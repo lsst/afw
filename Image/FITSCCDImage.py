@@ -9,9 +9,9 @@ __all__ = ["FITSCCDImage"]
 import os
 import math
 import pyfits
-from lsst.apps.fw.Policy import Policy
-from lsst.apps.support.PySextractor import *
-from lsst.apps.fw.Collection import *
+from lsst.fw.Policy import Policy
+from lsst.support.PySextractor import *
+from lsst.fw.Collection import *
 from RO.StringUtil import *
 
 from Image import Image

@@ -12,8 +12,8 @@ import os
 import math
 from numarray import *
  
-from lsst.apps.fw.Catalog.ctgread import *
-from lsst.apps.fw.Image import SkyRegion
+from lsst.fw.Catalog.ctgread import *
+from lsst.fw.Image import SkyRegion
 import RO.DS9
 import RO.StringUtil
 
