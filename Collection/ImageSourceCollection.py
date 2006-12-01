@@ -28,7 +28,7 @@ class ImageSourceCollection:
         """
         if (isinstance(sourceInfo, list)==False):
             raise(DataError)
-        if ((not sourceInfo[0].has_key('X_IMAGE')) or (not sourceInfo[0].has_key('Y_IMAGE')) or
+        if ((not sourceInfo[0].has_key('XWIN_IMAGE')) or (not sourceInfo[0].has_key('YWIN_IMAGE')) or
             (not sourceInfo[0].has_key('FLUX_BEST')) or (not sourceInfo[0].has_key('FLAGS')) or
             (not sourceInfo[0].has_key('CLASS_STAR'))):
             raise(DataError)
@@ -37,7 +37,7 @@ class ImageSourceCollection:
         self.flagArray= numarray.zeros([self.nSources], type='UInt8')
         i = 0
         for source in sourceInfo:
-            self.sourceArray[i] = [source['X_IMAGE'], source['Y_IMAGE'], source['FLUX_BEST'], source['CLASS_STAR'], i]
+            self.sourceArray[i] = [source['XWIN_IMAGE'], source['YWIN_IMAGE'], source['FLUX_BEST'], source['CLASS_STAR'], i]
             self.flagArray[i] = source['FLAGS']
             i = i + 1
 

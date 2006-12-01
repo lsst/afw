@@ -73,7 +73,7 @@ class FITSCCDImage(Image):
             self.geom = CCDGeom(xoff, yoff, rot, xflip, yflip)
         else:
             print "Warning: no geometry from parent mosaic"
-            self.geom = None
+            self.geom = CCDGeom(0, 0, 0, 0, 0)
 
         #
         # metaData will be initialized with a dictionary of metadata items needed

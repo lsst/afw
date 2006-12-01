@@ -35,7 +35,8 @@ packages = [
 # get setuputil
 currSysPath = sys.path
 #sys.path = [os.path.join(PyDir, "apps", "support")] + list(currSysPath)
-import lsst.support.setuputil as setuputil
+#RAA#import lsst.support.setuputil as setuputil
+from lsst.support.setuputil import *
 sys.path = currSysPath
 
 # process sys.argv to handle --lsst-home, etc.
