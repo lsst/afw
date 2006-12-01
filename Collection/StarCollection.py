@@ -220,13 +220,13 @@ class StarCollection:
         if wcs:
             for i in range(self.nStars):
                 (x, y) = wcs.WCS2pix(self.raArray[i], self.decArray[i])
-                ds9win.xpaset('regions', data='circle(%f,%f,%d)' % (x,y,displayRadius))
+                ds9win.xpaset('regions', data='circle(%f,%f,%d) # color = red' % (x + 1,y + 1,displayRadius))
                 print '%f %f (ra,dec) -> %f %f\n' % (self.raArray[i], self.decArray[i], x, y)
         else:
             for i in range(self.nStars):
                 raStr = RO.StringUtil.dmsStrFromDeg(self.raArray[i]/15.0)
                 decStr = RO.StringUtil.dmsStrFromDeg(self.decArray[i])
-                ds9win.xpaset('regions', data='fk5; circle(%s,%s,%f\")' % (raStr,decStr,displayRadius))
+                ds9win.xpaset('regions', data='fk5; circle(%s,%s,%f\") # color = red' % (raStr,decStr,displayRadius))
         return
 
 
