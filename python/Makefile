@@ -5,7 +5,7 @@ all :
 
 install :
 	@ mkdir -p $(PYTHONDIR)
-	cp fw/__init__.py fits2fic.py $(PYTHONDIR)
+	cp fw/__init__.py $(PYTHONDIR)
 
 clean:
 	$(RM) *~ core*
