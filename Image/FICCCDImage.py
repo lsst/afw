@@ -9,9 +9,9 @@ __all__ = ["FICCCDImage"]
 import os
 import math
 import pyfits
-from lsst.fw.Policy import Policy
-from lsst.support.PySextractor import *
-from lsst.fw.Collection import *
+from fw.Policy import Policy
+from support.PySextractor import *
+from fw.Collection import *
 from RO.StringUtil import *
 
 from Image import Image
@@ -46,9 +46,9 @@ class FICCCDImage(Image):
             ValueError      if CCDImage has more than one HDU (i.e. is MEF)
         Side Effect
             initialize  Policy,
-                        lsst.fw.Image.CCDGeom,
+                        fw.Image.CCDGeom,
                         pyfits.HDUList,
-                        lsst.fw.Image.SkyRegion
+                        fw.Image.SkyRegion
         """
         Image.__init__(self)
         if (isinstance(arg, str)==True):

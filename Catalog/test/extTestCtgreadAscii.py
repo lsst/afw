@@ -43,7 +43,7 @@ Review tester code to see how to catch exceptions
 """
 
 import sys
-from lsst.fw.Catalog.ctgread import *
+from fw.Catalog.ctgread import *
 # access via:  ctgread()
 
 

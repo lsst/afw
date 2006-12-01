@@ -5,6 +5,15 @@
 /* Wrap wcstools function ctgread for extracting a portion of a catalog */
 /* to be used in image matching to determine wcs.                       */
 
+%define ctgread_DOCSTRING
+"
+Basic wrappers for wcslib's ctgread
+"
+%enddef
+
+%feature("autodoc", "1");
+%module(docstring=ctgread_DOCSTRING) ctgread
+
 %module wcstools
 %{
 #include <unistd.h>

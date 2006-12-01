@@ -1,0 +1,5 @@
+setupOptional("pyfits")
+setupRequired("support")
+setupOptional("wcstools")
+
+envAppend(PYTHONPATH, ${UPS_PROD_DIR}/python)

@@ -1,0 +1,47 @@
+# @configure_input@
+CC = @CC@
+LD = @LD@
+CFLAGS = @CFLAGS@
+SO = @SO@
+SO_LDFLAGS = @SO_LDFLAGS@
+DYLIB = @DYLIB@
+DYLIB_LDFLAGS = @DYLIB_LDFLAGS@
+
+RANLIB = @RANLIB@
+SWIG = @SWIG@
+
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+ifeq ($(strip $(FW_DIR)),)
+	$(error Please setup fw and try again)
+endif
+
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+include $(FW_DIR)/etc/makedefs
+include $(FW_DIR)/etc/installdefs
+
+% : %.c
+	$(CC) $(CFLAGS) $(FW_CFLAGS) -o $@ $< $(FW_LIBS)
+
+%.o : %.c
+	$(CC) -c $(CFLAGS) $(FW_CFLAGS) $<
+
+
+FW_LIBS = $(PYTHON_LIBS) -L$(WCSTOOLS_DIR)/lib -lwcs
+FW_LIBS += $(EXTRA_LIBS)
+
+FW_CFLAGS = $(PYTHON_CFLAGS) -I$(WCSTOOLS_DIR)/include
+CFLAGS += $(FW_CFLAGS)
+
+.PHONY : install all clean distclean
+
+.PHONY : first
+first : all
+	@true
+
+check_swig :
+	@ if [ X"$(SWIG)" = X"" ]; then \
+		echo "Please ensure your build environment defines \$$SWIG" >&2; \
+		exit 1; \
+	fi

@@ -8,7 +8,7 @@
 #######################################################
 __all__ = ["FITSMosaicImage"]
 
-from lsst.fw.Policy import Policy
+from fw.Policy import Policy
 from Image import Image
 from CCDImage import CCDImage
 from CCDGeom import CCDGeom
