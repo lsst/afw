@@ -1359,7 +1359,7 @@ if test "${with_version+set}" = set; then
   withval="$with_version"
   eups_version=$withval
 else
-  eups_version=$(echo '$HeadURL: file:///u/rhl/SVN/support/trunk/configure.ac $' | perl -ne 'chomp;
+  eups_version=$(echo '$HeadURL$' | perl -ne 'chomp;
 		       	      	     	       if(s|^\$''Name:\s*(\S*)\s*\$|\1|) {
 					          $vers = $_;
 					          if (!$vers) {
