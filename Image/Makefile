@@ -1,5 +1,4 @@
-include $(FW_DIR)/etc/Makefile.global
-
+include ../etc/Makefile.global
 
 .PHONY : all
 all :
@@ -7,7 +6,7 @@ all :
 #
 install : 
 	@ mkdir -p $(PYTHONDIR)/Image
-	cp fits2fic.py $(FW_DIR)
+	cp fits2fic.py $(BINDIR)
 	cp *.py $(PYTHONDIR)/Image
 #
 clean :
