@@ -1,5 +1,4 @@
-include $(FW_DIR)/etc/Makefile.global
-
+include ../etc/Makefile.global
 
 .PHONY : all
 all :
