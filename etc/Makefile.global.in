@@ -13,13 +13,13 @@ SWIG = @SWIG@
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 ifeq ($(strip $(FW_DIR)),)
-	$(error Please setup fw and try again)
+   $(error Please setup fw and try again)
 endif
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-include $(FW_DIR)/etc/makedefs
-include $(FW_DIR)/etc/installdefs
+include ../etc/makedefs
+include ../etc/installdefs
 
 % : %.c
 	$(CC) $(CFLAGS) $(FW_CFLAGS) -o $@ $< $(FW_LIBS)
