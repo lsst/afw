@@ -2,4 +2,5 @@ setupOptional("pyfits")
 setupRequired("support")
 setupOptional("wcstools")
 
-envAppend(PYTHONPATH, ${UPS_PROD_DIR}/python)
+envAppend(PATH, ${PRODUCT_DIR}/bin)
+envAppend(PYTHONPATH, ${PRODUCT_DIR}/python)
