@@ -1,4 +1,4 @@
-include etc/Makefile.global
+include etc/installdefs
 
 SHELL = /bin/sh
 DIRS = etc python ups
