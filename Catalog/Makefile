@@ -1,4 +1,4 @@
-include $(FW_DIR)/etc/Makefile.global
+include ../etc/Makefile.global
 
 #CFLAGS += $(FW_CFLAGS) -I../SDSS
 SWIGFLAGS = $(shell echo $(FW_CFLAGS) | perl -pe 's/-pthread\s+//g')
