@@ -2703,18 +2703,18 @@ fi;
    if [ "$enable_numarray" = "" -o "$enable_numarray" = "yes" ]; then
        echo "$as_me:$LINENO: checking for numarray" >&5
 echo $ECHO_N "checking for numarray... $ECHO_C" >&6
-       NUMARRAY_INCDIR=$($PYTHON -c 'import numarray, re; print re.sub(r"/numarray$", "", numarray.numinclude.include_dir)' 2> /dev/null)
+       NUMARRAY_INCDIR=$($PYTHON -c 'import numarray, re; re.sub(r"/^/+$", "", numarray.numinclude.include_dir)' 2> /dev/null)
        if [ $? != 0 ]; then
           echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6
           { echo "$as_me:$LINENO: WARNING: Failed to find numarray; ignoring --enable-numarray" >&5
 echo "$as_me: WARNING: Failed to find numarray; ignoring --enable-numarray" >&2;}
        else
-          echo "$as_me:$LINENO: result: ok ($NUMARRAY_INCDIR)" >&5
-echo "${ECHO_T}ok ($NUMARRAY_INCDIR)" >&6
+          echo "$as_me:$LINENO: result: ok" >&5
+echo "${ECHO_T}ok" >&6
           PYTHON_CFLAGS="$PYTHON_CFLAGS -I$NUMARRAY_INCDIR"
-	  if [ X"$NUMARRAY_DIR" != X"" ]; then
-	     PYTHON_CFLAGS=$(echo $PYTHON_CFLAGS | sed -e "s|$NUMARRAY_DIR|\\\${NUMARRAY_DIR}|g")
+	  if [ X"$PYCORE_DIR" != X"" ]; then
+	     PYTHON_CFLAGS=$(echo $PYTHON_CFLAGS | sed -e "s|$PYCORE_DIR|\\\${PYCORE_DIR}|g")
 	  fi
 	  PYTHON_CFLAGS="$PYTHON_CFLAGS -DUSE_NUMARRAY=1"
        fi
@@ -3308,7 +3308,7 @@ fi;
 
 
 
-for ac_header in wcslib.h
+for ac_header in wcscat.h
 do
 as_ac_Header=`echo "ac_cv_header_$ac_header" | $as_tr_sh`
 if eval "test \"\${$as_ac_Header+set}\" = set"; then

@@ -13,7 +13,7 @@ undefine([SUPPORT_DIR])
 
 dnl ------------- EUPS directories and how to install -------------------------
 
-EUPS_DEFINE_ROOT($HeadURL: file:///u/rhl/SVN/support/trunk/configure.ac $)
+EUPS_DEFINE_ROOT($HeadURL$)
 EUPS_INSTALL_DIRS   
 
 dnl C-compiler issues
@@ -53,7 +53,7 @@ LSST_SWIG([1.3.27])
 dnl --------- Products from UPS ------------------------------------------------
 dnl (remember to update etc/Makefile.global if you add a new product)
 
-EUPS_WITHOUT_CONFIGURE([wcstools],  [wcslib.h], -lwcs,     [wcs,wcscat])
+EUPS_WITHOUT_CONFIGURE([wcstools],  [wcscat.h], -lwcs,     [wcs,wcscat])
 
 dnl ------------ Creation of dynamic libraries ---------------------------------
 	
