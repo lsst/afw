@@ -1,6 +1,4 @@
-setupOptional("pyfits")
-setupRequired("support")
-setupOptional("wcstools")
+setupRequired(support)
+setupRequired(wcstools v3_6_2)
 
-envAppend(PATH, ${PRODUCT_DIR}/bin)
 envAppend(PYTHONPATH, ${PRODUCT_DIR}/python)
