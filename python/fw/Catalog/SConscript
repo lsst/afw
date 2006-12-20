@@ -2,4 +2,4 @@
 Import("env")
 
 env.CheckSwig("python")
-env.LoadableModuleIncomplete("_wcstools", ["wcstools.i"], LIBS = ["wcs"])
+env.LoadableModuleIncomplete("_ctgread", ["ctgread.i"], LIBS = ["wcs"])
