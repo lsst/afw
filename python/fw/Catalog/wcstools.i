@@ -1,18 +1,17 @@
-/* File:  	ctgread.i 						*/
 /* Author:	Michelle Miller						*/
 /* Date: 	10/28/05						*/
 /*                                                                      */
 /* Wrap wcstools function ctgread for extracting a portion of a catalog */
 /* to be used in image matching to determine wcs.                       */
 
-%define ctgread_DOCSTRING
+%define wcslib_DOCSTRING
 "
-Basic wrappers for wcslib's ctgread
+Basic wrappers for wcslib
 "
 %enddef
 
 %feature("autodoc", "1");
-%module(docstring=ctgread_DOCSTRING) ctgread
+%module(docstring=wcslib_DOCSTRING) wcslib
 
 %module wcstools
 %{
