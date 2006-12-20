@@ -16,12 +16,9 @@ env = scons.makeEnv("fw",
 #
 SConscript("python/fw/Catalog/SConscript")
 
-env['IgnoreFiles'] = r"(~$|\.pyc$|^\.svn$)"
+env['IgnoreFiles'] = r"(~$|\.pyc$|^\.svn$|\.o$)"
 
-for dir in ("", "Catalog", "Collection", "Image", "Policy"):
-    fulldir = os.path.join("python/fw", dir)
-    Alias("install", env.Install(os.path.join(env['prefix'], fulldir), glob.glob(fulldir + "/*.py")))
-    Alias("install", env.Install(os.path.join(env['prefix'], fulldir), glob.glob(fulldir + "/*.so")))
+Alias("install", env.Install(env['prefix'], "python"))
 Alias("install", env.Install(env['prefix'] + "/bin", glob.glob("bin/*.py")))
 Alias("install", env.InstallEups(env['prefix'] + "/ups", glob.glob("ups/*.table")))
 
