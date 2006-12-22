@@ -1,0 +1,36 @@
+# @configure_input@
+CC = @CC@
+LD = @LD@
+CFLAGS = @CFLAGS@
+SO = @SO@
+SO_LDFLAGS = @SO_LDFLAGS@
+DYLIB = @DYLIB@
+DYLIB_LDFLAGS = @DYLIB_LDFLAGS@
+
+RANLIB = @RANLIB@
+SWIG = @SWIG@
+
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+include ../build/makedefs
+include ../build/installdefs
+
+% : %.c
+	$(CC) $(CFLAGS) $(SUPPORT_CFLAGS) -o $@ $< $(SUPPORT_LIBS)
+
+%.o : %.c
+	$(CC) -c $(CFLAGS) $(SUPPORT_CFLAGS) $<
+
+%_wrap.c : %.i
+	$(SWIG) $<
+
+
+SUPPORT_LIBS += $(EXTRA_LIBS)
+
+SUPPORT_CFLAGS = $(PYTHON_CFLAGS) -I$(WCSLIB_DIR)/include
+
+.PHONY : install all clean distclean
+
+.PHONY : first
+first : all
+	@true
