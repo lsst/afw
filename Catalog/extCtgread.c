@@ -37,9 +37,9 @@
 
 /* Definitions for Python <-> C interface */
 #include "Python.h"
-#include "libnumarray.h"
-#include "arrayobject.h"
-#include "wcscat.h"
+#include "numarray/libnumarray.h"
+#include "numarray/arrayobject.h"
+#include "libwcs/wcscat.h"
 
 #define MAX_MAG_INDEX 5
 

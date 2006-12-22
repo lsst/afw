@@ -1,10 +1,34 @@
-WCSTOOLSLIB = /home/mmiller/michelle/tools/wcstools-3.6.2/libwcs
-PYTHONLIB = /usr/include/python2.4
-INCLUDE = -I${WCSTOOLSLIB} -I${PYTHONLIB}
-CFLAGS = ${INCLUDE}
-LIB = -L${WCSTOOLSLIB}
+include ../build/Makefile.global
 
-all : 
-	swig -python ctgread.i
-	gcc -c -fpic $(CFLAGS) ctgread_wrap.c
-	ld -shared ctgread_wrap.o $(LIB) -lwcs -lc -o _wcstools.so
+MODULE = PyCtgread.$(SO)
+OBJS = extCtgread.o swigCtgread_wrap.o
+
+SUPPORT_CFLAGS += -I$(WCSTOOLS_DIR)
+
+.PHONY : all
+all : $(MODULE)
+	@: nothing to do
+#
+#
+$(MODULE) : $(OBJS)
+	$(LD) -o $(MODULE) $(SO_LDFLAGS) $(OBJS) $(SUPPORT_LIBS)
+#
+# Update Makefile dependencies
+#
+-include .Makefile.depend
+.PHONY : depend
+depend :
+	@echo Rebuilding make dependencies
+	@$(CC) $(CFLAGS) -MM $(OBJS:.o=.c) > .Makefile.depend
+#
+install : 
+	@ mkdir -p $(PYTHONDIR)/PyWCSlib
+	cp *.py *.$(SO) $(PYTHONDIR)/PyWCSlib
+#
+clean :
+	$(RM) *.o _*.{so,dylib} *_wrap.c
+	$(RM) core core.[0-9]*[0-9] *~
+
+distclean: clean
+	@ $(RM) .Makefile.depend
+	$(RM) *.so *.pyc wcstools.py
