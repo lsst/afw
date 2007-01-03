@@ -1,4 +1,9 @@
-include ../build/Makefile.global
+# Make the C/C++ compile portion of a Python extension module
+#
+# The Makefile.global contains rules for building .c, .o files.  This include
+# requires that make be called with -I option.  
+#
+include Makefile.global
 
 MODULE = PyCtgread.$(SO)
 OBJS = extCtgread.o swigCtgread_wrap.o
@@ -6,7 +11,10 @@ OBJS = extCtgread.o swigCtgread_wrap.o
 SUPPORT_CFLAGS += -I$(WCSTOOLS_DIR)
 
 .PHONY : all
-all : $(MODULE)
+all : build
+
+.PHONY : build
+build : $(MODULE)
 	@: nothing to do
 #
 #
@@ -21,14 +29,10 @@ depend :
 	@echo Rebuilding make dependencies
 	@$(CC) $(CFLAGS) -MM $(OBJS:.o=.c) > .Makefile.depend
 #
-install : 
-	@ mkdir -p $(PYTHONDIR)/PyWCSlib
-	cp *.py *.$(SO) $(PYTHONDIR)/PyWCSlib
-#
 clean :
 	$(RM) *.o _*.{so,dylib} *_wrap.c
 	$(RM) core core.[0-9]*[0-9] *~
 
 distclean: clean
 	@ $(RM) .Makefile.depend
-	$(RM) *.so *.pyc wcstools.py
+	$(RM) *.so *.pyc wcstools.py*
