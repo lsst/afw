@@ -1,2 +1,2 @@
 setupRequired("Numarray 1.5.1")
-envAppend(PYTHONPATH, ${PRODUCT_DIR}/lib/python)
+envAppend(PYTHONPATH, ${PRODUCT_DIR}/python)
