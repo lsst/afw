@@ -12,8 +12,8 @@ SWIG = @SWIG@
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-include ../build/makedefs
-include ../build/installdefs
+include makedefs
+include installdefs
 
 % : %.c
 	$(CC) $(CFLAGS) $(SUPPORT_CFLAGS) -o $@ $< $(SUPPORT_LIBS)
@@ -24,7 +24,11 @@ include ../build/installdefs
 %_wrap.c : %.i
 	$(SWIG) $<
 
+%/__init__.py : 
+	touch $@
 
+
+SUPPORT_LIBS = $(PYTHON_LIBS)
 SUPPORT_LIBS += $(EXTRA_LIBS)
 
 SUPPORT_CFLAGS = $(PYTHON_CFLAGS) -I$(WCSLIB_DIR)/include

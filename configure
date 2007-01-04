@@ -273,7 +273,7 @@ PACKAGE_VERSION='X.Y'
 PACKAGE_STRING='fw X.Y'
 PACKAGE_BUGREPORT='rallsman@lsst.org'
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS eups_product eups_version eups_flavor builddir pythondir swigdir srcinstalldir testdir eupsdir upsdir xmldir CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT LD RANLIB ac_ct_RANLIB PYTHON PYTHON_CFLAGS PYTHON_LIBS SWIG SO_LDFLAGS SO DYLIB_LDFLAGS DYLIB EXTRA_LIBS LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS WCSTOOLS_DIR eups_product eups_version eups_flavor builddir pythondir swigdir srcinstalldir testdir eupsdir upsdir xmldir CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT LD RANLIB ac_ct_RANLIB PYTHON PYTHON_CFLAGS PYTHON_LIBS SWIG SO_LDFLAGS SO DYLIB_LDFLAGS DYLIB EXTRA_LIBS LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -814,6 +814,7 @@ Optional Packages:
   --with-eups=DIR         Use DIR as base for installation directories
   --with-python=file      Specify name of python executable.
   --with-swig=DIR         Specify location of SWIG executable.
+  --with-wcstools=DIR     Specify the directory where WCSTools is installed.
 
 Some influential environment variables:
   CC          C compiler command
@@ -1245,6 +1246,10 @@ ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+
+
+
 
 
 
@@ -2730,14 +2735,52 @@ See \`config.log' for more details." >&2;}
 
 
    swig_version=$($SWIG -version 2>&1 | perl -ne 'if(/^SWIG Version (\d)\.(\d)\.(\d+)/) { print 100000*$1 + 1000*$2 + $3; }')
-   desired_swig_version=$(echo $SWIG_DIR/bin | perl -ne 'if(/\/(\d)\.(\d)\.(\d+)/) { print 100000*$1 + 1000*$2 + $3; }')
+   desired_swig_version=$(echo 1.3.29 | perl -ne 'if(/(\d)\.(\d)\.(\d+)/) { print 100000*$1 + 1000*$2 + $3; }')
 
    if [ "$swig_version" = "" -o $swig_version -lt $desired_swig_version ]; then
-      { echo "$as_me:$LINENO: You would be better off with a swig version >= $SWIG_DIR/bin" >&5
-echo "$as_me: You would be better off with a swig version >= $SWIG_DIR/bin" >&6;}
+      { echo "$as_me:$LINENO: You would be better off with a swig version >= 1.3.29" >&5
+echo "$as_me: You would be better off with a swig version >= 1.3.29" >&6;}
    fi
    unset swig_version; unset desired_swig_version
 
+
+# Check whether --with-wcstools or --without-wcstools was given.
+if test "${with_wcstools+set}" = set; then
+  withval="$with_wcstools"
+  WCSTOOLS_DIR="$withval"
+fi;
+   echo -n checking for WCSTools...
+   if [ -z "$WCSTOOLS_DIR" ]; then
+      { { echo "$as_me:$LINENO: error: You need WCSTools; use either setup or --with-wcstools=dir
+See \`config.log' for more details." >&5
+echo "$as_me: error: You need WCSTools; use either setup or --with-wcstools=dir
+See \`config.log' for more details." >&2;}
+   { (exit 1); exit 1; }; }
+   fi
+
+   if [ ! -d "$WCSTOOLS_DIR" ]; then
+      { { echo "$as_me:$LINENO: error: \"$WCSTOOLS_DIR\" is not a directory containing the package
+See \`config.log' for more details." >&5
+echo "$as_me: error: \"$WCSTOOLS_DIR\" is not a directory containing the package
+See \`config.log' for more details." >&2;}
+   { (exit 1); exit 1; }; }
+   fi
+
+   if [ ! -f $WCSTOOLS_DIR/libwcs/wcs.h ]; then
+      { { echo "$as_me:$LINENO: error: \"$WCSTOOLS_DIR\" is missing include file: libwcs/wcs.h; is this really WCSTools?
+See \`config.log' for more details." >&5
+echo "$as_me: error: \"$WCSTOOLS_DIR\" is missing include file: libwcs/wcs.h; is this really WCSTools?
+See \`config.log' for more details." >&2;}
+   { (exit 1); exit 1; }; }
+   fi
+   if [ ! -f $WCSTOOLS_DIR/libwcs/libwcs.a ]; then
+      { { echo "$as_me:$LINENO: error: \"$WCSTOOLS_DIR\" is missing library: libwcs/libwcs.a; is WCSTools built?
+See \`config.log' for more details." >&5
+echo "$as_me: error: \"$WCSTOOLS_DIR\" is missing library: libwcs/libwcs.a; is WCSTools built?
+See \`config.log' for more details." >&2;}
+   { (exit 1); exit 1; }; }
+   fi
+   echo " ok ($WCSTOOLS_DIR)"
 
 
 
@@ -3415,6 +3458,7 @@ s,@ECHO_C@,$ECHO_C,;t t
 s,@ECHO_N@,$ECHO_N,;t t
 s,@ECHO_T@,$ECHO_T,;t t
 s,@LIBS@,$LIBS,;t t
+s,@WCSTOOLS_DIR@,$WCSTOOLS_DIR,;t t
 s,@eups_product@,$eups_product,;t t
 s,@eups_version@,$eups_version,;t t
 s,@eups_flavor@,$eups_flavor,;t t

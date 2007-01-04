@@ -13,7 +13,7 @@ INCLUDEDIR = @includedir@
 DOCDIR = @infodir@
 
 M4DIR = @m4dir@
-PYTHONDIR = @pythondir@/@eups_product@
+PYTHONDIR = @pythondir@
 SRCDIR = @srcinstalldir@
 SWIGDIR = @swigdir@
 TESTDIR = @testdir@

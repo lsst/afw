@@ -129,7 +129,7 @@ AC_DEFUN([LSST_SWIG], [
 
    ifelse($1, , , [
    swig_version=$($SWIG -version 2>&1 | perl -ne 'if(/^SWIG Version (\d)\.(\d)\.(\d+)/) { print 100000*[$]1 + 1000*[$]2 + [$]3; }')
-   desired_swig_version=$(echo $1 | perl -ne 'if(/\/(\d)\.(\d)\.(\d+)/) { print 100000*[$]1 + 1000*[$]2 + [$]3; }')
+   desired_swig_version=$(echo $1 | perl -ne 'if(/(\d)\.(\d)\.(\d+)/) { print 100000*[$]1 + 1000*[$]2 + [$]3; }')
 
    if [[ "$swig_version" = "" -o $swig_version -lt $desired_swig_version ]]; then
       ifelse($2, ,
@@ -138,6 +138,35 @@ AC_DEFUN([LSST_SWIG], [
    fi
    unset swig_version; unset desired_swig_version])
 ])
+
+dnl ------------------- wcstools ---------------------
+dnl
+dnl Detect WCSTools
+dnl This package has an unusual organization, so EUPS_WITH_CONFIGURE won't work
+dnl
+AC_DEFUN([LSST_FIND_WCSTOOLS], [
+   AC_ARG_WITH(wcstools,
+     [AS_HELP_STRING(--with-wcstools=DIR, Specify the directory where WCSTools is installed.)],
+     [WCSTOOLS_DIR="$withval"],
+     [])
+   echo -n checking for WCSTools...
+   if [[ -z "$WCSTOOLS_DIR" ]]; then
+      AC_MSG_FAILURE([You need WCSTools; use either setup or --with-wcstools=dir])
+   fi
+
+   if [[ ! -d "$WCSTOOLS_DIR" ]]; then
+      AC_MSG_FAILURE(["$WCSTOOLS_DIR" is not a directory containing the package])
+   fi
+
+   if [[ ! -f $WCSTOOLS_DIR/libwcs/wcs.h ]]; then
+      AC_MSG_FAILURE(["$WCSTOOLS_DIR" is missing include file: libwcs/wcs.h; is this really WCSTools?])
+   fi
+   if [[ ! -f $WCSTOOLS_DIR/libwcs/libwcs.a ]]; then
+      AC_MSG_FAILURE(["$WCSTOOLS_DIR" is missing library: libwcs/libwcs.a; is WCSTools built?])
+   fi
+   echo " ok ($WCSTOOLS_DIR)" ])
+
+AC_SUBST(WCSTOOLS_DIR)
 
 dnl
 dnl Aliases used in old RHL projects.

@@ -71,7 +71,8 @@ dnl
 LSST_FIND_PYTHON()                       dnl  if you require Python
 LSST_FIND_NUMARRAY([-DUSE_NUMARRAY=1])   dnl  if you require Numarray
 dnl LSST_FIND_NUMPY([-DUSE_NUMPY=1])         dnl  if you require Numarray
-LSST_SWIG($SWIG_DIR/bin)                 dnl  if you require Swig
+LSST_SWIG(1.3.29)                        dnl  if you require Swig
+LSST_FIND_WCSTOOLS()                     dnl if you require WCSTools
 
 
 dnl --------- UPDATE: Products from UPS ----------------------------------------
@@ -80,7 +81,7 @@ dnl packages.  For each dependent package, add a EUPS_WITHOUT_CONFIGURE line
 dnl that looks like the following:
 dnl 
 dnl                        PKG-NAME  INCLUDE-FILE       LIBFLG  LIB,FUNCTION
-dnl EUPS_WITHOUT_CONFIGURE([wcslib], [wcslib/wcslib.h], -lwcs,  [wcs,wcsini])
+dnl EUPS_WITHOUT_CONFIGURE([WCSTools], [libwcs/wcscat.h], -lwcs,  [wcs,ctgread])
 dnl
 dnl where the arguments are:
 dnl    PKG-NAME       the name of the package required (as known by EUPS)
