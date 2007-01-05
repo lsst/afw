@@ -1,2 +1,3 @@
-setupRequired("Numarray 1.5.1")
+setupOptional("Numarray 1.5.1")
+setupOptional("PyFITS 1.0.1")
 envAppend(PYTHONPATH, ${PRODUCT_DIR}/python)
