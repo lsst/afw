@@ -10,7 +10,7 @@ m4_dnl  it may only be necessary to update the values of the following macros.
 m4_dnl  Only m4_PACKAGE and m4_VERSION are required.  
 m4_dnl
 m4_define([m4_PACKAGE], [fw])m4_dnl
-m4_define([m4_VERSION], [trunk])m4_dnl
+m4_define([m4_VERSION], [0.2])m4_dnl
 m4_define([m4_TARBALL], [m4_PACKAGE-m4_VERSION.tar.gz])m4_dnl
 # 
 # set up the initial pacman definitions and environment variables.
@@ -26,6 +26,10 @@ m4_dnl
 # denote dependencies
 #
 # package('m4_CACHE:otherpkg-2.2')
+setenvShellTemp('PYFITS_DIR', 'export SHELL=sh; source $EUPS_DIR/bin/setups.sh; setup PyFITS 1.0.1; echo $PYTHON_DIR')
+envIsSet('PYFITS_DIR')
+echo('Using PYFITS_DIR=$PYFITS_DIR')
+shell('[[ -d "$PYFITS_DIR" ]]')
 
 
 #
@@ -52,18 +56,16 @@ downloadUntar('m4_PKGURL/m4_PKGPATH/m4_TARBALL','BUILDDIR')
 #
 cd('$BUILDDIR')
 echo ("configuring m4_PACKAGE-m4_VERSION...")
-shell('./configure')
+shell('export SHELL=sh; source $EUPS_DIR/bin/setups.sh; setup PyFITS 1.0.1; ./configure')
 
 echo ("running make install")
-shell('make install')
+shell('export SHELL=sh; source $EUPS_DIR/bin/setups.sh; setup PyFITS 1.0.1; make installnowarn')
 cd()
 
 #
 # Now download & install the EUPS table file and load package into EUPS
 #
 m4_include([PacmanLsst-post.m4])m4_dnl
-
-shell('rm -rf $BUILDDIR/*; true')
 
 uninstallShell('rm -rf $PWD/m4_PACKAGE/m4_VERSION')
 uninstallShell('rmdir $PWD/m4_PACKAGE; true')
