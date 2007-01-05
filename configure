@@ -1312,6 +1312,8 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
         eups_product=$PACKAGE_NAME
 
 
+        relative_path=
+
 
 # Check whether --with-version or --without-version was given.
 if test "${with_version+set}" = set; then
@@ -1383,7 +1385,7 @@ echo "$as_me: error: I can't find DB \"$eups_db\" in $EUPS_PATH" >&2;}
 	    fi
 fi;
 	   if [ X"$prefix" != X"NONE" ]; then
-	   	   prefix=$prefix/$eups_product/$(echo $eups_version | perl -pe 's/\./_/g')
+	   	   prefix=$prefix/$relative_path$eups_product/$(echo $eups_version | perl -pe 's/\./_/g')
 		   { echo "$as_me:$LINENO: Setting \$prefix to $prefix" >&5
 echo "$as_me: Setting \$prefix to $prefix" >&6;}
 	   fi

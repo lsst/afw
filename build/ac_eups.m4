@@ -15,17 +15,22 @@ dnl
 
 dnl There is also support for setting prefix in a UPSy sort of way.
 dnl
-dnl The macro UPS_DEFINE_ROOT sets the prefix for a UPS installation,
+dnl The macro UPS_DEFINE_ROOT sets the prefix for a UPS installation.
 dnl but only if you say --with-eups=DIR.  More specifically, given
 dnl   AC_INIT([product], [X.Y])
 dnl   UPS_DEFINE_ROOT(version, flavor)
 dnl and
 dnl   --with-eups=DIR
 dnl are equivalent to
-dnl   --prefix=DIR/flavor/product/version
-dnl If you don't specify --with-eups, it'll be taken from EUPS_PATH, if set. Usually
-dnl the first element is used, but you can change this with --with-eups-db=XXX to
-dnl select a different eups database
+dnl   --prefix=DIR/product/version
+dnl If you don't specify --with-eups, it'll be taken from EUPS_PATH, if set. 
+dnl Usually the first element is used, but you can change this with 
+dnl --with-eups-db=XXX to select a different eups database.  
+dnl You can set the default prefix to a subdirectory via a third argument 
+dnl that provides a relative path:
+dnl   UPS_DEFINE_ROOT(version, flavor, relative/path)
+dnl This would be equivalent to 
+dnl   --prefix=DIR/relative/path/product/version
 dnl
 dnl The version is set based on the value of --with-version,
 dnl $1 (which may be of the form dollar Name: version dollar or dollar HeadURL dollar
@@ -41,6 +46,8 @@ dnl
 AC_DEFUN([EUPS_DEFINE_ROOT], [
         eups_product=$PACKAGE_NAME
 	AC_SUBST([eups_product])
+
+        ifelse($3, , relative_path=, relative_path=patsubst([$3/], [//$], [/]) )
 
 	AC_ARG_WITH(version,
 	   [AS_HELP_STRING(--with-version=XXX, Set version to XXX)],
@@ -98,7 +105,7 @@ AC_DEFUN([EUPS_DEFINE_ROOT], [
 		fi
 	    fi])
 	   if [[ X"$prefix" != X"NONE" ]]; then
-	   	   prefix=$prefix/$eups_product/$(echo $eups_version | perl -pe 's/\./_/g')
+	   	   prefix=$prefix/$relative_path$eups_product/$(echo $eups_version | perl -pe 's/\./_/g')
 		   AC_MSG_NOTICE(Setting \$prefix to $prefix)
 	   fi
    ])
