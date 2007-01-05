@@ -105,7 +105,7 @@ AC_DEFUN([EUPS_DEFINE_ROOT], [
 		fi
 	    fi])
 	   if [[ X"$prefix" != X"NONE" ]]; then
-	   	   prefix=$prefix/$relative_path$eups_product/$(echo $eups_version | perl -pe 's/\./_/g')
+	   	   prefix=$prefix/$relative_path$eups_product/$eups_version
 		   AC_MSG_NOTICE(Setting \$prefix to $prefix)
 	   fi
    ])
