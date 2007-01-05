@@ -9,6 +9,7 @@ dnl       not always required, but never hurts to include them.  If you add
 dnl       shell programming code to this file, you should be sure to use 
 dnl       double brackets, [[ ]], in your if statments.  
 dnl
+dnl
 AC_INIT([fw], [X.Y], [rallsman@lsst.org])
 
 dnl ------------- Include files from ./build ---------------------------------
