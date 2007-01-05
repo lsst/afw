@@ -273,7 +273,7 @@ PACKAGE_VERSION='X.Y'
 PACKAGE_STRING='fw X.Y'
 PACKAGE_BUGREPORT='rallsman@lsst.org'
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS WCSTOOLS_DIR eups_product eups_version eups_flavor builddir pythondir swigdir srcinstalldir testdir eupsdir upsdir xmldir CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT LD RANLIB ac_ct_RANLIB PYTHON PYTHON_CFLAGS PYTHON_LIBS SWIG SO_LDFLAGS SO DYLIB_LDFLAGS DYLIB EXTRA_LIBS LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS WCSTOOLS_DIR eups_product eups_version eups_flavor builddir pythondir swigdir srcinstalldir testdir eupsdir upsdir xmldir docdir CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT LD RANLIB ac_ct_RANLIB PYTHON PYTHON_CFLAGS PYTHON_LIBS SWIG SO_LDFLAGS SO DYLIB_LDFLAGS DYLIB EXTRA_LIBS LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -1404,6 +1404,8 @@ echo "$as_me: Setting \$prefix to $prefix" >&6;}
    upsdir='${prefix}/ups'
 
    xmldir='${prefix}/xml'
+
+   docdir='${prefix}/doc'
 
 
 
@@ -3470,6 +3472,7 @@ s,@testdir@,$testdir,;t t
 s,@eupsdir@,$eupsdir,;t t
 s,@upsdir@,$upsdir,;t t
 s,@xmldir@,$xmldir,;t t
+s,@docdir@,$docdir,;t t
 s,@CC@,$CC,;t t
 s,@CFLAGS@,$CFLAGS,;t t
 s,@LDFLAGS@,$LDFLAGS,;t t

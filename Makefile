@@ -1,13 +1,36 @@
+# Template Makefile for a package's top-level directory 
+#
+# Normally, the only editing this file needs is adding subdirectories 
+# to the SUBDIRS variable
+#
 include build/installdefs
 
+# set this to the subdirectories where make must run recursively.
+# These must contain there own Makefiles.  When they exist, the following 
+# subdirectories fall into this category:
+#   
+# SUBDIRS = python src java etc scripts doc
+#
+# The build and ups subdirectories usually do not.  Do not include directories 
+# that do not exist. 
+#
+SUBDIRS = python 
+
 SHELL = /bin/sh
-UPSDIR = ups
-DIRS = python 
 MAKEFLAGS = I $(PWD)/build
 
+all : build
+
 .PHONY : build
-all build clean distclean : configure
-	@for f in $(DIRS); do \
+build : $(SUBDIRS)
+
+.PHONY : $(SUBDIRS)
+$(SUBDIRS): configure
+	$(MAKE) -C $@ -$(MAKEFLAGS) build
+
+.PHONY : build
+clean distclean : configure
+	@for f in $(SUBDIRS); do \
 		if [ ! -d $$f ]; then \
 			echo No such directory: $$f >&2; \
 		else \
@@ -73,12 +96,13 @@ installwarn :
 installsubs:
 	@ $(RM) -r $(prefix)
 	@ mkdir -p $(prefix)
-	@ for f in $(DIRS) ; do \
+	@ for f in $(SUBDIRS) ; do \
 		(cd $$f ; echo In $$f; $(MAKE) -$(MAKEFLAGS) install ); \
 	done
 
 installups: ups
-	cp -rf ups $(prefix)
+	install -d $(UPSDIR)
+	install --mode=644 ups/*.table $(UPSDIR)
 
 declare :
 	eups declare --flavor $(UPS_FLAVOR) --root $(prefix) $(UPS_PRODUCT) $(UPS_VERSION)

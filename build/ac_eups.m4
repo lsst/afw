@@ -114,6 +114,7 @@ AC_DEFUN([EUPS_INSTALL_DIRS], [
    AC_SUBST(eupsdir, '${prefix}/ups')
    AC_SUBST(upsdir, '${prefix}/ups')
    AC_SUBST(xmldir, '${prefix}/xml')
+   AC_SUBST(docdir, '${prefix}/doc')
    ])
 
 dnl -------------------------------------------------------------------------

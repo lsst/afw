@@ -10,7 +10,7 @@ BINDIR = @bindir@
 LIBDIR = @libdir@
 ETCDIR = @sysconfdir@
 INCLUDEDIR = @includedir@
-DOCDIR = @infodir@
+DOCDIR = @docdir@
 
 M4DIR = @m4dir@
 PYTHONDIR = @pythondir@

@@ -1,7 +1,9 @@
 # @configure_input@
 CC = @CC@
+CXX = @CXX@
 LD = @LD@
 CFLAGS = @CFLAGS@
+CXXFLAGS = @CXXFLAGS@
 SO = @SO@
 SO_LDFLAGS = @SO_LDFLAGS@
 DYLIB = @DYLIB@
@@ -19,7 +21,16 @@ include installdefs
 	$(CC) $(CFLAGS) $(SUPPORT_CFLAGS) -o $@ $< $(SUPPORT_LIBS)
 
 %.o : %.c
-	$(CC) -c $(CFLAGS) $(SUPPORT_CFLAGS) $<
+	$(CC) -c $(CFLAGS) $(SUPPORT_CFLAGS) -o $@ $<
+
+%.o : %.cc
+	$(CXX) -c $(CXXFLAGS) $(SUPPORT_CFLAGS) -o $@ $<
+
+%.o : %.cpp
+	$(CXX) -c $(CXXFLAGS) $(SUPPORT_CFLAGS) -o $@ $<
+
+%.o : %.C
+	$(CXX) -c $(CXXFLAGS) $(SUPPORT_CFLAGS) -o $@ $<
 
 %_wrap.c : %.i
 	$(SWIG) $<
@@ -31,7 +42,7 @@ include installdefs
 SUPPORT_LIBS = $(PYTHON_LIBS)
 SUPPORT_LIBS += $(EXTRA_LIBS)
 
-SUPPORT_CFLAGS = $(PYTHON_CFLAGS) -I$(WCSLIB_DIR)/include
+SUPPORT_CFLAGS = $(PYTHON_CFLAGS)
 
 .PHONY : install all clean distclean
 
