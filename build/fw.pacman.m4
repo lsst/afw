@@ -63,6 +63,8 @@ cd()
 #
 m4_include([PacmanLsst-post.m4])m4_dnl
 
+shell('rm -rf $BUILDDIR/*; true')
+
 uninstallShell('rm -rf $PWD/m4_PACKAGE/m4_VERSION')
 uninstallShell('rmdir $PWD/m4_PACKAGE; true')
 
