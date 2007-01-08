@@ -26,11 +26,15 @@ m4_dnl
 # denote dependencies
 #
 # package('m4_CACHE:otherpkg-2.2')
-setenvShellTemp('PYFITS_DIR', 'export SHELL=sh; source $EUPS_DIR/bin/setups.sh; setup PyFITS 1.0.1; echo $PYTHON_DIR')
+setenvShellTemp('PYFITS_DIR', 'export SHELL=sh; source $EUPS_DIR/bin/setups.sh; setup PyFITS 1.0.1; echo $PYFITS_DIR')
 envIsSet('PYFITS_DIR')
 echo('Using PYFITS_DIR=$PYFITS_DIR')
 shell('[[ -d "$PYFITS_DIR" ]]')
 
+setenvShellTemp('WCSTOOLS_DIR', 'export SHELL=sh; source $EUPS_DIR/bin/setups.sh; setup WCSTools 3.6.2; echo $WCSTOOLS_DIR')
+envIsSet('WCSTOOLS_DIR')
+echo('Using WCSTOOLS_DIR=$WCSTOOLS_DIR')
+shell('[[ -d "$WCSTOOLS_DIR" ]]')
 
 #
 # begin installation assuming we are located in LSST_HOME
@@ -56,10 +60,10 @@ downloadUntar('m4_PKGURL/m4_PKGPATH/m4_TARBALL','BUILDDIR')
 #
 cd('$BUILDDIR')
 echo ("configuring m4_PACKAGE-m4_VERSION...")
-shell('export SHELL=sh; source $EUPS_DIR/bin/setups.sh; setup PyFITS 1.0.1; ./configure')
+shell('export SHELL=sh; source $EUPS_DIR/bin/setups.sh; setup PyFITS 1.0.1; setup WCSTools 3.6.2; ./configure')
 
 echo ("running make install")
-shell('export SHELL=sh; source $EUPS_DIR/bin/setups.sh; setup PyFITS 1.0.1; make installnowarn')
+shell('export SHELL=sh; source $EUPS_DIR/bin/setups.sh; setup PyFITS 1.0.1; setup WCSTools 3.6.2; make installnowarn')
 cd()
 
 #
