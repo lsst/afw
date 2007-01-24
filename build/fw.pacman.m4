@@ -31,6 +31,11 @@ envIsSet('PYFITS_DIR')
 echo('Using PYFITS_DIR=$PYFITS_DIR')
 shell('[[ -d "$PYFITS_DIR" ]]')
 
+setenvShellTemp('SWIG_DIR', 'export SHELL=sh; source $EUPS_DIR/bin/setups.sh; setup swig 1.3.29; echo $SWIG_DIR')
+envIsSet('SWIG_DIR')
+echo('Using SWIG_DIR=$SWIG_DIR')
+shell('[[ -d "$SWIG_DIR" ]]')
+
 setenvShellTemp('WCSTOOLS_DIR', 'export SHELL=sh; source $EUPS_DIR/bin/setups.sh; setup WCSTools 3.6.2; echo $WCSTOOLS_DIR')
 envIsSet('WCSTOOLS_DIR')
 echo('Using WCSTOOLS_DIR=$WCSTOOLS_DIR')
@@ -60,10 +65,10 @@ downloadUntar('m4_PKGURL/m4_PKGPATH/m4_TARBALL','BUILDDIR')
 #
 cd('$BUILDDIR')
 echo ("configuring m4_PACKAGE-m4_VERSION...")
-shell('export SHELL=sh; source $EUPS_DIR/bin/setups.sh; setup PyFITS 1.0.1; setup WCSTools 3.6.2; ./configure')
+shell('export SHELL=sh; source $EUPS_DIR/bin/setups.sh; setup PyFITS 1.0.1; setup WCSTools 3.6.2; setup swig 1.3.29; ./configure')
 
 echo ("running make install")
-shell('export SHELL=sh; source $EUPS_DIR/bin/setups.sh; setup PyFITS 1.0.1; setup WCSTools 3.6.2; make installnowarn')
+shell('export SHELL=sh; source $EUPS_DIR/bin/setups.sh; setup PyFITS 1.0.1; setup WCSTools 3.6.2; setup swig 1.3.29; make installnowarn')
 cd()
 
 #
