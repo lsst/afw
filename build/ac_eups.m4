@@ -86,28 +86,35 @@ AC_DEFUN([EUPS_DEFINE_ROOT], [
 	AC_ARG_WITH(eups-db,
 	   [AS_HELP_STRING(--with-eups-db=name,Select directory containing NAME from $EUPS_PATH)],
 	   [eups_db=$withval])
+        eupsprefix=NONE
 	AC_ARG_WITH(eups,
 	   [AS_HELP_STRING(--with-eups=DIR,Use DIR as base for installation directories)],
-	   [prefix=$withval],
-	   [if [[ X"$EUPS_PATH" != X"" ]]; then
+	   [eupsprefix=$withval],
+	   [if [[ X"$prefix" = X"NONE" -a X"$EUPS_PATH" != X"" ]]; then
 	       if [[ X"$eups_db" = X"" ]]; then
-		       prefix=$(echo $EUPS_PATH | perl -pe 's/:.*//')
+		       eupsprefix=$(echo $EUPS_PATH | perl -pe 's/:.*//')
 	       else
 		       for d in $(echo $EUPS_PATH | perl -pe 's/:/\n/g'); do
 			       case $d in
 				  */$eups_db$|$eups_db/*|*/$eups_db/*)
-				       prefix=$d;;
+				       eupsprefix=$d;;
 			       esac
 		       done			
-		       if [[ X"$prefix" = X"NONE" ]]; then
+		       if [[ X"$eupsprefix" = X"NONE" ]]; then
 			      AC_MSG_ERROR([I can't find DB \"$eups_db\" in $EUPS_PATH])
 		       fi
 		fi
 	    fi])
-	   if [[ X"$prefix" != X"NONE" ]]; then
-	   	   prefix=$prefix/$relative_path$eups_product/$eups_version
-		   AC_MSG_NOTICE(Setting \$prefix to $prefix)
+	   if [[ X"$eupsprefix" != X"NONE" ]]; then
+              if [[ X"$prefix" != X"NONE" ]]; then
+                AC_MSG_NOTICE(Note: since --prefix has been set we will ignore --with-eups)
+              fi
+    	      eupsprefix=$eupsprefix/$relative_path$eups_product/$eups_version
 	   fi
+           if [[ X"$prefix" = X"NONE" ]]; then
+                prefix=$eupsprefix
+           fi
+	   AC_MSG_NOTICE(Setting \$prefix to $prefix)
    ])
 dnl
 dnl Define extra installation directories (not expanding $prefix)
