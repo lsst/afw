@@ -103,7 +103,7 @@ installsubs:
 
 installups: ups
 	install -d $(UPSDIR)
-	install --mode=644 ups/*.table $(UPSDIR)
+	install -m 644 ups/*.table $(UPSDIR)
 
 declare :
 	eups declare --flavor $(UPS_FLAVOR) --root $(prefix) $(UPS_PRODUCT) $(UPS_VERSION)
