@@ -10,7 +10,7 @@ m4_dnl  it may only be necessary to update the values of the following macros.
 m4_dnl  Only m4_PACKAGE and m4_VERSION are required.  
 m4_dnl
 m4_define([m4_PACKAGE], [fw])m4_dnl
-m4_define([m4_VERSION], [0.2])m4_dnl
+m4_define([m4_VERSION], [0.3])m4_dnl
 m4_define([m4_TARBALL], [m4_PACKAGE-m4_VERSION.tar.gz])m4_dnl
 # 
 # set up the initial pacman definitions and environment variables.
@@ -26,17 +26,17 @@ m4_dnl
 # denote dependencies
 #
 # package('m4_CACHE:otherpkg-2.2')
-setenvShellTemp('PYFITS_DIR', 'export SHELL=sh; source $EUPS_DIR/bin/setups.sh; setup PyFITS 1.0.1; echo $PYFITS_DIR')
+setenvShellTemp('PYFITS_DIR', 'export SHELL=sh; source $EUPS_DIR/bin/setups.sh; setup PyFITS; echo $PYFITS_DIR')
 envIsSet('PYFITS_DIR')
 echo('Using PYFITS_DIR=$PYFITS_DIR')
 shell('[[ -d "$PYFITS_DIR" ]]')
 
-setenvShellTemp('SWIG_DIR', 'export SHELL=sh; source $EUPS_DIR/bin/setups.sh; setup swig 1.3.29; echo $SWIG_DIR')
+setenvShellTemp('SWIG_DIR', 'export SHELL=sh; source $EUPS_DIR/bin/setups.sh; setup swig; echo $SWIG_DIR')
 envIsSet('SWIG_DIR')
 echo('Using SWIG_DIR=$SWIG_DIR')
 shell('[[ -d "$SWIG_DIR" ]]')
 
-setenvShellTemp('WCSTOOLS_DIR', 'export SHELL=sh; source $EUPS_DIR/bin/setups.sh; setup WCSTools 3.6.2; echo $WCSTOOLS_DIR')
+setenvShellTemp('WCSTOOLS_DIR', 'export SHELL=sh; source $EUPS_DIR/bin/setups.sh; setup WCSTools; echo $WCSTOOLS_DIR')
 envIsSet('WCSTOOLS_DIR')
 echo('Using WCSTOOLS_DIR=$WCSTOOLS_DIR')
 shell('[[ -d "$WCSTOOLS_DIR" ]]')
@@ -65,10 +65,10 @@ downloadUntar('m4_PKGURL/m4_PKGPATH/m4_TARBALL','BUILDDIR')
 #
 cd('$BUILDDIR')
 echo ("configuring m4_PACKAGE-m4_VERSION...")
-shell('export SHELL=sh; source $EUPS_DIR/bin/setups.sh; setup PyFITS 1.0.1; setup WCSTools 3.6.2; setup swig 1.3.29; ./configure')
+shell('export SHELL=sh; source $EUPS_DIR/bin/setups.sh; setup PyFITS; setup WCSTools; setup swig; ./configure')
 
 echo ("running make install")
-shell('export SHELL=sh; source $EUPS_DIR/bin/setups.sh; setup PyFITS 1.0.1; setup WCSTools 3.6.2; setup swig 1.3.29; make installnowarn')
+shell('export SHELL=sh; source $EUPS_DIR/bin/setups.sh; setup PyFITS; setup WCSTools; setup swig; make installnowarn')
 cd()
 
 #
