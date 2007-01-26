@@ -1,0 +1,4 @@
+# -*- python -*-
+Import('env')
+
+env.Program('sharedPointers', ["sharedPointersExample.cc"], LIBS="citizen")
