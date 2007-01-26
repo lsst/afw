@@ -1,5 +1,0 @@
-# -*- python -*-
-Import("env")
-
-env.CheckSwig("python")
-env.LoadableModuleIncomplete("_ctgread", ["ctgread.i"], LIBS = ["wcs"])

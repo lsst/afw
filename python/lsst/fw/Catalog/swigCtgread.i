@@ -5,15 +5,6 @@
 /* Wrap wcstools function ctgread for extracting a portion of a catalog */
 /* to be used in image matching to determine wcs.                       */
 
-%define ctgread_DOCSTRING
-"
-Basic wrappers for wcslib's ctgread
-"
-%enddef
-
-%feature("autodoc", "1");
-%module(docstring=ctgread_DOCSTRING) ctgread
-
 %module wcstools
 %{
 #include <unistd.h>
@@ -22,12 +13,22 @@ Basic wrappers for wcslib's ctgread
 #include <string.h>
 #include <math.h>
 #include <sys/types.h>
-#include "wcs.h"
-#include "wcscat.h"
-#include "fitsfile.h"
-%}
+#include "libwcs/wcs.h"
+#include "libwcs/wcscat.h"
+#include "libwcs/fitsfile.h"
 
-extern char catdir[64]="/data/catalogs";
+extern int ctgread (char *catfile, int refcat, int distsort, double cra,
+                    double cdec, double dra, double ddec, double drad,
+                    double dradi, int sysout, double eqout, double epout,
+                    double mag1, double mag2, int sortmag, int nsmax, 
+                    struct StarCat **starcat, double *tnum, double *tra,
+                    double *tdec, double *tpra, double *tpdec, double **tmag,
+                    int *tc, char **tobj, int nlog);
+
+extern struct StarCat * ty2open (int nstar, int nread);
+
+extern char catdir;
+%}
 
 #define MAX_LTOK	80
 
@@ -234,7 +235,7 @@ double **new2D_DoubleArray (int rows, int cols, double init_value)
 
 char **new2D_charArray (int rows, int cols, char *init_value)
 {
-   int i,j;
+   int i;
    char **new2D;
 
    new2D = (char **)malloc(rows*sizeof(char *));
@@ -250,14 +251,4 @@ char **nullStringArray() {
    return (NULL);
 }
 %}
-
-extern int ctgread (char *catfile, int refcat, int distsort, double cra,
-                    double cdec, double dra, double ddec, double drad,
-                    double dradi, int sysout, double eqout, double epout,
-                    double mag1, double mag2, int sortmag, int nsmax, 
-                    struct StarCat **starcat, double *tnum, double *tra,
-                    double *tdec, double *tpra, double *tpdec, double **tmag,
-                    int *tc, char **tobj, int nlog);
-
-extern struct StarCat * ty2open (int nstar, int nread);
 

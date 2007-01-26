@@ -44,7 +44,7 @@ Review tester code to see how to catch exceptions
 
 import sys
 import os
-from fw.Catalog.ctgread import *
+from lsst.fw.Catalog.ctgread import *
 # access via:  ctgread()
 #--------------------------------------------------------------
 

@@ -5,7 +5,7 @@ TestPolicy
 Description
     Tests the Policy class
 """
-from fw.Policy import Policy
+from lsst.fw.Policy import Policy
 
 import sys
 import os

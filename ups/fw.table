@@ -1,6 +1,3 @@
-setupRequired(support)
-setupRequired(wcstools v3_6_2)
-setupOptional(pyfits)
-setupOptional(pycore)
-
+setupOptional("Numarray")
+setupOptional("PyFITS")
 envAppend(PYTHONPATH, ${PRODUCT_DIR}/python)
