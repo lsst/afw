@@ -6,7 +6,7 @@ import glob, os
 import LSST.SConsUtils as scons
 
 env = scons.makeEnv("fw",
-                    r"$HeadURL: svn+ssh://lsstarchive.ncsa.uiuc.edu/DC2/fw/branches/scons/SConstruct $",
+                    r"$HeadURL$",
                     [["python", "Python.h"],
                      ["boost", "boost/version.hpp"],
                      ["support"],
