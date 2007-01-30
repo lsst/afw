@@ -1,21 +1,21 @@
 #include <iostream>
-#include "sharedPointers.h"
+#include "Citizen.h"
 
-class Shoe : lsst::citizen {
+class Shoe : lsst::Citizen {
 public:
     Shoe() {
     }
-    Shoe(const char *file, int line) : lsst::citizen(file, line) {
+    Shoe(const char *file, int line) : lsst::Citizen(file, line) {
     }
-    Shoe(const char *file, int line, int) : lsst::citizen(file, line) {
+    Shoe(const char *file, int line, int) : lsst::Citizen(file, line) {
     }
     ~Shoe() { }
 };
 
-class MyClass : lsst::citizen {
+class MyClass : lsst::Citizen {
   public:
     MyClass(const char *file, int line) :
-        lsst::citizen(file, line),
+        lsst::Citizen(file, line),
         ptr(new int) {
         *ptr = 0;
     }
@@ -30,7 +30,7 @@ private:
 using namespace lsst;
 
 MyClass *foo() {
-    lsst::SCOPED_PTR(Shoe, x, NEW(Shoe, 1));
+    SCOPED_PTR(Shoe, x, NEW(Shoe, 1));
 #if 1
     MyClass *my_instance = NEW(MyClass);
 #else
@@ -38,52 +38,52 @@ MyClass *foo() {
 #endif
 
     std::cout << "In foo\n";
-    citizen::census(std::cout);
+    Citizen::census(std::cout);
 
     return my_instance;
 }
 
-citizen::memId newCallback(const citizen *ptr) {
+Citizen::memId newCallback(const Citizen *ptr) {
     std::cout << boost::format("\tRHL Allocating memId %s\n") % ptr->repr();
     
     return 1;                           // trace all subsequent allocs
 }
 
-citizen::memId deleteCallback(const citizen *ptr) {
+Citizen::memId deleteCallback(const Citizen *ptr) {
     std::cout << boost::format("\tRHL Freeing memId %s\n") % ptr->repr();
     
     return 0;
 }
 
 int main() {
-    (void)lsst::citizen::setNewCallbackId(6);
-    (void)lsst::citizen::setDeleteCallbackId(3);
-    (void)lsst::citizen::setNewCallback(newCallback);
-    (void)lsst::citizen::setDeleteCallback(deleteCallback);
+    (void)lsst::Citizen::setNewCallbackId(6);
+    (void)lsst::Citizen::setDeleteCallbackId(3);
+    (void)lsst::Citizen::setNewCallback(newCallback);
+    (void)lsst::Citizen::setDeleteCallback(deleteCallback);
 
-    lsst::SCOPED_PTR(Shoe, x, NEW(Shoe));
-    lsst::SCOPED_PTR(Shoe, y, new Shoe);
+    SCOPED_PTR(Shoe, x, NEW(Shoe));
+    SCOPED_PTR(Shoe, y, new Shoe);
     Shoe *z = NEW(Shoe);
 
     MyClass *my_instance = foo();
 
-    std::cout << boost::format("In main (%d objects)\n") % citizen::census(0);
+    std::cout << boost::format("In main (%d objects)\n") % Citizen::census(0);
 
-    //boost::scoped_ptr<const std::vector<const citizen *> > leaks(citizen::census());
-    const std::vector<const citizen *> *leaks = citizen::census();
-    for (std::vector<const citizen *>::const_iterator cur = leaks->begin();
+    //boost::scoped_ptr<const std::vector<const Citizen *> > leaks(Citizen::census());
+    const std::vector<const Citizen *> *leaks = Citizen::census();
+    for (std::vector<const Citizen *>::const_iterator cur = leaks->begin();
          cur != leaks->end(); cur++) {
         std::cerr << boost::format("    %s\n") % (*cur)->repr();
     }
-    delete leaks;
+    delete leaks;                       // not needed with scoped_ptr
 
     x.reset();
     y.reset();
     delete my_instance;
     delete z;
 
-    std::cout << boost::format("In main (%d objects)\n") % citizen::census(0);
-    citizen::census(std::cout);
+    std::cout << boost::format("In main (%d objects)\n") % Citizen::census(0);
+    Citizen::census(std::cout);
     
     return 0;
 }

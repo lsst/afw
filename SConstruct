@@ -16,6 +16,7 @@ env = scons.makeEnv("fw",
 # Build/install things
 #
 SConscript("examples/SConscript")
+SConscript("doc/SConscript")
 SConscript("lib/SConscript")
 SConscript("src/SConscript")
 SConscript("python/lsst/fw/Catalog/SConscript")

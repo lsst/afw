@@ -2,4 +2,4 @@
 Import('env')
 
 env.SharedLibrary('citizen', map(lambda str: "../src/" + str,
-				 Split("sharedPointers.cc")))
+				 Split("Citizen.cc")))
