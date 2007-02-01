@@ -8,7 +8,8 @@ import LSST.SConsUtils as scons
 env = scons.makeEnv("fw",
                     r"$HeadURL$",
                     [["python", "Python.h"],
-                     ["boost", "boost/version.hpp"],
+                     ["boost", "boost/version.hpp", "boost_filesystem"],
+                     ["visionWorkbench", "vw/vw.h", "vw"],
                      ["support"],
                      ["wcstools", "wcs.h", "wcs", "wcscat"],
                      ])
