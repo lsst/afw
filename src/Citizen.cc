@@ -1,4 +1,5 @@
-//! \file Implementation of Citizen
+//! \file
+//! \brief Implementation of Citizen
 
 #include <iostream>
 #include "Citizen.h"
