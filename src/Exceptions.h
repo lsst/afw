@@ -5,12 +5,12 @@
 //! \file
 //! \brief An exception class that provides a string with details
 namespace lsst {
-    class exception : std::exception {
+    class Exception : std::exception {
     public:
-        exception(const std::string msg) throw() {
+        Exception(const std::string msg) throw() {
             _msg = new std::string(msg);
         }
-        ~exception() throw() {};
+        ~Exception() throw() {};
 
         //! Return the details of the exception
         const std::string &getMsg() const { return *_msg; }
@@ -19,9 +19,9 @@ namespace lsst {
     };
 
     //! A bad_alloc class parallel to std::bad_alloc
-    class bad_alloc : public exception {
+    class bad_alloc : public Exception {
     public:
-        bad_alloc(const std::string msg) throw() : exception(msg) {};
+        bad_alloc(const std::string msg) throw() : Exception(msg) {};
     };
 }
 #endif
