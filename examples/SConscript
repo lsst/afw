@@ -1,4 +1,14 @@
 # -*- python -*-
 Import('env')
 
+libs = dict([
+	("boost",	Split("boost_filesystem-d")),
+	("fits",	Split("fitsio cfitsio")),
+	("vw",		Split("vw vwCore vwFileIO")),
+	])
+
 env.Program('sharedPointers', ["sharedPointersExample.cc"], LIBS="citizen")
+env.Program("generate", ["generate.cc"],
+	    LIBS=["citizen"] + libs["vw"] + Split("vwMosaic vwImage") + libs["boost"])
+env.Program("vwconvert", ["vwconvert.cc"], LIBS=libs["vw"])
+env.Program("fitsio", ["fitsio.cc"], LIBS=libs["vw"] + libs["fits"])

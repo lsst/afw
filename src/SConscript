@@ -2,11 +2,4 @@
 #
 # Note: the shared libraries are built in ../lib
 #
-Import('env')
-
-vw_libs = ["vw", "vwCore", "vwFileIO", "vwMosaic"]
-boost_libs =  ["boost_filesystem-d"]
-libs = ["citizen"] + vw_libs + boost_libs
-
-env.Program('generate', ["generate.cc"], LIBS=libs)
-env.Program('vwconvert', ["vwconvert.cc"], LIBS=Split("vw vwCore vwFileIO"))
+Import("env")

@@ -11,6 +11,7 @@ env = scons.makeEnv("fw",
                      ["boost", "boost/version.hpp", "boost_filesystem"],
                      ["visionWorkbench", "vw/vw.h", "vw"],
                      ["support"],
+		     ["cfitsio", "fitsio.h", "cfitsio", "ffopen"],
                      ["wcstools", "wcs.h", "wcs", "wcscat"],
                      ])
 #
