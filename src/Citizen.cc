@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include "Citizen.h"
+#include "Exceptions.h"
 
 using namespace lsst;
 //
@@ -14,6 +15,8 @@ Citizen::Citizen(const char *file,  //!< File where Citizen was allocated
     _id = ++_nextMemId;
     active_Citizens[_id] = this;
 
+    _sentinel = magicSentinel;
+
     if (_id == _newId) {
         _newId += _newCallback(this);
     }
@@ -23,6 +26,8 @@ Citizen::~Citizen() {
         _deleteId += _deleteCallback(this);
     }
 
+    (void)_checkCorruption();
+    
     active_Citizens.erase(_id);
 }
 //
@@ -85,6 +90,30 @@ const std::vector<const Citizen *> *Citizen::census() {
 }
 //@}
 
+//! Check for corruption
+//! Return true if the block is corrupted, but
+//! only after calling the corruptionCallback
+bool Citizen::_checkCorruption() const {
+    if (_sentinel == magicSentinel) {
+        return false;
+    }
+
+    (void)_corruptionCallback(this);
+    return true;
+}
+
+//! Check all allocated blocks for corruption
+bool Citizen::checkCorruption() {
+    for (table::iterator cur = active_Citizens.begin();
+         cur != active_Citizens.end(); cur++) {
+        if (cur->second->_checkCorruption()) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 //! \name callbackIDs
 //! Set callback Ids. The old Id is returned
 //@{
@@ -143,33 +172,53 @@ Citizen::memCallback Citizen::setDeleteCallback(
     return old;
 }
     
+//! Set the DeleteCallback function
+Citizen::memCallback Citizen::setCorruptionCallback(
+	Citizen::memCallback func //!< function be called when block is found to be corrupted
+                                                   ) {
+    Citizen::memCallback old = _corruptionCallback;
+    _corruptionCallback = func;
+
+    return old;
+}
+    
 //! Default callbacks.
 //!
 //! Note that these may well be the target of debugger breakpoints, so e.g. dId
 //! may well be changed behind our back
 //@{
 //! Default NewCallback
-Citizen::memId defaultNewCallback(
-    const Citizen *ptr                  //!< Just-allocated Citizen
-    ) {
+Citizen::memId defaultNewCallback(const Citizen *ptr //!< Just-allocated Citizen
+                                 ) {
     static int dId = 0;             // how much to incr memId
     std::cerr << boost::format("Allocating memId %s\n") % ptr->repr();
 
     return dId;
 }
+
 //! Default DeleteCallback
-Citizen::memId defaultDeleteCallback(
-    const Citizen *ptr                  //!< About-to-be freed Citizen
-    ) {
+Citizen::memId defaultDeleteCallback(const Citizen *ptr //!< About-to-be freed Citizen
+                                    ) {
     static int dId = 0;             // how much to incr memId
     std::cerr << boost::format("Freeing memId %s\n") % ptr->repr();
 
     return dId;
 }
+
+//! Default CorruptionCallback
+Citizen::memId defaultCorruptionCallback(const Citizen *ptr //!< About-to-be freed Citizen
+                              ) {
+    throw lsst::bad_alloc(str(boost::format("Memory block \"%s\" is corrupted") % ptr->repr()));
+
+    return ptr->getId();                // NOTREACHED
+}
+
 //@}
 //
-// Initialise static members.  Could use singleton pattern
+// Initialise static members
 //
+const int Citizen::magicSentinel = 0xdeadbeef;
+
 Citizen::memId Citizen::_nextMemId = 0;
 Citizen::table Citizen::active_Citizens = Citizen::table();
 
@@ -178,3 +227,4 @@ Citizen::memId Citizen::_deleteId = 0;
 
 Citizen::memCallback Citizen::_newCallback = defaultNewCallback;
 Citizen::memCallback Citizen::_deleteCallback = defaultDeleteCallback;
+Citizen::memCallback Citizen::_corruptionCallback = defaultCorruptionCallback;

@@ -1,5 +1,6 @@
 #include <iostream>
 #include "Citizen.h"
+#include "Exceptions.h"
 
 class Shoe : lsst::Citizen {
 public:
@@ -62,7 +63,7 @@ int main() {
     (void)lsst::Citizen::setDeleteCallback(deleteCallback);
 
     SCOPED_PTR(Shoe, x, NEW(Shoe));
-    SCOPED_PTR(Shoe, y, new Shoe);
+    SHARED_PTR(Shoe, y, new Shoe);
     Shoe *z = NEW(Shoe);
 
     MyClass *my_instance = foo();
@@ -80,6 +81,19 @@ int main() {
     x.reset();
     y.reset();
     delete my_instance;
+
+#if 1                                   // Try out the corruption detection
+    ((char *)z)[0] = 0;                 // corrupt the block
+    
+    try {
+        std::cerr << "Checking corruption\n";
+        (void)Citizen::checkCorruption();
+    } catch(lsst::bad_alloc &e) {
+        std::cerr << "Memory check: " << e.getMsg() << "; exiting\n";
+        return 1;
+    }
+#endif
+    
     delete z;
 
     std::cout << boost::format("In main (%d objects)\n") % Citizen::census(0);
