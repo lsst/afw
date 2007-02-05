@@ -5,29 +5,38 @@
 //! \file
 //! \brief An exception class that provides a string with details
 
+#include <exception>
 #include <boost/format.hpp>
 
 namespace lsst {
+    //! Define an exception that saves a string or boost::format
     class Exception : std::exception {
     public:
         Exception(const std::string msg) throw() {
-            _msg = new std::string(msg);
+            _what = new std::string(msg);
         }
         Exception(const boost::format msg) throw() {
-            _msg = new std::string(msg.str());
+            _what = new std::string(msg.str());
         }
         ~Exception() throw() {};
 
         //! Return the details of the exception
-        const std::string &getMsg() const { return *_msg; }
+        const char *what() const throw() { return _what->c_str(); }
     private:
-        const std::string *_msg;
+        const std::string *_what;
     };
 
-    //! A bad_alloc class parallel to std::bad_alloc
-    class bad_alloc : public Exception {
-    public:
-        bad_alloc(const std::string msg) throw() : Exception(msg) {};
-    };
+    //! Define a new subclass NAME of Exception without added functionality
+#define LSST_NEW_EXCEPTION(NAME) \
+    class NAME : public Exception { \
+    public: \
+        NAME(const std::string msg) throw() : Exception(msg) {}; \
+        NAME(const boost::format msg) throw() : Exception(msg) {}; \
+    }
+    
+    //! \brief \name BadAlloc Problem in allocation
+    LSST_NEW_EXCEPTION(BadAlloc);
+    
+#undef LSST_NEW_EXCEPTION
 }
 #endif

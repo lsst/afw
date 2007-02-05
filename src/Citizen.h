@@ -47,7 +47,7 @@ namespace lsst {
         static void census(std::ostream &stream);
         static const std::vector<const Citizen *> *census();
 
-        static bool Citizen::checkCorruption();
+        static bool checkCorruption();
         
         memId getId() const;
         
@@ -80,7 +80,7 @@ namespace lsst {
         static memCallback _deleteCallback;        
         static memCallback _corruptionCallback;        
         //
-        bool Citizen::_checkCorruption() const;
+        bool _checkCorruption() const;
     };
 
     /*! \brief A subclass of boost::SMART_PTR that also subclasses
