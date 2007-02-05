@@ -3,7 +3,7 @@
 
 #include <iostream>
 #include "Citizen.h"
-#include "Exceptions.h"
+#include "Exception.h"
 
 using namespace lsst;
 //

@@ -1,14 +1,20 @@
 // -*- lsst-c++ -*-
-#if !defined(LSST_EXCEPTIONS)      //! multiple inclusion guard macro
-#define LSST_EXCEPTIONS 1
+#if !defined(LSST_EXCEPTION)      //! multiple inclusion guard macro
+#define LSST_EXCEPTION 1
 
 //! \file
 //! \brief An exception class that provides a string with details
+
+#include <boost/format.hpp>
+
 namespace lsst {
     class Exception : std::exception {
     public:
         Exception(const std::string msg) throw() {
             _msg = new std::string(msg);
+        }
+        Exception(const boost::format msg) throw() {
+            _msg = new std::string(msg.str());
         }
         ~Exception() throw() {};
 

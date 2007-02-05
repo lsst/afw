@@ -1,6 +1,6 @@
 #include <iostream>
 #include "Citizen.h"
-#include "Exceptions.h"
+#include "Exception.h"
 
 class Shoe : lsst::Citizen {
 public:

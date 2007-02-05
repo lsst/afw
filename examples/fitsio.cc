@@ -1,5 +1,6 @@
 #include <iostream>
 #include "DiskImageResourceFITS.h"
+#include "Exception.h"
 
 using namespace lsst::fits;
 
