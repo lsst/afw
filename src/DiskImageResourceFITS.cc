@@ -52,12 +52,12 @@ static void _throw_cfitsio_error(const int line,               //!< line in file
 }
 
 /******************************************************************************/
-// Multiply a vw::GenericImageBuffer by a constant
+// Multiply a vw::ImageBuffer by a constant
 // Here's the templated function; the driver that looks up
 // the type comes next
 //
 template<typename PIXTYPE>
-static void _multiplyImageBuffer(vw::GenericImageBuffer const& buff, // the buffer in question
+static void _multiplyImageBuffer(vw::ImageBuffer const& buff, // the buffer in question
                                 double value // the value to multiply by
                                 ) {
     PIXTYPE *data = static_cast<PIXTYPE *>(buff.data);
@@ -67,7 +67,7 @@ static void _multiplyImageBuffer(vw::GenericImageBuffer const& buff, // the buff
     }
 }
 
-static void multiplyImageBuffer(vw::GenericImageBuffer const& buff, // the buffer in question
+static void multiplyImageBuffer(vw::ImageBuffer const& buff, // the buffer in question
                                 double value // the value to multiply by
                                ) {
 
@@ -138,7 +138,7 @@ DiskImageResourceFITS::DiskImageResourceFITS(std::string const& filename //!< fi
 }
 
 DiskImageResourceFITS::DiskImageResourceFITS(std::string const& filename, 
-                                             vw::GenericImageFormat const& format
+                                             vw::ImageFormat const& format
                                             ) : vw::DiskImageResource(filename) {
     _fd = 0;
     create(filename, format);
@@ -255,7 +255,7 @@ void DiskImageResourceFITS::open(std::string const& filename //!< Desired filena
 
 //! Bind the resource to a file for writing.
 void DiskImageResourceFITS::create(std::string const& filename, //!< file to write
-                                   vw::GenericImageFormat const& format //!< format. What is this??
+                                   vw::ImageFormat const& format //!< format. What is this??
                                   ) {
     if (format.planes != 1)
         throw vw::NoImplErr() << "We don't support multi-plane images";
@@ -306,13 +306,17 @@ void DiskImageResourceFITS::create(std::string const& filename, //!< file to wri
 }
 
 //! Read the disk image into the given buffer.
-void DiskImageResourceFITS::read_generic(
-                                         vw::GenericImageBuffer const& dest
-                                        ) const {
+void DiskImageResourceFITS::read(vw::ImageBuffer const& dest, //!< Where to put the image
+                                 vw::BBox2i const& bbox //!< Desired bounding box
+                                ) const {
     int status = 0;			// cfitsio function return status
 
     VW_ASSERT(dest.format.cols == cols() && dest.format.rows == rows(),
               vw::IOErr() << "Buffer has wrong dimensions in FITS read.");
+
+    if (_hdu != 0) {
+        throw vw::IOErr() << str(boost::format("Non-default HDUs are not yet supported: %d") % _hdu);
+    }
 
     fitsfile *fd = static_cast<fitsfile *>(_fd); // cfitsio file descriptor
     // Allocate the input buffer, and prepare to read
@@ -332,7 +336,7 @@ void DiskImageResourceFITS::read_generic(
      */
 
     // Set up a generic image buffer around the raw fits data
-    vw::GenericImageBuffer src;
+    vw::ImageBuffer src;
     src.data = buf.get();
     src.format = m_format;
     
@@ -352,10 +356,11 @@ void DiskImageResourceFITS::read_generic(
 }
 
 //! Write the given buffer into the disk image.
-void DiskImageResourceFITS::write_generic(vw::GenericImageBuffer const& src //!< the buffer to write
-                                         ) {
+void DiskImageResourceFITS::write(vw::ImageBuffer const& src, //!< the buffer to write
+                                  vw::BBox2i const& bbox              //!< Desired bounding box
+                                 ) {
     VW_ASSERT(src.format.cols == cols() && src.format.rows == rows(),
-               vw::IOErr() << "Buffer has wrong dimensions in FITS write." );
+              vw::IOErr() << "Buffer has wrong dimensions in FITS write." );
 
     fitsfile *fd = static_cast<fitsfile *>(_fd); // cfitsio file descriptor
     
@@ -363,7 +368,7 @@ void DiskImageResourceFITS::write_generic(vw::GenericImageBuffer const& src //!<
     const int npix = cols()*rows();     // number of pixels in image
     const int sizeof_pixel = vw::channel_size(_channelType);
 
-    vw::GenericImageBuffer dest;
+    vw::ImageBuffer dest;
     boost::scoped_array<char> buf(new char[npix*sizeof_pixel]);
     dest.data = buf.get();
     dest.format = m_format;
@@ -413,7 +418,7 @@ vw::DiskImageResource* DiskImageResourceFITS::construct_open(std::string const& 
 
 //! A FileIO hook to open a file for writing
 vw::DiskImageResource* DiskImageResourceFITS::construct_create(std::string const& filename,
-                                                               vw::GenericImageFormat const& format) {
+                                                               vw::ImageFormat const& format) {
     return new DiskImageResourceFITS(filename, format);
 }
 
