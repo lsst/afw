@@ -88,7 +88,7 @@ int main() {
     try {
         std::cerr << "Checking corruption\n";
         (void)Citizen::checkCorruption();
-    } catch(lsst::BadAlloc &e) {
+    } catch(lsst::Memory &e) {
         std::cerr << "Memory check: " << e.what() << "; exiting\n";
         return 1;
     }

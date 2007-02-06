@@ -208,7 +208,7 @@ Citizen::memId defaultDeleteCallback(const Citizen *ptr //!< About-to-be freed C
 //! Default CorruptionCallback
 Citizen::memId defaultCorruptionCallback(const Citizen *ptr //!< About-to-be freed Citizen
                               ) {
-    throw lsst::BadAlloc(str(boost::format("Memory block \"%s\" is corrupted") % ptr->repr()));
+    throw lsst::Memory(str(boost::format("Memory block \"%s\" is corrupted") % ptr->repr()));
 
     return ptr->getId();                // NOTREACHED
 }
