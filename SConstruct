@@ -3,7 +3,7 @@
 # Setup our environment
 #
 import glob, os
-import LSST.SConsUtils as scons
+import lsst.SConsUtils as scons
 
 env = scons.makeEnv("fw",
                     r"$HeadURL$",
