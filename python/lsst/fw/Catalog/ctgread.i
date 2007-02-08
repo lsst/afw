@@ -233,10 +233,9 @@ double **new2D_DoubleArray (int rows, int cols, double init_value)
 
 char **new2D_charArray (int rows, int cols, char *init_value)
 {
-   int i,j;
-   char **new2D;
+   int i;
+   char **new2D = (char **)malloc(rows*sizeof(char *));
 
-   new2D = (char **)malloc(rows*sizeof(char *));
    for (i=0; i < rows; i++) {
       new2D[i] = (char *)malloc (cols*sizeof(char));
    }
