@@ -1,5 +1,12 @@
+setupRequired(scons)
+setupRequired(boost)
+setupRequired(visionWorkbench)
+setupRequired(cfitsio)
+setupRequired(wcstools v3_6_2)
+
 setupOptional("Numarray")
 setupOptional("PyFITS")
+
 envAppend(LD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
 envAppend(PYTHONPATH, ${PRODUCT_DIR}/python)
 
