@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vw/Image/Manipulation.h>
 #include "DiskImageResourceFITS.h"
 #include "Exception.h"
 
@@ -21,13 +22,19 @@ int main(int ac, char **av) {
     }
 
     int r = 1;
-    int c = 42;
-    for (int dr = 1; dr >= -1; dr--) {
+    int c = 41;
+    const int nrow = 3;
+    const int ncol = 3;
+    my_image_type::pixel_accessor row(vw::crop(image, c - 1, r - 1, ncol, nrow).impl().origin());
+    for (int dr = -1; dr < nrow - 1; dr++) {
+        my_image_type::pixel_accessor col = row;
         std::cout << r + dr << "  ";
-        for (int dc = -1; dc <= 1; dc++) {
-            std::cout << image(c + dc, r + dr) << " ";
+        for (int dc = -1; dc < ncol - 1; dc++) {
+            std::cout << *col << " ";
+            col.next_col();
         }
         std::cout << "\n";
+        row.next_row();
     }
 
 #if 0

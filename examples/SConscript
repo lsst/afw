@@ -7,10 +7,10 @@ libs = dict([
 	("vw",		Split("vw vwCore vwFileIO")),
 	])
 
-env.Program('sharedPointers', ["sharedPointersExample.cc"], LIBS="citizen")
+env.Program("sharedPointers", ["sharedPointersExample.cc"], LIBS="citizen")
 env.Program(["generate.cc"],
 	    LIBS=["citizen"] + libs["vw"] + Split("vwMosaic vwImage") + libs["boost"])
 env.Program(["vwconvert.cc"], LIBS=libs["vw"])
 env.Program(["fitsio.cc"], LIBS=libs["vw"] + libs["fits"])
 env.Program(["exceptions.cc"])
-
+env.Program("trace", ["traceExample.cc"], LIBS="citizen")

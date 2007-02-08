@@ -2,6 +2,6 @@
 Import('env')
 
 env.SharedLibrary('citizen', map(lambda str: "../src/" + str,
-				 Split("Citizen.cc")))
+				 Split("Citizen.cc trace.cc")))
 env.SharedLibraryIncomplete('fitsio', map(lambda str: "../src/" + str,
 					  Split("DiskImageResourceFITS.cc")))
