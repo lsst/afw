@@ -1,6 +1,7 @@
 // -*- lsst-c++ -*-
-/*!
- *  \brief basic run-time trace facilities
+/*
+ * \file
+ * basic run-time trace facilities
  *
  *  A class to print trace messages from code, with controllable verbosity
  *
@@ -11,9 +12,6 @@
 
 #include <iostream>
 #include <string>
-#include <map>
-
-#include <boost/tokenizer.hpp>
 #include <boost/format.hpp>
 
 #include "Utils.h"
@@ -22,11 +20,20 @@ LSST_START_NAMESPACE(lsst)
 LSST_START_NAMESPACE(utils)
 
 #if !defined(LSST_NO_TRACE)
-#  define LSST_NO_TRACE 0               //!< to turn off all tracing
+#  define LSST_NO_TRACE 0               //!< True => turn off all tracing
 #endif
-    
+/*!
+ * \brief A simple implementation of a tracing facility for LSST
+ *
+ * Tracing is controlled on a per "component" basis, where a "component" is a
+ * name of the form aaa.bbb.ccc where aaa is the Most significant part; for
+ * example, the utilities library might be called "utils", the doubly-linked
+ * list "utils.dlist", and the code to destroy a list "utils.dlist.del" 
+ */
 class Trace {
 public:
+    Trace();
+
 #if LSST_NO_TRACE
     static void trace(const std::string &comp, const int verbosity,
                       const std::string &msg) {}
@@ -40,47 +47,25 @@ public:
 #endif
 
     static void reset();
-    static int getVerbosity(const std::string &name);
-    static void setVerbosity(const char *comp,
-                             const int verbosity);
+    static void setVerbosity(const char *name, const int verbosity);
 
     static void printVerbosity();
 
     static void setDestination(std::ostream &fp);
 private:
-    Trace(const std::string &name,  //!< name of component
-          int verbosity = Trace::UNKNOWN_LEVEL //!< associated verbosity
-         );
-    ~Trace();
+    class Component;
+    static Component *_root;            //!< the root of the Component tree
 
-    typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
-    typedef std::map<const std::string, Trace *> comp_map; //!< sub components
-
-    std::string *_name;			//!< last part of name of this component
-    int _verbosity;                     //!< verbosity for this component
-    comp_map *_subcomp;                 //!< next level of subcomponents
-
-    const static std::string Trace::NO_CACHE; //!< There is no valid cache
-    const static int UNKNOWN_LEVEL;     //!< we don't know this name's verbosity
-
-    static Trace *_root;                //!< root of the trace component tree
-
+    static std::string _separator;      //!< path separation character
     static std::ostream *_traceStream;  //!< output stream for traces
-    //! Properties cached for efficiency
-    static int _highest_verbosity;              //!< highest verbosity requested
-    static std::string _cachedName;             //!< last name looked up
-    static int _cachedVerbosity;        //!< verbosity of last looked up name
 
-    static void init();
-    static void setHighestVerbosity(const Trace *comp);
-    static void add(Trace &comp, const std::string &name, int verbosity);
-    static void doAdd(Trace &comp,
-                      tokenizer::iterator token, const tokenizer::iterator end,
-                      int verbosity);
-    static void doPrintVerbosity(const Trace &comp, int depth);
-    static int doGetVerbosity(const Trace &comp,
-                              tokenizer::iterator token,
-                              const tokenizer::iterator end);
+    static int getVerbosity(const std::string &name);
+
+    //! Properties cached for efficiency
+    static int _HighestVerbosity;         //!< highest verbosity requested
+    static bool _cacheIsValid;            //!< Is the cache valid?
+    static std::string _cachedName;       //!< last name looked up
+    static int _cachedVerbosity;          //!< verbosity of last looked up name
 };
 
 LSST_END_NAMESPACE(utils)

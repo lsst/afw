@@ -1,97 +1,114 @@
 /*!
- * \brief A simple implementation of a tracing facility for LSST
- *
- * Tracing is controlled on a per "component" basis, where a "component" is a
- * name of the form aaa.bbb.ccc where aaa is the Most significant part; for
- * example, the utilities library might be called "utils", the doubly-linked
- * list "utils.dlist", and the code to destroy a list "utils.dlist.del" 
+ * \file
  */
+#include <map>
+
+#include <boost/tokenizer.hpp>
+
 #include "Trace.h"
 
+/*
+ * \brief Document namespace
+ */
 using namespace lsst::utils;
 
 /*****************************************************************************/
-/*
- * A component is a string of the form aaa.bbb.ccc, and may itself
- * contain further subcomponents. The Trace structure doesn't
- * in fact contain its full name, but only the last part.
+/*!
+ * \brief A node in the Trace system
  */
-Trace::Trace(const std::string &name,      //!< name of component
-             int verbosity                     //!< associated verbosity
-            ) {
+class Trace::Component {
+public:
+    Component(const std::string &name = "", int verbosity=0);
+    ~Component();
+
+    void add(const std::string &name, int verbosity,
+             const std::string &separator);
+
+    int getVerbosity(const std::string &name,
+                     const std::string &separator);
+    int highestVerbosity(int highest=0);
+    void printVerbosity(int depth = 0);
+private:
+    typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
+    typedef std::map<const std::string, Component *> comp_map; //!< subcomponents
+
+    const static int UNKNOWN_LEVEL;     //!< we don't know this name's verbosity
+
+    std::string *_name;			//!< last part of name of this component
+    int _verbosity;                     //!< verbosity for this component
+    comp_map *_subcomp;                 //!< next level of subcomponents
+
+    void add(tokenizer::iterator token,
+             const tokenizer::iterator end,
+             int verbosity);
+    int getVerbosity(tokenizer::iterator token,
+                     const tokenizer::iterator end);
+};
+
+/*****************************************************************************/
+
+const int Trace::Component::UNKNOWN_LEVEL = -9999;
+
+/*!
+ * Create a component of the trace tree
+ *
+ * A name is a string of the form aaa.bbb.ccc, and may itself contain further
+ * subcomponents. The Component structure doesn't in fact contain its full name,
+ * but only the first part.
+ *
+ * The reason for this is inheritance --- verbosity is inherited, but may be
+ * overriden.  For example, if "foo" is at level 2 then "foo.goo.hoo" is taken
+ * to be at level 2 unless set specifically -- but this inheritance is dynamic
+ * (so changing "foo" to 3 changes "foo.goo.hoo" too).  However, I may also set
+ * "foo.goo.hoo" explicitly, in which case "foo"'s value is irrelevant --- but
+ * "foo.goo" continues to inherit it.
+ */
+Trace::Component::Component(const std::string &name, //!< name of component
+                            int verbosity            //!< associated verbosity
+                ) {
     _name = new std::string(name);
     _verbosity = verbosity;
     _subcomp = new(comp_map);
 }
 
-Trace::~Trace() {
+Trace::Component::~Component() {
     delete _subcomp;
     delete _name;
 }
 
-//! Initialise the trace system
-void Trace::init() {
-    if (_root == 0) {
-        _root = new Trace("");
-    }
-}
-
-const int Trace::UNKNOWN_LEVEL = -9999;
-const std::string Trace::NO_CACHE = "\a";
-
-Trace *Trace::_root = 0;
-std::ostream *Trace::_traceStream = 0;
-
-/******************************************************************************/
-/*
- * The trace verbosity cache
- */
-int Trace::_highest_verbosity = 0;
-std::string Trace::_cachedName = NO_CACHE;
-int Trace::_cachedVerbosity;
-
-/******************************************************************************/
-//! Reset the entire trace system
-void Trace::reset() {
-    delete _root;
-    _root = 0;
-}
-
-/*****************************************************************************/
-/*
+/*!
  * Add a new component to the tree
  */
-void Trace::add(Trace &comp,          //!< Where to add component
-                    const std::string &name,  //!< The name of the component
-                    int verbosity                 //!< The component's verbosity verbosity
-                   ) {
+void Trace::Component::add(const std::string &name,  //!< Component's name
+                           int verbosity, //!< The component's verbosity
+                           const std::string &separator //!< path separator
+                          ) {
     //
     // Prepare to parse name
     //
-    boost::char_separator<char> sep(".");
+    boost::char_separator<char> sep(separator.c_str());
     tokenizer components(name, sep);
     tokenizer::iterator token = components.begin();
     const tokenizer::iterator end = components.end();
 
     if (token != end) {
-        doAdd(comp, token, end, verbosity);
+        add(token, end, verbosity);
     }
 }
 
-void Trace::doAdd(Trace &comp,          //!< Where to add component
-                      tokenizer::iterator token, //!< parts of name
-                      const tokenizer::iterator end, //!< end of name
-                      int verbosity                 //!< The component's verbosity verbosity
+void Trace::Component::add(tokenizer::iterator token, //!< parts of name
+                           const tokenizer::iterator end, //!< end of name
+                           int verbosity                 //!< The component's verbosity
                      ) {
     const std::string cpt0 = *token++;  // first component of name
     //
     // Does first part of path match this verbosity?
     //
-    if (*comp._name == cpt0) {          // a match
+    if (*_name == cpt0) {          // a match
 	if (token == end) {
-	    comp._verbosity = verbosity;
+	    _verbosity = verbosity;
 	} else {
-            doAdd(comp, token, end, verbosity);
+            add(token, end, verbosity);
 	}
 	
 	return;
@@ -99,12 +116,12 @@ void Trace::doAdd(Trace &comp,          //!< Where to add component
     //
     // Look for a match for cpt0 in this verbosity's subcomps
     //
-    comp_map::iterator iter = comp._subcomp->find(cpt0);
-    if (iter->second != 0) {
+    comp_map::iterator iter = _subcomp->find(cpt0);
+    if (iter != _subcomp->end()) {
         if (token == end) {
             iter->second->_verbosity = verbosity;
         } else {
-            doAdd(*iter->second, token, end, verbosity);
+            iter->second->add(token, end, verbosity);
         }
 
         return;
@@ -112,119 +129,85 @@ void Trace::doAdd(Trace &comp,          //!< Where to add component
     /*
      * No match; add cpt0 to this verbosity
      */
-    Trace *fcpt0 = new Trace(cpt0);
-    (*comp._subcomp)[*fcpt0->_name] = fcpt0;
+    Component *fcpt0 = new Component(cpt0);
+    (*_subcomp)[*fcpt0->_name] = fcpt0;
 
     if (token == end) {
 	fcpt0->_verbosity = verbosity;
     } else {
-        doAdd(*fcpt0, token, end, verbosity);
+        fcpt0->add(token, end, verbosity);
     }
-}
-
-/*****************************************************************************/
-/*
- * Find the highest verbosity present in the tree
- */
-void Trace::setHighestVerbosity(const Trace *comp) {
-    if (comp->_verbosity > _root->_highest_verbosity) {
-	_root->_highest_verbosity = comp->_verbosity;
-    }
-    
-    for (comp_map::iterator iter = comp->_subcomp->begin();
-         iter != comp->_subcomp->end(); iter++) {
-	setHighestVerbosity(iter->second);
-    }
-}
-
-/*****************************************************************************/
-
-void Trace::setVerbosity(const char *comp, //!< component of interest
-                         const int verbosity //!< desired trace verbosity
-                        ) {
-    init();
-
-    if (*comp == '.') {			// skip initial '.'
-	comp++;
-    }
-    
-    _cachedName = NO_CACHE;             // invalidate cache
-    
-    add(*_root, comp, verbosity);
-
-    if (verbosity > _highest_verbosity) {
-	_highest_verbosity = verbosity;
-    } else {
-	_highest_verbosity = Trace::UNKNOWN_LEVEL;
-	setHighestVerbosity(_root);
-    }
-}
-
-/*****************************************************************************/
-/*
- * Return a trace verbosity given a name
- */
-int Trace::doGetVerbosity(const Trace &comp, //!< end of component to search
-                          tokenizer::iterator token, const tokenizer::iterator end
-                         ) {
-    const std::string cpt0 = *token++;				// first component of name
-    /*
-     * Look for a match for cpt0 in this verbosity's subcomps
-     */
-    comp_map::iterator iter = comp._subcomp->find(cpt0);
-    if (iter->second != 0) {
-        int verbosity;
-        if (token == end) {
-            verbosity = iter->second->_verbosity;
-        } else {
-            verbosity = doGetVerbosity(*iter->second, token, end);
-        }
-
-        return (verbosity == Trace::UNKNOWN_LEVEL) ? comp._verbosity : verbosity;
-    }
-    /*
-     * No match. This is as far as she goes
-     */
-    return comp._verbosity;
-}
-
-int Trace::getVerbosity(const std::string &name	// component of interest
-                       ) {
-    init();
-    //
-    // Is name cached?
-    //
-    if (name == _cachedName) {
-	return _cachedVerbosity;
-    }
-    //
-    // Prepare to parse name
-    //
-    boost::char_separator<char> sep(".");
-    tokenizer components(name, sep);
-    tokenizer::iterator token = components.begin();
-
-    const int verbosity = doGetVerbosity(*_root, token, components.end());
-
-    _cachedName = name;
-    _cachedVerbosity = verbosity;
-
-    return verbosity;
 }
 
 /*****************************************************************************/
 /*!
- * Print a tree of trace verbositys
+ * Return the highest verbosity rooted at comp
  */
-void Trace::printVerbosity() {
-    init();
+int Trace::Component::highestVerbosity(int highest //!< minimum verbosity to return
+                           ) {
+    if (_verbosity > highest) {
+	highest = _verbosity;
+    }
+    
+    for (comp_map::iterator iter = _subcomp->begin();
+         iter != _subcomp->end(); iter++) {
+	highest = iter->second->highestVerbosity(highest);
+    }
 
-    doPrintVerbosity(*_root, 0);
+    return highest;
 }
 
-void Trace::doPrintVerbosity(const Trace &comp,
-                              int depth
-                             ) {
+/*****************************************************************************/
+/*!
+ * Return a trace verbosity given a name
+ */
+int Trace::Component::getVerbosity(tokenizer::iterator token,
+                                   const tokenizer::iterator end
+                                  ) {
+    const std::string cpt0 = *token++;  // first component of name
+    /*
+     * Look for a match for cpt0 in this Component's subcomps
+     */
+    comp_map::iterator iter = _subcomp->find(cpt0);
+    if (iter != _subcomp->end()) {
+        int verbosity;
+        if (token == end) {
+            verbosity = iter->second->_verbosity;
+        } else {
+            verbosity = iter->second->getVerbosity(token, end);
+        }
+
+        return (verbosity == UNKNOWN_LEVEL) ? _verbosity : verbosity;
+    }
+    /*
+     * No match. This is as far as she goes
+     */
+    return _verbosity;
+}
+
+//!
+// Return a component's verbosity, from the perspective of this.
+//
+// \sa Trace::Component::getVerbosity
+//
+int Trace::Component::getVerbosity(const std::string &name, // component of interest
+                                   const std::string &separator //!< path separator
+                                  ) {
+    //
+    // Prepare to parse name
+    //
+    boost::char_separator<char> sep(separator.c_str());
+    tokenizer components(name, sep);
+    tokenizer::iterator token = components.begin();
+
+    return getVerbosity(token, components.end());
+}
+
+/*!
+ * Print all the trace verbosities rooted at this
+ */
+void Trace::Component::printVerbosity(int depth
+                                       ) {
     //
     // Print this verbosity
     //
@@ -232,28 +215,106 @@ void Trace::doPrintVerbosity(const Trace &comp,
         std::cerr << ' ';
     }
 
-    const std::string &name =
-        (comp._verbosity == Trace::UNKNOWN_LEVEL) ? "." : *comp._name;
+    const std::string &name = (_verbosity == UNKNOWN_LEVEL) ? "." : *_name;
     std::cerr << name;
-    for (int i = 0; i < 20 - depth - name.size(); i++) {
+    for (int i = 0; i < 20 - depth - static_cast<int>(name.size()); i++) {
         std::cerr << ' ';
     }
     
-    const int verbosity = comp._verbosity;
-    if (verbosity != Trace::UNKNOWN_LEVEL) {
-        std::cerr << verbosity;
+    if (_verbosity != UNKNOWN_LEVEL) {
+        std::cerr << _verbosity;
     }
     std::cerr << "\n";
     //
-    // And other verbositys  too
+    // And other verbosities  too
     //
-    for (comp_map::iterator iter = comp._subcomp->begin();
-         iter != comp._subcomp->end(); iter++) {
-        doPrintVerbosity(*iter->second, depth + 1);
+    for (comp_map::iterator iter = _subcomp->begin();
+         iter != _subcomp->end(); iter++) {
+        iter->second->printVerbosity(depth + 1);
     }
 }
 
 /*****************************************************************************/
+//! Create the one true trace tree
+    
+Trace::Trace() {
+    if (_root == 0) {
+        _root = new Component();
+        _traceStream = &std::cerr;
+        _separator = ".";
+    }
+}
+
+Trace::Component *Trace::_root = 0;
+std::string Trace::_separator;
+std::ostream *Trace::_traceStream;
+
+static Trace::Trace *_root = new Trace(); // the singleton
+
+/******************************************************************************/
+/*
+ * The trace verbosity cache
+ */
+int Trace::_HighestVerbosity = 0;
+bool Trace::_cacheIsValid = false;
+std::string Trace::_cachedName = "";
+int Trace::_cachedVerbosity;
+
+/******************************************************************************/
+//! Reset the entire trace system
+
+void Trace::reset() {
+    delete _root;
+    _root = new Component;
+}
+/*!
+ * Set a component's verbosity
+ */
+void Trace::setVerbosity(const char *name, //!< component of interest
+                         const int verbosity //!< desired trace verbosity
+                        ) {
+    _cacheIsValid = false;
+    
+    _root->add(name, verbosity, _separator);
+
+    if (verbosity > _HighestVerbosity) {
+	_HighestVerbosity = verbosity;
+    } else {
+	_HighestVerbosity = _root->highestVerbosity();
+    }
+
+    std::cerr << boost::format("%s: Highest verb is %d\n")
+        % name % _HighestVerbosity;
+}
+
+//!
+// Return a component's verbosity
+//
+int Trace::getVerbosity(const std::string &name	// component of interest
+                       ) {
+    //
+    // Is name cached?
+    //
+    if (_cacheIsValid && name == _cachedName) {
+	return _cachedVerbosity;
+    }
+
+    const int verbosity = _root->getVerbosity(name, _separator);
+
+    _cachedName = name;
+    _cachedVerbosity = verbosity;
+    _cacheIsValid = true;
+    
+    return verbosity;
+}
+
+/*!
+ * Print all the trace verbosities
+ */
+void Trace::printVerbosity() {
+    _root->printVerbosity();
+}
+
 /*!
  * Change where traces go
  *
@@ -267,28 +328,24 @@ void Trace::setDestination(std::ostream &fp) {
     _traceStream = &fp;
 }
 
-/*****************************************************************************/
 /*!
  * Actually generate the trace message. Note that psTrace dealt with
  * prepending appropriate indentation
  */
 #if !LSST_NO_TRACE
-void Trace::trace(const std::string &comp,	//!< component being traced
+void Trace::trace(const std::string &name,	//!< component being traced
                   const int verbosity,		//!< desired trace verbosity
                   const boost::format &msg      //!< trace message
                  ) {
-    trace(comp, verbosity, msg.str());
+    trace(name, verbosity, msg.str());
 }
 
-void Trace::trace(const std::string &comp,	//!< component being traced
+void Trace::trace(const std::string &name,	//!< component being traced
                   const int verbosity,		//!< desired trace verbosity
                   const std::string &msg        //!< trace message
                  ) {
-    if (verbosity <= _highest_verbosity &&
-        Trace::getVerbosity(comp) >= verbosity) {
-        if (_traceStream == 0) {	// not initialised
-            _traceStream = &std::cerr;
-	}
+    if (verbosity <= _HighestVerbosity &&
+        Trace::getVerbosity(name) >= verbosity) {
 	for (int i = 0; i < verbosity; i++) {
             *_traceStream << ' ';
 	}
