@@ -3,8 +3,6 @@
  * \file
  * basic run-time trace facilities
  *
- *  A class to print trace messages from code, with controllable verbosity
- *
  *  \author Robert Lupton, Princeton University
  */
 #if !defined(LSST_TRACE_H)
@@ -49,7 +47,7 @@ public:
     static void reset();
     static void setVerbosity(const char *name, const int verbosity);
 
-    static void printVerbosity();
+    static void printVerbosity(std::ostream &fp = std::cout);
 
     static void setDestination(std::ostream &fp);
 private:

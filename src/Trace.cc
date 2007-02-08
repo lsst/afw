@@ -5,7 +5,7 @@
 
 #include <boost/tokenizer.hpp>
 
-#include "Trace.h"
+#include "lsst/Trace.h"
 
 /*
  * \brief Document namespace
@@ -27,7 +27,8 @@ public:
     int getVerbosity(const std::string &name,
                      const std::string &separator);
     int highestVerbosity(int highest=0);
-    void printVerbosity(int depth = 0);
+    void printVerbosity(std::ostream &fp, int depth = 0);
+    void setVerbosity(int verbosity) { _verbosity = verbosity; }
 private:
     typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
     typedef std::map<const std::string, Component *> comp_map; //!< subcomponents
@@ -83,6 +84,10 @@ void Trace::Component::add(const std::string &name,  //!< Component's name
                            int verbosity, //!< The component's verbosity
                            const std::string &separator //!< path separator
                           ) {
+    if (name == "") {
+        _root->setVerbosity(verbosity);
+        return;
+    }
     //
     // Prepare to parse name
     //
@@ -206,31 +211,32 @@ int Trace::Component::getVerbosity(const std::string &name, // component of inte
 /*!
  * Print all the trace verbosities rooted at this
  */
-void Trace::Component::printVerbosity(int depth
-                                       ) {
+void Trace::Component::printVerbosity(std::ostream &fp,
+                                      int depth
+                                     ) {
     //
     // Print this verbosity
     //
     for (int i = 0; i < depth; i++) {
-        std::cerr << ' ';
+        fp << ' ';
     }
 
     const std::string &name = (_verbosity == UNKNOWN_LEVEL) ? "." : *_name;
-    std::cerr << name;
+    fp << name;
     for (int i = 0; i < 20 - depth - static_cast<int>(name.size()); i++) {
-        std::cerr << ' ';
+        fp << ' ';
     }
     
     if (_verbosity != UNKNOWN_LEVEL) {
-        std::cerr << _verbosity;
+        fp << _verbosity;
     }
-    std::cerr << "\n";
+    fp << "\n";
     //
-    // And other verbosities  too
+    // And other levels of the hierarchy too
     //
     for (comp_map::iterator iter = _subcomp->begin();
          iter != _subcomp->end(); iter++) {
-        iter->second->printVerbosity(depth + 1);
+        iter->second->printVerbosity(fp, depth + 1);
     }
 }
 
@@ -282,9 +288,6 @@ void Trace::setVerbosity(const char *name, //!< component of interest
     } else {
 	_HighestVerbosity = _root->highestVerbosity();
     }
-
-    std::cerr << boost::format("%s: Highest verb is %d\n")
-        % name % _HighestVerbosity;
 }
 
 //!
@@ -311,8 +314,8 @@ int Trace::getVerbosity(const std::string &name	// component of interest
 /*!
  * Print all the trace verbosities
  */
-void Trace::printVerbosity() {
-    _root->printVerbosity();
+void Trace::printVerbosity(std::ostream &fp) {
+    _root->printVerbosity(fp);
 }
 
 /*!

@@ -1,9 +1,9 @@
 #include <iostream>
 #include <vw/Image/Manipulation.h>
-#include "DiskImageResourceFITS.h"
-#include "Exception.h"
+#include "lsst/DiskImageResourceFITS.h"
+#include "lsst/Exception.h"
 
-using namespace lsst::fits;
+using namespace lsst::image;
 
 int main(int ac, char **av) {
     typedef vw::ImageView<float> my_image_type;
@@ -14,7 +14,7 @@ int main(int ac, char **av) {
     } catch(vw::Exception &e) {
         try {
             std::cerr << av[1] << " is not a registered file type; trying FITS\n";
-            lsst::fits::read(image, av[1]);
+            read(image, av[1]);
         } catch(vw::Exception &e) {
             std::cerr << "Error: " << e.what() << std::endl;
             return 1;
@@ -53,7 +53,7 @@ int main(int ac, char **av) {
 
     my_image_type image2;
     try {
-        lsst::fits::read(image2, av[2]);
+        read(image2, av[2]);
     } catch(vw::Exception &e) {
         std::cerr << "Error: " << e.what() << std::endl;
     }

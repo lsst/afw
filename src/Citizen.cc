@@ -2,8 +2,8 @@
 //! \brief Implementation of Citizen
 
 #include <iostream>
-#include "Citizen.h"
-#include "Exception.h"
+#include "lsst/Citizen.h"
+#include "lsst/Exception.h"
 
 using namespace lsst;
 //

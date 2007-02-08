@@ -6,13 +6,13 @@
 #include <boost/format.hpp>
 #include <vw/Core/Exception.h>
 #include <vw/Image/ImageMath.h>
-#include "DiskImageResourceFITS.h"
+#include "lsst/DiskImageResourceFITS.h"
 
 extern "C" {
 #include "fitsio.h"
 }
 
-using namespace lsst::fits;
+using namespace lsst::image;
 
 //
 // A utility routine to throw an error. Note that the macro form includes
@@ -62,8 +62,9 @@ static void _multiplyImageBuffer(vw::ImageBuffer const& buff, // the buffer in q
                                 ) {
     PIXTYPE *data = static_cast<PIXTYPE *>(buff.data);
 
-    for (int i = 0; i < buff.format.rows*buff.format.cols; i++) {
-        *data++ = static_cast<PIXTYPE>(*data * value);
+    for (unsigned int i = 0; i < buff.format.rows*buff.format.cols; i++) {
+        *data = static_cast<PIXTYPE>(*data * value);
+        data++;
     }
 }
 
@@ -167,8 +168,6 @@ void DiskImageResourceFITS::flush() {
 //! the file and that it has a sane pixel format.  
 void DiskImageResourceFITS::open(std::string const& filename //!< Desired filename
                                 ) {
-    char errStr[200];               // our error string
-
     if (_fd) {
         throw vw::IOErr() << "DiskImageResourceFITS: A file is already open.";
     }
