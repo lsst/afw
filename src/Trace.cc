@@ -14,21 +14,26 @@ using namespace lsst::utils;
 /*
  * A component is a string of the form aaa.bbb.ccc, and may itself
  * contain further subcomponents. The Trace structure doesn't
- * in fact contain it's full name, but only the last part.
+ * in fact contain its full name, but only the last part.
  */
 Trace::Trace(const std::string &name,      //!< name of component
              int verbosity                     //!< associated verbosity
             ) {
     _name = new std::string(name);
     _verbosity = verbosity;
-    _dimen = 0;
-    _n = 0;
     _subcomp = new(comp_map);
 }
 
 Trace::~Trace() {
     delete _subcomp;
     delete _name;
+}
+
+//! Initialise the trace system
+void Trace::init() {
+    if (_root == 0) {
+        _root = new Trace("");
+    }
 }
 
 const int Trace::UNKNOWN_LEVEL = -9999;
@@ -39,7 +44,7 @@ std::ostream *Trace::_traceStream = 0;
 
 /******************************************************************************/
 /*
- * The traceverbosity cache
+ * The trace verbosity cache
  */
 int Trace::_highest_verbosity = 0;
 std::string Trace::_cachedName = NO_CACHE;
@@ -134,8 +139,8 @@ void Trace::setHighestVerbosity(const Trace *comp) {
 
 /*****************************************************************************/
 
-void Trace::setVerbosity(const char *comp,          //!< component of interest
-                         const int verbosity            //!< desired trace verbosity
+void Trace::setVerbosity(const char *comp, //!< component of interest
+                         const int verbosity //!< desired trace verbosity
                         ) {
     init();
 
@@ -249,9 +254,10 @@ void Trace::doPrintVerbosity(const Trace &comp,
 }
 
 /*****************************************************************************/
-/*
- * Change where we're writing to; close previous file descriptor
- * if it isn't stdout/stderr
+/*!
+ * Change where traces go
+ *
+ * close previous file descriptor if it isn't stdout/stderr
  */
 void Trace::setDestination(std::ostream &fp) {
     if (*_traceStream != std::cout && *_traceStream != std::cerr) {
@@ -266,16 +272,17 @@ void Trace::setDestination(std::ostream &fp) {
  * Actually generate the trace message. Note that psTrace dealt with
  * prepending appropriate indentation
  */
+#if !LSST_NO_TRACE
 void Trace::trace(const std::string &comp,	//!< component being traced
                   const int verbosity,		//!< desired trace verbosity
-                  const boost::format &msg    //!< trace message
+                  const boost::format &msg      //!< trace message
                  ) {
     trace(comp, verbosity, msg.str());
 }
 
 void Trace::trace(const std::string &comp,	//!< component being traced
                   const int verbosity,		//!< desired trace verbosity
-                  const std::string &msg      //!< trace message
+                  const std::string &msg        //!< trace message
                  ) {
     if (verbosity <= _highest_verbosity &&
         Trace::getVerbosity(comp) >= verbosity) {
@@ -292,3 +299,4 @@ void Trace::trace(const std::string &comp,	//!< component being traced
 	}
     }
 }
+#endif
