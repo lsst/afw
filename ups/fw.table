@@ -4,6 +4,9 @@ setupRequired(visionWorkbench)
 setupRequired(cfitsio)
 setupRequired(wcstools v3_6_2)
 
+setupOptional("swig")
+setupOptional("doxygen")
+
 setupOptional("Numarray")
 setupOptional("PyFITS")
 
