@@ -1,5 +1,5 @@
 #include <iostream>
-#include "Exception.h"
+#include "lsst/Exception.h"
 
 int main(int ac, char **av) {
     try {
