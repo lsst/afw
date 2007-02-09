@@ -15,7 +15,9 @@
 
 LSST_START_NAMESPACE(lsst)
 LSST_START_NAMESPACE(image)
-
+/*!
+ * FITS I/O for VisionWorkbench
+ */
 class DiskImageResourceFITS : public vw::DiskImageResource {
 public:
     explicit DiskImageResourceFITS();

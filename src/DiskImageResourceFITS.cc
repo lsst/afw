@@ -44,7 +44,7 @@ static void _throw_cfitsio_error(const int line,   //!< line in file (from __LIN
     }
 }
 
-static void _throw_cfitsio_error(const int line,               //!< line in file (from __LINE__)
+static void _throw_cfitsio_error(const int line, //!< line in file (from __LINE__)
                                  fitsfile *fd, //!< (possibly invalid) file descriptor
                                  const std::string errStr = "" //!< optional extra information
                                ) {
@@ -106,7 +106,7 @@ static void move_to_hdu(fitsfile *fd,          //!< cfitsio file descriptor
     }
 }
 
-/************************************************************************************************************/
+/******************************************************************************/
 //
 // Register our suffices so that vw::read_image() will work.
 //
@@ -115,7 +115,7 @@ int DiskImageResourceFITS::_defaultHdu = 0;
 
 static DiskImageResourceFITS::DiskImageResourceFITS registerMe; // actually do the registering
 
-/************************************************************************************************************/
+/******************************************************************************/
 // Constructors
 
 //! Don't open a file, just register our file suffixes for vw::read_image()
