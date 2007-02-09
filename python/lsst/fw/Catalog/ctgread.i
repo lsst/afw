@@ -24,9 +24,11 @@ Basic wrappers for wcslib's ctgread
 #include "wcs.h"
 #include "wcscat.h"
 #include "fitsfile.h"
+
+extern char *catdir;
 %}
 
-extern char catdir[64]="/data/catalogs";
+char catdir[64]="/data/catalogs";
 
 #define MAX_LTOK	80
 
