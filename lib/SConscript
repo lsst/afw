@@ -4,4 +4,5 @@ Import('env')
 env.SharedLibrary('citizen', map(lambda str: "../src/" + str,
 				 Split("Citizen.cc trace.cc")))
 env.SharedLibraryIncomplete('fitsio', map(lambda str: "../src/" + str,
-					  Split("DiskImageResourceFITS.cc")))
+					  Split("DiskImageResourceFITS.cc")),
+                            LIBS=["cfitsio"])

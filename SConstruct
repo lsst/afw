@@ -12,7 +12,16 @@ env = scons.makeEnv("fw",
                      ["visionWorkbench", "vw/Core.h", "vw"],
 		     ["cfitsio", "fitsio.h", "cfitsio", "ffopen"],
                      ["wcstools", "wcs.h", "wcs", "wcscat"],
+                     ["xpa", "xpa.h", "xpa", "XPAPuts"],
                      ])
+#
+# Libraries that I need to link things.  This should be handled better
+#
+env.libs = dict([
+    ("boost",	Split("boost_filesystem-d")),
+    ("fits",	Split("fitsio")),
+    ("vw",	Split("vw vwCore vwFileIO")),
+    ])
 #
 # Build/install things
 #
@@ -22,6 +31,7 @@ SConscript("include/lsst/SConscript")
 SConscript("lib/SConscript")
 SConscript("src/SConscript")
 SConscript("python/lsst/fw/Catalog/SConscript")
+SConscript("python/lsst/fw/Display/SConscript")
 
 env['IgnoreFiles'] = r"(~$|\.pyc$|^\.svn$|\.o$)"
 

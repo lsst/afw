@@ -31,13 +31,13 @@ public:
     void setVerbosity(int verbosity) { _verbosity = verbosity; }
 private:
     typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
-    typedef std::map<const std::string, Component *> comp_map; //!< subcomponents
+    typedef std::map<const std::string, Component *> comp_map; // subcomponents
 
-    const static int UNKNOWN_LEVEL;     //!< we don't know this name's verbosity
+    const static int UNKNOWN_LEVEL;     // we don't know this name's verbosity
 
-    std::string *_name;			//!< last part of name of this component
-    int _verbosity;                     //!< verbosity for this component
-    comp_map *_subcomp;                 //!< next level of subcomponents
+    std::string *_name;			// last part of name of this component
+    int _verbosity;                     // verbosity for this component
+    comp_map *_subcomp;                 // next level of subcomponents
 
     void add(tokenizer::iterator token,
              const tokenizer::iterator end,

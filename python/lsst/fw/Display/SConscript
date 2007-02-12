@@ -1,0 +1,7 @@
+# -*- python -*-
+Import("env")
+
+env.CheckSwig("python", ilang="c++")
+env.LoadableModuleIncomplete("_xpa", ["xpa.i"], LIBS = ["xpa"])
+env.LoadableModuleIncomplete("_ds9Lib", Split("ds9Lib.i simpleFits.cc"),
+                             LIBS=env.libs["vw"] + env.libs["fits"])

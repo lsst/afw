@@ -5,9 +5,6 @@
 #if !defined(LSST_UTILS_H)
 #define LSST_UTILS_H 1
 
-namespace lsst {
-    namespace utils {
-
 //! Start a namespace without confusing emacs
 //! \sa LSST_END_NAMESPACE
 #define LSST_START_NAMESPACE(NAME) namespace NAME {
@@ -22,8 +19,5 @@ LSST_START_NAMESPACE(utils)
 
 LSST_END_NAMESPACE(utils)
 LSST_END_NAMESPACE(lsst)
-
-    }
-}
 
 #endif

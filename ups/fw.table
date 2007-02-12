@@ -15,3 +15,5 @@ envAppend(PYTHONPATH, ${PRODUCT_DIR}/python)
 
 Flavor=Darwin
 envAppend(DYLD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
+Flavor=DarwinX86
+envAppend(DYLD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
