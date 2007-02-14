@@ -10,24 +10,28 @@
 #define LSST_MASK_H
 
 #include <vw/Image.h>
+#include <vw/Math/BBox.h>
 #include <list>
 #include <map>
 #include <string>
-
-#include "PixelRegion.h"
 
 using namespace vw;
 using namespace std;
 
 namespace lsst {
 
+    struct PixelCoord {
+        int x;
+        int y;
+    };
 
     template<class MaskPixelT>
     class Mask
     {
     public:
-        typedef bool (*MaskPixelBooleanFunc) (MaskPixelT);
         typedef typename PixelChannelType<MaskPixelT>::type MaskChannelT;
+        typedef ImageView<MaskPixelT> MaskImageT;
+        typedef bool (*MaskPixelBooleanFunc) (MaskChannelT);
         
         Mask();
 
@@ -45,9 +49,11 @@ namespace lsst {
         
         void setMaskPlaneValues(int plane, MaskPixelBooleanFunc selectionFunc);
         
-        int countMask(MaskPixelBooleanFunc testFunc, PixelRegion maskRegion);
+        int countMask(MaskPixelBooleanFunc testFunc, BBox2i maskRegion);
 
-        // do we want an operator (x,y, iplane) to give the mask values?
+        Mask<MaskPixelT>* getSubMask(BBox2i maskRegion);
+
+        void replaceSubMask(BBox2i maskRegion, Mask<MaskPixelT>& insertMask);
 
         MaskChannelT operator ()(int x, int y);
 
