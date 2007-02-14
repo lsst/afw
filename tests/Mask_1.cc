@@ -1,6 +1,12 @@
+// -*- lsst-c++ -*-
 #include "lsst/Mask.h"
 
 using namespace lsst;
+
+bool testCrFunc(unsigned char pixVal)
+{
+    return ((pixVal & 0x1)!=0);
+}
 
 int main(int argc, char *argv[])
 {
@@ -50,7 +56,7 @@ int main(int argc, char *argv[])
      PixelCoord coord;
      list<PixelCoord> pixelList;
 
-     for (int x=0; x<300; x+=10) {
+     for (int x=0; x<300; x+=1) {
 	  for (int y=300; y<400; y+=20) {
 	       coord.x = x;
 	       coord.y = y;
@@ -79,6 +85,7 @@ int main(int argc, char *argv[])
 
 // -------------- Test mask plane removal
 
+     testMask.clearMaskPlane(planeBP);
      testMask.removeMaskPlane("BP");
 
      if (testMask.findMaskPlane("CR", planeCR) == false) {
@@ -92,5 +99,36 @@ int main(int argc, char *argv[])
      } else {
 	  cout << "BP plane is " << planeBP << endl;
      }
+
+// --------------- Test submask methods
+
+     testMask.setMaskPlaneValues(planeCR, pixelList);
+
+     Mask<MaskPixelType >* subTestMask;
+
+     BBox2i region(100, 300, 10, 40);
+     subTestMask = testMask.getSubMask(region);
+
+     testMask.clearMaskPlane(planeCR);
+
+     testMask.replaceSubMask(region, *subTestMask);
+
+     cout << endl;
+     for (int x=90; x<120; x+=1) {
+	  for (int y=295; y<350; y+=5) {
+	       cout << x << " " << y << " " << (int)testMask(x, y) << " " << testMask(x, y, planeCR) << endl;
+	  }
+     }
+
+     int count = testMask.countMask(testCrFunc, region);
+     cout << count << " pixels had CR set in region" << endl;
+
+     // This should generate a vw exception - dimensions of region and submask must be =
+
+     cout << "This should throw an exception:" << endl;
+
+     region.expand(10);
+     testMask.replaceSubMask(region, *subTestMask);
+
 
 }
