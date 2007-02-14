@@ -1,3 +1,4 @@
+// -*- lsst-c++ -*-
 // Implementations of Mask class methods
 // This file can NOT be separately compiled!   It is included by Mask.h
 
@@ -45,6 +46,8 @@ template<class MaskPixelT> int Mask<MaskPixelT>::addMaskPlane(string name)
 	  return -1;
      }
 }
+
+// Should removeMaskPlane clear the plane before removal?
 
 template<class MaskPixelT> void Mask<MaskPixelT>::removeMaskPlane(string name)
 {
@@ -100,14 +103,54 @@ template<class MaskPixelT> void Mask<MaskPixelT>::setMaskPlaneValues(int plane, 
 //
 template<class MaskPixelT> void Mask<MaskPixelT>::setMaskPlaneValues(int plane, MaskPixelBooleanFunc selectionFunc)
 {
+    //  Should check plane for legality here...
+
+    for (int y=0; y<_imageRows; y++) {
+        for (int x=0; x<_imageCols; x++) {
+            if ((*selectionFunc)(_image(x,y).v()) == true) {
+                _image(x,y).v() = _image(x,y).v() | _planeBitMask[plane];
+            }
+          }
+    }
 }
 
-// countMask(MaskPixelBooleanFunc testFunc, PixelRegion maskRegion) returns the number of pixels
+// countMask(MaskPixelBooleanFunc testFunc, BBox2i maskRegion) returns the number of pixels
 // within maskRegion for which testFunc(pixel) returns true
 //
-template<class MaskPixelT> int Mask<MaskPixelT>::countMask(MaskPixelBooleanFunc testFunc, PixelRegion maskRegion)
+// PROBABLY WANT maskRegion to default to whole Mask
+
+template<class MaskPixelT> int Mask<MaskPixelT>::countMask(MaskPixelBooleanFunc testFunc, BBox2i maskRegion)
 {
-     return 0;
+    int count = 0;
+    Vector<int32, 2> ulCorner = maskRegion.min();
+    Vector<int32, 2> lrCorner = maskRegion.max();
+
+    for (int y=ulCorner[1]; y<lrCorner[1]; y++) {
+        for (int x=ulCorner[0]; x<lrCorner[0]; x++) {
+            if ((*testFunc)(_image(x,y).v()) == true) {
+                count += 1;
+            }
+          }
+    }
+     return count;
+}
+
+template<class MaskPixelT>  Mask<MaskPixelT>* Mask<MaskPixelT>::getSubMask(BBox2i maskRegion)
+{
+    // NOTE - later, this will need to use smart_ptr through Citizen 
+
+    MaskImageT *croppedMask = new MaskImageT;
+    *croppedMask = copy(crop(_image, maskRegion));
+    Mask<MaskPixelT> *newMask = new Mask<MaskPixelT>(*croppedMask);
+    return newMask;
+}
+
+// Given a Mask, insertMask, place it into this Mask as directed by maskRegion.
+// An exception is generated if maskRegion is not of the same size as insertMask.
+//
+template<class MaskPixelT> void Mask<MaskPixelT>::replaceSubMask(BBox2i maskRegion, Mask<MaskPixelT>& insertMask)
+{
+    crop(_image, maskRegion) = insertMask._image;
 }
 
 template<class MaskPixelT> typename Mask<MaskPixelT>::MaskChannelT Mask<MaskPixelT>::operator ()(int x, int y)
