@@ -1,4 +1,4 @@
-#include "Mask.h"
+#include "lsst/Mask.h"
 
 using namespace lsst;
 
