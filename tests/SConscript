@@ -1,0 +1,4 @@
+# -*- python -*-
+Import("env")
+
+env.Program(["Mask_1.cc"], LIBS=env.libs["vw"])

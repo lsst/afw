@@ -25,13 +25,9 @@ env.libs = dict([
 #
 # Build/install things
 #
-SConscript("examples/SConscript")
-SConscript("doc/SConscript")
-SConscript("include/lsst/SConscript")
-SConscript("lib/SConscript")
-SConscript("src/SConscript")
-SConscript("python/lsst/fw/Catalog/SConscript")
-SConscript("python/lsst/fw/Display/SConscript")
+for d in Split("doc examples include/lsst lib src tests") + \
+        Split("python/lsst/fw/Catalog python/lsst/fw/Display"):
+    SConscript("%s/SConscript" % d)
 
 env['IgnoreFiles'] = r"(~$|\.pyc$|^\.svn$|\.o$)"
 
