@@ -14,8 +14,6 @@ namespace posix {
 }
 using namespace posix;
 
-#define ACT_LITTLE_ENDIAN 1
-
 #include "lsst/Exception.h"
 #include "lsst/Utils.h"
 
@@ -296,7 +294,7 @@ static int write_fits_data(int fd,
     int swap_bytes = 0;			/* the default */
     static int warned = 0;		/* Did we warn about BZERO/BSCALE? */
    
-#if defined(ACT_LITTLE_ENDIAN)		/* we'll need to byte swap FITS */
+#if defined(LSST_LITTLE_ENDIAN)		/* we'll need to byte swap FITS */
     if(bytes_per_pixel > 1) {
 	swap_bytes = 1;
     }
