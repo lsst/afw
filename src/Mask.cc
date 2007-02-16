@@ -25,7 +25,7 @@ template<class MaskPixelT> Mask<MaskPixelT>::Mask(ImageView<MaskPixelT>& image):
 template<class MaskPixelT> int Mask<MaskPixelT>::addMaskPlane(string name)
 {
      int id;
-     if (findMaskPlane(name, id) == true) {
+     if (getMaskPlane(name, id) == true) {
 	  // raise exception?
 	  return id;
      }
@@ -52,7 +52,7 @@ template<class MaskPixelT> int Mask<MaskPixelT>::addMaskPlane(string name)
 template<class MaskPixelT> void Mask<MaskPixelT>::removeMaskPlane(string name)
 {
      int id;
-     if (findMaskPlane(name, id) == false) {
+     if (getMaskPlane(name, id) == false) {
 	  // raise exception?
 	  return;
      }
@@ -62,7 +62,7 @@ template<class MaskPixelT> void Mask<MaskPixelT>::removeMaskPlane(string name)
      
 }
 
-template<class MaskPixelT> bool Mask<MaskPixelT>::findMaskPlane(string name, int& plane)
+template<class MaskPixelT> bool Mask<MaskPixelT>::getMaskPlane(string name, int& plane)
 {
      for(map<int, string>::iterator i=_maskPlaneDict.begin(); i != _maskPlaneDict.end(); ++i) {
 	  if (i->second == name) {
@@ -73,6 +73,16 @@ template<class MaskPixelT> bool Mask<MaskPixelT>::findMaskPlane(string name, int
      plane = -1;
      return false;
 }
+
+template<class MaskPixelT> bool Mask<MaskPixelT>::getPlaneBitMask(string name, MaskChannelT& bitMask)
+{
+    int plane;
+    if (getMaskPlane(name, plane)==false) return false;
+
+    bitMask = _planeBitMask[plane];
+    return true;
+}
+
 
 // clearMaskPlane(int plane) clears the bit specified by "plane" in all pixels in the mask
 //
@@ -101,7 +111,7 @@ template<class MaskPixelT> void Mask<MaskPixelT>::setMaskPlaneValues(int plane, 
 // setMaskPlaneValues(int plane,MaskPixelBooleanFunc selectionFunc ) sets the bit specified by "plane"
 // for each pixel for which selectionFunc(pixel) returns true
 //
-template<class MaskPixelT> void Mask<MaskPixelT>::setMaskPlaneValues(int plane, MaskPixelBooleanFunc selectionFunc)
+template<class MaskPixelT> void Mask<MaskPixelT>::setMaskPlaneValues(int plane, MaskPixelBooleanFunc<MaskPixelT> selectionFunc)
 {
     //  Should check plane for legality here...
 
@@ -119,7 +129,7 @@ template<class MaskPixelT> void Mask<MaskPixelT>::setMaskPlaneValues(int plane, 
 //
 // PROBABLY WANT maskRegion to default to whole Mask
 
-template<class MaskPixelT> int Mask<MaskPixelT>::countMask(MaskPixelBooleanFunc testFunc, BBox2i maskRegion)
+template<class MaskPixelT> int Mask<MaskPixelT>::countMask(MaskPixelBooleanFunc<MaskPixelT>& testFunc, BBox2i maskRegion)
 {
     int count = 0;
     Vector<int32, 2> ulCorner = maskRegion.min();
@@ -127,7 +137,7 @@ template<class MaskPixelT> int Mask<MaskPixelT>::countMask(MaskPixelBooleanFunc 
 
     for (int y=ulCorner[1]; y<lrCorner[1]; y++) {
         for (int x=ulCorner[0]; x<lrCorner[0]; x++) {
-            if ((*testFunc)(_image(x,y).v()) == true) {
+            if (testFunc(_image(x,y)) == true) {
                 count += 1;
             }
           }
