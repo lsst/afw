@@ -47,8 +47,6 @@ template<class MaskPixelT> int Mask<MaskPixelT>::addMaskPlane(string name)
      }
 }
 
-// Should removeMaskPlane clear the plane before removal?
-
 template<class MaskPixelT> void Mask<MaskPixelT>::removeMaskPlane(string name)
 {
      int id;
@@ -56,7 +54,7 @@ template<class MaskPixelT> void Mask<MaskPixelT>::removeMaskPlane(string name)
 	  // raise exception?
 	  return;
      }
-
+     clearMaskPlane(id);
      _maskPlaneDict[id] = "";
      _numPlanesUsed--;
      
