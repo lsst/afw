@@ -31,7 +31,8 @@ namespace lsst {
     public:
         MaskPixelBooleanFunc(Mask<MaskPixelT>& m) : _mask(m) {}
         virtual bool operator () (MaskPixelT) = 0;
-    private:
+        virtual ~MaskPixelBooleanFunc() {};
+    protected:
         Mask<MaskPixelT>& _mask;
     };
     
