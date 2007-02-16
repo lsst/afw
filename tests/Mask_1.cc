@@ -3,10 +3,14 @@
 
 using namespace lsst;
 
-bool testCrFunc(unsigned char pixVal)
-{
-    return ((pixVal & 0x1)!=0);
-}
+template <typename MaskPixelT> class testCrFunc : public MaskPixelBooleanFunc<MaskPixelT> {
+public:
+    typedef typename PixelChannelType<MaskPixelT>::type MaskChannelT;
+    testCrFunc(Mask<MaskPixelT>& m) : MaskPixelBooleanFunc<MaskPixelT>(m) {m.getPlaneBitMask("CR", bitsCR); }
+    bool operator ()(MaskPixelT pixel) { return ((pixel.v() & bitsCR) !=0 ); }
+private:
+    MaskChannelT bitsCR;
+};
 
 int main(int argc, char *argv[])
 {
@@ -36,13 +40,13 @@ int main(int argc, char *argv[])
 
      int planeCR, planeBP;
 
-     if (testMask.findMaskPlane("CR", planeCR) == false) {
+     if (testMask.getMaskPlane("CR", planeCR) == false) {
 	  cout << "No CR plane found" << endl;
      } else {
 	  cout << "CR plane is " << planeCR << endl;
      }
 
-     if (testMask.findMaskPlane("BP", planeBP) == false) {
+     if (testMask.getMaskPlane("BP", planeBP) == false) {
 	  cout << "No BP plane found" << endl;
      } else {
 	  cout << "BP plane is " << planeBP << endl;
@@ -88,13 +92,13 @@ int main(int argc, char *argv[])
      testMask.clearMaskPlane(planeBP);
      testMask.removeMaskPlane("BP");
 
-     if (testMask.findMaskPlane("CR", planeCR) == false) {
+     if (testMask.getMaskPlane("CR", planeCR) == false) {
 	  cout << "No CR plane found" << endl;
      } else {
 	  cout << "CR plane is " << planeCR << endl;
      }
 
-     if (testMask.findMaskPlane("BP", planeBP) == false) {
+     if (testMask.getMaskPlane("BP", planeBP) == false) {
 	  cout << "No BP plane found" << endl;
      } else {
 	  cout << "BP plane is " << planeBP << endl;
@@ -120,7 +124,11 @@ int main(int argc, char *argv[])
 	  }
      }
 
-     int count = testMask.countMask(testCrFunc, region);
+     // --------------------- Test MaskPixelBooleanFunc
+
+     testCrFunc<MaskPixelType> testCrFuncInstance(testMask);
+
+     int count = testMask.countMask(testCrFuncInstance, region);
      cout << count << " pixels had CR set in region" << endl;
 
      // This should generate a vw exception - dimensions of region and submask must be =
