@@ -6,8 +6,13 @@ using namespace lsst;
 template <typename MaskPixelT> class testCrFunc : public MaskPixelBooleanFunc<MaskPixelT> {
 public:
     typedef typename PixelChannelType<MaskPixelT>::type MaskChannelT;
-    testCrFunc(Mask<MaskPixelT>& m) : MaskPixelBooleanFunc<MaskPixelT>(m) {m.getPlaneBitMask("CR", bitsCR); }
-    bool operator ()(MaskPixelT pixel) { return ((pixel.v() & bitsCR) !=0 ); }
+    testCrFunc(Mask<MaskPixelT>& m) : MaskPixelBooleanFunc<MaskPixelT>(m) {}
+    void init() {
+        MaskPixelBooleanFunc<MaskPixelT>::_mask.getPlaneBitMask("CR", bitsCR);
+    }        
+    bool operator ()(MaskPixelT pixel) { 
+        return ((pixel.v() & bitsCR) !=0 ); 
+    }
 private:
     MaskChannelT bitsCR;
 };
@@ -128,6 +133,10 @@ int main(int argc, char *argv[])
 
      testCrFunc<MaskPixelType> testCrFuncInstance(testMask);
 
+     // Calling init gets the latest plane info from testMask
+     testCrFuncInstance.init();
+
+     // Now use testCrFuncInstance
      int count = testMask.countMask(testCrFuncInstance, region);
      cout << count << " pixels had CR set in region" << endl;
 
