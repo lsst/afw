@@ -6,7 +6,7 @@ import os, re, math, sys, time
 try: import xpa
 except: print "Cannot import xpa"
 
-try: import ds9Lib
+try: import fwLib
 except: pass
 
 class Ds9Error(IOError):
@@ -69,8 +69,8 @@ def mtv(data, frame = 0, init = 1, WCS = ""):
    else:
       pfd = file("foo.fits", "w")
 
-   if isinstance(data, ds9Lib.imageFloat):
-       ds9Lib.rhlWriteFitsFloat(pfd.fileno(), data, WCS)
+   if isinstance(data, fwLib.imageFloat):
+       fwLib.writeFitsFloat(pfd.fileno(), data, WCS)
    else:
        try:
            pfd.close()

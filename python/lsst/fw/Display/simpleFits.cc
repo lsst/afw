@@ -349,10 +349,10 @@ static int write_fits_data(int fd,
     return (nbyte == 0 ? 0 : -1);
 }
 
-void rhlWriteFits(int fd,                // file descriptor to write to
-                  vw::ImageBuffer &buff, // The data to write
-                  const std::string &WCS // which WCS to use for pixel
-                 ) {
+void writeFits(int fd,                // file descriptor to write to
+               vw::ImageBuffer &buff, // The data to write
+               const std::string &WCS // which WCS to use for pixel
+              ) {
     Card **cards = NULL;		/* extra header info */
     const int naxis = 2;		// == NAXIS
     int naxes[2];			/* values of NAXIS1 etc */
@@ -430,10 +430,10 @@ void rhlWriteFits(int fd,                // file descriptor to write to
 
 /******************************************************************************/
 
-void rhlWriteFitsFile(const std::string &filename, // file to write or "| cmd"
-                      vw::ImageBuffer &data, // The data to write
-                      const std::string &WCS // which WCS to use for pixel
-                    ) {
+void writeFitsFile(const std::string &filename, // file to write or "| cmd"
+                   vw::ImageBuffer &data, // The data to write
+                   const std::string &WCS // which WCS to use for pixel
+                  ) {
     int fd;
     if ((filename.c_str())[0] == '|') {		// a command
 	const char *cmd = filename.c_str() + 1;
@@ -451,7 +451,7 @@ void rhlWriteFitsFile(const std::string &filename, // file to write or "| cmd"
     }
 
     try {
-        rhlWriteFits(fd, data, WCS);
+        writeFits(fd, data, WCS);
     } catch(lsst::Exception &e) {
         (void)close(fd);
         throw e;
