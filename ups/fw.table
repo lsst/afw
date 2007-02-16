@@ -3,6 +3,7 @@ setupRequired(boost)
 setupRequired(visionWorkbench)
 setupRequired(cfitsio)
 setupRequired(wcstools v3_6_2)
+setupRequired(xpa)
 
 setupOptional("swig")
 setupOptional("doxygen")
@@ -12,6 +13,8 @@ setupOptional("PyFITS")
 
 envAppend(LD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
 envAppend(PYTHONPATH, ${PRODUCT_DIR}/python)
+# Needed to load the LSSTImporter that handles multiple "lsst"s in PYTHONPATH
+envAppend(PYTHONPATH, ${PRODUCT_DIR}/python/lsst)
 
 Flavor=Darwin
 envAppend(DYLD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
