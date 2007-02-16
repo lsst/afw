@@ -25,13 +25,23 @@ namespace lsst {
         int y;
     };
 
-    template<class MaskPixelT>
+    template<typename MaskPixelT> class Mask;
+
+    template <typename MaskPixelT> class MaskPixelBooleanFunc {
+    public:
+        MaskPixelBooleanFunc(Mask<MaskPixelT>& m) : _mask(m) {}
+        virtual bool operator () (MaskPixelT) = 0;
+    private:
+        Mask<MaskPixelT>& _mask;
+    };
+    
+    template<typename MaskPixelT>
     class Mask
     {
     public:
         typedef typename PixelChannelType<MaskPixelT>::type MaskChannelT;
         typedef ImageView<MaskPixelT> MaskImageT;
-        typedef bool (*MaskPixelBooleanFunc) (MaskChannelT);
+
         
         Mask();
 
@@ -41,15 +51,17 @@ namespace lsst {
         
         void removeMaskPlane(string name);
 
-        bool findMaskPlane(string name, int& plane);
+        bool getMaskPlane(string name, int& plane);
+
+        bool getPlaneBitMask(string name, MaskChannelT& bitMask);
         
         void clearMaskPlane(int plane);
         
         void setMaskPlaneValues(int plane, list<PixelCoord> pixelList);
         
-        void setMaskPlaneValues(int plane, MaskPixelBooleanFunc selectionFunc);
+        void setMaskPlaneValues(int plane, MaskPixelBooleanFunc<MaskPixelT> selectionFunc);
         
-        int countMask(MaskPixelBooleanFunc testFunc, BBox2i maskRegion);
+        int countMask(MaskPixelBooleanFunc<MaskPixelT>& testFunc, BBox2i maskRegion);
 
         Mask<MaskPixelT>* getSubMask(BBox2i maskRegion);
 
