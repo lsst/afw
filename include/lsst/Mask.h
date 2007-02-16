@@ -20,7 +20,10 @@ using namespace std;
 
 namespace lsst {
 
-    struct PixelCoord {
+    class PixelCoord {
+    public:
+        PixelCoord(int x = 0, int y = 0) : x(x), y(y) {}
+        ~PixelCoord() {}
         int x;
         int y;
     };
@@ -30,8 +33,8 @@ namespace lsst {
     template <typename MaskPixelT> class MaskPixelBooleanFunc {
     public:
         MaskPixelBooleanFunc(Mask<MaskPixelT>& m) : _mask(m) {}
-        virtual bool operator () (MaskPixelT) = 0;
-        virtual ~MaskPixelBooleanFunc() {};
+        virtual bool operator () (MaskPixelT);
+        virtual ~MaskPixelBooleanFunc() {}
     protected:
         Mask<MaskPixelT>& _mask;
     };

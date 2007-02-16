@@ -2,12 +2,19 @@
 // Implementations of Mask class methods
 // This file can NOT be separately compiled!   It is included by Mask.h
 
-template<class MaskPixelT> Mask<MaskPixelT>::Mask(ImageView<MaskPixelT>& image): 
-     _image(image),
-     _numPlanesMax(8 * sizeof(MaskChannelT))
-{
-     _imageRows = _image.rows();
-     _imageCols = _image.cols();
+template<typename MaskPixelT>
+Mask<MaskPixelT>::Mask() :
+    _image(*(new vw::ImageView<MaskPixelT>())),
+    _numPlanesMax(8*sizeof(MaskChannelT)) {
+    ;
+}
+
+template<class MaskPixelT>
+Mask<MaskPixelT>::Mask(ImageView<MaskPixelT>& image): 
+    _image(image),
+    _numPlanesMax(8 * sizeof(MaskChannelT)) {
+    _imageRows = _image.rows();
+    _imageCols = _image.cols();
 
      cout << "Number of mask planes: " << _numPlanesMax << endl;
 
@@ -115,7 +122,7 @@ template<class MaskPixelT> void Mask<MaskPixelT>::setMaskPlaneValues(int plane, 
 
     for (int y=0; y<_imageRows; y++) {
         for (int x=0; x<_imageCols; x++) {
-            if ((*selectionFunc)(_image(x,y).v()) == true) {
+            if (selectionFunc(_image(x,y).v()) == true) {
                 _image(x,y).v() = _image(x,y).v() | _planeBitMask[plane];
             }
           }
@@ -143,8 +150,7 @@ template<class MaskPixelT> int Mask<MaskPixelT>::countMask(MaskPixelBooleanFunc<
      return count;
 }
 
-template<class MaskPixelT>  Mask<MaskPixelT>* Mask<MaskPixelT>::getSubMask(BBox2i maskRegion)
-{
+template<class MaskPixelT>  Mask<MaskPixelT>* Mask<MaskPixelT>::getSubMask(vw::BBox2i maskRegion) {
     // NOTE - later, this will need to use smart_ptr through Citizen 
 
     MaskImageT *croppedMask = new MaskImageT;
@@ -171,4 +177,10 @@ template<class MaskPixelT> bool Mask<MaskPixelT>::operator ()(int x, int y, int 
 {
 //      cout << x << " " << y << " " << (void *)_planeBitMask[plane] << " " << (void *)_image(x, y).v() << endl;
      return (_image(x, y).v() & _planeBitMask[plane]) != 0;
+}
+
+template<typename MaskPixelT>
+bool MaskPixelBooleanFunc<MaskPixelT>::operator() (MaskPixelT) {
+    abort();
+    return true;
 }
