@@ -122,7 +122,7 @@ template<class MaskPixelT> void Mask<MaskPixelT>::setMaskPlaneValues(int plane, 
 
     for (int y=0; y<_imageRows; y++) {
         for (int x=0; x<_imageCols; x++) {
-            if (selectionFunc(_image(x,y).v()) == true) {
+            if (selectionFunc(_image(x,y)) == true) {
                 _image(x,y).v() = _image(x,y).v() | _planeBitMask[plane];
             }
           }
