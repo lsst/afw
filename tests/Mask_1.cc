@@ -22,14 +22,22 @@ int main(int argc, char *argv[])
 // ------------- Test constructors
 
      typedef PixelGray<uint8> MaskPixelType;
+     typedef ImageView<MaskPixelType> MaskImageType;
+     typedef boost::shared_ptr<MaskImageType> MaskImagePtrType;
+     typedef boost::shared_ptr<Mask<MaskPixelType> > MaskPtrType;
 
-     ImageView<MaskPixelType > maskImage(300,400);
+     
+     MaskImagePtrType maskImage(new MaskImageType(300,400));
+     cout << maskImage.use_count() << endl;
 
      Mask<MaskPixelType > testMask(maskImage);
+     cout << maskImage.use_count() << endl;
 
      typedef PixelGray<uint16> MaskPixelType2;
+     typedef ImageView<MaskPixelType2> MaskImageType2;
+     typedef boost::shared_ptr<MaskImageType2> MaskImagePtrType2;
 
-     ImageView<MaskPixelType2 > maskImage2(300,400);
+     MaskImagePtrType2 maskImage2(new MaskImageType2(300,400));
 
      Mask<MaskPixelType2 > testMask2(maskImage2);
 
@@ -113,7 +121,7 @@ int main(int argc, char *argv[])
 
      testMask.setMaskPlaneValues(planeCR, pixelList);
 
-     Mask<MaskPixelType >* subTestMask;
+     MaskPtrType subTestMask;
 
      BBox2i region(100, 300, 10, 40);
      subTestMask = testMask.getSubMask(region);
