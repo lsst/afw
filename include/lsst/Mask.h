@@ -11,6 +11,7 @@
 
 #include <vw/Image.h>
 #include <vw/Math/BBox.h>
+#include <boost/shared_ptr.hpp>
 #include <list>
 #include <map>
 #include <string>
@@ -45,11 +46,13 @@ namespace lsst {
     public:
         typedef typename PixelChannelType<MaskPixelT>::type MaskChannelT;
         typedef ImageView<MaskPixelT> MaskImageT;
+        typedef boost::shared_ptr<Mask<MaskPixelT> > MaskPtrT;
+        typedef boost::shared_ptr<MaskImageT> MaskImagePtrT;
 
         
         Mask();
 
-        Mask(ImageView<MaskPixelT>& image);
+        Mask(MaskImagePtrT image);
         
         int addMaskPlane(string name);
         
@@ -67,7 +70,7 @@ namespace lsst {
         
         int countMask(MaskPixelBooleanFunc<MaskPixelT>& testFunc, BBox2i maskRegion);
 
-        Mask<MaskPixelT>* getSubMask(BBox2i maskRegion);
+        MaskPtrT getSubMask(BBox2i maskRegion);
 
         void replaceSubMask(BBox2i maskRegion, Mask<MaskPixelT>& insertMask);
 
@@ -78,7 +81,8 @@ namespace lsst {
 //         virtual ~Mask();
 
     private:
-        ImageView<MaskPixelT>& _image;
+        MaskImagePtrT _imagePtr;
+        MaskImageT& _image;
         int _imageRows;
         int _imageCols;
         map<int, std::string> _maskPlaneDict;
