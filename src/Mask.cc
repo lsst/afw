@@ -4,14 +4,16 @@
 
 template<typename MaskPixelT>
 Mask<MaskPixelT>::Mask() :
-    _image(*(new vw::ImageView<MaskPixelT>())),
+    _imagePtr(new vw::ImageView<MaskPixelT>()),
+    _image(*_imagePtr),
     _numPlanesMax(8*sizeof(MaskChannelT)) {
     ;
 }
 
 template<class MaskPixelT>
-Mask<MaskPixelT>::Mask(ImageView<MaskPixelT>& image): 
-    _image(image),
+Mask<MaskPixelT>::Mask(MaskImagePtrT image): 
+    _imagePtr(image),
+    _image(*_imagePtr),
     _numPlanesMax(8 * sizeof(MaskChannelT)) {
     _imageRows = _image.rows();
     _imageCols = _image.cols();
@@ -150,12 +152,11 @@ template<class MaskPixelT> int Mask<MaskPixelT>::countMask(MaskPixelBooleanFunc<
      return count;
 }
 
-template<class MaskPixelT>  Mask<MaskPixelT>* Mask<MaskPixelT>::getSubMask(vw::BBox2i maskRegion) {
-    // NOTE - later, this will need to use smart_ptr through Citizen 
+template<class MaskPixelT>  typename Mask<MaskPixelT>::MaskPtrT Mask<MaskPixelT>::getSubMask(vw::BBox2i maskRegion) {
 
-    MaskImageT *croppedMask = new MaskImageT;
+    MaskImagePtrT croppedMask(new MaskImageT());
     *croppedMask = copy(crop(_image, maskRegion));
-    Mask<MaskPixelT> *newMask = new Mask<MaskPixelT>(*croppedMask);
+    MaskPtrT newMask(new Mask<MaskPixelT>(croppedMask));
     return newMask;
 }
 
