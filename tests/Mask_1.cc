@@ -41,6 +41,8 @@ int main(int argc, char *argv[])
 
      Mask<MaskPixelType2 > testMask2(maskImage2);
 
+     Mask<MaskPixelType > testMask3(300,400);
+
 // ------------- Test mask plane addition
 
      int iPlane;
@@ -100,6 +102,15 @@ int main(int argc, char *argv[])
 	  }
      }
 
+// ------------------ Test |= operator
+   
+     iPlane = testMask3.addMaskPlane("CR");
+     cout << "Assigned CR to plane " << iPlane << endl;
+
+     testMask |= testMask3;
+
+     cout << "Applied |= operator" << endl;
+     
 // -------------- Test mask plane removal
 
      testMask.clearMaskPlane(planeBP);
@@ -137,7 +148,8 @@ int main(int argc, char *argv[])
 	  }
      }
 
-     // --------------------- Test MaskPixelBooleanFunc
+
+// --------------------- Test MaskPixelBooleanFunc
 
      testCrFunc<MaskPixelType> testCrFuncInstance(testMask);
 
