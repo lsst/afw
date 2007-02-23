@@ -45,14 +45,16 @@ namespace lsst {
     {
     public:
         typedef typename PixelChannelType<MaskPixelT>::type MaskChannelT;
-        typedef ImageView<MaskPixelT> MaskImageT;
+        typedef ImageView<MaskPixelT> MaskIVwT;
         typedef boost::shared_ptr<Mask<MaskPixelT> > MaskPtrT;
-        typedef boost::shared_ptr<MaskImageT> MaskImagePtrT;
+        typedef boost::shared_ptr<MaskIVwT> MaskIVwPtrT;
 
         
         Mask();
 
-        Mask(MaskImagePtrT image);
+        Mask(MaskIVwPtrT image);
+
+        Mask(int ncols, int nrows);
         
         int addMaskPlane(string name);
         
@@ -74,15 +76,25 @@ namespace lsst {
 
         void replaceSubMask(BBox2i maskRegion, Mask<MaskPixelT>& insertMask);
 
-        MaskChannelT operator ()(int x, int y);
+        MaskChannelT operator ()(int x, int y) const;
 
-        bool operator ()(int x, int y, int plane);
+        bool operator ()(int x, int y, int plane) const;
+
+        void operator |= (const Mask<MaskPixelT>& inputMask);
+
+        int getImageCols() const;
+
+        int getImageRows() const;
+
+        MaskIVwPtrT getIVwPtr() const;
+
+        map<int, std::string> getMaskPlaneDict() const;
 
 //         virtual ~Mask();
 
     private:
-        MaskImagePtrT _imagePtr;
-        MaskImageT& _image;
+        MaskIVwPtrT _imagePtr;
+        MaskIVwT& _image;
         int _imageRows;
         int _imageCols;
         map<int, std::string> _maskPlaneDict;
