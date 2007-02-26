@@ -36,7 +36,9 @@ namespace lsst {
             
 	MaskedImage(ImagePtrT image, MaskPtrT mask);
 
-	MaskedImage processPixels(MaskPixelBooleanFunc<MaskPixelT> selectionFunc, PixelProcessingFunc<ImagePixelT, MaskPixelT> processingFunc);
+        MaskedImage(int nCols, int nRows);
+
+	MaskedImage returnProcessedPixels(MaskPixelBooleanFunc<MaskPixelT> selectionFunc, PixelProcessingFunc<ImagePixelT, MaskPixelT> processingFunc);
             
 	void processPixels(MaskPixelBooleanFunc<MaskPixelT> selectionFunc, PixelProcessingFunc<ImagePixelT, MaskPixelT> processingFunc);
 
@@ -59,9 +61,11 @@ namespace lsst {
 	virtual ~MaskedImage();
         
     private:
-	ImagePtrT _image;
-	MaskPtrT _mask;
+	ImagePtrT _imagePtr;
+	MaskPtrT _maskPtr;
     };
     
-}
+#include "MaskedImage.cc"
+
+} // namespace lsst
 #endif //  LSST_MASKEDIMAGE_H

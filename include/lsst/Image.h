@@ -60,6 +60,7 @@ namespace lsst {
         int _imageCols;
     };
   
+#include "Image.cc"
 
 } // namespace lsst
 

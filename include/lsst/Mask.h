@@ -54,7 +54,7 @@ namespace lsst {
 
         Mask(MaskIVwPtrT image);
 
-        Mask(int ncols, int nrows);
+        Mask(int nCols, int nRows);
         
         int addMaskPlane(string name);
         
