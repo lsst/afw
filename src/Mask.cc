@@ -205,7 +205,7 @@ bool MaskPixelBooleanFunc<MaskPixelT>::operator() (MaskPixelT) {
     return true;
 }
 
-template<class MaskPixelT> void  Mask<MaskPixelT>::operator |= (const Mask<MaskPixelT>& inputMask)
+template<class MaskPixelT> Mask<MaskPixelT>&  Mask<MaskPixelT>::operator |= (const Mask<MaskPixelT>& inputMask)
 {
 // Need to check for identical sizes, and presence of all needed planes
     if (_imageCols != inputMask.getImageCols() || _imageRows != inputMask.getImageRows()) {
@@ -241,6 +241,8 @@ template<class MaskPixelT> void  Mask<MaskPixelT>::operator |= (const Mask<MaskP
             _image(x,y).v() |= inputMask(x,y);
         }
     }
+
+    return *this;
 }
 
 template<class MaskPixelT> int Mask<MaskPixelT>::getImageCols() const {

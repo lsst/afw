@@ -23,3 +23,12 @@ Image<ImagePixelT>::Image(ImageIVwPtrT image):
 
 }
 
+template<class ImagePixelT> typename Image<ImagePixelT>::ImageIVwPtrT Image<ImagePixelT>::getIVwPtr() const {
+    return _imagePtr;
+}
+
+template<class ImagePixelT> Image<ImagePixelT>&  Image<ImagePixelT>::operator += (const Image<ImagePixelT>& inputImage)
+{
+    _image += *(inputImage.getIVwPtr());
+    return *this;
+}
