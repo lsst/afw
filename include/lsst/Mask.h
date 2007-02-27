@@ -80,7 +80,7 @@ namespace lsst {
 
         bool operator ()(int x, int y, int plane) const;
 
-        void operator |= (const Mask<MaskPixelT>& inputMask);
+        Mask<MaskPixelT>& operator |= (const Mask<MaskPixelT>& inputMask);
 
         int getImageCols() const;
 

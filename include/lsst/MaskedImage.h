@@ -28,9 +28,12 @@ namespace lsst {
     {
         
     public:
+        typedef Image<ImagePixelT> ImageT;
+        typedef Mask<MaskPixelT> MaskT;
         typedef boost::shared_ptr<Image<ImagePixelT> > ImagePtrT;
         typedef boost::shared_ptr<Mask<MaskPixelT> > MaskPtrT;
         typedef boost::shared_ptr<MaskedImage<ImagePixelT, MaskPixelT> > MaskedImagePtrT;
+        typedef MaskedImage<ImagePixelT, MaskPixelT> MaskedImageT;
 
 	MaskedImage();
             
@@ -46,13 +49,13 @@ namespace lsst {
 
 	void replaceSubImage(BBox2i region, MaskedImage sImage, bool replaceMask, bool replaceAstro);
 
-	void operator+=(const MaskedImage & maskedImageInput);
+	MaskedImage<ImagePixelT, MaskPixelT>& operator+=( MaskedImageT& maskedImageInput);
 
-	void operator-=(const MaskedImage & maskedImageInput);
+	MaskedImage<ImagePixelT, MaskPixelT>& operator-=( MaskedImage & maskedImageInput);
 
-	void operator*=(const MaskedImage & maskedImageInput);
+	MaskedImage<ImagePixelT, MaskPixelT>& operator*=( MaskedImage & maskedImageInput);
 
-	void operator/=(const MaskedImage & maskedImageInput);
+	MaskedImage<ImagePixelT, MaskPixelT>& operator/=( MaskedImage & maskedImageInput);
 
 	ImagePtrT getImage();
 
@@ -63,6 +66,8 @@ namespace lsst {
     private:
 	ImagePtrT _imagePtr;
 	MaskPtrT _maskPtr;
+        ImageT & _image;
+        MaskT & _mask;
     };
     
 #include "MaskedImage.cc"

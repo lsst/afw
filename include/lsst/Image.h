@@ -45,6 +45,8 @@ namespace lsst {
 
         bool operator ()(int x, int y, int plane) const;
 
+        Image<ImagePixelT>& operator += (const Image<ImagePixelT>& inputImage);
+
         int getImageCols() const;
 
         int getImageRows() const;
