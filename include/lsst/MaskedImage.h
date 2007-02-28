@@ -12,6 +12,10 @@
 #include <vw/Image.h>
 #include <vw/Math/BBox.h>
 #include <boost/shared_ptr.hpp>
+#include <boost/iterator/filter_iterator.hpp>
+#include <boost/iterator/zip_iterator.hpp>
+#include <boost/tuple/tuple.hpp>
+#include <boost/tuple/tuple_io.hpp>
 #include <list>
 #include <map>
 #include <string>
@@ -20,8 +24,27 @@
 #include "Image.h"
 
 namespace lsst {
+    template<class ImagePixelT, class MaskPixelT> class MaskedImage;
 
-    template<typename ImagePixelT, typename MaskPixelT> class PixelProcessingFunc;
+    template<typename ImagePixelT, typename MaskPixelT> class PixelProcessingFunc
+    {
+    public:
+        typedef boost::tuple<const ImagePixelT&, const MaskPixelT&> TupleT;
+        typedef boost::shared_ptr<Image<ImagePixelT> > ImagePtrT;
+        typedef boost::shared_ptr<Mask<MaskPixelT> > MaskPtrT;
+
+        PixelProcessingFunc(MaskedImage<ImagePixelT, MaskPixelT>& m) : 
+            _imagePtr(m.getImage()),
+            _maskPtr(m.getMask()) {};
+        virtual bool operator () (TupleT);
+        virtual ~PixelProcessingFunc() {};
+    protected:
+        ImagePtrT _imagePtr;
+        MaskPtrT _maskPtr;
+    };
+
+    template<typename ImagePixelT, typename MaskPixelT> class NonLocalPixelProcessingFunc;
+
 
     template<class ImagePixelT, class MaskPixelT>
     class MaskedImage
@@ -41,9 +64,12 @@ namespace lsst {
 
         MaskedImage(int nCols, int nRows);
 
-	MaskedImage returnProcessedPixels(MaskPixelBooleanFunc<MaskPixelT> selectionFunc, PixelProcessingFunc<ImagePixelT, MaskPixelT> processingFunc);
+	void processPixels(MaskPixelBooleanFunc<MaskPixelT> selectionFunc, PixelProcessingFunc<ImagePixelT, MaskPixelT> processingFunc,
+            MaskedImageT &);
             
 	void processPixels(MaskPixelBooleanFunc<MaskPixelT> selectionFunc, PixelProcessingFunc<ImagePixelT, MaskPixelT> processingFunc);
+
+	void processPixels(PixelProcessingFunc<ImagePixelT, MaskPixelT> processingFunc);
 
 	MaskedImagePtrT getSubImage(BBox2i region);
 
