@@ -2,6 +2,7 @@
 // Implementations of Mask class methods
 // This file can NOT be separately compiled!   It is included by Mask.h
 
+
 template<typename MaskPixelT>
 Mask<MaskPixelT>::Mask() :
     _imagePtr(new vw::ImageView<MaskPixelT>()),
@@ -53,57 +54,71 @@ Mask<MaskPixelT>::Mask(int ncols, int nrows) :
 template<class MaskPixelT> int Mask<MaskPixelT>::addMaskPlane(string name)
 {
      int id;
-     if (getMaskPlane(name, id) == true) {
-	  // raise exception?
+     try {
+         getMaskPlane(name, id);
 	  return id;
      }
-
-     if (_numPlanesUsed < _numPlanesMax) {
-	  // find first entry in dict with null name
-	  for(map<int, string>::iterator i=_maskPlaneDict.begin(); i != _maskPlaneDict.end(); ++i) {
+     catch(NoMaskPlane &e) {
+        // build new entry
+        if (_numPlanesUsed < _numPlanesMax) {
+	    // find first entry in dict with null name
+	    for(map<int, string>::iterator i=_maskPlaneDict.begin(); i != _maskPlaneDict.end(); ++i) {
 	       if (i->second == "") {
 		    i->second = name;
 		    _numPlanesUsed++; 
 		    return i->first;
 	       }
-	  }
-	  // raise exception?
-	  return -1;
-     } else {
-	  // raise exception?
-	  return -1;
-     }
+	    }
+            // No free space found for new plane addition
+            std::string s("No space to add new plane");
+	    throw OutOfPlaneSpace(s, _numPlanesUsed, _numPlanesMax);
+        } else {
+            // Max number of planes already allocated
+          std::string s = "Max number of planes already used";
+	  throw OutOfPlaneSpace(s, _numPlanesUsed, _numPlanesMax);
+        }
+    }
 }
 
 template<class MaskPixelT> void Mask<MaskPixelT>::removeMaskPlane(string name)
 {
      int id;
-     if (getMaskPlane(name, id) == false) {
-	  // raise exception?
-	  return;
+     try {
+         getMaskPlane(name, id);
+         clearMaskPlane(id);
+         _maskPlaneDict[id] = "";
+         _numPlanesUsed--;
+	 return;
      }
-     clearMaskPlane(id);
-     _maskPlaneDict[id] = "";
-     _numPlanesUsed--;
+     catch (exception &e) {
+         cout << e.what() << "Plane " << name << " not present in this Mask" << endl;
+         return;
+     }
      
 }
 
-template<class MaskPixelT> bool Mask<MaskPixelT>::getMaskPlane(string name, int& plane)
+template<class MaskPixelT> void Mask<MaskPixelT>::getMaskPlane(string name, int& plane)
 {
      for(map<int, string>::iterator i=_maskPlaneDict.begin(); i != _maskPlaneDict.end(); ++i) {
 	  if (i->second == name) {
 	       plane = i->first;
-	       return true;
+	       return ;
 	  }
      }
      plane = -1;
-     return false;
+     throw NoMaskPlane();
 }
 
 template<class MaskPixelT> bool Mask<MaskPixelT>::getPlaneBitMask(string name, MaskChannelT& bitMask)
 {
     int plane;
-    if (getMaskPlane(name, plane)==false) return false;
+    try {
+        getMaskPlane(name, plane);
+    }
+    catch (exception &e) {
+         cout << e.what() << "Plane " << name << " not present in this Mask" << endl;
+         return false;
+    }
 
     bitMask = _planeBitMask[plane];
     return true;
@@ -222,8 +237,11 @@ template<class MaskPixelT> Mask<MaskPixelT>&  Mask<MaskPixelT>::operator |= (con
         string inputPlaneName = i->second;
         if (inputPlaneName != "") {
             int thisPlaneNumber;
-            if (getMaskPlane(inputPlaneName, thisPlaneNumber)==false) {
-                cout << "Plane " << inputPlaneName << " not present in this Mask" << endl;
+            try {
+                getMaskPlane(inputPlaneName, thisPlaneNumber) ;
+            }
+            catch (NoMaskPlane &e) {
+                cout << e.what() << "Plane " << inputPlaneName << " not present in this Mask" << endl;
                 throw;
             }
             if (thisPlaneNumber != inputPlaneNumber) {

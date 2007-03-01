@@ -1,6 +1,8 @@
 // -*- lsst-c++ -*-
 #include "lsst/Mask.h"
 
+#include <stdexcept>
+
 using namespace lsst;
 
 template <typename MaskPixelT> class testCrFunc : public MaskPixelBooleanFunc<MaskPixelT> {
@@ -47,25 +49,44 @@ int main(int argc, char *argv[])
 
      int iPlane;
 
-     iPlane = testMask.addMaskPlane("CR");
-     cout << "Assigned CR to plane " << iPlane << endl;
+     try {
+        iPlane = testMask.addMaskPlane("CR");
+        cout << "Assigned CR to plane " << iPlane << endl;
+     }
+     catch(OutOfPlaneSpace &e){
+        cout << "Ran out of space to add new CR plane: number of Planes: " \
+             << e.nPlane() << "  max Planes: " << e.maxPlane() << endl;
+        throw;
+     }
 
-     iPlane = testMask.addMaskPlane("BP");
-     cout << "Assigned BP to plane " << iPlane << endl;
+     try {
+         iPlane = testMask.addMaskPlane("BP");
+         cout << "Assigned BP to plane " << iPlane << endl;
+     }
+     catch(exception &e){
+         cout << e.what() << "Ran out of space to add new BP plane" << endl;
+         throw;
+     }
 
      int planeCR, planeBP;
 
-     if (testMask.getMaskPlane("CR", planeCR) == false) {
-	  cout << "No CR plane found" << endl;
-     } else {
-	  cout << "CR plane is " << planeCR << endl;
+     try {
+         testMask.getMaskPlane("CR", planeCR); 
+         cout << "CR plane is " << planeCR << endl;
+     }
+     catch(NoMaskPlane &e) {
+	  cout << e.what() << "No CR plane found" << endl;
+          throw;
      }
 
-     if (testMask.getMaskPlane("BP", planeBP) == false) {
-	  cout << "No BP plane found" << endl;
-     } else {
-	  cout << "BP plane is " << planeBP << endl;
+     try {
+         testMask.getMaskPlane("BP", planeBP);
+         cout << "BP plane is " << planeBP << endl;
      }
+     catch(NoMaskPlane &e) {
+	  cout << e.what() << "No BP plane found" << endl;
+          throw;
+     } 
 
 
 // ------------ Test mask plane operations
@@ -104,8 +125,15 @@ int main(int argc, char *argv[])
 
 // ------------------ Test |= operator
    
-     iPlane = testMask3.addMaskPlane("CR");
-     cout << "Assigned CR to plane " << iPlane << endl;
+     try {
+         iPlane = testMask3.addMaskPlane("CR");
+         cout << "Assigned CR to plane " << iPlane << endl;
+     }
+     catch(exception &e){
+         cout << e.what() << "Ran out of space to add new CR plane" << endl;
+         throw;
+     }
+
 
      testMask |= testMask3;
 
@@ -116,17 +144,23 @@ int main(int argc, char *argv[])
      testMask.clearMaskPlane(planeBP);
      testMask.removeMaskPlane("BP");
 
-     if (testMask.getMaskPlane("CR", planeCR) == false) {
-	  cout << "No CR plane found" << endl;
-     } else {
-	  cout << "CR plane is " << planeCR << endl;
+     try {
+         testMask.getMaskPlane("CR", planeCR);
      }
+     catch(NoMaskPlane &e) {
+	  cout << e.what() << "No CR plane found" << endl;
+          throw;
+     } 
+     cout << "CR plane is " << planeCR << endl;
 
-     if (testMask.getMaskPlane("BP", planeBP) == false) {
-	  cout << "No BP plane found" << endl;
-     } else {
-	  cout << "BP plane is " << planeBP << endl;
+     try {
+         testMask.getMaskPlane("BP", planeBP);
+         cout << "BP plane is " << planeBP << endl;
      }
+     catch(NoMaskPlane &e) {
+	  cout << e.what() << "No BP plane found" << endl;
+          // testing success of plane deletion so NO  throw;
+     } 
 
 // --------------- Test submask methods
 
@@ -164,8 +198,38 @@ int main(int argc, char *argv[])
 
      cout << "This should throw an exception:" << endl;
 
-     region.expand(10);
-     testMask.replaceSubMask(region, *subTestMask);
+     try {
+        region.expand(10);
+        testMask.replaceSubMask(region, *subTestMask);
+     }
 
-
+     //----------------------------------------------------------------
+     // Catch base STD exception (from which all exceptions should be derived)
+     catch (exception eex) {
+        cout << "Exception handler (exception eex): Caught the buggy code" << endl;
+     }
+     //----------------------------------------------------------------
+     // Catch all exceptions not derived from STD base exception
+     catch (...) {
+        cout << "Exception handler (...): Caught the buggy code" << endl;
+     }
 }
+
+/*   //----------------------------------------------------------------
+     // Following exceptions are the only exceptions currently used in VW. 
+     //     Additional VW exceptions are defined in vw:Exception.h
+     //     VW exceptions are derived from std:exception
+
+     catch (vw::NoImplErr noirex) {
+        cout << "Exception handler (vw::NoImplErr noirex): Caught the buggy code" << endl;
+     }
+     catch (vw::LogicErr lrex) {
+        cout << "Exception handler (vw::LoginErr lrex): Caught the buggy code" << endl;
+     }
+     catch (vw::IOErr iorex) {
+        cout << "Exception handler (vw::IOErr iorex): Caught the buggy code" << endl;
+     }
+     catch (vw::ArgumentErr vwrex) {
+        cout << "Exception handler (vw::ArgumentErr vwrex): Caught the buggy code" << endl;
+     }
+*/

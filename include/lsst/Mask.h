@@ -16,6 +16,8 @@
 #include <map>
 #include <string>
 
+#include "lsst/MaskExceptions.h"
+
 using namespace vw;
 using namespace std;
 
@@ -60,7 +62,7 @@ namespace lsst {
         
         void removeMaskPlane(string name);
 
-        bool getMaskPlane(string name, int& plane);
+        void getMaskPlane(string name, int& plane);
 
         bool getPlaneBitMask(string name, MaskChannelT& bitMask);
         
