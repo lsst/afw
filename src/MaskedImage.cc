@@ -2,6 +2,8 @@
 // Implementations of MaskedImage class methods
 // This file can NOT be separately compiled!   It is included by MaskedImage.h
 
+#include <typeinfo>
+
 template<typename ImagePixelT, typename MaskPixelT> 
 MaskedImage<ImagePixelT, MaskPixelT>::MaskedImage() :
      _imagePtr(new Image<ImagePixelT>()),
@@ -49,6 +51,52 @@ void  MaskedImage<ImagePixelT, MaskPixelT>::processPixels(MaskPixelBooleanFunc<M
 template<typename ImagePixelT, typename MaskPixelT> 
 void  MaskedImage<ImagePixelT, MaskPixelT>::processPixels(PixelProcessingFunc<ImagePixelT, MaskPixelT> processingFunc) {
     std::cout << "Processing pixels" << std::endl;
+
+    std::cout << typeid(processingFunc).name() << std::endl;
+
+
+    // Just build zip iterator and iterate
+    ImageView<ImagePixelT>& vwImage = *(_image.getIVwPtr());
+//     typename ImageView<ImagePixelT>::iterator beg1 = vwImage.begin();
+//     typename ImageView<ImagePixelT>::iterator end1 = vwImage.end();
+
+    ImageView<MaskPixelT>& vwMask = *(_mask.getIVwPtr());
+//     typename ImageView<MaskPixelT>::iterator beg2 = vwMask.begin();
+//     typename ImageView<MaskPixelT>::iterator end2 = vwMask.end();
+
+    processingFunc.foo(10);
+
+    ImagePixelT iPix(0);
+    MaskPixelT mPix(0);
+    boost::tuple<ImagePixelT &, MaskPixelT &> foo(iPix, mPix);
+    processingFunc(foo);
+
+//     boost::tuple<ImagePixelT &, MaskPixelT &> foo2 = boost::make_tuple(boost::ref(iPix), boost::ref(mPix));
+//     processingFunc(foo2);
+    
+//     processingFunc(boost::make_tuple(boost::ref(iPix), boost::ref(mPix)));
+
+//     std::for_each(
+//                   boost::make_zip_iterator(
+//                                            boost::make_tuple(beg1, beg2)
+//                                            ),
+//                   boost::make_zip_iterator(
+//                                            boost::make_tuple(end1, end2)
+//                                            ),
+//                   processingFunc()
+//                   );
+
+//     typedef boost::tuple<typename ImageView<ImagePixelT>::iterator, typename ImageView<MaskPixelT>::iterator> ZipTupleT;
+//     ZipTupleT zipBegin(vwImage.begin(), vwMask.begin());
+//     ZipTupleT zipEnd(vwImage.end(), vwMask.end());
+
+//     boost::zip_iterator<ZipTupleT> i(zipBegin);
+//     boost::zip_iterator<ZipTupleT> iEnd(zipEnd);
+
+//     for ( ; i != iEnd; i++) {
+//         processingFunc(*i);
+//     }
+    
 }
 
 template<typename ImagePixelT, typename MaskPixelT> 
@@ -60,7 +108,12 @@ void  MaskedImage<ImagePixelT, MaskPixelT>::processPixels(MaskPixelBooleanFunc<M
 // Would be better to just declare the operator() to be virtual = 0 - but causes problems for Swig/Python
 
 template<typename ImagePixelT, typename MaskPixelT>
-bool PixelProcessingFunc<ImagePixelT, MaskPixelT>::operator() (typename PixelProcessingFunc<ImagePixelT, MaskPixelT>::TupleT t) {
-    abort();
-    return true;
+void PixelProcessingFunc<ImagePixelT, MaskPixelT>::operator() (boost::tuple<ImagePixelT&, MaskPixelT&> t) {
+    std::cout << "this should not happen!" << std::endl;
+//     abort();
+}
+
+template<typename ImagePixelT, typename MaskPixelT>
+void PixelProcessingFunc<ImagePixelT, MaskPixelT>::foo(int i) {
+    std::cout << "PixelProcFunc::foo" << std::endl;
 }
