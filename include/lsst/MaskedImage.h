@@ -26,18 +26,20 @@
 namespace lsst {
     template<class ImagePixelT, class MaskPixelT> class MaskedImage;
 
-    template<typename ImagePixelT, typename MaskPixelT> class PixelProcessingFunc
+    template<typename ImagePixelT, typename MaskPixelT> class PixelProcessingFunc : 
+        public std::unary_function<boost::tuple<ImagePixelT&, MaskPixelT&>&, void>
     {
     public:
-        typedef boost::tuple<const ImagePixelT&, const MaskPixelT&> TupleT;
+        typedef boost::tuple<ImagePixelT&, MaskPixelT&> TupleT;
         typedef boost::shared_ptr<Image<ImagePixelT> > ImagePtrT;
         typedef boost::shared_ptr<Mask<MaskPixelT> > MaskPtrT;
 
         PixelProcessingFunc(MaskedImage<ImagePixelT, MaskPixelT>& m) : 
             _imagePtr(m.getImage()),
             _maskPtr(m.getMask()) {};
-        virtual bool operator () (TupleT);
+        virtual void operator () (boost::tuple<ImagePixelT&, MaskPixelT&>);
         virtual ~PixelProcessingFunc() {};
+        virtual void foo(int);
     protected:
         ImagePtrT _imagePtr;
         MaskPtrT _maskPtr;
