@@ -21,13 +21,14 @@ public:
 	  if (++testCount < 10) std::cout << "yup" << std::endl;
      }
 
-     void foo(int i) {
-	  std::cout << "testPixProcFunc::foo" << std::endl;
-     } 
 private:
      MaskChannelT bitsCR;
      int testCount;
 };
+
+  template <typename ImagePixelT, typename MaskPixelT> void testFunc(PixelProcessingFunc<ImagePixelT, MaskPixelT> &func) {
+    std::cout << "testFunc got: " << typeid(func).name() << std::endl;
+  };
 
 };
 
@@ -46,14 +47,6 @@ int main()
                                                                                  // from testMaskedImage1 to fooFunc
      fooFunc.init();
 
-     fooFunc.foo(10);
-
-     std::cout << typeid(fooFunc).name() << std::endl;
-
-     ImagePixelType i1(0);
-     MaskPixelType m1(0);
-
-     fooFunc(boost::make_tuple(boost::ref(i1), boost::ref(m1)));
-
      testMaskedImage1.processPixels(fooFunc);
+
 }
