@@ -39,7 +39,6 @@ namespace lsst {
             _maskPtr(m.getMask()) {};
         virtual void operator () (boost::tuple<ImagePixelT&, MaskPixelT&>);
         virtual ~PixelProcessingFunc() {};
-        virtual void foo(int);
     protected:
         ImagePtrT _imagePtr;
         MaskPtrT _maskPtr;
@@ -66,12 +65,12 @@ namespace lsst {
 
         MaskedImage(int nCols, int nRows);
 
-	void processPixels(MaskPixelBooleanFunc<MaskPixelT> selectionFunc, PixelProcessingFunc<ImagePixelT, MaskPixelT> processingFunc,
+	void processPixels(MaskPixelBooleanFunc<MaskPixelT> &selectionFunc, PixelProcessingFunc<ImagePixelT, MaskPixelT> &processingFunc,
             MaskedImageT &);
             
-	void processPixels(MaskPixelBooleanFunc<MaskPixelT> selectionFunc, PixelProcessingFunc<ImagePixelT, MaskPixelT> processingFunc);
+	void processPixels(MaskPixelBooleanFunc<MaskPixelT> &selectionFunc, PixelProcessingFunc<ImagePixelT, MaskPixelT> &processingFunc);
 
-	void processPixels(PixelProcessingFunc<ImagePixelT, MaskPixelT> processingFunc);
+	void processPixels(PixelProcessingFunc<ImagePixelT, MaskPixelT> &processingFunc);
 
 	MaskedImagePtrT getSubImage(BBox2i region);
 
