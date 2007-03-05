@@ -52,14 +52,12 @@ template<typename ImagePixelT, typename MaskPixelT>
 void  MaskedImage<ImagePixelT, MaskPixelT>::processPixels(PixelProcessingFunc<ImagePixelT, MaskPixelT> &processingFunc) {
     std::cout << "Processing pixels" << std::endl;
 
-    std::cout << typeid(processingFunc).name() << std::endl;
-
     ImageView<ImagePixelT>& vwImage = *(_image.getIVwPtr());
     ImageView<MaskPixelT>& vwMask = *(_mask.getIVwPtr());
 
 
 // For unknown reasons this approach has compiler problems
-
+// ----------------------------------------------------------------------
 // Just build zip iterator and iterate 
 //     typename ImageView<ImagePixelT>::iterator beg1 = vwImage.begin();
 //     typename ImageView<ImagePixelT>::iterator end1 = vwImage.end();
@@ -76,6 +74,7 @@ void  MaskedImage<ImagePixelT, MaskPixelT>::processPixels(PixelProcessingFunc<Im
 //                                            ),
 //                   processingFunc()
 //                   );
+// ----------------------------------------------------------------------
 
 // So... use this somewhat less clean alternate approach 
 
