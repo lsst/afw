@@ -2,8 +2,8 @@
 #include "lsst/MaskedImage.h"
 #include <typeinfo>
 
+using namespace lsst;
 
-namespace lsst {
 template <typename ImagePixelT, typename MaskPixelT> class testPixProcFunc : public PixelProcessingFunc<ImagePixelT, MaskPixelT> {
 public:
      typedef typename PixelChannelType<ImagePixelT>::type ImageChannelT;
@@ -18,7 +18,12 @@ public:
         
      void operator ()(boost::tuple<ImagePixelT&, MaskPixelT&> t) { 
          //  In general, do something to the pixel values
-	  if (++testCount < 10) std::cout << "yup" << std::endl;
+         if (++testCount < 10) {
+             ImagePixelT& i = boost::tuples::get<0>(t);
+             MaskPixelT& m =  boost::tuples::get<1>(t);
+             std::cout << i << " " << m << std::endl;
+             boost::tuples::get<0>(t) = 1;
+         }
      }
 
 private:
@@ -26,13 +31,8 @@ private:
      int testCount;
 };
 
-  template <typename ImagePixelT, typename MaskPixelT> void testFunc(PixelProcessingFunc<ImagePixelT, MaskPixelT> &func) {
-    std::cout << "testFunc got: " << typeid(func).name() << std::endl;
-  };
 
-};
 
-using namespace lsst;
 
 int main()
 {
@@ -47,6 +47,9 @@ int main()
                                                                                  // from testMaskedImage1 to fooFunc
      fooFunc.init();
 
+     testMaskedImage1.processPixels(fooFunc);
+
+     fooFunc.init();
      testMaskedImage1.processPixels(fooFunc);
 
 }
