@@ -1,4 +1,5 @@
 # -*- python -*-
 Import("env")
 
-env.Program(["Mask_1.cc"], LIBS=env.libs["vw"])
+env.Program(["Mask_1.cc"], LIBS=env.libs["vw"] + ["citizen"])
+env.Program(["BuildExcept.cc"], LIBS="citizen")
