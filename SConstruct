@@ -10,7 +10,7 @@ env = scons.makeEnv("fw",
                     [["python", "Python.h"],
                      ["boost", "boost/version.hpp", "boost_filesystem:C++"],
                      ["visionWorkbench", "vw/Core.h", "vw:C++"],
-		     ["cfitsio", "fitsio.h", "cfitsio", "ffopen"],
+		     ["cfitsio", "fitsio.h", ], # "cfitsio", "ffopen"],
                      ["wcstools", "wcs.h", "wcs", "wcscat"],
                      ["xpa", "xpa.h", "xpa", "XPAPuts"],
                      ])
@@ -18,7 +18,7 @@ env = scons.makeEnv("fw",
 # Libraries that I need to link things.  This should be handled better
 #
 env.libs = dict([
-    ("boost",	Split("boost_filesystem-d")),
+    ("boost",	Split("boost_filesystem")),
     ("fits",	Split("fitsio")),
     ("vw",	Split("vw vwCore vwFileIO")),
     ])
