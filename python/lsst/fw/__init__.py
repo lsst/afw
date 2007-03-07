@@ -3,7 +3,7 @@ try:
 except NameError:
     import imp, os, sys
 
-    class LSSTImporter():
+    class LSSTImporter:
         """An importer to go on sys.meta_path that enables you to
         find a module somewhere on sys.path, even if not found at
         the top level (requires python 2.5; cf PEP 302).
