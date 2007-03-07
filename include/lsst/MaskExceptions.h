@@ -36,8 +36,8 @@ namespace lsst {
         const int maxPlane() throw();
     };
 
-#include "MaskExceptions.cc"
-
 } // namespace lsst
 
 #endif // LSST_MASK_EXCEPTIONS_H
+
+
