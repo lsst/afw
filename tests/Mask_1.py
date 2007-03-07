@@ -3,11 +3,11 @@ import fw                               # Search multiple lsst dirs on sys.path
 import lsst.fw.Display.fwLib as fwLib
 
 def test():
-    if True:
+    if not True:
         maskImage = fwLib.ImageMask(300,400)
         testMask = fwLib.MaskD(maskImage)
     else:
-        testMask = fwLib.MaskD(fwLib.ImageMask(300,400))
+        testMask = fwLib.MaskD(300, 400)
 
     for p in ("CR", "BP"):
         print "Assigned %s to plane %d" % (p, testMask.addMaskPlane(p))
@@ -42,7 +42,6 @@ def test():
 
     testMask.setMaskPlaneValues(planes['CR'], pixelList)
     region = fwLib.BBox2i(100, 300, 10, 40)
-    print "region:", region
     subTestMask = testMask.getSubMask(region)
     
     testMask.clearMaskPlane(planes['CR']);
