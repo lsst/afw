@@ -26,6 +26,22 @@
 namespace lsst {
     template<class ImagePixelT, class MaskPixelT> class MaskedImage;
 
+    template<typename PixelT> class PixelLocator : public vw::PixelIterator<vw::ImageView<PixelT> > {
+    public:
+        PixelLocator(vw::ImageView<PixelT>*, vw::PixelIterator<vw::ImageView<PixelT> >);
+        PixelLocator<PixelT>& advance(int dx, int dy);
+        PixelT& operator ()();
+    private:
+        unsigned _cols;
+        unsigned _rows;
+        unsigned _planes;
+        unsigned _cstride;
+        unsigned _rstride;
+        unsigned _pstride;
+        PixelT* _pixelPtr;
+    };
+
+
     template<typename ImagePixelT, typename MaskPixelT> class PixelProcessingFunc : 
         public std::unary_function<boost::tuple<ImagePixelT&, MaskPixelT&>&, void>
     {
@@ -33,19 +49,37 @@ namespace lsst {
         typedef boost::tuple<ImagePixelT&, MaskPixelT&> TupleT;
         typedef boost::shared_ptr<Image<ImagePixelT> > ImagePtrT;
         typedef boost::shared_ptr<Mask<MaskPixelT> > MaskPtrT;
+        typedef PixelLocator<ImagePixelT> ImageIteratorT;
+        typedef PixelLocator<MaskPixelT> MaskIteratorT;
+        typedef vw::ImageView<ImagePixelT> * ImageViewPtrT;
+        typedef vw::ImageView<MaskPixelT> * MaskViewPtrT;
 
         PixelProcessingFunc(MaskedImage<ImagePixelT, MaskPixelT>& m) : 
             _imagePtr(m.getImage()),
-            _maskPtr(m.getMask()) {};
-        virtual void operator () (boost::tuple<ImagePixelT&, MaskPixelT&>);
+            _imageViewPtr(_imagePtr->getIVwPtr().get()),
+            _maskPtr(m.getMask()),
+            _maskViewPtr(_maskPtr->getIVwPtr().get()),
+            _imageLocatorBegin(_imageViewPtr, _imageViewPtr->begin()),
+            _imageLocatorEnd(_imageViewPtr, _imageViewPtr->end()),
+            _maskLocatorBegin(_maskViewPtr, _maskViewPtr->begin()),
+            _maskLocatorEnd(_maskViewPtr, _maskViewPtr->end()) {
+        }
+        virtual void operator () (ImageIteratorT&, MaskIteratorT&);
         virtual ~PixelProcessingFunc() {};
+        ImageIteratorT & getImagePixelLocatorBegin() { return _imageLocatorBegin; }
+        ImageIteratorT & getImagePixelLocatorEnd() { return _imageLocatorEnd; }
+        MaskIteratorT & getMaskPixelLocatorBegin() { return _maskLocatorBegin; }
+        MaskIteratorT & getMaskPixelLocatorEnd() { return _maskLocatorEnd; }
     protected:
         ImagePtrT _imagePtr;
         MaskPtrT _maskPtr;
+        ImageViewPtrT _imageViewPtr;
+        MaskViewPtrT _maskViewPtr;
+        ImageIteratorT _imageLocatorBegin;
+        ImageIteratorT _imageLocatorEnd;
+        MaskIteratorT _maskLocatorBegin;
+        MaskIteratorT _maskLocatorEnd;
     };
-
-    template<typename ImagePixelT, typename MaskPixelT> class NonLocalPixelProcessingFunc;
-
 
     template<class ImagePixelT, class MaskPixelT>
     class MaskedImage
