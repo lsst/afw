@@ -6,23 +6,29 @@ using namespace lsst;
 
 template <typename ImagePixelT, typename MaskPixelT> class testPixProcFunc : public PixelProcessingFunc<ImagePixelT, MaskPixelT> {
 public:
-     typedef typename PixelChannelType<ImagePixelT>::type ImageChannelT;
-     typedef typename PixelChannelType<MaskPixelT>::type MaskChannelT;
+    typedef typename PixelChannelType<ImagePixelT>::type ImageChannelT;
+    typedef typename PixelChannelType<MaskPixelT>::type MaskChannelT;
+    typedef PixelLocator<ImagePixelT> ImageIteratorT;
+    typedef PixelLocator<MaskPixelT> MaskIteratorT;
      
-     testPixProcFunc(MaskedImage<ImagePixelT, MaskPixelT>& m) : PixelProcessingFunc<ImagePixelT, MaskPixelT>(m) {}
-     
-     void init() {
-	  PixelProcessingFunc<ImagePixelT, MaskPixelT>::_maskPtr->getPlaneBitMask("CR", bitsCR);
-	  testCount = 0;
-     }
+    testPixProcFunc(MaskedImage<ImagePixelT, MaskPixelT>& m) : PixelProcessingFunc<ImagePixelT, MaskPixelT>(m) {}
+    
+    void init() {
+        PixelProcessingFunc<ImagePixelT, MaskPixelT>::_maskPtr->getPlaneBitMask("CR", bitsCR);
+        testCount = 0;
+    }
         
-     void operator ()(boost::tuple<ImagePixelT&, MaskPixelT&> t) { 
-         //  In general, do something to the pixel values
-         if (++testCount < 10) {
-             ImagePixelT& i = boost::tuples::get<0>(t);
-             MaskPixelT& m =  boost::tuples::get<1>(t);
-             std::cout << i << " " << m << std::endl;
-             boost::tuples::get<0>(t) = 1;
+    void operator ()(ImageIteratorT &i,MaskIteratorT &m ) { 
+        //  In general, do something to the pixel values
+        ImageIteratorT j = i;
+        if (++testCount < 10) {
+            std::cout << *i << " " << *m << std::endl;
+            *i = 1;
+            int dx = 1;
+            int dy = 10;
+//             *(i.advance(dx,dy)) = 10;
+            j.advance(dx,dy);
+            *j = 10;
          }
      }
 
