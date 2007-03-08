@@ -52,43 +52,19 @@ template<typename ImagePixelT, typename MaskPixelT>
 void  MaskedImage<ImagePixelT, MaskPixelT>::processPixels(PixelProcessingFunc<ImagePixelT, MaskPixelT> &processingFunc) {
     std::cout << "Processing pixels" << std::endl;
 
-    ImageView<ImagePixelT>& vwImage = *(_image.getIVwPtr());
-    ImageView<MaskPixelT>& vwMask = *(_mask.getIVwPtr());
+//     ImageView<ImagePixelT>& vwImage = *(_image.getIVwPtr());
+//     ImageView<MaskPixelT>& vwMask = *(_mask.getIVwPtr());
 
+//     typename ImageView<ImagePixelT>::iterator i = vwImage.begin();
+//     typename ImageView<MaskPixelT>::iterator m = vwMask.begin();
 
-// For unknown reasons this approach has compiler problems
-// ----------------------------------------------------------------------
-// Just build zip iterator and iterate 
-//     typename ImageView<ImagePixelT>::iterator beg1 = vwImage.begin();
-//     typename ImageView<ImagePixelT>::iterator end1 = vwImage.end();
+    PixelLocator<ImagePixelT> i = processingFunc.getImagePixelLocatorBegin();
+    PixelLocator<ImagePixelT> iEnd = processingFunc.getImagePixelLocatorEnd();
+    PixelLocator<MaskPixelT> m = processingFunc.getMaskPixelLocatorBegin();
 
-//     typename ImageView<MaskPixelT>::iterator beg2 = vwMask.begin();
-//     typename ImageView<MaskPixelT>::iterator end2 = vwMask.end();
-
-//     std::for_each(
-//                   boost::make_zip_iterator(
-//                                            boost::make_tuple(beg1, beg2)
-//                                            ),
-//                   boost::make_zip_iterator(
-//                                            boost::make_tuple(end1, end2)
-//                                            ),
-//                   processingFunc()
-//                   );
-// ----------------------------------------------------------------------
-
-// So... use this somewhat less clean alternate approach 
-
-    typedef boost::tuple<typename ImageView<ImagePixelT>::iterator, typename ImageView<MaskPixelT>::iterator> ZipTupleT;
-    ZipTupleT zipBegin(vwImage.begin(), vwMask.begin());
-    ZipTupleT zipEnd(vwImage.end(), vwMask.end());
-
-    boost::zip_iterator<ZipTupleT> i(zipBegin);
-    boost::zip_iterator<ZipTupleT> iEnd(zipEnd);
-
-    for ( ; i != iEnd; i++) {
-        processingFunc(*i);
+    for ( ; i != iEnd; i++, m++) {
+        processingFunc(i, m);
     }
-    
 }
 
 template<typename ImagePixelT, typename MaskPixelT> 
@@ -100,7 +76,33 @@ void  MaskedImage<ImagePixelT, MaskPixelT>::processPixels(MaskPixelBooleanFunc<M
 // Would be better to just declare the operator() to be virtual = 0 - but causes problems for Swig/Python
 
 template<typename ImagePixelT, typename MaskPixelT>
-void PixelProcessingFunc<ImagePixelT, MaskPixelT>::operator() (boost::tuple<ImagePixelT&, MaskPixelT&> t) {
+void PixelProcessingFunc<ImagePixelT, MaskPixelT>::operator() (ImageIteratorT& i, MaskIteratorT& m) {
     std::cout << "this should not happen!" << std::endl;
 //     abort();
+}
+
+// construct with ImageView pointer to ensure smart pointer reference counting?
+
+template<typename PixelT> 
+PixelLocator<PixelT>::PixelLocator(vw::ImageView<PixelT>* iv, vw::PixelIterator<vw::ImageView<PixelT> > ivIterator) : 
+    vw::PixelIterator<vw::ImageView<PixelT> > (ivIterator),
+    _cols(iv->cols()),
+    _rows(iv->rows()),
+    _planes(iv->planes()),
+    _cstride(1),
+    _rstride(_cols),
+    _pstride(_rows*_cols),
+    _pixelPtr(&vw::PixelIterator<vw::ImageView<PixelT> >::dereference())
+{
+}
+
+template<typename PixelT> 
+PixelLocator<PixelT>& PixelLocator<PixelT>::advance(int dx, int dy) {
+    _pixelPtr += dx*_cstride + dy*_rstride;
+    return *this;
+}
+
+template<typename PixelT> 
+PixelT& PixelLocator<PixelT>::operator () () {
+    return *_pixelPtr;
 }
