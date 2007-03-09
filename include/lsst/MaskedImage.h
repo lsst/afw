@@ -30,7 +30,6 @@ namespace lsst {
     public:
         PixelLocator(vw::ImageView<PixelT>*, vw::PixelIterator<vw::ImageView<PixelT> >);
         PixelLocator<PixelT>& advance(int dx, int dy);
-        PixelT& operator ()();
     private:
         unsigned _cols;
         unsigned _rows;
@@ -38,7 +37,6 @@ namespace lsst {
         unsigned _cstride;
         unsigned _rstride;
         unsigned _pstride;
-        PixelT* _pixelPtr;
     };
 
 
@@ -56,8 +54,8 @@ namespace lsst {
 
         PixelProcessingFunc(MaskedImage<ImagePixelT, MaskPixelT>& m) : 
             _imagePtr(m.getImage()),
-            _imageViewPtr(_imagePtr->getIVwPtr().get()),
             _maskPtr(m.getMask()),
+            _imageViewPtr(_imagePtr->getIVwPtr().get()),
             _maskViewPtr(_maskPtr->getIVwPtr().get()),
             _imageLocatorBegin(_imageViewPtr, _imageViewPtr->begin()),
             _imageLocatorEnd(_imageViewPtr, _imageViewPtr->end()),
