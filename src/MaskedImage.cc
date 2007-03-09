@@ -98,10 +98,13 @@ PixelLocator<PixelT>::PixelLocator(vw::ImageView<PixelT>* iv, vw::PixelIterator<
 
 template<typename PixelT> 
 PixelLocator<PixelT>& PixelLocator<PixelT>::advance(int dx, int dy) {
-    _pixelPtr += dx*_cstride + dy*_rstride;
+    int delta = dx*_cstride + dy*_rstride;
+    vw::PixelIterator<vw::ImageView<PixelT> >::advance(delta);
+    _pixelPtr += delta;
     return *this;
 }
 
+// maybe don't need this at all - if not, don't need pixelPtr
 template<typename PixelT> 
 PixelT& PixelLocator<PixelT>::operator () () {
     return *_pixelPtr;
