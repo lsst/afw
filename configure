@@ -814,7 +814,7 @@ Optional Packages:
   --with-eups=DIR         Use DIR as base for installation directories
   --with-python=file      Specify name of python executable.
   --with-swig=DIR         Specify location of SWIG executable.
-  --with-wcstools=DIR     Specify the directory where WCSTools is installed.
+  --with-wcstools=DIR     Specify the directory where wcstools is installed.
 
 Some influential environment variables:
   CC          C compiler command
@@ -1390,7 +1390,7 @@ fi;
                 { echo "$as_me:$LINENO: Note: since --prefix has been set we will ignore --with-eups" >&5
 echo "$as_me: Note: since --prefix has been set we will ignore --with-eups" >&6;}
               fi
-    	      eupsprefix=$eupsprefix/$relative_path$eups_product/$eups_version
+    	      eupsprefix=$eupsprefix/$eups_flavor/$relative_path$eups_product/$eups_version
 	   fi
            if [ X"$prefix" = X"NONE" ]; then
                 prefix=$eupsprefix
@@ -2761,11 +2761,11 @@ if test "${with_wcstools+set}" = set; then
   withval="$with_wcstools"
   WCSTOOLS_DIR="$withval"
 fi;
-   echo -n checking for WCSTools...
+   echo -n checking for wcstools...
    if [ -z "$WCSTOOLS_DIR" ]; then
-      { { echo "$as_me:$LINENO: error: You need WCSTools; use either setup or --with-wcstools=dir
+      { { echo "$as_me:$LINENO: error: You need wcstools; use either setup or --with-wcstools=dir
 See \`config.log' for more details." >&5
-echo "$as_me: error: You need WCSTools; use either setup or --with-wcstools=dir
+echo "$as_me: error: You need wcstools; use either setup or --with-wcstools=dir
 See \`config.log' for more details." >&2;}
    { (exit 1); exit 1; }; }
    fi
@@ -2786,9 +2786,9 @@ See \`config.log' for more details." >&2;}
    { (exit 1); exit 1; }; }
    fi
    if [ ! -f $WCSTOOLS_DIR/libwcs/libwcs.a ]; then
-      { { echo "$as_me:$LINENO: error: \"$WCSTOOLS_DIR\" is missing library: libwcs/libwcs.a; is WCSTools built?
+      { { echo "$as_me:$LINENO: error: \"$WCSTOOLS_DIR\" is missing library: libwcs/libwcs.a; is wcstools built?
 See \`config.log' for more details." >&5
-echo "$as_me: error: \"$WCSTOOLS_DIR\" is missing library: libwcs/libwcs.a; is WCSTools built?
+echo "$as_me: error: \"$WCSTOOLS_DIR\" is missing library: libwcs/libwcs.a; is wcstools built?
 See \`config.log' for more details." >&2;}
    { (exit 1); exit 1; }; }
    fi

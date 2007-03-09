@@ -109,7 +109,7 @@ AC_DEFUN([EUPS_DEFINE_ROOT], [
               if [[ X"$prefix" != X"NONE" ]]; then
                 AC_MSG_NOTICE(Note: since --prefix has been set we will ignore --with-eups)
               fi
-    	      eupsprefix=$eupsprefix/$relative_path$eups_product/$eups_version
+    	      eupsprefix=$eupsprefix/$eups_flavor/$relative_path$eups_product/$eups_version
 	   fi
            if [[ X"$prefix" = X"NONE" ]]; then
                 prefix=$eupsprefix

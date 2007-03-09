@@ -146,12 +146,12 @@ dnl This package has an unusual organization, so EUPS_WITH_CONFIGURE won't work
 dnl
 AC_DEFUN([LSST_FIND_WCSTOOLS], [
    AC_ARG_WITH(wcstools,
-     [AS_HELP_STRING(--with-wcstools=DIR, Specify the directory where WCSTools is installed.)],
+     [AS_HELP_STRING(--with-wcstools=DIR, Specify the directory where wcstools is installed.)],
      [WCSTOOLS_DIR="$withval"],
      [])
-   echo -n checking for WCSTools...
+   echo -n checking for wcstools...
    if [[ -z "$WCSTOOLS_DIR" ]]; then
-      AC_MSG_FAILURE([You need WCSTools; use either setup or --with-wcstools=dir])
+      AC_MSG_FAILURE([You need wcstools; use either setup or --with-wcstools=dir])
    fi
 
    if [[ ! -d "$WCSTOOLS_DIR" ]]; then
@@ -162,7 +162,7 @@ AC_DEFUN([LSST_FIND_WCSTOOLS], [
       AC_MSG_FAILURE(["$WCSTOOLS_DIR" is missing include file: libwcs/wcs.h; is this really WCSTools?])
    fi
    if [[ ! -f $WCSTOOLS_DIR/libwcs/libwcs.a ]]; then
-      AC_MSG_FAILURE(["$WCSTOOLS_DIR" is missing library: libwcs/libwcs.a; is WCSTools built?])
+      AC_MSG_FAILURE(["$WCSTOOLS_DIR" is missing library: libwcs/libwcs.a; is wcstools built?])
    fi
    echo " ok ($WCSTOOLS_DIR)" ])
 
