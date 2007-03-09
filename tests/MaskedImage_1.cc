@@ -11,11 +11,12 @@ public:
     typedef PixelLocator<ImagePixelT> ImageIteratorT;
     typedef PixelLocator<MaskPixelT> MaskIteratorT;
      
-    testPixProcFunc(MaskedImage<ImagePixelT, MaskPixelT>& m) : PixelProcessingFunc<ImagePixelT, MaskPixelT>(m) {}
+    testPixProcFunc(MaskedImage<ImagePixelT, MaskPixelT>& m) : PixelProcessingFunc<ImagePixelT, MaskPixelT>(m), initCount(0) {}
     
     void init() {
         PixelProcessingFunc<ImagePixelT, MaskPixelT>::_maskPtr->getPlaneBitMask("CR", bitsCR);
         testCount = 0;
+        initCount++;
     }
         
     void operator ()(ImageIteratorT &i,MaskIteratorT &m ) { 
@@ -23,18 +24,18 @@ public:
         ImageIteratorT j = i;
         if (++testCount < 10) {
             std::cout << *i << " " << *m << std::endl;
-            *i = 1;
+            *j = 1;
             int dx = 1;
-            int dy = 10;
-//             *(i.advance(dx,dy)) = 10;
-            j.advance(dx,dy);
-            *j = 10;
+            int dy = 0;
+            if (initCount <2) *(j.advance(dx,dy)) = 2*testCount;
+            std::cout << "modified: " << *j << std::endl;
          }
      }
 
 private:
-     MaskChannelT bitsCR;
-     int testCount;
+    MaskChannelT bitsCR;
+    int testCount;
+    int initCount;
 };
 
 
