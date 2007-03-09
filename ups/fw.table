@@ -16,7 +16,4 @@ envAppend(PYTHONPATH, ${PRODUCT_DIR}/python)
 # Needed to load the LSSTImporter that handles multiple "lsst"s in PYTHONPATH
 envAppend(PYTHONPATH, ${PRODUCT_DIR}/python/lsst)
 
-Flavor=Darwin
-envAppend(DYLD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
-Flavor=DarwinX86
 envAppend(DYLD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
