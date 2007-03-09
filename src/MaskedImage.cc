@@ -52,12 +52,6 @@ template<typename ImagePixelT, typename MaskPixelT>
 void  MaskedImage<ImagePixelT, MaskPixelT>::processPixels(PixelProcessingFunc<ImagePixelT, MaskPixelT> &processingFunc) {
     std::cout << "Processing pixels" << std::endl;
 
-//     ImageView<ImagePixelT>& vwImage = *(_image.getIVwPtr());
-//     ImageView<MaskPixelT>& vwMask = *(_mask.getIVwPtr());
-
-//     typename ImageView<ImagePixelT>::iterator i = vwImage.begin();
-//     typename ImageView<MaskPixelT>::iterator m = vwMask.begin();
-
     PixelLocator<ImagePixelT> i = processingFunc.getImagePixelLocatorBegin();
     PixelLocator<ImagePixelT> iEnd = processingFunc.getImagePixelLocatorEnd();
     PixelLocator<MaskPixelT> m = processingFunc.getMaskPixelLocatorBegin();
@@ -91,8 +85,7 @@ PixelLocator<PixelT>::PixelLocator(vw::ImageView<PixelT>* iv, vw::PixelIterator<
     _planes(iv->planes()),
     _cstride(1),
     _rstride(_cols),
-    _pstride(_rows*_cols),
-    _pixelPtr(&vw::PixelIterator<vw::ImageView<PixelT> >::dereference())
+    _pstride(_rows*_cols)
 {
 }
 
@@ -100,12 +93,5 @@ template<typename PixelT>
 PixelLocator<PixelT>& PixelLocator<PixelT>::advance(int dx, int dy) {
     int delta = dx*_cstride + dy*_rstride;
     vw::PixelIterator<vw::ImageView<PixelT> >::advance(delta);
-    _pixelPtr += delta;
     return *this;
-}
-
-// maybe don't need this at all - if not, don't need pixelPtr
-template<typename PixelT> 
-PixelT& PixelLocator<PixelT>::operator () () {
-    return *_pixelPtr;
 }
