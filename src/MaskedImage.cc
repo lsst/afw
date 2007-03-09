@@ -92,6 +92,6 @@ PixelLocator<PixelT>::PixelLocator(vw::ImageView<PixelT>* iv, vw::PixelIterator<
 template<typename PixelT> 
 PixelLocator<PixelT>& PixelLocator<PixelT>::advance(int dx, int dy) {
     int delta = dx*_cstride + dy*_rstride;
-    vw::PixelIterator<vw::ImageView<PixelT> >::advance(delta);
+    *this += delta;
     return *this;
 }
