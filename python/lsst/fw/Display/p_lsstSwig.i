@@ -5,7 +5,7 @@
  * typos when the user _thinks_ that they're setting a C-level object, but in
  * reality they're adding a new (and irrelevent) member to the class
  */
-%pythonnondynamic;
+%pythonnondynamic();
 #endif
 
 %include "cpointer.i"
