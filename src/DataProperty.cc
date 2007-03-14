@@ -1,5 +1,5 @@
 // -*- lsst-c++ -*-
-#include "DataProperty.h"
+#include "lsst/DataProperty.h"
 
 using namespace lsst;
 using boost::any_cast;
@@ -14,7 +14,7 @@ DataProperty* DataProperty::find(const std::string name) {
 
     std::list<DataProperty>::iterator pos;
     for (pos = _properties.begin(); pos != _properties.end(); pos++) {
-        if ((*pos).getName() == name) {
+        if (pos->getName() == name) {
             return &(*pos);
         }
     }
@@ -36,5 +36,14 @@ void DataProperty::print() {
         std::cout << " " << tmp;
     }
     std::cout << std::endl;
+
+    if (_properties.size() > 0) {
+        std::cout << "Nested property list: " << std::endl;
+        std::list<DataProperty>::iterator pos;
+        for (pos = _properties.begin(); pos != _properties.end(); pos++) {
+            pos->print();
+        }
+    }
+
           
 }
