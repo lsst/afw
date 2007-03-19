@@ -10,6 +10,7 @@
 #define LSST_DATAPROPERTY_H
 
 #include "boost/any.hpp"
+#include "boost/regex.hpp"
 #include <string>
 #include <list>
 #include <iostream>
@@ -20,7 +21,8 @@ namespace lsst {
     class DataProperty {
     public:
         DataProperty(std::string name, boost::any value = boost::any());
-        DataProperty* find(const std::string name);
+        DataProperty* find(const std::string name, bool reset=true);
+        DataProperty* find(const boost::regex pattern, bool reset=true);
         void addProperty(DataProperty &property);
         std::string getName() {return _name; }
         boost::any getValue() {return _value; }
@@ -32,6 +34,7 @@ namespace lsst {
         std::string _name;
         boost::any _value;
         ContainerT _properties;
+        std::list<DataProperty>::iterator pos;
     };
 
 };
