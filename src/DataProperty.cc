@@ -10,15 +10,22 @@ DataProperty::DataProperty(std::string name, boost::any value):
 {
 };
 
-DataProperty* DataProperty::find(const std::string name) {
+DataProperty* DataProperty::find(const std::string name, bool reset) {
 
-    std::list<DataProperty>::iterator pos;
-    for (pos = _properties.begin(); pos != _properties.end(); pos++) {
+    if (reset) {
+        pos = _properties.begin();
+    }
+
+    for ( ; pos != _properties.end(); pos++) {
         if (pos->getName() == name) {
             return &(*pos);
         }
     }
     
+    return NULL;
+}
+
+DataProperty* DataProperty::find(const boost::regex pattern, bool reset) {
     return NULL;
 }
 
