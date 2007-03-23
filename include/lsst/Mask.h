@@ -15,8 +15,8 @@
 #include <list>
 #include <map>
 #include <string>
+#include "lsst/Exception.h"
 
-#include "lsst/MaskExceptions.h"
 
 using namespace vw;
 using namespace std;

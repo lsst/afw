@@ -1,9 +1,11 @@
 // -*- lsst-c++ -*-
 #include "lsst/Mask.h"
+#include "lsst/Exception.h"
 
 #include <stdexcept>
 
 using namespace lsst;
+using boost::any_cast;
 
 template <typename MaskPixelT> class testCrFunc : public MaskPixelBooleanFunc<MaskPixelT> {
 public:
@@ -54,8 +56,15 @@ int main(int argc, char *argv[])
         cout << "Assigned CR to plane " << iPlane << endl;
      }
      catch(OutOfPlaneSpace &e){
+        DataPropertyPtr  propertyList = e.propertyList();
+        propertyList->print();
+        DataProperty *aProperty = propertyList->find("numPlanesUsed");
+        int numPlanesUsed = any_cast<const int>(aProperty->getValue());
+        DataProperty *bProperty = propertyList->find("numPlanesMax");
+        int numPlanesMax = any_cast<const int>(bProperty->getValue());
+
         cout << "Ran out of space to add new CR plane: number of Planes: " \
-             << e.nPlane() << "  max Planes: " << e.maxPlane() << endl;
+             << numPlanesUsed << "  max Planes: " << numPlanesMax << endl;
         throw;
      }
 

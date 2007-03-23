@@ -33,6 +33,7 @@ void DataProperty::addProperty(DataProperty &property) {
     _properties.push_back(property);
 }
 
+
 void DataProperty::print() {
     std::cout << _name;
     if (_value.type() == typeid(int)) {
@@ -46,7 +47,7 @@ void DataProperty::print() {
 
     if (_properties.size() > 0) {
         std::cout << "Nested property list: " << std::endl;
-        std::list<DataProperty>::iterator pos;
+        std::list<DataProperty >::iterator pos;
         for (pos = _properties.begin(); pos != _properties.end(); pos++) {
             pos->print();
         }

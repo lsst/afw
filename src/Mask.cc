@@ -56,7 +56,7 @@ template<class MaskPixelT> int Mask<MaskPixelT>::addMaskPlane(string name)
      int id;
      try {
          getMaskPlane(name, id);
-	  return id;
+	 return id;
      }
      catch(NoMaskPlane &e) {
         // build new entry
@@ -71,11 +71,26 @@ template<class MaskPixelT> int Mask<MaskPixelT>::addMaskPlane(string name)
 	    }
             // No free space found for new plane addition
             std::string s("No space to add new plane");
-	    throw OutOfPlaneSpace(s, _numPlanesUsed, _numPlanesMax);
+            DataPropertyPtr propertyList(new DataProperty("root",(int)0));
+            DataPropertyPtr aProperty(new DataProperty("numPlanesUsed",(int)_numPlanesUsed));
+            propertyList->addProperty(*aProperty);
+            DataPropertyPtr bProperty(new DataProperty("numPlanesMax",(int)_numPlanesMax));
+            propertyList->addProperty(*bProperty);
+            propertyList->print();
+            OutOfPlaneSpace oops(OutOfPlaneSpace(s, propertyList));
+            throw oops;
+
         } else {
             // Max number of planes already allocated
           std::string s = "Max number of planes already used";
-	  throw OutOfPlaneSpace(s, _numPlanesUsed, _numPlanesMax);
+          DataPropertyPtr propertyList(new DataProperty("root",(int)0));
+          DataPropertyPtr aProperty(new DataProperty("numPlanesUsed",(int)_numPlanesUsed));
+          propertyList->addProperty(*aProperty);
+          DataPropertyPtr bProperty(new DataProperty("numPlanesMax",(int)_numPlanesMax));
+          propertyList->addProperty(*bProperty);
+          propertyList->print();
+          OutOfPlaneSpace oops(OutOfPlaneSpace(s, propertyList));
+          throw oops;
         }
     }
 }
@@ -106,7 +121,7 @@ template<class MaskPixelT> void Mask<MaskPixelT>::getMaskPlane(string name, int&
 	  }
      }
      plane = -1;
-     throw NoMaskPlane();
+     throw NoMaskPlane("Failed miserably");
 }
 
 template<class MaskPixelT> bool Mask<MaskPixelT>::getPlaneBitMask(string name, MaskChannelT& bitMask)

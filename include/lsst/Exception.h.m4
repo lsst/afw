@@ -16,8 +16,12 @@ dnl
 //! the VisionWorkbench exception classes it doesn't overload operator<<
 #include <exception>
 #include <boost/format.hpp>
+#include <boost/shared_ptr.hpp>
+#include "lsst/DataProperty.h"
 
 namespace lsst {
+typedef boost::shared_ptr<DataProperty> DataPropertyPtr;
+
     //! An exception that saves a string or boost::format
     class Exception : std::runtime_error {
     public:
@@ -31,16 +35,40 @@ namespace lsst {
     dnl
     dnl define(name, body) defines an m4 macro
     dnl Define a new subclass $1 of Exception without added functionality; docstring $2
-    
-    define(LSST_NEW_EXCEPTION,
-           //! $2
-           class $1 : public Exception {
-           public:
-               $1(const std::string msg) throw() : Exception(msg) {};
-               $1(const boost::format msg) throw() : Exception(msg) {};
-           })
-        
+define(LSST_NEW_EXCEPTION,
+    `//! $2
+    class $1 : public Exception {
+    public:
+        $1(std::string const& msg ) throw() : \
+            Exception(msg),_propertyList(new DataProperty("root",int(0))){};
+        $1(std::string const& msg, DataPropertyPtr propertyList) throw() : \
+            Exception(msg), _propertyList(propertyList) {};
+        $1(const $1 & oops) throw() : \
+            Exception(oops.what()), _propertyList(oops._propertyList){};
+        ~$1() throw() { \
+            std::cout << "----Destroy ExceptObj" << std::endl; \
+            _propertyList->print();  \
+            };
+        DataPropertyPtr propertyList() throw() { return _propertyList;};
+        $1 & operator= (const $1 & oops) throw() { \
+            Exception::operator= (oops); _propertyList=oops._propertyList; \
+            return *this;}; 
+        void print(){ \
+            std::cout << "----ExceptObj: msg: "<< std::endl; \
+            this->what();\
+            std::cout << "----ExceptObj: Proplist: " << std::endl; \
+            _propertyList->print(); };
+    private:
+        DataPropertyPtr _propertyList;
+    }')
+
     LSST_NEW_EXCEPTION(Memory,
                        An Exception due to a problem in the memory system);
+
+    LSST_NEW_EXCEPTION(NoMaskPlane,
+                      An Exception due to failure to find specified Mask Plane);
+
+    LSST_NEW_EXCEPTION(OutOfPlaneSpace,
+                       An Exception due to an insufficient Plane allocation);
 }
 #endif

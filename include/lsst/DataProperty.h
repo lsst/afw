@@ -10,14 +10,15 @@
 #define LSST_DATAPROPERTY_H
 
 #include "boost/any.hpp"
+#include "boost/shared_ptr.hpp"
 #include "boost/regex.hpp"
 #include <string>
 #include <list>
 #include <iostream>
 
+
 namespace lsst {
 
-    
     class DataProperty {
     public:
         DataProperty(std::string name, boost::any value = boost::any());
@@ -27,6 +28,7 @@ namespace lsst {
         std::string getName() {return _name; }
         boost::any getValue() {return _value; }
         void print();
+        ~DataProperty() { std::cout << "destroying DataProperty: " << _name << std::endl;}
         
     private:
         typedef std::list<DataProperty> ContainerT;
