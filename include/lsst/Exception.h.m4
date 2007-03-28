@@ -43,6 +43,10 @@ define(LSST_NEW_EXCEPTION,
             Exception(msg),_propertyList(new DataProperty("root",int(0))){};
         $1(std::string const& msg, DataPropertyPtr propertyList) throw() : \
             Exception(msg), _propertyList(propertyList) {};
+        $1(boost::format const& msg ) throw() : \
+            Exception(msg),_propertyList(new DataProperty("root",int(0))){};
+        $1(boost::format const& msg, DataPropertyPtr propertyList) throw() : \
+            Exception(msg), _propertyList(propertyList) {};
         $1(const $1 & oops) throw() : \
             Exception(oops.what()), _propertyList(oops._propertyList){};
         ~$1() throw() { \
