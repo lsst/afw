@@ -15,7 +15,7 @@
 #include "Utils.h"
 
 LSST_START_NAMESPACE(lsst)
-LSST_START_NAMESPACE(utils)
+LSST_START_NAMESPACE(fw)
 
 #if !defined(LSST_NO_TRACE)
 #  define LSST_NO_TRACE 0               //!< True => turn off all tracing
@@ -45,13 +45,18 @@ public:
 #endif
 
     static void reset();
-    static void setVerbosity(const char *name, const int verbosity);
+    static void setVerbosity(const std::string &name);
+    static void setVerbosity(const std::string &name, const int verbosity);
 
     static void printVerbosity(std::ostream &fp = std::cout);
 
     static void setDestination(std::ostream &fp);
 private:
     class Component;
+    ~Trace() {}                         //!< no-one should delete the singleton
+
+    enum { INHERIT_VERBOSITY = -9999};  //!< use parent's verbosity
+
     static Component *_root;            //!< the root of the Component tree
 
     static std::string _separator;      //!< path separation character
@@ -66,6 +71,6 @@ private:
     static int _cachedVerbosity;          //!< verbosity of last looked up name
 };
 
-LSST_END_NAMESPACE(utils)
+LSST_END_NAMESPACE(fw)
 LSST_END_NAMESPACE(lsst)
 #endif

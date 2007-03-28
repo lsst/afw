@@ -10,7 +10,7 @@
 /*
  * \brief Document namespace
  */
-using namespace lsst::utils;
+using namespace lsst::fw;
 
 /*****************************************************************************/
 /*!
@@ -18,7 +18,7 @@ using namespace lsst::utils;
  */
 class Trace::Component {
 public:
-    Component(const std::string &name = "", int verbosity=0);
+    Component(const std::string &name = ".", int verbosity=INHERIT_VERBOSITY);
     ~Component();
 
     void add(const std::string &name, int verbosity,
@@ -33,23 +33,19 @@ private:
     typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
     typedef std::map<const std::string, Component *> comp_map; // subcomponents
 
-    const static int UNKNOWN_LEVEL;     // we don't know this name's verbosity
-
     std::string *_name;			// last part of name of this component
     int _verbosity;                     // verbosity for this component
-    comp_map *_subcomp;                 // next level of subcomponents
+    comp_map &_subcomp;                 // next level of subcomponents
 
     void add(tokenizer::iterator token,
              const tokenizer::iterator end,
              int verbosity);
     int getVerbosity(tokenizer::iterator token,
-                     const tokenizer::iterator end);
+                     const tokenizer::iterator end,
+                     int defaultVerbosity);
 };
 
 /*****************************************************************************/
-
-const int Trace::Component::UNKNOWN_LEVEL = -9999;
-
 /*!
  * Create a component of the trace tree
  *
@@ -66,14 +62,13 @@ const int Trace::Component::UNKNOWN_LEVEL = -9999;
  */
 Trace::Component::Component(const std::string &name, //!< name of component
                             int verbosity            //!< associated verbosity
-                ) {
-    _name = new std::string(name);
-    _verbosity = verbosity;
-    _subcomp = new(comp_map);
+                           ) : _name(new std::string(name)),
+                               _verbosity(verbosity),
+                               _subcomp(*new(comp_map)) {
 }
 
 Trace::Component::~Component() {
-    delete _subcomp;
+    delete &_subcomp;
     delete _name;
 }
 
@@ -84,10 +79,6 @@ void Trace::Component::add(const std::string &name,  //!< Component's name
                            int verbosity, //!< The component's verbosity
                            const std::string &separator //!< path separator
                           ) {
-    if (name == "") {
-        _root->setVerbosity(verbosity);
-        return;
-    }
     //
     // Prepare to parse name
     //
@@ -96,21 +87,23 @@ void Trace::Component::add(const std::string &name,  //!< Component's name
     tokenizer::iterator token = components.begin();
     const tokenizer::iterator end = components.end();
 
-    if (token != end) {
+    if (token == end) {                 // "" or "."
+        _root->setVerbosity(verbosity);
+    } else {
         add(token, end, verbosity);
     }
 }
 
 void Trace::Component::add(tokenizer::iterator token, //!< parts of name
                            const tokenizer::iterator end, //!< end of name
-                           int verbosity                 //!< The component's verbosity
+                           int verbosity //!< The component's verbosity
                      ) {
     const std::string cpt0 = *token++;  // first component of name
     //
     // Does first part of path match this verbosity?
     //
-    if (*_name == cpt0) {          // a match
-	if (token == end) {
+    if (*_name == cpt0) {               // a match
+	if (token == end) {             // name has no more components
 	    _verbosity = verbosity;
 	} else {
             add(token, end, verbosity);
@@ -121,8 +114,8 @@ void Trace::Component::add(tokenizer::iterator token, //!< parts of name
     //
     // Look for a match for cpt0 in this verbosity's subcomps
     //
-    comp_map::iterator iter = _subcomp->find(cpt0);
-    if (iter != _subcomp->end()) {
+    comp_map::iterator iter = _subcomp.find(cpt0);
+    if (iter != _subcomp.end()) {
         if (token == end) {
             iter->second->_verbosity = verbosity;
         } else {
@@ -135,7 +128,7 @@ void Trace::Component::add(tokenizer::iterator token, //!< parts of name
      * No match; add cpt0 to this verbosity
      */
     Component *fcpt0 = new Component(cpt0);
-    (*_subcomp)[*fcpt0->_name] = fcpt0;
+    _subcomp[*fcpt0->_name] = fcpt0;
 
     if (token == end) {
 	fcpt0->_verbosity = verbosity;
@@ -154,8 +147,8 @@ int Trace::Component::highestVerbosity(int highest //!< minimum verbosity to ret
 	highest = _verbosity;
     }
     
-    for (comp_map::iterator iter = _subcomp->begin();
-         iter != _subcomp->end(); iter++) {
+    for (comp_map::iterator iter = _subcomp.begin();
+         iter != _subcomp.end(); iter++) {
 	highest = iter->second->highestVerbosity(highest);
     }
 
@@ -167,22 +160,27 @@ int Trace::Component::highestVerbosity(int highest //!< minimum verbosity to ret
  * Return a trace verbosity given a name
  */
 int Trace::Component::getVerbosity(tokenizer::iterator token,
-                                   const tokenizer::iterator end
+                                   const tokenizer::iterator end,
+                                   int defaultVerbosity
                                   ) {
     const std::string cpt0 = *token++;  // first component of name
     /*
      * Look for a match for cpt0 in this Component's subcomps
      */
-    comp_map::iterator iter = _subcomp->find(cpt0);
-    if (iter != _subcomp->end()) {
-        int verbosity;
-        if (token == end) {
-            verbosity = iter->second->_verbosity;
-        } else {
-            verbosity = iter->second->getVerbosity(token, end);
+    comp_map::iterator iter = _subcomp.find(cpt0);
+    if (iter != _subcomp.end()) {
+        int verbosity = iter->second->_verbosity;
+        if (verbosity == INHERIT_VERBOSITY) {
+            verbosity = defaultVerbosity;
         }
 
-        return (verbosity == UNKNOWN_LEVEL) ? _verbosity : verbosity;
+        if (token == end) {             // there was only one component
+            ;                           // so save the function call
+        } else {
+            verbosity = iter->second->getVerbosity(token, end, verbosity);
+        }
+
+        return (verbosity == INHERIT_VERBOSITY) ? defaultVerbosity : verbosity;
     }
     /*
      * No match. This is as far as she goes
@@ -191,7 +189,7 @@ int Trace::Component::getVerbosity(tokenizer::iterator token,
 }
 
 //!
-// Return a component's verbosity, from the perspective of this.
+// Return a component's verbosity, from the perspective of "this".
 //
 // \sa Trace::Component::getVerbosity
 //
@@ -205,15 +203,18 @@ int Trace::Component::getVerbosity(const std::string &name, // component of inte
     tokenizer components(name, sep);
     tokenizer::iterator token = components.begin();
 
-    return getVerbosity(token, components.end());
+    return getVerbosity(token, components.end(), _verbosity);
 }
 
 /*!
- * Print all the trace verbosities rooted at this
+ * Print all the trace verbosities rooted at "this"
  */
 void Trace::Component::printVerbosity(std::ostream &fp,
                                       int depth
                                      ) {
+    if (_subcomp.empty() && _verbosity == INHERIT_VERBOSITY) {
+        return;
+    }
     //
     // Print this verbosity
     //
@@ -221,21 +222,21 @@ void Trace::Component::printVerbosity(std::ostream &fp,
         fp << ' ';
     }
 
-    const std::string &name = (_verbosity == UNKNOWN_LEVEL) ? "." : *_name;
+    const std::string &name = *_name;
     fp << name;
     for (int i = 0; i < 20 - depth - static_cast<int>(name.size()); i++) {
         fp << ' ';
     }
     
-    if (_verbosity != UNKNOWN_LEVEL) {
+    if (_verbosity != INHERIT_VERBOSITY) {
         fp << _verbosity;
     }
     fp << "\n";
     //
     // And other levels of the hierarchy too
     //
-    for (comp_map::iterator iter = _subcomp->begin();
-         iter != _subcomp->end(); iter++) {
+    for (comp_map::iterator iter = _subcomp.begin();
+         iter != _subcomp.end(); iter++) {
         iter->second->printVerbosity(fp, depth + 1);
     }
 }
@@ -245,7 +246,7 @@ void Trace::Component::printVerbosity(std::ostream &fp,
     
 Trace::Trace() {
     if (_root == 0) {
-        _root = new Component();
+        _root = new Component(".", 0);
         _traceStream = &std::cerr;
         _separator = ".";
     }
@@ -272,11 +273,24 @@ int Trace::_cachedVerbosity;
 void Trace::reset() {
     delete _root;
     _root = new Component;
+    setVerbosity("");
 }
 /*!
- * Set a component's verbosity
+ * Set a component's verbosity.
+ *
+ * If no verbosity is specified, inherit from parent
  */
-void Trace::setVerbosity(const char *name, //!< component of interest
+void Trace::setVerbosity(const std::string &name //!< component of interest
+                        ) {
+
+    int verbosity = INHERIT_VERBOSITY;
+    if (name == "" || name == ".") {
+        verbosity = 0;
+    }
+    setVerbosity(name, verbosity);
+}
+
+void Trace::setVerbosity(const std::string &name, //!< component of interest
                          const int verbosity //!< desired trace verbosity
                         ) {
     _cacheIsValid = false;
@@ -332,8 +346,7 @@ void Trace::setDestination(std::ostream &fp) {
 }
 
 /*!
- * Actually generate the trace message. Note that psTrace dealt with
- * prepending appropriate indentation
+ * Actually generate the trace message.
  */
 #if !LSST_NO_TRACE
 void Trace::trace(const std::string &name,	//!< component being traced
@@ -347,8 +360,7 @@ void Trace::trace(const std::string &name,	//!< component being traced
                   const int verbosity,		//!< desired trace verbosity
                   const std::string &msg        //!< trace message
                  ) {
-    if (verbosity <= _HighestVerbosity &&
-        Trace::getVerbosity(name) >= verbosity) {
+    if (verbosity <= _HighestVerbosity && getVerbosity(name) >= verbosity) {
 	for (int i = 0; i < verbosity; i++) {
             *_traceStream << ' ';
 	}
