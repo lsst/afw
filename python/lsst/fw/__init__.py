@@ -1,6 +1,7 @@
 try:
-    LSSTImporter()
-except NameError:
+    import sys
+    sys.meta_path[0].LSSTImporter()     # Is it already loaded?
+except (NameError, IndexError):
     import imp, os, sys
 
     class LSSTImporter:
