@@ -15,8 +15,8 @@
 #include <list>
 #include <map>
 #include <string>
+#include "lsst/LsstBase.h"
 #include "lsst/Exception.h"
-
 
 using namespace vw;
 using namespace std;
@@ -43,8 +43,7 @@ namespace lsst {
     };
     
     template<typename MaskPixelT>
-    class Mask
-    {
+    class Mask : private fw::LsstBase {
     public:
         typedef typename PixelChannelType<MaskPixelT>::type MaskChannelT;
         typedef ImageView<MaskPixelT> MaskIVwT;

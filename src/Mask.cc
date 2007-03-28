@@ -5,6 +5,7 @@
 
 template<typename MaskPixelT>
 Mask<MaskPixelT>::Mask() :
+    fw::LsstBase(typeid(this)),
     _imagePtr(new vw::ImageView<MaskPixelT>()),
     _image(*_imagePtr),
     _numPlanesMax(8*sizeof(MaskChannelT)) {
@@ -12,6 +13,7 @@ Mask<MaskPixelT>::Mask() :
 
 template<class MaskPixelT>
 Mask<MaskPixelT>::Mask(MaskIVwPtrT image): 
+    fw::LsstBase(typeid(this)),
     _imagePtr(image),
     _image(*_imagePtr),
     _numPlanesMax(8 * sizeof(MaskChannelT)) {
@@ -32,6 +34,7 @@ Mask<MaskPixelT>::Mask(MaskIVwPtrT image):
 
 template<class MaskPixelT>
 Mask<MaskPixelT>::Mask(int ncols, int nrows) :
+    fw::LsstBase(typeid(this)),
     _imagePtr(new vw::ImageView<MaskPixelT>(ncols, nrows)),
     _image(*_imagePtr),
     _numPlanesMax(8*sizeof(MaskChannelT)) {

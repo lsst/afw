@@ -6,18 +6,20 @@
 
 template<typename ImagePixelT, typename MaskPixelT> 
 MaskedImage<ImagePixelT, MaskPixelT>::MaskedImage() :
-     _imagePtr(new Image<ImagePixelT>()),
-     _maskPtr(new Mask<MaskPixelT>()),
-     _image(*_imagePtr),
-     _mask(*_maskPtr) {
+    LsstBase(typeid(this)),
+    _imagePtr(new Image<ImagePixelT>()),
+    _maskPtr(new Mask<MaskPixelT>()),
+    _image(*_imagePtr),
+    _mask(*_maskPtr) {
 }
 
 template<typename ImagePixelT, typename MaskPixelT> 
 MaskedImage<ImagePixelT, MaskPixelT>::MaskedImage(int nCols, int nRows) :
-     _imagePtr(new Image<ImagePixelT>(nCols, nRows)),
-     _maskPtr(new Mask<MaskPixelT>(nCols, nRows)),
-     _image(*_imagePtr),
-     _mask(*_maskPtr) {
+    LsstBase(typeid(this)),
+    _imagePtr(new Image<ImagePixelT>(nCols, nRows)),
+    _maskPtr(new Mask<MaskPixelT>(nCols, nRows)),
+    _image(*_imagePtr),
+    _mask(*_maskPtr) {
 }
 
 template<typename ImagePixelT, typename MaskPixelT> 

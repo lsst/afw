@@ -20,6 +20,7 @@
 #include <map>
 #include <string>
 
+#include "LsstBase.h"
 #include "Mask.h"
 #include "Image.h"
 
@@ -80,8 +81,7 @@ namespace lsst {
     };
 
     template<class ImagePixelT, class MaskPixelT>
-    class MaskedImage
-    {
+    class MaskedImage : private fw::LsstBase {
         
     public:
         typedef Image<ImagePixelT> ImageT;
