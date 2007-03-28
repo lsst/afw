@@ -1,7 +1,7 @@
 # -*- python -*-
 Import('env')
 
-env.Program("sharedPointers", ["sharedPointersExample.cc"], LIBS="fw")
+env.Program("citizen", ["citizenExample.cc"], LIBS="fw")
 env.Program(["generate.cc"],
 	    LIBS=["fw"] + env.libs["vw"] + \
             Split("vwMosaic vwImage") + env.libs["boost"])
