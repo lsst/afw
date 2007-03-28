@@ -2,7 +2,7 @@
 #
 # Setup our environment
 #
-import glob
+import glob, os.path
 import lsst.SConsUtils as scons
 
 env = scons.makeEnv("fw",
@@ -25,9 +25,12 @@ env.libs = dict([
 #
 # Build/install things
 #
-for d in Split("doc examples include/lsst lib src tests") + \
-        Split("python/lsst/fw/Catalog python/lsst/fw/Display"):
-    SConscript("%s/SConscript" % d)
+for d in Split("doc examples include/lsst lib src tests"):
+    SConscript(os.path.join(d, "SConscript"))
+
+for d in map(lambda str: "python/lsst/fw/" + str,
+             Split("Catalog Core Display")):
+    SConscript(os.path.join(d, "SConscript"))
 
 env['IgnoreFiles'] = r"(~$|\.pyc$|^\.svn$|\.o$)"
 
