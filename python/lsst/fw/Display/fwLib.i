@@ -18,7 +18,7 @@ Basic routines to talk to FW's classes (including visionWorkbench) and ds9
 #   include "lsst/Trace.h"
 
 using namespace lsst;
-using namespace lsst::image;
+using namespace lsst::fw;
 using namespace vw;
 %}
 
@@ -51,9 +51,9 @@ typedef vw::PixelGray<uint8> MaskPixelType;
 
 %include "simpleFits.h"
 
-using namespace lsst::image;
+using namespace lsst::fw;
 
-%template(readFloat) lsst::image::read<ImagePixelType>;
+%template(readFloat) read<ImagePixelType>;
 
 %template(writeFitsFloat) writeFits<ImagePixelType>;
 %template(writeFitsFileFloat) writeFitsFile<ImagePixelType>;

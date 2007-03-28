@@ -3,7 +3,7 @@
 #include "lsst/DiskImageResourceFITS.h"
 #include "lsst/Exception.h"
 
-using namespace lsst::image;
+using namespace lsst::fw;
 
 int main(int ac, char **av) {
     typedef vw::ImageView<float> my_image_type;

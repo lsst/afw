@@ -12,7 +12,7 @@ extern "C" {
 #include "fitsio.h"
 }
 
-using namespace lsst::image;
+using namespace lsst::fw;
 
 //
 // A utility routine to throw an error. Note that the macro form includes

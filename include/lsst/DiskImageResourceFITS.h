@@ -14,7 +14,7 @@
 #include <lsst/Utils.h>
 
 LSST_START_NAMESPACE(lsst)
-LSST_START_NAMESPACE(image)
+LSST_START_NAMESPACE(fw)
 /*!
  * FITS I/O for VisionWorkbench
  */
@@ -77,6 +77,6 @@ void read(vw::ImageView<PixelT>& image, //!< Desired image
     
     delete r;
 }
-LSST_END_NAMESPACE(image)
+LSST_END_NAMESPACE(fw)
 LSST_END_NAMESPACE(lsst)
 #endif

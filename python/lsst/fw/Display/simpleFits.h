@@ -8,7 +8,7 @@
 #include <lsst/Utils.h>
 
 LSST_START_NAMESPACE(lsst)
-LSST_START_NAMESPACE(image)
+LSST_START_NAMESPACE(fw)
 
 void writeFits(int fd,                // file descriptor to write to
                vw::ImageBuffer &data, // The data to write
@@ -36,6 +36,6 @@ void writeFitsFile(const std::string &filename, // file to write to (or "| cmd")
     writeFitsFile(filename, buff, WCS);
 }
 
-LSST_END_NAMESPACE(image)
+LSST_END_NAMESPACE(fw)
 LSST_END_NAMESPACE(lsst)
 #endif

@@ -20,7 +20,7 @@ using namespace posix;
 #include "simpleFits.h"
 
 LSST_START_NAMESPACE(lsst);
-LSST_START_NAMESPACE(image);
+LSST_START_NAMESPACE(fw);
 
 #define FITS_SIZE 2880
 
@@ -460,5 +460,5 @@ void writeFitsFile(const std::string &filename, // file to write or "| cmd"
     (void)close(fd);
 }
 
-LSST_END_NAMESPACE(image);
+LSST_END_NAMESPACE(fw);
 LSST_END_NAMESPACE(lsst);

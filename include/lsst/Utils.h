@@ -15,9 +15,9 @@
 //! \namespace lsst::utils
 //\brief LSST utilities
 LSST_START_NAMESPACE(lsst)
-LSST_START_NAMESPACE(utils)
+LSST_START_NAMESPACE(fw)
 
-LSST_END_NAMESPACE(utils)
+LSST_END_NAMESPACE(fw)
 LSST_END_NAMESPACE(lsst)
 
 #endif
