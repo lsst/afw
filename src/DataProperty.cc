@@ -1,5 +1,5 @@
 // -*- lsst-c++ -*-
-#include "lsst/DataProperty.h"
+#include "lsst/fw/DataProperty.h"
 
 using namespace lsst;
 using boost::any_cast;

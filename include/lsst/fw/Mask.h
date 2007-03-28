@@ -15,8 +15,8 @@
 #include <list>
 #include <map>
 #include <string>
-#include "lsst/LsstBase.h"
-#include "lsst/Exception.h"
+#include "lsst/fw/LsstBase.h"
+#include "lsst/fw/Exception.h"
 
 using namespace vw;
 using namespace std;

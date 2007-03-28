@@ -1,9 +1,9 @@
 #include <iostream>
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
-#include "lsst/Citizen.h"
-#include "lsst/LsstBase.h"
-#include "lsst/Exception.h"
+#include "lsst/fw/Citizen.h"
+#include "lsst/fw/LsstBase.h"
+#include "lsst/fw/Exception.h"
 
 //
 // We'll fully qualify LsstBasehere in the class definitions;

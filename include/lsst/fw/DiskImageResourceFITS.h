@@ -11,7 +11,7 @@
 #include <vw/Image/ImageResource.h>
 #include <vw/FileIO/DiskImageResource.h>
 
-#include <lsst/Utils.h>
+#include "lsst/fw/Utils.h"
 
 LSST_START_NAMESPACE(lsst)
 LSST_START_NAMESPACE(fw)

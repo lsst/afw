@@ -25,7 +25,7 @@ env.libs = dict([
 #
 # Build/install things
 #
-for d in Split("doc examples include/lsst lib src tests"):
+for d in Split("doc examples include/lsst/fw lib src tests"):
     SConscript(os.path.join(d, "SConscript"))
 
 for d in map(lambda str: "python/lsst/fw/" + str,

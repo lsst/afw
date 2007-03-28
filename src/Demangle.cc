@@ -1,7 +1,7 @@
 #include <string>
 #include <stack>
-#include <lsst/Utils.h>
-#include <lsst/Demangle.h>
+#include "lsst/fw/Utils.h"
+#include "lsst/fw/Demangle.h"
 
 LSST_START_NAMESPACE(lsst)
 LSST_START_NAMESPACE(fw)

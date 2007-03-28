@@ -5,7 +5,7 @@
 
 #include <boost/tokenizer.hpp>
 
-#include "lsst/Trace.h"
+#include "lsst/fw/Trace.h"
 
 /*
  * \brief Document namespace

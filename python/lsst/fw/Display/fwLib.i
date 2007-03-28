@@ -10,12 +10,12 @@ Basic routines to talk to FW's classes (including visionWorkbench) and ds9
 
 %{
 #   include <boost/cstdint.hpp>
-#   include "lsst/Citizen.h"
-#   include "lsst/DiskImageResourceFITS.h"
+#   include "lsst/fw/Citizen.h"
+#   include "lsst/fw/DiskImageResourceFITS.h"
 #   include "simpleFits.h"
-#   include "lsst/Mask.h"
-#   include "lsst/MaskedImage.h"
-#   include "lsst/Trace.h"
+#   include "lsst/fw/Mask.h"
+#   include "lsst/fw/MaskedImage.h"
+#   include "lsst/fw/Trace.h"
 
 using namespace lsst;
 using namespace lsst::fw;
@@ -34,7 +34,7 @@ using namespace vw;
 %warnfilter(503) vw;
 
 %include "../Core/p_lsstSwig.i"
-%import "lsst/Utils.h"
+%import "lsst/fw/Utils.h"
 
 %{
 typedef vw::PixelGray<float> ImagePixelType;
@@ -44,7 +44,7 @@ typedef vw::PixelGray<uint8> MaskPixelType;
 %import <vw/Image/ImageResource.h>
 %import <vw/FileIO/DiskImageResource.h>
 
-%import "lsst/DiskImageResourceFITS.h"
+%import "lsst/fw/DiskImageResourceFITS.h"
 
 /******************************************************************************/
 // Talk to DS9

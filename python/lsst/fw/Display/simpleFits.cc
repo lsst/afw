@@ -14,8 +14,8 @@ namespace posix {
 }
 using namespace posix;
 
-#include "lsst/Exception.h"
-#include "lsst/Utils.h"
+#include "lsst/fw/Exception.h"
+#include "lsst/fw/Utils.h"
 
 #include "simpleFits.h"
 

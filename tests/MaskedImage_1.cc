@@ -1,5 +1,5 @@
 // -*- lsst-c++ -*-
-#include "lsst/MaskedImage.h"
+#include "lsst/fw/MaskedImage.h"
 #include <typeinfo>
 
 using namespace lsst;

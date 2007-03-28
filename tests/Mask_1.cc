@@ -1,6 +1,6 @@
 // -*- lsst-c++ -*-
-#include "lsst/Mask.h"
-#include "lsst/Exception.h"
+#include "lsst/fw/Mask.h"
+#include "lsst/fw/Exception.h"
 
 #include <stdexcept>
 

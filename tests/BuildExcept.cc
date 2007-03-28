@@ -2,7 +2,7 @@
 
 #include <string>
 #include <iostream>
-#include "lsst/Exception.h"
+#include "lsst/fw/Exception.h"
 
 using namespace lsst;
 using boost::any_cast;

@@ -5,10 +5,10 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/format.hpp>
 #include <ctype.h>
-#include "lsst/Citizen.h"
-#include "lsst/Demangle.h"
-#include "lsst/Exception.h"
-#include "lsst/LsstBase.h"
+#include "lsst/fw/Citizen.h"
+#include "lsst/fw/Demangle.h"
+#include "lsst/fw/Exception.h"
+#include "lsst/fw/LsstBase.h"
 
 LSST_START_NAMESPACE(lsst)
 LSST_START_NAMESPACE(fw)

@@ -1,5 +1,5 @@
 // -*- lsst-c++ -*-
-#include "lsst/DataProperty.h"
+#include "lsst/fw/DataProperty.h"
 #include <typeinfo>
 
 using namespace lsst;

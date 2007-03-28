@@ -1,4 +1,4 @@
-#include "lsst/Trace.h"
+#include "lsst/fw/Trace.h"
 
 using namespace lsst::fw;
 

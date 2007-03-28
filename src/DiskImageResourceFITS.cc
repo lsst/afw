@@ -6,7 +6,7 @@
 #include <boost/format.hpp>
 #include <vw/Core/Exception.h>
 #include <vw/Image/ImageMath.h>
-#include "lsst/DiskImageResourceFITS.h"
+#include "lsst/fw/DiskImageResourceFITS.h"
 
 extern "C" {
 #include "fitsio.h"

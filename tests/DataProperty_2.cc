@@ -1,7 +1,7 @@
 // -*- lsst-c++ -*-
 #include <iostream>
 #include <typeinfo>
-#include "lsst/DataProperty.h"
+#include "lsst/fw/DataProperty.h"
 
 
 #include <boost/shared_ptr.hpp>

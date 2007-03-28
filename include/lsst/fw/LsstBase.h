@@ -2,7 +2,7 @@
 #if !defined(LSST_LSST_BASE)            //! multiple inclusion guard macro
 #define LSST_LSST_BASE 1
 
-#include "lsst/Citizen.h"
+#include "lsst/fw/Citizen.h"
 #include "Utils.h"
 
 LSST_START_NAMESPACE(lsst)
