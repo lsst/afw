@@ -35,7 +35,7 @@ Basic routines to talk to FW's classes (including visionWorkbench) and ds9
 #   include "lsst/Trace.h"
 
 using namespace lsst;
-using namespace lsst::image;
+using namespace lsst::fw;
 using namespace vw;
 %}
 
