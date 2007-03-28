@@ -1,6 +1,6 @@
 setupRequired(scons)
 setupRequired(boost)
-setupRequired(visionWorkbench)
+setupRequired(vw)
 setupRequired(cfitsio)
 setupRequired(wcstools v3_6_2)
 setupRequired(xpa)
