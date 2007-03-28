@@ -1,8 +1,12 @@
 # -*- python -*-
 Import('env')
 
-env.SharedLibrary('citizen', map(lambda str: "../src/" + str,
-				 Split("Citizen.cc Trace.cc MaskExceptions.cc")))
+env.SharedLibrary('fw', map(lambda str: "../src/" + str,
+                            ["Citizen.cc",
+                             "DataProperty.cc",
+                             "Demangle.cc",
+                             "Trace.cc",
+                             ]))
 env.SharedLibraryIncomplete('fitsio', map(lambda str: "../src/" + str,
 					  Split("DiskImageResourceFITS.cc")),
                             LIBS=["cfitsio"])

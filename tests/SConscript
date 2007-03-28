@@ -1,7 +1,7 @@
 # -*- python -*-
 Import("env")
 
-env.Program(["Mask_1.cc"], LIBS=env.libs["vw"] + ["citizen"])
-env.Program(["MaskedImage_1.cc"], LIBS=env.libs["vw"] + ["citizen"])
-env.Program(["BuildExcept.cc"], LIBS="citizen")
+env.Program(["Mask_1.cc"], LIBS=env.libs["vw"] + ["fw"])
+env.Program(["MaskedImage_1.cc"], LIBS=env.libs["vw"] + ["fw"])
+env.Program(["BuildExcept.cc"], LIBS="fw")
 env.Program(["DataProperty_1.cc", "../src/DataProperty.cc"])
