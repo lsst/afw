@@ -17,7 +17,7 @@ dnl
 #include <exception>
 #include <boost/format.hpp>
 #include <boost/shared_ptr.hpp>
-#include "lsst/DataProperty.h"
+#include "lsst/fw/DataProperty.h"
 
 namespace lsst {
 typedef boost::shared_ptr<DataProperty> DataPropertyPtr;
