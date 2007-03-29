@@ -103,20 +103,20 @@ std::string demangleType(const std::string _typeName) {
             break;
           case '0': case '1': case '2': case '3': case '4':
           case '5': case '6': case '7': case '8': case '9':
-            {
-	      if (!startSymbolSequence) {
+            if (!startSymbolSequence) {
                 typeName += "::";
-	      }
-	      startSymbolSequence = false;
-	      
-	      const int len = atoi(ptr++);
-	      while (isdigit(*ptr)) ptr++;
-	      
-	      for (int i = 0; *ptr != '\0' && i < len; i++) {
-                typeName += *ptr++;
-	      }
-	      break;
+            }
+            startSymbolSequence = false;
+            
+            {
+                const int len = atoi(ptr++);
+                while (isdigit(*ptr)) ptr++;
+                
+                for (int i = 0; *ptr != '\0' && i < len; i++) {
+                    typeName += *ptr++;
+                }
 	    }
+            break;
           case 'v': typeName += "void";		ptr++; break;
           case 'w': typeName += "wchar_t";	ptr++; break;
           case 'b': typeName += "bool";		ptr++; break;
