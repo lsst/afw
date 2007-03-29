@@ -1,6 +1,8 @@
 #include <string>
 #include <stack>
+#include <boost/format.hpp>
 #include "lsst/fw/Utils.h"
+#include "lsst/fw/Trace.h"
 #include "lsst/fw/Demangle.h"
 
 LSST_START_NAMESPACE(lsst)
@@ -27,6 +29,10 @@ std::string demangleType(const std::string _typeName) {
     std::string typeName("");
     const char *ptr = _typeName.c_str();
 
+    if (*ptr == 'r' || *ptr == 'V' || *ptr == 'K') {
+        ptr++;                          // (restrict/volatile/const)
+    }
+    
     if (*ptr == 'P') ptr++;             // We passed "this" which is (type *)
 
     bool startSymbolSequence = true;    // are in the middle of a set of symbs
@@ -38,12 +44,18 @@ std::string demangleType(const std::string _typeName) {
             ptr++;
             startSymbolSequence = true;
 
+            if (typeStack.size() == 0) {
+                Trace::trace("fw.Citizen.demangle", 0, boost::format("Tried to examine empty stack for %s at \"%s\"") % _typeName % ptr);
+                typeStack.push('\a');   // at least don't crash
+            }
+
             if (typeStack.top() == 'N') {
                 ;
             } else if (typeStack.top() == 'I') {
                 typeName += ">";
             }
             typeStack.pop();
+
             break;
           case 'I':
             typeStack.push(*ptr++);
@@ -53,6 +65,40 @@ std::string demangleType(const std::string _typeName) {
             break;
           case 'N':
             typeStack.push(*ptr++);
+            startSymbolSequence = true;
+            break;
+          case 'S':
+            *ptr++;
+            switch (*ptr) {
+              case 't': typeName += "::std::"; break;
+              case 'a': typeName += "::std::allocator"; break;
+              case 'b': typeName += "::std::basic_string"; break;
+              case 's': typeName += "::std::basic_string<char,::std::char_traits<char>,::std::allocator<char>>"; break;
+              case 'i': typeName += "::std::basic_istream<char,  std::char_traits<char> >"; break;
+              case 'o': typeName += "::std::basic_ostream<char,std::char_traits<char>>"; break;
+              case 'd': typeName += "::std::basic_iostream<char,std::char_traits<char>>"; break;
+              default:
+                typeName += "[";
+                if (*ptr == '_') {
+                    typeName += "S0";
+                } else if (isdigit(*ptr) || isupper(*ptr)) {
+                    int subst = 0;
+                    while (isdigit(*ptr) || isupper(*ptr)) {
+                        if (isdigit(*ptr)) {
+                            subst = 36*subst + (*ptr - '0');
+                        } else {
+                            subst = 36*subst + 10 + (*ptr - 'A');
+                        }
+                        *ptr++;
+                    }
+                    assert (*ptr == '_');
+                    ptr++;
+                    
+                    typeName += (boost::format("S%d") % subst).str();
+                }
+                typeName += "]";
+                break;
+            }
             startSymbolSequence = true;
             break;
           case '0': case '1': case '2': case '3': case '4':
