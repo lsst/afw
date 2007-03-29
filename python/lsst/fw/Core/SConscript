@@ -1,0 +1,6 @@
+# -*- python -*-
+Import("env")
+
+env.CheckSwig("python", ilang="c++")
+env.LoadableModuleIncomplete("_fwLib", Split("fwLib.i"),
+                             LIBS=env.libs["vw"] + env.libs["fits"] + ["fw"])
