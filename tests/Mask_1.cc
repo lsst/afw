@@ -58,9 +58,9 @@ int main(int argc, char *argv[])
      catch(OutOfPlaneSpace &e){
         DataPropertyPtr  propertyList = e.propertyList();
         propertyList->print();
-        DataProperty *aProperty = propertyList->find("numPlanesUsed");
+        DataPropertyPtr aProperty = propertyList->find("numPlanesUsed");
         int numPlanesUsed = any_cast<const int>(aProperty->getValue());
-        DataProperty *bProperty = propertyList->find("numPlanesMax");
+        DataPropertyPtr bProperty = propertyList->find("numPlanesMax");
         int numPlanesMax = any_cast<const int>(bProperty->getValue());
 
         cout << "Ran out of space to add new CR plane: number of Planes: " \

@@ -76,9 +76,9 @@ template<class MaskPixelT> int Mask<MaskPixelT>::addMaskPlane(string name)
             std::string s("No space to add new plane");
             DataPropertyPtr propertyList(new DataProperty("root",(int)0));
             DataPropertyPtr aProperty(new DataProperty("numPlanesUsed",(int)_numPlanesUsed));
-            propertyList->addProperty(*aProperty);
+            propertyList->addProperty(aProperty);
             DataPropertyPtr bProperty(new DataProperty("numPlanesMax",(int)_numPlanesMax));
-            propertyList->addProperty(*bProperty);
+            propertyList->addProperty(bProperty);
             propertyList->print();
             OutOfPlaneSpace oops(OutOfPlaneSpace(s, propertyList));
             throw oops;
@@ -88,9 +88,9 @@ template<class MaskPixelT> int Mask<MaskPixelT>::addMaskPlane(string name)
           std::string s = "Max number of planes already used";
           DataPropertyPtr propertyList(new DataProperty("root",(int)0));
           DataPropertyPtr aProperty(new DataProperty("numPlanesUsed",(int)_numPlanesUsed));
-          propertyList->addProperty(*aProperty);
+          propertyList->addProperty(aProperty);
           DataPropertyPtr bProperty(new DataProperty("numPlanesMax",(int)_numPlanesMax));
-          propertyList->addProperty(*bProperty);
+          propertyList->addProperty(bProperty);
           propertyList->print();
           OutOfPlaneSpace oops(OutOfPlaneSpace(s, propertyList));
           throw oops;

@@ -21,22 +21,24 @@ namespace lsst {
 
     class DataProperty {
     public:
+        typedef boost::shared_ptr<DataProperty> DataPropertyPtrT;
         DataProperty(std::string name, boost::any value = boost::any());
-        DataProperty* find(const std::string name, bool reset=true);
-        DataProperty* find(const boost::regex pattern, bool reset=true);
-        void addProperty(DataProperty &property);
-        std::string getName() {return _name; }
-        boost::any getValue() {return _value; }
+        DataProperty(const DataProperty& orig);
+        DataPropertyPtrT find(const std::string name, bool reset=true);
+        DataPropertyPtrT find(const boost::regex pattern, bool reset=true);
+        void addProperty(DataPropertyPtrT property);
+        std::string getName() const {return _name; }
+        boost::any getValue() const {return _value; }
         void print();
-        ~DataProperty() { std::cout << "destroying DataProperty: " << _name << std::endl;}
+        ~DataProperty();
         
     private:
-        typedef std::list<DataProperty> ContainerT;
+        typedef std::list<DataPropertyPtrT> ContainerT;
 
         std::string _name;
         boost::any _value;
         ContainerT _properties;
-        std::list<DataProperty>::iterator pos;
+        std::list<DataPropertyPtrT>::iterator pos;
     };
 
 };

@@ -43,9 +43,9 @@ int main(int argc, char *argv[])
         DataPropertyPtr aProperty(new DataProperty("NPlane",(int)5));
         DataPropertyPtr bProperty(new DataProperty("MaxPlane",(int)3));
         DataPropertyPtr nProperty(new DataProperty("sonofMaxPlane",(int)12));
-        bProperty->addProperty(*nProperty);
-        exceptionPropertyList->addProperty(*aProperty);
-        exceptionPropertyList->addProperty(*bProperty);
+        bProperty->addProperty(nProperty);
+        exceptionPropertyList->addProperty(aProperty);
+        exceptionPropertyList->addProperty(bProperty);
 
         std::cout<< "aProperty use count: " << aProperty.use_count() << std::endl;
         std::cout<< "bProperty use count: " << bProperty.use_count() << std::endl;
@@ -71,11 +71,11 @@ int main(int argc, char *argv[])
         exceptionPropertyList->print();
 
         std::cout << "....Extracting properties from PropertyList"<<std::endl;
-        DataProperty *aProperty = exceptionPropertyList->find("NPlane");
+        DataPropertyPtr aProperty = exceptionPropertyList->find("NPlane");
         int testNPlane = any_cast<const int>(aProperty->getValue());
-        DataProperty *bProperty = exceptionPropertyList->find("MaxPlane");
+        DataPropertyPtr bProperty = exceptionPropertyList->find("MaxPlane");
         int testMaxPlane = any_cast<const int>(bProperty->getValue());
-        //DataProperty *cProperty = exceptionPropertyList->find("sonofMaxPlane");
+        //DataPropertyPtr cProperty = exceptionPropertyList->find("sonofMaxPlane");
         //int testSonOfMaxPlane = any_cast<const int>(cProperty->getValue());
 
         std::cout << "....No space to add new CR plane: number of Planes: " 
