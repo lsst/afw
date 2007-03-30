@@ -32,3 +32,22 @@ template<class ImagePixelT> Image<ImagePixelT>&  Image<ImagePixelT>::operator +=
     _image += *(inputImage.getIVwPtr());
     return *this;
 }
+
+template<class ImagePixelT> Image<ImagePixelT>&  Image<ImagePixelT>::operator -= (const Image<ImagePixelT>& inputImage)
+{
+    _image -= *(inputImage.getIVwPtr());
+    return *this;
+}
+
+template<class ImagePixelT> Image<ImagePixelT>&  Image<ImagePixelT>::operator *= (const Image<ImagePixelT>& inputImage)
+{
+    _image *= *(inputImage.getIVwPtr());
+    return *this;
+}
+
+template<class ImagePixelT> Image<ImagePixelT>&  Image<ImagePixelT>::operator /= (const Image<ImagePixelT>& inputImage)
+{
+    _image /= *(inputImage.getIVwPtr());
+    return *this;
+}
+
