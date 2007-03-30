@@ -1,12 +1,47 @@
 #include <string>
 #include <stack>
 #include <boost/format.hpp>
+#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/sequenced_index.hpp>
+#include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index/member.hpp>
 #include "lsst/fw/Utils.h"
 #include "lsst/fw/Trace.h"
 #include "lsst/fw/Demangle.h"
 
 LSST_START_NAMESPACE(lsst)
 LSST_START_NAMESPACE(fw)
+/*
+ * Provide a symbol table for "substitutions" while mangling
+ */
+using boost::multi_index_container;
+using namespace boost::multi_index;
+
+class Symbol {
+public:
+    int n;                              // index of substitution
+    std::string key;                    // key to saved string
+
+    Symbol(std::string key) : n(n_next++), key(key) { }
+    ~Symbol() {}
+
+    static void reset() { n_next = 0; } // reset counter
+    
+    void print() const {
+        std::cout << '\t' << n << " " << key << '\n';
+    }
+private:
+    static int n_next;                  // the next value of n
+};
+
+/*
+ * Tags for indices
+ */
+struct n {};                            // lookup by n
+struct key {};                          // lookup by key
+
+int Symbol::n_next = 0;                 // unique ID for each symbol
+
 /*! \brief Try to demangle a C++ type
  *
  * Try to unmangle a type name; this is purely a convenience to the user
@@ -24,8 +59,58 @@ LSST_START_NAMESPACE(fw)
  * much more than types (which is all I need) and have long tentacles
  * into e.g. the libiberty source.
  */
+static bool interpret_typeletter(const char c, std::string &type) {
+    switch (c) {
+      case 'v': type = "void"; return true;
+      case 'w': type = "wchar_t"; return true;
+      case 'b': type = "bool"; return true;
+      case 'c': type = "char"; return true;
+      case 'a': type = "schar"; return true;
+      case 'h': type = "uchar"; return true;
+      case 's': type = "short"; return true;
+      case 't': type = "ushort"; return true;
+      case 'i': type = "int"; return true;
+      case 'j': type = "uint"; return true;
+      case 'l': type = "long"; return true;
+      case 'm': type = "ulong"; return true;
+      case 'x': type = "long long"; return true;
+      case 'y': type = "ulong long"; return true;
+      case 'n': type = "__int128"; return true;
+      case 'o': type = "__uint128"; return true;
+      case 'f': type = "float"; return true;
+      case 'd': type = "double"; return true;
+      case 'e': type = "long double"; return true;
+      case 'g': type = "__float128"; return true;
+      case 'z': type = "..."; return true;
+      case 'u': type = "vendor extended type"; return true;
+      default: return false;
+    }
+}
+
+
 std::string demangleType(const std::string _typeName) {
 #if 1
+    typedef multi_index_container<
+        Symbol,
+        indexed_by<
+            ordered_unique<tag<n>,
+        	member<Symbol, int, &Symbol::n> >,
+            ordered_unique<tag<key>,
+        	member<Symbol, std::string, &Symbol::key> >
+        >
+    > SymbolTable;
+    typedef SymbolTable::index<n>::type::iterator nIterator;
+    typedef SymbolTable::index<key>::type::iterator keyIterator;
+    Symbol::reset();
+   
+    // Here's my symbol table and its indices
+    SymbolTable st;
+    
+    SymbolTable::index<n>::type &nIndex = st.get<n>();
+    SymbolTable::index<key>::type &keyIndex = st.get<key>();
+    //
+    // Start mangling
+    //
     std::string typeName("");
     const char *ptr = _typeName.c_str();
 
@@ -35,37 +120,65 @@ std::string demangleType(const std::string _typeName) {
     
     if (*ptr == 'P') ptr++;             // We passed "this" which is (type *)
 
-    bool startSymbolSequence = true;    // are in the middle of a set of symbs
+    std::string currentSymbol = "";     // Current symbol
     std::stack<char> typeStack;         // Did we last see an N or an I?
 
     while (*ptr != '\0') {
         switch (*ptr) {
           case 'E':
             ptr++;
-            startSymbolSequence = true;
+            currentSymbol = "";
 
-            if (typeStack.size() == 0) {
-                Trace::trace("fw.Citizen.demangle", 0, boost::format("Tried to examine empty stack for %s at \"%s\"") % _typeName % ptr);
+            if (typeStack.empty()) {
+                Trace::trace("fw.Citizen.demangle", 0,
+                             boost::format("Tried to examine empty stack for %s at \"%s\"") % _typeName % ptr);
                 typeStack.push('\a');   // at least don't crash
             }
 
-            if (typeStack.top() == 'N') {
+            if (typeStack.top() == 'I') {
+                typeName += '>';
+            } else if (typeStack.top() == 'L') {
                 ;
-            } else if (typeStack.top() == 'I') {
-                typeName += ">";
+            } else if (typeStack.top() == 'N') {
+                ;
             }
             typeStack.pop();
 
+            if (!typeStack.empty() && typeStack.top() == 'I') {
+                if (*ptr != 'E' && typeName[typeName.size() - 1] != '<') {
+                    typeName += ',';
+                }
+            }
+                        
             break;
           case 'I':
             typeStack.push(*ptr++);
-            startSymbolSequence = true;
+            currentSymbol = "";
 
-            typeName += "<";
+            typeName += '<';
+            break;
+          case 'L':
+            typeStack.push(*ptr++);
+            currentSymbol = "";
+            {
+                std::string type;
+                if (interpret_typeletter(*ptr, type)) {
+                    typeName += "(" + type + ')';
+                } else {
+                    typeName += 'c';
+                }
+                ptr++;
+            }
+            if (*ptr == 'n') {
+                typeName += '-'; ptr++;
+            }
+            while (*ptr != '\0' && *ptr != 'E') {
+                typeName += *ptr++;
+            }
             break;
           case 'N':
             typeStack.push(*ptr++);
-            startSymbolSequence = true;
+            currentSymbol = "";
             break;
           case 'S':
             *ptr++;
@@ -78,69 +191,83 @@ std::string demangleType(const std::string _typeName) {
               case 'o': typeName += "::std::basic_ostream<char,std::char_traits<char>>"; break;
               case 'd': typeName += "::std::basic_iostream<char,std::char_traits<char>>"; break;
               default:
-                typeName += "[";
-                if (*ptr == '_') {
-                    typeName += "S0";
-                } else if (isdigit(*ptr) || isupper(*ptr)) {
-                    int subst = 0;
-                    while (isdigit(*ptr) || isupper(*ptr)) {
-                        if (isdigit(*ptr)) {
-                            subst = 36*subst + (*ptr - '0');
-                        } else {
-                            subst = 36*subst + 10 + (*ptr - 'A');
+                {
+                    int subst = 0;      // number of substitution
+
+                    if (*ptr == '_') {
+                        ;                   // S_ => 0
+                    } else if (isdigit(*ptr) || isupper(*ptr)) {
+                        while (isdigit(*ptr) || isupper(*ptr)) {
+                            if (isdigit(*ptr)) {
+                                subst = 36*subst + (*ptr - '0');
+                            } else {
+                                subst = 36*subst + 10 + (*ptr - 'A');
+                            }
+                            *ptr++;
                         }
-                        *ptr++;
+                        subst++;            // S_ == 0; S1_ == 1
+                        assert (*ptr == '_');
+                        ptr++;
                     }
-                    assert (*ptr == '_');
-                    ptr++;
-                    
-                    typeName += (boost::format("S%d") % subst).str();
+
+                    nIterator sym = nIndex.find(subst);
+                    if (sym == nIndex.end()) { // not found
+                        typeName += (boost::format("[S%d]") % subst).str();
+                    } else {
+                        typeName += sym->key;
+                    }
+
                 }
-                typeName += "]";
                 break;
             }
-            startSymbolSequence = true;
+            currentSymbol = "";
             break;
           case '0': case '1': case '2': case '3': case '4':
           case '5': case '6': case '7': case '8': case '9':
-            if (!startSymbolSequence) {
-                typeName += "::";
-            }
-            startSymbolSequence = false;
-            
             {
                 const int len = atoi(ptr++);
                 while (isdigit(*ptr)) ptr++;
-                
+
+                std::string name = "";
                 for (int i = 0; *ptr != '\0' && i < len; i++) {
-                    typeName += *ptr++;
+                    name += *ptr++;
+                }
+
+                if (currentSymbol != "") {
+                    currentSymbol += "::";
+                    typeName += "::";
+                }
+            
+                currentSymbol += name;
+                typeName += name;
+
+                if (keyIndex.find(currentSymbol) == keyIndex.end()) {
+                    st.insert(currentSymbol);
                 }
 	    }
             break;
-          case 'v': typeName += "void";		ptr++; break;
-          case 'w': typeName += "wchar_t";	ptr++; break;
-          case 'b': typeName += "bool";		ptr++; break;
-          case 'c': typeName += "char";		ptr++; break;
-          case 'a': typeName += "signed char";	ptr++; break;
-          case 'h': typeName += "unsigned char"; ptr++; break;
-          case 's': typeName += "short";	ptr++; break;
-          case 't': typeName += "unsigned short"; ptr++; break;
-          case 'i': typeName += "int";		ptr++; break;
-          case 'j': typeName += "unsigned int";	ptr++; break;
-          case 'l': typeName += "long";		ptr++; break;
-          case 'm': typeName += "unsigned long"; ptr++; break;
-          case 'x': typeName += "long long, __int64"; ptr++; break;
-          case 'y': typeName += "unsigned long long, __int64"; ptr++; break;
-          case 'n': typeName += "__int128";	ptr++; break;
-          case 'o': typeName += "unsigned __int128"; ptr++; break;
-          case 'f': typeName += "float";	ptr++; break;
-          case 'd': typeName += "double";	ptr++; break;
-          case 'e': typeName += "long double, __float80"; ptr++; break;
-          case 'g': typeName += "__float128";	ptr++; break;
-          case 'z': typeName += "...";		ptr++; break;
-          case 'u': typeName += "vendor extended type"; ptr++; break;
           default:
-            typeName += *ptr++;
+            {
+                std::string type;
+                if (interpret_typeletter(*ptr, type)) {
+                    typeName += type;
+                } else {
+                    typeName += *ptr;
+                }
+                ptr++;
+            }
+        }
+    }
+
+    static volatile bool dumpSymbolTable = false; // can be set from gdb
+    if (dumpSymbolTable) {
+        // The test on the iterator is paranoid, but they _could_
+        // have deleted elements.  In this case, they didn't.
+        for (unsigned int i = 0; i < st.size(); i++) {
+            nIterator el = nIndex.find(2);
+            if (el != nIndex.end()) {          // did we find it?
+                el->print();
+            }
         }
     }
 
