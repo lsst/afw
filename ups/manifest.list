@@ -1,0 +1,12 @@
+>merge: build
+>merge: core
+>merge: vw
+>merge: numarray
+>merge: pyfits
+>merge: swig
+>merge: cfitsio
+>merge: wcstools 3.6.2
+>merge: xpa
+>merge: doxygen
+>self
+

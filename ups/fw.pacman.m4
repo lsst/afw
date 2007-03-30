@@ -1,5 +1,5 @@
 #
-#   package version
+#   fw 1.0
 #
 #
 m4_changequote([, ])m4_dnl
@@ -10,7 +10,7 @@ m4_dnl  it may only be necessary to update the values of the following macros.
 m4_dnl  Only m4_PACKAGE and m4_VERSION are required.  
 m4_dnl
 m4_define([m4_PACKAGE], [fw])m4_dnl
-m4_define([m4_VERSION], [0.3])m4_dnl
+m4_define([m4_VERSION], [1.0])m4_dnl
 m4_define([m4_TARBALL], [m4_PACKAGE-m4_VERSION.tar.gz])m4_dnl
 # 
 # set up the initial pacman definitions and environment variables.
@@ -25,21 +25,8 @@ m4_dnl
 #
 # denote dependencies
 #
-# package('m4_CACHE:otherpkg-2.2')
-setenvShellTemp('PYFITS_DIR', 'export SHELL=sh; source $EUPS_DIR/bin/setups.sh; setup PyFITS; echo $PYFITS_DIR')
-envIsSet('PYFITS_DIR')
-echo('Using PYFITS_DIR=$PYFITS_DIR')
-shell('[[ -d "$PYFITS_DIR" ]]')
-
-setenvShellTemp('SWIG_DIR', 'export SHELL=sh; source $EUPS_DIR/bin/setups.sh; setup swig; echo $SWIG_DIR')
-envIsSet('SWIG_DIR')
-echo('Using SWIG_DIR=$SWIG_DIR')
-shell('[[ -d "$SWIG_DIR" ]]')
-
-setenvShellTemp('WCSTOOLS_DIR', 'export SHELL=sh; source $EUPS_DIR/bin/setups.sh; setup WCSTools; echo $WCSTOOLS_DIR')
-envIsSet('WCSTOOLS_DIR')
-echo('Using WCSTOOLS_DIR=$WCSTOOLS_DIR')
-shell('[[ -d "$WCSTOOLS_DIR" ]]')
+# Make sure scons is available
+m4_ENSURE_SCONS()
 
 #
 # begin installation assuming we are located in LSST_HOME
@@ -64,12 +51,9 @@ downloadUntar('m4_PKGURL/m4_PKGPATH/m4_TARBALL','BUILDDIR')
 #   cd into the untarred directory, configure, make and make install
 #
 cd('$BUILDDIR')
-echo ("configuring m4_PACKAGE-m4_VERSION...")
-shell('export SHELL=sh; source $EUPS_DIR/bin/setups.sh; setup PyFITS; setup WCSTools; setup swig; ./configure')
-
-echo ("running make install")
-shell('export SHELL=sh; source $EUPS_DIR/bin/setups.sh; setup PyFITS; setup WCSTools; setup swig; make installnowarn')
-cd()
+echo ("building and installing m4_PACKAGE-m4_VERSION...")
+m4_SCONS_BUILD()
+cd('$LSST_HOME')
 
 #
 # Now download & install the EUPS table file and load package into EUPS
