@@ -92,10 +92,10 @@ namespace lsst {
         typedef MaskedImage<ImagePixelT, MaskPixelT> MaskedImageT;
 
 	MaskedImage();
-            
-	MaskedImage(ImagePtrT image, MaskPtrT mask);
-
+        MaskedImage(ImagePtrT image, MaskPtrT mask);
         MaskedImage(int nCols, int nRows);
+
+        virtual ~MaskedImage();
 
 	void processPixels(MaskPixelBooleanFunc<MaskPixelT> &selectionFunc, PixelProcessingFunc<ImagePixelT, MaskPixelT> &processingFunc,
             MaskedImageT &);
@@ -104,25 +104,23 @@ namespace lsst {
 
 	void processPixels(PixelProcessingFunc<ImagePixelT, MaskPixelT> &processingFunc);
 
+#if 0
 	MaskedImagePtrT getSubImage(BBox2i region);
 
-	void replaceSubImage(BBox2i region, MaskedImage sImage, bool replaceMask, bool replaceAstro);
+	void replaceSubImage(BBox2i region, MaskedImage &sImage, bool replaceMask, bool replaceAstro);
+#endif
 
-	MaskedImage<ImagePixelT, MaskPixelT>& operator+=( MaskedImageT& maskedImageInput);
-
-	MaskedImage<ImagePixelT, MaskPixelT>& operator-=( MaskedImage & maskedImageInput);
-
-	MaskedImage<ImagePixelT, MaskPixelT>& operator*=( MaskedImage & maskedImageInput);
-
-	MaskedImage<ImagePixelT, MaskPixelT>& operator/=( MaskedImage & maskedImageInput);
+	MaskedImage& operator+=( MaskedImageT& maskedImageInput);
+	MaskedImage& operator-=( MaskedImage & maskedImageInput);
+	MaskedImage& operator*=( MaskedImage & maskedImageInput);
+	MaskedImage& operator/=( MaskedImage & maskedImageInput);
 
 	ImagePtrT getImage();
-
 	MaskPtrT getMask();
-
-	virtual ~MaskedImage();
-        
     private:
+        MaskedImage(const MaskedImage &);
+        MaskedImage& operator=(const MaskedImage &);
+
 	ImagePtrT _imagePtr;
 	MaskPtrT _maskPtr;
         ImageT & _image;

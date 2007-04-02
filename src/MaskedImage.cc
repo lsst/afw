@@ -14,6 +14,15 @@ MaskedImage<ImagePixelT, MaskPixelT>::MaskedImage() :
 }
 
 template<typename ImagePixelT, typename MaskPixelT> 
+MaskedImage<ImagePixelT, MaskPixelT>::MaskedImage(ImagePtrT image, MaskPtrT mask) :
+    LsstBase(typeid(this)),
+    _imagePtr(image),
+    _maskPtr(mask),
+    _image(*_imagePtr),
+    _mask(*_maskPtr) {
+}    
+
+template<typename ImagePixelT, typename MaskPixelT> 
 MaskedImage<ImagePixelT, MaskPixelT>::MaskedImage(int nCols, int nRows) :
     LsstBase(typeid(this)),
     _imagePtr(new Image<ImagePixelT>(nCols, nRows)),
@@ -36,11 +45,31 @@ boost::shared_ptr<Image<ImagePixelT> > MaskedImage<ImagePixelT, MaskPixelT>::get
     return _imagePtr;
 }
 
-
 template<typename ImagePixelT, typename MaskPixelT> 
 MaskedImage<ImagePixelT, MaskPixelT>& MaskedImage<ImagePixelT, MaskPixelT>::operator+=(MaskedImageT & maskedImageInput) {
     _mask |= *(maskedImageInput.getMask());
     _image += *(maskedImageInput.getImage());
+    return *this;
+}
+
+template<typename ImagePixelT, typename MaskPixelT> 
+MaskedImage<ImagePixelT, MaskPixelT>& MaskedImage<ImagePixelT, MaskPixelT>::operator-=(MaskedImageT & maskedImageInput) {
+    _mask |= *(maskedImageInput.getMask());
+    _image -= *(maskedImageInput.getImage());
+    return *this;
+}
+
+template<typename ImagePixelT, typename MaskPixelT> 
+MaskedImage<ImagePixelT, MaskPixelT>& MaskedImage<ImagePixelT, MaskPixelT>::operator*=(MaskedImageT & maskedImageInput) {
+    _mask |= *(maskedImageInput.getMask());
+    _image *= *(maskedImageInput.getImage());
+    return *this;
+}
+
+template<typename ImagePixelT, typename MaskPixelT> 
+MaskedImage<ImagePixelT, MaskPixelT>& MaskedImage<ImagePixelT, MaskPixelT>::operator/=(MaskedImageT & maskedImageInput) {
+    _mask |= *(maskedImageInput.getMask());
+    _image /= *(maskedImageInput.getImage());
     return *this;
 }
 
