@@ -8,6 +8,8 @@
 %pythonnondynamic;
 #endif
 
+%naturalvar;                            // use const reference typemaps
+
 %include "cpointer.i"
 %include "exception.i"
 %include "std_list.i"
