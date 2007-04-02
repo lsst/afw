@@ -17,6 +17,8 @@
 LSST_START_NAMESPACE(lsst)
 LSST_START_NAMESPACE(fw)
 
+void guessSvnVersion(const std::string &, std::string &OUTPUT);
+
 LSST_END_NAMESPACE(fw)
 LSST_END_NAMESPACE(lsst)
 
