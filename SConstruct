@@ -8,6 +8,7 @@ import lsst.SConsUtils as scons
 env = scons.makeEnv("fw",
                     r"$HeadURL$",
                     [["boost", "boost/version.hpp", "boost_filesystem:C++"],
+                     ["boost", "boost/regex.hpp", "boost_regex:C++"],
                      ["vw", "vw/Core.h", "vw:C++"],
                      ["python", "Python.h"],
 		     ["cfitsio", "fitsio.h", "m cfitsio", "ffopen"],
@@ -18,7 +19,7 @@ env = scons.makeEnv("fw",
 # Libraries that I need to link things.  This should be handled better
 #
 env.libs = dict([
-    ("boost",	Split("boost_filesystem")),
+    ("boost",	Split("boost_filesystem boost_regex")),
     ("fits",	Split("fitsio")),
     ("vw",	Split("vw vwCore vwFileIO")),
     ])
