@@ -6,7 +6,7 @@ Basic routines to talk to FW's classes (including visionWorkbench) and ds9
 %enddef
 
 %feature("autodoc", "1");
-%module(docstring=fwLib_DOCSTRING, naturalvar=1) fwLib
+%module(docstring=fwLib_DOCSTRING) fwLib
 
 #if 0
    %rename("%(command:perl -pe 's/^act(.)/\l$1/' <<< )s") "";
@@ -29,10 +29,12 @@ Basic routines to talk to FW's classes (including visionWorkbench) and ds9
 %{
 #   include <boost/cstdint.hpp>
 #   include "lsst/fw/Citizen.h"
+#   include "lsst/fw/Demangle.h"
 #   include "lsst/fw/DiskImageResourceFITS.h"
 #   include "lsst/fw/Mask.h"
 #   include "lsst/fw/MaskedImage.h"
 #   include "lsst/fw/Trace.h"
+#   include "lsst/fw/Utils.h"
 
 using namespace lsst;
 using namespace lsst::fw;
@@ -43,7 +45,15 @@ using namespace vw;
 %}
 
 %include "../Core/p_lsstSwig.i"
-%import "lsst/fw/Utils.h"
+%include "lsst/fw/Utils.h"
+
+%pythoncode %{
+
+def version(HeadURL = r"$HeadURL$"):
+    """Return a version given a HeadURL string; default: fw's version"""
+    return guessSvnVersion(HeadURL)
+
+%}
 
 /******************************************************************************/
 
@@ -70,7 +80,6 @@ typedef vw::PixelGray<uint8> MaskPixelType;
 %import "vw/FileIO/DiskImageResource.h"
 %include "lsst/fw/DiskImageResourceFITS.h"
 
-
 /******************************************************************************/
 // Citizens, Trace, etc.
 %include "lsst/fw/Citizen.h"
@@ -80,7 +89,7 @@ typedef vw::PixelGray<uint8> MaskPixelType;
 // Masks and MaskedImages
 
 %include "lsst/fw/Mask.h"
-//%include "lsst/fw/MaskedImage.h"
+%include "lsst/fw/MaskedImage.h"
 
 using namespace lsst;
 
@@ -91,7 +100,7 @@ using namespace lsst;
 %template(ImageMask)  vw::ImageView<MaskPixelType>;
 
 %template(MaskD)      lsst::Mask<MaskPixelType>;
-//%template(MaskedImageD) lsst::MaskedImage<ImagePixelType, MaskPixelType>;
+%template(MaskedImageD) lsst::MaskedImage<ImagePixelType, MaskPixelType>;
 %template(BBox2i)     BBox<int32, 2>;
 
 %template(listPixelCoord)  std::list<lsst::PixelCoord>;
