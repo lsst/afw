@@ -3,6 +3,7 @@
 // This file can NOT be separately compiled!   It is included by MaskedImage.h
 
 #include <typeinfo>
+#include <lsst/fw/Trace.h>
 
 template<typename ImagePixelT, typename MaskPixelT> 
 MaskedImage<ImagePixelT, MaskPixelT>::MaskedImage() :
@@ -81,7 +82,7 @@ void  MaskedImage<ImagePixelT, MaskPixelT>::processPixels(MaskPixelBooleanFunc<M
 
 template<typename ImagePixelT, typename MaskPixelT> 
 void  MaskedImage<ImagePixelT, MaskPixelT>::processPixels(PixelProcessingFunc<ImagePixelT, MaskPixelT> &processingFunc) {
-    std::cout << "Processing pixels" << std::endl;
+    fw::Trace::trace("fw.MaskedImage", 1, "Processing pixels");
 
     PixelLocator<ImagePixelT> i = processingFunc.getImagePixelLocatorBegin();
     PixelLocator<ImagePixelT> iEnd = processingFunc.getImagePixelLocatorEnd();

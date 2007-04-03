@@ -18,6 +18,7 @@ dnl
 #include <boost/format.hpp>
 #include <boost/shared_ptr.hpp>
 #include "lsst/fw/DataProperty.h"
+#include "lsst/fw/Trace.h"
 
 namespace lsst {
 typedef boost::shared_ptr<DataProperty> DataPropertyPtr;
@@ -50,8 +51,8 @@ define(LSST_NEW_EXCEPTION,
         $1(const $1 & oops) throw() : \
             Exception(oops.what()), _propertyList(oops._propertyList){};
         ~$1() throw() { \
-            std::cout << "----Destroy ExceptObj" << std::endl; \
-            _propertyList->print();  \
+            fw::Trace::trace("fw.Exception", 1, "----Destroy ExceptObj"); \
+            fw::Trace::trace("fw.Exception", 1, _propertyList->repr());  \
             };
         DataPropertyPtr propertyList() throw() { return _propertyList;};
         $1 & operator= (const $1 & oops) throw() { \

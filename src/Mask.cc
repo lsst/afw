@@ -2,6 +2,7 @@
 // Implementations of Mask class methods
 // This file can NOT be separately compiled!   It is included by Mask.h
 
+#include <lsst/fw/Trace.h>
 
 template<typename MaskPixelT>
 Mask<MaskPixelT>::Mask() :
@@ -20,7 +21,8 @@ Mask<MaskPixelT>::Mask(MaskIVwPtrT image):
     _imageRows = _image.rows();
     _imageCols = _image.cols();
 
-     cout << "Number of mask planes: " << _numPlanesMax << endl;
+    fw::Trace::trace("fw.Mask", 1,
+                 boost::format("Number of mask planes: %d") % _numPlanesMax);
 
      for (int i=0; i<_numPlanesMax; i++) {
 	  _planeBitMask[i] = 1 << i;
@@ -41,7 +43,8 @@ Mask<MaskPixelT>::Mask(int ncols, int nrows) :
     _imageRows = _image.rows();
     _imageCols = _image.cols();
 
-     cout << "Number of mask planes: " << _numPlanesMax << endl;
+    fw::Trace::trace("fw.Mask", 1,
+                     boost::format("Number of mask planes: %d") % _numPlanesMax);
 
      for (int i=0; i<_numPlanesMax; i++) {
 	  _planeBitMask[i] = 1 << i;
