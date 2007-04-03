@@ -29,7 +29,8 @@ namespace lsst {
         void addProperty(DataPropertyPtrT property);
         std::string getName() const {return _name; }
         boost::any getValue() const {return _value; }
-        void print();
+        std::string DataProperty::repr() const;
+        void print() const;
         ~DataProperty();
         
     private:

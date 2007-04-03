@@ -1,4 +1,6 @@
 // -*- lsst-c++ -*-
+#include <sstream>
+#include "lsst/fw/Trace.h"
 #include "lsst/fw/DataProperty.h"
 
 using namespace lsst;
@@ -12,7 +14,9 @@ DataProperty::DataProperty(std::string name, boost::any value):
 
 DataProperty::DataProperty(const DataProperty& orig)
 {
-    std::cout << "copying DataProperty " << orig._name << std::endl;
+    using lsst::fw::Trace::trace;
+    trace("fw.DataProperty", 1,
+          boost::format("copying DataProperty %s") % orig._name);
     _name = orig._name;
     _value = orig._value;
     
@@ -50,39 +54,55 @@ void DataProperty::addProperty(DataPropertyPtrT propertyPtr) {
 }
 
 
-void DataProperty::print() {
-    std::cout << _name;
+std::string DataProperty::repr() const {
+    std::ostringstream sout;
+    sout << _name;
     if (_value.type() == typeid(int)) {
         int tmp = any_cast<const int>(_value);
-        std::cout << " " << tmp;
+        sout << " " << tmp;
     } else if (_value.type() == typeid(std::string)) {
         std::string tmp = any_cast<const std::string>(_value);
-        std::cout << " " << tmp;
+        sout << " " << tmp;
     }
-    std::cout << std::endl;
+    sout << std::endl;
 
     if (_properties.size() > 0) {
-        std::cout << "Nested property list: " << std::endl;
-        std::list<DataPropertyPtrT>::iterator pos;
+        sout << "Nested property list: " << std::endl;
+        ContainerT::const_iterator pos;
         for (pos = _properties.begin(); pos != _properties.end(); pos++) {
-            (*pos)->print();
+            sout << (*pos)->repr();
         }
     }
 
+    return sout.str();
 }
 
+void DataProperty::print() const {
+    std::cout << repr();
+}
 
 DataProperty::~DataProperty() {
-    std::cout << "Destroying DataProperty " << _name << std::endl;
+    using lsst::fw::Trace::trace;
+
+    trace("fw.DataProperty", 1,
+          boost::format("Destroying DataProperty %s") % _name);
+
     if (_properties.size() > 0) {
-        std::cout << "Destroying nested property list: " << std::endl;
+        trace("fw.DataProperty", 1,
+              boost::format("Destroying nested property list: "));
         std::list<DataPropertyPtrT>::iterator pos;
         for (pos = _properties.begin(); pos != _properties.end(); pos++) {
             DataPropertyPtrT dpPtr = *pos;
-            std::cout << "Use count prior to destructor: " << dpPtr.use_count() << std::endl;
-            std::cout << "(in loop) Destroying DataProperty " << dpPtr->getName() << std::endl;
+            trace("fw.DataProperty", 1,
+                  boost::format("Use count prior to destructor: %d") %
+                  dpPtr.use_count());
+            trace("fw.DataProperty", 1,
+                  boost::format("(in loop) Destroying DataProperty %s") %
+                  dpPtr->getName());
             dpPtr.~DataPropertyPtrT();
-            std::cout << "Use count after destructor: " << dpPtr.use_count() << std::endl;
+        trace("fw.DataProperty", 1,
+              boost::format("Use count after destructor: %s") %
+              dpPtr.use_count());
         }
     }
 }
