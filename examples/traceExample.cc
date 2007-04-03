@@ -16,36 +16,38 @@ static void work() {
 }
 
 int main() {
-    Trace::setDestination(std::cout);
+    using namespace Trace;
     
-    Trace::setVerbosity(".", 100);
+    setDestination(std::cout);
+    
+    setVerbosity(".", 100);
     work();
 
-    Trace::setVerbosity(".", 0);
-    Trace::setVerbosity("foo.bar", 3);
-    Trace::setVerbosity("foo.bar.goo", 10);
-    Trace::setVerbosity("foo.tar", 5);
+    setVerbosity(".", 0);
+    setVerbosity("foo.bar", 3);
+    setVerbosity("foo.bar.goo", 10);
+    setVerbosity("foo.tar", 5);
     work();
 
-    Trace::setVerbosity("foo.tar");
-    Trace::setVerbosity("foo.bar");
+    setVerbosity("foo.tar");
+    setVerbosity("foo.bar");
     work();
     
     std::cout << "\nReset.";
-    Trace::reset();
+    reset();
     work();
 
-    Trace::setVerbosity("", 1);
-    Trace::setVerbosity("foo.bar.goo.hoo", 10);
+    setVerbosity("", 1);
+    setVerbosity("foo.bar.goo.hoo", 10);
     work();
 
-    Trace::setVerbosity("", 2);
+    setVerbosity("", 2);
     work();
 
-    Trace::setVerbosity("");
-    Trace::setVerbosity("foo.bar.goo.hoo");
-    Trace::setVerbosity("foo.bar.goo.hoo.joo", 10);
-    Trace::setVerbosity("foo.bar.goo", 3);
+    setVerbosity("");
+    setVerbosity("foo.bar.goo.hoo");
+    setVerbosity("foo.bar.goo.hoo.joo", 10);
+    setVerbosity("foo.bar.goo", 3);
     work();
     
     return 0;
