@@ -1,22 +1,66 @@
 /*!
  * \file
  */
+/*!
+ * \brief A simple implementation of a tracing facility for LSST
+ *
+ * Tracing is controlled on a per "component" basis, where a "component" is a
+ * name of the form aaa.bbb.ccc where aaa is the Most significant part; for
+ * example, the utilities library might be called "utils", the doubly-linked
+ * list "utils.dlist", and the code to destroy a list "utils.dlist.del" 
+ *
+ * All tracing may be disabled by recompiling with LSST_NO_TRACE defined
+ * to be non-zero
+ */
 #include <map>
 
 #include <boost/tokenizer.hpp>
 
 #include "lsst/fw/Trace.h"
 
-/*
- * \brief Document namespace
- */
 using namespace lsst::fw;
+
+class TraceImpl {
+public:
+    TraceImpl();
+
+    friend void Trace::trace(const std::string &comp, const int verbosity,
+                             const std::string &msg);
+    friend void Trace::trace(const std::string &comp, const int verbosity,
+                             const boost::format &msg);
+
+    static void reset();
+    static void setVerbosity(const std::string &name);
+    static void setVerbosity(const std::string &name, const int verbosity);
+
+    static int getVerbosity(const std::string &name);
+
+    static void printVerbosity(std::ostream &fp = std::cout);
+
+    static void setDestination(std::ostream &fp);
+private:
+    class Component;
+    ~TraceImpl() {}                         //!< no-one should delete the singleton
+
+    enum { INHERIT_VERBOSITY = -9999};  //!< use parent's verbosity
+
+    static Component *_root;            //!< the root of the Component tree
+
+    static std::string _separator;      //!< path separation character
+    static std::ostream *_traceStream;  //!< output stream for traces
+
+    //! Properties cached for efficiency
+    static int _HighestVerbosity;         //!< highest verbosity requested
+    static bool _cacheIsValid;            //!< Is the cache valid?
+    static std::string _cachedName;       //!< last name looked up
+    static int _cachedVerbosity;          //!< verbosity of last looked up name
+};
 
 /*****************************************************************************/
 /*!
  * \brief A node in the Trace system
  */
-class Trace::Component {
+class TraceImpl::Component {
 public:
     Component(const std::string &name = ".", int verbosity=INHERIT_VERBOSITY);
     ~Component();
@@ -60,14 +104,14 @@ private:
  * "foo.goo.hoo" explicitly, in which case "foo"'s value is irrelevant --- but
  * "foo.goo" continues to inherit it.
  */
-Trace::Component::Component(const std::string &name, //!< name of component
+TraceImpl::Component::Component(const std::string &name, //!< name of component
                             int verbosity            //!< associated verbosity
                            ) : _name(new std::string(name)),
                                _verbosity(verbosity),
                                _subcomp(*new(comp_map)) {
 }
 
-Trace::Component::~Component() {
+TraceImpl::Component::~Component() {
     delete &_subcomp;
     delete _name;
 }
@@ -75,7 +119,7 @@ Trace::Component::~Component() {
 /*!
  * Add a new component to the tree
  */
-void Trace::Component::add(const std::string &name,  //!< Component's name
+void TraceImpl::Component::add(const std::string &name,  //!< Component's name
                            int verbosity, //!< The component's verbosity
                            const std::string &separator //!< path separator
                           ) {
@@ -94,7 +138,7 @@ void Trace::Component::add(const std::string &name,  //!< Component's name
     }
 }
 
-void Trace::Component::add(tokenizer::iterator token, //!< parts of name
+void TraceImpl::Component::add(tokenizer::iterator token, //!< parts of name
                            const tokenizer::iterator end, //!< end of name
                            int verbosity //!< The component's verbosity
                      ) {
@@ -141,7 +185,7 @@ void Trace::Component::add(tokenizer::iterator token, //!< parts of name
 /*!
  * Return the highest verbosity rooted at comp
  */
-int Trace::Component::highestVerbosity(int highest //!< minimum verbosity to return
+int TraceImpl::Component::highestVerbosity(int highest //!< minimum verbosity to return
                            ) {
     if (_verbosity > highest) {
 	highest = _verbosity;
@@ -159,10 +203,10 @@ int Trace::Component::highestVerbosity(int highest //!< minimum verbosity to ret
 /*!
  * Return a trace verbosity given a name
  */
-int Trace::Component::getVerbosity(tokenizer::iterator token,
-                                   const tokenizer::iterator end,
-                                   int defaultVerbosity
-                                  ) {
+int TraceImpl::Component::getVerbosity(tokenizer::iterator token,
+                                       const tokenizer::iterator end,
+                                       int defaultVerbosity
+                                      ) {
     const std::string cpt0 = *token++;  // first component of name
     /*
      * Look for a match for cpt0 in this Component's subcomps
@@ -191,11 +235,11 @@ int Trace::Component::getVerbosity(tokenizer::iterator token,
 //!
 // Return a component's verbosity, from the perspective of "this".
 //
-// \sa Trace::Component::getVerbosity
+// \sa TraceImpl::Component::getVerbosity
 //
-int Trace::Component::getVerbosity(const std::string &name, // component of interest
-                                   const std::string &separator //!< path separator
-                                  ) {
+int TraceImpl::Component::getVerbosity(const std::string &name, // component of interest
+                                       const std::string &separator //!< path separator
+                                      ) {
     //
     // Prepare to parse name
     //
@@ -203,13 +247,17 @@ int Trace::Component::getVerbosity(const std::string &name, // component of inte
     tokenizer components(name, sep);
     tokenizer::iterator token = components.begin();
 
+    if (token == components.end()) {
+        return _verbosity;
+    }
+
     return getVerbosity(token, components.end(), _verbosity);
 }
 
 /*!
  * Print all the trace verbosities rooted at "this"
  */
-void Trace::Component::printVerbosity(std::ostream &fp,
+void TraceImpl::Component::printVerbosity(std::ostream &fp,
                                       int depth
                                      ) {
     if (_subcomp.empty() && _verbosity == INHERIT_VERBOSITY) {
@@ -244,7 +292,7 @@ void Trace::Component::printVerbosity(std::ostream &fp,
 /*****************************************************************************/
 //! Create the one true trace tree
     
-Trace::Trace() {
+TraceImpl::TraceImpl() {
     if (_root == 0) {
         _root = new Component(".", 0);
         _traceStream = &std::cerr;
@@ -252,25 +300,25 @@ Trace::Trace() {
     }
 }
 
-Trace::Component *Trace::_root = 0;
-std::string Trace::_separator;
-std::ostream *Trace::_traceStream;
+TraceImpl::Component *TraceImpl::_root = 0;
+std::string TraceImpl::_separator;
+std::ostream *TraceImpl::_traceStream;
 
-static Trace::Trace *_root = new Trace(); // the singleton
+static TraceImpl::TraceImpl *_root = new TraceImpl(); // the singleton
 
 /******************************************************************************/
 /*
  * The trace verbosity cache
  */
-int Trace::_HighestVerbosity = 0;
-bool Trace::_cacheIsValid = false;
-std::string Trace::_cachedName = "";
-int Trace::_cachedVerbosity;
+int TraceImpl::_HighestVerbosity = 0;
+bool TraceImpl::_cacheIsValid = false;
+std::string TraceImpl::_cachedName = "";
+int TraceImpl::_cachedVerbosity;
 
 /******************************************************************************/
 //! Reset the entire trace system
 
-void Trace::reset() {
+void TraceImpl::reset() {
     delete _root;
     _root = new Component;
     setVerbosity("");
@@ -280,7 +328,7 @@ void Trace::reset() {
  *
  * If no verbosity is specified, inherit from parent
  */
-void Trace::setVerbosity(const std::string &name //!< component of interest
+void TraceImpl::setVerbosity(const std::string &name //!< component of interest
                         ) {
 
     int verbosity = INHERIT_VERBOSITY;
@@ -290,7 +338,7 @@ void Trace::setVerbosity(const std::string &name //!< component of interest
     setVerbosity(name, verbosity);
 }
 
-void Trace::setVerbosity(const std::string &name, //!< component of interest
+void TraceImpl::setVerbosity(const std::string &name, //!< component of interest
                          const int verbosity //!< desired trace verbosity
                         ) {
     _cacheIsValid = false;
@@ -307,8 +355,8 @@ void Trace::setVerbosity(const std::string &name, //!< component of interest
 //!
 // Return a component's verbosity
 //
-int Trace::getVerbosity(const std::string &name	// component of interest
-                       ) {
+int TraceImpl::getVerbosity(const std::string &name	// component of interest
+                           ) {
     //
     // Is name cached?
     //
@@ -328,7 +376,7 @@ int Trace::getVerbosity(const std::string &name	// component of interest
 /*!
  * Print all the trace verbosities
  */
-void Trace::printVerbosity(std::ostream &fp) {
+void TraceImpl::printVerbosity(std::ostream &fp) {
     _root->printVerbosity(fp);
 }
 
@@ -337,7 +385,7 @@ void Trace::printVerbosity(std::ostream &fp) {
  *
  * close previous file descriptor if it isn't stdout/stderr
  */
-void Trace::setDestination(std::ostream &fp) {
+void TraceImpl::setDestination(std::ostream &fp) {
     if (*_traceStream != std::cout && *_traceStream != std::cerr) {
         delete _traceStream;
     }
@@ -345,30 +393,67 @@ void Trace::setDestination(std::ostream &fp) {
     _traceStream = &fp;
 }
 
+LSST_START_NAMESPACE(lsst)
+LSST_START_NAMESPACE(fw)
+/*
+ * \brief Document namespace Trace
+ */
+LSST_START_NAMESPACE(Trace)
+
 /*!
  * Actually generate the trace message.
  */
 #if !LSST_NO_TRACE
-void Trace::trace(const std::string &name,	//!< component being traced
-                  const int verbosity,		//!< desired trace verbosity
-                  const boost::format &msg      //!< trace message
-                 ) {
+void trace(const std::string &name,	//!< component being traced
+           const int verbosity,		//!< desired trace verbosity
+           const boost::format &msg     //!< trace message
+          ) {
     trace(name, verbosity, msg.str());
 }
 
-void Trace::trace(const std::string &name,	//!< component being traced
-                  const int verbosity,		//!< desired trace verbosity
-                  const std::string &msg        //!< trace message
-                 ) {
-    if (verbosity <= _HighestVerbosity && getVerbosity(name) >= verbosity) {
+void trace(const std::string &name,	//!< component being traced
+           const int verbosity,		//!< desired trace verbosity
+           const std::string &msg       //!< trace message
+          ) {
+    if (verbosity <= TraceImpl::_HighestVerbosity &&
+        TraceImpl::getVerbosity(name) >= verbosity) {
 	for (int i = 0; i < verbosity; i++) {
-            *_traceStream << ' ';
+            *TraceImpl::_traceStream << ' ';
 	}
-        *_traceStream << msg;
+        *TraceImpl::_traceStream << msg;
 
         if (msg.substr(msg.size() - 1) != "\n") {
-            *_traceStream << "\n";
+            *TraceImpl::_traceStream << "\n";
 	}
     }
 }
 #endif
+
+void reset() {
+    TraceImpl::reset();
+}
+
+void setVerbosity(const std::string &name) {
+    TraceImpl::setVerbosity(name);
+}
+
+void setVerbosity(const std::string &name, const int verbosity) {
+    TraceImpl::setVerbosity(name, verbosity);
+}
+
+int getVerbosity(const std::string &name) {
+    return TraceImpl::getVerbosity(name);
+}
+
+void printVerbosity(std::ostream &fp) {
+    TraceImpl::printVerbosity(fp);
+}
+
+void setDestination(std::ostream &fp) {
+    TraceImpl::setDestination(fp);
+}
+
+LSST_END_NAMESPACE(Trace)
+LSST_END_NAMESPACE(fw)
+LSST_END_NAMESPACE(lsst)
+    
