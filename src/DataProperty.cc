@@ -30,20 +30,26 @@ DataProperty::DataProperty(const DataProperty& orig)
     }
 };
 
+// Find the property with the given name.   If reset==true, start from the beginning.
+// If reset==false, advance the pointer from the previous find, and continue the find.
+
 DataProperty::DataPropertyPtrT DataProperty::find(const std::string name, bool reset) {
 
     if (reset) {
-        pos = _properties.begin();
+        _pos = _properties.begin();
+    } else {
+        _pos++;
     }
 
-    for ( ; pos != _properties.end(); pos++) {
-        if ((*pos)->getName() == name) {
-            return *pos;
+    for ( ; _pos != _properties.end(); _pos++) {
+        if ((*_pos)->getName() == name) {
+            return *_pos;
         }
     }
     
     return DataPropertyPtrT();
 }
+
 
 DataProperty::DataPropertyPtrT DataProperty::find(const boost::regex pattern, bool reset) {
     return DataPropertyPtrT();
@@ -68,7 +74,7 @@ std::string DataProperty::repr() const {
 
     if (_properties.size() > 0) {
         sout << "Nested property list: " << std::endl;
-        ContainerT::const_iterator pos;
+        DataPropertyContainerT::const_iterator pos;
         for (pos = _properties.begin(); pos != _properties.end(); pos++) {
             sout << (*pos)->repr();
         }
