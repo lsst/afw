@@ -47,7 +47,11 @@ int main()
      typedef PixelGray<float32> ImagePixelType;
 
      MaskedImage<ImagePixelType,MaskPixelType > testMaskedImage1(272, 1037);
+     testMaskedImage1.getMask()->addMaskPlane("CR");
+     
      MaskedImage<ImagePixelType,MaskPixelType > testMaskedImage2(272, 1037);
+     testMaskedImage2.getMask()->addMaskPlane("CR");
+
      testMaskedImage2 += testMaskedImage1;
 
      testPixProcFunc<ImagePixelType, MaskPixelType> fooFunc(testMaskedImage1);   // should be a way to automatically convey template types
