@@ -213,7 +213,7 @@ Citizen::memCallback Citizen::setDeleteCallback(
     return old;
 }
     
-//! Set the DeleteCallback function
+//! Set the CorruptionCallback function
 Citizen::memCallback Citizen::setCorruptionCallback(
 	Citizen::memCallback func //!< function be called when block is found to be corrupted
                                                    ) {
