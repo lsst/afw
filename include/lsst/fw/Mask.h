@@ -36,7 +36,7 @@ namespace lsst {
     template <typename MaskPixelT> class MaskPixelBooleanFunc {
     public:
         MaskPixelBooleanFunc(Mask<MaskPixelT>& m) : _mask(m) {}
-        virtual bool operator () (MaskPixelT);
+        virtual bool operator () (MaskPixelT) const;
         virtual ~MaskPixelBooleanFunc() {}
     protected:
         Mask<MaskPixelT>& _mask;
@@ -49,7 +49,6 @@ namespace lsst {
         typedef ImageView<MaskPixelT> MaskIVwT;
         typedef boost::shared_ptr<Mask<MaskPixelT> > MaskPtrT;
         typedef boost::shared_ptr<MaskIVwT> MaskIVwPtrT;
-
         
         Mask();
 
@@ -57,25 +56,28 @@ namespace lsst {
 
         Mask(int nCols, int nRows);
         
-        int addMaskPlane(string name);
+        int addMaskPlane(const string& name);
         
-        void removeMaskPlane(string name);
+        void removeMaskPlane(const string& name);
 
-        void getMaskPlane(string name, int& plane);
+        void getMaskPlane(const string& name, int& plane) const;
 
-        bool getPlaneBitMask(string name, MaskChannelT& bitMask);
+        bool getPlaneBitMask(const string& name,
+                             MaskChannelT& bitMask) const;
         
         void clearMaskPlane(int plane);
         
         void setMaskPlaneValues(int plane, list<PixelCoord> pixelList);
         
-        void setMaskPlaneValues(int plane, MaskPixelBooleanFunc<MaskPixelT> selectionFunc);
+        void setMaskPlaneValues(int plane,
+                                MaskPixelBooleanFunc<MaskPixelT> selectionFunc);
         
-        int countMask(MaskPixelBooleanFunc<MaskPixelT>& testFunc, BBox2i maskRegion);
+        int countMask(MaskPixelBooleanFunc<MaskPixelT>& testFunc,
+                      const BBox2i maskRegion) const;
 
-        MaskPtrT getSubMask(BBox2i maskRegion);
+        MaskPtrT getSubMask(const BBox2i maskRegion) const;
 
-        void replaceSubMask(BBox2i maskRegion, Mask<MaskPixelT>& insertMask);
+        void replaceSubMask(const BBox2i maskRegion, MaskPtrT insertMask);
 
         MaskChannelT operator ()(int x, int y) const;
 

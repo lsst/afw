@@ -57,7 +57,8 @@ Mask<MaskPixelT>::Mask(int ncols, int nrows) :
     }
 
 
-template<class MaskPixelT> int Mask<MaskPixelT>::addMaskPlane(string name)
+template<class MaskPixelT>
+int Mask<MaskPixelT>::addMaskPlane(const string& name)
 {
      int id;
      try {
@@ -101,7 +102,8 @@ template<class MaskPixelT> int Mask<MaskPixelT>::addMaskPlane(string name)
     }
 }
 
-template<class MaskPixelT> void Mask<MaskPixelT>::removeMaskPlane(string name)
+template<class MaskPixelT>
+void Mask<MaskPixelT>::removeMaskPlane(const string& name)
 {
      int id;
      try {
@@ -112,32 +114,36 @@ template<class MaskPixelT> void Mask<MaskPixelT>::removeMaskPlane(string name)
 	 return;
      }
      catch (exception &e) {
-         cout << e.what() << "Plane " << name << " not present in this Mask" << endl;
+         fw::Trace::trace("fw.Mask", 0,
+                          boost::format("%s Plane %s not present in this Mask") % e.what() % name);
          return;
      }
      
 }
 
-template<class MaskPixelT> void Mask<MaskPixelT>::getMaskPlane(string name, int& plane)
-{
-     for(map<int, string>::iterator i=_maskPlaneDict.begin(); i != _maskPlaneDict.end(); ++i) {
+template<class MaskPixelT>
+void Mask<MaskPixelT>::getMaskPlane(const string& name,
+                                    int& plane) const {
+     for(map<int, string>::const_iterator i=_maskPlaneDict.begin(); i != _maskPlaneDict.end(); ++i) {
 	  if (i->second == name) {
 	       plane = i->first;
 	       return ;
 	  }
      }
      plane = -1;
-     throw NoMaskPlane("Failed miserably");
+     throw NoMaskPlane("Failed to find maskPlane " + name);
 }
 
-template<class MaskPixelT> bool Mask<MaskPixelT>::getPlaneBitMask(string name, MaskChannelT& bitMask)
-{
+template<class MaskPixelT>
+bool Mask<MaskPixelT>::getPlaneBitMask(const string& name,
+                                       MaskChannelT& bitMask) const {
     int plane;
     try {
         getMaskPlane(name, plane);
     }
     catch (exception &e) {
-         cout << e.what() << "Plane " << name << " not present in this Mask" << endl;
+         fw::Trace::trace("fw.Mask", 0,
+                          boost::format("%s Plane %s not present in this Mask") % e.what() % name);
          return false;
     }
 
@@ -191,8 +197,9 @@ template<class MaskPixelT> void Mask<MaskPixelT>::setMaskPlaneValues(int plane, 
 //
 // PROBABLY WANT maskRegion to default to whole Mask
 
-template<class MaskPixelT> int Mask<MaskPixelT>::countMask(MaskPixelBooleanFunc<MaskPixelT>& testFunc, BBox2i maskRegion)
-{
+template<class MaskPixelT>
+int Mask<MaskPixelT>::countMask(MaskPixelBooleanFunc<MaskPixelT>& testFunc,
+                                const BBox2i maskRegion) const {
     int count = 0;
     Vector<int32, 2> ulCorner = maskRegion.min();
     Vector<int32, 2> lrCorner = maskRegion.max();
@@ -207,7 +214,8 @@ template<class MaskPixelT> int Mask<MaskPixelT>::countMask(MaskPixelBooleanFunc<
      return count;
 }
 
-template<class MaskPixelT>  typename Mask<MaskPixelT>::MaskPtrT Mask<MaskPixelT>::getSubMask(vw::BBox2i maskRegion) {
+template<class MaskPixelT>
+typename Mask<MaskPixelT>::MaskPtrT Mask<MaskPixelT>::getSubMask(const vw::BBox2i maskRegion) const {
 
     MaskIVwPtrT croppedMask(new MaskIVwT());
     *croppedMask = copy(crop(_image, maskRegion));
@@ -218,9 +226,14 @@ template<class MaskPixelT>  typename Mask<MaskPixelT>::MaskPtrT Mask<MaskPixelT>
 // Given a Mask, insertMask, place it into this Mask as directed by maskRegion.
 // An exception is generated if maskRegion is not of the same size as insertMask.
 //
-template<class MaskPixelT> void Mask<MaskPixelT>::replaceSubMask(BBox2i maskRegion, Mask<MaskPixelT>& insertMask)
+template<class MaskPixelT>
+void Mask<MaskPixelT>::replaceSubMask(const BBox2i maskRegion, MaskPtrT insertMask)
 {
-    crop(_image, maskRegion) = insertMask._image;
+    try {
+        crop(_image, maskRegion) = insertMask->_image;
+    } catch (exception eex) {
+        throw lsst::Exception(std::string("in ") + __func__);
+    } 
 }
 
 template<class MaskPixelT> typename Mask<MaskPixelT>::MaskChannelT Mask<MaskPixelT>::operator ()(int x, int y) const
@@ -236,8 +249,8 @@ template<class MaskPixelT> bool Mask<MaskPixelT>::operator ()(int x, int y, int 
 }
 
 template<typename MaskPixelT>
-bool MaskPixelBooleanFunc<MaskPixelT>::operator() (MaskPixelT) {
-    abort();
+bool MaskPixelBooleanFunc<MaskPixelT>::operator() (MaskPixelT) const {
+    throw lsst::Exception(boost::format("You can't get here: %s:%d") % __FILE__ % __LINE__);
     return true;
 }
 
@@ -262,12 +275,13 @@ template<class MaskPixelT> Mask<MaskPixelT>&  Mask<MaskPixelT>::operator |= (con
                 getMaskPlane(inputPlaneName, thisPlaneNumber) ;
             }
             catch (NoMaskPlane &e) {
-                cout << e.what() << "Plane " << inputPlaneName << " not present in this Mask" << endl;
+                fw::Trace::trace("fw.Mask", 0,
+                                 boost::format("%s Plane %s not present in this Mask") % e.what() % inputPlaneName);
                 throw;
             }
             if (thisPlaneNumber != inputPlaneNumber) {
-                cout << "Plane " << inputPlaneName << " does not have the same assignment in this Mask (" 
-                     << inputPlaneNumber << " " << thisPlaneNumber << ")" << endl;
+                fw::Trace::trace("fw.Mask", 0,
+                                 boost::format("Plane %s does not have the same assignment in this Mask (%d %d) ") % inputPlaneNumber % thisPlaneNumber);
                 throw;
             }
         }
