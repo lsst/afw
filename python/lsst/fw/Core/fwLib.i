@@ -19,15 +19,14 @@ Basic routines to talk to FW's classes (including visionWorkbench) and ds9
 // 317: Specialization of non-template
 // 389: operator[] ignored
 // 362: operator=  ignored
-// 503: Can't wrap 'operator unspecified_bool_type()'
 // I had trouble getting %warnfilter to work; hence the pragmas
 #pragma SWIG nowarn=317
 #pragma SWIG nowarn=362
 #pragma SWIG nowarn=389
-%warnfilter(503) vw;
 
 %{
 #   include <boost/cstdint.hpp>
+#   include <boost/shared_ptr.hpp>
 #   include "lsst/fw/Citizen.h"
 #   include "lsst/fw/Demangle.h"
 #   include "lsst/fw/DiskImageResourceFITS.h"
@@ -57,14 +56,17 @@ def version(HeadURL = r"$HeadURL$"):
 
 /******************************************************************************/
 
-%{
+%inline %{
 typedef vw::PixelGray<float> ImagePixelType;
 typedef vw::PixelGray<uint8> MaskPixelType;
 %}
 
 %ignore vw::ImageView<ImagePixelType>::origin;
 %ignore vw::ImageView<MaskPixelType>::origin;
+%ignore operator vw::ImageView::unspecified_bool_type;
+%ignore operator lsst::Mask::operator()(int, int); // RHL can't get this to work
 
+%import  <vw/Core/FundamentalTypes.h>
 %include <vw/Image/ImageViewBase.h>
 %include <vw/Image/ImageView.h>
 %include <vw/Image/PixelTypeInfo.h>
@@ -72,12 +74,11 @@ typedef vw::PixelGray<uint8> MaskPixelType;
 %include <vw/Image/ImageResource.h>
 %include <vw/Math/BBox.h>
 
-//%include <vw/Math/Vector.h>
-
 %apply int {int32};
 %apply int {vw::int32};
+%apply int {boost::int32_t};
 
-%import "vw/FileIO/DiskImageResource.h"
+%import <vw/FileIO/DiskImageResource.h>
 %include "lsst/fw/DiskImageResourceFITS.h"
 
 /******************************************************************************/
@@ -94,18 +95,37 @@ typedef vw::PixelGray<uint8> MaskPixelType;
 using namespace lsst;
 
 %template(ImageBaseFloat) vw::ImageViewBase<vw::ImageView<ImagePixelType> >;
-%template(ImageFloat) vw::ImageView<ImagePixelType>;
+%template(ImageFloat)     vw::ImageView<ImagePixelType>;
 
 %template(ImageBaseMask)  vw::ImageViewBase<vw::ImageView<MaskPixelType> >;
-%template(ImageMask)  vw::ImageView<MaskPixelType>;
+%template(ImageMask)      vw::ImageView<MaskPixelType>;
 
-%template(MaskD)      lsst::Mask<MaskPixelType>;
-%template(MaskedImageD) lsst::MaskedImage<ImagePixelType, MaskPixelType>;
-%template(BBox2i)     BBox<int32, 2>;
+%template(MaskD)          lsst::Mask<MaskPixelType>;
+%template(MaskedImageD)   lsst::MaskedImage<ImagePixelType, MaskPixelType>;
+%template(BBox2i)         BBox<int32, 2>;
+%template(XXX)            boost::shared_ptr<lsst::Mask<MaskPixelType> >;
+
+%extend_smart_pointer(boost::shared_ptr<vw::ImageView<MaskPixelType> >);
+//%delobject boost::shared_ptr<vw::ImageView<MaskPixelType> >::shared_ptr;
+//%apply SWIGTYPE *DISOWN {Foo *foo};
+%template(MaskIVwPtrT) boost::shared_ptr<vw::ImageView<MaskPixelType> >;
+
+%pythoncode %{
+def ImageMaskPtr(*args):
+    """Return an MaskIVwPtrT that owns its ImageMask"""
+
+    trace("fw.memory", 5, "creating maskImagePtr")
+
+    im = ImageMask(*args)
+    im.this.disown()
+    maskImagePtr = MaskIVwPtrT(im)
+
+    trace("fw.memory", 5, "returning maskImagePtr")
+        
+    return maskImagePtr
+%}
 
 %template(listPixelCoord)  std::list<lsst::PixelCoord>;
-
-//%template(pairInt)  vw::Vector<int, 2>;
 
 /******************************************************************************/
 //
@@ -115,12 +135,12 @@ using namespace lsst;
 template <typename MaskPixelT>
 class testCrFunc : public MaskPixelBooleanFunc<MaskPixelT> {
 public:
-    typedef typename PixelChannelType<MaskPixelT>::type MaskChannelT;
+    typedef typename Mask<MaskPixelT>::MaskChannelT MaskChannelT;
     testCrFunc(Mask<MaskPixelT>& m) : MaskPixelBooleanFunc<MaskPixelT>(m) {}
     void init() {
         MaskPixelBooleanFunc<MaskPixelT>::_mask.getPlaneBitMask("CR", _bitsCR);
     }        
-    bool operator ()(MaskPixelT pixel) { 
+    bool operator ()(MaskPixelT pixel) const { 
         return ((pixel.v() & _bitsCR) !=0 ); 
     }
 private:
