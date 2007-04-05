@@ -40,6 +40,21 @@
 
 /******************************************************************************/
 /*
+ * Don't expose the entire boost::shared_ptr to swig; it is complicated...
+ */
+namespace boost {
+    template<class T>
+    class shared_ptr {
+    public:
+        shared_ptr(T *);
+        ~shared_ptr();
+        T *operator->() const;
+        int use_count() const;
+    };
+}
+
+/******************************************************************************/
+/*
  * Typemaps
  */
 %typemap(in) FILE * {
