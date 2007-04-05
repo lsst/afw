@@ -22,6 +22,8 @@ namespace lsst {
     class DataProperty {
     public:
         typedef boost::shared_ptr<DataProperty> DataPropertyPtrT;
+        typedef std::list<DataPropertyPtrT> DataPropertyContainerT;
+
         DataProperty(std::string name, boost::any value = boost::any());
         DataProperty(const DataProperty& orig);
         DataPropertyPtrT find(const std::string name, bool reset=true);
@@ -29,17 +31,16 @@ namespace lsst {
         void addProperty(DataPropertyPtrT property);
         std::string getName() const {return _name; }
         boost::any getValue() const {return _value; }
-        std::string DataProperty::repr() const;
+        DataPropertyContainerT getContents() const {return _properties; }
+        std::string repr() const;
         void print() const;
         ~DataProperty();
         
     private:
-        typedef std::list<DataPropertyPtrT> ContainerT;
-
         std::string _name;
         boost::any _value;
-        ContainerT _properties;
-        std::list<DataPropertyPtrT>::iterator pos;
+        DataPropertyContainerT _properties;
+        std::list<DataPropertyPtrT>::iterator _pos;
     };
 
 };
