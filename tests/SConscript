@@ -7,6 +7,6 @@ env.Program(["BuildExcept.cc"], LIBS="fw")
 env.Program(["DataProperty_1.cc", "../src/DataProperty.cc"], LIBS="fw")
 
 env.CheckSwig("python", ilang="c++")
-
+env.Append(SWIGFLAGS=" -Ipython")
 env.LoadableModuleIncomplete("_fwTests", "fwTests.i",
                              LIBS=env.libs["vw"] + ["fw"])

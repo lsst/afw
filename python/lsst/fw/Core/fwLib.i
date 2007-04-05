@@ -128,30 +128,6 @@ def ImageMaskPtr(*args):
 %template(listPixelCoord)  std::list<lsst::PixelCoord>;
 
 /******************************************************************************/
-//
-// Define a class to (in this case) count pixels with CR set
-//
-%inline %{
-template <typename MaskPixelT>
-class testCrFunc : public MaskPixelBooleanFunc<MaskPixelT> {
-public:
-    typedef typename Mask<MaskPixelT>::MaskChannelT MaskChannelT;
-    testCrFunc(Mask<MaskPixelT>& m) : MaskPixelBooleanFunc<MaskPixelT>(m) {}
-    void init() {
-        MaskPixelBooleanFunc<MaskPixelT>::_mask.getPlaneBitMask("CR", _bitsCR);
-    }        
-    bool operator ()(MaskPixelT pixel) const { 
-        return ((pixel.v() & _bitsCR) !=0 ); 
-    }
-private:
-    MaskChannelT _bitsCR;
-};
-%}
-
-%template(MaskPixelBooleanFuncD) lsst::MaskPixelBooleanFunc<MaskPixelType>;
-%template(testCrFuncD) testCrFunc<MaskPixelType>;
-
-/******************************************************************************/
 // Local Variables: ***
 // eval: (setq indent-tabs-mode nil) ***
 // End: ***

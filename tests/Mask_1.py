@@ -1,5 +1,6 @@
 import sys
 import lsst.fw.Core.fwLib as fwCore
+import fwTests
 
 def test():
     if True:
@@ -65,7 +66,7 @@ def test():
     printMaskPlane(testMask, planes['CR'], range(90, 120), range(295, 350, 5))
 
     # --------------------- Test MaskPixelBooleanFunc
-    testCrFuncInstance = fwCore.testCrFuncD(testMask)
+    testCrFuncInstance = fwTests.testCrFuncD(testMask)
     testCrFuncInstance.init() # get the latest plane info from testMask
     count = testMask.countMask(testCrFuncInstance, region)
     print "%d pixels had CR set in region" % (count)

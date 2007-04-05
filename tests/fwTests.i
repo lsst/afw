@@ -21,7 +21,7 @@ using namespace vw;
 %}
 
 %import  <vw/Core/FundamentalTypes.h>
-%include "../python/lsst/fw/Core/p_lsstSwig.i"
+%include "lsst/fw/Core/p_lsstSwig.i"
 
 /******************************************************************************/
 
@@ -30,14 +30,16 @@ typedef vw::PixelGray<float> ImagePixelType;
 typedef vw::PixelGray<uint8> MaskPixelType;
 %}
 
-/******************************************************************************/
-//
-// Define a class to (in this case) count pixels with CR set
-//
-%include "lsst/fw/MaskedImage.h"
+%import "lsst/fw/Mask.h"
+%import "lsst/fw/MaskedImage.h"
 
 using namespace lsst;
 using namespace vw;
+
+/******************************************************************************/
+//
+// Define a class to do very little with a PixelProcessingFunc
+//
 
 %inline %{
 template <typename ImagePixelT, typename MaskPixelT>
@@ -85,6 +87,30 @@ namespace std {
 %template(XXX) std::unary_function<boost::tuple<vw::PixelGray<float > &,vw::PixelGray<uint8 > & > &,void >;
 %template(PixelProcessingFuncD) lsst::PixelProcessingFunc<ImagePixelType, MaskPixelType>;
 %template(testPixProcFuncD) testPixProcFunc<ImagePixelType, MaskPixelType>;
+
+/******************************************************************************/
+//
+// Define a class to (in this case) count pixels with CR set
+//
+%inline %{
+template <typename MaskPixelT>
+class testCrFunc : public MaskPixelBooleanFunc<MaskPixelT> {
+public:
+    typedef typename Mask<MaskPixelT>::MaskChannelT MaskChannelT;
+    testCrFunc(Mask<MaskPixelT>& m) : MaskPixelBooleanFunc<MaskPixelT>(m) {}
+    void init() {
+        MaskPixelBooleanFunc<MaskPixelT>::_mask.getPlaneBitMask("CR", _bitsCR);
+    }        
+    bool operator ()(MaskPixelT pixel) const { 
+        return ((pixel.v() & _bitsCR) !=0 ); 
+    }
+private:
+    MaskChannelT _bitsCR;
+};
+%}
+
+%template(MaskPixelBooleanFuncD) lsst::MaskPixelBooleanFunc<MaskPixelType>;
+%template(testCrFuncD) testCrFunc<MaskPixelType>;
 
 /******************************************************************************/
 // Local Variables: ***
