@@ -9,37 +9,38 @@ using boost::any_cast;
 
 template <typename MaskPixelT> class testCrFunc : public MaskPixelBooleanFunc<MaskPixelT> {
 public:
-    typedef typename PixelChannelType<MaskPixelT>::type MaskChannelT;
+    typedef typename Mask<MaskPixelT>::MaskChannelT MaskChannelT;
     testCrFunc(Mask<MaskPixelT>& m) : MaskPixelBooleanFunc<MaskPixelT>(m) {}
     void init() {
         MaskPixelBooleanFunc<MaskPixelT>::_mask.getPlaneBitMask("CR", bitsCR);
     }        
-    bool operator ()(MaskPixelT pixel) { 
+    bool operator ()(MaskPixelT pixel) const { 
         return ((pixel.v() & bitsCR) !=0 ); 
     }
 private:
     MaskChannelT bitsCR;
 };
 
-int main(int argc, char *argv[])
-{
+/*
+ * Make this a subroutine so that locals go out of scope as part of test
+ * of memory management
+ */
+void test() {
 // ------------- Test constructors
-
      typedef PixelGray<uint8> MaskPixelType;
-     typedef ImageView<MaskPixelType> MaskImageType;
-     typedef boost::shared_ptr<MaskImageType> MaskImagePtrType;
-     typedef boost::shared_ptr<Mask<MaskPixelType> > MaskPtrType;
-
+     typedef Mask<MaskPixelType>::MaskIVwT MaskImageType;
+     typedef Mask<MaskPixelType>::MaskIVwPtrT MaskImagePtrType;
+     typedef Mask<MaskPixelType>::MaskPtrT MaskPtrType;
      
      MaskImagePtrType maskImage(new MaskImageType(300,400));
      cout << maskImage.use_count() << endl;
 
-     Mask<MaskPixelType > testMask(maskImage);
+     Mask<MaskPixelType> testMask(maskImage);
      cout << maskImage.use_count() << endl;
 
      typedef PixelGray<uint16> MaskPixelType2;
-     typedef ImageView<MaskPixelType2> MaskImageType2;
-     typedef boost::shared_ptr<MaskImageType2> MaskImagePtrType2;
+     typedef Mask<MaskPixelType2>::MaskIVwT MaskImageType2;
+     typedef Mask<MaskPixelType2>::MaskIVwPtrT MaskImagePtrType2;
 
      MaskImagePtrType2 maskImage2(new MaskImageType2(300,400));
 
@@ -175,14 +176,12 @@ int main(int argc, char *argv[])
 
      testMask.setMaskPlaneValues(planeCR, pixelList);
 
-     MaskPtrType subTestMask;
-
      BBox2i region(100, 300, 10, 40);
-     subTestMask = testMask.getSubMask(region);
+     MaskPtrType subTestMask = testMask.getSubMask(region);
 
      testMask.clearMaskPlane(planeCR);
 
-     testMask.replaceSubMask(region, *subTestMask);
+     testMask.replaceSubMask(region, subTestMask);
 
      cout << endl;
      for (int x=90; x<120; x+=1) {
@@ -209,10 +208,14 @@ int main(int argc, char *argv[])
 
      try {
         region.expand(10);
-        testMask.replaceSubMask(region, *subTestMask);
+        testMask.replaceSubMask(region, subTestMask);
      }
 
      //----------------------------------------------------------------
+     catch (lsst::Exception &e) {
+         cout << "Exception handler: Caught the buggy code: " << e.what() << endl;
+     }
+
      // Catch base STD exception (from which all exceptions should be derived)
      catch (exception eex) {
         cout << "Exception handler (exception eex): Caught the buggy code" << endl;
@@ -224,7 +227,8 @@ int main(int argc, char *argv[])
      }
 }
 
-/*   //----------------------------------------------------------------
+#if 0
+     //----------------------------------------------------------------
      // Following exceptions are the only exceptions currently used in VW. 
      //     Additional VW exceptions are defined in vw:Exception.h
      //     VW exceptions are derived from std:exception
@@ -241,4 +245,16 @@ int main(int argc, char *argv[])
      catch (vw::ArgumentErr vwrex) {
         cout << "Exception handler (vw::ArgumentErr vwrex): Caught the buggy code" << endl;
      }
-*/
+#endif
+
+int main(int argc, char *argv[]) {
+    try {
+        try {
+            test();
+        } catch (lsst::Exception &e) {
+            throw lsst::Exception(std::string("In handler\n") + e.what());
+        }
+    } catch (lsst::Exception &e) {
+        std::clog << e.what() << endl;
+    }
+}
