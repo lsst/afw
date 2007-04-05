@@ -1,13 +1,15 @@
 import sys
-import fw                               # Search multiple lsst dirs on sys.path
-import lsst.fw.Display.fwLib as fwLib
+import lsst.fw.Core.fwLib as fwCore
 
 def test():
-    if not True:
-        maskImage = fwLib.ImageMask(300,400)
-        testMask = fwLib.MaskD(maskImage)
+    if True:
+        maskImage = fwCore.ImageMaskPtr(300,400)
     else:
-        testMask = fwLib.MaskD(300, 400)
+        maskImage = fwCore.ImageMask(300,400)
+        
+    print maskImage.use_count()
+    testMask = fwCore.MaskD(maskImage)
+    print maskImage.use_count()
 
     for p in ("CR", "BP"):
         print "Assigned %s to plane %d" % (p, testMask.addMaskPlane(p))
@@ -16,10 +18,10 @@ def test():
 
     testMask.clearMaskPlane(planes['CR'])
 
-    pixelList = fwLib.listPixelCoord()
+    pixelList = fwCore.listPixelCoord()
     for x in range(0, 300):
         for y in range(300, 400, 20):
-            pixelList.push_back(fwLib.PixelCoord(x, y))
+            pixelList.push_back(fwCore.PixelCoord(x, y))
 
     for p in planes.keys():
         testMask.setMaskPlaneValues(planes[p], pixelList);
@@ -31,6 +33,18 @@ def test():
 
     printMaskPlane(testMask, planes['CR'])
 
+    # ------------------ Test |= operator
+   
+    testMask3 = fwCore.MaskD(
+        fwCore.ImageMaskPtr(testMask.getImageCols(), testMask.getImageRows())
+        )
+
+    testMask3.addMaskPlane("CR")
+
+    testMask |= testMask3
+
+    print "Applied |= operator"
+     
     # -------------- Test mask plane removal
 
     testMask.clearMaskPlane(planes['BP']);
@@ -41,7 +55,7 @@ def test():
     # --------------- Test submask methods
 
     testMask.setMaskPlaneValues(planes['CR'], pixelList)
-    region = fwLib.BBox2i(100, 300, 10, 40)
+    region = fwCore.BBox2i(100, 300, 10, 40)
     subTestMask = testMask.getSubMask(region)
     
     testMask.clearMaskPlane(planes['CR']);
@@ -51,7 +65,7 @@ def test():
     printMaskPlane(testMask, planes['CR'], range(90, 120), range(295, 350, 5))
 
     # --------------------- Test MaskPixelBooleanFunc
-    testCrFuncInstance = fwLib.testCrFuncD(testMask)
+    testCrFuncInstance = fwCore.testCrFuncD(testMask)
     testCrFuncInstance.init() # get the latest plane info from testMask
     count = testMask.countMask(testCrFuncInstance, region)
     print "%d pixels had CR set in region" % (count)
@@ -67,11 +81,11 @@ def test():
 def lookupPlanes(mask, planeNames):
     planes = {}
     for p in planeNames:
-        found, planes[p] = mask.getMaskPlane(p)
-        if found:
+        try:
+            planes[p] = mask.getMaskPlane(p)
             print "%s plane is %d" % (p, planes[p])
-        else:
-            print "No %s plane found" % (p)
+        except Exception, e:
+            print "No %s plane found: %s" % (p, e)
 
     return planes
 
@@ -79,7 +93,14 @@ def printMaskPlane(mask, plane,
                    xrange=range(250, 300, 10), yrange=range(300, 400, 20)):
     """Print parts of the specified plane of the mask"""
     
+    if True:
+        xrange = range(min(xrange), max(xrange), 25)
+        yrange = range(min(yrange), max(yrange), 25)
+
     for x in xrange:
         for y in yrange:
-            print x, y, mask(x, y, plane)
+            if False:                   # mask(x,y) confuses swig
+                print x, y, mask(x, y), mask(x, y, plane)
+            else:
+                print x, y, mask(x, y, plane)
 
