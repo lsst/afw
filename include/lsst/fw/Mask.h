@@ -17,6 +17,7 @@
 #include <string>
 #include "lsst/fw/LsstBase.h"
 #include "lsst/fw/Exception.h"
+#include "lsst/fw/DataProperty.h"
 
 using namespace vw;
 using namespace std;
@@ -66,12 +67,17 @@ namespace lsst {
                              MaskChannelT& bitMask) const;
         
         void clearMaskPlane(int plane);
+
+        void clearAllMaskPlanes();
         
         void setMaskPlaneValues(int plane, list<PixelCoord> pixelList);
         
         void setMaskPlaneValues(int plane,
                                 MaskPixelBooleanFunc<MaskPixelT> selectionFunc);
-        
+        DataProperty::DataPropertyPtrT getMaskPlaneMetaData();
+
+        void setMaskPlaneMetaData(DataProperty::DataPropertyPtrT);
+
         int countMask(MaskPixelBooleanFunc<MaskPixelT>& testFunc,
                       const BBox2i maskRegion) const;
 
@@ -93,6 +99,8 @@ namespace lsst {
 
         map<int, std::string> getMaskPlaneDict() const;
 
+        void printMaskPlanes() const;
+
 //         virtual ~Mask();
 
     private:
@@ -106,6 +114,7 @@ namespace lsst {
         MaskChannelT _planeBitMask[8 * sizeof(MaskChannelT)];
         MaskChannelT _planeBitMaskComplemented[8 * sizeof(MaskChannelT)];
 
+        int addMaskPlane(string name, int plane);
     };
   
 #include "Mask.cc"  
