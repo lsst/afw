@@ -102,6 +102,22 @@ int Mask<MaskPixelT>::addMaskPlane(const string& name)
     }
 }
 
+// This is a private function.  It sets the plane of the given planeId to be name
+// with minimal checking.   Mainly used by setMaskPlaneMetadata
+
+template<class MaskPixelT> 
+int Mask<MaskPixelT>::addMaskPlane(string name, int planeId)
+{
+    if (planeId <0 || planeId >= _numPlanesMax) {
+        throw;
+    }
+
+    std::string oldName = _maskPlaneDict[planeId];
+    _maskPlaneDict[planeId] = name;
+    if (oldName == "") _numPlanesUsed++;
+    return planeId;
+}
+
 template<class MaskPixelT>
 void Mask<MaskPixelT>::removeMaskPlane(const string& name)
 {
@@ -151,6 +167,10 @@ bool Mask<MaskPixelT>::getPlaneBitMask(const string& name,
     return true;
 }
 
+template<class MaskPixelT> void Mask<MaskPixelT>::clearAllMaskPlanes() {
+    _maskPlaneDict.clear();
+    _numPlanesUsed = 0;
+}
 
 // clearMaskPlane(int plane) clears the bit specified by "plane" in all pixels in the mask
 //
@@ -296,6 +316,57 @@ template<class MaskPixelT> Mask<MaskPixelT>&  Mask<MaskPixelT>::operator |= (con
     }
 
     return *this;
+}
+
+// Build a DataProperty that describes the MaskPlane assignments, and return the pointer to it.
+
+template<class MaskPixelT> DataProperty::DataPropertyPtrT Mask<MaskPixelT>::getMaskPlaneMetaData() {
+
+    DataProperty::DataPropertyPtrT rootPtr(new DataProperty("MaskPlaneMetaData", 0));
+
+    // iterate over MaskPlanes
+    for (map<int, std::string>::iterator i = _maskPlaneDict.begin(); i != _maskPlaneDict.end() ; i++) {
+        int planeNumber = i->first;
+        std::string planeName = i->second;
+        if (planeName != "") {
+            rootPtr->addProperty(DataProperty::DataPropertyPtrT(new DataProperty(planeName, planeNumber)));
+        }
+    }
+
+    return rootPtr;
+}
+
+// Given a DataProperty that describes the MaskPlane assignments setup the MaskPlanes.
+
+template<class MaskPixelT> void Mask<MaskPixelT>::setMaskPlaneMetaData(DataProperty::DataPropertyPtrT rootPtr) {
+
+    if (rootPtr->getName() != "MaskPlaneMetaData") {
+        throw;
+    }
+
+    // Clear all existing MaskPlanes
+
+    clearAllMaskPlanes();
+
+    // Iterate through contents of DataProperty
+
+    const DataProperty::DataPropertyContainerT contents = rootPtr->getContents();
+
+    for (DataProperty::DataPropertyContainerT::const_iterator i = contents.begin(); i != contents.end(); i++) {
+        DataProperty::DataPropertyPtrT dpPtr = *i;
+        addMaskPlane(dpPtr->getName(), boost::any_cast<const int>(dpPtr->getValue()));
+    }
+
+}
+
+template<class MaskPixelT> void Mask<MaskPixelT>::printMaskPlanes() const {
+
+        for (map<int, std::string>::const_iterator i = _maskPlaneDict.begin(); i != _maskPlaneDict.end() ; i++) {
+        int planeNumber = i->first;
+        std::string planeName = i->second;
+        cout << "Plane " << planeNumber << " -> " << planeName << endl;
+        }
+
 }
 
 template<class MaskPixelT> int Mask<MaskPixelT>::getImageCols() const {
