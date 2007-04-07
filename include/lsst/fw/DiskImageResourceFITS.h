@@ -43,6 +43,8 @@ public:
     // Accessors
     const int getHdu() const { return _hdu; }
     void setHdu(const int hdu) { _hdu = hdu; }
+    int getNumKeys();
+    bool getKey(int n, std::string & keyWord, std::string & keyValue, std::string & keyComment);
 private:
     static bool _typeIsRegistered;   //!< Have we registered our file suffixes with VW?
     static int _defaultHdu;          //!< Default HDU to use when opening files
