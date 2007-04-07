@@ -426,3 +426,18 @@ void DiskImageResourceFITS::setDefaultHdu(const int hdu //!< desired hdu
                                          ) {
     _defaultHdu = hdu;
 }
+
+//! Get the number of keywords in the header
+int DiskImageResourceFITS::getNumKeys()
+{
+     int keynum = 0;
+     int numKeys = 0;
+     int status = 0;
+     fitsfile *fd = static_cast<fitsfile *>(_fd); // cfitsio file descriptor
+ 
+     if (fits_get_hdrpos(fd, &numKeys, &keynum, &status) != 0) {
+	  throw_cfitsio_error(fd, status);
+     }
+
+     return numKeys;
+}
