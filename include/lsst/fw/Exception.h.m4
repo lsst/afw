@@ -21,8 +21,6 @@ dnl
 #include "lsst/fw/Trace.h"
 
 namespace lsst {
-typedef boost::shared_ptr<DataProperty> DataPropertyPtr;
-
     //! An exception that saves a string or boost::format
     class Exception : std::runtime_error {
     public:
@@ -31,6 +29,10 @@ typedef boost::shared_ptr<DataProperty> DataPropertyPtr;
 
         //! Return the details of the exception
         const char *what() const throw() { return std::runtime_error::what(); }
+
+        virtual void print(const std::string& prefix = "") const {
+            std::cout << prefix << this->what() << std::endl;
+        }
     };
 
     dnl
@@ -40,29 +42,36 @@ define(LSST_NEW_EXCEPTION,
     `//! $2
     class $1 : public Exception {
     public:
-        $1(std::string const& msg ) throw() : \
+        $1(std::string const& msg ) throw() :
             Exception(msg),_propertyList(new DataProperty("root",int(0))){};
-        $1(std::string const& msg, DataPropertyPtr propertyList) throw() : \
+        $1(std::string const& msg, DataPropertyPtr propertyList) throw() :
             Exception(msg), _propertyList(propertyList) {};
-        $1(boost::format const& msg ) throw() : \
+        $1(boost::format const& msg ) throw() :
             Exception(msg),_propertyList(new DataProperty("root",int(0))){};
-        $1(boost::format const& msg, DataPropertyPtr propertyList) throw() : \
+        $1(boost::format const& msg, DataPropertyPtr propertyList) throw() :
             Exception(msg), _propertyList(propertyList) {};
-        $1(const $1 & oops) throw() : \
+        $1(const $1 & oops) throw() :
             Exception(oops.what()), _propertyList(oops._propertyList){};
-        ~$1() throw() { \
-            fw::Trace::trace("fw.Exception", 1, "----Destroy ExceptObj"); \
-            fw::Trace::trace("fw.Exception", 1, _propertyList->repr());  \
+        ~$1() throw() {
+            fw::Trace::trace("fw.Exception", 1, "----Destroy ExceptObj");
+            fw::Trace::trace("fw.Exception", 1, _propertyList->repr());
             };
         DataPropertyPtr propertyList() throw() { return _propertyList;};
-        $1 & operator= (const $1 & oops) throw() { \
-            Exception::operator= (oops); _propertyList=oops._propertyList; \
-            return *this;}; 
-        void print(){ \
-            std::cout << "----ExceptObj: msg: "<< std::endl; \
-            this->what();\
-            std::cout << "----ExceptObj: Proplist: " << std::endl; \
-            _propertyList->print(); };
+        $1 & operator= (const $1 & oops) throw() {
+            Exception::operator= (oops); _propertyList=oops._propertyList;
+            return *this;};
+        $1 &operator<<(const DataProperty &dp) {
+            _propertyList->addProperty(dp);
+            
+            return *this;            
+        }
+
+        void print(const std::string& prefix = "") const {
+            std::cout << prefix << "----ExceptObj: msg: " << std::endl;
+            std::cout << prefix << this->what() << std::endl;
+            std::cout << prefix << "----ExceptObj: Proplist: " << std::endl;
+            _propertyList->print(prefix);
+        }
     private:
         DataPropertyPtr _propertyList;
     }')
