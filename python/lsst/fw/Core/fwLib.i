@@ -25,8 +25,11 @@ Basic routines to talk to FW's classes (including visionWorkbench) and ds9
 #pragma SWIG nowarn=389
 
 %{
+#   include <exception>
+#   include <map>
 #   include <boost/cstdint.hpp>
 #   include <boost/shared_ptr.hpp>
+#   include <boost/any.hpp>
 #   include "lsst/fw/Citizen.h"
 #   include "lsst/fw/Demangle.h"
 #   include "lsst/fw/DiskImageResourceFITS.h"
@@ -85,9 +88,23 @@ typedef vw::PixelGray<uint8> MaskPixelType;
 // Citizens, Trace, etc.
 %include "lsst/fw/Citizen.h"
 %include "lsst/fw/Trace.h"
+%include "lsst/fw/DataProperty.h"
+
+%template(DataPropertyPtrT) boost::shared_ptr<DataProperty>;
+
+%extend lsst::DataProperty {
+    DataProperty(std::string name, int val) {
+        return new DataProperty(name, val);
+    }
+}
 
 /******************************************************************************/
 // Masks and MaskedImages
+%newobject getMaskPlaneMetaData;
+%clear int &;
+%template(pairIntString) std::pair<int,std::string>;
+%template(mapIntString)  std::map<int,std::string>;
+%apply int &OUTPUT { int & };
 
 %include "lsst/fw/Mask.h"
 %include "lsst/fw/MaskedImage.h"

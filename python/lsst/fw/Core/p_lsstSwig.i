@@ -13,6 +13,7 @@
 %include "cpointer.i"
 %include "exception.i"
 %include "std_list.i"
+%include "std_map.i"
 %include "std_string.i"
 %include "std_vector.i"
 %include "std_iostream.i"
@@ -23,7 +24,9 @@
 // N.b. these may interfere with the use of e.g. std_list.i for primitive types;
 // you'll have to say e.g.
 // %clear int &;
-// %template(listInt)  std::list<int>;
+//    %template(listInt)   std::list<int>;
+//    %template(mapIntInt) std::map<int,int>;
+// %apply int &OUTPUT { int & };
 
 %apply int &OUTPUT { int & };
 %apply float &OUTPUT { float & };

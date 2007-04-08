@@ -84,7 +84,7 @@ namespace std {
     struct unary_function {};
 }
 
-%template(XXX) std::unary_function<boost::tuple<vw::PixelGray<float > &,vw::PixelGray<uint8 > & > &,void >;
+%template(unary_function_tuple) std::unary_function<boost::tuple<vw::PixelGray<float > &,vw::PixelGray<uint8 > & > &,void >;
 %template(PixelProcessingFuncD) lsst::PixelProcessingFunc<ImagePixelType, MaskPixelType>;
 %template(testPixProcFuncD) testPixProcFunc<ImagePixelType, MaskPixelType>;
 
@@ -92,12 +92,18 @@ namespace std {
 //
 // Define a class to (in this case) count pixels with CR set
 //
+%import "lsst/fw/Utils.h"
+%import "lsst/fw/Citizen.h"
+
 %inline %{
 template <typename MaskPixelT>
-class testCrFunc : public MaskPixelBooleanFunc<MaskPixelT> {
+class testCrFunc : public lsst::fw::Citizen,
+                   public MaskPixelBooleanFunc<MaskPixelT> {
 public:
     typedef typename Mask<MaskPixelT>::MaskChannelT MaskChannelT;
-    testCrFunc(Mask<MaskPixelT>& m) : MaskPixelBooleanFunc<MaskPixelT>(m) {}
+    testCrFunc(Mask<MaskPixelT>& m) :
+        Citizen(typeid(this)),
+        MaskPixelBooleanFunc<MaskPixelT>(m) {}
     void init() {
         MaskPixelBooleanFunc<MaskPixelT>::_mask.getPlaneBitMask("CR", _bitsCR);
     }        

@@ -2,7 +2,8 @@ import sys
 import lsst.fw.Core.fwLib as fwCore
 import fwTests
 
-def test():
+def doMask_1():
+    """Run the code in Mask_1.cc"""
     if True:
         maskImage = fwCore.ImageMaskPtr(300,400)
     else:
@@ -12,10 +13,47 @@ def test():
     testMask = fwCore.MaskD(maskImage)
     print maskImage.use_count()
 
+    # ------------- Test mask plane addition
+    
     for p in ("CR", "BP"):
         print "Assigned %s to plane %d" % (p, testMask.addMaskPlane(p))
+
+    for p in range(0,8):
+        sp = "P%d" % p
+        try:
+            print "Assigned %s to plane %d" % (sp, testMask.addMaskPlane(sp))
+        except IndexError, e:
+            print e
+            
+    for p in range(0,8):
+        sp = "P%d" % p
+        try:
+            testMask.removeMaskPlane(sp)
+        except:
+            pass
         
     planes = lookupPlanes(testMask, ["CR", "BP"])
+
+    # ------------ Test mask plane metaData
+
+    metaData = testMask.getMaskPlaneMetaData()
+    print "MaskPlane metadata:"
+    metaData._print("\t");
+
+    print "Printing metadata from Python:"
+    d = testMask.getMaskPlaneDict()
+    for p in d.keys():
+        if d[p]:
+            print "\t", d[p], p
+    
+    newPlane = fwCore.DataProperty("Whatever", 5)
+    metaData.addProperty(newPlane)
+    
+    testMask.setMaskPlaneMetaData(metaData)
+    print "After loading metadata: "
+    testMask.printMaskPlanes()
+
+    # ------------ Test mask plane operations
 
     testMask.clearMaskPlane(planes['CR'])
 
@@ -25,12 +63,12 @@ def test():
             pixelList.push_back(fwCore.PixelCoord(x, y))
 
     for p in planes.keys():
-        testMask.setMaskPlaneValues(planes[p], pixelList);
+        testMask.setMaskPlaneValues(planes[p], pixelList)
 
     printMaskPlane(testMask, planes['CR'])
 
     print "\nClearing mask"
-    testMask.clearMaskPlane(planes['CR']);
+    testMask.clearMaskPlane(planes['CR'])
 
     printMaskPlane(testMask, planes['CR'])
 
@@ -48,8 +86,8 @@ def test():
      
     # -------------- Test mask plane removal
 
-    testMask.clearMaskPlane(planes['BP']);
-    testMask.removeMaskPlane("BP");
+    testMask.clearMaskPlane(planes['BP'])
+    testMask.removeMaskPlane("BP")
 
     planes = lookupPlanes(testMask, ["CR", "BP"])
 
@@ -58,11 +96,11 @@ def test():
     testMask.setMaskPlaneValues(planes['CR'], pixelList)
     region = fwCore.BBox2i(100, 300, 10, 40)
     subTestMask = testMask.getSubMask(region)
-    
-    testMask.clearMaskPlane(planes['CR']);
-    
-    testMask.replaceSubMask(region, subTestMask);
-    
+
+    testMask.clearMaskPlane(planes['CR'])
+
+    testMask.replaceSubMask(region, subTestMask)
+
     printMaskPlane(testMask, planes['CR'], range(90, 120), range(295, 350, 5))
 
     # --------------------- Test MaskPixelBooleanFunc
@@ -71,13 +109,25 @@ def test():
     count = testMask.countMask(testCrFuncInstance, region)
     print "%d pixels had CR set in region" % (count)
 
+    del testCrFuncInstance
+
     # should generate a vw exception - dims. of region and submask must be =
+    region.expand(10)
     print "This should throw an exception:"
     try:
-        region.expand(10)
         testMask.replaceSubMask(region, subTestMask)
     except IndexError, e:
         print "Caught exception:", e
+
+def test():
+    """Actually run the Mask_1 test; call doMask_1 so that it can
+    clean up its local variables"""
+    
+    doMask_1()
+
+    if fwCore.Citizen_census(0):
+        print fwCore.Citizen_census(0), "Objects leaked:"
+        print fwCore.Citizen_census(fwCore.cout)
 
 def lookupPlanes(mask, planeNames):
     planes = {}
