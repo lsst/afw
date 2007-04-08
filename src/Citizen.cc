@@ -32,7 +32,7 @@ Citizen::~Citizen() {
     }
 
     (void)_checkCorruption();
-    
+    _sentinel = 0x0000dead;             // In case we have a dangling pointer
     active_Citizens.erase(_id);
 }
 
