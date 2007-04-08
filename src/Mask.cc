@@ -77,27 +77,40 @@ int Mask<MaskPixelT>::addMaskPlane(const string& name)
 	       }
 	    }
             // No free space found for new plane addition
+#if 0
             std::string s("No space to add new plane");
             DataPropertyPtr propertyList(new DataProperty("root",(int)0));
             DataPropertyPtr aProperty(new DataProperty("numPlanesUsed",(int)_numPlanesUsed));
             propertyList->addProperty(aProperty);
             DataPropertyPtr bProperty(new DataProperty("numPlanesMax",(int)_numPlanesMax));
             propertyList->addProperty(bProperty);
-            propertyList->print();
-            OutOfPlaneSpace oops(OutOfPlaneSpace(s, propertyList));
-            throw oops;
-
+            propertyList->print(">>\t");
+            throw OutOfPlaneSpace(s, propertyList);
+#else
+            throw OutOfPlaneSpace("No space to add new plane")
+                << DataProperty("numPlanesUsed", _numPlanesUsed) 
+                << DataProperty("numPlanesMax", _numPlanesMax);
+#endif
         } else {
             // Max number of planes already allocated
+#if 0
           std::string s = "Max number of planes already used";
           DataPropertyPtr propertyList(new DataProperty("root",(int)0));
           DataPropertyPtr aProperty(new DataProperty("numPlanesUsed",(int)_numPlanesUsed));
           propertyList->addProperty(aProperty);
           DataPropertyPtr bProperty(new DataProperty("numPlanesMax",(int)_numPlanesMax));
           propertyList->addProperty(bProperty);
-          propertyList->print();
+          propertyList->print(">>\t");
           OutOfPlaneSpace oops(OutOfPlaneSpace(s, propertyList));
+          cout << "Throwing oops " << oops.propertyList().use_count() << " | "
+               << static_cast<Citizen *>(oops.propertyList().get())->repr()
+               << endl;
           throw oops;
+#else
+          throw OutOfPlaneSpace("Max number of planes already used")
+              << DataProperty("numPlanesUsed", _numPlanesUsed)
+              << DataProperty("numPlanesMax", _numPlanesMax);
+#endif
         }
     }
 }
@@ -320,7 +333,8 @@ template<class MaskPixelT> Mask<MaskPixelT>&  Mask<MaskPixelT>::operator |= (con
 
 // Build a DataProperty that describes the MaskPlane assignments, and return the pointer to it.
 
-template<class MaskPixelT> DataProperty::DataPropertyPtrT Mask<MaskPixelT>::getMaskPlaneMetaData() {
+template<class MaskPixelT>
+DataProperty::DataPropertyPtrT Mask<MaskPixelT>::getMaskPlaneMetaData() {
 
     DataProperty::DataPropertyPtrT rootPtr(new DataProperty("MaskPlaneMetaData", 0));
 
@@ -338,7 +352,7 @@ template<class MaskPixelT> DataProperty::DataPropertyPtrT Mask<MaskPixelT>::getM
 
 // Given a DataProperty that describes the MaskPlane assignments setup the MaskPlanes.
 
-template<class MaskPixelT> void Mask<MaskPixelT>::setMaskPlaneMetaData(DataProperty::DataPropertyPtrT rootPtr) {
+template<class MaskPixelT> void Mask<MaskPixelT>::setMaskPlaneMetaData(const DataProperty::DataPropertyPtrT rootPtr) {
 
     if (rootPtr->getName() != "MaskPlaneMetaData") {
         throw;
