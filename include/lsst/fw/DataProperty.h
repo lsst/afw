@@ -11,15 +11,18 @@
 
 #include "boost/any.hpp"
 #include "boost/shared_ptr.hpp"
-#include "boost/regex.hpp"
 #include <string>
 #include <list>
 #include <iostream>
-
+#include "boost/regex.hpp"
+#include "lsst/fw/Citizen.h"
+#include "lsst/fw/DataProperty.h"
 
 namespace lsst {
+    class DataProperty;
+    typedef boost::shared_ptr<DataProperty> DataPropertyPtr;
 
-    class DataProperty {
+    class DataProperty : private fw::Citizen {
     public:
         typedef boost::shared_ptr<DataProperty> DataPropertyPtrT;
         typedef std::list<DataPropertyPtrT> DataPropertyContainerT;
@@ -28,12 +31,13 @@ namespace lsst {
         DataProperty(const DataProperty& orig);
         DataPropertyPtrT find(const std::string name, bool reset=true);
         DataPropertyPtrT find(const boost::regex pattern, bool reset=true);
+        void addProperty(const DataProperty& dp);
         void addProperty(DataPropertyPtrT property);
         std::string getName() const {return _name; }
         boost::any getValue() const {return _value; }
         DataPropertyContainerT getContents() const {return _properties; }
-        std::string repr() const;
-        void print() const;
+        std::string DataProperty::repr(const std::string& prefix = "") const;
+        void print(const std::string& prefix = "") const;
         ~DataProperty();
         
     private:
