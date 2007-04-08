@@ -78,6 +78,27 @@ void test() {
          throw;
      }
 
+     for (int i = 0; i <= 8; i++) {
+         std::string sp = (boost::format("P%d") % i).str();
+         try {
+             std::cout << boost::format("Assigned %s to plane %d\n") %
+                 sp % testMask.addMaskPlane(sp);
+         } catch(lsst::OutOfPlaneSpace &e) {
+             e.print("\t");
+         }
+     }
+
+     for (int i = 0; i <= 8; i++) {
+         std::string sp = (boost::format("P%d") % i).str();
+         try {
+             testMask.removeMaskPlane(sp);
+         } catch(NoMaskPlane) {
+             ;
+         }
+     }
+
+/******************************************************************************/
+     
      int planeCR, planeBP;
 
      try {
@@ -100,9 +121,10 @@ void test() {
 
 // ------------ Test mask plane metaData
 
-     DataProperty::DataPropertyPtrT metaData = testMask.getMaskPlaneMetaData();
+     DataProperty::DataPropertyPtrT metaData =
+         testMask.getMaskPlaneMetaData();
      cout << "MaskPlane metadata:" << endl;
-     metaData->print();
+     metaData->print("\t");
 
      DataProperty::DataPropertyPtrT newPlane(new DataProperty("Whatever", 5));
      metaData->addProperty(newPlane);
@@ -110,8 +132,6 @@ void test() {
      testMask.setMaskPlaneMetaData(metaData);
      cout << "After loading metadata: " << endl;
      testMask.printMaskPlanes();
-     
-
 
 // ------------ Test mask plane operations
 
@@ -157,7 +177,6 @@ void test() {
          cout << e.what() << "Ran out of space to add new CR plane" << endl;
          throw;
      }
-
 
      testMask |= testMask3;
 
@@ -223,21 +242,14 @@ void test() {
      try {
         region.expand(10);
         testMask.replaceSubMask(region, subTestMask);
-     }
-
-     //----------------------------------------------------------------
-     catch (lsst::Exception &e) {
+     } catch (lsst::Exception &e) {
          cout << "Exception handler: Caught the buggy code: " << e.what() << endl;
-     }
-
-     // Catch base STD exception (from which all exceptions should be derived)
-     catch (exception eex) {
+     } catch (exception eex) {
+         // Catch base STD exception (from which all exceptions should be derived)
         cout << "Exception handler (exception eex): Caught the buggy code" << endl;
-     }
-     //----------------------------------------------------------------
-     // Catch all exceptions not derived from STD base exception
-     catch (...) {
-        cout << "Exception handler (...): Caught the buggy code" << endl;
+     } catch (...) {
+         // Catch all exceptions not derived from STD base exception
+         cout << "Exception handler (...): Caught the buggy code" << endl;
      }
 }
 
@@ -271,4 +283,14 @@ int main(int argc, char *argv[]) {
     } catch (lsst::Exception &e) {
         std::clog << e.what() << endl;
     }
+
+     //
+     // Check for memory leaks
+     //
+     if (fw::Citizen::census(0) == 0) {
+         cerr << "No leaks detected" << endl;
+     } else {
+         cerr << "Leaked memory blocks:" << endl;
+         fw::Citizen::census(cerr);
+     }
 }
