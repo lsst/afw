@@ -59,27 +59,17 @@ def version(HeadURL = r"$HeadURL$"):
 
 /******************************************************************************/
 
-%inline %{
-typedef vw::PixelGray<float> ImagePixelType;
-typedef vw::PixelGray<uint8> MaskPixelType;
-%}
-
 %ignore vw::ImageView<ImagePixelType>::origin;
 %ignore vw::ImageView<MaskPixelType>::origin;
 %ignore operator vw::ImageView::unspecified_bool_type;
 %ignore operator lsst::Mask::operator()(int, int); // RHL can't get this to work
 
-%import  <vw/Core/FundamentalTypes.h>
 %include <vw/Image/ImageViewBase.h>
 %include <vw/Image/ImageView.h>
 %include <vw/Image/PixelTypeInfo.h>
 %include <vw/Image/PixelTypes.h>
 %include <vw/Image/ImageResource.h>
 %include <vw/Math/BBox.h>
-
-%apply int {int32};
-%apply int {vw::int32};
-%apply int {boost::int32_t};
 
 %import <vw/FileIO/DiskImageResource.h>
 %include "lsst/fw/DiskImageResourceFITS.h"
@@ -119,8 +109,8 @@ using namespace lsst;
 
 %template(MaskD)          lsst::Mask<MaskPixelType>;
 %template(MaskedImageD)   lsst::MaskedImage<ImagePixelType, MaskPixelType>;
+%template(MaskDPtr)       boost::shared_ptr<lsst::Mask<MaskPixelType> >;
 %template(BBox2i)         BBox<int32, 2>;
-%template(XXX)            boost::shared_ptr<lsst::Mask<MaskPixelType> >;
 
 %extend_smart_pointer(boost::shared_ptr<vw::ImageView<MaskPixelType> >);
 //%delobject boost::shared_ptr<vw::ImageView<MaskPixelType> >::shared_ptr;

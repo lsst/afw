@@ -63,15 +63,20 @@ def mtv(data, frame = 0, init = 1, WCS = ""):
          
    ds9Cmd("frame %d" % frame)
 
-   if 1:
+   if True:
       xpa_cmd = "xpaset ds9 fits"
       pfd = os.popen(xpa_cmd, "w")
    else:
       pfd = file("foo.fits", "w")
 
-   if isinstance(data, fwLib.imageFloat):
-       fwLib.writeFitsFloat(pfd.fileno(), data, WCS)
-   else:
+   try:
+       fwLib.writeFitsImage(pfd.fileno(), data, WCS)
+   except NotImplementedError:
+       try:
+           fwLib.writeFitsMask(pfd.fileno(), data, WCS)
+       except TypeError:
+           pass
+       
        try:
            pfd.close()
        except:

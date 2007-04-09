@@ -53,13 +53,29 @@ namespace boost {
         ~shared_ptr();
         T *operator->() const;
         int use_count() const;
+        T *get() const;
     };
 }
+
+/*****************************************************************************/
+/*
+ * Types of Images/Masks
+ */
+%{
+typedef vw::PixelGray<float> ImagePixelType;
+typedef vw::PixelGray<uint8> MaskPixelType;
+%}
+
+%import  <vw/Core/FundamentalTypes.h>
+%apply int {int32};
+%apply int {vw::int32};
+%apply int {boost::int32_t};
 
 /******************************************************************************/
 /*
  * Typemaps
  */
+#if 0
 %typemap(in) FILE * {
     if ($input == Py_None) {
 	$1 = NULL;
@@ -83,86 +99,7 @@ namespace boost {
 }
 
 %typemap(freearg) char * {}
-
-/******************************************************************************/
-/*
- * Accept a python list/tuple of TYPE if the routine wants an array
- */
-#if 0
-%define ACCEPT_LIST_AS_ARRAY(TYPE)
-%typemap(arginit) (const TYPE **) {
-  $1 = NULL;
-}
-%typemap(in) (const TYPE **) {
-    /* Check if is a list */
-    $1 = NULL;
-    if ($input == Py_None) {
-	$1 = NULL;
-    } else if (PyList_Check($input) || PyTuple_Check($input)) {
-        int input_is_list = PyList_Check($input);
-        int n = (input_is_list) ? PyList_Size($input) : PyTuple_Size($input);
-	if (n > 0) {
-	    $1 = psAlloc(n*sizeof(void *));
-	
-	    for (int i = 0; i < n; i++) {
-		PyObject *o =  (input_is_list) ? PyList_GetItem($input,i) : PyTuple_GetItem($input,i);
-	    
-                if ((SWIG_ConvertPtr(o, (void **)&$1[i], $*1_descriptor,SWIG_POINTER_EXCEPTION)) == -1) {
-                   PyErr_SetString(PyExc_TypeError,"Failed to convert element of array");
-                   psFree($1);
-                   return NULL;
-                }
-	    }
-	}
-    } else {
-	PyErr_SetString(PyExc_TypeError,"not a list or tuple");
-	return NULL;
-    }
-}
-
-%typemap(freearg) (const TYPE **) {
-    psFree($1);
-}
-%enddef
-
-%define ACCEPT_LIST_AS_ARRAY_WITH_DIMEN(TYPE)
-%typemap(arginit) (const TYPE **, const int) {
-  $1 = NULL;
-}
-%typemap(in) (const TYPE **, const int) {
-    /* Check if is a list */
-    $1 = NULL;
-    if ($input == Py_None) {
-	$1 = NULL; $2 = 0;
-    } else if (PyList_Check($input) || PyTuple_Check($input)) {
-        int input_is_list = PyList_Check($input);
-        $2 = (input_is_list) ? PyList_Size($input) : PyTuple_Size($input);
-	if ($2 > 0) {
-	    $1 = psAlloc($2*sizeof(void *));
-	
-	    for (int i = 0; i < $2; i++) {
-		PyObject *o =  (input_is_list) ? PyList_GetItem($input,i) : PyTuple_GetItem($input,i);
-	    
-                if ((SWIG_ConvertPtr(o, (void **)&$1[i], $*1_descriptor,SWIG_POINTER_EXCEPTION)) == -1) {
-                   PyErr_SetString(PyExc_TypeError,"Failed to convert element of array");
-                   psFree($1);
-                   return NULL;
-                }
-	    }
-	}
-    } else {
-	PyErr_SetString(PyExc_TypeError,"not a list or tuple");
-	return NULL;
-    }
-}
-
-%typemap(freearg) (const TYPE **, const int) {
-    psFree($1);
-}
-%enddef
 #endif
-
-/******************************************************************************/
 
 /******************************************************************************/
 /*
@@ -259,170 +196,6 @@ namespace boost {
 %define CAST(TYPE)
     %pointer_cast(void *, TYPE *, cast_ ## TYPE ## Ptr); // convert void pointer to (TYPE *)
 %enddef
-
-/******************************************************************************/
-/*
- * Accept a python list of ints if the routine wants an array
- */
-#if 0
-%typemap(arginit) (const int *intArr, int nel) {
-  $1 = NULL;
-}
-%typemap(in) (const int *intArr, int nel) {
-    /* Check if is a list */
-    $1 = NULL;
-    if ($input == Py_None) {
-	$1 = NULL; $2 = 0;
-    } else if (PyList_Check($input) || PyTuple_Check($input)) {
-        int input_is_list = PyList_Check($input);
-        $2 = (input_is_list) ? PyList_Size($input) : PyTuple_Size($input);
-	if ($2 > 0) {
-	    $1 = psAlloc($2*sizeof(int));
-	
-	    for (int i = 0; i < $2; i++) {
-		PyObject *o =  (input_is_list) ? PyList_GetItem($input,i) : PyTuple_GetItem($input,i);
-                if (PyInt_Check(o)) {
-		    $1[i] = PyInt_AsLong((input_is_list) ?
-                                         PyList_GetItem($input, i) : PyTuple_GetItem($input, i));
-		} else {
-		    PyErr_SetString(PyExc_TypeError, "list/tuple must contain numbers");
-		    psFree($1);
-		    return NULL;
-		}
-	    }
-	}
-    } else {
-	PyErr_SetString(PyExc_TypeError,"not a list or tuple");
-	return NULL;
-    }
-}
-
-%typemap(freearg) (const int *intArr, int nel) {
-    psFree($1);
-}
-
-%typemap(arginit) (const int *) {
-  $1 = NULL;
-}
-%typemap(in) (const int *) {
-    /* Check if is a list */
-    $1 = NULL;
-    if ($input == Py_None) {
-	$1 = NULL;
-    } else if (PyList_Check($input) || PyTuple_Check($input)) {
-        int input_is_list = PyList_Check($input);
-        int n = (input_is_list) ? PyList_Size($input) : PyTuple_Size($input);
-	if (n > 0) {
-	    $1 = psAlloc(n*sizeof(int));
-	
-	    for (int i = 0; i < n; i++) {
-		PyObject *o =  (input_is_list) ? PyList_GetItem($input,i) : PyTuple_GetItem($input,i);
-                if (PyInt_Check(o)) {
-		    $1[i] = PyInt_AsLong((input_is_list) ?
-                                         PyList_GetItem($input, i) : PyTuple_GetItem($input, i));
-		} else {
-		    PyErr_SetString(PyExc_TypeError, "list/tuple must contain numbers");
-		    psFree($1);
-		    return NULL;
-		}
-	    }
-	}
-    } else {
-	PyErr_SetString(PyExc_TypeError,"not a list or tuple");
-	return NULL;
-    }
-}
-
-%typemap(freearg) (const int *) {
-    psFree($1);
-}
-
-/******************************************************************************/
-/*
- * Accept a python list of floats if the routine wants an array
- */
-%typemap(arginit) (const float *floatArr, int nel) {
-  $1 = NULL;
-}
-%typemap(in) (const float *floatArr, int nel) {
-    /* Check if is a list */
-    $1 = NULL;
-    if ($input == Py_None) {
-	$1 = NULL; $2 = 0;
-    } else if (PyList_Check($input) || PyTuple_Check($input)) {
-        int input_is_list = PyList_Check($input);
-        $2 = (input_is_list) ? PyList_Size($input) : PyTuple_Size($input);
-	if ($2 > 0) {
-	    $1 = psAlloc($2*sizeof(float));
-	
-	    for (int i = 0; i < $2; i++) {
-		PyObject *o =  (input_is_list) ? PyList_GetItem($input,i) : PyTuple_GetItem($input,i);
-		if (PyFloat_Check(o)) {
-		    $1[i] = PyFloat_AsDouble((input_is_list) ?
-                                             PyList_GetItem($input, i) : PyTuple_GetItem($input, i));
-                } else if (PyInt_Check(o)) {
-		    $1[i] = PyInt_AsLong((input_is_list) ?
-                                         PyList_GetItem($input, i) : PyTuple_GetItem($input, i));
-                } else {
-		    PyErr_SetString(PyExc_TypeError, "list/tuple must contain numbers");
-		    psFree($1);
-		    return NULL;
-		}
-	    }
-	}
-    } else {
-	PyErr_SetString(PyExc_TypeError,"not a list or tuple");
-	return NULL;
-    }
-}
-
-%typemap(freearg) (const float *floatArr, int nel) {
-    psFree($1);
-}
-
-/******************************************************************************/
-/*
- * Accept a python list of doubles if the routine wants an array
- */
-%typemap(arginit) (const double *doubleArr, int nel) {
-  $1 = NULL;
-}
-%typemap(in) (const double *doubleArr, int nel) {
-    /* Check if is a list */
-    $1 = NULL;
-    if ($input == Py_None) {
-	$1 = NULL; $2 = 0;
-    } else if (PyList_Check($input) || PyTuple_Check($input)) {
-        int input_is_list = PyList_Check($input);
-        $2 = (input_is_list) ? PyList_Size($input) : PyTuple_Size($input);
-	if ($2 > 0) {
-	    $1 = psAlloc($2*sizeof(double));
-	
-	    for (int i = 0; i < $2; i++) {
-		PyObject *o =  (input_is_list) ? PyList_GetItem($input,i) : PyTuple_GetItem($input,i);
-		if (PyFloat_Check(o)) {
-		    $1[i] = PyFloat_AsDouble((input_is_list) ?
-                                             PyList_GetItem($input, i) : PyTuple_GetItem($input, i));
-                } else if (PyInt_Check(o)) {
-		    $1[i] = PyInt_AsLong((input_is_list) ?
-                                         PyList_GetItem($input, i) : PyTuple_GetItem($input, i));
-		} else {
-		    PyErr_SetString(PyExc_TypeError, "list/tuple must contain numbers");
-		    psFree($1);
-		    return NULL;
-		}
-	    }
-	}
-    } else {
-	PyErr_SetString(PyExc_TypeError,"not a list or tuple");
-	return NULL;
-    }
-}
-
-%typemap(freearg) (const double *doubleArr, int nel) {
-    psFree($1);
-}
-#endif
 
 /******************************************************************************/
 // Local Variables: ***

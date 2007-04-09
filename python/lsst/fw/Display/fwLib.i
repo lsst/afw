@@ -36,11 +36,6 @@ using namespace vw;
 %include "../Core/p_lsstSwig.i"
 %import "lsst/fw/Utils.h"
 
-%{
-typedef vw::PixelGray<float> ImagePixelType;
-typedef vw::PixelGray<uint8> MaskPixelType;
-%}
-
 %import <vw/Image/ImageResource.h>
 %import <vw/FileIO/DiskImageResource.h>
 
@@ -53,10 +48,24 @@ typedef vw::PixelGray<uint8> MaskPixelType;
 
 using namespace lsst::fw;
 
-%template(readFloat) read<ImagePixelType>;
+%import "lsst/fw/Mask.h"
+%import "lsst/fw/Image.h"
+%import "lsst/fw/MaskedImage.h"
 
-%template(writeFitsFloat) writeFits<ImagePixelType>;
-%template(writeFitsFileFloat) writeFitsFile<ImagePixelType>;
+%template(MaskD)          lsst::Mask<MaskPixelType>;
+%template(MaskDPtr)       boost::shared_ptr<lsst::Mask<MaskPixelType> >;
+%template(ImageD)         lsst::Image<ImagePixelType>;
+%template(ImageDPtr)      boost::shared_ptr<lsst::Image<ImagePixelType> >;
+%template(MaskedImageD)	  lsst::MaskedImage<ImagePixelType, MaskPixelType>;
+%template(MaskedImageDPtr) boost::shared_ptr<lsst::MaskedImage<ImagePixelType, MaskPixelType> >;
+
+%template(readMask) read<MaskPixelType>;
+%template(writeFitsMask) writeFits<MaskPixelType>;
+%template(writeFitsFileMask) writeFitsFile<MaskPixelType>;
+
+%template(readImage) read<ImagePixelType>;
+%template(writeFitsImage) writeFits<ImagePixelType>;
+%template(writeFitsFileImage) writeFitsFile<ImagePixelType>;
 
 /******************************************************************************/
 // Local Variables: ***
