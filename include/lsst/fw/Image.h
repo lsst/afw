@@ -16,14 +16,15 @@
 #include <map>
 #include <string>
 
+#include "lsst/fw/LsstBase.h"
+
 using namespace vw;
 using namespace std;
 
 namespace lsst {
 
     template<typename ImagePixelT>
-    class Image
-    {
+    class Image : private fw::LsstBase {
     public:
         typedef typename PixelChannelType<ImagePixelT>::type ImageChannelT;
         typedef ImageView<ImagePixelT> ImageIVwT;
@@ -37,22 +38,25 @@ namespace lsst {
 
         Image(int ncols, int nrows);
         
+#if 0                                   // not implemented
         ImagePtrT getSubImage(BBox2i maskRegion);
 
         void replaceSubImage(BBox2i maskRegion, Image<ImagePixelT>& insertImage);
-
         ImageChannelT operator ()(int x, int y) const;
 
         bool operator ()(int x, int y, int plane) const;
+#endif
 
         Image<ImagePixelT>& operator += (const Image<ImagePixelT>& inputImage);
         Image<ImagePixelT>& operator -= (const Image<ImagePixelT>& inputImage);
         Image<ImagePixelT>& operator *= (const Image<ImagePixelT>& inputImage);
         Image<ImagePixelT>& operator /= (const Image<ImagePixelT>& inputImage);
 
+#if 0                                   // not implemented
         int getImageCols() const;
 
         int getImageRows() const;
+#endif
 
         ImageIVwPtrT getIVwPtr() const;
 
