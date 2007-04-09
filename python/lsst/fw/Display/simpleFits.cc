@@ -435,10 +435,10 @@ void writeVwFits(int fd,                // file descriptor to write to
 
 /******************************************************************************/
 
-void writeVwFitsFile(const std::string &filename, // file to write or "| cmd"
-                     const vw::ImageBuffer &data, // The data to write
-                     const std::string &WCS // which WCS to use for pixel
-                  ) {
+void writeVwFits(const std::string &filename, // file to write or "| cmd"
+                 const vw::ImageBuffer &data, // The data to write
+                 const std::string &WCS // which WCS to use for pixel
+                ) {
     int fd;
     if ((filename.c_str())[0] == '|') {		// a command
 	const char *cmd = filename.c_str() + 1;

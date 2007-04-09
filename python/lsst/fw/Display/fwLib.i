@@ -61,11 +61,9 @@ using namespace lsst::fw;
 
 %template(readMask) read<MaskPixelType>;
 %template(writeFitsMask) writeFits<MaskPixelType>;
-%template(writeFitsFileMask) writeFitsFile<MaskPixelType>;
 
 %template(readImage) read<ImagePixelType>;
 %template(writeFitsImage) writeFits<ImagePixelType>;
-%template(writeFitsFileImage) writeFitsFile<ImagePixelType>;
 
 /******************************************************************************/
 // Local Variables: ***
