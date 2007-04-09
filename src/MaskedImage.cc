@@ -42,7 +42,7 @@ boost::shared_ptr<Mask<MaskPixelT> > MaskedImage<ImagePixelT, MaskPixelT>::getMa
 }
 
 template<typename ImagePixelT, typename MaskPixelT>
-boost::shared_ptr<Image<ImagePixelT> > MaskedImage<ImagePixelT, MaskPixelT>::getImage() {
+typename MaskedImage<ImagePixelT, MaskPixelT>::ImagePtrT MaskedImage<ImagePixelT, MaskPixelT>::getImage() {
     return _imagePtr;
 }
 
