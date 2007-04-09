@@ -56,6 +56,8 @@ using namespace lsst::fw;
 %template(MaskDPtr)       boost::shared_ptr<lsst::Mask<MaskPixelType> >;
 %template(ImageD)         lsst::Image<ImagePixelType>;
 %template(ImageDPtr)      boost::shared_ptr<lsst::Image<ImagePixelType> >;
+%template(ImageMaskD)     lsst::Image<MaskPixelType>;
+%template(ImageMaskDPtr)  boost::shared_ptr<lsst::Image<MaskPixelType> >;
 %template(MaskedImageD)	  lsst::MaskedImage<ImagePixelType, MaskPixelType>;
 %template(MaskedImageDPtr) boost::shared_ptr<lsst::MaskedImage<ImagePixelType, MaskPixelType> >;
 
