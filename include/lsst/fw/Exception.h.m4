@@ -51,7 +51,7 @@ define(LSST_NEW_EXCEPTION,
         $1(boost::format const& msg, DataPropertyPtr propertyList) throw() :
             Exception(msg), _propertyList(propertyList) {};
         $1(const $1 & oops) throw() :
-            Exception(oops.what()), _propertyList(oops._propertyList){};
+            Exception(oops.what()), _propertyList(new DataProperty(*(oops._propertyList))){};
         ~$1() throw() {
             fw::Trace::trace("fw.Exception", 1, "----Destroy ExceptObj");
             fw::Trace::trace("fw.Exception", 1, _propertyList->repr());
