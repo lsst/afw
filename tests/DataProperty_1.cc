@@ -1,7 +1,9 @@
 // -*- lsst-c++ -*-
 #include "lsst/fw/DataProperty.h"
-#include <typeinfo>
+//#include <iostream>
+#include <lsst/fw/Citizen.h>
 
+using namespace std;
 using namespace lsst;
 
 class Foo {
@@ -10,8 +12,7 @@ class Foo {
      double durp;
 };
 
-int main()
-{
+void test() {
     DataProperty::DataPropertyPtrT root(new DataProperty("root"));
 
      DataProperty::DataPropertyPtrT prop1(new DataProperty("name1", std::string("value1")));
@@ -70,3 +71,16 @@ int main()
      rootCopy->print();
      
 }     
+
+int main() {
+    test();
+     //
+     // Check for memory leaks
+     //
+     if (fw::Citizen::census(0) == 0) {
+         cerr << "No leaks detected" << endl;
+     } else {
+         cerr << "Leaked memory blocks:" << endl;
+         fw::Citizen::census(cerr);
+     }
+}
