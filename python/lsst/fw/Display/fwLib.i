@@ -45,6 +45,11 @@ using namespace vw;
 // Talk to DS9
 
 using namespace lsst::fw;
+//
+// I don't know why I need to say this; but I do.
+//
+%feature("novaluewrapper") boost::shared_ptr<lsst::Image<ImagePixelType> >;
+%feature("novaluewrapper") boost::shared_ptr<lsst::Image<MaskPixelType> >;
 
 %import "lsst/fw/Mask.h"
 %import "lsst/fw/Image.h"
