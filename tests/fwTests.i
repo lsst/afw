@@ -25,7 +25,7 @@ using namespace vw;
 
 /******************************************************************************/
 
-%inline %{
+%{
 typedef vw::PixelGray<float> ImagePixelType;
 typedef vw::PixelGray<uint8> MaskPixelType;
 %}
@@ -85,6 +85,7 @@ namespace std {
 }
 
 %template(unary_function_tuple) std::unary_function<boost::tuple<vw::PixelGray<float > &,vw::PixelGray<uint8 > & > &,void >;
+%template(unary_function_tuple2) std::unary_function<boost::tuple<ImagePixelType &,MaskPixelType & > &,void >;
 %template(PixelProcessingFuncD) lsst::PixelProcessingFunc<ImagePixelType, MaskPixelType>;
 %template(testPixProcFuncD) testPixProcFunc<ImagePixelType, MaskPixelType>;
 

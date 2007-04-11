@@ -1,4 +1,3 @@
-import sys
 import lsst.fw.Core.fwLib as fwCore
 import fwTests
 

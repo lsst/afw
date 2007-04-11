@@ -1,7 +1,7 @@
 // -*- lsst-c++ -*-
 #include "lsst/fw/DataProperty.h"
-//#include <iostream>
 #include <lsst/fw/Citizen.h>
+#include <lsst/fw/Trace.h>
 
 using namespace std;
 using namespace lsst;
@@ -30,16 +30,16 @@ void test() {
      root->addProperty(prop2a);
 
 //      DataProperty::DataPropertyPtrT dpPtr = root->find("name2");
-//      dpPtr->print();
+//      dpPtr->print("\t");
 
 //      // check find without reset to beginning
 //      dpPtr = root->find("name2", false);
-//      dpPtr->print();
+//      dpPtr->print("\t");
 
 //      dpPtr = root->find("name1");
-//      dpPtr->print();
+//      dpPtr->print("\t");
 //      dpPtr = root->find("name3");
-//      dpPtr->print();
+//      dpPtr->print("\t");
 
      // Try nested property list
      
@@ -54,7 +54,7 @@ void test() {
 
      root->addProperty(nested);
 
-     root->print();
+     root->print("\t");
 
      // Check copy constructor
 
@@ -68,11 +68,13 @@ void test() {
 
      // Check that rootCopy is still OK...
 
-     rootCopy->print();
+     rootCopy->print("\t");
      
 }     
 
 int main() {
+    fw::Trace::setVerbosity("fw.DataProperty", 10);
+
     test();
      //
      // Check for memory leaks
