@@ -77,7 +77,7 @@ void writeFits(const std::string& filename, // file to write to (or "| cmd")
 
 template<typename ImagePixelT>
 void writeFits(int fd,                  //!< file descriptor to write to
-               const typename lsst::Image<ImagePixelT>::ImagePtrT image, //!< Image to write
+               const typename Image<ImagePixelT>::ImagePtrT image, //!< Image to write
                const std::string& WCS   //!< which WCS to use for pixel
               ) {
     typename Image<ImagePixelT>::ImageIVwPtrT vwImagePtr = image.get()->getIVwPtr();
@@ -86,7 +86,7 @@ void writeFits(int fd,                  //!< file descriptor to write to
 
 template<typename ImagePixelT>
 void writeFits(const std::string& filename, // file to write to (or "| cmd")
-               const typename lsst::Image<ImagePixelT>::ImagePtrT image, //!< Image to write
+               const typename Image<ImagePixelT>::ImagePtrT image, //!< Image to write
                const std::string& WCS   //!< which WCS to use for pixel
               ) {
     typename Image<ImagePixelT>::ImageIVwPtrT vwImagePtr = image.get()->getIVwPtr();

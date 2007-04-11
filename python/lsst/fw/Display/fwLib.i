@@ -44,8 +44,6 @@ using namespace vw;
 /******************************************************************************/
 // Talk to DS9
 
-%include "simpleFits.h"
-
 using namespace lsst::fw;
 
 %import "lsst/fw/Mask.h"
@@ -61,11 +59,13 @@ using namespace lsst::fw;
 %template(MaskedImageD)	  lsst::MaskedImage<ImagePixelType, MaskPixelType>;
 %template(MaskedImageDPtr) boost::shared_ptr<lsst::MaskedImage<ImagePixelType, MaskPixelType> >;
 
+%include "simpleFits.h"
+
 %template(readMask) read<MaskPixelType>;
-%template(writeFitsMask) writeFits<MaskPixelType>;
+%template(writeFits) writeFits<MaskPixelType>;
 
 %template(readImage) read<ImagePixelType>;
-%template(writeFitsImage) writeFits<ImagePixelType>;
+%template(writeFits) writeFits<ImagePixelType>;
 
 /******************************************************************************/
 // Local Variables: ***

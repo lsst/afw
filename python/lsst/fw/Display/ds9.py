@@ -70,19 +70,14 @@ def mtv(data, frame = 0, init = 1, WCS = ""):
       pfd = file("foo.fits", "w")
 
    try:
-       fwLib.writeFitsImage(pfd.fileno(), data, WCS)
-   except NotImplementedError:
-       try:
-           fwLib.writeFitsMask(pfd.fileno(), data, WCS)
-       except TypeError:
-           pass
-       
+       fwLib.writeFits(pfd.fileno(), data, WCS)
+   except Exception, e:
        try:
            pfd.close()
        except:
            pass
        
-       raise RuntimeError, "Unsupported image type %s" % (type(data))
+       raise e
 
    try:
        pfd.close()
