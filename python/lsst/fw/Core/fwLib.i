@@ -80,10 +80,22 @@ def version(HeadURL = r"$HeadURL$"):
 %include "lsst/fw/Trace.h"
 %include "lsst/fw/DataProperty.h"
 
+#if 0                                   // doesn't work (yet)
+typedef boost::shared_ptr<DataProperty> DataPropertyPtr;
+
+%contract DataPropertyPtr::DataPropertyPtr {
+ensure:
+    DataPropertyPtr_ptr.get() > 0;
+}
+#endif
+    
 %template(DataPropertyPtrT) boost::shared_ptr<DataProperty>;
 
 %extend lsst::DataProperty {
     DataProperty(std::string name, int val) {
+        return new DataProperty(name, val);
+    }
+    DataProperty(std::string name, std::string val) {
         return new DataProperty(name, val);
     }
 }
