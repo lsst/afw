@@ -33,7 +33,7 @@ DataProperty::DataProperty(const DataProperty& orig) :
     }
 };
 
-// Find the property with the given name.   If reset==true, start from the beginning.
+// Find the next property with the given name.   If reset==true, start from the beginning.
 // If reset==false, advance the pointer from the previous find, and continue the find.
 
 DataProperty::DataPropertyPtrT DataProperty::find(const std::string name, bool reset) {
@@ -54,7 +54,23 @@ DataProperty::DataPropertyPtrT DataProperty::find(const std::string name, bool r
 }
 
 
+// Find the next property whose name matches the given regex .   If reset==true, start from the beginning.
+// If reset==false, advance the pointer from the previous find, and continue the find.
+
 DataProperty::DataPropertyPtrT DataProperty::find(const boost::regex pattern, bool reset) {
+    if (reset) {
+        _pos = _properties.begin();
+    } else {
+        _pos++;
+    }
+
+    for ( ; _pos != _properties.end(); _pos++) {
+        std::string name = (*_pos)->getName();
+        if (boost::regex_match(name, pattern)) {
+            return *_pos;
+        }
+    }
+
     return DataPropertyPtrT();
 }
 
