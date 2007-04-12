@@ -441,3 +441,23 @@ int DiskImageResourceFITS::getNumKeys()
 
      return numKeys;
 }
+
+bool DiskImageResourceFITS::getKey(int n, std::string & keyWord, std::string & keyValue, std::string & keyComment)
+{
+     // NOTE:  the sizes of arrays are tied to FITS standard
+     char keyWordChars[80];
+     char keyValueChars[80];
+     char keyCommentChars[80];
+
+     int status = 0;
+     fitsfile *fd = static_cast<fitsfile *>(_fd); // cfitsio file descriptor
+
+     int cfitsioError = fits_read_keyn(fd, n, keyWordChars, keyValueChars, keyCommentChars, &status);
+     if (!cfitsioError) {
+	  keyWord = keyWordChars;
+	  keyValue = keyValueChars;
+	  keyComment = keyCommentChars;
+	  return true;
+     }
+     return false;
+}
