@@ -5,6 +5,7 @@ env.Program(["Mask_1.cc"], LIBS=env.libs["vw"] + ["fw"])
 env.Program(["MaskedImage_1.cc"], LIBS=env.libs["vw"] + ["fw"])
 env.Program(["BuildExcept.cc"], LIBS="fw")
 env.Program(["DataProperty_1.cc", "../src/DataProperty.cc"], LIBS="fw")
+env.Program(["MaskIO_1.cc", "../src/LSSTFitsResource.cc", "../src/DiskImageResourceFITS.cc"], LIBS=env.libs["vw"] + ["fw"] + ["cfitsio"])
 
 env.CheckSwig("python", ilang="c++")
 env.Append(SWIGFLAGS=" -Ipython")
