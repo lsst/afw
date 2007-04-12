@@ -20,8 +20,9 @@ DataProperty::DataPropertyPtrT LSSTFitsResource::getMetaData()
 	  std::string kw;
 	  std::string val;
 	  std::string comment;
-	  // do we need to reset the strings first?
 	  getKey(i, kw, val, comment);
+	  DataProperty::DataPropertyPtrT dpItemPtr(new DataProperty(kw, val));
+	  dpPtr->addProperty(dpItemPtr);
      }
 
      return dpPtr;
