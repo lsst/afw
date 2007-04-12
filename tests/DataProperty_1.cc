@@ -62,7 +62,7 @@ void test() {
 
      // Explicitly destroy root
 
-     root.~shared_ptr<DataProperty>();
+     root.reset();
 
      std::cout << "Explicit destruction done" << std::endl;
 
