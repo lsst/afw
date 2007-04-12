@@ -16,6 +16,12 @@ void test() {
     LSSTFitsResource inFits("filename.fits");
     DataProperty::DataPropertyPtrT metaDataPtr = inFits.getMetaData();
     metaDataPtr->print();
+    std::cout << std::endl;
+    DataProperty::DataPropertyPtrT matchPtr = metaDataPtr->find(boost::regex("WAT.*"));
+    while (matchPtr) {
+        matchPtr->print();
+        matchPtr = metaDataPtr->find(boost::regex("WAT.*"), false);
+    }
 }
 
 int main(int argc, char *argv[]) {
