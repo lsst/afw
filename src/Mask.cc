@@ -365,7 +365,7 @@ void Mask<MaskPixelT>::parseMaskPlaneMetaData(const DataProperty::DataPropertyPt
     while (dpPtr) {
         // split off the "MP_" to get the planeName
         std::string keyWord = dpPtr->getName();
-        std::string planeName = keyWord.substr(maskPlanePrefix.size()+1);
+        std::string planeName = keyWord.substr(maskPlanePrefix.size());
         addMaskPlane(planeName, boost::any_cast<const int>(dpPtr->getValue()));
         dpPtr = rootPtr->find(boost::regex(maskPlanePrefix +".*"),false);
     }
