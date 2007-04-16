@@ -121,15 +121,15 @@ void test() {
 
 // ------------ Test mask plane metaData
 
-     DataProperty::DataPropertyPtrT metaData =
-         testMask.getMaskPlaneMetaData();
+     DataProperty::DataPropertyPtrT metaData(new DataProperty("testMetaData", 0));
+     testMask.addMaskPlaneMetaData(metaData);
      cout << "MaskPlane metadata:" << endl;
      metaData->print("\t");
 
      DataProperty::DataPropertyPtrT newPlane(new DataProperty("Whatever", 5));
      metaData->addProperty(newPlane);
 
-     testMask.setMaskPlaneMetaData(metaData);
+     testMask.parseMaskPlaneMetaData(metaData);
      cout << "After loading metadata: " << endl;
      testMask.printMaskPlanes();
 

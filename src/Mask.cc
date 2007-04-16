@@ -331,30 +331,28 @@ template<class MaskPixelT> Mask<MaskPixelT>&  Mask<MaskPixelT>::operator |= (con
     return *this;
 }
 
-// Build a DataProperty that describes the MaskPlane assignments, and return the pointer to it.
+// Given a DataProperty, add to it the MaskPlane assignments
 
 template<class MaskPixelT>
-DataProperty::DataPropertyPtrT Mask<MaskPixelT>::getMaskPlaneMetaData() {
-
-    DataProperty::DataPropertyPtrT rootPtr(new DataProperty("MaskPlaneMetaData", 0));
-
+void Mask<MaskPixelT>::addMaskPlaneMetaData(DataProperty::DataPropertyPtrT rootPtr) {
     // iterate over MaskPlanes
     for (map<int, std::string>::iterator i = _maskPlaneDict.begin(); i != _maskPlaneDict.end() ; i++) {
         int planeNumber = i->first;
         std::string planeName = i->second;
         if (planeName != "") {
-            rootPtr->addProperty(DataProperty::DataPropertyPtrT(new DataProperty(planeName, planeNumber)));
+            rootPtr->addProperty(DataProperty::DataPropertyPtrT(new DataProperty(Mask::maskPlanePrefix + planeName, planeNumber)));
         }
     }
-
-    return rootPtr;
 }
 
-// Given a DataProperty that describes the MaskPlane assignments setup the MaskPlanes.
+// Given a DataProperty that contains the MaskPlane assignments setup the MaskPlanes.  If no MaskPlane data,
+// throw an exception
 
-template<class MaskPixelT> void Mask<MaskPixelT>::setMaskPlaneMetaData(const DataProperty::DataPropertyPtrT rootPtr) {
+template<class MaskPixelT>
+void Mask<MaskPixelT>::parseMaskPlaneMetaData(const DataProperty::DataPropertyPtrT rootPtr) {
 
-    if (rootPtr->getName() != "MaskPlaneMetaData") {
+    DataProperty::DataPropertyPtrT dpPtr = rootPtr->find(boost::regex(maskPlanePrefix +".*"));
+    if (!dpPtr) {
         throw;
     }
 
@@ -362,13 +360,14 @@ template<class MaskPixelT> void Mask<MaskPixelT>::setMaskPlaneMetaData(const Dat
 
     clearAllMaskPlanes();
 
-    // Iterate through contents of DataProperty
+    // Iterate through matching keyWords
 
-    const DataProperty::DataPropertyContainerT contents = rootPtr->getContents();
-
-    for (DataProperty::DataPropertyContainerT::const_iterator i = contents.begin(); i != contents.end(); i++) {
-        DataProperty::DataPropertyPtrT dpPtr = *i;
-        addMaskPlane(dpPtr->getName(), boost::any_cast<const int>(dpPtr->getValue()));
+    while (dpPtr) {
+        // split off the "MP_" to get the planeName
+        std::string keyWord = dpPtr->getName();
+        std::string planeName = keyWord.substr(maskPlanePrefix.size()+1);
+        addMaskPlane(planeName, boost::any_cast<const int>(dpPtr->getValue()));
+        dpPtr = rootPtr->find(boost::regex(maskPlanePrefix +".*"),false);
     }
 
 }
@@ -399,3 +398,6 @@ template<class MaskPixelT> typename Mask<MaskPixelT>::MaskIVwPtrT Mask<MaskPixel
 template<class MaskPixelT> map<int, std::string> Mask<MaskPixelT>::getMaskPlaneDict() const {
     return _maskPlaneDict;
 }
+
+template<class MaskPixelT> 
+const std::string Mask<MaskPixelT>::maskPlanePrefix("MP_");

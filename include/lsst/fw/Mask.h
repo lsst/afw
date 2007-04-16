@@ -74,9 +74,10 @@ namespace lsst {
         
         void setMaskPlaneValues(int plane,
                                 MaskPixelBooleanFunc<MaskPixelT> selectionFunc);
-        DataProperty::DataPropertyPtrT getMaskPlaneMetaData();
 
-        void setMaskPlaneMetaData(DataProperty::DataPropertyPtrT);
+        void parseMaskPlaneMetaData(const DataProperty::DataPropertyPtrT);
+
+        void addMaskPlaneMetaData(DataProperty::DataPropertyPtrT);
 
         int countMask(MaskPixelBooleanFunc<MaskPixelT>& testFunc,
                       const BBox2i maskRegion) const;
@@ -113,6 +114,7 @@ namespace lsst {
         int _numPlanesUsed;
         MaskChannelT _planeBitMask[8 * sizeof(MaskChannelT)];
         MaskChannelT _planeBitMaskComplemented[8 * sizeof(MaskChannelT)];
+        static const std::string maskPlanePrefix;
 
         int addMaskPlane(string name, int plane);
     };
