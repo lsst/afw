@@ -1,19 +1,29 @@
-#include "lsst/fw/LSSTFitsResource.h"
+// -*- lsst-c++ -*-
+// This file can NOT be separately compiled!   It is included by LSSTFitsResource.h
 
-using namespace lsst;
-
-LSSTFitsResource::LSSTFitsResource(std::string const& filename) : DiskImageResourceFITS(filename)
+template <typename PixelT>
+LSSTFitsResource<PixelT>::LSSTFitsResource(std::string const& filename) : DiskImageResourceFITS(filename)
 {
 }
 
-// Build a DataProperty that contains all the FITS kw-value pairs
-// Any "indexed keywords", of the form name0, name1, etc, will be collected together
-// into a single DataProperty with name "name"
-
-DataProperty::DataPropertyPtrT LSSTFitsResource::getMetaData()
+template <typename PixelT>
+void LSSTFitsResource<PixelT>::readFits(ImageView<PixelT>& image, DataProperty::DataPropertyPtrT metaData, int hdu)
 {
-     DataProperty::DataPropertyPtrT dpPtr(new DataProperty("FitsMetaData", 0));
+    setHdu(hdu);
+    read_image(image, *this);
+    getMetaData(metaData);
+}
 
+template <typename PixelT>
+void LSSTFitsResource<PixelT>::writeFits(ImageView<PixelT>&, DataProperty::DataPropertyPtrT metaData, int hdu)
+{
+}
+
+// Private function to build a DataProperty that contains all the FITS kw-value pairs
+
+template <typename PixelT>
+void LSSTFitsResource<PixelT>::getMetaData(DataProperty::DataPropertyPtrT dpPtr)
+{
      // Get all the kw-value pairs from the FITS file, and add each to DataProperty
 
      for (int i=1; i<=getNumKeys(); i++) {
@@ -25,9 +35,11 @@ DataProperty::DataPropertyPtrT LSSTFitsResource::getMetaData()
 	  dpPtr->addProperty(dpItemPtr);
      }
 
-     return dpPtr;
 }
 
-void  LSSTFitsResource::setMetaData(DataProperty::DataPropertyPtrT metaData)
+// Private function
+
+template <typename PixelT>
+void  LSSTFitsResource<PixelT>::setMetaData(DataProperty::DataPropertyPtrT metaData)
 {
 }

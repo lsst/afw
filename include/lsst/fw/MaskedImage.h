@@ -91,12 +91,14 @@ namespace lsst {
         typedef boost::shared_ptr<MaskedImage<ImagePixelT, MaskPixelT> > MaskedImagePtrT;
         typedef MaskedImage<ImagePixelT, MaskPixelT> MaskedImageT;
 
+        // Constructors
 	MaskedImage();
         MaskedImage(ImagePtrT image, MaskPtrT mask);
         MaskedImage(int nCols, int nRows);
 
         virtual ~MaskedImage();
 
+        // Processing functions
 	void processPixels(MaskPixelBooleanFunc<MaskPixelT> &selectionFunc, PixelProcessingFunc<ImagePixelT, MaskPixelT> &processingFunc,
             MaskedImageT &);
             
@@ -104,17 +106,22 @@ namespace lsst {
 
 	void processPixels(PixelProcessingFunc<ImagePixelT, MaskPixelT> &processingFunc);
 
+        // SubImage functions
 #if 0
 	MaskedImagePtrT getSubImage(BBox2i region);
 
 	void replaceSubImage(BBox2i region, MaskedImage &sImage, bool replaceMask, bool replaceAstro);
 #endif
-
+        // Operators
 	MaskedImage& operator+=( MaskedImageT& maskedImageInput);
 	MaskedImage& operator-=( MaskedImage & maskedImageInput);
 	MaskedImage& operator*=( MaskedImage & maskedImageInput);
 	MaskedImage& operator/=( MaskedImage & maskedImageInput);
+        
+        // IO functions
+        void readFits(std::string baseName);
 
+        // Getters
 	ImagePtrT getImage();
 	MaskPtrT getMask();
     private:

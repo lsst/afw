@@ -46,6 +46,12 @@ typename MaskedImage<ImagePixelT, MaskPixelT>::ImagePtrT MaskedImage<ImagePixelT
     return _imagePtr;
 }
 
+template<typename ImagePixelT, typename MaskPixelT>
+void MaskedImage<ImagePixelT, MaskPixelT>::readFits(std::string baseName) {
+
+    const std::string suffixList[] = {"_img", "_var", "_msk"};
+}
+
 template<typename ImagePixelT, typename MaskPixelT> 
 MaskedImage<ImagePixelT, MaskPixelT>& MaskedImage<ImagePixelT, MaskPixelT>::operator+=(MaskedImageT & maskedImageInput) {
     _mask |= *(maskedImageInput.getMask());

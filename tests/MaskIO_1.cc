@@ -13,10 +13,23 @@ using boost::any_cast;
  * of memory management
  */
 void test() {
-    LSSTFitsResource inFits("filename.fits");
-    DataProperty::DataPropertyPtrT metaDataPtr = inFits.getMetaData();
+
+    // NOTE:  does not work with <uint16> until DiskResourceFITS bug is fixed
+    typedef PixelGray<float> MaskPixelType;
+
+    Mask<MaskPixelType> testMask;
+    testMask.readFits("filename.fits");
+
+    // check whether Mask planes got setup right from FITS header...
+    std::cout << "MaskPlanes from FITS header:" << std::endl;
+    testMask.printMaskPlanes();
+
+    // check the full metadata from the FITS header
+    DataProperty::DataPropertyPtrT metaDataPtr = testMask.getMetaData();
     metaDataPtr->print();
     std::cout << std::endl;
+
+    // try some pattern matching on metadata
     DataProperty::DataPropertyPtrT matchPtr = metaDataPtr->find(boost::regex("WAT.*"));
     while (matchPtr) {
         matchPtr->print();

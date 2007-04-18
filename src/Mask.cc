@@ -9,6 +9,7 @@ Mask<MaskPixelT>::Mask() :
     fw::LsstBase(typeid(this)),
     _imagePtr(new vw::ImageView<MaskPixelT>()),
     _image(*_imagePtr),
+    _metaData(new DataProperty::DataProperty("FitsMetaData", 0)),
     _numPlanesMax(8*sizeof(MaskChannelT)) {
 }
 
@@ -17,6 +18,7 @@ Mask<MaskPixelT>::Mask(MaskIVwPtrT image):
     fw::LsstBase(typeid(this)),
     _imagePtr(image),
     _image(*_imagePtr),
+    _metaData(new DataProperty::DataProperty("FitsMetaData", 0)),
     _numPlanesMax(8 * sizeof(MaskChannelT)) {
     _imageRows = _image.rows();
     _imageCols = _image.cols();
@@ -39,6 +41,7 @@ Mask<MaskPixelT>::Mask(int ncols, int nrows) :
     fw::LsstBase(typeid(this)),
     _imagePtr(new vw::ImageView<MaskPixelT>(ncols, nrows)),
     _image(*_imagePtr),
+    _metaData(new DataProperty::DataProperty("FitsMetaData", 0)),
     _numPlanesMax(8*sizeof(MaskChannelT)) {
     _imageRows = _image.rows();
     _imageCols = _image.cols();
@@ -56,6 +59,24 @@ Mask<MaskPixelT>::Mask(int ncols, int nrows) :
 
     }
 
+template<class MaskPixelT>
+DataProperty::DataPropertyPtrT Mask<MaskPixelT>::getMetaData()
+{
+    return _metaData;
+}
+
+template<class MaskPixelT>
+void Mask<MaskPixelT>::readFits(const string& fileName, int hdu)
+{
+    lsst::LSSTFitsResource<MaskPixelT> fitsRes(fileName);
+    fitsRes.readFits(_image, _metaData, hdu);
+    parseMaskPlaneMetaData(_metaData);
+}
+
+template<class MaskPixelT>
+void Mask<MaskPixelT>::writeFits(const string& fileName)
+{
+}
 
 template<class MaskPixelT>
 int Mask<MaskPixelT>::addMaskPlane(const string& name)
@@ -366,7 +387,9 @@ void Mask<MaskPixelT>::parseMaskPlaneMetaData(const DataProperty::DataPropertyPt
         // split off the "MP_" to get the planeName
         std::string keyWord = dpPtr->getName();
         std::string planeName = keyWord.substr(maskPlanePrefix.size());
-        addMaskPlane(planeName, boost::any_cast<const int>(dpPtr->getValue()));
+        std::string valueString = boost::any_cast<const std::string>(dpPtr->getValue());
+        int planeId = atoi(valueString.c_str());
+        addMaskPlane(planeName, planeId);
         dpPtr = rootPtr->find(boost::regex(maskPlanePrefix +".*"),false);
     }
 

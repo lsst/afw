@@ -17,6 +17,8 @@
 #include <string>
 
 #include "lsst/fw/LsstBase.h"
+#include "lsst/fw/DataProperty.h"
+#include "lsst/fw/LSSTFitsResource.h"
 
 using namespace vw;
 using namespace std;
@@ -38,6 +40,10 @@ namespace lsst {
 
         Image(int ncols, int nrows);
         
+        void readFits(const string& fileName, int hdu=0);
+
+        void writeFits(const string& fileName);
+
 #if 0                                   // not implemented
         ImagePtrT getSubImage(BBox2i maskRegion);
 
@@ -67,6 +73,7 @@ namespace lsst {
         ImageIVwT& _image;
         int _imageRows;
         int _imageCols;
+        DataProperty::DataPropertyPtrT _metaData;
     };
   
 #include "Image.cc"

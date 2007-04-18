@@ -1,17 +1,27 @@
 #ifndef LSST_LSSTFITSRESOURCE_H
 #define LSST_LSSTFITSRESOURCE_H
 
+#include <vw/Image.h>
 #include "lsst/fw/DataProperty.h"
 #include "lsst/fw/DiskImageResourceFITS.h"
 
+using namespace vw;
+
 namespace lsst {
 
-    class LSSTFitsResource : public lsst::fw::DiskImageResourceFITS {
+    template <typename PixelT> class LSSTFitsResource : public lsst::fw::DiskImageResourceFITS {
     public:
         LSSTFitsResource(std::string const& filename);
-        DataProperty::DataPropertyPtrT getMetaData();
+        void readFits(ImageView<PixelT>& image, DataProperty::DataPropertyPtrT metaData, int hdu=0);
+        void writeFits(ImageView<PixelT>& image, DataProperty::DataPropertyPtrT metaData, int hdu=0);
+    private:
+        void getMetaData(DataProperty::DataPropertyPtrT metaData);
         void setMetaData(DataProperty::DataPropertyPtrT metaData);
+
     };
+
+#include "LSSTFitsResource.cc"  
+
 }
 
 #endif // LSST_LSSTFITSRESOURCE_H

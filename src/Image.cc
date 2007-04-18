@@ -5,6 +5,7 @@
 template<typename ImagePixelT>
 Image<ImagePixelT>::Image() :
     fw::LsstBase(typeid(this)),
+    _metaData(new DataProperty::DataProperty("FitsMetaData", 0)),
     _imagePtr(new vw::ImageView<ImagePixelT>()),
     _image(*_imagePtr) {
 }
@@ -12,6 +13,7 @@ Image<ImagePixelT>::Image() :
 template<typename ImagePixelT>
 Image<ImagePixelT>::Image(int nCols, int nRows) :
     fw::LsstBase(typeid(this)),
+    _metaData(new DataProperty::DataProperty("FitsMetaData", 0)),
     _imagePtr(new vw::ImageView<ImagePixelT>(nCols, nRows)),
     _image(*_imagePtr) {
 }
@@ -19,6 +21,7 @@ Image<ImagePixelT>::Image(int nCols, int nRows) :
 template<class ImagePixelT>
 Image<ImagePixelT>::Image(ImageIVwPtrT image): 
     fw::LsstBase(typeid(this)),
+    _metaData(new DataProperty::DataProperty("FitsMetaData", 0)),
     _imagePtr(image),
     _image(*_imagePtr) {
     _imageRows = _image.rows();
@@ -29,6 +32,19 @@ Image<ImagePixelT>::Image(ImageIVwPtrT image):
 template<class ImagePixelT> typename Image<ImagePixelT>::ImageIVwPtrT Image<ImagePixelT>::getIVwPtr() const {
     return _imagePtr;
 }
+
+template<class ImagePixelT>
+void Image<ImagePixelT>::readFits(const string& fileName, int hdu)
+{
+    lsst::LSSTFitsResource<ImagePixelT> fitsRes(fileName);
+    fitsRes.readFits(_image, _metaData, hdu);
+}
+
+template<class ImagePixelT>
+void Image<ImagePixelT>::writeFits(const string& fileName)
+{
+}
+
 
 template<class ImagePixelT> Image<ImagePixelT>&  Image<ImagePixelT>::operator += (const Image<ImagePixelT>& inputImage)
 {

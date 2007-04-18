@@ -18,6 +18,8 @@
 #include "lsst/fw/LsstBase.h"
 #include "lsst/fw/Exception.h"
 #include "lsst/fw/DataProperty.h"
+#include "lsst/fw/Trace.h"
+#include "lsst/fw/LSSTFitsResource.h"
 
 using namespace vw;
 using namespace std;
@@ -56,6 +58,12 @@ namespace lsst {
         Mask(MaskIVwPtrT image);
 
         Mask(int nCols, int nRows);
+
+        void readFits(const string& fileName, int hdu=0);
+
+        void writeFits(const string& fileName);
+
+        DataProperty::DataPropertyPtrT getMetaData();
         
         int addMaskPlane(const string& name);
         
@@ -114,6 +122,7 @@ namespace lsst {
         int _numPlanesUsed;
         MaskChannelT _planeBitMask[8 * sizeof(MaskChannelT)];
         MaskChannelT _planeBitMaskComplemented[8 * sizeof(MaskChannelT)];
+        DataProperty::DataPropertyPtrT _metaData;
         static const std::string maskPlanePrefix;
 
         int addMaskPlane(string name, int plane);
