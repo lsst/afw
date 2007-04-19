@@ -11,6 +11,18 @@ Mask<MaskPixelT>::Mask() :
     _image(*_imagePtr),
     _metaData(new DataProperty::DataProperty("FitsMetaData", 0)),
     _numPlanesMax(8*sizeof(MaskChannelT)) {
+
+    fw::Trace::trace("fw.Mask", 1,
+                 boost::format("Number of mask planes: %d") % _numPlanesMax);
+
+     for (int i=0; i<_numPlanesMax; i++) {
+	  _planeBitMask[i] = 1 << i;
+	  _planeBitMaskComplemented[i] = ~_planeBitMask[i];
+	  _maskPlaneDict[i] = "";
+     }
+
+     _numPlanesUsed = 0;
+
 }
 
 template<class MaskPixelT>
