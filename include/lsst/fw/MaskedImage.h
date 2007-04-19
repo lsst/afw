@@ -132,6 +132,9 @@ namespace lsst {
 	MaskPtrT _maskPtr;
         ImageT & _image;
         MaskT & _mask;
+        int _imageRows;
+        int _imageCols;
+
     };
     
 #include "MaskedImage.cc"

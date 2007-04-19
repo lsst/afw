@@ -49,7 +49,60 @@ typename MaskedImage<ImagePixelT, MaskPixelT>::ImagePtrT MaskedImage<ImagePixelT
 template<typename ImagePixelT, typename MaskPixelT>
 void MaskedImage<ImagePixelT, MaskPixelT>::readFits(std::string baseName) {
 
-    const std::string suffixList[] = {"_img", "_var", "_msk"};
+    const std::string imageSuffix = "_img.fits";
+    const std::string maskSuffix = "_msk.fits";
+    const std::string varianceSuffix = "_var.fits";
+
+// reset any existing data
+
+    typename Image<ImagePixelT>::ImageIVwPtrT _imageVwPtr = _image.getIVwPtr();
+    typename Mask<MaskPixelT>::MaskIVwPtrT _maskVwPtr = _mask.getIVwPtr();
+
+    _imageRows = 0;
+    _imageCols = 0;
+    _imageVwPtr->set_size(0,0);
+    _maskVwPtr->set_size(0,0);
+
+    std::string fileName;
+    try {
+        fileName = baseName + imageSuffix;
+       _imagePtr->readFits(fileName);
+       _imageRows = _imageVwPtr->rows();
+       _imageCols = _imageVwPtr->cols();
+    }
+    catch (vw::IOErr){
+    }
+
+    try {
+        fileName = baseName + maskSuffix;
+        _maskPtr->readFits(fileName);
+        if (_imageRows > 0 && _maskVwPtr->rows() != _imageRows) {
+            throw;
+        }
+        if (_imageCols > 0 && _maskVwPtr->cols() != _imageCols) {
+            throw;
+        }
+       _imageRows = _maskVwPtr->rows();
+       _imageCols = _maskVwPtr->cols();
+     }
+    catch (vw::IOErr) {
+    }
+
+//  if size not set now, no file was read successfully
+
+    if (_imageRows==0) {
+        throw;
+    }
+
+//  ensure all image components have the same size.  set_size is a nop if size would be unchanged
+
+    _imageVwPtr->set_size(_imageCols, _imageRows);
+    _maskVwPtr->set_size(_imageCols, _imageRows);
+
+    fw::Trace::trace("fw.MaskedImage", 1,
+                     boost::format("Read in MaskedImage of size (%d,%d)") % _imageCols % _imageRows);
+
+
 }
 
 template<typename ImagePixelT, typename MaskPixelT> 

@@ -374,7 +374,7 @@ void Mask<MaskPixelT>::parseMaskPlaneMetaData(const DataProperty::DataPropertyPt
 
     DataProperty::DataPropertyPtrT dpPtr = rootPtr->find(boost::regex(maskPlanePrefix +".*"));
     if (!dpPtr) {
-        throw;
+        return;
     }
 
     // Clear all existing MaskPlanes
