@@ -15,7 +15,7 @@ using boost::any_cast;
 void test() {
 
     // NOTE:  does not work with <uint16> until DiskResourceFITS bug is fixed
-    typedef PixelGray<float> MaskPixelType;
+    typedef PixelGray<uint16> MaskPixelType;
     typedef PixelGray<float> ImagePixelType;
 
     MaskedImage<ImagePixelType, MaskPixelType> testMasked;

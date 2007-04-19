@@ -1,6 +1,7 @@
 // -*- lsst-c++ -*-
 #include "lsst/fw/Mask.h"
 #include "lsst/fw/Exception.h"
+#include "lsst/fw/Trace.h"
 
 #include <stdexcept>
 
@@ -26,6 +27,12 @@ private:
  * of memory management
  */
 void test() {
+    using namespace lsst::fw::Trace;
+
+    setDestination(std::cerr);
+
+    setVerbosity(".", 100);
+
 // ------------- Test constructors
      typedef PixelGray<uint8> MaskPixelType;
      typedef Mask<MaskPixelType>::MaskIVwT MaskImageType;

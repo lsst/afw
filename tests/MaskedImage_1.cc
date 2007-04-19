@@ -1,5 +1,6 @@
 // -*- lsst-c++ -*-
 #include "lsst/fw/MaskedImage.h"
+#include "lsst/fw/Trace.h"
 #include <typeinfo>
 
 using namespace lsst;
@@ -21,16 +22,26 @@ public:
         
     void operator ()(ImageIteratorT &i,MaskIteratorT &m ) { 
         //  In general, do something to the pixel values
-        ImageIteratorT j = i;
-        if (++testCount < 10) {
-            std::cout << *i << " " << *m << std::endl;
-            *j = 1;
-            int dx = 1;
-            int dy = 0;
-            if (initCount <2) *(j.advance(dx,dy)) = 2*testCount;
-            std::cout << "modified: " << *j << std::endl;
-         }
+//         ImageIteratorT j = i;
+//         if (++testCount < 10) {
+//             std::cout << *i << " " << *m << std::endl;
+//             *j = 1;
+//             int dx = 1;
+//             int dy = 0;
+//             if (initCount <2) *(j.advance(dx,dy)) = 2*testCount;
+//             std::cout << "modified: " << *j << std::endl;
+//          }
+        if (*i > 15000) {
+            MaskPixelT mPix = *m;
+            MaskChannelT mPixChannel = mPix[0];
+            mPixChannel |= bitsCR;
+            mPix[0] = mPixChannel;
+            *m = mPix;
+            testCount++;
+        }
      }
+
+    int getCount() { return testCount; }
 
 private:
     MaskChannelT bitsCR;
@@ -41,19 +52,21 @@ private:
 
 
 
-int main()
+int main(int argc, char**argv)
 {
+    using namespace lsst::fw::Trace;
+
+    setDestination(std::cout);
+
+    setVerbosity(".", 0);
+
      typedef PixelGray<uint8> MaskPixelType;
      typedef PixelGray<float32> ImagePixelType;
 
-     MaskedImage<ImagePixelType,MaskPixelType > testMaskedImage1(272, 1037);
+     MaskedImage<ImagePixelType,MaskPixelType > testMaskedImage1;
+     testMaskedImage1.readFits(argv[1]);
      testMaskedImage1.getMask()->addMaskPlane("CR");
      
-     MaskedImage<ImagePixelType,MaskPixelType > testMaskedImage2(272, 1037);
-     testMaskedImage2.getMask()->addMaskPlane("CR");
-
-     testMaskedImage2 += testMaskedImage1;
-
      testPixProcFunc<ImagePixelType, MaskPixelType> fooFunc(testMaskedImage1);   // should be a way to automatically convey template types
                                                                                  // from testMaskedImage1 to fooFunc
      fooFunc.init();
@@ -62,5 +75,6 @@ int main()
 
      fooFunc.init();
      testMaskedImage1.processPixels(fooFunc);
+     std::cout << fooFunc.getCount() << " mask pixels were set" << std::endl;
 
 }
