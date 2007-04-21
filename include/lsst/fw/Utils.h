@@ -12,6 +12,8 @@
 //! \sa LSST_START_NAMESPACE
 #define LSST_END_NAMESPACE(NAME) }
 
+#include <string>
+
 //! \namespace lsst::utils
 //\brief LSST utilities
 LSST_START_NAMESPACE(lsst)

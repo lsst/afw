@@ -7,7 +7,7 @@
 #include <ctype.h>
 #include "lsst/fw/Citizen.h"
 #include "lsst/fw/Demangle.h"
-#include "lsst/fw/Exception.h"
+//#include "lsst/fw/Exception.h"
 #include "lsst/fw/LsstBase.h"
 
 LSST_START_NAMESPACE(lsst)
@@ -249,7 +249,7 @@ Citizen::memId defaultDeleteCallback(const Citizen *ptr //!< About-to-be deleted
 //! Default CorruptionCallback
 Citizen::memId defaultCorruptionCallback(const Citizen *ptr //!< About-to-be deleted Citizen
                               ) {
-    throw lsst::Memory(str(boost::format("Citizen \"%s\" is corrupted") % ptr->repr()));
+//    throw lsst::Memory(str(boost::format("Citizen \"%s\" is corrupted") % ptr->repr()));
 
     return ptr->getId();                // NOTREACHED
 }
