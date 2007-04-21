@@ -102,7 +102,23 @@ void MaskedImage<ImagePixelT, MaskPixelT>::readFits(std::string baseName) {
     fw::Trace::trace("fw.MaskedImage", 1,
                      boost::format("Read in MaskedImage of size (%d,%d)") % _imageCols % _imageRows);
 
+}
 
+template<typename ImagePixelT, typename MaskPixelT>
+void MaskedImage<ImagePixelT, MaskPixelT>::writeFits(std::string baseName) {
+
+    const std::string imageSuffix = "_img.fits";
+    const std::string maskSuffix = "_msk.fits";
+    const std::string varianceSuffix = "_var.fits";
+
+    std::string fileName;
+
+    fileName = baseName + imageSuffix;
+    _imagePtr->writeFits(fileName);
+    
+    fileName = baseName + maskSuffix;
+    _maskPtr->writeFits(fileName);
+    
 }
 
 template<typename ImagePixelT, typename MaskPixelT> 

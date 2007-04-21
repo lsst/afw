@@ -36,15 +36,16 @@ template<class ImagePixelT> typename Image<ImagePixelT>::ImageIVwPtrT Image<Imag
 template<class ImagePixelT>
 void Image<ImagePixelT>::readFits(const string& fileName, int hdu)
 {
-    lsst::LSSTFitsResource<ImagePixelT> fitsRes(fileName);
-    fitsRes.readFits(_image, _metaData, hdu);
+    lsst::LSSTFitsResource<ImagePixelT> fitsRes;
+    fitsRes.readFits(fileName, _image, _metaData, hdu);
 }
 
 template<class ImagePixelT>
 void Image<ImagePixelT>::writeFits(const string& fileName)
 {
+    lsst::LSSTFitsResource<ImagePixelT> fitsRes;
+    fitsRes.writeFits(_image, _metaData, fileName);
 }
-
 
 template<class ImagePixelT> Image<ImagePixelT>&  Image<ImagePixelT>::operator += (const Image<ImagePixelT>& inputImage)
 {

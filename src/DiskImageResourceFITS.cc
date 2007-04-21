@@ -8,6 +8,10 @@
 #include <vw/Image/ImageMath.h>
 #include "lsst/fw/DiskImageResourceFITS.h"
 
+// these two necessary only for appendKey()
+#include <string.h>
+char *strncpy(char *dest, const char *src, size_t n);
+
 extern "C" {
 #include "fitsio.h"
 }
@@ -130,6 +134,7 @@ DiskImageResourceFITS::DiskImageResourceFITS() : vw::DiskImageResource("") {
 
         _typeIsRegistered = true;
     }
+    _fd = 0;
 }
 
 DiskImageResourceFITS::DiskImageResourceFITS(std::string const& filename //!< file to open
@@ -269,7 +274,7 @@ void DiskImageResourceFITS::create(std::string const& filename, //!< file to wri
     _channelType = format.channel_type;
 
     switch (_channelType) {
-      case vw::VW_CHANNEL_INT8:
+      case vw::VW_CHANNEL_UINT8:
 	_ttype = TBYTE;
         _bitpix = 8;
 	break;
@@ -457,6 +462,32 @@ bool DiskImageResourceFITS::getKey(int n, std::string & keyWord, std::string & k
 	  keyWord = keyWordChars;
 	  keyValue = keyValueChars;
 	  keyComment = keyCommentChars;
+	  return true;
+     }
+     return false;
+}
+
+// append a record to the FITS header.   Note the specialization to string values
+
+bool DiskImageResourceFITS::appendKey(const std::string & keyWord, const std::string & keyValue, const std::string & keyComment)
+{
+
+     // NOTE:  the sizes of arrays are tied to FITS standard
+     // These shenanigans are required only because fits_write_key does not take const args...
+ 
+     char keyWordChars[80];
+     char keyValueChars[80];
+     char keyCommentChars[80];
+
+     strncpy(keyWordChars, keyWord.c_str(), 80);
+     strncpy(keyValueChars, keyValue.c_str(), 80);
+     strncpy(keyCommentChars, keyComment.c_str(), 80);
+
+     int status = 0;
+     fitsfile *fd = static_cast<fitsfile *>(_fd); // cfitsio file descriptor
+
+     int cfitsioError = fits_write_key(fd, TSTRING, keyWordChars, keyValueChars, keyCommentChars, &status);
+     if (!cfitsioError) {
 	  return true;
      }
      return false;

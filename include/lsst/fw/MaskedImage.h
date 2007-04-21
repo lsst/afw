@@ -120,6 +120,7 @@ namespace lsst {
         
         // IO functions
         void readFits(std::string baseName);
+        void writeFits(std::string baseName);
 
         // Getters
 	ImagePtrT getImage();

@@ -80,14 +80,16 @@ DataProperty::DataPropertyPtrT Mask<MaskPixelT>::getMetaData()
 template<class MaskPixelT>
 void Mask<MaskPixelT>::readFits(const string& fileName, int hdu)
 {
-    lsst::LSSTFitsResource<MaskPixelT> fitsRes(fileName);
-    fitsRes.readFits(_image, _metaData, hdu);
+    lsst::LSSTFitsResource<MaskPixelT> fitsRes;
+    fitsRes.readFits(fileName, _image, _metaData, hdu);
     parseMaskPlaneMetaData(_metaData);
 }
 
 template<class MaskPixelT>
 void Mask<MaskPixelT>::writeFits(const string& fileName)
 {
+    lsst::LSSTFitsResource<MaskPixelT> fitsRes;
+    fitsRes.writeFits(_image, _metaData, fileName);
 }
 
 template<class MaskPixelT>

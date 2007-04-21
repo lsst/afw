@@ -32,11 +32,7 @@ public:
 //             std::cout << "modified: " << *j << std::endl;
 //          }
         if (*i > 15000) {
-            MaskPixelT mPix = *m;
-            MaskChannelT mPixChannel = mPix[0];
-            mPixChannel |= bitsCR;
-            mPix[0] = mPixChannel;
-            *m = mPix;
+            *m = *m | bitsCR;
             testCount++;
         }
      }
@@ -60,8 +56,8 @@ int main(int argc, char**argv)
 
     setVerbosity(".", 0);
 
-     typedef PixelGray<uint8> MaskPixelType;
-     typedef PixelGray<float32> ImagePixelType;
+     typedef uint8 MaskPixelType;
+     typedef float32 ImagePixelType;
 
      MaskedImage<ImagePixelType,MaskPixelType > testMaskedImage1;
      testMaskedImage1.readFits(argv[1]);
@@ -76,5 +72,9 @@ int main(int argc, char**argv)
      fooFunc.init();
      testMaskedImage1.processPixels(fooFunc);
      std::cout << fooFunc.getCount() << " mask pixels were set" << std::endl;
+
+     // test of fits write
+
+     testMaskedImage1.writeFits(argv[2]);
 
 }
