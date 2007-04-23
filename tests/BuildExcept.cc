@@ -3,6 +3,7 @@
 #include <string>
 #include <iostream>
 #include "lsst/fw/Exception.h"
+#include "lsst/fw/Citizen.h"
 
 using namespace lsst;
 using boost::any_cast;
@@ -92,11 +93,22 @@ int main(int argc, char *argv[])
      }
      std::cout << "Left exception scoping block, was anything additional deleted?" << std::endl;
 
+
+
+     //
+     // Check for memory leaks
+     //
+     if (fw::Citizen::census(0) == 0) {
+         std::cerr << "No leaks detected" << std::endl;
+     } else {
+         std::cerr << "Leaked memory blocks:" << std::endl;
+         fw::Citizen::census(std::cerr);
+     }     
 }
 
 
 
-/*
+#if 0
      {
         std::cout << "Testing ~deletion of Data Property." << std::endl;
         DataPropertyPtr cProperty(new DataProperty("DummyProperty",(int)4));
@@ -106,5 +118,5 @@ int main(int argc, char *argv[])
         std::cout << ".... Data Property  deleted";
         std::cout<< "cProperty use count: " << cProperty.use_count() << std::endl;
      }
+#endif
 
-*/
