@@ -76,10 +76,10 @@ void MaskedImage<ImagePixelT, MaskPixelT>::readFits(std::string baseName) {
     try {
         fileName = baseName + maskSuffix;
         _maskPtr->readFits(fileName);
-        if (_imageRows > 0 && _maskVwPtr->rows() != _imageRows) {
+        if (_imageRows > 0 && _maskVwPtr->rows() != (unsigned int)_imageRows) {
             throw;
         }
-        if (_imageCols > 0 && _maskVwPtr->cols() != _imageCols) {
+        if (_imageCols > 0 && _maskVwPtr->cols() != (unsigned int)_imageCols) {
             throw;
         }
        _imageRows = _maskVwPtr->rows();

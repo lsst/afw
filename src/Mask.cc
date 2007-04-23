@@ -9,8 +9,8 @@ Mask<MaskPixelT>::Mask() :
     fw::LsstBase(typeid(this)),
     _imagePtr(new vw::ImageView<MaskPixelT>()),
     _image(*_imagePtr),
-    _metaData(new DataProperty::DataProperty("FitsMetaData", 0)),
-    _numPlanesMax(8*sizeof(MaskChannelT)) {
+    _numPlanesMax(8*sizeof(MaskChannelT)),
+    _metaData(new DataProperty::DataProperty("FitsMetaData", 0)) {
 
     fw::Trace("fw.Mask", 1,
               boost::format("Number of mask planes: %d") % _numPlanesMax);
@@ -30,8 +30,8 @@ Mask<MaskPixelT>::Mask(MaskIVwPtrT image):
     fw::LsstBase(typeid(this)),
     _imagePtr(image),
     _image(*_imagePtr),
-    _metaData(new DataProperty::DataProperty("FitsMetaData", 0)),
-    _numPlanesMax(8 * sizeof(MaskChannelT)) {
+    _numPlanesMax(8 * sizeof(MaskChannelT)),
+    _metaData(new DataProperty::DataProperty("FitsMetaData", 0)) {
     _imageRows = _image.rows();
     _imageCols = _image.cols();
 
@@ -53,8 +53,8 @@ Mask<MaskPixelT>::Mask(int ncols, int nrows) :
     fw::LsstBase(typeid(this)),
     _imagePtr(new vw::ImageView<MaskPixelT>(ncols, nrows)),
     _image(*_imagePtr),
-    _metaData(new DataProperty::DataProperty("FitsMetaData", 0)),
-    _numPlanesMax(8*sizeof(MaskChannelT)) {
+    _numPlanesMax(8*sizeof(MaskChannelT)),
+    _metaData(new DataProperty::DataProperty("FitsMetaData", 0)) {
     _imageRows = _image.rows();
     _imageCols = _image.cols();
 
