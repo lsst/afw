@@ -21,10 +21,11 @@
 #include "lsst/fw/Trace.h"
 #include "lsst/fw/LSSTFitsResource.h"
 
-using namespace vw;
-using namespace std;
 
 namespace lsst {
+
+    using namespace vw;
+    using namespace std;
 
     class PixelCoord {
     public:

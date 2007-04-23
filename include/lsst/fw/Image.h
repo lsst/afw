@@ -20,10 +20,12 @@
 #include "lsst/fw/DataProperty.h"
 #include "lsst/fw/LSSTFitsResource.h"
 
-using namespace vw;
-using namespace std;
+
 
 namespace lsst {
+
+    using namespace vw;
+    using namespace std;
 
     template<typename ImagePixelT>
     class Image : private fw::LsstBase {
