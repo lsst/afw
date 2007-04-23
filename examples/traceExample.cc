@@ -1,3 +1,5 @@
+//#define LSST_NO_TRACE 1                 // define to compile out tracing
+
 #include "lsst/fw/Trace.h"
 
 using namespace lsst::fw;
@@ -5,49 +7,47 @@ using namespace lsst::fw;
 static void work() {
     std::cout << "\nVerbosity levels:\n";
     Trace::printVerbosity(std::cout);
-    std::cout << "Traces:\n";
+    std::cout << "traces:\n";
 
-    Trace::trace("foo", 1, "foo 1");
-    Trace::trace("foo.bar", 2, boost::format("foo.bar %d") % 2);
-    Trace::trace("foo.bar.goo", 4, "foo.bar.goo 4");
-    Trace::trace("foo.bar.goo.hoo", 3, boost::format("foo.bar.goo.hoo %d") % 3);
+    Trace("foo", 1, "foo 1");
+    Trace("foo.bar", 2) << "foo.bar " << 2 << "\n";
+    Trace("foo.bar.goo", 4, "foo.bar.goo 4");
+    Trace("foo.bar.goo.hoo", 3, boost::format("foo.bar.goo.hoo %d") % 3);
 
-    Trace::trace("foo.tar", 5, "foo.tar 5");
+    Trace("foo.tar", 5, "foo.tar 5");
 }
 
 int main() {
-    using namespace Trace;
+    Trace::setDestination(std::cout);
     
-    setDestination(std::cout);
-    
-    setVerbosity(".", 100);
+    Trace::setVerbosity(".", 100);
     work();
 
-    setVerbosity(".", 0);
-    setVerbosity("foo.bar", 3);
-    setVerbosity("foo.bar.goo", 10);
-    setVerbosity("foo.tar", 5);
+    Trace::setVerbosity(".", 0);
+    Trace::setVerbosity("foo.bar", 3);
+    Trace::setVerbosity("foo.bar.goo", 10);
+    Trace::setVerbosity("foo.tar", 5);
     work();
 
-    setVerbosity("foo.tar");
-    setVerbosity("foo.bar");
+    Trace::setVerbosity("foo.tar");
+    Trace::setVerbosity("foo.bar");
     work();
     
     std::cout << "\nReset.";
-    reset();
+    Trace::reset();
     work();
 
-    setVerbosity("", 1);
-    setVerbosity("foo.bar.goo.hoo", 10);
+    Trace::setVerbosity("", 1);
+    Trace::setVerbosity("foo.bar.goo.hoo", 10);
     work();
 
-    setVerbosity("", 2);
+    Trace::setVerbosity("", 2);
     work();
 
-    setVerbosity("");
-    setVerbosity("foo.bar.goo.hoo");
-    setVerbosity("foo.bar.goo.hoo.joo", 10);
-    setVerbosity("foo.bar.goo", 3);
+    Trace::setVerbosity("");
+    Trace::setVerbosity("foo.bar.goo.hoo");
+    Trace::setVerbosity("foo.bar.goo.hoo.joo", 10);
+    Trace::setVerbosity("foo.bar.goo", 3);
     work();
     
     return 0;

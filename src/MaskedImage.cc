@@ -99,8 +99,8 @@ void MaskedImage<ImagePixelT, MaskPixelT>::readFits(std::string baseName) {
     _imageVwPtr->set_size(_imageCols, _imageRows);
     _maskVwPtr->set_size(_imageCols, _imageRows);
 
-    fw::Trace::trace("fw.MaskedImage", 1,
-                     boost::format("Read in MaskedImage of size (%d,%d)") % _imageCols % _imageRows);
+    fw::Trace("fw.MaskedImage", 1,
+              boost::format("Read in MaskedImage of size (%d,%d)") % _imageCols % _imageRows);
 
 }
 
@@ -157,7 +157,7 @@ void  MaskedImage<ImagePixelT, MaskPixelT>::processPixels(MaskPixelBooleanFunc<M
 
 template<typename ImagePixelT, typename MaskPixelT> 
 void  MaskedImage<ImagePixelT, MaskPixelT>::processPixels(PixelProcessingFunc<ImagePixelT, MaskPixelT> &processingFunc) {
-    fw::Trace::trace("fw.MaskedImage", 1, "Processing pixels");
+    fw::Trace("fw.MaskedImage", 1, "Processing pixels");
 
     PixelLocator<ImagePixelT> i = processingFunc.getImagePixelLocatorBegin();
     PixelLocator<ImagePixelT> iEnd = processingFunc.getImagePixelLocatorEnd();

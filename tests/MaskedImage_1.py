@@ -17,3 +17,6 @@ def test():
 
     fooFunc.init()
     testMaskedImage1.processPixels(fooFunc)
+
+if __name__ == "__main__":
+    test()

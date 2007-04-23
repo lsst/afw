@@ -53,8 +53,8 @@ define(LSST_NEW_EXCEPTION,
         $1(const $1 & oops) throw() :
             Exception(oops.what()), _propertyList(new DataProperty(*(oops._propertyList))){};
         ~$1() throw() {
-            fw::Trace::trace("fw.Exception", 1, "----Destroy ExceptObj");
-            fw::Trace::trace("fw.Exception", 1, _propertyList->repr());
+            fw::Trace("fw.Exception", 1, "----Destroy ExceptObj");
+            fw::Trace("fw.Exception", 1, _propertyList->repr());
             };
         DataPropertyPtr propertyList() throw() { return _propertyList;};
         $1 & operator= (const $1 & oops) throw() {

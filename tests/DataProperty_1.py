@@ -65,10 +65,13 @@ def doTest():
     rootCopy._print("\t")
 
 def test(verbose = 0):
-    fwCore.setVerbosity("fw.DataProperty", verbose)
+    fwCore.Trace_setVerbosity("fw.DataProperty", verbose)
 
     doTest()
 
     if fwCore.Citizen_census(0):
         print fwCore.Citizen_census(0), "Objects leaked:"
         print fwCore.Citizen_census(fwCore.cout)
+
+if __name__ == "__main__":
+    test()

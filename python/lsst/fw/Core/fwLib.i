@@ -133,15 +133,28 @@ using namespace lsst;
 def ImageMaskPtr(*args):
     """Return an MaskIVwPtrT that owns its ImageMask"""
 
-    trace("fw.memory", 5, "creating maskImagePtr")
+    Trace("fw.memory", 5, "creating maskImagePtr")
 
     im = ImageMask(*args)
     im.this.disown()
     maskImagePtr = MaskIVwPtrT(im)
 
-    trace("fw.memory", 5, "returning maskImagePtr")
+    Trace("fw.memory", 5, "returning maskImagePtr")
         
     return maskImagePtr
+
+def DataPropertyPtr(*args):
+    """Return an DataPropertyPtrT that owns its DataProperty"""
+
+    Trace("fw.memory", 5, "creating DataPropertyPtrT")
+
+    md = DataProperty(*args)
+    md.this.disown()
+    DataPropertyPtr = DataPropertyPtrT(md)
+
+    Trace("fw.memory", 5, "returning DataPropertyPtr")
+        
+    return DataPropertyPtr
 %}
 
 %template(listPixelCoord)  std::list<lsst::PixelCoord>;

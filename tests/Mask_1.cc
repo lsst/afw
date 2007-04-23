@@ -27,11 +27,9 @@ private:
  * of memory management
  */
 void test() {
-    using namespace lsst::fw::Trace;
+    fw::Trace::setDestination(std::cerr);
 
-    setDestination(std::cerr);
-
-    setVerbosity(".", 100);
+    fw::Trace::setVerbosity(".", 100);
 
 // ------------- Test constructors
      typedef PixelGray<uint8> MaskPixelType;

@@ -24,12 +24,8 @@ void test() {
 }
 
 int main(int argc, char *argv[]) {
-
-    using namespace lsst::fw::Trace;
-
-    setDestination(std::cout);
-
-    setVerbosity(".", 1);
+    fw::Trace::setDestination(std::cout);
+    fw::Trace::setVerbosity(".", 1);
 
     try {
         try {

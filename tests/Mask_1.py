@@ -35,7 +35,8 @@ def doMask_1():
 
     # ------------ Test mask plane metaData
 
-    metaData = testMask.getMaskPlaneMetaData()
+    metaData = fwCore.DataPropertyPtr("testMetaData")
+    testMask.addMaskPlaneMetaData(metaData)
     print "MaskPlane metadata:"
     metaData._print("\t");
 
@@ -48,7 +49,7 @@ def doMask_1():
     newPlane = fwCore.DataProperty("Whatever", 5)
     metaData.addProperty(newPlane)
     
-    testMask.setMaskPlaneMetaData(metaData)
+    testMask.parseMaskPlaneMetaData(metaData)
     print "After loading metadata: "
     testMask.printMaskPlanes()
 
@@ -154,3 +155,7 @@ def printMaskPlane(mask, plane,
             else:
                 print x, y, mask(x, y, plane)
 
+
+if __name__ == "__main__":
+    test()
+    

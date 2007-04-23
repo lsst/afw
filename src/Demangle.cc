@@ -130,8 +130,8 @@ std::string demangleType(const std::string _typeName) {
             currentSymbol = "";
 
             if (typeStack.empty()) {
-                Trace::trace("fw.Citizen.demangle", 0,
-                             boost::format("Tried to examine empty stack for %s at \"%s\"") % _typeName % ptr);
+                Trace("fw.Citizen.demangle", 0,
+                      boost::format("Tried to examine empty stack for %s at \"%s\"") % _typeName % ptr);
                 typeStack.push('\a');   // at least don't crash
             }
 

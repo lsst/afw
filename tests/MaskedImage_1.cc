@@ -50,11 +50,8 @@ private:
 
 int main(int argc, char**argv)
 {
-    using namespace lsst::fw::Trace;
-
-    setDestination(std::cout);
-
-    setVerbosity(".", 0);
+    fw::Trace::setDestination(std::cout);
+    fw::Trace::setVerbosity(".", 0);
 
      typedef uint8 MaskPixelType;
      typedef float32 ImagePixelType;

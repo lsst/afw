@@ -21,7 +21,7 @@ env = scons.makeEnv("fw",
 env.libs = dict([
     ("boost",	Split("boost_filesystem boost_regex")),
     ("fits",	Split("fitsio")),
-    ("vw",	Split("vw vwCore vwFileIO")),
+    ("vw",	Split("vw vwCore vwFileIO vwImage")),
     ])
 #
 # Build/install things

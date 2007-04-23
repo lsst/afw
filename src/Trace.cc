@@ -24,10 +24,7 @@ class TraceImpl {
 public:
     TraceImpl();
 
-    friend void Trace::trace(const std::string &comp, const int verbosity,
-                             const std::string &msg);
-    friend void Trace::trace(const std::string &comp, const int verbosity,
-                             const boost::format &msg);
+    friend class lsst::fw::Trace;
 
     static void reset();
     static void setVerbosity(const std::string &name);
@@ -40,7 +37,8 @@ public:
     static void setDestination(std::ostream &fp);
 private:
     class Component;
-    ~TraceImpl() {}                         //!< no-one should delete the singleton
+
+    ~TraceImpl() {}                     //!< no-one should delete the singleton
 
     enum { INHERIT_VERBOSITY = -9999};  //!< use parent's verbosity
 
@@ -395,65 +393,62 @@ void TraceImpl::setDestination(std::ostream &fp) {
 
 LSST_START_NAMESPACE(lsst)
 LSST_START_NAMESPACE(fw)
-/*
- * \brief Document namespace Trace
- */
-LSST_START_NAMESPACE(Trace)
 
 /*!
  * Actually generate the trace message.
  */
-#if !LSST_NO_TRACE
-void trace(const std::string &name,	//!< component being traced
-           const int verbosity,		//!< desired trace verbosity
-           const boost::format &msg     //!< trace message
-          ) {
-    trace(name, verbosity, msg.str());
+void Trace::trace(const std::string &msg   //!< trace message
+                 ) {
+    *TraceImpl::_traceStream << msg;
 }
 
-void trace(const std::string &name,	//!< component being traced
-           const int verbosity,		//!< desired trace verbosity
-           const std::string &msg       //!< trace message
-          ) {
-    if (verbosity <= TraceImpl::_HighestVerbosity &&
-        TraceImpl::getVerbosity(name) >= verbosity) {
-	for (int i = 0; i < verbosity; i++) {
-            *TraceImpl::_traceStream << ' ';
-	}
-        *TraceImpl::_traceStream << msg;
+void Trace::trace(const std::string &msg,   //!< trace message
+                  const bool add_newline //!< Should I add a newline?
+                 ) {
+    *TraceImpl::_traceStream << msg;
 
-        if (msg.substr(msg.size() - 1) != "\n") {
-            *TraceImpl::_traceStream << "\n";
-	}
+    if (msg.substr(msg.size() - 1) != "\n") {
+        *TraceImpl::_traceStream << "\n";
     }
 }
-#endif
 
-void reset() {
+bool Trace::check_level(const std::string& name, const int verbosity) {
+    bool print = (verbosity <= TraceImpl::_HighestVerbosity &&
+                  TraceImpl::getVerbosity(name) >= verbosity) ? true : false;
+
+    if (print) {
+        for (int i = 0; i < verbosity; i++) {
+            *TraceImpl::_traceStream << ' ';
+        }
+    }
+
+    return print;
+}
+
+void Trace::reset() {
     TraceImpl::reset();
 }
 
-void setVerbosity(const std::string &name) {
+void Trace::setVerbosity(const std::string &name) {
     TraceImpl::setVerbosity(name);
 }
 
-void setVerbosity(const std::string &name, const int verbosity) {
+void Trace::setVerbosity(const std::string &name, const int verbosity) {
     TraceImpl::setVerbosity(name, verbosity);
 }
 
-int getVerbosity(const std::string &name) {
+int Trace::getVerbosity(const std::string &name) {
     return TraceImpl::getVerbosity(name);
 }
 
-void printVerbosity(std::ostream &fp) {
+void Trace::printVerbosity(std::ostream &fp) {
     TraceImpl::printVerbosity(fp);
 }
 
-void setDestination(std::ostream &fp) {
+void Trace::setDestination(std::ostream &fp) {
     TraceImpl::setDestination(fp);
 }
 
-LSST_END_NAMESPACE(Trace)
 LSST_END_NAMESPACE(fw)
 LSST_END_NAMESPACE(lsst)
     
