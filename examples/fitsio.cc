@@ -6,8 +6,16 @@
 using namespace lsst::fw;
 
 int main(int ac, char **av) {
-    typedef vw::ImageView<float> my_image_type;
+    if (ac < 2) {
+        std::cerr << "Please provide a filename for me to read" << std::endl;
+        return 1;
+    }
 
+#if 0
+    typedef vw::ImageView<float> my_image_type;
+#else
+    typedef vw::ImageView<unsigned int> my_image_type;
+#endif
     my_image_type image;
     try {
         vw::read_image(image, av[1]);   // is the filetype registered?

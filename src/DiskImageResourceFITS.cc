@@ -78,7 +78,28 @@ static void multiplyImageBuffer(vw::ImageBuffer const& buff, // the buffer in qu
 
     switch (buff.format.channel_type) {
       case vw::VW_CHANNEL_FLOAT32:
-        _multiplyImageBuffer<float>(buff, value);
+        _multiplyImageBuffer<vw::float32>(buff, value);
+	break;
+      case vw::VW_CHANNEL_FLOAT64:
+        _multiplyImageBuffer<vw::float64>(buff, value);
+	break;
+      case vw::VW_CHANNEL_INT8:
+        _multiplyImageBuffer<vw::int8>(buff, value);
+	break;
+      case vw::VW_CHANNEL_UINT8:
+        _multiplyImageBuffer<vw::uint8>(buff, value);
+	break;
+      case vw::VW_CHANNEL_INT16:
+        _multiplyImageBuffer<vw::int16>(buff, value);
+	break;
+      case vw::VW_CHANNEL_UINT16:
+        _multiplyImageBuffer<vw::uint16>(buff, value);
+	break;
+      case vw::VW_CHANNEL_INT32:
+        _multiplyImageBuffer<vw::int32>(buff, value);
+	break;
+      case vw::VW_CHANNEL_UINT32:
+        _multiplyImageBuffer<vw::uint32>(buff, value);
 	break;
       default:
         throw vw::IOErr() << "MultiplyImageBuffer: unknown type. " << buff.format.channel_type;
