@@ -24,13 +24,23 @@ Image<ImagePixelT>::Image(ImageIVwPtrT image):
     _imagePtr(image),
     _image(*_imagePtr),
     _metaData(new DataProperty::DataProperty("FitsMetaData", 0)) {
-    _imageRows = _image.rows();
-    _imageCols = _image.cols();
-
 }
 
-template<class ImagePixelT> typename Image<ImagePixelT>::ImageIVwPtrT Image<ImagePixelT>::getIVwPtr() const {
+template<class ImagePixelT> typename Image<ImagePixelT>::ImageIVwPtrT Image<ImagePixelT>::getIVwPtr() const 
+{
     return _imagePtr;
+}
+
+template<class ImagePixelT> 
+float Image<ImagePixelT>::getGain() const
+{
+    DataProperty::DataPropertyPtrT gainProp = _metaData->find("GAIN");
+    if (gainProp) {
+        std::string valueString = boost::any_cast<const std::string>(gainProp->getValue());
+        float gain = atof(valueString.c_str());
+        return gain;
+    }
+    throw lsst::Exception(std::string("in ") + __func__ + std::string(": Could not get gain from image metadata"));
 }
 
 template<class ImagePixelT>
@@ -45,6 +55,12 @@ void Image<ImagePixelT>::writeFits(const string& fileName)
 {
     lsst::LSSTFitsResource<ImagePixelT> fitsRes;
     fitsRes.writeFits(_image, _metaData, fileName);
+}
+
+template<class ImagePixelT>
+DataProperty::DataPropertyPtrT Image<ImagePixelT>::getMetaData()
+{
+    return _metaData;
 }
 
 template<class ImagePixelT> Image<ImagePixelT>&  Image<ImagePixelT>::operator += (const Image<ImagePixelT>& inputImage)
@@ -71,3 +87,10 @@ template<class ImagePixelT> Image<ImagePixelT>&  Image<ImagePixelT>::operator /=
     return *this;
 }
 
+template<class ImagePixelT> int Image<ImagePixelT>::getImageCols() const {
+    return _image.cols();
+}
+
+template<class ImagePixelT> int Image<ImagePixelT>::getImageRows() const {
+    return _image.rows();
+}

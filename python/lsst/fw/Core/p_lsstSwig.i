@@ -62,8 +62,8 @@ namespace boost {
  * Types of Images/Masks
  */
 %{
-typedef vw::PixelGray<float> ImagePixelType;
-typedef vw::PixelGray<uint8> MaskPixelType;
+typedef float ImagePixelType;
+typedef uint8 MaskPixelType;
 %}
 
 %import  <vw/Core/FundamentalTypes.h>

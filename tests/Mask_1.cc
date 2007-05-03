@@ -16,7 +16,7 @@ public:
         MaskPixelBooleanFunc<MaskPixelT>::_mask.getPlaneBitMask("CR", bitsCR);
     }        
     bool operator ()(MaskPixelT pixel) const { 
-        return ((pixel.v() & bitsCR) !=0 ); 
+        return ((pixel & bitsCR) !=0 ); 
     }
 private:
     MaskChannelT bitsCR;
@@ -32,7 +32,7 @@ void test() {
     fw::Trace::setVerbosity(".", 100);
 
 // ------------- Test constructors
-     typedef PixelGray<uint8> MaskPixelType;
+     typedef uint8 MaskPixelType;
      typedef Mask<MaskPixelType>::MaskIVwT MaskImageType;
      typedef Mask<MaskPixelType>::MaskIVwPtrT MaskImagePtrType;
      typedef Mask<MaskPixelType>::MaskPtrT MaskPtrType;
@@ -43,7 +43,7 @@ void test() {
      Mask<MaskPixelType> testMask(maskImage);
      cout << maskImage.use_count() << endl;
 
-     typedef PixelGray<uint16> MaskPixelType2;
+     typedef uint16 MaskPixelType2;
      typedef Mask<MaskPixelType2>::MaskIVwT MaskImageType2;
      typedef Mask<MaskPixelType2>::MaskIVwPtrT MaskImagePtrType2;
 

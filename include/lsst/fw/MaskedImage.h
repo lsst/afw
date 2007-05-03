@@ -94,6 +94,7 @@ namespace lsst {
         // Constructors
 	MaskedImage();
         MaskedImage(ImagePtrT image, MaskPtrT mask);
+        MaskedImage(ImagePtrT image, ImagePtrT variance, MaskPtrT mask);
         MaskedImage(int nCols, int nRows);
 
         virtual ~MaskedImage();
@@ -110,8 +111,13 @@ namespace lsst {
 #if 0
 	MaskedImagePtrT getSubImage(BBox2i region);
 
+
 	void replaceSubImage(BBox2i region, MaskedImage &sImage, bool replaceMask, bool replaceAstro);
 #endif
+        // Variance functions
+
+        void setDefaultVariance();
+        
         // Operators
 	MaskedImage& operator+=( MaskedImageT& maskedImageInput);
 	MaskedImage& operator-=( MaskedImage & maskedImageInput);
@@ -124,17 +130,22 @@ namespace lsst {
 
         // Getters
 	ImagePtrT getImage();
+	ImagePtrT getVariance();
 	MaskPtrT getMask();
     private:
         MaskedImage(const MaskedImage &);
         MaskedImage& operator=(const MaskedImage &);
 
+        void conformSizes();
+
 	ImagePtrT _imagePtr;
+	ImagePtrT _variancePtr;
 	MaskPtrT _maskPtr;
         ImageT & _image;
+        ImageT & _variance;
         MaskT & _mask;
-        int _imageRows;
-        int _imageCols;
+        unsigned int _imageRows;
+        unsigned int _imageCols;
 
     };
     

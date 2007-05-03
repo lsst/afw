@@ -14,8 +14,7 @@ using boost::any_cast;
  */
 void test(char *name) {
 
-    // NOTE:  does not work with <uint16> until DiskResourceFITS bug is fixed
-    typedef PixelGray<uint16> MaskPixelType;
+    typedef uint16 MaskPixelType;
 
     Mask<MaskPixelType> testMask;
     testMask.readFits(name);

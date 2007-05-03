@@ -9,26 +9,50 @@ template<typename ImagePixelT, typename MaskPixelT>
 MaskedImage<ImagePixelT, MaskPixelT>::MaskedImage() :
     LsstBase(typeid(this)),
     _imagePtr(new Image<ImagePixelT>()),
+    _variancePtr(new Image<ImagePixelT>()),
     _maskPtr(new Mask<MaskPixelT>()),
     _image(*_imagePtr),
+    _variance(*_variancePtr),
     _mask(*_maskPtr) {
 }
+
+// Construct from a supplied Image and Mask.  The Variance will be set to zero
 
 template<typename ImagePixelT, typename MaskPixelT> 
 MaskedImage<ImagePixelT, MaskPixelT>::MaskedImage(ImagePtrT image, MaskPtrT mask) :
     LsstBase(typeid(this)),
     _imagePtr(image),
+    _variancePtr(new Image<ImagePixelT>()),
     _maskPtr(mask),
     _image(*_imagePtr),
+    _variance(*_variancePtr),
     _mask(*_maskPtr) {
+    conformSizes();
 }    
+
+// Construct from a supplied Image, Variance, and Mask.
+
+template<typename ImagePixelT, typename MaskPixelT> 
+MaskedImage<ImagePixelT, MaskPixelT>::MaskedImage(ImagePtrT image, ImagePtrT variance, MaskPtrT mask) :
+    LsstBase(typeid(this)),
+    _imagePtr(image),
+    _variancePtr(variance),
+    _maskPtr(mask),
+    _image(*_imagePtr),
+    _variance(*_variancePtr),
+    _mask(*_maskPtr) {
+    conformSizes();
+}    
+
 
 template<typename ImagePixelT, typename MaskPixelT> 
 MaskedImage<ImagePixelT, MaskPixelT>::MaskedImage(int nCols, int nRows) :
     LsstBase(typeid(this)),
     _imagePtr(new Image<ImagePixelT>(nCols, nRows)),
+    _variancePtr(new Image<ImagePixelT>(nCols, nRows)),
     _maskPtr(new Mask<MaskPixelT>(nCols, nRows)),
     _image(*_imagePtr),
+    _variance(*_imagePtr),
     _mask(*_maskPtr) {
 }
 
@@ -47,28 +71,44 @@ typename MaskedImage<ImagePixelT, MaskPixelT>::ImagePtrT MaskedImage<ImagePixelT
 }
 
 template<typename ImagePixelT, typename MaskPixelT>
+typename MaskedImage<ImagePixelT, MaskPixelT>::ImagePtrT MaskedImage<ImagePixelT, MaskPixelT>::getVariance() {
+    return _variancePtr;
+}
+
+template<typename ImagePixelT, typename MaskPixelT>
 void MaskedImage<ImagePixelT, MaskPixelT>::readFits(std::string baseName) {
 
     const std::string imageSuffix = "_img.fits";
     const std::string maskSuffix = "_msk.fits";
     const std::string varianceSuffix = "_var.fits";
 
+    bool fileReadOK = false;
+
 // reset any existing data
 
     typename Image<ImagePixelT>::ImageIVwPtrT _imageVwPtr = _image.getIVwPtr();
+    typename Image<ImagePixelT>::ImageIVwPtrT _varianceVwPtr = _image.getIVwPtr();
     typename Mask<MaskPixelT>::MaskIVwPtrT _maskVwPtr = _mask.getIVwPtr();
 
     _imageRows = 0;
     _imageCols = 0;
     _imageVwPtr->set_size(0,0);
+    _varianceVwPtr->set_size(0,0);
     _maskVwPtr->set_size(0,0);
 
     std::string fileName;
     try {
         fileName = baseName + imageSuffix;
        _imagePtr->readFits(fileName);
-       _imageRows = _imageVwPtr->rows();
-       _imageCols = _imageVwPtr->cols();
+       fileReadOK = true;
+    }
+    catch (vw::IOErr){
+    }
+
+    try {
+        fileName = baseName + varianceSuffix;
+       _variancePtr->readFits(fileName);
+       fileReadOK = true;
     }
     catch (vw::IOErr){
     }
@@ -76,28 +116,20 @@ void MaskedImage<ImagePixelT, MaskPixelT>::readFits(std::string baseName) {
     try {
         fileName = baseName + maskSuffix;
         _maskPtr->readFits(fileName);
-        if (_imageRows > 0 && _maskVwPtr->rows() != (unsigned int)_imageRows) {
-            throw;
-        }
-        if (_imageCols > 0 && _maskVwPtr->cols() != (unsigned int)_imageCols) {
-            throw;
-        }
-       _imageRows = _maskVwPtr->rows();
-       _imageCols = _maskVwPtr->cols();
+        fileReadOK = true;
      }
     catch (vw::IOErr) {
     }
 
-//  if size not set now, no file was read successfully
+//  if no file was read successfully, throw an exception
 
-    if (_imageRows==0) {
+    if (fileReadOK == false) {
         throw;
     }
 
 //  ensure all image components have the same size.  set_size is a nop if size would be unchanged
 
-    _imageVwPtr->set_size(_imageCols, _imageRows);
-    _maskVwPtr->set_size(_imageCols, _imageRows);
+    conformSizes();
 
     fw::Trace("fw.MaskedImage", 1,
               boost::format("Read in MaskedImage of size (%d,%d)") % _imageCols % _imageRows);
@@ -116,15 +148,48 @@ void MaskedImage<ImagePixelT, MaskPixelT>::writeFits(std::string baseName) {
     fileName = baseName + imageSuffix;
     _imagePtr->writeFits(fileName);
     
+    fileName = baseName + varianceSuffix;
+    _variancePtr->writeFits(fileName);
+    
     fileName = baseName + maskSuffix;
     _maskPtr->writeFits(fileName);
     
 }
 
+// Set the pixel values of the variance based on the image.  The assumption is
+// gaussian statistics, so that variance = image / k, where k is the gain in
+// electrons per ADU
+
+template<typename ImagePixelT, typename MaskPixelT>
+void MaskedImage<ImagePixelT, MaskPixelT>::setDefaultVariance()
+{
+    float gain;
+
+    try {
+        gain = _image.getGain();
+    } 
+
+    catch (...) {
+        fw::Trace("fw.MaskedImage", 0, "Gain could not be set in setDefaultVariance().  Using gain=1.0");
+        gain = 1.0;
+    }
+
+    typename Image<ImagePixelT>::ImageIVwPtrT imageVw = _image.getIVwPtr();
+    typename Image<ImagePixelT>::ImageIVwPtrT varianceVw = _variance.getIVwPtr();
+
+    *varianceVw = *imageVw / gain;
+
+    fw::Trace("fw.MaskedImage", 1,
+              boost::format("Using gain = %f in setDefaultVariance()") % gain);
+
+}
+
+
 template<typename ImagePixelT, typename MaskPixelT> 
 MaskedImage<ImagePixelT, MaskPixelT>& MaskedImage<ImagePixelT, MaskPixelT>::operator+=(MaskedImageT & maskedImageInput) {
     _mask |= *(maskedImageInput.getMask());
     _image += *(maskedImageInput.getImage());
+    _variance += *(maskedImageInput.getVariance());
     return *this;
 }
 
@@ -132,13 +197,22 @@ template<typename ImagePixelT, typename MaskPixelT>
 MaskedImage<ImagePixelT, MaskPixelT>& MaskedImage<ImagePixelT, MaskPixelT>::operator-=(MaskedImageT & maskedImageInput) {
     _mask |= *(maskedImageInput.getMask());
     _image -= *(maskedImageInput.getImage());
+    _variance += *(maskedImageInput.getVariance());
     return *this;
 }
 
 template<typename ImagePixelT, typename MaskPixelT> 
 MaskedImage<ImagePixelT, MaskPixelT>& MaskedImage<ImagePixelT, MaskPixelT>::operator*=(MaskedImageT & maskedImageInput) {
+    
     _mask |= *(maskedImageInput.getMask());
     _image *= *(maskedImageInput.getImage());
+    // For the variance arithmetic, reach down directly to the vw level:
+    typename Image<ImagePixelT>::ImageIVwPtrT _variancePtr = _variance.getIVwPtr();
+    typename Image<ImagePixelT>::ImageIVwPtrT _imagePtr = _image.getIVwPtr();
+    typename Image<ImagePixelT>::ImageIVwPtrT _inpImagePtr = maskedImageInput.getImage()->getIVwPtr();
+    typename Image<ImagePixelT>::ImageIVwPtrT _inpVariancePtr = maskedImageInput.getImage()->getIVwPtr();
+    *_variancePtr = (*_variancePtr) * (*_inpImagePtr) + (*_inpVariancePtr) * (*_imagePtr) + 
+        (*_variancePtr) * (*_inpVariancePtr);
     return *this;
 }
 
@@ -174,6 +248,45 @@ void  MaskedImage<ImagePixelT, MaskPixelT>::processPixels(MaskPixelBooleanFunc<M
                                                           MaskedImage<ImagePixelT, MaskPixelT>&) {
 }
 
+
+// private function conformSizes() ensures that the Mask and Variance have the same dimensions
+// as Image.  If Mask and/or Variance have non-zero dimensions that conflict with the size of Image,
+// an exception is thrown.
+
+template<typename ImagePixelT, typename MaskPixelT>
+void  MaskedImage<ImagePixelT, MaskPixelT>::conformSizes()
+{
+
+    typename Image<ImagePixelT>::ImageIVwPtrT _imageVwPtr = _image.getIVwPtr();
+    typename Image<ImagePixelT>::ImageIVwPtrT _varianceVwPtr = _variance.getIVwPtr();
+    typename Mask<MaskPixelT>::MaskIVwPtrT _maskVwPtr = _mask.getIVwPtr();
+
+    unsigned int goldRows = _imageVwPtr->rows();
+    unsigned int goldCols = _imageVwPtr->cols();
+
+    unsigned int testRows, testCols;
+
+    testRows = _varianceVwPtr->rows();
+    testCols = _varianceVwPtr->cols();
+
+    if (testRows > 0 && testRows != goldRows) throw;
+    if (testCols > 0 && testCols != goldCols) throw;
+
+    _varianceVwPtr->set_size(goldCols, goldRows);
+
+    testRows = _maskVwPtr->rows();
+    testCols = _maskVwPtr->cols();
+
+    if (testRows > 0 && testRows != goldRows) throw;
+    if (testCols > 0 && testCols != goldCols) throw;
+
+    _maskVwPtr->set_size(goldCols, goldRows);
+
+    _imageRows = goldRows;
+    _imageCols = goldCols;
+
+}
+
 // Would be better to just declare the operator() to be virtual = 0 - but causes problems for Swig/Python
 
 template<typename ImagePixelT, typename MaskPixelT>
@@ -202,3 +315,4 @@ PixelLocator<PixelT>& PixelLocator<PixelT>::advance(int dx, int dy) {
     *this += delta;
     return *this;
 }
+

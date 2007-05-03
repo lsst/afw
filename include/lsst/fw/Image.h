@@ -46,6 +46,8 @@ namespace lsst {
 
         void writeFits(const string& fileName);
 
+        DataProperty::DataPropertyPtrT getMetaData();
+
 #if 0                                   // not implemented
         ImagePtrT getSubImage(BBox2i maskRegion);
 
@@ -60,21 +62,18 @@ namespace lsst {
         Image<ImagePixelT>& operator *= (const Image<ImagePixelT>& inputImage);
         Image<ImagePixelT>& operator /= (const Image<ImagePixelT>& inputImage);
 
-#if 0                                   // not implemented
         int getImageCols() const;
-
         int getImageRows() const;
-#endif
 
         ImageIVwPtrT getIVwPtr() const;
+
+        float getGain() const;
 
 //         virtual ~Image();
 
     private:
         ImageIVwPtrT _imagePtr;
         ImageIVwT& _image;
-        int _imageRows;
-        int _imageCols;
         DataProperty::DataPropertyPtrT _metaData;
     };
   

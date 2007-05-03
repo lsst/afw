@@ -116,8 +116,6 @@ namespace lsst {
     private:
         MaskIVwPtrT _imagePtr;
         MaskIVwT& _image;
-        int _imageRows;
-        int _imageCols;
         map<int, std::string> _maskPlaneDict;
         const int _numPlanesMax;
         int _numPlanesUsed;

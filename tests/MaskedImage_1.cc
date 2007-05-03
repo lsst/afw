@@ -5,7 +5,8 @@
 
 using namespace lsst;
 
-template <typename ImagePixelT, typename MaskPixelT> class testPixProcFunc : public PixelProcessingFunc<ImagePixelT, MaskPixelT> {
+template <typename ImagePixelT, typename MaskPixelT> 
+class testPixProcFunc : public PixelProcessingFunc<ImagePixelT, MaskPixelT> {
 public:
     typedef typename PixelChannelType<ImagePixelT>::type ImageChannelT;
     typedef typename PixelChannelType<MaskPixelT>::type MaskChannelT;
@@ -51,27 +52,31 @@ private:
 int main(int argc, char**argv)
 {
     fw::Trace::setDestination(std::cout);
-    fw::Trace::setVerbosity(".", 0);
+    fw::Trace::setVerbosity(".", 1);
 
      typedef uint8 MaskPixelType;
      typedef float32 ImagePixelType;
 
      MaskedImage<ImagePixelType,MaskPixelType > testMaskedImage1;
      testMaskedImage1.readFits(argv[1]);
+     testMaskedImage1.setDefaultVariance();
      testMaskedImage1.getMask()->addMaskPlane("CR");
      
      testPixProcFunc<ImagePixelType, MaskPixelType> fooFunc(testMaskedImage1);   // should be a way to automatically convey template types
                                                                                  // from testMaskedImage1 to fooFunc
-     fooFunc.init();
-
-     testMaskedImage1.processPixels(fooFunc);
 
      fooFunc.init();
      testMaskedImage1.processPixels(fooFunc);
      std::cout << fooFunc.getCount() << " mask pixels were set" << std::endl;
 
+     MaskedImage<ImagePixelType,MaskPixelType > testFlat;
+     testFlat.readFits(argv[2]);
+     testFlat.setDefaultVariance();
+
+     testMaskedImage1 *= testFlat;
+
      // test of fits write
 
-     testMaskedImage1.writeFits(argv[2]);
+     testMaskedImage1.writeFits(argv[3]);
 
 }

@@ -26,8 +26,8 @@ using namespace vw;
 /******************************************************************************/
 
 %{
-typedef vw::PixelGray<float> ImagePixelType;
-typedef vw::PixelGray<uint8> MaskPixelType;
+typedef float ImagePixelType;
+typedef uint8 MaskPixelType;
 %}
 
 %import "lsst/fw/Mask.h"
@@ -109,7 +109,7 @@ public:
         MaskPixelBooleanFunc<MaskPixelT>::_mask.getPlaneBitMask("CR", _bitsCR);
     }        
     bool operator ()(MaskPixelT pixel) const { 
-        return ((pixel.v() & _bitsCR) !=0 ); 
+        return ((pixel & _bitsCR) !=0 ); 
     }
 private:
     MaskChannelT _bitsCR;

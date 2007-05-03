@@ -12,14 +12,13 @@ using boost::any_cast;
  * Make this a subroutine so that locals go out of scope as part of test
  * of memory management
  */
-void test() {
+void test(char *name) {
 
-    // NOTE:  does not work with <uint16> until DiskResourceFITS bug is fixed
-    typedef PixelGray<uint16> MaskPixelType;
-    typedef PixelGray<float> ImagePixelType;
+    typedef uint16 MaskPixelType;
+    typedef float ImagePixelType;
 
     MaskedImage<ImagePixelType, MaskPixelType> testMasked;
-    testMasked.readFits("imageBase");
+    testMasked.readFits(name);
 
 }
 
@@ -29,7 +28,7 @@ int main(int argc, char *argv[]) {
 
     try {
         try {
-            test();
+            test(argv[1]);
         } catch (lsst::Exception &e) {
             throw lsst::Exception(std::string("In handler\n") + e.what());
         }
