@@ -76,6 +76,9 @@ define(LSST_NEW_EXCEPTION,
         DataPropertyPtr _propertyList;
     }')
 
+    LSST_NEW_EXCEPTION(NotFound,
+                       An Exception due to a missing file);
+
     LSST_NEW_EXCEPTION(Memory,
                        An Exception due to a problem in the memory system);
 

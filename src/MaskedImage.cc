@@ -3,7 +3,8 @@
 // This file can NOT be separately compiled!   It is included by MaskedImage.h
 
 #include <typeinfo>
-#include <lsst/fw/Trace.h>
+#include "lsst/fw/Trace.h"
+#include "lsst/fw/Exception.h"
 
 template<typename ImagePixelT, typename MaskPixelT> 
 MaskedImage<ImagePixelT, MaskPixelT>::MaskedImage() :
@@ -124,7 +125,8 @@ void MaskedImage<ImagePixelT, MaskPixelT>::readFits(std::string baseName) {
 //  if no file was read successfully, throw an exception
 
     if (fileReadOK == false) {
-        throw;
+        throw lsst::NotFound(boost::format("Failed to open %s{%s,%s}") %
+                             baseName % imageSuffix % maskSuffix);
     }
 
 //  ensure all image components have the same size.  set_size is a nop if size would be unchanged

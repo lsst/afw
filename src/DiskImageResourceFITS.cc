@@ -259,8 +259,10 @@ void DiskImageResourceFITS::open(std::string const& filename //!< Desired filena
 
 //! Bind the resource to a file for writing.
 void DiskImageResourceFITS::create(std::string const& filename, //!< file to write
-                                   vw::ImageFormat const& format //!< format. What is this??
+                                   vw::ImageFormat const& format, //!< format. What is this??
+                                   DataProperty *metaData //!< metadata to write to header; or NULL
                                   ) {
+                                   
     if (format.planes != 1)
         throw vw::NoImplErr() << "We don't support multi-plane images";
     if (format.pixel_format != vw::VW_PIXEL_SCALAR )
@@ -305,8 +307,10 @@ void DiskImageResourceFITS::create(std::string const& filename, //!< file to wri
     if (fits_create_file((fitsfile **)&_fd, filename.c_str(), &status) != 0) {
         throw_cfitsio_error(static_cast<fitsfile *>(_fd), status);
     }
+    
     _filename = filename;
     m_format = format;
+    _metaData = metaData;
 }
 
 //! Read the disk image into the given buffer.
@@ -361,8 +365,7 @@ void DiskImageResourceFITS::read(vw::ImageBuffer const& dest, //!< Where to put 
 
 //! Write the given buffer into the disk image.
 void DiskImageResourceFITS::write(vw::ImageBuffer const& src, //!< the buffer to write
-                                  vw::BBox2i const& bbox              //!< Desired bounding box
-                                 ) {
+                                  vw::BBox2i const& bbox) { //!< Desired bounding box
     VW_ASSERT(src.format.cols == cols() && src.format.rows == rows(),
               vw::IOErr() << "Buffer has wrong dimensions in FITS write." );
 
@@ -404,8 +407,17 @@ void DiskImageResourceFITS::write(vw::ImageBuffer const& src, //!< the buffer to
         throw_cfitsio_error(fd, status);
     }
     /*
-     * Write metadata to header.  We'll cross this bridge when we have metadata
+     * Write metadata to header.
      */
+    if (_metaData != NULL) {
+        DataProperty::DataPropertyContainerT dpC = _metaData->getContents();
+        DataProperty::DataPropertyContainerT::const_iterator pos;
+        for (pos = dpC.begin(); pos != dpC.end(); pos++) {
+            DataProperty::DataPropertyPtrT dpItemPtr = *pos;
+            std::string tmp = boost::any_cast<const std::string>(dpItemPtr->getValue());
+            appendKey(dpItemPtr->getName(), tmp, "");
+        }
+    }
     /*
      * Write the data itself
      */

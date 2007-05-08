@@ -11,6 +11,7 @@
 #include <vw/Image/ImageResource.h>
 #include <vw/FileIO/DiskImageResource.h>
 
+#include "lsst/fw/DataProperty.h"
 #include "lsst/fw/Utils.h"
 
 LSST_START_NAMESPACE(lsst)
@@ -34,7 +35,8 @@ public:
     void open(std::string const& filename);
     
     void create(std::string const& filename,
-                vw::ImageFormat const& format);
+                vw::ImageFormat const& format,
+                DataProperty *metaData = NULL);
     
     static DiskImageResource* construct_open(std::string const& filename);
     
@@ -52,11 +54,12 @@ private:
     static void setDefaultHdu(const int hdu);
     
     std::string _filename;          //!< filename
-    void *_fd;                      //<! really a fitsfile, but we aren't including cfitsio.h
-    int _hdu;                       //<! desired HDU
-    int _ttype;                     //<! cfitsio's name for data type
-    int _bitpix;                    //<! FITS' BITPIX keyword
-    vw::ChannelTypeEnum _channelType; //<! VW's name for data type
+    DataProperty *_metaData;        //!< metadata to write to the file
+    void *_fd;                      //!< really a fitsfile, but we aren't including cfitsio.h
+    int _hdu;                       //!< desired HDU
+    int _ttype;                     //!< cfitsio's name for data type
+    int _bitpix;                    //!< FITS' BITPIX keyword
+    vw::ChannelTypeEnum _channelType; //!< VW's name for data type
 };
 
 //! Free function to read a FITS image on disk into a vw::ImageView<T> object.

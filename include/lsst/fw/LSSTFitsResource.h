@@ -16,8 +16,6 @@ namespace lsst {
         void writeFits(ImageView<PixelT>& image, DataProperty::DataPropertyPtrT metaData, const std::string& filename, int hdu=0);
     private:
         void getMetaData(DataProperty::DataPropertyPtrT metaData);
-        void setMetaData(DataProperty::DataPropertyPtrT metaData);
-
     };
 
 #include "LSSTFitsResource.cc"  
