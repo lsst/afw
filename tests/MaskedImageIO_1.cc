@@ -4,7 +4,7 @@
 
 #include <stdexcept>
 
-using namespace lsst;
+using namespace lsst::fw;
 using boost::any_cast;
 
 
@@ -23,16 +23,16 @@ void test(char *name) {
 }
 
 int main(int argc, char *argv[]) {
-    fw::Trace::setDestination(std::cout);
-    fw::Trace::setVerbosity(".", 1);
+    Trace::setDestination(std::cout);
+    Trace::setVerbosity(".", 1);
 
     try {
         try {
             test(argv[1]);
-        } catch (lsst::Exception &e) {
-            throw lsst::Exception(std::string("In handler\n") + e.what());
+        } catch (lsst::fw::Exception &e) {
+            throw lsst::fw::Exception(std::string("In handler\n") + e.what());
         }
-    } catch (lsst::Exception &e) {
+    } catch (lsst::fw::Exception &e) {
         std::clog << e.what() << endl;
     }
 }

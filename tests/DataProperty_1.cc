@@ -4,7 +4,7 @@
 #include <lsst/fw/Trace.h>
 
 using namespace std;
-using namespace lsst;
+using namespace lsst::fw;
 
 class Foo {
      int gurp;
@@ -73,16 +73,16 @@ void test() {
 }     
 
 int main() {
-    fw::Trace::setVerbosity("fw.DataProperty", 10);
+    Trace::setVerbosity("fw.DataProperty", 10);
 
     test();
      //
      // Check for memory leaks
      //
-     if (fw::Citizen::census(0) == 0) {
+     if (Citizen::census(0) == 0) {
          cerr << "No leaks detected" << endl;
      } else {
          cerr << "Leaked memory blocks:" << endl;
-         fw::Citizen::census(cerr);
+         Citizen::census(cerr);
      }
 }

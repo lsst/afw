@@ -4,7 +4,7 @@
 #include "lsst/fw/Trace.h"
 #include <typeinfo>
 
-using namespace lsst;
+using namespace lsst::fw;
 
 template <typename ImagePixelT, typename MaskPixelT> 
 class testPixProcFunc : public PixelProcessingFunc<ImagePixelT, MaskPixelT> {
@@ -56,8 +56,8 @@ int main(int argc, char**argv) {
         return 1;
     }
     
-    fw::Trace::setDestination(std::cout);
-    fw::Trace::setVerbosity(".", 1);
+    Trace::setDestination(std::cout);
+    Trace::setVerbosity(".", 1);
     
      typedef uint8 MaskPixelType;
      typedef float32 ImagePixelType;
@@ -65,7 +65,7 @@ int main(int argc, char**argv) {
      MaskedImage<ImagePixelType,MaskPixelType > testMaskedImage1;
      try {
          testMaskedImage1.readFits(argv[1]);
-     } catch (lsst::Exception &e) {
+     } catch (lsst::fw::Exception &e) {
          std::cerr << "Failed to open " << argv[1] << ": " << e.what();
          return 1;
      }
@@ -84,7 +84,7 @@ int main(int argc, char**argv) {
 
      try {
          testFlat.readFits(argv[2]);
-     } catch (lsst::Exception &e) {
+     } catch (lsst::fw::Exception &e) {
          std::cerr << "Failed to open " << argv[2] << ": " << e.what();
          return 1;
      }

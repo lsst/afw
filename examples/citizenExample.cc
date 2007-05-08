@@ -93,7 +93,7 @@ int main() {
     try {
         std::cerr << "Checking corruption\n";
         (void)Citizen::checkCorruption();
-    } catch(lsst::Memory &e) {
+    } catch(lsst::fw::Memory &e) {
         std::cerr << "Memory check: " << e.what() <<
             "; proceeding with trepidation\n";
         ((int *)y.get())[0] = 0xdeadbeef; // uncorrupt the block

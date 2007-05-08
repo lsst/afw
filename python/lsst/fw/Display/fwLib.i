@@ -48,21 +48,21 @@ using namespace lsst::fw;
 //
 // I don't know why I need to say this; but I do.
 //
-%feature("novaluewrapper") boost::shared_ptr<lsst::Image<ImagePixelType> >;
-%feature("novaluewrapper") boost::shared_ptr<lsst::Image<MaskPixelType> >;
+%feature("novaluewrapper") boost::shared_ptr<lsst::fw::Image<ImagePixelType> >;
+%feature("novaluewrapper") boost::shared_ptr<lsst::fw::Image<MaskPixelType> >;
 
 %import "lsst/fw/Mask.h"
 %import "lsst/fw/Image.h"
 %import "lsst/fw/MaskedImage.h"
 
-%template(MaskD)          lsst::Mask<MaskPixelType>;
-%template(MaskDPtr)       boost::shared_ptr<lsst::Mask<MaskPixelType> >;
-%template(ImageD)         lsst::Image<ImagePixelType>;
-%template(ImageDPtr)      boost::shared_ptr<lsst::Image<ImagePixelType> >;
-%template(ImageMaskD)     lsst::Image<MaskPixelType>;
-%template(ImageMaskDPtr)  boost::shared_ptr<lsst::Image<MaskPixelType> >;
-%template(MaskedImageD)	  lsst::MaskedImage<ImagePixelType, MaskPixelType>;
-%template(MaskedImageDPtr) boost::shared_ptr<lsst::MaskedImage<ImagePixelType, MaskPixelType> >;
+%template(MaskD)          lsst::fw::Mask<MaskPixelType>;
+%template(MaskDPtr)       boost::shared_ptr<lsst::fw::Mask<MaskPixelType> >;
+%template(ImageD)         lsst::fw::Image<ImagePixelType>;
+%template(ImageDPtr)      boost::shared_ptr<lsst::fw::Image<ImagePixelType> >;
+%template(ImageMaskD)     lsst::fw::Image<MaskPixelType>;
+%template(ImageMaskDPtr)  boost::shared_ptr<lsst::fw::Image<MaskPixelType> >;
+%template(MaskedImageD)	  lsst::fw::MaskedImage<ImagePixelType, MaskPixelType>;
+%template(MaskedImageDPtr) boost::shared_ptr<lsst::fw::MaskedImage<ImagePixelType, MaskPixelType> >;
 
 %include "simpleFits.h"
 

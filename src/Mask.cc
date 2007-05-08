@@ -6,13 +6,13 @@
 
 template<typename MaskPixelT>
 Mask<MaskPixelT>::Mask() :
-    fw::LsstBase(typeid(this)),
+    LsstBase(typeid(this)),
     _imagePtr(new vw::ImageView<MaskPixelT>()),
     _image(*_imagePtr),
     _numPlanesMax(8*sizeof(MaskChannelT)),
     _metaData(new DataProperty::DataProperty("FitsMetaData", 0)) {
 
-    fw::Trace("fw.Mask", 1,
+    Trace("fw.Mask", 1,
               boost::format("Number of mask planes: %d") % _numPlanesMax);
 
      for (int i=0; i<_numPlanesMax; i++) {
@@ -27,13 +27,13 @@ Mask<MaskPixelT>::Mask() :
 
 template<class MaskPixelT>
 Mask<MaskPixelT>::Mask(MaskIVwPtrT image): 
-    fw::LsstBase(typeid(this)),
+    LsstBase(typeid(this)),
     _imagePtr(image),
     _image(*_imagePtr),
     _numPlanesMax(8 * sizeof(MaskChannelT)),
     _metaData(new DataProperty::DataProperty("FitsMetaData", 0)) {
 
-    fw::Trace("fw.Mask", 1,
+    Trace("fw.Mask", 1,
               boost::format("Number of mask planes: %d") % _numPlanesMax);
 
      for (int i=0; i<_numPlanesMax; i++) {
@@ -48,13 +48,13 @@ Mask<MaskPixelT>::Mask(MaskIVwPtrT image):
 
 template<class MaskPixelT>
 Mask<MaskPixelT>::Mask(int ncols, int nrows) :
-    fw::LsstBase(typeid(this)),
+    LsstBase(typeid(this)),
     _imagePtr(new vw::ImageView<MaskPixelT>(ncols, nrows)),
     _image(*_imagePtr),
     _numPlanesMax(8*sizeof(MaskChannelT)),
     _metaData(new DataProperty::DataProperty("FitsMetaData", 0)) {
 
-    fw::Trace("fw.Mask", 1,
+    Trace("fw.Mask", 1,
               boost::format("Number of mask planes: %d") % _numPlanesMax);
 
      for (int i=0; i<_numPlanesMax; i++) {
@@ -76,7 +76,7 @@ DataProperty::DataPropertyPtrT Mask<MaskPixelT>::getMetaData()
 template<class MaskPixelT>
 void Mask<MaskPixelT>::readFits(const string& fileName, int hdu)
 {
-    lsst::LSSTFitsResource<MaskPixelT> fitsRes;
+    LSSTFitsResource<MaskPixelT> fitsRes;
     fitsRes.readFits(fileName, _image, _metaData, hdu);
     parseMaskPlaneMetaData(_metaData);
 }
@@ -84,7 +84,7 @@ void Mask<MaskPixelT>::readFits(const string& fileName, int hdu)
 template<class MaskPixelT>
 void Mask<MaskPixelT>::writeFits(const string& fileName)
 {
-    lsst::LSSTFitsResource<MaskPixelT> fitsRes;
+    LSSTFitsResource<MaskPixelT> fitsRes;
     fitsRes.writeFits(_image, _metaData, fileName);
 }
 
@@ -174,7 +174,7 @@ void Mask<MaskPixelT>::removeMaskPlane(const string& name)
 	 return;
      }
      catch (exception &e) {
-         fw::Trace("fw.Mask", 0,
+         Trace("fw.Mask", 0,
                    boost::format("%s Plane %s not present in this Mask") % e.what() % name);
          return;
      }
@@ -202,7 +202,7 @@ bool Mask<MaskPixelT>::getPlaneBitMask(const string& name,
         getMaskPlane(name, plane);
     }
     catch (exception &e) {
-         fw::Trace("fw.Mask", 0,
+         Trace("fw.Mask", 0,
                    boost::format("%s Plane %s not present in this Mask") % e.what() % name);
          return false;
     }
@@ -296,7 +296,7 @@ void Mask<MaskPixelT>::replaceSubMask(const BBox2i maskRegion, MaskPtrT insertMa
     try {
         crop(_image, maskRegion) = insertMask->_image;
     } catch (exception eex) {
-        throw lsst::Exception(std::string("in ") + __func__);
+        throw Exception(std::string("in ") + __func__);
     } 
 }
 
@@ -314,7 +314,7 @@ template<class MaskPixelT> bool Mask<MaskPixelT>::operator ()(int x, int y, int 
 
 template<typename MaskPixelT>
 bool MaskPixelBooleanFunc<MaskPixelT>::operator() (MaskPixelT) const {
-    throw lsst::Exception(boost::format("You can't get here: %s:%d") % __FILE__ % __LINE__);
+    throw Exception(boost::format("You can't get here: %s:%d") % __FILE__ % __LINE__);
     return true;
 }
 
@@ -339,12 +339,12 @@ template<class MaskPixelT> Mask<MaskPixelT>&  Mask<MaskPixelT>::operator |= (con
                 getMaskPlane(inputPlaneName, thisPlaneNumber) ;
             }
             catch (NoMaskPlane &e) {
-                fw::Trace("fw.Mask", 0,
+                Trace("fw.Mask", 0,
                           boost::format("%s Plane %s not present in this Mask") % e.what() % inputPlaneName);
                 throw;
             }
             if (thisPlaneNumber != inputPlaneNumber) {
-                fw::Trace("fw.Mask", 0,
+                Trace("fw.Mask", 0,
                           boost::format("Plane %s does not have the same assignment in this Mask (%d %d) ") % inputPlaneNumber % thisPlaneNumber);
                 throw;
             }

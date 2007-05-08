@@ -44,7 +44,7 @@ using namespace vw;
 %inline %{
 template <typename ImagePixelT, typename MaskPixelT>
 class testPixProcFunc :
-    public lsst::PixelProcessingFunc<ImagePixelT, MaskPixelT> {
+    public lsst::fw::PixelProcessingFunc<ImagePixelT, MaskPixelT> {
 public:
     typedef typename PixelChannelType<ImagePixelT>::type ImageChannelT;
     typedef typename PixelChannelType<MaskPixelT>::type MaskChannelT;
@@ -86,7 +86,7 @@ namespace std {
 
 %template(unary_function_tuple) std::unary_function<boost::tuple<vw::PixelGray<float > &,vw::PixelGray<uint8 > & > &,void >;
 %template(unary_function_tuple2) std::unary_function<boost::tuple<ImagePixelType &,MaskPixelType & > &,void >;
-%template(PixelProcessingFuncD) lsst::PixelProcessingFunc<ImagePixelType, MaskPixelType>;
+%template(PixelProcessingFuncD) lsst::fw::PixelProcessingFunc<ImagePixelType, MaskPixelType>;
 %template(testPixProcFuncD) testPixProcFunc<ImagePixelType, MaskPixelType>;
 
 /******************************************************************************/
@@ -116,7 +116,7 @@ private:
 };
 %}
 
-%template(MaskPixelBooleanFuncD) lsst::MaskPixelBooleanFunc<MaskPixelType>;
+%template(MaskPixelBooleanFuncD) lsst::fw::MaskPixelBooleanFunc<MaskPixelType>;
 %template(testCrFuncD) testCrFunc<MaskPixelType>;
 
 /******************************************************************************/

@@ -5,7 +5,7 @@
 
 #include <stdexcept>
 
-using namespace lsst;
+using namespace lsst::fw;
 using boost::any_cast;
 
 template <typename MaskPixelT> class testCrFunc : public MaskPixelBooleanFunc<MaskPixelT> {
@@ -27,9 +27,9 @@ private:
  * of memory management
  */
 void test() {
-    fw::Trace::setDestination(std::cerr);
+    Trace::setDestination(std::cerr);
 
-    fw::Trace::setVerbosity(".", 100);
+    Trace::setVerbosity(".", 100);
 
 // ------------- Test constructors
      typedef uint8 MaskPixelType;
@@ -88,7 +88,7 @@ void test() {
          try {
              std::cout << boost::format("Assigned %s to plane %d\n") %
                  sp % testMask.addMaskPlane(sp);
-         } catch(lsst::OutOfPlaneSpace &e) {
+         } catch(lsst::fw::OutOfPlaneSpace &e) {
              e.print("\t");
          }
      }
@@ -247,7 +247,7 @@ void test() {
      try {
         region.expand(10);
         testMask.replaceSubMask(region, subTestMask);
-     } catch (lsst::Exception &e) {
+     } catch (lsst::fw::Exception &e) {
          cout << "Exception handler: Caught the buggy code: " << e.what() << endl;
      } catch (exception eex) {
          // Catch base STD exception (from which all exceptions should be derived)
@@ -282,20 +282,20 @@ int main(int argc, char *argv[]) {
     try {
         try {
             test();
-        } catch (lsst::Exception &e) {
-            throw lsst::Exception(std::string("In handler\n") + e.what());
+        } catch (lsst::fw::Exception &e) {
+            throw lsst::fw::Exception(std::string("In handler\n") + e.what());
         }
-    } catch (lsst::Exception &e) {
+    } catch (lsst::fw::Exception &e) {
         std::clog << e.what() << endl;
     }
 
      //
      // Check for memory leaks
      //
-     if (fw::Citizen::census(0) == 0) {
+     if (Citizen::census(0) == 0) {
          cerr << "No leaks detected" << endl;
      } else {
          cerr << "Leaked memory blocks:" << endl;
-         fw::Citizen::census(cerr);
+         Citizen::census(cerr);
      }
 }

@@ -3,7 +3,7 @@
 #include "lsst/fw/Trace.h"
 #include "lsst/fw/DataProperty.h"
 
-using namespace lsst;
+using namespace lsst::fw;
 using boost::any_cast;
 
 DataProperty::DataProperty(std::string name, boost::any value) :

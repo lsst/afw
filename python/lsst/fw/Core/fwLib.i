@@ -91,7 +91,7 @@ ensure:
     
 %template(DataPropertyPtrT) boost::shared_ptr<DataProperty>;
 
-%extend lsst::DataProperty {
+%extend lsst::fw::DataProperty {
     DataProperty(std::string name, int val) {
         return new DataProperty(name, val);
     }
@@ -119,10 +119,10 @@ using namespace lsst;
 %template(ImageBaseMask)  vw::ImageViewBase<vw::ImageView<MaskPixelType> >;
 %template(ImageMask)      vw::ImageView<MaskPixelType>;
 
-%template(MaskD)          lsst::Mask<MaskPixelType>;
-%template(MaskedImageD)   lsst::MaskedImage<ImagePixelType, MaskPixelType>;
-%template(MaskDPtr)       boost::shared_ptr<lsst::Mask<MaskPixelType> >;
-%template(BBox2i)         BBox<int32, 2>;
+%template(MaskD)          lsst::fw::Mask<MaskPixelType>;
+%template(MaskedImageD)   lsst::fw::MaskedImage<ImagePixelType, MaskPixelType>;
+%template(MaskDPtr)       boost::shared_ptr<lsst::fw::Mask<MaskPixelType> >;
+%template(BBox2i)         vw::BBox<int32, 2>;
 
 %extend_smart_pointer(boost::shared_ptr<vw::ImageView<MaskPixelType> >);
 //%delobject boost::shared_ptr<vw::ImageView<MaskPixelType> >::shared_ptr;
@@ -157,7 +157,7 @@ def DataPropertyPtr(*args):
     return DataPropertyPtr
 %}
 
-%template(listPixelCoord)  std::list<lsst::PixelCoord>;
+%template(listPixelCoord)  std::list<lsst::fw::PixelCoord>;
 
 /******************************************************************************/
 // Local Variables: ***

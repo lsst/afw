@@ -125,7 +125,7 @@ void MaskedImage<ImagePixelT, MaskPixelT>::readFits(std::string baseName) {
 //  if no file was read successfully, throw an exception
 
     if (fileReadOK == false) {
-        throw lsst::NotFound(boost::format("Failed to open %s{%s,%s}") %
+        throw lsst::fw::NotFound(boost::format("Failed to open %s{%s,%s}") %
                              baseName % imageSuffix % maskSuffix);
     }
 
@@ -133,7 +133,7 @@ void MaskedImage<ImagePixelT, MaskPixelT>::readFits(std::string baseName) {
 
     conformSizes();
 
-    fw::Trace("fw.MaskedImage", 1,
+    Trace("fw.MaskedImage", 1,
               boost::format("Read in MaskedImage of size (%d,%d)") % _imageCols % _imageRows);
 
 }
@@ -181,7 +181,7 @@ void MaskedImage<ImagePixelT, MaskPixelT>::setDefaultVariance()
 
     *varianceVw = *imageVw / gain;
 
-    fw::Trace("fw.MaskedImage", 1,
+    Trace("fw.MaskedImage", 1,
               boost::format("Using gain = %f in setDefaultVariance()") % gain);
 
 }

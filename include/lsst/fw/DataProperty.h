@@ -19,34 +19,37 @@
 #include "lsst/fw/DataProperty.h"
 
 namespace lsst {
-    class DataProperty;
-    typedef boost::shared_ptr<DataProperty> DataPropertyPtr;
-
-    class DataProperty : private fw::Citizen {
-    public:
-        typedef boost::shared_ptr<DataProperty> DataPropertyPtrT;
-        typedef std::list<DataPropertyPtrT> DataPropertyContainerT;
-
-        DataProperty(std::string name, boost::any value = boost::any());
-        DataProperty(const DataProperty& orig);
-        DataPropertyPtrT find(const std::string name, bool reset=true);
-        DataPropertyPtrT find(const boost::regex pattern, bool reset=true);
-        void addProperty(const DataProperty& dp);
-        void addProperty(DataPropertyPtrT property);
-        std::string getName() const {return _name; }
-        boost::any getValue() const {return _value; }
-        DataPropertyContainerT getContents() const {return _properties; }
-        std::string repr(const std::string& prefix = "") const;
-        void print(const std::string& prefix = "") const;
-        ~DataProperty();
+    namespace fw {
+        class DataProperty;
+        typedef boost::shared_ptr<DataProperty> DataPropertyPtr;
         
-    private:
-        std::string _name;
-        boost::any _value;
-        DataPropertyContainerT _properties;
-        std::list<DataPropertyPtrT>::iterator _pos;
-    };
+        class DataProperty : private Citizen {
+        public:
+            typedef boost::shared_ptr<DataProperty> DataPropertyPtrT;
+            typedef std::list<DataPropertyPtrT> DataPropertyContainerT;
+            
+            DataProperty(std::string name, boost::any value = boost::any());
+            DataProperty(const DataProperty& orig);
+            DataPropertyPtrT find(const std::string name, bool reset=true);
+            DataPropertyPtrT find(const boost::regex pattern, bool reset=true);
+            void addProperty(const DataProperty& dp);
+            void addProperty(DataPropertyPtrT property);
+            std::string getName() const {return _name; }
+            boost::any getValue() const {return _value; }
+            DataPropertyContainerT getContents() const {return _properties; }
+            std::string repr(const std::string& prefix = "") const;
+            void print(const std::string& prefix = "") const;
+            ~DataProperty();
+            
+        private:
+            std::string _name;
+            boost::any _value;
+            DataPropertyContainerT _properties;
+            std::list<DataPropertyPtrT>::iterator _pos;
+        };
+        
+    }  // namespace fw
 
-};
-
+} // namespace lsst
+    
 #endif // LSST_DATAPROPERTY_H

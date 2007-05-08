@@ -4,7 +4,7 @@
 
 template<typename ImagePixelT>
 Image<ImagePixelT>::Image() :
-    fw::LsstBase(typeid(this)),
+    LsstBase(typeid(this)),
     _imagePtr(new vw::ImageView<ImagePixelT>()),
     _image(*_imagePtr),
     _metaData(new DataProperty::DataProperty("FitsMetaData", 0)) {
@@ -12,7 +12,7 @@ Image<ImagePixelT>::Image() :
 
 template<typename ImagePixelT>
 Image<ImagePixelT>::Image(int nCols, int nRows) :
-    fw::LsstBase(typeid(this)),
+    LsstBase(typeid(this)),
     _imagePtr(new vw::ImageView<ImagePixelT>(nCols, nRows)),
     _image(*_imagePtr),
     _metaData(new DataProperty::DataProperty("FitsMetaData", 0)) {
@@ -20,7 +20,7 @@ Image<ImagePixelT>::Image(int nCols, int nRows) :
 
 template<class ImagePixelT>
 Image<ImagePixelT>::Image(ImageIVwPtrT image): 
-    fw::LsstBase(typeid(this)),
+    LsstBase(typeid(this)),
     _imagePtr(image),
     _image(*_imagePtr),
     _metaData(new DataProperty::DataProperty("FitsMetaData", 0)) {
@@ -40,20 +40,20 @@ float Image<ImagePixelT>::getGain() const
         float gain = atof(valueString.c_str());
         return gain;
     }
-    throw lsst::Exception(std::string("in ") + __func__ + std::string(": Could not get gain from image metadata"));
+    throw Exception(std::string("in ") + __func__ + std::string(": Could not get gain from image metadata"));
 }
 
 template<class ImagePixelT>
 void Image<ImagePixelT>::readFits(const string& fileName, int hdu)
 {
-    lsst::LSSTFitsResource<ImagePixelT> fitsRes;
+    LSSTFitsResource<ImagePixelT> fitsRes;
     fitsRes.readFits(fileName, _image, _metaData, hdu);
 }
 
 template<class ImagePixelT>
 void Image<ImagePixelT>::writeFits(const string& fileName)
 {
-    lsst::LSSTFitsResource<ImagePixelT> fitsRes;
+    LSSTFitsResource<ImagePixelT> fitsRes;
     fitsRes.writeFits(_image, _metaData, fileName);
 }
 

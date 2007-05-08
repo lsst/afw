@@ -24,111 +24,114 @@
 
 namespace lsst {
 
-    using namespace vw;
-    using namespace std;
-
-    class PixelCoord {
-    public:
-        PixelCoord(int x = 0, int y = 0) : x(x), y(y) {}
-        ~PixelCoord() {}
-        int x;
-        int y;
-    };
-
-    template<typename MaskPixelT> class Mask;
-
-    template <typename MaskPixelT> class MaskPixelBooleanFunc {
-    public:
-        MaskPixelBooleanFunc(Mask<MaskPixelT>& m) : _mask(m) {}
-        virtual bool operator () (MaskPixelT) const;
-        virtual ~MaskPixelBooleanFunc() {}
-    protected:
-        Mask<MaskPixelT>& _mask;
-    };
-    
-    template<typename MaskPixelT>
-    class Mask : private fw::LsstBase {
-    public:
-        typedef typename PixelChannelType<MaskPixelT>::type MaskChannelT;
-        typedef ImageView<MaskPixelT> MaskIVwT;
-        typedef boost::shared_ptr<Mask<MaskPixelT> > MaskPtrT;
-        typedef boost::shared_ptr<MaskIVwT> MaskIVwPtrT;
+    namespace fw {
+        using namespace vw;
+        using namespace std;
         
-        Mask();
-
-        Mask(MaskIVwPtrT image);
-
-        Mask(int nCols, int nRows);
-
-        void readFits(const string& fileName, int hdu=0);
-
-        void writeFits(const string& fileName);
-
-        DataProperty::DataPropertyPtrT getMetaData();
+        class PixelCoord {
+        public:
+            PixelCoord(int x = 0, int y = 0) : x(x), y(y) {}
+            ~PixelCoord() {}
+            int x;
+            int y;
+        };
         
-        int addMaskPlane(const string& name);
+        template<typename MaskPixelT> class Mask;
         
-        void removeMaskPlane(const string& name);
-
-        void getMaskPlane(const string& name, int& plane) const;
-
-        bool getPlaneBitMask(const string& name,
-                             MaskChannelT& bitMask) const;
+        template <typename MaskPixelT> class MaskPixelBooleanFunc {
+        public:
+            MaskPixelBooleanFunc(Mask<MaskPixelT>& m) : _mask(m) {}
+            virtual bool operator () (MaskPixelT) const;
+            virtual ~MaskPixelBooleanFunc() {}
+        protected:
+            Mask<MaskPixelT>& _mask;
+        };
         
-        void clearMaskPlane(int plane);
+        template<typename MaskPixelT>
+        class Mask : private LsstBase {
+        public:
+            typedef typename PixelChannelType<MaskPixelT>::type MaskChannelT;
+            typedef ImageView<MaskPixelT> MaskIVwT;
+            typedef boost::shared_ptr<Mask<MaskPixelT> > MaskPtrT;
+            typedef boost::shared_ptr<MaskIVwT> MaskIVwPtrT;
+            
+            Mask();
+            
+            Mask(MaskIVwPtrT image);
+            
+            Mask(int nCols, int nRows);
+            
+            void readFits(const string& fileName, int hdu=0);
+            
+            void writeFits(const string& fileName);
+            
+            DataProperty::DataPropertyPtrT getMetaData();
+            
+            int addMaskPlane(const string& name);
+            
+            void removeMaskPlane(const string& name);
+            
+            void getMaskPlane(const string& name, int& plane) const;
+            
+            bool getPlaneBitMask(const string& name,
+                                 MaskChannelT& bitMask) const;
+            
+            void clearMaskPlane(int plane);
+            
+            void clearAllMaskPlanes();
+            
+            void setMaskPlaneValues(int plane, list<PixelCoord> pixelList);
+            
+            void setMaskPlaneValues(int plane,
+                                    MaskPixelBooleanFunc<MaskPixelT> selectionFunc);
+            
+            void parseMaskPlaneMetaData(const DataProperty::DataPropertyPtrT);
+            
+            void addMaskPlaneMetaData(DataProperty::DataPropertyPtrT);
+            
+            int countMask(MaskPixelBooleanFunc<MaskPixelT>& testFunc,
+                          const BBox2i maskRegion) const;
+            
+            MaskPtrT getSubMask(const BBox2i maskRegion) const;
+            
+            void replaceSubMask(const BBox2i maskRegion, MaskPtrT insertMask);
+            
+            MaskChannelT operator ()(int x, int y) const;
+            
+            bool operator ()(int x, int y, int plane) const;
+            
+            Mask<MaskPixelT>& operator |= (const Mask<MaskPixelT>& inputMask);
+            
+            int getImageCols() const;
 
-        void clearAllMaskPlanes();
-        
-        void setMaskPlaneValues(int plane, list<PixelCoord> pixelList);
-        
-        void setMaskPlaneValues(int plane,
-                                MaskPixelBooleanFunc<MaskPixelT> selectionFunc);
-
-        void parseMaskPlaneMetaData(const DataProperty::DataPropertyPtrT);
-
-        void addMaskPlaneMetaData(DataProperty::DataPropertyPtrT);
-
-        int countMask(MaskPixelBooleanFunc<MaskPixelT>& testFunc,
-                      const BBox2i maskRegion) const;
-
-        MaskPtrT getSubMask(const BBox2i maskRegion) const;
-
-        void replaceSubMask(const BBox2i maskRegion, MaskPtrT insertMask);
-
-        MaskChannelT operator ()(int x, int y) const;
-
-        bool operator ()(int x, int y, int plane) const;
-
-        Mask<MaskPixelT>& operator |= (const Mask<MaskPixelT>& inputMask);
-
-        int getImageCols() const;
-
-        int getImageRows() const;
-
-        MaskIVwPtrT getIVwPtr() const;
-
-        map<int, std::string> getMaskPlaneDict() const;
-
-        void printMaskPlanes() const;
-
+            int getImageRows() const;
+            
+            MaskIVwPtrT getIVwPtr() const;
+            
+            map<int, std::string> getMaskPlaneDict() const;
+            
+            void printMaskPlanes() const;
+            
 //         virtual ~Mask();
-
+            
     private:
-        MaskIVwPtrT _imagePtr;
-        MaskIVwT& _image;
-        map<int, std::string> _maskPlaneDict;
-        const int _numPlanesMax;
+            MaskIVwPtrT _imagePtr;
+            MaskIVwT& _image;
+            map<int, std::string> _maskPlaneDict;
+            const int _numPlanesMax;
         int _numPlanesUsed;
-        MaskChannelT _planeBitMask[8 * sizeof(MaskChannelT)];
-        MaskChannelT _planeBitMaskComplemented[8 * sizeof(MaskChannelT)];
-        DataProperty::DataPropertyPtrT _metaData;
-        static const std::string maskPlanePrefix;
-
-        int addMaskPlane(string name, int plane);
-    };
+            MaskChannelT _planeBitMask[8 * sizeof(MaskChannelT)];
+            MaskChannelT _planeBitMaskComplemented[8 * sizeof(MaskChannelT)];
+            DataProperty::DataPropertyPtrT _metaData;
+            static const std::string maskPlanePrefix;
+            
+            int addMaskPlane(string name, int plane);
+        };
   
 #include "Mask.cc"  
-
+        
+        
+    } // namespace fw
 
 } // namespace lsst
 

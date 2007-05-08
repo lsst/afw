@@ -21,60 +21,62 @@ dnl
 #include "lsst/fw/Trace.h"
 
 namespace lsst {
-    //! An exception that saves a string or boost::format
-    class Exception : std::runtime_error {
-    public:
-        explicit Exception(const std::string msg) : std::runtime_error(msg) { }
-        explicit Exception(const boost::format msg) : std::runtime_error(msg.str()) { }
+    namespace fw {
 
-        //! Return the details of the exception
-        const char *what() const throw() { return std::runtime_error::what(); }
-
-        virtual void print(const std::string& prefix = "") const {
-            std::cout << prefix << this->what() << std::endl;
-        }
-    };
-
-    dnl
-    dnl define(name, body) defines an m4 macro
-    dnl Define a new subclass $1 of Exception without added functionality; docstring $2
-define(LSST_NEW_EXCEPTION,
-    `//! $2
-    class $1 : public Exception {
-    public:
-        $1(std::string const& msg ) throw() :
-            Exception(msg),_propertyList(new DataProperty("root",int(0))){};
-        $1(std::string const& msg, DataPropertyPtr propertyList) throw() :
-            Exception(msg), _propertyList(propertyList) {};
-        $1(boost::format const& msg ) throw() :
-            Exception(msg),_propertyList(new DataProperty("root",int(0))){};
-        $1(boost::format const& msg, DataPropertyPtr propertyList) throw() :
-            Exception(msg), _propertyList(propertyList) {};
-        $1(const $1 & oops) throw() :
-            Exception(oops.what()), _propertyList(new DataProperty(*(oops._propertyList))){};
-        ~$1() throw() {
-            fw::Trace("fw.Exception", 1, "----Destroy ExceptObj");
-            fw::Trace("fw.Exception", 1, _propertyList->repr());
-            };
-        DataPropertyPtr propertyList() throw() { return _propertyList;};
-        $1 & operator= (const $1 & oops) throw() {
-            Exception::operator= (oops); _propertyList=oops._propertyList;
-            return *this;};
-        $1 &operator<<(const DataProperty &dp) {
-            _propertyList->addProperty(dp);
+        //! An exception that saves a string or boost::format
+        class Exception : std::runtime_error {
+        public:
+            explicit Exception(const std::string msg) : std::runtime_error(msg) { }
+            explicit Exception(const boost::format msg) : std::runtime_error(msg.str()) { }
             
+            //! Return the details of the exception
+            const char *what() const throw() { return std::runtime_error::what(); }
+            
+            virtual void print(const std::string& prefix = "") const {
+                std::cout << prefix << this->what() << std::endl;
+            }
+        };
+        
+        dnl
+        dnl define(name, body) defines an m4 macro
+        dnl Define a new subclass $1 of Exception without added functionality; docstring $2
+        define(LSST_NEW_EXCEPTION,
+               `//! $2
+               class $1 : public Exception {
+               public:
+                   $1(std::string const& msg ) throw() :
+                       Exception(msg),_propertyList(new DataProperty("root",int(0))){};
+                   $1(std::string const& msg, DataPropertyPtr propertyList) throw() :
+                       Exception(msg), _propertyList(propertyList) {};
+                   $1(boost::format const& msg ) throw() :
+                       Exception(msg),_propertyList(new DataProperty("root",int(0))){};
+                   $1(boost::format const& msg, DataPropertyPtr propertyList) throw() :
+                       Exception(msg), _propertyList(propertyList) {};
+                   $1(const $1 & oops) throw() :
+                       Exception(oops.what()), _propertyList(new DataProperty(*(oops._propertyList))){};
+                   ~$1() throw() {
+                       fw::Trace("fw.Exception", 1, "----Destroy ExceptObj");
+                       fw::Trace("fw.Exception", 1, _propertyList->repr());
+                   };
+                   DataPropertyPtr propertyList() throw() { return _propertyList;};
+                   $1 & operator= (const $1 & oops) throw() {
+                       Exception::operator= (oops); _propertyList=oops._propertyList;
+            return *this;};
+                   $1 &operator<<(const DataProperty &dp) {
+                       _propertyList->addProperty(dp);
+                       
             return *this;            
-        }
-
-        void print(const std::string& prefix = "") const {
+                   }
+                   
+                   void print(const std::string& prefix = "") const {
             std::cout << prefix << "----ExceptObj: msg: " << std::endl;
             std::cout << prefix << this->what() << std::endl;
             std::cout << prefix << "----ExceptObj: Proplist: " << std::endl;
             _propertyList->print(prefix);
-        }
-    private:
-        DataPropertyPtr _propertyList;
-    }')
+                   }
+               private:
+                   DataPropertyPtr _propertyList;
+                }')
 
     LSST_NEW_EXCEPTION(NotFound,
                        An Exception due to a missing file);
@@ -87,5 +89,6 @@ define(LSST_NEW_EXCEPTION,
 
     LSST_NEW_EXCEPTION(OutOfPlaneSpace,
                        An Exception due to an insufficient Plane allocation);
+}
 }
 #endif

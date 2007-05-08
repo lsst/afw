@@ -5,7 +5,7 @@
 #include "lsst/fw/Exception.h"
 #include "lsst/fw/Citizen.h"
 
-using namespace lsst;
+using namespace lsst::fw;
 using boost::any_cast;
 using boost::shared_ptr;
 
@@ -98,11 +98,11 @@ int main(int argc, char *argv[])
      //
      // Check for memory leaks
      //
-     if (fw::Citizen::census(0) == 0) {
+     if (Citizen::census(0) == 0) {
          std::cerr << "No leaks detected" << std::endl;
      } else {
          std::cerr << "Leaked memory blocks:" << std::endl;
-         fw::Citizen::census(std::cerr);
+         Citizen::census(std::cerr);
      }     
 }
 
