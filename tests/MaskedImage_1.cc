@@ -1,5 +1,6 @@
 // -*- lsst-c++ -*-
 #include "lsst/fw/MaskedImage.h"
+#include "lsst/fw/Exception.h"
 #include "lsst/fw/Trace.h"
 #include <typeinfo>
 
@@ -49,16 +50,26 @@ private:
 
 
 
-int main(int argc, char**argv)
-{
+int main(int argc, char**argv) {
+    if (argc < 3) {
+        std::cerr << "Usage: inputBaseName outputBaseName" << std::endl;
+        return 1;
+    }
+    
     fw::Trace::setDestination(std::cout);
     fw::Trace::setVerbosity(".", 1);
-
+    
      typedef uint8 MaskPixelType;
      typedef float32 ImagePixelType;
 
      MaskedImage<ImagePixelType,MaskPixelType > testMaskedImage1;
-     testMaskedImage1.readFits(argv[1]);
+     try {
+         testMaskedImage1.readFits(argv[1]);
+     } catch (lsst::Exception &e) {
+         std::cerr << "Failed to open " << argv[1] << ": " << e.what();
+         return 1;
+     }
+
      testMaskedImage1.setDefaultVariance();
      testMaskedImage1.getMask()->addMaskPlane("CR");
      
@@ -70,7 +81,13 @@ int main(int argc, char**argv)
      std::cout << fooFunc.getCount() << " mask pixels were set" << std::endl;
 
      MaskedImage<ImagePixelType,MaskPixelType > testFlat;
-     testFlat.readFits(argv[2]);
+
+     try {
+         testFlat.readFits(argv[2]);
+     } catch (lsst::Exception &e) {
+         std::cerr << "Failed to open " << argv[2] << ": " << e.what();
+         return 1;
+     }
      testFlat.setDefaultVariance();
 
      testMaskedImage1 *= testFlat;
