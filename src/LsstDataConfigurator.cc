@@ -76,3 +76,4 @@ void LsstDataConfigurator::configureSupport( LsstData* data, Policy* policy){
 
 LSST_END_NAMESPACE(fw)
 LSST_END_NAMESPACE(lsst)
+
