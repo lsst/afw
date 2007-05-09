@@ -7,6 +7,7 @@ env.Program(["BuildExcept.cc"], LIBS="fw")
 env.Program(["DataProperty_1.cc"], LIBS="fw")
 env.Program(["MaskIO_1.cc"], LIBS=env.libs["vw"] + ["fw"] + ["cfitsio"] + ["fitsio"])
 env.Program(["MaskedImageIO_1.cc"], LIBS=env.libs["vw"] + ["fw"] + ["cfitsio"] + ["fitsio"])
+env.Program(["lsstdata01.cc"], LIBS=env.libs["vw"] + ["fw"])
 
 env.CheckSwig("python", ilang="c++")
 env.Append(SWIGFLAGS=" -Ipython")
