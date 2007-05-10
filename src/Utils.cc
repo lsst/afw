@@ -40,9 +40,9 @@ void guessSvnVersion(const std::string &headURL, //!< the HeadURL String
             version = matchObject[2];
         
             if (type == "branches") {
-                version += " B";
+                version += "B";
             } else if (type == "tickets") {
-                version += " T" ;
+                version += "T" ;
             } else if (type == "trunk") {
                 version = "svn";
             }
