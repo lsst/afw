@@ -68,7 +68,7 @@ Mask<MaskPixelT>::Mask(int ncols, int nrows) :
     }
 
 template<class MaskPixelT>
-DataProperty::DataPropertyPtrT Mask<MaskPixelT>::getMetaData()
+DataPropertyPtrT Mask<MaskPixelT>::getMetaData()
 {
     return _metaData;
 }
@@ -85,6 +85,7 @@ template<class MaskPixelT>
 void Mask<MaskPixelT>::writeFits(const string& fileName)
 {
     LSSTFitsResource<MaskPixelT> fitsRes;
+    addMaskPlaneMetaData(_metaData);
     fitsRes.writeFits(_image, _metaData, fileName);
 }
 
@@ -108,40 +109,14 @@ int Mask<MaskPixelT>::addMaskPlane(const string& name)
 	       }
 	    }
             // No free space found for new plane addition
-#if 0
-            std::string s("No space to add new plane");
-            DataPropertyPtr propertyList(new DataProperty("root",(int)0));
-            DataPropertyPtr aProperty(new DataProperty("numPlanesUsed",(int)_numPlanesUsed));
-            propertyList->addProperty(aProperty);
-            DataPropertyPtr bProperty(new DataProperty("numPlanesMax",(int)_numPlanesMax));
-            propertyList->addProperty(bProperty);
-            propertyList->print(">>\t");
-            throw OutOfPlaneSpace(s, propertyList);
-#else
             throw OutOfPlaneSpace("No space to add new plane")
                 << DataProperty("numPlanesUsed", _numPlanesUsed) 
                 << DataProperty("numPlanesMax", _numPlanesMax);
-#endif
         } else {
             // Max number of planes already allocated
-#if 0
-          std::string s = "Max number of planes already used";
-          DataPropertyPtr propertyList(new DataProperty("root",(int)0));
-          DataPropertyPtr aProperty(new DataProperty("numPlanesUsed",(int)_numPlanesUsed));
-          propertyList->addProperty(aProperty);
-          DataPropertyPtr bProperty(new DataProperty("numPlanesMax",(int)_numPlanesMax));
-          propertyList->addProperty(bProperty);
-          propertyList->print(">>\t");
-          OutOfPlaneSpace oops(OutOfPlaneSpace(s, propertyList));
-          cout << "Throwing oops " << oops.propertyList().use_count() << " | "
-               << static_cast<Citizen *>(oops.propertyList().get())->repr()
-               << endl;
-          throw oops;
-#else
           throw OutOfPlaneSpace("Max number of planes already used")
               << DataProperty("numPlanesUsed", _numPlanesUsed)
               << DataProperty("numPlanesMax", _numPlanesMax);
-#endif
         }
     }
 }
@@ -211,8 +186,12 @@ bool Mask<MaskPixelT>::getPlaneBitMask(const string& name,
     return true;
 }
 
-template<class MaskPixelT> void Mask<MaskPixelT>::clearAllMaskPlanes() {
-    _maskPlaneDict.clear();
+
+template<class MaskPixelT> void Mask<MaskPixelT>::clearAllMaskPlanes() 
+{
+     for (int i=0; i<_numPlanesMax; i++) {
+	  _maskPlaneDict[i] = "";
+     }
     _numPlanesUsed = 0;
 }
 
@@ -362,16 +341,25 @@ template<class MaskPixelT> Mask<MaskPixelT>&  Mask<MaskPixelT>::operator |= (con
     return *this;
 }
 
-// Given a DataProperty, add to it the MaskPlane assignments
+// Given a DataProperty, replace any existing MaskPlane assignments with the current ones
 
 template<class MaskPixelT>
-void Mask<MaskPixelT>::addMaskPlaneMetaData(DataProperty::DataPropertyPtrT rootPtr) {
-    // iterate over MaskPlanes
+void Mask<MaskPixelT>::addMaskPlaneMetaData(DataPropertyPtrT rootPtr) {
+    // First, clear existing MaskPlane metadata
+
+    DataPropertyPtrT dpPtr = rootPtr->find(boost::regex(maskPlanePrefix +".*"));
+    while (dpPtr) {
+        rootPtr->deleteFoundProperty();
+        dpPtr = rootPtr->find(boost::regex(maskPlanePrefix +".*"),false);
+    }
+
+    // Add new MaskPlane metadata
+
     for (map<int, std::string>::iterator i = _maskPlaneDict.begin(); i != _maskPlaneDict.end() ; i++) {
         int planeNumber = i->first;
         std::string planeName = i->second;
         if (planeName != "") {
-            rootPtr->addProperty(DataProperty::DataPropertyPtrT(new DataProperty(Mask::maskPlanePrefix + planeName, planeNumber)));
+            rootPtr->addProperty(DataPropertyPtrT(new DataProperty(Mask::maskPlanePrefix + planeName, planeNumber)));
         }
     }
 }
@@ -380,9 +368,9 @@ void Mask<MaskPixelT>::addMaskPlaneMetaData(DataProperty::DataPropertyPtrT rootP
 // throw an exception
 
 template<class MaskPixelT>
-void Mask<MaskPixelT>::parseMaskPlaneMetaData(const DataProperty::DataPropertyPtrT rootPtr) {
+void Mask<MaskPixelT>::parseMaskPlaneMetaData(const DataPropertyPtrT rootPtr) {
 
-    DataProperty::DataPropertyPtrT dpPtr = rootPtr->find(boost::regex(maskPlanePrefix +".*"));
+    DataPropertyPtrT dpPtr = rootPtr->find(boost::regex(maskPlanePrefix +".*"));
     if (!dpPtr) {
         return;
     }
@@ -397,8 +385,7 @@ void Mask<MaskPixelT>::parseMaskPlaneMetaData(const DataProperty::DataPropertyPt
         // split off the "MP_" to get the planeName
         std::string keyWord = dpPtr->getName();
         std::string planeName = keyWord.substr(maskPlanePrefix.size());
-        std::string valueString = boost::any_cast<const std::string>(dpPtr->getValue());
-        int planeId = atoi(valueString.c_str());
+        int planeId = boost::any_cast<const int>(dpPtr->getValue());
         addMaskPlane(planeName, planeId);
         dpPtr = rootPtr->find(boost::regex(maskPlanePrefix +".*"),false);
     }
@@ -421,6 +408,10 @@ template<class MaskPixelT> int Mask<MaskPixelT>::getImageCols() const {
 
 template<class MaskPixelT> int Mask<MaskPixelT>::getImageRows() const {
     return _image.rows();
+}
+
+template<class MaskPixelT> typename Mask<MaskPixelT>::MaskIVwT& Mask<MaskPixelT>::getIVw() const {
+    return _image;
 }
 
 template<class MaskPixelT> typename Mask<MaskPixelT>::MaskIVwPtrT Mask<MaskPixelT>::getIVwPtr() const {

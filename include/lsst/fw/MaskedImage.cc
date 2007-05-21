@@ -62,17 +62,17 @@ MaskedImage<ImagePixelT, MaskPixelT>::~MaskedImage() {
 }
 
 template<typename ImagePixelT, typename MaskPixelT>
-boost::shared_ptr<Mask<MaskPixelT> > MaskedImage<ImagePixelT, MaskPixelT>::getMask() {
+boost::shared_ptr<Mask<MaskPixelT> > MaskedImage<ImagePixelT, MaskPixelT>::getMask() const{
     return _maskPtr;
 }
 
 template<typename ImagePixelT, typename MaskPixelT>
-typename MaskedImage<ImagePixelT, MaskPixelT>::ImagePtrT MaskedImage<ImagePixelT, MaskPixelT>::getImage() {
+typename MaskedImage<ImagePixelT, MaskPixelT>::ImagePtrT MaskedImage<ImagePixelT, MaskPixelT>::getImage() const {
     return _imagePtr;
 }
 
 template<typename ImagePixelT, typename MaskPixelT>
-typename MaskedImage<ImagePixelT, MaskPixelT>::ImagePtrT MaskedImage<ImagePixelT, MaskPixelT>::getVariance() {
+typename MaskedImage<ImagePixelT, MaskPixelT>::ImagePtrT MaskedImage<ImagePixelT, MaskPixelT>::getVariance() const {
     return _variancePtr;
 }
 
@@ -158,6 +158,57 @@ void MaskedImage<ImagePixelT, MaskPixelT>::writeFits(std::string baseName) {
     
 }
 
+
+template<typename ImagePixelT, typename MaskPixelT>
+typename MaskedImage<ImagePixelT, MaskPixelT>::MaskedImagePtrT MaskedImage<ImagePixelT, MaskPixelT>::getSubImage(const vw::BBox2i subRegion) const {
+
+    typename Image<ImagePixelT>::ImagePtrT newSubImage = _image.getSubImage(subRegion);
+     
+    typename Image<ImagePixelT>::ImagePtrT newSubVariance = _variance.getSubImage(subRegion);
+
+    typename Mask<MaskPixelT>::MaskPtrT newSubMask = _mask.getSubMask(subRegion);
+
+    typename MaskedImage<ImagePixelT, MaskPixelT>::MaskedImagePtrT newMaskedImage(new MaskedImage<ImagePixelT, MaskPixelT>(newSubImage, newSubVariance, newSubMask));
+
+    return newMaskedImage; // and what happened to the metaData??
+}
+
+// Given a MaskedImage, insert insertImage, place it into this MaskedImage as directed by subRegion.
+// An exception is generated if subRegion is not of the same size as insertImage.
+//
+template<typename ImagePixelT, typename MaskPixelT>
+void MaskedImage<ImagePixelT, MaskPixelT>::replaceSubImage(const BBox2i subRegion, MaskedImagePtrT insertImage, 
+                                         const bool replaceMask, const bool replaceImage, const bool replaceVariance)
+{
+    if (replaceImage) {
+        typename Image<ImagePixelT>::ImageIVwT& _imageView = _image.getIVw();
+        typename Image<ImagePixelT>::ImageIVwT& _imageViewInsert = insertImage->_image.getIVw();
+        try {
+            crop(_imageView, subRegion) = _imageViewInsert;
+        } catch (exception eex) {
+            throw Exception(std::string("in ") + __func__);
+        } 
+    }
+    if (replaceVariance) {
+        typename Image<ImagePixelT>::ImageIVwT& _imageView = _variance.getIVw();
+        typename Image<ImagePixelT>::ImageIVwT& _imageViewInsert = insertImage->_variance.getIVw();
+        try {
+            crop(_imageView, subRegion) = _imageViewInsert;
+        } catch (exception eex) {
+            throw Exception(std::string("in ") + __func__);
+        } 
+    }
+    if (replaceMask) {
+        typename Mask<MaskPixelT>::MaskIVwT& _imageView = _mask.getIVw();
+        typename Mask<MaskPixelT>::MaskIVwT& _imageViewInsert = insertImage->_mask.getIVw();
+        try {
+            crop(_imageView, subRegion) = _imageViewInsert;
+        } catch (exception eex) {
+            throw Exception(std::string("in ") + __func__);
+        } 
+    }
+}
+
 // Set the pixel values of the variance based on the image.  The assumption is
 // gaussian statistics, so that variance = image / k, where k is the gain in
 // electrons per ADU
@@ -165,7 +216,7 @@ void MaskedImage<ImagePixelT, MaskPixelT>::writeFits(std::string baseName) {
 template<typename ImagePixelT, typename MaskPixelT>
 void MaskedImage<ImagePixelT, MaskPixelT>::setDefaultVariance()
 {
-    float gain;
+    double gain;
 
     try {
         gain = _image.getGain();
@@ -222,6 +273,32 @@ template<typename ImagePixelT, typename MaskPixelT>
 MaskedImage<ImagePixelT, MaskPixelT>& MaskedImage<ImagePixelT, MaskPixelT>::operator/=(MaskedImageT & maskedImageInput) {
     _mask |= *(maskedImageInput.getMask());
     _image /= *(maskedImageInput.getImage());
+    return *this;
+}
+
+template<typename ImagePixelT, typename MaskPixelT> 
+MaskedImage<ImagePixelT, MaskPixelT>& MaskedImage<ImagePixelT, MaskPixelT>::operator+=(ImagePixelT scalar) {
+    _image += scalar;
+    return *this;
+}
+
+template<typename ImagePixelT, typename MaskPixelT> 
+MaskedImage<ImagePixelT, MaskPixelT>& MaskedImage<ImagePixelT, MaskPixelT>::operator-=(ImagePixelT scalar) {
+    _image -= scalar;
+    return *this;
+}
+
+template<typename ImagePixelT, typename MaskPixelT> 
+MaskedImage<ImagePixelT, MaskPixelT>& MaskedImage<ImagePixelT, MaskPixelT>::operator*=(ImagePixelT scalar) {
+    _image *= scalar;
+    _variance *= scalar*scalar;
+    return *this;
+}
+
+template<typename ImagePixelT, typename MaskPixelT> 
+MaskedImage<ImagePixelT, MaskPixelT>& MaskedImage<ImagePixelT, MaskPixelT>::operator/=(ImagePixelT scalar) {
+    _image /= scalar;
+    _variance /= scalar*scalar;
     return *this;
 }
 

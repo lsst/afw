@@ -48,35 +48,38 @@ namespace lsst {
             
             void writeFits(const string& fileName);
             
-            DataProperty::DataPropertyPtrT getMetaData();
+            DataPropertyPtrT getMetaData();
             
-#if 0                                   // not implemented
-            ImagePtrT getSubImage(BBox2i maskRegion);
+            ImagePtrT getSubImage(const BBox2i imageRegion) const;
             
-            void replaceSubImage(BBox2i maskRegion, Image<ImagePixelT>& insertImage);
+            void replaceSubImage(const BBox2i imageRegion, ImagePtrT insertImage);
+
             ImageChannelT operator ()(int x, int y) const;
-            
-            bool operator ()(int x, int y, int plane) const;
-#endif
             
             Image<ImagePixelT>& operator += (const Image<ImagePixelT>& inputImage);
             Image<ImagePixelT>& operator -= (const Image<ImagePixelT>& inputImage);
             Image<ImagePixelT>& operator *= (const Image<ImagePixelT>& inputImage);
             Image<ImagePixelT>& operator /= (const Image<ImagePixelT>& inputImage);
+            Image<ImagePixelT>& operator += (const ImagePixelT scalar);
+            Image<ImagePixelT>& operator -= (const ImagePixelT scalar);
+            Image<ImagePixelT>& operator *= (const ImagePixelT scalar);
+            Image<ImagePixelT>& operator /= (const ImagePixelT scalar);
             
             int getImageCols() const;
             int getImageRows() const;
             
             ImageIVwPtrT getIVwPtr() const;
             
-            float getGain() const;
+            ImageIVwT& getIVw() const;
+
+            double getGain() const;
             
 //         virtual ~Image();
             
         private:
             ImageIVwPtrT _imagePtr;
             ImageIVwT& _image;
-            DataProperty::DataPropertyPtrT _metaData;
+            DataPropertyPtrT _metaData;
         };
   
 #include "Image.cc"

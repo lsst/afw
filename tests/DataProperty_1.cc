@@ -13,23 +13,23 @@ class Foo {
 };
 
 void test() {
-    DataProperty::DataPropertyPtrT root(new DataProperty("root"));
+    DataPropertyPtrT root(new DataProperty("root"));
 
-     DataProperty::DataPropertyPtrT prop1(new DataProperty("name1", std::string("value1")));
-     DataProperty::DataPropertyPtrT prop2(new DataProperty("name2", 2));
-     DataProperty::DataPropertyPtrT prop2a(new DataProperty("name2", 4));
+     DataPropertyPtrT prop1(new DataProperty("name1", std::string("value1")));
+     DataPropertyPtrT prop2(new DataProperty("name2", 2));
+     DataPropertyPtrT prop2a(new DataProperty("name2", 4));
      
 
      root->addProperty(prop1);
      root->addProperty(prop2);
 
      Foo foo1;
-     DataProperty::DataPropertyPtrT prop3(new DataProperty("name3", foo1));
+     DataPropertyPtrT prop3(new DataProperty("name3", foo1));
      root->addProperty(prop3);
 
      root->addProperty(prop2a);
 
-//      DataProperty::DataPropertyPtrT dpPtr = root->find("name2");
+//      DataPropertyPtrT dpPtr = root->find("name2");
 //      dpPtr->print("\t");
 
 //      // check find without reset to beginning
@@ -43,10 +43,10 @@ void test() {
 
      // Try nested property list
      
-     DataProperty::DataPropertyPtrT nested(new DataProperty("nested"));
+     DataPropertyPtrT nested(new DataProperty("nested"));
 
-     DataProperty::DataPropertyPtrT nprop1(new DataProperty("name1n", std::string("value1")));
-     DataProperty::DataPropertyPtrT nprop2(new DataProperty("name2n", 2));
+     DataPropertyPtrT nprop1(new DataProperty("name1n", std::string("value1")));
+     DataPropertyPtrT nprop2(new DataProperty("name2n", 2));
      
 
      nested->addProperty(nprop1);
@@ -58,7 +58,7 @@ void test() {
 
      // Check copy constructor
 
-     DataProperty::DataPropertyPtrT rootCopy(new DataProperty(*root));
+     DataPropertyPtrT rootCopy(new DataProperty(*root));
 
      // Explicitly destroy root
 
@@ -71,6 +71,20 @@ void test() {
      rootCopy->print("\t");
      
 }     
+
+void test2()
+{
+    boost::any foo = stringToAny("-1234");
+    boost::any foo2 = stringToAny("1.234e-1");
+    boost::any foo3 = stringToAny("'This is a Fits string'");
+    
+    DataPropertyPtrT fooProp(new DataProperty("foo", foo));
+    DataPropertyPtrT fooProp2(new DataProperty("foo2", foo2));
+    DataPropertyPtrT fooProp3(new DataProperty("foo3", foo3));
+    fooProp->print();
+    fooProp2->print();
+    fooProp3->print();
+}
 
 int main() {
     Trace::setVerbosity("fw.DataProperty", 10);
@@ -85,4 +99,6 @@ int main() {
          cerr << "Leaked memory blocks:" << endl;
          Citizen::census(cerr);
      }
+
+     test2();
 }

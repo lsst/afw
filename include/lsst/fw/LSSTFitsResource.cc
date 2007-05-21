@@ -7,7 +7,7 @@ LSSTFitsResource<PixelT>::LSSTFitsResource() : DiskImageResourceFITS()
 }
 
 template <typename PixelT>
-void LSSTFitsResource<PixelT>::readFits(const std::string& filename, ImageView<PixelT>& image, DataProperty::DataPropertyPtrT metaData, int hdu)
+void LSSTFitsResource<PixelT>::readFits(const std::string& filename, ImageView<PixelT>& image, DataPropertyPtrT metaData, int hdu)
 {
     open(filename);
     setHdu(hdu);
@@ -16,7 +16,7 @@ void LSSTFitsResource<PixelT>::readFits(const std::string& filename, ImageView<P
 }
 
 template <typename PixelT>
-void LSSTFitsResource<PixelT>::writeFits(ImageView<PixelT>& image, DataProperty::DataPropertyPtrT metaData, const std::string& filename, int hdu )
+void LSSTFitsResource<PixelT>::writeFits(ImageView<PixelT>& image, DataPropertyPtrT metaData, const std::string& filename, int hdu )
 {
 #if 0
     std::cout << metaData->repr();
@@ -29,7 +29,7 @@ void LSSTFitsResource<PixelT>::writeFits(ImageView<PixelT>& image, DataProperty:
 // Private function to build a DataProperty that contains all the FITS kw-value pairs
 
 template <typename PixelT>
-void LSSTFitsResource<PixelT>::getMetaData(DataProperty::DataPropertyPtrT dpPtr)
+void LSSTFitsResource<PixelT>::getMetaData(DataPropertyPtrT dpPtr)
 {
      // Get all the kw-value pairs from the FITS file, and add each to DataProperty
 
@@ -38,7 +38,7 @@ void LSSTFitsResource<PixelT>::getMetaData(DataProperty::DataPropertyPtrT dpPtr)
 	  std::string val;
 	  std::string comment;
 	  getKey(i, kw, val, comment);
-	  DataProperty::DataPropertyPtrT dpItemPtr(new DataProperty(kw, val));
+	  DataPropertyPtrT dpItemPtr(new DataProperty(kw, stringToAny(val)));
 	  dpPtr->addProperty(dpItemPtr);
      }
 

@@ -407,15 +407,21 @@ void DiskImageResourceFITS::write(vw::ImageBuffer const& src, //!< the buffer to
         throw_cfitsio_error(fd, status);
     }
     /*
-     * Write metadata to header.
+     * Write metadata to header.  
+     * Ugliness is required to avoid multiple SIMPLE, etc keywords in Fits file,
+     * since cfitsio will put in its own in any case.
      */
     if (_metaData != NULL) {
         DataProperty::DataPropertyContainerT dpC = _metaData->getContents();
         DataProperty::DataPropertyContainerT::const_iterator pos;
         for (pos = dpC.begin(); pos != dpC.end(); pos++) {
-            DataProperty::DataPropertyPtrT dpItemPtr = *pos;
-            std::string tmp = boost::any_cast<const std::string>(dpItemPtr->getValue());
-            appendKey(dpItemPtr->getName(), tmp, "");
+            DataPropertyPtrT dpItemPtr = *pos;
+	    std::string keyName = dpItemPtr->getName();
+	    if (keyName != "SIMPLE" && keyName != "BITPIX" && 
+		keyName != "NAXIS" && keyName != "NAXIS1" && keyName != "NAXIS2" &&
+		keyName != "EXTEND") {
+		    appendKey(keyName, dpItemPtr->getValue(), "");
+	    }
         }
     }
     /*
@@ -481,7 +487,7 @@ bool DiskImageResourceFITS::getKey(int n, std::string & keyWord, std::string & k
 
 // append a record to the FITS header.   Note the specialization to string values
 
-bool DiskImageResourceFITS::appendKey(const std::string & keyWord, const std::string & keyValue, const std::string & keyComment)
+bool DiskImageResourceFITS::appendKey(const std::string & keyWord, const boost::any & keyValue, const std::string & keyComment)
 {
 
      // NOTE:  the sizes of arrays are tied to FITS standard
@@ -492,13 +498,27 @@ bool DiskImageResourceFITS::appendKey(const std::string & keyWord, const std::st
      char keyCommentChars[80];
 
      strncpy(keyWordChars, keyWord.c_str(), 80);
-     strncpy(keyValueChars, keyValue.c_str(), 80);
      strncpy(keyCommentChars, keyComment.c_str(), 80);
 
      int status = 0;
+     int cfitsioError = -1;
+
      fitsfile *fd = static_cast<fitsfile *>(_fd); // cfitsio file descriptor
 
-     int cfitsioError = fits_write_key(fd, TSTRING, keyWordChars, keyValueChars, keyCommentChars, &status);
+    if (keyValue.type() == typeid(int)) {
+	 int tmp = boost::any_cast<const int>(keyValue);
+	 cfitsioError = fits_write_key(fd, TINT, keyWordChars, &tmp, keyCommentChars, &status);
+
+    } else if (keyValue.type() == typeid(double)) {
+        double tmp = boost::any_cast<const double>(keyValue);
+	cfitsioError = fits_write_key(fd, TDOUBLE, keyWordChars, &tmp, keyCommentChars, &status);
+
+    } else if (keyValue.type() == typeid(std::string)) {
+        std::string tmp = boost::any_cast<const std::string>(keyValue);
+	strncpy(keyValueChars, tmp.c_str(), 80);
+	cfitsioError = fits_write_key(fd, TSTRING, keyWordChars, keyValueChars, keyCommentChars, &status);
+    }
+
      if (!cfitsioError) {
 	  return true;
      }

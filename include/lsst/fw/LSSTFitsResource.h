@@ -13,10 +13,11 @@ namespace lsst {
         template <typename PixelT> class LSSTFitsResource : public lsst::fw::DiskImageResourceFITS {
         public:
             LSSTFitsResource();
-            void readFits(const std::string& filename, ImageView<PixelT>& image, DataProperty::DataPropertyPtrT metaData, int hdu=0);
-            void writeFits(ImageView<PixelT>& image, DataProperty::DataPropertyPtrT metaData, const std::string& filename, int hdu=0);
+            void readFits(const std::string& filename, ImageView<PixelT>& image, DataPropertyPtrT metaData, int hdu=0);
+            void writeFits(ImageView<PixelT>& image, DataPropertyPtrT metaData, const std::string& filename, int hdu=0);
         private:
-            void getMetaData(DataProperty::DataPropertyPtrT metaData);
+            void getMetaData(DataPropertyPtrT metaData);
+            void setMetaData(DataPropertyPtrT metaData);
         };
         
 #include "LSSTFitsResource.cc"  

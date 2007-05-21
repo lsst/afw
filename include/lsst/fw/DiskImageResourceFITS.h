@@ -47,7 +47,7 @@ public:
     void setHdu(const int hdu) { _hdu = hdu; }
     int getNumKeys();
     bool getKey(int n, std::string & keyWord, std::string & keyValue, std::string & keyComment);
-    bool appendKey(const std::string & keyWord, const std::string & keyValue, const std::string & keyComment);
+    bool appendKey(const std::string & keyWord, const boost::any & keyValue, const std::string & keyComment);
 private:
     static bool _typeIsRegistered;   //!< Have we registered our file suffixes with VW?
     static int _defaultHdu;          //!< Default HDU to use when opening files

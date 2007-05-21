@@ -57,7 +57,7 @@ int main(int argc, char**argv) {
     }
     
     Trace::setDestination(std::cout);
-    Trace::setVerbosity(".", 1);
+    Trace::setVerbosity(".", 0);
     
      typedef uint8 MaskPixelType;
      typedef float32 ImagePixelType;
@@ -90,9 +90,25 @@ int main(int argc, char**argv) {
      }
      testFlat.setDefaultVariance();
 
+     testFlat /= 20000.0;
+
      testMaskedImage1 *= testFlat;
 
      // test of fits write
+
+     testMaskedImage1.writeFits(argv[3]);
+
+     // test of subImage
+
+     MaskedImage<ImagePixelType,MaskPixelType>::MaskedImagePtrT subMaskedImagePtr1;
+
+     BBox2i region(100, 600, 200, 300);
+     subMaskedImagePtr1 = testMaskedImage1.getSubImage(region);
+     *subMaskedImagePtr1 *= 0.5;
+     subMaskedImagePtr1->writeFits(argv[4]);
+
+
+     testMaskedImage1.replaceSubImage(region, subMaskedImagePtr1, true, true, true);
 
      testMaskedImage1.writeFits(argv[3]);
 

@@ -24,12 +24,12 @@ void test(char *name) {
     testMask.printMaskPlanes();
 
     // check the full metadata from the FITS header
-    DataProperty::DataPropertyPtrT metaDataPtr = testMask.getMetaData();
+    DataPropertyPtrT metaDataPtr = testMask.getMetaData();
     metaDataPtr->print();
     std::cout << std::endl;
 
     // try some pattern matching on metadata
-    DataProperty::DataPropertyPtrT matchPtr = metaDataPtr->find(boost::regex("WAT.*"));
+    DataPropertyPtrT matchPtr = metaDataPtr->find(boost::regex("WAT.*"));
     while (matchPtr) {
         matchPtr->print();
         matchPtr = metaDataPtr->find(boost::regex("WAT.*"), false);

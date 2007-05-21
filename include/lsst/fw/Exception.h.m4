@@ -46,11 +46,11 @@ namespace lsst {
                public:
                    $1(std::string const& msg ) throw() :
                        Exception(msg),_propertyList(new DataProperty("root",int(0))){};
-                   $1(std::string const& msg, DataPropertyPtr propertyList) throw() :
+                   $1(std::string const& msg, DataPropertyPtrT propertyList) throw() :
                        Exception(msg), _propertyList(propertyList) {};
                    $1(boost::format const& msg ) throw() :
                        Exception(msg),_propertyList(new DataProperty("root",int(0))){};
-                   $1(boost::format const& msg, DataPropertyPtr propertyList) throw() :
+                   $1(boost::format const& msg, DataPropertyPtrT propertyList) throw() :
                        Exception(msg), _propertyList(propertyList) {};
                    $1(const $1 & oops) throw() :
                        Exception(oops.what()), _propertyList(new DataProperty(*(oops._propertyList))){};
@@ -58,7 +58,7 @@ namespace lsst {
                        fw::Trace("fw.Exception", 1, "----Destroy ExceptObj");
                        fw::Trace("fw.Exception", 1, _propertyList->repr());
                    };
-                   DataPropertyPtr propertyList() throw() { return _propertyList;};
+                   DataPropertyPtrT propertyList() throw() { return _propertyList;};
                    $1 & operator= (const $1 & oops) throw() {
                        Exception::operator= (oops); _propertyList=oops._propertyList;
             return *this;};
@@ -75,7 +75,7 @@ namespace lsst {
             _propertyList->print(prefix);
                    }
                private:
-                   DataPropertyPtr _propertyList;
+                   DataPropertyPtrT _propertyList;
                 }')
 
     LSST_NEW_EXCEPTION(NotFound,

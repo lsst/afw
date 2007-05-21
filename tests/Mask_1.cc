@@ -62,11 +62,11 @@ void test() {
         cout << "Assigned CR to plane " << iPlane << endl;
      }
      catch(OutOfPlaneSpace &e){
-        DataPropertyPtr  propertyList = e.propertyList();
+        DataPropertyPtrT  propertyList = e.propertyList();
         propertyList->print();
-        DataPropertyPtr aProperty = propertyList->find("numPlanesUsed");
+        DataPropertyPtrT aProperty = propertyList->find("numPlanesUsed");
         int numPlanesUsed = any_cast<const int>(aProperty->getValue());
-        DataPropertyPtr bProperty = propertyList->find("numPlanesMax");
+        DataPropertyPtrT bProperty = propertyList->find("numPlanesMax");
         int numPlanesMax = any_cast<const int>(bProperty->getValue());
 
         cout << "Ran out of space to add new CR plane: number of Planes: " \
@@ -126,12 +126,12 @@ void test() {
 
 // ------------ Test mask plane metaData
 
-     DataProperty::DataPropertyPtrT metaData(new DataProperty("testMetaData", 0));
+     DataPropertyPtrT metaData(new DataProperty("testMetaData", 0));
      testMask.addMaskPlaneMetaData(metaData);
      cout << "MaskPlane metadata:" << endl;
      metaData->print("\t");
 
-     DataProperty::DataPropertyPtrT newPlane(new DataProperty("Whatever", 5));
+     DataPropertyPtrT newPlane(new DataProperty("Whatever", 5));
      metaData->addProperty(newPlane);
 
      testMask.parseMaskPlaneMetaData(metaData);

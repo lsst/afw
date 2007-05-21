@@ -111,30 +111,34 @@ namespace lsst {
             void processPixels(PixelProcessingFunc<ImagePixelT, MaskPixelT> &processingFunc);
             
             // SubImage functions
-#if 0
-            MaskedImagePtrT getSubImage(BBox2i region);
+
+            MaskedImagePtrT getSubImage(const BBox2i region) const;
             
-            
-            void replaceSubImage(BBox2i region, MaskedImage &sImage, bool replaceMask, bool replaceAstro);
-#endif
+            void replaceSubImage(const BBox2i region, MaskedImagePtrT insertImage, const bool replaceMask, const bool replaceImage,
+                const bool replaceVariance);
+
             // Variance functions
             
             void setDefaultVariance();
             
             // Operators
-            MaskedImage& operator+=( MaskedImageT& maskedImageInput);
+            MaskedImage& operator+=( MaskedImage & maskedImageInput);
             MaskedImage& operator-=( MaskedImage & maskedImageInput);
             MaskedImage& operator*=( MaskedImage & maskedImageInput);
             MaskedImage& operator/=( MaskedImage & maskedImageInput);
+            MaskedImage& operator += (const ImagePixelT scalar);
+            MaskedImage& operator -= (const ImagePixelT scalar);
+            MaskedImage& operator *= (const ImagePixelT scalar);
+            MaskedImage& operator /= (const ImagePixelT scalar);
             
         // IO functions
             void readFits(std::string baseName);
             void writeFits(std::string baseName);
             
             // Getters
-            ImagePtrT getImage();
-            ImagePtrT getVariance();
-            MaskPtrT getMask();
+            ImagePtrT getImage() const;
+            ImagePtrT getVariance() const;
+            MaskPtrT getMask() const;
         private:
             MaskedImage(const MaskedImage &);
             MaskedImage& operator=(const MaskedImage &);

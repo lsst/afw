@@ -21,11 +21,10 @@
 namespace lsst {
     namespace fw {
         class DataProperty;
-        typedef boost::shared_ptr<DataProperty> DataPropertyPtr;
+        typedef boost::shared_ptr<DataProperty> DataPropertyPtrT;
         
         class DataProperty : private Citizen {
         public:
-            typedef boost::shared_ptr<DataProperty> DataPropertyPtrT;
             typedef std::list<DataPropertyPtrT> DataPropertyContainerT;
             
             DataProperty(std::string name, boost::any value = boost::any());
@@ -34,6 +33,7 @@ namespace lsst {
             DataPropertyPtrT find(const boost::regex pattern, bool reset=true);
             void addProperty(const DataProperty& dp);
             void addProperty(DataPropertyPtrT property);
+            void deleteFoundProperty();
             std::string getName() const {return _name; }
             boost::any getValue() const {return _value; }
             DataPropertyContainerT getContents() const {return _properties; }
@@ -48,6 +48,9 @@ namespace lsst {
             std::list<DataPropertyPtrT>::iterator _pos;
         };
         
+        // handy free function to take a string and make a boost::any with appropriate type
+        boost::any stringToAny(std::string valueString);
+
     }  // namespace fw
 
 } // namespace lsst

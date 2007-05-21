@@ -4,6 +4,7 @@
 #include <iostream>
 #include "lsst/fw/Exception.h"
 #include "lsst/fw/Citizen.h"
+#include "lsst/fw/DataProperty.h"
 
 using namespace lsst::fw;
 using boost::any_cast;
@@ -14,7 +15,7 @@ int main(int argc, char *argv[])
 // ------------- Test constructors
      {
         std::cout << "Testing creation of Data Property." << std::endl;
-        DataPropertyPtr cProperty(new DataProperty("DummyProperty",(int)4));
+        DataPropertyPtrT cProperty(new DataProperty("DummyProperty",(int)4));
         std::cout << ".... Data Property created." << std::endl;
         std::cout << "Testing deletion of Data Property by leaving scope." 
                << std::endl << "....Just before leaving scope" << std::endl;
@@ -40,10 +41,10 @@ int main(int argc, char *argv[])
         std::string s("exception msg: Threw an OutOfPlane exception with arguments");
 
         // allocate the list items from the heap 
-        DataPropertyPtr exceptionPropertyList(new DataProperty("root",(int)0));
-        DataPropertyPtr aProperty(new DataProperty("NPlane",(int)5));
-        DataPropertyPtr bProperty(new DataProperty("MaxPlane",(int)3));
-        DataPropertyPtr nProperty(new DataProperty("sonofMaxPlane",(int)12));
+        DataPropertyPtrT exceptionPropertyList(new DataProperty("root",(int)0));
+        DataPropertyPtrT aProperty(new DataProperty("NPlane",(int)5));
+        DataPropertyPtrT bProperty(new DataProperty("MaxPlane",(int)3));
+        DataPropertyPtrT nProperty(new DataProperty("sonofMaxPlane",(int)12));
         bProperty->addProperty(nProperty);
         exceptionPropertyList->addProperty(aProperty);
         exceptionPropertyList->addProperty(bProperty);
@@ -67,16 +68,16 @@ int main(int argc, char *argv[])
         // acquire the list of variables used by this exception handler
 
         std::cout << "....Extracting Property list from Exception Object"<<std::endl;
-        DataPropertyPtr exceptionPropertyList = e.propertyList();
+        DataPropertyPtrT exceptionPropertyList = e.propertyList();
 
         exceptionPropertyList->print();
 
         std::cout << "....Extracting properties from PropertyList"<<std::endl;
-        DataPropertyPtr aProperty = exceptionPropertyList->find("NPlane");
+        DataPropertyPtrT aProperty = exceptionPropertyList->find("NPlane");
         int testNPlane = any_cast<const int>(aProperty->getValue());
-        DataPropertyPtr bProperty = exceptionPropertyList->find("MaxPlane");
+        DataPropertyPtrT bProperty = exceptionPropertyList->find("MaxPlane");
         int testMaxPlane = any_cast<const int>(bProperty->getValue());
-        //DataPropertyPtr cProperty = exceptionPropertyList->find("sonofMaxPlane");
+        //DataPropertyPtrT cProperty = exceptionPropertyList->find("sonofMaxPlane");
         //int testSonOfMaxPlane = any_cast<const int>(cProperty->getValue());
 
         std::cout << "....No space to add new CR plane: number of Planes: " 
@@ -111,7 +112,7 @@ int main(int argc, char *argv[])
 #if 0
      {
         std::cout << "Testing ~deletion of Data Property." << std::endl;
-        DataPropertyPtr cProperty(new DataProperty("DummyProperty",(int)4));
+        DataPropertyPtrT cProperty(new DataProperty("DummyProperty",(int)4));
         std::cout << ".... Data Property created." << std::endl;
         std::cout<< "cProperty use count: " << cProperty.use_count() << std::endl;
         //~cProperty();

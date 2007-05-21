@@ -26,18 +26,22 @@ Image<ImagePixelT>::Image(ImageIVwPtrT image):
     _metaData(new DataProperty::DataProperty("FitsMetaData", 0)) {
 }
 
+template<class ImagePixelT> typename Image<ImagePixelT>::ImageIVwT& Image<ImagePixelT>::getIVw() const {
+    return _image;
+}
+
+
 template<class ImagePixelT> typename Image<ImagePixelT>::ImageIVwPtrT Image<ImagePixelT>::getIVwPtr() const 
 {
     return _imagePtr;
 }
 
 template<class ImagePixelT> 
-float Image<ImagePixelT>::getGain() const
+double Image<ImagePixelT>::getGain() const
 {
-    DataProperty::DataPropertyPtrT gainProp = _metaData->find("GAIN");
+    DataPropertyPtrT gainProp = _metaData->find("GAIN");
     if (gainProp) {
-        std::string valueString = boost::any_cast<const std::string>(gainProp->getValue());
-        float gain = atof(valueString.c_str());
+        double gain = boost::any_cast<const double>(gainProp->getValue());
         return gain;
     }
     throw Exception(std::string("in ") + __func__ + std::string(": Could not get gain from image metadata"));
@@ -58,9 +62,37 @@ void Image<ImagePixelT>::writeFits(const string& fileName)
 }
 
 template<class ImagePixelT>
-DataProperty::DataPropertyPtrT Image<ImagePixelT>::getMetaData()
+DataPropertyPtrT Image<ImagePixelT>::getMetaData()
 {
     return _metaData;
+}
+
+template<class ImagePixelT>
+typename Image<ImagePixelT>::ImagePtrT Image<ImagePixelT>::getSubImage(const vw::BBox2i imageRegion) const {
+
+    ImageIVwPtrT croppedImage(new ImageIVwT());
+    *croppedImage = copy(crop(_image, imageRegion));
+    ImagePtrT newImage(new Image<ImagePixelT>(croppedImage));
+    return newImage;
+}
+
+// Given a Image, insertImage, place it into this Image as directed by maskRegion.
+// An exception is generated if maskRegion is not of the same size as insertImage.
+//
+template<class ImagePixelT>
+void Image<ImagePixelT>::replaceSubImage(const BBox2i maskRegion, ImagePtrT insertImage)
+{
+    try {
+        crop(_image, maskRegion) = insertImage->_image;
+    } catch (exception eex) {
+        throw Exception(std::string("in ") + __func__);
+    } 
+}
+
+template<class ImagePixelT> typename Image<ImagePixelT>::ImageChannelT Image<ImagePixelT>::operator ()(int x, int y) const
+{
+//      cout << x << " " << y << " " << (void *)_image(x, y) << endl;
+     return _image(x, y);
 }
 
 template<class ImagePixelT> Image<ImagePixelT>&  Image<ImagePixelT>::operator += (const Image<ImagePixelT>& inputImage)
@@ -84,6 +116,30 @@ template<class ImagePixelT> Image<ImagePixelT>&  Image<ImagePixelT>::operator *=
 template<class ImagePixelT> Image<ImagePixelT>&  Image<ImagePixelT>::operator /= (const Image<ImagePixelT>& inputImage)
 {
     _image /= *(inputImage.getIVwPtr());
+    return *this;
+}
+
+template<class ImagePixelT> Image<ImagePixelT>&  Image<ImagePixelT>::operator += (const ImagePixelT scalar)
+{
+    _image += scalar;
+    return *this;
+}
+
+template<class ImagePixelT> Image<ImagePixelT>&  Image<ImagePixelT>::operator -= (const ImagePixelT scalar)
+{
+    _image -= scalar;
+    return *this;
+}
+
+template<class ImagePixelT> Image<ImagePixelT>&  Image<ImagePixelT>::operator *= (const ImagePixelT scalar)
+{
+    _image *= scalar;
+    return *this;
+}
+
+template<class ImagePixelT> Image<ImagePixelT>&  Image<ImagePixelT>::operator /= (const ImagePixelT scalar)
+{
+    _image /= scalar;
     return *this;
 }
 
