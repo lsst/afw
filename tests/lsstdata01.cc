@@ -208,7 +208,8 @@ int main( int argc, char** argv )
         Trace( "lsstdata01",1, "ERROR: Memory leaks detected!");
         Citizen::census(cerr);
     }
-    return 1;
+
+    return 0;
 }
 
 
