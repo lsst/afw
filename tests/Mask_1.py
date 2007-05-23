@@ -89,6 +89,7 @@ def doMask_1():
     testMask.clearMaskPlane(planes['BP'])
     testMask.removeMaskPlane("BP")
 
+    print "Expect to fail to find BP:"
     planes = lookupPlanes(testMask, ["CR", "BP"])
 
     # --------------- Test submask methods
