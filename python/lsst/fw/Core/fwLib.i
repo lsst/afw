@@ -37,7 +37,12 @@ Basic routines to talk to FW's classes (including visionWorkbench) and ds9
 #   include "lsst/fw/MaskedImage.h"
 #   include "lsst/fw/Trace.h"
 #   include "lsst/fw/Utils.h"
+%}
 
+%inline %{
+namespace lsst { namespace fw { } }
+namespace vw {}
+    
 using namespace lsst;
 using namespace lsst::fw;
 using namespace vw;
@@ -63,6 +68,8 @@ def version(HeadURL = r"$HeadURL$"):
 %ignore vw::ImageView<MaskPixelType>::origin;
 %ignore operator vw::ImageView::unspecified_bool_type;
 %ignore operator lsst::Mask::operator()(int, int); // RHL can't get this to work
+
+%import <vw/Core/FundamentalTypes.h>
 
 %include <vw/Image/ImageViewBase.h>
 %include <vw/Image/ImageView.h>
@@ -111,8 +118,6 @@ ensure:
 %include "lsst/fw/Mask.h"
 %include "lsst/fw/MaskedImage.h"
 
-using namespace lsst;
-
 %template(ImageBaseFloat) vw::ImageViewBase<vw::ImageView<ImagePixelType> >;
 %template(ImageFloat)     vw::ImageView<ImagePixelType>;
 
@@ -122,7 +127,7 @@ using namespace lsst;
 %template(MaskD)          lsst::fw::Mask<MaskPixelType>;
 %template(MaskedImageD)   lsst::fw::MaskedImage<ImagePixelType, MaskPixelType>;
 %template(MaskDPtr)       boost::shared_ptr<lsst::fw::Mask<MaskPixelType> >;
-%template(BBox2i)         vw::BBox<int32, 2>;
+%template(BBox2i)	  BBox<int32, 2>;
 
 %extend_smart_pointer(boost::shared_ptr<vw::ImageView<MaskPixelType> >);
 //%delobject boost::shared_ptr<vw::ImageView<MaskPixelType> >::shared_ptr;

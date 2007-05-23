@@ -11,7 +11,12 @@ Image processing code
 %{
 #   include "lsst/fw/Mask.h"
 #   include "lsst/fw/MaskedImage.h"
+%}
 
+%inline %{
+namespace lsst { namespace fw { } }
+namespace vw {}
+    
 using namespace lsst;
 using namespace lsst::fw;
 using namespace vw;
@@ -24,7 +29,6 @@ using namespace vw;
 %include "lsst/fw/Core/p_lsstSwig.i"
 
 /******************************************************************************/
-
 %{
 typedef float ImagePixelType;
 typedef uint8 MaskPixelType;
@@ -33,14 +37,10 @@ typedef uint8 MaskPixelType;
 %import "lsst/fw/Mask.h"
 %import "lsst/fw/MaskedImage.h"
 
-using namespace lsst;
-using namespace vw;
-
 /******************************************************************************/
 //
 // Define a class to do very little with a PixelProcessingFunc
 //
-
 %inline %{
 template <typename ImagePixelT, typename MaskPixelT>
 class testPixProcFunc :
