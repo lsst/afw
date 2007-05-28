@@ -18,7 +18,8 @@ fwTests = env.LoadableModuleIncomplete("_fwTests", "fwTests.i",
 #
 import glob, os
 env.AppendENVPath('PYTHONPATH', os.environ['PYTHONPATH'])
-testTmpDir = ".tests/"
+env['ENV']['LD_LIBRARY_PATH'] = os.environ['LD_LIBRARY_PATH']
+testTmpDir = ".tests/"                  # note trailing /
 
 for f in glob.glob("*.py"):
     target = os.path.join(testTmpDir, f)
