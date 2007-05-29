@@ -1,3 +1,4 @@
+#include <iostream>
 #include <vw/Image.h>
 #include <vw/FileIO.h>
 #include <vw/Mosaic.h>
@@ -6,7 +7,12 @@ int main() {
 
   // Generate the variations on the mural image
   vw::ImageView<vw::PixelRGB<vw::float32> > mural;
-  read_image( mural, "images/mural.jpg" );
+  try {
+    read_image( mural, "images/mural.jpg" );
+  } catch(vw::NoImplErr &e) {
+    std::cerr << "VW error: " << e.what() << std::endl;
+    return 1;
+  }
   write_image( "images/mural_rotate_180.jpg", rotate_180(mural) );
   write_image( "images/mural_flip_vertical.jpg", flip_vertical(mural) );
   write_image( "images/mural_flip_horizontal.jpg", flip_horizontal(mural) );
