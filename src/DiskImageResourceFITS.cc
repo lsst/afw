@@ -7,6 +7,7 @@
 #include <vw/Core/Exception.h>
 #include <vw/Image/ImageMath.h>
 #include "lsst/fw/DiskImageResourceFITS.h"
+#include "lsst/fw/Exception.h"
 
 // these two necessary only for appendKey()
 #include <string.h>
@@ -30,9 +31,6 @@ static void _throw_cfitsio_error(const int line,   //!< line in file (from __LIN
                                  const int status, //!< cfitsio error status (0 => no error)
                                  const std::string errStr = "" //!< optional extra information
                                 ) {
-    int close_status = 0;
-    (void)fits_close_file(fd, &close_status);
-    
     if (status == 0) {
         if (errStr == "") {
             return;
@@ -41,10 +39,15 @@ static void _throw_cfitsio_error(const int line,   //!< line in file (from __LIN
     } else {
         char fitsErr[FLEN_ERRMSG];
         (void)fits_get_errstatus(status, fitsErr);
+#if 1
         throw vw::IOErr() << "DiskImageResourceFITS: cfitsio error: " << line << ": "
                           << fitsErr
                           << (errStr == "" ? "" : " : ")
                           << (errStr == "" ? std::string("") : errStr);
+#else
+        throw FitsError(boost::format("DiskImageResourceFITS: cfitsio error: %d: %s%s%s")
+            % line % fitsErr % (errStr == "" ? "" : " : ") % (errStr == "" ? std::string("") : errStr));
+#endif
     }
 }
 
