@@ -23,6 +23,11 @@ void test(char *name) {
 }
 
 int main(int argc, char *argv[]) {
+    if (argc < 2) {
+        std::cerr << "Usage: inputBaseName" << std::endl;
+        return 1;
+    }
+    
     Trace::setDestination(std::cout);
     Trace::setVerbosity(".", 1);
 
@@ -34,5 +39,6 @@ int main(int argc, char *argv[]) {
         }
     } catch (lsst::fw::Exception &e) {
         std::clog << e.what() << endl;
+        return 1;
     }
 }

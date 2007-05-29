@@ -37,6 +37,11 @@ void test(char *name) {
 }
 
 int main(int argc, char *argv[]) {
+    if (argc < 2) {
+        std::cerr << "Usage: inputBaseName" << std::endl;
+        return 1;
+    }
+
     try {
         try {
             test(argv[1]);
