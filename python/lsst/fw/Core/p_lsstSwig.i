@@ -157,7 +157,7 @@ typedef uint8 MaskPixelType;
 %exception {
     try {
         $action
-            } catch (lsst::fw::Exception &e) {
+    } catch (lsst::fw::Exception &e) {
         PyErr_SetString(PyExc_IndexError, e.what());
         return NULL;
     } catch (vw::Exception &e) {
