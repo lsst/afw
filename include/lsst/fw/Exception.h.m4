@@ -89,6 +89,9 @@ namespace lsst {
 
     LSST_NEW_EXCEPTION(OutOfPlaneSpace,
                        An Exception due to an insufficient Plane allocation);
+
+    LSST_NEW_EXCEPTION(FitsError,
+                       Problem in FITS I/O system);
 }
 }
 #endif

@@ -39,15 +39,20 @@ static void _throw_cfitsio_error(const int line,   //!< line in file (from __LIN
     } else {
         char fitsErr[FLEN_ERRMSG];
         (void)fits_get_errstatus(status, fitsErr);
-#if 1
-        throw vw::IOErr() << "DiskImageResourceFITS: cfitsio error: " << line << ": "
-                          << fitsErr
-                          << (errStr == "" ? "" : " : ")
-                          << (errStr == "" ? std::string("") : errStr);
-#else
-        throw FitsError(boost::format("DiskImageResourceFITS: cfitsio error: %d: %s%s%s")
-            % line % fitsErr % (errStr == "" ? "" : " : ") % (errStr == "" ? std::string("") : errStr));
-#endif
+        boost::format msg = boost::format("DiskImageResourceFITS: cfitsio error: %d: %s%s%s")
+            % line
+            % fitsErr
+            % (errStr == "" ? "" : " : ")
+            % (errStr == "" ? std::string("") : errStr);
+
+        switch (status) {
+          case FILE_NOT_OPENED:
+            throw vw::IOErr() << msg.str();
+            break;
+          default:
+            throw FitsError(msg);
+            break;
+        }
     }
 }
 
