@@ -65,8 +65,10 @@ namespace lsst {
             Image<ImagePixelT>& operator *= (const ImagePixelT scalar);
             Image<ImagePixelT>& operator /= (const ImagePixelT scalar);
             
-            int getImageCols() const;
-            int getImageRows() const;
+            unsigned int getCols() const;
+            unsigned int getRows() const;
+            unsigned int getOffsetCols() const;
+            unsigned int getOffsetRows() const;
             
             ImageIVwPtrT getIVwPtr() const;
             
@@ -80,6 +82,12 @@ namespace lsst {
             ImageIVwPtrT _imagePtr;
             ImageIVwT& _image;
             DataPropertyPtrT _metaData;
+            unsigned int _offsetRows;
+            unsigned int _offsetCols;
+
+            void setOffsetRows(unsigned int offset);
+            void setOffsetCols(unsigned int offset);
+
         };
   
 #include "Image.cc"

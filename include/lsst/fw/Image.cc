@@ -7,7 +7,10 @@ Image<ImagePixelT>::Image() :
     LsstBase(typeid(this)),
     _imagePtr(new vw::ImageView<ImagePixelT>()),
     _image(*_imagePtr),
-    _metaData(new DataProperty::DataProperty("FitsMetaData", 0)) {
+    _metaData(new DataProperty::DataProperty("FitsMetaData", 0)),
+    _offsetRows(0),
+    _offsetCols(0)
+{
 }
 
 template<typename ImagePixelT>
@@ -15,7 +18,10 @@ Image<ImagePixelT>::Image(int nCols, int nRows) :
     LsstBase(typeid(this)),
     _imagePtr(new vw::ImageView<ImagePixelT>(nCols, nRows)),
     _image(*_imagePtr),
-    _metaData(new DataProperty::DataProperty("FitsMetaData", 0)) {
+    _metaData(new DataProperty::DataProperty("FitsMetaData", 0)),
+    _offsetRows(0),
+    _offsetCols(0)
+{
 }
 
 template<class ImagePixelT>
@@ -23,7 +29,10 @@ Image<ImagePixelT>::Image(ImageIVwPtrT image):
     LsstBase(typeid(this)),
     _imagePtr(image),
     _image(*_imagePtr),
-    _metaData(new DataProperty::DataProperty("FitsMetaData", 0)) {
+    _metaData(new DataProperty::DataProperty("FitsMetaData", 0)),
+    _offsetRows(0),
+    _offsetCols(0)
+{
 }
 
 template<class ImagePixelT> typename Image<ImagePixelT>::ImageIVwT& Image<ImagePixelT>::getIVw() const {
@@ -73,6 +82,10 @@ typename Image<ImagePixelT>::ImagePtrT Image<ImagePixelT>::getSubImage(const vw:
     ImageIVwPtrT croppedImage(new ImageIVwT());
     *croppedImage = copy(crop(_image, imageRegion));
     ImagePtrT newImage(new Image<ImagePixelT>(croppedImage));
+    Vector<int, 2> bboxOffset = imageRegion.min();
+    newImage->setOffsetRows(bboxOffset[0] + _offsetRows);
+    newImage->setOffsetCols(bboxOffset[1] + _offsetCols);
+
     return newImage;
 }
 
@@ -143,10 +156,29 @@ template<class ImagePixelT> Image<ImagePixelT>&  Image<ImagePixelT>::operator /=
     return *this;
 }
 
-template<class ImagePixelT> int Image<ImagePixelT>::getImageCols() const {
+template<class ImagePixelT> unsigned int Image<ImagePixelT>::getCols() const {
     return _image.cols();
 }
 
-template<class ImagePixelT> int Image<ImagePixelT>::getImageRows() const {
+template<class ImagePixelT> unsigned int Image<ImagePixelT>::getRows() const {
     return _image.rows();
 }
+
+template<class ImagePixelT> unsigned int Image<ImagePixelT>::getOffsetCols() const {
+    return _offsetCols;
+}
+
+template<class ImagePixelT> unsigned int Image<ImagePixelT>::getOffsetRows() const {
+    return _offsetRows;
+}
+
+template<class ImagePixelT> void Image<ImagePixelT>::setOffsetRows(unsigned int offset)
+{
+    _offsetRows = offset;
+}
+
+template<class ImagePixelT> void Image<ImagePixelT>::setOffsetCols(unsigned int offset)
+{
+    _offsetCols = offset;
+}
+

@@ -38,6 +38,7 @@ namespace lsst {
             boost::any getValue() const {return _value; }
             DataPropertyContainerT getContents() const {return _properties; }
             std::string repr(const std::string& prefix = "") const;
+            void reprCfitsio(std::ostringstream& sout, bool includeHead = true) const;
             void print(const std::string& prefix = "") const;
             ~DataProperty();
             

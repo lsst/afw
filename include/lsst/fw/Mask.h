@@ -102,10 +102,11 @@ namespace lsst {
             
             Mask<MaskPixelT>& operator |= (const Mask<MaskPixelT>& inputMask);
             
-            int getImageCols() const;
+            unsigned int getCols() const;
+            unsigned int getRows() const;
+            unsigned int getOffsetCols() const;
+            unsigned int getOffsetRows() const;
 
-            int getImageRows() const;
-            
             MaskIVwPtrT getIVwPtr() const;
 
             MaskIVwT& getIVw() const;
@@ -121,12 +122,17 @@ namespace lsst {
             MaskIVwT& _image;
             map<int, std::string> _maskPlaneDict;
             const int _numPlanesMax;
-        int _numPlanesUsed;
+            int _numPlanesUsed;
             MaskChannelT _planeBitMask[8 * sizeof(MaskChannelT)];
             MaskChannelT _planeBitMaskComplemented[8 * sizeof(MaskChannelT)];
             DataPropertyPtrT _metaData;
             static const std::string maskPlanePrefix;
+            unsigned int _offsetRows;
+            unsigned int _offsetCols;
             
+            void setOffsetRows(unsigned int offset);
+            void setOffsetCols(unsigned int offset);
+
             int addMaskPlane(string name, int plane);
         };
   

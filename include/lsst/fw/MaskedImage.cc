@@ -327,6 +327,29 @@ void  MaskedImage<ImagePixelT, MaskPixelT>::processPixels(MaskPixelBooleanFunc<M
                                                           MaskedImage<ImagePixelT, MaskPixelT>&) {
 }
 
+template<typename ImagePixelT, typename MaskPixelT> 
+unsigned int  MaskedImage<ImagePixelT, MaskPixelT>::getRows() const
+{
+    return _image.getRows();
+}
+
+template<typename ImagePixelT, typename MaskPixelT> 
+unsigned int  MaskedImage<ImagePixelT, MaskPixelT>::getCols() const
+{
+    return _image.getCols();
+}
+
+template<typename ImagePixelT, typename MaskPixelT> 
+unsigned int  MaskedImage<ImagePixelT, MaskPixelT>::getOffsetRows() const
+{
+    return _image.getOffsetRows();
+}
+
+template<typename ImagePixelT, typename MaskPixelT> 
+unsigned int  MaskedImage<ImagePixelT, MaskPixelT>::getOffsetCols() const
+{
+    return _image.getOffsetCols();
+}
 
 // private function conformSizes() ensures that the Mask and Variance have the same dimensions
 // as Image.  If Mask and/or Variance have non-zero dimensions that conflict with the size of Image,

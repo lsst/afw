@@ -131,7 +131,7 @@ namespace lsst {
             MaskedImage& operator *= (const ImagePixelT scalar);
             MaskedImage& operator /= (const ImagePixelT scalar);
             
-        // IO functions
+            // IO functions
             void readFits(std::string baseName);
             void writeFits(std::string baseName);
             
@@ -139,9 +139,11 @@ namespace lsst {
             ImagePtrT getImage() const;
             ImagePtrT getVariance() const;
             MaskPtrT getMask() const;
+            unsigned int getRows() const;
+            unsigned int getCols() const;
+            unsigned int getOffsetRows() const;
+            unsigned int getOffsetCols() const;
         private:
-            MaskedImage(const MaskedImage &);
-            MaskedImage& operator=(const MaskedImage &);
 
             void conformSizes();
             
@@ -151,9 +153,9 @@ namespace lsst {
             ImageT & _image;
             ImageT & _variance;
             MaskT & _mask;
+
             unsigned int _imageRows;
             unsigned int _imageCols;
-            
         };
         
 #include "MaskedImage.cc"

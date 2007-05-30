@@ -22,6 +22,8 @@ Mask<MaskPixelT>::Mask() :
      }
 
      _numPlanesUsed = 0;
+     _offsetRows = 0;
+     _offsetCols = 0;
 
 }
 
@@ -43,6 +45,8 @@ Mask<MaskPixelT>::Mask(MaskIVwPtrT image):
      }
 
      _numPlanesUsed = 0;
+     _offsetRows = 0;
+     _offsetCols = 0;
 
 }
 
@@ -64,6 +68,8 @@ Mask<MaskPixelT>::Mask(int ncols, int nrows) :
      }
 
      _numPlanesUsed = 0;
+     _offsetRows = 0;
+     _offsetCols = 0;
 
     }
 
@@ -199,8 +205,8 @@ template<class MaskPixelT> void Mask<MaskPixelT>::clearAllMaskPlanes()
 //
 template<class MaskPixelT> void Mask<MaskPixelT>::clearMaskPlane(int plane)
 {
-    for (int y=0; y<getImageRows(); y++) {
-        for (int x=0; x<getImageCols(); x++) {
+    for (int y=0; y<getRows(); y++) {
+        for (int x=0; x<getCols(); x++) {
 	       _image(x,y) = _image(x,y) & _planeBitMaskComplemented[plane];
 	  }
      }
@@ -226,8 +232,8 @@ template<class MaskPixelT> void Mask<MaskPixelT>::setMaskPlaneValues(int plane, 
 {
     //  Should check plane for legality here...
 
-    for (int y=0; y<getImageRows(); y++) {
-        for (int x=0; x<getImageCols(); x++) {
+    for (int y=0; y<getRows(); y++) {
+        for (int x=0; x<getCols(); x++) {
             if (selectionFunc(_image(x,y)) == true) {
                 _image(x,y) = _image(x,y) | _planeBitMask[plane];
             }
@@ -263,11 +269,15 @@ typename Mask<MaskPixelT>::MaskPtrT Mask<MaskPixelT>::getSubMask(const vw::BBox2
     MaskIVwPtrT croppedMask(new MaskIVwT());
     *croppedMask = copy(crop(_image, maskRegion));
     MaskPtrT newMask(new Mask<MaskPixelT>(croppedMask));
+    Vector<int, 2> bboxOffset = maskRegion.min();
+    newMask->setOffsetRows(bboxOffset[0] + _offsetRows);
+    newMask->setOffsetCols(bboxOffset[1] + _offsetCols);
     return newMask;
 }
 
 // Given a Mask, insertMask, place it into this Mask as directed by maskRegion.
 // An exception is generated if maskRegion is not of the same size as insertMask.
+// Maybe generate an exception if offsets are not consistent?
 //
 template<class MaskPixelT>
 void Mask<MaskPixelT>::replaceSubMask(const BBox2i maskRegion, MaskPtrT insertMask)
@@ -300,7 +310,7 @@ bool MaskPixelBooleanFunc<MaskPixelT>::operator() (MaskPixelT) const {
 template<class MaskPixelT> Mask<MaskPixelT>&  Mask<MaskPixelT>::operator |= (const Mask<MaskPixelT>& inputMask)
 {
 // Need to check for identical sizes, and presence of all needed planes
-    if (getImageCols() != inputMask.getImageCols() || getImageRows() != inputMask.getImageRows()) {
+    if (getCols() != inputMask.getCols() || getRows() != inputMask.getRows()) {
         throw;
     }
 
@@ -332,8 +342,8 @@ template<class MaskPixelT> Mask<MaskPixelT>&  Mask<MaskPixelT>::operator |= (con
      
     // Now, can iterate through the MaskImages, or'ing the input pixels into this MaskImage
 
-    for (int y=0; y<getImageRows(); y++) {
-        for (int x=0; x<getImageCols(); x++) {
+    for (int y=0; y<getRows(); y++) {
+        for (int x=0; x<getCols(); x++) {
             _image(x,y) |= inputMask(x,y);
         }
     }
@@ -402,12 +412,20 @@ template<class MaskPixelT> void Mask<MaskPixelT>::printMaskPlanes() const {
 
 }
 
-template<class MaskPixelT> int Mask<MaskPixelT>::getImageCols() const {
+template<class MaskPixelT> unsigned int Mask<MaskPixelT>::getCols() const {
     return _image.cols();
 }
 
-template<class MaskPixelT> int Mask<MaskPixelT>::getImageRows() const {
+template<class MaskPixelT> unsigned int Mask<MaskPixelT>::getRows() const {
     return _image.rows();
+}
+
+template<class MaskPixelT> unsigned int Mask<MaskPixelT>::getOffsetCols() const {
+    return _offsetCols;
+}
+
+template<class MaskPixelT> unsigned int Mask<MaskPixelT>::getOffsetRows() const {
+    return _offsetRows;
 }
 
 template<class MaskPixelT> typename Mask<MaskPixelT>::MaskIVwT& Mask<MaskPixelT>::getIVw() const {
@@ -422,6 +440,17 @@ template<class MaskPixelT> typename Mask<MaskPixelT>::MaskIVwPtrT Mask<MaskPixel
 template<class MaskPixelT> map<int, std::string> Mask<MaskPixelT>::getMaskPlaneDict() const {
     return _maskPlaneDict;
 }
+
+template<class MaskPixelT> void Mask<MaskPixelT>::setOffsetRows(unsigned int offset)
+{
+    _offsetRows = offset;
+}
+
+template<class MaskPixelT> void Mask<MaskPixelT>::setOffsetCols(unsigned int offset)
+{
+    _offsetCols = offset;
+}
+
 
 template<class MaskPixelT> 
 const std::string Mask<MaskPixelT>::maskPlanePrefix("MP_");

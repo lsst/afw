@@ -119,6 +119,29 @@ std::string DataProperty::repr(const std::string& prefix) const {
     return sout.str();
 }
 
+void DataProperty::reprCfitsio(std::ostringstream& sout, bool includeHead) const {
+
+    if (includeHead) {
+        if (_value.type() == typeid(int)) {
+            int tmp = any_cast<const int>(_value);
+            sout << boost::format("%-8s= %70d") % _name % tmp;
+        } else if (_value.type() == typeid(double)) {
+            double tmp = any_cast<const double>(_value);
+            sout << boost::format("%-8s= %70g") % _name % tmp;
+        } else if (_value.type() == typeid(std::string)) {
+            std::string tmp = any_cast<const std::string>(_value);
+            sout << boost::format("%-8s= '%68s'") % _name % tmp;
+        }
+    }
+
+    if (_properties.size() > 0) {
+        DataPropertyContainerT::const_iterator pos;
+        for (pos = _properties.begin(); pos != _properties.end(); pos++) {
+            (*pos)->reprCfitsio(sout);
+        }
+    }
+}
+
 void DataProperty::print(const std::string& prefix) const {
     std::cout << repr(prefix);
 }

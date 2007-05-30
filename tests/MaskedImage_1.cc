@@ -80,6 +80,10 @@ int main(int argc, char**argv) {
      testMaskedImage1.processPixels(fooFunc);
      std::cout << fooFunc.getCount() << " mask pixels were set" << std::endl;
 
+     // verify that copy constructor works OK
+
+     MaskedImage<ImagePixelType,MaskPixelType > testMaskedImage2(testMaskedImage1);
+
      MaskedImage<ImagePixelType,MaskPixelType > testFlat;
 
      try {
@@ -92,11 +96,11 @@ int main(int argc, char**argv) {
 
      testFlat /= 20000.0;
 
-     testMaskedImage1 *= testFlat;
+     testMaskedImage2 *= testFlat;
 
      // test of fits write
 
-     testMaskedImage1.writeFits(argv[3]);
+     testMaskedImage2.writeFits(argv[3]);
 
      // test of subImage
 
@@ -110,6 +114,24 @@ int main(int argc, char**argv) {
 
      testMaskedImage1.replaceSubImage(region, subMaskedImagePtr1, true, true, true);
 
+     // Check whether offsets have been correctly saved
+
+     MaskedImage<ImagePixelType,MaskPixelType>::MaskedImagePtrT subMaskedImagePtr2;
+
+     BBox2i region2(80, 110, 20, 30);
+     subMaskedImagePtr2 = subMaskedImagePtr1->getSubImage(region2);
+
+     cout << "Offsets: " << subMaskedImagePtr2->getOffsetCols() << " " << 
+         subMaskedImagePtr2->getOffsetRows() << endl;
+
      testMaskedImage1.writeFits(argv[3]);
+
+     DataPropertyPtrT metaDataPtr = testMaskedImage1.getImage()->getMetaData();
+
+     std::ostringstream metaDataRepr;
+
+     metaDataPtr->reprCfitsio(metaDataRepr, false);
+
+     cout << metaDataRepr.str();
 
 }
