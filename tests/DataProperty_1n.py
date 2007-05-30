@@ -1,3 +1,4 @@
+import pdb                              # we may want to say pdb.set_trace()
 import unittest
 import lsst.fw.Core.fwLib as fwCore
 
@@ -12,8 +13,8 @@ class DataPropertyTestCase(unittest.TestCase):
     def setUp(self):
         self.root = fwCore.DataProperty("root")
 
-        self.values = {}
-        props = []
+        self.values = {}; props = []
+        
         n = "name1"; self.values[n] = "value1"
         props += [fwCore.DataProperty(n, self.values[n])]
 
@@ -42,9 +43,10 @@ class DataPropertyTestCase(unittest.TestCase):
     def testName1(self):
         """Check "name1", a string valued DataProperty"""
         
-        dpPtr = self.root.find("name1")
-        assert dpPtr.get() != None
-        self.assertEqual(dpPtr.getValueString(), self.values["name1"])
+        n = "name1"
+        dpPtr = self.root.find(n)
+        assert dpPtr.get() != None, "Failed to find %s" % n
+        self.assertEqual(dpPtr.getValueString(), self.values[n])
 
     def testDataPtrType(self):
         """Check that the getValueXXX routines get the right types"""
@@ -57,29 +59,32 @@ class DataPropertyTestCase(unittest.TestCase):
     def testName2(self):
         """Check "name2", an int valued DataProperty with two definitions"""
         
-        dpPtr = self.root.find("name2")
-        assert dpPtr.get() != None
-        assert dpPtr.getValueInt() == self.values["name2"]
+        n = "name2"
 
-        dpPtr = self.root.find("name2", False)
-        assert dpPtr.get() != None
-        assert dpPtr.getValueInt() == 2*self.values["name2"]
+        dpPtr = self.root.find(n)
+        assert dpPtr.get() != None, "Failed to find %s" % n
+        assert dpPtr.getValueInt() == self.values[n]
 
-        dpPtr = self.root.find("name2", False)
-        assert dpPtr.get() == None
+        dpPtr = self.root.find(n, False)
+        assert dpPtr.get() != None, "Failed to find %s" % n
+        assert dpPtr.getValueInt() == 2*self.values[n]
 
-        dpPtr = self.root.find("name2")
-        assert dpPtr.getValueInt() == self.values["name2"]
+        dpPtr = self.root.find(n, False)
+        assert dpPtr.get() == None, "Failed to find %s" % n
+
+        dpPtr = self.root.find(n)
+        self.assertEqual(dpPtr.getValueInt(), self.values[n])
 
     def testName3(self):
         """Check name3, which (should have) a non-{int,string} type"""
-        dpPtr = self.root.find("name3")
-        assert dpPtr.get() != None
+        n = "name3"
+        dpPtr = self.root.find(n)
+        assert dpPtr.get() != None, "Failed to find %s" % n
 
     def testUndefined(self):
         """Check that we can't find a data property that isn't defined"""
         dpPtr = self.root.find("undefined")
-        assert dpPtr.get() == None
+        assert dpPtr.get() == None, "Found non-existent DataProperty"
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -90,14 +95,19 @@ class NestedDataPropertyTestCase(unittest.TestCase):
 
         nested = fwCore.DataProperty("nested")
 
-        nprop1 = fwCore.DataProperty("name1n", "value1")
-        nprop2 = fwCore.DataProperty("name2n", 2)
+        self.values = {}; props = []
+           
+        n = "name1"; self.values[n] = "value1"
+        props += [fwCore.DataProperty(n, self.values[n])]
 
-        nested.addProperty(nprop1)
-        nested.addProperty(nprop2)
+        n = "name2"; self.values[n] = 2
+        props += [fwCore.DataProperty(n, self.values[n])]
+
+        for prop in props:
+            nested.addProperty(prop)
 
         self.root.addProperty(nested)
-    
+        
     def tearDown(self):
         del self.root
         self.root = None
@@ -111,8 +121,34 @@ class NestedDataPropertyTestCase(unittest.TestCase):
         del self.root; self.root = None
     
         # Check that rootCopy is still OK...
-        rootCopy.repr("\t")
-        assert rootCopy != None
+        assert rootCopy.repr() != None, "rootCopy is mangled"
+
+    def testNested(self):
+        contents = self.root.getContents()
+        self.assertEqual(len(contents), 1)
+        self.assertEqual(contents[0].getName(), "nested")
+
+    def testNested2(self):
+        contents = self.root.getContents()
+
+        for n in ("name1", "name2"):
+            dpPtr = contents[0].find(n)
+            assert dpPtr.get() != None, "failed to find %s" % n
+            getValue = (dpPtr.getValueString if (n == "name1") else dpPtr.getValueInt)
+            self.assertEqual(getValue(), self.values[n])
+
+    def testNested3(self):
+        contents = self.root.getContents()
+
+        reset = True
+        while True:
+            dpPtr = contents[0].match("^name[0-9]+", reset); reset = False
+            if not dpPtr.get():
+                break
+            n = dpPtr.getName()
+
+            getValue = (dpPtr.getValueString if (n == "name1") else dpPtr.getValueInt)
+            self.assertEqual(getValue(), self.values[n])
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
         
@@ -139,6 +175,7 @@ def suite():
     # functions.
     suites = []
     suites += unittest.makeSuite(DataPropertyTestCase)
+    suites += unittest.makeSuite(NestedDataPropertyTestCase)
     suites += unittest.makeSuite(MemoryTestCase)
     return unittest.TestSuite(suites)
 
