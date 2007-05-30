@@ -206,7 +206,7 @@ void DiskImageResourceFITS::open(std::string const& filename //!< Desired filena
         _channelType = vw::VW_CHANNEL_INT8;
 	break;
       case 16:				// uint16
-	_ttype = TSHORT;                 // n.b. cfitsio does magic things with bzero/bscale to make Uint16
+	_ttype = TUSHORT;                 // n.b. cfitsio does magic things with bzero/bscale to make Uint16
         _channelType = vw::VW_CHANNEL_UINT16;
 	break;
       case 32:				// int32
