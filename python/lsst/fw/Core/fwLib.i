@@ -99,11 +99,26 @@ ensure:
 %template(DataPropertyPtrT) boost::shared_ptr<DataProperty>;
 
 %extend lsst::fw::DataProperty {
+    %exception {
+        try {
+            $action;
+        } catch(boost::bad_any_cast &e) {
+            SWIG_exception(SWIG_RuntimeError, e.what());
+        }
+    }
+    
     DataProperty(std::string name, int val) {
         return new DataProperty(name, val);
     }
     DataProperty(std::string name, std::string val) {
         return new DataProperty(name, val);
+    }
+
+    int getValueInt() {
+        return boost::any_cast<const int>(self->getValue());
+    }
+    std::string getValueString() {
+        return boost::any_cast<const std::string>(self->getValue());
     }
 }
 
