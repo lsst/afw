@@ -97,6 +97,7 @@ ensure:
 #endif
     
 %template(DataPropertyPtrT) boost::shared_ptr<DataProperty>;
+%template(DataPropertyContainerT) std::list<DataPropertyPtrT>;
 
 %extend lsst::fw::DataProperty {
     %exception {
@@ -119,6 +120,11 @@ ensure:
     }
     std::string getValueString() {
         return boost::any_cast<const std::string>(self->getValue());
+    }
+
+    DataPropertyPtrT match(const std::string &pattern, bool reset=true) {
+        boost::regex re(pattern);
+        return self->find(re, reset);
     }
 }
 
