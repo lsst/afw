@@ -13,23 +13,32 @@ env.Program("trace", ["traceExample.cc"], LIBS="fw")
 #
 # Tests
 #
-import glob, os
-env.AppendENVPath('PYTHONPATH', os.environ['PYTHONPATH'])
-env['ENV']['LD_LIBRARY_PATH'] = os.environ['LD_LIBRARY_PATH']
-testTmpDir = ".tests/"                  # note trailing /
+import glob, os, sys
+testTmpDir = ".tests"
 
-for f in glob.glob("*.py"):
-    target = os.path.join(testTmpDir, f)
-    env.Command(target, f, "@echo -n running $SOURCES; python $SOURCES > $TARGET 2>&1 || (mv $TARGET ${TARGET}.failed; echo -n ' failed'); echo")
-    env.Depends(target, fwTests)
+runExamples = True                      # should I run the examples?
+try:
+    runExamples = (os.stat(testTmpDir).st_mode & 0x5) # file is world read/executable
+except OSError:
+    pass
     
-for f in glob.glob("*.cc"):
-    exe = os.path.splitext(f)[0]
-    try:
-        if os.stat(exe).st_mode & 01:  # file exists and is executable
-            target = os.path.join(testTmpDir, exe)
-            env.Command(target, exe, "@echo -n running $SOURCES; $SOURCES > $TARGET 2>&1 || (mv $TARGET ${TARGET}.failed; echo -n ' failed'); echo")
-    except OSError:
-        pass
+if not runExamples:
+    print >> sys.stderr, "Not running examples; \"chmod 755 %s\" to run them again" % testTmpDir
+else:
+    env.AppendENVPath('PYTHONPATH', os.environ['PYTHONPATH'])
+    env['ENV']['LD_LIBRARY_PATH'] = os.environ['LD_LIBRARY_PATH']
+
+    for f in glob.glob("*.py"):
+        target = os.path.join(testTmpDir, f)
+        env.Command(target, f, "@echo -n running $SOURCES; python $SOURCES > $TARGET 2>&1 || (mv $TARGET ${TARGET}.failed; echo -n ' failed'); echo")
+
+    for f in glob.glob("*.cc"):
+        exe = os.path.splitext(f)[0]
+        try:
+            if os.stat(exe).st_mode & 01:  # file exists and is executable
+                target = os.path.join(testTmpDir, exe)
+                env.Command(target, exe, "@echo -n running $SOURCES; $SOURCES > $TARGET 2>&1 || (mv $TARGET ${TARGET}.failed; echo -n ' failed'); echo")
+        except OSError:
+            pass
 
 Clean("", testTmpDir)
