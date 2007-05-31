@@ -124,11 +124,13 @@ class NestedDataPropertyTestCase(unittest.TestCase):
         assert rootCopy.repr() != None, "rootCopy is mangled"
 
     def testNested(self):
+        """Extract root node"""
         contents = self.root.getContents()
         self.assertEqual(len(contents), 1)
         self.assertEqual(contents[0].getName(), "nested")
 
     def testNested2(self):
+        """Extract nested contents"""
         contents = self.root.getContents()
 
         for n in ("name1", "name2"):
@@ -137,12 +139,12 @@ class NestedDataPropertyTestCase(unittest.TestCase):
             getValue = (dpPtr.getValueString if (n == "name1") else dpPtr.getValueInt)
             self.assertEqual(getValue(), self.values[n])
 
-    def testNested3(self):
+    def testRegex(self):
+        """Find DataProperty using boost::regex"""
         contents = self.root.getContents()
 
-        reset = True
         while True:
-            dpPtr = contents[0].match("^name[0-9]+", reset); reset = False
+            dpPtr = contents[0].match("^name[0-9]+", False)
             if not dpPtr.get():
                 break
             n = dpPtr.getName()
