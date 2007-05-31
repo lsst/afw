@@ -11,6 +11,7 @@ DataProperty::DataProperty(std::string name, boost::any value) :
     _name(name),
     _value(value)
 {
+    _pos = _properties.begin();
 };
 
 DataProperty::DataProperty(const DataProperty& orig) :
@@ -19,6 +20,7 @@ DataProperty::DataProperty(const DataProperty& orig) :
               boost::format("copying DataProperty %s") % orig._name);
     _name = orig._name;
     _value = orig._value;
+    _pos = _properties.begin();
     
     if (orig._properties.size() > 0) {
         std::list<DataPropertyPtrT>::const_iterator pos;
