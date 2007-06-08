@@ -420,8 +420,8 @@ void DiskImageResourceFITS::write(vw::ImageBuffer const& src, //!< the buffer to
      * since cfitsio will put in its own in any case.
      */
     if (_metaData != NULL) {
-        DataProperty::DataPropertyContainerT dpC = _metaData->getContents();
-        DataProperty::DataPropertyContainerT::const_iterator pos;
+        DataPropertyContainerT dpC = _metaData->getContents();
+        DataPropertyContainerT::const_iterator pos;
         for (pos = dpC.begin(); pos != dpC.end(); pos++) {
             DataPropertyPtrT dpItemPtr = *pos;
 	    std::string keyName = dpItemPtr->getName();

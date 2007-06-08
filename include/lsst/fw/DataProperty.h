@@ -22,10 +22,9 @@ namespace lsst {
     namespace fw {
         class DataProperty;
         typedef boost::shared_ptr<DataProperty> DataPropertyPtrT;
-        
+        typedef std::list<DataPropertyPtrT> DataPropertyContainerT;
         class DataProperty : private Citizen {
         public:
-            typedef std::list<DataPropertyPtrT> DataPropertyContainerT;
             
             DataProperty(std::string name, boost::any value = boost::any());
             DataProperty(const DataProperty& orig);
@@ -38,6 +37,7 @@ namespace lsst {
             boost::any getValue() const {return _value; }
             DataPropertyContainerT getContents() const {return _properties; }
             std::string repr(const std::string& prefix = "") const;
+            std::string treeNode(const std::string& prefix = "",const std::string& midfix = ": ") const;
             void reprCfitsio(std::ostringstream& sout, bool includeHead = true) const;
             void print(const std::string& prefix = "") const;
             ~DataProperty();

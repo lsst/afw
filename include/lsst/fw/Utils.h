@@ -1,5 +1,6 @@
 // -*- lsst-c++ -*-
 //! \file
+//! \defgroup fw LSST framework 
 //! \brief Generic LSST software support
 //!
 #if !defined(LSST_UTILS_H)

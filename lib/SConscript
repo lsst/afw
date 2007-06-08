@@ -3,6 +3,7 @@ Import('env')
 
 env.SharedLibrary('fw', map(lambda str: "../src/" + str,
                             ["Citizen.cc",
+                             "Component.cc",
                              "DataProperty.cc",
                              "LsstDataConfigurator.cc",
                              "LsstImpl_DC2.cc",
@@ -15,6 +16,7 @@ env.SharedLibrary('fw', map(lambda str: "../src/" + str,
                              "SupportFactory.cc",
                              "Demangle.cc",
                              "Trace.cc",
+                             "Log.cc",
                              "Utils.cc",
                              ]), LIBS=env.libs["boost"])
 env.SharedLibraryIncomplete('fitsio', map(lambda str: "../src/" + str,

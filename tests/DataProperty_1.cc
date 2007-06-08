@@ -55,6 +55,7 @@ void test() {
      root->addProperty(nested);
 
      root->print("\t");
+     std::cout << "treeNode(root)::"  << std::endl << root->treeNode() << std::endl;
 
      // Check copy constructor
 
@@ -69,6 +70,7 @@ void test() {
      // Check that rootCopy is still OK...
 
      rootCopy->print("\t");
+     std::cout << "treeNode(rootCopy)::"  << std::endl << rootCopy->treeNode() << std::endl;
      
 }     
 

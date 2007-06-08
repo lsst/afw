@@ -8,6 +8,7 @@ env.Program(["generate.cc"],
 env.Program(["vwconvert.cc"], LIBS=env.libs["vw"])
 env.Program(["fitsio.cc"], LIBS=["fw"] + env.libs["vw"] + env.libs["fits"])
 env.Program(["exceptions.cc"], LIBS="fw")
+env.Program("log", ["log.cc"], LIBS="fw")
 env.Program("trace", ["trace.cc"], LIBS="fw")
 
 #

@@ -121,6 +121,34 @@ std::string DataProperty::repr(const std::string& prefix) const {
     return sout.str();
 }
 
+
+std::string DataProperty::treeNode(const std::string& prefix,const std::string& midfix) const {
+    std::ostringstream sout;
+    if (_value.type() == typeid(int)) {
+        int tmp = any_cast<const int>(_value);
+        sout << prefix << _name << midfix << tmp  << std::endl;
+        return sout.str();
+    } else if (_value.type() == typeid(std::string)) {
+        std::string tmp = any_cast<const std::string>(_value);
+        sout << prefix << _name << midfix << tmp << std::endl ;
+        return sout.str();
+    }
+    if (_properties.size() < 1) {
+        sout << prefix << _name << midfix << " STRUCT" << std::endl ;
+        return sout.str();
+    } else  { // nested DataProperty
+        std::ostringstream newprefix;
+        newprefix << prefix << _name << '.' ;
+        DataPropertyContainerT::const_iterator pos;
+        for (pos = _properties.begin(); pos != _properties.end(); pos++) {
+            sout << (*pos)->treeNode(newprefix.str());
+        }
+    }
+    return sout.str();
+}
+
+
+
 void DataProperty::reprCfitsio(std::ostringstream& sout, bool includeHead) const {
 
     if (includeHead) {
