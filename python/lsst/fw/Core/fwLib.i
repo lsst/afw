@@ -149,9 +149,17 @@ ensure:
 %template(mapIntString)  std::map<int,std::string>;
 %apply int &OUTPUT { int & };
 
+%ignore lsst::fw::Mask::getMaskPlane;   // with the %apply int& typemap,
+                                        // void getMaskPlane(const std::string& name, int& plane) const; and
+                                        // void getMaskPlane(const std::string& name) const; have the same signature
+
 %include "lsst/fw/Image.h"
 %include "lsst/fw/Mask.h"
 %include "lsst/fw/MaskedImage.h"
+
+%extend lsst::fw::Mask {                // get getMaskPlane back
+    void getMaskPlane(const std::string& name, int& plane) const;
+}
 
 %extend lsst::fw::Image<int> {
     %rename(getPtr) get;
