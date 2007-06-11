@@ -361,8 +361,6 @@ void writeVwFits(int fd,                // file descriptor to write to
     int bitpix = 0;                     // BITPIX for fits file
     switch (buff.format.channel_type) {
       case vw::VW_CHANNEL_UINT8:
-	bitpix = -8;
-	break;
       case vw::VW_CHANNEL_INT8:
 	bitpix = 8;
         break;
