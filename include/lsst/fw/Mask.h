@@ -72,18 +72,19 @@ namespace lsst {
             void removeMaskPlane(const string& name);
             
             void getMaskPlane(const string& name, int& plane) const;
+            int getMaskPlane(const string& name) const;
             
             bool getPlaneBitMask(const string& name,
                                  MaskChannelT& bitMask) const;
+            MaskChannelT getPlaneBitMask(const string& name) const;
             
             void clearMaskPlane(int plane);
             
             void clearAllMaskPlanes();
             
             void setMaskPlaneValues(int plane, list<PixelCoord> pixelList);
-            
-            void setMaskPlaneValues(int plane,
-                                    MaskPixelBooleanFunc<MaskPixelT> selectionFunc);
+            void setMaskPlaneValues(const int plane, const int x0, const int x1, const int y);            
+            void setMaskPlaneValues(int plane, MaskPixelBooleanFunc<MaskPixelT> selectionFunc);
             
             void parseMaskPlaneMetaData(const DataPropertyPtrT);
             
@@ -102,15 +103,18 @@ namespace lsst {
             
             Mask<MaskPixelT>& operator |= (const Mask<MaskPixelT>& inputMask);
             
-            unsigned int getCols() const;
-            unsigned int getRows() const;
-            unsigned int getOffsetCols() const;
-            unsigned int getOffsetRows() const;
+            unsigned int getCols() const { return _image.cols(); }
+            unsigned int getRows() const { return _image.rows(); }
+            unsigned int getOffsetCols() const { return _offsetCols; }
+            unsigned int getOffsetRows() const { return _offsetRows; }
 
-            MaskIVwPtrT getIVwPtr() const;
 
-            MaskIVwT& getIVw() const;
-            
+            MaskIVwPtrT getIVwPtr() const {
+                return _imagePtr; // did this increment reference count or not....and does this violate const??
+            }                
+
+            MaskIVwT& getIVw() const { return _image; }
+
             map<int, std::string> getMaskPlaneDict() const;
             
             void printMaskPlanes() const;

@@ -176,15 +176,21 @@ void Mask<MaskPixelT>::getMaskPlane(const string& name,
 }
 
 template<class MaskPixelT>
+int Mask<MaskPixelT>::getMaskPlane(const string& name) const {
+    for(map<int, string>::const_iterator i=_maskPlaneDict.begin(); i != _maskPlaneDict.end(); ++i) {
+        if (i->second == name) {
+            return i->first;
+        }
+    }
+    return -1;
+}
+
+template<class MaskPixelT>
 bool Mask<MaskPixelT>::getPlaneBitMask(const string& name,
                                        MaskChannelT& bitMask) const {
-    int plane;
-    try {
-        getMaskPlane(name, plane);
-    }
-    catch (exception &e) {
-         Trace("fw.Mask", 0,
-                   boost::format("%s Plane %s not present in this Mask") % e.what() % name);
+    int plane = getMaskPlane(name);
+    if (plane < 0) {
+         Trace("fw.Mask", 1, boost::format("Plane %s not present in this Mask") % name);
          return false;
     }
 
@@ -192,6 +198,10 @@ bool Mask<MaskPixelT>::getPlaneBitMask(const string& name,
     return true;
 }
 
+template<class MaskPixelT>
+typename Mask<MaskPixelT>::MaskChannelT Mask<MaskPixelT>::getPlaneBitMask(const string& name) const {
+    return _planeBitMask[getMaskPlane(name)];
+}
 
 template<class MaskPixelT> void Mask<MaskPixelT>::clearAllMaskPlanes() 
 {
@@ -205,8 +215,8 @@ template<class MaskPixelT> void Mask<MaskPixelT>::clearAllMaskPlanes()
 //
 template<class MaskPixelT> void Mask<MaskPixelT>::clearMaskPlane(int plane)
 {
-    for (int y=0; y<getRows(); y++) {
-        for (int x=0; x<getCols(); x++) {
+    for (unsigned int y = 0; y < getRows(); y++) {
+        for (unsigned int x = 0; x < getCols(); x++) {
 	       _image(x,y) = _image(x,y) & _planeBitMaskComplemented[plane];
 	  }
      }
@@ -225,6 +235,16 @@ template<class MaskPixelT> void Mask<MaskPixelT>::setMaskPlaneValues(int plane, 
      }
 }
 
+/**
+ * setMaskPlaneValues(int plane, x0, x1, y) sets the bit specified by "plane" for pixels (x0, y) ... (x1, y)
+ */
+template<typename MaskPixelT>
+void Mask<MaskPixelT>::setMaskPlaneValues(const int plane, const int x0, const int x1, const int y) {
+    for (int x = x0; x <= x1; x++) {
+        _image(x, y) |= _planeBitMask[plane];
+    }
+}
+
 // setMaskPlaneValues(int plane,MaskPixelBooleanFunc selectionFunc ) sets the bit specified by "plane"
 // for each pixel for which selectionFunc(pixel) returns true
 //
@@ -232,8 +252,8 @@ template<class MaskPixelT> void Mask<MaskPixelT>::setMaskPlaneValues(int plane, 
 {
     //  Should check plane for legality here...
 
-    for (int y=0; y<getRows(); y++) {
-        for (int x=0; x<getCols(); x++) {
+    for (unsigned int y = 0; y < getRows(); y++) {
+        for (unsigned int x = 0; x < getCols(); x++) {
             if (selectionFunc(_image(x,y)) == true) {
                 _image(x,y) = _image(x,y) | _planeBitMask[plane];
             }
@@ -342,8 +362,8 @@ template<class MaskPixelT> Mask<MaskPixelT>&  Mask<MaskPixelT>::operator |= (con
      
     // Now, can iterate through the MaskImages, or'ing the input pixels into this MaskImage
 
-    for (int y=0; y<getRows(); y++) {
-        for (int x=0; x<getCols(); x++) {
+    for (unsigned int y = 0; y < getRows(); y++) {
+        for (unsigned int x = 0; x < getCols(); x++) {
             _image(x,y) |= inputMask(x,y);
         }
     }
@@ -410,31 +430,6 @@ template<class MaskPixelT> void Mask<MaskPixelT>::printMaskPlanes() const {
         cout << "Plane " << planeNumber << " -> " << planeName << endl;
         }
 
-}
-
-template<class MaskPixelT> unsigned int Mask<MaskPixelT>::getCols() const {
-    return _image.cols();
-}
-
-template<class MaskPixelT> unsigned int Mask<MaskPixelT>::getRows() const {
-    return _image.rows();
-}
-
-template<class MaskPixelT> unsigned int Mask<MaskPixelT>::getOffsetCols() const {
-    return _offsetCols;
-}
-
-template<class MaskPixelT> unsigned int Mask<MaskPixelT>::getOffsetRows() const {
-    return _offsetRows;
-}
-
-template<class MaskPixelT> typename Mask<MaskPixelT>::MaskIVwT& Mask<MaskPixelT>::getIVw() const {
-    return _image;
-}
-
-template<class MaskPixelT> typename Mask<MaskPixelT>::MaskIVwPtrT Mask<MaskPixelT>::getIVwPtr() const {
-    return _imagePtr;
-    // did this increment reference count or not....and does this violate const??
 }
 
 template<class MaskPixelT> map<int, std::string> Mask<MaskPixelT>::getMaskPlaneDict() const {
