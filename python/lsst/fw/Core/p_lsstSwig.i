@@ -61,7 +61,7 @@ namespace boost {
 /*
  * Types of Images/Masks
  */
-%{
+%inline %{
 typedef float ImagePixelType;
 typedef uint8 MaskPixelType;
 %}
@@ -70,38 +70,14 @@ typedef uint8 MaskPixelType;
 %apply int {int32};
 %apply int {vw::int32};
 %apply int {boost::int32_t};
+%apply char {vw::uint8};
+%apply char {boost::uint8_t};
 
 /******************************************************************************/
 /*
  * Typemaps
  */
-#if 0
-%typemap(in) FILE * {
-    if ($input == Py_None) {
-	$1 = NULL;
-    } else if (!PyFile_Check($input)) {
-	PyErr_SetString(PyExc_TypeError, "Need a file!");
-	goto fail;
-    } else {
-	$1 = PyFile_AsFile($input);
-    }
-}
 
-%typemap(in) char * {
-    if ($input == Py_None) {
-	$1 = NULL;
-    } else if (!PyString_Check($input)) {
-	PyErr_SetString(PyExc_TypeError, "Need a string!");
-	goto fail;
-    } else {
-	$1 = PyString_AsString($input);
-    }
-}
-
-%typemap(freearg) char * {}
-#endif
-
-/******************************************************************************/
 /*
  * Handle treating arrays within structures as arrays.
  *
