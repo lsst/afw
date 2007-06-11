@@ -37,7 +37,8 @@ class MaskedImageTestCase(unittest.TestCase):
         """Check if we can add mask planes"""
         mask = self.maskedImage1.getMask()
 
-        self.assertRaises(IndexError, mask.getMaskPlane, "XXX")
+        name = "XXX"
+        assert mask.getMaskPlane(name) == -1, "There is no plane named %s" %name
 
         name = "FOO"
         mask.addMaskPlane(name)

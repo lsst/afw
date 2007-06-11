@@ -71,7 +71,9 @@ namespace lsst {
             
             void removeMaskPlane(const string& name);
             
+#if !defined(SWIG)
             void getMaskPlane(const string& name, int& plane) const;
+#endif
             int getMaskPlane(const string& name) const;
             
             bool getPlaneBitMask(const string& name,

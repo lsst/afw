@@ -149,17 +149,12 @@ ensure:
 %template(mapIntString)  std::map<int,std::string>;
 %apply int &OUTPUT { int & };
 
-%ignore lsst::fw::Mask::getMaskPlane;   // with the %apply int& typemap,
-                                        // void getMaskPlane(const std::string& name, int& plane) const; and
-                                        // void getMaskPlane(const std::string& name) const; have the same signature
+%ignore lsst::fw::Mask::rows;           // no need to swig pointers to the rows (and the _wrap.cc file is invalid)
+%ignore lsst::fw::Image::rows;          // no need to swig pointers to the rows (and the _wrap.cc file is invalid)
 
 %include "lsst/fw/Image.h"
 %include "lsst/fw/Mask.h"
 %include "lsst/fw/MaskedImage.h"
-
-%extend lsst::fw::Mask {                // get getMaskPlane back
-    void getMaskPlane(const std::string& name, int& plane) const;
-}
 
 %extend lsst::fw::Image<int> {
     %rename(getPtr) get;
@@ -257,6 +252,7 @@ ensure:
 %template(ImageInt)			lsst::fw::Image<int>;
 %template(ImagePtrInt) 	                boost::shared_ptr<lsst::fw::Image<int> >;
 
+%template(listMaskPixelPtr)		std::list<MaskPixelType *>;
 %template(ImageBaseMask)                vw::ImageViewBase<vw::ImageView<MaskPixelType> >;
 %template(ImageViewMask)                vw::ImageView<MaskPixelType>;
 %template(CompoundChannelMaskTypeD)     vw::CompoundChannelType<MaskPixelType>;
