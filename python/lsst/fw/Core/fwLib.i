@@ -8,13 +8,6 @@ Basic routines to talk to FW's classes (including visionWorkbench) and ds9
 %feature("autodoc", "1");
 %module(docstring=fwLib_DOCSTRING) fwLib
 
-#if 0
-   %rename("%(command:perl -pe 's/^act(.)/\l$1/' <<< )s") "";
-#else
-//   %include "fwRename.i"
-#endif
-
-
 // Suppress swig complaints from vw
 // 317: Specialization of non-template
 // 389: operator[] ignored
@@ -28,8 +21,10 @@ Basic routines to talk to FW's classes (including visionWorkbench) and ds9
 #   include <exception>
 #   include <map>
 #   include <boost/cstdint.hpp>
+#   include <boost/static_assert.hpp>
 #   include <boost/shared_ptr.hpp>
 #   include <boost/any.hpp>
+#   include <boost/array.hpp>
 #   include "lsst/fw/Citizen.h"
 #   include "lsst/fw/Demangle.h"
 #   include "lsst/fw/DiskImageResourceFITS.h"
@@ -64,12 +59,13 @@ def version(HeadURL = r"$HeadURL$"):
 
 /******************************************************************************/
 
+%ignore vw::ImageView<int>::origin;
 %ignore vw::ImageView<ImagePixelType>::origin;
 %ignore vw::ImageView<MaskPixelType>::origin;
 %ignore operator vw::ImageView::unspecified_bool_type;
-%ignore operator lsst::Mask::operator()(int, int); // RHL can't get this to work
 
 %import <vw/Core/FundamentalTypes.h>
+%import <vw/Core/CompoundTypes.h>
 
 %include <vw/Image/ImageViewBase.h>
 %include <vw/Image/ImageView.h>
@@ -77,7 +73,24 @@ def version(HeadURL = r"$HeadURL$"):
 %include <vw/Image/PixelTypes.h>
 %include <vw/Image/ImageResource.h>
 %include <vw/Math/BBox.h>
-
+#if 0
+%   include <vw/Math/Vector.h>             // swig doesn't like "const static int value = 0;"
+#else
+    template <class ElemT, int SizeN = 0>
+    class Vector {
+        boost::array<ElemT,SizeN> core_;
+    public:
+        ElemT x() {
+            BOOST_STATIC_ASSERT( SizeN >= 1 );
+            return core_[0];
+        }
+        
+        ElemT y() {
+            BOOST_STATIC_ASSERT( SizeN >= 2 );
+            return core_[0];
+        }
+    };
+#endif
 %import <vw/FileIO/DiskImageResource.h>
 %include "lsst/fw/DiskImageResourceFITS.h"
 
@@ -136,38 +149,137 @@ ensure:
 %template(mapIntString)  std::map<int,std::string>;
 %apply int &OUTPUT { int & };
 
+%include "lsst/fw/Image.h"
 %include "lsst/fw/Mask.h"
 %include "lsst/fw/MaskedImage.h"
 
-%template(ImageBaseFloat) vw::ImageViewBase<vw::ImageView<ImagePixelType> >;
-%template(ImageFloat)     vw::ImageView<ImagePixelType>;
+%extend lsst::fw::Image<int> {
+    %rename(getPtr) get;
+    /**
+     * Set an image to the value val
+     */
+    void set(double val) {
+        Image<int>::ImageIVwT& ivw = self->getIVw();
+        std::fill(ivw.begin(), ivw.end(), val);
+    }
+    ImagePixelType get(int x, int y) {
+        return self->operator()(x, y);
+    }
+}
 
-%template(ImageBaseMask)  vw::ImageViewBase<vw::ImageView<MaskPixelType> >;
-%template(ImageMask)      vw::ImageView<MaskPixelType>;
+%extend lsst::fw::Image<ImagePixelType> {
+    %rename(getPtr) get;
+    /**
+     * Set an image to the value val
+     */
+    void set(double val) {
+        Image<ImagePixelType>::ImageIVwT& ivw = self->getIVw();
+#if 1                                   // Using whole-image iterator
+        std::fill(ivw.begin(), ivw.end(), val);
+#elif 0                                 // Using whole-image iterator
+        typedef PixelIterator<Image<ImagePixelType>::ImageIVwT> PixelIterator;
+        
+        const PixelIterator end = ivw.end();
+        for (PixelIterator ptr = ivw.begin(); ptr < end; ptr++) {
+            *ptr = val;
+        }
+#else  // Using per-row iterator
+        typedef Image<ImagePixelType>::ImageIVwT::pixel_accessor pixAccessT;
+        pixAccessT srow = ivw.origin();
 
-%template(MaskD)          lsst::fw::Mask<MaskPixelType>;
-%template(MaskedImageD)   lsst::fw::MaskedImage<ImagePixelType, MaskPixelType>;
-%template(MaskDPtr)       boost::shared_ptr<lsst::fw::Mask<MaskPixelType> >;
-%template(BBox2i)	  BBox<int32, 2>;
+        for (unsigned int y = 0; y < ivw.rows(); y++) {
+            pixAccessT scol = srow;
+            for (unsigned int x = 0; x < ivw.cols(); x++) {
+                *scol = val;
+                scol.next_col();
+            }
+            srow.next_row();
+        }
+#endif
+    }
+    /**
+     * Set pixel (x,y) to val
+     */
+    void set(int x, int y, double val) {
+        Image<ImagePixelType>::ImageIVwT& ivw = self->getIVw();
+        *ivw.origin().advance(x, y) = val;
+    }
+    /**
+     * Return the value of pixel (x,y)
+     */
+    ImagePixelType get(int x, int y) {
+        return self->operator()(x, y);
+    }
+}
 
-%extend_smart_pointer(boost::shared_ptr<vw::ImageView<MaskPixelType> >);
+//%ignore operator lsst::Mask::operator()(int, int); // RHL can't get this to work
+%extend lsst::fw::Mask<MaskPixelType> {
+    %rename(getPtr) get;
+    /**
+     * Set entire mask to val
+     */
+    void set(double val) {
+        Mask<MaskPixelType>::MaskIVwT& ivw = self->getIVw();
+        std::fill(ivw.begin(), ivw.end(), val);
+    }
+    /**
+     * Set pixel (x,y) to val
+     */
+    void set(int x, int y, double val) {
+        Mask<MaskPixelType>::MaskIVwT& ivw = self->getIVw();
+        *ivw.origin().advance(x, y) = val;
+    }
+    /**
+     * return the value of pixel (x,y).  Would be called get, except that that's taken
+     */
+    MaskPixelType get(int x, int y) {
+        return self->operator()(x, y);
+    }
+}
+
+%template(CompoundChannelTypeD)		vw::CompoundChannelType<ImagePixelType>;
+%template(PixelChannelTypeD)		vw::PixelChannelType<ImagePixelType>;
+%template(ImageBaseD)			vw::ImageViewBase<vw::ImageView<ImagePixelType> >;
+%template(ImageViewD)			vw::ImageView<ImagePixelType>;
+%template(ImageD) 	                lsst::fw::Image<ImagePixelType>;
+%template(ImagePtrD) 	                boost::shared_ptr<lsst::fw::Image<ImagePixelType> >;
+
+%template(ImageBaseInt)			vw::ImageViewBase<vw::ImageView<int> >;
+%template(ImageViewInt)                 vw::ImageView<int>;
+%template(ImageInt)			lsst::fw::Image<int>;
+%template(ImagePtrInt) 	                boost::shared_ptr<lsst::fw::Image<int> >;
+
+%template(ImageBaseMask)                vw::ImageViewBase<vw::ImageView<MaskPixelType> >;
+%template(ImageViewMask)                vw::ImageView<MaskPixelType>;
+%template(CompoundChannelMaskTypeD)     vw::CompoundChannelType<MaskPixelType>;
+%template(PixelChannelMaskTypeD)        vw::PixelChannelType<MaskPixelType>;
+%template(MaskD)                        lsst::fw::Mask<MaskPixelType>;
+%template(MaskDPtr)                     boost::shared_ptr<lsst::fw::Mask<MaskPixelType> >;
+
+%template(MaskedImageD)                 lsst::fw::MaskedImage<ImagePixelType, MaskPixelType>;
+%template(MaskedImageDPtr)              boost::shared_ptr<lsst::fw::MaskedImage<ImagePixelType, MaskPixelType> >;
+
+%template(BBox2i)	                BBox<int32, 2>;
+%template(Vector2i)	                Vector<int32, 2>;
+
 //%delobject boost::shared_ptr<vw::ImageView<MaskPixelType> >::shared_ptr;
 //%apply SWIGTYPE *DISOWN {Foo *foo};
-%template(MaskIVwPtrT) boost::shared_ptr<vw::ImageView<MaskPixelType> >;
+%extend_smart_pointer(boost::shared_ptr<vw::ImageView<MaskPixelType> >);
+%template(MaskIVwPtrT)                  boost::shared_ptr<vw::ImageView<MaskPixelType> >;
 
 %pythoncode %{
-def ImageMaskPtr(*args):
+def ImageViewMaskPtr(*args):
     """Return an MaskIVwPtrT that owns its ImageMask"""
 
-    Trace("fw.memory", 5, "creating maskImagePtr")
+    Trace("fw.memory", 5, "creating ImageViewMaskPtr")
 
-    im = ImageMask(*args)
+    im = ImageViewMask(*args)
     im.this.disown()
-    maskImagePtr = MaskIVwPtrT(im)
+    ivmPtr = MaskIVwPtrT(im)
 
-    Trace("fw.memory", 5, "returning maskImagePtr")
+    Trace("fw.memory", 5, "returning ImageViewMaskPtr")
         
-    return maskImagePtr
+    return ivmPtr
 
 def DataPropertyPtr(*args):
     """Return an DataPropertyPtrT that owns its DataProperty"""
