@@ -4,9 +4,9 @@ import fwTests
 def doMask_1():
     """Run the code in Mask_1.cc"""
     if True:
-        maskImage = fwCore.ImageMaskPtr(300,400)
+        maskImage = fwCore.ImageViewMaskPtr(300,400)
     else:
-        maskImage = fwCore.ImageMask(300,400)
+        maskImage = fwCore.ImageViewMask(300,400)
         
     print maskImage.use_count()
     testMask = fwCore.MaskD(maskImage)
@@ -75,7 +75,7 @@ def doMask_1():
     # ------------------ Test |= operator
    
     testMask3 = fwCore.MaskD(
-        fwCore.ImageMaskPtr(testMask.getImageCols(), testMask.getImageRows())
+        fwCore.ImageViewMaskPtr(testMask.getCols(), testMask.getRows())
         )
 
     testMask3.addMaskPlane("CR")
@@ -159,4 +159,3 @@ def printMaskPlane(mask, plane,
 
 if __name__ == "__main__":
     test()
-    
