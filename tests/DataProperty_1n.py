@@ -1,26 +1,29 @@
 import pdb                              # we may want to say pdb.set_trace()
 import unittest
-import lsst.fw.Core.fwLib as fwCore
+import lsst.fw.Core.tests as tests
+import lsst.fw.Core.fwLib as fw
 
 try:
     type(verbose)
 except NameError:
     verbose = 0
-    fwCore.Trace_setVerbosity("fw.DataProperty", verbose)
+    fw.Trace_setVerbosity("fw.DataProperty", verbose)
+
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class DataPropertyTestCase(unittest.TestCase):
     """A test case for DataProperty"""
     def setUp(self):
-        self.root = fwCore.DataProperty("root")
+        self.root = fw.DataProperty("root")
 
         self.values = {}; props = []
         
         n = "name1"; self.values[n] = "value1"
-        props += [fwCore.DataProperty(n, self.values[n])]
+        props += [fw.DataProperty(n, self.values[n])]
 
         n = "name2"; self.values[n] = 2
-        props += [fwCore.DataProperty(n, self.values[n])]
-        props += [fwCore.DataProperty(n, 2*self.values[n])] # add with different value
+        props += [fw.DataProperty(n, self.values[n])]
+        props += [fw.DataProperty(n, 2*self.values[n])] # add with different value
 
         n = "name3"
         if False:                           # this won't work, as I don't
@@ -31,7 +34,7 @@ class DataPropertyTestCase(unittest.TestCase):
             self.values[n] = Foo()
         else:
             self.values[n] = "Foo()"
-        props += [fwCore.DataProperty(n, self.values[n])]
+        props += [fw.DataProperty(n, self.values[n])]
 
         for prop in props:
             self.root.addProperty(prop)
@@ -91,17 +94,17 @@ class DataPropertyTestCase(unittest.TestCase):
 class NestedDataPropertyTestCase(unittest.TestCase):
     """A test case for nested DataProperty"""
     def setUp(self):
-        self.root = fwCore.DataProperty("root")
+        self.root = fw.DataProperty("root")
 
-        nested = fwCore.DataProperty("nested")
+        nested = fw.DataProperty("nested")
 
         self.values = {}; props = []
            
         n = "name1"; self.values[n] = "value1"
-        props += [fwCore.DataProperty(n, self.values[n])]
+        props += [fw.DataProperty(n, self.values[n])]
 
         n = "name2"; self.values[n] = 2
-        props += [fwCore.DataProperty(n, self.values[n])]
+        props += [fw.DataProperty(n, self.values[n])]
 
         for prop in props:
             nested.addProperty(prop)
@@ -115,7 +118,7 @@ class NestedDataPropertyTestCase(unittest.TestCase):
     def testCopyConstructor(self):
         """Check copy constructor"""
     
-        rootCopy = fwCore.DataProperty(self.root)
+        rootCopy = fw.DataProperty(self.root)
 
         # Explicitly destroy root
         del self.root; self.root = None
@@ -153,32 +156,15 @@ class NestedDataPropertyTestCase(unittest.TestCase):
             self.assertEqual(getValue(), self.values[n])
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-        
-class MemoryTestCase(unittest.TestCase):
-    """Check for memory leaks"""
-    def setUp(self):
-        pass
-
-    def testLeaks(self):
-        """Check for memory leaks in the preceding tests"""
-        if fwCore.Citizen_census(0) != 0:
-            if False:
-                print fwCore.Citizen_census(0), "Objects leaked:"
-                print fwCore.Citizen_census(fwCore.cout)
-                
-            self.fail("Leaked %d blocks" % fwCore.Citizen_census(0))
-            
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
     """Returns a suite containing all the test cases in this module."""
-    # Build a TestSuite containing all the possible test case instances
-    # that can be made from the ListTestCase class using its 'test*'
-    # functions.
+    tests.init()
+
     suites = []
     suites += unittest.makeSuite(DataPropertyTestCase)
     suites += unittest.makeSuite(NestedDataPropertyTestCase)
-    suites += unittest.makeSuite(MemoryTestCase)
+    suites += unittest.makeSuite(tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
 if __name__ == "__main__":
