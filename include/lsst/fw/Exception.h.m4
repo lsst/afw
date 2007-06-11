@@ -92,6 +92,9 @@ namespace lsst {
 
     LSST_NEW_EXCEPTION(FitsError,
                        Problem in FITS I/O system);
+
+    LSST_NEW_EXCEPTION(InvalidParameter,
+                       A parameter or argument has been found to be invalid);
 }
 }
 #endif
