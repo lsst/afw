@@ -63,12 +63,12 @@ public:
         //  In general, do something to the pixel values
         ImageIteratorT j = i;
         if (++testCount < 10) {
-            std::cout << *i << " " << *m << std::endl;
+            //std::cout << *i << " " << *m << std::endl;
             *j = 1;
             int dx = 1;
             int dy = 0;
             if (initCount <2) *(j.advance(dx,dy)) = 2*testCount;
-            std::cout << "modified: " << *j << std::endl;
+            //std::cout << "modified: " << *j << std::endl;
          }
      }
 
