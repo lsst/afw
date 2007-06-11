@@ -6,7 +6,7 @@ import os, re, math, sys, time
 try: import xpa
 except: print "Cannot import xpa"
 
-try: import fwLib
+try: import fwDisplay
 except: pass
 
 class Ds9Error(IOError):
@@ -46,7 +46,7 @@ def initDS9(execDs9 = True):
       raise Ds9Error
 
 def mtv(data, frame = 0, init = 1, WCS = ""):
-   """Display an OTA or Cell on a DS9 display"""
+   """Display an Image or Mask on a DS9 display"""
 	
    if frame == None:
       return
@@ -70,7 +70,24 @@ def mtv(data, frame = 0, init = 1, WCS = ""):
       pfd = file("foo.fits", "w")
 
    try:
-       fwLib.writeFits(pfd.fileno(), data, WCS)
+       #import pdb; pdb.set_trace()
+
+       try:                             # maybe it's smart pointer?
+           data = data.get()
+       except AttributeError:
+           pass
+       
+       try:                             # get the vw::ImageView
+           data = data.getIVw()
+       except AttributeError:
+           pass
+       
+       try:                             # get the vw::ImageBuffer
+           data = data.buffer()
+       except AttributeError:
+           pass
+       
+       fwDisplay.writeVwFits(pfd.fileno(), data, WCS)
    except Exception, e:
        try:
            pfd.close()
