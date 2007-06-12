@@ -19,20 +19,16 @@ import glob, os, sys
 import lsst.tests
 tests = lsst.tests.Control(env, ignoreList=["fitsio", "generate", "vwconvert"])
 
-try:
-    tests.runExamples                   # in scons 1.16
+if not hasattr(tests, "runExamples"): # before scons 1.16
+    try:
+        tests.runExamples = (os.stat(tests._tmpDir).st_mode & 0x5) # file is world read/executable
+    except OSError:
+        tests.runExamples = True
+
+if not tests.runExamples:
+    print >> sys.stderr, "Not running the examples; \"chmod 755 examples/%s\" to run them" % tests._tmpDir
+else:
+    print >> sys.stderr, "Running the examples; \"chmod 0 examples/%s\" to not run them" % tests._tmpDir
     tests.run("*.cc")
     tests.run("*.py")
-except:                                 # Code for pre-1.16 scons
-    tests.runExamples = True            # should I run the examples?
-    try:
-        runExamples = (os.stat(tests._tmpDir).st_mode & 0x5) # file is world read/executable
-    except OSError:
-        pass
-
-    if not runExamples:
-        print >> sys.stderr, "Not running examples; \"chmod 755 %s\" to run them again" % tests._tmpDir
-    else:
-        tests.run("*.cc")
-        tests.run("*.py")
 

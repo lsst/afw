@@ -18,7 +18,7 @@ env.SharedLibrary('fw', map(lambda str: "../src/" + str,
                              "Trace.cc",
                              "Log.cc",
                              "Utils.cc",
-                             ]), LIBS=env.libs["boost"])
+                             ]), LIBS=env.libs["boost"] + env.libs["vw"])
 env.SharedLibraryIncomplete('fitsio', map(lambda str: "../src/" + str,
 					  Split("DiskImageResourceFITS.cc")),
                             LIBS=["cfitsio"])
