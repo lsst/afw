@@ -18,6 +18,7 @@ Basic routines to talk to FW's classes (including visionWorkbench) and ds9
 #pragma SWIG nowarn=389
 
 %{
+#   include <fstream>
 #   include <exception>
 #   include <map>
 #   include <boost/cstdint.hpp>
@@ -28,6 +29,7 @@ Basic routines to talk to FW's classes (including visionWorkbench) and ds9
 #   include "lsst/fw/Citizen.h"
 #   include "lsst/fw/Demangle.h"
 #   include "lsst/fw/DiskImageResourceFITS.h"
+#   include "lsst/fw/Log.h"
 #   include "lsst/fw/Mask.h"
 #   include "lsst/fw/MaskedImage.h"
 #   include "lsst/fw/Trace.h"
@@ -113,8 +115,16 @@ def version(HeadURL = r"$HeadURL$"):
 /******************************************************************************/
 // Citizens, Trace, etc.
 %include "lsst/fw/Citizen.h"
+%include "lsst/fw/Log.h"
 %include "lsst/fw/Trace.h"
 %include "lsst/fw/DataProperty.h"
+
+%extend lsst::fw::Log {
+    static void setDestination(const std::string& fileName) {
+        std::ofstream &fp = *new std::ofstream(fileName.c_str(), std::ios_base::out); // Log now owns this stream
+        lsst::fw::Log::setDestination(fp);
+    }
+}
 
 #if 0                                   // doesn't work (yet)
 typedef boost::shared_ptr<DataProperty> DataPropertyPtr;
