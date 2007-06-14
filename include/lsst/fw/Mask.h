@@ -54,6 +54,7 @@ namespace lsst {
             typedef ImageView<MaskPixelT> MaskIVwT;
             typedef boost::shared_ptr<Mask<MaskPixelT> > MaskPtrT;
             typedef boost::shared_ptr<MaskIVwT> MaskIVwPtrT;
+            typedef typename vw::ImageView<MaskPixelT>::pixel_accessor pixel_accessor;
             
             Mask();
             
@@ -98,6 +99,8 @@ namespace lsst {
             MaskPtrT getSubMask(const BBox2i maskRegion) const;
             
             void replaceSubMask(const BBox2i maskRegion, MaskPtrT insertMask);
+            
+            pixel_accessor origin() { return getIVwPtr()->origin(); }
             
             MaskChannelT operator ()(int x, int y) const;
             

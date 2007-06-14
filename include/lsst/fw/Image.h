@@ -36,7 +36,7 @@ namespace lsst {
             typedef ImageView<ImagePixelT> ImageIVwT;
             typedef boost::shared_ptr<Image<ImagePixelT> > ImagePtrT;
             typedef boost::shared_ptr<ImageIVwT> ImageIVwPtrT;
-            
+            typedef typename vw::ImageView<ImagePixelT>::pixel_accessor pixel_accessor;
             
             Image();
             
@@ -55,6 +55,8 @@ namespace lsst {
             void replaceSubImage(const BBox2i imageRegion, ImagePtrT insertImage);
 
             ImageChannelT operator ()(int x, int y) const;
+
+            pixel_accessor origin() { return getIVwPtr()->origin(); }
             
             Image<ImagePixelT>& operator += (const Image<ImagePixelT>& inputImage);
             Image<ImagePixelT>& operator -= (const Image<ImagePixelT>& inputImage);
