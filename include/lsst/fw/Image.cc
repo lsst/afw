@@ -64,14 +64,14 @@ void Image<ImagePixelT>::readFits(const string& fileName, int hdu)
 }
 
 template<class ImagePixelT>
-void Image<ImagePixelT>::writeFits(const string& fileName)
+void Image<ImagePixelT>::writeFits(const string& fileName) const
 {
     LSSTFitsResource<ImagePixelT> fitsRes;
     fitsRes.writeFits(_image, _metaData, fileName);
 }
 
 template<class ImagePixelT>
-DataPropertyPtrT Image<ImagePixelT>::getMetaData()
+DataPropertyPtrT Image<ImagePixelT>::getMetaData() const
 {
     return _metaData;
 }

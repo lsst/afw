@@ -46,9 +46,9 @@ namespace lsst {
             
             void readFits(const string& fileName, int hdu=0);
             
-            void writeFits(const string& fileName);
+            void writeFits(const string& fileName) const;
             
-            DataPropertyPtrT getMetaData();
+            DataPropertyPtrT getMetaData() const;
             
             ImagePtrT getSubImage(const BBox2i imageRegion) const;
             
@@ -56,7 +56,7 @@ namespace lsst {
 
             ImageChannelT operator ()(int x, int y) const;
 
-            pixel_accessor origin() { return getIVwPtr()->origin(); }
+            pixel_accessor origin() const { return getIVwPtr()->origin(); }
             
             Image<ImagePixelT>& operator += (const Image<ImagePixelT>& inputImage);
             Image<ImagePixelT>& operator -= (const Image<ImagePixelT>& inputImage);
