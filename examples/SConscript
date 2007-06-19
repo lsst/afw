@@ -31,4 +31,3 @@ else:
     print >> sys.stderr, "Running the examples; \"chmod 0 examples/%s\" to not run them" % tests._tmpDir
     tests.run("*.cc")
     tests.run("*.py")
-

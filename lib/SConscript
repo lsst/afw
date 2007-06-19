@@ -22,4 +22,3 @@ env.SharedLibrary('fw', map(lambda str: "../src/" + str,
 env.SharedLibraryIncomplete('fitsio', map(lambda str: "../src/" + str,
 					  Split("DiskImageResourceFITS.cc")),
                             LIBS=["cfitsio"])
-
