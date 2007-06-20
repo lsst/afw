@@ -21,13 +21,13 @@ tests = lsst.tests.Control(env, ignoreList=["fitsio", "generate", "vwconvert"])
 
 if not hasattr(tests, "runExamples"): # before scons 1.16
     try:
-        tests.runExamples = (os.stat(tests._tmpDir).st_mode & 0x5) # file is world read/executable
+        tests.runExamples = (os.stat(tests._tmpDir).st_mode & 0x1) # directory is world executable
     except OSError:
         tests.runExamples = True
 
 if not tests.runExamples:
-    print >> sys.stderr, "Not running the examples; \"chmod 755 examples/%s\" to run them" % tests._tmpDir
+    print >> sys.stderr, "Not running the examples; \"chmod o+x examples/%s\" to run them" % tests._tmpDir
 else:
-    print >> sys.stderr, "Running the examples; \"chmod 0 examples/%s\" to not run them" % tests._tmpDir
+    print >> sys.stderr, "Running the examples; \"chmod o-x examples/%s\" to not run them" % tests._tmpDir
     tests.run("*.cc")
     tests.run("*.py")
