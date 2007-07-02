@@ -20,10 +20,10 @@ fwTests = env.LoadableModuleIncomplete("_fwTests", "fwTests.i",
 import lsst.tests
 tests = lsst.tests.Control(env,
                            args=dict([
-    ("MaskIO_1", "data/871034p_1_MI_msk.fits"),
-    ("MaskedImage_1", "data/871034p_1_MI foo"),
-    ("MaskedImageIO_1", "data/871034p_1_MI"),
-    ]))
+    ("MaskIO_1",        "data/871034p_1_MI_msk.fits"),
+    ("MaskedImage_1",   "file:data/871034p_1_MI foo"),
+    ("MaskedImageIO_1", "file:data/871034p_1_MI"),
+    ]), verbose=True)
 
 tests.run("*.cc")
 for target in tests.run("*.py"):
