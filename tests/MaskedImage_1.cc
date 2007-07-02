@@ -66,7 +66,7 @@ int main(int argc, char**argv) {
      try {
          testMaskedImage1.readFits(argv[1]);
      } catch (lsst::fw::Exception &e) {
-         std::cerr << "Failed to open " << argv[1] << ": " << e.what();
+         std::cerr << "Failed to open " << argv[1] << ": " << e.what() << std::endl;
          return 1;
      }
 
@@ -89,7 +89,7 @@ int main(int argc, char**argv) {
      try {
          testFlat.readFits(argv[2]);
      } catch (lsst::fw::Exception &e) {
-         std::cerr << "Failed to open " << argv[2] << ": " << e.what();
+         std::cerr << "Failed to open " << argv[2] << ": " << e.what() << std::endl;
          return 1;
      }
      testFlat.setDefaultVariance();
