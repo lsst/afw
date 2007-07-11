@@ -42,6 +42,13 @@ Alias("install", env.Install(env['prefix'] + "/bin", glob.glob("bin/*.py")))
 Alias("install", env.InstallEups(env['prefix'] + "/ups", glob.glob("ups/*.table")))
 
 scons.CleanTree(r"*~ core *.so *.os *.o")
+#
+# Build TAGS files
+#
+try:
+    env.Command("TAGS", scons.filesToTag(), "etags -o $TARGET $SOURCES")
+except AttributeError:                  # not in this version of scons
+    pass
 
 env.Declare()
 env.Help("""
