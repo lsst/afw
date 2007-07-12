@@ -45,10 +45,11 @@ scons.CleanTree(r"*~ core *.so *.os *.o")
 #
 # Build TAGS files
 #
-try:
-    env.Command("TAGS", scons.filesToTag(), "etags -o $TARGET $SOURCES")
-except AttributeError:                  # not in this version of scons
-    pass
+if len(filter(lambda t: t == "TAGS", scons.COMMAND_LINE_TARGETS)) > 0:
+    try:
+        env.Command("TAGS", scons.filesToTag(), "etags -o $TARGET $SOURCES")
+    except AttributeError:                  # not in this version of sconsUtils
+        pass
 
 env.Declare()
 env.Help("""
