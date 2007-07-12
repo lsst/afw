@@ -14,14 +14,7 @@ LSST_START_NAMESPACE(fw)
  * classes base classes, and handles basic memory management
  *
  * Instances of subclasses of Citizen will automatically be
- * given a unique id.  If you use the
- *   Citizen(const char *file, const int line)
- * constructor, the values of file and line will also be
- * recorded; this is typically achieved by using
- *   Citizen(__FILE__, __LINE__)
- * where the values are provided by the pre-processor.
- *
- * \sa NEW to include the file/line information when calling new
+ * given a unique id.
  *
  * You can ask for infomation about the currently allocated
  * Citizens using the census functions, request that
@@ -87,8 +80,6 @@ LSST_START_NAMESPACE(fw)
 //! The new object knows its type. E.g.<BR>
 //! Shoe *z = lsstFactory(Shoe);<BR>
 //! lsst::Citizen::census(std::cout);<BR>
-//! \note __VA_ARGS__ is standard C, but not [yet] shandard C++
-//! \note The use of ## is a gcc extension.
 
 LSST_END_NAMESPACE(fw)
 LSST_END_NAMESPACE(lsst)
