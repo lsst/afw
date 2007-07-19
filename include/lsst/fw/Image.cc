@@ -35,6 +35,20 @@ Image<ImagePixelT>::Image(ImageIVwPtrT image):
 {
 }
 
+template<typename ImagePixelT>
+Image<ImagePixelT>& Image<ImagePixelT>::operator = (const Image<ImagePixelT>& image) {
+    if (&image != this) {   // beware of self assignment: image = image;
+        _imagePtr.reset();
+        _imagePtr = ImageIVwPtrT(new typename vw::ImageView<ImagePixelT>(image._image));
+        _image = *_imagePtr;
+        _metaData = image._metaData;
+        _offsetRows = image._offsetRows;
+        _offsetCols = image._offsetCols;
+    }
+    
+    return *this;
+}
+
 template<class ImagePixelT> typename Image<ImagePixelT>::ImageIVwT& Image<ImagePixelT>::getIVw() const {
     return _image;
 }

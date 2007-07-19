@@ -43,7 +43,9 @@ namespace lsst {
             Image(ImageIVwPtrT image);
             
             Image(int ncols, int nrows);
-            
+
+            Image& operator=(const Image& image);
+
             void readFits(const string& fileName, int hdu=0);
             
             void writeFits(const string& fileName) const;
