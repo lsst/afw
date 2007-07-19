@@ -46,7 +46,7 @@ def findFileFromRoot(ifile):
     This is useful for running tests that may be run from fw/tests or fw"""
     
     if os.path.isfile(ifile):
-        return file
+        return ifile
 
     ofile = None
     file = ifile
