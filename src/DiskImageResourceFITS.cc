@@ -26,93 +26,95 @@ using namespace lsst::fw;
 //
 #define throw_cfitsio_error(...) _throw_cfitsio_error(__LINE__, __VA_ARGS__)
 
-static void _throw_cfitsio_error(const int line,   //!< line in file (from __LINE__)
-                                 fitsfile *fd,     //!< (possibly invalid) file descriptor
-                                 const int status, //!< cfitsio error status (0 => no error)
-                                 const std::string errStr = "" //!< optional extra information
-                                ) {
-    if (status == 0) {
-        if (errStr == "") {
-            return;
+namespace {
+    void _throw_cfitsio_error(const int line,   //!< line in file (from __LINE__)
+                              fitsfile *fd,     //!< (possibly invalid) file descriptor
+                              const int status, //!< cfitsio error status (0 => no error)
+                              const std::string errStr = "" //!< optional extra information
+                             ) {
+        if (status == 0) {
+            if (errStr == "") {
+                return;
+            }
+            throw vw::IOErr() << "DiskImageResourceFITS:L" << line << ": " << errStr;
+        } else {
+            char fitsErr[FLEN_ERRMSG];
+            (void)fits_get_errstatus(status, fitsErr);
+            boost::format msg = boost::format("DiskImageResourceFITS: cfitsio error: %d: %s%s%s")
+                % line
+                % fitsErr
+                % (errStr == "" ? "" : " : ")
+                % (errStr == "" ? std::string("") : errStr);
+            
+            switch (status) {
+              case FILE_NOT_OPENED:
+                throw vw::IOErr() << msg.str();
+                break;
+              default:
+                throw FitsError(msg) << DataProperty("status", status);
+                break;
+            }
         }
-        throw vw::IOErr() << "DiskImageResourceFITS:L" << line << ": " << errStr;
-    } else {
-        char fitsErr[FLEN_ERRMSG];
-        (void)fits_get_errstatus(status, fitsErr);
-        boost::format msg = boost::format("DiskImageResourceFITS: cfitsio error: %d: %s%s%s")
-            % line
-            % fitsErr
-            % (errStr == "" ? "" : " : ")
-            % (errStr == "" ? std::string("") : errStr);
+    }
 
-        switch (status) {
-          case FILE_NOT_OPENED:
-            throw vw::IOErr() << msg.str();
+    void _throw_cfitsio_error(const int line, //!< line in file (from __LINE__)
+                              fitsfile *fd, //!< (possibly invalid) file descriptor
+                              const std::string errStr = "" //!< optional extra information
+                             ) {
+        _throw_cfitsio_error(line, fd, 0, errStr);
+    }
+
+    /******************************************************************************/
+    // Multiply a vw::ImageBuffer by a constant
+    // Here's the templated function; the driver that looks up
+    // the type comes next
+    //
+    template<typename PIXTYPE>
+    void _multiplyImageBuffer(vw::ImageBuffer const& buff, // the buffer in question
+                              double value // the value to multiply by
+                             ) {
+        PIXTYPE *data = static_cast<PIXTYPE *>(buff.data);
+        
+        for (unsigned int i = 0; i < buff.format.rows*buff.format.cols; i++) {
+            *data = static_cast<PIXTYPE>(*data * value);
+            data++;
+        }
+    }
+
+    void multiplyImageBuffer(vw::ImageBuffer const& buff, // the buffer in question
+                             double value // the value to multiply by
+                            ) {
+        
+        switch (buff.format.channel_type) {
+          case vw::VW_CHANNEL_FLOAT32:
+            _multiplyImageBuffer<float>(buff, value);
             break;
           default:
-            throw FitsError(msg);
-            break;
+            throw vw::IOErr() << "MultiplyImageBuffer: unknown type. " << buff.format.channel_type;
         }
     }
-}
 
-static void _throw_cfitsio_error(const int line, //!< line in file (from __LINE__)
-                                 fitsfile *fd, //!< (possibly invalid) file descriptor
-                                 const std::string errStr = "" //!< optional extra information
-                               ) {
-    _throw_cfitsio_error(line, fd, 0, errStr);
-}
-
-/******************************************************************************/
-// Multiply a vw::ImageBuffer by a constant
-// Here's the templated function; the driver that looks up
-// the type comes next
-//
-template<typename PIXTYPE>
-static void _multiplyImageBuffer(vw::ImageBuffer const& buff, // the buffer in question
-                                double value // the value to multiply by
-                                ) {
-    PIXTYPE *data = static_cast<PIXTYPE *>(buff.data);
-
-    for (unsigned int i = 0; i < buff.format.rows*buff.format.cols; i++) {
-        *data = static_cast<PIXTYPE>(*data * value);
-        data++;
-    }
-}
-
-static void multiplyImageBuffer(vw::ImageBuffer const& buff, // the buffer in question
-                                double value // the value to multiply by
-                               ) {
-
-    switch (buff.format.channel_type) {
-      case vw::VW_CHANNEL_FLOAT32:
-        _multiplyImageBuffer<float>(buff, value);
-	break;
-      default:
-        throw vw::IOErr() << "MultiplyImageBuffer: unknown type. " << buff.format.channel_type;
-    }
-}
-
-/******************************************************************************/
-//! \brief Move to the specified HDU
-static void move_to_hdu(fitsfile *fd,          //!< cfitsio file descriptor
-                        int hdu,               //!< desired HDU
-                        bool relative = false //!< Is move relative to current HDU?
-                       ) {
-    int status = 0;			// cfitsio status
-
-    if (relative) {
-        if (fits_movrel_hdu(fd, hdu, NULL, &status) != 0) {
-            throw_cfitsio_error(fd, status, 
-                                str(boost::format("Attempted to select relative HDU %d") % hdu));
-        }
-    } else {
-        if (hdu == 0) { // PDU; go there
-            hdu = 1;
-        } else {
-            if (fits_movabs_hdu(fd, hdu, NULL, &status) != 0) {
+    /******************************************************************************/
+    //! \brief Move to the specified HDU
+    void move_to_hdu(fitsfile *fd,          //!< cfitsio file descriptor
+                     int hdu,               //!< desired HDU
+                     bool relative = false //!< Is move relative to current HDU?
+                    ) {
+        int status = 0;			// cfitsio status
+        
+        if (relative) {
+            if (fits_movrel_hdu(fd, hdu, NULL, &status) != 0) {
                 throw_cfitsio_error(fd, status, 
-                                    str(boost::format("Attempted to select absolute HDU %d") % hdu));
+                                    str(boost::format("Attempted to select relative HDU %d") % hdu));
+            }
+        } else {
+            if (hdu == 0) { // PDU; go there
+                hdu = 1;
+            } else {
+                if (fits_movabs_hdu(fd, hdu, NULL, &status) != 0) {
+                    throw_cfitsio_error(fd, status, 
+                                        str(boost::format("Attempted to select absolute HDU %d") % hdu));
+                }
             }
         }
     }
@@ -195,34 +197,37 @@ void DiskImageResourceFITS::open(std::string const& filename //!< Desired filena
     fitsfile *fd = static_cast<fitsfile *>(_fd); // for convenience
 
     move_to_hdu(fd, _hdu);
-    //psError(ACT_ERR_FITS, false, "Opening %s", file);
 
     /* get image data type */
     int bitpix = 0;			// BITPIX from FITS header
-    if (fits_get_img_type(fd, &bitpix, &status) != 0) {
+    if (fits_get_img_equivtype(fd, &bitpix, &status) != 0) {
         throw_cfitsio_error(fd, status);
     }
     /*
-     * Find out the image type and convert to cfitsio name/channel type
+     * Find out the image type and convert to cfitsio name/vw channel type
      */
     switch (bitpix) {
-      case 8:
+      case BYTE_IMG:
 	_ttype = TBYTE;
         _channelType = vw::VW_CHANNEL_INT8;
 	break;
-      case 16:				// uint16
-	_ttype = TUSHORT;                 // n.b. cfitsio does magic things with bzero/bscale to make Uint16
+      case SHORT_IMG:                   // int16
+	_ttype = TSHORT;
+        _channelType = vw::VW_CHANNEL_INT16;
+	break;
+      case USHORT_IMG:                  // uint16
+	_ttype = TUSHORT;               // n.b. cfitsio does magic things with bzero/bscale to make Uint16
         _channelType = vw::VW_CHANNEL_UINT16;
 	break;
-      case 32:				// int32
+      case LONG_IMG:                    // int32
 	_ttype = TINT;
         _channelType = vw::VW_CHANNEL_INT32;
 	break;
-      case -32:				// float
+      case FLOAT_IMG:                   // float
 	_ttype = TFLOAT;
         _channelType = vw::VW_CHANNEL_FLOAT32;
 	break;
-      case -64:				// double
+      case DOUBLE_IMG:                  // double
 	_ttype = TDOUBLE;
         _channelType = vw::VW_CHANNEL_FLOAT64;
 	break;

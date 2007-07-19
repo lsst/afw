@@ -22,7 +22,7 @@ import lsst.tests
 tests = lsst.tests.Control(env,
                            args=dict([
     ("MaskIO_1",        "data/871034p_1_MI_msk.fits"),
-    ("MaskedImage_1",   "file:data/871034p_1_MI foo"),
+    ("MaskedImage_1",   "file:data/871034p_1_MI file:data/871034p_1_MI file:MaskedImage_1_output_1 file:MaskedImage_1_output_2"),
     ("MaskedImageIO_1", "file:data/871034p_1_MI"),
     ]), verbose=True)
 

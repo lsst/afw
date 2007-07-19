@@ -51,8 +51,8 @@ private:
 
 
 int main(int argc, char**argv) {
-    if (argc < 3) {
-        std::cerr << "Usage: inputBaseName outputBaseName" << std::endl;
+    if (argc < 5) {
+        std::cerr << "Usage: inputBaseName1 inputBaseName2 outputBaseName1  outputBaseName2" << std::endl;
         return 1;
     }
     
