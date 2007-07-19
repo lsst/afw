@@ -7,6 +7,8 @@ env.Program(["generate.cc"],
             Split("vwMosaic vwImage") + env.libs["boost"])
 env.Program(["vwconvert.cc"], LIBS=env.libs["vw"])
 env.Program(["fitsio.cc"], LIBS=["fw"] + env.libs["vw"] + env.libs["fits"] + env.libs["wcs"])
+env.Program("maskedImageFitsIO", ["maskedImageFitsIO.cc"],
+    LIBS=["fw"] + env.libs["vw"] + env.libs["fits"] + ["vwImage"] + env.libs["boost"])
 env.Program(["exceptions.cc"], LIBS=["fw"]+ env.libs["wcs"])
 env.Program("log", ["log.cc"], LIBS=["fw"]+ env.libs["wcs"])
 env.Program("trace", ["trace.cc"], LIBS=["fw"]+ env.libs["wcs"])
