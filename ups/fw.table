@@ -3,7 +3,7 @@ setupRequired(core)
 setupRequired(boost)
 setupRequired(vw)
 setupRequired(cfitsio)
-setupRequired(wcstools 3.6.2)
+setupRequired(wcslib)
 setupRequired(xpa)
 
 setupOptional("swig")

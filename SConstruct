@@ -12,7 +12,7 @@ env = scons.makeEnv("fw",
                      ["vw", "vw/Core.h", "vw:C++"],
                      ["python", "Python.h"],
 		     ["cfitsio", "fitsio.h", "m cfitsio", "ffopen"],
-                     ["wcstools", "wcs.h", "wcs", "wcscat"],
+                     ["wcslib", "wcslib/wcs.h", "wcs"],
                      ["xpa", "xpa.h", "xpa", "XPAPuts"],
                      ])
 #
@@ -22,6 +22,7 @@ env.libs = dict([
     ("boost",	Split("boost_filesystem boost_regex")),
     ("fits",	Split("fitsio")),
     ("vw",	Split("vw vwCore vwFileIO vwImage")),
+    ("wcs",     Split("wcs")),
     ])
 #
 # Build/install things

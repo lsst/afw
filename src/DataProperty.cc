@@ -16,7 +16,7 @@ DataProperty::DataProperty(std::string name, boost::any value) :
 
 DataProperty::DataProperty(const DataProperty& orig) :
     fw::Citizen(typeid(this)) {
-    fw::Trace("fw.DataProperty", 1,
+    fw::Trace("fw.DataProperty", 2,
               boost::format("copying DataProperty %s") % orig._name);
     _name = orig._name;
     _value = orig._value;
@@ -26,7 +26,7 @@ DataProperty::DataProperty(const DataProperty& orig) :
         std::list<DataPropertyPtrT>::const_iterator pos;
         for (pos = orig._properties.begin(); pos != orig._properties.end(); pos++) {
             const DataPropertyPtrT origPtr = *pos;
-            fw::Trace("fw.DataProperty", 1,
+            fw::Trace("fw.DataProperty", 2,
                       "(in loop) copying DataProperty " + origPtr->_name);
             DataPropertyPtrT dpPtr(new DataProperty(*origPtr));
             _properties.push_back(dpPtr);
@@ -121,7 +121,6 @@ std::string DataProperty::repr(const std::string& prefix) const {
     return sout.str();
 }
 
-
 std::string DataProperty::treeNode(const std::string& prefix,const std::string& midfix) const {
     std::ostringstream sout;
     if (_value.type() == typeid(int)) {
@@ -147,27 +146,28 @@ std::string DataProperty::treeNode(const std::string& prefix,const std::string& 
     return sout.str();
 }
 
-
-
-void DataProperty::reprCfitsio(std::ostringstream& sout, bool includeHead) const {
+void DataProperty::reprCfitsio(std::ostringstream& sout, int *nItems, bool includeHead) const {
 
     if (includeHead) {
         if (_value.type() == typeid(int)) {
             int tmp = any_cast<const int>(_value);
-            sout << boost::format("%-8s= %70d") % _name % tmp;
+            sout << boost::format("%-8s= %20d%50s") % _name % tmp % "";
+            *nItems += 1;
         } else if (_value.type() == typeid(double)) {
             double tmp = any_cast<const double>(_value);
-            sout << boost::format("%-8s= %70g") % _name % tmp;
+            sout << boost::format("%-8s= %20g%50s") % _name % tmp % "";
+            *nItems += 1;
         } else if (_value.type() == typeid(std::string)) {
             std::string tmp = any_cast<const std::string>(_value);
-            sout << boost::format("%-8s= '%68s'") % _name % tmp;
+            sout << boost::format("%-8s= '%67s' ") % _name % tmp;
+            *nItems += 1;
         }
     }
 
     if (_properties.size() > 0) {
         DataPropertyContainerT::const_iterator pos;
         for (pos = _properties.begin(); pos != _properties.end(); pos++) {
-            (*pos)->reprCfitsio(sout);
+            (*pos)->reprCfitsio(sout, nItems);
         }
     }
 }
@@ -177,10 +177,10 @@ void DataProperty::print(const std::string& prefix) const {
 }
 
 DataProperty::~DataProperty() {
-    fw::Trace("fw.DataProperty", 1, "Destroying DataProperty " + _name);
+    fw::Trace("fw.DataProperty", 2, "Destroying DataProperty " + _name);
 
     if (_properties.size() > 0) {
-        fw::Trace("fw.DataProperty", 1, "Destroying nested property list:");
+        fw::Trace("fw.DataProperty", 2, "Destroying nested property list:");
         std::list<DataPropertyPtrT>::iterator pos;
         for (pos = _properties.begin(); pos != _properties.end(); pos = _properties.erase(pos)) {
             fw::Trace("fw.DataProperty", 10,

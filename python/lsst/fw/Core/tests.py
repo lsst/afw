@@ -2,6 +2,7 @@
 
 import unittest
 import lsst.fw.Core.fwLib as fw
+import sys
 
 try:
     type(memId0)
@@ -11,6 +12,11 @@ except NameError:
 def init():
     global memId0
     memId0 = fw.Citizen_getNextMemId()  # used by MemoryTestCase
+
+def run(suite):
+    """Exit with the status code resulting from running the provided test suite"""
+    status = 0 if unittest.TextTestRunner().run(suite).wasSuccessful() else 1
+    sys.exit(status)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
         

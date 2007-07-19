@@ -38,7 +38,7 @@ namespace lsst {
             DataPropertyContainerT getContents() const {return _properties; }
             std::string repr(const std::string& prefix = "") const;
             std::string treeNode(const std::string& prefix = "",const std::string& midfix = ": ") const;
-            void reprCfitsio(std::ostringstream& sout, bool includeHead = true) const;
+            void reprCfitsio(std::ostringstream& sout, int *nItems, bool includeHead = true) const;
             void print(const std::string& prefix = "") const;
             ~DataProperty();
             

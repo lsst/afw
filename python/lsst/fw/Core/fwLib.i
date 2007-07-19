@@ -98,6 +98,16 @@ def version(HeadURL = r"$HeadURL$"):
     class Vector {
         boost::array<ElemT,SizeN> core_;
     public:
+        Vector() {
+            for( unsigned i=0; i<SizeN; ++i ) (*this)[i] = ElemT();
+        }
+        
+        Vector( ElemT e1, ElemT e2 ) {
+            BOOST_STATIC_ASSERT( SizeN >= 2 );
+            (*this)[0] = e1; (*this)[1] = e2;
+            for( unsigned i=2; i<SizeN; ++i ) (*this)[i] = ElemT();
+        }
+
         ElemT x() {
             BOOST_STATIC_ASSERT( SizeN >= 1 );
             return core_[0];
@@ -105,7 +115,7 @@ def version(HeadURL = r"$HeadURL$"):
         
         ElemT y() {
             BOOST_STATIC_ASSERT( SizeN >= 2 );
-            return core_[0];
+            return core_[1];
         }
     };
 #endif
@@ -326,6 +336,16 @@ def DataPropertyPtr(*args):
 %}
 
 %template(listPixelCoord)  std::list<lsst::fw::PixelCoord>;
+
+/************************************************************************************************************/
+
+%{
+    #include "lsst/fw/WCS.h"
+%}
+
+%template(Coord2D)	                Vector<double, 2>;
+%rename(isValid) operator bool;
+%include "lsst/fw/WCS.h"
 
 /******************************************************************************/
 // Local Variables: ***

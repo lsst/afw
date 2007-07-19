@@ -1,16 +1,15 @@
 # -*- python -*-
 Import('env')
 
-env.Program("citizen", ["citizen.cc"], LIBS="fw")
+env.Program("citizen", ["citizen.cc"], LIBS=["fw"] + env.libs["wcs"])
 env.Program(["generate.cc"],
-	    LIBS=["fw"] + env.libs["vw"] + \
+	    LIBS=["fw"] + env.libs["wcs"] + env.libs["vw"] + \
             Split("vwMosaic vwImage") + env.libs["boost"])
 env.Program(["vwconvert.cc"], LIBS=env.libs["vw"])
-env.Program(["fitsio.cc"], LIBS=["fw"] + env.libs["vw"] + env.libs["fits"])
-env.Program(["exceptions.cc"], LIBS="fw")
-env.Program("log", ["log.cc"], LIBS="fw")
-env.Program("trace", ["trace.cc"], LIBS="fw")
-
+env.Program(["fitsio.cc"], LIBS=["fw"] + env.libs["vw"] + env.libs["fits"] + env.libs["wcs"])
+env.Program(["exceptions.cc"], LIBS=["fw"]+ env.libs["wcs"])
+env.Program("log", ["log.cc"], LIBS=["fw"]+ env.libs["wcs"])
+env.Program("trace", ["trace.cc"], LIBS=["fw"]+ env.libs["wcs"])
 #
 # Tests
 #

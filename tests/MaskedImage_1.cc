@@ -129,9 +129,10 @@ int main(int argc, char**argv) {
      DataPropertyPtrT metaDataPtr = testMaskedImage1.getImage()->getMetaData();
 
      std::ostringstream metaDataRepr;
+     int nItems;
 
-     metaDataPtr->reprCfitsio(metaDataRepr, false);
+     metaDataPtr->reprCfitsio(metaDataRepr, &nItems, false);
 
+     cout << "Number of FITS header cards: " << nItems << endl;
      cout << metaDataRepr.str();
-
 }
