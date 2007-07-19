@@ -9,7 +9,6 @@ env.Program(["DataProperty_2.cc"], LIBS=["fw"] + env.libs["wcs"])
 env.Program(["MaskIO_1.cc"], LIBS=env.libs["vw"] + ["fw"] + env.libs["wcs"] + ["cfitsio"] + ["fitsio"])
 env.Program(["MaskedImageIO_1.cc"], LIBS=env.libs["vw"] + ["fw"] + env.libs["wcs"] + ["cfitsio"] + ["fitsio"])
 env.Program(["lsstdata01.cc"], LIBS=env.libs["vw"] + ["fw"] + env.libs["wcs"])
-env.Program(["WCS_1.cc"], LIBS=env.libs["vw"] + ["fw"] + env.libs["wcs"])
 
 env.CheckSwig("python", ilang="c++")
 env.Append(SWIGFLAGS=" -Ipython")
