@@ -18,7 +18,9 @@ env.Program("trace", ["trace.cc"], LIBS=["fw"]+ env.libs["wcs"])
 import glob, os, sys
 
 import lsst.tests
-tests = lsst.tests.Control(env, ignoreList=["fitsio", "generate", "vwconvert"])
+tests = lsst.tests.Control(env, ignoreList=[
+    "fitsio", "generate", "vwconvert",  "maskedImageFitsIO",
+])
 
 if not hasattr(tests, "runExamples"): # before scons 1.16
     try:
