@@ -8,22 +8,23 @@
 #include "lsst/fw/Utils.h"
 #include "lsst/fw/Image.h"
 #include "lsst/fw/Mask.h"
+#include "lsst/fw/WCS.h"
 
 LSST_START_NAMESPACE(lsst)
 LSST_START_NAMESPACE(fw)
 
 void writeVwFits(int fd,                // file descriptor to write to
                  const vw::ImageBuffer& data, // The data to write
-                 const std::string& WCS); // which WCS to use for pixel
+                 const lsst::fw::WCS *WCS = NULL); // which WCS to use for pixel
 
 void writeVwFits(const std::string& filename, // file to write, or "| cmd"
                  const vw::ImageBuffer& data, // The data to write
-                 const std::string& WCS); // which WCS to use for pixel
+                 const WCS *WCS = NULL); // which WCS to use for pixel
 
 template<typename PIXTYPE>
-void writeFits(int fd,               // file descriptor to write to
+void writeFits(int fd,                  // file descriptor to write to
                const vw::ImageView<PIXTYPE>& data, // The data to write
-               const std::string& WCS // which WCS to use for pixel
+               const WCS *WCS = NULL   // which WCS to use for pixel
               ) {
     vw::ImageBuffer buff = data.buffer();
     writeVwFits(fd, buff, WCS);
@@ -32,7 +33,7 @@ void writeFits(int fd,               // file descriptor to write to
 template<typename PIXTYPE>
 void writeFits(const std::string& filename, // file to write to (or "| cmd")
                const vw::ImageView<PIXTYPE>& data, // The data to write
-               const std::string& WCS // which WCS to use for pixel
+               const WCS *WCS // which WCS to use for pixel
               ) {
     vw::ImageBuffer buff = data.buffer();
     writeVwFits(filename, buff, WCS);
@@ -41,7 +42,7 @@ void writeFits(const std::string& filename, // file to write to (or "| cmd")
 template<typename MaskPixelT>
 void writeFits(int fd,                  //!< file descriptor to write to
                const lsst::fw::Mask<MaskPixelT>& mask, //!< Mask to write
-               const std::string& WCS   //!< which WCS to use for pixel
+               const WCS *WCS   //!< which WCS to use for pixel
               ) {
     typename Mask<MaskPixelT>::MaskIVwPtrT vwImagePtr = mask.getIVwPtr();
     writeVwFits(fd, vwImagePtr.get()->buffer(), WCS);
@@ -50,7 +51,7 @@ void writeFits(int fd,                  //!< file descriptor to write to
 template<typename MaskPixelT>
 void writeFits(const std::string& filename, // file to write to (or "| cmd")
                const lsst::fw::Mask<MaskPixelT>& mask, //!< Mask to write
-               const std::string& WCS   //!< which WCS to use for pixel
+               const WCS *WCS   //!< which WCS to use for pixel
               ) {
     typename Mask<MaskPixelT>::MaskIVwPtrT vwImagePtr = mask.getIVwPtr();
     writeVwFits(filename, vwImagePtr.get()->buffer(), WCS);
@@ -60,7 +61,7 @@ void writeFits(const std::string& filename, // file to write to (or "| cmd")
 template<typename ImagePixelT>
 void writeFits(int fd,                  //!< file descriptor to write to
                const lsst::fw::Image<ImagePixelT>& image, //!< Image to write
-               const std::string& WCS   //!< which WCS to use for pixel
+               const WCS *WCS   //!< which WCS to use for pixel
               ) {
     typename Image<ImagePixelT>::ImageIVwPtrT vwImagePtr = image.getIVwPtr();
     writeVwFits(fd, vwImagePtr.get()->buffer(), WCS);
@@ -69,7 +70,7 @@ void writeFits(int fd,                  //!< file descriptor to write to
 template<typename ImagePixelT>
 void writeFits(const std::string& filename, // file to write to (or "| cmd")
                const lsst::fw::Image<ImagePixelT>& image, //!< Image to write
-               const std::string& WCS   //!< which WCS to use for pixel
+               const WCS *WCS   //!< which WCS to use for pixel
               ) {
     typename Image<ImagePixelT>::ImageIVwPtrT vwImagePtr = image.getIVwPtr();
     writeVwFits(filename, vwImagePtr.get()->buffer(), WCS);
@@ -78,7 +79,7 @@ void writeFits(const std::string& filename, // file to write to (or "| cmd")
 template<typename ImagePixelT>
 void writeFits(int fd,                  //!< file descriptor to write to
                const typename lsst::fw::Image<ImagePixelT>::ImagePtrT image, //!< Image to write
-               const std::string& WCS   //!< which WCS to use for pixel
+               const WCS *WCS   //!< which WCS to use for pixel
               ) {
     typename Image<ImagePixelT>::ImageIVwPtrT vwImagePtr = image.get()->getIVwPtr();
     writeVwFits(fd, vwImagePtr.get()->buffer(), WCS);
@@ -87,7 +88,7 @@ void writeFits(int fd,                  //!< file descriptor to write to
 template<typename ImagePixelT>
 void writeFits(const std::string& filename, // file to write to (or "| cmd")
                const typename lsst::fw::Image<ImagePixelT>::ImagePtrT image, //!< Image to write
-               const std::string& WCS   //!< which WCS to use for pixel
+               const WCS *WCS   //!< which WCS to use for pixel
               ) {
     typename Image<ImagePixelT>::ImageIVwPtrT vwImagePtr = image.get()->getIVwPtr();
     writeVwFits(filename, vwImagePtr.get()->buffer(), WCS);

@@ -45,7 +45,7 @@ def initDS9(execDs9 = True):
 
       raise Ds9Error
 
-def mtv(data, frame = 0, init = 1, WCS = ""):
+def mtv(data, frame=0, init=1, WCS=None):
    """Display an Image or Mask on a DS9 display"""
 	
    if frame == None:

@@ -4,5 +4,5 @@ Import("env")
 env.CheckSwig("python", ilang="c++")
 env.LoadableModuleIncomplete("_xpa", ["xpa.i"], LIBS = ["xpa"])
 env.LoadableModuleIncomplete("_fwDisplay", Split("fwDisplay.i simpleFits.cc"),
-                             LIBS=env.libs["vw"] + env.libs["fits"] + ["fw"])
+                             LIBS=env.libs["vw"] + env.libs["fits"] + ["fw"] + ["wcs"])
 #env.LoadableModuleIncomplete("_test", ["test.i"])
