@@ -8,8 +8,16 @@
 using namespace lsst::fw;
 using namespace vw::math;
 
-/// Constructor for WCS
-WCS::WCS(DataPropertyPtrT fitsMetaData) : LsstBase(typeid(this)) {
+/// Constructor for WCS, creating an invalid WCS
+WCS::WCS() : LsstBase(typeid(this)),
+             _fitsMetaData(),
+             _wcsInfo(NULL), _nWcsInfo(0), _status(1), _relax(0), _ctrl(0), _nReject(0) {
+}
+
+/// Constructor for WCS  from a FITS header, represented as DataProperty::PtrType
+WCS::WCS(DataPropertyPtrT fitsMetaData  ///< The contents of a valid FITS header
+        ) : LsstBase(typeid(this)),
+            _fitsMetaData(fitsMetaData) {
     int nCards = 0;
 
     // these should be set via policy - but for the moment...

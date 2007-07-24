@@ -29,8 +29,12 @@ namespace lsst {
         class WCS : private LsstBase {
         public:
             
+            WCS();
             WCS(DataPropertyPtrT fitsMetaData);
             ~WCS();
+
+            /// Return the input fits header
+            DataPropertyPtrT getFitsMetaData() const { return _fitsMetaData; }
 
             /// Return true iff WCS is valid
             operator bool() const { return _wcsInfo != NULL; }
@@ -43,6 +47,8 @@ namespace lsst {
             Coord2D colRowToRaDec(Coord2D pix) const;
             Coord2D WCS::colRowToRaDec(double const col, double const row) const;
         private:
+            DataPropertyPtrT _fitsMetaData; ///< Input FITS header.  Caveat Emptor: may contain other keywords
+            // including e.g. SIMPLE and BITPIX
             struct wcsprm* _wcsInfo;
             int _nWcsInfo;
             int _status;
