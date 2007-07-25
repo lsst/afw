@@ -11,17 +11,17 @@ env = scons.makeEnv("fw",
                      ["boost", "boost/regex.hpp", "boost_regex:C++"],
                      ["vw", "vw/Core.h", "vw:C++"],
                      ["python", "Python.h"],
-		     ["cfitsio", "fitsio.h", "m cfitsio", "ffopen"],
-                     ["wcslib", "wcslib/wcs.h", "wcs"],
+                     ["cfitsio", "fitsio.h", "m cfitsio", "ffopen"],
+                     ["wcslib", "wcslib/wcs.h", "m wcs"], # remove m once SConsUtils bug fixed
                      ["xpa", "xpa.h", "xpa", "XPAPuts"],
                      ])
 #
 # Libraries that I need to link things.  This should be handled better
 #
 env.libs = dict([
-    ("boost",	Split("boost_filesystem boost_regex")),
-    ("fits",	Split("fitsio")),
-    ("vw",	Split("vw vwCore vwFileIO vwImage")),
+    ("boost",   Split("boost_filesystem boost_regex")),
+    ("fits",    Split("fitsio")),
+    ("vw",      Split("vw vwCore vwFileIO vwImage")),
     ("wcs",     Split("wcs")),
     ])
 #
