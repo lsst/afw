@@ -21,7 +21,6 @@ int main() {
         new lsst::fw::function::GaussianFunction2<pixelType>(sigmaX, sigmaY));
     lsst::fw::AnalyticKernel<pixelType> analyticKernel(kfuncPtr, kernelCols, kernelRows);
     pixelType imSum;
-    double x=0, y=0;
     lsst::fw::Image<pixelType> analyticImage = analyticKernel.computeNewImage(imSum);
     analyticImage *= 47.3; // denormalize by some arbitrary factor
     
