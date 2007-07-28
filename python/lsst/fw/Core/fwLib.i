@@ -48,10 +48,8 @@ using namespace vw;
 %init %{
 %}
 
-// this will also include p_lsstSwig.i from mwi
-//
-//%include "lsst/mwi/p_lsstSwig.i"
-%include "typeSupport.i"
+%include "lsst/mwi/p_lsstSwig.i"
+%include "lsstImageTypes.i"     // vw and Image/Mask types and typedefs
 
 %pythoncode %{
 import lsst.mwi.data
@@ -78,8 +76,6 @@ def version(HeadURL = r"$HeadURL$"):
         return "%s (setup: %s)" % (version_svn, version_eups)
 
 %}
-
-%include "../Core/lsstImageTypes.i"     // vw and Image/Mask types and typedefs
 
 /******************************************************************************/
 
@@ -132,7 +128,7 @@ def version(HeadURL = r"$HeadURL$"):
 %import "lsst/mwi/data/DataProperty.h"
 %import "lsst/mwi/exceptions/Exception.h"
 
-%import "lsst/fw/DiskImageResourceFITS.h"
+%include "lsst/fw/DiskImageResourceFITS.h"
 
 /******************************************************************************/
 // Masks and MaskedImages

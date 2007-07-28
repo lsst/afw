@@ -27,6 +27,6 @@ tests = lsst.tests.Control(env,
 
 tests.run("*.cc")
 
-# for target in tests.run("*.py"):
-#     env.Depends(target, fwTests)
-#     env.Depends(target, "../python/lsst/fw/Core/_fwLib%s" % (env['LDMODULESUFFIX']))
+for target in tests.run("*.py"):
+    env.Depends(target, fwTests)
+    env.Depends(target, "../python/lsst/fw/Core/_fwLib%s" % (env['LDMODULESUFFIX']))

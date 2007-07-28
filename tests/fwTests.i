@@ -26,10 +26,9 @@ using namespace vw;
 %}
 
 %import  <vw/Core/FundamentalTypes.h>
-// this will also include p_lsstSwig.i from mwi
-//
-//%include "lsst/mwi/p_lsstSwig.i"
-%include "lsst/fw/Core/typeSupport.i"
+
+%include "lsst/mwi/p_lsstSwig.i"
+%include "lsst/fw/Core/lsstImageTypes.i"
 
 /******************************************************************************/
 %{
