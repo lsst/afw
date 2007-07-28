@@ -1,17 +1,14 @@
 # -*- python -*-
 Import('env')
 
-env.Program("citizen", ["citizen.cc"], LIBS=["fw"] + env.libs["wcs"])
 env.Program(["generate.cc"],
 	    LIBS=["fw"] + env.libs["wcs"] + env.libs["vw"] + \
-            Split("vwMosaic vwImage") + env.libs["boost"])
+            Split("vwMosaic vwImage") + env.libs["boost"] + ["mwi"])
 env.Program(["vwconvert.cc"], LIBS=env.libs["vw"])
-env.Program(["fitsio.cc"], LIBS=["fw"] + env.libs["vw"] + env.libs["fits"] + env.libs["wcs"])
+env.Program(["fitsio.cc"], LIBS=["fw"] + env.libs["vw"] + env.libs["fits"] + env.libs["wcs"] + ["mwi"])
 env.Program("maskedImageFitsIO", ["maskedImageFitsIO.cc"],
-    LIBS=["fw"] + env.libs["vw"] + env.libs["fits"] + ["vwImage"] + env.libs["boost"])
-env.Program(["exceptions.cc"], LIBS=["fw"]+ env.libs["wcs"])
-env.Program("log", ["log.cc"], LIBS=["fw"]+ env.libs["wcs"])
-env.Program("trace", ["trace.cc"], LIBS=["fw"]+ env.libs["wcs"])
+    LIBS=["fw"] + env.libs["vw"] + env.libs["fits"] + ["vwImage"] + env.libs["boost"] + ["mwi"])
+
 
 env.Program("chebyshev1Function", ["chebyshev1Function.cc"],
     LIBS=["fw"] + env.libs["boost"])

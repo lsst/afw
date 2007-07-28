@@ -10,15 +10,15 @@
 #define LSST_WCS_H
 
 #include <vw/Math.h>
-#include "lsst/fw/LsstBase.h"
-#include "lsst/fw/DataProperty.h"
+#include "lsst/mwi/data/LsstBase.h"
+#include "lsst/mwi/data/DataProperty.h"
 
 struct wcsprm;                          // defined in wcs.h
 
 namespace lsst {
 
     namespace fw {
-        
+
         typedef vw::math::Vector<double, 2> Coord2D;
 
         /// \brief WCS supports coordinate system transformations between pixel and world coordinates
@@ -26,15 +26,17 @@ namespace lsst {
         /// All WCS (in the FITS sense) coordinate conventions are supported via
         /// Mark Calabretta's wcslib package (http://www.atnf.csiro.au/people/mcalabre)
         ///
-        class WCS : private LsstBase {
+        class WCS : private lsst::mwi::data::LsstBase {
         public:
             
             WCS();
-            WCS(DataPropertyPtrT fitsMetaData);
+            WCS(lsst::mwi::data::DataPropertyPtrT fitsMetaData);
             ~WCS();
 
             /// Return the input fits header
-            DataPropertyPtrT getFitsMetaData() const { return _fitsMetaData; }
+            lsst::mwi::data::DataPropertyPtrT getFitsMetaData() const { 
+                return _fitsMetaData; 
+            }
 
             /// Return true iff WCS is valid
             operator bool() const { return _wcsInfo != NULL; }
@@ -47,7 +49,7 @@ namespace lsst {
             Coord2D colRowToRaDec(Coord2D pix) const;
             Coord2D WCS::colRowToRaDec(double const col, double const row) const;
         private:
-            DataPropertyPtrT _fitsMetaData; ///< Input FITS header.  Caveat Emptor: may contain other keywords
+            lsst::mwi::data::DataPropertyPtrT _fitsMetaData; ///< Input FITS header.  Caveat Emptor: may contain other keywords
             // including e.g. SIMPLE and BITPIX
             struct wcsprm* _wcsInfo;
             int _nWcsInfo;

@@ -14,6 +14,7 @@ env = scons.makeEnv("fw",
                      ["cfitsio", "fitsio.h", "m cfitsio", "ffopen"],
                      ["wcslib", "wcslib/wcs.h", "m wcs"], # remove m once SConsUtils bug fixed
                      ["xpa", "xpa.h", "xpa", "XPAPuts"],
+                     ["mwi", "lsst/mwi/data.h", "boost_filesystem boost_regex mwi:C++"],
                      ])
 #
 # Libraries that I need to link things.  This should be handled better
@@ -22,12 +23,13 @@ env.libs = dict([
     ("boost",   Split("boost_filesystem boost_regex")),
     ("fits",    Split("fitsio")),
     ("vw",      Split("vw vwCore vwFileIO vwImage")),
+    ("mwi",     Split("mwi")),
     ("wcs",     Split("wcs")),
     ])
 #
 # Build/install things
 #
-for d in Split("doc examples include/lsst/fw lib src tests"):
+for d in Split("doc examples lib src tests"):
     SConscript(os.path.join(d, "SConscript"))
 
 for d in map(lambda str: "python/lsst/fw/" + str,

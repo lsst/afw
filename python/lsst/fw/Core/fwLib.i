@@ -26,14 +26,14 @@ Basic routines to talk to FW's classes (including visionWorkbench) and ds9
 #   include <boost/shared_ptr.hpp>
 #   include <boost/any.hpp>
 #   include <boost/array.hpp>
-#   include "lsst/fw/Citizen.h"
-#   include "lsst/fw/Demangle.h"
+#   include "lsst/mwi/data/Citizen.h"
+#   include "lsst/mwi/utils/Demangle.h"
+#   include "lsst/mwi/utils/Trace.h"
+#   include "lsst/mwi/utils/Utils.h"
+#   include "lsst/mwi/logging/Log.h"
 #   include "lsst/fw/DiskImageResourceFITS.h"
-#   include "lsst/fw/Log.h"
 #   include "lsst/fw/Mask.h"
 #   include "lsst/fw/MaskedImage.h"
-#   include "lsst/fw/Trace.h"
-#   include "lsst/fw/Utils.h"
 %}
 
 %inline %{
@@ -48,10 +48,14 @@ using namespace vw;
 %init %{
 %}
 
-%include "../Core/p_lsstSwig.i"
-%include "lsst/fw/Utils.h"
+// this will also include p_lsstSwig.i from mwi
+//
+//%include "lsst/mwi/p_lsstSwig.i"
+%include "typeSupport.i"
 
 %pythoncode %{
+import lsst.mwi.data
+import lsst.mwi.utils
 
 def version(HeadURL = r"$HeadURL$"):
     """Return a version given a HeadURL string.  If a different version's setup, return that too"""
@@ -74,6 +78,8 @@ def version(HeadURL = r"$HeadURL$"):
         return "%s (setup: %s)" % (version_svn, version_eups)
 
 %}
+
+%include "../Core/lsstImageTypes.i"     // vw and Image/Mask types and typedefs
 
 /******************************************************************************/
 
@@ -120,62 +126,13 @@ def version(HeadURL = r"$HeadURL$"):
     };
 #endif
 %import <vw/FileIO/DiskImageResource.h>
-%include "lsst/fw/DiskImageResourceFITS.h"
 
-/******************************************************************************/
-// Citizens, Trace, etc.
-%include "lsst/fw/Citizen.h"
-%include "lsst/fw/Log.h"
-%include "lsst/fw/Trace.h"
-%include "lsst/fw/DataProperty.h"
+%import "lsst/mwi/utils/Utils.h"
+%import "lsst/mwi/data/LsstData.h"
+%import "lsst/mwi/data/DataProperty.h"
+%import "lsst/mwi/exceptions/Exception.h"
 
-%extend lsst::fw::Log {
-    static void setDestination(const std::string& fileName) {
-        std::ofstream &fp = *new std::ofstream(fileName.c_str(), std::ios_base::out); // Log now owns this stream
-        lsst::fw::Log::setDestination(fp);
-    }
-}
-
-#if 0                                   // doesn't work (yet)
-typedef boost::shared_ptr<DataProperty> DataPropertyPtr;
-
-%contract DataPropertyPtr::DataPropertyPtr {
-ensure:
-    DataPropertyPtr_ptr.get() > 0;
-}
-#endif
-    
-%template(DataPropertyPtrT) boost::shared_ptr<DataProperty>;
-%template(DataPropertyContainerT) std::list<DataPropertyPtrT>;
-
-%extend lsst::fw::DataProperty {
-    %exception {
-        try {
-            $action;
-        } catch(boost::bad_any_cast &e) {
-            SWIG_exception(SWIG_RuntimeError, e.what());
-        }
-    }
-    
-    DataProperty(std::string name, int val) {
-        return new DataProperty(name, val);
-    }
-    DataProperty(std::string name, std::string val) {
-        return new DataProperty(name, val);
-    }
-
-    int getValueInt() {
-        return boost::any_cast<const int>(self->getValue());
-    }
-    std::string getValueString() {
-        return boost::any_cast<const std::string>(self->getValue());
-    }
-
-    DataPropertyPtrT match(const std::string &pattern, bool reset=true) {
-        boost::regex re(pattern);
-        return self->find(re, reset);
-    }
-}
+%import "lsst/fw/DiskImageResourceFITS.h"
 
 /******************************************************************************/
 // Masks and MaskedImages
@@ -188,6 +145,9 @@ ensure:
 %ignore lsst::fw::Image::origin;        // no need to swig origin (and the _wrap.cc file is invalid)
 %ignore lsst::fw::Mask::origin;         // no need to swig origin (and the _wrap.cc file is invalid)
 
+%import "lsst/mwi/utils/Utils.h"
+%import "lsst/mwi/data/LsstImpl_DC2.h"
+%include "lsst/mwi/data/LsstBase.h"
 %include "lsst/fw/Image.h"
 %include "lsst/fw/Mask.h"
 %include "lsst/fw/MaskedImage.h"
@@ -308,6 +268,8 @@ ensure:
 %template(MaskIVwPtrT)                  boost::shared_ptr<vw::ImageView<MaskPixelType> >;
 
 %pythoncode %{
+from lsst.mwi.utils import Trace
+
 def ImageViewMaskPtr(*args):
     """Return an MaskIVwPtrT that owns its ImageMask"""
 
@@ -320,19 +282,6 @@ def ImageViewMaskPtr(*args):
     Trace("fw.memory", 5, "returning ImageViewMaskPtr")
         
     return ivmPtr
-
-def DataPropertyPtr(*args):
-    """Return an DataPropertyPtrT that owns its DataProperty"""
-
-    Trace("fw.memory", 5, "creating DataPropertyPtrT")
-
-    md = DataProperty(*args)
-    md.this.disown()
-    DataPropertyPtr = DataPropertyPtrT(md)
-
-    Trace("fw.memory", 5, "returning DataPropertyPtr")
-        
-    return DataPropertyPtr
 %}
 
 %template(listPixelCoord)  std::list<lsst::fw::PixelCoord>;

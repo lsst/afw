@@ -1,13 +1,8 @@
-setupRequired(scons)
-setupRequired(core)
-setupRequired(boost)
+setupRequired(mwi)
 setupRequired(vw)
 setupRequired(cfitsio)
 setupRequired(wcslib)
 setupRequired(xpa)
-
-setupOptional("swig")
-setupOptional("doxygen")
 
 setupOptional("numarray")
 setupOptional("pyfits")
@@ -16,5 +11,3 @@ envAppend(LD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
 envAppend(DYLD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
 
 envAppend(PYTHONPATH, ${PRODUCT_DIR}/python)
-
-

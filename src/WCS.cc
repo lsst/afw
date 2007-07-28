@@ -8,6 +8,10 @@
 using namespace lsst::fw;
 using namespace vw::math;
 
+using lsst::mwi::data::LsstBase;
+using lsst::mwi::data::DataProperty;
+using lsst::mwi::data::DataPropertyPtrT;
+
 /// Constructor for WCS, creating an invalid WCS
 WCS::WCS() : LsstBase(typeid(this)),
              _fitsMetaData(),

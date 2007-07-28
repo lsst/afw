@@ -1,13 +1,17 @@
 // -*- lsst-c++ -*-
 #include "lsst/fw/MaskedImage.h"
-#include "lsst/fw/Trace.h"
 #include "lsst/fw/WCS.h"
+#include "lsst/mwi/utils/Trace.h"
 
 #include <stdexcept>
 
 using namespace lsst::fw;
 using boost::any_cast;
 
+using lsst::mwi::utils::Trace;
+using lsst::mwi::data::DataPropertyPtrT;
+
+namespace mwie = lsst::mwi::exceptions;
 
 /*
  * Make this a subroutine so that locals go out of scope as part of test
@@ -71,10 +75,10 @@ int main(int argc, char *argv[]) {
     try {
         try {
             test(argv[1]);
-        } catch (lsst::fw::Exception &e) {
-            throw lsst::fw::Exception(std::string("In handler\n") + e.what());
+        } catch (mwie::Exception &e) {
+            throw mwie::Exception(std::string("In handler\n") + e.what());
         }
-    } catch (lsst::fw::Exception &e) {
+    } catch (mwie::Exception &e) {
         std::clog << e.what() << endl;
         return 1;
     }

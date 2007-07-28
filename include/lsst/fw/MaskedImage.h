@@ -20,13 +20,15 @@
 #include <map>
 #include <string>
 
-#include "LsstBase.h"
+#include "lsst/mwi/data/LsstBase.h"
 #include "Mask.h"
 #include "Image.h"
 
 namespace lsst {
 
     namespace fw {
+
+        using lsst::mwi::data::LsstBase;
 
         template<class ImagePixelT, class MaskPixelT> class MaskedImage;
 

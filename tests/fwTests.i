@@ -26,7 +26,10 @@ using namespace vw;
 %}
 
 %import  <vw/Core/FundamentalTypes.h>
-%include "lsst/fw/Core/p_lsstSwig.i"
+// this will also include p_lsstSwig.i from mwi
+//
+//%include "lsst/mwi/p_lsstSwig.i"
+%include "lsst/fw/Core/typeSupport.i"
 
 /******************************************************************************/
 %{
@@ -34,6 +37,13 @@ typedef float ImagePixelType;
 typedef uint8 MaskPixelType;
 %}
 
+%import "lsst/mwi/utils/Utils.h"
+%import "lsst/mwi/exceptions/Exception.h"
+%import "lsst/mwi/data/Citizen.h"
+%import "lsst/mwi/data/DataProperty.h"
+%import "lsst/mwi/data/LsstData.h"
+%import "lsst/mwi/data/LsstImpl_DC2.h"
+%import "lsst/mwi/data/LsstBase.h"
 %import "lsst/fw/Mask.h"
 %import "lsst/fw/MaskedImage.h"
 
@@ -93,17 +103,14 @@ namespace std {
 //
 // Define a class to (in this case) count pixels with CR set
 //
-%import "lsst/fw/Utils.h"
-%import "lsst/fw/Citizen.h"
-
 %inline %{
 template <typename MaskPixelT>
-class testCrFunc : public lsst::fw::Citizen,
+class testCrFunc : public lsst::mwi::data::Citizen,
                    public MaskPixelBooleanFunc<MaskPixelT> {
 public:
     typedef typename Mask<MaskPixelT>::MaskChannelT MaskChannelT;
     testCrFunc(Mask<MaskPixelT>& m) :
-        Citizen(typeid(this)),
+        lsst::mwi::data::Citizen(typeid(this)),
         MaskPixelBooleanFunc<MaskPixelT>(m) {}
     void init() {
         MaskPixelBooleanFunc<MaskPixelT>::_mask.getPlaneBitMask("CR", _bitsCR);

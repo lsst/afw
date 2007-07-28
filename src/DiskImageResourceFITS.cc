@@ -6,8 +6,8 @@
 #include <boost/format.hpp>
 #include <vw/Core/Exception.h>
 #include <vw/Image/ImageMath.h>
+#include "lsst/mwi/exceptions/Exception.h"
 #include "lsst/fw/DiskImageResourceFITS.h"
-#include "lsst/fw/Exception.h"
 
 // these two necessary only for appendKey()
 #include <string.h>
@@ -18,6 +18,11 @@ extern "C" {
 }
 
 using namespace lsst::fw;
+
+using lsst::mwi::exceptions::FitsError;
+using lsst::mwi::data::DataProperty;
+using lsst::mwi::data::DataPropertyPtrT;
+using lsst::mwi::data::DataPropertyContainerT;
 
 //
 // A utility routine to throw an error. Note that the macro form includes

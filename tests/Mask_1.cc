@@ -1,12 +1,18 @@
 // -*- lsst-c++ -*-
 #include "lsst/fw/Mask.h"
-#include "lsst/fw/Exception.h"
-#include "lsst/fw/Trace.h"
+#include "lsst/mwi/exceptions/Exception.h"
+#include "lsst/mwi/utils/Trace.h"
 
 #include <stdexcept>
 
 using namespace lsst::fw;
 using boost::any_cast;
+
+using namespace lsst::mwi::exceptions;
+using lsst::mwi::utils::Trace;
+using lsst::mwi::data::Citizen;
+
+namespace mwie = lsst::mwi::exceptions;
 
 template <typename MaskPixelT> class testCrFunc : public MaskPixelBooleanFunc<MaskPixelT> {
 public:
@@ -247,7 +253,7 @@ void test() {
      try {
         region.expand(10);
         testMask.replaceSubMask(region, subTestMask);
-     } catch (lsst::fw::Exception &e) {
+     } catch (mwie::Exception &e) {
          cout << "Exception handler: Caught the buggy code: " << e.what() << endl;
      } catch (exception eex) {
          // Catch base STD exception (from which all exceptions should be derived)
@@ -282,10 +288,10 @@ int main(int argc, char *argv[]) {
     try {
         try {
             test();
-        } catch (lsst::fw::Exception &e) {
-            throw lsst::fw::Exception(std::string("In handler\n") + e.what());
+        } catch (mwie::Exception &e) {
+            throw mwie::Exception(std::string("In handler\n") + e.what());
         }
-    } catch (lsst::fw::Exception &e) {
+    } catch (mwie::Exception &e) {
         std::clog << e.what() << endl;
     }
 

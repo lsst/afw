@@ -1,5 +1,0 @@
-# -*- python -*-
-#
-Import("env")
-
-AddPostAction(env.M4("Exception.h.m4"), "chmod 444 $TARGET")

@@ -1,4 +1,5 @@
 import lsst.fw.Core.fwLib as fwCore
+import lsst.mwi.data as mwid
 import fwTests
 
 def doMask_1():
@@ -35,7 +36,7 @@ def doMask_1():
 
     # ------------ Test mask plane metaData
 
-    metaData = fwCore.DataPropertyPtr("testMetaData")
+    metaData = mwid.DataPropertyPtr("testMetaData")
     testMask.addMaskPlaneMetaData(metaData)
     print "MaskPlane metadata:"
     metaData._print("\t");
@@ -46,7 +47,7 @@ def doMask_1():
         if d[p]:
             print "\t", d[p], p
     
-    newPlane = fwCore.DataProperty("Whatever", 5)
+    newPlane = mwid.DataProperty("Whatever", 5)
     metaData.addProperty(newPlane)
     
     testMask.parseMaskPlaneMetaData(metaData)
@@ -126,9 +127,9 @@ def test():
     
     doMask_1()
 
-    if fwCore.Citizen_census(0):
-        print fwCore.Citizen_census(0), "Objects leaked:"
-        print fwCore.Citizen_census(fwCore.cout)
+    if mwid.Citizen_census(0):
+        print mwid.Citizen_census(0), "Objects leaked:"
+        print mwid.Citizen_census(fwCore.cout)
 
 def lookupPlanes(mask, planeNames):
     planes = {}

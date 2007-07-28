@@ -5,7 +5,7 @@
 #include <vw/Image/PixelTypes.h>
 #include <vw/Image/ImageResource.h>
 
-#include "lsst/fw/Utils.h"
+#include "lsst/mwi/utils/Utils.h"
 #include "lsst/fw/Image.h"
 #include "lsst/fw/Mask.h"
 #include "lsst/fw/WCS.h"

@@ -2,7 +2,9 @@
 // Implementations of Mask class methods
 // This file can NOT be separately compiled!   It is included by Mask.h
 
-#include <lsst/fw/Trace.h>
+#include <lsst/mwi/utils/Trace.h>
+
+using lsst::mwi::utils::Trace;
 
 template<typename MaskPixelT>
 Mask<MaskPixelT>::Mask() :

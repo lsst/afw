@@ -2,7 +2,7 @@
 #define LSST_LSSTFITSRESOURCE_H
 
 #include <vw/Image.h>
-#include "lsst/fw/DataProperty.h"
+#include "lsst/mwi/data/DataProperty.h"
 #include "lsst/fw/DiskImageResourceFITS.h"
 
 using namespace vw;
@@ -10,6 +10,9 @@ using namespace vw;
 namespace lsst {
 
     namespace fw {
+
+        using lsst::mwi::data::DataPropertyPtrT;
+
         template <typename PixelT> class LSSTFitsResource : public lsst::fw::DiskImageResourceFITS {
         public:
             LSSTFitsResource();

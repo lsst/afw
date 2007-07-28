@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vw/Image/Manipulation.h>
 #include "lsst/fw/DiskImageResourceFITS.h"
-#include "lsst/fw/Exception.h"
+#include "lsst/mwi/exceptions.h"
 
 using namespace lsst::fw;
 

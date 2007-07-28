@@ -4,17 +4,18 @@
 #include <lsst/fw/FunctionLibrary.h>
 #include <lsst/fw/Image.h>
 #include <lsst/fw/MaskedImage.h>
-#include <lsst/fw/Trace.h>
+#include <lsst/mwi/utils/Trace.h>
 #include <lsst/fw/Kernel.h>
 #include <lsst/fw/KernelFunctions.h>
 
 using namespace std;
+namespace mwiu = lsst::mwi::utils;
 
 const std::string outFile("scOut");
 
 int main(int argc, char **argv) {
-    lsst::fw::Trace::setDestination(std::cout);
-    lsst::fw::Trace::setVerbosity("lsst.fw.kernel", 5);
+    mwiu::Trace::setDestination(std::cout);
+    mwiu::Trace::setVerbosity("lsst.fw.kernel", 5);
 
     typedef float pixelType;
     typedef unsigned int maskType;

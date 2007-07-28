@@ -3,8 +3,11 @@
 // This file can NOT be separately compiled!   It is included by MaskedImage.h
 
 #include <typeinfo>
-#include "lsst/fw/Trace.h"
-#include "lsst/fw/Exception.h"
+#include "lsst/mwi/utils/Trace.h"
+#include "lsst/mwi/exceptions/Exception.h"
+
+using lsst::mwi::exceptions::NotFound;
+namespace mwiu = lsst::mwi::utils;
 
 template<typename ImagePixelT, typename MaskPixelT> 
 MaskedImage<ImagePixelT, MaskPixelT>::MaskedImage() :
@@ -125,8 +128,8 @@ void MaskedImage<ImagePixelT, MaskPixelT>::readFits(std::string baseName) {
 //  if no file was read successfully, throw an exception
 
     if (fileReadOK == false) {
-        throw lsst::fw::NotFound(boost::format("Failed to open %s{%s,%s}") %
-                             baseName % imageSuffix % maskSuffix);
+        throw NotFound(boost::format("Failed to open %s{%s,%s}") %
+                       baseName % imageSuffix % maskSuffix);
     }
 
 //  ensure all image components have the same size.  set_size is a nop if size would be unchanged
@@ -223,7 +226,7 @@ void MaskedImage<ImagePixelT, MaskPixelT>::setDefaultVariance()
     } 
 
     catch (...) {
-        fw::Trace("fw.MaskedImage", 0, "Gain could not be set in setDefaultVariance().  Using gain=1.0");
+        mwiu::Trace("fw.MaskedImage", 0, "Gain could not be set in setDefaultVariance().  Using gain=1.0");
         gain = 1.0;
     }
 
@@ -310,7 +313,7 @@ void  MaskedImage<ImagePixelT, MaskPixelT>::processPixels(MaskPixelBooleanFunc<M
 
 template<typename ImagePixelT, typename MaskPixelT> 
 void  MaskedImage<ImagePixelT, MaskPixelT>::processPixels(PixelProcessingFunc<ImagePixelT, MaskPixelT> &processingFunc) {
-    fw::Trace("fw.MaskedImage", 1, "Processing pixels");
+    mwiu::Trace("fw.MaskedImage", 1, "Processing pixels");
 
     PixelLocator<ImagePixelT> i = processingFunc.getImagePixelLocatorBegin();
     PixelLocator<ImagePixelT> iEnd = processingFunc.getImagePixelLocatorEnd();

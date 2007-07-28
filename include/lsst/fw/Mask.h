@@ -15,10 +15,10 @@
 #include <list>
 #include <map>
 #include <string>
-#include "lsst/fw/LsstBase.h"
-#include "lsst/fw/Exception.h"
-#include "lsst/fw/DataProperty.h"
-#include "lsst/fw/Trace.h"
+#include "lsst/mwi/data/LsstBase.h"
+#include "lsst/mwi/exceptions/Exception.h"
+#include "lsst/mwi/data/DataProperty.h"
+#include "lsst/mwi/utils/Trace.h"
 #include "lsst/fw/LSSTFitsResource.h"
 
 
@@ -28,6 +28,10 @@ namespace lsst {
         using namespace vw;
         using namespace std;
         
+        using lsst::mwi::data::LsstBase;
+        using lsst::mwi::data::DataPropertyPtrT;
+        using namespace lsst::mwi::exceptions;
+
         class PixelCoord {
         public:
             PixelCoord(int x = 0, int y = 0) : x(x), y(y) {}

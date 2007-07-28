@@ -14,14 +14,17 @@ namespace posix {
 }
 using namespace posix;
 
+#include "lsst/mwi/exceptions.h"
+#include "lsst/mwi/utils/Utils.h"
 #include <boost/any.hpp>
-#include "lsst/fw/Exception.h"
-#include "lsst/fw/Utils.h"
 
 #include "simpleFits.h"
 
 LSST_START_NAMESPACE(lsst);
 LSST_START_NAMESPACE(fw);
+
+using lsst::mwi::data::DataProperty;
+using lsst::mwi::data::DataPropertyContainerT;
 
 #define FITS_SIZE 2880
 

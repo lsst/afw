@@ -15,7 +15,7 @@
 #include <boost/shared_ptr.hpp>
 #include <vw/Image.h>
 
-#include <lsst/fw/LsstBase.h>
+#include <lsst/mwi/data/LsstBase.h>
 #include <lsst/fw/Function.h>
 #include <lsst/fw/Image.h>
 
@@ -94,7 +94,7 @@ namespace fw {
      * \ingroup fw
      */
     template<typename PixelT>
-    class Kernel : private LsstBase {
+    class Kernel : private lsst::mwi::data::LsstBase {
     
     public:
         typedef boost::shared_ptr<lsst::fw::function::Function2<PixelT> > KernelFunctionPtrType;

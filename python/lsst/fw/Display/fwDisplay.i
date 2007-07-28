@@ -1,7 +1,7 @@
 // -*- lsst-c++ -*-
 %define fwDisplay_DOCSTRING
 "
-Basic routines to talk to FW's classes (including visionWorkbench) and ds9
+Basic routines to talk to ds9
 "
 %enddef
 
@@ -34,8 +34,9 @@ using namespace vw;
 %init %{
 %}
 
-%include "../Core/p_lsstSwig.i"
-%import "lsst/fw/Utils.h"
+%include "lsst/mwi/p_lsstSwig.i"
+%import "lsst/mwi/utils/Utils.h"
+%include "../Core/lsstImageTypes.i"
 
 /******************************************************************************/
 

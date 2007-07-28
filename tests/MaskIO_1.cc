@@ -7,6 +7,7 @@
 using namespace lsst::fw;
 using boost::any_cast;
 
+using lsst::mwi::data::DataPropertyPtrT;
 
 /*
  * Make this a subroutine so that locals go out of scope as part of test
@@ -45,10 +46,10 @@ int main(int argc, char *argv[]) {
     try {
         try {
             test(argv[1]);
-        } catch (lsst::fw::Exception &e) {
-            throw lsst::fw::Exception(std::string("In handler\n") + e.what());
+        } catch (lsst::mwi::exceptions::Exception &e) {
+            throw lsst::mwi::exceptions::Exception(std::string("In handler\n") + e.what());
         }
-    } catch (lsst::fw::Exception &e) {
+    } catch (lsst::mwi::exceptions::Exception &e) {
         std::clog << e.what() << endl;
     }
 }

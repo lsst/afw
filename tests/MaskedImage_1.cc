@@ -1,10 +1,11 @@
 // -*- lsst-c++ -*-
 #include "lsst/fw/MaskedImage.h"
-#include "lsst/fw/Exception.h"
-#include "lsst/fw/Trace.h"
+#include "lsst/mwi/exceptions/Exception.h"
+#include "lsst/mwi/utils/Trace.h"
 #include <typeinfo>
 
 using namespace lsst::fw;
+using lsst::mwi::utils::Trace;
 
 template <typename ImagePixelT, typename MaskPixelT> 
 class testPixProcFunc : public PixelProcessingFunc<ImagePixelT, MaskPixelT> {
@@ -65,7 +66,7 @@ int main(int argc, char**argv) {
      MaskedImage<ImagePixelType,MaskPixelType > testMaskedImage1;
      try {
          testMaskedImage1.readFits(argv[1]);
-     } catch (lsst::fw::Exception &e) {
+     } catch (lsst::mwi::exceptions::Exception &e) {
          std::cerr << "Failed to open " << argv[1] << ": " << e.what() << std::endl;
          return 1;
      }
@@ -88,7 +89,7 @@ int main(int argc, char**argv) {
 
      try {
          testFlat.readFits(argv[2]);
-     } catch (lsst::fw::Exception &e) {
+     } catch (lsst::mwi::exceptions::Exception &e) {
          std::cerr << "Failed to open " << argv[2] << ": " << e.what() << std::endl;
          return 1;
      }

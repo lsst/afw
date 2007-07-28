@@ -11,11 +11,14 @@
 #include <vw/Image/ImageResource.h>
 #include <vw/FileIO/DiskImageResource.h>
 
-#include "lsst/fw/DataProperty.h"
-#include "lsst/fw/Utils.h"
+#include "lsst/mwi/data/DataProperty.h"
+#include "lsst/mwi/utils/Utils.h"
 
 LSST_START_NAMESPACE(lsst)
 LSST_START_NAMESPACE(fw)
+
+using lsst::mwi::data::DataProperty;
+
 /*!
  * FITS I/O for VisionWorkbench
  */

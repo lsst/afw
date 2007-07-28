@@ -1,6 +1,8 @@
 // -*- lsst-c++ -*-
 // This file can NOT be separately compiled!   It is included by LSSTFitsResource.h
 
+using lsst::mwi::data::stringToAny;
+
 template <typename PixelT>
 LSSTFitsResource<PixelT>::LSSTFitsResource() : DiskImageResourceFITS()
 {

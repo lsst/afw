@@ -16,8 +16,8 @@
 #include <map>
 #include <string>
 
-#include "lsst/fw/LsstBase.h"
-#include "lsst/fw/DataProperty.h"
+#include "lsst/mwi/data/LsstBase.h"
+#include "lsst/mwi/data/DataProperty.h"
 #include "lsst/fw/LSSTFitsResource.h"
 
 
@@ -29,6 +29,9 @@ namespace lsst {
         using namespace vw;
         using namespace std;
         
+        using lsst::mwi::data::LsstBase;
+        using lsst::mwi::data::DataPropertyPtrT;
+
         template<typename ImagePixelT>
         class Image : private LsstBase {
         public:

@@ -16,7 +16,7 @@
 
 #include <boost/format.hpp>
 
-#include <lsst/fw/LsstBase.h>
+#include <lsst/mwi/data/LsstBase.h>
 
 namespace lsst {
 namespace fw {
@@ -49,7 +49,7 @@ namespace function {
      * \ingroup fw
      */
     template<typename ReturnT>
-    class Function : private LsstBase {
+    class Function : private lsst::mwi::data::LsstBase {
     
     public:
         /**
@@ -60,7 +60,7 @@ namespace function {
         explicit Function(
             unsigned int nParams)   ///< number of function parameters
         :
-            LsstBase(typeid(this)),
+            lsst::mwi::data::LsstBase(typeid(this)),
             _params(nParams)
         {}
 
@@ -70,7 +70,7 @@ namespace function {
         explicit Function(
             std::vector<double> const &params)
         :
-            LsstBase(typeid(this)),
+            lsst::mwi::data::LsstBase(typeid(this)),
             _params(params)   ///< function parameters
         {}
         
