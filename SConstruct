@@ -27,7 +27,9 @@ def selectBoostLibs(env, boostlibs):
     boostlibs = Split(boostlibs)
     for lib in boostlibs:
         if re.match(r"boost", lib):
-            actual = scons.mangleLibraryName(env, libdir, lib)
+#            actual = scons.mangleLibraryName(env, libdir, lib)
+# The following works with scons 1.15
+            actual = scons.chooseBoostLib(env, libdir, lib)
             if actual is None: actual = lib
         else:
             actual = lib
@@ -50,7 +52,7 @@ env = scons.makeEnv("fw",
 # Libraries that I need to link things.  This should be handled better
 #
 env.libs = dict([
-    ("boost",   scons.selectBoostLibs(env, "boost_filesystem boost_regex")),
+    ("boost",   selectBoostLibs(env, "boost_filesystem boost_regex")),
     ("fits",    Split("fitsio")),
     ("vw",      Split("vw vwCore vwFileIO vwImage")),
     ("mwi",     Split("mwi")),
