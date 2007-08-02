@@ -6,6 +6,7 @@
 >merge: swig
 >merge: cfitsio
 >merge: wcstools 3.6.2
+>merge: wcslib
 >merge: xpa
 >merge: doxygen
 >self
