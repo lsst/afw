@@ -7,7 +7,7 @@ Image<ImagePixelT>::Image() :
     LsstBase(typeid(this)),
     _imagePtr(new vw::ImageView<ImagePixelT>()),
     _image(*_imagePtr),
-    _metaData(new DataProperty::DataProperty("FitsMetaData", 0)),
+    _metaData(SupportFactory::createPropertyNode("FitsMetaData")),
     _offsetRows(0),
     _offsetCols(0)
 {
@@ -18,7 +18,7 @@ Image<ImagePixelT>::Image(int nCols, int nRows) :
     LsstBase(typeid(this)),
     _imagePtr(new vw::ImageView<ImagePixelT>(nCols, nRows)),
     _image(*_imagePtr),
-    _metaData(new DataProperty::DataProperty("FitsMetaData", 0)),
+    _metaData(SupportFactory::createPropertyNode("FitsMetaData")),
     _offsetRows(0),
     _offsetCols(0)
 {
@@ -29,7 +29,7 @@ Image<ImagePixelT>::Image(ImageIVwPtrT image):
     LsstBase(typeid(this)),
     _imagePtr(image),
     _image(*_imagePtr),
-    _metaData(new DataProperty::DataProperty("FitsMetaData", 0)),
+    _metaData(SupportFactory::createPropertyNode("FitsMetaData")),
     _offsetRows(0),
     _offsetCols(0)
 {
@@ -62,7 +62,7 @@ template<class ImagePixelT> typename Image<ImagePixelT>::ImageIVwPtrT Image<Imag
 template<class ImagePixelT> 
 double Image<ImagePixelT>::getGain() const
 {
-    DataPropertyPtrT gainProp = _metaData->find("GAIN");
+    DataProperty::PtrType gainProp = _metaData->findUnique("GAIN");
     if (gainProp) {
         double gain = boost::any_cast<const double>(gainProp->getValue());
         return gain;
@@ -85,7 +85,7 @@ void Image<ImagePixelT>::writeFits(const string& fileName) const
 }
 
 template<class ImagePixelT>
-DataPropertyPtrT Image<ImagePixelT>::getMetaData() const
+DataProperty::PtrType Image<ImagePixelT>::getMetaData() const
 {
     return _metaData;
 }

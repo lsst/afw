@@ -4,23 +4,26 @@
 #include <vw/Image.h>
 #include "lsst/mwi/data/DataProperty.h"
 #include "lsst/fw/DiskImageResourceFITS.h"
+#include "lsst/mwi/utils/Utils.h"
+#include "lsst/mwi/exceptions/Exception.h"
+
 
 using namespace vw;
+using namespace lsst::mwi::data;
+using namespace lsst::mwi::utils;
+
 
 namespace lsst {
 
     namespace fw {
 
-        using lsst::mwi::data::DataPropertyPtrT;
-
         template <typename PixelT> class LSSTFitsResource : public lsst::fw::DiskImageResourceFITS {
         public:
             LSSTFitsResource();
-            void readFits(const std::string& filename, ImageView<PixelT>& image, DataPropertyPtrT metaData, int hdu=0);
-            void writeFits(ImageView<PixelT>& image, DataPropertyPtrT metaData, const std::string& filename, int hdu=0);
+            void readFits( const std::string& filename, ImageView<PixelT>& image, DataProperty::PtrType metaData, int hdu=0);
+            void writeFits(ImageView<PixelT>& image, DataProperty::PtrType metaData, const std::string& filename, int hdu=0);
         private:
-            void getMetaData(DataPropertyPtrT metaData);
-            void setMetaData(DataPropertyPtrT metaData);
+            void getMetaData(DataProperty::PtrType metaData);
         };
         
 #include "LSSTFitsResource.cc"  

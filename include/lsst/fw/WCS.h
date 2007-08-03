@@ -30,11 +30,11 @@ namespace lsst {
         public:
             
             WCS();
-            WCS(lsst::mwi::data::DataPropertyPtrT fitsMetaData);
+            WCS(lsst::mwi::data::DataProperty::PtrType fitsMetaData);
             ~WCS();
 
             /// Return the input fits header
-            lsst::mwi::data::DataPropertyPtrT getFitsMetaData() const { 
+            lsst::mwi::data::DataProperty::PtrType getFitsMetaData() const { 
                 return _fitsMetaData; 
             }
 
@@ -47,9 +47,9 @@ namespace lsst {
 
             void colRowToRaDec(Coord2D pix, Coord2D& sky) const;
             Coord2D colRowToRaDec(Coord2D pix) const;
-            Coord2D WCS::colRowToRaDec(double const col, double const row) const;
+            Coord2D colRowToRaDec(double const col, double const row) const;
         private:
-            lsst::mwi::data::DataPropertyPtrT _fitsMetaData; ///< Input FITS header.  Caveat Emptor: may contain other keywords
+            lsst::mwi::data::DataProperty::PtrType _fitsMetaData; ///< Input FITS header.  Caveat Emptor: may contain other keywords
             // including e.g. SIMPLE and BITPIX
             struct wcsprm* _wcsInfo;
             int _nWcsInfo;

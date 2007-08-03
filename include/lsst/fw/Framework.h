@@ -1,5 +1,5 @@
-#ifndef _LLST_FRAMEWORK
-#define _LLST_FRAMEWORK
+#ifndef _LSST_FW_FRAMEWORK
+#define _LSST_FW_FRAMEWORK
 
 #include "lsst/mwi/data/LsstBase.h"
 #include "lsst/mwi/data/Citizen.h"
@@ -17,4 +17,4 @@
 #include "Mask.h"
 #include "MaskedImage.h"
 
-#endif // !defined(_LLST_FRAMEWORK)
+#endif // !defined(_LSST_FW_FRAMEWORK)

@@ -30,22 +30,19 @@ using namespace vw;
 %include "lsst/mwi/p_lsstSwig.i"
 %include "lsst/fw/Core/lsstImageTypes.i"
 
-/******************************************************************************/
-%{
-typedef float ImagePixelType;
-typedef uint8 MaskPixelType;
+%pythoncode %{
+import lsst.mwi.data
+import lsst.mwi.utils
 %}
 
+/******************************************************************************/
+
 %import "lsst/mwi/utils/Utils.h"
-%import "lsst/mwi/exceptions/Exception.h"
-%import "lsst/mwi/data/Citizen.h"
-%import "lsst/mwi/data/DataProperty.h"
 %import "lsst/mwi/data/LsstData.h"
-%import "lsst/mwi/data/LsstImpl_DC2.h"
-%import "lsst/mwi/data/LsstBase.h"
+%import "lsst/mwi/data/DataProperty.h"
+%import "lsst/mwi/exceptions/Exception.h"
 %import "lsst/fw/Mask.h"
 %import "lsst/fw/MaskedImage.h"
-
 /******************************************************************************/
 //
 // Define a class to do very little with a PixelProcessingFunc

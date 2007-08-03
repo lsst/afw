@@ -2,10 +2,12 @@
 #include "lsst/fw/MaskedImage.h"
 #include "lsst/mwi/exceptions/Exception.h"
 #include "lsst/mwi/utils/Trace.h"
+#include "lsst/mwi/data/FitsFormatter.h"
 #include <typeinfo>
 
 using namespace lsst::fw;
 using lsst::mwi::utils::Trace;
+using lsst::mwi::data::FitsFormatter;
 
 template <typename ImagePixelT, typename MaskPixelT> 
 class testPixProcFunc : public PixelProcessingFunc<ImagePixelT, MaskPixelT> {
@@ -127,13 +129,9 @@ int main(int argc, char**argv) {
 
      testMaskedImage1.writeFits(argv[3]);
 
-     DataPropertyPtrT metaDataPtr = testMaskedImage1.getImage()->getMetaData();
+     DataProperty::PtrType metaDataPtr = testMaskedImage1.getImage()->getMetaData();
 
-     std::ostringstream metaDataRepr;
-     int nItems;
-
-     metaDataPtr->reprCfitsio(metaDataRepr, &nItems, false);
-
-     cout << "Number of FITS header cards: " << nItems << endl;
-     cout << metaDataRepr.str();
+     cout << "Number of FITS header cards: " 
+        << FitsFormatter::countFITSHeaderCards(metaDataPtr, false) << endl;
+     cout << FitsFormatter::formatDataProperty(metaDataPtr, false) << endl;
 }

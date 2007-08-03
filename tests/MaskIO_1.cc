@@ -1,13 +1,14 @@
 // -*- lsst-c++ -*-
 #include "lsst/fw/Mask.h"
 #include "lsst/fw/LSSTFitsResource.h"
+#include "lsst/mwi/data/DataProperty.h"
 
 #include <stdexcept>
 
 using namespace lsst::fw;
 using boost::any_cast;
 
-using lsst::mwi::data::DataPropertyPtrT;
+using lsst::mwi::data::DataProperty;
 
 /*
  * Make this a subroutine so that locals go out of scope as part of test
@@ -25,15 +26,16 @@ void test(char *name) {
     testMask.printMaskPlanes();
 
     // check the full metadata from the FITS header
-    DataPropertyPtrT metaDataPtr = testMask.getMetaData();
-    metaDataPtr->print();
-    std::cout << std::endl;
+    DataProperty::PtrType metaDataPtr = testMask.getMetaData();
+    std::cout << metaDataPtr->toString("",true) << std::endl;
 
     // try some pattern matching on metadata
-    DataPropertyPtrT matchPtr = metaDataPtr->find(boost::regex("WAT.*"));
-    while (matchPtr) {
-        matchPtr->print();
-        matchPtr = metaDataPtr->find(boost::regex("WAT.*"), false);
+    const std::string pattern("WAT.*");
+    std::cout << "Searching metadata with pattern " + pattern << std::endl;
+    DataProperty::iteratorRangeType matches = metaDataPtr->searchAll(pattern);
+    DataProperty::ContainerType::const_iterator iter;
+    for( iter = matches.first; iter!= matches.second; iter++) {
+        std::cout << "    found " + (*iter)->toString() << std::endl;
     }
 }
 

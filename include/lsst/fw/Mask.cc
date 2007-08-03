@@ -2,17 +2,13 @@
 // Implementations of Mask class methods
 // This file can NOT be separately compiled!   It is included by Mask.h
 
-#include <lsst/mwi/utils/Trace.h>
-
-using lsst::mwi::utils::Trace;
-
 template<typename MaskPixelT>
 Mask<MaskPixelT>::Mask() :
     LsstBase(typeid(this)),
     _imagePtr(new vw::ImageView<MaskPixelT>()),
     _image(*_imagePtr),
     _numPlanesMax(8*sizeof(MaskChannelT)),
-    _metaData(new DataProperty::DataProperty("FitsMetaData", 0)) {
+    _metaData(SupportFactory::createPropertyNode("FitsMetaData")) {
 
     Trace("fw.Mask", 1,
               boost::format("Number of mask planes: %d") % _numPlanesMax);
@@ -35,7 +31,7 @@ Mask<MaskPixelT>::Mask(MaskIVwPtrT image):
     _imagePtr(image),
     _image(*_imagePtr),
     _numPlanesMax(8 * sizeof(MaskChannelT)),
-    _metaData(new DataProperty::DataProperty("FitsMetaData", 0)) {
+    _metaData(SupportFactory::createPropertyNode("FitsMetaData")) {
 
     Trace("fw.Mask", 1,
               boost::format("Number of mask planes: %d") % _numPlanesMax);
@@ -58,7 +54,7 @@ Mask<MaskPixelT>::Mask(int ncols, int nrows) :
     _imagePtr(new vw::ImageView<MaskPixelT>(ncols, nrows)),
     _image(*_imagePtr),
     _numPlanesMax(8*sizeof(MaskChannelT)),
-    _metaData(new DataProperty::DataProperty("FitsMetaData", 0)) {
+    _metaData(SupportFactory::createPropertyNode("FitsMetaData")) {
 
     Trace("fw.Mask", 1,
               boost::format("Number of mask planes: %d") % _numPlanesMax);
@@ -76,7 +72,7 @@ Mask<MaskPixelT>::Mask(int ncols, int nrows) :
     }
 
 template<class MaskPixelT>
-DataPropertyPtrT Mask<MaskPixelT>::getMetaData()
+DataProperty::PtrType Mask<MaskPixelT>::getMetaData()
 {
     return _metaData;
 }
@@ -373,37 +369,40 @@ template<class MaskPixelT> Mask<MaskPixelT>&  Mask<MaskPixelT>::operator |= (con
     return *this;
 }
 
-// Given a DataProperty, replace any existing MaskPlane assignments with the current ones
-
+/** Given a DataProperty, replace any existing MaskPlane assignments with the current ones.
+  *
+  * \throw Throws lsst::fw::InvalidParameter if given DataProperty is not a node
+  */
 template<class MaskPixelT>
-void Mask<MaskPixelT>::addMaskPlaneMetaData(DataPropertyPtrT rootPtr) {
-    // First, clear existing MaskPlane metadata
+void Mask<MaskPixelT>::addMaskPlaneMetaData(DataProperty::PtrType rootPtr) {
+     if( rootPtr->isNode() != true ) {
+        throw lsst::fw::InvalidParameter( "Given DataProperty object is not a node" );
+        
+     }
 
-    DataPropertyPtrT dpPtr = rootPtr->find(boost::regex(maskPlanePrefix +".*"));
-    while (dpPtr) {
-        rootPtr->deleteFoundProperty();
-        dpPtr = rootPtr->find(boost::regex(maskPlanePrefix +".*"),false);
-    }
+    // First, clear existing MaskPlane metadata
+    rootPtr->deleteAll( maskPlanePrefix +".*", false );
 
     // Add new MaskPlane metadata
-
     for (map<int, std::string>::iterator i = _maskPlaneDict.begin(); i != _maskPlaneDict.end() ; i++) {
         int planeNumber = i->first;
         std::string planeName = i->second;
         if (planeName != "") {
-            rootPtr->addProperty(DataPropertyPtrT(new DataProperty(Mask::maskPlanePrefix + planeName, planeNumber)));
+            rootPtr->addProperty(
+                DataProperty::PtrType(new DataProperty(Mask::maskPlanePrefix + planeName, planeNumber)));
         }
     }
 }
 
-// Given a DataProperty that contains the MaskPlane assignments setup the MaskPlanes.  If no MaskPlane data,
-// throw an exception
+
+/** Given a DataProperty that contains the MaskPlane assignments setup the MaskPlanes.
+  */
 
 template<class MaskPixelT>
-void Mask<MaskPixelT>::parseMaskPlaneMetaData(const DataPropertyPtrT rootPtr) {
+void Mask<MaskPixelT>::parseMaskPlaneMetaData(const DataProperty::PtrType rootPtr) {
 
-    DataPropertyPtrT dpPtr = rootPtr->find(boost::regex(maskPlanePrefix +".*"));
-    if (!dpPtr) {
+    DataProperty::iteratorRangeType range = rootPtr->searchAll( maskPlanePrefix +".*" );
+    if (std::distance(range.first, range.second) == 0) {
         return;
     }
 
@@ -412,14 +411,15 @@ void Mask<MaskPixelT>::parseMaskPlaneMetaData(const DataPropertyPtrT rootPtr) {
     clearAllMaskPlanes();
 
     // Iterate through matching keyWords
-
-    while (dpPtr) {
+    DataProperty::ContainerIteratorType iter;
+    for( iter = range.first; iter != range.second; iter++ ) {
+        DataProperty::PtrType dpPtr = *iter;
         // split off the "MP_" to get the planeName
         std::string keyWord = dpPtr->getName();
         std::string planeName = keyWord.substr(maskPlanePrefix.size());
+        // will throw an exception if the found item does not contain const int
         int planeId = boost::any_cast<const int>(dpPtr->getValue());
         addMaskPlane(planeName, planeId);
-        dpPtr = rootPtr->find(boost::regex(maskPlanePrefix +".*"),false);
     }
 
 }

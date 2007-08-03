@@ -21,8 +21,6 @@ using namespace lsst::fw;
 
 using lsst::mwi::exceptions::FitsError;
 using lsst::mwi::data::DataProperty;
-using lsst::mwi::data::DataPropertyPtrT;
-using lsst::mwi::data::DataPropertyContainerT;
 
 //
 // A utility routine to throw an error. Note that the macro form includes
@@ -430,16 +428,16 @@ void DiskImageResourceFITS::write(vw::ImageBuffer const& src, //!< the buffer to
      * since cfitsio will put in its own in any case.
      */
     if (_metaData != NULL) {
-        DataPropertyContainerT dpC = _metaData->getContents();
-        DataPropertyContainerT::const_iterator pos;
-        for (pos = dpC.begin(); pos != dpC.end(); pos++) {
-            DataPropertyPtrT dpItemPtr = *pos;
-	    std::string keyName = dpItemPtr->getName();
-	    if (keyName != "SIMPLE" && keyName != "BITPIX" && 
-		keyName != "NAXIS" && keyName != "NAXIS1" && keyName != "NAXIS2" &&
-		keyName != "EXTEND") {
-		    appendKey(keyName, dpItemPtr->getValue(), "");
-	    }
+        DataProperty::iteratorRangeType range = _metaData->getChildren();
+        DataProperty::ContainerIteratorType iter;
+        for ( iter = range.first; iter != range.second; iter++) {
+            DataProperty::PtrType dpItemPtr = *iter;
+            std::string keyName = dpItemPtr->getName();
+            if (keyName != "SIMPLE" && keyName != "BITPIX" && 
+                keyName != "NAXIS" && keyName != "NAXIS1" && keyName != "NAXIS2" &&
+                keyName != "EXTEND") {
+		        appendKey(keyName, dpItemPtr->getValue(), "");
+	        }
         }
     }
     /*

@@ -2,6 +2,7 @@
 #include "lsst/fw/MaskedImage.h"
 #include "lsst/fw/WCS.h"
 #include "lsst/mwi/utils/Trace.h"
+#include "lsst/mwi/data/FitsFormatter.h"
 
 #include <stdexcept>
 
@@ -9,7 +10,8 @@ using namespace lsst::fw;
 using boost::any_cast;
 
 using lsst::mwi::utils::Trace;
-using lsst::mwi::data::DataPropertyPtrT;
+using lsst::mwi::data::DataProperty;
+using lsst::mwi::data::FitsFormatter;
 
 namespace mwie = lsst::mwi::exceptions;
 
@@ -25,18 +27,15 @@ void test(char *name) {
     MaskedImage<ImagePixelType, MaskPixelType> testMasked;
     testMasked.readFits(name);
 
-    DataPropertyPtrT metaDataPtr = testMasked.getImage()->getMetaData();
+    DataProperty::PtrType metaDataPtr = testMasked.getImage()->getMetaData();
 
-    std::ostringstream metaDataRepr;
-    int nItems = 0;
-
-    metaDataPtr->reprCfitsio(metaDataRepr, &nItems, false);
-    
     Trace("MaskedImageIO_1", 1,
-          boost::format("Number of FITS header cards: %d") % nItems);
+        boost::format("Number of FITS header cards: %d") 
+            % FitsFormatter::countFITSHeaderCards(metaDataPtr, false));
 
     Trace("MaskedImageIO_1", 3,
-          boost::format("FITS metadata string: %s") % metaDataRepr.str());
+        boost::format("FITS metadata string: %s") 
+            % FitsFormatter::formatDataProperty(metaDataPtr, false));
 
     WCS testWCS(metaDataPtr);
 

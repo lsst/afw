@@ -24,7 +24,6 @@ LSST_START_NAMESPACE(lsst);
 LSST_START_NAMESPACE(fw);
 
 using lsst::mwi::data::DataProperty;
-using lsst::mwi::data::DataPropertyContainerT;
 
 #define FITS_SIZE 2880
 
@@ -353,9 +352,9 @@ void writeVwFits(int fd,                // file descriptor to write to
      * Was there something else?
      */
     if (WCS != NULL) {
-        DataPropertyContainerT WCSCards = WCS->getFitsMetaData()->getContents();
+        DataProperty::iteratorRangeType WCSCards = WCS->getFitsMetaData()->getChildren();
         
-        for (DataPropertyContainerT::const_iterator i = WCSCards.begin(); i != WCSCards.end(); i++) {
+        for (DataProperty::ContainerIteratorType i = WCSCards.first; i != WCSCards.second; i++) {
             Card card(*(*i));
             
             if (card.keyword == "SIMPLE" ||

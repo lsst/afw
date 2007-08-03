@@ -2,6 +2,7 @@
 #include "lsst/fw/Mask.h"
 #include "lsst/mwi/exceptions/Exception.h"
 #include "lsst/mwi/utils/Trace.h"
+#include "lsst/mwi/data/SupportFactory.h"
 
 #include <stdexcept>
 
@@ -11,6 +12,7 @@ using boost::any_cast;
 using namespace lsst::mwi::exceptions;
 using lsst::mwi::utils::Trace;
 using lsst::mwi::data::Citizen;
+using lsst::mwi::data::SupportFactory;
 
 namespace mwie = lsst::mwi::exceptions;
 
@@ -68,11 +70,11 @@ void test() {
         cout << "Assigned CR to plane " << iPlane << endl;
      }
      catch(OutOfPlaneSpace &e){
-        DataPropertyPtrT  propertyList = e.propertyList();
-        propertyList->print();
-        DataPropertyPtrT aProperty = propertyList->find("numPlanesUsed");
+        DataProperty::PtrType  propertyList = e.propertyList();
+        cout << propertyList->toString("",true) << endl;
+        DataProperty::PtrType aProperty = propertyList->findUnique("numPlanesUsed");
         int numPlanesUsed = any_cast<const int>(aProperty->getValue());
-        DataPropertyPtrT bProperty = propertyList->find("numPlanesMax");
+        DataProperty::PtrType bProperty = propertyList->findUnique("numPlanesMax");
         int numPlanesMax = any_cast<const int>(bProperty->getValue());
 
         cout << "Ran out of space to add new CR plane: number of Planes: " \
@@ -132,12 +134,12 @@ void test() {
 
 // ------------ Test mask plane metaData
 
-     DataPropertyPtrT metaData(new DataProperty("testMetaData", 0));
+     DataProperty::PtrType metaData = SupportFactory::createPropertyNode("testMetaData");
      testMask.addMaskPlaneMetaData(metaData);
      cout << "MaskPlane metadata:" << endl;
-     metaData->print("\t");
+     cout << metaData->toString("\t",true) << endl;
 
-     DataPropertyPtrT newPlane(new DataProperty("Whatever", 5));
+     DataProperty::PtrType newPlane(new DataProperty("Whatever", 5));
      metaData->addProperty(newPlane);
 
      testMask.parseMaskPlaneMetaData(metaData);

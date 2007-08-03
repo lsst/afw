@@ -20,6 +20,7 @@
 #include "lsst/mwi/data/DataProperty.h"
 #include "lsst/mwi/utils/Trace.h"
 #include "lsst/fw/LSSTFitsResource.h"
+#include "lsst/mwi/data/SupportFactory.h"
 
 
 namespace lsst {
@@ -29,8 +30,11 @@ namespace lsst {
         using namespace std;
         
         using lsst::mwi::data::LsstBase;
-        using lsst::mwi::data::DataPropertyPtrT;
+        using lsst::mwi::data::DataProperty;
+        using lsst::mwi::data::SupportFactory;
         using namespace lsst::mwi::exceptions;
+        using lsst::mwi::utils::Trace;
+
 
         class PixelCoord {
         public:
@@ -70,7 +74,7 @@ namespace lsst {
             
             void writeFits(const string& fileName);
             
-            DataPropertyPtrT getMetaData();
+            DataProperty::PtrType getMetaData();
             
             int addMaskPlane(const string& name);
             
@@ -93,9 +97,9 @@ namespace lsst {
             void setMaskPlaneValues(const int plane, const int x0, const int x1, const int y);            
             void setMaskPlaneValues(int plane, MaskPixelBooleanFunc<MaskPixelT> selectionFunc);
             
-            void parseMaskPlaneMetaData(const DataPropertyPtrT);
+            void parseMaskPlaneMetaData(const DataProperty::PtrType);
             
-            void addMaskPlaneMetaData(DataPropertyPtrT);
+            void addMaskPlaneMetaData(DataProperty::PtrType);
             
             int countMask(MaskPixelBooleanFunc<MaskPixelT>& testFunc,
                           const BBox2i maskRegion) const;
@@ -138,7 +142,7 @@ namespace lsst {
             int _numPlanesUsed;
             MaskChannelT _planeBitMask[8 * sizeof(MaskChannelT)];
             MaskChannelT _planeBitMaskComplemented[8 * sizeof(MaskChannelT)];
-            DataPropertyPtrT _metaData;
+            DataProperty::PtrType _metaData;
             static const std::string maskPlanePrefix;
             unsigned int _offsetRows;
             unsigned int _offsetCols;

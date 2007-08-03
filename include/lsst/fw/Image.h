@@ -19,7 +19,7 @@
 #include "lsst/mwi/data/LsstBase.h"
 #include "lsst/mwi/data/DataProperty.h"
 #include "lsst/fw/LSSTFitsResource.h"
-
+#include "lsst/mwi/data/SupportFactory.h"
 
 
 namespace lsst {
@@ -30,7 +30,8 @@ namespace lsst {
         using namespace std;
         
         using lsst::mwi::data::LsstBase;
-        using lsst::mwi::data::DataPropertyPtrT;
+        using lsst::mwi::data::DataProperty;
+        using lsst::mwi::data::SupportFactory;
 
         template<typename ImagePixelT>
         class Image : private LsstBase {
@@ -53,7 +54,7 @@ namespace lsst {
             
             void writeFits(const string& fileName) const;
             
-            DataPropertyPtrT getMetaData() const;
+            DataProperty::PtrType getMetaData() const;
             
             ImagePtrT getSubImage(const BBox2i imageRegion) const;
             
@@ -88,7 +89,7 @@ namespace lsst {
         private:
             ImageIVwPtrT _imagePtr;
             ImageIVwT& _image;
-            DataPropertyPtrT _metaData;
+            DataProperty::PtrType _metaData;
             unsigned int _offsetRows;
             unsigned int _offsetCols;
 

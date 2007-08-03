@@ -2,6 +2,8 @@
 //! \brief Implementation of WCS
 #include "lsst/fw/WCS.h"
 
+#include "lsst/mwi/data/FitsFormatter.h"
+
 #include "wcslib/wcs.h"
 #include "wcslib/wcshdr.h"
 
@@ -10,7 +12,7 @@ using namespace vw::math;
 
 using lsst::mwi::data::LsstBase;
 using lsst::mwi::data::DataProperty;
-using lsst::mwi::data::DataPropertyPtrT;
+using lsst::mwi::data::FitsFormatter;
 
 /// Constructor for WCS, creating an invalid WCS
 WCS::WCS() : LsstBase(typeid(this)),
@@ -19,23 +21,24 @@ WCS::WCS() : LsstBase(typeid(this)),
 }
 
 /// Constructor for WCS  from a FITS header, represented as DataProperty::PtrType
-WCS::WCS(DataPropertyPtrT fitsMetaData  ///< The contents of a valid FITS header
+WCS::WCS(DataProperty::PtrType fitsMetaData  ///< The contents of a valid FITS header
         ) : LsstBase(typeid(this)),
             _fitsMetaData(fitsMetaData) {
     int nCards = 0;
-
+    std::string metadataStr;
+    
     // these should be set via policy - but for the moment...
 
     _relax = 1;
     _ctrl = 2;
 
-    std::ostringstream fitsMetaDataStr;
-    fitsMetaData->reprCfitsio(fitsMetaDataStr, &nCards, false);
-     
+    metadataStr = FitsFormatter::formatDataProperty( fitsMetaData, false );
+    nCards = FitsFormatter::countFITSHeaderCards( fitsMetaData, false );
+    
     // idiocy required because wcspih takes a non-const char*
-    int len = fitsMetaDataStr.str().size();
+    int len = metadataStr.size();
     char *hdrString = new(char[len+1]);
-    strcpy(hdrString, fitsMetaDataStr.str().c_str());
+    strcpy(hdrString, metadataStr.c_str());
 
     _status = wcspih(hdrString, nCards, _relax, _ctrl, &_nReject, &_nWcsInfo, &_wcsInfo);
 
