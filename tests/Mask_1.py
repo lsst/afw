@@ -36,10 +36,14 @@ def doMask_1():
 
     # ------------ Test mask plane metaData
 
-    metaData = mwid.DataPropertyPtr("testMetaData")
+    if False:
+        metaData = mwid.DataPropertyPtr("testMetaData")
+    else:
+        metaData = mwid.SupportFactory_createPropertyNode("testMetaData")
+
     testMask.addMaskPlaneMetaData(metaData)
     print "MaskPlane metadata:"
-    metaData._print("\t");
+    print metaData.toString("\t");
 
     print "Printing metadata from Python:"
     d = testMask.getMaskPlaneDict()
