@@ -7,8 +7,8 @@ env.SharedLibrary('fw', map(lambda str: "../src/" + str,
                              "Kernel/AnalyticKernel.cc",
                              "Kernel/LinearCombinationKernel.cc",
                              "WCS.cc",
-                            ]), LIBS=env.libs["boost"] + env.libs["vw"] + env.libs["wcs"] + env.libs["mwi"])
+                             ]), LIBS=env.getlibs("boost mwi vw wcslib"))
 
 env.SharedLibraryIncomplete('fitsio', map(lambda str: "../src/" + str,
 					  Split("DiskImageResourceFITS.cc")),
-                            LIBS=["cfitsio"])
+                            LIBS=env.getlibs("cfitsio"))

@@ -1,8 +1,5 @@
 # -*- python -*-
 Import("env")
-import os
 
-env.CheckSwig("python", ilang="c++")
-env['SWIGFLAGS'] += " -I%s" % (os.path.join(os.environ["MWI_DIR"], "python"))
-env.LoadableModuleIncomplete("_fwLib", Split("fwLib.i"),
-                             LIBS=env.libs["vw"] + env.libs["fits"] + ["fw"] + env.libs["wcs"] + ["mwi"])
+env.CheckSwig("python", ilang="c++", includedProducts="mwi")
+env.LoadableModuleIncomplete("_fwLib", Split("fwLib.i"), LIBS=env.getlibs("fw fitsio"))

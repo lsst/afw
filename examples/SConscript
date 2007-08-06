@@ -1,63 +1,40 @@
 # -*- python -*-
 Import('env')
 
-env.Program(["generate.cc"],
-	    LIBS=["fw"] + env.libs["wcs"] + env.libs["vw"] + \
-            Split("vwMosaic vwImage") + env.libs["boost"] + ["mwi"])
-env.Program(["vwconvert.cc"], LIBS=env.libs["vw"])
-env.Program(["fitsio.cc"], LIBS=["fw"] + env.libs["vw"] + env.libs["fits"] + env.libs["wcs"] + ["mwi"])
-env.Program("maskedImageFitsIO", ["maskedImageFitsIO.cc"],
-    LIBS=["fw"] + env.libs["vw"] + env.libs["fits"] + ["vwImage"] + env.libs["boost"] + ["mwi"])
+env.Program(["generate.cc"], LIBS=env.getlibs("fw"))
+env.Program(["vwconvert.cc"], LIBS=env.getlibs("vw"))
+env.Program(["fitsio.cc"], LIBS=env.getlibs("fw fitsio"))
+env.Program("maskedImageFitsIO", ["maskedImageFitsIO.cc"], LIBS=env.getlibs("fw fitsio"))
 
+env.Program("chebyshev1Function", ["chebyshev1Function.cc"], LIBS=env.getlibs("fw"))
+env.Program("gaussianFunction", ["gaussianFunction.cc"], LIBS=env.getlibs("fw"))
+env.Program("integerDeltaFunction", ["integerDeltaFunction.cc"], LIBS=env.getlibs("fw"))
+env.Program("lanczosFunction", ["lanczosFunction.cc"], LIBS=env.getlibs("fw"))
+env.Program("polynomialFunction", ["polynomialFunction.cc"], LIBS=env.getlibs("fw"))
 
-env.Program("chebyshev1Function", ["chebyshev1Function.cc"],
-    LIBS=["fw"] + env.libs["boost"])
-env.Program("gaussianFunction", ["gaussianFunction.cc"],
-    LIBS=["fw"] + env.libs["boost"])
-env.Program("integerDeltaFunction", ["integerDeltaFunction.cc"],
-    LIBS=["fw"] + env.libs["boost"])
-env.Program("lanczosFunction", ["lanczosFunction.cc"],
-    LIBS=["fw"] + env.libs["boost"])
-env.Program("polynomialFunction", ["polynomialFunction.cc"],
-    LIBS=["fw"] + env.libs["boost"])
+env.Program("analyticKernel", ["analyticKernel.cc"], LIBS=env.getlibs("fw"))
+env.Program("deltaFunctionKernels", ["deltaFunctionKernels.cc"], LIBS=env.getlibs("fw"))
+env.Program("fixedKernel", ["fixedKernel.cc"], LIBS=env.getlibs("fw"))
+env.Program("lanczosKernel", ["lanczosKernel.cc"], LIBS=env.getlibs("fw"))
 
-env.Program("analyticKernel", ["analyticKernel.cc"],
-    LIBS=["fw"] + env.libs["vw"] + ["vwImage"] + env.libs["boost"])
-env.Program("deltaFunctionKernels", ["deltaFunctionKernels.cc"],
-    LIBS=["fw"] + env.libs["vw"] + ["vwImage"] + env.libs["boost"])
-env.Program("fixedKernel", ["fixedKernel.cc"],
-    LIBS=["fw"] + env.libs["vw"] + ["vwImage"] + env.libs["boost"])
-env.Program("lanczosKernel", ["lanczosKernel.cc"],
-    LIBS=["fw"] + env.libs["vw"] + ["vwImage"] + env.libs["boost"])
-
-env.Program("simpleConvolve", ["simpleConvolve.cc"],
-    LIBS=["fw"] + env.libs["vw"] + env.libs["fits"] + ["vwImage"] + env.libs["boost"])
-env.Program("spatiallyVaryingConvolve", ["spatiallyVaryingConvolve.cc"],
-    LIBS=["fw"] + env.libs["vw"] + env.libs["fits"] + ["vwImage"] + env.libs["boost"])
-env.Program("timeConvolve", ["timeConvolve.cc"],
-    LIBS=["fw"] + env.libs["vw"] + env.libs["fits"] + ["vwImage"] + env.libs["boost"])
-env.Program("timeSpatiallyVaryingConvolve", ["timeSpatiallyVaryingConvolve.cc"],
-    LIBS=["fw"] + env.libs["vw"] + env.libs["fits"] + ["vwImage"] + env.libs["boost"])
+env.Program("simpleConvolve", ["simpleConvolve.cc"], LIBS=env.getlibs("fw fitsio"))
+env.Program("spatiallyVaryingConvolve", ["spatiallyVaryingConvolve.cc"], LIBS=env.getlibs("fw fitsio"))
+env.Program("timeConvolve", ["timeConvolve.cc"], LIBS=env.getlibs("fw fitsio"))
+env.Program("timeSpatiallyVaryingConvolve", ["timeSpatiallyVaryingConvolve.cc"], LIBS=env.getlibs("fw fitsio"))
 #
 # Tests
 #
-import glob, os, sys
-
 import lsst.tests
 tests = lsst.tests.Control(env, ignoreList=[
     "fitsio", "generate", "vwconvert", "maskedImageFitsIO",
     "simpleConvolve", "spatiallyVaryingConvolve", "timeConvolve", "timeSpatiallyVaryingConvolve",
 ])
 
-if not hasattr(tests, "runExamples"): # before scons 1.16
-    try:
-        tests.runExamples = (os.stat(tests._tmpDir).st_mode & 0x1) # directory is world executable
-    except OSError:
-        tests.runExamples = True
-
 if not tests.runExamples:
-    print >> sys.stderr, "Not running the examples; \"chmod o+x examples/%s\" to run them" % tests._tmpDir
+    if not env.QuietFlagIsSet():
+        print >> sys.stderr, "Not running the examples; \"chmod o+x examples/%s\" to run them" % tests._tmpDir
 else:
-    print >> sys.stderr, "Running the examples; \"chmod o-x examples/%s\" to not run them" % tests._tmpDir
+    if not env.QuietFlagIsSet():
+        print >> sys.stderr, "Running the examples; \"chmod o-x examples/%s\" to not run them" % tests._tmpDir
     tests.run("*.cc")
     tests.run("*.py")

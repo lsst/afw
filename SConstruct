@@ -42,6 +42,9 @@ env = scons.makeEnv("fw",
                     [["boost", "boost/version.hpp", "boost_filesystem:C++"],
                      ["boost", "boost/regex.hpp", "boost_regex:C++"],
                      ["vw", "vw/Core.h", "vw:C++"],
+                     ["vw", "vw/Core.h", "vwCore:C++"],
+                     ["vw", "vw/FileIO.h", "vwFileIO:C++"],
+                     ["vw", "vw/Image.h", "vwImage:C++"],
                      ["python", "Python.h"],
                      ["cfitsio", "fitsio.h", "m cfitsio", "ffopen"],
                      ["wcslib", "wcslib/wcs.h", "m wcs"], # remove m once SConsUtils bug fixed
@@ -49,16 +52,10 @@ env = scons.makeEnv("fw",
                      ["mwi", "lsst/mwi/data.h", "boost_filesystem boost_regex mwi:C++"],
                      ])
 #
-# Libraries that I need to link things.  This should be handled better
+# Libraries needed to link libraries/executables
 #
-env.libs = dict([
-    ("boost",   selectBoostLibs(env, "boost_filesystem boost_regex")),
-    ("fits",    Split("fitsio")),
-    ("vw",      Split("vw vwCore vwFileIO vwImage")),
-    ("mwi",     Split("mwi")),
-    ("wcs",     Split("wcs")),
-    ])
-print "Will link against these boost libraries:", env.libs["boost"]
+env.libs["fitsio"] = ["fitsio"]         # Our fitsio library.  This should probably be part of libfw
+env.libs["fw"] += env.getlibs("boost mwi vw wcslib") # we'll always want to link these with fw
 #
 # Build/install things
 #
@@ -69,23 +66,18 @@ for d in map(lambda str: "python/lsst/fw/" + str,
              Split("Catalog Core Display")):
     SConscript(os.path.join(d, "SConscript"))
 
-env['IgnoreFiles'] = r"(~$|\.pyc$|^\.svn$|\.o$)"
-
-Alias("install", env.Install(env['prefix'], "python"))
-Alias("install", env.Install(env['prefix'], "include"))
-Alias("install", env.Install(env['prefix'], "lib"))
-Alias("install", env.Install(env['prefix'] + "/bin", glob.glob("bin/*.py")))
-Alias("install", env.InstallEups(env['prefix'] + "/ups", glob.glob("ups/*.table")))
+Alias("install", [env.InstallDir(env['prefix'], "python"),
+                  env.InstallDir(env['prefix'], "include"),
+                  env.InstallDir(env['prefix'], "lib"),
+                  env.InstallEups(env['prefix'] + "/ups", glob.glob("ups/*.table"))])
 
 scons.CleanTree(r"*~ core *.so *.os *.o")
 #
 # Build TAGS files
 #
-if len(filter(lambda t: t == "TAGS", scons.COMMAND_LINE_TARGETS)) > 0:
-    try:
-        env.Command("TAGS", scons.filesToTag(), "etags -o $TARGET $SOURCES")
-    except AttributeError:                  # not in this version of sconsUtils
-        pass
+files = scons.filesToTag()
+if files:
+    env.Command("TAGS", files, "etags -o $TARGET $SOURCES")
 
 env.Declare()
 env.Help("""

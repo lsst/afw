@@ -2,18 +2,16 @@
 Import("env")
 import os
 
-env.Program(["Mask_1.cc"], LIBS=env.libs["vw"] + ["mwi"] + env.libs["boost"] + env.libs["wcs"])
-env.Program(["MaskedImage_1.cc"], LIBS=env.libs["vw"] + ["mwi"] + env.libs["boost"] + env.libs["wcs"] + ["cfitsio"] + ["fitsio"])
-env.Program(["MaskIO_1.cc"], LIBS=env.libs["vw"] + ["mwi"] + env.libs["boost"] + env.libs["wcs"] + ["cfitsio"] + ["fitsio"])
-env.Program(["MaskedImageIO_1.cc"], LIBS=env.libs["vw"] + ["mwi"] + ["fw"] + env.libs["boost"] + env.libs["wcs"] + ["cfitsio"] + ["fitsio"])
+env.Program(["Mask_1.cc"], LIBS=env.getlibs("fw"))
+env.Program(["MaskedImage_1.cc"], LIBS=env.getlibs("fw fitsio"))
+env.Program(["MaskIO_1.cc"], LIBS=env.getlibs("fw fitsio"))
+env.Program(["MaskedImageIO_1.cc"], LIBS=env.getlibs("fw fitsio"))
 
 env.CheckSwig("python", ilang="c++")
 env.Append(SWIGFLAGS=" -Ipython")
 
 env['SWIGFLAGS'] += " -I%s/%s" % (os.environ["MWI_DIR"], "python")
-fwTests = env.LoadableModuleIncomplete("_fwTests", "fwTests.i",
-                                       LIBS=env.libs["vw"] + ["fw"] + ["mwi"])
-
+fwTests = env.LoadableModuleIncomplete("_fwTests", "fwTests.i", LIBS=env.getlibs("fw fitsio"))
 #
 # Tests
 #

@@ -10,7 +10,7 @@ or
 
 import pdb                              # we may want to say pdb.set_trace()
 import unittest
-import lsst.fw.Core.tests as tests
+import lsst.mwi.tests as tests
 import lsst.fw.Core.fwLib as fw
 import fwTests
 
@@ -69,4 +69,5 @@ def suite():
     return unittest.TestSuite(suites)
 
 if __name__ == "__main__":
-    unittest.main()
+    tests.run(suite())
+    

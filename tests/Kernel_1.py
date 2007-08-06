@@ -1,8 +1,7 @@
 import pdb                              # we may want to say pdb.set_trace()
 import unittest
-import lsst.fw.Core.tests as tests
 import lsst.fw.Core.fwLib as fw
-import lsst.mwi.tests as mtests
+import lsst.mwi.tests as tests
 import lsst.mwi.utils as mwiu
 
 try:
@@ -71,11 +70,11 @@ class FixedKernelTestCase(unittest.TestCase):
 
 def suite():
     """Returns a suite containing all the test cases in this module."""
-    mtests.init()
+    tests.init()
 
     suites = []
     suites += unittest.makeSuite(FixedKernelTestCase)
-    suites += unittest.makeSuite(mtests.MemoryTestCase)
+    suites += unittest.makeSuite(tests.MemoryTestCase)
 
     return unittest.TestSuite(suites)
 
