@@ -1,4 +1,5 @@
 # -*- python -*-
+import sys
 Import('env')
 
 env.Program(["generate.cc"], LIBS=env.getlibs("fw"))
