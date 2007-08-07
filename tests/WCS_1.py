@@ -43,10 +43,10 @@ class WCSTestCase(unittest.TestCase):
 
     def test_RaTan_DecTan(self):
         """Check the RA---TAN, DEC--TAN WCS conversion"""
-        raDec = self.wcs.colRowToRaDec(32.0 - 1, 1.0 - 1) # 1-indexed position read off ds9
+        raDec = self.wcs.colRowToRaDec(33.0, 1.0 ) # position read off ds9
 
-        self.assertAlmostEqual(raDec.x(), 17.87840) # ra from ds9
-        self.assertAlmostEqual(raDec.y(), 7.77231) # dec from ds9
+        self.assertAlmostEqual(raDec.x(), 17.87840, 5) # ra from ds9
+        self.assertAlmostEqual(raDec.y(), 7.72231, 5) # dec from ds9
 
         if False:
             print raDec.x(), raDec.y()
