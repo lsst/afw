@@ -14,10 +14,7 @@ MaskedImage<ImagePixelT, MaskPixelT>::MaskedImage() :
     LsstBase(typeid(this)),
     _imagePtr(new Image<ImagePixelT>()),
     _variancePtr(new Image<ImagePixelT>()),
-    _maskPtr(new Mask<MaskPixelT>()),
-    _image(*_imagePtr),
-    _variance(*_variancePtr),
-    _mask(*_maskPtr) {
+    _maskPtr(new Mask<MaskPixelT>()) {
 }
 
 // Construct from a supplied Image and Mask.  The Variance will be set to zero
@@ -27,10 +24,7 @@ MaskedImage<ImagePixelT, MaskPixelT>::MaskedImage(ImagePtrT image, MaskPtrT mask
     LsstBase(typeid(this)),
     _imagePtr(image),
     _variancePtr(new Image<ImagePixelT>()),
-    _maskPtr(mask),
-    _image(*_imagePtr),
-    _variance(*_variancePtr),
-    _mask(*_maskPtr) {
+    _maskPtr(mask) {
     conformSizes();
 }    
 
@@ -41,10 +35,7 @@ MaskedImage<ImagePixelT, MaskPixelT>::MaskedImage(ImagePtrT image, ImagePtrT var
     LsstBase(typeid(this)),
     _imagePtr(image),
     _variancePtr(variance),
-    _maskPtr(mask),
-    _image(*_imagePtr),
-    _variance(*_variancePtr),
-    _mask(*_maskPtr) {
+    _maskPtr(mask) {
     conformSizes();
 }    
 
@@ -54,10 +45,7 @@ MaskedImage<ImagePixelT, MaskPixelT>::MaskedImage(int nCols, int nRows) :
     LsstBase(typeid(this)),
     _imagePtr(new Image<ImagePixelT>(nCols, nRows)),
     _variancePtr(new Image<ImagePixelT>(nCols, nRows)),
-    _maskPtr(new Mask<MaskPixelT>(nCols, nRows)),
-    _image(*_imagePtr),
-    _variance(*_imagePtr),
-    _mask(*_maskPtr) {
+    _maskPtr(new Mask<MaskPixelT>(nCols, nRows)) {
 }
 
 template<typename ImagePixelT, typename MaskPixelT> 
@@ -90,9 +78,9 @@ void MaskedImage<ImagePixelT, MaskPixelT>::readFits(std::string baseName) {
 
 // reset any existing data
 
-    typename Image<ImagePixelT>::ImageIVwPtrT _imageVwPtr = _image.getIVwPtr();
-    typename Image<ImagePixelT>::ImageIVwPtrT _varianceVwPtr = _image.getIVwPtr();
-    typename Mask<MaskPixelT>::MaskIVwPtrT _maskVwPtr = _mask.getIVwPtr();
+    typename Image<ImagePixelT>::ImageIVwPtrT _imageVwPtr = _imagePtr->getIVwPtr();
+    typename Image<ImagePixelT>::ImageIVwPtrT _varianceVwPtr = _variancePtr->getIVwPtr();
+    typename Mask<MaskPixelT>::MaskIVwPtrT _maskVwPtr = _maskPtr->getIVwPtr();
 
     _imageRows = 0;
     _imageCols = 0;
@@ -165,11 +153,11 @@ void MaskedImage<ImagePixelT, MaskPixelT>::writeFits(std::string baseName) {
 template<typename ImagePixelT, typename MaskPixelT>
 typename MaskedImage<ImagePixelT, MaskPixelT>::MaskedImagePtrT MaskedImage<ImagePixelT, MaskPixelT>::getSubImage(const vw::BBox2i subRegion) const {
 
-    typename Image<ImagePixelT>::ImagePtrT newSubImage = _image.getSubImage(subRegion);
+    typename Image<ImagePixelT>::ImagePtrT newSubImage = _imagePtr->getSubImage(subRegion);
      
-    typename Image<ImagePixelT>::ImagePtrT newSubVariance = _variance.getSubImage(subRegion);
+    typename Image<ImagePixelT>::ImagePtrT newSubVariance = _variancePtr->getSubImage(subRegion);
 
-    typename Mask<MaskPixelT>::MaskPtrT newSubMask = _mask.getSubMask(subRegion);
+    typename Mask<MaskPixelT>::MaskPtrT newSubMask = _maskPtr->getSubMask(subRegion);
 
     typename MaskedImage<ImagePixelT, MaskPixelT>::MaskedImagePtrT newMaskedImage(new MaskedImage<ImagePixelT, MaskPixelT>(newSubImage, newSubVariance, newSubMask));
 
@@ -184,8 +172,8 @@ void MaskedImage<ImagePixelT, MaskPixelT>::replaceSubImage(const BBox2i subRegio
                                          const bool replaceMask, const bool replaceImage, const bool replaceVariance)
 {
     if (replaceImage) {
-        typename Image<ImagePixelT>::ImageIVwT& _imageView = _image.getIVw();
-        typename Image<ImagePixelT>::ImageIVwT& _imageViewInsert = insertImage->_image.getIVw();
+        typename Image<ImagePixelT>::ImageIVwT& _imageView = _imagePtr->getIVw();
+        typename Image<ImagePixelT>::ImageIVwT& _imageViewInsert = insertImage->_imagePtr->getIVw();
         try {
             crop(_imageView, subRegion) = _imageViewInsert;
         } catch (exception eex) {
@@ -193,8 +181,8 @@ void MaskedImage<ImagePixelT, MaskPixelT>::replaceSubImage(const BBox2i subRegio
         } 
     }
     if (replaceVariance) {
-        typename Image<ImagePixelT>::ImageIVwT& _imageView = _variance.getIVw();
-        typename Image<ImagePixelT>::ImageIVwT& _imageViewInsert = insertImage->_variance.getIVw();
+        typename Image<ImagePixelT>::ImageIVwT& _imageView = _variancePtr->getIVw();
+        typename Image<ImagePixelT>::ImageIVwT& _imageViewInsert = insertImage->_variancePtr->getIVw();
         try {
             crop(_imageView, subRegion) = _imageViewInsert;
         } catch (exception eex) {
@@ -202,8 +190,8 @@ void MaskedImage<ImagePixelT, MaskPixelT>::replaceSubImage(const BBox2i subRegio
         } 
     }
     if (replaceMask) {
-        typename Mask<MaskPixelT>::MaskIVwT& _imageView = _mask.getIVw();
-        typename Mask<MaskPixelT>::MaskIVwT& _imageViewInsert = insertImage->_mask.getIVw();
+        typename Mask<MaskPixelT>::MaskIVwT& _imageView = _maskPtr->getIVw();
+        typename Mask<MaskPixelT>::MaskIVwT& _imageViewInsert = insertImage->_maskPtr->getIVw();
         try {
             crop(_imageView, subRegion) = _imageViewInsert;
         } catch (exception eex) {
@@ -222,7 +210,7 @@ void MaskedImage<ImagePixelT, MaskPixelT>::setDefaultVariance()
     double gain;
 
     try {
-        gain = _image.getGain();
+        gain = _imagePtr->getGain();
     } 
 
     catch (...) {
@@ -230,8 +218,8 @@ void MaskedImage<ImagePixelT, MaskPixelT>::setDefaultVariance()
         gain = 1.0;
     }
 
-    typename Image<ImagePixelT>::ImageIVwPtrT imageVw = _image.getIVwPtr();
-    typename Image<ImagePixelT>::ImageIVwPtrT varianceVw = _variance.getIVwPtr();
+    typename Image<ImagePixelT>::ImageIVwPtrT imageVw = _imagePtr->getIVwPtr();
+    typename Image<ImagePixelT>::ImageIVwPtrT varianceVw = _variancePtr->getIVwPtr();
 
     *varianceVw = *imageVw / gain;
 
@@ -243,65 +231,65 @@ void MaskedImage<ImagePixelT, MaskPixelT>::setDefaultVariance()
 
 template<typename ImagePixelT, typename MaskPixelT> 
 MaskedImage<ImagePixelT, MaskPixelT>& MaskedImage<ImagePixelT, MaskPixelT>::operator+=(MaskedImageT & maskedImageInput) {
-    _mask |= *(maskedImageInput.getMask());
-    _image += *(maskedImageInput.getImage());
-    _variance += *(maskedImageInput.getVariance());
+    *_maskPtr |= *(maskedImageInput.getMask());
+    *_imagePtr += *(maskedImageInput.getImage());
+    *_variancePtr += *(maskedImageInput.getVariance());
     return *this;
 }
 
 template<typename ImagePixelT, typename MaskPixelT> 
 MaskedImage<ImagePixelT, MaskPixelT>& MaskedImage<ImagePixelT, MaskPixelT>::operator-=(MaskedImageT & maskedImageInput) {
-    _mask |= *(maskedImageInput.getMask());
-    _image -= *(maskedImageInput.getImage());
-    _variance += *(maskedImageInput.getVariance());
+    *_maskPtr |= *(maskedImageInput.getMask());
+    *_imagePtr -= *(maskedImageInput.getImage());
+    *_variancePtr += *(maskedImageInput.getVariance());
     return *this;
 }
 
 template<typename ImagePixelT, typename MaskPixelT> 
 MaskedImage<ImagePixelT, MaskPixelT>& MaskedImage<ImagePixelT, MaskPixelT>::operator*=(MaskedImageT & maskedImageInput) {
     
-    _mask |= *(maskedImageInput.getMask());
-    _image *= *(maskedImageInput.getImage());
+    *_maskPtr |= *(maskedImageInput.getMask());
+    *_imagePtr *= *(maskedImageInput.getImage());
     // For the variance arithmetic, reach down directly to the vw level:
-    typename Image<ImagePixelT>::ImageIVwPtrT _variancePtr = _variance.getIVwPtr();
-    typename Image<ImagePixelT>::ImageIVwPtrT _imagePtr = _image.getIVwPtr();
-    typename Image<ImagePixelT>::ImageIVwPtrT _inpImagePtr = maskedImageInput.getImage()->getIVwPtr();
-    typename Image<ImagePixelT>::ImageIVwPtrT _inpVariancePtr = maskedImageInput.getImage()->getIVwPtr();
-    *_variancePtr = (*_variancePtr) * (*_inpImagePtr) + (*_inpVariancePtr) * (*_imagePtr) + 
-        (*_variancePtr) * (*_inpVariancePtr);
+    typename Image<ImagePixelT>::ImageIVwPtrT _imageIVwPtr = _imagePtr->getIVwPtr();
+    typename Image<ImagePixelT>::ImageIVwPtrT _varianceIVwPtr = _variancePtr->getIVwPtr();
+    typename Image<ImagePixelT>::ImageIVwPtrT _inpImageIVwPtr = maskedImageInput.getImage()->getIVwPtr();
+    typename Image<ImagePixelT>::ImageIVwPtrT _inpVarianceIVwPtr = maskedImageInput.getImage()->getIVwPtr();
+    *_varianceIVwPtr = (*_varianceIVwPtr) * (*_inpImageIVwPtr) + (*_inpVarianceIVwPtr) * (*_imageIVwPtr) + 
+        (*_varianceIVwPtr) * (*_inpVarianceIVwPtr);
     return *this;
 }
 
 template<typename ImagePixelT, typename MaskPixelT> 
 MaskedImage<ImagePixelT, MaskPixelT>& MaskedImage<ImagePixelT, MaskPixelT>::operator/=(MaskedImageT & maskedImageInput) {
-    _mask |= *(maskedImageInput.getMask());
-    _image /= *(maskedImageInput.getImage());
+    *_maskPtr |= *(maskedImageInput.getMask());
+    *_imagePtr /= *(maskedImageInput.getImage());
     return *this;
 }
 
 template<typename ImagePixelT, typename MaskPixelT> 
 MaskedImage<ImagePixelT, MaskPixelT>& MaskedImage<ImagePixelT, MaskPixelT>::operator+=(ImagePixelT scalar) {
-    _image += scalar;
+    *_imagePtr += scalar;
     return *this;
 }
 
 template<typename ImagePixelT, typename MaskPixelT> 
 MaskedImage<ImagePixelT, MaskPixelT>& MaskedImage<ImagePixelT, MaskPixelT>::operator-=(ImagePixelT scalar) {
-    _image -= scalar;
+    *_imagePtr -= scalar;
     return *this;
 }
 
 template<typename ImagePixelT, typename MaskPixelT> 
 MaskedImage<ImagePixelT, MaskPixelT>& MaskedImage<ImagePixelT, MaskPixelT>::operator*=(ImagePixelT scalar) {
-    _image *= scalar;
-    _variance *= scalar*scalar;
+    *_imagePtr *= scalar;
+    *_variancePtr *= scalar*scalar;
     return *this;
 }
 
 template<typename ImagePixelT, typename MaskPixelT> 
 MaskedImage<ImagePixelT, MaskPixelT>& MaskedImage<ImagePixelT, MaskPixelT>::operator/=(ImagePixelT scalar) {
-    _image /= scalar;
-    _variance /= scalar*scalar;
+    *_imagePtr /= scalar;
+    *_variancePtr /= scalar*scalar;
     return *this;
 }
 
@@ -333,25 +321,25 @@ void  MaskedImage<ImagePixelT, MaskPixelT>::processPixels(MaskPixelBooleanFunc<M
 template<typename ImagePixelT, typename MaskPixelT> 
 unsigned int  MaskedImage<ImagePixelT, MaskPixelT>::getRows() const
 {
-    return _image.getRows();
+    return _imagePtr->getRows();
 }
 
 template<typename ImagePixelT, typename MaskPixelT> 
 unsigned int  MaskedImage<ImagePixelT, MaskPixelT>::getCols() const
 {
-    return _image.getCols();
+    return _imagePtr->getCols();
 }
 
 template<typename ImagePixelT, typename MaskPixelT> 
 unsigned int  MaskedImage<ImagePixelT, MaskPixelT>::getOffsetRows() const
 {
-    return _image.getOffsetRows();
+    return _imagePtr->getOffsetRows();
 }
 
 template<typename ImagePixelT, typename MaskPixelT> 
 unsigned int  MaskedImage<ImagePixelT, MaskPixelT>::getOffsetCols() const
 {
-    return _image.getOffsetCols();
+    return _imagePtr->getOffsetCols();
 }
 
 // private function conformSizes() ensures that the Mask and Variance have the same dimensions
@@ -362,9 +350,9 @@ template<typename ImagePixelT, typename MaskPixelT>
 void  MaskedImage<ImagePixelT, MaskPixelT>::conformSizes()
 {
 
-    typename Image<ImagePixelT>::ImageIVwPtrT _imageVwPtr = _image.getIVwPtr();
-    typename Image<ImagePixelT>::ImageIVwPtrT _varianceVwPtr = _variance.getIVwPtr();
-    typename Mask<MaskPixelT>::MaskIVwPtrT _maskVwPtr = _mask.getIVwPtr();
+    typename Image<ImagePixelT>::ImageIVwPtrT _imageVwPtr = _imagePtr->getIVwPtr();
+    typename Image<ImagePixelT>::ImageIVwPtrT _varianceVwPtr = _variancePtr->getIVwPtr();
+    typename Mask<MaskPixelT>::MaskIVwPtrT _maskVwPtr = _maskPtr->getIVwPtr();
 
     unsigned int goldRows = _imageVwPtr->rows();
     unsigned int goldCols = _imageVwPtr->cols();

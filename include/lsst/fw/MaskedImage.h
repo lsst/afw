@@ -152,9 +152,6 @@ namespace lsst {
             ImagePtrT _imagePtr;
             ImagePtrT _variancePtr;
             MaskPtrT _maskPtr;
-            ImageT & _image;
-            ImageT & _variance;
-            MaskT & _mask;
 
             unsigned int _imageRows;
             unsigned int _imageCols;
