@@ -2,40 +2,8 @@
 #
 # Setup our environment
 #
-import glob, os.path, re, os
+import glob, os.path
 import lsst.SConsUtils as scons
-
-def selectBoostLibs(env, boostlibs):
-    """convert a list of boost library names into actual boost library file
-    names.
-
-    Boost library files, unfortunately, are shipped with platform- and
-    verions-specific identifiers in their filenames.  This provides a
-    translation from the generic component of the boost library name (e.g.
-    "boost_regex") and the best choice among the available versions of
-    that library.  Typically the boostlibs parameter only contains generic 
-    boost library names; however, if the name does not start with "boost",
-    it will be returned unchanged.
-    
-    @param boostlibs   the list (or space-limited string concatonation) of
-                         boost libraries.  
-    """
-    (topdir, incdir, libdir) = scons.searchEnvForDirs(env, "boost")
-    actual = None
-    out = []
-    
-    boostlibs = Split(boostlibs)
-    for lib in boostlibs:
-        if re.match(r"boost", lib):
-#            actual = scons.mangleLibraryName(env, libdir, lib)
-# The following works with scons 1.15
-            actual = scons.chooseBoostLib(env, libdir, lib)
-            if actual is None: actual = lib
-        else:
-            actual = lib
-        out.append(actual)
-    
-    return out
 
 env = scons.makeEnv("fw",
                     r"$HeadURL$",
