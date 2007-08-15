@@ -4,6 +4,8 @@ setupRequired(cfitsio)
 setupRequired(wcslib)
 setupRequired(xpa)
 
+setupOptional(fwData)
+
 setupOptional("numarray")
 setupOptional("pyfits")
 
