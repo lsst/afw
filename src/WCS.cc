@@ -5,6 +5,7 @@
 #include "lsst/mwi/data/FitsFormatter.h"
 
 #include "wcslib/wcs.h"
+#include "wcslib/wcsfix.h"
 #include "wcslib/wcshdr.h"
 
 using namespace lsst::fw;
@@ -41,6 +42,13 @@ WCS::WCS(DataProperty::PtrType fitsMetaData  ///< The contents of a valid FITS h
     strcpy(hdrString, metadataStr.c_str());
 
     _status = wcspih(hdrString, nCards, _relax, _ctrl, &_nReject, &_nWcsInfo, &_wcsInfo);
+
+    /*
+     * Fix any bad values in the WCS
+     */
+    const int *naxes = NULL;            // should be {NAXIS1, NAXIS2, ...} to check cylindrical projections
+    int stats[NWCSFIX];			// status returns from wcsfix
+    _status = wcsfix(_ctrl, naxes, _wcsInfo, stats);
 
     // What do we do if _status != 0?
 
