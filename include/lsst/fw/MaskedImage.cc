@@ -254,7 +254,7 @@ MaskedImage<ImagePixelT, MaskPixelT>& MaskedImage<ImagePixelT, MaskPixelT>::oper
     typename Image<ImagePixelT>::ImageIVwPtrT _imageIVwPtr = _imagePtr->getIVwPtr();
     typename Image<ImagePixelT>::ImageIVwPtrT _varianceIVwPtr = _variancePtr->getIVwPtr();
     typename Image<ImagePixelT>::ImageIVwPtrT _inpImageIVwPtr = maskedImageInput.getImage()->getIVwPtr();
-    typename Image<ImagePixelT>::ImageIVwPtrT _inpVarianceIVwPtr = maskedImageInput.getImage()->getIVwPtr();
+    typename Image<ImagePixelT>::ImageIVwPtrT _inpVarianceIVwPtr = maskedImageInput.getVariance()->getIVwPtr();
     *_varianceIVwPtr = (*_varianceIVwPtr) * (*_inpImageIVwPtr) + (*_inpVarianceIVwPtr) * (*_imageIVwPtr) + 
         (*_varianceIVwPtr) * (*_inpVarianceIVwPtr);
     return *this;
