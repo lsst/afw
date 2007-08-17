@@ -84,7 +84,7 @@ namespace function {
         
         virtual ReturnT operator() (double x) const {
             return (_multFac / this->_params[0]) *
-                std::exp(- (x * x) / (this->_params[0] * this->_params[0]));
+                std::exp(- (x * x) / (2.0 * this->_params[0] * this->_params[0]));
         }
         
     private:
@@ -125,8 +125,8 @@ namespace function {
         
         virtual ReturnT operator() (double x, double y) const {
             return (_multFac / (this->_params[0] * this->_params[1])) *
-                std::exp(- ((x * x) / (this->_params[0] * this->_params[0]))
-                         - ((y * y) / (this->_params[1] * this->_params[1]))
+                std::exp(- ((x * x) / (2.0 * this->_params[0] * this->_params[0]))
+                         - ((y * y) / (2.0 * this->_params[1] * this->_params[1]))
                 );
         }
         
@@ -161,7 +161,7 @@ namespace function {
          *
          * The order of the polynomial is set to the length of the params vector.
          *
-         * \throw std::invalid_argument if params is empty
+         * \throw lsst::mwi::exceptions::InvalidParameter if params is empty
          */
         explicit PolynomialFunction1(
             std::vector<double> params)  ///< polynomial coefficients (const, x, x^2...)
@@ -169,7 +169,7 @@ namespace function {
             Function1<ReturnT>(params)
         {
             if (params.size() < 1) {
-                throw std::invalid_argument("PolynomialFunction1 called with empty vector");
+                throw lsst::mwi::exceptions::InvalidParameter("PolynomialFunction1 called with empty vector");
             }
         }
         
@@ -187,7 +187,7 @@ namespace function {
 
 
     /**
-     * \brief 2-dimensional polynomial function.
+     * \brief 2-dimensional polynomial function with cross terms
      *
      * f(x,y) = c0                                          (0th order)
      *          + c1 x + c2 y                               (1st order)
@@ -203,35 +203,42 @@ namespace function {
         /**
          * \brief Construct a polynomial function of specified order.
          *
+         * The polynomial will have (order + 1) * (order + 2) / 2 coefficients
+         *
          * The parameters are initialized to zero.
          */
         explicit PolynomialFunction2(
             unsigned int order) ///< order of polynomial (0 for constant)
         :
-            Function2<ReturnT>((order+1)*(order+2)/2),
+            Function2<ReturnT>((order + 1) * (order + 2) / 2),
             _order(order)
         {}
 
         /**
          * \brief Construct a polynomial function with specified parameters.
          *
-         * The order of the polynomial is set to the length of the params vector.
+         * The order of the polynomial is determined from the length of the params vector:
+         *   order = (sqrt(1 + 8 * length) - 3) / 2
+         * and if this is not an integer then the length is unsuitable
          *
-         * \throw std::invalid_argument if params length is unsuitable
+         * \throw lsst::mwi::exceptions::InvalidParameter if params length is unsuitable
+         * \throw lsst::mwi::exceptions::Exception if an internal sanity check fails
          */
         explicit PolynomialFunction2(
             std::vector<double> params)  ///< polynomial coefficients (const, x, y, x^2, xy, y^2...);
                                     ///< length must be one of 1, 3, 6, 10, 15...
         :
             Function2<ReturnT>(params),
-            _order((-3 + std::sqrt(1 + (8 * params.size()))) / 2)
+            _order(static_cast<unsigned int>(
+                0.5 + ((-3.0 + (std::sqrt(1.0 + (8.0 * static_cast<double>(params.size()))))) / 2.0)
+            ))
         {
             unsigned int nParams = params.size();
             if (nParams < 1) {
-                throw std::invalid_argument("PolynomialFunction2 created with empty vector");
+                throw lsst::mwi::exceptions::InvalidParameter("PolynomialFunction2 created with empty vector");
             }
             if (nParams != ((_order + 1) * (_order + 2)) / 2) {
-                throw std::invalid_argument("PolynomialFunction2 created with vector of unusable length");
+                throw lsst::mwi::exceptions::InvalidParameter("PolynomialFunction2 created with vector of unusable length");
             }
         }
         
@@ -239,13 +246,16 @@ namespace function {
         
         virtual ReturnT operator() (double x, double y) const {
             // there must be a more efficient way to solve this
+            double retVal = 0.0;
             int paramInd = static_cast<int>(this->_params.size()) - 1;
-            int currOrder = static_cast<int>(_order);
-            double retVal = this->_params[0];
-            while (paramInd > 0) {
-                for (int xPower = 0, yPower = currOrder; xPower <= currOrder; ++xPower, --yPower) {
-                    retVal += std::pow(x, xPower) * std::pow(y, yPower) * this->_params[paramInd];
-                    --paramInd;
+            for (int currOrder = static_cast<int>(_order); currOrder >= 0; --currOrder) {
+                for (int xPow = 0, yPow = currOrder; yPow >= 0; ++xPow, --yPow, --paramInd) {
+                    retVal += this->_params[paramInd] * std::pow(x, xPow) * std::pow(y, yPow);
+                    if ((paramInd == 0) && (yPow != 0)) {
+                        throw lsst::mwi::exceptions::Exception(boost::format(
+                            "PolynomialFunction2 internal error; order=%d, nParams=%d")
+                            % this->_order % this->_params.size());
+                    }   
                 }
             }
             return static_cast<ReturnT>(retVal);
@@ -294,7 +304,7 @@ namespace function {
          *
          * The order of the polynomial is set to the length of the params vector.
          *
-         * \throw std::invalid_argument if params is empty
+         * \throw lsst::mwi::exceptions::InvalidParameter if params is empty
          */
         explicit Chebyshev1Function1(
             std::vector<double> params,  ///< polynomial coefficients
@@ -304,7 +314,7 @@ namespace function {
             Function1<ReturnT>(params)
         {
             if (params.size() < 1) {
-                throw std::invalid_argument("Chebyshev1Function1 called with empty vector");
+                throw lsst::mwi::exceptions::InvalidParameter("Chebyshev1Function1 called with empty vector");
             }
             _initialize(xMin, xMax);
         }
@@ -312,24 +322,24 @@ namespace function {
         virtual ~Chebyshev1Function1() {};
         
         virtual ReturnT operator() (double x) const {
-            double xPrime = (x * _scale) + _offset;
+            double xPrime = (x + _offset) * _scale;
             return static_cast<ReturnT>(_clenshaw(xPrime, 0));
         }
     private:
         double _minX;    ///< minimum allowed x
         double _maxX;    ///< maximum allowed x
-        double _scale;   ///< x' = (x * _scale) + _offset
-        double _offset;  ///< x' = (x * _scale) + _offset
+        double _scale;   ///< x' = (x + _offset) * _scale
+        double _offset;  ///< x' = (x + _offset) * _scale
         unsigned int _maxInd;   ///< maximum index for Clenshaw function
         
         /**
          * \brief Clenshaw recursive function for solving the Chebyshev polynomial
          */
         double _clenshaw(double x, unsigned int ind) const {
-            if (ind == 0) {
-                return (x * _clenshaw(x, 1)) + this->_params[0] - _clenshaw(x, 2);
-            } else if (ind == _maxInd) {
+            if (ind == _maxInd) {
                 return this->_params[ind];
+            } else if (ind == 0) {
+                return (x * _clenshaw(x, 1)) + this->_params[0] - _clenshaw(x, 2);
             } else if (ind == _maxInd - 1) {
                 return (2 * x * _clenshaw(x, ind+1)) + this->_params[ind];
             } else if (ind < _maxInd) {
@@ -347,7 +357,7 @@ namespace function {
             _minX = xMin;
             _maxX = xMax;
             _scale = 2 / (xMax - xMin);
-            _offset = -1 - (xMin * _scale);
+            _offset = -(xMin + xMax) / 2.0;
             _maxInd = this->getNParameters() - 1;
         }
     };

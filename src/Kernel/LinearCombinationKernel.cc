@@ -86,7 +86,7 @@ void lsst::fw::LinearCombinationKernel<PixelT>::computeImage(
     bool doNormalize
 ) const {
     if ((image.getCols() != this->getCols()) || (image.getRows() != this->getRows())) {
-        throw std::invalid_argument("image is the wrong size");
+        throw lsst::mwi::exceptions::InvalidParameter("image is the wrong size");
     }
     if (this->isSpatiallyVarying()) {
         this->setKernelParametersFromSpatialModel(x, y);
@@ -117,7 +117,7 @@ lsst::fw::LinearCombinationKernel<PixelT>::getKernelList() const {
 template<typename PixelT>
 void lsst::fw::LinearCombinationKernel<PixelT>::checkKernelList(const KernelListType &kernelList) const {
     if (kernelList.size() < 1) {
-        throw std::invalid_argument("kernelList has no elements");
+        throw lsst::mwi::exceptions::InvalidParameter("kernelList has no elements");
     }
 
     unsigned int cols = kernelList[0]->getCols();
@@ -129,21 +129,18 @@ void lsst::fw::LinearCombinationKernel<PixelT>::checkKernelList(const KernelList
         if (ii > 0) {
             if ((cols != kernelList[ii]->getCols()) ||
                 (rows != kernelList[ii]->getRows())) {
-                throw std::invalid_argument(str(
-                    boost::format("kernel %d has different size than kernel 0") % ii
-                ));
+                throw lsst::mwi::exceptions::InvalidParameter(
+                    boost::format("kernel %d has different size than kernel 0") % ii);
             }
             if ((ctrCol != kernelList[ii]->getCtrCol()) ||
                 (ctrRow != kernelList[ii]->getCtrRow())) {
-                throw std::invalid_argument(str(
-                    boost::format("kernel %d has different center than kernel 0") % ii
-                ));
+                throw lsst::mwi::exceptions::InvalidParameter(
+                    boost::format("kernel %d has different center than kernel 0") % ii);
             }
         }
         if (kernelList[ii]->isSpatiallyVarying()) {
-            throw std::invalid_argument(str(
-                boost::format("kernel %d is spatially varying") % ii
-            ));
+            throw lsst::mwi::exceptions::InvalidParameter(
+                boost::format("kernel %d is spatially varying") % ii);
         }
     }
 }
@@ -161,8 +158,8 @@ template<typename PixelT>
 void lsst::fw::LinearCombinationKernel<PixelT>::basicSetKernelParameters(std::vector<double> const &params)
 const {
     if (params.size() != this->_kernelList.size()) {
-        throw std::invalid_argument(str(
-            boost::format("params size is %d instead of %d\n") % params.size() % _kernelList.size()));
+        throw lsst::mwi::exceptions::InvalidParameter(
+            boost::format("params size is %d instead of %d\n") % params.size() % _kernelList.size());
     }
     this->_kernelParams = params;
 }

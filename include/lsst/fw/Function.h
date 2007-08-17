@@ -17,6 +17,7 @@
 #include <boost/format.hpp>
 
 #include <lsst/mwi/data/LsstBase.h>
+#include <lsst/mwi/exceptions/Exception.h>
 
 namespace lsst {
 namespace fw {
@@ -93,13 +94,13 @@ namespace function {
         /**
          * \brief Set the function parameters
          *
-         * \throw std::invalid_argument if the wrong number of parameters is supplied.
+         * \throw lsst::mwi::exceptions::InvalidParameter if the wrong number of parameters is supplied.
          */
         virtual void setParameters(std::vector<double> const &params) {
             if (_params.size() != params.size()) {
-                throw std::invalid_argument(str(boost::format(
+                throw lsst::mwi::exceptions::InvalidParameter(boost::format(
                     "setParameters called with %d parameters instead of %d")
-                    % params.size() % _params.size()));
+                    % params.size() % _params.size());
             }
             _params = params;
         }

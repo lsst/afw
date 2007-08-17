@@ -23,9 +23,9 @@ int main() {
     unsigned int ind = 0;
     for (unsigned int row = 0; row < kernelRows; ++row) {
         for (unsigned int col = 0; col < kernelCols; ++col) {
-            int x = static_cast<double>(col) - static_cast<double>(colCtr);
-            int y = static_cast<double>(row) - static_cast<double>(rowCtr);
-            cout << boost::format("Delta function kernel %3d: x=%2d, y=%2d\n") % ind % x % y;
+            double x = static_cast<double>(col) - static_cast<double>(colCtr);
+            double y = static_cast<double>(row) - static_cast<double>(rowCtr);
+            cout << boost::format("Delta function kernel %3d: x=%.1f, y=%.1f\n") % ind % x % y;
             lsst::fw::Kernel<pixelType>::KernelFunctionPtrType kfuncPtr(
                 new lsst::fw::function::IntegerDeltaFunction2<pixelType>(x, y)
             );

@@ -1,46 +1,53 @@
 // -*- lsst-c++ -*-
 // Implementations of Image class methods
 // This file can NOT be separately compiled!   It is included by Image.h
+#include <stdexcept>
+#include "lsst/mwi/data/SupportFactory.h"
+#include <lsst/mwi/exceptions/Exception.h>
+
+//
+// Constructors
+//
 
 template<typename ImagePixelT>
-Image<ImagePixelT>::Image() :
-    LsstBase(typeid(this)),
-    _imagePtr(new vw::ImageView<ImagePixelT>()),
-    _image(*_imagePtr),
-    _metaData(SupportFactory::createPropertyNode("FitsMetaData")),
+lsst::fw::Image<ImagePixelT>::Image() :
+    lsst::mwi::data::LsstBase(typeid(this)),
+    _vwImagePtr(new vw::ImageView<ImagePixelT>()),
+    _metaData(lsst::mwi::data::SupportFactory::createPropertyNode("FitsMetaData")),
     _offsetRows(0),
     _offsetCols(0)
 {
 }
 
 template<typename ImagePixelT>
-Image<ImagePixelT>::Image(int nCols, int nRows) :
-    LsstBase(typeid(this)),
-    _imagePtr(new vw::ImageView<ImagePixelT>(nCols, nRows)),
-    _image(*_imagePtr),
-    _metaData(SupportFactory::createPropertyNode("FitsMetaData")),
-    _offsetRows(0),
-    _offsetCols(0)
-{
-}
-
-template<class ImagePixelT>
-Image<ImagePixelT>::Image(ImageIVwPtrT image): 
-    LsstBase(typeid(this)),
-    _imagePtr(image),
-    _image(*_imagePtr),
-    _metaData(SupportFactory::createPropertyNode("FitsMetaData")),
+lsst::fw::Image<ImagePixelT>::Image(int nCols, int nRows) :
+    lsst::mwi::data::LsstBase(typeid(this)),
+    _vwImagePtr(new vw::ImageView<ImagePixelT>(nCols, nRows)),
+    _metaData(lsst::mwi::data::SupportFactory::createPropertyNode("FitsMetaData")),
     _offsetRows(0),
     _offsetCols(0)
 {
 }
 
 template<typename ImagePixelT>
-Image<ImagePixelT>& Image<ImagePixelT>::operator = (const Image<ImagePixelT>& image) {
+lsst::fw::Image<ImagePixelT>::Image(ImageIVwPtrT image): 
+    lsst::mwi::data::LsstBase(typeid(this)),
+    _vwImagePtr(image),
+    _metaData(lsst::mwi::data::SupportFactory::createPropertyNode("FitsMetaData")),
+    _offsetRows(0),
+    _offsetCols(0)
+{
+}
+
+//
+// Public Member Functions
+//
+
+template<typename ImagePixelT>
+lsst::fw::Image<ImagePixelT>& lsst::fw::Image<ImagePixelT>::operator= (const Image<ImagePixelT>& image) {
     if (&image != this) {   // beware of self assignment: image = image;
-        _imagePtr.reset();
-        _imagePtr = ImageIVwPtrT(new typename vw::ImageView<ImagePixelT>(image._image));
-        _image = *_imagePtr;
+        _vwImagePtr.reset();
+        _vwImagePtr = image._vwImagePtr;
         _metaData = image._metaData;
         _offsetRows = image._offsetRows;
         _offsetCols = image._offsetCols;
@@ -49,52 +56,54 @@ Image<ImagePixelT>& Image<ImagePixelT>::operator = (const Image<ImagePixelT>& im
     return *this;
 }
 
-template<class ImagePixelT> typename Image<ImagePixelT>::ImageIVwT& Image<ImagePixelT>::getIVw() const {
-    return _image;
+template<typename ImagePixelT>
+typename lsst::fw::Image<ImagePixelT>::ImageIVwT& lsst::fw::Image<ImagePixelT>::getIVw() const {
+    return *_vwImagePtr;
 }
 
 
-template<class ImagePixelT> typename Image<ImagePixelT>::ImageIVwPtrT Image<ImagePixelT>::getIVwPtr() const 
-{
-    return _imagePtr;
+template<typename ImagePixelT>
+typename lsst::fw::Image<ImagePixelT>::ImageIVwPtrT lsst::fw::Image<ImagePixelT>::getIVwPtr() const {
+    return _vwImagePtr;
 }
 
-template<class ImagePixelT> 
-double Image<ImagePixelT>::getGain() const
-{
-    DataProperty::PtrType gainProp = _metaData->findUnique("GAIN");
+/**
+ * \brief Return the gain from the image metadata
+ *
+ * \throw lsst::mwi::exceptions::Exception if gain not found
+ */
+template<typename ImagePixelT> 
+double lsst::fw::Image<ImagePixelT>::getGain() const {
+    lsst::mwi::data::DataProperty::PtrType gainProp = _metaData->findUnique("GAIN");
     if (gainProp) {
         double gain = boost::any_cast<const double>(gainProp->getValue());
         return gain;
     }
-    throw Exception(std::string("in ") + __func__ + std::string(": Could not get gain from image metadata"));
+    throw lsst::mwi::exceptions::Exception(std::string("in ") + __func__ + std::string(": Could not get gain from image metadata"));
 }
 
-template<class ImagePixelT>
-void Image<ImagePixelT>::readFits(const string& fileName, int hdu)
-{
+template<typename ImagePixelT>
+void lsst::fw::Image<ImagePixelT>::readFits(const string& fileName, int hdu) {
     LSSTFitsResource<ImagePixelT> fitsRes;
-    fitsRes.readFits(fileName, _image, _metaData, hdu);
+    fitsRes.readFits(fileName, *_vwImagePtr, _metaData, hdu);
 }
 
-template<class ImagePixelT>
-void Image<ImagePixelT>::writeFits(const string& fileName) const
-{
+template<typename ImagePixelT>
+void lsst::fw::Image<ImagePixelT>::writeFits(const string& fileName) const {
     LSSTFitsResource<ImagePixelT> fitsRes;
-    fitsRes.writeFits(_image, _metaData, fileName);
+    fitsRes.writeFits(*_vwImagePtr, _metaData, fileName);
 }
 
-template<class ImagePixelT>
-DataProperty::PtrType Image<ImagePixelT>::getMetaData() const
-{
+template<typename ImagePixelT>
+lsst::mwi::data::DataProperty::PtrType lsst::fw::Image<ImagePixelT>::getMetaData() const {
     return _metaData;
 }
 
-template<class ImagePixelT>
-typename Image<ImagePixelT>::ImagePtrT Image<ImagePixelT>::getSubImage(const vw::BBox2i imageRegion) const {
-
+template<typename ImagePixelT>
+typename lsst::fw::Image<ImagePixelT>::ImagePtrT
+lsst::fw::Image<ImagePixelT>::getSubImage(const BBox2i imageRegion) const {
     ImageIVwPtrT croppedImage(new ImageIVwT());
-    *croppedImage = copy(crop(_image, imageRegion));
+    *croppedImage = copy(crop(*_vwImagePtr, imageRegion));
     ImagePtrT newImage(new Image<ImagePixelT>(croppedImage));
     Vector<int, 2> bboxOffset = imageRegion.min();
     newImage->setOffsetRows(bboxOffset[0] + _offsetRows);
@@ -103,96 +112,113 @@ typename Image<ImagePixelT>::ImagePtrT Image<ImagePixelT>::getSubImage(const vw:
     return newImage;
 }
 
-// Given a Image, insertImage, place it into this Image as directed by maskRegion.
-// An exception is generated if maskRegion is not of the same size as insertImage.
-//
-template<class ImagePixelT>
-void Image<ImagePixelT>::replaceSubImage(const BBox2i maskRegion, ImagePtrT insertImage)
-{
+/**
+ * \brief Given a Image, insertImage, place it into this Image as directed by maskRegion.
+ *
+ * \throw lsst::mwi::exceptions::Exception if maskRegion is not of the same size as insertImage.
+ */
+template<typename ImagePixelT>
+void lsst::fw::Image<ImagePixelT>::replaceSubImage(const BBox2i maskRegion, ImagePtrT insertImage) {
     try {
-        crop(_image, maskRegion) = insertImage->_image;
-    } catch (exception eex) {
-        throw Exception(std::string("in ") + __func__);
+        crop(*_vwImagePtr, maskRegion) = *(insertImage->getIVwPtr());
+    } catch (std::exception eex) {
+        throw lsst::mwi::exceptions::Exception(std::string("in ") + __func__);
     } 
 }
 
-template<class ImagePixelT> typename Image<ImagePixelT>::ImageChannelT Image<ImagePixelT>::operator ()(int x, int y) const
-{
-//      cout << x << " " << y << " " << (void *)_image(x, y) << endl;
-     return _image(x, y);
+template<typename ImagePixelT>
+inline typename lsst::fw::Image<ImagePixelT>::ImageChannelT
+lsst::fw::Image<ImagePixelT>::operator ()(int x, int y) const {
+     return (*_vwImagePtr)(x, y);
 }
 
-template<class ImagePixelT> Image<ImagePixelT>&  Image<ImagePixelT>::operator += (const Image<ImagePixelT>& inputImage)
-{
-    _image += *(inputImage.getIVwPtr());
+template<typename ImagePixelT>
+inline typename lsst::fw::Image<ImagePixelT>::pixel_accessor lsst::fw::Image<ImagePixelT>::origin() const {
+    return getIVwPtr()->origin();
+}
+
+template<typename ImagePixelT>
+lsst::fw::Image<ImagePixelT>&
+lsst::fw::Image<ImagePixelT>::operator += (const Image<ImagePixelT>& inputImage) {
+    *_vwImagePtr += *(inputImage.getIVwPtr());
     return *this;
 }
 
-template<class ImagePixelT> Image<ImagePixelT>&  Image<ImagePixelT>::operator -= (const Image<ImagePixelT>& inputImage)
-{
-    _image -= *(inputImage.getIVwPtr());
+template<typename ImagePixelT>
+lsst::fw::Image<ImagePixelT>&
+lsst::fw::Image<ImagePixelT>::operator -= (const Image<ImagePixelT>& inputImage) {
+    *_vwImagePtr -= *(inputImage.getIVwPtr());
     return *this;
 }
 
-template<class ImagePixelT> Image<ImagePixelT>&  Image<ImagePixelT>::operator *= (const Image<ImagePixelT>& inputImage)
-{
-    _image *= *(inputImage.getIVwPtr());
+template<typename ImagePixelT>
+inline lsst::fw::Image<ImagePixelT>&
+lsst::fw::Image<ImagePixelT>::operator *= (const Image<ImagePixelT>& inputImage) {
+    *_vwImagePtr *= *(inputImage.getIVwPtr());
     return *this;
 }
 
-template<class ImagePixelT> Image<ImagePixelT>&  Image<ImagePixelT>::operator /= (const Image<ImagePixelT>& inputImage)
-{
-    _image /= *(inputImage.getIVwPtr());
+template<typename ImagePixelT>
+lsst::fw::Image<ImagePixelT>&
+lsst::fw::Image<ImagePixelT>::operator /= (const Image<ImagePixelT>& inputImage) {
+    *_vwImagePtr /= *(inputImage.getIVwPtr());
     return *this;
 }
 
-template<class ImagePixelT> Image<ImagePixelT>&  Image<ImagePixelT>::operator += (const ImagePixelT scalar)
-{
-    _image += scalar;
+template<typename ImagePixelT>
+lsst::fw::Image<ImagePixelT>& lsst::fw::Image<ImagePixelT>::operator += (const ImagePixelT scalar) {
+    *_vwImagePtr += scalar;
     return *this;
 }
 
-template<class ImagePixelT> Image<ImagePixelT>&  Image<ImagePixelT>::operator -= (const ImagePixelT scalar)
-{
-    _image -= scalar;
+template<typename ImagePixelT>
+lsst::fw::Image<ImagePixelT>& lsst::fw::Image<ImagePixelT>::operator -= (const ImagePixelT scalar) {
+    *_vwImagePtr -= scalar;
     return *this;
 }
 
-template<class ImagePixelT> Image<ImagePixelT>&  Image<ImagePixelT>::operator *= (const ImagePixelT scalar)
-{
-    _image *= scalar;
+template<typename ImagePixelT>
+lsst::fw::Image<ImagePixelT>& lsst::fw::Image<ImagePixelT>::operator *= (const ImagePixelT scalar) {
+    *_vwImagePtr *= scalar;
     return *this;
 }
 
-template<class ImagePixelT> Image<ImagePixelT>&  Image<ImagePixelT>::operator /= (const ImagePixelT scalar)
-{
-    _image /= scalar;
+template<typename ImagePixelT>
+lsst::fw::Image<ImagePixelT>& lsst::fw::Image<ImagePixelT>::operator /= (const ImagePixelT scalar) {
+    *_vwImagePtr /= scalar;
     return *this;
 }
 
-template<class ImagePixelT> unsigned int Image<ImagePixelT>::getCols() const {
-    return _image.cols();
+template<typename ImagePixelT>
+inline unsigned int lsst::fw::Image<ImagePixelT>::getCols() const {
+    return _vwImagePtr->cols();
 }
 
-template<class ImagePixelT> unsigned int Image<ImagePixelT>::getRows() const {
-    return _image.rows();
+template<typename ImagePixelT>
+inline unsigned int lsst::fw::Image<ImagePixelT>::getRows() const {
+    return _vwImagePtr->rows();
 }
 
-template<class ImagePixelT> unsigned int Image<ImagePixelT>::getOffsetCols() const {
+template<typename ImagePixelT>
+inline unsigned int lsst::fw::Image<ImagePixelT>::getOffsetCols() const {
     return _offsetCols;
 }
 
-template<class ImagePixelT> unsigned int Image<ImagePixelT>::getOffsetRows() const {
+template<typename ImagePixelT>
+inline unsigned int lsst::fw::Image<ImagePixelT>::getOffsetRows() const {
     return _offsetRows;
 }
 
-template<class ImagePixelT> void Image<ImagePixelT>::setOffsetRows(unsigned int offset)
-{
+//
+// Private Member Functions
+//
+
+template<typename ImagePixelT>
+inline void lsst::fw::Image<ImagePixelT>::setOffsetRows(unsigned int offset) {
     _offsetRows = offset;
 }
 
-template<class ImagePixelT> void Image<ImagePixelT>::setOffsetCols(unsigned int offset)
-{
+template<typename ImagePixelT>
+inline void lsst::fw::Image<ImagePixelT>::setOffsetCols(unsigned int offset) {
     _offsetCols = offset;
 }
-

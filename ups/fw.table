@@ -3,6 +3,7 @@ setupRequired(vw)
 setupRequired(cfitsio)
 setupRequired(wcslib)
 setupRequired(xpa)
+setupRequired(numpy)
 
 setupOptional(fwData)
 

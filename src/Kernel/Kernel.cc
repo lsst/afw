@@ -54,7 +54,7 @@ lsst::fw::Kernel<PixelT>::Kernel(
 /**
  * \brief Construct a spatially varying Kernel with spatial parameters initialized to 0
  *
- * \throw std::invalid_argument if the kernel or spatial function has no parameters.
+ * \throw lsst::mwi::exceptions::InvalidParameter if the kernel or spatial function has no parameters.
  */
 template<typename PixelT>
 lsst::fw::Kernel<PixelT>::Kernel(
@@ -74,10 +74,10 @@ lsst::fw::Kernel<PixelT>::Kernel(
 {
     // create spatial parameters initialized to zero
     if (this->getNSpatialParameters() == 0) {
-        throw std::invalid_argument("Spatial function has no parameters");
+        throw lsst::mwi::exceptions::InvalidParameter("Spatial function has no parameters");
     }
     if (this->getNKernelParameters() == 0) {
-        throw std::invalid_argument("Kernel function has no parameters");
+        throw lsst::mwi::exceptions::InvalidParameter("Kernel function has no parameters");
     }
     std::vector<double> zeros(this->getNSpatialParameters());
     std::vector<std::vector<double> > spatialParams;
@@ -91,7 +91,7 @@ lsst::fw::Kernel<PixelT>::Kernel(
  *
  * See setSpatialParameters for the form of the spatial parameters.
  *
- * \throw std::invalid_argument if:
+ * \throw lsst::mwi::exceptions::InvalidParameter if:
  * - the kernel or spatial function has no parameters
  * - the spatialParams vector is the wrong length
  */
@@ -112,10 +112,10 @@ lsst::fw::Kernel<PixelT>::Kernel(
    _isSpatiallyVarying(true),
    _spatialFunctionPtr(spatialFunction){
     if (this->getNSpatialParameters() == 0) {
-        throw std::invalid_argument("Spatial function has no parameters");
+        throw lsst::mwi::exceptions::InvalidParameter("Spatial function has no parameters");
     }
     if (this->getNKernelParameters() == 0) {
-        throw std::invalid_argument("Kernel function has no parameters");
+        throw lsst::mwi::exceptions::InvalidParameter("Kernel function has no parameters");
     }
     setSpatialParameters(spatialParams);
 }
@@ -167,23 +167,21 @@ std::vector<double> lsst::fw::Kernel<PixelT>::getKernelParameters(
  *
  * Params is indexed as [kernel parameter][spatial parameter]
  *
- * \throw std::invalid_argument if params is the wrong shape.
+ * \throw lsst::mwi::exceptions::InvalidParameter if params is the wrong shape.
  */
 template<typename PixelT>
 void lsst::fw::Kernel<PixelT>::setSpatialParameters(const std::vector<std::vector<double> > params) {
     unsigned int nKernelParams = this->getNKernelParameters();
     if (params.size() != nKernelParams) {
-        throw std::invalid_argument(str(
-            boost::format("params has %d entries instead of %d") % params.size() % nKernelParams
-        ));
+        throw lsst::mwi::exceptions::InvalidParameter(
+            boost::format("params has %d entries instead of %d") % params.size() % nKernelParams);
     }
     unsigned int nSpatialParams = this->getNSpatialParameters();
     for (unsigned int ii = 0; ii < nKernelParams; ++ii) {
         if (params[ii].size() != nSpatialParams) {
-            throw std::invalid_argument(str(
+            throw lsst::mwi::exceptions::InvalidParameter(
                 boost::format("params[%d] has %d entries instead of %d") %
-                ii % params[ii].size() % nSpatialParams
-            ));
+                ii % params[ii].size() % nSpatialParams);
         }
     }
     _spatialParams = params;

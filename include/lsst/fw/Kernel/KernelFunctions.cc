@@ -77,8 +77,8 @@ inline void lsst::fw::kernel::apply(
  * * kernel.getCtrCol/Row() along the left/bottom edge
  * * kernel.getCols/Rows() - 1 - kernel.getCtrCol/Row() along the right/top edge
  *
- * \throw std::invalid_argument if convolvedImage is not the same size as maskedImage.
- * \throw std::invalid_argument if maskedImage is smaller (in colums or rows) than kernel.
+ * \throw lsst::mwi::exceptions::InvalidParameter if convolvedImage is not the same size as maskedImage.
+ * \throw lsst::mwi::exceptions::InvalidParameter if maskedImage is smaller (in colums or rows) than kernel.
  *
  * \ingroup fw
  */
@@ -101,10 +101,10 @@ void lsst::fw::kernel::convolve(
     const unsigned int kCtrCol = kernel.getCtrCol();
     const unsigned int kCtrRow = kernel.getCtrRow();
     if ((convolvedImage.getCols() != imCols) || (convolvedImage.getRows() != imRows)) {
-        throw std::invalid_argument("convolvedImage not the same size as maskedImage");
+        throw lsst::mwi::exceptions::InvalidParameter("convolvedImage not the same size as maskedImage");
     }
     if ((imCols< kCols) || (imRows < kRows)) {
-        throw std::invalid_argument("maskedImage smaller than kernel in columns and/or rows");
+        throw lsst::mwi::exceptions::InvalidParameter("maskedImage smaller than kernel in columns and/or rows");
     }
 
     const unsigned int cnvCols = imCols + 1 - kernel.getCols();
@@ -185,7 +185,7 @@ void lsst::fw::kernel::convolve(
  * * kernel.getCtrCol/Row() along the left/bottom edge
  * * kernel.getCols/Rows() - 1 - kernel.getCtrCol/Row() along the right/top edge
  *
- * \throw std::invalid_argument if maskedImage is smaller (in colums or rows) than kernel.
+ * \throw lsst::mwi::exceptions::InvalidParameter if maskedImage is smaller (in colums or rows) than kernel.
  *
  * \ingroup fw
  */
@@ -266,7 +266,7 @@ inline void lsst::fw::kernel::_copyRegion(
     vw::math::Vector<vw::int32> const endColRow = region.max();
     if ((static_cast<unsigned int>(endColRow[0]) > min(destImage.getCols(), sourceImage.getCols()))
         || ((static_cast<unsigned int>(endColRow[1]) > min(destImage.getRows(), sourceImage.getRows())))) {
-        throw std::invalid_argument("Region out of range");
+        throw lsst::mwi::exceptions::InvalidParameter("Region out of range");
     }
     imageAccessorType inRow(sourceImage);
     imageAccessorType outRow(destImage);

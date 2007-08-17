@@ -1,5 +1,10 @@
-import pdb                              # we may want to say pdb.set_trace()
+import os
+import math
+import pdb                          # we may want to say pdb.set_trace()
 import unittest
+
+import numpy
+
 import lsst.fw.Core.fwLib as fw
 import lsst.mwi.tests as tests
 import lsst.mwi.utils as mwiu
@@ -12,60 +17,105 @@ except NameError:
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-class FixedKernelTestCase(unittest.TestCase):
-    """A test case for FixedKernel"""
-    def setUp(self):
-        sigmaX = 2.0;
-        sigmaY = 2.5;
-        kernelCols = 5;
-        kernelRows = 7;
+# convenience functions
+def arrayFromImage(im, dtype=float):
+    """Return a numpy array representation of an image.
+    
+    A temporary hack until image offers a better way to do this 
+    """
+    arr = numpy.zeros([im.getCols(), im.getRows()], dtype=dtype)
+    for row in range(im.getRows()):
+        for col in range(im.getCols()):
+            arr[col, row] = im.getPtr(col, row)
+    return arr
 
-        g = fw.GaussianFunction2D(sigmaX, sigmaY)
-        kfuncPtr =  fw.Function2PtrTypeD(g); g.this.disown() # Only the shared pointer owns g
-        
-        self.analyticKernel = fw.AnalyticKernelD(kfuncPtr, kernelCols, kernelRows)
-
-    def tearDown(self):
-        del self.analyticKernel
-
-    def testAnalyticImage(self):
-        """Get an image from an AnalyticKernel"""
-
-        image = self.analyticKernel.getImage()
-        image *= 47.3           	# denormalize by some arbitrary factor
-
-        if False:
-            print "Gaussian kernel with sigmaX=%.1f, sigmaY=%.1f" % \
-                  self.analyticKernel.getKernelFunction().getParameters()
-            
-            fw.printKernelD(self.analyticKernel);
-
-    def testAnalyticImage2(self):
-        """Compute an image from an AnalyticKernel"""
-
-        image = self.analyticKernel.getImage()
-        self.analyticKernel.computeImage(image)
-        image *= 47.3           	# denormalize by some arbitrary factor
-
-        if False:
-            print "Gaussian kernel with sigmaX=%.1f, sigmaY=%.1f" % \
-                  self.analyticKernel.getKernelFunction().getParameters()
-            
-            fw.printKernelD(self.analyticKernel);
-
+class KernelTestCase(unittest.TestCase):
+    """A test case for Kernels"""
     def testFixedKernel(self):
-        """Make a fixedKernel from an image"""
+        """Test FixedKernel using a ramp function
+        """
+        kCols = 5
+        kRows = 6
+        
+        inArr = numpy.arange(kCols * kRows, dtype=float)
+        inArr.shape = [kCols, kRows]
 
-        image = fw.ImageD(5,7)
-        image.setVal(0); image.setVal(image.getCols()//2, image.getRows()//2, 1.0)
+        inImage = fw.ImageD(kCols, kRows)
+        for row in range(inImage.getRows()):
+            for col in range(inImage.getCols()):
+                inImage.set(col, row, inArr[col, row])
+        
+        fixedKernel = fw.FixedKernelF(inImage);
+        outImage = fixedKernel.computeNewImage(0.0, 0.0, False)[0]
+        outArr = arrayFromImage(outImage)
+        if not numpy.allclose(inArr, outArr):
+            self.fail("%s = %s != %s (not normalized)" % \
+                (k.__class__.__name__, inArr, outArr))
+        
+        normInArr = inArr / inArr.sum()
+        normOutImage = fixedKernel.computeNewImage(0.0, 0.0, True)[0]
+        normOutArr = arrayFromImage(normOutImage)
+        if not numpy.allclose(normOutArr, normInArr):
+            self.fail("%s = %s != %s (normalized)" % \
+                (k.__class__.__name__, normInArr, normOutArr))
 
-        fixedKernel = fw.FixedKernelD(image);
+    def testGaussianKernel(self):
+        """Test AnalyticKernel using a Gaussian function
+        """
+        kCols = 5
+        kRows = 8
 
-        if False:
-            print "Fixed kernel"
-            
-            fw.printKernelD(fixedKernel);
-
+        f = fw.GaussianFunction2F(1.0, 1.0)
+        fPtr =  fw.Function2PtrTypeF(f)
+        f.this.disown() # Only the shared pointer now owns f
+        k = fw.AnalyticKernelF(fPtr, kCols, kRows)
+        fArr = numpy.zeros(shape=[k.getCols(), k.getRows()], dtype=float)
+        for xsigma in (0.1, 1.0, 3.0):
+            for ysigma in (0.1, 1.0, 3.0):
+                f.setParameters((xsigma, ysigma))
+                # compute array of function values and normalize
+                for row in range(k.getRows()):
+                    y = row - k.getCtrRow()
+                    for col in range(k.getCols()):
+                        x = col - k.getCtrCol()
+                        fArr[col, row] = f(x, y)
+                fArr /= fArr.sum()
+                
+                k.setKernelParameters((xsigma, ysigma))
+                kImage = k.computeNewImage(0.0, 0.0, True)[0]
+                kArr = arrayFromImage(kImage)
+                if not numpy.allclose(fArr, kArr):
+                    self.fail("%s = %s != %s for xsigma=%s, ysigma=%s" % \
+                        (k.__class__.__name__, kArr, fArr, xsigma, ysigma))
+        
+    def testLinearCombinationKernel(self):
+        """Test LinearCombinationKernel using a set of delta basis functions
+        """
+        kCols = 5
+        kRows = 8
+        
+        # create list of kernels
+        kPtrList = []
+        ctrCol = (kCols - 1) // 2
+        ctrRow = (kRows - 1) // 2
+        for row in range(kRows):
+            y = float(row - ctrRow)
+            for col in range(kCols):
+                x = float(col - ctrCol)
+                f = fw.IntegerDeltaFunction2F(x, y)
+                fPtr = fw.Function2PtrTypeF(f)
+                f.this.disown() # only the shared pointer now owns f
+                basisKernel = fw.AnalyticKernelF(fPtr, kCols, kRows)
+                kPtr = fw.KernelPtrTypeF(basisKernel)
+                basisKernel.this.disown() # only the shared pointer now owns basisKernel
+                kPtrList.append(kPtr)
+        
+        kParams = numpy.zeros(len(kPtrList), dtype=float)
+        
+        # this doesn't work -- can't match a constructor --
+        # so the python interface needs some work
+        #k = fw.LinearCombinationKernelF(tuple(kPtrList), tuple(kParams))
+    
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
@@ -73,7 +123,7 @@ def suite():
     tests.init()
 
     suites = []
-    suites += unittest.makeSuite(FixedKernelTestCase)
+    suites += unittest.makeSuite(KernelTestCase)
     suites += unittest.makeSuite(tests.MemoryTestCase)
 
     return unittest.TestSuite(suites)

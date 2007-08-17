@@ -25,10 +25,7 @@
 #include "Image.h"
 
 namespace lsst {
-
     namespace fw {
-
-        using lsst::mwi::data::LsstBase;
 
         template<class ImagePixelT, class MaskPixelT> class MaskedImage;
 
@@ -44,8 +41,7 @@ namespace lsst {
             unsigned _rstride;
             unsigned _pstride;
         };
-        
-        
+
         template<typename ImagePixelT, typename MaskPixelT> class PixelProcessingFunc : 
             public std::unary_function<boost::tuple<ImagePixelT&, MaskPixelT&>&, void>
         {
@@ -86,7 +82,7 @@ namespace lsst {
         };
         
         template<class ImagePixelT, class MaskPixelT>
-        class MaskedImage : private LsstBase {
+        class MaskedImage : private lsst::mwi::data::LsstBase {
             
         public:
             typedef Image<ImagePixelT> ImageT;
@@ -138,13 +134,13 @@ namespace lsst {
             void writeFits(std::string baseName);
             
             // Getters
-            ImagePtrT getImage() const;
-            ImagePtrT getVariance() const;
-            MaskPtrT getMask() const;
-            unsigned int getRows() const;
-            unsigned int getCols() const;
-            unsigned int getOffsetRows() const;
-            unsigned int getOffsetCols() const;
+            inline ImagePtrT getImage() const;
+            inline ImagePtrT getVariance() const;
+            inline MaskPtrT getMask() const;
+            inline unsigned int getRows() const;
+            inline unsigned int getCols() const;
+            inline unsigned int getOffsetRows() const;
+            inline unsigned int getOffsetCols() const;
         private:
 
             void conformSizes();
@@ -156,10 +152,11 @@ namespace lsst {
             unsigned int _imageRows;
             unsigned int _imageCols;
         };
-        
-#include "MaskedImage.cc"
-        
     } // namespace fw
-
 } // namespace lsst
+
+#ifndef SWIG // don't bother SWIG with .cc files
+#include "MaskedImage.cc"
+#endif
+        
 #endif //  LSST_MASKEDIMAGE_H

@@ -17,6 +17,14 @@ Basic routines to talk to FW's classes (including visionWorkbench) and ds9
 #pragma SWIG nowarn=362
 #pragma SWIG nowarn=389
 
+// define basic vectors
+// these are used by Kernel and Function (and possibly other code)
+%include "std_vector.i"
+%template(vectorF) std::vector<float>;
+%template(vectorD) std::vector<double>;
+%template(vectorVectorF) std::vector<std::vector<float> >;
+%template(vectorVectorD) std::vector<std::vector<double> >;
+
 %{
 #   include <fstream>
 #   include <exception>
@@ -34,6 +42,7 @@ Basic routines to talk to FW's classes (including visionWorkbench) and ds9
 #   include "lsst/fw/DiskImageResourceFITS.h"
 #   include "lsst/fw/Mask.h"
 #   include "lsst/fw/MaskedImage.h"
+#   include "lsst/fw/ImageUtils.h"
 %}
 
 %inline %{
@@ -232,36 +241,36 @@ def version(HeadURL = r"$HeadURL$"):
     }
 }
 
-%template(CompoundChannelTypeD)		vw::CompoundChannelType<ImagePixelType>;
-%template(PixelChannelTypeD)		vw::PixelChannelType<ImagePixelType>;
-%template(ImageBaseD)			vw::ImageViewBase<vw::ImageView<ImagePixelType> >;
-%template(ImageViewD)			vw::ImageView<ImagePixelType>;
-%template(ImageD) 	                lsst::fw::Image<ImagePixelType>;
-%template(ImagePtrD) 	                boost::shared_ptr<lsst::fw::Image<ImagePixelType> >;
+%template(CompoundChannelTypeD) vw::CompoundChannelType<ImagePixelType>;
+%template(PixelChannelTypeD)    vw::PixelChannelType<ImagePixelType>;
+%template(ImageBaseD)           vw::ImageViewBase<vw::ImageView<ImagePixelType> >;
+%template(ImageViewD)           vw::ImageView<ImagePixelType>;
+%template(ImageD)               lsst::fw::Image<ImagePixelType>;
+%template(ImagePtrD)            boost::shared_ptr<lsst::fw::Image<ImagePixelType> >;
 
-%template(ImageBaseInt)			vw::ImageViewBase<vw::ImageView<int> >;
-%template(ImageViewInt)                 vw::ImageView<int>;
-%template(ImageInt)			lsst::fw::Image<int>;
-%template(ImagePtrInt) 	                boost::shared_ptr<lsst::fw::Image<int> >;
+%template(ImageBaseInt)         vw::ImageViewBase<vw::ImageView<int> >;
+%template(ImageViewInt)         vw::ImageView<int>;
+%template(ImageInt)             lsst::fw::Image<int>;
+%template(ImagePtrInt)          boost::shared_ptr<lsst::fw::Image<int> >;
 
-%template(listMaskPixelPtr)		std::list<MaskPixelType *>;
-%template(ImageBaseMask)                vw::ImageViewBase<vw::ImageView<MaskPixelType> >;
-%template(ImageViewMask)                vw::ImageView<MaskPixelType>;
-%template(CompoundChannelMaskTypeD)     vw::CompoundChannelType<MaskPixelType>;
-%template(PixelChannelMaskTypeD)        vw::PixelChannelType<MaskPixelType>;
-%template(MaskD)                        lsst::fw::Mask<MaskPixelType>;
-%template(MaskDPtr)                     boost::shared_ptr<lsst::fw::Mask<MaskPixelType> >;
+%template(listMaskPixelPtr)     std::list<MaskPixelType *>;
+%template(ImageBaseMask)        vw::ImageViewBase<vw::ImageView<MaskPixelType> >;
+%template(ImageViewMask)        vw::ImageView<MaskPixelType>;
+%template(CompoundChannelMaskTypeD) vw::CompoundChannelType<MaskPixelType>;
+%template(PixelChannelMaskTypeD)    vw::PixelChannelType<MaskPixelType>;
+%template(MaskD)                lsst::fw::Mask<MaskPixelType>;
+%template(MaskDPtr)             boost::shared_ptr<lsst::fw::Mask<MaskPixelType> >;
 
-%template(MaskedImageD)                 lsst::fw::MaskedImage<ImagePixelType, MaskPixelType>;
-%template(MaskedImageDPtr)              boost::shared_ptr<lsst::fw::MaskedImage<ImagePixelType, MaskPixelType> >;
+%template(MaskedImageD)         lsst::fw::MaskedImage<ImagePixelType, MaskPixelType>;
+%template(MaskedImageDPtr)      boost::shared_ptr<lsst::fw::MaskedImage<ImagePixelType, MaskPixelType> >;
 
-%template(BBox2i)	                BBox<int32, 2>;
-%template(Vector2i)	                Vector<int32, 2>;
+%template(BBox2i)               BBox<int32, 2>;
+%template(Vector2i)             Vector<int32, 2>;
 
 //%delobject boost::shared_ptr<vw::ImageView<MaskPixelType> >::shared_ptr;
 //%apply SWIGTYPE *DISOWN {Foo *foo};
 %extend_smart_pointer(boost::shared_ptr<vw::ImageView<MaskPixelType> >);
-%template(MaskIVwPtrT)                  boost::shared_ptr<vw::ImageView<MaskPixelType> >;
+%template(MaskIVwPtrT)          boost::shared_ptr<vw::ImageView<MaskPixelType> >;
 
 %pythoncode %{
 from lsst.mwi.utils import Trace
@@ -282,8 +291,11 @@ def ImageViewMaskPtr(*args):
 
 %template(listPixelCoord)  std::list<lsst::fw::PixelCoord>;
 
+%include "lsst/fw/ImageUtils.h"
+
 /************************************************************************************************************/
 
+%include "function.i"
 %include "kernel.i"
 
 /************************************************************************************************************/
@@ -292,7 +304,7 @@ def ImageViewMaskPtr(*args):
     #include "lsst/fw/WCS.h"
 %}
 
-%template(Coord2D)	                Vector<double, 2>;
+%template(Coord2D)                  Vector<double, 2>;
 %rename(isValid) operator bool;
 %include "lsst/fw/WCS.h"
 

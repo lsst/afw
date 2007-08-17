@@ -73,6 +73,8 @@ namespace kernel {
 }   // namespace fw
 }   // namespace lsst
     
+#ifndef SWIG // don't bother SWIG with .cc files
 #include <lsst/fw/Kernel/KernelFunctions.cc>
+#endif
 
 #endif // !defined(LSST_FW_KernelFunctions_H)

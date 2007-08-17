@@ -1,13 +1,17 @@
 // -*- lsst-c++ -*-
-#include "lsst/fw/MaskedImage.h"
+#include <typeinfo>
+
+#include "lsst/mwi/data/Citizen.h"
+#include "lsst/mwi/data/FitsFormatter.h"
 #include "lsst/mwi/exceptions/Exception.h"
 #include "lsst/mwi/utils/Trace.h"
-#include "lsst/mwi/data/FitsFormatter.h"
-#include <typeinfo>
+#include "lsst/fw/MaskedImage.h"
 
 using namespace lsst::fw;
 using lsst::mwi::utils::Trace;
+using lsst::mwi::data::Citizen;
 using lsst::mwi::data::FitsFormatter;
+namespace mwie = lsst::mwi::exceptions;
 
 template <typename ImagePixelT, typename MaskPixelT> 
 class testPixProcFunc : public PixelProcessingFunc<ImagePixelT, MaskPixelT> {
@@ -53,7 +57,7 @@ private:
 
 
 
-int main(int argc, char**argv) {
+int test(int argc, char**argv) {
     if (argc < 5) {
         std::cerr << "Usage: inputBaseName1 inputBaseName2 outputBaseName1  outputBaseName2" << std::endl;
         return 1;
@@ -134,4 +138,28 @@ int main(int argc, char**argv) {
      cout << "Number of FITS header cards: " 
         << FitsFormatter::countFITSHeaderCards(metaDataPtr, false) << endl;
      cout << FitsFormatter::formatDataProperty(metaDataPtr, false) << endl;
+     
+     return 0;
+}
+
+int main(int argc, char **argv) {
+    try {
+        try {
+            test(argc, argv);
+        } catch (mwie::Exception &e) {
+            throw mwie::Exception(std::string("In handler\n") + e.what());
+        }
+    } catch (mwie::Exception &e) {
+        std::clog << e.what() << endl;
+    }
+
+     //
+     // Check for memory leaks
+     //
+     if (Citizen::census(0) == 0) {
+         cerr << "No leaks detected" << endl;
+     } else {
+         cerr << "Leaked memory blocks:" << endl;
+         Citizen::census(cerr);
+     }
 }

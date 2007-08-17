@@ -78,7 +78,7 @@ void lsst::fw::AnalyticKernel<PixelT>::computeImage(
 ) const {
     typedef typename Image<PixelT>::pixel_accessor pixelAccessor;
     if ((image.getCols() != this->getCols()) || (image.getRows() != this->getRows())) {
-        throw std::invalid_argument("image is the wrong size");
+        throw lsst::mwi::exceptions::InvalidParameter("image is the wrong size");
     }
     if (this->isSpatiallyVarying()) {
         this->setKernelParametersFromSpatialModel(x, y);

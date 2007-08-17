@@ -54,7 +54,7 @@ void lsst::fw::FixedKernel<PixelT>::computeImage(
 ) const {
     typedef typename Image<PixelT>::pixel_accessor pixelAccessor;
     if ((image.getCols() != this->getCols()) || (image.getRows() != this->getRows())) {
-        throw std::invalid_argument("image is the wrong size");
+        throw lsst::mwi::exceptions::InvalidParameter("image is the wrong size");
     }
     double multFactor;
     if (doNormalize) {
@@ -91,7 +91,7 @@ std::vector<double> lsst::fw::FixedKernel<PixelT>::getCurrentKernelParameters() 
 template<typename PixelT>
 void lsst::fw::FixedKernel<PixelT>::basicSetKernelParameters(std::vector<double> const &params) const {
     if (params.size() > 0) {
-        throw std::invalid_argument("FixedKernel has no kernel parameters");
+        throw lsst::mwi::exceptions::InvalidParameter("FixedKernel has no kernel parameters");
     }
 }
 

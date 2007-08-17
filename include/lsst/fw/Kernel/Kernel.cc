@@ -10,9 +10,7 @@
  *
  * \ingroup fw
  */
-#include <stdexcept>
-
-#include <boost/format.hpp>
+#include <lsst/mwi/exceptions/Exception.h>
 
 //
 // Inline Member Functions
@@ -89,13 +87,16 @@ inline bool lsst::fw::Kernel<PixelT>::isSpatiallyVarying() const {
 /**
  * \brief Set the kernel parameters of a spatially invariant kernel.
  *
- * \throw std::runtime_error if the kernel has a spatial function
- * \throw std::invalid_argument if the params vector is the wrong length
+ * Note: if lsst::mwi::exceptions::RuntimeError becomes available then 
+ * I plan to use that instead of lsst::mwi::exceptions::Exception.
+ *
+ * \throw lsst::mwi::exceptions::Exception if the kernel has a spatial function
+ * \throw lsst::mwi::exceptions::InvalidParameter if the params vector is the wrong length
  */
 template<typename PixelT>
 inline void lsst::fw::Kernel<PixelT>::setKernelParameters(std::vector<double> const &params) {
     if (this->isSpatiallyVarying()) {
-        throw std::runtime_error("Kernel is spatially varying");
+        throw lsst::mwi::exceptions::Exception("Kernel is spatially varying");
     }
     this->basicSetKernelParameters(params);
 }

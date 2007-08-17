@@ -1,15 +1,15 @@
 // -*- lsst-c++ -*-
-#include "lsst/fw/Mask.h"
+#include <stdexcept>
+
+#include "lsst/mwi/data/SupportFactory.h"
+#include "lsst/mwi/data/Citizen.h"
 #include "lsst/mwi/exceptions/Exception.h"
 #include "lsst/mwi/utils/Trace.h"
-#include "lsst/mwi/data/SupportFactory.h"
-
-#include <stdexcept>
+#include "lsst/fw/Mask.h"
 
 using namespace lsst::fw;
 using boost::any_cast;
 
-using namespace lsst::mwi::exceptions;
 using lsst::mwi::utils::Trace;
 using lsst::mwi::data::Citizen;
 using lsst::mwi::data::SupportFactory;

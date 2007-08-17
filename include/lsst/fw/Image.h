@@ -9,35 +9,27 @@
 #ifndef LSST_IMAGE_H
 #define LSST_IMAGE_H
 
-#include <vw/Image.h>
-#include <vw/Math/BBox.h>
-#include <boost/shared_ptr.hpp>
 #include <list>
 #include <map>
 #include <string>
 
+#include <boost/shared_ptr.hpp>
+#include <vw/Image.h>
+#include <vw/Math/BBox.h>
+
 #include "lsst/mwi/data/LsstBase.h"
 #include "lsst/mwi/data/DataProperty.h"
 #include "lsst/fw/LSSTFitsResource.h"
-#include "lsst/mwi/data/SupportFactory.h"
-
 
 namespace lsst {
-
     namespace fw {
+        using vw::BBox2i;
         
-        using namespace vw;
-        using namespace std;
-        
-        using lsst::mwi::data::LsstBase;
-        using lsst::mwi::data::DataProperty;
-        using lsst::mwi::data::SupportFactory;
-
         template<typename ImagePixelT>
-        class Image : private LsstBase {
+        class Image : private lsst::mwi::data::LsstBase {
         public:
-            typedef typename PixelChannelType<ImagePixelT>::type ImageChannelT;
-            typedef ImageView<ImagePixelT> ImageIVwT;
+            typedef typename vw::PixelChannelType<ImagePixelT>::type ImageChannelT;
+            typedef vw::ImageView<ImagePixelT> ImageIVwT;
             typedef boost::shared_ptr<Image<ImagePixelT> > ImagePtrT;
             typedef boost::shared_ptr<ImageIVwT> ImageIVwPtrT;
             typedef typename vw::ImageView<ImagePixelT>::pixel_accessor pixel_accessor;
@@ -54,15 +46,15 @@ namespace lsst {
             
             void writeFits(const string& fileName) const;
             
-            DataProperty::PtrType getMetaData() const;
+            lsst::mwi::data::DataProperty::PtrType getMetaData() const;
             
             ImagePtrT getSubImage(const BBox2i imageRegion) const;
             
             void replaceSubImage(const BBox2i imageRegion, ImagePtrT insertImage);
 
-            ImageChannelT operator ()(int x, int y) const;
+            inline ImageChannelT operator ()(int x, int y) const;
 
-            pixel_accessor origin() const { return getIVwPtr()->origin(); }
+            inline pixel_accessor origin() const;
             
             Image<ImagePixelT>& operator += (const Image<ImagePixelT>& inputImage);
             Image<ImagePixelT>& operator -= (const Image<ImagePixelT>& inputImage);
@@ -73,37 +65,35 @@ namespace lsst {
             Image<ImagePixelT>& operator *= (const ImagePixelT scalar);
             Image<ImagePixelT>& operator /= (const ImagePixelT scalar);
             
-            unsigned int getCols() const;
-            unsigned int getRows() const;
-            unsigned int getOffsetCols() const;
-            unsigned int getOffsetRows() const;
+            inline unsigned int getCols() const;
+            inline unsigned int getRows() const;
+            inline unsigned int getOffsetCols() const;
+            inline unsigned int getOffsetRows() const;
             
-            ImageIVwPtrT getIVwPtr() const;
+            inline ImageIVwPtrT getIVwPtr() const;
             
-            ImageIVwT& getIVw() const;
+            inline ImageIVwT& getIVw() const;
 
             double getGain() const;
             
 //         virtual ~Image();
             
         private:
-            ImageIVwPtrT _imagePtr;
-            ImageIVwT& _image;
-            DataProperty::PtrType _metaData;
+            ImageIVwPtrT _vwImagePtr;
+            lsst::mwi::data::DataProperty::PtrType _metaData;
             unsigned int _offsetRows;
             unsigned int _offsetCols;
 
-            void setOffsetRows(unsigned int offset);
-            void setOffsetCols(unsigned int offset);
+            inline void setOffsetRows(unsigned int offset);
+            inline void setOffsetCols(unsigned int offset);
 
         };
-  
-#include "Image.cc"
-        
     } // namespace fw
-
 } // namespace lsst
 
+// Included definitions for templated and inline member functions
+#ifndef SWIG // don't bother SWIG with .cc files
+#include "Image.cc"
+#endif
+
 #endif // LSST_Image_H
-
-

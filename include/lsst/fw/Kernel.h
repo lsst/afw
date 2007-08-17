@@ -140,7 +140,7 @@ namespace fw {
          *
          * x, y are ignored if there is no spatial function.
          *
-         * \throw std::invalid_argument if the image is the wrong size
+         * \throw lsst::mwi::exceptions::InvalidParameter if the image is the wrong size
          */
         virtual void computeImage(
             Image<PixelT> &image,   ///< image whose pixels are to be set
@@ -181,7 +181,7 @@ namespace fw {
          * then it is a const operation if part of computing the kernel at a particular position.
          * But if there is no spatial model then it is not const.
          *
-         * \throw std::invalid_argument if the params vector is the wrong length
+         * \throw lsst::mwi::exceptions::InvalidParameter if the params vector is the wrong length
          */
         virtual void basicSetKernelParameters(std::vector<double> const &params) const = 0;
                 
@@ -195,7 +195,7 @@ namespace fw {
         /**
          * \brief Compute the kernel parameters at a particular spatial position.
          *
-         * \throw std::invalid_argument if the params vector is the wrong length
+         * \throw lsst::mwi::exceptions::InvalidParameter if the params vector is the wrong length
          */
         virtual std::vector<double> getKernelParametersFromSpatialModel(double x, double y) const;
         
@@ -252,6 +252,11 @@ namespace fw {
     
     /**
      * \brief A kernel described by a function.
+     *
+     * The function's x, y arguments are:
+     * * -getCtrCol(), -getCtrRow() for the lower left corner pixel
+     * * 0, 0 for the center pixel
+     * * (getCols() - 1) - getCtrCol(), (getRows() - 1) - getCtrRow() for the upper right pixel
      *
      * Note: each pixel is set to the value of the kernel function at the center of the pixel
      * (rather than averaging the function over the area of the pixel).
@@ -357,7 +362,7 @@ namespace fw {
         /**
          * \brief Check that all kernels have the same size and center and that none are spatially varying
          *
-         * \throw std::invalid_argument if the check fails
+         * \throw lsst::mwi::exceptions::InvalidParameter if the check fails
          */
         void checkKernelList(const KernelListType &kernelList) const;
         
@@ -375,6 +380,8 @@ namespace fw {
 }   // namespace lsst
     
 // Included definitions for templated and inline member functions
+#ifndef SWIG // don't bother SWIG with .cc files
 #include <lsst/fw/Kernel/Kernel.cc>
+#endif
 
 #endif // !defined(LSST_FW_Kernel_H)
