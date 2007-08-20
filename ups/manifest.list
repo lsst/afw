@@ -1,7 +1,8 @@
 >merge: build
 >merge: core
->merge: vw
+>merge: vw 1.0.1-lapack
 >merge: numarray
+>merge: numpy
 >merge: pyfits
 >merge: swig
 >merge: cfitsio
