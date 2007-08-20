@@ -34,9 +34,11 @@ for d in map(lambda str: "python/lsst/fw/" + str,
              Split("Catalog Core Display")):
     SConscript(os.path.join(d, "SConscript"))
 
-Alias("install", [env.InstallDir(env['prefix'], "python"),
-                  env.InstallDir(env['prefix'], "include"),
-                  env.InstallDir(env['prefix'], "lib"),
+env['IgnoreFiles'] = r"(~$|\.pyc$|^\.svn$|\.o$)"
+
+Alias("install", [env.Install(env['prefix'], "python"),
+                  env.Install(env['prefix'], "include"),
+                  env.Install(env['prefix'], "lib"),
                   env.InstallEups(env['prefix'] + "/ups", glob.glob("ups/*.table"))])
 
 scons.CleanTree(r"*~ core *.so *.os *.o")
