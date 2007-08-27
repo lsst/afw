@@ -102,12 +102,21 @@ lsst::mwi::data::DataProperty::PtrType lsst::fw::Image<ImagePixelT>::getMetaData
 template<typename ImagePixelT>
 typename lsst::fw::Image<ImagePixelT>::ImagePtrT
 lsst::fw::Image<ImagePixelT>::getSubImage(const BBox2i imageRegion) const {
+
+
+    // Check that imageRegion is completely inside the image
+    
+    BBox2i imageBoundary(0, 0, getCols(), getRows());
+    if (!imageBoundary.contains(imageRegion)) {
+        throw lsst::mwi::exceptions::InvalidParameter(boost::format("getSubImage region not contained within Image"));
+    }
+
     ImageIVwPtrT croppedImage(new ImageIVwT());
     *croppedImage = copy(crop(*_vwImagePtr, imageRegion));
     ImagePtrT newImage(new Image<ImagePixelT>(croppedImage));
     Vector<int, 2> bboxOffset = imageRegion.min();
-    newImage->setOffsetRows(bboxOffset[0] + _offsetRows);
-    newImage->setOffsetCols(bboxOffset[1] + _offsetCols);
+    newImage->setOffsetRows(bboxOffset[1] + _offsetRows);
+    newImage->setOffsetCols(bboxOffset[0] + _offsetCols);
 
     return newImage;
 }

@@ -284,12 +284,19 @@ int Mask<MaskPixelT>::countMask(MaskPixelBooleanFunc<MaskPixelT>& testFunc,
 template<class MaskPixelT>
 typename Mask<MaskPixelT>::MaskPtrT Mask<MaskPixelT>::getSubMask(const vw::BBox2i maskRegion) const {
 
+    // Check that maskRegion is completely inside the mask
+    
+    BBox2i maskBoundary(0, 0, getCols(), getRows());
+    if (!maskBoundary.contains(maskRegion)) {
+        throw lsst::mwi::exceptions::InvalidParameter(boost::format("getSubMask region not contained within Mask"));
+    }
+
     MaskIVwPtrT croppedMask(new MaskIVwT());
     *croppedMask = copy(crop(_image, maskRegion));
     MaskPtrT newMask(new Mask<MaskPixelT>(croppedMask));
     Vector<int, 2> bboxOffset = maskRegion.min();
-    newMask->setOffsetRows(bboxOffset[0] + _offsetRows);
-    newMask->setOffsetCols(bboxOffset[1] + _offsetCols);
+    newMask->setOffsetRows(bboxOffset[1] + _offsetRows);
+    newMask->setOffsetCols(bboxOffset[0] + _offsetCols);
     return newMask;
 }
 
