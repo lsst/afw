@@ -116,17 +116,19 @@ namespace lsst {
             
             Mask<MaskPixelT>& operator |= (const Mask<MaskPixelT>& inputMask);
             
-            unsigned int getCols() const { return _image.cols(); }
-            unsigned int getRows() const { return _image.rows(); }
+            unsigned int getCols() const { return _imagePtr->cols(); }
+            unsigned int getRows() const { return _imagePtr->rows(); }
             unsigned int getOffsetCols() const { return _offsetCols; }
             unsigned int getOffsetRows() const { return _offsetRows; }
-
 
             MaskIVwPtrT getIVwPtr() const {
                 return _imagePtr; // did this increment reference count or not....and does this violate const??
             }                
 
-            MaskIVwT& getIVw() const { return _image; }
+            MaskIVwT& getIVw() const { return *_imagePtr; }
+
+            int getNumPlanesMax() const { return 8 * sizeof(MaskChannelT); }
+            int getNumPlanesUsed() const { return _numPlanesUsed; }
 
             map<int, std::string> getMaskPlaneDict() const;
             
@@ -135,10 +137,9 @@ namespace lsst {
 //         virtual ~Mask();
             
     private:
+
             MaskIVwPtrT _imagePtr;
-            MaskIVwT& _image;
             map<int, std::string> _maskPlaneDict;
-            const int _numPlanesMax;
             int _numPlanesUsed;
             MaskChannelT _planeBitMask[8 * sizeof(MaskChannelT)];
             MaskChannelT _planeBitMaskComplemented[8 * sizeof(MaskChannelT)];

@@ -6,14 +6,12 @@ template<typename MaskPixelT>
 Mask<MaskPixelT>::Mask() :
     LsstBase(typeid(this)),
     _imagePtr(new vw::ImageView<MaskPixelT>()),
-    _image(*_imagePtr),
-    _numPlanesMax(8*sizeof(MaskChannelT)),
     _metaData(SupportFactory::createPropertyNode("FitsMetaData")) {
 
     Trace("fw.Mask", 1,
-              boost::format("Number of mask planes: %d") % _numPlanesMax);
+              boost::format("Number of mask planes: %d") % getNumPlanesMax());
 
-     for (int i=0; i<_numPlanesMax; i++) {
+     for (int i=0; i<getNumPlanesMax(); i++) {
 	  _planeBitMask[i] = 1 << i;
 	  _planeBitMaskComplemented[i] = ~_planeBitMask[i];
 	  _maskPlaneDict[i] = "";
@@ -29,14 +27,12 @@ template<class MaskPixelT>
 Mask<MaskPixelT>::Mask(MaskIVwPtrT image): 
     LsstBase(typeid(this)),
     _imagePtr(image),
-    _image(*_imagePtr),
-    _numPlanesMax(8 * sizeof(MaskChannelT)),
     _metaData(SupportFactory::createPropertyNode("FitsMetaData")) {
 
     Trace("fw.Mask", 1,
-              boost::format("Number of mask planes: %d") % _numPlanesMax);
+              boost::format("Number of mask planes: %d") % getNumPlanesMax());
 
-     for (int i=0; i<_numPlanesMax; i++) {
+     for (int i=0; i<getNumPlanesMax(); i++) {
 	  _planeBitMask[i] = 1 << i;
 	  _planeBitMaskComplemented[i] = ~_planeBitMask[i];
 	  _maskPlaneDict[i] = "";
@@ -52,14 +48,12 @@ template<class MaskPixelT>
 Mask<MaskPixelT>::Mask(int ncols, int nrows) :
     LsstBase(typeid(this)),
     _imagePtr(new vw::ImageView<MaskPixelT>(ncols, nrows)),
-    _image(*_imagePtr),
-    _numPlanesMax(8*sizeof(MaskChannelT)),
     _metaData(SupportFactory::createPropertyNode("FitsMetaData")) {
 
     Trace("fw.Mask", 1,
-              boost::format("Number of mask planes: %d") % _numPlanesMax);
+              boost::format("Number of mask planes: %d") % getNumPlanesMax());
 
-     for (int i=0; i<_numPlanesMax; i++) {
+     for (int i=0; i<getNumPlanesMax(); i++) {
 	  _planeBitMask[i] = 1 << i;
 	  _planeBitMaskComplemented[i] = ~_planeBitMask[i];
 	  _maskPlaneDict[i] = "";
@@ -81,7 +75,7 @@ template<class MaskPixelT>
 void Mask<MaskPixelT>::readFits(const string& fileName, int hdu)
 {
     LSSTFitsResource<MaskPixelT> fitsRes;
-    fitsRes.readFits(fileName, _image, _metaData, hdu);
+    fitsRes.readFits(fileName, *_imagePtr, _metaData, hdu);
     parseMaskPlaneMetaData(_metaData);
 }
 
@@ -90,7 +84,7 @@ void Mask<MaskPixelT>::writeFits(const string& fileName)
 {
     LSSTFitsResource<MaskPixelT> fitsRes;
     addMaskPlaneMetaData(_metaData);
-    fitsRes.writeFits(_image, _metaData, fileName);
+    fitsRes.writeFits(*_imagePtr, _metaData, fileName);
 }
 
 template<class MaskPixelT>
@@ -103,7 +97,7 @@ int Mask<MaskPixelT>::addMaskPlane(const string& name)
      }
      catch(NoMaskPlane &e) {
         // build new entry
-        if (_numPlanesUsed < _numPlanesMax) {
+        if (_numPlanesUsed < getNumPlanesMax()) {
 	    // find first entry in dict with null name
 	    for(map<int, string>::iterator i=_maskPlaneDict.begin(); i != _maskPlaneDict.end(); ++i) {
 	       if (i->second == "") {
@@ -115,12 +109,12 @@ int Mask<MaskPixelT>::addMaskPlane(const string& name)
             // No free space found for new plane addition
             throw OutOfPlaneSpace("No space to add new plane")
                 << DataProperty("numPlanesUsed", _numPlanesUsed) 
-                << DataProperty("numPlanesMax", _numPlanesMax);
+                << DataProperty("numPlanesMax", getNumPlanesMax());
         } else {
             // Max number of planes already allocated
           throw OutOfPlaneSpace("Max number of planes already used")
               << DataProperty("numPlanesUsed", _numPlanesUsed)
-              << DataProperty("numPlanesMax", _numPlanesMax);
+              << DataProperty("numPlanesMax", getNumPlanesMax());
         }
     }
 }
@@ -131,7 +125,7 @@ int Mask<MaskPixelT>::addMaskPlane(const string& name)
 template<class MaskPixelT> 
 int Mask<MaskPixelT>::addMaskPlane(string name, int planeId)
 {
-    if (planeId <0 || planeId >= _numPlanesMax) {
+    if (planeId <0 || planeId >= getNumPlanesMax()) {
         throw;
     }
 
@@ -203,7 +197,7 @@ typename Mask<MaskPixelT>::MaskChannelT Mask<MaskPixelT>::getPlaneBitMask(const 
 
 template<class MaskPixelT> void Mask<MaskPixelT>::clearAllMaskPlanes() 
 {
-     for (int i=0; i<_numPlanesMax; i++) {
+     for (int i=0; i<getNumPlanesMax(); i++) {
 	  _maskPlaneDict[i] = "";
      }
     _numPlanesUsed = 0;
@@ -215,7 +209,7 @@ template<class MaskPixelT> void Mask<MaskPixelT>::clearMaskPlane(int plane)
 {
     for (unsigned int y = 0; y < getRows(); y++) {
         for (unsigned int x = 0; x < getCols(); x++) {
-	       _image(x,y) = _image(x,y) & _planeBitMaskComplemented[plane];
+	       (*_imagePtr)(x,y) = (*_imagePtr)(x,y) & _planeBitMaskComplemented[plane];
 	  }
      }
 }
@@ -228,8 +222,8 @@ template<class MaskPixelT> void Mask<MaskPixelT>::setMaskPlaneValues(int plane, 
 //      cout << "setMaskPlaneValues " << pixelList.size() << endl;
      for (list<PixelCoord>::iterator i = pixelList.begin(); i != pixelList.end(); i++) {
 	  PixelCoord coord = *i;
-	  _image(coord.x, coord.y) = _image(coord.x, coord.y) | _planeBitMask[plane];
-// 	  cout << "Set: " << coord.x << " " << coord.y << " " << (void *)_planeBitMask[plane] << " " << _image(coord.x, coord.y) << endl;
+	  (*_imagePtr)(coord.x, coord.y) = (*_imagePtr)(coord.x, coord.y) | _planeBitMask[plane];
+// 	  cout << "Set: " << coord.x << " " << coord.y << " " << (void *)_planeBitMask[plane] << " " << (*_imagePtr)(coord.x, coord.y) << endl;
      }
 }
 
@@ -239,7 +233,7 @@ template<class MaskPixelT> void Mask<MaskPixelT>::setMaskPlaneValues(int plane, 
 template<typename MaskPixelT>
 void Mask<MaskPixelT>::setMaskPlaneValues(const int plane, const int x0, const int x1, const int y) {
     for (int x = x0; x <= x1; x++) {
-        _image(x, y) |= _planeBitMask[plane];
+        (*_imagePtr)(x, y) |= _planeBitMask[plane];
     }
 }
 
@@ -252,8 +246,8 @@ template<class MaskPixelT> void Mask<MaskPixelT>::setMaskPlaneValues(int plane, 
 
     for (unsigned int y = 0; y < getRows(); y++) {
         for (unsigned int x = 0; x < getCols(); x++) {
-            if (selectionFunc(_image(x,y)) == true) {
-                _image(x,y) = _image(x,y) | _planeBitMask[plane];
+            if (selectionFunc((*_imagePtr)(x,y)) == true) {
+                (*_imagePtr)(x,y) = (*_imagePtr)(x,y) | _planeBitMask[plane];
             }
           }
     }
@@ -273,7 +267,7 @@ int Mask<MaskPixelT>::countMask(MaskPixelBooleanFunc<MaskPixelT>& testFunc,
 
     for (int y=ulCorner[1]; y<lrCorner[1]; y++) {
         for (int x=ulCorner[0]; x<lrCorner[0]; x++) {
-            if (testFunc(_image(x,y)) == true) {
+            if (testFunc((*_imagePtr)(x,y)) == true) {
                 count += 1;
             }
           }
@@ -292,7 +286,7 @@ typename Mask<MaskPixelT>::MaskPtrT Mask<MaskPixelT>::getSubMask(const vw::BBox2
     }
 
     MaskIVwPtrT croppedMask(new MaskIVwT());
-    *croppedMask = copy(crop(_image, maskRegion));
+    *croppedMask = copy(crop(*_imagePtr, maskRegion));
     MaskPtrT newMask(new Mask<MaskPixelT>(croppedMask));
     Vector<int, 2> bboxOffset = maskRegion.min();
     newMask->setOffsetRows(bboxOffset[1] + _offsetRows);
@@ -308,7 +302,7 @@ template<class MaskPixelT>
 void Mask<MaskPixelT>::replaceSubMask(const BBox2i maskRegion, MaskPtrT insertMask)
 {
     try {
-        crop(_image, maskRegion) = insertMask->_image;
+        crop(*_imagePtr, maskRegion) = *(insertMask->_imagePtr);
     } catch (exception eex) {
         throw Exception(std::string("in ") + __func__);
     } 
@@ -316,14 +310,14 @@ void Mask<MaskPixelT>::replaceSubMask(const BBox2i maskRegion, MaskPtrT insertMa
 
 template<class MaskPixelT> typename Mask<MaskPixelT>::MaskChannelT Mask<MaskPixelT>::operator ()(int x, int y) const
 {
-//      cout << x << " " << y << " " << (void *)_image(x, y) << endl;
-     return _image(x, y);
+//      cout << x << " " << y << " " << (void *)(*_imagePtr)(x, y) << endl;
+     return (*_imagePtr)(x, y);
 }
 
 template<class MaskPixelT> bool Mask<MaskPixelT>::operator ()(int x, int y, int plane) const
 {
-//      cout << x << " " << y << " " << (void *)_planeBitMask[plane] << " " << (void *)_image(x, y) << endl;
-     return (_image(x, y) & _planeBitMask[plane]) != 0;
+//      cout << x << " " << y << " " << (void *)_planeBitMask[plane] << " " << (void *)(*_imagePtr)(x, y) << endl;
+     return ((*_imagePtr)(x, y) & _planeBitMask[plane]) != 0;
 }
 
 template<typename MaskPixelT>
@@ -369,7 +363,7 @@ template<class MaskPixelT> Mask<MaskPixelT>&  Mask<MaskPixelT>::operator |= (con
 
     for (unsigned int y = 0; y < getRows(); y++) {
         for (unsigned int x = 0; x < getCols(); x++) {
-            _image(x,y) |= inputMask(x,y);
+            (*_imagePtr)(x,y) |= inputMask(x,y);
         }
     }
 

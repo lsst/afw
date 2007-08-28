@@ -21,10 +21,10 @@ public:
     typedef typename Mask<MaskPixelT>::MaskChannelT MaskChannelT;
     testCrFunc(Mask<MaskPixelT>& m) : MaskPixelBooleanFunc<MaskPixelT>(m) {}
     void init() {
-        MaskPixelBooleanFunc<MaskPixelT>::_mask.getPlaneBitMask("CR", bitsCR);
+       MaskPixelBooleanFunc<MaskPixelT>::_mask.getPlaneBitMask("CR", bitsCR);
     }        
     bool operator ()(MaskPixelT pixel) const { 
-        return ((pixel & bitsCR) !=0 ); 
+       return ((pixel & bitsCR) !=0 ); 
     }
 private:
     MaskChannelT bitsCR;
@@ -40,270 +40,275 @@ void test() {
     Trace::setVerbosity(".", 100);
 
 // ------------- Test constructors
-     typedef uint8 MaskPixelType;
-     typedef Mask<MaskPixelType>::MaskIVwT MaskImageType;
-     typedef Mask<MaskPixelType>::MaskIVwPtrT MaskImagePtrType;
-     typedef Mask<MaskPixelType>::MaskPtrT MaskPtrType;
-     
-     MaskImagePtrType maskImage(new MaskImageType(300,400));
-     cout << maskImage.use_count() << endl;
+    typedef uint8 MaskPixelType;
+    typedef Mask<MaskPixelType>::MaskIVwT MaskImageType;
+    typedef Mask<MaskPixelType>::MaskIVwPtrT MaskImagePtrType;
+    typedef Mask<MaskPixelType>::MaskPtrT MaskPtrType;
+    
+    MaskImagePtrType maskImage(new MaskImageType(300,400));
+    cout << maskImage.use_count() << endl;
 
-     Mask<MaskPixelType> testMask(maskImage);
-     cout << maskImage.use_count() << endl;
+    Mask<MaskPixelType> testMask(maskImage);
+    cout << maskImage.use_count() << endl;
 
-     typedef uint16 MaskPixelType2;
-     typedef Mask<MaskPixelType2>::MaskIVwT MaskImageType2;
-     typedef Mask<MaskPixelType2>::MaskIVwPtrT MaskImagePtrType2;
+    typedef uint16 MaskPixelType2;
+    typedef Mask<MaskPixelType2>::MaskIVwT MaskImageType2;
+    typedef Mask<MaskPixelType2>::MaskIVwPtrT MaskImagePtrType2;
 
-     MaskImagePtrType2 maskImage2(new MaskImageType2(300,400));
+    MaskImagePtrType2 maskImage2(new MaskImageType2(300,400));
 
-     Mask<MaskPixelType2 > testMask2(maskImage2);
+    Mask<MaskPixelType2> testMask2(maskImage2);
 
-     Mask<MaskPixelType > testMask3(300,400);
+    Mask<MaskPixelType> testMask3(300,400);
+
+// ------------- Test copy constructor and operator= for memory leaks
+
+    Mask<MaskPixelType> maskCopy(testMask3);
+    maskCopy = testMask3;
 
 // ------------- Test mask plane addition
 
-     int iPlane;
+    int iPlane;
 
-     try {
-        iPlane = testMask.addMaskPlane("CR");
-        cout << "Assigned CR to plane " << iPlane << endl;
-     }
-     catch(OutOfPlaneSpace &e){
-        DataProperty::PtrType  propertyList = e.propertyList();
-        cout << propertyList->toString("",true) << endl;
-        DataProperty::PtrType aProperty = propertyList->findUnique("numPlanesUsed");
-        int numPlanesUsed = any_cast<const int>(aProperty->getValue());
-        DataProperty::PtrType bProperty = propertyList->findUnique("numPlanesMax");
-        int numPlanesMax = any_cast<const int>(bProperty->getValue());
+    try {
+       iPlane = testMask.addMaskPlane("CR");
+       cout << "Assigned CR to plane " << iPlane << endl;
+    }
+    catch(OutOfPlaneSpace &e){
+       DataProperty::PtrType  propertyList = e.propertyList();
+       cout << propertyList->toString("",true) << endl;
+       DataProperty::PtrType aProperty = propertyList->findUnique("numPlanesUsed");
+       int numPlanesUsed = any_cast<const int>(aProperty->getValue());
+       DataProperty::PtrType bProperty = propertyList->findUnique("numPlanesMax");
+       int numPlanesMax = any_cast<const int>(bProperty->getValue());
 
-        cout << "Ran out of space to add new CR plane: number of Planes: " \
-             << numPlanesUsed << "  max Planes: " << numPlanesMax << endl;
+       cout << "Ran out of space to add new CR plane: number of Planes: " \
+            << numPlanesUsed << "  max Planes: " << numPlanesMax << endl;
+       throw;
+    }
+
+    try {
+        iPlane = testMask.addMaskPlane("BP");
+        cout << "Assigned BP to plane " << iPlane << endl;
+    }
+    catch(exception &e){
+        cout << e.what() << "Ran out of space to add new BP plane" << endl;
         throw;
-     }
+    }
 
-     try {
-         iPlane = testMask.addMaskPlane("BP");
-         cout << "Assigned BP to plane " << iPlane << endl;
-     }
-     catch(exception &e){
-         cout << e.what() << "Ran out of space to add new BP plane" << endl;
-         throw;
-     }
+    for (int i = 0; i <= 8; i++) {
+        std::string sp = (boost::format("P%d") % i).str();
+        try {
+            std::cout << boost::format("Assigned %s to plane %d\n") %
+                sp % testMask.addMaskPlane(sp);
+        } catch(lsst::fw::OutOfPlaneSpace &e) {
+            e.print("\t");
+        }
+    }
 
-     for (int i = 0; i <= 8; i++) {
-         std::string sp = (boost::format("P%d") % i).str();
-         try {
-             std::cout << boost::format("Assigned %s to plane %d\n") %
-                 sp % testMask.addMaskPlane(sp);
-         } catch(lsst::fw::OutOfPlaneSpace &e) {
-             e.print("\t");
-         }
-     }
-
-     for (int i = 0; i <= 8; i++) {
-         std::string sp = (boost::format("P%d") % i).str();
-         try {
-             testMask.removeMaskPlane(sp);
-         } catch(NoMaskPlane) {
-             ;
-         }
-     }
+    for (int i = 0; i <= 8; i++) {
+        std::string sp = (boost::format("P%d") % i).str();
+        try {
+            testMask.removeMaskPlane(sp);
+        } catch(NoMaskPlane) {
+            ;
+        }
+    }
 
 /******************************************************************************/
-     
-     int planeCR, planeBP;
+    
+    int planeCR, planeBP;
 
-     try {
-         testMask.getMaskPlane("CR", planeCR); 
-         cout << "CR plane is " << planeCR << endl;
-     }
-     catch(NoMaskPlane &e) {
+    try {
+        testMask.getMaskPlane("CR", planeCR); 
+        cout << "CR plane is " << planeCR << endl;
+    }
+    catch(NoMaskPlane &e) {
 	  cout << e.what() << "No CR plane found" << endl;
-          throw;
-     }
+         throw;
+    }
 
-     try {
-         testMask.getMaskPlane("BP", planeBP);
-         cout << "BP plane is " << planeBP << endl;
-     }
-     catch(NoMaskPlane &e) {
+    try {
+        testMask.getMaskPlane("BP", planeBP);
+        cout << "BP plane is " << planeBP << endl;
+    }
+    catch(NoMaskPlane &e) {
 	  cout << e.what() << "No BP plane found" << endl;
-          throw;
-     } 
+         throw;
+    } 
 
 // ------------ Test mask plane metaData
 
-     DataProperty::PtrType metaData = SupportFactory::createPropertyNode("testMetaData");
-     testMask.addMaskPlaneMetaData(metaData);
-     cout << "MaskPlane metadata:" << endl;
-     cout << metaData->toString("\t",true) << endl;
+    DataProperty::PtrType metaData = SupportFactory::createPropertyNode("testMetaData");
+    testMask.addMaskPlaneMetaData(metaData);
+    cout << "MaskPlane metadata:" << endl;
+    cout << metaData->toString("\t",true) << endl;
 
-     DataProperty::PtrType newPlane(new DataProperty("Whatever", 5));
-     metaData->addProperty(newPlane);
+    DataProperty::PtrType newPlane(new DataProperty("Whatever", 5));
+    metaData->addProperty(newPlane);
 
-     testMask.parseMaskPlaneMetaData(metaData);
-     cout << "After loading metadata: " << endl;
-     testMask.printMaskPlanes();
+    testMask.parseMaskPlaneMetaData(metaData);
+    cout << "After loading metadata: " << endl;
+    testMask.printMaskPlanes();
 
 // ------------ Test mask plane operations
 
-     testMask.clearMaskPlane(planeCR);
+    testMask.clearMaskPlane(planeCR);
 
-     PixelCoord coord;
-     list<PixelCoord> pixelList;
+    PixelCoord coord;
+    list<PixelCoord> pixelList;
 
-     for (int x=0; x<300; x+=1) {
+    for (int x=0; x<300; x+=1) {
 	  for (int y=300; y<400; y+=20) {
 	       coord.x = x;
 	       coord.y = y;
 	       pixelList.push_back(coord);
 	  }
-     }
+    }
 
-     testMask.setMaskPlaneValues(planeCR, pixelList);
+    testMask.setMaskPlaneValues(planeCR, pixelList);
 
-     testMask.setMaskPlaneValues(planeBP, pixelList);
+    testMask.setMaskPlaneValues(planeBP, pixelList);
 
-     for (int x=250; x<300; x+=10) {
+    for (int x=250; x<300; x+=10) {
 	  for (int y=300; y<400; y+=20) {
 	       cout << x << " " << y << " " << (int)testMask(x, y) << " " << testMask(x, y, planeCR) << endl;
 	  }
-     }
+    }
 
-     testMask.clearMaskPlane(planeCR);
+    testMask.clearMaskPlane(planeCR);
 
-     cout << endl;
-     for (int x=250; x<300; x+=10) {
+    cout << endl;
+    for (int x=250; x<300; x+=10) {
 	  for (int y=300; y<400; y+=20) {
 	       cout << x << " " << y << " " << (int)testMask(x, y) << " " << testMask(x, y, planeCR) << endl;
 	  }
-     }
+    }
 
 // ------------------ Test |= operator
    
-     try {
-         iPlane = testMask3.addMaskPlane("CR");
-         cout << "Assigned CR to plane " << iPlane << endl;
-     }
-     catch(exception &e){
-         cout << e.what() << "Ran out of space to add new CR plane" << endl;
-         throw;
-     }
+    try {
+        iPlane = testMask3.addMaskPlane("CR");
+        cout << "Assigned CR to plane " << iPlane << endl;
+    }
+    catch(exception &e){
+        cout << e.what() << "Ran out of space to add new CR plane" << endl;
+        throw;
+    }
 
-     testMask |= testMask3;
+    testMask |= testMask3;
 
-     cout << "Applied |= operator" << endl;
-     
+    cout << "Applied |= operator" << endl;
+    
 // -------------- Test mask plane removal
 
-     testMask.clearMaskPlane(planeBP);
-     testMask.removeMaskPlane("BP");
+    testMask.clearMaskPlane(planeBP);
+    testMask.removeMaskPlane("BP");
 
-     try {
-         testMask.getMaskPlane("CR", planeCR);
-     }
-     catch(NoMaskPlane &e) {
+    try {
+        testMask.getMaskPlane("CR", planeCR);
+    }
+    catch(NoMaskPlane &e) {
 	  cout << e.what() << "No CR plane found" << endl;
-          throw;
-     } 
-     cout << "CR plane is " << planeCR << endl;
+         throw;
+    } 
+    cout << "CR plane is " << planeCR << endl;
 
-     try {
-         testMask.getMaskPlane("BP", planeBP);
-         cout << "BP plane is " << planeBP << endl;
-     }
-     catch(NoMaskPlane &e) {
+    try {
+        testMask.getMaskPlane("BP", planeBP);
+        cout << "BP plane is " << planeBP << endl;
+    }
+    catch(NoMaskPlane &e) {
 	  cout << e.what() << "No BP plane found" << endl;
-          // testing success of plane deletion so NO  throw;
-     } 
+         // testing success of plane deletion so NO  throw;
+    } 
 
 // --------------- Test submask methods
 
-     testMask.setMaskPlaneValues(planeCR, pixelList);
+    testMask.setMaskPlaneValues(planeCR, pixelList);
 
-     BBox2i region(100, 300, 10, 40);
-     MaskPtrType subTestMask = testMask.getSubMask(region);
+    BBox2i region(100, 300, 10, 40);
+    MaskPtrType subTestMask = testMask.getSubMask(region);
 
-     testMask.clearMaskPlane(planeCR);
+    testMask.clearMaskPlane(planeCR);
 
-     testMask.replaceSubMask(region, subTestMask);
+    testMask.replaceSubMask(region, subTestMask);
 
-     cout << endl;
-     for (int x=90; x<120; x+=1) {
+    cout << endl;
+    for (int x=90; x<120; x+=1) {
 	  for (int y=295; y<350; y+=5) {
 	       cout << x << " " << y << " " << (int)testMask(x, y) << " " << testMask(x, y, planeCR) << endl;
 	  }
-     }
+    }
 
 
 // --------------------- Test MaskPixelBooleanFunc
 
-     testCrFunc<MaskPixelType> testCrFuncInstance(testMask);
+    testCrFunc<MaskPixelType> testCrFuncInstance(testMask);
 
-     // Calling init gets the latest plane info from testMask
-     testCrFuncInstance.init();
+    // Calling init gets the latest plane info from testMask
+    testCrFuncInstance.init();
 
-     // Now use testCrFuncInstance
-     int count = testMask.countMask(testCrFuncInstance, region);
-     cout << count << " pixels had CR set in region" << endl;
+    // Now use testCrFuncInstance
+    int count = testMask.countMask(testCrFuncInstance, region);
+    cout << count << " pixels had CR set in region" << endl;
 
-     // This should generate a vw exception - dimensions of region and submask must be =
+    // This should generate a vw exception - dimensions of region and submask must be =
 
-     cout << "This should throw an exception:" << endl;
+    cout << "This should throw an exception:" << endl;
 
-     try {
-        region.expand(10);
-        testMask.replaceSubMask(region, subTestMask);
-     } catch (mwie::Exception &e) {
-         cout << "Exception handler: Caught the buggy code: " << e.what() << endl;
-     } catch (exception eex) {
-         // Catch base STD exception (from which all exceptions should be derived)
-        cout << "Exception handler (exception eex): Caught the buggy code" << endl;
-     } catch (...) {
-         // Catch all exceptions not derived from STD base exception
-         cout << "Exception handler (...): Caught the buggy code" << endl;
-     }
+    try {
+       region.expand(10);
+       testMask.replaceSubMask(region, subTestMask);
+    } catch (mwie::Exception &e) {
+        cout << "Exception handler: Caught the buggy code: " << e.what() << endl;
+    } catch (exception eex) {
+        // Catch base STD exception (from which all exceptions should be derived)
+       cout << "Exception handler (exception eex): Caught the buggy code" << endl;
+    } catch (...) {
+        // Catch all exceptions not derived from STD base exception
+        cout << "Exception handler (...): Caught the buggy code" << endl;
+    }
 }
 
 #if 0
-     //----------------------------------------------------------------
-     // Following exceptions are the only exceptions currently used in VW. 
-     //     Additional VW exceptions are defined in vw:Exception.h
-     //     VW exceptions are derived from std:exception
+    //----------------------------------------------------------------
+    // Following exceptions are the only exceptions currently used in VW. 
+    //     Additional VW exceptions are defined in vw:Exception.h
+    //     VW exceptions are derived from std:exception
 
-     catch (vw::NoImplErr noirex) {
-        cout << "Exception handler (vw::NoImplErr noirex): Caught the buggy code" << endl;
-     }
-     catch (vw::LogicErr lrex) {
-        cout << "Exception handler (vw::LoginErr lrex): Caught the buggy code" << endl;
-     }
-     catch (vw::IOErr iorex) {
-        cout << "Exception handler (vw::IOErr iorex): Caught the buggy code" << endl;
-     }
-     catch (vw::ArgumentErr vwrex) {
-        cout << "Exception handler (vw::ArgumentErr vwrex): Caught the buggy code" << endl;
-     }
+    catch (vw::NoImplErr noirex) {
+       cout << "Exception handler (vw::NoImplErr noirex): Caught the buggy code" << endl;
+    }
+    catch (vw::LogicErr lrex) {
+       cout << "Exception handler (vw::LoginErr lrex): Caught the buggy code" << endl;
+    }
+    catch (vw::IOErr iorex) {
+       cout << "Exception handler (vw::IOErr iorex): Caught the buggy code" << endl;
+    }
+    catch (vw::ArgumentErr vwrex) {
+       cout << "Exception handler (vw::ArgumentErr vwrex): Caught the buggy code" << endl;
+    }
 #endif
 
 int main(int argc, char *argv[]) {
     try {
-        try {
-            test();
-        } catch (mwie::Exception &e) {
-            throw mwie::Exception(std::string("In handler\n") + e.what());
-        }
+       try {
+           test();
+       } catch (mwie::Exception &e) {
+           throw mwie::Exception(std::string("In handler\n") + e.what());
+       }
     } catch (mwie::Exception &e) {
-        std::clog << e.what() << endl;
+       std::clog << e.what() << endl;
     }
 
-     //
-     // Check for memory leaks
-     //
-     if (Citizen::census(0) == 0) {
-         cerr << "No leaks detected" << endl;
-     } else {
-         cerr << "Leaked memory blocks:" << endl;
-         Citizen::census(cerr);
-     }
+    //
+    // Check for memory leaks
+    //
+    if (Citizen::census(0) == 0) {
+        cerr << "No leaks detected" << endl;
+    } else {
+        cerr << "Leaked memory blocks:" << endl;
+        Citizen::census(cerr);
+    }
 }
