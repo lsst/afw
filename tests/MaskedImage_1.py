@@ -49,6 +49,12 @@ class MaskedImageTestCase(unittest.TestCase):
 
     def testAddMaskedImages(self):
         self.maskedImage2 += self.maskedImage1
+    
+#    def testCopyConstructors(self):
+#        imageView = fw.copyImageViewF(fw.ImageViewD(100, 100))
+#        image = fw.copyImageF(fw.ImageD(100, 100))
+#        mask = fw.copyMaskF(fw.MaskD(100, 100))
+#        maskedImage = fw.copyMaskedImageF(self.maskedImage1)
 
     def testPixelProc(self):
         fooFunc = fwTests.testPixProcFuncD(self.maskedImage1)

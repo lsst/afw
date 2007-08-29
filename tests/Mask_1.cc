@@ -73,8 +73,7 @@ void test() {
     try {
        iPlane = testMask.addMaskPlane("CR");
        cout << "Assigned CR to plane " << iPlane << endl;
-    }
-    catch(OutOfPlaneSpace &e){
+    } catch(mwie::OutOfPlaneSpace &e){
        DataProperty::PtrType  propertyList = e.propertyList();
        cout << propertyList->toString("",true) << endl;
        DataProperty::PtrType aProperty = propertyList->findUnique("numPlanesUsed");
@@ -90,8 +89,7 @@ void test() {
     try {
         iPlane = testMask.addMaskPlane("BP");
         cout << "Assigned BP to plane " << iPlane << endl;
-    }
-    catch(exception &e){
+    } catch(exception &e){
         cout << e.what() << "Ran out of space to add new BP plane" << endl;
         throw;
     }
@@ -101,7 +99,7 @@ void test() {
         try {
             std::cout << boost::format("Assigned %s to plane %d\n") %
                 sp % testMask.addMaskPlane(sp);
-        } catch(lsst::fw::OutOfPlaneSpace &e) {
+        } catch(mwie::OutOfPlaneSpace &e) {
             e.print("\t");
         }
     }
@@ -110,7 +108,7 @@ void test() {
         std::string sp = (boost::format("P%d") % i).str();
         try {
             testMask.removeMaskPlane(sp);
-        } catch(NoMaskPlane) {
+        } catch(mwie::NoMaskPlane) {
             ;
         }
     }
@@ -122,8 +120,7 @@ void test() {
     try {
         testMask.getMaskPlane("CR", planeCR); 
         cout << "CR plane is " << planeCR << endl;
-    }
-    catch(NoMaskPlane &e) {
+    } catch(mwie::NoMaskPlane &e) {
 	  cout << e.what() << "No CR plane found" << endl;
          throw;
     }
@@ -132,7 +129,7 @@ void test() {
         testMask.getMaskPlane("BP", planeBP);
         cout << "BP plane is " << planeBP << endl;
     }
-    catch(NoMaskPlane &e) {
+    catch(mwie::NoMaskPlane &e) {
 	  cout << e.what() << "No BP plane found" << endl;
          throw;
     } 
@@ -190,8 +187,7 @@ void test() {
     try {
         iPlane = testMask3.addMaskPlane("CR");
         cout << "Assigned CR to plane " << iPlane << endl;
-    }
-    catch(exception &e){
+    } catch(std::exception &e){
         cout << e.what() << "Ran out of space to add new CR plane" << endl;
         throw;
     }
@@ -207,8 +203,7 @@ void test() {
 
     try {
         testMask.getMaskPlane("CR", planeCR);
-    }
-    catch(NoMaskPlane &e) {
+    } catch(mwie::NoMaskPlane &e) {
 	  cout << e.what() << "No CR plane found" << endl;
          throw;
     } 
@@ -217,8 +212,7 @@ void test() {
     try {
         testMask.getMaskPlane("BP", planeBP);
         cout << "BP plane is " << planeBP << endl;
-    }
-    catch(NoMaskPlane &e) {
+    } catch(mwie::NoMaskPlane &e) {
 	  cout << e.what() << "No BP plane found" << endl;
          // testing success of plane deletion so NO  throw;
     } 

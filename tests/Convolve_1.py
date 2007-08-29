@@ -145,7 +145,7 @@ class ConvolveTestCase(unittest.TestCase):
         """Test convolution that returns a new MaskedImage with a spatially invariant Gaussian function
         In this case, just make sure there are no memory leaks.
         
-        Disabled because this triggers a memory leak. Don't use the new-image version
+        This presently triggers a memory leak. Don't use the new-image version
         of the convolve function until we get this straightened out.
         """
         kCols = 7
