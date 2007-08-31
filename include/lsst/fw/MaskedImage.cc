@@ -58,6 +58,28 @@ template<typename ImagePixelT, typename MaskPixelT>
 lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::~MaskedImage() {
 }
 
+/*
+ * Avoiding the default assignment operator seems to solve ticket 144 (memory leaks in the Python code),
+ * but I don't know why. Explicitly resetting the shared pointers before setting them is not the answer
+ * (because commenting it out makes no difference) and the rest of the code should be identical
+ * to the default assignment operator.
+ */
+template<typename MaskPixelT, typename ImagePixelT>
+lsst::fw::MaskedImage<MaskPixelT, ImagePixelT>& lsst::fw::MaskedImage<MaskPixelT, ImagePixelT>::operator= (
+    const MaskedImage<MaskPixelT, ImagePixelT>& rhs
+) {
+    if (&rhs != this) {   // beware of self assignment: maskedImage = maskedImage;
+        _imagePtr.reset();
+        _variancePtr.reset();
+        _maskPtr.reset();
+        _imagePtr = rhs._imagePtr;
+        _variancePtr = rhs._variancePtr;
+        _maskPtr = rhs._maskPtr;
+    }
+    
+    return *this;
+}
+
 template<typename ImagePixelT, typename MaskPixelT>
 inline typename lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::ImagePtrT
 lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::getImage() const {

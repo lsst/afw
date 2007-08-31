@@ -59,10 +59,8 @@ namespace lsst {
             explicit Mask(MaskIVwPtrT vwImagePtr);
             
             explicit Mask(int nCols, int nRows);
-            
-            explicit Mask(const Mask<MaskPixelT>& rhs);
 
-            Mask& operator=(const Mask<MaskPixelT>& rhs);
+            Mask<MaskPixelT>& operator=(const Mask<MaskPixelT>& rhs);
             
             void readFits(const std::string& fileName, int hdu=0);
             
@@ -135,8 +133,6 @@ namespace lsst {
             MaskIVwPtrT _vwImagePtr;
             std::map<int, std::string> _maskPlaneDict;
             int _numPlanesUsed;
-            MaskChannelT _planeBitMask[8 * sizeof(MaskChannelT)];
-            MaskChannelT _planeBitMaskComplemented[8 * sizeof(MaskChannelT)];
             lsst::mwi::data::DataProperty::PtrType _metaData;
             static const std::string maskPlanePrefix;
             unsigned int _offsetRows;
@@ -144,6 +140,8 @@ namespace lsst {
             
             void setOffsetRows(unsigned int offset);
             void setOffsetCols(unsigned int offset);
+            
+            MaskChannelT getBitMask(int plane) const { return 1 << plane; }
 
             int addMaskPlane(string name, int plane);
         };

@@ -12,8 +12,6 @@ lsst::fw::Mask<MaskPixelT>::Mask() :
               boost::format("Number of mask planes: %d") % getNumPlanesMax());
 
      for (int i=0; i<getNumPlanesMax(); i++) {
-      _planeBitMask[i] = 1 << i;
-      _planeBitMaskComplemented[i] = ~_planeBitMask[i];
       _maskPlaneDict[i] = "";
      }
 
@@ -33,8 +31,6 @@ lsst::fw::Mask<MaskPixelT>::Mask(MaskIVwPtrT vwImagePtr):
               boost::format("Number of mask planes: %d") % getNumPlanesMax());
 
      for (int i=0; i<getNumPlanesMax(); i++) {
-        _planeBitMask[i] = 1 << i;
-        _planeBitMaskComplemented[i] = ~_planeBitMask[i];
         _maskPlaneDict[i] = "";
      }
 
@@ -53,8 +49,6 @@ lsst::fw::Mask<MaskPixelT>::Mask(int ncols, int nrows) :
               boost::format("Number of mask planes: %d") % getNumPlanesMax());
 
      for (int i=0; i<getNumPlanesMax(); i++) {
-        _planeBitMask[i] = 1 << i;
-        _planeBitMaskComplemented[i] = ~_planeBitMask[i];
         _maskPlaneDict[i] = "";
      }
 
@@ -63,31 +57,17 @@ lsst::fw::Mask<MaskPixelT>::Mask(int ncols, int nrows) :
      _offsetCols = 0;
 }
 
-template<typename MaskPixelT>
-lsst::fw::Mask<MaskPixelT>::Mask(const Mask<MaskPixelT>& rhs) :
-    lsst::mwi::data::LsstBase(typeid(this)),
-    _vwImagePtr(rhs._vwImagePtr),
-    _maskPlaneDict(rhs._maskPlaneDict),
-    _numPlanesUsed(rhs._numPlanesUsed),
-    _metaData(rhs._metaData),
-    _offsetRows(rhs._offsetRows),
-    _offsetCols(rhs._offsetCols)
-{
-    for (int i=0; i<getNumPlanesMax(); i++) {
-        _planeBitMask[i] = rhs._planeBitMask[i];
-        _planeBitMaskComplemented[i] = rhs._planeBitMaskComplemented[i];
-    }
-}
-
+/*
+ * Avoiding the default assignment operator seems to solve ticket 144 (memory leaks in the Python code),
+ * but I don't know why. Explicitly resetting the shared pointers before setting them is not the answer
+ * (because commenting it out makes no difference) and the rest of the code should be identical
+ * to the default assignment operator.
+ */
 template<typename MaskPixelT>
 lsst::fw::Mask<MaskPixelT>& lsst::fw::Mask<MaskPixelT>::operator= (const Mask<MaskPixelT>& rhs) {
     if (&rhs != this) {   // beware of self assignment: mask = mask;
         _vwImagePtr.reset();
         _vwImagePtr = rhs._vwImagePtr;
-        for (int i=0; i<getNumPlanesMax(); i++) {
-            _planeBitMask[i] = rhs._planeBitMask[i];
-            _planeBitMaskComplemented[i] = rhs._planeBitMaskComplemented[i];
-        }
         _maskPlaneDict = rhs._maskPlaneDict;
         _numPlanesUsed = rhs._numPlanesUsed;
         _metaData = rhs._metaData;
@@ -219,7 +199,7 @@ bool lsst::fw::Mask<MaskPixelT>::getPlaneBitMask(const std::string& name,
         return false;
     }
 
-    bitMask = _planeBitMask[plane];
+    bitMask = getBitMask(plane);
     return true;
 }
 
@@ -227,7 +207,7 @@ template<typename MaskPixelT>
 typename lsst::fw::Mask<MaskPixelT>::MaskChannelT lsst::fw::Mask<MaskPixelT>::getPlaneBitMask(
     const std::string& name
 ) const {
-    return _planeBitMask[getMaskPlane(name)];
+    return getBitMask(getMaskPlane(name));
 }
 
 template<typename MaskPixelT>
@@ -244,7 +224,7 @@ template<typename MaskPixelT>
 void lsst::fw::Mask<MaskPixelT>::clearMaskPlane(int plane) {
     for (unsigned int y = 0; y < getRows(); y++) {
         for (unsigned int x = 0; x < getCols(); x++) {
-           (*_vwImagePtr)(x,y) = (*_vwImagePtr)(x,y) & _planeBitMaskComplemented[plane];
+           (*_vwImagePtr)(x,y) = (*_vwImagePtr)(x,y) & ~getBitMask(plane);
         }
      }
 }
@@ -257,8 +237,8 @@ void lsst::fw::Mask<MaskPixelT>::setMaskPlaneValues(int plane, std::list<PixelCo
 //    std::cout << "setMaskPlaneValues " << pixelList.size() << std::endl;
     for (std::list<PixelCoord>::iterator i = pixelList.begin(); i != pixelList.end(); i++) {
         PixelCoord coord = *i;
-        (*_vwImagePtr)(coord.x, coord.y) = (*_vwImagePtr)(coord.x, coord.y) | _planeBitMask[plane];
-//        std::cout << "Set: " << coord.x << " " << coord.y << " " << (void *)_planeBitMask[plane] << " " << (*_vwImagePtr)(coord.x, coord.y) << std::endl;
+        (*_vwImagePtr)(coord.x, coord.y) = (*_vwImagePtr)(coord.x, coord.y) | getBitMask(plane);
+//        std::cout << "Set: " << coord.x << " " << coord.y << " " << (void *)getBitMask(plane) << " " << (*_vwImagePtr)(coord.x, coord.y) << std::endl;
     }
 }
 
@@ -268,7 +248,7 @@ void lsst::fw::Mask<MaskPixelT>::setMaskPlaneValues(int plane, std::list<PixelCo
 template<typename MaskPixelT>
 void lsst::fw::Mask<MaskPixelT>::setMaskPlaneValues(const int plane, const int x0, const int x1, const int y) {
     for (int x = x0; x <= x1; x++) {
-        (*_vwImagePtr)(x, y) |= _planeBitMask[plane];
+        (*_vwImagePtr)(x, y) |= getBitMask(plane);
     }
 }
 
@@ -282,7 +262,7 @@ void lsst::fw::Mask<MaskPixelT>::setMaskPlaneValues(int plane, MaskPixelBooleanF
     for (unsigned int y = 0; y < getRows(); y++) {
         for (unsigned int x = 0; x < getCols(); x++) {
             if (selectionFunc((*_vwImagePtr)(x,y)) == true) {
-                (*_vwImagePtr)(x,y) = (*_vwImagePtr)(x,y) | _planeBitMask[plane];
+                (*_vwImagePtr)(x,y) = (*_vwImagePtr)(x,y) | getBitMask(plane);
             }
           }
     }
@@ -358,8 +338,8 @@ typename lsst::fw::Mask<MaskPixelT>::MaskChannelT lsst::fw::Mask<MaskPixelT>::op
 template<typename MaskPixelT>
 bool lsst::fw::Mask<MaskPixelT>::operator ()(int x, int y, int plane) const
 {
-//      std::cout << x << " " << y << " " << (void *)_planeBitMask[plane] << " " << (void *)(*_vwImagePtr)(x, y) << std::endl;
-     return ((*_vwImagePtr)(x, y) & _planeBitMask[plane]) != 0;
+//      std::cout << x << " " << y << " " << (void *)getBitMask(plane) << " " << (void *)(*_vwImagePtr)(x, y) << std::endl;
+     return ((*_vwImagePtr)(x, y) & getBitMask(plane)) != 0;
 }
 
 template<typename MaskPixelT>

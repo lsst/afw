@@ -4,6 +4,9 @@
 #include "lsst/fw/FunctionLibrary.h"
 %}
 
+// I'm not sure newobject is needed (the memory leak test works without it)
+%newobject lsst::fw::function::Function::getParameters;
+
 %include "lsst/fw/Function.h"
 %include "lsst/fw/FunctionLibrary.h"
 

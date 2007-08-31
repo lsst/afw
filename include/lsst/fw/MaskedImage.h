@@ -100,6 +100,8 @@ namespace lsst {
             
             virtual ~MaskedImage();
             
+            MaskedImage<ImagePixelT, MaskPixelT>& MaskedImage::operator=(const MaskedImage<ImagePixelT, MaskPixelT>& rhs);
+            
             // Processing functions
             void processPixels(MaskPixelBooleanFunc<MaskPixelT> &selectionFunc, PixelProcessingFunc<ImagePixelT, MaskPixelT> &processingFunc,
                                MaskedImageT &);

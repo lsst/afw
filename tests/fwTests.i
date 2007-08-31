@@ -123,6 +123,36 @@ private:
 %template(testCrFuncD) testCrFunc<MaskPixelType>;
 
 /******************************************************************************/
+// Give python access to C++ copy constructors and/or operator=
+// This are used to test ticket 144
+
+// I'm not sure these are needed (they had no effect on ticket 144) but just in case...
+%newobject copyMask;
+%newobject copyImage;
+%newobject copyMaskedImage;
+
+%inline %{
+    template <typename ImageT>
+    lsst::fw::Image<ImageT> copyImage(lsst::fw::Image<ImageT> &src) {
+        return src;
+    }
+
+    template <typename MaskT>
+    lsst::fw::Mask<MaskT> copyMask(lsst::fw::Mask<MaskT> &src) {
+        return src;
+    }
+
+    template <typename ImageT, typename MaskT>
+    lsst::fw::MaskedImage<ImageT, MaskT> copyMaskedImage(lsst::fw::MaskedImage<ImageT, MaskT> &src) {
+        return src;
+    }
+%}
+
+%template(copyImageF) copyImage<ImagePixelType>;
+%template(copyMaskF) copyMask<MaskPixelType>;
+%template(copyMaskedImageF) copyMaskedImage<ImagePixelType, MaskPixelType>;
+
+/******************************************************************************/
 // Local Variables: ***
 // eval: (setq indent-tabs-mode nil) ***
 // End: ***

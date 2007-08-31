@@ -1,7 +1,10 @@
 """Test lsst.fw.Core.fwLib.convolve
 
-To do:
-- Fix memory leak in the version of the convolve function that returns a new MaskedImage
+The convolve function is overloaded in two flavors:
+- in-place convolve: user supplies the output image as an argument
+- new-image convolve: the convolve function returns the convolved image
+
+All tests use the new-image version unless otherwise noted.
 """
 import os
 import math
@@ -92,8 +95,7 @@ class ConvolveTestCase(unittest.TestCase):
         f.this.disown() # Only the shared pointer now owns f
         k = fw.AnalyticKernelF(fPtr, 3, 3)
         
-        cnvMaskedImage = fw.MaskedImageD(maskedImage.getCols(), maskedImage.getRows())
-        fw.convolveF(cnvMaskedImage, maskedImage, k, threshold, edgeBit)
+        cnvMaskedImage = fw.convolveF(maskedImage, k, threshold, edgeBit)
     
         origImVarMaskArrays = iUtils.arraysFromMaskedImage(maskedImage)
         cnvImVarMaskArrays = iUtils.arraysFromMaskedImage(cnvMaskedImage)
@@ -102,7 +104,7 @@ class ConvolveTestCase(unittest.TestCase):
                 self.fail("Convolved %s does not match reference" % (name,))
 
     def testSpatiallyInvariantInPlaceConvolve(self):
-        """Test in-place convolution with a spatially invariant Gaussian function
+        """Test in-place version of convolve with a spatially invariant Gaussian function
         """
         kCols = 7
         kRows = 7
@@ -142,11 +144,7 @@ class ConvolveTestCase(unittest.TestCase):
             self.fail("Convolved mask does not match reference")
     
     def testSpatiallyInvariantNewConvolve(self):
-        """Test convolution that returns a new MaskedImage with a spatially invariant Gaussian function
-        In this case, just make sure there are no memory leaks.
-        
-        This presently triggers a memory leak. Don't use the new-image version
-        of the convolve function until we get this straightened out.
+        """Test convolution with a spatially invariant Gaussian function
         """
         kCols = 7
         kRows = 7
