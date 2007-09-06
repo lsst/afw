@@ -101,11 +101,11 @@ lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::getMask() const {
 /**
  * \brief Read a masked image from a trio of FITS files
  *
- * Image data is loaded from <baseName>_img.fits
- * Variance is loaded from <baseName>_var.fits, if found
- * Mask data is loaded from <baseName>_msk.fits, if found
+ * Image data is loaded from (baseName)_img.fits
+ * Variance is loaded from (baseName)_var.fits, if found
+ * Mask data is loaded from (baseName)_msk.fits, if found
  *
- * \throw lsst::mwi::exceptions::NotFound if <baseName>_img.fits is not found
+ * \throw lsst::mwi::exceptions::NotFound if (baseName)_img.fits is not found
  */
 template<typename ImagePixelT, typename MaskPixelT>
 void lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::readFits(std::string baseName) {
@@ -172,11 +172,11 @@ void lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::readFits(std::string baseNa
 /**
  * \brief Write a masked image to a trio of FITS files
  *
- * Image data is written to <baseName>_img.fits
- * Variance is written to <baseName>_var.fits
- * Mask data is written to <baseName>_msk.fits
+ * Image data is written to (baseName)_img.fits
+ * Variance is written to (baseName)_var.fits
+ * Mask data is written to (baseName)_msk.fits
  *
- * \throw lsst::mwi::exceptions::NotFound if <baseName>_img.fits is not found
+ * \throw lsst::mwi::exceptions::NotFound if (baseName)_img.fits is not found
  */
 template<typename ImagePixelT, typename MaskPixelT>
 void lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::writeFits(std::string baseName) {

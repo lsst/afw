@@ -506,8 +506,6 @@ namespace function {
         double _invN;   ///< 1/n
     };
 
-}   // namespace functions
-}   // namespace fw
-}   // namespace lsst
+}}}   // lsst::fw::function
 
 #endif // #ifndef LSST_FW_FunctionLibrary_H

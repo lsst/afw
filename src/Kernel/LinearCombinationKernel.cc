@@ -13,6 +13,7 @@
 #include <boost/format.hpp>
 #include <vw/Image.h>
 
+#include <lsst/mwi/exceptions/Exception.h>
 #include <lsst/fw/Kernel.h>
 
 // This file is meant to be included by lsst/fw/Kernel.h
@@ -108,12 +109,20 @@ void lsst::fw::LinearCombinationKernel<PixelT>::computeImage(
     }
 }
 
+/**
+ * \brief Get the fixed basis kernels
+ */
 template<typename PixelT>
 typename lsst::fw::LinearCombinationKernel<PixelT>::KernelListType const &
 lsst::fw::LinearCombinationKernel<PixelT>::getKernelList() const {
     return _kernelList;
 }
     
+/**
+ * \brief Check that all kernels have the same size and center and that none are spatially varying
+ *
+ * \throw lsst::mwi::exceptions::InvalidParameter if the check fails
+ */
 template<typename PixelT>
 void lsst::fw::LinearCombinationKernel<PixelT>::checkKernelList(const KernelListType &kernelList) const {
     if (kernelList.size() < 1) {

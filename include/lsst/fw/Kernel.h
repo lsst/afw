@@ -192,11 +192,6 @@ namespace fw {
          */
         virtual std::vector<double> getCurrentKernelParameters() const = 0;
         
-        /**
-         * \brief Compute the kernel parameters at a particular spatial position.
-         *
-         * \throw lsst::mwi::exceptions::InvalidParameter if the params vector is the wrong length
-         */
         virtual std::vector<double> getKernelParametersFromSpatialModel(double x, double y) const;
         
         virtual void setKernelParametersFromSpatialModel(double x, double y) const;
@@ -354,16 +349,8 @@ namespace fw {
             bool doNormalize = true
         ) const;
                 
-        /**
-         * \brief Get the fixed basis kernels
-         */
         virtual KernelListType const &getKernelList() const;
         
-        /**
-         * \brief Check that all kernels have the same size and center and that none are spatially varying
-         *
-         * \throw lsst::mwi::exceptions::InvalidParameter if the check fails
-         */
         void checkKernelList(const KernelListType &kernelList) const;
         
     protected:
@@ -376,8 +363,7 @@ namespace fw {
         mutable std::vector<double> _kernelParams;
     };
 
-}   // namespace fw
-}   // namespace lsst
+}}   // lsst:fw
     
 // Included definitions for templated and inline member functions
 #ifndef SWIG // don't bother SWIG with .cc files

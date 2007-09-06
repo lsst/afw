@@ -183,8 +183,6 @@ namespace function {
         virtual ReturnT operator() (double x, double y) const = 0;
     };
 
-}   // namespace functions
-}   // namespace fw
-}   // namespace lsst
+}}}   // lsst::fw::function
 
 #endif // #ifndef LSST_FW_Function_H

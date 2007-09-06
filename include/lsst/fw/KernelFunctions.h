@@ -69,9 +69,7 @@ namespace kernel {
         MaskT orMask
     );
 
-}   // namespace kernel
-}   // namespace fw
-}   // namespace lsst
+}}}   // lsst::fw::kernel
     
 #ifndef SWIG // don't bother SWIG with .cc files
 #include <lsst/fw/Kernel/KernelFunctions.cc>

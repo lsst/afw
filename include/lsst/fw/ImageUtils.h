@@ -43,9 +43,7 @@ namespace image {
         return static_cast<int>(pos);
     }
 
-} // namespace image
-} // namespace fw
-} // namespace lsst
+}}} // lsst::fw::image
 
 #endif // LSST_IMAGEUTILS_H
 

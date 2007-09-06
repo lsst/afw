@@ -18,8 +18,6 @@
 #include <lsst/mwi/utils/Trace.h>
 #include <lsst/fw/ImageUtils.h>
 
-namespace mwiu = lsst::mwi::utils;
-
 /**
  * \brief Apply convolution kernel to a masked image at one point
  *
@@ -119,7 +117,7 @@ void lsst::fw::kernel::convolve(
     if (kernel.isSpatiallyVarying()) {
         lsst::fw::Image<KernelT> kernelImage(kernel.getCols(), kernel.getRows());
         kernelAccessorType kernelAccessor = kernelImage.origin();
-        mwiu::Trace("lsst.fw.kernel.convolve", 1, "kernel is spatially varying");
+        lsst::mwi::utils::Trace("lsst.fw.kernel.convolve", 1, "kernel is spatially varying");
         for (int row = 0; row < static_cast<int>(cnvRows); ++row) {
             double rowPos = lsst::fw::image::indexToPosition(row);
             imageAccessorType imCol = imRow;
@@ -139,7 +137,7 @@ void lsst::fw::kernel::convolve(
             imRow.nextRow();
         }
     } else {
-        mwiu::Trace("lsst.fw.kernel.convolve", 1, "kernel is spatially invariant");
+        lsst::mwi::utils::Trace("lsst.fw.kernel.convolve", 1, "kernel is spatially invariant");
         KernelT kSum;
         lsst::fw::Image<KernelT> kernelImage = kernel.computeNewImage(kSum, 0.0, 0.0, true);
         kernelAccessorType kernelAccessor = kernelImage.origin();
@@ -257,7 +255,7 @@ inline void lsst::fw::kernel::_copyRegion(
 
     vw::math::Vector<vw::int32> const startColRow = region.min();
     vw::math::Vector<vw::int32> const numColRow = region.size();
-    mwiu::Trace("lsst.fw.kernel._copyRegion", 1, str(boost::format(
+    lsst::mwi::utils::Trace("lsst.fw.kernel._copyRegion", 1, str(boost::format(
         "_copyRegion: dest size %d, %d; src size %d, %d; region start=%d, %d; region size=%d, %d; orMask=%d")
         % destImage.getCols() % destImage.getRows() % sourceImage.getCols() % sourceImage.getRows()
         % startColRow[0] % startColRow[1]% numColRow[0] % numColRow[1] % orMask

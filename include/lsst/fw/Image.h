@@ -22,74 +22,74 @@
 #include "lsst/fw/LSSTFitsResource.h"
 
 namespace lsst {
-    namespace fw {
-        using vw::BBox2i;
+namespace fw {
+    using vw::BBox2i;
+    
+    template<typename ImagePixelT>
+    class Image : private lsst::mwi::data::LsstBase {
+    public:
+        typedef typename vw::PixelChannelType<ImagePixelT>::type ImageChannelT;
+        typedef vw::ImageView<ImagePixelT> ImageIVwT;
+        typedef boost::shared_ptr<Image<ImagePixelT> > ImagePtrT;
+        typedef boost::shared_ptr<ImageIVwT> ImageIVwPtrT;
+        typedef typename vw::ImageView<ImagePixelT>::pixel_accessor pixel_accessor;
         
-        template<typename ImagePixelT>
-        class Image : private lsst::mwi::data::LsstBase {
-        public:
-            typedef typename vw::PixelChannelType<ImagePixelT>::type ImageChannelT;
-            typedef vw::ImageView<ImagePixelT> ImageIVwT;
-            typedef boost::shared_ptr<Image<ImagePixelT> > ImagePtrT;
-            typedef boost::shared_ptr<ImageIVwT> ImageIVwPtrT;
-            typedef typename vw::ImageView<ImagePixelT>::pixel_accessor pixel_accessor;
-            
-            Image();
-            
-            Image(ImageIVwPtrT image);
-            
-            Image(int ncols, int nrows);
+        Image();
+        
+        Image(ImageIVwPtrT image);
+        
+        Image(int ncols, int nrows);
 
-            Image& operator=(const Image& image);
+        Image& operator=(const Image& image);
 
-            void readFits(const string& fileName, int hdu=0);
-            
-            void writeFits(const string& fileName) const;
-            
-            lsst::mwi::data::DataProperty::PtrType getMetaData() const;
-            
-            ImagePtrT getSubImage(const BBox2i imageRegion) const;
-            
-            void replaceSubImage(const BBox2i imageRegion, ImagePtrT insertImage);
+        void readFits(const string& fileName, int hdu=0);
+        
+        void writeFits(const string& fileName) const;
+        
+        lsst::mwi::data::DataProperty::PtrType getMetaData() const;
+        
+        ImagePtrT getSubImage(const BBox2i imageRegion) const;
+        
+        void replaceSubImage(const BBox2i imageRegion, ImagePtrT insertImage);
 
-            inline ImageChannelT operator ()(int x, int y) const;
+        inline ImageChannelT operator ()(int x, int y) const;
 
-            inline pixel_accessor origin() const;
-            
-            Image<ImagePixelT>& operator += (const Image<ImagePixelT>& inputImage);
-            Image<ImagePixelT>& operator -= (const Image<ImagePixelT>& inputImage);
-            Image<ImagePixelT>& operator *= (const Image<ImagePixelT>& inputImage);
-            Image<ImagePixelT>& operator /= (const Image<ImagePixelT>& inputImage);
-            Image<ImagePixelT>& operator += (const ImagePixelT scalar);
-            Image<ImagePixelT>& operator -= (const ImagePixelT scalar);
-            Image<ImagePixelT>& operator *= (const ImagePixelT scalar);
-            Image<ImagePixelT>& operator /= (const ImagePixelT scalar);
-            
-            inline unsigned int getCols() const;
-            inline unsigned int getRows() const;
-            inline unsigned int getOffsetCols() const;
-            inline unsigned int getOffsetRows() const;
-            
-            inline ImageIVwPtrT getIVwPtr() const;
-            
-            inline ImageIVwT& getIVw() const;
+        inline pixel_accessor origin() const;
+        
+        Image<ImagePixelT>& operator += (const Image<ImagePixelT>& inputImage);
+        Image<ImagePixelT>& operator -= (const Image<ImagePixelT>& inputImage);
+        Image<ImagePixelT>& operator *= (const Image<ImagePixelT>& inputImage);
+        Image<ImagePixelT>& operator /= (const Image<ImagePixelT>& inputImage);
+        Image<ImagePixelT>& operator += (const ImagePixelT scalar);
+        Image<ImagePixelT>& operator -= (const ImagePixelT scalar);
+        Image<ImagePixelT>& operator *= (const ImagePixelT scalar);
+        Image<ImagePixelT>& operator /= (const ImagePixelT scalar);
+        
+        inline unsigned int getCols() const;
+        inline unsigned int getRows() const;
+        inline unsigned int getOffsetCols() const;
+        inline unsigned int getOffsetRows() const;
+        
+        inline ImageIVwPtrT getIVwPtr() const;
+        
+        inline ImageIVwT& getIVw() const;
 
-            double getGain() const;
-            
-//         virtual ~Image();
-            
-        private:
-            ImageIVwPtrT _vwImagePtr;
-            lsst::mwi::data::DataProperty::PtrType _metaData;
-            unsigned int _offsetRows;
-            unsigned int _offsetCols;
+        double getGain() const;
+        
+//        virtual ~Image();
+        
+    private:
+        ImageIVwPtrT _vwImagePtr;
+        lsst::mwi::data::DataProperty::PtrType _metaData;
+        unsigned int _offsetRows;
+        unsigned int _offsetCols;
 
-            inline void setOffsetRows(unsigned int offset);
-            inline void setOffsetCols(unsigned int offset);
+        inline void setOffsetRows(unsigned int offset);
+        inline void setOffsetCols(unsigned int offset);
 
-        };
-    } // namespace fw
-} // namespace lsst
+    };
+
+}}  // lsst::fw
 
 // Included definitions for templated and inline member functions
 #ifndef SWIG // don't bother SWIG with .cc files

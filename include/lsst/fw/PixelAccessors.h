@@ -145,7 +145,6 @@ namespace fw {
         maskAccessorType mask;      ///< mask pixel accessor
     };
 
-}   // namespace fw
-}   // namespace lsst
+}}  // lsst::fw
 
 #endif // !defined(LLST_FW_PixelAccessors_H)
