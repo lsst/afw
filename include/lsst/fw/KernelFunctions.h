@@ -41,7 +41,8 @@ namespace kernel {
         lsst::fw::MaskedImage<ImageT, MaskT> const &maskedImage,
         lsst::fw::Kernel<KernelT> const &kernel,
         KernelT threshold,
-        int edgeBit
+        int edgeBit,
+        bool doNormalize = true
     );
     
     template <typename ImageT, typename MaskT, typename KernelT>
@@ -49,7 +50,8 @@ namespace kernel {
         lsst::fw::MaskedImage<ImageT, MaskT> const &maskedImage,
         lsst::fw::Kernel<KernelT> const &kernel,
         KernelT threshold,
-        int edgeBit
+        int edgeBit,
+        bool doNormalize = true
     );
 
     template <typename PixelT>

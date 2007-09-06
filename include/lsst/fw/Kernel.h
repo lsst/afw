@@ -313,6 +313,11 @@ namespace fw {
      * with each fixed kernel, then adding the resulting images using the (possibly
      * spatially varying) kernel coefficients.
      *
+     * Warnings:
+     * - This class does not normalize the individual basis kernels; they are used "as is".
+     * - The kernels are assumed to be invariant; do not try to modify the basis kernels
+     *   while using LinearCombinationKernel.
+     *
      * \ingroup fw
      */
     template<typename PixelT>
@@ -359,7 +364,9 @@ namespace fw {
         virtual std::vector<double> getCurrentKernelParameters() const;
     
     private:
+        void _computeKernelImageList();
         KernelListType _kernelList;
+        std::vector<Image<PixelT> > _kernelImageList;
         mutable std::vector<double> _kernelParams;
     };
 

@@ -47,22 +47,17 @@ inline void lsst::fw::kernel::apply(
 
     lsst::fw::MaskedPixelAccessor<ImageT, MaskT> imRow = imageAccessor;
     kernelAccessorType kRow = kernelAccessor;
-    for (unsigned int row = 0; row < rows; ++row) {
+    for (unsigned int row = 0; row < rows; ++row, imRow.nextRow(), kRow.next_row()) {
         MaskedPixelAccessor<ImageT, MaskT> imCol = imRow;
         kernelAccessorType kCol = kRow;
-        for (unsigned int col = 0; col < cols; ++col) {
+        for (unsigned int col = 0; col < cols; ++col, imCol.nextCol(), kCol.next_col()) {
             *outAccessor.image += (*kCol) * (*imCol.image);
             *outAccessor.variance += (*kCol) * (*kCol) * (*imCol.variance);
             if ((*imCol.mask) && (*kCol > threshold)) {
                 // this bad pixel contributes enough to "OR" in the bad bits
                 *outAccessor.mask |= *imCol.mask;
             }
-            
-            imCol.nextCol();
-            kCol.next_col();
         }
-        imRow.nextRow();
-        kRow.next_row();
     }
 }
 
@@ -86,8 +81,9 @@ void lsst::fw::kernel::convolve(
     lsst::fw::MaskedImage<ImageT, MaskT> const &maskedImage,    ///< image to convolve
     lsst::fw::Kernel<KernelT> const &kernel,    ///< convolution kernel
     KernelT threshold,  ///< if kernel pixel > threshold then corresponding maskedImage mask pixel is OR'd in
-    int edgeBit         ///< mask bit to indicate pixel includes edge-extended data;
+    int edgeBit,        ///< mask bit to indicate pixel includes edge-extended data;
                         ///< if negative then no bit is set
+    bool doNormalize    ///< if True, normalize the kernel, else use "as is"
 ) {
     typedef lsst::fw::MaskedPixelAccessor<ImageT, MaskT> imageAccessorType;
     typedef typename lsst::fw::Image<KernelT>::pixel_accessor kernelAccessorType;
@@ -118,39 +114,34 @@ void lsst::fw::kernel::convolve(
         lsst::fw::Image<KernelT> kernelImage(kernel.getCols(), kernel.getRows());
         kernelAccessorType kernelAccessor = kernelImage.origin();
         lsst::mwi::utils::Trace("lsst.fw.kernel.convolve", 1, "kernel is spatially varying");
-        for (int row = 0; row < static_cast<int>(cnvRows); ++row) {
+        for (int row = 0; row < static_cast<int>(cnvRows); ++row, outRow.nextRow(), imRow.nextRow()) {
             double rowPos = lsst::fw::image::indexToPosition(row);
             imageAccessorType imCol = imRow;
             imageAccessorType outCol = outRow;
-            for (int col = 0; col < static_cast<int>(cnvCols); ++col) {
+            for (int col = 0; col < static_cast<int>(cnvCols); ++col, imCol.nextCol(), outCol.nextCol()) {
                 KernelT kSum;
                 kernel.computeImage(
                     kernelImage, kSum, lsst::fw::image::indexToPosition(col), rowPos, false);
                 KernelT adjThreshold = threshold * kSum;
                 lsst::fw::kernel::apply(outCol, imCol, kernelAccessor, kCols, kRows, adjThreshold);
-                *outCol.image /= static_cast<ImageT>(kSum);
-                *outCol.variance /= static_cast<ImageT>(kSum * kSum);
-                outCol.nextCol();
-                imCol.nextCol();
+                if (doNormalize) {
+                    *outCol.image /= static_cast<ImageT>(kSum);
+                    *outCol.variance /= static_cast<ImageT>(kSum * kSum);
+                }
             }
-            outRow.nextRow();
-            imRow.nextRow();
         }
     } else {
+        // kernel is spatially invariant
         lsst::mwi::utils::Trace("lsst.fw.kernel.convolve", 1, "kernel is spatially invariant");
         KernelT kSum;
-        lsst::fw::Image<KernelT> kernelImage = kernel.computeNewImage(kSum, 0.0, 0.0, true);
+        lsst::fw::Image<KernelT> kernelImage = kernel.computeNewImage(kSum, 0.0, 0.0, doNormalize);
         kernelAccessorType kernelAccessor = kernelImage.origin();
-        for (unsigned int row = 0; row < cnvRows; ++row) {
+        for (int row = 0; row < static_cast<int>(cnvRows); ++row, outRow.nextRow(), imRow.nextRow()) {
             imageAccessorType imCol = imRow;
             imageAccessorType outCol = outRow;
-            for (unsigned int col = 0; col < cnvCols; ++col) {
+            for (int col = 0; col < static_cast<int>(cnvCols); ++col, imCol.nextCol(), outCol.nextCol()) {
                 lsst::fw::kernel::apply(outCol, imCol, kernelAccessor, kCols, kRows, threshold);
-                outCol.nextCol();
-                imCol.nextCol();
             }
-            outRow.nextRow();
-            imRow.nextRow();
         }
     }
 
@@ -192,11 +183,12 @@ lsst::fw::MaskedImage<ImageT, MaskT> lsst::fw::kernel::convolve(
     lsst::fw::MaskedImage<ImageT, MaskT> const &maskedImage,    ///< image to convolve
     lsst::fw::Kernel<KernelT> const &kernel,    ///< convolution kernel
     KernelT threshold,  ///< if kernel pixel > threshold then corresponding maskedImage mask pixel is OR'd in
-    int edgeBit         ///< mask bit to indicate pixel includes edge-extended data;
+    int edgeBit,        ///< mask bit to indicate pixel includes edge-extended data;
                         ///< if negative then no bit is set
+    bool doNormalize    ///< if True, normalize the kernel, else use "as is"
 ) {
     lsst::fw::MaskedImage<ImageT, MaskT> convolvedImage(maskedImage.getCols(), maskedImage.getRows());
-    lsst::fw::kernel::convolve(convolvedImage, maskedImage, kernel, threshold, edgeBit);
+    lsst::fw::kernel::convolve(convolvedImage, maskedImage, kernel, threshold, edgeBit, doNormalize);
     return convolvedImage;
 }
 
@@ -220,14 +212,12 @@ void lsst::fw::kernel::printKernel(
     lsst::fw::Image<PixelT> kImage = kernel.computeNewImage(kSum, x, y, doNormalize);
     imageAccessorType imRow = kImage.origin();
     imRow.advance(0, kImage.getRows()-1);
-    for (unsigned int row=0; row < kImage.getRows(); ++row) {
+    for (unsigned int row=0; row < kImage.getRows(); ++row, imRow.prev_row()) {
         imageAccessorType imCol = imRow;
-        for (unsigned int col = 0; col < kImage.getCols(); ++col) {
-            std::cout << boost::format(pixelFmt) % (*imCol);
-            imCol.next_col();
+        for (unsigned int col = 0; col < kImage.getCols(); ++col, imCol.next_col()) {
+            std::cout << boost::format(pixelFmt) % (*imCol) << " ";
         }
         std::cout << std::endl;
-        imRow.prev_row();
     }
     if (doNormalize && abs(static_cast<double>(kSum) - 1.0) > 1.0e-5) {
         std::cout << boost::format("Warning! Sum of all pixels = %9.5f != 1.0\n") % kSum;
@@ -270,18 +260,14 @@ inline void lsst::fw::kernel::_copyRegion(
     imageAccessorType outRow(destImage);
     inRow.advance(startColRow[0], startColRow[1]);
     outRow.advance(startColRow[0], startColRow[1]);
-    for (int row = 0; row < numColRow[1]; ++row) {
+    for (int row = 0; row < numColRow[1]; ++row, inRow.nextRow(), outRow.nextRow()) {
         imageAccessorType inCol = inRow;
         imageAccessorType outCol = outRow;
-        for (int col = 0; col < numColRow[0]; ++col) {
+        for (int col = 0; col < numColRow[0]; ++col, inCol.nextCol(), outCol.nextCol()) {
             *(outCol.image) = *(inCol.image);
             *(outCol.variance) = *(inCol.variance);
             *(outCol.mask) = *(inCol.mask) | orMask;
-            inCol.nextCol();
-            outCol.nextCol();
         }
-        inRow.nextRow();
-        outRow.nextRow();
     }
 }
 
