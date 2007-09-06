@@ -100,7 +100,7 @@ namespace fw {
         
         virtual ~MaskedImage();
         
-        MaskedImage<ImagePixelT, MaskPixelT>& MaskedImage::operator=(const MaskedImage<ImagePixelT, MaskPixelT>& rhs);
+        MaskedImage<ImagePixelT, MaskPixelT> &operator=(const MaskedImage<ImagePixelT, MaskPixelT>& rhs);
         
         // Processing functions
         void processPixels(MaskPixelBooleanFunc<MaskPixelT> &selectionFunc, PixelProcessingFunc<ImagePixelT, MaskPixelT> &processingFunc,
