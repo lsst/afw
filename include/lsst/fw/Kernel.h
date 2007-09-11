@@ -171,6 +171,8 @@ namespace fw {
         inline void setKernelParameters(std::vector<double> const &params);
         
         virtual void setSpatialParameters(const std::vector<std::vector<double> > params);
+
+        void computeKernelParametersFromSpatialModel(std::vector<double> &kernelParams, double x, double y) const;
     
     protected:
         /**
@@ -191,10 +193,6 @@ namespace fw {
          * Assumes there is no spatial model.
          */
         virtual std::vector<double> getCurrentKernelParameters() const = 0;
-        
-        virtual std::vector<double> getKernelParametersFromSpatialModel(double x, double y) const;
-        
-        virtual void setKernelParametersFromSpatialModel(double x, double y) const;
            
     private:
         unsigned int _cols;
@@ -305,7 +303,7 @@ namespace fw {
         typename Kernel<PixelT>::KernelFunctionPtrType _kernelFunctionPtr;
     };
     
-    
+
     /**
      * \brief A kernel that is a linear combination of fixed basis kernels.
      * 

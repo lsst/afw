@@ -54,6 +54,14 @@ namespace kernel {
         bool doNormalize = true
     );
 
+    template <typename ImageT, typename MaskT, typename KernelT>
+    void convolveLinear(
+        lsst::fw::MaskedImage<ImageT, MaskT> &convolvedImage,
+        lsst::fw::MaskedImage<ImageT, MaskT> const &maskedImage,
+        lsst::fw::LinearCombinationKernel<KernelT> const &kernel,
+        int edgeBit
+    );
+
     template <typename PixelT>
     void printKernel(
         lsst::fw::Kernel<PixelT> const &kernel,

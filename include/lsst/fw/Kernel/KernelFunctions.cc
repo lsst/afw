@@ -10,7 +10,10 @@
  *
  * \ingroup fw
  */
+#include <algorithm>
+#include <functional>
 #include <iostream>
+#include <vector>
 
 #include <boost/format.hpp>
 #include <vw/Image.h>
@@ -98,7 +101,8 @@ void lsst::fw::kernel::convolve(
         throw lsst::mwi::exceptions::InvalidParameter("convolvedImage not the same size as maskedImage");
     }
     if ((imCols< kCols) || (imRows < kRows)) {
-        throw lsst::mwi::exceptions::InvalidParameter("maskedImage smaller than kernel in columns and/or rows");
+        throw lsst::mwi::exceptions::InvalidParameter(
+            "maskedImage smaller than kernel in columns and/or rows");
     }
 
     const unsigned int cnvCols = imCols + 1 - kernel.getCols();
@@ -192,6 +196,103 @@ lsst::fw::MaskedImage<ImageT, MaskT> lsst::fw::kernel::convolve(
     return convolvedImage;
 }
 
+
+/**
+ * \brief Convolve a MaskedImage with a LinearCombinationKernel, setting pixels of an existing image
+ *
+ * A variant of the convolve function that is faster for spatially varying LinearCombinationKernels.
+ * For the sake of speed: 
+ * * The threshold is fixed at 0
+ * * The kernel is NOT normalized
+ * If you want a higher threshold or normalization then call the standard convolve function.
+ *
+ * The Algorithm:
+ * Convolves the input MaskedImage by each basis kernel in turn, creating a set of basis images.
+ * Then for each output pixel it solves the spatial model and computes the the pixel as
+ * the appropriate linear combination of basis images.
+ *
+ * \throw lsst::mwi::exceptions::InvalidParameter if convolvedImage is not the same size as maskedImage.
+ * \throw lsst::mwi::exceptions::InvalidParameter if maskedImage is smaller (in colums or rows) than kernel.
+ *
+ * \ingroup fw
+ */
+template <typename ImageT, typename MaskT, typename KernelT>
+void lsst::fw::kernel::convolveLinear(
+    lsst::fw::MaskedImage<ImageT, MaskT> &convolvedImage,       ///< convolved image
+    lsst::fw::MaskedImage<ImageT, MaskT> const &maskedImage,    ///< image to convolve
+    lsst::fw::LinearCombinationKernel<KernelT> const &kernel,    ///< convolution kernel
+    int edgeBit         ///< mask bit to indicate pixel includes edge-extended data;
+                        ///< if negative then no bit is set
+) {
+    KernelT threshold = 0;
+
+    if (!kernel.isSpatiallyVarying()) {
+        return lsst::fw::kernel::convolve(convolvedImage, maskedImage, kernel, threshold, edgeBit, false);
+    }
+
+    const unsigned int imCols = maskedImage.getCols();
+    const unsigned int imRows = maskedImage.getRows();
+    const unsigned int kCols = kernel.getCols();
+    const unsigned int kRows = kernel.getRows();
+    if ((convolvedImage.getCols() != imCols) || (convolvedImage.getRows() != imRows)) {
+        throw lsst::mwi::exceptions::InvalidParameter("convolvedImage not the same size as maskedImage");
+    }
+    if ((imCols< kCols) || (imRows < kRows)) {
+        throw lsst::mwi::exceptions::InvalidParameter(
+            "maskedImage smaller than kernel in columns and/or rows");
+    }
+
+    typedef lsst::fw::MaskedImage<ImageT, MaskT> maskedImageType;
+    typedef lsst::fw::MaskedPixelAccessor<ImageT, MaskT> imageAccessorType;
+    imageAccessorType outRow(convolvedImage);
+    
+    // create vector of basis images (input MaskedImage convolved with each basis kernel)
+    // and accessors to those images
+    typedef typename lsst::fw::LinearCombinationKernel<KernelT>::KernelListType kernelListType;
+    typedef std::vector<maskedImageType> imageListType;
+    typedef std::vector<imageAccessorType> imageAccessorListType;
+    typedef std::vector<double> kernelCoeffListType;
+
+    kernelListType basisKernels = kernel.getKernelList();
+    imageListType basisImageList;
+    imageAccessorListType basisImageRowList;
+    {
+        maskedImageType basisImage(imCols, imRows);
+        for (typename kernelListType::const_iterator basisKernelIter = basisKernels.begin();
+            basisKernelIter != basisKernels.end(); ++basisKernelIter) {
+            lsst::fw::kernel::convolve(basisImage, maskedImage, **basisKernelIter, threshold, edgeBit, false);
+            basisImageList.push_back(basisImage);
+            basisImageRowList.push_back(lsst::fw::MaskedPixelAccessor<ImageT, MaskT>(basisImage));
+        }
+    }
+    
+    // iterate over matching pixels of all images to compute output image
+    std::vector<double> kernelCoeffList(kernel.getNKernelParameters());
+    for (int row = 0; row < static_cast<int>(imRows); ++row) {
+        double rowPos = lsst::fw::image::indexToPosition(row);
+        imageAccessorType outCol = outRow;
+        imageAccessorListType basisImageColList = basisImageRowList;
+        for (int col = 0; col < static_cast<int>(imCols); ++col) {
+            double colPos = lsst::fw::image::indexToPosition(col);
+            kernel.computeKernelParametersFromSpatialModel(kernelCoeffList, colPos, rowPos);
+            
+            typename std::vector<double>::const_iterator kernelCoeffIter = kernelCoeffList.begin();
+            for (typename imageAccessorListType::const_iterator basisImageColIter = basisImageColList.begin();
+                basisImageColIter != basisImageColList.end(); ++basisImageColIter, ++kernelCoeffIter) {
+                *outCol.image += (*kernelCoeffIter) * (*basisImageColIter->image);
+                *outCol.variance += (*kernelCoeffIter) * (*kernelCoeffIter) * (*basisImageColIter->variance);
+                *outCol.mask |= (*basisImageColIter->mask);
+            }
+            outCol.nextCol();
+            std::for_each(basisImageColList.begin(), basisImageColList.end(),
+                std::mem_fun_ref(&lsst::fw::MaskedPixelAccessor<ImageT, MaskT>::nextCol));
+        }
+    }
+    outRow.nextRow();
+    std::for_each(basisImageRowList.begin(), basisImageRowList.end(),
+        std::mem_fun_ref(&lsst::fw::MaskedPixelAccessor<ImageT, MaskT>::nextRow));
+}
+
 /**
  * \brief Print the pixel values of a kernel to std::cout
  *
@@ -245,11 +346,11 @@ inline void lsst::fw::kernel::_copyRegion(
 
     vw::math::Vector<vw::int32> const startColRow = region.min();
     vw::math::Vector<vw::int32> const numColRow = region.size();
-    lsst::mwi::utils::Trace("lsst.fw.kernel._copyRegion", 1, str(boost::format(
-        "_copyRegion: dest size %d, %d; src size %d, %d; region start=%d, %d; region size=%d, %d; orMask=%d")
-        % destImage.getCols() % destImage.getRows() % sourceImage.getCols() % sourceImage.getRows()
-        % startColRow[0] % startColRow[1]% numColRow[0] % numColRow[1] % orMask
-    ));
+//    lsst::mwi::utils::Trace("lsst.fw.kernel._copyRegion", 1, str(boost::format(
+//        "_copyRegion: dest size %d, %d; src size %d, %d; region start=%d, %d; region size=%d, %d; orMask=%d")
+//        % destImage.getCols() % destImage.getRows() % sourceImage.getCols() % sourceImage.getRows()
+//        % startColRow[0] % startColRow[1]% numColRow[0] % numColRow[1] % orMask
+//    ));
 
     vw::math::Vector<vw::int32> const endColRow = region.max();
     if ((static_cast<unsigned int>(endColRow[0]) > min(destImage.getCols(), sourceImage.getCols()))

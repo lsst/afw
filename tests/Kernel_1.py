@@ -91,8 +91,8 @@ class KernelTestCase(unittest.TestCase):
     def testLinearCombinationKernel(self):
         """Test LinearCombinationKernel using a set of delta basis functions
         """
-        kCols = 5
-        kRows = 8
+        kCols = 3
+        kRows = 2
         
         # create list of kernels
         kPtrList = []
@@ -110,11 +110,12 @@ class KernelTestCase(unittest.TestCase):
                 basisKernel.this.disown() # only the shared pointer now owns basisKernel
                 kPtrList.append(kPtr)
         
-        kParams = numpy.zeros(len(kPtrList), dtype=float)
-        
+        kPtrList = tuple(kPtrList)
+        kParams = tuple(numpy.zeros(len(kPtrList), dtype=float))
+         
         # this doesn't work -- can't match a constructor --
         # so the python interface needs some work
-        #k = fw.LinearCombinationKernelF(tuple(kPtrList), tuple(kParams))
+        #k = fw.LinearCombinationKernelF(kPtrList, kParams)
     
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

@@ -97,7 +97,7 @@ void lsst::fw::LinearCombinationKernel<PixelT>::computeImage(
         throw lsst::mwi::exceptions::InvalidParameter("image is the wrong size");
     }
     if (this->isSpatiallyVarying()) {
-        this->setKernelParametersFromSpatialModel(x, y);
+        this->computeKernelParametersFromSpatialModel(this->_kernelParams, x, y);
     }
     Image<PixelT> tempImage(this->getCols(), this->getRows());
     typename Image<PixelT>::ImageIVwPtrT vwImagePtr = image.getIVwPtr();

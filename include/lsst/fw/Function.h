@@ -14,8 +14,6 @@
 #include <sstream>
 #include <vector>
 
-#include <boost/format.hpp>
-
 #include <lsst/mwi/data/LsstBase.h>
 #include <lsst/mwi/exceptions/Exception.h>
 
@@ -80,14 +78,14 @@ namespace function {
         /**
          * \brief Return the number of function parameters
          */
-        virtual unsigned int getNParameters() const {
+        unsigned int getNParameters() const {
             return _params.size();
         }
         
         /**
          * \brief Return the function parameters
          */
-        virtual std::vector<double> const &getParameters() const {
+        std::vector<double> const &getParameters() const {
             return _params;
         }
         
@@ -96,19 +94,16 @@ namespace function {
          *
          * \throw lsst::mwi::exceptions::InvalidParameter if the wrong number of parameters is supplied.
          */
-        virtual void setParameters(std::vector<double> const &params) {
+        void setParameters(std::vector<double> const &params) {
             if (_params.size() != params.size()) {
-                throw lsst::mwi::exceptions::InvalidParameter(boost::format(
-                    "setParameters called with %d parameters instead of %d")
-                    % params.size() % _params.size());
+                throw lsst::mwi::exceptions::InvalidParameter("Wrong number of parameters");
             }
             _params = params;
         }
     
     protected:
         std::vector<double> _params;
-    };
-    
+    };   
     
     /**
      * \brief A Function taking one argument.
@@ -143,8 +138,7 @@ namespace function {
         virtual ~Function1() {};
     
         virtual ReturnT operator() (double x) const = 0;
-    };
-    
+    };    
     
     /**
      * \brief A Function taking two arguments.

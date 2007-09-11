@@ -156,11 +156,13 @@ std::vector<double> lsst::fw::Kernel<PixelT>::getKernelParameters(
     double x,   ///< x at which to evaluate the spatial model
     double y    ///< y at which to evaluate the spatial model
 ) const {
-   if (isSpatiallyVarying()) {
-       return getKernelParametersFromSpatialModel(x, y);
-   } else {
-       return getCurrentKernelParameters();
-   }
+    if (isSpatiallyVarying()) {
+        std::vector<double> kernelParams(getNKernelParameters());
+        computeKernelParametersFromSpatialModel(kernelParams, x, y);
+        return kernelParams;
+    } else {
+        return getCurrentKernelParameters();
+    }
 }
 
 /**
@@ -188,38 +190,25 @@ void lsst::fw::Kernel<PixelT>::setSpatialParameters(const std::vector<std::vecto
     _spatialParams = params;
 }
 
-//
-// Protected Member Functions
-//
-
 /**
- * \brief Return the kernel parameters at a specified point
+ * \brief Compute the kernel parameters at a specified point
  *
- * Assumes there is a spatial model
+ * Warning: this is a low-level function that assumes:
+ * * there is a spatial model
+ * * kernelParams is the right length
+ * It will fail in unpredictable ways if either condition is not met.
+ * The only reason it is not protected is because the convolveLinear function needs it.
  */
 template<typename PixelT>
-std::vector<double> lsst::fw::Kernel<PixelT>::getKernelParametersFromSpatialModel(double x, double y) const {
-    std::vector<double> kernelParams(getNKernelParameters());
-    typename std::vector<double>::iterator kIter;
-    typename std::vector<std::vector<double> >::const_iterator sIter;
-    for (kIter = kernelParams.begin(), sIter = _spatialParams.begin();
-        kIter != kernelParams.end(); ++kIter, ++sIter) {
+void lsst::fw::Kernel<PixelT>::computeKernelParametersFromSpatialModel(std::vector<double> &kernelParams, double x, double y) const {
+    typename std::vector<double>::iterator kIter = kernelParams.begin();
+    typename std::vector<std::vector<double> >::const_iterator sIter = _spatialParams.begin();
+    for ( ; kIter != kernelParams.end(); ++kIter, ++sIter) {
         _spatialFunctionPtr->setParameters(*sIter);
         *kIter = (*_spatialFunctionPtr)(x,y);
     }
-    return kernelParams;
 }
    
-/**
- * \brief Set the kernel parameters at a specified point
- *
- * Assumes there is a spatial model
- */
-template<typename PixelT>
-void lsst::fw::Kernel<PixelT>::setKernelParametersFromSpatialModel(double x, double y) const {
-    this->basicSetKernelParameters(getKernelParametersFromSpatialModel(x,y));
-}
-
 // Explicit instantiations
 template class lsst::fw::Kernel<float>;
 template class lsst::fw::Kernel<double>;

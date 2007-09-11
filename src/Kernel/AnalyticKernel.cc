@@ -82,7 +82,9 @@ void lsst::fw::AnalyticKernel<PixelT>::computeImage(
         throw lsst::mwi::exceptions::InvalidParameter("image is the wrong size");
     }
     if (this->isSpatiallyVarying()) {
-        this->setKernelParametersFromSpatialModel(x, y);
+        std::vector<double> kernelParams(this->getNKernelParameters());
+        this->computeKernelParametersFromSpatialModel(kernelParams, x, y);
+        this->basicSetKernelParameters(kernelParams);
     }
     pixelAccessor imRow = image.origin();
     double xOffset = - static_cast<double>(this->getCtrCol());
