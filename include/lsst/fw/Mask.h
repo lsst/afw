@@ -94,11 +94,11 @@ namespace fw {
         void addMaskPlaneMetaData(lsst::mwi::data::DataProperty::PtrType);
         
         int countMask(MaskPixelBooleanFunc<MaskPixelT>& testFunc,
-                      const BBox2i maskRegion) const;
+                      const vw::BBox2i maskRegion) const;
         
-        MaskPtrT getSubMask(const BBox2i maskRegion) const;
+        MaskPtrT getSubMask(const vw::BBox2i maskRegion) const;
         
-        void replaceSubMask(const BBox2i maskRegion, MaskPtrT insertMask);
+        void replaceSubMask(const vw::BBox2i maskRegion, MaskPtrT insertMask);
         
         pixel_accessor origin() { return getIVwPtr()->origin(); }
         
@@ -143,7 +143,7 @@ private:
         
         MaskChannelT getBitMask(int plane) const { return 1 << plane; }
 
-        int addMaskPlane(string name, int plane);
+        int addMaskPlane(std::string name, int plane);
     };
 
 }}  // lsst::fw

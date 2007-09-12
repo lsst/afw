@@ -1,5 +1,6 @@
 #include <iostream>
 #include <sstream>
+#include <string>
 
 #include <lsst/mwi/data/Citizen.h>
 #include <lsst/mwi/utils/Trace.h>
@@ -36,17 +37,17 @@ int main(int argc, char **argv) {
     
         double sigma = DefSigma;
         if (argc > 2) {
-            istringstream(argv[2]) >> sigma;
+            std::istringstream(argv[2]) >> sigma;
         }
         
         pixelType threshold = DefThreshold;
         if (argc > 3) {
-            istringstream(argv[3]) >> threshold;
+            std::istringstream(argv[3]) >> threshold;
         }
 
         int edgeBit = DefEdgeBit;
         if (argc > 4) {
-            istringstream(argv[4]) >> edgeBit;
+            std::istringstream(argv[4]) >> edgeBit;
         }
         
         // read in fits file

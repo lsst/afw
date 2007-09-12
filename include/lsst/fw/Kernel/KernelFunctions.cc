@@ -306,7 +306,7 @@ void lsst::fw::kernel::printKernel(
     double x,   ///< x at which to evaluate kernel
     double y,   ///< y at which to evaluate kernel
     bool doNormalize,   ///< if true, normalize kernel
-    string pixelFmt     ///< format for pixel values
+    std::string pixelFmt     ///< format for pixel values
 ) {
     typedef typename lsst::fw::Image<PixelT>::pixel_accessor imageAccessorType;
     PixelT kSum;
@@ -353,8 +353,8 @@ inline void lsst::fw::kernel::_copyRegion(
 //    ));
 
     vw::math::Vector<vw::int32> const endColRow = region.max();
-    if ((static_cast<unsigned int>(endColRow[0]) > min(destImage.getCols(), sourceImage.getCols()))
-        || ((static_cast<unsigned int>(endColRow[1]) > min(destImage.getRows(), sourceImage.getRows())))) {
+    if ((static_cast<unsigned int>(endColRow[0]) > std::min(destImage.getCols(), sourceImage.getCols()))
+        || ((static_cast<unsigned int>(endColRow[1]) > std::min(destImage.getRows(), sourceImage.getRows())))) {
         throw lsst::mwi::exceptions::InvalidParameter("Region out of range");
     }
     imageAccessorType inRow(sourceImage);
@@ -380,10 +380,10 @@ inline void lsst::fw::kernel::_copyRegion(
 //    double x,
 //    double y,
 //    bool doNormalize,
-//    string pixelFmt);
+//    std::string pixelFmt);
 //template void lsst::fw::kernel::printKernel<double>(
 //    lsst::fw::Kernel<PixelT> const &kernel,
 //    double x,
 //    double y,
 //    bool doNormalize,
-//    string pixelFmt);
+//    std::string pixelFmt);

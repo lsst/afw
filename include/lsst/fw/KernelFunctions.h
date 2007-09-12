@@ -68,7 +68,7 @@ namespace kernel {
         double x = 0,
         double y = 0,
         bool doNormalize = true,
-        string pixelFmt = "%7.3f"
+        std::string pixelFmt = "%7.3f"
     );
 
     template <typename ImageT, typename MaskT>

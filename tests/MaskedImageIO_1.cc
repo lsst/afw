@@ -6,6 +6,7 @@
 
 #include <stdexcept>
 
+using namespace std;
 using namespace lsst::fw;
 using boost::any_cast;
 
@@ -64,21 +65,21 @@ void test(char *name) {
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
-        std::cerr << "Usage: inputBaseName" << std::endl;
+        cerr << "Usage: inputBaseName" << endl;
         return 1;
     }
     
-    Trace::setDestination(std::cout);
+    Trace::setDestination(cout);
     Trace::setVerbosity(".", 1);
 
     try {
         try {
             test(argv[1]);
         } catch (mwie::Exception &e) {
-            throw mwie::Exception(std::string("In handler\n") + e.what());
+            throw mwie::Exception(string("In handler\n") + e.what());
         }
     } catch (mwie::Exception &e) {
-        std::clog << e.what() << endl;
+        clog << e.what() << endl;
         return 1;
     }
 }

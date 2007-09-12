@@ -159,7 +159,7 @@ void lsst::fw::Mask<MaskPixelT>::removeMaskPlane(const std::string& name)
         _numPlanesUsed--;
         return;
      }
-     catch (exception &e) {
+     catch (std::exception &e) {
         lsst::mwi::utils::Trace("fw.Mask", 0,
                    boost::format("%s Plane %s not present in this Mask") % e.what() % name);
         return;
@@ -276,7 +276,7 @@ void lsst::fw::Mask<MaskPixelT>::setMaskPlaneValues(int plane, MaskPixelBooleanF
 template<typename MaskPixelT>
 int lsst::fw::Mask<MaskPixelT>::countMask(
     MaskPixelBooleanFunc<MaskPixelT>& testFunc,
-    const BBox2i maskRegion
+    const vw::BBox2i maskRegion
 ) const {
     int count = 0;
     Vector<int32, 2> ulCorner = maskRegion.min();
@@ -297,7 +297,7 @@ typename lsst::fw::Mask<MaskPixelT>::MaskPtrT lsst::fw::Mask<MaskPixelT>::getSub
 
     // Check that maskRegion is completely inside the mask
     
-    BBox2i maskBoundary(0, 0, getCols(), getRows());
+    vw::BBox2i maskBoundary(0, 0, getCols(), getRows());
     if (!maskBoundary.contains(maskRegion)) {
         throw lsst::mwi::exceptions::InvalidParameter(boost::format("getSubMask region not contained within Mask"));
     }
@@ -319,11 +319,11 @@ typename lsst::fw::Mask<MaskPixelT>::MaskPtrT lsst::fw::Mask<MaskPixelT>::getSub
  * Maybe generate an exception if offsets are not consistent?
  */
 template<typename MaskPixelT>
-void lsst::fw::Mask<MaskPixelT>::replaceSubMask(const BBox2i maskRegion, MaskPtrT insertMask)
+void lsst::fw::Mask<MaskPixelT>::replaceSubMask(const vw::BBox2i maskRegion, MaskPtrT insertMask)
 {
     try {
         crop(*_vwImagePtr, maskRegion) = *(insertMask->_vwImagePtr);
-    } catch (exception eex) {
+    } catch (std::exception eex) {
         throw lsst::mwi::exceptions::Exception(std::string("in ") + __func__);
     } 
 }

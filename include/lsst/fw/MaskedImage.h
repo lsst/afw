@@ -9,6 +9,10 @@
 #ifndef LSST_MASKEDIMAGE_H
 #define LSST_MASKEDIMAGE_H
 
+#include <list>
+#include <map>
+#include <string>
+
 #include <vw/Image.h>
 #include <vw/Math/BBox.h>
 #include <boost/shared_ptr.hpp>
@@ -16,9 +20,6 @@
 #include <boost/iterator/zip_iterator.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_io.hpp>
-#include <list>
-#include <map>
-#include <string>
 
 #include "lsst/mwi/data/LsstBase.h"
 #include "Mask.h"
@@ -112,9 +113,9 @@ namespace fw {
         
         // SubImage functions
 
-        MaskedImagePtrT getSubImage(const BBox2i region) const;
+        MaskedImagePtrT getSubImage(const vw::BBox2i &region) const;
         
-        void replaceSubImage(const BBox2i region, MaskedImagePtrT insertImage, const bool replaceMask, const bool replaceImage,
+        void replaceSubImage(const vw::BBox2i &region, MaskedImagePtrT insertImage, const bool replaceMask, const bool replaceImage,
             const bool replaceVariance);
 
         // Variance functions

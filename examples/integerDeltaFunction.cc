@@ -6,7 +6,7 @@
 using namespace std;
 
 int main() {
-    typedef int funcType;
+    typedef float funcType;
     
     funcType xo = 1.0, yo = -2.0;
     

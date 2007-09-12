@@ -7,6 +7,7 @@
 #include "lsst/mwi/utils/Trace.h"
 #include "lsst/fw/MaskedImage.h"
 
+using namespace std;
 using namespace lsst::fw;
 using lsst::mwi::utils::Trace;
 using lsst::mwi::data::Citizen;
@@ -33,12 +34,12 @@ public:
        //  In general, do something to the pixel values
 //         ImageIteratorT j = i;
 //         if (++testCount < 10) {
-//             std::cout << *i << " " << *m << std::endl;
+//             cout << *i << " " << *m << endl;
 //             *j = 1;
 //             int dx = 1;
 //             int dy = 0;
 //             if (initCount <2) *(j.advance(dx,dy)) = 2*testCount;
-//             std::cout << "modified: " << *j << std::endl;
+//             cout << "modified: " << *j << endl;
 //          }
        if (*i > 15000) {
            *m = *m | bitsCR;
@@ -59,11 +60,11 @@ private:
 
 int test(int argc, char**argv) {
     if (argc < 5) {
-       std::cerr << "Usage: inputBaseName1 inputBaseName2 outputBaseName1  outputBaseName2" << std::endl;
+       cerr << "Usage: inputBaseName1 inputBaseName2 outputBaseName1  outputBaseName2" << endl;
        return 1;
     }
     
-    Trace::setDestination(std::cout);
+    Trace::setDestination(cout);
     Trace::setVerbosity(".", 0);
     
     typedef uint8 MaskPixelType;
@@ -73,7 +74,7 @@ int test(int argc, char**argv) {
     try {
         testMaskedImage1.readFits(argv[1]);
     } catch (lsst::mwi::exceptions::Exception &e) {
-        std::cerr << "Failed to open " << argv[1] << ": " << e.what() << std::endl;
+        cerr << "Failed to open " << argv[1] << ": " << e.what() << endl;
         return 1;
     }
 
@@ -85,7 +86,7 @@ int test(int argc, char**argv) {
 
     fooFunc.init();
     testMaskedImage1.processPixels(fooFunc);
-    std::cout << fooFunc.getCount() << " mask pixels were set" << std::endl;
+    cout << fooFunc.getCount() << " mask pixels were set" << endl;
 
     // verify that copy constructor and operator= build and do not leak
     Image<ImagePixelType> testImage(100, 100);
@@ -100,7 +101,7 @@ int test(int argc, char**argv) {
     try {
         testFlat.readFits(argv[2]);
     } catch (lsst::mwi::exceptions::Exception &e) {
-        std::cerr << "Failed to open " << argv[2] << ": " << e.what() << std::endl;
+        cerr << "Failed to open " << argv[2] << ": " << e.what() << endl;
         return 1;
     }
     testFlat.setDefaultVariance();
@@ -151,10 +152,10 @@ int main(int argc, char **argv) {
        try {
            test(argc, argv);
        } catch (mwie::Exception &e) {
-           throw mwie::Exception(std::string("In handler\n") + e.what());
+           throw mwie::Exception(string("In handler\n") + e.what());
        }
     } catch (mwie::Exception &e) {
-       std::clog << e.what() << endl;
+       clog << e.what() << endl;
     }
 
     //

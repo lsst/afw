@@ -23,8 +23,6 @@
 
 namespace lsst {
 namespace fw {
-    using vw::BBox2i;
-    
     template<typename ImagePixelT>
     class Image : private lsst::mwi::data::LsstBase {
     public:
@@ -42,15 +40,15 @@ namespace fw {
 
         Image& operator=(const Image& image);
 
-        void readFits(const string& fileName, int hdu=0);
+        void readFits(const std::string& fileName, int hdu=0);
         
-        void writeFits(const string& fileName) const;
+        void writeFits(const std::string& fileName) const;
         
         lsst::mwi::data::DataProperty::PtrType getMetaData() const;
         
-        ImagePtrT getSubImage(const BBox2i imageRegion) const;
+        ImagePtrT getSubImage(const vw::BBox2i imageRegion) const;
         
-        void replaceSubImage(const BBox2i imageRegion, ImagePtrT insertImage);
+        void replaceSubImage(const vw::BBox2i imageRegion, ImagePtrT insertImage);
 
         inline ImageChannelT operator ()(int x, int y) const;
 

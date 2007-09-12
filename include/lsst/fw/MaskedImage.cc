@@ -164,7 +164,7 @@ void lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::readFits(std::string baseNa
 
     conformSizes();
 
-    Trace("fw.MaskedImage", 1,
+    lsst::mwi::utils::Trace("fw.MaskedImage", 1,
               boost::format("Read in MaskedImage of size (%d,%d)") % _imageCols % _imageRows);
 
 }
@@ -201,7 +201,7 @@ void lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::writeFits(std::string baseN
 
 template<typename ImagePixelT, typename MaskPixelT>
 typename lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::MaskedImagePtrT
-lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::getSubImage(const vw::BBox2i subRegion) const {
+lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::getSubImage(const vw::BBox2i &subRegion) const {
 
     typename Image<ImagePixelT>::ImagePtrT newSubImage = _imagePtr->getSubImage(subRegion);
      
@@ -220,7 +220,7 @@ lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::getSubImage(const vw::BBox2i sub
 //
 template<typename ImagePixelT, typename MaskPixelT>
 void lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::replaceSubImage(
-    const BBox2i subRegion, MaskedImagePtrT insertImage, 
+    const vw::BBox2i &subRegion, MaskedImagePtrT insertImage, 
     const bool replaceMask, const bool replaceImage, const bool replaceVariance) {
 
     if (replaceImage) {
@@ -228,8 +228,8 @@ void lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::replaceSubImage(
         typename Image<ImagePixelT>::ImageIVwT& _imageViewInsert = insertImage->_imagePtr->getIVw();
         try {
             crop(_imageView, subRegion) = _imageViewInsert;
-        } catch (exception eex) {
-            throw Exception(std::string("in ") + __func__);
+        } catch (std::exception eex) {
+            throw lsst::mwi::exceptions::Exception(std::string("in ") + __func__);
         } 
     }
     if (replaceVariance) {
@@ -237,8 +237,8 @@ void lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::replaceSubImage(
         typename Image<ImagePixelT>::ImageIVwT& _imageViewInsert = insertImage->_variancePtr->getIVw();
         try {
             crop(_imageView, subRegion) = _imageViewInsert;
-        } catch (exception eex) {
-            throw Exception(std::string("in ") + __func__);
+        } catch (std::exception eex) {
+            throw lsst::mwi::exceptions::Exception(std::string("in ") + __func__);
         } 
     }
     if (replaceMask) {
@@ -246,8 +246,8 @@ void lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::replaceSubImage(
         typename Mask<MaskPixelT>::MaskIVwT& _imageViewInsert = insertImage->_maskPtr->getIVw();
         try {
             crop(_imageView, subRegion) = _imageViewInsert;
-        } catch (exception eex) {
-            throw Exception(std::string("in ") + __func__);
+        } catch (std::exception eex) {
+            throw lsst::mwi::exceptions::Exception(std::string("in ") + __func__);
         } 
     }
 }
@@ -275,7 +275,7 @@ void lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::setDefaultVariance() {
 
     *varianceVw = *imageVw / gain;
 
-    Trace("fw.MaskedImage", 1,
+    lsst::mwi::utils::Trace("fw.MaskedImage", 1,
               boost::format("Using gain = %f in setDefaultVariance()") % gain);
 
 }

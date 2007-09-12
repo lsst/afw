@@ -7,6 +7,7 @@
 #include "lsst/mwi/utils/Trace.h"
 #include "lsst/fw/Mask.h"
 
+using namespace std;
 using namespace lsst::fw;
 using boost::any_cast;
 
@@ -35,7 +36,7 @@ private:
  * of memory management
  */
 void test() {
-    Trace::setDestination(std::cerr);
+    Trace::setDestination(cerr);
 
     Trace::setVerbosity(".", 100);
 
@@ -95,9 +96,9 @@ void test() {
     }
 
     for (int i = 0; i <= 8; i++) {
-        std::string sp = (boost::format("P%d") % i).str();
+        string sp = (boost::format("P%d") % i).str();
         try {
-            std::cout << boost::format("Assigned %s to plane %d\n") %
+            cout << boost::format("Assigned %s to plane %d\n") %
                 sp % testMask.addMaskPlane(sp);
         } catch(mwie::OutOfPlaneSpace &e) {
             e.print("\t");
@@ -105,7 +106,7 @@ void test() {
     }
 
     for (int i = 0; i <= 8; i++) {
-        std::string sp = (boost::format("P%d") % i).str();
+        string sp = (boost::format("P%d") % i).str();
         try {
             testMask.removeMaskPlane(sp);
         } catch(mwie::NoMaskPlane) {
@@ -187,7 +188,7 @@ void test() {
     try {
         iPlane = testMask3.addMaskPlane("CR");
         cout << "Assigned CR to plane " << iPlane << endl;
-    } catch(std::exception &e){
+    } catch(exception &e){
         cout << e.what() << "Ran out of space to add new CR plane" << endl;
         throw;
     }
@@ -290,10 +291,10 @@ int main(int argc, char *argv[]) {
        try {
            test();
        } catch (mwie::Exception &e) {
-           throw mwie::Exception(std::string("In handler\n") + e.what());
+           throw mwie::Exception(string("In handler\n") + e.what());
        }
     } catch (mwie::Exception &e) {
-       std::clog << e.what() << endl;
+       clog << e.what() << endl;
     }
 
     //

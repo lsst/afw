@@ -83,13 +83,13 @@ double lsst::fw::Image<ImagePixelT>::getGain() const {
 }
 
 template<typename ImagePixelT>
-void lsst::fw::Image<ImagePixelT>::readFits(const string& fileName, int hdu) {
+void lsst::fw::Image<ImagePixelT>::readFits(const std::string& fileName, int hdu) {
     LSSTFitsResource<ImagePixelT> fitsRes;
     fitsRes.readFits(fileName, *_vwImagePtr, _metaData, hdu);
 }
 
 template<typename ImagePixelT>
-void lsst::fw::Image<ImagePixelT>::writeFits(const string& fileName) const {
+void lsst::fw::Image<ImagePixelT>::writeFits(const std::string& fileName) const {
     LSSTFitsResource<ImagePixelT> fitsRes;
     fitsRes.writeFits(*_vwImagePtr, _metaData, fileName);
 }

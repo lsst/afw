@@ -5,6 +5,7 @@
 
 #include <stdexcept>
 
+using namespace std;
 using namespace lsst::fw;
 using boost::any_cast;
 
@@ -22,26 +23,26 @@ void test(char *name) {
     testMask.readFits(name);
 
     // check whether Mask planes got setup right from FITS header...
-    std::cout << "MaskPlanes from FITS header:" << std::endl;
+    cout << "MaskPlanes from FITS header:" << endl;
     testMask.printMaskPlanes();
 
     // check the full metadata from the FITS header
     DataProperty::PtrType metaDataPtr = testMask.getMetaData();
-    std::cout << metaDataPtr->toString("",true) << std::endl;
+    cout << metaDataPtr->toString("",true) << endl;
 
     // try some pattern matching on metadata
-    const std::string pattern("WAT.*");
-    std::cout << "Searching metadata with pattern " + pattern << std::endl;
+    const string pattern("WAT.*");
+    cout << "Searching metadata with pattern " + pattern << endl;
     DataProperty::iteratorRangeType matches = metaDataPtr->searchAll(pattern);
     DataProperty::ContainerType::const_iterator iter;
     for( iter = matches.first; iter!= matches.second; iter++) {
-        std::cout << "    found " + (*iter)->toString() << std::endl;
+        cout << "    found " + (*iter)->toString() << endl;
     }
 }
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
-        std::cerr << "Usage: inputBaseName" << std::endl;
+        cerr << "Usage: inputBaseName" << endl;
         return 1;
     }
 
@@ -49,9 +50,9 @@ int main(int argc, char *argv[]) {
         try {
             test(argv[1]);
         } catch (lsst::mwi::exceptions::Exception &e) {
-            throw lsst::mwi::exceptions::Exception(std::string("In handler\n") + e.what());
+            throw lsst::mwi::exceptions::Exception(string("In handler\n") + e.what());
         }
     } catch (lsst::mwi::exceptions::Exception &e) {
-        std::clog << e.what() << endl;
+        clog << e.what() << endl;
     }
 }
