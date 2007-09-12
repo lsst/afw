@@ -11,6 +11,7 @@
  * \ingroup fw
  */
 #include <algorithm>
+#include <cmath>
 #include <functional>
 #include <iostream>
 #include <vector>
@@ -320,7 +321,7 @@ void lsst::fw::kernel::printKernel(
         }
         std::cout << std::endl;
     }
-    if (doNormalize && abs(static_cast<double>(kSum) - 1.0) > 1.0e-5) {
+    if (doNormalize && std::abs(static_cast<double>(kSum) - 1.0) > 1.0e-5) {
         std::cout << boost::format("Warning! Sum of all pixels = %9.5f != 1.0\n") % kSum;
     }
     std::cout << std::endl;
