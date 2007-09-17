@@ -245,18 +245,38 @@ namespace function {
         virtual ~PolynomialFunction2() {};
         
         virtual ReturnT operator() (double x, double y) const {
-            // there must be a more efficient way to solve this
-            double retVal = 0.0;
+            /* Solve as follows:
+            - f(x,y) = Cy0 + Cy1 y + Cy2 y^2 + Cy3 y^3 + ...
+            where:
+              Cy0 = P0 + P1 x + P3 x^2 + P6 x^3 + ...
+              Cy1 = P2 + P4 x + P7 x2 + ...
+              Cy2 = P5 + P8 x + ...
+              Cy3 = P9 + ...
+            First compute the y coefficients: 1-d polynomials in x solved in the usual way.
+            Then compute the return value: a 1-d polynomial in y solved in the usual way.
+            */
+            const int maxYCoeffInd = this->_order;
+            std::vector<double> yCoeffs(maxYCoeffInd + 1);
             int paramInd = static_cast<int>(this->_params.size()) - 1;
-            for (int currOrder = static_cast<int>(_order); currOrder >= 0; --currOrder) {
-                for (int xPow = 0, yPow = currOrder; yPow >= 0; ++xPow, --yPow, --paramInd) {
-                    retVal += this->_params[paramInd] * std::pow(x, xPow) * std::pow(y, yPow);
-                    if ((paramInd == 0) && (yPow != 0)) {
-                        throw lsst::mwi::exceptions::Exception(boost::format(
-                            "PolynomialFunction2 internal error; order=%d, nParams=%d")
-                            % this->_order % this->_params.size());
-                    }   
+            // initialize the y coefficients
+            for (int yCoeffInd = maxYCoeffInd; yCoeffInd >= 0; --yCoeffInd, --paramInd) {
+                yCoeffs[yCoeffInd] = this->_params[paramInd];
+            }
+            // finish computing the y coefficients
+            for (int startYCoeffInd = maxYCoeffInd - 1, yCoeffInd = startYCoeffInd;
+                paramInd >= 0; --paramInd) {
+                yCoeffs[yCoeffInd] = (yCoeffs[yCoeffInd] * x) + this->_params[paramInd];
+                if (yCoeffInd == 0) {
+                    --startYCoeffInd;
+                    yCoeffInd = startYCoeffInd;
+                } else {
+                    --yCoeffInd;
                 }
+            }
+            // compute y polynomial
+            double retVal = yCoeffs[maxYCoeffInd];
+            for (int yCoeffInd = maxYCoeffInd - 1; yCoeffInd >= 0; --yCoeffInd) {
+                retVal = (retVal * y) + yCoeffs[yCoeffInd];
             }
             return static_cast<ReturnT>(retVal);
         }
