@@ -86,16 +86,16 @@ class ConvolveTestCase(unittest.TestCase):
         currDir = os.path.abspath(os.path.dirname(__file__))
         inFilePath = os.path.join(currDir, "data", "small")
     
-        maskedImage = fw.MaskedImageD()
+        maskedImage = fw.MaskedImageF()
         maskedImage.readFits(inFilePath)
         
         # create a delta function kernel that has 1,1 in the center
-        f = fw.IntegerDeltaFunction2F(0.0, 0.0)
-        fPtr =  fw.Function2PtrTypeF(f)
+        f = fw.IntegerDeltaFunction2D(0.0, 0.0)
+        fPtr =  fw.Function2PtrTypeD(f)
         f.this.disown() # Only the shared pointer now owns f
-        k = fw.AnalyticKernelF(fPtr, 3, 3)
+        k = fw.AnalyticKernelD(fPtr, 3, 3)
         
-        cnvMaskedImage = fw.convolveF(maskedImage, k, threshold, edgeBit)
+        cnvMaskedImage = fw.convolve(maskedImage, k, threshold, edgeBit)
     
         origImVarMaskArrays = iUtils.arraysFromMaskedImage(maskedImage)
         cnvImVarMaskArrays = iUtils.arraysFromMaskedImage(cnvMaskedImage)
@@ -111,15 +111,15 @@ class ConvolveTestCase(unittest.TestCase):
         threshold = 0.0
         edgeBit = 7
 
-        f = fw.GaussianFunction2F(1.5, 2.5)
-        fPtr =  fw.Function2PtrTypeF(f)
+        f = fw.GaussianFunction2D(1.5, 2.5)
+        fPtr =  fw.Function2PtrTypeD(f)
         f.this.disown() # Only the shared pointer now owns f
-        k = fw.AnalyticKernelF(fPtr, kCols, kRows)
+        k = fw.AnalyticKernelD(fPtr, kCols, kRows)
         fArr = numpy.zeros(shape=[k.getCols(), k.getRows()], dtype=float)
         
         currDir = os.path.abspath(os.path.dirname(__file__))
         inFilePath = os.path.join(currDir, "data", InputMaskedImageName)
-        fullMaskedImage = fw.MaskedImageD()
+        fullMaskedImage = fw.MaskedImageF()
         fullMaskedImage.readFits(inFilePath)
         
         # pick a small piece of the image to save time
@@ -128,8 +128,8 @@ class ConvolveTestCase(unittest.TestCase):
         maskedImage = subMaskedImagePtr.get()
         maskedImage.this.disown()
 
-        cnvMaskedImage = fw.MaskedImageD(maskedImage.getCols(), maskedImage.getRows())
-        fw.convolveF(cnvMaskedImage, maskedImage, k, threshold, edgeBit)
+        cnvMaskedImage = fw.MaskedImageF(maskedImage.getCols(), maskedImage.getRows())
+        fw.convolve(cnvMaskedImage, maskedImage, k, threshold, edgeBit)
         cnvImage, cnvVariance, cnvMask = iUtils.arraysFromMaskedImage(cnvMaskedImage)
 
         imVarMask = iUtils.arraysFromMaskedImage(maskedImage)
@@ -151,15 +151,15 @@ class ConvolveTestCase(unittest.TestCase):
         threshold = 0.0
         edgeBit = 7
 
-        f = fw.GaussianFunction2F(1.5, 2.5)
-        fPtr =  fw.Function2PtrTypeF(f)
+        f = fw.GaussianFunction2D(1.5, 2.5)
+        fPtr =  fw.Function2PtrTypeD(f)
         f.this.disown() # Only the shared pointer now owns f
-        k = fw.AnalyticKernelF(fPtr, kCols, kRows)
+        k = fw.AnalyticKernelD(fPtr, kCols, kRows)
         fArr = numpy.zeros(shape=[k.getCols(), k.getRows()], dtype=float)
         
         currDir = os.path.abspath(os.path.dirname(__file__))
         inFilePath = os.path.join(currDir, "data", InputMaskedImageName)
-        fullMaskedImage = fw.MaskedImageD()
+        fullMaskedImage = fw.MaskedImageF()
         fullMaskedImage.readFits(inFilePath)
         
         # pick a small piece of the image to save time
@@ -170,7 +170,7 @@ class ConvolveTestCase(unittest.TestCase):
         
         # this fails because of wrong # of arguments
         # so the function overloading is not working correctly (no surprise)
-        cnvMaskedImage = fw.convolveF(maskedImage, k, threshold, edgeBit)
+        cnvMaskedImage = fw.convolve(maskedImage, k, threshold, edgeBit)
         cnvImage, cnvVariance, cnvMask = iUtils.arraysFromMaskedImage(cnvMaskedImage)
 
         imVarMask = iUtils.arraysFromMaskedImage(maskedImage)

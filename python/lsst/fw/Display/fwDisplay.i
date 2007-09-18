@@ -42,9 +42,10 @@ using namespace vw;
 
 %include "simpleFits.h"
 
-%template(writeFitsImage) writeFits<int>;
-%template(writeFitsImage) writeFits<ImagePixelType>;
-%template(writeFitsMask)  writeFits<MaskPixelType>;
+%template(writeFitsImage) writeFits<boost::uint16_t>;
+%template(writeFitsImage) writeFits<float>;
+%template(writeFitsImage) writeFits<double>;
+%template(writeFitsMask)  writeFits<lsst::fw::maskPixelType>;
 
 /******************************************************************************/
 // Local Variables: ***

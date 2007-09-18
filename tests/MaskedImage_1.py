@@ -19,8 +19,8 @@ import fwTests
 class MaskedImageTestCase(unittest.TestCase):
     """A test case for MaskedImage"""
     def setUp(self):
-        self.maskedImage1 = fw.MaskedImageD(272, 1037)
-        self.maskedImage2 = fw.MaskedImageD(272, 1037)
+        self.maskedImage1 = fw.MaskedImageF(272, 1037)
+        self.maskedImage2 = fw.MaskedImageF(272, 1037)
 
         for m in (self.maskedImage1, self.maskedImage2):
             m.getMask().addMaskPlane("CR")
@@ -51,12 +51,12 @@ class MaskedImageTestCase(unittest.TestCase):
         self.maskedImage2 += self.maskedImage1
     
     def testCopyConstructors(self):
-        image = fwTests.copyImageF(fw.ImageD(100, 100))
-        mask = fwTests.copyMaskF(fw.MaskD(100, 100))
+        image = fwTests.copyImageF(fw.ImageF(100, 100))
+        mask = fwTests.copyMaskU(fw.MaskU(100, 100))
         maskedImage = fwTests.copyMaskedImageF(self.maskedImage1)
 
     def testPixelProc(self):
-        fooFunc = fwTests.testPixProcFuncD(self.maskedImage1)
+        fooFunc = fwTests.testPixProcFuncF(self.maskedImage1)
 
         fooFunc.init()
         self.maskedImage1.processPixels(fooFunc)

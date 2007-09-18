@@ -1,17 +1,16 @@
 // -*- lsst-c++ -*-
 /*****************************************************************************/
-/*
- * Types of Images/Masks
- */
-%inline %{
-typedef float ImagePixelType;
-typedef uint8 MaskPixelType;
-%}
 
 %import  <vw/Core/FundamentalTypes.h>
 %apply int {int32};
 %apply int {vw::int32};
 %apply int {boost::int32_t};
+%apply int {vw::uint32};
+%apply int {boost::uint32_t};
+%apply int {vw::uint16};
+%apply int {boost::uint16_t};
+%apply int {vw::int16_t};
+%apply int {boost::int16_t};
 %apply char {vw::uint8};
 %apply char {boost::uint8_t};
 

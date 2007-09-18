@@ -259,11 +259,13 @@ void lsst::fw::kernel::convolveLinear(
     imageAccessorListType basisImageRowList;
     {
         maskedImageType basisImage(imCols, imRows);
+        int locEdgeBit = edgeBit;
         for (typename kernelListType::const_iterator basisKernelIter = basisKernels.begin();
             basisKernelIter != basisKernels.end(); ++basisKernelIter) {
-            lsst::fw::kernel::convolve(basisImage, maskedImage, **basisKernelIter, threshold, edgeBit, false);
+            lsst::fw::kernel::convolve(basisImage, maskedImage, **basisKernelIter, threshold, locEdgeBit, false);
             basisImageList.push_back(basisImage);
             basisImageRowList.push_back(lsst::fw::MaskedPixelAccessor<ImageT, MaskT>(basisImage));
+            locEdgeBit = -1; // only set the edge bit for the first image; this saves time
         }
     }
     

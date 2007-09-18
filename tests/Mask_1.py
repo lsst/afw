@@ -10,7 +10,7 @@ def doMask_1():
         maskImage = fwCore.ImageViewMask(300,400)
         
     print maskImage.use_count()
-    testMask = fwCore.MaskD(maskImage)
+    testMask = fwCore.MaskU(maskImage)
     print maskImage.use_count()
 
     # ------------- Test mask plane addition
@@ -79,7 +79,7 @@ def doMask_1():
 
     # ------------------ Test |= operator
    
-    testMask3 = fwCore.MaskD(
+    testMask3 = fwCore.MaskU(
         fwCore.ImageViewMaskPtr(testMask.getCols(), testMask.getRows())
         )
 

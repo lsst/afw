@@ -3,7 +3,7 @@
 #include "lsst/fw/KernelFunctions.h"
 %}
 
-// I'm not sure newobject is needed (the memory leak test works without it)
+// I doubt newobject is needed; the code seems to work just as well without it.
 %newobject lsst::fw::kernel::convolve;
 %newobject lsst::fw::Kernel::computeNewImage;
 %newobject lsst::fw::Kernel::getKernelParameters;
@@ -11,31 +11,30 @@
 
 %include "lsst/fw/Kernel.h"
 %include "lsst/fw/KernelFunctions.h"
-
-%template(KernelF)              lsst::fw::Kernel<float>;
-%template(FixedKernelF)         lsst::fw::FixedKernel<float>;
-%template(AnalyticKernelF)      lsst::fw::AnalyticKernel<float>;
-%template(LinearCombinationKernelF) lsst::fw::LinearCombinationKernel<float>;
-
-%template(Function2PtrTypeF)    boost::shared_ptr<lsst::fw::function::Function2<float> >;
-%template(KernelPtrTypeF)       boost::shared_ptr<lsst::fw::Kernel<float> >;
-%template(vectorKernelPtrF)     std::vector<boost::shared_ptr<Kernel<float> > >;
-
-%template(printKernelF)         lsst::fw::kernel::printKernel<float>;
-
-%template(convolveF)            lsst::fw::kernel::convolve<ImagePixelType, MaskPixelType, float>;
-%template(convolveLinearF)      lsst::fw::kernel::convolveLinear<ImagePixelType, MaskPixelType, float>;
-
+//
+// classes (every template must have a unique name
+//
 %template(KernelD)              lsst::fw::Kernel<double>;
 %template(FixedKernelD)         lsst::fw::FixedKernel<double>;
 %template(AnalyticKernelD)      lsst::fw::AnalyticKernel<double>;
 %template(LinearCombinationKernelD) lsst::fw::LinearCombinationKernel<double>;
 
+// I doubt extend_smart_pointer is needed; the code seems to work just as well without it.
+%extend_smart_pointer(boost::shared_ptr<lsst::fw::function::Function2<double> >);
 %template(Function2PtrTypeD)    boost::shared_ptr<lsst::fw::function::Function2<double> >;
+%extend_smart_pointer(boost::shared_ptr<lsst::fw::Kernel<double> >);
 %template(KernelPtrTypeD)       boost::shared_ptr<lsst::fw::Kernel<double> >;
-%template(vectorKernelPtrD)     std::vector<boost::shared_ptr<Kernel<double> > >;
+%template(vectorKernelPtrD)     std::vector<boost::shared_ptr<lsst::fw::Kernel<double> > >;
+//
+// functions (every template can have the same name)
+//
+%template(printKernel)          lsst::fw::kernel::printKernel<double>;
 
-%template(printKernelD)         lsst::fw::kernel::printKernel<double>;
+%template(convolve)             lsst::fw::kernel::convolve<double, lsst::fw::maskPixelType, double>;
+%template(convolve)             lsst::fw::kernel::convolve<float, lsst::fw::maskPixelType, double>;
+%template(convolve)             lsst::fw::kernel::convolve<boost::uint16_t, lsst::fw::maskPixelType, double>;
 
-%template(convolveD)            lsst::fw::kernel::convolve<ImagePixelType, MaskPixelType, double>;
-%template(convolveLinearD)      lsst::fw::kernel::convolveLinear<ImagePixelType, MaskPixelType, double>;
+%template(convolveLinear)       lsst::fw::kernel::convolveLinear<double, lsst::fw::maskPixelType, double>;
+%template(convolveLinear)       lsst::fw::kernel::convolveLinear<float, lsst::fw::maskPixelType, double>;
+%template(convolveLinear)       lsst::fw::kernel::convolveLinear<boost::uint16_t, lsst::fw::maskPixelType, double>;
+

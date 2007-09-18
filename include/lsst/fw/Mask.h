@@ -13,6 +13,7 @@
 #include <map>
 #include <string>
 
+#include <boost/cstdint.hpp>
 #include <boost/shared_ptr.hpp>
 #include <vw/Image.h>
 #include <vw/Math/BBox.h>
@@ -25,7 +26,10 @@
 #include "lsst/fw/LSSTFitsResource.h"
 
 namespace lsst {
-namespace fw {        
+namespace fw {
+    // all masks will be instantiated with the same pixel type
+    typedef boost::uint16_t maskPixelType;
+
     class PixelCoord {
     public:
         PixelCoord(int x = 0, int y = 0) : x(x), y(y) {}
@@ -86,7 +90,7 @@ namespace fw {
         void clearAllMaskPlanes();
         
         void setMaskPlaneValues(int plane, std::list<PixelCoord> pixelList);
-        void setMaskPlaneValues(const int plane, const int x0, const int x1, const int y);            
+        void setMaskPlaneValues(const int plane, const int x0, const int x1, const int y);
         void setMaskPlaneValues(int plane, MaskPixelBooleanFunc<MaskPixelT> selectionFunc);
         
         void parseMaskPlaneMetaData(const lsst::mwi::data::DataProperty::PtrType);

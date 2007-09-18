@@ -91,9 +91,12 @@ namespace std {
 }
 
 %template(unary_function_tuple) std::unary_function<boost::tuple<vw::PixelGray<float > &,vw::PixelGray<uint8 > & > &,void >;
-%template(unary_function_tuple2) std::unary_function<boost::tuple<ImagePixelType &,MaskPixelType & > &,void >;
-%template(PixelProcessingFuncD) lsst::fw::PixelProcessingFunc<ImagePixelType, MaskPixelType>;
-%template(testPixProcFuncD) testPixProcFunc<ImagePixelType, MaskPixelType>;
+%template(unary_function_tupleF) std::unary_function<boost::tuple<float &,lsst::fw::maskPixelType & > &,void >;
+%template(unary_function_tupleD) std::unary_function<boost::tuple<double &,lsst::fw::maskPixelType & > &,void >;
+%template(PixelProcessingFuncF) lsst::fw::PixelProcessingFunc<float, lsst::fw::maskPixelType>;
+%template(PixelProcessingFuncD) lsst::fw::PixelProcessingFunc<double, lsst::fw::maskPixelType>;
+%template(testPixProcFuncF) testPixProcFunc<float, lsst::fw::maskPixelType>;
+%template(testPixProcFuncD) testPixProcFunc<double, lsst::fw::maskPixelType>;
 
 /******************************************************************************/
 //
@@ -119,8 +122,8 @@ private:
 };
 %}
 
-%template(MaskPixelBooleanFuncD) lsst::fw::MaskPixelBooleanFunc<MaskPixelType>;
-%template(testCrFuncD) testCrFunc<MaskPixelType>;
+%template(MaskPixelBooleanFuncD) lsst::fw::MaskPixelBooleanFunc<lsst::fw::maskPixelType>;
+%template(testCrFuncD) testCrFunc<lsst::fw::maskPixelType>;
 
 /******************************************************************************/
 // Give python access to C++ copy constructors and/or operator=
@@ -148,9 +151,11 @@ private:
     }
 %}
 
-%template(copyImageF) copyImage<ImagePixelType>;
-%template(copyMaskF) copyMask<MaskPixelType>;
-%template(copyMaskedImageF) copyMaskedImage<ImagePixelType, MaskPixelType>;
+%template(copyImageF) copyImage<float>;
+%template(copyImageD) copyImage<double>;
+%template(copyMaskU)  copyMask<lsst::fw::maskPixelType>;
+%template(copyMaskedImageF) copyMaskedImage<float, lsst::fw::maskPixelType>;
+%template(copyMaskedImageD) copyMaskedImage<double, lsst::fw::maskPixelType>;
 
 /******************************************************************************/
 // Local Variables: ***

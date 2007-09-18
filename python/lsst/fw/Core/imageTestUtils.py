@@ -20,11 +20,14 @@ def arrayFromImage(im, dtype=float):
 def arrayFromMask(im, dtype=int):
     """Return a numpy array representation of a mask.
     The data is presently copied but do not rely on that.
+    
+    Warning: will fail for uint8 masks because lssgImageTypes.i maps uint8 to char;
+    use ord(im.getPtr(col, row)) to get each pixel value
     """
     arr = numpy.zeros([im.getCols(), im.getRows()], dtype=dtype)
     for row in range(im.getRows()):
         for col in range(im.getCols()):
-            arr[col, row] = ord(im.getPtr(col, row))
+            arr[col, row] = im.getPtr(col, row)
     return arr
 
 def arraysFromMaskedImage(maskedImage):
