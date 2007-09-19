@@ -136,7 +136,7 @@ def version(HeadURL = r"$HeadURL$"):
 %import "lsst/mwi/utils/Utils.h"
 %import "lsst/mwi/data/LsstData.h"
 %import "lsst/mwi/data/DataProperty.h"
-%import "lsst/mwi/exceptions/Exception.h"
+%import "lsst/mwi/exceptions.h"
 
 %include "lsst/fw/DiskImageResourceFITS.h"
 

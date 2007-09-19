@@ -4,7 +4,7 @@
 
 #include <typeinfo>
 #include "lsst/mwi/utils/Trace.h"
-#include "lsst/mwi/exceptions/Exception.h"
+#include "lsst/mwi/exceptions.h"
 
 /**
  * \brief Construct an empty MaskedImage of size 0x0
@@ -229,7 +229,7 @@ void lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::replaceSubImage(
         try {
             crop(_imageView, subRegion) = _imageViewInsert;
         } catch (std::exception eex) {
-            throw lsst::mwi::exceptions::Exception(std::string("in ") + __func__);
+            throw lsst::mwi::exceptions::Runtime(std::string("in ") + __func__);
         } 
     }
     if (replaceVariance) {
@@ -238,7 +238,7 @@ void lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::replaceSubImage(
         try {
             crop(_imageView, subRegion) = _imageViewInsert;
         } catch (std::exception eex) {
-            throw lsst::mwi::exceptions::Exception(std::string("in ") + __func__);
+            throw lsst::mwi::exceptions::Runtime(std::string("in ") + __func__);
         } 
     }
     if (replaceMask) {
@@ -247,7 +247,7 @@ void lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::replaceSubImage(
         try {
             crop(_imageView, subRegion) = _imageViewInsert;
         } catch (std::exception eex) {
-            throw lsst::mwi::exceptions::Exception(std::string("in ") + __func__);
+            throw lsst::mwi::exceptions::Runtime(std::string("in ") + __func__);
         } 
     }
 }

@@ -6,7 +6,7 @@
 #include <boost/format.hpp>
 #include <vw/Core/Exception.h>
 #include <vw/Image/ImageMath.h>
-#include "lsst/mwi/exceptions/Exception.h"
+#include "lsst/mwi/exceptions.h"
 #include "lsst/fw/DiskImageResourceFITS.h"
 
 // these two necessary only for appendKey()

@@ -5,7 +5,7 @@
 #include "lsst/mwi/data/DataProperty.h"
 #include "lsst/fw/DiskImageResourceFITS.h"
 #include "lsst/mwi/utils/Utils.h"
-#include "lsst/mwi/exceptions/Exception.h"
+#include "lsst/mwi/exceptions.h"
 
 
 using namespace vw;

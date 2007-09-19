@@ -3,7 +3,7 @@
 // This file can NOT be separately compiled!   It is included by Image.h
 #include <stdexcept>
 #include "lsst/mwi/data/SupportFactory.h"
-#include <lsst/mwi/exceptions/Exception.h>
+#include <lsst/mwi/exceptions.h>
 
 //
 // Constructors
@@ -70,7 +70,7 @@ typename lsst::fw::Image<ImagePixelT>::ImageIVwPtrT lsst::fw::Image<ImagePixelT>
 /**
  * \brief Return the gain from the image metadata
  *
- * \throw lsst::mwi::exceptions::Exception if gain not found
+ * \throw lsst::mwi::exceptions::Runtime if gain not found
  */
 template<typename ImagePixelT> 
 double lsst::fw::Image<ImagePixelT>::getGain() const {
@@ -79,7 +79,7 @@ double lsst::fw::Image<ImagePixelT>::getGain() const {
         double gain = boost::any_cast<const double>(gainProp->getValue());
         return gain;
     }
-    throw lsst::mwi::exceptions::Exception(std::string("in ") + __func__ + std::string(": Could not get gain from image metadata"));
+    throw lsst::mwi::exceptions::Runtime(std::string("in ") + __func__ + std::string(": Could not get gain from image metadata"));
 }
 
 template<typename ImagePixelT>
@@ -124,14 +124,14 @@ lsst::fw::Image<ImagePixelT>::getSubImage(const BBox2i imageRegion) const {
 /**
  * \brief Given a Image, insertImage, place it into this Image as directed by maskRegion.
  *
- * \throw lsst::mwi::exceptions::Exception if maskRegion is not of the same size as insertImage.
+ * \throw lsst::mwi::exceptions::Runtime if maskRegion is not of the same size as insertImage.
  */
 template<typename ImagePixelT>
 void lsst::fw::Image<ImagePixelT>::replaceSubImage(const BBox2i maskRegion, ImagePtrT insertImage) {
     try {
         crop(*_vwImagePtr, maskRegion) = *(insertImage->getIVwPtr());
     } catch (std::exception eex) {
-        throw lsst::mwi::exceptions::Exception(std::string("in ") + __func__);
+        throw lsst::mwi::exceptions::Runtime(std::string("in ") + __func__);
     } 
 }
 

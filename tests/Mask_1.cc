@@ -3,7 +3,7 @@
 
 #include "lsst/mwi/data/SupportFactory.h"
 #include "lsst/mwi/data/Citizen.h"
-#include "lsst/mwi/exceptions/Exception.h"
+#include "lsst/mwi/exceptions.h"
 #include "lsst/mwi/utils/Trace.h"
 #include "lsst/fw/Mask.h"
 
@@ -75,7 +75,7 @@ void test() {
        iPlane = testMask.addMaskPlane("CR");
        cout << "Assigned CR to plane " << iPlane << endl;
     } catch(mwie::OutOfPlaneSpace &e){
-       DataProperty::PtrType  propertyList = e.propertyList();
+       DataProperty::PtrType  propertyList = e.getLast();
        cout << propertyList->toString("",true) << endl;
        DataProperty::PtrType aProperty = propertyList->findUnique("numPlanesUsed");
        int numPlanesUsed = any_cast<const int>(aProperty->getValue());
@@ -101,7 +101,7 @@ void test() {
             cout << boost::format("Assigned %s to plane %d\n") %
                 sp % testMask.addMaskPlane(sp);
         } catch(mwie::OutOfPlaneSpace &e) {
-            e.print("\t");
+            e.getStack()->toString("\t",true);
         }
     }
 
@@ -255,7 +255,7 @@ void test() {
     try {
        region.expand(10);
        testMask.replaceSubMask(region, subTestMask);
-    } catch (mwie::Exception &e) {
+    } catch (mwie::ExceptionStack &e) {
         cout << "Exception handler: Caught the buggy code: " << e.what() << endl;
     } catch (exception eex) {
         // Catch base STD exception (from which all exceptions should be derived)
@@ -290,10 +290,10 @@ int main(int argc, char *argv[]) {
     try {
        try {
            test();
-       } catch (mwie::Exception &e) {
-           throw mwie::Exception(string("In handler\n") + e.what());
+       } catch (mwie::ExceptionStack &e) {
+           throw mwie::Runtime(std::string("In handler\n") + e.what());
        }
-    } catch (mwie::Exception &e) {
+    } catch (mwie::ExceptionStack &e) {
        clog << e.what() << endl;
     }
 

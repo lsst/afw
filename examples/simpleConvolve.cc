@@ -9,6 +9,7 @@
 #include <lsst/fw/Kernel.h>
 #include <lsst/fw/KernelFunctions.h>
 
+using namespace std;
 const std::string outFile("scOut");
 
 int main(int argc, char **argv) {

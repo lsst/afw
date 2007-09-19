@@ -75,10 +75,10 @@ int main(int argc, char *argv[]) {
     try {
         try {
             test(argv[1]);
-        } catch (mwie::Exception &e) {
-            throw mwie::Exception(string("In handler\n") + e.what());
+        } catch (mwie::ExceptionStack &e) {
+            throw mwie::Runtime(std::string("In handler\n") + e.what());
         }
-    } catch (mwie::Exception &e) {
+    } catch (mwie::ExceptionStack &e) {
         clog << e.what() << endl;
         return 1;
     }

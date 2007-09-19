@@ -15,7 +15,7 @@
 #include <vector>
 
 #include <lsst/mwi/data/LsstBase.h>
-#include <lsst/mwi/exceptions/Exception.h>
+#include <lsst/mwi/exceptions.h>
 
 namespace lsst {
 namespace fw {

@@ -19,7 +19,7 @@
 #include <vw/Math/BBox.h>
 
 #include "lsst/mwi/data/LsstBase.h"
-#include "lsst/mwi/exceptions/Exception.h"
+#include "lsst/mwi/exceptions.h"
 #include "lsst/mwi/data/DataProperty.h"
 #include "lsst/mwi/utils/Trace.h"
 #include "lsst/mwi/data/SupportFactory.h"

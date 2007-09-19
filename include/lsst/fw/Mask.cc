@@ -324,7 +324,7 @@ void lsst::fw::Mask<MaskPixelT>::replaceSubMask(const vw::BBox2i maskRegion, Mas
     try {
         crop(*_vwImagePtr, maskRegion) = *(insertMask->_vwImagePtr);
     } catch (std::exception eex) {
-        throw lsst::mwi::exceptions::Exception(std::string("in ") + __func__);
+        throw lsst::mwi::exceptions::Runtime(std::string("in ") + __func__);
     } 
 }
 
@@ -344,7 +344,7 @@ bool lsst::fw::Mask<MaskPixelT>::operator ()(int x, int y, int plane) const
 
 template<typename MaskPixelT>
 bool lsst::fw::MaskPixelBooleanFunc<MaskPixelT>::operator() (MaskPixelT) const {
-    throw lsst::mwi::exceptions::Exception(boost::format("You can't get here: %s:%d") % __FILE__ % __LINE__);
+    throw lsst::mwi::exceptions::Runtime(boost::format("You can't get here: %s:%d") % __FILE__ % __LINE__);
     return true;
 }
 
@@ -353,7 +353,7 @@ lsst::fw::Mask<MaskPixelT>& lsst::fw::Mask<MaskPixelT>::operator |= (const Mask<
 {
 // Need to check for identical sizes, and presence of all needed planes
     if (getCols() != inputMask.getCols() || getRows() != inputMask.getRows()) {
-        throw lsst::mwi::exceptions::Exception("Sizes do not match");
+        throw lsst::mwi::exceptions::Runtime("Sizes do not match");
     }
 
     // iterate through maskplanes of inputMask, and find corresponding planes in this Mask. 
@@ -376,7 +376,7 @@ lsst::fw::Mask<MaskPixelT>& lsst::fw::Mask<MaskPixelT>::operator |= (const Mask<
             if (thisPlaneNumber != inputPlaneNumber) {
                 lsst::mwi::utils::Trace("fw.Mask", 0,
                     boost::format("Plane %s does not have the same assignment in this Mask (%d %d) ") % inputPlaneNumber % thisPlaneNumber);
-                throw lsst::mwi::exceptions::Exception(
+                throw lsst::mwi::exceptions::Runtime(
                     boost::format("Plane %s does not have the same assignment in this Mask (%d %d) ") % inputPlaneNumber % thisPlaneNumber);
             }
         }

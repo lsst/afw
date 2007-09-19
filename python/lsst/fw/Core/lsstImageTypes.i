@@ -74,7 +74,7 @@
 %exception {
     try {
         $action
-    } catch (lsst::mwi::exceptions::Exception &e) {
+    } catch (lsst::mwi::exceptions::ExceptionStack &e) {
         PyErr_SetString(PyExc_IndexError, e.what());
         return NULL;
     } catch (vw::Exception &e) {

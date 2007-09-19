@@ -3,7 +3,7 @@
 
 #include "lsst/mwi/data/Citizen.h"
 #include "lsst/mwi/data/FitsFormatter.h"
-#include "lsst/mwi/exceptions/Exception.h"
+#include "lsst/mwi/exceptions.h"
 #include "lsst/mwi/utils/Trace.h"
 #include "lsst/fw/MaskedImage.h"
 
@@ -73,7 +73,7 @@ int test(int argc, char**argv) {
     MaskedImage<ImagePixelType,MaskPixelType > testMaskedImage1;
     try {
         testMaskedImage1.readFits(argv[1]);
-    } catch (lsst::mwi::exceptions::Exception &e) {
+    } catch (mwie::ExceptionStack &e) {
         cerr << "Failed to open " << argv[1] << ": " << e.what() << endl;
         return 1;
     }
@@ -100,7 +100,7 @@ int test(int argc, char**argv) {
 
     try {
         testFlat.readFits(argv[2]);
-    } catch (lsst::mwi::exceptions::Exception &e) {
+    } catch (mwie::ExceptionStack &e) {
         cerr << "Failed to open " << argv[2] << ": " << e.what() << endl;
         return 1;
     }
@@ -151,10 +151,10 @@ int main(int argc, char **argv) {
     try {
        try {
            test(argc, argv);
-       } catch (mwie::Exception &e) {
-           throw mwie::Exception(string("In handler\n") + e.what());
+       } catch (mwie::ExceptionStack &e) {
+           throw mwie::Runtime(std::string("In handler\n") + e.what());
        }
-    } catch (mwie::Exception &e) {
+    } catch (mwie::ExceptionStack &e) {
        clog << e.what() << endl;
     }
 

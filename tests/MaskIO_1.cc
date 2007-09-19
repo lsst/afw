@@ -49,10 +49,10 @@ int main(int argc, char *argv[]) {
     try {
         try {
             test(argv[1]);
-        } catch (lsst::mwi::exceptions::Exception &e) {
-            throw lsst::mwi::exceptions::Exception(string("In handler\n") + e.what());
+        } catch (lsst::mwi::exceptions::ExceptionStack &e) {
+            throw lsst::mwi::exceptions::Runtime(string("In handler\n") + e.what());
         }
-    } catch (lsst::mwi::exceptions::Exception &e) {
+    } catch (lsst::mwi::exceptions::ExceptionStack &e) {
         clog << e.what() << endl;
     }
 }
