@@ -15,8 +15,7 @@ int main(int argc, char **argv) {
     lsst::mwi::utils::Trace::setDestination(std::cout);
     lsst::mwi::utils::Trace::setVerbosity("lsst.fw.kernel", 5);
 
-    typedef float pixelType;
-    typedef int maskType;
+    typedef double pixelType;
     const double DefSigma = 2.0;
     const pixelType DefThreshold = 0.1;
     int DefEdgeBit = 0;
@@ -51,7 +50,7 @@ int main(int argc, char **argv) {
         }
         
         // read in fits file
-        lsst::fw::MaskedImage<pixelType, maskType> mImage;
+        lsst::fw::MaskedImage<pixelType, lsst::fw::maskPixelType> mImage;
         mImage.readFits(argv[1]);
         
         // construct kernel
@@ -60,7 +59,7 @@ int main(int argc, char **argv) {
         lsst::fw::AnalyticKernel<pixelType> kernel(kfuncPtr, 5, 5);
     
         // convolve
-        lsst::fw::MaskedImage<pixelType, maskType>
+        lsst::fw::MaskedImage<pixelType, lsst::fw::maskPixelType>
             resMaskedImage = lsst::fw::kernel::convolve(mImage, kernel, threshold, edgeBit);
     
         // write results

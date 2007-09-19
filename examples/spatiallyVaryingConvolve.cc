@@ -24,8 +24,7 @@ int main(int argc, char **argv) {
     mwiu::Trace::setDestination(std::cout);
     mwiu::Trace::setVerbosity("lsst.fw.kernel", 5);
 
-    typedef float pixelType;
-    typedef unsigned int maskType;
+    typedef double pixelType;
     double minSigma = 0.1;
     double maxSigma = 3.0;
     unsigned int kernelCols = 5;
@@ -54,7 +53,7 @@ int main(int argc, char **argv) {
     }
     
     // read in fits file
-    lsst::fw::MaskedImage<pixelType, maskType> mImage;
+    lsst::fw::MaskedImage<pixelType, lsst::fw::maskPixelType> mImage;
     mImage.readFits(argv[1]);
     
     // construct kernel
@@ -93,7 +92,7 @@ int main(int argc, char **argv) {
     cout << endl;
 
     // convolve
-    lsst::fw::MaskedImage<pixelType, maskType>
+    lsst::fw::MaskedImage<pixelType, lsst::fw::maskPixelType>
         resMaskedImage = lsst::fw::kernel::convolve(mImage, gaussSpVarKernel, threshold, edgeMaskBit);
 
     // write results

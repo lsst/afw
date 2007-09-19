@@ -13,7 +13,7 @@
 using namespace std;
 
 int main() {
-    typedef float pixelType;
+    typedef double pixelType;
     double sigmaX = 2.0;
     double sigmaY = 2.5;
     unsigned int kernelCols = 6;

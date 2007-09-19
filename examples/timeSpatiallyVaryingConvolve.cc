@@ -18,8 +18,7 @@ using namespace std;
  * ySigma varies linearly from minSigma to maxSigma as image row goes from 0 to max
  */
 int main(int argc, char **argv) {
-    typedef float pixelType;
-    typedef unsigned int maskType;
+    typedef double pixelType;
     double minSigma = 0.1;
     double maxSigma = 3.0;
     const unsigned int DefNIter = 10;
@@ -47,7 +46,7 @@ int main(int argc, char **argv) {
     }
     
     // read in fits file
-    lsst::fw::MaskedImage<pixelType, maskType> mImage;
+    lsst::fw::MaskedImage<pixelType, lsst::fw::maskPixelType> mImage;
     mImage.readFits(argv[1]);
     
     cout << "Image is " << mImage.getCols() << " by " << mImage.getRows() << endl;
@@ -75,7 +74,7 @@ int main(int argc, char **argv) {
         clock_t startTime = clock();
         for (unsigned int iter = 0; iter < nIter; ++iter) {
             // convolve
-            lsst::fw::MaskedImage<pixelType, maskType>
+            lsst::fw::MaskedImage<pixelType, lsst::fw::maskPixelType>
                 resMImage = lsst::fw::kernel::convolve(mImage, gaussSpVarKernel, threshold, -1);
         }
         double secPerIter = (clock() - startTime) / static_cast<double> (nIter * CLOCKS_PER_SEC);

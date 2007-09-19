@@ -11,8 +11,7 @@
 using namespace std;
 
 int main(int argc, char **argv) {
-    typedef float pixelType;
-    typedef unsigned int maskType;
+    typedef double pixelType;
     double sigma = 3;
     const unsigned DefNIter = 10;
     const unsigned MinKernelSize = 5;
@@ -39,7 +38,7 @@ int main(int argc, char **argv) {
     }
     
     // read in fits file
-    lsst::fw::MaskedImage<pixelType, maskType> mImage;
+    lsst::fw::MaskedImage<pixelType, lsst::fw::maskPixelType> mImage;
     mImage.readFits(argv[1]);
     
     cout << "Image is " << mImage.getCols()
@@ -54,7 +53,7 @@ int main(int argc, char **argv) {
         clock_t startTime = clock();
         for (unsigned iter = 0; iter < nIter; ++iter) {
             // convolve
-            lsst::fw::MaskedImage<pixelType, maskType>
+            lsst::fw::MaskedImage<pixelType, lsst::fw::maskPixelType>
                 resMImage = lsst::fw::kernel::convolve(mImage, kernel, threshold, -1);
         }
         double secPerIter = (clock() - startTime) / static_cast<double> (nIter * CLOCKS_PER_SEC);

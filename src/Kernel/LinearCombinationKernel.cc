@@ -196,5 +196,4 @@ void lsst::fw::LinearCombinationKernel<PixelT>::_computeKernelImageList() {
 }
 
 // Explicit instantiations
-template class lsst::fw::LinearCombinationKernel<float>;
 template class lsst::fw::LinearCombinationKernel<double>;

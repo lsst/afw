@@ -2,8 +2,8 @@
 import sys
 Import('env')
 
-env.Program(["generate.cc"], LIBS=env.getlibs("fw"))
-env.Program(["vwconvert.cc"], LIBS=env.getlibs("vw"))
+env.Program(["generate.cc"], LIBS=env.getlibs("vw boost"))
+env.Program(["vwconvert.cc"], LIBS=env.getlibs("vw boost"))
 env.Program(["fitsio.cc"], LIBS=env.getlibs("fw fitsio"))
 env.Program("maskedImageFitsIO", ["maskedImageFitsIO.cc"], LIBS=env.getlibs("fw fitsio"))
 

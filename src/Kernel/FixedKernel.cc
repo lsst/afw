@@ -101,5 +101,4 @@ void lsst::fw::FixedKernel<PixelT>::basicSetKernelParameters(std::vector<double>
 //
 
 // Explicit instantiations
-template class lsst::fw::FixedKernel<float>;
 template class lsst::fw::FixedKernel<double>;

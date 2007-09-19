@@ -10,7 +10,7 @@
 using namespace std;
 
 int main() {
-    typedef float pixelType;
+    typedef double pixelType;
     unsigned int kernelCols = 6;
     unsigned int kernelRows = 5;
     unsigned int order = (min(kernelCols, kernelRows) - 1) / 2;

@@ -130,5 +130,4 @@ void lsst::fw::AnalyticKernel<PixelT>::basicSetKernelParameters(std::vector<doub
 }
 
 // Explicit instantiations
-template class lsst::fw::AnalyticKernel<float>;
 template class lsst::fw::AnalyticKernel<double>;

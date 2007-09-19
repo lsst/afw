@@ -11,7 +11,7 @@
 using namespace std;
 
 int main() {
-    typedef float pixelType;
+    typedef double pixelType;
     unsigned int kernelCols = 3;
     unsigned int kernelRows = 2;
     unsigned int nPixels = kernelCols * kernelRows;
