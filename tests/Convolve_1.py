@@ -176,7 +176,7 @@ class ConvolveTestCase(unittest.TestCase):
         if not numpy.allclose(cnvMask, refCnvMask):
             self.fail("Convolved mask does not match reference")
     
-    def testSpatiallyInvariantNewConvolve(self):
+    def testSpatiallyInvariantConvolve(self):
         """Test convolution with a spatially invariant Gaussian function
         """
         kCols = 7
@@ -215,7 +215,7 @@ class ConvolveTestCase(unittest.TestCase):
         if not numpy.allclose(cnvMask, refCnvMask):
             self.fail("Convolved mask does not match reference")
 
-    def testSpatiallyInvariantLinearCombinationNewConvolve(self):
+    def testSpatiallyInvariantLinearCombinationConvolve(self):
         """Test convolution with a spatially invariant LinearCombinationKernel
         """
         kCols = 7
@@ -254,14 +254,13 @@ class ConvolveTestCase(unittest.TestCase):
 
     def testConvolveLinear(self):
         """Test convolution with a spatially varying LinearCombinationKernel
-        by comparing the results of calling convolve with convolveLinear
-        or refConvolve, depending on the value of compareToConvolve.
+        by comparing the results of convolveLinear to fw.convolve or refConvolve,
+        depending on the value of compareToFwConvolve.
         """
-        compareToConvolve = True
+        compareToFwConvolve = True
         
         kCols = 7
         kRows = 7
-        threshold = 0.0
         edgeBit = 7
         imCols = 45
         imRows = 55
@@ -295,7 +294,7 @@ class ConvolveTestCase(unittest.TestCase):
         cnvMaskedImage = fw.convolve(maskedImage, lcKernel, 0.0, edgeBit)
         cnvImage, cnvVariance, cnvMask = iUtils.arraysFromMaskedImage(cnvMaskedImage)
         
-        if compareToConvolve:
+        if compareToFwConvolve:
             refCnvMaskedImage = fw.MaskedImageF(imCols, imRows)
             fw.convolveLinear(cnvMaskedImage, maskedImage, lcKernel, edgeBit)
             refCnvImage, refCnvVariance, refCnvMask = \
@@ -303,7 +302,7 @@ class ConvolveTestCase(unittest.TestCase):
         else:
             imVarMask = iUtils.arraysFromMaskedImage(maskedImage)
             refCnvImage, refCnvVariance, refCnvMask = \
-               refConvolve(imVarMask, lcKernel, threshold, edgeBit)
+               refConvolve(imVarMask, lcKernel, 0.0, edgeBit)
 
         if not numpy.allclose(cnvImage, refCnvImage):
             self.fail("Convolved image does not match reference")
