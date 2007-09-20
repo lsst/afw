@@ -29,8 +29,10 @@ InputMaskedImageName = "871034p_1_MI"
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def refSpatiallyInvariantConvolve(imVarMask, kernel, threshold=0, edgeBit=-1):
-    """Reference code to convolve a spatially invariant kernel with masked image data.
+def refConvolve(imVarMask, kernel, threshold=0, edgeBit=-1):
+    """Reference code to convolve a kernel with masked image data.
+
+    Warning: slow (especially for spatially varying kernels).
     
     Inputs:
     - imVarMask: (image, variance, mask) numpy arrays
@@ -42,7 +44,6 @@ def refSpatiallyInvariantConvolve(imVarMask, kernel, threshold=0, edgeBit=-1):
     and if edgeBit >= 0 then border mask pixels have the edgeBit bit set
     """
     image, variance, mask = imVarMask
-    kImage = iUtils.arrayFromImage(kernel.computeNewImage()[0])
     
     # copy input data, handling the outer border and edge bit
     retImage = image.copy()
@@ -59,23 +60,55 @@ def refSpatiallyInvariantConvolve(imVarMask, kernel, threshold=0, edgeBit=-1):
         raise RuntimeError("image must be larger than kernel in both dimensions")
     colRange = range(numCols)
 
+    isSpatiallyVarying = kernel.isSpatiallyVarying()
+    if not isSpatiallyVarying:
+        kImArr = iUtils.arrayFromImage(kernel.computeNewImage()[0])
+    else:
+        kImage = fw.ImageD(kCols, kRows)
+
     retRow = kernel.getCtrRow()
     for inRowBeg in range(numRows):
         inRowEnd = inRowBeg + kRows
         retCol = kernel.getCtrCol()
+        if isSpatiallyVarying:
+            rowPos = fw.indexToPosition(retRow)
         for inColBeg in colRange:
+            if isSpatiallyVarying:
+                colPos = fw.indexToPosition(retCol)
+                kernel.computeImage(kImage, colPos, rowPos)
+                kImArr = iUtils.arrayFromImage(kImage)
             inColEnd = inColBeg + kCols
             subImage = image[inColBeg:inColEnd, inRowBeg:inRowEnd]
             subVariance = variance[inColBeg:inColEnd, inRowBeg:inRowEnd]
             subMask = mask[inColBeg:inColEnd, inRowBeg:inRowEnd]
-            retImage[retCol, retRow] = numpy.add.reduce((kImage * subImage).flat)
-            retVariance[retCol, retRow] = numpy.add.reduce((kImage * kImage * subVariance).flat)
-            retMask[retCol, retRow] = numpy.bitwise_or.reduce(((kImage > threshold) * subMask).flat)
+            retImage[retCol, retRow] = numpy.add.reduce((kImArr * subImage).flat)
+            retVariance[retCol, retRow] = numpy.add.reduce((kImArr * kImArr * subVariance).flat)
+            retMask[retCol, retRow] = numpy.bitwise_or.reduce(((kImArr > threshold) * subMask).flat)
 
             retCol += 1
         retRow += 1
     return (retImage, retVariance, retMask)
 
+def makeGaussianKernelVec(kCols, kRows):
+    """Create a fw.vectorKernelPtrD of gaussian kernels.
+
+    This is useful for constructing a LinearCombinationKernel.
+    """
+    xySigmaList = [
+        (1.5, 1.5),
+        (1.5, 2.5),
+        (2.5, 1.5),
+    ]
+    kVec = fw.vectorKernelPtrD()
+    for xSigma, ySigma in xySigmaList:
+        f = fw.GaussianFunction2D(1.5, 2.5)
+        fPtr =  fw.Function2PtrTypeD(f)
+        f.this.disown() # Only the shared pointer now owns f
+        basisKernel = fw.AnalyticKernelD(fPtr, kCols, kRows)
+        basisKernelPtr = fw.KernelPtrTypeD(basisKernel)
+        basisKernel.this.disown() # only the shared pointer now owns basisKernel
+        kVec.append(basisKernelPtr)
+    return kVec
 
 class ConvolveTestCase(unittest.TestCase):
     def testUnityConvolution(self):
@@ -134,7 +167,7 @@ class ConvolveTestCase(unittest.TestCase):
 
         imVarMask = iUtils.arraysFromMaskedImage(maskedImage)
         refCnvImage, refCnvVariance, refCnvMask = \
-            refSpatiallyInvariantConvolve(imVarMask, k, threshold, edgeBit)
+            refConvolve(imVarMask, k, threshold, edgeBit)
 
         if not numpy.allclose(cnvImage, refCnvImage):
             self.fail("Convolved image does not match reference")
@@ -168,14 +201,12 @@ class ConvolveTestCase(unittest.TestCase):
         maskedImage = subMaskedImagePtr.get()
         maskedImage.this.disown()
         
-        # this fails because of wrong # of arguments
-        # so the function overloading is not working correctly (no surprise)
         cnvMaskedImage = fw.convolve(maskedImage, k, threshold, edgeBit)
         cnvImage, cnvVariance, cnvMask = iUtils.arraysFromMaskedImage(cnvMaskedImage)
 
         imVarMask = iUtils.arraysFromMaskedImage(maskedImage)
         refCnvImage, refCnvVariance, refCnvMask = \
-            refSpatiallyInvariantConvolve(imVarMask, k, threshold, edgeBit)
+            refConvolve(imVarMask, k, threshold, edgeBit)
 
         if not numpy.allclose(cnvImage, refCnvImage):
             self.fail("Convolved image does not match reference")
@@ -183,7 +214,104 @@ class ConvolveTestCase(unittest.TestCase):
             self.fail("Convolved variance does not match reference")
         if not numpy.allclose(cnvMask, refCnvMask):
             self.fail("Convolved mask does not match reference")
-    
+
+    def testSpatiallyInvariantLinearCombinationNewConvolve(self):
+        """Test convolution with a spatially invariant LinearCombinationKernel
+        """
+        kCols = 7
+        kRows = 7
+        threshold = 0.0
+        edgeBit = 7
+        imCols = 45
+        imRows = 55
+
+        currDir = os.path.abspath(os.path.dirname(__file__))
+        inFilePath = os.path.join(currDir, "data", InputMaskedImageName)
+        fullMaskedImage = fw.MaskedImageF()
+        fullMaskedImage.readFits(inFilePath)
+        
+        # pick a small piece of the image to save time
+        bbox = fw.BBox2i(0, 0, imCols, imRows)
+        subMaskedImagePtr = fullMaskedImage.getSubImage(bbox)
+        maskedImage = subMaskedImagePtr.get()
+        maskedImage.this.disown()
+
+        kVec = makeGaussianKernelVec(kCols, kRows)
+        lcKernel = fw.LinearCombinationKernelD(kVec, (1.0, 1.0, 1.0))
+        cnvMaskedImage = fw.convolve(maskedImage, lcKernel, threshold, edgeBit)
+        cnvImage, cnvVariance, cnvMask = iUtils.arraysFromMaskedImage(cnvMaskedImage)
+
+        imVarMask = iUtils.arraysFromMaskedImage(maskedImage)
+        refCnvImage, refCnvVariance, refCnvMask = \
+            refConvolve(imVarMask, lcKernel, threshold, edgeBit)
+
+        if not numpy.allclose(cnvImage, refCnvImage):
+            self.fail("Convolved image does not match reference")
+        if not numpy.allclose(cnvVariance, refCnvVariance):
+            self.fail("Convolved variance does not match reference")
+        if not numpy.allclose(cnvMask, refCnvMask):
+            self.fail("Convolved mask does not match reference")
+
+    def testConvolveLinear(self):
+        """Test convolution with a spatially varying LinearCombinationKernel
+        by comparing the results of calling convolve with convolveLinear
+        or refConvolve, depending on the value of compareToConvolve.
+        """
+        compareToConvolve = True
+        
+        kCols = 7
+        kRows = 7
+        threshold = 0.0
+        edgeBit = 7
+        imCols = 45
+        imRows = 55
+
+        currDir = os.path.abspath(os.path.dirname(__file__))
+        inFilePath = os.path.join(currDir, "data", InputMaskedImageName)
+        fullMaskedImage = fw.MaskedImageF()
+        fullMaskedImage.readFits(inFilePath)
+        
+        # pick a small piece of the image to save time
+        bbox = fw.BBox2i(0, 0, imCols, imRows)
+        subMaskedImagePtr = fullMaskedImage.getSubImage(bbox)
+        maskedImage = subMaskedImagePtr.get()
+        maskedImage.this.disown()
+
+        # create spatially varying linear combination kernel
+        sFunc = fw.PolynomialFunction2D(1)
+        sFuncPtr =  fw.Function2PtrTypeD(sFunc)
+        sFunc.this.disown() # Only the shared pointer now owns sFunc
+        
+        # spatial parameters are a list of entries, one per kernel parameter;
+        # each entry is a list of spatial parameters
+        sParams = (
+            (1.0, -0.5 / imCols, -0.5 / imRows),
+            (0.0,  1.0 / imCols,  0.0 / imRows),
+            (0.0,  0.0 / imCols,  1.0 / imRows),
+        )
+        
+        kVec = makeGaussianKernelVec(kCols, kRows)
+        lcKernel = fw.LinearCombinationKernelD(kVec, sFuncPtr, sParams)
+        cnvMaskedImage = fw.convolve(maskedImage, lcKernel, 0.0, edgeBit)
+        cnvImage, cnvVariance, cnvMask = iUtils.arraysFromMaskedImage(cnvMaskedImage)
+        
+        if compareToConvolve:
+            refCnvMaskedImage = fw.MaskedImageF(imCols, imRows)
+            fw.convolveLinear(cnvMaskedImage, maskedImage, lcKernel, edgeBit)
+            refCnvImage, refCnvVariance, refCnvMask = \
+                iUtils.arraysFromMaskedImage(cnvMaskedImage)
+        else:
+            imVarMask = iUtils.arraysFromMaskedImage(maskedImage)
+            refCnvImage, refCnvVariance, refCnvMask = \
+               refConvolve(imVarMask, lcKernel, threshold, edgeBit)
+
+        if not numpy.allclose(cnvImage, refCnvImage):
+            self.fail("Convolved image does not match reference")
+        if not numpy.allclose(cnvVariance, refCnvVariance):
+            self.fail("Convolved variance does not match reference")
+        if not numpy.allclose(cnvMask, refCnvMask):
+            self.fail("Convolved mask does not match reference")
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
