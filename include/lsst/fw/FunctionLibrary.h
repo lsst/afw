@@ -416,7 +416,7 @@ namespace function {
         virtual ReturnT operator() (double x) const {
             double xArg1 = (x - this->_params[0]) * M_PI;
             double xArg2 = xArg1 * _invN;
-            if (abs(xArg1) > 1.0e-5) {
+            if (std::fabs(xArg1) > 1.0e-5) {
                 return static_cast<ReturnT>(std::sin(xArg1) * std::sin(xArg2) / (xArg1 * xArg2));
             } else {
                 return static_cast<ReturnT>(1);
@@ -464,7 +464,7 @@ namespace function {
                 + ((y - this->_params[1]) * (y - this->_params[1])));
             double arg1 = rad * M_PI;
             double arg2 = arg1 * _invN;
-            if (abs(rad) > 1.0e-5) {
+            if (std::fabs(rad) > 1.0e-5) {
                 return static_cast<ReturnT>(std::sin(arg1) * std::sin(arg2) / (arg1 * arg2));
             } else {
                 return static_cast<ReturnT>(1);
@@ -511,13 +511,13 @@ namespace function {
             double xArg1 = (x - this->_params[0]) * M_PI;
             double xArg2 = xArg1 * _invN;
             double xFunc = 1;
-            if (abs(xArg1) > 1.0e-5) {
+            if (std::fabs(xArg1) > 1.0e-5) {
                 xFunc = std::sin(xArg1) * std::sin(xArg2) / (xArg1 * xArg2);
             }
             double yArg1 = (y - this->_params[1]) * M_PI;
             double yArg2 = yArg1 * _invN;
             double yFunc = 1;
-            if (abs(yArg1) > 1.0e-5) {
+            if (std::fabs(yArg1) > 1.0e-5) {
                 yFunc = std::sin(yArg1) * std::sin(yArg2) / (yArg1 * yArg2);
             }
             return static_cast<ReturnT>(xFunc * yFunc);

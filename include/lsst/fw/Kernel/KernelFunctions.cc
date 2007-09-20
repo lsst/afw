@@ -55,8 +55,8 @@ inline void lsst::fw::kernel::apply(
         MaskedPixelAccessor<ImageT, MaskT> imCol = imRow;
         kernelAccessorType kCol = kRow;
         for (unsigned int col = 0; col < cols; ++col, imCol.nextCol(), kCol.next_col()) {
-            *outAccessor.image += (*kCol) * (*imCol.image);
-            *outAccessor.variance += (*kCol) * (*kCol) * (*imCol.variance);
+            *outAccessor.image += static_cast<ImageT>((*kCol) * (*imCol.image));
+            *outAccessor.variance += static_cast<ImageT>((*kCol) * (*kCol) * (*imCol.variance));
             if ((*imCol.mask) && (*kCol > threshold)) {
                 // this bad pixel contributes enough to "OR" in the bad bits
                 *outAccessor.mask |= *imCol.mask;
@@ -282,8 +282,8 @@ void lsst::fw::kernel::convolveLinear(
             typename std::vector<double>::const_iterator kernelCoeffIter = kernelCoeffList.begin();
             for (typename imageAccessorListType::const_iterator basisImageColIter = basisImageColList.begin();
                 basisImageColIter != basisImageColList.end(); ++basisImageColIter, ++kernelCoeffIter) {
-                *outCol.image += (*kernelCoeffIter) * (*basisImageColIter->image);
-                *outCol.variance += (*kernelCoeffIter) * (*kernelCoeffIter) * (*basisImageColIter->variance);
+                *outCol.image += static_cast<ImageT>((*kernelCoeffIter) * (*basisImageColIter->image));
+                *outCol.variance += static_cast<ImageT>((*kernelCoeffIter) * (*kernelCoeffIter) * (*basisImageColIter->variance));
                 *outCol.mask |= (*basisImageColIter->mask);
             }
             outCol.nextCol();

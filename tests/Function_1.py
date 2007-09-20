@@ -163,7 +163,7 @@ class FunctionTestCase(unittest.TestCase):
                             rad = math.sqrt((x - xOffset)**2 + (y - yOffset)**2)
                             predVal = basicLanczos1(rad, n)
                             if not numpy.allclose(predVal, f(x, y)):
-                                self.fail("%s = %s != %s for x=%s, n=%s, y=%s, xOffset=%s, yOffset=%s, rad=%s" % \
+                                self.fail("%s = %s != %s for n=%s, x=%s, xOffset=%s, yOffset=%s, rad=%s" % \
                                     (f.__class__.__name__, f(x,y), predVal, n, x, xOffset, yOffset, rad))
        
     def testLanczosSeparableFunction2D(self):
@@ -182,7 +182,7 @@ class FunctionTestCase(unittest.TestCase):
                             yAdj = y - yOffset
                             predVal = basicLanczos1(xAdj, n) * basicLanczos1(yAdj, n)
                             if not numpy.allclose(predVal, f(x, y)):
-                                self.fail("%s = %s != %s for x=%s, n=%s, y=%s, xOffset=%s, yOffset=%s, xAdj=%s, yAdj=%s" % \
+                                self.fail("%s = %s != %s for n=%s, x=%s, xOffset=%s, yOffset=%s, xAdj=%s, yAdj=%s" % \
                                     (f.__class__.__name__, f(x,y), predVal, n, x, xOffset, yOffset, xAdj, yAdj))
        
     def testPolynomialFunction1D(self):
