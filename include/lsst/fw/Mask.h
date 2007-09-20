@@ -24,6 +24,7 @@
 #include "lsst/mwi/utils/Trace.h"
 #include "lsst/mwi/data/SupportFactory.h"
 #include "lsst/fw/LSSTFitsResource.h"
+#include "lsst/fw/fwExceptions.h"
 
 namespace lsst {
 namespace fw {

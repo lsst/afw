@@ -27,7 +27,7 @@ env.libs["fw"] += env.getlibs("boost mwi vw wcslib") # we'll always want to link
 #
 # Build/install things
 #
-for d in Split("doc examples lib src tests"):
+for d in Split("include/lsst/fw doc examples lib src tests"):
     SConscript(os.path.join(d, "SConscript"))
 
 for d in map(lambda str: "python/lsst/fw/" + str,

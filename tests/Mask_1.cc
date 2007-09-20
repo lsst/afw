@@ -3,6 +3,7 @@
 
 #include "lsst/mwi/data/SupportFactory.h"
 #include "lsst/mwi/data/Citizen.h"
+#include "lsst/fw/fwExceptions.h"
 #include "lsst/mwi/exceptions.h"
 #include "lsst/mwi/utils/Trace.h"
 #include "lsst/fw/Mask.h"
@@ -16,6 +17,7 @@ using lsst::mwi::data::Citizen;
 using lsst::mwi::data::SupportFactory;
 
 namespace mwie = lsst::mwi::exceptions;
+namespace fwe  = lsst::fw;
 
 template <typename MaskPixelT> class testCrFunc : public MaskPixelBooleanFunc<MaskPixelT> {
 public:
@@ -74,7 +76,7 @@ void test() {
     try {
        iPlane = testMask.addMaskPlane("CR");
        cout << "Assigned CR to plane " << iPlane << endl;
-    } catch(mwie::OutOfPlaneSpace &e){
+    } catch(fwe::OutOfPlaneSpace &e){
        DataProperty::PtrType  propertyList = e.getLast();
        cout << propertyList->toString("",true) << endl;
        DataProperty::PtrType aProperty = propertyList->findUnique("numPlanesUsed");
@@ -100,7 +102,7 @@ void test() {
         try {
             cout << boost::format("Assigned %s to plane %d\n") %
                 sp % testMask.addMaskPlane(sp);
-        } catch(mwie::OutOfPlaneSpace &e) {
+        } catch(fwe::OutOfPlaneSpace &e) {
             e.getStack()->toString("\t",true);
         }
     }
@@ -109,7 +111,7 @@ void test() {
         string sp = (boost::format("P%d") % i).str();
         try {
             testMask.removeMaskPlane(sp);
-        } catch(mwie::NoMaskPlane) {
+        } catch(fwe::NoMaskPlane) {
             ;
         }
     }
@@ -121,7 +123,7 @@ void test() {
     try {
         testMask.getMaskPlane("CR", planeCR); 
         cout << "CR plane is " << planeCR << endl;
-    } catch(mwie::NoMaskPlane &e) {
+    } catch(fwe::NoMaskPlane &e) {
 	  cout << e.what() << "No CR plane found" << endl;
          throw;
     }
@@ -130,7 +132,7 @@ void test() {
         testMask.getMaskPlane("BP", planeBP);
         cout << "BP plane is " << planeBP << endl;
     }
-    catch(mwie::NoMaskPlane &e) {
+    catch(fwe::NoMaskPlane &e) {
 	  cout << e.what() << "No BP plane found" << endl;
          throw;
     } 
@@ -204,7 +206,7 @@ void test() {
 
     try {
         testMask.getMaskPlane("CR", planeCR);
-    } catch(mwie::NoMaskPlane &e) {
+    } catch(fwe::NoMaskPlane &e) {
 	  cout << e.what() << "No CR plane found" << endl;
          throw;
     } 
@@ -213,7 +215,7 @@ void test() {
     try {
         testMask.getMaskPlane("BP", planeBP);
         cout << "BP plane is " << planeBP << endl;
-    } catch(mwie::NoMaskPlane &e) {
+    } catch(fwe::NoMaskPlane &e) {
 	  cout << e.what() << "No BP plane found" << endl;
          // testing success of plane deletion so NO  throw;
     } 
@@ -291,7 +293,7 @@ int main(int argc, char *argv[]) {
        try {
            test();
        } catch (mwie::ExceptionStack &e) {
-           throw mwie::Runtime(std::string("In handler\n") + e.what());
+           throw mwie::Runtime(string("In handler\n") + e.what());
        }
     } catch (mwie::ExceptionStack &e) {
        clog << e.what() << endl;

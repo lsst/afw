@@ -108,7 +108,7 @@ int lsst::fw::Mask<MaskPixelT>::addMaskPlane(const std::string& name)
         getMaskPlane(name, id);
      return id;
      }
-     catch(lsst::mwi::exceptions::NoMaskPlane &e) {
+     catch(lsst::fw::NoMaskPlane &e) {
         // build new entry
         if (_numPlanesUsed < getNumPlanesMax()) {
             // find first entry in dict with null name
@@ -120,12 +120,12 @@ int lsst::fw::Mask<MaskPixelT>::addMaskPlane(const std::string& name)
                 }
             }
             // No free space found for new plane addition
-            throw lsst::mwi::exceptions::OutOfPlaneSpace("No space to add new plane")
+            throw lsst::fw::OutOfPlaneSpace("No space to add new plane")
                 << lsst::mwi::data::DataProperty("numPlanesUsed", _numPlanesUsed) 
                 << lsst::mwi::data::DataProperty("numPlanesMax", getNumPlanesMax());
         } else {
             // Max number of planes already allocated
-          throw lsst::mwi::exceptions::OutOfPlaneSpace("Max number of planes already used")
+          throw lsst::fw::OutOfPlaneSpace("Max number of planes already used")
               << lsst::mwi::data::DataProperty("numPlanesUsed", _numPlanesUsed)
               << lsst::mwi::data::DataProperty("numPlanesMax", getNumPlanesMax());
         }
@@ -177,7 +177,7 @@ void lsst::fw::Mask<MaskPixelT>::getMaskPlane(const std::string& name,
         }
      }
      plane = -1;
-     throw lsst::mwi::exceptions::NoMaskPlane("Failed to find maskPlane " + name);
+     throw lsst::fw::NoMaskPlane("Failed to find maskPlane " + name);
 }
 
 template<typename MaskPixelT>
@@ -368,7 +368,7 @@ lsst::fw::Mask<MaskPixelT>& lsst::fw::Mask<MaskPixelT>::operator |= (const Mask<
             int thisPlaneNumber;
             try {
                 getMaskPlane(inputPlaneName, thisPlaneNumber) ;
-            } catch (lsst::mwi::exceptions::NoMaskPlane &e) {
+            } catch (lsst::fw::NoMaskPlane &e) {
                 lsst::mwi::utils::Trace("fw.Mask", 0,
                     boost::format("%s Plane %s not present in this Mask") % e.what() % inputPlaneName);
                 throw;
