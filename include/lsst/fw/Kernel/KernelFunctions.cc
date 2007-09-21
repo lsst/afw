@@ -55,11 +55,11 @@ inline void lsst::fw::kernel::apply(
         MaskedPixelAccessor<ImageT, MaskT> imCol = imRow;
         kernelAccessorType kCol = kRow;
         for (unsigned int col = 0; col < cols; ++col, imCol.nextCol(), kCol.next_col()) {
-            *outAccessor.image += static_cast<ImageT>((*kCol) * (*imCol.image));
-            *outAccessor.variance += static_cast<ImageT>((*kCol) * (*kCol) * (*imCol.variance));
+            *(outAccessor.image) += static_cast<ImageT>((*kCol) * (*(imCol.image)));
+            *(outAccessor.variance) += static_cast<ImageT>((*kCol) * (*kCol) * (*(imCol.variance)));
             if ((*imCol.mask) && (*kCol > threshold)) {
                 // this bad pixel contributes enough to "OR" in the bad bits
-                *outAccessor.mask |= *imCol.mask;
+                *(outAccessor.mask) |= *(imCol.mask);
             }
         }
     }
@@ -130,8 +130,8 @@ void lsst::fw::kernel::convolve(
                 KernelT adjThreshold = threshold * kSum;
                 lsst::fw::kernel::apply(outCol, imCol, kernelAccessor, kCols, kRows, adjThreshold);
                 if (doNormalize) {
-                    *outCol.image /= static_cast<ImageT>(kSum);
-                    *outCol.variance /= static_cast<ImageT>(kSum * kSum);
+                    *(outCol.image) /= static_cast<ImageT>(kSum);
+                    *(outCol.variance) /= static_cast<ImageT>(kSum * kSum);
                 }
             }
         }
@@ -262,7 +262,8 @@ void lsst::fw::kernel::convolveLinear(
         int locEdgeBit = edgeBit;
         for (typename kernelListType::const_iterator basisKernelIter = basisKernels.begin();
             basisKernelIter != basisKernels.end(); ++basisKernelIter) {
-            lsst::fw::kernel::convolve(basisImage, maskedImage, **basisKernelIter, threshold, locEdgeBit, false);
+            lsst::fw::kernel::convolve(
+                basisImage, maskedImage, **basisKernelIter, threshold, locEdgeBit, false);
             basisImageList.push_back(basisImage);
             basisImageRowList.push_back(lsst::fw::MaskedPixelAccessor<ImageT, MaskT>(basisImage));
             locEdgeBit = -1; // only set the edge bit for the first image; this saves time
@@ -282,9 +283,10 @@ void lsst::fw::kernel::convolveLinear(
             typename std::vector<double>::const_iterator kernelCoeffIter = kernelCoeffList.begin();
             for (typename imageAccessorListType::const_iterator basisImageColIter = basisImageColList.begin();
                 basisImageColIter != basisImageColList.end(); ++basisImageColIter, ++kernelCoeffIter) {
-                *outCol.image += static_cast<ImageT>((*kernelCoeffIter) * (*basisImageColIter->image));
-                *outCol.variance += static_cast<ImageT>((*kernelCoeffIter) * (*kernelCoeffIter) * (*basisImageColIter->variance));
-                *outCol.mask |= (*basisImageColIter->mask);
+                *(outCol.image) += static_cast<ImageT>((*kernelCoeffIter) * (*(basisImageColIter->image)));
+                *(outCol.variance) += static_cast<ImageT>(
+                    (*kernelCoeffIter) * (*kernelCoeffIter) * (*(basisImageColIter->variance)));
+                *(outCol.mask) |= *(basisImageColIter->mask);
             }
             outCol.nextCol();
             std::for_each(basisImageColList.begin(), basisImageColList.end(),

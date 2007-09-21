@@ -18,6 +18,7 @@ env.Program("deltaFunctionKernels", ["deltaFunctionKernels.cc"], LIBS=env.getlib
 env.Program("fixedKernel", ["fixedKernel.cc"], LIBS=env.getlibs("fw"))
 env.Program("lanczosKernel", ["lanczosKernel.cc"], LIBS=env.getlibs("fw"))
 
+env.Program("convolveLinear", ["convolveLinear.cc"], LIBS=env.getlibs("fw fitsio"))
 env.Program("simpleConvolve", ["simpleConvolve.cc"], LIBS=env.getlibs("fw fitsio"))
 env.Program("spatiallyVaryingConvolve", ["spatiallyVaryingConvolve.cc"], LIBS=env.getlibs("fw fitsio"))
 env.Program("timeConvolve", ["timeConvolve.cc"], LIBS=env.getlibs("fw fitsio"))
@@ -28,7 +29,8 @@ env.Program("timeSpatiallyVaryingConvolve", ["timeSpatiallyVaryingConvolve.cc"],
 import lsst.tests
 tests = lsst.tests.Control(env, ignoreList=[
     "fitsio", "generate", "vwconvert", "maskedImageFitsIO",
-    "simpleConvolve", "spatiallyVaryingConvolve", "timeConvolve", "timeSpatiallyVaryingConvolve",
+    "convolveLinear", "simpleConvolve", "spatiallyVaryingConvolve",
+    "timeConvolve", "timeSpatiallyVaryingConvolve",
 ])
 
 if not tests.runExamples:
