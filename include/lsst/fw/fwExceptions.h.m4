@@ -161,7 +161,16 @@ public:
     *
     * \param rhs     Reference to DataProperty to be added to most recent ExceptionData on ExceptionStack.
     */
-    $1 &operator<< (lsst::mwi::data::DataProperty  rhs) throw() {
+    $1 &operator<< (lsst::mwi::data::DataProperty  const rhs) throw() {
+        this->getLast()->addProperty(rhs);
+        return *this;
+    }
+
+  /** operator<< 
+    *
+    * \param rhs     Reference to DataProperty to be added to most recent ExceptionData on ExceptionStack.
+    */
+    $1 &operator<< (lsst::mwi::data::DataProperty::PtrType  const rhs) throw() {
         this->getLast()->addProperty(rhs);
         return *this;
     }
