@@ -36,6 +36,15 @@ namespace kernel {
     );
     
     template <typename ImageT, typename MaskT, typename KernelT>
+    void basicConvolve(
+        lsst::fw::MaskedImage<ImageT, MaskT> &convolvedImage,
+        lsst::fw::MaskedImage<ImageT, MaskT> const &maskedImage,
+        lsst::fw::Kernel<KernelT> const &kernel,
+        KernelT threshold,
+        bool doNormalize = true
+    );
+    
+    template <typename ImageT, typename MaskT, typename KernelT>
     void convolve(
         lsst::fw::MaskedImage<ImageT, MaskT> &convolvedImage,
         lsst::fw::MaskedImage<ImageT, MaskT> const &maskedImage,
@@ -69,14 +78,6 @@ namespace kernel {
         double y = 0,
         bool doNormalize = true,
         std::string pixelFmt = "%7.3f"
-    );
-
-    template <typename ImageT, typename MaskT>
-    inline void _copyRegion(
-        typename lsst::fw::MaskedImage<ImageT, MaskT> &destImage,
-        typename lsst::fw::MaskedImage<ImageT, MaskT> const &sourceImage,
-        vw::BBox2i const &region,
-        MaskT orMask
     );
 
 }}}   // lsst::fw::kernel

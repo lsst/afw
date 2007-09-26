@@ -114,6 +114,60 @@ class KernelTestCase(unittest.TestCase):
                 self.fail("%s = %s != %s for the %s'th basis kernel" % \
                     (k.__class__.__name__, kImArr, basisImArrList[ii], ii))
 
+    def testSVLinearCombinationKernel(self):
+        """Test a spatially varying LinearCombinationKernel
+        """
+        kCols = 3
+        kRows = 2
+
+        # create image arrays for the basis kernels
+        basisImArrList = []
+        imArr = numpy.zeros((kCols, kRows), dtype=float)
+        imArr += 0.1
+        imArr[kCols//2, :] = 0.9
+        basisImArrList.append(imArr)
+        imArr = numpy.zeros((kCols, kRows), dtype=float)
+        imArr += 0.2
+        imArr[:, kRows//2] = 0.8
+        basisImArrList.append(imArr)
+        
+        # create a list of basis kernels from the images
+        kVec = fw.vectorKernelPtrD()
+        for basisImArr in basisImArrList:
+            basisImage = itu.imageFromArray(basisImArr)
+            basisKernel = fw.FixedKernelD(basisImage)
+            kPtr = fw.KernelPtrTypeD(basisKernel)
+            basisKernel.this.disown() # only the shared pointer now owns basisKernel
+            kVec.append(kPtr)
+
+        # create spatially varying linear combination kernel
+        sFunc = fw.PolynomialFunction2D(1)
+        sFuncPtr =  fw.Function2PtrTypeD(sFunc)
+        sFunc.this.disown() # Only the shared pointer now owns sFunc
+        
+        # spatial parameters are a list of entries, one per kernel parameter;
+        # each entry is a list of spatial parameters
+        sParams = (
+            (0.0, 1.0, 0.0),
+            (0.0, 0.0, 1.0),
+        )
+        
+        k = fw.LinearCombinationKernelD(kVec, sFuncPtr, sParams)
+        kImage = fw.ImageD(kCols, kRows)
+        for colPos, rowPos, coeff0, coeff1 in [
+            (0.0, 0.0, 0.0, 0.0),
+            (1.0, 0.0, 1.0, 0.0),
+            (0.0, 1.0, 0.0, 1.0),
+            (1.0, 1.0, 1.0, 1.0),
+            (0.5, 0.5, 0.5, 0.5),
+        ]:
+            k.computeImage(kImage, colPos, rowPos, False)
+            kImArr = itu.arrayFromImage(kImage)
+            refKImArr = (basisImArrList[0] * coeff0) + (basisImArrList[1] * coeff1)
+            if not numpy.allclose(kImArr, refKImArr):
+                self.fail("%s = %s != %s at colPos=%s, rowPos=%s" % \
+                    (k.__class__.__name__, kImArr, refKImArr, colPos, rowPos))
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():

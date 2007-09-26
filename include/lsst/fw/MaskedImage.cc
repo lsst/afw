@@ -41,7 +41,7 @@ lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::MaskedImage(
     _variancePtr(variance),
     _maskPtr(mask) {
     conformSizes();
-}    
+}
 
 /**
  * \brief Construct a blank MaskedImage of specified size
@@ -54,19 +54,39 @@ lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::MaskedImage(int nCols, int nRows
     _maskPtr(new Mask<MaskPixelT>(nCols, nRows)) {
 }
 
+/**
+ * \brief Copy constructor
+ *
+ * Warning: this is a shallow copy; the pixel data is shared with the original MaskedImage.
+ *
+ * I would not expect an explicit assignment operator to be necessary, given the use of shared pointers,
+ * but it allows lsst::fw::convolveLinear to function properly.
+ */
+template<typename ImagePixelT, typename MaskPixelT>
+lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::MaskedImage(
+    const lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>& rhs
+) :
+    lsst::mwi::data::LsstBase(typeid(this)),
+    _imagePtr(rhs._imagePtr),
+    _variancePtr(rhs._variancePtr),
+    _maskPtr(rhs._maskPtr) {
+}
+
 template<typename ImagePixelT, typename MaskPixelT> 
 lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::~MaskedImage() {
 }
 
-/*
- * Avoiding the default assignment operator seems to solve ticket 144 (memory leaks in the Python code),
- * but I don't know why. Explicitly resetting the shared pointers before setting them is not the answer
- * (because commenting it out makes no difference) and the rest of the code should be identical
- * to the default assignment operator.
+/**
+ * \brief Assignment operator
+ *
+ * Warning: this is a shallow copy; the pixel data is shared with the original MaskedImage.
+ *
+ * I would not expect an explicit assignment operator to be necessary, given the use of shared pointers,
+ * but it avoids memory problems (see ticket 144).
  */
-template<typename MaskPixelT, typename ImagePixelT>
-lsst::fw::MaskedImage<MaskPixelT, ImagePixelT>& lsst::fw::MaskedImage<MaskPixelT, ImagePixelT>::operator= (
-    const MaskedImage<MaskPixelT, ImagePixelT>& rhs
+template<typename ImagePixelT, typename MaskPixelT>
+lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>& lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::operator= (
+    const MaskedImage<ImagePixelT, MaskPixelT>& rhs
 ) {
     if (&rhs != this) {   // beware of self assignment: maskedImage = maskedImage;
         _imagePtr.reset();

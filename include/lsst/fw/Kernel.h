@@ -364,7 +364,7 @@ namespace fw {
     private:
         void _computeKernelImageList();
         KernelListType _kernelList;
-        std::vector<Image<PixelT> > _kernelImageList;
+        std::vector<boost::shared_ptr<Image<PixelT> > > _kernelImagePtrList;
         mutable std::vector<double> _kernelParams;
     };
 

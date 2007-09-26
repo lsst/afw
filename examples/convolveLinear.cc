@@ -100,7 +100,7 @@ int main(int argc, char **argv) {
         if (doBothWays) {
             lsst::fw::MaskedImage<imagePixelType, lsst::fw::maskPixelType> altResMaskedImage(
                 mImage.getCols(), mImage.getRows());
-            lsst::fw::kernel::convolve(altResMaskedImage, mImage, lcSpVarKernel, 0.0, edgeBit);
+            lsst::fw::kernel::convolve(altResMaskedImage, mImage, lcSpVarKernel, 0.0, edgeBit, false);
             altResMaskedImage.writeFits(altOutFile);
             std::cout << "Wrote " << altOutFile << "_img.fits, etc. (using lsst::fw::kernel::convolve)"
                 << std::endl;

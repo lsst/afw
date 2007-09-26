@@ -19,10 +19,7 @@
 %template(AnalyticKernelD)      lsst::fw::AnalyticKernel<double>;
 %template(LinearCombinationKernelD) lsst::fw::LinearCombinationKernel<double>;
 
-// I doubt extend_smart_pointer is needed; the code seems to work just as well without it.
-%extend_smart_pointer(boost::shared_ptr<lsst::fw::function::Function2<double> >);
 %template(Function2PtrTypeD)    boost::shared_ptr<lsst::fw::function::Function2<double> >;
-%extend_smart_pointer(boost::shared_ptr<lsst::fw::Kernel<double> >);
 %template(KernelPtrTypeD)       boost::shared_ptr<lsst::fw::Kernel<double> >;
 %template(vectorKernelPtrD)     std::vector<boost::shared_ptr<lsst::fw::Kernel<double> > >;
 //

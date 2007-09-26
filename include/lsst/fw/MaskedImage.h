@@ -98,6 +98,7 @@ namespace fw {
         MaskedImage(ImagePtrT image, MaskPtrT mask);
         MaskedImage(ImagePtrT image, ImagePtrT variance, MaskPtrT mask);
         MaskedImage(int nCols, int nRows);
+        MaskedImage(const MaskedImage<ImagePixelT, MaskPixelT> & rhs);
         
         virtual ~MaskedImage();
         

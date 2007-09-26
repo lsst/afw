@@ -26,7 +26,7 @@ lsst::fw::LinearCombinationKernel<PixelT>::LinearCombinationKernel()
 :
     Kernel<PixelT>(),
     _kernelList(),
-    _kernelImageList(),
+    _kernelImagePtrList(),
     _kernelParams()
 { }
 
@@ -40,7 +40,7 @@ lsst::fw::LinearCombinationKernel<PixelT>::LinearCombinationKernel(
 :
     Kernel<PixelT>(kernelList[0]->getCols(), kernelList[0]->getRows(), kernelList.size()),
     _kernelList(kernelList),
-    _kernelImageList(),
+    _kernelImagePtrList(),
     _kernelParams(kernelParameters)
 {
     checkKernelList(kernelList);
@@ -57,7 +57,7 @@ lsst::fw::LinearCombinationKernel<PixelT>::LinearCombinationKernel(
 :
     Kernel<PixelT>(kernelList[0]->getCols(), kernelList[0]->getRows(), kernelList.size(), spatialFunction),
     _kernelList(kernelList),
-    _kernelImageList(),
+    _kernelImagePtrList(),
     _kernelParams(std::vector<double>(kernelList.size()))
 {
     checkKernelList(kernelList);
@@ -78,7 +78,7 @@ lsst::fw::LinearCombinationKernel<PixelT>::LinearCombinationKernel(
     Kernel<PixelT>(kernelList[0]->getCols(), kernelList[0]->getRows(),
         kernelList.size(), spatialFunction, spatialParameters),
     _kernelList(kernelList),
-    _kernelImageList(),
+    _kernelImagePtrList(),
     _kernelParams(std::vector<double>(kernelList.size()))
 {
     checkKernelList(kernelList);
@@ -99,13 +99,18 @@ void lsst::fw::LinearCombinationKernel<PixelT>::computeImage(
     if (this->isSpatiallyVarying()) {
         this->computeKernelParametersFromSpatialModel(this->_kernelParams, x, y);
     }
-    Image<PixelT> tempImage(this->getCols(), this->getRows());
     typename Image<PixelT>::ImageIVwPtrT vwImagePtr = image.getIVwPtr();
     
-    typename std::vector<Image<PixelT> >::const_iterator kImIter = _kernelImageList.begin();
+    bool isFirst = true;
+    typename std::vector<boost::shared_ptr<Image<PixelT> > >::const_iterator
+        kImPtrIter = _kernelImagePtrList.begin();
     typename std::vector<double>::const_iterator kParIter = _kernelParams.begin();
-    for ( ; kImIter != _kernelImageList.end(); ++kImIter, ++kParIter) {
-        *vwImagePtr += (*(kImIter->getIVwPtr())) * static_cast<PixelT>(*kParIter);
+    for ( ; kImPtrIter != _kernelImagePtrList.end(); ++kImPtrIter, ++kParIter, isFirst = false) {
+        if (isFirst) {
+            *vwImagePtr = (*((**kImPtrIter).getIVwPtr())) * static_cast<PixelT>(*kParIter);
+        } else {
+            *vwImagePtr += (*((**kImPtrIter).getIVwPtr())) * static_cast<PixelT>(*kParIter);
+        }
     }
     imSum = vw::sum_of_channel_values(*vwImagePtr);
     if (doNormalize) {
@@ -183,7 +188,7 @@ const {
 //
 
 /**
- * Compute _kernelImageList, the internal archive of kernel images.
+ * Compute _kernelImagePtrList, the internal archive of kernel images.
  */
 template<typename PixelT>
 void lsst::fw::LinearCombinationKernel<PixelT>::_computeKernelImageList() {
@@ -191,7 +196,10 @@ void lsst::fw::LinearCombinationKernel<PixelT>::_computeKernelImageList() {
     typename std::vector<double>::const_iterator kParIter = _kernelParams.begin();
     for ( ; kIter != _kernelList.end(); ++kIter) {
         PixelT kSum;
-        _kernelImageList.push_back((*kIter)->computeNewImage(kSum, 0, 0, false));
+        boost::shared_ptr<lsst::fw::Image<PixelT> >
+            kernelImagePtr(new lsst::fw::Image<PixelT>(this->getCols(), this->getRows()));
+        (*kIter)->computeImage(*kernelImagePtr, kSum, 0, 0, false);
+        _kernelImagePtrList.push_back(kernelImagePtr);
     }
 }
 
