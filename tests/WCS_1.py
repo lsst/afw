@@ -1,19 +1,24 @@
-import pdb                              # we may want to say pdb.set_trace()
+import os
+import math
+import pdb                          # we may want to say pdb.set_trace()
 import unittest
-import os.path
 
-import eups
 import lsst.fw.Core.fwLib as fw
 import lsst.mwi.tests as tests
-import lsst.mwi.utils as mwiu
 
 try:
     type(verbose)
 except NameError:
     verbose = 0
-    mwiu.Trace_setVerbosity("fw.DataProperty", verbose)
 
-
+dataDir = os.environ.get("FWDATA_DIR")
+if not dataDir:
+    raise RuntimeError("Must set up fwData to run these tests")
+InputImagePath = os.path.join(dataDir, "871034p_1_MI_img.fits")
+InputSmallImagePath = os.path.join(dataDir, "small_img.fits")
+InputCorruptMaskedImageName = "small_MI_corrupt"
+currDir = os.path.abspath(os.path.dirname(__file__))
+InputCorruptFilePath = os.path.join(currDir, "data", InputCorruptMaskedImageName)
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class WCSTestCaseSDSS(unittest.TestCase):
@@ -21,7 +26,7 @@ class WCSTestCaseSDSS(unittest.TestCase):
 
     def setUp(self):
         im = fw.ImageD()
-        im.readFits(tests.findFileFromRoot("tests/data/small_img.fits"))
+        im.readFits(InputSmallImagePath)
 
         self.wcs = fw.WCS(im.getMetaData())
 
@@ -36,9 +41,21 @@ class WCSTestCaseSDSS(unittest.TestCase):
         self.assertTrue(self.wcs.isValid())
 
     def testInvalidWCS(self):
-        """Test operator bool() (== isValid)"""
-        wcs = fw.WCS(fw.ImageD().getMetaData())
+        """Test operator bool() (== isValid)
+        This test has been improved by deleting some essential
+        metadata (in this case, CRPIX1, and CRPIX2) from the
+        MaskedImage's metadata and using that.
+        """
+        wcs = fw.WCS()
         self.assertFalse(wcs.isValid())
+
+        # Using MaskedImage with corrupt metadata 
+        maskedImage = fw.MaskedImageF()
+        maskedImage.readFits(InputCorruptFilePath)
+        metadata = maskedImage.getImage().getMetaData()
+        corruptWcs = fw.WCS(metadata)
+        self.assertTrue(corruptWcs.isValid())
+        
 
     def testraDecToColRowArguments(self):
         """Check that all the expected forms of raDecToColRow/colRowToRaDec work"""
@@ -83,7 +100,7 @@ class WCSTestCaseCFHT(unittest.TestCase):
     def setUp(self):
         im = fw.ImageD()
 
-        im.readFits(tests.findFileFromRoot(os.path.join(dataDir, "871034p_1_img.fits")))
+        im.readFits(InputImagePath)
 
         self.wcs = fw.WCS(im.getMetaData())
 
@@ -99,27 +116,15 @@ class WCSTestCaseCFHT(unittest.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-
 def suite():
     """Returns a suite containing all the test cases in this module."""
-
-    global dataDir
-
-    try:                                # eups version >= v0_7_33
-        dataDir = eups.directory("fwData", "setup")
-    except AttributeError:
-        dataDir = eups.list("fwData", eups.current("fwData")) # should be "setup", but "current" is available
-        if dataDir:
-            dataDir = dataDir[2]
+    tests.init()
 
     suites = []
-
-    if dataDir:
-        suites += unittest.makeSuite(WCSTestCaseSDSS)
-        suites += unittest.makeSuite(WCSTestCaseCFHT)
-
+    suites += unittest.makeSuite(WCSTestCaseSDSS)
+    suites += unittest.makeSuite(WCSTestCaseCFHT)
     suites += unittest.makeSuite(tests.MemoryTestCase)
-        
+
     return unittest.TestSuite(suites)
 
 if __name__ == "__main__":

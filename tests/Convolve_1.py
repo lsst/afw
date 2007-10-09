@@ -18,14 +18,16 @@ import lsst.fw.Core.imageTestUtils as iUtils
 import lsst.mwi.tests as tests
 import lsst.mwi.utils as mwiu
 
-
 try:
     type(verbose)
 except NameError:
     verbose = 0
     mwiu.Trace_setVerbosity("fw.kernel", verbose)
 
-InputMaskedImageName = "871034p_1_MI"
+dataDir = os.environ.get("FWDATA_DIR")
+if not dataDir:
+    raise RuntimeError("Must set up fwData to run these tests")
+InputMaskedImagePath = os.path.join(dataDir, "871034p_1_MI")
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -116,14 +118,19 @@ def makeGaussianKernelVec(kCols, kRows):
 class ConvolveTestCase(unittest.TestCase):
     def testUnityConvolution(self):
         """Verify that convolution with a centered delta function reproduces the original"""
+        imCols = 45
+        imRows = 55
         threshold = 0.0
         edgeBit = -1
         
-        currDir = os.path.abspath(os.path.dirname(__file__))
-        inFilePath = os.path.join(currDir, "data", "small")
-    
-        maskedImage = fw.MaskedImageF()
-        maskedImage.readFits(inFilePath)
+        fullMaskedImage = fw.MaskedImageF()
+        fullMaskedImage.readFits(InputMaskedImagePath)
+        
+        # pick a small piece of the image to save time
+        bbox = fw.BBox2i(50, 50, imCols, imRows)
+        subMaskedImagePtr = fullMaskedImage.getSubImage(bbox)
+        maskedImage = subMaskedImagePtr.get()
+        maskedImage.this.disown()
         
         # create a delta function kernel that has 1,1 in the center
         f = fw.IntegerDeltaFunction2D(0.0, 0.0)
@@ -155,10 +162,8 @@ class ConvolveTestCase(unittest.TestCase):
         f.this.disown() # Only the shared pointer now owns f
         k = fw.AnalyticKernelD(fPtr, kCols, kRows)
         
-        currDir = os.path.abspath(os.path.dirname(__file__))
-        inFilePath = os.path.join(currDir, "data", InputMaskedImageName)
         fullMaskedImage = fw.MaskedImageF()
-        fullMaskedImage.readFits(inFilePath)
+        fullMaskedImage.readFits(InputMaskedImagePath)
         
         # pick a small piece of the image to save time
         bbox = fw.BBox2i(50, 50, imCols, imRows)
@@ -198,10 +203,8 @@ class ConvolveTestCase(unittest.TestCase):
         f.this.disown() # Only the shared pointer now owns f
         k = fw.AnalyticKernelD(fPtr, kCols, kRows)
         
-        currDir = os.path.abspath(os.path.dirname(__file__))
-        inFilePath = os.path.join(currDir, "data", InputMaskedImageName)
         fullMaskedImage = fw.MaskedImageF()
-        fullMaskedImage.readFits(inFilePath)
+        fullMaskedImage.readFits(InputMaskedImagePath)
         
         # pick a small piece of the image to save time
         bbox = fw.BBox2i(50, 50, imCols, imRows)
@@ -251,10 +254,8 @@ class ConvolveTestCase(unittest.TestCase):
         f.this.disown() # Only the shared pointer now owns f
         k = fw.AnalyticKernelD(fPtr, kCols, kRows, sFuncPtr, sParams)
         
-        currDir = os.path.abspath(os.path.dirname(__file__))
-        inFilePath = os.path.join(currDir, "data", InputMaskedImageName)
         fullMaskedImage = fw.MaskedImageF()
-        fullMaskedImage.readFits(inFilePath)
+        fullMaskedImage.readFits(InputMaskedImagePath)
         
         # pick a small piece of the image to save time
         bbox = fw.BBox2i(50, 50, imCols, imRows)
@@ -292,10 +293,8 @@ class ConvolveTestCase(unittest.TestCase):
         threshold = 0.0 # must be 0 because convolveLinear only does threshold = 0
         doNormalize = False # must be false because convolveLinear cannot normalize
 
-        currDir = os.path.abspath(os.path.dirname(__file__))
-        inFilePath = os.path.join(currDir, "data", InputMaskedImageName)
         fullMaskedImage = fw.MaskedImageF()
-        fullMaskedImage.readFits(inFilePath)
+        fullMaskedImage.readFits(InputMaskedImagePath)
         
         # pick a small piece of the image to save time
         bbox = fw.BBox2i(50, 50, imCols, imRows)

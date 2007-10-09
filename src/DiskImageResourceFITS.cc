@@ -92,6 +92,9 @@ namespace {
           case vw::VW_CHANNEL_FLOAT32:
             _multiplyImageBuffer<float>(buff, value);
             break;
+          case vw::VW_CHANNEL_FLOAT64:
+            _multiplyImageBuffer<double>(buff, value);
+            break;
           default:
             throw vw::IOErr() << "MultiplyImageBuffer: unknown type. " << buff.format.channel_type;
         }

@@ -1,14 +1,16 @@
 # -*- python -*-
 Import('env')
 
-env.SharedLibrary('fw', map(lambda str: "../src/" + str,
-                            ["Kernel/Kernel.cc",
-                             "Kernel/FixedKernel.cc",
-                             "Kernel/AnalyticKernel.cc",
-                             "Kernel/LinearCombinationKernel.cc",
-                             "WCS.cc",
-                             ]), LIBS=env.getlibs("boost mwi vw wcslib"))
-
-env.SharedLibraryIncomplete('fitsio', map(lambda str: "../src/" + str,
-					  Split("DiskImageResourceFITS.cc")),
-                            LIBS=env.getlibs("cfitsio"))
+env.SharedLibrary(
+	'fw',
+	["../src/%s" % (src,) for src in (
+		"DiskImageResourceFITS.cc",
+		"Exposure.cc",
+		"Kernel/Kernel.cc",
+		"Kernel/FixedKernel.cc",
+		"Kernel/AnalyticKernel.cc",
+		"Kernel/LinearCombinationKernel.cc",
+		"WCS.cc",
+	)],
+	LIBS=env.getlibs("boost mwi vw wcslib cfitsio")
+)

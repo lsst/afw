@@ -10,7 +10,7 @@
 
 #include <boost/format.hpp>
 
-#include <lsst/mwi/exceptions/Exception.h>
+#include <lsst/mwi/exceptions.h>
 #include <lsst/fw/Kernel.h>
 
 //

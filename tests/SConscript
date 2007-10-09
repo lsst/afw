@@ -1,34 +1,44 @@
 # -*- python -*-
 Import("env")
 import os
+import sys
+
+import lsst.tests
+import lsst.SConsUtils as scons # scons 1.17 supports "env.ProductDir", but for now use scons.ProductDir
 
 env.Program(["Mask_1.cc"], LIBS=env.getlibs("fw"))
-env.Program(["MaskedImage_1.cc"], LIBS=env.getlibs("fw fitsio"))
-env.Program(["MaskIO_1.cc"], LIBS=env.getlibs("fw fitsio"))
-env.Program(["MaskedImageIO_1.cc"], LIBS=env.getlibs("fw fitsio"))
-#env.Program(["testImageSubtract0.cc"], LIBS=env.getlibs("fw fitsio"));
+env.Program(["MaskedImage_1.cc"], LIBS=env.getlibs("fw"))
+env.Program(["MaskIO_1.cc"], LIBS=env.getlibs("fw"))
+env.Program(["MaskedImageIO_1.cc"], LIBS=env.getlibs("fw"))
+env.Program(["wcsCopy.cc"], LIBS=env.getlibs("fw"))
 
 env.CheckSwig("python", ilang="c++")
 env.Append(SWIGFLAGS=" -Ipython")
 
-env['SWIGFLAGS'] += " -I%s/%s" % (os.environ["MWI_DIR"], "python")
-fwTests = env.LoadableModuleIncomplete("_fwTests", "fwTests.i", LIBS=env.getlibs("fw fitsio"))
+env["SWIGFLAGS"] += " -I%s/%s" % (os.environ["MWI_DIR"], "python")
+fwTests = env.LoadableModuleIncomplete("_fwTests", "fwTests.i", LIBS=env.getlibs("fw"))
 #
 # Tests
 #
-import lsst.tests
-tests = lsst.tests.Control(
-    env,
-    args=dict([
-        ("MaskIO_1",        "data/871034p_1_MI_msk.fits"),
-        ("MaskedImage_1",   "file:data/871034p_1_MI file:data/871034p_1_MI file:MaskedImage_1_output_1 file:MaskedImage_1_output_2"),
-        ("MaskedImageIO_1", "file:data/871034p_1_MI"),
-    ]),
-    verbose=True,
-)
+dataDir = scons.ProductDir("fwData")
+if not dataDir:
+     print "Warning: fwData is not set up; not running the tests!"
+     Exit()
 
+# copy FWDATA_DIR to the test's environment
+env["ENV"]["FWDATA_DIR"] = os.environ["FWDATA_DIR"]
+
+# set up arguments for C++ tests
+inFile = os.path.join(dataDir, "871034p_1_MI")
+testArgs = dict(
+    MaskIO_1 = "%s_msk.fits" % inFile,
+    MaskedImage_1 = "%s %s file:MaskedImage_1_output_1 file:MaskedImage_1_output_2" % (inFile, inFile),
+    MaskedImageIO_1 = inFile,
+)
+tests = lsst.tests.Control(env, args = testArgs, verbose = True)
 tests.run("*.cc")
 
+# set up python tests
 for target in tests.run("*.py"):
     env.Depends(target, fwTests)
-    env.Depends(target, "../python/lsst/fw/Core/_fwLib%s" % (env['LDMODULESUFFIX']))
+    env.Depends(target, "../python/lsst/fw/Core/_fwLib%s" % (env["LDMODULESUFFIX"]))

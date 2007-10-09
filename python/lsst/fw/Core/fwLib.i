@@ -163,13 +163,18 @@ def version(HeadURL = r"$HeadURL$"):
     /**
      * Set an image to the value val
      */
-    void set(int val) {
+    void set(boost::uint16_t val) {
         Image<boost::uint16_t>::ImageIVwT& ivw = self->getIVw();
         std::fill(ivw.begin(), ivw.end(), val);
     }
-    // no set(int x, int y, int val) because reason it causes compilation of the swig wrapper to fail with:
-    // error: invalid initialization of reference of type 'vw::ImageView<float>&' from expression of type 'vw::ImageView<int>'
-    int get(int x, int y) {
+    /**
+     * Set pixel (x,y) to val
+     */
+    void set(int x, int y, boost::uint16_t val) {
+        Image<boost::uint16_t>::ImageIVwT& ivw = self->getIVw();
+        *ivw.origin().advance(x, y) = val;
+    }
+    boost::uint16_t get(int x, int y) {
         return self->operator()(x, y);
     }
 }
@@ -179,14 +184,14 @@ def version(HeadURL = r"$HeadURL$"):
     /**
      * Set an image to the value val
      */
-    void set(double val) {
+    void set(float val) {
         Image<float>::ImageIVwT& ivw = self->getIVw();
         std::fill(ivw.begin(), ivw.end(), val);
     }
     /**
      * Set pixel (x,y) to val
      */
-    void set(int x, int y, double val) {
+    void set(int x, int y, float val) {
         Image<float>::ImageIVwT& ivw = self->getIVw();
         *ivw.origin().advance(x, y) = val;
     }
@@ -205,28 +210,7 @@ def version(HeadURL = r"$HeadURL$"):
      */
     void set(double val) {
         Image<double>::ImageIVwT& ivw = self->getIVw();
-#if 1                                   // Using whole-image iterator
         std::fill(ivw.begin(), ivw.end(), val);
-#elif 0                                 // Using whole-image iterator
-        typedef PixelIterator<Image<double>::ImageIVwT> PixelIterator;
-        
-        const PixelIterator end = ivw.end();
-        for (PixelIterator ptr = ivw.begin(); ptr < end; ptr++) {
-            *ptr = val;
-        }
-#else  // Using per-row iterator
-        typedef Image<double>::ImageIVwT::pixel_accessor pixAccessT;
-        pixAccessT srow = ivw.origin();
-
-        for (unsigned int y = 0; y < ivw.rows(); y++) {
-            pixAccessT scol = srow;
-            for (unsigned int x = 0; x < ivw.cols(); x++) {
-                *scol = val;
-                scol.next_col();
-            }
-            srow.next_row();
-        }
-#endif
     }
     /**
      * Set pixel (x,y) to val
@@ -244,26 +228,19 @@ def version(HeadURL = r"$HeadURL$"):
 }
 
 
-
-
-
-
-
-
-//%ignore operator lsst::Mask::operator()(int, int); // RHL can't get this to work
 %extend lsst::fw::Mask<lsst::fw::maskPixelType> {
     %rename(getPtr) get;
     /**
      * Set entire mask to val
      */
-    void set(double val) {
+    void set(lsst::fw::maskPixelType val) {
         Mask<lsst::fw::maskPixelType>::MaskIVwT& ivw = self->getIVw();
         std::fill(ivw.begin(), ivw.end(), val);
     }
     /**
      * Set pixel (x,y) to val
      */
-    void set(int x, int y, double val) {
+    void set(int x, int y, lsst::fw::maskPixelType val) {
         Mask<lsst::fw::maskPixelType>::MaskIVwT& ivw = self->getIVw();
         *ivw.origin().advance(x, y) = val;
     }
@@ -347,6 +324,7 @@ def ImageViewMaskPtr(*args):
 
 /************************************************************************************************************/
 
+%include "exposure.i"
 %include "function.i"
 %include "kernel.i"
 

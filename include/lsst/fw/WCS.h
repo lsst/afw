@@ -31,6 +31,9 @@ namespace lsst {
             
             WCS();
             WCS(lsst::mwi::data::DataProperty::PtrType fitsMetaData);
+            WCS(WCS const &);
+            WCS & operator = (const WCS &);
+
             ~WCS();
 
             /// Return the input fits header
@@ -53,9 +56,9 @@ namespace lsst {
             // including e.g. SIMPLE and BITPIX
             struct wcsprm* _wcsInfo;
             int _nWcsInfo;
-            int _status;
-            int _relax;  // should be set by policy
-            int _ctrl;
+            int _relax; ///< Degree of permissiveness for wcspih (0 for strict); see wcshdr.h for details.
+            int _wcsfixCtrl; ///< Do potentially unsafe translations of non-standard unit strings? 0/1 = no/yes
+            int _wcshdrCtrl; ///< Controls messages to stderr from wcshdr (0 for none); see wcshdr.h for details
             int _nReject;
         };
   

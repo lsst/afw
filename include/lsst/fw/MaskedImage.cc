@@ -3,6 +3,7 @@
 // This file can NOT be separately compiled!   It is included by MaskedImage.h
 
 #include <typeinfo>
+#include <sys/stat.h>
 #include "lsst/mwi/utils/Trace.h"
 #include "lsst/mwi/exceptions.h"
 
@@ -125,7 +126,7 @@ lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::getMask() const {
  * Variance is loaded from (baseName)_var.fits, if found
  * Mask data is loaded from (baseName)_msk.fits, if found
  *
- * \throw lsst::mwi::exceptions::NotFound if (baseName)_img.fits is not found
+ * \throw lsst::mwi::exceptions::NotFound if none of (baseName){_img,_var,_msk}.fits is found
  */
 template<typename ImagePixelT, typename MaskPixelT>
 void lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::readFits(std::string baseName) {
@@ -134,7 +135,7 @@ void lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::readFits(std::string baseNa
     const std::string maskSuffix = "_msk.fits";
     const std::string varianceSuffix = "_var.fits";
 
-    bool fileReadOK = false;
+    bool fileFound = false;
 
 // reset any existing data
 
@@ -148,36 +149,30 @@ void lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::readFits(std::string baseNa
     _varianceVwPtr->set_size(0,0);
     _maskVwPtr->set_size(0,0);
 
-    std::string fileName;
-    try {
-        fileName = baseName + imageSuffix;
-       _imagePtr->readFits(fileName);
-       fileReadOK = true;
-    }
-    catch (vw::IOErr){
+    struct stat statFileInfo;
+    std::string imageFileName = baseName + imageSuffix;
+    if (stat(imageFileName.c_str(), &statFileInfo) == 0) {
+       fileFound = true;
+       _imagePtr->readFits(imageFileName);
     }
 
-    try {
-        fileName = baseName + varianceSuffix;
-       _variancePtr->readFits(fileName);
-       fileReadOK = true;
-    }
-    catch (vw::IOErr){
+    std::string varianceFileName = baseName + varianceSuffix;
+    if (stat(varianceFileName.c_str(), &statFileInfo) == 0) {
+       fileFound = true;
+       _variancePtr->readFits(varianceFileName);
     }
 
-    try {
-        fileName = baseName + maskSuffix;
-        _maskPtr->readFits(fileName);
-        fileReadOK = true;
-     }
-    catch (vw::IOErr) {
+    std::string maskFileName = baseName + maskSuffix;
+    if (stat(maskFileName.c_str(), &statFileInfo) == 0) {
+        fileFound = true;
+        _maskPtr->readFits(maskFileName);
     }
 
-//  if no file was read successfully, throw an exception
+//  if no file found, throw an exception
 
-    if (fileReadOK == false) {
-        throw lsst::mwi::exceptions::NotFound(boost::format("Failed to open %s{%s,%s}") %
-                       baseName % imageSuffix % maskSuffix);
+    if (fileFound == false) {
+        throw lsst::mwi::exceptions::NotFound(boost::format("Failed to open %s{%s, %s, %s}") %
+                       baseName % imageSuffix % varianceSuffix % maskSuffix);
     }
 
 //  ensure all image components have the same size.  set_size is a nop if size would be unchanged
@@ -195,8 +190,6 @@ void lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::readFits(std::string baseNa
  * Image data is written to (baseName)_img.fits
  * Variance is written to (baseName)_var.fits
  * Mask data is written to (baseName)_msk.fits
- *
- * \throw lsst::mwi::exceptions::NotFound if (baseName)_img.fits is not found
  */
 template<typename ImagePixelT, typename MaskPixelT>
 void lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::writeFits(std::string baseName) {

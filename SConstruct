@@ -22,8 +22,7 @@ env = scons.makeEnv("fw",
 #
 # Libraries needed to link libraries/executables
 #
-env.libs["fitsio"] = ["fitsio"]         # Our fitsio library.  This should probably be part of libfw
-env.libs["fw"] += env.getlibs("boost mwi vw wcslib") # we'll always want to link these with fw
+env.libs["fw"] += env.getlibs("boost mwi vw wcslib cfitsio") # we'll always want to link these with fw
 #
 # Build/install things
 #

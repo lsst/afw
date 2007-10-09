@@ -1,12 +1,18 @@
-//! \file
-//! \brief Implementation of WCS
-#include "lsst/fw/WCS.h"
+/**
+ * \file
+ * \brief Implementation of WCS as a thin wrapper around wcslib
+ */
+#include <iostream>
+#include <sstream>
 
-#include "lsst/mwi/data/FitsFormatter.h"
+#include <lsst/mwi/exceptions.h>
+#include <lsst/mwi/data/FitsFormatter.h>
 
-#include "wcslib/wcs.h"
-#include "wcslib/wcsfix.h"
-#include "wcslib/wcshdr.h"
+#include <lsst/fw/WCS.h>
+
+#include <wcslib/wcs.h>
+#include <wcslib/wcsfix.h>
+#include <wcslib/wcshdr.h>
 
 using namespace lsst::fw;
 using namespace vw::math;
@@ -15,51 +21,153 @@ using lsst::mwi::data::LsstBase;
 using lsst::mwi::data::DataProperty;
 using lsst::mwi::data::FitsFormatter;
 
-/// Constructor for WCS, creating an invalid WCS
+/**
+ * \brief Construct an invalid WCS given no arguments
+ *
+ * \throw lsst::mwi::exceptions::Runtime on error
+ */
 WCS::WCS() : LsstBase(typeid(this)),
              _fitsMetaData(),
-             _wcsInfo(NULL), _nWcsInfo(0), _status(1), _relax(0), _ctrl(0), _nReject(0) {
+             _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0) {
 }
 
-/// Constructor for WCS  from a FITS header, represented as DataProperty::PtrType
+/**
+ * \brief Construct a WCS from a FITS header, represented as DataProperty::PtrType
+ *
+ * \throw lsst::mwi::exceptions::Runtime on error
+ */
 WCS::WCS(DataProperty::PtrType fitsMetaData  ///< The contents of a valid FITS header
         ) : LsstBase(typeid(this)),
-            _fitsMetaData(fitsMetaData) {
-    int nCards = 0;
-    std::string metadataStr;
-    
+            _fitsMetaData(fitsMetaData),
+            _wcsInfo(NULL),
+            _nWcsInfo(0),
+            _nReject(0)
+{
     // these should be set via policy - but for the moment...
 
     _relax = 1;
-    _ctrl = 2;
+    _wcsfixCtrl = 2;
+    _wcshdrCtrl = 2;
 
-    metadataStr = FitsFormatter::formatDataProperty( fitsMetaData, false );
-    nCards = FitsFormatter::countFITSHeaderCards( fitsMetaData, false );
+    std::string metadataStr = FitsFormatter::formatDataProperty( fitsMetaData, false );
+    int nCards = FitsFormatter::countFITSHeaderCards( fitsMetaData, false );
+    if (nCards <= 0) {
+        throw lsst::mwi::exceptions::Runtime("Could not parse FITS WCS: no header cards found");
+    }
     
-    // idiocy required because wcspih takes a non-const char*
+    // wcspih takes a non-const char* (because some versions of ctrl modify the string)
+    // but we cannot afford to allow that to happen, so make a copy...
     int len = metadataStr.size();
     char *hdrString = new(char[len+1]);
     strcpy(hdrString, metadataStr.c_str());
 
-    _status = wcspih(hdrString, nCards, _relax, _ctrl, &_nReject, &_nWcsInfo, &_wcsInfo);
+    int pihStatus = wcspih(hdrString, nCards, _relax, _wcshdrCtrl, &_nReject, &_nWcsInfo, &_wcsInfo);
+    delete hdrString;
+    if (pihStatus != 0) {
+        throw lsst::mwi::exceptions::Runtime(
+            boost::format("Could not parse FITS WCS: wcspih status = %d") % pihStatus);
+    }
 
     /*
      * Fix any bad values in the WCS
+     * Should we throw an exception or continue if this fails?
+     * For now be paranoid...
      */
     const int *naxes = NULL;            // should be {NAXIS1, NAXIS2, ...} to check cylindrical projections
     int stats[NWCSFIX];			// status returns from wcsfix
-    _status = wcsfix(_ctrl, naxes, _wcsInfo, stats);
+    int fixStatus = wcsfix(_wcsfixCtrl, naxes, _wcsInfo, stats);
+    if (fixStatus != 0) {
+        std::stringstream errStream;
+        errStream << "Could not parse FITS WCS: wcsfix failed";
+        for (int ii = 0; ii < NWCSFIX; ++ii) {
+            if (stats[ii] != 0) {
+                errStream << "; " << ii << ": " << wcsfix_errmsg[ii];
+            }
+        }
+        errStream << std::endl;
+        throw lsst::mwi::exceptions::Runtime(errStream.str());
+    }
+}
 
-    // What do we do if _status != 0?
+/**
+ * \brief WCS copy constructor
+ *
+ * \throw lsst::mwi::exceptions::Memory or lsst::mwi::exceptions::Runtime on error
+ */
+WCS::WCS(WCS const & rhs):
+        LsstBase(typeid(this)),
+        _fitsMetaData(rhs._fitsMetaData),
+        _wcsInfo(NULL),
+        _nWcsInfo(0),
+        _relax(rhs._relax),
+        _wcsfixCtrl(rhs._wcsfixCtrl),
+        _wcshdrCtrl(rhs._wcshdrCtrl),
+        _nReject(rhs._nReject)
+{
+    if (rhs._nWcsInfo > 0) {
+        _wcsInfo = static_cast<struct wcsprm *>(calloc(rhs._nWcsInfo, sizeof(struct wcsprm)));
+        if (_wcsInfo == NULL) {
+            throw lsst::mwi::exceptions::Memory("Cannot allocate WCS info");
+        }
+        _nWcsInfo = rhs._nWcsInfo;
+        for (int ii = 0; ii < rhs._nWcsInfo; ++ii) {
+            // wcssub deep copies each _wcsInfo structure into newly allocated memory
+            // this memory is managed by wcslib and so must be freed by wcsfree
+            _wcsInfo[ii].flag = -1;
+            int status = wcscopy(1, rhs._wcsInfo + ii, _wcsInfo + ii);
+            if (status != 0) {
+                wcsvfree(&_nWcsInfo, &_wcsInfo);
+                throw lsst::mwi::exceptions::Runtime(
+                    boost::format("Could not copy WCS: wcscopy status = %d for wcs index %d") % status % ii);
+            }
+        }
+    }
+}
 
-    delete hdrString;
+/**
+ * \brief WCS assignment operator
+ *
+ * \throw lsst::mwi::exceptions::Memory or lsst::mwi::exceptions::Runtime on error
+ */
+WCS & WCS::operator = (const WCS & rhs) {
+    if (this != &rhs) {
+        if (_nWcsInfo > 0) {
+            wcsvfree(&_nWcsInfo, &_wcsInfo);
+        }
+        _fitsMetaData = rhs._fitsMetaData;
+        _nWcsInfo = 0;
+        _wcsInfo = NULL;
+        _relax = rhs._relax;
+        _wcsfixCtrl = rhs._wcsfixCtrl;
+        _wcshdrCtrl = rhs._wcshdrCtrl;
+        _nReject = rhs._nReject;
+        if (rhs._nWcsInfo > 0) {
+            // allocate wcs structs
+            _wcsInfo = static_cast<struct wcsprm *>(calloc(rhs._nWcsInfo, sizeof(struct wcsprm)));
+            if (_wcsInfo == NULL) {
+                throw lsst::mwi::exceptions::Memory("Cannot allocate WCS info");
+            }
+            _nWcsInfo = rhs._nWcsInfo;
+            // deep-copy wcs data
+            for (int ii = 0; ii < rhs._nWcsInfo; ++ii) {
+                _wcsInfo[ii].flag = -1;
+                int status = wcscopy(1, rhs._wcsInfo + ii, _wcsInfo + ii);
+                if (status != 0) {
+                    wcsvfree(&_nWcsInfo, &_wcsInfo);
+                    throw lsst::mwi::exceptions::Runtime(
+                        boost::format("Failed to copy wcs info; wcscopy status = %d") % status);
+                }
+            }
+        }
+    }
+    
+    return *this;
 }
 
 /// Destructor for WCS
 WCS::~WCS() {
     if (_wcsInfo != NULL) {
-        _status = wcsvfree(&_nWcsInfo, &_wcsInfo);
-        assert(_status == 0);               // true unless _wcsInfo is NULL
+        wcsvfree(&_nWcsInfo, &_wcsInfo);
     }
 }
 

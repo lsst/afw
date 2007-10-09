@@ -2,4 +2,4 @@
 Import("env")
 
 env.CheckSwig("python", ilang="c++", includedProducts="mwi")
-env.LoadableModuleIncomplete("_fwLib", Split("fwLib.i"), LIBS=env.getlibs("fw fitsio"))
+env.LoadableModuleIncomplete("_fwLib", Split("fwLib.i"), LIBS=env.getlibs("fw"))

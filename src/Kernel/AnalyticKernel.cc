@@ -10,7 +10,7 @@
  */
 #include <vw/Image.h>
 
-#include <lsst/mwi/exceptions/Exception.h>
+#include <lsst/mwi/exceptions.h>
 #include <lsst/fw/Kernel.h>
 
 // This file is meant to be included by lsst/fw/Kernel.h

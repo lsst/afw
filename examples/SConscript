@@ -4,8 +4,8 @@ Import('env')
 
 env.Program(["generate.cc"], LIBS=env.getlibs("vw boost"))
 env.Program(["vwconvert.cc"], LIBS=env.getlibs("vw boost"))
-env.Program(["fitsio.cc"], LIBS=env.getlibs("fw fitsio"))
-env.Program("maskedImageFitsIO", ["maskedImageFitsIO.cc"], LIBS=env.getlibs("fw fitsio"))
+env.Program(["fitsio.cc"], LIBS=env.getlibs("fw"))
+env.Program("maskedImageFitsIO", ["maskedImageFitsIO.cc"], LIBS=env.getlibs("fw"))
 
 env.Program("chebyshev1Function", ["chebyshev1Function.cc"], LIBS=env.getlibs("fw"))
 env.Program("gaussianFunction", ["gaussianFunction.cc"], LIBS=env.getlibs("fw"))
@@ -18,11 +18,15 @@ env.Program("deltaFunctionKernels", ["deltaFunctionKernels.cc"], LIBS=env.getlib
 env.Program("fixedKernel", ["fixedKernel.cc"], LIBS=env.getlibs("fw"))
 env.Program("lanczosKernel", ["lanczosKernel.cc"], LIBS=env.getlibs("fw"))
 
-env.Program("convolveLinear", ["convolveLinear.cc"], LIBS=env.getlibs("fw fitsio"))
-env.Program("simpleConvolve", ["simpleConvolve.cc"], LIBS=env.getlibs("fw fitsio"))
-env.Program("spatiallyVaryingConvolve", ["spatiallyVaryingConvolve.cc"], LIBS=env.getlibs("fw fitsio"))
-env.Program("timeConvolve", ["timeConvolve.cc"], LIBS=env.getlibs("fw fitsio"))
-env.Program("timeSpatiallyVaryingConvolve", ["timeSpatiallyVaryingConvolve.cc"], LIBS=env.getlibs("fw fitsio"))
+env.Program("convolveLinear", ["convolveLinear.cc"], LIBS=env.getlibs("fw"))
+env.Program("simpleConvolve", ["simpleConvolve.cc"], LIBS=env.getlibs("fw"))
+env.Program("spatiallyVaryingConvolve", ["spatiallyVaryingConvolve.cc"], LIBS=env.getlibs("fw"))
+env.Program("timeConvolve", ["timeConvolve.cc"], LIBS=env.getlibs("fw"))
+env.Program("timeSpatiallyVaryingConvolve", ["timeSpatiallyVaryingConvolve.cc"], LIBS=env.getlibs("fw"))
+
+env.Program("makeExposure", ["makeExposure.cc"], LIBS=env.getlibs("fw wcs"))
+env.Program("wcsTest", ["wcsTest.cc"], LIBS=env.getlibs("fw wcs"))
+
 #
 # Tests
 #
