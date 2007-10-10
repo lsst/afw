@@ -23,22 +23,21 @@ fwTests = env.LoadableModuleIncomplete("_fwTests", "fwTests.i", LIBS=env.getlibs
 dataDir = scons.ProductDir("fwData")
 if not dataDir:
      print "Warning: fwData is not set up; not running the tests!"
-     Exit()
-
-# copy FWDATA_DIR to the test's environment
-env["ENV"]["FWDATA_DIR"] = os.environ["FWDATA_DIR"]
-
-# set up arguments for C++ tests
-inFile = os.path.join(dataDir, "871034p_1_MI")
-testArgs = dict(
-    MaskIO_1 = "%s_msk.fits" % inFile,
-    MaskedImage_1 = "%s %s file:MaskedImage_1_output_1 file:MaskedImage_1_output_2" % (inFile, inFile),
-    MaskedImageIO_1 = inFile,
-)
-tests = lsst.tests.Control(env, args = testArgs, verbose = True)
-tests.run("*.cc")
-
-# set up python tests
-for target in tests.run("*.py"):
-    env.Depends(target, fwTests)
-    env.Depends(target, "../python/lsst/fw/Core/_fwLib%s" % (env["LDMODULESUFFIX"]))
+else:
+    # copy FWDATA_DIR to the test's environment
+    env["ENV"]["FWDATA_DIR"] = os.environ["FWDATA_DIR"]
+    
+    # set up arguments for C++ tests
+    inFile = os.path.join(dataDir, "871034p_1_MI")
+    testArgs = dict(
+        MaskIO_1 = "%s_msk.fits" % inFile,
+        MaskedImage_1 = "%s %s file:MaskedImage_1_output_1 file:MaskedImage_1_output_2" % (inFile, inFile),
+        MaskedImageIO_1 = inFile,
+    )
+    tests = lsst.tests.Control(env, args = testArgs, verbose = True)
+    tests.run("*.cc")
+    
+    # set up python tests
+    for target in tests.run("*.py"):
+        env.Depends(target, fwTests)
+        env.Depends(target, "../python/lsst/fw/Core/_fwLib%s" % (env["LDMODULESUFFIX"]))
