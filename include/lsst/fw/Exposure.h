@@ -43,7 +43,6 @@ namespace fw {
     public:    
 
         typedef boost::shared_ptr<lsst::fw::WCS> wscPtrType;
-        typedef maskPixelType boost::uint32_t;
 
         // Class Constructors and Destructor
         explicit Exposure();
