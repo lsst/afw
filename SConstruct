@@ -9,6 +9,7 @@ env = scons.makeEnv("fw",
                     r"$HeadURL$",
                     [["boost", "boost/version.hpp", "boost_filesystem:C++"],
                      ["boost", "boost/regex.hpp", "boost_regex:C++"],
+                     ["boost", "boost/serialization/base_object.hpp", "boost_serialization:C++"],
                      ["vw", "vw/Core.h", "vw:C++"],
                      ["vw", "vw/Core.h", "vwCore:C++"],
                      ["vw", "vw/FileIO.h", "vwFileIO:C++"],
@@ -17,7 +18,7 @@ env = scons.makeEnv("fw",
                      ["cfitsio", "fitsio.h", "m cfitsio", "ffopen"],
                      ["wcslib", "wcslib/wcs.h", "m wcs"], # remove m once SConsUtils bug fixed
                      ["xpa", "xpa.h", "xpa", "XPAPuts"],
-                     ["mwi", "lsst/mwi/data.h", "boost_filesystem boost_regex mwi:C++"],
+                     ["mwi", "lsst/mwi/data.h", "mwi:C++"],
                      ])
 #
 # Libraries needed to link libraries/executables
