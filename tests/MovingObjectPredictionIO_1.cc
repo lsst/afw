@@ -17,6 +17,7 @@
 #include <lsst/mwi/data/DataProperty.h>
 #include <lsst/mwi/data/SupportFactory.h>
 #include <lsst/mwi/policy/Policy.h>
+#include <lsst/mwi/persistence/DbAuth.h>
 #include <lsst/mwi/persistence/Persistence.h>
 #include <lsst/mwi/persistence/LogicalLocation.h>
 
@@ -168,7 +169,7 @@ static void testDb(std::string const & storageType) {
     DataProperty::PtrType props(createDbTestProps(0, 1, "MovingObjectPrediction"));
 
     Persistence::Ptr pers = Persistence::getPersistence(policy);
-    LogicalLocation loc("mysql://test:globular!test@lsst10.ncsa.uiuc.edu:3306/test");
+    LogicalLocation loc("mysql://lsst10.ncsa.uiuc.edu:3306/test");
 
     // 1. Test on a single MovingObjectPrediction
     MovingObjectPrediction mop;
@@ -240,7 +241,7 @@ static void testDb2(std::string const & storageType) {
     Policy::Ptr nested(policy->getPolicy(policyRoot));
 
     Persistence::Ptr pers = Persistence::getPersistence(policy);
-    LogicalLocation loc("mysql://test:globular!test@lsst10.ncsa.uiuc.edu:3306/test");
+    LogicalLocation loc("mysql://lsst10.ncsa.uiuc.edu:3306/test");
 
     MovingObjectPredictionVector all;
     int const numSlices = 3; // and use multiple slice tables
@@ -279,10 +280,12 @@ static void testDb2(std::string const & storageType) {
 int main(int const argc, char const * const * const argv) {
     try {
         testBoost();
-        testDb("DbStorage");
-        testDb("DbTsvStorage");
-        testDb2("DbStorage");
-        testDb2("DbTsvStorage");
+        if (lsst::mwi::persistence::DbAuth::available()) {
+            testDb("DbStorage");
+            testDb("DbTsvStorage");
+            testDb2("DbStorage");
+            testDb2("DbTsvStorage");
+        }
         if (lsst::mwi::data::Citizen::census(0) == 0) {
             std::clog << "No leaks detected" << std::endl;
         } else {

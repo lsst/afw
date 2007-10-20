@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS DiaSourceTemplate
 (
     diaSourceId      BIGINT   NOT NULL,
     ampExposureId    BIGINT   NOT NULL,
-    filterId         SMALLINT NOT NULL,
+    filterId         TINYINT  NOT NULL,
     objectId         BIGINT       NULL,
     movingObjectId   BIGINT       NULL,
     scId             INTEGER  NOT NULL,
@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS DiaSourceTemplate
     flag4association SMALLINT     NULL,
     flag4detection   SMALLINT     NULL,
     flag4wcs         SMALLINT     NULL,
-    _dataSource      SMALLINT NOT NULL
+    _dataSource      TINYINT  NOT NULL
 ) ENGINE=MyISAM;
 
 

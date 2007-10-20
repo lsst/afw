@@ -90,8 +90,8 @@ void DiaSourceVectorFormatter::insertRow(T & db, DiaSource const & d) {
     db.template setColumn<float>  ("snr",              d._snr);
     db.template setColumn<float>  ("chi2",             d._chi2);
     db.template setColumn<int32_t>("scId",             d._scId);
-    db.template setColumn<int16_t>("filterId",         d._filterId);
-    db.template setColumn<int16_t>("_dataSource",      d._dataSource);
+    db.template setColumn<char>   ("filterId",         static_cast<char>(d._filterId));
+    db.template setColumn<char>   ("_dataSource",      static_cast<char>(d._dataSource));
 
     if (!d.isNull(DiaSource::OBJECT_ID)) {
         db.template setColumn<int64_t>("objectId", d._objectId);
@@ -174,7 +174,7 @@ template void DiaSourceVectorFormatter::insertRow<DbTsvStorage>(DbTsvStorage &, 
 void DiaSourceVectorFormatter::setupFetch(DbStorage & db, DiaSource & d) {
     db.outParam("diaSourceId",      &(d._diaSourceId));
     db.outParam("ampExposureId",    &(d._ampExposureId));
-    db.outParam("filterId",         &(d._filterId));
+    db.outParam("filterId",         reinterpret_cast<char *>(&(d._filterId)));
     db.outParam("objectId",         &(d._objectId));
     db.outParam("movingObjectId",   &(d._movingObjectId));
     db.outParam("scId",             &(d._scId));
@@ -218,7 +218,7 @@ void DiaSourceVectorFormatter::setupFetch(DbStorage & db, DiaSource & d) {
     db.outParam("flag4association", &(d._flag4association));
     db.outParam("flag4detection",   &(d._flag4detection));
     db.outParam("flag4wcs",         &(d._flag4wcs));
-    db.outParam("_dataSource",      &(d._dataSource));
+    db.outParam("_dataSource",      reinterpret_cast<char *>(&(d._dataSource)));
 }
 
 

@@ -98,7 +98,7 @@ namespace formatters {
         flag4association SMALLINT      NULL,
         flag4detection   SMALLINT      NULL,
         flag4wcs         SMALLINT      NULL,
-        _dataSource      CHAR(1)       NOT NULL,
+        _dataSource      TINYINT       NOT NULL,
         PRIMARY KEY (diaSourceId),
         KEY (ampExposureId),
         KEY (filterId),
@@ -193,8 +193,8 @@ public :
     int16_t getFlag4association() const { return _flag4association; }
     int16_t getFlag4detection()   const { return _flag4detection;   }
     int16_t getFlag4wcs()         const { return _flag4wcs;         }
-    int16_t getFilterId()         const { return _filterId;         }
-    int16_t getDataSource()       const { return _dataSource;       }
+    int8_t  getFilterId()         const { return _filterId;         }
+    int8_t  getDataSource()       const { return _dataSource;       }
 
     // setters
     void setId              (int64_t const diaSourceId     ) { _diaSourceId      = diaSourceId;      }
@@ -242,8 +242,8 @@ public :
     void setFlag4association(int16_t const flag4association) { _flag4association = flag4association; }
     void setFlag4detection  (int16_t const flag4detection  ) { _flag4detection   = flag4detection;   }
     void setFlag4wcs        (int16_t const flag4wcs        ) { _flag4wcs         = flag4wcs;         }
-    void setFilterId        (int16_t const filterId        ) { _filterId         = filterId;         }
-    void setDataSource      (int16_t const dataSource      ) { _dataSource       = dataSource;       }
+    void setFilterId        (int8_t  const filterId        ) { _filterId         = filterId;         }
+    void setDataSource      (int8_t  const dataSource      ) { _dataSource       = dataSource;       }
 
     // Get/set whether or not fields are null
     bool isNull    (NullableField const f) const            { return _nulls.test(f); }
@@ -302,8 +302,8 @@ private :
     int16_t _flag4association; // SMALLINT      NULL
     int16_t _flag4detection;   // SMALLINT      NULL
     int16_t _flag4wcs;         // SMALLINT      NULL
-    int16_t _filterId;         // TINYINT       NOT NULL
-    int16_t _dataSource;       // CHAR(1)       NOT NULL
+    int8_t  _filterId;         // TINYINT       NOT NULL
+    int8_t  _dataSource;       // TINYINT       NOT NULL
 
     std::bitset<NUM_NULLABLE_FIELDS> _nulls;
 

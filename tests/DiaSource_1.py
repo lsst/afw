@@ -81,22 +81,23 @@ class DiaSourceTestCase(unittest.TestCase):
             j += 1
 
     def testPersistence(self):
-        pol  = policy.PolicyPtr()
-        pers = persistence.Persistence.getPersistence(pol)
-        loc  =  persistence.LogicalLocation("mysql://test:globular!test@lsst10.ncsa.uiuc.edu:3306/test")
-        dp = data.SupportFactory.createPropertyNode("root")
-        dp.addProperty(data.DataProperty("visitId", int(time.clock())*16384 + random.randint(0,16383)))
-        dp.addProperty(data.DataProperty("sliceId", 0))
-        dp.addProperty(data.DataProperty("numSlices", 1))
-        dp.addProperty(data.DataProperty("itemName", "DiaSource"))
-        stl = persistence.StorageList()
-        stl.push_back(pers.getPersistStorage("DbStorage", loc))
-        pers.persist(self.dsv1, stl, dp)
-        stl = persistence.StorageList()
-        stl.push_back(pers.getRetrieveStorage("DbStorage", loc))
-        res = cat.DiaSourceVecSharedPtr(pers.retrieve("DiaSourceVector", stl, dp))
-        cat.dropAllVisitSliceTables(loc, pol, dp)
-        assert(res == self.dsv1)
+        if persistence.DbAuth.available():
+            pol  = policy.PolicyPtr()
+            pers = persistence.Persistence.getPersistence(pol)
+            loc  =  persistence.LogicalLocation("mysql://lsst10.ncsa.uiuc.edu:3306/test")
+            dp = data.SupportFactory.createPropertyNode("root")
+            dp.addProperty(data.DataProperty("visitId", int(time.clock())*16384 + random.randint(0,16383)))
+            dp.addProperty(data.DataProperty("sliceId", 0))
+            dp.addProperty(data.DataProperty("numSlices", 1))
+            dp.addProperty(data.DataProperty("itemName", "DiaSource"))
+            stl = persistence.StorageList()
+            stl.push_back(pers.getPersistStorage("DbStorage", loc))
+            pers.persist(self.dsv1, stl, dp)
+            stl = persistence.StorageList()
+            stl.push_back(pers.getRetrieveStorage("DbStorage", loc))
+            res = cat.DiaSourceVecSharedPtr(pers.retrieve("DiaSourceVector", stl, dp))
+            cat.dropAllVisitSliceTables(loc, pol, dp)
+            assert(res == self.dsv1)
 
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
