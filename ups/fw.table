@@ -4,11 +4,11 @@ setupRequired(cfitsio)
 setupRequired(wcslib)
 setupRequired(xpa)
 setupRequired(numpy)
+setupRequired(minuit)
 
 setupOptional(fwData)
-
-setupOptional("numarray")
-setupOptional("pyfits")
+setupOptional(numarray)
+setupOptional(pyfits)
 
 envPrepend(LD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
 envPrepend(DYLD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)

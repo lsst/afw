@@ -12,16 +12,16 @@
 %include "lsst/fw/Kernel.h"
 %include "lsst/fw/KernelFunctions.h"
 //
-// classes (every template must have a unique name
+// classes (every template must have a unique name)
 //
 %template(KernelD)              lsst::fw::Kernel<double>;
+%template(KernelPtrTypeD)       boost::shared_ptr<lsst::fw::Kernel<double> >;
+%template(vectorKernelPtrD)     std::vector<boost::shared_ptr<lsst::fw::Kernel<double> > >;
+
 %template(FixedKernelD)         lsst::fw::FixedKernel<double>;
 %template(AnalyticKernelD)      lsst::fw::AnalyticKernel<double>;
 %template(LinearCombinationKernelD) lsst::fw::LinearCombinationKernel<double>;
 
-%template(Function2PtrTypeD)    boost::shared_ptr<lsst::fw::function::Function2<double> >;
-%template(KernelPtrTypeD)       boost::shared_ptr<lsst::fw::Kernel<double> >;
-%template(vectorKernelPtrD)     std::vector<boost::shared_ptr<lsst::fw::Kernel<double> > >;
 //
 // functions (every template can have the same name)
 //

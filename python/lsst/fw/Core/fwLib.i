@@ -326,6 +326,7 @@ def ImageViewMaskPtr(*args):
 
 %include "exposure.i"
 %include "function.i"
+%include "minimize.i"
 %include "kernel.i"
 
 /************************************************************************************************************/

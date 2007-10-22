@@ -13,6 +13,8 @@ env.Program("integerDeltaFunction", ["integerDeltaFunction.cc"], LIBS=env.getlib
 env.Program("lanczosFunction", ["lanczosFunction.cc"], LIBS=env.getlibs("fw"))
 env.Program("polynomialFunction", ["polynomialFunction.cc"], LIBS=env.getlibs("fw"))
 
+env.Program(["minimize.cc"], LIBS=env.getlibs("fw"))
+
 env.Program("analyticKernel", ["analyticKernel.cc"], LIBS=env.getlibs("fw"))
 env.Program("deltaFunctionKernels", ["deltaFunctionKernels.cc"], LIBS=env.getlibs("fw"))
 env.Program("fixedKernel", ["fixedKernel.cc"], LIBS=env.getlibs("fw"))

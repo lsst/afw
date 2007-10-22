@@ -142,7 +142,7 @@ void lsst::fw::kernel::basicConvolve(
     if (kernel.isSpatiallyVarying()) {
         lsst::fw::Image<KernelT> kernelImage(kernel.getCols(), kernel.getRows());
         kernelAccessorType kernelAccessor = kernelImage.origin();
-        lsst::mwi::utils::Trace("lsst.fw.kernel.convolve", 1, "kernel is spatially varying");
+        lsst::mwi::utils::Trace("lsst.fw.kernel.convolve", 3, "kernel is spatially varying");
         for (int cnvRow = cnvStartRow; cnvRow < cnvEndRow; ++cnvRow, cnvRowAcc.nextRow(), mImageRowAcc.nextRow()) {
             double rowPos = lsst::fw::image::indexToPosition(cnvRow);
             maskedPixelAccessorType mImageColAcc = mImageRowAcc;
@@ -161,7 +161,7 @@ void lsst::fw::kernel::basicConvolve(
         }
     } else {
         // kernel is spatially invariant
-        lsst::mwi::utils::Trace("lsst.fw.kernel.convolve", 1, "kernel is spatially invariant");
+        lsst::mwi::utils::Trace("lsst.fw.kernel.convolve", 3, "kernel is spatially invariant");
         KernelT kSum;
         lsst::fw::Image<KernelT> kernelImage = kernel.computeNewImage(kSum, 0.0, 0.0, doNormalize);
         kernelAccessorType kernelAccessor = kernelImage.origin();
@@ -444,7 +444,7 @@ inline void lsst::fw::kernel::_copyRegion(
 
     vw::math::Vector<vw::int32> const startColRow = region.min();
     vw::math::Vector<vw::int32> const numColRow = region.size();
-//    lsst::mwi::utils::Trace("lsst.fw.kernel._copyRegion", 1, str(boost::format(
+//    lsst::mwi::utils::Trace("lsst.fw.kernel._copyRegion", 3, str(boost::format(
 //        "_copyRegion: dest size %d, %d; src size %d, %d; region start=%d, %d; region size=%d, %d; orMask=%d")
 //        % destImage.getCols() % destImage.getRows() % sourceImage.getCols() % sourceImage.getRows()
 //        % startColRow[0] % startColRow[1]% numColRow[0] % numColRow[1] % orMask

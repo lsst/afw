@@ -18,12 +18,13 @@ env = scons.makeEnv("fw",
                      ["cfitsio", "fitsio.h", "m cfitsio", "ffopen"],
                      ["wcslib", "wcslib/wcs.h", "m wcs"], # remove m once SConsUtils bug fixed
                      ["xpa", "xpa.h", "xpa", "XPAPuts"],
+                     ["minuit", "Minuit/FCNBase.h", "lcg_Minuit:C++"],
                      ["mwi", "lsst/mwi/data.h", "mwi:C++"],
                      ])
 #
 # Libraries needed to link libraries/executables
 #
-env.libs["fw"] += env.getlibs("boost mwi vw wcslib cfitsio") # we'll always want to link these with fw
+env.libs["fw"] += env.getlibs("boost vw wcslib cfitsio minuit mwi") # we'll always want to link these with fw
 #
 # Build/install things
 #
