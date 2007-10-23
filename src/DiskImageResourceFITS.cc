@@ -307,6 +307,10 @@ void DiskImageResourceFITS::create(std::string const& filename, //!< file to wri
 	_ttype = TINT;
         _bitpix = 32;
 	break;
+      case vw::VW_CHANNEL_UINT32:
+	_ttype = TUINT;
+        _bitpix = 32;
+	break;
       case vw::VW_CHANNEL_FLOAT32:
 	_ttype = TFLOAT;
         _bitpix = -32;
