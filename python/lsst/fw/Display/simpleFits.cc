@@ -326,6 +326,9 @@ void writeVwFits(int fd,                // file descriptor to write to
       case vw::VW_CHANNEL_FLOAT32:
 	bitpix = -32;
 	break;
+      case vw::VW_CHANNEL_FLOAT64:
+	bitpix = -64;
+	break;
       default:
         throw lsst::mwi::exceptions::Runtime(boost::format("Unsupported channel type: %d") %
                         buff.format.channel_type);
