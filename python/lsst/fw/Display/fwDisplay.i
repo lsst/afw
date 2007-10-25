@@ -42,6 +42,7 @@ using namespace vw;
 
 %include "simpleFits.h"
 
+%template(writeFitsImage) writeFits<char>;
 %template(writeFitsImage) writeFits<boost::uint16_t>;
 %template(writeFitsImage) writeFits<float>;
 %template(writeFitsImage) writeFits<double>;
