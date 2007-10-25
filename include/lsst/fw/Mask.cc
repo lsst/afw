@@ -308,6 +308,12 @@ typename lsst::fw::Mask<MaskPixelT>::MaskPtrT lsst::fw::Mask<MaskPixelT>::getSub
     Vector<int, 2> bboxOffset = maskRegion.min();
     newMask->setOffsetRows(bboxOffset[1] + _offsetRows);
     newMask->setOffsetCols(bboxOffset[0] + _offsetCols);
+
+    // Now copy Maskplane info:
+    newMask->_maskPlaneDict = _maskPlaneDict;
+    newMask->_numPlanesUsed = _numPlanesUsed;
+    newMask->_metaData = _metaData;
+
     return newMask;
 }
 
