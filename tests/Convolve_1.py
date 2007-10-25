@@ -24,8 +24,7 @@ except NameError:
     verbose = 0
     mwiu.Trace_setVerbosity("fw.kernel", verbose)
 
-import eups; dataDir = eups.productDir("fwData")
-
+dataDir = os.environ.get("FWDATA_DIR")
 if not dataDir:
     raise RuntimeError("Must set up fwData to run these tests")
 InputMaskedImagePath = os.path.join(dataDir, "871034p_1_MI")
