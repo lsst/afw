@@ -8,6 +8,16 @@
 #include <vw/Image/ImageMath.h>
 #include "lsst/mwi/exceptions.h"
 #include "lsst/fw/DiskImageResourceFITS.h"
+//
+// Provide a version of vw::convert that does NOT rescale images
+//
+// This is rumoured to be included in v2 2.0, although I'm not sure
+// what the API is.  For now, we provide our own in OurImageResource.cc
+//
+namespace vw {
+    void convert( ImageBuffer const& dst, ImageBuffer const& src, bool );
+}
+
 
 // these two necessary only for appendKey()
 #include <string.h>
@@ -65,39 +75,6 @@ namespace {
                               const std::string errStr = "" //!< optional extra information
                              ) {
         _throw_cfitsio_error(line, fd, 0, errStr);
-    }
-
-    /******************************************************************************/
-    // Multiply a vw::ImageBuffer by a constant
-    // Here's the templated function; the driver that looks up
-    // the type comes next
-    //
-    template<typename PIXTYPE>
-    void _multiplyImageBuffer(vw::ImageBuffer const& buff, // the buffer in question
-                              double value // the value to multiply by
-                             ) {
-        PIXTYPE *data = static_cast<PIXTYPE *>(buff.data);
-        
-        for (unsigned int i = 0; i < buff.format.rows*buff.format.cols; i++) {
-            *data = static_cast<PIXTYPE>(*data * value);
-            data++;
-        }
-    }
-
-    void multiplyImageBuffer(vw::ImageBuffer const& buff, // the buffer in question
-                             double value // the value to multiply by
-                            ) {
-        
-        switch (buff.format.channel_type) {
-          case vw::VW_CHANNEL_FLOAT32:
-            _multiplyImageBuffer<float>(buff, value);
-            break;
-          case vw::VW_CHANNEL_FLOAT64:
-            _multiplyImageBuffer<double>(buff, value);
-            break;
-          default:
-            throw vw::IOErr() << "MultiplyImageBuffer: unknown type. " << buff.format.channel_type;
-        }
     }
 
     /******************************************************************************/
@@ -335,6 +312,22 @@ void DiskImageResourceFITS::create(std::string const& filename, //!< file to wri
     m_format = format;
     _metaData = metaData;
 }
+    
+#if 0
+template
+void myConvert<typename destType, typename srcType>() {
+    typedef PixelIterator<ImplT> iterator;
+
+    /// Returns an iterator pointing to the first pixel in the image.
+    iterator begin() const { return iterator(impl(),0,0,0); }
+
+    /// Returns an iterator pointing one past the last pixel in the image.
+    iterator end() const { return iterator(impl(),0,0,impl().planes()); }
+    
+    Image<boost::uint16_t>::ImageIVwT& ivw = self->getIVw();
+    std::fill(ivw.begin(), ivw.end(), val);
+}
+#endif
 
 //! Read the disk image into the given buffer.
 void DiskImageResourceFITS::read(vw::ImageBuffer const& dest, //!< Where to put the image
@@ -375,15 +368,7 @@ void DiskImageResourceFITS::read(vw::ImageBuffer const& dest, //!< Where to put 
     src.rstride = src.cstride*cols();
     src.pstride = src.rstride*rows();
     
-    convert(dest, src);
-    /*
-     * Undo delitarious effects of some conversions
-     */
-    switch (_ttype) {
-      case TSHORT:
-        multiplyImageBuffer(dest, 65535); // undo the effects of converting short to float
-        break;
-    }
+    convert(dest, src, false);
 }
 
 //! Write the given buffer into the disk image.
@@ -406,15 +391,7 @@ void DiskImageResourceFITS::write(vw::ImageBuffer const& src, //!< the buffer to
     dest.cstride = sizeof_pixel;
     dest.rstride = dest.cstride*cols();
     dest.pstride = dest.rstride*rows();
-    convert(dest, src);
-    /*
-     * Undo delitarious effects of some conversions
-     */
-    switch (_ttype) {
-      case TSHORT:
-        multiplyImageBuffer(dest, 65535); // undo the effects of converting short to float
-        break;
-    }
+    convert(dest, src, false);
     //
     // OK, so we have the data in the format that they requested.  Now all
     // that we have to do is to write it to a file

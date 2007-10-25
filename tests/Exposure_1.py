@@ -24,7 +24,7 @@ except NameError:
     verbose = 0
     mwiu.Trace_setVerbosity("fw", verbose)
 
-dataDir = os.environ.get("FWDATA_DIR")
+import eups; dataDir = eups.productDir("fwData")
 if not dataDir:
     raise RuntimeError("Must set up fwData to run these tests") 
 

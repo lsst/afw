@@ -11,7 +11,8 @@ try:
 except NameError:
     verbose = 0
 
-dataDir = os.environ.get("FWDATA_DIR")
+import eups; dataDir = eups.productDir("fwData")
+
 if not dataDir:
     raise RuntimeError("Must set up fwData to run these tests")
 InputImagePath = os.path.join(dataDir, "871034p_1_MI_img.fits")

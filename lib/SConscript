@@ -5,6 +5,7 @@ env.SharedLibrary(
     'fw',
     ["../src/%s" % (src,) for src in (
         "DiaSource.cc",
+        "OurImageResource.cc",
         "DiskImageResourceFITS.cc",
         "Exposure.cc",
         "formatters/Utils.cc",
