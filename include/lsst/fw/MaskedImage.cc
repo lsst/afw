@@ -179,7 +179,7 @@ void lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::readFits(std::string baseNa
 
     conformSizes();
 
-    lsst::mwi::utils::Trace("fw.MaskedImage", 1,
+    lsst::mwi::utils::Trace("fw.MaskedImage", 2,
               boost::format("Read in MaskedImage of size (%d,%d)") % _imageCols % _imageRows);
 
 }
@@ -377,7 +377,7 @@ template<typename ImagePixelT, typename MaskPixelT>
 void lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::processPixels(
     PixelProcessingFunc<ImagePixelT, MaskPixelT> &processingFunc
 ) {
-    lsst::mwi::utils::Trace("fw.MaskedImage", 1, "Processing pixels");
+    lsst::mwi::utils::Trace("fw.MaskedImage", 5, "Processing pixels");
 
     PixelLocator<ImagePixelT> i = processingFunc.getImagePixelLocatorBegin();
     PixelLocator<ImagePixelT> iEnd = processingFunc.getImagePixelLocatorEnd();

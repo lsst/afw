@@ -8,7 +8,7 @@ lsst::fw::Mask<MaskPixelT>::Mask() :
     _vwImagePtr(new vw::ImageView<MaskPixelT>()),
     _metaData(lsst::mwi::data::SupportFactory::createPropertyNode("FitsMetaData")) {
 
-    lsst::mwi::utils::Trace("fw.Mask", 1,
+    lsst::mwi::utils::Trace("fw.Mask", 5,
               boost::format("Number of mask planes: %d") % getNumPlanesMax());
 
      for (int i=0; i<getNumPlanesMax(); i++) {
@@ -27,7 +27,7 @@ lsst::fw::Mask<MaskPixelT>::Mask(MaskIVwPtrT vwImagePtr):
     _vwImagePtr(vwImagePtr),
     _metaData(lsst::mwi::data::SupportFactory::createPropertyNode("FitsMetaData")) {
 
-    lsst::mwi::utils::Trace("fw.Mask", 1,
+    lsst::mwi::utils::Trace("fw.Mask", 5,
               boost::format("Number of mask planes: %d") % getNumPlanesMax());
 
      for (int i=0; i<getNumPlanesMax(); i++) {
@@ -45,7 +45,7 @@ lsst::fw::Mask<MaskPixelT>::Mask(int ncols, int nrows) :
     _vwImagePtr(new vw::ImageView<MaskPixelT>(ncols, nrows)),
     _metaData(lsst::mwi::data::SupportFactory::createPropertyNode("FitsMetaData")) {
 
-    lsst::mwi::utils::Trace("fw.Mask", 1,
+    lsst::mwi::utils::Trace("fw.Mask", 5,
               boost::format("Number of mask planes: %d") % getNumPlanesMax());
 
      for (int i=0; i<getNumPlanesMax(); i++) {
