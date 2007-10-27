@@ -105,7 +105,7 @@ namespace fw {
         
         void replaceSubMask(const vw::BBox2i maskRegion, MaskPtrT insertMask);
         
-        pixel_accessor origin() { return getIVwPtr()->origin(); }
+        pixel_accessor origin() const { return getIVwPtr()->origin(); }
         
         MaskChannelT operator ()(int x, int y) const;
         
