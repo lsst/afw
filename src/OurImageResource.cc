@@ -26,7 +26,7 @@
 // by adding a bool argument to convert, and disabling the automatic
 // scaling of float images to [0, 1]
 
-/// \file ImageResource.cc
+/// \file
 /// 
 /// Defines a run-type-typed image buffer.
 ///

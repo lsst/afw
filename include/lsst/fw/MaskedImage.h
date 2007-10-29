@@ -106,7 +106,7 @@ namespace fw {
         
         // Processing functions
         void processPixels(MaskPixelBooleanFunc<MaskPixelT> &selectionFunc, PixelProcessingFunc<ImagePixelT, MaskPixelT> &processingFunc,
-                           MaskedImageT &);
+                           MaskedImage<ImagePixelT, MaskPixelT>&);
         
         void processPixels(MaskPixelBooleanFunc<MaskPixelT> &selectionFunc, PixelProcessingFunc<ImagePixelT, MaskPixelT> &processingFunc);
         

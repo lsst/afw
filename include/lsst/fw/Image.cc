@@ -101,7 +101,7 @@ lsst::mwi::data::DataProperty::PtrType lsst::fw::Image<ImagePixelT>::getMetaData
 
 template<typename ImagePixelT>
 typename lsst::fw::Image<ImagePixelT>::ImagePtrT
-lsst::fw::Image<ImagePixelT>::getSubImage(const BBox2i imageRegion) const {
+lsst::fw::Image<ImagePixelT>::getSubImage(const vw::BBox2i imageRegion) const {
 
 
     // Check that imageRegion is completely inside the image
@@ -127,7 +127,7 @@ lsst::fw::Image<ImagePixelT>::getSubImage(const BBox2i imageRegion) const {
  * \throw lsst::mwi::exceptions::Runtime if maskRegion is not of the same size as insertImage.
  */
 template<typename ImagePixelT>
-void lsst::fw::Image<ImagePixelT>::replaceSubImage(const BBox2i maskRegion, ImagePtrT insertImage) {
+void lsst::fw::Image<ImagePixelT>::replaceSubImage(const vw::BBox2i maskRegion, ImagePtrT insertImage) {
     try {
         crop(*_vwImagePtr, maskRegion) = *(insertImage->getIVwPtr());
     } catch (std::exception eex) {

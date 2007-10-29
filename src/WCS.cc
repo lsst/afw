@@ -36,7 +36,7 @@ WCS::WCS() : LsstBase(typeid(this)),
  *
  * \throw lsst::mwi::exceptions::Runtime on error
  */
-WCS::WCS(DataProperty::PtrType fitsMetaData  ///< The contents of a valid FITS header
+WCS::WCS(lsst::mwi::data::DataProperty::PtrType fitsMetaData  ///< The contents of a valid FITS header
         ) : LsstBase(typeid(this)),
             _fitsMetaData(fitsMetaData),
             _wcsInfo(NULL),

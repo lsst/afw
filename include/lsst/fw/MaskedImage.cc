@@ -296,7 +296,7 @@ void lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::setDefaultVariance() {
 
 template<typename ImagePixelT, typename MaskPixelT> 
 lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>&
-lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::operator+=(MaskedImageT & maskedImageInput) {
+lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::operator+=(MaskedImage<ImagePixelT, MaskPixelT>& maskedImageInput) {
     *_maskPtr |= *(maskedImageInput.getMask());
     *_imagePtr += *(maskedImageInput.getImage());
     *_variancePtr += *(maskedImageInput.getVariance());
@@ -305,7 +305,7 @@ lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::operator+=(MaskedImageT & masked
 
 template<typename ImagePixelT, typename MaskPixelT> 
 lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>&
-lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::operator-=(MaskedImageT & maskedImageInput) {
+lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::operator-=(MaskedImage<ImagePixelT, MaskPixelT>& maskedImageInput) {
     *_maskPtr |= *(maskedImageInput.getMask());
     *_imagePtr -= *(maskedImageInput.getImage());
     *_variancePtr += *(maskedImageInput.getVariance());
@@ -314,7 +314,7 @@ lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::operator-=(MaskedImageT & masked
 
 template<typename ImagePixelT, typename MaskPixelT> 
 lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>&
-lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::operator*=(MaskedImageT & maskedImageInput) {
+lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::operator*=(MaskedImage<ImagePixelT, MaskPixelT>& maskedImageInput) {
     
     *_maskPtr |= *(maskedImageInput.getMask());
     *_imagePtr *= *(maskedImageInput.getImage());
@@ -330,7 +330,7 @@ lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::operator*=(MaskedImageT & masked
 
 template<typename ImagePixelT, typename MaskPixelT> 
 lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>&
-lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::operator/=(MaskedImageT & maskedImageInput) {
+lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::operator/=(MaskedImage<ImagePixelT, MaskPixelT>& maskedImageInput) {
     *_maskPtr |= *(maskedImageInput.getMask());
     *_imagePtr /= *(maskedImageInput.getImage());
     return *this;
