@@ -15,6 +15,7 @@
 #include <vector>
 
 #include <boost/cstdint.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include <lsst/mwi/data/Citizen.h>
 #include <lsst/mwi/persistence/Persistable.h>
@@ -116,6 +117,8 @@ namespace formatters {
 class DiaSource {
 
 public :
+
+    typedef boost::shared_ptr<DiaSource> Ptr;
 
     /*! An integer id for each nullable field. */
     enum NullableField {
