@@ -325,11 +325,11 @@ void DiaSourceVectorFormatter::write(
 }
 
 
-Persistable::Ptr DiaSourceVectorFormatter::read(
+Persistable* DiaSourceVectorFormatter::read(
     Storage::Ptr          storage,
     DataProperty::PtrType additionalData
 ) {
-    DiaSourceVector::Ptr p(new DiaSourceVector);
+    DiaSourceVector* p = new DiaSourceVector;
 
     if (typeid(*storage) == typeid(BoostStorage)) {
         BoostStorage* bs = dynamic_cast<BoostStorage *>(storage.get());
@@ -413,7 +413,7 @@ Persistable::Ptr DiaSourceVectorFormatter::read(
 }
 
 
-void DiaSourceVectorFormatter::update(Persistable::Ptr, Storage::Ptr, DataProperty::PtrType) {
+void DiaSourceVectorFormatter::update(Persistable*, Storage::Ptr, DataProperty::PtrType) {
     throw ex::Runtime("DiaSourceVectorFormatter: updates not supported");
 }
 

@@ -189,11 +189,11 @@ void MovingObjectPredictionVectorFormatter::write(
 }
 
 
-Persistable::Ptr MovingObjectPredictionVectorFormatter::read(
+Persistable* MovingObjectPredictionVectorFormatter::read(
     Storage::Ptr          storage,
     DataProperty::PtrType additionalData
 ) {
-    MovingObjectPredictionVector::Ptr p(new MovingObjectPredictionVector);
+    MovingObjectPredictionVector* p = new MovingObjectPredictionVector;
 
     if (typeid(*storage) == typeid(BoostStorage)) {
         BoostStorage* bs = dynamic_cast<BoostStorage *>(storage.get());
@@ -236,7 +236,7 @@ Persistable::Ptr MovingObjectPredictionVectorFormatter::read(
 }
 
 
-void MovingObjectPredictionVectorFormatter::update(Persistable::Ptr, Storage::Ptr, DataProperty::PtrType) {
+void MovingObjectPredictionVectorFormatter::update(Persistable*, Storage::Ptr, DataProperty::PtrType) {
     throw ex::Runtime("MovingObjectPredictionVectorFormatter: updates not supported");
 }
 

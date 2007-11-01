@@ -46,8 +46,8 @@ public:
     virtual ~DiaSourceVectorFormatter();
 
     virtual void write(Persistable const *, Storage::Ptr, DataProperty::PtrType);
-    virtual Persistable::Ptr read(Storage::Ptr, DataProperty::PtrType);
-    virtual void update(Persistable::Ptr, Storage::Ptr, DataProperty::PtrType);
+    virtual Persistable* read(Storage::Ptr, DataProperty::PtrType);
+    virtual void update(Persistable*, Storage::Ptr, DataProperty::PtrType);
 
     template <class Archive> static void delegateSerialize(Archive &, unsigned int const, Persistable *);
 
