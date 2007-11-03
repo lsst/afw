@@ -7,6 +7,8 @@
 //
 //##====----------------                                ----------------====##/
 
+#include <memory>
+
 #include <lsst/mwi/exceptions.h>
 #include <lsst/mwi/persistence/BoostStorage.h>
 #include <lsst/mwi/persistence/DbStorage.h>
@@ -193,7 +195,7 @@ Persistable* MovingObjectPredictionVectorFormatter::read(
     Storage::Ptr          storage,
     DataProperty::PtrType additionalData
 ) {
-    MovingObjectPredictionVector* p = new MovingObjectPredictionVector;
+    std::auto_ptr<MovingObjectPredictionVector> p(new MovingObjectPredictionVector);
 
     if (typeid(*storage) == typeid(BoostStorage)) {
         BoostStorage* bs = dynamic_cast<BoostStorage *>(storage.get());
@@ -232,7 +234,7 @@ Persistable* MovingObjectPredictionVectorFormatter::read(
     } else {
         throw ex::InvalidParameter("Storage type is not supported");
     }
-    return p;
+    return p.release();
 }
 
 

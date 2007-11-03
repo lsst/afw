@@ -28,7 +28,11 @@ if not dataDir:
 else:
     # copy FWDATA_DIR to the test's environment
     env["ENV"]["FWDATA_DIR"] = os.environ["FWDATA_DIR"]
-    env["ENV"]["SEAL_PLUGINS"] = os.environ["SEAL_PLUGINS"]    
+    env["ENV"]["SEAL_PLUGINS"] = os.environ["SEAL_PLUGINS"]
+    try:
+       env["ENV"]["LSST_DB_AUTH"] = os.environ["LSST_DB_AUTH"]  
+    except:
+       pass
 
     # set up arguments for C++ tests
     inFile = os.path.join(dataDir, "871034p_1_MI")

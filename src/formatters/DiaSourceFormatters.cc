@@ -7,6 +7,8 @@
 //
 //##====----------------                                ----------------====##/
 
+#include <memory>
+
 #include <lsst/mwi/exceptions.h>
 #include <lsst/mwi/persistence/BoostStorage.h>
 #include <lsst/mwi/persistence/DbStorage.h>
@@ -329,7 +331,7 @@ Persistable* DiaSourceVectorFormatter::read(
     Storage::Ptr          storage,
     DataProperty::PtrType additionalData
 ) {
-    DiaSourceVector* p = new DiaSourceVector;
+    std::auto_ptr<DiaSourceVector> p(new DiaSourceVector);
 
     if (typeid(*storage) == typeid(BoostStorage)) {
         BoostStorage* bs = dynamic_cast<BoostStorage *>(storage.get());
@@ -409,7 +411,7 @@ Persistable* DiaSourceVectorFormatter::read(
     } else {
         throw ex::InvalidParameter("Storage type is not supported");
     }
-    return p;
+    return p.release();
 }
 
 

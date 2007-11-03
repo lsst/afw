@@ -98,6 +98,8 @@ class DiaSourceTestCase(unittest.TestCase):
             res = cat.DiaSourceVecSharedPtr(pers.retrieve("DiaSourceVector", stl, dp))
             cat.dropAllVisitSliceTables(loc, pol, dp)
             assert(res == self.dsv1)
+        else:
+            print "skipping database tests"
 
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
