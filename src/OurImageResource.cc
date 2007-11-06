@@ -81,7 +81,9 @@ void channel_convert_float_to_int( SrcT* src, DestT* dest ) {
   else *dest = DestT( *src * boost::integer_traits<DestT>::const_max );
 }
 
+namespace {
 std::map<std::pair<ChannelTypeEnum,ChannelTypeEnum>,channel_convert_func> *channel_convert_map = 0;
+}
 
 class ChannelConvertMapEntry {
 public:
@@ -95,6 +97,7 @@ public:
   }
 };
 
+namespace {
 ChannelConvertMapEntry _conv_i8i8  ( &channel_convert_cast<int8,int8>   );
 ChannelConvertMapEntry _conv_i8u8  ( &channel_convert_cast<int8,uint8>  );
 ChannelConvertMapEntry _conv_i8i16 ( &channel_convert_cast<int8,int16>  );
@@ -195,6 +198,7 @@ ChannelConvertMapEntry _conv_f64i64( &channel_convert_float_to_int<double,int64>
 ChannelConvertMapEntry _conv_f64u64( &channel_convert_float_to_int<double,uint64> );
 ChannelConvertMapEntry _conv_f64f32( &channel_convert_cast<double,float>  );
 ChannelConvertMapEntry _conv_f64f64( &channel_convert_cast<double,double> );
+}
 
 typedef void (*channel_set_max_func)(void* dest);
 
@@ -208,7 +212,9 @@ void channel_set_max_float( DestT* dest ) {
   *dest = DestT(1.0);
 }
 
+namespace {
 std::map<ChannelTypeEnum,channel_set_max_func> *channel_set_max_map = 0;
+}
 
 class ChannelSetMaxMapEntry {
 public:
@@ -221,6 +227,7 @@ public:
   }
 };
 
+namespace {
 ChannelSetMaxMapEntry _setmax_i8 ( &channel_set_max_int<int8> );
 ChannelSetMaxMapEntry _setmax_u8 ( &channel_set_max_int<uint8> );
 ChannelSetMaxMapEntry _setmax_i16( &channel_set_max_int<int16> );
@@ -231,7 +238,7 @@ ChannelSetMaxMapEntry _setmax_i64( &channel_set_max_int<int64> );
 ChannelSetMaxMapEntry _setmax_u64( &channel_set_max_int<uint64> );
 ChannelSetMaxMapEntry _setmax_f32( &channel_set_max_float<float> );
 ChannelSetMaxMapEntry _setmax_f64( &channel_set_max_float<double> );
-
+}
 typedef void (*channel_average_func)(void* src, void* dest, unsigned len);
 
 template <class T>
@@ -241,6 +248,7 @@ void channel_average( T* src, T* dest, unsigned len ) {
   *dest = accum / len;
 }
 
+namespace {
 std::map<ChannelTypeEnum,channel_average_func> *channel_average_map = 0;
 
 class ChannelAverageMapEntry {
@@ -264,6 +272,7 @@ ChannelAverageMapEntry _average_i64( &channel_average<int64> );
 ChannelAverageMapEntry _average_u64( &channel_average<uint64> );
 ChannelAverageMapEntry _average_f32( &channel_average<float> );
 ChannelAverageMapEntry _average_f64( &channel_average<double> );
+}
 
 typedef void (*channel_premultiply_func)(void* src, void* dst, unsigned len);
 
@@ -281,8 +290,9 @@ void channel_premultiply_float( T* src, T* dst, unsigned len ) {
   dst[len-1] = src[len-1];
 }
 
+namespace {
 std::map<ChannelTypeEnum,channel_premultiply_func> *channel_premultiply_map = 0;
-
+}
 class ChannelPremultiplyMapEntry {
 public:
   template <class T>
@@ -294,6 +304,7 @@ public:
   }
 };
 
+namespace {
 ChannelPremultiplyMapEntry _premultiply_i8 ( &channel_premultiply_int<int8> );
 ChannelPremultiplyMapEntry _premultiply_u8 ( &channel_premultiply_int<uint8> );
 ChannelPremultiplyMapEntry _premultiply_i16( &channel_premultiply_int<int16> );
@@ -304,6 +315,7 @@ ChannelPremultiplyMapEntry _premultiply_i64( &channel_premultiply_int<int64> );
 ChannelPremultiplyMapEntry _premultiply_u64( &channel_premultiply_int<uint64> );
 ChannelPremultiplyMapEntry _premultiply_f32( &channel_premultiply_float<float> );
 ChannelPremultiplyMapEntry _premultiply_f64( &channel_premultiply_float<double> );
+}
 
 typedef void (*channel_unpremultiply_func)(void* src, void* dst, unsigned len);
 
@@ -321,7 +333,9 @@ void channel_unpremultiply_float( T* src, T* dst, unsigned len ) {
   dst[len-1] = src[len-1];
 }
 
+namespace {
 std::map<ChannelTypeEnum,channel_unpremultiply_func> *channel_unpremultiply_map = 0;
+}
 
 class ChannelUnpremultiplyMapEntry {
 public:
@@ -334,6 +348,7 @@ public:
   }
 };
 
+namespace {
 ChannelUnpremultiplyMapEntry _unpremultiply_i8 ( &channel_unpremultiply_int<int8> );
 ChannelUnpremultiplyMapEntry _unpremultiply_u8 ( &channel_unpremultiply_int<uint8> );
 ChannelUnpremultiplyMapEntry _unpremultiply_i16( &channel_unpremultiply_int<int16> );
@@ -344,6 +359,7 @@ ChannelUnpremultiplyMapEntry _unpremultiply_i64( &channel_unpremultiply_int<int6
 ChannelUnpremultiplyMapEntry _unpremultiply_u64( &channel_unpremultiply_int<uint64> );
 ChannelUnpremultiplyMapEntry _unpremultiply_f32( &channel_unpremultiply_float<float> );
 ChannelUnpremultiplyMapEntry _unpremultiply_f64( &channel_unpremultiply_float<double> );
+}
 
 namespace vw {
 void convert( ImageBuffer const& dst, ImageBuffer const& src,
