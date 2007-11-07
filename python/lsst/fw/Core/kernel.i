@@ -9,6 +9,8 @@
 %newobject lsst::fw::Kernel::getKernelParameters;
 %newobject lsst::fw::Kernel::getSpatialParameters;
 
+// Handle return-by-reference argument.
+%apply double& OUTPUT { double& imSum };
 %include "lsst/fw/Kernel.h"
 %include "lsst/fw/KernelFunctions.h"
 //
