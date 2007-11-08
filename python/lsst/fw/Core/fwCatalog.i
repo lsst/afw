@@ -254,8 +254,10 @@ public:
 %lsst_persistable_shared_ptr(MopsPredVecSharedPtr, lsst::fw::MovingObjectPredictionVector);
 %lsst_persistable_shared_ptr(DiaSourceVecSharedPtr, lsst::fw::DiaSourceVector);
 
+%template(DiaSourceSharedPtr) boost::shared_ptr<lsst::fw::DiaSource>;
 
 %pythoncode %{
+
 def DiaSourceVecPtr(*args):
     """return a DiaSourceVecSharedPtr that owns its own DiaSourceVec"""
     v = DiaSourceVec(*args)
@@ -269,5 +271,13 @@ def MopsPredVecPtr(*args):
     v.this.disown()
     out = MopsPredVecSharedPtr(v)
     return out
+
+def DiaSourcePtr(*args):
+    """return a DiaSourceSharedPtr that owns its own DiaSource"""
+    ds = DiaSource(*args)
+    ds.this.disown()
+    out = DiaSourceSharedPtr(ds)
+    return out
+
 %}
 
