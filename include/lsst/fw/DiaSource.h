@@ -389,8 +389,8 @@ inline bool operator!=(DiaSource const & d1, DiaSource const & d2) {
     A persistable container of DiaSource instances (implemented using std::vector).
  */
 class DiaSourceVector :
-    public  lsst::mwi::persistence::Persistable,
-    private lsst::mwi::data::Citizen
+    public lsst::mwi::persistence::Persistable,
+    public lsst::mwi::data::Citizen
 {
 public :
     typedef boost::shared_ptr<DiaSourceVector> Ptr;

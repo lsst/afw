@@ -106,8 +106,8 @@ inline bool operator!=(MovingObjectPrediction const & d1, MovingObjectPrediction
     A persistable container of MovingObjectPrediction instances, implemented using std::vector.
  */
 class MovingObjectPredictionVector :
-    public  lsst::mwi::persistence::Persistable,
-    private lsst::mwi::data::Citizen
+    public lsst::mwi::persistence::Persistable,
+    public lsst::mwi::data::Citizen
 {
 public :
 
