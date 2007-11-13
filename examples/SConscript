@@ -32,18 +32,19 @@ env.Program("wcsTest", ["wcsTest.cc"], LIBS=env.getlibs("fw wcs"))
 #
 # Tests
 #
-import lsst.tests
-tests = lsst.tests.Control(env, ignoreList=[
-    "fitsio", "generate", "vwconvert", "maskedImageFitsIO",
-    "convolveLinear", "simpleConvolve", "spatiallyVaryingConvolve",
-    "timeConvolve", "timeSpatiallyVaryingConvolve",
-])
+if False:
+    import lsst.tests
+    tests = lsst.tests.Control(env, ignoreList=[
+        "fitsio", "generate", "vwconvert", "maskedImageFitsIO",
+        "convolveLinear", "simpleConvolve", "spatiallyVaryingConvolve",
+        "timeConvolve", "timeSpatiallyVaryingConvolve",
+    ])
 
-if not tests.runExamples:
-    if not env.QuietFlagIsSet():
-        print >> sys.stderr, "Not running the examples; \"chmod o+x examples/%s\" to run them" % tests._tmpDir
-else:
-    if not env.QuietFlagIsSet():
-        print >> sys.stderr, "Running the examples; \"chmod o-x examples/%s\" to not run them" % tests._tmpDir
-    tests.run("*.cc")
-    tests.run("*.py")
+    if not tests.runExamples:
+        if not env.QuietFlagIsSet():
+            print >> sys.stderr, "Not running the examples; \"chmod o+x examples/%s\" to run them" % tests._tmpDir
+    else:
+        if not env.QuietFlagIsSet():
+            print >> sys.stderr, "Running the examples; \"chmod o-x examples/%s\" to not run them" % tests._tmpDir
+        tests.run("*.cc")
+        tests.run("*.py")
