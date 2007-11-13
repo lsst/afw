@@ -3,6 +3,7 @@
 #include "lsst/fw/minimize.h"
 %}
 
+%import "Minuit/GenericFunction.h"
 %include "Minuit/FCNBase.h"
 %include "lsst/fw/Function.h"
 %include "lsst/fw/FunctionLibrary.h"
