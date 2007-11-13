@@ -45,7 +45,7 @@ def initDS9(execDs9 = True):
 
       raise Ds9Error
 
-def mtv(data, frame=0, init=1, WCS=None):
+def mtv(data, frame=0, init=1, WCS=None, isMask=False):
    """Display an Image or Mask on a DS9 display"""
 	
    if frame == None:
@@ -63,31 +63,28 @@ def mtv(data, frame=0, init=1, WCS=None):
          
    ds9Cmd("frame %d" % frame)
 
+   if re.search("MaskedImage", data.repr()): # it's a MaskedImage
+       mtv(data.getImage(), frame, init, WCS, False)
+       xpa.set(None, "ds9", "mask color red", "", "", 0)       
+       mtv(data.getMask(), frame, init, WCS, True)
+       return
+
    if True:
-      xpa_cmd = "xpaset ds9 fits"
-      pfd = os.popen(xpa_cmd, "w")
+       if isMask:
+           xpa_cmd = "xpaset ds9 fits mask"
+       else:
+           xpa_cmd = "xpaset ds9 fits"
+           
+       pfd = os.popen(xpa_cmd, "w")
    else:
       pfd = file("foo.fits", "w")
 
    try:
        #import pdb; pdb.set_trace()
-
-       try:                             # maybe it's smart pointer?
-           data = data.get()
-       except AttributeError:
-           pass
-       
-       try:                             # get the vw::ImageView
-           data = data.getIVw()
-       except AttributeError:
-           pass
-       
-       try:                             # get the vw::ImageBuffer
-           data = data.buffer()
-       except AttributeError:
-           pass
-       
-       fwDisplay.writeVwFits(pfd.fileno(), data, WCS)
+       try:
+           fwDisplay.writeFitsImage(pfd.fileno(), data, WCS)
+       except NotImplementedError:
+           fwDisplay.writeFitsImage(pfd.fileno(), data.get(), WCS)
    except Exception, e:
        try:
            pfd.close()

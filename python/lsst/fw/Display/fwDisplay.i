@@ -46,7 +46,7 @@ using namespace vw;
 %template(writeFitsImage) writeFits<boost::uint16_t>;
 %template(writeFitsImage) writeFits<float>;
 %template(writeFitsImage) writeFits<double>;
-%template(writeFitsMask)  writeFits<lsst::fw::maskPixelType>;
+%template(writeFitsImage)  writeFits<lsst::fw::maskPixelType>;
 
 /******************************************************************************/
 // Local Variables: ***
