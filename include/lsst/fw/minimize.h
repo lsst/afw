@@ -35,7 +35,7 @@ namespace function {
      * \brief Minuit wrapper for a function(x)
      */
     template<typename ReturnT>
-    class MinimizerFunctionBase1 : public FCNBase, private lsst::mwi::data::LsstBase {
+    class MinimizerFunctionBase1 : public FCNBase, public lsst::mwi::data::LsstBase {
     public:
         explicit MinimizerFunctionBase1();
         explicit MinimizerFunctionBase1(
@@ -68,7 +68,7 @@ namespace function {
      * \brief Minuit wrapper for a function(x, y)
      */
     template<typename ReturnT>
-    class MinimizerFunctionBase2 : public FCNBase, private lsst::mwi::data::LsstBase {
+    class MinimizerFunctionBase2 : public FCNBase, lsst::mwi::data::LsstBase {
     public:
         explicit MinimizerFunctionBase2();
         explicit MinimizerFunctionBase2(

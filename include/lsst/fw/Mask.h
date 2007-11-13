@@ -51,7 +51,7 @@ namespace fw {
     };
     
     template<typename MaskPixelT>
-    class Mask : private lsst::mwi::data::LsstBase {
+    class Mask : public lsst::mwi::data::LsstBase {
     public:
         typedef typename PixelChannelType<MaskPixelT>::type MaskChannelT;
         typedef vw::ImageView<MaskPixelT> MaskIVwT;

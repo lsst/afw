@@ -83,7 +83,7 @@ namespace fw {
     };
     
     template<class ImagePixelT, class MaskPixelT>
-    class MaskedImage : private lsst::mwi::data::LsstBase {
+    class MaskedImage : public lsst::mwi::data::LsstBase {
         
     public:
         typedef Image<ImagePixelT> ImageT;

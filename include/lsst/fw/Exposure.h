@@ -38,7 +38,7 @@ namespace fw {
     template<class ImageT, class MaskT> class Exposure;
         
     template<typename ImageT, typename MaskT> 
-    class Exposure : private lsst::mwi::data::LsstBase {
+    class Exposure : public lsst::mwi::data::LsstBase {
                 
     public:    
 

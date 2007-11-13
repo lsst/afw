@@ -94,7 +94,7 @@ namespace fw {
      * \ingroup fw
      */
     template<typename PixelT>
-    class Kernel : private lsst::mwi::data::LsstBase {
+    class Kernel : public lsst::mwi::data::LsstBase {
     
     public:
         typedef boost::shared_ptr<lsst::fw::function::Function2<PixelT> > KernelFunctionPtrType;

@@ -24,7 +24,7 @@
 namespace lsst {
 namespace fw {
     template<typename ImagePixelT>
-    class Image : private lsst::mwi::data::LsstBase {
+    class Image : public lsst::mwi::data::LsstBase {
     public:
         typedef typename vw::PixelChannelType<ImagePixelT>::type ImageChannelT;
         typedef vw::ImageView<ImagePixelT> ImageIVwT;

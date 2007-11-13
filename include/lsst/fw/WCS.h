@@ -26,7 +26,7 @@ namespace lsst {
         /// All WCS (in the FITS sense) coordinate conventions are supported via
         /// Mark Calabretta's wcslib package (http://www.atnf.csiro.au/people/mcalabre)
         ///
-        class WCS : private lsst::mwi::data::LsstBase {
+        class WCS : public lsst::mwi::data::LsstBase {
         public:
             
             WCS();

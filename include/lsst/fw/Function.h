@@ -48,7 +48,7 @@ namespace function {
      * \ingroup fw
      */
     template<typename ReturnT>
-    class Function : private lsst::mwi::data::LsstBase {
+    class Function : public lsst::mwi::data::LsstBase {
     
     public:
         /**
