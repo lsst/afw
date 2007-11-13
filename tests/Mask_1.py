@@ -99,7 +99,7 @@ class MaskTestCase(unittest.TestCase):
         """Test |= operator"""
 
         testMask3 = fw.MaskU(
-            fw.ImageViewMaskPtr(self.testMask.getCols(), self.testMask.getRows())
+            fw.MaskIVwPtrT(fw.ImageViewU(self.testMask.getCols(), self.testMask.getRows()))
             )
 
         testMask3.addMaskPlane("CR")
