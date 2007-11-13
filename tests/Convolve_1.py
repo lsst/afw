@@ -18,11 +18,8 @@ import lsst.fw.Core.imageTestUtils as iUtils
 import lsst.mwi.tests as tests
 import lsst.mwi.utils as mwiu
 
-try:
-    type(verbose)
-except NameError:
-    verbose = 0
-    mwiu.Trace_setVerbosity("fw.kernel", verbose)
+verbosity = 0 # increase to see trace
+mwiu.Trace_setVerbosity("lsst.fw", verbosity)
 
 dataDir = os.environ.get("FWDATA_DIR")
 if not dataDir:

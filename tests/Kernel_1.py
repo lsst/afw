@@ -10,11 +10,8 @@ import lsst.mwi.tests as tests
 import lsst.mwi.utils as mwiu
 import lsst.fw.Core.imageTestUtils as itu
 
-try:
-    type(verbose)
-except NameError:
-    verbose = 0
-    mwiu.Trace_setVerbosity("fw.kernel", verbose)
+verbosity = 0 # increase to see trace
+mwiu.Trace_setVerbosity("lsst.fw", verbosity)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
