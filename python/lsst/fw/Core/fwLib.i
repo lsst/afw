@@ -60,6 +60,30 @@ using namespace vw;
 %include "lsst/mwi/p_lsstSwig.i"
 %include "lsstImageTypes.i"     // vw and Image/Mask types and typedefs
 
+#if !defined(HAVE_SMART_POINTER)        // in mwi 2.0 (cf. #223)
+%define smart_pointer(PTR_TYPE, NAME, TYPE...)
+// The next three lines are equivalent to %extend_smart_pointer(PTR_TYPE<TYPE >);
+//   %implicitconv PTR_TYPE<TYPE >;
+   %apply const SWIGTYPE& SMARTPOINTER { const PTR_TYPE<TYPE >& };
+   %apply SWIGTYPE SMARTPOINTER { PTR_TYPE<TYPE > };
+
+   %template(NAME) PTR_TYPE<TYPE >;
+
+   %extend PTR_TYPE<TYPE > {
+   %pythoncode %{
+   __oldInit__ = __init__
+   def __init__(self, *args):
+      args[0].this.disown()
+      self.__oldInit__(args[0])
+   %}
+   };
+%enddef
+
+%define boost_shared_ptr(NAME, TYPE...)
+    smart_pointer(boost::shared_ptr, NAME, TYPE)
+%enddef
+#endif
+
 %pythoncode %{
 import lsst.mwi.data
 import lsst.mwi.utils
@@ -133,9 +157,11 @@ def version(HeadURL = r"$HeadURL$"):
 #endif
 %import <vw/FileIO/DiskImageResource.h>
 
+%include "lsst/mwi/data/Citizen.h"
 %import "lsst/mwi/utils/Utils.h"
+%import "lsst/mwi/policy/Policy.h"
 %import "lsst/mwi/data/LsstData.h"
-%import "lsst/mwi/data/DataProperty.h"
+%import "lsst/mwi/DataProperty.i"
 %import "lsst/mwi/exceptions.h"
 
 %include "lsst/fw/DiskImageResourceFITS.h"
@@ -143,7 +169,7 @@ def version(HeadURL = r"$HeadURL$"):
 /******************************************************************************/
 // Masks and MaskedImages
 %newobject getMaskPlaneMetaData;
-%clear int &;
+%clear int &;                           // no longer needed as of mwi 2.0
 %template(pairIntString) std::pair<int,std::string>;
 %template(mapIntString)  std::map<int,std::string>;
 %apply int &OUTPUT { int & };
@@ -152,7 +178,8 @@ def version(HeadURL = r"$HeadURL$"):
 %ignore lsst::fw::Mask::origin;         // no need to swig origin (and the _wrap.cc file is invalid)
 
 %import "lsst/mwi/utils/Utils.h"
-%import "lsst/mwi/data/LsstImpl_DC2.h"
+%include "lsst/mwi/data/Citizen.h"
+%include "lsst/mwi/data/LsstImpl_DC2.h"
 %include "lsst/mwi/data/LsstBase.h"
 %include "lsst/fw/Image.h"
 %include "lsst/fw/Mask.h"
@@ -255,68 +282,39 @@ def version(HeadURL = r"$HeadURL$"):
 %template(ImageBaseU)           vw::ImageViewBase<vw::ImageView<boost::uint16_t> >;
 %template(ImageViewU)           vw::ImageView<boost::uint16_t>;
 %template(ImageU)               lsst::fw::Image<boost::uint16_t>;
-%template(ImagePtrU)            boost::shared_ptr<lsst::fw::Image<boost::uint16_t> >;
+boost_shared_ptr(ImageUPtr,     lsst::fw::Image<boost::uint16_t>);
+
 %template(MaskedImageU)         lsst::fw::MaskedImage<boost::uint16_t, lsst::fw::maskPixelType>;
-%template(MaskedImageUPtr)      boost::shared_ptr<lsst::fw::MaskedImage<boost::uint16_t, lsst::fw::maskPixelType> >;
+boost_shared_ptr(MaskedImageUPtr, lsst::fw::MaskedImage<boost::uint16_t, lsst::fw::maskPixelType>);
 
 %template(ImageBaseF)           vw::ImageViewBase<vw::ImageView<float> >;
 %template(ImageViewF)           vw::ImageView<float>;
 %template(CompoundChannelTypeF) vw::CompoundChannelType<float>;
 %template(PixelChannelTypeF)    vw::PixelChannelType<float>;
 %template(ImageF)               lsst::fw::Image<float>;
-%template(ImagePtrF)            boost::shared_ptr<lsst::fw::Image<float> >;
+boost_shared_ptr(ImageFPtr,     lsst::fw::Image<float>);
 %template(MaskedImageF)         lsst::fw::MaskedImage<float, lsst::fw::maskPixelType>;
-%template(MaskedImageFPtr)      boost::shared_ptr<lsst::fw::MaskedImage<float, lsst::fw::maskPixelType> >;
+boost_shared_ptr(MaskedImageFPtr, lsst::fw::MaskedImage<float, lsst::fw::maskPixelType>);
 
 %template(ImageBaseD)           vw::ImageViewBase<vw::ImageView<double> >;
 %template(ImageViewD)           vw::ImageView<double>;
 %template(CompoundChannelTypeD) vw::CompoundChannelType<double>;
 %template(PixelChannelTypeD)    vw::PixelChannelType<double>;
 %template(ImageD)               lsst::fw::Image<double>;
-%template(ImagePtrD)            boost::shared_ptr<lsst::fw::Image<double> >;
+boost_shared_ptr(ImagePtrD,     lsst::fw::Image<double>);
 %template(MaskedImageD)         lsst::fw::MaskedImage<double, lsst::fw::maskPixelType>;
-%template(MaskedImageDPtr)      boost::shared_ptr<lsst::fw::MaskedImage<double, lsst::fw::maskPixelType> >;
+boost_shared_ptr(MaskedImageDPtr, lsst::fw::MaskedImage<double, lsst::fw::maskPixelType>);
 
 %template(listMaskPixelPtr)     std::list<lsst::fw::maskPixelType *>;
-// change 0 to 1 if lsst::fw::maskPixelType != integer image type
-#if 0
-    %template(ImageBaseMask)        vw::ImageViewBase<vw::ImageView<lsst::fw::maskPixelType> >;
-    %template(ImageViewMask)        vw::ImageView<lsst::fw::maskPixelType>;
-#else
-    %pythoncode %{
-        ImageBaseMask = ImageBaseU
-        ImageViewMask = ImageViewU
-    %}
-#endif
 %template(CompoundChannelMaskTypeD) vw::CompoundChannelType<lsst::fw::maskPixelType>;
 %template(PixelChannelMaskTypeD)    vw::PixelChannelType<lsst::fw::maskPixelType>;
 %template(MaskU)                lsst::fw::Mask<lsst::fw::maskPixelType>;
-%template(MaskUPtr)             boost::shared_ptr<lsst::fw::Mask<lsst::fw::maskPixelType> >;
+boost_shared_ptr(MaskUPtr,      lsst::fw::Mask<lsst::fw::maskPixelType>);
+boost_shared_ptr(MaskIVwPtrT, vw::ImageView<lsst::fw::maskPixelType>);
 
 %template(BBox2i)               BBox<int32, 2>;
 %template(Vector2i)             Vector<int32, 2>;
 
-//%delobject boost::shared_ptr<vw::ImageView<lsst::fw::maskPixelType> >::shared_ptr;
-//%apply SWIGTYPE *DISOWN {Foo *foo};
-%extend_smart_pointer(boost::shared_ptr<vw::ImageView<lsst::fw::maskPixelType> >);
-%template(MaskIVwPtrT)          boost::shared_ptr<vw::ImageView<lsst::fw::maskPixelType> >;
-
-%pythoncode %{
-from lsst.mwi.utils import Trace
-
-def ImageViewMaskPtr(*args):
-    """Return an MaskIVwPtrT that owns its ImageMask"""
-
-    Trace("fw.memory", 5, "creating ImageViewMaskPtr")
-
-    im = ImageViewMask(*args)
-    im.this.disown()
-    ivmPtr = MaskIVwPtrT(im)
-
-    Trace("fw.memory", 5, "returning ImageViewMaskPtr")
-        
-    return ivmPtr
-%}
 
 %template(listPixelCoord)  std::list<lsst::fw::PixelCoord>;
 
