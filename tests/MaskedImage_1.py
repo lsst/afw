@@ -1,18 +1,24 @@
 """
-Tests for Peaks, Footprints, and DetectionSets
+Tests for MaskedImages
 
 Run with:
-   python Footprint_1.py
+   python MaskedImage_1.py
 or
    python
-   >>> import unittest; T=load("Footprint_1"); unittest.TextTestRunner(verbosity=1).run(T.suite())
+   >>> import MaskedImage_1; MaskedImage_1.run()
 """
 
 import pdb                              # we may want to say pdb.set_trace()
 import unittest
 import lsst.mwi.tests as tests
 import lsst.fw.Core.fwLib as fw
+import lsst.fw.Display.ds9 as ds9
 import fwTests
+
+try:
+    type(display)
+except NameError:
+    display = False
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -24,6 +30,7 @@ class MaskedImageTestCase(unittest.TestCase):
 
         for m in (self.maskedImage1, self.maskedImage2):
             m.getMask().addMaskPlane("CR")
+            m.getMask().addMaskPlane("INTERP")
 
     def tearDown(self):
         del self.maskedImage1
@@ -60,6 +67,34 @@ class MaskedImageTestCase(unittest.TestCase):
 
         fooFunc.init()
         self.maskedImage1.processPixels(fooFunc)
+
+    def testDisplay(self):
+        """Test decomposing a mask into its bit planes"""
+
+        mask = self.maskedImage1.getMask()
+
+        pixelList = fw.listPixelCoord()
+        for x in range(0, mask.getCols()):
+            for y in range(300, 400, 20):
+                pixelList.push_back(fw.PixelCoord(x, y))
+        mask.setMaskPlaneValues(mask.getMaskPlane('CR'), pixelList)
+
+        pixelList = fw.listPixelCoord()
+        for x in range(300, 400, 20):
+            for y in range(0, mask.getRows()):
+                pixelList.push_back(fw.PixelCoord(x, y))
+        mask.setMaskPlaneValues(mask.getMaskPlane('INTERP'), pixelList)
+
+        if display:
+            ds9.mtv(self.maskedImage1.getImage(), isMask=False)
+
+            ds9.setMaskColor(ds9.RED)
+            CR = mask; mask.removeMaskPlane("INTERP")
+            ds9.mtv(CR, isMask=True)
+
+            ds9.setMaskColor(ds9.GREEN)
+            INTERP = mask; mask.removeMaskPlane("CR")
+            ds9.mtv(INTERP, isMask=True)
             
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -73,6 +108,12 @@ def suite():
     suites += unittest.makeSuite(tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
+def run(exit=False):
+    """Run the tests"""
+    try:
+        tests.run(suite(), exit)        # mwi 2.0
+    except:
+        tests.run(suite())
+
 if __name__ == "__main__":
-    tests.run(suite())
-    
+    run(True)
