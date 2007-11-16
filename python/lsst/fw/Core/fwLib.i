@@ -61,7 +61,7 @@ using namespace vw;
 %include "lsstImageTypes.i"     // vw and Image/Mask types and typedefs
 
 #if !defined(HAVE_SMART_POINTER)        // in mwi 2.0 (cf. #223)
-%define smart_pointer(PTR_TYPE, NAME, TYPE...)
+%define %smart_pointer(PTR_TYPE, NAME, TYPE...)
 // The next three lines are equivalent to %extend_smart_pointer(PTR_TYPE<TYPE >);
 //   %implicitconv PTR_TYPE<TYPE >;
    %apply const SWIGTYPE& SMARTPOINTER { const PTR_TYPE<TYPE >& };
@@ -79,8 +79,8 @@ using namespace vw;
    };
 %enddef
 
-%define boost_shared_ptr(NAME, TYPE...)
-    smart_pointer(boost::shared_ptr, NAME, TYPE)
+%define %boost_shared_ptr(NAME, TYPE...)
+    %smart_pointer(boost::shared_ptr, NAME, TYPE)
 %enddef
 #endif
 
@@ -283,38 +283,38 @@ def version(HeadURL = r"$HeadURL$"):
 %template(ImageBaseU)           vw::ImageViewBase<vw::ImageView<boost::uint16_t> >;
 %template(ImageViewU)           vw::ImageView<boost::uint16_t>;
 %template(ImageU)               lsst::fw::Image<boost::uint16_t>;
-boost_shared_ptr(ImageUPtr,     lsst::fw::Image<boost::uint16_t>);
+%boost_shared_ptr(ImageUPtr,     lsst::fw::Image<boost::uint16_t>);
 
 %template(ImageBaseF)           vw::ImageViewBase<vw::ImageView<float> >;
 %template(ImageViewF)           vw::ImageView<float>;
 %template(CompoundChannelTypeF) vw::CompoundChannelType<float>;
 %template(PixelChannelTypeF)    vw::PixelChannelType<float>;
 %template(ImageF)               lsst::fw::Image<float>;
-boost_shared_ptr(ImageFPtr,     lsst::fw::Image<float>);
+%boost_shared_ptr(ImageFPtr,     lsst::fw::Image<float>);
 
 %template(ImageBaseD)           vw::ImageViewBase<vw::ImageView<double> >;
 %template(ImageViewD)           vw::ImageView<double>;
 %template(CompoundChannelTypeD) vw::CompoundChannelType<double>;
 %template(PixelChannelTypeD)    vw::PixelChannelType<double>;
 %template(ImageD)               lsst::fw::Image<double>;
-boost_shared_ptr(ImageDPtr,     lsst::fw::Image<double>);
+%boost_shared_ptr(ImageDPtr,     lsst::fw::Image<double>);
 
 %template(listMaskPixelPtr)     std::list<lsst::fw::maskPixelType *>;
 %template(CompoundChannelMaskTypeD) vw::CompoundChannelType<lsst::fw::maskPixelType>;
 %template(PixelChannelMaskTypeD)    vw::PixelChannelType<lsst::fw::maskPixelType>;
 %template(MaskU)                lsst::fw::Mask<lsst::fw::maskPixelType>;
-boost_shared_ptr(MaskUPtr,      lsst::fw::Mask<lsst::fw::maskPixelType>);
+%boost_shared_ptr(MaskUPtr,      lsst::fw::Mask<lsst::fw::maskPixelType>);
 
-boost_shared_ptr(MaskIVwPtrT,   vw::ImageView<lsst::fw::maskPixelType>);
+%boost_shared_ptr(MaskIVwPtrT,   vw::ImageView<lsst::fw::maskPixelType>);
 //
 // MaskedImage
 //
 %template(MaskedImageF)         lsst::fw::MaskedImage<float, lsst::fw::maskPixelType>;
-boost_shared_ptr(MaskedImageFPtr, lsst::fw::MaskedImage<float, lsst::fw::maskPixelType>);
+%boost_shared_ptr(MaskedImageFPtr, lsst::fw::MaskedImage<float, lsst::fw::maskPixelType>);
 %template(MaskedImageD)         lsst::fw::MaskedImage<double, lsst::fw::maskPixelType>;
-boost_shared_ptr(MaskedImageDPtr, lsst::fw::MaskedImage<double, lsst::fw::maskPixelType>);
+%boost_shared_ptr(MaskedImageDPtr, lsst::fw::MaskedImage<double, lsst::fw::maskPixelType>);
 %template(MaskedImageU)         lsst::fw::MaskedImage<boost::uint16_t, lsst::fw::maskPixelType>;
-boost_shared_ptr(MaskedImageUPtr, lsst::fw::MaskedImage<boost::uint16_t, lsst::fw::maskPixelType>);
+%boost_shared_ptr(MaskedImageUPtr, lsst::fw::MaskedImage<boost::uint16_t, lsst::fw::maskPixelType>);
 
 %template(BBox2i)               BBox<int32, 2>;
 %template(Vector2i)             Vector<int32, 2>;

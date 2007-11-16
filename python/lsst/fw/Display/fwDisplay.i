@@ -34,6 +34,10 @@ using namespace vw;
 %init %{
 %}
 
+%pythoncode %{
+import lsst.fw.exceptions
+%}
+
 %include "lsst/mwi/p_lsstSwig.i"
 %import "lsst/mwi/utils/Utils.h"
 %include "../Core/lsstImageTypes.i"

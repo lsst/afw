@@ -75,11 +75,14 @@
     try {
         $action
     } catch (lsst::mwi::exceptions::ExceptionStack &e) {
-        PyErr_SetString(PyExc_IndexError, e.what());
-        return NULL;
+        raiseLsstExceptionStack(e);
+        SWIG_fail;
     } catch (vw::Exception &e) {
         PyErr_SetString(PyExc_IndexError, e.what());
-        return NULL;
+        SWIG_fail;
+    } catch (std::exception & e) {
+        PyErr_SetString(PyExc_Exception, e.what());
+        SWIG_fail;
     }
 }
 

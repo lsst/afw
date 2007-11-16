@@ -19,6 +19,10 @@ Access to persistable C++ objects for catalog data. Currently supported are:
 %init %{
 %}
 
+%pythoncode %{
+import lsst.fw.exceptions
+%}
+
 %include "lsst/mwi/p_lsstSwig.i"
 %include "lsst/mwi/persistenceMacros.i"
 

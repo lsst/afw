@@ -17,6 +17,7 @@ import eups
 import lsst.fw.Core.fwLib as fw
 import lsst.mwi.tests as tests
 import lsst.mwi.utils as mwiu
+import lsst.mwi.exceptions as mwex
 
 verbosity = 0 # increase to see trace
 mwiu.Trace_setVerbosity("lsst.fw", verbosity)
@@ -123,15 +124,15 @@ class ExposureTestCase(unittest.TestCase):
         try:
             wcsBlank = self.exposureBlank.getWcs()
             self.fail("No exception raised for wcsBlank")
-        except IndexError, e:
-        
+        except mwex.LsstExceptionStack, e:
+            print "caught expected exception: %s" % e
             pass
             
         try:    
             wcsMiOnly = self.exposureMiOnly.getWcs()
             self.fail("No exception raised for wcsMiOnly")
-        except IndexError, e:
-           
+        except mwex.LsstExceptionStack, e:
+            print "caught expected exception: %s" % e
             pass
 
         # These two should pass
@@ -141,8 +142,8 @@ class ExposureTestCase(unittest.TestCase):
         try:
             wcsCrOnly = self.exposureCrOnly.getWcs()
             self.fail("No exception raised for wcsCrOnly")
-        except IndexError, e:
-           
+        except mwex.LsstExceptionStack, e:
+            print "caught expected exception: %s" % e
             pass
 
             
@@ -239,8 +240,8 @@ class ExposureTestCase(unittest.TestCase):
         try:
             subExposure = self.exposureCrWcs.getSubExposure(subRegion3)
             self.fail("No exception raised for getSubExposureLargeMI")
-        except IndexError, e:
-       
+        except mwex.LsstExceptionStack, e:
+            print "caught expected exception: %s" % e
             pass
 
         # this subRegion is not valid and should trigger an exception
@@ -251,8 +252,8 @@ class ExposureTestCase(unittest.TestCase):
         try:
             subExposure = smallExposure.getSubExposure(subRegion4)
             self.fail("No exception raised for getSubExposureSmallMI")
-        except IndexError, e:
-       
+        except mwex.LsstExceptionStack, e:
+            print "caught expected exception: %s" % e
             pass
         
     def testReadWriteFits(self):
@@ -277,26 +278,24 @@ class ExposureTestCase(unittest.TestCase):
          exposure = fw.ExposureF()
 
          # This should pass without an exception
-         try:
-             exposure.readFits(inFilePathSmall)
-         except IndexError, e:
-           
-             pass    
+         exposure.readFits(inFilePathSmall)
 
          # This should throw an exception
          try:
              exposure.readFits(inFilePathSmallImage)
-         except IndexError, e:
-           
-             pass  
+             self.fail("No exception raised for readFits")
+         except mwex.LsstNotFound, e:
+             print "caught expected exception: %s" % e
+             pass
 
          # This should throw an exception 
          try:
              exposure.writeFits(inFilePathSmall)         
              self.fail("No exception raised for writeFits")
-         except IndexError, e:
-            
+         except mwex.LsstInvalidParameter, e:
+             print "caught expected exception: %s" % e
              pass
+
          
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

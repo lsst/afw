@@ -144,7 +144,7 @@ class MaskTestCase(unittest.TestCase):
 
         # should generate a vw exception - dims. of region and submask must be =
         self.region.expand(10)
-        self.assertRaises(IndexError, self.testMask.replaceSubMask, self.region, self.subTestMask)
+        self.assertRaises(Exception, self.testMask.replaceSubMask, self.region, self.subTestMask)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 

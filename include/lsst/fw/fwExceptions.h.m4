@@ -179,6 +179,10 @@ public:
   /** Destructor for $1 object
     */
     ~$1() throw() {};
+
+    virtual char const * getPythonModule() const { return "lsst.fw.exceptions"; }
+    virtual char const * getPythonClass()  const { return "Lsst$1"; }
+
 }')
 
 // Mapping  package errors 

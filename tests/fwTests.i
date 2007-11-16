@@ -33,6 +33,7 @@ using namespace vw;
 %pythoncode %{
 import lsst.mwi.data
 import lsst.mwi.utils
+import lsst.fw.exceptions
 %}
 
 /******************************************************************************/
