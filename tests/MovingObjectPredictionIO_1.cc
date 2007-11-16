@@ -74,6 +74,7 @@ static void initTestData(MovingObjectPredictionVector & v, int sliceId = 0) {
         data.setPositionAngle      (static_cast<double>(j + 5));
         data.setMjd                (static_cast<double>(j + 6));
         data.setMagnitude          (static_cast<double>(j + 7));        
+        data.setMagnitudeError     (static_cast<float> (j + 8));        
         v.push_back(data);
     }
 }

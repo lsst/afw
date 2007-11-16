@@ -68,6 +68,7 @@ void MovingObjectPredictionVectorFormatter::insertRow(T & db, MovingObjectPredic
     db.template setColumn<double> ("smaa",     p._smaa);
     db.template setColumn<double> ("pa",       p._pa);
     db.template setColumn<double> ("mag",      p._mag);
+    db.template setColumn<float>  ("magErr",   p._magErr);
     db.insertRow();
 }
 
@@ -85,6 +86,7 @@ void MovingObjectPredictionVectorFormatter::setupFetch(DbStorage & db, MovingObj
     db.outParam("smaa",     &(p._smaa));
     db.outParam("pa",       &(p._pa));
     db.outParam("mag",      &(p._mag));
+    db.outParam("magErr",   &(p._magErr));
 }
 
 
@@ -227,6 +229,7 @@ Persistable* MovingObjectPredictionVectorFormatter::read(
                 if (db->columnIsNull(5)) { throw ex::Runtime("null column \"smaa\"");     }
                 if (db->columnIsNull(6)) { throw ex::Runtime("null column \"pa\"");       }
                 if (db->columnIsNull(7)) { throw ex::Runtime("null column \"mag\"");      }
+                if (db->columnIsNull(8)) { throw ex::Runtime("null column \"magErr\"");   }
                 p->push_back(data);
             }
             db->finishQuery();

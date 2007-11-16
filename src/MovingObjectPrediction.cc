@@ -22,7 +22,8 @@ MovingObjectPrediction::MovingObjectPrediction() :
     _smia   (0.0),
     _pa     (0.0),
     _mjd    (0.0),
-    _mag    (0.0)
+    _mag    (0.0),
+    _magErr (0.0)
 {}
 
 
@@ -37,7 +38,8 @@ bool MovingObjectPrediction::operator==(MovingObjectPrediction const & d) const 
            _smia    == d._smia    &&
            _pa      == d._pa      &&
            _mjd     == d._mjd     &&
-           _mag     == d._mag;
+           _mag     == d._mag     &&
+           _magErr  == d._magErr;
 }
 
 

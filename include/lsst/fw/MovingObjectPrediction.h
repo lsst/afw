@@ -53,18 +53,19 @@ public :
     double  getSemiMinorAxisLength() const { return _smia;    }
     double  getSemiMajorAxisLength() const { return _smaa;    }
     double  getPositionAngle()       const { return _pa;      }
-
     double  getMjd()                 const { return _mjd;     }
     double  getMagnitude()           const { return _mag;     }
+    float   getMagnitudeError()      const { return _magErr;  }
 
-    void setId                 (int64_t const id  ) { _orbitId = id; }
-    void setRa                 (double  const ra  ) { _ra   = ra;    }
-    void setDec                (double  const dec ) { _dec  = dec;   }
-    void setSemiMinorAxisLength(double  const smia) { _smia = smia;  }
-    void setSemiMajorAxisLength(double  const smaa) { _smaa = smaa;  }
-    void setPositionAngle      (double  const pa  ) { _pa   = pa;    }
-    void setMjd                (double  const mjd ) { _mjd  = mjd;   }
-    void setMagnitude          (double  const mag ) { _mag  = mag;   }
+    void setId                 (int64_t const id  ) { _orbitId = id;   }
+    void setRa                 (double  const ra  ) { _ra      = ra;   }
+    void setDec                (double  const dec ) { _dec     = dec;  }
+    void setSemiMinorAxisLength(double  const smia) { _smia    = smia; }
+    void setSemiMajorAxisLength(double  const smaa) { _smaa    = smaa; }
+    void setPositionAngle      (double  const pa  ) { _pa      = pa;   }
+    void setMjd                (double  const mjd ) { _mjd     = mjd;  }
+    void setMagnitude          (double  const mag ) { _mag     = mag;  }
+    void setMagnitudeError     (float   const err ) { _magErr  = err;  }
 
     bool operator==(MovingObjectPrediction const & d) const;
 
@@ -78,6 +79,7 @@ private :
     double  _pa;      //!< error ellipse position angle (deg)
     double  _mjd;     //!< input ephemerides date time (UTC MJD)
     double  _mag;     //!< apparent magnitude (mag)
+    float   _magErr;  //!< error in apparent magnitude
 
     template <typename Archive> void serialize(Archive & ar, unsigned int const version) {
         ar & _orbitId;
@@ -88,6 +90,7 @@ private :
         ar & _pa;
         ar & _mjd;
         ar & _mag;
+        ar & _magErr;
     }
 
     friend class boost::serialization::access;
