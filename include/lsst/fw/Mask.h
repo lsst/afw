@@ -58,20 +58,35 @@ namespace fw {
         typedef boost::shared_ptr<Mask<MaskPixelT> > MaskPtrT;
         typedef boost::shared_ptr<MaskIVwT> MaskIVwPtrT;
         typedef typename vw::ImageView<MaskPixelT>::pixel_accessor pixel_accessor;
+        typedef std::map<int, std::string> MaskPlaneDict;
+
+        // Constructors        
+
+        explicit Mask(MaskPlaneDict planeDefs = MaskPlaneDict());
         
-        explicit Mask();
+        explicit Mask(MaskIVwPtrT vwImagePtr, MaskPlaneDict planeDefs = MaskPlaneDict());
         
-        explicit Mask(MaskIVwPtrT vwImagePtr);
-        
-        explicit Mask(int nCols, int nRows);
+        explicit Mask(int nCols, int nRows, MaskPlaneDict planeDefs = MaskPlaneDict());
+
+        // Operators
 
         Mask<MaskPixelT>& operator=(const Mask<MaskPixelT>& rhs);
+
+        Mask<MaskPixelT>& operator |= (const Mask<MaskPixelT>& inputMask);
+
+        MaskChannelT operator ()(int x, int y) const;
         
-        void readFits(const std::string& fileName, int hdu=0);
+        bool operator ()(int x, int y, int plane) const;
+
+        // I/O and FITS metadata
+        
+        void readFits(const std::string& fileName, bool conformMasks=false, int hdu=0);
         
         void writeFits(const std::string& fileName);
         
         lsst::mwi::data::DataProperty::PtrType getMetaData();
+
+        // Mask Plane ops
         
         int addMaskPlane(const std::string& name);
         
@@ -85,13 +100,15 @@ namespace fw {
         bool getPlaneBitMask(const std::string& name,
                              MaskChannelT& bitMask) const;
         MaskChannelT getPlaneBitMask(const std::string& name) const;
-        
+
         void clearMaskPlane(int plane);
         
         void clearAllMaskPlanes();
         
         void setMaskPlaneValues(int plane, std::list<PixelCoord> pixelList);
+
         void setMaskPlaneValues(const int plane, const int x0, const int x1, const int y);
+
         void setMaskPlaneValues(int plane, MaskPixelBooleanFunc<MaskPixelT> selectionFunc);
         
         void parseMaskPlaneMetaData(const lsst::mwi::data::DataProperty::PtrType);
@@ -101,18 +118,26 @@ namespace fw {
         int countMask(MaskPixelBooleanFunc<MaskPixelT>& testFunc,
                       const vw::BBox2i maskRegion) const;
         
+        int getNumPlanesMax() const { return 8 * sizeof(MaskChannelT); }
+
+        int getNumPlanesUsed() const { return _numPlanesUsed; }
+
+        MaskPlaneDict getMaskPlaneDict() const;
+        
+        void printMaskPlanes() const;
+
+        void conformMaskPlanes(MaskPlaneDict masterPlaneDict);
+
+        // SubMask ops
+
         MaskPtrT getSubMask(const vw::BBox2i maskRegion) const;
         
         void replaceSubMask(const vw::BBox2i maskRegion, MaskPtrT insertMask);
         
         pixel_accessor origin() const { return getIVwPtr()->origin(); }
         
-        MaskChannelT operator ()(int x, int y) const;
-        
-        bool operator ()(int x, int y, int plane) const;
-        
-        Mask<MaskPixelT>& operator |= (const Mask<MaskPixelT>& inputMask);
-        
+        // Getters
+
         unsigned int getCols() const { return _vwImagePtr->cols(); }
         unsigned int getRows() const { return _vwImagePtr->rows(); }
         unsigned int getOffsetCols() const { return _offsetCols; }
@@ -124,19 +149,11 @@ namespace fw {
 
         MaskIVwT& getIVw() const { return *_vwImagePtr; }
 
-        int getNumPlanesMax() const { return 8 * sizeof(MaskChannelT); }
-        int getNumPlanesUsed() const { return _numPlanesUsed; }
-
-        std::map<int, std::string> getMaskPlaneDict() const;
-        
-        void printMaskPlanes() const;
-        
-//        virtual ~Mask();
         
 private:
 
         MaskIVwPtrT _vwImagePtr;
-        std::map<int, std::string> _maskPlaneDict;
+        MaskPlaneDict _maskPlaneDict;
         int _numPlanesUsed;
         lsst::mwi::data::DataProperty::PtrType _metaData;
         static const std::string maskPlanePrefix;
@@ -146,7 +163,7 @@ private:
         void setOffsetRows(unsigned int offset);
         void setOffsetCols(unsigned int offset);
         
-        MaskChannelT getBitMask(int plane) const { return 1 << plane; }
+        MaskChannelT getBitMask(int plane) const { return plane >= 0 ? 1 << plane : 0; }
 
         int addMaskPlane(std::string name, int plane);
     };

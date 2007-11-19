@@ -125,6 +125,9 @@ void lsst::fw::kernel::basicConvolve(
         throw lsst::mwi::exceptions::InvalidParameter(
             "maskedImage smaller than kernel in columns and/or rows");
     }
+    
+    // copy mask plane names
+    convolvedImage.getMask()->conformMaskPlanes(maskedImage.getMask()->getMaskPlaneDict());
 
     const int cnvCols = static_cast<int>(mImageColAccs) + 1 - static_cast<int>(kernel.getCols());
     const int cnvRows = static_cast<int>(mImageRowAccs) + 1 - static_cast<int>(kernel.getRows());
@@ -229,7 +232,8 @@ lsst::fw::MaskedImage<ImageT, MaskT> lsst::fw::kernel::convolve(
                         ///< if negative then no bit is set
     bool doNormalize    ///< if True, normalize the kernel, else use "as is"
 ) {
-    lsst::fw::MaskedImage<ImageT, MaskT> convolvedImage(maskedImage.getCols(), maskedImage.getRows());
+    lsst::fw::MaskedImage<ImageT, MaskT> convolvedImage(
+        maskedImage.getCols(), maskedImage.getRows(), maskedImage.getMask()->getMaskPlaneDict());
     lsst::fw::kernel::convolve(convolvedImage, maskedImage, kernel, threshold, edgeBit, doNormalize);
     return convolvedImage;
 }
@@ -279,6 +283,9 @@ void lsst::fw::kernel::convolveLinear(
         throw lsst::mwi::exceptions::InvalidParameter(
             "maskedImage smaller than kernel in columns and/or rows");
     }
+    
+    // copy mask plane names
+    convolvedImage.getMask()->conformMaskPlanes(maskedImage.getMask()->getMaskPlaneDict());
 
     typedef lsst::fw::MaskedImage<ImageT, MaskT> maskedImageType;
     typedef boost::shared_ptr<maskedImageType> maskedImagePtrType;
@@ -303,7 +310,8 @@ void lsst::fw::kernel::convolveLinear(
     maskedPixelAccessorListType basisImRowAccList;
     for (typename kernelListType::const_iterator basisKernelIter = basisKernelList.begin();
         basisKernelIter != basisKernelList.end(); ++basisKernelIter) {
-        maskedImagePtrType basisImagePtr(new maskedImageType(imCols, imRows));
+        maskedImagePtrType basisImagePtr(new maskedImageType(
+            imCols, imRows, maskedImage.getMask()->getMaskPlaneDict()));
         lsst::fw::kernel::basicConvolve(*basisImagePtr, maskedImage, **basisKernelIter, threshold, false);
         basisImagePtrList.push_back(basisImagePtr);
         basisImRowAccList.push_back(lsst::fw::MaskedPixelAccessor<ImageT, MaskT>(*basisImagePtr));

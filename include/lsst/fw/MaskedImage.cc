@@ -11,11 +11,11 @@
  * \brief Construct an empty MaskedImage of size 0x0
  */
 template<typename ImagePixelT, typename MaskPixelT> 
-lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::MaskedImage() :
+lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::MaskedImage(MaskPlaneDict planeDefs) :
     lsst::mwi::data::LsstBase(typeid(this)),
     _imagePtr(new Image<ImagePixelT>()),
     _variancePtr(new Image<ImagePixelT>()),
-    _maskPtr(new Mask<MaskPixelT>()) {
+    _maskPtr(new Mask<MaskPixelT>(planeDefs)) {
 }
 
 /**
@@ -48,11 +48,11 @@ lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::MaskedImage(
  * \brief Construct a blank MaskedImage of specified size
  */
 template<typename ImagePixelT, typename MaskPixelT> 
-lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::MaskedImage(int nCols, int nRows) :
+lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::MaskedImage(int nCols, int nRows, MaskPlaneDict planeDefs) :
     lsst::mwi::data::LsstBase(typeid(this)),
     _imagePtr(new Image<ImagePixelT>(nCols, nRows)),
     _variancePtr(new Image<ImagePixelT>(nCols, nRows)),
-    _maskPtr(new Mask<MaskPixelT>(nCols, nRows)) {
+    _maskPtr(new Mask<MaskPixelT>(nCols, nRows, planeDefs)) {
 }
 
 /**
@@ -129,7 +129,7 @@ lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::getMask() const {
  * \throw lsst::mwi::exceptions::NotFound if none of (baseName){_img,_var,_msk}.fits is found
  */
 template<typename ImagePixelT, typename MaskPixelT>
-void lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::readFits(std::string baseName) {
+void lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::readFits(std::string baseName, bool conformMaskPlanes) {
 
     const std::string imageSuffix = "_img.fits";
     const std::string maskSuffix = "_msk.fits";
@@ -165,7 +165,7 @@ void lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::readFits(std::string baseNa
     std::string maskFileName = baseName + maskSuffix;
     if (stat(maskFileName.c_str(), &statFileInfo) == 0) {
         fileFound = true;
-        _maskPtr->readFits(maskFileName);
+        _maskPtr->readFits(maskFileName, conformMaskPlanes);
     }
 
 //  if no file found, throw an exception

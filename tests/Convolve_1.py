@@ -112,6 +112,23 @@ def makeGaussianKernelVec(kCols, kRows):
         kVec.append(basisKernelPtr)
     return kVec
 
+def sameMaskPlaneDicts(maskedImageA, maskedImageB):
+    """Return True if the mask plane dicts are the same, False otherwise.
+
+    Handles the fact that one cannot directly compare maskPlaneDicts using ==
+    """
+    mpDictA = maskedImageA.getMask().getMaskPlaneDict()
+    mpDictB = maskedImageB.getMask().getMaskPlaneDict()
+    if mpDictA.keys() != mpDictB.keys():
+        print "mpDictA.keys()  ", mpDictA.keys()
+        print "mpDictB.keys()  ", mpDictB.keys()
+        return False
+    if mpDictA.values() != mpDictB.values():
+        print "mpDictA.values()", mpDictA.values()
+        print "mpDictB.values()", mpDictB.values()
+        return False
+    return True
+
 class ConvolveTestCase(unittest.TestCase):
     def testUnityConvolution(self):
         """Verify that convolution with a centered delta function reproduces the original"""
@@ -184,6 +201,9 @@ class ConvolveTestCase(unittest.TestCase):
                 self.fail("Convolved variance does not match reference for doNormalize=%s" % doNormalize)
             if not numpy.allclose(cnvMask, refCnvMask):
                 self.fail("Convolved mask does not match reference for doNormalize=%s" % doNormalize)
+            self.assert_(sameMaskPlaneDicts(cnvMaskedImage, maskedImage),
+                "Convolved mask dictionary does not match input for doNormalize=%s" % doNormalize)
+                
     
     def testSpatiallyInvariantConvolve(self):
         """Test convolution with a spatially invariant Gaussian function
@@ -223,6 +243,8 @@ class ConvolveTestCase(unittest.TestCase):
                 self.fail("Convolved variance does not match reference for doNormalize=%s" % doNormalize)
             if not numpy.allclose(cnvMask, refCnvMask):
                 self.fail("Convolved mask does not match reference for doNormalize=%s" % doNormalize)
+            self.assert_(sameMaskPlaneDicts(cnvMaskedImage, maskedImage),
+                "Convolved mask dictionary does not match input for doNormalize=%s" % doNormalize)
 
     def testSpatiallyVaryingInPlaceConvolve(self):
         """Test in-place convolution with a spatially varying Gaussian function
@@ -275,6 +297,8 @@ class ConvolveTestCase(unittest.TestCase):
                 self.fail("Convolved variance does not match reference for doNormalize=%s" % doNormalize)
             if not numpy.allclose(cnvMask, refCnvMask):
                 self.fail("Convolved mask does not match reference for doNormalize=%s" % doNormalize)
+            self.assert_(sameMaskPlaneDicts(cnvMaskedImage, maskedImage),
+                "Convolved mask dictionary does not match input for doNormalize=%s" % doNormalize)
 
 
     def testConvolveLinear(self):
@@ -343,6 +367,8 @@ class ConvolveTestCase(unittest.TestCase):
                 self.fail("Variance from fw.convolveLinear does not match image from refConvolve in iter %d" % ii)
             if not numpy.allclose(cnvMask, ref2CnvMask):
                 self.fail("Mask from fw.convolveLinear does not match image from refConvolve in iter %d" % ii)
+            self.assert_(sameMaskPlaneDicts(cnvMaskedImage, maskedImage),
+                "Convolved mask dictionary does not match input for doNormalize=%s" % doNormalize)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

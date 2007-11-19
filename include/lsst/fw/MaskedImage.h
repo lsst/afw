@@ -92,12 +92,13 @@ namespace fw {
         typedef boost::shared_ptr<Mask<MaskPixelT> > MaskPtrT;
         typedef boost::shared_ptr<MaskedImage<ImagePixelT, MaskPixelT> > MaskedImagePtrT;
         typedef MaskedImage<ImagePixelT, MaskPixelT> MaskedImageT;
+        typedef std::map<int, std::string> MaskPlaneDict;
         
         // Constructors
-        MaskedImage();
+        MaskedImage(MaskPlaneDict planeDefs = MaskPlaneDict());
+        MaskedImage(int nCols, int nRows, MaskPlaneDict planeDefs = MaskPlaneDict());
         MaskedImage(ImagePtrT image, MaskPtrT mask);
         MaskedImage(ImagePtrT image, ImagePtrT variance, MaskPtrT mask);
-        MaskedImage(int nCols, int nRows);
         MaskedImage(const MaskedImage<ImagePixelT, MaskPixelT> & rhs);
         
         virtual ~MaskedImage();
@@ -134,7 +135,7 @@ namespace fw {
         MaskedImage& operator /= (const ImagePixelT scalar);
         
         // IO functions
-        void readFits(std::string baseName);
+        void readFits(std::string baseName, bool conformMaskPlanes=false);
         void writeFits(std::string baseName);
         
         // Getters

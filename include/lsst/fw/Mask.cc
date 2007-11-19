@@ -3,7 +3,7 @@
 // This file can NOT be separately compiled!   It is included by Mask.h
 
 template<typename MaskPixelT>
-lsst::fw::Mask<MaskPixelT>::Mask() :
+lsst::fw::Mask<MaskPixelT>::Mask(MaskPlaneDict planeDefs) :
     lsst::mwi::data::LsstBase(typeid(this)),
     _vwImagePtr(new vw::ImageView<MaskPixelT>()),
     _metaData(lsst::mwi::data::SupportFactory::createPropertyNode("FitsMetaData")) {
@@ -11,18 +11,35 @@ lsst::fw::Mask<MaskPixelT>::Mask() :
     lsst::mwi::utils::Trace("fw.Mask", 5,
               boost::format("Number of mask planes: %d") % getNumPlanesMax());
 
-     for (int i=0; i<getNumPlanesMax(); i++) {
-      _maskPlaneDict[i] = "";
-     }
+    // Check whether planeDefs is coming in as the default empty map
 
-     _numPlanesUsed = 0;
+    _numPlanesUsed = 0;
+
+    if (planeDefs.size() == 0) {
+        for (int i=0; i<getNumPlanesMax(); i++) {
+            _maskPlaneDict[i] = "";
+        }
+
+    } else {
+        _maskPlaneDict = planeDefs;
+        if (_maskPlaneDict.size() != static_cast<unsigned int>(getNumPlanesMax())) {
+            // raise some exception
+        }
+        
+        for (int i=0; i<getNumPlanesMax(); i++) {
+            if (_maskPlaneDict[i] != "") {
+                _numPlanesUsed++;
+            }
+        }
+    }
+
      _offsetRows = 0;
      _offsetCols = 0;
 
 }
 
 template<typename MaskPixelT>
-lsst::fw::Mask<MaskPixelT>::Mask(MaskIVwPtrT vwImagePtr): 
+lsst::fw::Mask<MaskPixelT>::Mask(MaskIVwPtrT vwImagePtr, MaskPlaneDict planeDefs): 
     lsst::mwi::data::LsstBase(typeid(this)),
     _vwImagePtr(vwImagePtr),
     _metaData(lsst::mwi::data::SupportFactory::createPropertyNode("FitsMetaData")) {
@@ -30,17 +47,34 @@ lsst::fw::Mask<MaskPixelT>::Mask(MaskIVwPtrT vwImagePtr):
     lsst::mwi::utils::Trace("fw.Mask", 5,
               boost::format("Number of mask planes: %d") % getNumPlanesMax());
 
-     for (int i=0; i<getNumPlanesMax(); i++) {
-        _maskPlaneDict[i] = "";
-     }
+    // Check whether planeDefs is coming in as the default empty map
 
-     _numPlanesUsed = 0;
+    _numPlanesUsed = 0;
+
+    if (planeDefs.size() == 0) {
+        for (int i=0; i<getNumPlanesMax(); i++) {
+            _maskPlaneDict[i] = "";
+        }
+
+    } else {
+        _maskPlaneDict = planeDefs;
+        if (_maskPlaneDict.size() != static_cast<unsigned int>(getNumPlanesMax())) {
+            // raise some exception
+        }
+        
+        for (int i=0; i<getNumPlanesMax(); i++) {
+            if (_maskPlaneDict[i] != "") {
+                _numPlanesUsed++;
+            }
+        }
+    }
+
      _offsetRows = 0;
      _offsetCols = 0;
 }
 
 template<typename MaskPixelT>
-lsst::fw::Mask<MaskPixelT>::Mask(int ncols, int nrows) :
+lsst::fw::Mask<MaskPixelT>::Mask(int ncols, int nrows, MaskPlaneDict planeDefs) :
     lsst::mwi::data::LsstBase(typeid(this)),
     _vwImagePtr(new vw::ImageView<MaskPixelT>(ncols, nrows)),
     _metaData(lsst::mwi::data::SupportFactory::createPropertyNode("FitsMetaData")) {
@@ -48,11 +82,28 @@ lsst::fw::Mask<MaskPixelT>::Mask(int ncols, int nrows) :
     lsst::mwi::utils::Trace("fw.Mask", 5,
               boost::format("Number of mask planes: %d") % getNumPlanesMax());
 
-     for (int i=0; i<getNumPlanesMax(); i++) {
-        _maskPlaneDict[i] = "";
-     }
+    // Check whether planeDefs is coming in as the default empty map
 
-     _numPlanesUsed = 0;
+    _numPlanesUsed = 0;
+
+    if (planeDefs.size() == 0) {
+        for (int i=0; i<getNumPlanesMax(); i++) {
+            _maskPlaneDict[i] = "";
+        }
+
+    } else {
+        _maskPlaneDict = planeDefs;
+        if (_maskPlaneDict.size() != static_cast<unsigned int>(getNumPlanesMax())) {
+            // raise some exception
+        }
+        
+        for (int i=0; i<getNumPlanesMax(); i++) {
+            if (_maskPlaneDict[i] != "") {
+                _numPlanesUsed++;
+            }
+        }
+    }
+
      _offsetRows = 0;
      _offsetCols = 0;
 }
@@ -85,11 +136,17 @@ lsst::mwi::data::DataProperty::PtrType lsst::fw::Mask<MaskPixelT>::getMetaData()
 }
 
 template<typename MaskPixelT>
-void lsst::fw::Mask<MaskPixelT>::readFits(const std::string& fileName, int hdu)
+void lsst::fw::Mask<MaskPixelT>::readFits(const std::string& fileName, bool conformMasks, int hdu)
 {
     LSSTFitsResource<MaskPixelT> fitsRes;
     fitsRes.readFits(fileName, *_vwImagePtr, _metaData, hdu);
-    parseMaskPlaneMetaData(_metaData);
+    if (conformMasks==true) {
+        MaskPlaneDict masterPlaneDefs = _maskPlaneDict;
+        parseMaskPlaneMetaData(_metaData);
+        conformMaskPlanes(masterPlaneDefs);
+    } else {
+        parseMaskPlaneMetaData(_metaData);
+    }        
 }
 
 template<typename MaskPixelT>
@@ -228,6 +285,62 @@ void lsst::fw::Mask<MaskPixelT>::clearMaskPlane(int plane) {
         }
      }
 }
+
+// conformMaskPlanes ensures that this Mask has the same plane assignments as
+// masterMask.   If a change in plane assignments is needed, the bits within 
+// each pixel are permuted as required
+//
+template<typename MaskPixelT>
+void lsst::fw::Mask<MaskPixelT>::conformMaskPlanes(MaskPlaneDict masterPlaneDict) {
+
+    if (_maskPlaneDict == masterPlaneDict)
+        return;   // nothing to do
+
+    MaskChannelT bitMasks[sizeof(MaskChannelT)*8];
+    MaskChannelT myMask[sizeof(MaskChannelT)*8];
+    MaskChannelT masterMask[sizeof(MaskChannelT)*8];
+    int numReMap = 0;
+
+    for (int i=0; i<getNumPlanesMax(); i++) {
+        bitMasks[i] = getBitMask(i);
+    }
+
+    int masterNumPlanesUsed = 0;
+    for (int i=0; i<getNumPlanesMax(); i++) {
+        std::string masterId = masterPlaneDict[i];
+        // determine i -> myJ
+        // lookup masterId in _maskPlaneDict -> myJ; myJ=-1 if masterId=="" or masterId not found in _maskPlaneDict
+        if (masterId != "") {
+            ++masterNumPlanesUsed;
+            int myJ = getMaskPlane(masterId); 
+            if (myJ != -1 && myJ != i) {
+                myMask[numReMap] = bitMasks[myJ];
+                masterMask[numReMap] = bitMasks[i];
+                numReMap++;
+            }
+        }
+    }
+
+    // warning if no corresponding plane in master.   This one will be dropped
+
+    // Now loop over all pixels in Mask
+    if (numReMap > 0) {
+        for (unsigned int y = 0; y < getRows(); y++) {
+            for (unsigned int x = 0; x < getCols(); x++) {
+                MaskChannelT newPixel  = 0;
+                MaskChannelT pixel = (*_vwImagePtr)(x,y);
+                for (int j=0; j<numReMap; j++) {
+                    if (pixel && myMask[j]) newPixel |= masterMask[j];
+                }
+                (*_vwImagePtr)(x,y) = newPixel;
+            }
+        }
+    }
+
+    _maskPlaneDict = masterPlaneDict;
+    _numPlanesUsed = masterNumPlanesUsed;
+}
+
 
 /**
  * \brief Set the bit specified by "plane" for each pixel in the pixelList
