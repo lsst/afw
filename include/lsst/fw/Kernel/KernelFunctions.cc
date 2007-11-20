@@ -6,6 +6,12 @@
  *
  * This file is meant to be included by lsst/fw/KernelFunctions.h
  *
+ * TO DO:
+ * * Explicitly instantiate all desired templated versions of the functions (once I know how).
+ * * Add some kind of threshold support for convolution once we know how to do it properly.
+ *   It existed in convolve and apply but was taken out due to ticket 231.
+ *   It never existed in convolveLinear because we didn't know how to do it.
+ *
  * \author Russell Owen
  *
  * \ingroup fw
@@ -63,10 +69,8 @@ inline void lsst::fw::kernel::apply(
         ///< accessor to for masked image pixel that overlaps (0,0) pixel of kernel(!)
     typename lsst::fw::Image<KernelT>::pixel_accessor const &kernelAccessor,
         ///< accessor for (0,0) pixel of kernel
-    unsigned int cols,      ///< number of columns in kernel
-    unsigned int rows,      ///< number of rows in kernel
-    KernelT threshold   ///< if a kernel pixel > threshold then the corresponding image mask pixel
-                        ///< is ORd into the output pixel, otherwise the mask pixel is ignored
+    unsigned int cols,  ///< number of columns in kernel
+    unsigned int rows   ///< number of rows in kernel
 ) {
     typedef typename lsst::fw::Image<KernelT>::pixel_accessor kernelAccessorType;
     *(outAccessor.image) = 0;
@@ -81,10 +85,7 @@ inline void lsst::fw::kernel::apply(
         for (unsigned int col = 0; col < cols; ++col, mImageColAcc.nextCol(), kCol.next_col()) {
             *(outAccessor.image) += static_cast<ImageT>((*kCol) * (*(mImageColAcc.image)));
             *(outAccessor.variance) += static_cast<ImageT>((*kCol) * (*kCol) * (*(mImageColAcc.variance)));
-            if ((*mImageColAcc.mask) && (*kCol > threshold)) {
-                // this bad pixel contributes enough to "OR" in the bad bits
-                *(outAccessor.mask) |= *(mImageColAcc.mask);
-            }
+            *(outAccessor.mask) |= *(mImageColAcc.mask);
         }
     }
 }
@@ -108,7 +109,6 @@ void lsst::fw::kernel::basicConvolve(
     lsst::fw::MaskedImage<ImageT, MaskT> &convolvedImage,       ///< convolved image
     lsst::fw::MaskedImage<ImageT, MaskT> const &maskedImage,    ///< image to convolve
     lsst::fw::Kernel<KernelT> const &kernel,    ///< convolution kernel
-    KernelT threshold,  ///< if kernel pixel > threshold then corresponding maskedImage mask pixel is OR'd in
     bool doNormalize    ///< if True, normalize the kernel, else use "as is"
 ) {
     typedef lsst::fw::MaskedPixelAccessor<ImageT, MaskT> maskedPixelAccessorType;
@@ -154,8 +154,9 @@ void lsst::fw::kernel::basicConvolve(
                 KernelT kSum;
                 kernel.computeImage(
                     kernelImage, kSum, lsst::fw::image::indexToPosition(cnvCol), rowPos, false);
-                KernelT adjThreshold = threshold * kSum;
-                lsst::fw::kernel::apply(cnvColAcc, mImageColAcc, kernelAccessor, kCols, kRows, adjThreshold);
+                // g++ 3.6.4 requires the template arguments here to find the function; I don't know why
+                lsst::fw::kernel::apply<ImageT, MaskT, KernelT>(
+                    cnvColAcc, mImageColAcc, kernelAccessor, kCols, kRows);
                 if (doNormalize) {
                     *(cnvColAcc.image) /= static_cast<ImageT>(kSum);
                     *(cnvColAcc.variance) /= static_cast<ImageT>(kSum * kSum);
@@ -172,7 +173,9 @@ void lsst::fw::kernel::basicConvolve(
             maskedPixelAccessorType mImageColAcc = mImageRowAcc;
             maskedPixelAccessorType cnvColAcc = cnvRowAcc;
             for (int cnvCol = cnvStartCol; cnvCol < cnvEndCol; ++cnvCol, mImageColAcc.nextCol(), cnvColAcc.nextCol()) {
-                lsst::fw::kernel::apply(cnvColAcc, mImageColAcc, kernelAccessor, kCols, kRows, threshold);
+                // g++ 3.6.4 requires the template arguments here to find the function; I don't know why
+                lsst::fw::kernel::apply<ImageT, MaskT, KernelT>(
+                    cnvColAcc, mImageColAcc, kernelAccessor, kCols, kRows);
             }
         }
     }
@@ -198,12 +201,11 @@ void lsst::fw::kernel::convolve(
     lsst::fw::MaskedImage<ImageT, MaskT> &convolvedImage,       ///< convolved image
     lsst::fw::MaskedImage<ImageT, MaskT> const &maskedImage,    ///< image to convolve
     lsst::fw::Kernel<KernelT> const &kernel,    ///< convolution kernel
-    KernelT threshold,  ///< if kernel pixel > threshold then corresponding maskedImage mask pixel is OR'd in
     int edgeBit,        ///< mask bit to indicate pixel includes edge-extended data;
                         ///< if negative then no bit is set
     bool doNormalize    ///< if True, normalize the kernel, else use "as is"
 ) {
-    lsst::fw::kernel::basicConvolve(convolvedImage, maskedImage, kernel, threshold, doNormalize);
+    lsst::fw::kernel::basicConvolve(convolvedImage, maskedImage, kernel, doNormalize);
     lsst::fw::kernel::_copyBorder(convolvedImage, maskedImage, kernel, edgeBit);
 }
 
@@ -227,14 +229,13 @@ template <typename ImageT, typename MaskT, typename KernelT>
 lsst::fw::MaskedImage<ImageT, MaskT> lsst::fw::kernel::convolve(
     lsst::fw::MaskedImage<ImageT, MaskT> const &maskedImage,    ///< image to convolve
     lsst::fw::Kernel<KernelT> const &kernel,    ///< convolution kernel
-    KernelT threshold,  ///< if kernel pixel > threshold then corresponding maskedImage mask pixel is OR'd in
     int edgeBit,        ///< mask bit to indicate pixel includes edge-extended data;
                         ///< if negative then no bit is set
     bool doNormalize    ///< if True, normalize the kernel, else use "as is"
 ) {
     lsst::fw::MaskedImage<ImageT, MaskT> convolvedImage(
         maskedImage.getCols(), maskedImage.getRows(), maskedImage.getMask()->getMaskPlaneDict());
-    lsst::fw::kernel::convolve(convolvedImage, maskedImage, kernel, threshold, edgeBit, doNormalize);
+    lsst::fw::kernel::convolve(convolvedImage, maskedImage, kernel, edgeBit, doNormalize);
     return convolvedImage;
 }
 
@@ -243,10 +244,8 @@ lsst::fw::MaskedImage<ImageT, MaskT> lsst::fw::kernel::convolve(
  * \brief Convolve a MaskedImage with a LinearCombinationKernel, setting pixels of an existing image
  *
  * A variant of the convolve function that is faster for spatially varying LinearCombinationKernels.
- * For the sake of speed: 
- * * The threshold is fixed at 0
- * * The kernel is NOT normalized
- * If you want a higher threshold or normalization then call the standard convolve function.
+ * For the sake of speed the kernel is NOT normalized. If you want normalization then call the standard
+ * convolve function.
  *
  * The Algorithm:
  * Convolves the input MaskedImage by each basis kernel in turn, creating a set of basis images.
@@ -266,10 +265,8 @@ void lsst::fw::kernel::convolveLinear(
     int edgeBit         ///< mask bit to indicate pixel includes edge-extended data;
                         ///< if negative then no bit is set
 ) {
-    KernelT threshold = 0;
-
     if (!kernel.isSpatiallyVarying()) {
-        return lsst::fw::kernel::convolve(convolvedImage, maskedImage, kernel, threshold, edgeBit, false);
+        return lsst::fw::kernel::convolve(convolvedImage, maskedImage, kernel, edgeBit, false);
     }
 
     const unsigned int imCols = maskedImage.getCols();
@@ -312,7 +309,7 @@ void lsst::fw::kernel::convolveLinear(
         basisKernelIter != basisKernelList.end(); ++basisKernelIter) {
         maskedImagePtrType basisImagePtr(new maskedImageType(
             imCols, imRows, maskedImage.getMask()->getMaskPlaneDict()));
-        lsst::fw::kernel::basicConvolve(*basisImagePtr, maskedImage, **basisKernelIter, threshold, false);
+        lsst::fw::kernel::basicConvolve(*basisImagePtr, maskedImage, **basisKernelIter, false);
         basisImagePtrList.push_back(basisImagePtr);
         basisImRowAccList.push_back(lsst::fw::MaskedPixelAccessor<ImageT, MaskT>(*basisImagePtr));
         basisImRowAccList.back().advance(cnvStartCol, cnvStartRow);
@@ -368,7 +365,7 @@ void lsst::fw::kernel::printKernel(
     double x,   ///< x at which to evaluate kernel
     double y,   ///< y at which to evaluate kernel
     bool doNormalize,   ///< if true, normalize kernel
-    std::string pixelFmt     ///< format for pixel values
+    std::string pixelFmt    ///< format for pixel values
 ) {
     typedef typename lsst::fw::Image<PixelT>::pixel_accessor imageAccessorType;
     PixelT kSum;
@@ -452,11 +449,11 @@ inline void lsst::fw::kernel::_copyRegion(
 
     vw::math::Vector<vw::int32> const startColRow = region.min();
     vw::math::Vector<vw::int32> const numColRow = region.size();
-//    lsst::mwi::utils::Trace("lsst.fw.kernel._copyRegion", 3, str(boost::format(
-//        "_copyRegion: dest size %d, %d; src size %d, %d; region start=%d, %d; region size=%d, %d; orMask=%d")
-//        % destImage.getCols() % destImage.getRows() % sourceImage.getCols() % sourceImage.getRows()
-//        % startColRow[0] % startColRow[1]% numColRow[0] % numColRow[1] % orMask
-//    ));
+    lsst::mwi::utils::Trace("lsst.fw.kernel._copyRegion", 4,
+        "_copyRegion: dest size=%d, %d; src size=%d, %d; region start=%d, %d; region size=%d, %d; orMask=%d",
+        destImage.getCols(), destImage.getRows(), sourceImage.getCols(), sourceImage.getRows(),
+        startColRow[0], startColRow[1], numColRow[0], numColRow[1], orMask
+    );
 
     vw::math::Vector<vw::int32> const endColRow = region.max();
     if ((static_cast<unsigned int>(endColRow[0]) > std::min(destImage.getCols(), sourceImage.getCols()))

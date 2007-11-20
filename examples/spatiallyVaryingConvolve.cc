@@ -29,27 +29,19 @@ int main(int argc, char **argv) {
     double maxSigma = 3.0;
     unsigned int kernelCols = 5;
     unsigned int kernelRows = 5;
-    const pixelType DefThreshold = 0.1;
     const int DefEdgeMaskBit = 15;
 
     if (argc < 2) {
-        std::cerr << "Usage: simpleConvolve fitsFile [edgeMaskBit [threshold]]" << std::endl;
+        std::cerr << "Usage: simpleConvolve fitsFile [edgeMaskBit]" << std::endl;
         std::cerr << "fitsFile excludes the \"_img.fits\" suffix" << std::endl;
         std::cerr << "edgeMaskBit (default " << DefEdgeMaskBit
             << ")  is the edge-extended mask bit (-1 to disable)" << std::endl;
-        std::cerr << "threshold (default " << DefThreshold
-            << ") is the kernel value above which a bad pixel is significant" << std::endl;
         return 1;
     }
     
     int edgeMaskBit = DefEdgeMaskBit;
     if (argc > 2) {
         istringstream(argv[2]) >> edgeMaskBit;
-    }
-    
-    pixelType threshold = DefThreshold;
-    if (argc > 3) {
-        istringstream(argv[3]) >> threshold;
     }
     
     // read in fits file
@@ -93,7 +85,7 @@ int main(int argc, char **argv) {
 
     // convolve
     lsst::fw::MaskedImage<pixelType, lsst::fw::maskPixelType>
-        resMaskedImage = lsst::fw::kernel::convolve(mImage, gaussSpVarKernel, threshold, edgeMaskBit);
+        resMaskedImage = lsst::fw::kernel::convolve(mImage, gaussSpVarKernel, edgeMaskBit, true);
 
     // write results
     resMaskedImage.writeFits(outFile);

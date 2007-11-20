@@ -28,7 +28,7 @@ InputMaskedImagePath = os.path.join(dataDir, "871034p_1_MI")
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def refConvolve(imVarMask, kernel, threshold=0, edgeBit=-1, doNormalize=True):
+def refConvolve(imVarMask, kernel, edgeBit, doNormalize):
     """Reference code to convolve a kernel with masked image data.
     
     Does NOT normalize the kernel.
@@ -38,7 +38,6 @@ def refConvolve(imVarMask, kernel, threshold=0, edgeBit=-1, doNormalize=True):
     Inputs:
     - imVarMask: (image, variance, mask) numpy arrays
     - kernel: lsst::fw::Core.Kernel object
-    - threshold: kernel pixels above this threshold are used to or in mask bits
     - edgeBit: this bit is set in the output mask for border pixels; no bit set if < 0
     - doNormalize: normalize the kernel
     
@@ -85,7 +84,7 @@ def refConvolve(imVarMask, kernel, threshold=0, edgeBit=-1, doNormalize=True):
             subMask = mask[inColBeg:inColEnd, inRowBeg:inRowEnd]
             retImage[retCol, retRow] = numpy.add.reduce((kImArr * subImage).flat)
             retVariance[retCol, retRow] = numpy.add.reduce((kImArr * kImArr * subVariance).flat)
-            retMask[retCol, retRow] = numpy.bitwise_or.reduce(((kImArr > threshold) * subMask).flat)
+            retMask[retCol, retRow] = numpy.bitwise_or.reduce((subMask).flat)
 
             retCol += 1
         retRow += 1
@@ -134,7 +133,6 @@ class ConvolveTestCase(unittest.TestCase):
         """Verify that convolution with a centered delta function reproduces the original"""
         imCols = 45
         imRows = 55
-        threshold = 0.0
         edgeBit = -1
         
         fullMaskedImage = fw.MaskedImageF()
@@ -152,7 +150,7 @@ class ConvolveTestCase(unittest.TestCase):
         f.this.disown() # Only the shared pointer now owns f
         k = fw.AnalyticKernelD(fPtr, 3, 3)
         
-        cnvMaskedImage = fw.convolve(maskedImage, k, threshold, edgeBit)
+        cnvMaskedImage = fw.convolve(maskedImage, k, edgeBit, True)
     
         origImVarMaskArrays = iUtils.arraysFromMaskedImage(maskedImage)
         cnvImVarMaskArrays = iUtils.arraysFromMaskedImage(cnvMaskedImage)
@@ -167,7 +165,6 @@ class ConvolveTestCase(unittest.TestCase):
         kRows = 7
         imCols = 45
         imRows = 55
-        threshold = 0.0
         edgeBit = 7
         doNormalize = False
 
@@ -188,12 +185,12 @@ class ConvolveTestCase(unittest.TestCase):
 
         cnvMaskedImage = fw.MaskedImageF(imCols, imRows)
         for doNormalize in (False, True):
-            fw.convolve(cnvMaskedImage, maskedImage, k, threshold, edgeBit, doNormalize)
+            fw.convolve(cnvMaskedImage, maskedImage, k, edgeBit, doNormalize)
             cnvImage, cnvVariance, cnvMask = iUtils.arraysFromMaskedImage(cnvMaskedImage)
 
             imVarMask = iUtils.arraysFromMaskedImage(maskedImage)
             refCnvImage, refCnvVariance, refCnvMask = \
-                refConvolve(imVarMask, k, threshold, edgeBit, doNormalize)
+                refConvolve(imVarMask, k, edgeBit, doNormalize)
     
             if not numpy.allclose(cnvImage, refCnvImage):
                 self.fail("Convolved image does not match reference for doNormalize=%s" % doNormalize)
@@ -212,7 +209,6 @@ class ConvolveTestCase(unittest.TestCase):
         kRows = 6
         imCols = 55
         imRows = 45
-        threshold = 0.0
         edgeBit = 7
 
         f = fw.GaussianFunction2D(1.5, 2.5)
@@ -230,12 +226,12 @@ class ConvolveTestCase(unittest.TestCase):
         maskedImage.this.disown()
         
         for doNormalize in (False, True):
-            cnvMaskedImage = fw.convolve(maskedImage, k, threshold, edgeBit, doNormalize)
+            cnvMaskedImage = fw.convolve(maskedImage, k, edgeBit, doNormalize)
             cnvImage, cnvVariance, cnvMask = iUtils.arraysFromMaskedImage(cnvMaskedImage)
     
             imVarMask = iUtils.arraysFromMaskedImage(maskedImage)
             refCnvImage, refCnvVariance, refCnvMask = \
-                refConvolve(imVarMask, k, threshold, edgeBit, doNormalize)
+                refConvolve(imVarMask, k, edgeBit, doNormalize)
     
             if not numpy.allclose(cnvImage, refCnvImage):
                 self.fail("Convolved image does not match reference for doNormalize=%s" % doNormalize)
@@ -253,7 +249,6 @@ class ConvolveTestCase(unittest.TestCase):
         kRows = 6
         imCols = 55
         imRows = 45
-        threshold = 0.0
         edgeBit = 7
 
         # create spatially varying linear combination kernel
@@ -284,12 +279,12 @@ class ConvolveTestCase(unittest.TestCase):
         
         cnvMaskedImage = fw.MaskedImageF(imCols, imRows)
         for doNormalize in (False, True):
-            fw.convolve(cnvMaskedImage, maskedImage, k, threshold, edgeBit, doNormalize)
+            fw.convolve(cnvMaskedImage, maskedImage, k, edgeBit, doNormalize)
             cnvImage, cnvVariance, cnvMask = iUtils.arraysFromMaskedImage(cnvMaskedImage)
     
             imVarMask = iUtils.arraysFromMaskedImage(maskedImage)
             refCnvImage, refCnvVariance, refCnvMask = \
-                refConvolve(imVarMask, k, threshold, edgeBit, doNormalize)
+                refConvolve(imVarMask, k, edgeBit, doNormalize)
     
             if not numpy.allclose(cnvImage, refCnvImage):
                 self.fail("Convolved image does not match reference for doNormalize=%s" % doNormalize)
@@ -311,7 +306,6 @@ class ConvolveTestCase(unittest.TestCase):
         edgeBit = 7
         imCols = 50
         imRows = 55
-        threshold = 0.0 # must be 0 because convolveLinear only does threshold = 0
         doNormalize = False # must be false because convolveLinear cannot normalize
 
         fullMaskedImage = fw.MaskedImageF()
@@ -340,13 +334,13 @@ class ConvolveTestCase(unittest.TestCase):
         kVec = makeGaussianKernelVec(kCols, kRows)
         lcKernel = fw.LinearCombinationKernelD(kVec, sFuncPtr, sParams)
 
-        refCnvMaskedImage = fw.convolve(maskedImage, lcKernel, threshold, edgeBit, doNormalize)
+        refCnvMaskedImage = fw.convolve(maskedImage, lcKernel, edgeBit, doNormalize)
         refCnvImage, refCnvVariance, refCnvMask = \
             iUtils.arraysFromMaskedImage(refCnvMaskedImage)
 
         imVarMask = iUtils.arraysFromMaskedImage(maskedImage)
         ref2CnvImage, ref2CnvVariance, ref2CnvMask = \
-           refConvolve(imVarMask, lcKernel, threshold, edgeBit, doNormalize)
+           refConvolve(imVarMask, lcKernel, edgeBit, doNormalize)
 
         if not numpy.allclose(refCnvImage, ref2CnvImage):
             self.fail("Image from fw.convolve does not match image from refConvolve")

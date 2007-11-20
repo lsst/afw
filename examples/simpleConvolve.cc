@@ -18,17 +18,14 @@ int main(int argc, char **argv) {
 
     typedef double pixelType;
     const double DefSigma = 2.0;
-    const pixelType DefThreshold = 0.1;
-    int DefEdgeBit = 0;
+    int DefEdgeMaskBit = 0;
     
     if (argc < 2) {
-        std::cerr << "Usage: simpleConvolve fitsFile [sigma [threshold]]" << std::endl;
+        std::cerr << "Usage: simpleConvolve fitsFile [sigma [edgeMaskBit]]" << std::endl;
         std::cerr << "fitsFile excludes the \"_img.fits\" suffix" << std::endl;
         std::cerr << "sigma (default " << DefSigma << ") is the width of the gaussian kernel, in pixels"
             << std::endl;
-        std::cerr << "threshold (default " << DefThreshold
-            << ") is the kernel value above which a bad pixel is significant" << std::endl;
-        std::cerr << "edgeBit (default " << DefEdgeBit
+        std::cerr << "edgeMaskBit (default " << DefEdgeMaskBit
             << ") bit to set around the edge (none if < 0)" << std::endl;
         return 1;
     }
@@ -40,14 +37,9 @@ int main(int argc, char **argv) {
             std::istringstream(argv[2]) >> sigma;
         }
         
-        pixelType threshold = DefThreshold;
+        int edgeMaskBit = DefEdgeMaskBit;
         if (argc > 3) {
-            std::istringstream(argv[3]) >> threshold;
-        }
-
-        int edgeBit = DefEdgeBit;
-        if (argc > 4) {
-            std::istringstream(argv[4]) >> edgeBit;
+            std::istringstream(argv[3]) >> edgeMaskBit;
         }
         
         // read in fits file
@@ -61,7 +53,7 @@ int main(int argc, char **argv) {
     
         // convolve
         lsst::fw::MaskedImage<pixelType, lsst::fw::maskPixelType>
-            resMaskedImage = lsst::fw::kernel::convolve(mImage, kernel, threshold, edgeBit);
+            resMaskedImage = lsst::fw::kernel::convolve(mImage, kernel, edgeMaskBit, true);
     
         // write results
         resMaskedImage.writeFits(outFile);

@@ -31,8 +31,7 @@ namespace kernel {
         lsst::fw::MaskedPixelAccessor<ImageT, MaskT> const &imageAccessor,
         typename lsst::fw::Image<KernelT>::pixel_accessor const &kernelAccessor,
         unsigned int cols,
-        unsigned int rows,
-        KernelT threshold
+        unsigned int rows
     );
     
     template <typename ImageT, typename MaskT, typename KernelT>
@@ -40,8 +39,7 @@ namespace kernel {
         lsst::fw::MaskedImage<ImageT, MaskT> &convolvedImage,
         lsst::fw::MaskedImage<ImageT, MaskT> const &maskedImage,
         lsst::fw::Kernel<KernelT> const &kernel,
-        KernelT threshold,
-        bool doNormalize = true
+        bool doNormalize
     );
     
     template <typename ImageT, typename MaskT, typename KernelT>
@@ -49,18 +47,16 @@ namespace kernel {
         lsst::fw::MaskedImage<ImageT, MaskT> &convolvedImage,
         lsst::fw::MaskedImage<ImageT, MaskT> const &maskedImage,
         lsst::fw::Kernel<KernelT> const &kernel,
-        KernelT threshold,
         int edgeBit,
-        bool doNormalize = true
+        bool doNormalize
     );
     
     template <typename ImageT, typename MaskT, typename KernelT>
     lsst::fw::MaskedImage<ImageT, MaskT> convolve(
         lsst::fw::MaskedImage<ImageT, MaskT> const &maskedImage,
         lsst::fw::Kernel<KernelT> const &kernel,
-        KernelT threshold,
         int edgeBit,
-        bool doNormalize = true
+        bool doNormalize
     );
 
     template <typename ImageT, typename MaskT, typename KernelT>

@@ -13,13 +13,14 @@ using namespace std;
 int main(int argc, char **argv) {
     typedef double pixelType;
     double sigma = 3;
+    const int EdgeMaskBit = -1;
     const unsigned DefNIter = 10;
     const unsigned MinKernelSize = 5;
     const unsigned MaxKernelSize = 15;
     const unsigned DeltaKernelSize = 5;
 
     if (argc < 2) {
-        std::cout << "Usage: timeConvolve fitsFile [nIter [threshold]]" << std::endl;
+        std::cout << "Usage: timeConvolve fitsFile [nIter]" << std::endl;
         std::cerr << "fitsFile excludes the \"_img.fits\" suffix" << std::endl;
         std::cout << "nIter (default " << DefNIter << ") is the number of iterations per kernel size" << endl;
         std::cout << "Kernel size ranges from " << MinKernelSize << " to " << MaxKernelSize
@@ -30,11 +31,6 @@ int main(int argc, char **argv) {
     unsigned nIter = 10;
     if (argc > 2) {
         istringstream(argv[2]) >> nIter;
-    }
-    
-    pixelType threshold = 1000;
-    if (argc > 3) {
-        istringstream(argv[3]) >> threshold;
     }
     
     // read in fits file
@@ -54,7 +50,7 @@ int main(int argc, char **argv) {
         for (unsigned iter = 0; iter < nIter; ++iter) {
             // convolve
             lsst::fw::MaskedImage<pixelType, lsst::fw::maskPixelType>
-                resMImage = lsst::fw::kernel::convolve(mImage, kernel, threshold, -1);
+                resMImage = lsst::fw::kernel::convolve(mImage, kernel, EdgeMaskBit, true);
         }
         double secPerIter = (clock() - startTime) / static_cast<double> (nIter * CLOCKS_PER_SEC);
         cout << secPerIter << " sec/convolution for a " << kSize << " by " << kSize << " kernel" << endl;
