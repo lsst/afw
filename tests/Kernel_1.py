@@ -8,7 +8,7 @@ import numpy
 import lsst.fw.Core.fwLib as fw
 import lsst.mwi.tests as tests
 import lsst.mwi.utils as mwiu
-import lsst.fw.Core.imageTestUtils as itu
+import lsst.fw.Core.imageTestUtils as imTestUtils
 
 verbosity = 0 # increase to see trace
 mwiu.Trace_setVerbosity("lsst.fw", verbosity)
@@ -33,14 +33,14 @@ class KernelTestCase(unittest.TestCase):
         
         fixedKernel = fw.FixedKernelD(inImage);
         outImage = fixedKernel.computeNewImage(0.0, 0.0, False)[0]
-        outArr = itu.arrayFromImage(outImage)
+        outArr = imTestUtils.arrayFromImage(outImage)
         if not numpy.allclose(inArr, outArr):
             self.fail("%s = %s != %s (not normalized)" % \
                 (k.__class__.__name__, inArr, outArr))
         
         normInArr = inArr / inArr.sum()
         normOutImage = fixedKernel.computeNewImage(0.0, 0.0, True)[0]
-        normOutArr = itu.arrayFromImage(normOutImage)
+        normOutArr = imTestUtils.arrayFromImage(normOutImage)
         if not numpy.allclose(normOutArr, normInArr):
             self.fail("%s = %s != %s (normalized)" % \
                 (k.__class__.__name__, normInArr, normOutArr))
@@ -51,25 +51,23 @@ class KernelTestCase(unittest.TestCase):
         kCols = 5
         kRows = 8
 
-        f = fw.GaussianFunction2D(1.0, 1.0)
-        fPtr =  fw.Function2PtrTypeD(f)
-        f.this.disown() # Only the shared pointer now owns f
+        fPtr =  fw.Function2DPtr(fw.GaussianFunction2D(1.0, 1.0))
         k = fw.AnalyticKernelD(fPtr, kCols, kRows)
         fArr = numpy.zeros(shape=[k.getCols(), k.getRows()], dtype=float)
         for xsigma in (0.1, 1.0, 3.0):
             for ysigma in (0.1, 1.0, 3.0):
-                f.setParameters((xsigma, ysigma))
+                fPtr.setParameters((xsigma, ysigma))
                 # compute array of function values and normalize
                 for row in range(k.getRows()):
                     y = row - k.getCtrRow()
                     for col in range(k.getCols()):
                         x = col - k.getCtrCol()
-                        fArr[col, row] = f(x, y)
+                        fArr[col, row] = fPtr(x, y)
                 fArr /= fArr.sum()
                 
                 k.setKernelParameters((xsigma, ysigma))
                 kImage = k.computeNewImage(0.0, 0.0, True)[0]
-                kArr = itu.arrayFromImage(kImage)
+                kArr = imTestUtils.arrayFromImage(kImage)
                 if not numpy.allclose(fArr, kArr):
                     self.fail("%s = %s != %s for xsigma=%s, ysigma=%s" % \
                         (k.__class__.__name__, kArr, fArr, xsigma, ysigma))
@@ -82,21 +80,17 @@ class KernelTestCase(unittest.TestCase):
         
         # create list of kernels
         basisImArrList = []
-        kVec = fw.vectorKernelPtrD()
+        kVec = fw.vectorKernelDPtr()
         ctrCol = (kCols - 1) // 2
         ctrRow = (kRows - 1) // 2
         for row in range(kRows):
             y = float(row - ctrRow)
             for col in range(kCols):
                 x = float(col - ctrCol)
-                f = fw.IntegerDeltaFunction2D(x, y)
-                fPtr = fw.Function2PtrTypeD(f)
-                f.this.disown() # only the shared pointer now owns f
-                basisKernel = fw.AnalyticKernelD(fPtr, kCols, kRows)
-                basisImage = basisKernel.computeNewImage()[0]
-                basisImArrList.append(itu.arrayFromImage(basisImage))
-                kPtr = fw.KernelPtrTypeD(basisKernel)
-                basisKernel.this.disown() # only the shared pointer now owns basisKernel
+                fPtr = fw.Function2DPtr(fw.IntegerDeltaFunction2D(x, y))
+                kPtr = fw.KernelDPtr(fw.AnalyticKernelD(fPtr, kCols, kRows))
+                basisImage = kPtr.computeNewImage()[0]
+                basisImArrList.append(imTestUtils.arrayFromImage(basisImage))
                 kVec.append(kPtr)
         
         kParams = [0.0]*len(kVec)
@@ -106,7 +100,7 @@ class KernelTestCase(unittest.TestCase):
             kParams[ii] = 1.0
             k.setKernelParameters(kParams)
             kIm = k.computeNewImage()[0]
-            kImArr = itu.arrayFromImage(kIm)
+            kImArr = imTestUtils.arrayFromImage(kIm)
             if not numpy.allclose(kImArr, basisImArrList[ii]):
                 self.fail("%s = %s != %s for the %s'th basis kernel" % \
                     (k.__class__.__name__, kImArr, basisImArrList[ii], ii))
@@ -129,18 +123,14 @@ class KernelTestCase(unittest.TestCase):
         basisImArrList.append(imArr)
         
         # create a list of basis kernels from the images
-        kVec = fw.vectorKernelPtrD()
+        kVec = fw.vectorKernelDPtr()
         for basisImArr in basisImArrList:
-            basisImage = itu.imageFromArray(basisImArr)
-            basisKernel = fw.FixedKernelD(basisImage)
-            kPtr = fw.KernelPtrTypeD(basisKernel)
-            basisKernel.this.disown() # only the shared pointer now owns basisKernel
+            basisImage = imTestUtils.imageFromArray(basisImArr)
+            kPtr = fw.KernelDPtr(fw.FixedKernelD(basisImage))
             kVec.append(kPtr)
 
         # create spatially varying linear combination kernel
-        sFunc = fw.PolynomialFunction2D(1)
-        sFuncPtr =  fw.Function2PtrTypeD(sFunc)
-        sFunc.this.disown() # Only the shared pointer now owns sFunc
+        sFuncPtr =  fw.Function2DPtr(fw.PolynomialFunction2D(1))
         
         # spatial parameters are a list of entries, one per kernel parameter;
         # each entry is a list of spatial parameters
@@ -159,7 +149,7 @@ class KernelTestCase(unittest.TestCase):
             (0.5, 0.5, 0.5, 0.5),
         ]:
             k.computeImage(kImage, colPos, rowPos, False)
-            kImArr = itu.arrayFromImage(kImage)
+            kImArr = imTestUtils.arrayFromImage(kImage)
             refKImArr = (basisImArrList[0] * coeff0) + (basisImArrList[1] * coeff1)
             if not numpy.allclose(kImArr, refKImArr):
                 self.fail("%s = %s != %s at colPos=%s, rowPos=%s" % \

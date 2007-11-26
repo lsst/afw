@@ -19,19 +19,17 @@ class MinimizeTestCase(unittest.TestCase):
         errorDef = 0.1
     
         polyOrder = 1
-        polyFunc = fw.PolynomialFunction2D(polyOrder)
-        polyFuncPtr = fw.Function2PtrTypeD(polyFunc)
-        polyFunc.this.disown() # pointer now owns this function
+        polyFuncPtr = fw.Function2DPtr(fw.PolynomialFunction2D(polyOrder))
         
         modelParams = [0.1, 0.2, 0.3]
-        polyFunc.setParameters(modelParams)
+        polyFuncPtr.setParameters(modelParams)
         measurements = []
         for x, y in zip(xPositions, yPositions):
-            measurements.append(polyFunc(x,y))
+            measurements.append(polyFuncPtr(x,y))
         print "measurements=", measurements
     
         # Set up initial guesses
-        nParameters = polyFunc.getNParameters()
+        nParameters = polyFuncPtr.getNParameters()
         initialParameters = numpy.zeros(nParameters, float)    
         stepsize  = numpy.ones(nParameters, float)
         stepsize *= 0.1

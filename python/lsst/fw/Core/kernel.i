@@ -17,8 +17,9 @@
 // classes (every template must have a unique name)
 //
 %template(KernelD)              lsst::fw::Kernel<double>;
-%template(KernelPtrTypeD)       boost::shared_ptr<lsst::fw::Kernel<double> >;
-%template(vectorKernelPtrD)     std::vector<boost::shared_ptr<lsst::fw::Kernel<double> > >;
+%template(LinearCombinationKernelD) lsst::fw::LinearCombinationKernel<double>;
+%boost_shared_ptr(KernelDPtr,   lsst::fw::Kernel<double>);
+%template(vectorKernelDPtr)     std::vector<boost::shared_ptr<lsst::fw::Kernel<double> > >;
 
 %template(FixedKernelD)         lsst::fw::FixedKernel<double>;
 %template(AnalyticKernelD)      lsst::fw::AnalyticKernel<double>;

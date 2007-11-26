@@ -13,7 +13,7 @@
 %template(FunctionF)          lsst::fw::function::Function<float>;
 %template(Function1F)         lsst::fw::function::Function1<float>;
 %template(Function2F)         lsst::fw::function::Function2<float>;
-%template(Function2PtrTypeF)    boost::shared_ptr<lsst::fw::function::Function2<float> >;
+%boost_shared_ptr(Function2FPtr,    lsst::fw::function::Function2<float>);
 
 %template(Chebyshev1Function1F) lsst::fw::function::Chebyshev1Function1<float>;
 %template(GaussianFunction1F) lsst::fw::function::GaussianFunction1<float>;
@@ -28,7 +28,7 @@
 %template(FunctionD)          lsst::fw::function::Function<double>;
 %template(Function1D)         lsst::fw::function::Function1<double>;
 %template(Function2D)         lsst::fw::function::Function2<double>;
-%template(Function2PtrTypeD)    boost::shared_ptr<lsst::fw::function::Function2<double> >;
+%boost_shared_ptr(Function2DPtr,    lsst::fw::function::Function2<double>);
 
 %template(Chebyshev1Function1D) lsst::fw::function::Chebyshev1Function1<double>;
 %template(GaussianFunction1D) lsst::fw::function::GaussianFunction1<double>;

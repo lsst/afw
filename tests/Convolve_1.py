@@ -14,7 +14,7 @@ import unittest
 import numpy
 
 import lsst.fw.Core.fwLib as fw
-import lsst.fw.Core.imageTestUtils as iUtils
+import lsst.fw.Core.imageTestUtils as imTestUtils
 import lsst.mwi.tests as tests
 import lsst.mwi.utils as mwiu
 
@@ -63,7 +63,7 @@ def refConvolve(imVarMask, kernel, edgeBit, doNormalize):
 
     isSpatiallyVarying = kernel.isSpatiallyVarying()
     if not isSpatiallyVarying:
-        kImArr = iUtils.arrayFromImage(kernel.computeNewImage(0, 0, doNormalize)[0])
+        kImArr = imTestUtils.arrayFromImage(kernel.computeNewImage(0, 0, doNormalize)[0])
     else:
         kImage = fw.ImageD(kCols, kRows)
 
@@ -77,7 +77,7 @@ def refConvolve(imVarMask, kernel, edgeBit, doNormalize):
             if isSpatiallyVarying:
                 colPos = fw.indexToPosition(retCol)
                 kernel.computeImage(kImage, colPos, rowPos, doNormalize)
-                kImArr = iUtils.arrayFromImage(kImage)
+                kImArr = imTestUtils.arrayFromImage(kImage)
             inColEnd = inColBeg + kCols
             subImage = image[inColBeg:inColEnd, inRowBeg:inRowEnd]
             subVariance = variance[inColBeg:inColEnd, inRowBeg:inRowEnd]
@@ -91,7 +91,7 @@ def refConvolve(imVarMask, kernel, edgeBit, doNormalize):
     return (retImage, retVariance, retMask)
 
 def makeGaussianKernelVec(kCols, kRows):
-    """Create a fw.vectorKernelPtrD of gaussian kernels.
+    """Create a fw.vectorKernelDPtr of gaussian kernels.
 
     This is useful for constructing a LinearCombinationKernel.
     """
@@ -100,14 +100,10 @@ def makeGaussianKernelVec(kCols, kRows):
         (1.5, 2.5),
         (2.5, 1.5),
     ]
-    kVec = fw.vectorKernelPtrD()
+    kVec = fw.vectorKernelDPtr()
     for xSigma, ySigma in xySigmaList:
-        f = fw.GaussianFunction2D(1.5, 2.5)
-        fPtr =  fw.Function2PtrTypeD(f)
-        f.this.disown() # Only the shared pointer now owns f
-        basisKernel = fw.AnalyticKernelD(fPtr, kCols, kRows)
-        basisKernelPtr = fw.KernelPtrTypeD(basisKernel)
-        basisKernel.this.disown() # only the shared pointer now owns basisKernel
+        fPtr =  fw.Function2DPtr(fw.GaussianFunction2D(1.5, 2.5))
+        basisKernelPtr = fw.KernelDPtr(fw.AnalyticKernelD(fPtr, kCols, kRows))
         kVec.append(basisKernelPtr)
     return kVec
 
@@ -145,15 +141,13 @@ class ConvolveTestCase(unittest.TestCase):
         maskedImage.this.disown()
         
         # create a delta function kernel that has 1,1 in the center
-        f = fw.IntegerDeltaFunction2D(0.0, 0.0)
-        fPtr =  fw.Function2PtrTypeD(f)
-        f.this.disown() # Only the shared pointer now owns f
+        fPtr =  fw.Function2DPtr(fw.IntegerDeltaFunction2D(0.0, 0.0))
         k = fw.AnalyticKernelD(fPtr, 3, 3)
         
         cnvMaskedImage = fw.convolve(maskedImage, k, edgeBit, True)
     
-        origImVarMaskArrays = iUtils.arraysFromMaskedImage(maskedImage)
-        cnvImVarMaskArrays = iUtils.arraysFromMaskedImage(cnvMaskedImage)
+        origImVarMaskArrays = imTestUtils.arraysFromMaskedImage(maskedImage)
+        cnvImVarMaskArrays = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
         for name, ind in (("image", 0), ("variance", 1), ("mask", 2)):
             if not numpy.allclose(origImVarMaskArrays[ind], cnvImVarMaskArrays[ind]):
                 self.fail("Convolved %s does not match reference" % (name,))
@@ -168,9 +162,7 @@ class ConvolveTestCase(unittest.TestCase):
         edgeBit = 7
         doNormalize = False
 
-        f = fw.GaussianFunction2D(1.5, 2.5)
-        fPtr =  fw.Function2PtrTypeD(f)
-        f.this.disown() # Only the shared pointer now owns f
+        fPtr =  fw.Function2DPtr(fw.GaussianFunction2D(1.5, 2.5))
         k = fw.AnalyticKernelD(fPtr, kCols, kRows)
         
         fullMaskedImage = fw.MaskedImageF()
@@ -186,9 +178,9 @@ class ConvolveTestCase(unittest.TestCase):
         cnvMaskedImage = fw.MaskedImageF(imCols, imRows)
         for doNormalize in (False, True):
             fw.convolve(cnvMaskedImage, maskedImage, k, edgeBit, doNormalize)
-            cnvImage, cnvVariance, cnvMask = iUtils.arraysFromMaskedImage(cnvMaskedImage)
+            cnvImage, cnvVariance, cnvMask = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
 
-            imVarMask = iUtils.arraysFromMaskedImage(maskedImage)
+            imVarMask = imTestUtils.arraysFromMaskedImage(maskedImage)
             refCnvImage, refCnvVariance, refCnvMask = \
                 refConvolve(imVarMask, k, edgeBit, doNormalize)
     
@@ -211,9 +203,7 @@ class ConvolveTestCase(unittest.TestCase):
         imRows = 45
         edgeBit = 7
 
-        f = fw.GaussianFunction2D(1.5, 2.5)
-        fPtr =  fw.Function2PtrTypeD(f)
-        f.this.disown() # Only the shared pointer now owns f
+        fPtr =  fw.Function2DPtr(fw.GaussianFunction2D(1.5, 2.5))
         k = fw.AnalyticKernelD(fPtr, kCols, kRows)
         
         fullMaskedImage = fw.MaskedImageF()
@@ -227,9 +217,9 @@ class ConvolveTestCase(unittest.TestCase):
         
         for doNormalize in (False, True):
             cnvMaskedImage = fw.convolve(maskedImage, k, edgeBit, doNormalize)
-            cnvImage, cnvVariance, cnvMask = iUtils.arraysFromMaskedImage(cnvMaskedImage)
+            cnvImage, cnvVariance, cnvMask = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
     
-            imVarMask = iUtils.arraysFromMaskedImage(maskedImage)
+            imVarMask = imTestUtils.arraysFromMaskedImage(maskedImage)
             refCnvImage, refCnvVariance, refCnvMask = \
                 refConvolve(imVarMask, k, edgeBit, doNormalize)
     
@@ -252,9 +242,7 @@ class ConvolveTestCase(unittest.TestCase):
         edgeBit = 7
 
         # create spatially varying linear combination kernel
-        sFunc = fw.PolynomialFunction2D(1)
-        sFuncPtr =  fw.Function2PtrTypeD(sFunc)
-        sFunc.this.disown() # Only the shared pointer now owns sFunc
+        sFuncPtr =  fw.Function2DPtr(fw.PolynomialFunction2D(1))
         
         # spatial parameters are a list of entries, one per kernel parameter;
         # each entry is a list of spatial parameters
@@ -263,9 +251,7 @@ class ConvolveTestCase(unittest.TestCase):
             (1.0, 0.0,  1.0 / imRows),
         )
    
-        f = fw.GaussianFunction2D(1.0, 1.0)
-        fPtr =  fw.Function2PtrTypeD(f)
-        f.this.disown() # Only the shared pointer now owns f
+        fPtr =  fw.Function2DPtr(fw.GaussianFunction2D(1.0, 1.0))
         k = fw.AnalyticKernelD(fPtr, kCols, kRows, sFuncPtr, sParams)
         
         fullMaskedImage = fw.MaskedImageF()
@@ -280,9 +266,9 @@ class ConvolveTestCase(unittest.TestCase):
         cnvMaskedImage = fw.MaskedImageF(imCols, imRows)
         for doNormalize in (False, True):
             fw.convolve(cnvMaskedImage, maskedImage, k, edgeBit, doNormalize)
-            cnvImage, cnvVariance, cnvMask = iUtils.arraysFromMaskedImage(cnvMaskedImage)
+            cnvImage, cnvVariance, cnvMask = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
     
-            imVarMask = iUtils.arraysFromMaskedImage(maskedImage)
+            imVarMask = imTestUtils.arraysFromMaskedImage(maskedImage)
             refCnvImage, refCnvVariance, refCnvMask = \
                 refConvolve(imVarMask, k, edgeBit, doNormalize)
     
@@ -319,9 +305,7 @@ class ConvolveTestCase(unittest.TestCase):
         maskedImage.writeFits("Src")
 
         # create spatially varying linear combination kernel
-        sFunc = fw.PolynomialFunction2D(1)
-        sFuncPtr =  fw.Function2PtrTypeD(sFunc)
-        sFunc.this.disown() # Only the shared pointer now owns sFunc
+        sFuncPtr =  fw.Function2DPtr(fw.PolynomialFunction2D(1))
         
         # spatial parameters are a list of entries, one per kernel parameter;
         # each entry is a list of spatial parameters
@@ -336,9 +320,9 @@ class ConvolveTestCase(unittest.TestCase):
 
         refCnvMaskedImage = fw.convolve(maskedImage, lcKernel, edgeBit, doNormalize)
         refCnvImage, refCnvVariance, refCnvMask = \
-            iUtils.arraysFromMaskedImage(refCnvMaskedImage)
+            imTestUtils.arraysFromMaskedImage(refCnvMaskedImage)
 
-        imVarMask = iUtils.arraysFromMaskedImage(maskedImage)
+        imVarMask = imTestUtils.arraysFromMaskedImage(maskedImage)
         ref2CnvImage, ref2CnvVariance, ref2CnvMask = \
            refConvolve(imVarMask, lcKernel, edgeBit, doNormalize)
 
@@ -353,7 +337,7 @@ class ConvolveTestCase(unittest.TestCase):
         cnvMaskedImage = fw.MaskedImageF(imCols, imRows)
         for ii in range(2):        
             fw.convolveLinear(cnvMaskedImage, maskedImage, lcKernel, edgeBit)
-            cnvImage, cnvVariance, cnvMask = iUtils.arraysFromMaskedImage(cnvMaskedImage)
+            cnvImage, cnvVariance, cnvMask = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
     
             if not numpy.allclose(cnvImage, ref2CnvImage):
                 self.fail("Image from fw.convolveLinear does not match image from refConvolve in iter %d" % ii)
