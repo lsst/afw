@@ -51,6 +51,8 @@ namespace lsst {
             void colRowToRaDec(Coord2D pix, Coord2D& sky) const;
             Coord2D colRowToRaDec(Coord2D pix) const;
             Coord2D colRowToRaDec(double const col, double const row) const;
+
+            double pixArea(Coord2D pix) const;
         private:
             lsst::mwi::data::DataProperty::PtrType _fitsMetaData; ///< Input FITS header.  Caveat Emptor: may contain other keywords
             // including e.g. SIMPLE and BITPIX

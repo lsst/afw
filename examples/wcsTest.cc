@@ -36,16 +36,10 @@
 
 using namespace std;
 
-int main() {
+int main(int argc, char **argv) {
     typedef double pixelType;
 
-    char *fwDataCStr = getenv("FWDATA_DIR");
-    if (fwDataCStr == 0) {
-        std::cout << "fwData must be set up" << std::endl;
-        exit(1);
-    }
-    std::string fwData(fwDataCStr);
-    const std::string inFilename(fwData + "/small_MI");
+    const std::string inFilename(argv[1]);
     
    
     std::cout << "Opening file " << inFilename << std::endl;
@@ -55,21 +49,22 @@ int main() {
     
     // Testing input col, row values 
 
-    double miCol = 1.0;
-    double miRow = 1.0;
+    lsst::fw::Coord2D minCoord(1.0,1.0);
+    lsst::fw::Coord2D colRow(mskdImage.getCols(), mskdImage.getRows());
 
-    double colRow[2];
-    colRow[0] = 1;
-    colRow[1] = 1;
-
-    lsst::fw::Coord2D sky1 = wcs.colRowToRaDec(miCol, miRow);
+    lsst::fw::Coord2D sky1 = wcs.colRowToRaDec(minCoord);
     lsst::fw::Coord2D sky2 = wcs.colRowToRaDec(colRow);
 
-    std::cout << "ra, decl of " << inFilename << " at ("<< miCol << miRow <<") = " << endl;
+    std::cout << "ra, decl of " << inFilename << " at ("<< minCoord[0] << " " << minCoord[1] <<") = " << endl;
     std::cout << "ra: " << sky1[0] << " decl: " << sky1[1] << endl << endl;
  
-    std::cout << "ra, decl of " << inFilename << " at ("<< colRow[0] << colRow[1]<<") = " << endl;
+    std::cout << "ra, decl of " << inFilename << " at ("<< colRow[0] << " " << colRow[1]<<") = " << endl;
     std::cout << "ra: " << sky2[0] << " decl: " << sky2[1] << endl << endl;
+
+    double pixArea0 = wcs.pixArea(minCoord);
+    double pixArea1 = wcs.pixArea(colRow);
+
+    std::cout << "pixel areas: " << pixArea0 << " " << pixArea1 << std::endl;
 
     // Testing input ra, dec values using output from above for now
 
@@ -81,10 +76,10 @@ int main() {
     lsst::fw::Coord2D pix1 = wcs.raDecToColRow(miRa1, miDecl1);
     lsst::fw::Coord2D pix2 = wcs.raDecToColRow(miRa2, miDecl2);
 
-    std::cout << "col, row of " << inFilename << " at ("<< miRa1 << miDecl1<<") = " << endl;
+    std::cout << "col, row of " << inFilename << " at ("<< miRa1 << " " << miDecl1<<") = " << endl;
     std::cout << "col: " << pix1[0] << " row: " << pix1[1] << endl << endl;
 
-    std::cout << "col, row of " << inFilename << " at ("<< miRa2 << miDecl2<<") = " << endl;
+    std::cout << "col, row of " << inFilename << " at ("<< miRa2 << " " << miDecl2<<") = " << endl;
     std::cout << "col: " << pix2[0] << " row: " << pix2[1] << endl << endl;
 
     double raDecl1[2];
@@ -98,10 +93,10 @@ int main() {
     lsst::fw::Coord2D pix3 = wcs.raDecToColRow(raDecl1);
     lsst::fw::Coord2D pix4 = wcs.raDecToColRow(raDecl2);
 
-        std::cout << "col, row of " << inFilename << " at ("<< raDecl1[0] << raDecl1[2]<<") = " << endl;
+        std::cout << "col, row of " << inFilename << " at ("<< raDecl1[0] << " " << raDecl1[1]<<") = " << endl;
     std::cout << "col: " << pix3[0] << " row: " << pix3[1] << endl << endl;
 
-    std::cout << "col, row of " << inFilename << " at ("<< raDecl2[0] << raDecl2[1]<<") = " << endl;
+    std::cout << "col, row of " << inFilename << " at ("<< raDecl2[0] << " " << raDecl2[1]<<") = " << endl;
     std::cout << "col: " << pix4[0] << " row: " << pix4[1] << endl << endl;    
 
 } // close main

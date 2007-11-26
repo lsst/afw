@@ -1,3 +1,4 @@
+// -*- lsst-c++ -*-
 /**
  * \file
  * \brief Implementation of WCS as a thin wrapper around wcslib
@@ -78,13 +79,16 @@ WCS::WCS(lsst::mwi::data::DataProperty::PtrType fitsMetaData  ///< The contents 
     int fixStatus = wcsfix(_wcsfixCtrl, naxes, _wcsInfo, stats);
     if (fixStatus != 0) {
         std::stringstream errStream;
-        errStream << "Could not parse FITS WCS: wcsfix failed";
+        errStream << "Could not parse FITS WCS: wcsfix failed " << std::endl;
         for (int ii = 0; ii < NWCSFIX; ++ii) {
-            if (stats[ii] != 0) {
-                errStream << "; " << ii << ": " << wcsfix_errmsg[ii];
-            }
-        }
-        errStream << std::endl;
+	  if (stats[ii] >= 0) {
+	    errStream << "\t" << ii << ": " << stats[ii] << " " << wcsfix_errmsg[stats[ii]] << std::endl;
+	  } else {
+	    errStream << "\t" << ii << ": " << stats[ii] << std::endl;
+	  }
+	}
+	  
+// 	std::cerr << errStream.str();
         throw lsst::mwi::exceptions::Runtime(errStream.str());
     }
 }
@@ -261,4 +265,25 @@ Coord2D WCS::colRowToRaDec(double const col, ///< Input column position
     colRowToRaDec(pix, sky);
    
     return sky;
+}
+
+/// Return the pixel area in deg^2 at a given pixel coordinate
+double WCS::pixArea(Coord2D pix0) const
+{
+    Coord2D sky0, sky1, deltaSky;
+    Coord2D pix1 = pix0 + Coord2D(1,1);
+
+    sky0 = colRowToRaDec(pix0);
+    sky1 = colRowToRaDec(pix1);
+
+    deltaSky = sky1 - sky0;
+
+    double cosDec, area;
+
+    cosDec = cos(sky0[1] * M_PI/180.0);
+    area = fabs(deltaSky[0] * cosDec * deltaSky[1]);
+
+    return area;
+    
+    
 }
