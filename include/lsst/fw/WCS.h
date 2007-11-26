@@ -12,12 +12,17 @@
 #include <vw/Math.h>
 #include "lsst/mwi/data/LsstBase.h"
 #include "lsst/mwi/data/DataProperty.h"
+#include "lsst/mwi/persistence/Persistable.h"
 
 struct wcsprm;                          // defined in wcs.h
 
 namespace lsst {
 
     namespace fw {
+
+        namespace formatters {
+            class WcsFormatter;
+        }
 
         typedef vw::math::Vector<double, 2> Coord2D;
 
@@ -26,7 +31,8 @@ namespace lsst {
         /// All WCS (in the FITS sense) coordinate conventions are supported via
         /// Mark Calabretta's wcslib package (http://www.atnf.csiro.au/people/mcalabre)
         ///
-        class WCS : public lsst::mwi::data::LsstBase {
+        class WCS : public lsst::mwi::persistence::Persistable,
+                    public lsst::mwi::data::LsstBase {
         public:
             
             WCS();
@@ -54,6 +60,8 @@ namespace lsst {
 
             double pixArea(Coord2D pix) const;
         private:
+            LSST_PERSIST_FORMATTER(formatters::WcsFormatter);
+
             lsst::mwi::data::DataProperty::PtrType _fitsMetaData; ///< Input FITS header.  Caveat Emptor: may contain other keywords
             // including e.g. SIMPLE and BITPIX
             struct wcsprm* _wcsInfo;

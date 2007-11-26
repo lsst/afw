@@ -25,11 +25,11 @@ import lsst.fw.exceptions
 
 %include "lsst/mwi/p_lsstSwig.i"
 %include "lsst/mwi/persistenceMacros.i"
+%import "lsst/mwi/persistence/Persistable.h"
 
 %import "lsst/mwi/data/DataProperty.h"
 %import "lsst/mwi/policy/Policy.h"
 %import "lsst/mwi/persistence/LogicalLocation.h"
-%import "lsst/mwi/persistence/Persistable.h"
 %import "lsst/mwi/persistence/Persistence.h"
 %import "lsst/mwi/persistence/Storage.h"
 

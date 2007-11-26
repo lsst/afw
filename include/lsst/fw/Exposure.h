@@ -29,6 +29,7 @@
 #include <vw/Math/BBox.h>
 
 #include <lsst/mwi/data/LsstBase.h>
+#include <lsst/mwi/persistence/Persistable.h>
 #include <lsst/fw/MaskedImage.h>
 #include <lsst/fw/WCS.h>
 
@@ -36,9 +37,13 @@ namespace lsst {
 namespace fw {
     
     template<class ImageT, class MaskT> class Exposure;
+    namespace formatters {
+        template<class ImageT, class MaskT> class ExposureFormatter;
+    }
         
     template<typename ImageT, typename MaskT> 
-    class Exposure : public lsst::mwi::data::LsstBase {
+    class Exposure : public lsst::mwi::persistence::Persistable,
+                     public lsst::mwi::data::LsstBase {
                 
     public:    
 
@@ -69,6 +74,8 @@ namespace fw {
         void writeFits(std::string const &expOutFile) const;
         
     private:
+        LSST_PERSIST_FORMATTER(formatters::ExposureFormatter<ImageT, MaskT>);
+
         MaskedImage<ImageT, MaskT> _maskedImage;             
         boost::shared_ptr<WCS> _wcsPtr;    
     };     

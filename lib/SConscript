@@ -11,6 +11,11 @@ env.SharedLibrary(
         "formatters/Utils.cc",
         "formatters/DiaSourceFormatters.cc",
         "formatters/MovingObjectPredictionFormatters.cc",
+        "formatters/ExposureFormatter.cc",
+        "formatters/ImageFormatter.cc",
+        "formatters/MaskFormatter.cc",
+        "formatters/MaskedImageFormatter.cc",
+        "formatters/WcsFormatter.cc",
         "Kernel/Kernel.cc",
         "Kernel/FixedKernel.cc",
         "Kernel/AnalyticKernel.cc",
@@ -20,4 +25,3 @@ env.SharedLibrary(
         )],
     LIBS=env.getlibs("boost mwi vw wcslib cfitsio")
 )
-

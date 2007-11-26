@@ -24,7 +24,6 @@
 
 %template(FixedKernelD)         lsst::fw::FixedKernel<double>;
 %template(AnalyticKernelD)      lsst::fw::AnalyticKernel<double>;
-%template(LinearCombinationKernelD) lsst::fw::LinearCombinationKernel<double>;
 
 //
 // functions (every template can have the same name)

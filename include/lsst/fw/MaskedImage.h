@@ -22,11 +22,16 @@
 #include <boost/tuple/tuple_io.hpp>
 
 #include "lsst/mwi/data/LsstBase.h"
+#include "lsst/mwi/persistence/Persistable.h"
 #include "Mask.h"
 #include "Image.h"
 
 namespace lsst {
 namespace fw {
+
+    namespace formatters {
+        template<class ImagePixelT, class MaskPixelT> class MaskedImageFormatter;
+    }
 
     template<class ImagePixelT, class MaskPixelT> class MaskedImage;
 
@@ -83,7 +88,8 @@ namespace fw {
     };
     
     template<class ImagePixelT, class MaskPixelT>
-    class MaskedImage : public lsst::mwi::data::LsstBase {
+    class MaskedImage : public lsst::mwi::persistence::Persistable,
+                        public lsst::mwi::data::LsstBase {
         
     public:
         typedef Image<ImagePixelT> ImageT;
@@ -136,7 +142,7 @@ namespace fw {
         
         // IO functions
         void readFits(std::string baseName, bool conformMaskPlanes=false);
-        void writeFits(std::string baseName);
+        void writeFits(std::string baseName) const;
         
         // Getters
         inline ImagePtrT getImage() const;
@@ -148,6 +154,7 @@ namespace fw {
         inline unsigned int getOffsetCols() const;
     private:
 
+        LSST_PERSIST_FORMATTER(formatters::MaskedImageFormatter<ImagePixelT, MaskPixelT>);
         void conformSizes();
         
         ImagePtrT _imagePtr;

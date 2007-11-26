@@ -95,7 +95,8 @@ class DiaSourceTestCase(unittest.TestCase):
             pers.persist(self.dsv1, stl, dp)
             stl = persistence.StorageList()
             stl.push_back(pers.getRetrieveStorage("DbStorage", loc))
-            res = cat.DiaSourceVecSharedPtr(pers.retrieve("DiaSourceVector", stl, dp))
+            persistable = pers.unsafeRetrieve("DiaSourceVector", stl, dp)
+            res = cat.DiaSourceVec.swigConvert(persistable)
             cat.dropAllVisitSliceTables(loc, pol, dp)
             assert(res == self.dsv1)
         else:

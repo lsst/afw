@@ -96,8 +96,8 @@ class MopsPredTestCase(unittest.TestCase):
             pers.persist(self.mpv1, stl, dp)
             stl = persistence.StorageList()
             stl.push_back(pers.getRetrieveStorage("DbStorage", loc))
-            pp  = pers.unsafeRetrieve("MovingObjectPredictionVector", stl, dp)
-            res = cat.MopsPredVec.swigConvert(pp)
+            persistable = pers.unsafeRetrieve("MovingObjectPredictionVector", stl, dp)
+            res = cat.MopsPredVec.swigConvert(persistable)
             cat.dropAllVisitSliceTables(loc, pol, dp)
             assert(res == self.mpv1)
         else:

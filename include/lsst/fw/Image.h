@@ -20,11 +20,18 @@
 #include "lsst/mwi/data/LsstBase.h"
 #include "lsst/mwi/data/DataProperty.h"
 #include "lsst/fw/LSSTFitsResource.h"
+#include "lsst/mwi/persistence/Persistable.h"
 
 namespace lsst {
 namespace fw {
+
+namespace formatters {
+    template <typename ImagePixelT> class ImageFormatter;
+}
+
     template<typename ImagePixelT>
-    class Image : public lsst::mwi::data::LsstBase {
+    class Image : public lsst::mwi::persistence::Persistable,
+                  public lsst::mwi::data::LsstBase {
     public:
         typedef typename vw::PixelChannelType<ImagePixelT>::type ImageChannelT;
         typedef vw::ImageView<ImagePixelT> ImageIVwT;
@@ -77,6 +84,7 @@ namespace fw {
 //        virtual ~Image();
         
     private:
+        LSST_PERSIST_FORMATTER(formatters::ImageFormatter<ImagePixelT>);
         ImageIVwPtrT _vwImagePtr;
         lsst::mwi::data::DataProperty::PtrType _metaData;
         unsigned int _offsetRows;

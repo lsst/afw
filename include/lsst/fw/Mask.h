@@ -21,6 +21,7 @@
 #include "lsst/mwi/data/LsstBase.h"
 #include "lsst/mwi/exceptions.h"
 #include "lsst/mwi/data/DataProperty.h"
+#include "lsst/mwi/persistence/Persistable.h"
 #include "lsst/mwi/utils/Trace.h"
 #include "lsst/mwi/data/SupportFactory.h"
 #include "lsst/fw/LSSTFitsResource.h"
@@ -40,6 +41,9 @@ namespace fw {
     };
     
     template<typename MaskPixelT> class Mask;
+    namespace formatters {
+        template<typename MaskPixelT> class MaskFormatter;
+    }
     
     template <typename MaskPixelT> class MaskPixelBooleanFunc {
     public:
@@ -51,7 +55,8 @@ namespace fw {
     };
     
     template<typename MaskPixelT>
-    class Mask : public lsst::mwi::data::LsstBase {
+    class Mask : public lsst::mwi::persistence::Persistable,
+                 public lsst::mwi::data::LsstBase {
     public:
         typedef typename PixelChannelType<MaskPixelT>::type MaskChannelT;
         typedef vw::ImageView<MaskPixelT> MaskIVwT;
@@ -151,6 +156,7 @@ namespace fw {
 
         
 private:
+        LSST_PERSIST_FORMATTER(formatters::MaskFormatter<MaskPixelT>);
 
         MaskIVwPtrT _vwImagePtr;
         MaskPlaneDict _maskPlaneDict;

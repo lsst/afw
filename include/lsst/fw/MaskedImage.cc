@@ -192,7 +192,7 @@ void lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::readFits(std::string baseNa
  * Mask data is written to (baseName)_msk.fits
  */
 template<typename ImagePixelT, typename MaskPixelT>
-void lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::writeFits(std::string baseName) {
+void lsst::fw::MaskedImage<ImagePixelT, MaskPixelT>::writeFits(std::string baseName) const {
 
     const std::string imageSuffix = "_img.fits";
     const std::string maskSuffix = "_msk.fits";

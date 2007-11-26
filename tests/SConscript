@@ -4,12 +4,14 @@ import os
 import sys
 
 import lsst.tests
+import lsst.mwi.persistence
 import lsst.SConsUtils as scons # scons 1.17 supports "env.ProductDir", but for now use scons.ProductDir
 
 env.Program(["Mask_1.cc"], LIBS=env.getlibs("fw"))
 env.Program(["MaskedImage_1.cc"], LIBS=env.getlibs("fw"))
 env.Program(["MaskIO_1.cc"], LIBS=env.getlibs("fw"))
-env.Program(["MaskIO_2.cc"], LIBS=env.getlibs("fw"))
+# Removed since not ready according to Tim Axelrod. 2007-11-26
+# env.Program(["MaskIO_2.cc"], LIBS=env.getlibs("fw"))
 env.Program(["MaskedImageIO_1.cc"], LIBS=env.getlibs("fw"))
 env.Program(["MaskedImageIO_2.cc"], LIBS=env.getlibs("fw"))
 env.Program(["wcsCopy.cc"], LIBS=env.getlibs("fw"))
@@ -21,20 +23,25 @@ env.Append(SWIGFLAGS=" -Ipython")
 
 env["SWIGFLAGS"] += " -I%s/%s" % (os.environ["MWI_DIR"], "python")
 fwTests = env.LoadableModuleIncomplete("_fwTests", "fwTests.i", LIBS=env.getlibs("fw"))
+
 #
 # Tests
 #
 dataDir = scons.ProductDir("fwData")
 if not dataDir:
      print "Warning: fwData is not set up; not running the tests!"
+
 else:
     # copy FWDATA_DIR to the test's environment
     env["ENV"]["FWDATA_DIR"] = os.environ["FWDATA_DIR"]
-    env["ENV"]["SEAL_PLUGINS"] = os.environ["SEAL_PLUGINS"]
-    try:
-       env["ENV"]["LSST_DB_AUTH"] = os.environ["LSST_DB_AUTH"]  
-    except:
-       pass
+    
+    if lsst.mwi.persistence.DbAuth.available():
+        env["ENV"]["SEAL_PLUGINS"] = os.environ["SEAL_PLUGINS"]    
+        if os.environ.has_key("LSST_DB_AUTH"):
+            env["ENV"]["LSST_DB_AUTH"] = os.environ["LSST_DB_AUTH"]
+    else:
+        print "WARNING: No fallback database authenticator seen"
+        print "Database tests may be skipped or may fail"
 
     # set up arguments for C++ tests
     inFile = os.path.join(dataDir, "871034p_1_MI")
@@ -42,6 +49,7 @@ else:
         MaskIO_1 = "%s_msk.fits" % inFile,
         MaskedImage_1 = "%s %s file:MaskedImage_1_output_1 file:MaskedImage_1_output_2" % (inFile, inFile),
         MaskedImageIO_1 = inFile,
+        MaskedImageIO_2 = inFile,
     )
     tests = lsst.tests.Control(env, args = testArgs, verbose = True)
     tests.run("*.cc")
