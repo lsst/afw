@@ -239,9 +239,8 @@ lsst::fw::MaskedImage<ImageT, MaskT> lsst::fw::kernel::convolve(
     return convolvedImage;
 }
 
-
 /**
- * \brief Convolve a MaskedImage with a LinearCombinationKernel, setting pixels of an existing image
+ * \brief Convolve a MaskedImage with a LinearCombinationKernel, setting pixels of an existing image.
  *
  * A variant of the convolve function that is faster for spatially varying LinearCombinationKernels.
  * For the sake of speed the kernel is NOT normalized. If you want normalization then call the standard
@@ -351,6 +350,29 @@ void lsst::fw::kernel::convolveLinear(
     lsst::fw::kernel::_copyBorder(convolvedImage, maskedImage, kernel, edgeBit);
 }
 
+/**
+ * \brief Convolve a MaskedImage with a LinearCombinationKernel, returning a new image.
+ *
+ * \return the convolved MaskedImage.
+ *
+ * See documentation for the version of convolveLinear that sets pixels in an existing image.
+ *
+ * \throw lsst::mwi::exceptions::InvalidParameter if maskedImage is smaller (in colums or rows) than kernel.
+ *
+ * \ingroup fw
+ */
+template <typename ImageT, typename MaskT, typename KernelT>
+lsst::fw::MaskedImage<ImageT, MaskT> lsst::fw::kernel::convolveLinear(
+    lsst::fw::MaskedImage<ImageT, MaskT> const &maskedImage,    ///< image to convolve
+    lsst::fw::LinearCombinationKernel<KernelT> const &kernel,    ///< convolution kernel
+    int edgeBit         ///< mask bit to indicate pixel includes edge-extended data;
+                        ///< if negative then no bit is set
+) {
+    lsst::fw::MaskedImage<ImageT, MaskT> convolvedImage(
+        maskedImage.getCols(), maskedImage.getRows(), maskedImage.getMask()->getMaskPlaneDict());
+    lsst::fw::kernel::convolveLinear(convolvedImage, maskedImage, kernel, edgeBit);
+    return convolvedImage;
+}
 
 /**
  * \brief Print the pixel values of a kernel to std::cout

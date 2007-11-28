@@ -348,6 +348,69 @@ class ConvolveTestCase(unittest.TestCase):
             self.assert_(sameMaskPlaneDicts(cnvMaskedImage, maskedImage),
                 "Convolved mask dictionary does not match input for doNormalize=%s" % doNormalize)
 
+    def testConvolveLinearNewImage(self):
+        """Test variant of convolveLinear that returns a new image
+        """
+        kCols = 5
+        kRows = 5
+        edgeBit = 7
+        imCols = 50
+        imRows = 55
+        doNormalize = False # must be false because convolveLinear cannot normalize
+
+        fullMaskedImage = fw.MaskedImageF()
+        fullMaskedImage.readFits(InputMaskedImagePath)
+        
+        # pick a small piece of the image to save time
+        bbox = fw.BBox2i(50, 50, imCols, imRows)
+        subMaskedImagePtr = fullMaskedImage.getSubImage(bbox)
+        maskedImage = subMaskedImagePtr.get()
+        maskedImage.this.disown()
+        maskedImage.writeFits("Src")
+
+        # create spatially varying linear combination kernel
+        sFuncPtr =  fw.Function2DPtr(fw.PolynomialFunction2D(1))
+        
+        # spatial parameters are a list of entries, one per kernel parameter;
+        # each entry is a list of spatial parameters
+        sParams = (
+            (1.0, -0.5 / imCols, -0.5 / imRows),
+            (0.0,  1.0 / imCols,  0.0 / imRows),
+            (0.0,  0.0 / imCols,  1.0 / imRows),
+        )
+        
+        kVec = makeGaussianKernelVec(kCols, kRows)
+        lcKernel = fw.LinearCombinationKernelD(kVec, sFuncPtr, sParams)
+
+        refCnvMaskedImage = fw.convolve(maskedImage, lcKernel, edgeBit, doNormalize)
+        refCnvImage, refCnvVariance, refCnvMask = \
+            imTestUtils.arraysFromMaskedImage(refCnvMaskedImage)
+
+        imVarMask = imTestUtils.arraysFromMaskedImage(maskedImage)
+        ref2CnvImage, ref2CnvVariance, ref2CnvMask = \
+           refConvolve(imVarMask, lcKernel, edgeBit, doNormalize)
+
+        if not numpy.allclose(refCnvImage, ref2CnvImage):
+            self.fail("Image from fw.convolve does not match image from refConvolve")
+        if not numpy.allclose(refCnvVariance, ref2CnvVariance):
+            self.fail("Variance from fw.convolve does not match image from refConvolve")
+        if not numpy.allclose(refCnvMask, ref2CnvMask):
+            self.fail("Mask from fw.convolve does not match image from refCconvolve")
+
+        # compute twice, to be sure cnvMaskedImage is properly reset
+        for ii in range(2):        
+            cnvMaskedImage = fw.convolveLinear(maskedImage, lcKernel, edgeBit)
+            cnvImage, cnvVariance, cnvMask = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
+    
+            if not numpy.allclose(cnvImage, ref2CnvImage):
+                self.fail("Image from fw.convolveLinear does not match image from refConvolve in iter %d" % ii)
+            if not numpy.allclose(cnvVariance, ref2CnvVariance):
+                self.fail("Variance from fw.convolveLinear does not match image from refConvolve in iter %d" % ii)
+            if not numpy.allclose(cnvMask, ref2CnvMask):
+                self.fail("Mask from fw.convolveLinear does not match image from refConvolve in iter %d" % ii)
+            self.assert_(sameMaskPlaneDicts(cnvMaskedImage, maskedImage),
+                "Convolved mask dictionary does not match input for doNormalize=%s" % doNormalize)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
