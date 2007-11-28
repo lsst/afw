@@ -143,10 +143,8 @@ def version(HeadURL = r"$HeadURL$"):
 
 /******************************************************************************/
 // Masks and MaskedImages
-%clear int &;                           // no longer needed as of mwi 2.0
 %template(pairIntString) std::pair<int,std::string>;
 %template(mapIntString)  std::map<int,std::string>;
-%apply int &OUTPUT { int & };
 
 %ignore lsst::fw::Image::origin;        // no need to swig origin (and the _wrap.cc file is invalid)
 %ignore lsst::fw::Mask::origin;         // no need to swig origin (and the _wrap.cc file is invalid)
@@ -297,6 +295,10 @@ def version(HeadURL = r"$HeadURL$"):
 
 
 %template(listPixelCoord)  std::list<lsst::fw::PixelCoord>;
+
+%apply double &OUTPUT { double & };
+%rename(positionToIndexAndResidual) lsst::fw::image::positionToIndex(double &, double);
+%clear double &OUTPUT;
 
 %include "lsst/fw/ImageUtils.h"
 
