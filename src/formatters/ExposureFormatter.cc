@@ -76,16 +76,16 @@ template <typename ImagePixelT, typename MaskPixelT>
 ExposureFormatter<ImagePixelT, MaskPixelT>::~ExposureFormatter(void) {
 }
 
-static char lookupFilterId(DbStorage* db, std::string const& filterName) {
+static int lookupFilterId(DbStorage* db, std::string const& filterName) {
     db->setTableForQuery("Filter");
     db->outColumn("filterId");
     db->condParam<std::string>("name", filterName);
-    db->setQueryWhere("filterName = :name");
+    db->setQueryWhere("filtName = :name");
     db->query();
     if (!db->next() || db->columnIsNull(0)) {
         throw lsst::mwi::exceptions::Runtime("Unable to get id for filter type: " + filterName);
     }
-    char filterId = db->getColumnByPos<char>(0);
+    int filterId = db->getColumnByPos<int>(0);
     if (db->next()) {
         throw lsst::mwi::exceptions::Runtime("Multiple ids for filter type: " + filterName);
 
@@ -94,10 +94,10 @@ static char lookupFilterId(DbStorage* db, std::string const& filterName) {
     return filterId;
 }
 
-static std::string lookupFilterName(DbStorage* db, char filterId) {
+static std::string lookupFilterName(DbStorage* db, int filterId) {
     db->setTableForQuery("Filter");
     db->outColumn("filterName");
-    db->condParam<char>("id", filterId);
+    db->condParam<int>("id", filterId);
     db->setQueryWhere("filterId = :id");
     db->query();
     if (!db->next() || db->columnIsNull(0)) {
@@ -209,7 +209,7 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::write(
         // Look up the filter ID given the name.
         std::string filterName =
             boost::any_cast<std::string>(dp->findUnique("FILTER")->getValue());
-        char filterId = lookupFilterId(db, filterName);
+        int filterId = lookupFilterId(db, filterName);
 
 
         // Select a table to insert into based on the itemName.
@@ -249,7 +249,7 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::write(
 
 
         // Set the filter ID column.
-        db->setColumn<char>("filterId", filterId);
+        db->setColumn<int>("filterId", filterId);
 
         std::cerr << "RA/DEC columns" << std::endl;
         // Set the RA and declination columns for raw images.
@@ -407,12 +407,15 @@ Persistable* ExposureFormatter<ImagePixelT, MaskPixelT>::read(
         }
         db->finishQuery();
 
+        // \todo Should really have FITS be a separate Storage. - KTL -
+        // 2007-11-29
+
         // Restore image from FITS...
         ip->readFits(db->getColumnByPos<std::string>(0));
         DataProperty::PtrType dp = ip->getMetadata();
 
         // Look up the filter name given the ID.
-        char filterId = db->getColumnByPos<char>(1);
+        int filterId = db->getColumnByPos<int>(1);
         std::string filterName = lookupFilterName(db, filterId);
         dp->deleteAll("FILTER");
         dp->addProperty(lsst::mwi::data::SupportFactory::createLeafProperty(
@@ -433,6 +436,8 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::update(
     Persistable* persistable,
     Storage::Ptr storage,
     lsst::mwi::data::DataProperty::PtrType additionalData) {
+    // \todo Implement update from FitsStorage, keeping DB-provided headers. -
+    // KTL - 2007-11-29
     throw lsst::mwi::exceptions::Runtime("Unexpected call to update for Exposure");
 }
 
