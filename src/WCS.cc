@@ -74,6 +74,7 @@ WCS::WCS(lsst::mwi::data::DataProperty::PtrType fitsMetaData  ///< The contents 
      * Should we throw an exception or continue if this fails?
      * For now be paranoid...
      */
+#if 0
     const int *naxes = NULL;            // should be {NAXIS1, NAXIS2, ...} to check cylindrical projections
     int stats[NWCSFIX];			// status returns from wcsfix
     int fixStatus = wcsfix(_wcsfixCtrl, naxes, _wcsInfo, stats);
@@ -88,9 +89,9 @@ WCS::WCS(lsst::mwi::data::DataProperty::PtrType fitsMetaData  ///< The contents 
 	  }
 	}
 	  
-// 	std::cerr << errStream.str();
         throw lsst::mwi::exceptions::Runtime(errStream.str());
     }
+#endif
 }
 
 /**
