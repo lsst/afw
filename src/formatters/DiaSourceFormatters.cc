@@ -58,6 +58,12 @@ FormatterRegistration DiaSourceVectorFormatter::registration(
 );
 
 
+inline static int64_t generateDiaSourceId(unsigned short seqNum, int sliceId,
+                                   int64_t const& exposureId) {
+    return (exposureId << 24) + (sliceId << 16) + seqNum;
+};
+
+
 template <typename T>
 void DiaSourceVectorFormatter::insertRow(T & db, DiaSource const & d) {
 
@@ -281,6 +287,29 @@ void DiaSourceVectorFormatter::write(
     DiaSourceVector const * p = dynamic_cast<DiaSourceVector const *>(persistable);
     if (p == 0) {
         throw ex::Runtime("Persistable was not of concrete type DiaSourceVector");
+    }
+
+    // Assume all have ids or none do.
+    if (p->begin()->_diaSourceId == 0 &&
+        (!_policy || !_policy->exists("GenerateIds") ||
+         _policy->getBool("GenerateIds"))) {
+        DiaSourceVector* v = const_cast<DiaSourceVector*>(p);
+        unsigned short seq = 1;
+        int64_t exposureId = extractExposureId(additionalData);
+        int sliceId = extractSliceId(additionalData);
+        if (sliceId < 0 || sliceId >= 256) {
+            throw ex::InvalidParameter("sliceId out of range");
+        }
+        if ((exposureId & 0xffffff0000000000LL) != 0) {
+            throw ex::InvalidParameter("exposureId out of range");
+        }
+        for (DiaSourceVector::iterator i = v->begin(); i != v->end(); ++i) {
+            i->_diaSourceId = generateDiaSourceId(seq, sliceId, exposureId);
+            ++seq;
+            if (seq == 0) { // Overflowed
+                throw ex::Runtime("Too many DiaSources");
+            }
+        }
     }
 
     if (typeid(*storage) == typeid(BoostStorage)) {

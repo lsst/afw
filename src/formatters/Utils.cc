@@ -55,8 +55,22 @@ static int64_t extractVisitId(DataProperty::PtrType const & properties) {
     return visitId;
 }
 
+int64_t extractExposureId(DataProperty::PtrType const & properties) {
+    DataProperty::PtrType const & dp = properties->findUnique("exposureId");
+    if (!dp) {
+        throw ex::Runtime("\"exposureId\" property not found");
+    }
+    int64_t exposureId = getInt64FromAny(dp->getValue(), "\"exposureId\"");
+    if (exposureId < 0) {
+        throw ex::Runtime("\"exposureId\" property value is negative");
+    }
+    if ((exposureId & 0xfffffffe00000000LL) != 0LL) {
+        throw ex::Runtime("\"exposureId\" property value is too big");
+    }
+    return exposureId;
+}
 
-static int extractSliceId(DataProperty::PtrType const & properties) {
+int extractSliceId(DataProperty::PtrType const & properties) {
     DataProperty::PtrType const & dp1 = properties->findUnique("sliceId");
     if (!dp1) {
         throw ex::Runtime("\"sliceId\" property not found");

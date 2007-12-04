@@ -25,6 +25,7 @@
 
 #include <stdexcept>
 
+
 using boost::int64_t;
 
 using lsst::mwi::data::DataProperty;
@@ -63,9 +64,8 @@ static void initTestData(DiaSourceVector & v, int sliceId = 0) {
     for (int i = 0; i < DiaSource::NUM_NULLABLE_FIELDS + 2; ++i) {
         DiaSource data;
         // make sure each field has a different value, and that IO for each nullable field is tested
-        // Note: DiaSource ids are generated in ascending order
         int j = i*64;
-        data.setId              (j + sliceId*(DiaSource::NUM_NULLABLE_FIELDS + 2)*64 + 1);
+        data.setId              (0);
         data.setAmpExposureId   (j +  1);
         data.setObjectId        (j +  2);
         data.setMovingObjectId  (j +  3);
@@ -125,16 +125,31 @@ static void initTestData(DiaSourceVector & v, int sliceId = 0) {
 }
 
 
+// Make at least a token attempt at generating a unique visit id
+// (in-db table name collisions could cause spurious testcase failures)
+static int64_t createVisitId() {
+    struct timeval tv;
+    ::gettimeofday(&tv, 0);
+    return static_cast<int64_t>(tv.tv_sec);
+}
+
+
 static void testBoost(void) {
     // Create a blank Policy and DataProperty.
     Policy::Ptr           policy(new Policy);
     DataProperty::PtrType props = SupportFactory::createPropertyNode("root");
+    int64_t visitId = createVisitId();
+    // Not really how ccdExposureId should be set, but good enough for now.
+    props->addProperty(
+        SupportFactory::createLeafProperty("exposureId", visitId));
+    props->addProperty(
+        SupportFactory::createLeafProperty("sliceId", 0));
 
     // Setup test location
     LogicalLocation loc(makeTempFile());
 
     // Intialize test data
-    DiaSource       ds(1, 0.0, 1.0, 2.0, 3.0);
+    DiaSource       ds(0, 0.0, 1.0, 2.0, 3.0);
     DiaSourceVector dsv;
     initTestData(dsv);
     dsv.push_back(ds);
@@ -147,6 +162,7 @@ static void testBoost(void) {
         Storage::List storageList;
         storageList.push_back(pers->getPersistStorage("BoostStorage", loc));
         pers->persist(dsv, storageList, props);
+        Assert(dsv[0].getId() == (visitId << 24) + 1LL, "DiaSource id not changed to expected value");
     }
 
     // read in data
@@ -161,15 +177,6 @@ static void testBoost(void) {
         Assert(*v == dsv, "persist()/retrieve() resulted in DiaSourceVector corruption");
     }
     ::unlink(loc.locString().c_str());
-}
-
-
-// Make at least a token attempt at generating a unique visit id
-// (in-db table name collisions could cause spurious testcase failures)
-static int64_t createVisitId() {
-    struct timeval tv;
-    ::gettimeofday(&tv, 0);
-    return static_cast<int64_t>(tv.tv_sec)*1000000 + static_cast<int64_t>(tv.tv_usec);
 }
 
 
@@ -188,7 +195,10 @@ static DataProperty::PtrType createDbTestProps(
         dias->addProperty(DataProperty("numSlices",       boost::any(numSlices)));
         props->addProperty(dias);
     }
-    props->addProperty(DataProperty("visitId", createVisitId()));
+    int64_t visitId = createVisitId();
+    props->addProperty(DataProperty("visitId", visitId));
+    // Not really how ccdExposureId should be set, but good enough for now.
+    props->addProperty(DataProperty("exposureId", visitId));
     props->addProperty(DataProperty("sliceId", boost::any(sliceId)));
     props->addProperty(DataProperty("itemName", boost::any(itemName)));
     return props;
@@ -212,7 +222,7 @@ static void testDb(std::string const & storageType) {
     LogicalLocation loc("mysql://lsst10.ncsa.uiuc.edu:3306/test");
 
     // 1. Test on a single DiaSource
-    DiaSource ds(1, 0.0, 1.0, 2.0, 3.0);
+    DiaSource ds(0, 0.0, 1.0, 2.0, 3.0);
     DiaSourceVector dsv;
     dsv.push_back(ds);
     // write out data
@@ -220,6 +230,10 @@ static void testDb(std::string const & storageType) {
         Storage::List storageList;
         storageList.push_back(pers->getPersistStorage(storageType, loc));
         pers->persist(dsv, storageList, props);
+        Assert(dsv[0].getId() ==
+               (boost::any_cast<int64_t>(
+                       props->findUnique("exposureId")->getValue())
+               << 24) + 1LL, "DiaSource id not changed to expected value");
     }
     // and read it back in (in a DiaSourceVector)
     {
@@ -229,7 +243,7 @@ static void testDb(std::string const & storageType) {
         Assert(p != 0, "Failed to retrieve Persistable");
         DiaSourceVector::Ptr v = boost::dynamic_pointer_cast<DiaSourceVector, Persistable>(p);
         Assert(v.get() != 0, "Couldn't cast to DiaSourceVector");
-        Assert(v->at(0) == ds, "persist()/retrieve() resulted in DiaSourceVector corruption");
+        Assert(v->at(0) == dsv[0], "persist()/retrieve() resulted in DiaSourceVector corruption");
     }
     formatters::dropAllVisitSliceTables(loc, policy, props);
 
@@ -241,6 +255,14 @@ static void testDb(std::string const & storageType) {
         Storage::List storageList;
         storageList.push_back(pers->getPersistStorage(storageType, loc));
         pers->persist(dsv, storageList, props);
+        int i = 1;
+        for (DiaSourceVector::iterator it = dsv.begin();
+             it != dsv.end(); ++it) {
+            Assert(it->getId() == (boost::any_cast<int64_t>(
+                    props->findUnique("exposureId")->getValue()) << 24) + i,
+                "DiaSource id in vector not changed to expected value");
+            ++i;
+        }
     }
     // and read it back in
     {
@@ -259,59 +281,12 @@ static void testDb(std::string const & storageType) {
 }
 
 
-static void testDb2(std::string const & storageType) {
-    // Create the required Policy and DataProperty
-    Policy::Ptr policy(new Policy);
-    std::string policyRoot(std::string("Formatter.") + "DiaSourceVector");
-    // use custom table name patterns for this test
-    policy->set(policyRoot + ".DiaSource.perVisitTableNamePattern", "DiaSource_%1%");
-    policy->set(policyRoot + ".DiaSource.perSliceAndVisitTableNamePattern", "DiaSource_%1%_%2%");
-
-    Policy::Ptr nested(policy->getPolicy(policyRoot));
-
-    Persistence::Ptr pers = Persistence::getPersistence(policy);
-    LogicalLocation loc("mysql://lsst10.ncsa.uiuc.edu:3306/test");
-
-    DiaSourceVector all;
-    int const numSlices = 3;
-    DataProperty::PtrType props(createDbTestProps(0, numSlices, "DiaSource"));
-
-    // 1. Write out each slice table seperately
-    for (int sliceId = 0; sliceId < numSlices; ++sliceId) {
-        DataProperty::PtrType dp = props->findUnique("sliceId");
-        dp->setValue(boost::any(sliceId));
-        DiaSourceVector dsv;
-        initTestData(dsv, sliceId);
-        all.insert(all.end(), dsv.begin(), dsv.end());
-        Storage::List storageList;
-        storageList.push_back(pers->getPersistStorage(storageType, loc));
-        pers->persist(dsv, storageList, props);
-    }
-
-    // 2. Read in all slice tables - simulates association pipeline
-    //    gathering the results of numSlices image processing pipeline slices
-    Storage::List storageList;
-    storageList.push_back(pers->getRetrieveStorage(storageType, loc));
-    Persistable::Ptr p = pers->retrieve("DiaSourceVector", storageList, props);
-    Assert(p != 0, "Failed to retrieve Persistable");
-    DiaSourceVector::Ptr v = boost::dynamic_pointer_cast<DiaSourceVector, Persistable>(p);
-    Assert(v, "Couldn't cast to DiaSourceVector");
-    // sort in ascending id order (database does not give any ordering guarantees
-    // in the absence of an ORDER BY clause)
-    std::sort(v->begin(), v->end(), DiaSourceLessThan());
-    Assert(v.get() != &all && *v == all, "persist()/retrieve() resulted in DiaSourceVector corruption");
-    formatters::dropAllVisitSliceTables(loc, nested, props);
-}
-
-
 int main(int const argc, char const * const * const argv) {
     try {
         testBoost();
         if (lsst::mwi::persistence::DbAuth::available()) {
             testDb("DbStorage");
             testDb("DbTsvStorage");
-            testDb2("DbStorage");
-            testDb2("DbTsvStorage");
         }
         if (lsst::mwi::data::Citizen::census(0) == 0) {
             std::clog << "No leaks detected" << std::endl;

@@ -16,6 +16,7 @@ env.Program(["MaskedImageIO_1.cc"], LIBS=env.getlibs("fw"))
 env.Program(["MaskedImageIO_2.cc"], LIBS=env.getlibs("fw"))
 env.Program(["wcsCopy.cc"], LIBS=env.getlibs("fw"))
 env.Program(["DiaSourceIO_1.cc"], LIBS=env.getlibs("fw mwi"))
+env.Program(["DiaSourceIO_2.cc"], LIBS=env.getlibs("fw mwi"))
 env.Program(["MovingObjectPredictionIO_1.cc"], LIBS=env.getlibs("fw mwi"))
 
 env.CheckSwig("python", ilang="c++")

@@ -28,7 +28,7 @@ class DiaSourceTestCase(unittest.TestCase):
         self.dsv2 = cat.DiaSourceVec()
 
         for m in xrange(16):
-            self.dsv1[m].setId(m)
+            self.dsv1[m].setId(m + 1)
             ds = cat.DiaSource()
             ds.setId(m)
             ds.setRa(m*20)
@@ -40,7 +40,7 @@ class DiaSourceTestCase(unittest.TestCase):
 
     def testIterable(self):
         """Check that we can iterate over a DiaSourceVec"""
-        j = 0
+        j = 1
         for i in self.dsv1:
             assert i.getId() == j
             j += 1
@@ -74,7 +74,7 @@ class DiaSourceTestCase(unittest.TestCase):
 
     def testSlice(self):
         slice = self.dsv1[0:3]
-        j = 0
+        j = 1
         for i in slice:
             print i
             assert i.getId() == j
