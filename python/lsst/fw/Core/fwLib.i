@@ -102,6 +102,7 @@ def version(HeadURL = r"$HeadURL$"):
 %include <vw/Image/PixelTypeInfo.h>
 %include <vw/Image/PixelTypes.h>
 %include <vw/Image/ImageResource.h>
+%include <vw/Image/Statistics.h>
 %include <vw/Math/BBox.h>
 #if 0
 %   include <vw/Math/Vector.h>             // swig doesn't like "const static int value = 0;"
@@ -289,6 +290,29 @@ def version(HeadURL = r"$HeadURL$"):
 %lsst_persistable_shared_ptr(MaskedImageDPtr, lsst::fw::MaskedImage<double, lsst::fw::maskPixelType>);
 %template(MaskedImageU)         lsst::fw::MaskedImage<boost::uint16_t, lsst::fw::maskPixelType>;
 %lsst_persistable_shared_ptr(MaskedImageUPtr, lsst::fw::MaskedImage<boost::uint16_t, lsst::fw::maskPixelType>);
+
+// vw Statistics on Images
+  /// Compute the mean value stored in all of the channels of all of the planes of the image.
+  // template <class ViewT>
+  // typename CompoundChannelType<typename ViewT::pixel_type>::type
+  // mean_channel_value( const ImageViewBase<ViewT> &view_ ) {
+
+%template(mean_channel_valueD)  mean_channel_value<ImageView<double> >;
+%template(mean_channel_valueF)  mean_channel_value<ImageView<float> >;
+%template(mean_channel_valueU)  mean_channel_value<ImageView<boost::uint16_t> >;
+
+%pythoncode %{
+    def mean_channel_value(img):
+        iv = img.getIVw()
+        if type(img) == type(ImageD()) or type(img) == type(ImageDPtr(ImageD())) :
+            return mean_channel_valueD(iv)
+        elif type(img) == type(ImageF()) or type(img) == type(ImageFPtr(ImageF())) :
+            return mean_channel_valueF(iv)
+        elif type(img) == type(ImageU()) or type(img) == type(ImageUPtr(ImageU())) :
+            return mean_channel_valueU(iv)
+        else:
+            return None
+%}
 
 %template(BBox2i)               BBox<int32, 2>;
 %template(Vector2i)             Vector<int32, 2>;
