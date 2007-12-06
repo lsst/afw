@@ -8,14 +8,12 @@ Basic routines to talk to FW's classes (including visionWorkbench) and ds9
 %feature("autodoc", "1");
 %module(docstring=fwLib_DOCSTRING) fwLib
 
-// Suppress swig complaints from vw
-// 317: Specialization of non-template
-// 389: operator[] ignored
-// 362: operator=  ignored
+// Suppress swig complaints
 // I had trouble getting %warnfilter to work; hence the pragmas
-#pragma SWIG nowarn=317
-#pragma SWIG nowarn=362
-#pragma SWIG nowarn=389
+#pragma SWIG nowarn=314                 // print is a python keyword (--> _print)
+#pragma SWIG nowarn=317                 // specialization of non-template
+#pragma SWIG nowarn=362                 // operator=  ignored
+#pragma SWIG nowarn=389                 // operator[] ignored
 
 // define basic vectors
 // these are used by Kernel and Function (and possibly other code)

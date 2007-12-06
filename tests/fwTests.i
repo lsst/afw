@@ -8,6 +8,11 @@ Image processing code
 %feature("autodoc", "1");
 %module(docstring=fwTests_DOCSTRING) fwTests
 
+// Suppress swig complaints
+// I had trouble getting %warnfilter to work; hence the pragmas
+#pragma SWIG nowarn=314                 // print is a python keyword (--> _print)
+#pragma SWIG nowarn=362                 // operator=  ignored
+
 %{
 #   include "lsst/fw/Mask.h"
 #   include "lsst/fw/MaskedImage.h"
@@ -39,6 +44,9 @@ import lsst.fw.exceptions
 /******************************************************************************/
 
 %import "lsst/mwi/utils/Utils.h"
+%import "lsst/mwi/data/Citizen.h"
+%import "lsst/mwi/policy/Policy.h"
+%import "lsst/mwi/persistence/Persistable.h"
 %import "lsst/mwi/data/LsstData.h"
 %import "lsst/mwi/data/DataProperty.h"
 %import "lsst/mwi/exceptions.h"

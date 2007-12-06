@@ -10,6 +10,11 @@ Access to persistable C++ objects for catalog data. Currently supported are:
 %feature("autodoc", "1");
 %module(package="lsst.fw.Core", docstring=fwCatalog_DOCSTRING) fwCatalog
 
+// Suppress swig complaints
+// I had trouble getting %warnfilter to work; hence the pragmas
+#pragma SWIG nowarn=314                 // print is a python keyword (--> _print)
+#pragma SWIG nowarn=362                 // operator=  ignored
+
 %{
 #include "lsst/fw/DiaSource.h"
 #include "lsst/fw/MovingObjectPrediction.h"
@@ -27,11 +32,12 @@ import lsst.fw.exceptions
 %include "lsst/mwi/persistenceMacros.i"
 %import "lsst/mwi/persistence/Persistable.h"
 
-%import "lsst/mwi/data/DataProperty.h"
+%import "lsst/mwi/data/Citizen.h"
 %import "lsst/mwi/policy/Policy.h"
 %import "lsst/mwi/persistence/LogicalLocation.h"
 %import "lsst/mwi/persistence/Persistence.h"
 %import "lsst/mwi/persistence/Storage.h"
+%import "lsst/mwi/data/DataProperty.h"
 
 
 %include <stdint.i>
