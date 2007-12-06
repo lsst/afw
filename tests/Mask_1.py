@@ -188,10 +188,7 @@ def suite():
 
 def run(exit=False):
     """Run the tests"""
-    try:
-        tests.run(suite(), exit)        # mwi 1.3
-    except:
-        tests.run(suite())
+    tests.run(suite(), exit)
 
 if __name__ == "__main__":
     run(True)

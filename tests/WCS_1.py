@@ -2,6 +2,7 @@ import os
 import math
 import pdb                          # we may want to say pdb.set_trace()
 import unittest
+import eups
 
 import lsst.fw.Core.fwLib as fw
 import lsst.mwi.tests as tests
@@ -11,7 +12,7 @@ try:
 except NameError:
     verbose = 0
 
-dataDir = os.environ.get("FWDATA_DIR")
+dataDir = eups.productDir("fwData")
 if not dataDir:
     raise RuntimeError("Must set up fwData to run these tests")
 InputImagePath = os.path.join(dataDir, "871034p_1_MI_img.fits")
@@ -127,5 +128,9 @@ def suite():
 
     return unittest.TestSuite(suites)
 
+def run(exit=False):
+    """Run the tests"""
+    tests.run(suite(), exit)
+
 if __name__ == "__main__":
-    tests.run(suite())
+    run(True)

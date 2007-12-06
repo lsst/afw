@@ -22,7 +22,7 @@ import lsst.mwi.exceptions as mwex
 verbosity = 0 # increase to see trace
 mwiu.Trace_setVerbosity("lsst.fw", verbosity)
 
-dataDir = os.environ.get("FWDATA_DIR")
+dataDir = eups.productDir("fwData")
 if not dataDir:
     raise RuntimeError("Must set up fwData to run these tests") 
 
