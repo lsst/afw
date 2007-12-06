@@ -1,5 +1,5 @@
-setupRequired(mwi)
-setupRequired(vw)
+setupRequired(mwi >= 2.0)
+setupRequired(vw >= 1.0.1+2)
 setupRequired(cfitsio)
 setupRequired(wcslib)
 setupRequired(xpa)
