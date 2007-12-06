@@ -12,6 +12,13 @@ except: pass
 class Ds9Error(IOError):
     """Some problem talking to ds9"""
 
+#
+# Symbolic names for mask colours
+#
+WHITE = "white"; BLACK = "black"
+RED = "red"; GREEN = "green"; BLUE = "blue"
+CYAN = "cyan"; MAGENTA = "magenta"; YELLOW = "yellow"
+
 def ds9Cmd(cmd):
    """Issue a ds9 command, raising errors as appropriate"""
    
@@ -45,6 +52,10 @@ def initDS9(execDs9 = True):
 
       raise Ds9Error
 
+def setMaskColor(color = GREEN):
+    """Set the ds9 mask colour to; eg. ds9.setMaskColor(ds9.RED)"""
+    xpa.set(None, "ds9", "mask color %s" % color, "", "", 0)
+
 def mtv(data, frame=0, init=1, WCS=None, isMask=False):
    """Display an Image or Mask on a DS9 display"""
 	
@@ -65,7 +76,7 @@ def mtv(data, frame=0, init=1, WCS=None, isMask=False):
 
    if re.search("MaskedImage", data.repr()): # it's a MaskedImage
        mtv(data.getImage(), frame, init, WCS, False)
-       xpa.set(None, "ds9", "mask color red", "", "", 0)       
+       setMaskColor(RED)
        mtv(data.getMask(), frame, init, WCS, True)
        return
 
