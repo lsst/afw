@@ -8,16 +8,6 @@
 #include <vw/Image/ImageMath.h>
 #include "lsst/mwi/exceptions.h"
 #include "lsst/fw/DiskImageResourceFITS.h"
-//
-// Provide a version of vw::convert that does NOT rescale images
-//
-// This is rumoured to be included in v2 2.0, although I'm not sure
-// what the API is.  For now, we provide our own in OurImageResource.cc
-//
-namespace vw {
-    void convert( ImageBuffer const& dst, ImageBuffer const& src, bool );
-}
-
 
 // these two necessary only for appendKey()
 #include <string.h>
