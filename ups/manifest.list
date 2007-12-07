@@ -1,14 +1,16 @@
 >merge: build
 >merge: core
->merge: vw 1.0.1-lapack
+>merge: vw 1.0.1+2
 >merge: numarray
 >merge: numpy
 >merge: pyfits
->merge: swig
 >merge: cfitsio
 >merge: wcstools 3.6.2
 >merge: wcslib
 >merge: xpa
+>merge: minuit
+>merge: mysqlclient
+>merge: swig
 >merge: doxygen
 >self
 
