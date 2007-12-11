@@ -95,10 +95,10 @@ std::string const Filter::toString(lsst::mwi::persistence::DbStorage & db) {
             throw lsst::mwi::exceptions::Runtime("Multiple names for filter " + _id);
         }
     } catch(...) {
-        db->finishQuery();
+        db.finishQuery();
         throw;
     }
-    db->finishQuery();
+    db.finishQuery();
     return filterName;
 }
 
@@ -122,10 +122,10 @@ int Filter::nameToId(lsst::mwi::persistence::DbStorage & db, std::string const &
             throw lsst::mwi::exceptions::OutOfRange("Invalid filter id for filter named " + name);
         }
     } catch (...) {
-        db->finishQuery();
+        db.finishQuery();
         throw;
     }
-    db->finishQuery();
+    db.finishQuery();
     return filterId;
 }
 
