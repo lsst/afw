@@ -7,6 +7,7 @@ env.SharedLibrary(
         "DiaSource.cc",
         "DiskImageResourceFITS.cc",
         "Exposure.cc",
+        "Filter.cc",
         "formatters/Utils.cc",
         "formatters/DiaSourceFormatters.cc",
         "formatters/MovingObjectPredictionFormatters.cc",
