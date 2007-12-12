@@ -21,6 +21,10 @@ Access to persistable C++ objects for catalog data. Currently supported are:
 #include "lsst/fw/formatters/Utils.h"
 %}
 
+%inline %{
+namespace boost { namespace filesystem {} }
+%}
+
 %init %{
 %}
 

@@ -21,6 +21,7 @@ Image processing code
 %inline %{
 namespace lsst { namespace fw { } }
 namespace vw {}
+namespace boost { namespace filesystem {} }
     
 using namespace lsst;
 using namespace lsst::fw;

@@ -47,6 +47,7 @@ Basic routines to talk to FW's classes (including visionWorkbench) and ds9
 %inline %{
 namespace lsst { namespace fw { } }
 namespace vw {}
+namespace boost { namespace filesystem {} }
     
 using namespace lsst;
 using namespace lsst::fw;
@@ -153,6 +154,7 @@ def version(HeadURL = r"$HeadURL$"):
 %include "lsst/mwi/data/Citizen.h"
 %include "lsst/mwi/data/LsstImpl_DC2.h"
 %include "lsst/mwi/data/LsstBase.h"
+%ignore lsst::fw::Filter::operator int;
 %include "lsst/fw/Filter.h"
 %include "lsst/fw/Image.h"
 %include "lsst/fw/Mask.h"
