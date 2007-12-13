@@ -317,8 +317,9 @@ def version(HeadURL = r"$HeadURL$"):
 %}
 
 %template(BBox2i)               BBox<int32, 2>;
-%template(Vector2i)             Vector<int32, 2>;
+%template(BBox2f)               BBox<float, 2>;
 
+%template(Vector2i)             Vector<int32, 2>;
 
 %template(listPixelCoord)  std::list<lsst::fw::PixelCoord>;
 
