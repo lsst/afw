@@ -101,6 +101,17 @@ namespace function {
             _params = params;
         }
     
+        virtual std::string toString(void) const {
+            std::stringstream os;
+            os << "parameters: [ ";
+            for (std::vector<double>::const_iterator i = _params.begin(); i != _params.end(); ++i) {
+                if (i != _params.begin()) os << ", ";
+                os << *i;
+            }
+            os << " ]";
+            return os.str();
+        };
+
     protected:
         std::vector<double> _params;
     };   
@@ -138,6 +149,10 @@ namespace function {
         virtual ~Function1() {};
     
         virtual ReturnT operator() (double x) const = 0;
+
+        virtual std::string toString(void) const {
+            return std::string("Function1: ") + Function<ReturnT>::toString();
+        };
     };    
     
     /**
@@ -175,6 +190,10 @@ namespace function {
         virtual ~Function2() {};
     
         virtual ReturnT operator() (double x, double y) const = 0;
+
+        virtual std::string toString(void) const {
+            return std::string("Function2: ") + Function<ReturnT>::toString();
+        };
     };
 
 }}}   // lsst::fw::function

@@ -174,6 +174,26 @@ namespace fw {
 
         void computeKernelParametersFromSpatialModel(std::vector<double> &kernelParams, double x, double y) const;
     
+        virtual std::string toString(std::string prefix = "") const {
+            std::ostringstream os;
+            os << prefix << "Kernel:" << std::endl;
+            os << prefix << "..rows, cols: " << _rows << ", " << _cols << std::endl;
+            os << prefix << "..ctrRow, Col: " << _ctrRow << ", " << _ctrCol << std::endl;
+            os << prefix << "..isSpatiallyVarying: " << (_isSpatiallyVarying ? "True" : "False") << std::endl;
+            os << prefix << "..spatialFunction: " << (_spatialFunctionPtr ? _spatialFunctionPtr->toString() : "None") << std::endl;
+            os << prefix << "..nKernelParams: " << _nKernelParams << std::endl;
+            os << prefix << "..spatialParams:" << std::endl;
+            for (std::vector<std::vector<double> >::const_iterator i = _spatialParams.begin(); i != _spatialParams.end(); ++i) {
+                os << prefix << "....[ ";
+                for (std::vector<double>::const_iterator j = i->begin(); j != i->end(); ++j) {
+                    if (j != i->begin()) os << ", ";
+                    os << *j;
+                }
+                os << " ]" << std::endl;
+            }
+            return os.str();
+        };
+
     protected:
         /**
          * \brief Set the kernel parameters.
@@ -232,6 +252,14 @@ namespace fw {
             bool doNormalize = true
         ) const;
             
+        virtual std::string toString(std::string prefix = "") const {
+            std::ostringstream os;
+            os << prefix << "FixedKernel:" << std::endl;
+            os << prefix << "..sum: " << _sum << std::endl;
+            os << Kernel<PixelT>::toString(prefix + "\t");
+            return os.str();
+        };
+
     protected:
         virtual void basicSetKernelParameters(std::vector<double> const &params) const;
             
@@ -294,6 +322,14 @@ namespace fw {
     
         virtual typename Kernel<PixelT>::KernelFunctionPtrType getKernelFunction() const;
             
+        virtual std::string toString(std::string prefix = "") const {
+            std::ostringstream os;
+            os << prefix << "AnalyticKernel:" << std::endl;
+            os << prefix << "..function: " << (_kernelFunctionPtr ? _kernelFunctionPtr->toString() : "None") << std::endl;
+            os << Kernel<PixelT>::toString(prefix + "\t");
+            return os.str();
+        };
+
     protected:
         virtual void basicSetKernelParameters(std::vector<double> const &params) const;
 
@@ -356,6 +392,23 @@ namespace fw {
         
         void checkKernelList(const KernelListType &kernelList) const;
         
+        virtual std::string toString(std::string prefix = "") const {
+            std::ostringstream os;
+            os << prefix << "LinearCombinationKernel:" << std::endl;
+            os << prefix << "..Kernels:" << std::endl;
+            for (typename KernelListType::const_iterator i = _kernelList.begin(); i != _kernelList.end(); ++i) {
+                os << (*i)->toString(prefix + "\t");
+            }
+            os << "..parameters: [ ";
+            for (std::vector<double>::const_iterator i = _kernelParams.begin(); i != _kernelParams.end(); ++i) {
+                if (i != _kernelParams.begin()) os << ", ";
+                os << *i;
+            }
+            os << " ]" << std::endl;
+            os << Kernel<PixelT>::toString(prefix + "\t");
+            return os.str();
+        };
+
     protected:
         virtual void basicSetKernelParameters(std::vector<double> const &params) const;
 

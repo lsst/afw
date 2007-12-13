@@ -52,6 +52,14 @@ namespace function {
         virtual ReturnT operator() (double x, double y) const {
             return static_cast<ReturnT>((x == _xo) && (y == _yo));
         }
+
+        virtual std::string toString(void) const {
+            std::ostringstream os;
+            os << "IntegerDeltaFunction2 [" << _xo << ", " << _yo << "]: ";
+            os << Function2<ReturnT>::toString();
+            return os.str();
+        };
+
     private:
         double _xo;
         double _yo;
@@ -87,6 +95,13 @@ namespace function {
                 std::exp(- (x * x) / (2.0 * this->_params[0] * this->_params[0]));
         }
         
+        virtual std::string toString(void) const {
+            std::ostringstream os;
+            os << "GaussianFunction1 [" << _multFac << "]: ";
+            os << Function1<ReturnT>::toString();
+            return os.str();
+        };
+
     private:
         const double _multFac; ///< precomputed scale factor
     };
@@ -130,6 +145,13 @@ namespace function {
                 );
         }
         
+        virtual std::string toString(void) const {
+            std::ostringstream os;
+            os << "GaussianFunction2 [" << _multFac << "]: ";
+            os << Function2<ReturnT>::toString();
+            return os.str();
+        };
+
     private:
         const double _multFac; ///< precomputed scale factor
     };
@@ -183,6 +205,14 @@ namespace function {
             }
             return static_cast<ReturnT>(retVal);
         }
+
+        virtual std::string toString(void) const {
+            std::ostringstream os;
+            os << "PolynomialFunction1 []: ";
+            os << Function1<ReturnT>::toString();
+            return os.str();
+        };
+
     };
 
 
@@ -280,6 +310,14 @@ namespace function {
             }
             return static_cast<ReturnT>(retVal);
         }
+
+        virtual std::string toString(void) const {
+            std::ostringstream os;
+            os << "PolynomialFunction2 [" << _order << "]: ";
+            os << Function2<ReturnT>::toString();
+            return os.str();
+        };
+
     private:
         unsigned int _order; ///< order of polynomial
     };
@@ -345,6 +383,17 @@ namespace function {
             double xPrime = (x + _offset) * _scale;
             return static_cast<ReturnT>(_clenshaw(xPrime, 0));
         }
+
+        virtual std::string toString(void) const {
+            std::ostringstream os;
+            os << "Chebyshev1Function1 [";
+            os << _minX << ", " << _maxX << ", ";
+            os << _scale << ", " << _offset << ", ";
+            os << _maxInd << "]: ";
+            os << Function1<ReturnT>::toString();
+            return os.str();
+        };
+
     private:
         double _minX;    ///< minimum allowed x
         double _maxX;    ///< maximum allowed x
@@ -422,6 +471,14 @@ namespace function {
                 return static_cast<ReturnT>(1);
             }
         }
+
+        virtual std::string toString(void) const {
+            std::ostringstream os;
+            os << "LanczosFunction1 [" << _invN << "]: ";;
+            os << Function1<ReturnT>::toString();
+            return os.str();
+        };
+
     private:
         double _invN;   ///< 1/n
     };
@@ -470,6 +527,14 @@ namespace function {
                 return static_cast<ReturnT>(1);
             }
         }
+
+        virtual std::string toString(void) const {
+            std::ostringstream os;
+            os << "LanczosFunction2 [" << _invN << "]: ";;
+            os << Function2<ReturnT>::toString();
+            return os.str();
+        };
+
     private:
         double _invN;   ///< 1/n
     };
@@ -522,6 +587,14 @@ namespace function {
             }
             return static_cast<ReturnT>(xFunc * yFunc);
         }
+
+        virtual std::string toString(void) const {
+            std::ostringstream os;
+            os << "LanczosSeparableFunction2 [" << _invN << "]: ";;
+            os << Function2<ReturnT>::toString();
+            return os.str();
+        };
+
     private:
         double _invN;   ///< 1/n
     };
