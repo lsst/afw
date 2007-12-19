@@ -7,8 +7,6 @@
 //
 //##====----------------                                ----------------====##/
 
-#include <boost/bind.hpp>
-
 #include <lsst/mwi/persistence/Persistence.h>
 #include <lsst/mwi/persistence/Storage.h>
 #include <lsst/mwi/policy/Policy.h>
