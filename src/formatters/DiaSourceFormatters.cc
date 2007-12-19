@@ -17,15 +17,10 @@
 
 #include <boost/any.hpp>
 #include <boost/format.hpp>
-//#include <boost/serialization/export.hpp>
 
 #include "lsst/fw/DiaSource.h"
 #include "lsst/fw/formatters/DiaSourceFormatters.h"
 #include "lsst/fw/formatters/Utils.h"
-
-
-//BOOST_CLASS_EXPORT(lsst::fw::DiaSource)
-//BOOST_CLASS_EXPORT(lsst::fw::DiaSourceVector)
 
 
 namespace lsst {
@@ -58,12 +53,20 @@ FormatterRegistration DiaSourceVectorFormatter::registration(
 );
 
 
-inline static int64_t generateDiaSourceId(unsigned short seqNum, int sliceId,
-                                   int64_t const& exposureId) {
+/*!
+    \internal   Generates a unique identifier for a DiaSource given the id of the originating
+                exposure, the id of the worker slice that detected it, and the sequence number
+                of the DiaSource within that slice.
+ */
+inline static int64_t generateDiaSourceId(unsigned short seqNum, int sliceId, int64_t exposureId) {
     return (exposureId << 24) + (sliceId << 16) + seqNum;
-};
+}
 
 
+/*!
+    Inserts a single DiaSource into a database table using \a db
+    (an instance of lsst::mwi::persistence::DbStorage or subclass thereof).
+ */
 template <typename T>
 void DiaSourceVectorFormatter::insertRow(T & db, DiaSource const & d) {
 
@@ -179,6 +182,8 @@ template void DiaSourceVectorFormatter::insertRow<DbStorage>   (DbStorage &,    
 template void DiaSourceVectorFormatter::insertRow<DbTsvStorage>(DbTsvStorage &, DiaSource const &);
 //! \endcond
 
+
+/*! Prepares for reading DiaSource instances from a database table. */
 void DiaSourceVectorFormatter::setupFetch(DbStorage & db, DiaSource & d) {
     db.outParam("diaSourceId",      &(d._diaSourceId));
     db.outParam("ampExposureId",    &(d._ampExposureId));

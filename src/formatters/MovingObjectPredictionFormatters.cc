@@ -17,15 +17,10 @@
 
 #include <boost/any.hpp>
 #include <boost/format.hpp>
-//#include <boost/serialization/export.hpp>
 
 #include "lsst/fw/MovingObjectPrediction.h"
 #include "lsst/fw/formatters/MovingObjectPredictionFormatters.h"
 #include "lsst/fw/formatters/Utils.h"
-
-
-//BOOST_CLASS_EXPORT(lsst::fw::MovingObjectPrediction)
-//BOOST_CLASS_EXPORT(lsst::fw::MovingObjectPredictionVector)
 
 
 namespace lsst {
@@ -58,6 +53,10 @@ Formatter::Ptr MovingObjectPredictionVectorFormatter::createInstance(Policy::Ptr
 }
 
 
+/*!
+    Inserts a single MovingObjectPrediction into a database table using \a db
+    (an instance of lsst::mwi::persistence::DbStorage or subclass thereof).
+ */
 template <typename T>
 void MovingObjectPredictionVectorFormatter::insertRow(T & db, MovingObjectPrediction const & p) {
     db.template setColumn<int64_t>("orbit_id", p._orbitId);
@@ -77,6 +76,8 @@ template void MovingObjectPredictionVectorFormatter::insertRow<DbStorage>   (DbS
 template void MovingObjectPredictionVectorFormatter::insertRow<DbTsvStorage>(DbTsvStorage &, MovingObjectPrediction const &);
 //! \endcond
 
+
+/*! Prepares for reading MovingObjectPrediction instances from a database table. */
 void MovingObjectPredictionVectorFormatter::setupFetch(DbStorage & db, MovingObjectPrediction & p) {
     db.outParam("orbit_id", &(p._orbitId));
     db.outParam("ra_deg",   &(p._ra));
