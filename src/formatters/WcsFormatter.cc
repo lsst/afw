@@ -32,6 +32,7 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 #include "wcslib/wcs.h"
 
 #include "lsst/mwi/data/SupportFactory.h"
+#include "lsst/mwi/exceptions.h"
 #include "lsst/mwi/persistence/LogicalLocation.h"
 #include "lsst/mwi/persistence/BoostStorage.h"
 #include "lsst/mwi/persistence/FitsStorage.h"
@@ -69,7 +70,7 @@ void WcsFormatter::write(
     WCS const* ip =
         dynamic_cast<WCS const*>(persistable);
     if (ip == 0) {
-        throw std::runtime_error("Persisting non-WCS");
+        throw lsst::mwi::exceptions::Runtime("Persisting non-WCS");
     }
     if (typeid(*storage) == typeid(BoostStorage)) {
         execTrace("WcsFormatter write BoostStorage");
@@ -78,7 +79,7 @@ void WcsFormatter::write(
         execTrace("WcsFormatter write end");
         return;
     }
-    throw std::runtime_error("Unrecognized Storage for WCS");
+    throw lsst::mwi::exceptions::Runtime("Unrecognized Storage for WCS");
 }
 
 Persistable* WcsFormatter::read(
@@ -93,14 +94,14 @@ Persistable* WcsFormatter::read(
         execTrace("WcsFormatter read end");
         return ip;
     }
-    throw std::runtime_error("Unrecognized Storage for WCS");
+    throw lsst::mwi::exceptions::Runtime("Unrecognized Storage for WCS");
 }
 
 void WcsFormatter::update(
     Persistable* persistable,
     Storage::Ptr storage,
     lsst::mwi::data::DataProperty::PtrType additionalData) {
-    throw std::runtime_error("Unexpected call to update for WCS");
+    throw lsst::mwi::exceptions::Runtime("Unexpected call to update for WCS");
 }
 
 lsst::mwi::data::DataProperty::PtrType
@@ -133,7 +134,7 @@ void WcsFormatter::delegateSerialize(
     execTrace("WcsFormatter delegateSerialize start");
     WCS* ip = dynamic_cast<WCS*>(persistable);
     if (ip == 0) {
-        throw std::runtime_error("Serializing non-WCS");
+        throw lsst::mwi::exceptions::Runtime("Serializing non-WCS");
     }
 
     // Serialize most fields normally

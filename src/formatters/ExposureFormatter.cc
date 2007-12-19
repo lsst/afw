@@ -17,8 +17,6 @@
 #endif
 static char const* SVNid __attribute__((unused)) = "$Id$";
 
-#include <iostream>
-
 #include "lsst/fw/formatters/ExposureFormatter.h"
 #include "lsst/fw/Exposure.h"
 
@@ -76,7 +74,12 @@ template <typename ImagePixelT, typename MaskPixelT>
 ExposureFormatter<ImagePixelT, MaskPixelT>::~ExposureFormatter(void) {
 }
 
-static int lookupFilterId(DbStorage* db, std::string const& filterName) {
+/** Lookup a filter name in the database to find a filter id number.
+ */
+static int lookupFilterId(
+    DbStorage* db,                  //!< Database to look in
+    std::string const& filterName   //!< Name of filter to lookup
+    ) {
     db->setTableForQuery("Filter");
     db->outColumn("filterId");
     db->condParam<std::string>("name", filterName);
@@ -94,7 +97,12 @@ static int lookupFilterId(DbStorage* db, std::string const& filterName) {
     return filterId;
 }
 
-static std::string lookupFilterName(DbStorage* db, int filterId) {
+/** Lookup a filter number in the database to find a filter name.
+ */
+static std::string lookupFilterName(
+    DbStorage* db,  //!< Database to look in
+    int filterId    //!< Number of filter to lookup
+    ) {
     db->setTableForQuery("Filter");
     db->outColumn("filterName");
     db->condParam<int>("id", filterId);
@@ -112,8 +120,12 @@ static std::string lookupFilterName(DbStorage* db, int filterId) {
     return filterName;
 }
 
-static void addToProperty(lsst::mwi::data::DataProperty::PtrType dest,
-                          lsst::mwi::data::DataProperty::PtrType source) {
+/** Add a DataProperty's children to another DataProperty.
+ */
+static void addToProperty(
+    lsst::mwi::data::DataProperty::PtrType dest,  //!< Destination DataProperty
+    lsst::mwi::data::DataProperty::PtrType source //!< Source DataProperty
+    ) {
     using lsst::mwi::data::DataProperty;
     DataProperty::iteratorRangeType range = source->getChildren();
     for (DataProperty::ContainerIteratorType iter = range.first;
@@ -122,24 +134,36 @@ static void addToProperty(lsst::mwi::data::DataProperty::PtrType dest,
     }
 }
 
+/** Set an output column's value from a DataProperty, setting it to NULL if
+ * the desired child property does not exist.
+ */
 template <typename T>
-static void setColumn(DbStorage* db, std::string const& colName,
-                      lsst::mwi::data::DataProperty::PtrType source,
-                      std::string const& dpName) {
+static void setColumn(
+    DbStorage* db,                                  //!< Destination database
+    std::string const& colName,                     //!< Output column name
+    lsst::mwi::data::DataProperty::PtrType source,  //!< Source DataProperty
+    std::string const& dpName                       //!< Child name
+    ) {
     lsst::mwi::data::DataProperty::PtrType dp = source->findUnique(dpName);
     if (!dp) {
         db->setColumnToNull(colName);
     }
     else {
-        db->setColumn<T>(colName, boost::any_cast<T>(
-            source->findUnique(dpName)->getValue()));
+        db->setColumn<T>(colName, boost::any_cast<T>(dp->getValue()));
     }
 }
 
+/** Set an output column's value from a DataProperty, setting it to NULL if
+ * the desired child property does not exist.  Casts from DataProperty type to
+ * database field type.
+ */
 template <typename T1, typename T2>
-static void setColumn(DbStorage* db, std::string const& colName,
-                      lsst::mwi::data::DataProperty::PtrType source,
-                      std::string const& dpName) {
+static void setColumn(
+    DbStorage* db,                                  //!< Destination database
+    std::string const& colName,                     //!< Output column name
+    lsst::mwi::data::DataProperty::PtrType source,  //!< Source DataProperty
+    std::string const& dpName                       //!< Child name
+    ) {
     lsst::mwi::data::DataProperty::PtrType dp = source->findUnique(dpName);
     if (!dp) {
         db->setColumnToNull(colName);
@@ -224,7 +248,6 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::write(
         db->setTableForInsert(itemName);
 
 
-        std::cerr << "Identifier columns" << std::endl;
         // Set the identifier columns.
         if (itemName == "Raw_CCD_Exposure") {
             setColumn<long long>(db, "rawCCDExposureId",
@@ -251,18 +274,13 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::write(
         // Set the filter ID column.
         db->setColumn<int>("filterId", filterId);
 
-        std::cerr << "RA/DEC columns" << std::endl;
         // Set the RA and declination columns for raw images.
         if (itemName == "Raw_CCD_Exposure") {
-            std::cerr << "RA/DEC system" << std::endl;
             setColumn<std::string>(db, "radecSys", dp, "RADECSYS");
-            std::cerr << "RA" << std::endl;
             setColumn<double>(db, "ra", dp, "RA");
-            std::cerr << "Decl" << std::endl;
             setColumn<double>(db, "decl", dp, "DECL");
         }
 
-        std::cerr << "WCS columns" << std::endl;
         // Set the WCS information columns.
         setColumn<float, double>(db, "equinox", dp, "EQUINOX");
         setColumn<std::string>(db, "ctype1", wcsDP, "CTYPE1");
@@ -276,7 +294,6 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::write(
         setColumn<double>(db, "cd12", wcsDP, "CD1_2");
         setColumn<double>(db, "cd22", wcsDP, "CD2_2");
 
-        std::cerr << "Time columns" << std::endl;
         // Set the observation start time and exposure time columns.
         double mjdObs = boost::any_cast<double>(
             dp->findUnique("MJD-OBS")->getValue());
@@ -291,7 +308,6 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::write(
         }
         setColumn<float>(db, "expTime", dp, "EXPTIME");
 
-        std::cerr << "Calibration columns" << std::endl;
         // Set calibration input/output data columns.
         if (itemName == "Raw_CCD_Exposure") {
             setColumn<float, double>(db, "darkTime", dp, "DARKTIME");
@@ -361,7 +377,6 @@ Persistable* ExposureFormatter<ImagePixelT, MaskPixelT>::read(
         db->outColumn("url");
         db->outColumn("filterId");
 
-        std::cerr << "WCS columns" << std::endl;
         // Set the WCS information columns.
         db->outColumn("equinox");
         db->outColumn("ctype1");
@@ -375,12 +390,10 @@ Persistable* ExposureFormatter<ImagePixelT, MaskPixelT>::read(
         db->outColumn("cd12");
         db->outColumn("cd22");
 
-        std::cerr << "Time columns" << std::endl;
         // Set the observation start time and exposure time columns.
         db->outColumn("dateObs");
         db->outColumn("expTime");
 
-        std::cerr << "Calibration columns" << std::endl;
         // Set calibration input/output data columns.
         if (itemName == "Raw_CCD_Exposure") {
             db->outColumn("radecSys");
@@ -422,8 +435,10 @@ Persistable* ExposureFormatter<ImagePixelT, MaskPixelT>::read(
                 "FILTER", filterName));
 
         // Set the image headers.
-
         // Set the WCS headers in ip->_wcsPtr.
+
+        // \todo Need to implement overwriting of FITS metadata DataProperty
+        // with values from database. - KTL - 2007-12-18
 
         execTrace("ExposureFormatter read end");
         return ip;
