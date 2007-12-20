@@ -118,6 +118,25 @@ lsst::fw::Image<ImagePixelT>::getSubImage(const vw::BBox2i imageRegion) const {
     newImage->setOffsetRows(bboxOffset[1] + _offsetRows);
     newImage->setOffsetCols(bboxOffset[0] + _offsetCols);
 
+    // Make a copy of the metadata
+
+    lsst::mwi::data::DataProperty::PtrType newMetaData(new lsst::mwi::data::DataProperty(*_metaData));
+    newImage->_metaData = newMetaData;
+
+    // If CRPIX values are present in _metaData, keep them consistent with the offset
+
+    lsst::mwi::data::DataProperty::PtrType crpix1 = newImage->_metaData->findUnique("CRPIX1");
+    if (crpix1) {
+        double crpix1Value = boost::any_cast<double>(crpix1->getValue());
+        crpix1->setValue(crpix1Value - bboxOffset[0]);
+    }
+
+    lsst::mwi::data::DataProperty::PtrType crpix2 = newImage->_metaData->findUnique("CRPIX2");
+    if (crpix2) {
+        double crpix2Value = boost::any_cast<double>(crpix2->getValue());
+        crpix2->setValue(crpix2Value - bboxOffset[1]);
+    }
+
     return newImage;
 }
 
