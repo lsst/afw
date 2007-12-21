@@ -190,10 +190,8 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::write(
 
         Exposure<ImagePixelT, MaskPixelT>* vip =
             const_cast<Exposure<ImagePixelT, MaskPixelT>*>(ip);
-        lsst::fw::formatters::addToProperty(
-            vip->_maskedImage.getImage()->getMetaData(), wcsDP);
-        lsst::fw::formatters::addToProperty(
-            vip->_maskedImage.getVariance()->getMetaData(), wcsDP);
+        vip->_maskedImage.getImage()->getMetaData()->addChildren(wcsDP);
+        vip->_maskedImage.getVariance()->getMetaData()->addChildren(wcsDP);
         ip->_maskedImage.writeFits(fits->getPath());
         execTrace("ExposureFormatter write end");
         return;

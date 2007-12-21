@@ -60,8 +60,6 @@ void dropAllVisitSliceTables(
 int64_t extractExposureId(DataProperty::PtrType const& properties);
 int extractSliceId(DataProperty::PtrType const& properties);
 
-void addToProperty(DataProperty::PtrType dest, DataProperty::PtrType source);
-
 }}} // end of namespace lsst::fw::formatters
 
 #endif // LSST_FW_FORMATTERS_UTILS_H
