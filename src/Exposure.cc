@@ -186,7 +186,7 @@ lsst::fw::Exposure<ImageT, MaskT> lsst::fw::Exposure<ImageT, MaskT>::getSubExpos
 ) const {    
 
     typename lsst::fw::MaskedImage<ImageT, MaskT>::MaskedImagePtrT subMskImPtr = _maskedImage.getSubImage(subRegion);
-    lsst::mwi::data::DataProperty::PtrType miMetaData = _maskedImage.getImage()->getMetaData();
+    lsst::mwi::data::DataProperty::PtrType miMetaData = subMskImPtr->getImage()->getMetaData();
     lsst::fw::WCS miWcs(miMetaData);
     lsst::fw::Exposure<ImageT, MaskT> subExposure(*subMskImPtr, miWcs);
     return subExposure;
