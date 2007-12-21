@@ -9,6 +9,8 @@
   *
   * \author Nicole M. Silvestri, University of Washington
   *
+  * Contact: nms@astro.washington.edu
+  *
   * Created on: Mon Apr 23 13:01:15 2007
   *
   * \version 
@@ -25,12 +27,14 @@
 
 #include <stdexcept>
 
+#include <lsst/mwi/data/DataProperty.h>
 #include <lsst/mwi/data/LsstBase.h>
 #include <lsst/mwi/exceptions.h>
 #include <lsst/mwi/utils/Trace.h> 
 #include <lsst/fw/Exposure.h>
 #include <lsst/fw/MaskedImage.h>
 #include <lsst/fw/WCS.h> 
+#include <lsst/fw/formatters/WcsFormatter.h>
 
 /** \brief Exposure Class Implementation for LSST: a templated framework class
   * for creating an Exposure from a MaskedImage and a WCS.
@@ -45,41 +49,20 @@
   * Exposure class.  All MaskedImage and WCS constructors are 'const' to allow
   * for views and copying.
   *
-  * An Exposure can get and return its MaskedImage, WCS, and a subExposure.  The
-  * getSubExposure member takes a vw::BBox region defining the subRegion of the
-  * original Exposure to be returned.  The member retrieves the MaskedImage
+  * An Exposure can get and return its MaskedImage, WCS, and a subExposure.
+  * The getSubExposure member takes a vw::BBox region defining the subRegion of 
+  * the original Exposure to be returned.  The member retrieves the MaskedImage
   * corresponding to the subRegion.  The MaskedImage class throws an exception
   * for any subRegion extending beyond the original MaskedImage bounding
   * box. This member is not yet fully implemented because it requires the WCS
   * class to return the WCS metadata to the member so the CRPIX values of the
   * WCS can be adjusted to reflect the new subMaskedImage origin.  The
-  * getSubExposure member will eventually return a subExposure consisting of the
-  * subMAskedImage and the WCS object with its corresponding adjusted metadata.
+  * getSubExposure member will eventually return a subExposure consisting of   
+  * the subMAskedImage and the WCS object with its corresponding adjusted
+  * metadata.
   *
   * The hasWcs member is used to determine if the Exposure has a WCS.  It is not
   * required to have one.
-  *
-  * The read/writeFits members are not fully implemented yet.  They require both
-  * persistence formatters and the metadata to be passed form the WCS class.
-  *
-  * TODO 20070905 Nicole M. Silvestri; By DC2: 
-  *
-  * 1. 'getSubExposure' method should deal with edge extension issues and at a
-  * minimum, change the CRPIX (and other) values for the WCS in the metedata
-  * header. Modify header keywords in the MaskedImage metadata (can use MI class
-  * for this) and overwrite existing WCS kewords.  This should really be part of
-  * the WCS class - discuss with TA. (for DC2)
-  *
-  * 2. Need to implement writeFits functionality...see persistance information
-  * (boost::serialize - discuss w/ K-T & Jeff B.)  need formatter (see Greg D.'s
-  * README on the Twiki.  Again need modifications to the WCS Class to get this
-  * to work properly...same goes for the reafits method. (for DC2)
-  *
-  * 3. Test 'getSubExposure' method when complete and then close Ticket
-  * #111. (for DC2)
-  *
-  * 4. Re-Sync with EA UML model and update robustness and seuqence
-  * diagrams. (before CoDR)
   */
 
 // CLASS CONSTRUCTORS and DESTRUCTOR
@@ -261,19 +244,17 @@ void lsst::fw::Exposure<ImageT, MaskT>::writeFits(
     const std::string &expOutFile ///< Exposure's base output file name
     ) const {
 
-//    std::string suffix = ".fits";
-    //   std::string expFile = expOutFile + suffix;
+    lsst::mwi::data::DataProperty::PtrType wcsDP =
+        lsst::fw::formatters::WcsFormatter::generateDataProperty(*_wcsPtr);
+    _maskedImage.getImage()->getMetaData()->addChildren(wcsDP);
+    // does the Variance have metadata to persist? 
+    _maskedImage.getVariance()->getMetaData()->addChildren(wcsDP);
+    // does the Mask have metadata to persist? 
+    //_maskedImage.getMask()->getMetaData()->addChildren(wcsDP);
 
-    // Since this is not yet implemented to work properly - throw an exception
-
-//     lsst::fw::Image<ImageT> _image;
-//     _image->writefits(expFile);
-
-    throw lsst::mwi::exceptions::InvalidParameter("'writeFits' method has not been implemented!");
+    _maskedImage.writeFits(expOutFile);
     
-    // eventually need to add functionality here...
-    
-}
+        }
 
 // Explicit instantiations
 template class lsst::fw::Exposure<float, lsst::fw::maskPixelType>;
