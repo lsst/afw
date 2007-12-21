@@ -43,9 +43,9 @@ public:
     virtual void update(Persistable* persistable,
                         Storage::Ptr storage,
                         lsst::mwi::data::DataProperty::PtrType additionalData);
-    virtual lsst::mwi::data::DataProperty::PtrType
-        generateDataProperty(WCS const& wcs);
 
+    static lsst::mwi::data::DataProperty::PtrType
+        generateDataProperty(WCS const& wcs);
     static Formatter::Ptr createInstance(lsst::mwi::policy::Policy::Ptr policy);
 
     template <class Archive>

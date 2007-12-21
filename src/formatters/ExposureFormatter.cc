@@ -23,6 +23,7 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 #include "lsst/mwi/persistence/FormatterImpl.h"
 
 #include "lsst/fw/formatters/MaskedImageFormatter.h"
+#include "lsst/fw/formatters/Utils.h"
 #include "lsst/fw/formatters/WcsFormatter.h"
 
 #include "lsst/mwi/exceptions.h"
@@ -120,19 +121,6 @@ static std::string lookupFilterName(
     return filterName;
 }
 
-/** Add a DataProperty's children to another DataProperty.
- */
-static void addToProperty(
-    lsst::mwi::data::DataProperty::PtrType dest,  //!< Destination DataProperty
-    lsst::mwi::data::DataProperty::PtrType source //!< Source DataProperty
-    ) {
-    using lsst::mwi::data::DataProperty;
-    DataProperty::iteratorRangeType range = source->getChildren();
-    for (DataProperty::ContainerIteratorType iter = range.first;
-         iter != range.second; iter++) {
-        dest->addProperty(*iter);
-    }
-}
 
 /** Set an output column's value from a DataProperty, setting it to NULL if
  * the desired child property does not exist.
@@ -196,17 +184,16 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::write(
         execTrace("ExposureFormatter write FitsStorage");
         FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
 
-        lsst::mwi::policy::Policy::Ptr policy;
-        boost::shared_ptr<WcsFormatter> wcsFormatter =
-            boost::dynamic_pointer_cast<WcsFormatter, Formatter>(
-                WcsFormatter::createInstance(policy));
         lsst::mwi::data::DataProperty::PtrType wcsDP =
-            wcsFormatter->generateDataProperty(*(ip->_wcsPtr));
+            lsst::fw::formatters::WcsFormatter::generateDataProperty(
+                *(ip->_wcsPtr));
 
         Exposure<ImagePixelT, MaskPixelT>* vip =
             const_cast<Exposure<ImagePixelT, MaskPixelT>*>(ip);
-        addToProperty(vip->_maskedImage.getImage()->getMetaData(), wcsDP);
-        addToProperty(vip->_maskedImage.getVariance()->getMetaData(), wcsDP);
+        lsst::fw::formatters::addToProperty(
+            vip->_maskedImage.getImage()->getMetaData(), wcsDP);
+        lsst::fw::formatters::addToProperty(
+            vip->_maskedImage.getVariance()->getMetaData(), wcsDP);
         ip->_maskedImage.writeFits(fits->getPath());
         execTrace("ExposureFormatter write end");
         return;

@@ -319,5 +319,20 @@ void dropAllVisitSliceTables(
 }
 
 
+/** Add a DataProperty's children to another DataProperty.
+ */
+void addToProperty(
+    lsst::mwi::data::DataProperty::PtrType dest,  //!< Destination DataProperty
+    lsst::mwi::data::DataProperty::PtrType source //!< Source DataProperty
+    ) {
+    using lsst::mwi::data::DataProperty;
+    DataProperty::iteratorRangeType range = source->getChildren();
+    for (DataProperty::ContainerIteratorType iter = range.first;
+         iter != range.second; iter++) {
+        dest->addProperty(*iter);
+    }
+}
+
+
 }}} // end of namespace lsst::fw::formatters
 
