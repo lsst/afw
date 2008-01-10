@@ -405,8 +405,8 @@ Persistable* ExposureFormatter<ImagePixelT, MaskPixelT>::read(
         }
         db->finishQuery();
 
-        // \todo Should really have FITS be a separate Storage. - KTL -
-        // 2007-11-29
+        //! \todo Should really have FITS be a separate Storage.
+        // - KTL - 2007-11-29
 
         // Restore image from FITS...
         ip->readFits(db->getColumnByPos<std::string>(0));
@@ -422,7 +422,7 @@ Persistable* ExposureFormatter<ImagePixelT, MaskPixelT>::read(
         // Set the image headers.
         // Set the WCS headers in ip->_wcsPtr.
 
-        // \todo Need to implement overwriting of FITS metadata DataProperty
+        //! \todo Need to implement overwriting of FITS metadata DataProperty
         // with values from database. - KTL - 2007-12-18
 
         execTrace("ExposureFormatter read end");
@@ -436,8 +436,8 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::update(
     Persistable* persistable,
     Storage::Ptr storage,
     lsst::mwi::data::DataProperty::PtrType additionalData) {
-    // \todo Implement update from FitsStorage, keeping DB-provided headers. -
-    // KTL - 2007-11-29
+    //! \todo Implement update from FitsStorage, keeping DB-provided headers.
+    // - KTL - 2007-11-29
     throw lsst::mwi::exceptions::Runtime("Unexpected call to update for Exposure");
 }
 
