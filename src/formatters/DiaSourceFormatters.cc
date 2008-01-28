@@ -71,7 +71,7 @@ template <typename T>
 void DiaSourceVectorFormatter::insertRow(T & db, DiaSource const & d) {
 
     db.template setColumn<int64_t>("diaSourceId",      d._diaSourceId);
-    db.template setColumn<int64_t>("ampExposureId",    d._ampExposureId);
+    db.template setColumn<int64_t>("exposureId",       d._exposureId);
     db.template setColumn<double> ("colc",             d._colc);
     db.template setColumn<double> ("rowc",             d._rowc);
     db.template setColumn<double> ("dcol",             d._dcol);
@@ -186,7 +186,7 @@ template void DiaSourceVectorFormatter::insertRow<DbTsvStorage>(DbTsvStorage &, 
 /*! Prepares for reading DiaSource instances from a database table. */
 void DiaSourceVectorFormatter::setupFetch(DbStorage & db, DiaSource & d) {
     db.outParam("diaSourceId",      &(d._diaSourceId));
-    db.outParam("ampExposureId",    &(d._ampExposureId));
+    db.outParam("exposureId",       &(d._exposureId));
     db.outParam("filterId",         reinterpret_cast<char *>(&(d._filterId)));
     db.outParam("objectId",         &(d._objectId));
     db.outParam("movingObjectId",   &(d._movingObjectId));
@@ -310,6 +310,7 @@ void DiaSourceVectorFormatter::write(
         }
         for (DiaSourceVector::iterator i = v->begin(); i != v->end(); ++i) {
             i->_diaSourceId = generateDiaSourceId(seq, sliceId, exposureId);
+            i->_exposureId  = exposureId;
             ++seq;
             if (seq == 0) { // Overflowed
                 throw ex::Runtime("Too many DiaSources");
@@ -391,7 +392,7 @@ Persistable* DiaSourceVectorFormatter::read(
             data.setNotNull();
             while (db->next()) {
                 if (db->columnIsNull( 0)) { throw ex::Runtime("null column \"diaSourceId\"");      }
-                if (db->columnIsNull( 1)) { throw ex::Runtime("null column \"ampExposureId\"");    }
+                if (db->columnIsNull( 1)) { throw ex::Runtime("null column \"exposureId\"");       }
                 if (db->columnIsNull( 2)) { throw ex::Runtime("null column \"filterId\"");         }
                 if (db->columnIsNull( 3)) { data.setNull(DiaSource::OBJECT_ID);                    }
                 if (db->columnIsNull( 4)) { data.setNull(DiaSource::MOVING_OBJECT_ID);             }

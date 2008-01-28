@@ -66,7 +66,7 @@ static void initTestData(DiaSourceVector & v, int sliceId = 0) {
         // make sure each field has a different value, and that IO for each nullable field is tested
         int j = i*64;
         data.setId              (0);
-        data.setAmpExposureId   (j +  1);
+        data.setExposureId      (j +  1);
         data.setObjectId        (j +  2);
         data.setMovingObjectId  (j +  3);
         data.setColc            (static_cast<double>(j +  4));

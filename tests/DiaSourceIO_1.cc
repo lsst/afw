@@ -66,7 +66,7 @@ static void initTestData(DiaSourceVector & v, int sliceId = 0) {
         // Note: DiaSource ids are generated in ascending order
         int j = i*64;
         data.setId              (j + sliceId*(DiaSource::NUM_NULLABLE_FIELDS + 2)*64 + 1);
-        data.setAmpExposureId   (j +  1);
+        data.setExposureId      (j +  1);
         data.setObjectId        (j +  2);
         data.setMovingObjectId  (j +  3);
         data.setColc            (static_cast<double>(j +  4));

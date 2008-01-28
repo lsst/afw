@@ -16,7 +16,7 @@ namespace fw {
 
 DiaSource::DiaSource() : 
     _diaSourceId(0),
-    _ampExposureId(0),
+    _exposureId(0),
     _objectId(0),
     _movingObjectId(0),
     _colc(0.0),
@@ -75,7 +75,7 @@ DiaSource::DiaSource(
     double  drow
 ) : 
     _diaSourceId(id),
-    _ampExposureId(0),
+    _exposureId(0),
     _objectId(0),
     _movingObjectId(0),
     _colc(colc),
@@ -131,7 +131,7 @@ bool DiaSource::operator==(DiaSource const & d) const {
         return true;
     }
     if (_diaSourceId      == d._diaSourceId      &&
-        _ampExposureId    == d._ampExposureId    &&
+        _exposureId       == d._exposureId       &&
         _colc             == d._colc             &&
         _rowc             == d._rowc             &&
         _dcol             == d._dcol             &&
