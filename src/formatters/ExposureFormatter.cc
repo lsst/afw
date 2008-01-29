@@ -68,7 +68,7 @@ FormatterRegistration ExposureFormatter<ImagePixelT, MaskPixelT>::registration(
 template <typename ImagePixelT, typename MaskPixelT>
 ExposureFormatter<ImagePixelT, MaskPixelT>::ExposureFormatter(
     lsst::mwi::policy::Policy::Ptr policy) :
-    Formatter(typeid(*this)) {
+    Formatter(typeid(*this)), _policy(policy) {
 }
 
 template <typename ImagePixelT, typename MaskPixelT>
@@ -201,12 +201,9 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::write(
         DbStorage* db = dynamic_cast<DbStorage*>(storage.get());
 
         // Get the WCS headers.
-        lsst::mwi::policy::Policy::Ptr policy;
-        boost::shared_ptr<WcsFormatter> wcsFormatter =
-            boost::dynamic_pointer_cast<WcsFormatter, Formatter>(
-                WcsFormatter::createInstance(policy));
         lsst::mwi::data::DataProperty::PtrType wcsDP =
-            wcsFormatter->generateDataProperty(*(ip->_wcsPtr));
+            lsst::fw::formatters::WcsFormatter::generateDataProperty(
+                *(ip->_wcsPtr));
 
         // Get the image headers.
         lsst::mwi::data::DataProperty::PtrType dp =
@@ -215,26 +212,28 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::write(
             throw lsst::mwi::exceptions::Runtime("Unable to retrieve metadata from MaskedImage's Image");
         }
 
-        // Look up the filter ID given the name.
-        std::string filterName =
-            boost::any_cast<std::string>(dp->findUnique("FILTER")->getValue());
-        int filterId = lookupFilterId(db, filterName);
-
-
         // Select a table to insert into based on the itemName.
         std::string itemName = boost::any_cast<std::string>(
             additionalData->findUnique("itemName")->getValue());
-        if (itemName != "Raw_CCD_Exposure" &&
-            itemName != "Science_CCD_Exposure") {
+        std::string tableName = itemName;
+        if (policy.exists(itemName)) {
+            lsst::mwi::policy::Policy::Ptr itemPolicy =
+                policy.getPolicy(itemName);
+            if (itemPolicy.exists("TableName")) {
+                tableName = itemPolicy.getString("TableName");
+            }
+        }
+        if (tableName != "Raw_CCD_Exposure" &&
+            tableName != "Science_CCD_Exposure") {
             throw lsst::mwi::exceptions::Runtime(
                 "Unknown table name for persisting Exposure to DbStorage: " +
-                itemName);
+                tableName + "for item " + itemName);
         }
-        db->setTableForInsert(itemName);
+        db->setTableForInsert(tableName);
 
 
         // Set the identifier columns.
-        if (itemName == "Raw_CCD_Exposure") {
+        if (tableName == "Raw_CCD_Exposure") {
             setColumn<long long>(db, "rawCCDExposureId",
                                  additionalData, "ccdExposureId");
             setColumn<int>(db, "rawFPAExposureId",
@@ -247,6 +246,8 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::write(
                            additionalData, "exposureId");
             setColumn<long long>(db, "rawCCDExposureId",
                                  additionalData, "ccdExposureId");
+            /// \todo Check that rawCCDExposureId == scienceCCDExposureId --
+            /// KTL -- 2008-01-25
         }
 
         setColumn<int>(db, "visitId", additionalData, "visitId");
@@ -256,50 +257,19 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::write(
                               additionalData, "StorageLocation.FitsStorage");
 
 
-        // Set the filter ID column.
-        db->setColumn<int>("filterId", filterId);
-
-        // Set the RA and declination columns for raw images.
-        if (itemName == "Raw_CCD_Exposure") {
-            setColumn<std::string>(db, "radecSys", dp, "RADECSYS");
-            setColumn<double>(db, "ra", dp, "RA");
-            setColumn<double>(db, "decl", dp, "DECL");
-        }
-
-        // Set the WCS information columns.
-        setColumn<float, double>(db, "equinox", dp, "EQUINOX");
-        setColumn<std::string>(db, "ctype1", wcsDP, "CTYPE1");
-        setColumn<std::string>(db, "ctype2", wcsDP, "CTYPE2");
-        setColumn<float, double>(db, "crpix1", wcsDP, "CRPIX1");
-        setColumn<float, double>(db, "crpix2", wcsDP, "CRPIX2");
-        setColumn<double>(db, "crval1", wcsDP, "CRVAL1");
-        setColumn<double>(db, "crval2", wcsDP, "CRVAL2");
-        setColumn<double>(db, "cd11", wcsDP, "CD1_1");
-        setColumn<double>(db, "cd21", wcsDP, "CD2_1");
-        setColumn<double>(db, "cd12", wcsDP, "CD1_2");
-        setColumn<double>(db, "cd22", wcsDP, "CD2_2");
-
-        // Set the observation start time and exposure time columns.
-        double mjdObs = boost::any_cast<double>(
-            dp->findUnique("MJD-OBS")->getValue());
-        if (itemName == "Raw_CCD_Exposure") {
-            DateTime utc(mjdObs);
-            db->setColumn<DateTime>("dateObs", utc);
-            db->setColumn<DateTime>("taiObs", utc.utc2tai());
-            db->setColumn<double>("mjdObs", mjdObs);
-        }
-        else { // Science_CCD_Exposure
-            db->setColumn<DateTime>("dateObs", DateTime(mjdObs));
-        }
-        setColumn<float>(db, "expTime", dp, "EXPTIME");
-
-        // Set calibration input/output data columns.
-        if (itemName == "Raw_CCD_Exposure") {
-            setColumn<float, double>(db, "darkTime", dp, "DARKTIME");
-            setColumn<float, double>(db, "zd", dp, "ZD"); // Zenith distance
-            setColumn<float, double>(db, "airmass", dp, "AIRMASS");
-        }
-        else { // Science_CCD_Exposure
+        if (tableName == "Science_CCD_Exposure") {
+            // Set the WCS information columns for science images.
+            setColumn<std::string>(db, "ctype1", wcsDP, "CTYPE1");
+            setColumn<std::string>(db, "ctype2", wcsDP, "CTYPE2");
+            setColumn<float, double>(db, "crpix1", wcsDP, "CRPIX1");
+            setColumn<float, double>(db, "crpix2", wcsDP, "CRPIX2");
+            setColumn<double>(db, "crval1", wcsDP, "CRVAL1");
+            setColumn<double>(db, "crval2", wcsDP, "CRVAL2");
+            setColumn<double>(db, "cd11", wcsDP, "CD1_1");
+            setColumn<double>(db, "cd21", wcsDP, "CD2_1");
+            setColumn<double>(db, "cd12", wcsDP, "CD1_2");
+            setColumn<double>(db, "cd22", wcsDP, "CD2_2");
+            // Set calibration data columns.
             setColumn<float, double>(db, "photoFlam", dp, "PHOTFLAM");
             setColumn<float, double>(db, "photoZP", dp, "PHOTZP");
         }
@@ -340,19 +310,27 @@ Persistable* ExposureFormatter<ImagePixelT, MaskPixelT>::read(
         // Select a table to retrieve from based on the itemName.
         std::string itemName = boost::any_cast<std::string>(
             additionalData->findUnique("itemName")->getValue());
-        if (itemName != "Raw_CCD_Exposure" &&
-            itemName != "Science_CCD_Exposure") {
+        std::string tableName = itemName;
+        if (policy.exists(itemName)) {
+            lsst::mwi::policy::Policy::Ptr itemPolicy =
+                policy.getPolicy(itemName);
+            if (itemPolicy.exists("TableName")) {
+                tableName = itemPolicy.getString("TableName");
+            }
+        }
+        if (tableName != "Raw_CCD_Exposure" &&
+            tableName != "Science_CCD_Exposure") {
             throw lsst::mwi::exceptions::Runtime(
                 "Unknown table name for retrieving Exposure from DbStorage: " +
-                itemName);
+                tableName + " for item " + itemName);
         }
-        db->setTableForQuery(itemName);
+        db->setTableForQuery(tableName);
 
 
         // Set the identifier column tests.
         db->condParam<int64_t>("id", boost::any_cast<int64_t>(
                 additionalData->findUnique("ccdExposureId")->getValue()));
-        if (itemName == "Raw_CCD_Exposure") {
+        if (tableName == "Raw_CCD_Exposure") {
             db->setQueryWhere("rawCCDExposureId = :id");
         }
         else { // Science_CCD_Exposure
@@ -360,36 +338,22 @@ Persistable* ExposureFormatter<ImagePixelT, MaskPixelT>::read(
         }
 
         db->outColumn("url");
-        db->outColumn("filterId");
 
         // Set the WCS information columns.
-        db->outColumn("equinox");
-        db->outColumn("ctype1");
-        db->outColumn("ctype2");
-        db->outColumn("crpix1");
-        db->outColumn("crpix2");
-        db->outColumn("crval1");
-        db->outColumn("crval2");
-        db->outColumn("cd11");
-        db->outColumn("cd21");
-        db->outColumn("cd12");
-        db->outColumn("cd22");
+        if (tableName == "Science_CCD_Exposure") {
+            db->outColumn("ctype1");
+            db->outColumn("ctype2");
+            db->outColumn("crpix1");
+            db->outColumn("crpix2");
+            db->outColumn("crval1");
+            db->outColumn("crval2");
+            db->outColumn("cd11");
+            db->outColumn("cd21");
+            db->outColumn("cd12");
+            db->outColumn("cd22");
 
-        // Set the observation start time and exposure time columns.
-        db->outColumn("dateObs");
-        db->outColumn("expTime");
-
-        // Set calibration input/output data columns.
-        if (itemName == "Raw_CCD_Exposure") {
-            db->outColumn("radecSys");
-            db->outColumn("ra");
-            db->outColumn("decl");
-
-            db->outColumn("darkTime");
-            db->outColumn("zd");
-            db->outColumn("airmass");
-        }
-        else { // Science_CCD_Exposure
+        // Set calibration data columns.
+        if (tableName == "Science_CCD_Exposure") {
             db->outColumn("photoFlam");
             db->outColumn("photoZP");
         }

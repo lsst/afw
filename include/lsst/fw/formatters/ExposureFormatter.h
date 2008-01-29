@@ -49,6 +49,8 @@ public:
 private:
     explicit ExposureFormatter(lsst::mwi::policy::Policy::Ptr policy);
 
+    lsst::mwi::policy::Policy::Ptr _policy;
+
     static FormatterRegistration registration;
 };
 
