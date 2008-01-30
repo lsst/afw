@@ -216,11 +216,11 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::write(
         std::string itemName = boost::any_cast<std::string>(
             additionalData->findUnique("itemName")->getValue());
         std::string tableName = itemName;
-        if (_policy.exists(itemName)) {
+        if (_policy->exists(itemName)) {
             lsst::mwi::policy::Policy::Ptr itemPolicy =
-                _policy.getPolicy(itemName);
-            if (itemPolicy.exists("TableName")) {
-                tableName = itemPolicy.getString("TableName");
+                _policy->getPolicy(itemName);
+            if (itemPolicy->exists("TableName")) {
+                tableName = itemPolicy->getString("TableName");
             }
         }
         if (tableName != "Raw_CCD_Exposure" &&
@@ -311,11 +311,11 @@ Persistable* ExposureFormatter<ImagePixelT, MaskPixelT>::read(
         std::string itemName = boost::any_cast<std::string>(
             additionalData->findUnique("itemName")->getValue());
         std::string tableName = itemName;
-        if (_policy.exists(itemName)) {
+        if (_policy->exists(itemName)) {
             lsst::mwi::policy::Policy::Ptr itemPolicy =
-                _policy.getPolicy(itemName);
-            if (itemPolicy.exists("TableName")) {
-                tableName = itemPolicy.getString("TableName");
+                _policy->getPolicy(itemName);
+            if (itemPolicy->exists("TableName")) {
+                tableName = itemPolicy->getString("TableName");
             }
         }
         if (tableName != "Raw_CCD_Exposure" &&
