@@ -66,7 +66,7 @@ static void initTestData(DiaSourceVector & v, int sliceId = 0) {
         // make sure each field has a different value, and that IO for each nullable field is tested
         int j = i*64;
         data.setId              (0);
-        data.setExposureId      (j +  1);
+        data.setCcdExposureId   (j +  1);
         data.setObjectId        (j +  2);
         data.setMovingObjectId  (j +  3);
         data.setColc            (static_cast<double>(j +  4));
@@ -127,10 +127,10 @@ static void initTestData(DiaSourceVector & v, int sliceId = 0) {
 
 // Make at least a token attempt at generating a unique visit id
 // (in-db table name collisions could cause spurious testcase failures)
-static int64_t createVisitId() {
+static int createVisitId() {
     struct timeval tv;
     ::gettimeofday(&tv, 0);
-    return static_cast<int64_t>(tv.tv_sec);
+    return static_cast<int>(tv.tv_sec);
 }
 
 
@@ -138,12 +138,12 @@ static void testBoost(void) {
     // Create a blank Policy and DataProperty.
     Policy::Ptr           policy(new Policy);
     DataProperty::PtrType props = SupportFactory::createPropertyNode("root");
-    int64_t visitId = createVisitId();
+    int visitId = createVisitId();
     // Not really how ccdExposureId should be set, but good enough for now.
-    props->addProperty(
-        SupportFactory::createLeafProperty("exposureId", visitId));
-    props->addProperty(
-        SupportFactory::createLeafProperty("sliceId", 0));
+    props->addProperty(DataProperty("visitId",    boost::any(visitId)));
+    props->addProperty(DataProperty("exposureId", boost::any(static_cast<int64_t>(visitId)*2)));
+    props->addProperty(DataProperty("ccdId",      boost::any(std::string("0"))));
+    props->addProperty(DataProperty("sliceId",    boost::any(static_cast<int>(0))));
 
     // Setup test location
     LogicalLocation loc(makeTempFile());
@@ -162,7 +162,7 @@ static void testBoost(void) {
         Storage::List storageList;
         storageList.push_back(pers->getPersistStorage("BoostStorage", loc));
         pers->persist(dsv, storageList, props);
-        Assert(dsv[0].getId() == (visitId << 24) + 1LL, "DiaSource id not changed to expected value");
+        Assert(dsv[0].getId() == (static_cast<int64_t>(visitId) << 24) + 1LL, "DiaSource id not changed to expected value");
     }
 
     // read in data
@@ -195,11 +195,12 @@ static DataProperty::PtrType createDbTestProps(
         dias->addProperty(DataProperty("numSlices",       boost::any(numSlices)));
         props->addProperty(dias);
     }
-    int64_t visitId = createVisitId();
+    int visitId = createVisitId();
     props->addProperty(DataProperty("visitId", visitId));
+    props->addProperty(DataProperty("exposureId", boost::any(static_cast<int64_t>(visitId)*2)));
     // Not really how ccdExposureId should be set, but good enough for now.
-    props->addProperty(DataProperty("exposureId", visitId));
-    props->addProperty(DataProperty("sliceId", boost::any(sliceId)));
+    props->addProperty(DataProperty("ccdId",    std::string("0")));
+    props->addProperty(DataProperty("sliceId",  boost::any(sliceId)));
     props->addProperty(DataProperty("itemName", boost::any(itemName)));
     return props;
 }
@@ -225,15 +226,14 @@ static void testDb(std::string const & storageType) {
     DiaSource ds(0, 0.0, 1.0, 2.0, 3.0);
     DiaSourceVector dsv;
     dsv.push_back(ds);
+    int64_t visitId = static_cast<int64_t>(boost::any_cast<int>(props->findUnique("visitId")->getValue()));
     // write out data
     {
         Storage::List storageList;
         storageList.push_back(pers->getPersistStorage(storageType, loc));
         pers->persist(dsv, storageList, props);
-        Assert(dsv[0].getId() ==
-               (boost::any_cast<int64_t>(
-                       props->findUnique("exposureId")->getValue())
-               << 24) + 1LL, "DiaSource id not changed to expected value");
+        Assert(dsv[0].getId() == (visitId << 24) + 1LL,
+            "DiaSource id not changed to expected value");
     }
     // and read it back in (in a DiaSourceVector)
     {
@@ -258,8 +258,7 @@ static void testDb(std::string const & storageType) {
         int i = 1;
         for (DiaSourceVector::iterator it = dsv.begin();
              it != dsv.end(); ++it) {
-            Assert(it->getId() == (boost::any_cast<int64_t>(
-                    props->findUnique("exposureId")->getValue()) << 24) + i,
+            Assert(it->getId() == (visitId << 24) + i,
                 "DiaSource id in vector not changed to expected value");
             ++i;
         }

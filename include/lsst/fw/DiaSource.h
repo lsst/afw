@@ -54,7 +54,7 @@ namespace formatters {
     CREATE TABLE DIASource
     (
         diaSourceId      BIGINT        NOT NULL,
-        exposureId       BIGINT        NOT NULL,
+        ccdExposureId    BIGINT        NOT NULL,
         filterId         TINYINT       NOT NULL,
         objectId         BIGINT        NULL,
         movingObjectId   BIGINT        NULL,
@@ -101,7 +101,7 @@ namespace formatters {
         flag4wcs         SMALLINT      NULL,
         _dataSource      TINYINT       NOT NULL,
         PRIMARY KEY (diaSourceId),
-        KEY (exposureId),
+        KEY (ccdExposureId),
         KEY (filterId),
         KEY (movingObjectId),
         KEY (objectId),
@@ -152,7 +152,7 @@ public :
 
     // getters
     int64_t getId()               const { return _diaSourceId;      }
-    int64_t getExposureId()       const { return _exposureId;       }
+    int64_t getCcdExposureId()    const { return _ccdExposureId;    }
     int64_t getObjectId()         const { return _objectId;         }
     int64_t getMovingObjectId()   const { return _movingObjectId;   }
     double  getColc()             const { return _colc;             }
@@ -201,7 +201,7 @@ public :
 
     // setters
     void setId              (int64_t const diaSourceId     ) { _diaSourceId      = diaSourceId;      }
-    void setExposureId      (int64_t const exposureId      ) { _exposureId       = exposureId;       }
+    void setCcdExposureId   (int64_t const ccdExposureId   ) { _ccdExposureId    = ccdExposureId;    }
     void setObjectId        (int64_t const objectId        ) { _objectId         = objectId;         }
     void setMovingObjectId  (int64_t const movingObjectId  ) { _movingObjectId   = movingObjectId;   }
     void setColc            (double  const colc            ) { _colc             = colc;             }
@@ -261,7 +261,7 @@ public :
 private :
 
     int64_t _diaSourceId;      // BIGINT        NOT NULL
-    int64_t _exposureId;       // BIGINT        NOT NULL
+    int64_t _ccdExposureId;    // BIGINT        NOT NULL
     int64_t _objectId;         // BIGINT        NULL
     int64_t _movingObjectId;   // BIGINT        NULL
     double  _colc;             // DOUBLE        NOT NULL
@@ -312,7 +312,7 @@ private :
 
     template <typename Archive> void serialize(Archive & ar, unsigned int const version) {
         ar & _diaSourceId;
-        ar & _exposureId;
+        ar & _ccdExposureId;
         ar & _objectId;
         ar & _movingObjectId;
         ar & _colc;

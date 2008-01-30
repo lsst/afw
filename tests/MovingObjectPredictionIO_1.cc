@@ -127,10 +127,10 @@ static void testBoost(void) {
 
 // Make at least a token attempt at generating a unique visit id
 // (in-db table name collisions could cause spurious testcase failures)
-static int64_t createVisitId() {
+static int createVisitId() {
     struct timeval tv;
     ::gettimeofday(&tv, 0);
-    return static_cast<int64_t>(tv.tv_sec)*1000000 + static_cast<int64_t>(tv.tv_usec);
+    return static_cast<int>(tv.tv_sec);
 }
 
 
@@ -149,8 +149,8 @@ static DataProperty::PtrType createDbTestProps(
         dias->addProperty(DataProperty("numSlices",       boost::any(numSlices)));
         props->addProperty(dias);
     }
-    props->addProperty(DataProperty("visitId", createVisitId()));
-    props->addProperty(DataProperty("sliceId", boost::any(sliceId)));
+    props->addProperty(DataProperty("visitId",  boost::any(createVisitId())));
+    props->addProperty(DataProperty("sliceId",  boost::any(sliceId)));
     props->addProperty(DataProperty("itemName", boost::any(itemName)));
     return props;
 }
