@@ -75,29 +75,6 @@ template <typename ImagePixelT, typename MaskPixelT>
 ExposureFormatter<ImagePixelT, MaskPixelT>::~ExposureFormatter(void) {
 }
 
-/** Lookup a filter name in the database to find a filter id number.
- */
-static int lookupFilterId(
-    DbStorage* db,                  //!< Database to look in
-    std::string const& filterName   //!< Name of filter to lookup
-    ) {
-    db->setTableForQuery("Filter");
-    db->outColumn("filterId");
-    db->condParam<std::string>("name", filterName);
-    db->setQueryWhere("filtName = :name");
-    db->query();
-    if (!db->next() || db->columnIsNull(0)) {
-        throw lsst::mwi::exceptions::Runtime("Unable to get id for filter type: " + filterName);
-    }
-    int filterId = db->getColumnByPos<int>(0);
-    if (db->next()) {
-        throw lsst::mwi::exceptions::Runtime("Multiple ids for filter type: " + filterName);
-
-    }
-    db->finishQuery();
-    return filterId;
-}
-
 /** Lookup a filter number in the database to find a filter name.
  */
 static std::string lookupFilterName(
