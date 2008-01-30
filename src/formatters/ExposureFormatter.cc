@@ -216,9 +216,9 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::write(
         std::string itemName = boost::any_cast<std::string>(
             additionalData->findUnique("itemName")->getValue());
         std::string tableName = itemName;
-        if (policy.exists(itemName)) {
+        if (_policy.exists(itemName)) {
             lsst::mwi::policy::Policy::Ptr itemPolicy =
-                policy.getPolicy(itemName);
+                _policy.getPolicy(itemName);
             if (itemPolicy.exists("TableName")) {
                 tableName = itemPolicy.getString("TableName");
             }
@@ -311,9 +311,9 @@ Persistable* ExposureFormatter<ImagePixelT, MaskPixelT>::read(
         std::string itemName = boost::any_cast<std::string>(
             additionalData->findUnique("itemName")->getValue());
         std::string tableName = itemName;
-        if (policy.exists(itemName)) {
+        if (_policy.exists(itemName)) {
             lsst::mwi::policy::Policy::Ptr itemPolicy =
-                policy.getPolicy(itemName);
+                _policy.getPolicy(itemName);
             if (itemPolicy.exists("TableName")) {
                 tableName = itemPolicy.getString("TableName");
             }
@@ -339,8 +339,8 @@ Persistable* ExposureFormatter<ImagePixelT, MaskPixelT>::read(
 
         db->outColumn("url");
 
-        // Set the WCS information columns.
         if (tableName == "Science_CCD_Exposure") {
+            // Set the WCS information columns.
             db->outColumn("ctype1");
             db->outColumn("ctype2");
             db->outColumn("crpix1");
@@ -352,8 +352,7 @@ Persistable* ExposureFormatter<ImagePixelT, MaskPixelT>::read(
             db->outColumn("cd12");
             db->outColumn("cd22");
 
-        // Set calibration data columns.
-        if (tableName == "Science_CCD_Exposure") {
+            // Set calibration data columns.
             db->outColumn("photoFlam");
             db->outColumn("photoZP");
         }
