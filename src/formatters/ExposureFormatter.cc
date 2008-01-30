@@ -210,25 +210,17 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::write(
 
         // Set the identifier columns.
 
-        lsst::mwi::data::DataProperty::PtrType ccdDP =
-            additionalData->findUnique("ccdId");
-        int ccdId =
-            atoi(boost::any_cast<std::string>(ccdDP->getValue()).c_str());
-
-        lsst::mwi::data::DataProperty::PtrType expDP =
-            additionalData->findUnique("exposureId");
-        int exposureId = boost::any_cast<int>(expDP->getValue());
-
-        long long ccdExposureId =
-            (static_cast<long long>(ccdId) << 32) + exposureId;
+        int ccdId = extractCcdId(additionalData);
+        int64_t exposureId = extractExposureId(additionalData);
+        int64_t ccdExposureId = extractCcdExposureId(additionalData);
 
         if (tableName == "Raw_CCD_Exposure") {
             db->setColumn<long long>("rawCCDExposureId", ccdExposureId);
-            db->setColumn<int>("rawFPAExposureId", exposureId);
+            db->setColumn<long long>("rawFPAExposureId", exposureId);
         }
         else { // Science_CCD_Exposure
             db->setColumn<long long>("scienceCCDExposureId", ccdExposureId);
-            db->setColumn<int>("scienceFPAExposureId", exposureId);
+            db->setColumn<long long>("scienceFPAExposureId", exposureId);
             db->setColumn<long long>("rawCCDExposureId", ccdExposureId);
             /// \todo Check that rawCCDExposureId == scienceCCDExposureId --
             /// KTL -- 2008-01-25
