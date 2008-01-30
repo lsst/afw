@@ -208,29 +208,33 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::write(
         }
         db->setTableForInsert(tableName);
 
-
         // Set the identifier columns.
+
+        lsst::mwi::data::DataProperty::PtrType ccdDP =
+            additionalData->findUnique("ccdId");
+        int ccdId =
+            atoi(boost::any_cast<std::string>(ccdDP->getValue()).c_str());
+
+        lsst::mwi::data::DataProperty::PtrType expDP =
+            additionalData->findUnique("exposureId");
+        int exposureId = boost::any_cast<int>(expDP->getValue());
+
+        long long ccdExposureId =
+            (static_cast<long long>(ccdId) << 32) + exposureId;
+
         if (tableName == "Raw_CCD_Exposure") {
-            setColumn<long long>(db, "rawCCDExposureId",
-                                 additionalData, "ccdExposureId");
-            setColumn<int>(db, "rawFPAExposureId",
-                           additionalData, "exposureId");
+            db->setColumn<long long>("rawCCDExposureId", ccdExposureId);
+            db->setColumn<int>("rawFPAExposureId", exposureId);
         }
         else { // Science_CCD_Exposure
-            setColumn<long long>(db, "scienceCCDExposureId",
-                                 additionalData, "ccdExposureId");
-            setColumn<int>(db, "scienceFPAExposureId",
-                           additionalData, "exposureId");
-            setColumn<long long>(db, "rawCCDExposureId",
-                                 additionalData, "ccdExposureId");
+            db->setColumn<long long>("scienceCCDExposureId", ccdExposureId);
+            db->setColumn<int>("scienceFPAExposureId", exposureId);
+            db->setColumn<long long>("rawCCDExposureId", ccdExposureId);
             /// \todo Check that rawCCDExposureId == scienceCCDExposureId --
             /// KTL -- 2008-01-25
         }
 
-        lsst::mwi::data::DataProperty::PtrType ccdDP =
-            additionalData->findUnique("ccdId");
-        std::string ccdId = boost::any_cast<std::string>(ccdDP->getValue());
-        db->setColumn<int>("ccdDetectorId", atoi(ccdId.c_str()));
+        db->setColumn<int>("ccdDetectorId", ccdId);
 
         // Set the URL column with the location of the FITS file.
         setColumn<std::string>(db, "url",
