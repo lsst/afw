@@ -57,8 +57,11 @@ void dropAllVisitSliceTables(
     DataProperty::PtrType const & properties
 );
 
-int64_t extractExposureId(DataProperty::PtrType const& properties);
 int extractSliceId(DataProperty::PtrType const& properties);
+int64_t extractExposureId(DataProperty::PtrType const& properties);
+int extractVisitId(DataProperty::PtrType const& properties);
+int extractCcdId(DataProperty::PtrType const& properties);
+int64_t extractCcdExposureId(DataProperty::PtrType const& properties);
 
 }}} // end of namespace lsst::fw::formatters
 

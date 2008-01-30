@@ -43,12 +43,32 @@ static int64_t getInt64FromAny(boost::any const & val, std::string const & key) 
 }
 
 
-static int64_t extractVisitId(DataProperty::PtrType const & properties) {
+int extractSliceId(DataProperty::PtrType const & properties) {
+    DataProperty::PtrType const & dp1 = properties->findUnique("sliceId");
+    if (!dp1) {
+        throw ex::Runtime("\"sliceId\" property not found");
+    }
+    int sliceId = boost::any_cast<int>(dp1->getValue());
+    if (sliceId < 0) {
+        throw ex::Runtime("\"sliceId\" property value is negative");
+    }
+    // validate against universeSize if available
+    DataProperty::PtrType const & dp2 = properties->findUnique("universeSize");
+    if (dp2) {
+        int universeSize = boost::any_cast<int>(dp2->getValue());
+        if (sliceId >= universeSize) {
+            throw ex::Runtime("\"sliceId\" must be between 0 and \"universeSize \" - 1");
+        }
+    }
+    return sliceId;
+}
+                        
+int extractVisitId(DataProperty::PtrType const & properties) {
     DataProperty::PtrType const & dp = properties->findUnique("visitId");
     if (!dp) {
         throw ex::Runtime("\"visitId\" property not found");
     }
-    int64_t visitId = getInt64FromAny(dp->getValue(), "\"visitId\"");
+    int visitId = boost::any_cast<int>(dp->getValue());
     if (visitId < 0) {
         throw ex::Runtime("\"visitId\" property value is negative");
     }
@@ -67,27 +87,26 @@ int64_t extractExposureId(DataProperty::PtrType const & properties) {
     if ((exposureId & 0xfffffffe00000000LL) != 0LL) {
         throw ex::Runtime("\"exposureId\" property value is too big");
     }
-    return exposureId;
+    return exposureId << 1; // DC2 fix
 }
 
-int extractSliceId(DataProperty::PtrType const & properties) {
-    DataProperty::PtrType const & dp1 = properties->findUnique("sliceId");
-    if (!dp1) {
-        throw ex::Runtime("\"sliceId\" property not found");
+int extractCcdId(DataProperty::PtrType const & properties) {
+    std::string ccdIdString = getItemName("ccdId");
+    int ccdId = strtod(ccdIdString.c_str(), 0, 10);
+        // Ignore leading zeros, rather than treating as octal.
+    if (ccdId < 0) {
+        throw ex::Runtime("\"ccdId\" property value is negative");
     }
-    int sliceId = boost::any_cast<int>(dp1->getValue());
-    if (sliceId < 0) {
-        throw ex::Runtime("\"sliceId\" property value is negative");
+    if (ccdId > 255) {
+        throw ex::Runtime("\"ccdId\" property value is too big");
     }
-    // validate against universeSize if available
-    DataProperty::PtrType const & dp2 = properties->findUnique("universeSize");
-    if (dp2) {
-        int universeSize = boost::any_cast<int>(dp2->getValue());
-        if (sliceId >= universeSize) {
-            throw ex::Runtime("\"sliceId\" must be between 0 and \"universeSize\" - 1");
-        }
-    }
-    return sliceId;
+    return ccdId;
+}
+
+int64_t extractCcdExposureId(DataProperty::PtrType const & properties) {
+    int64_t exposureId = extractExposureId(properties);
+    int ccdId = extractCcdId(properties);
+    return (exposureId << 8) + ccdId;
 }
 
 
