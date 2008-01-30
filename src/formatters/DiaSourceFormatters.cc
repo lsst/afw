@@ -54,12 +54,12 @@ FormatterRegistration DiaSourceVectorFormatter::registration(
 
 
 /*!
-    \internal   Generates a unique identifier for a DiaSource given the id of the originating
-                visit, the id of the worker slice that detected it, and the sequence number
-                of the DiaSource within that slice.
+    \internal   Generates a unique identifier for a DiaSource given the id of the
+                originating visit, the id of the originating ccd, and the sequence
+                number of the DiaSource within that slice.
  */
-inline static int64_t generateDiaSourceId(unsigned short seqNum, int sliceId, int64_t visitId) {
-    return (visitId << 24) + (sliceId << 16) + seqNum;
+inline static int64_t generateDiaSourceId(unsigned short seqNum, int ccdId, int64_t visitId) {
+    return (visitId << 24) + (ccdId << 16) + seqNum;
 }
 
 
