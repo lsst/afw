@@ -227,25 +227,25 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::write(
             /// KTL -- 2008-01-25
         }
 
-        setColumn<int>(db, "visitId", additionalData, "visitId");
         setColumn<int>(db, "ccdDetectorId", additionalData, "ccdId");
         // Set the URL column with the location of the FITS file.
         setColumn<std::string>(db, "url",
                               additionalData, "StorageLocation.FitsStorage");
 
 
+        // Set the WCS information columns.
+        setColumn<std::string>(db, "ctype1", wcsDP, "CTYPE1");
+        setColumn<std::string>(db, "ctype2", wcsDP, "CTYPE2");
+        setColumn<float, double>(db, "crpix1", wcsDP, "CRPIX1");
+        setColumn<float, double>(db, "crpix2", wcsDP, "CRPIX2");
+        setColumn<double>(db, "crval1", wcsDP, "CRVAL1");
+        setColumn<double>(db, "crval2", wcsDP, "CRVAL2");
+        setColumn<double>(db, "cd11", wcsDP, "CD1_1");
+        setColumn<double>(db, "cd21", wcsDP, "CD2_1");
+        setColumn<double>(db, "cd12", wcsDP, "CD1_2");
+        setColumn<double>(db, "cd22", wcsDP, "CD2_2");
+
         if (tableName == "Science_CCD_Exposure") {
-            // Set the WCS information columns for science images.
-            setColumn<std::string>(db, "ctype1", wcsDP, "CTYPE1");
-            setColumn<std::string>(db, "ctype2", wcsDP, "CTYPE2");
-            setColumn<float, double>(db, "crpix1", wcsDP, "CRPIX1");
-            setColumn<float, double>(db, "crpix2", wcsDP, "CRPIX2");
-            setColumn<double>(db, "crval1", wcsDP, "CRVAL1");
-            setColumn<double>(db, "crval2", wcsDP, "CRVAL2");
-            setColumn<double>(db, "cd11", wcsDP, "CD1_1");
-            setColumn<double>(db, "cd21", wcsDP, "CD2_1");
-            setColumn<double>(db, "cd12", wcsDP, "CD1_2");
-            setColumn<double>(db, "cd22", wcsDP, "CD2_2");
             // Set calibration data columns.
             setColumn<float, double>(db, "photoFlam", dp, "PHOTFLAM");
             setColumn<float, double>(db, "photoZP", dp, "PHOTZP");
