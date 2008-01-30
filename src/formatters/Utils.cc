@@ -91,8 +91,12 @@ int64_t extractExposureId(DataProperty::PtrType const & properties) {
 }
 
 int extractCcdId(DataProperty::PtrType const & properties) {
-    std::string ccdIdString = getItemName("ccdId");
-    int ccdId = strtod(ccdIdString.c_str(), 0, 10);
+    DataProperty::PtrType const& dp = properties->findUnique("ccdId");
+    if (!dp) {
+        throw ex::Runtime("\"ccdId\" property not found");
+    }
+    std::string ccdIdString = boost::any_cast<std::string>(dp->getValue());
+    int ccdId = strtol(ccdIdString.c_str(), 0, 10);
         // Ignore leading zeros, rather than treating as octal.
     if (ccdId < 0) {
         throw ex::Runtime("\"ccdId\" property value is negative");
