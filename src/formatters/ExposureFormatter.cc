@@ -227,7 +227,11 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::write(
             /// KTL -- 2008-01-25
         }
 
-        setColumn<int>(db, "ccdDetectorId", additionalData, "ccdId");
+        lsst::mwi::data::DataProperty::PtrType ccdDP =
+            additionalData->findUnique("ccdId");
+        std::string ccdId = boost::any_cast<std::string>(ccdDP->getValue());
+        db->setColumn<int>("ccdDetectorId", atoi(ccdId.c_str()));
+
         // Set the URL column with the location of the FITS file.
         setColumn<std::string>(db, "url",
                               additionalData, "StorageLocation.FitsStorage");
