@@ -202,8 +202,6 @@ public :
     // setters
     void setId              (int64_t const diaSourceId     ) { _diaSourceId      = diaSourceId;      }
     void setCcdExposureId   (int64_t const ccdExposureId   ) { _ccdExposureId    = ccdExposureId;    }
-    void setObjectId        (int64_t const objectId        ) { _objectId         = objectId;         }
-    void setMovingObjectId  (int64_t const movingObjectId  ) { _movingObjectId   = movingObjectId;   }
     void setColc            (double  const colc            ) { _colc             = colc;             }
     void setRowc            (double  const rowc            ) { _rowc             = rowc;             }
     void setDcol            (double  const dcol            ) { _dcol             = dcol;             }
@@ -212,11 +210,9 @@ public :
     void setDec             (double  const decl            ) { _decl             = decl;             }
     void setRaErr4detection (double  const raErr4detection ) { _raErr4detection  = raErr4detection;  }
     void setDecErr4detection(double  const decErr4detection) { _decErr4detection = decErr4detection; }
-    void setRaErr4wcs       (double  const raErr4wcs       ) { _raErr4wcs        = raErr4wcs;        }
     void setCx              (double  const cx              ) { _cx               = cx;               }
     void setCy              (double  const cy              ) { _cy               = cy;               }
     void setCz              (double  const cz              ) { _cz               = cz;               }
-    void setDecErr4wcs      (double  const decErr4wcs      ) { _decErr4wcs       = decErr4wcs;       }
     void setTaiMidPoint     (double  const taiMidPoint     ) { _taiMidPoint      = taiMidPoint;      }
     void setTaiRange        (double  const taiRange        ) { _taiRange         = taiRange;         }
     void setFlux            (double  const flux            ) { _flux             = flux;             }
@@ -232,21 +228,51 @@ public :
     void setFwhmA           (float   const fwhmA           ) { _fwhmA            = fwhmA;            }
     void setFwhmB           (float   const fwhmB           ) { _fwhmB            = fwhmB;            }
     void setFwhmTheta       (float   const fwhmTheta       ) { _fwhmTheta        = fwhmTheta;        }
-    void setApDia           (float   const apDia           ) { _apDia            = apDia;            }
-    void setIxx             (float   const ixx             ) { _ixx              = ixx;              }
-    void setIxxErr          (float   const ixxErr          ) { _ixxErr           = ixxErr;           }
-    void setIyy             (float   const iyy             ) { _iyy              = iyy;              }
-    void setIyyErr          (float   const iyyErr          ) { _iyyErr           = iyyErr;           }
-    void setIxy             (float   const ixy             ) { _ixy              = ixy;              }
-    void setIxyErr          (float   const ixyErr          ) { _ixyErr           = ixyErr;           }
     void setSnr             (float   const snr             ) { _snr              = snr;              }
     void setChi2            (float   const chi2            ) { _chi2             = chi2;             }
     void setScId            (int32_t const scId            ) { _scId             = scId;             }
-    void setFlag4association(int16_t const flag4association) { _flag4association = flag4association; }
-    void setFlag4detection  (int16_t const flag4detection  ) { _flag4detection   = flag4detection;   }
-    void setFlag4wcs        (int16_t const flag4wcs        ) { _flag4wcs         = flag4wcs;         }
     void setFilterId        (int8_t  const filterId        ) { _filterId         = filterId;         }
     void setDataSource      (int8_t  const dataSource      ) { _dataSource       = dataSource;       }
+
+    void setObjectId(int64_t const objectId) {
+        _objectId = objectId;
+        setNotNull(OBJECT_ID);
+    }
+    void setMovingObjectId(int64_t const movingObjectId) {
+        _movingObjectId = movingObjectId;
+        setNotNull(MOVING_OBJECT_ID);
+    }
+    void setRaErr4wcs(double const raErr4wcs) {
+        _raErr4wcs = raErr4wcs;
+        setNotNull(RA_ERR_4_WCS);
+    }
+    void setDecErr4wcs(double const decErr4wcs) {
+        _decErr4wcs = decErr4wcs;
+        setNotNull(DEC_ERR_4_WCS);
+    }
+    void setApDia(float const apDia) {
+        _apDia = apDia;
+        setNotNull(AP_DIA);
+    }
+    void setIxx   (float const ixx   ) { _ixx    = ixx;    setNotNull(IXX);     }
+    void setIxxErr(float const ixxErr) { _ixxErr = ixxErr; setNotNull(IXX_ERR); }         
+    void setIyy   (float const iyy   ) { _iyy    = iyy;    setNotNull(IYY);     }     
+    void setIyyErr(float const iyyErr) { _iyyErr = iyyErr; setNotNull(IYY_ERR); }         
+    void setIxy   (float const ixy   ) { _ixy    = ixy;    setNotNull(IXY);     }      
+    void setIxyErr(float const ixyErr) { _ixyErr = ixyErr; setNotNull(IXY_ERR); }         
+    void setFlag4association(int16_t const flag4association) {
+        _flag4association = flag4association;
+        setNotNull(FLAG_4_ASSOCIATION);
+    }
+    void setFlag4detection(int16_t const flag4detection) {
+        _flag4detection = flag4detection;
+        setNotNull(FLAG_4_DETECTION);
+    }
+    void setFlag4wcs(int16_t const flag4wcs) {
+        _flag4wcs = flag4wcs;
+        setNotNull(FLAG_4_WCS);
+    }
+
 
     // Get/set whether or not fields are null
     bool isNull    (NullableField const f) const            { return _nulls.test(f); }
