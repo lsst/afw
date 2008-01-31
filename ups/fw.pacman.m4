@@ -1,5 +1,5 @@
 #
-#   fw 2.1
+#   fw 2.2
 #
 #
 m4_changequote([, ])m4_dnl
@@ -10,7 +10,7 @@ m4_dnl  it may only be necessary to update the values of the following macros.
 m4_dnl  Only m4_PACKAGE and m4_VERSION are required.  
 m4_dnl
 m4_define([m4_PACKAGE], [fw])m4_dnl
-m4_define([m4_VERSION], [2.1])m4_dnl
+m4_define([m4_VERSION], [2.2])m4_dnl
 m4_define([m4_TARBALL], [m4_PACKAGE-m4_VERSION.tar.gz])m4_dnl
 # 
 # set up the initial pacman definitions and environment variables.
