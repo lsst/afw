@@ -210,5 +210,6 @@ void lsst::fw::Kernel<PixelT>::computeKernelParametersFromSpatialModel(std::vect
 }
    
 // Explicit instantiations
+template class lsst::fw::Kernel<int>;
 template class lsst::fw::Kernel<float>;
 template class lsst::fw::Kernel<double>;
