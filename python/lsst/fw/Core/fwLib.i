@@ -67,7 +67,7 @@ import lsst.mwi.utils
 def version(HeadURL = r"$HeadURL$"):
     """Return a version given a HeadURL string.  If a different version's setup, return that too"""
 
-    version_svn = guessSvnVersion(HeadURL)
+    version_svn = lsst.mwi.utils.guessSvnVersion(HeadURL)
 
     try:
         import eups
@@ -318,6 +318,9 @@ def version(HeadURL = r"$HeadURL$"):
 
 %template(BBox2i)               BBox<int32, 2>;
 %template(BBox2f)               BBox<float, 2>;
+
+%boost_shared_ptr(BBox2iPtr, BBox<int32, 2>);
+%boost_shared_ptr(BBox2fPtr, BBox<float, 2>);
 
 %template(Vector2i)             Vector<int32, 2>;
 %template(Vector2f)             Vector<float, 2>;
