@@ -513,6 +513,40 @@ lsst::fw::Mask<MaskPixelT>& lsst::fw::Mask<MaskPixelT>::operator |= (const Mask<
 }
 
 /**
+ * \brief OR a bitmask into a Mask
+ *
+ * \return Modified Mask
+ */
+template<typename MaskPixelT>
+lsst::fw::Mask<MaskPixelT>& lsst::fw::Mask<MaskPixelT>::operator |= (MaskPixelT const inputMask)
+{
+    for (unsigned int y = 0; y < getRows(); y++) {
+        for (unsigned int x = 0; x < getCols(); x++) {
+            (*_vwImagePtr)(x,y) |= inputMask;
+        }
+    }
+
+    return *this;
+}
+
+/**
+ * \brief AND a bitmask into a Mask
+ *
+ * \return Modified Mask
+ */
+template<typename MaskPixelT>
+lsst::fw::Mask<MaskPixelT>& lsst::fw::Mask<MaskPixelT>::operator &= (MaskPixelT const inputMask)
+{
+    for (unsigned int y = 0; y < getRows(); y++) {
+        for (unsigned int x = 0; x < getCols(); x++) {
+            (*_vwImagePtr)(x,y) &= inputMask;
+        }
+    }
+
+    return *this;
+}
+
+/**
  * \brief Given a DataProperty, replace any existing MaskPlane assignments with the current ones.
  *
  * \throw Throws lsst::mwi::exceptions::InvalidParameter if given DataProperty is not a node

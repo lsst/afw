@@ -78,6 +78,9 @@ namespace fw {
         Mask<MaskPixelT>& operator=(const Mask<MaskPixelT>& rhs);
 
         Mask<MaskPixelT>& operator |= (const Mask<MaskPixelT>& inputMask);
+        Mask<MaskPixelT>& operator |= (MaskPixelT const inputMask);
+
+        Mask<MaskPixelT>& operator &= (MaskPixelT const opMask);
 
         MaskChannelT operator ()(int x, int y) const;
         
