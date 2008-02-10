@@ -6,8 +6,8 @@ import os, re, math, sys, time
 try: import xpa
 except: print "Cannot import xpa"
 
-try: import fwDisplay
-except: pass
+import fwDisplay
+import lsst.fw.Core.fwLib as fw
 
 class Ds9Error(IOError):
     """Some problem talking to ds9"""
@@ -18,6 +18,42 @@ class Ds9Error(IOError):
 WHITE = "white"; BLACK = "black"
 RED = "red"; GREEN = "green"; BLUE = "blue"
 CYAN = "cyan"; MAGENTA = "magenta"; YELLOW = "yellow"
+_maskColors = [WHITE, BLACK, RED, GREEN, BLUE, CYAN, MAGENTA, YELLOW]
+#
+# Mapping from mask plane names to colours
+#
+_maskPlaneColors = {
+    "BAD": RED,
+    "CR" : MAGENTA,
+    "EDGE": YELLOW,
+    "INTRP" : GREEN,
+    "SAT" : GREEN,
+    }
+
+def setMaskPlaneColor(name, color=None):
+    """Request that mask plane name be displayed as color; name may be a dictionary
+    (in which case color should be omitted"""
+
+    if isinstance(name, dict):
+        assert color == None
+        for k in name.keys():
+            setMaskPlaneColor(k, name[k])
+        return
+
+    for c in _maskColors:
+        if color == c:
+            _maskPlaneColors[name] = color
+            return
+
+    raise RuntimeError, "%s is not a supported colour" % color
+
+def getMaskPlaneColor(name):
+    """Return the colour associated with the specified mask plane name"""
+
+    if _maskPlaneColors.has_key(name):
+        return _maskPlaneColors[name]
+    else:
+        return None
 
 def ds9Cmd(cmd):
    """Issue a ds9 command, raising errors as appropriate"""
@@ -30,6 +66,7 @@ def ds9Cmd(cmd):
 def initDS9(execDs9 = True):
    try:
       ds9Cmd("iconify no; raise")
+      ds9Cmd("wcs wcsa")                # include the pixel coordinates WCS (WCSA)
    except IOError:
       if execDs9:
          print "ds9 doesn't appear to be running, I'll exec it for you"
@@ -54,10 +91,14 @@ def initDS9(execDs9 = True):
 
 def setMaskColor(color = GREEN):
     """Set the ds9 mask colour to; eg. ds9.setMaskColor(ds9.RED)"""
-    xpa.set(None, "ds9", "mask color %s" % color, "", "", 0)
+    ds9Cmd("mask color %s" % color)
 
-def mtv(data, frame=0, init=1, WCS=None, isMask=False):
-   """Display an Image or Mask on a DS9 display"""
+def mtv(data, frame=0, init=True, WCS=None, isMask=False):
+   """Display an Image or Mask on a DS9 display
+
+Historical note: the name "mtv" comes from Jim Gunn's forth imageprocessing
+system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
+   """
 	
    if frame == None:
       return
@@ -74,11 +115,38 @@ def mtv(data, frame=0, init=1, WCS=None, isMask=False):
          
    ds9Cmd("frame %d" % frame)
 
-   if re.search("MaskedImage", data.repr()): # it's a MaskedImage
-       mtv(data.getImage(), frame, init, WCS, False)
-       setMaskColor(RED)
-       mtv(data.getMask(), frame, init, WCS, True)
+   if re.search("::MaskedImage<", data.repr()): # it's a MaskedImage; display the Image and overlay the Mask
+       _mtv(data.getImage(), WCS, False)
+       mtv(data.getMask(), frame, False, WCS, False)
+   elif re.search("::Mask<", data.repr()): # it's a Mask; display it, bitplane by bitplane
+       nMaskPlanes = data.getNumPlanesUsed()
+       maskPlanes = data.getMaskPlaneDict()
+       cols, rows = data.getCols(), data.getRows()
+
+       colorIndex = 0                   # index into maskColors
+       for p in range(nMaskPlanes):
+           if maskPlanes[p]:
+               mask = data.getSubMask(fw.BBox2i(0, 0, cols, rows)) # the only way to get a copy
+               mask &= (1 << p)
+
+               color = getMaskPlaneColor(maskPlanes[p])
+
+               if not color:            # none was specified
+                   while True:
+                       color = _maskColors[colorIndex%len(_maskColors)]; colorIndex += 1
+                       if color != WHITE and color != BLACK:
+                           break
+
+               setMaskColor(color)
+               _mtv(mask, WCS, True)
        return
+   elif re.search("::Image<", data.repr()): # it's an Image; display it
+       _mtv(data, WCS, False)
+   else:
+       raise RuntimeError, "Unsupported type %s" % data.repr()
+
+def _mtv(data, WCS=None, isMask=False):
+   """Internal routine to display an Image or Mask on a DS9 display"""
 
    if True:
        if isMask:
@@ -129,21 +197,21 @@ Any other value is interpreted as a string to be drawn
    if frame == None:
       return
 
-   cmd = "frame %d; regions physical; " % frame
+   cmd = "frame %d; " % frame
    r += 1; c += 1;                      # ds9 uses 1-based coordinates
    if (symb == '+'):
-      cmd += 'regions line %g %g %g %g # color=%s; ' % (c, r+size, c, r-size, ctype)
-      cmd += 'regions line %g %g %g %g ' % (c-size, r, c+size, r)
+      cmd += 'regions command {line %g %g %g %g}; ' % (c, r+size, c, r-size)
+      cmd += 'regions command {line %g %g %g %g}; ' % (c-size, r, c+size, r)
    elif (symb == 'x'):
       size = size/math.sqrt(2)
-      cmd += 'regions line %g %g %g %g # color=%s; ; ' % (c+size, r+size, c-size, r-size, ctype)
-      cmd += 'regions line %g %g %g %g ' % (c-size, r+size, c+size, r-size)
+      cmd += 'regions command {line %g %g %g %g}; ' % (c+size, r+size, c-size, r-size)
+      cmd += 'regions command {line %g %g %g %g}; ' % (c-size, r+size, c+size, r-size)
    elif (symb == 'o'):
-      cmd += 'regions circle %g %g %g ' % (c, r, size)
+      cmd += 'regions command {circle %g %g %g}; ' % (c, r, size)
    else:
-      cmd += 'regions text %g %g \"%s\"' % (c, r, symb)
+      cmd += 'regions command {text %g %g \"%s\"}; ' % (c, r, symb)
 
-   cmd += ' # color=%s' % ctype
+   #cmd += ' # color=%s' % ctype
 
    ds9Cmd(cmd)
 
@@ -159,15 +227,18 @@ otherwise connect the dots.  Ctype is the name of a colour (e.g. 'red')"""
       for (r, c) in points:
          dot(symbs, r, c, frame = frame, size = 0.5, ctype = ctype)
    else:
-      cmd = "frame %d; regions image; regions line " % (frame)
+      if len(points) > 0:
+          cmd = "frame %d; " % (frame)
 
-      for (r, c) in points:
-         r += 1; c += 1;                   # ds9 uses 1-based coordinates
-         cmd += '%g %g ' % (c, r)
-         
-      cmd += ' # color=%s' % ctype
-         
-      ds9Cmd(cmd)
+          r0, c0 = points[0];
+          r0 += 1; c0 += 1;             # ds9 uses 1-based coordinates
+          for (r, c) in points[1:]:
+             r += 1; c += 1;            # ds9 uses 1-based coordinates
+             cmd += 'regions command { line %g %g %g %g };' % (c0, r0, c, r)
+             c0, r0 = c, r
+          #cmd += ' # color=%s' % ctype
+
+          ds9Cmd(cmd)
 #
 # Zoom and Pan
 #
