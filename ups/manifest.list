@@ -1,5 +1,4 @@
->merge: build
->merge: core
+>merge: mwi
 >merge: vw 1.0.1+2
 >merge: numarray
 >merge: numpy
@@ -9,7 +8,6 @@
 >merge: wcslib
 >merge: xpa
 >merge: minuit
->merge: mysqlclient
 >merge: swig
 >merge: doxygen
 >self
