@@ -37,8 +37,20 @@ int main(int argc, char **argv) {
     lsst::fw::MaskedImage<pixelType, lsst::fw::maskPixelType> mImage;
     mImage.readFits(argv[1]);
     
-    cout << "Image is " << mImage.getCols()
-        << " by " << mImage.getRows() << endl;
+    unsigned imCols = mImage.getCols();
+    unsigned imRows = mImage.getRows();
+    
+    cout << "Timing convolution for a " << imCols << "x" << imRows << " image." << endl;
+    cout << endl;
+    cout << "Columns:" << endl;
+    cout << "* MOps: the number of operations of a kernel pixel on a masked pixel / 10e6." << endl;
+    cout << "  One operation includes the all of the following:" << endl;
+    cout << "  * two multiplies and two additions (one image, one for variance)," << endl;
+    cout << "  * one OR (for the mask)" << endl;
+    cout << "  * four pixel pointer increments (for image, variance, mask and kernel)" << endl;
+    cout << "* CnvSec: time to perform one convolution (sec)" << endl;
+    cout << endl;
+    cout << "ImCols\tImRows\tKerCols\tKerRows\tMOps\tCnvSec\tMOpsPerSec" << endl;
     
     for (unsigned kSize = MinKernelSize; kSize <= MaxKernelSize; kSize += DeltaKernelSize) {
         // construct kernel
@@ -53,6 +65,9 @@ int main(int argc, char **argv) {
                 resMImage = lsst::fw::kernel::convolve(mImage, kernel, EdgeMaskBit, true);
         }
         double secPerIter = (clock() - startTime) / static_cast<double> (nIter * CLOCKS_PER_SEC);
-        cout << secPerIter << " sec/convolution for a " << kSize << " by " << kSize << " kernel" << endl;
+        
+        double mOps = static_cast<double>((imRows + 1 - kSize) * (imCols + 1 - kSize) * kSize * kSize) / 1.0e6;
+        double mOpsPerSec = mOps / secPerIter;
+        cout << imCols << "\t" << imRows << "\t" << kSize << "\t" << kSize << "\t" << mOps << "\t" << secPerIter << "\t" << mOpsPerSec << endl;
     }
 }
