@@ -1,20 +1,21 @@
 // -*- LSST-C++ -*-
 /**
- * \file
+ * @file
  *
- * \brief Definition of templated functions declared in KernelFunctions.h
+ * @brief Definition of templated functions declared in KernelFunctions.h
  *
  * This file is meant to be included by lsst/fw/KernelFunctions.h
  *
- * TO DO:
+ * @todo
+ * * Speed up convolution
  * * Explicitly instantiate all desired templated versions of the functions (once I know how).
  * * Add some kind of threshold support for convolution once we know how to do it properly.
  *   It existed in convolve and apply but was taken out due to ticket 231.
  *   It never existed in convolveLinear because we didn't know how to do it.
  *
- * \author Russell Owen
+ * @author Russell Owen
  *
- * \ingroup fw
+ * @ingroup fw
  */
 #include <algorithm>
 #include <cmath>
@@ -53,14 +54,14 @@ namespace kernel {
 }}}   // lsst::fw::kernel
 
 /**
- * \brief Apply convolution kernel to a masked image at one point
+ * @brief Apply convolution kernel to a masked image at one point
  *
  * Note: this is a high performance routine; the user is expected to:
  * - handle edge extension
  * - figure out the kernel center and adjust the supplied pixel accessors accordingly
  * For an example of how to do this see the convolve function.
  *
- * \ingroup fw
+ * @ingroup fw
  */
 template <typename ImageT, typename MaskT, typename KernelT>
 inline void lsst::fw::kernel::apply(
@@ -73,36 +74,54 @@ inline void lsst::fw::kernel::apply(
     unsigned int rows   ///< number of rows in kernel
 ) {
     typedef typename lsst::fw::Image<KernelT>::pixel_accessor kernelAccessorType;
-    *(outAccessor.image) = 0;
-    *(outAccessor.variance) = 0;
-    *(outAccessor.mask) = 0;
-
+    ImageT outImage = 0;
+    ImageT outVariance = 0;
+    MaskT outMask = 0;
     lsst::fw::MaskedPixelAccessor<ImageT, MaskT> mImageRowAcc = maskedImageAccessor;
     kernelAccessorType kRow = kernelAccessor;
     for (unsigned int row = 0; row < rows; ++row, mImageRowAcc.nextRow(), kRow.next_row()) {
+// this variant code is for speed testing only
+// I find it boost speed by roughly 25% when building with opt=3
+// on babaroga, a 32-bit linux box with gcc 3.4.6
+// but it is NOT SAFE because fw does not enforce row order for images and kernels
+//        ImageT *imagePtr = &(*(mImageRowAcc.image));
+//        ImageT *varPtr = &(*(mImageRowAcc.variance));
+//        MaskT *maskPtr = &(*(mImageRowAcc.mask));
+//        KernelT *kerPtr = &(*kRow);
+//        kernelAccessorType kCol = kRow;
+//        for (unsigned int col = 0; col < cols; ++col, imagePtr++, varPtr++, maskPtr++, kerPtr++) {
+//            KernelT ker = *kerPtr;
+//            outImage += static_cast<ImageT>(ker * (*imagePtr));
+//            outVariance += static_cast<ImageT>(ker * ker * (*varPtr));
+//            outMask |= *maskPtr;
+//        }
         MaskedPixelAccessor<ImageT, MaskT> mImageColAcc = mImageRowAcc;
         kernelAccessorType kCol = kRow;
         for (unsigned int col = 0; col < cols; ++col, mImageColAcc.nextCol(), kCol.next_col()) {
-            *(outAccessor.image) += static_cast<ImageT>((*kCol) * (*(mImageColAcc.image)));
-            *(outAccessor.variance) += static_cast<ImageT>((*kCol) * (*kCol) * (*(mImageColAcc.variance)));
-            *(outAccessor.mask) |= *(mImageColAcc.mask);
+            KernelT ker = *kCol;
+            outImage += static_cast<ImageT>(ker * (*(mImageColAcc.image)));
+            outVariance += static_cast<ImageT>(ker * ker * (*(mImageColAcc.variance)));
+            outMask |= *(mImageColAcc.mask);
         }
     }
+    *(outAccessor.image) = outImage;
+    *(outAccessor.variance) = outVariance;
+    *(outAccessor.mask) = outMask;
 }
 
 
 /**
- * \brief Low-level convolution function that does not set edge pixels.
+ * @brief Low-level convolution function that does not set edge pixels.
  *
  * convolvedImage must be the same size as maskedImage.
  * convolvedImage has a border in which the output pixels are not set. This border has size:
  * * kernel.getCtrCol/Row() along the left/bottom edge
  * * kernel.getCols/Rows() - 1 - kernel.getCtrCol/Row() along the right/top edge
  *
- * \throw lsst::mwi::exceptions::InvalidParameter if convolvedImage is not the same size as maskedImage.
- * \throw lsst::mwi::exceptions::InvalidParameter if maskedImage is smaller (in colums or rows) than kernel.
+ * @throw lsst::mwi::exceptions::InvalidParameter if convolvedImage is not the same size as maskedImage.
+ * @throw lsst::mwi::exceptions::InvalidParameter if maskedImage is smaller (in colums or rows) than kernel.
  *
- * \ingroup fw
+ * @ingroup fw
  */
 template <typename ImageT, typename MaskT, typename KernelT>
 void lsst::fw::kernel::basicConvolve(
@@ -183,7 +202,7 @@ void lsst::fw::kernel::basicConvolve(
 
 
 /**
- * \brief Convolve a MaskedImage with a Kernel, setting pixels of an existing image
+ * @brief Convolve a MaskedImage with a Kernel, setting pixels of an existing image
  *
  * convolvedImage must be the same size as maskedImage.
  * convolvedImage has a border in which the output pixels are just a copy of the input pixels
@@ -191,10 +210,10 @@ void lsst::fw::kernel::basicConvolve(
  * * kernel.getCtrCol/Row() along the left/bottom edge
  * * kernel.getCols/Rows() - 1 - kernel.getCtrCol/Row() along the right/top edge
  *
- * \throw lsst::mwi::exceptions::InvalidParameter if convolvedImage is not the same size as maskedImage.
- * \throw lsst::mwi::exceptions::InvalidParameter if maskedImage is smaller (in colums or rows) than kernel.
+ * @throw lsst::mwi::exceptions::InvalidParameter if convolvedImage is not the same size as maskedImage.
+ * @throw lsst::mwi::exceptions::InvalidParameter if maskedImage is smaller (in colums or rows) than kernel.
  *
- * \ingroup fw
+ * @ingroup fw
  */
 template <typename ImageT, typename MaskT, typename KernelT>
 void lsst::fw::kernel::convolve(
@@ -211,9 +230,9 @@ void lsst::fw::kernel::convolve(
 
 
 /**
- * \brief Convolve a MaskedImage with a Kernel, returning a new image.
+ * @brief Convolve a MaskedImage with a Kernel, returning a new image.
  *
- * \return the convolved MaskedImage.
+ * @return the convolved MaskedImage.
  *
  * The returned MaskedImage is the same size as maskedImage.
  * It has a border in which the output pixels are just a copy of the input pixels
@@ -221,9 +240,9 @@ void lsst::fw::kernel::convolve(
  * * kernel.getCtrCol/Row() along the left/bottom edge
  * * kernel.getCols/Rows() - 1 - kernel.getCtrCol/Row() along the right/top edge
  *
- * \throw lsst::mwi::exceptions::InvalidParameter if maskedImage is smaller (in colums or rows) than kernel.
+ * @throw lsst::mwi::exceptions::InvalidParameter if maskedImage is smaller (in colums or rows) than kernel.
  *
- * \ingroup fw
+ * @ingroup fw
  */
 template <typename ImageT, typename MaskT, typename KernelT>
 lsst::fw::MaskedImage<ImageT, MaskT> lsst::fw::kernel::convolve(
@@ -240,7 +259,7 @@ lsst::fw::MaskedImage<ImageT, MaskT> lsst::fw::kernel::convolve(
 }
 
 /**
- * \brief Convolve a MaskedImage with a LinearCombinationKernel, setting pixels of an existing image.
+ * @brief Convolve a MaskedImage with a LinearCombinationKernel, setting pixels of an existing image.
  *
  * A variant of the convolve function that is faster for spatially varying LinearCombinationKernels.
  * For the sake of speed the kernel is NOT normalized. If you want normalization then call the standard
@@ -251,10 +270,10 @@ lsst::fw::MaskedImage<ImageT, MaskT> lsst::fw::kernel::convolve(
  * Then for each output pixel it solves the spatial model and computes the the pixel as
  * the appropriate linear combination of basis images.
  *
- * \throw lsst::mwi::exceptions::InvalidParameter if convolvedImage is not the same size as maskedImage.
- * \throw lsst::mwi::exceptions::InvalidParameter if maskedImage is smaller (in colums or rows) than kernel.
+ * @throw lsst::mwi::exceptions::InvalidParameter if convolvedImage is not the same size as maskedImage.
+ * @throw lsst::mwi::exceptions::InvalidParameter if maskedImage is smaller (in colums or rows) than kernel.
  *
- * \ingroup fw
+ * @ingroup fw
  */
 template <typename ImageT, typename MaskT, typename KernelT>
 void lsst::fw::kernel::convolveLinear(
@@ -351,15 +370,15 @@ void lsst::fw::kernel::convolveLinear(
 }
 
 /**
- * \brief Convolve a MaskedImage with a LinearCombinationKernel, returning a new image.
+ * @brief Convolve a MaskedImage with a LinearCombinationKernel, returning a new image.
  *
- * \return the convolved MaskedImage.
+ * @return the convolved MaskedImage.
  *
  * See documentation for the version of convolveLinear that sets pixels in an existing image.
  *
- * \throw lsst::mwi::exceptions::InvalidParameter if maskedImage is smaller (in colums or rows) than kernel.
+ * @throw lsst::mwi::exceptions::InvalidParameter if maskedImage is smaller (in colums or rows) than kernel.
  *
- * \ingroup fw
+ * @ingroup fw
  */
 template <typename ImageT, typename MaskT, typename KernelT>
 lsst::fw::MaskedImage<ImageT, MaskT> lsst::fw::kernel::convolveLinear(
@@ -375,11 +394,11 @@ lsst::fw::MaskedImage<ImageT, MaskT> lsst::fw::kernel::convolveLinear(
 }
 
 /**
- * \brief Print the pixel values of a kernel to std::cout
+ * @brief Print the pixel values of a kernel to std::cout
  *
  * Rows increase upward and columns to the right; thus the lower left pixel is (0,0).
  *
- * \ingroup fw
+ * @ingroup fw
  */
 template <typename PixelT>
 void lsst::fw::kernel::printKernel(
@@ -409,7 +428,7 @@ void lsst::fw::kernel::printKernel(
 
 
 /**
- * \brief Private function to copy the border of a convolved image.
+ * @brief Private function to copy the border of a convolved image.
  *
  * Copy the border of an image and set mask bit edgeBit for the border pixels. This border has size:
  * * kernel.getCtrCol/Row() along the left/bottom edge
@@ -417,7 +436,7 @@ void lsst::fw::kernel::printKernel(
  *
  * The sizes are not error-checked.
  *
- * \ingroup fw
+ * @ingroup fw
  */
 template <typename ImageT, typename MaskT, typename KernelT>
 void lsst::fw::kernel::_copyBorder(
@@ -452,13 +471,13 @@ void lsst::fw::kernel::_copyBorder(
 
 
 /**
- * \brief Private function to copy a rectangular region from one MaskedImage to another.
+ * @brief Private function to copy a rectangular region from one MaskedImage to another.
  *
  * I hope eventually to replace this by calls to MaskedImage.getSubImage
  * and MaskedImage.replaceSubImage, but that is currently too messy
  * because getSubImage requires a shared pointer to the source image.
  *
- * \throw invalid_argument if the region extends off of either image.
+ * @throw invalid_argument if the region extends off of either image.
  */
 template <typename ImageT, typename MaskT>
 inline void lsst::fw::kernel::_copyRegion(
