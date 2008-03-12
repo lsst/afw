@@ -11,7 +11,8 @@
 using namespace std;
 
 int main(int argc, char **argv) {
-    typedef double pixelType;
+    typedef float imageType;
+    typedef double kernelType;
     double sigma = 3;
     const int EdgeMaskBit = -1;
     const unsigned DefNIter = 10;
@@ -34,7 +35,7 @@ int main(int argc, char **argv) {
     }
     
     // read in fits file
-    lsst::fw::MaskedImage<pixelType, lsst::fw::maskPixelType> mImage;
+    lsst::fw::MaskedImage<imageType, lsst::fw::maskPixelType> mImage;
     mImage.readFits(argv[1]);
     
     unsigned imCols = mImage.getCols();
@@ -54,14 +55,14 @@ int main(int argc, char **argv) {
     
     for (unsigned kSize = MinKernelSize; kSize <= MaxKernelSize; kSize += DeltaKernelSize) {
         // construct kernel
-        lsst::fw::Kernel<pixelType>::KernelFunctionPtrType kfuncPtr(
-            new lsst::fw::function::GaussianFunction2<pixelType>(sigma, sigma));
-        lsst::fw::AnalyticKernel<pixelType> kernel(kfuncPtr, kSize, kSize);
+        lsst::fw::Kernel<kernelType>::KernelFunctionPtrType kfuncPtr(
+            new lsst::fw::function::GaussianFunction2<kernelType>(sigma, sigma));
+        lsst::fw::AnalyticKernel<kernelType> kernel(kfuncPtr, kSize, kSize);
         
         clock_t startTime = clock();
         for (unsigned iter = 0; iter < nIter; ++iter) {
             // convolve
-            lsst::fw::MaskedImage<pixelType, lsst::fw::maskPixelType>
+            lsst::fw::MaskedImage<imageType, lsst::fw::maskPixelType>
                 resMImage = lsst::fw::kernel::convolve(mImage, kernel, EdgeMaskBit, true);
         }
         double secPerIter = (clock() - startTime) / static_cast<double> (nIter * CLOCKS_PER_SEC);

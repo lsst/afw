@@ -74,8 +74,8 @@ inline void lsst::fw::kernel::apply(
     unsigned int rows   ///< number of rows in kernel
 ) {
     typedef typename lsst::fw::Image<KernelT>::pixel_accessor kernelAccessorType;
-    ImageT outImage = 0;
-    ImageT outVariance = 0;
+    double outImage = 0;
+    double outVariance = 0;
     MaskT outMask = 0;
     lsst::fw::MaskedPixelAccessor<ImageT, MaskT> mImageRowAcc = maskedImageAccessor;
     kernelAccessorType kRow = kernelAccessor;
@@ -99,13 +99,13 @@ inline void lsst::fw::kernel::apply(
         kernelAccessorType kCol = kRow;
         for (unsigned int col = 0; col < cols; ++col, mImageColAcc.nextCol(), kCol.next_col()) {
             KernelT ker = *kCol;
-            outImage += static_cast<ImageT>(ker * (*(mImageColAcc.image)));
-            outVariance += static_cast<ImageT>(ker * ker * (*(mImageColAcc.variance)));
+            outImage += static_cast<double>(ker * (*(mImageColAcc.image)));
+            outVariance += static_cast<double>(ker * ker * (*(mImageColAcc.variance)));
             outMask |= *(mImageColAcc.mask);
         }
     }
-    *(outAccessor.image) = outImage;
-    *(outAccessor.variance) = outVariance;
+    *(outAccessor.image) = static_cast<ImageT>(outImage);
+    *(outAccessor.variance) = static_cast<ImageT>(outVariance);
     *(outAccessor.mask) = outMask;
 }
 
