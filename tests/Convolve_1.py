@@ -281,7 +281,49 @@ class ConvolveTestCase(unittest.TestCase):
                 self.fail("Convolved mask does not match reference for doNormalize=%s" % doNormalize)
             self.assert_(sameMaskPlaneDicts(cnvMaskedImage, maskedImage),
                 "Convolved mask dictionary does not match input for doNormalize=%s" % doNormalize)
+    
+    def testDeltaConvolveUnoptimized(self):
+        """Test convolution with various delta function kernels,
+        avoiding any optimized fw convolution code.
+        """
+        edgeBit = 7
+        imCols = 20
+        imRows = 12
+        doNormalize = True
 
+        fullMaskedImage = fw.MaskedImageF()
+        fullMaskedImage.readFits(InputMaskedImagePath)
+        
+        # pick a small piece of the image to save time
+        bbox = fw.BBox2i(50, 50, imCols, imRows)
+        subMaskedImagePtr = fullMaskedImage.getSubImage(bbox)
+        maskedImage = subMaskedImagePtr.get()
+        maskedImage.this.disown()
+
+        for kCols in range(1, 11):
+            kRows = kCols
+            kNumPix = kRows * kCols
+            for deltaInd in range(kNumPix):
+                kerArr = numpy.zeros([kNumPix])
+                kerArr[deltaInd] = 1.0
+                kerArr.shape = [kCols, kRows]
+                kerIm = imTestUtils.imageFromArray(kerArr)
+                kernel = fw.FixedKernelD(kerIm)
+                
+                refCnvMaskedImage = fw.convolve(maskedImage, kernel, edgeBit, doNormalize)
+                refCnvImage, refCnvVariance, refCnvMask = \
+                    imTestUtils.arraysFromMaskedImage(refCnvMaskedImage)
+        
+                imVarMask = imTestUtils.arraysFromMaskedImage(maskedImage)
+                ref2CnvImage, ref2CnvVariance, ref2CnvMask = \
+                   refConvolve(imVarMask, kernel, edgeBit, doNormalize)
+        
+                if not numpy.allclose(refCnvImage, ref2CnvImage):
+                    self.fail("Image from fw.convolve does not match image from refConvolve")
+                if not numpy.allclose(refCnvVariance, ref2CnvVariance):
+                    self.fail("Variance from fw.convolve does not match image from refConvolve")
+                if not numpy.allclose(refCnvMask, ref2CnvMask):
+                    self.fail("Mask from fw.convolve does not match image from refCconvolve")
 
     def testConvolveLinear(self):
         """Test convolution with a spatially varying LinearCombinationKernel
@@ -303,7 +345,6 @@ class ConvolveTestCase(unittest.TestCase):
         subMaskedImagePtr = fullMaskedImage.getSubImage(bbox)
         maskedImage = subMaskedImagePtr.get()
         maskedImage.this.disown()
-        maskedImage.writeFits("Src")
 
         # create spatially varying linear combination kernel
         sFuncPtr =  fw.Function2DPtr(fw.PolynomialFunction2D(1))
@@ -367,7 +408,6 @@ class ConvolveTestCase(unittest.TestCase):
         subMaskedImagePtr = fullMaskedImage.getSubImage(bbox)
         maskedImage = subMaskedImagePtr.get()
         maskedImage.this.disown()
-        maskedImage.writeFits("Src")
 
         # create spatially varying linear combination kernel
         sFuncPtr =  fw.Function2DPtr(fw.PolynomialFunction2D(1))
