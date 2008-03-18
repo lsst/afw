@@ -6,6 +6,8 @@ env.Program(["generate.cc"], LIBS=env.getlibs("vw boost"))
 env.Program(["vwconvert.cc"], LIBS=env.getlibs("vw boost"))
 env.Program(["fitsio.cc"], LIBS=env.getlibs("fw"))
 env.Program("maskedImageFitsIO", ["maskedImageFitsIO.cc"], LIBS=env.getlibs("fw"))
+env.Program("timeImageAddition", ["timeImageAddition.cc"], LIBS=env.getlibs("fw"))
+env.Program("timePixelAccessor", ["timePixelAccessor.cc"], LIBS=env.getlibs("fw"))
 
 env.Program("chebyshev1Function", ["chebyshev1Function.cc"], LIBS=env.getlibs("fw"))
 env.Program("gaussianFunction", ["gaussianFunction.cc"], LIBS=env.getlibs("fw"))
