@@ -35,8 +35,6 @@ int main(int argc, char **argv) {
         return 1;
     }
     
-    std::cout << "Timing addition of one " << imCols << "x" << imRows << " image to another" << std::endl;
-    std::cout << std::endl;
     std::cout << "Cols\tRows\tMPix\tSecPerIter\tSecPerIterPerMPix" << std::endl;
     
     clock_t startTime = clock();

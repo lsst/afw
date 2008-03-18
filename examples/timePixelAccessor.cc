@@ -28,8 +28,6 @@ int main(int argc, char **argv) {
     unsigned imCols = image.getCols();
     unsigned imRows = image.getRows();
     
-    std::cout << "Timing pixel_accessor on a " << imCols << "x" << imRows << " image" << std::endl;
-    std::cout << std::endl;
     std::cout << "Cols\tRows\tMPix\tSecPerIter\tSecPerIterPerMPix" << std::endl;
     
     clock_t startTime = clock();
