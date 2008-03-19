@@ -99,9 +99,11 @@ inline void lsst::fw::kernel::apply(
         kernelAccessorType kCol = kRow;
         for (unsigned int col = 0; col < cols; ++col, mImageColAcc.nextCol(), kCol.next_col()) {
             KernelT ker = *kCol;
-            outImage += static_cast<double>(ker * (*(mImageColAcc.image)));
-            outVariance += static_cast<double>(ker * ker * (*(mImageColAcc.variance)));
-            outMask |= *(mImageColAcc.mask);
+//            if (ker != 0) {
+                outImage += static_cast<double>(ker * (*(mImageColAcc.image)));
+                outVariance += static_cast<double>(ker * ker * (*(mImageColAcc.variance)));
+                outMask |= *(mImageColAcc.mask);
+//            }
         }
     }
     *(outAccessor.image) = static_cast<ImageT>(outImage);
