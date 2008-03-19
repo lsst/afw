@@ -18,37 +18,34 @@
 /**
  * \brief Construct an empty spatially invariant AnalyticKernel of size 0x0
  */
-template<typename PixelT>
-lsst::fw::AnalyticKernel<PixelT>::AnalyticKernel()
+lsst::fw::AnalyticKernel::AnalyticKernel()
 :
-    Kernel<PixelT>(),
+    Kernel(),
     _kernelFunctionPtr()
 {}
 
 /**
  * \brief Construct a spatially invariant AnalyticKernel
  */
-template<typename PixelT>
-lsst::fw::AnalyticKernel<PixelT>::AnalyticKernel(
-    typename Kernel<PixelT>::KernelFunctionPtrType kernelFunction,
+lsst::fw::AnalyticKernel::AnalyticKernel(
+    Kernel::KernelFunctionPtrType kernelFunction,
     unsigned int cols,
     unsigned int rows)
 :
-    Kernel<PixelT>(cols, rows, kernelFunction->getNParameters()),
+    Kernel(cols, rows, kernelFunction->getNParameters()),
     _kernelFunctionPtr(kernelFunction)
 {}
 
 /**
  * \brief Construct a spatially varying AnalyticKernel with spatial coefficients initialized to 0
  */
-template<typename PixelT>
-lsst::fw::AnalyticKernel<PixelT>::AnalyticKernel(
-    typename Kernel<PixelT>::KernelFunctionPtrType kernelFunction,
+lsst::fw::AnalyticKernel::AnalyticKernel(
+    Kernel::KernelFunctionPtrType kernelFunction,
     unsigned int cols,
     unsigned int rows,
-    typename Kernel<PixelT>::SpatialFunctionPtrType spatialFunction)
+    Kernel::SpatialFunctionPtrType spatialFunction)
 :
-    Kernel<PixelT>(cols, rows, kernelFunction->getNParameters(), spatialFunction),
+    Kernel(cols, rows, kernelFunction->getNParameters(), spatialFunction),
     _kernelFunctionPtr(kernelFunction)
 {}
 
@@ -57,27 +54,25 @@ lsst::fw::AnalyticKernel<PixelT>::AnalyticKernel(
  *
  * See setSpatialParameters for the form of the spatial parameters.
  */
-template<typename PixelT>
-lsst::fw::AnalyticKernel<PixelT>::AnalyticKernel(
-    typename Kernel<PixelT>::KernelFunctionPtrType kernelFunction,
+lsst::fw::AnalyticKernel::AnalyticKernel(
+    Kernel::KernelFunctionPtrType kernelFunction,
     unsigned int cols,
     unsigned int rows,
-    typename Kernel<PixelT>::SpatialFunctionPtrType spatialFunction,
+    Kernel::SpatialFunctionPtrType spatialFunction,
     std::vector<std::vector<double> > const &spatialParameters)
 :
-    Kernel<PixelT>(cols, rows, kernelFunction->getNParameters(), spatialFunction, spatialParameters),
+    Kernel(cols, rows, kernelFunction->getNParameters(), spatialFunction, spatialParameters),
     _kernelFunctionPtr(kernelFunction)
 {}
 
-template<typename PixelT>
-void lsst::fw::AnalyticKernel<PixelT>::computeImage(
+void lsst::fw::AnalyticKernel::computeImage(
     Image<PixelT> &image,
     PixelT &imSum,
     double x,
     double y,
     bool doNormalize
 ) const {
-    typedef typename Image<PixelT>::pixel_accessor pixelAccessor;
+    typedef Image<PixelT>::pixel_accessor pixelAccessor;
     if ((image.getCols() != this->getCols()) || (image.getRows() != this->getRows())) {
         throw lsst::mwi::exceptions::InvalidParameter("image is the wrong size");
     }
@@ -109,14 +104,12 @@ void lsst::fw::AnalyticKernel<PixelT>::computeImage(
 /**
  * \brief Get the kernel function
  */
-template<typename PixelT>
-typename lsst::fw::Kernel<PixelT>::KernelFunctionPtrType lsst::fw::AnalyticKernel<PixelT>::getKernelFunction(
+lsst::fw::Kernel::KernelFunctionPtrType lsst::fw::AnalyticKernel::getKernelFunction(
 ) const {
     return _kernelFunctionPtr;
 }
 
-template<typename PixelT>
-std::vector<double> lsst::fw::AnalyticKernel<PixelT>::getCurrentKernelParameters() const {
+std::vector<double> lsst::fw::AnalyticKernel::getCurrentKernelParameters() const {
     return _kernelFunctionPtr->getParameters();
 }
 
@@ -124,10 +117,6 @@ std::vector<double> lsst::fw::AnalyticKernel<PixelT>::getCurrentKernelParameters
 // Protected Member Functions
 //
 
-template<typename PixelT>
-void lsst::fw::AnalyticKernel<PixelT>::basicSetKernelParameters(std::vector<double> const &params) const {
+void lsst::fw::AnalyticKernel::basicSetKernelParameters(std::vector<double> const &params) const {
     _kernelFunctionPtr->setParameters(params);
 }
-
-// Explicit instantiations
-template class lsst::fw::AnalyticKernel<double>;

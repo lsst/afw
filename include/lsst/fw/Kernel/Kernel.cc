@@ -19,48 +19,42 @@
 /**
  * \brief Return the number of columns
  */
-template<typename PixelT>
-inline unsigned lsst::fw::Kernel<PixelT>::getCols() const {
+inline unsigned lsst::fw::Kernel::getCols() const {
     return _cols;
 }
 
 /**
  * \brief Return the number of rows
  */
-template<typename PixelT>
-inline unsigned lsst::fw::Kernel<PixelT>::getRows() const {
+inline unsigned lsst::fw::Kernel::getRows() const {
     return _rows;
 }
 
 /**
  * \brief Return the center column
  */
-template<typename PixelT>
-inline unsigned lsst::fw::Kernel<PixelT>::getCtrCol() const {
+inline unsigned lsst::fw::Kernel::getCtrCol() const {
     return _ctrCol;
 }
 
 /**
  * \brief Return the center row
  */
-template<typename PixelT>
-inline unsigned lsst::fw::Kernel<PixelT>::getCtrRow() const {
+inline unsigned lsst::fw::Kernel::getCtrRow() const {
     return _ctrRow;
 }
 
 /**
  * \brief Return the number of kernel parameters (0 if none)
  */
-template<typename PixelT>
-inline unsigned lsst::fw::Kernel<PixelT>::getNKernelParameters() const {
+inline unsigned lsst::fw::Kernel::getNKernelParameters() const {
     return _nKernelParams;
 }
 
 /**
  * \brief Return the number of spatial parameters (0 if not spatially varying)
  */
-template<typename PixelT>
-inline unsigned lsst::fw::Kernel<PixelT>::getNSpatialParameters() const { 
+inline unsigned lsst::fw::Kernel::getNSpatialParameters() const { 
     if (!isSpatiallyVarying()) {
         return 0;
     } else {
@@ -71,16 +65,14 @@ inline unsigned lsst::fw::Kernel<PixelT>::getNSpatialParameters() const {
 /**
  * \brief Return the spatial parameters parameters (an empty vector if not spatially varying)
  */
-template<typename PixelT>
-inline std::vector<std::vector<double> > lsst::fw::Kernel<PixelT>::getSpatialParameters() const {
+inline std::vector<std::vector<double> > lsst::fw::Kernel::getSpatialParameters() const {
     return _spatialParams;
 }
 
 /**
  * \brief Return true if the kernel is spatially varying (has a spatial function)
  */
-template<typename PixelT>
-inline bool lsst::fw::Kernel<PixelT>::isSpatiallyVarying() const {
+inline bool lsst::fw::Kernel::isSpatiallyVarying() const {
     return _isSpatiallyVarying;
 }
 
@@ -93,8 +85,7 @@ inline bool lsst::fw::Kernel<PixelT>::isSpatiallyVarying() const {
  * \throw lsst::mwi::exceptions::Runtime if the kernel has a spatial function
  * \throw lsst::mwi::exceptions::InvalidParameter if the params vector is the wrong length
  */
-template<typename PixelT>
-inline void lsst::fw::Kernel<PixelT>::setKernelParameters(std::vector<double> const &params) {
+inline void lsst::fw::Kernel::setKernelParameters(std::vector<double> const &params) {
     if (this->isSpatiallyVarying()) {
         throw lsst::mwi::exceptions::Runtime("Kernel is spatially varying");
     }

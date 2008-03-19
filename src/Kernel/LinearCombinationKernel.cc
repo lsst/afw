@@ -21,10 +21,9 @@
 /**
  * \brief Construct an empty LinearCombinationKernel of size 0x0
  */
-template<typename PixelT>
-lsst::fw::LinearCombinationKernel<PixelT>::LinearCombinationKernel()
+lsst::fw::LinearCombinationKernel::LinearCombinationKernel()
 :
-    Kernel<PixelT>(),
+    Kernel(),
     _kernelList(),
     _kernelImagePtrList(),
     _kernelParams()
@@ -33,12 +32,11 @@ lsst::fw::LinearCombinationKernel<PixelT>::LinearCombinationKernel()
 /**
  * \brief Construct a spatially invariant LinearCombinationKernel
  */
-template<typename PixelT>
-lsst::fw::LinearCombinationKernel<PixelT>::LinearCombinationKernel(
+lsst::fw::LinearCombinationKernel::LinearCombinationKernel(
     KernelListType const &kernelList,    ///< list of (shared pointers to) kernels
     std::vector<double> const &kernelParameters) ///< kernel coefficients
 :
-    Kernel<PixelT>(kernelList[0]->getCols(), kernelList[0]->getRows(), kernelList.size()),
+    Kernel(kernelList[0]->getCols(), kernelList[0]->getRows(), kernelList.size()),
     _kernelList(kernelList),
     _kernelImagePtrList(),
     _kernelParams(kernelParameters)
@@ -50,12 +48,11 @@ lsst::fw::LinearCombinationKernel<PixelT>::LinearCombinationKernel(
 /**
  * \brief Construct a spatially varying LinearCombinationKernel with spatial parameters initialized to 0
  */
-template<typename PixelT>
-lsst::fw::LinearCombinationKernel<PixelT>::LinearCombinationKernel(
+lsst::fw::LinearCombinationKernel::LinearCombinationKernel(
     KernelListType const &kernelList,    ///< list of (shared pointers to) kernels
-    typename Kernel<PixelT>::SpatialFunctionPtrType spatialFunction)  ///< spatial function
+    Kernel::SpatialFunctionPtrType spatialFunction)  ///< spatial function
 :
-    Kernel<PixelT>(kernelList[0]->getCols(), kernelList[0]->getRows(), kernelList.size(), spatialFunction),
+    Kernel(kernelList[0]->getCols(), kernelList[0]->getRows(), kernelList.size(), spatialFunction),
     _kernelList(kernelList),
     _kernelImagePtrList(),
     _kernelParams(std::vector<double>(kernelList.size()))
@@ -69,13 +66,12 @@ lsst::fw::LinearCombinationKernel<PixelT>::LinearCombinationKernel(
  *
  * See setSpatialParameters for the form of the spatial parameters.
  */
-template<typename PixelT>
-lsst::fw::LinearCombinationKernel<PixelT>::LinearCombinationKernel(
+lsst::fw::LinearCombinationKernel::LinearCombinationKernel(
     KernelListType const &kernelList,    ///< list of (shared pointers to) kernels
-    typename Kernel<PixelT>::SpatialFunctionPtrType spatialFunction,  ///< spatial function
+    Kernel::SpatialFunctionPtrType spatialFunction,  ///< spatial function
     std::vector<std::vector<double> > const &spatialParameters)  ///< spatial coefficients
 :
-    Kernel<PixelT>(kernelList[0]->getCols(), kernelList[0]->getRows(),
+    Kernel(kernelList[0]->getCols(), kernelList[0]->getRows(),
         kernelList.size(), spatialFunction, spatialParameters),
     _kernelList(kernelList),
     _kernelImagePtrList(),
@@ -85,8 +81,7 @@ lsst::fw::LinearCombinationKernel<PixelT>::LinearCombinationKernel(
     _computeKernelImageList();
 }
 
-template<typename PixelT>
-void lsst::fw::LinearCombinationKernel<PixelT>::computeImage(
+void lsst::fw::LinearCombinationKernel::computeImage(
     Image<PixelT> &image,
     PixelT &imSum,
     double x,
@@ -99,12 +94,12 @@ void lsst::fw::LinearCombinationKernel<PixelT>::computeImage(
     if (this->isSpatiallyVarying()) {
         this->computeKernelParametersFromSpatialModel(this->_kernelParams, x, y);
     }
-    typename Image<PixelT>::ImageIVwPtrT vwImagePtr = image.getIVwPtr();
+    Image<PixelT>::ImageIVwPtrT vwImagePtr = image.getIVwPtr();
     
     bool isFirst = true;
-    typename std::vector<boost::shared_ptr<Image<PixelT> > >::const_iterator
+    std::vector<boost::shared_ptr<Image<PixelT> > >::const_iterator
         kImPtrIter = _kernelImagePtrList.begin();
-    typename std::vector<double>::const_iterator kParIter = _kernelParams.begin();
+    std::vector<double>::const_iterator kParIter = _kernelParams.begin();
     for ( ; kImPtrIter != _kernelImagePtrList.end(); ++kImPtrIter, ++kParIter, isFirst = false) {
         if (isFirst) {
             *vwImagePtr = (*((**kImPtrIter).getIVwPtr())) * static_cast<PixelT>(*kParIter);
@@ -122,9 +117,8 @@ void lsst::fw::LinearCombinationKernel<PixelT>::computeImage(
 /**
  * \brief Get the fixed basis kernels
  */
-template<typename PixelT>
-typename lsst::fw::LinearCombinationKernel<PixelT>::KernelListType const &
-lsst::fw::LinearCombinationKernel<PixelT>::getKernelList() const {
+lsst::fw::LinearCombinationKernel::KernelListType const &
+lsst::fw::LinearCombinationKernel::getKernelList() const {
     return _kernelList;
 }
     
@@ -133,8 +127,7 @@ lsst::fw::LinearCombinationKernel<PixelT>::getKernelList() const {
  *
  * \throw lsst::mwi::exceptions::InvalidParameter if the check fails
  */
-template<typename PixelT>
-void lsst::fw::LinearCombinationKernel<PixelT>::checkKernelList(const KernelListType &kernelList) const {
+void lsst::fw::LinearCombinationKernel::checkKernelList(const KernelListType &kernelList) const {
     if (kernelList.size() < 1) {
         throw lsst::mwi::exceptions::InvalidParameter("kernelList has no elements");
     }
@@ -164,17 +157,14 @@ void lsst::fw::LinearCombinationKernel<PixelT>::checkKernelList(const KernelList
     }
 }
 
-template<typename PixelT>
-std::vector<double> lsst::fw::LinearCombinationKernel<PixelT>::getCurrentKernelParameters() const {
+std::vector<double> lsst::fw::LinearCombinationKernel::getCurrentKernelParameters() const {
     return _kernelParams;
 }
 
 //
 // Protected Member Functions
 //
-
-template<typename PixelT>
-void lsst::fw::LinearCombinationKernel<PixelT>::basicSetKernelParameters(std::vector<double> const &params)
+void lsst::fw::LinearCombinationKernel::basicSetKernelParameters(std::vector<double> const &params)
 const {
     if (params.size() != this->_kernelList.size()) {
         throw lsst::mwi::exceptions::InvalidParameter(
@@ -190,10 +180,9 @@ const {
 /**
  * Compute _kernelImagePtrList, the internal archive of kernel images.
  */
-template<typename PixelT>
-void lsst::fw::LinearCombinationKernel<PixelT>::_computeKernelImageList() {
-    typename KernelListType::const_iterator kIter = _kernelList.begin();
-    typename std::vector<double>::const_iterator kParIter = _kernelParams.begin();
+void lsst::fw::LinearCombinationKernel::_computeKernelImageList() {
+    KernelListType::const_iterator kIter = _kernelList.begin();
+    std::vector<double>::const_iterator kParIter = _kernelParams.begin();
     for ( ; kIter != _kernelList.end(); ++kIter) {
         PixelT kSum;
         boost::shared_ptr<lsst::fw::Image<PixelT> >
@@ -202,6 +191,3 @@ void lsst::fw::LinearCombinationKernel<PixelT>::_computeKernelImageList() {
         _kernelImagePtrList.push_back(kernelImagePtr);
     }
 }
-
-// Explicit instantiations
-template class lsst::fw::LinearCombinationKernel<double>;

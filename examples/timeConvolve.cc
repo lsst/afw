@@ -53,9 +53,9 @@ int main(int argc, char **argv) {
     
     for (unsigned kSize = MinKernelSize; kSize <= MaxKernelSize; kSize += DeltaKernelSize) {
         // construct kernel
-        lsst::fw::Kernel<kernelType>::KernelFunctionPtrType kfuncPtr(
+        lsst::fw::Kernel::KernelFunctionPtrType kfuncPtr(
             new lsst::fw::function::GaussianFunction2<kernelType>(sigma, sigma));
-        lsst::fw::AnalyticKernel<kernelType> kernel(kfuncPtr, kSize, kSize);
+        lsst::fw::AnalyticKernel kernel(kfuncPtr, kSize, kSize);
         
         clock_t startTime = clock();
         for (unsigned iter = 0; iter < nIter; ++iter) {

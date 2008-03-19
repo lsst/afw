@@ -21,10 +21,9 @@
 /**
  * \brief Construct an empty FixedKernel of size 0x0
  */
-template<typename PixelT>
-lsst::fw::FixedKernel<PixelT>::FixedKernel()
+lsst::fw::FixedKernel::FixedKernel()
 :
-    Kernel<PixelT>(),
+    Kernel(),
     _image(),
     _sum(0) {
 }
@@ -32,11 +31,10 @@ lsst::fw::FixedKernel<PixelT>::FixedKernel()
 /**
  * \brief Construct a FixedKernel from an image
  */
-template<typename PixelT>
-lsst::fw::FixedKernel<PixelT>::FixedKernel(
+lsst::fw::FixedKernel::FixedKernel(
     Image<PixelT> const &image)     ///< image for kernel
 :
-    Kernel<PixelT>(image.getCols(), image.getRows(), 0),
+    Kernel(image.getCols(), image.getRows(), 0),
     _image(image),
     _sum(vw::sum_of_channel_values(*(image.getIVwPtr()))) {
 }
@@ -44,16 +42,14 @@ lsst::fw::FixedKernel<PixelT>::FixedKernel(
 //
 // Member Functions
 //
-
-template<typename PixelT>
-void lsst::fw::FixedKernel<PixelT>::computeImage(
+void lsst::fw::FixedKernel::computeImage(
     Image<PixelT> &image,
     PixelT &imSum,
     double x,
     double y,
     bool doNormalize
 ) const {
-    typedef typename Image<PixelT>::pixel_accessor pixelAccessor;
+    typedef Image<PixelT>::pixel_accessor pixelAccessor;
     if ((image.getCols() != this->getCols()) || (image.getRows() != this->getRows())) {
         throw lsst::mwi::exceptions::InvalidParameter("image is the wrong size");
     }
@@ -80,8 +76,7 @@ void lsst::fw::FixedKernel<PixelT>::computeImage(
     }
 }
 
-template<typename PixelT>
-std::vector<double> lsst::fw::FixedKernel<PixelT>::getCurrentKernelParameters() const {
+std::vector<double> lsst::fw::FixedKernel::getCurrentKernelParameters() const {
     return std::vector<double>(0);
 }
 
@@ -89,8 +84,7 @@ std::vector<double> lsst::fw::FixedKernel<PixelT>::getCurrentKernelParameters() 
 // Protected Member Functions
 //
 
-template<typename PixelT>
-void lsst::fw::FixedKernel<PixelT>::basicSetKernelParameters(std::vector<double> const &params) const {
+void lsst::fw::FixedKernel::basicSetKernelParameters(std::vector<double> const &params) const {
     if (params.size() > 0) {
         throw lsst::mwi::exceptions::InvalidParameter("FixedKernel has no kernel parameters");
     }
@@ -99,7 +93,3 @@ void lsst::fw::FixedKernel<PixelT>::basicSetKernelParameters(std::vector<double>
 //
 // Private Member Functions
 //
-
-// Explicit instantiations
-template class lsst::fw::FixedKernel<int>;
-template class lsst::fw::FixedKernel<double>;

@@ -14,6 +14,7 @@ Basic routines to talk to FW's classes (including visionWorkbench) and ds9
 #pragma SWIG nowarn=317                 // specialization of non-template
 #pragma SWIG nowarn=362                 // operator=  ignored
 #pragma SWIG nowarn=389                 // operator[] ignored
+#pragma SWIG nowarn=503                 // Can't wrap 'operator unspecified_bool_type'
 
 // define basic vectors
 // these are used by Kernel and Function (and possibly other code)
@@ -144,6 +145,7 @@ def version(HeadURL = r"$HeadURL$"):
 
 /******************************************************************************/
 // Masks and MaskedImages
+%template(pairIntInt)    std::pair<int,int>;
 %template(pairIntString) std::pair<int,std::string>;
 %template(mapIntString)  std::map<int,std::string>;
 

@@ -21,10 +21,11 @@ const std::string outFile("svcOut");
  * ySigma varies linearly from minSigma to maxSigma as image row goes from 0 to max
  */
 int main(int argc, char **argv) {
+    typedef double pixelType;
+
     mwiu::Trace::setDestination(std::cout);
     mwiu::Trace::setVerbosity("lsst.fw.kernel", 5);
 
-    typedef double pixelType;
     double minSigma = 0.1;
     double maxSigma = 3.0;
     unsigned int kernelCols = 5;
@@ -49,12 +50,12 @@ int main(int argc, char **argv) {
     mImage.readFits(argv[1]);
     
     // construct kernel
-    lsst::fw::Kernel<pixelType>::KernelFunctionPtrType gaussFuncPtr(
+    lsst::fw::Kernel::KernelFunctionPtrType gaussFuncPtr(
         new lsst::fw::function::GaussianFunction2<pixelType>(1, 1));
     unsigned int polyOrder = 1;
-    lsst::fw::Kernel<pixelType>::SpatialFunctionPtrType polyFuncPtr(
+    lsst::fw::Kernel::SpatialFunctionPtrType polyFuncPtr(
         new lsst::fw::function::PolynomialFunction2<double>(polyOrder));
-    lsst::fw::AnalyticKernel<pixelType> gaussSpVarKernel(
+    lsst::fw::AnalyticKernel gaussSpVarKernel(
         gaussFuncPtr, kernelCols, kernelRows, polyFuncPtr);
 
     // Get copy of spatial parameters (all zeros), set and feed back to the kernel

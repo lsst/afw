@@ -10,14 +10,15 @@
 using namespace std;
 
 int main() {
-    typedef double pixelType;
+    typedef lsst::fw::Kernel::PixelT pixelType;
+
     unsigned int kernelCols = 6;
     unsigned int kernelRows = 5;
     unsigned int order = (min(kernelCols, kernelRows) - 1) / 2;
 
-    lsst::fw::Kernel<pixelType>::KernelFunctionPtrType kfuncPtr(
+    lsst::fw::Kernel::KernelFunctionPtrType kfuncPtr(
         new lsst::fw::function::LanczosFunction2<pixelType>(order));
-    lsst::fw::AnalyticKernel<pixelType> kernel(kfuncPtr, kernelCols, kernelRows);
+    lsst::fw::AnalyticKernel kernel(kfuncPtr, kernelCols, kernelRows);
 
     cout << boost::format("Lanczos Kernel is %d x %d; Lanczos function has %d order\n")
         % kernelCols % kernelRows % order;

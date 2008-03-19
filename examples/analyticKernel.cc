@@ -10,18 +10,19 @@
  * Demonstrate an AnalyticKernel, both spatially invariant and spatially varying.
  */
 
+typedef lsst::fw::Kernel::PixelT PixelT;
+
 using namespace std;
 
 int main() {
-    typedef double pixelType;
     double sigmaX = 2.0;
     double sigmaY = 2.5;
     unsigned int kernelCols = 6;
     unsigned int kernelRows = 5;
 
-    lsst::fw::Kernel<pixelType>::KernelFunctionPtrType gaussFuncPtr(
-        new lsst::fw::function::GaussianFunction2<pixelType>(sigmaX, sigmaY));
-    lsst::fw::AnalyticKernel<pixelType> gaussKernel(gaussFuncPtr, kernelCols, kernelRows);
+    lsst::fw::Kernel::KernelFunctionPtrType gaussFuncPtr(
+        new lsst::fw::function::GaussianFunction2<PixelT>(sigmaX, sigmaY));
+    lsst::fw::AnalyticKernel gaussKernel(gaussFuncPtr, kernelCols, kernelRows);
     
     cout << boost::format("Gaussian Kernel with sigmaX=%.1f, sigmaY=%.1f\n\n") % sigmaX % sigmaY;
     
@@ -29,11 +30,10 @@ int main() {
     
     // now show a spatially varying version
     unsigned int polyOrder = 1;
-    lsst::fw::Kernel<double>::SpatialFunctionPtrType polyFuncPtr(
-        new lsst::fw::function::PolynomialFunction2<double>(polyOrder));
+    lsst::fw::Kernel::SpatialFunctionPtrType polyFuncPtr(
+        new lsst::fw::function::PolynomialFunction2<PixelT>(polyOrder));
 
-    lsst::fw::AnalyticKernel<pixelType> gaussSpVarKernel(
-        gaussFuncPtr, kernelCols, kernelRows, polyFuncPtr);
+    lsst::fw::AnalyticKernel gaussSpVarKernel(gaussFuncPtr, kernelCols, kernelRows, polyFuncPtr);
 
     // get copy of spatial parameters (all zeros), set and feed back to the kernel
     vector<vector<double> > polyParams = gaussSpVarKernel.getSpatialParameters();

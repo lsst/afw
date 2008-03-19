@@ -31,7 +31,7 @@ class KernelTestCase(unittest.TestCase):
             for col in range(inImage.getCols()):
                 inImage.set(col, row, inArr[col, row])
         
-        fixedKernel = fw.FixedKernelD(inImage);
+        fixedKernel = fw.FixedKernel(inImage);
         outImage = fixedKernel.computeNewImage(0.0, 0.0, False)[0]
         outArr = imTestUtils.arrayFromImage(outImage)
         if not numpy.allclose(inArr, outArr):
@@ -52,7 +52,7 @@ class KernelTestCase(unittest.TestCase):
         kRows = 8
 
         fPtr =  fw.Function2DPtr(fw.GaussianFunction2D(1.0, 1.0))
-        k = fw.AnalyticKernelD(fPtr, kCols, kRows)
+        k = fw.AnalyticKernel(fPtr, kCols, kRows)
         fArr = numpy.zeros(shape=[k.getCols(), k.getRows()], dtype=float)
         for xsigma in (0.1, 1.0, 3.0):
             for ysigma in (0.1, 1.0, 3.0):
@@ -80,7 +80,7 @@ class KernelTestCase(unittest.TestCase):
         
         # create list of kernels
         basisImArrList = []
-        kVec = fw.vectorKernelDPtr()
+        kVec = fw.KernelListD()
         ctrCol = (kCols - 1) // 2
         ctrRow = (kRows - 1) // 2
         for row in range(kRows):
@@ -88,13 +88,13 @@ class KernelTestCase(unittest.TestCase):
             for col in range(kCols):
                 x = float(col - ctrCol)
                 fPtr = fw.Function2DPtr(fw.IntegerDeltaFunction2D(x, y))
-                kPtr = fw.KernelDPtr(fw.AnalyticKernelD(fPtr, kCols, kRows))
+                kPtr = fw.KernelPtr(fw.AnalyticKernel(fPtr, kCols, kRows))
                 basisImage = kPtr.computeNewImage()[0]
                 basisImArrList.append(imTestUtils.arrayFromImage(basisImage))
                 kVec.append(kPtr)
         
         kParams = [0.0]*len(kVec)
-        k = fw.LinearCombinationKernelD(kVec, kParams)
+        k = fw.LinearCombinationKernel(kVec, kParams)
         for ii in range(len(kVec)):
             kParams = [0.0]*len(kVec)
             kParams[ii] = 1.0
@@ -123,10 +123,10 @@ class KernelTestCase(unittest.TestCase):
         basisImArrList.append(imArr)
         
         # create a list of basis kernels from the images
-        kVec = fw.vectorKernelDPtr()
+        kVec = fw.KernelListD()
         for basisImArr in basisImArrList:
             basisImage = imTestUtils.imageFromArray(basisImArr)
-            kPtr = fw.KernelDPtr(fw.FixedKernelD(basisImage))
+            kPtr = fw.KernelPtr(fw.FixedKernel(basisImage))
             kVec.append(kPtr)
 
         # create spatially varying linear combination kernel
@@ -139,7 +139,7 @@ class KernelTestCase(unittest.TestCase):
             (0.0, 0.0, 1.0),
         )
         
-        k = fw.LinearCombinationKernelD(kVec, sFuncPtr, sParams)
+        k = fw.LinearCombinationKernel(kVec, sFuncPtr, sParams)
         kImage = fw.ImageD(kCols, kRows)
         for colPos, rowPos, coeff0, coeff1 in [
             (0.0, 0.0, 0.0, 0.0),
@@ -167,5 +167,9 @@ def suite():
 
     return unittest.TestSuite(suites)
 
+def run(exit=False):
+    """Run the tests"""
+    tests.run(suite(), exit)
+
 if __name__ == "__main__":
-    tests.run(suite())
+    run(True)

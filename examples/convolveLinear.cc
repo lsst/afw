@@ -18,7 +18,6 @@ int main(int argc, char **argv) {
     lsst::mwi::utils::Trace::setVerbosity("lsst.fw.kernel", 5);
 
     typedef float imagePixelType;
-    typedef double kernelPixelType;
     unsigned int KernelCols = 5;
     unsigned int KernelRows = 8;
     double MinSigma = 1.5;
@@ -52,24 +51,23 @@ int main(int argc, char **argv) {
         mImage.readFits(argv[1]);
         
         // construct basis kernels
-        vector<boost::shared_ptr<lsst::fw::Kernel<kernelPixelType> > > kernelVec;
+        lsst::fw::KernelList<> kernelVec;
         for (int ii = 0; ii < 3; ++ii) {
             double xSigma = (ii == 1) ? MaxSigma : MinSigma;
             double ySigma = (ii == 2) ? MinSigma : MaxSigma;
-            lsst::fw::Kernel<kernelPixelType>::KernelFunctionPtrType gaussFuncPtr(
-                new lsst::fw::function::GaussianFunction2<kernelPixelType>(xSigma, ySigma));
-            boost::shared_ptr<lsst::fw::Kernel<kernelPixelType> > basisKernelPtr(
-                new lsst::fw::AnalyticKernel<kernelPixelType>(gaussFuncPtr, KernelCols, KernelRows)
+            lsst::fw::Kernel::KernelFunctionPtrType gaussFuncPtr(
+                new lsst::fw::function::GaussianFunction2<lsst::fw::Kernel::PixelT>(xSigma, ySigma));
+            lsst::fw::Kernel::PtrT basisKernelPtr(
+                new lsst::fw::AnalyticKernel(gaussFuncPtr, KernelCols, KernelRows)
             );
             kernelVec.push_back(basisKernelPtr);
         }
         
         // construct spatially varying linear combination kernel
         unsigned int polyOrder = 1;
-        lsst::fw::Kernel<double>::SpatialFunctionPtrType polyFuncPtr(
+        lsst::fw::Kernel::SpatialFunctionPtrType polyFuncPtr(
             new lsst::fw::function::PolynomialFunction2<double>(polyOrder));
-        lsst::fw::LinearCombinationKernel<kernelPixelType> lcSpVarKernel(kernelVec, polyFuncPtr);
-
+        lsst::fw::LinearCombinationKernel lcSpVarKernel(kernelVec, polyFuncPtr);
     
         // Get copy of spatial parameters (all zeros), set and feed back to the kernel
         vector<vector<double> > polyParams = lcSpVarKernel.getSpatialParameters();

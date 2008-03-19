@@ -25,11 +25,11 @@ namespace lsst {
 namespace fw {
 namespace kernel {
 
-    template <typename ImageT, typename MaskT, typename KernelT>
+    template <typename ImageT, typename MaskT>
     inline void apply(
         lsst::fw::MaskedPixelAccessor<ImageT, MaskT> &outAccessor,
         lsst::fw::MaskedPixelAccessor<ImageT, MaskT> const &imageAccessor,
-        typename lsst::fw::Image<KernelT>::pixel_accessor const &kernelAccessor,
+        typename lsst::fw::Image<lsst::fw::Kernel::PixelT>::pixel_accessor const &kernelAccessor,
         unsigned int cols,
         unsigned int rows
     );
@@ -38,7 +38,15 @@ namespace kernel {
     void basicConvolve(
         lsst::fw::MaskedImage<ImageT, MaskT> &convolvedImage,
         lsst::fw::MaskedImage<ImageT, MaskT> const &maskedImage,
-        lsst::fw::Kernel<KernelT> const &kernel,
+        KernelT const &kernel,
+        bool doNormalize
+    );
+    
+    template <typename ImageT, typename MaskT>
+    void basicConvolve(
+        lsst::fw::MaskedImage<ImageT, MaskT> &convolvedImage,
+        lsst::fw::MaskedImage<ImageT, MaskT> const &maskedImage,
+        lsst::fw::DeltaFunctionKernel const &kernel,
         bool doNormalize
     );
     
@@ -46,7 +54,7 @@ namespace kernel {
     void convolve(
         lsst::fw::MaskedImage<ImageT, MaskT> &convolvedImage,
         lsst::fw::MaskedImage<ImageT, MaskT> const &maskedImage,
-        lsst::fw::Kernel<KernelT> const &kernel,
+        KernelT const &kernel,
         int edgeBit,
         bool doNormalize
     );
@@ -54,29 +62,28 @@ namespace kernel {
     template <typename ImageT, typename MaskT, typename KernelT>
     lsst::fw::MaskedImage<ImageT, MaskT> convolve(
         lsst::fw::MaskedImage<ImageT, MaskT> const &maskedImage,
-        lsst::fw::Kernel<KernelT> const &kernel,
+        KernelT const &kernel,
         int edgeBit,
         bool doNormalize
     );
 
-    template <typename ImageT, typename MaskT, typename KernelT>
+    template <typename ImageT, typename MaskT>
     void convolveLinear(
         lsst::fw::MaskedImage<ImageT, MaskT> &convolvedImage,
         lsst::fw::MaskedImage<ImageT, MaskT> const &maskedImage,
-        lsst::fw::LinearCombinationKernel<KernelT> const &kernel,
+        lsst::fw::LinearCombinationKernel const &kernel,
         int edgeBit
     );
 
-    template <typename ImageT, typename MaskT, typename KernelT>
+    template <typename ImageT, typename MaskT>
     lsst::fw::MaskedImage<ImageT, MaskT> convolveLinear(
         lsst::fw::MaskedImage<ImageT, MaskT> const &maskedImage,
-        lsst::fw::LinearCombinationKernel<KernelT> const &kernel,
+        lsst::fw::LinearCombinationKernel const &kernel,
         int edgeBit
     );
 
-    template <typename PixelT>
     void printKernel(
-        lsst::fw::Kernel<PixelT> const &kernel,
+        lsst::fw::Kernel const &kernel,
         double x = 0,
         double y = 0,
         bool doNormalize = true,

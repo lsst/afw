@@ -13,10 +13,11 @@ using namespace std;
 const std::string outFile("scOut");
 
 int main(int argc, char **argv) {
+    typedef lsst::fw::Kernel::PixelT pixelType;
+    
     lsst::mwi::utils::Trace::setDestination(std::cout);
     lsst::mwi::utils::Trace::setVerbosity("lsst.fw.kernel", 5);
 
-    typedef double pixelType;
     const double DefSigma = 2.0;
     int DefEdgeMaskBit = 0;
     
@@ -47,9 +48,9 @@ int main(int argc, char **argv) {
         mImage.readFits(argv[1]);
         
         // construct kernel
-        lsst::fw::Kernel<pixelType>::KernelFunctionPtrType kfuncPtr(
+        lsst::fw::Kernel::KernelFunctionPtrType kfuncPtr(
             new lsst::fw::function::GaussianFunction2<pixelType>(sigma, sigma));
-        lsst::fw::AnalyticKernel<pixelType> kernel(kfuncPtr, 5, 5);
+        lsst::fw::AnalyticKernel kernel(kfuncPtr, 5, 5);
     
         // convolve
         lsst::fw::MaskedImage<pixelType, lsst::fw::maskPixelType>

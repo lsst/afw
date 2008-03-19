@@ -13,11 +13,18 @@
 #include <vector>
 
 #include <boost/shared_ptr.hpp>
+
+#include <boost/mpl/or.hpp>
+#include <boost/static_assert.hpp>
+#include <boost/type_traits/is_same.hpp>
+#include <boost/type_traits/is_base_and_derived.hpp>
+
 #include <vw/Image.h>
 
 #include <lsst/mwi/data/LsstBase.h>
 #include <lsst/fw/Function.h>
 #include <lsst/fw/Image.h>
+#include <lsst/fw/Kernel/traits.h>
 
 namespace lsst {
 namespace fw {
@@ -93,12 +100,15 @@ namespace fw {
      *
      * \ingroup fw
      */
-    template<typename PixelT>
     class Kernel : public lsst::mwi::data::LsstBase {
     
     public:
+        typedef double PixelT;
+        typedef boost::shared_ptr<Kernel> PtrT;
         typedef boost::shared_ptr<lsst::fw::function::Function2<PixelT> > KernelFunctionPtrType;
         typedef boost::shared_ptr<lsst::fw::function::Function2<double> > SpatialFunctionPtrType;
+        // Traits values for this class of Kernel
+        typedef generic_kernel_tag kernel_fill_factor;
 
         explicit Kernel();
         
@@ -159,7 +169,7 @@ namespace fw {
         inline unsigned int getCtrRow() const;
         
         virtual std::vector<double> getKernelParameters(double x = 0, double y = 0) const;
-    
+
         inline unsigned int getNKernelParameters() const;
     
         inline unsigned int getNSpatialParameters() const;
@@ -205,14 +215,14 @@ namespace fw {
          *
          * \throw lsst::mwi::exceptions::InvalidParameter if the params vector is the wrong length
          */
-        virtual void basicSetKernelParameters(std::vector<double> const &params) const = 0;
+        virtual void basicSetKernelParameters(std::vector<double> const &params) const {};
                 
         /**
          * \brief Get the current kernel parameters.
          *
          * Assumes there is no spatial model.
          */
-        virtual std::vector<double> getCurrentKernelParameters() const = 0;
+        virtual std::vector<double> getCurrentKernelParameters() const { return std::vector<double>(); }
            
     private:
         unsigned int _cols;
@@ -224,7 +234,38 @@ namespace fw {
         SpatialFunctionPtrType _spatialFunctionPtr;
         std::vector<std::vector<double> > _spatialParams;
     };
-    
+
+    /**
+     * \brief A list of Kernels
+     *
+     * This is basically a wrapper for an stl container, but defines
+     * a conversion from KernelList<K1> to KernelList<K2> providing
+     * that K1 is derived from K2 (or that K1 == K2)
+     *
+     * \ingroup fw
+     */
+    template<typename _KernelT=Kernel>
+    class KernelList : public std::vector<typename _KernelT::PtrT> {
+    public:
+        typedef _KernelT KernelT;
+
+        KernelList() { }
+        
+        template<typename Kernel2T>
+        KernelList(const KernelList<Kernel2T>& k2l) :
+            std::vector<typename KernelT::PtrT>(k2l.size())
+            {
+#if !defined(SWIG)
+                BOOST_STATIC_ASSERT((
+                                     boost::mpl::or_<
+                                     boost::is_same<KernelT, Kernel2T>,
+                                     boost::is_base_and_derived<KernelT, Kernel2T>
+                                     >::value
+                                    ));
+#endif
+                copy(k2l.begin(), k2l.end(), this->begin());
+            }
+    };
     
     /**
      * \brief A kernel created from an Image
@@ -233,9 +274,10 @@ namespace fw {
      *
      * \ingroup fw
      */
-    template<typename PixelT>
-    class FixedKernel : public Kernel<PixelT> {
+    class FixedKernel : public Kernel {
     public:
+        typedef boost::shared_ptr<FixedKernel> PtrT;
+
         explicit FixedKernel();
 
         explicit FixedKernel(
@@ -256,7 +298,7 @@ namespace fw {
             std::ostringstream os;
             os << prefix << "FixedKernel:" << std::endl;
             os << prefix << "..sum: " << _sum << std::endl;
-            os << Kernel<PixelT>::toString(prefix + "\t");
+            os << Kernel::toString(prefix + "\t");
             return os.str();
         };
 
@@ -284,29 +326,30 @@ namespace fw {
      *
      * \ingroup fw
      */
-    template<typename PixelT>
-    class AnalyticKernel : public Kernel<PixelT> {
+    class AnalyticKernel : public Kernel {
     public:
+        typedef boost::shared_ptr<AnalyticKernel> PtrT;
+        
         explicit AnalyticKernel();
 
         explicit AnalyticKernel(
-            typename Kernel<PixelT>::KernelFunctionPtrType kernelFunction,
+            Kernel::KernelFunctionPtrType kernelFunction,
             unsigned int cols,
             unsigned int rows
         );
         
         explicit AnalyticKernel(
-            typename Kernel<PixelT>::KernelFunctionPtrType kernelFunction,
+            Kernel::KernelFunctionPtrType kernelFunction,
             unsigned int cols,
             unsigned int rows,
-            typename Kernel<PixelT>::SpatialFunctionPtrType spatialFunction
+            Kernel::SpatialFunctionPtrType spatialFunction
         );
         
         explicit AnalyticKernel(
-            typename Kernel<PixelT>::KernelFunctionPtrType kernelFunction,
+            Kernel::KernelFunctionPtrType kernelFunction,
             unsigned int cols,
             unsigned int rows,
-            typename Kernel<PixelT>::SpatialFunctionPtrType spatialFunction,
+            Kernel::SpatialFunctionPtrType spatialFunction,
             std::vector<std::vector<double> > const &spatialParameters
         );
         
@@ -320,13 +363,13 @@ namespace fw {
             bool doNormalize = true
         ) const;
     
-        virtual typename Kernel<PixelT>::KernelFunctionPtrType getKernelFunction() const;
+        virtual Kernel::KernelFunctionPtrType getKernelFunction() const;
             
         virtual std::string toString(std::string prefix = "") const {
             std::ostringstream os;
             os << prefix << "AnalyticKernel:" << std::endl;
             os << prefix << "..function: " << (_kernelFunctionPtr ? _kernelFunctionPtr->toString() : "None") << std::endl;
-            os << Kernel<PixelT>::toString(prefix + "\t");
+            os << Kernel::toString(prefix + "\t");
             return os.str();
         };
 
@@ -336,7 +379,57 @@ namespace fw {
         virtual std::vector<double> getCurrentKernelParameters() const;
     
     private:
-        typename Kernel<PixelT>::KernelFunctionPtrType _kernelFunctionPtr;
+        Kernel::KernelFunctionPtrType _kernelFunctionPtr;
+    };
+    
+    
+    /**
+     * \brief A kernel that has only one non-zero pixel
+     *
+     * The function's x, y arguments are:
+     * * -getCtrCol(), -getCtrRow() for the lower left corner pixel
+     * * 0, 0 for the center pixel
+     * * (getCols() - 1) - getCtrCol(), (getRows() - 1) - getCtrRow() for the upper right pixel
+     *
+     * Note: each pixel is set to the value of the kernel function at the center of the pixel
+     * (rather than averaging the function over the area of the pixel).
+     *
+     * \ingroup fw
+     */
+    class DeltaFunctionKernel : public Kernel {
+    public:
+        typedef boost::shared_ptr<DeltaFunctionKernel> PtrT;
+        // Traits values for this class of Kernel
+        typedef deltafunction_kernel_tag kernel_fill_factor;
+
+        explicit DeltaFunctionKernel(int pixelCol,
+                                     int pixelRow,
+                                     unsigned int cols,
+                                     unsigned int rows);
+
+        virtual void computeImage(
+            Image<PixelT> &image,
+            PixelT &imSum,
+            double x = 0.0,
+            double y = 0.0,
+            bool doNormalize = true
+        ) const;
+
+        std::pair<int, int> getPixel() const { return _pixel; }
+
+        virtual std::string toString(std::string prefix = "") const {
+            const int pixelCol = getPixel().first; // active pixel in Kernel
+            const int pixelRow = getPixel().second;
+
+            std::ostringstream os;            
+            os << prefix << "DeltaFunctionKernel:" << std::endl;
+            os << prefix << "Pixel (c,r) " << pixelCol << "," << pixelRow << ")" << std::endl;
+            os << Kernel::toString(prefix + "\t");
+            return os.str();
+        };
+
+    private:
+        std::pair<int, int> _pixel;
     };
     
 
@@ -354,11 +447,10 @@ namespace fw {
      *
      * \ingroup fw
      */
-    template<typename PixelT>
-    class LinearCombinationKernel : public Kernel<PixelT> {
-    
+    class LinearCombinationKernel : public Kernel {
     public:
-        typedef std::vector<boost::shared_ptr<Kernel<PixelT> > > KernelListType;
+        typedef boost::shared_ptr<LinearCombinationKernel> PtrT;
+        typedef KernelList<Kernel> KernelListType;
 
         explicit LinearCombinationKernel();
 
@@ -369,12 +461,12 @@ namespace fw {
         
         explicit LinearCombinationKernel(
             KernelListType const &kernelList,
-            typename Kernel<PixelT>::SpatialFunctionPtrType spatialFunction
+            Kernel::SpatialFunctionPtrType spatialFunction
         );
         
         explicit LinearCombinationKernel(
             KernelListType const &kernelList,
-            typename Kernel<PixelT>::SpatialFunctionPtrType spatialFunction,
+            Kernel::SpatialFunctionPtrType spatialFunction,
             std::vector<std::vector<double> > const &spatialParameters
         );
         
@@ -396,7 +488,7 @@ namespace fw {
             std::ostringstream os;
             os << prefix << "LinearCombinationKernel:" << std::endl;
             os << prefix << "..Kernels:" << std::endl;
-            for (typename KernelListType::const_iterator i = _kernelList.begin(); i != _kernelList.end(); ++i) {
+            for (KernelListType::const_iterator i = _kernelList.begin(); i != _kernelList.end(); ++i) {
                 os << (*i)->toString(prefix + "\t");
             }
             os << "..parameters: [ ";
@@ -405,7 +497,7 @@ namespace fw {
                 os << *i;
             }
             os << " ]" << std::endl;
-            os << Kernel<PixelT>::toString(prefix + "\t");
+            os << Kernel::toString(prefix + "\t");
             return os.str();
         };
 
@@ -420,7 +512,6 @@ namespace fw {
         std::vector<boost::shared_ptr<Image<PixelT> > > _kernelImagePtrList;
         mutable std::vector<double> _kernelParams;
     };
-
 }}   // lsst:fw
     
 // Included definitions for templated and inline member functions

@@ -13,6 +13,9 @@
 #include <lsst/mwi/exceptions.h>
 #include <lsst/fw/Kernel.h>
 
+lsst::fw::generic_kernel_tag lsst::fw::generic_kernel_tag_; ///< Used as default value in argument lists
+lsst::fw::deltafunction_kernel_tag lsst::fw::deltafunction_kernel_tag_; ///< Used as default value in argument lists
+
 //
 // Constructors
 //
@@ -20,8 +23,7 @@
 /**
  * \brief Construct a spatially invariant Kernel with no kernel parameters
  */
-template<typename PixelT>
-lsst::fw::Kernel<PixelT>::Kernel()
+lsst::fw::Kernel::Kernel()
 :
     LsstBase(typeid(this)),
    _cols(0),
@@ -36,8 +38,7 @@ lsst::fw::Kernel<PixelT>::Kernel()
 /**
  * \brief Construct a spatially invariant Kernel
  */
-template<typename PixelT>
-lsst::fw::Kernel<PixelT>::Kernel(
+lsst::fw::Kernel::Kernel(
     unsigned int cols,  ///< number of columns
     unsigned int rows,  ///< number of rows
     unsigned int nKernelParams) ///< number of kernel parameters
@@ -57,8 +58,7 @@ lsst::fw::Kernel<PixelT>::Kernel(
  *
  * \throw lsst::mwi::exceptions::InvalidParameter if the kernel or spatial function has no parameters.
  */
-template<typename PixelT>
-lsst::fw::Kernel<PixelT>::Kernel(
+lsst::fw::Kernel::Kernel(
     unsigned int cols,  ///< number of columns
     unsigned int rows,  ///< number of rows
     unsigned int nKernelParams, ///< number of kernel parameters
@@ -96,8 +96,7 @@ lsst::fw::Kernel<PixelT>::Kernel(
  * - the kernel or spatial function has no parameters
  * - the spatialParams vector is the wrong length
  */
-template<typename PixelT>
-lsst::fw::Kernel<PixelT>::Kernel(
+lsst::fw::Kernel::Kernel(
     unsigned int cols,  ///< number of columns
     unsigned int rows,  ///< number of rows
     unsigned int nKernelParams, ///< number of kernel parameters
@@ -133,14 +132,13 @@ lsst::fw::Kernel<PixelT>::Kernel(
  *
  * \return an image (your own copy to do with as you wish)
  */
-template<typename PixelT>
-lsst::fw::Image<PixelT> lsst::fw::Kernel<PixelT>::computeNewImage(
+lsst::fw::Image<lsst::fw::Kernel::PixelT> lsst::fw::Kernel::computeNewImage(
     PixelT &imSum,  ///< sum of image pixels
     double x,       ///< x (column position) at which to compute spatial function
     double y,       ///< y (row position) at which to compute spatial function
     bool doNormalize    ///< normalize the image (so sum is 1)?
 ) const {
-    lsst::fw::Image<PixelT> retImage(this->getCols(), this->getRows());
+    lsst::fw::Image<lsst::fw::Kernel::PixelT> retImage(this->getCols(), this->getRows());
     this->computeImage(retImage, imSum, x, y, doNormalize);
     return retImage;
 }
@@ -151,8 +149,7 @@ lsst::fw::Image<PixelT> lsst::fw::Kernel<PixelT>::computeNewImage(
  * If the kernel is not spatially varying then the position is ignored
  * If there are no kernel parameters then an empty vector is returned
  */
-template<typename PixelT>
-std::vector<double> lsst::fw::Kernel<PixelT>::getKernelParameters(
+std::vector<double> lsst::fw::Kernel::getKernelParameters(
     double x,   ///< x at which to evaluate the spatial model
     double y    ///< y at which to evaluate the spatial model
 ) const {
@@ -172,8 +169,7 @@ std::vector<double> lsst::fw::Kernel<PixelT>::getKernelParameters(
  *
  * \throw lsst::mwi::exceptions::InvalidParameter if params is the wrong shape.
  */
-template<typename PixelT>
-void lsst::fw::Kernel<PixelT>::setSpatialParameters(const std::vector<std::vector<double> > params) {
+void lsst::fw::Kernel::setSpatialParameters(const std::vector<std::vector<double> > params) {
     unsigned int nKernelParams = this->getNKernelParameters();
     if (params.size() != nKernelParams) {
         throw lsst::mwi::exceptions::InvalidParameter(
@@ -199,17 +195,11 @@ void lsst::fw::Kernel<PixelT>::setSpatialParameters(const std::vector<std::vecto
  * It will fail in unpredictable ways if either condition is not met.
  * The only reason it is not protected is because the convolveLinear function needs it.
  */
-template<typename PixelT>
-void lsst::fw::Kernel<PixelT>::computeKernelParametersFromSpatialModel(std::vector<double> &kernelParams, double x, double y) const {
-    typename std::vector<double>::iterator kIter = kernelParams.begin();
-    typename std::vector<std::vector<double> >::const_iterator sIter = _spatialParams.begin();
+void lsst::fw::Kernel::computeKernelParametersFromSpatialModel(std::vector<double> &kernelParams, double x, double y) const {
+    std::vector<double>::iterator kIter = kernelParams.begin();
+    std::vector<std::vector<double> >::const_iterator sIter = _spatialParams.begin();
     for ( ; kIter != kernelParams.end(); ++kIter, ++sIter) {
         _spatialFunctionPtr->setParameters(*sIter);
         *kIter = (*_spatialFunctionPtr)(x,y);
     }
 }
-   
-// Explicit instantiations
-template class lsst::fw::Kernel<int>;
-template class lsst::fw::Kernel<float>;
-template class lsst::fw::Kernel<double>;

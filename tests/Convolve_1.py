@@ -92,7 +92,7 @@ def refConvolve(imVarMask, kernel, edgeBit, doNormalize):
     return (retImage, retVariance, retMask)
 
 def makeGaussianKernelVec(kCols, kRows):
-    """Create a fw.vectorKernelDPtr of gaussian kernels.
+    """Create a fw.VectorKernel of gaussian kernels.
 
     This is useful for constructing a LinearCombinationKernel.
     """
@@ -101,10 +101,10 @@ def makeGaussianKernelVec(kCols, kRows):
         (1.5, 2.5),
         (2.5, 1.5),
     ]
-    kVec = fw.vectorKernelDPtr()
+    kVec = fw.KernelListD()
     for xSigma, ySigma in xySigmaList:
         fPtr =  fw.Function2DPtr(fw.GaussianFunction2D(1.5, 2.5))
-        basisKernelPtr = fw.KernelDPtr(fw.AnalyticKernelD(fPtr, kCols, kRows))
+        basisKernelPtr = fw.KernelPtr(fw.AnalyticKernel(fPtr, kCols, kRows))
         kVec.append(basisKernelPtr)
     return kVec
 
@@ -147,7 +147,7 @@ class ConvolveTestCase(unittest.TestCase):
         
         # create a delta function kernel that has 1,1 in the center
         fPtr =  fw.Function2DPtr(fw.IntegerDeltaFunction2D(0.0, 0.0))
-        k = fw.AnalyticKernelD(fPtr, 3, 3)
+        k = fw.AnalyticKernel(fPtr, 3, 3)
         
         cnvMaskedImage = fw.convolve(maskedImage, k, edgeBit, True)
     
@@ -168,7 +168,7 @@ class ConvolveTestCase(unittest.TestCase):
         doNormalize = False
 
         fPtr =  fw.Function2DPtr(fw.GaussianFunction2D(1.5, 2.5))
-        k = fw.AnalyticKernelD(fPtr, kCols, kRows)
+        k = fw.AnalyticKernel(fPtr, kCols, kRows)
         
         fullMaskedImage = fw.MaskedImageF()
         fullMaskedImage.readFits(InputMaskedImagePath)
@@ -209,7 +209,7 @@ class ConvolveTestCase(unittest.TestCase):
         edgeBit = 7
 
         fPtr =  fw.Function2DPtr(fw.GaussianFunction2D(1.5, 2.5))
-        k = fw.AnalyticKernelD(fPtr, kCols, kRows)
+        k = fw.AnalyticKernel(fPtr, kCols, kRows)
         
         fullMaskedImage = fw.MaskedImageF()
         fullMaskedImage.readFits(InputMaskedImagePath)
@@ -258,7 +258,7 @@ class ConvolveTestCase(unittest.TestCase):
         )
    
         fPtr =  fw.Function2DPtr(fw.GaussianFunction2D(1.0, 1.0))
-        k = fw.AnalyticKernelD(fPtr, kCols, kRows, sFuncPtr, sParams)
+        k = fw.AnalyticKernel(fPtr, kCols, kRows, sFuncPtr, sParams)
         
         fullMaskedImage = fw.MaskedImageF()
         fullMaskedImage.readFits(InputMaskedImagePath)
@@ -315,7 +315,7 @@ class ConvolveTestCase(unittest.TestCase):
                 kerArr[deltaInd] = 1.0
                 kerArr.shape = [kCols, kRows]
                 kerIm = imTestUtils.imageFromArray(kerArr)
-                kernel = fw.FixedKernelD(kerIm)
+                kernel = fw.FixedKernel(kerIm)
                 
                 refCnvMaskedImage = fw.convolve(maskedImage, kernel, edgeBit, doNormalize)
                 refCnvImage, refCnvVariance, refCnvMask = \
@@ -366,7 +366,7 @@ class ConvolveTestCase(unittest.TestCase):
         )
         
         kVec = makeGaussianKernelVec(kCols, kRows)
-        lcKernel = fw.LinearCombinationKernelD(kVec, sFuncPtr, sParams)
+        lcKernel = fw.LinearCombinationKernel(kVec, sFuncPtr, sParams)
 
         refCnvMaskedImage = fw.convolve(maskedImage, lcKernel, edgeBit, doNormalize)
         refCnvImage, refCnvVariance, refCnvMask = \
@@ -430,7 +430,7 @@ class ConvolveTestCase(unittest.TestCase):
         )
         
         kVec = makeGaussianKernelVec(kCols, kRows)
-        lcKernel = fw.LinearCombinationKernelD(kVec, sFuncPtr, sParams)
+        lcKernel = fw.LinearCombinationKernel(kVec, sFuncPtr, sParams)
 
         refCnvMaskedImage = fw.convolve(maskedImage, lcKernel, edgeBit, doNormalize)
         refCnvImage, refCnvVariance, refCnvMask = \
