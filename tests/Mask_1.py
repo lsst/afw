@@ -7,6 +7,13 @@ import lsst.fw.Core.fwLib as fw
 import lsst.mwi.tests as tests
 import lsst.mwi.data as mwid
 import fwTests
+from lsst.mwi.exceptions import *
+
+import lsst.fw.Display.ds9 as ds9
+try:
+    type(display)
+except NameError:
+    display = False
 
 try:
     type(verbose)
@@ -17,10 +24,10 @@ class MaskTestCase(unittest.TestCase):
     """A test case for Mask (based on Mask_1.cc)"""
 
     def setUp(self):
-        #import rhl; rhl.cmdtrace(11)
         maskImage = fw.ImageViewU(300,400)
 
         self.testMask = fw.MaskU(fw.MaskIVwPtrT(maskImage))
+        self.testMask.clearAllMaskPlanes() # reset so tests will be deterministic
 
         for p in ("CR", "BP"):
             self.testMask.addMaskPlane(p)
@@ -49,7 +56,7 @@ class MaskTestCase(unittest.TestCase):
         for p in range(0,8):
             sp = "P%d" % p
             plane = self.testMask.addMaskPlane(sp)
-            #print "Assigned %s to plane %d" % (sp, plane)
+            print "Assigned %s to plane %d" % (sp, plane)
 
         for p in range(0,8):
             sp = "P%d" % p
@@ -116,6 +123,103 @@ class MaskTestCase(unittest.TestCase):
         self.testMask.removeMaskPlane("BP")
 
         self.assertEqual(self.testMask.getMaskPlane("BP"), -1, "Plane BP is removed")
+
+    def testInvalidPlaneOperations(self):
+        """Test mask plane operations invalidated by Mask changes"""
+
+        testMask3 = fw.MaskU(self.testMask.getCols(), self.testMask.getRows())
+        
+        name = "Great Timothy"
+        testMask3.addMaskPlane(name)
+        testMask3.removeMaskPlane(name) # invalidates dictionary version
+
+        def tst():
+            self.testMask |= testMask3
+
+        self.assertRaises(LsstRuntime, tst)
+        self.testMask.this.acquire()    # Work around bug in swig "mask |= mask;" leaks when |= throws
+
+    def testInvalidPlaneOperations2(self):
+        """Test mask plane operations invalidated by Mask changes"""
+
+        testMask3 = fw.MaskU(self.testMask.getCols(), self.testMask.getRows())
+        
+        name = "Great Timothy"
+        name2 = "Our Boss"
+        testMask3.addMaskPlane(name)
+        testMask3.addMaskPlane(name2)
+        oldDict = testMask3.getMaskPlaneDict()
+
+        self.testMask.removeMaskPlane(name)
+        self.testMask.removeMaskPlane(name2)
+        self.testMask.addMaskPlane(name2) # added in opposite order to testMask3
+        self.testMask.addMaskPlane(name)
+
+        self.assertNotEqual(self.testMask.getMaskPlaneDict()[name], oldDict[name])
+
+        def tst():
+            self.testMask |= testMask3
+
+        self.assertRaises(LsstRuntime, tst)
+        self.testMask.this.acquire()    # Work around bug in swig "mask |= mask;" leaks when |= throws
+
+    def XXtestConformMaskPlanes(self):
+        """Test conformMaskPlanes() when the two planes are actually the same"""
+
+        testMask3 = fw.MaskU(self.testMask.getCols(), self.testMask.getRows())
+        oldDict = self.testMask.getMaskPlaneDict()
+
+        name = "XXX"
+        self.testMask.addMaskPlane(name)
+        self.testMask.removeMaskPlane(name) # invalidates dictionary version
+
+        testMask3.conformMaskPlanes(oldDict)
+
+        self.testMask |= testMask3
+
+    def testConformMaskPlanes2(self):
+        """Test conformMaskPlanes() when the two planes are different"""
+
+        testMask3 = fw.MaskU(self.testMask.getCols(), self.testMask.getRows())
+        
+        name1 = "Great Timothy"
+        name2 = "Our Boss"
+        p1 = testMask3.addMaskPlane(name1)
+        p2 = testMask3.addMaskPlane(name2)
+        oldDict = self.testMask.getMaskPlaneDict()
+
+        testMask3.setMaskPlaneValues(p1, 0, 5, 0)
+        testMask3.setMaskPlaneValues(p2, 0, 5, 1)
+
+        if display:
+            im = fw.ImageD(self.testMask.getCols(), self.testMask.getRows())
+            ds9.mtv(im)                 # bug in Mask display; needs an Image first
+            ds9.mtv(testMask3)
+
+        self.assertEqual(testMask3.getVal(0,0), testMask3.getPlaneBitMask(name1))
+        self.assertEqual(testMask3.getVal(0,1), testMask3.getPlaneBitMask(name2))
+
+        self.testMask.removeMaskPlane(name1)
+        self.testMask.removeMaskPlane(name2)
+        self.testMask.addMaskPlane(name2) # added in opposite order to testMask3
+        self.testMask.addMaskPlane(name1)
+
+        self.assertEqual(self.testMask.getVal(0,0), 0)
+
+        if display:
+            ds9.mtv(im, frame=1)
+            ds9.mtv(testMask3, frame=1)
+
+        testMask3.conformMaskPlanes(oldDict)
+
+        self.assertEqual(testMask3.getVal(0,0), testMask3.getPlaneBitMask(name1))
+        self.assertEqual(testMask3.getVal(0,1), testMask3.getPlaneBitMask(name2))
+
+        if display:
+            ds9.mtv(im, frame=2)
+            ds9.mtv(testMask3, frame=2)
+
+        self.testMask |= testMask3
 
     def testSubmask(self):
         """Test submask methods"""

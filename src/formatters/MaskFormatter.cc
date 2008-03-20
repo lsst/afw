@@ -140,7 +140,7 @@ void MaskFormatter<MaskPixelT>::delegateSerialize(
         throw std::runtime_error("Serializing non-Mask");
     }
     ar & ip->_metaData & ip->_offsetRows & ip->_offsetCols;
-    ar & ip->_maskPlaneDict & ip->_numPlanesUsed;
+    ar & ip->_maskPlaneDict;
     unsigned int cols;
     unsigned int rows;
     unsigned int planes;

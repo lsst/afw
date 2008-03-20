@@ -27,18 +27,15 @@ void test(char *name) {
 
     Mask<MaskPixelType>::MaskPlaneDict LSSTPlaneDefs;
 
-    LSSTPlaneDefs[0] = "BAD";
-    LSSTPlaneDefs[1] = "SAT";
-    LSSTPlaneDefs[2] = "EDGE";
-    LSSTPlaneDefs[3] = "OBJ";
-
+    LSSTPlaneDefs["BAD"] = 0;
+    LSSTPlaneDefs["SAT"] = 1;
+    LSSTPlaneDefs["EDGE"] = 2;
+    LSSTPlaneDefs["OBJ"] = 3;
 
     MaskedImage<ImagePixelType, MaskPixelType> testMasked(LSSTPlaneDefs);
     testMasked.readFits(name, true);   // second arg says to conform mask planes
 
     testMasked.writeFits("testout");
-
-
 }
 
 int main(int argc, char *argv[]) {

@@ -147,7 +147,7 @@ def version(HeadURL = r"$HeadURL$"):
 // Masks and MaskedImages
 %template(pairIntInt)    std::pair<int,int>;
 %template(pairIntString) std::pair<int,std::string>;
-%template(mapIntString)  std::map<int,std::string>;
+%template(mapIntString)  std::map<std::string, int>;
 
 %ignore lsst::fw::Image::origin;        // no need to swig origin (and the _wrap.cc file is invalid)
 %ignore lsst::fw::Mask::origin;         // no need to swig origin (and the _wrap.cc file is invalid)
@@ -165,7 +165,7 @@ def version(HeadURL = r"$HeadURL$"):
 %include "lsst/fw/DiskImageResourceFITS.h"
 
 %extend lsst::fw::Image<boost::uint16_t> {
-    %rename(getPtr) get;
+    %rename(getVal) get;
     /**
      * Set an image to the value val
      */
@@ -183,10 +183,13 @@ def version(HeadURL = r"$HeadURL$"):
     boost::uint16_t get(int x, int y) {
         return self->operator()(x, y);
     }
+%pythoncode %{
+    getPtr = getVal	# Keep old (confusing) name
+%}
 }
 
 %extend lsst::fw::Image<float> {
-    %rename(getPtr) get;
+    %rename(getVal) get;
     /**
      * Set an image to the value val
      */
@@ -207,10 +210,13 @@ def version(HeadURL = r"$HeadURL$"):
     float get(int x, int y) {
         return self->operator()(x, y);
     }
+%pythoncode %{
+    getPtr = getVal	# Keep old (confusing) name
+%}
 }
 
 %extend lsst::fw::Image<double> {
-    %rename(getPtr) get;
+    %rename(getVal) get;
     /**
      * Set an image to the value val
      */
@@ -231,11 +237,14 @@ def version(HeadURL = r"$HeadURL$"):
     double get(int x, int y) {
         return self->operator()(x, y);
     }
+%pythoncode %{
+    getPtr = getVal	# Keep old (confusing) name
+%}
 }
 
 
 %extend lsst::fw::Mask<lsst::fw::maskPixelType> {
-    %rename(getPtr) get;
+    %rename(getVal) get;
     /**
      * Set entire mask to val
      */
@@ -256,6 +265,9 @@ def version(HeadURL = r"$HeadURL$"):
     lsst::fw::maskPixelType get(int x, int y) {
         return self->operator()(x, y);
     }
+%pythoncode %{
+    getPtr = getVal	# Keep old (confusing) name
+%}
 }
 
 %include "lsst/mwi/persistenceMacros.i"

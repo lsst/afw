@@ -37,7 +37,7 @@ class ReadFitsTestCase(unittest.TestCase):
         self.im.readFits(os.path.join(dataDir, "small_img.fits"))
         
         col, row, val = 0, 0, 1154
-        self.assertEqual(self.im.getPtr(col, row), val)
+        self.assertEqual(self.im.getVal(col, row), val)
 
     def testS16(self):
         """Test reading S16 image"""
@@ -47,14 +47,14 @@ class ReadFitsTestCase(unittest.TestCase):
             import lsst.fw.Display.ds9 as ds9; ds9.mtv(self.im)
         
         col, row, val = 32, 1, 62
-        self.assertEqual(self.im.getPtr(col, row), val)
+        self.assertEqual(self.im.getVal(col, row), val)
 
     def testF32(self):
         """Test reading F32 image"""
         self.im.readFits(os.path.join(dataDir, "871034p_1_MI_var.fits"))
         
         col, row, val = 32, 1, 39.11672
-        self.assertAlmostEqual(self.im.getPtr(col, row), val, 5)
+        self.assertAlmostEqual(self.im.getVal(col, row), val, 5)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

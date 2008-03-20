@@ -60,18 +60,19 @@ namespace fw {
     public:
         typedef typename PixelChannelType<MaskPixelT>::type MaskChannelT;
         typedef vw::ImageView<MaskPixelT> MaskIVwT;
-        typedef boost::shared_ptr<Mask<MaskPixelT> > MaskPtrT;
+        typedef boost::shared_ptr<Mask<MaskPixelT> > Ptr;
+        typedef boost::shared_ptr<Mask<MaskPixelT> > MaskPtrT; // deprecated; use Ptr
         typedef boost::shared_ptr<MaskIVwT> MaskIVwPtrT;
         typedef typename vw::ImageView<MaskPixelT>::pixel_accessor pixel_accessor;
-        typedef std::map<int, std::string> MaskPlaneDict;
+        typedef std::map<std::string, int> MaskPlaneDict;
 
         // Constructors        
 
-        explicit Mask(MaskPlaneDict planeDefs = MaskPlaneDict());
+        explicit Mask(MaskPlaneDict const& planeDefs = MaskPlaneDict());
         
-        explicit Mask(MaskIVwPtrT vwImagePtr, MaskPlaneDict planeDefs = MaskPlaneDict());
+        explicit Mask(MaskIVwPtrT vwImagePtr, MaskPlaneDict const& planeDefs = MaskPlaneDict());
         
-        explicit Mask(int nCols, int nRows, MaskPlaneDict planeDefs = MaskPlaneDict());
+        explicit Mask(int nCols, int nRows, MaskPlaneDict const& planeDefs = MaskPlaneDict());
 
         // Operators
 
@@ -128,7 +129,7 @@ namespace fw {
         
         int getNumPlanesMax() const { return 8 * sizeof(MaskChannelT); }
 
-        int getNumPlanesUsed() const { return _numPlanesUsed; }
+        int getNumPlanesUsed() const { return _maskPlaneDict.size(); }
 
         MaskPlaneDict getMaskPlaneDict() const;
         
@@ -162,9 +163,8 @@ private:
         LSST_PERSIST_FORMATTER(formatters::MaskFormatter<MaskPixelT>);
 
         MaskIVwPtrT _vwImagePtr;
-        MaskPlaneDict _maskPlaneDict;
-        int _numPlanesUsed;
         lsst::mwi::data::DataProperty::PtrType _metaData;
+        static MaskPlaneDict _maskPlaneDict;
         static const std::string maskPlanePrefix;
         unsigned int _offsetRows;
         unsigned int _offsetCols;
@@ -172,16 +172,25 @@ private:
         void setOffsetRows(unsigned int offset);
         void setOffsetCols(unsigned int offset);
         
-        MaskChannelT getBitMask(int plane) const { return plane >= 0 ? 1 << plane : 0; }
+        MaskChannelT getBitMask(int plane) const;
+
+        static int _MaskDictVersion;    // version number for bitplane dictionary
+        int _MyMaskDictVersion;         // version number for bitplane dictionary for this Mask
+        //
+        // Check that masks have the same dictionary version
+        //
+        // @throw lsst::mwi::exceptions::Runtime
+        //
+        void checkMaskDictionaries(Mask const &other) const {
+            if (_MyMaskDictVersion != other._MyMaskDictVersion) {
+                throw lsst::mwi::exceptions::Runtime("Mask dictionary versions do not match");
+            }
+        }        
 
         int addMaskPlane(std::string name, int plane);
     };
 
 }}  // lsst::fw
-  
-#ifndef SWIG // don't bother SWIG with .cc files
-#include "Mask.cc"  
-#endif
         
 #endif // LSST_MASK_H
 

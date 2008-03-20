@@ -23,6 +23,7 @@ env.SharedLibrary(
         "Kernel/DeltaFunctionKernel.cc",
         "Kernel/LinearCombinationKernel.cc",
         "MovingObjectPrediction.cc",
+        "Mask.cc",
         "WCS.cc",
         )],
     LIBS=env.getlibs("boost mwi vw wcslib cfitsio")

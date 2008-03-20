@@ -148,9 +148,6 @@ void lsst::fw::kernel::basicConvolve(
             "maskedImage smaller than kernel in columns and/or rows");
     }
     
-    // copy mask plane names
-    convolvedImage.getMask()->conformMaskPlanes(maskedImage.getMask()->getMaskPlaneDict());
-
     const int cnvCols = static_cast<int>(mImageColAccs) + 1 - static_cast<int>(kernel.getCols());
     const int cnvRows = static_cast<int>(mImageRowAccs) + 1 - static_cast<int>(kernel.getRows());
     const int cnvStartCol = static_cast<int>(kernel.getCtrCol());
@@ -368,9 +365,6 @@ void lsst::fw::kernel::convolveLinear(
             "maskedImage smaller than kernel in columns and/or rows");
     }
     
-    // copy mask plane names
-    convolvedImage.getMask()->conformMaskPlanes(maskedImage.getMask()->getMaskPlaneDict());
-
     typedef lsst::fw::MaskedImage<ImageT, MaskT> maskedImageType;
     typedef boost::shared_ptr<maskedImageType> maskedImagePtrType;
     typedef lsst::fw::MaskedPixelAccessor<ImageT, MaskT> maskedPixelAccessorType;

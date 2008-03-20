@@ -98,7 +98,7 @@ namespace fw {
         typedef boost::shared_ptr<Mask<MaskPixelT> > MaskPtrT;
         typedef boost::shared_ptr<MaskedImage<ImagePixelT, MaskPixelT> > MaskedImagePtrT;
         typedef MaskedImage<ImagePixelT, MaskPixelT> MaskedImageT;
-        typedef std::map<int, std::string> MaskPlaneDict;
+        typedef typename Mask<MaskPixelT>::MaskPlaneDict MaskPlaneDict;
         
         // Constructors
         MaskedImage(MaskPlaneDict planeDefs = MaskPlaneDict());

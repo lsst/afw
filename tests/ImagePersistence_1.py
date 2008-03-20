@@ -53,8 +53,8 @@ assert image.getOffsetRows() == image2.getOffsetRows()
 assert image.getOffsetCols() == image2.getOffsetCols()
 for c in xrange(image.getCols()):
     for r in xrange(image.getRows()):
-        pixel1 = image.getPtr(c, r)
-        pixel2 = image2.getPtr(c, r)
+        pixel1 = image.getVal(c, r)
+        pixel2 = image2.getVal(c, r)
         # Persisting through Boost text archives causes conversion error!
         # assert abs(pixel1 - pixel2) / pixel1 < 1e-7, \
         assert pixel1 == pixel2, \
