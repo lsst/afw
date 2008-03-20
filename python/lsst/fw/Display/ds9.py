@@ -19,16 +19,6 @@ WHITE = "white"; BLACK = "black"
 RED = "red"; GREEN = "green"; BLUE = "blue"
 CYAN = "cyan"; MAGENTA = "magenta"; YELLOW = "yellow"
 _maskColors = [WHITE, BLACK, RED, GREEN, BLUE, CYAN, MAGENTA, YELLOW]
-#
-# Mapping from mask plane names to colours
-#
-_maskPlaneColors = {
-    "BAD": RED,
-    "CR" : MAGENTA,
-    "EDGE": YELLOW,
-    "INTRP" : GREEN,
-    "SAT" : GREEN,
-    }
 
 def setMaskPlaneColor(name, color=None):
     """Request that mask plane name be displayed as color; name may be a dictionary
@@ -40,12 +30,29 @@ def setMaskPlaneColor(name, color=None):
             setMaskPlaneColor(k, name[k])
         return
 
+    global _maskPlaneColors
+    try:
+        type(_maskPlaneColors)
+    except:
+        _maskPlaneColors = {}
+
     for c in _maskColors:
         if color == c:
             _maskPlaneColors[name] = color
             return
 
     raise RuntimeError, "%s is not a supported colour" % color
+#
+# Default mapping from mask plane names to colours
+#
+setMaskPlaneColor({
+    "BAD": RED,
+    "CR" : MAGENTA,
+    "EDGE": YELLOW,
+    "INTRP" : GREEN,
+    "SAT" : GREEN,
+    "DETECTED" : BLUE,
+    })
 
 def getMaskPlaneColor(name):
     """Return the colour associated with the specified mask plane name"""
@@ -54,6 +61,34 @@ def getMaskPlaneColor(name):
         return _maskPlaneColors[name]
     else:
         return None
+
+def setMaskPlaneVisibility(name, show=True):
+    """Specify the visibility of a given mask plane; name may be a dictionary (in which case show will be ignored)"""
+
+    global _maskPlaneVisibility
+    try:
+        type(_maskPlaneVisibility)
+    except NameError, e:
+        _maskPlaneVisibility = {}
+
+    if isinstance(name, dict):
+        for k in name.keys():
+            setMaskPlaneVisibility(k, name[k])
+        return
+
+    _maskPlaneVisibility[name] = show
+
+setMaskPlaneVisibility({})
+
+def getMaskPlaneVisibility(name):
+    """Should we display the specified mask plane name?"""
+
+    if _maskPlaneVisibility.has_key(name):
+        return _maskPlaneVisibility[name]
+    else:
+        return True
+
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def ds9Cmd(cmd):
    """Issue a ds9 command, raising errors as appropriate"""
@@ -126,6 +161,9 @@ system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
        colorIndex = 0                   # index into maskColors
        for p in range(nMaskPlanes):
            if maskPlanes[p]:
+               if not getMaskPlaneVisibility(maskPlanes[p]):
+                   continue
+
                mask = data.getSubMask(fw.BBox2i(0, 0, cols, rows)) # the only way to get a copy
                mask &= (1 << p)
 
