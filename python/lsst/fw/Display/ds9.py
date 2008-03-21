@@ -158,16 +158,20 @@ system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
        maskPlanes = data.getMaskPlaneDict()
        cols, rows = data.getCols(), data.getRows()
 
+       planes = {}                      # build inverse dictionary
+       for key in maskPlanes.keys():
+           planes[maskPlanes[key]] = key
+
        colorIndex = 0                   # index into maskColors
        for p in range(nMaskPlanes):
-           if maskPlanes[p]:
-               if not getMaskPlaneVisibility(maskPlanes[p]):
+           if planes[p]:
+               if not getMaskPlaneVisibility(planes[p]):
                    continue
 
                mask = data.getSubMask(fw.BBox2i(0, 0, cols, rows)) # the only way to get a copy
                mask &= (1 << p)
 
-               color = getMaskPlaneColor(maskPlanes[p])
+               color = getMaskPlaneColor(planes[p])
 
                if not color:            # none was specified
                    while True:

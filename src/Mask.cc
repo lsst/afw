@@ -11,14 +11,14 @@ Mask<MaskPixelT>::Mask(MaskPlaneDict const& planeDefs) :
     _vwImagePtr(new vw::ImageView<MaskPixelT>()),
     _metaData(lsst::mwi::data::SupportFactory::createPropertyNode("FitsMetaData")),
     _offsetRows(0), _offsetCols(0),
-    _MyMaskDictVersion(_MaskDictVersion) {
+    _myMaskDictVersion(_maskDictVersion) {
 
     lsst::mwi::utils::Trace("fw.Mask", 5,
               boost::format("Number of mask planes: %d") % getNumPlanesMax());
 
     if (planeDefs.size() > 0) {
         _maskPlaneDict = planeDefs;
-        _MyMaskDictVersion = ++_MaskDictVersion;
+        _myMaskDictVersion = ++_maskDictVersion;
     }
 }
 
@@ -28,14 +28,14 @@ Mask<MaskPixelT>::Mask(MaskIVwPtrT vwImagePtr, MaskPlaneDict const& planeDefs):
     _vwImagePtr(vwImagePtr),
     _metaData(lsst::mwi::data::SupportFactory::createPropertyNode("FitsMetaData")),
     _offsetRows(0), _offsetCols(0),
-    _MyMaskDictVersion(_MaskDictVersion) {
+    _myMaskDictVersion(_maskDictVersion) {
     
     lsst::mwi::utils::Trace("fw.Mask", 5,
               boost::format("Number of mask planes: %d") % getNumPlanesMax());
 
     if (planeDefs.size() > 0) {
         _maskPlaneDict = planeDefs;
-        _MyMaskDictVersion = ++_MaskDictVersion;
+        _myMaskDictVersion = ++_maskDictVersion;
     }
 }
 
@@ -45,14 +45,14 @@ Mask<MaskPixelT>::Mask(int ncols, int nrows, MaskPlaneDict const& planeDefs) :
     _vwImagePtr(new vw::ImageView<MaskPixelT>(ncols, nrows)),
     _metaData(lsst::mwi::data::SupportFactory::createPropertyNode("FitsMetaData")),
     _offsetRows(0), _offsetCols(0),
-    _MyMaskDictVersion(_MaskDictVersion) {
+    _myMaskDictVersion(_maskDictVersion) {
 
     lsst::mwi::utils::Trace("fw.Mask", 5,
               boost::format("Number of mask planes: %d") % getNumPlanesMax());
 
     if (planeDefs.size() > 0) {
         _maskPlaneDict = planeDefs;
-        _MyMaskDictVersion = ++_MaskDictVersion;
+        _myMaskDictVersion = ++_maskDictVersion;
     }
 }
 
@@ -82,18 +82,35 @@ lsst::mwi::data::DataProperty::PtrType Mask<MaskPixelT>::getMetaData()
     return _metaData;
 }
 
+/**
+ * \brief Read a Mask from disk
+ *
+ * The meaning of the bitplanes is given in the header.  If conformMasks is false (default),
+ * the bitvalues will be changed to match those in Mask's plane dictionary.  If it's true, the
+ * bitvalues will be left alone, but Mask's dictionary will be modified to match the
+ * on-disk version
+ */
 template<typename MaskPixelT>
-void Mask<MaskPixelT>::readFits(const std::string& fileName, bool conformMasks, int hdu)
-{
+void Mask<MaskPixelT>::readFits(const std::string& fileName, //!< Name of file to read
+                                bool conformMasks, //!< Make Mask conform to mask layout in file?
+                                int hdu //!< HDU to read
+                               ) {
     LSSTFitsResource<MaskPixelT> fitsRes;
     fitsRes.readFits(fileName, *_vwImagePtr, _metaData, hdu);
-    if (conformMasks==true) {
-        MaskPlaneDict masterPlaneDefs = _maskPlaneDict;
-        parseMaskPlaneMetaData(_metaData);
-        conformMaskPlanes(masterPlaneDefs);
-    } else {
-        parseMaskPlaneMetaData(_metaData);
-    }        
+
+    MaskPlaneDict fileMaskDict = parseMaskPlaneMetaData(_metaData); // what mask planes are present in the file?
+
+    if (fileMaskDict == _maskPlaneDict) { // file is consistent with Mask
+        return;
+    }
+    
+    if (conformMasks) {                 // adopt the definitions in the file
+        _maskPlaneDict = fileMaskDict;
+        _maskDictVersion++;
+    }
+
+    conformMaskPlanes(fileMaskDict);    // convert planes defined by fileMaskDict to the order
+    ;                                   // defined by Mask::_maskPlaneDict
 }
 
 template<typename MaskPixelT>
@@ -149,7 +166,7 @@ void Mask<MaskPixelT>::removeMaskPlane(const std::string& name)
         id = getMaskPlane(name);
         clearMaskPlane(id);
         _maskPlaneDict.erase(name);
-        _MyMaskDictVersion = ++_MaskDictVersion;
+        _myMaskDictVersion = ++_maskDictVersion;
         return;
      } catch (std::exception &e) {
         lsst::mwi::utils::Trace("fw.Mask", 0,
@@ -215,16 +232,21 @@ typename Mask<MaskPixelT>::MaskChannelT Mask<MaskPixelT>::getPlaneBitMask(
     return getBitMask(getMaskPlane(name));
 }
 
+// \brief Reset the maskPlane dictionary
+template<typename MaskPixelT>
+void Mask<MaskPixelT>::clearMaskPlaneDict() {
+    _maskPlaneDict.clear();
+    _myMaskDictVersion = ++_maskDictVersion;
+}
+
+// \brief Clear all the pixels in a Mask
 template<typename MaskPixelT>
 void Mask<MaskPixelT>::clearAllMaskPlanes() {
-    _maskPlaneDict.clear();
-    _MyMaskDictVersion = ++_MaskDictVersion;
-
     for (unsigned int y = 0; y != getRows(); y++) {
         for (unsigned int x = 0; x != getCols(); x++) {
             (*_vwImagePtr)(x,y) = 0;
         }
-     }
+    }
 }
 
 // clearMaskPlane(int plane) clears the bit specified by "plane" in all pixels in the mask
@@ -247,10 +269,11 @@ void Mask<MaskPixelT>::clearMaskPlane(int plane) {
 // the bits within each pixel are permuted as required
 //
 template<typename MaskPixelT>
-void Mask<MaskPixelT>::conformMaskPlanes(MaskPlaneDict currentPlaneDict) {
+void Mask<MaskPixelT>::conformMaskPlanes(MaskPlaneDict currentPlaneDict
+                                        ) {
 
     if (_maskPlaneDict == currentPlaneDict) {
-        _MyMaskDictVersion = _MaskDictVersion;
+        _myMaskDictVersion = _maskDictVersion;
         return;   // nothing to do
     }
     //
@@ -293,7 +316,7 @@ void Mask<MaskPixelT>::conformMaskPlanes(MaskPlaneDict currentPlaneDict) {
         }
     }
     // We've made the planes match the current mask dictionary
-    _MyMaskDictVersion = _MaskDictVersion;
+    _myMaskDictVersion = _maskDictVersion;
 }
 
 
@@ -507,31 +530,49 @@ void Mask<MaskPixelT>::addMaskPlaneMetaData(lsst::mwi::data::DataProperty::PtrTy
 
 /**
  * \brief Given a DataProperty that contains the MaskPlane assignments setup the MaskPlanes.
+ *
+ * \returns a dictionary of mask names/plane assignments
  */
 template<typename MaskPixelT>
-void Mask<MaskPixelT>::parseMaskPlaneMetaData(const lsst::mwi::data::DataProperty::PtrType rootPtr) {
+typename Mask<MaskPixelT>::MaskPlaneDict Mask<MaskPixelT>::parseMaskPlaneMetaData(
+	lsst::mwi::data::DataProperty::PtrType const rootPtr //!< metadata from a Mask
+) const {
+    MaskPlaneDict newDict;
 
     lsst::mwi::data::DataProperty::iteratorRangeType range = rootPtr->searchAll( maskPlanePrefix +".*" );
     if (std::distance(range.first, range.second) == 0) {
-        return;
+        return newDict;
     }
 
-    // Clear all existing MaskPlanes
-
-    clearAllMaskPlanes();
-
-    // Iterate through matching keyWords
+    int numPlanesUsed = 0;              // number of planes used
+    // Iterate through matching keyWords setting the dictionary
     lsst::mwi::data::DataProperty::ContainerIteratorType iter;
-    for( iter = range.first; iter != range.second; iter++ ) {
+    for( iter = range.first; iter != range.second; ++iter, ++numPlanesUsed ) {
         lsst::mwi::data::DataProperty::PtrType dpPtr = *iter;
         // split off the "MP_" to get the planeName
-        std::string keyWord = dpPtr->getName();
-        std::string planeName = keyWord.substr(maskPlanePrefix.size());
+        std::string const keyWord = dpPtr->getName();
+        std::string const planeName = keyWord.substr(maskPlanePrefix.size());
         // will throw an exception if the found item does not contain const int
-        int planeId = boost::any_cast<const int>(dpPtr->getValue());
-        addMaskPlane(planeName, planeId);
+        int const planeId = boost::any_cast<const int>(dpPtr->getValue());
+
+        typename Mask<MaskPixelT>::MaskPlaneDict::const_iterator plane = newDict.find(planeName);
+        if (plane != newDict.end() && planeId != plane->second) {
+            throw lsst::mwi::exceptions::Runtime("File specifies plane " + planeName + " twice");
+        }
+
+        // build new entry
+        if (numPlanesUsed >= getNumPlanesMax()) {
+            // Max number of planes already allocated
+            throw OutOfPlaneSpace("Max number of planes already used")
+                << lsst::mwi::data::DataProperty("numPlanesUsed", numPlanesUsed)
+                << lsst::mwi::data::DataProperty("numPlanesMax", getNumPlanesMax());
+        }
+
+        newDict[planeName] = planeId;
+        
     }
 
+    return newDict;
 }
 
 template<typename MaskPixelT>
@@ -570,10 +611,10 @@ static typename Mask<MaskPixelT>::MaskPlaneDict initMaskPlanes() {
 
     int i = -1;
     planeDict["BAD"] = ++i;
+    planeDict["SAT"] = ++i;
+    planeDict["INTRP"] = ++i;
     planeDict["CR"] = ++i;
     planeDict["EDGE"] = ++i;
-    planeDict["INTRP"] = ++i;
-    planeDict["SAT"] = ++i;
 
     return planeDict;
 }
@@ -588,7 +629,7 @@ template<typename MaskPixelT>
 typename Mask<MaskPixelT>::MaskPlaneDict Mask<MaskPixelT>::_maskPlaneDict = initMaskPlanes<MaskPixelT>();
 
 template<typename MaskPixelT> 
-int Mask<MaskPixelT>::_MaskDictVersion = 0;    // version number for bitplane dictionary
+int Mask<MaskPixelT>::_maskDictVersion = 0;    // version number for bitplane dictionary
 
 /************************************************************************************************************/
 //

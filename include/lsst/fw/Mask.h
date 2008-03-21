@@ -110,17 +110,18 @@ namespace fw {
                              MaskChannelT& bitMask) const;
         MaskChannelT getPlaneBitMask(const std::string& name) const;
 
-        void clearMaskPlane(int plane);
+        void clearMaskPlaneDict();
         
         void clearAllMaskPlanes();
-        
+        void clearMaskPlane(int plane);
+
         void setMaskPlaneValues(int plane, std::list<PixelCoord> pixelList);
 
         void setMaskPlaneValues(const int plane, const int x0, const int x1, const int y);
 
         void setMaskPlaneValues(int plane, MaskPixelBooleanFunc<MaskPixelT> selectionFunc);
         
-        void parseMaskPlaneMetaData(const lsst::mwi::data::DataProperty::PtrType);
+        MaskPlaneDict parseMaskPlaneMetaData(lsst::mwi::data::DataProperty::PtrType const) const;
         
         void addMaskPlaneMetaData(lsst::mwi::data::DataProperty::PtrType);
         
@@ -174,15 +175,15 @@ private:
         
         MaskChannelT getBitMask(int plane) const;
 
-        static int _MaskDictVersion;    // version number for bitplane dictionary
-        int _MyMaskDictVersion;         // version number for bitplane dictionary for this Mask
+        static int _maskDictVersion;    // version number for bitplane dictionary
+        int _myMaskDictVersion;         // version number for bitplane dictionary for this Mask
         //
         // Check that masks have the same dictionary version
         //
         // @throw lsst::mwi::exceptions::Runtime
         //
         void checkMaskDictionaries(Mask const &other) const {
-            if (_MyMaskDictVersion != other._MyMaskDictVersion) {
+            if (_myMaskDictVersion != other._myMaskDictVersion) {
                 throw lsst::mwi::exceptions::Runtime("Mask dictionary versions do not match");
             }
         }        

@@ -27,7 +27,7 @@ class MaskTestCase(unittest.TestCase):
         maskImage = fw.ImageViewU(300,400)
 
         self.testMask = fw.MaskU(fw.MaskIVwPtrT(maskImage))
-        self.testMask.clearAllMaskPlanes() # reset so tests will be deterministic
+        self.testMask.clearMaskPlaneDict() # reset so tests will be deterministic
 
         for p in ("CR", "BP"):
             self.testMask.addMaskPlane(p)
