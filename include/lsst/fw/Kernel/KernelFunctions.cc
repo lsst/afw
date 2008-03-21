@@ -232,9 +232,6 @@ void lsst::fw::kernel::basicConvolve(
             "maskedImage smaller than kernel in columns and/or rows");
     }
     
-    // copy mask plane names
-    convolvedImage.getMask()->conformMaskPlanes(maskedImage.getMask()->getMaskPlaneDict());
-
     const int pixelCol = kernel.getPixel().first; // active pixel in Kernel
     const int pixelRow = kernel.getPixel().second;
     const int nCopyCols = mImageCols - abs(pixelCol); // number of columns to copy
@@ -318,8 +315,7 @@ lsst::fw::MaskedImage<ImageT, MaskT> lsst::fw::kernel::convolve(
                         ///< if negative then no bit is set
     bool doNormalize    ///< if True, normalize the kernel, else use "as is"
 ) {
-    lsst::fw::MaskedImage<ImageT, MaskT> convolvedImage(
-        maskedImage.getCols(), maskedImage.getRows(), maskedImage.getMask()->getMaskPlaneDict());
+    lsst::fw::MaskedImage<ImageT, MaskT> convolvedImage(maskedImage.getCols(), maskedImage.getRows());
     lsst::fw::kernel::convolve(convolvedImage, maskedImage, kernel, edgeBit, doNormalize);
     return convolvedImage;
 }
@@ -388,8 +384,7 @@ void lsst::fw::kernel::convolveLinear(
     maskedPixelAccessorListType basisImRowAccList;
     for (typename kernelListType::const_iterator basisKernelIter = basisKernelList.begin();
         basisKernelIter != basisKernelList.end(); ++basisKernelIter) {
-        maskedImagePtrType basisImagePtr(new maskedImageType(
-            imCols, imRows, maskedImage.getMask()->getMaskPlaneDict()));
+        maskedImagePtrType basisImagePtr(new maskedImageType(imCols, imRows));
         lsst::fw::kernel::basicConvolve(*basisImagePtr, maskedImage, **basisKernelIter, false);
         basisImagePtrList.push_back(basisImagePtr);
         basisImRowAccList.push_back(lsst::fw::MaskedPixelAccessor<ImageT, MaskT>(*basisImagePtr));
@@ -450,8 +445,7 @@ lsst::fw::MaskedImage<ImageT, MaskT> lsst::fw::kernel::convolveLinear(
     int edgeBit         ///< mask bit to indicate pixel includes edge-extended data;
                         ///< if negative then no bit is set
 ) {
-    lsst::fw::MaskedImage<ImageT, MaskT> convolvedImage(
-        maskedImage.getCols(), maskedImage.getRows(), maskedImage.getMask()->getMaskPlaneDict());
+    lsst::fw::MaskedImage<ImageT, MaskT> convolvedImage(maskedImage.getCols(), maskedImage.getRows());
     lsst::fw::kernel::convolveLinear(convolvedImage, maskedImage, kernel, edgeBit);
     return convolvedImage;
 }

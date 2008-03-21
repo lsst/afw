@@ -16,7 +16,7 @@ Mask<MaskPixelT>::Mask(MaskPlaneDict const& planeDefs) :
     lsst::mwi::utils::Trace("fw.Mask", 5,
               boost::format("Number of mask planes: %d") % getNumPlanesMax());
 
-    if (planeDefs.size() > 0) {
+    if (planeDefs.size() > 0 && planeDefs != _maskPlaneDict) {
         _maskPlaneDict = planeDefs;
         _myMaskDictVersion = ++_maskDictVersion;
     }
@@ -33,7 +33,7 @@ Mask<MaskPixelT>::Mask(MaskIVwPtrT vwImagePtr, MaskPlaneDict const& planeDefs):
     lsst::mwi::utils::Trace("fw.Mask", 5,
               boost::format("Number of mask planes: %d") % getNumPlanesMax());
 
-    if (planeDefs.size() > 0) {
+    if (planeDefs.size() > 0 && planeDefs != _maskPlaneDict) {
         _maskPlaneDict = planeDefs;
         _myMaskDictVersion = ++_maskDictVersion;
     }
@@ -50,7 +50,7 @@ Mask<MaskPixelT>::Mask(int ncols, int nrows, MaskPlaneDict const& planeDefs) :
     lsst::mwi::utils::Trace("fw.Mask", 5,
               boost::format("Number of mask planes: %d") % getNumPlanesMax());
 
-    if (planeDefs.size() > 0) {
+    if (planeDefs.size() > 0 && planeDefs != _maskPlaneDict) {
         _maskPlaneDict = planeDefs;
         _myMaskDictVersion = ++_maskDictVersion;
     }
@@ -105,8 +105,10 @@ void Mask<MaskPixelT>::readFits(const std::string& fileName, //!< Name of file t
     }
     
     if (conformMasks) {                 // adopt the definitions in the file
-        _maskPlaneDict = fileMaskDict;
-        _maskDictVersion++;
+        if (_maskPlaneDict != fileMaskDict) {
+            _maskPlaneDict = fileMaskDict;
+            _maskDictVersion++;
+        }
     }
 
     conformMaskPlanes(fileMaskDict);    // convert planes defined by fileMaskDict to the order
