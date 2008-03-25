@@ -2,38 +2,37 @@
 #include <sstream>
 #include <ctime>
 
-#include <lsst/fw/Image.h>
+#include <vw/Image.h>
 
 int main(int argc, char **argv) {
     typedef float imageType;
+    typedef vw::ImageView<imageType>::pixel_accessor accessorType;
     const unsigned DefNIter = 100;
-
-    if (argc < 3) {
-        std::cout << "Usage: timeImageAddition fitsFile1 fitsFile2 [nIter]" << std::endl;
-        std::cout << "fitsFile includes the \".fits\" suffix" << std::endl;
+    const unsigned DefNCols = 1024;
+    
+    if ((argc == 2) && (argv[1][0] == '-')) {
+        std::cout << "Usage: timeImageAddition [nIter [nCols [nRows]]]" << std::endl;
         std::cout << "nIter (default " << DefNIter << ") is the number of iterations" << std::endl;
+        std::cout << "nCols (default " << DefNCols << ") is the number of columns" << std::endl;
+        std::cout << "nRows (default = nCols) is the number of rows" << std::endl;
         return 1;
     }
     
     unsigned nIter = DefNIter;
+    if (argc > 1) {
+        std::istringstream(argv[1]) >> nIter;
+    }
+    unsigned nCols = DefNCols;
+    if (argc > 2) {
+        std::istringstream(argv[2]) >> nCols;
+    }
+    unsigned nRows = nCols;
     if (argc > 3) {
-        std::istringstream(argv[3]) >> nIter;
+        std::istringstream(argv[3]) >> nRows;
     }
     
-    // read in fits files
-    lsst::fw::Image<imageType> image1, image2;
-    image1.readFits(argv[1]);
-    image2.readFits(argv[2]);
-    
-    unsigned imCols = image1.getCols();
-    unsigned imRows = image1.getRows();
-    
-    if ((imCols != image2.getCols()) || (imRows != image2.getRows())) {
-        std::cerr << "Images must be the same size" << std::endl;
-        std::cerr << argv[1] << " is " << imCols << "x" << imRows << std::endl;
-        std::cerr << argv[2] << " is " << image2.getCols() << "x" << image2.getRows() << std::endl;
-        return 1;
-    }
+    vw::ImageView<imageType> image1(nCols, nRows);
+    vw::ImageView<imageType> image2(nCols, nRows);
     
     std::cout << "Cols\tRows\tMPix\tSecPerIter\tSecPerIterPerMPix" << std::endl;
     
@@ -42,7 +41,7 @@ int main(int argc, char **argv) {
         image1 += image2;
     }
     double secPerIter = (clock() - startTime) / static_cast<double> (nIter * CLOCKS_PER_SEC);
-    double megaPix = static_cast<double>(imCols * imRows) / 1.0e6;
+    double megaPix = static_cast<double>(nCols * nRows) / 1.0e6;
     double secPerMPixPerIter = secPerIter / static_cast<double>(megaPix);
-    std::cout << imCols << "\t" << imRows << "\t" << megaPix << "\t" << secPerIter << "\t" << secPerMPixPerIter << std::endl;
+    std::cout << nCols << "\t" << nRows << "\t" << megaPix << "\t" << secPerIter << "\t\t" << secPerMPixPerIter << std::endl;
 }
