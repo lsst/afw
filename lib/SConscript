@@ -2,7 +2,7 @@
 Import('env')
 
 env.SharedLibrary(
-    'fw',
+    'afw',
     ["../src/%s" % (src,) for src in (
         "DiaSource.cc",
         "DiskImageResourceFITS.cc",
@@ -26,5 +26,5 @@ env.SharedLibrary(
         "Mask.cc",
         "WCS.cc",
         )],
-    LIBS=env.getlibs("boost mwi vw wcslib cfitsio")
+    LIBS=env.getlibs("boost pex vw wcslib cfitsio")
 )

@@ -1,4 +1,4 @@
-setupRequired(mwi >= 2.0)
+setupRequired(pex >= 2.0)
 setupRequired(swig >= 1.3.34)
 setupRequired(vw >= 1.0.1+2)
 setupRequired(cfitsio)
@@ -7,7 +7,7 @@ setupRequired(xpa)
 setupRequired(numpy)
 setupRequired(minuit)
 
-setupOptional(fwData)
+setupOptional(testdata)
 setupOptional(numarray)
 setupOptional(pyfits)
 

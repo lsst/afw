@@ -1,4 +1,4 @@
->merge: mwi
+>merge: pex
 >merge: vw 1.0.1+2
 >merge: numarray
 >merge: numpy

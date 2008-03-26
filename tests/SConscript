@@ -4,7 +4,7 @@ import os
 import sys
 
 import lsst.tests
-import lsst.mwi.persistence
+import lsst.pex.persistence
 import lsst.SConsUtils as scons # scons 1.17 supports "env.ProductDir", but for now use scons.ProductDir
 
 env.Program(["Mask_1.cc"], LIBS=env.getlibs("afw"))
@@ -15,9 +15,9 @@ env.Program(["MaskIO_1.cc"], LIBS=env.getlibs("afw"))
 env.Program(["MaskedImageIO_1.cc"], LIBS=env.getlibs("afw"))
 env.Program(["MaskedImageIO_2.cc"], LIBS=env.getlibs("afw"))
 env.Program(["wcsCopy.cc"], LIBS=env.getlibs("afw"))
-env.Program(["DiaSourceIO_1.cc"], LIBS=env.getlibs("afw mwi"))
-env.Program(["DiaSourceIO_2.cc"], LIBS=env.getlibs("afw mwi"))
-env.Program(["MovingObjectPredictionIO_1.cc"], LIBS=env.getlibs("afw mwi"))
+env.Program(["DiaSourceIO_1.cc"], LIBS=env.getlibs("afw pex"))
+env.Program(["DiaSourceIO_2.cc"], LIBS=env.getlibs("afw pex"))
+env.Program(["MovingObjectPredictionIO_1.cc"], LIBS=env.getlibs("afw pex"))
 
 env.CheckSwig("python", ilang="c++")
 env.Append(SWIGFLAGS=" -Ipython")
@@ -36,7 +36,7 @@ else:
     # copy FWDATA_DIR to the test's environment
     env["ENV"]["FWDATA_DIR"] = os.environ["FWDATA_DIR"]
     
-    if lsst.mwi.persistence.DbAuth.available():
+    if lsst.pex.persistence.DbAuth.available():
         env["ENV"]["SEAL_PLUGINS"] = os.environ["SEAL_PLUGINS"]    
         if os.environ.has_key("LSST_DB_AUTH"):
             env["ENV"]["LSST_DB_AUTH"] = os.environ["LSST_DB_AUTH"]

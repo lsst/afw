@@ -2,7 +2,7 @@
 Import("env")
 import os
 
-env.CheckSwig("python", ilang="c++", includedProducts="mwi")
+env.CheckSwig("python", ilang="c++", includedProducts="pex")
 env.LoadableModuleIncomplete("_xpa", ["xpa.i"], LIBS = ["xpa"])
-env.LoadableModuleIncomplete("_fwDisplay", Split("fwDisplay.i simpleFits.cc"), LIBS=env.getlibs("fw"))
+env.LoadableModuleIncomplete("_fwDisplay", Split("fwDisplay.i simpleFits.cc"), LIBS=env.getlibs("afw"))
 
