@@ -1,0 +1,30 @@
+# -*- python -*-
+Import('env')
+
+env.SharedLibrary(
+    'fw',
+    ["../src/%s" % (src,) for src in (
+        "DiaSource.cc",
+        "DiskImageResourceFITS.cc",
+        "Exposure.cc",
+        "Filter.cc",
+        "formatters/Utils.cc",
+        "formatters/DiaSourceFormatters.cc",
+        "formatters/MovingObjectPredictionFormatters.cc",
+        "formatters/ExposureFormatter.cc",
+        "formatters/ImageFormatter.cc",
+        "formatters/MaskFormatter.cc",
+        "formatters/MaskedImageFormatter.cc",
+        "formatters/WcsFormatter.cc",
+        "Kernel/Kernel.cc",
+        "Kernel/KernelFunctions.cc",
+        "Kernel/FixedKernel.cc",
+        "Kernel/AnalyticKernel.cc",
+        "Kernel/DeltaFunctionKernel.cc",
+        "Kernel/LinearCombinationKernel.cc",
+        "MovingObjectPrediction.cc",
+        "Mask.cc",
+        "WCS.cc",
+        )],
+    LIBS=env.getlibs("boost mwi vw wcslib cfitsio")
+)

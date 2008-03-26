@@ -1,0 +1,5 @@
+# -*- python -*-
+#
+Import("env")
+
+AddPostAction(env.M4("fwExceptions.h.m4"), "chmod 444 $TARGET")

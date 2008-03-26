@@ -1,0 +1,5 @@
+# -*- python -*-
+Import('env')
+
+doxy = env.Doxygen("doxygen.conf")
+env.Depends(doxy, "../include/lsst/fw/fwExceptions.h")
