@@ -1,6 +1,6 @@
 // -*- LSST-C++ -*-
-#ifndef LSST_FW_FunctionLibrary_H
-#define LSST_FW_FunctionLibrary_H
+#ifndef LSST_AFW_MATH_FUNCTIONLIBRARY_H
+#define LSST_AFW_MATH_FUNCTIONLIBRARY_H
 /**
  * \file
  *
@@ -16,7 +16,7 @@
  */
 #include <cmath>
 
-#include "Function.h"
+#include <lsst/afw/math/Function.h>
 
 namespace lsst {
 namespace fw {
@@ -601,4 +601,4 @@ namespace function {
 
 }}}   // lsst::fw::function
 
-#endif // #ifndef LSST_FW_FunctionLibrary_H
+#endif // #ifndef LSST_AFW_MATH_FUNCTIONLIBRARY_H

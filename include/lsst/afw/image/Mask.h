@@ -6,8 +6,8 @@
 //  Original author: Tim Axelrod
 ///////////////////////////////////////////////////////////
 
-#ifndef LSST_MASK_H
-#define LSST_MASK_H
+#ifndef LSST_AFW_IMAGE_MASK_H
+#define LSST_AFW_IMAGE_MASK_H
 
 #include <list>
 #include <map>
@@ -24,8 +24,8 @@
 #include "lsst/mwi/persistence/Persistable.h"
 #include "lsst/mwi/utils/Trace.h"
 #include "lsst/mwi/data/SupportFactory.h"
-#include "lsst/fw/LSSTFitsResource.h"
-#include "lsst/fw/fwExceptions.h"
+#include <lsst/afw/image/LSSTFitsResource.h>
+#include <lsst/afw/image/ImageExceptions.h>
 
 namespace lsst {
 namespace fw {
@@ -193,6 +193,6 @@ private:
 
 }}  // lsst::fw
         
-#endif // LSST_MASK_H
+#endif // LSST_AFW_IMAGE_MASK_H
 
 

@@ -2,8 +2,8 @@
 //! \file
 //! \brief Provides support for file formats via libJPEG.
 
-#if !defined(LSST_DISK_IMAGE_RESOUCE_FITS_H)
-#define LSST_DISK_IMAGE_RESOUCE_FITS_H 1
+#ifndef LSST_AFW_IMAGE_DISKIMAGERESOURCESFITS_H
+#define LSST_AFW_IMAGE_DISKIMAGERESOURCESFITS_H
 
 #include <string>
 
@@ -88,4 +88,4 @@ void read(vw::ImageView<PixelT>& image, //!< Desired image
 }
 LSST_END_NAMESPACE(fw)
 LSST_END_NAMESPACE(lsst)
-#endif
+#endif // LSST_AFW_IMAGE_DISKIMAGERESOURCESFITS_H

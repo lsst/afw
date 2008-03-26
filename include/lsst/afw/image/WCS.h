@@ -6,8 +6,8 @@
 //  Original author: Tim Axelrod
 ///////////////////////////////////////////////////////////
 
-#ifndef LSST_WCS_H
-#define LSST_WCS_H
+#ifndef LSST_AFW_IMAGE_WCS_H
+#define LSST_AFW_IMAGE_WCS_H
 
 #include <vw/Math.h>
 #include "lsst/mwi/data/LsstBase.h"
@@ -76,6 +76,6 @@ namespace lsst {
 
 } // namespace lsst
 
-#endif // LSST_WCS_H
+#endif // LSST_AFW_IMAGE_WCS_H
 
 

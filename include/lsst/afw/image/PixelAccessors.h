@@ -1,6 +1,6 @@
 // -*- C++-LSST -*-
-#ifndef LLST_FW_PixelAccessors_H
-#define LLST_FW_PixelAccessors_H
+#ifndef LSST_AFW_IMAGE_PIXELACCESSORS.H
+#define LSST_AFW_IMAGE_PIXELACCESSORS.H
 /**
  * \file
  *
@@ -12,7 +12,7 @@
  */
 #include <vw/Image.h>
 
-#include <lsst/fw/MaskedImage.h>
+#include <lsst/afw/image/MaskedImage.h>
 
 namespace lsst {
 namespace fw {
@@ -147,4 +147,4 @@ namespace fw {
 
 }}  // lsst::fw
 
-#endif // !defined(LLST_FW_PixelAccessors_H)
+#endif // LSST_AFW_IMAGE_PIXELACCESSORS.H

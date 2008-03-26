@@ -1,12 +1,11 @@
-#ifndef LSST_LSSTFITSRESOURCE_H
-#define LSST_LSSTFITSRESOURCE_H
+#ifndef LSST_AFW_IMAGE_LSSTFITSRESOURCE_H
+#define LSST_AFW_IMAGE_LSSTFITSRESOURCE_H
 
 #include <vw/Image.h>
 #include "lsst/mwi/data/DataProperty.h"
-#include "lsst/fw/DiskImageResourceFITS.h"
 #include "lsst/mwi/utils/Utils.h"
 #include "lsst/mwi/exceptions.h"
-
+#include "lsst/afw/image/DiskImageResourceFITS.h"
 
 using namespace vw;
 using namespace lsst::mwi::data;
@@ -32,4 +31,4 @@ namespace lsst {
 
 } // namespace lsst
 
-#endif // LSST_LSSTFITSRESOURCE_H
+#endif // LSST_AFW_IMAGE_LSSTFITSRESOURCE_H

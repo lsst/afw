@@ -20,8 +20,8 @@
   * LSST Legalese here...
   */
 
-#if !defined(EA_D499575A_A50B_4725_A632_F121B26310F0__INCLUDED_)
-#define EA_D499575A_A50B_4725_A632_F121B26310F0__INCLUDED_
+#ifndef LSST_AFW_IMAGE_EXPOSURE_H
+#define LSST_AFW_IMAGE_EXPOSURE_H
 
 #include <boost/cstdint.hpp>
 #include <boost/shared_ptr.hpp>
@@ -30,8 +30,8 @@
 
 #include <lsst/mwi/data/LsstBase.h>
 #include <lsst/mwi/persistence/Persistable.h>
-#include <lsst/fw/MaskedImage.h>
-#include <lsst/fw/WCS.h>
+#include <lsst/afw/image/MaskedImage.h>
+#include <lsst/afw/image/WCS.h>
 
 namespace lsst {
 namespace fw {
@@ -81,4 +81,4 @@ namespace fw {
     };     
 }} // fw::lsst
 
-#endif // !defined(EA_D499575A_A50B_4725_A632_F121B26310F0__INCLUDED_)
+#endif // LSST_AFW_IMAGE_EXPOSURE_H

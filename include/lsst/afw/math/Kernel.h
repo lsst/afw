@@ -1,6 +1,6 @@
 // -*- LSST-C++ -*-
-#ifndef LSST_FW_Kernel_H
-#define LSST_FW_Kernel_H
+#ifndef LSST_AFW_MATH_KERNEL_H
+#define LSST_AFW_MATH_KERNEL_H
 /**
  * \file
  *
@@ -12,19 +12,17 @@
  */
 #include <vector>
 
-#include <boost/shared_ptr.hpp>
-
 #include <boost/mpl/or.hpp>
+#include <boost/shared_ptr.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/type_traits/is_base_and_derived.hpp>
-
 #include <vw/Image.h>
 
 #include <lsst/mwi/data/LsstBase.h>
-#include <lsst/fw/Function.h>
-#include <lsst/fw/Image.h>
-#include <lsst/fw/Kernel/traits.h>
+#include <lsst/afw/math/Function.h>
+#include <lsst/afw/image/Image.h>
+#include <lsst/afw/image/Kernel/traits.h>
 
 namespace lsst {
 namespace fw {
@@ -516,7 +514,7 @@ namespace fw {
     
 // Included definitions for templated and inline member functions
 #ifndef SWIG // don't bother SWIG with .cc files
-#include <lsst/fw/Kernel/Kernel.cc>
+#include <lsst/afw/math/Kernel.cc>
 #endif
 
-#endif // !defined(LSST_FW_Kernel_H)
+#endif // !defined(LSST_AFW_MATH_KERNEL_H)

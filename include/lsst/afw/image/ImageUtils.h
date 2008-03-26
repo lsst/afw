@@ -6,8 +6,8 @@
  *
  * \defgroup fw LSST framework 
  */
-#ifndef LSST_IMAGEUTILS_H
-#define LSST_IMAGEUTILS_H
+#ifndef LSST_AFW_IMAGE_IMAGEUTILS_H
+#define LSST_AFW_IMAGE_IMAGEUTILS_H
 
 #include <cmath>
 
@@ -70,5 +70,5 @@ namespace image {
 
 }}} // lsst::fw::image
 
-#endif // LSST_IMAGEUTILS_H
+#endif // LSST_AFW_IMAGE_IMAGEUTILS_H
 

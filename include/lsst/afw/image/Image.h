@@ -6,8 +6,8 @@
 //  Original author: Tim Axelrod
 ///////////////////////////////////////////////////////////
 
-#ifndef LSST_IMAGE_H
-#define LSST_IMAGE_H
+#ifndef LSST_IMAGE_IMAGE_H
+#define LSST_IMAGE_IMAGE_H
 
 #include <list>
 #include <map>
@@ -19,8 +19,8 @@
 
 #include "lsst/mwi/data/LsstBase.h"
 #include "lsst/mwi/data/DataProperty.h"
-#include "lsst/fw/LSSTFitsResource.h"
 #include "lsst/mwi/persistence/Persistable.h"
+#include "lsst/afw/image/LSSTFitsResource.h"
 
 namespace lsst {
 namespace fw {
@@ -102,4 +102,4 @@ namespace formatters {
 #include "Image.cc"
 #endif
 
-#endif // LSST_Image_H
+#endif // LSST_IMAGE_IMAGE_H

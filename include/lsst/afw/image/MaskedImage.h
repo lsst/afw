@@ -23,8 +23,9 @@
 
 #include "lsst/mwi/data/LsstBase.h"
 #include "lsst/mwi/persistence/Persistable.h"
-#include "Mask.h"
-#include "Image.h"
+#include <lsst/afw/image/Image.h>
+#include <lsst/afw/image/Mask.h>
+#include <lsst/afw/image/MaskedPixelAccessor.h>
 
 namespace lsst {
 namespace fw {

@@ -7,8 +7,8 @@
 //
 //##====----------------                                ----------------====##/
 
-#ifndef LSST_FW_FILTER_H
-#define LSST_FW_FILTER_H
+#ifndef LSST_FW_IMAGE_FILTER_H
+#define LSST_FW_IMAGE_FILTER_H
 
 #include <cassert>
 #include <string>
@@ -62,4 +62,4 @@ private :
 
 }}  // end of namespace lsst::fw
 
-#endif // LSST_FW_FILTER_H
+#endif // LSST_FW_IMAGE_FILTER_H

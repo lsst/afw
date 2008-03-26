@@ -1,6 +1,6 @@
 // -*- LSST-C++ -*-
-#ifndef LSST_FW_KernelFunctions_H
-#define LSST_FW_KernelFunctions_H
+#ifndef LSST_AFW_MATH_KERNELFUNCTIONS_H
+#define LSST_AFW_MATH_KERNELFUNCTIONS_H
 /**
  * \file
  *
@@ -16,10 +16,10 @@
 #include <vw/Image.h>
 #include <vw/Math/BBox.h>
 
-#include <lsst/fw/Image.h>
-#include <lsst/fw/MaskedImage.h>
-#include <lsst/fw/PixelAccessors.h>
-#include <lsst/fw/Kernel.h>
+#include <lsst/afw/image/Image.h>
+#include <lsst/afw/image/MaskedImage.h>
+#include <lsst/afw/image/PixelAccessors.h>
+#include <lsst/afw/math/Kernel.h>
 
 namespace lsst {
 namespace fw {
@@ -93,7 +93,7 @@ namespace kernel {
 }}}   // lsst::fw::kernel
     
 #ifndef SWIG // don't bother SWIG with .cc files
-#include <lsst/fw/Kernel/KernelFunctions.cc>
+#include <lsst/afw/math/KernelFunctions.cc>
 #endif
 
-#endif // !defined(LSST_FW_KernelFunctions_H)
+#endif // !defined(LSST_AFW_MATH_KERNELFUNCTIONS_H)

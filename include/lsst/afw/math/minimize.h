@@ -1,6 +1,6 @@
 // -*- LSST-C++ -*-
-#ifndef LSST_FW_minimize_H
-#define LSST_FW_minimize_H
+#ifndef LSST_AFW_MATH_MINIMIZE_H
+#define LSST_AFW_MATH_MINIMIZE_H
 /**
  * \file
  *
@@ -10,11 +10,11 @@
  *
  * \ingroup fw
  */
-
+#include <boost/shared_ptr.hpp>
 #include <Minuit/FCNBase.h>
+
 #include <lsst/mwi/data/LsstData.h>
 #include <lsst/fw/Function.h>
-#include <boost/shared_ptr.hpp>
 
 namespace lsst {
 namespace fw {
@@ -123,12 +123,10 @@ namespace function {
         double errorDef
     );
     
-}   // namespace function        
-}   // namespace fw
-}   // namespace lsst
+}}}   // lsst::fw::function
 
 #ifndef SWIG // don't bother SWIG with .cc files
 #include <lsst/fw/minimize.cc>
 #endif
 
-#endif // !defined(LSST_FW_minimize_H)
+#endif // !defined(LSST_AFW_MATH_MINIMIZE_H)

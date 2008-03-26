@@ -1,6 +1,6 @@
 // -*- LSST-C++ -*-
-#ifndef LSST_FW_Function_H
-#define LSST_FW_Function_H
+#ifndef LSST_AFW_MATH_FUNCTION_H
+#define LSST_AFW_MATH_FUNCTION_H
 /**
  * \file
  *
@@ -198,4 +198,4 @@ namespace function {
 
 }}}   // lsst::fw::function
 
-#endif // #ifndef LSST_FW_Function_H
+#endif // #ifndef LSST_AFW_MATH_FUNCTION_H
