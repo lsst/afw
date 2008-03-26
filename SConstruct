@@ -5,7 +5,7 @@
 import glob, os.path
 import lsst.SConsUtils as scons
 
-env = scons.makeEnv("fw",
+env = scons.makeEnv("afw",
                     r"$HeadURL$",
                     [["boost", "boost/version.hpp", "boost_filesystem:C++"],
                      ["boost", "boost/regex.hpp", "boost_regex:C++"],
@@ -24,14 +24,14 @@ env = scons.makeEnv("fw",
 #
 # Libraries needed to link libraries/executables
 #
-env.libs["fw"] += env.getlibs("boost vw wcslib cfitsio minuit mwi") # we'll always want to link these with fw
+env.libs["afw"] += env.getlibs("boost vw wcslib cfitsio minuit mwi") # we'll always want to link these with afw
 #
 # Build/install things
 #
-for d in Split("include/lsst/fw doc examples lib src tests"):
+for d in Split("include/lsst/afw doc examples lib src tests"):
     SConscript(os.path.join(d, "SConscript"))
 
-for d in map(lambda str: "python/lsst/fw/" + str,
+for d in map(lambda str: "python/lsst/afw/" + str,
              Split("Catalog Core Display")):
     SConscript(os.path.join(d, "SConscript"))
 
