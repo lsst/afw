@@ -1,6 +1,0 @@
-# -*- python -*-
-Import("env")
-
-if False:                               # relies on wcstools, which we aren't using
-    env.CheckSwig("python", ilang="C")
-    env.LoadableModuleIncomplete("_ctgread", ["ctgread.i"], LIBS = ["wcs"])
