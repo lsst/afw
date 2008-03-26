@@ -2,4 +2,4 @@
 Import('env')
 
 doxy = env.Doxygen("doxygen.conf")
-env.Depends(doxy, "../include/lsst/afw/fwExceptions.h")
+env.Depends(doxy, "../include/lsst/afw/image/ImageExceptions.h")
