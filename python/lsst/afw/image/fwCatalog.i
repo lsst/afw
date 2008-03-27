@@ -8,7 +8,7 @@ Access to persistable C++ objects for catalog data. Currently supported are:
 %enddef
 
 %feature("autodoc", "1");
-%module(package="lsst.fw.Core", docstring=fwCatalog_DOCSTRING) fwCatalog
+%module(package="lsst.fw.image", docstring=fwCatalog_DOCSTRING) fwCatalog
 
 // Suppress swig complaints
 // I had trouble getting %warnfilter to work; hence the pragmas

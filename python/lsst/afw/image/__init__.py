@@ -1,2 +1,2 @@
-from fwLib import *
+from imageLib import *
 from imageExceptions import *

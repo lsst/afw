@@ -6,7 +6,7 @@ Basic routines to talk to FW's classes (including visionWorkbench) and ds9
 %enddef
 
 %feature("autodoc", "1");
-%module(docstring=fwLib_DOCSTRING) fwLib
+%module(docstring=fwLib_DOCSTRING) imageLib
 
 // Suppress swig complaints
 // I had trouble getting %warnfilter to work; hence the pragmas
