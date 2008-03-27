@@ -2,7 +2,7 @@
 //
 //##====----------------                                ----------------====##/
 //
-//! \file   DiaSource.h
+//! \file   Source.h
 //! \brief  The C++ representation of a Difference-Image-Analysis Source.
 //
 //##====----------------                                ----------------====##/
@@ -37,7 +37,7 @@ using boost::int64_t;
 
 // forward declarations for formatters
 namespace formatters {
-    class DiaSourceVectorFormatter;
+    class SourceVectorFormatter;
 }
 
 
@@ -113,11 +113,11 @@ namespace formatters {
     columns: fields are sorted by type size to minimize the number of padding bytes that the
     compiler must insert to meet field alignment requirements.
  */
-class DiaSource {
+class Source {
 
 public :
 
-    typedef boost::shared_ptr<DiaSource> Ptr;
+    typedef boost::shared_ptr<Source> Ptr;
 
     /*! An integer id for each nullable field. */
     enum NullableField {
@@ -139,9 +139,9 @@ public :
         NUM_NULLABLE_FIELDS
     };
 
-    DiaSource();
+    Source();
 
-    DiaSource(
+    Source(
         int64_t id,
         double  colc,
         double  rowc,
@@ -281,7 +281,7 @@ public :
     void setNull   ()                                       { _nulls.set();          }
     void setNotNull()                                       { _nulls.reset();        }
 
-    bool operator==(DiaSource const & d) const;
+    bool operator==(Source const & d) const;
 
 private :
 
@@ -399,10 +399,10 @@ private :
     }
 
     friend class boost::serialization::access;
-    friend class formatters::DiaSourceVectorFormatter;
+    friend class formatters::SourceVectorFormatter;
 };
 
-inline bool operator!=(DiaSource const & d1, DiaSource const & d2) {
+inline bool operator!=(Source const & d1, Source const & d2) {
     return !(d1 == d2);
 }
 
@@ -411,15 +411,15 @@ inline bool operator!=(DiaSource const & d1, DiaSource const & d2) {
 #ifndef SWIG
 
 /*!
-    A persistable container of DiaSource instances (implemented using std::vector).
+    A persistable container of Source instances (implemented using std::vector).
  */
-class DiaSourceVector :
+class SourceVector :
     public lsst::daf::persitence::Persistable,
     public lsst::daf::data::Citizen
 {
 public :
-    typedef boost::shared_ptr<DiaSourceVector> Ptr;
-    typedef std::vector<DiaSource>             Vector;
+    typedef boost::shared_ptr<SourceVector> Ptr;
+    typedef std::vector<Source>             Vector;
 
     typedef Vector::allocator_type         allocator_type;
     typedef Vector::iterator               iterator;
@@ -432,24 +432,24 @@ public :
     typedef Vector::const_reference        const_reference;
     typedef Vector::value_type             value_type;
 
-    DiaSourceVector();
-    explicit DiaSourceVector(size_type sz);
-    DiaSourceVector(size_type sz, value_type const & val);
+    SourceVector();
+    explicit SourceVector(size_type sz);
+    SourceVector(size_type sz, value_type const & val);
 
     template <typename InputIterator>
-    DiaSourceVector(InputIterator beg, InputIterator end) :
+    SourceVector(InputIterator beg, InputIterator end) :
         lsst::daf::data::Citizen(typeid(*this)),
         _vec(beg, end)
     {}
 
-    virtual ~DiaSourceVector();
+    virtual ~SourceVector();
 
-    DiaSourceVector(DiaSourceVector const & vec);
-    explicit DiaSourceVector(Vector const & vec);
-    DiaSourceVector & operator=(DiaSourceVector const & vec);
-    DiaSourceVector & operator=(Vector const & vec);
+    SourceVector(SourceVector const & vec);
+    explicit SourceVector(Vector const & vec);
+    SourceVector & operator=(SourceVector const & vec);
+    SourceVector & operator=(Vector const & vec);
 
-    void swap(DiaSourceVector & v) { using std::swap; swap(_vec, v._vec); }
+    void swap(SourceVector & v) { using std::swap; swap(_vec, v._vec); }
     void swap(Vector & v)          { using std::swap; swap(_vec, v);      }
 
     size_type size()     const { return _vec.size();     }
@@ -499,12 +499,12 @@ public :
     void resize(size_type n)                 { _vec.resize(n);      }
     void resize(size_type n, value_type val) { _vec.resize(n, val); }
 
-    bool operator==(DiaSourceVector const & v) { return _vec == v._vec; }
-    bool operator!=(DiaSourceVector const & v) { return _vec != v._vec; }
+    bool operator==(SourceVector const & v) { return _vec == v._vec; }
+    bool operator!=(SourceVector const & v) { return _vec != v._vec; }
 
 private :
 
-    LSST_PERSIST_FORMATTER(formatters::DiaSourceVectorFormatter);
+    LSST_PERSIST_FORMATTER(formatters::SourceVectorFormatter);
 
     Vector _vec;
 };

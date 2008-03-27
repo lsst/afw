@@ -2,8 +2,8 @@
 //
 //##====----------------                                ----------------====##/
 //
-//! \file   DiaSourceFormatters.h
-//! \brief  Formatter subclasses for DiaSource
+//! \file   SourceFormatters.h
+//! \brief  Formatter subclasses for Source
 //!         and Persistable containers thereof.
 //
 //##====----------------                                ----------------====##/
@@ -19,7 +19,7 @@
 #include <lsst/daf/persistence/Formatter.h>
 #include <lsst/daf/persistence/DbStorage.h>
 
-#include "lsst/afw/DiaSource.h"
+#include "lsst/afw/Source.h"
 
 
 namespace lsst {
@@ -38,12 +38,12 @@ using lsst::daf::data::DataProperty;
     - lsst::daf::persitence::DbTsvStorage
     - lsst::daf::persitence::BoostStorage
 
-    for DiaSourceVector instances.
+    for SourceVector instances.
  */
-class DiaSourceVectorFormatter : public Formatter {
+class SourceVectorFormatter : public Formatter {
 public:
 
-    virtual ~DiaSourceVectorFormatter();
+    virtual ~SourceVectorFormatter();
 
     virtual void write(Persistable const *, Storage::Ptr, DataProperty::PtrType);
     virtual Persistable* read(Storage::Ptr, DataProperty::PtrType);
@@ -55,13 +55,13 @@ private:
 
     Policy::Ptr _policy;
 
-    DiaSourceVectorFormatter(Policy::Ptr const &);
+    SourceVectorFormatter(Policy::Ptr const &);
 
     static Formatter::Ptr createInstance(Policy::Ptr);
     static FormatterRegistration registration;
 
-    template <typename T> static void insertRow(T &, DiaSource const &);
-    static void setupFetch(DbStorage &, DiaSource &);
+    template <typename T> static void insertRow(T &, Source const &);
+    static void setupFetch(DbStorage &, Source &);
 };
 
 

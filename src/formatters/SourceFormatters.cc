@@ -2,8 +2,8 @@
 //
 //##====----------------                                ----------------====##/
 //
-//! \file   DiaSourceFormatters.cc
-//! \brief  Implementation of persistence for DiaSource instances
+//! \file   SourceFormatters.cc
+//! \brief  Implementation of persistence for Source instances
 //
 //##====----------------                                ----------------====##/
 
@@ -18,53 +18,53 @@
 #include <boost/any.hpp>
 #include <boost/format.hpp>
 
-#include <lsst/afw/detection/DiaSource.h>
-#include <lsst/afw/formatters/DiaSourceFormatters.h>
+#include <lsst/afw/detection/Source.h>
+#include <lsst/afw/formatters/SourceFormatters.h>
 #include <lsst/afw/formatters/Utils.h>
 
 using namespace lsst::afw::formatters;
 namespace ex = lsst::pex::exceptions;
 
 
-// -- DiaSourceVectorFormatter ----------------
+// -- SourceVectorFormatter ----------------
 
-DiaSourceVectorFormatter::DiaSourceVectorFormatter(Policy::Ptr const & policy) :
+SourceVectorFormatter::SourceVectorFormatter(Policy::Ptr const & policy) :
     Formatter(typeid(*this)),
     _policy(policy)
 {}
 
 
-DiaSourceVectorFormatter::~DiaSourceVectorFormatter() {}
+SourceVectorFormatter::~SourceVectorFormatter() {}
 
 
-Formatter::Ptr DiaSourceVectorFormatter::createInstance(Policy::Ptr policy) {
-    return Formatter::Ptr(new DiaSourceVectorFormatter(policy));
+Formatter::Ptr SourceVectorFormatter::createInstance(Policy::Ptr policy) {
+    return Formatter::Ptr(new SourceVectorFormatter(policy));
 }
 
 
-FormatterRegistration DiaSourceVectorFormatter::registration(
-    "DiaSourceVector",
-    typeid(DiaSourceVector),
+FormatterRegistration SourceVectorFormatter::registration(
+    "SourceVector",
+    typeid(SourceVector),
     createInstance
 );
 
 
 /*!
-    \internal   Generates a unique identifier for a DiaSource given the id of the
+    \internal   Generates a unique identifier for a Source given the id of the
                 originating visit, the id of the originating ccd, and the sequence
-                number of the DiaSource within that slice.
+                number of the Source within that slice.
  */
-inline static int64_t generateDiaSourceId(unsigned short seqNum, int ccdId, int64_t visitId) {
+inline static int64_t generateSourceId(unsigned short seqNum, int ccdId, int64_t visitId) {
     return (visitId << 24) + (ccdId << 16) + seqNum;
 }
 
 
 /*!
-    Inserts a single DiaSource into a database table using \a db
+    Inserts a single Source into a database table using \a db
     (an instance of lsst::daf::persitence::DbStorage or subclass thereof).
  */
 template <typename T>
-void DiaSourceVectorFormatter::insertRow(T & db, DiaSource const & d) {
+void SourceVectorFormatter::insertRow(T & db, Source const & d) {
 
     db.template setColumn<int64_t>("diaSourceId",      d._diaSourceId);
     db.template setColumn<int64_t>("ccdExposureId",    d._ccdExposureId);
@@ -100,72 +100,72 @@ void DiaSourceVectorFormatter::insertRow(T & db, DiaSource const & d) {
     db.template setColumn<char>   ("filterId",         static_cast<char>(d._filterId));
     db.template setColumn<char>   ("_dataSource",      static_cast<char>(d._dataSource));
 
-    if (!d.isNull(DiaSource::OBJECT_ID)) {
+    if (!d.isNull(Source::OBJECT_ID)) {
         db.template setColumn<int64_t>("objectId", d._objectId);
     } else {
         db.setColumnToNull("objectId");
     }
-    if (!d.isNull(DiaSource::MOVING_OBJECT_ID)) {
+    if (!d.isNull(Source::MOVING_OBJECT_ID)) {
         db.template setColumn<int64_t>("movingObjectId", d._movingObjectId);
     } else {
         db.setColumnToNull("movingObjectId");
     }
-    if (!d.isNull(DiaSource::RA_ERR_4_WCS)) {
+    if (!d.isNull(Source::RA_ERR_4_WCS)) {
         db.template setColumn<double>("raErr4wcs", d._raErr4wcs);
     } else {
         db.setColumnToNull("raErr4wcs");
     }
-    if (!d.isNull(DiaSource::DEC_ERR_4_WCS)) {
+    if (!d.isNull(Source::DEC_ERR_4_WCS)) {
         db.template setColumn<double>("decErr4wcs", d._decErr4wcs);
     } else {
         db.setColumnToNull("decErr4wcs");
     }
-    if (!d.isNull(DiaSource::AP_DIA)) {
+    if (!d.isNull(Source::AP_DIA)) {
         db.template setColumn<float>("apDia", d._apDia);
     } else {
         db.setColumnToNull("apDia");
     }
-    if (!d.isNull(DiaSource::IXX)) {
+    if (!d.isNull(Source::IXX)) {
         db.template setColumn<float>("Ixx", d._ixx);
     } else {
         db.setColumnToNull("Ixx");
     }
-    if (!d.isNull(DiaSource::IXX_ERR)) {
+    if (!d.isNull(Source::IXX_ERR)) {
         db.template setColumn<float>("IxxErr", d._ixxErr);
     } else {
         db.setColumnToNull("IxxErr");
     }
-    if (!d.isNull(DiaSource::IYY)) {
+    if (!d.isNull(Source::IYY)) {
         db.template setColumn<float>("Iyy", d._iyy);
     } else {
         db.setColumnToNull("Iyy");
     }
-    if (!d.isNull(DiaSource::IYY_ERR)) {
+    if (!d.isNull(Source::IYY_ERR)) {
         db.template setColumn<float>("IyyErr", d._iyyErr);
     } else {
         db.setColumnToNull("IyyErr");
     }
-    if (!d.isNull(DiaSource::IXY)) {
+    if (!d.isNull(Source::IXY)) {
         db.template setColumn<float>("Ixy", d._ixy);
     } else {
         db.setColumnToNull("Ixy");
     }
-    if (!d.isNull(DiaSource::IXY_ERR)) {
+    if (!d.isNull(Source::IXY_ERR)) {
         db.template setColumn<float>("IxyErr", d._ixyErr);
     } else {
         db.setColumnToNull("IxyErr");
     }
-    if (!d.isNull(DiaSource::FLAG_4_ASSOCIATION)) {
+    if (!d.isNull(Source::FLAG_4_ASSOCIATION)) {
         db.template setColumn<int16_t>("flag4association", d._flag4association);
     } else {
         db.setColumnToNull("flag4association");
     }
-    if (!d.isNull(DiaSource::FLAG_4_DETECTION)) {
+    if (!d.isNull(Source::FLAG_4_DETECTION)) {
         db.template setColumn<int16_t>("flag4detection", d._flag4detection);
     } else {
         db.setColumnToNull("flag4detection");
     }
-    if (!d.isNull(DiaSource::FLAG_4_WCS)) {
+    if (!d.isNull(Source::FLAG_4_WCS)) {
         db.template setColumn<int16_t>("flag4wcs", d._flag4wcs);
     } else {
         db.setColumnToNull("flag4wcs");
@@ -174,13 +174,13 @@ void DiaSourceVectorFormatter::insertRow(T & db, DiaSource const & d) {
 }
 
 //! \cond
-template void DiaSourceVectorFormatter::insertRow<DbStorage>   (DbStorage &,    DiaSource const &);
-template void DiaSourceVectorFormatter::insertRow<DbTsvStorage>(DbTsvStorage &, DiaSource const &);
+template void SourceVectorFormatter::insertRow<DbStorage>   (DbStorage &,    Source const &);
+template void SourceVectorFormatter::insertRow<DbTsvStorage>(DbTsvStorage &, Source const &);
 //! \endcond
 
 
-/*! Prepares for reading DiaSource instances from a database table. */
-void DiaSourceVectorFormatter::setupFetch(DbStorage & db, DiaSource & d) {
+/*! Prepares for reading Source instances from a database table. */
+void SourceVectorFormatter::setupFetch(DbStorage & db, Source & d) {
     db.outParam("diaSourceId",      &(d._diaSourceId));
     db.outParam("ccdExposureId",    &(d._ccdExposureId));
     db.outParam("filterId",         reinterpret_cast<char *>(&(d._filterId)));
@@ -232,17 +232,17 @@ void DiaSourceVectorFormatter::setupFetch(DbStorage & db, DiaSource & d) {
 
 
 template <class Archive>
-void DiaSourceVectorFormatter::delegateSerialize(
+void SourceVectorFormatter::delegateSerialize(
     Archive &          archive,
     unsigned int const version,
     Persistable *      persistable
 ) {
-    DiaSourceVector * p = dynamic_cast<DiaSourceVector *>(persistable);
+    SourceVector * p = dynamic_cast<SourceVector *>(persistable);
     archive & boost::serialization::base_object<Persistable>(*p);
-    DiaSourceVector::size_type sz;
+    SourceVector::size_type sz;
 
     if (Archive::is_loading::value) {
-        DiaSource data;
+        Source data;
         archive & sz;
         p->reserve(sz);
         for (; sz > 0; --sz) {
@@ -252,28 +252,28 @@ void DiaSourceVectorFormatter::delegateSerialize(
     } else {
         sz = p->size();
         archive & sz;
-        DiaSourceVector::iterator const end(p->end());
-        for (DiaSourceVector::iterator i = p->begin(); i != end; ++i) {
+        SourceVector::iterator const end(p->end());
+        for (SourceVector::iterator i = p->begin(); i != end; ++i) {
             archive & *i;
         }
     }
 }
 
-template void DiaSourceVectorFormatter::delegateSerialize<boost::archive::text_oarchive>(
+template void SourceVectorFormatter::delegateSerialize<boost::archive::text_oarchive>(
     boost::archive::text_oarchive &, unsigned int const, Persistable *
 );
-template void DiaSourceVectorFormatter::delegateSerialize<boost::archive::text_iarchive>(
+template void SourceVectorFormatter::delegateSerialize<boost::archive::text_iarchive>(
     boost::archive::text_iarchive &, unsigned int const, Persistable *
 );
-//template void DiaSourceVectorFormatter::delegateSerialize<boost::archive::binary_oarchive>(
+//template void SourceVectorFormatter::delegateSerialize<boost::archive::binary_oarchive>(
 //    boost::archive::binary_oarchive &, unsigned int const, Persistable *
 //);
-//template void DiaSourceVectorFormatter::delegateSerialize<boost::archive::binary_iarchive>(
+//template void SourceVectorFormatter::delegateSerialize<boost::archive::binary_iarchive>(
 //    boost::archive::binary_iarchive &, unsigned int const, Persistable *
 //);
 
 
-void DiaSourceVectorFormatter::write(
+void SourceVectorFormatter::write(
     Persistable const *   persistable,
     Storage::Ptr          storage,
     DataProperty::PtrType additionalData
@@ -285,16 +285,16 @@ void DiaSourceVectorFormatter::write(
         throw ex::InvalidParameter("No Storage provided");
     }
 
-    DiaSourceVector const * p = dynamic_cast<DiaSourceVector const *>(persistable);
+    SourceVector const * p = dynamic_cast<SourceVector const *>(persistable);
     if (p == 0) {
-        throw ex::Runtime("Persistable was not of concrete type DiaSourceVector");
+        throw ex::Runtime("Persistable was not of concrete type SourceVector");
     }
 
     // Assume all have ids or none do.
     if (p->begin()->_diaSourceId == 0 &&
         (!_policy || !_policy->exists("GenerateIds") ||
          _policy->getBool("GenerateIds"))) {
-        DiaSourceVector* v    = const_cast<DiaSourceVector*>(p);
+        SourceVector* v    = const_cast<SourceVector*>(p);
         unsigned short seq    = 1;
         int64_t visitId       = extractVisitId(additionalData);
         int64_t ccdExposureId = extractCcdExposureId(additionalData);
@@ -302,12 +302,12 @@ void DiaSourceVectorFormatter::write(
         if (ccdId < 0 || ccdId >= 256) {
             throw ex::InvalidParameter("ccdId out of range");
         }
-        for (DiaSourceVector::iterator i = v->begin(); i != v->end(); ++i) {
-            i->_diaSourceId    = generateDiaSourceId(seq, ccdId, visitId);
+        for (SourceVector::iterator i = v->begin(); i != v->end(); ++i) {
+            i->_diaSourceId    = generateSourceId(seq, ccdId, visitId);
             i->_ccdExposureId  = ccdExposureId;
             ++seq;
             if (seq == 0) { // Overflowed
-                throw ex::Runtime("Too many DiaSources");
+                throw ex::Runtime("Too many Sources");
             }
         }
     }
@@ -334,8 +334,8 @@ void DiaSourceVectorFormatter::write(
             }
             db->createTableFromTemplate(name, model, mayExist);
             db->setTableForInsert(name);
-            DiaSourceVector::const_iterator const end(p->end());
-            for (DiaSourceVector::const_iterator i = p->begin(); i != end; ++i) {
+            SourceVector::const_iterator const end(p->end());
+            for (SourceVector::const_iterator i = p->begin(); i != end; ++i) {
                 insertRow<DbStorage>(*db, *i);
             }
         } else {
@@ -345,8 +345,8 @@ void DiaSourceVectorFormatter::write(
             }
             db->createTableFromTemplate(name, model, mayExist);
             db->setTableForInsert(name);
-            DiaSourceVector::const_iterator const end(p->end());
-            for (DiaSourceVector::const_iterator i = p->begin(); i != end; ++i) {
+            SourceVector::const_iterator const end(p->end());
+            for (SourceVector::const_iterator i = p->begin(); i != end; ++i) {
                 insertRow<DbTsvStorage>(*db, *i);
             }
         }
@@ -356,11 +356,11 @@ void DiaSourceVectorFormatter::write(
 }
 
 
-Persistable* DiaSourceVectorFormatter::read(
+Persistable* SourceVectorFormatter::read(
     Storage::Ptr          storage,
     DataProperty::PtrType additionalData
 ) {
-    std::auto_ptr<DiaSourceVector> p(new DiaSourceVector);
+    std::auto_ptr<SourceVector> p(new SourceVector);
 
     if (typeid(*storage) == typeid(BoostStorage)) {
         BoostStorage* bs = dynamic_cast<BoostStorage *>(storage.get());
@@ -380,7 +380,7 @@ Persistable* DiaSourceVectorFormatter::read(
         std::vector<std::string>::const_iterator const end = tables.end();
         for (std::vector<std::string>::const_iterator i = tables.begin(); i != end; ++i) {
             db->setTableForQuery(*i);
-            DiaSource data;
+            Source data;
             setupFetch(*db, data);
             db->query();
             data.setNotNull();
@@ -388,8 +388,8 @@ Persistable* DiaSourceVectorFormatter::read(
                 if (db->columnIsNull( 0)) { throw ex::Runtime("null column \"diaSourceId\"");      }
                 if (db->columnIsNull( 1)) { throw ex::Runtime("null column \"exposureId\"");       }
                 if (db->columnIsNull( 2)) { throw ex::Runtime("null column \"filterId\"");         }
-                if (db->columnIsNull( 3)) { data.setNull(DiaSource::OBJECT_ID);                    }
-                if (db->columnIsNull( 4)) { data.setNull(DiaSource::MOVING_OBJECT_ID);             }
+                if (db->columnIsNull( 3)) { data.setNull(Source::OBJECT_ID);                    }
+                if (db->columnIsNull( 4)) { data.setNull(Source::MOVING_OBJECT_ID);             }
                 if (db->columnIsNull( 5)) { throw ex::Runtime("null column \"scId\"");             }
                 if (db->columnIsNull( 6)) { throw ex::Runtime("null column \"colc\"");             }
                 if (db->columnIsNull( 7)) { throw ex::Runtime("null column \"colcErr\"");          }
@@ -401,8 +401,8 @@ Persistable* DiaSourceVectorFormatter::read(
                 if (db->columnIsNull(13)) { throw ex::Runtime("null column \"decl\"");             }
                 if (db->columnIsNull(14)) { throw ex::Runtime("null column \"raErr4detection\"");  }
                 if (db->columnIsNull(15)) { throw ex::Runtime("null column \"decErr4detection\""); }
-                if (db->columnIsNull(16)) { data.setNull(DiaSource::RA_ERR_4_WCS);                 }
-                if (db->columnIsNull(17)) { data.setNull(DiaSource::DEC_ERR_4_WCS);                }
+                if (db->columnIsNull(16)) { data.setNull(Source::RA_ERR_4_WCS);                 }
+                if (db->columnIsNull(17)) { data.setNull(Source::DEC_ERR_4_WCS);                }
                 if (db->columnIsNull(18)) { throw ex::Runtime("null column \"cx\"");               }
                 if (db->columnIsNull(19)) { throw ex::Runtime("null column \"cy\"");               }
                 if (db->columnIsNull(20)) { throw ex::Runtime("null column \"cz\"");               }
@@ -419,18 +419,18 @@ Persistable* DiaSourceVectorFormatter::read(
                 if (db->columnIsNull(31)) { throw ex::Runtime("null column \"apMagErr\"");         }
                 if (db->columnIsNull(32)) { throw ex::Runtime("null column \"modelMag\"");         }
                 if (db->columnIsNull(33)) { throw ex::Runtime("null column \"modelMagErr\"");      }
-                if (db->columnIsNull(34)) { data.setNull(DiaSource::AP_DIA);                       }
-                if (db->columnIsNull(35)) { data.setNull(DiaSource::IXX);                          }
-                if (db->columnIsNull(36)) { data.setNull(DiaSource::IXX_ERR);                      }
-                if (db->columnIsNull(37)) { data.setNull(DiaSource::IYY);                          }
-                if (db->columnIsNull(38)) { data.setNull(DiaSource::IYY_ERR);                      }
-                if (db->columnIsNull(39)) { data.setNull(DiaSource::IXY);                          }
-                if (db->columnIsNull(40)) { data.setNull(DiaSource::IXY_ERR);                      }
+                if (db->columnIsNull(34)) { data.setNull(Source::AP_DIA);                       }
+                if (db->columnIsNull(35)) { data.setNull(Source::IXX);                          }
+                if (db->columnIsNull(36)) { data.setNull(Source::IXX_ERR);                      }
+                if (db->columnIsNull(37)) { data.setNull(Source::IYY);                          }
+                if (db->columnIsNull(38)) { data.setNull(Source::IYY_ERR);                      }
+                if (db->columnIsNull(39)) { data.setNull(Source::IXY);                          }
+                if (db->columnIsNull(40)) { data.setNull(Source::IXY_ERR);                      }
                 if (db->columnIsNull(41)) { throw ex::Runtime("null column \"snr\"");              }
                 if (db->columnIsNull(42)) { throw ex::Runtime("null column \"chi2\"");             }
-                if (db->columnIsNull(43)) { data.setNull(DiaSource::FLAG_4_ASSOCIATION);           }
-                if (db->columnIsNull(44)) { data.setNull(DiaSource::FLAG_4_DETECTION);             }
-                if (db->columnIsNull(45)) { data.setNull(DiaSource::FLAG_4_WCS);                   }
+                if (db->columnIsNull(43)) { data.setNull(Source::FLAG_4_ASSOCIATION);           }
+                if (db->columnIsNull(44)) { data.setNull(Source::FLAG_4_DETECTION);             }
+                if (db->columnIsNull(45)) { data.setNull(Source::FLAG_4_WCS);                   }
                 if (db->columnIsNull(46)) { throw ex::Runtime("null column \"_dataSource\"");      }
                 p->push_back(data);
                 data.setNotNull(); // clear out null markers
@@ -444,6 +444,6 @@ Persistable* DiaSourceVectorFormatter::read(
 }
 
 
-void DiaSourceVectorFormatter::update(Persistable*, Storage::Ptr, DataProperty::PtrType) {
-    throw ex::Runtime("DiaSourceVectorFormatter: updates not supported");
+void SourceVectorFormatter::update(Persistable*, Storage::Ptr, DataProperty::PtrType) {
+    throw ex::Runtime("SourceVectorFormatter: updates not supported");
 }

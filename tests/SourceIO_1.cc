@@ -2,8 +2,8 @@
 //
 //##====----------------                                ----------------====##/
 //
-//! \file   DiaSourceIo_1.cc
-//! \brief  Testing of IO via the persistence framework for DiaSource and DiaSourceVector.
+//! \file   SourceIo_1.cc
+//! \brief  Testing of IO via the persistence framework for Source and SourceVector.
 //
 //##====----------------                                ----------------====##/
 
@@ -20,7 +20,7 @@
 #include <lsst/daf/persistence/Persistence.h>
 #include <lsst/daf/persistence/LogicalLocation.h>
 
-#include <lsst/afw/detection/DiaSource.h>
+#include <lsst/afw/detection/Source.h>
 #include <lsst/afw/formatters/Utils.h>
 
 #include <stdexcept>
@@ -49,7 +49,7 @@ static void doThrow(std::string const & msg, int line) {
 
 static std::string const makeTempFile() {
     char name[32];
-    std::strncpy(name, "DiaSource_XXXXXX", 31);
+    std::strncpy(name, "Source_XXXXXX", 31);
     name[31] = 0;
     int const fd = ::mkstemp(name);
     Assert(fd != -1, "Failed to create temporary file");
@@ -58,14 +58,14 @@ static std::string const makeTempFile() {
 }
 
 
-static void initTestData(DiaSourceVector & v, int sliceId = 0) {
-    v.reserve(DiaSource::NUM_NULLABLE_FIELDS + 2);
-    for (int i = 0; i < DiaSource::NUM_NULLABLE_FIELDS + 2; ++i) {
-        DiaSource data;
+static void initTestData(SourceVector & v, int sliceId = 0) {
+    v.reserve(Source::NUM_NULLABLE_FIELDS + 2);
+    for (int i = 0; i < Source::NUM_NULLABLE_FIELDS + 2; ++i) {
+        Source data;
         // make sure each field has a different value, and that IO for each nullable field is tested
-        // Note: DiaSource ids are generated in ascending order
+        // Note: Source ids are generated in ascending order
         int j = i*64;
-        data.setId              (j + sliceId*(DiaSource::NUM_NULLABLE_FIELDS + 2)*64 + 1);
+        data.setId              (j + sliceId*(Source::NUM_NULLABLE_FIELDS + 2)*64 + 1);
         data.setCcdExposureId   (j +  1);
         data.setObjectId        (j +  2);
         data.setMovingObjectId  (j +  3);
@@ -112,9 +112,9 @@ static void initTestData(DiaSourceVector & v, int sliceId = 0) {
         data.setFlag4wcs        (j + 44);
         data.setFilterId        (-1);
         data.setDataSource      ('a' + (i & 15));
-        if (i < DiaSource::NUM_NULLABLE_FIELDS) {
+        if (i < Source::NUM_NULLABLE_FIELDS) {
             data.setNotNull();
-            data.setNull(static_cast<DiaSource::NullableField>(i));
+            data.setNull(static_cast<Source::NullableField>(i));
         } else if ((i & 1) == 0) {
             data.setNotNull();
         } else {
@@ -134,8 +134,8 @@ static void testBoost(void) {
     LogicalLocation loc(makeTempFile());
 
     // Intialize test data
-    DiaSource       ds(1, 0.0, 1.0, 2.0, 3.0);
-    DiaSourceVector dsv;
+    Source       ds(1, 0.0, 1.0, 2.0, 3.0);
+    SourceVector dsv;
     initTestData(dsv);
     dsv.push_back(ds);
 
@@ -153,12 +153,12 @@ static void testBoost(void) {
     {
         Storage::List storageList;
         storageList.push_back(pers->getRetrieveStorage("BoostStorage", loc));
-        Persistable::Ptr p = pers->retrieve("DiaSourceVector", storageList, props);
+        Persistable::Ptr p = pers->retrieve("SourceVector", storageList, props);
         Assert(p.get() != 0, "Failed to retrieve Persistable");
-        DiaSourceVector::Ptr v =
-            boost::dynamic_pointer_cast<DiaSourceVector, Persistable>(p);
-        Assert(v, "Couldn't cast to DiaSourceVector");
-        Assert(*v == dsv, "persist()/retrieve() resulted in DiaSourceVector corruption");
+        SourceVector::Ptr v =
+            boost::dynamic_pointer_cast<SourceVector, Persistable>(p);
+        Assert(v, "Couldn't cast to SourceVector");
+        Assert(*v == dsv, "persist()/retrieve() resulted in SourceVector corruption");
     }
     ::unlink(loc.locString().c_str());
 }
@@ -183,7 +183,7 @@ static DataProperty::PtrType createDbTestProps(
     DataProperty::PtrType props = SupportFactory::createPropertyNode("root");
 
     if (numSlices > 1) {
-        DataProperty::PtrType dias = SupportFactory::createPropertyNode("DiaSource");
+        DataProperty::PtrType dias = SupportFactory::createPropertyNode("Source");
         dias->addProperty(DataProperty("isPerSliceTable", boost::any(true)));
         dias->addProperty(DataProperty("numSlices",       boost::any(numSlices)));
         props->addProperty(dias);
@@ -196,9 +196,9 @@ static DataProperty::PtrType createDbTestProps(
 }
 
 
-// comparison operator used to sort DiaSource in id order
-struct DiaSourceLessThan {
-    bool operator()(DiaSource const & d1, DiaSource const & d2) {
+// comparison operator used to sort Source in id order
+struct SourceLessThan {
+    bool operator()(Source const & d1, Source const & d2) {
         return d1.getId() < d2.getId();
     }
 };
@@ -207,14 +207,14 @@ struct DiaSourceLessThan {
 static void testDb(std::string const & storageType) {
     // Create the required Policy and DataProperty
     Policy::Ptr           policy(new Policy);
-    DataProperty::PtrType props(createDbTestProps(0, 1, "DiaSource"));
+    DataProperty::PtrType props(createDbTestProps(0, 1, "Source"));
 
     Persistence::Ptr pers = Persistence::getPersistence(policy);
     LogicalLocation loc("mysql://lsst10.ncsa.uiuc.edu:3306/test");
 
-    // 1. Test on a single DiaSource
-    DiaSource ds(1, 0.0, 1.0, 2.0, 3.0);
-    DiaSourceVector dsv;
+    // 1. Test on a single Source
+    Source ds(1, 0.0, 1.0, 2.0, 3.0);
+    SourceVector dsv;
     dsv.push_back(ds);
     // write out data
     {
@@ -222,19 +222,19 @@ static void testDb(std::string const & storageType) {
         storageList.push_back(pers->getPersistStorage(storageType, loc));
         pers->persist(dsv, storageList, props);
     }
-    // and read it back in (in a DiaSourceVector)
+    // and read it back in (in a SourceVector)
     {
         Storage::List storageList;
         storageList.push_back(pers->getRetrieveStorage(storageType, loc));
-        Persistable::Ptr p = pers->retrieve("DiaSourceVector", storageList, props);
+        Persistable::Ptr p = pers->retrieve("SourceVector", storageList, props);
         Assert(p != 0, "Failed to retrieve Persistable");
-        DiaSourceVector::Ptr v = boost::dynamic_pointer_cast<DiaSourceVector, Persistable>(p);
-        Assert(v.get() != 0, "Couldn't cast to DiaSourceVector");
-        Assert(v->at(0) == ds, "persist()/retrieve() resulted in DiaSourceVector corruption");
+        SourceVector::Ptr v = boost::dynamic_pointer_cast<SourceVector, Persistable>(p);
+        Assert(v.get() != 0, "Couldn't cast to SourceVector");
+        Assert(v->at(0) == ds, "persist()/retrieve() resulted in SourceVector corruption");
     }
     formatters::dropAllVisitSliceTables(loc, policy, props);
 
-    // 2. Test on a DiaSourceVector
+    // 2. Test on a SourceVector
     dsv.clear();
     initTestData(dsv);
     // write out data
@@ -247,14 +247,14 @@ static void testDb(std::string const & storageType) {
     {
         Storage::List storageList;
         storageList.push_back(pers->getRetrieveStorage(storageType, loc));
-        Persistable::Ptr p = pers->retrieve("DiaSourceVector", storageList, props);
+        Persistable::Ptr p = pers->retrieve("SourceVector", storageList, props);
         Assert(p != 0, "Failed to retrieve Persistable");
-        DiaSourceVector::Ptr v = boost::dynamic_pointer_cast<DiaSourceVector, Persistable>(p);
-        Assert(v.get() != 0, "Couldn't cast to DiaSourceVector");
+        SourceVector::Ptr v = boost::dynamic_pointer_cast<SourceVector, Persistable>(p);
+        Assert(v.get() != 0, "Couldn't cast to SourceVector");
         // sort in ascending id order (database does not give any ordering guarantees
         // in the absence of an ORDER BY clause)
-        std::sort(v->begin(), v->end(), DiaSourceLessThan());
-        Assert(v.get() != &dsv && *v == dsv, "persist()/retrieve() resulted in DiaSourceVector corruption");
+        std::sort(v->begin(), v->end(), SourceLessThan());
+        Assert(v.get() != &dsv && *v == dsv, "persist()/retrieve() resulted in SourceVector corruption");
     }
     formatters::dropAllVisitSliceTables(loc, policy, props);
 }
@@ -263,25 +263,25 @@ static void testDb(std::string const & storageType) {
 static void testDb2(std::string const & storageType) {
     // Create the required Policy and DataProperty
     Policy::Ptr policy(new Policy);
-    std::string policyRoot(std::string("Formatter.") + "DiaSourceVector");
+    std::string policyRoot(std::string("Formatter.") + "SourceVector");
     // use custom table name patterns for this test
-    policy->set(policyRoot + ".DiaSource.perVisitTableNamePattern", "DiaSource_%1%");
-    policy->set(policyRoot + ".DiaSource.perSliceAndVisitTableNamePattern", "DiaSource_%1%_%2%");
+    policy->set(policyRoot + ".Source.perVisitTableNamePattern", "Source_%1%");
+    policy->set(policyRoot + ".Source.perSliceAndVisitTableNamePattern", "Source_%1%_%2%");
 
     Policy::Ptr nested(policy->getPolicy(policyRoot));
 
     Persistence::Ptr pers = Persistence::getPersistence(policy);
     LogicalLocation loc("mysql://lsst10.ncsa.uiuc.edu:3306/test");
 
-    DiaSourceVector all;
+    SourceVector all;
     int const numSlices = 3;
-    DataProperty::PtrType props(createDbTestProps(0, numSlices, "DiaSource"));
+    DataProperty::PtrType props(createDbTestProps(0, numSlices, "Source"));
 
     // 1. Write out each slice table seperately
     for (int sliceId = 0; sliceId < numSlices; ++sliceId) {
         DataProperty::PtrType dp = props->findUnique("sliceId");
         dp->setValue(boost::any(sliceId));
-        DiaSourceVector dsv;
+        SourceVector dsv;
         initTestData(dsv, sliceId);
         all.insert(all.end(), dsv.begin(), dsv.end());
         Storage::List storageList;
@@ -293,14 +293,14 @@ static void testDb2(std::string const & storageType) {
     //    gathering the results of numSlices image processing pipeline slices
     Storage::List storageList;
     storageList.push_back(pers->getRetrieveStorage(storageType, loc));
-    Persistable::Ptr p = pers->retrieve("DiaSourceVector", storageList, props);
+    Persistable::Ptr p = pers->retrieve("SourceVector", storageList, props);
     Assert(p != 0, "Failed to retrieve Persistable");
-    DiaSourceVector::Ptr v = boost::dynamic_pointer_cast<DiaSourceVector, Persistable>(p);
-    Assert(v, "Couldn't cast to DiaSourceVector");
+    SourceVector::Ptr v = boost::dynamic_pointer_cast<SourceVector, Persistable>(p);
+    Assert(v, "Couldn't cast to SourceVector");
     // sort in ascending id order (database does not give any ordering guarantees
     // in the absence of an ORDER BY clause)
-    std::sort(v->begin(), v->end(), DiaSourceLessThan());
-    Assert(v.get() != &all && *v == all, "persist()/retrieve() resulted in DiaSourceVector corruption");
+    std::sort(v->begin(), v->end(), SourceLessThan());
+    Assert(v.get() != &all && *v == all, "persist()/retrieve() resulted in SourceVector corruption");
     formatters::dropAllVisitSliceTables(loc, nested, props);
 }
 
