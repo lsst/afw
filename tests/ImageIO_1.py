@@ -5,7 +5,7 @@ import os
 import pdb                          # we may want to say pdb.set_trace()
 import unittest
 
-import lsst.afw as afw
+import lsst.afw.image as afwImage
 import lsst.mwi.tests as tests
 
 try:
@@ -27,7 +27,7 @@ class ReadFitsTestCase(unittest.TestCase):
     """A test case for reading FITS images"""
 
     def setUp(self):
-        self.im = afw.image.ImageD()
+        self.im = afwImage.ImageD()
 
     def tearDown(self):
         del self.im

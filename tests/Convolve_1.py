@@ -1,4 +1,4 @@
-"""Test lsst.afw.math.convolve
+"""Test lsst.afwMath.convolve
 
 The convolve function is overloaded in two flavors:
 - in-place convolve: user supplies the output image as an argument
@@ -14,10 +14,11 @@ import eups
 
 import numpy
 
-import lsst.afw as afw
-import lsst.afw.image.testUtils as imTestUtils
 import lsst.mwi.tests as tests
 import lsst.mwi.utils as mwiu
+import lsst.afw.image as afwImage
+import lsst.afw.math as afwMath
+import lsst.afw.testUtils as imTestUtils
 
 verbosity = 0 # increase to see trace
 mwiu.Trace_setVerbosity("lsst.afw", verbosity)
@@ -66,7 +67,7 @@ def refConvolve(imVarMask, kernel, edgeBit, doNormalize):
     if not isSpatiallyVarying:
         kImArr = imTestUtils.arrayFromImage(kernel.computeNewImage(0, 0, doNormalize)[0])
     else:
-        kImage = afw.image.ImageD(kCols, kRows)
+        kImage = afwImage.ImageD(kCols, kRows)
 
     retRow = kernel.getCtrRow()
     for inRowBeg in range(numRows):
@@ -101,10 +102,10 @@ def makeGaussianKernelVec(kCols, kRows):
         (1.5, 2.5),
         (2.5, 1.5),
     ]
-    kVec = afw.math.KernelListD()
+    kVec = afwMath.KernelListD()
     for xSigma, ySigma in xySigmaList:
-        fPtr =  afw.math.Function2DPtr(afw.GaussianFunction2D(1.5, 2.5))
-        basisKernelPtr = afw.math.KernelPtr(afw.AnalyticKernel(fPtr, kCols, kRows))
+        fPtr =  afwMath.Function2DPtr(afw.GaussianFunction2D(1.5, 2.5))
+        basisKernelPtr = afwMath.KernelPtr(afw.AnalyticKernel(fPtr, kCols, kRows))
         kVec.append(basisKernelPtr)
     return kVec
 
@@ -135,18 +136,18 @@ class ConvolveTestCase(unittest.TestCase):
         imRows = 55
         edgeBit = -1
         
-        fullMaskedImage = afw.image.MaskedImageF()
+        fullMaskedImage = afwImage.MaskedImageF()
         fullMaskedImage.readFits(InputMaskedImagePath)
         
         # pick a small piece of the image to save time
-        bbox = afw.image.BBox2i(50, 50, imCols, imRows)
+        bbox = afwImage.BBox2i(50, 50, imCols, imRows)
         subMaskedImagePtr = fullMaskedImage.getSubImage(bbox)
         maskedImage = subMaskedImagePtr.get()
         maskedImage.this.disown()
         maskedImage.getMask().setMaskPlaneValues(0, 5, 7, 5)
         
         # create a delta function kernel that has 1,1 in the center
-        fPtr =  afw.math.Function2DPtr(afw.IntegerDeltaFunction2D(0.0, 0.0))
+        fPtr =  afwMath.Function2DPtr(afw.IntegerDeltaFunction2D(0.0, 0.0))
         k = afw.AnalyticKernel(fPtr, 3, 3)
         
         cnvMaskedImage = afw.convolve(maskedImage, k, edgeBit, True)
@@ -167,20 +168,20 @@ class ConvolveTestCase(unittest.TestCase):
         edgeBit = 7
         doNormalize = False
 
-        fPtr =  afw.math.Function2DPtr(afw.GaussianFunction2D(1.5, 2.5))
+        fPtr =  afwMath.Function2DPtr(afw.GaussianFunction2D(1.5, 2.5))
         k = afw.AnalyticKernel(fPtr, kCols, kRows)
         
-        fullMaskedImage = afw.image.MaskedImageF()
+        fullMaskedImage = afwImage.MaskedImageF()
         fullMaskedImage.readFits(InputMaskedImagePath)
         
         # pick a small piece of the image to save time
-        bbox = afw.image.BBox2i(50, 50, imCols, imRows)
+        bbox = afwImage.BBox2i(50, 50, imCols, imRows)
         subMaskedImagePtr = fullMaskedImage.getSubImage(bbox)
         maskedImage = subMaskedImagePtr.get()
         maskedImage.this.disown()
         maskedImage.getMask().setMaskPlaneValues(0, 5, 7, 5)
         
-        cnvMaskedImage = afw.image.MaskedImageF(imCols, imRows)
+        cnvMaskedImage = afwImage.MaskedImageF(imCols, imRows)
         for doNormalize in (False, True):
             afw.convolve(cnvMaskedImage, maskedImage, k, edgeBit, doNormalize)
             cnvImage, cnvVariance, cnvMask = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
@@ -208,14 +209,14 @@ class ConvolveTestCase(unittest.TestCase):
         imRows = 45
         edgeBit = 7
 
-        fPtr =  afw.math.Function2DPtr(afw.GaussianFunction2D(1.5, 2.5))
+        fPtr =  afwMath.Function2DPtr(afw.GaussianFunction2D(1.5, 2.5))
         k = afw.AnalyticKernel(fPtr, kCols, kRows)
         
-        fullMaskedImage = afw.image.MaskedImageF()
+        fullMaskedImage = afwImage.MaskedImageF()
         fullMaskedImage.readFits(InputMaskedImagePath)
         
         # pick a small piece of the image to save time
-        bbox = afw.image.BBox2i(50, 50, imCols, imRows)
+        bbox = afwImage.BBox2i(50, 50, imCols, imRows)
         subMaskedImagePtr = fullMaskedImage.getSubImage(bbox)
         maskedImage = subMaskedImagePtr.get()
         maskedImage.this.disown()
@@ -248,7 +249,7 @@ class ConvolveTestCase(unittest.TestCase):
         edgeBit = 7
 
         # create spatially varying linear combination kernel
-        sFuncPtr =  afw.math.Function2DPtr(afw.PolynomialFunction2D(1))
+        sFuncPtr =  afwMath.Function2DPtr(afw.PolynomialFunction2D(1))
         
         # spatial parameters are a list of entries, one per kernel parameter;
         # each entry is a list of spatial parameters
@@ -257,20 +258,20 @@ class ConvolveTestCase(unittest.TestCase):
             (1.0, 0.0,  1.0 / imRows),
         )
    
-        fPtr =  afw.math.Function2DPtr(afw.GaussianFunction2D(1.0, 1.0))
+        fPtr =  afwMath.Function2DPtr(afw.GaussianFunction2D(1.0, 1.0))
         k = afw.AnalyticKernel(fPtr, kCols, kRows, sFuncPtr, sParams)
         
-        fullMaskedImage = afw.image.MaskedImageF()
+        fullMaskedImage = afwImage.MaskedImageF()
         fullMaskedImage.readFits(InputMaskedImagePath)
         
         # pick a small piece of the image to save time
-        bbox = afw.image.BBox2i(50, 50, imCols, imRows)
+        bbox = afwImage.BBox2i(50, 50, imCols, imRows)
         subMaskedImagePtr = fullMaskedImage.getSubImage(bbox)
         maskedImage = subMaskedImagePtr.get()
         maskedImage.this.disown()
         maskedImage.getMask().setMaskPlaneValues(0, 5, 7, 5)
         
-        cnvMaskedImage = afw.image.MaskedImageF(imCols, imRows)
+        cnvMaskedImage = afwImage.MaskedImageF(imCols, imRows)
         for doNormalize in (False, True):
             afw.convolve(cnvMaskedImage, maskedImage, k, edgeBit, doNormalize)
             cnvImage, cnvVariance, cnvMask = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
@@ -297,11 +298,11 @@ class ConvolveTestCase(unittest.TestCase):
         imRows = 12
         doNormalize = True
 
-        fullMaskedImage = afw.image.MaskedImageF()
+        fullMaskedImage = afwImage.MaskedImageF()
         fullMaskedImage.readFits(InputMaskedImagePath)
         
         # pick a small piece of the image to save time
-        bbox = afw.image.BBox2i(50, 50, imCols, imRows)
+        bbox = afwImage.BBox2i(50, 50, imCols, imRows)
         subMaskedImagePtr = fullMaskedImage.getSubImage(bbox)
         maskedImage = subMaskedImagePtr.get()
         maskedImage.this.disown()
@@ -344,18 +345,18 @@ class ConvolveTestCase(unittest.TestCase):
         imRows = 55
         doNormalize = False # must be false because convolveLinear cannot normalize
 
-        fullMaskedImage = afw.image.MaskedImageF()
+        fullMaskedImage = afwImage.MaskedImageF()
         fullMaskedImage.readFits(InputMaskedImagePath)
         
         # pick a small piece of the image to save time
-        bbox = afw.image.BBox2i(50, 50, imCols, imRows)
+        bbox = afwImage.BBox2i(50, 50, imCols, imRows)
         subMaskedImagePtr = fullMaskedImage.getSubImage(bbox)
         maskedImage = subMaskedImagePtr.get()
         maskedImage.this.disown()
         maskedImage.getMask().setMaskPlaneValues(0, 5, 7, 5)
 
         # create spatially varying linear combination kernel
-        sFuncPtr =  afw.math.Function2DPtr(afw.PolynomialFunction2D(1))
+        sFuncPtr =  afwMath.Function2DPtr(afw.PolynomialFunction2D(1))
         
         # spatial parameters are a list of entries, one per kernel parameter;
         # each entry is a list of spatial parameters
@@ -384,7 +385,7 @@ class ConvolveTestCase(unittest.TestCase):
             self.fail("Mask from afw.convolve does not match image from refCconvolve")
 
         # compute twice, to be sure cnvMaskedImage is properly reset
-        cnvMaskedImage = afw.image.MaskedImageF(imCols, imRows)
+        cnvMaskedImage = afwImage.MaskedImageF(imCols, imRows)
         for ii in range(2):        
             afw.convolveLinear(cnvMaskedImage, maskedImage, lcKernel, edgeBit)
             cnvImage, cnvVariance, cnvMask = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
@@ -408,18 +409,18 @@ class ConvolveTestCase(unittest.TestCase):
         imRows = 55
         doNormalize = False # must be false because convolveLinear cannot normalize
 
-        fullMaskedImage = afw.image.MaskedImageF()
+        fullMaskedImage = afwImage.MaskedImageF()
         fullMaskedImage.readFits(InputMaskedImagePath)
         
         # pick a small piece of the image to save time
-        bbox = afw.image.BBox2i(50, 50, imCols, imRows)
+        bbox = afwImage.BBox2i(50, 50, imCols, imRows)
         subMaskedImagePtr = fullMaskedImage.getSubImage(bbox)
         maskedImage = subMaskedImagePtr.get()
         maskedImage.this.disown()
         maskedImage.getMask().setMaskPlaneValues(0, 5, 7, 5)
 
         # create spatially varying linear combination kernel
-        sFuncPtr =  afw.math.Function2DPtr(afw.PolynomialFunction2D(1))
+        sFuncPtr =  afwMath.Function2DPtr(afw.PolynomialFunction2D(1))
         
         # spatial parameters are a list of entries, one per kernel parameter;
         # each entry is a list of spatial parameters

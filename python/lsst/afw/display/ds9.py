@@ -6,8 +6,8 @@ import os, re, math, sys, time
 try: import xpa
 except: print "Cannot import xpa"
 
-import fwDisplay
-import lsst.afw as afw
+import displayLib
+import lsst.afw.image as afwImage
 
 class Ds9Error(IOError):
     """Some problem talking to ds9"""
@@ -168,7 +168,7 @@ system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
                if not getMaskPlaneVisibility(planes[p]):
                    continue
 
-               mask = data.getSubMask(afw.image.BBox2i(0, 0, cols, rows)) # the only way to get a copy
+               mask = data.getSubMask(afwImage.BBox2i(0, 0, cols, rows)) # the only way to get a copy
                mask &= (1 << p)
 
                color = getMaskPlaneColor(planes[p])
@@ -203,9 +203,9 @@ def _mtv(data, WCS=None, isMask=False):
    try:
        #import pdb; pdb.set_trace()
        try:
-           fwDisplay.writeFitsImage(pfd.fileno(), data, WCS)
+           displayLib.writeFitsImage(pfd.fileno(), data, WCS)
        except NotImplementedError:
-           fwDisplay.writeFitsImage(pfd.fileno(), data.get(), WCS)
+           displayLib.writeFitsImage(pfd.fileno(), data.get(), WCS)
    except Exception, e:
        try:
            pfd.close()

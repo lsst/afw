@@ -3,7 +3,7 @@ import math
 import pdb                          # we may want to say pdb.set_trace()
 import unittest
 
-import lsst.afw as afw
+import lsst.afw.image as afwImage
 import lsst.mwi.tests as tests
 import lsst.mwi.data as mwid
 import fwTests
@@ -24,15 +24,15 @@ class MaskTestCase(unittest.TestCase):
     """A test case for Mask (based on Mask_1.cc)"""
 
     def setUp(self):
-        maskImage = afw.image.ImageViewU(300,400)
+        maskImage = afwImage.ImageViewU(300,400)
 
-        self.testMask = afw.image.MaskU(afw.image.MaskIVwPtrT(maskImage))
+        self.testMask = afwImage.MaskU(afwImage.MaskIVwPtrT(maskImage))
         self.testMask.clearMaskPlaneDict() # reset so tests will be deterministic
 
         for p in ("CR", "BP"):
             self.testMask.addMaskPlane(p)
 
-        self.region = afw.image.BBox2i(100, 300, 10, 40)
+        self.region = afwImage.BBox2i(100, 300, 10, 40)
         self.subTestMask = self.testMask.getSubMask(self.region)
 
         self.pixelList = afw.listPixelCoord()
@@ -105,8 +105,8 @@ class MaskTestCase(unittest.TestCase):
     def testOrEquals(self):
         """Test |= operator"""
 
-        testMask3 = afw.image.MaskU(
-            afw.image.MaskIVwPtrT(afw.image.ImageViewU(self.testMask.getCols(), self.testMask.getRows()))
+        testMask3 = afwImage.MaskU(
+            afwImage.MaskIVwPtrT(afwImage.ImageViewU(self.testMask.getCols(), self.testMask.getRows()))
             )
 
         testMask3.addMaskPlane("CR")
@@ -127,7 +127,7 @@ class MaskTestCase(unittest.TestCase):
     def testInvalidPlaneOperations(self):
         """Test mask plane operations invalidated by Mask changes"""
 
-        testMask3 = afw.image.MaskU(self.testMask.getCols(), self.testMask.getRows())
+        testMask3 = afwImage.MaskU(self.testMask.getCols(), self.testMask.getRows())
         
         name = "Great Timothy"
         testMask3.addMaskPlane(name)
@@ -142,7 +142,7 @@ class MaskTestCase(unittest.TestCase):
     def testInvalidPlaneOperations2(self):
         """Test mask plane operations invalidated by Mask changes"""
 
-        testMask3 = afw.image.MaskU(self.testMask.getCols(), self.testMask.getRows())
+        testMask3 = afwImage.MaskU(self.testMask.getCols(), self.testMask.getRows())
         
         name = "Great Timothy"
         name2 = "Our Boss"
@@ -166,7 +166,7 @@ class MaskTestCase(unittest.TestCase):
     def XXtestConformMaskPlanes(self):
         """Test conformMaskPlanes() when the two planes are actually the same"""
 
-        testMask3 = afw.image.MaskU(self.testMask.getCols(), self.testMask.getRows())
+        testMask3 = afwImage.MaskU(self.testMask.getCols(), self.testMask.getRows())
         oldDict = self.testMask.getMaskPlaneDict()
 
         name = "XXX"
@@ -180,7 +180,7 @@ class MaskTestCase(unittest.TestCase):
     def testConformMaskPlanes2(self):
         """Test conformMaskPlanes() when the two planes are different"""
 
-        testMask3 = afw.image.MaskU(self.testMask.getCols(), self.testMask.getRows())
+        testMask3 = afwImage.MaskU(self.testMask.getCols(), self.testMask.getRows())
         
         name1 = "Great Timothy"
         name2 = "Our Boss"
@@ -192,7 +192,7 @@ class MaskTestCase(unittest.TestCase):
         testMask3.setMaskPlaneValues(p2, 0, 5, 1)
 
         if display:
-            im = afw.image.ImageD(self.testMask.getCols(), self.testMask.getRows())
+            im = afwImage.ImageD(self.testMask.getCols(), self.testMask.getRows())
             ds9.mtv(im)                 # bug in Mask display; needs an Image first
             ds9.mtv(testMask3)
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import lsst.afw as afw
+import lsst.afw.image as afwImage
 import lsst.mwi.data as DATA
 import lsst.mwi.persistence as PERS
 import lsst.mwi.policy as POL
@@ -30,7 +30,7 @@ storageList = PERS.StorageList([storage])
 print "Retrieving MaskedImage Src"
 
 # Let's do the retrieval!
-maskedImage = afw.image.MaskedImageF.swigConvert( \
+maskedImage = afwImage.MaskedImageF.swigConvert( \
     persistence.unsafeRetrieve("MaskedImageF", storageList, additionalData))
 
 # Check the resulting MaskedImage

@@ -11,7 +11,7 @@ or
 import pdb                              # we may want to say pdb.set_trace()
 import unittest
 import lsst.mwi.tests as tests
-import lsst.afw as afw
+import lsst.afw.image as afwImage
 import lsst.afw.display.ds9 as ds9
 import fwTests
 
@@ -25,8 +25,8 @@ except NameError:
 class MaskedImageTestCase(unittest.TestCase):
     """A test case for MaskedImage"""
     def setUp(self):
-        self.maskedImage1 = afw.image.MaskedImageF(272, 1037)
-        self.maskedImage2 = afw.image.MaskedImageF(272, 1037)
+        self.maskedImage1 = afwImage.MaskedImageF(272, 1037)
+        self.maskedImage2 = afwImage.MaskedImageF(272, 1037)
 
         for m in (self.maskedImage1, self.maskedImage2):
             m.getMask().addMaskPlane("CR")
@@ -58,8 +58,8 @@ class MaskedImageTestCase(unittest.TestCase):
         self.maskedImage2 += self.maskedImage1
     
     def testCopyConstructors(self):
-        image = fwTests.copyImageF(afw.image.ImageF(100, 100))
-        mask = fwTests.copyMaskU(afw.image.MaskU(100, 100))
+        image = fwTests.copyImageF(afwImage.ImageF(100, 100))
+        mask = fwTests.copyMaskU(afwImage.MaskU(100, 100))
         maskedImage = fwTests.copyMaskedImageF(self.maskedImage1)
 
     def testPixelProc(self):

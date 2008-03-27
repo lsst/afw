@@ -4,7 +4,7 @@ import pdb                          # we may want to say pdb.set_trace()
 import unittest
 import eups
 
-import lsst.afw as afw
+import lsst.afw.image as afwImage
 import lsst.mwi.tests as tests
 
 try:
@@ -26,7 +26,7 @@ class WCSTestCaseSDSS(unittest.TestCase):
     """A test case for WCS using a small (SDSS) image with a slightly weird WCS"""
 
     def setUp(self):
-        im = afw.image.ImageD()
+        im = afwImage.ImageD()
         im.readFits(InputSmallImagePath)
 
         self.wcs = afw.WCS(im.getMetaData())
@@ -51,7 +51,7 @@ class WCSTestCaseSDSS(unittest.TestCase):
         self.assertFalse(wcs.isValid())
 
         # Using MaskedImage with corrupt metadata 
-        maskedImage = afw.image.MaskedImageF()
+        maskedImage = afwImage.MaskedImageF()
         maskedImage.readFits(InputCorruptFilePath)
         metadata = maskedImage.getImage().getMetaData()
         corruptWcs = afw.WCS(metadata)
@@ -99,7 +99,7 @@ class WCSTestCaseCFHT(unittest.TestCase):
     """A test case for WCS"""
 
     def setUp(self):
-        im = afw.image.ImageD()
+        im = afwImage.ImageD()
 
         im.readFits(InputImagePath)
 

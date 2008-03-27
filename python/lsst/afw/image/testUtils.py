@@ -5,7 +5,7 @@ Please only use these for testing; they are too slow for production work!
 Eventually Image, Mask and MaskedImage will offer much better ways to do this.
 """
 import numpy
-import lsst.afw as afw
+import lsst.afw.image as afwImage
 
 def arrayFromImage(im, dtype=float):
     """Return a numpy array representation of an image.
@@ -42,8 +42,8 @@ def arraysFromMaskedImage(maskedImage):
 
 def getImageVarianceMaskFromMaskedImage(maskedImage):
     """Return the image, variance and mask from a MaskedImage.
-    Image and variance are of type lsst.afw.image.ImageD
-    and mask is of type lsst.afw.image.MaskD.
+    Image and variance are of type lsst.afwImage.ImageD
+    and mask is of type lsst.afwImage.MaskD.
     The data is NOT copied.
     """
     imPtr = maskedImage.getImage()
@@ -58,20 +58,20 @@ def getImageVarianceMaskFromMaskedImage(maskedImage):
     return (im, var, mask)
 
 def imageFromArray(arr):
-    """Create an lsst.afw.image.ImageD from a numpy array.
+    """Create an lsst.afwImage.ImageD from a numpy array.
     The data is presently copied but do not rely on that.
     """
-    im = afw.image.ImageD(arr.shape[0], arr.shape[1])
+    im = afwImage.ImageD(arr.shape[0], arr.shape[1])
     for row in range(im.getRows()):
         for col in range(im.getCols()):
             im.set(col, row, arr[col, row])
     return im
 
 def maskFromArray(arr):
-    """Create an lsst.afw.image.MaskD from a numpy array
+    """Create an lsst.afwImage.MaskD from a numpy array
     The data is presently copied but do not rely on that.
     """
-    mask = afw.image.MaskD(arr.shape[0], arr.shape[1])
+    mask = afwImage.MaskD(arr.shape[0], arr.shape[1])
     for row in range(mask.getRows()):
         for col in range(mask.getCols()):
             mask.set(col, row, int(arr[col, row]))
@@ -84,7 +84,7 @@ def maskedImageFromArrays(imVarMaskArrays):
     imArr, varArr, maskArr = imVarMaskArrays
     if not (imArr.shape == varArr.shape == maskArr.shape):
         raise RuntimeError("The arrays must all be the same shape")
-    maskedImage = afw.image.MaskedImageD(imArr.shape[0], imArr.shape[1])
+    maskedImage = afwImage.MaskedImageD(imArr.shape[0], imArr.shape[1])
     im, var, mask = getImageVarianceMaskFromMaskedImage(maskedImage)
     for row in range(maskedImage.getRows()):
         for col in range(maskedImage.getCols()):
@@ -94,9 +94,9 @@ def maskedImageFromArrays(imVarMaskArrays):
     return maskedImage
 
 if __name__ == "__main__":
-    maskedImage = afw.image.MaskedImageD()
+    maskedImage = afwImage.MaskedImageD()
     maskedImage.readFits("data/small")
-    bb = afw.image.BBox2i(200, 100, 50, 50)
+    bb = afwImage.BBox2i(200, 100, 50, 50)
     siPtr = maskedImage.getSubImage(bb)
     si = siPtr.get()
     si.this.disown()

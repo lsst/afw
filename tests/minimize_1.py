@@ -4,9 +4,9 @@ import unittest
 
 import numpy
 
-import lsst.afw as afw
 import lsst.mwi.tests as tests
 import lsst.mwi.utils as mwiu
+import lsst.afw.math as afwMath
 
 __all__ = ["computePsfMatchingKernelForMaskedImage"]
 
@@ -19,7 +19,7 @@ class MinimizeTestCase(unittest.TestCase):
         errorDef = 0.1
     
         polyOrder = 1
-        polyFuncPtr = afw.math.Function2DPtr(afw.PolynomialFunction2D(polyOrder))
+        polyFuncPtr = afwMath.Function2DPtr(afw.PolynomialFunction2D(polyOrder))
         
         modelParams = [0.1, 0.2, 0.3]
         polyFuncPtr.setParameters(modelParams)

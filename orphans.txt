@@ -1,0 +1,15 @@
+The following files belong elsewhere.
+Please move them update this file when you have.
+When all are moved this file can be deleted.
+
+include/lsst/afw/DiaSource.h
+include/lsst/afw/formatters/DiaSourceFormatters.h
+include/lsst/afw/formatters/MovingObjectPredictionFormatters.h
+include/lsst/afw/MovingObjectPrediction.h
+python/lsst/afw/image/fwCatalog.i
+src/formatters/DiaSourceFormatters.cc
+src/formatters/MaskedImageFormatter.cc
+src/image/DiaSource.cc
+src/MovingObjectPrediction.cc
+tests/DiaSource*.*
+tests/MovingObject*.*
