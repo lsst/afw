@@ -7,8 +7,8 @@
 //
 //##====----------------                                ----------------====##/
 
-#ifndef LSST_FW_IMAGE_FILTER_H
-#define LSST_FW_IMAGE_FILTER_H
+#ifndef LSST_AFW_IMAGE_FILTER_H
+#define LSST_AFW_IMAGE_FILTER_H
 
 #include <cassert>
 #include <string>
@@ -18,8 +18,8 @@
 
 
 namespace lsst {
-namespace fw {
-
+namespace afw {
+namespace image {
 
 /*!
     \brief  Holds an integer identifier for an LSST filter.
@@ -59,7 +59,6 @@ private :
     static int nameToId(lsst::pex::persistence::DbStorage & db, std::string const & name);
 };
 
+}}}  // lsst::afw::image
 
-}}  // end of namespace lsst::afw
-
-#endif // LSST_FW_IMAGE_FILTER_H
+#endif // LSST_AFW_IMAGE_FILTER_H

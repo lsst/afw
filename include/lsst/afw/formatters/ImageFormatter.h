@@ -1,6 +1,6 @@
 // -*- lsst-c++ -*-
-#ifndef LSST_FW_FORMATTERS_IMAGEFORMATTER_H
-#define LSST_FW_FORMATTERS_IMAGEFORMATTER_H
+#ifndef LSST_AFW_FORMATTERS_IMAGEFORMATTER_H
+#define LSST_AFW_FORMATTERS_IMAGEFORMATTER_H
 
 /** \file
  * \brief Interface for ImageFormatter class
@@ -10,19 +10,19 @@
  * \date $Date$
  *
  * Contact: Kian-Tat Lim (ktl@slac.stanford.edu)
- * \ingroup fw
+ * \ingroup afw
  */
 
 /** \class lsst::afw::formatters::ImageFormatter
  * \brief Class implementing persistence and retrieval for Images.
  *
- * \ingroup fw
+ * \ingroup afw
  */
 
 #include "lsst/pex/persistence/Formatter.h"
 
 namespace lsst {
-namespace fw {
+namespace afw {
 namespace formatters {
                
 using namespace lsst::pex::persistence;

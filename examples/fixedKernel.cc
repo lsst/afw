@@ -3,9 +3,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/format.hpp>
 
-#include <lsst/afw/math/FunctionLibrary.h>
-#include <lsst/afw/math/Kernel.h>
-#include <lsst/afw/math/KernelFunctions.h>
+#include <lsst/afw/math.h>
 
 using namespace std;
 

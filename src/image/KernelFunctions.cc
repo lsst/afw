@@ -4,7 +4,7 @@
  *
  * \brief Definitions of members of lsst::afw::math
  *
- * \ingroup fw
+ * \ingroup afw
  */
 #include <stdexcept>
 
@@ -18,7 +18,7 @@
  *
  * Rows increase upward and columns to the right; thus the lower left pixel is (0,0).
  *
- * \ingroup fw
+ * \ingroup afw
  */
 void
 lsst::afw::math::printKernel(
@@ -46,5 +46,3 @@ lsst::afw::math::printKernel(
     }
     std::cout << std::endl;
 }
-
-//}}}

@@ -23,7 +23,8 @@
 #include "lsst/afw/image/LSSTFitsResource.h"
 
 namespace lsst {
-namespace fw {
+namespace afw {
+namespace image {
 
 namespace formatters {
     template <typename ImagePixelT> class ImageFormatter;
@@ -95,7 +96,7 @@ namespace formatters {
 
     };
 
-}}  // lsst::afw
+}}}  // lsst::afw::image
 
 // Included definitions for templated and inline member functions
 #ifndef SWIG // don't bother SWIG with .cc files

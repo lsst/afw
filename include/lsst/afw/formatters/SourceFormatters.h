@@ -8,8 +8,8 @@
 //
 //##====----------------                                ----------------====##/
 
-#ifndef LSST_FW_FORMATTERS_DIA_SOURCE_FORMATTERS_H
-#define LSST_FW_FORMATTERS_DIA_SOURCE_FORMATTERS_H
+#ifndef LSST_AFW_FORMATTERS__SOURCE_FORMATTERS_H
+#define LSST_AFW_FORMATTERS__SOURCE_FORMATTERS_H
 
 #include <string>
 #include <vector>
@@ -67,5 +67,5 @@ private:
 
 }}} // end of namespace lsst::afw::formatters
 
-#endif // LSST_FW_FORMATTERS_DIA_SOURCE_FORMATTERS_H
+#endif // LSST_AFW_FORMATTERS__SOURCE_FORMATTERS_H
 

@@ -16,7 +16,7 @@ int main(int argc, char **argv) {
     typedef lsst::afw::math::Kernel::PixelT pixelType;
     
     lsst::pex::utils::Trace::setDestination(std::cout);
-    lsst::pex::utils::Trace::setVerbosity("lsst.fw.kernel", 5);
+    lsst::pex::utils::Trace::setVerbosity("lsst.afw.kernel", 5);
 
     const double DefSigma = 2.0;
     int DefEdgeMaskBit = 0;
@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
         }
         
         // read in fits file
-        lsst::afw::image::MaskedImage<pixelType, lsst::afw::maskPixelType> mImage;
+        lsst::afw::image::MaskedImage<pixelType, lsst::afw::image::maskPixelType> mImage;
         mImage.readFits(argv[1]);
         
         // construct kernel
@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
         lsst::afw::math::AnalyticKernel kernel(kfuncPtr, 5, 5);
     
         // convolve
-        lsst::afw::image::MaskedImage<pixelType, lsst::afw::maskPixelType>
+        lsst::afw::image::MaskedImage<pixelType, lsst::afw::image::maskPixelType>
             resMaskedImage = lsst::afw::math::convolve(mImage, kernel, edgeMaskBit, true);
     
         // write results

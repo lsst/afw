@@ -15,7 +15,7 @@
  *
  * @author Russell Owen
  *
- * @ingroup fw
+ * @ingroup afw
  */
 #include <algorithm>
 #include <cmath>
@@ -32,7 +32,7 @@
 
 // declare private functions
 namespace lsst {
-namespace fw {
+namespace afw {
 namespace math {
 
     template <typename ImageT, typename MaskT>
@@ -61,7 +61,7 @@ namespace math {
  * - figure out the kernel center and adjust the supplied pixel accessors accordingly
  * For an example of how to do this see the convolve function.
  *
- * @ingroup fw
+ * @ingroup afw
  */
 template <typename ImageT, typename MaskT>
 inline void lsst::afw::math::apply(
@@ -83,7 +83,7 @@ inline void lsst::afw::math::apply(
 // this variant code is for speed testing only
 // I find it boost speed by roughly 25% when building with opt=3
 // on babaroga, a 32-bit linux box with gcc 3.4.6
-// but it is NOT SAFE because fw does not enforce row order for images and kernels
+// but it is NOT SAFE because afw does not enforce row order for images and kernels
 //        ImageT *imagePtr = &(*(mImageRowAcc.image));
 //        ImageT *varPtr = &(*(mImageRowAcc.variance));
 //        MaskT *maskPtr = &(*(mImageRowAcc.mask));
@@ -123,7 +123,7 @@ inline void lsst::afw::math::apply(
  * @throw lsst::pex::exceptions::InvalidParameter if convolvedImage is not the same size as maskedImage.
  * @throw lsst::pex::exceptions::InvalidParameter if maskedImage is smaller (in colums or rows) than kernel.
  *
- * @ingroup fw
+ * @ingroup afw
  */
 template <typename ImageT, typename MaskT, typename KernelT>
 void lsst::afw::math::basicConvolve(
@@ -164,7 +164,7 @@ void lsst::afw::math::basicConvolve(
     if (kernel.isSpatiallyVarying()) {
         lsst::afw::image::Image<KernelPixelT> kernelImage(kernel.getCols(), kernel.getRows());
         kernelAccessorType kernelAccessor = kernelImage.origin();
-        lsst::pex::utils::Trace("lsst.fw.kernel.convolve", 3, "kernel is spatially varying");
+        lsst::pex::utils::Trace("lsst.afw.kernel.convolve", 3, "kernel is spatially varying");
         for (int cnvRow = cnvStartRow; cnvRow < cnvEndRow; ++cnvRow, cnvRowAcc.nextRow(), mImageRowAcc.nextRow()) {
             double rowPos = lsst::afw::image::indexToPosition(cnvRow);
             maskedPixelAccessorType mImageColAcc = mImageRowAcc;
@@ -185,7 +185,7 @@ void lsst::afw::math::basicConvolve(
         }
     } else {
         // kernel is spatially invariant
-        lsst::pex::utils::Trace("lsst.fw.kernel.convolve", 3, "kernel is spatially invariant");
+        lsst::pex::utils::Trace("lsst.afw.kernel.convolve", 3, "kernel is spatially invariant");
         KernelPixelT kSum;
         lsst::afw::image::Image<KernelPixelT> kernelImage = kernel.computeNewImage(kSum, 0.0, 0.0, doNormalize);
         kernelAccessorType kernelAccessor = kernelImage.origin();
@@ -209,7 +209,7 @@ template <typename ImageT, typename MaskT>
 void lsst::afw::math::basicConvolve(
                                      lsst::afw::image::MaskedImage<ImageT, MaskT> &convolvedImage,       ///< convolved image
                                      lsst::afw::image::MaskedImage<ImageT, MaskT> const &maskedImage,    ///< image to convolve
-                                     lsst::afw::DeltaFunctionKernel const &kernel,    ///< convolution kernel
+                                     lsst::afw::math::DeltaFunctionKernel const &kernel,    ///< convolution kernel
                                      bool doNormalize    ///< if True, normalize the kernel, else use "as is"
                                     ) {
     assert (!kernel.isSpatiallyVarying());
@@ -248,7 +248,7 @@ void lsst::afw::math::basicConvolve(
         cnvRowAcc.advance(0, -pixelRow);
     }
 
-    lsst::pex::utils::Trace("lsst.fw.kernel.convolve", 3, "kernel is spatially invariant delta function basis");
+    lsst::pex::utils::Trace("lsst.afw.kernel.convolve", 3, "kernel is spatially invariant delta function basis");
     for (int i = 0; i < nCopyRows; ++i, cnvRowAcc.nextRow(), mImageRowAcc.nextRow()) {
         MIAccessorT mImageColAcc = mImageRowAcc;
         MIAccessorT cnvColAcc = cnvRowAcc;
@@ -277,7 +277,7 @@ void lsst::afw::math::basicConvolve(
  * @throw lsst::pex::exceptions::InvalidParameter if convolvedImage is not the same size as maskedImage.
  * @throw lsst::pex::exceptions::InvalidParameter if maskedImage is smaller (in colums or rows) than kernel.
  *
- * @ingroup fw
+ * @ingroup afw
  */
 template <typename ImageT, typename MaskT, typename KernelT>
 void lsst::afw::math::convolve(
@@ -305,7 +305,7 @@ void lsst::afw::math::convolve(
  *
  * @throw lsst::pex::exceptions::InvalidParameter if maskedImage is smaller (in colums or rows) than kernel.
  *
- * @ingroup fw
+ * @ingroup afw
  */
 template <typename ImageT, typename MaskT, typename KernelT>
 lsst::afw::image::MaskedImage<ImageT, MaskT> lsst::afw::math::convolve(
@@ -335,7 +335,7 @@ lsst::afw::image::MaskedImage<ImageT, MaskT> lsst::afw::math::convolve(
  * @throw lsst::pex::exceptions::InvalidParameter if convolvedImage is not the same size as maskedImage.
  * @throw lsst::pex::exceptions::InvalidParameter if maskedImage is smaller (in colums or rows) than kernel.
  *
- * @ingroup fw
+ * @ingroup afw
  */
 template <typename ImageT, typename MaskT>
 void lsst::afw::math::convolveLinear(
@@ -436,7 +436,7 @@ void lsst::afw::math::convolveLinear(
  *
  * @throw lsst::pex::exceptions::InvalidParameter if maskedImage is smaller (in colums or rows) than kernel.
  *
- * @ingroup fw
+ * @ingroup afw
  */
 template <typename ImageT, typename MaskT>
 lsst::afw::image::MaskedImage<ImageT, MaskT> lsst::afw::math::convolveLinear(
@@ -459,7 +459,7 @@ lsst::afw::image::MaskedImage<ImageT, MaskT> lsst::afw::math::convolveLinear(
  *
  * The sizes are not error-checked.
  *
- * @ingroup fw
+ * @ingroup afw
  */
 template <typename ImageT, typename MaskT>
 void lsst::afw::math::_copyBorder(
@@ -513,7 +513,7 @@ inline void lsst::afw::math::_copyRegion(
 
     vw::math::Vector<vw::int32> const startColRow = region.min();
     vw::math::Vector<vw::int32> const numColRow = region.size();
-    lsst::pex::utils::Trace("lsst.fw.kernel._copyRegion", 4,
+    lsst::pex::utils::Trace("lsst.afw.kernel._copyRegion", 4,
         "_copyRegion: dest size=%d, %d; src size=%d, %d; region start=%d, %d; region size=%d, %d; orMask=%d",
         destImage.getCols(), destImage.getRows(), sourceImage.getCols(), sourceImage.getRows(),
         startColRow[0], startColRow[1], numColRow[0], numColRow[1], orMask

@@ -7,8 +7,8 @@
 //
 //##====----------------                                ----------------====##/
 
-#ifndef LSST_FW_DIA_SOURCE_H
-#define LSST_FW_DIA_SOURCE_H
+#ifndef LSST_AFW_DETECTION_SOURCE_H
+#define LSST_AFW_DETECTION_SOURCE_H
 
 #include <bitset>
 #include <string>
@@ -515,6 +515,6 @@ private :
 
 }}  // end of namespace lsst::afw
 
-#endif // LSST_FW_DIA_SOURCE_H
+#endif // LSST_AFW_DETECTION_SOURCE_H
 
 

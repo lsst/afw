@@ -4,10 +4,8 @@
 
 #include <lsst/daf/data/Citizen.h>
 #include <lsst/pex/utils/Trace.h>
-#include <lsst/afw/math/FunctionLibrary.h>
-#include <lsst/afw/image/Image.h>
-#include <lsst/afw/math/Kernel.h>
-#include <lsst/afw/math/KernelFunctions.h>
+#include <lsst/afw/image.h>
+#include <lsst/afw/math.h>
 
 using namespace std;
 const std::string outFile("clOut");
@@ -15,7 +13,7 @@ const std::string altOutFile("clAltOut");
 
 int main(int argc, char **argv) {
     lsst::pex::utils::Trace::setDestination(std::cout);
-    lsst::pex::utils::Trace::setVerbosity("lsst.fw.kernel", 5);
+    lsst::pex::utils::Trace::setVerbosity("lsst.afw.kernel", 5);
 
     typedef float imagePixelType;
     unsigned int KernelCols = 5;
@@ -47,7 +45,7 @@ int main(int argc, char **argv) {
         }
         
         // read in fits file
-        lsst::afw::image::MaskedImage<imagePixelType, lsst::afw::maskPixelType> mImage;
+        lsst::afw::image::MaskedImage<imagePixelType, lsst::afw::image::maskPixelType> mImage;
         mImage.readFits(argv[1]);
         
         // construct basis kernels
@@ -87,7 +85,7 @@ int main(int argc, char **argv) {
         lcSpVarKernel.setSpatialParameters(polyParams);
     
         // convolve with convolveLinear
-        lsst::afw::image::MaskedImage<imagePixelType, lsst::afw::maskPixelType> resMaskedImage(
+        lsst::afw::image::MaskedImage<imagePixelType, lsst::afw::image::maskPixelType> resMaskedImage(
             mImage.getCols(), mImage.getRows());
         lsst::afw::math::convolveLinear(resMaskedImage, mImage, lcSpVarKernel, edgeBit);
         
@@ -96,7 +94,7 @@ int main(int argc, char **argv) {
         std::cout << "Wrote " << outFile << "_img.fits, etc." << std::endl;
 
         if (doBothWays) {
-            lsst::afw::image::MaskedImage<imagePixelType, lsst::afw::maskPixelType> altResMaskedImage(
+            lsst::afw::image::MaskedImage<imagePixelType, lsst::afw::image::maskPixelType> altResMaskedImage(
                 mImage.getCols(), mImage.getRows());
             lsst::afw::math::convolve(altResMaskedImage, mImage, lcSpVarKernel, edgeBit, false);
             altResMaskedImage.writeFits(altOutFile);

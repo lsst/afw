@@ -1,6 +1,6 @@
 // -*- lsst-c++ -*-
-#ifndef LSST_FW_FORMATTERS_WCSFORMATTER_H
-#define LSST_FW_FORMATTERS_WCSFORMATTER_H
+#ifndef LSST_AFW_FORMATTERS_WCSFORMATTER_H
+#define LSST_AFW_FORMATTERS_WCSFORMATTER_H
 
 /** \file
  * \brief Interface for WcsFormatter class
@@ -10,19 +10,20 @@
  * \date $Date$
  *
  * Contact: Kian-Tat Lim (ktl@slac.stanford.edu)
- * \ingroup fw
+ * \ingroup afw
  */
 
 /** \class lsst::afw::formatters::WcsFormatter
  * \brief Class implementing persistence and retrieval for WCS objects.
  *
- * \ingroup fw
+ * \ingroup afw
  */
 
 #include "lsst/pex/persistence/Formatter.h"
 
 namespace lsst {
-namespace fw {
+namespace afw {
+namespace formatters {
 
 class WCS;
 

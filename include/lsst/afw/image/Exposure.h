@@ -2,9 +2,9 @@
 /**
   * \file Exposure.h
   *
-  * \class lsst::afw::Exposure 
+  * \class lsst::afw::image::Exposure 
   *
-  * \ingroup fw
+  * \ingroup afw
   *
   * \brief Declaration of the templated Exposure Class for LSST.  Create an
   * Exposure from a lsst::afw::image::MaskedImage.
@@ -34,7 +34,8 @@
 #include <lsst/afw/image/WCS.h>
 
 namespace lsst {
-namespace fw {
+namespace afw {
+namespace image {
     
     template<class ImageT, class MaskT> class Exposure;
     namespace formatters {
@@ -47,7 +48,7 @@ namespace fw {
                 
     public:    
 
-        typedef boost::shared_ptr<lsst::afw::math::WCS> wscPtrType;
+        typedef boost::shared_ptr<lsst::afw::image::WCS> wscPtrType;
 
         // Class Constructors and Destructor
         explicit Exposure();
@@ -79,6 +80,6 @@ namespace fw {
         MaskedImage<ImageT, MaskT> _maskedImage;             
         boost::shared_ptr<WCS> _wcsPtr;    
     };     
-}} // fw::lsst
+}}} // lsst::afw::image
 
 #endif // LSST_AFW_IMAGE_EXPOSURE_H

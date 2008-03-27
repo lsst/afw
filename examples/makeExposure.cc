@@ -2,7 +2,7 @@
 /**
   * \file makeExposure.cc
   *
-  * \ingroup fw
+  * \ingroup afw
   *
   * \brief Test code for the LSST Exposure Class.
   *
@@ -46,7 +46,7 @@
 #include <lsst/afw/image/Image.h>
 #include <lsst/afw/image/MaskedImage.h>
 #include <lsst/pex/utils/Trace.h>
-#include <lsst/afw/math/WCS.h>
+#include <lsst/afw/image/WCS.h>
 
 // FROM POLICY FILE: INPUT AND OUTPUT FILE NAMES FOR EXPOSURES/MASKEDIMAGES
 const std::string miOutFile1("miOutFile1"); // output maskedImage
@@ -68,7 +68,7 @@ int main() {
     std::string fwData(fwDataCStr);
                 
     lsst::pex::utils::Trace::setDestination(std::cout);
-    lsst::pex::utils::Trace::setVerbosity("lsst.fw", 4);
+    lsst::pex::utils::Trace::setVerbosity("lsst.afw", 4);
 
     { //memory (de)allocation block
 
@@ -77,7 +77,7 @@ int main() {
         // These have been commented out upon mergeing to the trunk.
     
         // Read a fits file in as a MaskedImage
-        lsst::afw::image::MaskedImage<pixelType, lsst::afw::maskPixelType> mImage;
+        lsst::afw::image::MaskedImage<pixelType, lsst::afw::image::maskPixelType> mImage;
         const std::string inMIFile(fwData + "/small_MI"); // input CFHT MI
         
         mImage.readFits(inMIFile);
@@ -90,22 +90,22 @@ int main() {
 
         // (1) Construct a blank Exposure
 
-        lsst::afw::Exposure<pixelType, lsst::afw::maskPixelType> blankExpImage;
-        lsst::afw::image::MaskedImage<pixelType, lsst::afw::maskPixelType> blankMaskedImage = blankExpImage.getMaskedImage();
+        lsst::afw::image::Exposure<pixelType, lsst::afw::image::maskPixelType> blankExpImage;
+        lsst::afw::image::MaskedImage<pixelType, lsst::afw::image::maskPixelType> blankMaskedImage = blankExpImage.getMaskedImage();
         int numCols = blankMaskedImage.getCols();
         int numRows = blankMaskedImage.getRows();
-        lsst::pex::utils::Trace("lsst.fw.Exposure", 5, boost::format("Number of columns, rows in Blank Exposure: %s, %s") % numCols % numRows);
+        lsst::pex::utils::Trace("lsst.afw.Exposure", 5, boost::format("Number of columns, rows in Blank Exposure: %s, %s") % numCols % numRows);
         
         // (2) Construct an Exposure with only a MaskedImage.
 
-        lsst::afw::Exposure<pixelType, lsst::afw::maskPixelType> miExpImage(mImage);
-        lsst::afw::image::MaskedImage<pixelType, lsst::afw::maskPixelType> miMaskedImage = miExpImage.getMaskedImage();
+        lsst::afw::image::Exposure<pixelType, lsst::afw::image::maskPixelType> miExpImage(mImage);
+        lsst::afw::image::MaskedImage<pixelType, lsst::afw::image::maskPixelType> miMaskedImage = miExpImage.getMaskedImage();
         int numMiCols = miMaskedImage.getCols();
         int numMiRows = miMaskedImage.getRows();
         int numOrigMiCols = mImage.getCols();
         int numOrigMiRows = mImage.getRows();
-        lsst::pex::utils::Trace("lsst.fw.Exposure", 5, boost::format("Number of columns, rows in MiExposure: %s, %s") % numMiCols % numMiRows);
-        lsst::pex::utils::Trace("lsst.fw.Exposure", 5, boost::format("Number of columns, rows in original MaskedImage, 'mImage': %s, %s") % numOrigMiCols % numOrigMiRows);
+        lsst::pex::utils::Trace("lsst.afw.Exposure", 5, boost::format("Number of columns, rows in MiExposure: %s, %s") % numMiCols % numMiRows);
+        lsst::pex::utils::Trace("lsst.afw.Exposure", 5, boost::format("Number of columns, rows in original MaskedImage, 'mImage': %s, %s") % numOrigMiCols % numOrigMiRows);
 
         // (3) Construct an Exposure from a MaskedImage and a WCS.  Need to
         // construct a WCS first.  The WCS class takes the MaskedImage metadata
@@ -115,66 +115,66 @@ int main() {
         lsst::daf::data::DataProperty::PtrType mData = mImage.getImage()->getMetaData();
 
         // make sure it can be copied.
-        lsst::afw::math::WCS myWcs(mData);  
+        lsst::afw::image::WCS myWcs(mData);  
 
-        lsst::afw::math::WCS wcs2;
+        lsst::afw::image::WCS wcs2;
         wcs2 = myWcs;
         
         // Now use Exposure class to create an Exposure from a MaskedImage and a
         // WCS.
        
-       lsst::afw::Exposure<pixelType, lsst::afw::maskPixelType> miWcsExpImage(mImage, myWcs);
+       lsst::afw::image::Exposure<pixelType, lsst::afw::image::maskPixelType> miWcsExpImage(mImage, myWcs);
              
-	lsst::afw::math::WCS wcsCopy(myWcs); 
+	lsst::afw::image::WCS wcsCopy(myWcs); 
       
-	//lsst::afw::math::WCS wcsAssigned();
+	//lsst::afw::image::WCS wcsAssigned();
 	//wcsAssigned = myWcs; 
 
         // (4) Construct an Exposure from a given region (col, row) and a WCS.
 
         unsigned miCols = 5;
         unsigned miRows = 5;
-        lsst::afw::Exposure<pixelType, lsst::afw::maskPixelType> regWcsExpImage(miCols, miRows, myWcs);
+        lsst::afw::image::Exposure<pixelType, lsst::afw::image::maskPixelType> regWcsExpImage(miCols, miRows, myWcs);
        
         // (5) Construct an Exposure from a given region (col, row) with no WCS.
 
         unsigned mi2Cols = 5;
         unsigned mi2Rows = 5;
-        lsst::afw::Exposure<pixelType, lsst::afw::maskPixelType> regExpImage(mi2Cols, mi2Rows);
+        lsst::afw::image::Exposure<pixelType, lsst::afw::image::maskPixelType> regExpImage(mi2Cols, mi2Rows);
        
         // try to get the WCS when there isn't one
         try {
-        lsst::afw::math::WCS noWcs = regExpImage.getWcs();
+        lsst::afw::image::WCS noWcs = regExpImage.getWcs();
         } catch (lsst::pex::exceptions::NotFound e) {
-            lsst::pex::utils::Trace("lsst.fw.Exposure", 5, "Caught lsst::pex NotFound Exception for getting a null WCS");
+            lsst::pex::utils::Trace("lsst.afw.Exposure", 5, "Caught lsst::pex NotFound Exception for getting a null WCS");
         }
 
         // (6) Get a MaskedImage and write it out.
 
-        lsst::afw::image::MaskedImage<pixelType, lsst::afw::maskPixelType> newMiImage =  miWcsExpImage.getMaskedImage();
+        lsst::afw::image::MaskedImage<pixelType, lsst::afw::image::maskPixelType> newMiImage =  miWcsExpImage.getMaskedImage();
         newMiImage.writeFits(miOutFile2);
         
         // (7) Get a WCS. 
          
-       lsst::afw::math::WCS newWcs = miWcsExpImage.getWcs();
+       lsst::afw::image::WCS newWcs = miWcsExpImage.getWcs();
 
         // try to get a WCS from an image where I have corrupted the WCS
         // information (removed the CRPIX1/2 header keywords/values.  Lets see
         // what WCS class does.  It should fail miserably because there is no
         // exception handling for this in the WCS class.
         
-        lsst::afw::image::MaskedImage<pixelType, lsst::afw::maskPixelType> mCorruptImage;
+        lsst::afw::image::MaskedImage<pixelType, lsst::afw::image::maskPixelType> mCorruptImage;
         const std::string inCorrMIFile("tests/data/small_MI_corrupt"); // input CFHT MI with corrupt header
        
         try {
         mCorruptImage.readFits(inCorrMIFile);
         lsst::daf::data::DataProperty::PtrType  mCorData = mCorruptImage.getImage()->getMetaData();
-        lsst::afw::math::WCS wcs = lsst::afw::math::WCS(mCorData);
+        lsst::afw::image::WCS wcs = lsst::afw::image::WCS(mCorData);
        
-        lsst::afw::Exposure<pixelType, lsst::afw::maskPixelType> newCorExposure(mCorruptImage, wcs);
+        lsst::afw::image::Exposure<pixelType, lsst::afw::image::maskPixelType> newCorExposure(mCorruptImage, wcs);
        
         } catch (lsst::pex::exceptions::NotFound error) {
-            lsst::pex::utils::Trace("lsst.fw.Exposure", 1, "Reading Corrupted MaskedImage Failed - caught lsst::pex NotFound Exception.");
+            lsst::pex::utils::Trace("lsst.afw.Exposure", 1, "Reading Corrupted MaskedImage Failed - caught lsst::pex NotFound Exception.");
         }
 
         // (8) Get a subExposure once the WCS Class is ready for this to be
@@ -198,12 +198,12 @@ int main() {
         const vw::BBox2i &subRegion = vw::BBox2i(orx, ory, subWidth, subHeight);
         
         try {
-            lsst::afw::Exposure<pixelType, lsst::afw::maskPixelType> subExpImage =  miWcsExpImage.getSubExposure(subRegion);
+            lsst::afw::image::Exposure<pixelType, lsst::afw::image::maskPixelType> subExpImage =  miWcsExpImage.getSubExposure(subRegion);
            
-            lsst::afw::image::MaskedImage<pixelType, lsst::afw::maskPixelType> subExpMI = subExpImage.getMaskedImage();
+            lsst::afw::image::MaskedImage<pixelType, lsst::afw::image::maskPixelType> subExpMI = subExpImage.getMaskedImage();
             subExpMI.writeFits(expMIOutFile1);
         } catch (lsst::pex::exceptions::InvalidParameter ex) {
-            lsst::pex::utils::Trace("lsst.fw.Exposure", 5, "Caught InvalidParameter Exception for requested subRegion");
+            lsst::pex::utils::Trace("lsst.afw.Exposure", 5, "Caught InvalidParameter Exception for requested subRegion");
         }
        
         // This subRegion should trigger an exception.  It extends beyond the
@@ -213,12 +213,12 @@ int main() {
         const vw::BBox2i &subRegion2 = BBox2i(orx, ory, subWidth2, subHeight2); 
      
         try {
-            lsst::afw::Exposure<pixelType, lsst::afw::maskPixelType> subExpImage2 =  miWcsExpImage.getSubExposure(subRegion2); 
+            lsst::afw::image::Exposure<pixelType, lsst::afw::image::maskPixelType> subExpImage2 =  miWcsExpImage.getSubExposure(subRegion2); 
             
-            lsst::afw::image::MaskedImage<pixelType, lsst::afw::maskPixelType> subExpMI2 = subExpImage2.getMaskedImage();
+            lsst::afw::image::MaskedImage<pixelType, lsst::afw::image::maskPixelType> subExpMI2 = subExpImage2.getMaskedImage();
             subExpMI2.writeFits(expMIOutFile2);
         } catch (lsst::pex::exceptions::InvalidParameter err) {
-            lsst::pex::utils::Trace("lsst.fw.Exposure", 5, "Caught InvalidParameter Exception for requested subRegion2");
+            lsst::pex::utils::Trace("lsst.afw.Exposure", 5, "Caught InvalidParameter Exception for requested subRegion2");
         }
        
         // (9) Check if the Exposure has a WCS.  Doesn't have to have one.  Bool
@@ -237,19 +237,19 @@ int main() {
         
         // (10) Test readFits/writeFits functionality for Exposure
         // Class...writeFits still needs to be implemented.
-        lsst::afw::Exposure<pixelType, lsst::afw::maskPixelType> exposure;
+        lsst::afw::image::Exposure<pixelType, lsst::afw::image::maskPixelType> exposure;
         
         const std::string inExFile(fwData + "/871034p_1_MI"); // input CFHT Exposure
         try {
         exposure.readFits(fwData + "/871034p_1_MI");        
         } catch (lsst::pex::exceptions::NotFound error) {
-           lsst::pex::utils::Trace("lsst.fw.Exposure", 5, "Reading MaskedImage Failed - caught lsst::pex NotFound Exception.");
+           lsst::pex::utils::Trace("lsst.afw.Exposure", 5, "Reading MaskedImage Failed - caught lsst::pex NotFound Exception.");
         }
 
         try {
         exposure.writeFits(expOutFile1);
         } catch (lsst::pex::exceptions::InvalidParameter error) {
-            lsst::pex::utils::Trace("lsst.fw.Exposure", 5, "Writing MaskedImage Failed - caught lsst::pex InvalidParameter Exception.");
+            lsst::pex::utils::Trace("lsst.afw.Exposure", 5, "Writing MaskedImage Failed - caught lsst::pex InvalidParameter Exception.");
         }
 
     } // close memory (de)allocation block

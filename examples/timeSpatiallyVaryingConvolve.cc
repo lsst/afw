@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
     }
     
     // read in fits file
-    lsst::afw::image::MaskedImage<imageType, lsst::afw::maskPixelType> mImage;
+    lsst::afw::image::MaskedImage<imageType, lsst::afw::image::maskPixelType> mImage;
     mImage.readFits(argv[1]);
     
     std::cout << "Image is " << mImage.getCols() << " by " << mImage.getRows() << std::endl;
@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
         clock_t startTime = clock();
         for (unsigned int iter = 0; iter < nIter; ++iter) {
             // convolve
-            lsst::afw::image::MaskedImage<imageType, lsst::afw::maskPixelType>
+            lsst::afw::image::MaskedImage<imageType, lsst::afw::image::maskPixelType>
                 resMImage = lsst::afw::math::convolve(mImage, gaussSpVarKernel, EdgeMaskBit, true);
         }
         double secPerIter = (clock() - startTime) / static_cast<double> (nIter * CLOCKS_PER_SEC);

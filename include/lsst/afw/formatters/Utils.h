@@ -4,8 +4,8 @@
 //! \file   Utils.h
 //##====----------------                                ----------------====##/
 
-#ifndef LSST_FW_FORMATTERS_UTILS_H
-#define LSST_FW_FORMATTERS_UTILS_H
+#ifndef LSST_AFW_FORMATTERS_UTILS_H
+#define LSST_AFW_FORMATTERS_UTILS_H
 
 #include <string>
 #include <lsst/daf/data/DataProperty.h>
@@ -14,7 +14,7 @@
 
 
 namespace lsst {
-namespace fw {
+namespace afw {
 namespace formatters {
 
 using namespace lsst::pex::persistence;
@@ -63,7 +63,7 @@ int extractVisitId(DataProperty::PtrType const& properties);
 int extractCcdId(DataProperty::PtrType const& properties);
 int64_t extractCcdExposureId(DataProperty::PtrType const& properties);
 
-}}} // end of namespace lsst::afw::formatters
+}}} // lsst::afw::formatters
 
-#endif // LSST_FW_FORMATTERS_UTILS_H
+#endif // LSST_AFW_FORMATTERS_UTILS_H
 

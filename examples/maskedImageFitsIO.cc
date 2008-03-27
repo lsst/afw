@@ -8,7 +8,7 @@ const std::string outFile("rwfitsOut");
 int main(int argc, char **argv) {
     typedef float pixelType;
 
-    lsst::afw::image::MaskedImage<pixelType, lsst::afw::maskPixelType> mImage;
+    lsst::afw::image::MaskedImage<pixelType, lsst::afw::image::maskPixelType> mImage;
 
     if (argc < 2) {
         std::cerr << "Usage: maskedImageFitsIO fitsFile" << std::endl;

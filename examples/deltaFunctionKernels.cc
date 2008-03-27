@@ -4,9 +4,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/format.hpp>
 
-#include <lsst/afw/math/Kernel.h>
-#include <lsst/afw/math/KernelFunctions.h>
-#include <lsst/afw/math/FunctionLibrary.h>
+#include <lsst/afw/math.h>
 
 using namespace std;
 
@@ -32,7 +30,7 @@ int main() {
 #if 0
 		new lsst::afw::math::AnalyticKernel(kfuncPtr, kernelCols, kernelRows)
 #else
-                new lsst::afw::DeltaFunctionKernel(x, y, kernelCols, kernelRows)
+                new lsst::afw::math::DeltaFunctionKernel(x, y, kernelCols, kernelRows)
 #endif
                                             );
             kernelVec.push_back(kernelPtr);

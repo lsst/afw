@@ -26,7 +26,7 @@
 #include <lsst/afw/image/Image.h>
 #include <lsst/afw/image/MaskedImage.h>
 #include <lsst/pex/utils/Trace.h> // turn off by recompiling with 'LSST_NO_TRACE 0'
-#include <lsst/afw/math/WCS.h>
+#include <lsst/afw/image/WCS.h>
 
 /**
  * \brief This test code incorporates some very simple tests of the WCS Class
@@ -43,9 +43,9 @@ int main(int argc, char **argv) {
     
    
     std::cout << "Opening file " << inFilename << std::endl;
-    lsst::afw::image::MaskedImage<pixelType, lsst::afw::maskPixelType> mskdImage;
+    lsst::afw::image::MaskedImage<pixelType, lsst::afw::image::maskPixelType> mskdImage;
     mskdImage.readFits(inFilename);
-    lsst::afw::math::WCS wcs(mskdImage.getImage()->getMetaData());
+    lsst::afw::image::WCS wcs(mskdImage.getImage()->getMetaData());
     
     // Testing input col, row values 
 
