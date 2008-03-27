@@ -5,13 +5,13 @@ import unittest
 
 import numpy
 
-import lsst.fw.Core.fwLib as fw
+import lsst.afw as afw
 import lsst.mwi.tests as tests
 import lsst.mwi.utils as mwiu
-import lsst.fw.Core.imageTestUtils as imTestUtils
+import lsst.afw.image.testUtils as imTestUtils
 
 verbosity = 0 # increase to see trace
-mwiu.Trace_setVerbosity("lsst.fw", verbosity)
+mwiu.Trace_setVerbosity("lsst.afw", verbosity)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -26,12 +26,12 @@ class KernelTestCase(unittest.TestCase):
         inArr = numpy.arange(kCols * kRows, dtype=float)
         inArr.shape = [kCols, kRows]
 
-        inImage = fw.ImageD(kCols, kRows)
+        inImage = afw.image.ImageD(kCols, kRows)
         for row in range(inImage.getRows()):
             for col in range(inImage.getCols()):
                 inImage.set(col, row, inArr[col, row])
         
-        fixedKernel = fw.FixedKernel(inImage);
+        fixedKernel = afw.FixedKernel(inImage);
         outImage = fixedKernel.computeNewImage(0.0, 0.0, False)[0]
         outArr = imTestUtils.arrayFromImage(outImage)
         if not numpy.allclose(inArr, outArr):
@@ -51,8 +51,8 @@ class KernelTestCase(unittest.TestCase):
         kCols = 5
         kRows = 8
 
-        fPtr =  fw.Function2DPtr(fw.GaussianFunction2D(1.0, 1.0))
-        k = fw.AnalyticKernel(fPtr, kCols, kRows)
+        fPtr =  afw.math.Function2DPtr(afw.GaussianFunction2D(1.0, 1.0))
+        k = afw.AnalyticKernel(fPtr, kCols, kRows)
         fArr = numpy.zeros(shape=[k.getCols(), k.getRows()], dtype=float)
         for xsigma in (0.1, 1.0, 3.0):
             for ysigma in (0.1, 1.0, 3.0):
@@ -80,21 +80,21 @@ class KernelTestCase(unittest.TestCase):
         
         # create list of kernels
         basisImArrList = []
-        kVec = fw.KernelListD()
+        kVec = afw.math.KernelListD()
         ctrCol = (kCols - 1) // 2
         ctrRow = (kRows - 1) // 2
         for row in range(kRows):
             y = float(row - ctrRow)
             for col in range(kCols):
                 x = float(col - ctrCol)
-                fPtr = fw.Function2DPtr(fw.IntegerDeltaFunction2D(x, y))
-                kPtr = fw.KernelPtr(fw.AnalyticKernel(fPtr, kCols, kRows))
+                fPtr = afw.math.Function2DPtr(afw.IntegerDeltaFunction2D(x, y))
+                kPtr = afw.math.KernelPtr(afw.AnalyticKernel(fPtr, kCols, kRows))
                 basisImage = kPtr.computeNewImage()[0]
                 basisImArrList.append(imTestUtils.arrayFromImage(basisImage))
                 kVec.append(kPtr)
         
         kParams = [0.0]*len(kVec)
-        k = fw.LinearCombinationKernel(kVec, kParams)
+        k = afw.LinearCombinationKernel(kVec, kParams)
         for ii in range(len(kVec)):
             kParams = [0.0]*len(kVec)
             kParams[ii] = 1.0
@@ -123,14 +123,14 @@ class KernelTestCase(unittest.TestCase):
         basisImArrList.append(imArr)
         
         # create a list of basis kernels from the images
-        kVec = fw.KernelListD()
+        kVec = afw.math.KernelListD()
         for basisImArr in basisImArrList:
             basisImage = imTestUtils.imageFromArray(basisImArr)
-            kPtr = fw.KernelPtr(fw.FixedKernel(basisImage))
+            kPtr = afw.math.KernelPtr(afw.FixedKernel(basisImage))
             kVec.append(kPtr)
 
         # create spatially varying linear combination kernel
-        sFuncPtr =  fw.Function2DPtr(fw.PolynomialFunction2D(1))
+        sFuncPtr =  afw.math.Function2DPtr(afw.PolynomialFunction2D(1))
         
         # spatial parameters are a list of entries, one per kernel parameter;
         # each entry is a list of spatial parameters
@@ -139,8 +139,8 @@ class KernelTestCase(unittest.TestCase):
             (0.0, 0.0, 1.0),
         )
         
-        k = fw.LinearCombinationKernel(kVec, sFuncPtr, sParams)
-        kImage = fw.ImageD(kCols, kRows)
+        k = afw.LinearCombinationKernel(kVec, sFuncPtr, sParams)
+        kImage = afw.image.ImageD(kCols, kRows)
         for colPos, rowPos, coeff0, coeff1 in [
             (0.0, 0.0, 0.0, 0.0),
             (1.0, 0.0, 1.0, 0.0),

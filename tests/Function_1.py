@@ -5,12 +5,12 @@ import unittest
 
 import numpy
 
-import lsst.fw.Core.fwLib as fw
+import lsst.afw as afw
 import lsst.mwi.tests as tests
 import lsst.mwi.utils as mwiu
 
 verbosity = 0 # increase to see trace
-mwiu.Trace_setVerbosity("lsst.fw", verbosity)
+mwiu.Trace_setVerbosity("lsst.afw", verbosity)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -66,7 +66,7 @@ class FunctionTestCase(unittest.TestCase):
             xMin, xMax = rangeIter.next()
             xMean = (xMin + xMax) / 2.0
             xDelta = (xMax - xMin) / float(nPoints - 1)
-            f = fw.Chebyshev1Function1D(coeffs, xMin, xMax)
+            f = afw.Chebyshev1Function1D(coeffs, xMin, xMax)
             for x in numpy.arange(xMin, xMax + xDelta/2.0, xDelta):
                 xNorm = 2.0 * (x - xMean) / float(xMax - xMin)
                 if minXNorm == None or xNorm < minXNorm:
@@ -86,7 +86,7 @@ class FunctionTestCase(unittest.TestCase):
         def basicGaussian(x, sigma):
             return (1.0 / (sigma * math.sqrt(2 * math.pi))) * math.exp(-x**2 / (2.0 * sigma**2))
         
-        f = fw.GaussianFunction1D(1.0)
+        f = afw.GaussianFunction1D(1.0)
         for xsigma in (0.1, 1.0, 3.0):
             f.setParameters((xsigma,))
             for x in numpy.arange(-10.0, 10.1, 0.25):
@@ -99,9 +99,9 @@ class FunctionTestCase(unittest.TestCase):
         """A test for GaussianFunction2D
         Assumes GaussianFunction1D is correct (test it elsewhere)
         """
-        f = fw.GaussianFunction2D(1.0, 1.0)
-        fx = fw.GaussianFunction1D(1.0)
-        fy = fw.GaussianFunction1D(1.0)
+        f = afw.GaussianFunction2D(1.0, 1.0)
+        fx = afw.GaussianFunction1D(1.0)
+        fy = afw.GaussianFunction1D(1.0)
         for xsigma in (0.1, 1.0, 3.0):
             for ysigma in (0.1, 1.0, 3.0):
                 f.setParameters((xsigma, ysigma))
@@ -121,7 +121,7 @@ class FunctionTestCase(unittest.TestCase):
         
         for xo in numpy.arange(-5.0, 5.0, 1.0):
             for yo in numpy.arange(-5.0, 5.0, 1.0):
-                f = fw.IntegerDeltaFunction2D(xo, yo)
+                f = afw.IntegerDeltaFunction2D(xo, yo)
                 for x in numpy.arange(-5.0, 5.0, 1.0):
                     for y in numpy.arange(-5.0, 5.0, 1.0):
                         predVal = basicDelta(x, xo) * basicDelta(y, yo)
@@ -135,7 +135,7 @@ class FunctionTestCase(unittest.TestCase):
             return sincpi(x) * sincpi(x / float(n))
 
         for n in range(1, 5):
-            f = fw.LanczosFunction1D(n)
+            f = afw.LanczosFunction1D(n)
             for xOffset in (-10.0, 0.0, 0.05):
                 f.setParameters((xOffset,))
                 for x in numpy.arange(-10.0, 10.1, 0.50):
@@ -151,7 +151,7 @@ class FunctionTestCase(unittest.TestCase):
             return sincpi(x) * sincpi(x / float(n))
 
         for n in range(1, 5):
-            f = fw.LanczosFunction2D(n)
+            f = afw.LanczosFunction2D(n)
             for xOffset in (-10.0, 0.0, 0.05):
                 for yOffset in (-0.01, 0.0, 7.5):
                     f.setParameters((xOffset, yOffset))
@@ -169,7 +169,7 @@ class FunctionTestCase(unittest.TestCase):
             return sincpi(x) * sincpi(x / float(n))
 
         for n in range(1, 5):
-            f = fw.LanczosSeparableFunction2D(n)
+            f = afw.LanczosSeparableFunction2D(n)
             for xOffset in (-10.0, 0.0, 0.05):
                 for yOffset in (-0.01, 0.0, 7.5):
                     f.setParameters((xOffset, yOffset))
@@ -200,7 +200,7 @@ class FunctionTestCase(unittest.TestCase):
         
         for order in range(maxOrder):
             coeffs = allCoeffs[0: order + 1]
-            f = fw.PolynomialFunction1D(coeffs)
+            f = afw.PolynomialFunction1D(coeffs)
             for x in numpy.arange(-10.0, 10.1, 1.0):
                 predVal = basic1DPoly(x, coeffs)
                 if not numpy.allclose(predVal, f(x)):
@@ -234,7 +234,7 @@ class FunctionTestCase(unittest.TestCase):
         
         for numCoeffs in numCoeffsList:
             coeffs = allCoeffs[0: numCoeffs]
-            f = fw.PolynomialFunction2D(coeffs)
+            f = afw.PolynomialFunction2D(coeffs)
             for x in numpy.arange(-10.0, 10.1, 2.5):
                 for y in numpy.arange(-10.0, 10.1, 2.5):
                     predVal = basic2DPoly(x, y, coeffs)
@@ -247,10 +247,10 @@ class FunctionTestCase(unittest.TestCase):
             return (order + 1) * (order + 2) / 2
         MaxOrder = 13
         for order in range(MaxOrder+1):
-            f = fw.PolynomialFunction2D(order)
+            f = afw.PolynomialFunction2D(order)
             predNParams = numParamsFromOrder(order)
             self.assertEqual(f.getNParameters(), predNParams)
-            fw.PolynomialFunction2D(numpy.zeros(predNParams, dtype=float))
+            afw.PolynomialFunction2D(numpy.zeros(predNParams, dtype=float))
         
         # test that the wrong number of parameters raises an exception
         validNumParams = set()
@@ -259,7 +259,7 @@ class FunctionTestCase(unittest.TestCase):
         for numParams in range(numParamsFromOrder(MaxOrder)):
             if numParams in validNumParams:
                 continue
-            self.assertRaises(Exception, fw.PolynomialFunction2D, numpy.zeros(numParams, dtype=float))
+            self.assertRaises(Exception, afw.PolynomialFunction2D, numpy.zeros(numParams, dtype=float))
 
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

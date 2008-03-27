@@ -1,5 +1,5 @@
 """
-Test lsst.fw.Core.fwLib.Exposure
+Test lsst.afw.image.Exposure
 
 Author: Nicole M. Silvestri, University of Washington
 Contact: nms@astro.washington.edu
@@ -14,13 +14,13 @@ import unittest
 import numpy
 
 import eups
-import lsst.fw.Core.fwLib as fw
+import lsst.afw as afw
 import lsst.mwi.tests as tests
 import lsst.mwi.utils as mwiu
 import lsst.mwi.exceptions as mwex
 
 verbosity = 0 # increase to see trace
-mwiu.Trace_setVerbosity("lsst.fw", verbosity)
+mwiu.Trace_setVerbosity("lsst.afw", verbosity)
 
 dataDir = eups.productDir("fwData")
 if not dataDir:
@@ -44,14 +44,14 @@ class ExposureTestCase(unittest.TestCase):
     """
 
     def setUp(self):
-        self.maskedImage = fw.MaskedImageF()
+        self.maskedImage = afw.image.MaskedImageF()
         self.maskedImage.readFits(inFilePathSmall)
-        self.wcs = fw.WCS(self.maskedImage.getImage().getMetaData())
-        self.exposureBlank = fw.ExposureF()
-        self.exposureMiOnly = fw.ExposureF(self.maskedImage)
-        self.exposureMiWcs = fw.ExposureF(self.maskedImage, self.wcs)
-        self.exposureCrWcs = fw.ExposureF(100, 100, self.wcs)
-        self.exposureCrOnly = fw.ExposureF(100, 100)
+        self.wcs = afw.WCS(self.maskedImage.getImage().getMetaData())
+        self.exposureBlank = afw.ExposureF()
+        self.exposureMiOnly = afw.ExposureF(self.maskedImage)
+        self.exposureMiWcs = afw.ExposureF(self.maskedImage, self.wcs)
+        self.exposureCrWcs = afw.ExposureF(100, 100, self.wcs)
+        self.exposureCrOnly = afw.ExposureF(100, 100)
 
     def tearDown(self):
         del self.exposureBlank 
@@ -151,12 +151,12 @@ class ExposureTestCase(unittest.TestCase):
         """
         Test that the MaskedImage and the WCS of an Exposure can be set.
         """
-        maskedImage = fw.MaskedImageF()           
+        maskedImage = afw.image.MaskedImageF()           
         maskedImage.readFits(inFilePathSmall)
         
-        exposure = fw.ExposureF()       
+        exposure = afw.ExposureF()       
         exposure.setMaskedImage(maskedImage)        
-        wcs = fw.WCS(maskedImage.getImage().getMetaData())
+        wcs = afw.WCS(maskedImage.getImage().getMetaData())
         exposure.setWcs(wcs)
         
         try:
@@ -212,7 +212,7 @@ class ExposureTestCase(unittest.TestCase):
         # are not found (this fails for 871034p_1_MI because the Fits
         # header cards are not found).
         
-        subRegion1 = fw.BBox2i(50, 50, 10, 10)
+        subRegion1 = afw.image.BBox2i(50, 50, 10, 10)
         try:
             subExposure = self.exposureCrWcs.getSubExposure(subRegion1)
            
@@ -220,12 +220,12 @@ class ExposureTestCase(unittest.TestCase):
            
             pass
         
-        smallMaskedImage = fw.MaskedImageF()
+        smallMaskedImage = afw.image.MaskedImageF()
         smallMaskedImage.readFits(inFilePathSmall)
-        wcs = fw.WCS(smallMaskedImage.getImage().getMetaData())
-        smallExposure = fw.ExposureF(smallMaskedImage, wcs)
+        wcs = afw.WCS(smallMaskedImage.getImage().getMetaData())
+        smallExposure = afw.ExposureF(smallMaskedImage, wcs)
     
-        subRegion2 = fw.BBox2i(0, 0, 5, 5)
+        subRegion2 = afw.image.BBox2i(0, 0, 5, 5)
         try:
             subExposure = smallExposure.getSubExposure(subRegion2)
         except IndexError, e:
@@ -236,7 +236,7 @@ class ExposureTestCase(unittest.TestCase):
         # from the MaskedImage class and should trigger an exception
         # from the WCS class for the MaskedImage 871034p_1_MI.
         
-        subRegion3 = fw.BBox2i(100, 100, 10, 10)
+        subRegion3 = afw.image.BBox2i(100, 100, 10, 10)
         try:
             subExposure = self.exposureCrWcs.getSubExposure(subRegion3)
             self.fail("No exception raised for getSubExposureLargeMI")
@@ -248,7 +248,7 @@ class ExposureTestCase(unittest.TestCase):
         # from the MaskedImage class only for the MaskedImage small_MI.
         # small_MI (cols, rows) = (256, 256) 
 
-        subRegion4 = fw.BBox2i(250, 250, 10, 10)        
+        subRegion4 = afw.image.BBox2i(250, 250, 10, 10)        
         try:
             subExposure = smallExposure.getSubExposure(subRegion4)
             self.fail("No exception raised for getSubExposureSmallMI")
@@ -275,7 +275,7 @@ class ExposureTestCase(unittest.TestCase):
          19 2007) therefore this member should throw a
          lsst::mwi::exceptions::InvalidParameter.
          """
-         exposure = fw.ExposureF()
+         exposure = afw.ExposureF()
 
          # This should pass without an exception
          exposure.readFits(inFilePathSmall)

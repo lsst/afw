@@ -4,7 +4,7 @@ import unittest
 
 import numpy
 
-import lsst.fw.Core.fwLib as fw
+import lsst.afw as afw
 import lsst.mwi.tests as tests
 import lsst.mwi.utils as mwiu
 
@@ -19,7 +19,7 @@ class MinimizeTestCase(unittest.TestCase):
         errorDef = 0.1
     
         polyOrder = 1
-        polyFuncPtr = fw.Function2DPtr(fw.PolynomialFunction2D(polyOrder))
+        polyFuncPtr = afw.math.Function2DPtr(afw.PolynomialFunction2D(polyOrder))
         
         modelParams = [0.1, 0.2, 0.3]
         polyFuncPtr.setParameters(modelParams)
@@ -35,7 +35,7 @@ class MinimizeTestCase(unittest.TestCase):
         stepsize *= 0.1
             
         # Minimize!
-        fitResults = fw.minimize(
+        fitResults = afw.minimize(
             polyFuncPtr,
             initialParameters,
             stepsize,

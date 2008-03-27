@@ -11,8 +11,8 @@ or
 import pdb                              # we may want to say pdb.set_trace()
 import unittest
 import lsst.mwi.tests as tests
-import lsst.fw.Core.fwLib as fw
-import lsst.fw.Display.ds9 as ds9
+import lsst.afw as afw
+import lsst.afw.display.ds9 as ds9
 import fwTests
 
 try:
@@ -25,8 +25,8 @@ except NameError:
 class MaskedImageTestCase(unittest.TestCase):
     """A test case for MaskedImage"""
     def setUp(self):
-        self.maskedImage1 = fw.MaskedImageF(272, 1037)
-        self.maskedImage2 = fw.MaskedImageF(272, 1037)
+        self.maskedImage1 = afw.image.MaskedImageF(272, 1037)
+        self.maskedImage2 = afw.image.MaskedImageF(272, 1037)
 
         for m in (self.maskedImage1, self.maskedImage2):
             m.getMask().addMaskPlane("CR")
@@ -58,8 +58,8 @@ class MaskedImageTestCase(unittest.TestCase):
         self.maskedImage2 += self.maskedImage1
     
     def testCopyConstructors(self):
-        image = fwTests.copyImageF(fw.ImageF(100, 100))
-        mask = fwTests.copyMaskU(fw.MaskU(100, 100))
+        image = fwTests.copyImageF(afw.image.ImageF(100, 100))
+        mask = fwTests.copyMaskU(afw.image.MaskU(100, 100))
         maskedImage = fwTests.copyMaskedImageF(self.maskedImage1)
 
     def testPixelProc(self):
@@ -73,16 +73,16 @@ class MaskedImageTestCase(unittest.TestCase):
 
         mask = self.maskedImage1.getMask()
 
-        pixelList = fw.listPixelCoord()
+        pixelList = afw.listPixelCoord()
         for x in range(0, mask.getCols()):
             for y in range(300, 400, 20):
-                pixelList.push_back(fw.PixelCoord(x, y))
+                pixelList.push_back(afw.PixelCoord(x, y))
         mask.setMaskPlaneValues(mask.getMaskPlane('CR'), pixelList)
 
-        pixelList = fw.listPixelCoord()
+        pixelList = afw.listPixelCoord()
         for x in range(300, 400, 20):
             for y in range(0, mask.getRows()):
-                pixelList.push_back(fw.PixelCoord(x, y))
+                pixelList.push_back(afw.PixelCoord(x, y))
         mask.setMaskPlaneValues(mask.getMaskPlane('INTERP'), pixelList)
 
         if display:

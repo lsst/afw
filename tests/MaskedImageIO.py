@@ -13,8 +13,8 @@ import os
 import eups
 import unittest
 import lsst.mwi.tests as tests
-import lsst.fw.Core.fwLib as fw
-import lsst.fw.Display.ds9 as ds9
+import lsst.afw as afw
+import lsst.afw.display.ds9 as ds9
 import fwTests
 from lsst.mwi.exceptions import *
 
@@ -32,7 +32,7 @@ except NameError:
 class MaskedImageTestCase(unittest.TestCase):
     """A test case for MaskedImage"""
     def setUp(self):
-        self.mi = fw.MaskedImageF()
+        self.mi = afw.image.MaskedImageF()
 
         mask = self.mi.getMask()
 
@@ -98,7 +98,7 @@ class MaskedImageTestCase(unittest.TestCase):
         mask = self.mi.getMask()
 
         self.mi.readFits(self.file)     # just to get the size
-        testMask = fw.MaskU(mask.getCols(), mask.getRows())
+        testMask = afw.image.MaskU(mask.getCols(), mask.getRows())
         self.mi.readFits(self.file, False)
 
         mask |= testMask
@@ -109,7 +109,7 @@ class MaskedImageTestCase(unittest.TestCase):
         mask = self.mi.getMask()
 
         self.mi.readFits(self.file)     # just to get the size
-        testMask = fw.MaskU(mask.getCols(), mask.getRows())
+        testMask = afw.image.MaskU(mask.getCols(), mask.getRows())
         self.mi.readFits(self.file, True)
 
         def tst(mask=mask):

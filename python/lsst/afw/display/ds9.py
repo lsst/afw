@@ -7,7 +7,7 @@ try: import xpa
 except: print "Cannot import xpa"
 
 import fwDisplay
-import lsst.fw.Core.fwLib as fw
+import lsst.afw as afw
 
 class Ds9Error(IOError):
     """Some problem talking to ds9"""
@@ -168,7 +168,7 @@ system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
                if not getMaskPlaneVisibility(planes[p]):
                    continue
 
-               mask = data.getSubMask(fw.BBox2i(0, 0, cols, rows)) # the only way to get a copy
+               mask = data.getSubMask(afw.image.BBox2i(0, 0, cols, rows)) # the only way to get a copy
                mask &= (1 << p)
 
                color = getMaskPlaneColor(planes[p])

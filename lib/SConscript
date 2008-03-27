@@ -4,16 +4,12 @@ Import('env')
 env.SharedLibrary(
     'afw',
     ["../src/%s" % (src,) for src in (
-        "MovingObjectPrediction.cc",
         "formatters/Utils.cc",
-        "formatters/DiaSourceFormatters.cc",
-        "formatters/MovingObjectPredictionFormatters.cc",
         "formatters/ExposureFormatter.cc",
         "formatters/ImageFormatter.cc",
         "formatters/MaskFormatter.cc",
         "formatters/MaskedImageFormatter.cc",
         "formatters/WcsFormatter.cc",
-        "image/DiaSource.cc",
         "image/DiskImageResourceFITS.cc",
         "image/Exposure.cc",
         "image/Filter.cc",

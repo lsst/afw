@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import lsst.fw.Core.fwLib as FWCL
+import lsst.afw as FWCL
 import lsst.mwi.data as DATA
 import lsst.mwi.persistence as PERS
 import lsst.mwi.policy as POL

@@ -5,7 +5,7 @@ import os
 import pdb                          # we may want to say pdb.set_trace()
 import unittest
 
-import lsst.fw.Core.fwLib as fw
+import lsst.afw as afw
 import lsst.mwi.tests as tests
 
 try:
@@ -27,7 +27,7 @@ class ReadFitsTestCase(unittest.TestCase):
     """A test case for reading FITS images"""
 
     def setUp(self):
-        self.im = fw.ImageD()
+        self.im = afw.image.ImageD()
 
     def tearDown(self):
         del self.im
@@ -44,7 +44,7 @@ class ReadFitsTestCase(unittest.TestCase):
         self.im.readFits(os.path.join(dataDir, "871034p_1_img.fits"))
 
         if False:
-            import lsst.fw.Display.ds9 as ds9; ds9.mtv(self.im)
+            import lsst.afw.display.ds9 as ds9; ds9.mtv(self.im)
         
         col, row, val = 32, 1, 62
         self.assertEqual(self.im.getVal(col, row), val)

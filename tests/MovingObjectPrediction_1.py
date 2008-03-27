@@ -17,7 +17,7 @@ import lsst.mwi.data as data
 import lsst.mwi.policy as policy
 import lsst.mwi.persistence as persistence
 import lsst.mwi.tests as tests
-import lsst.fw.Core.fwCatalog as cat
+import lsst.afw.Core.fwCatalog as cat
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

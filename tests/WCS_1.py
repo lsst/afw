@@ -4,7 +4,7 @@ import pdb                          # we may want to say pdb.set_trace()
 import unittest
 import eups
 
-import lsst.fw.Core.fwLib as fw
+import lsst.afw as afw
 import lsst.mwi.tests as tests
 
 try:
@@ -26,13 +26,13 @@ class WCSTestCaseSDSS(unittest.TestCase):
     """A test case for WCS using a small (SDSS) image with a slightly weird WCS"""
 
     def setUp(self):
-        im = fw.ImageD()
+        im = afw.image.ImageD()
         im.readFits(InputSmallImagePath)
 
-        self.wcs = fw.WCS(im.getMetaData())
+        self.wcs = afw.WCS(im.getMetaData())
 
         if False:
-            import lsst.fw.Display.ds9 as ds9; ds9.mtv(im, WCS=self.wcs)
+            import lsst.afw.display.ds9 as ds9; ds9.mtv(im, WCS=self.wcs)
 
     def tearDown(self):
         del self.wcs
@@ -47,36 +47,36 @@ class WCSTestCaseSDSS(unittest.TestCase):
         metadata (in this case, CRPIX1, and CRPIX2) from the
         MaskedImage's metadata and using that.
         """
-        wcs = fw.WCS()
+        wcs = afw.WCS()
         self.assertFalse(wcs.isValid())
 
         # Using MaskedImage with corrupt metadata 
-        maskedImage = fw.MaskedImageF()
+        maskedImage = afw.image.MaskedImageF()
         maskedImage.readFits(InputCorruptFilePath)
         metadata = maskedImage.getImage().getMetaData()
-        corruptWcs = fw.WCS(metadata)
+        corruptWcs = afw.WCS(metadata)
         self.assertTrue(corruptWcs.isValid())
         
 
     def testraDecToColRowArguments(self):
         """Check that all the expected forms of raDecToColRow/colRowToRaDec work"""
-        raDec = fw.Coord2D(1,2)
+        raDec = afw.Coord2D(1,2)
         self.wcs.raDecToColRow(raDec)
         self.wcs.raDecToColRow(1, 2)
-        rowCol = fw.Coord2D()
+        rowCol = afw.Coord2D()
         self.wcs.raDecToColRow(raDec, rowCol)
 
     def test_RaTan_DecTan(self):
         """Check the RA---TAN, DEC--TAN WCS conversion"""
         raDec = self.wcs.colRowToRaDec(1.0, 1.0)
-        raDec0 = fw.Coord2D(19.1960467992, 245.1598413385) # values from wcstools' xy2sky, transposed
+        raDec0 = afw.Coord2D(19.1960467992, 245.1598413385) # values from wcstools' xy2sky, transposed
 
         self.assertAlmostEqual(raDec.x(), raDec0.x(), 5)
         self.assertAlmostEqual(raDec.y(), raDec0.y(), 5) # dec from ds9
 
     def testIdentity(self):
         """Convert from ra, dec to col, row and back again"""
-        raDec = fw.Coord2D(20, 150)
+        raDec = afw.Coord2D(20, 150)
         rowCol = self.wcs.raDecToColRow(raDec)
         raDec2 = self.wcs.colRowToRaDec(rowCol)
 
@@ -86,7 +86,7 @@ class WCSTestCaseSDSS(unittest.TestCase):
     def testInvalidRaDec(self):
         """Test a conversion for an invalid position.  Well, "test" isn't
         quite right as the result is invalid, but make sure that it still is"""
-        raDec = fw.Coord2D(1, 2)
+        raDec = afw.Coord2D(1, 2)
         rowCol = self.wcs.raDecToColRow(raDec)
         raDec2 = self.wcs.colRowToRaDec(rowCol)
 
@@ -99,11 +99,11 @@ class WCSTestCaseCFHT(unittest.TestCase):
     """A test case for WCS"""
 
     def setUp(self):
-        im = fw.ImageD()
+        im = afw.image.ImageD()
 
         im.readFits(InputImagePath)
 
-        self.wcs = fw.WCS(im.getMetaData())
+        self.wcs = afw.WCS(im.getMetaData())
 
     def tearDown(self):
         del self.wcs
