@@ -17,7 +17,7 @@ import eups
 import lsst.afw.image as afwImage
 import lsst.daf.tests as dafTests
 import lsst.daf.utils as dafUtils
-import lsst.pex.exceptions as mwex
+import lsst.pex.exceptions as pexEx
 
 verbosity = 0 # increase to see trace
 dafUtils.Trace_setVerbosity("lsst.afw", verbosity)
@@ -124,14 +124,14 @@ class ExposureTestCase(unittest.TestCase):
         try:
             wcsBlank = self.exposureBlank.getWcs()
             self.fail("No exception raised for wcsBlank")
-        except mwex.LsstExceptionStack, e:
+        except pexEx.LsstExceptionStack, e:
             print "caught expected exception (wcsBlank): %s" % e
             pass
             
         try:    
             wcsMiOnly = self.exposureMiOnly.getWcs()
             self.fail("No exception raised for wcsMiOnly")
-        except mwex.LsstExceptionStack, e:
+        except pexEx.LsstExceptionStack, e:
             print "caught expected exception (wcsMiOnly): %s" % e
             pass
 
@@ -142,7 +142,7 @@ class ExposureTestCase(unittest.TestCase):
         try:
             wcsCrOnly = self.exposureCrOnly.getWcs()
             self.fail("No exception raised for wcsCrOnly")
-        except mwex.LsstExceptionStack, e:
+        except pexEx.LsstExceptionStack, e:
             print "caught expected exception (wcsCrOnly): %s" % e
             pass
 
@@ -161,7 +161,7 @@ class ExposureTestCase(unittest.TestCase):
         
         try:
             theWcs = exposure.getWcs();
-        except mwex.LsstExceptionStack, e:
+        except pexEx.LsstExceptionStack, e:
             print "caught expected exception (getWcs): %s" % e   
             pass
                
@@ -240,7 +240,7 @@ class ExposureTestCase(unittest.TestCase):
         try:
             subExposure = self.exposureCrWcs.getSubExposure(subRegion3)
             self.fail("No exception raised for getSubExposureLargeMI")
-        except mwex.LsstExceptionStack, e:
+        except pexEx.LsstExceptionStack, e:
             print "caught expected exception: %s" % e
             pass
 
@@ -252,7 +252,7 @@ class ExposureTestCase(unittest.TestCase):
         try:
             subExposure = smallExposure.getSubExposure(subRegion4)
             self.fail("No exception raised for getSubExposureSmallMI")
-        except mwex.LsstExceptionStack, e:
+        except pexEx.LsstExceptionStack, e:
             print "caught expected exception: %s" % e
             pass
         
@@ -284,7 +284,7 @@ class ExposureTestCase(unittest.TestCase):
          try:
              exposure.readFits(inFilePathSmallImage)
              self.fail("No exception raised for readFits")
-         except mwex.LsstNotFound, e:
+         except pexEx.LsstNotFound, e:
              print "caught expected exception: %s" % e
              pass
 
@@ -293,7 +293,7 @@ class ExposureTestCase(unittest.TestCase):
          exposure.writeFits(outFilePath)
          #exposure.writeFits(OutputMaskedImageName)         
          #    self.fail("No exception raised for writeFits")
-         #except mwex.LsstInvalidParameter, e:
+         #except pexEx.LsstInvalidParameter, e:
          #    print "caught expected exception: %s" % e
          #    pass
 

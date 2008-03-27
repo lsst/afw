@@ -26,9 +26,8 @@ namespace serialization {
     class access;
 }}
 
-
 namespace lsst {
-namespace fw {
+namespace afw {
 
 #ifndef SWIG
 using boost::int16_t;
@@ -513,7 +512,7 @@ private :
 #endif // SWIG
 
 
-}}  // end of namespace lsst::afw
+}}  // namespace lsst::afw
 
 #endif // LSST_AFW_DETECTION_SOURCE_H
 

@@ -12,11 +12,11 @@ import pdb                              # we may want to say pdb.set_trace()
 import os
 import eups
 import unittest
-import lsst.daf.tests as tests
+import lsst.daf.tests as dafTests
 import lsst.afw.image as afwImage
 import lsst.afw.display.ds9 as ds9
 import fwTests
-from lsst.pex.exceptions import *
+import lsst.pex.exceptions as pexEx
 
 dataDir = eups.productDir("fwData")
 if not dataDir:
@@ -24,7 +24,7 @@ if not dataDir:
 
 try:
     type(display)
-except NameError:
+except pexEx.NameError:
     display = False
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -123,16 +123,16 @@ class MaskedImageTestCase(unittest.TestCase):
 def suite():
     """Returns a suite containing all the test cases in this module."""
 
-    tests.init()
+    dafTests.init()
 
     suites = []
     suites += unittest.makeSuite(MaskedImageTestCase)
-    suites += unittest.makeSuite(tests.MemoryTestCase)
+    suites += unittest.makeSuite(dafTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
 def run(exit=False):
     """Run the tests"""
-    tests.run(suite(), exit)        # mwi 2.0
+    dafTests.run(suite(), exit)        # mwi 2.0
 
 if __name__ == "__main__":
     run(True)

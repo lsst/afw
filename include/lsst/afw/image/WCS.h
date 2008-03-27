@@ -21,8 +21,8 @@ namespace afw {
     namespace formatters {
         class WcsFormatter;
     }
-
 namespace image {
+
     typedef vw::math::Vector<double, 2> Coord2D;
 
     /// \brief WCS supports coordinate system transformations between pixel and world coordinates

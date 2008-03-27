@@ -23,11 +23,10 @@
 
 namespace lsst {
 namespace afw {
-
-class WCS;
-
+    namespace image {
+        class WCS;
+    }
 namespace formatters {
-               
 
 using namespace lsst::daf::persitence;
 

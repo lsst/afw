@@ -23,7 +23,7 @@
 
 
 namespace lsst {
-namespace fw {
+namespace afw {
 namespace formatters {
 
 using namespace lsst::daf::persitence;
@@ -65,7 +65,7 @@ private:
 };
 
 
-}}} // end of namespace lsst::afw::formatters
+}}} // namespace lsst::afw::formatters
 
 #endif // LSST_AFW_FORMATTERS__SOURCE_FORMATTERS_H
 

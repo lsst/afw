@@ -9,7 +9,7 @@ import lsst.daf.tests as dafTests
 import lsst.daf.utils as dafUtils
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
-import lsst.afw.testUtils as imTestUtils
+import lsst.afw.image.testUtils as imTestUtils
 
 verbosity = 0 # increase to see trace
 dafUtils.Trace_setVerbosity("lsst.afw", verbosity)
