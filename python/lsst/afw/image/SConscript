@@ -1,7 +1,7 @@
 # -*- python -*-
 Import("env")
 
-env.CheckSwig("python", ilang="c++", includedProducts="mwi")
-env.LoadableModuleIncomplete("_fwLib", Split("fwLib.i"), LIBS=env.getlibs("fw"))
-env.LoadableModuleIncomplete("_fwCatalog", Split("fwCatalog.i"), LIBS=env.getlibs("fw mwi"))
+env.CheckSwig("python", ilang="c++", includedProducts="pex")
+env.LoadableModuleIncomplete("_fwLib", Split("fwLib.i"), LIBS=env.getlibs("afw"))
+env.LoadableModuleIncomplete("_fwCatalog", Split("fwCatalog.i"), LIBS=env.getlibs("afw pex"))
 
