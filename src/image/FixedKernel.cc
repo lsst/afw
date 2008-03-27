@@ -6,13 +6,14 @@
  *
  * \author Russell Owen
  *
- * \ingroup fw
+ * \ingroup afw
  */
 #include <stdexcept>
 
-#include <lsst/mwi/exceptions.h>
-#include <lsst/fw/Kernel.h>
 #include <vw/Image.h>
+
+#include <lsst/pex/exceptions.h>
+#include <lsst/afw/math/Kernel.h>
 
 //
 // Constructors
@@ -21,7 +22,7 @@
 /**
  * \brief Construct an empty FixedKernel of size 0x0
  */
-lsst::fw::FixedKernel::FixedKernel()
+lsst::afw::math::FixedKernel::FixedKernel()
 :
     Kernel(),
     _image(),
@@ -31,7 +32,7 @@ lsst::fw::FixedKernel::FixedKernel()
 /**
  * \brief Construct a FixedKernel from an image
  */
-lsst::fw::FixedKernel::FixedKernel(
+lsst::afw::math::FixedKernel::FixedKernel(
     Image<PixelT> const &image)     ///< image for kernel
 :
     Kernel(image.getCols(), image.getRows(), 0),
@@ -42,7 +43,7 @@ lsst::fw::FixedKernel::FixedKernel(
 //
 // Member Functions
 //
-void lsst::fw::FixedKernel::computeImage(
+void lsst::afw::math::FixedKernel::computeImage(
     Image<PixelT> &image,
     PixelT &imSum,
     double x,
@@ -51,7 +52,7 @@ void lsst::fw::FixedKernel::computeImage(
 ) const {
     typedef Image<PixelT>::pixel_accessor pixelAccessor;
     if ((image.getCols() != this->getCols()) || (image.getRows() != this->getRows())) {
-        throw lsst::mwi::exceptions::InvalidParameter("image is the wrong size");
+        throw lsst::pex::exceptions::InvalidParameter("image is the wrong size");
     }
     double multFactor;
     if (doNormalize) {
@@ -76,7 +77,7 @@ void lsst::fw::FixedKernel::computeImage(
     }
 }
 
-std::vector<double> lsst::fw::FixedKernel::getCurrentKernelParameters() const {
+std::vector<double> lsst::afw::math::FixedKernel::getCurrentKernelParameters() const {
     return std::vector<double>(0);
 }
 
@@ -84,9 +85,9 @@ std::vector<double> lsst::fw::FixedKernel::getCurrentKernelParameters() const {
 // Protected Member Functions
 //
 
-void lsst::fw::FixedKernel::basicSetKernelParameters(std::vector<double> const &params) const {
+void lsst::afw::math::FixedKernel::basicSetKernelParameters(std::vector<double> const &params) const {
     if (params.size() > 0) {
-        throw lsst::mwi::exceptions::InvalidParameter("FixedKernel has no kernel parameters");
+        throw lsst::pex::exceptions::InvalidParameter("FixedKernel has no kernel parameters");
     }
 }
 

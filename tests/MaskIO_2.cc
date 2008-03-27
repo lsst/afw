@@ -1,15 +1,11 @@
 // -*- lsst-c++ -*-
-#include "lsst/fw/Mask.h"
-#include "lsst/fw/LSSTFitsResource.h"
-#include "lsst/mwi/data/DataProperty.h"
-
 #include <stdexcept>
 
-using namespace std;
-using namespace lsst::fw;
-using boost::any_cast;
+#include <lsst/afw/image.h>
 
-using lsst::mwi::data::DataProperty;
+using namespace std;
+using namespace lsst::afw;
+using boost::any_cast;
 
 /*
  * Make this a subroutine so that locals go out of scope as part of test
@@ -58,10 +54,10 @@ int main(int argc, char *argv[]) {
     try {
         try {
             test(argv[1], argv[2]);
-        } catch (lsst::mwi::exceptions::ExceptionStack &e) {
-            throw lsst::mwi::exceptions::Runtime(string("In handler\n") + e.what());
+        } catch (lsst::pex::exceptions::ExceptionStack &e) {
+            throw lsst::pex::exceptions::Runtime(string("In handler\n") + e.what());
         }
-    } catch (lsst::mwi::exceptions::ExceptionStack &e) {
+    } catch (lsst::pex::exceptions::ExceptionStack &e) {
         clog << e.what() << endl;
     }
 }

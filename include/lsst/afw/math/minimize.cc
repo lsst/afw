@@ -4,11 +4,11 @@
  *
  * Definition of member functions declared in MinimizerFunctionBase.h
  *
- * This file is meant to be included by lsst/fw/MinimizerFunctionBase.h
+ * This file is meant to be included by lsst/afw/math/MinimizerFunctionBase.h
  *
  * \author Andrew Becker and Russell Owen
  *
- * \ingroup fw
+ * \ingroup afw
  */
 
 #include <string> // for upar.add
@@ -20,9 +20,9 @@
 
 // Constructors
 template<typename ReturnT>
-lsst::fw::function::MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1()
+lsst::afw::math::MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1()
 :
-    lsst::mwi::data::LsstBase(typeid(this)),
+    lsst::daf::data::LsstBase(typeid(this)),
     _theFunctionPtr(),
     _measurementList(),
     _varianceList(),
@@ -31,14 +31,14 @@ lsst::fw::function::MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1()
 {}
 
 template<typename ReturnT>
-lsst::fw::function::MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1(
-    boost::shared_ptr<lsst::fw::function::Function1<ReturnT> > theFunctionPtr,
+lsst::afw::math::MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1(
+    boost::shared_ptr<lsst::afw::math::Function1<ReturnT> > theFunctionPtr,
     std::vector<double> const &measurementList,
     std::vector<double> const &varianceList,
     std::vector<double> const &xPositionList, 
     double errorDef)
 :
-    lsst::mwi::data::LsstBase(typeid(this)),
+    lsst::daf::data::LsstBase(typeid(this)),
     _theFunctionPtr(theFunctionPtr),
     _measurementList(measurementList),
     _varianceList(varianceList),
@@ -47,9 +47,9 @@ lsst::fw::function::MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1(
 {}
 
 template<typename ReturnT>
-lsst::fw::function::MinimizerFunctionBase2<ReturnT>::MinimizerFunctionBase2()
+lsst::afw::math::MinimizerFunctionBase2<ReturnT>::MinimizerFunctionBase2()
 :
-    lsst::mwi::data::LsstBase(typeid(this)),
+    lsst::daf::data::LsstBase(typeid(this)),
     _theFunctionPtr(),
     _measurementList(),
     _varianceList(),
@@ -59,15 +59,15 @@ lsst::fw::function::MinimizerFunctionBase2<ReturnT>::MinimizerFunctionBase2()
 {}
 
 template<typename ReturnT>
-lsst::fw::function::MinimizerFunctionBase2<ReturnT>::MinimizerFunctionBase2(
-    boost::shared_ptr<lsst::fw::function::Function2<ReturnT> > theFunctionPtr,
+lsst::afw::math::MinimizerFunctionBase2<ReturnT>::MinimizerFunctionBase2(
+    boost::shared_ptr<lsst::afw::math::Function2<ReturnT> > theFunctionPtr,
     const std::vector<double> &measurementList,
     const std::vector<double> &varianceList,
     const std::vector<double> &xPositionList,
     const std::vector<double> &yPositionList,
     double errorDef)
 :
-    lsst::mwi::data::LsstBase(typeid(this)),
+    lsst::daf::data::LsstBase(typeid(this)),
     _theFunctionPtr(theFunctionPtr),
     _measurementList(measurementList),
     _varianceList(varianceList),
@@ -80,7 +80,7 @@ lsst::fw::function::MinimizerFunctionBase2<ReturnT>::MinimizerFunctionBase2(
 
 // Only method we need to set up; basically this is a chi^2 routine
 template<typename ReturnT>
-double lsst::fw::function::MinimizerFunctionBase1<ReturnT>::operator() (const std::vector<double>& par) const {
+double lsst::afw::math::MinimizerFunctionBase1<ReturnT>::operator() (const std::vector<double>& par) const {
     // Initialize the function with the fit parameters
     this->_theFunctionPtr->setParameters(par);
     
@@ -95,7 +95,7 @@ double lsst::fw::function::MinimizerFunctionBase1<ReturnT>::operator() (const st
 
 
 template<typename ReturnT>
-double lsst::fw::function::MinimizerFunctionBase2<ReturnT>::operator() (const std::vector<double>& par) const {
+double lsst::afw::math::MinimizerFunctionBase2<ReturnT>::operator() (const std::vector<double>& par) const {
     // Initialize the function with the fit parameters
     this->_theFunctionPtr->setParameters(par);
     
@@ -114,9 +114,9 @@ double lsst::fw::function::MinimizerFunctionBase2<ReturnT>::operator() (const st
  * \return true if minimum is valid, false otherwise
  *
  * Uses the Minuit fitting package with a standard definition of chiSq
- * (see lsst::fw::function::MinimizerFunctionBase1).
+ * (see lsst::afw::math::MinimizerFunctionBase1).
  *
- * \throw lsst::mwi::exceptions::InvalidParameter if any input vector is the wrong length 
+ * \throw lsst::pex::exceptions::InvalidParameter if any input vector is the wrong length 
  *
  * To do:
  * - Document stepSizeList better
@@ -124,8 +124,8 @@ double lsst::fw::function::MinimizerFunctionBase2<ReturnT>::operator() (const st
  * - Compute stepSize automatically? (if so, find a different way to fix parameters)
  */
 template<typename ReturnT>
-lsst::fw::function::FitResults lsst::fw::function::minimize(
-    boost::shared_ptr<lsst::fw::function::Function1<ReturnT> > functionPtr, ///< function(x) to be minimized
+lsst::afw::math::FitResults lsst::afw::math::minimize(
+    boost::shared_ptr<lsst::afw::math::Function1<ReturnT> > functionPtr, ///< function(x) to be minimized
         ///< warning: the parameters will be modified unpredictably
     std::vector<double> const &initialParameterList,    ///< initial guess for parameters
     std::vector<double> const &stepSizeList, ///< step size for each parameter; use 0.0 to fix a parameter
@@ -136,17 +136,17 @@ lsst::fw::function::FitResults lsst::fw::function::minimize(
 ) {
     unsigned int const nParameters = functionPtr->getNParameters();
     if (initialParameterList.size() != nParameters) {
-        throw lsst::mwi::exceptions::InvalidParameter("initialParameterList is the wrong length");
+        throw lsst::pex::exceptions::InvalidParameter("initialParameterList is the wrong length");
     }
     if (stepSizeList.size() != nParameters) {
-        throw lsst::mwi::exceptions::InvalidParameter("stepSizeList is the wrong length");
+        throw lsst::pex::exceptions::InvalidParameter("stepSizeList is the wrong length");
     }
     unsigned int const nMeasurements = measurementList.size();
     if (varianceList.size() != nMeasurements) {
-        throw lsst::mwi::exceptions::InvalidParameter("varianceList is the wrong length");
+        throw lsst::pex::exceptions::InvalidParameter("varianceList is the wrong length");
     }
     if (xPositionList.size() != nMeasurements) {
-        throw lsst::mwi::exceptions::InvalidParameter("xPositionList is the wrong length");
+        throw lsst::pex::exceptions::InvalidParameter("xPositionList is the wrong length");
     }
 
     MinimizerFunctionBase1<ReturnT> minimizerFunc(
@@ -172,7 +172,7 @@ lsst::fw::function::FitResults lsst::fw::function::minimize(
     fitResults.chiSq = min.fval();
     fitResults.isValid = min.isValid() && std::isfinite(fitResults.chiSq);
     if (!fitResults.isValid) {
-        lsst::mwi::utils::Trace("lsst::fw::function::minimize", 1, "WARNING : Fit failed to converge");
+        lsst::pex::utils::Trace("lsst::afw::math::minimize", 1, "WARNING : Fit failed to converge");
     }
     
     for (unsigned int i = 0; i < nParameters; ++i) {
@@ -193,11 +193,11 @@ lsst::fw::function::FitResults lsst::fw::function::minimize(
  * \brief Find the minimum of a function(x, y)
  *
  * Uses the Minuit fitting package with a standard definition of chiSq.
- * (see lsst::fw::function::MinimizerFunctionBase2).
+ * (see lsst::afw::math::MinimizerFunctionBase2).
  *
  * \return true if minimum is valid, false otherwise
  *
- * \throw lsst::mwi::exceptions::InvalidParameter if any input vector is the wrong length 
+ * \throw lsst::pex::exceptions::InvalidParameter if any input vector is the wrong length 
  *
  * To do:
  * - Document stepSizeList better
@@ -205,8 +205,8 @@ lsst::fw::function::FitResults lsst::fw::function::minimize(
  * - Compute stepSize automatically? (if so, find a different way to fix parameters)
  */
 template<typename ReturnT>
-lsst::fw::function::FitResults lsst::fw::function::minimize(
-    boost::shared_ptr<lsst::fw::function::Function2<ReturnT> > functionPtr,  ///< function(x,y) to be minimized
+lsst::afw::math::FitResults lsst::afw::math::minimize(
+    boost::shared_ptr<lsst::afw::math::Function2<ReturnT> > functionPtr,  ///< function(x,y) to be minimized
         ///< warning: the parameters will be modified unpredictably
     std::vector<double> const &initialParameterList,    ///< initial guess for parameters
     std::vector<double> const &stepSizeList,        ///< step size for each parameter; use 0.0 to fix a parameter
@@ -218,20 +218,20 @@ lsst::fw::function::FitResults lsst::fw::function::minimize(
 ) {
     unsigned int const nParameters = functionPtr->getNParameters();
     if (initialParameterList.size() != nParameters) {
-        throw lsst::mwi::exceptions::InvalidParameter("initialParameterList is the wrong length");
+        throw lsst::pex::exceptions::InvalidParameter("initialParameterList is the wrong length");
     }
     if (stepSizeList.size() != nParameters) {
-        throw lsst::mwi::exceptions::InvalidParameter("stepSizeList is the wrong length");
+        throw lsst::pex::exceptions::InvalidParameter("stepSizeList is the wrong length");
     }
     unsigned int const nMeasurements = measurementList.size();
     if (varianceList.size() != nMeasurements) {
-        throw lsst::mwi::exceptions::InvalidParameter("varianceList is the wrong length");
+        throw lsst::pex::exceptions::InvalidParameter("varianceList is the wrong length");
     }
     if (xPositionList.size() != nMeasurements) {
-        throw lsst::mwi::exceptions::InvalidParameter("xPositionList is the wrong length");
+        throw lsst::pex::exceptions::InvalidParameter("xPositionList is the wrong length");
     }
     if (yPositionList.size() != nMeasurements) {
-        throw lsst::mwi::exceptions::InvalidParameter("yPositionList is the wrong length");
+        throw lsst::pex::exceptions::InvalidParameter("yPositionList is the wrong length");
     }
 
     MinimizerFunctionBase2<ReturnT> minimizerFunc(
@@ -258,7 +258,7 @@ lsst::fw::function::FitResults lsst::fw::function::minimize(
     fitResults.chiSq = min.fval();
     fitResults.isValid = min.isValid() && std::isfinite(fitResults.chiSq);
     if (!fitResults.isValid) {
-        lsst::mwi::utils::Trace("lsst::fw::function::minimize", 1, "WARNING : Fit failed to converge");
+        lsst::pex::utils::Trace("lsst::afw::math::minimize", 1, "WARNING : Fit failed to converge");
     }
     for (unsigned int i = 0; i < nParameters; ++i) {
         fitResults.parameterList.push_back(min.userState().value(paramNames[i].c_str()));

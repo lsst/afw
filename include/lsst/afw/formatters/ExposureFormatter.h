@@ -13,19 +13,19 @@
  * \ingroup fw
  */
 
-/** \class lsst::fw::formatters::ExposureFormatter
+/** \class lsst::afw::formatters::ExposureFormatter
  * \brief Class implementing persistence and retrieval for Exposures.
  *
  * \ingroup fw
  */
 
-#include "lsst/mwi/persistence/Formatter.h"
+#include "lsst/pex/persistence/Formatter.h"
 
 namespace lsst {
 namespace fw {
 namespace formatters {
                
-using namespace lsst::mwi::persistence;
+using namespace lsst::pex::persistence;
 
 template<typename ImagePixelT, typename MaskPixelT>
 class ExposureFormatter : public Formatter {
@@ -33,27 +33,27 @@ public:
     virtual ~ExposureFormatter(void);
 
     virtual void write(Persistable const* persistable, Storage::Ptr storage,
-                       lsst::mwi::data::DataProperty::PtrType additionalData);
+                       lsst::daf::data::DataProperty::PtrType additionalData);
     virtual Persistable* read(
         Storage::Ptr storage,
-        lsst::mwi::data::DataProperty::PtrType additionalData);
+        lsst::daf::data::DataProperty::PtrType additionalData);
     virtual void update(Persistable* persistable,
                         Storage::Ptr storage,
-                        lsst::mwi::data::DataProperty::PtrType additionalData);
+                        lsst::daf::data::DataProperty::PtrType additionalData);
 
-    static Formatter::Ptr createInstance(lsst::mwi::policy::Policy::Ptr policy);
+    static Formatter::Ptr createInstance(lsst::pex::policy::Policy::Ptr policy);
 
     template <class Archive>
         static void delegateSerialize(Archive& ar, int const version,
                                       Persistable* persistable);
 private:
-    explicit ExposureFormatter(lsst::mwi::policy::Policy::Ptr policy);
+    explicit ExposureFormatter(lsst::pex::policy::Policy::Ptr policy);
 
-    lsst::mwi::policy::Policy::Ptr _policy;
+    lsst::pex::policy::Policy::Ptr _policy;
 
     static FormatterRegistration registration;
 };
 
-}}} // namespace lsst::fw::formatters
+}}} // namespace lsst::afw::formatters
 
 #endif

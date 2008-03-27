@@ -7,8 +7,8 @@
 #include <sstream>
 #include <string>
 
-#include <lsst/fw/MaskedImage.h>
-#include <lsst/fw/WCS.h>
+#include <lsst/daf/data.h>
+#include <lsst/afw/image.h>
 
 int main() {
     typedef float pixelType;
@@ -24,18 +24,18 @@ int main() {
 
         // Create a wcs from a fits file (so the wcs has some memory to allocate)
         std::cout << "Opening file " << inFilename << std::endl;
-        lsst::fw::MaskedImage<pixelType, lsst::fw::maskPixelType> mImage;
+        lsst::afw::image::MaskedImage<pixelType, lsst::afw::image::maskPixelType> mImage;
         mImage.readFits(inFilename);
-        lsst::fw::WCS wcs(mImage.getImage()->getMetaData());
+        lsst::afw::image::WCS wcs(mImage.getImage()->getMetaData());
         
         std::cout << "making a copy of a wcs" << std::endl;
         { // use copy constructor and deallocate the copy
-            lsst::fw::WCS wcsCopy(wcs);
-            lsst::fw::WCS wcsCopy2(wcsCopy);
+            lsst::afw::image::WCS wcsCopy(wcs);
+            lsst::afw::image::WCS wcsCopy2(wcsCopy);
         }
         std::cout << "deallocated the copy; assigning a wcs" << std::endl;
         { // use assignment operator and deallocate the assigned copy
-            lsst::fw::WCS wcsAssign, wcsAssign2;
+            lsst::afw::image::WCS wcsAssign, wcsAssign2;
             wcsAssign = wcs;
             wcsAssign2 = wcsAssign;
         }
@@ -43,8 +43,8 @@ int main() {
     } // close memory (de)allocation block
 
     // check for memory leaks
-    if (lsst::mwi::data::Citizen::census(0) != 0) {
+    if (lsst::daf::data::Citizen::census(0) != 0) {
         std::cerr << "Leaked memory blocks:" << std::endl;
-        lsst::mwi::data::Citizen::census(std::cerr);
+        lsst::daf::data::Citizen::census(std::cerr);
     }
 }

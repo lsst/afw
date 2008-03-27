@@ -9,7 +9,7 @@
  *
  * Contact: Kian-Tat Lim (ktl@slac.stanford.edu)
  *
- * \ingroup fw
+ * \ingroup afw
  */
 
 #ifndef __GNUC__
@@ -17,45 +17,43 @@
 #endif
 static char const* SVNid __attribute__((unused)) = "$Id$";
 
-#include "lsst/fw/formatters/WcsFormatter.h"
+#include <lsst/afw/formatters/WcsFormatter.h>
 
-#include "lsst/mwi/persistence/FormatterImpl.h"
-#include "lsst/mwi/data/DataPropertyFormatter.h"
-#include "lsst/fw/formatters/ImageFormatter.h"
-#include "lsst/fw/formatters/MaskedImageFormatter.h"
-#include "lsst/fw/formatters/WcsFormatter.h"
+#include <lsst/pex/persistence/FormatterImpl.h>
+#include <lsst/daf/data/DataPropertyFormatter.h>
+#include <lsst/afw/formatters/ImageFormatter.h>
+#include <lsst/afw/formatters/MaskedImageFormatter.h>
+#include <lsst/afw/formatters/WcsFormatter.h>
 #include <boost/serialization/shared_ptr.hpp>
 
 #include <stdlib.h>
 
-#include "lsst/fw/WCS.h"
+#include <lsst/afw/image.h>
 #include "wcslib/wcs.h"
 
-#include "lsst/mwi/data/SupportFactory.h"
-#include "lsst/mwi/exceptions.h"
-#include "lsst/mwi/persistence/LogicalLocation.h"
-#include "lsst/mwi/persistence/BoostStorage.h"
-#include "lsst/mwi/persistence/FitsStorage.h"
-#include "lsst/mwi/utils/Trace.h"
-
-// #include "lsst/fw/LSSTFitsResource.h"
+#include <lsst/daf/data/SupportFactory.h>
+#include <lsst/pex/exceptions.h>
+#include <lsst/pex/persistence/LogicalLocation.h>
+#include <lsst/pex/persistence/BoostStorage.h>
+#include <lsst/pex/persistence/FitsStorage.h>
+#include <lsst/pex/utils/Trace.h>
 
 #define EXEC_TRACE  20
 static void execTrace(std::string s, int level = EXEC_TRACE) {
-    lsst::mwi::utils::Trace("fw.WcsFormatter", level, s);
+    lsst::pex::utils::Trace("afw.WcsFormatter", level, s);
 }
 
-using namespace lsst::mwi::persistence;
+using namespace lsst::pex::persistence;
 
 namespace lsst {
-namespace fw {
+namespace afw {
 namespace formatters {
 
 FormatterRegistration WcsFormatter::registration(
     "WCS", typeid(WCS), createInstance);
 
 WcsFormatter::WcsFormatter(
-    lsst::mwi::policy::Policy::Ptr policy) :
+    lsst::pex::policy::Policy::Ptr policy) :
     Formatter(typeid(*this)) {
 }
 
@@ -65,12 +63,12 @@ WcsFormatter::~WcsFormatter(void) {
 void WcsFormatter::write(
     Persistable const* persistable,
     Storage::Ptr storage,
-    lsst::mwi::data::DataProperty::PtrType additionalData) {
+    lsst::daf::data::DataProperty::PtrType additionalData) {
     execTrace("WcsFormatter write start");
     WCS const* ip =
         dynamic_cast<WCS const*>(persistable);
     if (ip == 0) {
-        throw lsst::mwi::exceptions::Runtime("Persisting non-WCS");
+        throw lsst::pex::exceptions::Runtime("Persisting non-WCS");
     }
     if (typeid(*storage) == typeid(BoostStorage)) {
         execTrace("WcsFormatter write BoostStorage");
@@ -79,12 +77,12 @@ void WcsFormatter::write(
         execTrace("WcsFormatter write end");
         return;
     }
-    throw lsst::mwi::exceptions::Runtime("Unrecognized Storage for WCS");
+    throw lsst::pex::exceptions::Runtime("Unrecognized Storage for WCS");
 }
 
 Persistable* WcsFormatter::read(
     Storage::Ptr storage,
-    lsst::mwi::data::DataProperty::PtrType additionalData) {
+    lsst::daf::data::DataProperty::PtrType additionalData) {
     execTrace("WcsFormatter read start");
     WCS* ip = new WCS;
     if (typeid(*storage) == typeid(BoostStorage)) {
@@ -94,22 +92,22 @@ Persistable* WcsFormatter::read(
         execTrace("WcsFormatter read end");
         return ip;
     }
-    throw lsst::mwi::exceptions::Runtime("Unrecognized Storage for WCS");
+    throw lsst::pex::exceptions::Runtime("Unrecognized Storage for WCS");
 }
 
 void WcsFormatter::update(
     Persistable* persistable,
     Storage::Ptr storage,
-    lsst::mwi::data::DataProperty::PtrType additionalData) {
-    throw lsst::mwi::exceptions::Runtime("Unexpected call to update for WCS");
+    lsst::daf::data::DataProperty::PtrType additionalData) {
+    throw lsst::pex::exceptions::Runtime("Unexpected call to update for WCS");
 }
 
-lsst::mwi::data::DataProperty::PtrType
+lsst::daf::data::DataProperty::PtrType
 WcsFormatter::generateDataProperty(WCS const& wcs) {
     // Only generates DP for the first wcsInfo.
-    using lsst::mwi::data::DataProperty;
+    using lsst::daf::data::DataProperty;
     DataProperty::PtrType wcsDP =
-        lsst::mwi::data::SupportFactory::createPropertyNode("WCS");
+        lsst::daf::data::SupportFactory::createPropertyNode("WCS");
     wcsDP->addProperty(DataProperty("NAXIS", wcs._wcsInfo[0].naxis));
     wcsDP->addProperty(DataProperty("EQUINOX", wcs._wcsInfo[0].equinox));
     wcsDP->addProperty(DataProperty("RADECSYS", std::string(wcs._wcsInfo[0].radesys)));
@@ -134,7 +132,7 @@ void WcsFormatter::delegateSerialize(
     execTrace("WcsFormatter delegateSerialize start");
     WCS* ip = dynamic_cast<WCS*>(persistable);
     if (ip == 0) {
-        throw lsst::mwi::exceptions::Runtime("Serializing non-WCS");
+        throw lsst::pex::exceptions::Runtime("Serializing non-WCS");
     }
 
     // Serialize most fields normally
@@ -183,8 +181,8 @@ void WcsFormatter::delegateSerialize(
 }
 
 Formatter::Ptr WcsFormatter::createInstance(
-    lsst::mwi::policy::Policy::Ptr policy) {
+    lsst::pex::policy::Policy::Ptr policy) {
     return Formatter::Ptr(new WcsFormatter(policy));
 }
 
-}}} // namespace lsst::fw::formatters
+}}} // namespace lsst::afw::formatters

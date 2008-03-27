@@ -1,31 +1,32 @@
 // -*- lsst-c++ -*-
 #include <typeinfo>
 
-#include "lsst/mwi/data/Citizen.h"
-#include "lsst/mwi/data/FitsFormatter.h"
-#include "lsst/mwi/exceptions.h"
-#include "lsst/mwi/utils/Trace.h"
-#include "lsst/fw/MaskedImage.h"
+#include <vw/Image.h>
+
+#include <lsst/daf/data.h>
+#include <lsst/pex/exceptions.h>
+#include <lsst/pex/utils/Trace.h>
+#include <lsst/afw/image.h>
 
 using namespace std;
-using namespace lsst::fw;
-using lsst::mwi::utils::Trace;
-using lsst::mwi::data::Citizen;
-using lsst::mwi::data::FitsFormatter;
-namespace mwie = lsst::mwi::exceptions;
+using lsst::pex::utils::Trace;
+using lsst::daf::data::Citizen;
+using lsst::daf::data::FitsFormatter;
+namespace mwie = lsst::pex::exceptions;
 
 template <typename ImagePixelT, typename MaskPixelT> 
-class testPixProcFunc : public PixelProcessingFunc<ImagePixelT, MaskPixelT> {
+class testPixProcFunc : public lsst::afw::image::PixelProcessingFunc<ImagePixelT, MaskPixelT> {
 public:
-    typedef typename PixelChannelType<ImagePixelT>::type ImageChannelT;
-    typedef typename PixelChannelType<MaskPixelT>::type MaskChannelT;
-    typedef PixelLocator<ImagePixelT> ImageIteratorT;
-    typedef PixelLocator<MaskPixelT> MaskIteratorT;
+    typedef typename vw::PixelChannelType<ImagePixelT>::type ImageChannelT;
+    typedef typename vw::PixelChannelType<MaskPixelT>::type MaskChannelT;
+    typedef lsst::afw::image::PixelLocator<ImagePixelT> ImageIteratorT;
+    typedef lsst::afw::image::PixelLocator<MaskPixelT> MaskIteratorT;
     
-    testPixProcFunc(MaskedImage<ImagePixelT, MaskPixelT>& m) : PixelProcessingFunc<ImagePixelT, MaskPixelT>(m), initCount(0) {}
+    testPixProcFunc(lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>& m) : 
+        lsst::afw::image::PixelProcessingFunc<ImagePixelT, MaskPixelT>(m), initCount(0) {}
     
     void init() {
-       PixelProcessingFunc<ImagePixelT, MaskPixelT>::_maskPtr->getPlaneBitMask("CR", bitsCR);
+       lsst::afw::image::PixelProcessingFunc<ImagePixelT, MaskPixelT>::_maskPtr->getPlaneBitMask("CR", bitsCR);
        testCount = 0;
        initCount++;
     }
@@ -70,7 +71,7 @@ int test(int argc, char**argv) {
     typedef uint8 MaskPixelType;
     typedef float32 ImagePixelType;
 
-    MaskedImage<ImagePixelType,MaskPixelType > testMaskedImage1;
+    lsst::afw::image::MaskedImage<ImagePixelType,MaskPixelType > testMaskedImage1;
     try {
         testMaskedImage1.readFits(argv[1]);
     } catch (mwie::ExceptionStack &e) {
@@ -89,14 +90,14 @@ int test(int argc, char**argv) {
     cout << fooFunc.getCount() << " mask pixels were set" << endl;
 
     // verify that copy constructor and operator= build and do not leak
-    Image<ImagePixelType> testImage(100, 100);
-    Image<ImagePixelType> imageCopy(testImage);
+    lsst::afw::image::Image<ImagePixelType> testImage(100, 100);
+    lsst::afw::image::Image<ImagePixelType> imageCopy(testImage);
     imageCopy = testImage;
 
-    MaskedImage<ImagePixelType,MaskPixelType > testMaskedImage2(testMaskedImage1);
+    lsst::afw::image::MaskedImage<ImagePixelType,MaskPixelType > testMaskedImage2(testMaskedImage1);
     testMaskedImage2 = testMaskedImage1;
 
-    MaskedImage<ImagePixelType,MaskPixelType > testFlat;
+    lsst::afw::image::MaskedImage<ImagePixelType,MaskPixelType > testFlat;
 
     try {
         testFlat.readFits(argv[2]);
@@ -116,9 +117,9 @@ int test(int argc, char**argv) {
 
     // test of subImage
 
-    MaskedImage<ImagePixelType,MaskPixelType>::MaskedImagePtrT subMaskedImagePtr1;
+    lsst::afw::image::MaskedImage<ImagePixelType,MaskPixelType>::MaskedImagePtrT subMaskedImagePtr1;
 
-    BBox2i region(100, 600, 200, 300);
+    vw::BBox2i region(100, 600, 200, 300);
     subMaskedImagePtr1 = testMaskedImage1.getSubImage(region);
     *subMaskedImagePtr1 *= 0.5;
     subMaskedImagePtr1->writeFits(argv[4]);
@@ -128,9 +129,9 @@ int test(int argc, char**argv) {
 
     // Check whether offsets have been correctly saved
 
-    MaskedImage<ImagePixelType,MaskPixelType>::MaskedImagePtrT subMaskedImagePtr2;
+    lsst::afw::image::MaskedImage<ImagePixelType,MaskPixelType>::MaskedImagePtrT subMaskedImagePtr2;
 
-    BBox2i region2(80, 110, 20, 30);
+    vw::BBox2i region2(80, 110, 20, 30);
     subMaskedImagePtr2 = subMaskedImagePtr1->getSubImage(region2);
 
     cout << "Offsets: " << subMaskedImagePtr2->getOffsetCols() << " " << 

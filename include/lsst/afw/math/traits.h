@@ -1,12 +1,13 @@
-#if !defined(LSST_KERNEL_TRAITS_H)
-#define LSST_KERNEL_TRAITS_H 1
+#if !defined(LSST_AFW_MATH_KERNEL_TRAITS_H)
+#define LSST_AFW_MATH_KERNEL_TRAITS_H 1
 
 #include <boost/mpl/bool.hpp>
 /**
  * \brief Traits to describe kernels, allowing for compile-time optimisation
  */
 namespace lsst {
-namespace fw {
+namespace afw {
+namespace math {
     class AnalyticKernel;
 
     //! \brief traits class to determine if a Kernel is represented as an analytic function
@@ -42,6 +43,6 @@ namespace fw {
 
     extern generic_kernel_tag generic_kernel_tag_;
     extern deltafunction_kernel_tag deltafunction_kernel_tag_;
-}}
+}}} // lsst::afw::math
 
 #endif

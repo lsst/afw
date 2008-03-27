@@ -3,7 +3,7 @@
 
 #include <boost/format.hpp>
 
-#include <lsst/fw/FunctionLibrary.h>
+#include <lsst/afw/math/FunctionLibrary.h>
 
 using namespace std;
 
@@ -11,7 +11,7 @@ int main() {
     typedef double funcType;
     const unsigned int order = 3;
     vector<double> params(order+1);
-    lsst::fw::function::Chebyshev1Function1<funcType> chebyFunc(order);
+    lsst::afw::math::Chebyshev1Function1<funcType> chebyFunc(order);
 
     for (unsigned int jj = 0; jj < params.size(); ++jj) {
         for (unsigned int ii = 0; ii < params.size(); ++ii) {

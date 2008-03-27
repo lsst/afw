@@ -1,7 +1,7 @@
 #include <iostream>
 #include <iomanip>
 
-#include <lsst/fw/FunctionLibrary.h>
+#include <lsst/afw/math/FunctionLibrary.h>
 
 using namespace std;
 
@@ -10,7 +10,7 @@ int main() {
     
     funcType xo = 1.0, yo = -2.0;
     
-    lsst::fw::function::IntegerDeltaFunction2<funcType> deltaFunc(xo, yo);
+    lsst::afw::math::IntegerDeltaFunction2<funcType> deltaFunc(xo, yo);
     
     cout << "IntegerDeltaFunction2(" << xo << ", " << yo << ")" << endl;
 

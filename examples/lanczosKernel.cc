@@ -3,22 +3,22 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/format.hpp>
 
-#include <lsst/fw/FunctionLibrary.h>
-#include <lsst/fw/Kernel.h>
-#include <lsst/fw/KernelFunctions.h>
+#include <lsst/afw/math/FunctionLibrary.h>
+#include <lsst/afw/math/Kernel.h>
+#include <lsst/afw/math/KernelFunctions.h>
 
 using namespace std;
 
 int main() {
-    typedef lsst::fw::Kernel::PixelT pixelType;
+    typedef lsst::afw::math::Kernel::PixelT pixelType;
 
     unsigned int kernelCols = 6;
     unsigned int kernelRows = 5;
     unsigned int order = (min(kernelCols, kernelRows) - 1) / 2;
 
-    lsst::fw::Kernel::KernelFunctionPtrType kfuncPtr(
-        new lsst::fw::function::LanczosFunction2<pixelType>(order));
-    lsst::fw::AnalyticKernel kernel(kfuncPtr, kernelCols, kernelRows);
+    lsst::afw::math::Kernel::KernelFunctionPtrType kfuncPtr(
+        new lsst::afw::math::LanczosFunction2<pixelType>(order));
+    lsst::afw::math::AnalyticKernel kernel(kfuncPtr, kernelCols, kernelRows);
 
     cout << boost::format("Lanczos Kernel is %d x %d; Lanczos function has %d order\n")
         % kernelCols % kernelRows % order;
@@ -30,6 +30,6 @@ int main() {
         
         kernel.setKernelParameters(offVec);
         
-        lsst::fw::kernel::printKernel(kernel);
+        lsst::afw::math::printKernel(kernel);
     }
 }

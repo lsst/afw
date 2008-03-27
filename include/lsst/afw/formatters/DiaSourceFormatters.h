@@ -14,29 +14,29 @@
 #include <string>
 #include <vector>
 
-#include <lsst/mwi/data/DataProperty.h>
-#include <lsst/mwi/policy/Policy.h>
-#include <lsst/mwi/persistence/Formatter.h>
-#include <lsst/mwi/persistence/DbStorage.h>
+#include <lsst/daf/data/DataProperty.h>
+#include <lsst/pex/policy/Policy.h>
+#include <lsst/pex/persistence/Formatter.h>
+#include <lsst/pex/persistence/DbStorage.h>
 
-#include "lsst/fw/DiaSource.h"
+#include "lsst/afw/DiaSource.h"
 
 
 namespace lsst {
 namespace fw {
 namespace formatters {
 
-using namespace lsst::mwi::persistence;
-using lsst::mwi::policy::Policy;
-using lsst::mwi::data::DataProperty;
+using namespace lsst::pex::persistence;
+using lsst::pex::policy::Policy;
+using lsst::daf::data::DataProperty;
 
 
 /*!
     Formatter that supports persistence and retrieval with
 
-    - lsst::mwi::persistence::DbStorage
-    - lsst::mwi::persistence::DbTsvStorage
-    - lsst::mwi::persistence::BoostStorage
+    - lsst::pex::persistence::DbStorage
+    - lsst::pex::persistence::DbTsvStorage
+    - lsst::pex::persistence::BoostStorage
 
     for DiaSourceVector instances.
  */
@@ -65,7 +65,7 @@ private:
 };
 
 
-}}} // end of namespace lsst::fw::formatters
+}}} // end of namespace lsst::afw::formatters
 
 #endif // LSST_FW_FORMATTERS_DIA_SOURCE_FORMATTERS_H
 

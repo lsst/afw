@@ -1,20 +1,7 @@
-#ifndef _LSST_FW_FRAMEWORK
-#define _LSST_FW_FRAMEWORK
+#ifndef _LSST_AFW_H
+#define _LSST_AFW_H
 
-#include "lsst/mwi/data/LsstBase.h"
-#include "lsst/mwi/data/Citizen.h"
-#include "lsst/mwi/data/DataProperty.h"
-#include "lsst/mwi/utils/Demangle.h"
-#include "lsst/mwi/utils/Trace.h"
-#include "lsst/mwi/utils/Utils.h"
-#include "DiskImageResourceFITS.h"
-#include "Function.h"
-#include "FunctionLibrary.h"
-#include "Image.h"
-#include "Kernel.h"
-#include "KernelFunctions.h"
-#include "LSSTFitsResource.h"
-#include "Mask.h"
-#include "MaskedImage.h"
+#include <lsst/afw/image.h>
+#include <lsst/afw/math.h>
 
-#endif // !defined(_LSST_FW_FRAMEWORK)
+#endif // !defined(_LSST_AFW_H)

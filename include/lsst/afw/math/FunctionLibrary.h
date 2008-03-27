@@ -12,14 +12,14 @@
  *
  * \author Russell Owen
  *
- * \ingroup fw
+ * \ingroup afw
  */
 #include <cmath>
 
 #include <lsst/afw/math/Function.h>
 
 namespace lsst {
-namespace fw {
+namespace afw {
 namespace function {
 
     /**
@@ -30,7 +30,7 @@ namespace function {
      * For use as a kernel function be sure to handle the offset for row and column center;
      * see examples/deltaFunctionKernel for an example.
      *
-     * \ingroup fw
+     * \ingroup afw
      */
     template<typename ReturnT>
     class IntegerDeltaFunction2: public Function2<ReturnT> {
@@ -72,7 +72,7 @@ namespace function {
      * f(x) = e^(-x^2 / sigma^2) / (sqrt(2 pi) xSigma)
      * with coefficient c0 = sigma
      *
-     * \ingroup fw
+     * \ingroup afw
      */
     template<typename ReturnT>
     class GaussianFunction1: public Function1<ReturnT> {
@@ -117,7 +117,7 @@ namespace function {
      * - Allow setting angle of ellipticity
      * - Perhaps recast as a separable pair of 1-d Guassians
      *
-     * \ingroup fw
+     * \ingroup afw
      */
     template<typename ReturnT>
     class GaussianFunction2: public Function2<ReturnT> {
@@ -162,7 +162,7 @@ namespace function {
      *
      * f(x) = c0 + c1 x + c2 x^2 + ... cn-1 x^(n-1)
      *
-     * \ingroup fw
+     * \ingroup afw
      */
     template<typename ReturnT>
     class PolynomialFunction1: public Function1<ReturnT> {
@@ -183,7 +183,7 @@ namespace function {
          *
          * The order of the polynomial is set to the length of the params vector.
          *
-         * \throw lsst::mwi::exceptions::InvalidParameter if params is empty
+         * \throw lsst::pex::exceptions::InvalidParameter if params is empty
          */
         explicit PolynomialFunction1(
             std::vector<double> params)  ///< polynomial coefficients (const, x, x^2...)
@@ -191,7 +191,7 @@ namespace function {
             Function1<ReturnT>(params)
         {
             if (params.size() < 1) {
-                throw lsst::mwi::exceptions::InvalidParameter("PolynomialFunction1 called with empty vector");
+                throw lsst::pex::exceptions::InvalidParameter("PolynomialFunction1 called with empty vector");
             }
         }
         
@@ -225,7 +225,7 @@ namespace function {
      *          + c5 x^3 + c6 x^2 y + c7 x y^2 + c8 y^3     (3rd order)
      *          + ...
      *
-     * \ingroup fw
+     * \ingroup afw
      */
     template<typename ReturnT>
     class PolynomialFunction2: public Function2<ReturnT> {
@@ -251,8 +251,8 @@ namespace function {
          *   order = (sqrt(1 + 8 * length) - 3) / 2
          * and if this is not an integer then the length is unsuitable
          *
-         * \throw lsst::mwi::exceptions::InvalidParameter if params length is unsuitable
-         * \throw lsst::mwi::exceptions::Exception if an internal sanity check fails
+         * \throw lsst::pex::exceptions::InvalidParameter if params length is unsuitable
+         * \throw lsst::pex::exceptions::Exception if an internal sanity check fails
          */
         explicit PolynomialFunction2(
             std::vector<double> params)  ///< polynomial coefficients (const, x, y, x^2, xy, y^2...);
@@ -265,10 +265,10 @@ namespace function {
         {
             unsigned int nParams = params.size();
             if (nParams < 1) {
-                throw lsst::mwi::exceptions::InvalidParameter("PolynomialFunction2 created with empty vector");
+                throw lsst::pex::exceptions::InvalidParameter("PolynomialFunction2 created with empty vector");
             }
             if (nParams != ((_order + 1) * (_order + 2)) / 2) {
-                throw lsst::mwi::exceptions::InvalidParameter("PolynomialFunction2 created with vector of unusable length");
+                throw lsst::pex::exceptions::InvalidParameter("PolynomialFunction2 created with vector of unusable length");
             }
         }
         
@@ -337,7 +337,7 @@ namespace function {
      * Note: solved using the Clenshaw algorithm. This avoids cosines,
      * but is recursive and so (presumably) cannot be inlined.
      *
-     * \ingroup fw
+     * \ingroup afw
      */
     template<typename ReturnT>
     class Chebyshev1Function1: public Function1<ReturnT> {
@@ -362,7 +362,7 @@ namespace function {
          *
          * The order of the polynomial is set to the length of the params vector.
          *
-         * \throw lsst::mwi::exceptions::InvalidParameter if params is empty
+         * \throw lsst::pex::exceptions::InvalidParameter if params is empty
          */
         explicit Chebyshev1Function1(
             std::vector<double> params,  ///< polynomial coefficients
@@ -372,7 +372,7 @@ namespace function {
             Function1<ReturnT>(params)
         {
             if (params.size() < 1) {
-                throw lsst::mwi::exceptions::InvalidParameter("Chebyshev1Function1 called with empty vector");
+                throw lsst::pex::exceptions::InvalidParameter("Chebyshev1Function1 called with empty vector");
             }
             _initialize(xMin, xMax);
         }
@@ -442,7 +442,7 @@ namespace function {
      * Warning: the Lanczos function is sometimes forced to 0 if |x'| > n
      * but this implementation does not perform that truncation so as to improve Lanczos kernels.
      *
-     * \ingroup fw
+     * \ingroup afw
      */
     template<typename ReturnT>
     class LanczosFunction1: public Function1<ReturnT> {
@@ -494,7 +494,7 @@ namespace function {
      * Warning: the Lanczos function is sometimes forced to 0 if radius > n
      * but this implementation does not perform that truncation so as to improve Lanczos kernels.
      *
-     * \ingroup fw
+     * \ingroup afw
      */
     template<typename ReturnT>
     class LanczosFunction2: public Function2<ReturnT> {
@@ -550,7 +550,7 @@ namespace function {
      * Warning: the Lanczos function is sometimes forced to 0 if |x'| > n or |y'| > n
      * but this implementation does not perform that truncation so as to improve Lanczos kernels.
      *
-     * \ingroup fw
+     * \ingroup afw
      */
     template<typename ReturnT>
     class LanczosSeparableFunction2: public Function2<ReturnT> {
@@ -599,6 +599,6 @@ namespace function {
         double _invN;   ///< 1/n
     };
 
-}}}   // lsst::fw::function
+}}}   // lsst::afw::math
 
 #endif // #ifndef LSST_AFW_MATH_FUNCTIONLIBRARY_H

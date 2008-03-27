@@ -6,22 +6,22 @@
  *
  * \author Russell Owen
  *
- * \ingroup fw
+ * \ingroup afw
  */
 #include <stdexcept>
 
 #include <boost/format.hpp>
 #include <vw/Image.h>
 
-#include <lsst/mwi/exceptions.h>
-#include <lsst/fw/Kernel.h>
+#include <lsst/pex/exceptions.h>
+#include <lsst/afw/math/Kernel.h>
 
-// This file is meant to be included by lsst/fw/Kernel.h
+// This file is meant to be included by lsst/afw/math/Kernel.h
 
 /**
  * \brief Construct an empty LinearCombinationKernel of size 0x0
  */
-lsst::fw::LinearCombinationKernel::LinearCombinationKernel()
+lsst::afw::math::LinearCombinationKernel::LinearCombinationKernel()
 :
     Kernel(),
     _kernelList(),
@@ -32,7 +32,7 @@ lsst::fw::LinearCombinationKernel::LinearCombinationKernel()
 /**
  * \brief Construct a spatially invariant LinearCombinationKernel
  */
-lsst::fw::LinearCombinationKernel::LinearCombinationKernel(
+lsst::afw::math::LinearCombinationKernel::LinearCombinationKernel(
     KernelListType const &kernelList,    ///< list of (shared pointers to) kernels
     std::vector<double> const &kernelParameters) ///< kernel coefficients
 :
@@ -48,7 +48,7 @@ lsst::fw::LinearCombinationKernel::LinearCombinationKernel(
 /**
  * \brief Construct a spatially varying LinearCombinationKernel with spatial parameters initialized to 0
  */
-lsst::fw::LinearCombinationKernel::LinearCombinationKernel(
+lsst::afw::math::LinearCombinationKernel::LinearCombinationKernel(
     KernelListType const &kernelList,    ///< list of (shared pointers to) kernels
     Kernel::SpatialFunctionPtrType spatialFunction)  ///< spatial function
 :
@@ -66,7 +66,7 @@ lsst::fw::LinearCombinationKernel::LinearCombinationKernel(
  *
  * See setSpatialParameters for the form of the spatial parameters.
  */
-lsst::fw::LinearCombinationKernel::LinearCombinationKernel(
+lsst::afw::math::LinearCombinationKernel::LinearCombinationKernel(
     KernelListType const &kernelList,    ///< list of (shared pointers to) kernels
     Kernel::SpatialFunctionPtrType spatialFunction,  ///< spatial function
     std::vector<std::vector<double> > const &spatialParameters)  ///< spatial coefficients
@@ -81,7 +81,7 @@ lsst::fw::LinearCombinationKernel::LinearCombinationKernel(
     _computeKernelImageList();
 }
 
-void lsst::fw::LinearCombinationKernel::computeImage(
+void lsst::afw::math::LinearCombinationKernel::computeImage(
     Image<PixelT> &image,
     PixelT &imSum,
     double x,
@@ -89,7 +89,7 @@ void lsst::fw::LinearCombinationKernel::computeImage(
     bool doNormalize
 ) const {
     if ((image.getCols() != this->getCols()) || (image.getRows() != this->getRows())) {
-        throw lsst::mwi::exceptions::InvalidParameter("image is the wrong size");
+        throw lsst::pex::exceptions::InvalidParameter("image is the wrong size");
     }
     if (this->isSpatiallyVarying()) {
         this->computeKernelParametersFromSpatialModel(this->_kernelParams, x, y);
@@ -117,19 +117,19 @@ void lsst::fw::LinearCombinationKernel::computeImage(
 /**
  * \brief Get the fixed basis kernels
  */
-lsst::fw::LinearCombinationKernel::KernelListType const &
-lsst::fw::LinearCombinationKernel::getKernelList() const {
+lsst::afw::math::LinearCombinationKernel::KernelListType const &
+lsst::afw::math::LinearCombinationKernel::getKernelList() const {
     return _kernelList;
 }
     
 /**
  * \brief Check that all kernels have the same size and center and that none are spatially varying
  *
- * \throw lsst::mwi::exceptions::InvalidParameter if the check fails
+ * \throw lsst::pex::exceptions::InvalidParameter if the check fails
  */
-void lsst::fw::LinearCombinationKernel::checkKernelList(const KernelListType &kernelList) const {
+void lsst::afw::math::LinearCombinationKernel::checkKernelList(const KernelListType &kernelList) const {
     if (kernelList.size() < 1) {
-        throw lsst::mwi::exceptions::InvalidParameter("kernelList has no elements");
+        throw lsst::pex::exceptions::InvalidParameter("kernelList has no elements");
     }
 
     unsigned int cols = kernelList[0]->getCols();
@@ -141,33 +141,33 @@ void lsst::fw::LinearCombinationKernel::checkKernelList(const KernelListType &ke
         if (ii > 0) {
             if ((cols != kernelList[ii]->getCols()) ||
                 (rows != kernelList[ii]->getRows())) {
-                throw lsst::mwi::exceptions::InvalidParameter(
+                throw lsst::pex::exceptions::InvalidParameter(
                     boost::format("kernel %d has different size than kernel 0") % ii);
             }
             if ((ctrCol != kernelList[ii]->getCtrCol()) ||
                 (ctrRow != kernelList[ii]->getCtrRow())) {
-                throw lsst::mwi::exceptions::InvalidParameter(
+                throw lsst::pex::exceptions::InvalidParameter(
                     boost::format("kernel %d has different center than kernel 0") % ii);
             }
         }
         if (kernelList[ii]->isSpatiallyVarying()) {
-            throw lsst::mwi::exceptions::InvalidParameter(
+            throw lsst::pex::exceptions::InvalidParameter(
                 boost::format("kernel %d is spatially varying") % ii);
         }
     }
 }
 
-std::vector<double> lsst::fw::LinearCombinationKernel::getCurrentKernelParameters() const {
+std::vector<double> lsst::afw::math::LinearCombinationKernel::getCurrentKernelParameters() const {
     return _kernelParams;
 }
 
 //
 // Protected Member Functions
 //
-void lsst::fw::LinearCombinationKernel::basicSetKernelParameters(std::vector<double> const &params)
+void lsst::afw::math::LinearCombinationKernel::basicSetKernelParameters(std::vector<double> const &params)
 const {
     if (params.size() != this->_kernelList.size()) {
-        throw lsst::mwi::exceptions::InvalidParameter(
+        throw lsst::pex::exceptions::InvalidParameter(
             boost::format("params size is %d instead of %d\n") % params.size() % _kernelList.size());
     }
     this->_kernelParams = params;
@@ -180,13 +180,13 @@ const {
 /**
  * Compute _kernelImagePtrList, the internal archive of kernel images.
  */
-void lsst::fw::LinearCombinationKernel::_computeKernelImageList() {
+void lsst::afw::math::LinearCombinationKernel::_computeKernelImageList() {
     KernelListType::const_iterator kIter = _kernelList.begin();
     std::vector<double>::const_iterator kParIter = _kernelParams.begin();
     for ( ; kIter != _kernelList.end(); ++kIter) {
         PixelT kSum;
-        boost::shared_ptr<lsst::fw::Image<PixelT> >
-            kernelImagePtr(new lsst::fw::Image<PixelT>(this->getCols(), this->getRows()));
+        boost::shared_ptr<lsst::afw::image::Image<PixelT> >
+            kernelImagePtr(new lsst::afw::image::Image<PixelT>(this->getCols(), this->getRows()));
         (*kIter)->computeImage(*kernelImagePtr, kSum, 0, 0, false);
         _kernelImagePtrList.push_back(kernelImagePtr);
     }

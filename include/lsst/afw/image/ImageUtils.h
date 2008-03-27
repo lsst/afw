@@ -4,7 +4,7 @@
  *
  * \brief Image utility functions
  *
- * \defgroup fw LSST framework 
+ * \defgroup afw LSST framework 
  */
 #ifndef LSST_AFW_IMAGE_IMAGEUTILS_H
 #define LSST_AFW_IMAGE_IMAGEUTILS_H
@@ -12,8 +12,9 @@
 #include <cmath>
 
 namespace lsst {
-namespace fw {
+namespace afw {
 namespace image {
+
     const double PixelZeroPos = 0.5; ///< position of center of pixel 0
     ///< FITS uses 1.0, SDSS uses 0.5, LSST is undecided but RHL proposed 0.0
 
@@ -68,7 +69,7 @@ namespace image {
         return static_cast<int>(roundedIndex);
     }     
 
-}}} // lsst::fw::image
+}}} // lsst::afw::image
 
 #endif // LSST_AFW_IMAGE_IMAGEUTILS_H
 

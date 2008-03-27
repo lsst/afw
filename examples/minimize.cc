@@ -1,7 +1,7 @@
 #include <cstdlib>
 #include <vector>
-#include <lsst/fw/FunctionLibrary.h>
-#include <lsst/fw/minimize.h>
+#include <lsst/afw/math/FunctionLibrary.h>
+#include <lsst/afw/minimize.h>
 
 template<class T>
 void printVector(std::vector<T> v) {
@@ -16,8 +16,8 @@ int main(int argc, char** argv) {
     const unsigned int order = 3;
     const unsigned int npts = 10;
 
-    boost::shared_ptr<lsst::fw::function::Function1<funcType> > chebyFuncPtr(
-        new lsst::fw::function::Chebyshev1Function1<funcType>(order)
+    boost::shared_ptr<lsst::afw::math::Function1<funcType> > chebyFuncPtr(
+        new lsst::afw::math::Chebyshev1Function1<funcType>(order)
     );
 
     const unsigned int nParams = chebyFuncPtr->getNParameters();
@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
 
     double errorDef = 1.0;
 
-    lsst::fw::function::FitResults fitResults = lsst::fw::function::minimize(
+    lsst::afw::math::FitResults fitResults = lsst::afw::math::minimize(
         chebyFuncPtr,
         initialParams,
         stepSizes,
@@ -117,11 +117,11 @@ int main(int argc, char** argv) {
 //
 //
 //    const unsigned int polyorder = 0;
-//    boost::shared_ptr<lsst::fw::function::PolynomialFunction1<funcType> > polyFuncPtr(
-//        new lsst::fw::function::PolynomialFunction1<funcType>(polyorder)
+//    boost::shared_ptr<lsst::afw::math::PolynomialFunction1<funcType> > polyFuncPtr(
+//        new lsst::afw::math::PolynomialFunction1<funcType>(polyorder)
 //        );
 //
-//    lsst::fw::function::MinimizerFunctionBase1<funcType> myFcn2(measurements, variances, positions, def, polyFuncPtr);
+//    lsst::afw::math::MinimizerFunctionBase1<funcType> myFcn2(measurements, variances, positions, def, polyFuncPtr);
 //
 //    MnMigrad migrad2(myFcn2, upar2);
 //    FunctionMinimum min2 = migrad2();

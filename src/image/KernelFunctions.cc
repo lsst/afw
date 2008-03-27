@@ -2,7 +2,7 @@
 /**
  * \file
  *
- * \brief Definitions of members of lsst::fw::kernel
+ * \brief Definitions of members of lsst::afw::math
  *
  * \ingroup fw
  */
@@ -10,8 +10,8 @@
 
 #include <boost/format.hpp>
 
-#include <lsst/mwi/exceptions.h>
-#include <lsst/fw/KernelFunctions.h>
+#include <lsst/pex/exceptions.h>
+#include <lsst/afw/math/KernelFunctions.h>
 
 /**
  * \brief Print the pixel values of a Kernel to std::cout
@@ -21,17 +21,17 @@
  * \ingroup fw
  */
 void
-lsst::fw::kernel::printKernel(
-    lsst::fw::Kernel const &kernel,     ///< the kernel
+lsst::afw::math::printKernel(
+    lsst::afw::math::Kernel const &kernel,     ///< the kernel
     double x,                           ///< x at which to evaluate kernel
     double y,                           ///< y at which to evaluate kernel
     bool doNormalize,                   ///< if true, normalize kernel
     std::string pixelFmt                ///< format for pixel values
 ) {
-    typedef lsst::fw::Kernel::PixelT PixelT;
-    typedef lsst::fw::Image<PixelT>::pixel_accessor imageAccessorType;
+    typedef lsst::afw::math::Kernel::PixelT PixelT;
+    typedef lsst::afw::image::Image<PixelT>::pixel_accessor imageAccessorType;
     PixelT kSum;
-    lsst::fw::Image<PixelT> kImage = kernel.computeNewImage(kSum, x, y, doNormalize);
+    lsst::afw::image::Image<PixelT> kImage = kernel.computeNewImage(kSum, x, y, doNormalize);
     imageAccessorType imRow = kImage.origin();
     imRow.advance(0, kImage.getRows()-1);
     for (unsigned int row=0; row < kImage.getRows(); ++row, imRow.prev_row()) {

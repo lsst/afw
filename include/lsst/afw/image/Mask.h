@@ -18,17 +18,16 @@
 #include <vw/Image.h>
 #include <vw/Math/BBox.h>
 
-#include "lsst/mwi/data/LsstBase.h"
-#include "lsst/mwi/exceptions.h"
-#include "lsst/mwi/data/DataProperty.h"
-#include "lsst/mwi/persistence/Persistable.h"
-#include "lsst/mwi/utils/Trace.h"
-#include "lsst/mwi/data/SupportFactory.h"
+#include <lsst/daf/data.h>
+#include <lsst/pex/exceptions.h>
+#include <lsst/pex/persistence/Persistable.h>
+#include <lsst/pex/utils/Trace.h>
 #include <lsst/afw/image/LSSTFitsResource.h>
 #include <lsst/afw/image/ImageExceptions.h>
 
 namespace lsst {
-namespace fw {
+namespace afw {
+namespace image {
     // all masks will be instantiated with the same pixel type
     typedef boost::uint16_t maskPixelType;
 
@@ -55,8 +54,8 @@ namespace fw {
     };
     
     template<typename MaskPixelT>
-    class Mask : public lsst::mwi::persistence::Persistable,
-                 public lsst::mwi::data::LsstBase {
+    class Mask : public lsst::pex::persistence::Persistable,
+                 public lsst::daf::data::LsstBase {
     public:
         typedef typename PixelChannelType<MaskPixelT>::type MaskChannelT;
         typedef vw::ImageView<MaskPixelT> MaskIVwT;
@@ -93,7 +92,7 @@ namespace fw {
         
         void writeFits(const std::string& fileName);
         
-        lsst::mwi::data::DataProperty::PtrType getMetaData();
+        lsst::daf::data::DataProperty::PtrType getMetaData();
 
         // Mask Plane ops
         
@@ -121,9 +120,9 @@ namespace fw {
 
         void setMaskPlaneValues(int plane, MaskPixelBooleanFunc<MaskPixelT> selectionFunc);
         
-        MaskPlaneDict parseMaskPlaneMetaData(lsst::mwi::data::DataProperty::PtrType const) const;
+        MaskPlaneDict parseMaskPlaneMetaData(lsst::daf::data::DataProperty::PtrType const) const;
         
-        void addMaskPlaneMetaData(lsst::mwi::data::DataProperty::PtrType);
+        void addMaskPlaneMetaData(lsst::daf::data::DataProperty::PtrType);
         
         int countMask(MaskPixelBooleanFunc<MaskPixelT>& testFunc,
                       const vw::BBox2i maskRegion) const;
@@ -164,7 +163,7 @@ private:
         LSST_PERSIST_FORMATTER(formatters::MaskFormatter<MaskPixelT>);
 
         MaskIVwPtrT _vwImagePtr;
-        lsst::mwi::data::DataProperty::PtrType _metaData;
+        lsst::daf::data::DataProperty::PtrType _metaData;
         static MaskPlaneDict _maskPlaneDict;
         static const std::string maskPlanePrefix;
         unsigned int _offsetRows;
@@ -180,18 +179,18 @@ private:
         //
         // Check that masks have the same dictionary version
         //
-        // @throw lsst::mwi::exceptions::Runtime
+        // @throw lsst::pex::exceptions::Runtime
         //
         void checkMaskDictionaries(Mask const &other) const {
             if (_myMaskDictVersion != other._myMaskDictVersion) {
-                throw lsst::mwi::exceptions::Runtime("Mask dictionary versions do not match");
+                throw lsst::pex::exceptions::Runtime("Mask dictionary versions do not match");
             }
         }        
 
         int addMaskPlane(std::string name, int plane);
     };
 
-}}  // lsst::fw
+}}}  // lsst::afw::image
         
 #endif // LSST_AFW_IMAGE_MASK_H
 

@@ -8,17 +8,17 @@
  *
  * \author Russell Owen
  *
- * \ingroup fw
+ * \ingroup afw
  */
 #include <stdexcept>
 #include <sstream>
 #include <vector>
 
-#include <lsst/mwi/data/LsstBase.h>
-#include <lsst/mwi/exceptions.h>
+#include <lsst/daf/data/LsstBase.h>
+#include <lsst/pex/exceptions.h>
 
 namespace lsst {
-namespace fw {
+namespace afw {
 namespace function {
 
     /**
@@ -45,10 +45,10 @@ namespace function {
      * To do:
      * - Implement separable functions
      *
-     * \ingroup fw
+     * \ingroup afw
      */
     template<typename ReturnT>
-    class Function : public lsst::mwi::data::LsstBase {
+    class Function : public lsst::daf::data::LsstBase {
     
     public:
         /**
@@ -59,7 +59,7 @@ namespace function {
         explicit Function(
             unsigned int nParams)   ///< number of function parameters
         :
-            lsst::mwi::data::LsstBase(typeid(this)),
+            lsst::daf::data::LsstBase(typeid(this)),
             _params(nParams)
         {}
 
@@ -69,7 +69,7 @@ namespace function {
         explicit Function(
             std::vector<double> const &params)
         :
-            lsst::mwi::data::LsstBase(typeid(this)),
+            lsst::daf::data::LsstBase(typeid(this)),
             _params(params)   ///< function parameters
         {}
         
@@ -92,11 +92,11 @@ namespace function {
         /**
          * \brief Set the function parameters
          *
-         * \throw lsst::mwi::exceptions::InvalidParameter if the wrong number of parameters is supplied.
+         * \throw lsst::pex::exceptions::InvalidParameter if the wrong number of parameters is supplied.
          */
         void setParameters(std::vector<double> const &params) {
             if (_params.size() != params.size()) {
-                throw lsst::mwi::exceptions::InvalidParameter("Wrong number of parameters");
+                throw lsst::pex::exceptions::InvalidParameter("Wrong number of parameters");
             }
             _params = params;
         }
@@ -121,7 +121,7 @@ namespace function {
      *
      * Subclass and override operator() to do useful work.
      *
-     * \ingroup fw
+     * \ingroup afw
      */
     template<typename ReturnT>
     class Function1 : public Function<ReturnT> {
@@ -160,7 +160,7 @@ namespace function {
      *
      * Subclass and override operator() to do useful work.
      *
-     * \ingroup fw
+     * \ingroup afw
      */
     template<typename ReturnT>
     class Function2 : public Function<ReturnT> {
@@ -196,6 +196,6 @@ namespace function {
         };
     };
 
-}}}   // lsst::fw::function
+}}}   // lsst::afw::math
 
 #endif // #ifndef LSST_AFW_MATH_FUNCTION_H

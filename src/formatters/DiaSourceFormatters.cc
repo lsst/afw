@@ -9,25 +9,21 @@
 
 #include <memory>
 
-#include <lsst/mwi/exceptions.h>
-#include <lsst/mwi/persistence/BoostStorage.h>
-#include <lsst/mwi/persistence/DbStorage.h>
-#include <lsst/mwi/persistence/DbTsvStorage.h>
-#include <lsst/mwi/persistence/FormatterImpl.h>
+#include <lsst/pex/exceptions.h>
+#include <lsst/pex/persistence/BoostStorage.h>
+#include <lsst/pex/persistence/DbStorage.h>
+#include <lsst/pex/persistence/DbTsvStorage.h>
+#include <lsst/pex/persistence/FormatterImpl.h>
 
 #include <boost/any.hpp>
 #include <boost/format.hpp>
 
-#include "lsst/fw/DiaSource.h"
-#include "lsst/fw/formatters/DiaSourceFormatters.h"
-#include "lsst/fw/formatters/Utils.h"
+#include <lsst/afw/detection/DiaSource.h>
+#include <lsst/afw/formatters/DiaSourceFormatters.h>
+#include <lsst/afw/formatters/Utils.h>
 
-
-namespace lsst {
-namespace fw {
-namespace formatters {
-
-namespace ex = lsst::mwi::exceptions;
+using namespace lsst::afw::formatters;
+namespace ex = lsst::pex::exceptions;
 
 
 // -- DiaSourceVectorFormatter ----------------
@@ -65,7 +61,7 @@ inline static int64_t generateDiaSourceId(unsigned short seqNum, int ccdId, int6
 
 /*!
     Inserts a single DiaSource into a database table using \a db
-    (an instance of lsst::mwi::persistence::DbStorage or subclass thereof).
+    (an instance of lsst::pex::persistence::DbStorage or subclass thereof).
  */
 template <typename T>
 void DiaSourceVectorFormatter::insertRow(T & db, DiaSource const & d) {
@@ -451,7 +447,3 @@ Persistable* DiaSourceVectorFormatter::read(
 void DiaSourceVectorFormatter::update(Persistable*, Storage::Ptr, DataProperty::PtrType) {
     throw ex::Runtime("DiaSourceVectorFormatter: updates not supported");
 }
-
-
-}}} // end of namespace lsst::fw::formatters
-

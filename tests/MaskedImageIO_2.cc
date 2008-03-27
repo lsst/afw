@@ -1,20 +1,19 @@
 // -*- lsst-c++ -*-
-#include "lsst/fw/MaskedImage.h"
-#include "lsst/fw/WCS.h"
-#include "lsst/mwi/utils/Trace.h"
-#include "lsst/mwi/data/FitsFormatter.h"
+#include <lsst/daf/data.h>
+#include <lsst/pex/utils/Trace.h>
+#include <lsst/afw/image.h>
+#include <lsst/afw/math.h>
 
 #include <stdexcept>
 
 using namespace std;
-using namespace lsst::fw;
 using boost::any_cast;
 
-using lsst::mwi::utils::Trace;
-using lsst::mwi::data::DataProperty;
-using lsst::mwi::data::FitsFormatter;
+using lsst::pex::utils::Trace;
+using lsst::daf::data::DataProperty;
+using lsst::daf::data::FitsFormatter;
 
-namespace mwie = lsst::mwi::exceptions;
+namespace mwie = lsst::pex::exceptions;
 
 /*
  * Make this a subroutine so that locals go out of scope as part of test
@@ -25,14 +24,14 @@ void test(char *name) {
     typedef uint16 MaskPixelType;
     typedef float ImagePixelType;
 
-    Mask<MaskPixelType>::MaskPlaneDict LSSTPlaneDefs;
+    lsst::afw::image::Mask<MaskPixelType>::MaskPlaneDict LSSTPlaneDefs;
 
     LSSTPlaneDefs["BAD"] = 0;
     LSSTPlaneDefs["SAT"] = 1;
     LSSTPlaneDefs["EDGE"] = 2;
     LSSTPlaneDefs["OBJ"] = 3;
 
-    MaskedImage<ImagePixelType, MaskPixelType> testMasked(LSSTPlaneDefs);
+    lsst::afw::image::MaskedImage<ImagePixelType, MaskPixelType> testMasked(LSSTPlaneDefs);
     testMasked.readFits(name, true);   // second arg says to conform mask planes
 
     testMasked.writeFits("testout");

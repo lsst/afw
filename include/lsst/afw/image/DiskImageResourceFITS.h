@@ -11,13 +11,14 @@
 #include <vw/Image/ImageResource.h>
 #include <vw/FileIO/DiskImageResource.h>
 
-#include "lsst/mwi/data/DataProperty.h"
-#include "lsst/mwi/utils/Utils.h"
+#include <lsst/daf/data/DataProperty.h>
+#include <lsst/pex/utils/Utils.h>
 
-LSST_START_NAMESPACE(lsst)
-LSST_START_NAMESPACE(fw)
+namespace lsst {
+namespace afw {
+namespace image {
 
-using lsst::mwi::data::DataProperty;
+using lsst::daf::data::DataProperty;
 
 /*!
  * FITS I/O for VisionWorkbench
@@ -86,6 +87,7 @@ void read(vw::ImageView<PixelT>& image, //!< Desired image
     
     delete r;
 }
-LSST_END_NAMESPACE(fw)
-LSST_END_NAMESPACE(lsst)
+
+}}} // lsst::afw::image
+
 #endif // LSST_AFW_IMAGE_DISKIMAGERESOURCESFITS_H

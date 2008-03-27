@@ -13,13 +13,13 @@
  * \ingroup fw
  */
 
-/** \class lsst::fw::formatters::WcsFormatter
+/** \class lsst::afw::formatters::WcsFormatter
  * \brief Class implementing persistence and retrieval for WCS objects.
  *
  * \ingroup fw
  */
 
-#include "lsst/mwi/persistence/Formatter.h"
+#include "lsst/pex/persistence/Formatter.h"
 
 namespace lsst {
 namespace fw {
@@ -29,35 +29,35 @@ class WCS;
 namespace formatters {
                
 
-using namespace lsst::mwi::persistence;
+using namespace lsst::pex::persistence;
 
 class WcsFormatter : public Formatter {
 public:       
     virtual ~WcsFormatter(void);
 
     virtual void write(Persistable const* persistable, Storage::Ptr storage,
-                       lsst::mwi::data::DataProperty::PtrType additionalData);
+                       lsst::daf::data::DataProperty::PtrType additionalData);
     virtual Persistable* read(
         Storage::Ptr storage,
-        lsst::mwi::data::DataProperty::PtrType additionalData);
+        lsst::daf::data::DataProperty::PtrType additionalData);
     virtual void update(Persistable* persistable,
                         Storage::Ptr storage,
-                        lsst::mwi::data::DataProperty::PtrType additionalData);
+                        lsst::daf::data::DataProperty::PtrType additionalData);
 
-    static lsst::mwi::data::DataProperty::PtrType
+    static lsst::daf::data::DataProperty::PtrType
         generateDataProperty(WCS const& wcs);
-    static Formatter::Ptr createInstance(lsst::mwi::policy::Policy::Ptr policy);
+    static Formatter::Ptr createInstance(lsst::pex::policy::Policy::Ptr policy);
 
     template <class Archive>
     static void delegateSerialize(Archive& ar,
                                   int const version, Persistable* persistable);
 
 private:
-    explicit WcsFormatter(lsst::mwi::policy::Policy::Ptr policy);
+    explicit WcsFormatter(lsst::pex::policy::Policy::Ptr policy);
 
     static FormatterRegistration registration;
 };
 
-}}} // namespace lsst::fw::formatters
+}}} // namespace lsst::afw::formatters
 
 #endif

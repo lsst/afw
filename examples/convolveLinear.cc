@@ -2,20 +2,20 @@
 #include <sstream>
 #include <string>
 
-#include <lsst/mwi/data/Citizen.h>
-#include <lsst/mwi/utils/Trace.h>
-#include <lsst/fw/FunctionLibrary.h>
-#include <lsst/fw/Image.h>
-#include <lsst/fw/Kernel.h>
-#include <lsst/fw/KernelFunctions.h>
+#include <lsst/daf/data/Citizen.h>
+#include <lsst/pex/utils/Trace.h>
+#include <lsst/afw/math/FunctionLibrary.h>
+#include <lsst/afw/image/Image.h>
+#include <lsst/afw/math/Kernel.h>
+#include <lsst/afw/math/KernelFunctions.h>
 
 using namespace std;
 const std::string outFile("clOut");
 const std::string altOutFile("clAltOut");
 
 int main(int argc, char **argv) {
-    lsst::mwi::utils::Trace::setDestination(std::cout);
-    lsst::mwi::utils::Trace::setVerbosity("lsst.fw.kernel", 5);
+    lsst::pex::utils::Trace::setDestination(std::cout);
+    lsst::pex::utils::Trace::setVerbosity("lsst.fw.kernel", 5);
 
     typedef float imagePixelType;
     unsigned int KernelCols = 5;
@@ -47,27 +47,27 @@ int main(int argc, char **argv) {
         }
         
         // read in fits file
-        lsst::fw::MaskedImage<imagePixelType, lsst::fw::maskPixelType> mImage;
+        lsst::afw::image::MaskedImage<imagePixelType, lsst::afw::maskPixelType> mImage;
         mImage.readFits(argv[1]);
         
         // construct basis kernels
-        lsst::fw::KernelList<> kernelVec;
+        lsst::afw::math::KernelList<> kernelVec;
         for (int ii = 0; ii < 3; ++ii) {
             double xSigma = (ii == 1) ? MaxSigma : MinSigma;
             double ySigma = (ii == 2) ? MinSigma : MaxSigma;
-            lsst::fw::Kernel::KernelFunctionPtrType gaussFuncPtr(
-                new lsst::fw::function::GaussianFunction2<lsst::fw::Kernel::PixelT>(xSigma, ySigma));
-            lsst::fw::Kernel::PtrT basisKernelPtr(
-                new lsst::fw::AnalyticKernel(gaussFuncPtr, KernelCols, KernelRows)
+            lsst::afw::math::Kernel::KernelFunctionPtrType gaussFuncPtr(
+                new lsst::afw::math::GaussianFunction2<lsst::afw::math::Kernel::PixelT>(xSigma, ySigma));
+            lsst::afw::math::Kernel::PtrT basisKernelPtr(
+                new lsst::afw::math::AnalyticKernel(gaussFuncPtr, KernelCols, KernelRows)
             );
             kernelVec.push_back(basisKernelPtr);
         }
         
         // construct spatially varying linear combination kernel
         unsigned int polyOrder = 1;
-        lsst::fw::Kernel::SpatialFunctionPtrType polyFuncPtr(
-            new lsst::fw::function::PolynomialFunction2<double>(polyOrder));
-        lsst::fw::LinearCombinationKernel lcSpVarKernel(kernelVec, polyFuncPtr);
+        lsst::afw::math::Kernel::SpatialFunctionPtrType polyFuncPtr(
+            new lsst::afw::math::PolynomialFunction2<double>(polyOrder));
+        lsst::afw::math::LinearCombinationKernel lcSpVarKernel(kernelVec, polyFuncPtr);
     
         // Get copy of spatial parameters (all zeros), set and feed back to the kernel
         vector<vector<double> > polyParams = lcSpVarKernel.getSpatialParameters();
@@ -87,20 +87,20 @@ int main(int argc, char **argv) {
         lcSpVarKernel.setSpatialParameters(polyParams);
     
         // convolve with convolveLinear
-        lsst::fw::MaskedImage<imagePixelType, lsst::fw::maskPixelType> resMaskedImage(
+        lsst::afw::image::MaskedImage<imagePixelType, lsst::afw::maskPixelType> resMaskedImage(
             mImage.getCols(), mImage.getRows());
-        lsst::fw::kernel::convolveLinear(resMaskedImage, mImage, lcSpVarKernel, edgeBit);
+        lsst::afw::math::convolveLinear(resMaskedImage, mImage, lcSpVarKernel, edgeBit);
         
         // write results
         resMaskedImage.writeFits(outFile);
         std::cout << "Wrote " << outFile << "_img.fits, etc." << std::endl;
 
         if (doBothWays) {
-            lsst::fw::MaskedImage<imagePixelType, lsst::fw::maskPixelType> altResMaskedImage(
+            lsst::afw::image::MaskedImage<imagePixelType, lsst::afw::maskPixelType> altResMaskedImage(
                 mImage.getCols(), mImage.getRows());
-            lsst::fw::kernel::convolve(altResMaskedImage, mImage, lcSpVarKernel, edgeBit, false);
+            lsst::afw::math::convolve(altResMaskedImage, mImage, lcSpVarKernel, edgeBit, false);
             altResMaskedImage.writeFits(altOutFile);
-            std::cout << "Wrote " << altOutFile << "_img.fits, etc. (using lsst::fw::kernel::convolve)"
+            std::cout << "Wrote " << altOutFile << "_img.fits, etc. (using lsst::afw::math::convolve)"
                 << std::endl;
         }
     }
@@ -108,9 +108,9 @@ int main(int argc, char **argv) {
      //
      // Check for memory leaks
      //
-     if (lsst::mwi::data::Citizen::census(0) != 0) {
+     if (lsst::daf::data::Citizen::census(0) != 0) {
          std::cerr << "Leaked memory blocks:" << std::endl;
-         lsst::mwi::data::Citizen::census(std::cerr);
+         lsst::daf::data::Citizen::census(std::cerr);
      }
     
 }

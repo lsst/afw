@@ -4,17 +4,17 @@
  *
  * \brief Definitions of DeltaFunctionKernel member functions and explicit instantiations of the class.
  *
- * \ingroup fw
+ * \ingroup afw
  */
 #include <vw/Image.h>
 
-#include <lsst/mwi/exceptions.h>
-#include <lsst/fw/Kernel.h>
+#include <lsst/pex/exceptions.h>
+#include <lsst/afw/math/Kernel.h>
 
 /**
  * \brief Construct a spatially invariant DeltaFunctionKernel
  */
-lsst::fw::DeltaFunctionKernel::DeltaFunctionKernel(int pixelCol,
+lsst::afw::math::DeltaFunctionKernel::DeltaFunctionKernel(int pixelCol,
                                                    int pixelRow,
                                                    unsigned int cols,
                                                    unsigned int rows)
@@ -33,11 +33,11 @@ lsst::fw::DeltaFunctionKernel::DeltaFunctionKernel(int pixelCol,
 
     if (c < 0 || c >= static_cast<int>(getCols()) ||
         r < 0 || r >= static_cast<int>(getRows())) {
-        throw lsst::mwi::exceptions::InvalidParameter("Pixel lies outside image");
+        throw lsst::pex::exceptions::InvalidParameter("Pixel lies outside image");
     }
 }
 
-void lsst::fw::DeltaFunctionKernel::computeImage(
+void lsst::afw::math::DeltaFunctionKernel::computeImage(
     Image<PixelT> &image,
     PixelT &imSum,
     double x,
@@ -46,7 +46,7 @@ void lsst::fw::DeltaFunctionKernel::computeImage(
 ) const {
     typedef Image<PixelT>::pixel_accessor pixelAccessor;
     if ((image.getCols() != this->getCols()) || (image.getRows() != this->getRows())) {
-        throw lsst::mwi::exceptions::InvalidParameter("image is the wrong size");
+        throw lsst::pex::exceptions::InvalidParameter("image is the wrong size");
     }
 
     image *= 0;

@@ -8,7 +8,7 @@
  *
  * \author Russell Owen
  *
- * \ingroup fw
+ * \ingroup afw
  */
 #include <vector>
 
@@ -19,13 +19,14 @@
 #include <boost/type_traits/is_base_and_derived.hpp>
 #include <vw/Image.h>
 
-#include <lsst/mwi/data/LsstBase.h>
+#include <lsst/daf/data/LsstBase.h>
 #include <lsst/afw/math/Function.h>
 #include <lsst/afw/image/Image.h>
 #include <lsst/afw/image/Kernel/traits.h>
 
 namespace lsst {
-namespace fw {
+namespace afw {
+namespace math {
 
     /**
      * \brief Kernels are used for convolution with MaskedImages and (eventually) Images
@@ -63,7 +64,7 @@ namespace fw {
      *
      * When determining the parameters for a spatial function or a kernel function,
      * please keep the LSST convention for pixel position vs. pixel index in mind.
-     * See lsst/fw/ImageUtils.h for the convention.
+     * See lsst/afw/image/ImageUtils.h for the convention.
      *
      * Note that if a kernel is spatially varying then you may not set the kernel parameters directly;
      * that is the job of the spatial function! However, you may change the spatial parameters at any time.
@@ -96,15 +97,15 @@ namespace fw {
      * in evaluating the functions. However, it would be difficult or impossible to pre-instantiate
      * the desired template classes, a requirement of the LSST coding standards.
      *
-     * \ingroup fw
+     * \ingroup afw
      */
-    class Kernel : public lsst::mwi::data::LsstBase {
+    class Kernel : public lsst::daf::data::LsstBase {
     
     public:
         typedef double PixelT;
         typedef boost::shared_ptr<Kernel> PtrT;
-        typedef boost::shared_ptr<lsst::fw::function::Function2<PixelT> > KernelFunctionPtrType;
-        typedef boost::shared_ptr<lsst::fw::function::Function2<double> > SpatialFunctionPtrType;
+        typedef boost::shared_ptr<lsst::afw::math::Function2<PixelT> > KernelFunctionPtrType;
+        typedef boost::shared_ptr<lsst::afw::math::Function2<double> > SpatialFunctionPtrType;
         // Traits values for this class of Kernel
         typedef generic_kernel_tag kernel_fill_factor;
 
@@ -148,7 +149,7 @@ namespace fw {
          *
          * x, y are ignored if there is no spatial function.
          *
-         * \throw lsst::mwi::exceptions::InvalidParameter if the image is the wrong size
+         * \throw lsst::pex::exceptions::InvalidParameter if the image is the wrong size
          */
         virtual void computeImage(
             Image<PixelT> &image,   ///< image whose pixels are to be set
@@ -211,7 +212,7 @@ namespace fw {
          * then it is a const operation if part of computing the kernel at a particular position.
          * But if there is no spatial model then it is not const.
          *
-         * \throw lsst::mwi::exceptions::InvalidParameter if the params vector is the wrong length
+         * \throw lsst::pex::exceptions::InvalidParameter if the params vector is the wrong length
          */
         virtual void basicSetKernelParameters(std::vector<double> const &params) const {};
                 
@@ -240,7 +241,7 @@ namespace fw {
      * a conversion from KernelList<K1> to KernelList<K2> providing
      * that K1 is derived from K2 (or that K1 == K2)
      *
-     * \ingroup fw
+     * \ingroup afw
      */
     template<typename _KernelT=Kernel>
     class KernelList : public std::vector<typename _KernelT::PtrT> {
@@ -270,7 +271,7 @@ namespace fw {
      *
      * It has no adjustable parameters and so cannot be spatially varying.
      *
-     * \ingroup fw
+     * \ingroup afw
      */
     class FixedKernel : public Kernel {
     public:
@@ -322,7 +323,7 @@ namespace fw {
      * Note: each pixel is set to the value of the kernel function at the center of the pixel
      * (rather than averaging the function over the area of the pixel).
      *
-     * \ingroup fw
+     * \ingroup afw
      */
     class AnalyticKernel : public Kernel {
     public:
@@ -392,7 +393,7 @@ namespace fw {
      * Note: each pixel is set to the value of the kernel function at the center of the pixel
      * (rather than averaging the function over the area of the pixel).
      *
-     * \ingroup fw
+     * \ingroup afw
      */
     class DeltaFunctionKernel : public Kernel {
     public:
@@ -443,7 +444,7 @@ namespace fw {
      * - The kernels are assumed to be invariant; do not try to modify the basis kernels
      *   while using LinearCombinationKernel.
      *
-     * \ingroup fw
+     * \ingroup afw
      */
     class LinearCombinationKernel : public Kernel {
     public:
@@ -510,7 +511,7 @@ namespace fw {
         std::vector<boost::shared_ptr<Image<PixelT> > > _kernelImagePtrList;
         mutable std::vector<double> _kernelParams;
     };
-}}   // lsst:fw
+}}}   // lsst:afw::math
     
 // Included definitions for templated and inline member functions
 #ifndef SWIG // don't bother SWIG with .cc files

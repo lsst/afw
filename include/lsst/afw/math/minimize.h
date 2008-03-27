@@ -4,20 +4,20 @@
 /**
  * \file
  *
- * Class that Minuit knows how to minimize, that contains an lsst::fw::function::Function
+ * Class that Minuit knows how to minimize, that contains an lsst::afw::math::Function
  *
  * \author Andrew Becker and Russell Owen
  *
- * \ingroup fw
+ * \ingroup afw
  */
 #include <boost/shared_ptr.hpp>
 #include <Minuit/FCNBase.h>
 
-#include <lsst/mwi/data/LsstData.h>
-#include <lsst/fw/Function.h>
+#include <lsst/daf/data/LsstData.h>
+#include <lsst/afw/math/Function.h>
 
 namespace lsst {
-namespace fw {
+namespace afw {
 namespace function {
 
     /**
@@ -35,11 +35,11 @@ namespace function {
      * \brief Minuit wrapper for a function(x)
      */
     template<typename ReturnT>
-    class MinimizerFunctionBase1 : public FCNBase, public lsst::mwi::data::LsstBase {
+    class MinimizerFunctionBase1 : public FCNBase, public lsst::daf::data::LsstBase {
     public:
         explicit MinimizerFunctionBase1();
         explicit MinimizerFunctionBase1(
-            boost::shared_ptr<lsst::fw::function::Function1<ReturnT> > theFunctionPtr,
+            boost::shared_ptr<lsst::afw::math::Function1<ReturnT> > theFunctionPtr,
             std::vector<double> const &measurementList,
             std::vector<double> const &varianceList,
             std::vector<double> const &xPositionList,
@@ -57,7 +57,7 @@ namespace function {
         inline std::vector<double> getPositions() const {return _xPositionList;}
         inline void setErrorDef(double def) {_errorDef=def;}
     private:
-        boost::shared_ptr<lsst::fw::function::Function1<ReturnT> > _theFunctionPtr;
+        boost::shared_ptr<lsst::afw::math::Function1<ReturnT> > _theFunctionPtr;
         std::vector<double> _measurementList;
         std::vector<double> _varianceList;
         std::vector<double> _xPositionList;
@@ -68,11 +68,11 @@ namespace function {
      * \brief Minuit wrapper for a function(x, y)
      */
     template<typename ReturnT>
-    class MinimizerFunctionBase2 : public FCNBase, public lsst::mwi::data::LsstBase {
+    class MinimizerFunctionBase2 : public FCNBase, public lsst::daf::data::LsstBase {
     public:
         explicit MinimizerFunctionBase2();
         explicit MinimizerFunctionBase2(
-            boost::shared_ptr<lsst::fw::function::Function2<ReturnT> > theFunctionPtr,
+            boost::shared_ptr<lsst::afw::math::Function2<ReturnT> > theFunctionPtr,
             std::vector<double> const &measurementList,
             std::vector<double> const &varianceList,
             std::vector<double> const &xPositionList,
@@ -92,7 +92,7 @@ namespace function {
         inline std::vector<double> getPosition2() const {return _yPositionList;}
         inline void setErrorDef(double def) {_errorDef=def;}
     private:
-        boost::shared_ptr<lsst::fw::function::Function2<ReturnT> > _theFunctionPtr;
+        boost::shared_ptr<lsst::afw::math::Function2<ReturnT> > _theFunctionPtr;
         std::vector<double> _measurementList;
         std::vector<double> _varianceList;
         std::vector<double> _xPositionList;
@@ -102,7 +102,7 @@ namespace function {
         
     template<typename ReturnT>
     FitResults minimize(
-        boost::shared_ptr<lsst::fw::function::Function1<ReturnT> > functionPtr,
+        boost::shared_ptr<lsst::afw::math::Function1<ReturnT> > functionPtr,
         std::vector<double> const &initialParameterList,
         std::vector<double> const &stepSizeList,
         std::vector<double> const &measurementList,
@@ -113,7 +113,7 @@ namespace function {
 
     template<typename ReturnT>
     FitResults minimize(
-        boost::shared_ptr<lsst::fw::function::Function2<ReturnT> > functionPtr,
+        boost::shared_ptr<lsst::afw::math::Function2<ReturnT> > functionPtr,
         std::vector<double> const &initialParameterList,
         std::vector<double> const &stepSizeList,
         std::vector<double> const &measurementList,
@@ -123,10 +123,10 @@ namespace function {
         double errorDef
     );
     
-}}}   // lsst::fw::function
+}}}   // lsst::afw::math
 
 #ifndef SWIG // don't bother SWIG with .cc files
-#include <lsst/fw/minimize.cc>
+#include "minimize.cc"
 #endif
 
 #endif // !defined(LSST_AFW_MATH_MINIMIZE_H)

@@ -9,7 +9,7 @@
  *
  * Contact: Kian-Tat Lim (ktl@slac.stanford.edu)
  *
- * \ingroup fw
+ * \ingroup afw
  */
 
 #ifndef __GNUC__
@@ -17,36 +17,34 @@
 #endif
 static char const* SVNid __attribute__((unused)) = "$Id$";
 
-#include "lsst/fw/formatters/ExposureFormatter.h"
-#include "lsst/fw/Exposure.h"
+#include <lsst/afw/formatters/ExposureFormatter.h>
+#include <lsst/afw/image/Exposure.h>
 
-#include "lsst/mwi/persistence/FormatterImpl.h"
+#include <lsst/pex/persistence/FormatterImpl.h>
 
-#include "lsst/fw/formatters/MaskedImageFormatter.h"
-#include "lsst/fw/formatters/Utils.h"
-#include "lsst/fw/formatters/WcsFormatter.h"
+#include <lsst/afw/formatters/MaskedImageFormatter.h>
+#include <lsst/afw/formatters/Utils.h>
+#include <lsst/afw/formatters/WcsFormatter.h>
 
-#include "lsst/mwi/exceptions.h"
-#include "lsst/mwi/persistence/LogicalLocation.h"
-#include "lsst/mwi/persistence/BoostStorage.h"
-#include "lsst/mwi/persistence/DateTime.h"
-#include "lsst/mwi/persistence/DbStorage.h"
-#include "lsst/mwi/persistence/FitsStorage.h"
-#include "lsst/mwi/utils/Trace.h"
+#include <lsst/pex/exceptions.h>
+#include <lsst/pex/persistence/LogicalLocation.h>
+#include <lsst/pex/persistence/BoostStorage.h>
+#include <lsst/pex/persistence/DateTime.h>
+#include <lsst/pex/persistence/DbStorage.h>
+#include <lsst/pex/persistence/FitsStorage.h>
+#include <lsst/pex/utils/Trace.h>
 
 #include <boost/serialization/shared_ptr.hpp>
-// #include "lsst/fw/LSSTFitsResource.h"
+// #include <lsst/afw/image/LSSTFitsResource.h>
 
 #define EXEC_TRACE  20
 static void execTrace(std::string s, int level = EXEC_TRACE) {
-    lsst::mwi::utils::Trace("fw.ExposureFormatter", level, s);
+    lsst::pex::utils::Trace("afw.ExposureFormatter", level, s);
 }
 
-using namespace lsst::mwi::persistence;
+using namespace lsst::pex::persistence;
 
-namespace lsst {
-namespace fw {
-namespace formatters {
+using namespace lsst::afw::formatters;
 
 template <typename ImagePixelT, typename MaskPixelT>
 class ExposureFormatterTraits {
@@ -67,7 +65,7 @@ FormatterRegistration ExposureFormatter<ImagePixelT, MaskPixelT>::registration(
 
 template <typename ImagePixelT, typename MaskPixelT>
 ExposureFormatter<ImagePixelT, MaskPixelT>::ExposureFormatter(
-    lsst::mwi::policy::Policy::Ptr policy) :
+    lsst::pex::policy::Policy::Ptr policy) :
     Formatter(typeid(*this)), _policy(policy) {
 }
 
@@ -87,11 +85,11 @@ static std::string lookupFilterName(
     db->setQueryWhere("filterId = :id");
     db->query();
     if (!db->next() || db->columnIsNull(0)) {
-        throw lsst::mwi::exceptions::Runtime("Unable to get name for filter id: " + static_cast<int>(filterId));
+        throw lsst::pex::exceptions::Runtime("Unable to get name for filter id: " + static_cast<int>(filterId));
     }
     std::string filterName = db->getColumnByPos<std::string>(0);
     if (db->next()) {
-        throw lsst::mwi::exceptions::Runtime("Multiple names for filter id: " + static_cast<int>(filterId));
+        throw lsst::pex::exceptions::Runtime("Multiple names for filter id: " + static_cast<int>(filterId));
 
     }
     db->finishQuery();
@@ -106,10 +104,10 @@ template <typename T>
 static void setColumn(
     DbStorage* db,                                  //!< Destination database
     std::string const& colName,                     //!< Output column name
-    lsst::mwi::data::DataProperty::PtrType source,  //!< Source DataProperty
+    lsst::daf::data::DataProperty::PtrType source,  //!< Source DataProperty
     std::string const& dpName                       //!< Child name
     ) {
-    lsst::mwi::data::DataProperty::PtrType dp = source->findUnique(dpName);
+    lsst::daf::data::DataProperty::PtrType dp = source->findUnique(dpName);
     if (!dp) {
         db->setColumnToNull(colName);
     }
@@ -126,10 +124,10 @@ template <typename T1, typename T2>
 static void setColumn(
     DbStorage* db,                                  //!< Destination database
     std::string const& colName,                     //!< Output column name
-    lsst::mwi::data::DataProperty::PtrType source,  //!< Source DataProperty
+    lsst::daf::data::DataProperty::PtrType source,  //!< Source DataProperty
     std::string const& dpName                       //!< Child name
     ) {
-    lsst::mwi::data::DataProperty::PtrType dp = source->findUnique(dpName);
+    lsst::daf::data::DataProperty::PtrType dp = source->findUnique(dpName);
     if (!dp) {
         db->setColumnToNull(colName);
     }
@@ -143,12 +141,12 @@ template <typename ImagePixelT, typename MaskPixelT>
 void ExposureFormatter<ImagePixelT, MaskPixelT>::write(
     Persistable const* persistable,
     Storage::Ptr storage,
-    lsst::mwi::data::DataProperty::PtrType additionalData) {
+    lsst::daf::data::DataProperty::PtrType additionalData) {
     execTrace("ExposureFormatter write start");
     Exposure<ImagePixelT, MaskPixelT> const* ip =
         dynamic_cast<Exposure<ImagePixelT, MaskPixelT> const*>(persistable);
     if (ip == 0) {
-        throw lsst::mwi::exceptions::Runtime("Persisting non-Exposure");
+        throw lsst::pex::exceptions::Runtime("Persisting non-Exposure");
     }
     if (typeid(*storage) == typeid(BoostStorage)) {
         execTrace("ExposureFormatter write BoostStorage");
@@ -161,8 +159,8 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::write(
         execTrace("ExposureFormatter write FitsStorage");
         FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
 
-        lsst::mwi::data::DataProperty::PtrType wcsDP =
-            lsst::fw::formatters::WcsFormatter::generateDataProperty(
+        lsst::daf::data::DataProperty::PtrType wcsDP =
+            lsst::afw::formatters::WcsFormatter::generateDataProperty(
                 *(ip->_wcsPtr));
 
         Exposure<ImagePixelT, MaskPixelT>* vip =
@@ -178,15 +176,15 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::write(
         DbStorage* db = dynamic_cast<DbStorage*>(storage.get());
 
         // Get the WCS headers.
-        lsst::mwi::data::DataProperty::PtrType wcsDP =
-            lsst::fw::formatters::WcsFormatter::generateDataProperty(
+        lsst::daf::data::DataProperty::PtrType wcsDP =
+            lsst::afw::formatters::WcsFormatter::generateDataProperty(
                 *(ip->_wcsPtr));
 
         // Get the image headers.
-        lsst::mwi::data::DataProperty::PtrType dp =
+        lsst::daf::data::DataProperty::PtrType dp =
             ip->_maskedImage.getImage()->getMetaData();
         if (!dp) {
-            throw lsst::mwi::exceptions::Runtime("Unable to retrieve metadata from MaskedImage's Image");
+            throw lsst::pex::exceptions::Runtime("Unable to retrieve metadata from MaskedImage's Image");
         }
 
         // Select a table to insert into based on the itemName.
@@ -194,7 +192,7 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::write(
             additionalData->findUnique("itemName")->getValue());
         std::string tableName = itemName;
         if (_policy->exists(itemName)) {
-            lsst::mwi::policy::Policy::Ptr itemPolicy =
+            lsst::pex::policy::Policy::Ptr itemPolicy =
                 _policy->getPolicy(itemName);
             if (itemPolicy->exists("TableName")) {
                 tableName = itemPolicy->getString("TableName");
@@ -202,7 +200,7 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::write(
         }
         if (tableName != "Raw_CCD_Exposure" &&
             tableName != "Science_CCD_Exposure") {
-            throw lsst::mwi::exceptions::Runtime(
+            throw lsst::pex::exceptions::Runtime(
                 "Unknown table name for persisting Exposure to DbStorage: " +
                 tableName + "for item " + itemName);
         }
@@ -257,13 +255,13 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::write(
         execTrace("ExposureFormatter write end");
         return;
     }
-    throw lsst::mwi::exceptions::Runtime("Unrecognized Storage for Exposure");
+    throw lsst::pex::exceptions::Runtime("Unrecognized Storage for Exposure");
 }
 
 template <typename ImagePixelT, typename MaskPixelT>
 Persistable* ExposureFormatter<ImagePixelT, MaskPixelT>::read(
     Storage::Ptr storage,
-    lsst::mwi::data::DataProperty::PtrType additionalData) {
+    lsst::daf::data::DataProperty::PtrType additionalData) {
     execTrace("ExposureFormatter read start");
     Exposure<ImagePixelT, MaskPixelT>* ip = new Exposure<ImagePixelT, MaskPixelT>;
     if (typeid(*storage) == typeid(BoostStorage)) {
@@ -289,7 +287,7 @@ Persistable* ExposureFormatter<ImagePixelT, MaskPixelT>::read(
             additionalData->findUnique("itemName")->getValue());
         std::string tableName = itemName;
         if (_policy->exists(itemName)) {
-            lsst::mwi::policy::Policy::Ptr itemPolicy =
+            lsst::pex::policy::Policy::Ptr itemPolicy =
                 _policy->getPolicy(itemName);
             if (itemPolicy->exists("TableName")) {
                 tableName = itemPolicy->getString("TableName");
@@ -297,7 +295,7 @@ Persistable* ExposureFormatter<ImagePixelT, MaskPixelT>::read(
         }
         if (tableName != "Raw_CCD_Exposure" &&
             tableName != "Science_CCD_Exposure") {
-            throw lsst::mwi::exceptions::Runtime(
+            throw lsst::pex::exceptions::Runtime(
                 "Unknown table name for retrieving Exposure from DbStorage: " +
                 tableName + " for item " + itemName);
         }
@@ -337,11 +335,11 @@ Persistable* ExposureFormatter<ImagePixelT, MaskPixelT>::read(
         // Phew!  Run the query.
         db->query();
         if (!db->next()) {
-            throw lsst::mwi::exceptions::Runtime("Unable to retrieve row");
+            throw lsst::pex::exceptions::Runtime("Unable to retrieve row");
         }
         // ...
         if (db->next()) {
-            throw lsst::mwi::exceptions::Runtime("Non-unique Exposure retrieved");
+            throw lsst::pex::exceptions::Runtime("Non-unique Exposure retrieved");
         }
         db->finishQuery();
 
@@ -356,7 +354,7 @@ Persistable* ExposureFormatter<ImagePixelT, MaskPixelT>::read(
         int filterId = db->getColumnByPos<int>(1);
         std::string filterName = lookupFilterName(db, filterId);
         dp->deleteAll("FILTER");
-        dp->addProperty(lsst::mwi::data::SupportFactory::createLeafProperty(
+        dp->addProperty(lsst::daf::data::SupportFactory::createLeafProperty(
                 "FILTER", filterName));
 
         // Set the image headers.
@@ -368,17 +366,17 @@ Persistable* ExposureFormatter<ImagePixelT, MaskPixelT>::read(
         execTrace("ExposureFormatter read end");
         return ip;
     }
-    throw lsst::mwi::exceptions::Runtime("Unrecognized Storage for Exposure");
+    throw lsst::pex::exceptions::Runtime("Unrecognized Storage for Exposure");
 }
 
 template <typename ImagePixelT, typename MaskPixelT>
 void ExposureFormatter<ImagePixelT, MaskPixelT>::update(
     Persistable* persistable,
     Storage::Ptr storage,
-    lsst::mwi::data::DataProperty::PtrType additionalData) {
+    lsst::daf::data::DataProperty::PtrType additionalData) {
     //! \todo Implement update from FitsStorage, keeping DB-provided headers.
     // - KTL - 2007-11-29
-    throw lsst::mwi::exceptions::Runtime("Unexpected call to update for Exposure");
+    throw lsst::pex::exceptions::Runtime("Unexpected call to update for Exposure");
 }
 
 template <typename ImagePixelT, typename MaskPixelT> template <class Archive>
@@ -387,7 +385,7 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::delegateSerialize(
     execTrace("ExposureFormatter delegateSerialize start");
     Exposure<ImagePixelT, MaskPixelT>* ip = dynamic_cast<Exposure<ImagePixelT, MaskPixelT>*>(persistable);
     if (ip == 0) {
-        throw lsst::mwi::exceptions::Runtime("Serializing non-Exposure");
+        throw lsst::pex::exceptions::Runtime("Serializing non-Exposure");
     }
     ar & ip->_maskedImage & ip->_wcsPtr;
     execTrace("ExposureFormatter delegateSerialize end");
@@ -395,12 +393,10 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::delegateSerialize(
 
 template <typename ImagePixelT, typename MaskPixelT>
 Formatter::Ptr ExposureFormatter<ImagePixelT, MaskPixelT>::createInstance(
-    lsst::mwi::policy::Policy::Ptr policy) {
+    lsst::pex::policy::Policy::Ptr policy) {
     return Formatter::Ptr(new ExposureFormatter<ImagePixelT, MaskPixelT>(policy));
 }
 
-template class ExposureFormatter<boost::uint16_t, lsst::fw::maskPixelType>;
-template class ExposureFormatter<float, lsst::fw::maskPixelType>;
-template class ExposureFormatter<double, lsst::fw::maskPixelType>;
-
-}}} // namespace lsst::fw::formatters
+template class ExposureFormatter<boost::uint16_t, lsst::afw::image::maskPixelType>;
+template class ExposureFormatter<float, lsst::afw::image::maskPixelType>;
+template class ExposureFormatter<double, lsst::afw::image::maskPixelType>;

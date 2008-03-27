@@ -2,21 +2,21 @@
 #include <sstream>
 #include <string>
 
-#include <lsst/mwi/data/Citizen.h>
-#include <lsst/mwi/utils/Trace.h>
-#include <lsst/fw/FunctionLibrary.h>
-#include <lsst/fw/Image.h>
-#include <lsst/fw/Kernel.h>
-#include <lsst/fw/KernelFunctions.h>
+#include <lsst/daf/data/Citizen.h>
+#include <lsst/pex/utils/Trace.h>
+#include <lsst/afw/math/FunctionLibrary.h>
+#include <lsst/afw/image/Image.h>
+#include <lsst/afw/math/Kernel.h>
+#include <lsst/afw/math/KernelFunctions.h>
 
 using namespace std;
 const std::string outFile("scOut");
 
 int main(int argc, char **argv) {
-    typedef lsst::fw::Kernel::PixelT pixelType;
+    typedef lsst::afw::math::Kernel::PixelT pixelType;
     
-    lsst::mwi::utils::Trace::setDestination(std::cout);
-    lsst::mwi::utils::Trace::setVerbosity("lsst.fw.kernel", 5);
+    lsst::pex::utils::Trace::setDestination(std::cout);
+    lsst::pex::utils::Trace::setVerbosity("lsst.fw.kernel", 5);
 
     const double DefSigma = 2.0;
     int DefEdgeMaskBit = 0;
@@ -44,17 +44,17 @@ int main(int argc, char **argv) {
         }
         
         // read in fits file
-        lsst::fw::MaskedImage<pixelType, lsst::fw::maskPixelType> mImage;
+        lsst::afw::image::MaskedImage<pixelType, lsst::afw::maskPixelType> mImage;
         mImage.readFits(argv[1]);
         
         // construct kernel
-        lsst::fw::Kernel::KernelFunctionPtrType kfuncPtr(
-            new lsst::fw::function::GaussianFunction2<pixelType>(sigma, sigma));
-        lsst::fw::AnalyticKernel kernel(kfuncPtr, 5, 5);
+        lsst::afw::math::Kernel::KernelFunctionPtrType kfuncPtr(
+            new lsst::afw::math::GaussianFunction2<pixelType>(sigma, sigma));
+        lsst::afw::math::AnalyticKernel kernel(kfuncPtr, 5, 5);
     
         // convolve
-        lsst::fw::MaskedImage<pixelType, lsst::fw::maskPixelType>
-            resMaskedImage = lsst::fw::kernel::convolve(mImage, kernel, edgeMaskBit, true);
+        lsst::afw::image::MaskedImage<pixelType, lsst::afw::maskPixelType>
+            resMaskedImage = lsst::afw::math::convolve(mImage, kernel, edgeMaskBit, true);
     
         // write results
         resMaskedImage.writeFits(outFile);
@@ -63,9 +63,9 @@ int main(int argc, char **argv) {
      //
      // Check for memory leaks
      //
-     if (lsst::mwi::data::Citizen::census(0) != 0) {
+     if (lsst::daf::data::Citizen::census(0) != 0) {
          std::cerr << "Leaked memory blocks:" << std::endl;
-         lsst::mwi::data::Citizen::census(std::cerr);
+         lsst::daf::data::Citizen::census(std::cerr);
      }
     
 }

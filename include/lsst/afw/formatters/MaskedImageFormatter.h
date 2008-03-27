@@ -13,19 +13,19 @@
  * \ingroup fw
  */
 
-/** \class lsst::fw::formatters::MaskedImageFormatter
+/** \class lsst::afw::formatters::MaskedImageFormatter
  * \brief Class implementing persistence and retrieval for MaskedImages.
  *
  * \ingroup fw
  */
 
-#include "lsst/mwi/persistence/Formatter.h"
+#include "lsst/pex/persistence/Formatter.h"
 
 namespace lsst {
 namespace fw {
 namespace formatters {
                
-using namespace lsst::mwi::persistence;
+using namespace lsst::pex::persistence;
 
 template<typename ImagePixelT, typename MaskPixelT>
 class MaskedImageFormatter : public Formatter {
@@ -33,25 +33,25 @@ public:
     virtual ~MaskedImageFormatter(void);
 
     virtual void write(Persistable const* persistable, Storage::Ptr storage,
-                       lsst::mwi::data::DataProperty::PtrType additionalData);
+                       lsst::daf::data::DataProperty::PtrType additionalData);
     virtual Persistable* read(
         Storage::Ptr storage,
-        lsst::mwi::data::DataProperty::PtrType additionalData);
+        lsst::daf::data::DataProperty::PtrType additionalData);
     virtual void update(Persistable* persistable,
                         Storage::Ptr storage,
-                        lsst::mwi::data::DataProperty::PtrType additionalData);
+                        lsst::daf::data::DataProperty::PtrType additionalData);
 
-    static Formatter::Ptr createInstance(lsst::mwi::policy::Policy::Ptr policy);
+    static Formatter::Ptr createInstance(lsst::pex::policy::Policy::Ptr policy);
 
     template <class Archive>
         static void delegateSerialize(Archive& ar, int const version,
                                       Persistable* persistable);
 private:
-    explicit MaskedImageFormatter(lsst::mwi::policy::Policy::Ptr policy);
+    explicit MaskedImageFormatter(lsst::pex::policy::Policy::Ptr policy);
 
     static FormatterRegistration registration;
 };
 
-}}} // namespace lsst::fw::formatters
+}}} // namespace lsst::afw::formatters
 
 #endif

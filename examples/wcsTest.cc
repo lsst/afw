@@ -19,14 +19,14 @@
 #include <vw/Image.h>
 #include <vw/Math/BBox.h>
 
-#include <lsst/mwi/data/DataProperty.h>
-#include <lsst/fw/DiskImageResourceFITS.h> // need this for now?
-#include <lsst/mwi/exceptions.h>
-#include <lsst/fw/Exposure.h>
-#include <lsst/fw/Image.h>
-#include <lsst/fw/MaskedImage.h>
-#include <lsst/mwi/utils/Trace.h> // turn off by recompiling with 'LSST_NO_TRACE 0'
-#include <lsst/fw/WCS.h>
+#include <lsst/daf/data/DataProperty.h>
+#include <lsst/afw/image/DiskImageResourceFITS.h> // need this for now?
+#include <lsst/pex/exceptions.h>
+#include <lsst/afw/image/Exposure.h>
+#include <lsst/afw/image/Image.h>
+#include <lsst/afw/image/MaskedImage.h>
+#include <lsst/pex/utils/Trace.h> // turn off by recompiling with 'LSST_NO_TRACE 0'
+#include <lsst/afw/math/WCS.h>
 
 /**
  * \brief This test code incorporates some very simple tests of the WCS Class
@@ -43,17 +43,17 @@ int main(int argc, char **argv) {
     
    
     std::cout << "Opening file " << inFilename << std::endl;
-    lsst::fw::MaskedImage<pixelType, lsst::fw::maskPixelType> mskdImage;
+    lsst::afw::image::MaskedImage<pixelType, lsst::afw::maskPixelType> mskdImage;
     mskdImage.readFits(inFilename);
-    lsst::fw::WCS wcs(mskdImage.getImage()->getMetaData());
+    lsst::afw::math::WCS wcs(mskdImage.getImage()->getMetaData());
     
     // Testing input col, row values 
 
-    lsst::fw::Coord2D minCoord(1.0,1.0);
-    lsst::fw::Coord2D colRow(mskdImage.getCols(), mskdImage.getRows());
+    lsst::afw::Coord2D minCoord(1.0,1.0);
+    lsst::afw::Coord2D colRow(mskdImage.getCols(), mskdImage.getRows());
 
-    lsst::fw::Coord2D sky1 = wcs.colRowToRaDec(minCoord);
-    lsst::fw::Coord2D sky2 = wcs.colRowToRaDec(colRow);
+    lsst::afw::Coord2D sky1 = wcs.colRowToRaDec(minCoord);
+    lsst::afw::Coord2D sky2 = wcs.colRowToRaDec(colRow);
 
     std::cout << "ra, decl of " << inFilename << " at ("<< minCoord[0] << " " << minCoord[1] <<") = " << endl;
     std::cout << "ra: " << sky1[0] << " decl: " << sky1[1] << endl << endl;
@@ -73,8 +73,8 @@ int main(int argc, char **argv) {
     double miRa2 = sky2[0];
     double miDecl2 = sky2[1];
 
-    lsst::fw::Coord2D pix1 = wcs.raDecToColRow(miRa1, miDecl1);
-    lsst::fw::Coord2D pix2 = wcs.raDecToColRow(miRa2, miDecl2);
+    lsst::afw::Coord2D pix1 = wcs.raDecToColRow(miRa1, miDecl1);
+    lsst::afw::Coord2D pix2 = wcs.raDecToColRow(miRa2, miDecl2);
 
     std::cout << "col, row of " << inFilename << " at ("<< miRa1 << " " << miDecl1<<") = " << endl;
     std::cout << "col: " << pix1[0] << " row: " << pix1[1] << endl << endl;
@@ -90,8 +90,8 @@ int main(int argc, char **argv) {
     raDecl2[0] = sky2[0];
     raDecl2[1] = sky2[1];
 
-    lsst::fw::Coord2D pix3 = wcs.raDecToColRow(raDecl1);
-    lsst::fw::Coord2D pix4 = wcs.raDecToColRow(raDecl2);
+    lsst::afw::Coord2D pix3 = wcs.raDecToColRow(raDecl1);
+    lsst::afw::Coord2D pix4 = wcs.raDecToColRow(raDecl2);
 
         std::cout << "col, row of " << inFilename << " at ("<< raDecl1[0] << " " << raDecl1[1]<<") = " << endl;
     std::cout << "col: " << pix3[0] << " row: " << pix3[1] << endl << endl;

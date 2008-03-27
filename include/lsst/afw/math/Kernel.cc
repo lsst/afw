@@ -4,13 +4,13 @@
  *
  * \brief Definition of inline member functions declared in Kernel.h
  *
- * This file is meant to be included by lsst/fw/Kernel.h
+ * This file is meant to be included by lsst/afw/math/Kernel.h
  *
  * \author Russell Owen
  *
- * \ingroup fw
+ * \ingroup afw
  */
-#include <lsst/mwi/exceptions.h>
+#include <lsst/pex/exceptions.h>
 
 //
 // Inline Member Functions
@@ -19,42 +19,42 @@
 /**
  * \brief Return the number of columns
  */
-inline unsigned lsst::fw::Kernel::getCols() const {
+inline unsigned lsst::afw::math::Kernel::getCols() const {
     return _cols;
 }
 
 /**
  * \brief Return the number of rows
  */
-inline unsigned lsst::fw::Kernel::getRows() const {
+inline unsigned lsst::afw::math::Kernel::getRows() const {
     return _rows;
 }
 
 /**
  * \brief Return the center column
  */
-inline unsigned lsst::fw::Kernel::getCtrCol() const {
+inline unsigned lsst::afw::math::Kernel::getCtrCol() const {
     return _ctrCol;
 }
 
 /**
  * \brief Return the center row
  */
-inline unsigned lsst::fw::Kernel::getCtrRow() const {
+inline unsigned lsst::afw::math::Kernel::getCtrRow() const {
     return _ctrRow;
 }
 
 /**
  * \brief Return the number of kernel parameters (0 if none)
  */
-inline unsigned lsst::fw::Kernel::getNKernelParameters() const {
+inline unsigned lsst::afw::math::Kernel::getNKernelParameters() const {
     return _nKernelParams;
 }
 
 /**
  * \brief Return the number of spatial parameters (0 if not spatially varying)
  */
-inline unsigned lsst::fw::Kernel::getNSpatialParameters() const { 
+inline unsigned lsst::afw::math::Kernel::getNSpatialParameters() const { 
     if (!isSpatiallyVarying()) {
         return 0;
     } else {
@@ -65,29 +65,29 @@ inline unsigned lsst::fw::Kernel::getNSpatialParameters() const {
 /**
  * \brief Return the spatial parameters parameters (an empty vector if not spatially varying)
  */
-inline std::vector<std::vector<double> > lsst::fw::Kernel::getSpatialParameters() const {
+inline std::vector<std::vector<double> > lsst::afw::math::Kernel::getSpatialParameters() const {
     return _spatialParams;
 }
 
 /**
  * \brief Return true if the kernel is spatially varying (has a spatial function)
  */
-inline bool lsst::fw::Kernel::isSpatiallyVarying() const {
+inline bool lsst::afw::math::Kernel::isSpatiallyVarying() const {
     return _isSpatiallyVarying;
 }
 
 /**
  * \brief Set the kernel parameters of a spatially invariant kernel.
  *
- * Note: if lsst::mwi::exceptions::RuntimeError becomes available then 
- * I plan to use that instead of lsst::mwi::exceptions::Exception.
+ * Note: if lsst::pex::exceptions::RuntimeError becomes available then 
+ * I plan to use that instead of lsst::pex::exceptions::Exception.
  *
- * \throw lsst::mwi::exceptions::Runtime if the kernel has a spatial function
- * \throw lsst::mwi::exceptions::InvalidParameter if the params vector is the wrong length
+ * \throw lsst::pex::exceptions::Runtime if the kernel has a spatial function
+ * \throw lsst::pex::exceptions::InvalidParameter if the params vector is the wrong length
  */
-inline void lsst::fw::Kernel::setKernelParameters(std::vector<double> const &params) {
+inline void lsst::afw::math::Kernel::setKernelParameters(std::vector<double> const &params) {
     if (this->isSpatiallyVarying()) {
-        throw lsst::mwi::exceptions::Runtime("Kernel is spatially varying");
+        throw lsst::pex::exceptions::Runtime("Kernel is spatially varying");
     }
     this->basicSetKernelParameters(params);
 }

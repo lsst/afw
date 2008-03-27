@@ -6,43 +6,45 @@
 #include <iostream>
 #include <sstream>
 
-#include <lsst/mwi/exceptions.h>
-#include <lsst/mwi/data/FitsFormatter.h>
+#include <lsst/pex/exceptions.h>
+#include <lsst/daf/data/FitsFormatter.h>
 
-#include <lsst/fw/WCS.h>
+#include <lsst/afw/image/WCS.h>
 
 #include <wcslib/wcs.h>
 #include <wcslib/wcsfix.h>
 #include <wcslib/wcshdr.h>
 
-using namespace lsst::fw;
 using namespace vw::math;
 
-using lsst::mwi::data::LsstBase;
-using lsst::mwi::data::DataProperty;
-using lsst::mwi::data::FitsFormatter;
+using lsst::daf::data::LsstBase;
+using lsst::daf::data::DataProperty;
+using lsst::daf::data::FitsFormatter;
 
 /**
  * \brief Construct an invalid WCS given no arguments
  *
- * \throw lsst::mwi::exceptions::Runtime on error
+ * \throw lsst::pex::exceptions::Runtime on error
  */
-WCS::WCS() : LsstBase(typeid(this)),
-             _fitsMetaData(),
-             _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0) {
+lsst::afw::image::WCS::WCS() :
+    LsstBase(typeid(this)),
+    _fitsMetaData(),
+    _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0) {
 }
 
 /**
  * \brief Construct a WCS from a FITS header, represented as DataProperty::PtrType
  *
- * \throw lsst::mwi::exceptions::Runtime on error
+ * \throw lsst::pex::exceptions::Runtime on error
  */
-WCS::WCS(lsst::mwi::data::DataProperty::PtrType fitsMetaData  ///< The contents of a valid FITS header
-        ) : LsstBase(typeid(this)),
-            _fitsMetaData(fitsMetaData),
-            _wcsInfo(NULL),
-            _nWcsInfo(0),
-            _nReject(0)
+lsst::afw::image::WCS::WCS(
+    lsst::daf::data::DataProperty::PtrType fitsMetaData  ///< The contents of a valid FITS header
+) :
+    LsstBase(typeid(this)),
+    _fitsMetaData(fitsMetaData),
+    _wcsInfo(NULL),
+    _nWcsInfo(0),
+    _nReject(0)
 {
     // these should be set via policy - but for the moment...
 
@@ -53,7 +55,7 @@ WCS::WCS(lsst::mwi::data::DataProperty::PtrType fitsMetaData  ///< The contents 
     std::string metadataStr = FitsFormatter::formatDataProperty( fitsMetaData, false );
     int nCards = FitsFormatter::countFITSHeaderCards( fitsMetaData, false );
     if (nCards <= 0) {
-        throw lsst::mwi::exceptions::Runtime("Could not parse FITS WCS: no header cards found");
+        throw lsst::pex::exceptions::Runtime("Could not parse FITS WCS: no header cards found");
     }
     
     // wcspih takes a non-const char* (because some versions of ctrl modify the string)
@@ -65,7 +67,7 @@ WCS::WCS(lsst::mwi::data::DataProperty::PtrType fitsMetaData  ///< The contents 
     int pihStatus = wcspih(hdrString, nCards, _relax, _wcshdrCtrl, &_nReject, &_nWcsInfo, &_wcsInfo);
     delete hdrString;
     if (pihStatus != 0) {
-        throw lsst::mwi::exceptions::Runtime(
+        throw lsst::pex::exceptions::Runtime(
             boost::format("Could not parse FITS WCS: wcspih status = %d") % pihStatus);
     }
 
@@ -89,7 +91,7 @@ WCS::WCS(lsst::mwi::data::DataProperty::PtrType fitsMetaData  ///< The contents 
 	  }
 	}
 #if 0	  
-         throw lsst::mwi::exceptions::Runtime(errStream.str());
+         throw lsst::pex::exceptions::Runtime(errStream.str());
 #endif
     }
 }
@@ -97,22 +99,22 @@ WCS::WCS(lsst::mwi::data::DataProperty::PtrType fitsMetaData  ///< The contents 
 /**
  * \brief WCS copy constructor
  *
- * \throw lsst::mwi::exceptions::Memory or lsst::mwi::exceptions::Runtime on error
+ * \throw lsst::pex::exceptions::Memory or lsst::pex::exceptions::Runtime on error
  */
-WCS::WCS(WCS const & rhs):
-        LsstBase(typeid(this)),
-        _fitsMetaData(rhs._fitsMetaData),
-        _wcsInfo(NULL),
-        _nWcsInfo(0),
-        _relax(rhs._relax),
-        _wcsfixCtrl(rhs._wcsfixCtrl),
-        _wcshdrCtrl(rhs._wcshdrCtrl),
-        _nReject(rhs._nReject)
+lsst::afw::image::WCS::WCS(WCS const & rhs):
+    LsstBase(typeid(this)),
+    _fitsMetaData(rhs._fitsMetaData),
+    _wcsInfo(NULL),
+    _nWcsInfo(0),
+    _relax(rhs._relax),
+    _wcsfixCtrl(rhs._wcsfixCtrl),
+    _wcshdrCtrl(rhs._wcshdrCtrl),
+    _nReject(rhs._nReject)
 {
     if (rhs._nWcsInfo > 0) {
         _wcsInfo = static_cast<struct wcsprm *>(calloc(rhs._nWcsInfo, sizeof(struct wcsprm)));
         if (_wcsInfo == NULL) {
-            throw lsst::mwi::exceptions::Memory("Cannot allocate WCS info");
+            throw lsst::pex::exceptions::Memory("Cannot allocate WCS info");
         }
         _nWcsInfo = rhs._nWcsInfo;
         for (int ii = 0; ii < rhs._nWcsInfo; ++ii) {
@@ -122,7 +124,7 @@ WCS::WCS(WCS const & rhs):
             int status = wcscopy(1, rhs._wcsInfo + ii, _wcsInfo + ii);
             if (status != 0) {
                 wcsvfree(&_nWcsInfo, &_wcsInfo);
-                throw lsst::mwi::exceptions::Runtime(
+                throw lsst::pex::exceptions::Runtime(
                     boost::format("Could not copy WCS: wcscopy status = %d for wcs index %d") % status % ii);
             }
         }
@@ -132,9 +134,9 @@ WCS::WCS(WCS const & rhs):
 /**
  * \brief WCS assignment operator
  *
- * \throw lsst::mwi::exceptions::Memory or lsst::mwi::exceptions::Runtime on error
+ * \throw lsst::pex::exceptions::Memory or lsst::pex::exceptions::Runtime on error
  */
-WCS & WCS::operator = (const WCS & rhs) {
+lsst::afw::image::WCS & WCS::operator = (const WCS & rhs) {
     if (this != &rhs) {
         if (_nWcsInfo > 0) {
             wcsvfree(&_nWcsInfo, &_wcsInfo);
@@ -150,7 +152,7 @@ WCS & WCS::operator = (const WCS & rhs) {
             // allocate wcs structs
             _wcsInfo = static_cast<struct wcsprm *>(calloc(rhs._nWcsInfo, sizeof(struct wcsprm)));
             if (_wcsInfo == NULL) {
-                throw lsst::mwi::exceptions::Memory("Cannot allocate WCS info");
+                throw lsst::pex::exceptions::Memory("Cannot allocate WCS info");
             }
             _nWcsInfo = rhs._nWcsInfo;
             // deep-copy wcs data
@@ -159,7 +161,7 @@ WCS & WCS::operator = (const WCS & rhs) {
                 int status = wcscopy(1, rhs._wcsInfo + ii, _wcsInfo + ii);
                 if (status != 0) {
                     wcsvfree(&_nWcsInfo, &_wcsInfo);
-                    throw lsst::mwi::exceptions::Runtime(
+                    throw lsst::pex::exceptions::Runtime(
                         boost::format("Failed to copy wcs info; wcscopy status = %d") % status);
                 }
             }
@@ -170,16 +172,17 @@ WCS & WCS::operator = (const WCS & rhs) {
 }
 
 /// Destructor for WCS
-WCS::~WCS() {
+lsst::afw::image::WCS::~WCS() {
     if (_wcsInfo != NULL) {
         wcsvfree(&_nWcsInfo, &_wcsInfo);
     }
 }
 
 /// Convert from (ra, dec) to (column, row) coordinates
-void WCS::raDecToColRow(Coord2D sky,    ///< Input (ra, dec)
-                        Coord2D& pix    ///< Desired (col, row)
-                       ) const {
+void lsst::afw::image::WCS::raDecToColRow(
+    Coord2D sky,    ///< Input (ra, dec)
+    Coord2D& pix    ///< Desired (col, row)
+) const {
     double skyTmp[2];
     skyTmp[0] = sky[0];
     skyTmp[1] = sky[1];
@@ -201,8 +204,9 @@ void WCS::raDecToColRow(Coord2D sky,    ///< Input (ra, dec)
 /// Convert from (ra, dec) to (column, row) coordinates
 ///
 /// \return The desired (col, row) position
-Coord2D WCS::raDecToColRow(Coord2D sky  ///< Input (ra, dec)
-                          ) const {
+Coord2D lsst::afw::image::WCS::raDecToColRow(
+    Coord2D sky  ///< Input (ra, dec)
+) const {
     Coord2D pix;
     raDecToColRow(sky, pix);
 
@@ -212,9 +216,10 @@ Coord2D WCS::raDecToColRow(Coord2D sky  ///< Input (ra, dec)
 /// Convert from (ra, dec) to (column, row) coordinates
 ///
 /// \return The desired (col, row) position
-Coord2D WCS::raDecToColRow(double const ra,   ///< Input right ascension
-                           double const dec   ///< Input declination
-                          ) const {
+Coord2D lsst::afw::image::WCS::raDecToColRow(
+    double const ra,   ///< Input right ascension
+    double const dec   ///< Input declination
+) const {
     Coord2D sky(ra, dec);
     Coord2D pix;
     raDecToColRow(sky, pix);
@@ -223,9 +228,10 @@ Coord2D WCS::raDecToColRow(double const ra,   ///< Input right ascension
 }
 
 /// Convert from (column, row) to (ra, dec) coordinates
-void WCS::colRowToRaDec(Coord2D pix,    ///< Input (col, row)
-                        Coord2D& sky    ///< Desired (ra, dec)
-                       ) const {
+void lsst::afw::image::WCS::colRowToRaDec(
+    Coord2D pix,    ///< Input (col, row)
+    Coord2D& sky    ///< Desired (ra, dec)
+) const {
     double pixTmp[2];
     pixTmp[0] = pix[0];
     pixTmp[1] = pix[1];
@@ -246,8 +252,9 @@ void WCS::colRowToRaDec(Coord2D pix,    ///< Input (col, row)
 
 /// Convert from (column, row) to (ra, dec) coordinates
 /// \return The desired (ra, dec) position
-Coord2D WCS::colRowToRaDec(Coord2D pix  ///< Input (col, row)
-                          ) const {
+Coord2D lsst::afw::image::WCS::colRowToRaDec(
+    Coord2D pix  ///< Input (col, row)
+) const {
     Coord2D sky;
  
     colRowToRaDec(pix, sky);
@@ -257,9 +264,10 @@ Coord2D WCS::colRowToRaDec(Coord2D pix  ///< Input (col, row)
 
 /// Convert from (column, row) to (ra, dec) coordinates
 /// \return The desired (ra, dec) position
-Coord2D WCS::colRowToRaDec(double const col, ///< Input column position
-                           double const row ///< Input row position
-                          ) const {
+Coord2D lsst::afw::image::WCS::colRowToRaDec(
+    double const col, ///< Input column position
+    double const row ///< Input row position
+) const {
     Coord2D pix(col, row);
     Coord2D sky;
  
@@ -269,7 +277,7 @@ Coord2D WCS::colRowToRaDec(double const col, ///< Input column position
 }
 
 /// Return the pixel area in deg^2 at a given pixel coordinate
-double WCS::pixArea(Coord2D pix0) const
+double lsst::afw::image::WCS::pixArea(Coord2D pix0) const
 {
     Coord2D sky0, sky1, deltaSky;
     Coord2D pix1 = pix0 + Coord2D(1,1);
@@ -285,6 +293,4 @@ double WCS::pixArea(Coord2D pix0) const
     area = fabs(deltaSky[0] * cosDec * deltaSky[1]);
 
     return area;
-    
-    
 }

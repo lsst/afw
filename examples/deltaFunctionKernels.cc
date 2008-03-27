@@ -4,9 +4,9 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/format.hpp>
 
-#include <lsst/fw/Kernel.h>
-#include <lsst/fw/KernelFunctions.h>
-#include <lsst/fw/FunctionLibrary.h>
+#include <lsst/afw/math/Kernel.h>
+#include <lsst/afw/math/KernelFunctions.h>
+#include <lsst/afw/math/FunctionLibrary.h>
 
 using namespace std;
 
@@ -16,7 +16,7 @@ int main() {
     unsigned int nPixels = kernelCols * kernelRows;
     
     // create linear combination kernel as a set of delta function basis kernels
-    lsst::fw::KernelList<> kernelVec;
+    lsst::afw::math::KernelList<> kernelVec;
     int colCtr = (kernelCols - 1) / 2;
     int rowCtr = (kernelRows - 1) / 2;
     unsigned int ind = 0;
@@ -25,14 +25,14 @@ int main() {
             int const x = col - colCtr;
             int const y = row - rowCtr;
             cout << boost::format("Delta function kernel %3d: x=%.1f, y=%.1f\n") % ind % x % y;
-            lsst::fw::Kernel::KernelFunctionPtrType kfuncPtr(
-                new lsst::fw::function::IntegerDeltaFunction2<lsst::fw::Kernel::PixelT>(x, y)
+            lsst::afw::math::Kernel::KernelFunctionPtrType kfuncPtr(
+                new lsst::afw::math::IntegerDeltaFunction2<lsst::afw::math::Kernel::PixelT>(x, y)
             );
-            lsst::fw::Kernel::PtrT kernelPtr(
+            lsst::afw::math::Kernel::PtrT kernelPtr(
 #if 0
-		new lsst::fw::AnalyticKernel(kfuncPtr, kernelCols, kernelRows)
+		new lsst::afw::math::AnalyticKernel(kfuncPtr, kernelCols, kernelRows)
 #else
-                new lsst::fw::DeltaFunctionKernel(x, y, kernelCols, kernelRows)
+                new lsst::afw::DeltaFunctionKernel(x, y, kernelCols, kernelRows)
 #endif
                                             );
             kernelVec.push_back(kernelPtr);
@@ -41,7 +41,7 @@ int main() {
     }
     cout << endl;
     std::vector<double> kernelParams(nPixels); // initial kernel parameters
-    lsst::fw::LinearCombinationKernel deltaFunctionKernelSet(kernelVec, kernelParams);
+    lsst::afw::math::LinearCombinationKernel deltaFunctionKernelSet(kernelVec, kernelParams);
     
     // set various kernel parameters and print the results
     for (unsigned int ind = 0; ind < nPixels; ++ind) {
@@ -53,6 +53,6 @@ int main() {
             cout << kernelParams[ii] << " ";
         }
         cout << endl << endl;
-        lsst::fw::kernel::printKernel(deltaFunctionKernelSet);
+        lsst::afw::math::printKernel(deltaFunctionKernelSet);
     }
 }

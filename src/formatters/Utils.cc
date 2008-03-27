@@ -8,17 +8,14 @@
 
 #include <boost/cstdint.hpp>
 
-#include <lsst/mwi/exceptions.h>
-#include <lsst/mwi/persistence/DbTsvStorage.h>
+#include <lsst/pex/exceptions.h>
+#include <lsst/pex/persistence/DbTsvStorage.h>
 
-#include "lsst/fw/formatters/Utils.h"
+#include <lsst/afw/formatters/Utils.h>
 
+using namespace lsst::afw::formatters
 
-namespace lsst {
-namespace fw {
-namespace formatters {
-
-namespace ex = lsst::mwi::exceptions;
+namespace ex = lsst::pex::exceptions;
 
 using boost::int64_t;
 
@@ -117,7 +114,7 @@ int64_t extractCcdExposureId(DataProperty::PtrType const & properties) {
 /*!
     Extracts and returns the string-valued \c "itemName" property from the given data property object.
     
-    \throw lsst::mwi::exceptions::InvalidParameter  If the given pointer is null, or the data property
+    \throw lsst::pex::exceptions::InvalidParameter  If the given pointer is null, or the data property
                                                     object pointed to does not contain a property named
                                                     \c "itemName".
  */
@@ -340,7 +337,3 @@ void dropAllVisitSliceTables(
         db.dropTable(*i);
     }
 }
-
-
-}}} // end of namespace lsst::fw::formatters
-

@@ -8,14 +8,15 @@
  *
  * \author Russell Owen
  *
- * \ingroup fw
+ * \ingroup afw
  */
 #include <vw/Image.h>
 
 #include <lsst/afw/image/MaskedImage.h>
 
 namespace lsst {
-namespace fw {
+namespace afw {
+namespace image {
 
     /**
      * \brief Accessor for MaskedImage pixels
@@ -28,7 +29,7 @@ namespace fw {
      * Note that there is no default (no arguments) constructor because it makes no sense
      * and because vw::MemoryStridingPixelAccessor does not have one.
      *
-     * \ingroup fw
+     * \ingroup afw
      */
     template <typename ImageT, typename MaskT>
     class MaskedPixelAccessor {
@@ -145,6 +146,6 @@ namespace fw {
         maskAccessorType mask;      ///< mask pixel accessor
     };
 
-}}  // lsst::fw
+}}}  // lsst::afw::image
 
 #endif // LSST_AFW_IMAGE_PIXELACCESSORS.H

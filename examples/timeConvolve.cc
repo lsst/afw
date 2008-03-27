@@ -2,11 +2,11 @@
 #include <sstream>
 #include <ctime>
 
-#include <lsst/fw/FunctionLibrary.h>
-#include <lsst/fw/Image.h>
-#include <lsst/fw/MaskedImage.h>
-#include <lsst/fw/Kernel.h>
-#include <lsst/fw/KernelFunctions.h>
+#include <lsst/afw/math/FunctionLibrary.h>
+#include <lsst/afw/image/Image.h>
+#include <lsst/afw/image/MaskedImage.h>
+#include <lsst/afw/math/Kernel.h>
+#include <lsst/afw/math/KernelFunctions.h>
 
 int main(int argc, char **argv) {
     typedef float imageType;
@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
     }
     
     // read in fits file
-    lsst::fw::MaskedImage<imageType, lsst::fw::maskPixelType> mImage;
+    lsst::afw::image::MaskedImage<imageType, lsst::afw::maskPixelType> mImage;
     mImage.readFits(argv[1]);
     
     unsigned imCols = mImage.getCols();
@@ -53,15 +53,15 @@ int main(int argc, char **argv) {
     
     for (unsigned kSize = MinKernelSize; kSize <= MaxKernelSize; kSize += DeltaKernelSize) {
         // construct kernel
-        lsst::fw::Kernel::KernelFunctionPtrType kfuncPtr(
-            new lsst::fw::function::GaussianFunction2<kernelType>(sigma, sigma));
-        lsst::fw::AnalyticKernel kernel(kfuncPtr, kSize, kSize);
+        lsst::afw::math::Kernel::KernelFunctionPtrType kfuncPtr(
+            new lsst::afw::math::GaussianFunction2<kernelType>(sigma, sigma));
+        lsst::afw::math::AnalyticKernel kernel(kfuncPtr, kSize, kSize);
         
         clock_t startTime = clock();
         for (unsigned iter = 0; iter < nIter; ++iter) {
             // convolve
-            lsst::fw::MaskedImage<imageType, lsst::fw::maskPixelType>
-                resMImage = lsst::fw::kernel::convolve(mImage, kernel, EdgeMaskBit, true);
+            lsst::afw::image::MaskedImage<imageType, lsst::afw::maskPixelType>
+                resMImage = lsst::afw::math::convolve(mImage, kernel, EdgeMaskBit, true);
         }
         double secPerIter = (clock() - startTime) / static_cast<double> (nIter * CLOCKS_PER_SEC);
         

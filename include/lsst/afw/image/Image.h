@@ -17,9 +17,9 @@
 #include <vw/Image.h>
 #include <vw/Math/BBox.h>
 
-#include "lsst/mwi/data/LsstBase.h"
-#include "lsst/mwi/data/DataProperty.h"
-#include "lsst/mwi/persistence/Persistable.h"
+#include "lsst/daf/data/LsstBase.h"
+#include "lsst/daf/data/DataProperty.h"
+#include "lsst/pex/persistence/Persistable.h"
 #include "lsst/afw/image/LSSTFitsResource.h"
 
 namespace lsst {
@@ -30,8 +30,8 @@ namespace formatters {
 }
 
     template<typename ImagePixelT>
-    class Image : public lsst::mwi::persistence::Persistable,
-                  public lsst::mwi::data::LsstBase {
+    class Image : public lsst::pex::persistence::Persistable,
+                  public lsst::daf::data::LsstBase {
     public:
         typedef typename vw::PixelChannelType<ImagePixelT>::type ImageChannelT;
         typedef vw::ImageView<ImagePixelT> ImageIVwT;
@@ -51,7 +51,7 @@ namespace formatters {
         
         void writeFits(const std::string& fileName) const;
         
-        lsst::mwi::data::DataProperty::PtrType getMetaData() const;
+        lsst::daf::data::DataProperty::PtrType getMetaData() const;
         
         ImagePtrT getSubImage(const vw::BBox2i imageRegion) const;
         
@@ -86,7 +86,7 @@ namespace formatters {
     private:
         LSST_PERSIST_FORMATTER(formatters::ImageFormatter<ImagePixelT>);
         ImageIVwPtrT _vwImagePtr;
-        lsst::mwi::data::DataProperty::PtrType _metaData;
+        lsst::daf::data::DataProperty::PtrType _metaData;
         unsigned int _offsetRows;
         unsigned int _offsetCols;
 
@@ -95,7 +95,7 @@ namespace formatters {
 
     };
 
-}}  // lsst::fw
+}}  // lsst::afw
 
 // Included definitions for templated and inline member functions
 #ifndef SWIG // don't bother SWIG with .cc files

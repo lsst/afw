@@ -21,14 +21,15 @@
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_io.hpp>
 
-#include "lsst/mwi/data/LsstBase.h"
-#include "lsst/mwi/persistence/Persistable.h"
+#include <lsst/daf/data/LsstBase.h>
+#include <lsst/pex/persistence/Persistable.h>
 #include <lsst/afw/image/Image.h>
 #include <lsst/afw/image/Mask.h>
 #include <lsst/afw/image/MaskedPixelAccessor.h>
 
 namespace lsst {
-namespace fw {
+namespace afw {
+namespace image {
 
     namespace formatters {
         template<class ImagePixelT, class MaskPixelT> class MaskedImageFormatter;
@@ -89,8 +90,8 @@ namespace fw {
     };
     
     template<class ImagePixelT, class MaskPixelT>
-    class MaskedImage : public lsst::mwi::persistence::Persistable,
-                        public lsst::mwi::data::LsstBase {
+    class MaskedImage : public lsst::pex::persistence::Persistable,
+                        public lsst::daf::data::LsstBase {
         
     public:
         typedef Image<ImagePixelT> ImageT;
@@ -166,7 +167,7 @@ namespace fw {
         unsigned int _imageCols;
     };
 
-}}  // lsst::fw
+}}}  // lsst::afw::image
 
 #ifndef SWIG // don't bother SWIG with .cc files
 #include "MaskedImage.cc"

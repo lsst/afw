@@ -1,15 +1,15 @@
 #include <iostream>
 #include <sstream>
 
-#include <lsst/fw/FunctionLibrary.h>
-#include <lsst/fw/Image.h>
-#include <lsst/fw/MaskedImage.h>
-#include <lsst/mwi/utils/Trace.h>
-#include <lsst/fw/Kernel.h>
-#include <lsst/fw/KernelFunctions.h>
+#include <lsst/afw/math/FunctionLibrary.h>
+#include <lsst/afw/image/Image.h>
+#include <lsst/afw/image/MaskedImage.h>
+#include <lsst/pex/utils/Trace.h>
+#include <lsst/afw/math/Kernel.h>
+#include <lsst/afw/math/KernelFunctions.h>
 
 using namespace std;
-namespace mwiu = lsst::mwi::utils;
+namespace mwiu = lsst::pex::utils;
 
 const std::string outFile("svcOut");
 
@@ -46,16 +46,16 @@ int main(int argc, char **argv) {
     }
     
     // read in fits file
-    lsst::fw::MaskedImage<pixelType, lsst::fw::maskPixelType> mImage;
+    lsst::afw::image::MaskedImage<pixelType, lsst::afw::maskPixelType> mImage;
     mImage.readFits(argv[1]);
     
     // construct kernel
-    lsst::fw::Kernel::KernelFunctionPtrType gaussFuncPtr(
-        new lsst::fw::function::GaussianFunction2<pixelType>(1, 1));
+    lsst::afw::math::Kernel::KernelFunctionPtrType gaussFuncPtr(
+        new lsst::afw::math::GaussianFunction2<pixelType>(1, 1));
     unsigned int polyOrder = 1;
-    lsst::fw::Kernel::SpatialFunctionPtrType polyFuncPtr(
-        new lsst::fw::function::PolynomialFunction2<double>(polyOrder));
-    lsst::fw::AnalyticKernel gaussSpVarKernel(
+    lsst::afw::math::Kernel::SpatialFunctionPtrType polyFuncPtr(
+        new lsst::afw::math::PolynomialFunction2<double>(polyOrder));
+    lsst::afw::math::AnalyticKernel gaussSpVarKernel(
         gaussFuncPtr, kernelCols, kernelRows, polyFuncPtr);
 
     // Get copy of spatial parameters (all zeros), set and feed back to the kernel
@@ -85,8 +85,8 @@ int main(int argc, char **argv) {
     cout << endl;
 
     // convolve
-    lsst::fw::MaskedImage<pixelType, lsst::fw::maskPixelType>
-        resMaskedImage = lsst::fw::kernel::convolve(mImage, gaussSpVarKernel, edgeMaskBit, true);
+    lsst::afw::image::MaskedImage<pixelType, lsst::afw::maskPixelType>
+        resMaskedImage = lsst::afw::math::convolve(mImage, gaussSpVarKernel, edgeMaskBit, true);
 
     // write results
     resMaskedImage.writeFits(outFile);

@@ -2,15 +2,13 @@
 
 #include <boost/format.hpp>
 
-#include <lsst/fw/FunctionLibrary.h>
-#include <lsst/fw/Kernel.h>
-#include <lsst/fw/KernelFunctions.h>
+#include <lsst/afw/math.h>
 
 /**
  * Demonstrate an AnalyticKernel, both spatially invariant and spatially varying.
  */
 
-typedef lsst::fw::Kernel::PixelT PixelT;
+typedef lsst::afw::math::Kernel::PixelT PixelT;
 
 using namespace std;
 
@@ -20,20 +18,20 @@ int main() {
     unsigned int kernelCols = 6;
     unsigned int kernelRows = 5;
 
-    lsst::fw::Kernel::KernelFunctionPtrType gaussFuncPtr(
-        new lsst::fw::function::GaussianFunction2<PixelT>(sigmaX, sigmaY));
-    lsst::fw::AnalyticKernel gaussKernel(gaussFuncPtr, kernelCols, kernelRows);
+    lsst::afw::math::Kernel::KernelFunctionPtrType gaussFuncPtr(
+        new lsst::afw::math::GaussianFunction2<PixelT>(sigmaX, sigmaY));
+    lsst::afw::math::AnalyticKernel gaussKernel(gaussFuncPtr, kernelCols, kernelRows);
     
     cout << boost::format("Gaussian Kernel with sigmaX=%.1f, sigmaY=%.1f\n\n") % sigmaX % sigmaY;
     
-    lsst::fw::kernel::printKernel(gaussKernel);
+    lsst::afw::math::printKernel(gaussKernel);
     
     // now show a spatially varying version
     unsigned int polyOrder = 1;
-    lsst::fw::Kernel::SpatialFunctionPtrType polyFuncPtr(
-        new lsst::fw::function::PolynomialFunction2<PixelT>(polyOrder));
+    lsst::afw::math::Kernel::SpatialFunctionPtrType polyFuncPtr(
+        new lsst::afw::math::PolynomialFunction2<PixelT>(polyOrder));
 
-    lsst::fw::AnalyticKernel gaussSpVarKernel(gaussFuncPtr, kernelCols, kernelRows, polyFuncPtr);
+    lsst::afw::math::AnalyticKernel gaussSpVarKernel(gaussFuncPtr, kernelCols, kernelRows, polyFuncPtr);
 
     // get copy of spatial parameters (all zeros), set and feed back to the kernel
     vector<vector<double> > polyParams = gaussSpVarKernel.getSpatialParameters();
@@ -65,7 +63,7 @@ int main() {
             cout << boost::format("GaussianKernel at x=%d, y=%d; xSigma = %7.2f, ySigma=%7.2f:\n\n")
                 % x % y % kernelParams[0] % kernelParams[1];
 
-            lsst::fw::kernel::printKernel(
+            lsst::afw::math::printKernel(
                 gaussSpVarKernel, static_cast<double>(x), static_cast<double>(y));
         }
     }

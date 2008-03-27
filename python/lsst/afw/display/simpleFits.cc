@@ -14,16 +14,14 @@ namespace posix {
 }
 using namespace posix;
 
-#include "lsst/mwi/exceptions.h"
-#include "lsst/mwi/utils/Utils.h"
+#include "lsst/pex/exceptions.h"
+#include "lsst/pex/utils/Utils.h"
 #include <boost/any.hpp>
 
 #include "simpleFits.h"
 
-LSST_START_NAMESPACE(lsst);
-LSST_START_NAMESPACE(fw);
-
-using lsst::mwi::data::DataProperty;
+using namespace lsst::afw::display;
+using lsst::daf::data::DataProperty;
 
 #define FITS_SIZE 2880
 
@@ -91,7 +89,7 @@ int Card::write(int fd,
  */
     if(++ncard == 36) {
 	if(posix::write(fd, record, FITS_SIZE) != FITS_SIZE) {
-	    throw lsst::mwi::exceptions::Runtime("Cannot write header record");
+	    throw lsst::pex::exceptions::Runtime("Cannot write header record");
 	}
 	ncard = 0;
     }
@@ -108,7 +106,7 @@ namespace {
                 const int n) {          // number of bytes
         if(n%2 != 0) {
             throw
-                lsst::mwi::exceptions::Runtime(boost::format("Attempt to byte swap odd number of bytes: %d") % n);
+                lsst::pex::exceptions::Runtime(boost::format("Attempt to byte swap odd number of bytes: %d") % n);
         }
 
         for(char *end = arr + n;arr < end;arr += 2) {
@@ -123,7 +121,7 @@ namespace {
     void swap_4(char *arr,              // array to swap
                 const int n) {          // number of bytes
         if(n%4 != 0) {
-            throw lsst::mwi::exceptions::Runtime(boost::format("Attempt to byte swap non-multiple of 4 bytes: %d") % n);
+            throw lsst::pex::exceptions::Runtime(boost::format("Attempt to byte swap non-multiple of 4 bytes: %d") % n);
         }
 
         for(char *end = arr + n;arr < end;arr += 4) {
@@ -142,7 +140,7 @@ namespace {
     void swap_8(char *arr,              // array to swap
                 const int n) {          // number of bytes
         if(n%8 != 0) {
-            throw lsst::mwi::exceptions::Runtime(boost::format("Attempt to byte swap non-multiple of 8 bytes: %d") % n);
+            throw lsst::pex::exceptions::Runtime(boost::format("Attempt to byte swap non-multiple of 8 bytes: %d") % n);
         }
 
         for(char *end = arr + n;arr < end;arr += 8) {
@@ -235,7 +233,7 @@ namespace {
             nbyte = FITS_SIZE - nbyte%FITS_SIZE;
             memset(record, ' ', nbyte);
             if(write(fd, record, nbyte) != nbyte) {
-                throw lsst::mwi::exceptions::Runtime("error padding file to multiple of fits block size");
+                throw lsst::pex::exceptions::Runtime("error padding file to multiple of fits block size");
             }
         }
     }
@@ -330,7 +328,7 @@ void writeVwFits(int fd,                // file descriptor to write to
 	bitpix = -64;
 	break;
       default:
-        throw lsst::mwi::exceptions::Runtime(boost::format("Unsupported channel type: %d") %
+        throw lsst::pex::exceptions::Runtime(boost::format("Unsupported channel type: %d") %
                         buff.format.channel_type);
     }
     char *data = static_cast<char *>(buff.data);
@@ -386,7 +384,7 @@ void writeVwFits(int fd,                // file descriptor to write to
     write_fits_hdr(fd, bitpix, naxis, naxes, cards, 1);
     for (unsigned int r = 0; r < buff.rows(); r++) {
 	if(write_fits_data(fd, bitpix, buff.cols(), data + r*buff.rstride) < 0){
-	    throw lsst::mwi::exceptions::Runtime(boost::format("Error writing data for row %d") % r);
+	    throw lsst::pex::exceptions::Runtime(boost::format("Error writing data for row %d") % r);
 	}
     }
 
@@ -412,7 +410,7 @@ void writeVwFits(const std::string &filename, // file to write or "| cmd"
     }
 
     if (fd < 0) {
-        throw lsst::mwi::exceptions::Runtime(boost::format("Cannot open \"%s\"") % filename);
+        throw lsst::pex::exceptions::Runtime(boost::format("Cannot open \"%s\"") % filename);
     }
 
     try {
@@ -424,6 +422,3 @@ void writeVwFits(const std::string &filename, // file to write or "| cmd"
 
     (void)close(fd);
 }
-
-LSST_END_NAMESPACE(fw);
-LSST_END_NAMESPACE(lsst);

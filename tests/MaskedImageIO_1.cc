@@ -1,20 +1,18 @@
 // -*- lsst-c++ -*-
-#include "lsst/fw/MaskedImage.h"
-#include "lsst/fw/WCS.h"
-#include "lsst/mwi/utils/Trace.h"
-#include "lsst/mwi/data/FitsFormatter.h"
-
 #include <stdexcept>
 
+#include <lsst/pex/utils/Trace.h>
+#include <lsst/daf/data.h>
+#include <lsst/afw/image.h>
+#include <lsst/afw/math.h>
+
 using namespace std;
-using namespace lsst::fw;
-using boost::any_cast;
 
-using lsst::mwi::utils::Trace;
-using lsst::mwi::data::DataProperty;
-using lsst::mwi::data::FitsFormatter;
+using lsst::pex::utils::Trace;
+using lsst::daf::data::DataProperty;
+using lsst::daf::data::FitsFormatter;
 
-namespace mwie = lsst::mwi::exceptions;
+namespace mwie = lsst::pex::exceptions;
 
 /*
  * Make this a subroutine so that locals go out of scope as part of test
@@ -25,7 +23,7 @@ void test(char *name) {
     typedef uint16 MaskPixelType;
     typedef float ImagePixelType;
 
-    MaskedImage<ImagePixelType, MaskPixelType> testMasked;
+    lsst::afw::image::MaskedImage<ImagePixelType, MaskPixelType> testMasked;
     testMasked.readFits(name);
 
     DataProperty::PtrType metaDataPtr = testMasked.getImage()->getMetaData();
@@ -38,7 +36,7 @@ void test(char *name) {
         boost::format("FITS metadata string: %s") 
             % FitsFormatter::formatDataProperty(metaDataPtr, false));
 
-    WCS testWCS(metaDataPtr);
+    lsst::afw::image::WCS testWCS(metaDataPtr);
 
     Coord2D pix, sky;
 

@@ -17,8 +17,8 @@
 #include <boost/cstdint.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include <lsst/mwi/data/Citizen.h>
-#include <lsst/mwi/persistence/Persistable.h>
+#include <lsst/daf/data/Citizen.h>
+#include <lsst/pex/persistence/Persistable.h>
 
 
 namespace boost {
@@ -415,8 +415,8 @@ inline bool operator!=(DiaSource const & d1, DiaSource const & d2) {
     A persistable container of DiaSource instances (implemented using std::vector).
  */
 class DiaSourceVector :
-    public lsst::mwi::persistence::Persistable,
-    public lsst::mwi::data::Citizen
+    public lsst::pex::persistence::Persistable,
+    public lsst::daf::data::Citizen
 {
 public :
     typedef boost::shared_ptr<DiaSourceVector> Ptr;
@@ -439,7 +439,7 @@ public :
 
     template <typename InputIterator>
     DiaSourceVector(InputIterator beg, InputIterator end) :
-        lsst::mwi::data::Citizen(typeid(*this)),
+        lsst::daf::data::Citizen(typeid(*this)),
         _vec(beg, end)
     {}
 
@@ -513,7 +513,7 @@ private :
 #endif // SWIG
 
 
-}}  // end of namespace lsst::fw
+}}  // end of namespace lsst::afw
 
 #endif // LSST_FW_DIA_SOURCE_H
 

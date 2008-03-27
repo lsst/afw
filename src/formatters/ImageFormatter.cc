@@ -9,7 +9,7 @@
  *
  * Contact: Kian-Tat Lim (ktl@slac.stanford.edu)
  *
- * \ingroup fw
+ * \ingroup afw
  */
 
 #ifndef __GNUC__
@@ -17,31 +17,29 @@
 #endif
 static char const* SVNid __attribute__((unused)) = "$Id$";
 
-#include "lsst/fw/formatters/ImageFormatter.h"
+#include <lsst/afw/formatters/ImageFormatter.h>
 
-#include "lsst/mwi/persistence/FormatterImpl.h"
-#include "lsst/mwi/data/DataPropertyFormatter.h"
+#include <lsst/pex/persistence/FormatterImpl.h>
+#include <lsst/daf/data/DataPropertyFormatter.h>
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/binary_object.hpp>
 
-#include "lsst/fw/Image.h"
-#include "lsst/mwi/persistence/LogicalLocation.h"
-#include "lsst/mwi/persistence/BoostStorage.h"
-#include "lsst/mwi/persistence/FitsStorage.h"
-#include "lsst/mwi/utils/Trace.h"
+#include <lsst/afw/image/Image.h>
+#include <lsst/pex/persistence/LogicalLocation.h>
+#include <lsst/pex/persistence/BoostStorage.h>
+#include <lsst/pex/persistence/FitsStorage.h>
+#include <lsst/pex/utils/Trace.h>
 
-// #include "lsst/fw/LSSTFitsResource.h"
+// #include <lsst/afw/image/LSSTFitsResource.h>
 
 #define EXEC_TRACE  20
 static void execTrace(std::string s, int level = EXEC_TRACE) {
-    lsst::mwi::utils::Trace("fw.ImageFormatter", level, s);
+    lsst::pex::utils::Trace("afw.ImageFormatter", level, s);
 }
 
-using namespace lsst::mwi::persistence;
+using namespace lsst::pex::persistence;
 
-namespace lsst {
-namespace fw {
-namespace formatters {
+using namespace lsst::afw::formatters;
 
 template <typename ImagePixelT>
 class ImageFormatterTraits {
@@ -62,7 +60,7 @@ FormatterRegistration ImageFormatter<ImagePixelT>::registration(
 
 template <typename ImagePixelT>
 ImageFormatter<ImagePixelT>::ImageFormatter(
-    lsst::mwi::policy::Policy::Ptr policy) :
+    lsst::pex::policy::Policy::Ptr policy) :
     Formatter(typeid(*this)) {
 }
 
@@ -74,7 +72,7 @@ template <typename ImagePixelT>
 void ImageFormatter<ImagePixelT>::write(
     Persistable const* persistable,
     Storage::Ptr storage,
-    lsst::mwi::data::DataProperty::PtrType additionalData) {
+    lsst::daf::data::DataProperty::PtrType additionalData) {
     execTrace("ImageFormatter write start");
     Image<ImagePixelT> const* ip =
         dynamic_cast<Image<ImagePixelT> const*>(persistable);
@@ -106,7 +104,7 @@ void ImageFormatter<ImagePixelT>::write(
 template <typename ImagePixelT>
 Persistable* ImageFormatter<ImagePixelT>::read(
     Storage::Ptr storage,
-    lsst::mwi::data::DataProperty::PtrType additionalData) {
+    lsst::daf::data::DataProperty::PtrType additionalData) {
     execTrace("ImageFormatter read start");
     Image<ImagePixelT>* ip = new Image<ImagePixelT>;
     if (typeid(*storage) == typeid(BoostStorage)) {
@@ -135,7 +133,7 @@ template <typename ImagePixelT>
 void ImageFormatter<ImagePixelT>::update(
     Persistable* persistable,
     Storage::Ptr storage,
-    lsst::mwi::data::DataProperty::PtrType additionalData) {
+    lsst::daf::data::DataProperty::PtrType additionalData) {
     throw std::runtime_error("Unexpected call to update for Image");
 }
 
@@ -169,12 +167,10 @@ void ImageFormatter<ImagePixelT>::delegateSerialize(
 
 template <typename ImagePixelT>
 Formatter::Ptr ImageFormatter<ImagePixelT>::createInstance(
-    lsst::mwi::policy::Policy::Ptr policy) {
+    lsst::pex::policy::Policy::Ptr policy) {
     return Formatter::Ptr(new ImageFormatter<ImagePixelT>(policy));
 }
 
 template class ImageFormatter<boost::uint16_t>;
 template class ImageFormatter<float>;
 template class ImageFormatter<double>;
-
-}}} // namespace lsst::fw::formatters

@@ -3,7 +3,7 @@
 
 #include <boost/format.hpp>
 
-#include <lsst/fw/FunctionLibrary.h>
+#include <lsst/afw/math/FunctionLibrary.h>
 
 using namespace std;
 
@@ -11,7 +11,7 @@ int main() {
     typedef double funcType;
     const unsigned int order = 2;
     vector<double> params(order+1);
-    lsst::fw::function::PolynomialFunction1<funcType> polyFunc(order);
+    lsst::afw::math::PolynomialFunction1<funcType> polyFunc(order);
 
     for (unsigned int ii = 0; ii < params.size(); ++ii) {
         params[ii] = static_cast<double>(1 + order - ii);

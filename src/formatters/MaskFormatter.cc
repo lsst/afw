@@ -9,7 +9,7 @@
  *
  * Contact: Kian-Tat Lim (ktl@slac.stanford.edu)
  *
- * \ingroup fw
+ * \ingroup afw
  */
 
 #ifndef __GNUC__
@@ -17,33 +17,31 @@
 #endif
 static char const* SVNid __attribute__((unused)) = "$Id$";
 
-#include "lsst/fw/formatters/MaskFormatter.h"
+#include <lsst/afw/formatters/MaskFormatter.h>
 
-#include "lsst/mwi/persistence/FormatterImpl.h"
-#include "lsst/mwi/data/DataPropertyFormatter.h"
+#include <lsst/pex/persistence/FormatterImpl.h>
+#include <lsst/daf/data/DataPropertyFormatter.h>
 
-#include "lsst/fw/Mask.h"
-#include "lsst/mwi/persistence/LogicalLocation.h"
-#include "lsst/mwi/persistence/BoostStorage.h"
-#include "lsst/mwi/persistence/FitsStorage.h"
-#include "lsst/mwi/utils/Trace.h"
+#include <lsst/afw/image/Mask.h>
+#include <lsst/pex/persistence/LogicalLocation.h>
+#include <lsst/pex/persistence/BoostStorage.h>
+#include <lsst/pex/persistence/FitsStorage.h>
+#include <lsst/pex/utils/Trace.h>
 
 #include <boost/serialization/binary_object.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/map.hpp>
 
-// #include "lsst/fw/LSSTFitsResource.h"
+// #include <lsst/afw/image/LSSTFitsResource.h>
 
 #define EXEC_TRACE  20
 static void execTrace(std::string s, int level = EXEC_TRACE) {
-    lsst::mwi::utils::Trace("fw.MaskFormatter", level, s);
+    lsst::pex::utils::Trace("afw.MaskFormatter", level, s);
 }
 
-using namespace lsst::mwi::persistence;
+using namespace lsst::pex::persistence;
 
-namespace lsst {
-namespace fw {
-namespace formatters {
+using namespace lsst::afw::formatters;
 
 template <typename imagePixelT>
 class MaskFormatterTraits {
@@ -62,7 +60,7 @@ FormatterRegistration MaskFormatter<MaskPixelT>::registration(
 
 template <typename MaskPixelT>
 MaskFormatter<MaskPixelT>::MaskFormatter(
-    lsst::mwi::policy::Policy::Ptr policy) :
+    lsst::pex::policy::Policy::Ptr policy) :
     Formatter(typeid(*this)) {
 }
 
@@ -74,7 +72,7 @@ template <typename MaskPixelT>
 void MaskFormatter<MaskPixelT>::write(
     Persistable const* persistable,
     Storage::Ptr storage,
-    lsst::mwi::data::DataProperty::PtrType additionalData) {
+    lsst::daf::data::DataProperty::PtrType additionalData) {
     execTrace("MaskFormatter write start");
     Mask<MaskPixelT> const* ip =
         dynamic_cast<Mask<MaskPixelT> const*>(persistable);
@@ -103,7 +101,7 @@ void MaskFormatter<MaskPixelT>::write(
 template <typename MaskPixelT>
 Persistable* MaskFormatter<MaskPixelT>::read(
     Storage::Ptr storage,
-    lsst::mwi::data::DataProperty::PtrType additionalData) {
+    lsst::daf::data::DataProperty::PtrType additionalData) {
     execTrace("MaskFormatter read start");
     Mask<MaskPixelT>* ip = new Mask<MaskPixelT>;
     if (typeid(*storage) == typeid(BoostStorage)) {
@@ -127,7 +125,7 @@ template <typename MaskPixelT>
 void MaskFormatter<MaskPixelT>::update(
     Persistable* persistable,
     Storage::Ptr storage,
-    lsst::mwi::data::DataProperty::PtrType additionalData) {
+    lsst::daf::data::DataProperty::PtrType additionalData) {
     throw std::runtime_error("Unexpected call to update for Mask");
 }
 
@@ -162,10 +160,8 @@ void MaskFormatter<MaskPixelT>::delegateSerialize(
 
 template <typename MaskPixelT>
 Formatter::Ptr MaskFormatter<MaskPixelT>::createInstance(
-    lsst::mwi::policy::Policy::Ptr policy) {
+    lsst::pex::policy::Policy::Ptr policy) {
     return Formatter::Ptr(new MaskFormatter<MaskPixelT>(policy));
 }
 
 template class MaskFormatter<maskPixelType>;
-
-}}} // namespace lsst::fw::formatters

@@ -1,7 +1,7 @@
 #include <iostream>
 #include <iomanip>
 
-#include <lsst/fw/FunctionLibrary.h>
+#include <lsst/afw/math/FunctionLibrary.h>
 
 using namespace std;
 
@@ -9,7 +9,7 @@ int main() {
     typedef double funcType;
     
     unsigned int order = 2;
-    lsst::fw::function::LanczosFunction2<funcType> lancFunc(order);
+    lsst::afw::math::LanczosFunction2<funcType> lancFunc(order);
 
     double deltaX = order * 2 / 12.0;
     

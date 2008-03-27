@@ -1,14 +1,14 @@
 #include <iostream>
 #include <sstream>
 
-#include <lsst/fw/MaskedImage.h>
+#include <lsst/afw/image/MaskedImage.h>
 
 const std::string outFile("rwfitsOut");
 
 int main(int argc, char **argv) {
     typedef float pixelType;
 
-    lsst::fw::MaskedImage<pixelType, lsst::fw::maskPixelType> mImage;
+    lsst::afw::image::MaskedImage<pixelType, lsst::afw::maskPixelType> mImage;
 
     if (argc < 2) {
         std::cerr << "Usage: maskedImageFitsIO fitsFile" << std::endl;

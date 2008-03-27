@@ -2,12 +2,12 @@
 /**
   * \file Exposure.h
   *
-  * \class lsst::fw::Exposure 
+  * \class lsst::afw::Exposure 
   *
   * \ingroup fw
   *
   * \brief Declaration of the templated Exposure Class for LSST.  Create an
-  * Exposure from a lsst::fw::MaskedImage.
+  * Exposure from a lsst::afw::image::MaskedImage.
   *
   * \author Nicole M. Silvestri, University of Washington
   *
@@ -28,8 +28,8 @@
 
 #include <vw/Math/BBox.h>
 
-#include <lsst/mwi/data/LsstBase.h>
-#include <lsst/mwi/persistence/Persistable.h>
+#include <lsst/daf/data/LsstBase.h>
+#include <lsst/pex/persistence/Persistable.h>
 #include <lsst/afw/image/MaskedImage.h>
 #include <lsst/afw/image/WCS.h>
 
@@ -42,12 +42,12 @@ namespace fw {
     }
         
     template<typename ImageT, typename MaskT> 
-    class Exposure : public lsst::mwi::persistence::Persistable,
-                     public lsst::mwi::data::LsstBase {
+    class Exposure : public lsst::pex::persistence::Persistable,
+                     public lsst::daf::data::LsstBase {
                 
     public:    
 
-        typedef boost::shared_ptr<lsst::fw::WCS> wscPtrType;
+        typedef boost::shared_ptr<lsst::afw::math::WCS> wscPtrType;
 
         // Class Constructors and Destructor
         explicit Exposure();

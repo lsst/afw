@@ -37,16 +37,16 @@
 #include <vw/Image.h>
 #include <vw/Math/BBox.h>
 
-#include <lsst/mwi/data/Citizen.h>
-#include <lsst/mwi/data/DataProperty.h>
-#include <lsst/fw/DiskImageResourceFITS.h>
-#include <lsst/mwi/exceptions.h>
-#include <lsst/fw/Exposure.h>
-#include <lsst/fw/Mask.h>
-#include <lsst/fw/Image.h>
-#include <lsst/fw/MaskedImage.h>
-#include <lsst/mwi/utils/Trace.h>
-#include <lsst/fw/WCS.h>
+#include <lsst/daf/data/Citizen.h>
+#include <lsst/daf/data/DataProperty.h>
+#include <lsst/afw/image/DiskImageResourceFITS.h>
+#include <lsst/pex/exceptions.h>
+#include <lsst/afw/image/Exposure.h>
+#include <lsst/afw/image/Mask.h>
+#include <lsst/afw/image/Image.h>
+#include <lsst/afw/image/MaskedImage.h>
+#include <lsst/pex/utils/Trace.h>
+#include <lsst/afw/math/WCS.h>
 
 // FROM POLICY FILE: INPUT AND OUTPUT FILE NAMES FOR EXPOSURES/MASKEDIMAGES
 const std::string miOutFile1("miOutFile1"); // output maskedImage
@@ -67,8 +67,8 @@ int main() {
     }
     std::string fwData(fwDataCStr);
                 
-    lsst::mwi::utils::Trace::setDestination(std::cout);
-    lsst::mwi::utils::Trace::setVerbosity("lsst.fw", 4);
+    lsst::pex::utils::Trace::setDestination(std::cout);
+    lsst::pex::utils::Trace::setVerbosity("lsst.fw", 4);
 
     { //memory (de)allocation block
 
@@ -77,7 +77,7 @@ int main() {
         // These have been commented out upon mergeing to the trunk.
     
         // Read a fits file in as a MaskedImage
-        lsst::fw::MaskedImage<pixelType, lsst::fw::maskPixelType> mImage;
+        lsst::afw::image::MaskedImage<pixelType, lsst::afw::maskPixelType> mImage;
         const std::string inMIFile(fwData + "/small_MI"); // input CFHT MI
         
         mImage.readFits(inMIFile);
@@ -90,91 +90,91 @@ int main() {
 
         // (1) Construct a blank Exposure
 
-        lsst::fw::Exposure<pixelType, lsst::fw::maskPixelType> blankExpImage;
-        lsst::fw::MaskedImage<pixelType, lsst::fw::maskPixelType> blankMaskedImage = blankExpImage.getMaskedImage();
+        lsst::afw::Exposure<pixelType, lsst::afw::maskPixelType> blankExpImage;
+        lsst::afw::image::MaskedImage<pixelType, lsst::afw::maskPixelType> blankMaskedImage = blankExpImage.getMaskedImage();
         int numCols = blankMaskedImage.getCols();
         int numRows = blankMaskedImage.getRows();
-        lsst::mwi::utils::Trace("lsst.fw.Exposure", 5, boost::format("Number of columns, rows in Blank Exposure: %s, %s") % numCols % numRows);
+        lsst::pex::utils::Trace("lsst.fw.Exposure", 5, boost::format("Number of columns, rows in Blank Exposure: %s, %s") % numCols % numRows);
         
         // (2) Construct an Exposure with only a MaskedImage.
 
-        lsst::fw::Exposure<pixelType, lsst::fw::maskPixelType> miExpImage(mImage);
-        lsst::fw::MaskedImage<pixelType, lsst::fw::maskPixelType> miMaskedImage = miExpImage.getMaskedImage();
+        lsst::afw::Exposure<pixelType, lsst::afw::maskPixelType> miExpImage(mImage);
+        lsst::afw::image::MaskedImage<pixelType, lsst::afw::maskPixelType> miMaskedImage = miExpImage.getMaskedImage();
         int numMiCols = miMaskedImage.getCols();
         int numMiRows = miMaskedImage.getRows();
         int numOrigMiCols = mImage.getCols();
         int numOrigMiRows = mImage.getRows();
-        lsst::mwi::utils::Trace("lsst.fw.Exposure", 5, boost::format("Number of columns, rows in MiExposure: %s, %s") % numMiCols % numMiRows);
-        lsst::mwi::utils::Trace("lsst.fw.Exposure", 5, boost::format("Number of columns, rows in original MaskedImage, 'mImage': %s, %s") % numOrigMiCols % numOrigMiRows);
+        lsst::pex::utils::Trace("lsst.fw.Exposure", 5, boost::format("Number of columns, rows in MiExposure: %s, %s") % numMiCols % numMiRows);
+        lsst::pex::utils::Trace("lsst.fw.Exposure", 5, boost::format("Number of columns, rows in original MaskedImage, 'mImage': %s, %s") % numOrigMiCols % numOrigMiRows);
 
         // (3) Construct an Exposure from a MaskedImage and a WCS.  Need to
         // construct a WCS first.  The WCS class takes the MaskedImage metadata
         // as a DataPropertyPtrT.  The getImage()->getMetaData() member returns a pointer to
         // the metadata.
 
-        lsst::mwi::data::DataProperty::PtrType mData = mImage.getImage()->getMetaData();
+        lsst::daf::data::DataProperty::PtrType mData = mImage.getImage()->getMetaData();
 
         // make sure it can be copied.
-        lsst::fw::WCS myWcs(mData);  
+        lsst::afw::math::WCS myWcs(mData);  
 
-        lsst::fw::WCS wcs2;
+        lsst::afw::math::WCS wcs2;
         wcs2 = myWcs;
         
         // Now use Exposure class to create an Exposure from a MaskedImage and a
         // WCS.
        
-       lsst::fw::Exposure<pixelType, lsst::fw::maskPixelType> miWcsExpImage(mImage, myWcs);
+       lsst::afw::Exposure<pixelType, lsst::afw::maskPixelType> miWcsExpImage(mImage, myWcs);
              
-	lsst::fw::WCS wcsCopy(myWcs); 
+	lsst::afw::math::WCS wcsCopy(myWcs); 
       
-	//lsst::fw::WCS wcsAssigned();
+	//lsst::afw::math::WCS wcsAssigned();
 	//wcsAssigned = myWcs; 
 
         // (4) Construct an Exposure from a given region (col, row) and a WCS.
 
         unsigned miCols = 5;
         unsigned miRows = 5;
-        lsst::fw::Exposure<pixelType, lsst::fw::maskPixelType> regWcsExpImage(miCols, miRows, myWcs);
+        lsst::afw::Exposure<pixelType, lsst::afw::maskPixelType> regWcsExpImage(miCols, miRows, myWcs);
        
         // (5) Construct an Exposure from a given region (col, row) with no WCS.
 
         unsigned mi2Cols = 5;
         unsigned mi2Rows = 5;
-        lsst::fw::Exposure<pixelType, lsst::fw::maskPixelType> regExpImage(mi2Cols, mi2Rows);
+        lsst::afw::Exposure<pixelType, lsst::afw::maskPixelType> regExpImage(mi2Cols, mi2Rows);
        
         // try to get the WCS when there isn't one
         try {
-        lsst::fw::WCS noWcs = regExpImage.getWcs();
-        } catch (lsst::mwi::exceptions::NotFound e) {
-            lsst::mwi::utils::Trace("lsst.fw.Exposure", 5, "Caught lsst::mwi NotFound Exception for getting a null WCS");
+        lsst::afw::math::WCS noWcs = regExpImage.getWcs();
+        } catch (lsst::pex::exceptions::NotFound e) {
+            lsst::pex::utils::Trace("lsst.fw.Exposure", 5, "Caught lsst::pex NotFound Exception for getting a null WCS");
         }
 
         // (6) Get a MaskedImage and write it out.
 
-        lsst::fw::MaskedImage<pixelType, lsst::fw::maskPixelType> newMiImage =  miWcsExpImage.getMaskedImage();
+        lsst::afw::image::MaskedImage<pixelType, lsst::afw::maskPixelType> newMiImage =  miWcsExpImage.getMaskedImage();
         newMiImage.writeFits(miOutFile2);
         
         // (7) Get a WCS. 
          
-       lsst::fw::WCS newWcs = miWcsExpImage.getWcs();
+       lsst::afw::math::WCS newWcs = miWcsExpImage.getWcs();
 
         // try to get a WCS from an image where I have corrupted the WCS
         // information (removed the CRPIX1/2 header keywords/values.  Lets see
         // what WCS class does.  It should fail miserably because there is no
         // exception handling for this in the WCS class.
         
-        lsst::fw::MaskedImage<pixelType, lsst::fw::maskPixelType> mCorruptImage;
+        lsst::afw::image::MaskedImage<pixelType, lsst::afw::maskPixelType> mCorruptImage;
         const std::string inCorrMIFile("tests/data/small_MI_corrupt"); // input CFHT MI with corrupt header
        
         try {
         mCorruptImage.readFits(inCorrMIFile);
-        lsst::mwi::data::DataProperty::PtrType  mCorData = mCorruptImage.getImage()->getMetaData();
-        lsst::fw::WCS wcs = lsst::fw::WCS(mCorData);
+        lsst::daf::data::DataProperty::PtrType  mCorData = mCorruptImage.getImage()->getMetaData();
+        lsst::afw::math::WCS wcs = lsst::afw::math::WCS(mCorData);
        
-        lsst::fw::Exposure<pixelType, lsst::fw::maskPixelType> newCorExposure(mCorruptImage, wcs);
+        lsst::afw::Exposure<pixelType, lsst::afw::maskPixelType> newCorExposure(mCorruptImage, wcs);
        
-        } catch (lsst::mwi::exceptions::NotFound error) {
-            lsst::mwi::utils::Trace("lsst.fw.Exposure", 1, "Reading Corrupted MaskedImage Failed - caught lsst::mwi NotFound Exception.");
+        } catch (lsst::pex::exceptions::NotFound error) {
+            lsst::pex::utils::Trace("lsst.fw.Exposure", 1, "Reading Corrupted MaskedImage Failed - caught lsst::pex NotFound Exception.");
         }
 
         // (8) Get a subExposure once the WCS Class is ready for this to be
@@ -198,12 +198,12 @@ int main() {
         const vw::BBox2i &subRegion = vw::BBox2i(orx, ory, subWidth, subHeight);
         
         try {
-            lsst::fw::Exposure<pixelType, lsst::fw::maskPixelType> subExpImage =  miWcsExpImage.getSubExposure(subRegion);
+            lsst::afw::Exposure<pixelType, lsst::afw::maskPixelType> subExpImage =  miWcsExpImage.getSubExposure(subRegion);
            
-            lsst::fw::MaskedImage<pixelType, lsst::fw::maskPixelType> subExpMI = subExpImage.getMaskedImage();
+            lsst::afw::image::MaskedImage<pixelType, lsst::afw::maskPixelType> subExpMI = subExpImage.getMaskedImage();
             subExpMI.writeFits(expMIOutFile1);
-        } catch (lsst::mwi::exceptions::InvalidParameter ex) {
-            lsst::mwi::utils::Trace("lsst.fw.Exposure", 5, "Caught InvalidParameter Exception for requested subRegion");
+        } catch (lsst::pex::exceptions::InvalidParameter ex) {
+            lsst::pex::utils::Trace("lsst.fw.Exposure", 5, "Caught InvalidParameter Exception for requested subRegion");
         }
        
         // This subRegion should trigger an exception.  It extends beyond the
@@ -213,12 +213,12 @@ int main() {
         const vw::BBox2i &subRegion2 = BBox2i(orx, ory, subWidth2, subHeight2); 
      
         try {
-            lsst::fw::Exposure<pixelType, lsst::fw::maskPixelType> subExpImage2 =  miWcsExpImage.getSubExposure(subRegion2); 
+            lsst::afw::Exposure<pixelType, lsst::afw::maskPixelType> subExpImage2 =  miWcsExpImage.getSubExposure(subRegion2); 
             
-            lsst::fw::MaskedImage<pixelType, lsst::fw::maskPixelType> subExpMI2 = subExpImage2.getMaskedImage();
+            lsst::afw::image::MaskedImage<pixelType, lsst::afw::maskPixelType> subExpMI2 = subExpImage2.getMaskedImage();
             subExpMI2.writeFits(expMIOutFile2);
-        } catch (lsst::mwi::exceptions::InvalidParameter err) {
-            lsst::mwi::utils::Trace("lsst.fw.Exposure", 5, "Caught InvalidParameter Exception for requested subRegion2");
+        } catch (lsst::pex::exceptions::InvalidParameter err) {
+            lsst::pex::utils::Trace("lsst.fw.Exposure", 5, "Caught InvalidParameter Exception for requested subRegion2");
         }
        
         // (9) Check if the Exposure has a WCS.  Doesn't have to have one.  Bool
@@ -237,27 +237,27 @@ int main() {
         
         // (10) Test readFits/writeFits functionality for Exposure
         // Class...writeFits still needs to be implemented.
-        lsst::fw::Exposure<pixelType, lsst::fw::maskPixelType> exposure;
+        lsst::afw::Exposure<pixelType, lsst::afw::maskPixelType> exposure;
         
         const std::string inExFile(fwData + "/871034p_1_MI"); // input CFHT Exposure
         try {
         exposure.readFits(fwData + "/871034p_1_MI");        
-        } catch (lsst::mwi::exceptions::NotFound error) {
-           lsst::mwi::utils::Trace("lsst.fw.Exposure", 5, "Reading MaskedImage Failed - caught lsst::mwi NotFound Exception.");
+        } catch (lsst::pex::exceptions::NotFound error) {
+           lsst::pex::utils::Trace("lsst.fw.Exposure", 5, "Reading MaskedImage Failed - caught lsst::pex NotFound Exception.");
         }
 
         try {
         exposure.writeFits(expOutFile1);
-        } catch (lsst::mwi::exceptions::InvalidParameter error) {
-            lsst::mwi::utils::Trace("lsst.fw.Exposure", 5, "Writing MaskedImage Failed - caught lsst::mwi InvalidParameter Exception.");
+        } catch (lsst::pex::exceptions::InvalidParameter error) {
+            lsst::pex::utils::Trace("lsst.fw.Exposure", 5, "Writing MaskedImage Failed - caught lsst::pex InvalidParameter Exception.");
         }
 
     } // close memory (de)allocation block
 
     // Checking for memory leaks...
-    if (lsst::mwi::data::Citizen::census(0) != 0) {
+    if (lsst::daf::data::Citizen::census(0) != 0) {
         std::cerr << "Leaked memory blocks:" << std::endl;
-        lsst::mwi::data::Citizen::census(std::cerr);
+        lsst::daf::data::Citizen::census(std::cerr);
     }
 
 } //close main

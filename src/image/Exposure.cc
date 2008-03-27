@@ -2,7 +2,7 @@
 /**
   * \file Exposure.cc
   *
-  * \ingroup fw
+  * \ingroup afw
   *
   * \brief Implementation of the Exposure Class for LSST.  Class declaration in
   * Exposure.h.
@@ -27,21 +27,21 @@
 
 #include <stdexcept>
 
-#include <lsst/mwi/data/DataProperty.h>
-#include <lsst/mwi/data/LsstBase.h>
-#include <lsst/mwi/exceptions.h>
-#include <lsst/mwi/utils/Trace.h> 
-#include <lsst/fw/Exposure.h>
-#include <lsst/fw/MaskedImage.h>
-#include <lsst/fw/WCS.h> 
-#include <lsst/fw/formatters/WcsFormatter.h>
+#include <lsst/daf/data/DataProperty.h>
+#include <lsst/daf/data/LsstBase.h>
+#include <lsst/pex/exceptions.h>
+#include <lsst/pex/utils/Trace.h> 
+#include <lsst/afw/image/Exposure.h>
+#include <lsst/afw/image/MaskedImage.h>
+#include <lsst/afw/image/WCS.h> 
+#include <lsst/afw/formatters/WcsFormatter.h>
 
 /** \brief Exposure Class Implementation for LSST: a templated framework class
   * for creating an Exposure from a MaskedImage and a WCS.
   *
-  * An Exposure is required to take one lsst::fw::MaskedImage or a region (col,
+  * An Exposure is required to take one lsst::afw::image::MaskedImage or a region (col,
   * row) defining the size of a MaskedImage (this can be of size 0,0).  An
-  * Exposure can (but is not required to) contain a lsst::fw::WCS.
+  * Exposure can (but is not required to) contain a lsst::afw::image::WCS.
   *
   * The template types should optimally be a float, double, unsigned int 16 bit,
   * or unsigned int 32 bit for the image (pixel) type and an unsigned int 32 bit
@@ -70,9 +70,9 @@
 /** \brief Construct a blank Exposure of size 0x0 with no WCS. 
   */     
 template<typename ImageT, typename MaskT> 
-lsst::fw::Exposure<ImageT, MaskT>::Exposure(  
+lsst::afw::image::Exposure<ImageT, MaskT>::Exposure(  
     ) : 
-    lsst::mwi::data::LsstBase(typeid(this)),   
+    lsst::daf::data::LsstBase(typeid(this)),   
     _maskedImage(0,0),
     _wcsPtr()                 
 {}
@@ -81,10 +81,10 @@ lsst::fw::Exposure<ImageT, MaskT>::Exposure(
 /** \brief Construct an Exposure without a WCS.
   */       
 template<typename ImageT, typename MaskT> 
-lsst::fw::Exposure<ImageT, MaskT>::Exposure( 
-    lsst::fw::MaskedImage<ImageT, MaskT> const &maskedImage ///< the MaskedImage
+lsst::afw::image::Exposure<ImageT, MaskT>::Exposure( 
+    lsst::afw::image::MaskedImage<ImageT, MaskT> const &maskedImage ///< the MaskedImage
     ) : 
-    lsst::mwi::data::LsstBase(typeid(this)),   
+    lsst::daf::data::LsstBase(typeid(this)),   
     _maskedImage(maskedImage),
     _wcsPtr()
 {}
@@ -93,13 +93,13 @@ lsst::fw::Exposure<ImageT, MaskT>::Exposure(
 /** \brief Construct an Exposure with a WCS.
   */               
 template<typename ImageT, typename MaskT> 
-lsst::fw::Exposure<ImageT, MaskT>::Exposure(
-    lsst::fw::MaskedImage<ImageT, MaskT> const &maskedImage, ///< the MaskedImage
-    lsst::fw::WCS const &wcs                                 ///< the WCS
+lsst::afw::image::Exposure<ImageT, MaskT>::Exposure(
+    lsst::afw::image::MaskedImage<ImageT, MaskT> const &maskedImage, ///< the MaskedImage
+    lsst::afw::image::WCS const &wcs                                 ///< the WCS
     ) : 
-    lsst::mwi::data::LsstBase(typeid(this)),
+    lsst::daf::data::LsstBase(typeid(this)),
     _maskedImage(maskedImage),
-    _wcsPtr(new lsst::fw::WCS (wcs))
+    _wcsPtr(new lsst::afw::image::WCS (wcs))
 {}
 
 
@@ -107,14 +107,14 @@ lsst::fw::Exposure<ImageT, MaskT>::Exposure(
   * a WCS.
   */          
 template<typename ImageT, typename MaskT> 
-lsst::fw::Exposure<ImageT, MaskT>::Exposure(
+lsst::afw::image::Exposure<ImageT, MaskT>::Exposure(
     unsigned cols,            ///< number of columns in the MaskedImage
     unsigned rows,            ///< number of rows in the MaskedImage
-    lsst::fw::WCS const &wcs  ///< the WCS
+    lsst::afw::image::WCS const &wcs  ///< the WCS
     ) :
-    lsst::mwi::data::LsstBase(typeid(this)),
+    lsst::daf::data::LsstBase(typeid(this)),
     _maskedImage(cols, rows),
-    _wcsPtr(new lsst::fw::WCS (wcs))
+    _wcsPtr(new lsst::afw::image::WCS (wcs))
 {}
 
 
@@ -122,11 +122,11 @@ lsst::fw::Exposure<ImageT, MaskT>::Exposure(
   *  without a WCS.
   */          
 template<typename ImageT, typename MaskT> 
-lsst::fw::Exposure<ImageT, MaskT>::Exposure(
+lsst::afw::image::Exposure<ImageT, MaskT>::Exposure(
     unsigned cols, ///< number of columns in the MaskedImage
     unsigned rows  ///< number of rows in the MaskedImage
     ) :
-    lsst::mwi::data::LsstBase(typeid(this)),
+    lsst::daf::data::LsstBase(typeid(this)),
     _maskedImage(cols, rows),
     _wcsPtr()
 {}
@@ -135,20 +135,20 @@ lsst::fw::Exposure<ImageT, MaskT>::Exposure(
 /** Destructor
  */
 template<typename ImageT, typename MaskT> 
-lsst::fw::Exposure<ImageT, MaskT>::~Exposure(){}
+lsst::afw::image::Exposure<ImageT, MaskT>::~Exposure(){}
 
 
 /** \brief Get the WCS of an Exposure.
   *
   * \return a copy of the boost::shared_ptr to the WCS.
   *
-  * \throw a lsst::mwi::exceptions::NotFound if the Exposure does not have a WCS.
+  * \throw a lsst::pex::exceptions::NotFound if the Exposure does not have a WCS.
   */
 template<typename ImageT, typename MaskT> 
-lsst::fw::WCS lsst::fw::Exposure<ImageT, MaskT>::getWcs() const { 
+lsst::afw::image::WCS lsst::afw::image::Exposure<ImageT, MaskT>::getWcs() const { 
     
     if (_wcsPtr.get() == 0) {
-        throw lsst::mwi::exceptions::NotFound("The Exposure does not have WCS!!");
+        throw lsst::pex::exceptions::NotFound("The Exposure does not have WCS!!");
     }
     return *_wcsPtr;
 }
@@ -161,17 +161,17 @@ lsst::fw::WCS lsst::fw::Exposure<ImageT, MaskT>::getWcs() const {
   *
   * \return the subExposure.
   * 
-  * \throw a lsst::mwi::exceptions::InvalidParameter if the requested subRegion
+  * \throw a lsst::pex::exceptions::InvalidParameter if the requested subRegion
   * is not fully contained by the original MaskedImage BBox.
   */        
 template<typename ImageT, typename MaskT> 
-lsst::fw::Exposure<ImageT, MaskT> lsst::fw::Exposure<ImageT, MaskT>::getSubExposure(const vw::BBox2i &subRegion ///< vw bounding box structure for sub-region 
+lsst::afw::image::Exposure<ImageT, MaskT> lsst::afw::image::Exposure<ImageT, MaskT>::getSubExposure(const vw::BBox2i &subRegion ///< vw bounding box structure for sub-region 
 ) const {    
 
-    typename lsst::fw::MaskedImage<ImageT, MaskT>::MaskedImagePtrT subMskImPtr = _maskedImage.getSubImage(subRegion);
-    lsst::mwi::data::DataProperty::PtrType miMetaData = subMskImPtr->getImage()->getMetaData();
-    lsst::fw::WCS miWcs(miMetaData);
-    lsst::fw::Exposure<ImageT, MaskT> subExposure(*subMskImPtr, miWcs);
+    typename lsst::afw::image::MaskedImage<ImageT, MaskT>::MaskedImagePtrT subMskImPtr = _maskedImage.getSubImage(subRegion);
+    lsst::daf::data::DataProperty::PtrType miMetaData = subMskImPtr->getImage()->getMetaData();
+    lsst::afw::image::WCS miWcs(miMetaData);
+    lsst::afw::image::Exposure<ImageT, MaskT> subExposure(*subMskImPtr, miWcs);
     return subExposure;
 }
 
@@ -181,7 +181,7 @@ lsst::fw::Exposure<ImageT, MaskT> lsst::fw::Exposure<ImageT, MaskT>::getSubExpos
 /** \brief Set the MaskedImage of the Exposure.
   */   
 template<typename ImageT, typename MaskT> 
-void lsst::fw::Exposure<ImageT, MaskT>::setMaskedImage(lsst::fw::MaskedImage<ImageT, MaskT> &maskedImage){
+void lsst::afw::image::Exposure<ImageT, MaskT>::setMaskedImage(lsst::afw::image::MaskedImage<ImageT, MaskT> &maskedImage){
     _maskedImage = maskedImage; 
 }
 
@@ -189,8 +189,8 @@ void lsst::fw::Exposure<ImageT, MaskT>::setMaskedImage(lsst::fw::MaskedImage<Ima
 /** \brief Set the WCS of the Exposure.  
  */   
 template<typename ImageT, typename MaskT> 
-void lsst::fw::Exposure<ImageT, MaskT>::setWcs(lsst::fw::WCS const &wcs){
-    _wcsPtr.reset(new lsst::fw::WCS(wcs)); 
+void lsst::afw::image::Exposure<ImageT, MaskT>::setWcs(lsst::afw::image::WCS const &wcs){
+    _wcsPtr.reset(new lsst::afw::image::WCS(wcs)); 
 }
 
 
@@ -208,11 +208,11 @@ void lsst::fw::Exposure<ImageT, MaskT>::setWcs(lsst::fw::WCS const &wcs){
   *  
   * \note The method warns the user if the Exposure does not have a WCS.
   *
-  * \throw an lsst::mwi::exceptions::NotFound if the MaskedImage could not be
+  * \throw an lsst::pex::exceptions::NotFound if the MaskedImage could not be
   * read or the base file name could not be found.
   */
 template<typename ImageT, typename MaskT> 
-void lsst::fw::Exposure<ImageT, MaskT>::readFits(
+void lsst::afw::image::Exposure<ImageT, MaskT>::readFits(
     const std::string &expInFile ///< Exposure's base input file name
     ) {
 
@@ -221,9 +221,9 @@ void lsst::fw::Exposure<ImageT, MaskT>::readFits(
     // throw an exception otherwise.
 
      _maskedImage.readFits(expInFile);
-     lsst::mwi::data::DataProperty::PtrType mData = _maskedImage.getImage()->getMetaData();
-     lsst::fw::WCS newWcs(mData);
-     _wcsPtr.reset(new lsst::fw::WCS(newWcs));
+     lsst::daf::data::DataProperty::PtrType mData = _maskedImage.getImage()->getMetaData();
+     lsst::afw::image::WCS newWcs(mData);
+     _wcsPtr.reset(new lsst::afw::image::WCS(newWcs));
 }
 
 
@@ -240,12 +240,12 @@ void lsst::fw::Exposure<ImageT, MaskT>::readFits(
   * filename is not found.
   */
 template<typename ImageT, typename MaskT> 
-void lsst::fw::Exposure<ImageT, MaskT>::writeFits(
+void lsst::afw::image::Exposure<ImageT, MaskT>::writeFits(
     const std::string &expOutFile ///< Exposure's base output file name
     ) const {
 
-    lsst::mwi::data::DataProperty::PtrType wcsDP =
-        lsst::fw::formatters::WcsFormatter::generateDataProperty(*_wcsPtr);
+    lsst::daf::data::DataProperty::PtrType wcsDP =
+        lsst::afw::formatters::WcsFormatter::generateDataProperty(*_wcsPtr);
     _maskedImage.getImage()->getMetaData()->addChildren(wcsDP);
     // does the Variance have metadata to persist? 
     _maskedImage.getVariance()->getMetaData()->addChildren(wcsDP);
@@ -257,6 +257,6 @@ void lsst::fw::Exposure<ImageT, MaskT>::writeFits(
         }
 
 // Explicit instantiations
-template class lsst::fw::Exposure<float, lsst::fw::maskPixelType>;
-template class lsst::fw::Exposure<double, lsst::fw::maskPixelType>;
-template class lsst::fw::Exposure<boost::uint16_t, lsst::fw::maskPixelType>;
+template class lsst::afw::image::Exposure<float, lsst::afw::image::maskPixelType>;
+template class lsst::afw::image::Exposure<double, lsst::afw::image::maskPixelType>;
+template class lsst::afw::image::Exposure<boost::uint16_t, lsst::afw::image::maskPixelType>;
