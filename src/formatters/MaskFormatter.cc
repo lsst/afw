@@ -19,13 +19,13 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 
 #include <lsst/afw/formatters/MaskFormatter.h>
 
-#include <lsst/pex/persistence/FormatterImpl.h>
+#include <lsst/daf/persistence/FormatterImpl.h>
 #include <lsst/daf/data/DataPropertyFormatter.h>
 
 #include <lsst/afw/image/Mask.h>
-#include <lsst/pex/persistence/LogicalLocation.h>
-#include <lsst/pex/persistence/BoostStorage.h>
-#include <lsst/pex/persistence/FitsStorage.h>
+#include <lsst/daf/persistence/LogicalLocation.h>
+#include <lsst/daf/persistence/BoostStorage.h>
+#include <lsst/daf/persistence/FitsStorage.h>
 #include <lsst/pex/utils/Trace.h>
 
 #include <boost/serialization/binary_object.hpp>
@@ -39,7 +39,7 @@ static void execTrace(std::string s, int level = EXEC_TRACE) {
     lsst::pex::utils::Trace("afw.MaskFormatter", level, s);
 }
 
-using namespace lsst::pex::persistence;
+using namespace lsst::daf::persitence;
 
 using namespace lsst::afw::formatters;
 

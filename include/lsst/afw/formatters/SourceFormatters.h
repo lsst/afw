@@ -16,8 +16,8 @@
 
 #include <lsst/daf/data/DataProperty.h>
 #include <lsst/pex/policy/Policy.h>
-#include <lsst/pex/persistence/Formatter.h>
-#include <lsst/pex/persistence/DbStorage.h>
+#include <lsst/daf/persistence/Formatter.h>
+#include <lsst/daf/persistence/DbStorage.h>
 
 #include "lsst/afw/DiaSource.h"
 
@@ -26,7 +26,7 @@ namespace lsst {
 namespace fw {
 namespace formatters {
 
-using namespace lsst::pex::persistence;
+using namespace lsst::daf::persitence;
 using lsst::pex::policy::Policy;
 using lsst::daf::data::DataProperty;
 
@@ -34,9 +34,9 @@ using lsst::daf::data::DataProperty;
 /*!
     Formatter that supports persistence and retrieval with
 
-    - lsst::pex::persistence::DbStorage
-    - lsst::pex::persistence::DbTsvStorage
-    - lsst::pex::persistence::BoostStorage
+    - lsst::daf::persitence::DbStorage
+    - lsst::daf::persitence::DbTsvStorage
+    - lsst::daf::persitence::BoostStorage
 
     for DiaSourceVector instances.
  */

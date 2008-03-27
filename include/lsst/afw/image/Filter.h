@@ -13,8 +13,8 @@
 #include <cassert>
 #include <string>
 
-#include <lsst/pex/persistence/LogicalLocation.h>
-#include <lsst/pex/persistence/DbStorage.h>
+#include <lsst/daf/persistence/LogicalLocation.h>
+#include <lsst/daf/persistence/DbStorage.h>
 
 
 namespace lsst {
@@ -42,21 +42,21 @@ public :
         Creates a Filter with the given name, using the \b Filter table in the database currently
         set on the given DbStorage to map the filter name to an integer identifier.
      */
-    Filter(lsst::pex::persistence::DbStorage & db, std::string const & name) : _id(nameToId(db, name)) {}
+    Filter(lsst::daf::persitence::DbStorage & db, std::string const & name) : _id(nameToId(db, name)) {}
 
-    Filter(lsst::pex::persistence::LogicalLocation const & location, std::string const & name);
+    Filter(lsst::daf::persitence::LogicalLocation const & location, std::string const & name);
 
     operator int() const { return _id; }
     int getId()    const { return _id; }
 
-    std::string const toString(lsst::pex::persistence::DbStorage & db);
-    std::string const toString(lsst::pex::persistence::LogicalLocation const & location);
+    std::string const toString(lsst::daf::persitence::DbStorage & db);
+    std::string const toString(lsst::daf::persitence::LogicalLocation const & location);
 
 private :
 
     int _id;
 
-    static int nameToId(lsst::pex::persistence::DbStorage & db, std::string const & name);
+    static int nameToId(lsst::daf::persitence::DbStorage & db, std::string const & name);
 };
 
 }}}  // lsst::afw::image

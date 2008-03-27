@@ -6,7 +6,7 @@ import pdb                          # we may want to say pdb.set_trace()
 import unittest
 
 import lsst.afw.image as afwImage
-import lsst.mwi.tests as tests
+import lsst.daf.tests as dafTests
 
 try:
     type(verbose)
@@ -60,13 +60,13 @@ class ReadFitsTestCase(unittest.TestCase):
 
 def suite():
     """Returns a suite containing all the test cases in this module."""
-    tests.init()
+    dafTests.init()
 
     suites = []
     suites += unittest.makeSuite(ReadFitsTestCase)
-    suites += unittest.makeSuite(tests.MemoryTestCase)
+    suites += unittest.makeSuite(dafTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)
 
 if __name__ == "__main__":
-    tests.run(suite())
+    dafTests.run(suite())

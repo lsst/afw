@@ -18,7 +18,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include <lsst/daf/data/Citizen.h>
-#include <lsst/pex/persistence/Persistable.h>
+#include <lsst/daf/persistence/Persistable.h>
 
 
 namespace boost {
@@ -415,7 +415,7 @@ inline bool operator!=(DiaSource const & d1, DiaSource const & d2) {
     A persistable container of DiaSource instances (implemented using std::vector).
  */
 class DiaSourceVector :
-    public lsst::pex::persistence::Persistable,
+    public lsst::daf::persitence::Persistable,
     public lsst::daf::data::Citizen
 {
 public :

@@ -9,7 +9,7 @@
 #include <boost/cstdint.hpp>
 
 #include <lsst/pex/exceptions.h>
-#include <lsst/pex/persistence/DbTsvStorage.h>
+#include <lsst/daf/persistence/DbTsvStorage.h>
 
 #include <lsst/afw/formatters/Utils.h>
 

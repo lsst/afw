@@ -1,8 +1,8 @@
-import lsst.mwi.exceptions
+import lsst.pex.exceptions
 
-class LsstNoMaskPlane(lsst.mwi.exceptions.LsstExceptionStack):
+class LsstNoMaskPlane(lsst.pex.exceptions.LsstExceptionStack):
     pass
 
-class LsstOutOfPlaneSpace(lsst.mwi.exceptions.LsstExceptionStack):
+class LsstOutOfPlaneSpace(lsst.pex.exceptions.LsstExceptionStack):
     pass
 

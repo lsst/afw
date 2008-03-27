@@ -12,11 +12,11 @@ import pdb                              # we may want to say pdb.set_trace()
 import os
 import eups
 import unittest
-import lsst.mwi.tests as tests
+import lsst.daf.tests as tests
 import lsst.afw.image as afwImage
 import lsst.afw.display.ds9 as ds9
 import fwTests
-from lsst.mwi.exceptions import *
+from lsst.pex.exceptions import *
 
 dataDir = eups.productDir("fwData")
 if not dataDir:

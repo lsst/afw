@@ -4,8 +4,7 @@ import unittest
 
 import numpy
 
-import lsst.mwi.tests as tests
-import lsst.mwi.utils as mwiu
+import lsst.daf.tests as tests
 import lsst.afw.math as afwMath
 
 __all__ = ["computePsfMatchingKernelForMaskedImage"]

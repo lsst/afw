@@ -5,14 +5,14 @@ import unittest
 
 import numpy
 
-import lsst.mwi.tests as tests
-import lsst.mwi.utils as mwiu
+import lsst.daf.tests as dafTests
+import lsst.daf.utils as dafUtils
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.testUtils as imTestUtils
 
 verbosity = 0 # increase to see trace
-mwiu.Trace_setVerbosity("lsst.afw", verbosity)
+dafUtils.Trace_setVerbosity("lsst.afw", verbosity)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -160,17 +160,17 @@ class KernelTestCase(unittest.TestCase):
 
 def suite():
     """Returns a suite containing all the test cases in this module."""
-    tests.init()
+    dafTests.init()
 
     suites = []
     suites += unittest.makeSuite(KernelTestCase)
-    suites += unittest.makeSuite(tests.MemoryTestCase)
+    suites += unittest.makeSuite(dafTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)
 
 def run(exit=False):
     """Run the tests"""
-    tests.run(suite(), exit)
+    dafTests.run(suite(), exit)
 
 if __name__ == "__main__":
     run(True)

@@ -10,14 +10,14 @@
 #include <string>
 #include <lsst/daf/data/DataProperty.h>
 #include <lsst/pex/policy/Policy.h>
-#include <lsst/pex/persistence/LogicalLocation.h>
+#include <lsst/daf/persistence/LogicalLocation.h>
 
 
 namespace lsst {
 namespace afw {
 namespace formatters {
 
-using namespace lsst::pex::persistence;
+using namespace lsst::daf::persitence;
 using lsst::daf::data::DataProperty;
 using lsst::pex::policy::Policy;
 

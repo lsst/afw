@@ -19,15 +19,15 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 
 #include <lsst/afw/formatters/ImageFormatter.h>
 
-#include <lsst/pex/persistence/FormatterImpl.h>
+#include <lsst/daf/persistence/FormatterImpl.h>
 #include <lsst/daf/data/DataPropertyFormatter.h>
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/binary_object.hpp>
 
 #include <lsst/afw/image/Image.h>
-#include <lsst/pex/persistence/LogicalLocation.h>
-#include <lsst/pex/persistence/BoostStorage.h>
-#include <lsst/pex/persistence/FitsStorage.h>
+#include <lsst/daf/persistence/LogicalLocation.h>
+#include <lsst/daf/persistence/BoostStorage.h>
+#include <lsst/daf/persistence/FitsStorage.h>
 #include <lsst/pex/utils/Trace.h>
 
 // #include <lsst/afw/image/LSSTFitsResource.h>
@@ -37,7 +37,7 @@ static void execTrace(std::string s, int level = EXEC_TRACE) {
     lsst::pex::utils::Trace("afw.ImageFormatter", level, s);
 }
 
-using namespace lsst::pex::persistence;
+using namespace lsst::daf::persitence;
 
 using namespace lsst::afw::formatters;
 

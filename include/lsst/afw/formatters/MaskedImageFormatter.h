@@ -19,13 +19,13 @@
  * \ingroup afw
  */
 
-#include "lsst/pex/persistence/Formatter.h"
+#include "lsst/daf/persistence/Formatter.h"
 
 namespace lsst {
 namespace afw {
 namespace formatters {
                
-using namespace lsst::pex::persistence;
+using namespace lsst::daf::persitence;
 
 template<typename ImagePixelT, typename MaskPixelT>
 class MaskedImageFormatter : public Formatter {

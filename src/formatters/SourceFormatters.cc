@@ -10,10 +10,10 @@
 #include <memory>
 
 #include <lsst/pex/exceptions.h>
-#include <lsst/pex/persistence/BoostStorage.h>
-#include <lsst/pex/persistence/DbStorage.h>
-#include <lsst/pex/persistence/DbTsvStorage.h>
-#include <lsst/pex/persistence/FormatterImpl.h>
+#include <lsst/daf/persistence/BoostStorage.h>
+#include <lsst/daf/persistence/DbStorage.h>
+#include <lsst/daf/persistence/DbTsvStorage.h>
+#include <lsst/daf/persistence/FormatterImpl.h>
 
 #include <boost/any.hpp>
 #include <boost/format.hpp>
@@ -61,7 +61,7 @@ inline static int64_t generateDiaSourceId(unsigned short seqNum, int ccdId, int6
 
 /*!
     Inserts a single DiaSource into a database table using \a db
-    (an instance of lsst::pex::persistence::DbStorage or subclass thereof).
+    (an instance of lsst::daf::persitence::DbStorage or subclass thereof).
  */
 template <typename T>
 void DiaSourceVectorFormatter::insertRow(T & db, DiaSource const & d) {

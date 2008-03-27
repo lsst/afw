@@ -19,7 +19,7 @@
 
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/daf/data/DataProperty.h"
-#include "lsst/pex/persistence/Persistable.h"
+#include "lsst/daf/persistence/Persistable.h"
 #include "lsst/afw/image/LSSTFitsResource.h"
 
 namespace lsst {
@@ -31,7 +31,7 @@ namespace formatters {
 }
 
     template<typename ImagePixelT>
-    class Image : public lsst::pex::persistence::Persistable,
+    class Image : public lsst::daf::persitence::Persistable,
                   public lsst::daf::data::LsstBase {
     public:
         typedef typename vw::PixelChannelType<ImagePixelT>::type ImageChannelT;

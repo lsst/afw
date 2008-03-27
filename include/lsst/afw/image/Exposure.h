@@ -29,7 +29,7 @@
 #include <vw/Math/BBox.h>
 
 #include <lsst/daf/data/LsstBase.h>
-#include <lsst/pex/persistence/Persistable.h>
+#include <lsst/daf/persistence/Persistable.h>
 #include <lsst/afw/image/MaskedImage.h>
 #include <lsst/afw/image/WCS.h>
 
@@ -43,7 +43,7 @@ namespace image {
     }
         
     template<typename ImageT, typename MaskT> 
-    class Exposure : public lsst::pex::persistence::Persistable,
+    class Exposure : public lsst::daf::persitence::Persistable,
                      public lsst::daf::data::LsstBase {
                 
     public:    

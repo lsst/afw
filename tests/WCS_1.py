@@ -5,7 +5,7 @@ import unittest
 import eups
 
 import lsst.afw.image as afwImage
-import lsst.mwi.tests as tests
+import lsst.daf.tests as tests
 
 try:
     type(verbose)

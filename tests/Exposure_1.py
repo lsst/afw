@@ -15,12 +15,12 @@ import numpy
 
 import eups
 import lsst.afw.image as afwImage
-import lsst.mwi.tests as tests
-import lsst.mwi.utils as mwiu
-import lsst.mwi.exceptions as mwex
+import lsst.daf.tests as dafTests
+import lsst.daf.utils as dafUtils
+import lsst.pex.exceptions as mwex
 
 verbosity = 0 # increase to see trace
-mwiu.Trace_setVerbosity("lsst.afw", verbosity)
+dafUtils.Trace_setVerbosity("lsst.afw", verbosity)
 
 dataDir = eups.productDir("fwData")
 if not dataDir:
@@ -304,13 +304,13 @@ def suite():
     """
     Returns a suite containing all the test cases in this module.
     """
-    tests.init()
+    dafTests.init()
 
     suites = []
     suites += unittest.makeSuite(ExposureTestCase)
-    suites += unittest.makeSuite(tests.MemoryTestCase)
+    suites += unittest.makeSuite(dafTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)
 
 if __name__ == "__main__":
-    tests.run(suite())
+    dafTests.run(suite())

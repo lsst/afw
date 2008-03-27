@@ -19,7 +19,7 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 
 #include <lsst/afw/formatters/WcsFormatter.h>
 
-#include <lsst/pex/persistence/FormatterImpl.h>
+#include <lsst/daf/persistence/FormatterImpl.h>
 #include <lsst/daf/data/DataPropertyFormatter.h>
 #include <lsst/afw/formatters/ImageFormatter.h>
 #include <lsst/afw/formatters/MaskedImageFormatter.h>
@@ -33,9 +33,9 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 
 #include <lsst/daf/data/SupportFactory.h>
 #include <lsst/pex/exceptions.h>
-#include <lsst/pex/persistence/LogicalLocation.h>
-#include <lsst/pex/persistence/BoostStorage.h>
-#include <lsst/pex/persistence/FitsStorage.h>
+#include <lsst/daf/persistence/LogicalLocation.h>
+#include <lsst/daf/persistence/BoostStorage.h>
+#include <lsst/daf/persistence/FitsStorage.h>
 #include <lsst/pex/utils/Trace.h>
 
 #define EXEC_TRACE  20
@@ -43,7 +43,7 @@ static void execTrace(std::string s, int level = EXEC_TRACE) {
     lsst::pex::utils::Trace("afw.WcsFormatter", level, s);
 }
 
-using namespace lsst::pex::persistence;
+using namespace lsst::daf::persitence;
 
 namespace lsst {
 namespace afw {

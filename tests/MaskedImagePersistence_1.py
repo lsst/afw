@@ -1,31 +1,31 @@
 #!/usr/bin/env python
 
 import lsst.afw.image as afwImage
-import lsst.mwi.data as DATA
-import lsst.mwi.persistence as PERS
-import lsst.mwi.policy as POL
+import lsst.daf.data as dafData
+import lsst.daf.persistence as dafPers
+import lsst.daf.policy as dafPolicy
 import os
 
 # Create the additionalData DataProperty
-additionalData = DATA.SupportFactory.createPropertyNode("root")
-additionalData.addProperty(DATA.DataProperty("sliceId", 0))
-additionalData.addProperty(DATA.DataProperty("visitId", "fov391"))
-additionalData.addProperty(DATA.DataProperty("universeSize", 100))
-additionalData.addProperty(DATA.DataProperty("itemName", "foo"))
+additionalData = dafData.SupportFactory.createPropertyNode("root")
+additionalData.addProperty(dafData.DataProperty("sliceId", 0))
+additionalData.addProperty(dafData.DataProperty("visitId", "fov391"))
+additionalData.addProperty(dafData.DataProperty("universeSize", 100))
+additionalData.addProperty(dafData.DataProperty("itemName", "foo"))
 
 # Create an empty Policy
-policy = POL.PolicyPtr()
+policy = dafPolicy.PolicyPtr()
 
 # Get a Persistence object
-persistence = PERS.Persistence.getPersistence(policy)
+persistence = dafPers.Persistence.getPersistence(policy)
 
 # Set up the LogicalLocation.  Assumes that previous tests have run, and
 # Src_*.fits exists in the current directory.
-logicalLocation = PERS.LogicalLocation("Src")
+logicalLocation = dafPers.LogicalLocation("Src")
 
 # Create a FitsStorage and put it in a StorageList.
 storage = persistence.getRetrieveStorage("FitsStorage", logicalLocation)
-storageList = PERS.StorageList([storage])
+storageList = dafPers.StorageList([storage])
 
 print "Retrieving MaskedImage Src"
 
@@ -39,12 +39,12 @@ maskedImage = afwImage.MaskedImageF.swigConvert( \
 print "Persisting MaskedImage as FITS to Dest"
 
 # Persist the MaskedImage (under a different name)
-logicalLocation = PERS.LogicalLocation("Dest")
+logicalLocation = dafPers.LogicalLocation("Dest")
 storage = persistence.getPersistStorage("FitsStorage", logicalLocation)
-storageList = PERS.StorageList([storage])
+storageList = dafPers.StorageList([storage])
 try:
     persistence.persist(maskedImage, storageList, additionalData)
-except POL.LsstInvalidParameter, e:
+except dafPolicy.LsstInvalidParameter, e:
     print e.what()
     raise
 

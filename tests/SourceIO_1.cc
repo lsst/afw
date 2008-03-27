@@ -16,9 +16,9 @@
 #include <lsst/daf/data/DataProperty.h>
 #include <lsst/daf/data/SupportFactory.h>
 #include <lsst/pex/policy/Policy.h>
-#include <lsst/pex/persistence/DbAuth.h>
-#include <lsst/pex/persistence/Persistence.h>
-#include <lsst/pex/persistence/LogicalLocation.h>
+#include <lsst/daf/persistence/DbAuth.h>
+#include <lsst/daf/persistence/Persistence.h>
+#include <lsst/daf/persistence/LogicalLocation.h>
 
 #include <lsst/afw/detection/DiaSource.h>
 #include <lsst/afw/formatters/Utils.h>
@@ -30,10 +30,10 @@ using boost::int64_t;
 using lsst::daf::data::DataProperty;
 using lsst::daf::data::SupportFactory;
 using lsst::pex::policy::Policy;
-using lsst::pex::persistence::LogicalLocation;
-using lsst::pex::persistence::Persistence;
-using lsst::pex::persistence::Persistable;
-using lsst::pex::persistence::Storage;
+using lsst::daf::persitence::LogicalLocation;
+using lsst::daf::persitence::Persistence;
+using lsst::daf::persitence::Persistable;
+using lsst::daf::persitence::Storage;
 
 using namespace lsst::afw;
 
@@ -308,7 +308,7 @@ static void testDb2(std::string const & storageType) {
 int main(int const argc, char const * const * const argv) {
     try {
         testBoost();
-        if (lsst::pex::persistence::DbAuth::available()) {
+        if (lsst::daf::persitence::DbAuth::available()) {
             testDb("DbStorage");
             testDb("DbTsvStorage");
             testDb2("DbStorage");

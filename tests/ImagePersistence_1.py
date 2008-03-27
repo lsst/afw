@@ -1,50 +1,50 @@
 #!/usr/bin/env python
 
-import lsst.afw as FWCL
-import lsst.mwi.data as DATA
-import lsst.mwi.persistence as PERS
-import lsst.mwi.policy as POL
+import lsst.afw.image as afwImage
+import lsst.daf.data as dafData
+import lsst.daf.persistence as dafPers
+import lsst.daf.policy as dafPolicy
 import os
 
 # Create the additionalData DataProperty
-additionalData = DATA.SupportFactory.createPropertyNode("root")
-additionalData.addProperty(DATA.DataProperty("sliceId", 0))
-additionalData.addProperty(DATA.DataProperty("visitId", "fov391"))
-additionalData.addProperty(DATA.DataProperty("universeSize", 100))
-additionalData.addProperty(DATA.DataProperty("itemName", "foo"))
+additionalData = dafData.SupportFactory.createPropertyNode("root")
+additionalData.addProperty(dafData.DataProperty("sliceId", 0))
+additionalData.addProperty(dafData.DataProperty("visitId", "fov391"))
+additionalData.addProperty(dafData.DataProperty("universeSize", 100))
+additionalData.addProperty(dafData.DataProperty("itemName", "foo"))
 
 # Create an empty Policy
-policy = POL.PolicyPtr()
+policy = dafPolicy.PolicyPtr()
 
 # Get a Persistence object
-persistence = PERS.Persistence.getPersistence(policy)
+persistence = dafPers.Persistence.getPersistence(policy)
 
 # Set up the LogicalLocation.  Assumes that previous tests have run, and
 # Src_*.fits exists in the current directory.
-logicalLocation = PERS.LogicalLocation("Src_img.fits")
+logicalLocation = dafPers.LogicalLocation("Src_img.fits")
 
 # Create a FitsStorage and put it in a StorageList.
 storage = persistence.getRetrieveStorage("FitsStorage", logicalLocation)
-storageList = PERS.StorageList([storage])
+storageList = dafPers.StorageList([storage])
 
 # Let's do the retrieval!
 persPtr = persistence.unsafeRetrieve("ImageF", storageList, additionalData)
-image = FWCL.ImageF.swigConvert(persPtr)
+image = afwImage.ImageF.swigConvert(persPtr)
 
 # Check the resulting Image
 # ...
 
 # Persist the Image (under a different name, and in a different format)
-logicalLocation = PERS.LogicalLocation("image.boost")
+logicalLocation = dafPers.LogicalLocation("image.boost")
 storage = persistence.getPersistStorage("BoostStorage", logicalLocation)
-storageList = PERS.StorageList([storage])
+storageList = dafPers.StorageList([storage])
 persistence.persist(image, storageList, additionalData)
 
 # Retrieve it again
 storage = persistence.getRetrieveStorage("BoostStorage", logicalLocation)
-storageList = PERS.StorageList([storage])
+storageList = dafPers.StorageList([storage])
 pers2Ptr = persistence.unsafeRetrieve("ImageF", storageList, additionalData)
-image2 = FWCL.ImageF.swigConvert(pers2Ptr)
+image2 = afwImage.ImageF.swigConvert(pers2Ptr)
 
 # Check to make sure that we got the same data
 assert image.getRows() == image2.getRows()

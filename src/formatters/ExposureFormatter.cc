@@ -20,18 +20,18 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 #include <lsst/afw/formatters/ExposureFormatter.h>
 #include <lsst/afw/image/Exposure.h>
 
-#include <lsst/pex/persistence/FormatterImpl.h>
+#include <lsst/daf/persistence/FormatterImpl.h>
 
 #include <lsst/afw/formatters/MaskedImageFormatter.h>
 #include <lsst/afw/formatters/Utils.h>
 #include <lsst/afw/formatters/WcsFormatter.h>
 
 #include <lsst/pex/exceptions.h>
-#include <lsst/pex/persistence/LogicalLocation.h>
-#include <lsst/pex/persistence/BoostStorage.h>
-#include <lsst/pex/persistence/DateTime.h>
-#include <lsst/pex/persistence/DbStorage.h>
-#include <lsst/pex/persistence/FitsStorage.h>
+#include <lsst/daf/persistence/LogicalLocation.h>
+#include <lsst/daf/persistence/BoostStorage.h>
+#include <lsst/daf/persistence/DateTime.h>
+#include <lsst/daf/persistence/DbStorage.h>
+#include <lsst/daf/persistence/FitsStorage.h>
 #include <lsst/pex/utils/Trace.h>
 
 #include <boost/serialization/shared_ptr.hpp>
@@ -42,7 +42,7 @@ static void execTrace(std::string s, int level = EXEC_TRACE) {
     lsst::pex::utils::Trace("afw.ExposureFormatter", level, s);
 }
 
-using namespace lsst::pex::persistence;
+using namespace lsst::daf::persitence;
 
 using namespace lsst::afw::formatters;
 

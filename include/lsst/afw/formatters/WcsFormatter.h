@@ -19,18 +19,17 @@
  * \ingroup afw
  */
 
-#include "lsst/pex/persistence/Formatter.h"
+#include "lsst/daf/persistence/Formatter.h"
 
 namespace lsst {
 namespace afw {
-namespace formatters {
 
 class WCS;
 
 namespace formatters {
                
 
-using namespace lsst::pex::persistence;
+using namespace lsst::daf::persitence;
 
 class WcsFormatter : public Formatter {
 public:       

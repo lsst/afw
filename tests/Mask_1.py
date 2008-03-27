@@ -4,10 +4,10 @@ import pdb                          # we may want to say pdb.set_trace()
 import unittest
 
 import lsst.afw.image as afwImage
-import lsst.mwi.tests as tests
-import lsst.mwi.data as mwid
+import lsst.daf.tests as dafTests
+import lsst.daf.data as mwid
 import fwTests
-from lsst.mwi.exceptions import *
+from lsst.pex.exceptions import *
 
 import lsst.afw.display.ds9 as ds9
 try:
@@ -282,17 +282,17 @@ def printMaskPlane(mask, plane,
 
 def suite():
     """Returns a suite containing all the test cases in this module."""
-    tests.init()
+    dafTests.init()
 
     suites = []
     suites += unittest.makeSuite(MaskTestCase)
-    suites += unittest.makeSuite(tests.MemoryTestCase)
+    suites += unittest.makeSuite(dafTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)
 
 def run(exit=False):
     """Run the tests"""
-    tests.run(suite(), exit)
+    dafTests.run(suite(), exit)
 
 if __name__ == "__main__":
     run(True)
