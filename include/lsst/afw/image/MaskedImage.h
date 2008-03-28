@@ -33,8 +33,6 @@ namespace afw {
         template<class ImagePixelT, class MaskPixelT> class MaskedImageFormatter;
     }
 namespace image {
-    typedef vw::BBox2i BBox2i
-
     template<class ImagePixelT, class MaskPixelT> class MaskedImage;
 
     template<typename PixelT> class PixelLocator : public vw::PixelIterator<vw::ImageView<PixelT> > {

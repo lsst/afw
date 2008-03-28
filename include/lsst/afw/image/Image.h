@@ -28,7 +28,6 @@ namespace afw {
         template <typename ImagePixelT> class ImageFormatter;
     }
 namespace image {
-
     template<typename ImagePixelT>
     class Image : public lsst::daf::persitence::Persistable,
                   public lsst::daf::data::LsstBase {
@@ -53,9 +52,9 @@ namespace image {
         
         lsst::daf::data::DataProperty::PtrType getMetaData() const;
         
-        ImagePtrT getSubImage(const BBox2i imageRegion) const;
+        ImagePtrT getSubImage(const vw::BBox2i imageRegion) const;
         
-        void replaceSubImage(const BBox2i imageRegion, ImagePtrT insertImage);
+        void replaceSubImage(const vw::BBox2i imageRegion, ImagePtrT insertImage);
 
         inline ImageChannelT operator ()(int x, int y) const;
 

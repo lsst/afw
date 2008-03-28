@@ -22,7 +22,6 @@
 #include <boost/format.hpp> 
 #include <boost/shared_ptr.hpp>
 
-#include <vw/Image.h>
 #include <vw/Math/BBox.h>
 
 #include <stdexcept>

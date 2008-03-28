@@ -7,6 +7,7 @@
 
 #include <string>
 
+#include <vw/Math/BBox.h>
 #include <vw/Image/PixelTypes.h>
 #include <vw/Image/ImageResource.h>
 #include <vw/FileIO/DiskImageResource.h>

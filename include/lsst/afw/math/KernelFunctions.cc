@@ -25,7 +25,7 @@
 #include <string>
 
 #include <boost/format.hpp>
-#include <vw/Image.h>
+#include <vw/Math.h>
 
 #include <lsst/pex/utils/Trace.h>
 #include <lsst/afw/image/ImageUtils.h>
