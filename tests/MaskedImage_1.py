@@ -10,6 +10,7 @@ or
 
 import pdb                              # we may want to say pdb.set_trace()
 import unittest
+
 import lsst.daf.tests as tests
 import lsst.afw.image as afwImage
 import lsst.afw.display.ds9 as ds9

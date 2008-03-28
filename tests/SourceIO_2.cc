@@ -17,7 +17,7 @@
 #include <lsst/daf/persistence/Persistence.h>
 #include <lsst/daf/persistence/LogicalLocation.h>
 #include <lsst/pex/exceptions.h>
-#include <lsst/pex/policy/Policy.h>
+#include <lsst/daf/policy/Policy.h>
 
 #include <lsst/afw/detection/Source.h>
 #include <lsst/afw/formatters/Utils.h>
@@ -29,7 +29,7 @@ using boost::int64_t;
 
 using lsst::daf::data::DataProperty;
 using lsst::daf::data::SupportFactory;
-using lsst::pex::policy::Policy;
+using lsst::daf::policy::Policy;
 using lsst::daf::persitence::LogicalLocation;
 using lsst::daf::persitence::Persistence;
 using lsst::daf::persitence::Persistable;

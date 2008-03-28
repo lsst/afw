@@ -4,7 +4,7 @@ import unittest
 
 import numpy
 
-import lsst.daf.tests as tests
+import lsst.daf.tests as dafTests
 import lsst.afw.math as afwMath
 
 __all__ = ["computePsfMatchingKernelForMaskedImage"]
@@ -56,13 +56,13 @@ class MinimizeTestCase(unittest.TestCase):
 
 def suite():
     """Returns a suite containing all the test cases in this module."""
-    tests.init()
+    dafTests.init()
 
     suites = []
     suites += unittest.makeSuite(MinimizeTestCase)
-    suites += unittest.makeSuite(tests.MemoryTestCase)
+    suites += unittest.makeSuite(dafTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)
 
 if __name__ == "__main__":
-    tests.run(suite())
+    dafTests.run(suite())

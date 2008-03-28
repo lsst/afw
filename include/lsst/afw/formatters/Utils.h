@@ -9,7 +9,7 @@
 
 #include <string>
 #include <lsst/daf/data/DataProperty.h>
-#include <lsst/pex/policy/Policy.h>
+#include <lsst/daf/policy/Policy.h>
 #include <lsst/daf/persistence/LogicalLocation.h>
 
 
@@ -19,7 +19,7 @@ namespace formatters {
 
 using namespace lsst::daf::persitence;
 using lsst::daf::data::DataProperty;
-using lsst::pex::policy::Policy;
+using lsst::daf::policy::Policy;
 
 bool extractOptionalFlag(
     DataProperty::PtrType const & properties,

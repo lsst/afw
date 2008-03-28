@@ -45,14 +45,14 @@ public:
 
     static lsst::daf::data::DataProperty::PtrType
         generateDataProperty(WCS const& wcs);
-    static Formatter::Ptr createInstance(lsst::pex::policy::Policy::Ptr policy);
+    static Formatter::Ptr createInstance(lsst::daf::policy::Policy::Ptr policy);
 
     template <class Archive>
     static void delegateSerialize(Archive& ar,
                                   int const version, Persistable* persistable);
 
 private:
-    explicit WcsFormatter(lsst::pex::policy::Policy::Ptr policy);
+    explicit WcsFormatter(lsst::daf::policy::Policy::Ptr policy);
 
     static FormatterRegistration registration;
 };

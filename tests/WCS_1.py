@@ -2,10 +2,11 @@ import os
 import math
 import pdb                          # we may want to say pdb.set_trace()
 import unittest
+
 import eups
 
 import lsst.afw.image as afwImage
-import lsst.daf.tests as tests
+import lsst.daf.tests as dafTests
 
 try:
     type(verbose)
@@ -119,18 +120,18 @@ class WCSTestCaseCFHT(unittest.TestCase):
 
 def suite():
     """Returns a suite containing all the test cases in this module."""
-    tests.init()
+    dafTests.init()
 
     suites = []
     suites += unittest.makeSuite(WCSTestCaseSDSS)
     suites += unittest.makeSuite(WCSTestCaseCFHT)
-    suites += unittest.makeSuite(tests.MemoryTestCase)
+    suites += unittest.makeSuite(dafTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)
 
 def run(exit=False):
     """Run the tests"""
-    tests.run(suite(), exit)
+    dafTests.run(suite(), exit)
 
 if __name__ == "__main__":
     run(True)

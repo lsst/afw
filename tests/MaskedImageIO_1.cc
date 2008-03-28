@@ -12,7 +12,7 @@ using lsst::pex::utils::Trace;
 using lsst::daf::data::DataProperty;
 using lsst::daf::data::FitsFormatter;
 
-namespace mwie = lsst::pex::exceptions;
+namespace pexEx = lsst::pex::exceptions;
 
 /*
  * Make this a subroutine so that locals go out of scope as part of test
@@ -73,10 +73,10 @@ int main(int argc, char *argv[]) {
     try {
         try {
             test(argv[1]);
-        } catch (mwie::ExceptionStack &e) {
-            throw mwie::Runtime(std::string("In handler\n") + e.what());
+        } catch (pexEx::ExceptionStack &e) {
+            throw pexEx::Runtime(std::string("In handler\n") + e.what());
         }
-    } catch (mwie::ExceptionStack &e) {
+    } catch (pexEx::ExceptionStack &e) {
         clog << e.what() << endl;
         return 1;
     }

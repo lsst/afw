@@ -9,13 +9,14 @@
 
 #include <sys/time.h>
 #include <cstdlib>
+#include <stdexcept>
 
 #include <boost/cstdint.hpp>
 
 #include <lsst/pex/exceptions.h>
 #include <lsst/daf/data/DataProperty.h>
 #include <lsst/daf/data/SupportFactory.h>
-#include <lsst/pex/policy/Policy.h>
+#include <lsst/daf/policy/Policy.h>
 #include <lsst/daf/persistence/DbAuth.h>
 #include <lsst/daf/persistence/Persistence.h>
 #include <lsst/daf/persistence/LogicalLocation.h>
@@ -23,13 +24,11 @@
 #include <lsst/afw/detection/Source.h>
 #include <lsst/afw/formatters/Utils.h>
 
-#include <stdexcept>
-
 using boost::int64_t;
 
 using lsst::daf::data::DataProperty;
 using lsst::daf::data::SupportFactory;
-using lsst::pex::policy::Policy;
+using lsst::daf::policy::Policy;
 using lsst::daf::persitence::LogicalLocation;
 using lsst::daf::persitence::Persistence;
 using lsst::daf::persitence::Persistable;

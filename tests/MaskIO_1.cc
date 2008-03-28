@@ -1,14 +1,13 @@
 // -*- lsst-c++ -*-
 #include <stdexcept>
 
+#include <lsst/pex/exceptions.h>
 #include <lsst/daf/data.h>
 #include <lsst/afw/image.h>
 
 using namespace std;
-using namespace lsst::afw;
-using boost::any_cast;
-
 using lsst::daf::data::DataProperty;
+namespace afwImage = lsst::afw::image;
 
 /*
  * Make this a subroutine so that locals go out of scope as part of test
@@ -16,9 +15,9 @@ using lsst::daf::data::DataProperty;
  */
 void test(char *name) {
 
-    typedef uint16 MaskPixelType;
+    typedef afwImage::maskPixelType maskPixelType;
 
-    Mask<MaskPixelType> testMask;
+    afwImage::Mask<maskPixelType> testMask;
     testMask.readFits(name);
 
     // check whether Mask planes got setup right from FITS header...

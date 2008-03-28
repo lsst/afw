@@ -41,14 +41,14 @@ public:
                         Storage::Ptr storage,
                         lsst::daf::data::DataProperty::PtrType additionalData);
 
-    static Formatter::Ptr createInstance(lsst::pex::policy::Policy::Ptr policy);
+    static Formatter::Ptr createInstance(lsst::daf::policy::Policy::Ptr policy);
 
     template <class Archive>
     static void delegateSerialize(Archive& ar,
                                   int const version, Persistable* persistable);
 
 private:
-    explicit MaskFormatter(lsst::pex::policy::Policy::Ptr policy);
+    explicit MaskFormatter(lsst::daf::policy::Policy::Ptr policy);
 
     static FormatterRegistration registration;
 };

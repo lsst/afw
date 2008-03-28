@@ -12,7 +12,7 @@ using namespace std;
 using lsst::pex::utils::Trace;
 using lsst::daf::data::Citizen;
 using lsst::daf::data::FitsFormatter;
-namespace mwie = lsst::pex::exceptions;
+namespace pexEx = lsst::pex::exceptions;
 
 template <typename ImagePixelT, typename MaskPixelT> 
 class testPixProcFunc : public lsst::afw::image::PixelProcessingFunc<ImagePixelT, MaskPixelT> {
@@ -74,7 +74,7 @@ int test(int argc, char**argv) {
     lsst::afw::image::MaskedImage<ImagePixelType,MaskPixelType > testMaskedImage1;
     try {
         testMaskedImage1.readFits(argv[1]);
-    } catch (mwie::ExceptionStack &e) {
+    } catch (pexEx::ExceptionStack &e) {
         cerr << "Failed to open " << argv[1] << ": " << e.what() << endl;
         return 1;
     }
@@ -101,7 +101,7 @@ int test(int argc, char**argv) {
 
     try {
         testFlat.readFits(argv[2]);
-    } catch (mwie::ExceptionStack &e) {
+    } catch (pexEx::ExceptionStack &e) {
         cerr << "Failed to open " << argv[2] << ": " << e.what() << endl;
         return 1;
     }
@@ -152,10 +152,10 @@ int main(int argc, char **argv) {
     try {
        try {
            test(argc, argv);
-       } catch (mwie::ExceptionStack &e) {
-           throw mwie::Runtime(std::string("In handler\n") + e.what());
+       } catch (pexEx::ExceptionStack &e) {
+           throw pexEx::Runtime(std::string("In handler\n") + e.what());
        }
-    } catch (mwie::ExceptionStack &e) {
+    } catch (pexEx::ExceptionStack &e) {
        clog << e.what() << endl;
     }
 

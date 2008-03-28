@@ -7,11 +7,11 @@ or
    python
    >>> import unittest; T=load("Source_1"); unittest.TextTestRunner(verbosity=1).run(T.suite())
 """
-
 import pdb
 import unittest
 import random
 import time
+
 import lsst.daf.data as dafData
 import lsst.daf.policy as dafPolicy
 import lsst.daf.persistence as dafPers

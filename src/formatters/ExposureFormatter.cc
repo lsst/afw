@@ -65,7 +65,7 @@ FormatterRegistration ExposureFormatter<ImagePixelT, MaskPixelT>::registration(
 
 template <typename ImagePixelT, typename MaskPixelT>
 ExposureFormatter<ImagePixelT, MaskPixelT>::ExposureFormatter(
-    lsst::pex::policy::Policy::Ptr policy) :
+    lsst::daf::policy::Policy::Ptr policy) :
     Formatter(typeid(*this)), _policy(policy) {
 }
 
@@ -192,7 +192,7 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::write(
             additionalData->findUnique("itemName")->getValue());
         std::string tableName = itemName;
         if (_policy->exists(itemName)) {
-            lsst::pex::policy::Policy::Ptr itemPolicy =
+            lsst::daf::policy::Policy::Ptr itemPolicy =
                 _policy->getPolicy(itemName);
             if (itemPolicy->exists("TableName")) {
                 tableName = itemPolicy->getString("TableName");
@@ -287,7 +287,7 @@ Persistable* ExposureFormatter<ImagePixelT, MaskPixelT>::read(
             additionalData->findUnique("itemName")->getValue());
         std::string tableName = itemName;
         if (_policy->exists(itemName)) {
-            lsst::pex::policy::Policy::Ptr itemPolicy =
+            lsst::daf::policy::Policy::Ptr itemPolicy =
                 _policy->getPolicy(itemName);
             if (itemPolicy->exists("TableName")) {
                 tableName = itemPolicy->getString("TableName");
@@ -393,7 +393,7 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::delegateSerialize(
 
 template <typename ImagePixelT, typename MaskPixelT>
 Formatter::Ptr ExposureFormatter<ImagePixelT, MaskPixelT>::createInstance(
-    lsst::pex::policy::Policy::Ptr policy) {
+    lsst::daf::policy::Policy::Ptr policy) {
     return Formatter::Ptr(new ExposureFormatter<ImagePixelT, MaskPixelT>(policy));
 }
 

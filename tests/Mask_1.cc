@@ -13,7 +13,7 @@ using lsst::pex::utils::Trace;
 using lsst::daf::data::Citizen;
 using lsst::daf::data::SupportFactory;
 
-namespace mwie = lsst::pex::exceptions;
+namespace pexEx = lsst::pex::exceptions;
 namespace fwImage  = lsst::afw::image;
 
 template <typename MaskPixelT> class testCrFunc : public fwImage::MaskPixelBooleanFunc<MaskPixelT> {
@@ -254,7 +254,7 @@ void test() {
     try {
        region.expand(10);
        testMask.replaceSubMask(region, subTestMask);
-    } catch (mwie::ExceptionStack &e) {
+    } catch (pexEx::ExceptionStack &e) {
         cout << "Exception handler: Caught the buggy code: " << e.what() << endl;
     } catch (exception eex) {
         // Catch base STD exception (from which all exceptions should be derived)
@@ -289,10 +289,10 @@ int main(int argc, char *argv[]) {
     try {
        try {
            test();
-       } catch (mwie::ExceptionStack &e) {
-           throw mwie::Runtime(string("In handler\n") + e.what());
+       } catch (pexEx::ExceptionStack &e) {
+           throw pexEx::Runtime(string("In handler\n") + e.what());
        }
-    } catch (mwie::ExceptionStack &e) {
+    } catch (pexEx::ExceptionStack &e) {
        clog << e.what() << endl;
     }
 

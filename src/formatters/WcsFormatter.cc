@@ -53,7 +53,7 @@ FormatterRegistration WcsFormatter::registration(
     "WCS", typeid(WCS), createInstance);
 
 WcsFormatter::WcsFormatter(
-    lsst::pex::policy::Policy::Ptr policy) :
+    lsst::daf::policy::Policy::Ptr policy) :
     Formatter(typeid(*this)) {
 }
 
@@ -181,7 +181,7 @@ void WcsFormatter::delegateSerialize(
 }
 
 Formatter::Ptr WcsFormatter::createInstance(
-    lsst::pex::policy::Policy::Ptr policy) {
+    lsst::daf::policy::Policy::Ptr policy) {
     return Formatter::Ptr(new WcsFormatter(policy));
 }
 
