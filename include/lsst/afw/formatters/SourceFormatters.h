@@ -58,8 +58,8 @@ private:
     static Formatter::Ptr createInstance(Policy::Ptr);
     static FormatterRegistration registration;
 
-    template <typename T> static void insertRow(T &, Source const &);
-    static void setupFetch(DbStorage &, Source &);
+    template <typename T> static void insertRow(T &, lsst::fw::detection::Source const &);
+    static void setupFetch(DbStorage &, lsst::fw::detection::Source &);
 };
 
 

@@ -23,6 +23,7 @@
 #include <lsst/afw/formatters/Utils.h>
 
 namespace ex = lsst::pex::exceptions;
+using lsst::afw::detection::Source;
 
 namespace lsst {
 namespace afw {
