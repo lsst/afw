@@ -4,7 +4,7 @@ import os
 import lsst.afw.image as afwImage
 import lsst.daf.data as dafData
 import lsst.daf.persistence as dafPers
-import lsst.daf.policy as dafPolicy
+import lsst.pex.policy as dafPolicy
 
 # Create the additionalData DataProperty
 additionalData = dafData.SupportFactory.createPropertyNode("root")

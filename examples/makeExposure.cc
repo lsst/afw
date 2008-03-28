@@ -60,12 +60,12 @@ int main() {
     typedef float pixelType;
     typedef float viewType;
 
-    char *fwDataCStr = getenv("FWDATA_DIR");
-    if (fwDataCStr == 0) {
-        std::cout << "fwData must be set up" << std::endl;
+    char *afwdataCStr = getenv("AFWDATA_DIR");
+    if (afwdataCStr == 0) {
+        std::cout << "afwdata must be set up" << std::endl;
         exit(1);
     }
-    std::string fwData(fwDataCStr);
+    std::string afwdata(afwdataCStr);
                 
     lsst::pex::utils::Trace::setDestination(std::cout);
     lsst::pex::utils::Trace::setVerbosity("lsst.afw", 4);
@@ -78,7 +78,7 @@ int main() {
     
         // Read a fits file in as a MaskedImage
         lsst::afw::image::MaskedImage<pixelType, lsst::afw::image::maskPixelType> mImage;
-        const std::string inMIFile(fwData + "/small_MI"); // input CFHT MI
+        const std::string inMIFile(afwdata + "/small_MI"); // input CFHT MI
         
         mImage.readFits(inMIFile);
        
@@ -239,9 +239,9 @@ int main() {
         // Class...writeFits still needs to be implemented.
         lsst::afw::image::Exposure<pixelType, lsst::afw::image::maskPixelType> exposure;
         
-        const std::string inExFile(fwData + "/871034p_1_MI"); // input CFHT Exposure
+        const std::string inExFile(afwdata + "/871034p_1_MI"); // input CFHT Exposure
         try {
-        exposure.readFits(fwData + "/871034p_1_MI");        
+        exposure.readFits(afwdata + "/871034p_1_MI");        
         } catch (lsst::pex::exceptions::NotFound error) {
            lsst::pex::utils::Trace("lsst.afw.Exposure", 5, "Reading MaskedImage Failed - caught lsst::pex NotFound Exception.");
         }

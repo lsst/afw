@@ -13,7 +13,7 @@ import random
 import time
 
 import lsst.daf.data as dafData
-import lsst.daf.policy as dafPolicy
+import lsst.pex.policy as dafPolicy
 import lsst.daf.persistence as dafPers
 import lsst.daf.tests as dafTests
 import lsst.afw.detection as afwDet

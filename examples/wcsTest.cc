@@ -19,14 +19,9 @@
 #include <vw/Image.h>
 #include <vw/Math/BBox.h>
 
-#include <lsst/daf/data/DataProperty.h>
-#include <lsst/afw/image/DiskImageResourceFITS.h> // need this for now?
 #include <lsst/pex/exceptions.h>
-#include <lsst/afw/image/Exposure.h>
-#include <lsst/afw/image/Image.h>
-#include <lsst/afw/image/MaskedImage.h>
 #include <lsst/pex/utils/Trace.h> // turn off by recompiling with 'LSST_NO_TRACE 0'
-#include <lsst/afw/image/WCS.h>
+#include <lsst/afw/image.h>
 
 /**
  * \brief This test code incorporates some very simple tests of the WCS Class

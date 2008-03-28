@@ -9,7 +9,7 @@
 
 #include <lsst/daf/persistence/Persistence.h>
 #include <lsst/daf/persistence/Storage.h>
-#include <lsst/daf/policy/Policy.h>
+#include <lsst/pex/policy/Policy.h>
 #include <lsst/pex/exceptions.h>
 
 #include <lsst/afw/image/Filter.h>
@@ -19,7 +19,7 @@ using namespace lsst::afw::image;
 
 using lsst::daf::persitence::Persistence;
 using lsst::daf::persitence::Storage;
-using lsst::daf::policy::Policy;
+using lsst::pex::policy::Policy;
 
 
 /*!

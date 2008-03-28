@@ -27,9 +27,13 @@
 
 namespace lsst {
 namespace afw {
+    namespace formatters {
+        template<typename MaskPixelT> class MaskFormatter;
+    }
 namespace image {
     // all masks will be instantiated with the same pixel type
     typedef boost::uint16_t maskPixelType;
+    typedef vw::BBox2i BBox2i;
 
     class PixelCoord {
     public:
@@ -40,9 +44,6 @@ namespace image {
     };
     
     template<typename MaskPixelT> class Mask;
-    namespace formatters {
-        template<typename MaskPixelT> class MaskFormatter;
-    }
     
     template <typename MaskPixelT> class MaskPixelBooleanFunc {
     public:
@@ -125,7 +126,7 @@ namespace image {
         void addMaskPlaneMetaData(lsst::daf::data::DataProperty::PtrType);
         
         int countMask(MaskPixelBooleanFunc<MaskPixelT>& testFunc,
-                      const vw::BBox2i maskRegion) const;
+                      const BBox2i maskRegion) const;
         
         int getNumPlanesMax() const { return 8 * sizeof(MaskChannelT); }
 
@@ -139,9 +140,9 @@ namespace image {
 
         // SubMask ops
 
-        MaskPtrT getSubMask(const vw::BBox2i maskRegion) const;
+        MaskPtrT getSubMask(const BBox2i maskRegion) const;
         
-        void replaceSubMask(const vw::BBox2i maskRegion, MaskPtrT insertMask);
+        void replaceSubMask(const BBox2i maskRegion, MaskPtrT insertMask);
         
         pixel_accessor origin() const { return getIVwPtr()->origin(); }
         

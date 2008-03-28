@@ -10,10 +10,10 @@ import os
 import math
 import pdb                          # we may want to say pdb.set_trace()
 import unittest
-import eups
 
 import numpy
 
+import eups
 import lsst.daf.tests as dafTests
 import lsst.daf.utils as dafUtils
 import lsst.afw.image as afwImage
@@ -23,9 +23,9 @@ import lsst.afw.image.testUtils as imTestUtils
 verbosity = 0 # increase to see trace
 dafUtils.Trace_setVerbosity("lsst.afw", verbosity)
 
-dataDir = eups.productDir("fwData")
+dataDir = eups.productDir("afwdata")
 if not dataDir:
-    raise RuntimeError("Must set up fwData to run these tests")
+    raise RuntimeError("Must set up afwdata to run these tests")
 InputMaskedImagePath = os.path.join(dataDir, "871034p_1_MI")
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

@@ -60,7 +60,7 @@ FormatterRegistration MaskedImageFormatter<ImagePixelT, MaskPixelT>::registratio
 
 template <typename ImagePixelT, typename MaskPixelT>
 MaskedImageFormatter<ImagePixelT, MaskPixelT>::MaskedImageFormatter(
-    lsst::daf::policy::Policy::Ptr policy) :
+    lsst::pex::policy::Policy::Ptr policy) :
     Formatter(typeid(*this)) {
 }
 
@@ -142,7 +142,7 @@ void MaskedImageFormatter<ImagePixelT, MaskPixelT>::delegateSerialize(
 
 template <typename ImagePixelT, typename MaskPixelT>
 Formatter::Ptr MaskedImageFormatter<ImagePixelT, MaskPixelT>::createInstance(
-    lsst::daf::policy::Policy::Ptr policy) {
+    lsst::pex::policy::Policy::Ptr policy) {
     return Formatter::Ptr(
         new MaskedImageFormatter<ImagePixelT, MaskPixelT>(policy));
 }

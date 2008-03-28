@@ -35,12 +35,12 @@
 
 namespace lsst {
 namespace afw {
-namespace image {
-    
-    template<class ImageT, class MaskT> class Exposure;
     namespace formatters {
         template<class ImageT, class MaskT> class ExposureFormatter;
     }
+namespace image {
+    
+    template<class ImageT, class MaskT> class Exposure;
         
     template<typename ImageT, typename MaskT> 
     class Exposure : public lsst::daf::persitence::Persistable,

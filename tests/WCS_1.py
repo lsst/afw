@@ -4,7 +4,6 @@ import pdb                          # we may want to say pdb.set_trace()
 import unittest
 
 import eups
-
 import lsst.afw.image as afwImage
 import lsst.daf.tests as dafTests
 
@@ -13,9 +12,9 @@ try:
 except NameError:
     verbose = 0
 
-dataDir = eups.productDir("fwData")
+dataDir = eups.productDir("afwdata")
 if not dataDir:
-    raise RuntimeError("Must set up fwData to run these tests")
+    raise RuntimeError("Must set up afwdata to run these tests")
 InputImagePath = os.path.join(dataDir, "871034p_1_MI_img.fits")
 InputSmallImagePath = os.path.join(dataDir, "small_img.fits")
 InputCorruptMaskedImageName = "small_MI_corrupt"

@@ -14,13 +14,13 @@ int main() {
     typedef float pixelType;
 
     { //memory (de)allocation block
-        char *fwDataCStr = getenv("FWDATA_DIR");
-        if (fwDataCStr == 0) {
-            std::cout << "fwData must be set up" << std::endl;
+        char *afwdataCStr = getenv("AFWDATA_DIR");
+        if (afwdataCStr == 0) {
+            std::cout << "afwdata must be set up" << std::endl;
             exit(1);
         }
-        std::string fwData(fwDataCStr);
-        const std::string inFilename(fwData + "/small_MI");
+        std::string afwdata(afwdataCStr);
+        const std::string inFilename(afwdata + "/small_MI");
 
         // Create a wcs from a fits file (so the wcs has some memory to allocate)
         std::cout << "Opening file " << inFilename << std::endl;

@@ -5,6 +5,7 @@ import os
 import pdb                          # we may want to say pdb.set_trace()
 import unittest
 
+import eups
 import lsst.afw.image as afwImage
 import lsst.daf.tests as dafTests
 
@@ -13,13 +14,9 @@ try:
 except NameError:
     verbose = 0
 
-try:
-    import eups; dataDir = eups.productDir("fwData") # needs eups >= v0_7_40
-except:
-    dataDir = os.environ.get("FWDATA_DIR")
-
+dataDir = eups.productDir("afwdata")
 if not dataDir:
-    raise RuntimeError("Must set up fwData to run these tests")
+    raise RuntimeError("Must set up afwdata to run these tests")
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

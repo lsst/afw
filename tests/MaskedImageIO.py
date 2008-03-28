@@ -20,9 +20,9 @@ import lsst.afw.display.ds9 as ds9
 import fwTests
 import lsst.pex.exceptions as pexEx
 
-dataDir = eups.productDir("fwData")
+dataDir = eups.productDir("afwdata")
 if not dataDir:
-    raise RuntimeError("You must set up fwData to run these tests")
+    raise RuntimeError("You must set up afwdata to run these tests")
 
 try:
     type(display)

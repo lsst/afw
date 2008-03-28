@@ -22,9 +22,9 @@ import lsst.pex.exceptions as pexEx
 verbosity = 0 # increase to see trace
 dafUtils.Trace_setVerbosity("lsst.afw", verbosity)
 
-dataDir = eups.productDir("fwData")
+dataDir = eups.productDir("afwdata")
 if not dataDir:
-    raise RuntimeError("Must set up fwData to run these tests") 
+    raise RuntimeError("Must set up afwdata to run these tests") 
 
 InputMaskedImageName = "871034p_1_MI"
 InputMaskedImageNameSmall = "small_MI"

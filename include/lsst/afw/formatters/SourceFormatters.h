@@ -15,7 +15,7 @@
 #include <vector>
 
 #include <lsst/daf/data/DataProperty.h>
-#include <lsst/daf/policy/Policy.h>
+#include <lsst/pex/policy/Policy.h>
 #include <lsst/daf/persistence/Formatter.h>
 #include <lsst/daf/persistence/DbStorage.h>
 
@@ -27,7 +27,7 @@ namespace afw {
 namespace formatters {
 
 using namespace lsst::daf::persitence;
-using lsst::daf::policy::Policy;
+using lsst::pex::policy::Policy;
 using lsst::daf::data::DataProperty;
 
 

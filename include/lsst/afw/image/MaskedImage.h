@@ -29,11 +29,11 @@
 
 namespace lsst {
 namespace afw {
-namespace image {
-
     namespace formatters {
         template<class ImagePixelT, class MaskPixelT> class MaskedImageFormatter;
     }
+namespace image {
+    typedef vw::BBox2i BBox2i
 
     template<class ImagePixelT, class MaskPixelT> class MaskedImage;
 
