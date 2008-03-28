@@ -22,9 +22,11 @@
 #include <lsst/afw/formatters/SourceFormatters.h>
 #include <lsst/afw/formatters/Utils.h>
 
-using namespace lsst::afw::formatters;
 namespace ex = lsst::pex::exceptions;
 
+namespace lsst {
+namespace afw {
+namespace formatters {
 
 // -- SourceVectorFormatter ----------------
 
@@ -447,3 +449,5 @@ Persistable* SourceVectorFormatter::read(
 void SourceVectorFormatter::update(Persistable*, Storage::Ptr, DataProperty::PtrType) {
     throw ex::Runtime("SourceVectorFormatter: updates not supported");
 }
+
+}}} // namespace lsst::afw::formatters

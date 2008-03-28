@@ -39,7 +39,9 @@ static void execTrace(std::string s, int level = EXEC_TRACE) {
 
 using namespace lsst::daf::persitence;
 
-using namespace lsst::afw::formatters;
+namespace lsst {
+namespace afw {
+namespace formatters {
 
 template <typename ImagePixelT>
 class ImageFormatterTraits {
@@ -174,3 +176,5 @@ Formatter::Ptr ImageFormatter<ImagePixelT>::createInstance(
 template class ImageFormatter<boost::uint16_t>;
 template class ImageFormatter<float>;
 template class ImageFormatter<double>;
+
+}}} // namespace lsst::afw::formatters

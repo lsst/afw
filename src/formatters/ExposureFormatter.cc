@@ -44,7 +44,9 @@ static void execTrace(std::string s, int level = EXEC_TRACE) {
 
 using namespace lsst::daf::persitence;
 
-using namespace lsst::afw::formatters;
+namespace lsst {
+namespace afw {
+namespace formatters {
 
 template <typename ImagePixelT, typename MaskPixelT>
 class ExposureFormatterTraits {
@@ -400,3 +402,5 @@ Formatter::Ptr ExposureFormatter<ImagePixelT, MaskPixelT>::createInstance(
 template class ExposureFormatter<boost::uint16_t, lsst::afw::image::maskPixelType>;
 template class ExposureFormatter<float, lsst::afw::image::maskPixelType>;
 template class ExposureFormatter<double, lsst::afw::image::maskPixelType>;
+
+}}} // namespace lsst::afw::formatters

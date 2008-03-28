@@ -13,12 +13,13 @@
 
 #include <lsst/afw/formatters/Utils.h>
 
-using namespace lsst::afw::formatters
-
 namespace ex = lsst::pex::exceptions;
 
 using boost::int64_t;
 
+namespace lsst {
+namespace afw {
+namespace formatters {
 
 static int64_t getInt64FromAny(boost::any const & val, std::string const & key) {
     int64_t i;
@@ -337,3 +338,5 @@ void dropAllVisitSliceTables(
         db.dropTable(*i);
     }
 }
+
+}}} // namespace lsst::afw::formatters

@@ -8,8 +8,8 @@
 //
 //##====----------------                                ----------------====##/
 
-#ifndef LSST_AFW_FORMATTERS__SOURCE_FORMATTERS_H
-#define LSST_AFW_FORMATTERS__SOURCE_FORMATTERS_H
+#ifndef LSST_AFW_FORMATTERS_SOURCE_FORMATTERS_H
+#define LSST_AFW_FORMATTERS_SOURCE_FORMATTERS_H
 
 #include <string>
 #include <vector>
@@ -19,8 +19,7 @@
 #include <lsst/daf/persistence/Formatter.h>
 #include <lsst/daf/persistence/DbStorage.h>
 
-#include "lsst/afw/Source.h"
-
+#include "lsst/afw/detection/Source.h"
 
 namespace lsst {
 namespace afw {
@@ -29,7 +28,6 @@ namespace formatters {
 using namespace lsst::daf::persitence;
 using lsst::pex::policy::Policy;
 using lsst::daf::data::DataProperty;
-
 
 /*!
     Formatter that supports persistence and retrieval with
@@ -67,5 +65,5 @@ private:
 
 }}} // namespace lsst::afw::formatters
 
-#endif // LSST_AFW_FORMATTERS__SOURCE_FORMATTERS_H
+#endif // LSST_AFW_FORMATTERS_SOURCE_FORMATTERS_H
 

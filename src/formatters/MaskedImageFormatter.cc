@@ -40,7 +40,9 @@ static void execTrace(std::string s, int level = EXEC_TRACE) {
 
 using namespace lsst::daf::persitence;
 
-namespace lsst::afw::formatters;
+namespace lsst {
+namespace afw {
+namespace formatters {
 
 template <typename ImagePixelT, typename MaskPixelT>
 class MaskedImageFormatterTraits {
@@ -150,3 +152,5 @@ Formatter::Ptr MaskedImageFormatter<ImagePixelT, MaskPixelT>::createInstance(
 template class MaskedImageFormatter<uint16_t, maskPixelType>;
 template class MaskedImageFormatter<float, maskPixelType>;
 template class MaskedImageFormatter<double, maskPixelType>;
+
+}}} // namespace lsst::afw::formatters
