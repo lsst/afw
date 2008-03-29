@@ -17,7 +17,7 @@ namespace lsst {
 namespace afw {
 namespace formatters {
 
-using namespace lsst::daf::persitence;
+using namespace lsst::daf::persistence;
 using lsst::daf::data::DataProperty;
 using lsst::pex::policy::Policy;
 

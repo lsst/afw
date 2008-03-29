@@ -42,21 +42,21 @@ public :
         Creates a Filter with the given name, using the \b Filter table in the database currently
         set on the given DbStorage to map the filter name to an integer identifier.
      */
-    Filter(lsst::daf::persitence::DbStorage & db, std::string const & name) : _id(nameToId(db, name)) {}
+    Filter(lsst::daf::persistence::DbStorage & db, std::string const & name) : _id(nameToId(db, name)) {}
 
-    Filter(lsst::daf::persitence::LogicalLocation const & location, std::string const & name);
+    Filter(lsst::daf::persistence::LogicalLocation const & location, std::string const & name);
 
     operator int() const { return _id; }
     int getId()    const { return _id; }
 
-    std::string const toString(lsst::daf::persitence::DbStorage & db);
-    std::string const toString(lsst::daf::persitence::LogicalLocation const & location);
+    std::string const toString(lsst::daf::persistence::DbStorage & db);
+    std::string const toString(lsst::daf::persistence::LogicalLocation const & location);
 
 private :
 
     int _id;
 
-    static int nameToId(lsst::daf::persitence::DbStorage & db, std::string const & name);
+    static int nameToId(lsst::daf::persistence::DbStorage & db, std::string const & name);
 };
 
 }}}  // lsst::afw::image

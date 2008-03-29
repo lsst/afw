@@ -4,7 +4,7 @@
 
 #include <typeinfo>
 #include <sys/stat.h>
-#include <lsst/pex/utils/Trace.h>
+#include <lsst/pex/logging/Trace.h>
 #include <lsst/pex/exceptions.h>
 
 /**
@@ -179,7 +179,7 @@ void lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::readFits(std::strin
 
     conformSizes();
 
-    lsst::pex::utils::Trace("afw.MaskedImage", 2,
+    lsst::pex::logging::Trace("afw.MaskedImage", 2,
               boost::format("Read in MaskedImage of size (%d,%d)") % _imageCols % _imageRows);
 
 }
@@ -278,7 +278,7 @@ void lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::setDefaultVariance(
     } 
 
     catch (...) {
-        lsst::pex::utils::Trace("afw.MaskedImage", 0,
+        lsst::pex::logging::Trace("afw.MaskedImage", 0,
             "Gain could not be set in setDefaultVariance().  Using gain=1.0");
         gain = 1.0;
     }
@@ -288,7 +288,7 @@ void lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::setDefaultVariance(
 
     *varianceVw = *imageVw / gain;
 
-    lsst::pex::utils::Trace("afw.MaskedImage", 1,
+    lsst::pex::logging::Trace("afw.MaskedImage", 1,
               boost::format("Using gain = %f in setDefaultVariance()") % gain);
 
 }
@@ -377,7 +377,7 @@ template<typename ImagePixelT, typename MaskPixelT>
 void lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::processPixels(
     PixelProcessingFunc<ImagePixelT, MaskPixelT> &processingFunc
 ) {
-    lsst::pex::utils::Trace("afw.MaskedImage", 5, "Processing pixels");
+    lsst::pex::logging::Trace("afw.MaskedImage", 5, "Processing pixels");
 
     PixelLocator<ImagePixelT> i = processingFunc.getImagePixelLocatorBegin();
     PixelLocator<ImagePixelT> iEnd = processingFunc.getImagePixelLocatorEnd();

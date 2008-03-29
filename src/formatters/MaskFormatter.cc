@@ -26,7 +26,7 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 #include <lsst/daf/persistence/LogicalLocation.h>
 #include <lsst/daf/persistence/BoostStorage.h>
 #include <lsst/daf/persistence/FitsStorage.h>
-#include <lsst/pex/utils/Trace.h>
+#include <lsst/pex/logging/Trace.h>
 
 #include <boost/serialization/binary_object.hpp>
 #include <boost/serialization/shared_ptr.hpp>
@@ -36,10 +36,10 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 
 #define EXEC_TRACE  20
 static void execTrace(std::string s, int level = EXEC_TRACE) {
-    lsst::pex::utils::Trace("afw.MaskFormatter", level, s);
+    lsst::pex::logging::Trace("afw.MaskFormatter", level, s);
 }
 
-using namespace lsst::daf::persitence;
+using namespace lsst::daf::persistence;
 
 namespace lsst {
 namespace afw {

@@ -29,7 +29,7 @@
 #include <lsst/daf/data/DataProperty.h>
 #include <lsst/daf/data/LsstBase.h>
 #include <lsst/pex/exceptions.h>
-#include <lsst/pex/utils/Trace.h> 
+#include <lsst/pex/logging/Trace.h> 
 #include <lsst/afw/image/Exposure.h>
 #include <lsst/afw/image/MaskedImage.h>
 #include <lsst/afw/image/WCS.h> 
@@ -235,7 +235,7 @@ void lsst::afw::image::Exposure<ImageT, MaskT>::readFits(
   * disk.  Method also uses the metaData information to update the Exposure's
   * fits header cards.
   *
-  * \note The MaskedImage Class will throw an mwi Exception if the base
+  * \note The MaskedImage Class will throw an pex Exception if the base
   * filename is not found.
   */
 template<typename ImageT, typename MaskT> 

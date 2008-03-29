@@ -22,7 +22,7 @@
 #include <boost/tuple/tuple_io.hpp>
 
 #include <lsst/daf/data/LsstBase.h>
-#include <lsst/daf/persistence/Persistable.h>
+#include <lsst/daf/base/Persistable.h>
 #include <lsst/afw/image/Image.h>
 #include <lsst/afw/image/Mask.h>
 #include <lsst/afw/image/MaskedPixelAccessor.h>
@@ -88,7 +88,7 @@ namespace image {
     };
     
     template<class ImagePixelT, class MaskPixelT>
-    class MaskedImage : public lsst::daf::persitence::Persistable,
+    class MaskedImage : public lsst::daf::base::Persistable,
                         public lsst::daf::data::LsstBase {
         
     public:

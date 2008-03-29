@@ -25,19 +25,19 @@ namespace lsst {
 namespace afw {
 namespace formatters {
                
-using namespace lsst::daf::persitence;
+using namespace lsst::daf::persistence;
 
 template<typename ImagePixelT, typename MaskPixelT>
 class ExposureFormatter : public Formatter {
 public:       
     virtual ~ExposureFormatter(void);
 
-    virtual void write(Persistable const* persistable, Storage::Ptr storage,
+    virtual void write(lsst::daf::base::Persistable const* persistable, Storage::Ptr storage,
                        lsst::daf::data::DataProperty::PtrType additionalData);
-    virtual Persistable* read(
+    virtual lsst::daf::base::Persistable* read(
         Storage::Ptr storage,
         lsst::daf::data::DataProperty::PtrType additionalData);
-    virtual void update(Persistable* persistable,
+    virtual void update(lsst::daf::base::Persistable* persistable,
                         Storage::Ptr storage,
                         lsst::daf::data::DataProperty::PtrType additionalData);
 
@@ -45,7 +45,7 @@ public:
 
     template <class Archive>
         static void delegateSerialize(Archive& ar, int const version,
-                                      Persistable* persistable);
+                                      lsst::daf::base::Persistable* persistable);
 private:
     explicit ExposureFormatter(lsst::pex::policy::Policy::Ptr policy);
 

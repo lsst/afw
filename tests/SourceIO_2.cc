@@ -30,10 +30,10 @@ using boost::int64_t;
 using lsst::daf::data::DataProperty;
 using lsst::daf::data::SupportFactory;
 using lsst::pex::policy::Policy;
-using lsst::daf::persitence::LogicalLocation;
-using lsst::daf::persitence::Persistence;
-using lsst::daf::persitence::Persistable;
-using lsst::daf::persitence::Storage;
+using lsst::daf::persistence::LogicalLocation;
+using lsst::daf::persistence::Persistence;
+using lsst::daf::base::Persistable;
+using lsst::daf::persistence::Storage;
 
 using namespace lsst::afw;
 
@@ -282,7 +282,7 @@ static void testDb(std::string const & storageType) {
 int main(int const argc, char const * const * const argv) {
     try {
         testBoost();
-        if (lsst::daf::persitence::DbAuth::available()) {
+        if (lsst::daf::persistence::DbAuth::available()) {
             testDb("DbStorage");
             testDb("DbTsvStorage");
         }

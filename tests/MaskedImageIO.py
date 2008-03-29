@@ -134,7 +134,7 @@ def suite():
 
 def run(exit=False):
     """Run the tests"""
-    dafTests.run(suite(), exit)        # mwi 2.0
+    dafTests.run(suite(), exit)
 
 if __name__ == "__main__":
     run(True)

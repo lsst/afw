@@ -15,8 +15,8 @@ Access to persistable C++ objects for catalog data. Currently supported are:
 #pragma SWIG nowarn=362                 // operator=  ignored
 
 %{
-#include "lsst/fw/Source.h"
-#include "lsst/fw/formatters/Utils.h"
+#include "lsst/afw/detection/Source.h"
+#include "lsst/afw/formatters/Utils.h"
 %}
 
 %inline %{
@@ -31,30 +31,30 @@ import lsst.fw.exceptions
 %}
 
 %include "lsst/mwi/p_lsstSwig.i"
-%include "lsst/mwi/persistenceMacros.i"
-%import "lsst/mwi/persistence/Persistable.h"
+%include "lsst/daf/persistenceMacros.i"
+%import "lsst/daf/base/Persistable.h"
 
-%import "lsst/mwi/data/Citizen.h"
-%import "lsst/mwi/policy/Policy.h"
-%import "lsst/mwi/persistence/LogicalLocation.h"
-%import "lsst/mwi/persistence/Persistence.h"
-%import "lsst/mwi/persistence/Storage.h"
-%import "lsst/mwi/data/DataProperty.h"
+%import "lsst/lsst/daf/base/Citizen.h"
+%import "lsst/pex/policy/Policy.h"
+%import "lsst/daf/persistence/LogicalLocation.h"
+%import "lsst/daf/persistence/Persistence.h"
+%import "lsst/daf/persistence/Storage.h"
+%import "lsst/daf/base/DataPropery.h"
 
 
 %include <stdint.i>
 %include <std_vector.i>
 %include <typemaps.i>
 
-%rename(SourceVec)  lsst::fw::SourceVector;
+%rename(SourceVec)  lsst::afw::detection::SourceVector;
 
-%include "lsst/fw/Source.h"
-%include "lsst/fw/formatters/Utils.h"
+%include "lsst/afw/detection/Source.h"
+%include "lsst/afw/formatters/Utils.h"
 
 
 // Provide semi-useful printing of catalog records
 
-%extend lsst::fw::Source {
+%extend lsst::afw::detection::Source {
     std::string toString() {
         std::ostringstream os;
         os << "Source " << $self->getId();
@@ -76,16 +76,16 @@ Source.__str__ = Source.toString
 %{
 namespace swig {
     template <>
-    struct traits_asptr<lsst::fw::SourceVector>  {
-        static int asptr(PyObject *obj, lsst::fw::SourceVector **vec) {
-            return traits_asptr_stdseq<lsst::fw::SourceVector>::asptr(obj, vec);
+    struct traits_asptr<lsst::afw::detection::SourceVector>  {
+        static int asptr(PyObject *obj, lsst::afw::detection::SourceVector **vec) {
+            return traits_asptr_stdseq<lsst::afw::detection::SourceVector>::asptr(obj, vec);
         }
     };
     
     template <>
-    struct traits_from<lsst::fw::SourceVector> {
-        static PyObject *from(const lsst::fw::SourceVector& vec) {
-            return traits_from_stdseq<lsst::fw::SourceVector>::from(vec);
+    struct traits_from<lsst::afw::detection::SourceVector> {
+        static PyObject *from(const lsst::afw::detection::SourceVector& vec) {
+            return traits_from_stdseq<lsst::afw::detection::SourceVector>::from(vec);
         }
     };
 }
@@ -152,7 +152,7 @@ namespace lsst {
 namespace afw {
 namespace detection {
 
-class SourceVector : public lsst::mwi::persistence::Persistable {
+class SourceVector : public lsst::daf::base::Persistable {
 public:
     typedef size_t size_type;
     typedef ptrdiff_t difference_type;
@@ -161,45 +161,45 @@ public:
     typedef const value_type* const_pointer;
     typedef Source& reference;
     typedef const Source& const_reference;
-    typedef std::allocator<lsst::fw::Source> allocator_type;
+    typedef std::allocator<lsst::afw::detection::Source> allocator_type;
 
-    %traits_swigtype(lsst::fw::Source);
+    %traits_swigtype(lsst::afw::detection::Source);
 
-    %fragment(SWIG_Traits_frag(lsst::fw::SourceVector), "header",
-              fragment=SWIG_Traits_frag(lsst::fw::Source),
+    %fragment(SWIG_Traits_frag(lsst::afw::detection::SourceVector), "header",
+              fragment=SWIG_Traits_frag(lsst::afw::detection::Source),
               fragment="SourceVectorTraits") {
         namespace swig {
-            template <>  struct traits<lsst::fw::SourceVector> {
+            template <>  struct traits<lsst::afw::detection::SourceVector> {
                 typedef pointer_category category;
                 static const char* type_name() {
-                    return "lsst::fw::SourceVector";
+                    return "lsst::afw::detection::SourceVector";
                 }
             };
         }
     }
 
-    %typemap_traits_ptr(SWIG_TYPECHECK_VECTOR, lsst::fw::SourceVector);
+    %typemap_traits_ptr(SWIG_TYPECHECK_VECTOR, lsst::afw::detection::SourceVector);
 
     #ifdef %swig_vector_methods
     // Add swig/language extra methods
-    %swig_vector_methods(lsst::fw::SourceVector);
+    %swig_vector_methods(lsst::afw::detection::SourceVector);
     #endif
 
-    %lsst_vector_methods(lsst::fw::SourceVector);
+    %lsst_vector_methods(lsst::afw::detection::SourceVector);
 };
 
 
 
 }}} // namespace lsst::afw::detection
 
-// Make sure SWIG generates type information for boost::shared_ptr<lsst::mwi::Persistable> *,
+// Make sure SWIG generates type information for boost::shared_ptr<lsst::daf::base::Persistable> *,
 // even though that type is actually wrapped in the persistence module
-%types(boost::shared_ptr<lsst::mwi::persistence::Persistable> *);
+%types(boost::shared_ptr<lsst::daf::base::Persistable> *);
 
 // Export instantiations of boost::shared_ptr for persistable data vectors
-%lsst_persistable_shared_ptr(SourceVecSharedPtr, lsst::fw::SourceVector);
+%lsst_persistable_shared_ptr(SourceVecSharedPtr, lsst::afw::detection::SourceVector);
 
-%template(SourceSharedPtr) boost::shared_ptr<lsst::fw::Source>;
+%template(SourceSharedPtr) boost::shared_ptr<lsst::afw::detection::Source>;
 
 %pythoncode %{
 

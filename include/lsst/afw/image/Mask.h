@@ -20,8 +20,8 @@
 
 #include <lsst/daf/data.h>
 #include <lsst/pex/exceptions.h>
-#include <lsst/daf/persistence/Persistable.h>
-#include <lsst/pex/utils/Trace.h>
+#include <lsst/daf/base/Persistable.h>
+#include <lsst/pex/logging/Trace.h>
 #include <lsst/afw/image/LSSTFitsResource.h>
 #include <lsst/afw/image/ImageExceptions.h>
 
@@ -54,7 +54,7 @@ namespace image {
     };
     
     template<typename MaskPixelT>
-    class Mask : public lsst::daf::persitence::Persistable,
+    class Mask : public lsst::daf::base::Persistable,
                  public lsst::daf::data::LsstBase {
     public:
         typedef typename PixelChannelType<MaskPixelT>::type MaskChannelT;

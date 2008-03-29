@@ -3,7 +3,7 @@
 #include <string>
 
 #include <lsst/daf/data/Citizen.h>
-#include <lsst/pex/utils/Trace.h>
+#include <lsst/pex/logging/Trace.h>
 #include <lsst/afw/math/FunctionLibrary.h>
 #include <lsst/afw/image/Image.h>
 #include <lsst/afw/math/Kernel.h>
@@ -15,8 +15,8 @@ const std::string outFile("scOut");
 int main(int argc, char **argv) {
     typedef lsst::afw::math::Kernel::PixelT pixelType;
     
-    lsst::pex::utils::Trace::setDestination(std::cout);
-    lsst::pex::utils::Trace::setVerbosity("lsst.afw.kernel", 5);
+    lsst::pex::logging::Trace::setDestination(std::cout);
+    lsst::pex::logging::Trace::setVerbosity("lsst.afw.kernel", 5);
 
     const double DefSigma = 2.0;
     int DefEdgeMaskBit = 0;

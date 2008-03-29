@@ -64,7 +64,7 @@ inline static int64_t generateSourceId(unsigned short seqNum, int ccdId, int64_t
 
 /*!
     Inserts a single Source into a database table using \a db
-    (an instance of lsst::daf::persitence::DbStorage or subclass thereof).
+    (an instance of lsst::daf::persistence::DbStorage or subclass thereof).
  */
 template <typename T>
 void SourceVectorFormatter::insertRow(T & db, Source const & d) {

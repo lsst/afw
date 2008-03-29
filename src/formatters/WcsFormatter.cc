@@ -36,14 +36,14 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 #include <lsst/daf/persistence/LogicalLocation.h>
 #include <lsst/daf/persistence/BoostStorage.h>
 #include <lsst/daf/persistence/FitsStorage.h>
-#include <lsst/pex/utils/Trace.h>
+#include <lsst/pex/logging/Trace.h>
 
 #define EXEC_TRACE  20
 static void execTrace(std::string s, int level = EXEC_TRACE) {
-    lsst::pex::utils::Trace("afw.WcsFormatter", level, s);
+    lsst::pex::logging::Trace("afw.WcsFormatter", level, s);
 }
 
-using namespace lsst::daf::persitence;
+using namespace lsst::daf::persistence;
 
 namespace lsst {
 namespace afw {

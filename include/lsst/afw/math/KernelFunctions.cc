@@ -27,7 +27,7 @@
 #include <boost/format.hpp>
 #include <vw/Math.h>
 
-#include <lsst/pex/utils/Trace.h>
+#include <lsst/pex/logging/Trace.h>
 #include <lsst/afw/image/ImageUtils.h>
 
 // declare private functions
@@ -164,7 +164,7 @@ void lsst::afw::math::basicConvolve(
     if (kernel.isSpatiallyVarying()) {
         lsst::afw::image::Image<KernelPixelT> kernelImage(kernel.getCols(), kernel.getRows());
         kernelAccessorType kernelAccessor = kernelImage.origin();
-        lsst::pex::utils::Trace("lsst.afw.kernel.convolve", 3, "kernel is spatially varying");
+        lsst::pex::logging::Trace("lsst.afw.kernel.convolve", 3, "kernel is spatially varying");
         for (int cnvRow = cnvStartRow; cnvRow < cnvEndRow; ++cnvRow, cnvRowAcc.nextRow(), mImageRowAcc.nextRow()) {
             double rowPos = lsst::afw::image::indexToPosition(cnvRow);
             maskedPixelAccessorType mImageColAcc = mImageRowAcc;
@@ -185,7 +185,7 @@ void lsst::afw::math::basicConvolve(
         }
     } else {
         // kernel is spatially invariant
-        lsst::pex::utils::Trace("lsst.afw.kernel.convolve", 3, "kernel is spatially invariant");
+        lsst::pex::logging::Trace("lsst.afw.kernel.convolve", 3, "kernel is spatially invariant");
         KernelPixelT kSum;
         lsst::afw::image::Image<KernelPixelT> kernelImage = kernel.computeNewImage(kSum, 0.0, 0.0, doNormalize);
         kernelAccessorType kernelAccessor = kernelImage.origin();
@@ -248,7 +248,7 @@ void lsst::afw::math::basicConvolve(
         cnvRowAcc.advance(0, -pixelRow);
     }
 
-    lsst::pex::utils::Trace("lsst.afw.kernel.convolve", 3, "kernel is spatially invariant delta function basis");
+    lsst::pex::logging::Trace("lsst.afw.kernel.convolve", 3, "kernel is spatially invariant delta function basis");
     for (int i = 0; i < nCopyRows; ++i, cnvRowAcc.nextRow(), mImageRowAcc.nextRow()) {
         MIAccessorT mImageColAcc = mImageRowAcc;
         MIAccessorT cnvColAcc = cnvRowAcc;
@@ -513,7 +513,7 @@ inline void lsst::afw::math::_copyRegion(
 
     vw::math::Vector<vw::int32> const startColRow = region.min();
     vw::math::Vector<vw::int32> const numColRow = region.size();
-    lsst::pex::utils::Trace("lsst.afw.kernel._copyRegion", 4,
+    lsst::pex::logging::Trace("lsst.afw.kernel._copyRegion", 4,
         "_copyRegion: dest size=%d, %d; src size=%d, %d; region start=%d, %d; region size=%d, %d; orMask=%d",
         destImage.getCols(), destImage.getRows(), sourceImage.getCols(), sourceImage.getRows(),
         startColRow[0], startColRow[1], numColRow[0], numColRow[1], orMask

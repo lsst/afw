@@ -12,7 +12,7 @@
 #include <vw/Math.h>
 
 #include <lsst/daf/data.h>
-#include <lsst/daf/persistence/Persistable.h>
+#include <lsst/daf/base/Persistable.h>
 
 struct wcsprm;                          // defined in wcs.h
 
@@ -30,7 +30,7 @@ namespace image {
     /// All WCS (in the FITS sense) coordinate conventions are supported via
     /// Mark Calabretta's wcslib package (http://www.atnf.csiro.au/people/mcalabre)
     ///
-    class WCS : public lsst::daf::persitence::Persistable,
+    class WCS : public lsst::daf::base::Persistable,
                 public lsst::daf::data::LsstBase {
     public:
         

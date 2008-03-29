@@ -33,25 +33,25 @@ Basic routines to talk to FW's classes (including visionWorkbench) and ds9
 #   include <boost/shared_ptr.hpp>
 #   include <boost/any.hpp>
 #   include <boost/array.hpp>
-#   include "lsst/mwi/data/Citizen.h"
+#   include "lsst/lsst/daf/base/Citizen.h"
 #   include "lsst/mwi/utils/Demangle.h"
-#   include "lsst/mwi/utils/Trace.h"
+#   include "lsst/pex/logging/Trace.h"
 #   include "lsst/mwi/utils/Utils.h"
 #   include "lsst/mwi/logging/Log.h"
-#   include "lsst/fw/DiskImageResourceFITS.h"
-#   include "lsst/fw/Filter.h"
-#   include "lsst/fw/Mask.h"
-#   include "lsst/fw/MaskedImage.h"
-#   include "lsst/fw/ImageUtils.h"
+#   include "lsst/afw/image/DiskImageResourceFITS.h"
+#   include "lsst/afw/image/Filter.h"
+#   include "lsst/afw/image/Mask.h"
+#   include "lsst/afw/image/MaskedImage.h"
+#   include "lsst/afw/image/ImageUtils.h"
 %}
 
 %inline %{
-namespace lsst { namespace fw { } }
+namespace lsst { namespace afw { } }
 namespace vw {}
 namespace boost { namespace filesystem {} }
     
 using namespace lsst;
-using namespace lsst::fw;
+using namespace lsst::afw;
 using namespace vw;
 %}
 
@@ -76,7 +76,7 @@ def version(HeadURL = r"$HeadURL$"):
         return version_svn
     else:
         try:
-            version_eups = eups.setup("fw")
+            version_eups = eups.setup("afw")
         except AttributeError:
             return version_svn
 
@@ -92,7 +92,7 @@ def version(HeadURL = r"$HeadURL$"):
 %ignore vw::ImageView<boost::uint16_t>::origin;
 %ignore vw::ImageView<float>::origin;
 %ignore vw::ImageView<double>::origin;
-%ignore vw::ImageView<lsst::fw::maskPixelType>::origin;
+%ignore vw::ImageView<lsst::afw::image::maskPixelType>::origin;
 %ignore operator vw::ImageView::unspecified_bool_type;
 
 %import <vw/Core/FundamentalTypes.h>
@@ -135,13 +135,13 @@ def version(HeadURL = r"$HeadURL$"):
 #endif
 %import <vw/FileIO/DiskImageResource.h>
 
-%include "lsst/mwi/data/Citizen.h"
+%include "lsst/lsst/daf/base/Citizen.h"
 %import "lsst/mwi/utils/Utils.h"
-%import "lsst/mwi/policy/Policy.h"
-%include "lsst/mwi/persistence/Persistable.h"
-%include "lsst/mwi/data/LsstData.h"
+%import "lsst/pex/policy/Policy.h"
+%include "lsst/daf/base/Persistable.h"
+%include "lsst/daf/data/LsstData.h"
 %import "lsst/mwi/DataProperty.i"
-%import "lsst/mwi/exceptions.h"
+%import "lsst/pex/exceptions.h"
 
 /******************************************************************************/
 // Masks and MaskedImages
@@ -149,22 +149,22 @@ def version(HeadURL = r"$HeadURL$"):
 %template(pairIntString) std::pair<int,std::string>;
 %template(mapIntString)  std::map<std::string, int>;
 
-%ignore lsst::fw::Image::origin;        // no need to swig origin (and the _wrap.cc file is invalid)
-%ignore lsst::fw::Mask::origin;         // no need to swig origin (and the _wrap.cc file is invalid)
+%ignore lsst::afw::image::Image::origin;        // no need to swig origin (and the _wrap.cc file is invalid)
+%ignore lsst::afw::image::Mask::origin;         // no need to swig origin (and the _wrap.cc file is invalid)
 
 %import "lsst/mwi/utils/Utils.h"
-%include "lsst/mwi/data/Citizen.h"
+%include "lsst/lsst/daf/base/Citizen.h"
 %include "lsst/mwi/data/LsstImpl_DC2.h"
 %include "lsst/mwi/data/LsstBase.h"
-%ignore lsst::fw::Filter::operator int;
-%include "lsst/fw/Filter.h"
-%include "lsst/fw/Image.h"
-%include "lsst/fw/Mask.h"
-%include "lsst/fw/MaskedImage.h"
+%ignore lsst::afw::image::Filter::operator int;
+%include "lsst/afw/image/Filter.h"
+%include "lsst/afw/image/Image.h"
+%include "lsst/afw/image/Mask.h"
+%include "lsst/afw/image/MaskedImage.h"
 
-%include "lsst/fw/DiskImageResourceFITS.h"
+%include "lsst/afw/image/DiskImageResourceFITS.h"
 
-%extend lsst::fw::Image<boost::uint16_t> {
+%extend lsst::afw::image::Image<boost::uint16_t> {
     %rename(getVal) get;
     /**
      * Set an image to the value val
@@ -188,7 +188,7 @@ def version(HeadURL = r"$HeadURL$"):
 %}
 }
 
-%extend lsst::fw::Image<float> {
+%extend lsst::afw::image::Image<float> {
     %rename(getVal) get;
     /**
      * Set an image to the value val
@@ -215,7 +215,7 @@ def version(HeadURL = r"$HeadURL$"):
 %}
 }
 
-%extend lsst::fw::Image<double> {
+%extend lsst::afw::image::Image<double> {
     %rename(getVal) get;
     /**
      * Set an image to the value val
@@ -243,26 +243,26 @@ def version(HeadURL = r"$HeadURL$"):
 }
 
 
-%extend lsst::fw::Mask<lsst::fw::maskPixelType> {
+%extend lsst::afw::image::Mask<lsst::afw::image::maskPixelType> {
     %rename(getVal) get;
     /**
      * Set entire mask to val
      */
-    void set(lsst::fw::maskPixelType val) {
-        Mask<lsst::fw::maskPixelType>::MaskIVwT& ivw = self->getIVw();
+    void set(lsst::afw::image::maskPixelType val) {
+        Mask<lsst::afw::image::maskPixelType>::MaskIVwT& ivw = self->getIVw();
         std::fill(ivw.begin(), ivw.end(), val);
     }
     /**
      * Set pixel (x,y) to val
      */
-    void set(int x, int y, lsst::fw::maskPixelType val) {
-        Mask<lsst::fw::maskPixelType>::MaskIVwT& ivw = self->getIVw();
+    void set(int x, int y, lsst::afw::image::maskPixelType val) {
+        Mask<lsst::afw::image::maskPixelType>::MaskIVwT& ivw = self->getIVw();
         *ivw.origin().advance(x, y) = val;
     }
     /**
      * return the value of pixel (x,y).  Would be called get, except that that's taken
      */
-    lsst::fw::maskPixelType get(int x, int y) {
+    lsst::afw::image::maskPixelType get(int x, int y) {
         return self->operator()(x, y);
     }
 %pythoncode %{
@@ -270,42 +270,42 @@ def version(HeadURL = r"$HeadURL$"):
 %}
 }
 
-%include "lsst/mwi/persistenceMacros.i"
+%include "lsst/daf/persistenceMacros.i"
 %template(ImageBaseU)           vw::ImageViewBase<vw::ImageView<boost::uint16_t> >;
 %template(ImageViewU)           vw::ImageView<boost::uint16_t>;
-%template(ImageU)               lsst::fw::Image<boost::uint16_t>;
-%lsst_persistable_shared_ptr(ImageUPtr, lsst::fw::Image<boost::uint16_t>)
+%template(ImageU)               lsst::afw::image::Image<boost::uint16_t>;
+%lsst_persistable_shared_ptr(ImageUPtr, lsst::afw::image::Image<boost::uint16_t>)
 
 %template(ImageBaseF)           vw::ImageViewBase<vw::ImageView<float> >;
 %template(ImageViewF)           vw::ImageView<float>;
 %template(CompoundChannelTypeF) vw::CompoundChannelType<float>;
 %template(PixelChannelTypeF)    vw::PixelChannelType<float>;
-%template(ImageF)               lsst::fw::Image<float>;
-%lsst_persistable_shared_ptr(ImageFPtr, lsst::fw::Image<float>)
+%template(ImageF)               lsst::afw::image::Image<float>;
+%lsst_persistable_shared_ptr(ImageFPtr, lsst::afw::image::Image<float>)
 
 %template(ImageBaseD)           vw::ImageViewBase<vw::ImageView<double> >;
 %template(ImageViewD)           vw::ImageView<double>;
 %template(CompoundChannelTypeD) vw::CompoundChannelType<double>;
 %template(PixelChannelTypeD)    vw::PixelChannelType<double>;
-%template(ImageD)               lsst::fw::Image<double>;
-%lsst_persistable_shared_ptr(ImageDPtr, lsst::fw::Image<double>)
+%template(ImageD)               lsst::afw::image::Image<double>;
+%lsst_persistable_shared_ptr(ImageDPtr, lsst::afw::image::Image<double>)
 
-%template(listMaskPixelPtr)     std::list<lsst::fw::maskPixelType *>;
-%template(CompoundChannelMaskTypeD) vw::CompoundChannelType<lsst::fw::maskPixelType>;
-%template(PixelChannelMaskTypeD)    vw::PixelChannelType<lsst::fw::maskPixelType>;
-%template(MaskU)                lsst::fw::Mask<lsst::fw::maskPixelType>;
-%lsst_persistable_shared_ptr(MaskUPtr,      lsst::fw::Mask<lsst::fw::maskPixelType>);
+%template(listMaskPixelPtr)     std::list<lsst::afw::image::maskPixelType *>;
+%template(CompoundChannelMaskTypeD) vw::CompoundChannelType<lsst::afw::image::maskPixelType>;
+%template(PixelChannelMaskTypeD)    vw::PixelChannelType<lsst::afw::image::maskPixelType>;
+%template(MaskU)                lsst::afw::image::Mask<lsst::afw::image::maskPixelType>;
+%lsst_persistable_shared_ptr(MaskUPtr,      lsst::afw::image::Mask<lsst::afw::image::maskPixelType>);
 
-%boost_shared_ptr(MaskIVwPtrT,   vw::ImageView<lsst::fw::maskPixelType>);
+%boost_shared_ptr(MaskIVwPtrT,   vw::ImageView<lsst::afw::image::maskPixelType>);
 //
 // MaskedImage
 //
-%template(MaskedImageF)         lsst::fw::MaskedImage<float, lsst::fw::maskPixelType>;
-%lsst_persistable_shared_ptr(MaskedImageFPtr, lsst::fw::MaskedImage<float, lsst::fw::maskPixelType>);
-%template(MaskedImageD)         lsst::fw::MaskedImage<double, lsst::fw::maskPixelType>;
-%lsst_persistable_shared_ptr(MaskedImageDPtr, lsst::fw::MaskedImage<double, lsst::fw::maskPixelType>);
-%template(MaskedImageU)         lsst::fw::MaskedImage<boost::uint16_t, lsst::fw::maskPixelType>;
-%lsst_persistable_shared_ptr(MaskedImageUPtr, lsst::fw::MaskedImage<boost::uint16_t, lsst::fw::maskPixelType>);
+%template(MaskedImageF)         lsst::afw::image::MaskedImage<float, lsst::afw::image::maskPixelType>;
+%lsst_persistable_shared_ptr(MaskedImageFPtr, lsst::afw::image::MaskedImage<float, lsst::afw::image::maskPixelType>);
+%template(MaskedImageD)         lsst::afw::image::MaskedImage<double, lsst::afw::image::maskPixelType>;
+%lsst_persistable_shared_ptr(MaskedImageDPtr, lsst::afw::image::MaskedImage<double, lsst::afw::image::maskPixelType>);
+%template(MaskedImageU)         lsst::afw::image::MaskedImage<boost::uint16_t, lsst::afw::image::maskPixelType>;
+%lsst_persistable_shared_ptr(MaskedImageUPtr, lsst::afw::image::MaskedImage<boost::uint16_t, lsst::afw::image::maskPixelType>);
 
 // vw Statistics on Images
   /// Compute the mean value stored in all of the channels of all of the planes of the image.
@@ -339,13 +339,13 @@ def version(HeadURL = r"$HeadURL$"):
 %template(Vector2i)             Vector<int32, 2>;
 %template(Vector2f)             Vector<float, 2>;
 
-%template(listPixelCoord)  std::list<lsst::fw::PixelCoord>;
+%template(listPixelCoord)  std::list<lsst::afw::image::PixelCoord>;
 
 %apply double &OUTPUT { double & };
-%rename(positionToIndexAndResidual) lsst::fw::image::positionToIndex(double &, double);
+%rename(positionToIndexAndResidual) lsst::afw::image::positionToIndex(double &, double);
 %clear double &OUTPUT;
 
-%include "lsst/fw/ImageUtils.h"
+%include "lsst/afw/image/ImageUtils.h"
 
 /************************************************************************************************************/
 
@@ -354,12 +354,12 @@ def version(HeadURL = r"$HeadURL$"):
 /************************************************************************************************************/
 
 %{
-    #include "lsst/fw/WCS.h"
+    #include "lsst/afw/image/WCS.h"
 %}
 
 %template(Coord2D)                  Vector<double, 2>;
 %rename(isValid) operator bool;
-%include "lsst/fw/WCS.h"
+%include "lsst/afw/image/WCS.h"
 
 /******************************************************************************/
 // Local Variables: ***

@@ -25,16 +25,16 @@ namespace lsst {
 namespace afw {
 namespace formatters {
 
-using namespace lsst::daf::persitence;
+using namespace lsst::daf::persistence;
 using lsst::pex::policy::Policy;
 using lsst::daf::data::DataProperty;
 
 /*!
     Formatter that supports persistence and retrieval with
 
-    - lsst::daf::persitence::DbStorage
-    - lsst::daf::persitence::DbTsvStorage
-    - lsst::daf::persitence::BoostStorage
+    - lsst::daf::persistence::DbStorage
+    - lsst::daf::persistence::DbTsvStorage
+    - lsst::daf::persistence::BoostStorage
 
     for SourceVector instances.
  */
@@ -43,11 +43,11 @@ public:
 
     virtual ~SourceVectorFormatter();
 
-    virtual void write(Persistable const *, Storage::Ptr, DataProperty::PtrType);
-    virtual Persistable* read(Storage::Ptr, DataProperty::PtrType);
-    virtual void update(Persistable*, Storage::Ptr, DataProperty::PtrType);
+    virtual void write(lsst::daf::base::Persistable const *, Storage::Ptr, DataProperty::PtrType);
+    virtual lsst::daf::base::Persistable* read(Storage::Ptr, DataProperty::PtrType);
+    virtual void update(lsst::daf::base::Persistable*, Storage::Ptr, DataProperty::PtrType);
 
-    template <class Archive> static void delegateSerialize(Archive &, unsigned int const, Persistable *);
+    template <class Archive> static void delegateSerialize(Archive &, unsigned int const, lsst::daf::base::Persistable *);
 
 private:
 
@@ -58,8 +58,8 @@ private:
     static Formatter::Ptr createInstance(Policy::Ptr);
     static FormatterRegistration registration;
 
-    template <typename T> static void insertRow(T &, lsst::fw::detection::Source const &);
-    static void setupFetch(DbStorage &, lsst::fw::detection::Source &);
+    template <typename T> static void insertRow(T &, lsst::afw::detection::Source const &);
+    static void setupFetch(DbStorage &, lsst::afw::detection::Source &);
 };
 
 

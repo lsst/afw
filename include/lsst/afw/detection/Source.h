@@ -18,7 +18,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include <lsst/daf/data/Citizen.h>
-#include <lsst/daf/persistence/Persistable.h>
+#include <lsst/daf/base/Persistable.h>
 
 
 namespace boost {
@@ -414,7 +414,7 @@ inline bool operator!=(Source const & d1, Source const & d2) {
     A persistable container of Source instances (implemented using std::vector).
  */
 class SourceVector :
-    public lsst::daf::persitence::Persistable,
+    public lsst::daf::base::Persistable,
     public lsst::daf::data::Citizen
 {
 public :

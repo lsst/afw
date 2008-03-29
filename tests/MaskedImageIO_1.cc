@@ -1,14 +1,14 @@
 // -*- lsst-c++ -*-
 #include <stdexcept>
 
-#include <lsst/pex/utils/Trace.h>
+#include <lsst/pex/logging/Trace.h>
 #include <lsst/daf/data.h>
 #include <lsst/afw/image.h>
 #include <lsst/afw/math.h>
 
 using namespace std;
 
-using lsst::pex::utils::Trace;
+using lsst::pex::logging::Trace;
 using lsst::daf::data::DataProperty;
 using lsst::daf::data::FitsFormatter;
 

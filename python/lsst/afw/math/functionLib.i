@@ -1,41 +1,41 @@
 
 %{
-#include "lsst/fw/Function.h"
-#include "lsst/fw/FunctionLibrary.h"
+#include "lsst/afw/math/Function.h"
+#include "lsst/afw/math/FunctionLibrary.h"
 %}
 
 // I'm not sure newobject is needed (the memory leak test works without it)
-%newobject lsst::fw::function::Function::getParameters;
+%newobject lsst::afw::math::Function::getParameters;
 
-%include "lsst/fw/Function.h"
-%include "lsst/fw/FunctionLibrary.h"
+%include "lsst/afw/math/Function.h"
+%include "lsst/afw/math/FunctionLibrary.h"
 
-%template(FunctionF)          lsst::fw::function::Function<float>;
-%template(Function1F)         lsst::fw::function::Function1<float>;
-%template(Function2F)         lsst::fw::function::Function2<float>;
-%boost_shared_ptr(Function2FPtr,    lsst::fw::function::Function2<float>);
+%template(FunctionF)          lsst::afw::math::Function<float>;
+%template(Function1F)         lsst::afw::math::Function1<float>;
+%template(Function2F)         lsst::afw::math::Function2<float>;
+%boost_shared_ptr(Function2FPtr,    lsst::afw::math::Function2<float>);
 
-%template(Chebyshev1Function1F) lsst::fw::function::Chebyshev1Function1<float>;
-%template(GaussianFunction1F) lsst::fw::function::GaussianFunction1<float>;
-%template(GaussianFunction2F) lsst::fw::function::GaussianFunction2<float>;
-%template(IntegerDeltaFunction2F) lsst::fw::function::IntegerDeltaFunction2<float>;
-%template(LanczosFunction1F) lsst::fw::function::LanczosFunction1<float>;
-%template(LanczosFunction2F) lsst::fw::function::LanczosFunction2<float>;
-%template(LanczosSeparableFunction2F) lsst::fw::function::LanczosSeparableFunction2<float>;
-%template(PolynomialFunction1F) lsst::fw::function::PolynomialFunction1<float>;
-%template(PolynomialFunction2F) lsst::fw::function::PolynomialFunction2<float>;
+%template(Chebyshev1Function1F) lsst::afw::math::Chebyshev1Function1<float>;
+%template(GaussianFunction1F) lsst::afw::math::GaussianFunction1<float>;
+%template(GaussianFunction2F) lsst::afw::math::GaussianFunction2<float>;
+%template(IntegerDeltaFunction2F) lsst::afw::math::IntegerDeltaFunction2<float>;
+%template(LanczosFunction1F) lsst::afw::math::LanczosFunction1<float>;
+%template(LanczosFunction2F) lsst::afw::math::LanczosFunction2<float>;
+%template(LanczosSeparableFunction2F) lsst::afw::math::LanczosSeparableFunction2<float>;
+%template(PolynomialFunction1F) lsst::afw::math::PolynomialFunction1<float>;
+%template(PolynomialFunction2F) lsst::afw::math::PolynomialFunction2<float>;
 
-%template(FunctionD)          lsst::fw::function::Function<double>;
-%template(Function1D)         lsst::fw::function::Function1<double>;
-%template(Function2D)         lsst::fw::function::Function2<double>;
-%boost_shared_ptr(Function2DPtr,    lsst::fw::function::Function2<double>);
+%template(FunctionD)          lsst::afw::math::Function<double>;
+%template(Function1D)         lsst::afw::math::Function1<double>;
+%template(Function2D)         lsst::afw::math::Function2<double>;
+%boost_shared_ptr(Function2DPtr,    lsst::afw::math::Function2<double>);
 
-%template(Chebyshev1Function1D) lsst::fw::function::Chebyshev1Function1<double>;
-%template(GaussianFunction1D) lsst::fw::function::GaussianFunction1<double>;
-%template(GaussianFunction2D) lsst::fw::function::GaussianFunction2<double>;
-%template(IntegerDeltaFunction2D) lsst::fw::function::IntegerDeltaFunction2<double>;
-%template(LanczosFunction1D) lsst::fw::function::LanczosFunction1<double>;
-%template(LanczosFunction2D) lsst::fw::function::LanczosFunction2<double>;
-%template(LanczosSeparableFunction2D) lsst::fw::function::LanczosSeparableFunction2<double>;
-%template(PolynomialFunction1D) lsst::fw::function::PolynomialFunction1<double>;
-%template(PolynomialFunction2D) lsst::fw::function::PolynomialFunction2<double>;
+%template(Chebyshev1Function1D) lsst::afw::math::Chebyshev1Function1<double>;
+%template(GaussianFunction1D) lsst::afw::math::GaussianFunction1<double>;
+%template(GaussianFunction2D) lsst::afw::math::GaussianFunction2<double>;
+%template(IntegerDeltaFunction2D) lsst::afw::math::IntegerDeltaFunction2<double>;
+%template(LanczosFunction1D) lsst::afw::math::LanczosFunction1<double>;
+%template(LanczosFunction2D) lsst::afw::math::LanczosFunction2<double>;
+%template(LanczosSeparableFunction2D) lsst::afw::math::LanczosSeparableFunction2<double>;
+%template(PolynomialFunction1D) lsst::afw::math::PolynomialFunction1<double>;
+%template(PolynomialFunction2D) lsst::afw::math::PolynomialFunction2<double>;

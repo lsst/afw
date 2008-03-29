@@ -3,25 +3,25 @@
 
 #include <lsst/daf/data.h>
 #include <lsst/pex/exceptions.h>
-#include <lsst/pex/utils/Trace.h>
+#include <lsst/pex/logging/Trace.h>
 #include <lsst/afw/image.h>
 
 using namespace std;
 using boost::any_cast;
 
-using lsst::pex::utils::Trace;
+using lsst::pex::logging::Trace;
 using lsst::daf::data::Citizen;
 using lsst::daf::data::SupportFactory;
 
 namespace pexEx = lsst::pex::exceptions;
-namespace fwImage  = lsst::afw::image;
+namespace afwImage  = lsst::afw::image;
 
-template <typename MaskPixelT> class testCrFunc : public fwImage::MaskPixelBooleanFunc<MaskPixelT> {
+template <typename MaskPixelT> class testCrFunc : public afwImage::MaskPixelBooleanFunc<MaskPixelT> {
 public:
-    typedef typename fwImage::Mask<MaskPixelT>::MaskChannelT MaskChannelT;
-    testCrFunc(fwImage::Mask<MaskPixelT>& m) : fwImage::MaskPixelBooleanFunc<MaskPixelT>(m) {}
+    typedef typename afwImage::Mask<MaskPixelT>::MaskChannelT MaskChannelT;
+    testCrFunc(afwImage::Mask<MaskPixelT>& m) : afwImage::MaskPixelBooleanFunc<MaskPixelT>(m) {}
     void init() {
-       fwImage::MaskPixelBooleanFunc<MaskPixelT>::_mask.getPlaneBitMask("CR", bitsCR);
+       afwImage::MaskPixelBooleanFunc<MaskPixelT>::_mask.getPlaneBitMask("CR", bitsCR);
     }        
     bool operator ()(MaskPixelT pixel) const { 
        return ((pixel & bitsCR) !=0 ); 
@@ -41,29 +41,29 @@ void test() {
 
 // ------------- Test constructors
     typedef uint8 MaskPixelType;
-    typedef fwImage::Mask<MaskPixelType>::MaskIVwT MaskImageType;
-    typedef fwImage::Mask<MaskPixelType>::MaskIVwPtrT MaskImagePtrType;
-    typedef fwImage::Mask<MaskPixelType>::MaskPtrT MaskPtrType;
+    typedef afwImage::Mask<MaskPixelType>::MaskIVwT MaskImageType;
+    typedef afwImage::Mask<MaskPixelType>::MaskIVwPtrT MaskImagePtrType;
+    typedef afwImage::Mask<MaskPixelType>::MaskPtrT MaskPtrType;
     
     MaskImagePtrType maskImage(new MaskImageType(300,400));
     cout << maskImage.use_count() << endl;
 
-    fwImage::Mask<MaskPixelType> testMask(maskImage);
+    afwImage::Mask<MaskPixelType> testMask(maskImage);
     cout << maskImage.use_count() << endl;
 
     typedef uint16 MaskPixelType2;
-    typedef fwImage::Mask<MaskPixelType2>::MaskIVwT MaskImageType2;
-    typedef fwImage::Mask<MaskPixelType2>::MaskIVwPtrT MaskImagePtrType2;
+    typedef afwImage::Mask<MaskPixelType2>::MaskIVwT MaskImageType2;
+    typedef afwImage::Mask<MaskPixelType2>::MaskIVwPtrT MaskImagePtrType2;
 
     MaskImagePtrType2 maskImage2(new MaskImageType2(300,400));
 
-    fwImage::Mask<MaskPixelType2> testMask2(maskImage2);
+    afwImage::Mask<MaskPixelType2> testMask2(maskImage2);
 
-    fwImage::Mask<MaskPixelType> testMask3(300,400);
+    afwImage::Mask<MaskPixelType> testMask3(300,400);
 
 // ------------- Test copy constructor and operator= for memory leaks
 
-    fwImage::Mask<MaskPixelType> maskCopy(testMask3);
+    afwImage::Mask<MaskPixelType> maskCopy(testMask3);
     maskCopy = testMask3;
 
 // ------------- Test mask plane addition
@@ -73,7 +73,7 @@ void test() {
     try {
        iPlane = testMask.addMaskPlane("CR");
        cout << "Assigned CR to plane " << iPlane << endl;
-    } catch(fwImage::OutOfPlaneSpace &e){
+    } catch(afwImage::OutOfPlaneSpace &e){
        DataProperty::PtrType  propertyList = e.getLast();
        cout << propertyList->toString("",true) << endl;
        DataProperty::PtrType aProperty = propertyList->findUnique("numPlanesUsed");
@@ -99,7 +99,7 @@ void test() {
         try {
             cout << boost::format("Assigned %s to plane %d\n") %
                 sp % testMask.addMaskPlane(sp);
-        } catch(fwImage::OutOfPlaneSpace &e) {
+        } catch(afwImage::OutOfPlaneSpace &e) {
             e.getStack()->toString("\t",true);
         }
     }
@@ -108,7 +108,7 @@ void test() {
         string sp = (boost::format("P%d") % i).str();
         try {
             testMask.removeMaskPlane(sp);
-        } catch(fwImage::NoMaskPlane) {
+        } catch(afwImage::NoMaskPlane) {
             ;
         }
     }
@@ -120,7 +120,7 @@ void test() {
     try {
         testMask.getMaskPlane("CR", planeCR); 
         cout << "CR plane is " << planeCR << endl;
-    } catch(fwImage::NoMaskPlane &e) {
+    } catch(afwImage::NoMaskPlane &e) {
 	  cout << e.what() << "No CR plane found" << endl;
          throw;
     }
@@ -129,7 +129,7 @@ void test() {
         testMask.getMaskPlane("BP", planeBP);
         cout << "BP plane is " << planeBP << endl;
     }
-    catch(fwImage::NoMaskPlane &e) {
+    catch(afwImage::NoMaskPlane &e) {
 	  cout << e.what() << "No BP plane found" << endl;
          throw;
     } 
@@ -203,7 +203,7 @@ void test() {
 
     try {
         testMask.getMaskPlane("CR", planeCR);
-    } catch(fwImage::NoMaskPlane &e) {
+    } catch(afwImage::NoMaskPlane &e) {
 	  cout << e.what() << "No CR plane found" << endl;
          throw;
     } 
@@ -212,7 +212,7 @@ void test() {
     try {
         testMask.getMaskPlane("BP", planeBP);
         cout << "BP plane is " << planeBP << endl;
-    } catch(fwImage::NoMaskPlane &e) {
+    } catch(afwImage::NoMaskPlane &e) {
 	  cout << e.what() << "No BP plane found" << endl;
          // testing success of plane deletion so NO  throw;
     } 

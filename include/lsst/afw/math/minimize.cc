@@ -172,7 +172,7 @@ lsst::afw::math::FitResults lsst::afw::math::minimize(
     fitResults.chiSq = min.fval();
     fitResults.isValid = min.isValid() && std::isfinite(fitResults.chiSq);
     if (!fitResults.isValid) {
-        lsst::pex::utils::Trace("lsst::afw::math::minimize", 1, "WARNING : Fit failed to converge");
+        lsst::pex::logging::Trace("lsst::afw::math::minimize", 1, "WARNING : Fit failed to converge");
     }
     
     for (unsigned int i = 0; i < nParameters; ++i) {
@@ -258,7 +258,7 @@ lsst::afw::math::FitResults lsst::afw::math::minimize(
     fitResults.chiSq = min.fval();
     fitResults.isValid = min.isValid() && std::isfinite(fitResults.chiSq);
     if (!fitResults.isValid) {
-        lsst::pex::utils::Trace("lsst::afw::math::minimize", 1, "WARNING : Fit failed to converge");
+        lsst::pex::logging::Trace("lsst::afw::math::minimize", 1, "WARNING : Fit failed to converge");
     }
     for (unsigned int i = 0; i < nParameters; ++i) {
         fitResults.parameterList.push_back(min.userState().value(paramNames[i].c_str()));

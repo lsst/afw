@@ -4,12 +4,12 @@
 #include <lsst/afw/math/FunctionLibrary.h>
 #include <lsst/afw/image/Image.h>
 #include <lsst/afw/image/MaskedImage.h>
-#include <lsst/pex/utils/Trace.h>
+#include <lsst/pex/logging/Trace.h>
 #include <lsst/afw/math/Kernel.h>
 #include <lsst/afw/math/KernelFunctions.h>
 
 using namespace std;
-namespace mwiu = lsst::pex::utils;
+namespace pexLog = lsst::pex::logging;
 
 const std::string outFile("svcOut");
 
@@ -23,8 +23,8 @@ const std::string outFile("svcOut");
 int main(int argc, char **argv) {
     typedef double pixelType;
 
-    mwiu::Trace::setDestination(std::cout);
-    mwiu::Trace::setVerbosity("lsst.afw.kernel", 5);
+    pexLog::Trace::setDestination(std::cout);
+    pexLog::Trace::setVerbosity("lsst.afw.kernel", 5);
 
     double minSigma = 0.1;
     double maxSigma = 3.0;

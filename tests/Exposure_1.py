@@ -69,7 +69,7 @@ class ExposureTestCase(unittest.TestCase):
         therefore each of the Exposures should return a MaskedImage.
 
         MaskedImage class should throw appropriate
-        lsst::mwi::exceptions::NotFound if the MaskedImage can not be
+        lsst::pex::exceptions::NotFound if the MaskedImage can not be
         obtained.
         """
         maskedImageBlank = self.exposureBlank.getMaskedImage()        
@@ -115,11 +115,11 @@ class ExposureTestCase(unittest.TestCase):
     
         Test that appropriate exceptions are thrown if a WCS is
         requested from an Exposure that was not created with a WCS.
-        Python turns the mwi::exceptions in the Exposure and
+        Python turns the pex::exceptions in the Exposure and
         MaskedImage classes into IndexErrors.
 
         The exposureBlank, exposureMiOnly, and exposureCrOnly
-        Exposures should throw a lsst::mwi::exceptions::NotFound.
+        Exposures should throw a lsst::pex::exceptions::NotFound.
         """
         try:
             wcsBlank = self.exposureBlank.getWcs()
@@ -196,11 +196,11 @@ class ExposureTestCase(unittest.TestCase):
 
         Member has not been fully implemented yet (as of Sep 19 2007)
         so this test should throw a
-        lsst::mwi::exceptions::InvalidParameter when a subExposure is
+        lsst::pex::exceptions::InvalidParameter when a subExposure is
         requested.
  
         The MaskedImage class should throw a
-        lsst::mwi::exceptions::InvalidParameter if the requested
+        lsst::pex::exceptions::InvalidParameter if the requested
         subRegion is not fully contained within the original
         MaskedImage.
         
@@ -273,7 +273,7 @@ class ExposureTestCase(unittest.TestCase):
 
          The writeFits member is not yet fully implemented (as of Sep
          19 2007) therefore this member should throw a
-         lsst::mwi::exceptions::InvalidParameter.
+         lsst::pex::exceptions::InvalidParameter.
          """
          exposure = afw.ExposureF()
 

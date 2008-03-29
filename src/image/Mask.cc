@@ -13,7 +13,7 @@ Mask<MaskPixelT>::Mask(MaskPlaneDict const& planeDefs) :
     _offsetRows(0), _offsetCols(0),
     _myMaskDictVersion(_maskDictVersion) {
 
-    lsst::pex::utils::Trace("afw.Mask", 5,
+    lsst::pex::logging::Trace("afw.Mask", 5,
               boost::format("Number of mask planes: %d") % getNumPlanesMax());
 
     if (planeDefs.size() > 0 && planeDefs != _maskPlaneDict) {
@@ -30,7 +30,7 @@ Mask<MaskPixelT>::Mask(MaskIVwPtrT vwImagePtr, MaskPlaneDict const& planeDefs):
     _offsetRows(0), _offsetCols(0),
     _myMaskDictVersion(_maskDictVersion) {
     
-    lsst::pex::utils::Trace("afw.Mask", 5,
+    lsst::pex::logging::Trace("afw.Mask", 5,
               boost::format("Number of mask planes: %d") % getNumPlanesMax());
 
     if (planeDefs.size() > 0 && planeDefs != _maskPlaneDict) {
@@ -47,7 +47,7 @@ Mask<MaskPixelT>::Mask(int ncols, int nrows, MaskPlaneDict const& planeDefs) :
     _offsetRows(0), _offsetCols(0),
     _myMaskDictVersion(_maskDictVersion) {
 
-    lsst::pex::utils::Trace("afw.Mask", 5,
+    lsst::pex::logging::Trace("afw.Mask", 5,
               boost::format("Number of mask planes: %d") % getNumPlanesMax());
 
     if (planeDefs.size() > 0 && planeDefs != _maskPlaneDict) {
@@ -171,7 +171,7 @@ void Mask<MaskPixelT>::removeMaskPlane(const std::string& name)
         _myMaskDictVersion = ++_maskDictVersion;
         return;
      } catch (std::exception &e) {
-        lsst::pex::utils::Trace("afw.Mask", 0,
+        lsst::pex::logging::Trace("afw.Mask", 0,
                    boost::format("%s Plane %s not present in this Mask") % e.what() % name);
         return;
      }
@@ -219,7 +219,7 @@ bool Mask<MaskPixelT>::getPlaneBitMask(const std::string& name,
                                                  MaskChannelT& bitMask) const {
     int plane = getMaskPlane(name);
     if (plane < 0) {
-        lsst::pex::utils::Trace("afw.Mask", 1, boost::format("Plane %s not present in this Mask") % name);
+        lsst::pex::logging::Trace("afw.Mask", 1, boost::format("Plane %s not present in this Mask") % name);
         return false;
     }
 

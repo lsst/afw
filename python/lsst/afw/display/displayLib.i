@@ -18,16 +18,16 @@ Basic routines to talk to ds9
 #pragma SWIG nowarn=389
 
 %{
-#   include "lsst/fw/MaskedImage.h"
+#   include "lsst/afw/image/MaskedImage.h"
 #   include "simpleFits.h"
 %}
 
 %inline %{
-namespace lsst { namespace fw { } }
+namespace lsst { namespace afw { } }
 namespace vw {}
     
 using namespace lsst;
-using namespace lsst::fw;
+using namespace lsst::afw;
 using namespace vw;
 %}
 
@@ -40,7 +40,7 @@ import lsst.fw.exceptions
 
 %include "lsst/mwi/p_lsstSwig.i"
 %import "lsst/mwi/utils/Utils.h"
-%include "../Core/lsstImageTypes.i"
+%include "../image/lsstImageTypes.i"
 
 /******************************************************************************/
 
@@ -50,7 +50,7 @@ import lsst.fw.exceptions
 %template(writeFitsImage) writeFits<boost::uint16_t>;
 %template(writeFitsImage) writeFits<float>;
 %template(writeFitsImage) writeFits<double>;
-%template(writeFitsImage)  writeFits<lsst::fw::maskPixelType>;
+%template(writeFitsImage) writeFits<lsst::afw::image::maskPixelType>;
 
 /******************************************************************************/
 // Local Variables: ***

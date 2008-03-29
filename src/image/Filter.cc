@@ -17,8 +17,8 @@
 
 using namespace lsst::afw::image;
 
-using lsst::daf::persitence::Persistence;
-using lsst::daf::persitence::Storage;
+using lsst::daf::persistence::Persistence;
+using lsst::daf::persistence::Storage;
 using lsst::pex::policy::Policy;
 
 
@@ -26,11 +26,11 @@ using lsst::pex::policy::Policy;
     Creates a Filter with the given name, using the \c Filter table in the database given by
     \a location to map the filter name to an integer identifier.
  */
-Filter::Filter(lsst::daf::persitence::LogicalLocation const & location, std::string const & name) {
+Filter::Filter(lsst::daf::persistence::LogicalLocation const & location, std::string const & name) {
     Policy::Ptr      noPolicy;
     Persistence::Ptr persistence = Persistence::getPersistence(noPolicy);
     Storage::Ptr     storage     = persistence->getRetrieveStorage("DbStorage", location);
-    lsst::daf::persitence::DbStorage * db = dynamic_cast<lsst::daf::persitence::DbStorage *>(storage.get());
+    lsst::daf::persistence::DbStorage * db = dynamic_cast<lsst::daf::persistence::DbStorage *>(storage.get());
     if (db == 0) {
         throw lsst::pex::exceptions::Runtime("Didn't get DbStorage");
     }
@@ -49,11 +49,11 @@ Filter::Filter(lsst::daf::persitence::LogicalLocation const & location, std::str
     Returns the name of the filter, using the \b Filter table in the database given by
     \a location to map the filter identifier to a name.
  */
-std::string const Filter::toString(lsst::daf::persitence::LogicalLocation const & location) {
+std::string const Filter::toString(lsst::daf::persistence::LogicalLocation const & location) {
     Policy::Ptr      noPolicy;
     Persistence::Ptr persistence = Persistence::getPersistence(noPolicy);
     Storage::Ptr     storage     = persistence->getRetrieveStorage("DbStorage", location);
-    lsst::daf::persitence::DbStorage * db = dynamic_cast<lsst::daf::persitence::DbStorage *>(storage.get());
+    lsst::daf::persistence::DbStorage * db = dynamic_cast<lsst::daf::persistence::DbStorage *>(storage.get());
     if (db == 0) {
         throw lsst::pex::exceptions::Runtime("Didn't get DbStorage");
     }
@@ -74,14 +74,14 @@ std::string const Filter::toString(lsst::daf::persitence::LogicalLocation const 
     Returns the name of the filter, using the \b Filter table in the database currently
     set on the given DbStorage to map the filter identifier to a name.
  */
-std::string const Filter::toString(lsst::daf::persitence::DbStorage & db) {
+std::string const Filter::toString(lsst::daf::persistence::DbStorage & db) {
     db.setTableForQuery("Filter");
     db.outColumn("filtName");
     // CORAL always maps MYSQL_TYPE_LONG (MySQL internal type specifier for INTEGER columns) to long
     db.condParam<long>("id", static_cast<long>(_id));
     db.setQueryWhere("filterId = :id");
     db.query();
-    // ScopeGuard g(boost::bind(&lsst::daf::persitence::DbStorage::finishQuery, &db));
+    // ScopeGuard g(boost::bind(&lsst::daf::persistence::DbStorage::finishQuery, &db));
     std::string filterName;
     try {
         if (!db.next() || db.columnIsNull(0)) {
@@ -100,7 +100,7 @@ std::string const Filter::toString(lsst::daf::persitence::DbStorage & db) {
 }
 
 
-int Filter::nameToId(lsst::daf::persitence::DbStorage & db, std::string const & name) {
+int Filter::nameToId(lsst::daf::persistence::DbStorage & db, std::string const & name) {
     db.setTableForQuery("Filter");
     db.outColumn("filterId");
     db.condParam<std::string>("name", name);

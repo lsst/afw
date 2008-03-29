@@ -5,11 +5,11 @@
 
 #include <lsst/daf/data.h>
 #include <lsst/pex/exceptions.h>
-#include <lsst/pex/utils/Trace.h>
+#include <lsst/pex/logging/Trace.h>
 #include <lsst/afw/image.h>
 
 using namespace std;
-using lsst::pex::utils::Trace;
+using lsst::pex::logging::Trace;
 using lsst::daf::data::Citizen;
 using lsst::daf::data::FitsFormatter;
 namespace pexEx = lsst::pex::exceptions;

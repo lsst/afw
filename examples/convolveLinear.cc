@@ -3,7 +3,7 @@
 #include <string>
 
 #include <lsst/daf/data/Citizen.h>
-#include <lsst/pex/utils/Trace.h>
+#include <lsst/pex/logging/Trace.h>
 #include <lsst/afw/image.h>
 #include <lsst/afw/math.h>
 
@@ -12,8 +12,8 @@ const std::string outFile("clOut");
 const std::string altOutFile("clAltOut");
 
 int main(int argc, char **argv) {
-    lsst::pex::utils::Trace::setDestination(std::cout);
-    lsst::pex::utils::Trace::setVerbosity("lsst.afw.kernel", 5);
+    lsst::pex::logging::Trace::setDestination(std::cout);
+    lsst::pex::logging::Trace::setVerbosity("lsst.afw.kernel", 5);
 
     typedef float imagePixelType;
     unsigned int KernelCols = 5;
