@@ -20,7 +20,7 @@ env.SharedLibrary(
         "image/DeltaFunctionKernel.cc",
         "image/LinearCombinationKernel.cc",
         "image/Mask.cc",
-        "image/WCS.cc",
+        "image/Wcs.cc",
         )],
     LIBS=env.getlibs("boost pex vw wcslib cfitsio")
 )
