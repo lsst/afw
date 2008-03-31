@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-"""Subroutines to move data between numpy arrays and lsst Images and MaskedImages.
+"""Subroutines to move data between numpy arrays and lsst::afw::image classes
+Mask, Image and MaskedImage.
 
 Please only use these for testing; they are too slow for production work!
 Eventually Image, Mask and MaskedImage will offer much better ways to do this.

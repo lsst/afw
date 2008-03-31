@@ -1,12 +1,13 @@
 // -*- lsst-c++ -*-
-%define fwLib_DOCSTRING
+%define imageLib_DOCSTRING
 "
-Basic routines to talk to FW's classes (including visionWorkbench) and ds9
+Basic routines to talk to lsst::afw::image classes
+and some underlying VisionWorkbench classes.
 "
 %enddef
 
 %feature("autodoc", "1");
-%module(docstring=fwLib_DOCSTRING) imageLib
+%module(docstring=imageLib_DOCSTRING) imageLib
 
 // Suppress swig complaints
 // I had trouble getting %warnfilter to work; hence the pragmas
@@ -15,14 +16,6 @@ Basic routines to talk to FW's classes (including visionWorkbench) and ds9
 #pragma SWIG nowarn=362                 // operator=  ignored
 #pragma SWIG nowarn=389                 // operator[] ignored
 #pragma SWIG nowarn=503                 // Can't wrap 'operator unspecified_bool_type'
-
-// define basic vectors
-// these are used by Kernel and Function (and possibly other code)
-%include "std_vector.i"
-%template(vectorF) std::vector<float>;
-%template(vectorD) std::vector<double>;
-%template(vectorVectorF) std::vector<std::vector<float> >;
-%template(vectorVectorD) std::vector<std::vector<double> >;
 
 %{
 #   include <fstream>
@@ -33,16 +26,10 @@ Basic routines to talk to FW's classes (including visionWorkbench) and ds9
 #   include <boost/shared_ptr.hpp>
 #   include <boost/any.hpp>
 #   include <boost/array.hpp>
+#   include "lsst/utils.h"
 #   include "lsst/daf/base.h"
-#   include "lsst/utils/Demangle.h"
-#   include "lsst/pex/logging/Trace.h"
-#   include "lsst/utils/Utils.h"
-#   include "lsst/pex/logging/Log.h"
-#   include "lsst/afw/image/DiskImageResourceFITS.h"
-#   include "lsst/afw/image/Filter.h"
-#   include "lsst/afw/image/Mask.h"
-#   include "lsst/afw/image/MaskedImage.h"
-#   include "lsst/afw/image/ImageUtils.h"
+#   include "lsst/pex/logging.h"
+#   include "lsst/afw/image.h"
 %}
 
 %inline %{
@@ -66,7 +53,7 @@ import lsst.daf.data
 import lsst.utils
 
 def version(HeadURL = r"$HeadURL$"):
-    """Return a version given a HeadURL string.  If a different version's setup, return that too"""
+    """Return a version given a HeadURL string. If a different version is setup, return that too"""
 
     version_svn = lsst.utils.guessSvnVersion(HeadURL)
 
@@ -346,7 +333,18 @@ def version(HeadURL = r"$HeadURL$"):
 
 /************************************************************************************************************/
 
-%include "exposureLib.i"
+%{
+#include "lsst/afw/image/Exposure.h"
+%}
+
+%include "lsst/afw/image/Exposure.h"
+
+%template(ExposureU)    lsst::afw::image::Exposure<boost::uint16_t, lsst::afw::image::maskPixelType>;
+%template(ExposureF)    lsst::afw::image::Exposure<float, lsst::afw::image::maskPixelType>;
+%template(ExposureD)    lsst::afw::image::Exposure<double, lsst::afw::image::maskPixelType>;
+%lsst_persistable_shared_ptr(ExposureUPtr, lsst::afw::image::Exposure<boost::uint16_t, lsst::afw::image::maskPixelType>)
+%lsst_persistable_shared_ptr(ExposureFPtr, lsst::afw::image::Exposure<float, lsst::afw::image::maskPixelType>)
+%lsst_persistable_shared_ptr(ExposureDPtr, lsst::afw::image::Exposure<double, lsst::afw::image::maskPixelType>)
 
 /************************************************************************************************************/
 

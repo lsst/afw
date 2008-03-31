@@ -1,7 +1,5 @@
 # -*- python -*-
 Import("env")
 
-env.CheckSwig("python", ilang="c++", includedProducts="pex")
-env.LoadableModuleIncomplete("_exposureLib", Split("exposureLib.i"), LIBS=env.getlibs("afw"))
-env.LoadableModuleIncomplete("_kernelLib", Split("kernelLib.i"), LIBS=env.getlibs("afw pex"))
-env.LoadableModuleIncomplete("_minimizeLib", Split("minimizeLib.i"), LIBS=env.getlibs("afw pex"))
+env.CheckSwig("python", ilang="c++", includedProducts="utils daf pex")
+env.LoadableModuleIncomplete("_mathLib", Split("mathLib.i"), LIBS=env.getlibs("afw utils daf pex"))

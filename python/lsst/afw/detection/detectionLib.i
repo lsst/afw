@@ -1,8 +1,7 @@
 // -*- lsst-c++ -*-
 %define detectionLib_DOCSTRING
 "
-Access to persistable C++ objects for catalog data. Currently supported are:
-    - Source
+Python interface to lsst::afw::detection classes
 "
 %enddef
 
@@ -206,13 +205,6 @@ def SourceVecPtr(*args):
     v = SourceVec(*args)
     v.this.disown()
     out = SourceVecSharedPtr(v)
-    return out
-
-def MopsPredVecPtr(*args):
-    """return a MopsPredVecSharedPtr that owns its own MopsPredVec"""
-    v = MopsPredVec(*args)
-    v.this.disown()
-    out = MopsPredVecSharedPtr(v)
     return out
 
 def SourcePtr(*args):
