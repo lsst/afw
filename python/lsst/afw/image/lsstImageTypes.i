@@ -74,7 +74,7 @@
 %exception {
     try {
         $action
-    } catch (lsst::mwi::exceptions::ExceptionStack &e) {
+    } catch (lsst::pex::exceptions::ExceptionStack &e) {
         raiseLsstExceptionStack(e);
         SWIG_fail;
     } catch (vw::Exception &e) {

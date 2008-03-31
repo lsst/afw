@@ -30,15 +30,14 @@ namespace boost { namespace filesystem {} }
 import lsst.fw.exceptions
 %}
 
-%include "lsst/mwi/p_lsstSwig.i"
+%include "lsst/utils/p_lsstSwig.i"
 %include "lsst/daf/persistenceMacros.i"
-%import "lsst/daf/base/Persistable.h"
 
 %import "lsst/daf/base.h"
-%import "lsst/pex/policy/Policy.h"
 %import "lsst/daf/persistence/LogicalLocation.h"
 %import "lsst/daf/persistence/Persistence.h"
 %import "lsst/daf/persistence/Storage.h"
+%import "lsst/pex/policy/Policy.h"
 
 
 %include <stdint.i>

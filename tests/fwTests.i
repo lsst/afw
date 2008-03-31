@@ -33,18 +33,18 @@ using namespace vw;
 
 %import  <vw/Core/FundamentalTypes.h>
 
-%include "lsst/mwi/p_lsstSwig.i"
+%include "lsst/utils/p_lsstSwig.i"
 %include "lsst/afw/image/lsstImageTypes.i"
 
 %pythoncode %{
-import lsst.mwi.data
-import lsst.mwi.utils
+import lsst.daf.data
+import lsst.utils
 import lsst.fw.exceptions
 %}
 
 /******************************************************************************/
 
-%import "lsst/mwi/utils/Utils.h"
+%import "lsst/utils/Utils.h"
 %import "lsst/daf/base.h"
 %import "lsst/daf/data/LsstData.h"
 %import "lsst/pex/policy/Policy.h"

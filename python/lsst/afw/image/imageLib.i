@@ -34,10 +34,10 @@ Basic routines to talk to FW's classes (including visionWorkbench) and ds9
 #   include <boost/any.hpp>
 #   include <boost/array.hpp>
 #   include "lsst/daf/base.h"
-#   include "lsst/mwi/utils/Demangle.h"
+#   include "lsst/utils/Demangle.h"
 #   include "lsst/pex/logging/Trace.h"
-#   include "lsst/mwi/utils/Utils.h"
-#   include "lsst/mwi/logging/Log.h"
+#   include "lsst/utils/Utils.h"
+#   include "lsst/pex/logging/Log.h"
 #   include "lsst/afw/image/DiskImageResourceFITS.h"
 #   include "lsst/afw/image/Filter.h"
 #   include "lsst/afw/image/Mask.h"
@@ -58,17 +58,17 @@ using namespace vw;
 %init %{
 %}
 
-%include "lsst/mwi/p_lsstSwig.i"
+%include "lsst/utils/p_lsstSwig.i"
 %include "lsstImageTypes.i"     // vw and Image/Mask types and typedefs
 
 %pythoncode %{
-import lsst.mwi.data
-import lsst.mwi.utils
+import lsst.daf.data
+import lsst.utils
 
 def version(HeadURL = r"$HeadURL$"):
     """Return a version given a HeadURL string.  If a different version's setup, return that too"""
 
-    version_svn = lsst.mwi.utils.guessSvnVersion(HeadURL)
+    version_svn = lsst.utils.guessSvnVersion(HeadURL)
 
     try:
         import eups
@@ -136,10 +136,10 @@ def version(HeadURL = r"$HeadURL$"):
 %import <vw/FileIO/DiskImageResource.h>
 
 %include "lsst/daf/base.h"
-%import "lsst/mwi/utils/Utils.h"
+%import "lsst/utils/Utils.h"
 %import "lsst/pex/policy/Policy.h"
 %include "lsst/daf/data/LsstData.h"
-%import "lsst/mwi/DataProperty.i"
+%import "lsst/daf/base/DataProperty.i"
 %import "lsst/pex/exceptions.h"
 
 /******************************************************************************/
@@ -151,8 +151,8 @@ def version(HeadURL = r"$HeadURL$"):
 %ignore lsst::afw::image::Image::origin;        // no need to swig origin (and the _wrap.cc file is invalid)
 %ignore lsst::afw::image::Mask::origin;         // no need to swig origin (and the _wrap.cc file is invalid)
 
-%include "lsst/mwi/data/LsstImpl_DC2.h"
-%include "lsst/mwi/data/LsstBase.h"
+%include "lsst/daf/data/LsstImpl_DC2.h"
+%include "lsst/daf/data/LsstBase.h"
 %ignore lsst::afw::image::Filter::operator int;
 %include "lsst/afw/image/Filter.h"
 %include "lsst/afw/image/Image.h"
