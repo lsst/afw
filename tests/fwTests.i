@@ -45,11 +45,9 @@ import lsst.fw.exceptions
 /******************************************************************************/
 
 %import "lsst/mwi/utils/Utils.h"
-%import "lsst/daf/base/Citizen.h"
-%import "lsst/pex/policy/Policy.h"
-%import "lsst/daf/base/Persistable.h"
+%import "lsst/daf/base.h"
 %import "lsst/daf/data/LsstData.h"
-%import "lsst/daf/base/DataProperty.h"
+%import "lsst/pex/policy/Policy.h"
 %import "lsst/pex/exceptions.h"
 %import "lsst/afw/image/Mask.h"
 %import "lsst/afw/image/MaskedImage.h"
@@ -114,12 +112,12 @@ namespace std {
 //
 %inline %{
 template <typename MaskPixelT>
-class testCrFunc : public lsst::mwi::data::Citizen,
+class testCrFunc : public lsst::daf::base::Citizen,
                    public MaskPixelBooleanFunc<MaskPixelT> {
 public:
     typedef typename Mask<MaskPixelT>::MaskChannelT MaskChannelT;
     testCrFunc(Mask<MaskPixelT>& m) :
-        lsst::mwi::data::Citizen(typeid(this)),
+        lsst::daf::base::Citizen(typeid(this)),
         MaskPixelBooleanFunc<MaskPixelT>(m) {}
     void init() {
         MaskPixelBooleanFunc<MaskPixelT>::_mask.getPlaneBitMask("CR", _bitsCR);

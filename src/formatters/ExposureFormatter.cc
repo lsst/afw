@@ -17,24 +17,20 @@
 #endif
 static char const* SVNid __attribute__((unused)) = "$Id$";
 
-#include <lsst/afw/formatters/ExposureFormatter.h>
-#include <lsst/afw/image/Exposure.h>
+#include <boost/serialization/shared_ptr.hpp>
 
-#include <lsst/daf/persistence/FormatterImpl.h>
-
-#include <lsst/afw/formatters/MaskedImageFormatter.h>
-#include <lsst/afw/formatters/Utils.h>
-#include <lsst/afw/formatters/WcsFormatter.h>
-
+#include <lsst/daf/base/Persistable.h>
 #include <lsst/pex/exceptions.h>
-#include <lsst/daf/persistence/LogicalLocation.h>
 #include <lsst/daf/persistence/BoostStorage.h>
-#include <lsst/daf/persistence/DateTime.h>
 #include <lsst/daf/persistence/DbStorage.h>
 #include <lsst/daf/persistence/FitsStorage.h>
 #include <lsst/pex/logging/Trace.h>
+#include <lsst/afw/formatters/ExposureFormatter.h>
+#include <lsst/afw/formatters/Utils.h>
+#include <lsst/afw/formatters/WcsFormatter.h>
+#include <lsst/afw/image/Exposure.h>
 
-#include <boost/serialization/shared_ptr.hpp>
+
 // #include <lsst/afw/image/LSSTFitsResource.h>
 
 #define EXEC_TRACE  20
@@ -42,8 +38,12 @@ static void execTrace(std::string s, int level = EXEC_TRACE) {
     lsst::pex::logging::Trace("afw.ExposureFormatter", level, s);
 }
 
-using namespace lsst::daf::persistence;
 using lsst::daf::base::Persistable;
+using lsst::daf::persistence::BoostStorage;
+using lsst::daf::persistence::DbStorage;
+using lsst::daf::persistence::FitsStorage;
+using lsst::daf::base::Persistable;
+using lsst::afw::image::Exposure;
 
 namespace lsst {
 namespace afw {
@@ -107,10 +107,10 @@ template <typename T>
 static void setColumn(
     DbStorage* db,                                  //!< Destination database
     std::string const& colName,                     //!< Output column name
-    lsst::daf::data::DataProperty::PtrType source,  //!< Source DataProperty
+    lsst::daf::base::DataProperty::PtrType source,  //!< Source DataProperty
     std::string const& dpName                       //!< Child name
     ) {
-    lsst::daf::data::DataProperty::PtrType dp = source->findUnique(dpName);
+    lsst::daf::base::DataProperty::PtrType dp = source->findUnique(dpName);
     if (!dp) {
         db->setColumnToNull(colName);
     }
@@ -127,10 +127,10 @@ template <typename T1, typename T2>
 static void setColumn(
     DbStorage* db,                                  //!< Destination database
     std::string const& colName,                     //!< Output column name
-    lsst::daf::data::DataProperty::PtrType source,  //!< Source DataProperty
+    lsst::daf::base::DataProperty::PtrType source,  //!< Source DataProperty
     std::string const& dpName                       //!< Child name
     ) {
-    lsst::daf::data::DataProperty::PtrType dp = source->findUnique(dpName);
+    lsst::daf::base::DataProperty::PtrType dp = source->findUnique(dpName);
     if (!dp) {
         db->setColumnToNull(colName);
     }
@@ -144,7 +144,7 @@ template <typename ImagePixelT, typename MaskPixelT>
 void ExposureFormatter<ImagePixelT, MaskPixelT>::write(
     Persistable const* persistable,
     Storage::Ptr storage,
-    lsst::daf::data::DataProperty::PtrType additionalData) {
+    lsst::daf::base::DataProperty::PtrType additionalData) {
     execTrace("ExposureFormatter write start");
     Exposure<ImagePixelT, MaskPixelT> const* ip =
         dynamic_cast<Exposure<ImagePixelT, MaskPixelT> const*>(persistable);
@@ -162,7 +162,7 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::write(
         execTrace("ExposureFormatter write FitsStorage");
         FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
 
-        lsst::daf::data::DataProperty::PtrType wcsDP =
+        lsst::daf::base::DataProperty::PtrType wcsDP =
             lsst::afw::formatters::WcsFormatter::generateDataProperty(
                 *(ip->_wcsPtr));
 
@@ -178,13 +178,13 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::write(
         execTrace("ExposureFormatter write DbStorage");
         DbStorage* db = dynamic_cast<DbStorage*>(storage.get());
 
-        // Get the WCS headers.
-        lsst::daf::data::DataProperty::PtrType wcsDP =
+        // Get the Wcs headers.
+        lsst::daf::base::DataProperty::PtrType wcsDP =
             lsst::afw::formatters::WcsFormatter::generateDataProperty(
                 *(ip->_wcsPtr));
 
         // Get the image headers.
-        lsst::daf::data::DataProperty::PtrType dp =
+        lsst::daf::base::DataProperty::PtrType dp =
             ip->_maskedImage.getImage()->getMetaData();
         if (!dp) {
             throw lsst::pex::exceptions::Runtime("Unable to retrieve metadata from MaskedImage's Image");
@@ -234,7 +234,7 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::write(
                               additionalData, "StorageLocation.FitsStorage");
 
 
-        // Set the WCS information columns.
+        // Set the Wcs information columns.
         setColumn<std::string>(db, "ctype1", wcsDP, "CTYPE1");
         setColumn<std::string>(db, "ctype2", wcsDP, "CTYPE2");
         setColumn<float, double>(db, "crpix1", wcsDP, "CRPIX1");
@@ -264,7 +264,7 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::write(
 template <typename ImagePixelT, typename MaskPixelT>
 Persistable* ExposureFormatter<ImagePixelT, MaskPixelT>::read(
     Storage::Ptr storage,
-    lsst::daf::data::DataProperty::PtrType additionalData) {
+    lsst::daf::base::DataProperty::PtrType additionalData) {
     execTrace("ExposureFormatter read start");
     Exposure<ImagePixelT, MaskPixelT>* ip = new Exposure<ImagePixelT, MaskPixelT>;
     if (typeid(*storage) == typeid(BoostStorage)) {
@@ -318,7 +318,7 @@ Persistable* ExposureFormatter<ImagePixelT, MaskPixelT>::read(
         db->outColumn("url");
 
         if (tableName == "Science_CCD_Exposure") {
-            // Set the WCS information columns.
+            // Set the Wcs information columns.
             db->outColumn("ctype1");
             db->outColumn("ctype2");
             db->outColumn("crpix1");
@@ -361,7 +361,7 @@ Persistable* ExposureFormatter<ImagePixelT, MaskPixelT>::read(
                 "FILTER", filterName));
 
         // Set the image headers.
-        // Set the WCS headers in ip->_wcsPtr.
+        // Set the Wcs headers in ip->_wcsPtr.
 
         //! \todo Need to implement overwriting of FITS metadata DataProperty
         // with values from database. - KTL - 2007-12-18
@@ -376,7 +376,7 @@ template <typename ImagePixelT, typename MaskPixelT>
 void ExposureFormatter<ImagePixelT, MaskPixelT>::update(
     Persistable* persistable,
     Storage::Ptr storage,
-    lsst::daf::data::DataProperty::PtrType additionalData) {
+    lsst::daf::base::DataProperty::PtrType additionalData) {
     //! \todo Implement update from FitsStorage, keeping DB-provided headers.
     // - KTL - 2007-11-29
     throw lsst::pex::exceptions::Runtime("Unexpected call to update for Exposure");

@@ -17,18 +17,15 @@
 #endif
 static char const* SVNid __attribute__((unused)) = "$Id$";
 
-#include <lsst/afw/formatters/ImageFormatter.h>
-
-#include <lsst/daf/persistence/FormatterImpl.h>
-#include <lsst/daf/data/DataPropertyFormatter.h>
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/binary_object.hpp>
 
-#include <lsst/afw/image/Image.h>
-#include <lsst/daf/persistence/LogicalLocation.h>
+#include <lsst/daf/base/Persistable.h>
 #include <lsst/daf/persistence/BoostStorage.h>
 #include <lsst/daf/persistence/FitsStorage.h>
 #include <lsst/pex/logging/Trace.h>
+#include <lsst/afw/formatters/ImageFormatter.h>
+#include <lsst/afw/image/Image.h>
 
 // #include <lsst/afw/image/LSSTFitsResource.h>
 
@@ -37,7 +34,10 @@ static void execTrace(std::string s, int level = EXEC_TRACE) {
     lsst::pex::logging::Trace("afw.ImageFormatter", level, s);
 }
 
-using namespace lsst::daf::persistence;
+using lsst::daf::base::Persistable;
+using lsst::daf::persistence::BoostStorage;
+using lsst::daf::persistence::FitsStorage;
+using lsst::afw::image::Image;
 
 namespace lsst {
 namespace afw {
@@ -74,7 +74,7 @@ template <typename ImagePixelT>
 void ImageFormatter<ImagePixelT>::write(
     Persistable const* persistable,
     Storage::Ptr storage,
-    lsst::daf::data::DataProperty::PtrType additionalData) {
+    lsst::daf::base::DataProperty::PtrType additionalData) {
     execTrace("ImageFormatter write start");
     Image<ImagePixelT> const* ip =
         dynamic_cast<Image<ImagePixelT> const*>(persistable);
@@ -106,7 +106,7 @@ void ImageFormatter<ImagePixelT>::write(
 template <typename ImagePixelT>
 Persistable* ImageFormatter<ImagePixelT>::read(
     Storage::Ptr storage,
-    lsst::daf::data::DataProperty::PtrType additionalData) {
+    lsst::daf::base::DataProperty::PtrType additionalData) {
     execTrace("ImageFormatter read start");
     Image<ImagePixelT>* ip = new Image<ImagePixelT>;
     if (typeid(*storage) == typeid(BoostStorage)) {
@@ -135,7 +135,7 @@ template <typename ImagePixelT>
 void ImageFormatter<ImagePixelT>::update(
     Persistable* persistable,
     Storage::Ptr storage,
-    lsst::daf::data::DataProperty::PtrType additionalData) {
+    lsst::daf::base::DataProperty::PtrType additionalData) {
     throw std::runtime_error("Unexpected call to update for Image");
 }
 

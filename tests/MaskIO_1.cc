@@ -6,7 +6,7 @@
 #include <lsst/afw/image.h>
 
 using namespace std;
-using lsst::daf::data::DataProperty;
+using lsst::daf::base::DataProperty;
 namespace afwImage = lsst::afw::image;
 
 /*

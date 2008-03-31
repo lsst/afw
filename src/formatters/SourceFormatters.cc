@@ -9,20 +9,23 @@
 
 #include <memory>
 
-#include <lsst/pex/exceptions.h>
-#include <lsst/daf/persistence/BoostStorage.h>
-#include <lsst/daf/persistence/DbStorage.h>
-#include <lsst/daf/persistence/DbTsvStorage.h>
-#include <lsst/daf/persistence/FormatterImpl.h>
-
 #include <boost/any.hpp>
 #include <boost/format.hpp>
 
-#include <lsst/afw/detection/Source.h>
+#include <lsst/daf/base/Persistable.h>
+#include <lsst/daf/persistence/BoostStorage.h>
+#include <lsst/daf/persistence/DbStorage.h>
+#include <lsst/daf/persistence/DbTsvStorage.h>
+#include <lsst/pex/exceptions.h>
 #include <lsst/afw/formatters/SourceFormatters.h>
 #include <lsst/afw/formatters/Utils.h>
+#include <lsst/afw/detection/Source.h>
 
 namespace ex = lsst::pex::exceptions;
+using lsst::daf::base::Persistable;
+using lsst::daf::persistence::BoostStorage;
+using lsst::daf::persistence::DbStorage;
+using lsst::daf::persistence::DbTsvStorage;
 using lsst::afw::detection::Source;
 
 namespace lsst {

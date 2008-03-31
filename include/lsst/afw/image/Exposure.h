@@ -31,7 +31,7 @@
 #include <lsst/daf/data/LsstBase.h>
 #include <lsst/daf/base/Persistable.h>
 #include <lsst/afw/image/MaskedImage.h>
-#include <lsst/afw/image/WCS.h>
+#include <lsst/afw/image/Wcs.h>
 
 namespace lsst {
 namespace afw {
@@ -48,24 +48,24 @@ namespace image {
                 
     public:    
 
-        typedef boost::shared_ptr<lsst::afw::image::WCS> wscPtrType;
+        typedef boost::shared_ptr<lsst::afw::image::Wcs> wscPtrType;
 
         // Class Constructors and Destructor
         explicit Exposure();
         explicit Exposure(MaskedImage<ImageT, MaskT> const &maskedImage);
-        explicit Exposure(MaskedImage<ImageT, MaskT> const &maskedImage, WCS const &wcs);
-        explicit Exposure(unsigned cols, unsigned rows, WCS const &wcs);
+        explicit Exposure(MaskedImage<ImageT, MaskT> const &maskedImage, Wcs const &wcs);
+        explicit Exposure(unsigned cols, unsigned rows, Wcs const &wcs);
         explicit Exposure(unsigned cols, unsigned rows);
         virtual ~Exposure(); 
         
         // Get Members (getMaskedImage is inline) 
         MaskedImage<ImageT, MaskT> getMaskedImage() const { return _maskedImage; };
-        WCS getWcs() const;
+        Wcs getWcs() const;
         Exposure<ImageT, MaskT> getSubExposure(const vw::BBox2i&) const;
         
         // Set Members
         void setMaskedImage(MaskedImage<ImageT, MaskT> &maskedImage);
-        void setWcs(WCS const &wcs);
+        void setWcs(Wcs const &wcs);
         
         // Has Member (inline)
         bool hasWcs() const { return static_cast<bool>(_wcsPtr); };
@@ -78,7 +78,7 @@ namespace image {
         LSST_PERSIST_FORMATTER(formatters::ExposureFormatter<ImageT, MaskT>);
 
         MaskedImage<ImageT, MaskT> _maskedImage;             
-        boost::shared_ptr<WCS> _wcsPtr;    
+        boost::shared_ptr<Wcs> _wcsPtr;    
     };     
 }}} // lsst::afw::image
 

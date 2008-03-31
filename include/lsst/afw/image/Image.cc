@@ -2,8 +2,10 @@
 // Implementations of Image class methods
 // This file can NOT be separately compiled!   It is included by Image.h
 #include <stdexcept>
+
 #include "lsst/daf/data/SupportFactory.h"
 #include <lsst/pex/exceptions.h>
+#include <lsst/afw/image/LSSTFitsResource.h>
 
 //
 // Constructors
@@ -74,7 +76,7 @@ typename lsst::afw::image::Image<ImagePixelT>::ImageIVwPtrT lsst::afw::image::Im
  */
 template<typename ImagePixelT> 
 double lsst::afw::image::Image<ImagePixelT>::getGain() const {
-    lsst::daf::data::DataProperty::PtrType gainProp = _metaData->findUnique("GAIN");
+    lsst::daf::base::DataProperty::PtrType gainProp = _metaData->findUnique("GAIN");
     if (gainProp) {
         double gain = boost::any_cast<const double>(gainProp->getValue());
         return gain;
@@ -84,18 +86,18 @@ double lsst::afw::image::Image<ImagePixelT>::getGain() const {
 
 template<typename ImagePixelT>
 void lsst::afw::image::Image<ImagePixelT>::readFits(const std::string& fileName, int hdu) {
-    LSSTFitsResource<ImagePixelT> fitsRes;
+    lsst::afw::image::LSSTFitsResource<ImagePixelT> fitsRes;
     fitsRes.readFits(fileName, *_vwImagePtr, _metaData, hdu);
 }
 
 template<typename ImagePixelT>
 void lsst::afw::image::Image<ImagePixelT>::writeFits(const std::string& fileName) const {
-    LSSTFitsResource<ImagePixelT> fitsRes;
+    lsst::afw::image::LSSTFitsResource<ImagePixelT> fitsRes;
     fitsRes.writeFits(*_vwImagePtr, _metaData, fileName);
 }
 
 template<typename ImagePixelT>
-lsst::daf::data::DataProperty::PtrType lsst::afw::image::Image<ImagePixelT>::getMetaData() const {
+lsst::daf::base::DataProperty::PtrType lsst::afw::image::Image<ImagePixelT>::getMetaData() const {
     return _metaData;
 }
 
@@ -120,18 +122,18 @@ lsst::afw::image::Image<ImagePixelT>::getSubImage(const vw::BBox2i imageRegion) 
 
     // Make a copy of the metadata
 
-    lsst::daf::data::DataProperty::PtrType newMetaData(new lsst::daf::data::DataProperty(*_metaData));
+    lsst::daf::base::DataProperty::PtrType newMetaData(new lsst::daf::base::DataProperty(*_metaData));
     newImage->_metaData = newMetaData;
 
     // If CRPIX values are present in _metaData, keep them consistent with the offset
 
-    lsst::daf::data::DataProperty::PtrType crpix1 = newImage->_metaData->findUnique("CRPIX1");
+    lsst::daf::base::DataProperty::PtrType crpix1 = newImage->_metaData->findUnique("CRPIX1");
     if (crpix1) {
         double crpix1Value = boost::any_cast<double>(crpix1->getValue());
         crpix1->setValue(crpix1Value - bboxOffset[0]);
     }
 
-    lsst::daf::data::DataProperty::PtrType crpix2 = newImage->_metaData->findUnique("CRPIX2");
+    lsst::daf::base::DataProperty::PtrType crpix2 = newImage->_metaData->findUnique("CRPIX2");
     if (crpix2) {
         double crpix2Value = boost::any_cast<double>(crpix2->getValue());
         crpix2->setValue(crpix2Value - bboxOffset[1]);

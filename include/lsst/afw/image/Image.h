@@ -17,10 +17,8 @@
 #include <vw/Image.h>
 #include <vw/Math/BBox.h>
 
-#include "lsst/daf/data/LsstBase.h"
-#include "lsst/daf/data/DataProperty.h"
-#include "lsst/daf/base/Persistable.h"
-#include "lsst/afw/image/LSSTFitsResource.h"
+#include <lsst/daf/base.h>
+#include <lsst/daf/data/LsstBase.h>
 
 namespace lsst {
 namespace afw {
@@ -50,7 +48,7 @@ namespace image {
         
         void writeFits(const std::string& fileName) const;
         
-        lsst::daf::data::DataProperty::PtrType getMetaData() const;
+        lsst::daf::base::DataProperty::PtrType getMetaData() const;
         
         ImagePtrT getSubImage(const vw::BBox2i imageRegion) const;
         
@@ -85,7 +83,7 @@ namespace image {
     private:
         LSST_PERSIST_FORMATTER(formatters::ImageFormatter<ImagePixelT>);
         ImageIVwPtrT _vwImagePtr;
-        lsst::daf::data::DataProperty::PtrType _metaData;
+        lsst::daf::base::DataProperty::PtrType _metaData;
         unsigned int _offsetRows;
         unsigned int _offsetCols;
 

@@ -14,7 +14,7 @@ import unittest
 import numpy
 
 import eups
-import lsst.afw.image as afwImage
+import lsst.afwImage.image as afwImage
 import lsst.daf.tests as dafTests
 import lsst.daf.utils as dafUtils
 import lsst.pex.exceptions as pexEx
@@ -46,12 +46,12 @@ class ExposureTestCase(unittest.TestCase):
     def setUp(self):
         self.maskedImage = afwImage.MaskedImageF()
         self.maskedImage.readFits(inFilePathSmall)
-        self.wcs = afw.WCS(self.maskedImage.getImage().getMetaData())
-        self.exposureBlank = afw.ExposureF()
-        self.exposureMiOnly = afw.ExposureF(self.maskedImage)
-        self.exposureMiWcs = afw.ExposureF(self.maskedImage, self.wcs)
-        self.exposureCrWcs = afw.ExposureF(100, 100, self.wcs)
-        self.exposureCrOnly = afw.ExposureF(100, 100)
+        self.wcs = afwImage.Wcs(self.maskedImage.getImage().getMetaData())
+        self.exposureBlank = afwImage.ExposureF()
+        self.exposureMiOnly = afwImage.ExposureF(self.maskedImage)
+        self.exposureMiWcs = afwImage.ExposureF(self.maskedImage, self.wcs)
+        self.exposureCrWcs = afwImage.ExposureF(100, 100, self.wcs)
+        self.exposureCrOnly = afwImage.ExposureF(100, 100)
 
     def tearDown(self):
         del self.exposureBlank 
@@ -154,9 +154,9 @@ class ExposureTestCase(unittest.TestCase):
         maskedImage = afwImage.MaskedImageF()           
         maskedImage.readFits(inFilePathSmall)
         
-        exposure = afw.ExposureF()       
+        exposure = afwImage.ExposureF()       
         exposure.setMaskedImage(maskedImage)        
-        wcs = afw.WCS(maskedImage.getImage().getMetaData())
+        wcs = afwImage.Wcs(maskedImage.getImage().getMetaData())
         exposure.setWcs(wcs)
         
         try:
@@ -222,8 +222,8 @@ class ExposureTestCase(unittest.TestCase):
         
         smallMaskedImage = afwImage.MaskedImageF()
         smallMaskedImage.readFits(inFilePathSmall)
-        wcs = afw.WCS(smallMaskedImage.getImage().getMetaData())
-        smallExposure = afw.ExposureF(smallMaskedImage, wcs)
+        wcs = afwImage.Wcs(smallMaskedImage.getImage().getMetaData())
+        smallExposure = afwImage.ExposureF(smallMaskedImage, wcs)
     
         subRegion2 = afwImage.BBox2i(0, 0, 5, 5)
         try:
@@ -275,7 +275,7 @@ class ExposureTestCase(unittest.TestCase):
          19 2007) therefore this member should throw a
          lsst::pex::exceptions::InvalidParameter.
          """
-         exposure = afw.ExposureF()
+         exposure = afwImage.ExposureF()
 
          # This should pass without an exception
          exposure.readFits(inFilePathSmall)

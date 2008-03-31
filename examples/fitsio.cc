@@ -1,9 +1,6 @@
 #include <iostream>
 #include <vw/Image/Manipulation.h>
-#include "lsst/afw/image/DiskImageResourceFITS.h"
 #include "lsst/pex/exceptions.h"
-
-using namespace lsst::afw;
 
 int main(int ac, char **av) {
     if (ac < 2) {

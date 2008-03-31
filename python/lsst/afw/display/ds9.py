@@ -128,7 +128,7 @@ def setMaskColor(color = GREEN):
     """Set the ds9 mask colour to; eg. ds9.setMaskColor(ds9.RED)"""
     ds9Cmd("mask color %s" % color)
 
-def mtv(data, frame=0, init=True, WCS=None, isMask=False):
+def mtv(data, frame=0, init=True, wcs=None, isMask=False):
    """Display an Image or Mask on a DS9 display
 
 Historical note: the name "mtv" comes from Jim Gunn's forth imageprocessing
@@ -151,8 +151,8 @@ system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
    ds9Cmd("frame %d" % frame)
 
    if re.search("::MaskedImage<", data.repr()): # it's a MaskedImage; display the Image and overlay the Mask
-       _mtv(data.getImage(), WCS, False)
-       mtv(data.getMask(), frame, False, WCS, False)
+       _mtv(data.getImage(), wcs, False)
+       mtv(data.getMask(), frame, False, wcs, False)
    elif re.search("::Mask<", data.repr()): # it's a Mask; display it, bitplane by bitplane
        nMaskPlanes = data.getNumPlanesUsed()
        maskPlanes = data.getMaskPlaneDict()
@@ -180,14 +180,14 @@ system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
                            break
 
                setMaskColor(color)
-               _mtv(mask, WCS, True)
+               _mtv(mask, wcs, True)
        return
    elif re.search("::Image<", data.repr()): # it's an Image; display it
-       _mtv(data, WCS, False)
+       _mtv(data, wcs, False)
    else:
        raise RuntimeError, "Unsupported type %s" % data.repr()
 
-def _mtv(data, WCS=None, isMask=False):
+def _mtv(data, wcs=None, isMask=False):
    """Internal routine to display an Image or Mask on a DS9 display"""
 
    if True:
@@ -203,9 +203,9 @@ def _mtv(data, WCS=None, isMask=False):
    try:
        #import pdb; pdb.set_trace()
        try:
-           displayLib.writeFitsImage(pfd.fileno(), data, WCS)
+           displayLib.writeFitsImage(pfd.fileno(), data, wcs)
        except NotImplementedError:
-           displayLib.writeFitsImage(pfd.fileno(), data.get(), WCS)
+           displayLib.writeFitsImage(pfd.fileno(), data.get(), wcs)
    except Exception, e:
        try:
            pfd.close()

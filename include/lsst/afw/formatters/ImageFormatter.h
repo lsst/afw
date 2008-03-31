@@ -19,38 +19,50 @@
  * \ingroup afw
  */
 
-#include "lsst/daf/persistence/Formatter.h"
+#include <lsst/daf/base.h>
+#include <lsst/pex/policy/Policy.h>
+#include <lsst/daf/persistence/Formatter.h>
+#include <lsst/daf/persistence/Storage.h>
 
 namespace lsst {
 namespace afw {
 namespace formatters {
-               
-using namespace lsst::daf::persistence;
 
 template<typename ImagePixelT>
-class ImageFormatter : public Formatter {
+class ImageFormatter : public lsst::daf::persistence::Formatter {
 public:       
     virtual ~ImageFormatter(void);
 
-    virtual void write(lsst::daf::base::Persistable const* persistable, Storage::Ptr storage,
-                       lsst::daf::data::DataProperty::PtrType additionalData);
+    virtual void write(
+        lsst::daf::base::Persistable const* persistable,
+        lsst::daf::persistence::Storage::Ptr storage,
+        lsst::daf::base::DataProperty::PtrType additionalData
+    );
     virtual lsst::daf::base::Persistable* read(
-        Storage::Ptr storage,
-        lsst::daf::data::DataProperty::PtrType additionalData);
-    virtual void update(lsst::daf::base::Persistable* persistable,
-                        Storage::Ptr storage,
-                        lsst::daf::data::DataProperty::PtrType additionalData);
+        lsst::daf::persistence::Storage::Ptr storage,
+        lsst::daf::base::DataProperty::PtrType additionalData
+    );
+    virtual void update(
+        lsst::daf::base::Persistable* persistable,
+        lsst::daf::persistence::Storage::Ptr storage,
+        lsst::daf::base::DataProperty::PtrType additionalData
+    );
 
-    static Formatter::Ptr createInstance(lsst::pex::policy::Policy::Ptr policy);
+    static lsst::daf::persistence::Formatter::Ptr createInstance(
+        lsst::pex::policy::Policy::Ptr policy
+    );
 
     template <class Archive>
-    static void delegateSerialize(Archive& ar,
-                                  int const version, lsst::daf::base::Persistable* persistable);
+    static void delegateSerialize(
+        Archive& ar,
+        int const version,
+        lsst::daf::base::Persistable* persistable
+    );
 
 private:
     explicit ImageFormatter(lsst::pex::policy::Policy::Ptr policy);
 
-    static FormatterRegistration registration;
+    static lsst::daf::persistence::FormatterRegistration registration;
 };
 
 }}} // namespace lsst::afw::formatters

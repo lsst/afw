@@ -7,13 +7,13 @@
   * \brief Test code for the LSST Exposure Class.
   *
   * This test code runs some very straightforward tests on the Exposure Class
-  * members and (to some extent) its related classes (MaskedImage & WCS) - it
-  * reads in a fits file as a MaskedImage, gets the WCS and creates an Exposure
+  * members and (to some extent) its related classes (MaskedImage & Wcs) - it
+  * reads in a fits file as a MaskedImage, gets the Wcs and creates an Exposure
   * along with a few other mundane tasks.
   * 
-  * Additional tests will eventually include convolution of a WCS with an
-  * Exposure and an attempt to patch up the WCS. See examples/wcsTests.cc for
-  * additional WCS Class tests.
+  * Additional tests will eventually include convolution of a Wcs with an
+  * Exposure and an attempt to patch up the Wcs. See examples/wcsTests.cc for
+  * additional Wcs Class tests.
   *        
   * \author Nicole M. Silvestri, University of Washington
   *
@@ -30,23 +30,16 @@
 #include <sstream>
 #include <string>
 
-#include <boost/cstdint.hpp>
 #include <boost/format.hpp>
-#include <boost/shared_ptr.hpp>
 #include <vw/Core.h>
-#include <vw/Image.h>
 #include <vw/Math/BBox.h>
 
-#include <lsst/daf/data/Citizen.h>
-#include <lsst/daf/data/DataProperty.h>
-#include <lsst/afw/image/DiskImageResourceFITS.h>
+#include <lsst/daf/base.h>
 #include <lsst/pex/exceptions.h>
 #include <lsst/afw/image/Exposure.h>
-#include <lsst/afw/image/Mask.h>
-#include <lsst/afw/image/Image.h>
 #include <lsst/afw/image/MaskedImage.h>
 #include <lsst/pex/logging/Trace.h>
-#include <lsst/afw/image/WCS.h>
+#include <lsst/afw/image/Wcs.h>
 
 // FROM POLICY FILE: INPUT AND OUTPUT FILE NAMES FOR EXPOSURES/MASKEDIMAGES
 const std::string miOutFile1("miOutFile1"); // output maskedImage
@@ -107,46 +100,46 @@ int main() {
         lsst::pex::logging::Trace("lsst.afw.Exposure", 5, boost::format("Number of columns, rows in MiExposure: %s, %s") % numMiCols % numMiRows);
         lsst::pex::logging::Trace("lsst.afw.Exposure", 5, boost::format("Number of columns, rows in original MaskedImage, 'mImage': %s, %s") % numOrigMiCols % numOrigMiRows);
 
-        // (3) Construct an Exposure from a MaskedImage and a WCS.  Need to
-        // construct a WCS first.  The WCS class takes the MaskedImage metadata
+        // (3) Construct an Exposure from a MaskedImage and a Wcs.  Need to
+        // construct a Wcs first.  The Wcs class takes the MaskedImage metadata
         // as a DataPropertyPtrT.  The getImage()->getMetaData() member returns a pointer to
         // the metadata.
 
-        lsst::daf::data::DataProperty::PtrType mData = mImage.getImage()->getMetaData();
+        lsst::daf::base::DataProperty::PtrType mData = mImage.getImage()->getMetaData();
 
         // make sure it can be copied.
-        lsst::afw::image::WCS myWcs(mData);  
+        lsst::afw::image::Wcs myWcs(mData);  
 
-        lsst::afw::image::WCS wcs2;
+        lsst::afw::image::Wcs wcs2;
         wcs2 = myWcs;
         
         // Now use Exposure class to create an Exposure from a MaskedImage and a
-        // WCS.
+        // Wcs.
        
        lsst::afw::image::Exposure<pixelType, lsst::afw::image::maskPixelType> miWcsExpImage(mImage, myWcs);
              
-	lsst::afw::image::WCS wcsCopy(myWcs); 
+	lsst::afw::image::Wcs wcsCopy(myWcs); 
       
-	//lsst::afw::image::WCS wcsAssigned();
+	//lsst::afw::image::Wcs wcsAssigned();
 	//wcsAssigned = myWcs; 
 
-        // (4) Construct an Exposure from a given region (col, row) and a WCS.
+        // (4) Construct an Exposure from a given region (col, row) and a Wcs.
 
         unsigned miCols = 5;
         unsigned miRows = 5;
         lsst::afw::image::Exposure<pixelType, lsst::afw::image::maskPixelType> regWcsExpImage(miCols, miRows, myWcs);
        
-        // (5) Construct an Exposure from a given region (col, row) with no WCS.
+        // (5) Construct an Exposure from a given region (col, row) with no Wcs.
 
         unsigned mi2Cols = 5;
         unsigned mi2Rows = 5;
         lsst::afw::image::Exposure<pixelType, lsst::afw::image::maskPixelType> regExpImage(mi2Cols, mi2Rows);
        
-        // try to get the WCS when there isn't one
+        // try to get the Wcs when there isn't one
         try {
-        lsst::afw::image::WCS noWcs = regExpImage.getWcs();
+        lsst::afw::image::Wcs noWcs = regExpImage.getWcs();
         } catch (lsst::pex::exceptions::NotFound e) {
-            lsst::pex::logging::Trace("lsst.afw.Exposure", 5, "Caught lsst::pex NotFound Exception for getting a null WCS");
+            lsst::pex::logging::Trace("lsst.afw.Exposure", 5, "Caught lsst::pex NotFound Exception for getting a null Wcs");
         }
 
         // (6) Get a MaskedImage and write it out.
@@ -154,22 +147,22 @@ int main() {
         lsst::afw::image::MaskedImage<pixelType, lsst::afw::image::maskPixelType> newMiImage =  miWcsExpImage.getMaskedImage();
         newMiImage.writeFits(miOutFile2);
         
-        // (7) Get a WCS. 
+        // (7) Get a Wcs. 
          
-       lsst::afw::image::WCS newWcs = miWcsExpImage.getWcs();
+       lsst::afw::image::Wcs newWcs = miWcsExpImage.getWcs();
 
-        // try to get a WCS from an image where I have corrupted the WCS
+        // try to get a Wcs from an image where I have corrupted the Wcs
         // information (removed the CRPIX1/2 header keywords/values.  Lets see
-        // what WCS class does.  It should fail miserably because there is no
-        // exception handling for this in the WCS class.
+        // what Wcs class does.  It should fail miserably because there is no
+        // exception handling for this in the Wcs class.
         
         lsst::afw::image::MaskedImage<pixelType, lsst::afw::image::maskPixelType> mCorruptImage;
         const std::string inCorrMIFile("tests/data/small_MI_corrupt"); // input CFHT MI with corrupt header
        
         try {
         mCorruptImage.readFits(inCorrMIFile);
-        lsst::daf::data::DataProperty::PtrType  mCorData = mCorruptImage.getImage()->getMetaData();
-        lsst::afw::image::WCS wcs = lsst::afw::image::WCS(mCorData);
+        lsst::daf::base::DataProperty::PtrType  mCorData = mCorruptImage.getImage()->getMetaData();
+        lsst::afw::image::Wcs wcs = lsst::afw::image::Wcs(mCorData);
        
         lsst::afw::image::Exposure<pixelType, lsst::afw::image::maskPixelType> newCorExposure(mCorruptImage, wcs);
        
@@ -177,7 +170,7 @@ int main() {
             lsst::pex::logging::Trace("lsst.afw.Exposure", 1, "Reading Corrupted MaskedImage Failed - caught lsst::pex NotFound Exception.");
         }
 
-        // (8) Get a subExposure once the WCS Class is ready for this to be
+        // (8) Get a subExposure once the Wcs Class is ready for this to be
         // implemented.
 
         // Test that this throws the appropriate daf Exception that it should
@@ -221,18 +214,18 @@ int main() {
             lsst::pex::logging::Trace("lsst.afw.Exposure", 5, "Caught InvalidParameter Exception for requested subRegion2");
         }
        
-        // (9) Check if the Exposure has a WCS.  Doesn't have to have one.  Bool
-        // true/false should be returned.  Warning should be received if WCS is
+        // (9) Check if the Exposure has a Wcs.  Doesn't have to have one.  Bool
+        // true/false should be returned.  Warning should be received if Wcs is
         // not present.
         
-        // This Exposure should have a WCS.
+        // This Exposure should have a Wcs.
         miWcsExpImage.hasWcs(); 
         
-        // This Exposure should not have a WCS.        
+        // This Exposure should not have a Wcs.        
         if (!miExpImage.hasWcs()) {
             
         }
-        // This Exposure should have a MaskedImage with a size of 0,0 and no WCS.
+        // This Exposure should have a MaskedImage with a size of 0,0 and no Wcs.
         blankExpImage.hasWcs();
         
         // (10) Test readFits/writeFits functionality for Exposure
@@ -255,9 +248,9 @@ int main() {
     } // close memory (de)allocation block
 
     // Checking for memory leaks...
-    if (lsst::daf::data::Citizen::census(0) != 0) {
+    if (lsst::daf::base::Citizen::census(0) != 0) {
         std::cerr << "Leaked memory blocks:" << std::endl;
-        lsst::daf::data::Citizen::census(std::cerr);
+        lsst::daf::base::Citizen::census(std::cerr);
     }
 
 } //close main

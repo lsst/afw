@@ -9,7 +9,7 @@
 using namespace std;
 
 using lsst::pex::logging::Trace;
-using lsst::daf::data::DataProperty;
+using lsst::daf::base::DataProperty;
 using lsst::daf::data::FitsFormatter;
 
 namespace pexEx = lsst::pex::exceptions;
@@ -36,7 +36,7 @@ void test(char *name) {
         boost::format("FITS metadata string: %s") 
             % FitsFormatter::formatDataProperty(metaDataPtr, false));
 
-    lsst::afw::image::WCS testWCS(metaDataPtr);
+    lsst::afw::image::Wcs testWcs(metaDataPtr);
 
     Coord2D pix, sky;
 
@@ -45,7 +45,7 @@ void test(char *name) {
     pix[0] = 500.0;
     pix[1] = 1000.0;
 
-    testWCS.colRowToRaDec(pix, sky);
+    testWcs.colRowToRaDec(pix, sky);
 
     Trace("MaskedImageIO_1", 1,
           boost::format("pix: %lf %lf") % pix[0] % pix[1]);
@@ -53,7 +53,7 @@ void test(char *name) {
     Trace("MaskedImageIO_1", 1,
           boost::format("sky: %lf %lf") % sky[0] % sky[1]);
 
-    testWCS.raDecToColRow(sky, pix);
+    testWcs.raDecToColRow(sky, pix);
 
     Trace("MaskedImageIO_1", 1,
           boost::format("pix: %lf %lf") % pix[0] % pix[1]);

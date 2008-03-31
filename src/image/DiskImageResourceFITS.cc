@@ -2,10 +2,12 @@
 //! \brief Provides support for the FITS file format.
 
 #include <vector>
+
 #include <boost/scoped_array.hpp>
 #include <boost/format.hpp>
 #include <vw/Core/Exception.h>
 #include <vw/Image/ImageMath.h>
+
 #include <lsst/pex/exceptions.h>
 #include <lsst/afw/image/DiskImageResourceFITS.h>
 
@@ -17,10 +19,9 @@ extern "C" {
 #include "fitsio.h"
 }
 
-using namespace lsst::afw;
+using namespace lsst::afw::image;
 
-using lsst::pex::exceptions::FitsError;
-using lsst::daf::data::DataProperty;
+using lsst::daf::base::DataProperty;
 
 //
 // A utility routine to throw an error. Note that the macro form includes
@@ -54,7 +55,7 @@ namespace {
                 throw vw::IOErr() << msg.str();
                 break;
               default:
-                throw FitsError(msg) << DataProperty("status", status);
+                throw lsst::pex::exceptions::FitsError(msg) << DataProperty("status", status);
                 break;
             }
         }
@@ -73,7 +74,7 @@ namespace {
                      int hdu,               //!< desired HDU
                      bool relative = false //!< Is move relative to current HDU?
                     ) {
-        int status = 0;			// cfitsio status
+        int status = 0;     // cfitsio status
         
         if (relative) {
             if (fits_movrel_hdu(fd, hdu, NULL, &status) != 0) {
@@ -172,7 +173,7 @@ void DiskImageResourceFITS::open(std::string const& filename //!< Desired filena
     move_to_hdu(fd, _hdu);
 
     /* get image data type */
-    int bitpix = 0;			// BITPIX from FITS header
+    int bitpix = 0;     // BITPIX from FITS header
     if (fits_get_img_equivtype(fd, &bitpix, &status) != 0) {
         throw_cfitsio_error(fd, status);
     }
@@ -181,36 +182,36 @@ void DiskImageResourceFITS::open(std::string const& filename //!< Desired filena
      */
     switch (bitpix) {
       case BYTE_IMG:
-	_ttype = TBYTE;
+        _ttype = TBYTE;
         _channelType = vw::VW_CHANNEL_INT8;
-	break;
+        break;
       case SHORT_IMG:                   // int16
-	_ttype = TSHORT;
+        _ttype = TSHORT;
         _channelType = vw::VW_CHANNEL_INT16;
-	break;
+        break;
       case USHORT_IMG:                  // uint16
-	_ttype = TUSHORT;               // n.b. cfitsio does magic things with bzero/bscale to make Uint16
+        _ttype = TUSHORT;               // n.b. cfitsio does magic things with bzero/bscale to make Uint16
         _channelType = vw::VW_CHANNEL_UINT16;
-	break;
+        break;
       case LONG_IMG:                    // int32
-	_ttype = TINT;
+        _ttype = TINT;
         _channelType = vw::VW_CHANNEL_INT32;
-	break;
+        break;
       case FLOAT_IMG:                   // float
-	_ttype = TFLOAT;
+        _ttype = TFLOAT;
         _channelType = vw::VW_CHANNEL_FLOAT32;
-	break;
+        break;
       case DOUBLE_IMG:                  // double
-	_ttype = TDOUBLE;
+        _ttype = TDOUBLE;
         _channelType = vw::VW_CHANNEL_FLOAT64;
-	break;
+        break;
       default:
         throw_cfitsio_error(fd, (boost::format("Unsupported value BITPIX==%d in file \"%s\"") %
                              bitpix % _filename).str());
     }
     
     /* get image number of dimensions */
-    int nAxis = 0;			// number of axes in file
+    int nAxis = 0;  // number of axes in file
     if (fits_get_img_dim(fd, &nAxis, &status) != 0) {
         throw_cfitsio_error(fd, status,
                             str(boost::format("Getting NAXIS from %s") % filename));
@@ -221,8 +222,8 @@ void DiskImageResourceFITS::open(std::string const& filename //!< Desired filena
         throw_cfitsio_error(fd, (boost::format("Dimensions of '%s' is not supported (NAXIS=%i)") %
                              _filename.c_str() % nAxis).str());
     }
-	
-    long nAxes[3];		// dimensions of image in file
+        
+    long nAxes[3];  // dimensions of image in file
     if (fits_get_img_size(fd, nAxis, nAxes, &status) != 0) {
         throw_cfitsio_error(fd, status,
                             str(boost::format("Failed to find number of rows in %s") % filename));
@@ -263,29 +264,29 @@ void DiskImageResourceFITS::create(std::string const& filename, //!< file to wri
 
     switch (_channelType) {
       case vw::VW_CHANNEL_UINT8:
-	_ttype = TBYTE;
+        _ttype = TBYTE;
         _bitpix = 8;
-	break;
+        break;
       case vw::VW_CHANNEL_UINT16:
-	_ttype = TUSHORT;		 // n.b. cfitsio does magic things with bzero/bscale to make Uint16
+        _ttype = TUSHORT;   // n.b. cfitsio does magic things with bzero/bscale to make Uint16
         _bitpix = 16;
-	break;
+        break;
       case vw::VW_CHANNEL_INT32:
-	_ttype = TINT;
+        _ttype = TINT;
         _bitpix = 32;
-	break;
+        break;
       case vw::VW_CHANNEL_UINT32:
-	_ttype = TUINT;
+        _ttype = TUINT;
         _bitpix = 32;
-	break;
+        break;
       case vw::VW_CHANNEL_FLOAT32:
-	_ttype = TFLOAT;
+        _ttype = TFLOAT;
         _bitpix = -32;
-	break;
+        break;
       case vw::VW_CHANNEL_FLOAT64:
-	_ttype = TDOUBLE;
+        _ttype = TDOUBLE;
         _bitpix = -64;
-	break;
+        break;
       default:
         throw_cfitsio_error(0, (boost::format("Unsupported channel type==%d in file \"%s\"") %
                                 _channelType % _filename).str());
@@ -323,7 +324,7 @@ void myConvert<typename destType, typename srcType>() {
 void DiskImageResourceFITS::read(vw::ImageBuffer const& dest, //!< Where to put the image
                                  vw::BBox2i const& bbox //!< Desired bounding box
                                 ) const {
-    int status = 0;			// cfitsio function return status
+    int status = 0; // cfitsio function return status
 
     VW_ASSERT(dest.format.cols == cols() && dest.format.rows == rows(),
               vw::IOErr() << "Buffer has wrong dimensions in FITS read.");
@@ -338,7 +339,7 @@ void DiskImageResourceFITS::read(vw::ImageBuffer const& dest, //!< Where to put 
     const int sizeof_pixel = vw::channel_size(_channelType);
     boost::scoped_array<char> buf(new char[npix*sizeof_pixel]); // input buffer
     
-    long fpixel[2];			// tell cfitsio which pixels to read
+    long fpixel[2]; // tell cfitsio which pixels to read
     fpixel[0] = 1;                      // 1 indexed.
     fpixel[1] = 1;                      //            grrrrrr
     int anynull = 0;
@@ -370,7 +371,7 @@ void DiskImageResourceFITS::write(vw::ImageBuffer const& src, //!< the buffer to
     fitsfile *fd = static_cast<fitsfile *>(_fd); // cfitsio file descriptor
     
     // Set up the generic image buffer and convert the data into this buffer
-    const int npix = cols()*rows();     // number of pixels in image
+    const int npix = cols()*rows(); // number of pixels in image
     const int sizeof_pixel = vw::channel_size(_channelType);
 
     vw::ImageBuffer dest;
@@ -386,13 +387,13 @@ void DiskImageResourceFITS::write(vw::ImageBuffer const& src, //!< the buffer to
     // OK, so we have the data in the format that they requested.  Now all
     // that we have to do is to write it to a file
     //
-    long nAxes[3];			// dimensions of image in file
-    int nAxis = 0;			// Image dimension
+    long nAxes[3];  // dimensions of image in file
+    int nAxis = 0;  // Image dimension
     nAxes[nAxis++] = cols();
     nAxes[nAxis++] = rows();
 
     /*  create the mandatory image keywords */
-    int status = 0;			// cfitsio status
+    int status = 0; // cfitsio status
     if (fits_create_img(fd, _bitpix, nAxis, nAxes, &status) != 0) {
         throw_cfitsio_error(fd, status);
     }
@@ -410,8 +411,8 @@ void DiskImageResourceFITS::write(vw::ImageBuffer const& src, //!< the buffer to
             if (keyName != "SIMPLE" && keyName != "BITPIX" && 
                 keyName != "NAXIS" && keyName != "NAXIS1" && keyName != "NAXIS2" &&
                 keyName != "EXTEND") {
-		        appendKey(keyName, dpItemPtr->getValue(), "");
-	        }
+                        appendKey(keyName, dpItemPtr->getValue(), "");
+                }
         }
     }
     /*
@@ -449,7 +450,7 @@ int DiskImageResourceFITS::getNumKeys()
      fitsfile *fd = static_cast<fitsfile *>(_fd); // cfitsio file descriptor
  
      if (fits_get_hdrpos(fd, &numKeys, &keynum, &status) != 0) {
-	  throw_cfitsio_error(fd, status);
+          throw_cfitsio_error(fd, status);
      }
 
      return numKeys;
@@ -467,10 +468,10 @@ bool DiskImageResourceFITS::getKey(int n, std::string & keyWord, std::string & k
 
      int cfitsioError = fits_read_keyn(fd, n, keyWordChars, keyValueChars, keyCommentChars, &status);
      if (!cfitsioError) {
-	  keyWord = keyWordChars;
-	  keyValue = keyValueChars;
-	  keyComment = keyCommentChars;
-	  return true;
+          keyWord = keyWordChars;
+          keyValue = keyValueChars;
+          keyComment = keyCommentChars;
+          return true;
      }
      return false;
 }
@@ -480,37 +481,37 @@ bool DiskImageResourceFITS::getKey(int n, std::string & keyWord, std::string & k
 bool DiskImageResourceFITS::appendKey(const std::string & keyWord, const boost::any & keyValue, const std::string & keyComment)
 {
 
-     // NOTE:  the sizes of arrays are tied to FITS standard
-     // These shenanigans are required only because fits_write_key does not take const args...
- 
-     char keyWordChars[80];
-     char keyValueChars[80];
-     char keyCommentChars[80];
-
-     strncpy(keyWordChars, keyWord.c_str(), 80);
-     strncpy(keyCommentChars, keyComment.c_str(), 80);
-
-     int status = 0;
-     int cfitsioError = -1;
-
-     fitsfile *fd = static_cast<fitsfile *>(_fd); // cfitsio file descriptor
+    // NOTE:  the sizes of arrays are tied to FITS standard
+    // These shenanigans are required only because fits_write_key does not take const args...
+    
+    char keyWordChars[80];
+    char keyValueChars[80];
+    char keyCommentChars[80];
+    
+    strncpy(keyWordChars, keyWord.c_str(), 80);
+    strncpy(keyCommentChars, keyComment.c_str(), 80);
+    
+    int status = 0;
+    int cfitsioError = -1;
+    
+    fitsfile *fd = static_cast<fitsfile *>(_fd); // cfitsio file descriptor
 
     if (keyValue.type() == typeid(int)) {
-	 int tmp = boost::any_cast<const int>(keyValue);
-	 cfitsioError = fits_write_key(fd, TINT, keyWordChars, &tmp, keyCommentChars, &status);
+        int tmp = boost::any_cast<const int>(keyValue);
+        cfitsioError = fits_write_key(fd, TINT, keyWordChars, &tmp, keyCommentChars, &status);
 
     } else if (keyValue.type() == typeid(double)) {
         double tmp = boost::any_cast<const double>(keyValue);
-	cfitsioError = fits_write_key(fd, TDOUBLE, keyWordChars, &tmp, keyCommentChars, &status);
+        cfitsioError = fits_write_key(fd, TDOUBLE, keyWordChars, &tmp, keyCommentChars, &status);
 
     } else if (keyValue.type() == typeid(std::string)) {
         std::string tmp = boost::any_cast<const std::string>(keyValue);
-	strncpy(keyValueChars, tmp.c_str(), 80);
-	cfitsioError = fits_write_key(fd, TSTRING, keyWordChars, keyValueChars, keyCommentChars, &status);
+        strncpy(keyValueChars, tmp.c_str(), 80);
+        cfitsioError = fits_write_key(fd, TSTRING, keyWordChars, keyValueChars, keyCommentChars, &status);
     }
 
      if (!cfitsioError) {
-	  return true;
+        return true;
      }
      return false;
 }

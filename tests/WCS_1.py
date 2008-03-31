@@ -29,7 +29,7 @@ class WCSTestCaseSDSS(unittest.TestCase):
         im = afwImage.ImageD()
         im.readFits(InputSmallImagePath)
 
-        self.wcs = afw.WCS(im.getMetaData())
+        self.wcs = afwImage.Wcs(im.getMetaData())
 
         if False:
             import lsst.afw.display.ds9 as ds9; ds9.mtv(im, WCS=self.wcs)
@@ -37,24 +37,24 @@ class WCSTestCaseSDSS(unittest.TestCase):
     def tearDown(self):
         del self.wcs
 
-    def testValidWCS(self):
+    def testValidWcs(self):
         """Test operator bool() (== isValid)"""
         self.assertTrue(self.wcs.isValid())
 
-    def testInvalidWCS(self):
+    def testInvalidWcs(self):
         """Test operator bool() (== isValid)
         This test has been improved by deleting some essential
         metadata (in this case, CRPIX1, and CRPIX2) from the
         MaskedImage's metadata and using that.
         """
-        wcs = afw.WCS()
+        wcs = afwImage.Wcs()
         self.assertFalse(wcs.isValid())
 
         # Using MaskedImage with corrupt metadata 
         maskedImage = afwImage.MaskedImageF()
         maskedImage.readFits(InputCorruptFilePath)
         metadata = maskedImage.getImage().getMetaData()
-        corruptWcs = afw.WCS(metadata)
+        corruptWcs = afwImage.Wcs(metadata)
         self.assertTrue(corruptWcs.isValid())
         
 
@@ -103,7 +103,7 @@ class WCSTestCaseCFHT(unittest.TestCase):
 
         im.readFits(InputImagePath)
 
-        self.wcs = afw.WCS(im.getMetaData())
+        self.wcs = afwImage.Wcs(im.getMetaData())
 
     def tearDown(self):
         del self.wcs

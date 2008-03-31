@@ -21,8 +21,6 @@
 #include <lsst/daf/data.h>
 #include <lsst/pex/exceptions.h>
 #include <lsst/daf/base/Persistable.h>
-#include <lsst/pex/logging/Trace.h>
-#include <lsst/afw/image/LSSTFitsResource.h>
 #include <lsst/afw/image/ImageExceptions.h>
 
 namespace lsst {

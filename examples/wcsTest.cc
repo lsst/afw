@@ -1,7 +1,7 @@
 // -*- LSST-C++ -*- // fixed format comment for emacs
 /**
 * \file wcsTest.cc
-* \brief Simple test code for the WCS Class
+* \brief Simple test code for the Wcs Class
 *        Created on:    23-Jul-2007 12:28:00 PM PDT (by NMS)
 * \author Nicole M. Silvestri
 *         Last modified: 20-Aug-2007 (by NMS)
@@ -24,7 +24,7 @@
 #include <lsst/afw/image.h>
 
 /**
- * \brief This test code incorporates some very simple tests of the WCS Class
+ * \brief This test code incorporates some very simple tests of the Wcs Class
  * and its related classes.
  * 
  */
@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
     std::cout << "Opening file " << inFilename << std::endl;
     lsst::afw::image::MaskedImage<pixelType, lsst::afw::image::maskPixelType> mskdImage;
     mskdImage.readFits(inFilename);
-    lsst::afw::image::WCS wcs(mskdImage.getImage()->getMetaData());
+    lsst::afw::image::Wcs wcs(mskdImage.getImage()->getMetaData());
     
     // Testing input col, row values 
 

@@ -3,6 +3,7 @@
 
 #include <vw/Image.h>
 
+#include <lsst/daf/base.h>
 #include <lsst/daf/data.h>
 #include <lsst/pex/exceptions.h>
 #include <lsst/pex/logging/Trace.h>
@@ -10,7 +11,6 @@
 
 using namespace std;
 using lsst::pex::logging::Trace;
-using lsst::daf::data::Citizen;
 using lsst::daf::data::FitsFormatter;
 namespace pexEx = lsst::pex::exceptions;
 
@@ -162,10 +162,10 @@ int main(int argc, char **argv) {
     //
     // Check for memory leaks
     //
-    if (Citizen::census(0) == 0) {
+    if (lsst::daf::base::Citizen::census(0) == 0) {
         cerr << "No leaks detected" << endl;
     } else {
         cerr << "Leaked memory blocks:" << endl;
-        Citizen::census(cerr);
+        lsst::daf::base::Citizen::census(cerr);
     }
 }

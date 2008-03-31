@@ -12,14 +12,12 @@
 #include <vw/Image/ImageResource.h>
 #include <vw/FileIO/DiskImageResource.h>
 
-#include <lsst/daf/data/DataProperty.h>
-#include <lsst/pex/utils/Utils.h>
+#include <lsst/daf/base/DataProperty.h>
+// no such file: #include <lsst/pex/utils/Utils.h>
 
 namespace lsst {
 namespace afw {
 namespace image {
-
-using lsst::daf::data::DataProperty;
 
 /*!
  * FITS I/O for VisionWorkbench
@@ -41,7 +39,7 @@ public:
     
     void create(std::string const& filename,
                 vw::ImageFormat const& format,
-                DataProperty *metaData = NULL);
+                lsst::daf::base::DataProperty *metaData = NULL);
     
     static DiskImageResource* construct_open(std::string const& filename);
     
@@ -59,7 +57,7 @@ private:
     static void setDefaultHdu(const int hdu);
     
     std::string _filename;          //!< filename
-    DataProperty *_metaData;        //!< metadata to write to the file
+    lsst::daf::base::DataProperty *_metaData;        //!< metadata to write to the file
     void *_fd;                      //!< really a fitsfile, but we aren't including cfitsio.h
     int _hdu;                       //!< desired HDU
     int _ttype;                     //!< cfitsio's name for data type

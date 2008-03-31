@@ -17,7 +17,7 @@
 #include <boost/cstdint.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include <lsst/daf/data/Citizen.h>
+#include <lsst/daf/base/Citizen.h>
 #include <lsst/daf/base/Persistable.h>
 
 
@@ -28,6 +28,10 @@ namespace serialization {
 
 namespace lsst {
 namespace afw {
+    namespace formatters {
+        class SourceVectorFormatter;
+    }
+namespace detection {
 
 #ifndef SWIG
 using boost::int16_t;
@@ -36,9 +40,6 @@ using boost::int64_t;
 #endif
 
 // forward declarations for formatters
-namespace formatters {
-    class SourceVectorFormatter;
-}
 
 
 /*!
@@ -415,7 +416,7 @@ inline bool operator!=(Source const & d1, Source const & d2) {
  */
 class SourceVector :
     public lsst::daf::base::Persistable,
-    public lsst::daf::data::Citizen
+    public lsst::daf::base::Citizen
 {
 public :
     typedef boost::shared_ptr<SourceVector> Ptr;
@@ -438,7 +439,7 @@ public :
 
     template <typename InputIterator>
     SourceVector(InputIterator beg, InputIterator end) :
-        lsst::daf::data::Citizen(typeid(*this)),
+        lsst::daf::base::Citizen(typeid(*this)),
         _vec(beg, end)
     {}
 
@@ -512,7 +513,7 @@ private :
 #endif // SWIG
 
 
-}}  // namespace lsst::afw
+}}}  // namespace lsst::afw::detection
 
 #endif // LSST_AFW_DETECTION_SOURCE_H
 

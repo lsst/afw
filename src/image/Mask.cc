@@ -1,6 +1,17 @@
 // -*- lsst-c++ -*-
 // Implementations of Mask class methods
 
+#include <list>
+#include <string>
+
+#include <boost/format.hpp>
+#include <vw/Image.h>
+#include <vw/Math/BBox.h>
+
+#include <lsst/daf/data.h>
+#include <lsst/pex/exceptions.h>
+#include <lsst/pex/logging/Trace.h>
+#include <lsst/afw/image/LSSTFitsResource.h>
 #include <lsst/afw/image/Mask.h>
 
 using namespace lsst::afw::image;
@@ -77,7 +88,7 @@ Mask<MaskPixelT>& Mask<MaskPixelT>::operator= (const Mask<MaskPixelT>& rhs) {
 }
 
 template<typename MaskPixelT>
-lsst::daf::data::DataProperty::PtrType Mask<MaskPixelT>::getMetaData()
+lsst::daf::base::DataProperty::PtrType Mask<MaskPixelT>::getMetaData()
 {
     return _metaData;
 }
@@ -139,9 +150,9 @@ int Mask<MaskPixelT>::addMaskPlane(const std::string& name)
         return _maskPlaneDict[name];
     } else {
         // Max number of planes already allocated
-        throw OutOfPlaneSpace("Max number of planes already used")
-            << lsst::daf::data::DataProperty("numPlanesUsed", _maskPlaneDict.size())
-            << lsst::daf::data::DataProperty("numPlanesMax", getNumPlanesMax());
+        throw lsst::afw::image::OutOfPlaneSpace("Max number of planes already used")
+            << lsst::daf::base::DataProperty("numPlanesUsed", _maskPlaneDict.size())
+            << lsst::daf::base::DataProperty("numPlanesMax", getNumPlanesMax());
     }
 }
 
@@ -183,7 +194,7 @@ void Mask<MaskPixelT>::getMaskPlane(const std::string& name,
                                               int& plane) const {
     plane = getMaskPlane(name);
     if (plane < 0) {
-        throw NoMaskPlane("Failed to find maskPlane " + name);
+        throw lsst::afw::image::NoMaskPlane("Failed to find maskPlane " + name);
     }
 }
 
@@ -508,7 +519,7 @@ Mask<MaskPixelT>& Mask<MaskPixelT>::operator &= (MaskPixelT const inputMask)
  * \throw Throws lsst::pex::exceptions::InvalidParameter if given DataProperty is not a node
  */
 template<typename MaskPixelT>
-void Mask<MaskPixelT>::addMaskPlaneMetaData(lsst::daf::data::DataProperty::PtrType rootPtr) {
+void Mask<MaskPixelT>::addMaskPlaneMetaData(lsst::daf::base::DataProperty::PtrType rootPtr) {
      if( rootPtr->isNode() != true ) {
         throw lsst::pex::exceptions::InvalidParameter( "Given DataProperty object is not a node" );
         
@@ -524,7 +535,7 @@ void Mask<MaskPixelT>::addMaskPlaneMetaData(lsst::daf::data::DataProperty::PtrTy
         
         if (planeName != "") {
             rootPtr->addProperty(
-                lsst::daf::data::DataProperty::PtrType(new lsst::daf::data::DataProperty(Mask::maskPlanePrefix + planeName, planeNumber)));
+                lsst::daf::base::DataProperty::PtrType(new lsst::daf::base::DataProperty(Mask::maskPlanePrefix + planeName, planeNumber)));
         }
     }
 }
@@ -537,20 +548,20 @@ void Mask<MaskPixelT>::addMaskPlaneMetaData(lsst::daf::data::DataProperty::PtrTy
  */
 template<typename MaskPixelT>
 typename Mask<MaskPixelT>::MaskPlaneDict Mask<MaskPixelT>::parseMaskPlaneMetaData(
-	lsst::daf::data::DataProperty::PtrType const rootPtr //!< metadata from a Mask
+	lsst::daf::base::DataProperty::PtrType const rootPtr //!< metadata from a Mask
 ) const {
     MaskPlaneDict newDict;
 
-    lsst::daf::data::DataProperty::iteratorRangeType range = rootPtr->searchAll( maskPlanePrefix +".*" );
+    lsst::daf::base::DataProperty::iteratorRangeType range = rootPtr->searchAll( maskPlanePrefix +".*" );
     if (std::distance(range.first, range.second) == 0) {
         return newDict;
     }
 
     int numPlanesUsed = 0;              // number of planes used
     // Iterate through matching keyWords setting the dictionary
-    lsst::daf::data::DataProperty::ContainerIteratorType iter;
+    lsst::daf::base::DataProperty::ContainerIteratorType iter;
     for( iter = range.first; iter != range.second; ++iter, ++numPlanesUsed ) {
-        lsst::daf::data::DataProperty::PtrType dpPtr = *iter;
+        lsst::daf::base::DataProperty::PtrType dpPtr = *iter;
         // split off the "MP_" to get the planeName
         std::string const keyWord = dpPtr->getName();
         std::string const planeName = keyWord.substr(maskPlanePrefix.size());
@@ -565,9 +576,9 @@ typename Mask<MaskPixelT>::MaskPlaneDict Mask<MaskPixelT>::parseMaskPlaneMetaDat
         // build new entry
         if (numPlanesUsed >= getNumPlanesMax()) {
             // Max number of planes already allocated
-            throw OutOfPlaneSpace("Max number of planes already used")
-                << lsst::daf::data::DataProperty("numPlanesUsed", numPlanesUsed)
-                << lsst::daf::data::DataProperty("numPlanesMax", getNumPlanesMax());
+            throw lsst::afw::image::OutOfPlaneSpace("Max number of planes already used")
+                << lsst::daf::base::DataProperty("numPlanesUsed", numPlanesUsed)
+                << lsst::daf::base::DataProperty("numPlanesMax", getNumPlanesMax());
         }
 
         newDict[planeName] = planeId;

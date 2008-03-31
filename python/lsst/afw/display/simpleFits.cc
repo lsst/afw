@@ -15,13 +15,13 @@ namespace posix {
 using namespace posix;
 
 #include "lsst/pex/exceptions.h"
-#include "lsst/pex/utils/Utils.h"
+// no such file: #include "lsst/pex/utils/Utils.h"
 #include <boost/any.hpp>
 
 #include "simpleFits.h"
 
 using namespace lsst::afw::display;
-using lsst::daf::data::DataProperty;
+using lsst::daf::base::DataProperty;
 
 #define FITS_SIZE 2880
 
@@ -301,7 +301,7 @@ namespace {
 
 void writeVwFits(int fd,                // file descriptor to write to
                  const vw::ImageBuffer& buff, // The data to write
-                 const WCS *WCS         // which WCS to use for pixel
+                 const Wcs *Wcs         // which Wcs to use for pixel
                 ) {
     /*
      * What sort if image is it?
@@ -338,24 +338,24 @@ void writeVwFits(int fd,                // file descriptor to write to
      */
     std::list<Card> cards;
     /*
-     * Generate cards for WCS, so that pixel (0,0) is correctly labelled
+     * Generate cards for Wcs, so that pixel (0,0) is correctly labelled
      */
-    std::string WCSname = "A";
-    cards.push_back(Card(str(boost::format("CRVAL1%s") % WCSname), 0, "(output) Column pixel of Reference Pixel"));
-    cards.push_back(Card(str(boost::format("CRVAL2%s") %WCSname), 0, "(output) Row pixel of Reference Pixel"));
-    cards.push_back(Card(str(boost::format("CRPIX1%s") %WCSname), 1, "Column Pixel Coordinate of Reference"));
-    cards.push_back(Card(str(boost::format("CRPIX2%s") %WCSname), 1, "Row Pixel Coordinate of Reference"));
-    cards.push_back(Card(str(boost::format("CTYPE1%s") %WCSname), "LINEAR", "Type of projection"));
-    cards.push_back(Card(str(boost::format("CTYPE1%s") %WCSname), "LINEAR", "Type of projection"));
-    cards.push_back(Card(str(boost::format("CUNIT1%s") %WCSname), "PIXEL", "Column unit"));
-    cards.push_back(Card(str(boost::format("CUNIT2%s") %WCSname), "PIXEL", "Row unit"));
+    std::string wcsName = "A";
+    cards.push_back(Card(str(boost::format("CRVAL1%s") % wcsName), 0, "(output) Column pixel of Reference Pixel"));
+    cards.push_back(Card(str(boost::format("CRVAL2%s") %wcsName), 0, "(output) Row pixel of Reference Pixel"));
+    cards.push_back(Card(str(boost::format("CRPIX1%s") %wcsName), 1, "Column Pixel Coordinate of Reference"));
+    cards.push_back(Card(str(boost::format("CRPIX2%s") %wcsName), 1, "Row Pixel Coordinate of Reference"));
+    cards.push_back(Card(str(boost::format("CTYPE1%s") %wcsName), "LINEAR", "Type of projection"));
+    cards.push_back(Card(str(boost::format("CTYPE1%s") %wcsName), "LINEAR", "Type of projection"));
+    cards.push_back(Card(str(boost::format("CUNIT1%s") %wcsName), "PIXEL", "Column unit"));
+    cards.push_back(Card(str(boost::format("CUNIT2%s") %wcsName), "PIXEL", "Row unit"));
     /*
      * Was there something else?
      */
-    if (WCS != NULL) {
-        DataProperty::iteratorRangeType WCSCards = WCS->getFitsMetaData()->getChildren();
+    if (Wcs != NULL) {
+        DataProperty::iteratorRangeType wcsCards = Wcs->getFitsMetaData()->getChildren();
         
-        for (DataProperty::ContainerIteratorType i = WCSCards.first; i != WCSCards.second; i++) {
+        for (DataProperty::ContainerIteratorType i = wcsCards.first; i != wcsCards.second; i++) {
             Card card(*(*i));
             
             if (card.keyword == "SIMPLE" ||
@@ -395,7 +395,7 @@ void writeVwFits(int fd,                // file descriptor to write to
 
 void writeVwFits(const std::string &filename, // file to write or "| cmd"
                  const vw::ImageBuffer &data, // The data to write
-                 const WCS *WCS         // which WCS to use for pixel
+                 const Wcs *Wcs         // which Wcs to use for pixel
                 ) {
     int fd;
     if ((filename.c_str())[0] == '|') {		// a command
@@ -414,7 +414,7 @@ void writeVwFits(const std::string &filename, // file to write or "| cmd"
     }
 
     try {
-        writeVwFits(fd, data, WCS);
+        writeVwFits(fd, data, Wcs);
     } catch(Exception &e) {
         (void)close(fd);
         throw e;

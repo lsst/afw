@@ -10,7 +10,7 @@ using namespace std;
 using boost::any_cast;
 
 using lsst::pex::logging::Trace;
-using lsst::daf::data::DataProperty;
+using lsst::daf::base::DataProperty;
 using lsst::daf::data::FitsFormatter;
 
 namespace pexEx = lsst::pex::exceptions;

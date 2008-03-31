@@ -8,7 +8,8 @@
 #define LSST_AFW_FORMATTERS_UTILS_H
 
 #include <string>
-#include <lsst/daf/data/DataProperty.h>
+
+#include <lsst/daf/base/DataProperty.h>
 #include <lsst/pex/policy/Policy.h>
 #include <lsst/daf/persistence/LogicalLocation.h>
 
@@ -17,53 +18,51 @@ namespace lsst {
 namespace afw {
 namespace formatters {
 
-using namespace lsst::daf::persistence;
-using lsst::daf::data::DataProperty;
-using lsst::pex::policy::Policy;
-
 bool extractOptionalFlag(
-    DataProperty::PtrType const & properties,
-    std::string           const & name
+    lsst::daf::base::DataProperty::PtrType const & properties,
+    std::string const & name
 );
 
-std::string const extractPolicyString(
-    Policy::Ptr const & policy,
+std::string const extractlsst::pex::policy::PolicyString(
+    lsst::pex::policy::Policy::Ptr const & policy,
     std::string const & key,
     std::string const & def
 );
 
-std::string const getItemName(DataProperty::PtrType const & properties);
+std::string const getItemName(
+    lsst::daf::base::DataProperty::PtrType const & properties
+);
 
 std::string const getVisitSliceTableName(
-    Policy::Ptr           const & policy,
-    DataProperty::PtrType const & properties
+    lsst::pex::policy::Policy::Ptr const & policy,
+    lsst::daf::base::DataProperty::PtrType const & properties
 );
 
 void getAllVisitSliceTableNames(
-    std::vector<std::string>    & names,
-    Policy::Ptr           const & policy,
-    DataProperty::PtrType const & properties
+    std::vector<std::string> & names,
+    lsst::pex::policy::Policy::Ptr const & policy,
+    lsst::daf::base::DataProperty::PtrType const & properties
 );
 
 void createVisitSliceTable(
-    LogicalLocation       const & location,
-    Policy::Ptr           const & policy,
-    DataProperty::PtrType const & properties
+    lsst::daf::persistence::LogicalLocation const & location,
+    lsst::pex::policy::Policy::Ptr const & policy,
+    lsst::daf::base::DataProperty::PtrType const & properties
 );
 
 void dropAllVisitSliceTables(
-    LogicalLocation       const & location,
-    Policy::Ptr           const & policy,
-    DataProperty::PtrType const & properties
+    lsst::daf::persistence::LogicalLocation const & location,
+    lsst::pex::policy::Policy::Ptr const & policy,
+    lsst::daf::base::DataProperty::PtrType const & properties
 );
 
-int extractSliceId(DataProperty::PtrType const& properties);
-int64_t extractExposureId(DataProperty::PtrType const& properties);
-int extractVisitId(DataProperty::PtrType const& properties);
-int extractCcdId(DataProperty::PtrType const& properties);
-int64_t extractCcdExposureId(DataProperty::PtrType const& properties);
+int extractSliceId(lsst::daf::base::DataProperty::PtrType const& properties);
+int64_t extractExposureId(lsst::daf::base::DataProperty::PtrType const& properties);
+int extractVisitId(lsst::daf::base::DataProperty::PtrType const& properties);
+int extractCcdId(lsst::daf::base::DataProperty::PtrType const& properties);
+int64_t extractCcdExposureId(lsst::daf::base::DataProperty::PtrType const& properties);
 
-}}} // lsst::afw::formatters
+}}} // namespace lsst::afw::formatters
 
 #endif // LSST_AFW_FORMATTERS_UTILS_H
 

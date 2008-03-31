@@ -7,35 +7,35 @@
 //
 //##====----------------                                ----------------====##/
 
+#include <stdexcept>
 #include <sys/time.h>
+#include <cstring>
 #include <cstdlib>
 
 #include <boost/cstdint.hpp>
 
+#include <lsst/daf/base.h>
 #include <lsst/daf/data.h>
-#include <lsst/daf/persistence/DbAuth.h>
-#include <lsst/daf/persistence/Persistence.h>
-#include <lsst/daf/persistence/LogicalLocation.h>
+#include <lsst/daf/persistence.h>
 #include <lsst/pex/exceptions.h>
 #include <lsst/pex/policy/Policy.h>
 
 #include <lsst/afw/detection/Source.h>
 #include <lsst/afw/formatters/Utils.h>
 
-#include <stdexcept>
-
 
 using boost::int64_t;
 
-using lsst::daf::data::DataProperty;
+using lsst::daf::base::DataProperty;
+using lsst::daf::base::Persistable;
 using lsst::daf::data::SupportFactory;
 using lsst::pex::policy::Policy;
 using lsst::daf::persistence::LogicalLocation;
 using lsst::daf::persistence::Persistence;
-using lsst::daf::base::Persistable;
 using lsst::daf::persistence::Storage;
 
-using namespace lsst::afw;
+using namespace lsst::afw::detection;
+using namespace lsst::afw::formatters;
 
 
 #define Assert(pred, msg) do { if (!(pred)) { doThrow((msg), __LINE__); } } while(false)
@@ -286,7 +286,7 @@ int main(int const argc, char const * const * const argv) {
             testDb("DbStorage");
             testDb("DbTsvStorage");
         }
-        if (lsst::daf::data::Citizen::census(0) == 0) {
+        if (lsst::daf::base::Citizen::census(0) == 0) {
             std::clog << "No leaks detected" << std::endl;
         } else {
             Assert(false, "Detected memory leaks");
@@ -298,9 +298,9 @@ int main(int const argc, char const * const * const argv) {
         std::clog << ex.what() << std::endl;
     }
 
-    if (lsst::daf::data::Citizen::census(0) != 0) {
+    if (lsst::daf::base::Citizen::census(0) != 0) {
         std::clog << "Leaked memory blocks:" << std::endl;
-        lsst::daf::data::Citizen::census(std::clog);
+        lsst::daf::base::Citizen::census(std::clog);
     }
 
     return EXIT_FAILURE;

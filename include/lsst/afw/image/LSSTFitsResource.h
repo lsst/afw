@@ -3,26 +3,32 @@
 
 #include <vw/Image.h>
 
-#include <lsst/daf/data/DataProperty.h>
-#include <lsst/pex/utils/Utils.h>
-#include <lsst/pex/exceptions.h>
+#include <lsst/daf/base/DataProperty.h>
 #include <lsst/afw/image/DiskImageResourceFITS.h>
-
-using namespace vw;
-using namespace lsst::daf::data;
-using namespace lsst::pex::utils;
 
 namespace lsst {
 namespace afw {
 namespace image {
 
-    template <typename PixelT> class LSSTFitsResource : public lsst::afw::DiskImageResourceFITS {
+    template <typename PixelT> class LSSTFitsResource : public lsst::afw::image::DiskImageResourceFITS {
     public:
         LSSTFitsResource();
-        void readFits( const std::string& filename, ImageView<PixelT>& image, DataProperty::PtrType metaData, int hdu=0);
-        void writeFits(ImageView<PixelT>& image, DataProperty::PtrType metaData, const std::string& filename, int hdu=0);
+        void readFits(
+            const std::string& filename,
+            vw::ImageView<PixelT>& image,
+            lsst::daf::base::DataProperty::PtrType metaData,
+            int hdu=0
+        );
+        void writeFits(
+            vw::ImageView<PixelT>& image,
+            lsst::daf::base::DataProperty::PtrType metaData,
+            const std::string& filename,
+            int hdu=0
+        );
     private:
-        void getMetaData(DataProperty::PtrType metaData);
+        void getMetaData(
+            lsst::daf::base::DataProperty::PtrType metaData
+        );
     };
 
 }}} // lsst::afw::image

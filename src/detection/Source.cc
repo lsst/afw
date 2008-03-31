@@ -6,8 +6,8 @@
 //!
 //##====----------------                                ----------------====##/
 
+#include <lsst/daf/base.h>
 #include <lsst/afw/detection/Source.h>
-
 
 using namespace lsst::afw::detection;
 
@@ -186,11 +186,11 @@ bool Source::operator==(Source const & d) const {
 
 // -- SourceVector ----------------
 
-SourceVector::SourceVector()            : lsst::daf::data::Citizen(typeid(*this)), _vec()  {}
-SourceVector::SourceVector(size_type n) : lsst::daf::data::Citizen(typeid(*this)), _vec(n) {}
+SourceVector::SourceVector()            : lsst::daf::base::Citizen(typeid(*this)), _vec()  {}
+SourceVector::SourceVector(size_type n) : lsst::daf::base::Citizen(typeid(*this)), _vec(n) {}
 
 SourceVector::SourceVector(size_type n, value_type const & val) :
-    lsst::daf::data::Citizen(typeid(*this)),
+    lsst::daf::base::Citizen(typeid(*this)),
     _vec(n, val)
 {}
 
@@ -199,13 +199,13 @@ SourceVector::~SourceVector() {}
 
 
 SourceVector::SourceVector(SourceVector const & v) :
-    lsst::daf::data::Citizen(typeid(*this)),
+    lsst::daf::base::Citizen(typeid(*this)),
     _vec(v._vec)
 {}
 
 
 SourceVector::SourceVector(Vector const & v) :
-    lsst::daf::data::Citizen(typeid(*this)),
+    lsst::daf::base::Citizen(typeid(*this)),
     _vec(v)
 {}
 

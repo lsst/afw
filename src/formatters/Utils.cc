@@ -10,11 +10,10 @@
 
 #include <lsst/pex/exceptions.h>
 #include <lsst/daf/persistence/DbTsvStorage.h>
-
 #include <lsst/afw/formatters/Utils.h>
 
 namespace ex = lsst::pex::exceptions;
-
+using lsst::daf::persistence::DbTsvStorage;
 using boost::int64_t;
 
 namespace lsst {

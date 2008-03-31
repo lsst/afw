@@ -17,20 +17,18 @@
 #endif
 static char const* SVNid __attribute__((unused)) = "$Id$";
 
-#include <lsst/afw/formatters/MaskFormatter.h>
-
-#include <lsst/daf/persistence/FormatterImpl.h>
-#include <lsst/daf/data/DataPropertyFormatter.h>
-
-#include <lsst/afw/image/Mask.h>
-#include <lsst/daf/persistence/LogicalLocation.h>
-#include <lsst/daf/persistence/BoostStorage.h>
-#include <lsst/daf/persistence/FitsStorage.h>
-#include <lsst/pex/logging/Trace.h>
-
 #include <boost/serialization/binary_object.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/map.hpp>
+
+#include <lsst/afw/formatters/MaskFormatter.h>
+
+// not used? #include <lsst/daf/persistence/LogicalLocation.h>
+#include <lsst/daf/base/Persistable.h>
+#include <lsst/daf/persistence/BoostStorage.h>
+#include <lsst/daf/persistence/FitsStorage.h>
+#include <lsst/pex/logging/Trace.h>
+#include <lsst/afw/image/Mask.h>
 
 // #include <lsst/afw/image/LSSTFitsResource.h>
 
@@ -39,7 +37,10 @@ static void execTrace(std::string s, int level = EXEC_TRACE) {
     lsst::pex::logging::Trace("afw.MaskFormatter", level, s);
 }
 
-using namespace lsst::daf::persistence;
+using lsst::daf::base::Persistable;
+using lsst::daf::persistence::BoostStorage;
+using lsst::daf::persistence::FitsStorage;
+using lsst::afw::image::Mask;
 
 namespace lsst {
 namespace afw {
@@ -74,7 +75,7 @@ template <typename MaskPixelT>
 void MaskFormatter<MaskPixelT>::write(
     Persistable const* persistable,
     Storage::Ptr storage,
-    lsst::daf::data::DataProperty::PtrType additionalData) {
+    lsst::daf::base::DataProperty::PtrType additionalData) {
     execTrace("MaskFormatter write start");
     Mask<MaskPixelT> const* ip =
         dynamic_cast<Mask<MaskPixelT> const*>(persistable);
@@ -103,7 +104,7 @@ void MaskFormatter<MaskPixelT>::write(
 template <typename MaskPixelT>
 Persistable* MaskFormatter<MaskPixelT>::read(
     Storage::Ptr storage,
-    lsst::daf::data::DataProperty::PtrType additionalData) {
+    lsst::daf::base::DataProperty::PtrType additionalData) {
     execTrace("MaskFormatter read start");
     Mask<MaskPixelT>* ip = new Mask<MaskPixelT>;
     if (typeid(*storage) == typeid(BoostStorage)) {
@@ -127,7 +128,7 @@ template <typename MaskPixelT>
 void MaskFormatter<MaskPixelT>::update(
     Persistable* persistable,
     Storage::Ptr storage,
-    lsst::daf::data::DataProperty::PtrType additionalData) {
+    lsst::daf::base::DataProperty::PtrType additionalData) {
     throw std::runtime_error("Unexpected call to update for Mask");
 }
 

@@ -17,40 +17,39 @@
 #endif
 static char const* SVNid __attribute__((unused)) = "$Id$";
 
-#include <lsst/afw/formatters/WcsFormatter.h>
+// not used? #include <stdlib.h>
 
-#include <lsst/daf/persistence/FormatterImpl.h>
-#include <lsst/daf/data/DataPropertyFormatter.h>
+#include <boost/serialization/shared_ptr.hpp>
+#include "wcslib/wcs.h"
+
+#include <lsst/daf/base/Persistable.h>
+#include <lsst/daf/data/SupportFactory.h>
+#include <lsst/pex/exceptions.h>
+// not used? #include <lsst/daf/persistence/LogicalLocation.h>
+#include <lsst/daf/persistence/BoostStorage.h>
+// not used? #include <lsst/daf/persistence/FitsStorage.h>
+#include <lsst/pex/logging/Trace.h>
+#include <lsst/afw/formatters/WcsFormatter.h>
 #include <lsst/afw/formatters/ImageFormatter.h>
 #include <lsst/afw/formatters/MaskedImageFormatter.h>
 #include <lsst/afw/formatters/WcsFormatter.h>
-#include <boost/serialization/shared_ptr.hpp>
-
-#include <stdlib.h>
-
-#include <lsst/afw/image.h>
-#include "wcslib/wcs.h"
-
-#include <lsst/daf/data/SupportFactory.h>
-#include <lsst/pex/exceptions.h>
-#include <lsst/daf/persistence/LogicalLocation.h>
-#include <lsst/daf/persistence/BoostStorage.h>
-#include <lsst/daf/persistence/FitsStorage.h>
-#include <lsst/pex/logging/Trace.h>
+#include <lsst/afw/image/Wcs.h>
 
 #define EXEC_TRACE  20
 static void execTrace(std::string s, int level = EXEC_TRACE) {
     lsst::pex::logging::Trace("afw.WcsFormatter", level, s);
 }
 
-using namespace lsst::daf::persistence;
+using lsst::daf::base::Persistable;
+using lsst::daf::persistence::BoostStorage;
+using lsst::afw::image::Wcs;
 
 namespace lsst {
 namespace afw {
 namespace formatters {
 
 FormatterRegistration WcsFormatter::registration(
-    "WCS", typeid(WCS), createInstance);
+    "Wcs", typeid(Wcs), createInstance);
 
 WcsFormatter::WcsFormatter(
     lsst::pex::policy::Policy::Ptr policy) :
@@ -63,12 +62,12 @@ WcsFormatter::~WcsFormatter(void) {
 void WcsFormatter::write(
     Persistable const* persistable,
     Storage::Ptr storage,
-    lsst::daf::data::DataProperty::PtrType additionalData) {
+    lsst::daf::base::DataProperty::PtrType additionalData) {
     execTrace("WcsFormatter write start");
-    WCS const* ip =
-        dynamic_cast<WCS const*>(persistable);
+    Wcs const* ip =
+        dynamic_cast<Wcs const*>(persistable);
     if (ip == 0) {
-        throw lsst::pex::exceptions::Runtime("Persisting non-WCS");
+        throw lsst::pex::exceptions::Runtime("Persisting non-Wcs");
     }
     if (typeid(*storage) == typeid(BoostStorage)) {
         execTrace("WcsFormatter write BoostStorage");
@@ -77,14 +76,14 @@ void WcsFormatter::write(
         execTrace("WcsFormatter write end");
         return;
     }
-    throw lsst::pex::exceptions::Runtime("Unrecognized Storage for WCS");
+    throw lsst::pex::exceptions::Runtime("Unrecognized Storage for Wcs");
 }
 
 Persistable* WcsFormatter::read(
     Storage::Ptr storage,
-    lsst::daf::data::DataProperty::PtrType additionalData) {
+    lsst::daf::base::DataProperty::PtrType additionalData) {
     execTrace("WcsFormatter read start");
-    WCS* ip = new WCS;
+    Wcs* ip = new Wcs;
     if (typeid(*storage) == typeid(BoostStorage)) {
         execTrace("WcsFormatter read BoostStorage");
         BoostStorage* boost = dynamic_cast<BoostStorage*>(storage.get());
@@ -92,22 +91,22 @@ Persistable* WcsFormatter::read(
         execTrace("WcsFormatter read end");
         return ip;
     }
-    throw lsst::pex::exceptions::Runtime("Unrecognized Storage for WCS");
+    throw lsst::pex::exceptions::Runtime("Unrecognized Storage for Wcs");
 }
 
 void WcsFormatter::update(
     Persistable* persistable,
     Storage::Ptr storage,
-    lsst::daf::data::DataProperty::PtrType additionalData) {
-    throw lsst::pex::exceptions::Runtime("Unexpected call to update for WCS");
+    lsst::daf::base::DataProperty::PtrType additionalData) {
+    throw lsst::pex::exceptions::Runtime("Unexpected call to update for Wcs");
 }
 
-lsst::daf::data::DataProperty::PtrType
-WcsFormatter::generateDataProperty(WCS const& wcs) {
+lsst::daf::base::DataProperty::PtrType
+WcsFormatter::generateDataProperty(Wcs const& wcs) {
     // Only generates DP for the first wcsInfo.
-    using lsst::daf::data::DataProperty;
+    using lsst::daf::base::DataProperty;
     DataProperty::PtrType wcsDP =
-        lsst::daf::data::SupportFactory::createPropertyNode("WCS");
+        lsst::daf::data::SupportFactory::createPropertyNode("Wcs");
     wcsDP->addProperty(DataProperty("NAXIS", wcs._wcsInfo[0].naxis));
     wcsDP->addProperty(DataProperty("EQUINOX", wcs._wcsInfo[0].equinox));
     wcsDP->addProperty(DataProperty("RADECSYS", std::string(wcs._wcsInfo[0].radesys)));
@@ -130,22 +129,22 @@ template <class Archive>
 void WcsFormatter::delegateSerialize(
     Archive& ar, int const version, Persistable* persistable) {
     execTrace("WcsFormatter delegateSerialize start");
-    WCS* ip = dynamic_cast<WCS*>(persistable);
+    Wcs* ip = dynamic_cast<Wcs*>(persistable);
     if (ip == 0) {
-        throw lsst::pex::exceptions::Runtime("Serializing non-WCS");
+        throw lsst::pex::exceptions::Runtime("Serializing non-Wcs");
     }
 
     // Serialize most fields normally
     ar & ip->_fitsMetaData & ip->_nWcsInfo & ip->_relax;
     ar & ip->_wcsfixCtrl & ip->_wcshdrCtrl & ip->_nReject;
 
-    // If we are loading, create the array of WCS parameter structs
+    // If we are loading, create the array of Wcs parameter structs
     if (Archive::is_loading::value) {
         ip->_wcsInfo =
             reinterpret_cast<wcsprm*>(malloc(ip->_nWcsInfo * sizeof(wcsprm)));
     }
 
-    // Serialize each WCS parameter struct
+    // Serialize each Wcs parameter struct
     for (int i = 0; i < ip->_nWcsInfo; ++i) {
 
         // If we are loading, initialize the struct first
@@ -154,7 +153,7 @@ void WcsFormatter::delegateSerialize(
             wcsini(1, 2, &(ip->_wcsInfo[i]));
         }
 
-        // Serialize only critical WCS parameters
+        // Serialize only critical Wcs parameters
         ar & ip->_wcsInfo[i].naxis;
         ar & ip->_wcsInfo[i].equinox;
         ar & ip->_wcsInfo[i].radesys;

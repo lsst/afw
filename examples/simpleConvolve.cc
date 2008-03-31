@@ -2,7 +2,7 @@
 #include <sstream>
 #include <string>
 
-#include <lsst/daf/data/Citizen.h>
+#include <lsst/daf/base.h>
 #include <lsst/pex/logging/Trace.h>
 #include <lsst/afw/math/FunctionLibrary.h>
 #include <lsst/afw/image/Image.h>
@@ -63,9 +63,9 @@ int main(int argc, char **argv) {
      //
      // Check for memory leaks
      //
-     if (lsst::daf::data::Citizen::census(0) != 0) {
+     if (lsst::daf::base::Citizen::census(0) != 0) {
          std::cerr << "Leaked memory blocks:" << std::endl;
-         lsst::daf::data::Citizen::census(std::cerr);
+         lsst::daf::base::Citizen::census(std::cerr);
      }
     
 }

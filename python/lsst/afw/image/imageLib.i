@@ -33,7 +33,7 @@ Basic routines to talk to FW's classes (including visionWorkbench) and ds9
 #   include <boost/shared_ptr.hpp>
 #   include <boost/any.hpp>
 #   include <boost/array.hpp>
-#   include "lsst/lsst/daf/base/Citizen.h"
+#   include "lsst/daf/base.h"
 #   include "lsst/mwi/utils/Demangle.h"
 #   include "lsst/pex/logging/Trace.h"
 #   include "lsst/mwi/utils/Utils.h"
@@ -135,10 +135,9 @@ def version(HeadURL = r"$HeadURL$"):
 #endif
 %import <vw/FileIO/DiskImageResource.h>
 
-%include "lsst/lsst/daf/base/Citizen.h"
+%include "lsst/daf/base.h"
 %import "lsst/mwi/utils/Utils.h"
 %import "lsst/pex/policy/Policy.h"
-%include "lsst/daf/base/Persistable.h"
 %include "lsst/daf/data/LsstData.h"
 %import "lsst/mwi/DataProperty.i"
 %import "lsst/pex/exceptions.h"
@@ -152,8 +151,6 @@ def version(HeadURL = r"$HeadURL$"):
 %ignore lsst::afw::image::Image::origin;        // no need to swig origin (and the _wrap.cc file is invalid)
 %ignore lsst::afw::image::Mask::origin;         // no need to swig origin (and the _wrap.cc file is invalid)
 
-%import "lsst/mwi/utils/Utils.h"
-%include "lsst/lsst/daf/base/Citizen.h"
 %include "lsst/mwi/data/LsstImpl_DC2.h"
 %include "lsst/mwi/data/LsstBase.h"
 %ignore lsst::afw::image::Filter::operator int;
@@ -354,12 +351,12 @@ def version(HeadURL = r"$HeadURL$"):
 /************************************************************************************************************/
 
 %{
-    #include "lsst/afw/image/WCS.h"
+    #include "lsst/afw/image/Wcs.h"
 %}
 
 %template(Coord2D)                  Vector<double, 2>;
 %rename(isValid) operator bool;
-%include "lsst/afw/image/WCS.h"
+%include "lsst/afw/image/Wcs.h"
 
 /******************************************************************************/
 // Local Variables: ***
