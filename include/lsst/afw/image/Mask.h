@@ -158,7 +158,7 @@ namespace image {
 
         
 private:
-        LSST_PERSIST_FORMATTER(formatters::MaskFormatter<MaskPixelT>);
+        lsst::daf::base::LSST_PERSIST_FORMATTER(lsst::afw::formatters::MaskFormatter<MaskPixelT>);
 
         MaskIVwPtrT _vwImagePtr;
         lsst::daf::data::DataProperty::PtrType _metaData;

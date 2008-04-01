@@ -505,7 +505,7 @@ public :
 
 private :
 
-    LSST_PERSIST_FORMATTER(formatters::SourceVectorFormatter);
+    lsst::daf::base::LSST_PERSIST_FORMATTER(lsst::afw::formatters::SourceVectorFormatter);
 
     Vector _vec;
 };

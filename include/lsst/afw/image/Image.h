@@ -81,7 +81,7 @@ namespace image {
 //        virtual ~Image();
         
     private:
-        LSST_PERSIST_FORMATTER(formatters::ImageFormatter<ImagePixelT>);
+        lsst::daf::base::LSST_PERSIST_FORMATTER(lsst::afw::formatters::ImageFormatter<ImagePixelT>);
         ImageIVwPtrT _vwImagePtr;
         lsst::daf::base::DataProperty::PtrType _metaData;
         unsigned int _offsetRows;
