@@ -12,9 +12,7 @@ setupRequired(xpa)
 setupRequired(numpy)
 setupRequired(minuit)
 
-setupOptional(testdata)
-setupOptional(numarray)
-setupOptional(pyfits)
+setupOptional(afwdata)
 
 envPrepend(LD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
 envPrepend(DYLD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)

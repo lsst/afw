@@ -21,15 +21,15 @@ env.Program(["wcsCopy.cc"], LIBS=env.getlibs("afw"))
 env.CheckSwig("python", ilang="c++")
 env.Append(SWIGFLAGS=" -Ipython")
 
-env["SWIGFLAGS"] += " -I%s/%s" % (os.environ["MWI_DIR"], "python")
+#env["SWIGFLAGS"] += " -I%s/%s" % (os.environ["MWI_DIR"], "python")
 fwTests = env.LoadableModuleIncomplete("_fwTests", "fwTests.i", LIBS=env.getlibs("afw"))
 
 #
 # Tests
 #
-dataDir = scons.ProductDir("fwData")
+dataDir = scons.ProductDir("afwdata")
 if not dataDir:
-     print "Warning: fwData is not set up; not running the tests!"
+     print "Warning: afwdata is not set up; not running the tests!"
 
 else:
     # copy FWDATA_DIR to the test's environment
