@@ -1,4 +1,9 @@
->merge: pex
+>merge: daf_base
+>merge: daf_data
+>merge: daf_persistence
+>merge: pex_exceptions
+>merge: pex_logging
+>merge: pex_policy
 >merge: vw 1.0.1+2
 >merge: numarray
 >merge: numpy

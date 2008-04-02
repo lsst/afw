@@ -4,19 +4,19 @@ import os
 import sys
 
 import lsst.tests
-import lsst.pex.persistence
+import lsst.daf.persistence
 import lsst.SConsUtils as scons # scons 1.17 supports "env.ProductDir", but for now use scons.ProductDir
 
 env.Program(["Mask_1.cc"], LIBS=env.getlibs("afw"))
 env.Program(["MaskedImage_1.cc"], LIBS=env.getlibs("afw"))
+env.Program(["MaskedImageIO_1.cc"], LIBS=env.getlibs("afw"))
+env.Program(["MaskedImageIO_2.cc"], LIBS=env.getlibs("afw"))
 env.Program(["MaskIO_1.cc"], LIBS=env.getlibs("afw"))
 # Removed since not ready according to Tim Axelrod. 2007-11-26
 # env.Program(["MaskIO_2.cc"], LIBS=env.getlibs("afw"))
-env.Program(["MaskedImageIO_1.cc"], LIBS=env.getlibs("afw"))
-env.Program(["MaskedImageIO_2.cc"], LIBS=env.getlibs("afw"))
-env.Program(["wcsCopy.cc"], LIBS=env.getlibs("afw"))
 env.Program(["SourceIO_1.cc"], LIBS=env.getlibs("afw pex"))
 env.Program(["SourceIO_2.cc"], LIBS=env.getlibs("afw pex"))
+env.Program(["wcsCopy.cc"], LIBS=env.getlibs("afw"))
 
 env.CheckSwig("python", ilang="c++")
 env.Append(SWIGFLAGS=" -Ipython")
@@ -35,7 +35,7 @@ else:
     # copy FWDATA_DIR to the test's environment
     env["ENV"]["FWDATA_DIR"] = os.environ["FWDATA_DIR"]
     
-    if lsst.pex.persistence.DbAuth.available():
+    if lsst.daf.persistence.DbAuth.available():
         env["ENV"]["SEAL_PLUGINS"] = os.environ["SEAL_PLUGINS"]    
         if os.environ.has_key("LSST_DB_AUTH"):
             env["ENV"]["LSST_DB_AUTH"] = os.environ["LSST_DB_AUTH"]
@@ -46,10 +46,10 @@ else:
     # set up arguments for C++ tests
     inFile = os.path.join(dataDir, "871034p_1_MI")
     testArgs = dict(
-        MaskIO_1 = "%s_msk.fits" % inFile,
         MaskedImage_1 = "%s %s file:MaskedImage_1_output_1 file:MaskedImage_1_output_2" % (inFile, inFile),
         MaskedImageIO_1 = inFile,
         MaskedImageIO_2 = inFile,
+        MaskIO_1 = "%s_msk.fits" % inFile,
     )
     tests = lsst.tests.Control(env, args = testArgs, verbose = True)
     tests.run("*.cc")

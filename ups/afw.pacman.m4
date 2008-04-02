@@ -1,5 +1,5 @@
 #
-#   afw 2.3
+#   afw 3.0
 #
 #
 m4_changequote([, ])m4_dnl

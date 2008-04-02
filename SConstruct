@@ -20,6 +20,12 @@ env = scons.makeEnv("afw",
                      ["xpa", "xpa.h", "xpa", "XPAPuts"],
                      ["minuit", "Minuit/FCNBase.h", "lcg_Minuit:C++"],
                      ["mwi", "lsst/mwi/data.h", "mwi:C++"],
+                     ["daf_base", "lsst/daf/base.h", "daf_base:C++"],
+                     ["daf_data", "lsst/daf/data.h", "daf_data:C++"],
+                     ["daf_persistence", "lsst/daf/persistence.h", "daf_persistence:C++"],
+                     ["pex_exceptions", "lsst/pex/exceptions.h", "pex_exceptions:C++"],
+                     ["pex_logging", "lsst/pex/logging/Trace.h", "pex_logging:C++"],
+                     ["pex_policy", "lsst/pex/policy/Policy.h", "pex_policy:C++"],
                      ])
 #
 # Libraries needed to link libraries/executables

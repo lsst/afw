@@ -1,26 +1,35 @@
 # -*- python -*-
 Import('env')
 
+lsstLibs = [
+    "daf_base",
+    "daf_data",
+    "daf_persistence",
+    "pex_exceptions",
+    "pex_logging",
+    "pex_policy",
+]
 env.SharedLibrary(
     'afw',
     ["../src/%s" % (src,) for src in (
-        "formatters/Utils.cc",
+        "detection/Source.cc",
         "formatters/ExposureFormatter.cc",
         "formatters/ImageFormatter.cc",
-        "formatters/MaskFormatter.cc",
         "formatters/MaskedImageFormatter.cc",
+        "formatters/MaskFormatter.cc",
+        "formatters/SourceFormatter.cc",
+        "formatters/Utils.cc",
         "formatters/WcsFormatter.cc",
         "image/DiskImageResourceFITS.cc",
         "image/Exposure.cc",
         "image/Filter.cc",
-        "image/Kernel.cc",
-        "image/KernelFunctions.cc",
-        "image/FixedKernel.cc",
-        "image/AnalyticKernel.cc",
-        "image/DeltaFunctionKernel.cc",
-        "image/LinearCombinationKernel.cc",
         "image/Mask.cc",
         "image/Wcs.cc",
-        )],
-    LIBS=env.getlibs("boost pex vw wcslib cfitsio")
+        "math/AnalyticKernel.cc",
+        "math/FixedKernel.cc",
+        "math/Kernel.cc",
+        "math/KernelFunctions.cc",
+        "math/LinearCombinationKernel.cc",
+    )],
+    LIBS=env.getlibs("boost pex vw wcslib cfitsio") + lsstLibs,
 )

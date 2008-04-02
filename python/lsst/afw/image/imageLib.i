@@ -28,7 +28,7 @@ and some underlying VisionWorkbench classes.
 #   include <boost/array.hpp>
 #   include "lsst/utils.h"
 #   include "lsst/daf/base.h"
-#   include "lsst/pex/logging.h"
+#   include "lsst/pex/logging/Trace.h"
 #   include "lsst/afw/image.h"
 %}
 
