@@ -1,12 +1,12 @@
 // -*- lsst-c++ -*-
-%define fwTests_DOCSTRING
+%define afwTests_DOCSTRING
 "
 Image processing code
 "
 %enddef
 
 %feature("autodoc", "1");
-%module(docstring=fwTests_DOCSTRING) fwTests
+%module(docstring=afwTests_DOCSTRING) afwTests
 
 // Suppress swig complaints
 // I had trouble getting %warnfilter to work; hence the pragmas
