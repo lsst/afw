@@ -20,7 +20,7 @@
 
 namespace lsst {
 namespace afw {
-namespace function {
+namespace math {
 
     /**
      * \brief 2-dimensional integer delta function.

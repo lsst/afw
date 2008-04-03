@@ -18,7 +18,7 @@
 
 namespace lsst {
 namespace afw {
-namespace function {
+namespace math {
 
     /**
      * \brief Results from minimizing a function

@@ -19,7 +19,7 @@
 
 namespace lsst {
 namespace afw {
-namespace function {
+namespace math {
 
     /**
      * \brief Basic Function class.
