@@ -22,8 +22,7 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 #include <boost/serialization/shared_ptr.hpp>
 #include "wcslib/wcs.h"
 
-#include <lsst/daf/base/Persistable.h>
-#include <lsst/daf/data/SupportFactory.h>
+#include <lsst/daf/base.h>
 #include <lsst/pex/exceptions.h>
 // not used? #include <lsst/daf/persistence/LogicalLocation.h>
 #include <lsst/daf/persistence/BoostStorage.h>
@@ -106,7 +105,7 @@ WcsFormatter::generateDataProperty(Wcs const& wcs) {
     // Only generates DP for the first wcsInfo.
     using lsst::daf::base::DataProperty;
     DataProperty::PtrType wcsDP =
-        lsst::daf::data::SupportFactory::createPropertyNode("Wcs");
+        lsst::daf::base::DataProperty::createPropertyNode("Wcs");
     wcsDP->addProperty(DataProperty("NAXIS", wcs._wcsInfo[0].naxis));
     wcsDP->addProperty(DataProperty("EQUINOX", wcs._wcsInfo[0].equinox));
     wcsDP->addProperty(DataProperty("RADECSYS", std::string(wcs._wcsInfo[0].radesys)));

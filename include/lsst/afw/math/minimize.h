@@ -13,7 +13,7 @@
 #include <boost/shared_ptr.hpp>
 #include <Minuit/FCNBase.h>
 
-#include <lsst/daf/data/LsstData.h>
+#include <lsst/daf/data/LsstBase.h>
 #include <lsst/afw/math/Function.h>
 
 namespace lsst {

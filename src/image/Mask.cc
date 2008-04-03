@@ -8,7 +8,8 @@
 #include <vw/Image.h>
 #include <vw/Math/BBox.h>
 
-#include <lsst/daf/data.h>
+#include <lsst/daf/base.h>
+#include <lsst/daf/data/LsstBase.h>
 #include <lsst/pex/exceptions.h>
 #include <lsst/pex/logging/Trace.h>
 #include <lsst/afw/image/LSSTFitsResource.h>
@@ -20,7 +21,7 @@ template<typename MaskPixelT>
 Mask<MaskPixelT>::Mask(MaskPlaneDict const& planeDefs) :
     lsst::daf::data::LsstBase(typeid(this)),
     _vwImagePtr(new vw::ImageView<MaskPixelT>()),
-    _metaData(lsst::daf::data::SupportFactory::createPropertyNode("FitsMetaData")),
+    _metaData(lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData")),
     _offsetRows(0), _offsetCols(0),
     _myMaskDictVersion(_maskDictVersion) {
 
@@ -37,7 +38,7 @@ template<typename MaskPixelT>
 Mask<MaskPixelT>::Mask(MaskIVwPtrT vwImagePtr, MaskPlaneDict const& planeDefs): 
     lsst::daf::data::LsstBase(typeid(this)),
     _vwImagePtr(vwImagePtr),
-    _metaData(lsst::daf::data::SupportFactory::createPropertyNode("FitsMetaData")),
+    _metaData(lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData")),
     _offsetRows(0), _offsetCols(0),
     _myMaskDictVersion(_maskDictVersion) {
     
@@ -54,7 +55,7 @@ template<typename MaskPixelT>
 Mask<MaskPixelT>::Mask(int ncols, int nrows, MaskPlaneDict const& planeDefs) :
     lsst::daf::data::LsstBase(typeid(this)),
     _vwImagePtr(new vw::ImageView<MaskPixelT>(ncols, nrows)),
-    _metaData(lsst::daf::data::SupportFactory::createPropertyNode("FitsMetaData")),
+    _metaData(lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData")),
     _offsetRows(0), _offsetCols(0),
     _myMaskDictVersion(_maskDictVersion) {
 

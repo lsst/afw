@@ -2,16 +2,16 @@
 import os
 
 import lsst.afw.image as afwImage
-import lsst.daf.data as dafData
+import lsst.daf.base as dafBase
 import lsst.daf.persistence as dafPers
 import lsst.pex.policy as dafPolicy
 
 # Create the additionalData DataProperty
-additionalData = dafData.SupportFactory.createPropertyNode("root")
-additionalData.addProperty(dafData.DataProperty("sliceId", 0))
-additionalData.addProperty(dafData.DataProperty("visitId", "fov391"))
-additionalData.addProperty(dafData.DataProperty("universeSize", 100))
-additionalData.addProperty(dafData.DataProperty("itemName", "foo"))
+additionalData = dafBase.DataProperty.createPropertyNode("root")
+additionalData.addProperty(dafBase.DataProperty("sliceId", 0))
+additionalData.addProperty(dafBase.DataProperty("visitId", "fov391"))
+additionalData.addProperty(dafBase.DataProperty("universeSize", 100))
+additionalData.addProperty(dafBase.DataProperty("itemName", "foo"))
 
 # Create an empty Policy
 policy = dafPolicy.PolicyPtr()

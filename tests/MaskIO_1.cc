@@ -1,8 +1,8 @@
 // -*- lsst-c++ -*-
 #include <stdexcept>
 
+#include <lsst/daf/base.h>
 #include <lsst/pex/exceptions.h>
-#include <lsst/daf/data.h>
 #include <lsst/afw/image.h>
 
 using namespace std;

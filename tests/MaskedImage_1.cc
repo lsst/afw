@@ -4,7 +4,7 @@
 #include <vw/Image.h>
 
 #include <lsst/daf/base.h>
-#include <lsst/daf/data.h>
+#include <lsst/daf/data/FitsFormatter.h>
 #include <lsst/pex/exceptions.h>
 #include <lsst/pex/logging/Trace.h>
 #include <lsst/afw/image.h>

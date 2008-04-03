@@ -138,7 +138,6 @@ def version(HeadURL = r"$HeadURL$"):
 %ignore lsst::afw::image::Image::origin;        // no need to swig origin (and the _wrap.cc file is invalid)
 %ignore lsst::afw::image::Mask::origin;         // no need to swig origin (and the _wrap.cc file is invalid)
 
-%include "lsst/daf/data/LsstImpl_DC2.h"
 %include "lsst/daf/data/LsstBase.h"
 %ignore lsst::afw::image::Filter::operator int;
 %include "lsst/afw/image/Filter.h"

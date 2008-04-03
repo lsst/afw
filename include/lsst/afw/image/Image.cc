@@ -3,7 +3,7 @@
 // This file can NOT be separately compiled!   It is included by Image.h
 #include <stdexcept>
 
-#include "lsst/daf/data/SupportFactory.h"
+#include <lsst/daf/base.h>
 #include <lsst/pex/exceptions.h>
 #include <lsst/afw/image/LSSTFitsResource.h>
 
@@ -15,7 +15,7 @@ template<typename ImagePixelT>
 lsst::afw::image::Image<ImagePixelT>::Image() :
     lsst::daf::data::LsstBase(typeid(this)),
     _vwImagePtr(new vw::ImageView<ImagePixelT>()),
-    _metaData(lsst::daf::data::SupportFactory::createPropertyNode("FitsMetaData")),
+    _metaData(lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData")),
     _offsetRows(0),
     _offsetCols(0)
 {
@@ -25,7 +25,7 @@ template<typename ImagePixelT>
 lsst::afw::image::Image<ImagePixelT>::Image(int nCols, int nRows) :
     lsst::daf::data::LsstBase(typeid(this)),
     _vwImagePtr(new vw::ImageView<ImagePixelT>(nCols, nRows)),
-    _metaData(lsst::daf::data::SupportFactory::createPropertyNode("FitsMetaData")),
+    _metaData(lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData")),
     _offsetRows(0),
     _offsetCols(0)
 {
@@ -35,7 +35,7 @@ template<typename ImagePixelT>
 lsst::afw::image::Image<ImagePixelT>::Image(ImageIVwPtrT image): 
     lsst::daf::data::LsstBase(typeid(this)),
     _vwImagePtr(image),
-    _metaData(lsst::daf::data::SupportFactory::createPropertyNode("FitsMetaData")),
+    _metaData(lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData")),
     _offsetRows(0),
     _offsetCols(0)
 {

@@ -18,7 +18,8 @@
 #include <vw/Image.h>
 #include <vw/Math/BBox.h>
 
-#include <lsst/daf/data.h>
+#include <lsst/daf/base.h>
+#include <lsst/daf/data/LsstBase.h>
 #include <lsst/pex/exceptions.h>
 #include <lsst/daf/base/Persistable.h>
 #include <lsst/afw/image/ImageExceptions.h>
@@ -90,7 +91,7 @@ namespace image {
         
         void writeFits(const std::string& fileName);
         
-        lsst::daf::data::DataProperty::PtrType getMetaData();
+        lsst::daf::base::DataProperty::PtrType getMetaData();
 
         // Mask Plane ops
         
@@ -118,9 +119,9 @@ namespace image {
 
         void setMaskPlaneValues(int plane, MaskPixelBooleanFunc<MaskPixelT> selectionFunc);
         
-        MaskPlaneDict parseMaskPlaneMetaData(lsst::daf::data::DataProperty::PtrType const) const;
+        MaskPlaneDict parseMaskPlaneMetaData(lsst::daf::base::DataProperty::PtrType const) const;
         
-        void addMaskPlaneMetaData(lsst::daf::data::DataProperty::PtrType);
+        void addMaskPlaneMetaData(lsst::daf::base::DataProperty::PtrType);
         
         int countMask(MaskPixelBooleanFunc<MaskPixelT>& testFunc,
                       const vw::BBox2i maskRegion) const;
@@ -161,7 +162,7 @@ private:
         lsst::daf::base::LSST_PERSIST_FORMATTER(lsst::afw::formatters::MaskFormatter<MaskPixelT>);
 
         MaskIVwPtrT _vwImagePtr;
-        lsst::daf::data::DataProperty::PtrType _metaData;
+        lsst::daf::base::DataProperty::PtrType _metaData;
         static MaskPlaneDict _maskPlaneDict;
         static const std::string maskPlanePrefix;
         unsigned int _offsetRows;

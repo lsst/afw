@@ -15,7 +15,6 @@
 #include <boost/cstdint.hpp>
 
 #include <lsst/daf/base.h>
-#include <lsst/daf/data/SupportFactory.h>
 #include <lsst/pex/exceptions.h>
 #include <lsst/pex/policy/Policy.h>
 #include <lsst/daf/persistence/DbAuth.h>
@@ -29,7 +28,6 @@ using boost::int64_t;
 
 using lsst::daf::base::DataProperty;
 using lsst::daf::base::Persistable;
-using lsst::daf::data::SupportFactory;
 using lsst::daf::persistence::LogicalLocation;
 using lsst::daf::persistence::Persistence;
 using lsst::daf::persistence::Storage;
@@ -129,7 +127,7 @@ static void initTestData(SourceVector & v, int sliceId = 0) {
 static void testBoost(void) {
     // Create a blank Policy and DataProperty.
     Policy::Ptr           policy(new Policy);
-    DataProperty::PtrType props = SupportFactory::createPropertyNode("root");
+    DataProperty::PtrType props = DataProperty::createPropertyNode("root");
 
     // Setup test location
     LogicalLocation loc(makeTempFile());
@@ -181,10 +179,10 @@ static DataProperty::PtrType createDbTestProps(
 ) {
     Assert(sliceId < numSlices && numSlices > 0, "invalid slice parameters");
 
-    DataProperty::PtrType props = SupportFactory::createPropertyNode("root");
+    DataProperty::PtrType props = DataProperty::createPropertyNode("root");
 
     if (numSlices > 1) {
-        DataProperty::PtrType dias = SupportFactory::createPropertyNode("Source");
+        DataProperty::PtrType dias = DataProperty::createPropertyNode("Source");
         dias->addProperty(DataProperty("isPerSliceTable", boost::any(true)));
         dias->addProperty(DataProperty("numSlices",       boost::any(numSlices)));
         props->addProperty(dias);

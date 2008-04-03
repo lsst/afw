@@ -5,7 +5,7 @@ import unittest
 
 import lsst.afw.image as afwImage
 import lsst.daf.tests as dafTests
-import lsst.daf.data as dafData
+import lsst.daf.base as dafBase
 import fwTests
 import lsst.pex.exceptions as pexEx
 
@@ -67,7 +67,7 @@ class MaskTestCase(unittest.TestCase):
     def testMetaData(self):
         """Test mask plane metaData"""
 
-        metaData = dafData.SupportFactory_createPropertyNode("testMetaData")
+        metaData = dafBase.DataProperty_createPropertyNode("testMetaData")
 
         self.testMask.addMaskPlaneMetaData(metaData)
         print "MaskPlane metadata:"
@@ -79,7 +79,7 @@ class MaskTestCase(unittest.TestCase):
             if d[p]:
                 print "\t", d[p], p
 
-        newPlane = dafData.DataProperty("Whatever", 5)
+        newPlane = dafBase.DataProperty("Whatever", 5)
         metaData.addProperty(newPlane)
 
         self.testMask.parseMaskPlaneMetaData(metaData)

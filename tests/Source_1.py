@@ -12,7 +12,7 @@ import unittest
 import random
 import time
 
-import lsst.daf.data as dafData
+import lsst.daf.base as dafBase
 import lsst.pex.policy as dafPolicy
 import lsst.daf.persistence as dafPers
 import lsst.daf.tests as dafTests
@@ -85,11 +85,11 @@ class SourceTestCase(unittest.TestCase):
             pol  = dafPolicy.PolicyPtr()
             pers = dafPers.Persistence.getPersistence(pol)
             loc  =  dafPers.LogicalLocation("mysql://lsst10.ncsa.uiuc.edu:3306/test")
-            dp = dafData.SupportFactory.createPropertyNode("root")
-            dp.addProperty(dafData.DataProperty("visitId", int(time.clock())*16384 + random.randint(0,16383)))
-            dp.addProperty(dafData.DataProperty("sliceId", 0))
-            dp.addProperty(dafData.DataProperty("numSlices", 1))
-            dp.addProperty(dafData.DataProperty("itemName", "Source"))
+            dp = dafBase.DataProperty.createPropertyNode("root")
+            dp.addProperty(dafBase.DataProperty("visitId", int(time.clock())*16384 + random.randint(0,16383)))
+            dp.addProperty(dafBase.DataProperty("sliceId", 0))
+            dp.addProperty(dafBase.DataProperty("numSlices", 1))
+            dp.addProperty(dafBase.DataProperty("itemName", "Source"))
             stl = dafPers.StorageList()
             stl.push_back(pers.getPersistStorage("DbStorage", loc))
             pers.persist(self.dsv1, stl, dp)

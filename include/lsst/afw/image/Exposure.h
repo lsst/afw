@@ -28,8 +28,8 @@
 
 #include <vw/Math/BBox.h>
 
-#include <lsst/daf/data/LsstBase.h>
 #include <lsst/daf/base/Persistable.h>
+#include <lsst/daf/data/LsstBase.h>
 #include <lsst/afw/image/MaskedImage.h>
 #include <lsst/afw/image/Wcs.h>
 

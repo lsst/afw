@@ -19,7 +19,7 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 
 #include <boost/serialization/shared_ptr.hpp>
 
-#include <lsst/daf/base/Persistable.h>
+#include <lsst/daf/base.h>
 #include <lsst/pex/exceptions.h>
 #include <lsst/daf/persistence/BoostStorage.h>
 #include <lsst/daf/persistence/DbStorage.h>
@@ -357,8 +357,9 @@ Persistable* ExposureFormatter<ImagePixelT, MaskPixelT>::read(
         int filterId = db->getColumnByPos<int>(1);
         std::string filterName = lookupFilterName(db, filterId);
         dp->deleteAll("FILTER");
-        dp->addProperty(lsst::daf::data::SupportFactory::createLeafProperty(
-                "FILTER", filterName));
+        dp->addProperty(
+            lsst::daf::base::DataProperty::PtrType(
+                new lsst::daf::base::DataProperty("FILTER", filterName)));
 
         // Set the image headers.
         // Set the Wcs headers in ip->_wcsPtr.

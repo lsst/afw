@@ -2,7 +2,6 @@
 #include <stdexcept>
 
 #include <lsst/daf/base.h>
-#include <lsst/daf/data.h>
 #include <lsst/pex/exceptions.h>
 #include <lsst/pex/logging/Trace.h>
 #include <lsst/afw/image.h>
@@ -11,7 +10,7 @@ using namespace std;
 using boost::any_cast;
 
 using lsst::pex::logging::Trace;
-using lsst::daf::data::SupportFactory;
+using lsst::daf::base::DataProperty;
 
 namespace pexEx = lsst::pex::exceptions;
 namespace afwImage  = lsst::afw::image;
@@ -136,7 +135,7 @@ void test() {
 
 // ------------ Test mask plane metaData
 
-    DataProperty::PtrType metaData = SupportFactory::createPropertyNode("testMetaData");
+    DataProperty::PtrType metaData = DataProperty::createPropertyNode("testMetaData");
     testMask.addMaskPlaneMetaData(metaData);
     cout << "MaskPlane metadata:" << endl;
     cout << metaData->toString("\t",true) << endl;

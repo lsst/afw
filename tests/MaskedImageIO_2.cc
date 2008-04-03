@@ -1,10 +1,11 @@
 // -*- lsst-c++ -*-
-#include <lsst/daf/data.h>
+#include <stdexcept>
+
+#include <lsst/daf/base.h>
+#include <lsst/daf/data/FitsFormatter.h>
 #include <lsst/pex/logging/Trace.h>
 #include <lsst/afw/image.h>
 #include <lsst/afw/math.h>
-
-#include <stdexcept>
 
 using namespace std;
 using boost::any_cast;

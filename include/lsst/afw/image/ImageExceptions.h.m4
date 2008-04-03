@@ -50,12 +50,12 @@ dnl
   * \ author Roberta Allsman
   */
 #include <exception>
+
 #include <boost/format.hpp>
 #include <boost/shared_ptr.hpp>
-#include "lsst/mwi/data/DataProperty.h"
-#include "lsst/mwi/utils/Trace.h"
-#include "lsst/mwi/data/SupportFactory.h"
-#include "lsst/mwi/exceptions.h"
+
+#include <lsst/daf/base.h>
+#include <lsst/pex/exceptions.h>
 
 
 namespace lsst {
@@ -71,7 +71,7 @@ namespace fw {
   * The handlers "catch" indicates the following situation occurred: 
   * $2
   */
-class $1 : public lsst::mwi::exceptions::ExceptionStack  {
+class $1 : public lsst::pex::exceptions::ExceptionStack  {
 public:
   /** Construct new $1 object.
     *
@@ -79,8 +79,8 @@ public:
     * \note         Default ExceptionStack and ExceptionData will be created
     */
     $1(std::string const& comment) throw() :
-         lsst::mwi::exceptions::ExceptionStack(std::string("$1"),comment) {
-         lsst::mwi::exceptions::ExceptionData eNode("Node$1");
+         lsst::pex::exceptions::ExceptionStack(std::string("$1"),comment) {
+         lsst::pex::exceptions::ExceptionData eNode("Node$1");
          this->addExceptionData(eNode);
     };
 
@@ -91,8 +91,8 @@ public:
     * \note         Default ExceptionStack and ExceptionData will be created
     */
     $1(boost::format const& comment) throw() :
-         lsst::mwi::exceptions::ExceptionStack( std::string("$1"),comment.str()) {
-         lsst::mwi::exceptions::ExceptionData eNode("Node$1");
+         lsst::pex::exceptions::ExceptionStack( std::string("$1"),comment.str()) {
+         lsst::pex::exceptions::ExceptionData eNode("Node$1");
          this->addExceptionData(eNode);
     };
 
@@ -102,9 +102,9 @@ public:
     * \param comment  String used to initialize std::runtime_error.what(). 
     *                 Default to: "$2".
     */
-    $1(lsst::mwi::exceptions::ExceptionData &orig, std::string const& comment=std::string("$2")) 
+    $1(lsst::pex::exceptions::ExceptionData &orig, std::string const& comment=std::string("$2")) 
         throw() :
-        lsst::mwi::exceptions::ExceptionStack( std::string("$1"), comment) {
+        lsst::pex::exceptions::ExceptionStack( std::string("$1"), comment) {
         this->addExceptionData(orig);
     };
 
@@ -114,9 +114,9 @@ public:
     * \param comment  String used to initialize std::runtime_error.what(). 
     *                 Default to: "$2".
     */
-    $1(lsst::mwi::exceptions::ExceptionData &orig, boost::format const& comment=boost::format("$2")) 
+    $1(lsst::pex::exceptions::ExceptionData &orig, boost::format const& comment=boost::format("$2")) 
         throw() :
-        lsst::mwi::exceptions::ExceptionStack(orig, std::string("$1"), comment.str()) {
+        lsst::pex::exceptions::ExceptionStack(orig, std::string("$1"), comment.str()) {
         this->addExceptionData(orig);
     };
 
@@ -126,8 +126,8 @@ public:
     * \param comment  String used to initialize std::runtime_error.what(). 
     *                 Default to: "$2".
     */
-    $1(lsst::mwi::exceptions::ExceptionStack const &orig, std::string const& comment=std::string("$2")) throw() :
-         lsst::mwi::exceptions::ExceptionStack( orig, std::string("$1"), comment) {
+    $1(lsst::pex::exceptions::ExceptionStack const &orig, std::string const& comment=std::string("$2")) throw() :
+         lsst::pex::exceptions::ExceptionStack( orig, std::string("$1"), comment) {
     };
 
   /** Construct new $1 object.
@@ -136,8 +136,8 @@ public:
     * \param comment  String used to initialize std::runtime_error.what(). 
     *                 Default to: "$2".
     */
-    $1(lsst::mwi::exceptions::ExceptionStack const &orig, boost::format const& comment=boost::format("$2")) throw() :
-         lsst::mwi::exceptions::ExceptionStack(orig, std::string("$1"), comment.str()){
+    $1(lsst::pex::exceptions::ExceptionStack const &orig, boost::format const& comment=boost::format("$2")) throw() :
+         lsst::pex::exceptions::ExceptionStack(orig, std::string("$1"), comment.str()){
     };
 
 
@@ -146,13 +146,13 @@ public:
     * \param orig  A reference to the $1 object to clone.
     */
     $1(const $1 & orig) throw() :
-         lsst::mwi::exceptions::ExceptionStack(orig )  {};
+         lsst::pex::exceptions::ExceptionStack(orig )  {};
 
   /** operator<< 
     *
     * \param rhs     Reference to ExceptionData to be added to $1 ExceptionStack .
     */
-    $1 &operator<< (lsst::mwi::exceptions::ExceptionData  rhs) throw() {
+    $1 &operator<< (lsst::pex::exceptions::ExceptionData  rhs) throw() {
         this->getStack()->addProperty(rhs.getExceptionData());
         return *this;
     }
@@ -161,7 +161,7 @@ public:
     *
     * \param rhs     Reference to DataProperty to be added to most recent ExceptionData on ExceptionStack.
     */
-    $1 &operator<< (lsst::mwi::data::DataProperty  const rhs) throw() {
+    $1 &operator<< (lsst::daf::base::DataProperty  const rhs) throw() {
         this->getLast()->addProperty(rhs);
         return *this;
     }
@@ -170,7 +170,7 @@ public:
     *
     * \param rhs     Reference to DataProperty to be added to most recent ExceptionData on ExceptionStack.
     */
-    $1 &operator<< (lsst::mwi::data::DataProperty::PtrType  const rhs) throw() {
+    $1 &operator<< (lsst::daf::base::DataProperty::PtrType  const rhs) throw() {
         this->getLast()->addProperty(rhs);
         return *this;
     }
