@@ -66,7 +66,7 @@ public:
 private:
     explicit WcsFormatter(lsst::pex::policy::Policy::Ptr policy);
 
-    static FormatterRegistration registration;
+    static lsst::daf::persistence::FormatterRegistration registration;
 };
 
 }}} // namespace lsst::afw::formatters

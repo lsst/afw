@@ -59,7 +59,7 @@ namespace image {
 
         double pixArea(Coord2D pix) const;
     private:
-        lsst::daf::base::LSST_PERSIST_FORMATTER(lsst::afw::formatters::WcsFormatter);
+        LSST_PERSIST_FORMATTER(lsst::afw::formatters::WcsFormatter);
 
         lsst::daf::base::DataProperty::PtrType _fitsMetaData; ///< Input FITS header.  Caveat Emptor: may contain other keywords
         // including e.g. SIMPLE and BITPIX

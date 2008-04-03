@@ -154,7 +154,7 @@ namespace image {
         inline unsigned int getOffsetCols() const;
     private:
 
-        lsst::daf::base::LSST_PERSIST_FORMATTER(lsst::afw::formatters::MaskedImageFormatter<ImagePixelT, MaskPixelT>);
+        LSST_PERSIST_FORMATTER(lsst::afw::formatters::MaskedImageFormatter<ImagePixelT, MaskPixelT>);
         void conformSizes();
         
         ImagePtrT _imagePtr;

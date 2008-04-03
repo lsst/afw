@@ -75,7 +75,7 @@ namespace image {
         void writeFits(std::string const &expOutFile) const;
         
     private:
-        lsst::daf::base::LSST_PERSIST_FORMATTER(lsst::afw::formatters::ExposureFormatter<ImageT, MaskT>);
+        LSST_PERSIST_FORMATTER(lsst::afw::formatters::ExposureFormatter<ImageT, MaskT>);
 
         MaskedImage<ImageT, MaskT> _maskedImage;             
         boost::shared_ptr<Wcs> _wcsPtr;    

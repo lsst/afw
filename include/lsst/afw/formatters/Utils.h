@@ -23,7 +23,7 @@ bool extractOptionalFlag(
     std::string const & name
 );
 
-std::string const extractlsst::pex::policy::PolicyString(
+std::string const extractPolicyString(
     lsst::pex::policy::Policy::Ptr const & policy,
     std::string const & key,
     std::string const & def
