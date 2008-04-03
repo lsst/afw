@@ -60,10 +60,10 @@ template <typename ImagePixelT, typename MaskPixelT>
 class testPixProcFunc :
     public lsst::afw::image::PixelProcessingFunc<ImagePixelT, MaskPixelT> {
 public:
-    typedef typename PixelChannelType<ImagePixelT>::type ImageChannelT;
-    typedef typename PixelChannelType<MaskPixelT>::type MaskChannelT;
-    typedef PixelLocator<ImagePixelT> ImageIteratorT;
-    typedef PixelLocator<MaskPixelT> MaskIteratorT;
+    typedef typename vw::PixelChannelType<ImagePixelT>::type ImageChannelT;
+    typedef typename vw::PixelChannelType<MaskPixelT>::type MaskChannelT;
+    typedef lsst::afw::image::PixelLocator<ImagePixelT> ImageIteratorT;
+    typedef lsst::afw::image::PixelLocator<MaskPixelT> MaskIteratorT;
      
     testPixProcFunc(MaskedImage<ImagePixelT, MaskPixelT>& m) : PixelProcessingFunc<ImagePixelT, MaskPixelT>(m), initCount(0) {}
     
@@ -115,12 +115,12 @@ template <typename MaskPixelT>
 class testCrFunc : public lsst::daf::base::Citizen,
                    public MaskPixelBooleanFunc<MaskPixelT> {
 public:
-    typedef typename Mask<MaskPixelT>::MaskChannelT MaskChannelT;
+    typedef typename lsst::afw::image::Mask<MaskPixelT>::MaskChannelT MaskChannelT;
     testCrFunc(Mask<MaskPixelT>& m) :
         lsst::daf::base::Citizen(typeid(this)),
-        MaskPixelBooleanFunc<MaskPixelT>(m) {}
+        lsst::afw::image::MaskPixelBooleanFunc<MaskPixelT>(m) {}
     void init() {
-        MaskPixelBooleanFunc<MaskPixelT>::_mask.getPlaneBitMask("CR", _bitsCR);
+        lsst::afw::image::MaskPixelBooleanFunc<MaskPixelT>::_mask.getPlaneBitMask("CR", _bitsCR);
     }        
     bool operator ()(MaskPixelT pixel) const { 
         return ((pixel & _bitsCR) !=0 ); 

@@ -313,11 +313,11 @@ def version(HeadURL = r"$HeadURL$"):
             return None
 %}
 
-%template(BBox2i)               BBox<int32, 2>;
-%template(BBox2f)               BBox<float, 2>;
+%template(BBox2i)               vw::BBox<int32, 2>;
+%template(BBox2f)               vw::BBox<float, 2>;
 
-%boost_shared_ptr(BBox2iPtr, BBox<int32, 2>);
-%boost_shared_ptr(BBox2fPtr, BBox<float, 2>);
+%boost_shared_ptr(BBox2iPtr, vw::BBox<int32, 2>);
+%boost_shared_ptr(BBox2fPtr, vw::BBox<float, 2>);
 
 %template(Vector2i)             Vector<int32, 2>;
 %template(Vector2f)             Vector<float, 2>;

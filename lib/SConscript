@@ -31,5 +31,5 @@ env.SharedLibrary(
         "math/KernelFunctions.cc",
         "math/LinearCombinationKernel.cc",
     )],
-    LIBS=env.getlibs("boost pex vw wcslib cfitsio") + lsstLibs,
+    LIBS=env.getlibs("boost vw wcslib cfitsio") + lsstLibs,
 )

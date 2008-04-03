@@ -20,9 +20,8 @@
  */
 
 #include <lsst/daf/base.h>
+#include <lsst/daf/persistence.h>
 #include <lsst/pex/policy/Policy.h>
-#include <lsst/daf/persistence/Formatter.h>
-#include <lsst/daf/persistence/Storage.h>
 
 namespace lsst {
 namespace afw {
@@ -48,7 +47,7 @@ public:
         lsst::daf::base::DataProperty::PtrType additionalData
     );
 
-    static Formatter::Ptr createInstance(
+    static lsst::daf::persistence::Formatter::Ptr createInstance(
         lsst::pex::policy::Policy::Ptr policy
     );
 

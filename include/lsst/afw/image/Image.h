@@ -19,6 +19,7 @@
 
 #include <lsst/daf/base.h>
 #include <lsst/daf/data/LsstBase.h>
+#include <lsst/afw/formatters/ImageFormatter.h>
 
 namespace lsst {
 namespace afw {

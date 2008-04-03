@@ -20,9 +20,8 @@
  */
 
 #include <lsst/daf/base.h>
+#include <lsst/daf/persistence.h>
 #include <lsst/pex/policy/Policy.h>
-#include <lsst/daf/persistence/Formatter.h>
-#include <lsst/daf/persistence/Storage.h>
 
 namespace lsst {
 namespace afw {

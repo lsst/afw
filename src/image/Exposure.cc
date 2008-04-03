@@ -153,7 +153,7 @@ lsst::afw::image::Wcs lsst::afw::image::Exposure<ImageT, MaskT>::getWcs() const 
 
 
 /** \brief Get a subExposure given an Exposure and a VW bounding box structure
-  * (BBox2i) as the subRegion. This addresses Ticket #111 (assigned to NMS on
+  * (vw::BBox2i) as the subRegion. This addresses Ticket #111 (assigned to NMS on
   * 20070726).  The current implementation makes no effort to alter the existing
   * Wcs - a copy of the original Wcs is passed to the new subExposure.
   *

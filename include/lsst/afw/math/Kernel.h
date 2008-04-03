@@ -20,9 +20,9 @@
 #include <vw/Image.h>
 
 #include <lsst/daf/data/LsstBase.h>
-#include <lsst/afw/math/Function.h>
 #include <lsst/afw/image/Image.h>
-#include <lsst/afw/image/Kernel/traits.h>
+#include <lsst/afw/math/Function.h>
+#include <lsst/afw/math/traits.h>
 
 namespace lsst {
 namespace afw {
@@ -134,7 +134,7 @@ namespace math {
 
         virtual ~Kernel() {};
         
-        Image<PixelT> computeNewImage(
+        lsst::afw::image::Image<PixelT> computeNewImage(
             PixelT &imSum,
             double x = 0.0,
             double y = 0.0,
@@ -152,7 +152,7 @@ namespace math {
          * \throw lsst::pex::exceptions::InvalidParameter if the image is the wrong size
          */
         virtual void computeImage(
-            Image<PixelT> &image,   ///< image whose pixels are to be set
+            lsst::afw::image::Image<PixelT> &image,   ///< image whose pixels are to be set
             PixelT &imSum,  ///< sum of image pixels
             double x = 0.0, ///< x (column position) at which to compute spatial function
             double y = 0.0, ///< y (row position) at which to compute spatial function
@@ -280,13 +280,13 @@ namespace math {
         explicit FixedKernel();
 
         explicit FixedKernel(
-            Image<PixelT> const &image
+            lsst::afw::image::Image<PixelT> const &image
         );
         
         virtual ~FixedKernel() {};
     
         virtual void computeImage(
-            Image<PixelT> &image,
+            lsst::afw::image::Image<PixelT> &image,
             PixelT &imSum,
             double x = 0.0,
             double y = 0.0,
@@ -307,7 +307,7 @@ namespace math {
         virtual std::vector<double> getCurrentKernelParameters() const;
 
     private:
-        Image<PixelT> _image;
+        lsst::afw::image::Image<PixelT> _image;
         PixelT _sum;
     };
     
@@ -355,7 +355,7 @@ namespace math {
         virtual ~AnalyticKernel() {};
     
         virtual void computeImage(
-            Image<PixelT> &image,
+            lsst::afw::image::Image<PixelT> &image,
             PixelT &imSum,
             double x = 0.0,
             double y = 0.0,
@@ -407,7 +407,7 @@ namespace math {
                                      unsigned int rows);
 
         virtual void computeImage(
-            Image<PixelT> &image,
+            lsst::afw::image::Image<PixelT> &image,
             PixelT &imSum,
             double x = 0.0,
             double y = 0.0,
@@ -472,7 +472,7 @@ namespace math {
         virtual ~LinearCombinationKernel() {};
     
         virtual void computeImage(
-            Image<PixelT> &image,
+            lsst::afw::image::Image<PixelT> &image,
             PixelT &imSum,
             double x = 0.0,
             double y = 0.0,
@@ -508,7 +508,7 @@ namespace math {
     private:
         void _computeKernelImageList();
         KernelListType _kernelList;
-        std::vector<boost::shared_ptr<Image<PixelT> > > _kernelImagePtrList;
+        std::vector<boost::shared_ptr<lsst::afw::image::Image<PixelT> > > _kernelImagePtrList;
         mutable std::vector<double> _kernelParams;
     };
 }}}   // lsst:afw::math

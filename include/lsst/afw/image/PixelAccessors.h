@@ -1,6 +1,6 @@
 // -*- C++-LSST -*-
-#ifndef LSST_AFW_IMAGE_PIXELACCESSORS.H
-#define LSST_AFW_IMAGE_PIXELACCESSORS.H
+#ifndef LSST_AFW_IMAGE_PIXELACCESSORS_H
+#define LSST_AFW_IMAGE_PIXELACCESSORS_H
 /**
  * \file
  *
@@ -148,4 +148,4 @@ namespace image {
 
 }}}  // lsst::afw::image
 
-#endif // LSST_AFW_IMAGE_PIXELACCESSORS.H
+#endif // LSST_AFW_IMAGE_PIXELACCESSORS_H

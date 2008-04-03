@@ -95,7 +95,7 @@ inline void lsst::afw::math::apply(
 //            outVariance += static_cast<ImageT>(ker * ker * (*varPtr));
 //            outMask |= *maskPtr;
 //        }
-        MaskedPixelAccessor<ImageT, MaskT> mImageColAcc = mImageRowAcc;
+        lsst::afw::image::MaskedPixelAccessor<ImageT, MaskT> mImageColAcc = mImageRowAcc;
         kernelAccessorType kCol = kRow;
         for (unsigned int col = 0; col < cols; ++col, mImageColAcc.nextCol(), kCol.next_col()) {
             Kernel::PixelT ker = *kCol;

@@ -15,10 +15,8 @@
 #include <vector>
 
 #include <lsst/daf/base.h>
+#include <lsst/daf/persistence.h>
 #include <lsst/pex/policy/Policy.h>
-#include <lsst/daf/persistence/Formatter.h>
-#include <lsst/daf/persistence/Storage.h>
-#include <lsst/daf/persistence/DbStorage.h>
 #include <lsst/afw/detection/Source.h>
 
 namespace lsst {

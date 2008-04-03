@@ -21,9 +21,7 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 
 #include <lsst/daf/base.h>
 #include <lsst/pex/exceptions.h>
-#include <lsst/daf/persistence/BoostStorage.h>
-#include <lsst/daf/persistence/DbStorage.h>
-#include <lsst/daf/persistence/FitsStorage.h>
+#include <lsst/daf/persistence.h>
 #include <lsst/pex/logging/Trace.h>
 #include <lsst/afw/formatters/ExposureFormatter.h>
 #include <lsst/afw/formatters/Utils.h>
@@ -39,6 +37,7 @@ static void execTrace(std::string s, int level = EXEC_TRACE) {
 }
 
 using lsst::daf::base::Persistable;
+using lsst::daf::persistence::Storage;
 using lsst::daf::persistence::BoostStorage;
 using lsst::daf::persistence::DbStorage;
 using lsst::daf::persistence::FitsStorage;
@@ -55,13 +54,13 @@ public:
     static std::string name;
 };
 
-template<> std::string ExposureFormatterTraits<boost::uint16_t, maskPixelType>::name("ExposureU");
-template<> std::string ExposureFormatterTraits<float, maskPixelType>::name("ExposureF");
-template<> std::string ExposureFormatterTraits<double, maskPixelType>::name("ExposureD");
+template<> std::string ExposureFormatterTraits<boost::uint16_t, lsst::afw::image::maskPixelType>::name("ExposureU");
+template<> std::string ExposureFormatterTraits<float, lsst::afw::image::maskPixelType>::name("ExposureF");
+template<> std::string ExposureFormatterTraits<double, lsst::afw::image::maskPixelType>::name("ExposureD");
 
 
 template <typename ImagePixelT, typename MaskPixelT>
-FormatterRegistration ExposureFormatter<ImagePixelT, MaskPixelT>::registration(
+lsst::daf::persistence::FormatterRegistration ExposureFormatter<ImagePixelT, MaskPixelT>::registration(
     ExposureFormatterTraits<ImagePixelT, MaskPixelT>::name,
     typeid(Exposure<ImagePixelT, MaskPixelT>),
     createInstance);
@@ -69,7 +68,7 @@ FormatterRegistration ExposureFormatter<ImagePixelT, MaskPixelT>::registration(
 template <typename ImagePixelT, typename MaskPixelT>
 ExposureFormatter<ImagePixelT, MaskPixelT>::ExposureFormatter(
     lsst::pex::policy::Policy::Ptr policy) :
-    Formatter(typeid(*this)), _policy(policy) {
+    lsst::daf::persistence::Formatter(typeid(*this)), _policy(policy) {
 }
 
 template <typename ImagePixelT, typename MaskPixelT>
@@ -351,7 +350,7 @@ Persistable* ExposureFormatter<ImagePixelT, MaskPixelT>::read(
 
         // Restore image from FITS...
         ip->readFits(db->getColumnByPos<std::string>(0));
-        DataProperty::PtrType dp = ip->getMetadata();
+        lsst::daf::base::DataProperty::PtrType dp = ip->getMetadata();
 
         // Look up the filter name given the ID.
         int filterId = db->getColumnByPos<int>(1);
@@ -396,9 +395,9 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::delegateSerialize(
 }
 
 template <typename ImagePixelT, typename MaskPixelT>
-Formatter::Ptr ExposureFormatter<ImagePixelT, MaskPixelT>::createInstance(
+lsst::daf::persistence::Formatter::Ptr ExposureFormatter<ImagePixelT, MaskPixelT>::createInstance(
     lsst::pex::policy::Policy::Ptr policy) {
-    return Formatter::Ptr(new ExposureFormatter<ImagePixelT, MaskPixelT>(policy));
+    return lsst::daf::persistence::Formatter::Ptr(new ExposureFormatter<ImagePixelT, MaskPixelT>(policy));
 }
 
 template class ExposureFormatter<boost::uint16_t, lsst::afw::image::maskPixelType>;

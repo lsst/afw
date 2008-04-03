@@ -20,13 +20,11 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 // not used? #include <stdlib.h>
 
 #include <boost/serialization/shared_ptr.hpp>
-#include "wcslib/wcs.h"
+#include <wcslib/wcs.h>
 
 #include <lsst/daf/base.h>
+#include <lsst/daf/persistence.h>
 #include <lsst/pex/exceptions.h>
-// not used? #include <lsst/daf/persistence/LogicalLocation.h>
-#include <lsst/daf/persistence/BoostStorage.h>
-// not used? #include <lsst/daf/persistence/FitsStorage.h>
 #include <lsst/pex/logging/Trace.h>
 #include <lsst/afw/formatters/WcsFormatter.h>
 #include <lsst/afw/formatters/ImageFormatter.h>
@@ -41,18 +39,19 @@ static void execTrace(std::string s, int level = EXEC_TRACE) {
 
 using lsst::daf::base::Persistable;
 using lsst::daf::persistence::BoostStorage;
+using lsst::daf::persistence::Storage;
 using lsst::afw::image::Wcs;
 
 namespace lsst {
 namespace afw {
 namespace formatters {
 
-FormatterRegistration WcsFormatter::registration(
+lsst::daf::persistence::FormatterRegistration WcsFormatter::registration(
     "Wcs", typeid(Wcs), createInstance);
 
 WcsFormatter::WcsFormatter(
     lsst::pex::policy::Policy::Ptr policy) :
-    Formatter(typeid(*this)) {
+    lsst::daf::persistence::Formatter(typeid(*this)) {
 }
 
 WcsFormatter::~WcsFormatter(void) {
@@ -178,9 +177,9 @@ void WcsFormatter::delegateSerialize(
     execTrace("WcsFormatter delegateSerialize end");
 }
 
-Formatter::Ptr WcsFormatter::createInstance(
+lsst::daf::persistence::Formatter::Ptr WcsFormatter::createInstance(
     lsst::pex::policy::Policy::Ptr policy) {
-    return Formatter::Ptr(new WcsFormatter(policy));
+    return lsst::daf::persistence::Formatter::Ptr(new WcsFormatter(policy));
 }
 
 }}} // namespace lsst::afw::formatters

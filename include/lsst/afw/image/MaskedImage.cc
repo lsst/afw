@@ -379,9 +379,9 @@ void lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::processPixels(
 ) {
     lsst::pex::logging::Trace("afw.MaskedImage", 5, "Processing pixels");
 
-    PixelLocator<ImagePixelT> i = processingFunc.getImagePixelLocatorBegin();
-    PixelLocator<ImagePixelT> iEnd = processingFunc.getImagePixelLocatorEnd();
-    PixelLocator<MaskPixelT> m = processingFunc.getMaskPixelLocatorBegin();
+    lsst::afw::image::PixelLocator<ImagePixelT> i = processingFunc.getImagePixelLocatorBegin();
+    lsst::afw::image::PixelLocator<ImagePixelT> iEnd = processingFunc.getImagePixelLocatorEnd();
+    lsst::afw::image::PixelLocator<MaskPixelT> m = processingFunc.getMaskPixelLocatorBegin();
 
     for ( ; i != iEnd; i++, m++) {
         processingFunc(i, m);
@@ -456,7 +456,7 @@ void lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::conformSizes() {
 // Would be better to just declare the operator() to be virtual = 0 - but causes problems for Swig/Python
 
 template<typename ImagePixelT, typename MaskPixelT>
-void lsst::afw::PixelProcessingFunc<ImagePixelT, MaskPixelT>::operator() (ImageIteratorT& i, MaskIteratorT& m) {
+void lsst::afw::image::PixelProcessingFunc<ImagePixelT, MaskPixelT>::operator() (ImageIteratorT& i, MaskIteratorT& m) {
     std::cout << "this should not happen!" << std::endl;
 //     abort();
 }
@@ -464,7 +464,7 @@ void lsst::afw::PixelProcessingFunc<ImagePixelT, MaskPixelT>::operator() (ImageI
 // construct with ImageView pointer to ensure smart pointer reference counting?
 
 template<typename PixelT> 
-lsst::afw::PixelLocator<PixelT>::PixelLocator(
+lsst::afw::image::PixelLocator<PixelT>::PixelLocator(
     vw::ImageView<PixelT>* iv, vw::PixelIterator<vw::ImageView<PixelT> > ivIterator
 ) : 
     vw::PixelIterator<vw::ImageView<PixelT> > (ivIterator),
@@ -478,7 +478,7 @@ lsst::afw::PixelLocator<PixelT>::PixelLocator(
 }
 
 template<typename PixelT> 
-lsst::afw::PixelLocator<PixelT>& lsst::afw::PixelLocator<PixelT>::advance(int dx, int dy) {
+lsst::afw::image::PixelLocator<PixelT>& lsst::afw::image::PixelLocator<PixelT>::advance(int dx, int dy) {
     int delta = dx*_cstride + dy*_rstride;
     *this += delta;
     return *this;

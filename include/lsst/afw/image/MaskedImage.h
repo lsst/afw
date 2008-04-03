@@ -23,9 +23,9 @@
 
 #include <lsst/daf/data/LsstBase.h>
 #include <lsst/daf/base/Persistable.h>
+#include <lsst/afw/formatters/MaskedImageFormatter.h>
 #include <lsst/afw/image/Image.h>
 #include <lsst/afw/image/Mask.h>
-#include <lsst/afw/image/MaskedPixelAccessor.h>
 
 namespace lsst {
 namespace afw {

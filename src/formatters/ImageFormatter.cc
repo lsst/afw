@@ -20,9 +20,8 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/binary_object.hpp>
 
-#include <lsst/daf/base/Persistable.h>
-#include <lsst/daf/persistence/BoostStorage.h>
-#include <lsst/daf/persistence/FitsStorage.h>
+#include <lsst/daf/base.h>
+#include <lsst/daf/persistence.h>
 #include <lsst/pex/logging/Trace.h>
 #include <lsst/afw/formatters/ImageFormatter.h>
 #include <lsst/afw/image/Image.h>
@@ -37,6 +36,7 @@ static void execTrace(std::string s, int level = EXEC_TRACE) {
 using lsst::daf::base::Persistable;
 using lsst::daf::persistence::BoostStorage;
 using lsst::daf::persistence::FitsStorage;
+using lsst::daf::persistence::Storage;
 using lsst::afw::image::Image;
 
 namespace lsst {
@@ -55,7 +55,7 @@ template<> std::string ImageFormatterTraits<double>::name("ImageD");
 
 
 template <typename ImagePixelT>
-FormatterRegistration ImageFormatter<ImagePixelT>::registration(
+lsst::daf::persistence::FormatterRegistration ImageFormatter<ImagePixelT>::registration(
     ImageFormatterTraits<ImagePixelT>::name,
     typeid(Image<ImagePixelT>),
     createInstance);
@@ -63,7 +63,7 @@ FormatterRegistration ImageFormatter<ImagePixelT>::registration(
 template <typename ImagePixelT>
 ImageFormatter<ImagePixelT>::ImageFormatter(
     lsst::pex::policy::Policy::Ptr policy) :
-    Formatter(typeid(*this)) {
+    lsst::daf::persistence::Formatter(typeid(*this)) {
 }
 
 template <typename ImagePixelT>
@@ -168,9 +168,9 @@ void ImageFormatter<ImagePixelT>::delegateSerialize(
 }
 
 template <typename ImagePixelT>
-Formatter::Ptr ImageFormatter<ImagePixelT>::createInstance(
+lsst::daf::persistence::Formatter::Ptr ImageFormatter<ImagePixelT>::createInstance(
     lsst::pex::policy::Policy::Ptr policy) {
-    return Formatter::Ptr(new ImageFormatter<ImagePixelT>(policy));
+    return lsst::daf::persistence::Formatter::Ptr(new ImageFormatter<ImagePixelT>(policy));
 }
 
 template class ImageFormatter<boost::uint16_t>;

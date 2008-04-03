@@ -3,6 +3,8 @@
 // This file can NOT be separately compiled!   It is included by Image.h
 #include <stdexcept>
 
+#include <vw/Math.h>
+
 #include <lsst/daf/base.h>
 #include <lsst/pex/exceptions.h>
 #include <lsst/afw/image/LSSTFitsResource.h>
@@ -108,7 +110,7 @@ lsst::afw::image::Image<ImagePixelT>::getSubImage(const vw::BBox2i imageRegion) 
 
     // Check that imageRegion is completely inside the image
     
-    BBox2i imageBoundary(0, 0, getCols(), getRows());
+    vw::BBox2i imageBoundary(0, 0, getCols(), getRows());
     if (!imageBoundary.contains(imageRegion)) {
         throw lsst::pex::exceptions::InvalidParameter(boost::format("getSubImage region not contained within Image"));
     }
@@ -116,7 +118,7 @@ lsst::afw::image::Image<ImagePixelT>::getSubImage(const vw::BBox2i imageRegion) 
     ImageIVwPtrT croppedImage(new ImageIVwT());
     *croppedImage = copy(crop(*_vwImagePtr, imageRegion));
     ImagePtrT newImage(new Image<ImagePixelT>(croppedImage));
-    Vector<int, 2> bboxOffset = imageRegion.min();
+    vw::Vector<int, 2> bboxOffset = imageRegion.min();
     newImage->setOffsetRows(bboxOffset[1] + _offsetRows);
     newImage->setOffsetCols(bboxOffset[0] + _offsetCols);
 

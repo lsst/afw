@@ -22,6 +22,7 @@
 #include <lsst/daf/data/LsstBase.h>
 #include <lsst/pex/exceptions.h>
 #include <lsst/daf/base/Persistable.h>
+#include <lsst/afw/formatters/ImageFormatter.h>
 #include <lsst/afw/image/ImageExceptions.h>
 
 namespace lsst {
@@ -56,7 +57,7 @@ namespace image {
     class Mask : public lsst::daf::base::Persistable,
                  public lsst::daf::data::LsstBase {
     public:
-        typedef typename PixelChannelType<MaskPixelT>::type MaskChannelT;
+        typedef typename vw::PixelChannelType<MaskPixelT>::type MaskChannelT;
         typedef vw::ImageView<MaskPixelT> MaskIVwT;
         typedef boost::shared_ptr<Mask<MaskPixelT> > Ptr;
         typedef boost::shared_ptr<Mask<MaskPixelT> > MaskPtrT; // deprecated; use Ptr

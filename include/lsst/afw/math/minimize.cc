@@ -18,6 +18,8 @@
 #include <Minuit/MnMinos.h>
 #include <Minuit/MnPrint.h>
 
+#include <lsst/pex/logging/Trace.h>
+
 // Constructors
 template<typename ReturnT>
 lsst::afw::math::MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1()

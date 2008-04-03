@@ -19,17 +19,15 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 
 #include <boost/serialization/shared_ptr.hpp>
 
-// not used? #include <lsst/daf/persistence/LogicalLocation.h>
-#include <lsst/daf/base/Persistable.h>
-#include <lsst/daf/persistence/BoostStorage.h>
-#include <lsst/daf/persistence/FitsStorage.h>
+#include <lsst/daf/base.h>
+#include <lsst/daf/persistence.h>
 #include <lsst/pex/logging/Trace.h>
 #include <lsst/afw/formatters/MaskedImageFormatter.h>
 #include <lsst/afw/formatters/ImageFormatter.h>
 #include <lsst/afw/formatters/MaskFormatter.h>
 #include <lsst/afw/image/MaskedImage.h>
 
-// #include <lsst/afw/image/LSSTFitsResource.h>
+// not used? #include <lsst/afw/image/LSSTFitsResource.h>
 
 #define EXEC_TRACE  20
 static void execTrace(std::string s, int level = EXEC_TRACE) {
@@ -39,6 +37,7 @@ static void execTrace(std::string s, int level = EXEC_TRACE) {
 using lsst::daf::base::Persistable;
 using lsst::daf::persistence::BoostStorage;
 using lsst::daf::persistence::FitsStorage;
+using lsst::daf::persistence::Storage;
 using lsst::afw::image::MaskedImage;
 
 namespace lsst {
@@ -56,7 +55,7 @@ template<> std::string MaskedImageFormatterTraits<float, maskPixelType>::name("M
 template<> std::string MaskedImageFormatterTraits<double, maskPixelType>::name("MaskedImageD");
 
 template <typename ImagePixelT, typename MaskPixelT>
-FormatterRegistration MaskedImageFormatter<ImagePixelT, MaskPixelT>::registration(
+lsst::daf::persistence::FormatterRegistration MaskedImageFormatter<ImagePixelT, MaskPixelT>::registration(
     MaskedImageFormatterTraits<ImagePixelT, MaskPixelT>::name,
     typeid(MaskedImage<ImagePixelT, MaskPixelT>),
     createInstance);
@@ -64,7 +63,7 @@ FormatterRegistration MaskedImageFormatter<ImagePixelT, MaskPixelT>::registratio
 template <typename ImagePixelT, typename MaskPixelT>
 MaskedImageFormatter<ImagePixelT, MaskPixelT>::MaskedImageFormatter(
     lsst::pex::policy::Policy::Ptr policy) :
-    Formatter(typeid(*this)) {
+    lsst::daf::persistence::Formatter(typeid(*this)) {
 }
 
 template <typename ImagePixelT, typename MaskPixelT>
@@ -144,9 +143,9 @@ void MaskedImageFormatter<ImagePixelT, MaskPixelT>::delegateSerialize(
 }
 
 template <typename ImagePixelT, typename MaskPixelT>
-Formatter::Ptr MaskedImageFormatter<ImagePixelT, MaskPixelT>::createInstance(
+lsst::daf::persistence::Formatter::Ptr MaskedImageFormatter<ImagePixelT, MaskPixelT>::createInstance(
     lsst::pex::policy::Policy::Ptr policy) {
-    return Formatter::Ptr(
+    return lsst::daf::persistence::Formatter::Ptr(
         new MaskedImageFormatter<ImagePixelT, MaskPixelT>(policy));
 }
 

@@ -12,10 +12,8 @@
 #include <boost/any.hpp>
 #include <boost/format.hpp>
 
-#include <lsst/daf/base/Persistable.h>
-#include <lsst/daf/persistence/BoostStorage.h>
-#include <lsst/daf/persistence/DbStorage.h>
-#include <lsst/daf/persistence/DbTsvStorage.h>
+#include <lsst/daf/base.h>
+#include <lsst/daf/persistence.h>
 #include <lsst/pex/exceptions.h>
 #include <lsst/afw/formatters/SourceFormatters.h>
 #include <lsst/afw/formatters/Utils.h>
@@ -26,6 +24,7 @@ using lsst::daf::base::Persistable;
 using lsst::daf::persistence::BoostStorage;
 using lsst::daf::persistence::DbStorage;
 using lsst::daf::persistence::DbTsvStorage;
+using lsst::daf::persistence::Storage;
 using lsst::afw::detection::Source;
 
 namespace lsst {
@@ -35,7 +34,7 @@ namespace formatters {
 // -- SourceVectorFormatter ----------------
 
 SourceVectorFormatter::SourceVectorFormatter(Policy::Ptr const & policy) :
-    Formatter(typeid(*this)),
+    lsst::daf::persistence::Formatter(typeid(*this)),
     _policy(policy)
 {}
 
@@ -43,12 +42,12 @@ SourceVectorFormatter::SourceVectorFormatter(Policy::Ptr const & policy) :
 SourceVectorFormatter::~SourceVectorFormatter() {}
 
 
-Formatter::Ptr SourceVectorFormatter::createInstance(Policy::Ptr policy) {
-    return Formatter::Ptr(new SourceVectorFormatter(policy));
+lsst::daf::persistence::Formatter::Ptr SourceVectorFormatter::createInstance(Policy::Ptr policy) {
+    return lsst::daf::persistence::Formatter::Ptr(new SourceVectorFormatter(policy));
 }
 
 
-FormatterRegistration SourceVectorFormatter::registration(
+lsst::daf::persistence::FormatterRegistration SourceVectorFormatter::registration(
     "SourceVector",
     typeid(SourceVector),
     createInstance

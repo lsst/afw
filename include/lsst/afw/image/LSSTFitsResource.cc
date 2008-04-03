@@ -1,6 +1,8 @@
 // -*- lsst-c++ -*-
 // This file can NOT be separately compiled!   It is included by LSSTFitsResource.h
+#include <lsst/utils/Utils.h>
 #include <lsst/pex/exceptions.h>
+
 
 template <typename PixelT>
 lsst::afw::image::LSSTFitsResource<PixelT>::LSSTFitsResource() : DiskImageResourceFITS()
@@ -52,7 +54,8 @@ void lsst::afw::image::LSSTFitsResource<PixelT>::getMetaData(
 	  std::string val;
 	  std::string comment;
 	  getKey(i, kw, val, comment);
-	  lsst::daf::base::DataProperty::PtrType dpItemPtr(new lsst::daf::base::DataProperty(kw, stringToAny(val)));
+	  lsst::daf::base::DataProperty::PtrType dpItemPtr(
+	    new lsst::daf::base::DataProperty(kw, lsst::utils::stringToAny(val)));
 	  dpPtr->addProperty(dpItemPtr);
      }
 }

@@ -6,11 +6,10 @@
  *
  * \ingroup afw
  */
-#include <stdexcept>
+#include <stdio>
 
 #include <boost/format.hpp>
 
-#include <lsst/pex/exceptions.h>
 #include <lsst/afw/math/KernelFunctions.h>
 
 /**

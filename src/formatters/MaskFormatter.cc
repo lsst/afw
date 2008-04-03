@@ -24,9 +24,8 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 #include <lsst/afw/formatters/MaskFormatter.h>
 
 // not used? #include <lsst/daf/persistence/LogicalLocation.h>
-#include <lsst/daf/base/Persistable.h>
-#include <lsst/daf/persistence/BoostStorage.h>
-#include <lsst/daf/persistence/FitsStorage.h>
+#include <lsst/daf/base.h>
+#include <lsst/daf/persistence.h>
 #include <lsst/pex/logging/Trace.h>
 #include <lsst/afw/image/Mask.h>
 
@@ -40,6 +39,7 @@ static void execTrace(std::string s, int level = EXEC_TRACE) {
 using lsst::daf::base::Persistable;
 using lsst::daf::persistence::BoostStorage;
 using lsst::daf::persistence::FitsStorage;
+using lsst::daf::persistence::Storage;
 using lsst::afw::image::Mask;
 
 namespace lsst {
@@ -56,7 +56,7 @@ template<> std::string MaskFormatterTraits<maskPixelType>::name("Mask");
 
 
 template <typename MaskPixelT>
-FormatterRegistration MaskFormatter<MaskPixelT>::registration(
+lsst::daf::persistence::FormatterRegistration MaskFormatter<MaskPixelT>::registration(
     MaskFormatterTraits<MaskPixelT>::name,
     typeid(Mask<MaskPixelT>),
     createInstance);
@@ -64,7 +64,7 @@ FormatterRegistration MaskFormatter<MaskPixelT>::registration(
 template <typename MaskPixelT>
 MaskFormatter<MaskPixelT>::MaskFormatter(
     lsst::pex::policy::Policy::Ptr policy) :
-    Formatter(typeid(*this)) {
+    lsst::daf::persistence::Formatter(typeid(*this)) {
 }
 
 template <typename MaskPixelT>
@@ -162,9 +162,9 @@ void MaskFormatter<MaskPixelT>::delegateSerialize(
 }
 
 template <typename MaskPixelT>
-Formatter::Ptr MaskFormatter<MaskPixelT>::createInstance(
+lsst::daf::persistence::Formatter::Ptr MaskFormatter<MaskPixelT>::createInstance(
     lsst::pex::policy::Policy::Ptr policy) {
-    return Formatter::Ptr(new MaskFormatter<MaskPixelT>(policy));
+    return lsst::daf::persistence::Formatter::Ptr(new MaskFormatter<MaskPixelT>(policy));
 }
 
 template class MaskFormatter<maskPixelType>;
