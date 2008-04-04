@@ -2,6 +2,7 @@
 
 #include <vw/Image.h>
 #include <vw/FileIO.h>
+#include <lsst/afw/image/DiskImageResourceFITS.h>
 
 int main(int ac, char **av) {
     if (ac < 2) {
@@ -20,7 +21,7 @@ int main(int ac, char **av) {
     } catch(vw::Exception &e) {
         try {
             std::cerr << av[1] << " is not a registered file type; trying FITS\n";
-            read(image, av[1]);
+            lsst::afw::image::read(image, av[1]);
         } catch(vw::Exception &e) {
             std::cerr << "Error: " << e.what() << std::endl;
             return 1;
@@ -59,7 +60,7 @@ int main(int ac, char **av) {
 
     my_image_type image2;
     try {
-        read(image2, av[2]);
+        lsst::afw::image::read(image2, av[2]);
     } catch(vw::Exception &e) {
         std::cerr << "Error: " << e.what() << std::endl;
     }

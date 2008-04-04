@@ -38,7 +38,7 @@ using namespace vw;
 import lsst.fw.exceptions
 %}
 
-%include "lsst/utils/p_lsstSwig.i"
+%include "lsst/p_lsstSwig.i"
 %import "lsst/utils/Utils.h"
 %include "../image/lsstImageTypes.i"
 

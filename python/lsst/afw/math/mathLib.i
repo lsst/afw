@@ -43,8 +43,8 @@ Python interface to lsst::afw::math classes
 %init %{
 %}
 
-%include "lsst/utils/p_lsstSwig.i"
-%include "lsstImageTypes.i"     // vw and Image/Mask types and typedefs
+%include "lsst/p_lsstSwig.i"
+%include "../image/lsstImageTypes.i"
 
 %pythoncode %{
 import lsst.daf.data

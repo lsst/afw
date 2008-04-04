@@ -33,7 +33,7 @@ using namespace vw;
 
 %import  <vw/Core/FundamentalTypes.h>
 
-%include "lsst/utils/p_lsstSwig.i"
+%include "lsst/p_lsstSwig.i"
 %include "lsst/afw/image/lsstImageTypes.i"
 
 %pythoncode %{

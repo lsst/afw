@@ -26,6 +26,7 @@ env.SharedLibrary(
         "image/Mask.cc",
         "image/Wcs.cc",
         "math/AnalyticKernel.cc",
+        "math/DeltaFunctionKernel.cc",
         "math/FixedKernel.cc",
         "math/Kernel.cc",
         "math/KernelFunctions.cc",

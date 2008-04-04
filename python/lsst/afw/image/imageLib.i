@@ -45,7 +45,7 @@ using namespace vw;
 %init %{
 %}
 
-%include "lsst/utils/p_lsstSwig.i"
+%include "lsst/p_lsstSwig.i"
 %include "lsstImageTypes.i"     // vw and Image/Mask types and typedefs
 
 %pythoncode %{

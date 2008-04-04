@@ -29,8 +29,8 @@ namespace boost { namespace filesystem {} }
 import lsst.fw.exceptions
 %}
 
-%include "lsst/utils/p_lsstSwig.i"
-%include "lsst/daf/persistenceMacros.i"
+%include "lsst/p_lsstSwig.i"
+%include "lsst/daf/base/persistenceMacros.i"
 
 %import "lsst/daf/base.h"
 %import "lsst/daf/persistence/LogicalLocation.h"

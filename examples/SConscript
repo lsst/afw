@@ -4,8 +4,7 @@ Import('env')
 
 env.Program(["generate.cc"], LIBS=env.getlibs("vw boost"))
 env.Program(["vwconvert.cc"], LIBS=env.getlibs("vw boost"))
-# fitsio is broken because the read function is from an unknown library
-# env.Program(["fitsio.cc"], LIBS=env.getlibs("afw"))
+env.Program(["fitsio.cc"], LIBS=env.getlibs("afw"))
 env.Program("maskedImageFitsIO", ["maskedImageFitsIO.cc"], LIBS=env.getlibs("afw"))
 env.Program("timeImageAddition", ["timeImageAddition.cc"], LIBS=env.getlibs("afw"))
 env.Program("timePixelAccessor", ["timePixelAccessor.cc"], LIBS=env.getlibs("afw"))
