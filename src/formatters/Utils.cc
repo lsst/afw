@@ -12,9 +12,9 @@
 #include <lsst/daf/persistence/DbTsvStorage.h>
 #include <lsst/afw/formatters/Utils.h>
 
-namespace ex = lsst::pex::exceptions;
-using lsst::daf::persistence::DbTsvStorage;
 using boost::int64_t;
+namespace ex = lsst::pex::exceptions;
+using lsst::daf::base::DataProperty;
 
 namespace lsst {
 namespace afw {
@@ -153,7 +153,7 @@ bool extractOptionalFlag(
     policy pointer is null or contains no such parameter, the given default string is returned instead.
  */
 std::string const extractPolicyString(
-    Policy::Ptr const & policy,
+    lsst::pex::policy::Policy::Ptr const & policy,
     std::string const & key,
     std::string const & def
 ) {
@@ -199,7 +199,7 @@ static char const * const sDefaultVisitSliceNamePat = "_visit%1%_slice%2%";
     a property named \c "sliceId" (a non-negative integer of type \c int ) be present.
  */
 std::string const getVisitSliceTableName(
-    Policy::Ptr           const & policy,
+    lsst::pex::policy::Policy::Ptr           const & policy,
     DataProperty::PtrType const & properties
 ) {
     std::string itemName(getItemName(properties));
@@ -255,7 +255,7 @@ std::string const getVisitSliceTableName(
  */
 void getAllVisitSliceTableNames(
     std::vector<std::string>    & names,
-    Policy::Ptr           const & policy,
+    lsst::pex::policy::Policy::Ptr           const & policy,
     DataProperty::PtrType const & properties
 ) {
     std::string itemName(getItemName(properties));
@@ -307,15 +307,15 @@ void getAllVisitSliceTableNames(
     table already exists, an exception is thrown.
  */
 void createVisitSliceTable(
-    LogicalLocation       const & location,
-    Policy::Ptr           const & policy,
+    lsst::daf::persistence::LogicalLocation       const & location,
+    lsst::pex::policy::Policy::Ptr           const & policy,
     DataProperty::PtrType const & properties
 ) {
     std::string itemName(getItemName(properties));
     std::string name(getVisitSliceTableName(policy, properties));
     std::string model = extractPolicyString(policy, itemName + ".templateTableName", itemName + "Template");
     
-    DbTsvStorage db;
+    lsst::daf::persistence::DbTsvStorage db;
     db.setPersistLocation(location);
     db.createTableFromTemplate(name, model);
 }
@@ -323,14 +323,14 @@ void createVisitSliceTable(
 
 /*! Drops the database table(s) identified by getAllVisitSliceTables(). */
 void dropAllVisitSliceTables(
-    LogicalLocation       const & location,
-    Policy::Ptr           const & policy,
+    lsst::daf::persistence::LogicalLocation       const & location,
+    lsst::pex::policy::Policy::Ptr           const & policy,
     DataProperty::PtrType const & properties
 ) {
     std::vector<std::string> names;
     getAllVisitSliceTableNames(names, policy, properties);
 
-    DbTsvStorage db;
+    lsst::daf::persistence::DbTsvStorage db;
     db.setPersistLocation(location);
     std::vector<std::string>::const_iterator const end = names.end();
     for (std::vector<std::string>::const_iterator i = names.begin(); i != end; ++i) {

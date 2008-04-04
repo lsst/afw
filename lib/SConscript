@@ -17,7 +17,7 @@ env.SharedLibrary(
         "formatters/ImageFormatter.cc",
         "formatters/MaskedImageFormatter.cc",
         "formatters/MaskFormatter.cc",
-        "formatters/SourceFormatter.cc",
+        "formatters/SourceFormatters.cc",
         "formatters/Utils.cc",
         "formatters/WcsFormatter.cc",
         "image/DiskImageResourceFITS.cc",

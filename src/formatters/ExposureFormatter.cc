@@ -22,6 +22,7 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 #include <lsst/daf/base.h>
 #include <lsst/pex/exceptions.h>
 #include <lsst/daf/persistence.h>
+#include <lsst/daf/persistence/DataPropertyFormatter.h>
 #include <lsst/pex/logging/Trace.h>
 #include <lsst/afw/formatters/ExposureFormatter.h>
 #include <lsst/afw/formatters/Utils.h>

@@ -16,7 +16,6 @@
 
 #include <lsst/daf/base.h>
 #include <lsst/daf/persistence.h>
-#include <lsst/pex/policy/Policy.h>
 #include <lsst/afw/detection/Source.h>
 
 namespace lsst {
@@ -61,12 +60,12 @@ public:
 
 private:
 
-    lsst::daf::persistence::Formatter::Ptr _policy;
+    lsst::pex::policy::Policy::Ptr _policy;
 
-    SourceVectorFormatter(lsst::daf::persistence::Formatter::Ptr const &);
+    explicit SourceVectorFormatter(lsst::pex::policy::Policy::Ptr const & policy);
 
     static lsst::daf::persistence::Formatter::Ptr createInstance(
-        lsst::daf::persistence::Formatter::Ptr
+        lsst::pex::policy::Policy::Ptr
     );
     static lsst::daf::persistence::FormatterRegistration registration;
 

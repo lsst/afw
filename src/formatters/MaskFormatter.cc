@@ -26,6 +26,7 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 // not used? #include <lsst/daf/persistence/LogicalLocation.h>
 #include <lsst/daf/base.h>
 #include <lsst/daf/persistence.h>
+#include <lsst/daf/persistence/DataPropertyFormatter.h>
 #include <lsst/pex/logging/Trace.h>
 #include <lsst/afw/image/Mask.h>
 
@@ -41,6 +42,7 @@ using lsst::daf::persistence::BoostStorage;
 using lsst::daf::persistence::FitsStorage;
 using lsst::daf::persistence::Storage;
 using lsst::afw::image::Mask;
+using lsst::afw::image::maskPixelType;
 
 namespace lsst {
 namespace afw {

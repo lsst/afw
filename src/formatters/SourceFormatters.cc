@@ -15,6 +15,7 @@
 #include <lsst/daf/base.h>
 #include <lsst/daf/persistence.h>
 #include <lsst/pex/exceptions.h>
+#include <lsst/pex/policy/Policy.h>
 #include <lsst/afw/formatters/SourceFormatters.h>
 #include <lsst/afw/formatters/Utils.h>
 #include <lsst/afw/detection/Source.h>
@@ -25,7 +26,9 @@ using lsst::daf::persistence::BoostStorage;
 using lsst::daf::persistence::DbStorage;
 using lsst::daf::persistence::DbTsvStorage;
 using lsst::daf::persistence::Storage;
+using lsst::pex::policy::Policy;
 using lsst::afw::detection::Source;
+using lsst::afw::detection::SourceVector;
 
 namespace lsst {
 namespace afw {
@@ -281,7 +284,7 @@ template void SourceVectorFormatter::delegateSerialize<boost::archive::text_iarc
 void SourceVectorFormatter::write(
     Persistable const *   persistable,
     Storage::Ptr          storage,
-    DataProperty::PtrType additionalData
+    lsst::daf::base::DataProperty::PtrType additionalData
 ) {
     if (persistable == 0) {
         throw ex::InvalidParameter("No Persistable provided");
@@ -363,7 +366,7 @@ void SourceVectorFormatter::write(
 
 Persistable* SourceVectorFormatter::read(
     Storage::Ptr          storage,
-    DataProperty::PtrType additionalData
+    lsst::daf::base::DataProperty::PtrType additionalData
 ) {
     std::auto_ptr<SourceVector> p(new SourceVector);
 
@@ -449,7 +452,7 @@ Persistable* SourceVectorFormatter::read(
 }
 
 
-void SourceVectorFormatter::update(Persistable*, Storage::Ptr, DataProperty::PtrType) {
+void SourceVectorFormatter::update(Persistable*, Storage::Ptr, lsst::daf::base::DataProperty::PtrType) {
     throw ex::Runtime("SourceVectorFormatter: updates not supported");
 }
 

@@ -21,6 +21,7 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 
 #include <lsst/daf/base.h>
 #include <lsst/daf/persistence.h>
+#include <lsst/daf/persistence/DataPropertyFormatter.h>
 #include <lsst/pex/logging/Trace.h>
 #include <lsst/afw/formatters/MaskedImageFormatter.h>
 #include <lsst/afw/formatters/ImageFormatter.h>
@@ -39,6 +40,7 @@ using lsst::daf::persistence::BoostStorage;
 using lsst::daf::persistence::FitsStorage;
 using lsst::daf::persistence::Storage;
 using lsst::afw::image::MaskedImage;
+using lsst::afw::image::maskPixelType;
 
 namespace lsst {
 namespace afw {
