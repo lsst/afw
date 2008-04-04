@@ -33,7 +33,7 @@ lsst::afw::math::FixedKernel::FixedKernel()
  * \brief Construct a FixedKernel from an image
  */
 lsst::afw::math::FixedKernel::FixedKernel(
-    Image<PixelT> const &image)     ///< image for kernel
+    lsst::afw::image::Image<PixelT> const &image)     ///< image for kernel
 :
     Kernel(image.getCols(), image.getRows(), 0),
     _image(image),
@@ -44,13 +44,13 @@ lsst::afw::math::FixedKernel::FixedKernel(
 // Member Functions
 //
 void lsst::afw::math::FixedKernel::computeImage(
-    Image<PixelT> &image,
+    lsst::afw::image::Image<PixelT> &image,
     PixelT &imSum,
     double x,
     double y,
     bool doNormalize
 ) const {
-    typedef Image<PixelT>::pixel_accessor pixelAccessor;
+    typedef lsst::afw::image::Image<PixelT>::pixel_accessor pixelAccessor;
     if ((image.getCols() != this->getCols()) || (image.getRows() != this->getRows())) {
         throw lsst::pex::exceptions::InvalidParameter("image is the wrong size");
     }

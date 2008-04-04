@@ -386,8 +386,8 @@ int Mask<MaskPixelT>::countMask(
     const vw::BBox2i maskRegion
 ) const {
     int count = 0;
-    Vector<int32, 2> ulCorner = maskRegion.min();
-    Vector<int32, 2> lrCorner = maskRegion.max();
+    vw::Vector<boost::int32_t, 2> ulCorner = maskRegion.min();
+    vw::Vector<boost::int32_t, 2> lrCorner = maskRegion.max();
 
     for (int y=ulCorner[1]; y<lrCorner[1]; y++) {
         for (int x=ulCorner[0]; x<lrCorner[0]; x++) {
@@ -412,7 +412,7 @@ typename Mask<MaskPixelT>::MaskPtrT Mask<MaskPixelT>::getSubMask(const vw::BBox2
     MaskIVwPtrT croppedMask(new MaskIVwT());
     *croppedMask = copy(crop(*_vwImagePtr, maskRegion));
     MaskPtrT newMask(new Mask<MaskPixelT>(croppedMask));
-    Vector<int, 2> bboxOffset = maskRegion.min();
+    vw::Vector<int, 2> bboxOffset = maskRegion.min();
     newMask->setOffsetRows(bboxOffset[1] + _offsetRows);
     newMask->setOffsetCols(bboxOffset[0] + _offsetCols);
 

@@ -27,12 +27,12 @@ int main() {
                 new lsst::afw::math::IntegerDeltaFunction2<lsst::afw::math::Kernel::PixelT>(x, y)
             );
             lsst::afw::math::Kernel::PtrT kernelPtr(
-#if 0
-		new lsst::afw::math::AnalyticKernel(kfuncPtr, kernelCols, kernelRows)
+#if 1
+		        new lsst::afw::math::AnalyticKernel(kfuncPtr, kernelCols, kernelRows)
 #else
                 new lsst::afw::math::DeltaFunctionKernel(x, y, kernelCols, kernelRows)
 #endif
-                                            );
+            );
             kernelVec.push_back(kernelPtr);
             ++ind;
         }

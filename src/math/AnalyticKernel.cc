@@ -66,13 +66,13 @@ lsst::afw::math::AnalyticKernel::AnalyticKernel(
 {}
 
 void lsst::afw::math::AnalyticKernel::computeImage(
-    Image<PixelT> &image,
+    lsst::afw::image::Image<PixelT> &image,
     PixelT &imSum,
     double x,
     double y,
     bool doNormalize
 ) const {
-    typedef Image<PixelT>::pixel_accessor pixelAccessor;
+    typedef lsst::afw::image::Image<PixelT>::pixel_accessor pixelAccessor;
     if ((image.getCols() != this->getCols()) || (image.getRows() != this->getRows())) {
         throw lsst::pex::exceptions::InvalidParameter("image is the wrong size");
     }

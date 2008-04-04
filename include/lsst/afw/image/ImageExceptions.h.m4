@@ -1,6 +1,6 @@
 // -*- lsst-c++ -*-
-#if !defined(LSST_FW_EXCEPTION)      //! multiple inclusion guard macro
-#define LSST_FW_EXCEPTION 1
+#ifndef LSST_AFW_IMAGE_EXCEPTIONS
+#define LSST_AFW_IMAGE_EXCEPTIONS
 dnl "dnl" is the m4 comment syntax
 dnl
 undefine(`format')dnl ' Stop m4 expanding format
@@ -59,7 +59,8 @@ dnl
 
 
 namespace lsst {
-namespace fw {
+namespace afw {
+namespace image {
 
         dnl
         dnl define(name, body) defines an m4 macro
@@ -192,6 +193,5 @@ public:
     LSST_NEW_EXCEPTION(OutOfPlaneSpace,
                        Insufficient Plane allocation);
 
-}
-}
-#endif
+}}} // namespace lsst::afw::image
+#endif // LSST_AFW_IMAGE_EXCEPTIONS

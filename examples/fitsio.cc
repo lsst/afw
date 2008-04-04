@@ -1,6 +1,7 @@
 #include <iostream>
-#include <vw/Image/Manipulation.h>
-#include "lsst/pex/exceptions.h"
+
+#include <vw/Image.h>
+#include <vw/FileIO.h>
 
 int main(int ac, char **av) {
     if (ac < 2) {

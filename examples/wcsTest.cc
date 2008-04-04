@@ -44,11 +44,11 @@ int main(int argc, char **argv) {
     
     // Testing input col, row values 
 
-    lsst::afw::math::Coord2D minCoord(1.0,1.0);
-    lsst::afw::math::Coord2D colRow(mskdImage.getCols(), mskdImage.getRows());
+    lsst::afw::image::Coord2D minCoord(1.0,1.0);
+    lsst::afw::image::Coord2D colRow(mskdImage.getCols(), mskdImage.getRows());
 
-    lsst::afw::math::Coord2D sky1 = wcs.colRowToRaDec(minCoord);
-    lsst::afw::math::Coord2D sky2 = wcs.colRowToRaDec(colRow);
+    lsst::afw::image::Coord2D sky1 = wcs.colRowToRaDec(minCoord);
+    lsst::afw::image::Coord2D sky2 = wcs.colRowToRaDec(colRow);
 
     std::cout << "ra, decl of " << inFilename << " at ("<< minCoord[0] << " " << minCoord[1] <<") = " << endl;
     std::cout << "ra: " << sky1[0] << " decl: " << sky1[1] << endl << endl;
@@ -68,8 +68,8 @@ int main(int argc, char **argv) {
     double miRa2 = sky2[0];
     double miDecl2 = sky2[1];
 
-    lsst::afw::math::Coord2D pix1 = wcs.raDecToColRow(miRa1, miDecl1);
-    lsst::afw::math::Coord2D pix2 = wcs.raDecToColRow(miRa2, miDecl2);
+    lsst::afw::image::Coord2D pix1 = wcs.raDecToColRow(miRa1, miDecl1);
+    lsst::afw::image::Coord2D pix2 = wcs.raDecToColRow(miRa2, miDecl2);
 
     std::cout << "col, row of " << inFilename << " at ("<< miRa1 << " " << miDecl1<<") = " << endl;
     std::cout << "col: " << pix1[0] << " row: " << pix1[1] << endl << endl;
@@ -85,8 +85,8 @@ int main(int argc, char **argv) {
     raDecl2[0] = sky2[0];
     raDecl2[1] = sky2[1];
 
-    lsst::afw::math::Coord2D pix3 = wcs.raDecToColRow(raDecl1);
-    lsst::afw::math::Coord2D pix4 = wcs.raDecToColRow(raDecl2);
+    lsst::afw::image::Coord2D pix3 = wcs.raDecToColRow(raDecl1);
+    lsst::afw::image::Coord2D pix4 = wcs.raDecToColRow(raDecl2);
 
         std::cout << "col, row of " << inFilename << " at ("<< raDecl1[0] << " " << raDecl1[1]<<") = " << endl;
     std::cout << "col: " << pix3[0] << " row: " << pix3[1] << endl << endl;

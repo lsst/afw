@@ -13,8 +13,8 @@
 #include <lsst/pex/exceptions.h>
 #include <lsst/afw/math/Kernel.h>
 
-lsst::afw::generic_kernel_tag lsst::afw::generic_kernel_tag_; ///< Used as default value in argument lists
-lsst::afw::deltafunction_kernel_tag lsst::afw::deltafunction_kernel_tag_; ///< Used as default value in argument lists
+lsst::afw::math::generic_kernel_tag lsst::afw::math::generic_kernel_tag_; ///< Used as default value in argument lists
+lsst::afw::math::deltafunction_kernel_tag lsst::afw::math::deltafunction_kernel_tag_; ///< Used as default value in argument lists
 
 //
 // Constructors

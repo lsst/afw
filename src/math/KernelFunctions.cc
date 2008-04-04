@@ -6,7 +6,7 @@
  *
  * \ingroup afw
  */
-#include <stdio>
+#include <iostream>
 
 #include <boost/format.hpp>
 

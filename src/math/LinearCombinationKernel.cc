@@ -82,7 +82,7 @@ lsst::afw::math::LinearCombinationKernel::LinearCombinationKernel(
 }
 
 void lsst::afw::math::LinearCombinationKernel::computeImage(
-    Image<PixelT> &image,
+    lsst::afw::image::Image<PixelT> &image,
     PixelT &imSum,
     double x,
     double y,
@@ -94,10 +94,10 @@ void lsst::afw::math::LinearCombinationKernel::computeImage(
     if (this->isSpatiallyVarying()) {
         this->computeKernelParametersFromSpatialModel(this->_kernelParams, x, y);
     }
-    Image<PixelT>::ImageIVwPtrT vwImagePtr = image.getIVwPtr();
+    lsst::afw::image::Image<PixelT>::ImageIVwPtrT vwImagePtr = image.getIVwPtr();
     
     bool isFirst = true;
-    std::vector<boost::shared_ptr<Image<PixelT> > >::const_iterator
+    std::vector<boost::shared_ptr<lsst::afw::image::Image<PixelT> > >::const_iterator
         kImPtrIter = _kernelImagePtrList.begin();
     std::vector<double>::const_iterator kParIter = _kernelParams.begin();
     for ( ; kImPtrIter != _kernelImagePtrList.end(); ++kImPtrIter, ++kParIter, isFirst = false) {

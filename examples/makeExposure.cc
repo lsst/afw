@@ -203,7 +203,7 @@ int main() {
         // original Exposure's MaskedImage BBox.  
         vw::int32 subWidth2 = width + 5;
         vw::int32 subHeight2 = height + 5;
-        const vw::BBox2i &subRegion2 = BBox2i(orx, ory, subWidth2, subHeight2); 
+        const vw::BBox2i &subRegion2 = vw::BBox2i(orx, ory, subWidth2, subHeight2); 
      
         try {
             lsst::afw::image::Exposure<pixelType, lsst::afw::image::maskPixelType> subExpImage2 =  miWcsExpImage.getSubExposure(subRegion2); 
