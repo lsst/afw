@@ -20,7 +20,6 @@ using namespace posix;
 
 #include "simpleFits.h"
 
-using namespace lsst::afw::display;
 using lsst::daf::base::DataProperty;
 
 #define FITS_SIZE 2880
@@ -299,9 +298,9 @@ namespace {
     }
 }
 
-void writeVwFits(int fd,                // file descriptor to write to
+void lsst::afw::display::writeVwFits(int fd,                // file descriptor to write to
                  const vw::ImageBuffer& buff, // The data to write
-                 const Wcs *Wcs         // which Wcs to use for pixel
+                 const lsst::afw::image::Wcs *Wcs         // which Wcs to use for pixel
                 ) {
     /*
      * What sort if image is it?
@@ -393,9 +392,9 @@ void writeVwFits(int fd,                // file descriptor to write to
 
 /******************************************************************************/
 
-void writeVwFits(const std::string &filename, // file to write or "| cmd"
+void lsst::afw::display::writeVwFits(const std::string &filename, // file to write or "| cmd"
                  const vw::ImageBuffer &data, // The data to write
-                 const Wcs *Wcs         // which Wcs to use for pixel
+                 const lsst::afw::image::Wcs *Wcs         // which Wcs to use for pixel
                 ) {
     int fd;
     if ((filename.c_str())[0] == '|') {		// a command
@@ -415,7 +414,7 @@ void writeVwFits(const std::string &filename, // file to write or "| cmd"
 
     try {
         writeVwFits(fd, data, Wcs);
-    } catch(Exception &e) {
+    } catch(lsst::pex::exceptions::ExceptionStack &e) {
         (void)close(fd);
         throw e;
     }
