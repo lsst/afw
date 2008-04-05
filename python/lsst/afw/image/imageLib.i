@@ -34,15 +34,18 @@ and some underlying VisionWorkbench classes.
 #   include <lsst/pex/logging/Trace.h>
 #   include <lsst/pex/policy/Policy.h>
 #   include <lsst/afw/image.h>
+#   include "lsst/afw/image/ImageUtils.h" // not in image.h
 %}
 
 %inline %{
 namespace lsst { namespace afw { namespace image { } } }
+namespace lsst { namespace daf { namespace data { } } }
 namespace vw {}
 namespace boost { namespace filesystem {} }
     
 using namespace lsst;
 using namespace lsst::afw::image;
+using namespace lsst::daf::data;
 using namespace vw;
 %}
 
