@@ -33,7 +33,7 @@ Python interface to lsst::afw::math classes
 #   include <boost/shared_ptr.hpp>
 #   include <boost/any.hpp>
 #   include <boost/array.hpp>
-#   include "lsst/utils.h"
+#   include "lsst/utils/Utils.h"
 #   include "lsst/daf/base.h"
 #   include "lsst/pex/logging/Trace.h"
 #   include "lsst/afw/image.h"

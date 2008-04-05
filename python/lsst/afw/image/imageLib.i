@@ -26,19 +26,23 @@ and some underlying VisionWorkbench classes.
 #   include <boost/shared_ptr.hpp>
 #   include <boost/any.hpp>
 #   include <boost/array.hpp>
-#   include "lsst/utils.h"
-#   include "lsst/daf/base.h"
-#   include "lsst/pex/logging/Trace.h"
-#   include "lsst/afw/image.h"
+#   include <lsst/utils/Utils.h>
+#   include <lsst/daf/base.h>
+#   include <lsst/daf/data.h>
+#   include <lsst/daf/persistence.h>
+#   include <lsst/pex/exceptions.h>
+#   include <lsst/pex/logging/Trace.h>
+#   include <lsst/pex/policy/Policy.h>
+#   include <lsst/afw/image.h>
 %}
 
 %inline %{
-namespace lsst { namespace afw { } }
+namespace lsst { namespace afw { namespace image { } } }
 namespace vw {}
 namespace boost { namespace filesystem {} }
     
 using namespace lsst;
-using namespace lsst::afw;
+using namespace lsst::afw::image;
 using namespace vw;
 %}
 
@@ -123,11 +127,12 @@ def version(HeadURL = r"$HeadURL$"):
 %import <vw/FileIO/DiskImageResource.h>
 
 %include "lsst/daf/base.h"
-%import "lsst/utils/Utils.h"
-%import "lsst/pex/policy/Policy.h"
 %include "lsst/daf/data/LsstData.h"
-%import "lsst/daf/base/DataProperty.i"
-%import "lsst/pex/exceptions.h"
+%import <lsst/daf/data.h>
+%import <lsst/daf/persistence.h>
+%import <lsst/pex/exceptions.h>
+%import <lsst/pex/logging/Trace.h>
+%import <lsst/pex/policy/Policy.h>
 
 /******************************************************************************/
 // Masks and MaskedImages
@@ -253,7 +258,7 @@ def version(HeadURL = r"$HeadURL$"):
 %}
 }
 
-%include "lsst/daf/persistenceMacros.i"
+%include "lsst/daf/base/persistenceMacros.i"
 %template(ImageBaseU)           vw::ImageViewBase<vw::ImageView<boost::uint16_t> >;
 %template(ImageViewU)           vw::ImageView<boost::uint16_t>;
 %template(ImageU)               lsst::afw::image::Image<boost::uint16_t>;
