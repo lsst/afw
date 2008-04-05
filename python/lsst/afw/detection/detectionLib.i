@@ -16,6 +16,7 @@ Python interface to lsst::afw::detection classes
 %{
 #include "lsst/afw/detection/Source.h"
 #include "lsst/afw/formatters/Utils.h"
+#include <sstream>
 %}
 
 %inline %{
