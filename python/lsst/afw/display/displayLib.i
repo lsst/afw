@@ -24,10 +24,10 @@ Basic routines to talk to ds9
 
 %inline %{
 namespace lsst { namespace afw { } }
+namespace lsst { namespace afw { namespace display { } } }
 namespace vw {}
     
-using namespace lsst;
-using namespace lsst::afw;
+using namespace lsst::afw::display;
 using namespace vw;
 %}
 
