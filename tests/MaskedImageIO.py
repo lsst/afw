@@ -14,10 +14,10 @@ import unittest
 
 import eups
 
-import lsst.daf.tests as dafTests
+import lsst.utils.tests as utilsTests
 import lsst.afw.image as afwImage
 import lsst.afw.display.ds9 as ds9
-import fwTests
+import afwTests
 import lsst.pex.exceptions as pexEx
 
 dataDir = eups.productDir("afwdata")
@@ -125,16 +125,16 @@ class MaskedImageTestCase(unittest.TestCase):
 def suite():
     """Returns a suite containing all the test cases in this module."""
 
-    dafTests.init()
+    utilsTests.init()
 
     suites = []
     suites += unittest.makeSuite(MaskedImageTestCase)
-    suites += unittest.makeSuite(dafTests.MemoryTestCase)
+    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
 def run(exit=False):
     """Run the tests"""
-    dafTests.run(suite(), exit)
+    utilsTests.run(suite(), exit)
 
 if __name__ == "__main__":
     run(True)

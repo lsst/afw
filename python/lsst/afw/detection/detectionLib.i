@@ -27,7 +27,7 @@ namespace boost { namespace filesystem {} }
 %}
 
 %pythoncode %{
-import lsst.fw.exceptions
+import lsst.afw.exceptions
 %}
 
 %include "lsst/p_lsstSwig.i"
