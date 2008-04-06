@@ -18,7 +18,7 @@ env.Program(["SourceIO_1.cc"], LIBS=env.getlibs("afw pex"))
 env.Program(["SourceIO_2.cc"], LIBS=env.getlibs("afw pex"))
 env.Program(["wcsCopy.cc"], LIBS=env.getlibs("afw"))
 
-env.CheckSwig("python", ilang="c++")
+env.CheckSwig("python", ilang="c++",includedProducts="utils")
 env.Append(SWIGFLAGS=" -Ipython")
 
 #env["SWIGFLAGS"] += " -I%s/%s" % (os.environ["MWI_DIR"], "python")
@@ -51,10 +51,13 @@ else:
         MaskedImageIO_2 = inFile,
         MaskIO_1 = "%s_msk.fits" % inFile,
     )
-    tests = lsst.tests.Control(env, args = testArgs, verbose = True)
+    tests = lsst.tests.Control(env, args = testArgs, ignoreList=['afwTests.py'], verbose = True)
     tests.run("*.cc")
     
     # set up python tests
     for target in tests.run("*.py"):
         env.Depends(target, afwTests)
-        env.Depends(target, "../python/lsst/afw/_afwLib%s" % (env["LDMODULESUFFIX"]))
+        env.Depends(target, "../python/lsst/afw/detection/_detectionLib%s" % (env["LDMODULESUFFIX"]))
+        env.Depends(target, "../python/lsst/afw/display/_displayLib%s" % (env["LDMODULESUFFIX"]))
+        env.Depends(target, "../python/lsst/afw/image/_imageLib%s" % (env["LDMODULESUFFIX"]))
+        env.Depends(target, "../python/lsst/afw/math/_mathLib%s" % (env["LDMODULESUFFIX"]))

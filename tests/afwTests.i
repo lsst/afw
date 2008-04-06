@@ -6,7 +6,7 @@ Image processing code
 %enddef
 
 %feature("autodoc", "1");
-%module(package="afwTests",docstring=afwTests_DOCSTRING) afwTests
+%module(package="lsst::afw::afwTests",docstring=afwTests_DOCSTRING) afwTests
 
 // Suppress swig complaints
 // I had trouble getting %warnfilter to work; hence the pragmas
@@ -20,11 +20,13 @@ Image processing code
 
 %inline %{
 namespace lsst { namespace afw { } }
+namespace lsst { namespace afw { namespace image { } } }
 namespace vw {}
 namespace boost { namespace filesystem {} }
     
 using namespace lsst;
 using namespace lsst::afw;
+using namespace lsst::afw::image;
 using namespace vw;
 %}
 
