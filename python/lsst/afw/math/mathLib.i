@@ -6,7 +6,7 @@ Python interface to lsst::afw::math classes
 %enddef
 
 %feature("autodoc", "1");
-%module(docstring=mathLib_DOCSTRING) imageLib
+%module(package="lsst.afw.math",docstring=mathLib_DOCSTRING) mathLib
 
 // Suppress swig complaints
 // copied from afw/image/imageLib.i

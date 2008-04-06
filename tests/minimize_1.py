@@ -4,7 +4,7 @@ import unittest
 
 import numpy
 
-import lsst.daf.tests as dafTests
+import lsst.utils.tests as utilsTests
 import lsst.afw.math as afwMath
 
 __all__ = ["computePsfMatchingKernelForMaskedImage"]
@@ -18,7 +18,7 @@ class MinimizeTestCase(unittest.TestCase):
         errorDef = 0.1
     
         polyOrder = 1
-        polyFuncPtr = afwMath.Function2DPtr(afw.PolynomialFunction2D(polyOrder))
+        polyFuncPtr = afwMath.Function2DPtr(afwMath.PolynomialFunction2D(polyOrder))
         
         modelParams = [0.1, 0.2, 0.3]
         polyFuncPtr.setParameters(modelParams)
@@ -34,7 +34,7 @@ class MinimizeTestCase(unittest.TestCase):
         stepsize *= 0.1
             
         # Minimize!
-        fitResults = afw.minimize(
+        fitResults = afwMath.minimize(
             polyFuncPtr,
             initialParameters,
             stepsize,
@@ -56,13 +56,13 @@ class MinimizeTestCase(unittest.TestCase):
 
 def suite():
     """Returns a suite containing all the test cases in this module."""
-    dafTests.init()
+    utilsTests.init()
 
     suites = []
     suites += unittest.makeSuite(MinimizeTestCase)
-    suites += unittest.makeSuite(dafTests.MemoryTestCase)
+    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)
 
 if __name__ == "__main__":
-    dafTests.run(suite())
+    utilsTests.run(suite())

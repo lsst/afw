@@ -1,5 +1,5 @@
 """
-Test lsst.afwImage.Exposure
+Test lsst.afw.image.Exposure
 
 Author: Nicole M. Silvestri, University of Washington
 Contact: nms@astro.washington.edu
@@ -14,13 +14,13 @@ import unittest
 import numpy
 
 import eups
-import lsst.afwImage.image as afwImage
-import lsst.daf.tests as dafTests
-import lsst.daf.utils as dafUtils
+import lsst.afw.image as afwImage
+import lsst.utils.tests as utilsTests
+import lsst.pex.logging as logging
 import lsst.pex.exceptions as pexEx
 
 verbosity = 0 # increase to see trace
-dafUtils.Trace_setVerbosity("lsst.afw", verbosity)
+logging.Trace_setVerbosity("lsst.afw.image", verbosity)
 
 dataDir = eups.productDir("afwdata")
 if not dataDir:
@@ -304,13 +304,13 @@ def suite():
     """
     Returns a suite containing all the test cases in this module.
     """
-    dafTests.init()
+    utilsTests.init()
 
     suites = []
     suites += unittest.makeSuite(ExposureTestCase)
-    suites += unittest.makeSuite(dafTests.MemoryTestCase)
+    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)
 
 if __name__ == "__main__":
-    dafTests.run(suite())
+    utilsTests.run(suite())

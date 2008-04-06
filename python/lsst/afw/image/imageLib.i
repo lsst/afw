@@ -7,7 +7,7 @@ and some underlying VisionWorkbench classes.
 %enddef
 
 %feature("autodoc", "1");
-%module(docstring=imageLib_DOCSTRING) imageLib
+%module(package="lsst.afw.image",docstring=imageLib_DOCSTRING) imageLib
 
 // Suppress swig complaints
 // I had trouble getting %warnfilter to work; hence the pragmas

@@ -44,7 +44,7 @@ dnl
   *   -  NoMaskPlane : Failure to find specified Mask Plane (to be relocated)
   *   -  OutOfPlaneSpace :  Insufficient Plane allocation (to be relocated)
   *
-  * \ingroup mwi
+  * \ingroup afw
   *
   * \ author Robert Lupton
   * \ author Roberta Allsman

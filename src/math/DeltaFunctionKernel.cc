@@ -60,3 +60,4 @@ void lsst::afw::math::DeltaFunctionKernel::computeImage(
     imPtr.advance(c, r);
     *imPtr = imSum = 1;
 }
+
