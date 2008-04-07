@@ -8,18 +8,17 @@
 //##====----------------                                ----------------====##/
 
 #include <sys/time.h>
-#include <cstdlib>
+#include <iostream>
+#include <sstream>
 #include <cstring>
 #include <stdexcept>
 
 #include <boost/cstdint.hpp>
 
 #include <lsst/daf/base.h>
+#include <lsst/daf/persistence.h>
 #include <lsst/pex/exceptions.h>
 #include <lsst/pex/policy/Policy.h>
-#include <lsst/daf/persistence/DbAuth.h>
-#include <lsst/daf/persistence/Persistence.h>
-#include <lsst/daf/persistence/LogicalLocation.h>
 
 #include <lsst/afw/detection/Source.h>
 #include <lsst/afw/formatters/Utils.h>
@@ -33,8 +32,8 @@ using lsst::daf::persistence::Persistence;
 using lsst::daf::persistence::Storage;
 using lsst::pex::policy::Policy;
 
+namespace afwFormatters = lsst::afw::formatters;
 using namespace lsst::afw::detection;
-using namespace lsst::afw::formatters;
 
 
 #define Assert(pred, msg) do { if (!(pred)) { doThrow((msg), __LINE__); } } while(false)
@@ -231,7 +230,7 @@ static void testDb(std::string const & storageType) {
         Assert(v.get() != 0, "Couldn't cast to SourceVector");
         Assert(v->at(0) == ds, "persist()/retrieve() resulted in SourceVector corruption");
     }
-    formatters::dropAllVisitSliceTables(loc, policy, props);
+    afwFormatters::dropAllVisitSliceTables(loc, policy, props);
 
     // 2. Test on a SourceVector
     dsv.clear();
@@ -255,7 +254,7 @@ static void testDb(std::string const & storageType) {
         std::sort(v->begin(), v->end(), SourceLessThan());
         Assert(v.get() != &dsv && *v == dsv, "persist()/retrieve() resulted in SourceVector corruption");
     }
-    formatters::dropAllVisitSliceTables(loc, policy, props);
+    afwFormatters::dropAllVisitSliceTables(loc, policy, props);
 }
 
 
@@ -300,7 +299,7 @@ static void testDb2(std::string const & storageType) {
     // in the absence of an ORDER BY clause)
     std::sort(v->begin(), v->end(), SourceLessThan());
     Assert(v.get() != &all && *v == all, "persist()/retrieve() resulted in SourceVector corruption");
-    formatters::dropAllVisitSliceTables(loc, nested, props);
+    afwFormatters::dropAllVisitSliceTables(loc, nested, props);
 }
 
 

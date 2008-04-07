@@ -39,7 +39,7 @@ void test() {
     Trace::setVerbosity(".", 100);
 
 // ------------- Test constructors
-    typedef uint8 MaskPixelType;
+    typedef lsst::afw::image::maskPixelType MaskPixelType;
     typedef afwImage::Mask<MaskPixelType>::MaskIVwT MaskImageType;
     typedef afwImage::Mask<MaskPixelType>::MaskIVwPtrT MaskImagePtrType;
     typedef afwImage::Mask<MaskPixelType>::MaskPtrT MaskPtrType;
@@ -50,13 +50,12 @@ void test() {
     afwImage::Mask<MaskPixelType> testMask(maskImage);
     cout << maskImage.use_count() << endl;
 
-    typedef uint16 MaskPixelType2;
-    typedef afwImage::Mask<MaskPixelType2>::MaskIVwT MaskImageType2;
-    typedef afwImage::Mask<MaskPixelType2>::MaskIVwPtrT MaskImagePtrType2;
+    typedef afwImage::Mask<MaskPixelType>::MaskIVwT MaskImageType2;
+    typedef afwImage::Mask<MaskPixelType>::MaskIVwPtrT MaskImagePtrType2;
 
     MaskImagePtrType2 maskImage2(new MaskImageType2(300,400));
 
-    afwImage::Mask<MaskPixelType2> testMask2(maskImage2);
+    afwImage::Mask<MaskPixelType> testMask2(maskImage2);
 
     afwImage::Mask<MaskPixelType> testMask3(300,400);
 
@@ -151,8 +150,8 @@ void test() {
 
     testMask.clearMaskPlane(planeCR);
 
-    PixelCoord coord;
-    list<PixelCoord> pixelList;
+    lsst::afw::image::PixelCoord coord;
+    list<lsst::afw::image::PixelCoord> pixelList;
 
     for (int x=0; x<300; x+=1) {
 	  for (int y=300; y<400; y+=20) {

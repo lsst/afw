@@ -22,7 +22,7 @@ namespace pexEx = lsst::pex::exceptions;
  */
 void test(char *name) {
 
-    typedef uint16 MaskPixelType;
+    typedef lsst::afw::image::maskPixelType MaskPixelType;
     typedef float ImagePixelType;
 
     lsst::afw::image::Mask<MaskPixelType>::MaskPlaneDict LSSTPlaneDefs;

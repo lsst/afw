@@ -21,7 +21,7 @@ namespace pexEx = lsst::pex::exceptions;
  */
 void test(char *name) {
 
-    typedef uint16 MaskPixelType;
+    typedef lsst::afw::image::maskPixelType MaskPixelType;
     typedef float ImagePixelType;
 
     lsst::afw::image::MaskedImage<ImagePixelType, MaskPixelType> testMasked;
@@ -39,7 +39,7 @@ void test(char *name) {
 
     lsst::afw::image::Wcs testWcs(metaDataPtr);
 
-    Coord2D pix, sky;
+    lsst::afw::image::Coord2D pix, sky;
 
 //     pix[0] = testMasked.getCols() / 2.0;
 //     pix[1] = testMasked.getRows() / 2.0;

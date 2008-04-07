@@ -9,8 +9,9 @@
 
 #include <stdexcept>
 #include <sys/time.h>
+#include <iostream>
+#include <sstream>
 #include <cstring>
-#include <cstdlib>
 
 #include <boost/cstdint.hpp>
 
@@ -22,7 +23,6 @@
 #include <lsst/afw/detection/Source.h>
 #include <lsst/afw/formatters/Utils.h>
 
-
 using boost::int64_t;
 
 using lsst::daf::base::DataProperty;
@@ -32,8 +32,8 @@ using lsst::daf::persistence::LogicalLocation;
 using lsst::daf::persistence::Persistence;
 using lsst::daf::persistence::Storage;
 
+namespace afwFormatters = lsst::afw::formatters;
 using namespace lsst::afw::detection;
-using namespace lsst::afw::formatters;
 
 
 #define Assert(pred, msg) do { if (!(pred)) { doThrow((msg), __LINE__); } } while(false)
@@ -242,7 +242,7 @@ static void testDb(std::string const & storageType) {
         Assert(v.get() != 0, "Couldn't cast to SourceVector");
         Assert(v->at(0) == dsv[0], "persist()/retrieve() resulted in SourceVector corruption");
     }
-    formatters::dropAllVisitSliceTables(loc, policy, props);
+    afwFormatters::dropAllVisitSliceTables(loc, policy, props);
 
     // 2. Test on a SourceVector
     dsv.clear();
@@ -273,7 +273,7 @@ static void testDb(std::string const & storageType) {
         std::sort(v->begin(), v->end(), SourceLessThan());
         Assert(v.get() != &dsv && *v == dsv, "persist()/retrieve() resulted in SourceVector corruption");
     }
-    formatters::dropAllVisitSliceTables(loc, policy, props);
+    afwFormatters::dropAllVisitSliceTables(loc, policy, props);
 }
 
 

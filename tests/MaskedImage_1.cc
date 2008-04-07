@@ -68,8 +68,8 @@ int test(int argc, char**argv) {
     Trace::setDestination(cout);
     Trace::setVerbosity(".", 0);
     
-    typedef uint8 MaskPixelType;
-    typedef float32 ImagePixelType;
+    typedef lsst::afw::image::maskPixelType MaskPixelType;
+    typedef float ImagePixelType;
 
     lsst::afw::image::MaskedImage<ImagePixelType,MaskPixelType > testMaskedImage1;
     try {
@@ -139,7 +139,7 @@ int test(int argc, char**argv) {
 
     testMaskedImage1.writeFits(argv[3]);
 
-    DataProperty::PtrType metaDataPtr = testMaskedImage1.getImage()->getMetaData();
+    lsst::daf::base::DataProperty::PtrType metaDataPtr = testMaskedImage1.getImage()->getMetaData();
 
     cout << "Number of FITS header cards: " 
        << FitsFormatter::countFITSHeaderCards(metaDataPtr, false) << endl;
