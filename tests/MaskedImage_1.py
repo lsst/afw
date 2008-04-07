@@ -8,7 +8,7 @@ or
    >>> import MaskedImage_1; MaskedImage_1.run()
 """
 
-import pdb                              # we may want to say pdb.set_trace()
+import pdb  # we may want to say pdb.set_trace()
 import unittest
 
 import lsst.utils.tests as utilsTests
@@ -59,12 +59,12 @@ class MaskedImageTestCase(unittest.TestCase):
         self.maskedImage2 += self.maskedImage1
     
     def testCopyConstructors(self):
-        image = fwTests.copyImageF(afwImage.ImageF(100, 100))
-        mask = fwTests.copyMaskU(afwImage.MaskU(100, 100))
-        maskedImage = fwTests.copyMaskedImageF(self.maskedImage1)
+        image = afwTests.copyImageF(afwImage.ImageF(100, 100))
+        mask = afwTests.copyMaskU(afwImage.MaskU(100, 100))
+        maskedImage = afwTests.copyMaskedImageF(self.maskedImage1)
 
     def testPixelProc(self):
-        fooFunc = fwTests.testPixProcFuncF(self.maskedImage1)
+        fooFunc = afwTests.testPixProcFuncF(self.maskedImage1)
 
         fooFunc.init()
         self.maskedImage1.processPixels(fooFunc)
@@ -74,16 +74,16 @@ class MaskedImageTestCase(unittest.TestCase):
 
         mask = self.maskedImage1.getMask()
 
-        pixelList = afw.listPixelCoord()
+        pixelList = afwImage.listPixelCoord()
         for x in range(0, mask.getCols()):
             for y in range(300, 400, 20):
-                pixelList.push_back(afw.PixelCoord(x, y))
+                pixelList.push_back(afwImage.PixelCoord(x, y))
         mask.setMaskPlaneValues(mask.getMaskPlane('CR'), pixelList)
 
-        pixelList = afw.listPixelCoord()
+        pixelList = afwImage.listPixelCoord()
         for x in range(300, 400, 20):
             for y in range(0, mask.getRows()):
-                pixelList.push_back(afw.PixelCoord(x, y))
+                pixelList.push_back(afwImage.PixelCoord(x, y))
         mask.setMaskPlaneValues(mask.getMaskPlane('INTERP'), pixelList)
 
         if display:

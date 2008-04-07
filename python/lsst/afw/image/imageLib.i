@@ -7,7 +7,7 @@ and some underlying VisionWorkbench classes.
 %enddef
 
 %feature("autodoc", "1");
-%module(package="lsst.afw.image",docstring=imageLib_DOCSTRING) imageLib
+%module(docstring=imageLib_DOCSTRING) imageLib
 
 // Suppress swig complaints
 // I had trouble getting %warnfilter to work; hence the pragmas
@@ -34,7 +34,6 @@ and some underlying VisionWorkbench classes.
 #   include <lsst/pex/logging/Trace.h>
 #   include <lsst/pex/policy/Policy.h>
 #   include <lsst/afw/image.h>
-#   include "lsst/afw/image/ImageUtils.h" // not in image.h
 %}
 
 %inline %{
@@ -304,9 +303,9 @@ def version(HeadURL = r"$HeadURL$"):
   // typename CompoundChannelType<typename ViewT::pixel_type>::type
   // mean_channel_value( const ImageViewBase<ViewT> &view_ ) {
 
-%template(mean_channel_valueD)  mean_channel_value<ImageView<double> >;
-%template(mean_channel_valueF)  mean_channel_value<ImageView<float> >;
-%template(mean_channel_valueU)  mean_channel_value<ImageView<boost::uint16_t> >;
+%template(mean_channel_valueD)  vw::mean_channel_value<ImageView<double> >;
+%template(mean_channel_valueF)  vw::mean_channel_value<ImageView<float> >;
+%template(mean_channel_valueU)  vw::mean_channel_value<ImageView<boost::uint16_t> >;
 
 %pythoncode %{
     def mean_channel_value(img):
@@ -321,13 +320,13 @@ def version(HeadURL = r"$HeadURL$"):
             return None
 %}
 
-%template(BBox2i)               vw::BBox<int32, 2>;
+%template(BBox2i)               vw::BBox<vw::int32, 2>;
 %template(BBox2f)               vw::BBox<float, 2>;
 
-%boost_shared_ptr(BBox2iPtr, vw::BBox<int32, 2>);
+%boost_shared_ptr(BBox2iPtr, vw::BBox<vw::int32, 2>);
 %boost_shared_ptr(BBox2fPtr, vw::BBox<float, 2>);
 
-%template(Vector2i)             Vector<int32, 2>;
+%template(Vector2i)             Vector<vw::int32, 2>;
 %template(Vector2f)             Vector<float, 2>;
 
 %template(listPixelCoord)  std::list<lsst::afw::image::PixelCoord>;

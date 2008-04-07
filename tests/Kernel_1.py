@@ -32,7 +32,7 @@ class KernelTestCase(unittest.TestCase):
             for col in range(inImage.getCols()):
                 inImage.set(col, row, inArr[col, row])
         
-        fixedKernel = afw.FixedKernel(inImage);
+        fixedKernel = afwMath.FixedKernel(inImage);
         outImage = fixedKernel.computeNewImage(0.0, 0.0, False)[0]
         outArr = imTestUtils.arrayFromImage(outImage)
         if not numpy.allclose(inArr, outArr):
@@ -52,8 +52,8 @@ class KernelTestCase(unittest.TestCase):
         kCols = 5
         kRows = 8
 
-        fPtr =  afwMath.Function2DPtr(afw.GaussianFunction2D(1.0, 1.0))
-        k = afw.AnalyticKernel(fPtr, kCols, kRows)
+        fPtr =  afwMath.Function2DPtr(afwMath.GaussianFunction2D(1.0, 1.0))
+        k = afwMath.AnalyticKernel(fPtr, kCols, kRows)
         fArr = numpy.zeros(shape=[k.getCols(), k.getRows()], dtype=float)
         for xsigma in (0.1, 1.0, 3.0):
             for ysigma in (0.1, 1.0, 3.0):
@@ -88,14 +88,14 @@ class KernelTestCase(unittest.TestCase):
             y = float(row - ctrRow)
             for col in range(kCols):
                 x = float(col - ctrCol)
-                fPtr = afwMath.Function2DPtr(afw.IntegerDeltaFunction2D(x, y))
-                kPtr = afwMath.KernelPtr(afw.AnalyticKernel(fPtr, kCols, kRows))
+                fPtr = afwMath.Function2DPtr(afwMath.IntegerDeltaFunction2D(x, y))
+                kPtr = afwMath.KernelPtr(afwMath.AnalyticKernel(fPtr, kCols, kRows))
                 basisImage = kPtr.computeNewImage()[0]
                 basisImArrList.append(imTestUtils.arrayFromImage(basisImage))
                 kVec.append(kPtr)
         
         kParams = [0.0]*len(kVec)
-        k = afw.LinearCombinationKernel(kVec, kParams)
+        k = afwMath.LinearCombinationKernel(kVec, kParams)
         for ii in range(len(kVec)):
             kParams = [0.0]*len(kVec)
             kParams[ii] = 1.0
@@ -127,11 +127,11 @@ class KernelTestCase(unittest.TestCase):
         kVec = afwMath.KernelListD()
         for basisImArr in basisImArrList:
             basisImage = imTestUtils.imageFromArray(basisImArr)
-            kPtr = afwMath.KernelPtr(afw.FixedKernel(basisImage))
+            kPtr = afwMath.KernelPtr(afwMath.FixedKernel(basisImage))
             kVec.append(kPtr)
 
         # create spatially varying linear combination kernel
-        sFuncPtr =  afwMath.Function2DPtr(afw.PolynomialFunction2D(1))
+        sFuncPtr =  afwMath.Function2DPtr(afwMath.PolynomialFunction2D(1))
         
         # spatial parameters are a list of entries, one per kernel parameter;
         # each entry is a list of spatial parameters
@@ -140,7 +140,7 @@ class KernelTestCase(unittest.TestCase):
             (0.0, 0.0, 1.0),
         )
         
-        k = afw.LinearCombinationKernel(kVec, sFuncPtr, sParams)
+        k = afwMath.LinearCombinationKernel(kVec, sFuncPtr, sParams)
         kImage = afwImage.ImageD(kCols, kRows)
         for colPos, rowPos, coeff0, coeff1 in [
             (0.0, 0.0, 0.0, 0.0),

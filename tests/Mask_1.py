@@ -12,12 +12,12 @@ import lsst.pex.exceptions as pexEx
 import lsst.afw.display.ds9 as ds9
 try:
     type(display)
-except pexEx.NameError:
+except NameError:
     display = False
 
 try:
     type(verbose)
-except pexEx.NameError:
+except NameError:
     verbose = 0
 
 class MaskTestCase(unittest.TestCase):
@@ -136,7 +136,7 @@ class MaskTestCase(unittest.TestCase):
         def tst():
             self.testMask |= testMask3
 
-        self.assertRaises(LsstRuntime, tst)
+        self.assertRaises(pexEx.LsstRuntime, tst)
         self.testMask.this.acquire()    # Work around bug in swig "mask |= mask;" leaks when |= throws
 
     def testInvalidPlaneOperations2(self):
@@ -160,7 +160,7 @@ class MaskTestCase(unittest.TestCase):
         def tst():
             self.testMask |= testMask3
 
-        self.assertRaises(LsstRuntime, tst)
+        self.assertRaises(pexEx.LsstRuntime, tst)
         self.testMask.this.acquire()    # Work around bug in swig "mask |= mask;" leaks when |= throws
 
     def XXtestConformMaskPlanes(self):

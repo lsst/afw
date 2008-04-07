@@ -26,7 +26,7 @@ if not dataDir:
 
 try:
     type(display)
-except pexEx.NameError:
+except NameError:
     display = False
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -117,7 +117,7 @@ class MaskedImageTestCase(unittest.TestCase):
         def tst(mask=mask):
             mask |= testMask
 
-        self.assertRaises(LsstRuntime, tst)
+        self.assertRaises(pexEx.LsstRuntime, tst)
         mask.this.acquire() # Work around bug in swig "mask |= mask;" leaks when |= throws
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

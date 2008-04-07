@@ -1,12 +1,12 @@
 // -*- lsst-c++ -*-
-%define fwDisplay_DOCSTRING
+%define displayLib_DOCSTRING
 "
 Basic routines to talk to ds9
 "
 %enddef
 
 %feature("autodoc", "1");
-%module(docstring=fwDisplay_DOCSTRING) fwDisplay
+%module(docstring=displayLib_DOCSTRING) displayLib
 
 // Suppress swig complaints from vw
 // 317: Specialization of non-template
@@ -25,17 +25,15 @@ Basic routines to talk to ds9
 %inline %{
 namespace lsst { namespace afw { } }
 namespace lsst { namespace afw { namespace display { } } }
-namespace vw {}
     
 using namespace lsst::afw::display;
-using namespace vw;
 %}
 
 %init %{
 %}
 
 %pythoncode %{
-import lsst.fw.exceptions
+import lsst.afw.image
 %}
 
 %include "lsst/p_lsstSwig.i"
