@@ -1,6 +1,6 @@
 // -*- lsst-c++ -*-
 ///////////////////////////////////////////////////////////
-//  Image.h
+//  Wcs.h
 //  Implementation of the Class Wcs
 //  Created on:      09-Feb-2007 15:57:46
 //  Original author: Tim Axelrod

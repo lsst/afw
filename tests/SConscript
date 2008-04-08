@@ -52,7 +52,7 @@ else:
         MaskedImageIO_2 = inFile,
         MaskIO_1 = "%s_msk.fits" % inFile,
     )
-    tests = lsst.tests.Control(env, args = testArgs, ignoreList=['afwTests.py'], verbose = True)
+    tests = lsst.tests.Control(env, args = testArgs, ignoreList=["MaskIO_2","afwTests.py","afwTests_wrap"], verbose = True)
     tests.run("*.cc")
     
     # set up python tests
