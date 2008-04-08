@@ -22,7 +22,10 @@ Image processing code
 namespace lsst { namespace afw { } }
 namespace lsst { namespace afw { namespace image { } } }
 namespace vw {}
-namespace boost { namespace filesystem {} }
+namespace boost {
+    namespace filesystem {}
+    class bad_any_cast;                 // for lsst/pex/policy/Policy.h
+}
     
 using namespace lsst;
 using namespace lsst::afw;
@@ -41,11 +44,12 @@ using namespace vw;
 %pythoncode %{
 import lsst.daf.data
 import lsst.utils
-import lsst.afw.exceptions
+import lsst.pex.exceptions
 %}
 
 /******************************************************************************/
 
+%import "lsst/daf/base/Citizen.h"
 %import "lsst/utils/Utils.h"
 %import "lsst/daf/base.h"
 %import "lsst/daf/data/LsstData.h"
@@ -53,6 +57,7 @@ import lsst.afw.exceptions
 %import "lsst/pex/exceptions.h"
 %import "lsst/afw/image/Mask.h"
 %import "lsst/afw/image/MaskedImage.h"
+
 /******************************************************************************/
 //
 // Define a class to do very little with a PixelProcessingFunc

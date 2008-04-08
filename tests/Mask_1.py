@@ -35,10 +35,10 @@ class MaskTestCase(unittest.TestCase):
         self.region = afwImage.BBox2i(100, 300, 10, 40)
         self.subTestMask = self.testMask.getSubMask(self.region)
 
-        self.pixelList = afw.listPixelCoord()
+        self.pixelList = afwImage.listPixelCoord()
         for x in range(0, 300):
             for y in range(300, 400, 20):
-                self.pixelList.push_back(afw.PixelCoord(x, y))
+                self.pixelList.push_back(afwImage.PixelCoord(x, y))
 
     def tearDown(self):
         del self.subTestMask
@@ -235,7 +235,7 @@ class MaskTestCase(unittest.TestCase):
 
     def testMaskPixelBooleanFunc(self):
         """Test MaskPixelBooleanFunc"""
-        testCrFuncInstance = fwTests.testCrFuncD(self.testMask)
+        testCrFuncInstance = afwTests.testCrFuncD(self.testMask)
         testCrFuncInstance.init() # get the latest plane info from testMask
         CR_plane = self.testMask.getMaskPlane("CR")
         self.assertNotEqual(CR_plane, -1)

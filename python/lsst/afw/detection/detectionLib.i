@@ -20,25 +20,29 @@ Python interface to lsst::afw::detection classes
 %}
 
 %inline %{
-namespace boost { namespace filesystem {} }
+namespace boost {
+    namespace filesystem {}
+    class bad_any_cast;
+}
 %}
 
 %init %{
 %}
 
 %pythoncode %{
-import lsst.afw.exceptions
+import lsst.pex.exceptions
 %}
 
 %include "lsst/p_lsstSwig.i"
-%include "lsst/daf/base/persistenceMacros.i"
 
-%import "lsst/daf/base.h"
+%import "lsst/daf/base/Citizen.h"
+%import "lsst/daf/base/Persistable.h"
+%import "lsst/daf/base/DataProperty.h"
 %import "lsst/daf/persistence/LogicalLocation.h"
+//%include "lsst/daf/base/persistenceMacros.i"
 %import "lsst/daf/persistence/Persistence.h"
 %import "lsst/daf/persistence/Storage.h"
 %import "lsst/pex/policy/Policy.h"
-
 
 %include <stdint.i>
 %include <std_vector.i>

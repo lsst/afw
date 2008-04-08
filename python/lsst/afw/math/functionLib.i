@@ -1,4 +1,4 @@
-
+// -*- lsst-c++ -*-
 %{
 #include "lsst/afw/math/Function.h"
 #include "lsst/afw/math/FunctionLibrary.h"

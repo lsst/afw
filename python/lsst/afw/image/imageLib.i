@@ -40,7 +40,10 @@ and some underlying VisionWorkbench classes.
 namespace lsst { namespace afw { namespace image { } } }
 namespace lsst { namespace daf { namespace data { } } }
 namespace vw {}
-namespace boost { namespace filesystem {} }
+namespace boost {
+    namespace filesystem {}
+    class bad_any_cast;                 // for lsst/pex/policy/Policy.h
+}
     
 using namespace lsst;
 using namespace lsst::afw::image;
@@ -128,13 +131,17 @@ def version(HeadURL = r"$HeadURL$"):
 #endif
 %import <vw/FileIO/DiskImageResource.h>
 
-%include "lsst/daf/base.h"
-%include "lsst/daf/data/LsstData.h"
-%import <lsst/daf/data.h>
-%import <lsst/daf/persistence.h>
-%import <lsst/pex/exceptions.h>
-%import <lsst/pex/logging/Trace.h>
-%import <lsst/pex/policy/Policy.h>
+%import "lsst/daf/base/Citizen.h"
+%import "lsst/daf/base/Persistable.h"
+%import "lsst/daf/base/DataProperty.h"
+%import "lsst/daf/data/LsstData.h"
+%import "lsst/daf/data/LsstImpl_DC3.h"
+%import "lsst/daf/data/LsstBase.h"
+%import "lsst/daf/data.h"
+%import "lsst/daf/persistence/Persistence.h"
+%import "lsst/pex/exceptions.h"
+%import "lsst/pex/logging/Trace.h"
+%import "lsst/pex/policy/Policy.h"
 
 /******************************************************************************/
 // Masks and MaskedImages
@@ -145,7 +152,6 @@ def version(HeadURL = r"$HeadURL$"):
 %ignore lsst::afw::image::Image::origin;        // no need to swig origin (and the _wrap.cc file is invalid)
 %ignore lsst::afw::image::Mask::origin;         // no need to swig origin (and the _wrap.cc file is invalid)
 
-%include "lsst/daf/data/LsstBase.h"
 %ignore lsst::afw::image::Filter::operator int;
 %include "lsst/afw/image/Filter.h"
 %include "lsst/afw/image/Image.h"
@@ -320,13 +326,13 @@ def version(HeadURL = r"$HeadURL$"):
             return None
 %}
 
-%template(BBox2i)               vw::BBox<vw::int32, 2>;
-%template(BBox2f)               vw::BBox<float, 2>;
+%template(BBox2i)               BBox<int32, 2>;
+%template(BBox2f)               BBox<float, 2>;
 
-%boost_shared_ptr(BBox2iPtr, vw::BBox<vw::int32, 2>);
-%boost_shared_ptr(BBox2fPtr, vw::BBox<float, 2>);
+%boost_shared_ptr(BBox2iPtr, BBox<int32, 2>);
+%boost_shared_ptr(BBox2fPtr, BBox<float, 2>);
 
-%template(Vector2i)             Vector<vw::int32, 2>;
+%template(Vector2i)             Vector<int32, 2>;
 %template(Vector2f)             Vector<float, 2>;
 
 %template(listPixelCoord)  std::list<lsst::afw::image::PixelCoord>;

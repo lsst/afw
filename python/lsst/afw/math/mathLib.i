@@ -43,6 +43,16 @@ Python interface to lsst::afw::math classes
 %init %{
 %}
 
+%inline %{
+namespace lsst { namespace afw { namespace image { } } }
+namespace lsst { namespace daf { namespace data { } } }
+namespace vw {}
+    
+using namespace lsst::afw::image;
+using namespace lsst::daf::data;
+using namespace vw;
+%}
+
 %include "lsst/p_lsstSwig.i"
 %include "../image/lsstImageTypes.i"
 
@@ -71,6 +81,14 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
         return "%s (setup: %s)" % (version_svn, version_eups)
 
 %}
+
+%import "lsst/daf/base/Citizen.h"
+%import "lsst/daf/base/Persistable.h"
+%import "lsst/daf/base/DataProperty.h"
+%import "lsst/daf/data/LsstData.h"
+%import "lsst/daf/data/LsstImpl_DC3.h"
+%import "lsst/daf/data/LsstBase.h"
+%import "lsst/afw/image/Mask.h"
 
 %include "functionLib.i"
 %include "kernelLib.i"

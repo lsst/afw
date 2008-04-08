@@ -12,6 +12,7 @@
 
 // Handle return-by-reference argument.
 %apply double& OUTPUT { double& imSum };
+
 %include "lsst/afw/math/Kernel.h"
 %include "lsst/afw/math/KernelFunctions.h"
 //
@@ -56,20 +57,5 @@
 // Local Variables: ***
 // eval: (setq indent-tabs-mode nil) ***
 // End: ***
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
