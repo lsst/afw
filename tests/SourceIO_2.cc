@@ -2,7 +2,7 @@
 //
 //##====----------------                                ----------------====##/
 //
-//! \file   SourceIo_1.cc
+//! \file
 //! \brief  Testing of IO via the persistence framework for Source and SourceVector.
 //
 //##====----------------                                ----------------====##/

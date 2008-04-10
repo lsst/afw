@@ -2,7 +2,7 @@
 //
 //##====----------------                                ----------------====##/
 //
-//! \file   SourceFormatters.h
+//! \file
 //! \brief  Formatter subclasses for Source
 //!         and Persistable containers thereof.
 //

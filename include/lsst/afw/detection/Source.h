@@ -2,7 +2,7 @@
 //
 //##====----------------                                ----------------====##/
 //
-//! \file   Source.h
+//! \file
 //! \brief  The C++ representation of a Difference-Image-Analysis Source.
 //
 //##====----------------                                ----------------====##/

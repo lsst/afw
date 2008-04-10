@@ -1,6 +1,6 @@
 // -*- LSST-C++ -*- // fixed format comment for emacs
 /**
-* \file wcsTest.cc
+* \file
 * \brief Simple test code for the Wcs Class
 *        Created on:    23-Jul-2007 12:28:00 PM PDT (by NMS)
 * \author Nicole M. Silvestri

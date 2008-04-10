@@ -9,7 +9,7 @@ dnl comment to go into the output file
 // This file is machine generated from Runtime.h.m4. Please do not edit directly
 //         
 dnl
-/** \file  fwExceptions.h
+/** \file
   * \brief LSST exception handler classes for generic runtime exception events
   *
   * When LSST Data Managment software forces (i.e. throws) an exception 

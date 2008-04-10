@@ -2,7 +2,7 @@
 //
 //##====----------------                                ----------------====##/
 //
-//! \file   Filter.h
+//! \file
 //! \brief  Class encapsulating an identifier for an LSST filter.
 //
 //##====----------------                                ----------------====##/

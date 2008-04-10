@@ -1,6 +1,6 @@
 // -*- LSST-C++ -*- // fixed format comment for emacs
 /**
-  * \file Exposure.h
+  * \file
   *
   * \class lsst::afw::image::Exposure 
   *

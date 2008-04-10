@@ -1,6 +1,6 @@
 // -*- LSST-C++ -*- // fixed format comment for emacs
 /**
-  * \file makeExposure.cc
+  * \file
   *
   * \ingroup afw
   *

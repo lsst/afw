@@ -2,7 +2,7 @@
 //
 //##====----------------                                ----------------====##/
 //
-//! \file   Filter.cc
+//! \file
 //! \brief  Implements looking up a filter identifier by name.
 //
 //##====----------------                                ----------------====##/

@@ -2,7 +2,7 @@
 //
 //##====----------------                                ----------------====##/
 //
-//! \file   SourceFormatters.cc
+//! \file
 //! \brief  Implementation of persistence for Source instances
 //
 //##====----------------                                ----------------====##/
