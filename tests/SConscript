@@ -33,8 +33,7 @@ if not dataDir:
 
 else:
     # copy AFWDATA_DIR to the test's environment
-    if False:
-         env["ENV"]["AFWDATA_DIR"] = os.environ["AFWDATA_DIR"]
+    env["ENV"]["AFWDATA_DIR"] = os.environ["AFWDATA_DIR"]
     
     if lsst.daf.persistence.DbAuth.available():
         env["ENV"]["SEAL_PLUGINS"] = os.environ["SEAL_PLUGINS"]    
