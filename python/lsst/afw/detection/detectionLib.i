@@ -34,12 +34,12 @@ import lsst.pex.exceptions
 %}
 
 %include "lsst/p_lsstSwig.i"
+%include "lsst/daf/base/persistenceMacros.i"
 
 %import "lsst/daf/base/Citizen.h"
 %import "lsst/daf/base/Persistable.h"
 %import "lsst/daf/base/DataProperty.h"
 %import "lsst/daf/persistence/LogicalLocation.h"
-//%include "lsst/daf/base/persistenceMacros.i"
 %import "lsst/daf/persistence/Persistence.h"
 %import "lsst/daf/persistence/Storage.h"
 %import "lsst/pex/policy/Policy.h"
