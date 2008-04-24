@@ -34,6 +34,7 @@ and some underlying VisionWorkbench classes.
 #   include <lsst/pex/logging/Trace.h>
 #   include <lsst/pex/policy/Policy.h>
 #   include <lsst/afw/image.h>
+#   include "lsst/afw/image/DiskImageResourceFITS.h"
 %}
 
 %inline %{
@@ -131,12 +132,12 @@ def version(HeadURL = r"$HeadURL$"):
 #endif
 %import <vw/FileIO/DiskImageResource.h>
 
-%import "lsst/daf/base/Citizen.h"
+%include "lsst/daf/base/Citizen.h"
 %import "lsst/daf/base/Persistable.h"
 %import "lsst/daf/base/DataProperty.h"
-%import "lsst/daf/data/LsstData.h"
-%import "lsst/daf/data/LsstImpl_DC3.h"
-%import "lsst/daf/data/LsstBase.h"
+%include "lsst/daf/data/LsstData.h"
+%include "lsst/daf/data/LsstImpl_DC3.h"
+%include "lsst/daf/data/LsstBase.h"
 %import "lsst/daf/data.h"
 %import "lsst/daf/persistence/Persistence.h"
 %import "lsst/pex/exceptions.h"
