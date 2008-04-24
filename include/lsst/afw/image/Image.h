@@ -55,9 +55,13 @@ namespace image {
         
         void replaceSubImage(const vw::BBox2i imageRegion, ImagePtrT insertImage);
 
-        inline ImageChannelT operator ()(int x, int y) const;
+        ImageChannelT operator ()(int x, int y) const {
+            return (*_vwImagePtr)(x, y);
+        }
 
-        inline pixel_accessor origin() const;
+        pixel_accessor origin() const {
+            return getIVwPtr()->origin();
+        }
         
         Image<ImagePixelT>& operator += (const Image<ImagePixelT>& inputImage);
         Image<ImagePixelT>& operator -= (const Image<ImagePixelT>& inputImage);
@@ -68,14 +72,30 @@ namespace image {
         Image<ImagePixelT>& operator *= (const ImagePixelT scalar);
         Image<ImagePixelT>& operator /= (const ImagePixelT scalar);
         
-        inline unsigned int getCols() const;
-        inline unsigned int getRows() const;
-        inline unsigned int getOffsetCols() const;
-        inline unsigned int getOffsetRows() const;
+        unsigned int getCols() const {
+            return _vwImagePtr->cols();
+        }
+
+        unsigned int getRows() const {
+            return _vwImagePtr->rows();
+        }
         
-        inline ImageIVwPtrT getIVwPtr() const;
+        unsigned int getOffsetCols() const {
+            return _offsetCols;
+        }
         
-        inline ImageIVwT& getIVw() const;
+        unsigned int getOffsetRows() const {
+            return _offsetRows;
+        }
+        
+
+        ImageIVwPtrT getIVwPtr() const {
+            return _vwImagePtr;
+        }
+        
+        ImageIVwT& getIVw() const {
+            return *_vwImagePtr;
+        }
 
         double getGain() const;
         
@@ -88,16 +108,16 @@ namespace image {
         unsigned int _offsetRows;
         unsigned int _offsetCols;
 
-        inline void setOffsetRows(unsigned int offset);
-        inline void setOffsetCols(unsigned int offset);
+        void setOffsetRows(unsigned int offset) {
+            _offsetRows = offset;
+        }
+        
+        void setOffsetCols(unsigned int offset) {
+            _offsetCols = offset;
+        }
 
     };
 
 }}}  // lsst::afw::image
-
-// Included definitions for templated and inline member functions
-#ifndef SWIG // don't bother SWIG with .cc files
-#include "Image.cc"
-#endif
 
 #endif // LSST_IMAGE_IMAGE_H

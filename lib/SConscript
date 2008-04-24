@@ -16,6 +16,7 @@ env.SharedLibrary(
         "image/Exposure.cc",
         "image/Filter.cc",
         "image/Mask.cc",
+        "image/Image.cc",
         "image/Wcs.cc",
         "math/AnalyticKernel.cc",
         "math/DeltaFunctionKernel.cc",
