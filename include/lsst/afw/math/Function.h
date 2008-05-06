@@ -13,6 +13,7 @@
 #include <stdexcept>
 #include <sstream>
 #include <vector>
+#include <utility> // for std::pair
 
 #include <lsst/daf/data/LsstBase.h>
 #include <lsst/pex/exceptions.h>
@@ -42,8 +43,9 @@ namespace math {
      * such as Functor in VisualWorkbench) is because the Kernel class requires function
      * objects with a standard interface for setting and getting function parameters.
      *
-     * To do:
+     * \todo
      * - Implement separable functions
+     * - Implement deepCopy method
      *
      * \ingroup afw
      */
@@ -85,8 +87,17 @@ namespace math {
         /**
          * \brief Return the function parameters
          */
-        std::vector<double> const &getParameters() const {
+        std::vector<double> const getParameters() const {
             return _params;
+        }
+        
+        /**
+         * \brief Access the specified function parameter WITHOUT range checking
+         *
+         * Warning: no range checking is performed
+         */
+        double &operator[] (unsigned int ind) {
+            return _params[ind];
         }
         
         /**
@@ -114,7 +125,7 @@ namespace math {
 
     protected:
         std::vector<double> _params;
-    };   
+    };
     
     /**
      * \brief A Function taking one argument.
@@ -153,7 +164,7 @@ namespace math {
         virtual std::string toString(void) const {
             return std::string("Function1: ") + Function<ReturnT>::toString();
         };
-    };    
+    };
     
     /**
      * \brief A Function taking two arguments.
@@ -194,6 +205,160 @@ namespace math {
         virtual std::string toString(void) const {
             return std::string("Function2: ") + Function<ReturnT>::toString();
         };
+    };
+
+    
+    /**
+     * \brief A Function whose result is the product of one or more basis functions.
+     *
+     * Subclass and override operator() to do useful work.
+     *
+     * Note that the internal _params vector is not used.
+     *
+     * \ingroup afw
+     */
+    template<typename ReturnT>
+    class SeparableFunction : public Function<ReturnT> {
+    public:
+        typedef std::vector<boost::shared_ptr<Function1<ReturnT> > > functionListType;
+        /**
+         * \brief Construct a SeparableFunction from a list of basis functions
+         */
+        explicit SeparableFunction(
+            functionListType &functionList)   ///< list of functions
+        :
+            Function<ReturnT>(0),
+            _functionList(functionList)
+        {
+            unsigned int indexOffset = 0;
+            for (typename functionListType::const_iterator funcIter = _functionList.begin();
+                 funcIter != _functionList.end();  ++funcIter) {
+                const unsigned int nParams = (*funcIter)->getNParameters();
+                for (unsigned int ii = 0; ii < nParams; ++ii) {
+                    _funcIndexOffsetList.push_back(_functionIndexOffsetPairType(*funcIter, indexOffset));
+                }
+                indexOffset += nParams;
+            }
+        }
+        
+        virtual ~SeparableFunction() {};
+    
+        /**
+         * \brief Return the basis functions.
+         *
+         * Warning: this is a shallow copy: if you modify the parameters of a returned basis function
+         * it modifies the corresponding parameters of this SeparableFunction.
+         */
+        functionListType getFunctions() const {
+            return _functionList;
+        }
+    
+        /**
+         * \brief Return the number of basis functions.
+         *
+         * Warning: this is a shallow copy: if you modify the parameters of a returned basis function
+         * it modifies the corresponding parameters of this SeparableFunction.
+         */
+        unsigned int getNFunctions() const {
+            return _functionList.size();
+        }
+    
+        /**
+         * \brief Return the number of function parameters
+         */
+        unsigned int getNParameters() const {
+            return _funcIndexOffsetList.size();
+        }
+        
+        /**
+         * \brief Return the function parameters
+         */
+        std::vector<double> const getParameters() const {
+            std::vector<double> params(this->getNParameters());
+            std::vector<double>::iterator paramsIter = params.begin();
+            for (typename functionListType::const_iterator funcIter = _functionList.begin();
+                 funcIter != _functionList.end();  ++funcIter) {
+                const std::vector<double> funcParams = (*funcIter)->getParameters();
+                paramsIter = std::copy(funcParams.begin(), funcParams.end(), paramsIter);
+            }
+            return params;
+        }
+        
+        /**
+         * \brief Access the specified function parameter WITHOUT range checking
+         *
+         * Warning: no range checking is performed
+         */
+        double &operator[] (unsigned int ind) {
+            _functionIndexOffsetPairType funcOffsetPair = _funcIndexOffsetList[ind];
+            return (*(funcOffsetPair.first))[ind - funcOffsetPair.second];
+        }
+        
+        /**
+         * \brief Set the function parameters
+         *
+         * \throw lsst::pex::exceptions::InvalidParameter if the wrong number of parameters is supplied.
+         */
+        void setParameters(std::vector<double> const &params) {
+            if (params.size() != _funcIndexOffsetList.size()) {
+                throw lsst::pex::exceptions::InvalidParameter("Wrong number of parameters");
+            }
+            
+            std::vector<double>::const_iterator paramsIter = params.begin();
+            for (typename functionListType::const_iterator funcIter = _functionList.begin();
+                 funcIter != _functionList.end();  ++funcIter) {
+                const unsigned int nFuncParams = (*funcIter)->getNParameters();
+                for (unsigned int ind = 0; ind < nFuncParams; ++ind) {
+                    (**funcIter)[ind] = *paramsIter++;
+                }
+            }
+        }
+
+        virtual std::string toString(void) const {
+            std::stringstream os;
+            os << "SeparableFunction(";
+            bool isFirst = true;
+            for (typename functionListType::const_iterator funcIter = _functionList.begin();
+                 funcIter != _functionList.end();  ++funcIter) {
+                if (isFirst) {
+                    isFirst = false;
+                } else {
+                    os << ",";
+                }
+                os << (*funcIter)->toString();
+            }
+            os << ")";
+            return os.str();
+        };
+
+    protected:
+        typedef std::pair<boost::shared_ptr<Function1<ReturnT> >, unsigned int> _functionIndexOffsetPairType;
+        functionListType _functionList;
+        std::vector<_functionIndexOffsetPairType> _funcIndexOffsetList; ///< parameter index -> function, index offset
+    };
+    
+    /**
+     * \brief A SeparableFunction whose result is the product of two basis functions.
+     *
+     * \ingroup afw
+     */
+    template<typename ReturnT>
+    class SeparableFunction2 : public SeparableFunction<ReturnT> {
+    public:
+        typedef std::vector<boost::shared_ptr<Function1<ReturnT> > > functionListType;
+        explicit SeparableFunction2(
+            functionListType &functionList)   ///< list of functions
+        :
+            SeparableFunction<ReturnT>(functionList)
+        {
+            if (functionList.size() != 2) {
+                throw lsst::pex::exceptions::InvalidParameter("Must supply exactly two functions");
+            }
+        }
+        
+        ReturnT operator() (double x, double y) const {
+            return (*(this->_functionList[0]))(x) * (*(this->_functionList[1]))(y);
+        }
     };
 
 }}}   // lsst::afw::math
