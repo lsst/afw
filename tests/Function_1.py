@@ -261,6 +261,23 @@ class FunctionTestCase(unittest.TestCase):
                 continue
             self.assertRaises(Exception, afwMath.PolynomialFunction2D, numpy.zeros(numParams, dtype=float))
 
+    def testSeparableGaussian(self):
+        funcTuple = (
+            afwMath.Function1FPtr(afwMath.GaussianFunction1F(1.0)),
+            afwMath.Function1FPtr(afwMath.GaussianFunction1F(2.0)),
+        )
+        funcVec = afwMath.Function1FVector(funcTuple)
+        sepFunc = afwMath.SeparableFunction2F(funcVec)
+        
+        for xParam in (0.1, 1.0):
+            for yParam in (0.1, 1.0):
+                for x in numpy.arange(-10.0, 10.0, 0.2):
+                    for y in numpy.arange(-10.0, 10.0, 0.2):
+                        desValue = funcTuple[0](x) * funcTuple[1](y)
+                        testValue = sepFunc(x, y)
+                        if not numpy.allclose(desValue, testValue):
+                            raise RuntimeError("Error: xParam=%s, yParam=%s, x=%s, y=%s, desValue=%s, testValue=%s" % \
+                                (xParam, yParam, x, y, desValue, testValue))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

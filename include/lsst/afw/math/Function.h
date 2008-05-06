@@ -92,12 +92,17 @@ namespace math {
         }
         
         /**
-         * \brief Access the specified function parameter WITHOUT range checking
-         *
-         * Warning: no range checking is performed
+         * \brief Get the specified function parameter WITHOUT range checking
          */
-        double &operator[] (unsigned int ind) {
+        double getParameter (unsigned int ind) {
             return _params[ind];
+        }
+        
+        /**
+         * \brief Set the specified function parameter WITHOUT range checking
+         */
+        void setParameter (unsigned int ind, double newValue) {
+            _params[ind] = newValue;
         }
         
         /**
@@ -285,15 +290,21 @@ namespace math {
         }
         
         /**
-         * \brief Access the specified function parameter WITHOUT range checking
-         *
-         * Warning: no range checking is performed
+         * \brief Get the specified function parameter WITHOUT range checking
          */
-        double &operator[] (unsigned int ind) {
+        double getParameter(unsigned int ind, double newValue) {
             _functionIndexOffsetPairType funcOffsetPair = _funcIndexOffsetList[ind];
-            return (*(funcOffsetPair.first))[ind - funcOffsetPair.second];
+            return funcOffsetPair.first->getParameter(ind - funcOffsetPair.second);
         }
         
+        
+        /**
+         * \brief Set the specified function parameter WITHOUT range checking
+         */
+        void setParameter(unsigned int ind, double newValue) {
+            _functionIndexOffsetPairType funcOffsetPair = _funcIndexOffsetList[ind];
+            funcOffsetPair.first->setParameter(ind - funcOffsetPair.second, newValue);
+        }
         /**
          * \brief Set the function parameters
          *
@@ -309,7 +320,7 @@ namespace math {
                  funcIter != _functionList.end();  ++funcIter) {
                 const unsigned int nFuncParams = (*funcIter)->getNParameters();
                 for (unsigned int ind = 0; ind < nFuncParams; ++ind) {
-                    (**funcIter)[ind] = *paramsIter++;
+                    (*funcIter)->setParameter(ind, *paramsIter++);
                 }
             }
         }
