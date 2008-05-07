@@ -10,8 +10,9 @@
  *
  * \ingroup afw
  */
-#include <stdexcept>
 #include <sstream>
+#include <stdexcept>
+#include <string>
 #include <vector>
 #include <utility> // for std::pair
 
@@ -59,20 +60,23 @@ namespace math {
          * The function parameters are initialized to 0.
          */
         explicit Function(
-            unsigned int nParams)   ///< number of function parameters
+            unsigned int nParams,   ///< number of function parameters
+            std::string name="Function")    ///< function name (for toString)
         :
             lsst::daf::data::LsstBase(typeid(this)),
-            _params(nParams)
+            _params(nParams),
+            _name(name)
         {}
 
         /**
          * \brief Construct a Function given the function parameters.
          */
         explicit Function(
-            std::vector<double> const &params)
+            std::vector<double> const &params,  ///< function parameters
+            std::string name="Function")    ///< function name (for toString)
         :
             lsst::daf::data::LsstBase(typeid(this)),
-            _params(params)   ///< function parameters
+            _params(params)
         {}
         
         virtual ~Function() {};
@@ -117,19 +121,11 @@ namespace math {
             _params = params;
         }
     
-        virtual std::string toString(void) const {
-            std::stringstream os;
-            os << "parameters: [ ";
-            for (std::vector<double>::const_iterator i = _params.begin(); i != _params.end(); ++i) {
-                if (i != _params.begin()) os << ", ";
-                os << *i;
-            }
-            os << " ]";
-            return os.str();
-        };
+        virtual std::string toString(void) const;
 
     protected:
         std::vector<double> _params;
+        std::string _name;
     };
     
     /**
@@ -148,27 +144,25 @@ namespace math {
          * The function parameters are initialized to 0.
          */
         explicit Function1(
-            unsigned int nParams)   ///< number of function parameters
+            unsigned int nParams,   ///< number of function parameters
+            std::string name="Function1")   ///< function name (for toString)
         :
-            Function<ReturnT>(nParams)
+            Function<ReturnT>(nParams, name)
         {}
 
         /**
          * \brief Construct a Function1 given the function parameters.
          */
         explicit Function1(
-            std::vector<double> const &params)   ///< function parameters
+            std::vector<double> const &params,   ///< function parameters
+            std::string name="Function1")   ///< function name (for toString)
         :
-            Function<ReturnT>(params)
+            Function<ReturnT>(params, name)
         {}
         
         virtual ~Function1() {};
     
         virtual ReturnT operator() (double x) const = 0;
-
-        virtual std::string toString(void) const {
-            return std::string("Function1: ") + Function<ReturnT>::toString();
-        };
     };
     
     /**
@@ -187,9 +181,10 @@ namespace math {
          * The function parameters are initialized to 0.
          */
         explicit Function2(
-            unsigned int nParams)   ///< number of function parameters
+            unsigned int nParams,   ///< number of function parameters
+            std::string name="Function2")   ///< function name (for toString)
         :
-            Function<ReturnT>(nParams)
+            Function<ReturnT>(nParams, name)
         {}
 
         /**
@@ -198,23 +193,22 @@ namespace math {
          * The number of function parameters is set to the length of params.
          */
         explicit Function2(
-            std::vector<double> const &params)   ///< function parameters
+            std::vector<double> const &params,   ///< function parameters
+            std::string name="Function2")   ///< function name (for toString)
         :
-            Function<ReturnT>(params)
+            Function<ReturnT>(params, name)
         {}
         
         virtual ~Function2() {};
     
         virtual ReturnT operator() (double x, double y) const = 0;
-
-        virtual std::string toString(void) const {
-            return std::string("Function2: ") + Function<ReturnT>::toString();
-        };
     };
 
     
     /**
      * \brief A Function whose result is the product of one or more basis functions.
+     *
+     * The basis functions must each be instances of Function1
      *
      * Subclass and override operator() to do useful work.
      *
@@ -230,9 +224,10 @@ namespace math {
          * \brief Construct a SeparableFunction from a list of basis functions
          */
         explicit SeparableFunction(
-            functionListType &functionList)   ///< list of functions
+            functionListType &functionList,   ///< list of Function1 basis functions
+            std::string name="SeparableFunction")   ///< function name
         :
-            Function<ReturnT>(0),
+            Function<ReturnT>(0, name),
             _functionList(functionList)
         {
             unsigned int indexOffset = 0;
@@ -325,22 +320,7 @@ namespace math {
             }
         }
 
-        virtual std::string toString(void) const {
-            std::stringstream os;
-            os << "SeparableFunction(";
-            bool isFirst = true;
-            for (typename functionListType::const_iterator funcIter = _functionList.begin();
-                 funcIter != _functionList.end();  ++funcIter) {
-                if (isFirst) {
-                    isFirst = false;
-                } else {
-                    os << ",";
-                }
-                os << (*funcIter)->toString();
-            }
-            os << ")";
-            return os.str();
-        };
+        virtual std::string toString(void) const;
 
     protected:
         typedef std::pair<boost::shared_ptr<Function1<ReturnT> >, unsigned int> _functionIndexOffsetPairType;
@@ -351,6 +331,8 @@ namespace math {
     /**
      * \brief A SeparableFunction whose result is the product of two basis functions.
      *
+     * The basis functions must both be instances of Function1
+     *
      * \ingroup afw
      */
     template<typename ReturnT>
@@ -358,9 +340,10 @@ namespace math {
     public:
         typedef std::vector<boost::shared_ptr<Function1<ReturnT> > > functionListType;
         explicit SeparableFunction2(
-            functionListType &functionList)   ///< list of functions
+            functionListType &functionList,   ///< list of Function1 functions
+            std::string name="SeparableFunction2")   ///< function name
         :
-            SeparableFunction<ReturnT>(functionList)
+            SeparableFunction<ReturnT>(functionList, name)
         {
             if (functionList.size() != 2) {
                 throw lsst::pex::exceptions::InvalidParameter("Must supply exactly two functions");
