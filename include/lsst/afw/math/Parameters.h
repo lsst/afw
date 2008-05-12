@@ -2,13 +2,24 @@
 #ifndef LSST_AFW_MATH_PARAMETERS_H
 #define LSST_AFW_MATH_PARAMETERS_H
 /**
- * \file
+ * @file
  *
- * \brief Define classes to manage parameters for Functions.
+ * @brief Define classes to manage parameters for Functions.
  *
- * \author Russell Owen
+ * Parameters emulate vectors for getting parameters
+ * However Parameters emulate Functions for setting parameters.
  *
- * \ingroup afw
+ * This was done for several reasons:
+ * * Using [] and size makes the code in subclasses of Function compact and easy to read.
+ *   It also improved backwards compatibility for code that was written when _params was a vector.
+ * * However, using [] for set requires exposing references to internals (a bad idea)
+ *   and it would be needlessly tricky to implement for SeparableParams.
+ * * Emulating the Function calls for setting parameters makes the delegation code
+ *   in Function a bit clearer and easier to write.
+ *
+ * @author Russell Owen
+ *
+ * @ingroup afw
  */
 #include <sstream>
 #include <stdexcept>
@@ -24,16 +35,16 @@ namespace afw {
 namespace math {
 
     /**
-     * \brief Manage a vector of Function parameters.
+     * @brief Manage a vector of Function parameters.
      *
-     * \ingroup afw
+     * @ingroup afw
      */
     template<typename ReturnT>
     class SimpleParameters : public lsst::daf::data::LsstBase {
     
     public:
         /**
-         * \brief Construct a SimpleParameters given the number of function parameters.
+         * @brief Construct a SimpleParameters given the number of function parameters.
          *
          * The function parameters are initialized to 0.
          */
@@ -45,7 +56,7 @@ namespace math {
         {}
 
         /**
-         * \brief Construct a SimpleParameters given the function parameters.
+         * @brief Construct a SimpleParameters given the function parameters.
          */
         explicit SimpleParameters(
             std::vector<double> const &params)  ///< function parameters
@@ -55,25 +66,40 @@ namespace math {
         {}
         
         virtual ~SimpleParameters() {};
-    
-        /**
-         * \brief Get the number of function parameters
-         */
-        unsigned int size() const {
-            return _params.size();
-        }
         
         /**
-         * \brief Get all function parameters
+         * @brief Get all function parameters
+         *
+         * @return all parameters as a vector
          */
         std::vector<double> const getParameters() const {
             return _params;
         }
         
         /**
-         * \brief Set all function parameters
+         * @brief Get one function parameter without range checking
          *
-         * \throw lsst::pex::exceptions::InvalidParameter if the wrong number of parameters is supplied.
+         * @return the value of the specified parameter
+         */
+        double operator[] (
+            unsigned int ind)   ///< index of parameter
+        const {
+            return _params[ind];
+        }
+    
+        /**
+         * @brief Get the number of function parameters
+         *
+         * @return the number of function parameters
+         */
+        unsigned int size() const {
+            return _params.size();
+        }
+        
+        /**
+         * @brief Set all function parameters
+         *
+         * @throw lsst::pex::exceptions::InvalidParameter if the wrong number of parameters is supplied.
          */
         void setParameters(
             std::vector<double> const &params)  ///< new function parameters
@@ -85,16 +111,7 @@ namespace math {
         }
         
         /**
-         * \brief Get one function parameter WITHOUT range checking
-         */
-        double operator[] (
-            unsigned int ind)   ///< index of parameter
-        const {
-            return _params[ind];
-        }
-        
-        /**
-         * \brief Set one function parameter WITHOUT range checking
+         * @brief Set one function parameter without range checking
          */
         void setParameter(
             unsigned int ind,   ///< index of parameter
@@ -111,17 +128,17 @@ namespace math {
     class Function1;
     
     /**
-     * \brief Manage parameters for separable functions
+     * @brief Manage parameters for separable functions
      *
-     * \ingroup afw
+     * @ingroup afw
      */
     template<typename ReturnT>
     class SeparableParameters: public lsst::daf::data::LsstBase {
     public:
-        typedef boost::shared_ptr<Function1<ReturnT> > Function1PtrType;
+        typedef typename Function1<ReturnT>::PtrType Function1PtrType;
         typedef std::vector<Function1PtrType> Function1ListType;
         /**
-         * \brief Construct a SeparableParameters from a list of basis functions
+         * @brief Construct a SeparableParameters from a list of basis functions
          */
         explicit SeparableParameters(
             Function1ListType const &functionList    ///< list of Function1 basis functions
@@ -142,36 +159,11 @@ namespace math {
         }
         
         virtual ~SeparableParameters() {};
-    
-        /**
-         * \brief Return the basis functions.
-         *
-         * Warning: this is a shallow copy: if you modify the parameters of a returned basis function
-         * it modifies the corresponding parameters of this SeparableParameters.
-         */
-        Function1ListType getFunctions() const {
-            return _functionList;
-        }
-    
-        /**
-         * \brief Return the number of basis functions.
-         *
-         * Warning: this is a shallow copy: if you modify the parameters of a returned basis function
-         * it modifies the corresponding parameters of this SeparableParameters.
-         */
-        unsigned int getNFunctions() const {
-            return _functionList.size();
-        }
-    
-        /**
-         * \brief Return the number of function parameters
-         */
-        unsigned int size() const {
-            return _funcIndexOffsetList.size();
-        }
         
         /**
-         * \brief Return all function parameters
+         * @brief Return all function parameters
+         *
+         * @return all parameters as a vector
          */
         std::vector<double> const getParameters() const {
             std::vector<double> params(this->size());
@@ -183,11 +175,32 @@ namespace math {
             }
             return params;
         }
+        
+        /**
+         * @brief Get one function parameter without range checking
+         *
+         * @return the value of the specified parameter
+         */
+        double operator[] (
+            unsigned int ind)   ///< index of parameter
+        const {
+            _FunctionIndexOffsetType funcOffsetPair = _funcIndexOffsetList[ind];
+            return funcOffsetPair.first->getParameter(ind - funcOffsetPair.second);
+        }
+    
+        /**
+         * @brief Return the number of function parameters
+         *
+         * @return the number of function parameters
+         */
+        unsigned int size() const {
+            return _funcIndexOffsetList.size();
+        }
 
         /**
-         * \brief Set all function parameters
+         * @brief Set all function parameters
          *
-         * \throw lsst::pex::exceptions::InvalidParameter if the wrong number of parameters is supplied.
+         * @throw lsst::pex::exceptions::InvalidParameter if the wrong number of parameters is supplied.
          */
         void setParameters(
             std::vector<double> const &params)  ///< new function parameters
@@ -207,17 +220,7 @@ namespace math {
         }
         
         /**
-         * \brief Get one function parameter WITHOUT range checking
-         */
-        double operator[] (
-            unsigned int ind)   ///< index of parameter
-        const {
-            _FunctionIndexOffsetType funcOffsetPair = _funcIndexOffsetList[ind];
-            return funcOffsetPair.first->getParameter(ind - funcOffsetPair.second);
-        }
-        
-        /**
-         * \brief Set one function parameter WITHOUT range checking
+         * @brief Set one function parameter without range checking
          */
         void setParameter(
             unsigned int ind,   ///< index of parameter
@@ -227,9 +230,31 @@ namespace math {
             return funcOffsetPair.first->setParameter(ind - funcOffsetPair.second, newValue);
         }
 
-
+    
         /**
-         * \brief Solve the specified function
+         * @brief Get the basis functions
+         *
+         * Warning: returns the original basis functions, not copies.
+         * If you modify the parameters of a returned basis function it also modifies
+         * the contained basis function.
+         *
+         * @return the basis functions: a vector of shared_ptr to Function1
+         */
+        Function1ListType getFunctions() const {
+            return _functionList;
+        }
+    
+        /**
+         * @brief Return the number of basis functions.
+         */
+        unsigned int getNFunctions() const {
+            return _functionList.size();
+        }
+            
+        /**
+         * @brief Solve the specified function
+         *
+         * @return the value of the specified function at the specified point
          *
          */
         ReturnT solveFunction(

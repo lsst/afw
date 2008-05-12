@@ -18,26 +18,12 @@
 #include <cmath>
 
 #include <lsst/afw/math/Function.h>
+#include <lsst/afw/math/Utils.h>
 
 namespace lsst {
 namespace afw {
 namespace math {
     
-    template<typename T>
-    std::vector<T> makeVector1(T elt0) {
-        std::vector<T> vec;
-        vec.push_back(elt0);
-        return vec;
-    }
-    
-    template<typename T>
-    std::vector<T> makeVector2(T elt0, T elt1) {
-        std::vector<T> vec;
-        vec.push_back(elt0);
-        vec.push_back(elt1);
-        return vec;
-    }
-
     /**
      * \brief 2-dimensional integer delta function
      *
@@ -99,7 +85,7 @@ namespace math {
         explicit GaussianFunction1(
             double sigma)    ///< sigma
         :
-            SimpleFunction1<ReturnT>(makeVector1(sigma), std::string("GaussianFunction1")),
+            SimpleFunction1<ReturnT>(makeVector(sigma), std::string("GaussianFunction1")),
             _multFac(1.0 / std::sqrt(2.0 * M_PI))
         {}
         virtual ~GaussianFunction1() {};
@@ -144,7 +130,7 @@ namespace math {
             double ySigma)  ///< sigma in y
         : 
             SeparableFunction2<ReturnT>(
-                makeVector2<Function1PtrType>(
+                makeVector(
                     Function1PtrType(new GaussianFunction1<ReturnT>(xSigma)),
                     Function1PtrType(new GaussianFunction1<ReturnT>(ySigma))
                 ),
@@ -508,7 +494,7 @@ namespace math {
             double yOffset = 0.0)    ///< y offset
         :
             SeparableFunction2<ReturnT>(
-                makeVector2<Function1PtrType>(
+                makeVector(
                     Function1PtrType(new LanczosFunction1<ReturnT>(n, xOffset)),
                     Function1PtrType(new LanczosFunction1<ReturnT>(n, yOffset))
                 ),
