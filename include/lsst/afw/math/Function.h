@@ -20,16 +20,20 @@
  * SimpleFunction1 or SimpleFunction2. Your subclass must:
  * - Have one or more constructors, all of which must initialize the parent class.
  * - Define operator() with code to compute the function
- *   using this->_params or this->getParams() to reference the parameters
+ *   using this->_params[ind] or this->getParameters() to reference the parameters
  *
  * To create a separable function for a particular equation, you have two choices:
  * - Create a SeparableFunction2 with the appropriate arguments
  * - Subclass SeparableFunction2
+ * in either case you may find lsst::afw::math::makeFunction helpful
  *
  * Design Notes:
  * The reason these functions exist (rather than using a pre-existing function class,
  * such as Functor in VisualWorkbench) is because the Kernel class requires function
  * objects with a standard interface for setting and getting function parameters.
+ *
+ * Implementation of operator() and of getting and setting parameters are orthogonal
+ * and this is reflected in the design by delegating the latter to a set of Parameter classes.
  *
  * @todo
  * - Implement function cloning.
