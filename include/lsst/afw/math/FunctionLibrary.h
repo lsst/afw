@@ -6,17 +6,13 @@
  *
  * \brief Define a collection of useful Functions.
  *
- * To do:
- * - Add 2-d Chebyshev polynomial
- * - Add a function factory?
- *
  * \author Russell Owen
  *
  * \ingroup afw
  */
 #include <cmath>
 
-#include <lsst/afw/math/Function.h>
+#include "lsst/afw/math/Function.h"
 
 namespace lsst {
 namespace afw {
@@ -35,6 +31,8 @@ namespace math {
     template<typename ReturnT>
     class IntegerDeltaFunction2: public Function2<ReturnT> {
     public:
+        typedef typename Function<ReturnT>::Ptr Ptr;
+
         /**
          * \brief Construct an integer delta function with specified xo, yo
          */
@@ -48,6 +46,10 @@ namespace math {
         {}
         
         virtual ~IntegerDeltaFunction2() {};
+        
+        virtual Ptr copy() const {
+            return Ptr(new IntegerDeltaFunction2(_xo, _yo));
+        }
         
         virtual ReturnT operator() (double x, double y) const {
             return static_cast<ReturnT>((x == _xo) && (y == _yo));
@@ -77,6 +79,8 @@ namespace math {
     template<typename ReturnT>
     class GaussianFunction1: public Function1<ReturnT> {
     public:
+        typedef typename Function<ReturnT>::Ptr Ptr;
+
         /**
          * \brief Construct a Gaussian function with specified sigma
          */
@@ -89,6 +93,10 @@ namespace math {
             this->_params[0] = sigma;
         }
         virtual ~GaussianFunction1() {};
+        
+        virtual Ptr copy() const {
+            return Ptr(new GaussianFunction1(this->_params[0]));
+        }
         
         virtual ReturnT operator() (double x) const {
             return (_multFac / this->_params[0]) *
@@ -122,6 +130,8 @@ namespace math {
     template<typename ReturnT>
     class GaussianFunction2: public Function2<ReturnT> {
     public:
+        typedef typename Function<ReturnT>::Ptr Ptr;
+
         /**
          * \brief Construct a Gaussian function with specified x and y sigma
          */
@@ -137,6 +147,10 @@ namespace math {
         }
         
         virtual ~GaussianFunction2() {};
+        
+        virtual Ptr copy() const {
+            return Ptr(new GaussianFunction2(this->_params[0], this->_params[1]));
+        }
         
         virtual ReturnT operator() (double x, double y) const {
             return (_multFac / (this->_params[0] * this->_params[1])) *
@@ -167,6 +181,8 @@ namespace math {
     template<typename ReturnT>
     class PolynomialFunction1: public Function1<ReturnT> {
     public:
+        typedef typename Function<ReturnT>::Ptr Ptr;
+
         /**
          * \brief Construct a polynomial function of the specified order.
          *
@@ -196,6 +212,10 @@ namespace math {
         }
         
         virtual ~PolynomialFunction1() {};
+       
+        virtual Ptr copy() const {
+            return Ptr(new PolynomialFunction1(this->_params));
+        }
         
         virtual ReturnT operator() (double x) const {
             int maxInd = static_cast<int>(this->_params.size()) - 1;
@@ -230,6 +250,8 @@ namespace math {
     template<typename ReturnT>
     class PolynomialFunction2: public Function2<ReturnT> {
     public:
+        typedef typename Function<ReturnT>::Ptr Ptr;
+
         /**
          * \brief Construct a polynomial function of specified order.
          *
@@ -273,6 +295,10 @@ namespace math {
         }
         
         virtual ~PolynomialFunction2() {};
+       
+        virtual Ptr copy() const {
+            return Ptr(new PolynomialFunction2(this->_params));
+        }
         
         virtual ReturnT operator() (double x, double y) const {
             /* Solve as follows:
@@ -342,6 +368,8 @@ namespace math {
     template<typename ReturnT>
     class Chebyshev1Function1: public Function1<ReturnT> {
     public:
+        typedef typename Function<ReturnT>::Ptr Ptr;
+
         /**
          * \brief Construct a Chebyshev polynomial of specified order and range.
          *
@@ -378,6 +406,10 @@ namespace math {
         }
         
         virtual ~Chebyshev1Function1() {};
+       
+        virtual Ptr copy() const {
+            return Ptr(new Chebyshev1Function1(this->_params, _minX, _maxX));
+        }
         
         virtual ReturnT operator() (double x) const {
             double xPrime = (x + _offset) * _scale;
@@ -447,6 +479,8 @@ namespace math {
     template<typename ReturnT>
     class LanczosFunction1: public Function1<ReturnT> {
     public:
+        typedef typename Function<ReturnT>::Ptr Ptr;
+
         /**
          * \brief Construct a Lanczos function of specified order and x,y offset.
          */
@@ -461,6 +495,11 @@ namespace math {
         }
 
         virtual ~LanczosFunction1() {};
+       
+        virtual Ptr copy() const {
+            unsigned int n = static_cast<unsigned int>(0.5 + (1.0 / _invN));
+            return Ptr(new LanczosFunction1(n, this->_params[0]));
+        }
         
         virtual ReturnT operator() (double x) const {
             double xArg1 = (x - this->_params[0]) * M_PI;
@@ -485,13 +524,13 @@ namespace math {
 
 
     /**
-     * \brief 2-dimensional radial Lanczos function
+     * \brief 2-dimensional separable Lanczos function
      *
-     * f(rad) = sinc(pi rad) sinc(pi rad / n)
-     * where rad = sqrt((x - xOffset)^2 + (y - yOffset)^2)
+     * f(x, y) = sinc(pi x') sinc(pi x' / n) sinc(pi y') sinc(pi y' / n)
+     * where x' = x - xOffset and y' = y - yOffset
      * and coefficients c0 = xOffset, c1 = yOffset
      *
-     * Warning: the Lanczos function is sometimes forced to 0 if radius > n
+     * Warning: the Lanczos function is sometimes forced to 0 if |x'| > n or |y'| > n
      * but this implementation does not perform that truncation so as to improve Lanczos kernels.
      *
      * \ingroup afw
@@ -499,6 +538,8 @@ namespace math {
     template<typename ReturnT>
     class LanczosFunction2: public Function2<ReturnT> {
     public:
+        typedef typename Function<ReturnT>::Ptr Ptr;
+
         /**
          * \brief Construct a Lanczos function of specified order and x,y offset.
          */
@@ -515,62 +556,11 @@ namespace math {
         }
 
         virtual ~LanczosFunction2() {};
-        
-        virtual ReturnT operator() (double x, double y) const {
-            double rad = std::sqrt(((x - this->_params[0]) * (x - this->_params[0]))
-                + ((y - this->_params[1]) * (y - this->_params[1])));
-            double arg1 = rad * M_PI;
-            double arg2 = arg1 * _invN;
-            if (std::fabs(rad) > 1.0e-5) {
-                return static_cast<ReturnT>(std::sin(arg1) * std::sin(arg2) / (arg1 * arg2));
-            } else {
-                return static_cast<ReturnT>(1);
-            }
+       
+        virtual Ptr copy() const {
+            unsigned int n = static_cast<unsigned int>(0.5 + (1.0 / _invN));
+            return Ptr(new LanczosFunction2(n, this->_params[0], this->_params[1]));
         }
-
-        virtual std::string toString(void) const {
-            std::ostringstream os;
-            os << "LanczosFunction2 [" << _invN << "]: ";;
-            os << Function2<ReturnT>::toString();
-            return os.str();
-        };
-
-    private:
-        double _invN;   ///< 1/n
-    };
-
-
-    /**
-     * \brief 2-dimensional separable Lanczos function
-     *
-     * f(x, y) = sinc(pi x') sinc(pi x' / n) sinc(pi y') sinc(pi y' / n)
-     * where x' = x - xOffset and y' = y - yOffset
-     * and coefficients c0 = xOffset, c1 = yOffset
-     *
-     * Warning: the Lanczos function is sometimes forced to 0 if |x'| > n or |y'| > n
-     * but this implementation does not perform that truncation so as to improve Lanczos kernels.
-     *
-     * \ingroup afw
-     */
-    template<typename ReturnT>
-    class LanczosSeparableFunction2: public Function2<ReturnT> {
-    public:
-        /**
-         * \brief Construct a Lanczos function of specified order and x,y offset.
-         */
-        explicit LanczosSeparableFunction2(
-            unsigned int n,         ///< order of Lanczos function
-            double xOffset = 0.0,    ///< x offset
-            double yOffset = 0.0)    ///< y offset
-        :
-            Function2<ReturnT>(2),
-            _invN(1.0 / static_cast<double>(n))
-        {
-            this->_params[0] = xOffset;
-            this->_params[1] = yOffset;
-        }
-
-        virtual ~LanczosSeparableFunction2() {};
         
         virtual ReturnT operator() (double x, double y) const {
             double xArg1 = (x - this->_params[0]) * M_PI;
@@ -590,7 +580,7 @@ namespace math {
 
         virtual std::string toString(void) const {
             std::ostringstream os;
-            os << "LanczosSeparableFunction2 [" << _invN << "]: ";;
+            os << "LanczosFunction2 [" << _invN << "]: ";;
             os << Function2<ReturnT>::toString();
             return os.str();
         };

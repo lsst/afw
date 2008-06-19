@@ -146,30 +146,12 @@ class FunctionTestCase(unittest.TestCase):
                             (f.__class__.__name__, f(x), predVal, n, x, xOffset, xAdj))
 
     def testLanczosFunction2D(self):
-        """A test for LanczosFunction2D, the radial version"""
+        """A test for LanczosFunction2D"""
         def basicLanczos1(x, n):
             return sincpi(x) * sincpi(x / float(n))
 
         for n in range(1, 5):
             f = afwMath.LanczosFunction2D(n)
-            for xOffset in (-10.0, 0.0, 0.05):
-                for yOffset in (-0.01, 0.0, 7.5):
-                    f.setParameters((xOffset, yOffset))
-                    for x in numpy.arange(-10.0, 10.1, 2.0):
-                        for y in numpy.arange(-10.0, 10.1, 2.0):
-                            rad = math.sqrt((x - xOffset)**2 + (y - yOffset)**2)
-                            predVal = basicLanczos1(rad, n)
-                            if not numpy.allclose(predVal, f(x, y)):
-                                self.fail("%s = %s != %s for n=%s, x=%s, xOffset=%s, yOffset=%s, rad=%s" % \
-                                    (f.__class__.__name__, f(x,y), predVal, n, x, xOffset, yOffset, rad))
-       
-    def testLanczosSeparableFunction2D(self):
-        """A test for LanczosSeparableFunction2D, the separable version"""
-        def basicLanczos1(x, n):
-            return sincpi(x) * sincpi(x / float(n))
-
-        for n in range(1, 5):
-            f = afwMath.LanczosSeparableFunction2D(n)
             for xOffset in (-10.0, 0.0, 0.05):
                 for yOffset in (-0.01, 0.0, 7.5):
                     f.setParameters((xOffset, yOffset))

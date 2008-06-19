@@ -14,8 +14,8 @@
 #include <sstream>
 #include <vector>
 
-#include <lsst/daf/data/LsstBase.h>
-#include <lsst/pex/exceptions.h>
+#include "lsst/daf/data/LsstBase.h"
+#include "lsst/pex/exceptions.h"
 
 namespace lsst {
 namespace afw {
@@ -51,6 +51,7 @@ namespace math {
     class Function : public lsst::daf::data::LsstBase {
     
     public:
+        typedef boost::shared_ptr<Function<ReturnT> > Ptr;
         /**
          * \brief Construct a Function given the number of function parameters.
          *
@@ -74,9 +75,24 @@ namespace math {
         {}
         
         virtual ~Function() {};
+        
+        /**
+         * \brief Return a pointer to a deep copy of this function
+         *
+         * This function exists instead of a copy constructor
+         * so one can obtain a copy of an actual function
+         * instead of a useless copy of the base class.
+         *
+         * Every non-virtual function must override this method.
+         *
+         * \return a pointer to a deep copy of the function
+         */
+        virtual Ptr copy() const = 0; 
     
         /**
          * \brief Return the number of function parameters
+         *
+         * \return the number of function parameters
          */
         unsigned int getNParameters() const {
             return _params.size();
@@ -84,6 +100,8 @@ namespace math {
         
         /**
          * \brief Return the function parameters
+         *
+         * \return the function parameters
          */
         std::vector<double> const &getParameters() const {
             return _params;
@@ -101,6 +119,11 @@ namespace math {
             _params = params;
         }
     
+        /**
+         * \brief Return a string representation of the function
+         *
+         * \return a string representation of the function
+         */
         virtual std::string toString(void) const {
             std::stringstream os;
             os << "parameters: [ ";
