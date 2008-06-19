@@ -146,12 +146,30 @@ class FunctionTestCase(unittest.TestCase):
                             (f.__class__.__name__, f(x), predVal, n, x, xOffset, xAdj))
 
     def testLanczosFunction2D(self):
-        """A test for LanczosFunction2D"""
+        """A test for LanczosFunction2D, the radial version"""
         def basicLanczos1(x, n):
             return sincpi(x) * sincpi(x / float(n))
 
         for n in range(1, 5):
             f = afwMath.LanczosFunction2D(n)
+            for xOffset in (-10.0, 0.0, 0.05):
+                for yOffset in (-0.01, 0.0, 7.5):
+                    f.setParameters((xOffset, yOffset))
+                    for x in numpy.arange(-10.0, 10.1, 2.0):
+                        for y in numpy.arange(-10.0, 10.1, 2.0):
+                            rad = math.sqrt((x - xOffset)**2 + (y - yOffset)**2)
+                            predVal = basicLanczos1(rad, n)
+                            if not numpy.allclose(predVal, f(x, y)):
+                                self.fail("%s = %s != %s for n=%s, x=%s, xOffset=%s, yOffset=%s, rad=%s" % \
+                                    (f.__class__.__name__, f(x,y), predVal, n, x, xOffset, yOffset, rad))
+       
+    def testLanczosSeparableFunction2D(self):
+        """A test for LanczosSeparableFunction2D, the separable version"""
+        def basicLanczos1(x, n):
+            return sincpi(x) * sincpi(x / float(n))
+
+        for n in range(1, 5):
+            f = afwMath.LanczosSeparableFunction2D(n)
             for xOffset in (-10.0, 0.0, 0.05):
                 for yOffset in (-0.01, 0.0, 7.5):
                     f.setParameters((xOffset, yOffset))
@@ -243,23 +261,6 @@ class FunctionTestCase(unittest.TestCase):
                 continue
             self.assertRaises(Exception, afwMath.PolynomialFunction2D, numpy.zeros(numParams, dtype=float))
 
-    def testSeparableGaussian(self):
-        funcTuple = (
-            afwMath.Function1FPtr(afwMath.GaussianFunction1F(1.0)),
-            afwMath.Function1FPtr(afwMath.GaussianFunction1F(2.0)),
-        )
-        funcVec = afwMath.VectorFunction1FPtr(funcTuple)
-        sepFunc = afwMath.SeparableFunction2F(funcVec)
-        
-        for xParam in (0.1, 1.0):
-            for yParam in (0.1, 1.0):
-                for x in numpy.arange(-10.0, 10.0, 0.2):
-                    for y in numpy.arange(-10.0, 10.0, 0.2):
-                        desValue = funcTuple[0](x) * funcTuple[1](y)
-                        testValue = sepFunc(x, y)
-                        if not numpy.allclose(desValue, testValue):
-                            raise RuntimeError("Error: xParam=%s, yParam=%s, x=%s, y=%s, desValue=%s, testValue=%s" % \
-                                (xParam, yParam, x, y, desValue, testValue))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

@@ -21,7 +21,6 @@ env.SharedLibrary(
         "math/AnalyticKernel.cc",
         "math/DeltaFunctionKernel.cc",
         "math/FixedKernel.cc",
-        "math/Function.cc",
         "math/Kernel.cc",
         "math/KernelFunctions.cc",
         "math/LinearCombinationKernel.cc",
