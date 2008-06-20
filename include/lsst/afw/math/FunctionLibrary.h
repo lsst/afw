@@ -31,7 +31,7 @@ namespace math {
     template<typename ReturnT>
     class IntegerDeltaFunction2: public Function2<ReturnT> {
     public:
-        typedef typename Function<ReturnT>::Ptr Ptr;
+        typedef typename Function2<ReturnT>::Ptr Function2Ptr;
 
         /**
          * \brief Construct an integer delta function with specified xo, yo
@@ -47,8 +47,8 @@ namespace math {
         
         virtual ~IntegerDeltaFunction2() {};
         
-        virtual Ptr copy() const {
-            return Ptr(new IntegerDeltaFunction2(_xo, _yo));
+        virtual Function2Ptr copy() const {
+            return Function2Ptr(new IntegerDeltaFunction2(_xo, _yo));
         }
         
         virtual ReturnT operator() (double x, double y) const {
@@ -79,7 +79,7 @@ namespace math {
     template<typename ReturnT>
     class GaussianFunction1: public Function1<ReturnT> {
     public:
-        typedef typename Function<ReturnT>::Ptr Ptr;
+        typedef typename Function1<ReturnT>::Ptr Function1Ptr;
 
         /**
          * \brief Construct a Gaussian function with specified sigma
@@ -94,8 +94,8 @@ namespace math {
         }
         virtual ~GaussianFunction1() {};
         
-        virtual Ptr copy() const {
-            return Ptr(new GaussianFunction1(this->_params[0]));
+        virtual Function1Ptr copy() const {
+            return Function1Ptr(new GaussianFunction1(this->_params[0]));
         }
         
         virtual ReturnT operator() (double x) const {
@@ -130,7 +130,7 @@ namespace math {
     template<typename ReturnT>
     class GaussianFunction2: public Function2<ReturnT> {
     public:
-        typedef typename Function<ReturnT>::Ptr Ptr;
+        typedef typename Function2<ReturnT>::Ptr Function2Ptr;
 
         /**
          * \brief Construct a Gaussian function with specified x and y sigma
@@ -148,8 +148,8 @@ namespace math {
         
         virtual ~GaussianFunction2() {};
         
-        virtual Ptr copy() const {
-            return Ptr(new GaussianFunction2(this->_params[0], this->_params[1]));
+        virtual Function2Ptr copy() const {
+            return Function2Ptr(new GaussianFunction2(this->_params[0], this->_params[1]));
         }
         
         virtual ReturnT operator() (double x, double y) const {
@@ -181,7 +181,7 @@ namespace math {
     template<typename ReturnT>
     class PolynomialFunction1: public Function1<ReturnT> {
     public:
-        typedef typename Function<ReturnT>::Ptr Ptr;
+        typedef typename Function1<ReturnT>::Ptr Function1Ptr;
 
         /**
          * \brief Construct a polynomial function of the specified order.
@@ -213,8 +213,8 @@ namespace math {
         
         virtual ~PolynomialFunction1() {};
        
-        virtual Ptr copy() const {
-            return Ptr(new PolynomialFunction1(this->_params));
+        virtual Function1Ptr copy() const {
+            return Function1Ptr(new PolynomialFunction1(this->_params));
         }
         
         virtual ReturnT operator() (double x) const {
@@ -250,7 +250,7 @@ namespace math {
     template<typename ReturnT>
     class PolynomialFunction2: public Function2<ReturnT> {
     public:
-        typedef typename Function<ReturnT>::Ptr Ptr;
+        typedef typename Function2<ReturnT>::Ptr Function2Ptr;
 
         /**
          * \brief Construct a polynomial function of specified order.
@@ -296,8 +296,8 @@ namespace math {
         
         virtual ~PolynomialFunction2() {};
        
-        virtual Ptr copy() const {
-            return Ptr(new PolynomialFunction2(this->_params));
+        virtual Function2Ptr copy() const {
+            return Function2Ptr(new PolynomialFunction2(this->_params));
         }
         
         virtual ReturnT operator() (double x, double y) const {
@@ -368,7 +368,7 @@ namespace math {
     template<typename ReturnT>
     class Chebyshev1Function1: public Function1<ReturnT> {
     public:
-        typedef typename Function<ReturnT>::Ptr Ptr;
+        typedef typename Function1<ReturnT>::Ptr Function1Ptr;
 
         /**
          * \brief Construct a Chebyshev polynomial of specified order and range.
@@ -407,8 +407,8 @@ namespace math {
         
         virtual ~Chebyshev1Function1() {};
        
-        virtual Ptr copy() const {
-            return Ptr(new Chebyshev1Function1(this->_params, _minX, _maxX));
+        virtual Function1Ptr copy() const {
+            return Function1Ptr(new Chebyshev1Function1(this->_params, _minX, _maxX));
         }
         
         virtual ReturnT operator() (double x) const {
@@ -479,7 +479,7 @@ namespace math {
     template<typename ReturnT>
     class LanczosFunction1: public Function1<ReturnT> {
     public:
-        typedef typename Function<ReturnT>::Ptr Ptr;
+        typedef typename Function1<ReturnT>::Ptr Function1Ptr;
 
         /**
          * \brief Construct a Lanczos function of specified order and x,y offset.
@@ -496,9 +496,9 @@ namespace math {
 
         virtual ~LanczosFunction1() {};
        
-        virtual Ptr copy() const {
+        virtual Function1Ptr copy() const {
             unsigned int n = static_cast<unsigned int>(0.5 + (1.0 / _invN));
-            return Ptr(new LanczosFunction1(n, this->_params[0]));
+            return Function1Ptr(new LanczosFunction1(n, this->_params[0]));
         }
         
         virtual ReturnT operator() (double x) const {
@@ -538,7 +538,7 @@ namespace math {
     template<typename ReturnT>
     class LanczosFunction2: public Function2<ReturnT> {
     public:
-        typedef typename Function<ReturnT>::Ptr Ptr;
+        typedef typename Function2<ReturnT>::Ptr Function2Ptr;
 
         /**
          * \brief Construct a Lanczos function of specified order and x,y offset.
@@ -557,9 +557,9 @@ namespace math {
 
         virtual ~LanczosFunction2() {};
        
-        virtual Ptr copy() const {
+        virtual Function2Ptr copy() const {
             unsigned int n = static_cast<unsigned int>(0.5 + (1.0 / _invN));
-            return Ptr(new LanczosFunction2(n, this->_params[0], this->_params[1]));
+            return Function2Ptr(new LanczosFunction2(n, this->_params[0], this->_params[1]));
         }
         
         virtual ReturnT operator() (double x, double y) const {

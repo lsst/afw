@@ -28,42 +28,45 @@ lsst::afw::math::AnalyticKernel::AnalyticKernel()
  * \brief Construct a spatially invariant AnalyticKernel
  */
 lsst::afw::math::AnalyticKernel::AnalyticKernel(
-    Kernel::KernelFunctionPtrType kernelFunction,
+    Kernel::KernelFunction const &kernelFunction,
     unsigned int cols,
     unsigned int rows)
 :
-    Kernel(cols, rows, kernelFunction->getNParameters()),
-    _kernelFunctionPtr(kernelFunction)
+    Kernel(cols, rows, kernelFunction.getNParameters()),
+    _kernelFunctionPtr(kernelFunction.copy())
 {}
 
 /**
- * \brief Construct a spatially varying AnalyticKernel with spatial coefficients initialized to 0
+ * \brief Construct a spatially varying AnalyticKernel, replicating a spatial function once per kernel function parameter
  */
 lsst::afw::math::AnalyticKernel::AnalyticKernel(
-    Kernel::KernelFunctionPtrType kernelFunction,
+    Kernel::KernelFunction const &kernelFunction,
     unsigned int cols,
     unsigned int rows,
-    Kernel::SpatialFunctionPtrType spatialFunction)
+    Kernel::SpatialFunction const &spatialFunction)
 :
-    Kernel(cols, rows, kernelFunction->getNParameters(), spatialFunction),
-    _kernelFunctionPtr(kernelFunction)
+    Kernel(cols, rows, kernelFunction.getNParameters(), spatialFunction),
+    _kernelFunctionPtr(kernelFunction.copy())
 {}
 
 /**
- * \brief Construct a spatially varying AnalyticKernel with the spatially varying parameters specified
+ * \brief Construct a spatially varying AnalyticKernel
  *
- * See setSpatialParameters for the form of the spatial parameters.
+ * \throw lsst::pex::exceptions::InvalidParameter if the length of spatialFunctionList != # kernel function parameters.
  */
 lsst::afw::math::AnalyticKernel::AnalyticKernel(
-    Kernel::KernelFunctionPtrType kernelFunction,
+    Kernel::KernelFunction const &kernelFunction,
     unsigned int cols,
     unsigned int rows,
-    Kernel::SpatialFunctionPtrType spatialFunction,
-    std::vector<std::vector<double> > const &spatialParameters)
+    std::vector<Kernel::SpatialFunctionPtr> const &spatialFunctionList)
 :
-    Kernel(cols, rows, kernelFunction->getNParameters(), spatialFunction, spatialParameters),
-    _kernelFunctionPtr(kernelFunction)
-{}
+    Kernel(cols, rows, spatialFunctionList),
+    _kernelFunctionPtr(kernelFunction.copy())
+{
+    if (kernelFunction.getNParameters() != spatialFunctionList.size()) {
+        throw lsst::pex::exceptions::InvalidParameter("Length of spatialFunctionList does not match # of kernel function params");
+    }
+}
 
 void lsst::afw::math::AnalyticKernel::computeImage(
     lsst::afw::image::Image<PixelT> &image,
@@ -104,7 +107,7 @@ void lsst::afw::math::AnalyticKernel::computeImage(
 /**
  * \brief Get the kernel function
  */
-lsst::afw::math::Kernel::KernelFunctionPtrType lsst::afw::math::AnalyticKernel::getKernelFunction(
+lsst::afw::math::Kernel::KernelFunctionPtr lsst::afw::math::AnalyticKernel::getKernelFunction(
 ) const {
     return _kernelFunctionPtr;
 }

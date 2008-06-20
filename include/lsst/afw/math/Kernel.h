@@ -104,8 +104,12 @@ namespace math {
     public:
         typedef double PixelT;
         typedef boost::shared_ptr<Kernel> PtrT;
-        typedef boost::shared_ptr<lsst::afw::math::Function2<PixelT> > KernelFunctionPtrType;
-        typedef boost::shared_ptr<lsst::afw::math::Function2<double> > SpatialFunctionPtrType;
+        typedef boost::shared_ptr<lsst::afw::math::Function2<PixelT> > KernelFunctionPtr;
+        typedef boost::shared_ptr<lsst::afw::math::Function2<double> > SpatialFunctionPtr;
+        typedef lsst::afw::math::Function2<PixelT> KernelFunction;
+        typedef lsst::afw::math::Function2<double> SpatialFunction;
+
+        
         // Traits values for this class of Kernel
         typedef generic_kernel_tag kernel_fill_factor;
 
@@ -121,15 +125,13 @@ namespace math {
             unsigned int cols,
             unsigned int rows,
             unsigned int nKernelParams,
-            SpatialFunctionPtrType spatialFunction
+            SpatialFunction const &spatialFunction
         );
         
         explicit Kernel(
             unsigned int cols,
             unsigned int rows,
-            unsigned int nKernelParams,
-            SpatialFunctionPtrType spatialFunction,
-            std::vector<std::vector<double> > const &spatialParameters
+            const std::vector<SpatialFunctionPtr> spatialFunctionList
         );
 
         virtual ~Kernel() {};
@@ -188,18 +190,18 @@ namespace math {
             os << prefix << "Kernel:" << std::endl;
             os << prefix << "..rows, cols: " << _rows << ", " << _cols << std::endl;
             os << prefix << "..ctrRow, Col: " << _ctrRow << ", " << _ctrCol << std::endl;
-            os << prefix << "..isSpatiallyVarying: " << (_isSpatiallyVarying ? "True" : "False") << std::endl;
-            os << prefix << "..spatialFunction: " << (_spatialFunctionPtr ? _spatialFunctionPtr->toString() : "None") << std::endl;
+            os << prefix << "..isSpatiallyVarying: " << (this->isSpatiallyVarying() ? "True" : "False") << std::endl;
+//            os << prefix << "..spatialFunction: " << (_spatialFunctionPtr ? _spatialFunctionPtr->toString() : "None") << std::endl;
             os << prefix << "..nKernelParams: " << _nKernelParams << std::endl;
-            os << prefix << "..spatialParams:" << std::endl;
-            for (std::vector<std::vector<double> >::const_iterator i = _spatialParams.begin(); i != _spatialParams.end(); ++i) {
-                os << prefix << "....[ ";
-                for (std::vector<double>::const_iterator j = i->begin(); j != i->end(); ++j) {
-                    if (j != i->begin()) os << ", ";
-                    os << *j;
-                }
-                os << " ]" << std::endl;
-            }
+//            os << prefix << "..spatialParams:" << std::endl;
+//            for (std::vector<std::vector<double> >::const_iterator i = _spatialParams.begin(); i != _spatialParams.end(); ++i) {
+//                os << prefix << "....[ ";
+//                for (std::vector<double>::const_iterator j = i->begin(); j != i->end(); ++j) {
+//                    if (j != i->begin()) os << ", ";
+//                    os << *j;
+//                }
+//                os << " ]" << std::endl;
+//            }
             return os.str();
         };
 
@@ -229,9 +231,9 @@ namespace math {
         unsigned int _ctrCol;
         unsigned int _ctrRow;
         unsigned int _nKernelParams;
-        bool _isSpatiallyVarying;
-        SpatialFunctionPtrType _spatialFunctionPtr;
-        std::vector<std::vector<double> > _spatialParams;
+        std::vector<SpatialFunctionPtr> _spatialFunctionList;
+//        SpatialFunctionPtr _spatialFunctionPtr;
+//        std::vector<std::vector<double> > _spatialParams;
     };
 
     /**
@@ -332,24 +334,23 @@ namespace math {
         explicit AnalyticKernel();
 
         explicit AnalyticKernel(
-            Kernel::KernelFunctionPtrType kernelFunction,
+            Kernel::KernelFunction const &kernelFunction,
             unsigned int cols,
             unsigned int rows
         );
         
         explicit AnalyticKernel(
-            Kernel::KernelFunctionPtrType kernelFunction,
+            Kernel::KernelFunction const &kernelFunction,
             unsigned int cols,
             unsigned int rows,
-            Kernel::SpatialFunctionPtrType spatialFunction
+            Kernel::SpatialFunction const &spatialFunction
         );
         
         explicit AnalyticKernel(
-            Kernel::KernelFunctionPtrType kernelFunction,
+            Kernel::KernelFunction const &kernelFunction,
             unsigned int cols,
             unsigned int rows,
-            Kernel::SpatialFunctionPtrType spatialFunction,
-            std::vector<std::vector<double> > const &spatialParameters
+            std::vector<Kernel::SpatialFunctionPtr> const &spatialFunctionList
         );
         
         virtual ~AnalyticKernel() {};
@@ -362,7 +363,7 @@ namespace math {
             bool doNormalize = true
         ) const;
     
-        virtual Kernel::KernelFunctionPtrType getKernelFunction() const;
+        virtual Kernel::KernelFunctionPtr getKernelFunction() const;
             
         virtual std::string toString(std::string prefix = "") const {
             std::ostringstream os;
@@ -378,7 +379,7 @@ namespace math {
         virtual std::vector<double> getCurrentKernelParameters() const;
     
     private:
-        Kernel::KernelFunctionPtrType _kernelFunctionPtr;
+        Kernel::KernelFunctionPtr _kernelFunctionPtr;
     };
     
     
@@ -449,24 +450,23 @@ namespace math {
     class LinearCombinationKernel : public Kernel {
     public:
         typedef boost::shared_ptr<LinearCombinationKernel> PtrT;
-        typedef KernelList<Kernel> KernelListType;
+        typedef KernelList<Kernel> KernelList;
 
         explicit LinearCombinationKernel();
 
         explicit LinearCombinationKernel(
-            KernelListType const &kernelList,
+            KernelList const &kernelList,
             std::vector<double> const &kernelParameters
         );
         
         explicit LinearCombinationKernel(
-            KernelListType const &kernelList,
-            Kernel::SpatialFunctionPtrType spatialFunction
+            KernelList const &kernelList,
+            Kernel::SpatialFunction const &spatialFunction
         );
         
         explicit LinearCombinationKernel(
-            KernelListType const &kernelList,
-            Kernel::SpatialFunctionPtrType spatialFunction,
-            std::vector<std::vector<double> > const &spatialParameters
+            KernelList const &kernelList,
+            std::vector<Kernel::SpatialFunctionPtr> const &spatialFunctionList
         );
         
         virtual ~LinearCombinationKernel() {};
@@ -479,15 +479,15 @@ namespace math {
             bool doNormalize = true
         ) const;
                 
-        virtual KernelListType const &getKernelList() const;
+        virtual KernelList const &getKernelList() const;
         
-        void checkKernelList(const KernelListType &kernelList) const;
+        void checkKernelList(const KernelList &kernelList) const;
         
         virtual std::string toString(std::string prefix = "") const {
             std::ostringstream os;
             os << prefix << "LinearCombinationKernel:" << std::endl;
             os << prefix << "..Kernels:" << std::endl;
-            for (KernelListType::const_iterator i = _kernelList.begin(); i != _kernelList.end(); ++i) {
+            for (KernelList::const_iterator i = _kernelList.begin(); i != _kernelList.end(); ++i) {
                 os << (*i)->toString(prefix + "\t");
             }
             os << "..parameters: [ ";
@@ -507,7 +507,7 @@ namespace math {
     
     private:
         void _computeKernelImageList();
-        KernelListType _kernelList;
+        KernelList _kernelList;
         std::vector<boost::shared_ptr<lsst::afw::image::Image<PixelT> > > _kernelImagePtrList;
         mutable std::vector<double> _kernelParams;
     };

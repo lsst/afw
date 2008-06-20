@@ -33,7 +33,7 @@ lsst::afw::math::LinearCombinationKernel::LinearCombinationKernel()
  * \brief Construct a spatially invariant LinearCombinationKernel
  */
 lsst::afw::math::LinearCombinationKernel::LinearCombinationKernel(
-    KernelListType const &kernelList,    ///< list of (shared pointers to) kernels
+    KernelList const &kernelList,    ///< list of (shared pointers to) kernels
     std::vector<double> const &kernelParameters) ///< kernel coefficients
 :
     Kernel(kernelList[0]->getCols(), kernelList[0]->getRows(), kernelList.size()),
@@ -49,8 +49,8 @@ lsst::afw::math::LinearCombinationKernel::LinearCombinationKernel(
  * \brief Construct a spatially varying LinearCombinationKernel with spatial parameters initialized to 0
  */
 lsst::afw::math::LinearCombinationKernel::LinearCombinationKernel(
-    KernelListType const &kernelList,    ///< list of (shared pointers to) kernels
-    Kernel::SpatialFunctionPtrType spatialFunction)  ///< spatial function
+    KernelList const &kernelList,    ///< list of (shared pointers to) kernels
+    Kernel::SpatialFunction const &spatialFunction)  ///< spatial function
 :
     Kernel(kernelList[0]->getCols(), kernelList[0]->getRows(), kernelList.size(), spatialFunction),
     _kernelList(kernelList),
@@ -64,19 +64,20 @@ lsst::afw::math::LinearCombinationKernel::LinearCombinationKernel(
 /**
  * \brief Construct a spatially varying LinearCombinationKernel with the spatially varying parameters specified
  *
- * See setSpatialParameters for the form of the spatial parameters.
+ * \throw lsst::pex::exceptions::InvalidParameter if the length of spatialFunctionList != # kernels
  */
 lsst::afw::math::LinearCombinationKernel::LinearCombinationKernel(
-    KernelListType const &kernelList,    ///< list of (shared pointers to) kernels
-    Kernel::SpatialFunctionPtrType spatialFunction,  ///< spatial function
-    std::vector<std::vector<double> > const &spatialParameters)  ///< spatial coefficients
+    KernelList const &kernelList,    ///< list of (shared pointers to) kernels
+    std::vector<Kernel::SpatialFunctionPtr> const &spatialFunctionList)    ///< list of spatial functions, one per kernel
 :
-    Kernel(kernelList[0]->getCols(), kernelList[0]->getRows(),
-        kernelList.size(), spatialFunction, spatialParameters),
+    Kernel(kernelList[0]->getCols(), kernelList[0]->getRows(), spatialFunctionList),
     _kernelList(kernelList),
     _kernelImagePtrList(),
     _kernelParams(std::vector<double>(kernelList.size()))
 {
+    if (kernelList.size() != spatialFunctionList.size()) {
+        throw lsst::pex::exceptions::InvalidParameter("Length of spatialFunctionList does not match length of kernelList");
+    }
     checkKernelList(kernelList);
     _computeKernelImageList();
 }
@@ -117,7 +118,7 @@ void lsst::afw::math::LinearCombinationKernel::computeImage(
 /**
  * \brief Get the fixed basis kernels
  */
-lsst::afw::math::LinearCombinationKernel::KernelListType const &
+lsst::afw::math::LinearCombinationKernel::KernelList const &
 lsst::afw::math::LinearCombinationKernel::getKernelList() const {
     return _kernelList;
 }
@@ -127,7 +128,7 @@ lsst::afw::math::LinearCombinationKernel::getKernelList() const {
  *
  * \throw lsst::pex::exceptions::InvalidParameter if the check fails
  */
-void lsst::afw::math::LinearCombinationKernel::checkKernelList(const KernelListType &kernelList) const {
+void lsst::afw::math::LinearCombinationKernel::checkKernelList(const KernelList &kernelList) const {
     if (kernelList.size() < 1) {
         throw lsst::pex::exceptions::InvalidParameter("kernelList has no elements");
     }
@@ -181,7 +182,7 @@ const {
  * Compute _kernelImagePtrList, the internal archive of kernel images.
  */
 void lsst::afw::math::LinearCombinationKernel::_computeKernelImageList() {
-    KernelListType::const_iterator kIter = _kernelList.begin();
+    KernelList::const_iterator kIter = _kernelList.begin();
     std::vector<double>::const_iterator kParIter = _kernelParams.begin();
     for ( ; kIter != _kernelList.end(); ++kIter) {
         PixelT kSum;

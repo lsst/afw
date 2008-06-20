@@ -53,19 +53,17 @@ int main(int argc, char **argv) {
         for (int ii = 0; ii < 3; ++ii) {
             double xSigma = (ii == 1) ? MaxSigma : MinSigma;
             double ySigma = (ii == 2) ? MinSigma : MaxSigma;
-            lsst::afw::math::Kernel::KernelFunctionPtrType gaussFuncPtr(
-                new lsst::afw::math::GaussianFunction2<lsst::afw::math::Kernel::PixelT>(xSigma, ySigma));
+            lsst::afw::math::GaussianFunction2<lsst::afw::math::Kernel::PixelT> gaussFunc(xSigma, ySigma);
             lsst::afw::math::Kernel::PtrT basisKernelPtr(
-                new lsst::afw::math::AnalyticKernel(gaussFuncPtr, KernelCols, KernelRows)
+                new lsst::afw::math::AnalyticKernel(gaussFunc, KernelCols, KernelRows)
             );
             kernelVec.push_back(basisKernelPtr);
         }
         
         // construct spatially varying linear combination kernel
         unsigned int polyOrder = 1;
-        lsst::afw::math::Kernel::SpatialFunctionPtrType polyFuncPtr(
-            new lsst::afw::math::PolynomialFunction2<double>(polyOrder));
-        lsst::afw::math::LinearCombinationKernel lcSpVarKernel(kernelVec, polyFuncPtr);
+        lsst::afw::math::PolynomialFunction2<double> polyFunc(polyOrder);
+        lsst::afw::math::LinearCombinationKernel lcSpVarKernel(kernelVec, polyFunc);
     
         // Get copy of spatial parameters (all zeros), set and feed back to the kernel
         vector<vector<double> > polyParams = lcSpVarKernel.getSpatialParameters();

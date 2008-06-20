@@ -51,7 +51,6 @@ namespace math {
     class Function : public lsst::daf::data::LsstBase {
     
     public:
-        typedef boost::shared_ptr<Function<ReturnT> > Ptr;
         /**
          * \brief Construct a Function given the number of function parameters.
          *
@@ -75,19 +74,6 @@ namespace math {
         {}
         
         virtual ~Function() {};
-        
-        /**
-         * \brief Return a pointer to a deep copy of this function
-         *
-         * This function exists instead of a copy constructor
-         * so one can obtain a copy of an actual function
-         * instead of a useless copy of the base class.
-         *
-         * Every non-virtual function must override this method.
-         *
-         * \return a pointer to a deep copy of the function
-         */
-        virtual Ptr copy() const = 0; 
     
         /**
          * \brief Return the number of function parameters
@@ -149,6 +135,8 @@ namespace math {
     template<typename ReturnT>
     class Function1 : public Function<ReturnT> {
     public:
+        typedef boost::shared_ptr<Function1<ReturnT> > Ptr;
+
         /**
          * \brief Construct a Function1 given the number of function parameters.
          *
@@ -170,6 +158,19 @@ namespace math {
         {}
         
         virtual ~Function1() {};
+        
+        /**
+         * \brief Return a pointer to a deep copy of this function
+         *
+         * This function exists instead of a copy constructor
+         * so one can obtain a copy of an actual function
+         * instead of a useless copy of the base class.
+         *
+         * Every non-virtual function must override this method.
+         *
+         * \return a pointer to a deep copy of the function
+         */
+        virtual Ptr copy() const = 0; 
     
         virtual ReturnT operator() (double x) const = 0;
 
@@ -188,6 +189,8 @@ namespace math {
     template<typename ReturnT>
     class Function2 : public Function<ReturnT> {
     public:
+        typedef boost::shared_ptr<Function2<ReturnT> > Ptr;
+
         /**
          * \brief Construct a Function2 given the number of function parameters.
          *
@@ -211,6 +214,19 @@ namespace math {
         {}
         
         virtual ~Function2() {};
+        
+        /**
+         * \brief Return a pointer to a deep copy of this function
+         *
+         * This function exists instead of a copy constructor
+         * so one can obtain a copy of an actual function
+         * instead of a useless copy of the base class.
+         *
+         * Every non-virtual function must override this method.
+         *
+         * \return a pointer to a deep copy of the function
+         */
+        virtual Ptr copy() const = 0; 
     
         virtual ReturnT operator() (double x, double y) const = 0;
 

@@ -31,8 +31,7 @@ lsst::afw::math::Kernel::Kernel()
    _ctrCol(0),
    _ctrRow(0),
    _nKernelParams(0),
-   _isSpatiallyVarying(false),
-   _spatialFunctionPtr()
+   _spatialFunctionList()
 { }
 
 /**
@@ -49,75 +48,57 @@ lsst::afw::math::Kernel::Kernel(
    _ctrCol((cols-1)/2),
    _ctrRow((rows-1)/2),
    _nKernelParams(nKernelParams),
-   _isSpatiallyVarying(false),
-   _spatialFunctionPtr()
+   _spatialFunctionList()
 { }
 
 /**
- * \brief Construct a spatially varying Kernel with spatial parameters initialized to 0
+ * \brief Construct a spatially varying Kernel with one spatial function copied as needed
  *
- * \throw lsst::pex::exceptions::InvalidParameter if the kernel or spatial function has no parameters.
+ * \throw lsst::pex::exceptions::InvalidParameter if the kernel has no parameters.
  */
 lsst::afw::math::Kernel::Kernel(
     unsigned int cols,  ///< number of columns
     unsigned int rows,  ///< number of rows
     unsigned int nKernelParams, ///< number of kernel parameters
-    SpatialFunctionPtrType spatialFunction) ///< spatial function
+    SpatialFunction const &spatialFunction) ///< spatial function
 :
     LsstBase(typeid(this)),
    _cols(cols),
    _rows(rows),
    _ctrCol((cols-1)/2),
    _ctrRow((rows-1)/2),
-   _nKernelParams(nKernelParams),
-   _isSpatiallyVarying(true),
-   _spatialFunctionPtr(spatialFunction)
+   _nKernelParams(nKernelParams)
 {
-    // create spatial parameters initialized to zero
-    if (this->getNSpatialParameters() == 0) {
-        throw lsst::pex::exceptions::InvalidParameter("Spatial function has no parameters");
-    }
-    if (this->getNKernelParameters() == 0) {
+    if (nKernelParams == 0) {
         throw lsst::pex::exceptions::InvalidParameter("Kernel function has no parameters");
     }
-    std::vector<double> zeros(this->getNSpatialParameters());
-    std::vector<std::vector<double> > spatialParams;
-    for (unsigned int ii = 0; ii < this->getNKernelParameters(); ++ii) {
-        this->_spatialParams.push_back(zeros);
+    for (unsigned int ii = 0; ii < nKernelParams; ++ii) {
+        SpatialFunctionPtr spatialFunctionCopy = spatialFunction.copy();
+        this->_spatialFunctionList.push_back(spatialFunctionCopy);
     }
 }
 
 /**
- * \brief Construct a spatially varying Kernel with the spatially varying parameters specified
+ * \brief Construct a spatially varying Kernel with a list of spatial functions (one per kernel parameter)
  *
- * See setSpatialParameters for the form of the spatial parameters.
- *
- * \throw lsst::pex::exceptions::InvalidParameter if:
- * - the kernel or spatial function has no parameters
- * - the spatialParams vector is the wrong length
+ * Note: if the list of spatial functions is empty then the kernel is not spatially varying.
  */
 lsst::afw::math::Kernel::Kernel(
     unsigned int cols,  ///< number of columns
     unsigned int rows,  ///< number of rows
-    unsigned int nKernelParams, ///< number of kernel parameters
-    SpatialFunctionPtrType spatialFunction, ///< spatial function
-    std::vector<std::vector<double> > const &spatialParams)  ///< spatial parameters
+    std::vector<SpatialFunctionPtr> spatialFunctionList) ///< list of spatial function, one per kernel parameter
 :
     LsstBase(typeid(this)),
    _cols(cols),
    _rows(rows),
    _ctrCol((cols-1)/2),
    _ctrRow((rows-1)/2),
-   _nKernelParams(nKernelParams),
-   _isSpatiallyVarying(true),
-   _spatialFunctionPtr(spatialFunction){
-    if (this->getNSpatialParameters() == 0) {
-        throw lsst::pex::exceptions::InvalidParameter("Spatial function has no parameters");
+   _nKernelParams(spatialFunctionList.size())
+{
+    for (unsigned int ii = 0; ii < spatialFunctionList.size(); ++ii) {
+        SpatialFunctionPtr spatialFunctionCopy = spatialFunctionList[ii]->copy();
+        this->_spatialFunctionList.push_back(spatialFunctionCopy);
     }
-    if (this->getNKernelParameters() == 0) {
-        throw lsst::pex::exceptions::InvalidParameter("Kernel function has no parameters");
-    }
-    setSpatialParameters(spatialParams);
 }
 
 //
@@ -163,13 +144,14 @@ std::vector<double> lsst::afw::math::Kernel::getKernelParameters(
 }
 
 /**
- * \brief Set the parameters of the spatial function for all kernel parameters
+ * \brief Set the parameters of all spatial functions
  *
  * Params is indexed as [kernel parameter][spatial parameter]
  *
- * \throw lsst::pex::exceptions::InvalidParameter if params is the wrong shape.
+ * \throw lsst::pex::exceptions::InvalidParameter if params is the wrong shape (and no parameters are changed)
  */
 void lsst::afw::math::Kernel::setSpatialParameters(const std::vector<std::vector<double> > params) {
+    // Check params size before changing anything
     unsigned int nKernelParams = this->getNKernelParameters();
     if (params.size() != nKernelParams) {
         throw lsst::pex::exceptions::InvalidParameter(
@@ -183,7 +165,10 @@ void lsst::afw::math::Kernel::setSpatialParameters(const std::vector<std::vector
                 ii % params[ii].size() % nSpatialParams);
         }
     }
-    _spatialParams = params;
+    // Set parameters
+    for (unsigned int ii = 0; ii < nKernelParams; ++ii) {
+        this->_spatialFunctionList[ii]->setParameters(params[ii]);
+    }
 }
 
 /**
@@ -196,10 +181,9 @@ void lsst::afw::math::Kernel::setSpatialParameters(const std::vector<std::vector
  * The only reason it is not protected is because the convolveLinear function needs it.
  */
 void lsst::afw::math::Kernel::computeKernelParametersFromSpatialModel(std::vector<double> &kernelParams, double x, double y) const {
-    std::vector<double>::iterator kIter = kernelParams.begin();
-    std::vector<std::vector<double> >::const_iterator sIter = _spatialParams.begin();
-    for ( ; kIter != kernelParams.end(); ++kIter, ++sIter) {
-        _spatialFunctionPtr->setParameters(*sIter);
-        *kIter = (*_spatialFunctionPtr)(x,y);
+    std::vector<double>::iterator kParamsIter = kernelParams.begin();
+    std::vector<SpatialFunctionPtr>::const_iterator spFuncIter = _spatialFunctionList.begin();
+    for ( ; kParamsIter != kernelParams.end(); ++kParamsIter, ++spFuncIter) {
+        *kParamsIter = (*(*spFuncIter))(x,y);
     }
 }

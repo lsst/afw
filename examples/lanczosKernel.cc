@@ -16,11 +16,10 @@ int main() {
     unsigned int kernelRows = 5;
     unsigned int order = (min(kernelCols, kernelRows) - 1) / 2;
 
-    lsst::afw::math::Kernel::KernelFunctionPtrType kfuncPtr(
-        new lsst::afw::math::LanczosFunction2<pixelType>(order));
-    lsst::afw::math::AnalyticKernel kernel(kfuncPtr, kernelCols, kernelRows);
+    lsst::afw::math::LanczosFunction2<pixelType> lanczosFunc(order);
+    lsst::afw::math::AnalyticKernel kernel(lanczosFunc, kernelCols, kernelRows);
 
-    cout << boost::format("Lanczos Kernel is %d x %d; Lanczos function has %d order\n")
+    cout << boost::format("Lanczos Kernel is %d x %d; Lanczos function has order %d\n")
         % kernelCols % kernelRows % order;
     
     double deltaOff = 1.0 / 3.0;

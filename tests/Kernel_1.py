@@ -52,18 +52,18 @@ class KernelTestCase(unittest.TestCase):
         kCols = 5
         kRows = 8
 
-        fPtr =  afwMath.Function2DPtr(afwMath.GaussianFunction2D(1.0, 1.0))
-        k = afwMath.AnalyticKernel(fPtr, kCols, kRows)
+        gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0)
+        k = afwMath.AnalyticKernel(gaussFunc, kCols, kRows)
         fArr = numpy.zeros(shape=[k.getCols(), k.getRows()], dtype=float)
         for xsigma in (0.1, 1.0, 3.0):
             for ysigma in (0.1, 1.0, 3.0):
-                fPtr.setParameters((xsigma, ysigma))
+                gaussFunc.setParameters((xsigma, ysigma))
                 # compute array of function values and normalize
                 for row in range(k.getRows()):
                     y = row - k.getCtrRow()
                     for col in range(k.getCols()):
                         x = col - k.getCtrCol()
-                        fArr[col, row] = fPtr(x, y)
+                        fArr[col, row] = gaussFunc(x, y)
                 fArr /= fArr.sum()
                 
                 k.setKernelParameters((xsigma, ysigma))
@@ -88,8 +88,8 @@ class KernelTestCase(unittest.TestCase):
             y = float(row - ctrRow)
             for col in range(kCols):
                 x = float(col - ctrCol)
-                fPtr = afwMath.Function2DPtr(afwMath.IntegerDeltaFunction2D(x, y))
-                kPtr = afwMath.KernelPtr(afwMath.AnalyticKernel(fPtr, kCols, kRows))
+                deltaFunc = afwMath.IntegerDeltaFunction2D(x, y)
+                kPtr = afwMath.KernelPtr(afwMath.AnalyticKernel(deltaFunc, kCols, kRows))
                 basisImage = kPtr.computeNewImage()[0]
                 basisImArrList.append(imTestUtils.arrayFromImage(basisImage))
                 kVec.append(kPtr)
@@ -131,7 +131,7 @@ class KernelTestCase(unittest.TestCase):
             kVec.append(kPtr)
 
         # create spatially varying linear combination kernel
-        sFuncPtr =  afwMath.Function2DPtr(afwMath.PolynomialFunction2D(1))
+        spFunc = afwMath.PolynomialFunction2D(1)
         
         # spatial parameters are a list of entries, one per kernel parameter;
         # each entry is a list of spatial parameters
@@ -140,7 +140,8 @@ class KernelTestCase(unittest.TestCase):
             (0.0, 0.0, 1.0),
         )
         
-        k = afwMath.LinearCombinationKernel(kVec, sFuncPtr, sParams)
+        k = afwMath.LinearCombinationKernel(kVec, spFunc)
+        k.setSpatialParameters(sParams)
         kImage = afwImage.ImageD(kCols, kRows)
         for colPos, rowPos, coeff0, coeff1 in [
             (0.0, 0.0, 0.0, 0.0),

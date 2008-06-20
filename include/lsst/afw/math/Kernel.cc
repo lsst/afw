@@ -54,26 +54,29 @@ inline unsigned lsst::afw::math::Kernel::getNKernelParameters() const {
 /**
  * \brief Return the number of spatial parameters (0 if not spatially varying)
  */
-inline unsigned lsst::afw::math::Kernel::getNSpatialParameters() const { 
-    if (!isSpatiallyVarying()) {
+inline unsigned lsst::afw::math::Kernel::getNSpatialParameters() const {
+    if (!this->isSpatiallyVarying()) {
         return 0;
-    } else {
-        return _spatialFunctionPtr->getNParameters();
     }
+    return _spatialFunctionList[0]->getNParameters();
 }
 
 /**
  * \brief Return the spatial parameters parameters (an empty vector if not spatially varying)
  */
 inline std::vector<std::vector<double> > lsst::afw::math::Kernel::getSpatialParameters() const {
-    return _spatialParams;
+    std::vector<std::vector<double> > spatialParams;
+    for (unsigned int ii = 0; ii < _spatialFunctionList.size(); ++ii) {
+        spatialParams.push_back(_spatialFunctionList[ii]->getParameters());
+    }
+    return spatialParams;
 }
 
 /**
  * \brief Return true if the kernel is spatially varying (has a spatial function)
  */
 inline bool lsst::afw::math::Kernel::isSpatiallyVarying() const {
-    return _isSpatiallyVarying;
+    return _spatialFunctionList.size() != 0;
 }
 
 /**

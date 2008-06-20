@@ -49,13 +49,10 @@ int main(int argc, char **argv) {
     
     for (unsigned int kSize = MinKernelSize; kSize <= MaxKernelSize; kSize += DeltaKernelSize) {
         // construct kernel
-        lsst::afw::math::Kernel::KernelFunctionPtrType gaussFuncPtr(
-            new lsst::afw::math::GaussianFunction2<kernelType>(1, 1));
+        lsst::afw::math::GaussianFunction2<kernelType> gaussFunc(1, 1);
         unsigned int polyOrder = 1;
-        lsst::afw::math::Kernel::SpatialFunctionPtrType polyFuncPtr(
-            new lsst::afw::math::PolynomialFunction2<double>(polyOrder));
-        lsst::afw::math::AnalyticKernel gaussSpVarKernel(
-            gaussFuncPtr, kSize, kSize, polyFuncPtr);
+        lsst::afw::math::PolynomialFunction2<double> polyFunc(polyOrder);
+        lsst::afw::math::AnalyticKernel gaussSpVarKernel(gaussFunc, kSize, kSize, polyFunc);
     
         // get copy of spatial parameters (all zeros), set and feed back to the kernel
         std::vector<std::vector<double> > polyParams = gaussSpVarKernel.getSpatialParameters();

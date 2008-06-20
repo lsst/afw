@@ -104,8 +104,8 @@ def makeGaussianKernelVec(kCols, kRows):
     ]
     kVec = afwMath.KernelListD()
     for xSigma, ySigma in xySigmaList:
-        fPtr =  afwMath.Function2DPtr(afwMath.GaussianFunction2D(1.5, 2.5))
-        basisKernelPtr = afwMath.KernelPtr(afwMath.AnalyticKernel(fPtr, kCols, kRows))
+        kFunc = afwMath.GaussianFunction2D(1.5, 2.5)
+        basisKernelPtr = afwMath.KernelPtr(afwMath.AnalyticKernel(kFunc, kCols, kRows))
         kVec.append(basisKernelPtr)
     return kVec
 
@@ -147,8 +147,8 @@ class ConvolveTestCase(unittest.TestCase):
         maskedImage.getMask().setMaskPlaneValues(0, 5, 7, 5)
         
         # create a delta function kernel that has 1,1 in the center
-        fPtr =  afwMath.Function2DPtr(afwMath.IntegerDeltaFunction2D(0.0, 0.0))
-        k = afwMath.AnalyticKernel(fPtr, 3, 3)
+        kFunc = afwMath.IntegerDeltaFunction2D(0.0, 0.0)
+        k = afwMath.AnalyticKernel(kFunc, 3, 3)
         
         cnvMaskedImage = afwMath.convolve(maskedImage, k, edgeBit, True)
     
@@ -168,8 +168,8 @@ class ConvolveTestCase(unittest.TestCase):
         edgeBit = 7
         doNormalize = False
 
-        fPtr =  afwMath.Function2DPtr(afwMath.GaussianFunction2D(1.5, 2.5))
-        k = afwMath.AnalyticKernel(fPtr, kCols, kRows)
+        kFunc =  afwMath.GaussianFunction2D(1.5, 2.5)
+        k = afwMath.AnalyticKernel(kFunc, kCols, kRows)
         
         fullMaskedImage = afwImage.MaskedImageF()
         fullMaskedImage.readFits(InputMaskedImagePath)
@@ -209,8 +209,8 @@ class ConvolveTestCase(unittest.TestCase):
         imRows = 45
         edgeBit = 7
 
-        fPtr =  afwMath.Function2DPtr(afwMath.GaussianFunction2D(1.5, 2.5))
-        k = afwMath.AnalyticKernel(fPtr, kCols, kRows)
+        kFunc =  afwMath.GaussianFunction2D(1.5, 2.5)
+        k = afwMath.AnalyticKernel(kFunc, kCols, kRows)
         
         fullMaskedImage = afwImage.MaskedImageF()
         fullMaskedImage.readFits(InputMaskedImagePath)
@@ -249,7 +249,7 @@ class ConvolveTestCase(unittest.TestCase):
         edgeBit = 7
 
         # create spatially varying linear combination kernel
-        sFuncPtr =  afwMath.Function2DPtr(afwMath.PolynomialFunction2D(1))
+        sFunc = afwMath.PolynomialFunction2D(1)
         
         # spatial parameters are a list of entries, one per kernel parameter;
         # each entry is a list of spatial parameters
@@ -258,8 +258,9 @@ class ConvolveTestCase(unittest.TestCase):
             (1.0, 0.0,  1.0 / imRows),
         )
    
-        fPtr =  afwMath.Function2DPtr(afwMath.GaussianFunction2D(1.0, 1.0))
-        k = afwMath.AnalyticKernel(fPtr, kCols, kRows, sFuncPtr, sParams)
+        kFunc =  afwMath.GaussianFunction2D(1.0, 1.0)
+        k = afwMath.AnalyticKernel(kFunc, kCols, kRows, sFunc)
+        k.setSpatialParameters(sParams)
         
         fullMaskedImage = afwImage.MaskedImageF()
         fullMaskedImage.readFits(InputMaskedImagePath)
@@ -356,7 +357,7 @@ class ConvolveTestCase(unittest.TestCase):
         maskedImage.getMask().setMaskPlaneValues(0, 5, 7, 5)
 
         # create spatially varying linear combination kernel
-        sFuncPtr =  afwMath.Function2DPtr(afwMath.PolynomialFunction2D(1))
+        sFunc = afwMath.PolynomialFunction2D(1)
         
         # spatial parameters are a list of entries, one per kernel parameter;
         # each entry is a list of spatial parameters
@@ -367,7 +368,8 @@ class ConvolveTestCase(unittest.TestCase):
         )
         
         kVec = makeGaussianKernelVec(kCols, kRows)
-        lcKernel = afwMath.LinearCombinationKernel(kVec, sFuncPtr, sParams)
+        lcKernel = afwMath.LinearCombinationKernel(kVec, sFunc)
+        lcKernel.setSpatialParameters(sParams)
 
         refCnvMaskedImage = afwMath.convolve(maskedImage, lcKernel, edgeBit, doNormalize)
         refCnvImage, refCnvVariance, refCnvMask = \
@@ -420,7 +422,7 @@ class ConvolveTestCase(unittest.TestCase):
         maskedImage.getMask().setMaskPlaneValues(0, 5, 7, 5)
 
         # create spatially varying linear combination kernel
-        sFuncPtr =  afwMath.Function2DPtr(afwMath.PolynomialFunction2D(1))
+        sFunc = afwMath.PolynomialFunction2D(1)
         
         # spatial parameters are a list of entries, one per kernel parameter;
         # each entry is a list of spatial parameters
@@ -431,7 +433,8 @@ class ConvolveTestCase(unittest.TestCase):
         )
         
         kVec = makeGaussianKernelVec(kCols, kRows)
-        lcKernel = afwMath.LinearCombinationKernel(kVec, sFuncPtr, sParams)
+        lcKernel = afwMath.LinearCombinationKernel(kVec, sFunc)
+        lcKernel.setSpatialParameters(sParams)
 
         refCnvMaskedImage = afwMath.convolve(maskedImage, lcKernel, edgeBit, doNormalize)
         refCnvImage, refCnvVariance, refCnvMask = \

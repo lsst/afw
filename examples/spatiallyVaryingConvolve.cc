@@ -50,13 +50,10 @@ int main(int argc, char **argv) {
     mImage.readFits(argv[1]);
     
     // construct kernel
-    lsst::afw::math::Kernel::KernelFunctionPtrType gaussFuncPtr(
-        new lsst::afw::math::GaussianFunction2<pixelType>(1, 1));
+    lsst::afw::math::GaussianFunction2<pixelType> gaussFunc(1, 1);
     unsigned int polyOrder = 1;
-    lsst::afw::math::Kernel::SpatialFunctionPtrType polyFuncPtr(
-        new lsst::afw::math::PolynomialFunction2<double>(polyOrder));
-    lsst::afw::math::AnalyticKernel gaussSpVarKernel(
-        gaussFuncPtr, kernelCols, kernelRows, polyFuncPtr);
+    lsst::afw::math::PolynomialFunction2<double> polyFunc(polyOrder);
+    lsst::afw::math::AnalyticKernel gaussSpVarKernel(gaussFunc, kernelCols, kernelRows, polyFunc);
 
     // Get copy of spatial parameters (all zeros), set and feed back to the kernel
     vector<vector<double> > polyParams = gaussSpVarKernel.getSpatialParameters();

@@ -365,7 +365,7 @@ void lsst::afw::math::convolveLinear(
     typedef boost::shared_ptr<maskedImageType> maskedImagePtrType;
     typedef lsst::afw::image::MaskedPixelAccessor<ImageT, MaskT> maskedPixelAccessorType;
     typedef std::vector<maskedPixelAccessorType> maskedPixelAccessorListType;
-    typedef lsst::afw::math::LinearCombinationKernel::KernelListType kernelListType;
+    typedef lsst::afw::math::LinearCombinationKernel::KernelList kernelListType;
     typedef std::vector<double> kernelCoeffListType;
 
     const int cnvCols = static_cast<int>(imCols) + 1 - static_cast<int>(kernel.getCols());
