@@ -112,6 +112,14 @@ lsst::afw::math::Kernel::KernelFunctionPtr lsst::afw::math::AnalyticKernel::getK
     return _kernelFunctionPtr;
 }
 
+std::string lsst::afw::math::AnalyticKernel::toString(std::string prefix) const {
+    std::ostringstream os;
+    os << prefix << "AnalyticKernel:" << std::endl;
+    os << prefix << "..function: " << (_kernelFunctionPtr ? _kernelFunctionPtr->toString() : "None") << std::endl;
+    os << Kernel::toString(prefix + "\t");
+    return os.str();
+};
+
 std::vector<double> lsst::afw::math::AnalyticKernel::getCurrentKernelParameters() const {
     return _kernelFunctionPtr->getParameters();
 }

@@ -158,6 +158,24 @@ void lsst::afw::math::LinearCombinationKernel::checkKernelList(const KernelList 
     }
 }
 
+std::string lsst::afw::math::LinearCombinationKernel::toString(std::string prefix) const {
+    std::ostringstream os;
+    os << prefix << "LinearCombinationKernel:" << std::endl;
+    os << prefix << "..Kernels:" << std::endl;
+    for (KernelList::const_iterator i = _kernelList.begin(); i != _kernelList.end(); ++i) {
+        os << (*i)->toString(prefix + "\t");
+    }
+    os << "..parameters: [ ";
+    for (std::vector<double>::const_iterator i = _kernelParams.begin(); i != _kernelParams.end(); ++i) {
+        if (i != _kernelParams.begin()) os << ", ";
+        os << *i;
+    }
+    os << " ]" << std::endl;
+    os << Kernel::toString(prefix + "\t");
+    return os.str();
+};
+
+
 std::vector<double> lsst::afw::math::LinearCombinationKernel::getCurrentKernelParameters() const {
     return _kernelParams;
 }

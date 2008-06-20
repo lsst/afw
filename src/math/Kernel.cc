@@ -187,3 +187,24 @@ void lsst::afw::math::Kernel::computeKernelParametersFromSpatialModel(std::vecto
         *kParamsIter = (*(*spFuncIter))(x,y);
     }
 }
+
+
+/**
+ * \brief Return a string representation of the kernel
+ */
+std::string lsst::afw::math::Kernel::toString(std::string prefix) const {
+    std::ostringstream os;
+    os << prefix << "Kernel:" << std::endl;
+    os << prefix << "..rows, cols: " << _rows << ", " << _cols << std::endl;
+    os << prefix << "..ctrRow, Col: " << _ctrRow << ", " << _ctrCol << std::endl;
+    os << prefix << "..nKernelParams: " << _nKernelParams << std::endl;
+    os << prefix << "..isSpatiallyVarying: " << (this->isSpatiallyVarying() ? "True" : "False") << std::endl;
+    if (this->isSpatiallyVarying()) {
+        os << prefix << "..spatialFunctions:" << std::endl;
+        for (std::vector<SpatialFunctionPtr>::const_iterator spFuncPtr = _spatialFunctionList.begin();
+            spFuncPtr != _spatialFunctionList.end(); ++spFuncPtr) {
+            os << prefix << "...." << (*spFuncPtr)->toString() << std::endl;
+        }
+    }
+    return os.str();
+};

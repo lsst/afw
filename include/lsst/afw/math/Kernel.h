@@ -185,25 +185,7 @@ namespace math {
 
         void computeKernelParametersFromSpatialModel(std::vector<double> &kernelParams, double x, double y) const;
     
-        virtual std::string toString(std::string prefix = "") const {
-            std::ostringstream os;
-            os << prefix << "Kernel:" << std::endl;
-            os << prefix << "..rows, cols: " << _rows << ", " << _cols << std::endl;
-            os << prefix << "..ctrRow, Col: " << _ctrRow << ", " << _ctrCol << std::endl;
-            os << prefix << "..isSpatiallyVarying: " << (this->isSpatiallyVarying() ? "True" : "False") << std::endl;
-//            os << prefix << "..spatialFunction: " << (_spatialFunctionPtr ? _spatialFunctionPtr->toString() : "None") << std::endl;
-            os << prefix << "..nKernelParams: " << _nKernelParams << std::endl;
-//            os << prefix << "..spatialParams:" << std::endl;
-//            for (std::vector<std::vector<double> >::const_iterator i = _spatialParams.begin(); i != _spatialParams.end(); ++i) {
-//                os << prefix << "....[ ";
-//                for (std::vector<double>::const_iterator j = i->begin(); j != i->end(); ++j) {
-//                    if (j != i->begin()) os << ", ";
-//                    os << *j;
-//                }
-//                os << " ]" << std::endl;
-//            }
-            return os.str();
-        };
+        virtual std::string toString(std::string prefix = "") const;
 
     protected:
         /**
@@ -232,8 +214,6 @@ namespace math {
         unsigned int _ctrRow;
         unsigned int _nKernelParams;
         std::vector<SpatialFunctionPtr> _spatialFunctionList;
-//        SpatialFunctionPtr _spatialFunctionPtr;
-//        std::vector<std::vector<double> > _spatialParams;
     };
 
     /**
@@ -295,13 +275,7 @@ namespace math {
             bool doNormalize = true
         ) const;
             
-        virtual std::string toString(std::string prefix = "") const {
-            std::ostringstream os;
-            os << prefix << "FixedKernel:" << std::endl;
-            os << prefix << "..sum: " << _sum << std::endl;
-            os << Kernel::toString(prefix + "\t");
-            return os.str();
-        };
+        virtual std::string toString(std::string prefix = "") const;
 
     protected:
         virtual void basicSetKernelParameters(std::vector<double> const &params) const;
@@ -365,13 +339,7 @@ namespace math {
     
         virtual Kernel::KernelFunctionPtr getKernelFunction() const;
             
-        virtual std::string toString(std::string prefix = "") const {
-            std::ostringstream os;
-            os << prefix << "AnalyticKernel:" << std::endl;
-            os << prefix << "..function: " << (_kernelFunctionPtr ? _kernelFunctionPtr->toString() : "None") << std::endl;
-            os << Kernel::toString(prefix + "\t");
-            return os.str();
-        };
+        virtual std::string toString(std::string prefix = "") const;
 
     protected:
         virtual void basicSetKernelParameters(std::vector<double> const &params) const;
@@ -417,16 +385,7 @@ namespace math {
 
         std::pair<int, int> getPixel() const { return _pixel; }
 
-        virtual std::string toString(std::string prefix = "") const {
-            const int pixelCol = getPixel().first; // active pixel in Kernel
-            const int pixelRow = getPixel().second;
-
-            std::ostringstream os;            
-            os << prefix << "DeltaFunctionKernel:" << std::endl;
-            os << prefix << "Pixel (c,r) " << pixelCol << "," << pixelRow << ")" << std::endl;
-            os << Kernel::toString(prefix + "\t");
-            return os.str();
-        };
+        virtual std::string toString(std::string prefix = "") const;
 
     private:
         std::pair<int, int> _pixel;
@@ -483,22 +442,7 @@ namespace math {
         
         void checkKernelList(const KernelList &kernelList) const;
         
-        virtual std::string toString(std::string prefix = "") const {
-            std::ostringstream os;
-            os << prefix << "LinearCombinationKernel:" << std::endl;
-            os << prefix << "..Kernels:" << std::endl;
-            for (KernelList::const_iterator i = _kernelList.begin(); i != _kernelList.end(); ++i) {
-                os << (*i)->toString(prefix + "\t");
-            }
-            os << "..parameters: [ ";
-            for (std::vector<double>::const_iterator i = _kernelParams.begin(); i != _kernelParams.end(); ++i) {
-                if (i != _kernelParams.begin()) os << ", ";
-                os << *i;
-            }
-            os << " ]" << std::endl;
-            os << Kernel::toString(prefix + "\t");
-            return os.str();
-        };
+        virtual std::string toString(std::string prefix = "") const;
 
     protected:
         virtual void basicSetKernelParameters(std::vector<double> const &params) const;

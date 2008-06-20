@@ -61,3 +61,13 @@ void lsst::afw::math::DeltaFunctionKernel::computeImage(
     *imPtr = imSum = 1;
 }
 
+std::string lsst::afw::math::DeltaFunctionKernel::toString(std::string prefix) const {
+    const int pixelCol = getPixel().first; // active pixel in Kernel
+    const int pixelRow = getPixel().second;
+
+    std::ostringstream os;            
+    os << prefix << "DeltaFunctionKernel:" << std::endl;
+    os << prefix << "Pixel (c,r) " << pixelCol << "," << pixelRow << ")" << std::endl;
+    os << Kernel::toString(prefix + "\t");
+    return os.str();
+};

@@ -77,6 +77,14 @@ void lsst::afw::math::FixedKernel::computeImage(
     }
 }
 
+std::string lsst::afw::math::FixedKernel::toString(std::string prefix) const {
+    std::ostringstream os;
+    os << prefix << "FixedKernel:" << std::endl;
+    os << prefix << "..sum: " << _sum << std::endl;
+    os << Kernel::toString(prefix + "\t");
+    return os.str();
+};
+
 std::vector<double> lsst::afw::math::FixedKernel::getCurrentKernelParameters() const {
     return std::vector<double>(0);
 }
