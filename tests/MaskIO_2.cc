@@ -1,8 +1,8 @@
 // -*- lsst-c++ -*-
 #include <stdexcept>
 
-#include <lsst/pex/exceptions.h>
-#include <lsst/afw/image.h>
+#include "lsst/pex/exceptions.h"
+#include "lsst/afw/image.h"
 
 using namespace std;
 namespace afwImage = lsst::afw::image;

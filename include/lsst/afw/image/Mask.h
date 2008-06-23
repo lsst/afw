@@ -15,15 +15,15 @@
 
 #include <boost/cstdint.hpp>
 #include <boost/shared_ptr.hpp>
-#include <vw/Image.h>
-#include <vw/Math/BBox.h>
+#include "vw/Image.h"
+#include "vw/Math/BBox.h"
 
-#include <lsst/daf/base.h>
-#include <lsst/daf/data/LsstBase.h>
-#include <lsst/pex/exceptions.h>
-#include <lsst/daf/base/Persistable.h>
-#include <lsst/afw/formatters/ImageFormatter.h>
-#include <lsst/afw/image/ImageExceptions.h>
+#include "lsst/daf/base.h"
+#include "lsst/daf/data/LsstBase.h"
+#include "lsst/pex/exceptions.h"
+#include "lsst/daf/base/Persistable.h"
+#include "lsst/afw/formatters/ImageFormatter.h"
+#include "lsst/afw/image/ImageExceptions.h"
 
 namespace lsst {
 namespace afw {

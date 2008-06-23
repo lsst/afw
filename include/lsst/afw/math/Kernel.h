@@ -17,12 +17,12 @@
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/type_traits/is_base_and_derived.hpp>
-#include <vw/Image.h>
+#include "vw/Image.h"
 
-#include <lsst/daf/data/LsstBase.h>
-#include <lsst/afw/image/Image.h>
-#include <lsst/afw/math/Function.h>
-#include <lsst/afw/math/traits.h>
+#include "lsst/daf/data/LsstBase.h"
+#include "lsst/afw/image/Image.h"
+#include "lsst/afw/math/Function.h"
+#include "lsst/afw/math/traits.h"
 
 namespace lsst {
 namespace afw {
@@ -579,8 +579,17 @@ namespace math {
         virtual void setKernelParameter(unsigned int ind, double value) const;
     
     private:
+        void basicComputeVectors(
+            std::vector<PixelT> &colList,
+            std::vector<PixelT> &rowList,
+            PixelT &imSum,
+            bool doNormalize
+        ) const;
+
         KernelFunctionPtr _kernelColFunctionPtr;
         KernelFunctionPtr _kernelRowFunctionPtr;
+        mutable std::vector<PixelT> _localColList;  // used by computeImage
+        mutable std::vector<PixelT> _localRowList;
     };
     
 }}}   // lsst:afw::math

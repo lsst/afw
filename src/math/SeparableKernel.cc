@@ -2,7 +2,7 @@
 /**
  * \file
  *
- * \brief Definitions of SeparableKernel member functions and explicit instantiations of the class.
+ * \brief Definitions of SeparableKernel member functions.
  *
  * \author Russell Owen
  *
@@ -11,12 +11,10 @@
 #include <algorithm>
 #include <iterator>
 
-#include <vw/Image.h>
+#include "vw/Image.h"
 
-#include <lsst/pex/exceptions.h>
-#include <lsst/afw/math/Kernel.h>
-
-// This file is meant to be included by lsst/afw/math/Kernel.h
+#include "lsst/pex/exceptions.h"
+#include "lsst/afw/math/Kernel.h"
 
 /**
  * \brief Construct an empty spatially invariant SeparableKernel of size 0x0
@@ -39,7 +37,9 @@ lsst::afw::math::SeparableKernel::SeparableKernel(
 :
     Kernel(cols, rows, kernelColFunction.getNParameters() + kernelRowFunction.getNParameters()),
     _kernelColFunctionPtr(kernelColFunction.copy()),
-    _kernelRowFunctionPtr(kernelRowFunction.copy())
+    _kernelRowFunctionPtr(kernelRowFunction.copy()),
+    _localColList(cols),
+    _localRowList(rows)
 {}
 
 /**
@@ -54,7 +54,9 @@ lsst::afw::math::SeparableKernel::SeparableKernel(
 :
     Kernel(cols, rows, kernelColFunction.getNParameters() + kernelRowFunction.getNParameters(), spatialFunction),
     _kernelColFunctionPtr(kernelColFunction.copy()),
-    _kernelRowFunctionPtr(kernelRowFunction.copy())
+    _kernelRowFunctionPtr(kernelRowFunction.copy()),
+    _localColList(cols),
+    _localRowList(rows)
 {}
 
 /**
@@ -71,7 +73,9 @@ lsst::afw::math::SeparableKernel::SeparableKernel(
 :
     Kernel(cols, rows, spatialFunctionList),
     _kernelColFunctionPtr(kernelColFunction.copy()),
-    _kernelRowFunctionPtr(kernelRowFunction.copy())
+    _kernelRowFunctionPtr(kernelRowFunction.copy()),
+    _localColList(cols),
+    _localRowList(rows)
 {
     if (kernelColFunction.getNParameters() + kernelRowFunction.getNParameters() != spatialFunctionList.size()) {
         throw lsst::pex::exceptions::InvalidParameter(
@@ -93,55 +97,19 @@ void lsst::afw::math::SeparableKernel::computeImage(
     if (this->isSpatiallyVarying()) {
         this->setKernelParametersFromSpatialModel(x, y);
     }
+    
+    basicComputeVectors(_localColList, _localRowList, imSum, doNormalize);
 
-    double colSum = 0.0;
-    double colFuncValue;
-    std::vector<PixelT> colList(this->getCols());
-    std::vector<PixelT>::iterator colIter = colList.begin();
-    double xOffset = - static_cast<double>(this->getCtrCol());
-    for (double x = xOffset; colIter != colList.end(); ++colIter, x += 1.0) {
-        colFuncValue = (*_kernelColFunctionPtr)(x);
-        *colIter = colFuncValue;
-        colSum += colFuncValue;
-    }
-
-    double rowSum = 0.0;
-    double rowFuncValue;
-    std::vector<PixelT> rowList(this->getRows());
-    std::vector<PixelT>::iterator rowIter = rowList.begin();
-    double yOffset = - static_cast<double>(this->getCtrCol());
-    for (double y = yOffset; rowIter != rowList.end(); ++rowIter, y += 1.0) {
-        rowFuncValue = (*_kernelRowFunctionPtr)(y);
-        *rowIter = rowFuncValue;
-        rowSum += rowFuncValue;
-    }
-
-    if (doNormalize) {
-        colIter = colList.begin();
-        for ( ; colIter != colList.end(); ++colIter) {
-            *colIter /= colSum;
-        }
-
-        rowIter = rowList.begin();
-        for ( ; rowIter != rowList.end(); ++rowIter) {
-            *rowIter /= rowSum;
-        }
-        imSum = 1;
-    } else {
-        imSum = colSum * rowSum;
-    }
-
-    rowIter = rowList.begin();
+    std::vector<PixelT>::iterator rowIter = _localRowList.begin();
     pixelAccessor imRow = image.origin();
-    for ( ; rowIter != rowList.end(); ++rowIter, imRow.next_row()) {
+    for ( ; rowIter != _localRowList.end(); ++rowIter, imRow.next_row()) {
         pixelAccessor imCol = imRow;
-        colIter = colList.begin();
-        for ( ; colIter != colList.end(); ++colIter, imCol.next_col()) {
+        std::vector<PixelT>::iterator colIter = _localColList.begin();
+        for ( ; colIter != _localColList.end(); ++colIter, imCol.next_col()) {
             *imCol = (*colIter) * (*rowIter);
         }
     }
 }
-
 
 /**
  * @brief Compute the column and row arrays in place, where kernel(col, row) = colList(col) * rowList(row)
@@ -154,7 +122,7 @@ void lsst::afw::math::SeparableKernel::computeVectors(
     std::vector<PixelT> &colList,   ///< column vector
     std::vector<PixelT> &rowList,   ///< row vector
     PixelT &imSum,  ///< sum of image pixels (output)
-    bool doNormalize,   ///< normalize the image (so sum is 1)?
+    bool doNormalize,   ///< normalize the image (so sum of each is 1)?
     double x,   ///< x (column position) at which to compute spatial function
     double y    ///< y (row position) at which to compute spatial function
 ) const {
@@ -164,41 +132,8 @@ void lsst::afw::math::SeparableKernel::computeVectors(
     if (this->isSpatiallyVarying()) {
         this->setKernelParametersFromSpatialModel(x, y);
     }
-
-    double colSum = 0.0;
-    double colFuncValue;
-    std::vector<PixelT>::iterator colIter = colList.begin();
-    double xOffset = - static_cast<double>(this->getCtrCol());
-    for (double x = xOffset; colIter != colList.end(); ++colIter, x += 1.0) {
-        colFuncValue = (*_kernelColFunctionPtr)(x);
-        *colIter = colFuncValue;
-        colSum += colFuncValue;
-    }
-
-    double rowSum = 0.0;
-    double rowFuncValue;
-    std::vector<PixelT>::iterator rowIter = rowList.begin();
-    double yOffset = - static_cast<double>(this->getCtrCol());
-    for (double y = yOffset; rowIter != rowList.end(); ++rowIter, y += 1.0) {
-        rowFuncValue = (*_kernelRowFunctionPtr)(y);
-        *rowIter = rowFuncValue;
-        rowSum += rowFuncValue;
-    }
-
-    if (doNormalize) {
-        colIter = colList.begin();
-        for ( ; colIter != colList.end(); ++colIter) {
-            *colIter /= colSum;
-        }
-
-        rowIter = rowList.begin();
-        for ( ; rowIter != rowList.end(); ++rowIter) {
-            *rowIter /= rowSum;
-        }
-        imSum = 1;
-    } else {
-        imSum = colSum * rowSum;
-    }
+    
+    return basicComputeVectors(colList, rowList, imSum, doNormalize);
 }
 
 /**
@@ -243,5 +178,56 @@ void lsst::afw::math::SeparableKernel::setKernelParameter(unsigned int ind, doub
         _kernelColFunctionPtr->setParameter(ind, value);
     } else {
         _kernelRowFunctionPtr->setParameter(ind - nColParams, value);
+    }
+}
+
+//
+// Private Member Functions
+//
+
+/**
+ * @brief Compute the column and row arrays in place, where kernel(col, row) = colList(col) * rowList(row)
+ *
+ * Warning: no range checking!
+ */
+void lsst::afw::math::SeparableKernel::basicComputeVectors(
+    std::vector<PixelT> &colList,   ///< column vector
+    std::vector<PixelT> &rowList,   ///< row vector
+    PixelT &imSum,  ///< sum of image pixels (output)
+    bool doNormalize   ///< normalize the arrays (so sum of each is 1)?
+) const {
+    double colSum = 0.0;
+    double colFuncValue;
+    std::vector<PixelT>::iterator colIter = colList.begin();
+    double xOffset = - static_cast<double>(this->getCtrCol());
+    for (double x = xOffset; colIter != colList.end(); ++colIter, x += 1.0) {
+        colFuncValue = (*_kernelColFunctionPtr)(x);
+        *colIter = colFuncValue;
+        colSum += colFuncValue;
+    }
+
+    double rowSum = 0.0;
+    double rowFuncValue;
+    std::vector<PixelT>::iterator rowIter = rowList.begin();
+    double yOffset = - static_cast<double>(this->getCtrRow());
+    for (double y = yOffset; rowIter != rowList.end(); ++rowIter, y += 1.0) {
+        rowFuncValue = (*_kernelRowFunctionPtr)(y);
+        *rowIter = rowFuncValue;
+        rowSum += rowFuncValue;
+    }
+
+    if (doNormalize) {
+        colIter = colList.begin();
+        for ( ; colIter != colList.end(); ++colIter) {
+            *colIter /= colSum;
+        }
+
+        rowIter = rowList.begin();
+        for ( ; rowIter != rowList.end(); ++rowIter) {
+            *rowIter /= rowSum;
+        }
+        imSum = 1;
+    } else {
+        imSum = colSum * rowSum;
     }
 }

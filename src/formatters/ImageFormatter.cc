@@ -20,14 +20,14 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/binary_object.hpp>
 
-#include <lsst/daf/base.h>
-#include <lsst/daf/persistence.h>
-#include <lsst/daf/persistence/DataPropertyFormatter.h>
-#include <lsst/pex/logging/Trace.h>
-#include <lsst/afw/formatters/ImageFormatter.h>
-#include <lsst/afw/image/Image.h>
+#include "lsst/daf/base.h"
+#include "lsst/daf/persistence.h"
+#include "lsst/daf/persistence/DataPropertyFormatter.h"
+#include "lsst/pex/logging/Trace.h"
+#include "lsst/afw/formatters/ImageFormatter.h"
+#include "lsst/afw/image/Image.h"
 
-// #include <lsst/afw/image/LSSTFitsResource.h>
+// #include "lsst/afw/image/LSSTFitsResource.h"
 
 #define EXEC_TRACE  20
 static void execTrace(std::string s, int level = EXEC_TRACE) {

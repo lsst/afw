@@ -25,10 +25,10 @@
 #include <string>
 
 #include <boost/format.hpp>
-#include <vw/Math.h>
+#include "vw/Math.h"
 
-#include <lsst/pex/logging/Trace.h>
-#include <lsst/afw/image/ImageUtils.h>
+#include "lsst/pex/logging/Trace.h"
+#include "lsst/afw/image/ImageUtils.h"
 
 // declare private functions
 namespace lsst {

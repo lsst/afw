@@ -2,7 +2,7 @@
 /**
  * \file
  *
- * \brief Definitions of LinearCombinationKernel member functions and explicit instantiations of the class.
+ * \brief Definitions of LinearCombinationKernel member functions.
  *
  * \author Russell Owen
  *
@@ -11,12 +11,10 @@
 #include <stdexcept>
 
 #include <boost/format.hpp>
-#include <vw/Image.h>
+#include "vw/Image.h"
 
-#include <lsst/pex/exceptions.h>
-#include <lsst/afw/math/Kernel.h>
-
-// This file is meant to be included by lsst/afw/math/Kernel.h
+#include "lsst/pex/exceptions.h"
+#include "lsst/afw/math/Kernel.h"
 
 /**
  * \brief Construct an empty LinearCombinationKernel of size 0x0

@@ -13,12 +13,12 @@
 
 #include <string> // for upar.add
 
-#include <Minuit/FunctionMinimum.h>
-#include <Minuit/MnMigrad.h>
-#include <Minuit/MnMinos.h>
-#include <Minuit/MnPrint.h>
+#include "Minuit/FunctionMinimum.h"
+#include "Minuit/MnMigrad.h"
+#include "Minuit/MnMinos.h"
+#include "Minuit/MnPrint.h"
 
-#include <lsst/pex/logging/Trace.h>
+#include "lsst/pex/logging/Trace.h"
 
 // Constructors
 template<typename ReturnT>

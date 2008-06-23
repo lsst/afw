@@ -8,15 +8,15 @@
 #include <cmath>
 #include <cstring>
 
-#include <wcslib/wcs.h>
-#include <wcslib/wcsfix.h>
-#include <wcslib/wcshdr.h>
+#include "wcslib/wcs.h"
+#include "wcslib/wcsfix.h"
+#include "wcslib/wcshdr.h"
 
-#include <lsst/daf/base.h>
-#include <lsst/daf/data/LsstBase.h>
-#include <lsst/daf/data/FitsFormatter.h>
-#include <lsst/pex/exceptions.h>
-#include <lsst/afw/image/Wcs.h>
+#include "lsst/daf/base.h"
+#include "lsst/daf/data/LsstBase.h"
+#include "lsst/daf/data/FitsFormatter.h"
+#include "lsst/pex/exceptions.h"
+#include "lsst/afw/image/Wcs.h"
 
 using lsst::daf::base::DataProperty;
 using lsst::daf::data::LsstBase;

@@ -19,8 +19,8 @@
  * \ingroup afw
  */
 
-#include <lsst/daf/base.h>
-#include <lsst/daf/persistence.h>
+#include "lsst/daf/base.h"
+#include "lsst/daf/persistence.h"
 
 namespace lsst {
 namespace afw {

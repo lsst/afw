@@ -1,7 +1,7 @@
 #include <iostream>
-#include <vw/Image.h>
-#include <vw/FileIO.h>
-#include <vw/Mosaic.h>
+#include "vw/Image.h"
+#include "vw/FileIO.h"
+#include "vw/Mosaic.h"
 
 int main() {
 

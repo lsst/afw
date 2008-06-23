@@ -2,7 +2,7 @@
 /**
  * \file
  *
- * \brief Definitions of FixedKernel member functions and explicit instantiations of the class.
+ * \brief Definitions of FixedKernel member functions.
  *
  * \author Russell Owen
  *
@@ -10,10 +10,10 @@
  */
 #include <stdexcept>
 
-#include <vw/Image.h>
+#include "vw/Image.h"
 
-#include <lsst/pex/exceptions.h>
-#include <lsst/afw/math/Kernel.h>
+#include "lsst/pex/exceptions.h"
+#include "lsst/afw/math/Kernel.h"
 
 //
 // Constructors

@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 #include <stdexcept>
 
-#include <lsst/daf/base.h>
-#include <lsst/pex/exceptions.h>
-#include <lsst/afw/image.h>
+#include "lsst/daf/base.h"
+#include "lsst/pex/exceptions.h"
+#include "lsst/afw/image.h"
 
 using namespace std;
 using lsst::daf::base::DataProperty;

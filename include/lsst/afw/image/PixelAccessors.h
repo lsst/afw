@@ -10,9 +10,9 @@
  *
  * \ingroup afw
  */
-#include <vw/Image.h>
+#include "vw/Image.h"
 
-#include <lsst/afw/image/MaskedImage.h>
+#include "lsst/afw/image/MaskedImage.h"
 
 namespace lsst {
 namespace afw {

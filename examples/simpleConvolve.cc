@@ -2,12 +2,12 @@
 #include <sstream>
 #include <string>
 
-#include <lsst/daf/base.h>
-#include <lsst/pex/logging/Trace.h>
-#include <lsst/afw/math/FunctionLibrary.h>
-#include <lsst/afw/image/Image.h>
-#include <lsst/afw/math/Kernel.h>
-#include <lsst/afw/math/KernelFunctions.h>
+#include "lsst/daf/base.h"
+#include "lsst/pex/logging/Trace.h"
+#include "lsst/afw/math/FunctionLibrary.h"
+#include "lsst/afw/image/Image.h"
+#include "lsst/afw/math/Kernel.h"
+#include "lsst/afw/math/KernelFunctions.h"
 
 using namespace std;
 const std::string outFile("scOut");

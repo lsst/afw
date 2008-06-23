@@ -4,8 +4,8 @@
 #include <stdexcept>
 
 #include "lsst/afw/image/Image.h"
-#include <lsst/pex/exceptions.h>
-#include <lsst/afw/image/LSSTFitsResource.h>
+#include "lsst/pex/exceptions.h"
+#include "lsst/afw/image/LSSTFitsResource.h"
 
 using namespace lsst::afw::image;
 

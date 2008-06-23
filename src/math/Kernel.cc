@@ -2,7 +2,7 @@
 /**
  * \file
  *
- * \brief Definitions of Kernel member functions and explicit instantiations of the class.
+ * \brief Definitions of Kernel member functions.
  *
  * \ingroup afw
  */
@@ -10,8 +10,8 @@
 
 #include <boost/format.hpp>
 
-#include <lsst/pex/exceptions.h>
-#include <lsst/afw/math/Kernel.h>
+#include "lsst/pex/exceptions.h"
+#include "lsst/afw/math/Kernel.h"
 
 lsst::afw::math::generic_kernel_tag lsst::afw::math::generic_kernel_tag_; ///< Used as default value in argument lists
 lsst::afw::math::deltafunction_kernel_tag lsst::afw::math::deltafunction_kernel_tag_; ///< Used as default value in argument lists
@@ -198,7 +198,9 @@ std::string lsst::afw::math::Kernel::toString(std::string prefix) const {
     return os.str();
 };
 
-/// Protected Functions
+//
+// Protected Member Functions
+//
 
 /**
  * @brief Set one kernel parameter

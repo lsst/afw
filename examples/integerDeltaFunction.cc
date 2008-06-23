@@ -1,7 +1,7 @@
 #include <iostream>
 #include <iomanip>
 
-#include <lsst/afw/math/FunctionLibrary.h>
+#include "lsst/afw/math/FunctionLibrary.h"
 
 using namespace std;
 

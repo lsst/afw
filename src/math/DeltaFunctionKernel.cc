@@ -2,16 +2,16 @@
 /**
  * \file
  *
- * \brief Definitions of DeltaFunctionKernel member functions and explicit instantiations of the class.
+ * \brief Definitions of DeltaFunctionKernel member functions.
  *
  * \ingroup fw
  */
 #include <vector>
 
-#include <vw/Image.h>
+#include "vw/Image.h"
 
-#include <lsst/pex/exceptions.h>
-#include <lsst/afw/math/Kernel.h>
+#include "lsst/pex/exceptions.h"
+#include "lsst/afw/math/Kernel.h"
 
 /**
  * \brief Construct a spatially invariant DeltaFunctionKernel

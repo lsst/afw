@@ -5,11 +5,11 @@
 
 #include <boost/scoped_array.hpp>
 #include <boost/format.hpp>
-#include <vw/Core/Exception.h>
-#include <vw/Image/ImageMath.h>
+#include "vw/Core/Exception.h"
+#include "vw/Image/ImageMath.h"
 
-#include <lsst/pex/exceptions.h>
-#include <lsst/afw/image/DiskImageResourceFITS.h>
+#include "lsst/pex/exceptions.h"
+#include "lsst/afw/image/DiskImageResourceFITS.h"
 
 // these two necessary only for appendKey()
 #include <string.h>

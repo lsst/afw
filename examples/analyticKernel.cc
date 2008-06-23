@@ -2,7 +2,7 @@
 
 #include <boost/format.hpp>
 
-#include <lsst/afw/math.h>
+#include "lsst/afw/math.h"
 
 /**
  * Demonstrate an AnalyticKernel, both spatially invariant and spatially varying.

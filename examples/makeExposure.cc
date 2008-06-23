@@ -31,15 +31,15 @@
 #include <string>
 
 #include <boost/format.hpp>
-#include <vw/Core.h>
-#include <vw/Math/BBox.h>
+#include "vw/Core.h"
+#include "vw/Math/BBox.h"
 
-#include <lsst/daf/base.h>
-#include <lsst/pex/exceptions.h>
-#include <lsst/afw/image/Exposure.h>
-#include <lsst/afw/image/MaskedImage.h>
-#include <lsst/pex/logging/Trace.h>
-#include <lsst/afw/image/Wcs.h>
+#include "lsst/daf/base.h"
+#include "lsst/pex/exceptions.h"
+#include "lsst/afw/image/Exposure.h"
+#include "lsst/afw/image/MaskedImage.h"
+#include "lsst/pex/logging/Trace.h"
+#include "lsst/afw/image/Wcs.h"
 
 // FROM POLICY FILE: INPUT AND OUTPUT FILE NAMES FOR EXPOSURES/MASKEDIMAGES
 const std::string miOutFile1("miOutFile1"); // output maskedImage

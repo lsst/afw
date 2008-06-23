@@ -26,12 +26,12 @@
 #include <boost/cstdint.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include <vw/Math/BBox.h>
+#include "vw/Math/BBox.h"
 
-#include <lsst/daf/base/Persistable.h>
-#include <lsst/daf/data/LsstBase.h>
-#include <lsst/afw/image/MaskedImage.h>
-#include <lsst/afw/image/Wcs.h>
+#include "lsst/daf/base/Persistable.h"
+#include "lsst/daf/data/LsstBase.h"
+#include "lsst/afw/image/MaskedImage.h"
+#include "lsst/afw/image/Wcs.h"
 
 namespace lsst {
 namespace afw {

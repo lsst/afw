@@ -1,12 +1,12 @@
 #include <iostream>
 #include <sstream>
 
-#include <lsst/afw/math/FunctionLibrary.h>
-#include <lsst/afw/image/Image.h>
-#include <lsst/afw/image/MaskedImage.h>
-#include <lsst/pex/logging/Trace.h>
-#include <lsst/afw/math/Kernel.h>
-#include <lsst/afw/math/KernelFunctions.h>
+#include "lsst/afw/math/FunctionLibrary.h"
+#include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/MaskedImage.h"
+#include "lsst/pex/logging/Trace.h"
+#include "lsst/afw/math/Kernel.h"
+#include "lsst/afw/math/KernelFunctions.h"
 
 using namespace std;
 namespace pexLog = lsst::pex::logging;

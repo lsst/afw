@@ -1,14 +1,14 @@
 #if !defined(SIMPLE_FITS_H)
 #define SIMPLE_FITS_H 1
 
-#include <vw/Image/Manipulation.h>
-#include <vw/Image/PixelTypes.h>
-#include <vw/Image/ImageResource.h>
+#include "vw/Image/Manipulation.h"
+#include "vw/Image/PixelTypes.h"
+#include "vw/Image/ImageResource.h"
 
-// no such file: #include <lsst/pex/utils/Utils.h>
-#include <lsst/afw/image/Image.h>
-#include <lsst/afw/image/Mask.h>
-#include <lsst/afw/image/Wcs.h>
+// no such file: #include "lsst/pex/utils/Utils.h"
+#include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/Mask.h"
+#include "lsst/afw/image/Wcs.h"
 
 namespace lsst {
 namespace afw {

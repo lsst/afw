@@ -10,7 +10,7 @@
 
 #include <boost/format.hpp>
 
-#include <lsst/afw/math/KernelFunctions.h>
+#include "lsst/afw/math/KernelFunctions.h"
 
 /**
  * \brief Print the pixel values of a Kernel to std::cout

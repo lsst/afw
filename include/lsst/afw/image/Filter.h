@@ -13,8 +13,8 @@
 #include <cassert>
 #include <string>
 
-#include <lsst/daf/persistence/LogicalLocation.h>
-#include <lsst/daf/persistence/DbStorage.h>
+#include "lsst/daf/persistence/LogicalLocation.h"
+#include "lsst/daf/persistence/DbStorage.h"
 
 
 namespace lsst {

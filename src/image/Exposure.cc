@@ -24,15 +24,15 @@
 #include <boost/format.hpp> 
 #include <boost/shared_ptr.hpp>
 
-#include <vw/Math/BBox.h>
+#include "vw/Math/BBox.h"
 
-#include <lsst/daf/base/DataProperty.h>
-#include <lsst/daf/data/LsstBase.h>
-#include <lsst/pex/exceptions.h>
-#include <lsst/afw/image/Exposure.h>
-#include <lsst/afw/image/MaskedImage.h>
-#include <lsst/afw/image/Wcs.h> 
-#include <lsst/afw/formatters/WcsFormatter.h>
+#include "lsst/daf/base/DataProperty.h"
+#include "lsst/daf/data/LsstBase.h"
+#include "lsst/pex/exceptions.h"
+#include "lsst/afw/image/Exposure.h"
+#include "lsst/afw/image/MaskedImage.h"
+#include "lsst/afw/image/Wcs.h" 
+#include "lsst/afw/formatters/WcsFormatter.h"
 
 /** \brief Exposure Class Implementation for LSST: a templated framework class
   * for creating an Exposure from a MaskedImage and a Wcs.

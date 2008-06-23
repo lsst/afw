@@ -14,9 +14,9 @@
 #include <string>
 #include <vector>
 
-#include <lsst/daf/base.h>
-#include <lsst/daf/persistence.h>
-#include <lsst/afw/detection/Source.h>
+#include "lsst/daf/base.h"
+#include "lsst/daf/persistence.h"
+#include "lsst/afw/detection/Source.h"
 
 namespace lsst {
 namespace afw {

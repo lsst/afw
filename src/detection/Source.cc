@@ -6,8 +6,8 @@
 //!
 //##====----------------                                ----------------====##/
 
-#include <lsst/daf/base.h>
-#include <lsst/afw/detection/Source.h>
+#include "lsst/daf/base.h"
+#include "lsst/afw/detection/Source.h"
 
 using namespace lsst::afw::detection;
 

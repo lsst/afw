@@ -16,12 +16,12 @@
 
 #include <boost/format.hpp>
 #include <boost/shared_ptr.hpp>
-#include <vw/Image.h>
-#include <vw/Math/BBox.h>
+#include "vw/Image.h"
+#include "vw/Math/BBox.h"
 
-#include <lsst/pex/exceptions.h>
-#include <lsst/pex/logging/Trace.h> // turn off by recompiling with 'LSST_NO_TRACE 0'
-#include <lsst/afw/image.h>
+#include "lsst/pex/exceptions.h"
+#include "lsst/pex/logging/Trace.h" // turn off by recompiling with 'LSST_NO_TRACE 0'
+#include "lsst/afw/image.h"
 
 /**
  * \brief This test code incorporates some very simple tests of the Wcs Class

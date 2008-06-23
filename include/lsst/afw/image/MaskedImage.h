@@ -13,19 +13,19 @@
 #include <map>
 #include <string>
 
-#include <vw/Image.h>
-#include <vw/Math/BBox.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/iterator/filter_iterator.hpp>
 #include <boost/iterator/zip_iterator.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_io.hpp>
+#include "vw/Image.h"
+#include "vw/Math/BBox.h"
 
-#include <lsst/daf/data/LsstBase.h>
-#include <lsst/daf/base/Persistable.h>
-#include <lsst/afw/formatters/MaskedImageFormatter.h>
-#include <lsst/afw/image/Image.h>
-#include <lsst/afw/image/Mask.h>
+#include "lsst/daf/data/LsstBase.h"
+#include "lsst/daf/base/Persistable.h"
+#include "lsst/afw/formatters/MaskedImageFormatter.h"
+#include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/Mask.h"
 
 namespace lsst {
 namespace afw {

@@ -2,18 +2,16 @@
 /**
  * \file
  *
- * \brief Definitions of AnalyticKernel member functions and explicit instantiations of the class.
+ * \brief Definitions of AnalyticKernel member functions.
  *
  * \author Russell Owen
  *
  * \ingroup afw
  */
-#include <vw/Image.h>
+#include "vw/Image.h"
 
-#include <lsst/pex/exceptions.h>
-#include <lsst/afw/math/Kernel.h>
-
-// This file is meant to be included by lsst/afw/math/Kernel.h
+#include "lsst/pex/exceptions.h"
+#include "lsst/afw/math/Kernel.h"
 
 /**
  * \brief Construct an empty spatially invariant AnalyticKernel of size 0x0

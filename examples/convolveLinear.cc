@@ -2,10 +2,10 @@
 #include <sstream>
 #include <string>
 
-#include <lsst/daf/base.h>
-#include <lsst/pex/logging/Trace.h>
-#include <lsst/afw/image.h>
-#include <lsst/afw/math.h>
+#include "lsst/daf/base.h"
+#include "lsst/pex/logging/Trace.h"
+#include "lsst/afw/image.h"
+#include "lsst/afw/math.h"
 
 using namespace std;
 const std::string outFile("clOut");

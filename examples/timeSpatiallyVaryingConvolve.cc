@@ -3,11 +3,11 @@
 #include <sstream>
 #include <vector>
 
-#include <lsst/afw/math/FunctionLibrary.h>
-#include <lsst/afw/image/Image.h>
-#include <lsst/afw/image/MaskedImage.h>
-#include <lsst/afw/math/Kernel.h>
-#include <lsst/afw/math/KernelFunctions.h>
+#include "lsst/afw/math/FunctionLibrary.h"
+#include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/MaskedImage.h"
+#include "lsst/afw/math/Kernel.h"
+#include "lsst/afw/math/KernelFunctions.h"
 
 /**
  * Time convolution with a spatially varying kernel

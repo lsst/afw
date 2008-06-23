@@ -2,11 +2,11 @@
 #include <sstream>
 #include <ctime>
 
-#include <lsst/afw/math/FunctionLibrary.h>
-#include <lsst/afw/image/Image.h>
-#include <lsst/afw/image/MaskedImage.h>
-#include <lsst/afw/math/Kernel.h>
-#include <lsst/afw/math/KernelFunctions.h>
+#include "lsst/afw/math/FunctionLibrary.h"
+#include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/MaskedImage.h"
+#include "lsst/afw/math/Kernel.h"
+#include "lsst/afw/math/KernelFunctions.h"
 
 int main(int argc, char **argv) {
     typedef float imageType;

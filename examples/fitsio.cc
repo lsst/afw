@@ -1,8 +1,8 @@
 #include <iostream>
 
-#include <vw/Image.h>
-#include <vw/FileIO.h>
-#include <lsst/afw/image/DiskImageResourceFITS.h>
+#include "vw/Image.h"
+#include "vw/FileIO.h"
+#include "lsst/afw/image/DiskImageResourceFITS.h"
 
 int main(int ac, char **av) {
     if (ac < 2) {

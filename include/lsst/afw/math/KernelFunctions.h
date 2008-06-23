@@ -13,13 +13,13 @@
  *
  * \ingroup afw
  */
-#include <vw/Image.h>
-#include <vw/Math/BBox.h>
+#include "vw/Image.h"
+#include "vw/Math/BBox.h"
 
-#include <lsst/afw/image/Image.h>
-#include <lsst/afw/image/MaskedImage.h>
-#include <lsst/afw/image/PixelAccessors.h>
-#include <lsst/afw/math/Kernel.h>
+#include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/MaskedImage.h"
+#include "lsst/afw/image/PixelAccessors.h"
+#include "lsst/afw/math/Kernel.h"
 
 namespace lsst {
 namespace afw {
@@ -93,7 +93,7 @@ namespace math {
 }}}   // lsst::afw::math
     
 #ifndef SWIG // don't bother SWIG with .cc files
-#include <lsst/afw/math/KernelFunctions.cc>
+#include "lsst/afw/math/KernelFunctions.cc"
 #endif
 
 #endif // !defined(LSST_AFW_MATH_KERNELFUNCTIONS_H)

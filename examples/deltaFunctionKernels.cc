@@ -4,7 +4,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/format.hpp>
 
-#include <lsst/afw/math.h>
+#include "lsst/afw/math.h"
 
 using namespace std;
 namespace afwMath = lsst::afw::math;

@@ -5,15 +5,15 @@
 #include <string>
 
 #include <boost/format.hpp>
-#include <vw/Image.h>
-#include <vw/Math/BBox.h>
+#include "vw/Image.h"
+#include "vw/Math/BBox.h"
 
-#include <lsst/daf/base.h>
-#include <lsst/daf/data/LsstBase.h>
-#include <lsst/pex/exceptions.h>
-#include <lsst/pex/logging/Trace.h>
-#include <lsst/afw/image/LSSTFitsResource.h>
-#include <lsst/afw/image/Mask.h>
+#include "lsst/daf/base.h"
+#include "lsst/daf/data/LsstBase.h"
+#include "lsst/pex/exceptions.h"
+#include "lsst/pex/logging/Trace.h"
+#include "lsst/afw/image/LSSTFitsResource.h"
+#include "lsst/afw/image/Mask.h"
 
 using namespace lsst::afw::image;
 

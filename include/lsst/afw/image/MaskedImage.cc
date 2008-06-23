@@ -4,8 +4,8 @@
 
 #include <typeinfo>
 #include <sys/stat.h>
-#include <lsst/pex/logging/Trace.h>
-#include <lsst/pex/exceptions.h>
+#include "lsst/pex/logging/Trace.h"
+#include "lsst/pex/exceptions.h"
 
 /**
  * \brief Construct an empty MaskedImage of size 0x0

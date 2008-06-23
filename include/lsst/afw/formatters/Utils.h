@@ -9,9 +9,9 @@
 
 #include <string>
 
-#include <lsst/daf/base/DataProperty.h>
-#include <lsst/daf/persistence/LogicalLocation.h>
-#include <lsst/pex/policy/Policy.h>
+#include "lsst/daf/base/DataProperty.h"
+#include "lsst/daf/persistence/LogicalLocation.h"
+#include "lsst/pex/policy/Policy.h"
 
 
 namespace lsst {

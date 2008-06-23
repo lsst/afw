@@ -7,13 +7,13 @@
 
 #include <string>
 
-#include <vw/Math/BBox.h>
-#include <vw/Image/PixelTypes.h>
-#include <vw/Image/ImageResource.h>
-#include <vw/FileIO/DiskImageResource.h>
+#include "vw/Math/BBox.h"
+#include "vw/Image/PixelTypes.h"
+#include "vw/Image/ImageResource.h"
+#include "vw/FileIO/DiskImageResource.h"
 
-#include <lsst/daf/base/DataProperty.h>
-// no such file: #include <lsst/pex/utils/Utils.h>
+#include "lsst/daf/base/DataProperty.h"
+// no such file: #include "lsst/pex/utils/Utils.h"
 
 namespace lsst {
 namespace afw {

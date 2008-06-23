@@ -54,8 +54,8 @@ dnl
 #include <boost/format.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include <lsst/daf/base.h>
-#include <lsst/pex/exceptions.h>
+#include "lsst/daf/base.h"
+#include "lsst/pex/exceptions.h"
 
 
 namespace lsst {
