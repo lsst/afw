@@ -29,6 +29,6 @@ int main() {
         
         kernel.setKernelParameters(offVec);
         
-        lsst::afw::math::printKernel(kernel);
+        lsst::afw::math::printKernel(kernel, true);
     }
 }

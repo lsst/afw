@@ -172,7 +172,7 @@ void lsst::afw::math::basicConvolve(
             for (int cnvCol = cnvStartCol; cnvCol < cnvEndCol; ++cnvCol, mImageColAcc.nextCol(), cnvColAcc.nextCol()) {
                 KernelPixelT kSum;
                 kernel.computeImage(
-                    kernelImage, kSum, lsst::afw::image::indexToPosition(cnvCol), rowPos, false);
+                    kernelImage, kSum, false, lsst::afw::image::indexToPosition(cnvCol), rowPos);
                 // g++ 3.6.4 requires the template arguments here to find the function; I don't know why
                 // Is this still true? RHL
                 lsst::afw::math::apply<ImageT, MaskT>(
@@ -187,7 +187,7 @@ void lsst::afw::math::basicConvolve(
         // kernel is spatially invariant
         lsst::pex::logging::Trace("lsst.afw.kernel.convolve", 3, "kernel is spatially invariant");
         KernelPixelT kSum;
-        lsst::afw::image::Image<KernelPixelT> kernelImage = kernel.computeNewImage(kSum, 0.0, 0.0, doNormalize);
+        lsst::afw::image::Image<KernelPixelT> kernelImage = kernel.computeNewImage(kSum, doNormalize, 0.0, 0.0);
         kernelAccessorType kernelAccessor = kernelImage.origin();
         for (int cnvRow = cnvStartRow; cnvRow < cnvEndRow; ++cnvRow, cnvRowAcc.nextRow(), mImageRowAcc.nextRow()) {
             maskedPixelAccessorType mImageColAcc = mImageRowAcc;

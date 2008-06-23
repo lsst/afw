@@ -82,9 +82,6 @@ inline bool lsst::afw::math::Kernel::isSpatiallyVarying() const {
 /**
  * \brief Set the kernel parameters of a spatially invariant kernel.
  *
- * Note: if lsst::pex::exceptions::RuntimeError becomes available then 
- * I plan to use that instead of lsst::pex::exceptions::Exception.
- *
  * \throw lsst::pex::exceptions::Runtime if the kernel has a spatial function
  * \throw lsst::pex::exceptions::InvalidParameter if the params vector is the wrong length
  */
@@ -92,5 +89,11 @@ inline void lsst::afw::math::Kernel::setKernelParameters(std::vector<double> con
     if (this->isSpatiallyVarying()) {
         throw lsst::pex::exceptions::Runtime("Kernel is spatially varying");
     }
-    this->basicSetKernelParameters(params);
+    const unsigned int nParams = this->getNKernelParameters();
+    if (nParams != params.size()) {
+        throw lsst::pex::exceptions::InvalidParameter("Number of parameters is wrong");
+    }
+    for (unsigned int ii = 0; ii < nParams; ++ii) {
+        this->setKernelParameter(ii, params[ii]);
+    }
 }

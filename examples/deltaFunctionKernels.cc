@@ -50,6 +50,6 @@ int main() {
             cout << kernelParams[ii] << " ";
         }
         cout << endl << endl;
-        lsst::afw::math::printKernel(deltaFunctionKernelSet);
+        lsst::afw::math::printKernel(deltaFunctionKernelSet, true);
     }
 }

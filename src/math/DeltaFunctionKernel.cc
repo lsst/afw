@@ -42,9 +42,9 @@ lsst::afw::math::DeltaFunctionKernel::DeltaFunctionKernel(int pixelCol,
 void lsst::afw::math::DeltaFunctionKernel::computeImage(
     lsst::afw::image::Image<PixelT> &image,
     PixelT &imSum,
+    bool doNormalize,
     double x,
-    double y,
-    bool
+    double y
 ) const {
     typedef lsst::afw::image::Image<PixelT>::pixel_accessor pixelAccessor;
     if ((image.getCols() != this->getCols()) || (image.getRows() != this->getRows())) {

@@ -24,6 +24,7 @@ env.SharedLibrary(
         "math/Kernel.cc",
         "math/KernelFunctions.cc",
         "math/LinearCombinationKernel.cc",
+        "math/SeparableKernel.cc",
     )],
     LIBS=filter(lambda x: x != "afw", env.getlibs("afw"))
 )

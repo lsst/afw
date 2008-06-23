@@ -115,32 +115,13 @@ lsst::afw::math::Kernel::Kernel(
  */
 lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT> lsst::afw::math::Kernel::computeNewImage(
     PixelT &imSum,  ///< sum of image pixels
-    double x,       ///< x (column position) at which to compute spatial function
-    double y,       ///< y (row position) at which to compute spatial function
-    bool doNormalize    ///< normalize the image (so sum is 1)?
+    bool doNormalize,   ///< normalize the image (so sum is 1)?
+    double x,   ///< x (column position) at which to compute spatial function
+    double y    ///< y (row position) at which to compute spatial function
 ) const {
     lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT> retImage(this->getCols(), this->getRows());
-    this->computeImage(retImage, imSum, x, y, doNormalize);
+    this->computeImage(retImage, imSum, doNormalize, x, y);
     return retImage;
-}
-
-/**
- * \brief Return the kernel parameters at a specified position
- *
- * If the kernel is not spatially varying then the position is ignored
- * If there are no kernel parameters then an empty vector is returned
- */
-std::vector<double> lsst::afw::math::Kernel::getKernelParameters(
-    double x,   ///< x at which to evaluate the spatial model
-    double y    ///< y at which to evaluate the spatial model
-) const {
-    if (isSpatiallyVarying()) {
-        std::vector<double> kernelParams(getNKernelParameters());
-        computeKernelParametersFromSpatialModel(kernelParams, x, y);
-        return kernelParams;
-    } else {
-        return getCurrentKernelParameters();
-    }
 }
 
 /**
@@ -174,20 +155,28 @@ void lsst::afw::math::Kernel::setSpatialParameters(const std::vector<std::vector
 /**
  * \brief Compute the kernel parameters at a specified point
  *
- * Warning: this is a low-level function that assumes:
- * * there is a spatial model
- * * kernelParams is the right length
- * It will fail in unpredictable ways if either condition is not met.
+ * Warning: this is a low-level function that assumes kernelParams is the right length.
+ * It will fail in unpredictable ways if that condition is not met.
  * The only reason it is not protected is because the convolveLinear function needs it.
  */
 void lsst::afw::math::Kernel::computeKernelParametersFromSpatialModel(std::vector<double> &kernelParams, double x, double y) const {
-    std::vector<double>::iterator kParamsIter = kernelParams.begin();
-    std::vector<SpatialFunctionPtr>::const_iterator spFuncIter = _spatialFunctionList.begin();
-    for ( ; kParamsIter != kernelParams.end(); ++kParamsIter, ++spFuncIter) {
-        *kParamsIter = (*(*spFuncIter))(x,y);
+    std::vector<double>::iterator paramIter = kernelParams.begin();
+    std::vector<SpatialFunctionPtr>::const_iterator funcIter = _spatialFunctionList.begin();
+    for ( ; funcIter != _spatialFunctionList.end(); ++funcIter, ++paramIter) {
+        *paramIter = (*(*funcIter))(x,y);
     }
 }
 
+/**
+ * @brief Return the current kernel parameters
+ *
+ * If the kernel is spatially varying then the parameters are those last computed.
+ * See also computeKernelParametersFromSpatialModel.
+ * If there are no kernel parameters then returns an empty vector.
+ */
+std::vector<double> lsst::afw::math::Kernel::getKernelParameters() const {
+    return std::vector<double>();
+}
 
 /**
  * \brief Return a string representation of the kernel
@@ -208,3 +197,34 @@ std::string lsst::afw::math::Kernel::toString(std::string prefix) const {
     }
     return os.str();
 };
+
+/// Protected Functions
+
+/**
+ * @brief Set one kernel parameter
+ *
+ * Classes that have kernel parameters must subclass this function.
+ *
+ * This function is marked "const", despite modifying unimportant internals,
+ * so that computeImage can be const.
+ *
+ * @throw lsst::pex::exceptions::RuntimeError always (unless subclassed)
+ */
+void lsst::afw::math::Kernel::setKernelParameter(unsigned int ind, double value) const {
+    throw lsst::pex::exceptions::InvalidParameter("Kernel has no kernel parameters");
+}
+
+/**
+ * @brief Set the kernel parameters from the spatial model (if any).
+ *
+ * This function has no effect if there is no spatial model.
+ *
+ * This function is marked "const", despite modifying unimportant internals,
+ * so that computeImage can be const.
+ */
+void lsst::afw::math::Kernel::setKernelParametersFromSpatialModel(double x, double y) const {
+    std::vector<SpatialFunctionPtr>::const_iterator funcIter = _spatialFunctionList.begin();
+    for (unsigned int ii = 0; funcIter != _spatialFunctionList.end(); ++funcIter, ++ii) {
+        this->setKernelParameter(ii, (*(*funcIter))(x,y));
+    }
+}

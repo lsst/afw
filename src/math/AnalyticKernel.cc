@@ -28,7 +28,7 @@ lsst::afw::math::AnalyticKernel::AnalyticKernel()
  * \brief Construct a spatially invariant AnalyticKernel
  */
 lsst::afw::math::AnalyticKernel::AnalyticKernel(
-    Kernel::KernelFunction const &kernelFunction,
+    KernelFunction const &kernelFunction,
     unsigned int cols,
     unsigned int rows)
 :
@@ -40,7 +40,7 @@ lsst::afw::math::AnalyticKernel::AnalyticKernel(
  * \brief Construct a spatially varying AnalyticKernel, replicating a spatial function once per kernel function parameter
  */
 lsst::afw::math::AnalyticKernel::AnalyticKernel(
-    Kernel::KernelFunction const &kernelFunction,
+    KernelFunction const &kernelFunction,
     unsigned int cols,
     unsigned int rows,
     Kernel::SpatialFunction const &spatialFunction)
@@ -55,7 +55,7 @@ lsst::afw::math::AnalyticKernel::AnalyticKernel(
  * \throw lsst::pex::exceptions::InvalidParameter if the length of spatialFunctionList != # kernel function parameters.
  */
 lsst::afw::math::AnalyticKernel::AnalyticKernel(
-    Kernel::KernelFunction const &kernelFunction,
+    KernelFunction const &kernelFunction,
     unsigned int cols,
     unsigned int rows,
     std::vector<Kernel::SpatialFunctionPtr> const &spatialFunctionList)
@@ -71,18 +71,16 @@ lsst::afw::math::AnalyticKernel::AnalyticKernel(
 void lsst::afw::math::AnalyticKernel::computeImage(
     lsst::afw::image::Image<PixelT> &image,
     PixelT &imSum,
+    bool doNormalize,
     double x,
-    double y,
-    bool doNormalize
+    double y
 ) const {
     typedef lsst::afw::image::Image<PixelT>::pixel_accessor pixelAccessor;
     if ((image.getCols() != this->getCols()) || (image.getRows() != this->getRows())) {
         throw lsst::pex::exceptions::InvalidParameter("image is the wrong size");
     }
     if (this->isSpatiallyVarying()) {
-        std::vector<double> kernelParams(this->getNKernelParameters());
-        this->computeKernelParametersFromSpatialModel(kernelParams, x, y);
-        this->basicSetKernelParameters(kernelParams);
+        this->setKernelParametersFromSpatialModel(x, y);
     }
     pixelAccessor imRow = image.origin();
     double xOffset = - static_cast<double>(this->getCtrCol());
@@ -105,11 +103,11 @@ void lsst::afw::math::AnalyticKernel::computeImage(
 }
 
 /**
- * \brief Get the kernel function
+ * \brief Get a deep copy of the kernel function
  */
-lsst::afw::math::Kernel::KernelFunctionPtr lsst::afw::math::AnalyticKernel::getKernelFunction(
+lsst::afw::math::AnalyticKernel::KernelFunctionPtr lsst::afw::math::AnalyticKernel::getKernelFunction(
 ) const {
-    return _kernelFunctionPtr;
+    return _kernelFunctionPtr->copy();
 }
 
 std::string lsst::afw::math::AnalyticKernel::toString(std::string prefix) const {
@@ -120,14 +118,13 @@ std::string lsst::afw::math::AnalyticKernel::toString(std::string prefix) const 
     return os.str();
 };
 
-std::vector<double> lsst::afw::math::AnalyticKernel::getCurrentKernelParameters() const {
+std::vector<double> lsst::afw::math::AnalyticKernel::getKernelParameters() const {
     return _kernelFunctionPtr->getParameters();
 }
 
 //
 // Protected Member Functions
 //
-
-void lsst::afw::math::AnalyticKernel::basicSetKernelParameters(std::vector<double> const &params) const {
-    _kernelFunctionPtr->setParameters(params);
+void lsst::afw::math::AnalyticKernel::setKernelParameter(unsigned int ind, double value) const {
+    _kernelFunctionPtr->setParameter(ind, value);
 }

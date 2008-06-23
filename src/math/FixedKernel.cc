@@ -46,9 +46,9 @@ lsst::afw::math::FixedKernel::FixedKernel(
 void lsst::afw::math::FixedKernel::computeImage(
     lsst::afw::image::Image<PixelT> &image,
     PixelT &imSum,
+    bool doNormalize,
     double x,
-    double y,
-    bool doNormalize
+    double y
 ) const {
     typedef lsst::afw::image::Image<PixelT>::pixel_accessor pixelAccessor;
     if ((image.getCols() != this->getCols()) || (image.getRows() != this->getRows())) {
@@ -84,21 +84,3 @@ std::string lsst::afw::math::FixedKernel::toString(std::string prefix) const {
     os << Kernel::toString(prefix + "\t");
     return os.str();
 };
-
-std::vector<double> lsst::afw::math::FixedKernel::getCurrentKernelParameters() const {
-    return std::vector<double>(0);
-}
-
-//
-// Protected Member Functions
-//
-
-void lsst::afw::math::FixedKernel::basicSetKernelParameters(std::vector<double> const &params) const {
-    if (params.size() > 0) {
-        throw lsst::pex::exceptions::InvalidParameter("FixedKernel has no kernel parameters");
-    }
-}
-
-//
-// Private Member Functions
-//

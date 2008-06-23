@@ -2,13 +2,13 @@
 #ifndef LSST_AFW_MATH_KERNEL_H
 #define LSST_AFW_MATH_KERNEL_H
 /**
- * \file
+ * @file
  *
- * \brief Declare the Kernel class and subclasses.
+ * @brief Declare the Kernel class and subclasses.
  *
- * \author Russell Owen
+ * @author Russell Owen
  *
- * \ingroup afw
+ * @ingroup afw
  */
 #include <vector>
 
@@ -29,7 +29,7 @@ namespace afw {
 namespace math {
 
     /**
-     * \brief Kernels are used for convolution with MaskedImages and (eventually) Images
+     * @brief Kernels are used for convolution with MaskedImages and (eventually) Images
      *
      * Kernel is a virtual base class; it cannot be instantiated. The following notes apply to
      * Kernel and to its subclasses.
@@ -97,16 +97,14 @@ namespace math {
      * in evaluating the functions. However, it would be difficult or impossible to pre-instantiate
      * the desired template classes, a requirement of the LSST coding standards.
      *
-     * \ingroup afw
+     * @ingroup afw
      */
     class Kernel : public lsst::daf::data::LsstBase {
     
     public:
         typedef double PixelT;
         typedef boost::shared_ptr<Kernel> PtrT;
-        typedef boost::shared_ptr<lsst::afw::math::Function2<PixelT> > KernelFunctionPtr;
         typedef boost::shared_ptr<lsst::afw::math::Function2<double> > SpatialFunctionPtr;
-        typedef lsst::afw::math::Function2<PixelT> KernelFunction;
         typedef lsst::afw::math::Function2<double> SpatialFunction;
 
         
@@ -138,74 +136,126 @@ namespace math {
         
         lsst::afw::image::Image<PixelT> computeNewImage(
             PixelT &imSum,
+            bool doNormalize,
             double x = 0.0,
-            double y = 0.0,
-            bool doNormalize = true
+            double y = 0.0
         ) const;        
             
         /**
-         * \brief Compute an image (pixellized representation of the kernel) in place
-         *
-         * \return the sum of the image pixels. Warning: the sum will be wrong
-         * if doNormalize is true and the kernel is of integer type.
+         * @brief Compute an image (pixellized representation of the kernel) in place
          *
          * x, y are ignored if there is no spatial function.
          *
-         * \throw lsst::pex::exceptions::InvalidParameter if the image is the wrong size
+         * @throw lsst::pex::exceptions::InvalidParameter if the image is the wrong size
          */
         virtual void computeImage(
-            lsst::afw::image::Image<PixelT> &image,   ///< image whose pixels are to be set
-            PixelT &imSum,  ///< sum of image pixels
+            lsst::afw::image::Image<PixelT> &image,   ///< image whose pixels are to be set (output)
+            PixelT &imSum,  ///< sum of image pixels (output)
+            bool doNormalize,   ///< normalize the image (so sum is 1)?
             double x = 0.0, ///< x (column position) at which to compute spatial function
-            double y = 0.0, ///< y (row position) at which to compute spatial function
-            bool doNormalize = true ///< normalize the image (so sum is 1)?
+            double y = 0.0  ///< y (row position) at which to compute spatial function
         ) const = 0;
     
-        inline unsigned int getCols() const;
+        /**
+         * @brief Return the number of columns
+         */
+        inline unsigned int getCols() const {
+            return _cols;
+        };
         
-        inline unsigned int getRows() const;
+        /**
+         * @brief Return the number of rows
+         */
+        inline unsigned int getRows() const {
+            return _rows;
+        };
         
-        inline unsigned int getCtrCol() const;
+        /**
+         * @brief Return index of the center column
+         */
+        inline unsigned int getCtrCol() const {
+            return _ctrCol;
+        };
 
-        inline unsigned int getCtrRow() const;
+        /**
+         * @brief Return index of the center row
+         */
+        inline unsigned int getCtrRow() const {
+            return _ctrRow;
+        };
         
-        virtual std::vector<double> getKernelParameters(double x = 0, double y = 0) const;
+        /**
+         * @brief Return the number of kernel parameters (0 if none)
+         */
+        inline unsigned int getNKernelParameters() const {
+            return _nKernelParams;
+        };
+    
+        /**
+         * @brief Return the number of spatial parameters (0 if not spatially varying)
+         */
+        inline unsigned int getNSpatialParameters() const {
+            return this->isSpatiallyVarying() ? _spatialFunctionList[0]->getNParameters() : 0;
+        };
 
-        inline unsigned int getNKernelParameters() const;
+        virtual std::vector<double> getKernelParameters() const;
+        
+        inline void setCtrCol(unsigned int ctrCol) {
+            _ctrCol = ctrCol;
+        };
+        
+        inline void setCtrRow(unsigned int ctrRow) {
+            _ctrRow = ctrRow;
+        };
     
-        inline unsigned int getNSpatialParameters() const;
-    
-        inline std::vector<std::vector<double> > getSpatialParameters() const;
+        /**
+         * @brief Return the spatial parameters parameters (an empty vector if not spatially varying)
+         */
+        inline std::vector<std::vector<double> > getSpatialParameters() const {
+            std::vector<std::vector<double> > spatialParams;
+            std::vector<SpatialFunctionPtr>::const_iterator spFuncIter = _spatialFunctionList.begin();
+            for ( ; spFuncIter != _spatialFunctionList.end(); ++spFuncIter) {
+                spatialParams.push_back((*spFuncIter)->getParameters());
+            }
+            return spatialParams;
+        };
             
-        inline bool isSpatiallyVarying() const;    
+        /**
+         * @brief Return true iff the kernel is spatially varying (has a spatial function)
+         */
+        inline bool isSpatiallyVarying() const {
+            return _spatialFunctionList.size() != 0;
+        };
     
-        inline void setKernelParameters(std::vector<double> const &params);
+        /**
+         * @brief Set the kernel parameters of a spatially invariant kernel.
+         *
+         * @throw lsst::pex::exceptions::Runtime if the kernel has a spatial function
+         * @throw lsst::pex::exceptions::InvalidParameter if the params vector is the wrong length
+         */
+        inline void setKernelParameters(std::vector<double> const &params) {
+            if (this->isSpatiallyVarying()) {
+                throw lsst::pex::exceptions::Runtime("Kernel is spatially varying");
+            }
+            const unsigned int nParams = this->getNKernelParameters();
+            if (nParams != params.size()) {
+                throw lsst::pex::exceptions::InvalidParameter("Number of parameters is wrong");
+            }
+            for (unsigned int ii = 0; ii < nParams; ++ii) {
+                this->setKernelParameter(ii, params[ii]);
+            }
+        };
         
-        virtual void setSpatialParameters(const std::vector<std::vector<double> > params);
+        void setSpatialParameters(const std::vector<std::vector<double> > params);
 
         void computeKernelParametersFromSpatialModel(std::vector<double> &kernelParams, double x, double y) const;
     
         virtual std::string toString(std::string prefix = "") const;
 
     protected:
-        /**
-         * \brief Set the kernel parameters.
-         *
-         * Use with caution. This function is const but setting the kernel parameters
-         * is not always a const operation. For example if the kernel has a spatial model
-         * then it is a const operation if part of computing the kernel at a particular position.
-         * But if there is no spatial model then it is not const.
-         *
-         * \throw lsst::pex::exceptions::InvalidParameter if the params vector is the wrong length
-         */
-        virtual void basicSetKernelParameters(std::vector<double> const &params) const {};
-                
-        /**
-         * \brief Get the current kernel parameters.
-         *
-         * Assumes there is no spatial model.
-         */
-        virtual std::vector<double> getCurrentKernelParameters() const { return std::vector<double>(); }
+        virtual void setKernelParameter(unsigned int ind, double value) const;
+
+        void setKernelParametersFromSpatialModel(double x, double y) const;
            
     private:
         unsigned int _cols;
@@ -217,13 +267,13 @@ namespace math {
     };
 
     /**
-     * \brief A list of Kernels
+     * @brief A list of Kernels
      *
      * This is basically a wrapper for an stl container, but defines
      * a conversion from KernelList<K1> to KernelList<K2> providing
      * that K1 is derived from K2 (or that K1 == K2)
      *
-     * \ingroup afw
+     * @ingroup afw
      */
     template<typename _KernelT=Kernel>
     class KernelList : public std::vector<typename _KernelT::PtrT> {
@@ -249,11 +299,11 @@ namespace math {
     };
     
     /**
-     * \brief A kernel created from an Image
+     * @brief A kernel created from an Image
      *
      * It has no adjustable parameters and so cannot be spatially varying.
      *
-     * \ingroup afw
+     * @ingroup afw
      */
     class FixedKernel : public Kernel {
     public:
@@ -270,17 +320,12 @@ namespace math {
         virtual void computeImage(
             lsst::afw::image::Image<PixelT> &image,
             PixelT &imSum,
+            bool doNormalize,
             double x = 0.0,
-            double y = 0.0,
-            bool doNormalize = true
+            double y = 0.0
         ) const;
             
         virtual std::string toString(std::string prefix = "") const;
-
-    protected:
-        virtual void basicSetKernelParameters(std::vector<double> const &params) const;
-            
-        virtual std::vector<double> getCurrentKernelParameters() const;
 
     private:
         lsst::afw::image::Image<PixelT> _image;
@@ -289,9 +334,9 @@ namespace math {
     
     
     /**
-     * \brief A kernel described by a function.
+     * @brief A kernel described by a function.
      *
-     * The function's x, y arguments are:
+     * The function's x, y arguments are as follows:
      * * -getCtrCol(), -getCtrRow() for the lower left corner pixel
      * * 0, 0 for the center pixel
      * * (getCols() - 1) - getCtrCol(), (getRows() - 1) - getCtrRow() for the upper right pixel
@@ -299,29 +344,31 @@ namespace math {
      * Note: each pixel is set to the value of the kernel function at the center of the pixel
      * (rather than averaging the function over the area of the pixel).
      *
-     * \ingroup afw
+     * @ingroup afw
      */
     class AnalyticKernel : public Kernel {
     public:
         typedef boost::shared_ptr<AnalyticKernel> PtrT;
+        typedef lsst::afw::math::Function2<PixelT> KernelFunction;
+        typedef boost::shared_ptr<lsst::afw::math::Function2<PixelT> > KernelFunctionPtr;
         
         explicit AnalyticKernel();
 
         explicit AnalyticKernel(
-            Kernel::KernelFunction const &kernelFunction,
+            KernelFunction const &kernelFunction,
             unsigned int cols,
             unsigned int rows
         );
         
         explicit AnalyticKernel(
-            Kernel::KernelFunction const &kernelFunction,
+            KernelFunction const &kernelFunction,
             unsigned int cols,
             unsigned int rows,
             Kernel::SpatialFunction const &spatialFunction
         );
         
         explicit AnalyticKernel(
-            Kernel::KernelFunction const &kernelFunction,
+            KernelFunction const &kernelFunction,
             unsigned int cols,
             unsigned int rows,
             std::vector<Kernel::SpatialFunctionPtr> const &spatialFunctionList
@@ -332,27 +379,27 @@ namespace math {
         virtual void computeImage(
             lsst::afw::image::Image<PixelT> &image,
             PixelT &imSum,
+            bool doNormalize,
             double x = 0.0,
-            double y = 0.0,
-            bool doNormalize = true
+            double y = 0.0
         ) const;
+
+        virtual std::vector<double> getKernelParameters() const;
     
-        virtual Kernel::KernelFunctionPtr getKernelFunction() const;
+        virtual KernelFunctionPtr getKernelFunction() const;
             
         virtual std::string toString(std::string prefix = "") const;
 
     protected:
-        virtual void basicSetKernelParameters(std::vector<double> const &params) const;
-
-        virtual std::vector<double> getCurrentKernelParameters() const;
+        virtual void setKernelParameter(unsigned int ind, double value) const;
     
     private:
-        Kernel::KernelFunctionPtr _kernelFunctionPtr;
+        KernelFunctionPtr _kernelFunctionPtr;
     };
     
     
     /**
-     * \brief A kernel that has only one non-zero pixel
+     * @brief A kernel that has only one non-zero pixel
      *
      * The function's x, y arguments are:
      * * -getCtrCol(), -getCtrRow() for the lower left corner pixel
@@ -362,7 +409,7 @@ namespace math {
      * Note: each pixel is set to the value of the kernel function at the center of the pixel
      * (rather than averaging the function over the area of the pixel).
      *
-     * \ingroup afw
+     * @ingroup afw
      */
     class DeltaFunctionKernel : public Kernel {
     public:
@@ -378,9 +425,9 @@ namespace math {
         virtual void computeImage(
             lsst::afw::image::Image<PixelT> &image,
             PixelT &imSum,
+            bool doNormalize,
             double x = 0.0,
-            double y = 0.0,
-            bool doNormalize = true
+            double y = 0.0
         ) const;
 
         std::pair<int, int> getPixel() const { return _pixel; }
@@ -393,7 +440,7 @@ namespace math {
     
 
     /**
-     * \brief A kernel that is a linear combination of fixed basis kernels.
+     * @brief A kernel that is a linear combination of fixed basis kernels.
      * 
      * Convolution may be performed by first convolving the image
      * with each fixed kernel, then adding the resulting images using the (possibly
@@ -404,7 +451,7 @@ namespace math {
      * - The kernels are assumed to be invariant; do not try to modify the basis kernels
      *   while using LinearCombinationKernel.
      *
-     * \ingroup afw
+     * @ingroup afw
      */
     class LinearCombinationKernel : public Kernel {
     public:
@@ -433,10 +480,12 @@ namespace math {
         virtual void computeImage(
             lsst::afw::image::Image<PixelT> &image,
             PixelT &imSum,
+            bool doNormalize,
             double x = 0.0,
-            double y = 0.0,
-            bool doNormalize = true
+            double y = 0.0
         ) const;
+
+        virtual std::vector<double> getKernelParameters() const;
                 
         virtual KernelList const &getKernelList() const;
         
@@ -445,9 +494,7 @@ namespace math {
         virtual std::string toString(std::string prefix = "") const;
 
     protected:
-        virtual void basicSetKernelParameters(std::vector<double> const &params) const;
-
-        virtual std::vector<double> getCurrentKernelParameters() const;
+        virtual void setKernelParameter(unsigned int ind, double value) const;
     
     private:
         void _computeKernelImageList();
@@ -455,11 +502,87 @@ namespace math {
         std::vector<boost::shared_ptr<lsst::afw::image::Image<PixelT> > > _kernelImagePtrList;
         mutable std::vector<double> _kernelParams;
     };
-}}}   // lsst:afw::math
+
     
-// Included definitions for templated and inline member functions
-#ifndef SWIG // don't bother SWIG with .cc files
-#include <lsst/afw/math/Kernel.cc>
-#endif
+    /**
+     * @brief A kernel described by a pair of functions: func(x, y) = colFunc(x) * rowFunc(y)
+     *
+     * The function's x, y arguments are as follows:
+     * * -getCtrCol(), -getCtrRow() for the lower left corner pixel
+     * * 0, 0 for the center pixel
+     * * (getCols() - 1) - getCtrCol(), (getRows() - 1) - getCtrRow() for the upper right pixel
+     *
+     * Note: each pixel is set to the value of the kernel function at the center of the pixel
+     * (rather than averaging the function over the area of the pixel).
+     *
+     * @ingroup afw
+     */
+    class SeparableKernel : public Kernel {
+    public:
+        typedef boost::shared_ptr<SeparableKernel> PtrT;
+        typedef lsst::afw::math::Function1<PixelT> KernelFunction;
+        typedef boost::shared_ptr<KernelFunction> KernelFunctionPtr;
+        
+        explicit SeparableKernel();
+
+        explicit SeparableKernel(
+            KernelFunction const &kernelColFunction,
+            KernelFunction const &kernelRowFunction,
+            unsigned int cols,
+            unsigned int rows
+        );
+        
+        explicit SeparableKernel(
+            KernelFunction const &kernelColFunction,
+            KernelFunction const &kernelRowFunction,
+            unsigned int cols,
+            unsigned int rows,
+            Kernel::SpatialFunction const &spatialFunction
+        );
+        
+        explicit SeparableKernel(
+            KernelFunction const &kernelColFunction,
+            KernelFunction const &kernelRowFunction,
+            unsigned int cols,
+            unsigned int rows,
+            std::vector<Kernel::SpatialFunctionPtr> const &spatialFunctionList
+        );
+        
+        virtual ~SeparableKernel() {};
+    
+        virtual void computeImage(
+            lsst::afw::image::Image<PixelT> &image,
+            PixelT &imSum,
+            bool doNormalize,
+            double x = 0.0,
+            double y = 0.0
+        ) const;
+
+        void computeVectors(
+            std::vector<PixelT> &colList,
+            std::vector<PixelT> &rowList,
+            PixelT &imSum,
+            bool doNormalize,
+            double x = 0.0,
+            double y = 0.0
+        ) const;
+        
+        virtual std::vector<double> getKernelParameters() const;
+    
+        KernelFunctionPtr getKernelColFunction() const;
+
+        KernelFunctionPtr getKernelRowFunction() const;
+
+        virtual std::string toString(std::string prefix = "") const;
+
+    protected:
+        virtual void setKernelParameter(unsigned int ind, double value) const;
+    
+    private:
+        KernelFunctionPtr _kernelColFunctionPtr;
+        KernelFunctionPtr _kernelRowFunctionPtr;
+    };
+    
+}}}   // lsst:afw::math
 
 #endif // !defined(LSST_AFW_MATH_KERNEL_H)

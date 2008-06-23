@@ -85,9 +85,9 @@ lsst::afw::math::LinearCombinationKernel::LinearCombinationKernel(
 void lsst::afw::math::LinearCombinationKernel::computeImage(
     lsst::afw::image::Image<PixelT> &image,
     PixelT &imSum,
+    bool doNormalize,
     double x,
-    double y,
-    bool doNormalize
+    double y
 ) const {
     if ((image.getCols() != this->getCols()) || (image.getRows() != this->getRows())) {
         throw lsst::pex::exceptions::InvalidParameter("image is the wrong size");
@@ -176,20 +176,15 @@ std::string lsst::afw::math::LinearCombinationKernel::toString(std::string prefi
 };
 
 
-std::vector<double> lsst::afw::math::LinearCombinationKernel::getCurrentKernelParameters() const {
+std::vector<double> lsst::afw::math::LinearCombinationKernel::getKernelParameters() const {
     return _kernelParams;
 }
 
 //
 // Protected Member Functions
 //
-void lsst::afw::math::LinearCombinationKernel::basicSetKernelParameters(std::vector<double> const &params)
-const {
-    if (params.size() != this->_kernelList.size()) {
-        throw lsst::pex::exceptions::InvalidParameter(
-            boost::format("params size is %d instead of %d\n") % params.size() % _kernelList.size());
-    }
-    this->_kernelParams = params;
+void lsst::afw::math::LinearCombinationKernel::setKernelParameter(unsigned int ind, double value) const {
+    this->_kernelParams[ind] = value;
 }
 
 //
@@ -206,7 +201,7 @@ void lsst::afw::math::LinearCombinationKernel::_computeKernelImageList() {
         PixelT kSum;
         boost::shared_ptr<lsst::afw::image::Image<PixelT> >
             kernelImagePtr(new lsst::afw::image::Image<PixelT>(this->getCols(), this->getRows()));
-        (*kIter)->computeImage(*kernelImagePtr, kSum, 0, 0, false);
+        (*kIter)->computeImage(*kernelImagePtr, kSum, false, 0, 0);
         _kernelImagePtrList.push_back(kernelImagePtr);
     }
 }

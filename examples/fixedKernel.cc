@@ -18,12 +18,12 @@ int main() {
     lsst::afw::math::GaussianFunction2<pixelType> gaussFunc(sigmaX, sigmaY);
     lsst::afw::math::AnalyticKernel analyticKernel(gaussFunc, kernelCols, kernelRows);
     pixelType imSum = 0;
-    lsst::afw::image::Image<pixelType> analyticImage = analyticKernel.computeNewImage(imSum);
+    lsst::afw::image::Image<pixelType> analyticImage = analyticKernel.computeNewImage(imSum, true);
     analyticImage *= 47.3; // denormalize by some arbitrary factor
     
     lsst::afw::math::FixedKernel fixedKernel(analyticImage);
 
     cout << boost::format("Gaussian kernel with sigmaX=%.1f, sigmaY=%.1f\n") % sigmaX % sigmaY;
 
-    lsst::afw::math::printKernel(fixedKernel);
+    lsst::afw::math::printKernel(fixedKernel, true);
 }

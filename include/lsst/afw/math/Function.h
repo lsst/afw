@@ -2,13 +2,13 @@
 #ifndef LSST_AFW_MATH_FUNCTION_H
 #define LSST_AFW_MATH_FUNCTION_H
 /**
- * \file
+ * @file
  *
- * \brief Define the basic Function classes.
+ * @brief Define the basic Function classes.
  *
- * \author Russell Owen
+ * @author Russell Owen
  *
- * \ingroup afw
+ * @ingroup afw
  */
 #include <stdexcept>
 #include <sstream>
@@ -22,7 +22,7 @@ namespace afw {
 namespace math {
 
     /**
-     * \brief Basic Function class.
+     * @brief Basic Function class.
      *
      * Function objects are functions whose parameters may be read and changed using
      * getParameters and setParameters. They were designed for use with the Kernel class.
@@ -45,14 +45,14 @@ namespace math {
      * To do:
      * - Implement separable functions
      *
-     * \ingroup afw
+     * @ingroup afw
      */
     template<typename ReturnT>
     class Function : public lsst::daf::data::LsstBase {
     
     public:
         /**
-         * \brief Construct a Function given the number of function parameters.
+         * @brief Construct a Function given the number of function parameters.
          *
          * The function parameters are initialized to 0.
          */
@@ -64,7 +64,7 @@ namespace math {
         {}
 
         /**
-         * \brief Construct a Function given the function parameters.
+         * @brief Construct a Function given the function parameters.
          */
         explicit Function(
             std::vector<double> const &params)
@@ -76,29 +76,52 @@ namespace math {
         virtual ~Function() {};
     
         /**
-         * \brief Return the number of function parameters
+         * @brief Return the number of function parameters
          *
-         * \return the number of function parameters
+         * @return the number of function parameters
          */
         unsigned int getNParameters() const {
             return _params.size();
         }
         
         /**
-         * \brief Return the function parameters
+         * @brief Get one function parameter without range checking
          *
-         * \return the function parameters
+         * @return the specified function parameter
+         */
+        virtual double getParameter(
+            unsigned int ind)    ///< index of parameter
+        const {
+            return _params[ind];
+        }
+        
+        /**
+         * @brief Return all function parameters
+         *
+         * @return the function parameters as a vector
          */
         std::vector<double> const &getParameters() const {
             return _params;
         }
         
         /**
-         * \brief Set the function parameters
-         *
-         * \throw lsst::pex::exceptions::InvalidParameter if the wrong number of parameters is supplied.
+         * @brief Set one function parameter without range checking
          */
-        void setParameters(std::vector<double> const &params) {
+        virtual void setParameter(
+            unsigned int ind,   ///< index of parameter
+            double newValue)    ///< new value for parameter
+        {
+            _params[ind] = newValue;
+        };
+        
+        /**
+         * @brief Set all function parameters
+         *
+         * @throw lsst::pex::exceptions::InvalidParameter if the wrong number of parameters is supplied.
+         */
+        void setParameters(
+            std::vector<double> const &params)   ///< vector of function parameters
+        {
             if (_params.size() != params.size()) {
                 throw lsst::pex::exceptions::InvalidParameter("Wrong number of parameters");
             }
@@ -106,9 +129,9 @@ namespace math {
         }
     
         /**
-         * \brief Return a string representation of the function
+         * @brief Return a string representation of the function
          *
-         * \return a string representation of the function
+         * @return a string representation of the function
          */
         virtual std::string toString(void) const {
             std::stringstream os;
@@ -126,11 +149,11 @@ namespace math {
     };   
     
     /**
-     * \brief A Function taking one argument.
+     * @brief A Function taking one argument.
      *
      * Subclass and override operator() to do useful work.
      *
-     * \ingroup afw
+     * @ingroup afw
      */
     template<typename ReturnT>
     class Function1 : public Function<ReturnT> {
@@ -138,7 +161,7 @@ namespace math {
         typedef boost::shared_ptr<Function1<ReturnT> > Ptr;
 
         /**
-         * \brief Construct a Function1 given the number of function parameters.
+         * @brief Construct a Function1 given the number of function parameters.
          *
          * The function parameters are initialized to 0.
          */
@@ -149,7 +172,7 @@ namespace math {
         {}
 
         /**
-         * \brief Construct a Function1 given the function parameters.
+         * @brief Construct a Function1 given the function parameters.
          */
         explicit Function1(
             std::vector<double> const &params)   ///< function parameters
@@ -160,7 +183,7 @@ namespace math {
         virtual ~Function1() {};
         
         /**
-         * \brief Return a pointer to a deep copy of this function
+         * @brief Return a pointer to a deep copy of this function
          *
          * This function exists instead of a copy constructor
          * so one can obtain a copy of an actual function
@@ -168,7 +191,7 @@ namespace math {
          *
          * Every non-virtual function must override this method.
          *
-         * \return a pointer to a deep copy of the function
+         * @return a pointer to a deep copy of the function
          */
         virtual Ptr copy() const = 0; 
     
@@ -180,11 +203,11 @@ namespace math {
     };    
     
     /**
-     * \brief A Function taking two arguments.
+     * @brief A Function taking two arguments.
      *
      * Subclass and override operator() to do useful work.
      *
-     * \ingroup afw
+     * @ingroup afw
      */
     template<typename ReturnT>
     class Function2 : public Function<ReturnT> {
@@ -192,7 +215,7 @@ namespace math {
         typedef boost::shared_ptr<Function2<ReturnT> > Ptr;
 
         /**
-         * \brief Construct a Function2 given the number of function parameters.
+         * @brief Construct a Function2 given the number of function parameters.
          *
          * The function parameters are initialized to 0.
          */
@@ -203,7 +226,7 @@ namespace math {
         {}
 
         /**
-         * \brief Construct a Function2 given the function parameters.
+         * @brief Construct a Function2 given the function parameters.
          *
          * The number of function parameters is set to the length of params.
          */
@@ -216,7 +239,7 @@ namespace math {
         virtual ~Function2() {};
         
         /**
-         * \brief Return a pointer to a deep copy of this function
+         * @brief Return a pointer to a deep copy of this function
          *
          * This function exists instead of a copy constructor
          * so one can obtain a copy of an actual function
@@ -224,7 +247,7 @@ namespace math {
          *
          * Every non-virtual function must override this method.
          *
-         * \return a pointer to a deep copy of the function
+         * @return a pointer to a deep copy of the function
          */
         virtual Ptr copy() const = 0; 
     

@@ -84,9 +84,9 @@ namespace math {
 
     void printKernel(
         lsst::afw::math::Kernel const &kernel,
+        bool doNormalize,
         double x = 0,
         double y = 0,
-        bool doNormalize = true,
         std::string pixelFmt = "%7.3f"
     );
 

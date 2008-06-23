@@ -32,15 +32,15 @@ class KernelTestCase(unittest.TestCase):
             for col in range(inImage.getCols()):
                 inImage.set(col, row, inArr[col, row])
         
-        fixedKernel = afwMath.FixedKernel(inImage);
-        outImage = fixedKernel.computeNewImage(0.0, 0.0, False)[0]
+        k = afwMath.FixedKernel(inImage);
+        outImage = k.computeNewImage(False)[0]
         outArr = imTestUtils.arrayFromImage(outImage)
         if not numpy.allclose(inArr, outArr):
             self.fail("%s = %s != %s (not normalized)" % \
                 (k.__class__.__name__, inArr, outArr))
         
         normInArr = inArr / inArr.sum()
-        normOutImage = fixedKernel.computeNewImage(0.0, 0.0, True)[0]
+        normOutImage = k.computeNewImage(True)[0]
         normOutArr = imTestUtils.arrayFromImage(normOutImage)
         if not numpy.allclose(normOutArr, normInArr):
             self.fail("%s = %s != %s (normalized)" % \
@@ -67,7 +67,7 @@ class KernelTestCase(unittest.TestCase):
                 fArr /= fArr.sum()
                 
                 k.setKernelParameters((xsigma, ysigma))
-                kImage = k.computeNewImage(0.0, 0.0, True)[0]
+                kImage = k.computeNewImage(True)[0]
                 kArr = imTestUtils.arrayFromImage(kImage)
                 if not numpy.allclose(fArr, kArr):
                     self.fail("%s = %s != %s for xsigma=%s, ysigma=%s" % \
@@ -90,7 +90,7 @@ class KernelTestCase(unittest.TestCase):
                 x = float(col - ctrCol)
                 deltaFunc = afwMath.IntegerDeltaFunction2D(x, y)
                 kPtr = afwMath.KernelPtr(afwMath.AnalyticKernel(deltaFunc, kCols, kRows))
-                basisImage = kPtr.computeNewImage()[0]
+                basisImage = kPtr.computeNewImage(True)[0]
                 basisImArrList.append(imTestUtils.arrayFromImage(basisImage))
                 kVec.append(kPtr)
         
@@ -100,7 +100,7 @@ class KernelTestCase(unittest.TestCase):
             kParams = [0.0]*len(kVec)
             kParams[ii] = 1.0
             k.setKernelParameters(kParams)
-            kIm = k.computeNewImage()[0]
+            kIm = k.computeNewImage(True)[0]
             kImArr = imTestUtils.arrayFromImage(kIm)
             if not numpy.allclose(kImArr, basisImArrList[ii]):
                 self.fail("%s = %s != %s for the %s'th basis kernel" % \
@@ -150,7 +150,7 @@ class KernelTestCase(unittest.TestCase):
             (1.0, 1.0, 1.0, 1.0),
             (0.5, 0.5, 0.5, 0.5),
         ]:
-            k.computeImage(kImage, colPos, rowPos, False)
+            k.computeImage(kImage, False, colPos, rowPos)
             kImArr = imTestUtils.arrayFromImage(kImage)
             refKImArr = (basisImArrList[0] * coeff0) + (basisImArrList[1] * coeff1)
             if not numpy.allclose(kImArr, refKImArr):

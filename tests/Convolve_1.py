@@ -65,7 +65,7 @@ def refConvolve(imVarMask, kernel, edgeBit, doNormalize):
 
     isSpatiallyVarying = kernel.isSpatiallyVarying()
     if not isSpatiallyVarying:
-        kImArr = imTestUtils.arrayFromImage(kernel.computeNewImage(0, 0, doNormalize)[0])
+        kImArr = imTestUtils.arrayFromImage(kernel.computeNewImage(doNormalize)[0])
     else:
         kImage = afwImage.ImageD(kCols, kRows)
 
@@ -78,7 +78,7 @@ def refConvolve(imVarMask, kernel, edgeBit, doNormalize):
         for inColBeg in colRange:
             if isSpatiallyVarying:
                 colPos = afwImage.indexToPosition(retCol)
-                kernel.computeImage(kImage, colPos, rowPos, doNormalize)
+                kernel.computeImage(kImage, doNormalize, colPos, rowPos)
                 kImArr = imTestUtils.arrayFromImage(kImage)
             inColEnd = inColBeg + kCols
             subImage = image[inColBeg:inColEnd, inRowBeg:inRowEnd]
