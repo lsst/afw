@@ -34,11 +34,19 @@ namespace math {
         unsigned int rows
     );
     
-    template <typename ImageT, typename MaskT, typename KernelT>
+    template <typename ImageT, typename MaskT>
+    inline void apply(
+        lsst::afw::image::MaskedPixelAccessor<ImageT, MaskT> &outAccessor,
+        lsst::afw::image::MaskedPixelAccessor<ImageT, MaskT> const &imageAccessor,
+        std::vector<lsst::afw::math::Kernel::PixelT> const &kernelColList,
+        std::vector<lsst::afw::math::Kernel::PixelT> const &kernelRowList
+    );
+    
+    template <typename ImageT, typename MaskT>
     void basicConvolve(
         lsst::afw::image::MaskedImage<ImageT, MaskT> &convolvedImage,
         lsst::afw::image::MaskedImage<ImageT, MaskT> const &maskedImage,
-        KernelT const &kernel,
+        lsst::afw::math::Kernel const &kernel,
         bool doNormalize
     );
     
@@ -47,6 +55,14 @@ namespace math {
         lsst::afw::image::MaskedImage<ImageT, MaskT> &convolvedImage,
         lsst::afw::image::MaskedImage<ImageT, MaskT> const &maskedImage,
         lsst::afw::math::DeltaFunctionKernel const &kernel,
+        bool doNormalize
+    );
+    
+    template <typename ImageT, typename MaskT>
+    void basicConvolve(
+        lsst::afw::image::MaskedImage<ImageT, MaskT> &convolvedImage,
+        lsst::afw::image::MaskedImage<ImageT, MaskT> const &maskedImage,
+        lsst::afw::math::SeparableKernel const &kernel,
         bool doNormalize
     );
     

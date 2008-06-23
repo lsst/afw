@@ -8,6 +8,7 @@
  *
  * @todo
  * * Speed up convolution
+ * * Decide on the proper setting for IgnoreKernelZeroPixels
  * * Explicitly instantiate all desired templated versions of the functions (once I know how).
  * * Add some kind of threshold support for convolution once we know how to do it properly.
  *   It existed in convolve and apply but was taken out due to ticket 231.
@@ -29,6 +30,9 @@
 
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/image/ImageUtils.h"
+
+// if defined then kernel pixels that have value 0 are ignored when computing the output mask during convolution
+// #define IgnoreKernelZeroPixels
 
 // declare private functions
 namespace lsst {
@@ -87,10 +91,10 @@ inline void lsst::afw::math::apply(
 //        ImageT *imagePtr = &(*(mImageRowAcc.image));
 //        ImageT *varPtr = &(*(mImageRowAcc.variance));
 //        MaskT *maskPtr = &(*(mImageRowAcc.mask));
-//        KernelT *kerPtr = &(*kRow);
+//        lsst::afw::math::Kernel::PixelT *kerPtr = &(*kRow);
 //        kernelAccessorType kCol = kRow;
 //        for (unsigned int col = 0; col < cols; ++col, imagePtr++, varPtr++, maskPtr++, kerPtr++) {
-//            KernelT ker = *kerPtr;
+//            lsst::afw::math::Kernel::PixelT ker = *kerPtr;
 //            outImage += static_cast<ImageT>(ker * (*imagePtr));
 //            outVariance += static_cast<ImageT>(ker * ker * (*varPtr));
 //            outMask |= *maskPtr;
@@ -99,11 +103,72 @@ inline void lsst::afw::math::apply(
         kernelAccessorType kCol = kRow;
         for (unsigned int col = 0; col < cols; ++col, mImageColAcc.nextCol(), kCol.next_col()) {
             Kernel::PixelT ker = *kCol;
-//            if (ker != 0) {
+#ifdef IgnoreKernelZeroPixels
+            if (ker != 0) {
+#else
+            {
+#endif
                 outImage += static_cast<double>(ker * (*(mImageColAcc.image)));
                 outVariance += static_cast<double>(ker * ker * (*(mImageColAcc.variance)));
                 outMask |= *(mImageColAcc.mask);
-//            }
+            }
+        }
+    }
+    *(outAccessor.image) = static_cast<ImageT>(outImage);
+    *(outAccessor.variance) = static_cast<ImageT>(outVariance);
+    *(outAccessor.mask) = outMask;
+}
+
+/**
+ * @brief Apply separable convolution kernel to a masked image at one point
+ *
+ * Note: this is a high performance routine; the user is expected to:
+ * - handle edge extension
+ * - figure out the kernel center and adjust the supplied pixel accessors accordingly
+ * For an example of how to do this see the convolve function.
+ *
+ * @ingroup afw
+ */
+template <typename ImageT, typename MaskT>
+inline void lsst::afw::math::apply(
+    lsst::afw::image::MaskedPixelAccessor<ImageT, MaskT> &outAccessor,    ///< accessor for output pixel
+    lsst::afw::image::MaskedPixelAccessor<ImageT, MaskT> const &maskedImageAccessor,
+        ///< accessor to for masked image pixel that overlaps (0,0) pixel of kernel(!)
+    std::vector<lsst::afw::math::Kernel::PixelT> const &kernelColList,  ///< kernel column vector
+    std::vector<lsst::afw::math::Kernel::PixelT> const &kernelRowList   ///< kernel row vector
+) {
+    double outImage = 0;
+    double outVariance = 0;
+    MaskT outMask = 0;
+    lsst::afw::image::MaskedPixelAccessor<ImageT, MaskT> mImageRowAcc = maskedImageAccessor;
+    std::vector<lsst::afw::math::Kernel::PixelT>::const_iterator kernelRowIter = kernelRowList.begin();
+    for ( ; kernelRowIter != kernelRowList.end(); ++kernelRowIter, mImageRowAcc.nextRow()) {
+        lsst::afw::image::MaskedPixelAccessor<ImageT, MaskT> mImageColAcc = mImageRowAcc;
+        std::vector<lsst::afw::math::Kernel::PixelT>::const_iterator kernelColIter = kernelColList.begin();
+        double outImageRow = 0;
+        double outVarianceRow = 0;
+        MaskT outMaskRow = 0;
+        for ( ; kernelColIter != kernelColList.end(); ++kernelColIter, mImageColAcc.nextCol()) {
+            double kernelColValue = static_cast<double> (*kernelColIter);
+#ifdef IgnoreKernelZeroPixels
+            if (kernelColValue != 0) {
+#else
+            {
+#endif
+                outImageRow += kernelColValue * (*(mImageColAcc.image));
+                outVarianceRow += kernelColValue * kernelColValue * (*(mImageColAcc.variance));
+                outMaskRow |= *(mImageColAcc.mask);
+            }
+        }
+        double kernelRowValue = static_cast<double> (*kernelRowIter);
+#ifdef IgnoreKernelZeroPixels
+        if (kernelRowValue != 0) {
+#else
+        {
+#endif
+            outImage += kernelRowValue * outImageRow;
+            outVariance += kernelRowValue * kernelRowValue * outVarianceRow;
+            outMask |= outMaskRow;
         }
     }
     *(outAccessor.image) = static_cast<ImageT>(outImage);
@@ -125,14 +190,14 @@ inline void lsst::afw::math::apply(
  *
  * @ingroup afw
  */
-template <typename ImageT, typename MaskT, typename KernelT>
+template <typename ImageT, typename MaskT>
 void lsst::afw::math::basicConvolve(
     lsst::afw::image::MaskedImage<ImageT, MaskT> &convolvedImage,       ///< convolved image
     lsst::afw::image::MaskedImage<ImageT, MaskT> const &maskedImage,    ///< image to convolve
-    KernelT const &kernel,              ///< convolution kernel
+    lsst::afw::math::Kernel const &kernel,  ///< convolution kernel
     bool doNormalize                    ///< if True, normalize the kernel, else use "as is"
 ) {
-    typedef typename KernelT::PixelT KernelPixelT;
+    typedef typename lsst::afw::math::Kernel::PixelT KernelPixelT;
     typedef lsst::afw::image::MaskedPixelAccessor<ImageT, MaskT> maskedPixelAccessorType;
     typedef typename lsst::afw::image::Image<KernelPixelT>::pixel_accessor kernelAccessorType;
 
@@ -170,9 +235,9 @@ void lsst::afw::math::basicConvolve(
             maskedPixelAccessorType mImageColAcc = mImageRowAcc;
             maskedPixelAccessorType cnvColAcc = cnvRowAcc;
             for (int cnvCol = cnvStartCol; cnvCol < cnvEndCol; ++cnvCol, mImageColAcc.nextCol(), cnvColAcc.nextCol()) {
+                double colPos = lsst::afw::image::indexToPosition(cnvCol);
                 KernelPixelT kSum;
-                kernel.computeImage(
-                    kernelImage, kSum, false, lsst::afw::image::indexToPosition(cnvCol), rowPos);
+                kernel.computeImage(kernelImage, kSum, false, colPos, rowPos);
                 // g++ 3.6.4 requires the template arguments here to find the function; I don't know why
                 // Is this still true? RHL
                 lsst::afw::math::apply<ImageT, MaskT>(
@@ -248,7 +313,7 @@ void lsst::afw::math::basicConvolve(
         cnvRowAcc.advance(0, -pixelRow);
     }
 
-    lsst::pex::logging::Trace("lsst.afw.kernel.convolve", 3, "kernel is spatially invariant delta function basis");
+    lsst::pex::logging::Trace("lsst.afw.kernel.convolve", 3, "kernel is a spatially invariant delta function basis");
     for (int i = 0; i < nCopyRows; ++i, cnvRowAcc.nextRow(), mImageRowAcc.nextRow()) {
         MIAccessorT mImageColAcc = mImageRowAcc;
         MIAccessorT cnvColAcc = cnvRowAcc;
@@ -261,6 +326,82 @@ void lsst::afw::math::basicConvolve(
             *cnvColAcc.image =    *mImageColAcc.image;
             *cnvColAcc.variance = *mImageColAcc.variance;
             *cnvColAcc.mask =     *mImageColAcc.mask;
+        }
+    }
+}
+
+/**
+ * \brief A version of basicConvolve that should be used when convolving separable kernels
+ */
+template <typename ImageT, typename MaskT>
+void lsst::afw::math::basicConvolve(
+    lsst::afw::image::MaskedImage<ImageT, MaskT> &convolvedImage,       ///< convolved image
+    lsst::afw::image::MaskedImage<ImageT, MaskT> const &maskedImage,    ///< image to convolve
+    lsst::afw::math::SeparableKernel const &kernel,  ///< convolution kernel
+    bool doNormalize                    ///< if True, normalize the kernel, else use "as is"
+) {
+    typedef typename lsst::afw::math::Kernel::PixelT KernelPixelT;
+    typedef lsst::afw::image::MaskedPixelAccessor<ImageT, MaskT> maskedPixelAccessorType;
+
+    const unsigned int mImageColAccs = maskedImage.getCols();
+    const unsigned int mImageRowAccs = maskedImage.getRows();
+    const unsigned int kCols = kernel.getCols();
+    const unsigned int kRows = kernel.getRows();
+    if ((convolvedImage.getCols() != mImageColAccs) || (convolvedImage.getRows() != mImageRowAccs)) {
+        throw lsst::pex::exceptions::InvalidParameter("convolvedImage not the same size as maskedImage");
+    }
+    if ((mImageColAccs< kCols) || (mImageRowAccs < kRows)) {
+        throw lsst::pex::exceptions::InvalidParameter(
+            "maskedImage smaller than kernel in columns and/or rows");
+    }
+    
+    const int cnvCols = static_cast<int>(mImageColAccs) + 1 - static_cast<int>(kernel.getCols());
+    const int cnvRows = static_cast<int>(mImageRowAccs) + 1 - static_cast<int>(kernel.getRows());
+    const int cnvStartCol = static_cast<int>(kernel.getCtrCol());
+    const int cnvStartRow = static_cast<int>(kernel.getCtrRow());
+    const int cnvEndCol = cnvStartCol + static_cast<int>(cnvCols); // end index + 1
+    const int cnvEndRow = cnvStartRow + static_cast<int>(cnvRows); // end index + 1
+
+    // create input and output image accessors
+    // and advance output accessor to lower left pixel that is set by convolution
+    maskedPixelAccessorType mImageRowAcc(maskedImage);
+    maskedPixelAccessorType cnvRowAcc(convolvedImage);
+    cnvRowAcc.advance(cnvStartCol, cnvStartRow);
+    
+    std::vector<lsst::afw::math::Kernel::PixelT> kColVec(kernel.getCols());
+    std::vector<lsst::afw::math::Kernel::PixelT> kRowVec(kernel.getRows());
+    
+    if (kernel.isSpatiallyVarying()) {
+        lsst::pex::logging::Trace("lsst.afw.kernel.convolve", 3, "kernel is a spatially varying separable kernel");
+        for (int cnvRow = cnvStartRow; cnvRow < cnvEndRow; ++cnvRow, cnvRowAcc.nextRow(), mImageRowAcc.nextRow()) {
+            double rowPos = lsst::afw::image::indexToPosition(cnvRow);
+            maskedPixelAccessorType mImageColAcc = mImageRowAcc;
+            maskedPixelAccessorType cnvColAcc = cnvRowAcc;
+            for (int cnvCol = cnvStartCol; cnvCol < cnvEndCol; ++cnvCol, mImageColAcc.nextCol(), cnvColAcc.nextCol()) {
+                double colPos = lsst::afw::image::indexToPosition(cnvCol);
+                KernelPixelT kSum;
+                kernel.computeVectors(kColVec, kRowVec, kSum, doNormalize, colPos, rowPos);
+                // g++ 3.6.4 requires the template arguments here to find the function; I don't know why
+                // Is this still true? RHL
+                lsst::afw::math::apply<ImageT, MaskT>(cnvColAcc, mImageColAcc, kColVec, kRowVec);
+                if (doNormalize) {
+                    *(cnvColAcc.image) /= static_cast<ImageT>(kSum);
+                    *(cnvColAcc.variance) /= static_cast<ImageT>(kSum * kSum);
+                }
+            }
+        }
+    } else {
+        // kernel is spatially invariant
+        lsst::pex::logging::Trace("lsst.afw.kernel.convolve", 3, "kernel is a spatially invariant separable kernel");
+        KernelPixelT kSum;
+        kernel.computeVectors(kColVec, kRowVec, kSum, doNormalize);
+        for (int cnvRow = cnvStartRow; cnvRow < cnvEndRow; ++cnvRow, cnvRowAcc.nextRow(), mImageRowAcc.nextRow()) {
+            maskedPixelAccessorType mImageColAcc = mImageRowAcc;
+            maskedPixelAccessorType cnvColAcc = cnvRowAcc;
+            for (int cnvCol = cnvStartCol; cnvCol < cnvEndCol; ++cnvCol, mImageColAcc.nextCol(), cnvColAcc.nextCol()) {
+                // g++ 3.6.4 requires the template arguments here to find the function; I don't know why
+                lsst::afw::math::apply<ImageT, MaskT>(cnvColAcc, mImageColAcc, kColVec, kRowVec);
+            }
         }
     }
 }
