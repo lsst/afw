@@ -16,21 +16,12 @@ int main() {
     
     // create linear combination kernel as a set of delta function basis kernels
     lsst::afw::math::KernelList<> kernelVec;
-    int colCtr = (kernelCols - 1) / 2;
-    int rowCtr = (kernelRows - 1) / 2;
     unsigned int ind = 0;
     for (unsigned int row = 0; row < kernelRows; ++row) {
         for (unsigned int col = 0; col < kernelCols; ++col) {
-            int const x = col - colCtr;
-            int const y = row - rowCtr;
-            cout << boost::format("Delta function kernel %3d: x=%.1f, y=%.1f\n") % ind % x % y;
-            lsst::afw::math::IntegerDeltaFunction2<lsst::afw::math::Kernel::PixelT> deltaFunc(x, y);
+            cout << boost::format("Delta function kernel %3d: col=%d, row=%d\n") % ind % col % row;
             lsst::afw::math::Kernel::PtrT kernelPtr(
-#if 0
-		        new lsst::afw::math::AnalyticKernel(deltaFunc, kernelCols, kernelRows)
-#else
-                new lsst::afw::math::DeltaFunctionKernel(x, y, kernelCols, kernelRows)
-#endif
+                new lsst::afw::math::DeltaFunctionKernel(col, row, kernelCols, kernelRows)
             );
             kernelVec.push_back(kernelPtr);
             ++ind;

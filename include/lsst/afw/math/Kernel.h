@@ -401,14 +401,6 @@ namespace math {
     /**
      * @brief A kernel that has only one non-zero pixel
      *
-     * The function's x, y arguments are:
-     * * -getCtrCol(), -getCtrRow() for the lower left corner pixel
-     * * 0, 0 for the center pixel
-     * * (getCols() - 1) - getCtrCol(), (getRows() - 1) - getCtrRow() for the upper right pixel
-     *
-     * Note: each pixel is set to the value of the kernel function at the center of the pixel
-     * (rather than averaging the function over the area of the pixel).
-     *
      * @ingroup afw
      */
     class DeltaFunctionKernel : public Kernel {
@@ -417,10 +409,12 @@ namespace math {
         // Traits values for this class of Kernel
         typedef deltafunction_kernel_tag kernel_fill_factor;
 
-        explicit DeltaFunctionKernel(int pixelCol,
-                                     int pixelRow,
-                                     unsigned int cols,
-                                     unsigned int rows);
+        explicit DeltaFunctionKernel(
+            unsigned int pixelCol,
+            unsigned int pixelRow,
+            unsigned int cols,
+            unsigned int rows
+        );
 
         virtual void computeImage(
             lsst::afw::image::Image<PixelT> &image,

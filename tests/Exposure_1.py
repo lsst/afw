@@ -16,11 +16,11 @@ import numpy
 import eups
 import lsst.afw.image as afwImage
 import lsst.utils.tests as utilsTests
-import lsst.pex.logging as logging
+import lsst.pex.logging as pexLog
 import lsst.pex.exceptions as pexEx
 
-verbosity = 0 # increase to see trace
-logging.Trace_setVerbosity("lsst.afw.image", verbosity)
+Verbosity = 0 # increase to see trace
+pexLog.Trace_setVerbosity("lsst.afw.image", Verbosity)
 
 dataDir = eups.productDir("afwdata")
 if not dataDir:

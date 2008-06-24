@@ -16,12 +16,14 @@
 /**
  * @brief Construct a spatially invariant DeltaFunctionKernel
  */
-lsst::afw::math::DeltaFunctionKernel::DeltaFunctionKernel(int pixelCol,
-                                                   int pixelRow,
-                                                   unsigned int cols,
-                                                   unsigned int rows)
-    : Kernel(cols, rows, 0),
-      _pixel(pixelCol, pixelRow)
+lsst::afw::math::DeltaFunctionKernel::DeltaFunctionKernel(
+    unsigned int pixelCol,  ///< active pixel colum (0 is left column)
+    unsigned int pixelRow,  ///< active pixel row (0 is bottom row)
+    unsigned int cols,  ///< kernel size (columns)
+    unsigned int rows)  ///< kernel size (rows)
+:
+    Kernel(cols, rows, 0),
+    _pixel(pixelCol, pixelRow)
 {
 #if 0
     std::vector<double> params;
@@ -30,12 +32,8 @@ lsst::afw::math::DeltaFunctionKernel::DeltaFunctionKernel(int pixelCol,
     setRHLParameters(params);
 #endif
 
-    const int c = pixelCol + getCtrCol(); // column and
-    const int r = pixelRow + getCtrRow(); //     row in image
-
-    if (c < 0 || c >= static_cast<int>(getCols()) ||
-        r < 0 || r >= static_cast<int>(getRows())) {
-        throw lsst::pex::exceptions::InvalidParameter("Pixel lies outside image");
+    if ((pixelCol >= cols) || (pixelRow >= rows)) {
+        throw lsst::pex::exceptions::InvalidParameter("Active pixel lies outside image");
     }
 }
 
@@ -54,10 +52,10 @@ void lsst::afw::math::DeltaFunctionKernel::computeImage(
     image *= 0;
     pixelAccessor imPtr = image.origin();
 
-    const int c = getPixel().first + getCtrCol(); // column and
-    const int r = getPixel().second + getCtrRow(); //     row in image
+    const int pixelCol = getPixel().first; // active pixel in Kernel
+    const int pixelRow = getPixel().second;
 
-    imPtr.advance(c, r);
+    imPtr.advance(pixelCol, pixelRow);
     *imPtr = imSum = 1;
 }
 

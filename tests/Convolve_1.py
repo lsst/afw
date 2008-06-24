@@ -9,19 +9,20 @@ All tests use the new-image version unless otherwise noted.
 import os
 import math
 import pdb                          # we may want to say pdb.set_trace()
+import sys
 import unittest
 
 import numpy
 
 import eups
 import lsst.utils.tests as utilsTest
-import lsst.pex.logging as logging
+import lsst.pex.logging as pexLog
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.image.testUtils as imTestUtils
 
-verbosity = 0 # increase to see trace
-logging.Trace_setVerbosity("lsst.afw", verbosity)
+Verbosity = 0 # increase to see trace
+pexLog.Trace_setVerbosity("lsst.afw", Verbosity)
 
 dataDir = eups.productDir("afwdata")
 if not dataDir:
@@ -298,7 +299,7 @@ class ConvolveTestCase(unittest.TestCase):
     def testSpatiallyVaryingSeparableInPlaceConvolve(self):
         """Test in-place separable convolution with a spatially varying Gaussian function
         """
-        print "test Separable convolution"
+        sys.stderr.write("Test convolution with SeparableKernel\n")
         kCols = 7
         kRows = 6
         imCols = 55
@@ -332,11 +333,15 @@ class ConvolveTestCase(unittest.TestCase):
         maskedImage.this.disown()
         maskedImage.getMask().setMaskPlaneValues(0, 5, 7, 5)
         
+        isFirst = True
         cnvMaskedImage = afwImage.MaskedImageF(imCols, imRows)
         for doNormalize in (False, True):
-            logging.Trace_setVerbosity("lsst.afw", 3)
+            if isFirst and Verbosity < 3:
+                pexLog.Trace_setVerbosity("lsst.afw", 3)
             afwMath.convolve(cnvMaskedImage, maskedImage, separableKernel, edgeBit, doNormalize)
-            logging.Trace_setVerbosity("lsst.afw", 0)
+            if isFirst:
+                pexLog.Trace_setVerbosity("lsst.afw", Verbosity)
+                isFirst = False
             cnvImage, cnvVariance, cnvMask = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
     
             imVarMask = imTestUtils.arraysFromMaskedImage(maskedImage)
@@ -355,7 +360,7 @@ class ConvolveTestCase(unittest.TestCase):
     def testDeltaConvolve(self):
         """Test convolution with various delta function kernels using optimized code
         """
-        print "Test convolution with DeltaFunctionKernel"
+        sys.stderr.write("Test convolution with DeltaFunctionKernel\n")
         edgeBit = 7
         imCols = 20
         imRows = 12
@@ -371,15 +376,19 @@ class ConvolveTestCase(unittest.TestCase):
         maskedImage.this.disown()
         maskedImage.getMask().setMaskPlaneValues(0, 5, 7, 5)
         
-        for kCols in range(1, 3):
-            for kRows in range(1, 3):
-                for deltaCol in range(kCols):
-                    for deltaRow in range(kRows):
-                        kernel = afwMath.DeltaFunctionKernel(deltaCol, deltaRow, kCols, kRows)
+        isFirst = True
+        for kCols in range(1, 4):
+            for kRows in range(1, 4):
+                for activeCol in range(kCols):
+                    for activeRow in range(kRows):
+                        kernel = afwMath.DeltaFunctionKernel(activeCol, activeRow, kCols, kRows)
                         
-                        logging.Trace_setVerbosity("lsst.afw", 3)
+                        if isFirst and Verbosity < 3:
+                            pexLog.Trace_setVerbosity("lsst.afw", 3)
                         refCnvMaskedImage = afwMath.convolve(maskedImage, kernel, edgeBit, doNormalize)
-                        logging.Trace_setVerbosity("lsst.afw", 0)
+                        if isFirst:
+                            pexLog.Trace_setVerbosity("lsst.afw", Verbosity)
+                            isFirst = False
                         refCnvImage, refCnvVariance, refCnvMask = \
                             imTestUtils.arraysFromMaskedImage(refCnvMaskedImage)
                 

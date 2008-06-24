@@ -3,7 +3,7 @@
 
 #include <stdexcept>
 
-#include "boost/stdcint.hpp"
+#include "boost/cstdint.hpp"
 
 #include "lsst/afw/image/Image.h"
 #include "lsst/pex/exceptions.h"

@@ -7,10 +7,10 @@ import numpy
 
 import lsst.afw.math as afwMath
 import lsst.utils.tests as utilsTests
-import lsst.pex.logging as logging
+import lsst.pex.logging as pexLog
 
-verbosity = 0 # increase to see trace
-logging.Trace_setVerbosity("lsst.afwMath", verbosity)
+Verbosity = 0 # increase to see trace
+pexLog.Trace_setVerbosity("lsst.afwMath", Verbosity)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

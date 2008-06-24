@@ -6,13 +6,14 @@ import unittest
 import numpy
 
 import lsst.utils.tests as utilsTests
-import lsst.pex.logging as logging
+import lsst.pex.exceptions.exceptions as pexExcept
+import lsst.pex.logging as pexLog
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.image.testUtils as imTestUtils
 
-verbosity = 0 # increase to see trace
-logging.Trace_setVerbosity("lsst.afw", verbosity)
+Verbosity = 0 # increase to see trace
+pexLog.Trace_setVerbosity("lsst.afw", Verbosity)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -72,6 +73,28 @@ class KernelTestCase(unittest.TestCase):
                 if not numpy.allclose(fArr, kArr):
                     self.fail("%s = %s != %s for xsigma=%s, ysigma=%s" % \
                         (k.__class__.__name__, kArr, fArr, xsigma, ysigma))
+    
+    def testDeltaFunctionKernel(self):
+        """Test DeltaFunctionKernel
+        """
+        for kCols in range(1, 4):
+            for kRows in range(1, 4):
+                for activeCol in range(kCols):
+                    for activeRow in range(kRows):
+                        kernel = afwMath.DeltaFunctionKernel(activeCol, activeRow, kCols, kRows)
+                        kImage, kSum = kernel.computeNewImage(False)
+                        self.assertEqual(kSum, 1.0)
+                        kArr = imTestUtils.arrayFromImage(kImage)
+                        self.assertEqual(kArr[activeCol, activeRow], 1.0)
+                        kArr[activeCol, activeRow] = 0.0
+                        self.assertEqual(kArr.sum(), 0.0)
+                self.assertRaises(
+                    pexExcept.LsstInvalidParameter,
+                    afwMath.DeltaFunctionKernel, 0, kRows, kCols, kRows)
+                self.assertRaises(
+                    pexExcept.LsstInvalidParameter,
+                    afwMath.DeltaFunctionKernel, kCols, 0, kCols, kRows)
+                            
 
     def testSeparableKernel(self):
         """Test SeparableKernel using a Gaussian function
@@ -112,14 +135,9 @@ class KernelTestCase(unittest.TestCase):
         # create list of kernels
         basisImArrList = []
         kVec = afwMath.KernelListD()
-        ctrCol = (kCols - 1) // 2
-        ctrRow = (kRows - 1) // 2
         for row in range(kRows):
-            y = float(row - ctrRow)
             for col in range(kCols):
-                x = float(col - ctrCol)
-                deltaFunc = afwMath.IntegerDeltaFunction2D(x, y)
-                kPtr = afwMath.KernelPtr(afwMath.AnalyticKernel(deltaFunc, kCols, kRows))
+                kPtr = afwMath.KernelPtr(afwMath.DeltaFunctionKernel(col, row, kCols, kRows))
                 basisImage = kPtr.computeNewImage(True)[0]
                 basisImArrList.append(imTestUtils.arrayFromImage(basisImage))
                 kVec.append(kPtr)

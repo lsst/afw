@@ -292,30 +292,30 @@ void lsst::afw::math::basicConvolve(
             "maskedImage smaller than kernel in columns and/or rows");
     }
     
-    const int pixelCol = kernel.getPixel().first; // active pixel in Kernel
-    const int pixelRow = kernel.getPixel().second;
-    const int nCopyCols = mImageCols - abs(pixelCol); // number of columns to copy
-    const int nCopyRows = mImageRows - abs(pixelRow); // number of rows to copy
+    const int colOffset = kernel.getPixel().first - kernel.getCtrCol();
+    const int rowOffset = kernel.getPixel().second - kernel.getCtrRow();
+    const int nCopyCols = mImageCols - abs(colOffset); // number of columns to copy
+    const int nCopyRows = mImageRows - abs(rowOffset); // number of rows to copy
 
     // create input and output image accessors
     // and advance output accessor to lower left pixel that is set by convolution
     MIAccessorT mImageRowAcc(maskedImage);
     MIAccessorT cnvRowAcc(convolvedImage);
 
-    if (pixelRow > 0) {
-        mImageRowAcc.advance(0, pixelRow);
+    if (rowOffset > 0) {
+        mImageRowAcc.advance(0, rowOffset);
     } else {
-        cnvRowAcc.advance(0, -pixelRow);
+        cnvRowAcc.advance(0, -rowOffset);
     }
 
     lsst::pex::logging::Trace("lsst.afw.kernel.convolve", 3, "kernel is a spatially invariant delta function basis");
     for (int i = 0; i < nCopyRows; ++i, cnvRowAcc.nextRow(), mImageRowAcc.nextRow()) {
         MIAccessorT mImageColAcc = mImageRowAcc;
         MIAccessorT cnvColAcc = cnvRowAcc;
-        if (pixelCol > 0) {
-            mImageColAcc.advance(pixelCol, 0);
+        if (colOffset > 0) {
+            mImageColAcc.advance(colOffset, 0);
         } else {
-            cnvColAcc.advance(-pixelCol, 0);
+            cnvColAcc.advance(-colOffset, 0);
         }
         for (int j = 0; j < nCopyCols; ++j, mImageColAcc.nextCol(), cnvColAcc.nextCol()) {
             *cnvColAcc.image =    *mImageColAcc.image;
