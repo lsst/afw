@@ -18,24 +18,24 @@ class MinimizeTestCase(unittest.TestCase):
         errorDef = 0.1
     
         polyOrder = 1
-        polyFuncPtr = afwMath.Function2DPtr(afwMath.PolynomialFunction2D(polyOrder))
+        polyFunc = afwMath.PolynomialFunction2D(polyOrder)
         
         modelParams = [0.1, 0.2, 0.3]
-        polyFuncPtr.setParameters(modelParams)
+        polyFunc.setParameters(modelParams)
         measurements = []
         for x, y in zip(xPositions, yPositions):
-            measurements.append(polyFuncPtr(x,y))
+            measurements.append(polyFunc(x,y))
         print "measurements=", measurements
     
         # Set up initial guesses
-        nParameters = polyFuncPtr.getNParameters()
+        nParameters = polyFunc.getNParameters()
         initialParameters = numpy.zeros(nParameters, float)    
         stepsize  = numpy.ones(nParameters, float)
         stepsize *= 0.1
             
         # Minimize!
         fitResults = afwMath.minimize(
-            polyFuncPtr,
+            polyFunc,
             initialParameters,
             stepsize,
             measurements,

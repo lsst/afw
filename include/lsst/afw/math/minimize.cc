@@ -25,7 +25,7 @@ template<typename ReturnT>
 lsst::afw::math::MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1()
 :
     lsst::daf::data::LsstBase(typeid(this)),
-    _theFunctionPtr(),
+    _functionPtr(),
     _measurementList(),
     _varianceList(),
     _xPositionList(),
@@ -34,14 +34,14 @@ lsst::afw::math::MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1()
 
 template<typename ReturnT>
 lsst::afw::math::MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1(
-    boost::shared_ptr<lsst::afw::math::Function1<ReturnT> > theFunctionPtr,
+    lsst::afw::math::Function1<ReturnT> const &function,
     std::vector<double> const &measurementList,
     std::vector<double> const &varianceList,
     std::vector<double> const &xPositionList, 
     double errorDef)
 :
     lsst::daf::data::LsstBase(typeid(this)),
-    _theFunctionPtr(theFunctionPtr),
+    _functionPtr(function.copy()),
     _measurementList(measurementList),
     _varianceList(varianceList),
     _xPositionList(xPositionList),
@@ -52,7 +52,7 @@ template<typename ReturnT>
 lsst::afw::math::MinimizerFunctionBase2<ReturnT>::MinimizerFunctionBase2()
 :
     lsst::daf::data::LsstBase(typeid(this)),
-    _theFunctionPtr(),
+    _functionPtr(),
     _measurementList(),
     _varianceList(),
     _xPositionList(),
@@ -62,15 +62,15 @@ lsst::afw::math::MinimizerFunctionBase2<ReturnT>::MinimizerFunctionBase2()
 
 template<typename ReturnT>
 lsst::afw::math::MinimizerFunctionBase2<ReturnT>::MinimizerFunctionBase2(
-    boost::shared_ptr<lsst::afw::math::Function2<ReturnT> > theFunctionPtr,
-    const std::vector<double> &measurementList,
-    const std::vector<double> &varianceList,
-    const std::vector<double> &xPositionList,
-    const std::vector<double> &yPositionList,
+    lsst::afw::math::Function2<ReturnT> const &function,
+    std::vector<double> const &measurementList,
+    std::vector<double> const &varianceList,
+    std::vector<double> const &xPositionList,
+    std::vector<double> const &yPositionList,
     double errorDef)
 :
     lsst::daf::data::LsstBase(typeid(this)),
-    _theFunctionPtr(theFunctionPtr),
+    _functionPtr(function.copy()),
     _measurementList(measurementList),
     _varianceList(varianceList),
     _xPositionList(xPositionList),
@@ -84,11 +84,11 @@ lsst::afw::math::MinimizerFunctionBase2<ReturnT>::MinimizerFunctionBase2(
 template<typename ReturnT>
 double lsst::afw::math::MinimizerFunctionBase1<ReturnT>::operator() (const std::vector<double>& par) const {
     // Initialize the function with the fit parameters
-    this->_theFunctionPtr->setParameters(par);
+    this->_functionPtr->setParameters(par);
     
     double chi2 = 0.0;
     for (unsigned int i = 0; i < this->_measurementList.size(); i++) {
-        double resid = (*(this->_theFunctionPtr))(this->_xPositionList[i]) - this->_measurementList[i];
+        double resid = (*(this->_functionPtr))(this->_xPositionList[i]) - this->_measurementList[i];
         chi2 += resid * resid / this->_varianceList[i];
     }
     
@@ -99,11 +99,11 @@ double lsst::afw::math::MinimizerFunctionBase1<ReturnT>::operator() (const std::
 template<typename ReturnT>
 double lsst::afw::math::MinimizerFunctionBase2<ReturnT>::operator() (const std::vector<double>& par) const {
     // Initialize the function with the fit parameters
-    this->_theFunctionPtr->setParameters(par);
+    this->_functionPtr->setParameters(par);
     
     double chi2 = 0.0;
     for (unsigned int i = 0; i < this->_measurementList.size(); i++) {
-        double resid = (*(this->_theFunctionPtr))(this->_xPositionList[i], this->_yPositionList[i]) - this->_measurementList[i];
+        double resid = (*(this->_functionPtr))(this->_xPositionList[i], this->_yPositionList[i]) - this->_measurementList[i];
         chi2 += resid * resid / this->_varianceList[i];
     }
     
@@ -127,8 +127,7 @@ double lsst::afw::math::MinimizerFunctionBase2<ReturnT>::operator() (const std::
  */
 template<typename ReturnT>
 lsst::afw::math::FitResults lsst::afw::math::minimize(
-    boost::shared_ptr<lsst::afw::math::Function1<ReturnT> > functionPtr, ///< function(x) to be minimized
-        ///< warning: the parameters will be modified unpredictably
+    lsst::afw::math::Function1<ReturnT> const &function, ///< function(x) to be minimized
     std::vector<double> const &initialParameterList,    ///< initial guess for parameters
     std::vector<double> const &stepSizeList, ///< step size for each parameter; use 0.0 to fix a parameter
     std::vector<double> const &measurementList, ///< measured values
@@ -136,7 +135,7 @@ lsst::afw::math::FitResults lsst::afw::math::minimize(
     std::vector<double> const &xPositionList,   ///< x position of each measurement
     double errorDef ///< what is this?
 ) {
-    unsigned int const nParameters = functionPtr->getNParameters();
+    unsigned int const nParameters = function.getNParameters();
     if (initialParameterList.size() != nParameters) {
         throw lsst::pex::exceptions::InvalidParameter("initialParameterList is the wrong length");
     }
@@ -152,7 +151,7 @@ lsst::afw::math::FitResults lsst::afw::math::minimize(
     }
 
     MinimizerFunctionBase1<ReturnT> minimizerFunc(
-        functionPtr,
+        function,
         measurementList,
         varianceList,
         xPositionList,
@@ -208,8 +207,7 @@ lsst::afw::math::FitResults lsst::afw::math::minimize(
  */
 template<typename ReturnT>
 lsst::afw::math::FitResults lsst::afw::math::minimize(
-    boost::shared_ptr<lsst::afw::math::Function2<ReturnT> > functionPtr,  ///< function(x,y) to be minimized
-        ///< warning: the parameters will be modified unpredictably
+    lsst::afw::math::Function2<ReturnT> const &function,  ///< function(x,y) to be minimized
     std::vector<double> const &initialParameterList,    ///< initial guess for parameters
     std::vector<double> const &stepSizeList,        ///< step size for each parameter; use 0.0 to fix a parameter
     std::vector<double> const &measurementList, ///< measured values
@@ -218,7 +216,7 @@ lsst::afw::math::FitResults lsst::afw::math::minimize(
     std::vector<double> const &yPositionList,   ///< y position of each measurement
     double errorDef ///< what is this?
 ) {
-    unsigned int const nParameters = functionPtr->getNParameters();
+    unsigned int const nParameters = function.getNParameters();
     if (initialParameterList.size() != nParameters) {
         throw lsst::pex::exceptions::InvalidParameter("initialParameterList is the wrong length");
     }
@@ -237,7 +235,7 @@ lsst::afw::math::FitResults lsst::afw::math::minimize(
     }
 
     MinimizerFunctionBase2<ReturnT> minimizerFunc(
-        functionPtr,
+        function,
         measurementList,
         varianceList,
         xPositionList,

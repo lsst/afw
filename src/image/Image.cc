@@ -3,6 +3,8 @@
 
 #include <stdexcept>
 
+#include "boost/stdcint.hpp"
+
 #include "lsst/afw/image/Image.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/LSSTFitsResource.h"

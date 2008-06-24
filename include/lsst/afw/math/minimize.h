@@ -39,7 +39,7 @@ namespace math {
     public:
         explicit MinimizerFunctionBase1();
         explicit MinimizerFunctionBase1(
-            boost::shared_ptr<lsst::afw::math::Function1<ReturnT> > theFunctionPtr,
+            lsst::afw::math::Function1<ReturnT> const &function,
             std::vector<double> const &measurementList,
             std::vector<double> const &varianceList,
             std::vector<double> const &xPositionList,
@@ -57,7 +57,7 @@ namespace math {
         inline std::vector<double> getPositions() const {return _xPositionList;}
         inline void setErrorDef(double def) {_errorDef=def;}
     private:
-        boost::shared_ptr<lsst::afw::math::Function1<ReturnT> > _theFunctionPtr;
+        boost::shared_ptr<lsst::afw::math::Function1<ReturnT> > _functionPtr;
         std::vector<double> _measurementList;
         std::vector<double> _varianceList;
         std::vector<double> _xPositionList;
@@ -72,7 +72,7 @@ namespace math {
     public:
         explicit MinimizerFunctionBase2();
         explicit MinimizerFunctionBase2(
-            boost::shared_ptr<lsst::afw::math::Function2<ReturnT> > theFunctionPtr,
+            lsst::afw::math::Function2<ReturnT> const &function,
             std::vector<double> const &measurementList,
             std::vector<double> const &varianceList,
             std::vector<double> const &xPositionList,
@@ -92,7 +92,7 @@ namespace math {
         inline std::vector<double> getPosition2() const {return _yPositionList;}
         inline void setErrorDef(double def) {_errorDef=def;}
     private:
-        boost::shared_ptr<lsst::afw::math::Function2<ReturnT> > _theFunctionPtr;
+        boost::shared_ptr<lsst::afw::math::Function2<ReturnT> > _functionPtr;
         std::vector<double> _measurementList;
         std::vector<double> _varianceList;
         std::vector<double> _xPositionList;
@@ -102,7 +102,7 @@ namespace math {
         
     template<typename ReturnT>
     FitResults minimize(
-        boost::shared_ptr<lsst::afw::math::Function1<ReturnT> > functionPtr,
+        lsst::afw::math::Function1<ReturnT> const &function,
         std::vector<double> const &initialParameterList,
         std::vector<double> const &stepSizeList,
         std::vector<double> const &measurementList,
@@ -113,7 +113,7 @@ namespace math {
 
     template<typename ReturnT>
     FitResults minimize(
-        boost::shared_ptr<lsst::afw::math::Function2<ReturnT> > functionPtr,
+        lsst::afw::math::Function2<ReturnT> const &function,
         std::vector<double> const &initialParameterList,
         std::vector<double> const &stepSizeList,
         std::vector<double> const &measurementList,

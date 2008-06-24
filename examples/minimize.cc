@@ -16,16 +16,14 @@ int main(int argc, char** argv) {
     const unsigned int order = 3;
     const unsigned int npts = 10;
 
-    boost::shared_ptr<lsst::afw::math::Function1<funcType> > chebyFuncPtr(
-        new lsst::afw::math::Chebyshev1Function1<funcType>(order)
-    );
+    lsst::afw::math::Chebyshev1Function1<funcType> chebyFunc(order);
 
-    const unsigned int nParams = chebyFuncPtr->getNParameters();
-    std::vector<double> modelParams = chebyFuncPtr->getParameters();
+    const unsigned int nParams = chebyFunc.getNParameters();
+    std::vector<double> modelParams = chebyFunc.getParameters();
     for (unsigned int ii = 0; ii < nParams; ++ii) {
         modelParams[ii] = static_cast<double>(ii) * 0.1;
     }
-    chebyFuncPtr->setParameters(modelParams);
+    chebyFunc.setParameters(modelParams);
     std::cout << "Input : Chebychev polynomial of the first kind with parameters: " << std::endl;
     printVector(modelParams);
 
@@ -36,7 +34,7 @@ int main(int argc, char** argv) {
     double x = -1.0;
     double deltaX = 2.0 / static_cast<double>(npts - 1);
     for (unsigned int i = 0; i < npts; i++, x += deltaX) {
-        measurements[i] = (*chebyFuncPtr)(x);
+        measurements[i] = chebyFunc(x);
         variances[i] = 0.1;
         positions[i] = x;
     }
@@ -57,7 +55,7 @@ int main(int argc, char** argv) {
     double errorDef = 1.0;
 
     lsst::afw::math::FitResults fitResults = lsst::afw::math::minimize(
-        chebyFuncPtr,
+        chebyFunc,
         initialParams,
         stepSizes,
         measurements,
@@ -66,7 +64,7 @@ int main(int argc, char** argv) {
         errorDef
     );
     
-    std::vector<double> fitParams = chebyFuncPtr->getParameters();
+    std::vector<double> fitParams = chebyFunc.getParameters();
     std::cout << "fitResults.isValid =" << fitResults.isValid << std::endl;
     std::cout << "fitResults.parameterList:" << std::endl;
     printVector(fitResults.parameterList);
