@@ -13,11 +13,11 @@
 #include <map>
 #include <string>
 
-#include <boost/shared_ptr.hpp>
-#include <boost/iterator/filter_iterator.hpp>
-#include <boost/iterator/zip_iterator.hpp>
-#include <boost/tuple/tuple.hpp>
-#include <boost/tuple/tuple_io.hpp>
+#include "boost/shared_ptr.hpp"
+#include "boost/iterator/filter_iterator.hpp"
+#include "boost/iterator/zip_iterator.hpp"
+#include "boost/tuple/tuple.hpp"
+#include "boost/tuple/tuple_io.hpp"
 #include "vw/Image.h"
 #include "vw/Math/BBox.h"
 

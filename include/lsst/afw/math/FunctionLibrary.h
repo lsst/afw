@@ -2,13 +2,13 @@
 #ifndef LSST_AFW_MATH_FUNCTIONLIBRARY_H
 #define LSST_AFW_MATH_FUNCTIONLIBRARY_H
 /**
- * \file
+ * @file
  *
- * \brief Define a collection of useful Functions.
+ * @brief Define a collection of useful Functions.
  *
- * \author Russell Owen
+ * @author Russell Owen
  *
- * \ingroup afw
+ * @ingroup afw
  */
 #include <cmath>
 
@@ -19,14 +19,14 @@ namespace afw {
 namespace math {
 
     /**
-     * \brief 2-dimensional integer delta function.
+     * @brief 2-dimensional integer delta function.
      *
      * f(x) = 1 if x == xo and y == yo, 0 otherwise.
      *
      * For use as a kernel function be sure to handle the offset for row and column center;
      * see examples/deltaFunctionKernel for an example.
      *
-     * \ingroup afw
+     * @ingroup afw
      */
     template<typename ReturnT>
     class IntegerDeltaFunction2: public Function2<ReturnT> {
@@ -34,7 +34,7 @@ namespace math {
         typedef typename Function2<ReturnT>::Ptr Function2Ptr;
 
         /**
-         * \brief Construct an integer delta function with specified xo, yo
+         * @brief Construct an integer delta function with specified xo, yo
          */
         explicit IntegerDeltaFunction2(
             double xo,
@@ -69,12 +69,12 @@ namespace math {
 
 
     /**
-     * \brief 1-dimensional Gaussian
+     * @brief 1-dimensional Gaussian
      *
      * f(x) = e^(-x^2 / sigma^2) / (sqrt(2 pi) xSigma)
      * with coefficient c0 = sigma
      *
-     * \ingroup afw
+     * @ingroup afw
      */
     template<typename ReturnT>
     class GaussianFunction1: public Function1<ReturnT> {
@@ -82,7 +82,7 @@ namespace math {
         typedef typename Function1<ReturnT>::Ptr Function1Ptr;
 
         /**
-         * \brief Construct a Gaussian function with specified sigma
+         * @brief Construct a Gaussian function with specified sigma
          */
         explicit GaussianFunction1(
             double sigma)    ///< sigma
@@ -116,7 +116,7 @@ namespace math {
     
     
     /**
-     * \brief 2-dimensional Gaussian
+     * @brief 2-dimensional Gaussian
      *
      * f(x,y) = e^(-x^2 / xSigma^2) e^(-y^2 / ySigma^2) / (2 pi xSigma ySigma)
      * with coefficients c0 = xSigma and c1 = ySigma
@@ -125,7 +125,7 @@ namespace math {
      * - Allow setting angle of ellipticity
      * - Perhaps recast as a separable pair of 1-d Guassians
      *
-     * \ingroup afw
+     * @ingroup afw
      */
     template<typename ReturnT>
     class GaussianFunction2: public Function2<ReturnT> {
@@ -133,7 +133,7 @@ namespace math {
         typedef typename Function2<ReturnT>::Ptr Function2Ptr;
 
         /**
-         * \brief Construct a Gaussian function with specified x and y sigma
+         * @brief Construct a Gaussian function with specified x and y sigma
          */
         explicit GaussianFunction2(
             double xSigma,  ///< sigma in x
@@ -172,11 +172,11 @@ namespace math {
     
     
     /**
-     * \brief 1-dimensional polynomial function.
+     * @brief 1-dimensional polynomial function.
      *
      * f(x) = c0 + c1 x + c2 x^2 + ... cn-1 x^(n-1)
      *
-     * \ingroup afw
+     * @ingroup afw
      */
     template<typename ReturnT>
     class PolynomialFunction1: public Function1<ReturnT> {
@@ -184,7 +184,7 @@ namespace math {
         typedef typename Function1<ReturnT>::Ptr Function1Ptr;
 
         /**
-         * \brief Construct a polynomial function of the specified order.
+         * @brief Construct a polynomial function of the specified order.
          *
          * The parameters are initialized to zero.
          */
@@ -195,11 +195,11 @@ namespace math {
         }
         
         /**
-         * \brief Construct a polynomial function with the specified parameters.
+         * @brief Construct a polynomial function with the specified parameters.
          *
          * The order of the polynomial is set to the length of the params vector.
          *
-         * \throw lsst::pex::exceptions::InvalidParameter if params is empty
+         * @throw lsst::pex::exceptions::InvalidParameter if params is empty
          */
         explicit PolynomialFunction1(
             std::vector<double> params)  ///< polynomial coefficients (const, x, x^2...)
@@ -237,7 +237,7 @@ namespace math {
 
 
     /**
-     * \brief 2-dimensional polynomial function with cross terms
+     * @brief 2-dimensional polynomial function with cross terms
      *
      * f(x,y) = c0                                          (0th order)
      *          + c1 x + c2 y                               (1st order)
@@ -245,7 +245,7 @@ namespace math {
      *          + c5 x^3 + c6 x^2 y + c7 x y^2 + c8 y^3     (3rd order)
      *          + ...
      *
-     * \ingroup afw
+     * @ingroup afw
      */
     template<typename ReturnT>
     class PolynomialFunction2: public Function2<ReturnT> {
@@ -253,7 +253,7 @@ namespace math {
         typedef typename Function2<ReturnT>::Ptr Function2Ptr;
 
         /**
-         * \brief Construct a polynomial function of specified order.
+         * @brief Construct a polynomial function of specified order.
          *
          * The polynomial will have (order + 1) * (order + 2) / 2 coefficients
          *
@@ -267,14 +267,14 @@ namespace math {
         {}
 
         /**
-         * \brief Construct a polynomial function with specified parameters.
+         * @brief Construct a polynomial function with specified parameters.
          *
          * The order of the polynomial is determined from the length of the params vector:
          *   order = (sqrt(1 + 8 * length) - 3) / 2
          * and if this is not an integer then the length is unsuitable
          *
-         * \throw lsst::pex::exceptions::InvalidParameter if params length is unsuitable
-         * \throw lsst::pex::exceptions::Exception if an internal sanity check fails
+         * @throw lsst::pex::exceptions::InvalidParameter if params length is unsuitable
+         * @throw lsst::pex::exceptions::Exception if an internal sanity check fails
          */
         explicit PolynomialFunction2(
             std::vector<double> params)  ///< polynomial coefficients (const, x, y, x^2, xy, y^2...);
@@ -350,7 +350,7 @@ namespace math {
 
     
     /**
-     * \brief 1-dimensional weighted sum of Chebyshev polynomials of the first kind.
+     * @brief 1-dimensional weighted sum of Chebyshev polynomials of the first kind.
      *
      * f(x) = c0 + c1 * T1(x') + c2 * T2(x') + ...
      * where:
@@ -363,7 +363,7 @@ namespace math {
      * Note: solved using the Clenshaw algorithm. This avoids cosines,
      * but is recursive and so (presumably) cannot be inlined.
      *
-     * \ingroup afw
+     * @ingroup afw
      */
     template<typename ReturnT>
     class Chebyshev1Function1: public Function1<ReturnT> {
@@ -371,7 +371,7 @@ namespace math {
         typedef typename Function1<ReturnT>::Ptr Function1Ptr;
 
         /**
-         * \brief Construct a Chebyshev polynomial of specified order and range.
+         * @brief Construct a Chebyshev polynomial of specified order and range.
          *
          * The parameters are initialized to zero.
          */
@@ -386,11 +386,11 @@ namespace math {
         }
 
         /**
-         * \brief Construct a Chebyshev polynomial with specified parameters and range.
+         * @brief Construct a Chebyshev polynomial with specified parameters and range.
          *
          * The order of the polynomial is set to the length of the params vector.
          *
-         * \throw lsst::pex::exceptions::InvalidParameter if params is empty
+         * @throw lsst::pex::exceptions::InvalidParameter if params is empty
          */
         explicit Chebyshev1Function1(
             std::vector<double> params,  ///< polynomial coefficients
@@ -434,7 +434,7 @@ namespace math {
         unsigned int _maxInd;   ///< maximum index for Clenshaw function
         
         /**
-         * \brief Clenshaw recursive function for solving the Chebyshev polynomial
+         * @brief Clenshaw recursive function for solving the Chebyshev polynomial
          */
         double _clenshaw(double x, unsigned int ind) const {
             if (ind == _maxInd) {
@@ -452,7 +452,7 @@ namespace math {
         }
         
         /**
-         * \brief initialize private constants
+         * @brief initialize private constants
          */
         void _initialize(double xMin, double xMax) {
             _minX = xMin;
@@ -465,7 +465,7 @@ namespace math {
 
 
     /**
-     * \brief 1-dimensional Lanczos function
+     * @brief 1-dimensional Lanczos function
      *
      * f(x) = sinc(pi x') sinc(pi x' / n)
      * where x' = x - xOffset
@@ -474,7 +474,7 @@ namespace math {
      * Warning: the Lanczos function is sometimes forced to 0 if |x'| > n
      * but this implementation does not perform that truncation so as to improve Lanczos kernels.
      *
-     * \ingroup afw
+     * @ingroup afw
      */
     template<typename ReturnT>
     class LanczosFunction1: public Function1<ReturnT> {
@@ -482,7 +482,7 @@ namespace math {
         typedef typename Function1<ReturnT>::Ptr Function1Ptr;
 
         /**
-         * \brief Construct a Lanczos function of specified order and x,y offset.
+         * @brief Construct a Lanczos function of specified order and x,y offset.
          */
         explicit LanczosFunction1(
             unsigned int n,         ///< order of Lanczos function
@@ -524,7 +524,7 @@ namespace math {
 
 
     /**
-     * \brief 2-dimensional separable Lanczos function
+     * @brief 2-dimensional separable Lanczos function
      *
      * f(x, y) = sinc(pi x') sinc(pi x' / n) sinc(pi y') sinc(pi y' / n)
      * where x' = x - xOffset and y' = y - yOffset
@@ -533,7 +533,7 @@ namespace math {
      * Warning: the Lanczos function is sometimes forced to 0 if |x'| > n or |y'| > n
      * but this implementation does not perform that truncation so as to improve Lanczos kernels.
      *
-     * \ingroup afw
+     * @ingroup afw
      */
     template<typename ReturnT>
     class LanczosFunction2: public Function2<ReturnT> {
@@ -541,7 +541,7 @@ namespace math {
         typedef typename Function2<ReturnT>::Ptr Function2Ptr;
 
         /**
-         * \brief Construct a Lanczos function of specified order and x,y offset.
+         * @brief Construct a Lanczos function of specified order and x,y offset.
          */
         explicit LanczosFunction2(
             unsigned int n,         ///< order of Lanczos function

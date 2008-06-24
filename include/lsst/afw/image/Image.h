@@ -13,7 +13,7 @@
 #include <map>
 #include <string>
 
-#include <boost/shared_ptr.hpp>
+#include "boost/shared_ptr.hpp"
 #include "vw/Image.h"
 #include "vw/Math/BBox.h"
 

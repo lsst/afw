@@ -1,10 +1,10 @@
 // -*- lsst-c++ -*-
 /**
- * \file
+ * @file
  *
- * \brief Image utility functions
+ * @brief Image utility functions
  *
- * \defgroup afw LSST framework 
+ * @defgroup afw LSST framework 
  */
 #ifndef LSST_AFW_IMAGE_IMAGEUTILS_H
 #define LSST_AFW_IMAGE_IMAGEUTILS_H
@@ -19,13 +19,13 @@ namespace image {
     ///< FITS uses 1.0, SDSS uses 0.5, LSST is undecided but RHL proposed 0.0
 
     /**
-     * \brief Convert image index to image position
+     * @brief Convert image index to image position
      *
      * The LSST indexing convention is:
      * * the index of the bottom left pixel is 0,0
      * * the position of the center of the bottom left pixel is PixelZeroPos, PixelZeroPos
      *
-     * \return image position
+     * @return image position
      */
     inline double indexToPosition(
         int ind ///< image index
@@ -34,13 +34,13 @@ namespace image {
     }
     
     /**
-     * \brief Convert image position to nearest integer index
+     * @brief Convert image position to nearest integer index
      *
      * The LSST indexing convention is:
      * * the index of the bottom left pixel is 0,0
      * * the position of the center of the bottom left pixel is PixelZeroPos, PixelZeroPos
      *
-     * \return nearest integer index
+     * @return nearest integer index
      */
     inline int positionToIndex(
         double pos ///< image position
@@ -49,7 +49,7 @@ namespace image {
     }
     
     /**
-     * \brief Convert image position to index (nearest integer and fractional parts)
+     * @brief Convert image position to index (nearest integer and fractional parts)
      *
      * The LSST indexing convention is:
      * * the index of the bottom left pixel is 0,0
@@ -57,7 +57,7 @@ namespace image {
      *
      * Note: in python this is called positionToIndexAndResidual
      *
-     * \return nearest integer index
+     * @return nearest integer index
      */
     inline int positionToIndex(
         double &residual, ///< fractional part of index

@@ -30,7 +30,7 @@ InputMaskedImagePath = os.path.join(dataDir, "871034p_1_MI")
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def refConvolve(imVarMask, kernel, edgeBit, doNormalize, ignoreKernelZeroPixels=False):
+def refConvolve(imVarMask, kernel, edgeBit, doNormalize, ignoreKernelZeroPixels=True):
     """Reference code to convolve a kernel with masked image data.
     
     Does NOT normalize the kernel.

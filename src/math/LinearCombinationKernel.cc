@@ -1,23 +1,23 @@
 // -*- LSST-C++ -*-
 /**
- * \file
+ * @file
  *
- * \brief Definitions of LinearCombinationKernel member functions.
+ * @brief Definitions of LinearCombinationKernel member functions.
  *
- * \author Russell Owen
+ * @author Russell Owen
  *
- * \ingroup afw
+ * @ingroup afw
  */
 #include <stdexcept>
 
-#include <boost/format.hpp>
+#include "boost/format.hpp"
 #include "vw/Image.h"
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
 
 /**
- * \brief Construct an empty LinearCombinationKernel of size 0x0
+ * @brief Construct an empty LinearCombinationKernel of size 0x0
  */
 lsst::afw::math::LinearCombinationKernel::LinearCombinationKernel()
 :
@@ -28,7 +28,7 @@ lsst::afw::math::LinearCombinationKernel::LinearCombinationKernel()
 { }
 
 /**
- * \brief Construct a spatially invariant LinearCombinationKernel
+ * @brief Construct a spatially invariant LinearCombinationKernel
  */
 lsst::afw::math::LinearCombinationKernel::LinearCombinationKernel(
     KernelList const &kernelList,    ///< list of (shared pointers to) kernels
@@ -44,7 +44,7 @@ lsst::afw::math::LinearCombinationKernel::LinearCombinationKernel(
 }
 
 /**
- * \brief Construct a spatially varying LinearCombinationKernel with spatial parameters initialized to 0
+ * @brief Construct a spatially varying LinearCombinationKernel with spatial parameters initialized to 0
  */
 lsst::afw::math::LinearCombinationKernel::LinearCombinationKernel(
     KernelList const &kernelList,    ///< list of (shared pointers to) kernels
@@ -60,9 +60,9 @@ lsst::afw::math::LinearCombinationKernel::LinearCombinationKernel(
 }
 
 /**
- * \brief Construct a spatially varying LinearCombinationKernel with the spatially varying parameters specified
+ * @brief Construct a spatially varying LinearCombinationKernel with the spatially varying parameters specified
  *
- * \throw lsst::pex::exceptions::InvalidParameter if the length of spatialFunctionList != # kernels
+ * @throw lsst::pex::exceptions::InvalidParameter if the length of spatialFunctionList != # kernels
  */
 lsst::afw::math::LinearCombinationKernel::LinearCombinationKernel(
     KernelList const &kernelList,    ///< list of (shared pointers to) kernels
@@ -114,7 +114,7 @@ void lsst::afw::math::LinearCombinationKernel::computeImage(
 }
 
 /**
- * \brief Get the fixed basis kernels
+ * @brief Get the fixed basis kernels
  */
 lsst::afw::math::LinearCombinationKernel::KernelList const &
 lsst::afw::math::LinearCombinationKernel::getKernelList() const {
@@ -122,9 +122,9 @@ lsst::afw::math::LinearCombinationKernel::getKernelList() const {
 }
     
 /**
- * \brief Check that all kernels have the same size and center and that none are spatially varying
+ * @brief Check that all kernels have the same size and center and that none are spatially varying
  *
- * \throw lsst::pex::exceptions::InvalidParameter if the check fails
+ * @throw lsst::pex::exceptions::InvalidParameter if the check fails
  */
 void lsst::afw::math::LinearCombinationKernel::checkKernelList(const KernelList &kernelList) const {
     if (kernelList.size() < 1) {

@@ -1,10 +1,10 @@
 // -*- LSST-C++ -*-
 /**
- * \file
+ * @file
  *
- * \brief Definitions of DeltaFunctionKernel member functions.
+ * @brief Definitions of DeltaFunctionKernel member functions.
  *
- * \ingroup fw
+ * @ingroup fw
  */
 #include <vector>
 
@@ -14,7 +14,7 @@
 #include "lsst/afw/math/Kernel.h"
 
 /**
- * \brief Construct a spatially invariant DeltaFunctionKernel
+ * @brief Construct a spatially invariant DeltaFunctionKernel
  */
 lsst::afw::math::DeltaFunctionKernel::DeltaFunctionKernel(int pixelCol,
                                                    int pixelRow,

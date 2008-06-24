@@ -13,7 +13,7 @@
 #include <sstream>
 #include <cstring>
 
-#include <boost/cstdint.hpp>
+#include "boost/cstdint.hpp"
 
 #include "lsst/daf/base.h"
 #include "lsst/daf/persistence.h"

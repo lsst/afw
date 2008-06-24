@@ -1,7 +1,7 @@
 // -*- lsst-c++ -*-
 /**
- * \file
- * \brief Implementation of Wcs as a thin wrapper around wcslib
+ * @file
+ * @brief Implementation of Wcs as a thin wrapper around wcslib
  */
 #include <iostream>
 #include <sstream>
@@ -23,9 +23,9 @@ using lsst::daf::data::LsstBase;
 using lsst::daf::data::FitsFormatter;
 
 /**
- * \brief Construct an invalid Wcs given no arguments
+ * @brief Construct an invalid Wcs given no arguments
  *
- * \throw lsst::pex::exceptions::Runtime on error
+ * @throw lsst::pex::exceptions::Runtime on error
  */
 lsst::afw::image::Wcs::Wcs() :
     LsstBase(typeid(this)),
@@ -34,9 +34,9 @@ lsst::afw::image::Wcs::Wcs() :
 }
 
 /**
- * \brief Construct a Wcs from a FITS header, represented as DataProperty::PtrType
+ * @brief Construct a Wcs from a FITS header, represented as DataProperty::PtrType
  *
- * \throw lsst::pex::exceptions::Runtime on error
+ * @throw lsst::pex::exceptions::Runtime on error
  */
 lsst::afw::image::Wcs::Wcs(
     lsst::daf::base::DataProperty::PtrType fitsMetaData  ///< The contents of a valid FITS header
@@ -98,9 +98,9 @@ lsst::afw::image::Wcs::Wcs(
 }
 
 /**
- * \brief Wcs copy constructor
+ * @brief Wcs copy constructor
  *
- * \throw lsst::pex::exceptions::Memory or lsst::pex::exceptions::Runtime on error
+ * @throw lsst::pex::exceptions::Memory or lsst::pex::exceptions::Runtime on error
  */
 lsst::afw::image::Wcs::Wcs(Wcs const & rhs):
     LsstBase(typeid(this)),
@@ -133,9 +133,9 @@ lsst::afw::image::Wcs::Wcs(Wcs const & rhs):
 }
 
 /**
- * \brief Wcs assignment operator
+ * @brief Wcs assignment operator
  *
- * \throw lsst::pex::exceptions::Memory or lsst::pex::exceptions::Runtime on error
+ * @throw lsst::pex::exceptions::Memory or lsst::pex::exceptions::Runtime on error
  */
 lsst::afw::image::Wcs & lsst::afw::image::Wcs::operator = (const lsst::afw::image::Wcs & rhs) {
     if (this != &rhs) {

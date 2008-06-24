@@ -4,7 +4,7 @@
 #include <list>
 #include <string>
 
-#include <boost/format.hpp>
+#include "boost/format.hpp"
 #include "vw/Image.h"
 #include "vw/Math/BBox.h"
 
@@ -95,7 +95,7 @@ lsst::daf::base::DataProperty::PtrType Mask<MaskPixelT>::getMetaData()
 }
 
 /**
- * \brief Read a Mask from disk
+ * @brief Read a Mask from disk
  *
  * The meaning of the bitplanes is given in the header.  If conformMasks is false (default),
  * the bitvalues will be changed to match those in Mask's plane dictionary.  If it's true, the
@@ -335,7 +335,7 @@ void Mask<MaskPixelT>::conformMaskPlanes(MaskPlaneDict currentPlaneDict
 
 
 /**
- * \brief Set the bit specified by "plane" for each pixel in the pixelList
+ * @brief Set the bit specified by "plane" for each pixel in the pixelList
  */
 template<typename MaskPixelT>
 void Mask<MaskPixelT>::setMaskPlaneValues(int plane, std::list<PixelCoord> pixelList) {
@@ -348,7 +348,7 @@ void Mask<MaskPixelT>::setMaskPlaneValues(int plane, std::list<PixelCoord> pixel
 }
 
 /**
- * \brief Set the bit specified by "plane" for pixels (x0, y) ... (x1, y)
+ * @brief Set the bit specified by "plane" for pixels (x0, y) ... (x1, y)
  */
 template<typename MaskPixelT>
 void Mask<MaskPixelT>::setMaskPlaneValues(const int plane, const int x0, const int x1, const int y) {
@@ -360,7 +360,7 @@ void Mask<MaskPixelT>::setMaskPlaneValues(const int plane, const int x0, const i
 }
 
 /**
- * \brief Set the bit specified by "plane" for each pixel for which selectionFunc(pixel) returns true
+ * @brief Set the bit specified by "plane" for each pixel for which selectionFunc(pixel) returns true
  */
 template<typename MaskPixelT>
 void Mask<MaskPixelT>::setMaskPlaneValues(int plane, MaskPixelBooleanFunc<MaskPixelT> selectionFunc) {
@@ -376,7 +376,7 @@ void Mask<MaskPixelT>::setMaskPlaneValues(int plane, MaskPixelBooleanFunc<MaskPi
 }
 
 /**
- * \brief Return the number of pixels within maskRegion for which testFunc(pixel) returns true
+ * @brief Return the number of pixels within maskRegion for which testFunc(pixel) returns true
  *
  * PROBABLY WANT maskRegion to default to whole Mask
  */
@@ -424,9 +424,9 @@ typename Mask<MaskPixelT>::MaskPtrT Mask<MaskPixelT>::getSubMask(const vw::BBox2
 }
 
 /**
- * \brief Given a Mask, insertMask, place it into this Mask as directed by maskRegion.
+ * @brief Given a Mask, insertMask, place it into this Mask as directed by maskRegion.
  *
- * \throw lsst::pex::exceptions::Exception if maskRegion is not of the same size as insertMask.
+ * @throw lsst::pex::exceptions::Exception if maskRegion is not of the same size as insertMask.
  *
  * Maybe generate an exception if offsets are not consistent?
  */
@@ -481,9 +481,9 @@ Mask<MaskPixelT>& Mask<MaskPixelT>::operator |= (const Mask<MaskPixelT>& inputMa
 }
 
 /**
- * \brief OR a bitmask into a Mask
+ * @brief OR a bitmask into a Mask
  *
- * \return Modified Mask
+ * @return Modified Mask
  */
 template<typename MaskPixelT>
 Mask<MaskPixelT>& Mask<MaskPixelT>::operator |= (MaskPixelT const inputMask)
@@ -498,9 +498,9 @@ Mask<MaskPixelT>& Mask<MaskPixelT>::operator |= (MaskPixelT const inputMask)
 }
 
 /**
- * \brief AND a bitmask into a Mask
+ * @brief AND a bitmask into a Mask
  *
- * \return Modified Mask
+ * @return Modified Mask
  */
 template<typename MaskPixelT>
 Mask<MaskPixelT>& Mask<MaskPixelT>::operator &= (MaskPixelT const inputMask)
@@ -515,9 +515,9 @@ Mask<MaskPixelT>& Mask<MaskPixelT>::operator &= (MaskPixelT const inputMask)
 }
 
 /**
- * \brief Given a DataProperty, replace any existing MaskPlane assignments with the current ones.
+ * @brief Given a DataProperty, replace any existing MaskPlane assignments with the current ones.
  *
- * \throw Throws lsst::pex::exceptions::InvalidParameter if given DataProperty is not a node
+ * @throw Throws lsst::pex::exceptions::InvalidParameter if given DataProperty is not a node
  */
 template<typename MaskPixelT>
 void Mask<MaskPixelT>::addMaskPlaneMetaData(lsst::daf::base::DataProperty::PtrType rootPtr) {
@@ -543,9 +543,9 @@ void Mask<MaskPixelT>::addMaskPlaneMetaData(lsst::daf::base::DataProperty::PtrTy
 
 
 /**
- * \brief Given a DataProperty that contains the MaskPlane assignments setup the MaskPlanes.
+ * @brief Given a DataProperty that contains the MaskPlane assignments setup the MaskPlanes.
  *
- * \returns a dictionary of mask names/plane assignments
+ * @returns a dictionary of mask names/plane assignments
  */
 template<typename MaskPixelT>
 typename Mask<MaskPixelT>::MaskPlaneDict Mask<MaskPixelT>::parseMaskPlaneMetaData(

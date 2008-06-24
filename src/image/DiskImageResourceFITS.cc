@@ -3,8 +3,8 @@
 
 #include <vector>
 
-#include <boost/scoped_array.hpp>
-#include <boost/format.hpp>
+#include "boost/scoped_array.hpp"
+#include "boost/format.hpp"
 #include "vw/Core/Exception.h"
 #include "vw/Image/ImageMath.h"
 

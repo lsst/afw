@@ -1,23 +1,23 @@
 // -*- LSST-C++ -*-
 /**
- * \file
+ * @file
  *
- * \brief Definitions of members of lsst::afw::math
+ * @brief Definitions of members of lsst::afw::math
  *
- * \ingroup afw
+ * @ingroup afw
  */
 #include <iostream>
 
-#include <boost/format.hpp>
+#include "boost/format.hpp"
 
 #include "lsst/afw/math/KernelFunctions.h"
 
 /**
- * \brief Print the pixel values of a Kernel to std::cout
+ * @brief Print the pixel values of a Kernel to std::cout
  *
  * Rows increase upward and columns to the right; thus the lower left pixel is (0,0).
  *
- * \ingroup afw
+ * @ingroup afw
  */
 void
 lsst::afw::math::printKernel(

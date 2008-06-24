@@ -1,12 +1,12 @@
 // -*- LSST-C++ -*-
 /**
- * \file
+ * @file
  *
- * \brief Definitions of AnalyticKernel member functions.
+ * @brief Definitions of AnalyticKernel member functions.
  *
- * \author Russell Owen
+ * @author Russell Owen
  *
- * \ingroup afw
+ * @ingroup afw
  */
 #include "vw/Image.h"
 
@@ -14,7 +14,7 @@
 #include "lsst/afw/math/Kernel.h"
 
 /**
- * \brief Construct an empty spatially invariant AnalyticKernel of size 0x0
+ * @brief Construct an empty spatially invariant AnalyticKernel of size 0x0
  */
 lsst::afw::math::AnalyticKernel::AnalyticKernel()
 :
@@ -23,7 +23,7 @@ lsst::afw::math::AnalyticKernel::AnalyticKernel()
 {}
 
 /**
- * \brief Construct a spatially invariant AnalyticKernel
+ * @brief Construct a spatially invariant AnalyticKernel
  */
 lsst::afw::math::AnalyticKernel::AnalyticKernel(
     KernelFunction const &kernelFunction,
@@ -35,7 +35,7 @@ lsst::afw::math::AnalyticKernel::AnalyticKernel(
 {}
 
 /**
- * \brief Construct a spatially varying AnalyticKernel, replicating a spatial function once per kernel function parameter
+ * @brief Construct a spatially varying AnalyticKernel, replicating a spatial function once per kernel function parameter
  */
 lsst::afw::math::AnalyticKernel::AnalyticKernel(
     KernelFunction const &kernelFunction,
@@ -48,9 +48,9 @@ lsst::afw::math::AnalyticKernel::AnalyticKernel(
 {}
 
 /**
- * \brief Construct a spatially varying AnalyticKernel
+ * @brief Construct a spatially varying AnalyticKernel
  *
- * \throw lsst::pex::exceptions::InvalidParameter if the length of spatialFunctionList != # kernel function parameters.
+ * @throw lsst::pex::exceptions::InvalidParameter if the length of spatialFunctionList != # kernel function parameters.
  */
 lsst::afw::math::AnalyticKernel::AnalyticKernel(
     KernelFunction const &kernelFunction,
@@ -101,7 +101,7 @@ void lsst::afw::math::AnalyticKernel::computeImage(
 }
 
 /**
- * \brief Get a deep copy of the kernel function
+ * @brief Get a deep copy of the kernel function
  */
 lsst::afw::math::AnalyticKernel::KernelFunctionPtr lsst::afw::math::AnalyticKernel::getKernelFunction(
 ) const {

@@ -2,21 +2,21 @@
 #ifndef LSST_AFW_FORMATTERS_IMAGEFORMATTER_H
 #define LSST_AFW_FORMATTERS_IMAGEFORMATTER_H
 
-/** \file
- * \brief Interface for ImageFormatter class
+/** @file
+ * @brief Interface for ImageFormatter class
  *
- * \author $Author: ktlim $
- * \version $Revision: 2377 $
- * \date $Date$
+ * @author $Author: ktlim $
+ * @version $Revision: 2377 $
+ * @date $Date$
  *
  * Contact: Kian-Tat Lim (ktl@slac.stanford.edu)
- * \ingroup afw
+ * @ingroup afw
  */
 
-/** \class lsst::afw::formatters::ImageFormatter
- * \brief Class implementing persistence and retrieval for Images.
+/** @class lsst::afw::formatters::ImageFormatter
+ * @brief Class implementing persistence and retrieval for Images.
  *
- * \ingroup afw
+ * @ingroup afw
  */
 
 #include "lsst/daf/base.h"

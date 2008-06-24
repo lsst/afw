@@ -13,8 +13,8 @@
 #include <map>
 #include <string>
 
-#include <boost/cstdint.hpp>
-#include <boost/shared_ptr.hpp>
+#include "boost/cstdint.hpp"
+#include "boost/shared_ptr.hpp"
 #include "vw/Image.h"
 #include "vw/Math/BBox.h"
 

@@ -2,21 +2,21 @@
 #ifndef LSST_AFW_FORMATTERS_MASKEDIMAGEFORMATTER_H
 #define LSST_AFW_FORMATTERS_MASKEDIMAGEFORMATTER_H
 
-/** \file
- * \brief Interface for MaskedImageFormatter class
+/** @file
+ * @brief Interface for MaskedImageFormatter class
  *
- * \author $Author: ktlim $
- * \version $Revision: 2377 $
- * \date $Date$
+ * @author $Author: ktlim $
+ * @version $Revision: 2377 $
+ * @date $Date$
  *
  * Contact: Kian-Tat Lim (ktl@slac.stanford.edu)
- * \ingroup afw
+ * @ingroup afw
  */
 
-/** \class lsst::afw::formatters::MaskedImageFormatter
- * \brief Class implementing persistence and retrieval for MaskedImages.
+/** @class lsst::afw::formatters::MaskedImageFormatter
+ * @brief Class implementing persistence and retrieval for MaskedImages.
  *
- * \ingroup afw
+ * @ingroup afw
  */
 
 #include "lsst/daf/base.h"

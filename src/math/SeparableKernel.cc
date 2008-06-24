@@ -1,12 +1,12 @@
 // -*- LSST-C++ -*-
 /**
- * \file
+ * @file
  *
- * \brief Definitions of SeparableKernel member functions.
+ * @brief Definitions of SeparableKernel member functions.
  *
- * \author Russell Owen
+ * @author Russell Owen
  *
- * \ingroup afw
+ * @ingroup afw
  */
 #include <algorithm>
 #include <iterator>
@@ -17,7 +17,7 @@
 #include "lsst/afw/math/Kernel.h"
 
 /**
- * \brief Construct an empty spatially invariant SeparableKernel of size 0x0
+ * @brief Construct an empty spatially invariant SeparableKernel of size 0x0
  */
 lsst::afw::math::SeparableKernel::SeparableKernel()
 :
@@ -27,7 +27,7 @@ lsst::afw::math::SeparableKernel::SeparableKernel()
 {}
 
 /**
- * \brief Construct a spatially invariant SeparableKernel
+ * @brief Construct a spatially invariant SeparableKernel
  */
 lsst::afw::math::SeparableKernel::SeparableKernel(
     KernelFunction const &kernelColFunction,
@@ -43,7 +43,7 @@ lsst::afw::math::SeparableKernel::SeparableKernel(
 {}
 
 /**
- * \brief Construct a spatially varying SeparableKernel, replicating a spatial function once per kernel function parameter
+ * @brief Construct a spatially varying SeparableKernel, replicating a spatial function once per kernel function parameter
  */
 lsst::afw::math::SeparableKernel::SeparableKernel(
     KernelFunction const &kernelColFunction,
@@ -60,9 +60,9 @@ lsst::afw::math::SeparableKernel::SeparableKernel(
 {}
 
 /**
- * \brief Construct a spatially varying SeparableKernel
+ * @brief Construct a spatially varying SeparableKernel
  *
- * \throw lsst::pex::exceptions::InvalidParameter if the length of spatialFunctionList != # kernel function parameters.
+ * @throw lsst::pex::exceptions::InvalidParameter if the length of spatialFunctionList != # kernel function parameters.
  */
 lsst::afw::math::SeparableKernel::SeparableKernel(
     KernelFunction const &kernelColFunction,
@@ -137,7 +137,7 @@ void lsst::afw::math::SeparableKernel::computeVectors(
 }
 
 /**
- * \brief Get a deep copy of the col kernel function
+ * @brief Get a deep copy of the col kernel function
  */
 lsst::afw::math::SeparableKernel::KernelFunctionPtr lsst::afw::math::SeparableKernel::getKernelColFunction(
 ) const {
@@ -145,7 +145,7 @@ lsst::afw::math::SeparableKernel::KernelFunctionPtr lsst::afw::math::SeparableKe
 }
 
 /**
- * \brief Get a deep copy of the row kernel function
+ * @brief Get a deep copy of the row kernel function
  */
 lsst::afw::math::SeparableKernel::KernelFunctionPtr lsst::afw::math::SeparableKernel::getKernelRowFunction(
 ) const {

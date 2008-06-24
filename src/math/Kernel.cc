@@ -1,14 +1,14 @@
 // -*- LSST-C++ -*-
 /**
- * \file
+ * @file
  *
- * \brief Definitions of Kernel member functions.
+ * @brief Definitions of Kernel member functions.
  *
- * \ingroup afw
+ * @ingroup afw
  */
 #include <stdexcept>
 
-#include <boost/format.hpp>
+#include "boost/format.hpp"
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
@@ -21,7 +21,7 @@ lsst::afw::math::deltafunction_kernel_tag lsst::afw::math::deltafunction_kernel_
 //
 
 /**
- * \brief Construct a spatially invariant Kernel with no kernel parameters
+ * @brief Construct a spatially invariant Kernel with no kernel parameters
  */
 lsst::afw::math::Kernel::Kernel()
 :
@@ -35,7 +35,7 @@ lsst::afw::math::Kernel::Kernel()
 { }
 
 /**
- * \brief Construct a spatially invariant Kernel
+ * @brief Construct a spatially invariant Kernel
  */
 lsst::afw::math::Kernel::Kernel(
     unsigned int cols,  ///< number of columns
@@ -52,9 +52,9 @@ lsst::afw::math::Kernel::Kernel(
 { }
 
 /**
- * \brief Construct a spatially varying Kernel with one spatial function copied as needed
+ * @brief Construct a spatially varying Kernel with one spatial function copied as needed
  *
- * \throw lsst::pex::exceptions::InvalidParameter if the kernel has no parameters.
+ * @throw lsst::pex::exceptions::InvalidParameter if the kernel has no parameters.
  */
 lsst::afw::math::Kernel::Kernel(
     unsigned int cols,  ///< number of columns
@@ -79,7 +79,7 @@ lsst::afw::math::Kernel::Kernel(
 }
 
 /**
- * \brief Construct a spatially varying Kernel with a list of spatial functions (one per kernel parameter)
+ * @brief Construct a spatially varying Kernel with a list of spatial functions (one per kernel parameter)
  *
  * Note: if the list of spatial functions is empty then the kernel is not spatially varying.
  */
@@ -106,12 +106,12 @@ lsst::afw::math::Kernel::Kernel(
 //
 
 /**
- * \brief Compute an image (pixellized representation of the kernel), returning a new image
+ * @brief Compute an image (pixellized representation of the kernel), returning a new image
  *
  * This would be called computeImage (overloading the other function of the same name)
  * but at least some versions of the g++ compiler cannot then reliably find the function.
  *
- * \return an image (your own copy to do with as you wish)
+ * @return an image (your own copy to do with as you wish)
  */
 lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT> lsst::afw::math::Kernel::computeNewImage(
     PixelT &imSum,  ///< sum of image pixels
@@ -125,11 +125,11 @@ lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT> lsst::afw::math::Kernel
 }
 
 /**
- * \brief Set the parameters of all spatial functions
+ * @brief Set the parameters of all spatial functions
  *
  * Params is indexed as [kernel parameter][spatial parameter]
  *
- * \throw lsst::pex::exceptions::InvalidParameter if params is the wrong shape (and no parameters are changed)
+ * @throw lsst::pex::exceptions::InvalidParameter if params is the wrong shape (and no parameters are changed)
  */
 void lsst::afw::math::Kernel::setSpatialParameters(const std::vector<std::vector<double> > params) {
     // Check params size before changing anything
@@ -153,7 +153,7 @@ void lsst::afw::math::Kernel::setSpatialParameters(const std::vector<std::vector
 }
 
 /**
- * \brief Compute the kernel parameters at a specified point
+ * @brief Compute the kernel parameters at a specified point
  *
  * Warning: this is a low-level function that assumes kernelParams is the right length.
  * It will fail in unpredictable ways if that condition is not met.
@@ -179,7 +179,7 @@ std::vector<double> lsst::afw::math::Kernel::getKernelParameters() const {
 }
 
 /**
- * \brief Return a string representation of the kernel
+ * @brief Return a string representation of the kernel
  */
 std::string lsst::afw::math::Kernel::toString(std::string prefix) const {
     std::ostringstream os;

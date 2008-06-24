@@ -1,9 +1,9 @@
 // -*- LSST-C++ -*- // fixed format comment for emacs
 /**
-* \file
-* \brief Simple test code for the Wcs Class
+* @file
+* @brief Simple test code for the Wcs Class
 *        Created on:    23-Jul-2007 12:28:00 PM PDT (by NMS)
-* \author Nicole M. Silvestri
+* @author Nicole M. Silvestri
 *         Last modified: 20-Aug-2007 (by NMS)
 *
 * LSST Legalese here...
@@ -14,8 +14,8 @@
 #include <sstream>
 #include <string>
 
-#include <boost/format.hpp>
-#include <boost/shared_ptr.hpp>
+#include "boost/format.hpp"
+#include "boost/shared_ptr.hpp"
 #include "vw/Image.h"
 #include "vw/Math/BBox.h"
 
@@ -24,7 +24,7 @@
 #include "lsst/afw/image.h"
 
 /**
- * \brief This test code incorporates some very simple tests of the Wcs Class
+ * @brief This test code incorporates some very simple tests of the Wcs Class
  * and its related classes.
  * 
  */

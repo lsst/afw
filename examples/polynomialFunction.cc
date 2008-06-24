@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
 
-#include <boost/format.hpp>
+#include "boost/format.hpp"
 
 #include "lsst/afw/math/FunctionLibrary.h"
 

@@ -1,7 +1,7 @@
 #include <iostream>
 
-#include <boost/shared_ptr.hpp>
-#include <boost/format.hpp>
+#include "boost/shared_ptr.hpp"
+#include "boost/format.hpp"
 
 #include "lsst/afw/math.h"
 

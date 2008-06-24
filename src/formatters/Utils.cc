@@ -6,7 +6,7 @@
 //
 //##====----------------                                ----------------====##/
 
-#include <boost/cstdint.hpp>
+#include "boost/cstdint.hpp"
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/daf/persistence/DbTsvStorage.h"

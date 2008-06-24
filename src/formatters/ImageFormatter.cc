@@ -1,15 +1,15 @@
 // -*- lsst-c++ -*-
 
-/** \file
- * \brief Implementation of ImageFormatter class
+/** @file
+ * @brief Implementation of ImageFormatter class
  *
- * \author $Author: ktlim $
- * \version $Revision: 2151 $
- * \date $Date$
+ * @author $Author: ktlim $
+ * @version $Revision: 2151 $
+ * @date $Date$
  *
  * Contact: Kian-Tat Lim (ktl@slac.stanford.edu)
  *
- * \ingroup afw
+ * @ingroup afw
  */
 
 #ifndef __GNUC__
@@ -17,8 +17,8 @@
 #endif
 static char const* SVNid __attribute__((unused)) = "$Id$";
 
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/binary_object.hpp>
+#include "boost/serialization/shared_ptr.hpp"
+#include "boost/serialization/binary_object.hpp"
 
 #include "lsst/daf/base.h"
 #include "lsst/daf/persistence.h"

@@ -1,28 +1,28 @@
 // -*- LSST-C++ -*- // fixed format comment for emacs
 /**
-  * \file
+  * @file
   *
-  * \ingroup afw
+  * @ingroup afw
   *
-  * \brief Implementation of the Exposure Class for LSST.  Class declaration in
+  * @brief Implementation of the Exposure Class for LSST.  Class declaration in
   * Exposure.h.
   *
-  * \author Nicole M. Silvestri, University of Washington
+  * @author Nicole M. Silvestri, University of Washington
   *
   * Contact: nms@astro.washington.edu
   *
   * Created on: Mon Apr 23 13:01:15 2007
   *
-  * \version 
+  * @version 
   *
   * LSST Legalese here... 
   */
 
 #include <stdexcept>
 
-#include <boost/cstdint.hpp> 
-#include <boost/format.hpp> 
-#include <boost/shared_ptr.hpp>
+#include "boost/cstdint.hpp" 
+#include "boost/format.hpp" 
+#include "boost/shared_ptr.hpp"
 
 #include "vw/Math/BBox.h"
 
@@ -34,7 +34,7 @@
 #include "lsst/afw/image/Wcs.h" 
 #include "lsst/afw/formatters/WcsFormatter.h"
 
-/** \brief Exposure Class Implementation for LSST: a templated framework class
+/** @brief Exposure Class Implementation for LSST: a templated framework class
   * for creating an Exposure from a MaskedImage and a Wcs.
   *
   * An Exposure is required to take one lsst::afw::image::MaskedImage or a region (col,
@@ -65,7 +65,7 @@
 
 // CLASS CONSTRUCTORS and DESTRUCTOR
 
-/** \brief Construct a blank Exposure of size 0x0 with no Wcs. 
+/** @brief Construct a blank Exposure of size 0x0 with no Wcs. 
   */     
 template<typename ImageT, typename MaskT> 
 lsst::afw::image::Exposure<ImageT, MaskT>::Exposure(  
@@ -76,7 +76,7 @@ lsst::afw::image::Exposure<ImageT, MaskT>::Exposure(
 {}
 
 
-/** \brief Construct an Exposure without a Wcs.
+/** @brief Construct an Exposure without a Wcs.
   */       
 template<typename ImageT, typename MaskT> 
 lsst::afw::image::Exposure<ImageT, MaskT>::Exposure( 
@@ -88,7 +88,7 @@ lsst::afw::image::Exposure<ImageT, MaskT>::Exposure(
 {}
 
 
-/** \brief Construct an Exposure with a Wcs.
+/** @brief Construct an Exposure with a Wcs.
   */               
 template<typename ImageT, typename MaskT> 
 lsst::afw::image::Exposure<ImageT, MaskT>::Exposure(
@@ -101,7 +101,7 @@ lsst::afw::image::Exposure<ImageT, MaskT>::Exposure(
 {}
 
 
-/** \brief Construct an Exposure with a blank MaskedImage of specified size and
+/** @brief Construct an Exposure with a blank MaskedImage of specified size and
   * a Wcs.
   */          
 template<typename ImageT, typename MaskT> 
@@ -116,7 +116,7 @@ lsst::afw::image::Exposure<ImageT, MaskT>::Exposure(
 {}
 
 
-/** \brief Construct an Exposure with a blank MaskedImage of specified size and
+/** @brief Construct an Exposure with a blank MaskedImage of specified size and
   *  without a Wcs.
   */          
 template<typename ImageT, typename MaskT> 
@@ -136,11 +136,11 @@ template<typename ImageT, typename MaskT>
 lsst::afw::image::Exposure<ImageT, MaskT>::~Exposure(){}
 
 
-/** \brief Get the Wcs of an Exposure.
+/** @brief Get the Wcs of an Exposure.
   *
-  * \return a copy of the boost::shared_ptr to the Wcs.
+  * @return a copy of the boost::shared_ptr to the Wcs.
   *
-  * \throw a lsst::pex::exceptions::NotFound if the Exposure does not have a Wcs.
+  * @throw a lsst::pex::exceptions::NotFound if the Exposure does not have a Wcs.
   */
 template<typename ImageT, typename MaskT> 
 lsst::afw::image::Wcs lsst::afw::image::Exposure<ImageT, MaskT>::getWcs() const { 
@@ -152,14 +152,14 @@ lsst::afw::image::Wcs lsst::afw::image::Exposure<ImageT, MaskT>::getWcs() const 
 }
 
 
-/** \brief Get a subExposure given an Exposure and a VW bounding box structure
+/** @brief Get a subExposure given an Exposure and a VW bounding box structure
   * (vw::BBox2i) as the subRegion. This addresses Ticket #111 (assigned to NMS on
   * 20070726).  The current implementation makes no effort to alter the existing
   * Wcs - a copy of the original Wcs is passed to the new subExposure.
   *
-  * \return the subExposure.
+  * @return the subExposure.
   * 
-  * \throw a lsst::pex::exceptions::InvalidParameter if the requested subRegion
+  * @throw a lsst::pex::exceptions::InvalidParameter if the requested subRegion
   * is not fully contained by the original MaskedImage BBox.
   */        
 template<typename ImageT, typename MaskT> 
@@ -176,7 +176,7 @@ lsst::afw::image::Exposure<ImageT, MaskT> lsst::afw::image::Exposure<ImageT, Mas
 
 // SET METHODS
 
-/** \brief Set the MaskedImage of the Exposure.
+/** @brief Set the MaskedImage of the Exposure.
   */   
 template<typename ImageT, typename MaskT> 
 void lsst::afw::image::Exposure<ImageT, MaskT>::setMaskedImage(lsst::afw::image::MaskedImage<ImageT, MaskT> &maskedImage){
@@ -184,7 +184,7 @@ void lsst::afw::image::Exposure<ImageT, MaskT>::setMaskedImage(lsst::afw::image:
 }
 
 
-/** \brief Set the Wcs of the Exposure.  
+/** @brief Set the Wcs of the Exposure.  
  */   
 template<typename ImageT, typename MaskT> 
 void lsst::afw::image::Exposure<ImageT, MaskT>::setWcs(lsst::afw::image::Wcs const &wcs){
@@ -194,19 +194,19 @@ void lsst::afw::image::Exposure<ImageT, MaskT>::setWcs(lsst::afw::image::Wcs con
 
 // READ FITS AND WRITE FITS METHODS
 
-/** \brief Read the Exposure's Image files.
+/** @brief Read the Exposure's Image files.
   *
   * Member takes the Exposure's base input file name (as a std::string without
   * the _img.fits, _var.fits, or _msk.fits suffixes) and gets the MaskedImage of
   * the Exposure.  The method then uses the MaskedImage 'readFits' method to
   * read the MaskedImage of the Exposure and gets the Exposure's Wcs.
   *
-  * \return the MaskedImage and the Wcs object with appropriate metadata of the
+  * @return the MaskedImage and the Wcs object with appropriate metadata of the
   * Exposure.
   *  
-  * \note The method warns the user if the Exposure does not have a Wcs.
+  * @note The method warns the user if the Exposure does not have a Wcs.
   *
-  * \throw an lsst::pex::exceptions::NotFound if the MaskedImage could not be
+  * @throw an lsst::pex::exceptions::NotFound if the MaskedImage could not be
   * read or the base file name could not be found.
   */
 template<typename ImageT, typename MaskT> 
@@ -225,7 +225,7 @@ void lsst::afw::image::Exposure<ImageT, MaskT>::readFits(
 }
 
 
-/** \brief Write the Exposure's Image files.  Update the fits image header card
+/** @brief Write the Exposure's Image files.  Update the fits image header card
   * to reflect the Wcs information.
   *
   * Member takes the Exposure's base output file name (as a std::string without
@@ -234,7 +234,7 @@ void lsst::afw::image::Exposure<ImageT, MaskT>::readFits(
   * disk.  Method also uses the metaData information to update the Exposure's
   * fits header cards.
   *
-  * \note The MaskedImage Class will throw an pex Exception if the base
+  * @note The MaskedImage Class will throw an pex Exception if the base
   * filename is not found.
   */
 template<typename ImageT, typename MaskT> 

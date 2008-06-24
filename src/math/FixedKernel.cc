@@ -1,12 +1,12 @@
 // -*- LSST-C++ -*-
 /**
- * \file
+ * @file
  *
- * \brief Definitions of FixedKernel member functions.
+ * @brief Definitions of FixedKernel member functions.
  *
- * \author Russell Owen
+ * @author Russell Owen
  *
- * \ingroup afw
+ * @ingroup afw
  */
 #include <stdexcept>
 
@@ -20,7 +20,7 @@
 //
 
 /**
- * \brief Construct an empty FixedKernel of size 0x0
+ * @brief Construct an empty FixedKernel of size 0x0
  */
 lsst::afw::math::FixedKernel::FixedKernel()
 :
@@ -30,7 +30,7 @@ lsst::afw::math::FixedKernel::FixedKernel()
 }
 
 /**
- * \brief Construct a FixedKernel from an image
+ * @brief Construct a FixedKernel from an image
  */
 lsst::afw::math::FixedKernel::FixedKernel(
     lsst::afw::image::Image<PixelT> const &image)     ///< image for kernel
