@@ -7,12 +7,12 @@
 //
 //##====----------------                                ----------------====##/
 
-#include <lsst/daf/persistence/Persistence.h>
-#include <lsst/daf/persistence/Storage.h>
-#include <lsst/pex/policy/Policy.h>
-#include <lsst/pex/exceptions.h>
+#include "lsst/daf/persistence/Persistence.h"
+#include "lsst/daf/persistence/Storage.h"
+#include "lsst/pex/policy/Policy.h"
+#include "lsst/pex/exceptions.h"
 
-#include <lsst/afw/image/Filter.h>
+#include "lsst/afw/image/Filter.h"
 
 
 using namespace lsst::afw::image;

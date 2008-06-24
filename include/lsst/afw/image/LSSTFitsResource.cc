@@ -1,7 +1,7 @@
 // -*- lsst-c++ -*-
 // This file can NOT be separately compiled!   It is included by LSSTFitsResource.h
-#include <lsst/utils/Utils.h>
-#include <lsst/pex/exceptions.h>
+#include "lsst/utils/Utils.h"
+#include "lsst/pex/exceptions.h"
 
 
 template <typename PixelT>

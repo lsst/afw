@@ -1,7 +1,7 @@
 #include <iostream>
 #include <sstream>
 
-#include <lsst/afw/image/MaskedImage.h>
+#include "lsst/afw/image/MaskedImage.h"
 
 const std::string outFile("rwfitsOut");
 

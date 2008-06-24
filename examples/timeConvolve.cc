@@ -2,11 +2,11 @@
 #include <sstream>
 #include <ctime>
 
-#include <lsst/afw/math/FunctionLibrary.h>
-#include <lsst/afw/image/Image.h>
-#include <lsst/afw/image/MaskedImage.h>
-#include <lsst/afw/math/Kernel.h>
-#include <lsst/afw/math/KernelFunctions.h>
+#include "lsst/afw/math/FunctionLibrary.h"
+#include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/MaskedImage.h"
+#include "lsst/afw/math/Kernel.h"
+#include "lsst/afw/math/KernelFunctions.h"
 
 int main(int argc, char **argv) {
     typedef float imageType;
@@ -53,9 +53,8 @@ int main(int argc, char **argv) {
     
     for (unsigned kSize = MinKernelSize; kSize <= MaxKernelSize; kSize += DeltaKernelSize) {
         // construct kernel
-        lsst::afw::math::Kernel::KernelFunctionPtrType kfuncPtr(
-            new lsst::afw::math::GaussianFunction2<kernelType>(sigma, sigma));
-        lsst::afw::math::AnalyticKernel kernel(kfuncPtr, kSize, kSize);
+        lsst::afw::math::GaussianFunction2<kernelType> gaussFunc(sigma, sigma);
+        lsst::afw::math::AnalyticKernel kernel(gaussFunc, kSize, kSize);
         
         clock_t startTime = clock();
         for (unsigned iter = 0; iter < nIter; ++iter) {

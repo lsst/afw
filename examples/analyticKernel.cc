@@ -1,8 +1,8 @@
 #include <iostream>
 
-#include <boost/format.hpp>
+#include "boost/format.hpp"
 
-#include <lsst/afw/math.h>
+#include "lsst/afw/math.h"
 
 /**
  * Demonstrate an AnalyticKernel, both spatially invariant and spatially varying.
@@ -18,20 +18,18 @@ int main() {
     unsigned int kernelCols = 6;
     unsigned int kernelRows = 5;
 
-    lsst::afw::math::Kernel::KernelFunctionPtrType gaussFuncPtr(
-        new lsst::afw::math::GaussianFunction2<PixelT>(sigmaX, sigmaY));
-    lsst::afw::math::AnalyticKernel gaussKernel(gaussFuncPtr, kernelCols, kernelRows);
+    lsst::afw::math::GaussianFunction2<PixelT> gaussFunc(sigmaX, sigmaY);
+    lsst::afw::math::AnalyticKernel gaussKernel(gaussFunc, kernelCols, kernelRows);
     
     cout << boost::format("Gaussian Kernel with sigmaX=%.1f, sigmaY=%.1f\n\n") % sigmaX % sigmaY;
     
-    lsst::afw::math::printKernel(gaussKernel);
+    lsst::afw::math::printKernel(gaussKernel, true);
     
     // now show a spatially varying version
     unsigned int polyOrder = 1;
-    lsst::afw::math::Kernel::SpatialFunctionPtrType polyFuncPtr(
-        new lsst::afw::math::PolynomialFunction2<PixelT>(polyOrder));
+    lsst::afw::math::PolynomialFunction2<PixelT> polyFunc(polyOrder);
 
-    lsst::afw::math::AnalyticKernel gaussSpVarKernel(gaussFuncPtr, kernelCols, kernelRows, polyFuncPtr);
+    lsst::afw::math::AnalyticKernel gaussSpVarKernel(gaussFunc, kernelCols, kernelRows, polyFunc);
 
     // get copy of spatial parameters (all zeros), set and feed back to the kernel
     vector<vector<double> > polyParams = gaussSpVarKernel.getSpatialParameters();
@@ -57,14 +55,16 @@ int main() {
     }
     cout << endl;
 
+    std::vector<double> kernelParams(gaussSpVarKernel.getNKernelParameters());
     for (unsigned int y = 0; y < 2; ++y) {
         for (unsigned int x=0; x < 2; ++x) {
-            vector<double> kernelParams = gaussSpVarKernel.getKernelParameters(x, y);
+            gaussSpVarKernel.computeKernelParametersFromSpatialModel(
+                kernelParams, static_cast<double>(x), static_cast<double>(y));
             cout << boost::format("GaussianKernel at x=%d, y=%d; xSigma = %7.2f, ySigma=%7.2f:\n\n")
                 % x % y % kernelParams[0] % kernelParams[1];
 
             lsst::afw::math::printKernel(
-                gaussSpVarKernel, static_cast<double>(x), static_cast<double>(y));
+                gaussSpVarKernel, true, static_cast<double>(x), static_cast<double>(y));
         }
     }
 }

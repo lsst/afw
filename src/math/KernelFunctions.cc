@@ -1,36 +1,36 @@
 // -*- LSST-C++ -*-
 /**
- * \file
+ * @file
  *
- * \brief Definitions of members of lsst::afw::math
+ * @brief Definitions of members of lsst::afw::math
  *
- * \ingroup afw
+ * @ingroup afw
  */
 #include <iostream>
 
-#include <boost/format.hpp>
+#include "boost/format.hpp"
 
-#include <lsst/afw/math/KernelFunctions.h>
+#include "lsst/afw/math/KernelFunctions.h"
 
 /**
- * \brief Print the pixel values of a Kernel to std::cout
+ * @brief Print the pixel values of a Kernel to std::cout
  *
  * Rows increase upward and columns to the right; thus the lower left pixel is (0,0).
  *
- * \ingroup afw
+ * @ingroup afw
  */
 void
 lsst::afw::math::printKernel(
     lsst::afw::math::Kernel const &kernel,     ///< the kernel
+    bool doNormalize,                   ///< if true, normalize kernel
     double x,                           ///< x at which to evaluate kernel
     double y,                           ///< y at which to evaluate kernel
-    bool doNormalize,                   ///< if true, normalize kernel
     std::string pixelFmt                ///< format for pixel values
 ) {
     typedef lsst::afw::math::Kernel::PixelT PixelT;
     typedef lsst::afw::image::Image<PixelT>::pixel_accessor imageAccessorType;
     PixelT kSum;
-    lsst::afw::image::Image<PixelT> kImage = kernel.computeNewImage(kSum, x, y, doNormalize);
+    lsst::afw::image::Image<PixelT> kImage = kernel.computeNewImage(kSum, doNormalize, x, y);
     imageAccessorType imRow = kImage.origin();
     imRow.advance(0, kImage.getRows()-1);
     for (unsigned int row=0; row < kImage.getRows(); ++row, imRow.prev_row()) {

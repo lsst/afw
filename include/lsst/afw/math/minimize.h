@@ -2,26 +2,26 @@
 #ifndef LSST_AFW_MATH_MINIMIZE_H
 #define LSST_AFW_MATH_MINIMIZE_H
 /**
- * \file
+ * @file
  *
  * Class that Minuit knows how to minimize, that contains an lsst::afw::math::Function
  *
- * \author Andrew Becker and Russell Owen
+ * @author Andrew Becker and Russell Owen
  *
- * \ingroup afw
+ * @ingroup afw
  */
-#include <boost/shared_ptr.hpp>
-#include <Minuit/FCNBase.h>
+#include "boost/shared_ptr.hpp"
+#include "Minuit/FCNBase.h"
 
-#include <lsst/daf/data/LsstBase.h>
-#include <lsst/afw/math/Function.h>
+#include "lsst/daf/data/LsstBase.h"
+#include "lsst/afw/math/Function.h"
 
 namespace lsst {
 namespace afw {
 namespace math {
 
     /**
-     * \brief Results from minimizing a function
+     * @brief Results from minimizing a function
      */ 
     struct FitResults {
     public:
@@ -32,7 +32,7 @@ namespace math {
     };
 
     /**
-     * \brief Minuit wrapper for a function(x)
+     * @brief Minuit wrapper for a function(x)
      */
     template<typename ReturnT>
     class MinimizerFunctionBase1 : public FCNBase, public lsst::daf::data::LsstBase {
@@ -65,7 +65,7 @@ namespace math {
     };
         
     /**
-     * \brief Minuit wrapper for a function(x, y)
+     * @brief Minuit wrapper for a function(x, y)
      */
     template<typename ReturnT>
     class MinimizerFunctionBase2 : public FCNBase, public lsst::daf::data::LsstBase {

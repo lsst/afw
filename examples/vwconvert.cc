@@ -1,6 +1,6 @@
 #include <iostream>
-#include <vw/Image.h>
-#include <vw/FileIO.h>
+#include "vw/Image.h"
+#include "vw/FileIO.h"
 
 int main( int argc, char *argv[] ) {
   try {

@@ -4,11 +4,11 @@
 
 #include <typeinfo>
 #include <sys/stat.h>
-#include <lsst/pex/logging/Trace.h>
-#include <lsst/pex/exceptions.h>
+#include "lsst/pex/logging/Trace.h"
+#include "lsst/pex/exceptions.h"
 
 /**
- * \brief Construct an empty MaskedImage of size 0x0
+ * @brief Construct an empty MaskedImage of size 0x0
  */
 template<typename ImagePixelT, typename MaskPixelT> 
 lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::MaskedImage(MaskPlaneDict planeDefs) :
@@ -19,7 +19,7 @@ lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::MaskedImage(MaskPlaneDic
 }
 
 /**
- * \brief Construct from a supplied Image and Mask. The Variance will be set to zero.
+ * @brief Construct from a supplied Image and Mask. The Variance will be set to zero.
  */
 template<typename ImagePixelT, typename MaskPixelT> 
 lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::MaskedImage(ImagePtrT image, MaskPtrT mask) :
@@ -31,7 +31,7 @@ lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::MaskedImage(ImagePtrT im
 }    
 
 /**
- * \brief Construct from a supplied Image, Variance, and Mask.
+ * @brief Construct from a supplied Image, Variance, and Mask.
  */
 template<typename ImagePixelT, typename MaskPixelT> 
 lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::MaskedImage(
@@ -45,7 +45,7 @@ lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::MaskedImage(
 }
 
 /**
- * \brief Construct a blank MaskedImage of specified size
+ * @brief Construct a blank MaskedImage of specified size
  */
 template<typename ImagePixelT, typename MaskPixelT> 
 lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::MaskedImage(int nCols, int nRows, MaskPlaneDict planeDefs) :
@@ -56,7 +56,7 @@ lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::MaskedImage(int nCols, i
 }
 
 /**
- * \brief Copy constructor
+ * @brief Copy constructor
  *
  * Warning: this is a shallow copy; the pixel data is shared with the original MaskedImage.
  *
@@ -78,7 +78,7 @@ lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::~MaskedImage() {
 }
 
 /**
- * \brief Assignment operator
+ * @brief Assignment operator
  *
  * Warning: this is a shallow copy; the pixel data is shared with the original MaskedImage.
  *
@@ -120,13 +120,13 @@ lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::getMask() const {
 }
 
 /**
- * \brief Read a masked image from a trio of FITS files
+ * @brief Read a masked image from a trio of FITS files
  *
  * Image data is loaded from (baseName)_img.fits
  * Variance is loaded from (baseName)_var.fits, if found
  * Mask data is loaded from (baseName)_msk.fits, if found
  *
- * \throw lsst::pex::exceptions::NotFound if none of (baseName){_img,_var,_msk}.fits is found
+ * @throw lsst::pex::exceptions::NotFound if none of (baseName){_img,_var,_msk}.fits is found
  */
 template<typename ImagePixelT, typename MaskPixelT>
 void lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::readFits(std::string baseName, bool conformMaskPlanes) {
@@ -185,7 +185,7 @@ void lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::readFits(std::strin
 }
 
 /**
- * \brief Write a masked image to a trio of FITS files
+ * @brief Write a masked image to a trio of FITS files
  *
  * Image data is written to (baseName)_img.fits
  * Variance is written to (baseName)_var.fits

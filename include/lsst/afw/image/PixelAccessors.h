@@ -2,24 +2,24 @@
 #ifndef LSST_AFW_IMAGE_PIXELACCESSORS_H
 #define LSST_AFW_IMAGE_PIXELACCESSORS_H
 /**
- * \file
+ * @file
  *
- * \brief Accessors for MaskedImage pixels (and perhaps eventually Image pixels)
+ * @brief Accessors for MaskedImage pixels (and perhaps eventually Image pixels)
  *
- * \author Russell Owen
+ * @author Russell Owen
  *
- * \ingroup afw
+ * @ingroup afw
  */
-#include <vw/Image.h>
+#include "vw/Image.h"
 
-#include <lsst/afw/image/MaskedImage.h>
+#include "lsst/afw/image/MaskedImage.h"
 
 namespace lsst {
 namespace afw {
 namespace image {
 
     /**
-     * \brief Accessor for MaskedImage pixels
+     * @brief Accessor for MaskedImage pixels
      *
      * Pixel data is accessed via pointers named image, variance and mask, e.g.:
      *     oldImageValue = *maskedPixelAccessor.image;
@@ -29,7 +29,7 @@ namespace image {
      * Note that there is no default (no arguments) constructor because it makes no sense
      * and because vw::MemoryStridingPixelAccessor does not have one.
      *
-     * \ingroup afw
+     * @ingroup afw
      */
     template <typename ImageT, typename MaskT>
     class MaskedPixelAccessor {
@@ -40,7 +40,7 @@ namespace image {
         typedef typename vw::ImageView<MaskT>::pixel_accessor maskAccessorType;
         
         /**
-         * \brief Construct from a MaskedImage
+         * @brief Construct from a MaskedImage
          */
         explicit MaskedPixelAccessor(
             MaskedImage<ImageT, MaskT> &maskedImage)
@@ -51,7 +51,7 @@ namespace image {
         {}
         
         /**
-         * \brief Construct from a const MaskedImage
+         * @brief Construct from a const MaskedImage
          */
         explicit MaskedPixelAccessor(
             MaskedImage<ImageT, MaskT> const &maskedImage)
@@ -62,7 +62,7 @@ namespace image {
         {}
         
         /**
-         * \brief Construct from three VW::MemoryStridingPixelAccessors
+         * @brief Construct from three VW::MemoryStridingPixelAccessors
          */
         explicit MaskedPixelAccessor(
             imageAccessorType &imageAccessor,
@@ -75,7 +75,7 @@ namespace image {
         {}
 
         /**
-         * \brief Point to the next column
+         * @brief Point to the next column
          */
         inline void nextCol() {
             image.next_col();
@@ -84,7 +84,7 @@ namespace image {
         }
 
         /**
-         * \brief Point to the previous column
+         * @brief Point to the previous column
          */
         inline void prevCol() {
             image.prev_col();
@@ -93,7 +93,7 @@ namespace image {
         }
 
         /**
-         * \brief Point to the next row
+         * @brief Point to the next row
          */
         inline void nextRow() {
             image.next_row();
@@ -102,7 +102,7 @@ namespace image {
         }
 
         /**
-         * \brief Point to the previous row
+         * @brief Point to the previous row
          */
         inline void prevRow() {
             image.prev_row();
@@ -111,7 +111,7 @@ namespace image {
         }
 
         /**
-         * \brief Point to the next plane
+         * @brief Point to the next plane
          */
         inline void nextPlane() {
             image.next_plane();
@@ -120,7 +120,7 @@ namespace image {
         }
 
         /**
-         * \brief Point to the previous plane
+         * @brief Point to the previous plane
          */
         inline void prevPlane() {
             image.prev_plane();
@@ -129,7 +129,7 @@ namespace image {
         }
 
         /**
-         * \brief Advance by the specified amount
+         * @brief Advance by the specified amount
          */
         inline void advance(
             ptrdiff_t colOffset,    ///< column offset

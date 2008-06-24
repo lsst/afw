@@ -1,12 +1,13 @@
 #include <iostream>
 #include <vector>
 
-#include <boost/shared_ptr.hpp>
-#include <boost/format.hpp>
+#include "boost/shared_ptr.hpp"
+#include "boost/format.hpp"
 
-#include <lsst/afw/math.h>
+#include "lsst/afw/math.h"
 
 using namespace std;
+namespace afwMath = lsst::afw::math;
 
 int main() {
     unsigned int kernelCols = 3;
@@ -23,12 +24,10 @@ int main() {
             int const x = col - colCtr;
             int const y = row - rowCtr;
             cout << boost::format("Delta function kernel %3d: x=%.1f, y=%.1f\n") % ind % x % y;
-            lsst::afw::math::Kernel::KernelFunctionPtrType kfuncPtr(
-                new lsst::afw::math::IntegerDeltaFunction2<lsst::afw::math::Kernel::PixelT>(x, y)
-            );
+            lsst::afw::math::IntegerDeltaFunction2<lsst::afw::math::Kernel::PixelT> deltaFunc(x, y);
             lsst::afw::math::Kernel::PtrT kernelPtr(
 #if 0
-		        new lsst::afw::math::AnalyticKernel(kfuncPtr, kernelCols, kernelRows)
+		        new lsst::afw::math::AnalyticKernel(deltaFunc, kernelCols, kernelRows)
 #else
                 new lsst::afw::math::DeltaFunctionKernel(x, y, kernelCols, kernelRows)
 #endif
@@ -51,6 +50,6 @@ int main() {
             cout << kernelParams[ii] << " ";
         }
         cout << endl << endl;
-        lsst::afw::math::printKernel(deltaFunctionKernelSet);
+        lsst::afw::math::printKernel(deltaFunctionKernelSet, true);
     }
 }

@@ -2,26 +2,26 @@
 #ifndef LSST_AFW_FORMATTERS_EXPOSUREFORMATTER_H
 #define LSST_AFW_FORMATTERS_EXPOSUREFORMATTER_H
 
-/** \file
- * \brief Interface for ExposureFormatter class
+/** @file
+ * @brief Interface for ExposureFormatter class
  *
- * \author $Author: ktlim $
- * \version $Revision: 2377 $
- * \date $Date$
+ * @author $Author: ktlim $
+ * @version $Revision: 2377 $
+ * @date $Date$
  *
  * Contact: Kian-Tat Lim (ktl@slac.stanford.edu)
- * \ingroup afw
+ * @ingroup afw
  */
 
-/** \class lsst::afw::formatters::ExposureFormatter
- * \brief Class implementing persistence and retrieval for Exposures.
+/** @class lsst::afw::formatters::ExposureFormatter
+ * @brief Class implementing persistence and retrieval for Exposures.
  *
- * \ingroup afw
+ * @ingroup afw
  */
 
-#include <lsst/daf/base.h>
-#include <lsst/daf/persistence.h>
-#include <lsst/pex/policy/Policy.h>
+#include "lsst/daf/base.h"
+#include "lsst/daf/persistence.h"
+#include "lsst/pex/policy/Policy.h"
 
 namespace lsst {
 namespace afw {

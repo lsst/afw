@@ -1,21 +1,21 @@
 // -*- LSST-C++ -*- // fixed format comment for emacs
 /**
-  * \file
+  * @file
   *
-  * \class lsst::afw::image::Exposure 
+  * @class lsst::afw::image::Exposure 
   *
-  * \ingroup afw
+  * @ingroup afw
   *
-  * \brief Declaration of the templated Exposure Class for LSST.  Create an
+  * @brief Declaration of the templated Exposure Class for LSST.  Create an
   * Exposure from a lsst::afw::image::MaskedImage.
   *
-  * \author Nicole M. Silvestri, University of Washington
+  * @author Nicole M. Silvestri, University of Washington
   *
   * Contact: nms@astro.washington.edu
   *
   * Created on: Mon Apr 23 1:01:14 2007
   *
-  * \version 
+  * @version 
   *
   * LSST Legalese here...
   */
@@ -23,15 +23,15 @@
 #ifndef LSST_AFW_IMAGE_EXPOSURE_H
 #define LSST_AFW_IMAGE_EXPOSURE_H
 
-#include <boost/cstdint.hpp>
-#include <boost/shared_ptr.hpp>
+#include "boost/cstdint.hpp"
+#include "boost/shared_ptr.hpp"
 
-#include <vw/Math/BBox.h>
+#include "vw/Math/BBox.h"
 
-#include <lsst/daf/base/Persistable.h>
-#include <lsst/daf/data/LsstBase.h>
-#include <lsst/afw/image/MaskedImage.h>
-#include <lsst/afw/image/Wcs.h>
+#include "lsst/daf/base/Persistable.h"
+#include "lsst/daf/data/LsstBase.h"
+#include "lsst/afw/image/MaskedImage.h"
+#include "lsst/afw/image/Wcs.h"
 
 namespace lsst {
 namespace afw {

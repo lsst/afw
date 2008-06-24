@@ -4,8 +4,8 @@
 #include <stdexcept>
 
 #include "lsst/afw/image/Image.h"
-#include <lsst/pex/exceptions.h>
-#include <lsst/afw/image/LSSTFitsResource.h>
+#include "lsst/pex/exceptions.h"
+#include "lsst/afw/image/LSSTFitsResource.h"
 
 using namespace lsst::afw::image;
 
@@ -60,9 +60,9 @@ Image<ImagePixelT>& Image<ImagePixelT>::operator= (const Image<ImagePixelT>& ima
 }
 
 /**
- * \brief Return the gain from the image metadata
+ * @brief Return the gain from the image metadata
  *
- * \throw lsst::pex::exceptions::Runtime if gain not found
+ * @throw lsst::pex::exceptions::Runtime if gain not found
  */
 template<typename ImagePixelT> 
 double Image<ImagePixelT>::getGain() const {
@@ -133,9 +133,9 @@ Image<ImagePixelT>::getSubImage(const vw::BBox2i imageRegion) const {
 }
 
 /**
- * \brief Given a Image, insertImage, place it into this Image as directed by maskRegion.
+ * @brief Given a Image, insertImage, place it into this Image as directed by maskRegion.
  *
- * \throw lsst::pex::exceptions::Runtime if maskRegion is not of the same size as insertImage.
+ * @throw lsst::pex::exceptions::Runtime if maskRegion is not of the same size as insertImage.
  */
 template<typename ImagePixelT>
 void Image<ImagePixelT>::replaceSubImage(const vw::BBox2i maskRegion, ImagePtrT insertImage) {

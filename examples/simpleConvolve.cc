@@ -2,18 +2,20 @@
 #include <sstream>
 #include <string>
 
-#include <lsst/daf/base.h>
-#include <lsst/pex/logging/Trace.h>
-#include <lsst/afw/math/FunctionLibrary.h>
-#include <lsst/afw/image/Image.h>
-#include <lsst/afw/math/Kernel.h>
-#include <lsst/afw/math/KernelFunctions.h>
+#include "lsst/daf/base.h"
+#include "lsst/pex/logging/Trace.h"
+#include "lsst/afw/math/FunctionLibrary.h"
+#include "lsst/afw/image/Image.h"
+#include "lsst/afw/math/Kernel.h"
+#include "lsst/afw/math/KernelFunctions.h"
 
 using namespace std;
 const std::string outFile("scOut");
 
 int main(int argc, char **argv) {
     typedef lsst::afw::math::Kernel::PixelT pixelType;
+    unsigned int kernelCols = 6;
+    unsigned int kernelRows = 5;
     
     lsst::pex::logging::Trace::setDestination(std::cout);
     lsst::pex::logging::Trace::setVerbosity("lsst.afw.kernel", 5);
@@ -48,9 +50,8 @@ int main(int argc, char **argv) {
         mImage.readFits(argv[1]);
         
         // construct kernel
-        lsst::afw::math::Kernel::KernelFunctionPtrType kfuncPtr(
-            new lsst::afw::math::GaussianFunction2<pixelType>(sigma, sigma));
-        lsst::afw::math::AnalyticKernel kernel(kfuncPtr, 5, 5);
+        lsst::afw::math::GaussianFunction2<pixelType> gaussFunc(sigma, sigma);
+        lsst::afw::math::AnalyticKernel kernel(gaussFunc, kernelCols, kernelRows);
     
         // convolve
         lsst::afw::image::MaskedImage<pixelType, lsst::afw::image::maskPixelType>

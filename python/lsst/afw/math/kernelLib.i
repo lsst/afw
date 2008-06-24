@@ -44,10 +44,13 @@
 //
 %template(convolve)             lsst::afw::math::convolve<double, lsst::afw::image::maskPixelType, lsst::afw::math::Kernel>;
 %template(convolve)             lsst::afw::math::convolve<double, lsst::afw::image::maskPixelType, lsst::afw::math::DeltaFunctionKernel>;
+%template(convolve)             lsst::afw::math::convolve<double, lsst::afw::image::maskPixelType, lsst::afw::math::SeparableKernel>;
 %template(convolve)             lsst::afw::math::convolve<float, lsst::afw::image::maskPixelType, lsst::afw::math::Kernel>;
 %template(convolve)             lsst::afw::math::convolve<float, lsst::afw::image::maskPixelType, lsst::afw::math::DeltaFunctionKernel>;
+%template(convolve)             lsst::afw::math::convolve<float, lsst::afw::image::maskPixelType, lsst::afw::math::SeparableKernel>;
 %template(convolve)             lsst::afw::math::convolve<boost::uint16_t, lsst::afw::image::maskPixelType, lsst::afw::math::Kernel>;
 %template(convolve)             lsst::afw::math::convolve<boost::uint16_t, lsst::afw::image::maskPixelType, lsst::afw::math::DeltaFunctionKernel>;
+%template(convolve)             lsst::afw::math::convolve<boost::uint16_t, lsst::afw::image::maskPixelType, lsst::afw::math::SeparableKernel>;
 
 %template(convolveLinear)       lsst::afw::math::convolveLinear<double, lsst::afw::image::maskPixelType>;
 %template(convolveLinear)       lsst::afw::math::convolveLinear<float, lsst::afw::image::maskPixelType>;

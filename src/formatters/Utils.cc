@@ -6,11 +6,11 @@
 //
 //##====----------------                                ----------------====##/
 
-#include <boost/cstdint.hpp>
+#include "boost/cstdint.hpp"
 
-#include <lsst/pex/exceptions.h>
-#include <lsst/daf/persistence/DbTsvStorage.h>
-#include <lsst/afw/formatters/Utils.h>
+#include "lsst/pex/exceptions.h"
+#include "lsst/daf/persistence/DbTsvStorage.h"
+#include "lsst/afw/formatters/Utils.h"
 
 using boost::int64_t;
 namespace ex = lsst::pex::exceptions;

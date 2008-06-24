@@ -2,26 +2,26 @@
 #ifndef LSST_AFW_FORMATTERS_MASKFORMATTER_H
 #define LSST_AFW_FORMATTERS_MASKFORMATTER_H
 
-/** \file
- * \brief Interface for MaskFormatter class
+/** @file
+ * @brief Interface for MaskFormatter class
  *
- * \author $Author: ktlim $
- * \version $Revision: 2377 $
- * \date $Date$
+ * @author $Author: ktlim $
+ * @version $Revision: 2377 $
+ * @date $Date$
  *
  * Contact: Kian-Tat Lim (ktl@slac.stanford.edu)
- * \ingroup afw
+ * @ingroup afw
  */
 
-/** \class lsst::afw::formatters::MaskFormatter
- * \brief Class implementing persistence and retrieval for Masks.
+/** @class lsst::afw::formatters::MaskFormatter
+ * @brief Class implementing persistence and retrieval for Masks.
  *
- * \ingroup afw
+ * @ingroup afw
  */
 
-#include <lsst/daf/base.h>
-#include <lsst/daf/persistence.h>
-#include <lsst/pex/policy/Policy.h>
+#include "lsst/daf/base.h"
+#include "lsst/daf/persistence.h"
+#include "lsst/pex/policy/Policy.h"
 
 namespace lsst {
 namespace afw {

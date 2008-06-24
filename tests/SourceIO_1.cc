@@ -13,15 +13,15 @@
 #include <cstring>
 #include <stdexcept>
 
-#include <boost/cstdint.hpp>
+#include "boost/cstdint.hpp"
 
-#include <lsst/daf/base.h>
-#include <lsst/daf/persistence.h>
-#include <lsst/pex/exceptions.h>
-#include <lsst/pex/policy/Policy.h>
+#include "lsst/daf/base.h"
+#include "lsst/daf/persistence.h"
+#include "lsst/pex/exceptions.h"
+#include "lsst/pex/policy/Policy.h"
 
-#include <lsst/afw/detection/Source.h>
-#include <lsst/afw/formatters/Utils.h>
+#include "lsst/afw/detection/Source.h"
+#include "lsst/afw/formatters/Utils.h"
 
 using boost::int64_t;
 

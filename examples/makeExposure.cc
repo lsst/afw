@@ -1,10 +1,10 @@
 // -*- LSST-C++ -*- // fixed format comment for emacs
 /**
-  * \file
+  * @file
   *
-  * \ingroup afw
+  * @ingroup afw
   *
-  * \brief Test code for the LSST Exposure Class.
+  * @brief Test code for the LSST Exposure Class.
   *
   * This test code runs some very straightforward tests on the Exposure Class
   * members and (to some extent) its related classes (MaskedImage & Wcs) - it
@@ -15,13 +15,13 @@
   * Exposure and an attempt to patch up the Wcs. See examples/wcsTests.cc for
   * additional Wcs Class tests.
   *        
-  * \author Nicole M. Silvestri, University of Washington
+  * @author Nicole M. Silvestri, University of Washington
   *
   * Contact nms@astro.washington.edu 
   *
   * Created on: Wed Jun 06 13:15:00 2007
   *
-  * \version
+  * @version
   *
   * LSST Legalese here...
   */
@@ -30,16 +30,16 @@
 #include <sstream>
 #include <string>
 
-#include <boost/format.hpp>
-#include <vw/Core.h>
-#include <vw/Math/BBox.h>
+#include "boost/format.hpp"
+#include "vw/Core.h"
+#include "vw/Math/BBox.h"
 
-#include <lsst/daf/base.h>
-#include <lsst/pex/exceptions.h>
-#include <lsst/afw/image/Exposure.h>
-#include <lsst/afw/image/MaskedImage.h>
-#include <lsst/pex/logging/Trace.h>
-#include <lsst/afw/image/Wcs.h>
+#include "lsst/daf/base.h"
+#include "lsst/pex/exceptions.h"
+#include "lsst/afw/image/Exposure.h"
+#include "lsst/afw/image/MaskedImage.h"
+#include "lsst/pex/logging/Trace.h"
+#include "lsst/afw/image/Wcs.h"
 
 // FROM POLICY FILE: INPUT AND OUTPUT FILE NAMES FOR EXPOSURES/MASKEDIMAGES
 const std::string miOutFile1("miOutFile1"); // output maskedImage

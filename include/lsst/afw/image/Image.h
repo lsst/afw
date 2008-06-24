@@ -13,13 +13,13 @@
 #include <map>
 #include <string>
 
-#include <boost/shared_ptr.hpp>
-#include <vw/Image.h>
-#include <vw/Math/BBox.h>
+#include "boost/shared_ptr.hpp"
+#include "vw/Image.h"
+#include "vw/Math/BBox.h"
 
-#include <lsst/daf/base.h>
-#include <lsst/daf/data/LsstBase.h>
-#include <lsst/afw/formatters/ImageFormatter.h>
+#include "lsst/daf/base.h"
+#include "lsst/daf/data/LsstBase.h"
+#include "lsst/afw/formatters/ImageFormatter.h"
 
 namespace lsst {
 namespace afw {

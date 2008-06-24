@@ -2,7 +2,7 @@
 #include <sstream>
 #include <ctime>
 
-#include <vw/Image.h>
+#include "vw/Image.h"
 
 int main(int argc, char **argv) {
     typedef float imageType;

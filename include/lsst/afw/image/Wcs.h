@@ -9,10 +9,10 @@
 #ifndef LSST_AFW_IMAGE_WCS_H
 #define LSST_AFW_IMAGE_WCS_H
 
-#include <vw/Math.h>
+#include "vw/Math.h"
 
-#include <lsst/daf/base.h>
-#include <lsst/daf/data/LsstBase.h>
+#include "lsst/daf/base.h"
+#include "lsst/daf/data/LsstBase.h"
 
 struct wcsprm;                          // defined in wcs.h
 

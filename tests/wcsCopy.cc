@@ -7,8 +7,8 @@
 #include <sstream>
 #include <string>
 
-#include <lsst/daf/base.h>
-#include <lsst/afw/image.h>
+#include "lsst/daf/base.h"
+#include "lsst/afw/image.h"
 
 int main() {
     typedef float pixelType;

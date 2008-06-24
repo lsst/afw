@@ -9,8 +9,8 @@ dnl comment to go into the output file
 // This file is machine generated from Runtime.h.m4. Please do not edit directly
 //         
 dnl
-/** \file
-  * \brief LSST exception handler classes for generic runtime exception events
+/** @file
+  * @brief LSST exception handler classes for generic runtime exception events
   *
   * When LSST Data Managment software forces (i.e. throws) an exception 
   * event, an LSST exception handler (e.g. OutOfRange) must be invoked.  
@@ -44,18 +44,18 @@ dnl
   *   -  NoMaskPlane : Failure to find specified Mask Plane (to be relocated)
   *   -  OutOfPlaneSpace :  Insufficient Plane allocation (to be relocated)
   *
-  * \ingroup afw
+  * @ingroup afw
   *
-  * \ author Robert Lupton
-  * \ author Roberta Allsman
+  * @ author Robert Lupton
+  * @ author Roberta Allsman
   */
 #include <exception>
 
-#include <boost/format.hpp>
-#include <boost/shared_ptr.hpp>
+#include "boost/format.hpp"
+#include "boost/shared_ptr.hpp"
 
-#include <lsst/daf/base.h>
-#include <lsst/pex/exceptions.h>
+#include "lsst/daf/base.h"
+#include "lsst/pex/exceptions.h"
 
 
 namespace lsst {
@@ -67,7 +67,7 @@ namespace image {
         dnl Define a new subclass $1 of ExceptionData without added functionality; docstring $2
         define(LSST_NEW_EXCEPTION,
 `
-/** \brief $1 handler thrown or caught on an exceptional event.
+/** @brief $1 handler thrown or caught on an exceptional event.
   *
   * The handlers "catch" indicates the following situation occurred: 
   * $2
@@ -76,8 +76,8 @@ class $1 : public lsst::pex::exceptions::ExceptionStack  {
 public:
   /** Construct new $1 object.
     *
-    * \param comment  String used to initialize std::runtime_error.what(). 
-    * \note         Default ExceptionStack and ExceptionData will be created
+    * @param comment  String used to initialize std::runtime_error.what(). 
+    * @note         Default ExceptionStack and ExceptionData will be created
     */
     $1(std::string const& comment) throw() :
          lsst::pex::exceptions::ExceptionStack(std::string("$1"),comment) {
@@ -88,8 +88,8 @@ public:
 
   /** Construct new $1 object.
     *
-    * \param comment  String used to initialize std::runtime_error.what(). 
-    * \note         Default ExceptionStack and ExceptionData will be created
+    * @param comment  String used to initialize std::runtime_error.what(). 
+    * @note         Default ExceptionStack and ExceptionData will be created
     */
     $1(boost::format const& comment) throw() :
          lsst::pex::exceptions::ExceptionStack( std::string("$1"),comment.str()) {
@@ -99,8 +99,8 @@ public:
 
   /** Construct new $1 object.
     *
-    * \param orig     Reference to ExceptionData to be cloned for use in ExceptionStack.
-    * \param comment  String used to initialize std::runtime_error.what(). 
+    * @param orig     Reference to ExceptionData to be cloned for use in ExceptionStack.
+    * @param comment  String used to initialize std::runtime_error.what(). 
     *                 Default to: "$2".
     */
     $1(lsst::pex::exceptions::ExceptionData &orig, std::string const& comment=std::string("$2")) 
@@ -111,8 +111,8 @@ public:
 
   /** Construct new $1 object.
     *
-    * \param orig     Reference to ExceptionData to be cloned for use in ExceptionStack.
-    * \param comment  String used to initialize std::runtime_error.what(). 
+    * @param orig     Reference to ExceptionData to be cloned for use in ExceptionStack.
+    * @param comment  String used to initialize std::runtime_error.what(). 
     *                 Default to: "$2".
     */
     $1(lsst::pex::exceptions::ExceptionData &orig, boost::format const& comment=boost::format("$2")) 
@@ -123,8 +123,8 @@ public:
 
   /** Construct new $1 object.
     *
-    * \param orig     Reference to ExceptionStack to be cloned for use.
-    * \param comment  String used to initialize std::runtime_error.what(). 
+    * @param orig     Reference to ExceptionStack to be cloned for use.
+    * @param comment  String used to initialize std::runtime_error.what(). 
     *                 Default to: "$2".
     */
     $1(lsst::pex::exceptions::ExceptionStack const &orig, std::string const& comment=std::string("$2")) throw() :
@@ -133,8 +133,8 @@ public:
 
   /** Construct new $1 object.
     *
-    * \param orig     Reference to ExceptionStack to be cloned for use.
-    * \param comment  String used to initialize std::runtime_error.what(). 
+    * @param orig     Reference to ExceptionStack to be cloned for use.
+    * @param comment  String used to initialize std::runtime_error.what(). 
     *                 Default to: "$2".
     */
     $1(lsst::pex::exceptions::ExceptionStack const &orig, boost::format const& comment=boost::format("$2")) throw() :
@@ -144,14 +144,14 @@ public:
 
   /** $1 copy constructor.  This is a clone operation.
     *
-    * \param orig  A reference to the $1 object to clone.
+    * @param orig  A reference to the $1 object to clone.
     */
     $1(const $1 & orig) throw() :
          lsst::pex::exceptions::ExceptionStack(orig )  {};
 
   /** operator<< 
     *
-    * \param rhs     Reference to ExceptionData to be added to $1 ExceptionStack .
+    * @param rhs     Reference to ExceptionData to be added to $1 ExceptionStack .
     */
     $1 &operator<< (lsst::pex::exceptions::ExceptionData  rhs) throw() {
         this->getStack()->addProperty(rhs.getExceptionData());
@@ -160,7 +160,7 @@ public:
 
   /** operator<< 
     *
-    * \param rhs     Reference to DataProperty to be added to most recent ExceptionData on ExceptionStack.
+    * @param rhs     Reference to DataProperty to be added to most recent ExceptionData on ExceptionStack.
     */
     $1 &operator<< (lsst::daf::base::DataProperty  const rhs) throw() {
         this->getLast()->addProperty(rhs);
@@ -169,7 +169,7 @@ public:
 
   /** operator<< 
     *
-    * \param rhs     Reference to DataProperty to be added to most recent ExceptionData on ExceptionStack.
+    * @param rhs     Reference to DataProperty to be added to most recent ExceptionData on ExceptionStack.
     */
     $1 &operator<< (lsst::daf::base::DataProperty::PtrType  const rhs) throw() {
         this->getLast()->addProperty(rhs);

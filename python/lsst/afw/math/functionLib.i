@@ -21,7 +21,6 @@
 %template(IntegerDeltaFunction2F) lsst::afw::math::IntegerDeltaFunction2<float>;
 %template(LanczosFunction1F) lsst::afw::math::LanczosFunction1<float>;
 %template(LanczosFunction2F) lsst::afw::math::LanczosFunction2<float>;
-%template(LanczosSeparableFunction2F) lsst::afw::math::LanczosSeparableFunction2<float>;
 %template(PolynomialFunction1F) lsst::afw::math::PolynomialFunction1<float>;
 %template(PolynomialFunction2F) lsst::afw::math::PolynomialFunction2<float>;
 
@@ -36,6 +35,5 @@
 %template(IntegerDeltaFunction2D) lsst::afw::math::IntegerDeltaFunction2<double>;
 %template(LanczosFunction1D) lsst::afw::math::LanczosFunction1<double>;
 %template(LanczosFunction2D) lsst::afw::math::LanczosFunction2<double>;
-%template(LanczosSeparableFunction2D) lsst::afw::math::LanczosSeparableFunction2<double>;
 %template(PolynomialFunction1D) lsst::afw::math::PolynomialFunction1<double>;
 %template(PolynomialFunction2D) lsst::afw::math::PolynomialFunction2<double>;

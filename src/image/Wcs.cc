@@ -1,31 +1,31 @@
 // -*- lsst-c++ -*-
 /**
- * \file
- * \brief Implementation of Wcs as a thin wrapper around wcslib
+ * @file
+ * @brief Implementation of Wcs as a thin wrapper around wcslib
  */
 #include <iostream>
 #include <sstream>
 #include <cmath>
 #include <cstring>
 
-#include <wcslib/wcs.h>
-#include <wcslib/wcsfix.h>
-#include <wcslib/wcshdr.h>
+#include "wcslib/wcs.h"
+#include "wcslib/wcsfix.h"
+#include "wcslib/wcshdr.h"
 
-#include <lsst/daf/base.h>
-#include <lsst/daf/data/LsstBase.h>
-#include <lsst/daf/data/FitsFormatter.h>
-#include <lsst/pex/exceptions.h>
-#include <lsst/afw/image/Wcs.h>
+#include "lsst/daf/base.h"
+#include "lsst/daf/data/LsstBase.h"
+#include "lsst/daf/data/FitsFormatter.h"
+#include "lsst/pex/exceptions.h"
+#include "lsst/afw/image/Wcs.h"
 
 using lsst::daf::base::DataProperty;
 using lsst::daf::data::LsstBase;
 using lsst::daf::data::FitsFormatter;
 
 /**
- * \brief Construct an invalid Wcs given no arguments
+ * @brief Construct an invalid Wcs given no arguments
  *
- * \throw lsst::pex::exceptions::Runtime on error
+ * @throw lsst::pex::exceptions::Runtime on error
  */
 lsst::afw::image::Wcs::Wcs() :
     LsstBase(typeid(this)),
@@ -34,9 +34,9 @@ lsst::afw::image::Wcs::Wcs() :
 }
 
 /**
- * \brief Construct a Wcs from a FITS header, represented as DataProperty::PtrType
+ * @brief Construct a Wcs from a FITS header, represented as DataProperty::PtrType
  *
- * \throw lsst::pex::exceptions::Runtime on error
+ * @throw lsst::pex::exceptions::Runtime on error
  */
 lsst::afw::image::Wcs::Wcs(
     lsst::daf::base::DataProperty::PtrType fitsMetaData  ///< The contents of a valid FITS header
@@ -98,9 +98,9 @@ lsst::afw::image::Wcs::Wcs(
 }
 
 /**
- * \brief Wcs copy constructor
+ * @brief Wcs copy constructor
  *
- * \throw lsst::pex::exceptions::Memory or lsst::pex::exceptions::Runtime on error
+ * @throw lsst::pex::exceptions::Memory or lsst::pex::exceptions::Runtime on error
  */
 lsst::afw::image::Wcs::Wcs(Wcs const & rhs):
     LsstBase(typeid(this)),
@@ -133,9 +133,9 @@ lsst::afw::image::Wcs::Wcs(Wcs const & rhs):
 }
 
 /**
- * \brief Wcs assignment operator
+ * @brief Wcs assignment operator
  *
- * \throw lsst::pex::exceptions::Memory or lsst::pex::exceptions::Runtime on error
+ * @throw lsst::pex::exceptions::Memory or lsst::pex::exceptions::Runtime on error
  */
 lsst::afw::image::Wcs & lsst::afw::image::Wcs::operator = (const lsst::afw::image::Wcs & rhs) {
     if (this != &rhs) {

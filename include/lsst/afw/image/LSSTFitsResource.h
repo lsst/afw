@@ -1,10 +1,10 @@
 #ifndef LSST_AFW_IMAGE_LSSTFITSRESOURCE_H
 #define LSST_AFW_IMAGE_LSSTFITSRESOURCE_H
 
-#include <vw/Image.h>
+#include "vw/Image.h"
 
-#include <lsst/daf/base/DataProperty.h>
-#include <lsst/afw/image/DiskImageResourceFITS.h>
+#include "lsst/daf/base/DataProperty.h"
+#include "lsst/afw/image/DiskImageResourceFITS.h"
 
 namespace lsst {
 namespace afw {

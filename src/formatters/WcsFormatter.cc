@@ -1,15 +1,15 @@
 // -*- lsst-c++ -*-
 
-/** \file
- * \brief Implementation of WcsFormatter class
+/** @file
+ * @brief Implementation of WcsFormatter class
  *
- * \author $Author: ktlim $
- * \version $Revision: 2151 $
- * \date $Date$
+ * @author $Author: ktlim $
+ * @version $Revision: 2151 $
+ * @date $Date$
  *
  * Contact: Kian-Tat Lim (ktl@slac.stanford.edu)
  *
- * \ingroup afw
+ * @ingroup afw
  */
 
 #ifndef __GNUC__
@@ -19,19 +19,19 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 
 // not used? #include <stdlib.h>
 
-#include <boost/serialization/shared_ptr.hpp>
-#include <wcslib/wcs.h>
+#include "boost/serialization/shared_ptr.hpp"
+#include "wcslib/wcs.h"
 
-#include <lsst/daf/base.h>
-#include <lsst/daf/persistence.h>
-#include <lsst/daf/persistence/DataPropertyFormatter.h>
-#include <lsst/pex/exceptions.h>
-#include <lsst/pex/logging/Trace.h>
-#include <lsst/afw/formatters/WcsFormatter.h>
-#include <lsst/afw/formatters/ImageFormatter.h>
-#include <lsst/afw/formatters/MaskedImageFormatter.h>
-#include <lsst/afw/formatters/WcsFormatter.h>
-#include <lsst/afw/image/Wcs.h>
+#include "lsst/daf/base.h"
+#include "lsst/daf/persistence.h"
+#include "lsst/daf/persistence/DataPropertyFormatter.h"
+#include "lsst/pex/exceptions.h"
+#include "lsst/pex/logging/Trace.h"
+#include "lsst/afw/formatters/WcsFormatter.h"
+#include "lsst/afw/formatters/ImageFormatter.h"
+#include "lsst/afw/formatters/MaskedImageFormatter.h"
+#include "lsst/afw/formatters/WcsFormatter.h"
+#include "lsst/afw/image/Wcs.h"
 
 #define EXEC_TRACE  20
 static void execTrace(std::string s, int level = EXEC_TRACE) {

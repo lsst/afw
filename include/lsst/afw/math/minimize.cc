@@ -1,24 +1,24 @@
 // -*- LSST-C++ -*-
 /**
- * \file
+ * @file
  *
  * Definition of member functions declared in MinimizerFunctionBase.h
  *
  * This file is meant to be included by lsst/afw/math/MinimizerFunctionBase.h
  *
- * \author Andrew Becker and Russell Owen
+ * @author Andrew Becker and Russell Owen
  *
- * \ingroup afw
+ * @ingroup afw
  */
 
 #include <string> // for upar.add
 
-#include <Minuit/FunctionMinimum.h>
-#include <Minuit/MnMigrad.h>
-#include <Minuit/MnMinos.h>
-#include <Minuit/MnPrint.h>
+#include "Minuit/FunctionMinimum.h"
+#include "Minuit/MnMigrad.h"
+#include "Minuit/MnMinos.h"
+#include "Minuit/MnPrint.h"
 
-#include <lsst/pex/logging/Trace.h>
+#include "lsst/pex/logging/Trace.h"
 
 // Constructors
 template<typename ReturnT>
@@ -111,14 +111,14 @@ double lsst::afw::math::MinimizerFunctionBase2<ReturnT>::operator() (const std::
 }
 
 /**
- * \brief Find the minimum of a function(x)
+ * @brief Find the minimum of a function(x)
  *
- * \return true if minimum is valid, false otherwise
+ * @return true if minimum is valid, false otherwise
  *
  * Uses the Minuit fitting package with a standard definition of chiSq
  * (see lsst::afw::math::MinimizerFunctionBase1).
  *
- * \throw lsst::pex::exceptions::InvalidParameter if any input vector is the wrong length 
+ * @throw lsst::pex::exceptions::InvalidParameter if any input vector is the wrong length 
  *
  * To do:
  * - Document stepSizeList better
@@ -192,14 +192,14 @@ lsst::afw::math::FitResults lsst::afw::math::minimize(
 
 
 /**
- * \brief Find the minimum of a function(x, y)
+ * @brief Find the minimum of a function(x, y)
  *
  * Uses the Minuit fitting package with a standard definition of chiSq.
  * (see lsst::afw::math::MinimizerFunctionBase2).
  *
- * \return true if minimum is valid, false otherwise
+ * @return true if minimum is valid, false otherwise
  *
- * \throw lsst::pex::exceptions::InvalidParameter if any input vector is the wrong length 
+ * @throw lsst::pex::exceptions::InvalidParameter if any input vector is the wrong length 
  *
  * To do:
  * - Document stepSizeList better

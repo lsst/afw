@@ -1,10 +1,10 @@
 // -*- lsst-c++ -*-
 #include <stdexcept>
 
-#include <lsst/daf/base.h>
-#include <lsst/pex/exceptions.h>
-#include <lsst/pex/logging/Trace.h>
-#include <lsst/afw/image.h>
+#include "lsst/daf/base.h"
+#include "lsst/pex/exceptions.h"
+#include "lsst/pex/logging/Trace.h"
+#include "lsst/afw/image.h"
 
 using namespace std;
 using boost::any_cast;

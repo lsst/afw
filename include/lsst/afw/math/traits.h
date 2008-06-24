@@ -1,9 +1,9 @@
 #if !defined(LSST_AFW_MATH_KERNEL_TRAITS_H)
 #define LSST_AFW_MATH_KERNEL_TRAITS_H 1
 
-#include <boost/mpl/bool.hpp>
+#include "boost/mpl/bool.hpp"
 /**
- * \brief Traits to describe kernels, allowing for compile-time optimisation
+ * @brief Traits to describe kernels, allowing for compile-time optimisation
  */
 namespace lsst {
 namespace afw {

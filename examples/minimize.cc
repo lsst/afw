@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
-#include <lsst/afw/math/FunctionLibrary.h>
-#include <lsst/afw/math/minimize.h>
+#include "lsst/afw/math/FunctionLibrary.h"
+#include "lsst/afw/math/minimize.h"
 
 template<class T>
 void printVector(std::vector<T> v) {

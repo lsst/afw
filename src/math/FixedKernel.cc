@@ -1,26 +1,26 @@
 // -*- LSST-C++ -*-
 /**
- * \file
+ * @file
  *
- * \brief Definitions of FixedKernel member functions and explicit instantiations of the class.
+ * @brief Definitions of FixedKernel member functions.
  *
- * \author Russell Owen
+ * @author Russell Owen
  *
- * \ingroup afw
+ * @ingroup afw
  */
 #include <stdexcept>
 
-#include <vw/Image.h>
+#include "vw/Image.h"
 
-#include <lsst/pex/exceptions.h>
-#include <lsst/afw/math/Kernel.h>
+#include "lsst/pex/exceptions.h"
+#include "lsst/afw/math/Kernel.h"
 
 //
 // Constructors
 //
 
 /**
- * \brief Construct an empty FixedKernel of size 0x0
+ * @brief Construct an empty FixedKernel of size 0x0
  */
 lsst::afw::math::FixedKernel::FixedKernel()
 :
@@ -30,7 +30,7 @@ lsst::afw::math::FixedKernel::FixedKernel()
 }
 
 /**
- * \brief Construct a FixedKernel from an image
+ * @brief Construct a FixedKernel from an image
  */
 lsst::afw::math::FixedKernel::FixedKernel(
     lsst::afw::image::Image<PixelT> const &image)     ///< image for kernel
@@ -46,9 +46,9 @@ lsst::afw::math::FixedKernel::FixedKernel(
 void lsst::afw::math::FixedKernel::computeImage(
     lsst::afw::image::Image<PixelT> &image,
     PixelT &imSum,
+    bool doNormalize,
     double x,
-    double y,
-    bool doNormalize
+    double y
 ) const {
     typedef lsst::afw::image::Image<PixelT>::pixel_accessor pixelAccessor;
     if ((image.getCols() != this->getCols()) || (image.getRows() != this->getRows())) {
@@ -77,20 +77,10 @@ void lsst::afw::math::FixedKernel::computeImage(
     }
 }
 
-std::vector<double> lsst::afw::math::FixedKernel::getCurrentKernelParameters() const {
-    return std::vector<double>(0);
-}
-
-//
-// Protected Member Functions
-//
-
-void lsst::afw::math::FixedKernel::basicSetKernelParameters(std::vector<double> const &params) const {
-    if (params.size() > 0) {
-        throw lsst::pex::exceptions::InvalidParameter("FixedKernel has no kernel parameters");
-    }
-}
-
-//
-// Private Member Functions
-//
+std::string lsst::afw::math::FixedKernel::toString(std::string prefix) const {
+    std::ostringstream os;
+    os << prefix << "FixedKernel:" << std::endl;
+    os << prefix << "..sum: " << _sum << std::endl;
+    os << Kernel::toString(prefix + "\t");
+    return os.str();
+};

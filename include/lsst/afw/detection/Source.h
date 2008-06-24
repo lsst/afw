@@ -14,11 +14,11 @@
 #include <string>
 #include <vector>
 
-#include <boost/cstdint.hpp>
-#include <boost/shared_ptr.hpp>
+#include "boost/cstdint.hpp"
+#include "boost/shared_ptr.hpp"
 
-#include <lsst/daf/base/Citizen.h>
-#include <lsst/daf/base/Persistable.h>
+#include "lsst/daf/base/Citizen.h"
+#include "lsst/daf/base/Persistable.h"
 
 
 namespace boost {
