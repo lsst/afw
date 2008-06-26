@@ -46,10 +46,10 @@ namespace boost {
     class bad_any_cast;                 // for lsst/pex/policy/Policy.h
 }
     
-using namespace lsst;
+//using namespace lsst;
 using namespace lsst::afw::image;
 using namespace lsst::daf::data;
-using namespace vw;
+using namespace vw; // for BBox but I'm not sure why it's needed
 %}
 
 %init %{
@@ -86,10 +86,7 @@ def version(HeadURL = r"$HeadURL$"):
 
 /******************************************************************************/
 
-%ignore vw::ImageView<boost::uint16_t>::origin;
-%ignore vw::ImageView<float>::origin;
-%ignore vw::ImageView<double>::origin;
-%ignore vw::ImageView<lsst::afw::image::maskPixelType>::origin;
+%ignore vw::ImageView::origin;
 %ignore operator vw::ImageView::unspecified_bool_type;
 
 %import <vw/Core/FundamentalTypes.h>
@@ -185,6 +182,30 @@ def version(HeadURL = r"$HeadURL$"):
 %}
 }
 
+%extend lsst::afw::image::Image<int> {
+    %rename(getVal) get;
+    /**
+     * Set an image to the value val
+     */
+    void set(int val) {
+        Image<int>::ImageIVwT& ivw = self->getIVw();
+        std::fill(ivw.begin(), ivw.end(), val);
+    }
+    /**
+     * Set pixel (x,y) to val
+     */
+    void set(int x, int y, int val) {
+        Image<int>::ImageIVwT& ivw = self->getIVw();
+        *ivw.origin().advance(x, y) = val;
+    }
+    int get(int x, int y) {
+        return self->operator()(x, y);
+    }
+%pythoncode %{
+    getPtr = getVal	# Keep old (confusing) name
+%}
+}
+
 %extend lsst::afw::image::Image<float> {
     %rename(getVal) get;
     /**
@@ -273,6 +294,11 @@ def version(HeadURL = r"$HeadURL$"):
 %template(ImageU)               lsst::afw::image::Image<boost::uint16_t>;
 %lsst_persistable_shared_ptr(ImageUPtr, lsst::afw::image::Image<boost::uint16_t>)
 
+%template(ImageBaseI)           vw::ImageViewBase<vw::ImageView<int> >;
+%template(ImageViewI)           vw::ImageView<int>;
+%template(ImageI)               lsst::afw::image::Image<int>;
+%lsst_persistable_shared_ptr(ImageIPtr, lsst::afw::image::Image<int>)
+
 %template(ImageBaseF)           vw::ImageViewBase<vw::ImageView<float> >;
 %template(ImageViewF)           vw::ImageView<float>;
 %template(CompoundChannelTypeF) vw::CompoundChannelType<float>;
@@ -297,12 +323,14 @@ def version(HeadURL = r"$HeadURL$"):
 //
 // MaskedImage
 //
+%template(MaskedImageU)         lsst::afw::image::MaskedImage<boost::uint16_t, lsst::afw::image::maskPixelType>;
+%lsst_persistable_shared_ptr(MaskedImageUPtr, lsst::afw::image::MaskedImage<boost::uint16_t, lsst::afw::image::maskPixelType>);
+%template(MaskedImageI)         lsst::afw::image::MaskedImage<int, lsst::afw::image::maskPixelType>;
+%lsst_persistable_shared_ptr(MaskedImageIPtr, lsst::afw::image::MaskedImage<int, lsst::afw::image::maskPixelType>);
 %template(MaskedImageF)         lsst::afw::image::MaskedImage<float, lsst::afw::image::maskPixelType>;
 %lsst_persistable_shared_ptr(MaskedImageFPtr, lsst::afw::image::MaskedImage<float, lsst::afw::image::maskPixelType>);
 %template(MaskedImageD)         lsst::afw::image::MaskedImage<double, lsst::afw::image::maskPixelType>;
 %lsst_persistable_shared_ptr(MaskedImageDPtr, lsst::afw::image::MaskedImage<double, lsst::afw::image::maskPixelType>);
-%template(MaskedImageU)         lsst::afw::image::MaskedImage<boost::uint16_t, lsst::afw::image::maskPixelType>;
-%lsst_persistable_shared_ptr(MaskedImageUPtr, lsst::afw::image::MaskedImage<boost::uint16_t, lsst::afw::image::maskPixelType>);
 
 // vw Statistics on Images
   /// Compute the mean value stored in all of the channels of all of the planes of the image.
@@ -310,9 +338,10 @@ def version(HeadURL = r"$HeadURL$"):
   // typename CompoundChannelType<typename ViewT::pixel_type>::type
   // mean_channel_value( const ImageViewBase<ViewT> &view_ ) {
 
-%template(mean_channel_valueD)  vw::mean_channel_value<ImageView<double> >;
-%template(mean_channel_valueF)  vw::mean_channel_value<ImageView<float> >;
-%template(mean_channel_valueU)  vw::mean_channel_value<ImageView<boost::uint16_t> >;
+%template(mean_channel_valueD)  vw::mean_channel_value<vw::ImageView<double> >;
+%template(mean_channel_valueF)  vw::mean_channel_value<vw::ImageView<float> >;
+%template(mean_channel_valueU)  vw::mean_channel_value<vw::ImageView<boost::uint16_t> >;
+%template(mean_channel_valueI)  vw::mean_channel_value<vw::ImageView<int> >;
 
 %pythoncode %{
     def mean_channel_value(img):
@@ -323,6 +352,8 @@ def version(HeadURL = r"$HeadURL$"):
             return mean_channel_valueF(iv)
         elif type(img) == type(ImageU()) or type(img) == type(ImageUPtr(ImageU())) :
             return mean_channel_valueU(iv)
+        elif type(img) == type(ImageI()) or type(img) == type(ImageIPtr(ImageI())) :
+            return mean_channel_valueI(iv)
         else:
             return None
 %}
@@ -353,9 +384,11 @@ def version(HeadURL = r"$HeadURL$"):
 %include "lsst/afw/image/Exposure.h"
 
 %template(ExposureU)    lsst::afw::image::Exposure<boost::uint16_t, lsst::afw::image::maskPixelType>;
+%template(ExposureI)    lsst::afw::image::Exposure<int, lsst::afw::image::maskPixelType>;
 %template(ExposureF)    lsst::afw::image::Exposure<float, lsst::afw::image::maskPixelType>;
 %template(ExposureD)    lsst::afw::image::Exposure<double, lsst::afw::image::maskPixelType>;
 %lsst_persistable_shared_ptr(ExposureUPtr, lsst::afw::image::Exposure<boost::uint16_t, lsst::afw::image::maskPixelType>)
+%lsst_persistable_shared_ptr(ExposureIPtr, lsst::afw::image::Exposure<int, lsst::afw::image::maskPixelType>)
 %lsst_persistable_shared_ptr(ExposureFPtr, lsst::afw::image::Exposure<float, lsst::afw::image::maskPixelType>)
 %lsst_persistable_shared_ptr(ExposureDPtr, lsst::afw::image::Exposure<double, lsst::afw::image::maskPixelType>)
 

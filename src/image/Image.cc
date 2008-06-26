@@ -203,5 +203,6 @@ Image<ImagePixelT>& Image<ImagePixelT>::operator /= (const ImagePixelT scalar) {
 // Explicit instantiations
 //
 template class Image<boost::uint16_t>;
+template class Image<int>;
 template class Image<float>;
 template class Image<double>;

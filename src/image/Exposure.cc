@@ -255,6 +255,7 @@ void lsst::afw::image::Exposure<ImageT, MaskT>::writeFits(
         }
 
 // Explicit instantiations
+template class lsst::afw::image::Exposure<boost::uint16_t, lsst::afw::image::maskPixelType>;
+template class lsst::afw::image::Exposure<int, lsst::afw::image::maskPixelType>;
 template class lsst::afw::image::Exposure<float, lsst::afw::image::maskPixelType>;
 template class lsst::afw::image::Exposure<double, lsst::afw::image::maskPixelType>;
-template class lsst::afw::image::Exposure<boost::uint16_t, lsst::afw::image::maskPixelType>;
