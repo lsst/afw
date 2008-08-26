@@ -79,35 +79,39 @@ inline void lsst::afw::math::apply(
     lsst::afw::image::MaskedPixelAccessor<ImagePixelT, MaskPixelT> mImageRowAcc = maskedImageAccessor;
     kernelAccessorType kRow = kernelAccessor;
     for (unsigned int row = 0; row < rows; ++row, mImageRowAcc.nextRow(), kRow.next_row()) {
-// this variant code is for speed testing only
-// I find it boost speed by roughly 25% when building with opt=3
-// on babaroga, a 32-bit linux box with gcc 3.4.6
-// but it is NOT SAFE because afw does not enforce row order for images and kernels
-//        ImagePixelT *imagePtr = &(*(mImageRowAcc.image));
-//        ImagePixelT *varPtr = &(*(mImageRowAcc.variance));
-//        MaskPixelT *maskPtr = &(*(mImageRowAcc.mask));
-//        lsst::afw::math::Kernel::PixelT *kerPtr = &(*kRow);
-//        kernelAccessorType kCol = kRow;
-//        for (unsigned int col = 0; col < cols; ++col, imagePtr++, varPtr++, maskPtr++, kerPtr++) {
-//            lsst::afw::math::Kernel::PixelT ker = *kerPtr;
-//            outImage += static_cast<ImagePixelT>(ker * (*imagePtr));
-//            outVariance += static_cast<ImagePixelT>(ker * ker * (*varPtr));
-//            outMask |= *maskPtr;
-//        }
-        lsst::afw::image::MaskedPixelAccessor<ImagePixelT, MaskPixelT> mImageColAcc = mImageRowAcc;
-        kernelAccessorType kCol = kRow;
-        for (unsigned int col = 0; col < cols; ++col, mImageColAcc.nextCol(), kCol.next_col()) {
-            Kernel::PixelT ker = *kCol;
+        ImagePixelT *imagePtr = &(*(mImageRowAcc.image));
+        ImagePixelT *varPtr = &(*(mImageRowAcc.variance));
+        MaskPixelT *maskPtr = &(*(mImageRowAcc.mask));
+        // assume data contiguous along rows; use a pointer instead of a vw pixel accessor to gain speed
+        lsst::afw::math::Kernel::PixelT *kerPtr = &(*kRow);
+        for (unsigned int col = 0; col < cols; ++col, imagePtr++, varPtr++, maskPtr++, kerPtr++) {
+            lsst::afw::math::Kernel::PixelT ker = *kerPtr;
+
 #ifdef IgnoreKernelZeroPixels
             if (ker != 0) {
 #else
             {
 #endif
-                outImage += static_cast<double>(ker * (*(mImageColAcc.image)));
-                outVariance += static_cast<double>(ker * ker * (*(mImageColAcc.variance)));
-                outMask |= *(mImageColAcc.mask);
+                outImage += static_cast<ImagePixelT>(ker * (*imagePtr));
+                outVariance += static_cast<ImagePixelT>(ker * ker * (*varPtr));
+                outMask |= *maskPtr;
             }
         }
+//        // this version does not assume data order
+//        lsst::afw::image::MaskedPixelAccessor<ImagePixelT, MaskPixelT> mImageColAcc = mImageRowAcc;
+//        kernelAccessorType kCol = kRow;
+//        for (unsigned int col = 0; col < cols; ++col, mImageColAcc.nextCol(), kCol.next_col()) {
+//            Kernel::PixelT ker = *kCol;
+//#ifdef IgnoreKernelZeroPixels
+//            if (ker != 0) {
+//#else
+//            {
+//#endif
+//                outImage += static_cast<double>(ker * (*(mImageColAcc.image)));
+//                outVariance += static_cast<double>(ker * ker * (*(mImageColAcc.variance)));
+//                outMask |= *(mImageColAcc.mask);
+//            }
+//        }
     }
     *(outAccessor.image) = static_cast<ImagePixelT>(outImage);
     *(outAccessor.variance) = static_cast<ImagePixelT>(outVariance);
