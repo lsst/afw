@@ -16,6 +16,7 @@
 %boost_shared_ptr(Function2FPtr,    lsst::afw::math::Function2<float>);
 
 %template(Chebyshev1Function1F) lsst::afw::math::Chebyshev1Function1<float>;
+%template(DoubleGaussianFunction2F) lsst::afw::math::DoubleGaussianFunction2<float>;
 %template(GaussianFunction1F) lsst::afw::math::GaussianFunction1<float>;
 %template(GaussianFunction2F) lsst::afw::math::GaussianFunction2<float>;
 %template(IntegerDeltaFunction2F) lsst::afw::math::IntegerDeltaFunction2<float>;
@@ -30,6 +31,7 @@
 %boost_shared_ptr(Function2DPtr,    lsst::afw::math::Function2<double>);
 
 %template(Chebyshev1Function1D) lsst::afw::math::Chebyshev1Function1<double>;
+%template(DoubleGaussianFunction2D) lsst::afw::math::DoubleGaussianFunction2<double>;
 %template(GaussianFunction1D) lsst::afw::math::GaussianFunction1<double>;
 %template(GaussianFunction2D) lsst::afw::math::GaussianFunction2<double>;
 %template(IntegerDeltaFunction2D) lsst::afw::math::IntegerDeltaFunction2<double>;

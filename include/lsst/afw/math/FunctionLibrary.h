@@ -71,7 +71,7 @@ namespace math {
     /**
      * @brief 1-dimensional Gaussian
      *
-     * f(x) = e^(-x^2 / sigma^2) / (sqrt(2 pi) xSigma)
+     * f(x) = (1 / (sqrt(2 pi) xSigma)) e^(-x^2 / sigma^2)
      * with coefficient c0 = sigma
      *
      * @ingroup afw
@@ -99,8 +99,9 @@ namespace math {
         }
         
         virtual ReturnT operator() (double x) const {
-            return (_multFac / this->_params[0]) *
-                std::exp(- (x * x) / (2.0 * this->_params[0] * this->_params[0]));
+            return static_cast<ReturnT> (
+                (_multFac / this->_params[0]) *
+                std::exp(- (x * x) / (2.0 * this->_params[0] * this->_params[0])));
         }
         
         virtual std::string toString(void) const {
@@ -118,12 +119,10 @@ namespace math {
     /**
      * @brief 2-dimensional Gaussian
      *
-     * f(x,y) = e^(-x^2 / xSigma^2) e^(-y^2 / ySigma^2) / (2 pi xSigma ySigma)
+     * f(x,y) = (1 / (2 pi xSigma ySigma)) e^(-x^2 / xSigma^2) e^(-y^2 / ySigma^2) /
      * with coefficients c0 = xSigma and c1 = ySigma
      *
-     * To do:
-     * - Allow setting angle of ellipticity
-     * - Perhaps recast as a separable pair of 1-d Guassians
+     * @todo Allow setting angle of ellipticity.
      *
      * @ingroup afw
      */
@@ -153,10 +152,10 @@ namespace math {
         }
         
         virtual ReturnT operator() (double x, double y) const {
-            return (_multFac / (this->_params[0] * this->_params[1])) *
+            return static_cast<ReturnT> (
+                (_multFac / (this->_params[0] * this->_params[1])) *
                 std::exp(- ((x * x) / (2.0 * this->_params[0] * this->_params[0]))
-                         - ((y * y) / (2.0 * this->_params[1] * this->_params[1]))
-                );
+                         - ((y * y) / (2.0 * this->_params[1] * this->_params[1]))));
         }
         
         virtual std::string toString(void) const {
@@ -170,6 +169,65 @@ namespace math {
         const double _multFac; ///< precomputed scale factor
     };
     
+    /**
+     * @brief double Guassian (sum of two Gaussians)
+     *
+     * Intended for use as a PSF model: the main Gaussian represents the core
+     * and the second Gaussian represents the wings.
+     *
+     * f(x,y) = (1 / (2 pi (sigma1^2 + b sigma2^2))) (e^(-r^2 / sigma1^2) + b e^(-r^2 / sigma2^2))
+     * where r^2 = x^2 + y^2
+     *
+     * @ingroup afw
+     */
+    template<typename ReturnT>
+    class DoubleGaussianFunction2: public Function2<ReturnT> {
+    public:
+        typedef typename Function2<ReturnT>::Ptr Function2Ptr;
+
+        /**
+         * @brief Construct a Gaussian function with specified x and y sigma
+         */
+        explicit DoubleGaussianFunction2(
+            double sigma1,      ///< sigma of main Gaussian
+            double sigma2 = 0,  ///< sigma of second Gaussian
+            double ampl2 = 0)   ///< amplitude of second Gaussian as a fraction of main Gaussian at peak
+        : 
+            Function2<ReturnT>(3),
+            _multFac(1.0 / (2.0 * M_PI))
+        {
+            this->_params[0] = sigma1;
+            this->_params[1] = sigma2;
+            this->_params[2] = ampl2;
+        }
+        
+        virtual ~DoubleGaussianFunction2() {};
+        
+        virtual Function2Ptr copy() const {
+            return Function2Ptr(new DoubleGaussianFunction2(this->_params[0], this->_params[1], this->_params[2]));
+        }
+        
+        virtual ReturnT operator() (double x, double y) const {
+            double radSq = (x * x) + (y * y);
+            double sigma1Sq = this->_params[0] * this->_params[0];
+            double sigma2Sq = this->_params[1] * this->_params[1];
+            double b = this->_params[2];
+            return static_cast<ReturnT> (
+                (_multFac / (sigma1Sq + (b * sigma2Sq))) *
+                (std::exp(-radSq / (2.0 * sigma1Sq))
+                + (b * std::exp(-radSq / (2.0 * sigma2Sq)))));
+        }
+        
+        virtual std::string toString(void) const {
+            std::ostringstream os;
+            os << "DoubleGaussianFunction2 [" << _multFac << "]: ";
+            os << Function2<ReturnT>::toString();
+            return os.str();
+        };
+
+    private:
+        const double _multFac; ///< precomputed scale factor
+    };
     
     /**
      * @brief 1-dimensional polynomial function.
