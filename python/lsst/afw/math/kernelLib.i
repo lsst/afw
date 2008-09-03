@@ -34,10 +34,6 @@
     %template(KernelListDD) KernelList<lsst::afw::math::DeltaFunctionKernel>; // Conversion constructor
 };
 
-//%extend lsst::afw::math::KernelList {
-//    %template(KernelList) KernelList<lsst::afw::math::AnalyticKernel>; // Conversion constructor
-//};
-
 %include "lsst/afw/math/ConvolveMaskedImage.h"
 //
 // functions to convolve a MaskedImage with a Kernel that return a new MaskedImage
@@ -57,7 +53,6 @@
 
 %template(convolveLinear)       lsst::afw::math::convolveLinear<double, lsst::afw::image::maskPixelType>;
 %template(convolveLinear)       lsst::afw::math::convolveLinear<float,  lsst::afw::image::maskPixelType>;
-%template(convolveLinear)       lsst::afw::math::convolveLinear<float, lsst::afw::image::maskPixelType>;
 %template(convolveLinear)       lsst::afw::math::convolveLinear<boost::uint16_t, lsst::afw::image::maskPixelType>;
 
 //
@@ -82,13 +77,13 @@
 %template(convolveLinear)       lsst::afw::math::convolveLinear<boost::uint16_t, boost::uint16_t, lsst::afw::image::maskPixelType>;
 
 
-// Note: the following needs to be in a separate library
-// to avoid conflicts with the MaskedImage versions.
+/* The following conflicts with the above (MaskedImage functions that return a new MI are ambiguous with Image in-place functions)
+The likely solution is to rename the functions that return a new MI or new Image in C++, but first I've asked aroud.
+*/
 // %include "lsst/afw/math/ConvolveImage.h"
 // //
 // // functions to convolve an Image with a Kernel that return a new Image
 // //
-// %template(convolve)             lsst::afw::math::convolve<double, lsst::afw::math::Kernel>;
 // %template(convolve)             lsst::afw::math::convolve<double, lsst::afw::math::DeltaFunctionKernel>;
 // %template(convolve)             lsst::afw::math::convolve<double, lsst::afw::math::SeparableKernel>;
 // %template(convolve)             lsst::afw::math::convolve<float, lsst::afw::math::Kernel>;
@@ -102,7 +97,6 @@
 // %template(convolve)             lsst::afw::math::convolve<boost::uint16_t, lsst::afw::math::SeparableKernel>;
 // 
 // %template(convolveLinear)       lsst::afw::math::convolveLinear<double>;
-// %template(convolveLinear)       lsst::afw::math::convolveLinear<float>;
 // %template(convolveLinear)       lsst::afw::math::convolveLinear<float>;
 // %template(convolveLinear)       lsst::afw::math::convolveLinear<boost::uint16_t>;
 // 
@@ -126,6 +120,7 @@
 // %template(convolveLinear)       lsst::afw::math::convolveLinear<double, float>;
 // %template(convolveLinear)       lsst::afw::math::convolveLinear<float,  float>;
 // %template(convolveLinear)       lsst::afw::math::convolveLinear<boost::uint16_t, boost::uint16_t>;
+
 
 /******************************************************************************/
 // Local Variables: ***

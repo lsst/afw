@@ -295,32 +295,25 @@ void lsst::afw::math::basicConvolve(
             "maskedImage smaller than kernel in columns and/or rows");
     }
     
-    const int colOffset = kernel.getPixel().first - kernel.getCtrCol();
-    const int rowOffset = kernel.getPixel().second - kernel.getCtrRow();
-    const int nCopyCols = mImageCols - abs(colOffset); // number of columns to copy
-    const int nCopyRows = mImageRows - abs(rowOffset); // number of rows to copy
+    const int cnvCols = static_cast<int>(mImageCols) + 1 - static_cast<int>(kernel.getCols());
+    const int cnvRows = static_cast<int>(mImageRows) + 1 - static_cast<int>(kernel.getRows());
+    const int cnvStartCol = static_cast<int>(kernel.getCtrCol());
+    const int cnvStartRow = static_cast<int>(kernel.getCtrRow());
+    const int inStartCol = kernel.getPixel().first;
+    const int inStartRow = kernel.getPixel().second;
 
     // create input and output image accessors
     // and advance output accessor to lower left pixel that is set by convolution
     InMaskedImageAccessor mImageRowAcc(maskedImage);
+    mImageRowAcc.advance(inStartCol, inStartRow);
     OutMaskedImageAccessor cnvRowAcc(convolvedImage);
-
-    if (rowOffset > 0) {
-        mImageRowAcc.advance(0, rowOffset);
-    } else {
-        cnvRowAcc.advance(0, -rowOffset);
-    }
+    cnvRowAcc.advance(cnvStartCol, cnvStartRow);
 
     lsst::pex::logging::Trace("lsst.afw.kernel.convolve", 3, "kernel is a spatially invariant delta function basis");
-    for (int i = 0; i < nCopyRows; ++i, cnvRowAcc.nextRow(), mImageRowAcc.nextRow()) {
+    for (int i = 0; i < cnvRows; ++i, cnvRowAcc.nextRow(), mImageRowAcc.nextRow()) {
         InMaskedImageAccessor mImageColAcc = mImageRowAcc;
         OutMaskedImageAccessor cnvColAcc = cnvRowAcc;
-        if (colOffset > 0) {
-            mImageColAcc.advance(colOffset, 0);
-        } else {
-            cnvColAcc.advance(-colOffset, 0);
-        }
-        for (int j = 0; j < nCopyCols; ++j, mImageColAcc.nextCol(), cnvColAcc.nextCol()) {
+        for (int j = 0; j < cnvCols; ++j, mImageColAcc.nextCol(), cnvColAcc.nextCol()) {
             *cnvColAcc.image =    *mImageColAcc.image;
             *cnvColAcc.variance = *mImageColAcc.variance;
             *cnvColAcc.mask =     *mImageColAcc.mask;
