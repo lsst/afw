@@ -134,9 +134,6 @@ def sameMaskPlaneDicts(maskedImageA, maskedImageB):
 class ConvolveTestCase(unittest.TestCase):
     def testUnityConvolution(self):
         """Verify that convolution with a centered delta function reproduces the original.
-
-        Note: the test for masks is disabled because at present afwMath.convolve
-        smears the mask. If that is changed in convolution then re-enable the mask test.
         """
         imCols = 45
         imRows = 55
@@ -160,7 +157,7 @@ class ConvolveTestCase(unittest.TestCase):
     
         origImVarMaskArrays = imTestUtils.arraysFromMaskedImage(maskedImage)
         cnvImVarMaskArrays = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
-        for name, ind in (("image", 0), ("variance", 1)): # , ("mask", 2)):
+        for name, ind in (("image", 0), ("variance", 1), ("mask", 2)):
             if not numpy.allclose(origImVarMaskArrays[ind], cnvImVarMaskArrays[ind]):
                 self.fail("Convolved %s does not match reference" % (name,))
 
