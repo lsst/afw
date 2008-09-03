@@ -40,8 +40,8 @@ namespace math {
     
     template <typename OutPixelT, typename InPixelT, typename MaskPixelT>
     inline void apply(
-        lsst::afw::image::MaskedPixelAccessor<InPixelT, MaskPixelT> &outAccessor,
-        lsst::afw::image::MaskedPixelAccessor<OutPixelT, MaskPixelT> const &imageAccessor,
+        lsst::afw::image::MaskedPixelAccessor<OutPixelT, MaskPixelT> &outAccessor,
+        lsst::afw::image::MaskedPixelAccessor<InPixelT, MaskPixelT> const &imageAccessor,
         std::vector<lsst::afw::math::Kernel::PixelT> const &kernelColList,
         std::vector<lsst::afw::math::Kernel::PixelT> const &kernelRowList
     );

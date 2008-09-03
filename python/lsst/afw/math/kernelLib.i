@@ -14,9 +14,8 @@
 %apply double& OUTPUT { double& imSum };
 
 %include "lsst/afw/math/Kernel.h"
-%include "lsst/afw/math/KernelFunctions.h"
 //
-// classes (every template must have a unique name)
+// Kernel classes (every template of a class must have a unique name)
 //
 %boost_shared_ptr(KernelPtr,   lsst::afw::math::Kernel);
 %boost_shared_ptr(LinearCombinationKernelPtr,  lsst::afw::math::LinearCombinationKernel);
@@ -39,22 +38,94 @@
 //    %template(KernelList) KernelList<lsst::afw::math::AnalyticKernel>; // Conversion constructor
 //};
 
+%include "lsst/afw/math/ConvolveMaskedImage.h"
 //
-// functions (every template can have the same name)
+// functions to convolve a MaskedImage with a Kernel that return a new MaskedImage
 //
 %template(convolve)             lsst::afw::math::convolve<double, lsst::afw::image::maskPixelType, lsst::afw::math::Kernel>;
 %template(convolve)             lsst::afw::math::convolve<double, lsst::afw::image::maskPixelType, lsst::afw::math::DeltaFunctionKernel>;
 %template(convolve)             lsst::afw::math::convolve<double, lsst::afw::image::maskPixelType, lsst::afw::math::SeparableKernel>;
-%template(convolve)             lsst::afw::math::convolve<float, lsst::afw::image::maskPixelType, lsst::afw::math::Kernel>;
-%template(convolve)             lsst::afw::math::convolve<float, lsst::afw::image::maskPixelType, lsst::afw::math::DeltaFunctionKernel>;
-%template(convolve)             lsst::afw::math::convolve<float, lsst::afw::image::maskPixelType, lsst::afw::math::SeparableKernel>;
+%template(convolve)             lsst::afw::math::convolve<float,  lsst::afw::image::maskPixelType, lsst::afw::math::Kernel>;
+%template(convolve)             lsst::afw::math::convolve<float,  lsst::afw::image::maskPixelType, lsst::afw::math::DeltaFunctionKernel>;
+%template(convolve)             lsst::afw::math::convolve<float,  lsst::afw::image::maskPixelType, lsst::afw::math::SeparableKernel>;
+%template(convolve)             lsst::afw::math::convolve<float,  lsst::afw::image::maskPixelType, lsst::afw::math::Kernel>;
+%template(convolve)             lsst::afw::math::convolve<float,  lsst::afw::image::maskPixelType, lsst::afw::math::DeltaFunctionKernel>;
+%template(convolve)             lsst::afw::math::convolve<float,  lsst::afw::image::maskPixelType, lsst::afw::math::SeparableKernel>;
 %template(convolve)             lsst::afw::math::convolve<boost::uint16_t, lsst::afw::image::maskPixelType, lsst::afw::math::Kernel>;
 %template(convolve)             lsst::afw::math::convolve<boost::uint16_t, lsst::afw::image::maskPixelType, lsst::afw::math::DeltaFunctionKernel>;
 %template(convolve)             lsst::afw::math::convolve<boost::uint16_t, lsst::afw::image::maskPixelType, lsst::afw::math::SeparableKernel>;
 
 %template(convolveLinear)       lsst::afw::math::convolveLinear<double, lsst::afw::image::maskPixelType>;
+%template(convolveLinear)       lsst::afw::math::convolveLinear<float,  lsst::afw::image::maskPixelType>;
 %template(convolveLinear)       lsst::afw::math::convolveLinear<float, lsst::afw::image::maskPixelType>;
 %template(convolveLinear)       lsst::afw::math::convolveLinear<boost::uint16_t, lsst::afw::image::maskPixelType>;
+
+//
+// functions to convolve a MaskedImage with a Kernel that work in-place
+//
+%template(convolve)             lsst::afw::math::convolve<double, double, lsst::afw::image::maskPixelType, lsst::afw::math::Kernel>;
+%template(convolve)             lsst::afw::math::convolve<double, double, lsst::afw::image::maskPixelType, lsst::afw::math::DeltaFunctionKernel>;
+%template(convolve)             lsst::afw::math::convolve<double, double, lsst::afw::image::maskPixelType, lsst::afw::math::SeparableKernel>;
+%template(convolve)             lsst::afw::math::convolve<double, float,  lsst::afw::image::maskPixelType, lsst::afw::math::Kernel>;
+%template(convolve)             lsst::afw::math::convolve<double, float,  lsst::afw::image::maskPixelType, lsst::afw::math::DeltaFunctionKernel>;
+%template(convolve)             lsst::afw::math::convolve<double, float,  lsst::afw::image::maskPixelType, lsst::afw::math::SeparableKernel>;
+%template(convolve)             lsst::afw::math::convolve<float,  float,  lsst::afw::image::maskPixelType, lsst::afw::math::Kernel>;
+%template(convolve)             lsst::afw::math::convolve<float,  float,  lsst::afw::image::maskPixelType, lsst::afw::math::DeltaFunctionKernel>;
+%template(convolve)             lsst::afw::math::convolve<float,  float,  lsst::afw::image::maskPixelType, lsst::afw::math::SeparableKernel>;
+%template(convolve)             lsst::afw::math::convolve<boost::uint16_t, boost::uint16_t, lsst::afw::image::maskPixelType, lsst::afw::math::Kernel>;
+%template(convolve)             lsst::afw::math::convolve<boost::uint16_t, boost::uint16_t, lsst::afw::image::maskPixelType, lsst::afw::math::DeltaFunctionKernel>;
+%template(convolve)             lsst::afw::math::convolve<boost::uint16_t, boost::uint16_t, lsst::afw::image::maskPixelType, lsst::afw::math::SeparableKernel>;
+
+%template(convolveLinear)       lsst::afw::math::convolveLinear<double, double, lsst::afw::image::maskPixelType>;
+%template(convolveLinear)       lsst::afw::math::convolveLinear<double, float,  lsst::afw::image::maskPixelType>;
+%template(convolveLinear)       lsst::afw::math::convolveLinear<float,  float, lsst::afw::image::maskPixelType>;
+%template(convolveLinear)       lsst::afw::math::convolveLinear<boost::uint16_t, boost::uint16_t, lsst::afw::image::maskPixelType>;
+
+
+// Note: the following needs to be in a separate library
+// to avoid conflicts with the MaskedImage versions.
+// %include "lsst/afw/math/ConvolveImage.h"
+// //
+// // functions to convolve an Image with a Kernel that return a new Image
+// //
+// %template(convolve)             lsst::afw::math::convolve<double, lsst::afw::math::Kernel>;
+// %template(convolve)             lsst::afw::math::convolve<double, lsst::afw::math::DeltaFunctionKernel>;
+// %template(convolve)             lsst::afw::math::convolve<double, lsst::afw::math::SeparableKernel>;
+// %template(convolve)             lsst::afw::math::convolve<float, lsst::afw::math::Kernel>;
+// %template(convolve)             lsst::afw::math::convolve<float, lsst::afw::math::DeltaFunctionKernel>;
+// %template(convolve)             lsst::afw::math::convolve<float, lsst::afw::math::SeparableKernel>;
+// %template(convolve)             lsst::afw::math::convolve<float, lsst::afw::math::Kernel>;
+// %template(convolve)             lsst::afw::math::convolve<float, lsst::afw::math::DeltaFunctionKernel>;
+// %template(convolve)             lsst::afw::math::convolve<float, lsst::afw::math::SeparableKernel>;
+// %template(convolve)             lsst::afw::math::convolve<boost::uint16_t, lsst::afw::math::Kernel>;
+// %template(convolve)             lsst::afw::math::convolve<boost::uint16_t, lsst::afw::math::DeltaFunctionKernel>;
+// %template(convolve)             lsst::afw::math::convolve<boost::uint16_t, lsst::afw::math::SeparableKernel>;
+// 
+// %template(convolveLinear)       lsst::afw::math::convolveLinear<double>;
+// %template(convolveLinear)       lsst::afw::math::convolveLinear<float>;
+// %template(convolveLinear)       lsst::afw::math::convolveLinear<float>;
+// %template(convolveLinear)       lsst::afw::math::convolveLinear<boost::uint16_t>;
+// 
+// //
+// // functions to convolve an Image with a Kernel that work in-place
+// //
+// %template(convolve)             lsst::afw::math::convolve<double, double, lsst::afw::math::Kernel>;
+// %template(convolve)             lsst::afw::math::convolve<double, double, lsst::afw::math::DeltaFunctionKernel>;
+// %template(convolve)             lsst::afw::math::convolve<double, double, lsst::afw::math::SeparableKernel>;
+// %template(convolve)             lsst::afw::math::convolve<double, float, lsst::afw::math::Kernel>;
+// %template(convolve)             lsst::afw::math::convolve<double, float, lsst::afw::math::DeltaFunctionKernel>;
+// %template(convolve)             lsst::afw::math::convolve<double, float, lsst::afw::math::SeparableKernel>;
+// %template(convolve)             lsst::afw::math::convolve<float,  float, lsst::afw::math::Kernel>;
+// %template(convolve)             lsst::afw::math::convolve<float,  float, lsst::afw::math::DeltaFunctionKernel>;
+// %template(convolve)             lsst::afw::math::convolve<float,  float, lsst::afw::math::SeparableKernel>;
+// %template(convolve)             lsst::afw::math::convolve<boost::uint16_t, boost::uint16_t, lsst::afw::math::Kernel>;
+// %template(convolve)             lsst::afw::math::convolve<boost::uint16_t, boost::uint16_t, lsst::afw::math::DeltaFunctionKernel>;
+// %template(convolve)             lsst::afw::math::convolve<boost::uint16_t, boost::uint16_t, lsst::afw::math::SeparableKernel>;
+// 
+// %template(convolveLinear)       lsst::afw::math::convolveLinear<double, double>;
+// %template(convolveLinear)       lsst::afw::math::convolveLinear<double, float>;
+// %template(convolveLinear)       lsst::afw::math::convolveLinear<float,  float>;
+// %template(convolveLinear)       lsst::afw::math::convolveLinear<boost::uint16_t, boost::uint16_t>;
 
 /******************************************************************************/
 // Local Variables: ***

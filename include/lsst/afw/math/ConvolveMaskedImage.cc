@@ -276,7 +276,8 @@ void lsst::afw::math::basicConvolve(
 ) {
     assert (!kernel.isSpatiallyVarying());
 
-    typedef typename lsst::afw::image::MaskedPixelAccessor<InPixelT, MaskPixelT> MIAccessorT;
+    typedef typename lsst::afw::image::MaskedPixelAccessor<InPixelT, MaskPixelT> InMaskedImageAccessor;
+    typedef typename lsst::afw::image::MaskedPixelAccessor<OutPixelT, MaskPixelT> OutMaskedImageAccessor;
     //
     // It's a pain to deal with unsigned ints when subtracting; so don't
     //
@@ -301,8 +302,8 @@ void lsst::afw::math::basicConvolve(
 
     // create input and output image accessors
     // and advance output accessor to lower left pixel that is set by convolution
-    MIAccessorT mImageRowAcc(maskedImage);
-    MIAccessorT cnvRowAcc(convolvedImage);
+    InMaskedImageAccessor mImageRowAcc(maskedImage);
+    OutMaskedImageAccessor cnvRowAcc(convolvedImage);
 
     if (rowOffset > 0) {
         mImageRowAcc.advance(0, rowOffset);
@@ -312,8 +313,8 @@ void lsst::afw::math::basicConvolve(
 
     lsst::pex::logging::Trace("lsst.afw.kernel.convolve", 3, "kernel is a spatially invariant delta function basis");
     for (int i = 0; i < nCopyRows; ++i, cnvRowAcc.nextRow(), mImageRowAcc.nextRow()) {
-        MIAccessorT mImageColAcc = mImageRowAcc;
-        MIAccessorT cnvColAcc = cnvRowAcc;
+        InMaskedImageAccessor mImageColAcc = mImageRowAcc;
+        OutMaskedImageAccessor cnvColAcc = cnvRowAcc;
         if (colOffset > 0) {
             mImageColAcc.advance(colOffset, 0);
         } else {
