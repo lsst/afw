@@ -8,6 +8,9 @@
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/math/KernelFunctions.h"
 
+namespace afwImage = lsst::afw::image;
+namespace afwMath = lsst::afw::math;
+
 int main(int argc, char **argv) {
     typedef float imageType;
     typedef double kernelType;
@@ -33,7 +36,7 @@ int main(int argc, char **argv) {
     }
     
     // read in fits file
-    lsst::afw::image::MaskedImage<imageType, lsst::afw::image::maskPixelType> mImage;
+    afwImage::MaskedImage<imageType, afwImage::maskPixelType> mImage;
     mImage.readFits(argv[1]);
     
     unsigned imCols = mImage.getCols();
@@ -51,21 +54,23 @@ int main(int argc, char **argv) {
     std::cout << std::endl;
     std::cout << "ImCols\tImRows\tKerCols\tKerRows\tMOps\tCnvSec\tMOpsPerSec" << std::endl;
     
+    afwImage::MaskedImage<imageType, afwImage::maskPixelType> resMImage(mImage.getCols(), mImage.getRows());
+    
     for (unsigned kSize = MinKernelSize; kSize <= MaxKernelSize; kSize += DeltaKernelSize) {
         // construct kernel
-        lsst::afw::math::GaussianFunction2<kernelType> gaussFunc(sigma, sigma);
-        lsst::afw::math::AnalyticKernel kernel(gaussFunc, kSize, kSize);
+        afwMath::GaussianFunction2<kernelType> gaussFunc(sigma, sigma);
+        afwMath::AnalyticKernel kernel(gaussFunc, kSize, kSize);
         
         clock_t startTime = clock();
         for (unsigned iter = 0; iter < nIter; ++iter) {
             // convolve
-            lsst::afw::image::MaskedImage<imageType, lsst::afw::image::maskPixelType>
-                resMImage = lsst::afw::math::convolve(mImage, kernel, EdgeMaskBit, true);
+            afwMath::convolve(resMImage, mImage, kernel, EdgeMaskBit, true);
         }
         double secPerIter = (clock() - startTime) / static_cast<double> (nIter * CLOCKS_PER_SEC);
         
         double mOps = static_cast<double>((imRows + 1 - kSize) * (imCols + 1 - kSize) * kSize * kSize) / 1.0e6;
         double mOpsPerSec = mOps / secPerIter;
-        std::cout << imCols << "\t" << imRows << "\t" << kSize << "\t" << kSize << "\t" << mOps << "\t" << secPerIter << "\t" << mOpsPerSec << std::endl;
+        std::cout << imCols << "\t" << imRows << "\t" << kSize << "\t" << kSize << "\t" << mOps
+            << "\t" << secPerIter << "\t" << mOpsPerSec << std::endl;
     }
 }

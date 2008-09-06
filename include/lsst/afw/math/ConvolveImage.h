@@ -77,7 +77,7 @@ namespace math {
     );
     
     template <typename InPixelT, typename KernelT>
-    lsst::afw::image::Image<InPixelT> convolve(
+    lsst::afw::image::Image<InPixelT> convolveNew(
         lsst::afw::image::Image<InPixelT> const &inImage,
         KernelT const &kernel,
         bool doNormalize
@@ -91,7 +91,7 @@ namespace math {
     );
 
     template <typename InPixelT>
-    lsst::afw::image::Image<InPixelT> convolveLinear(
+    lsst::afw::image::Image<InPixelT> convolveLinearNew(
         lsst::afw::image::Image<InPixelT> const &inImage,
         lsst::afw::math::LinearCombinationKernel const &kernel
     );

@@ -10,6 +10,8 @@
 
 using namespace std;
 namespace pexLog = lsst::pex::logging;
+namespace afwImage = lsst::afw::image;
+namespace afwMath = lsst::afw::math;
 
 const std::string outFile("svcOut");
 
@@ -46,14 +48,14 @@ int main(int argc, char **argv) {
     }
     
     // read in fits file
-    lsst::afw::image::MaskedImage<pixelType, lsst::afw::image::maskPixelType> mImage;
+    afwImage::MaskedImage<pixelType, afwImage::maskPixelType> mImage;
     mImage.readFits(argv[1]);
     
     // construct kernel
-    lsst::afw::math::GaussianFunction2<pixelType> gaussFunc(1, 1);
+    afwMath::GaussianFunction2<pixelType> gaussFunc(1, 1);
     unsigned int polyOrder = 1;
-    lsst::afw::math::PolynomialFunction2<double> polyFunc(polyOrder);
-    lsst::afw::math::AnalyticKernel gaussSpVarKernel(gaussFunc, kernelCols, kernelRows, polyFunc);
+    afwMath::PolynomialFunction2<double> polyFunc(polyOrder);
+    afwMath::AnalyticKernel gaussSpVarKernel(gaussFunc, kernelCols, kernelRows, polyFunc);
 
     // Get copy of spatial parameters (all zeros), set and feed back to the kernel
     vector<vector<double> > polyParams = gaussSpVarKernel.getSpatialParameters();
@@ -82,8 +84,8 @@ int main(int argc, char **argv) {
     cout << endl;
 
     // convolve
-    lsst::afw::image::MaskedImage<pixelType, lsst::afw::image::maskPixelType>
-        resMaskedImage = lsst::afw::math::convolve(mImage, gaussSpVarKernel, edgeMaskBit, true);
+    afwImage::MaskedImage<pixelType, afwImage::maskPixelType>
+        resMaskedImage = afwMath::convolveNew(mImage, gaussSpVarKernel, edgeMaskBit, true);
 
     // write results
     resMaskedImage.writeFits(outFile);

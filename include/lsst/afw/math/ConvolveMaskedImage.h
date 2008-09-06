@@ -80,7 +80,7 @@ namespace math {
     );
     
     template <typename InPixelT, typename MaskPixelT, typename KernelT>
-    lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> convolve(
+    lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> convolveNew(
         lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> const &maskedImage,
         KernelT const &kernel,
         int edgeBit,
@@ -96,7 +96,7 @@ namespace math {
     );
 
     template <typename InPixelT, typename MaskPixelT>
-    lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> convolveLinear(
+    lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> convolveLinearNew(
         lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> const &maskedImage,
         lsst::afw::math::LinearCombinationKernel const &kernel,
         int edgeBit

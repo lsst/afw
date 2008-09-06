@@ -377,7 +377,7 @@ void lsst::afw::math::convolve(
  * @ingroup afw
  */
 template <typename InPixelT, typename KernelT>
-lsst::afw::image::Image<InPixelT> lsst::afw::math::convolve(
+lsst::afw::image::Image<InPixelT> lsst::afw::math::convolveNew(
     lsst::afw::image::Image<InPixelT> const &inImage,    ///< image to convolve
     KernelT const &kernel,  ///< convolution kernel
     bool doNormalize        ///< if True, normalize the kernel, else use "as is"
@@ -500,7 +500,7 @@ void lsst::afw::math::convolveLinear(
  * @ingroup afw
  */
 template <typename InPixelT>
-lsst::afw::image::Image<InPixelT> lsst::afw::math::convolveLinear(
+lsst::afw::image::Image<InPixelT> lsst::afw::math::convolveLinearNew(
     lsst::afw::image::Image<InPixelT> const &inImage,       ///< image to convolve
     lsst::afw::math::LinearCombinationKernel const &kernel  ///< convolution kernel
 ) {

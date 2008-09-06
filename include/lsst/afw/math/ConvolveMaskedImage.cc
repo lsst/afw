@@ -441,7 +441,7 @@ void lsst::afw::math::convolve(
  * @ingroup afw
  */
 template <typename InPixelT, typename MaskPixelT, typename KernelT>
-lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> lsst::afw::math::convolve(
+lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> lsst::afw::math::convolveNew(
     lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> const &maskedImage,    ///< image to convolve
     KernelT const &kernel,              ///< convolution kernel
     int edgeBit,        ///< mask bit to indicate pixel includes edge-extended data;
@@ -573,7 +573,7 @@ void lsst::afw::math::convolveLinear(
  * @ingroup afw
  */
 template <typename InPixelT, typename MaskPixelT>
-lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> lsst::afw::math::convolveLinear(
+lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> lsst::afw::math::convolveLinearNew(
     lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> const &maskedImage,    ///< image to convolve
     lsst::afw::math::LinearCombinationKernel const &kernel,    ///< convolution kernel
     int edgeBit         ///< mask bit to indicate pixel includes edge-extended data;
