@@ -11,9 +11,11 @@
 
 using namespace std;
 const std::string outFile("scOut");
+namespace afwImage = lsst::afw::image;
+namespace afwMath = lsst::afw::math;
 
 int main(int argc, char **argv) {
-    typedef lsst::afw::math::Kernel::PixelT pixelType;
+    typedef afwMath::Kernel::PixelT pixelType;
     unsigned int kernelCols = 6;
     unsigned int kernelRows = 5;
     
@@ -46,16 +48,16 @@ int main(int argc, char **argv) {
         }
         
         // read in fits file
-        lsst::afw::image::MaskedImage<pixelType, lsst::afw::image::maskPixelType> mImage;
+        afwImage::MaskedImage<pixelType, afwImage::maskPixelType> mImage;
         mImage.readFits(argv[1]);
         
         // construct kernel
-        lsst::afw::math::GaussianFunction2<pixelType> gaussFunc(sigma, sigma);
-        lsst::afw::math::AnalyticKernel kernel(gaussFunc, kernelCols, kernelRows);
+        afwMath::GaussianFunction2<pixelType> gaussFunc(sigma, sigma);
+        afwMath::AnalyticKernel kernel(gaussFunc, kernelCols, kernelRows);
     
         // convolve
-        lsst::afw::image::MaskedImage<pixelType, lsst::afw::image::maskPixelType>
-            resMaskedImage = lsst::afw::math::convolve(mImage, kernel, edgeMaskBit, true);
+        afwImage::MaskedImage<pixelType, afwImage::maskPixelType>
+            resMaskedImage = afwMath::convolveNew(mImage, kernel, edgeMaskBit, true);
     
         // write results
         resMaskedImage.writeFits(outFile);

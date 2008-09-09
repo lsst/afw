@@ -134,9 +134,6 @@ def sameMaskPlaneDicts(maskedImageA, maskedImageB):
 class ConvolveTestCase(unittest.TestCase):
     def testUnityConvolution(self):
         """Verify that convolution with a centered delta function reproduces the original.
-
-        Note: the test for masks is disabled because at present afwMath.convolve
-        smears the mask. If that is changed in convolution then re-enable the mask test.
         """
         imCols = 45
         imRows = 55
@@ -156,16 +153,16 @@ class ConvolveTestCase(unittest.TestCase):
         kFunc = afwMath.IntegerDeltaFunction2D(0.0, 0.0)
         k = afwMath.AnalyticKernel(kFunc, 3, 3)
         
-        cnvMaskedImage = afwMath.convolve(maskedImage, k, edgeBit, True)
+        cnvMaskedImage = afwMath.convolveNew(maskedImage, k, edgeBit, True)
     
         origImVarMaskArrays = imTestUtils.arraysFromMaskedImage(maskedImage)
         cnvImVarMaskArrays = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
-        for name, ind in (("image", 0), ("variance", 1)): # , ("mask", 2)):
+        for name, ind in (("image", 0), ("variance", 1), ("mask", 2)):
             if not numpy.allclose(origImVarMaskArrays[ind], cnvImVarMaskArrays[ind]):
                 self.fail("Convolved %s does not match reference" % (name,))
 
     def testSpatiallyInvariantInPlaceConvolve(self):
-        """Test in-place version of convolve with a spatially invariant Gaussian function
+        """Test convolve with a spatially invariant Gaussian function
         """
         kCols = 6
         kRows = 7
@@ -229,7 +226,7 @@ class ConvolveTestCase(unittest.TestCase):
         maskedImage.getMask().setMaskPlaneValues(0, 5, 7, 5)
         
         for doNormalize in (False, True):
-            cnvMaskedImage = afwMath.convolve(maskedImage, k, edgeBit, doNormalize)
+            cnvMaskedImage = afwMath.convolveNew(maskedImage, k, edgeBit, doNormalize)
             cnvImage, cnvVariance, cnvMask = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
     
             imVarMask = imTestUtils.arraysFromMaskedImage(maskedImage)
@@ -385,7 +382,7 @@ class ConvolveTestCase(unittest.TestCase):
                         
                         if isFirst and Verbosity < 3:
                             pexLog.Trace_setVerbosity("lsst.afw", 3)
-                        refCnvMaskedImage = afwMath.convolve(maskedImage, kernel, edgeBit, doNormalize)
+                        refCnvMaskedImage = afwMath.convolveNew(maskedImage, kernel, edgeBit, doNormalize)
                         if isFirst:
                             pexLog.Trace_setVerbosity("lsst.afw", Verbosity)
                             isFirst = False
@@ -397,16 +394,16 @@ class ConvolveTestCase(unittest.TestCase):
                            refConvolve(imVarMask, kernel, edgeBit, doNormalize, True)
                 
                         if not numpy.allclose(refCnvImage, ref2CnvImage):
-                            self.fail("Image from afwMath.convolve does not match image from refConvolve")
+                            self.fail("Image from afwMath.convolveNew does not match image from refConvolve")
                         if not numpy.allclose(refCnvVariance, ref2CnvVariance):
-                            self.fail("Variance from afwMath.convolve does not match image from refConvolve")
+                            self.fail("Variance from afwMath.convolveNew does not match image from refConvolve")
                         if not numpy.allclose(refCnvMask, ref2CnvMask):
-                            self.fail("Mask from afwMath.convolve does not match image from refCconvolve")
+                            self.fail("Mask from afwMath.convolveNew does not match image from refCconvolve")
         
 
     def testConvolveLinear(self):
         """Test convolution with a spatially varying LinearCombinationKernel
-        by comparing the results of convolveLinear to afwMath.convolve or refConvolve,
+        by comparing the results of afwMath.convolveLinear to afwMath.convolveNew or refConvolve,
         depending on the value of compareToFwConvolve.
         """
         kCols = 5
@@ -441,7 +438,7 @@ class ConvolveTestCase(unittest.TestCase):
         lcKernel = afwMath.LinearCombinationKernel(kVec, sFunc)
         lcKernel.setSpatialParameters(sParams)
 
-        refCnvMaskedImage = afwMath.convolve(maskedImage, lcKernel, edgeBit, doNormalize)
+        refCnvMaskedImage = afwMath.convolveNew(maskedImage, lcKernel, edgeBit, doNormalize)
         refCnvImage, refCnvVariance, refCnvMask = \
             imTestUtils.arraysFromMaskedImage(refCnvMaskedImage)
 
@@ -450,11 +447,11 @@ class ConvolveTestCase(unittest.TestCase):
            refConvolve(imVarMask, lcKernel, edgeBit, doNormalize)
 
         if not numpy.allclose(refCnvImage, ref2CnvImage):
-            self.fail("Image from afwMath.convolve does not match image from refConvolve")
+            self.fail("Image from afwMath.convolveNew does not match image from refConvolve")
         if not numpy.allclose(refCnvVariance, ref2CnvVariance):
-            self.fail("Variance from afwMath.convolve does not match image from refConvolve")
+            self.fail("Variance from afwMath.convolveNew does not match image from refConvolve")
         if not numpy.allclose(refCnvMask, ref2CnvMask):
-            self.fail("Mask from afwMath.convolve does not match image from refCconvolve")
+            self.fail("Mask from afwMath.convolveNew does not match image from refCconvolve")
 
         # compute twice, to be sure cnvMaskedImage is properly reset
         cnvMaskedImage = afwImage.MaskedImageF(imCols, imRows)
@@ -472,7 +469,7 @@ class ConvolveTestCase(unittest.TestCase):
                 "Convolved mask dictionary does not match input for doNormalize=%s" % doNormalize)
 
     def testConvolveLinearNewImage(self):
-        """Test variant of convolveLinear that returns a new image
+        """Test convolveLinearNew
         """
         kCols = 5
         kRows = 5
@@ -506,7 +503,7 @@ class ConvolveTestCase(unittest.TestCase):
         lcKernel = afwMath.LinearCombinationKernel(kVec, sFunc)
         lcKernel.setSpatialParameters(sParams)
 
-        refCnvMaskedImage = afwMath.convolve(maskedImage, lcKernel, edgeBit, doNormalize)
+        refCnvMaskedImage = afwMath.convolveNew(maskedImage, lcKernel, edgeBit, doNormalize)
         refCnvImage, refCnvVariance, refCnvMask = \
             imTestUtils.arraysFromMaskedImage(refCnvMaskedImage)
 
@@ -515,15 +512,15 @@ class ConvolveTestCase(unittest.TestCase):
            refConvolve(imVarMask, lcKernel, edgeBit, doNormalize)
 
         if not numpy.allclose(refCnvImage, ref2CnvImage):
-            self.fail("Image from afwMath.convolve does not match image from refConvolve")
+            self.fail("Image from afwMath.convolveNew does not match image from refConvolve")
         if not numpy.allclose(refCnvVariance, ref2CnvVariance):
-            self.fail("Variance from afwMath.convolve does not match image from refConvolve")
+            self.fail("Variance from afwMath.convolveNew does not match image from refConvolve")
         if not numpy.allclose(refCnvMask, ref2CnvMask):
-            self.fail("Mask from afwMath.convolve does not match image from refCconvolve")
+            self.fail("Mask from afwMath.convolveNew does not match image from refCconvolve")
 
         # compute twice, to be sure cnvMaskedImage is properly reset
         for ii in range(2):        
-            cnvMaskedImage = afwMath.convolveLinear(maskedImage, lcKernel, edgeBit)
+            cnvMaskedImage = afwMath.convolveLinearNew(maskedImage, lcKernel, edgeBit)
             cnvImage, cnvVariance, cnvMask = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
     
             if not numpy.allclose(cnvImage, ref2CnvImage):
