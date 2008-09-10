@@ -229,7 +229,7 @@ class MaskTestCase(unittest.TestCase):
 
         self.testMask.clearMaskPlane(planes['CR'])
 
-        self.testMask.replaceSubMask(self.region, self.subTestMask)
+        self.testMask.replaceSubMask(self.region, self.subTestMask.get())
 
         printMaskPlane(self.testMask, planes['CR'], range(90, 120), range(295, 350, 5))
 

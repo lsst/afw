@@ -122,9 +122,12 @@ namespace image {
         // SubImage functions
 
         MaskedImagePtrT getSubImage(const vw::BBox2i &region) const;
+
+        void replaceSubImage(const vw::BBox2i &region, const MaskedImage &insertImage,
+            const bool replaceMask, const bool replaceImage, const bool replaceVariance);
         
-        void replaceSubImage(const vw::BBox2i &region, MaskedImagePtrT insertImage, const bool replaceMask, const bool replaceImage,
-            const bool replaceVariance);
+        void replaceSubImage(const vw::BBox2i &region, MaskedImagePtrT insertImage,
+            const bool replaceMask, const bool replaceImage, const bool replaceVariance);
 
         // Variance functions
         

@@ -125,7 +125,7 @@ int test(int argc, char**argv) {
     subMaskedImagePtr1->writeFits(argv[4]);
 
 
-    testMaskedImage1.replaceSubImage(region, subMaskedImagePtr1, true, true, true);
+    testMaskedImage1.replaceSubImage(region, *subMaskedImagePtr1, true, true, true);
 
     // Check whether offsets have been correctly saved
 

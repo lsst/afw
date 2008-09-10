@@ -51,9 +51,11 @@ namespace image {
         
         lsst::daf::base::DataProperty::PtrType getMetaData() const;
         
-        ImagePtrT getSubImage(const vw::BBox2i imageRegion) const;
+        ImagePtrT getSubImage(const vw::BBox2i &region) const;
         
-        void replaceSubImage(const vw::BBox2i imageRegion, ImagePtrT insertImage);
+        void replaceSubImage(const vw::BBox2i &region, const Image &insertImage);
+
+        void replaceSubImage(const vw::BBox2i &region, ImagePtrT insertImagePtr);
 
         ImageChannelT operator ()(int x, int y) const {
             return (*_vwImagePtr)(x, y);
