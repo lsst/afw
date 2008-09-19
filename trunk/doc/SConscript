@@ -1,5 +1,0 @@
-# -*- python -*-
-Import('env')
-
-doxy = env.Doxygen("doxygen.conf")
-env.Depends(doxy, "../include/lsst/afw/image/ImageExceptions.h")

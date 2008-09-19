@@ -1,6 +1,0 @@
-# -*- python -*-
-Import("env")
-
-env.CheckSwig("python", ilang="c++", includedProducts="utils")
-env.LoadableModuleIncomplete("_xpa", ["xpa.i"], LIBS = ["xpa"])
-env.LoadableModuleIncomplete("_displayLib", Split("displayLib.i simpleFits.cc"), LIBS=env.getlibs("afw"))
