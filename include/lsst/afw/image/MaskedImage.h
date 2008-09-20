@@ -134,10 +134,10 @@ namespace image {
         void setDefaultVariance();
         
         // Operators
-        MaskedImage& operator+=( MaskedImage & maskedImageInput);
-        MaskedImage& operator-=( MaskedImage & maskedImageInput);
-        MaskedImage& operator*=( MaskedImage & maskedImageInput);
-        MaskedImage& operator/=( MaskedImage & maskedImageInput);
+        MaskedImage& operator+=( const MaskedImage & maskedImageInput);
+        MaskedImage& operator-=( const MaskedImage & maskedImageInput);
+        MaskedImage& operator*=( const MaskedImage & maskedImageInput);
+        MaskedImage& operator/=( const MaskedImage & maskedImageInput);
         MaskedImage& operator += (const ImagePixelT scalar);
         MaskedImage& operator -= (const ImagePixelT scalar);
         MaskedImage& operator *= (const ImagePixelT scalar);

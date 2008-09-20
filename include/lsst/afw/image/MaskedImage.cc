@@ -323,7 +323,7 @@ void lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::setDefaultVariance(
 
 template<typename ImagePixelT, typename MaskPixelT> 
 lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>&
-lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::operator+=(MaskedImage<ImagePixelT, MaskPixelT>& maskedImageInput) {
+lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::operator+=(const MaskedImage<ImagePixelT, MaskPixelT>& maskedImageInput) {
     *_maskPtr |= *(maskedImageInput.getMask());
     *_imagePtr += *(maskedImageInput.getImage());
     *_variancePtr += *(maskedImageInput.getVariance());
@@ -332,7 +332,7 @@ lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::operator+=(MaskedImage<I
 
 template<typename ImagePixelT, typename MaskPixelT> 
 lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>&
-lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::operator-=(MaskedImage<ImagePixelT, MaskPixelT>& maskedImageInput) {
+lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::operator-=(const MaskedImage<ImagePixelT, MaskPixelT>& maskedImageInput) {
     *_maskPtr |= *(maskedImageInput.getMask());
     *_imagePtr -= *(maskedImageInput.getImage());
     *_variancePtr += *(maskedImageInput.getVariance());
@@ -341,7 +341,7 @@ lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::operator-=(MaskedImage<I
 
 template<typename ImagePixelT, typename MaskPixelT> 
 lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>&
-lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::operator*=(MaskedImage<ImagePixelT, MaskPixelT>& maskedImageInput) {
+lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::operator*=(const MaskedImage<ImagePixelT, MaskPixelT>& maskedImageInput) {
     
     *_maskPtr |= *(maskedImageInput.getMask());
     *_imagePtr *= *(maskedImageInput.getImage());
@@ -357,7 +357,7 @@ lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::operator*=(MaskedImage<I
 
 template<typename ImagePixelT, typename MaskPixelT> 
 lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>&
-lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::operator/=(MaskedImage<ImagePixelT, MaskPixelT>& maskedImageInput) {
+lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::operator/=(const MaskedImage<ImagePixelT, MaskPixelT>& maskedImageInput) {
     *_maskPtr |= *(maskedImageInput.getMask());
     *_imagePtr /= *(maskedImageInput.getImage());
     return *this;
@@ -365,21 +365,21 @@ lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::operator/=(MaskedImage<I
 
 template<typename ImagePixelT, typename MaskPixelT> 
 lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>&
-lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::operator+=(ImagePixelT scalar) {
+lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::operator+=(const ImagePixelT scalar) {
     *_imagePtr += scalar;
     return *this;
 }
 
 template<typename ImagePixelT, typename MaskPixelT> 
 lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>&
-lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::operator-=(ImagePixelT scalar) {
+lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::operator-=(const ImagePixelT scalar) {
     *_imagePtr -= scalar;
     return *this;
 }
 
 template<typename ImagePixelT, typename MaskPixelT> 
 lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>&
-lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::operator*=(ImagePixelT scalar) {
+lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::operator*=(const ImagePixelT scalar) {
     *_imagePtr *= scalar;
     *_variancePtr *= scalar*scalar;
     return *this;
@@ -387,7 +387,7 @@ lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::operator*=(ImagePixelT s
 
 template<typename ImagePixelT, typename MaskPixelT> 
 lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>&
-lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::operator/=(ImagePixelT scalar) {
+lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT>::operator/=(const ImagePixelT scalar) {
     *_imagePtr /= scalar;
     *_variancePtr /= scalar*scalar;
     return *this;
