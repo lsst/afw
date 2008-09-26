@@ -139,9 +139,11 @@ namespace image {
 
         // SubMask ops
 
-        MaskPtrT getSubMask(const vw::BBox2i maskRegion) const;
+        MaskPtrT getSubMask(const vw::BBox2i &region) const;
         
-        void replaceSubMask(const vw::BBox2i maskRegion, MaskPtrT insertMask);
+        void replaceSubMask(const vw::BBox2i &region, const Mask &insertMask);
+        
+        void replaceSubMask(const vw::BBox2i &region, MaskPtrT insertMask);
         
         pixel_accessor origin() const { return getIVwPtr()->origin(); }
         

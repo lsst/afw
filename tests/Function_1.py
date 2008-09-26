@@ -89,11 +89,18 @@ class FunctionTestCase(unittest.TestCase):
         f = afwMath.GaussianFunction1D(1.0)
         for xsigma in (0.1, 1.0, 3.0):
             f.setParameters((xsigma,))
-            for x in numpy.arange(-10.0, 10.1, 0.25):
+            xdelta = xsigma / 10.0
+            sum = 0.0
+            for x in numpy.arange(-xsigma * 20, xsigma * 20.01, xdelta):
                 predVal = basicGaussian(x, xsigma)
+                sum += predVal
                 if not numpy.allclose(predVal, f(x)):
                     self.fail("%s = %s != %s for x=%s, xsigma=%s" % \
                         (f.__class__.__name__, f(x), predVal, x, xsigma))
+            approxArea = sum * xdelta
+            if not numpy.allclose(approxArea, 1.0):
+                self.fail("%s area = %s != 1.0 for xsigma=%s" % \
+                    (f.__class__.__name__, approxArea, xsigma))
 
     def testGaussianFunction2D(self):
         """A test for GaussianFunction2D
@@ -107,12 +114,53 @@ class FunctionTestCase(unittest.TestCase):
                 f.setParameters((xsigma, ysigma))
                 fx.setParameters((xsigma,))
                 fy.setParameters((ysigma,))
-                for y in numpy.arange(-2.5, 2.55, 0.5):
-                    for x in numpy.arange(-10.0, 10.1, 2.0):
+                sum = 0.0
+                xdelta = xsigma / 5.0
+                ydelta = ysigma / 5.0
+                for y in numpy.arange(-ysigma * 5, ysigma * 5.01, ydelta):
+                    for x in numpy.arange(-xsigma * 5.0, xsigma * 5.01, xdelta):
                         predVal = fx(x) * fy(y)
+                        sum += predVal
                         if not numpy.allclose(predVal, f(x,y)):
                             self.fail("%s = %s != %s for x=%s, y=%s, xsigma=%s, ysigma=%s" % \
                                 (f.__class__.__name__, f(x,y), predVal, x, y, xsigma, ysigma))
+                approxArea = sum * xdelta * ydelta
+                if not numpy.allclose(approxArea, 1.0):
+                    self.fail("%s area = %s != 1.0 for xsigma=%s, ysigma=%s" % \
+                        (f.__class__.__name__, approxArea, xsigma, ysigma))
+    
+    def testDoubleGaussianFunction2D(self):
+        """A test for DoubleGaussianFunction2D
+        Assumes GaussianFunction2D is correct (test it elsewhere)
+        """
+        f = afwMath.DoubleGaussianFunction2D(1.0, 1.0)
+        f1 = afwMath.GaussianFunction2D(1.0, 1.0)
+        f2 = afwMath.GaussianFunction2D(1.0, 1.0)
+        for sigma1 in (1.0,):
+            for sigma2 in (0.5, 2.0):
+                for b in (0.0, 0.2, 2.0):
+                    f.setParameters((sigma1, sigma2, b))
+                    f1.setParameters((sigma1, sigma1))
+                    f2.setParameters((sigma2, sigma2))
+                    sigma1Sq = sigma1**2
+                    sigma2Sq = sigma2**2
+                    f1Mult = b * sigma2Sq / sigma1Sq
+                    allMult = sigma1Sq / (sigma1Sq + (b * sigma2Sq))
+                    sum = 0.0
+                    maxsigma = max(sigma1, sigma2)
+                    minsigma = min(sigma1, sigma2)
+                    delta = minsigma / 5.0
+                    for y in numpy.arange(-maxsigma * 5, maxsigma * 5.01, delta):
+                        for x in numpy.arange(-maxsigma * 5.0, maxsigma * 5.01, delta):
+                            predVal = (f1(x, y) + (f1Mult * f2(x, y))) * allMult
+                            sum += predVal
+                            if not numpy.allclose(predVal, f(x,y)):
+                                self.fail("%s = %s != %s for x=%s, y=%s, sigma1=%s, sigma2=%s, b=%s" % \
+                                    (f.__class__.__name__, f(x,y), predVal, x, y, sigma1, sigma2, b))
+                    approxArea = sum * delta**2
+                    if not numpy.allclose(approxArea, 1.0):
+                        self.fail("%s area = %s != 1.0 for sigma1=%s, sigma2=%s" % \
+                            (f.__class__.__name__, approxArea, sigma1, sigma2))
     
     def testIntegerDeltaFunction2D(self):
         """A test for IntegerDeltaFunction2D"""

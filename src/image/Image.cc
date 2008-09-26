@@ -95,20 +95,17 @@ lsst::daf::base::DataProperty::PtrType Image<ImagePixelT>::getMetaData() const {
 
 template<typename ImagePixelT>
 typename Image<ImagePixelT>::ImagePtrT
-Image<ImagePixelT>::getSubImage(const vw::BBox2i imageRegion) const {
-
-
-    // Check that imageRegion is completely inside the image
-    
+Image<ImagePixelT>::getSubImage(const vw::BBox2i &region) const {
+    // Check that region is completely inside the image
     vw::BBox2i imageBoundary(0, 0, getCols(), getRows());
-    if (!imageBoundary.contains(imageRegion)) {
+    if (!imageBoundary.contains(region)) {
         throw lsst::pex::exceptions::InvalidParameter(boost::format("getSubImage region not contained within Image"));
     }
 
     ImageIVwPtrT croppedImage(new ImageIVwT());
-    *croppedImage = copy(crop(*_vwImagePtr, imageRegion));
+    *croppedImage = copy(crop(*_vwImagePtr, region));
     ImagePtrT newImage(new Image<ImagePixelT>(croppedImage));
-    vw::Vector<int, 2> bboxOffset = imageRegion.min();
+    vw::Vector<int, 2> bboxOffset = region.min();
     newImage->setOffsetRows(bboxOffset[1] + _offsetRows);
     newImage->setOffsetCols(bboxOffset[0] + _offsetCols);
 
@@ -135,17 +132,39 @@ Image<ImagePixelT>::getSubImage(const vw::BBox2i imageRegion) const {
 }
 
 /**
- * @brief Given a Image, insertImage, place it into this Image as directed by maskRegion.
+ * @brief Replace pixels in a region
  *
- * @throw lsst::pex::exceptions::Runtime if maskRegion is not of the same size as insertImage.
+ * Replace pixels in a region by copying pixels from another Image.
+ *
+ * @throw lsst::pex::exceptions::Runtime if region not same size as insertImage
  */
 template<typename ImagePixelT>
-void Image<ImagePixelT>::replaceSubImage(const vw::BBox2i maskRegion, ImagePtrT insertImage) {
+void Image<ImagePixelT>::replaceSubImage(
+    const vw::BBox2i &region,   ///< region to replace
+    const Image &insertImage    ///< replacement data
+) {
     try {
-        crop(*_vwImagePtr, maskRegion) = *(insertImage->getIVwPtr());
+        crop(*_vwImagePtr, region) = *(insertImage.getIVwPtr());
     } catch (std::exception eex) {
         throw lsst::pex::exceptions::Runtime(std::string("in ") + __func__);
     } 
+}
+
+/**
+ * @brief Replace pixels in a region
+ *
+ * Replace pixels in a region by copying pixels from another Image.
+ *
+ * @deprecated use the version that takes an Image instead of a pointer to an Image
+ *
+ * @throw lsst::pex::exceptions::Runtime if region not same size as insertImage
+ */
+template<typename ImagePixelT>
+void Image<ImagePixelT>::replaceSubImage(
+    const vw::BBox2i &region,   ///< region to replace
+    ImagePtrT insertImagePtr    ///< pointer to replacement data
+) {
+    return replaceSubImage(region, *insertImagePtr);
 }
 
 template<typename ImagePixelT>

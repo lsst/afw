@@ -2,7 +2,6 @@
 import sys
 Import('env')
 
-env.Program(["generate.cc"], LIBS=env.getlibs("vw boost"))
 env.Program(["vwconvert.cc"], LIBS=env.getlibs("vw boost"))
 env.Program(["fitsio.cc"], LIBS=env.getlibs("afw"))
 env.Program("maskedImageFitsIO", ["maskedImageFitsIO.cc"], LIBS=env.getlibs("afw"))
@@ -37,7 +36,7 @@ env.Program("wcsTest", ["wcsTest.cc"], LIBS=env.getlibs("afw wcs"))
 if False:
     import lsst.tests
     tests = lsst.tests.Control(env, ignoreList=[
-        "fitsio", "generate", "vwconvert", "maskedImageFitsIO",
+        "fitsio", "vwconvert", "maskedImageFitsIO",
         "convolveLinear", "simpleConvolve", "spatiallyVaryingConvolve",
         "timeConvolve", "timeSpatiallyVaryingConvolve",
     ])

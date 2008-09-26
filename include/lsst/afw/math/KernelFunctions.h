@@ -19,90 +19,15 @@
  *
  * @ingroup afw
  */
-#include "vw/Image.h"
-#include "vw/Math/BBox.h"
 
-#include "lsst/afw/image/Image.h"
-#include "lsst/afw/image/MaskedImage.h"
-#include "lsst/afw/image/PixelAccessors.h"
 #include "lsst/afw/math/Kernel.h"
+
+#include "lsst/afw/math/ConvolveImage.h"
+#include "lsst/afw/math/ConvolveMaskedImage.h"
 
 namespace lsst {
 namespace afw {
 namespace math {
-
-    template <typename ImagePixelT, typename MaskPixelT>
-    inline void apply(
-        lsst::afw::image::MaskedPixelAccessor<ImagePixelT, MaskPixelT> &outAccessor,
-        lsst::afw::image::MaskedPixelAccessor<ImagePixelT, MaskPixelT> const &imageAccessor,
-        typename lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::pixel_accessor const &kernelAccessor,
-        unsigned int cols,
-        unsigned int rows
-    );
-    
-    template <typename ImagePixelT, typename MaskPixelT>
-    inline void apply(
-        lsst::afw::image::MaskedPixelAccessor<ImagePixelT, MaskPixelT> &outAccessor,
-        lsst::afw::image::MaskedPixelAccessor<ImagePixelT, MaskPixelT> const &imageAccessor,
-        std::vector<lsst::afw::math::Kernel::PixelT> const &kernelColList,
-        std::vector<lsst::afw::math::Kernel::PixelT> const &kernelRowList
-    );
-    
-    template <typename ImagePixelT, typename MaskPixelT>
-    void basicConvolve(
-        lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT> &convolvedImage,
-        lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT> const &maskedImage,
-        lsst::afw::math::Kernel const &kernel,
-        bool doNormalize
-    );
-    
-    template <typename ImagePixelT, typename MaskPixelT>
-    void basicConvolve(
-        lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT> &convolvedImage,
-        lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT> const &maskedImage,
-        lsst::afw::math::DeltaFunctionKernel const &kernel,
-        bool doNormalize
-    );
-    
-    template <typename ImagePixelT, typename MaskPixelT>
-    void basicConvolve(
-        lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT> &convolvedImage,
-        lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT> const &maskedImage,
-        lsst::afw::math::SeparableKernel const &kernel,
-        bool doNormalize
-    );
-    
-    template <typename ImagePixelT, typename MaskPixelT, typename KernelT>
-    void convolve(
-        lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT> &convolvedImage,
-        lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT> const &maskedImage,
-        KernelT const &kernel,
-        int edgeBit,
-        bool doNormalize
-    );
-    
-    template <typename ImagePixelT, typename MaskPixelT, typename KernelT>
-    lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT> convolve(
-        lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT> const &maskedImage,
-        KernelT const &kernel,
-        int edgeBit,
-        bool doNormalize
-    );
-
-    template <typename ImagePixelT, typename MaskPixelT>
-    void convolveLinear(
-        lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT> &convolvedImage,
-        lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT> const &maskedImage,
-        lsst::afw::math::LinearCombinationKernel const &kernel,
-        int edgeBit
-    );
-
-    template <typename ImagePixelT, typename MaskPixelT>
-    lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT> convolveLinear(
-        lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT> const &maskedImage,
-        lsst::afw::math::LinearCombinationKernel const &kernel,
-        int edgeBit
-    );
 
     void printKernel(
         lsst::afw::math::Kernel const &kernel,
@@ -113,9 +38,5 @@ namespace math {
     );
 
 }}}   // lsst::afw::math
-    
-#ifndef SWIG // don't bother SWIG with .cc files
-#include "lsst/afw/math/KernelFunctions.cc"
-#endif
 
 #endif // !defined(LSST_AFW_MATH_KERNELFUNCTIONS_H)

@@ -400,19 +400,19 @@ int Mask<MaskPixelT>::countMask(
 }
 
 template<typename MaskPixelT>
-typename Mask<MaskPixelT>::MaskPtrT Mask<MaskPixelT>::getSubMask(const vw::BBox2i maskRegion) const {
+typename Mask<MaskPixelT>::MaskPtrT Mask<MaskPixelT>::getSubMask(const vw::BBox2i &region) const {
 
-    // Check that maskRegion is completely inside the mask
+    // Check that region is completely inside the mask
     
     vw::BBox2i maskBoundary(0, 0, getCols(), getRows());
-    if (!maskBoundary.contains(maskRegion)) {
+    if (!maskBoundary.contains(region)) {
         throw lsst::pex::exceptions::InvalidParameter(boost::format("getSubMask region not contained within Mask"));
     }
 
     MaskIVwPtrT croppedMask(new MaskIVwT());
-    *croppedMask = copy(crop(*_vwImagePtr, maskRegion));
+    *croppedMask = copy(crop(*_vwImagePtr, region));
     MaskPtrT newMask(new Mask<MaskPixelT>(croppedMask));
-    vw::Vector<int, 2> bboxOffset = maskRegion.min();
+    vw::Vector<int, 2> bboxOffset = region.min();
     newMask->setOffsetRows(bboxOffset[1] + _offsetRows);
     newMask->setOffsetCols(bboxOffset[0] + _offsetCols);
 
@@ -424,20 +424,43 @@ typename Mask<MaskPixelT>::MaskPtrT Mask<MaskPixelT>::getSubMask(const vw::BBox2
 }
 
 /**
- * @brief Given a Mask, insertMask, place it into this Mask as directed by maskRegion.
+ * @brief Replace pixels in a region.
  *
- * @throw lsst::pex::exceptions::Exception if maskRegion is not of the same size as insertMask.
+ * Replace pixels in a region by copying pixels from another Mask.
  *
- * Maybe generate an exception if offsets are not consistent?
+ * @throw lsst::pex::exceptions::Runtime if region is not of the same size as insertMask.
+ *
+ * @todo Maybe generate an exception if offsets are not consistent?
  */
 template<typename MaskPixelT>
-void Mask<MaskPixelT>::replaceSubMask(const vw::BBox2i maskRegion, MaskPtrT insertMask)
-{
+void Mask<MaskPixelT>::replaceSubMask(
+    const vw::BBox2i &region,   ///< region to replace
+    const Mask &insertMask      ///< replacement data
+) {
     try {
-        crop(*_vwImagePtr, maskRegion) = *(insertMask->_vwImagePtr);
+        crop(*_vwImagePtr, region) = *(insertMask.getIVwPtr());
     } catch (std::exception eex) {
         throw lsst::pex::exceptions::Runtime(std::string("in ") + __func__);
     } 
+}
+
+/**
+ * @brief Replace pixels in a region.
+ *
+ * Replace pixels in a region by copying pixels from another Mask.
+ *
+ * @deprecated use the version that takes a Mask instead of a pointer to a Mask
+ *
+ * @throw lsst::pex::exceptions::Runtime if region is not of the same size as insertMask.
+ *
+ * @todo Maybe generate an exception if offsets are not consistent?
+ */
+template<typename MaskPixelT>
+void Mask<MaskPixelT>::replaceSubMask(
+    const vw::BBox2i &region,   ///< region to replace
+    MaskPtrT insertMaskPtr      ///< pointer to replacement data
+) {
+    replaceSubMask(region, *insertMaskPtr);
 }
 
 template<typename MaskPixelT>

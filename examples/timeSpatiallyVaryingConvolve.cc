@@ -9,6 +9,9 @@
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/math/KernelFunctions.h"
 
+namespace afwImage = lsst::afw::image;
+namespace afwMath = lsst::afw::math;
+
 /**
  * Time convolution with a spatially varying kernel
  *
@@ -42,17 +45,19 @@ int main(int argc, char **argv) {
     }
     
     // read in fits file
-    lsst::afw::image::MaskedImage<imageType, lsst::afw::image::maskPixelType> mImage;
+    afwImage::MaskedImage<imageType, afwImage::maskPixelType> mImage;
     mImage.readFits(argv[1]);
     
     std::cout << "Image is " << mImage.getCols() << " by " << mImage.getRows() << std::endl;
     
+    afwImage::MaskedImage<imageType, afwImage::maskPixelType> resMImage(mImage.getCols(), mImage.getRows());
+    
     for (unsigned int kSize = MinKernelSize; kSize <= MaxKernelSize; kSize += DeltaKernelSize) {
         // construct kernel
-        lsst::afw::math::GaussianFunction2<kernelType> gaussFunc(1, 1);
+        afwMath::GaussianFunction2<kernelType> gaussFunc(1, 1);
         unsigned int polyOrder = 1;
-        lsst::afw::math::PolynomialFunction2<double> polyFunc(polyOrder);
-        lsst::afw::math::AnalyticKernel gaussSpVarKernel(gaussFunc, kSize, kSize, polyFunc);
+        afwMath::PolynomialFunction2<double> polyFunc(polyOrder);
+        afwMath::AnalyticKernel gaussSpVarKernel(gaussFunc, kSize, kSize, polyFunc);
     
         // get copy of spatial parameters (all zeros), set and feed back to the kernel
         std::vector<std::vector<double> > polyParams = gaussSpVarKernel.getSpatialParameters();
@@ -67,8 +72,7 @@ int main(int argc, char **argv) {
         clock_t startTime = clock();
         for (unsigned int iter = 0; iter < nIter; ++iter) {
             // convolve
-            lsst::afw::image::MaskedImage<imageType, lsst::afw::image::maskPixelType>
-                resMImage = lsst::afw::math::convolve(mImage, gaussSpVarKernel, EdgeMaskBit, true);
+            afwMath::convolve(resMImage, mImage, gaussSpVarKernel, EdgeMaskBit, true);
         }
         double secPerIter = (clock() - startTime) / static_cast<double> (nIter * CLOCKS_PER_SEC);
         std::cout << secPerIter << " sec/convolution for a " << kSize << " by " << kSize << " kernel" << std::endl;
