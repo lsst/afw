@@ -17,9 +17,6 @@
  *
  * @ingroup afw
  */
-#include "vw/Image.h"
-#include "vw/Math/BBox.h"
-
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/Kernel.h"
 

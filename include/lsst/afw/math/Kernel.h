@@ -17,7 +17,6 @@
 #include "boost/static_assert.hpp"
 #include "boost/type_traits/is_same.hpp"
 #include "boost/type_traits/is_base_and_derived.hpp"
-#include "vw/Image.h"
 
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/afw/image/Image.h"
