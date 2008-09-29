@@ -27,8 +27,8 @@ namespace math {
     template <typename OutPixelT, typename InPixelT>
     inline void apply(
         OutPixelT &outPixel,
-        typename lsst::afw::image::Image<InPixelT>::pixel_accessor const &imageAccessor,
-        typename lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::pixel_accessor const &kernelAccessor,
+        typename lsst::afw::image::Image<InPixelT>::xy_locator const &imageAccessor,
+        typename lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::const_xy_locator const &kernelAccessor,
         unsigned int cols,
         unsigned int rows
     );
@@ -36,7 +36,7 @@ namespace math {
     template <typename OutPixelT, typename InPixelT>
     inline void apply(
         OutPixelT &outPixel,
-        typename lsst::afw::image::Image<InPixelT>::pixel_accessor const &imageAccessor,
+        typename lsst::afw::image::Image<InPixelT>::xy_locator const &imageAccessor,
         std::vector<lsst::afw::math::Kernel::PixelT> const &kernelColList,
         std::vector<lsst::afw::math::Kernel::PixelT> const &kernelRowList
     );

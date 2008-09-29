@@ -257,6 +257,18 @@ namespace math {
             return std::string("Function2: ") + Function<ReturnT>::toString();
         };
     };
+    /**
+     * @brief a class used in function calls to indicate that no Function2 is being provided
+     */
+    template<typename ReturnT>
+    class NullFunction2 : public Function2<ReturnT> {
+    public:
+        explicit NullFunction2() : Function2<ReturnT>(0) {}
+        typename Function2<ReturnT>::Ptr copy() const { return typename Function2<ReturnT>::Ptr(new NullFunction2()); }
+
+    private:
+        ReturnT operator() (double x, double y) const;
+    };
 
 }}}   // lsst::afw::math
 

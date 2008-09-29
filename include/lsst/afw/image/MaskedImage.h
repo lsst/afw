@@ -2,12 +2,10 @@
 ///////////////////////////////////////////////////////////
 //  MaskedImage.h
 //  Implementation of the Class MaskedImage
-//  Created on:      23-Feb-2007 16:23:06
-//  Original author: Tim Axelrod
 ///////////////////////////////////////////////////////////
 
-#ifndef LSST_MASKEDIMAGE_H
-#define LSST_MASKEDIMAGE_H
+#ifndef LSST_IMAGE_MASKEDIMAGE_H
+#define LSST_IMAGE_MASKEDIMAGE_H
 
 #include <list>
 #include <map>
@@ -20,9 +18,9 @@
 
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/daf/base/Persistable.h"
-//#include "lsst/afw/formatters/MaskedImageFormatter.h"
-#include "lsst/gil/Image.h"
-#include "lsst/gil/Mask.h"
+#include "lsst/afw/formatters/MaskedImageFormatter.h"
+#include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/Mask.h"
 
 namespace lsst {
 namespace afw {
@@ -148,31 +146,42 @@ namespace image {
         class maskedImageLocatorBase {
             typedef typename boost::tuple<ImageLocator, MaskLocator, VarianceLocator> IMVLocator;
 
-            class _iterator_base {
+            class _x_iterator {
             public:
-                _iterator_base(maskedImageLocatorBase* mil) : _mil(mil) {}
+                _x_iterator(maskedImageLocatorBase* mil) : _mil(mil) {}
+
+                void operator+=(const int di) {
+                    _mil->_loc.template get<0>().x() += di;
+                    _mil->_loc.template get<1>().x() += di;
+                    _mil->_loc.template get<2>().x() += di;
+                }
+
+                void operator++() {     // prefix
+                    ++_mil->_loc.template get<0>().x();
+                    ++_mil->_loc.template get<1>().x();
+                    ++_mil->_loc.template get<2>().x();
+                }
             protected:
                 maskedImageLocatorBase *_mil;
             };
 
-            class _x_iterator : private _iterator_base {
+            class _y_iterator {
             public:
-                _x_iterator(maskedImageLocatorBase* mil) : _iterator_base(mil) {}
-                void operator++() {
-                    ++this->_mil->_loc.template get<0>().x();
-                    ++this->_mil->_loc.template get<1>().x();
-                    ++this->_mil->_loc.template get<2>().x();
-                }
-            };
+                _y_iterator(maskedImageLocatorBase* mil) : _mil(mil) {}
 
-            class _y_iterator : private _iterator_base {
-            public:
-                _y_iterator(maskedImageLocatorBase* mil) : _iterator_base(mil) {};
-                void operator++() {
-                    ++this->_mil->_loc->template get<0>().y();
-                    ++this->_mil->_loc->template get<1>().y();
-                    ++this->_mil->_loc->template get<2>().y();
+                void operator+=(const int di) {
+                    _mil->_loc.template get<0>().y() += di;
+                    _mil->_loc.template get<1>().y() += di;
+                    _mil->_loc.template get<2>().y() += di;
                 }
+
+                void operator++() {     // prefix
+                    ++_mil->_loc.template get<0>().y();
+                    ++_mil->_loc.template get<1>().y();
+                    ++_mil->_loc.template get<2>().y();
+                }
+            protected:
+                maskedImageLocatorBase *_mil;
             };
         public:
             template<typename, typename, typename> friend class const_maskedImageLocator;
@@ -349,6 +358,16 @@ namespace image {
                              MaskPtr mask = MaskPtr(static_cast<Mask *>(0)),
                              VariancePtr variance = VariancePtr(static_cast<Variance *>(0)));
         explicit MaskedImage(const std::pair<int, int> dimensions, MaskPlaneDict planeDefs=MaskPlaneDict());
+        explicit MaskedImage(std::string const& baseName, int const hdu=0,
+#if 1                                   // Old name for boost::shared_ptrs
+                             typename lsst::daf::base::DataProperty::PtrType
+		metadata=lsst::daf::base::DataProperty::PtrType(static_cast<lsst::daf::base::DataProperty *>(0)),
+#else
+                             typename lsst::daf::base::DataProperty::Ptr
+		metadata=lsst::daf::base::DataProperty::Ptr(static_cast<lsst::daf::base::DataProperty *>(0)),
+#endif
+                             bool conformMasks=false
+                            );                             
 
         MaskedImage(MaskedImage const& rhs, bool const deep=false);
         MaskedImage(const MaskedImage& src, const Bbox& bbox, const bool deep=false);
@@ -379,8 +398,19 @@ namespace image {
         void operator/=(MaskedImage& rhs);
         
         // IO functions
-        //void readFits(std::string baseName, bool conformMaskPlanes=false);
-        void writeFits(std::string const& baseName) const;
+        static std::string imageFileName(std::string const& baseName) { return baseName + "_img.fits"; }
+        static std::string maskFileName(std::string const& baseName) { return baseName + "_msk.fits"; }
+        static std::string varianceFileName(std::string const& baseName) { return baseName + "_var.fits"; }
+
+        void writeFits(std::string const& baseName,
+#if 1                                   // Old name for boost::shared_ptrs
+              typename lsst::daf::base::DataProperty::PtrType
+              metadata=lsst::daf::base::DataProperty::PtrType(static_cast<lsst::daf::base::DataProperty *>(0))
+#else
+              typename lsst::daf::base::DataProperty::ConstPtr
+              metadata=lsst::daf::base::DataProperty::ConstPtr(static_cast<lsst::daf::base::DataProperty *>(0))
+#endif
+                      ) const;
         
         // Getters
         ImagePtr getImage() const { return _image; }
@@ -429,4 +459,4 @@ namespace image {
 
 }}}  // lsst::afw::image
         
-#endif //  LSST_MASKEDIMAGE_H
+#endif //  LSST_IMAGE_MASKEDIMAGE_H

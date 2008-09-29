@@ -7,7 +7,7 @@
 
 #include "boost/gil/gil_all.hpp"
 
-#include "lsst/gil/lsstGil.h"
+#include "lsst/afw/image/lsstGil.h"
 #include "fits_io.h"
 
 namespace {

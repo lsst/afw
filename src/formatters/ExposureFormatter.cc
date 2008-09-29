@@ -55,9 +55,9 @@ public:
     static std::string name;
 };
 
-template<> std::string ExposureFormatterTraits<boost::uint16_t, lsst::afw::image::maskPixelType>::name("ExposureU");
-template<> std::string ExposureFormatterTraits<float, lsst::afw::image::maskPixelType>::name("ExposureF");
-template<> std::string ExposureFormatterTraits<double, lsst::afw::image::maskPixelType>::name("ExposureD");
+template<> std::string ExposureFormatterTraits<boost::uint16_t, lsst::afw::image::MaskPixel>::name("ExposureU");
+template<> std::string ExposureFormatterTraits<float, lsst::afw::image::MaskPixel>::name("ExposureF");
+template<> std::string ExposureFormatterTraits<double, lsst::afw::image::MaskPixel>::name("ExposureD");
 
 
 template <typename ImagePixelT, typename MaskPixelT>
@@ -166,26 +166,21 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::write(
             lsst::afw::formatters::WcsFormatter::generateDataProperty(
                 *(ip->_wcsPtr));
 
-        Exposure<ImagePixelT, MaskPixelT>* vip =
-            const_cast<Exposure<ImagePixelT, MaskPixelT>*>(ip);
-        vip->_maskedImage.getImage()->getMetaData()->addChildren(wcsDP);
-        vip->_maskedImage.getVariance()->getMetaData()->addChildren(wcsDP);
+        Exposure<ImagePixelT, MaskPixelT>* vip = const_cast<Exposure<ImagePixelT, MaskPixelT>*>(ip);
+        vip->getMetaData()->addChildren(wcsDP);
         ip->_maskedImage.writeFits(fits->getPath());
         execTrace("ExposureFormatter write end");
         return;
-    }
-    else if (typeid(*storage) == typeid(DbStorage)) {
+    } else if (typeid(*storage) == typeid(DbStorage)) {
         execTrace("ExposureFormatter write DbStorage");
         DbStorage* db = dynamic_cast<DbStorage*>(storage.get());
 
         // Get the Wcs headers.
         lsst::daf::base::DataProperty::PtrType wcsDP =
-            lsst::afw::formatters::WcsFormatter::generateDataProperty(
-                *(ip->_wcsPtr));
+            lsst::afw::formatters::WcsFormatter::generateDataProperty(*(ip->_wcsPtr));
 
         // Get the image headers.
-        lsst::daf::base::DataProperty::PtrType dp =
-            ip->_maskedImage.getImage()->getMetaData();
+        lsst::daf::base::DataProperty::PtrType dp = ip->getMetaData();
         if (!dp) {
             throw lsst::pex::exceptions::Runtime("Unable to retrieve metadata from MaskedImage's Image");
         }
@@ -195,8 +190,7 @@ void ExposureFormatter<ImagePixelT, MaskPixelT>::write(
             additionalData->findUnique("itemName")->getValue());
         std::string tableName = itemName;
         if (_policy->exists(itemName)) {
-            lsst::pex::policy::Policy::Ptr itemPolicy =
-                _policy->getPolicy(itemName);
+            lsst::pex::policy::Policy::Ptr itemPolicy = _policy->getPolicy(itemName);
             if (itemPolicy->exists("TableName")) {
                 tableName = itemPolicy->getString("TableName");
             }
@@ -266,22 +260,20 @@ Persistable* ExposureFormatter<ImagePixelT, MaskPixelT>::read(
     Storage::Ptr storage,
     lsst::daf::base::DataProperty::PtrType additionalData) {
     execTrace("ExposureFormatter read start");
-    Exposure<ImagePixelT, MaskPixelT>* ip = new Exposure<ImagePixelT, MaskPixelT>;
     if (typeid(*storage) == typeid(BoostStorage)) {
         execTrace("ExposureFormatter read BoostStorage");
         BoostStorage* boost = dynamic_cast<BoostStorage*>(storage.get());
+        Exposure<ImagePixelT, MaskPixelT>* ip = new Exposure<ImagePixelT, MaskPixelT>;
         boost->getIArchive() & *ip;
         execTrace("ExposureFormatter read end");
         return ip;
-    }
-    else if (typeid(*storage) == typeid(FitsStorage)) {
+    } else if (typeid(*storage) == typeid(FitsStorage)) {
         execTrace("ExposureFormatter read FitsStorage");
         FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
-        ip->readFits(fits->getPath());
+        Exposure<ImagePixelT, MaskPixelT>* ip = new Exposure<ImagePixelT, MaskPixelT>(fits->getPath());
         execTrace("ExposureFormatter read end");
         return ip;
-    }
-    else if (typeid(*storage) == typeid(DbStorage)) {
+    } else if (typeid(*storage) == typeid(DbStorage)) {
         execTrace("ExposureFormatter read DbStorage");
         DbStorage* db = dynamic_cast<DbStorage*>(storage.get());
 
@@ -350,7 +342,8 @@ Persistable* ExposureFormatter<ImagePixelT, MaskPixelT>::read(
         // - KTL - 2007-11-29
 
         // Restore image from FITS...
-        ip->readFits(db->getColumnByPos<std::string>(0));
+        Exposure<ImagePixelT, MaskPixelT>* ip =
+            new Exposure<ImagePixelT, MaskPixelT>(db->getColumnByPos<std::string>(0));
         lsst::daf::base::DataProperty::PtrType dp = ip->getMetadata();
 
         // Look up the filter name given the ID.
@@ -401,8 +394,8 @@ lsst::daf::persistence::Formatter::Ptr ExposureFormatter<ImagePixelT, MaskPixelT
     return lsst::daf::persistence::Formatter::Ptr(new ExposureFormatter<ImagePixelT, MaskPixelT>(policy));
 }
 
-template class ExposureFormatter<boost::uint16_t, lsst::afw::image::maskPixelType>;
-template class ExposureFormatter<float, lsst::afw::image::maskPixelType>;
-template class ExposureFormatter<double, lsst::afw::image::maskPixelType>;
+template class ExposureFormatter<boost::uint16_t, lsst::afw::image::MaskPixel>;
+template class ExposureFormatter<float, lsst::afw::image::MaskPixel>;
+template class ExposureFormatter<double, lsst::afw::image::MaskPixel>;
 
 }}} // namespace lsst::afw::formatters

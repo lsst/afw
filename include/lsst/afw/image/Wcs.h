@@ -9,10 +9,9 @@
 #ifndef LSST_AFW_IMAGE_WCS_H
 #define LSST_AFW_IMAGE_WCS_H
 
-#include "vw/Math.h"
-
 #include "lsst/daf/base.h"
 #include "lsst/daf/data/LsstBase.h"
+#include "lsst/afw/image/Image.h"
 
 struct wcsprm;                          // defined in wcs.h
 
@@ -22,9 +21,6 @@ namespace afw {
         class WcsFormatter;
     }
 namespace image {
-
-    typedef vw::math::Vector<double, 2> Coord2D;
-
     /// \brief Wcs supports coordinate system transformations between pixel and world coordinates
     ///
     /// All Wcs (in the FITS sense) coordinate conventions are supported via
@@ -33,6 +29,7 @@ namespace image {
     class Wcs : public lsst::daf::base::Persistable,
                 public lsst::daf::data::LsstBase {
     public:
+        typedef boost::shared_ptr<lsst::afw::image::Wcs> Ptr;
         
         Wcs();
         Wcs(lsst::daf::base::DataProperty::PtrType fitsMetaData);
@@ -49,15 +46,15 @@ namespace image {
         /// Return true iff Wcs is valid
         operator bool() const { return _wcsInfo != NULL; }
 
-        void raDecToColRow(Coord2D sky, Coord2D& pix) const;
-        Coord2D raDecToColRow(Coord2D sky) const;
-        Coord2D raDecToColRow(double const ra, double const dec) const;
+        void raDecToColRow(PointD sky, PointD& pix) const;
+        PointD raDecToColRow(PointD sky) const;
+        PointD raDecToColRow(double const ra, double const dec) const;
 
-        void colRowToRaDec(Coord2D pix, Coord2D& sky) const;
-        Coord2D colRowToRaDec(Coord2D pix) const;
-        Coord2D colRowToRaDec(double const col, double const row) const;
+        void colRowToRaDec(PointD pix, PointD& sky) const;
+        PointD colRowToRaDec(PointD pix) const;
+        PointD colRowToRaDec(double const col, double const row) const;
 
-        double pixArea(Coord2D pix) const;
+        double pixArea(PointD pix) const;
     private:
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::WcsFormatter);
 

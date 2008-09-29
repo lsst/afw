@@ -2,7 +2,11 @@
 import sys
 Import('env')
 
-env.Program(["vwconvert.cc"], LIBS=env.getlibs("vw boost"))
+env.Program(["Image.cc"], LIBS=env.getlibs("afw"))
+env.Program(["Mask.cc"], LIBS=env.getlibs("afw"))
+env.Program(["DecoratedImage.cc"], LIBS=env.getlibs("afw"))
+env.Program(["MaskedImage.cc"], LIBS=env.getlibs("afw"))
+
 env.Program(["fitsio.cc"], LIBS=env.getlibs("afw"))
 env.Program("maskedImageFitsIO", ["maskedImageFitsIO.cc"], LIBS=env.getlibs("afw"))
 env.Program("timeImageAddition", ["timeImageAddition.cc"], LIBS=env.getlibs("afw"))

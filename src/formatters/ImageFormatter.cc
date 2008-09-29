@@ -77,8 +77,7 @@ void ImageFormatter<ImagePixelT>::write(
     Storage::Ptr storage,
     lsst::daf::base::DataProperty::PtrType additionalData) {
     execTrace("ImageFormatter write start");
-    Image<ImagePixelT> const* ip =
-        dynamic_cast<Image<ImagePixelT> const*>(persistable);
+    Image<ImagePixelT> const* ip = dynamic_cast<Image<ImagePixelT> const*>(persistable);
     if (ip == 0) {
         throw std::runtime_error("Persisting non-Image");
     }
@@ -88,16 +87,15 @@ void ImageFormatter<ImagePixelT>::write(
         boost->getOArchive() & *ip;
         execTrace("ImageFormatter write end");
         return;
-    }
-    else if (typeid(*storage) == typeid(FitsStorage)) {
+    } else if (typeid(*storage) == typeid(FitsStorage)) {
         execTrace("ImageFormatter write FitsStorage");
         FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
+        typedef Image<ImagePixelT> Image;
+
         ip->writeFits(fits->getPath());
-        // LSSTFitsResource<ImagePixelT> fitsRes;
-        // fitsRes.writeFits(*(ip->_vwImagePtr), ip->_metaData, fits->getPath());
         // \todo Do something with these fields?
-        // unsigned int _offsetRows;
-        // unsigned int _offsetCols;
+        // int _X0;
+        // int _Y0;
         execTrace("ImageFormatter write end");
         return;
     }
@@ -105,27 +103,26 @@ void ImageFormatter<ImagePixelT>::write(
 }
 
 template <typename ImagePixelT>
-Persistable* ImageFormatter<ImagePixelT>::read(
-    Storage::Ptr storage,
-    lsst::daf::base::DataProperty::PtrType additionalData) {
+Persistable* ImageFormatter<ImagePixelT>::read(Storage::Ptr storage,
+                                               lsst::daf::base::DataProperty::PtrType additionalData) {
     execTrace("ImageFormatter read start");
-    Image<ImagePixelT>* ip = new Image<ImagePixelT>;
     if (typeid(*storage) == typeid(BoostStorage)) {
         execTrace("ImageFormatter read BoostStorage");
         BoostStorage* boost = dynamic_cast<BoostStorage*>(storage.get());
+        Image<ImagePixelT>* ip = new Image<ImagePixelT>;
         boost->getIArchive() & *ip;
         execTrace("ImageFormatter read end");
         return ip;
-    }
-    else if (typeid(*storage) == typeid(FitsStorage)) {
+    } else if(typeid(*storage) == typeid(FitsStorage)) {
+
         execTrace("ImageFormatter read FitsStorage");
         FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
-        ip->readFits(fits->getPath(), fits->getHdu());
-        // LSSTFitsResource<ImagePixelT> fitsRes;
-        // fitsRes.readFits(fits->getPath(), *(ip->_vwImagePtr), ip->_metaData, fits->getHdu());
+        
+        Image<ImagePixelT>* ip = new Image<ImagePixelT>(fits->getPath(), fits->getHdu());
+        // \note We're throwing away the metadata
         // \todo Do something with these fields?
-        // unsigned int _offsetRows;
-        // unsigned int _offsetCols;
+        // int _X0;
+        // int _Y0;
         execTrace("ImageFormatter read end");
         return ip;
     }

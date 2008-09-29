@@ -11,8 +11,7 @@
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h"
-//#include "lsst/afw/image/LSSTFitsResource.h"
-#include "lsst/gil/Mask.h"
+#include "lsst/afw/image/Mask.h"
 
 
 /************************************************************************************************************/
@@ -21,8 +20,8 @@
 //
 #include <boost/mpl/vector.hpp>
 #include "boost/gil/gil_all.hpp"
-#include "lsst/gil/fits/fits_io.h"
-#include "lsst/gil/fits/fits_io_mpl.h"
+#include "lsst/afw/image/fits/fits_io.h"
+#include "lsst/afw/image/fits/fits_io_mpl.h"
 
 using namespace lsst::afw::image;
 namespace image = lsst::afw::image;
@@ -104,11 +103,16 @@ lsst::daf::base::DataProperty::PtrType image::Mask<MaskPixelT>::getMetaData() {
  */
 template<typename MaskPixelT>
 image::Mask<MaskPixelT>::Mask(std::string const& fileName, //!< Name of file to read
-                              bool conformMasks, //!< Make Mask conform to mask layout in file?
-                              int hdu //!< HDU to read
+                              int hdu, //!< HDU to read 
+                              lsst::daf::base::DataProperty::PtrType metaData, ///< file metaData (may point to NULL)
+                              bool conformMasks //!< Make Mask conform to mask layout in file?
                              ) :
     image::ImageBase<MaskPixelT>(),
-    _metaData(lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData")) {
+    _metaData(metaData) {
+
+    if (_metaData.get() == NULL) {
+        _metaData.reset(lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData").get());
+    }
     //
     // These are the permitted input file types
     //

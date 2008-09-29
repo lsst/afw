@@ -9,8 +9,7 @@
  * @ingroup afw
  */
 #include <stdexcept>
-
-#include "vw/Image.h"
+#include <numeric>
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
@@ -35,9 +34,10 @@ lsst::afw::math::FixedKernel::FixedKernel()
 lsst::afw::math::FixedKernel::FixedKernel(
     lsst::afw::image::Image<PixelT> const &image)     ///< image for kernel
 :
-    Kernel(image.getCols(), image.getRows(), 0),
-    _image(image),
-    _sum(vw::sum_of_channel_values(*(image.getIVwPtr()))) {
+    Kernel(image.getWidth(), image.getHeight(), 0),
+    _image(image, true),
+    _sum(0) {
+    std::accumulate(_image.begin(), _image.end(), _sum); // (a loop over y + row_begin())'s a bit faster, but who cares?
 }
 
 //
@@ -50,30 +50,26 @@ void lsst::afw::math::FixedKernel::computeImage(
     double x,
     double y
 ) const {
-    typedef lsst::afw::image::Image<PixelT>::pixel_accessor pixelAccessor;
-    if ((image.getCols() != this->getCols()) || (image.getRows() != this->getRows())) {
+    if (image.dimensions() != this->dimensions()) {
         throw lsst::pex::exceptions::InvalidParameter("image is the wrong size");
     }
+
     double multFactor;
     if (doNormalize) {
-        multFactor = 1.0 / static_cast<double>(this->_sum);
+        multFactor = 1.0/static_cast<double>(this->_sum);
         imSum = 1;
     } else {
         multFactor = 1.0;
         imSum = this->_sum;
     }
-    pixelAccessor kRow = this->_image.origin();
-    pixelAccessor imRow = image.origin();
-    for (unsigned int row = 0; row < this->getRows(); ++row) {
-        pixelAccessor kCol = kRow;
-        pixelAccessor imCol = imRow;
-        for (unsigned int col = 0; col < this->getCols(); ++col) {
-            *imCol = static_cast<PixelT>(static_cast<double>(*kCol) * multFactor);
-            kCol.next_col();
-            imCol.next_col();
+
+    typedef lsst::afw::image::Image<PixelT>::x_iterator x_iterator;
+
+    for (int y = 0; y != this->getHeight(); ++y) {
+        x_iterator kRow = this->_image.row_begin(y);
+        for (x_iterator imRow = image.row_begin(y), imEnd = image.row_end(y); imRow != imEnd; ++imRow, ++kRow) {
+            imRow[0] = multFactor*kRow[0];
         }
-        kRow.next_row();
-        imRow.next_row();
     }
 }
 

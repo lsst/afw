@@ -19,7 +19,6 @@
  */
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
-#include "lsst/afw/image/PixelAccessors.h"
 #include "lsst/afw/math/Kernel.h"
 
 namespace lsst {

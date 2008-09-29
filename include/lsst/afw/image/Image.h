@@ -33,11 +33,13 @@ namespace image {
     template<typename T>
     class Point {
     public:
-        Point(T val) : _x(val), _y(val) {}
+        Point(T val=0) : _x(val), _y(val) {}
         Point(T x, T y) : _x(x), _y(y) {}
 
         T getX() const { return _x; }
         T getY() const { return _y; }
+        T& getX() { return _x; }
+        T& getY() { return _y; }
 
         Point operator+(const Point& rhs) const { return Point(_x + rhs._x, _y + rhs._y); }
         Point operator-(const Point& rhs) const { return Point(_x - rhs._x, _y - rhs._y); }
@@ -157,7 +159,7 @@ namespace image {
         int getX0() const { return _x0; }
         int getY0() const { return _y0; }
 
-        std::pair<int, int> dimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
+        const std::pair<int, int> dimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
 
         void swap(ImageBase &rhs);
         //
@@ -232,6 +234,16 @@ namespace image {
         explicit Image(const std::pair<int, int> dimensions);
         Image(const Image& src, const bool deep=false);
         Image(const Image& src, const Bbox& bbox, const bool deep=false);
+        Image(std::string const& fileName, const int hdu = 0,
+#if 1                                   // Old name for boost::shared_ptrs
+              typename lsst::daf::base::DataProperty::PtrType
+              metadata=lsst::daf::base::DataProperty::PtrType(static_cast<lsst::daf::base::DataProperty *>(0))
+#else
+              typename lsst::daf::base::DataProperty::Ptr
+              metadata=lsst::daf::base::DataProperty::Ptr(static_cast<lsst::daf::base::DataProperty *>(0))
+#endif
+             );
+
         // generalised copy constructor
         template<typename OtherPixelT>
         Image(const Image<OtherPixelT>& src, const bool deep) :
@@ -243,17 +255,29 @@ namespace image {
         //
         Image& operator=(const PixelT scalar);
         Image& operator=(const Image& src);
+
+        //void readFits(std::string const& fileName, ...); // replaced by constructor
+        void writeFits(std::string const& fileName,
+#if 1                                   // Old name for boost::shared_ptrs
+                       typename lsst::daf::base::DataProperty::PtrType
+                       metadata=lsst::daf::base::DataProperty::PtrType(static_cast<lsst::daf::base::DataProperty *>(0))
+#else
+                       typename lsst::daf::base::DataProperty::ConstPtr
+                       metadata=lsst::daf::base::DataProperty::ConstPtr(static_cast<lsst::daf::base::DataProperty *>(0))
+#endif
+                      ) const;
         //
         // Operators etc.
         //
-        void operator+=(const PixelT scalar);
-        void operator+=(const Image<PixelT>& inputImage);
-        void operator-=(const PixelT scalar);
-        void operator-=(const Image<PixelT>& inputImage);
-        void operator*=(const PixelT scalar);
-        void operator*=(const Image<PixelT>& inputImage);
-        void operator/=(const PixelT scalar);
-        void operator/=(const Image<PixelT>& inputImage);
+        void operator+=(PixelT const scalar);
+        void operator+=(Image<PixelT>const & inputImage);
+        void operator-=(PixelT const scalar);
+        void operator-=(Image<PixelT> const& inputImage);
+        Image<PixelT>& operator*(const PixelT scalar);
+        void operator*=(PixelT const scalar);
+        void operator*=(Image<PixelT> const& inputImage);
+        void operator/=(PixelT const scalar);
+        void operator/=(Image<PixelT> const& inputImage);
     protected:
         using ImageBase<PixelT>::_getRawView;
     private:
@@ -275,7 +299,7 @@ namespace image {
         explicit DecoratedImage(const std::pair<int, int> dimensions);
         explicit DecoratedImage(typename Image<PixelT>::Ptr src);
         DecoratedImage(const DecoratedImage& src, const bool deep=false);
-        explicit DecoratedImage(const std::string& fileName, const int hdu=0);
+        explicit DecoratedImage(std::string const& fileName, const int hdu=0);
 
         DecoratedImage& operator=(const DecoratedImage<PixelT>& image);
 
@@ -289,12 +313,12 @@ namespace image {
         int getX0() const { return _image->getX0(); }
         int getY0() const { return _image->getY0(); }
 
-        std::pair<int, int> dimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
+        const std::pair<int, int> dimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
 
         void swap(DecoratedImage &rhs);
         
-        //void readFits(const std::string& fileName, int hdu=0); // replaced by constructor
-        void writeFits(const std::string& fileName,
+        //void readFits(std::string const& fileName, ...); // replaced by constructor
+        void writeFits(std::string const& fileName,
 #if 1                                   // Old name for boost::shared_ptrs
                        typename lsst::daf::base::DataProperty::PtrType
                        metadata=lsst::daf::base::DataProperty::PtrType(static_cast<lsst::daf::base::DataProperty *>(0))

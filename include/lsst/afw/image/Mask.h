@@ -20,14 +20,13 @@
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/daf/base/Persistable.h"
-//#include "lsst/afw/formatters/ImageFormatter.h"
-//#include "lsst/afw/image/ImageExceptions.h"
-#include "lsst/gil/Image.h"
+#include "lsst/afw/formatters/ImageFormatter.h"
+#include "lsst/afw/image/Image.h"
 
 namespace lsst {
 namespace afw {
     namespace formatters {
-        class MaskFormatter;
+        template<typename> class MaskFormatter;
     }
 namespace image {
     // all masks will initially be instantiated with the same pixel type
@@ -45,7 +44,16 @@ namespace image {
         // Constructors        
         explicit Mask(int nCols=0, int nRows=0, MaskPlaneDict const& planeDefs = MaskPlaneDict());
         explicit Mask(const std::pair<int, int> dimensions, MaskPlaneDict const& planeDefs = MaskPlaneDict());
-        explicit Mask(std::string const& fileName, bool conformMasks=false, int hdu=0);
+        explicit Mask(std::string const& fileName, int const hdu=0,
+#if 1                                   // Old name for boost::shared_ptrs
+                      typename lsst::daf::base::DataProperty::PtrType
+                      metadata=lsst::daf::base::DataProperty::PtrType(static_cast<lsst::daf::base::DataProperty *>(0)),
+#else
+                      typename lsst::daf::base::DataProperty::Ptr
+                      metadata=lsst::daf::base::DataProperty::Ptr(static_cast<lsst::daf::base::DataProperty *>(0)),
+#endif
+                      bool const conformMasks=false
+                     );                      
 
         Mask(const Mask& src, const bool deep=false);
         Mask(const Mask& src, const Bbox& bbox, const bool deep=false);

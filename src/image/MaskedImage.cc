@@ -5,7 +5,7 @@
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/pex/exceptions.h"
 
-#include "lsst/gil/MaskedImage.h"
+#include "lsst/afw/image/MaskedImage.h"
 
 using boost::lambda::ret;
 using boost::lambda::_1;
@@ -46,7 +46,30 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(const s
 }
 
 /**
- * @brief Construct from a supplied Image and Mask. The Mask and Variance will be set to zero if omitted
+ * @brief Construct from an HDU in a FITS file.  Set metadata if it isn't a NULL pointer
+ */
+template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
+	std::string const& baseName,    ///< The desired file's baseName (e.g. foo will read foo_{img.msk.var}.fits)
+        int const hdu,                  ///< The HDU in the file (default: 0)
+#if 1                                   // Old name for boost::shared_ptrs
+        typename lsst::daf::base::DataProperty::PtrType
+#else
+        typename lsst::daf::base::DataProperty::Ptr
+#endif
+        metadata,                       ///< Filled out with metadata from file (default: NULL)
+        bool conformMasks                //!< Make Mask conform to mask layout in file?
+                                                                        ) :
+    lsst::daf::data::LsstBase(typeid(this)),
+    _image(new Image(MaskedImage::imageFileName(baseName), hdu, metadata)),
+    _mask(new Mask(MaskedImage::maskFileName(baseName), hdu, metadata, conformMasks)),
+    _variance(new Variance(MaskedImage::varianceFileName(baseName), hdu, metadata)) {
+    ;
+}
+
+/**
+ * @brief Construct from a supplied Image and optional Mask and Variance.
+ * The Mask and Variance will be set to zero if omitted
  */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
@@ -221,7 +244,18 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator/=(Ima
 }
         
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(std::string const& baseName) const {
+void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
+	std::string const& baseName,    ///< The desired file's baseName (e.g. foo will read foo_{img.msk.var}.fits)
+#if 1                                   // Old name for boost::shared_ptrs
+              typename lsst::daf::base::DataProperty::PtrType
+#else
+              typename lsst::daf::base::DataProperty::ConstPtr
+#endif
+        metadata                        ///< Metadata to write to file; or NULL
+                                                                           ) const {
+    _image->writeFits(MaskedImage::imageFileName(baseName), metadata);
+    _mask->writeFits(MaskedImage::maskFileName(baseName));
+    _variance->writeFits(MaskedImage::varianceFileName(baseName));
 }
         
 /************************************************************************************************************/

@@ -8,7 +8,7 @@
 #include "boost/test/unit_test.hpp"
 
 #include "boost/iterator/zip_iterator.hpp"
-#include "lsst/gil/MaskedImage.h"
+#include "lsst/afw/image/MaskedImage.h"
 
 namespace image = lsst::afw::image;
 using namespace std;
@@ -96,7 +96,7 @@ namespace {
     }
 }
 
-image::MaskedImage<float> make_image(int const width=5, int const height=4) {
+image::MaskedImage<float> make_image(int const width=5, int const height=6) {
     image::MaskedImage<float> img(width, height);
 
     int i = 0;
@@ -235,6 +235,15 @@ BOOST_AUTO_TEST_CASE(locators) {
         BOOST_CHECK_EQUAL(loc.image(), 2);
         BOOST_CHECK_EQUAL(loc.mask(), 2*img.getWidth());
         BOOST_CHECK_EQUAL(loc.variance(), 4);
+
+        loc.x() += 2; ++loc.x();        // loc == img.xy_at(3, 2);
+        loc.y() += 1; loc.y() += 1;     // loc == img.xy_at(3, 4);
+        BOOST_REQUIRE(img.getWidth() >= 4);
+        BOOST_REQUIRE(img.getHeight() >= 5);
+        
+        BOOST_CHECK_EQUAL(loc.image(), 304);
+        BOOST_CHECK_EQUAL(loc.mask(), 4*img.getWidth() + 3);
+        BOOST_CHECK_EQUAL(loc.variance(), 608);
     }
 
     {

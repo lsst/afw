@@ -3,12 +3,12 @@
 /*
  * Extend the gil types to provide non-scaling float/int32 images, type bits32[fs]_noscale
  */
-#include <boost/mpl/assert.hpp>
-#include <boost/mpl/bool.hpp>
+#include "boost/mpl/assert.hpp"
+#include "boost/mpl/bool.hpp"
 
 //#define BOOST_GIL_USE_CONCEPT_CHECK 1
 
-#include <boost/gil/gil_all.hpp>
+#include "boost/gil/gil_all.hpp"
 
 namespace boost { namespace gil {
 /*
@@ -57,9 +57,11 @@ template <typename DstChannelV> struct channel_converter_unsigned<bits64f_noscal
     DstChannelV   operator()(bits64f_noscale x) const { return DstChannelV(x + 0.5f); }
 };
 
+#if 0
 template <typename SrcChannelV> struct channel_converter_unsigned<SrcChannelV,bits64f_noscale> : public std::unary_function<SrcChannelV,bits64f_noscale> {
     bits64f_noscale operator()(SrcChannelV   x) const { return bits64f_noscale(x); }
 };
+#endif
 
 template <> struct channel_converter_unsigned<bits64f_noscale,bits64f_noscale> : public std::unary_function<bits64f_noscale,bits64f_noscale> {
     bits64f_noscale operator()(bits64f_noscale   x) const { return x; }
@@ -117,9 +119,11 @@ template <typename DstChannelV> struct channel_converter<bits32s_noscale,DstChan
     DstChannelV   operator()(bits32s_noscale x) const { return DstChannelV(x); }
 };
 
+#if 0
 template <typename SrcChannelV> struct channel_converter<SrcChannelV,bits32s_noscale> : public std::unary_function<SrcChannelV,bits32s_noscale> {
     bits32s_noscale operator()(SrcChannelV   x) const { return bits32s_noscale(x); }
 };
+#endif
 
 template <> struct channel_converter<bits32s_noscale,bits32s_noscale> : public std::unary_function<bits32s_noscale,bits32s_noscale> {
     bits32s_noscale operator()(bits32s_noscale   x) const { return x; }
@@ -129,6 +133,7 @@ template <> struct channel_converter<bits32s_noscale,bits32s_noscale> : public s
 template<> struct channel_multiplier<bits32s_noscale> : public std::binary_function<bits32s_noscale,bits32s_noscale,bits32s_noscale> {
     bits32s_noscale operator()(bits32s_noscale a, bits32s_noscale b) const { return a*b; }
 };
+
 } }  // namespace boost::gil
 
 

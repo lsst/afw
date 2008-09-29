@@ -24,7 +24,6 @@
 #include <string>
 
 #include "boost/format.hpp"
-#include "vw/Math.h"
 
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/image/ImageUtils.h"
@@ -32,22 +31,8 @@
 // if defined then kernel pixels that have value 0 are ignored when computing the output mask during convolution
 #define IgnoreKernelZeroPixels
 
-// declare private functions
-template <typename OutPixelT, typename InPixelT, typename MaskPixelT>
-void _copyBorder(
-    lsst::afw::image::MaskedImage<OutPixelT, MaskPixelT> &convolvedImage,
-    lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> const &maskedImage,
-    lsst::afw::math::Kernel const &kernel,
-    int edgeBit
-);
-
-template <typename OutPixelT, typename InPixelT, typename MaskPixelT>
-inline void _copyRegion(
-    typename lsst::afw::image::MaskedImage<OutPixelT, MaskPixelT> &destImage,
-    typename lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> const &sourceImage,
-    vw::BBox2i const &region,
-    MaskPixelT orMask
-);
+// Private functions to copy Images' borders
+#include "lsst/afw/math/copyEdges.h"
 
 /**
  * @brief Apply convolution kernel to a masked image at one point
@@ -568,6 +553,8 @@ void lsst::afw::math::convolveLinear(
  *
  * See documentation for the version of convolveLinear that sets pixels in an existing image.
  *
+ * @note This function should probably be retired;  it's easily coded by the user in 2 lines
+ *
  * @throw lsst::pex::exceptions::InvalidParameter if maskedImage is smaller (in colums or rows) than kernel.
  *
  * @ingroup afw
@@ -579,97 +566,7 @@ lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> lsst::afw::math::convolveLin
     int edgeBit         ///< mask bit to indicate pixel includes edge-extended data;
                         ///< if negative then no bit is set
 ) {
-    lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> convolvedImage(maskedImage.getCols(), maskedImage.getRows());
+    lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> convolvedImage(maskedImage.dimensions());
     lsst::afw::math::convolveLinear(convolvedImage, maskedImage, kernel, edgeBit);
     return convolvedImage;
-}
-
-/**
- * @brief Private function to copy the border of a convolved image.
- *
- * Copy the border of an image and set mask bit edgeBit for the border pixels. This border has size:
- * * kernel.getCtrCol/Row() along the left/bottom edge
- * * kernel.getCols/Rows() - 1 - kernel.getCtrCol/Row() along the right/top edge
- *
- * The sizes are not error-checked.
- *
- * @ingroup afw
- */
-template <typename OutPixelT, typename InPixelT, typename MaskPixelT>
-void _copyBorder(
-    lsst::afw::image::MaskedImage<OutPixelT, MaskPixelT> &convolvedImage,       ///< convolved image
-    lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> const &maskedImage,    ///< image to convolve
-    lsst::afw::math::Kernel const &kernel,    ///< convolution kernel
-    int edgeBit        ///< mask bit to indicate border pixel;  if negative then no bit is set
-) {
-    const unsigned int imCols = maskedImage.getCols();
-    const unsigned int imRows = maskedImage.getRows();
-    const unsigned int kCols = kernel.getCols();
-    const unsigned int kRows = kernel.getRows();
-    const unsigned int kCtrCol = kernel.getCtrCol();
-    const unsigned int kCtrRow = kernel.getCtrRow();
-
-    MaskPixelT edgeOrVal = edgeBit < 0 ? 0 : 1 << edgeBit;
-    
-    vw::BBox2i bottomEdge(0, 0, imCols, kCtrRow);
-    _copyRegion(convolvedImage, maskedImage, bottomEdge, edgeOrVal);
-    
-    vw::int32 numRows = kRows - (1 + kCtrRow);
-    vw::BBox2i topEdge(0, imRows - numRows, imCols, numRows);
-    _copyRegion(convolvedImage, maskedImage, topEdge, edgeOrVal);
-
-    vw::BBox2i leftEdge(0, kCtrRow, kCtrCol, imRows + 1 - kRows);
-    _copyRegion(convolvedImage, maskedImage, leftEdge, edgeOrVal);
-    
-    vw::int32 numCols = kCols - (1 + kernel.getCtrCol());
-    vw::BBox2i rightEdge(imCols - numCols, kCtrRow, numCols, imRows + 1 - kRows);
-    _copyRegion(convolvedImage, maskedImage, rightEdge, edgeOrVal);
-}
-
-
-/**
- * @brief Private function to copy a rectangular region from one MaskedImage to another.
- *
- * I hope eventually to replace this by calls to MaskedImage.getSubImage
- * and MaskedImage.replaceSubImage, but that is currently too messy
- * because getSubImage requires a shared pointer to the source image.
- *
- * @throw invalid_argument if the region extends off of either image.
- */
-template <typename OutPixelT, typename InPixelT, typename MaskPixelT>
-inline void _copyRegion(
-    typename lsst::afw::image::MaskedImage<OutPixelT, MaskPixelT> &destImage,           ///< destination MaskedImage
-    typename lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> const &sourceImage,   ///< source MaskedImage
-    vw::BBox2i const &region,   ///< region to copy
-    MaskPixelT orMask    ///< data to "or" into the mask pixels
-) {
-    typedef lsst::afw::image::MaskedPixelAccessor<InPixelT, MaskPixelT> InPixelAccessor;
-    typedef lsst::afw::image::MaskedPixelAccessor<OutPixelT, MaskPixelT> OutPixelAccessor;
-
-    vw::math::Vector<vw::int32> const startColRow = region.min();
-    vw::math::Vector<vw::int32> const numColRow = region.size();
-    lsst::pex::logging::Trace("lsst.afw.kernel._copyRegion", 4,
-        "_copyRegion: dest size=%d, %d; src size=%d, %d; region start=%d, %d; region size=%d, %d; orMask=%d",
-        destImage.getCols(), destImage.getRows(), sourceImage.getCols(), sourceImage.getRows(),
-        startColRow[0], startColRow[1], numColRow[0], numColRow[1], orMask
-    );
-
-    vw::math::Vector<vw::int32> const endColRow = region.max();
-    if ((static_cast<unsigned int>(endColRow[0]) > std::min(destImage.getCols(), sourceImage.getCols()))
-        || ((static_cast<unsigned int>(endColRow[1]) > std::min(destImage.getRows(), sourceImage.getRows())))) {
-        throw lsst::pex::exceptions::InvalidParameter("Region out of range");
-    }
-    InPixelAccessor inRow(sourceImage);
-    OutPixelAccessor outRow(destImage);
-    inRow.advance(startColRow[0], startColRow[1]);
-    outRow.advance(startColRow[0], startColRow[1]);
-    for (int row = 0; row < numColRow[1]; ++row, inRow.nextRow(), outRow.nextRow()) {
-        InPixelAccessor inCol = inRow;
-        OutPixelAccessor outCol = outRow;
-        for (int col = 0; col < numColRow[0]; ++col, inCol.nextCol(), outCol.nextCol()) {
-            *(outCol.image) = *(inCol.image);
-            *(outCol.variance) = *(inCol.variance);
-            *(outCol.mask) = *(inCol.mask) | orMask;
-        }
-    }
 }

@@ -11,52 +11,24 @@
 #include <algorithm>
 #include <iterator>
 
-#include "vw/Image.h"
-
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
-
-/**
- * @brief Construct an empty spatially invariant SeparableKernel of size 0x0
- */
-lsst::afw::math::SeparableKernel::SeparableKernel()
-:
-    Kernel(),
-    _kernelColFunctionPtr(),
-    _kernelRowFunctionPtr()
-{}
-
-/**
- * @brief Construct a spatially invariant SeparableKernel
- */
-lsst::afw::math::SeparableKernel::SeparableKernel(
-    KernelFunction const &kernelColFunction,
-    KernelFunction const &kernelRowFunction,
-    unsigned int cols,
-    unsigned int rows)
-:
-    Kernel(cols, rows, kernelColFunction.getNParameters() + kernelRowFunction.getNParameters()),
-    _kernelColFunctionPtr(kernelColFunction.copy()),
-    _kernelRowFunctionPtr(kernelRowFunction.copy()),
-    _localColList(cols),
-    _localRowList(rows)
-{}
 
 /**
  * @brief Construct a spatially varying SeparableKernel, replicating a spatial function once per kernel function parameter
  */
 lsst::afw::math::SeparableKernel::SeparableKernel(
-    KernelFunction const &kernelColFunction,
-    KernelFunction const &kernelRowFunction,
-    unsigned int cols,
-    unsigned int rows,
-    Kernel::SpatialFunction const &spatialFunction)
+    int width,
+    int height,
+    KernelFunction const& kernelColFunction,
+    KernelFunction const& kernelRowFunction,
+    Kernel::SpatialFunction const& spatialFunction)
 :
-    Kernel(cols, rows, kernelColFunction.getNParameters() + kernelRowFunction.getNParameters(), spatialFunction),
+    Kernel(width, height, kernelColFunction.getNParameters() + kernelRowFunction.getNParameters(), spatialFunction),
     _kernelColFunctionPtr(kernelColFunction.copy()),
     _kernelRowFunctionPtr(kernelRowFunction.copy()),
-    _localColList(cols),
-    _localRowList(rows)
+    _localColList(width),
+    _localRowList(height)
 {}
 
 /**
@@ -65,17 +37,17 @@ lsst::afw::math::SeparableKernel::SeparableKernel(
  * @throw lsst::pex::exceptions::InvalidParameter if the length of spatialFunctionList != # kernel function parameters.
  */
 lsst::afw::math::SeparableKernel::SeparableKernel(
-    KernelFunction const &kernelColFunction,
-    KernelFunction const &kernelRowFunction,
-    unsigned int cols,
-    unsigned int rows,
-    std::vector<Kernel::SpatialFunctionPtr> const &spatialFunctionList)
+    int width,
+    int height,
+    KernelFunction const& kernelColFunction,
+    KernelFunction const& kernelRowFunction,
+    std::vector<Kernel::SpatialFunctionPtr> const& spatialFunctionList)
 :
-    Kernel(cols, rows, spatialFunctionList),
+    Kernel(width, height, spatialFunctionList),
     _kernelColFunctionPtr(kernelColFunction.copy()),
     _kernelRowFunctionPtr(kernelRowFunction.copy()),
-    _localColList(cols),
-    _localRowList(rows)
+    _localColList(width),
+    _localRowList(height)
 {
     if (kernelColFunction.getNParameters() + kernelRowFunction.getNParameters() != spatialFunctionList.size()) {
         throw lsst::pex::exceptions::InvalidParameter(
@@ -90,8 +62,7 @@ void lsst::afw::math::SeparableKernel::computeImage(
     double x,
     double y
 ) const {
-    typedef lsst::afw::image::Image<PixelT>::pixel_accessor pixelAccessor;
-    if ((image.getCols() != this->getCols()) || (image.getRows() != this->getRows())) {
+    if (image.dimensions() != this->dimensions()) {
         throw lsst::pex::exceptions::InvalidParameter("image is the wrong size");
     }
     if (this->isSpatiallyVarying()) {
@@ -100,13 +71,11 @@ void lsst::afw::math::SeparableKernel::computeImage(
     
     basicComputeVectors(_localColList, _localRowList, imSum, doNormalize);
 
-    std::vector<PixelT>::iterator rowIter = _localRowList.begin();
-    pixelAccessor imRow = image.origin();
-    for ( ; rowIter != _localRowList.end(); ++rowIter, imRow.next_row()) {
-        pixelAccessor imCol = imRow;
-        std::vector<PixelT>::iterator colIter = _localColList.begin();
-        for ( ; colIter != _localColList.end(); ++colIter, imCol.next_col()) {
-            *imCol = (*colIter) * (*rowIter);
+    for (int y = 0; y != image.getHeight(); ++y) {
+        typename lsst::afw::image::Image<PixelT>::x_iterator imPtr = image.row_begin(y);
+        for (std::vector<PixelT>::iterator colIter = _localColList.begin();
+             colIter != _localColList.end(); ++colIter, ++imPtr) {
+            *imPtr = (*colIter)*_localRowList[y];
         }
     }
 }
@@ -155,7 +124,7 @@ lsst::afw::math::SeparableKernel::KernelFunctionPtr lsst::afw::math::SeparableKe
 std::string lsst::afw::math::SeparableKernel::toString(std::string prefix) const {
     std::ostringstream os;
     os << prefix << "SeparableKernel:" << std::endl;
-    os << prefix << "..x (cols) function: " << (_kernelColFunctionPtr ? _kernelColFunctionPtr->toString() : "None") << std::endl;
+    os << prefix << "..x (width) function: " << (_kernelColFunctionPtr ? _kernelColFunctionPtr->toString() : "None") << std::endl;
     os << prefix << "..y (rows) function: " << (_kernelRowFunctionPtr ? _kernelRowFunctionPtr->toString() : "None") << std::endl;
     os << Kernel::toString(prefix + "\t");
     return os.str();
@@ -173,7 +142,7 @@ std::vector<double> lsst::afw::math::SeparableKernel::getKernelParameters() cons
 //
 
 void lsst::afw::math::SeparableKernel::setKernelParameter(unsigned int ind, double value) const {
-    const unsigned int nColParams = _kernelColFunctionPtr->getNParameters();
+    unsigned int const nColParams = _kernelColFunctionPtr->getNParameters();
     if (ind < nColParams) {
         _kernelColFunctionPtr->setParameter(ind, value);
     } else {

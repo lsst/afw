@@ -12,7 +12,7 @@
 
 #include "boost/gil/gil_all.hpp"
 #include "boost/gil/extension/io/io_error.hpp"
-#include "lsst/gil/lsstGil.h"
+#include "lsst/afw/image/lsstGil.h"
 
 #include "lsst/utils/Utils.h"
 #include "lsst/pex/exceptions.h"

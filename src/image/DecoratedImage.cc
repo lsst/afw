@@ -2,7 +2,7 @@
 #include "boost/format.hpp"
 
 #include "lsst/pex/exceptions.h"
-#include "lsst/gil/Image.h"
+#include "lsst/afw/image/Image.h"
 
 namespace image = lsst::afw::image;
 
@@ -74,11 +74,11 @@ void image::swap(DecoratedImage<PixelT>& a, DecoratedImage<PixelT>& b) {
 #include <boost/mpl/vector.hpp>
 
 #include "lsst/pex/exceptions.h"
-#include "lsst/gil/Image.h"
+#include "lsst/afw/image/Image.h"
 
 #include "boost/gil/gil_all.hpp"
-#include "lsst/gil/fits/fits_io.h"
-#include "lsst/gil/fits/fits_io_mpl.h"
+#include "lsst/afw/image/fits/fits_io.h"
+#include "lsst/afw/image/fits/fits_io_mpl.h"
 
 template<typename PixelT>
 image::DecoratedImage<PixelT>::DecoratedImage(const std::string& fileName, const int hdu) {

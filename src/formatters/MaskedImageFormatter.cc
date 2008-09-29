@@ -40,7 +40,7 @@ using lsst::daf::persistence::BoostStorage;
 using lsst::daf::persistence::FitsStorage;
 using lsst::daf::persistence::Storage;
 using lsst::afw::image::MaskedImage;
-using lsst::afw::image::maskPixelType;
+using lsst::afw::image::MaskPixel;
 
 namespace lsst {
 namespace afw {
@@ -52,9 +52,9 @@ public:
     static std::string name;
 };
 
-template<> std::string MaskedImageFormatterTraits<boost::uint16_t, maskPixelType>::name("MaskedImageU");
-template<> std::string MaskedImageFormatterTraits<float, maskPixelType>::name("MaskedImageF");
-template<> std::string MaskedImageFormatterTraits<double, maskPixelType>::name("MaskedImageD");
+template<> std::string MaskedImageFormatterTraits<boost::uint16_t, MaskPixel>::name("MaskedImageU");
+template<> std::string MaskedImageFormatterTraits<float, MaskPixel>::name("MaskedImageF");
+template<> std::string MaskedImageFormatterTraits<double, MaskPixel>::name("MaskedImageD");
 
 template <typename ImagePixelT, typename MaskPixelT>
 lsst::daf::persistence::FormatterRegistration MaskedImageFormatter<ImagePixelT, MaskPixelT>::registration(
@@ -105,10 +105,10 @@ Persistable* MaskedImageFormatter<ImagePixelT, MaskPixelT>::read(
     Storage::Ptr storage,
     lsst::daf::base::DataProperty::PtrType additionalData) {
     execTrace("MaskedImageFormatter read start");
-    MaskedImage<ImagePixelT, MaskPixelT>* ip = new MaskedImage<ImagePixelT, MaskPixelT>;
     if (typeid(*storage) == typeid(BoostStorage)) {
         execTrace("MaskedImageFormatter read BoostStorage");
         BoostStorage* boost = dynamic_cast<BoostStorage*>(storage.get());
+        MaskedImage<ImagePixelT, MaskPixelT>* ip = new MaskedImage<ImagePixelT, MaskPixelT>;
         boost->getIArchive() & *ip;
         execTrace("MaskedImageFormatter read end");
         return ip;
@@ -116,7 +116,7 @@ Persistable* MaskedImageFormatter<ImagePixelT, MaskPixelT>::read(
     else if (typeid(*storage) == typeid(FitsStorage)) {
         execTrace("MaskedImageFormatter read FitsStorage");
         FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
-        ip->readFits(fits->getPath());
+        MaskedImage<ImagePixelT, MaskPixelT>* ip = new MaskedImage<ImagePixelT, MaskPixelT>(fits->getPath());
         execTrace("MaskedImageFormatter read end");
         return ip;
     }
@@ -151,8 +151,8 @@ lsst::daf::persistence::Formatter::Ptr MaskedImageFormatter<ImagePixelT, MaskPix
         new MaskedImageFormatter<ImagePixelT, MaskPixelT>(policy));
 }
 
-template class MaskedImageFormatter<uint16_t, maskPixelType>;
-template class MaskedImageFormatter<float, maskPixelType>;
-template class MaskedImageFormatter<double, maskPixelType>;
+template class MaskedImageFormatter<uint16_t, MaskPixel>;
+template class MaskedImageFormatter<float, MaskPixel>;
+template class MaskedImageFormatter<double, MaskPixel>;
 
 }}} // namespace lsst::afw::formatters

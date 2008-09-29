@@ -28,20 +28,8 @@
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/image/ImageUtils.h"
 
-// declare private functions
-template <typename OutPixelT, typename InPixelT>
-void _copyBorder(
-    lsst::afw::image::Image<OutPixelT> &convolvedImage,
-    lsst::afw::image::Image<InPixelT> const &inImage,
-    lsst::afw::math::Kernel const &kernel
-);
-
-template <typename OutPixelT, typename InPixelT>
-inline void _copyRegion(
-    typename lsst::afw::image::Image<OutPixelT> &outImage,
-    typename lsst::afw::image::Image<InPixelT> const &inImage,
-    vw::BBox2i const &region
-);
+// Private functions to copy Images' borders
+#include "lsst/afw/math/copyEdges.h"
 
 /**
  * @brief Apply convolution kernel to an image at one point
@@ -55,27 +43,26 @@ inline void _copyRegion(
 template <typename OutPixelT, typename InPixelT>
 inline void lsst::afw::math::apply(
     OutPixelT &outValue,    ///< output image pixel value
-    typename lsst::afw::image::Image<InPixelT>::pixel_accessor const &imageAccessor,
-        ///< accessor to for image pixel that overlaps (0,0) pixel of kernel(!)
-    lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::pixel_accessor const &kernelAccessor,
-        ///< accessor for (0,0) pixel of kernel
-    unsigned int cols,  ///< number of columns in kernel
-    unsigned int rows   ///< number of rows in kernel
+    typename lsst::afw::image::Image<InPixelT>::const_xy_locator const &imageAccessor,
+    ///< accessor to for image pixel that overlaps (0,0) pixel of kernel(!)
+    lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::const_xy_locator const &kernelAccessor,
+                                        ///< accessor for (0,0) pixel of kernel
+    unsigned int kwidth,                 ///< number of columns in kernel
+    unsigned int kheight                 ///< number of rows in kernel
 ) {
-    typedef typename lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::pixel_accessor kernelAccessorType;
+    typedef typename lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::const_xy_locator kernelAccessorType;
     double outImage = 0;
-    typename lsst::afw::image::Image<InPixelT>::pixel_accessor imageRowAcc = imageAccessor;
-    kernelAccessorType kRow = kernelAccessor;
-    for (unsigned int row = 0; row < rows; ++row, imageRowAcc.next_row(), kRow.next_row()) {
-        InPixelT *imagePtr = &(*imageRowAcc);
-        // assume data contiguous along rows; use a pointer instead of a vw pixel accessor to gain speed
-        lsst::afw::math::Kernel::PixelT *kerPtr = &(*kRow);
-        for (unsigned int col = 0; col < cols; ++col, imagePtr++, kerPtr++) {
-            lsst::afw::math::Kernel::PixelT ker = *kerPtr;
-
-            outImage += static_cast<OutPixelT>(ker * (*imagePtr));
+    typename lsst::afw::image::Image<InPixelT>::xy_locator imageRowAcc = imageAccessor;
+    
+    for (int y = 0; y != kheight; ++y) {
+        for (int x = 0; x != kwidth; ++x, ++imageAccessor.x(), ++kernelAccessor.x()) {
+            outImage += static_cast<OutPixelT>(imageAccessor[0]*kernelAccessor[0]);
         }
+
+        imageAccessor  += lsst::afw::image::details::difference_type(-kwidth, 1);
+        kernelAccessor += lsst::afw::image::details::difference_type(-kwidth, 1);
     }
+
     outValue = outImage;
 }
 
@@ -91,25 +78,31 @@ inline void lsst::afw::math::apply(
 template <typename OutPixelT, typename InPixelT>
 inline void lsst::afw::math::apply(
     OutPixelT &outValue,    ///< output pixel value
-    typename lsst::afw::image::Image<InPixelT>::pixel_accessor const &imageAccessor,
+    typename lsst::afw::image::Image<InPixelT>::const_xy_locator const &imageAccessor,
         ///< accessor to for image pixel that overlaps (0,0) pixel of kernel(!)
     std::vector<lsst::afw::math::Kernel::PixelT> const &kernelColList,  ///< kernel column vector
     std::vector<lsst::afw::math::Kernel::PixelT> const &kernelRowList   ///< kernel row vector
 ) {
-    double outImage = 0;
-    typename lsst::afw::image::Image<InPixelT>::pixel_accessor imageRowAcc = imageAccessor;
+    typedef typename std::vector<lsst::afw::math::Kernel::PixelT>::const_iterator k_iter;
+
     std::vector<lsst::afw::math::Kernel::PixelT>::const_iterator kernelRowIter = kernelRowList.begin();
-    for ( ; kernelRowIter != kernelRowList.end(); ++kernelRowIter, imageRowAcc.next_row()) {
-        typename lsst::afw::image::Image<InPixelT>::pixel_accessor imageColAcc = imageRowAcc;
-        std::vector<lsst::afw::math::Kernel::PixelT>::const_iterator kernelColIter = kernelColList.begin();
+
+    double outImage = 0;
+    for (k_iter kernelRowIter = kernelRowList.begin(), end = kernelRowList.end();
+         kernelRowIter != end; ++kernelRowIter) {
+
         double outImageRow = 0;
-        for ( ; kernelColIter != kernelColList.end(); ++kernelColIter, imageColAcc.next_col()) {
+        for (k_iter kernelColIter = kernelColList.begin(), end = kernelColList.end();
+             kernelColIter != end; ++kernelColIter, ++imageAccessor.x()) {
             double kernelColValue = static_cast<double> (*kernelColIter);
-            outImageRow += kernelColValue * (*imageColAcc);
+            outImageRow += kernelColValue*imageAccessor[0];
         }
-        double kernelRowValue = static_cast<double> (*kernelRowIter);
-        outImage += kernelRowValue * outImageRow;
+
+        outImage += static_cast<double>(*kernelRowIter) * outImageRow;
+
+        imageAccessor += lsst::afw::image::details::difference_type(-kernelColList.size(), 1);
     }
+    
     outValue = static_cast<OutPixelT>(outImage);
 }
 
@@ -119,7 +112,7 @@ inline void lsst::afw::math::apply(
  * convolvedImage must be the same size as inImage.
  * convolvedImage has a border in which the output pixels are not set. This border has size:
  * * kernel.getCtrCol/Row() along the left/bottom edge
- * * kernel.getCols/Rows() - 1 - kernel.getCtrCol/Row() along the right/top edge
+ * * kernel.getWidth/Height() - 1 - kernel.getCtrCol/Row() along the right/top edge
  *
  * @throw lsst::pex::exceptions::InvalidParameter if convolvedImage is not the same size as inImage.
  * @throw lsst::pex::exceptions::InvalidParameter if inImage is smaller (in colums or rows) than kernel.
@@ -134,54 +127,51 @@ void lsst::afw::math::basicConvolve(
     bool doNormalize                        ///< if True, normalize the kernel, else use "as is"
 ) {
     typedef typename lsst::afw::math::Kernel::PixelT KernelPixelT;
-    typedef typename lsst::afw::image::Image<InPixelT>::pixel_accessor InPixelAccessor;
-    typedef typename lsst::afw::image::Image<OutPixelT>::pixel_accessor OutPixelAccessor;
-    typedef typename lsst::afw::image::Image<KernelPixelT>::pixel_accessor KernelAccessor;
 
-    const unsigned int inImageCols = inImage.getCols();
-    const unsigned int inImageRows = inImage.getRows();
-    const unsigned int kCols = kernel.getCols();
-    const unsigned int kRows = kernel.getRows();
-    if ((convolvedImage.getCols() != inImageCols) || (convolvedImage.getRows() != inImageRows)) {
+    typedef typename lsst::afw::image::Image<KernelPixelT>::const_xy_locator kXY_locator;
+    typedef typename lsst::afw::image::Image<InPixelT>::const_xy_locator inXY_locator;
+    typedef typename lsst::afw::image::Image<OutPixelT>::x_iterator cnvX_iterator;
+
+    int const inImageWidth = inImage.getWidth();
+    int const inImageHeight = inImage.getHeight();
+    int const kWidth = kernel.getWidth();
+    int const kHeight = kernel.getHeight();
+    if (convolvedImage.dimensions() != inImage.dimensions()) {
         throw lsst::pex::exceptions::InvalidParameter("convolvedImage not the same size as inImage");
     }
-    if ((inImageCols < kCols) || (inImageRows < kRows)) {
+    if (inImage.dimensions() < kernel.dimensions()) {
         throw lsst::pex::exceptions::InvalidParameter("inImage smaller than kernel in columns and/or rows");
     }
     
-    const int cnvCols = static_cast<int>(inImageCols) + 1 - static_cast<int>(kernel.getCols());
-    const int cnvRows = static_cast<int>(inImageRows) + 1 - static_cast<int>(kernel.getRows());
-    const int cnvStartCol = static_cast<int>(kernel.getCtrCol());
-    const int cnvStartRow = static_cast<int>(kernel.getCtrRow());
-    const int cnvEndCol = cnvStartCol + static_cast<int>(cnvCols); // end index + 1
-    const int cnvEndRow = cnvStartRow + static_cast<int>(cnvRows); // end index + 1
+    int const cnvWidth = inImageWidth + 1 - kernel.getWidth();
+    int const cnvHeight = inImageHeight + 1 - kernel.getHeight();
+    int const cnvStartCol = kernel.getCtrX();
+    int const cnvStartRow = kernel.getCtrY();
+    int const cnvEndCol = cnvStartCol + cnvWidth;  // end index + 1
+    int const cnvEndRow = cnvStartRow + cnvHeight; // end index + 1
 
     // create input and output image accessors
     // and advance output accessor to lower left pixel that is set by convolution
-    InPixelAccessor inImageRowAcc = inImage.origin();
-    OutPixelAccessor cnvImageRowAcc = convolvedImage.origin();
-    cnvImageRowAcc.advance(cnvStartCol, cnvStartRow);
-    
     if (kernel.isSpatiallyVarying()) {
-        lsst::afw::image::Image<KernelPixelT> kernelImage(kernel.getCols(), kernel.getRows());
-        KernelAccessor kernelAcc = kernelImage.origin();
         lsst::pex::logging::Trace("lsst.afw.kernel.convolve", 3, "kernel is spatially varying");
-        for (int cnvRow = cnvStartRow; cnvRow < cnvEndRow;
-            ++cnvRow, cnvImageRowAcc.next_row(), inImageRowAcc.next_row()) {
-            double rowPos = lsst::afw::image::indexToPosition(cnvRow);
-            InPixelAccessor inImageColAcc = inImageRowAcc;
-            OutPixelAccessor cnvImageColAcc = cnvImageRowAcc;
-            for (int cnvCol = cnvStartCol; cnvCol < cnvEndCol;
-                ++cnvCol, inImageColAcc.next_col(), cnvImageColAcc.next_col()) {
-                double colPos = lsst::afw::image::indexToPosition(cnvCol);
+
+        lsst::afw::image::Image<KernelPixelT> kernelImage(kernel.dimensions()); // the kernel at a point
+
+        for (int cnvRow = cnvStartRow; cnvRow != cnvEndRow; ++cnvRow) {
+            double const rowPos = lsst::afw::image::indexToPosition(cnvRow);
+            
+            inXY_locator  inImLoc =  inImage.at_xy(0, cnvRow - cnvStartRow);
+            cnvX_iterator cnvImIter = convolvedImage.row_begin(cnvRow) + cnvStartCol;
+            for (int cnvCol = cnvStartCol; cnvCol != cnvEndCol; ++cnvCol, ++inImLoc.x(), ++cnvImIter) {
                 KernelPixelT kSum;
+                double const colPos = lsst::afw::image::indexToPosition(cnvCol);
                 kernel.computeImage(kernelImage, kSum, false, colPos, rowPos);
                 // g++ 3.6.4 requires the template arguments here to find the function; I don't know why
                 // Is this still true? RHL
-                lsst::afw::math::apply<OutPixelT, InPixelT>(
-                    *cnvImageColAcc, inImageColAcc, kernelAcc, kCols, kRows);
+                kXY_locator kernelLoc = kernelImage.xy_at(0,0);
+                lsst::afw::math::apply<OutPixelT, InPixelT>(*cnvImIter, inImLoc, kernelLoc, kWidth, kHeight);
                 if (doNormalize) {
-                    *cnvImageColAcc /= static_cast<InPixelT>(kSum);
+                    *cnvImIter /= kSum;
                 }
             }
         }
@@ -189,17 +179,14 @@ void lsst::afw::math::basicConvolve(
         // kernel is spatially invariant
         lsst::pex::logging::Trace("lsst.afw.kernel.convolve", 3, "kernel is spatially invariant");
         KernelPixelT kSum;
-        lsst::afw::image::Image<KernelPixelT> kernelImage = kernel.computeNewImage(kSum, doNormalize, 0.0, 0.0);
-        KernelAccessor kernelAcc = kernelImage.origin();
-        for (int cnvRow = cnvStartRow; cnvRow < cnvEndRow;
-            ++cnvRow, cnvImageRowAcc.next_row(), inImageRowAcc.next_row()) {
-            InPixelAccessor inImageColAcc = inImageRowAcc;
-            OutPixelAccessor cnvImageColAcc = cnvImageRowAcc;
-            for (int cnvCol = cnvStartCol; cnvCol < cnvEndCol;
-                ++cnvCol, inImageColAcc.next_col(), cnvImageColAcc.next_col()) {
-                // g++ 3.6.4 requires the template arguments here to find the function; I don't know why
-                lsst::afw::math::apply<OutPixelT, InPixelT>(
-                    *cnvImageColAcc, inImageColAcc, kernelAcc, kCols, kRows);
+        lsst::afw::image::Image<KernelPixelT> kernelImage = kernel.computeNewImage(kSum, doNormalize);
+
+        for (int cnvRow = cnvStartRow; cnvRow != cnvEndRow; ++cnvRow) {
+            inXY_locator inImLoc =  inImage.at_xy(0, cnvRow - cnvStartRow);
+            for (cnvX_iterator cnvImIter = convolvedImage.row_begin(cnvRow) + cnvStartCol,
+                     cnvImEnd = cnvImIter + cnvEndCol - cnvStartCol; cnvImIter != cnvImEnd; ++inImLoc.x(), ++cnvImIter) {
+                kXY_locator kernelLoc = kernelImage.xy_at(0,0);
+                lsst::afw::math::apply<OutPixelT, InPixelT>(*cnvImIter, inImLoc, kernelLoc, kWidth, kHeight);
             }
         }
     }
@@ -220,24 +207,24 @@ void lsst::afw::math::basicConvolve(
     typedef typename lsst::afw::image::Image<InPixelT>::pixel_accessor InPixelAccessor;
     typedef typename lsst::afw::image::Image<OutPixelT>::pixel_accessor OutPixelAccessor;
 
-    const unsigned int inImageCols = inImage.getCols();
-    const unsigned int inImageRows = inImage.getRows();
-    const unsigned int kCols = kernel.getCols();
-    const unsigned int kRows = kernel.getRows();
+    int const inImageWidth = inImage.getWidth();
+    int const inImageHeight = inImage.getHeight();
+    int const kWidth = kernel.getWidth();
+    int const kHeight = kernel.getHeight();
 
-    if (convolvedImage.getCols() != inImageCols || convolvedImage.getRows() != inImageRows) {
+    if (convolvedImage.getWidth() != inImageWidth || convolvedImage.getHeight() != inImageHeight) {
         throw lsst::pex::exceptions::InvalidParameter("convolvedImage not the same size as inImage");
     }
-    if ((inImageCols < kCols) || (inImageRows < kRows)) {
+    if ((inImageWidth < kWidth) || (inImageHeight < kHeight)) {
         throw lsst::pex::exceptions::InvalidParameter("inImage smaller than kernel in columns and/or rows");
     }
     
-    const int cnvCols = static_cast<int>(inImageCols) + 1 - static_cast<int>(kernel.getCols());
-    const int cnvRows = static_cast<int>(inImageRows) + 1 - static_cast<int>(kernel.getRows());
-    const int cnvStartCol = static_cast<int>(kernel.getCtrCol());
-    const int cnvStartRow = static_cast<int>(kernel.getCtrRow());
-    const int inStartCol = kernel.getPixel().first;
-    const int inStartRow = kernel.getPixel().second;
+    int const cnvWidth = static_cast<int>(inImageWidth) + 1 - static_cast<int>(kernel.getWidth());
+    int const cnvHeight = static_cast<int>(inImageHeight) + 1 - static_cast<int>(kernel.getHeight());
+    int const cnvStartCol = static_cast<int>(kernel.getCtrX());
+    int const cnvStartRow = static_cast<int>(kernel.getCtrY());
+    int const inStartCol = kernel.getPixel().first;
+    int const inStartRow = kernel.getPixel().second;
 
     // create input and output image accessors
     // and advance each to the right spot
@@ -247,10 +234,10 @@ void lsst::afw::math::basicConvolve(
     cnvImageRowAcc.advance(cnvStartCol, cnvStartRow);
 
     lsst::pex::logging::Trace("lsst.afw.kernel.convolve", 3, "kernel is a spatially invariant delta function basis");
-    for (int i = 0; i < cnvRows; ++i, cnvImageRowAcc.next_row(), inImageRowAcc.next_row()) {
+    for (int i = 0; i < cnvHeight; ++i, cnvImageRowAcc.next_row(), inImageRowAcc.next_row()) {
         InPixelAccessor inImageColAcc = inImageRowAcc;
         OutPixelAccessor cnvImageColAcc = cnvImageRowAcc;
-        for (int j = 0; j < cnvCols; ++j, inImageColAcc.next_col(), cnvImageColAcc.next_col()) {
+        for (int j = 0; j < cnvWidth; ++j, inImageColAcc.next_col(), cnvImageColAcc.next_col()) {
             *cnvImageColAcc = *inImageColAcc;
         }
     }
@@ -270,23 +257,23 @@ void lsst::afw::math::basicConvolve(
     typedef typename lsst::afw::image::Image<InPixelT>::pixel_accessor InPixelAccessor;
     typedef typename lsst::afw::image::Image<OutPixelT>::pixel_accessor OutPixelAccessor;
 
-    const unsigned int inImageCols = inImage.getCols();
-    const unsigned int inImageRows = inImage.getRows();
-    const unsigned int kCols = kernel.getCols();
-    const unsigned int kRows = kernel.getRows();
-    if ((convolvedImage.getCols() != inImageCols) || (convolvedImage.getRows() != inImageRows)) {
+    int const inImageWidth = inImage.getWidth();
+    int const inImageHeight = inImage.getHeight();
+    int const kWidth = kernel.getWidth();
+    int const kHeight = kernel.getHeight();
+    if ((convolvedImage.getWidth() != inImageWidth) || (convolvedImage.getHeight() != inImageHeight)) {
         throw lsst::pex::exceptions::InvalidParameter("convolvedImage not the same size as inImage");
     }
-    if ((inImageCols < kCols) || (inImageRows < kRows)) {
+    if ((inImageWidth < kWidth) || (inImageHeight < kHeight)) {
         throw lsst::pex::exceptions::InvalidParameter("inImage smaller than kernel in columns and/or rows");
     }
     
-    const int cnvCols = static_cast<int>(inImageCols) + 1 - static_cast<int>(kernel.getCols());
-    const int cnvRows = static_cast<int>(inImageRows) + 1 - static_cast<int>(kernel.getRows());
-    const int cnvStartCol = static_cast<int>(kernel.getCtrCol());
-    const int cnvStartRow = static_cast<int>(kernel.getCtrRow());
-    const int cnvEndCol = cnvStartCol + static_cast<int>(cnvCols); // end index + 1
-    const int cnvEndRow = cnvStartRow + static_cast<int>(cnvRows); // end index + 1
+    int const cnvWidth = static_cast<int>(inImageWidth) + 1 - static_cast<int>(kernel.getWidth());
+    int const cnvHeight = static_cast<int>(inImageHeight) + 1 - static_cast<int>(kernel.getHeight());
+    int const cnvStartCol = static_cast<int>(kernel.getCtrX());
+    int const cnvStartRow = static_cast<int>(kernel.getCtrY());
+    int const cnvEndCol = cnvStartCol + static_cast<int>(cnvWidth); // end index + 1
+    int const cnvEndRow = cnvStartRow + static_cast<int>(cnvHeight); // end index + 1
 
     // create input and output image accessors
     // and advance output accessor to lower left pixel that is set by convolution
@@ -294,8 +281,8 @@ void lsst::afw::math::basicConvolve(
     OutPixelAccessor cnvImageRowAcc = convolvedImage.origin();
     cnvImageRowAcc.advance(cnvStartCol, cnvStartRow);
     
-    std::vector<lsst::afw::math::Kernel::PixelT> kColVec(kernel.getCols());
-    std::vector<lsst::afw::math::Kernel::PixelT> kRowVec(kernel.getRows());
+    std::vector<lsst::afw::math::Kernel::PixelT> kColVec(kernel.getWidth());
+    std::vector<lsst::afw::math::Kernel::PixelT> kRowVec(kernel.getHeight());
     
     if (kernel.isSpatiallyVarying()) {
         lsst::pex::logging::Trace("lsst.afw.kernel.convolve", 3, "kernel is a spatially varying separable kernel");
@@ -341,8 +328,8 @@ void lsst::afw::math::basicConvolve(
  * convolvedImage must be the same size as inImage.
  * convolvedImage has a border in which the output pixels are just a copy of the input pixels.
  * This border has size:
- * * kernel.getCtrCol/Row() along the left/bottom edge
- * * kernel.getCols/Rows() - 1 - kernel.getCtrCol/Row() along the right/top edge
+ * * kernel.getCtrX/Y() along the left/bottom edge
+ * * kernel.getWidth/Height() - 1 - kernel.getCtrY/Y() along the right/top edge
  *
  * @throw lsst::pex::exceptions::InvalidParameter if convolvedImage is not the same size as inImage.
  * @throw lsst::pex::exceptions::InvalidParameter if inImage is smaller (in colums or rows) than kernel.
@@ -368,8 +355,8 @@ void lsst::afw::math::convolve(
  * The returned Image is the same size as inImage.
  * It has a border in which the output pixels are just a copy of the input pixels.
  * This border will have size:
- * * kernel.getCtrCol/Row() along the left/bottom edge
- * * kernel.getCols/Rows() - 1 - kernel.getCtrCol/Row() along the right/top edge
+ * * kernel.getCtrX/Y() along the left/bottom edge
+ * * kernel.getWidth/Height() - 1 - kernel.getCtrX/Y() along the right/top edge
  *
  * @throw lsst::pex::exceptions::InvalidParameter if inImage is smaller (in colums or rows) than kernel.
  *
@@ -381,7 +368,7 @@ lsst::afw::image::Image<InPixelT> lsst::afw::math::convolveNew(
     KernelT const &kernel,  ///< convolution kernel
     bool doNormalize        ///< if True, normalize the kernel, else use "as is"
 ) {
-    lsst::afw::image::Image<InPixelT> convolvedImage(inImage.getCols(), inImage.getRows());
+    lsst::afw::image::Image<InPixelT> convolvedImage(inImage.getWidth(), inImage.getHeight());
     lsst::afw::math::convolve(convolvedImage, inImage, kernel, doNormalize);
     return convolvedImage;
 }
@@ -413,75 +400,66 @@ void lsst::afw::math::convolveLinear(
         return lsst::afw::math::convolve(convolvedImage, inImage, kernel, false);
     }
 
-    const unsigned int imCols = inImage.getCols();
-    const unsigned int imRows = inImage.getRows();
-    const unsigned int kCols = kernel.getCols();
-    const unsigned int kRows = kernel.getRows();
-    if ((convolvedImage.getCols() != imCols) || (convolvedImage.getRows() != imRows)) {
+    int const imWidth = inImage.getWidth();
+    int const imHeight = inImage.getHeight();
+    int const kWidth = kernel.getWidth();
+    int const kHeight = kernel.getHeight();
+    if (convolvedImage.dimensions() != inImage.dimensions()) {
         throw lsst::pex::exceptions::InvalidParameter("convolvedImage not the same size as inImage");
     }
-    if ((imCols< kCols) || (imRows < kRows)) {
-        throw lsst::pex::exceptions::InvalidParameter(
-            "inImage smaller than kernel in columns and/or rows");
+    if (inImage.dimensions() < kernel.dimensions()) {
+        throw lsst::pex::exceptions::InvalidParameter("inImage smaller than kernel in columns and/or rows");
     }
     
     typedef lsst::afw::image::Image<double> BasisImage;
-    typedef boost::shared_ptr<BasisImage> BasisImagePtr;
-    typedef typename lsst::afw::image::Image<double>::pixel_accessor BasisPixelAccessor;
-    typedef std::vector<BasisPixelAccessor> BasisPixelAccessorList;
-    typedef typename lsst::afw::image::Image<OutPixelT>::pixel_accessor OutPixelAccessor;
+    typedef BasisImage::Ptr BasisImagePtr;
+    typedef typename lsst::afw::image::Image<double>::x_iterator BasisX_iterator;
+    typedef std::vector<BasisX_iterator> BasisX_iteratorList;
+    typedef typename lsst::afw::image::Image<OutPixelT>::x_iterator cnvX_iterator;
     typedef lsst::afw::math::LinearCombinationKernel::KernelList kernelListType;
-    typedef std::vector<double> kernelCoeffListType;
-
-    const int cnvCols = static_cast<int>(imCols) + 1 - static_cast<int>(kernel.getCols());
-    const int cnvRows = static_cast<int>(imRows) + 1 - static_cast<int>(kernel.getRows());
-    const int cnvStartCol = static_cast<int>(kernel.getCtrCol());
-    const int cnvStartRow = static_cast<int>(kernel.getCtrRow());
-    const int cnvEndCol = cnvStartCol + static_cast<int>(cnvCols); // end index + 1
-    const int cnvEndRow = cnvStartRow + static_cast<int>(cnvRows); // end index + 1
 
     // create a vector of pointers to basis images (input Image convolved with each basis kernel)
-    // and accessors to those images. We don't use the basis images directly,
-    // but keep them around to prevent the memory from being reclaimed.
-    // Advance the accessors to cnvStart
-    kernelListType basisKernelList = kernel.getKernelList();
     std::vector<BasisImagePtr> basisImagePtrList;
-    BasisPixelAccessorList basisImRowAccList;
-    for (typename kernelListType::const_iterator basisKernelIter = basisKernelList.begin();
-        basisKernelIter != basisKernelList.end(); ++basisKernelIter) {
-        BasisImagePtr basisImagePtr(new BasisImage(imCols, imRows));
-        lsst::afw::math::basicConvolve(*basisImagePtr, inImage, **basisKernelIter, false);
-        basisImagePtrList.push_back(basisImagePtr);
-        basisImRowAccList.push_back(BasisPixelAccessor(basisImagePtr->origin()));
-        basisImRowAccList.back().advance(cnvStartCol, cnvStartRow);
+    {
+        kernelListType basisKernelList = kernel.getKernelList();
+        for (typename kernelListType::const_iterator basisKernelIter = basisKernelList.begin();
+             basisKernelIter != basisKernelList.end(); ++basisKernelIter) {
+            BasisImagePtr basisImagePtr(new BasisImage(inImage.dimensions()));
+            lsst::afw::math::basicConvolve(*basisImagePtr, inImage, **basisKernelIter, false);
+            basisImagePtrList.push_back(basisImagePtr);
+        }
     }
+    BasisX_iteratorList basisIterList(basisImagePtrList.size()); // x_iterators for each basis image
+
+    int const cnvWidth = imWidth + 1 - kernel.getWidth();
+    int const cnvHeight = imHeight + 1 - kernel.getHeight();
+    int const cnvStartCol = kernel.getCtrX();
+    int const cnvStartRow = kernel.getCtrY();
+    int const cnvEndCol = cnvStartCol + cnvWidth;  // end index + 1
+    int const cnvEndRow = cnvStartRow + cnvHeight; // end index + 1
     
     // iterate over matching pixels of all images to compute output image
-    std::vector<double> kernelCoeffList(kernel.getNKernelParameters());
-    OutPixelAccessor cnvRowAcc = convolvedImage.origin();
-    cnvRowAcc.advance(cnvStartCol, cnvStartRow);
+    std::vector<double> kernelCoeffList(kernel.getNKernelParameters()); // weights of basic images at this point
     for (int cnvRow = cnvStartRow; cnvRow < cnvEndRow; ++cnvRow) {
-        double rowPos = lsst::afw::image::indexToPosition(cnvRow);
-        OutPixelAccessor cnvColAcc = cnvRowAcc;
-        BasisPixelAccessorList basisImColAccList = basisImRowAccList;
-        for (int cnvCol = cnvStartCol; cnvCol < cnvEndCol; ++cnvCol) {
-            double colPos = lsst::afw::image::indexToPosition(cnvCol);
+        double const rowPos = lsst::afw::image::indexToPosition(cnvRow);
+    
+        cnvX_iterator cnvColIter = convolvedImage.row_begin(cnvRow) + cnvStartCol;
+        for (int i = 0; i != basisIterList.size(); ++i) {
+            basisIterList[i] = basisImagePtrList[i]->row_begin(cnvRow) + cnvStartCol;
+        }
+
+        for (int cnvCol = cnvStartCol; cnvCol != cnvEndCol; ++cnvCol, ++cnvColIter) {
+            double const colPos = lsst::afw::image::indexToPosition(cnvCol);
+            
             kernel.computeKernelParametersFromSpatialModel(kernelCoeffList, colPos, rowPos);
 
             double cnvImagePix = 0.0;
-            typename std::vector<double>::const_iterator kernelCoeffIter = kernelCoeffList.begin();
-            for (typename BasisPixelAccessorList::const_iterator basisImColIter = basisImColAccList.begin();
-                basisImColIter != basisImColAccList.end(); ++basisImColIter, ++kernelCoeffIter) {
-                cnvImagePix += (*kernelCoeffIter) * (**basisImColIter);
+            for (int i = 0; i != basisIterList.size(); ++i) {
+                cnvImagePix += kernelCoeffList[i]*(*basisIterList[i]);
+                ++basisIterList[i];
             }
-            *cnvColAcc = static_cast<OutPixelT>(cnvImagePix);
-            cnvColAcc.next_col();
-            std::for_each(basisImColAccList.begin(), basisImColAccList.end(),
-                std::mem_fun_ref(&BasisPixelAccessor::next_col));
+            *cnvColIter = cnvImagePix;
         }
-        cnvRowAcc.next_row();
-        std::for_each(basisImRowAccList.begin(), basisImRowAccList.end(),
-            std::mem_fun_ref(&BasisPixelAccessor::next_row));
     }
 
     _copyBorder(convolvedImage, inImage, kernel);
@@ -503,91 +481,7 @@ lsst::afw::image::Image<InPixelT> lsst::afw::math::convolveLinearNew(
     lsst::afw::image::Image<InPixelT> const &inImage,       ///< image to convolve
     lsst::afw::math::LinearCombinationKernel const &kernel  ///< convolution kernel
 ) {
-    lsst::afw::image::Image<InPixelT> convolvedImage(inImage.getCols(), inImage.getRows());
+    lsst::afw::image::Image<InPixelT> convolvedImage(inImage.getWidth(), inImage.getHeight());
     lsst::afw::math::convolveLinear(convolvedImage, inImage, kernel);
     return convolvedImage;
-}
-
-/**
- * @brief Private function to copy the border of a convolved image.
- *
- * Copy the border of an image. This border has size:
- * * kernel.getCtrCol/Row() along the left/bottom edge
- * * kernel.getCols/Rows() - 1 - kernel.getCtrCol/Row() along the right/top edge
- *
- * The sizes are not error-checked.
- *
- * @ingroup afw
- */
-template <typename OutPixelT, typename InPixelT>
-void _copyBorder(
-    lsst::afw::image::Image<OutPixelT> &convolvedImage,       ///< convolved image
-    lsst::afw::image::Image<InPixelT> const &inImage,    ///< image to convolve
-    lsst::afw::math::Kernel const &kernel   ///< convolution kernel
-) {
-    const unsigned int imCols = inImage.getCols();
-    const unsigned int imRows = inImage.getRows();
-    const unsigned int kCols = kernel.getCols();
-    const unsigned int kRows = kernel.getRows();
-    const unsigned int kCtrCol = kernel.getCtrCol();
-    const unsigned int kCtrRow = kernel.getCtrRow();
-    
-    vw::BBox2i bottomEdge(0, 0, imCols, kCtrRow);
-    _copyRegion(convolvedImage, inImage, bottomEdge);
-    
-    vw::int32 numRows = kRows - (1 + kCtrRow);
-    vw::BBox2i topEdge(0, imRows - numRows, imCols, numRows);
-    _copyRegion(convolvedImage, inImage, topEdge);
-
-    vw::BBox2i leftEdge(0, kCtrRow, kCtrCol, imRows + 1 - kRows);
-    _copyRegion(convolvedImage, inImage, leftEdge);
-    
-    vw::int32 numCols = kCols - (1 + kernel.getCtrCol());
-    vw::BBox2i rightEdge(imCols - numCols, kCtrRow, numCols, imRows + 1 - kRows);
-    _copyRegion(convolvedImage, inImage, rightEdge);
-}
-
-
-/**
- * @brief Private function to copy a rectangular region from one Image to another.
- *
- * I hope eventually to replace this by calls to Image.getSubImage
- * and Image.replaceSubImage, but that is currently too messy
- * because getSubImage requires a shared pointer to the source image.
- *
- * @throw invalid_argument if the region extends off of either image.
- */
-template <typename OutPixelT, typename InPixelT>
-inline void _copyRegion(
-    typename lsst::afw::image::Image<OutPixelT> &outImage,          ///< destination Image
-    typename lsst::afw::image::Image<InPixelT> const &inImage,   ///< source Image
-    vw::BBox2i const &region    ///< region to copy
-) {
-    typedef typename lsst::afw::image::Image<InPixelT>::pixel_accessor InPixelAccessor;
-    typedef typename lsst::afw::image::Image<OutPixelT>::pixel_accessor OutPixelAccessor;
-
-    vw::math::Vector<vw::int32> const startColRow = region.min();
-    vw::math::Vector<vw::int32> const numColRow = region.size();
-    lsst::pex::logging::Trace("lsst.afw.kernel._copyRegion", 4,
-        "_copyRegion: dest size=%d, %d; src size=%d, %d; region start=%d, %d; region size=%d, %d",
-        outImage.getCols(), outImage.getRows(), inImage.getCols(), inImage.getRows(),
-        startColRow[0], startColRow[1], numColRow[0], numColRow[1]
-    );
-
-    vw::math::Vector<vw::int32> const endColRow = region.max();
-    if ((static_cast<unsigned int>(endColRow[0]) > std::min(outImage.getCols(), inImage.getCols()))
-        || ((static_cast<unsigned int>(endColRow[1]) > std::min(outImage.getRows(), inImage.getRows())))) {
-        throw lsst::pex::exceptions::InvalidParameter("Region out of range");
-    }
-    InPixelAccessor inRow = inImage.origin();
-    OutPixelAccessor outRow = outImage.origin();
-    inRow.advance(startColRow[0], startColRow[1]);
-    outRow.advance(startColRow[0], startColRow[1]);
-    for (int row = 0; row < numColRow[1]; ++row, inRow.next_row(), outRow.next_row()) {
-        InPixelAccessor inCol = inRow;
-        OutPixelAccessor outCol = outRow;
-        for (int col = 0; col < numColRow[0]; ++col, inCol.next_col(), outCol.next_col()) {
-            *outCol = static_cast<OutPixelT>(*inCol);
-        }
-    }
 }

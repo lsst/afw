@@ -26,8 +26,6 @@
 #include "boost/cstdint.hpp"
 #include "boost/shared_ptr.hpp"
 
-#include "vw/Math/BBox.h"
-
 #include "lsst/daf/base/Persistable.h"
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/afw/image/MaskedImage.h"
@@ -36,49 +34,46 @@
 namespace lsst {
 namespace afw {
     namespace formatters {
-        template<class ImageT, class MaskT> class ExposureFormatter;
+        template<typename ImageT, typename MaskT> class ExposureFormatter;
     }
 namespace image {
-    
-    template<class ImageT, class MaskT> class Exposure;
-        
-    template<typename ImageT, typename MaskT> 
+    template<typename ImageT, typename MaskT=lsst::afw::image::MaskPixel, typename VarianceT=ImageT>
     class Exposure : public lsst::daf::base::Persistable,
                      public lsst::daf::data::LsstBase {
-                
     public:    
-
-        typedef boost::shared_ptr<lsst::afw::image::Wcs> wscPtrType;
-
         // Class Constructors and Destructor
         explicit Exposure();
-        explicit Exposure(MaskedImage<ImageT, MaskT> const &maskedImage);
-        explicit Exposure(MaskedImage<ImageT, MaskT> const &maskedImage, Wcs const &wcs);
-        explicit Exposure(unsigned cols, unsigned rows, Wcs const &wcs);
-        explicit Exposure(unsigned cols, unsigned rows);
+        explicit Exposure(MaskedImage<ImageT, MaskT, VarianceT> const &maskedImage);
+        explicit Exposure(MaskedImage<ImageT, MaskT, VarianceT> const &maskedImage, Wcs const &wcs);
+        explicit Exposure(int const cols, int const rows, Wcs const &wcs);
+        explicit Exposure(int const cols, int const rows);
+        explicit Exposure(std::string const &file, int const hdu=0, bool const conformMasks=false);
+
+        Exposure(Exposure const &src, Bbox const& bbox, bool const deep);        
+
         virtual ~Exposure(); 
-        
-        // Get Members (getMaskedImage is inline) 
-        MaskedImage<ImageT, MaskT> getMaskedImage() const { return _maskedImage; };
+
+        // Get Members
+        MaskedImage<ImageT, MaskT, VarianceT> getMaskedImage() const { return _maskedImage; };
+        lsst::daf::base::DataProperty::PtrType getMetaData() const { return _metaData; }
         Wcs getWcs() const;
-        Exposure<ImageT, MaskT> getSubExposure(const vw::BBox2i&) const;
         
         // Set Members
-        void setMaskedImage(MaskedImage<ImageT, MaskT> &maskedImage);
+        void setMaskedImage(MaskedImage<ImageT, MaskT, VarianceT> &maskedImage);
         void setWcs(Wcs const &wcs);
         
         // Has Member (inline)
         bool hasWcs() const { return static_cast<bool>(_wcsPtr); };
         
-        // Read Fits and Write Fits Members
-        void readFits(std::string const &expInFile);
+        // FITS
         void writeFits(std::string const &expOutFile) const;
         
     private:
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::ExposureFormatter<ImageT, MaskT>);
 
+        lsst::daf::base::DataProperty::PtrType _metaData;
         MaskedImage<ImageT, MaskT> _maskedImage;             
-        boost::shared_ptr<Wcs> _wcsPtr;    
+        Wcs::Ptr _wcsPtr;
     };     
 }}} // lsst::afw::image
 

@@ -17,9 +17,8 @@
 #endif
 static char const* SVNid __attribute__((unused)) = "$Id$";
 
-#include "boost/serialization/binary_object.hpp"
 #include "boost/serialization/shared_ptr.hpp"
-#include "boost/serialization/map.hpp"
+#include "boost/serialization/binary_object.hpp"
 
 #include "lsst/afw/formatters/MaskFormatter.h"
 
@@ -42,7 +41,7 @@ using lsst::daf::persistence::BoostStorage;
 using lsst::daf::persistence::FitsStorage;
 using lsst::daf::persistence::Storage;
 using lsst::afw::image::Mask;
-using lsst::afw::image::maskPixelType;
+using lsst::afw::image::MaskPixel;
 
 namespace lsst {
 namespace afw {
@@ -54,7 +53,7 @@ public:
     static std::string name;
 };
 
-template<> std::string MaskFormatterTraits<maskPixelType>::name("Mask");
+template<> std::string MaskFormatterTraits<MaskPixel>::name("Mask");
 
 
 template <typename MaskPixelT>
@@ -108,10 +107,10 @@ Persistable* MaskFormatter<MaskPixelT>::read(
     Storage::Ptr storage,
     lsst::daf::base::DataProperty::PtrType additionalData) {
     execTrace("MaskFormatter read start");
-    Mask<MaskPixelT>* ip = new Mask<MaskPixelT>;
     if (typeid(*storage) == typeid(BoostStorage)) {
         execTrace("MaskFormatter read BoostStorage");
         BoostStorage* boost = dynamic_cast<BoostStorage*>(storage.get());
+        Mask<MaskPixelT>* ip = new Mask<MaskPixelT>;
         boost->getIArchive() & *ip;
         execTrace("MaskFormatter read end");
         return ip;
@@ -119,7 +118,7 @@ Persistable* MaskFormatter<MaskPixelT>::read(
     else if (typeid(*storage) == typeid(FitsStorage)) {
         execTrace("MaskFormatter read FitsStorage");
         FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
-        ip->readFits(fits->getPath(), fits->getHdu());
+        Mask<MaskPixelT>* ip = new Mask<MaskPixelT>(fits->getPath(), fits->getHdu());
         execTrace("MaskFormatter read end");
         return ip;
     }
@@ -158,8 +157,7 @@ void MaskFormatter<MaskPixelT>::delegateSerialize(
     }
     unsigned int pixels = cols * rows * planes;
     MaskPixelT* data = ip->_vwImagePtr->data();
-    ar & boost::serialization::make_binary_object(
-        data, pixels * sizeof(MaskPixelT));
+    ar & boost::serialization::make_binary_object(data, pixels * sizeof(MaskPixelT));
     execTrace("MaskFormatter delegateSerialize end");
 }
 
@@ -169,6 +167,6 @@ lsst::daf::persistence::Formatter::Ptr MaskFormatter<MaskPixelT>::createInstance
     return lsst::daf::persistence::Formatter::Ptr(new MaskFormatter<MaskPixelT>(policy));
 }
 
-template class MaskFormatter<maskPixelType>;
+template class MaskFormatter<MaskPixel>;
 
 }}} // namespace lsst::afw::formatters

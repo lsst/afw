@@ -1,9 +1,13 @@
 #include <iostream>
+#include "boost/mpl/vector.hpp"
 #include "boost/lambda/lambda.hpp"
 #include "boost/format.hpp"
+#include "boost/gil/gil_all.hpp"
 
 #include "lsst/pex/exceptions.h"
-#include "lsst/gil/Image.h"
+#include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/fits/fits_io.h"
+#include "lsst/afw/image/fits/fits_io_mpl.h"
 
 namespace image = lsst::afw::image;
 
@@ -209,6 +213,43 @@ image::Image<PixelT>& image::Image<PixelT>::operator=(const Image& src) {
 }
 
 /************************************************************************************************************/
+
+template<typename PixelT>
+image::Image<PixelT>::Image(const std::string& fileName, ///< File to read
+                            const int hdu,               ///< Desired HDU
+                            lsst::daf::base::DataProperty::PtrType metaData ///< file metaData (may point to NULL)
+                           ) :
+    image::ImageBase<PixelT>() {
+
+    typedef boost::mpl::vector<
+        lsst::afw::image::details::types_traits<unsigned char>::image_t,
+        lsst::afw::image::details::types_traits<unsigned short>::image_t,
+        lsst::afw::image::details::types_traits<short>::image_t,
+        lsst::afw::image::details::types_traits<int>::image_t,
+        lsst::afw::image::details::types_traits<float>::image_t // ,
+        //lsst::afw::image::details::types_traits<double>::image_t
+    > fits_img_types;
+
+    if (!image::fits_read_image<fits_img_types>(fileName, *this->_getRawImagePtr(), metaData)) {
+        throw lsst::pex::exceptions::FitsError(boost::format("Failed to read %s HDU %d") % fileName % hdu);
+    }
+    this->_setRawView();
+}
+
+template<typename PixelT>
+void image::Image<PixelT>::writeFits(
+	const std::string& fileName,    ///< File to write
+#if 1                                   // Old name for boost::shared_ptrs
+        typename lsst::daf::base::DataProperty::PtrType metaData //!< metadata to write to header; or NULL
+#else
+        typename lsst::daf::base::DataProperty::ConstPtr metaData //!< metadata to write to header; or NULL
+#endif
+                                    ) const {
+
+    image::fits_write_view(fileName, _getRawView(), metaData);
+}
+
+/************************************************************************************************************/
 //
 // N.b. We could use the STL, but I find boost::lambda clearer, and more easily extended
 // to e.g. setting random numbers
@@ -238,6 +279,14 @@ void image::Image<PixelT>::operator-=(const PixelT rhs) {
 template<typename PixelT>
 void image::Image<PixelT>::operator-=(const Image<PixelT>& rhs) {
     transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<PixelT>(_1 - _2));
+}
+
+template<typename PixelT>
+image::Image<PixelT>& image::Image<PixelT>::operator*(const PixelT rhs) {
+    abort();                            // we're doing a multiply in place, but need a tmp (I think)
+    transform_pixels(_getRawView(), _getRawView(), ret<PixelT>(_1 * rhs));
+
+    return *this;
 }
 
 template<typename PixelT>

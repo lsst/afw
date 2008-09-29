@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <string>
 #include <algorithm>
-#include "lsst/gil/Image.h"
+#include "lsst/afw/image/Image.h"
 
 using namespace lsst::afw::image;
 
