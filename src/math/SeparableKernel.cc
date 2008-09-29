@@ -72,7 +72,7 @@ void lsst::afw::math::SeparableKernel::computeImage(
     basicComputeVectors(_localColList, _localRowList, imSum, doNormalize);
 
     for (int y = 0; y != image.getHeight(); ++y) {
-        typename lsst::afw::image::Image<PixelT>::x_iterator imPtr = image.row_begin(y);
+        lsst::afw::image::Image<PixelT>::x_iterator imPtr = image.row_begin(y);
         for (std::vector<PixelT>::iterator colIter = _localColList.begin();
              colIter != _localColList.end(); ++colIter, ++imPtr) {
             *imPtr = (*colIter)*_localRowList[y];
@@ -95,7 +95,7 @@ void lsst::afw::math::SeparableKernel::computeVectors(
     double x,   ///< x (column position) at which to compute spatial function
     double y    ///< y (row position) at which to compute spatial function
 ) const {
-    if ((colList.size() != this->getCols()) || (rowList.size() != this->getRows())) {
+    if (static_cast<int>(colList.size()) != this->getWidth() || static_cast<int>(rowList.size()) != this->getHeight()) {
         throw lsst::pex::exceptions::InvalidParameter("colList and/or rowList are the wrong size");
     }
     if (this->isSpatiallyVarying()) {
@@ -168,7 +168,7 @@ void lsst::afw::math::SeparableKernel::basicComputeVectors(
     double colSum = 0.0;
     double colFuncValue;
     std::vector<PixelT>::iterator colIter = colList.begin();
-    double xOffset = - static_cast<double>(this->getCtrCol());
+    double xOffset = - static_cast<double>(this->getCtrX());
     for (double x = xOffset; colIter != colList.end(); ++colIter, x += 1.0) {
         colFuncValue = (*_kernelColFunctionPtr)(x);
         *colIter = colFuncValue;
@@ -178,7 +178,7 @@ void lsst::afw::math::SeparableKernel::basicComputeVectors(
     double rowSum = 0.0;
     double rowFuncValue;
     std::vector<PixelT>::iterator rowIter = rowList.begin();
-    double yOffset = - static_cast<double>(this->getCtrRow());
+    double yOffset = - static_cast<double>(this->getCtrY());
     for (double y = yOffset; rowIter != rowList.end(); ++rowIter, y += 1.0) {
         rowFuncValue = (*_kernelRowFunctionPtr)(y);
         *rowIter = rowFuncValue;

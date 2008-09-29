@@ -245,8 +245,8 @@ F transform_pixels(const View1& src1, const View2& src2,const View3& src3,const 
     for (std::ptrdiff_t y=0; y<dst.height(); ++y) {
         typename View1::x_iterator srcIt1=src1.row_begin(y);
         typename View2::x_iterator srcIt2=src2.row_begin(y);
-        typename View2::x_iterator srcIt3=src3.row_begin(y);
-        typename View3::x_iterator dstIt=dst.row_begin(y);
+        typename View3::x_iterator srcIt3=src3.row_begin(y);
+        typename ViewDest::x_iterator dstIt=dst.row_begin(y);
         for (std::ptrdiff_t x=0; x<dst.width(); ++x)
             dstIt[x]=fun(srcIt1[x],srcIt2[x],srcIt3[x]);
     }
@@ -260,9 +260,9 @@ F transform_pixels(const View1& src1, const View2& src2,const View3& src3,const 
     for (std::ptrdiff_t y=0; y<dst.height(); ++y) {
         typename View1::x_iterator srcIt1=src1.row_begin(y);
         typename View2::x_iterator srcIt2=src2.row_begin(y);
-        typename View2::x_iterator srcIt3=src3.row_begin(y);
-        typename View2::x_iterator srcIt4=src4.row_begin(y);
-        typename View3::x_iterator dstIt=dst.row_begin(y);
+        typename View3::x_iterator srcIt3=src3.row_begin(y);
+        typename View4::x_iterator srcIt4=src4.row_begin(y);
+        typename ViewDest::x_iterator dstIt=dst.row_begin(y);
         for (std::ptrdiff_t x=0; x<dst.width(); ++x)
             dstIt[x]=fun(srcIt1[x],srcIt2[x],srcIt3[x],srcIt4[x]);
     }

@@ -423,4 +423,7 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::xy_locator
 //
 // Explicit instantiations
 //
+template class image::MaskedImage<boost::uint16_t>;
+template class image::MaskedImage<int>;
 template class image::MaskedImage<float>;
+template class image::MaskedImage<double>;

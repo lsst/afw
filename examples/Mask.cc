@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <string>
 #include <algorithm>
-#include "lsst/gil/Mask.h"
+#include "lsst/afw/image/Mask.h"
 
 using namespace lsst::afw::image;
 

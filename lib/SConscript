@@ -14,6 +14,7 @@ env.SharedLibrary(
         "formatters/WcsFormatter.cc",
         "image/Exposure.cc",
         "image/Filter.cc",
+        "image/fitsIo.cc",
         "image/Image.cc",
         "image/DecoratedImage.cc",
         "image/Mask.cc",

@@ -246,8 +246,8 @@ namespace image {
 
         // generalised copy constructor
         template<typename OtherPixelT>
-        Image(const Image<OtherPixelT>& src, const bool deep) :
-            image::ImageBase<PixelT>(src, deep) {}
+        Image(const Image<OtherPixelT>& src) :
+            image::ImageBase<PixelT>(src, true) {}
 
         virtual ~Image() { }
         //
@@ -350,7 +350,10 @@ namespace image {
 
     template<typename PixelT>
     void swap(DecoratedImage<PixelT>& a, DecoratedImage<PixelT>& b);
-    
+    //
+    // Forward declaration, for templated functions in files that don't actually need to include MaskedImage.h 
+    //
+    template<typename, typename, typename> class MaskedImage;
 }}}  // lsst::afw::image
 
 #endif // LSST_IMAGE_IMAGE_H

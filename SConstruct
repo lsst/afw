@@ -11,6 +11,7 @@ env = scons.makeEnv(
     [
         ["boost", "boost/version.hpp", "boost_filesystem:C++"],
         ["boost", "boost/regex.hpp", "boost_regex:C++"],
+        ["boost", "boost/filesystem.hpp", "boost_system:C++"],
         ["boost", "boost/serialization/base_object.hpp", "boost_serialization:C++"],
         ["boost", "boost/test/unit_test.hpp", "boost_unit_test_framework:C++"],
         ["python", "Python.h"],

@@ -2,7 +2,7 @@
 #include <string>
 #include <algorithm>
 #include "boost/iterator/zip_iterator.hpp"
-#include "lsst/gil/MaskedImage.h"
+#include "lsst/afw/image/MaskedImage.h"
 
 namespace image = lsst::afw::image;
 using namespace std;

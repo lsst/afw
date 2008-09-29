@@ -540,7 +540,7 @@ namespace math {
         virtual std::string toString(std::string prefix = "") const;
 
     protected:
-        virtual void setKernelParameter(int ind, double value) const;
+        virtual void setKernelParameter(unsigned int ind, double value) const;
     
     private:
         void basicComputeVectors(

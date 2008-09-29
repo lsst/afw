@@ -25,22 +25,19 @@ namespace lsst {
 namespace afw {
 namespace math {
 
-    template <typename OutPixelT, typename InPixelT, typename MaskPixelT>
+    template <typename InMaskedImage, typename OutMaskedImage>
     inline void apply(
-        lsst::afw::image::MaskedPixelAccessor<OutPixelT, MaskPixelT> &outAccessor,
-        lsst::afw::image::MaskedPixelAccessor<InPixelT, MaskPixelT> const &imageAccessor,
-        typename lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::pixel_accessor const &kernelAccessor,
-        unsigned int cols,
-        unsigned int rows
-    );
+        typename OutMaskedImage::xy_locator& outLocator,
+        typename InMaskedImage::const_xy_locator& inLocator,
+        lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::const_xy_locator& kernelLocator,
+        int width, int height);
     
-    template <typename OutPixelT, typename InPixelT, typename MaskPixelT>
-    inline void apply(
-        lsst::afw::image::MaskedPixelAccessor<OutPixelT, MaskPixelT> &outAccessor,
-        lsst::afw::image::MaskedPixelAccessor<InPixelT, MaskPixelT> const &imageAccessor,
-        std::vector<lsst::afw::math::Kernel::PixelT> const &kernelColList,
-        std::vector<lsst::afw::math::Kernel::PixelT> const &kernelRowList
-    );
+    template <typename InMaskedImage, typename OutMaskedImage>
+    void apply(
+        typename OutMaskedImage::xy_locator& outLocator,
+        typename InMaskedImage::const_xy_locator& inLocator,
+        std::vector<lsst::afw::math::Kernel::PixelT> const& kernelColList,
+        std::vector<lsst::afw::math::Kernel::PixelT> const& kernelRowList);
     
     template <typename OutPixelT, typename InPixelT, typename MaskPixelT>
     void basicConvolve(

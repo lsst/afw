@@ -4,12 +4,9 @@
 ///         Princeton University
 /// \date   September 2008
 #include <cstring>
-//#include <iostream>
-//#include "boost/static_assert.hpp"
 #include "boost/format.hpp"
-#include "lsst/gil/fits/fits_io_private.h"
+#include "lsst/afw/image/fits/fits_io_private.h"
 
-//#include "lsst/utils/Utils.h"
 #include "lsst/pex/exceptions.h"
 
 

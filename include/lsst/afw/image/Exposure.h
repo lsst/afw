@@ -37,7 +37,8 @@ namespace afw {
         template<typename ImageT, typename MaskT> class ExposureFormatter;
     }
 namespace image {
-    template<typename ImageT, typename MaskT=lsst::afw::image::MaskPixel, typename VarianceT=ImageT>
+    template<typename ImageT, typename MaskT=lsst::afw::image::MaskPixel,
+             typename VarianceT=lsst::afw::image::VariancePixel>
     class Exposure : public lsst::daf::base::Persistable,
                      public lsst::daf::data::LsstBase {
     public:    

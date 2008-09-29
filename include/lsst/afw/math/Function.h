@@ -267,7 +267,7 @@ namespace math {
         typename Function2<ReturnT>::Ptr copy() const { return typename Function2<ReturnT>::Ptr(new NullFunction2()); }
 
     private:
-        ReturnT operator() (double x, double y) const;
+        ReturnT operator() (double x, double y) const { return static_cast<ReturnT>(0); }
     };
 
 }}}   // lsst::afw::math

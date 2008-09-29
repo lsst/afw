@@ -244,6 +244,18 @@ BOOST_AUTO_TEST_CASE(locators) {
         BOOST_CHECK_EQUAL(loc.image(), 304);
         BOOST_CHECK_EQUAL(loc.mask(), 4*img.getWidth() + 3);
         BOOST_CHECK_EQUAL(loc.variance(), 608);
+
+        BOOST_CHECK_EQUAL(loc.x().image(), 304);
+        BOOST_CHECK_EQUAL(loc.x().mask(), 4*img.getWidth() + 3);
+        BOOST_CHECK_EQUAL(loc.x().variance(), 608);
+
+        BOOST_CHECK_EQUAL(loc.y().image(), 304);
+        BOOST_CHECK_EQUAL(loc.y().mask(), 4*img.getWidth() + 3);
+        BOOST_CHECK_EQUAL(loc.y().variance(), 608);
+
+        ++loc.x();
+        BOOST_CHECK_EQUAL(loc.x().image(), 404);
+        BOOST_CHECK_EQUAL(loc.image(), 404);
     }
 
     {
