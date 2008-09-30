@@ -63,55 +63,31 @@
 
 // CLASS CONSTRUCTORS and DESTRUCTOR
 
-/** @brief Construct a blank Exposure of size 0x0 with no Wcs. 
-  */     
-template<typename ImageT, typename MaskT, typename VarianceT> 
-lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure() : 
-    lsst::daf::data::LsstBase(typeid(this)),   
-    _metaData(lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData")),
-    _maskedImage(0,0),
-    _wcsPtr()                 
-{}
 
-
-/** @brief Construct an Exposure without a Wcs.
-  */       
-template<typename ImageT, typename MaskT, typename VarianceT> 
-lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure( 
-    lsst::afw::image::MaskedImage<ImageT, MaskT, VarianceT> const &maskedImage ///< the MaskedImage
-                                                              ) : 
-    lsst::daf::data::LsstBase(typeid(this)),   
-    _metaData(lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData")),
-    _maskedImage(maskedImage),
-    _wcsPtr()
-{}
-
-
-/** @brief Construct an Exposure with a Wcs.
-  */               
-template<typename ImageT, typename MaskT, typename VarianceT> 
-lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure(
-    lsst::afw::image::MaskedImage<ImageT, MaskT, VarianceT> const &maskedImage, ///< the MaskedImage
-    lsst::afw::image::Wcs const &wcs                                 ///< the Wcs
-    ) : 
-    lsst::daf::data::LsstBase(typeid(this)),
-    _metaData(lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData")),
-    _maskedImage(maskedImage),
-    _wcsPtr(new lsst::afw::image::Wcs (wcs))
-{}
-
-
-/** @brief Construct an Exposure with a blank MaskedImage of specified size and
-  * a Wcs.
+/** @brief Construct an Exposure with a blank MaskedImage of specified size (default 0x0) and
+  * a Wcs (which may be default constructed)
   */          
 template<typename ImageT, typename MaskT, typename VarianceT> 
-lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure(int cols, ///< number of columns in the MaskedImage
-                                                               int rows, ///< number of rows in the MaskedImage
+lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure(int cols, ///< number of columns (default: 0)
+                                                               int rows, ///< number of rows (default: 0)
                                                                lsst::afw::image::Wcs const &wcs  ///< the Wcs
                                                               ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _metaData(lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData")),
     _maskedImage(cols, rows),
+    _wcsPtr(new lsst::afw::image::Wcs (wcs))
+{}
+
+/** @brief Construct an Exposure from a MaskedImage
+  */               
+template<typename ImageT, typename MaskT, typename VarianceT> 
+lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure(
+    lsst::afw::image::MaskedImage<ImageT, MaskT, VarianceT> const &maskedImage, ///< the MaskedImage
+    lsst::afw::image::Wcs const &wcs                                            ///< the Wcs
+    ) : 
+    lsst::daf::data::LsstBase(typeid(this)),
+    _metaData(lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData")),
+    _maskedImage(maskedImage),
     _wcsPtr(new lsst::afw::image::Wcs (wcs))
 {}
 
@@ -132,7 +108,7 @@ lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &s
     lsst::daf::data::LsstBase(typeid(this)),
     _metaData(lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData")),
     _maskedImage(src.getMaskedImage(), bbox, deep),
-    _wcsPtr(new lsst::afw::image::Wcs(*this->_wcsPtr))
+    _wcsPtr(new lsst::afw::image::Wcs(*src._wcsPtr))
 {}
 
 
@@ -172,17 +148,11 @@ lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::~Exposure(){}
 
 /** @brief Get the Wcs of an Exposure.
   *
-  * @return a copy of the boost::shared_ptr to the Wcs.
-  *
-  * @throw a lsst::pex::exceptions::NotFound if the Exposure does not have a Wcs.
+  * @return a boost::shared_ptr to the Wcs.
   */
 template<typename ImageT, typename MaskT, typename VarianceT> 
-lsst::afw::image::Wcs lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::getWcs() const { 
-    
-    if (_wcsPtr.get() == 0) {
-        throw lsst::pex::exceptions::NotFound("The Exposure does not have Wcs!!");
-    }
-    return *_wcsPtr;
+lsst::afw::image::Wcs::Ptr lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::getWcs() const { 
+    return _wcsPtr;
 }
 
 // SET METHODS
@@ -221,9 +191,16 @@ template<typename ImageT, typename MaskT, typename VarianceT>
 void lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::writeFits(
 	const std::string &expOutFile ///< Exposure's base output file name
                                                                     ) const {
-    lsst::daf::base::DataProperty::PtrType wcsDP = lsst::afw::formatters::WcsFormatter::generateDataProperty(*_wcsPtr);
-    lsst::daf::base::DataProperty::PtrType
-        outputMetaData(new lsst::daf::base::DataProperty(*_metaData)); // should be a deep copy
+    using lsst::daf::base::DataProperty;
+
+    DataProperty::PtrType outputMetaData(new DataProperty(*_metaData));
+    DataProperty::PtrType wcsMetaData = lsst::afw::formatters::WcsFormatter::generateDataProperty(*_wcsPtr);
+    //
+    // Copy wcsMetaData over to outputMetaData
+    //
+    for (DataProperty::iteratorRangeType be = wcsMetaData->getChildren(); be.first != be.second; be.first++) {
+        outputMetaData->addProperty(*be.first);
+    }
 
     _maskedImage.writeFits(expOutFile, outputMetaData);
 }

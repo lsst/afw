@@ -25,73 +25,77 @@ namespace lsst {
 namespace afw {
 namespace math {
 
-    template <typename InMaskedImage, typename OutMaskedImage>
+    template <typename OutMaskedImageT, typename InMaskedImageT>
     inline void apply(
-        typename OutMaskedImage::xy_locator& outLocator,
-        typename InMaskedImage::const_xy_locator& inLocator,
+#if 0
+        typename OutMaskedImageT::xy_locator& outLocator,
+#else
+        typename OutMaskedImageT::IMV_tuple const& outLocator, // triple of (image, mask, variance)
+#endif
+        typename InMaskedImageT::const_xy_locator& inLocator,
         lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::const_xy_locator& kernelLocator,
         int width, int height);
     
-    template <typename InMaskedImage, typename OutMaskedImage>
+    template <typename OutMaskedImageT, typename InMaskedImageT>
     void apply(
-        typename OutMaskedImage::xy_locator& outLocator,
-        typename InMaskedImage::const_xy_locator& inLocator,
+        typename OutMaskedImageT::xy_locator& outLocator,
+        typename InMaskedImageT::const_xy_locator& inLocator,
         std::vector<lsst::afw::math::Kernel::PixelT> const& kernelColList,
         std::vector<lsst::afw::math::Kernel::PixelT> const& kernelRowList);
     
-    template <typename OutPixelT, typename InPixelT, typename MaskPixelT>
+    template <typename OutMaskedImageT, typename InMaskedImageT>
     void basicConvolve(
-        lsst::afw::image::MaskedImage<OutPixelT, MaskPixelT> &convolvedImage,
-        lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> const &maskedImage,
-        lsst::afw::math::Kernel const &kernel,
+        OutMaskedImageT& convolvedImage,
+        InMaskedImageT const& maskedImage,
+        lsst::afw::math::Kernel const& kernel,
         bool doNormalize
     );
     
-    template <typename OutPixelT, typename InPixelT, typename MaskPixelT>
+    template <typename OutMaskedImageT, typename InMaskedImageT>
     void basicConvolve(
-        lsst::afw::image::MaskedImage<OutPixelT, MaskPixelT> &convolvedImage,
-        lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> const &maskedImage,
-        lsst::afw::math::DeltaFunctionKernel const &kernel,
+        OutMaskedImageT& convolvedImage,
+        InMaskedImageT const& maskedImage,
+        lsst::afw::math::DeltaFunctionKernel const& kernel,
         bool doNormalize
     );
     
-    template <typename OutPixelT, typename InPixelT, typename MaskPixelT>
+    template <typename OutMaskedImageT, typename InMaskedImageT>
     void basicConvolve(
-        lsst::afw::image::MaskedImage<OutPixelT, MaskPixelT> &convolvedImage,
-        lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> const &maskedImage,
-        lsst::afw::math::SeparableKernel const &kernel,
+        OutMaskedImageT& convolvedImage,
+        InMaskedImageT const& maskedImage,
+        lsst::afw::math::SeparableKernel const& kernel,
         bool doNormalize
     );
     
-    template <typename OutPixelT, typename InPixelT, typename MaskPixelT, typename KernelT>
+    template <typename OutMaskedImageT, typename InMaskedImageT, typename KernelT>
     void convolve(
-        lsst::afw::image::MaskedImage<OutPixelT, MaskPixelT> &convolvedImage,
-        lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> const &maskedImage,
-        KernelT const &kernel,
+        OutMaskedImageT& convolvedImage,
+        InMaskedImageT const& maskedImage,
+        KernelT const& kernel,
         int edgeBit,
         bool doNormalize
     );
     
-    template <typename InPixelT, typename MaskPixelT, typename KernelT>
-    lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> convolveNew(
-        lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> const &maskedImage,
-        KernelT const &kernel,
+    template <typename MaskedImageT, typename KernelT>
+    MaskedImageT convolveNew(
+        MaskedImageT const& maskedImage,
+        KernelT const& kernel,
         int edgeBit,
         bool doNormalize
     );
 
-    template <typename OutPixelT, typename InPixelT, typename MaskPixelT>
+    template <typename OutMaskedImageT, typename InMaskedImageT>
     void convolveLinear(
-        lsst::afw::image::MaskedImage<OutPixelT, MaskPixelT> &convolvedImage,
-        lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> const &maskedImage,
-        lsst::afw::math::LinearCombinationKernel const &kernel,
+        OutMaskedImageT& convolvedImage,
+        InMaskedImageT const& maskedImage,
+        lsst::afw::math::LinearCombinationKernel const& kernel,
         int edgeBit
     );
 
-    template <typename InPixelT, typename MaskPixelT>
-    lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> convolveLinearNew(
-        lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> const &maskedImage,
-        lsst::afw::math::LinearCombinationKernel const &kernel,
+    template <typename MaskedImageT>
+    MaskedImageT convolveLinearNew(
+        MaskedImageT const& maskedImage,
+        lsst::afw::math::LinearCombinationKernel const& kernel,
         int edgeBit
     );
 

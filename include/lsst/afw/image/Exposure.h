@@ -43,21 +43,18 @@ namespace image {
                      public lsst::daf::data::LsstBase {
     public:    
         // Class Constructors and Destructor
-        explicit Exposure();
-        explicit Exposure(MaskedImage<ImageT, MaskT, VarianceT> const &maskedImage);
-        explicit Exposure(MaskedImage<ImageT, MaskT, VarianceT> const &maskedImage, Wcs const &wcs);
-        explicit Exposure(int const cols, int const rows, Wcs const &wcs);
-        explicit Exposure(int const cols, int const rows);
+        explicit Exposure(int const cols=0, int const rows=0, Wcs const& wcs=Wcs());
+        explicit Exposure(MaskedImage<ImageT, MaskT, VarianceT> const& maskedImage, Wcs const& wcs=Wcs());
         explicit Exposure(std::string const &file, int const hdu=0, bool const conformMasks=false);
 
-        Exposure(Exposure const &src, Bbox const& bbox, bool const deep);        
+        Exposure(Exposure const &src, Bbox const& bbox, bool const deep=false);
 
         virtual ~Exposure(); 
 
         // Get Members
         MaskedImage<ImageT, MaskT, VarianceT> getMaskedImage() const { return _maskedImage; };
         lsst::daf::base::DataProperty::PtrType getMetaData() const { return _metaData; }
-        Wcs getWcs() const;
+        Wcs::Ptr getWcs() const;
         
         // Set Members
         void setMaskedImage(MaskedImage<ImageT, MaskT, VarianceT> &maskedImage);

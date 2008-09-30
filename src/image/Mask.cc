@@ -111,7 +111,7 @@ image::Mask<MaskPixelT>::Mask(std::string const& fileName, //!< Name of file to 
     _metaData(metaData) {
 
     if (_metaData.get() == NULL) {
-        _metaData.reset(lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData").get());
+        _metaData = lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData");
     }
     //
     // These are the permitted input file types

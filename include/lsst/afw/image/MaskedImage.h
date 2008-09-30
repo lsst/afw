@@ -88,6 +88,9 @@ namespace image {
             void operator+=(std::ptrdiff_t delta) {
                 _iter += delta;
             }
+            void operator-=(std::ptrdiff_t delta) {
+                _iter -= delta;
+            }
             void operator++() {         // prefix
                 ++_iter;
             }
@@ -106,6 +109,12 @@ namespace image {
             const IMV_tuple operator*() const {
                 return *_iter;
             }
+            IMV_tuple operator/=(double rhs) { // @note We really want to define this for the pixel, not the iterator
+                image() /= rhs;
+                variance() /= rhs*rhs;
+
+                return *_iter;
+            }
 
         protected:
             typename boost::zip_iterator<IMV_iterator_tuple> _iter;
@@ -118,6 +127,16 @@ namespace image {
         public:
             maskedImageIterator(ImageIterator& img, MaskIterator& msk, VarianceIterator &var) :
                 maskedImageIteratorBase(img, msk, var) {
+            }
+            maskedImageIterator& operator+(std::ptrdiff_t delta) {
+                maskedImageIteratorBase::operator+=(delta);
+
+                return *this;
+            }
+            maskedImageIterator& operator-(std::ptrdiff_t delta) {
+                maskedImageIteratorBase::operator-=(delta);
+
+                return *this;
             }
         };
 
@@ -141,6 +160,16 @@ namespace image {
                                         const_VarianceIterator(iter.get_iterator_tuple().template get<2>())
                                        ) {
                 ;
+            }
+            const_maskedImageIterator& operator+(std::ptrdiff_t delta) {
+                maskedImageIteratorBase::operator+=(delta);
+                
+                return *this;
+            }
+            const_maskedImageIterator& operator-(std::ptrdiff_t delta) {
+                maskedImageIteratorBase::operator-=(delta);
+                
+                return *this;
             }
         };
         //

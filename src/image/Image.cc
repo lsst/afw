@@ -54,6 +54,11 @@ image::ImageBase<PixelT>::ImageBase(const ImageBase& src, const Bbox& bbox, cons
                            bbox.getX0(), bbox.getY0(), bbox.getWidth(), bbox.getHeight())),
     _x0(src._x0 + bbox.getX0()), _y0(src._y0 + bbox.getY0())
 {
+    if (_x0 < 0 || _y0 < 0 || _x0 + getWidth() > _gilImage->width() || _y0 + getHeight() > _gilImage->height()) {
+        throw lsst::pex::exceptions::LengthError(boost::format("Bbox (%d,%d) %dx%d doesn't fit in image") %
+                                                 bbox.getX0() % bbox.getY0() % bbox.getWidth() % bbox.getHeight());
+    }
+
     if (deep) {
         ImageBase tmp(dimensions());
         tmp <<= *this;                  // now copy the pixels

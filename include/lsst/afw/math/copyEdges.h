@@ -18,7 +18,7 @@ inline void _copyRegion(lsst::afw::image::MaskedImage<OutPixelT, MaskPixelT, Var
     lsst::afw::image::MaskedImage<OutPixelT, MaskPixelT, VariancePixelT> outPatch(outImage, region); 
     lsst::afw::image::MaskedImage<InPixelT, MaskPixelT, VariancePixelT>   inPatch(inImage, region);
     outPatch <<= inPatch;
-    outPatch.getMask() |= orMask;
+    *outPatch.getMask() |= orMask;
 }
 
 template<typename OutPixelT, typename InPixelT>
@@ -32,10 +32,10 @@ inline void _copyRegion(lsst::afw::image::Image<OutPixelT> &outImage,     ///< d
     outPatch <<= inPatch;
 }
 
-template <typename OutPixelT, typename InPixelT>
+template <typename OutImageT, typename InImageT>
 inline void _copyBorder(
-    lsst::afw::image::Image<OutPixelT> &convolvedImage,       ///< convolved image
-    lsst::afw::image::Image<InPixelT> const &inImage,    ///< image to convolve
+    OutImageT& convolvedImage,                           ///< convolved image
+    InImageT const& inImage,                             ///< image to convolve
     lsst::afw::math::Kernel const &kernel,               ///< convolution kernel
     int edgeBit                         ///< mask bit to indicate border pixel;  if negative then no bit is set
 ) {

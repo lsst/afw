@@ -44,10 +44,14 @@
  *
  * @ingroup afw
  */
-template <typename InMaskedImageT, typename OutMaskedImageT>
+template <typename OutMaskedImageT, typename InMaskedImageT>
 inline void lsst::afw::math::apply(
+#if 0
     typename OutMaskedImageT::xy_locator& outLocator,
 					///< locator for output pixel
+#else
+    typename OutMaskedImageT::IMV_tuple const& outLocator, // triple of (image, mask, variance)
+#endif
     typename InMaskedImageT::const_xy_locator& inLocator,
                                         ///< locator for masked image pixel that overlaps (0,0) pixel of kernel(!)
     typename lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::const_xy_locator& kernelLocator,
@@ -80,9 +84,15 @@ inline void lsst::afw::math::apply(
         kernelLocator += lsst::afw::image::details::difference_type(-kwidth, 1);
     }
 
+#if 0
     outLocator.image() = outImage;
     outLocator.mask() = outMask;
     outLocator.variance() = outVariance;
+#else
+    outLocator.template get<0>() = outImage;
+    outLocator.template get<1>() = outMask;
+    outLocator.template get<2>() = outVariance;
+#endif
 }
 
 /**
@@ -147,6 +157,7 @@ inline void lsst::afw::math::apply(
     outLocator.variance() = outVariance;
 }
 
+#if 0                                   // The template in ConvolveImage.cc is the same as this one
 /**
  * @brief Low-level convolution function that does not set edge pixels.
  *
@@ -163,9 +174,9 @@ inline void lsst::afw::math::apply(
 template <typename OutMaskedImageT, typename InMaskedImageT>
 void lsst::afw::math::basicConvolve(
     OutMaskedImageT& convolvedImage,            ///< convolved image
-    InMaskedImageT const& inImage,          ///< image to convolve
-    lsst::afw::math::Kernel const &kernel,     ///< convolution kernel
-    bool doNormalize                           ///< if True, normalize the kernel, else use "as is"
+    InMaskedImageT const& inImage,              ///< image to convolve
+    lsst::afw::math::Kernel const &kernel,      ///< convolution kernel
+    bool doNormalize                            ///< if True, normalize the kernel, else use "as is"
 ) {
     typedef typename lsst::afw::math::Kernel::PixelT KernelPixelT;
 
@@ -177,20 +188,19 @@ void lsst::afw::math::basicConvolve(
         throw lsst::pex::exceptions::InvalidParameter("convolvedImage not the same size as inImage");
     }
     if (inImage.dimensions() < kernel.dimensions()) {
-        throw lsst::pex::exceptions::InvalidParameter(
-            "inImage smaller than kernel in columns and/or rows");
+        throw lsst::pex::exceptions::InvalidParameter("inImage smaller than kernel in columns and/or rows");
     }
     
-    int const imWidth = inImage.getWidth();
-    int const imHeight = inImage.getHeight();
+    int const inImageWidth = inImage.getWidth();
+    int const inImageHeight = inImage.getHeight();
     int const kWidth = kernel.getWidth();
     int const kHeight = kernel.getHeight();
-    int const cnvWidth = imWidth + 1 - kernel.getWidth();
-    int const cnvHeight = imHeight + 1 - kernel.getHeight();
+    int const cnvWidth = inImageWidth + 1 - kernel.getWidth();
+    int const cnvHeight = inImageHeight + 1 - kernel.getHeight();
     int const cnvStartX = kernel.getCtrX();
     int const cnvStartY = kernel.getCtrY();
-    int const cnvEndX = cnvStartX + static_cast<int>(cnvWidth); // end index + 1
-    int const cnvEndY = cnvStartY + static_cast<int>(cnvHeight); // end index + 1
+    int const cnvEndX = cnvStartX + cnvWidth;  // end index + 1
+    int const cnvEndY = cnvStartY + cnvHeight; // end index + 1
 
     if (kernel.isSpatiallyVarying()) {
         lsst::pex::logging::Trace("lsst.afw.kernel.convolve", 3, "kernel is spatially varying");
@@ -200,7 +210,7 @@ void lsst::afw::math::basicConvolve(
         for (int cnvY = cnvStartY; cnvY != cnvEndY; ++cnvY) {
             double const rowPos = lsst::afw::image::indexToPosition(cnvY);
             
-            inXY_locator  inImLoc =  inImage.at_xy(0, cnvY - cnvStartY);
+            inXY_locator  inImLoc =  inImage.xy_at(0, cnvY - cnvStartY);
             cnvX_iterator cnvImIter = convolvedImage.row_begin(cnvY) + cnvStartX;
             for (int cnvX = cnvStartX; cnvX != cnvEndX; ++cnvX, ++inImLoc.x(), ++cnvImIter) {
                 double const colPos = lsst::afw::image::indexToPosition(cnvX);
@@ -211,9 +221,7 @@ void lsst::afw::math::basicConvolve(
                 kXY_locator kernelLoc = kernelImage.xy_at(0,0);
                 lsst::afw::math::apply(*cnvImIter, inImLoc, kernelLoc, kWidth, kHeight);
                 if (doNormalize) {
-                    std::cout << "Before " << cnvImIter.image() << " " << cnvImIter.variance() << std::endl;
-                    *cnvImIter /= kSum; // does this change the variance? RHL
-                    std::cout << "After  " << cnvImIter.image() << " " << cnvImIter.variance() << std::endl;
+                    *cnvImIter /= kSum;
                 }
             }
         }
@@ -223,7 +231,7 @@ void lsst::afw::math::basicConvolve(
         lsst::afw::image::Image<KernelPixelT> kernelImage = kernel.computeNewImage(kSum, doNormalize);
 
         for (int cnvY = cnvStartY; cnvY != cnvEndY; ++cnvY) {
-            inXY_locator inImLoc =  inImage.at_xy(0, cnvY - cnvStartY);
+            inXY_locator inImLoc =  inImage.xy_at(0, cnvY - cnvStartY);
             for (cnvX_iterator cnvImIter = convolvedImage.row_begin(cnvY) + cnvStartX,
                      cnvImEnd = cnvImIter + cnvEndX - cnvStartX; cnvImIter != cnvImEnd; ++inImLoc.x(), ++cnvImIter) {
                 kXY_locator kernelLoc = kernelImage.xy_at(0,0);
@@ -232,6 +240,7 @@ void lsst::afw::math::basicConvolve(
         }
     }
 }
+#endif
 
 /************************************************************************************************************/
 /**
@@ -321,7 +330,7 @@ void lsst::afw::math::basicConvolve(
         for (int cnvY = cnvStartY; cnvY < cnvEndY; ++cnvY) {
             double const rowPos = lsst::afw::image::indexToPosition(cnvY);
             
-            inXY_locator  inImLoc =  inImage.at_xy(0, cnvY - cnvStartY);
+            inXY_locator  inImLoc =  inImage.xy_at(0, cnvY - cnvStartY);
             cnvX_iterator cnvImIter = convolvedImage.row_begin(cnvY) + cnvStartX;
             for (int cnvX = cnvStartX; cnvX != cnvEndX; ++cnvX, ++inImLoc.x(), ++cnvImIter) {
                 double const colPos = lsst::afw::image::indexToPosition(cnvX);
@@ -331,9 +340,7 @@ void lsst::afw::math::basicConvolve(
 
                 lsst::afw::math::apply(*cnvImIter, inImLoc, kXVec, kYVec);
                 if (doNormalize) {
-                    std::cout << "Before " << cnvImIter.image() << " " << cnvImIter.variance() << std::endl;
-                    *cnvImIter /= kSum; // does this change the variance? RHL
-                    std::cout << "After  " << cnvImIter.image() << " " << cnvImIter.variance() << std::endl;
+                    *cnvImIter /= kSum;
                 }
             }
         }
@@ -345,7 +352,7 @@ void lsst::afw::math::basicConvolve(
         kernel.computeVectors(kXVec, kYVec, kSum, doNormalize);
 
         for (int cnvY = cnvStartY; cnvY != cnvEndY; ++cnvY) {
-            inXY_locator inImLoc =  inImage.at_xy(0, cnvY - cnvStartY);
+            inXY_locator inImLoc =  inImage.xy_at(0, cnvY - cnvStartY);
             for (cnvX_iterator cnvImIter = convolvedImage.row_begin(cnvY) + cnvStartX,
                      cnvImEnd = cnvImIter + cnvEndX - cnvStartX; cnvImIter != cnvImEnd; ++inImLoc.x(), ++cnvImIter) {
                 lsst::afw::math::apply(*cnvImIter, inImLoc, kXVec, kYVec);
@@ -368,14 +375,14 @@ void lsst::afw::math::basicConvolve(
  *
  * @ingroup afw
  */
-template <typename OutPixelT, typename InPixelT, typename MaskPixelT, typename KernelT>
+template <typename OutImageT, typename InImageT, typename KernelT>
 void lsst::afw::math::convolve(
-    lsst::afw::image::MaskedImage<OutPixelT, MaskPixelT> &convolvedImage,       ///< convolved image
-    lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> const &inImage,    ///< image to convolve
-    KernelT const &kernel,    ///< convolution kernel
-    int edgeBit,        ///< mask bit to indicate pixel includes edge-extended data;
-                        ///< if negative then no bit is set
-    bool doNormalize    ///< if True, normalize the kernel, else use "as is"
+    OutImageT& convolvedImage,          ///< convolved image
+    InImageT const& inImage,            ///< image to convolve
+    KernelT const &kernel,              ///< convolution kernel
+    int edgeBit,                        ///< mask bit to indicate pixel includes edge-extended data;
+                                        ///< if negative then no bit is set
+    bool doNormalize                    ///< if True, normalize the kernel, else use "as is"
 ) {
     lsst::afw::math::basicConvolve(convolvedImage, inImage, kernel, doNormalize);
     _copyBorder(convolvedImage, inImage, kernel, edgeBit);
@@ -427,10 +434,10 @@ lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> lsst::afw::math::convolveNew
  * @ingroup afw
  */
 template <typename OutMaskedImageT, typename InMaskedImageT>
-void lsst::afw::math::basicConvolve(
+void lsst::afw::math::convolveLinear(
     OutMaskedImageT& convolvedImage,        ///< convolved image
     InMaskedImageT const& inImage,          ///< image to convolve
-    lsst::afw::math::LinearCombinationKernel const &kernel, ///< convolution kernel
+    lsst::afw::math::LinearCombinationKernel const& kernel, ///< convolution kernel
     int edgeBit				///< mask bit to indicate pixel includes edge-extended data;
                                         ///< if negative then no bit is set
 ) {
@@ -455,13 +462,12 @@ void lsst::afw::math::basicConvolve(
 
     int const imWidth = inImage.getWidth();
     int const imHeight = inImage.getHeight();
-    int const cnvWidth = static_cast<int>(imWidth) + 1 - static_cast<int>(kernel.getWidth());
-    int const cnvHeight = static_cast<int>(imHeight) + 1 - static_cast<int>(kernel.getHeight());
-    int const cnvStartX = static_cast<int>(kernel.getCtrX());
-    int const cnvStartY = static_cast<int>(kernel.getCtrY());
-    int const cnvEndX = cnvStartX + static_cast<int>(cnvWidth); // end index + 1
-    int const cnvEndY = cnvStartY + static_cast<int>(cnvHeight); // end index + 1
-
+    int const cnvWidth = imWidth + 1 - kernel.getWidth();
+    int const cnvHeight = imHeight + 1 - kernel.getHeight();
+    int const cnvStartX = kernel.getCtrX();
+    int const cnvStartY = kernel.getCtrY();
+    int const cnvEndX = cnvStartX + cnvWidth;  // end index + 1
+    int const cnvEndY = cnvStartY + cnvHeight; // end index + 1
 
     // create a vector of pointers to basis images (input Image convolved with each basis kernel)
     std::vector<BasisImagePtr> basisImagePtrList;
@@ -474,15 +480,16 @@ void lsst::afw::math::basicConvolve(
             basisImagePtrList.push_back(basisImagePtr);
         }
     }
-    BasisX_iteratorList basisIterList(basisImagePtrList.size()); // x_iterators for each basis image
-    // iterate over matching pixels of all images to compute output image
+    BasisX_iteratorList basisIterList;                           // x_iterators for each basis image
+    basisIterList.reserve(basisImagePtrList.size());
+    
     // iterate over matching pixels of all images to compute output image
     std::vector<double> kernelCoeffList(kernel.getNKernelParameters()); // weights of basic images at this point
     for (int cnvY = cnvStartY; cnvY < cnvEndY; ++cnvY) {
         double const rowPos = lsst::afw::image::indexToPosition(cnvY);
     
         cnvX_iterator cnvXIter = convolvedImage.row_begin(cnvY) + cnvStartX;
-        for (int i = 0; i != basisIterList.size(); ++i) {
+        for (unsigned int i = 0; i != basisIterList.size(); ++i) {
             basisIterList[i] = basisImagePtrList[i]->row_begin(cnvY) + cnvStartX;
         }
 
@@ -494,10 +501,10 @@ void lsst::afw::math::basicConvolve(
             double cnvImagePix = 0.0;
             long cnvMaskPix = 0;
             double cnvVariancePix = 0.0;
-            for (int i = 0; i != basisIterList.size(); ++i) {
-                cnvImagePix    += kernelCoeffList[i]*(basisIterList[i].image());
-                cnvMaskPix     |= kernelCoeffList[i]*(basisIterList[i].mask());
-                cnvVariancePix += kernelCoeffList[i]*(basisIterList[i].variance());
+            for (unsigned int i = 0; i != basisIterList.size(); ++i) {
+                cnvImagePix    += basisIterList[i].image()*kernelCoeffList[i];
+                cnvMaskPix     |= basisIterList[i].mask();
+                cnvVariancePix += basisIterList[i].variance()*kernelCoeffList[i]*kernelCoeffList[i];
 
                 ++basisIterList[i];
             }
@@ -523,14 +530,14 @@ void lsst::afw::math::basicConvolve(
  *
  * @ingroup afw
  */
-template <typename InPixelT, typename MaskPixelT>
-lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> lsst::afw::math::convolveLinearNew(
-    lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> const &inImage,    ///< image to convolve
+template <typename ImageT>
+ImageT lsst::afw::math::convolveLinearNew(
+    ImageT const &inImage,                                     ///< image to convolve
     lsst::afw::math::LinearCombinationKernel const &kernel,    ///< convolution kernel
-    int edgeBit         ///< mask bit to indicate pixel includes edge-extended data;
-                        ///< if negative then no bit is set
+    int edgeBit                         ///< mask bit to indicate pixel includes edge-extended data;
+                                        ///< if negative then no bit is set
 ) {
-    lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> convolvedImage(inImage.dimensions());
+    ImageT convolvedImage(inImage.dimensions());
     lsst::afw::math::convolveLinear(convolvedImage, inImage, kernel, edgeBit);
     return convolvedImage;
 }
