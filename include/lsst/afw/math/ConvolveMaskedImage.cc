@@ -403,15 +403,15 @@ void lsst::afw::math::convolve(
  *
  * @ingroup afw
  */
-template <typename InPixelT, typename MaskPixelT, typename KernelT>
-lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> lsst::afw::math::convolveNew(
-    lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> const &inImage,    ///< image to convolve
+template <typename ImageT, typename KernelT>
+ImageT lsst::afw::math::convolveNew(
+    ImageT const &inImage,              ///< image to convolve
     KernelT const &kernel,              ///< convolution kernel
-    int edgeBit,        ///< mask bit to indicate pixel includes edge-extended data;
-                        ///< if negative then no bit is set
-    bool doNormalize    ///< if True, normalize the kernel, else use "as is"
-) {
-    lsst::afw::image::MaskedImage<InPixelT, MaskPixelT> convolvedImage(inImage.getWidth(), inImage.getHeight());
+    int edgeBit,                        ///< mask bit to indicate pixel includes edge-extended data;
+                                        ///< if negative then no bit is set
+    bool doNormalize                    ///< if True, normalize the kernel, else use "as is"
+                                   ) {
+    ImageT convolvedImage(inImage.dimensions());
     lsst::afw::math::convolve(convolvedImage, inImage, kernel, edgeBit, doNormalize);
     return convolvedImage;
 }

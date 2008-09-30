@@ -48,8 +48,7 @@ int main(int argc, char **argv) {
     }
     
     // read in fits file
-    afwImage::MaskedImage<pixelType, afwImage::maskPixelType> mImage;
-    mImage.readFits(argv[1]);
+    afwImage::MaskedImage<pixelType> mImage(argv[1]);
     
     // construct kernel
     afwMath::GaussianFunction2<pixelType> gaussFunc(1, 1);
@@ -61,12 +60,12 @@ int main(int argc, char **argv) {
     vector<vector<double> > polyParams = gaussSpVarKernel.getSpatialParameters();
     // Set spatial parameters for kernel parameter 0
     polyParams[0][0] = minSigma;
-    polyParams[0][1] = (maxSigma - minSigma) / static_cast<double>(mImage.getCols());
+    polyParams[0][1] = (maxSigma - minSigma)/static_cast<double>(mImage.getWidth());
     polyParams[0][2] = 0.0;
     // Set spatial function parameters for kernel parameter 1
     polyParams[1][0] = minSigma;
     polyParams[1][1] = 0.0;
-    polyParams[1][2] = (maxSigma - minSigma) / static_cast<double>(mImage.getRows());
+    polyParams[1][2] = (maxSigma - minSigma)/static_cast<double>(mImage.getHeight());
     gaussSpVarKernel.setSpatialParameters(polyParams);
     
     cout << "Spatial Parameters:" << endl;
@@ -84,8 +83,7 @@ int main(int argc, char **argv) {
     cout << endl;
 
     // convolve
-    afwImage::MaskedImage<pixelType, afwImage::maskPixelType>
-        resMaskedImage = afwMath::convolveNew(mImage, gaussSpVarKernel, edgeMaskBit, true);
+    afwImage::MaskedImage<pixelType> resMaskedImage = afwMath::convolveNew(mImage, gaussSpVarKernel, edgeMaskBit, true);
 
     // write results
     resMaskedImage.writeFits(outFile);

@@ -45,12 +45,11 @@ int main(int argc, char **argv) {
     }
     
     // read in fits file
-    afwImage::MaskedImage<imageType, afwImage::maskPixelType> mImage;
-    mImage.readFits(argv[1]);
+    afwImage::MaskedImage<imageType> mImage(argv[1]);
     
-    std::cout << "Image is " << mImage.getCols() << " by " << mImage.getRows() << std::endl;
+    std::cout << "Image is " << mImage.getWidth() << " by " << mImage.getHeight() << std::endl;
     
-    afwImage::MaskedImage<imageType, afwImage::maskPixelType> resMImage(mImage.getCols(), mImage.getRows());
+    afwImage::MaskedImage<imageType> resMImage(mImage.dimensions());
     
     for (unsigned int kSize = MinKernelSize; kSize <= MaxKernelSize; kSize += DeltaKernelSize) {
         // construct kernel
@@ -62,11 +61,11 @@ int main(int argc, char **argv) {
         // get copy of spatial parameters (all zeros), set and feed back to the kernel
         std::vector<std::vector<double> > polyParams = gaussSpVarKernel.getSpatialParameters();
         polyParams[0][0] = minSigma;
-        polyParams[0][1] = (maxSigma - minSigma) / static_cast<double>(mImage.getCols());
+        polyParams[0][1] = (maxSigma - minSigma) / static_cast<double>(mImage.getWidth());
         polyParams[0][2] = 0.0;
         polyParams[1][0] = minSigma;
         polyParams[1][1] = 0.0;
-        polyParams[1][2] = (maxSigma - minSigma) / static_cast<double>(mImage.getRows());
+        polyParams[1][2] = (maxSigma - minSigma) / static_cast<double>(mImage.getHeight());
         gaussSpVarKernel.setSpatialParameters(polyParams);
         
         clock_t startTime = clock();

@@ -2,11 +2,12 @@
 #include <sstream>
 #include <ctime>
 
-#include "vw/Image.h"
+#include "lsst/afw/image.h"
+
+namespace image = lsst::afw::image;
 
 int main(int argc, char **argv) {
     typedef float imageType;
-    typedef vw::ImageView<imageType>::pixel_accessor accessorType;
     const unsigned DefNIter = 100;
     const unsigned DefNCols = 1024;
     
@@ -31,8 +32,8 @@ int main(int argc, char **argv) {
         std::istringstream(argv[3]) >> nRows;
     }
     
-    vw::ImageView<imageType> image1(nCols, nRows);
-    vw::ImageView<imageType> image2(nCols, nRows);
+    image::Image<imageType> image1(nCols, nRows);
+    image::Image<imageType> image2(nCols, nRows);
     
     std::cout << "Cols\tRows\tMPix\tSecPerIter\tSecPerIterPerMPix" << std::endl;
     

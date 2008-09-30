@@ -181,11 +181,13 @@ lsst::afw::image::Wcs::~Wcs() {
 }
 
 /// Convert from (ra, dec) to (column, row) coordinates
-void lsst::afw::image::Wcs::raDecToColRow(
-    lsst::afw::image::PointD sky,    ///< Input (ra, dec)
-    lsst::afw::image::PointD& pix    ///< Desired (col, row)
+///
+/// \return The desired (col, row) position
+lsst::afw::image::PointD lsst::afw::image::Wcs::raDecToColRow(
+    const double ra,   ///< Input right ascension
+    const double dec   ///< Input declination
 ) const {
-    double const skyTmp[2] = { sky.getX(), sky.getY() };
+    double const skyTmp[2] = { ra, dec };
     double imgcrd[2];
     double phi, theta;
     double pixTmp[2];
@@ -193,77 +195,41 @@ void lsst::afw::image::Wcs::raDecToColRow(
     int status = 0;
     wcss2p(_wcsInfo, 1, 2, skyTmp, &phi, &theta, imgcrd, pixTmp, &status);
 
-    pix.getX() = pixTmp[0];
-    pix.getY() = pixTmp[1];
+    return lsst::afw::image::PointD(pixTmp);
 }
 
 /// Convert from (ra, dec) to (column, row) coordinates
 ///
 /// \return The desired (col, row) position
 lsst::afw::image::PointD lsst::afw::image::Wcs::raDecToColRow(
-    lsst::afw::image::PointD sky  ///< Input (ra, dec)
+    lsst::afw::image::PointD sky        ///< Input (ra, dec)
 ) const {
-    lsst::afw::image::PointD pix;
-    raDecToColRow(sky, pix);
-
-    return pix;
-}
-
-/// Convert from (ra, dec) to (column, row) coordinates
-///
-/// \return The desired (col, row) position
-lsst::afw::image::PointD lsst::afw::image::Wcs::raDecToColRow(
-    double const ra,   ///< Input right ascension
-    double const dec   ///< Input declination
-) const {
-    lsst::afw::image::PointD sky(ra, dec);
-    lsst::afw::image::PointD pix;
-    raDecToColRow(sky, pix);
-
-    return pix;
+    return raDecToColRow(sky.getX(), sky.getY());
 }
 
 /// Convert from (column, row) to (ra, dec) coordinates
-void lsst::afw::image::Wcs::colRowToRaDec(
-    lsst::afw::image::PointD pix,    ///< Input (col, row)
-    lsst::afw::image::PointD& sky    ///< Desired (ra, dec)
+/// \return The desired (ra, dec) position
+lsst::afw::image::PointD lsst::afw::image::Wcs::colRowToRaDec(
+    double const x,                     ///< Input column position
+    double const y                      ///< Input row position
 ) const {
-    double const pixTmp[2] = { pix.getX(), pix.getY() };
+    double const pixTmp[2] = { x, y };
     double imgcrd[2];
     double phi, theta;
     double skyTmp[2];
-    int status = 0;
 
+    int status = 0;
     wcsp2s(_wcsInfo, 1, 2, pixTmp, imgcrd, &phi, &theta, skyTmp, &status);
 
-    sky.getX() = skyTmp[0];
-    sky.getY() = skyTmp[1];
+    return lsst::afw::image::PointD(skyTmp);
 }
 
 /// Convert from (column, row) to (ra, dec) coordinates
 /// \return The desired (ra, dec) position
 lsst::afw::image::PointD lsst::afw::image::Wcs::colRowToRaDec(
-    lsst::afw::image::PointD pix  ///< Input (col, row)
+    lsst::afw::image::PointD pix        ///< Input (x, y)
 ) const {
-    lsst::afw::image::PointD sky;
- 
-    colRowToRaDec(pix, sky);
-   
-    return sky;
-}
-
-/// Convert from (column, row) to (ra, dec) coordinates
-/// \return The desired (ra, dec) position
-lsst::afw::image::PointD lsst::afw::image::Wcs::colRowToRaDec(
-    double const col, ///< Input column position
-    double const row ///< Input row position
-) const {
-    lsst::afw::image::PointD pix(col, row);
-    lsst::afw::image::PointD sky;
- 
-    colRowToRaDec(pix, sky);
-   
-    return sky;
+    return colRowToRaDec(pix.getX(), pix.getY());
 }
 
 /// Return the pixel area in deg^2 at a given pixel coordinate

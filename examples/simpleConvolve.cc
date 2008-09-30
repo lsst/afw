@@ -48,15 +48,14 @@ int main(int argc, char **argv) {
         }
         
         // read in fits file
-        afwImage::MaskedImage<pixelType, afwImage::maskPixelType> mImage;
-        mImage.readFits(argv[1]);
+        afwImage::MaskedImage<pixelType> mImage(argv[1]);
         
         // construct kernel
         afwMath::GaussianFunction2<pixelType> gaussFunc(sigma, sigma);
         afwMath::AnalyticKernel kernel(gaussFunc, kernelCols, kernelRows);
     
         // convolve
-        afwImage::MaskedImage<pixelType, afwImage::maskPixelType>
+        afwImage::MaskedImage<pixelType>
             resMaskedImage = afwMath::convolveNew(mImage, kernel, edgeMaskBit, true);
     
         // write results

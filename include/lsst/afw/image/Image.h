@@ -35,6 +35,7 @@ namespace image {
     public:
         Point(T val=0) : _x(val), _y(val) {}
         Point(T x, T y) : _x(x), _y(y) {}
+        Point(T const xy[2]) : _x(xy[0]), _y(xy[1]) {}
 
         T getX() const { return _x; }
         T getY() const { return _y; }
@@ -43,6 +44,16 @@ namespace image {
 
         Point operator+(const Point& rhs) const { return Point(_x + rhs._x, _y + rhs._y); }
         Point operator-(const Point& rhs) const { return Point(_x - rhs._x, _y - rhs._y); }
+        T const& operator[](int const i) const {
+            switch (i) {
+              case 0: return _x;
+              case 1: return _y;
+              default: throw lsst::pex::exceptions::OutOfRange(boost::format("Index i == %d must be 0 or 1"), i);
+            }
+        }
+        T& operator[](int const i) {
+            return const_cast<T&>(static_cast<Point &>(*this)[i]); // Meyers, Effective C++, Item 3
+        }
     private:
         T _x, _y;
     };
