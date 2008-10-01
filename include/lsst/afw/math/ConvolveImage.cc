@@ -168,12 +168,7 @@ void lsst::afw::math::basicConvolve(
                 kXY_locator kernelLoc = kernelImage.xy_at(0,0);
                 lsst::afw::math::apply<OutImageT, InImageT>(*cnvImIter, inImLoc, kernelLoc, kWidth, kHeight);
                 if (doNormalize) {
-#if 0
                     *cnvImIter /= kSum;
-#else
-                    abort();            // the code's OK, but see next comment.  Do not check in
-                    cnvImIter /= kSum;  // we defined /= for the iterator, not the masked pixel value. XXXX
-#endif
                 }
             }
         }

@@ -121,6 +121,18 @@ BOOST_AUTO_TEST_CASE(setValues) {
     BOOST_CHECK_EQUAL((*img.getImage())(1,1), 101);
     BOOST_CHECK_EQUAL((*img.getMask())(1,1), img.getWidth() + 1);
     BOOST_CHECK_EQUAL((*img.getVariance())(1,1), 202);
+
+    image::MaskedImage<float>::x_iterator ptr = img.x_at(1, 1);
+    image::MaskedImage<float>::IMV val(*ptr);
+
+    BOOST_CHECK_EQUAL(val.image(),    101);
+    BOOST_CHECK_EQUAL(val.mask(),     img.getWidth() + 1);
+    BOOST_CHECK_EQUAL(val.variance(), 202);
+
+    *ptr = val/2;
+    BOOST_CHECK_EQUAL(ptr.image(),    50.5);
+    BOOST_CHECK_EQUAL(ptr.mask(),     img.getWidth() + 1);
+    BOOST_CHECK_EQUAL(ptr.variance(), 50.5);
 }
 
 /************************************************************************************************************/
