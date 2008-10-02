@@ -79,30 +79,73 @@ namespace image {
                 VariancePixelT& variance() {
                     return this->template get<2>()[0];
                 }
-                // These need to be friends --- see Meyers, Effective C++, Item 46
-                friend IMV const operator/=(IMV lhs, double const rhs) {
-                    lhs.image() /= rhs;
-                    lhs.variance() /= rhs*rhs;
-                    
-                    return lhs;
+                ImagePixelT const & image() const {
+                    return this->template get<0>()[0];
                 }
-                friend IMV& operator/=(IMV& lhs, IMV const& rhs) {
-                    ImagePixelT const rhs2 = rhs.image()*rhs.image();
-                    // Must do variance before we modify lhs.image()
-                    lhs.variance() = (lhs.image()*lhs.image()*rhs.variance() + rhs2*lhs.variance())/(rhs2*rhs2);
+                MaskPixelT const& mask() const {
+                    return this->template get<1>()[0];
+                }
+                VariancePixelT const& variance() const {
+                    return this->template get<2>()[0];
+                }
 
-                    lhs.image() /= rhs.image();
-                    lhs.mask() |= rhs.mask();
+                IMV const& operator+=(double const rhs) {
+                    image() += rhs;
                     
-                    return *lhs;
+                    return *this;
                 }
-                friend IMV const operator/(IMV lhs, double const rhs) {
-                    lhs /= rhs;
-                    return lhs;
+                IMV const& operator+=(IMV const& rhs) {
+                    image() += rhs.image();
+                    mask() |= rhs.mask();
+                    variance() += rhs.variance();
+                    
+                    return *this;
                 }
-                friend IMV const operator/(IMV lhs, IMV const rhs) {
-                    lhs /= rhs;
-                    return lhs;
+
+                IMV const& operator-=(double const rhs) {
+                    image() -= rhs;
+                    
+                    return *this;
+                }
+                IMV const& operator-=(IMV const& rhs) {
+                    image() -= rhs.image();
+                    mask() |= rhs.mask();
+                    variance() += rhs.variance();
+                    
+                    return *this;
+                }
+
+                IMV const& operator/=(double const rhs) {
+                    image() /= rhs;
+                    variance() /= rhs*rhs;
+                    
+                    return *this;
+                }
+                IMV const& operator/=(IMV const& rhs) {
+                    ImagePixelT const rhs2 = rhs.image()*rhs.image();
+                    // Must do variance before we modify this->image()
+                    variance() = (image()*image()*rhs.variance() + rhs2*variance())/(rhs2*rhs2);
+
+                    image() /= rhs.image();
+                    mask() |= rhs.mask();
+                    
+                    return *this;
+                }
+
+                IMV const& operator*=(double const rhs) {
+                    image() *= rhs;
+                    variance() *= rhs*rhs;
+                    
+                    return *this;
+                }
+                IMV const& operator*=(IMV const& rhs) {
+                    // Must do variance before we modify this->image()
+                    variance() = image()*image()*rhs.variance() + rhs.image()*rhs.image()*variance();
+
+                    image() *= rhs.image();
+                    mask() |= rhs.mask();
+                    
+                    return *this;
                 }
             };
             
@@ -207,14 +250,11 @@ namespace image {
                 return *this;
             }
         };
-        //
-        // We need a way to refer to IMV_tuple outside maskedImageIterators, so typedef it here
-        //
-        typedef typename maskedImageIteratorBase<typename Image::iterator, typename Mask::iterator,
-                                                 typename Variance::iterator>::IMV_tuple IMV_tuple;
+
+        /************************************************************************************************************/
 
         template<typename ImageLocator, typename MaskLocator, typename VarianceLocator,
-                 template<typename> class Ref=Reference, typename IMV_tuple=IMV_tuple>
+                 template<typename> class Ref=Reference>
         class maskedImageLocatorBase {
             typedef typename boost::tuple<ImageLocator, MaskLocator, VarianceLocator> IMVLocator;
             //
@@ -288,8 +328,7 @@ namespace image {
 
             class cached_location_t {
             public:
-                template<typename, typename, typename, template<typename> class, typename>
-									friend class maskedImageLocatorBase;
+                template<typename, typename, typename, template<typename> class> friend class maskedImageLocatorBase;
                 template<typename, typename, typename> friend class const_maskedImageLocator;
 
                 cached_location_t(IMVLocator const& loc, int x, int y) :
@@ -420,8 +459,7 @@ namespace image {
             typedef typename details::const_locator_type<VarianceLocator>::type const_VarianceLocator;
 
             typedef maskedImageLocatorBase<const_ImageLocator, const_MaskLocator, const_VarianceLocator,
-                                           ConstReference>
-											       maskedImageLocatorBase;
+                                           ConstReference> maskedImageLocatorBase;
         public:
             const_maskedImageLocator(maskedImageLocator<ImageLocator, MaskLocator, VarianceLocator> const& iter) :
                 maskedImageLocatorBase(const_ImageLocator(iter._loc.template get<0>()),
@@ -459,7 +497,7 @@ namespace image {
         typedef const_maskedImageLocator<typename Image::xy_locator,
                                     typename Mask::xy_locator, typename Variance::xy_locator> const_xy_locator;
         
-        typedef typename iterator::IMV IMV;
+        //typedef typename iterator::IMV IMV;
 
         /************************************************************************************************************/
 

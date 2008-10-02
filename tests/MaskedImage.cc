@@ -6,6 +6,7 @@
 #define BOOST_TEST_MODULE MaskedImage
 
 #include "boost/test/unit_test.hpp"
+#include "boost/test/floating_point_comparison.hpp"
 
 #include "boost/iterator/zip_iterator.hpp"
 #include "lsst/afw/image/MaskedImage.h"
@@ -123,16 +124,74 @@ BOOST_AUTO_TEST_CASE(setValues) {
     BOOST_CHECK_EQUAL((*img.getVariance())(1,1), 202);
 
     image::MaskedImage<float>::x_iterator ptr = img.x_at(1, 1);
-    image::MaskedImage<float>::IMV val(*ptr);
 
-    BOOST_CHECK_EQUAL(val.image(),    101);
-    BOOST_CHECK_EQUAL(val.mask(),     img.getWidth() + 1);
-    BOOST_CHECK_EQUAL(val.variance(), 202);
+    BOOST_CHECK_EQUAL(ptr.image(),    101);
+    BOOST_CHECK_EQUAL(ptr.mask(),     img.getWidth() + 1);
+    BOOST_CHECK_EQUAL(ptr.variance(), 202);
 
-    *ptr = val/2;
+    *ptr /= 2;
     BOOST_CHECK_EQUAL(ptr.image(),    50.5);
     BOOST_CHECK_EQUAL(ptr.mask(),     img.getWidth() + 1);
     BOOST_CHECK_EQUAL(ptr.variance(), 50.5);
+
+    *ptr *= 2;
+    BOOST_CHECK_EQUAL(ptr.image(),    101);
+    BOOST_CHECK_EQUAL(ptr.mask(),     img.getWidth() + 1);
+    BOOST_CHECK_EQUAL(ptr.variance(), 202);
+
+    *ptr /= *ptr;
+    BOOST_CHECK_EQUAL(ptr.image(),    1);
+    BOOST_CHECK_EQUAL(ptr.mask(),     img.getWidth() + 1);
+    BOOST_CHECK_CLOSE(ptr.variance(), 2*202/float(101*101), 1e-8); // 3rd argument is allowed percentage difference
+
+    ptr++;
+    BOOST_CHECK_EQUAL(ptr.image(),    201);
+    BOOST_CHECK_EQUAL(ptr.mask(),     img.getWidth() + 2);
+    BOOST_CHECK_EQUAL(ptr.variance(), 402);
+
+    image::MaskedImage<float> img2(img.dimensions()); // make a deep copy
+    *img2.getImage() = 4;
+    *img2.getMask() = 0x8;
+    *img2.getVariance() = 8;
+
+    image::MaskedImage<float>::x_iterator ptr2 = img2.x_at(0, 4);
+
+    ptr.image() = 100;
+    ptr.mask() = 0x10;
+    ptr.variance() = 3;
+    BOOST_CHECK_EQUAL(ptr.image(),    100);
+    BOOST_CHECK_EQUAL(ptr.mask(),     0x10);
+    BOOST_CHECK_EQUAL(ptr.variance(), 3);
+
+    *ptr *= *img2.x_at(0,4);            // == ptr2
+    BOOST_CHECK_EQUAL(ptr.image(),    400);
+    BOOST_CHECK_EQUAL(ptr.mask(),     0x18);
+    BOOST_CHECK_EQUAL(ptr.variance(), 100*100*8 + 4*4*3);
+
+    *ptr2 += 10;
+    BOOST_CHECK_EQUAL(ptr2.image(),    14);
+    BOOST_CHECK_EQUAL(ptr2.mask(),     0x8);
+    BOOST_CHECK_EQUAL(ptr2.variance(), 8);
+
+    *ptr2 -= 10;
+    BOOST_CHECK_EQUAL(ptr2.image(),    4);
+    BOOST_CHECK_EQUAL(ptr2.mask(),     0x8);
+    BOOST_CHECK_EQUAL(ptr2.variance(), 8);
+
+    *img.getImage() = 10;
+    *img.getMask() = 0x1;
+    *img.getVariance() = 2.5;
+    
+    *ptr += *ptr2;
+    BOOST_CHECK_EQUAL(ptr.image(),    14);
+    BOOST_CHECK_EQUAL(ptr.mask(),     0x9);
+    BOOST_CHECK_EQUAL(ptr.variance(), 10.5);    
+    
+    ptr2.mask() = 0x2;
+    *ptr -= *ptr2;
+    BOOST_CHECK_EQUAL(ptr.image(),    10);
+    BOOST_CHECK_EQUAL(ptr.mask(),     0x9 | 0x2);
+    BOOST_CHECK_EQUAL(ptr.variance(), 18.5);
 }
 
 /************************************************************************************************************/
