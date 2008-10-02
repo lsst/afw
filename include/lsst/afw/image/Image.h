@@ -284,7 +284,6 @@ namespace image {
         void operator+=(Image<PixelT>const & inputImage);
         void operator-=(PixelT const scalar);
         void operator-=(Image<PixelT> const& inputImage);
-        Image<PixelT>& operator*(const PixelT scalar);
         void operator*=(PixelT const scalar);
         void operator*=(Image<PixelT> const& inputImage);
         void operator/=(PixelT const scalar);

@@ -26,18 +26,18 @@ namespace lsst {
 namespace afw {
 namespace math {
 
-    template <typename OutPixelT, typename InImageT>
+    template <typename OutPixelT, typename InImageLocT>
     inline void apply(
-        OutPixelT &outPixel,
-        typename InImageT::xy_locator const &imageAccessor,
-        typename lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::const_xy_locator const &kernelAccessor,
+        OutPixelT const& outPixel,
+        InImageLocT& imageAccessor,
+        typename lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::const_xy_locator& kernelAccessor,
         int kWidth, int kHeight
     );
     
-    template <typename OutPixelT, typename InImageT>
+    template <typename OutPixelT, typename InImageLocT>
     inline void apply(
-        OutPixelT &outPixel,
-        typename InImageT::xy_locator const& imageAccessor,
+        OutPixelT const& outPixel,
+        InImageLocT& imageAccessor,
         std::vector<lsst::afw::math::Kernel::PixelT> const& kernelColList,
         std::vector<lsst::afw::math::Kernel::PixelT> const& kernelRowList
     );

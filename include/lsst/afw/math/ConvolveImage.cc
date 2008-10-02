@@ -40,29 +40,33 @@
  *
  * @ingroup afw
  */
-template <typename OutPixelT, typename InImageT>
+template <typename OutPixelT, typename InImageLocT>
 inline void lsst::afw::math::apply(
-    OutPixelT &outValue,                ///< output image pixel value
-    typename InImageT::const_xy_locator const &imageLocator,
-                                        ///< locator for image pixel that overlaps (0,0) pixel of kernel(!)
-    lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::const_xy_locator const &kernelLocator,
+    OutPixelT const& outValue,          ///< output image pixel value
+    InImageLocT& imageLocator,          ///< locator for image pixel that overlaps (0,0) pixel of kernel(!)
+    lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::const_xy_locator &kernelLocator,
                                         ///< accessor for (0,0) pixel of kernel
     int kwidth,                         ///< number of columns in kernel
     int kheight                         ///< number of rows in kernel
-) {
-    typedef typename lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::const_xy_locator kernelLocatorType;
-    double outImage = 0;
-    
+                                  ) {
+#if 0                                   // can't construct a MaskedImage::PixelT, so don't try
+    OutPixelT outImage;
+    outImage = 0;
+#endif
+
+    outValue = 0;
     for (int y = 0; y != kheight; ++y) {
         for (int x = 0; x != kwidth; ++x, ++imageLocator.x(), ++kernelLocator.x()) {
-            outImage += static_cast<OutPixelT>(imageLocator[0]*kernelLocator[0]);
+#if 1
+            *imageLocator;
+#else
+            outValue += *imageLocator*kernelLocator[0];
+#endif
         }
 
         imageLocator  += lsst::afw::image::details::difference_type(-kwidth, 1);
         kernelLocator += lsst::afw::image::details::difference_type(-kwidth, 1);
     }
-
-    outValue = outImage;
 }
 
 /**
@@ -74,11 +78,10 @@ inline void lsst::afw::math::apply(
  *
  * @ingroup afw
  */
-template <typename OutPixelT, typename InImageT>
+template <typename OutPixelT, typename InImageLocT>
 inline void lsst::afw::math::apply(
-    OutPixelT &outValue,                ///< output pixel value
-    typename InImageT::const_xy_locator const &imageLocator,
-                                        ///< accessor to for image pixel that overlaps (0,0) pixel of kernel(!)
+    OutPixelT const& outValue,          ///< output image pixel value
+    InImageLocT& imageLocator,          ///< locator for image pixel that overlaps (0,0) pixel of kernel(!)
     std::vector<lsst::afw::math::Kernel::PixelT> const &kernelXList,  ///< kernel column vector
     std::vector<lsst::afw::math::Kernel::PixelT> const &kernelYList   ///< kernel row vector
 ) {
@@ -128,7 +131,7 @@ void lsst::afw::math::basicConvolve(
     typedef typename lsst::afw::math::Kernel::PixelT KernelPixelT;
 
     typedef typename lsst::afw::image::Image<KernelPixelT>::const_xy_locator kXY_locator;
-    typedef typename InImageT::const_xy_locator inXY_locator;
+    typedef typename InImageT::xy_locator inXY_locator;
     typedef typename OutImageT::x_iterator cnvX_iterator;
 
     if (convolvedImage.dimensions() != inImage.dimensions()) {
@@ -166,7 +169,7 @@ void lsst::afw::math::basicConvolve(
                 kernel.computeImage(kernelImage, kSum, false, colPos, rowPos);
 
                 kXY_locator kernelLoc = kernelImage.xy_at(0,0);
-                lsst::afw::math::apply<OutImageT, InImageT>(*cnvImIter, inImLoc, kernelLoc, kWidth, kHeight);
+                lsst::afw::math::apply(*cnvImIter, inImLoc, kernelLoc, kWidth, kHeight);
                 if (doNormalize) {
                     *cnvImIter /= kSum;
                 }
@@ -182,7 +185,7 @@ void lsst::afw::math::basicConvolve(
             for (cnvX_iterator cnvImIter = convolvedImage.row_begin(cnvY) + cnvStartX,
                      cnvImEnd = cnvImIter + cnvEndX - cnvStartX; cnvImIter != cnvImEnd; ++inImLoc.x(), ++cnvImIter) {
                 kXY_locator kernelLoc = kernelImage.xy_at(0,0);
-                lsst::afw::math::apply<OutImageT, InImageT>(*cnvImIter, inImLoc, kernelLoc, kWidth, kHeight);
+                lsst::afw::math::apply(*cnvImIter, inImLoc, kernelLoc, kWidth, kHeight);
             }
         }
     }

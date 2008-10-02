@@ -287,14 +287,6 @@ void image::Image<PixelT>::operator-=(const Image<PixelT>& rhs) {
 }
 
 template<typename PixelT>
-image::Image<PixelT>& image::Image<PixelT>::operator*(const PixelT rhs) {
-    abort();                            // we're doing a multiply in place, but need a tmp (I think)
-    transform_pixels(_getRawView(), _getRawView(), ret<PixelT>(_1 * rhs));
-
-    return *this;
-}
-
-template<typename PixelT>
 void image::Image<PixelT>::operator*=(const PixelT rhs) {
     transform_pixels(_getRawView(), _getRawView(), ret<PixelT>(_1 * rhs));
 }

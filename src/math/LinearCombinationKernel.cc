@@ -96,12 +96,21 @@ void lsst::afw::math::LinearCombinationKernel::computeImage(
     
     std::vector<lsst::afw::image::Image<PixelT>::Ptr>::const_iterator kImPtrIter = _kernelImagePtrList.begin();
     std::vector<double>::const_iterator kParIter = _kernelParams.begin();
+    //
+    // Temp image to generate the kernel*components into.  Image::operator*() doesn't exist
+    // as it'd have to generate a temporary, and I don't think it's a good idea to make tmps
+    // without explicit requests from the user.
+    //
+    lsst::afw::image::Image<PixelT>::Ptr tmpImage(new lsst::afw::image::Image<PixelT>(image.dimensions()));
 
-    image = (**kImPtrIter)*(*kParIter);
+    image = **kImPtrIter;
+    image *= *kParIter;
     ++kImPtrIter, ++kParIter;
     
     for ( ; kImPtrIter != _kernelImagePtrList.end(); ++kImPtrIter, ++kParIter) {
-        image += (**kImPtrIter)*(*kParIter);
+        *tmpImage = **kImPtrIter;
+        *tmpImage *= *kParIter;
+        image += *tmpImage;
     }
 
     imSum = 0;

@@ -32,7 +32,8 @@ namespace image {
     
     typedef float VariancePixel;        // default type for variance images
     
-    template<typename ImagePixelT, typename MaskPixelT=lsst::afw::image::MaskPixel, typename VariancePixelT=VariancePixel>
+    template<typename ImagePixelT, typename MaskPixelT=lsst::afw::image::MaskPixel,
+             typename VariancePixelT=VariancePixel>
     class MaskedImage : public lsst::daf::base::Persistable,
                         public lsst::daf::data::LsstBase {
     public:
@@ -45,6 +46,125 @@ namespace image {
 
         typedef Image<ImagePixelT> Image; // need to be here, as "typedef Image::Ptr ImagePtr;" confuses swig
         typedef Mask<MaskPixelT> Mask;    // and we can't use Image<> after these typedefs
+        
+        /************************************************************************************************************/
+        /// @brief Class to provide utility functions for a "pixel" to get at image/mask/variance an operators
+        //
+        // This class allows us to manipulate the tuples returned by MaskedImage iterators/locators
+        // as if they were POD.  This provides convenient syntactic sugar, but it also permits us
+        // to write generic algorithms to manipulate MaskedImages as well as Images
+        class IMV {
+        public:
+            IMV(ImagePixelT& image, MaskPixelT& mask, VariancePixelT& variance) :
+                _image(image), _mask(mask), _variance(variance) {
+            }
+
+            IMV& operator=(IMV rhs) {
+                image() = rhs.image();
+                mask() = rhs.mask();
+                variance() = rhs.variance();
+                    
+                return *this;
+            }
+            /// @brief initialize a pixel;  the mask and variance are set to 0
+            //
+            // The method's declared const as it technically is (the references
+            // aren't changed, just their values).  This const qualification is
+            // required in order to be able to pass *locator to a routine expecting
+            // an IMV
+            IMV operator=(ImagePixelT image ///< The desired value for the image
+                         ) const {
+                _image = image;
+                _mask = 0x0;
+                _variance = 0;
+                    
+                return *this;
+            }
+
+            ImagePixelT& image() {
+                return _image;
+            }
+            MaskPixelT& mask() {
+                return _mask;
+            }
+            VariancePixelT& variance() {
+                return _variance;
+            }
+            ImagePixelT const & image() const {
+                return _image;
+            }
+            MaskPixelT const& mask() const {
+                return _mask;
+            }
+            VariancePixelT const& variance() const {
+                return _variance;
+            }
+
+            IMV const& operator+=(double const rhs) {
+                image() += rhs;
+                    
+                return *this;
+            }
+            IMV const& operator+=(IMV const& rhs) {
+                image() += rhs.image();
+                mask() |= rhs.mask();
+                variance() += rhs.variance();
+                    
+                return *this;
+            }
+
+            IMV const& operator-=(double const rhs) {
+                image() -= rhs;
+                    
+                return *this;
+            }
+            IMV const& operator-=(IMV const& rhs) {
+                image() -= rhs.image();
+                mask() |= rhs.mask();
+                variance() += rhs.variance();
+                    
+                return *this;
+            }
+
+            IMV const& operator/=(double const rhs) {
+                image() /= rhs;
+                variance() /= rhs*rhs;
+                    
+                return *this;
+            }
+            IMV const& operator/=(IMV const& rhs) {
+                ImagePixelT const rhs2 = rhs.image()*rhs.image();
+                // Must do variance before we modify this->image()
+                variance() = (image()*image()*rhs.variance() + rhs2*variance())/(rhs2*rhs2);
+
+                image() /= rhs.image();
+                mask() |= rhs.mask();
+                    
+                return *this;
+            }
+
+            IMV const& operator*=(double const rhs) {
+                image() *= rhs;
+                variance() *= rhs*rhs;
+                    
+                return *this;
+            }
+            IMV const& operator*=(IMV const& rhs) {
+                // Must do variance before we modify this->image()
+                variance() = image()*image()*rhs.variance() + rhs.image()*rhs.image()*variance();
+
+                image() *= rhs.image();
+                mask() |= rhs.mask();
+                    
+                return *this;
+            }
+        private:
+            ImagePixelT& _image;
+            MaskPixelT& _mask;
+            VariancePixelT& _variance;
+        };
+
+        typedef IMV PixelT;             ///< The type of a MaskedImage "Pixel"
         
         /************************************************************************************************************/
 
@@ -62,97 +182,11 @@ namespace image {
         public:
             typedef typename boost::zip_iterator<IMV_iterator_tuple>::reference IMV_tuple;
             template<typename, typename, typename> friend class const_maskedImageIterator;
-            /// @brief Class to provide utility functions for IMV_tuple to get at image/mask/variance an operators
-            //
-            // This class allows us to manipulate the tuples returned by MaskedImage iterators/locators
-            // as if they were POD.  This provides convenient syntactic sugar, but it also permits us
-            // to write generic algorithms to manipulate MaskedImages as well as Images
-            class IMV : public IMV_tuple {
-            public:
-                explicit IMV(IMV_tuple imv) : IMV_tuple(imv) {}
-                ImagePixelT& image() {
-                    return this->template get<0>()[0];
-                }
-                MaskPixelT& mask() {
-                    return this->template get<1>()[0];
-                }
-                VariancePixelT& variance() {
-                    return this->template get<2>()[0];
-                }
-                ImagePixelT const & image() const {
-                    return this->template get<0>()[0];
-                }
-                MaskPixelT const& mask() const {
-                    return this->template get<1>()[0];
-                }
-                VariancePixelT const& variance() const {
-                    return this->template get<2>()[0];
-                }
 
-                IMV const& operator+=(double const rhs) {
-                    image() += rhs;
-                    
-                    return *this;
-                }
-                IMV const& operator+=(IMV const& rhs) {
-                    image() += rhs.image();
-                    mask() |= rhs.mask();
-                    variance() += rhs.variance();
-                    
-                    return *this;
-                }
-
-                IMV const& operator-=(double const rhs) {
-                    image() -= rhs;
-                    
-                    return *this;
-                }
-                IMV const& operator-=(IMV const& rhs) {
-                    image() -= rhs.image();
-                    mask() |= rhs.mask();
-                    variance() += rhs.variance();
-                    
-                    return *this;
-                }
-
-                IMV const& operator/=(double const rhs) {
-                    image() /= rhs;
-                    variance() /= rhs*rhs;
-                    
-                    return *this;
-                }
-                IMV const& operator/=(IMV const& rhs) {
-                    ImagePixelT const rhs2 = rhs.image()*rhs.image();
-                    // Must do variance before we modify this->image()
-                    variance() = (image()*image()*rhs.variance() + rhs2*variance())/(rhs2*rhs2);
-
-                    image() /= rhs.image();
-                    mask() |= rhs.mask();
-                    
-                    return *this;
-                }
-
-                IMV const& operator*=(double const rhs) {
-                    image() *= rhs;
-                    variance() *= rhs*rhs;
-                    
-                    return *this;
-                }
-                IMV const& operator*=(IMV const& rhs) {
-                    // Must do variance before we modify this->image()
-                    variance() = image()*image()*rhs.variance() + rhs.image()*rhs.image()*variance();
-
-                    image() *= rhs.image();
-                    mask() |= rhs.mask();
-                    
-                    return *this;
-                }
-            };
-            
             maskedImageIteratorBase(ImageIterator const& img, MaskIterator const& msk, VarianceIterator const &var) :
                 _iter(boost::make_zip_iterator(boost::make_tuple(img, msk, var))) {
             }
-    
+            
             typename Ref<typename Image::Pixel>::type image() {
                 return _iter->template get<0>()[0];
             }
@@ -187,11 +221,18 @@ namespace image {
             bool operator<(maskedImageIteratorBase const& rhs) {
                 return _iter < rhs._iter;
             }
+
+            operator IMV() const {
+                return IMV(_image(this->template get<0>()[0]),
+                           _mask(this->template get<1>()[0]),
+                           _variance(this->template get<2>()[0]));
+            }
+
             IMV operator*() {
-                return IMV(*_iter);
+                return IMV(image(), mask(), variance());
             }
             const IMV operator*() const {
-                return IMV(*_iter);
+                return IMV(image(), mask(), variance());
             }
 
         protected:
@@ -346,6 +387,12 @@ namespace image {
                 ;
             }
 
+            IMV operator*() {
+		return IMV(_loc.template get<0>().x()[0][0],
+                           _loc.template get<1>().x()[0][0],
+                           _loc.template get<2>().x()[0][0]);
+            }
+
 	    _x_iterator x() {
 		return _x_iterator(this);
             }
@@ -359,12 +406,6 @@ namespace image {
             _y_iterator y() {
 		return _y_iterator(this);
 	    }
-
-            typename MaskedImage::x_iterator new_y() {
-		return x_iterator(_loc.template get<0>().y(),
-                                  _loc.template get<1>().y(),
-                                  _loc.template get<2>().y());
-            }
 
             cached_location_t cache_location(int x, int y) const {
                 return cached_location_t(_loc, x, y);
@@ -471,7 +512,7 @@ namespace image {
         };
 #endif  // !defined(SWIG)
 
-        /************************************************************************************************************/
+    /************************************************************************************************************/
     
         typedef maskedImageIterator<typename Image::iterator,
                                     typename Mask::iterator, typename Variance::iterator> iterator;
@@ -497,8 +538,6 @@ namespace image {
         typedef const_maskedImageLocator<typename Image::xy_locator,
                                     typename Mask::xy_locator, typename Variance::xy_locator> const_xy_locator;
         
-        //typedef typename iterator::IMV IMV;
-
         /************************************************************************************************************/
 
         // Constructors

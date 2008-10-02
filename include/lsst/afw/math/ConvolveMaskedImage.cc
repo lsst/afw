@@ -59,8 +59,6 @@ inline void lsst::afw::math::apply(
     int kwidth,                         ///< number of columns in kernel
     int kheight                         ///< number of rows in kernel
 ) {
-    typedef typename lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::const_xy_locator kernelLocatorType;
-
     double outImage = 0;
     double outVariance = 0;
     long outMask = 0;
