@@ -40,7 +40,7 @@ namespace image {
 
         template<typename ImageT>
         struct image_traits {
-            typedef typename ImageT::image_tag image_category;
+            typedef typename ImageT::image_category image_category;
         };
     }
 
@@ -126,18 +126,17 @@ namespace image {
         typedef boost::shared_ptr<ImageBase<PixelT> > Ptr;
         typedef boost::shared_ptr<const ImageBase<PixelT> > ConstPtr;
 
-        typedef details::basic_tag image_tag;
+        typedef details::basic_tag image_category;
 
 #if !defined(SWIG)
-        struct PixelConstant {
-            typedef PixelT type;
-        };
+        typedef PixelT PixelConstant;
+
         struct Pixel {
             typedef PixelT type;
             typedef PixelConstant Constant;
         };
 #endif
-        
+
         typedef typename Reference<PixelT>::type PixelReference;
         typedef typename ConstReference<PixelT>::type PixelConstReference;
         
@@ -275,8 +274,12 @@ namespace image {
         typedef boost::shared_ptr<Image<PixelT> > Ptr;
         typedef boost::shared_ptr<const Image<PixelT> > ConstPtr;
 
-        typedef details::image_tag image_tag;
+        typedef details::image_tag image_category;
 
+        template<typename ImagePT=PixelT>
+        struct ImageFactory {
+            typedef Image<ImagePT> type;
+        };
         template<typename OtherPixelT> friend class Image; // needed by generalised copy constructors
 
         explicit Image(const int width=0, const int height=0);
@@ -398,10 +401,6 @@ namespace image {
 
     template<typename PixelT>
     void swap(DecoratedImage<PixelT>& a, DecoratedImage<PixelT>& b);
-    //
-    // Forward declaration, for templated functions in files that don't actually need to include MaskedImage.h 
-    //
-    template<typename, typename, typename> class MaskedImage;
 }}}  // lsst::afw::image
 
 #endif // LSST_IMAGE_IMAGE_H

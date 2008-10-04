@@ -83,7 +83,8 @@ int main(int argc, char **argv) {
     cout << endl;
 
     // convolve
-    afwImage::MaskedImage<pixelType> resMaskedImage = afwMath::convolveNew(mImage, gaussSpVarKernel, edgeMaskBit, true);
+    afwImage::MaskedImage<pixelType> resMaskedImage(mImage.dimensions());
+    afwMath::convolve(resMaskedImage, mImage, gaussSpVarKernel, edgeMaskBit, true);
 
     // write results
     resMaskedImage.writeFits(outFile);

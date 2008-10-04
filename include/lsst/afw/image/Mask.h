@@ -43,7 +43,12 @@ namespace image {
         typedef boost::shared_ptr<const Mask> ConstPtr;
         typedef std::map<std::string, int> MaskPlaneDict;
         
-        typedef details::mask_tag image_tag;
+        typedef details::mask_tag image_category;
+
+        template<typename MaskPT=MaskPixelT>
+        struct ImageFactory {
+            typedef Mask<MaskPT> type;
+        };
 
         typedef typename ImageBase<MaskPixelT>::x_iterator x_iterator;
         

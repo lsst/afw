@@ -102,6 +102,7 @@ namespace math {
     
     public:
         typedef double PixelT;
+        typedef lsst::afw::image::Image<PixelT>::Pixel Pixel;
         typedef boost::shared_ptr<Kernel> PtrT;
         typedef boost::shared_ptr<lsst::afw::math::Function2<double> > SpatialFunctionPtr;
         typedef lsst::afw::math::Function2<double> SpatialFunction;

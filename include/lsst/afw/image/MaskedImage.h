@@ -32,7 +32,7 @@ namespace image {
 
     namespace details {
         struct maskedImage_tag : basic_tag { };
-        struct maskedImagePixel_tag {};
+        struct maskedImagePixel_tag { }; // used to identify classes that represent MaskedImage pixels
     }
     
     typedef float VariancePixel;        // default type for variance images
@@ -52,7 +52,12 @@ namespace image {
         typedef Image<ImagePixelT> Image;       // "typedef Image::Ptr ImagePtr;" confuses swig (it can't
         typedef Mask<MaskPixelT> Mask;          // find ImagePtr) and we can't use Image<> after these typedefs
         
-        typedef details::maskedImage_tag image_tag;
+        typedef details::maskedImage_tag image_category;
+
+        template<typename ImagePT=ImagePixelT, typename MaskPT=MaskPixelT, typename VarPT=VariancePixelT>
+        struct ImageFactory {
+            typedef MaskedImage<ImagePT, MaskPT, VarPT> type;
+        };
 
         /************************************************************************************************************/
 
@@ -73,15 +78,18 @@ namespace image {
         class Pixel : details::maskedImagePixel_tag {
             friend class PixelConstant;
 
+        public:
+            typedef Pixel type;
+            typedef PixelConstant Constant;
+            //
+            // This constructor casts away const.  This should be fixed by making const Pixels.
+            //
             Pixel(ImagePixelT const& image, MaskPixelT const& mask, VariancePixelT const& variance) :
                 _image(const_cast<ImagePixelT&>(image)),
                 _mask(const_cast<MaskPixelT&>(mask)),
                 _variance(const_cast<VariancePixel&>(variance)) {
             }
-        public:
-            typedef Pixel type;
-            typedef PixelConstant Constant;
-
+            
             Pixel(ImagePixelT& image, MaskPixelT& mask, VariancePixelT& variance) :
                 _image(image), _mask(mask), _variance(variance) {
             }

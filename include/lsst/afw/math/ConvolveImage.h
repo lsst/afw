@@ -28,15 +28,13 @@ namespace math {
 
     template <typename OutImageT, typename InImageT>
     inline typename OutImageT::Pixel::Constant apply(
-        typename InImageT::xy_locator& inImage,
-        typename lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::const_xy_locator& kernelAccessor,
-        int kWidth, int kHeight
-    );
+        typename InImageT::const_xy_locator& inLocator,
+        typename lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::const_xy_locator& kernelLocator,
+        int kWidth, int kHeight);
     
-    template <typename OutPixelT, typename InImageT>
-    inline void apply(
-        OutPixelT const& outPixel,
-        typename InImageT::xy_locator& inImage,
+    template <typename OutImageT, typename InImageT>
+    inline typename OutImageT::Pixel::Constant apply(
+        typename InImageT::const_xy_locator& inImage,
         std::vector<lsst::afw::math::Kernel::PixelT> const& kernelColList,
         std::vector<lsst::afw::math::Kernel::PixelT> const& kernelRowList
     );
@@ -70,27 +68,16 @@ namespace math {
         OutImageT& convolvedImage,
         InImageT const& inImage,
         KernelT const& kernel,
-        bool doNormalize
-    );
-    
-    template <typename InImageT, typename KernelT>
-    InImageT convolveNew(
-        InImageT const& inImage,
-        KernelT const& kernel,
-        bool doNormalize
+        bool doNormalize,
+        int edgeBit=-1
     );
 
     template <typename OutImageT, typename InImageT>
     void convolveLinear(
         OutImageT& convolvedImage,
         InImageT const& inImage,
-        lsst::afw::math::LinearCombinationKernel const &kernel
-    );
-
-    template <typename InImageT>
-    InImageT convolveLinearNew(
-        InImageT const& inImage,
-        lsst::afw::math::LinearCombinationKernel const& kernel
+        lsst::afw::math::LinearCombinationKernel const& kernel,
+        int edgeBit=-1
     );
 }}}   // lsst::afw::math
     
