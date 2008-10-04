@@ -14,6 +14,7 @@
 #include <string>
 #include <utility>
 
+#include "boost/mpl/bool.hpp"
 #include "boost/shared_ptr.hpp"
 
 #include "lsst/afw/image/lsstGil.h"
@@ -30,6 +31,21 @@ namespace formatters {
 }
 
 namespace image {
+    namespace details {
+        //
+        // Traits for image types
+        //
+        struct basic_tag { };
+        struct image_tag : basic_tag { };
+
+        template<typename ImageT>
+        struct image_traits {
+            typedef typename ImageT::image_tag image_category;
+        };
+    }
+
+    /************************************************************************************************************/
+
     template<typename T>
     class Point {
     public:
@@ -37,13 +53,14 @@ namespace image {
         Point(T x, T y) : _x(x), _y(y) {}
         Point(T const xy[2]) : _x(xy[0]), _y(xy[1]) {}
 
-        T getX() const { return _x; }
-        T getY() const { return _y; }
+        T const& getX() const { return _x; }
+        T const& getY() const { return _y; }
         T& getX() { return _x; }
         T& getY() { return _y; }
 
         Point operator+(const Point& rhs) const { return Point(_x + rhs._x, _y + rhs._y); }
         Point operator-(const Point& rhs) const { return Point(_x - rhs._x, _y - rhs._y); }
+#if !defined(SWIG)
         T const& operator[](int const i) const {
             switch (i) {
               case 0: return _x;
@@ -54,6 +71,7 @@ namespace image {
         T& operator[](int const i) {
             return const_cast<T&>(static_cast<Point &>(*this)[i]); // Meyers, Effective C++, Item 3
         }
+#endif
     private:
         T _x, _y;
     };
@@ -107,8 +125,19 @@ namespace image {
     public:
         typedef boost::shared_ptr<ImageBase<PixelT> > Ptr;
         typedef boost::shared_ptr<const ImageBase<PixelT> > ConstPtr;
-        typedef PixelT Pixel;
 
+        typedef details::basic_tag image_tag;
+
+#if !defined(SWIG)
+        struct PixelConstant {
+            typedef PixelT type;
+        };
+        struct Pixel {
+            typedef PixelT type;
+            typedef PixelConstant Constant;
+        };
+#endif
+        
         typedef typename Reference<PixelT>::type PixelReference;
         typedef typename ConstReference<PixelT>::type PixelConstReference;
         
@@ -124,6 +153,13 @@ namespace image {
         typedef typename _const_view_t::y_iterator const_y_iterator;
 
         template<typename OtherPixelT> friend class ImageBase; // needed by generalised copy constructors
+        //
+        /// @brief Convert a type to our PixelConstant type
+        //
+        template<typename PixelConstantT>
+        static PixelConstant PixelCast(PixelConstantT rhs) {
+            return PixelConstant(rhs);
+        }
         //
         // DecoratedImage needs enough access to ImageBase to read data from disk;  we might be able to design around this.
         //
@@ -239,6 +275,8 @@ namespace image {
         typedef boost::shared_ptr<Image<PixelT> > Ptr;
         typedef boost::shared_ptr<const Image<PixelT> > ConstPtr;
 
+        typedef details::image_tag image_tag;
+
         template<typename OtherPixelT> friend class Image; // needed by generalised copy constructors
 
         explicit Image(const int width=0, const int height=0);
@@ -257,8 +295,8 @@ namespace image {
 
         // generalised copy constructor
         template<typename OtherPixelT>
-        Image(const Image<OtherPixelT>& src) :
-            image::ImageBase<PixelT>(src, true) {}
+        Image(const Image<OtherPixelT>& src, const bool deep) :
+            image::ImageBase<PixelT>(src, deep) {}
 
         virtual ~Image() { }
         //
@@ -308,7 +346,7 @@ namespace image {
         explicit DecoratedImage(const int width=0, const int height=0);
         explicit DecoratedImage(const std::pair<int, int> dimensions);
         explicit DecoratedImage(typename Image<PixelT>::Ptr src);
-        DecoratedImage(const DecoratedImage& src, const bool deep=false);
+        DecoratedImage(DecoratedImage const& src, const bool deep=false);
         explicit DecoratedImage(std::string const& fileName, const int hdu=0);
 
         DecoratedImage& operator=(const DecoratedImage<PixelT>& image);

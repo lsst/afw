@@ -14,6 +14,9 @@
 namespace image = lsst::afw::image;
 using namespace std;
 
+typedef float PixelT;
+typedef image::MaskedImage<PixelT> ImageT;
+
 /************************************************************************************************************/
 
 template <typename PixelT>
@@ -57,39 +60,39 @@ void y_gradient(image::MaskedImage<PixelT> & src, image::MaskedImage<PixelT> & d
 /************************************************************************************************************/
 
 namespace {
-    void printImage(image::MaskedImage<float> const& img, string const& title="") {
+    void printImage(ImageT const& img, string const& title="") {
         if (title != "") {
             cout << title << endl;
         }
         
         for (int i = img.getHeight() - 1; i >= 0; --i) {
-            for (image::MaskedImage<float>::x_iterator ptr = img.row_begin(i), end = img.row_end(i); ptr != end; ++ptr) {
+            for (ImageT::x_iterator ptr = img.row_begin(i), end = img.row_end(i); ptr != end; ++ptr) {
                 cout << ptr.image() << " ";
             }
             cout << endl;
         }
     }
 
-    void printMask(image::MaskedImage<float> const& img, string const& title="") {
+    void printMask(ImageT const& img, string const& title="") {
         if (title != "") {
             cout << title << endl;
         }
         
         for (int i = img.getHeight() - 1; i >= 0; --i) {
-            for (image::MaskedImage<float>::x_iterator ptr = img.row_begin(i), end = img.row_end(i); ptr != end; ++ptr) {
+            for (ImageT::x_iterator ptr = img.row_begin(i), end = img.row_end(i); ptr != end; ++ptr) {
                 cout << ptr.mask() << " ";
             }
             cout << endl;
         }
     }
 
-    void printVariance(image::MaskedImage<float> const& img, string const& title="") {
+    void printVariance(ImageT const& img, string const& title="") {
         if (title != "") {
             cout << title << endl;
         }
         
         for (int i = img.getHeight() - 1; i >= 0; --i) {
-            for (image::MaskedImage<float>::x_iterator ptr = img.row_begin(i), end = img.row_end(i); ptr != end; ++ptr) {
+            for (ImageT::x_iterator ptr = img.row_begin(i), end = img.row_end(i); ptr != end; ++ptr) {
                 cout << ptr.variance() << " ";
             }
             cout << endl;
@@ -97,11 +100,11 @@ namespace {
     }
 }
 
-image::MaskedImage<float> make_image(int const width=5, int const height=6) {
-    image::MaskedImage<float> img(width, height);
+ImageT make_image(int const width=5, int const height=6) {
+    ImageT img(width, height);
 
     int i = 0;
-    for (image::MaskedImage<float>::iterator ptr = img.begin(), end = img.end(); ptr != end; ++ptr, ++i) {
+    for (ImageT::iterator ptr = img.begin(), end = img.end(); ptr != end; ++ptr, ++i) {
         ptr.image() = i/img.getWidth() + 100*(i%img.getWidth());
         ptr.mask() = i;;
         ptr.variance() = 2*ptr.image();
@@ -111,7 +114,7 @@ image::MaskedImage<float> make_image(int const width=5, int const height=6) {
 }
 
 BOOST_AUTO_TEST_CASE(setValues) {
-    image::MaskedImage<float> img = make_image();
+    ImageT img = make_image();
 
 #if 0
     printImage(img, "Image");
@@ -123,7 +126,7 @@ BOOST_AUTO_TEST_CASE(setValues) {
     BOOST_CHECK_EQUAL((*img.getMask())(1,1), img.getWidth() + 1);
     BOOST_CHECK_EQUAL((*img.getVariance())(1,1), 202);
 
-    image::MaskedImage<float>::x_iterator ptr = img.x_at(1, 1);
+    ImageT::x_iterator ptr = img.x_at(1, 1);
 
     BOOST_CHECK_EQUAL(ptr.image(),    101);
     BOOST_CHECK_EQUAL(ptr.mask(),     img.getWidth() + 1);
@@ -149,16 +152,18 @@ BOOST_AUTO_TEST_CASE(setValues) {
     BOOST_CHECK_EQUAL(ptr.mask(),     img.getWidth() + 2);
     BOOST_CHECK_EQUAL(ptr.variance(), 402);
 
-    image::MaskedImage<float> img2(img.dimensions()); // make a deep copy
+    ImageT img2(img.dimensions()); // make a deep copy
     *img2.getImage() = 4;
     *img2.getMask() = 0x8;
     *img2.getVariance() = 8;
 
-    image::MaskedImage<float>::x_iterator ptr2 = img2.x_at(0, 4);
+    ImageT::x_iterator ptr2 = img2.x_at(0, 4);
+    ImageT::Pixel val2 = *ptr2;
 
-    ptr.image() = 100;
+    *ptr = 100;                         // sets *ptr to (100, 0, 0)
     ptr.mask() = 0x10;
     ptr.variance() = 3;
+    
     BOOST_CHECK_EQUAL(ptr.image(),    100);
     BOOST_CHECK_EQUAL(ptr.mask(),     0x10);
     BOOST_CHECK_EQUAL(ptr.variance(), 3);
@@ -190,8 +195,23 @@ BOOST_AUTO_TEST_CASE(setValues) {
     ptr2.mask() = 0x2;
     *ptr -= *ptr2;
     BOOST_CHECK_EQUAL(ptr.image(),    10);
-    BOOST_CHECK_EQUAL(ptr.mask(),     0x9 | 0x2);
+    BOOST_CHECK_EQUAL(ptr.mask(),     0xb); // == 0x9 | 0x2
     BOOST_CHECK_EQUAL(ptr.variance(), 18.5);
+
+    typedef ImageT::PixelConstant PixelConstant;
+    *ptr = *ptr + *ptr2;
+    BOOST_CHECK_EQUAL(ptr.image(),    14);
+    BOOST_CHECK_EQUAL(ptr.mask(),     0xb);
+    BOOST_CHECK_EQUAL(ptr.variance(), 26.5);
+
+    *ptr = *ptr + PixelConstant(36, 0x5, 3.5);
+    *ptr = *ptr + 25;
+    *ptr = 25 + ImageT::PixelCast(*ptr);
+    BOOST_CHECK_EQUAL(ptr.image(),    100);
+    BOOST_CHECK_EQUAL(ptr.mask(),     0xf);
+    BOOST_CHECK_EQUAL(ptr.variance(), 30);
+
+    //BOOST_CHECK_EQUAL(ptr, ptr);
 }
 
 /************************************************************************************************************/
@@ -199,13 +219,13 @@ BOOST_AUTO_TEST_CASE(setValues) {
 // Iterators
 //
 BOOST_AUTO_TEST_CASE(iterators) {
-    image::MaskedImage<float> img = make_image();
+    ImageT img = make_image();
     //
     // Count the pixels between begin() and end() (using a const_iterator)
     //
     {
         int i = 0;
-        for (image::MaskedImage<float>::const_iterator ptr = img.begin(), end = img.end(); ptr != end; ++ptr, ++i) {
+        for (ImageT::const_iterator ptr = img.begin(), end = img.end(); ptr != end; ++ptr, ++i) {
         }
         BOOST_CHECK_EQUAL(i, img.getWidth()*img.getHeight());
     }
@@ -214,7 +234,7 @@ BOOST_AUTO_TEST_CASE(iterators) {
     //
     {
         int i = 0;
-        for (image::MaskedImage<float>::reverse_iterator ptr = img.rbegin(), end = img.rend(); ptr != end; ++ptr, ++i) {
+        for (ImageT::reverse_iterator ptr = img.rbegin(), end = img.rend(); ptr != end; ++ptr, ++i) {
         }
         BOOST_CHECK_EQUAL(i, img.getWidth()*img.getHeight());
     }
@@ -222,7 +242,7 @@ BOOST_AUTO_TEST_CASE(iterators) {
     // Check begin() and our ability to increment it
     //        
     {
-        image::MaskedImage<float>::iterator ptr = img.begin();
+        ImageT::iterator ptr = img.begin();
         ptr += img.getWidth() + 1;           // move to (1,1)
         
         BOOST_CHECK_EQUAL(ptr.image(), 101);
@@ -233,7 +253,7 @@ BOOST_AUTO_TEST_CASE(iterators) {
     // Check {col,row}_begin() and our ability to increment them
     //        
     {
-        image::MaskedImage<float>::x_iterator rptr = img.row_begin(1);
+        ImageT::x_iterator rptr = img.row_begin(1);
         rptr += 1;                       // move to (1,1)
         
         BOOST_CHECK_EQUAL(rptr.image(), 101);
@@ -241,11 +261,11 @@ BOOST_AUTO_TEST_CASE(iterators) {
         BOOST_CHECK_EQUAL(rptr.variance(), 202);
 
         BOOST_REQUIRE(img.getWidth() >= 4);
-        image::MaskedImage<float>::const_x_iterator at_ptr = img.x_at(3,2);
+        ImageT::const_x_iterator at_ptr = img.x_at(3,2);
         BOOST_CHECK_EQUAL(at_ptr.image(), 302);
     }
     {
-        image::MaskedImage<float>::y_iterator cptr = img.col_begin(2);
+        ImageT::y_iterator cptr = img.col_begin(2);
         cptr += 1;                       // move to (2,1)
         
         BOOST_CHECK_EQUAL(cptr.image(), 201);
@@ -253,7 +273,7 @@ BOOST_AUTO_TEST_CASE(iterators) {
         BOOST_CHECK_EQUAL(cptr.variance(), 402);
 
         BOOST_REQUIRE(img.getWidth() >= 4);
-        image::MaskedImage<float>::const_y_iterator at_ptr = img.y_at(3,2);
+        ImageT::const_y_iterator at_ptr = img.y_at(3,2);
         BOOST_CHECK_EQUAL(at_ptr.image(), 302);
     }
     //
@@ -261,13 +281,13 @@ BOOST_AUTO_TEST_CASE(iterators) {
     //
     {
         int i = 0;
-        for (image::MaskedImage<float>::x_iterator ptr = img.row_begin(0), end = img.row_end(0); ptr != end; ++ptr) {
+        for (ImageT::x_iterator ptr = img.row_begin(0), end = img.row_end(0); ptr != end; ++ptr) {
             ++i;
         }
         BOOST_CHECK_EQUAL(i, img.getWidth());
 
         i = 0;
-        for (image::MaskedImage<float>::y_iterator ptr = img.col_begin(0), end = img.col_end(0); ptr != end; ++ptr) {
+        for (ImageT::y_iterator ptr = img.col_begin(0), end = img.col_end(0); ptr != end; ++ptr) {
             ++i;
         }
         BOOST_CHECK_EQUAL(i, img.getHeight());
@@ -276,7 +296,7 @@ BOOST_AUTO_TEST_CASE(iterators) {
     // Check that at() works too
     //
     {
-        image::MaskedImage<float>::const_iterator ptr = img.at(1,1);
+        ImageT::const_iterator ptr = img.at(1,1);
         
         BOOST_CHECK_EQUAL(ptr.image(), 101);
         BOOST_CHECK_EQUAL(ptr.mask(), img.getWidth() + 1);
@@ -289,10 +309,10 @@ BOOST_AUTO_TEST_CASE(iterators) {
 // Locators
 //
 BOOST_AUTO_TEST_CASE(locators) {
-    image::MaskedImage<float> img = make_image();
+    ImageT img = make_image();
 
     {
-        image::MaskedImage<float>::const_xy_locator loc = img.xy_at(1,1);
+        ImageT::const_xy_locator loc = img.xy_at(1,1);
 
         BOOST_CHECK_EQUAL(loc.image(), 101);
         BOOST_CHECK_EQUAL(loc.mask(), img.getWidth() + 1);
@@ -330,12 +350,38 @@ BOOST_AUTO_TEST_CASE(locators) {
     }
 
     {
-        image::MaskedImage<float>::xy_locator loc = img.xy_at(1,1);
-        image::MaskedImage<float>::xy_locator::cached_location_t above = loc.cache_location(0,  1);
-        image::MaskedImage<float>::xy_locator::cached_location_t below = loc.cache_location(0, -1);
+        ImageT::xy_locator loc = img.xy_at(1,1);
+        ImageT::xy_locator::cached_location_t above = loc.cache_location(0,  1);
+        ImageT::xy_locator::cached_location_t below = loc.cache_location(0, -1);
         
         BOOST_CHECK_EQUAL(loc.image(above), 102);
         BOOST_CHECK_EQUAL(loc.mask(above), 2*img.getWidth() + 1);
         BOOST_CHECK_EQUAL(loc.variance(below), 200);
-    }    
+    }
+
+    {
+        image::MaskedImage<double> dimg(img.dimensions());
+        *dimg.getImage() = 1000;
+        image::MaskedImage<double>::xy_locator dloc = dimg.xy_at(1,1);
+        ImageT::Pixel::Constant outImage = 10;
+        BOOST_CHECK_EQUAL(outImage.image(), 10);
+        BOOST_CHECK_EQUAL(dloc.image(), 1000);
+        outImage = outImage + ImageT::PixelCast(*dloc);    // mixed double and PixelT
+        BOOST_CHECK_EQUAL(outImage.image(), 1010);
+
+        ImageT::xy_locator loc = img.xy_at(1,1);
+        ImageT::x_iterator iter = img.x_at(1,1);
+        
+        ImageT::Pixel pix = *loc;
+
+        *iter = *iter + *loc;
+        pix += 24;
+        BOOST_CHECK_EQUAL(pix.image(), 226);
+        BOOST_CHECK_EQUAL(pix.mask(), img.getWidth() + 1);
+        BOOST_CHECK_EQUAL(pix.variance(), 404);
+
+        BOOST_CHECK_EQUAL(dloc.image(), 1000);
+        pix += ImageT::PixelCast(*dloc) + pix;             // Mixed PixelT and float (adds 1000 + 226)
+        BOOST_CHECK_EQUAL(pix.image(), 1452);
+    }
 }

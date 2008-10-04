@@ -29,6 +29,11 @@ namespace afw {
 
 namespace image {
     namespace mpl = boost::mpl;
+
+    namespace details {
+        struct maskedImage_tag : basic_tag { };
+        struct maskedImagePixel_tag {};
+    }
     
     typedef float VariancePixel;        // default type for variance images
     
@@ -37,43 +42,65 @@ namespace image {
     class MaskedImage : public lsst::daf::base::Persistable,
                         public lsst::daf::data::LsstBase {
     public:
-        typedef Image<VariancePixelT> Variance;
         typedef typename Image<ImagePixelT>::Ptr ImagePtr;
         typedef typename Mask<MaskPixelT>::Ptr MaskPtr;
-        typedef typename Variance::Ptr VariancePtr;
+        typedef typename Image<VariancePixelT>::Ptr VariancePtr;
         typedef boost::shared_ptr<MaskedImage> Ptr;
         typedef typename Mask<MaskPixelT>::MaskPlaneDict MaskPlaneDict;
 
-        typedef Image<ImagePixelT> Image; // need to be here, as "typedef Image::Ptr ImagePtr;" confuses swig
-        typedef Mask<MaskPixelT> Mask;    // and we can't use Image<> after these typedefs
+        typedef Image<VariancePixelT> Variance; // need to be here, and in this order, as
+        typedef Image<ImagePixelT> Image;       // "typedef Image::Ptr ImagePtr;" confuses swig (it can't
+        typedef Mask<MaskPixelT> Mask;          // find ImagePtr) and we can't use Image<> after these typedefs
         
+        typedef details::maskedImage_tag image_tag;
+
+        /************************************************************************************************************/
+
+        template<typename, typename, typename> class maskedImageIterator;
+        template<typename, typename, typename> class const_maskedImageIterator;
+        template<typename, typename, typename> class maskedImageLocator;
+        template<typename, typename, typename> class const_maskedImageLocator;
+
         /************************************************************************************************************/
         /// @brief Class to provide utility functions for a "pixel" to get at image/mask/variance an operators
         //
         // This class allows us to manipulate the tuples returned by MaskedImage iterators/locators
         // as if they were POD.  This provides convenient syntactic sugar, but it also permits us
         // to write generic algorithms to manipulate MaskedImages as well as Images
-        class IMV {
+        class PixelConstant;
+
+#if !defined(SWIG)
+        class Pixel : details::maskedImagePixel_tag {
+            friend class PixelConstant;
+
+            Pixel(ImagePixelT const& image, MaskPixelT const& mask, VariancePixelT const& variance) :
+                _image(const_cast<ImagePixelT&>(image)),
+                _mask(const_cast<MaskPixelT&>(mask)),
+                _variance(const_cast<VariancePixel&>(variance)) {
+            }
         public:
-            IMV(ImagePixelT& image, MaskPixelT& mask, VariancePixelT& variance) :
+            typedef Pixel type;
+            typedef PixelConstant Constant;
+
+            Pixel(ImagePixelT& image, MaskPixelT& mask, VariancePixelT& variance) :
                 _image(image), _mask(mask), _variance(variance) {
             }
-
-            IMV& operator=(IMV rhs) {
+            Pixel& operator=(Pixel rhs) {
                 image() = rhs.image();
                 mask() = rhs.mask();
                 variance() = rhs.variance();
                     
                 return *this;
             }
+
             /// @brief initialize a pixel;  the mask and variance are set to 0
             //
-            // The method's declared const as it technically is (the references
+            // The method's declared const as technically it is (the references
             // aren't changed, just their values).  This const qualification is
             // required in order to be able to pass *locator to a routine expecting
-            // an IMV
-            IMV operator=(ImagePixelT image ///< The desired value for the image
-                         ) const {
+            // an Pixel
+            Pixel operator=(ImagePixelT image ///< The desired value for the image
+                           ) const {
                 _image = image;
                 _mask = 0x0;
                 _variance = 0;
@@ -100,39 +127,84 @@ namespace image {
                 return _variance;
             }
 
-            IMV const& operator+=(double const rhs) {
+            template<typename T1>
+            operator T1() const {
+                BOOST_MPL_ASSERT_MSG(boost::is_arithmetic<T1>::value,
+                                     I_DO_NOT_KNOW_HOW_TO_MAP_THIS_TYPE_TO_A_SCALAR,
+                                     ()
+                                    );
+                return _image;
+            }
+
+            // We need a temporary to support operatorX(), which means that we need a PixelConstant
+            // This is painful boilerplate, so use the CPP
+
+#define LSST_MASKED_IMAGE_PIXEL_OPERATOR_X(OP, OPEQ) /* E.g. OP: + and OPEQ: += */ \
+            template<typename RPixelT> \
+            friend PixelConstant const operator OP(Pixel const lhs, RPixelT const rhs) { \
+                PixelConstant tmp(lhs);     /* copy lhs into local storage */ \
+                Pixel(tmp) OPEQ PixelCast(rhs); \
+                return tmp; \
+            } \
+            friend PixelConstant const operator OP(Pixel const lhs, ImagePixelT rhs) { \
+                return lhs OP PixelConstant(rhs); \
+            } \
+            friend PixelConstant const operator OP(ImagePixelT lhs, Pixel const rhs) { \
+                return PixelConstant(lhs) OP rhs; \
+            }
+
+            Pixel const& operator+=(double const rhs) {
                 image() += rhs;
                     
                 return *this;
             }
-            IMV const& operator+=(IMV const& rhs) {
+            Pixel const& operator+=(Pixel const& rhs) {
                 image() += rhs.image();
                 mask() |= rhs.mask();
                 variance() += rhs.variance();
                     
                 return *this;
             }
+            LSST_MASKED_IMAGE_PIXEL_OPERATOR_X(+, +=);
 
-            IMV const& operator-=(double const rhs) {
+            Pixel const& operator-=(double const rhs) {
                 image() -= rhs;
                     
                 return *this;
             }
-            IMV const& operator-=(IMV const& rhs) {
+            Pixel const& operator-=(Pixel const& rhs) {
                 image() -= rhs.image();
                 mask() |= rhs.mask();
                 variance() += rhs.variance();
                     
                 return *this;
             }
+            LSST_MASKED_IMAGE_PIXEL_OPERATOR_X(-, -=);
 
-            IMV const& operator/=(double const rhs) {
+            Pixel const& operator*=(double const rhs) {
+                image() *= rhs;
+                variance() *= rhs*rhs;
+                    
+                return *this;
+            }
+            Pixel const& operator*=(Pixel const& rhs) {
+                // Must do variance before we modify this->image()
+                variance() = image()*image()*rhs.variance() + rhs.image()*rhs.image()*variance();
+
+                image() *= rhs.image();
+                mask() |= rhs.mask();
+                    
+                return *this;
+            }
+            LSST_MASKED_IMAGE_PIXEL_OPERATOR_X(*, *=);
+
+            Pixel const& operator/=(double const rhs) {
                 image() /= rhs;
                 variance() /= rhs*rhs;
                     
                 return *this;
             }
-            IMV const& operator/=(IMV const& rhs) {
+            Pixel const& operator/=(Pixel const& rhs) {
                 ImagePixelT const rhs2 = rhs.image()*rhs.image();
                 // Must do variance before we modify this->image()
                 variance() = (image()*image()*rhs.variance() + rhs2*variance())/(rhs2*rhs2);
@@ -142,38 +214,75 @@ namespace image {
                     
                 return *this;
             }
+            LSST_MASKED_IMAGE_PIXEL_OPERATOR_X(/, /=);
 
-            IMV const& operator*=(double const rhs) {
-                image() *= rhs;
-                variance() *= rhs*rhs;
-                    
-                return *this;
-            }
-            IMV const& operator*=(IMV const& rhs) {
-                // Must do variance before we modify this->image()
-                variance() = image()*image()*rhs.variance() + rhs.image()*rhs.image()*variance();
-
-                image() *= rhs.image();
-                mask() |= rhs.mask();
-                    
-                return *this;
-            }
+#undef LSST_MASKED_IMAGE_PIXEL_OPERATOR_X
         private:
             ImagePixelT& _image;
             MaskPixelT& _mask;
             VariancePixelT& _variance;
         };
 
-        typedef IMV PixelT;             ///< The type of a MaskedImage "Pixel"
-        
+        /// @brief A constant MaskedPixel;  needed as Pixel is a pure reference type
+        //
+        // This class can be used to assign initial values to an Pixel; we can't
+        // just pass the values to Pixel's constructor as it has no memory of its own,
+        // and we need temporaries to support arithmetic
+        //
+        class PixelConstant : details::maskedImagePixel_tag {
+        public:
+            template<typename ImagePT, typename MaskPT, typename VarPT>
+            PixelConstant(typename MaskedImage<ImagePT, MaskPT, VarPT>::Pixel rhs) :
+                _image(rhs.image()), _mask(rhs.mask()), _variance(rhs.variance()) {
+                ;
+            }
+
+            template<typename ImagePT, typename MaskPT, typename VarPT>
+            PixelConstant(typename MaskedImage<ImagePT, MaskPT, VarPT>::PixelConstant rhs) :
+                _image(rhs.image()), _mask(rhs.mask()), _variance(rhs.variance()) {
+                ;
+            }
+
+            PixelConstant(ImagePixelT image=0, MaskPixelT mask=0, VariancePixelT variance=0) :
+                _image(image), _mask(mask), _variance(variance) {
+            }
+            PixelConstant(Pixel imv) :
+                _image(imv.image()), _mask(imv.mask()), _variance(imv.variance()) {
+            }
+            operator Pixel() const {
+                return Pixel(_image, _mask, _variance);
+            }
+            operator Pixel() {
+                return Pixel(_image, _mask, _variance);
+            }
+
+            ImagePixelT& image() {
+                return _image;
+            }
+            MaskPixelT& mask() {
+                return _mask;
+            }
+            VariancePixelT& variance() {
+                return _variance;
+            }
+            ImagePixelT const & image() const {
+                return _image;
+            }
+            MaskPixelT const& mask() const {
+                return _mask;
+            }
+            VariancePixelT const& variance() const {
+                return _variance;
+            }
+
+        private:
+            ImagePixelT _image;
+            MaskPixelT _mask;
+            VariancePixelT _variance;
+        };
+
         /************************************************************************************************************/
 
-        template<typename, typename, typename> class maskedImageIterator;
-        template<typename, typename, typename> class const_maskedImageIterator;
-        template<typename, typename, typename> class maskedImageLocator;
-        template<typename, typename, typename> class const_maskedImageLocator;
-        
-#if !defined(SWIG)
         template<typename ImageIterator, typename MaskIterator, typename VarianceIterator,
                  template<typename> class Ref=Reference>
         class maskedImageIteratorBase {
@@ -182,20 +291,21 @@ namespace image {
         public:
             typedef typename boost::zip_iterator<IMV_iterator_tuple>::reference IMV_tuple;
             template<typename, typename, typename> friend class const_maskedImageIterator;
+            typedef Pixel type;
 
             maskedImageIteratorBase(ImageIterator const& img, MaskIterator const& msk, VarianceIterator const &var) :
                 _iter(boost::make_zip_iterator(boost::make_tuple(img, msk, var))) {
             }
             
-            typename Ref<typename Image::Pixel>::type image() {
+            typename Ref<typename Image::Pixel::type>::type image() {
                 return _iter->template get<0>()[0];
             }
         
-            typename Ref<typename Mask::Pixel>::type mask() {
+            typename Ref<typename Mask::Pixel::type>::type mask() {
                 return _iter->template get<1>()[0];
             }
 
-            typename Ref<typename Variance::Pixel>::type variance() {
+            typename Ref<typename Variance::Pixel::type>::type variance() {
                 return _iter->template get<2>()[0];
             }
 
@@ -222,17 +332,17 @@ namespace image {
                 return _iter < rhs._iter;
             }
 
-            operator IMV() const {
-                return IMV(_image(this->template get<0>()[0]),
-                           _mask(this->template get<1>()[0]),
-                           _variance(this->template get<2>()[0]));
+            operator Pixel() const {
+                return Pixel(_image(this->template get<0>()[0]),
+                             _mask(this->template get<1>()[0]),
+                             _variance(this->template get<2>()[0]));
             }
 
-            IMV operator*() {
-                return IMV(image(), mask(), variance());
+            Pixel operator*() {
+                return Pixel(image(), mask(), variance());
             }
-            const IMV operator*() const {
-                return IMV(image(), mask(), variance());
+            const Pixel operator*() const {
+                return Pixel(image(), mask(), variance());
             }
 
         protected:
@@ -322,15 +432,15 @@ namespace image {
                     ++X_OR_Y<VarianceLocator>(_mil->_loc.template get<2>())();
                 }
 
-                typename Ref<typename Image::Pixel>::type image() {
+                typename Ref<typename Image::Pixel::type>::type image() {
                     // Equivalent to "return (*_mil->_loc.template get<0>().x())[0];"
 
                     return (*(X_OR_Y<ImageLocator>(_mil->_loc.template get<0>())()))[0];
                 }
-                typename Ref<typename Mask::Pixel>::type mask() {
+                typename Ref<typename Mask::Pixel::type>::type mask() {
                     return (*(X_OR_Y<MaskLocator>(_mil->_loc.template get<1>())()))[0];
                 }
-                typename Ref<typename Variance::Pixel>::type variance() {
+                typename Ref<typename Variance::Pixel::type>::type variance() {
                     return (*(X_OR_Y<VarianceLocator>(_mil->_loc.template get<2>())()))[0];
                 }
             protected:
@@ -387,10 +497,10 @@ namespace image {
                 ;
             }
 
-            IMV operator*() {
-		return IMV(_loc.template get<0>().x()[0][0],
-                           _loc.template get<1>().x()[0][0],
-                           _loc.template get<2>().x()[0][0]);
+            Pixel operator*() {
+		return Pixel(_loc.template get<0>().x()[0][0],
+                             _loc.template get<1>().x()[0][0],
+                             _loc.template get<2>().x()[0][0]);
             }
 
 	    _x_iterator x() {
@@ -433,33 +543,33 @@ namespace image {
             //
             // Use those templated classes to implement image/mask/variance
             //
-            typename Ref<typename Image::Pixel>::type image(cached_location_t const& cached_loc) {
+            typename Ref<typename Image::Pixel::type>::type image(cached_location_t const& cached_loc) {
                 return apply_IMV<mpl::int_<0> >(cached_loc);
             }            
-            typename Ref<typename Image::Pixel>::type image() {
+            typename Ref<typename Image::Pixel::type>::type image() {
                 return apply_IMV<mpl::int_<0> >();
             }           
-            typename Ref<typename Image::Pixel>::type image(int x, int y) {
+            typename Ref<typename Image::Pixel::type>::type image(int x, int y) {
                 return apply_IMV<mpl::int_<0> >(x, y);
             }
             
-            typename Ref<typename Mask::Pixel>::type mask(cached_location_t const& cached_loc) {
+            typename Ref<typename Mask::Pixel::type>::type mask(cached_location_t const& cached_loc) {
                 return apply_IMV<mpl::int_<1> >(cached_loc);
             }
-            typename Ref<typename Mask::Pixel>::type mask() {
+            typename Ref<typename Mask::Pixel::type>::type mask() {
                 return apply_IMV<mpl::int_<1> >();
             }
-            typename Ref<typename Mask::Pixel>::type mask(int x, int y) {
+            typename Ref<typename Mask::Pixel::type>::type mask(int x, int y) {
                 return apply_IMV<mpl::int_<1> >(x, y);
             }
         
-            typename Ref<typename Variance::Pixel>::type variance(cached_location_t const& cached_loc) {
+            typename Ref<typename Variance::Pixel::type>::type variance(cached_location_t const& cached_loc) {
                 return apply_IMV<mpl::int_<2> >(cached_loc);
             }
-            typename Ref<typename Variance::Pixel>::type variance() {
+            typename Ref<typename Variance::Pixel::type>::type variance() {
                 return apply_IMV<mpl::int_<2> >();
             }
-            typename Ref<typename Variance::Pixel>::type variance(int x, int y) {
+            typename Ref<typename Variance::Pixel::type>::type variance(int x, int y) {
                 return apply_IMV<mpl::int_<2> >(x, y);
             }
 
@@ -510,6 +620,29 @@ namespace image {
                 ;
             }
         };
+
+    private:
+        //
+        // Implementations of PixelCast that work for MaskedImage pixels (if true_type) or
+        // other, presumably scalar, pixels if false_type
+        //
+        // The choice is made on the basis of inheritance from details::maskedImagePixel_tag
+        //
+        template<typename PixelConstantT>
+        static PixelConstant doPixelCast(PixelConstantT rhs, boost::false_type) {
+            return PixelConstant(rhs);
+        }
+
+        template<typename PixelConstantT>
+        static PixelConstant doPixelCast(PixelConstantT rhs, boost::true_type) {
+            return PixelConstant(rhs.image(), rhs.mask(), rhs.variance());
+        }
+    public:
+
+        template<typename PixelConstantT>
+        static PixelConstant PixelCast(PixelConstantT rhs) {
+            return doPixelCast(rhs, typename boost::is_base_of<details::maskedImagePixel_tag, PixelConstantT>::type());
+        }
 #endif  // !defined(SWIG)
 
     /************************************************************************************************************/
@@ -554,8 +687,7 @@ namespace image {
                              typename lsst::daf::base::DataProperty::Ptr
 		metadata=lsst::daf::base::DataProperty::Ptr(static_cast<lsst::daf::base::DataProperty *>(0)),
 #endif
-                             bool conformMasks=false
-                            );                             
+                             bool conformMasks=false);                             
 
         MaskedImage(MaskedImage const& rhs, bool const deep=false);
         MaskedImage(const MaskedImage& src, const Bbox& bbox, const bool deep=false);

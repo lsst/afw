@@ -32,6 +32,10 @@ namespace image {
     // all masks will initially be instantiated with the same pixel type
     typedef boost::uint16_t MaskPixel;
 
+    namespace details {
+        struct mask_tag : basic_tag { };
+    }
+
     template<typename MaskPixelT>
     class Mask : public ImageBase<MaskPixelT> {
     public:
@@ -39,6 +43,8 @@ namespace image {
         typedef boost::shared_ptr<const Mask> ConstPtr;
         typedef std::map<std::string, int> MaskPlaneDict;
         
+        typedef details::mask_tag image_tag;
+
         typedef typename ImageBase<MaskPixelT>::x_iterator x_iterator;
         
         // Constructors        
