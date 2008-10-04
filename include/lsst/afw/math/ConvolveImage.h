@@ -26,9 +26,8 @@ namespace lsst {
 namespace afw {
 namespace math {
 
-    template <typename OutPixelT, typename InImageT>
-    inline OutPixelT apply(
-//        OutPixelT const& outPixel,
+    template <typename OutImageT, typename InImageT>
+    inline typename OutImageT::Pixel::Constant apply(
         typename InImageT::xy_locator& inImage,
         typename lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::const_xy_locator& kernelAccessor,
         int kWidth, int kHeight
