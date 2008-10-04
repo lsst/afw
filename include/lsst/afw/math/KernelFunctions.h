@@ -23,7 +23,6 @@
 #include "lsst/afw/math/Kernel.h"
 
 #include "lsst/afw/math/ConvolveImage.h"
-#include "lsst/afw/math/ConvolveMaskedImage.h"
 
 namespace lsst {
 namespace afw {
