@@ -83,22 +83,7 @@ void image::swap(DecoratedImage<PixelT>& a, DecoratedImage<PixelT>& b) {
 template<typename PixelT>
 image::DecoratedImage<PixelT>::DecoratedImage(const std::string& fileName, const int hdu) {
     init();
-
-    typedef boost::mpl::vector<
-        lsst::afw::image::details::types_traits<unsigned char>::image_t,
-        lsst::afw::image::details::types_traits<unsigned short>::image_t,
-        lsst::afw::image::details::types_traits<short>::image_t,
-        lsst::afw::image::details::types_traits<int>::image_t,
-            lsst::afw::image::details::types_traits<float>::image_t // ,
-        //lsst::afw::image::details::types_traits<double>::image_t
-    > fits_img_types;
-
-    _image = typename Image<PixelT>::Ptr(new Image<PixelT>());
-
-    if (!image::fits_read_image<fits_img_types>(fileName, *_image->_getRawImagePtr(), _metaData)) {
-        throw lsst::pex::exceptions::FitsError(boost::format("Failed to read %s HDU %d") % fileName % hdu);
-    }
-    _image->_setRawView();
+    _image = typename Image<PixelT>::Ptr(new Image<PixelT>(fileName, hdu, _metaData));
 }
 
 /************************************************************************************************************/

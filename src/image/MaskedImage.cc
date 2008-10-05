@@ -23,10 +23,14 @@ namespace image = lsst::afw::image;
 // @brief Construct from a supplied dimensions. The Image, Mask, and Variance will be set to zero
 //
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(int width, int height, MaskPlaneDict planeDefs) :
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
+        int width,                      //!< Number of columns in image
+        int height,                     //!< Number of rows in image
+        MaskPlaneDict const& planeDict  //!< Make Mask conform to this mask layout (ignore if empty)
+                                                                        ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _image(new Image(width, height)),
-    _mask(new Mask(width, height, planeDefs)),
+    _mask(new Mask(width, height, planeDict)),
     _variance(new Variance(width, height)) {
     *_image = 0;
     *_mask = 0x0;
@@ -34,11 +38,13 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(int wid
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(const std::pair<int, int> dimensions,
-                                                                         MaskPlaneDict planeDefs) :
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
+        const std::pair<int, int> dimensions, //!< dimensions of image: width x height
+        MaskPlaneDict const& planeDict  //!< Make Mask conform to this mask layout (ignore if empty)
+                                                                        ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _image(new Image(dimensions)),
-    _mask(new Mask(dimensions, planeDefs)),
+    _mask(new Mask(dimensions, planeDict)),
     _variance(new Variance(dimensions)) {
     *_image = 0;
     *_mask = 0x0;
@@ -50,15 +56,15 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(const s
  */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
-	std::string const& baseName,    ///< The desired file's baseName (e.g. foo will read foo_{img.msk.var}.fits)
-        int const hdu,                  ///< The HDU in the file (default: 0)
+	std::string const& baseName,    //!< The desired file's baseName (e.g. foo will read foo_{img.msk.var}.fits)
+        const int hdu,                  //!< The HDU in the file (default: 0)
 #if 1                                   // Old name for boost::shared_ptrs
         typename lsst::daf::base::DataProperty::PtrType
 #else
         typename lsst::daf::base::DataProperty::Ptr
 #endif
-        metadata,                       ///< Filled out with metadata from file (default: NULL)
-        bool conformMasks                //!< Make Mask conform to mask layout in file?
+        metadata,                       //!< Filled out with metadata from file (default: NULL)
+        bool const conformMasks         //!< Make Mask conform to mask layout in file?
                                                                         ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _image(new Image(MaskedImage::imageFileName(baseName), hdu, metadata)),

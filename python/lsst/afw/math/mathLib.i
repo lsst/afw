@@ -88,6 +88,7 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 %import "lsst/daf/data/LsstData.h"
 %import "lsst/daf/data/LsstImpl_DC3.h"
 %import "lsst/daf/data/LsstBase.h"
+%import "lsst/afw/image/Image.h"
 %import "lsst/afw/image/Mask.h"
 
 %include "functionLib.i"

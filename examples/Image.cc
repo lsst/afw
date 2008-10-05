@@ -84,7 +84,7 @@ void y_gradient(const Image<PixelT>& src, const Image<PixelT>& dst) {
 #endif
         }
         
-        src_loc += details::difference_type(-src.getWidth(), 1);
+        src_loc += detail::difference_type(-src.getWidth(), 1);
     }
 }
 

@@ -1,6 +1,6 @@
 // -*- lsst-c++ -*-
 %{
-#   include <lsst/gil/Image.h>
+#   include "lsst/afw/image/Image.h"
 %}
 
 %ignore lsst::afw::image::ImageBase::operator();
@@ -91,7 +91,7 @@ SWIG_SHARED_PTR_DERIVED(NAME##TYPE##Ptr, lsst::afw::image::ImageBase<PIXEL_TYPE>
 %imagePtr(Image, U, boost::uint16_t);
 %imagePtr(Image, F, float);
 
-%include "lsst/gil/Image.h"
+%include "lsst/afw/image/Image.h"
 
 %image(Image, U, boost::uint16_t);
 %image(Image, I, int);

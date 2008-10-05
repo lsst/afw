@@ -17,34 +17,6 @@
 //
 
 /**
- * \brief Return the number of columns
- */
-inline unsigned lsst::afw::math::Kernel::getCols() const {
-    return _cols;
-}
-
-/**
- * \brief Return the number of rows
- */
-inline unsigned lsst::afw::math::Kernel::getRows() const {
-    return _rows;
-}
-
-/**
- * \brief Return the center column
- */
-inline unsigned lsst::afw::math::Kernel::getCtrCol() const {
-    return _ctrCol;
-}
-
-/**
- * \brief Return the center row
- */
-inline unsigned lsst::afw::math::Kernel::getCtrRow() const {
-    return _ctrRow;
-}
-
-/**
  * \brief Return the number of kernel parameters (0 if none)
  */
 inline unsigned lsst::afw::math::Kernel::getNKernelParameters() const {

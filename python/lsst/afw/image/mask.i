@@ -1,6 +1,6 @@
 // -*- lsst-c++ -*-
 %{
-#   include <lsst/gil/Mask.h>
+#   include "lsst/afw/image/Mask.h"
 %}
 
 %ignore lsst::afw::image::Mask::operator();
@@ -72,7 +72,7 @@ SWIG_SHARED_PTR_DERIVED(NAME##TYPE##Ptr, lsst::afw::image::ImageBase<PIXEL_TYPE>
 
 %maskPtr(Mask, U, boost::uint16_t);
 
-%include "lsst/gil/Mask.h"
+%include "lsst/afw/image/Mask.h"
 
 %mask(Mask, U, boost::uint16_t);
 

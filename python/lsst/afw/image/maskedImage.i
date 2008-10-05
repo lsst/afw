@@ -1,6 +1,6 @@
 // -*- lsst-c++ -*-
 %{
-#   include <lsst/gil/MaskedImage.h>
+#   include "lsst/afw/image/MaskedImage.h"
 %}
 
 /************************************************************************************************************/
@@ -114,7 +114,7 @@ SWIG_SHARED_PTR(NAME##TYPE##Ptr, lsst::afw::image::MaskedImage<PIXEL_TYPE>);
 
 %maskedImagePtr(MaskedImage, F, float);
 
-%include "lsst/gil/MaskedImage.h"
+%include "lsst/afw/image/MaskedImage.h"
 
 %maskedImage(MaskedImage, F, float);
 

@@ -139,7 +139,7 @@ template<> struct channel_multiplier<bits32s_noscale> : public std::binary_funct
 
 /************************************************************************************************************/
 
-namespace lsst { namespace afw { namespace image { namespace details {
+namespace lsst { namespace afw { namespace image { namespace detail {
     //
     // Map typenames to gil's types
     //
@@ -234,7 +234,7 @@ namespace lsst { namespace afw { namespace image { namespace details {
     };
 
     typedef boost::gil::point2<int> difference_type; // type used to advance locators
-}}}}    // namespace lsst::afw::image::details
+}}}}    // namespace lsst::afw::image::detail
 
 namespace boost { namespace gil {
 

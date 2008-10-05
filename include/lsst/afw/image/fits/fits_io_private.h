@@ -63,7 +63,7 @@ namespace detail {
 template <typename Channel>
 struct fits_read_support_private {
     BOOST_STATIC_CONSTANT(bool,is_supported=false);
-    BOOST_STATIC_CONSTANT(int , BITPIX=-1);
+    BOOST_STATIC_CONSTANT(int , BITPIX=0);
 };
 //
 // A partial specialization to handle const
@@ -136,22 +136,22 @@ struct cfitsio_traits {
 template <>
 struct cfitsio_traits<16> {
     BOOST_STATIC_CONSTANT(bool,is_supported=true);
-    typedef lsst::afw::image::details::types_traits<unsigned short>::view_t view_t;
+    typedef lsst::afw::image::detail::types_traits<unsigned short>::view_t view_t;
 };
 template <>
 struct cfitsio_traits<32> {
     BOOST_STATIC_CONSTANT(bool,is_supported=true);
-    typedef lsst::afw::image::details::types_traits<int>::view_t view_t;
+    typedef lsst::afw::image::detail::types_traits<int>::view_t view_t;
 };
 template <>
 struct cfitsio_traits<-32> {
     BOOST_STATIC_CONSTANT(bool,is_supported=true);
-    typedef lsst::afw::image::details::types_traits<float>::view_t view_t;
+    typedef lsst::afw::image::detail::types_traits<float>::view_t view_t;
 };
 template <>
 struct cfitsio_traits<-64> {
     BOOST_STATIC_CONSTANT(bool,is_supported=true);
-    typedef lsst::afw::image::details::types_traits<double>::view_t view_t;
+    typedef lsst::afw::image::detail::types_traits<double>::view_t view_t;
 };
 //
 // Like gil's file_mgr class (from whence cometh this code), but knows about

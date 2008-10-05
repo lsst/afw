@@ -15,11 +15,12 @@ namespace posix {
 using namespace posix;
 
 #include "lsst/pex/exceptions.h"
-// no such file: #include "lsst/pex/utils/Utils.h"
 #include "boost/any.hpp"
 
+#include "lsst/afw/image/fits/fits_io_private.h"
 #include "simpleFits.h"
 
+namespace image = lsst::afw::image;
 using lsst::daf::base::DataProperty;
 
 #define FITS_SIZE 2880
@@ -298,40 +299,20 @@ namespace {
     }
 }
 
-void lsst::afw::display::writeVwFits(int fd,                // file descriptor to write to
-                 const vw::ImageBuffer& buff, // The data to write
-                 const lsst::afw::image::Wcs *Wcs         // which Wcs to use for pixel
-                ) {
+template<typename ImageT>
+void writeBasicFits(int fd,                // file descriptor to write to
+                    ImageT const& data,    // The data to write
+                    image::Wcs const* Wcs // which Wcs to use for pixel
+                   ) {
     /*
      * What sort if image is it?
      */
-    int bitpix = 0;                     // BITPIX for fits file
-    switch (buff.format.channel_type) {
-      case vw::VW_CHANNEL_UINT8:
-      case vw::VW_CHANNEL_INT8:
-	bitpix = 8;
-        break;
-      case vw::VW_CHANNEL_UINT16:
-	bitpix = -16;
-	break;
-      case vw::VW_CHANNEL_INT16:
-	bitpix = 16;
-        break;
-      case vw::VW_CHANNEL_INT32:
-	bitpix = 32;
-	break;
-      case vw::VW_CHANNEL_FLOAT32:
-	bitpix = -32;
-	break;
-      case vw::VW_CHANNEL_FLOAT64:
-	bitpix = -64;
-	break;
-      default:
-        throw lsst::pex::exceptions::Runtime(boost::format("Unsupported channel type: %d") %
-                        buff.format.channel_type);
-    }
-    char *data = static_cast<char *>(buff.data);
+    int const bitpix = image::detail::fits_read_support_private<
+                typename image::detail::types_traits<typename ImageT::Pixel::type>::view_t>::BITPIX;
     
+    if (bitpix == 0) {
+        throw lsst::pex::exceptions::Runtime(boost::format("Unsupported image type"));
+    }
     /*
      * Allocate cards for FITS headers
      */
@@ -377,25 +358,26 @@ void lsst::afw::display::writeVwFits(int fd,                // file descriptor t
      */
     const int naxis = 2;		// == NAXIS
     int naxes[naxis];			/* values of NAXIS1 etc */
-    naxes[0] = buff.cols();
-    naxes[1] = buff.rows();
+    naxes[0] = data.getWidth();
+    naxes[1] = data.getHeight();
     
     write_fits_hdr(fd, bitpix, naxis, naxes, cards, 1);
-    for (unsigned int r = 0; r < buff.rows(); r++) {
-	if(write_fits_data(fd, bitpix, buff.cols(), data + r*buff.rstride) < 0){
-	    throw lsst::pex::exceptions::Runtime(boost::format("Error writing data for row %d") % r);
+    for (int y = 0; y != data.getHeight(); ++y) {
+	if(write_fits_data(fd, bitpix, data.row_begin(y), data.row_end(y)) < 0){
+	    throw lsst::pex::exceptions::Runtime(boost::format("Error writing data for row %d") % y);
 	}
     }
 
-    pad_to_fits_record(fd, buff.cols()*buff.rows(), bitpix);
+    pad_to_fits_record(fd, data.getWidth()*data.getHeight(), bitpix);
 }   
 
 /******************************************************************************/
 
-void lsst::afw::display::writeVwFits(const std::string &filename, // file to write or "| cmd"
-                 const vw::ImageBuffer &data, // The data to write
-                 const lsst::afw::image::Wcs *Wcs         // which Wcs to use for pixel
-                ) {
+template<typename ImageT>
+void writeBasicFits(std::string const& filename, // file to write, or "| cmd"
+                    ImageT const& data,          // The data to write
+                    image::Wcs const* Wcs // which Wcs to use for pixel
+                   ) {
     int fd;
     if ((filename.c_str())[0] == '|') {		// a command
 	const char *cmd = filename.c_str() + 1;
@@ -413,7 +395,7 @@ void lsst::afw::display::writeVwFits(const std::string &filename, // file to wri
     }
 
     try {
-        writeVwFits(fd, data, Wcs);
+        writeSimpleFits(fd, data, Wcs);
     } catch(lsst::pex::exceptions::ExceptionStack &e) {
         (void)close(fd);
         throw e;

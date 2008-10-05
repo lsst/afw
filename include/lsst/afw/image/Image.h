@@ -31,7 +31,7 @@ namespace formatters {
 }
 
 namespace image {
-    namespace details {
+    namespace detail {
         //
         // Traits for image types
         //
@@ -65,11 +65,11 @@ namespace image {
             switch (i) {
               case 0: return _x;
               case 1: return _y;
-              default: throw lsst::pex::exceptions::OutOfRange(boost::format("Index i == %d must be 0 or 1"), i);
+              default: throw lsst::pex::exceptions::OutOfRange(boost::format("Index i == %d must be 0 or 1") % i);
             }
         }
         T& operator[](int const i) {
-            return const_cast<T&>(static_cast<Point &>(*this)[i]); // Meyers, Effective C++, Item 3
+            return const_cast<T&>((static_cast<const Point&>(*this))[i]); // Meyers, Effective C++, Item 3
         }
 #endif
     private:
@@ -117,16 +117,16 @@ namespace image {
     class ImageBase : public lsst::daf::base::Persistable,
                       public lsst::daf::data::LsstBase {
     private:
-        typedef typename lsst::afw::image::details::types_traits<PixelT>::image_t _image_t;
-        typedef typename lsst::afw::image::details::types_traits<PixelT>::view_t _view_t;
-        typedef typename lsst::afw::image::details::types_traits<PixelT>::const_view_t _const_view_t;
+        typedef typename lsst::afw::image::detail::types_traits<PixelT>::image_t _image_t;
+        typedef typename lsst::afw::image::detail::types_traits<PixelT>::view_t _view_t;
+        typedef typename lsst::afw::image::detail::types_traits<PixelT>::const_view_t _const_view_t;
 
         typedef typename boost::shared_ptr<_image_t> _image_t_Ptr;
     public:
         typedef boost::shared_ptr<ImageBase<PixelT> > Ptr;
         typedef boost::shared_ptr<const ImageBase<PixelT> > ConstPtr;
 
-        typedef details::basic_tag image_category;
+        typedef detail::basic_tag image_category;
 
 #if !defined(SWIG)
         typedef PixelT PixelConstant;
@@ -170,19 +170,19 @@ namespace image {
         ImageBase(const ImageBase& src, const bool deep=false);
         ImageBase(const ImageBase& src, const Bbox& bbox, const bool deep=false);
         // generalised copy constructor; defined here in the header so that the compiler can instantiate
-        // N^2 conversions between N ImageBase types.
+        // N(N-1)/2 conversions between N ImageBase types.
         template<typename OtherPixelT>
-        ImageBase(const ImageBase<OtherPixelT>& src, const bool deep) :
+        ImageBase(const ImageBase<OtherPixelT>& rhs, const bool deep) :
             lsst::daf::data::LsstBase(typeid(this)) {
             if (!deep) {
                 throw lsst::pex::exceptions::InvalidParameter("Only deep copies are permitted for ImageBases "
                                                               "with different pixel types");
             }
 
-            ImageBase<PixelT> tmp(src.dimensions());
-            copy_and_convert_pixels(src._gilView, tmp._gilView); // from boost::gil
-            tmp._x0 = src._x0;
-            tmp._y0 = src._y0;
+            ImageBase<PixelT> tmp(rhs.dimensions());
+            copy_and_convert_pixels(rhs._gilView, tmp._gilView); // from boost::gil
+            tmp._x0 = rhs._x0;
+            tmp._y0 = rhs._y0;
 
             using std::swap;                           // See Meyers, Effective C++, Item 25
             ImageBase<PixelT>::swap(tmp);                  // See Meyers, Effective C++, Items 11 and 43
@@ -190,9 +190,9 @@ namespace image {
 
         virtual ~ImageBase() { }
 
-        ImageBase& operator=(const ImageBase& src);
-        ImageBase& operator=(const PixelT scalar);
-        void operator<<=(const ImageBase& src);
+        ImageBase& operator=(const ImageBase& rhs);
+        ImageBase& operator=(const PixelT rhs);
+        void operator<<=(const ImageBase& rhs);
         //
         // Operators etc.
         //
@@ -265,27 +265,29 @@ namespace image {
     template<typename PixelT>
     class Image : public ImageBase<PixelT> {
     private:
-        typedef typename lsst::afw::image::details::types_traits<PixelT>::image_t _image_t;
-        typedef typename lsst::afw::image::details::types_traits<PixelT>::view_t _view_t;
-        typedef typename lsst::afw::image::details::types_traits<PixelT>::const_view_t _const_view_t;
+        typedef typename lsst::afw::image::detail::types_traits<PixelT>::image_t _image_t;
+        typedef typename lsst::afw::image::detail::types_traits<PixelT>::view_t _view_t;
+        typedef typename lsst::afw::image::detail::types_traits<PixelT>::const_view_t _const_view_t;
 
         typedef typename boost::shared_ptr<_image_t> _image_t_Ptr;
     public:
         typedef boost::shared_ptr<Image<PixelT> > Ptr;
         typedef boost::shared_ptr<const Image<PixelT> > ConstPtr;
 
-        typedef details::image_tag image_category;
+        typedef detail::image_tag image_category;
 
+#if !defined(SWIG)
         template<typename ImagePT=PixelT>
-        struct ImageFactory {
+        struct ImageTypeFactory {
             typedef Image<ImagePT> type;
         };
+#endif
         template<typename OtherPixelT> friend class Image; // needed by generalised copy constructors
-
+        
         explicit Image(const int width=0, const int height=0);
         explicit Image(const std::pair<int, int> dimensions);
-        Image(const Image& src, const bool deep=false);
-        Image(const Image& src, const Bbox& bbox, const bool deep=false);
+        Image(const Image& rhs, const bool deep=false);
+        Image(const Image& rhs, const Bbox& bbox, const bool deep=false);
         Image(std::string const& fileName, const int hdu = 0,
 #if 1                                   // Old name for boost::shared_ptrs
               typename lsst::daf::base::DataProperty::PtrType
@@ -298,15 +300,15 @@ namespace image {
 
         // generalised copy constructor
         template<typename OtherPixelT>
-        Image(const Image<OtherPixelT>& src, const bool deep) :
-            image::ImageBase<PixelT>(src, deep) {}
+        Image(Image<OtherPixelT> const& rhs, const bool deep) :
+            image::ImageBase<PixelT>(rhs, deep) {}
 
         virtual ~Image() { }
         //
         // Assignment operators are not inherited
         //
-        Image& operator=(const PixelT scalar);
-        Image& operator=(const Image& src);
+        Image& operator=(const PixelT rhs);
+        Image& operator=(const Image& rhs);
 
         //void readFits(std::string const& fileName, ...); // replaced by constructor
         void writeFits(std::string const& fileName,
@@ -321,14 +323,14 @@ namespace image {
         //
         // Operators etc.
         //
-        void operator+=(PixelT const scalar);
-        void operator+=(Image<PixelT>const & inputImage);
-        void operator-=(PixelT const scalar);
-        void operator-=(Image<PixelT> const& inputImage);
-        void operator*=(PixelT const scalar);
-        void operator*=(Image<PixelT> const& inputImage);
-        void operator/=(PixelT const scalar);
-        void operator/=(Image<PixelT> const& inputImage);
+        void operator+=(PixelT const rhs);
+        void operator+=(Image<PixelT>const & rhs);
+        void operator-=(PixelT const rhs);
+        void operator-=(Image<PixelT> const& rhs);
+        void operator*=(PixelT const rhs);
+        void operator*=(Image<PixelT> const& rhs);
+        void operator/=(PixelT const rhs);
+        void operator/=(Image<PixelT> const& rhs);
     protected:
         using ImageBase<PixelT>::_getRawView;
     private:
@@ -348,8 +350,8 @@ namespace image {
         
         explicit DecoratedImage(const int width=0, const int height=0);
         explicit DecoratedImage(const std::pair<int, int> dimensions);
-        explicit DecoratedImage(typename Image<PixelT>::Ptr src);
-        DecoratedImage(DecoratedImage const& src, const bool deep=false);
+        explicit DecoratedImage(typename Image<PixelT>::Ptr rhs);
+        DecoratedImage(DecoratedImage const& rhs, const bool deep=false);
         explicit DecoratedImage(std::string const& fileName, const int hdu=0);
 
         DecoratedImage& operator=(const DecoratedImage<PixelT>& image);

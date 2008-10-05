@@ -30,7 +30,7 @@ namespace afw {
 namespace image {
     namespace mpl = boost::mpl;
 
-    namespace details {
+    namespace detail {
         struct maskedImage_tag : basic_tag { };
         struct maskedImagePixel_tag { }; // used to identify classes that represent MaskedImage pixels
     }
@@ -52,12 +52,14 @@ namespace image {
         typedef Image<ImagePixelT> Image;       // "typedef Image::Ptr ImagePtr;" confuses swig (it can't
         typedef Mask<MaskPixelT> Mask;          // find ImagePtr) and we can't use Image<> after these typedefs
         
-        typedef details::maskedImage_tag image_category;
+        typedef detail::maskedImage_tag image_category;
 
+#if !defined(SWIG)
         template<typename ImagePT=ImagePixelT, typename MaskPT=MaskPixelT, typename VarPT=VariancePixelT>
-        struct ImageFactory {
+        struct ImageTypeFactory {
             typedef MaskedImage<ImagePT, MaskPT, VarPT> type;
         };
+#endif
 
         /************************************************************************************************************/
 
@@ -75,7 +77,7 @@ namespace image {
         class PixelConstant;
 
 #if !defined(SWIG)
-        class Pixel : details::maskedImagePixel_tag {
+        class Pixel : detail::maskedImagePixel_tag {
             friend class PixelConstant;
 
         public:
@@ -237,7 +239,7 @@ namespace image {
         // just pass the values to Pixel's constructor as it has no memory of its own,
         // and we need temporaries to support arithmetic
         //
-        class PixelConstant : details::maskedImagePixel_tag {
+        class PixelConstant : detail::maskedImagePixel_tag {
         public:
             template<typename ImagePT, typename MaskPT, typename VarPT>
             PixelConstant(typename MaskedImage<ImagePT, MaskPT, VarPT>::Pixel rhs) :
@@ -379,14 +381,14 @@ namespace image {
 
         template<typename ImageIterator, typename MaskIterator, typename VarianceIterator>
         class const_maskedImageIterator :
-            public  maskedImageIteratorBase<typename details::const_iterator_type<ImageIterator>::type,
-                                            typename details::const_iterator_type<MaskIterator>::type,
-                                            typename details::const_iterator_type<VarianceIterator>::type,
+            public  maskedImageIteratorBase<typename detail::const_iterator_type<ImageIterator>::type,
+                                            typename detail::const_iterator_type<MaskIterator>::type,
+                                            typename detail::const_iterator_type<VarianceIterator>::type,
                                             ConstReference> {
 
-            typedef typename details::const_iterator_type<ImageIterator>::type const_ImageIterator;
-            typedef typename details::const_iterator_type<MaskIterator>::type const_MaskIterator;
-            typedef typename details::const_iterator_type<VarianceIterator>::type const_VarianceIterator;
+            typedef typename detail::const_iterator_type<ImageIterator>::type const_ImageIterator;
+            typedef typename detail::const_iterator_type<MaskIterator>::type const_MaskIterator;
+            typedef typename detail::const_iterator_type<VarianceIterator>::type const_VarianceIterator;
 
             typedef maskedImageIteratorBase<const_ImageIterator, const_MaskIterator, const_VarianceIterator,
                                             ConstReference> maskedImageIteratorBase;
@@ -582,10 +584,10 @@ namespace image {
             }
 
             maskedImageLocatorBase& operator+=(std::pair<int, int> p) {
-                return operator+=(details::difference_type(p.first, p.second));
+                return operator+=(detail::difference_type(p.first, p.second));
             }
 
-            maskedImageLocatorBase& operator+=(details::difference_type p) {
+            maskedImageLocatorBase& operator+=(detail::difference_type p) {
                 _loc.template get<0>() += p;
                 _loc.template get<1>() += p;
                 _loc.template get<2>() += p;
@@ -608,14 +610,14 @@ namespace image {
 
         template<typename ImageLocator, typename MaskLocator, typename VarianceLocator>
         class const_maskedImageLocator :
-            public  maskedImageLocatorBase<typename details::const_locator_type<ImageLocator>::type,
-                                           typename details::const_locator_type<MaskLocator>::type,
-                                           typename details::const_locator_type<VarianceLocator>::type,
+            public  maskedImageLocatorBase<typename detail::const_locator_type<ImageLocator>::type,
+                                           typename detail::const_locator_type<MaskLocator>::type,
+                                           typename detail::const_locator_type<VarianceLocator>::type,
                                            ConstReference> {
 
-            typedef typename details::const_locator_type<ImageLocator>::type const_ImageLocator;
-            typedef typename details::const_locator_type<MaskLocator>::type const_MaskLocator;
-            typedef typename details::const_locator_type<VarianceLocator>::type const_VarianceLocator;
+            typedef typename detail::const_locator_type<ImageLocator>::type const_ImageLocator;
+            typedef typename detail::const_locator_type<MaskLocator>::type const_MaskLocator;
+            typedef typename detail::const_locator_type<VarianceLocator>::type const_VarianceLocator;
 
             typedef maskedImageLocatorBase<const_ImageLocator, const_MaskLocator, const_VarianceLocator,
                                            ConstReference> maskedImageLocatorBase;
@@ -634,11 +636,15 @@ namespace image {
         // Implementations of PixelCast that work for MaskedImage pixels (if true_type) or
         // other, presumably scalar, pixels if false_type
         //
-        // The choice is made on the basis of inheritance from details::maskedImagePixel_tag
+        // The choice is made on the basis of inheritance from detail::maskedImagePixel_tag
         //
         template<typename PixelConstantT>
         static PixelConstant doPixelCast(PixelConstantT rhs, boost::false_type) {
             return PixelConstant(rhs);
+        }
+
+        static PixelConstant doPixelCast(PixelConstant rhs, boost::true_type) {
+            return rhs;
         }
 
         template<typename PixelConstantT>
@@ -649,7 +655,7 @@ namespace image {
 
         template<typename PixelConstantT>
         static PixelConstant PixelCast(PixelConstantT rhs) {
-            return doPixelCast(rhs, typename boost::is_base_of<details::maskedImagePixel_tag, PixelConstantT>::type());
+            return doPixelCast(rhs, typename boost::is_base_of<detail::maskedImagePixel_tag, PixelConstantT>::type());
         }
 #endif  // !defined(SWIG)
 
@@ -682,23 +688,39 @@ namespace image {
         /************************************************************************************************************/
 
         // Constructors
-        explicit MaskedImage(int width=0, int height=0, MaskPlaneDict planeDefs=MaskPlaneDict());
+        explicit MaskedImage(int width=0, int height=0, MaskPlaneDict const& planeDict=MaskPlaneDict());
         explicit MaskedImage(ImagePtr image,
                              MaskPtr mask = MaskPtr(static_cast<Mask *>(0)),
                              VariancePtr variance = VariancePtr(static_cast<Variance *>(0)));
-        explicit MaskedImage(const std::pair<int, int> dimensions, MaskPlaneDict planeDefs=MaskPlaneDict());
+        explicit MaskedImage(const std::pair<int, int> dimensions, MaskPlaneDict const& planeDict=MaskPlaneDict());
         explicit MaskedImage(std::string const& baseName, int const hdu=0,
 #if 1                                   // Old name for boost::shared_ptrs
                              typename lsst::daf::base::DataProperty::PtrType
-		metadata=lsst::daf::base::DataProperty::PtrType(static_cast<lsst::daf::base::DataProperty *>(0)),
+		metadata=lsst::daf::base::DataProperty::PtrType(static_cast<lsst::daf::base::DataProperty *>(NULL)),
 #else
                              typename lsst::daf::base::DataProperty::Ptr
-		metadata=lsst::daf::base::DataProperty::Ptr(static_cast<lsst::daf::base::DataProperty *>(0)),
+		metadata=lsst::daf::base::DataProperty::Ptr(static_cast<lsst::daf::base::DataProperty *>(NULL)),
 #endif
-                             bool conformMasks=false);                             
-
+                             bool const conformMasks=false);
+        
         MaskedImage(MaskedImage const& rhs, bool const deep=false);
-        MaskedImage(const MaskedImage& src, const Bbox& bbox, const bool deep=false);
+        MaskedImage(const MaskedImage& rhs, const Bbox& bbox, const bool deep=false);
+        // generalised copy constructor; defined here in the header so that the compiler can instantiate
+        // N(N-1)/2 conversions between N ImageBase types.
+        //
+        // We only support converting the Image part
+        template<typename OtherPixelT>
+        MaskedImage(MaskedImage<OtherPixelT, MaskPixelT, VariancePixelT> const& rhs, //!< Input image
+                    const bool deep) :                                         //!< Must be true; needed to disambiguate
+            lsst::daf::data::LsstBase(typeid(this)) {
+            if (!deep) {
+                throw lsst::pex::exceptions::InvalidParameter("Only deep copies are permitted for MaskedImages "
+                                                              "with different pixel types");
+            }
+
+            Image tmp(*rhs.getImage(), true);
+            _image->swap(tmp);          // See Meyers, Effective C++, Items 11 and 43
+        }
 
         // Use compiler generated functions
         //MaskedImage& operator=(MaskedImage const& rhs);
@@ -784,7 +806,6 @@ namespace image {
         MaskPtr _mask;
         VariancePtr _variance;
     };
-
 }}}  // lsst::afw::image
         
 #endif //  LSST_IMAGE_MASKEDIMAGE_H

@@ -28,8 +28,6 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 #include "lsst/afw/formatters/MaskFormatter.h"
 #include "lsst/afw/image/MaskedImage.h"
 
-// not used? #include "lsst/afw/image/LSSTFitsResource.h"
-
 #define EXEC_TRACE  20
 static void execTrace(std::string s, int level = EXEC_TRACE) {
     lsst::pex::logging::Trace("afw.MaskedImageFormatter", level, s);

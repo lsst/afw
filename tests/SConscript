@@ -10,7 +10,6 @@ import lsst.SConsUtils as scons # scons 1.17 supports "env.ProductDir", but for 
 env.Program(["MaskedImage.cc"], LIBS=env.getlibs("afw"))
 env.Program(["Exposure.cc"], LIBS=env.getlibs("afw"))
 
-env.Program(["Mask_1.cc"], LIBS=env.getlibs("afw"))
 env.Program(["MaskedImage_1.cc"], LIBS=env.getlibs("afw"))
 env.Program(["MaskedImageIO_1.cc"], LIBS=env.getlibs("afw"))
 env.Program(["MaskedImageIO_2.cc"], LIBS=env.getlibs("afw"))
@@ -49,10 +48,10 @@ else:
     # set up arguments for C++ tests
     inFile = os.path.join(dataDir, "871034p_1_MI")
     testArgs = dict(
-        MaskedImage_1 = "%s %s file:MaskedImage_1_output_1 file:MaskedImage_1_output_2" % (inFile, inFile),
+        MaskedImage_1 =   "%s %s file:MaskedImage_1_output_1 file:MaskedImage_1_output_2" % (inFile, inFile),
         MaskedImageIO_1 = inFile,
         MaskedImageIO_2 = inFile,
-        MaskIO_1 = "%s_msk.fits" % inFile,
+        MaskIO_1 =         "%s_msk.fits" % inFile,
     )
     tests = lsst.tests.Control(env, args = testArgs, ignoreList=["afwTests.py","afwTests_wrap"], verbose = True)
     tests.run("*.cc")

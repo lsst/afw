@@ -44,11 +44,11 @@ import lsst.afw.image
 
 %include "simpleFits.h"
 
-%template(writeFitsImage) writeFits<char>;
-%template(writeFitsImage) writeFits<boost::uint16_t>;
-%template(writeFitsImage) writeFits<float>;
-%template(writeFitsImage) writeFits<double>;
-%template(writeFitsImage) writeFits<lsst::afw::image::maskPixelType>;
+%template(writeFitsImage) writeBasicFits<char>;
+%template(writeFitsImage) writeBasicFits<boost::uint16_t>;
+%template(writeFitsImage) writeBasicFits<float>;
+%template(writeFitsImage) writeBasicFits<double>;
+%template(writeFitsImage) writeBasicFits<lsst::afw::image::MaskPixel>;
 
 /******************************************************************************/
 // Local Variables: ***

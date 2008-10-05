@@ -30,6 +30,8 @@
 using namespace std;
 namespace image = lsst::afw::image;
 
+using lsst::daf::base::DataProperty;
+
 int main(int argc, char **argv) {
     typedef double pixelType;
 
@@ -37,10 +39,8 @@ int main(int argc, char **argv) {
     
     std::cout << "Opening file " << inFilename << std::endl;
 
-    lsst::daf::base::DataProperty::PtrType miMetaData =
-        lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData");
+    DataProperty::PtrType miMetaData = DataProperty::createPropertyNode("FitsMetaData");
     int const hdu = 0;
-    
     image::MaskedImage<pixelType> mskdImage(inFilename, hdu, miMetaData);
     image::Wcs wcs(miMetaData);
     

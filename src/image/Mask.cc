@@ -103,9 +103,9 @@ lsst::daf::base::DataProperty::PtrType image::Mask<MaskPixelT>::getMetaData() {
  */
 template<typename MaskPixelT>
 image::Mask<MaskPixelT>::Mask(std::string const& fileName, //!< Name of file to read
-                              int hdu, //!< HDU to read 
-                              lsst::daf::base::DataProperty::PtrType metaData, ///< file metaData (may point to NULL)
-                              bool conformMasks //!< Make Mask conform to mask layout in file?
+        int const hdu,                                     //!< HDU to read 
+        lsst::daf::base::DataProperty::PtrType metaData,   //!< file metaData (may point to NULL)
+        bool const conformMasks                            //!< Make Mask conform to mask layout in file?
                              ) :
     image::ImageBase<MaskPixelT>(),
     _metaData(metaData) {
@@ -117,9 +117,9 @@ image::Mask<MaskPixelT>::Mask(std::string const& fileName, //!< Name of file to 
     // These are the permitted input file types
     //
     typedef boost::mpl::vector<
-        lsst::afw::image::details::types_traits<unsigned char>::image_t,
-        lsst::afw::image::details::types_traits<unsigned short>::image_t,
-        lsst::afw::image::details::types_traits<short>::image_t
+        lsst::afw::image::detail::types_traits<unsigned char>::image_t,
+        lsst::afw::image::detail::types_traits<unsigned short>::image_t,
+        lsst::afw::image::detail::types_traits<short>::image_t
     > fits_mask_types;
 
     if (!image::fits_read_image<fits_mask_types>(fileName, *_getRawImagePtr(), _metaData)) {

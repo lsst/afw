@@ -11,10 +11,7 @@ Basic routines to talk to lsst::afw::image classes
 // Suppress swig complaints
 // I had trouble getting %warnfilter to work; hence the pragmas
 #pragma SWIG nowarn=314                 // print is a python keyword (--> _print)
- //#pragma SWIG nowarn=317                 // specialization of non-template
 #pragma SWIG nowarn=362                 // operator=  ignored
- //#pragma SWIG nowarn=389                 // operator[] ignored
- //#pragma SWIG nowarn=503                 // Can't wrap 'operator unspecified_bool_type'
 
 %{
 #   include <fstream>
@@ -41,9 +38,8 @@ namespace lsst { namespace daf { namespace data { } } }
 namespace boost {
     typedef unsigned short uint16_t;
     namespace filesystem {}
-    class bad_any_cast;                 // for lsst/pex/policy/Policy.h
-    namespace filesystem {}
     namespace mpl {}
+    class bad_any_cast;                 // for lsst/pex/policy/Policy.h
 }
     
 using namespace lsst;
@@ -53,6 +49,8 @@ using namespace lsst::daf::data;
 
 %init %{
 %}
+
+/************************************************************************************************************/
 
 %include "lsst/p_lsstSwig.i"
 %include "lsstImageTypes.i"     // Image/Mask types and typedefs
@@ -98,13 +96,11 @@ def version(HeadURL = r"$HeadURL$"):
 %import "lsst/pex/policy/Policy.h"
 
 /******************************************************************************/
-%template(pairIntInt)    std::pair<int,int>;
+
+%template(pairIntInt)   std::pair<int, int>;
 %template(mapStringInt) std::map<std::string, int>;
-//%template(pairIntString) std::pair<int,std::string>;
-//%template(mapIntString)  std::map<std::string, int>;
 
 /************************************************************************************************************/
-// Masks and MaskedImages
 // Images, Masks, and MaskedImages
 %ignore lsst::afw::image::Filter::operator int;
 %include "lsst/afw/image/Filter.h"
@@ -130,10 +126,10 @@ def version(HeadURL = r"$HeadURL$"):
 
 %include "lsst/afw/image/Exposure.h"
 
-%template(ExposureU)    lsst::afw::image::Exposure<boost::uint16_t, lsst::afw::image::maskPixelType>;
-%template(ExposureI)    lsst::afw::image::Exposure<int, lsst::afw::image::maskPixelType>;
-%template(ExposureF)    lsst::afw::image::Exposure<float, lsst::afw::image::maskPixelType>;
-%template(ExposureD)    lsst::afw::image::Exposure<double, lsst::afw::image::maskPixelType>;
+%template(ExposureU)    lsst::afw::image::Exposure<boost::uint16_t>;
+%template(ExposureI)    lsst::afw::image::Exposure<int>;
+%template(ExposureF)    lsst::afw::image::Exposure<float>;
+%template(ExposureD)    lsst::afw::image::Exposure<double>;
 
 /************************************************************************************************************/
 

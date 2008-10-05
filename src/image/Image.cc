@@ -30,14 +30,14 @@ image::ImageBase<PixelT>::ImageBase(const std::pair<int, int> dimensions) :
 }
 
 template<typename PixelT>
-image::ImageBase<PixelT>::ImageBase(const ImageBase& src,
+image::ImageBase<PixelT>::ImageBase(const ImageBase& rhs,
                                     const bool deep) :
     lsst::daf::data::LsstBase(typeid(this)),
-    _gilImage(src._gilImage), // don't copy the pixels
+    _gilImage(rhs._gilImage), // don't copy the pixels
     _gilView(subimage_view(flipped_up_down_view(view(*_gilImage)),
-                            src._x0, src._y0, src.getWidth(), src.getHeight())),
-    _x0(src._x0),
-    _y0(src._y0)
+                            rhs._x0, rhs._y0, rhs.getWidth(), rhs.getHeight())),
+    _x0(rhs._x0),
+    _y0(rhs._y0)
 {
     if (deep) {
         ImageBase tmp(dimensions());
@@ -47,12 +47,12 @@ image::ImageBase<PixelT>::ImageBase(const ImageBase& src,
 }
 
 template<typename PixelT>
-image::ImageBase<PixelT>::ImageBase(const ImageBase& src, const Bbox& bbox, const bool deep) :
+image::ImageBase<PixelT>::ImageBase(const ImageBase& rhs, const Bbox& bbox, const bool deep) :
     lsst::daf::data::LsstBase(typeid(this)),
-    _gilImage(src._gilImage), // boost::shared_ptr, so don't copy the pixels
-    _gilView(subimage_view(src._gilView,
+    _gilImage(rhs._gilImage), // boost::shared_ptr, so don't copy the pixels
+    _gilView(subimage_view(rhs._gilView,
                            bbox.getX0(), bbox.getY0(), bbox.getWidth(), bbox.getHeight())),
-    _x0(src._x0 + bbox.getX0()), _y0(src._y0 + bbox.getY0())
+    _x0(rhs._x0 + bbox.getX0()), _y0(rhs._y0 + bbox.getY0())
 {
     if (_x0 < 0 || _y0 < 0 || _x0 + getWidth() > _gilImage->width() || _y0 + getHeight() > _gilImage->height()) {
         throw lsst::pex::exceptions::LengthError(boost::format("Bbox (%d,%d) %dx%d doesn't fit in image") %
@@ -67,20 +67,20 @@ image::ImageBase<PixelT>::ImageBase(const ImageBase& src, const Bbox& bbox, cons
 }
 
 template<typename PixelT>
-image::ImageBase<PixelT>& image::ImageBase<PixelT>::operator=(const ImageBase& src) {
-    ImageBase tmp(src);
+image::ImageBase<PixelT>& image::ImageBase<PixelT>::operator=(const ImageBase& rhs) {
+    ImageBase tmp(rhs);
     swap(tmp);                          // See Meyers, Effective C++, Item 11
     
     return *this;
 }
 
 template<typename PixelT>
-void image::ImageBase<PixelT>::operator<<=(const ImageBase& src) {
-    if (dimensions() != src.dimensions()) {
+void image::ImageBase<PixelT>::operator<<=(const ImageBase& rhs) {
+    if (dimensions() != rhs.dimensions()) {
         throw lsst::pex::exceptions::LengthError(boost::format("Dimension mismatch: %dx%d v. %dx%d") %
-                                                 getWidth() % getHeight() % src.getWidth() % src.getHeight());
+                                                 getWidth() % getHeight() % rhs.getWidth() % rhs.getHeight());
     }
-    copy_pixels(src._gilView, _gilView);
+    copy_pixels(rhs._gilView, _gilView);
 }
 
 template<typename PixelT>
@@ -176,8 +176,8 @@ typename image::ImageBase<PixelT>::y_iterator image::ImageBase<PixelT>::col_end(
 /************************************************************************************************************/
 
 template<typename PixelT>
-image::ImageBase<PixelT>& image::ImageBase<PixelT>::operator=(const PixelT scalar) {
-    fill_pixels(_gilView, scalar);
+image::ImageBase<PixelT>& image::ImageBase<PixelT>::operator=(const PixelT rhs) {
+    fill_pixels(_gilView, rhs);
 
     return *this;
 }
@@ -195,24 +195,24 @@ image::Image<PixelT>::Image(const std::pair<int, int> dimensions) :
     image::ImageBase<PixelT>(dimensions) {}
 
 template<typename PixelT>
-image::Image<PixelT>::Image(const Image& src,
+image::Image<PixelT>::Image(const Image& rhs,
                             const bool deep) :
-    image::ImageBase<PixelT>(src, deep) {}
+    image::ImageBase<PixelT>(rhs, deep) {}
 
 template<typename PixelT>
-image::Image<PixelT>::Image(const Image& src, const Bbox& bbox, const bool deep) :
-    image::ImageBase<PixelT>(src, bbox, deep) {}
+image::Image<PixelT>::Image(const Image& rhs, const Bbox& bbox, const bool deep) :
+    image::ImageBase<PixelT>(rhs, bbox, deep) {}
 
 template<typename PixelT>
-image::Image<PixelT>& image::Image<PixelT>::operator=(const PixelT scalar) {
-    this->ImageBase<PixelT>::operator=(scalar);
+image::Image<PixelT>& image::Image<PixelT>::operator=(const PixelT rhs) {
+    this->ImageBase<PixelT>::operator=(rhs);
 
     return *this;
 }
 
 template<typename PixelT>
-image::Image<PixelT>& image::Image<PixelT>::operator=(const Image& src) {
-    this->ImageBase<PixelT>::operator=(src);
+image::Image<PixelT>& image::Image<PixelT>::operator=(const Image& rhs) {
+    this->ImageBase<PixelT>::operator=(rhs);
     
     return *this;
 }
@@ -227,12 +227,12 @@ image::Image<PixelT>::Image(const std::string& fileName, ///< File to read
     image::ImageBase<PixelT>() {
 
     typedef boost::mpl::vector<
-        lsst::afw::image::details::types_traits<unsigned char>::image_t,
-        lsst::afw::image::details::types_traits<unsigned short>::image_t,
-        lsst::afw::image::details::types_traits<short>::image_t,
-        lsst::afw::image::details::types_traits<int>::image_t,
-        lsst::afw::image::details::types_traits<float>::image_t // ,
-        //lsst::afw::image::details::types_traits<double>::image_t
+        lsst::afw::image::detail::types_traits<unsigned char>::image_t,
+        lsst::afw::image::detail::types_traits<unsigned short>::image_t,
+        lsst::afw::image::detail::types_traits<short>::image_t,
+        lsst::afw::image::detail::types_traits<int>::image_t,
+        lsst::afw::image::detail::types_traits<float>::image_t // ,
+        //lsst::afw::image::detail::types_traits<double>::image_t
     > fits_img_types;
 
     if (!image::fits_read_image<fits_img_types>(fileName, *this->_getRawImagePtr(), metaData)) {

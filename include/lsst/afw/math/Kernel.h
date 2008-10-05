@@ -335,6 +335,7 @@ namespace math {
     public:
         typedef boost::shared_ptr<AnalyticKernel> PtrT;
         typedef lsst::afw::math::Function2<PixelT> KernelFunction;
+        typedef lsst::afw::math::NullFunction2<PixelT> NullKernelFunction;
         typedef boost::shared_ptr<lsst::afw::math::Function2<PixelT> > KernelFunctionPtr;
         
         explicit AnalyticKernel();
@@ -500,12 +501,13 @@ namespace math {
     public:
         typedef boost::shared_ptr<SeparableKernel> PtrT;
         typedef lsst::afw::math::Function1<PixelT> KernelFunction;
+        typedef lsst::afw::math::NullFunction1<PixelT> NullKernelFunction;
         typedef boost::shared_ptr<KernelFunction> KernelFunctionPtr;
         
         explicit SeparableKernel(
             int width=0, int height=0,
-            KernelFunction const& kernelColFunction=NullSpatialFunction(),
-            KernelFunction const& kernelRowFunction=NullSpatialFunction(),
+            KernelFunction const& kernelColFunction=NullKernelFunction(),
+            KernelFunction const& kernelRowFunction=NullKernelFunction(),
             Kernel::SpatialFunction const& spatialFunction=NullSpatialFunction()
         );
         

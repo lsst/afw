@@ -258,6 +258,19 @@ namespace math {
         };
     };
     /**
+     * @brief a class used in function calls to indicate that no Function1 is being provided
+     */
+    template<typename ReturnT>
+    class NullFunction1 : public Function1<ReturnT> {
+    public:
+        explicit NullFunction1() : Function1<ReturnT>(0) {}
+        typename Function1<ReturnT>::Ptr copy() const { return typename Function1<ReturnT>::Ptr(new NullFunction1()); }
+
+    private:
+        ReturnT operator() (double x) const { return static_cast<ReturnT>(0); }
+    };
+
+    /**
      * @brief a class used in function calls to indicate that no Function2 is being provided
      */
     template<typename ReturnT>
