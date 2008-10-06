@@ -69,7 +69,7 @@ namespace image {
                      );                      
 
         Mask(const Mask& src, const bool deep=false);
-        Mask(const Mask& src, const Bbox& bbox, const bool deep=false);
+        Mask(const Mask& src, const BBox& bbox, const bool deep=false);
         
         // Operators
 

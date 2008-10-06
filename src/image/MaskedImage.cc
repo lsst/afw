@@ -107,7 +107,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(MaskedI
  */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(MaskedImage const& rhs,
-                                                                         const Bbox& bbox,
+                                                                         const BBox& bbox,
                                                                          bool deep) :
     lsst::daf::data::LsstBase(typeid(this)),
     _image(new Image(*rhs._image, bbox, deep)),

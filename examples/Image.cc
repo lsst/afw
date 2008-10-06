@@ -144,12 +144,12 @@ int main() {
     
     printf("sub images\n");
 #if 0
-    Image<float> simg = Image<float>(img, Bbox(PointI(1, 1), 5, 2)); // img will be modified
+    Image<float> simg = Image<float>(img, BBox(PointI(1, 1), 5, 2)); // img will be modified
 #elif 0
-    Image<float> simg = Image<float>(img, Bbox(PointI(1, 1), 5, 2), true); // img won't be modified
+    Image<float> simg = Image<float>(img, BBox(PointI(1, 1), 5, 2), true); // img won't be modified
 #else
-    Image<float> simg1 = Image<float>(img, Bbox(PointI(1, 1), 7, 3)); // img will be modified
-    Image<float> simg = Image<float>(simg1, Bbox(PointI(0, 0), 5, 2));
+    Image<float> simg1 = Image<float>(img, BBox(PointI(1, 1), 7, 3)); // img will be modified
+    Image<float> simg = Image<float>(simg1, BBox(PointI(0, 0), 5, 2));
 #endif
 
 #if 0

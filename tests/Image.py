@@ -85,12 +85,12 @@ class ImageTestCase(unittest.TestCase):
         self.assertEqual(imageU.get(0,0), self.val1)
         self.assertEqual(imageF.get(0,0), self.val1)
             
-    def testBbox(self):
+    def testBBox(self):
         x0, y0, width, height = 1, 2, 10, 20
         x1, y1 = x0 + width - 1, y0 + height - 1
         llc = afwImage.PointI(x0, y0)
         
-        bbox = afwImage.Bbox(llc, width, height)
+        bbox = afwImage.BBox(llc, width, height)
 
         self.assertEqual(bbox.getX0(), x0)
         self.assertEqual(bbox.getY0(), y0)
@@ -100,10 +100,10 @@ class ImageTestCase(unittest.TestCase):
         self.assertEqual(bbox.getHeight(), height)
 
         urc = afwImage.PointI(x1, y1)
-        bbox2 = afwImage.Bbox(llc, urc)
+        bbox2 = afwImage.BBox(llc, urc)
         self.assertEqual(bbox, bbox2)
         
-        bbox2 = afwImage.Bbox(llc, width, height+1)
+        bbox2 = afwImage.BBox(llc, width, height+1)
         self.assertNotEqual(bbox, bbox2)
 
     def checkImgPatch(self, img, x0=0, y0=0):
@@ -117,9 +117,9 @@ class ImageTestCase(unittest.TestCase):
         self.assertEqual(img.get(x0,     y0 + 2), self.val1)
 
     def testSubimages(self):
-        simage1 = afwImage.ImageF(self.image1, afwImage.Bbox(afwImage.PointI(1, 1), 10, 5))
+        simage1 = afwImage.ImageF(self.image1, afwImage.BBox(afwImage.PointI(1, 1), 10, 5))
         
-        simage = afwImage.ImageF(simage1, afwImage.Bbox(afwImage.PointI(1, 1), 3, 2))
+        simage = afwImage.ImageF(simage1, afwImage.BBox(afwImage.PointI(1, 1), 3, 2))
         self.assertEqual(simage.getX0(), 2); self.assertEqual(simage.getY0(), 2) # i.e. wrt self.image1
 
         image2 = afwImage.ImageF(simage.dimensions())
@@ -134,12 +134,12 @@ class ImageTestCase(unittest.TestCase):
         """Test subimages when we've played with the (x0, y0) value"""
 
         self.image1.set(9, 4, 888)
-        #printImg(afwImage.ImageF(self.image1, afwImage.Bbox(afwImage.PointI(0, 0), 10, 5))); print
+        #printImg(afwImage.ImageF(self.image1, afwImage.BBox(afwImage.PointI(0, 0), 10, 5))); print
 
-        simage1 = afwImage.ImageF(self.image1, afwImage.Bbox(afwImage.PointI(1, 1), 10, 5))
+        simage1 = afwImage.ImageF(self.image1, afwImage.BBox(afwImage.PointI(1, 1), 10, 5))
         simage1.setXY0(afwImage.PointI(0, 0)) # reset origin; doesn't affect pixel coordinate systems
 
-        simage = afwImage.ImageF(simage1, afwImage.Bbox(afwImage.PointI(1, 1), 3, 2))
+        simage = afwImage.ImageF(simage1, afwImage.BBox(afwImage.PointI(1, 1), 3, 2))
         self.assertEqual(simage.getX0(), 1); self.assertEqual(simage.getY0(), 1)
 
         image2 = afwImage.ImageF(simage.dimensions())

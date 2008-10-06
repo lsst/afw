@@ -45,7 +45,7 @@ namespace {
 template<typename OutImageT, typename InImageT>
 inline void copyRegion(OutImageT &outImage,     // destination Image
                        InImageT const &inImage, // source Image
-                       lsst::afw::image::Bbox const &region, // region to copy
+                       lsst::afw::image::BBox const &region, // region to copy
                        int,
                        lsst::afw::image::detail::image_tag
                       ) {
@@ -57,7 +57,7 @@ inline void copyRegion(OutImageT &outImage,     // destination Image
 template<typename InImageT>
 inline void copyRegion(InImageT &outImage,     // destination Image
                        InImageT const &inImage, // source Image
-                       lsst::afw::image::Bbox const &region, // region to copy
+                       lsst::afw::image::BBox const &region, // region to copy
                        int,
                        lsst::afw::image::detail::image_tag
                       ) {
@@ -72,7 +72,7 @@ inline void copyRegion(InImageT &outImage,     // destination Image
 template<typename OutImageT, typename InImageT>
 inline void copyRegion(OutImageT &outImage,     // destination Image
                        InImageT const &inImage, // source Image
-                       lsst::afw::image::Bbox const &region, // region to copy
+                       lsst::afw::image::BBox const &region, // region to copy
                        int orMask,                           // data to | into the mask pixels
                        lsst::afw::image::detail::maskedImage_tag
                       ) {
@@ -85,7 +85,7 @@ inline void copyRegion(OutImageT &outImage,     // destination Image
 template<typename InImageT>
 inline void copyRegion(InImageT &outImage,      // destination Image
                        InImageT const &inImage, // source Image
-                       lsst::afw::image::Bbox const &region, // region to copy
+                       lsst::afw::image::BBox const &region, // region to copy
                        int orMask,                           // data to | into the mask pixels
                        lsst::afw::image::detail::maskedImage_tag
                       ) {
@@ -110,23 +110,23 @@ inline void copyBorder(
     const unsigned int kCtrX = kernel.getCtrX();
     const unsigned int kCtrY = kernel.getCtrY();
     
-    using lsst::afw::image::Bbox;
+    using lsst::afw::image::BBox;
     using lsst::afw::image::PointI;
-    Bbox bottomEdge(PointI(0, 0), imWidth, kCtrY);
+    BBox bottomEdge(PointI(0, 0), imWidth, kCtrY);
     copyRegion(convolvedImage, inImage, bottomEdge, edgeBit,
                 typename lsst::afw::image::detail::image_traits<OutImageT>::image_category());
     
     int numHeight = kHeight - (1 + kCtrY);
-    Bbox topEdge(PointI(0, imHeight - numHeight), imWidth, numHeight);
+    BBox topEdge(PointI(0, imHeight - numHeight), imWidth, numHeight);
     copyRegion(convolvedImage, inImage, topEdge, edgeBit,
                 typename lsst::afw::image::detail::image_traits<OutImageT>::image_category());
     
-    Bbox leftEdge(PointI(0, kCtrY), kCtrX, imHeight + 1 - kHeight);
+    BBox leftEdge(PointI(0, kCtrY), kCtrX, imHeight + 1 - kHeight);
     copyRegion(convolvedImage, inImage, leftEdge, edgeBit,
                 typename lsst::afw::image::detail::image_traits<OutImageT>::image_category());
     
     int numWidth = kWidth - (1 + kCtrX);
-    Bbox rightEdge(PointI(imWidth - numWidth, kCtrY), numWidth, imHeight + 1 - kHeight);
+    BBox rightEdge(PointI(imWidth - numWidth, kCtrY), numWidth, imHeight + 1 - kHeight);
     copyRegion(convolvedImage, inImage, rightEdge, edgeBit,
                 typename lsst::afw::image::detail::image_traits<OutImageT>::image_category());
 }

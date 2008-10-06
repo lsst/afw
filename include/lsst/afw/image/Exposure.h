@@ -47,7 +47,7 @@ namespace image {
         explicit Exposure(MaskedImage<ImageT, MaskT, VarianceT> const& maskedImage, Wcs const& wcs=Wcs());
         explicit Exposure(std::string const &file, int const hdu=0, bool const conformMasks=false);
 
-        Exposure(Exposure const &src, Bbox const& bbox, bool const deep=false);
+        Exposure(Exposure const &src, BBox const& bbox, bool const deep=false);
 
         virtual ~Exposure(); 
 

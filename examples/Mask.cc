@@ -33,12 +33,12 @@ int main() {
 
     printf("sub Mask<MaskPixel>s\n");
 #if 0
-    Mask<MaskPixel> simg = Mask<MaskPixel>(img, Bbox(PointI(1, 1), 5, 2)); // img will be modified
+    Mask<MaskPixel> simg = Mask<MaskPixel>(img, BBox(PointI(1, 1), 5, 2)); // img will be modified
 #elif 0
-    Mask<MaskPixel> simg = Mask<MaskPixel>(img, Bbox(PointI(1, 1), 5, 2), true); // img won't be modified
+    Mask<MaskPixel> simg = Mask<MaskPixel>(img, BBox(PointI(1, 1), 5, 2), true); // img won't be modified
 #else
-    Mask<MaskPixel> simg1 = Mask<MaskPixel>(img, Bbox(PointI(1, 1), 7, 3)); // img will be modified
-    Mask<MaskPixel> simg = Mask<MaskPixel>(simg1, Bbox(PointI(0, 0), 5, 2));
+    Mask<MaskPixel> simg1 = Mask<MaskPixel>(img, BBox(PointI(1, 1), 7, 3)); // img will be modified
+    Mask<MaskPixel> simg = Mask<MaskPixel>(simg1, BBox(PointI(0, 0), 5, 2));
 #endif
 
 #if 0

@@ -93,12 +93,12 @@ class MaskTestCase(unittest.TestCase):
         self.assertEqual(dmask.get(0,0), self.val1)
         self.assertEqual(smask.get(0,0), self.val1 | 32767)
 
-    def testBbox(self):
+    def testBBox(self):
         x0, y0, width, height = 1, 2, 10, 20
         x1, y1 = x0 + width - 1, y0 + height - 1
         llc = afwImage.PointI(x0, y0)
         
-        bbox = afwImage.Bbox(llc, width, height)
+        bbox = afwImage.BBox(llc, width, height)
 
         self.assertEqual(bbox.getX0(), x0)
         self.assertEqual(bbox.getY0(), y0)
@@ -108,14 +108,14 @@ class MaskTestCase(unittest.TestCase):
         self.assertEqual(bbox.getHeight(), height)
 
         urc = afwImage.PointI(x1, y1)
-        bbox2 = afwImage.Bbox(llc, urc)
+        bbox2 = afwImage.BBox(llc, urc)
         self.assertEqual(bbox, bbox2)
         
-        bbox2 = afwImage.Bbox(llc, width, height+1)
+        bbox2 = afwImage.BBox(llc, width, height+1)
         self.assertNotEqual(bbox, bbox2)
 
     def testSubmasks(self):
-        smask = afwImage.MaskU(self.mask1, afwImage.Bbox(afwImage.PointI(1, 1), 3, 2))
+        smask = afwImage.MaskU(self.mask1, afwImage.BBox(afwImage.PointI(1, 1), 3, 2))
         mask2 = afwImage.MaskU(smask.dimensions())
 
         mask2.set(666)
@@ -205,7 +205,7 @@ class OldMaskTestCase(unittest.TestCase):
         for p in ("CR", "BP"):
             self.testMask.addMaskPlane(p)
 
-        self.region = afwImage.Bbox(afwImage.PointI(100, 300), 10, 40)
+        self.region = afwImage.BBox(afwImage.PointI(100, 300), 10, 40)
         self.subTestMask = afwImage.MaskU(self.testMask, self.region)
 
         if False:

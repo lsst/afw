@@ -81,11 +81,11 @@ namespace image {
     typedef Point<double> PointD;
     typedef Point<int> PointI;
     
-    class Bbox : private std::pair<PointI, PointI > {
+    class BBox : private std::pair<PointI, PointI > {
     public:
-        Bbox(PointI llc, int width, int height) :
+        BBox(PointI llc, int width, int height) :
             std::pair<PointI, PointI>(llc, PointI(width, height)) {}
-        Bbox(PointI llc, PointI urc) :
+        BBox(PointI llc, PointI urc) :
             std::pair<PointI, PointI>(llc, urc - llc + 1) {}
         int getX0() const { return first.getX(); }
         int getY0() const { return first.getY(); }
@@ -94,12 +94,12 @@ namespace image {
         int getWidth() const { return second.getX(); }
         int getHeight() const { return second.getY(); }
 
-        bool operator==(const Bbox& rhs) const {
+        bool operator==(const BBox& rhs) const {
             return
                 getX0() == rhs.getX0() && getY0() == rhs.getY0() &&
                 getWidth() == rhs.getWidth() && getHeight() == rhs.getHeight();
         }
-        bool operator!=(const Bbox& rhs) const {
+        bool operator!=(const BBox& rhs) const {
             return !operator==(rhs);
         }
     };
@@ -171,7 +171,7 @@ namespace image {
         explicit ImageBase(const int width=0, const int height=0);
         explicit ImageBase(const std::pair<int, int> dimensions);
         ImageBase(const ImageBase& src, const bool deep=false);
-        ImageBase(const ImageBase& src, const Bbox& bbox, const bool deep=false);
+        ImageBase(const ImageBase& src, const BBox& bbox, const bool deep=false);
         // generalised copy constructor; defined here in the header so that the compiler can instantiate
         // N(N-1)/2 conversions between N ImageBase types.
         template<typename OtherPixelT>
@@ -290,7 +290,7 @@ namespace image {
         explicit Image(const int width=0, const int height=0);
         explicit Image(const std::pair<int, int> dimensions);
         Image(const Image& rhs, const bool deep=false);
-        Image(const Image& rhs, const Bbox& bbox, const bool deep=false);
+        Image(const Image& rhs, const BBox& bbox, const bool deep=false);
         Image(std::string const& fileName, const int hdu = 0,
 #if 1                                   // Old name for boost::shared_ptrs
               typename lsst::daf::base::DataProperty::PtrType

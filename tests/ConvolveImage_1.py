@@ -45,11 +45,11 @@ def makeMosaic(image1, image2):
     mosaic = afwImage.ImageF(gutter + 2*image1.getWidth(), image1.getHeight())
     mosaic.set(10)                 # gutter value
     
-    smosaic = afwImage.ImageF(mosaic, afwImage.Bbox(afwImage.PointI(0,0),
+    smosaic = afwImage.ImageF(mosaic, afwImage.BBox(afwImage.PointI(0,0),
                                                     image1.getWidth(), image1.getHeight()))
     smosaic <<= image1
     
-    smosaic = afwImage.ImageF(mosaic, afwImage.Bbox(afwImage.PointI(gutter + image1.getWidth(), 0),
+    smosaic = afwImage.ImageF(mosaic, afwImage.BBox(afwImage.PointI(gutter + image1.getWidth(), 0),
                                                     image1.getWidth(), image1.getHeight()))
     smosaic <<= image2
 
@@ -142,7 +142,7 @@ class ConvolveTestCase(unittest.TestCase):
             fullImage = afwImage.ImageF(InputImagePath)
             
             # pick a small piece of the image to save time
-            bbox = afwImage.Bbox(afwImage.PointI(50, 50), self.width, self.height)
+            bbox = afwImage.BBox(afwImage.PointI(50, 50), self.width, self.height)
             self.inImage = afwImage.ImageF(fullImage, bbox)
 
     def tearDown(self):

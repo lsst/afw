@@ -103,7 +103,7 @@ lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure(
   */        
 template<typename ImageT, typename MaskT, typename VarianceT> 
 lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &src,
-                                                               Bbox const& bbox,
+                                                               BBox const& bbox,
                                                                bool const deep) :
     lsst::daf::data::LsstBase(typeid(this)),
     _metaData(lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData")),

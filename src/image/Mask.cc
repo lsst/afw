@@ -57,7 +57,7 @@ image::Mask<MaskPixelT>::Mask(const std::pair<int, int> dimensions, MaskPlaneDic
 }
 
 template<typename MaskPixelT>
-image::Mask<MaskPixelT>::Mask(Mask const& rhs, const Bbox& bbox, const bool deep) :
+image::Mask<MaskPixelT>::Mask(Mask const& rhs, const BBox& bbox, const bool deep) :
     image::ImageBase<MaskPixelT>(rhs, bbox, deep),
     _metaData(rhs._metaData),
     _myMaskDictVersion(_myMaskDictVersion) {

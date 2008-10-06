@@ -44,7 +44,7 @@ class MaskedImageTestCase(unittest.TestCase):
         
         self.mimage.getMask().set(self.EDGE)
         centre = afwImage.MaskU(self.mimage.getMask(),
-                                afwImage.Bbox(afwImage.PointI(2,2), self.mimage.getWidth() - 4, self.mimage.getHeight() - 4))
+                                afwImage.BBox(afwImage.PointI(2,2), self.mimage.getWidth() - 4, self.mimage.getHeight() - 4))
         centre.set(0x0)
         #
         self.mimage.getVariance().set(self.varVal1)
@@ -164,9 +164,9 @@ class MaskedImageTestCase(unittest.TestCase):
         self.assertEqual(img.get(x0,     y0 + 2), (self.imgVal1, 0x0,       self.varVal1))
 
     def testSubimages(self):
-        smimage = afwImage.MaskedImageF(self.mimage, afwImage.Bbox(afwImage.PointI(1, 1), 10, 5))
+        smimage = afwImage.MaskedImageF(self.mimage, afwImage.BBox(afwImage.PointI(1, 1), 10, 5))
         
-        simage = afwImage.MaskedImageF(smimage, afwImage.Bbox(afwImage.PointI(1, 1), 3, 2))
+        simage = afwImage.MaskedImageF(smimage, afwImage.BBox(afwImage.PointI(1, 1), 3, 2))
         self.assertEqual(simage.getX0(), 2); self.assertEqual(simage.getY0(), 2) # i.e. wrt self.mimage
 
         mimage2 = afwImage.MaskedImageF(simage.dimensions())
@@ -183,12 +183,12 @@ class MaskedImageTestCase(unittest.TestCase):
         """Test subimages when we've played with the (x0, y0) value"""
 
         self.mimage.set(9, 4, (888, 0x0, 0))
-        #printImg(afwImage.ImageF(self.mimage, afwImage.Bbox(afwImage.PointI(0, 0), 10, 5))); print
+        #printImg(afwImage.ImageF(self.mimage, afwImage.BBox(afwImage.PointI(0, 0), 10, 5))); print
 
-        smimage = afwImage.MaskedImageF(self.mimage, afwImage.Bbox(afwImage.PointI(1, 1), 10, 5))
+        smimage = afwImage.MaskedImageF(self.mimage, afwImage.BBox(afwImage.PointI(1, 1), 10, 5))
         smimage.setXY0(afwImage.PointI(0, 0)) # reset origin; doesn't affect pixel coordinate systems
 
-        simage = afwImage.MaskedImageF(smimage, afwImage.Bbox(afwImage.PointI(1, 1), 3, 2))
+        simage = afwImage.MaskedImageF(smimage, afwImage.BBox(afwImage.PointI(1, 1), 3, 2))
         self.assertEqual(simage.getX0(), 1); self.assertEqual(simage.getY0(), 1)
 
         mimage2 = afwImage.MaskedImageF(simage.dimensions())

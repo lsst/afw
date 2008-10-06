@@ -726,7 +726,7 @@ namespace image {
                              bool const conformMasks=false);
         
         MaskedImage(MaskedImage const& rhs, bool const deep=false);
-        MaskedImage(const MaskedImage& rhs, const Bbox& bbox, const bool deep=false);
+        MaskedImage(const MaskedImage& rhs, const BBox& bbox, const bool deep=false);
         // generalised copy constructor; defined here in the header so that the compiler can instantiate
         // N(N-1)/2 conversions between N ImageBase types.
         //

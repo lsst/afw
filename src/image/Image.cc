@@ -47,7 +47,7 @@ image::ImageBase<PixelT>::ImageBase(const ImageBase& rhs,
 }
 
 template<typename PixelT>
-image::ImageBase<PixelT>::ImageBase(const ImageBase& rhs, const Bbox& bbox, const bool deep) :
+image::ImageBase<PixelT>::ImageBase(const ImageBase& rhs, const BBox& bbox, const bool deep) :
     lsst::daf::data::LsstBase(typeid(this)),
     _gilImage(rhs._gilImage), // boost::shared_ptr, so don't copy the pixels
     _gilView(subimage_view(rhs._gilView,
@@ -55,7 +55,7 @@ image::ImageBase<PixelT>::ImageBase(const ImageBase& rhs, const Bbox& bbox, cons
     _x0(rhs._x0 + bbox.getX0()), _y0(rhs._y0 + bbox.getY0())
 {
     if (_x0 < 0 || _y0 < 0 || _x0 + getWidth() > _gilImage->width() || _y0 + getHeight() > _gilImage->height()) {
-        throw lsst::pex::exceptions::LengthError(boost::format("Bbox (%d,%d) %dx%d doesn't fit in image") %
+        throw lsst::pex::exceptions::LengthError(boost::format("BBox (%d,%d) %dx%d doesn't fit in image") %
                                                  bbox.getX0() % bbox.getY0() % bbox.getWidth() % bbox.getHeight());
     }
 
@@ -200,7 +200,7 @@ image::Image<PixelT>::Image(const Image& rhs,
     image::ImageBase<PixelT>(rhs, deep) {}
 
 template<typename PixelT>
-image::Image<PixelT>::Image(const Image& rhs, const Bbox& bbox, const bool deep) :
+image::Image<PixelT>::Image(const Image& rhs, const BBox& bbox, const bool deep) :
     image::ImageBase<PixelT>(rhs, bbox, deep) {}
 
 template<typename PixelT>

@@ -65,13 +65,13 @@ int test(int argc, char**argv) {
 
     // test of subImage
 
-    image::Bbox region(image::PointI(100, 600), 200, 300);
+    image::BBox region(image::PointI(100, 600), 200, 300);
     MaskedImage subMaskedImage1 = MaskedImage(*testMaskedImage1, region);
     subMaskedImage1 *= 0.5;
     subMaskedImage1.writeFits(argv[4]);
 
     // Check whether offsets have been correctly saved
-    image::Bbox region2(image::PointI(80, 110), 20, 30);
+    image::BBox region2(image::PointI(80, 110), 20, 30);
     MaskedImage subMaskedImage2 = MaskedImage(subMaskedImage1, region2);
 
     cout << "Offsets: " << subMaskedImage2.getX0() << " " << subMaskedImage2.getY0() << endl;

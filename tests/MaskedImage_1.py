@@ -15,7 +15,6 @@ import unittest
 import lsst.utils.tests as utilsTests
 import lsst.afw.image as afwImage
 import lsst.afw.display.ds9 as ds9
-import afwTests
 
 try:
     type(display)
@@ -60,15 +59,9 @@ class MaskedImageTestCase(unittest.TestCase):
         self.maskedImage2 += self.maskedImage1
     
     def testCopyConstructors(self):
-        image = afwTests.copyImageF(afwImage.ImageF(100, 100))
-        mask = afwTests.copyMaskU(afwImage.MaskU(100, 100))
-        maskedImage = afwTests.copyMaskedImageF(self.maskedImage1)
-
-    def testPixelProc(self):
-        fooFunc = afwTests.testPixProcFuncF(self.maskedImage1)
-
-        fooFunc.init()
-        self.maskedImage1.processPixels(fooFunc)
+        image = afwImage.ImageF(afwImage.ImageF(100, 100))
+        mask = afwImage.MaskU(afwImage.MaskU(100, 100))
+        maskedImage = afwTests.MaskedImageF(self.maskedImage1)
 
     def testDisplay(self):
         """Test decomposing a mask into its bit planes"""
