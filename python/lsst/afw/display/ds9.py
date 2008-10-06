@@ -150,7 +150,9 @@ system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
          
    ds9Cmd("frame %d" % frame)
 
-   if re.search("::MaskedImage<", data.__repr__()): # it's a MaskedImage; display the Image and overlay the Mask
+   if re.search("::DecoratedImage<", data.__repr__()): # it's a DecorateImage; display it
+       _mtv(data.getImage(), wcs, False)
+   elif re.search("::MaskedImage<", data.__repr__()): # it's a MaskedImage; display the Image and overlay the Mask
        _mtv(data.getImage(), wcs, False)
        mtv(data.getMask(), frame, False, wcs, False)
    elif re.search("::Mask<", data.__repr__()): # it's a Mask; display it, bitplane by bitplane

@@ -53,11 +53,14 @@ namespace image {
         Point(T x, T y) : _x(x), _y(y) {}
         Point(T const xy[2]) : _x(xy[0]), _y(xy[1]) {}
 
-        T const& getX() const { return _x; }
-        T const& getY() const { return _y; }
-        T& getX() { return _x; }
-        T& getY() { return _y; }
+        T getX() const { return _x; }
+        T getY() const { return _y; }
+        void setX(T x) { _x = x; }
+        void setY(T y) { _y = y; }
 
+        bool operator==(const Point& rhs) const { return (_x == rhs._x && _y == rhs._y); }
+        bool operator!=(const Point& rhs) const { return !(*this == rhs); }
+        
         Point operator+(const Point& rhs) const { return Point(_x + rhs._x, _y + rhs._y); }
         Point operator-(const Point& rhs) const { return Point(_x - rhs._x, _y - rhs._y); }
 #if !defined(SWIG)
@@ -345,9 +348,11 @@ namespace image {
     template<typename PixelT>
     class DecoratedImage {
     public:
-        typedef boost::shared_ptr<DecoratedImage<PixelT> > Ptr;
-        typedef boost::shared_ptr<const DecoratedImage<PixelT> > ConstPtr;
-        
+        typedef boost::shared_ptr<DecoratedImage> Ptr;
+        typedef boost::shared_ptr<const DecoratedImage> ConstPtr;
+        typedef typename Image<PixelT>::Ptr ImagePtr;
+        typedef typename Image<PixelT>::ConstPtr ImageConstPtr;
+
         explicit DecoratedImage(const int width=0, const int height=0);
         explicit DecoratedImage(const std::pair<int, int> dimensions);
         explicit DecoratedImage(typename Image<PixelT>::Ptr rhs);
@@ -381,8 +386,8 @@ namespace image {
 #endif
                       ) const;
         
-        typename Image<PixelT>::Ptr      getImage()       { return _image; }
-        typename Image<PixelT>::ConstPtr getImage() const { return _image; }
+        ImagePtr      getImage()       { return _image; }
+        ImageConstPtr getImage() const { return _image; }
         
 #if 1                                   // Old name for boost::shared_ptrs
         lsst::daf::base::DataProperty::PtrType getMetaData() const { return _metaData; }

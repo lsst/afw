@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import os
 import math
 import pdb                          # we may want to say pdb.set_trace()
@@ -26,20 +27,19 @@ class WCSTestCaseSDSS(unittest.TestCase):
     """A test case for WCS using a small (SDSS) image with a slightly weird WCS"""
 
     def setUp(self):
-        im = afwImage.ImageD()
-        im.readFits(InputSmallImagePath)
+        self.im = afwImage.DecoratedImageD(InputSmallImagePath)
 
-        self.wcs = afwImage.Wcs(im.getMetaData())
+        self.wcs = afwImage.Wcs(self.im.getMetaData())
 
         if False:
-            import lsst.afwImage.display.ds9 as ds9; ds9.mtv(im, WCS=self.wcs)
+            import lsst.afw.display.ds9 as ds9; ds9.mtv(self.im, wcs=self.wcs)
 
     def tearDown(self):
         del self.wcs
 
     def testValidWcs(self):
         """Test operator bool() (== isValid)"""
-        self.assertTrue(self.wcs.isValid())
+        self.assertTrue(self.wcs)
 
     def testInvalidWcs(self):
         """Test operator bool() (== isValid)
@@ -48,50 +48,48 @@ class WCSTestCaseSDSS(unittest.TestCase):
         MaskedImage's metadata and using that.
         """
         wcs = afwImage.Wcs()
-        self.assertFalse(wcs.isValid())
+        self.assertFalse(wcs)
 
         # Using MaskedImage with corrupt metadata 
-        maskedImage = afwImage.MaskedImageF()
-        maskedImage.readFits(InputCorruptFilePath)
-        metadata = maskedImage.getImage().getMetaData()
+        decoratedImage = afwImage.DecoratedImageF(InputCorruptFilePath + "_img.fits")
+        metadata = decoratedImage.getMetaData()
+
         corruptWcs = afwImage.Wcs(metadata)
-        self.assertTrue(corruptWcs.isValid())
-        
+        global foo;  foo = corruptWcs
+        self.assertTrue(not corruptWcs)
 
     def testraDecToColRowArguments(self):
         """Check that all the expected forms of raDecToColRow/colRowToRaDec work"""
-        raDec = afwImage.Coord2D(1,2)
+        raDec = afwImage.PointD(1,2)
         self.wcs.raDecToColRow(raDec)
         self.wcs.raDecToColRow(1, 2)
-        rowCol = afwImage.Coord2D()
-        self.wcs.raDecToColRow(raDec, rowCol)
 
     def test_RaTan_DecTan(self):
         """Check the RA---TAN, DEC--TAN WCS conversion"""
         raDec = self.wcs.colRowToRaDec(1.0, 1.0)
-        raDec0 = afwImage.Coord2D(19.1960467992, 245.1598413385) # values from wcstools' xy2sky, transposed
+        raDec0 = afwImage.PointD(19.1960467992, 245.1598413385) # values from wcstools' xy2sky, transposed
 
-        self.assertAlmostEqual(raDec.x(), raDec0.x(), 5)
-        self.assertAlmostEqual(raDec.y(), raDec0.y(), 5) # dec from ds9
+        self.assertAlmostEqual(raDec.getX(), raDec0.getX(), 5)
+        self.assertAlmostEqual(raDec.getY(), raDec0.getY(), 5) # dec from ds9
 
     def testIdentity(self):
         """Convert from ra, dec to col, row and back again"""
-        raDec = afwImage.Coord2D(20, 150)
+        raDec = afwImage.PointD(20, 150)
         rowCol = self.wcs.raDecToColRow(raDec)
         raDec2 = self.wcs.colRowToRaDec(rowCol)
 
-        self.assertAlmostEqual(raDec.x(), raDec2.x())
-        self.assertAlmostEqual(raDec.y(), raDec2.y())
+        self.assertAlmostEqual(raDec.getX(), raDec2.getX())
+        self.assertAlmostEqual(raDec.getY(), raDec2.getY())
 
     def testInvalidRaDec(self):
         """Test a conversion for an invalid position.  Well, "test" isn't
         quite right as the result is invalid, but make sure that it still is"""
-        raDec = afwImage.Coord2D(1, 2)
+        raDec = afwImage.PointD(1, 2)
         rowCol = self.wcs.raDecToColRow(raDec)
         raDec2 = self.wcs.colRowToRaDec(rowCol)
 
-        self.assertAlmostEqual(raDec2.x(), -raDec.x())
-        self.assertAlmostEqual(raDec2.y(), 180 + raDec.y())
+        self.assertAlmostEqual(raDec2.getX(), -raDec.getX())
+        self.assertAlmostEqual(raDec2.getY(), 180 + raDec.getY())
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -99,9 +97,7 @@ class WCSTestCaseCFHT(unittest.TestCase):
     """A test case for WCS"""
 
     def setUp(self):
-        im = afwImage.ImageD()
-
-        im.readFits(InputImagePath)
+        im = afwImage.DecoratedImageD(InputImagePath)
 
         self.wcs = afwImage.Wcs(im.getMetaData())
 
@@ -112,8 +108,8 @@ class WCSTestCaseCFHT(unittest.TestCase):
         """Check the RA---TAN, DEC--TAN WCS conversion"""
         raDec = self.wcs.colRowToRaDec(33.0, 1.0 ) # position read off ds9
 
-        self.assertAlmostEqual(raDec.x(), 17.87840, 5) # ra from ds9
-        self.assertAlmostEqual(raDec.y(), 7.72231, 5) # dec from ds9
+        self.assertAlmostEqual(raDec.getX(), 17.87840, 5) # ra from ds9
+        self.assertAlmostEqual(raDec.getY(), 7.72231, 5) # dec from ds9
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
