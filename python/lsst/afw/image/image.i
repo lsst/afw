@@ -88,6 +88,8 @@ SWIG_SHARED_PTR_DERIVED(NAME##TYPE##Ptr, lsst::afw::image::ImageBase<PIXEL_TYPE>
 
 /************************************************************************************************************/
 
+%ignore swap;
+
 %imagePtr(Image, U, boost::uint16_t);
 %imagePtr(Image, F, float);
 

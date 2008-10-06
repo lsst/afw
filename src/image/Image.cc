@@ -312,8 +312,7 @@ void image::Image<PixelT>::operator/=(const Image<PixelT>& rhs) {
 //
 #define INSTANTIATE(T) \
    template class image::ImageBase<T>; \
-   template class image::Image<T>; \
-   //template void image::swap(Image<T>&, Image<T>&)
+   template class image::Image<T>;
 
 INSTANTIATE(boost::uint16_t);
 INSTANTIATE(int);

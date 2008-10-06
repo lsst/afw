@@ -83,12 +83,14 @@ def version(HeadURL = r"$HeadURL$"):
 
 /******************************************************************************/
 
-%include "lsst/daf/base/Citizen.h"
+//SWIG_SHARED_PTR(CitizenPtr, lsst::daf::base::Citizen);
+
+%import "lsst/daf/base/Citizen.h"
 %import "lsst/daf/base/Persistable.h"
 %import "lsst/daf/base/DataProperty.h"
-%include "lsst/daf/data/LsstData.h"
-%include "lsst/daf/data/LsstImpl_DC3.h"
-%include "lsst/daf/data/LsstBase.h"
+%import "lsst/daf/data/LsstData.h"
+%import "lsst/daf/data/LsstImpl_DC3.h"
+%import "lsst/daf/data/LsstBase.h"
 %import "lsst/daf/data.h"
 %import "lsst/daf/persistence/Persistence.h"
 %import "lsst/pex/exceptions.h"
@@ -140,6 +142,17 @@ def version(HeadURL = r"$HeadURL$"):
 %rename(isValid) operator bool;
 
 %include "lsst/afw/image/Wcs.h"
+
+/************************************************************************************************************/
+
+#if 0
+%include "simpleFits.h"
+
+%template(writeFitsImage) writeBasicFits<boost::uint16_t>;
+%template(writeFitsImage) writeBasicFits<float>;
+%template(writeFitsImage) writeBasicFits<double>;
+//%template(writeFitsImage) writeBasicFits<lsst::afw::image::MaskPixel>; // == boost::unit16_t
+#endif
 
 /******************************************************************************/
 // Local Variables: ***

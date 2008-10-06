@@ -6,19 +6,16 @@
 
 // I doubt newobject is needed; the code seems to work just as well without it.
 %newobject lsst::afw::math::convolve;
-%newobject lsst::afw::math::Kernel::computeNewImage;
 %newobject lsst::afw::math::Kernel::getKernelParameters;
 %newobject lsst::afw::math::Kernel::getSpatialParameters;
 
-// Handle return-by-reference argument.
-%apply double& OUTPUT { double& imSum };
-
 %include "lsst/afw/math/Kernel.h"
+
 //
 // Kernel classes (every template of a class must have a unique name)
 //
-%boost_shared_ptr(KernelPtr,   lsst::afw::math::Kernel);
-%boost_shared_ptr(LinearCombinationKernelPtr,  lsst::afw::math::LinearCombinationKernel);
+SWIG_SHARED_PTR(KernelPtr,   lsst::afw::math::Kernel);
+SWIG_SHARED_PTR(LinearCombinationKernelPtr,  lsst::afw::math::LinearCombinationKernel);
 
 %template(VectorKernel)         std::vector<lsst::afw::math::Kernel::PtrT>;
 %template(VectorKernelA)        std::vector<lsst::afw::math::AnalyticKernel::PtrT>;
@@ -46,6 +43,9 @@
     %template(convolve)       lsst::afw::math::convolve<lsst::afw::image::IMAGE<PIXTYPE1>,
                                                         lsst::afw::image::IMAGE<PIXTYPE2>,
                                                         lsst::afw::math::DeltaFunctionKernel>;
+    %template(convolve)       lsst::afw::math::convolve<lsst::afw::image::IMAGE<PIXTYPE1>,
+                                                        lsst::afw::image::IMAGE<PIXTYPE2>,
+                                                        lsst::afw::math::AnalyticKernel>;
     %template(convolve)       lsst::afw::math::convolve<lsst::afw::image::IMAGE<PIXTYPE1>,
                                                         lsst::afw::image::IMAGE<PIXTYPE2>,
                                                         lsst::afw::math::SeparableKernel>;

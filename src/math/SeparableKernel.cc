@@ -55,9 +55,8 @@ lsst::afw::math::SeparableKernel::SeparableKernel(
     }
 }
 
-void lsst::afw::math::SeparableKernel::computeImage(
+double lsst::afw::math::SeparableKernel::computeImage(
     lsst::afw::image::Image<PixelT> &image,
-    PixelT &imSum,
     bool doNormalize,
     double x,
     double y
@@ -69,7 +68,7 @@ void lsst::afw::math::SeparableKernel::computeImage(
         this->setKernelParametersFromSpatialModel(x, y);
     }
     
-    basicComputeVectors(_localColList, _localRowList, imSum, doNormalize);
+    double imSum = basicComputeVectors(_localColList, _localRowList, doNormalize);
 
     for (int y = 0; y != image.getHeight(); ++y) {
         lsst::afw::image::Image<PixelT>::x_iterator imPtr = image.row_begin(y);
@@ -78,6 +77,8 @@ void lsst::afw::math::SeparableKernel::computeImage(
             *imPtr = (*colIter)*_localRowList[y];
         }
     }
+    
+    return imSum;
 }
 
 /**
@@ -87,10 +88,9 @@ void lsst::afw::math::SeparableKernel::computeImage(
  *
  * @throw lsst::pex::exceptions::InvalidParameter if colList or rowList is the wrong size
  */
-void lsst::afw::math::SeparableKernel::computeVectors(
+double lsst::afw::math::SeparableKernel::computeVectors(
     std::vector<PixelT> &colList,   ///< column vector
     std::vector<PixelT> &rowList,   ///< row vector
-    PixelT &imSum,  ///< sum of image pixels (output)
     bool doNormalize,   ///< normalize the image (so sum of each is 1)?
     double x,   ///< x (column position) at which to compute spatial function
     double y    ///< y (row position) at which to compute spatial function
@@ -102,7 +102,7 @@ void lsst::afw::math::SeparableKernel::computeVectors(
         this->setKernelParametersFromSpatialModel(x, y);
     }
     
-    return basicComputeVectors(colList, rowList, imSum, doNormalize);
+    return basicComputeVectors(colList, rowList, doNormalize);
 }
 
 /**
@@ -159,16 +159,16 @@ void lsst::afw::math::SeparableKernel::setKernelParameter(unsigned int ind, doub
  *
  * Warning: no range checking!
  */
-void lsst::afw::math::SeparableKernel::basicComputeVectors(
+double lsst::afw::math::SeparableKernel::basicComputeVectors(
     std::vector<PixelT> &colList,   ///< column vector
     std::vector<PixelT> &rowList,   ///< row vector
-    PixelT &imSum,  ///< sum of image pixels (output)
     bool doNormalize   ///< normalize the arrays (so sum of each is 1)?
 ) const {
     double colSum = 0.0;
     double colFuncValue;
     std::vector<PixelT>::iterator colIter = colList.begin();
     double xOffset = - static_cast<double>(this->getCtrX());
+
     for (double x = xOffset; colIter != colList.end(); ++colIter, x += 1.0) {
         colFuncValue = (*_kernelColFunctionPtr)(x);
         *colIter = colFuncValue;
@@ -185,6 +185,7 @@ void lsst::afw::math::SeparableKernel::basicComputeVectors(
         rowSum += rowFuncValue;
     }
 
+    double imSum = 0;                   // sum of image pixels
     if (doNormalize) {
         colIter = colList.begin();
         for ( ; colIter != colList.end(); ++colIter) {
@@ -199,4 +200,6 @@ void lsst::afw::math::SeparableKernel::basicComputeVectors(
     } else {
         imSum = colSum * rowSum;
     }
+
+    return imSum;
 }

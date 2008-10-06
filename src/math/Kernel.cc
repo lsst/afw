@@ -79,26 +79,6 @@ lsst::afw::math::Kernel::Kernel(
 //
 // Public Member Functions
 //
-
-/**
- * @brief Compute an image (pixellized representation of the kernel), returning a new image
- *
- * This would be called computeImage (overloading the other function of the same name)
- * but at least some versions of the g++ compiler cannot then reliably find the function.
- *
- * @return an image (your own copy to do with as you wish)
- */
-lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT> lsst::afw::math::Kernel::computeNewImage(
-    PixelT &imSum,  ///< sum of image pixels
-    bool doNormalize,   ///< normalize the image (so sum is 1)?
-    double x,   ///< x (column position) at which to compute spatial function
-    double y    ///< y (row position) at which to compute spatial function
-) const {
-    lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT> retImage(this->dimensions());
-    this->computeImage(retImage, imSum, doNormalize, x, y);
-    return retImage;
-}
-
 /**
  * @brief Set the parameters of all spatial functions
  *

@@ -119,23 +119,17 @@ namespace math {
         
         const std::pair<int, int> dimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
 
-        lsst::afw::image::Image<PixelT> computeNewImage(
-            PixelT &imSum,
-            bool doNormalize,
-            double x = 0.0,
-            double y = 0.0
-        ) const;        
-            
         /**
          * @brief Compute an image (pixellized representation of the kernel) in place
          *
          * x, y are ignored if there is no spatial function.
          *
+         * @note computeNewImage has been retired; it doesn't need to be a member
+         *
          * @throw lsst::pex::exceptions::InvalidParameter if the image is the wrong size
          */
-        virtual void computeImage(
+        virtual double computeImage(
             lsst::afw::image::Image<PixelT> &image,   ///< image whose pixels are to be set (output)
-            PixelT &imSum,  ///< sum of image pixels (output)
             bool doNormalize,   ///< normalize the image (so sum is 1)?
             double x = 0.0, ///< x (column position) at which to compute spatial function
             double y = 0.0  ///< y (row position) at which to compute spatial function
@@ -302,9 +296,8 @@ namespace math {
         
         virtual ~FixedKernel() {};
     
-        virtual void computeImage(
+        virtual double computeImage(
             lsst::afw::image::Image<PixelT> &image,
-            PixelT &imSum,
             bool doNormalize,
             double x = 0.0,
             double y = 0.0
@@ -362,9 +355,8 @@ namespace math {
         
         virtual ~AnalyticKernel() {};
     
-        virtual void computeImage(
+        virtual double computeImage(
             lsst::afw::image::Image<PixelT> &image,
-            PixelT &imSum,
             bool doNormalize,
             double x = 0.0,
             double y = 0.0
@@ -402,9 +394,8 @@ namespace math {
             int height
         );
 
-        virtual void computeImage(
+        virtual double computeImage(
             lsst::afw::image::Image<PixelT> &image,
-            PixelT &imSum,
             bool doNormalize,
             double x = 0.0,
             double y = 0.0
@@ -457,9 +448,8 @@ namespace math {
         
         virtual ~LinearCombinationKernel() {};
     
-        virtual void computeImage(
+        virtual double computeImage(
             lsst::afw::image::Image<PixelT> &image,
-            PixelT &imSum,
             bool doNormalize,
             double x = 0.0,
             double y = 0.0
@@ -517,18 +507,16 @@ namespace math {
                                  std::vector<Kernel::SpatialFunctionPtr> const& spatialFunctionList);
         virtual ~SeparableKernel() {};
     
-        virtual void computeImage(
+        virtual double computeImage(
             lsst::afw::image::Image<PixelT> &image,
-            PixelT &imSum,
             bool doNormalize,
             double x = 0.0,
             double y = 0.0
         ) const;
 
-        void computeVectors(
+        double computeVectors(
             std::vector<PixelT> &colList,
             std::vector<PixelT> &rowList,
-            PixelT &imSum,
             bool doNormalize,
             double x = 0.0,
             double y = 0.0
@@ -546,10 +534,9 @@ namespace math {
         virtual void setKernelParameter(unsigned int ind, double value) const;
     
     private:
-        void basicComputeVectors(
+        double basicComputeVectors(
             std::vector<PixelT> &colList,
             std::vector<PixelT> &rowList,
-            PixelT &imSum,
             bool doNormalize
         ) const;
 

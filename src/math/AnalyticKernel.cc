@@ -64,9 +64,8 @@ lsst::afw::math::AnalyticKernel::AnalyticKernel(
     }
 }
 
-void lsst::afw::math::AnalyticKernel::computeImage(
+double lsst::afw::math::AnalyticKernel::computeImage(
     lsst::afw::image::Image<PixelT> &image,
-    PixelT &imSum,
     bool doNormalize,
     double x,
     double y
@@ -83,8 +82,8 @@ void lsst::afw::math::AnalyticKernel::computeImage(
     double xOffset = -this->getCtrX();
     double yOffset = -this->getCtrY();
 
-    imSum = 0;
-    for (int y = 0; y != this->getWidth(); ++y) {
+    double imSum = 0;
+    for (int y = 0; y != this->getHeight(); ++y) {
         double const fy = y + yOffset;
         lsst::afw::image::Image<PixelT>::x_iterator ptr = image.row_begin(y);
         for (int x = 0; x != this->getWidth(); ++x, ++ptr) {
@@ -98,6 +97,8 @@ void lsst::afw::math::AnalyticKernel::computeImage(
         image /= imSum;
         imSum = 1;
     }
+
+    return imSum;
 }
 
 /**

@@ -166,6 +166,9 @@ inline typename OutImageT::Pixel::Constant lsst::afw::math::apply(
         kernelLocator += lsst::afw::image::detail::difference_type(-kWidth, 1);
     }
 
+    imageLocator  += lsst::afw::image::detail::difference_type(0, -kHeight);
+    kernelLocator += lsst::afw::image::detail::difference_type(0, -kHeight);
+
     return outValue;
 }
 
@@ -217,6 +220,8 @@ inline typename OutImageT::Pixel::Constant lsst::afw::math::apply(
         imageLocator += lsst::afw::image::detail::difference_type(-kernelXList.size(), 1);
     }
     
+    imageLocator += lsst::afw::image::detail::difference_type(0, -kernelYList.size());
+
     return outValue;
 }
 
@@ -274,13 +279,11 @@ void lsst::afw::math::basicConvolve(
             double const rowPos = lsst::afw::image::indexToPosition(cnvY);
             
             inXY_locator  inImLoc =  inImage.xy_at(0, cnvY - cnvStartY);
-            cnvX_iterator cnvImIter = convolvedImage.row_begin(cnvY) + cnvStartX;
+            cnvX_iterator cnvImIter = convolvedImage.x_at(cnvStartX, cnvY);
             for (int cnvX = cnvStartX; cnvX != cnvEndX; ++cnvX, ++inImLoc.x(), ++cnvImIter) {
                 double const colPos = lsst::afw::image::indexToPosition(cnvX);
 
-                KernelPixelT kSum;
-                kernel.computeImage(kernelImage, kSum, false, colPos, rowPos);
-
+                KernelPixelT kSum = kernel.computeImage(kernelImage, false, colPos, rowPos);
                 kXY_locator kernelLoc = kernelImage.xy_at(0,0);
                 *cnvImIter = lsst::afw::math::apply<OutImageT, InImageT>(inImLoc, kernelLoc, kWidth, kHeight);
                 if (doNormalize) {
@@ -290,13 +293,13 @@ void lsst::afw::math::basicConvolve(
         }
     } else {                            // kernel is spatially invariant
         lsst::pex::logging::Trace("lsst.afw.kernel.convolve", 3, "kernel is spatially invariant");
-        KernelPixelT kSum;
-        KernelImageT kernelImage = kernel.computeNewImage(kSum, doNormalize);
+        KernelImageT kernelImage(kernel.dimensions());
+        (void)kernel.computeImage(kernelImage, doNormalize);
 
         for (int cnvY = cnvStartY; cnvY != cnvEndY; ++cnvY) {
             inXY_locator inImLoc =  inImage.xy_at(0, cnvY - cnvStartY);
-            for (cnvX_iterator cnvImIter = convolvedImage.row_begin(cnvY) + cnvStartX,
-                     cnvImEnd = cnvImIter + cnvEndX - cnvStartX; cnvImIter != cnvImEnd; ++inImLoc.x(), ++cnvImIter) {
+            for (cnvX_iterator cnvImIter = convolvedImage.x_at(cnvStartX, cnvY),
+                     cnvImEnd = convolvedImage.x_at(cnvEndX, cnvY); cnvImIter != cnvImEnd; ++inImLoc.x(), ++cnvImIter) {
                 kXY_locator kernelLoc = kernelImage.xy_at(0,0);
                 *cnvImIter = lsst::afw::math::apply<OutImageT, InImageT>(inImLoc, kernelLoc, kWidth, kHeight);
             }
@@ -387,7 +390,7 @@ void lsst::afw::math::basicConvolve(
     if (kernel.isSpatiallyVarying()) {
         lsst::pex::logging::Trace("lsst.afw.kernel.convolve", 3, "kernel is a spatially varying separable kernel");
 
-        for (int cnvY = cnvStartY; cnvY < cnvEndY; ++cnvY) {
+        for (int cnvY = cnvStartY; cnvY != cnvEndY; ++cnvY) {
             double const rowPos = lsst::afw::image::indexToPosition(cnvY);
             
             inXY_locator  inImLoc =  inImage.xy_at(0, cnvY - cnvStartY);
@@ -395,8 +398,7 @@ void lsst::afw::math::basicConvolve(
             for (int cnvX = cnvStartX; cnvX != cnvEndX; ++cnvX, ++inImLoc.x(), ++cnvImIter) {
                 double const colPos = lsst::afw::image::indexToPosition(cnvX);
 
-                KernelPixelT kSum;
-                kernel.computeVectors(kXVec, kYVec, kSum, doNormalize, colPos, rowPos);
+                KernelPixelT kSum = kernel.computeVectors(kXVec, kYVec, doNormalize, colPos, rowPos);
 
                 *cnvImIter = lsst::afw::math::apply<OutImageT, InImageT>(inImLoc, kXVec, kYVec);
                 if (doNormalize) {
@@ -408,8 +410,7 @@ void lsst::afw::math::basicConvolve(
         // kernel is spatially invariant
         lsst::pex::logging::Trace("lsst.afw.kernel.convolve", 3, "kernel is a spatially invariant separable kernel");
 
-        KernelPixelT kSum;
-        kernel.computeVectors(kXVec, kYVec, kSum, doNormalize);
+        (void)kernel.computeVectors(kXVec, kYVec, doNormalize);
 
         for (int cnvY = cnvStartY; cnvY != cnvEndY; ++cnvY) {
             inXY_locator inImLoc =  inImage.xy_at(0, cnvY - cnvStartY);

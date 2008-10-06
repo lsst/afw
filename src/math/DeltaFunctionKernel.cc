@@ -35,9 +35,8 @@ lsst::afw::math::DeltaFunctionKernel::DeltaFunctionKernel(
     }
 }
 
-void lsst::afw::math::DeltaFunctionKernel::computeImage(
+double lsst::afw::math::DeltaFunctionKernel::computeImage(
     lsst::afw::image::Image<PixelT> &image,
-    PixelT &imSum,
     bool doNormalize,
     double x,
     double y
@@ -50,7 +49,9 @@ void lsst::afw::math::DeltaFunctionKernel::computeImage(
     const int pixelY = getPixel().second;
 
     image = 0;
-    *image.xy_at(pixelX, pixelY) = imSum = 1;
+    *image.xy_at(pixelX, pixelY) = 1;
+
+    return 1;
 }
 
 std::string lsst::afw::math::DeltaFunctionKernel::toString(std::string prefix) const {

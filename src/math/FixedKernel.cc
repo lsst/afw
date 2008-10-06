@@ -43,9 +43,8 @@ lsst::afw::math::FixedKernel::FixedKernel(
 //
 // Member Functions
 //
-void lsst::afw::math::FixedKernel::computeImage(
+double lsst::afw::math::FixedKernel::computeImage(
     lsst::afw::image::Image<PixelT> &image,
-    PixelT &imSum,
     bool doNormalize,
     double x,
     double y
@@ -54,12 +53,11 @@ void lsst::afw::math::FixedKernel::computeImage(
         throw lsst::pex::exceptions::InvalidParameter("image is the wrong size");
     }
 
-    double multFactor;
+    double multFactor = 1.0;
+    double imSum = 1.0;
     if (doNormalize) {
         multFactor = 1.0/static_cast<double>(this->_sum);
-        imSum = 1;
     } else {
-        multFactor = 1.0;
         imSum = this->_sum;
     }
 
@@ -71,6 +69,8 @@ void lsst::afw::math::FixedKernel::computeImage(
             imRow[0] = multFactor*kRow[0];
         }
     }
+
+    return imSum;
 }
 
 std::string lsst::afw::math::FixedKernel::toString(std::string prefix) const {

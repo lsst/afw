@@ -150,10 +150,10 @@ system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
          
    ds9Cmd("frame %d" % frame)
 
-   if re.search("::MaskedImage<", data.repr()): # it's a MaskedImage; display the Image and overlay the Mask
+   if re.search("::MaskedImage<", data.__repr__()): # it's a MaskedImage; display the Image and overlay the Mask
        _mtv(data.getImage(), wcs, False)
        mtv(data.getMask(), frame, False, wcs, False)
-   elif re.search("::Mask<", data.repr()): # it's a Mask; display it, bitplane by bitplane
+   elif re.search("::Mask<", data.__repr__()): # it's a Mask; display it, bitplane by bitplane
        nMaskPlanes = data.getNumPlanesUsed()
        maskPlanes = data.getMaskPlaneDict()
        cols, rows = data.getCols(), data.getRows()
@@ -182,10 +182,10 @@ system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
                setMaskColor(color)
                _mtv(mask, wcs, True)
        return
-   elif re.search("::Image<", data.repr()): # it's an Image; display it
+   elif re.search("::Image<", data.__repr__()): # it's an Image; display it
        _mtv(data, wcs, False)
    else:
-       raise RuntimeError, "Unsupported type %s" % data.repr()
+       raise RuntimeError, "Unsupported type %s" % data.__repr__()
 
 def _mtv(data, wcs=None, isMask=False):
    """Internal routine to display an Image or Mask on a DS9 display"""

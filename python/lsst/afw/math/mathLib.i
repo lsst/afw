@@ -46,11 +46,10 @@ Python interface to lsst::afw::math classes
 %inline %{
 namespace lsst { namespace afw { namespace image { } } }
 namespace lsst { namespace daf { namespace data { } } }
-namespace vw {}
+namespace boost { namespace mpl { } }
     
 using namespace lsst::afw::image;
 using namespace lsst::daf::data;
-using namespace vw;
 %}
 
 %include "lsst/p_lsstSwig.i"
@@ -90,6 +89,10 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 %import "lsst/daf/data/LsstBase.h"
 %import "lsst/afw/image/Image.h"
 %import "lsst/afw/image/Mask.h"
+
+%import "lsst/afw/image/image.i"
+%import "lsst/afw/image/mask.i"
+%import "lsst/afw/image/maskedImage.i"
 
 %include "functionLib.i"
 %include "kernelLib.i"

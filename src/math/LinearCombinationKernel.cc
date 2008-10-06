@@ -80,9 +80,8 @@ lsst::afw::math::LinearCombinationKernel::LinearCombinationKernel(
     _computeKernelImageList();
 }
 
-void lsst::afw::math::LinearCombinationKernel::computeImage(
+double lsst::afw::math::LinearCombinationKernel::computeImage(
     lsst::afw::image::Image<PixelT> &image,
-    PixelT &imSum,
     bool doNormalize,
     double x,
     double y
@@ -113,12 +112,14 @@ void lsst::afw::math::LinearCombinationKernel::computeImage(
         image += *tmpImage;
     }
 
-    imSum = 0;
+    double imSum = 0;
     std::accumulate(image.begin(), image.end(), imSum);
     if (doNormalize) {
         image /= imSum;
         imSum = 1;
     }
+
+    return imSum;
 }
 
 /**
@@ -199,8 +200,7 @@ void lsst::afw::math::LinearCombinationKernel::_computeKernelImageList() {
     for (KernelList::const_iterator kIter = _kernelList.begin(), kEnd = _kernelList.end(); kIter != kEnd; ++kIter) {
         lsst::afw::image::Image<PixelT>::Ptr kernelImagePtr(new lsst::afw::image::Image<PixelT>(this->dimensions()));
 
-        PixelT kSum;
-        (*kIter)->computeImage(*kernelImagePtr, kSum, false);
+        (void)(*kIter)->computeImage(*kernelImagePtr, false);
 
         _kernelImagePtrList.push_back(kernelImagePtr);
     }

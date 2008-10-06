@@ -106,6 +106,6 @@ void image::DecoratedImage<PixelT>::DecoratedImage::writeFits(
 // Explicit instantiations
 //
 template class image::DecoratedImage<boost::uint16_t>;
-//template class image::DecoratedImage<int>;
+template class image::DecoratedImage<int>;
 template class image::DecoratedImage<float>;
-//template class image::DecoratedImage<double>; // not yet available as a gray64_noscale due to RHL's laziness
+template class image::DecoratedImage<double>;

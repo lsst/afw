@@ -1,5 +1,5 @@
 # -*- python -*-
 Import("env")
 
-env.CheckSwig("python", ilang="c++", includedProducts="utils")
+env.CheckSwig("python", ilang="c++", includedProducts="utils afw")
 env.LoadableModuleIncomplete("_mathLib", Split("mathLib.i"), LIBS=env.getlibs("afw"))

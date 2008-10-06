@@ -7,6 +7,7 @@
 #ifndef LSST_IMAGE_MASKEDIMAGE_H
 #define LSST_IMAGE_MASKEDIMAGE_H
 
+#include <ostream>
 #include <list>
 #include <map>
 #include <string>
@@ -227,6 +228,21 @@ namespace image {
             LSST_MASKED_IMAGE_PIXEL_OPERATOR_X(/, /=);
 
 #undef LSST_MASKED_IMAGE_PIXEL_OPERATOR_X
+
+            bool operator==(ImagePixelT const rhs) {
+                return image() == rhs;
+            }
+            bool operator==(Pixel const& rhs) {
+                return image() == rhs.image() && mask() == rhs.mask() && variance() == rhs.variance();
+            }
+
+            bool operator!=(ImagePixelT const rhs) {
+                return !(image() == rhs);
+            }
+            bool operator!=(Pixel const& rhs) {
+                return !(image() == rhs.image() && mask() == rhs.mask() && variance() == rhs.variance());
+            }
+
         private:
             ImagePixelT& _image;
             MaskPixelT& _mask;
@@ -291,6 +307,12 @@ namespace image {
             VariancePixelT _variance;
         };
 
+        friend std::ostream& operator<<(std::ostream& s, const PixelConstant& pix) {
+            s << "(" << pix.image() << " : " << pix.mask() << " : " << pix.variance() << ")";
+            
+            return s;
+        }
+        
         /************************************************************************************************************/
 
         template<typename ImageIterator, typename MaskIterator, typename VarianceIterator,

@@ -29,8 +29,8 @@ lsst::afw::math::printKernel(
 ) {
     typedef lsst::afw::math::Kernel::PixelT PixelT;
 
-    PixelT kSum;
-    lsst::afw::image::Image<PixelT> kImage = kernel.computeNewImage(kSum, doNormalize, x, y);
+    lsst::afw::image::Image<PixelT> kImage(kernel.dimensions());
+    double kSum = kernel.computeImage(kImage, doNormalize, x, y);
 
     for (int y = kImage.getHeight() - 1; y >= 0; --y) {
         for (lsst::afw::image::Image<PixelT>::const_x_iterator ptr = kImage.row_begin(y);

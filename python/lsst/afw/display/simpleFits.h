@@ -9,15 +9,15 @@ namespace lsst {
 namespace afw {
 namespace display {
 
-template<typename ImageT>
-void writeBasicFits(int fd,                // file descriptor to write to
-                    ImageT const& data,    // The data to write
-                    lsst::afw::image::Wcs const* Wcs = NULL); // which Wcs to use for pixel
+template<typename PixelT>
+void writeBasicFits(int fd,                                      // file descriptor to write to
+                    lsst::afw::image::Image<PixelT> const& data, // The data to write
+                    lsst::afw::image::Wcs const* Wcs = NULL);    // which Wcs to use for pixel
 
-template<typename ImageT>
-void writeBasicFits(std::string const& filename, // file to write, or "| cmd"
-                    ImageT const& data,          // The data to write
-                    lsst::afw::image::Wcs const* Wcs = NULL); // which Wcs to use for pixel
+template<typename PixelT>
+void writeBasicFits(std::string const& filename,                 // file to write, or "| cmd"
+                    lsst::afw::image::Image<PixelT> const& data, // The data to write
+                    lsst::afw::image::Wcs const* Wcs = NULL);    // which Wcs to use for pixel
 
 }}} // namespace lsst::afw::display
 #endif
