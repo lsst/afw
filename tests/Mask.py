@@ -151,7 +151,12 @@ class MaskTestCase(unittest.TestCase):
             print >> sys.stderr, "Warning: afwdata is not set up; not running the FITS I/O tests"
             return
 
-        mask = afwImage.MaskU(self.maskFile, True)
+        hdu = 0
+        mask = afwImage.MaskU(self.maskFile, hdu, None, True)
+
+        if False:
+            import lsst.afw.display.ds9 as ds9
+            ds9.mtv(mask)
 
         if False:
             for (k, v) in afwImage.MaskU_getMaskPlaneDict().items():

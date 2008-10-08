@@ -70,7 +70,7 @@
 template<typename ImageT, typename MaskT, typename VarianceT> 
 lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure(int cols, ///< number of columns (default: 0)
                                                                int rows, ///< number of rows (default: 0)
-                                                               lsst::afw::image::Wcs const &wcs  ///< the Wcs
+                                                               lsst::afw::image::Wcs const& wcs ///< the Wcs
                                                               ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _metaData(lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData")),
@@ -82,8 +82,8 @@ lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure(int cols, ///< nu
   */               
 template<typename ImageT, typename MaskT, typename VarianceT> 
 lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure(
-    lsst::afw::image::MaskedImage<ImageT, MaskT, VarianceT> const &maskedImage, ///< the MaskedImage
-    lsst::afw::image::Wcs const &wcs                                            ///< the Wcs
+    lsst::afw::image::MaskedImage<ImageT, MaskT, VarianceT> &maskedImage, ///< the MaskedImage
+    lsst::afw::image::Wcs const& wcs                                      ///< the Wcs
     ) : 
     lsst::daf::data::LsstBase(typeid(this)),
     _metaData(lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData")),
@@ -102,9 +102,9 @@ lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure(
   * is not fully contained by the original MaskedImage BBox.
   */        
 template<typename ImageT, typename MaskT, typename VarianceT> 
-lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &src,
-                                                               BBox const& bbox,
-                                                               bool const deep) :
+lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &src, ///< Parent Exposure
+                                                               BBox const& bbox,    ///< Desired region in Exposure 
+                                                               bool const deep) :   ///< Should we make copy of pixels?
     lsst::daf::data::LsstBase(typeid(this)),
     _metaData(lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData")),
     _maskedImage(src.getMaskedImage(), bbox, deep),
@@ -128,13 +128,13 @@ lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &s
   * read or the base file name could not be found.
   */
 template<typename ImageT, typename MaskT, typename VarianceT> 
-lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure(std::string const& expInFile, ///< Exposure's base input file name
+lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure(std::string const& baseName, ///< Exposure's base input file name
                                                                int const hdu,                ///< Desired HDU
                                                                bool conformMasks  //!< Make Mask conform to mask layout in file?
                                                          ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _metaData(lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData")),
-    _maskedImage(expInFile, hdu, _metaData, conformMasks),
+    _maskedImage(baseName, hdu, _metaData, conformMasks),
     _wcsPtr(new lsst::afw::image::Wcs(_metaData))
 {
     ;

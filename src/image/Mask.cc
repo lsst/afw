@@ -6,6 +6,7 @@
 
 #include "boost/lambda/lambda.hpp"
 #include "boost/format.hpp"
+#include "boost/filesystem/path.hpp"
 
 #include "lsst/daf/base.h"
 #include "lsst/daf/data/LsstBase.h"
@@ -121,6 +122,10 @@ image::Mask<MaskPixelT>::Mask(std::string const& fileName, //!< Name of file to 
         lsst::afw::image::detail::types_traits<unsigned short>::image_t,
         lsst::afw::image::detail::types_traits<short>::image_t
     > fits_mask_types;
+
+    if (!boost::filesystem::exists(fileName)) {
+        throw lsst::pex::exceptions::NotFound(boost::format("File %s doesn't exist") % fileName);
+    }
 
     if (!image::fits_read_image<fits_mask_types>(fileName, *_getRawImagePtr(), _metaData)) {
         throw lsst::pex::exceptions::FitsError(boost::format("Failed to read %s HDU %d") % fileName % hdu);

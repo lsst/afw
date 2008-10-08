@@ -83,7 +83,7 @@ def version(HeadURL = r"$HeadURL$"):
 
 /******************************************************************************/
 
-//SWIG_SHARED_PTR(CitizenPtr, lsst::daf::base::Citizen);
+SWIG_SHARED_PTR(DataPropertyPtr, lsst::daf::base::DataProperty);
 
 %import "lsst/daf/base/Citizen.h"
 %import "lsst/daf/base/Persistable.h"
@@ -123,6 +123,23 @@ def version(HeadURL = r"$HeadURL$"):
 /************************************************************************************************************/
 
 %{
+    #include "lsst/afw/image/Wcs.h"
+%}
+
+%rename(isValid) operator bool;
+
+SWIG_SHARED_PTR(WcsPtr, lsst::afw::image::Wcs);
+
+%include "lsst/afw/image/Wcs.h"
+
+/************************************************************************************************************/
+
+SWIG_SHARED_PTR(ExposureUPtr, lsst::afw::image::Exposure<boost::uint16_t>);
+SWIG_SHARED_PTR(ExposureIPtr, lsst::afw::image::Exposure<int>);
+SWIG_SHARED_PTR(ExposureFPtr, lsst::afw::image::Exposure<float>);
+SWIG_SHARED_PTR(ExposureDPtr, lsst::afw::image::Exposure<double>);
+
+%{
 #include "lsst/afw/image/Exposure.h"
 %}
 
@@ -132,16 +149,6 @@ def version(HeadURL = r"$HeadURL$"):
 %template(ExposureI)    lsst::afw::image::Exposure<int>;
 %template(ExposureF)    lsst::afw::image::Exposure<float>;
 %template(ExposureD)    lsst::afw::image::Exposure<double>;
-
-/************************************************************************************************************/
-
-%{
-    #include "lsst/afw/image/Wcs.h"
-%}
-
-%rename(isValid) operator bool;
-
-%include "lsst/afw/image/Wcs.h"
 
 /************************************************************************************************************/
 

@@ -44,8 +44,8 @@ namespace image {
     public:    
         // Class Constructors and Destructor
         explicit Exposure(int const cols=0, int const rows=0, Wcs const& wcs=Wcs());
-        explicit Exposure(MaskedImage<ImageT, MaskT, VarianceT> const& maskedImage, Wcs const& wcs=Wcs());
-        explicit Exposure(std::string const &file, int const hdu=0, bool const conformMasks=false);
+        explicit Exposure(MaskedImage<ImageT, MaskT, VarianceT> & maskedImage, Wcs const& wcs=Wcs());
+        explicit Exposure(std::string const &baseName, int const hdu=0, bool const conformMasks=false);
 
         Exposure(Exposure const &src, BBox const& bbox, bool const deep=false);
 
@@ -58,10 +58,10 @@ namespace image {
         
         // Set Members
         void setMaskedImage(MaskedImage<ImageT, MaskT, VarianceT> &maskedImage);
-        void setWcs(Wcs const &wcs);
+        void setWcs(Wcs const& wcs);
         
         // Has Member (inline)
-        bool hasWcs() const { return static_cast<bool>(_wcsPtr); };
+        bool hasWcs() const { return static_cast<bool>(*_wcsPtr); };
         
         // FITS
         void writeFits(std::string const &expOutFile) const;

@@ -2,6 +2,7 @@
 #include "boost/mpl/vector.hpp"
 #include "boost/lambda/lambda.hpp"
 #include "boost/format.hpp"
+#include "boost/filesystem/path.hpp"
 #include "boost/gil/gil_all.hpp"
 
 #include "lsst/pex/exceptions.h"
@@ -234,6 +235,10 @@ image::Image<PixelT>::Image(const std::string& fileName, ///< File to read
         lsst::afw::image::detail::types_traits<float>::image_t // ,
         //lsst::afw::image::detail::types_traits<double>::image_t
     > fits_img_types;
+
+    if (!boost::filesystem::exists(fileName)) {
+        throw lsst::pex::exceptions::NotFound(boost::format("File %s doesn't exist") % fileName);
+    }
 
     if (!image::fits_read_image<fits_img_types>(fileName, *this->_getRawImagePtr(), metaData)) {
         throw lsst::pex::exceptions::FitsError(boost::format("Failed to read %s HDU %d") % fileName % hdu);

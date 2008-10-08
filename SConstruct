@@ -46,6 +46,7 @@ for d in (
     "python/lsst/afw/display",
     "python/lsst/afw/image",
     "python/lsst/afw/math",
+    "python/lsst/afw/bug",
     "tests",
 ):
     if d != ".":

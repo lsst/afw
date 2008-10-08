@@ -18,6 +18,7 @@ Basic routines to talk to ds9
 #pragma SWIG nowarn=389
 
 %{
+#   include <boost/cstdint.hpp>
 #   include <boost/shared_ptr.hpp>
 #   include <boost/any.hpp>
 #   include <boost/array.hpp>
@@ -34,7 +35,10 @@ Basic routines to talk to ds9
 %}
 
 %inline %{
-namespace boost { namespace mpl { } } 
+namespace boost {
+    typedef unsigned short uint16_t;
+    namespace mpl { }
+} 
 namespace lsst { namespace afw { namespace display { } } }
 namespace lsst { namespace afw { namespace image { } } }
 namespace lsst { namespace daf { namespace data { } } }
@@ -72,10 +76,12 @@ SWIG_SHARED_PTR(CitizenPtr, lsst::daf::base::Citizen);
 
 %include "simpleFits.h"
 
-%template(writeFitsImage) writeBasicFits<boost::uint16_t>;
-%template(writeFitsImage) writeBasicFits<float>;
-%template(writeFitsImage) writeBasicFits<double>;
+%template(writeFitsImage) writeBasicFits<lsst::afw::image::Image<boost::uint16_t> >;
+%template(writeFitsImage) writeBasicFits<lsst::afw::image::Image<float> >;
+%template(writeFitsImage) writeBasicFits<lsst::afw::image::Image<double> >;
 //%template(writeFitsImage) writeBasicFits<lsst::afw::image::MaskPixel>; // == boost::unit16_t
+
+%template(writeFitsImage) writeBasicFits<lsst::afw::image::Mask<boost::uint16_t> >;
 
 /******************************************************************************/
 // Local Variables: ***

@@ -158,7 +158,6 @@ system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
    elif re.search("::Mask<", data.__repr__()): # it's a Mask; display it, bitplane by bitplane
        nMaskPlanes = data.getNumPlanesUsed()
        maskPlanes = data.getMaskPlaneDict()
-       cols, rows = data.getCols(), data.getRows()
 
        planes = {}                      # build inverse dictionary
        for key in maskPlanes.keys():
@@ -170,7 +169,7 @@ system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
                if not getMaskPlaneVisibility(planes[p]):
                    continue
 
-               mask = data.getSubMask(afwImage.BBox2i(0, 0, cols, rows)) # the only way to get a copy
+               mask = afwImage.MaskU(data, True)
                mask &= (1 << p)
 
                color = getMaskPlaneColor(planes[p])
@@ -204,10 +203,7 @@ def _mtv(data, wcs=None, isMask=False):
 
    try:
        #import pdb; pdb.set_trace()
-       try:
-           displayLib.writeFitsImage(pfd.fileno(), data, wcs)
-       except NotImplementedError:
-           displayLib.writeFitsImage(pfd.fileno(), data.get(), wcs)
+       displayLib.writeFitsImage(pfd.fileno(), data, wcs)
    except Exception, e:
        try:
            pfd.close()

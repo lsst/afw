@@ -75,4 +75,3 @@ SWIG_SHARED_PTR_DERIVED(NAME##TYPE##Ptr, lsst::afw::image::ImageBase<PIXEL_TYPE>
 %include "lsst/afw/image/Mask.h"
 
 %mask(Mask, U, boost::uint16_t);
-

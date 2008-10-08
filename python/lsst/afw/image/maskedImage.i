@@ -12,17 +12,17 @@
 //    SWIG_SHARED_PTR(NAME##BasePtr, lsst::afw::image::ImageBase<PIXEL_TYPE>);
 //
 //
-%define %maskedImagePtr(NAME, TYPE, PIXEL_TYPE...)
-SWIG_SHARED_PTR(NAME##TYPE##Ptr, lsst::afw::image::MaskedImage<PIXEL_TYPE>);
+%define %maskedImagePtr(NAME, TYPE, PIXEL_TYPES...)
+SWIG_SHARED_PTR(NAME##TYPE##Ptr, lsst::afw::image::MaskedImage<PIXEL_TYPES>);
 %enddef
 
 //
 // Must go After the %include
 //
-%define %maskedImage(NAME, TYPE, PIXEL_TYPE...)
-%template(NAME##TYPE) lsst::afw::image::MaskedImage<PIXEL_TYPE>;
+%define %maskedImage(NAME, TYPE, PIXEL_TYPES...)
+%template(NAME##TYPE) lsst::afw::image::MaskedImage<PIXEL_TYPES>;
 
-%extend lsst::afw::image::MaskedImage<PIXEL_TYPE> {
+%extend lsst::afw::image::MaskedImage<PIXEL_TYPES> {
     %pythoncode {
     def set(self, x, row, values):
         """Set the point (x, row) to a triple (value, mask, variance)"""
@@ -112,9 +112,8 @@ SWIG_SHARED_PTR(NAME##TYPE##Ptr, lsst::afw::image::MaskedImage<PIXEL_TYPE>);
 %ignore lsst::afw::image::MaskedImage::x_at;
 %ignore lsst::afw::image::MaskedImage::xy_at;
 
-%maskedImagePtr(MaskedImage, F, float);
+%maskedImagePtr(MaskedImage, F, float, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
 
 %include "lsst/afw/image/MaskedImage.h"
 
-%maskedImage(MaskedImage, F, float);
-
+%maskedImage(MaskedImage, F, float, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);

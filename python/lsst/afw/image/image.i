@@ -94,7 +94,9 @@ SWIG_SHARED_PTR(Decorated##NAME##TYPE##Ptr, lsst::afw::image::DecoratedImage<PIX
 %ignore swap;
 
 %imagePtr(Image, U, boost::uint16_t);
+%imagePtr(Image, I, int);
 %imagePtr(Image, F, float);
+%imagePtr(Image, D, double);
 
 %include "lsst/afw/image/Image.h"
 

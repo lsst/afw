@@ -158,7 +158,7 @@ inline typename OutImageT::Pixel::Constant lsst::afw::math::apply(
             if (kVal != 0)
 #endif
             {
-                outValue = outValue + *imageLocator*InImageT::PixelCast(kVal);
+                outValue = outValue + *imageLocator*kVal;
             }
         }
 
@@ -205,7 +205,7 @@ inline typename OutImageT::Pixel::Constant lsst::afw::math::apply(
             if (kValX != 0)
 #endif
             {
-                outValueY = outValueY + *imageLocator*InImageT::PixelCast(kValX);
+                outValueY = outValueY + *imageLocator*kValX;
             }
         }
         
@@ -214,7 +214,7 @@ inline typename OutImageT::Pixel::Constant lsst::afw::math::apply(
         if (kValY != 0)
 #endif
         {
-            outValue = outValue + outValueY*InImageT::PixelCast(kValY);
+            outValue = outValue + outValueY*kValY;
         }
         
         imageLocator += lsst::afw::image::detail::difference_type(-kernelXList.size(), 1);

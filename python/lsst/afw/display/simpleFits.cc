@@ -297,16 +297,16 @@ namespace {
 
 namespace lsst { namespace afw { namespace display {
 
-template<typename PixelT>
-void writeBasicFits(int fd,                // file descriptor to write to
-                    image::Image<PixelT> const& data,    // The data to write
-                    image::Wcs const* Wcs // which Wcs to use for pixel
+template<typename ImageT>
+void writeBasicFits(int fd,                                      // file descriptor to write to
+                    ImageT const& data,                          // The data to write
+                    image::Wcs const* Wcs                        // which Wcs to use for pixel
                    ) {
     /*
      * What sort if image is it?
      */
     int const bitpix = image::detail::fits_read_support_private<
-    typename image::detail::types_traits<typename image::Image<PixelT>::Pixel::type>::view_t>::BITPIX;
+    typename image::detail::types_traits<typename ImageT::Pixel::type>::view_t>::BITPIX;
     
     if (bitpix == 0) {
         throw lsst::pex::exceptions::Runtime(boost::format("Unsupported image type"));
@@ -371,10 +371,10 @@ void writeBasicFits(int fd,                // file descriptor to write to
 
 /******************************************************************************/
 
-template<typename PixelT>
-void writeBasicFits(std::string const& filename, // file to write, or "| cmd"
-                    image::Image<PixelT> const& data,          // The data to write
-                    image::Wcs const* Wcs // which Wcs to use for pixel
+template<typename ImageT>
+void writeBasicFits(std::string const& filename,                 // file to write, or "| cmd"
+                    ImageT const& data,                          // The data to write
+                    image::Wcs const* Wcs                        // which Wcs to use for pixel
                    ) {
     int fd;
     if ((filename.c_str())[0] == '|') {		// a command
@@ -402,13 +402,18 @@ void writeBasicFits(std::string const& filename, // file to write, or "| cmd"
     (void)close(fd);
 }
 
-#define INSTANTIATE(T) \
-    template void writeBasicFits<T>(int, image::Image<T> const&, image::Wcs const *); \
-    template void writeBasicFits<T>(std::string const&, image::Image<T> const&, image::Wcs const *)
+#define INSTANTIATE(IMAGET)                                            \
+    template void writeBasicFits(int,                IMAGET const&, image::Wcs const *); \
+    template void writeBasicFits(std::string const&, IMAGET const&, image::Wcs const *)
 
-INSTANTIATE(boost::uint16_t);
-INSTANTIATE(int);
-INSTANTIATE(float);
-INSTANTIATE(double);
+#define INSTANTIATE_IMAGE(T) INSTANTIATE(lsst::afw::image::Image<T>)
+#define INSTANTIATE_MASK(T)  INSTANTIATE(lsst::afw::image::Mask<T>)
 
+INSTANTIATE_IMAGE(boost::uint16_t);
+INSTANTIATE_IMAGE(int);
+INSTANTIATE_IMAGE(float);
+INSTANTIATE_IMAGE(double);
+
+INSTANTIATE_MASK(boost::uint16_t);
+            
 }}}
