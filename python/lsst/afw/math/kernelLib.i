@@ -8,14 +8,22 @@
 %newobject lsst::afw::math::convolve;
 %newobject lsst::afw::math::Kernel::getKernelParameters;
 %newobject lsst::afw::math::Kernel::getSpatialParameters;
-
-%include "lsst/afw/math/Kernel.h"
-
 //
 // Kernel classes (every template of a class must have a unique name)
 //
-SWIG_SHARED_PTR(KernelPtr,   lsst::afw::math::Kernel);
-SWIG_SHARED_PTR(LinearCombinationKernelPtr,  lsst::afw::math::LinearCombinationKernel);
+%define %kernelPtr(TYPE...)
+SWIG_SHARED_PTR_DERIVED(TYPE##Ptr, lsst::afw::math::Kernel, lsst::afw::math::TYPE);
+%enddef
+
+SWIG_SHARED_PTR(KernelPtr, lsst::afw::math::Kernel); // the base class
+
+%kernelPtr(AnalyticKernel);
+%kernelPtr(DeltaFunctionKernel);
+%kernelPtr(FixedKernel);
+%kernelPtr(LinearCombinationKernel);
+%kernelPtr(SeparableKernel);
+
+%include "lsst/afw/math/Kernel.h"
 
 %template(VectorKernel)         std::vector<lsst::afw::math::Kernel::PtrT>;
 %template(VectorKernelA)        std::vector<lsst::afw::math::AnalyticKernel::PtrT>;
