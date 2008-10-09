@@ -130,23 +130,12 @@ def makeGaussianKernelVec(kCols, kRows):
 class ConvolveTestCase(unittest.TestCase):
     def setUp(self):
         self.width, self.height = 45, 55
-        
-        if False:
-            self.width, self.height = 10, 10
-            
-            self.inImage = afwImage.ImageF(self.width, self.height)
-            self.inImage.set(0);  self.inImage.set(3, 4, 100);
 
-            if True:
-                for y in range(0, self.inImage.getHeight()):
-                    for x in range(0, self.inImage.getWidth()):
-                        self.inImage.set(x, y, x)
-        else:
-            fullImage = afwImage.ImageF(InputImagePath)
+        fullImage = afwImage.ImageF(InputImagePath)
             
-            # pick a small piece of the image to save time
-            bbox = afwImage.BBox(afwImage.PointI(50, 50), self.width, self.height)
-            self.inImage = afwImage.ImageF(fullImage, bbox)
+        # pick a small piece of the image to save time
+        bbox = afwImage.BBox(afwImage.PointI(50, 50), self.width, self.height)
+        self.inImage = afwImage.ImageF(fullImage, bbox)
 
     def tearDown(self):
         del self.inImage
@@ -160,7 +149,6 @@ class ConvolveTestCase(unittest.TestCase):
         # create a delta function kernel that has 1,1 in the center
         kFunc = afwMath.IntegerDeltaFunction2D(0.0, 0.0)
         k = afwMath.AnalyticKernel(kFunc, 3, 3)
-        k = afwMath.AnalyticKernel(kFunc, 5, 1)
 
         cnvImage = afwImage.ImageF(self.inImage.dimensions())
         afwMath.convolve(cnvImage, self.inImage, k, True)

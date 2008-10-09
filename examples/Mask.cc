@@ -2,13 +2,13 @@
 #include <string>
 #include <algorithm>
 #include "lsst/afw/image/Mask.h"
+#include "lsst/afw/image/LsstImageTypes.h"
 
 using namespace lsst::afw::image;
 
 /************************************************************************************************************/
 
 int main() {
-#if 1
     Mask<MaskPixel> img(10, 6);
     // This is equivalent to mask = 100:
     for (Mask<MaskPixel>::iterator ptr = img.begin(); ptr != img.end(); ++ptr) {
@@ -54,14 +54,13 @@ int main() {
     for (int r = 0; r != img.getHeight(); ++r) {
         std::fill(img.row_begin(r), img.row_end(r), 100*(1 + r));
     }
-#else
+
     Mask<MaskPixel> msk("/u/rhl/LSST/DMS/afwdata/small_MI_msk.fits");
-    printf("msk(0,0) = %d\n", msk(0,0)[0]);
+    printf("msk(0,0) = %d\n", msk(0,0));
     
     DecoratedImage<unsigned short> dimg("/u/rhl/LSST/DMS/afwdata/small_MI_msk.fits");
     //Image<unsigned short>::Ptr img = dimg.getImage();
-    printf("dimg(0,0) = %d\n", (*(dimg.getImage()))(0,0)[0]);
-#endif
+    printf("dimg(0,0) = %d\n", (*(dimg.getImage()))(0,0));
 
     return 0;
 }

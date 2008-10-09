@@ -30,8 +30,6 @@ namespace afw {
     }
 namespace image {
     // all masks will initially be instantiated with the same pixel type
-    typedef boost::uint16_t MaskPixel;
-
     namespace detail {
         struct mask_tag : detail::basic_tag { };
     }

@@ -31,6 +31,10 @@ public:
         ) : keyword(name), value(val), comment(commnt) { }
     Card(const std::string &name, int val, const char *commnt = ""
         ) : keyword(name), value(val), comment(commnt) { }
+    Card(const std::string &name, double val, const char *commnt = ""
+        ) : keyword(name), value(val), comment(commnt) { }
+    Card(const std::string &name, float val, const char *commnt = ""
+        ) : keyword(name), value(val), comment(commnt) { }
     Card(const std::string &name, const std::string &val, const char *commnt = ""
         ) : keyword(name), value(val), comment(commnt) { }
     Card(const std::string &name, const char *val, const char *commnt = ""
@@ -99,14 +103,32 @@ int Card::write(int fd,
 
 /*****************************************************************************/
 /*
+ * Utilities
+ *
+ * Flip high-order bit so as to write unsigned short to FITS.  Grrr.
+ */
+namespace {
+    void flip_high_bit(char *arr,              // array that needs bits swapped
+                       const int n) {          // number of bytes in arr
+        if(n%2 != 0) {
+            throw lsst::pex::exceptions::Runtime(boost::format("Attempt to bit flip odd number of bytes: %d") % n);
+        }
+
+        unsigned short* uarr = reinterpret_cast<unsigned short *>(arr);
+        for(unsigned short *end = uarr + n/2; uarr < end; ++uarr) {
+            *uarr ^= 0x8000;
+        }
+    }
+}
+
+/*
  * Byte swap ABABAB -> BABABAB in place
  */
 namespace {
     void swap_2(char *arr,              // array to swap
                 const int n) {          // number of bytes
         if(n%2 != 0) {
-            throw
-                lsst::pex::exceptions::Runtime(boost::format("Attempt to byte swap odd number of bytes: %d") % n);
+            throw lsst::pex::exceptions::Runtime(boost::format("Attempt to byte swap odd number of bytes: %d") % n);
         }
 
         for(char *end = arr + n;arr < end;arr += 2) {
@@ -252,33 +274,38 @@ namespace {
 #endif
 
         char *buff = NULL;              // I/O buffer
-        if(swap_bytes) {
+        bool allocated = false;         // do I need to free it?
+        if(swap_bytes || bitpix == 16) {
             buff = new char[FITS_SIZE*bytes_per_pixel];
+            allocated = true;
         }
     
-        static int warned = 0;		// Did we warn about BZERO/BSCALE?
-        if(bytes_per_pixel == 2 && !warned) {
-            warned = 1;
-            fprintf(stderr,"Worry about BZERO/BSCALE\n");
-        }
-
         int nbyte = end - begin;
         int nwrite = (nbyte > FITS_SIZE) ? FITS_SIZE : nbyte;
         for (char *ptr = begin; ptr != end; nbyte -= nwrite, ptr += nwrite) {
             if(swap_bytes) {
                 memcpy(buff, ptr, nwrite);
+                if (bitpix == 16) {     // flip high-order bit
+                    flip_high_bit(buff, nwrite);
+                }
+
                 if(bytes_per_pixel == 2) {
-                    swap_2((char *)buff, nwrite);
+                    swap_2(buff, nwrite);
                 } else if(bytes_per_pixel == 4) {
-                    swap_4((char *)buff, nwrite);
+                    swap_4(buff, nwrite);
                 } else if(bytes_per_pixel == 8) {
-                    swap_8((char *)buff, nwrite);
+                    swap_8(buff, nwrite);
                 } else {
                     fprintf(stderr,"You cannot get here\n");
                     abort();
                 }
             } else {
-                buff = ptr;
+                if (bitpix == 16) {     // flip high-order bit
+                    memcpy(buff, ptr, nwrite);
+                    flip_high_bit(buff, nwrite);
+                } else {
+                    buff = ptr;
+                }
             }
             
             if(write(fd, buff, nwrite) != nwrite) {
@@ -287,7 +314,7 @@ namespace {
             }
         }
         
-        if(swap_bytes) {
+        if(allocated) {
             delete buff;
         }
         
@@ -303,18 +330,21 @@ void writeBasicFits(int fd,                                      // file descrip
                     image::Wcs const* Wcs                        // which Wcs to use for pixel
                    ) {
     /*
-     * What sort if image is it?
-     */
-    int const bitpix = image::detail::fits_read_support_private<
-    typename image::detail::types_traits<typename ImageT::Pixel::type>::view_t>::BITPIX;
-    
-    if (bitpix == 0) {
-        throw lsst::pex::exceptions::Runtime(boost::format("Unsupported image type"));
-    }
-    /*
      * Allocate cards for FITS headers
      */
     std::list<Card> cards;
+    /*
+     * What sort if image is it?
+     */
+    int bitpix = image::detail::fits_read_support_private<
+    typename image::detail::types_traits<typename ImageT::Pixel::type>::view_t>::BITPIX;
+    if (bitpix == 20) {                 // cfitsio for "Unsigned short"
+        cards.push_back(Card("BZERO",  32768.0, ""));
+        cards.push_back(Card("BSCALE", 1.0,     ""));
+        bitpix = 16;
+    } else if (bitpix == 0) {
+        throw lsst::pex::exceptions::Runtime(boost::format("Unsupported image type"));
+    }
     /*
      * Generate cards for Wcs, so that pixel (0,0) is correctly labelled
      */

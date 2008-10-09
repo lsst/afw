@@ -7,11 +7,6 @@
 //
 // Must go Before the %include
 //
-// N.b. assumes that the corresponding image has been declared to swig; otherwise
-// you'll need something like
-//    SWIG_SHARED_PTR(NAME##BasePtr, lsst::afw::image::ImageBase<PIXEL_TYPE>);
-//
-//
 %define %maskedImagePtr(NAME, TYPE, PIXEL_TYPES...)
 SWIG_SHARED_PTR(NAME##TYPE##Ptr, lsst::afw::image::MaskedImage<PIXEL_TYPES>);
 %enddef
@@ -112,8 +107,10 @@ SWIG_SHARED_PTR(NAME##TYPE##Ptr, lsst::afw::image::MaskedImage<PIXEL_TYPES>);
 %ignore lsst::afw::image::MaskedImage::x_at;
 %ignore lsst::afw::image::MaskedImage::xy_at;
 
-%maskedImagePtr(MaskedImage, F, float, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
+%maskedImagePtr(MaskedImage, F, float,  lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
+%maskedImagePtr(MaskedImage, D, double, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
 
 %include "lsst/afw/image/MaskedImage.h"
 
-%maskedImage(MaskedImage, F, float, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
+%maskedImage(MaskedImage, D, double,  lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
+%maskedImage(MaskedImage, F, float,  lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);

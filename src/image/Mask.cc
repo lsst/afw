@@ -14,6 +14,7 @@
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/image/Mask.h"
 
+#include "lsst/afw/image/LsstImageTypes.h"
 
 /************************************************************************************************************/
 //

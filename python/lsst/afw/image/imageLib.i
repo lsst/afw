@@ -104,6 +104,8 @@ SWIG_SHARED_PTR(DataPropertyPtr, lsst::daf::base::DataProperty);
 
 /************************************************************************************************************/
 // Images, Masks, and MaskedImages
+%include "lsst/afw/image/LsstImageTypes.h"
+
 %ignore lsst::afw::image::Filter::operator int;
 %include "lsst/afw/image/Filter.h"
 

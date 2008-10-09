@@ -22,6 +22,8 @@
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/Mask.h"
 
+#include "lsst/afw/image/LsstImageTypes.h"
+
 namespace lsst {
 namespace afw {
     namespace formatters {
@@ -36,7 +38,7 @@ namespace image {
         struct maskedImagePixel_tag { }; // used to identify classes that represent MaskedImage pixels
     }
     
-    typedef float VariancePixel;        // default type for variance images
+    typedef float VariancePixel;        ///! default type for variance images
     
     template<typename ImagePixelT, typename MaskPixelT=lsst::afw::image::MaskPixel,
              typename VariancePixelT=VariancePixel>
@@ -90,7 +92,7 @@ namespace image {
             Pixel(ImagePixelT const& image, MaskPixelT const& mask, VariancePixelT const& variance) :
                 _image(const_cast<ImagePixelT&>(image)),
                 _mask(const_cast<MaskPixelT&>(mask)),
-                _variance(const_cast<VariancePixel&>(variance)) {
+                _variance(const_cast<VariancePixelT&>(variance)) {
             }
             
             Pixel(ImagePixelT& image, MaskPixelT& mask, VariancePixelT& variance) :

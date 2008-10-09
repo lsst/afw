@@ -29,7 +29,7 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/image/Mask.h"
 
-// #include "lsst/afw/image/LSSTFitsResource.h"
+#include "lsst/afw/image/LsstImageTypes.h"
 
 #define EXEC_TRACE  20
 static void execTrace(std::string s, int level = EXEC_TRACE) {
