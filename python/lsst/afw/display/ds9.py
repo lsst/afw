@@ -194,6 +194,8 @@ def _mtv(data, wcs=None, isMask=False):
    if True:
        if isMask:
            xpa_cmd = "xpaset ds9 fits mask"
+           if re.search(r"unsigned short|boost::uint16_t", data.__str__()):
+               data |= 0x8000;          # Hack.  ds9 mis-handles BZERO/BSCALE in masks. This is a copy we're modifying
        else:
            xpa_cmd = "xpaset ds9 fits"
            

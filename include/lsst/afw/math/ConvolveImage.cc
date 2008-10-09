@@ -31,7 +31,7 @@
 
 // if true, ignore kernel pixels that have value 0 when convolving (only affects propagation of mask bits)
 
-#define IGNORE_KERNEL_ZERO_PIXELS 0
+#define IGNORE_KERNEL_ZERO_PIXELS 1
 
 namespace {
 /*
@@ -101,7 +101,7 @@ inline void copyBorder(
     OutImageT& convolvedImage,                           ///< convolved image
     InImageT const& inImage,                             ///< image to convolve
     lsst::afw::math::Kernel const &kernel,               ///< convolution kernel
-    int edgeBit                         ///< mask bit to indicate border pixel;  if negative then no bit is set
+    int edgeBit                         ///< bit to set to indicate border pixel;  if negative then no bit is set
 ) {
     const unsigned int imWidth = inImage.getWidth();
     const unsigned int imHeight = inImage.getHeight();
@@ -109,25 +109,27 @@ inline void copyBorder(
     const unsigned int kHeight = kernel.getHeight();
     const unsigned int kCtrX = kernel.getCtrX();
     const unsigned int kCtrY = kernel.getCtrY();
-    
+
+    const int edgeBitMask = (edgeBit < 0) ? 0 : (1 << edgeBit);
+
     using lsst::afw::image::BBox;
     using lsst::afw::image::PointI;
     BBox bottomEdge(PointI(0, 0), imWidth, kCtrY);
-    copyRegion(convolvedImage, inImage, bottomEdge, edgeBit,
+    copyRegion(convolvedImage, inImage, bottomEdge, edgeBitMask,
                 typename lsst::afw::image::detail::image_traits<OutImageT>::image_category());
     
     int numHeight = kHeight - (1 + kCtrY);
     BBox topEdge(PointI(0, imHeight - numHeight), imWidth, numHeight);
-    copyRegion(convolvedImage, inImage, topEdge, edgeBit,
+    copyRegion(convolvedImage, inImage, topEdge, edgeBitMask,
                 typename lsst::afw::image::detail::image_traits<OutImageT>::image_category());
     
     BBox leftEdge(PointI(0, kCtrY), kCtrX, imHeight + 1 - kHeight);
-    copyRegion(convolvedImage, inImage, leftEdge, edgeBit,
+    copyRegion(convolvedImage, inImage, leftEdge, edgeBitMask,
                 typename lsst::afw::image::detail::image_traits<OutImageT>::image_category());
     
     int numWidth = kWidth - (1 + kCtrX);
     BBox rightEdge(PointI(imWidth - numWidth, kCtrY), numWidth, imHeight + 1 - kHeight);
-    copyRegion(convolvedImage, inImage, rightEdge, edgeBit,
+    copyRegion(convolvedImage, inImage, rightEdge, edgeBitMask,
                 typename lsst::afw::image::detail::image_traits<OutImageT>::image_category());
 }
 }

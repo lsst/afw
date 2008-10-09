@@ -69,6 +69,7 @@ SWIG_SHARED_PTR_DERIVED(NAME##TYPE##Ptr, lsst::afw::image::ImageBase<PIXEL_TYPE>
 %enddef
 
 /************************************************************************************************************/
+%apply int { unsigned short };
 
 %maskPtr(Mask, U, boost::uint16_t);
 

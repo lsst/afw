@@ -47,15 +47,15 @@ else:
 def makeMosaic(image1, image2):
     """Return mosaic of two identically-sized images"""
     gutter = 3
-    mosaic = afwImage.ImageF(gutter + 2*image1.getWidth(), image1.getHeight())
-    mosaic.set(10)                 # gutter value
+    mosaic = afwImage.MaskedImageF(gutter + 2*image1.getWidth(), image1.getHeight())
+    mosaic.set(10, 0, 0)                # gutter value
     
-    smosaic = afwImage.ImageF(mosaic, afwImage.BBox(afwImage.PointI(0,0),
-                                                    image1.getWidth(), image1.getHeight()))
+    smosaic = afwImage.MaskedImageF(mosaic, afwImage.BBox(afwImage.PointI(0,0),
+                                                          image1.getWidth(), image1.getHeight()))
     smosaic <<= image1
     
-    smosaic = afwImage.ImageF(mosaic, afwImage.BBox(afwImage.PointI(gutter + image1.getWidth(), 0),
-                                                    image1.getWidth(), image1.getHeight()))
+    smosaic = afwImage.MaskedImageF(mosaic, afwImage.BBox(afwImage.PointI(gutter + image1.getWidth(), 0),
+                                                          image1.getWidth(), image1.getHeight()))
     smosaic <<= image2
 
     return mosaic
@@ -87,24 +87,25 @@ def refConvolve(imVarMask, kernel, edgeBit, doNormalize, ignoreKernelZeroPixels=
     if (edgeBit >= 0):
          retMask |= 2 ** edgeBit
     
-    kCols = kernel.getCols()
-    kRows = kernel.getRows()
+    kCols = kernel.getWidth()
+    kRows = kernel.getHeight()
     numCols = image.shape[0] + 1 - kCols
     numRows = image.shape[1] + 1 - kRows
     if numCols < 0 or numRows < 0:
         raise RuntimeError("image must be larger than kernel in both dimensions")
     colRange = range(numCols)
 
+
+    kImage = afwImage.ImageD(kCols, kRows)
     isSpatiallyVarying = kernel.isSpatiallyVarying()
     if not isSpatiallyVarying:
-        kImArr = imTestUtils.arrayFromImage(kernel.computeNewImage(doNormalize)[0])
-    else:
-        kImage = afwImage.ImageD(kCols, kRows)
+        kernel.computeImage(kImage, doNormalize)
+        kImArr = imTestUtils.arrayFromImage(kImage)
 
-    retRow = kernel.getCtrRow()
+    retRow = kernel.getCtrY()
     for inRowBeg in range(numRows):
         inRowEnd = inRowBeg + kRows
-        retCol = kernel.getCtrCol()
+        retCol = kernel.getCtrX()
         if isSpatiallyVarying:
             rowPos = afwImage.indexToPosition(retRow)
         for inColBeg in colRange:
@@ -164,6 +165,15 @@ def sameMaskPlaneDicts(maskedImageA, maskedImageB):
 
 class ConvolveTestCase(unittest.TestCase):
     def setUp(self):
+        tmp = afwImage.MaskU()          # clearMaskPlaneDict isn't static
+        tmp.clearMaskPlaneDict()        # reset so tests will be deterministic
+
+        for p in ("BAD", "SAT", "INTRP", "CR", "EDGE"):
+            afwImage.MaskU_addMaskPlane(p)
+            
+        self.edgeBit = tmp.addMaskPlane("OUR_EDGE")
+        del tmp
+
         if False:
             fullImage = afwImage.MaskedImageF(InputMaskedImagePath)
             
@@ -175,9 +185,11 @@ class ConvolveTestCase(unittest.TestCase):
 
         self.width = self.maskedImage.getWidth()
         self.height = self.maskedImage.getHeight()
-        smask = afwImage.MaskU(self.maskedImage.getMask(), afwImage.BBox(afwImage.PointI(5, 7), 1, 5))
-        smask.set(0)
+        smask = afwImage.MaskU(self.maskedImage.getMask(), afwImage.BBox(afwImage.PointI(15, 17), 10, 5))
+        smask.set(0x8)
 
+        self.edgeBit = 7
+        
     def tearDown(self):
         del self.maskedImage
         
@@ -185,20 +197,13 @@ class ConvolveTestCase(unittest.TestCase):
         """Verify that convolution with a centered delta function reproduces the original.
         """
         edgeBit = -1
-        
+
         # create a delta function kernel that has 1,1 in the center
         kFunc = afwMath.IntegerDeltaFunction2D(0.0, 0.0)
         k = afwMath.AnalyticKernel(kFunc, 3, 3)
         
         cnvMaskedImage = afwImage.MaskedImageF(self.maskedImage.dimensions())
         afwMath.convolve(cnvMaskedImage, self.maskedImage, k, True, edgeBit)
-    
-        if display or True:
-            #ds9.mtv(makeMosaic(self.maskedImage, cnvMaskedImage))
-            ds9.mtv(self.maskedImage, frame=0)
-            ds9.mtv(cnvMaskedImage, frame=1)
-
-            print cnvMaskedImage.getMask().get(0,0)
 
         origImVarMaskArrays = imTestUtils.arraysFromMaskedImage(self.maskedImage)
         cnvImVarMaskArrays = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
@@ -206,38 +211,27 @@ class ConvolveTestCase(unittest.TestCase):
             if not numpy.allclose(origImVarMaskArrays[ind], cnvImVarMaskArrays[ind]):
                 self.fail("Convolved %s does not match reference" % (name,))
 
-    def XXXtestSpatiallyInvariantInPlaceConvolve(self):
+    def testSpatiallyInvariantInPlaceConvolve(self):
         """Test convolve with a spatially invariant Gaussian function
         """
         kCols = 6
         kRows = 7
-        self.width = 45
-        self.height = 55
-        edgeBit = 7
-        doNormalize = False
+        edgeBit = self.edgeBit
 
         kFunc =  afwMath.GaussianFunction2D(1.5, 2.5)
         k = afwMath.AnalyticKernel(kFunc, kCols, kRows)
         
-        fullMaskedImage = afwImage.MaskedImageF()
-        fullMaskedImage.readFits(InputMaskedImagePath)
-        
-        # pick a small piece of the image to save time
-        bbox = afwImage.BBox2i(50, 50, self.width, self.height)
-        subMaskedImagePtr = fullMaskedImage.getSubImage(bbox)
-        maskedImage = subMaskedImagePtr.get()
-        maskedImage.this.disown()
-        maskedImage.getMask().setMaskPlaneValues(0, 5, 7, 5)
-        
-        cnvMaskedImage = afwImage.MaskedImageF(self.width, self.height)
-        for doNormalize in (False, True):
-            afwMath.convolve(cnvMaskedImage, maskedImage, k, doNormalize, edgeBit)
+        cnvMaskedImage = afwImage.MaskedImageF(self.maskedImage.dimensions())
+        for doNormalize in (True, False):
+            afwMath.convolve(cnvMaskedImage, self.maskedImage, k, doNormalize, edgeBit)
             cnvImage, cnvVariance, cnvMask = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
 
-            imVarMask = imTestUtils.arraysFromMaskedImage(maskedImage)
-            refCnvImage, refCnvVariance, refCnvMask = \
-                refConvolve(imVarMask, k, doNormalize, edgeBit)
-    
+            imVarMask = imTestUtils.arraysFromMaskedImage(self.maskedImage)
+            refCnvImage, refCnvVariance, refCnvMask = refConvolve(imVarMask, k, doNormalize, edgeBit)
+
+            if display or True:
+                ds9.mtv(makeMosaic(cnvMaskedImage, self.maskedImage))
+
             if not numpy.allclose(cnvImage, refCnvImage):
                 self.fail("Convolved image does not match reference for doNormalize=%s" % doNormalize)
             if not numpy.allclose(cnvVariance, refCnvVariance):
@@ -255,7 +249,7 @@ class ConvolveTestCase(unittest.TestCase):
         kRows = 6
         self.width = 55
         self.height = 45
-        edgeBit = 7
+        edgeBit = self.edgeBit
 
         kFunc =  afwMath.GaussianFunction2D(1.5, 2.5)
         k = afwMath.AnalyticKernel(kFunc, kCols, kRows)
@@ -294,7 +288,7 @@ class ConvolveTestCase(unittest.TestCase):
         kRows = 6
         self.width = 55
         self.height = 45
-        edgeBit = 7
+        edgeBit = self.edgeBit
 
         # create spatially varying linear combination kernel
         sFunc = afwMath.PolynomialFunction2D(1)
@@ -346,7 +340,7 @@ class ConvolveTestCase(unittest.TestCase):
         kRows = 6
         self.width = 55
         self.height = 45
-        edgeBit = 7
+        edgeBit = self.edgeBit
 
         # create spatially varying linear combination kernel
         sFunc = afwMath.PolynomialFunction2D(1)
@@ -397,7 +391,7 @@ class ConvolveTestCase(unittest.TestCase):
         """Test convolution with various delta function kernels using optimized code
         """
         sys.stderr.write("Test convolution with DeltaFunctionKernel\n")
-        edgeBit = 7
+        edgeBit = self.edgeBit
         self.width = 20
         self.height = 12
         doNormalize = True
@@ -442,7 +436,7 @@ class ConvolveTestCase(unittest.TestCase):
         """
         kCols = 5
         kRows = 5
-        edgeBit = 7
+        edgeBit = self.edgeBit
         self.width = 50
         self.height = 55
         doNormalize = False # must be false because convolveLinear cannot normalize
@@ -507,7 +501,7 @@ class ConvolveTestCase(unittest.TestCase):
         """
         kCols = 5
         kRows = 5
-        edgeBit = 7
+        edgeBit = self.edgeBit
         self.width = 50
         self.height = 55
         doNormalize = False # must be false because convolveLinear cannot normalize
