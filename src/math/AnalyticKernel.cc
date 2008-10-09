@@ -124,6 +124,6 @@ std::vector<double> lsst::afw::math::AnalyticKernel::getKernelParameters() const
 //
 // Protected Member Functions
 //
-void lsst::afw::math::AnalyticKernel::setKernelParameter(int ind, double value) const {
+void lsst::afw::math::AnalyticKernel::setKernelParameter(unsigned int ind, double value) const {
     _kernelFunctionPtr->setParameter(ind, value);
 }

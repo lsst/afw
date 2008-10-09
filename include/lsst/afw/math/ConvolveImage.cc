@@ -472,7 +472,7 @@ void lsst::afw::math::convolveLinear(
     lsst::afw::math::LinearCombinationKernel const& kernel, ///< convolution kernel
     int edgeBit				///< mask bit to indicate pixel includes edge-extended data;
                                         ///< if negative (default) then no bit is set; only relevant for MaskedImages
-) {
+                                    ) {
     if (!kernel.isSpatiallyVarying()) {
         return lsst::afw::math::convolve(convolvedImage, inImage, kernel, false, edgeBit);
     }

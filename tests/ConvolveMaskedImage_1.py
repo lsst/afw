@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 """Test lsst.afwMath.convolve
 
 The convolve function is overloaded in two flavors:
@@ -21,7 +23,10 @@ import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.image.testUtils as imTestUtils
 
-Verbosity = 0 # increase to see trace
+try:
+    Verbosity
+except NameError:
+    Verbosity = 0 # increase to see trace
 pexLog.Trace_setVerbosity("lsst.afw", Verbosity)
 
 dataDir = eups.productDir("afwdata")
@@ -330,15 +335,9 @@ class ConvolveTestCase(unittest.TestCase):
         maskedImage.this.disown()
         maskedImage.getMask().setMaskPlaneValues(0, 5, 7, 5)
         
-        isFirst = True
         cnvMaskedImage = afwImage.MaskedImageF(imCols, imRows)
         for doNormalize in (False, True):
-            if isFirst and Verbosity < 3:
-                pexLog.Trace_setVerbosity("lsst.afw", 3)
             afwMath.convolve(cnvMaskedImage, maskedImage, separableKernel, edgeBit, doNormalize)
-            if isFirst:
-                pexLog.Trace_setVerbosity("lsst.afw", Verbosity)
-                isFirst = False
             cnvImage, cnvVariance, cnvMask = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
     
             imVarMask = imTestUtils.arraysFromMaskedImage(maskedImage)
@@ -373,19 +372,14 @@ class ConvolveTestCase(unittest.TestCase):
         maskedImage.this.disown()
         maskedImage.getMask().setMaskPlaneValues(0, 5, 7, 5)
         
-        isFirst = True
         for kCols in range(1, 4):
             for kRows in range(1, 4):
                 for activeCol in range(kCols):
                     for activeRow in range(kRows):
                         kernel = afwMath.DeltaFunctionKernel(activeCol, activeRow, kCols, kRows)
                         
-                        if isFirst and Verbosity < 3:
-                            pexLog.Trace_setVerbosity("lsst.afw", 3)
                         refCnvMaskedImage = afwMath.convolveNew(maskedImage, kernel, edgeBit, doNormalize)
-                        if isFirst:
-                            pexLog.Trace_setVerbosity("lsst.afw", Verbosity)
-                            isFirst = False
+
                         refCnvImage, refCnvVariance, refCnvMask = \
                             imTestUtils.arraysFromMaskedImage(refCnvMaskedImage)
                 

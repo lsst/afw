@@ -167,7 +167,7 @@ std::string lsst::afw::math::Kernel::toString(std::string prefix) const {
  *
  * @throw lsst::pex::exceptions::RuntimeError always (unless subclassed)
  */
-void lsst::afw::math::Kernel::setKernelParameter(int ind, double value) const {
+void lsst::afw::math::Kernel::setKernelParameter(unsigned int ind, double value) const {
     throw lsst::pex::exceptions::InvalidParameter("Kernel has no kernel parameters");
 }
 

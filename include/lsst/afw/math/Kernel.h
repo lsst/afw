@@ -232,7 +232,7 @@ namespace math {
         virtual std::string toString(std::string prefix = "") const;
 
     protected:
-        virtual void setKernelParameter(int ind, double value) const;
+        virtual void setKernelParameter(unsigned int ind, double value) const;
 
         void setKernelParametersFromSpatialModel(double x, double y) const;
            
@@ -369,7 +369,7 @@ namespace math {
         virtual std::string toString(std::string prefix = "") const;
 
     protected:
-        virtual void setKernelParameter(int ind, double value) const;
+        virtual void setKernelParameter(unsigned int ind, double value) const;
     
     private:
         KernelFunctionPtr _kernelFunctionPtr;
@@ -464,7 +464,7 @@ namespace math {
         virtual std::string toString(std::string prefix = "") const;
 
     protected:
-        virtual void setKernelParameter(int ind, double value) const;
+        virtual void setKernelParameter(unsigned int ind, double value) const;
     
     private:
         void _computeKernelImageList();

@@ -23,7 +23,10 @@ import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.image.testUtils as imTestUtils
 
-Verbosity = 0 # increase to see trace
+try:
+    Verbosity
+except NameError:
+    Verbosity = 0 # increase to see trace
 pexLog.Trace_setVerbosity("lsst.afw", Verbosity)
 
 import lsst.afw.display.ds9 as ds9
@@ -119,9 +122,9 @@ def makeGaussianKernelVec(kCols, kRows):
     ]
     kVec = afwMath.KernelListD()
     for xSigma, ySigma in xySigmaList:
-        kFunc = afwMath.GaussianFunction2D(1.5, 2.5)
-        basisKernelPtr = afwMath.AnalyticKernel(kFunc, kCols, kRows)
-        kVec.append(basisKernelPtr)
+        kFunc = afwMath.GaussianFunction2D(1.5, 2.5) # XXX ? xSigma, ySigma?
+        kVec.append(afwMath.AnalyticKernel(kFunc, kCols, kRows))
+
     return kVec
 
 class ConvolveTestCase(unittest.TestCase):
@@ -162,7 +165,7 @@ class ConvolveTestCase(unittest.TestCase):
         cnvImage = afwImage.ImageF(self.inImage.dimensions())
         afwMath.convolve(cnvImage, self.inImage, k, True)
     
-        if display and True:           # display as two panels
+        if display:
             ds9.mtv(makeMosaic(self.inImage, cnvImage))
 
         if False:
@@ -248,7 +251,6 @@ class ConvolveTestCase(unittest.TestCase):
     def testSpatiallyVaryingSeparableInPlaceConvolve(self):
         """Test convolve of a separable kernel with a spatially varying Gaussian function
         """
-        sys.stderr.write("Test convolution with SeparableKernel\n")
         kCols = 7
         kRows = 6
 
@@ -269,44 +271,31 @@ class ConvolveTestCase(unittest.TestCase):
         separableKernel.setSpatialParameters(sParams)
         analyticKernel.setSpatialParameters(sParams)
                 
-        isFirst = True
         cnvImage = afwImage.ImageF(self.inImage.dimensions())
         for doNormalize in (False, True):
-            if isFirst and Verbosity < 3:
-                pexLog.Trace_setVerbosity("lsst.afw", 3)
             afwMath.convolve(cnvImage, self.inImage, separableKernel, doNormalize)
-            if isFirst:
-                pexLog.Trace_setVerbosity("lsst.afw", Verbosity)
-                isFirst = False
+
             cnvImageArr = imTestUtils.arrayFromImage(cnvImage)
     
             inImageArr = imTestUtils.arrayFromImage(self.inImage)
             refCnvImageArr = refConvolve(inImageArr, analyticKernel, doNormalize)
-    
+
             if not numpy.allclose(cnvImageArr, refCnvImageArr):
                 self.fail("Convolved image does not match reference for doNormalize=%s" % doNormalize)
     
     def testDeltaConvolve(self):
         """Test convolve with various delta function kernels using optimized code
         """
-        sys.stderr.write("Test convolution with DeltaFunctionKernel\n")
         doNormalize = True
         
-        isFirst = True
         for kCols in range(1, 4):
             for kRows in range(1, 4):
                 for activeCol in range(kCols):
                     for activeRow in range(kRows):
                         kernel = afwMath.DeltaFunctionKernel(activeCol, activeRow, kCols, kRows)
                         
-                        if isFirst and Verbosity < 3:
-                            pexLog.Trace_setVerbosity("lsst.afw", 3)
-
                         refCnvImage = afwImage.ImageF(self.inImage.dimensions())
                         afwMath.convolve(refCnvImage, self.inImage, kernel, doNormalize)
-                        if isFirst:
-                            pexLog.Trace_setVerbosity("lsst.afw", Verbosity)
-                            isFirst = False
                         refCnvImageArr= imTestUtils.arrayFromImage(refCnvImage)
                 
                         inImageArr = imTestUtils.arrayFromImage(self.inImage)
@@ -332,10 +321,10 @@ class ConvolveTestCase(unittest.TestCase):
         # spatial parameters are a list of entries, one per kernel parameter;
         # each entry is a list of spatial parameters
         sParams = (
-            (1.0, -0.5 / self.width, -0.5 / self.height),
-            (0.0,  1.0 / self.width,  0.0 / self.height),
-            (0.0,  0.0 / self.width,  1.0 / self.height),
-        )
+            (1.0, -0.5/self.width, -0.5/self.height),
+            (0.0,  1.0/self.width,  0.0/self.height),
+            (0.0,  0.0/self.width,  1.0/self.height),
+            )
         
         kVec = makeGaussianKernelVec(kCols, kRows)
         lcKernel = afwMath.LinearCombinationKernel(kVec, sFunc)
@@ -347,18 +336,16 @@ class ConvolveTestCase(unittest.TestCase):
 
         inImageArr = imTestUtils.arrayFromImage(self.inImage)
         ref2CnvImageArr = refConvolve(inImageArr, lcKernel, doNormalize)
-
+        
         if not numpy.allclose(refCnvImageArr, ref2CnvImageArr):
             self.fail("Image from afwMath.convolve does not match image from refConvolve")
 
-        # compute twice, to be sure cnvImage is properly reset
         cnvImage = afwImage.ImageF(self.inImage.dimensions())
-        for ii in range(2):        
-            afwMath.convolveLinear(cnvImage, self.inImage, lcKernel)
-            cnvImageArr = imTestUtils.arrayFromImage(cnvImage)
+        afwMath.convolveLinear(cnvImage, self.inImage, lcKernel)
+        cnvImageArr = imTestUtils.arrayFromImage(cnvImage)
     
-            if not numpy.allclose(cnvImageArr, ref2CnvImageArr):
-                self.fail("Image from afwMath.convolveLinear does not match image from refConvolve in iter %d" % ii)
+        if not numpy.allclose(cnvImageArr, ref2CnvImageArr):
+            self.fail("Image from afwMath.convolveLinear does not match image from refConvolve in iter %d" % ii)
 
     def testConvolveLinearNewImage(self):
         """Test convolveLinearNew
@@ -393,8 +380,9 @@ class ConvolveTestCase(unittest.TestCase):
             self.fail("Image from afwMath.convolve does not match image from refConvolve")
 
         # compute twice, to be sure cnvImage is properly reset
+        cnvImage = afwImage.ImageF(self.inImage.dimensions())
         for ii in range(2):        
-            cnvImage = afwMath.convolveLinearNew(self.inImage, lcKernel)
+            afwMath.convolveLinear(cnvImage, self.inImage, lcKernel)
             cnvImageArr = imTestUtils.arrayFromImage(cnvImage)
     
             if not numpy.allclose(cnvImageArr, ref2CnvImageArr):

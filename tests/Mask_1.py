@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import os
 import math
 import pdb                          # we may want to say pdb.set_trace()
@@ -6,7 +7,6 @@ import unittest
 import lsst.afw.image as afwImage
 import lsst.utils.tests as utilsTests
 import lsst.daf.base as dafBase
-import afwTests
 import lsst.pex.exceptions as pexEx
 
 import lsst.afw.display.ds9 as ds9
@@ -232,23 +232,6 @@ class MaskTestCase(unittest.TestCase):
         self.testMask.replaceSubMask(self.region, self.subTestMask.get())
 
         printMaskPlane(self.testMask, planes['CR'], range(90, 120), range(295, 350, 5))
-
-    def testMaskPixelBooleanFunc(self):
-        """Test MaskPixelBooleanFunc"""
-        testCrFuncInstance = afwTests.testCrFuncD(self.testMask)
-        testCrFuncInstance.init() # get the latest plane info from testMask
-        CR_plane = self.testMask.getMaskPlane("CR")
-        self.assertNotEqual(CR_plane, -1)
-        
-        self.testMask.setMaskPlaneValues(CR_plane, self.pixelList)
-        count = self.testMask.countMask(testCrFuncInstance, self.region)
-        self.assertEqual(count, 20, "Saw %d pixels with CR set" % count)
-
-        del testCrFuncInstance
-
-        # should generate a vw exception - dims. of region and submask must be =
-        self.region.expand(10)
-        self.assertRaises(Exception, self.testMask.replaceSubMask, self.region, self.subTestMask)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 

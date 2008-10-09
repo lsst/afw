@@ -107,7 +107,7 @@ double lsst::afw::math::LinearCombinationKernel::computeImage(
     ++kImPtrIter, ++kParIter;
     
     for ( ; kImPtrIter != _kernelImagePtrList.end(); ++kImPtrIter, ++kParIter) {
-        *tmpImage = **kImPtrIter;
+        *tmpImage <<= **kImPtrIter;
         *tmpImage *= *kParIter;
         image += *tmpImage;
     }
@@ -185,7 +185,7 @@ std::vector<double> lsst::afw::math::LinearCombinationKernel::getKernelParameter
 //
 // Protected Member Functions
 //
-void lsst::afw::math::LinearCombinationKernel::setKernelParameter(int ind, double value) const {
+void lsst::afw::math::LinearCombinationKernel::setKernelParameter(unsigned int ind, double value) const {
     this->_kernelParams[ind] = value;
 }
 
