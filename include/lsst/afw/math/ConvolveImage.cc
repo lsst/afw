@@ -270,10 +270,10 @@ void lsst::afw::math::basicConvolve(
     int const cnvEndX = cnvStartX + cnvWidth;  // end index + 1
     int const cnvEndY = cnvStartY + cnvHeight; // end index + 1
 
+    KernelImageT kernelImage(kernel.dimensions()); // the kernel at a point
+
     if (kernel.isSpatiallyVarying()) {
         lsst::pex::logging::Trace("lsst.afw.kernel.convolve", 3, "kernel is spatially varying");
-
-        KernelImageT kernelImage(kernel.dimensions()); // the kernel at a point
 
         for (int cnvY = cnvStartY; cnvY != cnvEndY; ++cnvY) {
             double const rowPos = lsst::afw::image::indexToPosition(cnvY);
@@ -293,7 +293,6 @@ void lsst::afw::math::basicConvolve(
         }
     } else {                            // kernel is spatially invariant
         lsst::pex::logging::Trace("lsst.afw.kernel.convolve", 3, "kernel is spatially invariant");
-        KernelImageT kernelImage(kernel.dimensions());
         (void)kernel.computeImage(kernelImage, doNormalize);
 
         for (int cnvY = cnvStartY; cnvY != cnvEndY; ++cnvY) {
@@ -512,10 +511,12 @@ void lsst::afw::math::convolveLinear(
         }
     }
     BasisX_iteratorList basisIterList;                           // x_iterators for each basis image
-    basisIterList.reserve(basisImagePtrList.size());
+    for (unsigned int i = 0; i != basisImagePtrList.size(); ++i) {
+        basisIterList.push_back(basisImagePtrList[i]->row_begin(0)); // there's no default constructor
+    }
     
     // iterate over matching pixels of all images to compute output image
-    std::vector<double> kernelCoeffList(kernel.getNKernelParameters()); // weights of basic images at this point
+    std::vector<double> kernelCoeffList(kernel.getNKernelParameters()); // weights of basis images at this point
     for (int cnvY = cnvStartY; cnvY < cnvEndY; ++cnvY) {
         double const rowPos = lsst::afw::image::indexToPosition(cnvY);
     

@@ -102,7 +102,7 @@ double lsst::afw::math::LinearCombinationKernel::computeImage(
     //
     lsst::afw::image::Image<PixelT>::Ptr tmpImage(new lsst::afw::image::Image<PixelT>(image.dimensions()));
 
-    image = **kImPtrIter;
+    image <<= **kImPtrIter;
     image *= *kParIter;
     ++kImPtrIter, ++kParIter;
     
@@ -113,7 +113,8 @@ double lsst::afw::math::LinearCombinationKernel::computeImage(
     }
 
     double imSum = 0;
-    std::accumulate(image.begin(), image.end(), imSum);
+    imSum = std::accumulate(image.begin(), image.end(), imSum);
+
     if (doNormalize) {
         image /= imSum;
         imSum = 1;

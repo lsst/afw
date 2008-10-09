@@ -37,7 +37,7 @@ lsst::afw::math::FixedKernel::FixedKernel(
     Kernel(image.getWidth(), image.getHeight(), 0),
     _image(image, true),
     _sum(0) {
-    std::accumulate(_image.begin(), _image.end(), _sum); // (a loop over y + row_begin())'s a bit faster, but who cares?
+    _sum = std::accumulate(_image.begin(), _image.end(), _sum); // (a loop over y + row_begin())'s a bit faster, but who cares?
 }
 
 //
