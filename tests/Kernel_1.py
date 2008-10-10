@@ -35,14 +35,17 @@ class KernelTestCase(unittest.TestCase):
                 inImage.set(col, row, inArr[col, row])
         
         k = afwMath.FixedKernel(inImage);
-        outImage = k.computeNewImage(False)[0]
+        outImage = afwImage.ImageD(k.dimensions())
+        k.computeImage(outImage, False)
+        
         outArr = imTestUtils.arrayFromImage(outImage)
         if not numpy.allclose(inArr, outArr):
             self.fail("%s = %s != %s (not normalized)" % \
                 (k.__class__.__name__, inArr, outArr))
         
         normInArr = inArr / inArr.sum()
-        normOutImage = k.computeNewImage(True)[0]
+        normOutImage = afwImage.ImageD(k.dimensions())
+        k.computeImage(normOutImage, True)
         normOutArr = imTestUtils.arrayFromImage(normOutImage)
         if not numpy.allclose(normOutArr, normInArr):
             self.fail("%s = %s != %s (normalized)" % \
@@ -69,7 +72,9 @@ class KernelTestCase(unittest.TestCase):
                 fArr /= fArr.sum()
                 
                 k.setKernelParameters((xsigma, ysigma))
-                kImage = k.computeNewImage(True)[0]
+                kImage = afwImage.ImageD(k.dimensions())
+                k.computeImage(kImage, True)
+                
                 kArr = imTestUtils.arrayFromImage(kImage)
                 if not numpy.allclose(fArr, kArr):
                     self.fail("%s = %s != %s for xsigma=%s, ysigma=%s" % \
@@ -82,8 +87,10 @@ class KernelTestCase(unittest.TestCase):
             for kHeight in range(1, 4):
                 for activeCol in range(kWidth):
                     for activeRow in range(kHeight):
-                        kernel = afwMath.DeltaFunctionKernel(activeCol, activeRow, kWidth, kHeight)
-                        kImage, kSum = kernel.computeNewImage(False)
+                        kernel = afwMath.DeltaFunctionKernel(kWidth, kHeight,
+                                                             afwImage.PointI(activeCol, activeRow))
+                        kImage = afwImage.ImageD(kernel.dimensions())
+                        kSum = kernel.computeImage(kImage, False)
                         self.assertEqual(kSum, 1.0)
                         kArr = imTestUtils.arrayFromImage(kImage)
                         self.assertEqual(kArr[activeCol, activeRow], 1.0)
@@ -91,10 +98,10 @@ class KernelTestCase(unittest.TestCase):
                         self.assertEqual(kArr.sum(), 0.0)
                 self.assertRaises(
                     pexExcept.LsstInvalidParameter,
-                    afwMath.DeltaFunctionKernel, 0, kHeight, kWidth, kHeight)
+                    afwMath.DeltaFunctionKernel, 0, kHeight, afwImage.PointI(kWidth, kHeight))
                 self.assertRaises(
                     pexExcept.LsstInvalidParameter,
-                    afwMath.DeltaFunctionKernel, kWidth, 0, kWidth, kHeight)
+                    afwMath.DeltaFunctionKernel, kWidth, 0, afwImage.PointI(kWidth, kHeight))
                             
 
     def testSeparableKernel(self):
@@ -104,7 +111,7 @@ class KernelTestCase(unittest.TestCase):
         kHeight = 8
 
         gaussFunc1 = afwMath.GaussianFunction1D(1.0)
-        k = afwMath.SeparableKernel(gaussFunc1, gaussFunc1, kWidth, kHeight)
+        k = afwMath.SeparableKernel(kWidth, kHeight, gaussFunc1, gaussFunc1)
         fArr = numpy.zeros(shape=[k.getWidth(), k.getHeight()], dtype=float)
         gArr = numpy.zeros(shape=[k.getWidth(), k.getHeight()], dtype=float)
         gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0)
@@ -121,7 +128,8 @@ class KernelTestCase(unittest.TestCase):
                 fArr /= fArr.sum()
                 
                 k.setKernelParameters((xsigma, ysigma))
-                kImage = k.computeNewImage(True)[0]
+                kImage = afwImage.ImageD(k.dimensions())
+                k.computeImage(kImage, True)
                 kArr = imTestUtils.arrayFromImage(kImage)
                 if not numpy.allclose(fArr, kArr):
                     self.fail("%s = %s != %s for xsigma=%s, ysigma=%s" % \
@@ -138,11 +146,11 @@ class KernelTestCase(unittest.TestCase):
         kVec = afwMath.KernelListD()
         for row in range(kHeight):
             for col in range(kWidth):
-                kPtr = afwMath.DeltaFunctionKernel(col, row, kWidth, kHeight)
-                basisImage = afwImage.ImageF(kPtr.dimensions())
-                computeImage(basicImage, True)
+                kernel = afwMath.DeltaFunctionKernel(kWidth, kHeight, afwImage.PointI(col, row))
+                basisImage = afwImage.ImageD(kernel.dimensions())
+                kernel.computeImage(basisImage, True)
                 basisImArrList.append(imTestUtils.arrayFromImage(basisImage))
-                kVec.append(kPtr)
+                kVec.append(kernel)
         
         kParams = [0.0]*len(kVec)
         k = afwMath.LinearCombinationKernel(kVec, kParams)
@@ -150,7 +158,8 @@ class KernelTestCase(unittest.TestCase):
             kParams = [0.0]*len(kVec)
             kParams[ii] = 1.0
             k.setKernelParameters(kParams)
-            kIm = k.computeNewImage(True)[0]
+            kIm = afwImage.ImageD(k.dimensions())
+            k.computeImage(kIm, True)
             kImArr = imTestUtils.arrayFromImage(kIm)
             if not numpy.allclose(kImArr, basisImArrList[ii]):
                 self.fail("%s = %s != %s for the %s'th basis kernel" % \
@@ -177,8 +186,8 @@ class KernelTestCase(unittest.TestCase):
         kVec = afwMath.KernelListD()
         for basisImArr in basisImArrList:
             basisImage = imTestUtils.imageFromArray(basisImArr)
-            kPtr = afwMath.FixedKernel(basisImage)
-            kVec.append(kPtr)
+            kernel = afwMath.FixedKernel(basisImage)
+            kVec.append(kernel)
 
         # create spatially varying linear combination kernel
         spFunc = afwMath.PolynomialFunction2D(1)
@@ -218,8 +227,8 @@ class KernelTestCase(unittest.TestCase):
             k.setCtrX(xCtr)
             for yCtr in range(kHeight):
                 k.setCtrY(yCtr)
-                self.assertEqual(k.getCtrX(), colCtr)
-                self.assertEqual(k.getCtrY(), rowCtr)
+                self.assertEqual(k.getCtrX(), xCtr)
+                self.assertEqual(k.getCtrY(), yCtr)
         
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
