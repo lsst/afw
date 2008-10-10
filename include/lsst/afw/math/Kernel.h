@@ -388,10 +388,9 @@ namespace math {
         typedef deltafunction_kernel_tag kernel_fill_factor;
 
         explicit DeltaFunctionKernel(
-            int pixelX,
-            int pixelY,
             int width,
-            int height
+            int height,
+            lsst::afw::image::PointI point
         );
 
         virtual double computeImage(

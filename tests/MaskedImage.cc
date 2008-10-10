@@ -302,6 +302,17 @@ BOOST_AUTO_TEST_CASE(iterators) {
         BOOST_CHECK_EQUAL(ptr.mask(), img.getWidth() + 1);
         BOOST_CHECK_EQUAL(ptr.variance(), 202);
     }
+    //
+    // Check that adding to the iterators works
+    //
+    {
+        ImageT::x_iterator begin = img.row_begin(0), end = begin + img.getWidth();
+        BOOST_CHECK(begin != end);
+    }
+    {
+        ImageT::y_iterator end = img.col_end(0), begin = end - img.getWidth();
+        BOOST_CHECK(!(begin == end));
+    }
 }
 
 /************************************************************************************************************/

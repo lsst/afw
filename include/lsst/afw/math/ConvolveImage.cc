@@ -341,13 +341,9 @@ void lsst::afw::math::basicConvolve(
     lsst::pex::logging::Trace("lsst.afw.kernel.convolve", 3, "kernel is a spatially invariant delta function basis");
 
     for (int i = 0; i < cnvHeight; ++i) {
-        typename InImageT::x_iterator
-            inPtr =         inImage.row_begin(i +  inStartY) +  inStartX;
-        typename OutImageT::x_iterator
-            cnvPtr = convolvedImage.row_begin(i + cnvStartY) + cnvStartX,
-            cnvEnd = cnvPtr + cnvWidth;
-
-        for (; cnvPtr != cnvEnd; ++cnvPtr, ++inPtr) {
+        typename InImageT::x_iterator inPtr = inImage.x_at(inStartX, i +  inStartY);
+        for (typename OutImageT::x_iterator cnvPtr = convolvedImage.x_at(cnvStartX, i + cnvStartY),
+                 cnvEnd = cnvPtr + cnvWidth; cnvPtr != cnvEnd; ++cnvPtr, ++inPtr){
             *cnvPtr = OutImageT::PixelCast(*inPtr);
         }
     }

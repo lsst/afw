@@ -359,6 +359,9 @@ namespace image {
             void operator++(int) {      // postfix
                 _iter++;
             }
+            bool operator==(maskedImageIteratorBase const& rhs) {
+                return _iter == rhs._iter;
+            }
             bool operator!=(maskedImageIteratorBase const& rhs) {
                 return _iter != rhs._iter;
             }
@@ -391,15 +394,17 @@ namespace image {
             maskedImageIterator(ImageIterator& img, MaskIterator& msk, VarianceIterator &var) :
                 maskedImageIteratorBase(img, msk, var) {
             }
-            maskedImageIterator& operator+(std::ptrdiff_t delta) {
-                maskedImageIteratorBase::operator+=(delta);
+            maskedImageIterator operator+(std::ptrdiff_t delta) {
+                maskedImageIterator lhs = *this;
+                lhs += delta;
 
-                return *this;
+                return lhs;
             }
-            maskedImageIterator& operator-(std::ptrdiff_t delta) {
-                maskedImageIteratorBase::operator-=(delta);
+            maskedImageIterator operator-(std::ptrdiff_t delta) {
+                maskedImageIterator lhs = *this;
+                lhs -= delta;
 
-                return *this;
+                return lhs;
             }
         };
 

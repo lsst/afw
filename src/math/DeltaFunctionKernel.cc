@@ -15,22 +15,15 @@
  * @brief Construct a spatially invariant DeltaFunctionKernel
  */
 lsst::afw::math::DeltaFunctionKernel::DeltaFunctionKernel(
-    int pixelX,                       ///< active pixel colum (0 is left column)
-    int pixelY,                       ///< active pixel row (0 is bottom row)
     int width,                          ///< kernel size (columns)
-    int height)                         ///< kernel size (rows)
+    int height,                         ///< kernel size (rows)
+    lsst::afw::image::PointI point      //< Active pixel
+                                                         )
 :
     Kernel(width, height, 0),
-    _pixel(pixelX, pixelY)
+    _pixel(point.getX(), point.getY())
 {
-#if 0
-    std::vector<double> params;
-    params.push_back(pixelX);
-    params.push_back(pixelY);
-    setRHLParameters(params);
-#endif
-
-    if ((pixelX >= width) || (pixelY >= height)) {
+    if (point.getX() < 0 || point.getX() >= width || point.getY() < 0 || point.getY() >= height) {
         throw lsst::pex::exceptions::InvalidParameter("Active pixel lies outside image");
     }
 }

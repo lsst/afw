@@ -280,7 +280,7 @@ class ConvolveTestCase(unittest.TestCase):
             for kRows in range(1, 4):
                 for activeCol in range(kCols):
                     for activeRow in range(kRows):
-                        kernel = afwMath.DeltaFunctionKernel(activeCol, activeRow, kCols, kRows)
+                        kernel = afwMath.DeltaFunctionKernel(kCols, kRows, afwImage.PointI(activeCol, activeRow))
                         
                         refCnvImage = afwImage.ImageF(self.inImage.dimensions())
                         afwMath.convolve(refCnvImage, self.inImage, kernel, doNormalize)

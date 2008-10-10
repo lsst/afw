@@ -76,7 +76,7 @@ def maskedImageFromArrays(imVarMaskArrays):
     imArr, varArr, maskArr = imVarMaskArrays
     if not (imArr.shape == varArr.shape == maskArr.shape):
         raise RuntimeError("The arrays must all be the same shape")
-    maskedImage = afwImage.MaskedImageD(imArr.shape[0], imArr.shape[1])
+    maskedImage = afwImage.MaskedImageF(imArr.shape[0], imArr.shape[1])
     im, var, mask = getImageVarianceMaskFromMaskedImage(maskedImage)
     for row in range(maskedImage.getHeight()):
         for col in range(maskedImage.getWidth()):

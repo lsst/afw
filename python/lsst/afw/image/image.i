@@ -12,8 +12,6 @@
 SWIG_SHARED_PTR(NAME##TYPE##BasePtr, lsst::afw::image::ImageBase<PIXEL_TYPE>);
 SWIG_SHARED_PTR_DERIVED(NAME##TYPE##Ptr, lsst::afw::image::ImageBase<PIXEL_TYPE>, lsst::afw::image::Image<PIXEL_TYPE>);
 SWIG_SHARED_PTR(Decorated##NAME##TYPE##Ptr, lsst::afw::image::DecoratedImage<PIXEL_TYPE>);
-
-%template(NAME##TYPE##Ptr) boost::shared_ptr<lsst::afw::image::Image<PIXEL_TYPE> >;
 %enddef
 
 //
