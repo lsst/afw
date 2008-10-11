@@ -98,6 +98,7 @@ namespace image {
             Pixel(ImagePixelT& image, MaskPixelT& mask, VariancePixelT& variance) :
                 _image(image), _mask(mask), _variance(variance) {
             }
+
             Pixel& operator=(Pixel rhs) {
                 image() = rhs.image();
                 mask() = rhs.mask();
@@ -257,52 +258,30 @@ namespace image {
         // just pass the values to Pixel's constructor as it has no memory of its own,
         // and we need temporaries to support arithmetic
         //
-        class PixelConstant : detail::maskedImagePixel_tag {
+        class PixelConstant : public Pixel {
         public:
             template<typename ImagePT, typename MaskPT, typename VarPT>
             PixelConstant(typename MaskedImage<ImagePT, MaskPT, VarPT>::Pixel rhs) :
+                Pixel(_image, _mask, _variance),
                 _image(rhs.image()), _mask(rhs.mask()), _variance(rhs.variance()) {
                 ;
             }
 
             template<typename ImagePT, typename MaskPT, typename VarPT>
             PixelConstant(typename MaskedImage<ImagePT, MaskPT, VarPT>::PixelConstant rhs) :
+                Pixel(_image, _mask, _variance),
                 _image(rhs.image()), _mask(rhs.mask()), _variance(rhs.variance()) {
                 ;
             }
 
             PixelConstant(ImagePixelT image=0, MaskPixelT mask=0, VariancePixelT variance=0) :
+                Pixel(_image, _mask, _variance),
                 _image(image), _mask(mask), _variance(variance) {
             }
             PixelConstant(Pixel imv) :
+                Pixel(_image, _mask, _variance),
                 _image(imv.image()), _mask(imv.mask()), _variance(imv.variance()) {
             }
-            operator Pixel() const {
-                return Pixel(_image, _mask, _variance);
-            }
-            operator Pixel() {
-                return Pixel(_image, _mask, _variance);
-            }
-
-            ImagePixelT& image() {
-                return _image;
-            }
-            MaskPixelT& mask() {
-                return _mask;
-            }
-            VariancePixelT& variance() {
-                return _variance;
-            }
-            ImagePixelT const & image() const {
-                return _image;
-            }
-            MaskPixelT const& mask() const {
-                return _mask;
-            }
-            VariancePixelT const& variance() const {
-                return _variance;
-            }
-
         private:
             ImagePixelT _image;
             MaskPixelT _mask;
