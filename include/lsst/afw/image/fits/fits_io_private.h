@@ -316,8 +316,8 @@ public:
             int anynull = 0;
             int status = 0;                     // cfitsio function return status
 
-            if (fits_read_pix(_fd.get(),
-                              _ttype, fpixel, view.width(), NULL, view.row_begin(y), &anynull, &status) != 0) {
+            if (fits_read_pix(_fd.get(), _ttype, fpixel, view.width(), NULL,
+                              view.row_begin(view.height() - y - 1), &anynull, &status) != 0) {
                 throw_cfitsio_error(_fd.get(), status, str(boost::format("Reading row %d") % y));
             }
         }
