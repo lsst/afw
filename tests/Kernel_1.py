@@ -58,7 +58,7 @@ class KernelTestCase(unittest.TestCase):
         kHeight = 8
 
         gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0)
-        k = afwMath.AnalyticKernel(gaussFunc, kWidth, kHeight)
+        k = afwMath.AnalyticKernel(kWidth, kHeight, gaussFunc)
         fArr = numpy.zeros(shape=[k.getWidth(), k.getHeight()], dtype=float)
         for xsigma in (0.1, 1.0, 3.0):
             for ysigma in (0.1, 1.0, 3.0):
@@ -222,7 +222,7 @@ class KernelTestCase(unittest.TestCase):
         kHeight = 4
 
         gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0)
-        k = afwMath.AnalyticKernel(gaussFunc, kWidth, kHeight)
+        k = afwMath.AnalyticKernel(kWidth, kHeight, gaussFunc)
         for xCtr in range(kWidth):
             k.setCtrX(xCtr)
             for yCtr in range(kHeight):

@@ -334,22 +334,22 @@ namespace math {
         explicit AnalyticKernel();
 
         explicit AnalyticKernel(
-            KernelFunction const &kernelFunction,
             int width,
-            int height
+            int height,
+            KernelFunction const &kernelFunction
         );
         
         explicit AnalyticKernel(
-            KernelFunction const &kernelFunction,
             int width,
             int height,
+            KernelFunction const &kernelFunction,
             Kernel::SpatialFunction const &spatialFunction
         );
         
         explicit AnalyticKernel(
-            KernelFunction const &kernelFunction,
             int width,
             int height,
+            KernelFunction const &kernelFunction,
             std::vector<Kernel::SpatialFunctionPtr> const &spatialFunctionList
         );
         

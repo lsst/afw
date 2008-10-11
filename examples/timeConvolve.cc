@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
     for (unsigned kSize = MinKernelSize; kSize <= MaxKernelSize; kSize += DeltaKernelSize) {
         // construct kernel
         afwMath::GaussianFunction2<kernelType> gaussFunc(sigma, sigma);
-        afwMath::AnalyticKernel kernel(gaussFunc, kSize, kSize);
+        afwMath::AnalyticKernel kernel(kSize, kSize, gaussFunc);
         
         clock_t startTime = clock();
         for (unsigned iter = 0; iter < nIter; ++iter) {

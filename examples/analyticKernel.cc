@@ -19,7 +19,7 @@ int main() {
     unsigned int kernelRows = 5;
 
     lsst::afw::math::GaussianFunction2<PixelT> gaussFunc(sigmaX, sigmaY);
-    lsst::afw::math::AnalyticKernel gaussKernel(gaussFunc, kernelCols, kernelRows);
+    lsst::afw::math::AnalyticKernel gaussKernel(kernelCols, kernelRows, gaussFunc);
     
     cout << boost::format("Gaussian Kernel with sigmaX=%.1f, sigmaY=%.1f\n\n") % sigmaX % sigmaY;
     
@@ -29,7 +29,7 @@ int main() {
     unsigned int polyOrder = 1;
     lsst::afw::math::PolynomialFunction2<PixelT> polyFunc(polyOrder);
 
-    lsst::afw::math::AnalyticKernel gaussSpVarKernel(gaussFunc, kernelCols, kernelRows, polyFunc);
+    lsst::afw::math::AnalyticKernel gaussSpVarKernel(kernelCols, kernelRows, gaussFunc, polyFunc);
 
     // get copy of spatial parameters (all zeros), set and feed back to the kernel
     vector<vector<double> > polyParams = gaussSpVarKernel.getSpatialParameters();

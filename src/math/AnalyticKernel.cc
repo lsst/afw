@@ -24,9 +24,9 @@ lsst::afw::math::AnalyticKernel::AnalyticKernel()
  * @brief Construct a spatially invariant AnalyticKernel
  */
 lsst::afw::math::AnalyticKernel::AnalyticKernel(
-    KernelFunction const &kernelFunction,
     int width,
-    int height)
+    int height,
+    KernelFunction const &kernelFunction)
 :
     Kernel(width, height, kernelFunction.getNParameters()),
     _kernelFunctionPtr(kernelFunction.copy())
@@ -36,9 +36,9 @@ lsst::afw::math::AnalyticKernel::AnalyticKernel(
  * @brief Construct a spatially varying AnalyticKernel, replicating a spatial function once per kernel function parameter
  */
 lsst::afw::math::AnalyticKernel::AnalyticKernel(
-    KernelFunction const &kernelFunction,
     int width,
     int height,
+    KernelFunction const &kernelFunction,
     Kernel::SpatialFunction const &spatialFunction)
 :
     Kernel(width, height, kernelFunction.getNParameters(), spatialFunction),
@@ -51,9 +51,9 @@ lsst::afw::math::AnalyticKernel::AnalyticKernel(
  * @throw lsst::pex::exceptions::InvalidParameter if the length of spatialFunctionList != # kernel function parameters.
  */
 lsst::afw::math::AnalyticKernel::AnalyticKernel(
-    KernelFunction const &kernelFunction,
     int width,
     int height,
+    KernelFunction const &kernelFunction,
     std::vector<Kernel::SpatialFunctionPtr> const &spatialFunctionList)
 :
     Kernel(width, height, spatialFunctionList),

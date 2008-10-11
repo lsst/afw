@@ -108,7 +108,7 @@ def makeGaussianKernelVec(kCols, kRows):
     kVec = afwMath.KernelListD()
     for xSigma, ySigma in xySigmaList:
         kFunc = afwMath.GaussianFunction2D(1.5, 2.5) # XXX ? xSigma, ySigma?
-        kVec.append(afwMath.AnalyticKernel(kFunc, kCols, kRows))
+        kVec.append(afwMath.AnalyticKernel(kCols, kRows, kFunc))
 
     return kVec
 
@@ -133,7 +133,7 @@ class ConvolveTestCase(unittest.TestCase):
         """
         # create a delta function kernel that has 1,1 in the center
         kFunc = afwMath.IntegerDeltaFunction2D(0.0, 0.0)
-        k = afwMath.AnalyticKernel(kFunc, 3, 3)
+        k = afwMath.AnalyticKernel(3, 3, kFunc)
 
         cnvImage = afwImage.ImageF(self.inImage.dimensions())
         afwMath.convolve(cnvImage, self.inImage, k, True)
@@ -154,7 +154,7 @@ class ConvolveTestCase(unittest.TestCase):
         kCols, kRows = 6, 7
 
         kFunc =  afwMath.GaussianFunction2D(1.5, 2.5)
-        k = afwMath.AnalyticKernel(kFunc, kCols, kRows)
+        k = afwMath.AnalyticKernel(kCols, kRows, kFunc)
         
         cnvImage = afwImage.ImageF(self.inImage.dimensions())
         for doNormalize in (True, False):
@@ -177,7 +177,7 @@ class ConvolveTestCase(unittest.TestCase):
         kRows = 6
 
         kFunc =  afwMath.GaussianFunction2D(1.5, 2.5)
-        k = afwMath.AnalyticKernel(kFunc, kCols, kRows)
+        k = afwMath.AnalyticKernel(kCols, kRows, kFunc)
         
         for doNormalize in (False, True):
             cnvImage = afwImage.ImageF(self.inImage.dimensions())
@@ -207,7 +207,7 @@ class ConvolveTestCase(unittest.TestCase):
         )
    
         kFunc =  afwMath.GaussianFunction2D(1.0, 1.0)
-        k = afwMath.AnalyticKernel(kFunc, kCols, kRows, sFunc)
+        k = afwMath.AnalyticKernel(kCols, kRows, kFunc, sFunc)
         k.setSpatialParameters(sParams)
                 
         cnvImage = afwImage.ImageF(self.inImage.dimensions())
@@ -240,7 +240,7 @@ class ConvolveTestCase(unittest.TestCase):
         gaussFunc1 = afwMath.GaussianFunction1D(1.0)
         gaussFunc2 = afwMath.GaussianFunction2D(1.0, 1.0)
         separableKernel = afwMath.SeparableKernel(kCols, kRows, gaussFunc1, gaussFunc1, sFunc)
-        analyticKernel = afwMath.AnalyticKernel(gaussFunc2, kCols, kRows, sFunc)
+        analyticKernel = afwMath.AnalyticKernel(kCols, kRows, gaussFunc2, sFunc)
         separableKernel.setSpatialParameters(sParams)
         analyticKernel.setSpatialParameters(sParams)
                 

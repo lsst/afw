@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
         afwMath::GaussianFunction2<kernelType> gaussFunc(1, 1);
         unsigned int polyOrder = 1;
         afwMath::PolynomialFunction2<double> polyFunc(polyOrder);
-        afwMath::AnalyticKernel gaussSpVarKernel(gaussFunc, kSize, kSize, polyFunc);
+        afwMath::AnalyticKernel gaussSpVarKernel(kSize, kSize, gaussFunc, polyFunc);
     
         // get copy of spatial parameters (all zeros), set and feed back to the kernel
         std::vector<std::vector<double> > polyParams = gaussSpVarKernel.getSpatialParameters();

@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
         
         // construct kernel
         afwMath::GaussianFunction2<pixelType> gaussFunc(sigma, sigma);
-        afwMath::AnalyticKernel kernel(gaussFunc, kernelCols, kernelRows);
+        afwMath::AnalyticKernel kernel(kernelCols, kernelRows, gaussFunc);
     
         // convolve
         afwImage::MaskedImage<pixelType> resMaskedImage(mImage.dimensions());

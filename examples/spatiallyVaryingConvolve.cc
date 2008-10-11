@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
     afwMath::GaussianFunction2<pixelType> gaussFunc(1, 1);
     unsigned int polyOrder = 1;
     afwMath::PolynomialFunction2<double> polyFunc(polyOrder);
-    afwMath::AnalyticKernel gaussSpVarKernel(gaussFunc, kernelCols, kernelRows, polyFunc);
+    afwMath::AnalyticKernel gaussSpVarKernel(kernelCols, kernelRows, gaussFunc, polyFunc);
 
     // Get copy of spatial parameters (all zeros), set and feed back to the kernel
     vector<vector<double> > polyParams = gaussSpVarKernel.getSpatialParameters();
