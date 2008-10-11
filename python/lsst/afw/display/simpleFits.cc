@@ -283,6 +283,10 @@ namespace {
         int nbyte = end - begin;
         int nwrite = (nbyte > FITS_SIZE) ? FITS_SIZE : nbyte;
         for (char *ptr = begin; ptr != end; nbyte -= nwrite, ptr += nwrite) {
+            if (end - ptr < nwrite) {
+                nwrite = end - ptr;
+            }
+            
             if(swap_bytes) {
                 memcpy(buff, ptr, nwrite);
                 if (bitpix == 16) {     // flip high-order bit
