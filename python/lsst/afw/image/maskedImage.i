@@ -19,23 +19,39 @@ SWIG_SHARED_PTR(NAME##TYPE##Ptr, lsst::afw::image::MaskedImage<PIXEL_TYPES>);
 
 %extend lsst::afw::image::MaskedImage<PIXEL_TYPES> {
     %pythoncode {
-    def set(self, x, row, values):
-        """Set the point (x, row) to a triple (value, mask, variance)"""
+    def Factory(self, *args):
+        """Return a MaskedImage of this type"""
+        return NAME##TYPE(*args)
 
-        try:
-            return (self.getImage().set(x, row, values[0]),
-                    self.getMask().set(x, row, values[1]),
-                    self.getVariance().set(x, row, values[2]))
-        except TypeError:
-            return (self.getImage().set(x),
-                    self.getMask().set(row),
-                    self.getVariance().set(values))
+    def set(self, x, y=None, values=None):
+        """Set the point (x, y) to a triple (value, mask, variance)"""
 
-    def get(self, x, row):
-        """Return a triple (value, mask, variance) at the point (x, row)"""
-        return (self.getImage().get(x, row),
-                self.getMask().get(x, row),
-                self.getVariance().get(x, row))
+        if values is None:
+            assert (y is None)
+            values = x
+            try:
+                self.getImage().set(values[0])
+                self.getMask().set(values[1])
+                self.getVariance().set(values[2])
+            except TypeError:
+                self.getImage().set(values)
+                self.getMask().set(0)
+                self.getVariance().set(0)
+        else:
+            try:
+                self.getImage().set(x, y, values[0])
+                self.getMask().set(x, y, values[1])
+                self.getVariance().set(x, y, values[2])
+            except TypeError:
+                self.getImage().set(x)
+                self.getMask().set(y)
+                self.getVariance().set(values)
+
+    def get(self, x, y):
+        """Return a triple (value, mask, variance) at the point (x, y)"""
+        return (self.getImage().get(x, y),
+                self.getMask().get(x, y),
+                self.getVariance().get(x, y))
 
     #
     # Deal with incorrect swig wrappers for C++ "void operator op=()"

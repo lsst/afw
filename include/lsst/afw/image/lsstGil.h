@@ -19,28 +19,10 @@ typedef float bits32f_noscale;
 GIL_DEFINE_BASE_TYPEDEFS(32f_noscale, gray)
 GIL_DEFINE_ALL_TYPEDEFS_INTERNAL(32f_noscale, dev2n, devicen_t<2>, devicen_layout_t<2>)
 
-/////////////////////////////////////////////////////
-///  bits32f_noscale "conversions" that don't do anything
-/////////////////////////////////////////////////////
-
-template <typename DstChannelV> struct channel_converter_unsigned<bits32f_noscale,DstChannelV> : public std::unary_function<bits32f_noscale,DstChannelV> {
-    DstChannelV   operator()(bits32f_noscale x) const { return DstChannelV(x + 0.5f); }
-};
-
-template <typename SrcChannelV> struct channel_converter_unsigned<SrcChannelV,bits32f_noscale> : public std::unary_function<SrcChannelV,bits32f_noscale> {
-    bits32f_noscale operator()(SrcChannelV   x) const { return bits32f_noscale(x); }
-};
-
-template <> struct channel_converter_unsigned<bits32f_noscale,bits32f_noscale> : public std::unary_function<bits32f_noscale,bits32f_noscale> {
-    bits32f_noscale operator()(bits32f_noscale   x) const { return x; }
-};
-
-/// \brief Specialization of channel_multiply for 32f_noscale channels
-template<> struct channel_multiplier_unsigned<bits32f_noscale> : public std::binary_function<bits32f_noscale,bits32f_noscale,bits32f_noscale> {
+template<> struct channel_multiplier<bits32f_noscale> : public std::binary_function<bits32f_noscale,bits32f_noscale,bits32f_noscale> {
     bits32f_noscale operator()(bits32f_noscale a, bits32f_noscale b) const { return a*b; }
 };
 
-/************************************************************************************************************/
 /*
  * Define a type that's a pure double, without scaling into [0, 1]
  */
@@ -49,90 +31,58 @@ typedef double bits64f_noscale;
 GIL_DEFINE_BASE_TYPEDEFS(64f_noscale, gray)
 GIL_DEFINE_ALL_TYPEDEFS_INTERNAL(64f_noscale, dev2n, devicen_t<2>, devicen_layout_t<2>)
 
-/////////////////////////////////////////////////////
-///  bits64f_noscale "conversions" that don't do anything
-/////////////////////////////////////////////////////
+/************************************************************************************************************/
+//
+// Conversions that don't scale
+//
+template <typename DstChannelV>
+struct channel_converter<bits32f_noscale, DstChannelV> :
+        public std::unary_function<bits32f_noscale,DstChannelV> {
+    DstChannelV   operator()(bits32f_noscale x) const { return DstChannelV(x + 0.5f); }
+};
 
-template <typename DstChannelV> struct channel_converter_unsigned<bits64f_noscale,DstChannelV> : public std::unary_function<bits64f_noscale,DstChannelV> {
+template <typename SrcChannelV>
+struct channel_converter<SrcChannelV,bits32f_noscale> :
+        public std::unary_function<SrcChannelV,bits32f_noscale> {
+    bits32f_noscale operator()(SrcChannelV   x) const { return bits32f_noscale(x); }
+};
+
+template <typename DstChannelV>
+struct channel_converter<bits64f_noscale, DstChannelV> :
+        public std::unary_function<bits64f_noscale,DstChannelV> {
     DstChannelV   operator()(bits64f_noscale x) const { return DstChannelV(x + 0.5f); }
 };
 
-#if 0
-template <typename SrcChannelV> struct channel_converter_unsigned<SrcChannelV,bits64f_noscale> : public std::unary_function<SrcChannelV,bits64f_noscale> {
+template <typename SrcChannelV>
+struct channel_converter<SrcChannelV,bits64f_noscale> :
+        public std::unary_function<SrcChannelV,bits64f_noscale> {
     bits64f_noscale operator()(SrcChannelV   x) const { return bits64f_noscale(x); }
 };
-#endif
 
-template <> struct channel_converter_unsigned<bits64f_noscale,bits64f_noscale> : public std::unary_function<bits64f_noscale,bits64f_noscale> {
-    bits64f_noscale operator()(bits64f_noscale   x) const { return x; }
-};
+//
+// Totally specialised templates to resolve ambiguities
+//
+#define LSST_CONVERT_NOOP(T1, T2) \
+template <> \
+struct channel_converter<T1, T2> : public std::unary_function<T1, T2> { \
+    T2 operator()(T1 x) const { return static_cast<T2>(x); } \
+}; \
+\
+template <> \
+struct channel_converter<T2, T1> : public std::unary_function<T2, T1> { \
+    T1 operator()(T2 x) const { return static_cast<T1>(x); }            \
+}
 
-/// \brief Specialization of channel_multiply for 64f_noscale channels
-template<> struct channel_multiplier_unsigned<bits64f_noscale> : public std::binary_function<bits64f_noscale,bits64f_noscale,bits64f_noscale> {
-    bits64f_noscale operator()(bits64f_noscale a, bits64f_noscale b) const { return a*b; }
-};
-        
-/************************************************************************************************************/
-/*
- * Define a type that's a pure char, without scaling into [0, 255]
- */
-typedef int8_t bits8_noscale;
+LSST_CONVERT_NOOP(bits32f_noscale, bits64f_noscale);
 
-GIL_DEFINE_BASE_TYPEDEFS(8_noscale, gray)
-GIL_DEFINE_ALL_TYPEDEFS_INTERNAL(8_noscale, dev2n, devicen_t<2>, devicen_layout_t<2>)
+LSST_CONVERT_NOOP(unsigned char,  short);
+LSST_CONVERT_NOOP(unsigned char,  unsigned short);
+LSST_CONVERT_NOOP(unsigned char,  int);
+LSST_CONVERT_NOOP(unsigned short, short);
+LSST_CONVERT_NOOP(unsigned short, int);
+LSST_CONVERT_NOOP(short, int);
 
-/////////////////////////////////////////////////////
-///  bits8_noscale "conversions" that don't do anything
-/////////////////////////////////////////////////////
-
-template <typename DstChannelV> struct channel_converter<bits8_noscale,DstChannelV> : public std::unary_function<bits8_noscale,DstChannelV> {
-    DstChannelV   operator()(bits8_noscale x) const { return DstChannelV(x); }
-};
-
-template <typename SrcChannelV> struct channel_converter<SrcChannelV,bits8_noscale> : public std::unary_function<SrcChannelV,bits8_noscale> {
-    bits8_noscale operator()(SrcChannelV   x) const { return bits8_noscale(x); }
-};
-
-template <> struct channel_converter<bits8_noscale,bits8_noscale> : public std::unary_function<bits8_noscale,bits8_noscale> {
-    bits8_noscale operator()(bits8_noscale   x) const { return x; }
-};
-
-/// \brief Specialization of channel_multiply for 8_noscale channels
-template<> struct channel_multiplier<bits8_noscale> : public std::binary_function<bits8_noscale,bits8_noscale,bits8_noscale> {
-    bits8_noscale operator()(bits8_noscale a, bits8_noscale b) const { return a*b; }
-};
-        
-/************************************************************************************************************/
-/*
- * Define a type that's a pure int, without scaling into [-2.1478e9, 2.1478e9]
- */
-typedef int32_t bits32s_noscale;
-
-GIL_DEFINE_BASE_TYPEDEFS(32s_noscale, gray)
-GIL_DEFINE_ALL_TYPEDEFS_INTERNAL(32s_noscale, dev2n, devicen_t<2>, devicen_layout_t<2>)
-
-/////////////////////////////////////////////////////
-///  bits32s_noscale "conversions" that don't do anything
-/////////////////////////////////////////////////////
-
-template <typename DstChannelV> struct channel_converter<bits32s_noscale,DstChannelV> : public std::unary_function<bits32s_noscale,DstChannelV> {
-    DstChannelV   operator()(bits32s_noscale x) const { return DstChannelV(x); }
-};
-
-#if 0
-template <typename SrcChannelV> struct channel_converter<SrcChannelV,bits32s_noscale> : public std::unary_function<SrcChannelV,bits32s_noscale> {
-    bits32s_noscale operator()(SrcChannelV   x) const { return bits32s_noscale(x); }
-};
-#endif
-
-template <> struct channel_converter<bits32s_noscale,bits32s_noscale> : public std::unary_function<bits32s_noscale,bits32s_noscale> {
-    bits32s_noscale operator()(bits32s_noscale   x) const { return x; }
-};
-
-/// \brief Specialization of channel_multiply for 32s_noscale channels
-template<> struct channel_multiplier<bits32s_noscale> : public std::binary_function<bits32s_noscale,bits32s_noscale,bits32s_noscale> {
-    bits32s_noscale operator()(bits32s_noscale a, bits32s_noscale b) const { return a*b; }
-};
+#undef LSST_CONVERT_NOOP
 
 } }  // namespace boost::gil
 
@@ -151,9 +101,9 @@ namespace lsst { namespace afw { namespace image { namespace detail {
     };
                 
     template<> struct types_traits<unsigned char, false> {
-        typedef boost::gil::gray8_noscale_image_t image_t;
-        typedef boost::gil::gray8_noscale_view_t view_t;
-        typedef boost::gil::gray8_noscalec_view_t const_view_t;
+        typedef boost::gil::gray8_image_t image_t;
+        typedef boost::gil::gray8_view_t view_t;
+        typedef boost::gil::gray8c_view_t const_view_t;
         typedef boost::gil::channel_traits<char>::reference reference;
         typedef boost::gil::channel_traits<char>::const_reference const_reference;
     };
@@ -175,14 +125,6 @@ namespace lsst { namespace afw { namespace image { namespace detail {
     };
 
     template<> struct types_traits<int, false> {
-        typedef boost::gil::gray32s_noscale_image_t image_t;
-        typedef boost::gil::gray32s_noscale_view_t view_t;
-        typedef boost::gil::gray32s_noscalec_view_t const_view_t;
-        typedef boost::gil::channel_traits<int>::reference reference;
-        typedef boost::gil::channel_traits<int>::const_reference const_reference;
-    };
-
-    template<> struct types_traits<int, true> {
         typedef boost::gil::gray32s_image_t image_t;
         typedef boost::gil::gray32s_view_t view_t;
         typedef boost::gil::gray32sc_view_t const_view_t;
@@ -198,14 +140,6 @@ namespace lsst { namespace afw { namespace image { namespace detail {
         typedef boost::gil::channel_traits<float>::const_reference const_reference;
     };
 
-    template<> struct types_traits<float, true> {
-        typedef boost::gil::gray32f_image_t image_t;
-        typedef boost::gil::gray32f_view_t view_t;
-        typedef boost::gil::gray32fc_view_t const_view_t;
-        typedef boost::gil::channel_traits<float>::reference reference;
-        typedef boost::gil::channel_traits<float>::const_reference const_reference;
-    };
-
     template<> struct types_traits<double, false> {
         typedef boost::gil::gray64f_noscale_image_t image_t;
         typedef boost::gil::gray64f_noscale_view_t view_t;
@@ -213,15 +147,6 @@ namespace lsst { namespace afw { namespace image { namespace detail {
         typedef boost::gil::channel_traits<double>::reference reference;
         typedef boost::gil::channel_traits<double>::const_reference const_reference;
     };
-#if 0                                   // Not provided by boost::gil
-    template<> struct types_traits<double, true> {
-        typedef boost::gil::gray64f_image_t image_t;
-        typedef boost::gil::gray64f_view_t view_t;
-        typedef boost::gil::gray64fc_view_t const_view_t;
-        typedef boost::gil::channel_traits<double>::reference reference;
-        typedef boost::gil::channel_traits<double>::const_reference const_reference;
-    };
-#endif
 
     template<typename T>
     struct const_iterator_type {

@@ -77,7 +77,7 @@ struct fits_read_support_private<const T> {
 // Here are our types
 //
 template <>
-struct fits_read_support_private<boost::gil::gray8_noscale_view_t> {
+struct fits_read_support_private<boost::gil::gray8_view_t> {
     BOOST_STATIC_CONSTANT(bool,is_supported=true);
     BOOST_STATIC_CONSTANT(int,BITPIX=BYTE_IMG); // value is from fitsio.h
 };
@@ -92,7 +92,7 @@ struct fits_read_support_private<boost::gil::gray16_view_t> {
     BOOST_STATIC_CONSTANT(int,BITPIX=USHORT_IMG); // value is from fitsio.h
 };
 template <>
-struct fits_read_support_private<boost::gil::gray32s_noscale_view_t> {
+struct fits_read_support_private<boost::gil::gray32s_view_t> {
     BOOST_STATIC_CONSTANT(bool,is_supported=true);
     BOOST_STATIC_CONSTANT(int , BITPIX=LONG_IMG); // value is from fitsio.h
 };

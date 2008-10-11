@@ -48,7 +48,7 @@ class ImagePersistenceTestCase(unittest.TestCase):
         # Choose a file to manipulate
         self.infile = os.path.join(dataDir, "CFHT", "D4", "cal-53535-i-797722_1_img.fits")
 
-        self.image = afwImage.ImageF(); self.image.readFits(self.infile)
+        self.image = afwImage.ImageF(self.infile)
 
     def tearDown(self):
         del self.additionalData
@@ -98,7 +98,7 @@ class ImagePersistenceTestCase(unittest.TestCase):
             #
             # Read a U16 image
             #
-            self.image.readFits(os.path.join(dataDir, "small_MI_img.fits"))
+            self.image = self.im.Factory(os.path.join(dataDir, "small_MI_img.fits"))
             self.persistence.persist(self.image, storageList, self.additionalData)
 
             # Retrieve it again

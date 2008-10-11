@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Test cases to test image I/O
 """
@@ -24,34 +25,35 @@ class ReadFitsTestCase(unittest.TestCase):
     """A test case for reading FITS images"""
 
     def setUp(self):
-        self.im = afwImage.ImageD()
+        pass
 
     def tearDown(self):
-        del self.im
+        pass
 
     def testU16(self):
         """Test reading U16 image"""
-        self.im.readFits(os.path.join(dataDir, "small_img.fits"))
+
+        im = afwImage.ImageD(os.path.join(dataDir, "small_img.fits"))
         
         col, row, val = 0, 0, 1154
-        self.assertEqual(self.im.getVal(col, row), val)
+        self.assertEqual(im.get(col, row), val)
 
     def testS16(self):
         """Test reading S16 image"""
-        self.im.readFits(os.path.join(dataDir, "871034p_1_img.fits"))
+        im = afwImage.ImageD(os.path.join(dataDir, "871034p_1_img.fits"))
 
         if False:
-            import lsst.afw.display.ds9 as ds9; ds9.mtv(self.im)
+            import lsst.afw.display.ds9 as ds9; ds9.mtv(im)
         
         col, row, val = 32, 1, 62
-        self.assertEqual(self.im.getVal(col, row), val)
+        self.assertEqual(im.get(col, row), val)
 
     def testF32(self):
         """Test reading F32 image"""
-        self.im.readFits(os.path.join(dataDir, "871034p_1_MI_var.fits"))
+        im = afwImage.ImageD(os.path.join(dataDir, "871034p_1_MI_var.fits"))
         
         col, row, val = 32, 1, 39.11672
-        self.assertAlmostEqual(self.im.getVal(col, row), val, 5)
+        self.assertAlmostEqual(im.get(col, row), val, 5)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

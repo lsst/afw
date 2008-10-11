@@ -29,34 +29,19 @@ except NameError:
     Verbosity = 0 # increase to see trace
 pexLog.Trace_setVerbosity("lsst.afw", Verbosity)
 
-import lsst.afw.display.ds9 as ds9
 try:
     display
 except NameError:
     display=False
 
+if display:
+    import lsst.afw.display.ds9 as ds9
+    import lsst.afw.display.utils as displayUtils
+
 dataDir = eups.productDir("afwdata")
 if not dataDir:
     raise RuntimeError("Must set up afwdata to run these tests")
 InputImagePath = os.path.join(dataDir, "871034p_1_MI_img.fits")
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-def makeMosaic(image1, image2):
-    """Return mosaic of two identically-sized images"""
-    gutter = 3
-    mosaic = afwImage.ImageF(gutter + 2*image1.getWidth(), image1.getHeight())
-    mosaic.set(10)                 # gutter value
-    
-    smosaic = afwImage.ImageF(mosaic, afwImage.BBox(afwImage.PointI(0,0),
-                                                    image1.getWidth(), image1.getHeight()))
-    smosaic <<= image1
-    
-    smosaic = afwImage.ImageF(mosaic, afwImage.BBox(afwImage.PointI(gutter + image1.getWidth(), 0),
-                                                    image1.getWidth(), image1.getHeight()))
-    smosaic <<= image2
-
-    return mosaic
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -154,7 +139,7 @@ class ConvolveTestCase(unittest.TestCase):
         afwMath.convolve(cnvImage, self.inImage, k, True)
     
         if display:
-            ds9.mtv(makeMosaic(self.inImage, cnvImage))
+            ds9.mtv(displayUtils.makeMosaic(self.inImage, cnvImage))
 
         if False:
             origImageArr = imTestUtils.arrayFromImage(self.inImage)
@@ -176,7 +161,7 @@ class ConvolveTestCase(unittest.TestCase):
             afwMath.convolve(cnvImage, self.inImage, k, doNormalize)
 
             if doNormalize and display and True:    # display as two panels
-                ds9.mtv(makeMosaic(self.inImage, cnvImage))
+                ds9.mtv(displayUtils.makeMosaic(self.inImage, cnvImage))
 
             cnvImageArr = imTestUtils.arrayFromImage(cnvImage)
             inImageArr = imTestUtils.arrayFromImage(self.inImage)

@@ -7,7 +7,7 @@ import lsst.tests
 import lsst.daf.persistence
 import lsst.SConsUtils as scons # scons 1.17 supports "env.ProductDir", but for now use scons.ProductDir
 
-env.Program(["MaskedImage.cc"], LIBS=env.getlibs("afw"))
+env.Program(["checkTypeConversions.cc"], LIBS=env.getlibs("afw"))
 env.Program(["Exposure.cc"], LIBS=env.getlibs("afw"))
 
 env.Program(["MaskedImage_1.cc"], LIBS=env.getlibs("afw"))

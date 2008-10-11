@@ -30,11 +30,14 @@ except NameError:
     Verbosity = 0                       # increase to see trace
 pexLog.Trace_setVerbosity("lsst.afw", Verbosity)
 
-import lsst.afw.display.ds9 as ds9
 try:
     display
 except NameError:
     display=False
+
+if display:
+    import lsst.afw.display.ds9 as ds9
+    import lsst.afw.display.utils as displayUtils
 
 dataDir = eups.productDir("afwdata")
 if not dataDir:
@@ -43,33 +46,6 @@ if False:
     InputMaskedImagePath = os.path.join(dataDir, "871034p_1_MI")
 else:
     InputMaskedImagePath = os.path.join(dataDir, "small_MI")
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-def makeMosaic(image1, image2):
-    """Return mosaic of two identically-sized images"""
-    gutter = 3
-
-    if re.search(r"MaskedImageD", image1.__str__()):
-        newImage = afwImage.MaskedImageF
-    elif re.search(r"MaskedImageF", image1.__str__()):
-        newImage = afwImage.MaskedImageF
-    elif re.search(r"ImageD", image1.__str__()):
-        newImage = afwImage.ImageF
-    elif re.search(r"ImageF", image1.__str__()):
-        newImage = afwImage.ImageF
-
-    mosaic = newImage(gutter + 2*image1.getWidth(), image1.getHeight())
-    mosaic.set(10, 0, 0)                # gutter value
-    
-    smosaic = newImage(mosaic, afwImage.BBox(afwImage.PointI(0,0),
-                                             image1.getWidth(), image1.getHeight()))
-    smosaic <<= image1
-    
-    smosaic = newImage(mosaic, afwImage.BBox(afwImage.PointI(gutter + image1.getWidth(), 0),
-                                             image1.getWidth(), image1.getHeight()))
-    smosaic <<= image2
-
-    return mosaic
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -184,11 +160,11 @@ class ConvolveTestCase(unittest.TestCase):
         self.edgeBit = tmp.addMaskPlane("OUR_EDGE")
         del tmp
 
-        if False:
+        if not False:
             fullImage = afwImage.MaskedImageF(InputMaskedImagePath)
             
             # pick a small piece of the image to save time
-            bbox = afwImage.BBox(afwImage.PointI(0, 0), 45, 55)
+            bbox = afwImage.BBox(afwImage.PointI(0, 0), 145, 135)
             self.maskedImage = afwImage.MaskedImageF(fullImage, bbox)
         else:
             self.maskedImage = afwImage.MaskedImageF(InputMaskedImagePath)
@@ -241,7 +217,7 @@ class ConvolveTestCase(unittest.TestCase):
 
             if display:
                 refMaskedImage = imTestUtils.maskedImageFromArrays((refCnvImage, refCnvVariance, refCnvMask))
-                ds9.mtv(makeMosaic(refMaskedImage, cnvMaskedImage), frame=0)
+                ds9.mtv(displayUtils.makeMosaic(self.maskedImage, refMaskedImage, cnvMaskedImage), frame=0)
                 if False:
                     for (x, y) in ((0, 0), (1, 0), (0, 1), (50, 50)):
                         print "Mask(%d,%d) 0x%x 0x%x" % \
@@ -389,7 +365,7 @@ class ConvolveTestCase(unittest.TestCase):
                         refCnvImage, refCnvVariance, refCnvMask = \
                                      refConvolve(imVarMask, kernel, doNormalize, edgeBit, True)
                 
-                        if display:
+                        if display and False:
                             refMaskedImage = imTestUtils.maskedImageFromArrays((refCnvImage, refCnvVariance, refCnvMask))
 
                             if False:
@@ -399,7 +375,7 @@ class ConvolveTestCase(unittest.TestCase):
                                         x, y,
                                         refMaskedImage.getMask().get(x,y),
                                         cnvMaskedImage.getMask().get(x,y))
-                            ds9.mtv(makeMosaic(refMaskedImage, cnvMaskedImage), frame=0)
+                            ds9.mtv(displayUtils.makeMosaic(refMaskedImage, cnvMaskedImage), frame=0)
 
                         if not numpy.allclose(cnvImage, refCnvImage):
                             self.fail("Image from afwMath.convolveNew does not match image from refConvolve")
@@ -455,7 +431,7 @@ class ConvolveTestCase(unittest.TestCase):
     
             if display:
                 refMaskedImage = imTestUtils.maskedImageFromArrays((refCnvImage, refCnvVariance, refCnvMask))
-                ds9.mtv(makeMosaic(refMaskedImage, cnvMaskedImage), frame=0)
+                ds9.mtv(displayUtils.makeMosaic(refMaskedImage, cnvMaskedImage), frame=0)
             if not numpy.allclose(cnvImage, refCnvImage):
                 self.fail("Image from afwMath.convolveLinear does not match image from refConvolve in iter %d" % ii)
             if not numpy.allclose(cnvVariance, refCnvVariance):

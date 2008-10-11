@@ -47,6 +47,9 @@ SWIG_SHARED_PTR_DERIVED(NAME##TYPE##Ptr, lsst::afw::image::ImageBase<PIXEL_TYPE>
         return self->operator()(x, y, plane);
     }
     %pythoncode {
+    def Factory(self, *args):
+        """Return a Mask of this type"""
+        return NAME##TYPE(*args)
     #
     # Deal with incorrect swig wrappers for C++ "void operator op=()"
     #
