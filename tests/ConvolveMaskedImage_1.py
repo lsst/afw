@@ -217,7 +217,8 @@ class ConvolveTestCase(unittest.TestCase):
             refCnvImage, refCnvVariance, refCnvMask = refConvolve(imVarMask, k, doNormalize, edgeBit)
 
             if display:
-                refMaskedImage = imTestUtils.maskedImageFromArrays((refCnvImage, refCnvVariance, refCnvMask))
+                refMaskedImage = self.maskedImage.Factory(self.maskedImage.dimensions())
+                imTestUtils.maskedImageFromArrays(refMaskedImage, (refCnvImage, refCnvVariance, refCnvMask))
                 ds9.mtv(displayUtils.makeMosaic(self.maskedImage, refMaskedImage, cnvMaskedImage), frame=0)
                 if False:
                     for (x, y) in ((0, 0), (1, 0), (0, 1), (50, 50)):
@@ -431,7 +432,8 @@ class ConvolveTestCase(unittest.TestCase):
             cnvImage, cnvVariance, cnvMask = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
     
             if display:
-                refMaskedImage = imTestUtils.maskedImageFromArrays((refCnvImage, refCnvVariance, refCnvMask))
+                refMaskedImage = self.maskedImage.Factory(self.maskedImage.dimensions())
+                imTestUtils.maskedImageFromArrays(refMaskedImage, (refCnvImage, refCnvVariance, refCnvMask))
                 ds9.mtv(displayUtils.makeMosaic(refMaskedImage, cnvMaskedImage), frame=0)
             if not numpy.allclose(cnvImage, refCnvImage):
                 self.fail("Image from afwMath.convolveLinear does not match image from refConvolve in iter %d" % ii)
