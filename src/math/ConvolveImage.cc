@@ -28,6 +28,7 @@
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/image/ImageUtils.h"
 #include "lsst/afw/image/MaskedImage.h"
+#include "lsst/afw/math.h"
 
 // if true, ignore kernel pixels that have value 0 when convolving (only affects propagation of mask bits)
 
@@ -574,3 +575,44 @@ void lsst::afw::math::convolveLinear(
 
     copyBorder(convolvedImage, inImage, kernel, edgeBit);
 }
+
+/************************************************************************************************************/
+/*
+ *  Explicit instantiation of all convolve functions.
+ *
+ * This code needs to be compiled with full optimisation, and there's no need why
+ * it should be instantiated in the swig wrappers.
+ */
+namespace lsst { namespace afw { namespace math {
+
+#define IMAGE(PIXTYPE) lsst::afw::image::Image<PIXTYPE>
+#define MASKEDIMAGE(PIXTYPE) lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>
+//
+// Next a macro to generate needed instantiations for IMAGE (e.g. MASKEDIMAGE) and the specified pixel types
+//
+// Note that IMAGE is a macro, not a class name
+//
+/* NL's a newline for debugging -- don't define it and say
+ g++ -C -E -I$(eups list -s -d boost)/include Convolve.cc | perl -pe 's| *NL *|\n|g'
+*/
+#define NL /* */
+#define convolutionFuncsByType(IMAGE, PIXTYPE1, PIXTYPE2) \
+    template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, AnalyticKernel const&, bool, int); NL \
+    template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, DeltaFunctionKernel const&, bool, int); NL \
+    template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, LinearCombinationKernel const&, bool, int); NL \
+    template void convolveLinear(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, LinearCombinationKernel const&, int); NL \
+    template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, SeparableKernel const&, bool, int);
+
+//
+// Now a macro to specify Image and MaskedImage
+//
+#define convolutionFuncs(PIXTYPE1, PIXTYPE2) \
+    convolutionFuncsByType(IMAGE,       PIXTYPE1, PIXTYPE2) \
+    convolutionFuncsByType(MASKEDIMAGE, PIXTYPE1, PIXTYPE2)
+
+convolutionFuncs(double, double)
+convolutionFuncs(double, float)
+convolutionFuncs(float, float)
+convolutionFuncs(boost::uint16_t, boost::uint16_t)
+
+}}}

@@ -27,6 +27,7 @@ env.SharedLibrary(
         "math/KernelFunctions.cc",
         "math/LinearCombinationKernel.cc",
         "math/SeparableKernel.cc",
+        "math/ConvolveImage.cc",
     )],
     LIBS=filter(lambda x: x != "afw", env.getlibs("afw"))
 )

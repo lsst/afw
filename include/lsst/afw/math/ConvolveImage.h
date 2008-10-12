@@ -78,9 +78,10 @@ namespace math {
         int edgeBit=-1
     );
 }}}   // lsst::afw::math
-    
-#ifndef SWIG // don't bother SWIG with .cc files
-#include "lsst/afw/math/ConvolveImage.cc"
-#endif
+
+//
+// lsst/afw/math/ConvolveImage.cc has moved to src/math and all needed convolutions
+// are explicitly instantiated --- probably with full and aggressive optimisation
+//
 
 #endif // !defined(LSST_AFW_MATH_CONVOLVEIMAGE_H)

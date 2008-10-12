@@ -60,14 +60,14 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
 // Note that IMAGE is a macro, not a class name
 %define %convolutionFuncsByType(IMAGE, PIXTYPE1, PIXTYPE2)
     %template(convolve)       lsst::afw::math::convolve<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2),
-                                                        lsst::afw::math::Kernel>;
+                                                        lsst::afw::math::AnalyticKernel>;
     %template(convolve)       lsst::afw::math::convolve<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2),
                                                         lsst::afw::math::DeltaFunctionKernel>;
     %template(convolve)       lsst::afw::math::convolve<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2),
-                                                        lsst::afw::math::AnalyticKernel>;
+                                                        lsst::afw::math::LinearCombinationKernel>;
+    %template(convolveLinear) lsst::afw::math::convolveLinear<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2)>;
     %template(convolve)       lsst::afw::math::convolve<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2),
                                                         lsst::afw::math::SeparableKernel>;
-    %template(convolveLinear) lsst::afw::math::convolveLinear<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2)>;
 %enddef
 //
 // Now a macro to specify Image and MaskedImage
