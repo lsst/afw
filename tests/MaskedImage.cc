@@ -198,20 +198,21 @@ BOOST_AUTO_TEST_CASE(setValues) {
     BOOST_CHECK_EQUAL(ptr.mask(),     0xb); // == 0x9 | 0x2
     BOOST_CHECK_EQUAL(ptr.variance(), 18.5);
 
-    typedef ImageT::PixelConstant PixelConstant;
+    typedef ImageT::SinglePixel SinglePixel;
     *ptr = *ptr + *ptr2;
     BOOST_CHECK_EQUAL(ptr.image(),    14);
     BOOST_CHECK_EQUAL(ptr.mask(),     0xb);
     BOOST_CHECK_EQUAL(ptr.variance(), 26.5);
 
-    *ptr = *ptr + PixelConstant(36, 0x5, 3.5);
+    *ptr = *ptr + SinglePixel(36, 0x5, 3.5);
     *ptr = *ptr + 25;
     *ptr = 25 + ImageT::PixelCast(*ptr);
     BOOST_CHECK_EQUAL(ptr.image(),    100);
     BOOST_CHECK_EQUAL(ptr.mask(),     0xf);
     BOOST_CHECK_EQUAL(ptr.variance(), 30);
 
-    //BOOST_CHECK_EQUAL(ptr, ptr);
+    BOOST_CHECK_EQUAL(*ptr, *ptr);
+    BOOST_CHECK_EQUAL(*ptr, SinglePixel(ptr.image(), ptr.mask(), ptr.variance()));
 }
 
 /************************************************************************************************************/
@@ -374,7 +375,7 @@ BOOST_AUTO_TEST_CASE(locators) {
         image::MaskedImage<double> dimg(img.dimensions());
         *dimg.getImage() = 1000;
         image::MaskedImage<double>::xy_locator dloc = dimg.xy_at(1,1);
-        ImageT::Pixel::Constant outImage = 10;
+        ImageT::SinglePixel outImage = 10;
         BOOST_CHECK_EQUAL(outImage.image(), 10);
         BOOST_CHECK_EQUAL(dloc.image(), 1000);
         outImage = outImage + ImageT::PixelCast(*dloc);    // mixed double and PixelT

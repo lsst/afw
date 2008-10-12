@@ -34,9 +34,8 @@ try:
 except NameError:
     display=False
 
-if display:
-    import lsst.afw.display.ds9 as ds9
-    import lsst.afw.display.utils as displayUtils
+import lsst.afw.display.ds9 as ds9
+import lsst.afw.display.utils as displayUtils
 
 dataDir = eups.productDir("afwdata")
 if not dataDir:
@@ -125,10 +124,7 @@ class ConvolveTestCase(unittest.TestCase):
     def tearDown(self):
         del self.inImage
         
-    def testTearDown(self):
-        pass
-
-    def testUnityConvolution(self):
+    def XXXtestUnityConvolution(self):
         """Verify that convolution with a centered delta function reproduces the original.
         """
         # create a delta function kernel that has 1,1 in the center
@@ -148,7 +144,7 @@ class ConvolveTestCase(unittest.TestCase):
                 if not numpy.allclose(origImageArr, cnvImageArr):
                     self.fail("Convolved image does not match reference")
  
-    def testSpatiallyInvariantInPlaceConvolve(self):
+    def XXXtestSpatiallyInvariantInPlaceConvolve(self):
         """Test convolve with a spatially invariant Gaussian function
         """
         kCols, kRows = 6, 7
@@ -170,7 +166,7 @@ class ConvolveTestCase(unittest.TestCase):
             if not numpy.allclose(cnvImageArr, refCnvImageArr):
                 self.fail("Convolved image does not match reference for doNormalize=%s" % doNormalize)
                     
-    def testSpatiallyInvariantConvolve(self):
+    def XXXtestSpatiallyInvariantConvolve(self):
         """Test convolve with a spatially invariant Gaussian function
         """
         kCols = 7
@@ -190,7 +186,7 @@ class ConvolveTestCase(unittest.TestCase):
             if not numpy.allclose(cnvImageArr, refCnvImageArr):
                 self.fail("Convolved image does not match reference for doNormalize=%s" % doNormalize)
 
-    def testSpatiallyVaryingInPlaceConvolve(self):
+    def XXXtestSpatiallyVaryingInPlaceConvolve(self):
         """Test convolve with a spatially varying Gaussian function
         """
         kCols = 7
@@ -221,7 +217,7 @@ class ConvolveTestCase(unittest.TestCase):
             if not numpy.allclose(cnvImageArr, refCnvImageArr):
                 self.fail("Convolved image does not match reference for doNormalize=%s" % doNormalize)
 
-    def testSpatiallyVaryingSeparableInPlaceConvolve(self):
+    def XXXtestSpatiallyVaryingSeparableInPlaceConvolve(self):
         """Test convolve of a separable kernel with a spatially varying Gaussian function
         """
         kCols = 7
@@ -256,7 +252,7 @@ class ConvolveTestCase(unittest.TestCase):
             if not numpy.allclose(cnvImageArr, refCnvImageArr):
                 self.fail("Convolved image does not match reference for doNormalize=%s" % doNormalize)
     
-    def testDeltaConvolve(self):
+    def XXXtestDeltaConvolve(self):
         """Test convolve with various delta function kernels using optimized code
         """
         doNormalize = True
@@ -303,24 +299,31 @@ class ConvolveTestCase(unittest.TestCase):
         lcKernel = afwMath.LinearCombinationKernel(kVec, sFunc)
         lcKernel.setSpatialParameters(sParams)
 
-        refCnvImage = afwImage.ImageF(self.inImage.dimensions())
-        afwMath.convolve(refCnvImage, self.inImage, lcKernel, doNormalize)
-        refCnvImageArr = imTestUtils.arrayFromImage(refCnvImage)
+        cnvImage = afwImage.ImageF(self.inImage.dimensions())
+        afwMath.convolve(cnvImage, self.inImage, lcKernel, doNormalize)
+        cnvImageArr = imTestUtils.arrayFromImage(cnvImage)
 
         inImageArr = imTestUtils.arrayFromImage(self.inImage)
-        ref2CnvImageArr = refConvolve(inImageArr, lcKernel, doNormalize)
+        refCnvImageArr = refConvolve(inImageArr, lcKernel, doNormalize)
         
-        if not numpy.allclose(refCnvImageArr, ref2CnvImageArr):
+        if not numpy.allclose(cnvImageArr, refCnvImageArr):
             self.fail("Image from afwMath.convolve does not match image from refConvolve")
 
         cnvImage = afwImage.ImageF(self.inImage.dimensions())
-        afwMath.convolveLinear(cnvImage, self.inImage, lcKernel)
-        cnvImageArr = imTestUtils.arrayFromImage(cnvImage)
-    
-        if not numpy.allclose(cnvImageArr, ref2CnvImageArr):
-            self.fail("Image from afwMath.convolveLinear does not match image from refConvolve in iter %d" % ii)
+        # compute twice, to be sure cnvImage is properly reset
+        for ii in range(2):        
+            afwMath.convolveLinear(cnvImage, self.inImage, lcKernel)
+            cnvImageArr = imTestUtils.arrayFromImage(cnvImage)
+            
+            if display:
+                refImage = self.inImage.Factory(self.inImage.dimensions())
+                imTestUtils.imageFromArray(refImage, refCnvImageArr)
+                ds9.mtv(displayUtils.makeMosaic(self.inImage, cnvImage, refImage))
 
-    def testConvolveLinearNewImage(self):
+            if not numpy.allclose(cnvImageArr, refCnvImageArr):
+                self.fail("Image from afwMath.convolveLinear does not match image from refConvolve in iter %d" % ii)
+
+    def XXXtestConvolveLinearNewImage(self):
         """Test convolveLinearNew
         """
         kCols = 5

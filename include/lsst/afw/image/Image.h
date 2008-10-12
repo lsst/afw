@@ -132,11 +132,10 @@ namespace image {
         typedef detail::basic_tag image_category;
 
 #if !defined(SWIG)
-        typedef PixelT PixelConstant;
+        typedef PixelT SinglePixel;
 
         struct Pixel {
             typedef PixelT type;
-            typedef PixelConstant Constant;
         };
 #endif
 
@@ -156,11 +155,11 @@ namespace image {
 
         template<typename OtherPixelT> friend class ImageBase; // needed by generalised copy constructors
         //
-        /// @brief Convert a type to our PixelConstant type
+        /// @brief Convert a type to our SinglePixel type
         //
-        template<typename PixelConstantT>
-        static PixelConstant PixelCast(PixelConstantT rhs) {
-            return PixelConstant(rhs);
+        template<typename SinglePixelT>
+        static SinglePixel PixelCast(SinglePixelT rhs) {
+            return SinglePixel(rhs);
         }
         //
         // DecoratedImage needs enough access to ImageBase to read data from disk;  we might be able to design around this.

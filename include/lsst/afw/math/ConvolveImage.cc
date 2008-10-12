@@ -144,7 +144,7 @@ inline void copyBorder(
  * @ingroup afw
  */
 template <typename OutImageT, typename InImageT>
-inline typename OutImageT::Pixel::Constant lsst::afw::math::apply(
+inline typename OutImageT::SinglePixel lsst::afw::math::apply(
     typename InImageT::const_xy_locator& imageLocator,
                                         ///< locator for image pixel that overlaps (0,0) pixel of kernel(!)
     lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::const_xy_locator &kernelLocator,
@@ -152,7 +152,7 @@ inline typename OutImageT::Pixel::Constant lsst::afw::math::apply(
     int kWidth,                         ///< number of columns in kernel
     int kHeight                         ///< number of rows in kernel
                                   ) {
-    typename OutImageT::Pixel::Constant outValue = 0;
+    typename OutImageT::SinglePixel outValue = 0;
     for (int y = 0; y != kHeight; ++y) {
         for (int x = 0; x != kWidth; ++x, ++imageLocator.x(), ++kernelLocator.x()) {
             typename lsst::afw::math::Kernel::Pixel::type const kVal = kernelLocator[0];
@@ -184,7 +184,7 @@ inline typename OutImageT::Pixel::Constant lsst::afw::math::apply(
  * @ingroup afw
  */
 template <typename OutImageT, typename InImageT>
-inline typename OutImageT::Pixel::Constant lsst::afw::math::apply(
+inline typename OutImageT::SinglePixel lsst::afw::math::apply(
     typename InImageT::const_xy_locator& imageLocator,
                                         ///< locator for image pixel that overlaps (0,0) pixel of kernel(!)
     std::vector<lsst::afw::math::Kernel::PixelT> const &kernelXList,  ///< kernel column vector
@@ -194,7 +194,7 @@ inline typename OutImageT::Pixel::Constant lsst::afw::math::apply(
 
     std::vector<lsst::afw::math::Kernel::PixelT>::const_iterator kernelYIter = kernelYList.begin();
 
-    typedef typename OutImageT::Pixel::Constant OutT;
+    typedef typename OutImageT::SinglePixel OutT;
     OutT outValue = 0;
     for (k_iter kernelYIter = kernelYList.begin(), end = kernelYList.end();
          kernelYIter != end; ++kernelYIter) {
@@ -463,6 +463,41 @@ void lsst::afw::math::convolve(
  *
  * @ingroup afw
  */
+namespace {
+    //
+    // Implementations of PixelCast that work for MaskedImage pixels (if true_type) or
+    // other, presumably scalar, pixels if false_type
+    //
+    // The choice is made on the basis of inheritance from detail::maskedImagePixel_tag
+    //
+    template<typename OutPixelT, typename InPixelT>
+    inline OutPixelT doAddPixel(OutPixelT& lhs, InPixelT const& rhs, float, boost::mpl::false_) {
+        return lhs + rhs;
+    }
+
+    template<typename OutPixelT, typename InPixelT>
+    inline OutPixelT doAddPixel(OutPixelT& lhs, InPixelT const& rhs, float covariance, boost::mpl::true_) {
+        return lhs.addEq(rhs, covariance);
+    }
+    
+    template<typename OutPixelT, typename InPixelT>
+    inline OutPixelT addPixel(OutPixelT& lhs,
+                              InPixelT const& rhs,
+                              float covariance) {
+        return doAddPixel(lhs, rhs, covariance,
+              typename boost::mpl::and_<
+                  typename boost::is_base_of<lsst::afw::image::detail::maskedImagePixel_tag, InPixelT>::type,
+                  typename boost::is_base_of<lsst::afw::image::detail::maskedImagePixel_tag, OutPixelT>::type
+              >::type());
+    }
+
+    template<typename OutPixelT, typename InPixelT>
+    inline OutPixelT addPixel(OutPixelT& lhs,
+                              InPixelT const& rhs) {
+        return lhs + rhs;
+    }
+}
+
 template <typename OutImageT, typename InImageT>
 void lsst::afw::math::convolveLinear(
     OutImageT& convolvedImage,          ///< convolved image
@@ -528,9 +563,9 @@ void lsst::afw::math::convolveLinear(
             
             kernel.computeKernelParametersFromSpatialModel(kernelCoeffList, colPos, rowPos);
 
-            typename OutImageT::Pixel::Constant cnvImagePix = 0.0;
+            typename OutImageT::SinglePixel cnvImagePix = 0.0;
             for (unsigned int i = 0; i != basisIterList.size(); ++i) {
-                cnvImagePix = cnvImagePix + kernelCoeffList[i]*(*basisIterList[i]);
+                cnvImagePix = addPixel(cnvImagePix, OutImageT::PixelCast(*basisIterList[i])*kernelCoeffList[i], 1.0);
                 ++basisIterList[i];
             }
             *cnvXIter = cnvImagePix;

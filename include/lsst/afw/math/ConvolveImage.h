@@ -25,13 +25,13 @@ namespace afw {
 namespace math {
 
     template <typename OutImageT, typename InImageT>
-    inline typename OutImageT::Pixel::Constant apply(
+    inline typename OutImageT::SinglePixel apply(
         typename InImageT::const_xy_locator& inLocator,
         typename lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::const_xy_locator& kernelLocator,
         int kWidth, int kHeight);
     
     template <typename OutImageT, typename InImageT>
-    inline typename OutImageT::Pixel::Constant apply(
+    inline typename OutImageT::SinglePixel apply(
         typename InImageT::const_xy_locator& inImage,
         std::vector<lsst::afw::math::Kernel::PixelT> const& kernelColList,
         std::vector<lsst::afw::math::Kernel::PixelT> const& kernelRowList

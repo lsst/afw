@@ -49,51 +49,61 @@ def getImageVarianceMaskFromMaskedImage(maskedImage):
     """
     return (maskedImage.getImage(), maskedImage.getVariance(), maskedImage.getMask())
 
-def imageFromArray(arr):
+def imageFromArray(im, arr):
     """Create an lsst.afwImage.ImageD from a numpy array.
     The data is presently copied but do not rely on that.
     """
-    im = afwImage.ImageD(arr.shape[0], arr.shape[1])
+
+    assert im.getWidth() == arr.shape[0] and im.getHeight() == arr.shape[1]
+    
     for row in range(im.getHeight()):
         for col in range(im.getWidth()):
             im.set(col, row, arr[col, row])
+
     return im
 
-def maskFromArray(arr):
+def maskFromArray(mask, arr):
     """Create an lsst.afwImage.MaskD from a numpy array
     The data is presently copied but do not rely on that.
     """
+
+    assert mask.getWidth() == arr.shape[0] and mask.getHeight() == arr.shape[1]
+    
     mask = afwImage.MaskD(arr.shape[0], arr.shape[1])
     for row in range(mask.getHeight()):
         for col in range(mask.getWidth()):
             mask.set(col, row, int(arr[col, row]))
+
     return mask
 
-def maskedImageFromArrays(imVarMaskArrays):
+def maskedImageFromArrays(maskedImage, imVarMaskArrays):
     """Create a MaskedImage from a tuple of (image, variance, mask) arrays
     The data is presently copied but do not rely on that.
     """
     imArr, varArr, maskArr = imVarMaskArrays
     if not (imArr.shape == varArr.shape == maskArr.shape):
         raise RuntimeError("The arrays must all be the same shape")
-    maskedImage = afwImage.MaskedImageF(imArr.shape[0], imArr.shape[1])
+
+    assert maskedImage.getWidth() == imArr.shape[0] and maskedImage.getHeight() == imArr.shape[1]
+
     im, var, mask = getImageVarianceMaskFromMaskedImage(maskedImage)
     for row in range(maskedImage.getHeight()):
         for col in range(maskedImage.getWidth()):
             im.set(col, row, imArr[col, row])
             var.set(col, row, varArr[col, row])
             mask.set(col, row, maskArr[col, row])
+
     return maskedImage
 
 if __name__ == "__main__":
-    maskedImage = afwImage.MaskedImageD()
-    maskedImage.readFits("data/small")
-    bb = afwImage.BBox2i(200, 100, 50, 50)
-    siPtr = maskedImage.getSubImage(bb)
-    si = siPtr.get()
-    si.this.disown()
+    maskedImage = afwImage.MaskedImageD("data/small")
+    bb = afwImage.BBox(afwImage.PointI(200, 100), 50, 50)
+    siPtr = maskedImage.Factory(maskedImage, bb)
+
     siArrays = arraysFromMaskedImage(si)
-    siCopy = maskedImageFromArrays(siArrays)
+    siCopy = maskedImage.Factory(maskedImage.dimensions())
+    siCopy = maskedImageFromArrays(siCopy, siArrays)
+
     maskedImage.writeFits("mi")
     si.writeFits("si")
     siCopy.writeFits("siCopy")

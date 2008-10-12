@@ -77,15 +77,14 @@ namespace image {
         // This class allows us to manipulate the tuples returned by MaskedImage iterators/locators
         // as if they were POD.  This provides convenient syntactic sugar, but it also permits us
         // to write generic algorithms to manipulate MaskedImages as well as Images
-        class PixelConstant;
+        class SinglePixel;
 
 #if !defined(SWIG)
         class Pixel : detail::maskedImagePixel_tag {
-            friend class PixelConstant;
+            friend class SinglePixel;
 
         public:
             typedef Pixel type;
-            typedef PixelConstant Constant;
             //
             // This constructor casts away const.  This should be fixed by making const Pixels.
             //
@@ -150,21 +149,21 @@ namespace image {
                 return _image;
             }
 
-            // We need a temporary to support operatorX(), which means that we need a PixelConstant
+            // We need a temporary to support operatorX(), which means that we need a SinglePixel
             // This is painful boilerplate, so use the CPP
 
 #define LSST_MASKED_IMAGE_PIXEL_OPERATOR_X(OP, OPEQ) /* E.g. OP: + and OPEQ: += */ \
             template<typename RPixelT> \
-            friend PixelConstant const operator OP(Pixel const lhs, RPixelT const rhs) { \
-                PixelConstant tmp(lhs);     /* copy lhs into local storage */ \
+            friend SinglePixel const operator OP(Pixel const lhs, RPixelT const rhs) { \
+                SinglePixel tmp(lhs);     /* copy lhs into local storage */ \
                 Pixel(tmp) OPEQ PixelCast(rhs); \
                 return tmp; \
             } \
-            friend PixelConstant const operator OP(Pixel const lhs, ImagePixelT rhs) { \
-                return lhs OP PixelConstant(rhs); \
+            friend SinglePixel const operator OP(Pixel const lhs, ImagePixelT rhs) { \
+                return lhs OP SinglePixel(rhs); \
             } \
-            friend PixelConstant const operator OP(ImagePixelT lhs, Pixel const rhs) { \
-                return PixelConstant(lhs) OP rhs; \
+            friend SinglePixel const operator OP(ImagePixelT lhs, Pixel const rhs) { \
+                return SinglePixel(lhs) OP rhs; \
             }
 
             Pixel const& operator+=(double const rhs) {
@@ -178,6 +177,23 @@ namespace image {
                 variance() += rhs.variance();
                     
                 return *this;
+            }
+            /// @brief Like +=, but allows for covariances
+            Pixel const& addEq(Pixel const& rhs, ///< Right hand side
+                               double const alpha ///< covariance is 2 alpha sqrt(this.variance*rhs.variance)
+                              ) {
+                image() += rhs.image();
+                mask() |= rhs.mask();
+                variance() += rhs.variance() + 2*alpha*sqrt(variance()*rhs.variance());
+
+                return *this;
+            }
+            template<typename RPixelT>
+            friend SinglePixel const addEq(Pixel const lhs, RPixelT const rhs, double const alpha) {
+                SinglePixel tmp(lhs);     /* copy lhs into local storage */
+                Pixel ptmp(tmp);          /* a Pixel that points into tmp */
+                ptmp.addEq(PixelCast(rhs), alpha);
+                return tmp;
             }
             LSST_MASKED_IMAGE_PIXEL_OPERATOR_X(+, +=);
 
@@ -210,7 +226,24 @@ namespace image {
                     
                 return *this;
             }
+#if 0
             LSST_MASKED_IMAGE_PIXEL_OPERATOR_X(*, *=);
+#else
+            template<typename RPixelT> 
+            friend SinglePixel const operator *(Pixel const lhs, RPixelT const rhs) { 
+                SinglePixel tmp(lhs);     /* copy lhs into local storage */ 
+                SinglePixel rtmp = PixelCast(rhs); 
+                Pixel(tmp) *= PixelCast(rhs); 
+                return tmp; 
+            } 
+            friend SinglePixel const operator *(Pixel const lhs, ImagePixelT rhs) { 
+                return lhs * SinglePixel(rhs); 
+            } 
+            friend SinglePixel const operator *(ImagePixelT lhs, Pixel const rhs) { 
+                return SinglePixel(lhs) * rhs; 
+            }
+#endif
+            
 
             Pixel const& operator/=(double const rhs) {
                 image() /= rhs;
@@ -258,37 +291,51 @@ namespace image {
         // just pass the values to Pixel's constructor as it has no memory of its own,
         // and we need temporaries to support arithmetic
         //
-        class PixelConstant : public Pixel {
+        class SinglePixel : public Pixel {
         public:
             template<typename ImagePT, typename MaskPT, typename VarPT>
-            PixelConstant(typename MaskedImage<ImagePT, MaskPT, VarPT>::Pixel rhs) :
-                Pixel(_image, _mask, _variance),
-                _image(rhs.image()), _mask(rhs.mask()), _variance(rhs.variance()) {
+            SinglePixel(typename MaskedImage<ImagePT, MaskPT, VarPT>::Pixel rhs) :
+                Pixel(_myImage, _myMask, _myVariance),
+                _myImage(rhs.image()), _myMask(rhs.mask()), _myVariance(rhs.variance()) {
                 ;
             }
 
             template<typename ImagePT, typename MaskPT, typename VarPT>
-            PixelConstant(typename MaskedImage<ImagePT, MaskPT, VarPT>::PixelConstant rhs) :
-                Pixel(_image, _mask, _variance),
-                _image(rhs.image()), _mask(rhs.mask()), _variance(rhs.variance()) {
+            SinglePixel(typename MaskedImage<ImagePT, MaskPT, VarPT>::SinglePixel rhs) :
+                Pixel(_myImage, _myMask, _myVariance),
+                _myImage(rhs.image()), _myMask(rhs.mask()), _myVariance(rhs.variance()) {
                 ;
             }
 
-            PixelConstant(ImagePixelT image=0, MaskPixelT mask=0, VariancePixelT variance=0) :
-                Pixel(_image, _mask, _variance),
-                _image(image), _mask(mask), _variance(variance) {
+            SinglePixel(ImagePixelT image=0, MaskPixelT mask=0, VariancePixelT variance=0) :
+                Pixel(_myImage, _myMask, _myVariance),
+                _myImage(image), _myMask(mask), _myVariance(variance) {
             }
-            PixelConstant(Pixel imv) :
-                Pixel(_image, _mask, _variance),
-                _image(imv.image()), _mask(imv.mask()), _variance(imv.variance()) {
+
+            SinglePixel(Pixel imv) :
+                Pixel(_myImage, _myMask, _myVariance),
+                _myImage(imv.image()), _myMask(imv.mask()), _myVariance(imv.variance()) {
+            }
+
+            SinglePixel(SinglePixel const& rhs) :
+                Pixel(_myImage, _myMask, _myVariance),
+                _myImage(rhs._myImage), _myMask(rhs._myMask), _myVariance(rhs._myVariance) {
+            }
+
+            SinglePixel& operator=(SinglePixel const& rhs) {
+                _myImage = rhs._myImage;
+                _myMask = rhs._myMask;
+                _myVariance = rhs._myVariance;
+
+                return *this;
             }
         private:
-            ImagePixelT _image;
-            MaskPixelT _mask;
-            VariancePixelT _variance;
+            ImagePixelT _myImage;
+            MaskPixelT _myMask;
+            VariancePixelT _myVariance;
         };
 
-        friend std::ostream& operator<<(std::ostream& s, const PixelConstant& pix) {
+        friend std::ostream& operator<<(std::ostream& s, const Pixel& pix) {
             s << "(" << pix.image() << " : " << pix.mask() << " : " << pix.variance() << ")";
             
             return s;
@@ -646,24 +693,24 @@ namespace image {
         //
         // The choice is made on the basis of inheritance from detail::maskedImagePixel_tag
         //
-        template<typename PixelConstantT>
-        static PixelConstant doPixelCast(PixelConstantT rhs, boost::false_type) {
-            return PixelConstant(rhs);
+        template<typename SinglePixelT>
+        static SinglePixel doPixelCast(SinglePixelT rhs, boost::false_type) {
+            return SinglePixel(rhs);
         }
 
-        static PixelConstant doPixelCast(PixelConstant rhs, boost::true_type) {
+        static SinglePixel doPixelCast(SinglePixel rhs, boost::true_type) {
             return rhs;
         }
 
-        template<typename PixelConstantT>
-        static PixelConstant doPixelCast(PixelConstantT rhs, boost::true_type) {
-            return PixelConstant(rhs.image(), rhs.mask(), rhs.variance());
+        template<typename SinglePixelT>
+        static SinglePixel doPixelCast(SinglePixelT rhs, boost::true_type) {
+            return SinglePixel(rhs.image(), rhs.mask(), rhs.variance());
         }
     public:
 
-        template<typename PixelConstantT>
-        static PixelConstant PixelCast(PixelConstantT rhs) {
-            return doPixelCast(rhs, typename boost::is_base_of<detail::maskedImagePixel_tag, PixelConstantT>::type());
+        template<typename SinglePixelT>
+        static SinglePixel PixelCast(SinglePixelT rhs) {
+            return doPixelCast(rhs, typename boost::is_base_of<detail::maskedImagePixel_tag, SinglePixelT>::type());
         }
 #endif  // !defined(SWIG)
 
