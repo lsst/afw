@@ -226,24 +226,7 @@ namespace image {
                     
                 return *this;
             }
-#if 0
             LSST_MASKED_IMAGE_PIXEL_OPERATOR_X(*, *=);
-#else
-            template<typename RPixelT> 
-            friend SinglePixel const operator *(Pixel const lhs, RPixelT const rhs) { 
-                SinglePixel tmp(lhs);     /* copy lhs into local storage */ 
-                SinglePixel rtmp = PixelCast(rhs); 
-                Pixel(tmp) *= PixelCast(rhs); 
-                return tmp; 
-            } 
-            friend SinglePixel const operator *(Pixel const lhs, ImagePixelT rhs) { 
-                return lhs * SinglePixel(rhs); 
-            } 
-            friend SinglePixel const operator *(ImagePixelT lhs, Pixel const rhs) { 
-                return SinglePixel(lhs) * rhs; 
-            }
-#endif
-            
 
             Pixel const& operator/=(double const rhs) {
                 image() /= rhs;
