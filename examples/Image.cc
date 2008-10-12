@@ -118,8 +118,7 @@ int main() {
 #if 1
     print(jmg, "jmg");
 
-    Image<float> kmg;
-    kmg = jmg;
+    Image<float> kmg = jmg;
     kmg(0,0) = 111;
     kmg += 222;
     kmg -= 222;
