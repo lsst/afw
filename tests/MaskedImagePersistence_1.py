@@ -39,7 +39,7 @@ class MaskedImagePersistenceTestCase(unittest.TestCase):
         # Choose a file to manipulate
         self.infile = os.path.join(dataDir, "small_MI")
 
-        self.maskedImage = afwImage.MaskedImageF(); self.maskedImage.readFits(self.infile)
+        self.maskedImage = afwImage.MaskedImageF(self.infile)
         
     def tearDown(self):
         del self.additionalData

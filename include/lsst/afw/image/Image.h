@@ -45,7 +45,18 @@ namespace image {
     }
 
     /************************************************************************************************************/
+    /// @brief A type like std::pair<int, int>, but in lsst::afw::image thus permitting Koenig lookup
+    //
+    // We want to be able to call operator+= in the global namespace, but define it in lsst::afw::image.
+    // To make this possible, at least one of its arguments must be in lsst::afw::image, so we define
+    // this type to make the argument lookup ("Koenig Lookup") work smoothly
+    //
+    struct pair2I : std::pair<int, int> {
+        explicit pair2I(int first, int second) : std::pair<int, int>(first, second) {}
+    };
 
+    /************************************************************************************************************/
+    /// @brief a single Point, templated over the type to be used to store the coordinates
     template<typename T>
     class Point {
     public:
@@ -83,10 +94,43 @@ namespace image {
     
     class BBox : private std::pair<PointI, PointI > {
     public:
-        BBox(PointI llc, int width, int height) :
-            std::pair<PointI, PointI>(llc, PointI(width, height)) {}
-        BBox(PointI llc, PointI urc) :
+        //! Create a BBox with origin llc and the specified dimensions
+        BBox(PointI llc=PointI(0,0),       ///< Desired lower left corner
+             int width=0,                  ///< Width of BBox (pixels)
+             int height=0                  ///< Height of BBox (pixels)
+            ) :
+            std::pair<PointI, PointI>(llc, PointI(width, height)) {} 
+        //! Create a BBox given two corners
+        BBox(PointI llc,                ///< Desired lower left corner
+             PointI urc                 ///< Desired upper right corner
+            ) :
             std::pair<PointI, PointI>(llc, urc - llc + 1) {}
+
+        //! Grow the BBox to include the specified PointI
+        void grow(PointI p              ///< The point to include
+                 ) {
+            if (p.getX() < first.getX()) {
+                first.setX(p.getX());
+            } else if (p.getX() > second.getX()) {
+                second.setX(p.getX());
+            }
+
+            if (p.getY() < first.getY()) {
+                first.setY(p.getY());
+            } else if (p.getY() > second.getY()) {
+                second.setY(p.getY());
+            }
+        }
+        //! Offset a BBox by the specified vector
+        void shift(int dx,               ///< How much to offset in x
+                   int dy                ///< How much to offset in y
+                  ) {
+            first.setX(first.getX() + dx);
+            first.setY(first.getY() + dy);
+            second.setX(second.getX() + dx);
+            second.setY(second.getY() + dy);
+        }
+
         int getX0() const { return first.getX(); }
         int getY0() const { return first.getY(); }
         int getX1() const { return first.getX() + second.getX() - 1; }
@@ -102,6 +146,26 @@ namespace image {
         bool operator!=(const BBox& rhs) const {
             return !operator==(rhs);
         }
+    };
+
+    /**
+     * \brief A BCircle (named by analogy to BBox) is used to describe a circular patch of pixels
+     *
+     * Only integer centers are supported.  It'd be easy enough to add other
+     * types, but as BCircles are designed by analogy to BBoxes to define
+     * sets of pixels, I haven't done so
+     */
+    class BCircle : private std::pair<PointI, float > {
+    public:
+        /// Create a BCircle given centre and radius
+        BCircle(PointI center,               //!< Centre of circle
+                float r)                     //!< Radius of circle
+            : std::pair<PointI, float>(center, r) {}
+
+        /// Return the circle's centre
+        PointI const& getCenter() const { return first; }
+        /// Return the circle's radius
+        float getRadius() const { return second; }
     };
 
     /************************************************************************************************************/
@@ -152,7 +216,42 @@ namespace image {
         typedef typename _const_view_t::x_iterator const_x_iterator;
         typedef typename _view_t::y_iterator y_iterator;
         typedef typename _const_view_t::y_iterator const_y_iterator;
+        //
+        // Allow users to use std::pair<int, int> to manipulate xy_locators.  They're
+        // declared here for reasons similar to Meyer's item 46 --- we want to make
+        // sure that they're instantiated along with the class
+        //
+        // We don't actually use std::pair<int, int> but our own struct in our namespace
+        // so as to enable Koenig lookup
+        //
+        friend xy_locator& operator+=(xy_locator& loc, pair2I const& off) {
+            return (loc += boost::gil::point2<std::ptrdiff_t>(off.first, off.second));
+        }
+        friend const_xy_locator& operator+=(const_xy_locator& loc, pair2I const& off) {
+            return (loc += boost::gil::point2<std::ptrdiff_t>(off.first, off.second));
+        }
 
+        friend xy_locator& operator-=(xy_locator& loc, pair2I const& off) {
+            return (loc -= boost::gil::point2<std::ptrdiff_t>(off.first, off.second));
+        }
+        friend const_xy_locator& operator-=(const_xy_locator& loc, pair2I const& off) {
+            return (loc -= boost::gil::point2<std::ptrdiff_t>(off.first, off.second));
+        }
+
+        /************************************************************************************************************/
+#define LSST_OP_EQUALS(ITER, OP, OPEQ)          \
+        template<typename T> \
+        friend typename std::iterator_traits<ITER>::value_type& \
+                         operator OPEQ(typename std::iterator_traits<ITER>::value_type& lhs, T rhs) { \
+            return (lhs = lhs OP rhs); \
+        }
+        LSST_OP_EQUALS(iterator, +, +=)
+        LSST_OP_EQUALS(iterator, -, -=)
+        LSST_OP_EQUALS(iterator, *, *=)
+        LSST_OP_EQUALS(iterator, /, /=)
+
+#undef LSST_OP_EQUALS
+        //
         template<typename OtherPixelT> friend class ImageBase; // needed by generalised copy constructors
         //
         /// @brief Convert a type to our SinglePixel type
@@ -341,7 +440,7 @@ namespace image {
     
     template<typename PixelT>
     void swap(Image<PixelT>& a, Image<PixelT>& b);
-
+    
     /************************************************************************************************************/
     
     template<typename PixelT>

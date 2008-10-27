@@ -161,7 +161,7 @@ inline typename OutImageT::SinglePixel lsst::afw::math::apply(
             if (kVal != 0)
 #endif
             {
-                outValue = outValue + *imageLocator*kVal;
+                outValue += *imageLocator*kVal;
             }
         }
 
@@ -208,7 +208,7 @@ inline typename OutImageT::SinglePixel lsst::afw::math::apply(
             if (kValX != 0)
 #endif
             {
-                outValueY = outValueY + *imageLocator*kValX;
+                outValueY += *imageLocator*kValX;
             }
         }
         
@@ -217,7 +217,7 @@ inline typename OutImageT::SinglePixel lsst::afw::math::apply(
         if (kValY != 0)
 #endif
         {
-            outValue = outValue + outValueY*kValY;
+            outValue += outValueY*kValY;
         }
         
         imageLocator += lsst::afw::image::detail::difference_type(-kernelXList.size(), 1);
@@ -345,7 +345,7 @@ void lsst::afw::math::basicConvolve(
         typename InImageT::x_iterator inPtr = inImage.x_at(inStartX, i +  inStartY);
         for (typename OutImageT::x_iterator cnvPtr = convolvedImage.x_at(cnvStartX, i + cnvStartY),
                  cnvEnd = cnvPtr + cnvWidth; cnvPtr != cnvEnd; ++cnvPtr, ++inPtr){
-            *cnvPtr = OutImageT::PixelCast(*inPtr);
+            *cnvPtr = *inPtr;
         }
     }
 }
@@ -464,41 +464,6 @@ void lsst::afw::math::convolve(
  *
  * @ingroup afw
  */
-namespace {
-    //
-    // Implementations of PixelCast that work for MaskedImage pixels (if true_type) or
-    // other, presumably scalar, pixels if false_type
-    //
-    // The choice is made on the basis of inheritance from detail::maskedImagePixel_tag
-    //
-    template<typename OutPixelT, typename InPixelT>
-    inline OutPixelT doAddPixel(OutPixelT& lhs, InPixelT const& rhs, float, boost::mpl::false_) {
-        return lhs + rhs;
-    }
-
-    template<typename OutPixelT, typename InPixelT>
-    inline OutPixelT doAddPixel(OutPixelT& lhs, InPixelT const& rhs, float covariance, boost::mpl::true_) {
-        return lhs.addEq(rhs, covariance);
-    }
-    
-    template<typename OutPixelT, typename InPixelT>
-    inline OutPixelT addPixel(OutPixelT& lhs,
-                              InPixelT const& rhs,
-                              float covariance) {
-        return doAddPixel(lhs, rhs, covariance,
-              typename boost::mpl::and_<
-                  typename boost::is_base_of<lsst::afw::image::detail::maskedImagePixel_tag, InPixelT>::type,
-                  typename boost::is_base_of<lsst::afw::image::detail::maskedImagePixel_tag, OutPixelT>::type
-              >::type());
-    }
-
-    template<typename OutPixelT, typename InPixelT>
-    inline OutPixelT addPixel(OutPixelT& lhs,
-                              InPixelT const& rhs) {
-        return lhs + rhs;
-    }
-}
-
 template <typename OutImageT, typename InImageT>
 void lsst::afw::math::convolveLinear(
     OutImageT& convolvedImage,          ///< convolved image
@@ -566,7 +531,7 @@ void lsst::afw::math::convolveLinear(
 
             typename OutImageT::SinglePixel cnvImagePix = 0.0;
             for (unsigned int i = 0; i != basisIterList.size(); ++i) {
-                cnvImagePix = addPixel(cnvImagePix, OutImageT::PixelCast(*basisIterList[i])*kernelCoeffList[i], 1.0);
+                cnvImagePix = lsst::afw::image::pixel::plus(cnvImagePix, *basisIterList[i]*kernelCoeffList[i], 1.0);
                 ++basisIterList[i];
             }
             *cnvXIter = cnvImagePix;

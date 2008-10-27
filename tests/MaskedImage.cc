@@ -20,14 +20,14 @@ typedef image::MaskedImage<PixelT> ImageT;
 /************************************************************************************************************/
 
 template <typename PixelT>
-void y_gradient(image::MaskedImage<PixelT> & src, image::MaskedImage<PixelT> & dst) {
+void y_gradient(ImageT & src, ImageT & dst) {
     assert(src.dimensions() == dst.dimensions());
 
 #define CONST 1
 #if CONST
-    typedef typename image::MaskedImage<PixelT>::const_xy_locator xyl;
+    typedef typename ImageT::const_xy_locator xyl;
 #else
-    typedef typename image::MaskedImage<PixelT>::xy_locator xyl;
+    typedef typename ImageT::xy_locator xyl;
 #endif
     xyl src_loc = src.xy_at(0, 1);
 
@@ -38,7 +38,7 @@ void y_gradient(image::MaskedImage<PixelT> & src, image::MaskedImage<PixelT> & d
 #endif
 
     for (int r = 1; r < src.getHeight() - 1; ++r) {
-        for (typename image::MaskedImage<PixelT>::x_iterator dst_it = dst.row_begin(r);
+        for (typename ImageT::x_iterator dst_it = dst.row_begin(r);
              						dst_it != dst.row_end(r); ++dst_it, ++src_loc.x()) {
 #if USE_CACHE_LOCATION                  // this version is faster
             dst_it.image() = (src_loc.image(above) - src_loc.image(below))/2;
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(setValues) {
     BOOST_CHECK_EQUAL(ptr.mask(),     img.getWidth() + 1);
     BOOST_CHECK_EQUAL(ptr.variance(), 202);
 
-    *ptr /= *ptr;
+    *ptr /= *ptr;                       // ignore covariance; there's no divides (with a covariance) by analogy to plus
     BOOST_CHECK_EQUAL(ptr.image(),    1);
     BOOST_CHECK_EQUAL(ptr.mask(),     img.getWidth() + 1);
     BOOST_CHECK_CLOSE(ptr.variance(), 2*202/float(101*101), 1e-8); // 3rd argument is allowed percentage difference
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(setValues) {
     *img2.getVariance() = 8;
 
     ImageT::x_iterator ptr2 = img2.x_at(0, 4);
-    ImageT::Pixel val2 = *ptr2;
+    //ImageT::Pixel val2 = *ptr2;
 
     *ptr = 100;                         // sets *ptr to (100, 0, 0)
     ptr.mask() = 0x10;
@@ -204,9 +204,9 @@ BOOST_AUTO_TEST_CASE(setValues) {
     BOOST_CHECK_EQUAL(ptr.mask(),     0xb);
     BOOST_CHECK_EQUAL(ptr.variance(), 26.5);
 
-    *ptr = *ptr + SinglePixel(36, 0x5, 3.5);
+    *ptr += SinglePixel(36, 0x5, 3.5);
     *ptr = *ptr + 25;
-    *ptr = 25 + ImageT::PixelCast(*ptr);
+    *ptr = 25 + *ptr;
     BOOST_CHECK_EQUAL(ptr.image(),    100);
     BOOST_CHECK_EQUAL(ptr.mask(),     0xf);
     BOOST_CHECK_EQUAL(ptr.variance(), 30);
@@ -214,6 +214,47 @@ BOOST_AUTO_TEST_CASE(setValues) {
     BOOST_CHECK_EQUAL(*ptr, *ptr);
     BOOST_CHECK_EQUAL(*ptr, SinglePixel(ptr.image(), ptr.mask(), ptr.variance()));
 }
+
+/************************************************************************************************************/
+#if 0
+BOOST_AUTO_TEST_CASE(Pixels) {
+    typedef float ImagePixelT;
+    typedef int MaskPixelT;
+    typedef float VariancePixelT;
+
+    ImagePixelT x = 10;
+    MaskPixelT m = 0x2;
+    VariancePixelT var = 10;
+
+    Pixel<ImagePixelT, MaskPixelT, VariancePixelT> v(x, m, var);
+
+    cout << "v = " << v << " expr = " << ((v + 2)*3) << endl;
+
+    ImagePixelT x2 = v.image();
+    MaskPixelT m2 = 0x4;
+    VariancePixelT v2 = 0;
+    Pixel<ImagePixelT, MaskPixelT, VariancePixelT> u(x2, m2, v2);
+    u = (v + makeSinglePixel(3, 0x1, 1))*10;
+    cout << u << endl;
+
+    SinglePixel<ImagePixelT, MaskPixelT, VariancePixelT> w = 10*(u + 3);
+    w += makeSinglePixel(10, 0x4, 0);
+    cout << w << endl;
+
+    w = -v;
+    w *= -1;
+    w = w - v;
+    cout << w << endl;
+    w /= 2;
+    cout << w << endl;
+
+    Pixel<ImagePixelT, MaskPixelT, VariancePixelT> ww = w;
+    cout << "Logical: " << (ww == ww) <<  " " << (ww == v) << endl;
+
+    ww = makeSinglePixel(10, 0x0, 1);
+    cout << "ww: " << ww << " 2 ww: " << add(ww, ww, 1.0) << endl;
+}
+#endif
 
 /************************************************************************************************************/
 //
@@ -378,7 +419,7 @@ BOOST_AUTO_TEST_CASE(locators) {
         ImageT::SinglePixel outImage = 10;
         BOOST_CHECK_EQUAL(outImage.image(), 10);
         BOOST_CHECK_EQUAL(dloc.image(), 1000);
-        outImage = outImage + ImageT::PixelCast(*dloc);    // mixed double and PixelT
+        outImage = outImage + *dloc;    // mixed double and PixelT
         BOOST_CHECK_EQUAL(outImage.image(), 1010);
 
         ImageT::xy_locator loc = img.xy_at(1,1);
@@ -393,7 +434,7 @@ BOOST_AUTO_TEST_CASE(locators) {
         BOOST_CHECK_EQUAL(pix.variance(), 404);
 
         BOOST_CHECK_EQUAL(dloc.image(), 1000);
-        pix += ImageT::PixelCast(*dloc) + pix;             // Mixed PixelT and float (adds 1000 + 226)
+        pix += *dloc + pix;             // Mixed PixelT and float (adds 1000 + 226)
         BOOST_CHECK_EQUAL(pix.image(), 1452);
     }
 }

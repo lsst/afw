@@ -22,6 +22,16 @@
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/Mask.h"
 
+namespace lsst {
+namespace afw {
+namespace image {
+    namespace detail {
+        struct maskedImage_tag : basic_tag { };
+        struct maskedImagePixel_tag { }; // used to identify classes that represent MaskedImage pixels
+    }
+}}}
+
+#include "lsst/afw/image/Pixel.h"
 #include "lsst/afw/image/LsstImageTypes.h"
 
 namespace lsst {
@@ -33,11 +43,6 @@ namespace afw {
 namespace image {
     namespace mpl = boost::mpl;
 
-    namespace detail {
-        struct maskedImage_tag : basic_tag { };
-        struct maskedImagePixel_tag { }; // used to identify classes that represent MaskedImage pixels
-    }
-    
     typedef float VariancePixel;        ///! default type for variance images
     
     template<typename ImagePixelT, typename MaskPixelT=lsst::afw::image::MaskPixel,
@@ -72,258 +77,11 @@ namespace image {
         template<typename, typename, typename> class const_maskedImageLocator;
 
         /************************************************************************************************************/
-        /// @brief Class to provide utility functions for a "pixel" to get at image/mask/variance an operators
-        //
-        // This class allows us to manipulate the tuples returned by MaskedImage iterators/locators
-        // as if they were POD.  This provides convenient syntactic sugar, but it also permits us
-        // to write generic algorithms to manipulate MaskedImages as well as Images
-        class SinglePixel;
 
 #if !defined(SWIG)
-        class Pixel : detail::maskedImagePixel_tag {
-            friend class SinglePixel;
+        typedef lsst::afw::image::pixel::Pixel<ImagePixelT, MaskPixelT, VariancePixelT> Pixel;
+        typedef lsst::afw::image::pixel::SinglePixel<ImagePixelT, MaskPixelT, VariancePixelT> SinglePixel;
 
-        public:
-            typedef Pixel type;
-            //
-            // This constructor casts away const.  This should be fixed by making const Pixels.
-            //
-            Pixel(ImagePixelT const& image, MaskPixelT const& mask, VariancePixelT const& variance) :
-                _image(const_cast<ImagePixelT&>(image)),
-                _mask(const_cast<MaskPixelT&>(mask)),
-                _variance(const_cast<VariancePixelT&>(variance)) {
-            }
-            
-            Pixel(ImagePixelT& image, MaskPixelT& mask, VariancePixelT& variance) :
-                _image(image), _mask(mask), _variance(variance) {
-            }
-
-            Pixel& operator=(Pixel rhs) {
-                image() = rhs.image();
-                mask() = rhs.mask();
-                variance() = rhs.variance();
-                    
-                return *this;
-            }
-
-            /// @brief initialize a pixel;  the mask and variance are set to 0
-            //
-            // The method's declared const as technically it is (the references
-            // aren't changed, just their values).  This const qualification is
-            // required in order to be able to pass *locator to a routine expecting
-            // an Pixel
-            Pixel operator=(ImagePixelT image ///< The desired value for the image
-                           ) const {
-                _image = image;
-                _mask = 0x0;
-                _variance = 0;
-                    
-                return *this;
-            }
-
-            ImagePixelT& image() {
-                return _image;
-            }
-            MaskPixelT& mask() {
-                return _mask;
-            }
-            VariancePixelT& variance() {
-                return _variance;
-            }
-            ImagePixelT const & image() const {
-                return _image;
-            }
-            MaskPixelT const& mask() const {
-                return _mask;
-            }
-            VariancePixelT const& variance() const {
-                return _variance;
-            }
-
-            template<typename T1>
-            operator T1() const {
-                BOOST_MPL_ASSERT_MSG(boost::is_arithmetic<T1>::value,
-                                     I_DO_NOT_KNOW_HOW_TO_MAP_THIS_TYPE_TO_A_SCALAR,
-                                     ()
-                                    );
-                return _image;
-            }
-
-            // We need a temporary to support operatorX(), which means that we need a SinglePixel
-            // This is painful boilerplate, so use the CPP
-
-#define LSST_MASKED_IMAGE_PIXEL_OPERATOR_X(OP, OPEQ) /* E.g. OP: + and OPEQ: += */ \
-            template<typename RPixelT> \
-            friend SinglePixel const operator OP(Pixel const lhs, RPixelT const rhs) { \
-                SinglePixel tmp(lhs);     /* copy lhs into local storage */ \
-                Pixel(tmp) OPEQ PixelCast(rhs); \
-                return tmp; \
-            } \
-            friend SinglePixel const operator OP(Pixel const lhs, ImagePixelT rhs) { \
-                return lhs OP SinglePixel(rhs); \
-            } \
-            friend SinglePixel const operator OP(ImagePixelT lhs, Pixel const rhs) { \
-                return SinglePixel(lhs) OP rhs; \
-            }
-
-            Pixel const& operator+=(double const rhs) {
-                image() += rhs;
-                    
-                return *this;
-            }
-            Pixel const& operator+=(Pixel const& rhs) {
-                image() += rhs.image();
-                mask() |= rhs.mask();
-                variance() += rhs.variance();
-                    
-                return *this;
-            }
-            /// @brief Like +=, but allows for covariances
-            Pixel const& addEq(Pixel const& rhs, ///< Right hand side
-                               double const alpha ///< covariance is 2 alpha sqrt(this.variance*rhs.variance)
-                              ) {
-                image() += rhs.image();
-                mask() |= rhs.mask();
-                variance() += rhs.variance() + 2*alpha*sqrt(variance()*rhs.variance());
-
-                return *this;
-            }
-            template<typename RPixelT>
-            friend SinglePixel const addEq(Pixel const lhs, RPixelT const rhs, double const alpha) {
-                SinglePixel tmp(lhs);     /* copy lhs into local storage */
-                Pixel ptmp(tmp);          /* a Pixel that points into tmp */
-                ptmp.addEq(PixelCast(rhs), alpha);
-                return tmp;
-            }
-            LSST_MASKED_IMAGE_PIXEL_OPERATOR_X(+, +=);
-
-            Pixel const& operator-=(double const rhs) {
-                image() -= rhs;
-                    
-                return *this;
-            }
-            Pixel const& operator-=(Pixel const& rhs) {
-                image() -= rhs.image();
-                mask() |= rhs.mask();
-                variance() += rhs.variance();
-                    
-                return *this;
-            }
-            LSST_MASKED_IMAGE_PIXEL_OPERATOR_X(-, -=);
-
-            Pixel const& operator*=(double const rhs) {
-                image() *= rhs;
-                variance() *= rhs*rhs;
-                    
-                return *this;
-            }
-            Pixel const& operator*=(Pixel const& rhs) {
-                // Must do variance before we modify this->image()
-                variance() = image()*image()*rhs.variance() + rhs.image()*rhs.image()*variance();
-
-                image() *= rhs.image();
-                mask() |= rhs.mask();
-                    
-                return *this;
-            }
-            LSST_MASKED_IMAGE_PIXEL_OPERATOR_X(*, *=);
-
-            Pixel const& operator/=(double const rhs) {
-                image() /= rhs;
-                variance() /= rhs*rhs;
-                    
-                return *this;
-            }
-            Pixel const& operator/=(Pixel const& rhs) {
-                ImagePixelT const rhs2 = rhs.image()*rhs.image();
-                // Must do variance before we modify this->image()
-                variance() = (image()*image()*rhs.variance() + rhs2*variance())/(rhs2*rhs2);
-
-                image() /= rhs.image();
-                mask() |= rhs.mask();
-                    
-                return *this;
-            }
-            LSST_MASKED_IMAGE_PIXEL_OPERATOR_X(/, /=);
-
-#undef LSST_MASKED_IMAGE_PIXEL_OPERATOR_X
-
-            bool operator==(ImagePixelT const rhs) {
-                return image() == rhs;
-            }
-            bool operator==(Pixel const& rhs) {
-                return image() == rhs.image() && mask() == rhs.mask() && variance() == rhs.variance();
-            }
-
-            bool operator!=(ImagePixelT const rhs) {
-                return !(image() == rhs);
-            }
-            bool operator!=(Pixel const& rhs) {
-                return !(image() == rhs.image() && mask() == rhs.mask() && variance() == rhs.variance());
-            }
-
-        private:
-            ImagePixelT& _image;
-            MaskPixelT& _mask;
-            VariancePixelT& _variance;
-        };
-
-        /// @brief A constant MaskedPixel;  needed as Pixel is a pure reference type
-        //
-        // This class can be used to assign initial values to an Pixel; we can't
-        // just pass the values to Pixel's constructor as it has no memory of its own,
-        // and we need temporaries to support arithmetic
-        //
-        class SinglePixel : public Pixel {
-        public:
-            template<typename ImagePT, typename MaskPT, typename VarPT>
-            SinglePixel(typename MaskedImage<ImagePT, MaskPT, VarPT>::Pixel rhs) :
-                Pixel(_myImage, _myMask, _myVariance),
-                _myImage(rhs.image()), _myMask(rhs.mask()), _myVariance(rhs.variance()) {
-                ;
-            }
-
-            template<typename ImagePT, typename MaskPT, typename VarPT>
-            SinglePixel(typename MaskedImage<ImagePT, MaskPT, VarPT>::SinglePixel rhs) :
-                Pixel(_myImage, _myMask, _myVariance),
-                _myImage(rhs.image()), _myMask(rhs.mask()), _myVariance(rhs.variance()) {
-                ;
-            }
-
-            SinglePixel(ImagePixelT image=0, MaskPixelT mask=0, VariancePixelT variance=0) :
-                Pixel(_myImage, _myMask, _myVariance),
-                _myImage(image), _myMask(mask), _myVariance(variance) {
-            }
-
-            SinglePixel(Pixel imv) :
-                Pixel(_myImage, _myMask, _myVariance),
-                _myImage(imv.image()), _myMask(imv.mask()), _myVariance(imv.variance()) {
-            }
-
-            SinglePixel(SinglePixel const& rhs) :
-                Pixel(_myImage, _myMask, _myVariance),
-                _myImage(rhs._myImage), _myMask(rhs._myMask), _myVariance(rhs._myVariance) {
-            }
-
-            SinglePixel& operator=(SinglePixel const& rhs) {
-                _myImage = rhs._myImage;
-                _myMask = rhs._myMask;
-                _myVariance = rhs._myVariance;
-
-                return *this;
-            }
-        private:
-            ImagePixelT _myImage;
-            MaskPixelT _myMask;
-            VariancePixelT _myVariance;
-        };
-
-        friend std::ostream& operator<<(std::ostream& s, const Pixel& pix) {
-            s << "(" << pix.image() << " : " << pix.mask() << " : " << pix.variance() << ")";
-            
-            return s;
-        }
-        
         /************************************************************************************************************/
 
         template<typename ImageIterator, typename MaskIterator, typename VarianceIterator,
