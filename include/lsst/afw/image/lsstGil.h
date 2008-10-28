@@ -22,7 +22,7 @@ GIL_DEFINE_ALL_TYPEDEFS_INTERNAL(32f_noscale, dev2n, devicen_t<2>, devicen_layou
 template<> struct channel_multiplier<bits32f_noscale> : public std::binary_function<bits32f_noscale,bits32f_noscale,bits32f_noscale> {
     bits32f_noscale operator()(bits32f_noscale a, bits32f_noscale b) const { return a*b; }
 };
-
+            
 /*
  * Define a type that's a pure double, without scaling into [0, 1]
  */
@@ -83,6 +83,35 @@ LSST_CONVERT_NOOP(unsigned short, int);
 LSST_CONVERT_NOOP(short, int);
 
 #undef LSST_CONVERT_NOOP
+
+/************************************************************************************************************/
+/// @brief Declare operator+= (and -=, *=, /=, &=, and |=) for gil's iterators
+//
+// These are in the boost::gil namespace in order to permit Koenig lookup
+//
+#define LSST_BOOST_GIL_OP_EQUALS(TYPE, OP) \
+template<typename T2> \
+TYPE##_pixel_t& operator OP##=(TYPE##_pixel_t& lhs, T2 rhs) { return (lhs = lhs OP rhs); }
+
+#define LSST_BOOST_GIL_OP_EQUALS_ALL(PIXTYPE) \
+    LSST_BOOST_GIL_OP_EQUALS(PIXTYPE, +) \
+    LSST_BOOST_GIL_OP_EQUALS(PIXTYPE, -) \
+    LSST_BOOST_GIL_OP_EQUALS(PIXTYPE, *) \
+    LSST_BOOST_GIL_OP_EQUALS(PIXTYPE, /) \
+    LSST_BOOST_GIL_OP_EQUALS(PIXTYPE, &) \
+    LSST_BOOST_GIL_OP_EQUALS(PIXTYPE, |)
+
+LSST_BOOST_GIL_OP_EQUALS_ALL(gray8)
+LSST_BOOST_GIL_OP_EQUALS_ALL(gray8s)
+LSST_BOOST_GIL_OP_EQUALS_ALL(gray16)
+LSST_BOOST_GIL_OP_EQUALS_ALL(gray16s)
+LSST_BOOST_GIL_OP_EQUALS_ALL(gray32)
+LSST_BOOST_GIL_OP_EQUALS_ALL(gray32s)
+LSST_BOOST_GIL_OP_EQUALS_ALL(gray32f_noscale)
+LSST_BOOST_GIL_OP_EQUALS_ALL(gray64f_noscale)
+
+#undef LSST_BOOST_GIL_OP_EQUALS
+#undef LSST_BOOST_GIL_OP_EQUALS_ALL
 
 } }  // namespace boost::gil
 
@@ -194,4 +223,5 @@ F transform_pixels(const View1& src1, const View2& src2,const View3& src3,const 
     return fun;
 }
 }}                                  // namespace boost::gil
+
 #endif
