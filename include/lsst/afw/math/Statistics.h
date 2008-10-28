@@ -2,8 +2,13 @@
 #define LSST_AFW_MATH_STATISTICS_H
 
 namespace lsst { namespace afw { namespace math {
-
-enum Property { ERRORS = 0x1, MEAN = 0x2, STDEV = 0x4, };
+/// @brief control what is calculated
+enum Property {
+    ERRORS = 0x1,                       ///< Include errors of requested quantities
+    MEAN = 0x2,                         ///< estimate sample mean
+    STDEV = 0x4,                        ///< estimate sample standard deviation
+    VARIANCE = 0x10,                    ///< estimate sample variance
+};
             
 template<typename Image>
 class Statistics {
@@ -18,6 +23,10 @@ public:
     
 private:
     long _flags;                        // The desired calculation
+
+    int _n;                             // number of pixels in the image
+    double _mean;                       // the image's mean
+    double _variance;                   // the image's variance
 };
 
 template<typename Image>
