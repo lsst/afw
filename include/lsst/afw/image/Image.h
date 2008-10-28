@@ -23,8 +23,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/formatters/ImageFormatter.h"
 
-namespace lsst {
-namespace afw {
+namespace lsst { namespace afw {
 
 namespace formatters {
     template <typename PixelT> class ImageFormatter;
@@ -137,6 +136,7 @@ namespace image {
         int getY1() const { return first.getY() + second.getY() - 1; }
         int getWidth() const { return second.getX(); }
         int getHeight() const { return second.getY(); }
+        const std::pair<int, int> dimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
 
         bool operator==(const BBox& rhs) const {
             return
@@ -167,8 +167,6 @@ namespace image {
         /// Return the circle's radius
         float getRadius() const { return second; }
     };
-
-    /************************************************************************************************************/
 
     template<typename PixelT>
     struct Reference {
@@ -237,20 +235,6 @@ namespace image {
         friend const_xy_locator& operator-=(const_xy_locator& loc, pair2I const& off) {
             return (loc -= boost::gil::point2<std::ptrdiff_t>(off.first, off.second));
         }
-
-        /************************************************************************************************************/
-#define LSST_OP_EQUALS(ITER, OP, OPEQ)          \
-        template<typename T> \
-        friend typename std::iterator_traits<ITER>::value_type& \
-                         operator OPEQ(typename std::iterator_traits<ITER>::value_type& lhs, T rhs) { \
-            return (lhs = lhs OP rhs); \
-        }
-        LSST_OP_EQUALS(iterator, +, +=)
-        LSST_OP_EQUALS(iterator, -, -=)
-        LSST_OP_EQUALS(iterator, *, *=)
-        LSST_OP_EQUALS(iterator, /, /=)
-
-#undef LSST_OP_EQUALS
         //
         template<typename OtherPixelT> friend class ImageBase; // needed by generalised copy constructors
         //

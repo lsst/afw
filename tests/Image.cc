@@ -20,25 +20,6 @@ typedef image::Image<PixelT> ImageT;
 typedef image::Mask<MaskPixelT> MaskT;
 
 /************************************************************************************************************/
-/// @brief Declare operator+= (and -=, *=, and /=) for the iterators associated with
-// an image type such as Image<float>
-//
-// These using declarations are needed as none of the arguments are in the lsst::afw::image
-// namespace, and hence the compiler can't perform Koenig lookup and find the functions.
-//
-// What's more, we can't just issue the "using" directive until after the compiler knows
-// which versions of the Image classes we'll be using (as operator+= etc. aren't generated
-// until the class is instantiated)
-//
-#define LSST_AFW_IMAGE_DECLARE_OPEQ(IMAGE_T) \
-   template class image::IMAGE_T; \
-   using lsst::afw::image::operator+=; \
-   using lsst::afw::image::operator-=; \
-   using lsst::afw::image::operator*=; \
-   using lsst::afw::image::operator/=
-
-LSST_AFW_IMAGE_DECLARE_OPEQ(Image<PixelT>);
-LSST_AFW_IMAGE_DECLARE_OPEQ(Mask<MaskPixelT>);
 
 template <typename PixelT>
 void y_gradient(ImageT & src, ImageT & dst) {
