@@ -4,8 +4,8 @@ Import('env')
 env.SharedLibrary(
     'afw',
     ["../src/%s" % (src,) for src in (
-        #"detection/DetectionSet.cc",
-        #"detection/Footprint.cc",
+        "detection/DetectionSet.cc",
+        "detection/Footprint.cc",
         "detection/Source.cc",
         "formatters/ExposureFormatter.cc",
         "formatters/ImageFormatter.cc",
@@ -30,6 +30,7 @@ env.SharedLibrary(
         "math/LinearCombinationKernel.cc",
         "math/SeparableKernel.cc",
         "math/ConvolveImage.cc",
+        "math/Statistics.cc",
     )],
     LIBS=filter(lambda x: x != "afw", env.getlibs("afw"))
 )

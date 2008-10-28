@@ -33,6 +33,7 @@ public:
 
     int getX0() { return _x0; }
     int getX1() { return _x1; }
+    int getWidth() { return _x1 - _x0 + 1; }
     int getY() { return _y; }
 
     std::string toString();    
@@ -174,7 +175,7 @@ Footprint::Ptr footprintAndMask(Footprint::Ptr const & foot,
  * \brief A set of Footprints, associated with a MaskedImage
  *
  */
-template<typename ImagePixelT, typename MaskPixelT>
+template<typename ImagePixelT, typename MaskPixelT=lsst::afw::image::MaskPixel>
 class DetectionSet : public lsst::daf::data::LsstBase {
 public:
     typedef boost::shared_ptr<DetectionSet> Ptr;

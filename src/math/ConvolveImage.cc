@@ -564,6 +564,7 @@ namespace lsst { namespace afw { namespace math {
 #define convolutionFuncsByType(IMAGE, PIXTYPE1, PIXTYPE2) \
     template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, AnalyticKernel const&, bool, int); NL \
     template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, DeltaFunctionKernel const&, bool, int); NL \
+    template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, FixedKernel const&, bool, int); NL \
     template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, LinearCombinationKernel const&, bool, int); NL \
     template void convolveLinear(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, LinearCombinationKernel const&, int); NL \
     template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, SeparableKernel const&, bool, int);
@@ -575,6 +576,7 @@ namespace lsst { namespace afw { namespace math {
     convolutionFuncsByType(IMAGE,       PIXTYPE1, PIXTYPE2) \
     convolutionFuncsByType(MASKEDIMAGE, PIXTYPE1, PIXTYPE2)
 
+convolutionFuncs(int, int)
 convolutionFuncs(double, double)
 convolutionFuncs(double, float)
 convolutionFuncs(float, float)
