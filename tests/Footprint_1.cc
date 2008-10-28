@@ -1,32 +1,34 @@
 #include <iostream>
-#include "lsst/detection/Footprint.h"
+#define BOOST_TEST_DYN_LINK
+#define BOOST_TEST_MODULE Footprint
 
-using namespace lsst::afw::image;
-using namespace lsst::detection;
+#include "boost/test/unit_test.hpp"
+#include "boost/test/floating_point_comparison.hpp"
+
+#include "lsst/afw/detection/Footprint.h"
+
+namespace image = lsst::afw::image;
+namespace detection = lsst::afw::detection;
 
 typedef float ImagePixelT;
 
-int main() {
+BOOST_AUTO_TEST_CASE(DetectionSets) {
     int status = 0;                     // return status; 0 => good
     
-    MaskedImage<ImagePixelT, lsst::afw::image::maskPixelType> img(10,20);
+    image::MaskedImage<ImagePixelT> img(10,20);
+    *img.getImage() = 100;
 
-    DetectionSet<ImagePixelT, lsst::afw::image::maskPixelType> ds_by_value1(img, 0);
-    DetectionSet<ImagePixelT, lsst::afw::image::maskPixelType> ds_by_value2(img, Threshold(0, Threshold::VALUE));
+    detection::DetectionSet<ImagePixelT> ds_by_value1(img, 0);
+    BOOST_CHECK(ds_by_value1.getFootprints().size());
 
-    try {
-        DetectionSet<ImagePixelT, lsst::afw::image::maskPixelType> ds_by_variance(img, Threshold(0, Threshold::STDEV));
-        status++;
-    } catch (lsst::pex::exceptions::ExceptionStack& e) {
-        std::cerr << "Caught exception: " << e.what() << std::endl;
-    }
+    detection::DetectionSet<ImagePixelT> ds_by_value2(img, detection::Threshold(0, detection::Threshold::VALUE));
+    BOOST_CHECK(ds_by_value2.getFootprints().size());
+
+    BOOST_CHECK_THROW(detection::DetectionSet<ImagePixelT>(img,         \
+                                                           detection::Threshold(0, detection::Threshold::STDEV)), \
+                      lsst::pex::exceptions::ExceptionStack);
     
-    try {
-        DetectionSet<ImagePixelT, lsst::afw::image::maskPixelType> ds_by_variance(img, Threshold(0, Threshold::VARIANCE));
-        status++;
-    } catch (lsst::pex::exceptions::ExceptionStack& e) {
-        std::cerr << "Caught exception: " << e.what() << std::endl;
-    }
-
-    return status;
+    BOOST_CHECK_THROW(detection::DetectionSet<ImagePixelT>(img, \
+                                                           detection::Threshold(0, detection::Threshold::VARIANCE)), \
+                      lsst::pex::exceptions::ExceptionStack);
 }
