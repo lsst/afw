@@ -81,6 +81,8 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 
 %}
 
+%template(pairIntInt)   std::pair<int, int>;
+
 %import "lsst/daf/base/Citizen.h"
 %import "lsst/daf/base/Persistable.h"
 %import "lsst/daf/base/DataProperty.h"

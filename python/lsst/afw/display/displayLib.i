@@ -68,6 +68,9 @@ SWIG_SHARED_PTR(CitizenPtr, lsst::daf::base::Citizen);
 %import "lsst/daf/data/LsstBase.h"
 %import "lsst/daf/data.h"
 %import "lsst/daf/persistence/Persistence.h"
+
+%template(pairIntInt)   std::pair<int, int>;
+
 %import "../image/image.i"
 %import "../image/mask.i"
 %import "../image/maskedImage.i"
