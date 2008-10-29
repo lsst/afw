@@ -13,8 +13,6 @@ namespace detection = lsst::afw::detection;
 typedef float ImagePixelT;
 
 BOOST_AUTO_TEST_CASE(DetectionSets) {
-    int status = 0;                     // return status; 0 => good
-    
     image::MaskedImage<ImagePixelT> img(10,20);
     *img.getImage() = 100;
 
