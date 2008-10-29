@@ -328,7 +328,8 @@ namespace image {
             }
             //
             // We don't want to duplicate code for image/mask/variance -- but the boost::mpl stuff isn't pretty
-            // as we can't say int_<N> within a template<int N>
+            // as we can't say int_<N> within a template<int N>.  So define a set of functions apply_IMV
+            // to do the dirty work
             //
             typedef typename mpl::vector<ImagePixelT, MaskPixelT, VariancePixelT> PixelTVec;
 
