@@ -5,8 +5,9 @@ namespace lsst { namespace afw { namespace math {
 /// @brief control what is calculated
 enum Property {
     ERRORS = 0x1,                       ///< Include errors of requested quantities
-    MEAN = 0x2,                         ///< estimate sample mean
-    STDEV = 0x4,                        ///< estimate sample standard deviation
+    NPOINT = 0x2,                       ///< number of sample points
+    MEAN = 0x4,                         ///< estimate sample mean
+    STDEV = 0x8,                        ///< estimate sample standard deviation
     VARIANCE = 0x10,                    ///< estimate sample variance
 };
             
@@ -16,7 +17,7 @@ public:
     typedef std::pair<double, double> value_type;
     
     explicit Statistics(Image const& img, int const flags);
-    value_type getParameter(Property const prop) const;
+    value_type getResult(Property const prop) const;
 
     double getError(Property const prop) const;
     double getValue(Property const prop) const;

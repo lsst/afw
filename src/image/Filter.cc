@@ -14,19 +14,18 @@
 
 #include "lsst/afw/image/Filter.h"
 
+namespace image = lsst::afw::image;
 
-using namespace lsst::afw::image;
-
+// using is permitted for classes, but not namespaces?
 using lsst::daf::persistence::Persistence;
 using lsst::daf::persistence::Storage;
 using lsst::pex::policy::Policy;
-
 
 /*!
     Creates a Filter with the given name, using the \c Filter table in the database given by
     \a location to map the filter name to an integer identifier.
  */
-Filter::Filter(lsst::daf::persistence::LogicalLocation const & location, std::string const & name) {
+image::Filter::Filter(lsst::daf::persistence::LogicalLocation const & location, std::string const & name) {
     Policy::Ptr      noPolicy;
     Persistence::Ptr persistence = Persistence::getPersistence(noPolicy);
     Storage::Ptr     storage     = persistence->getRetrieveStorage("DbStorage", location);
@@ -49,7 +48,7 @@ Filter::Filter(lsst::daf::persistence::LogicalLocation const & location, std::st
     Returns the name of the filter, using the \b Filter table in the database given by
     \a location to map the filter identifier to a name.
  */
-std::string const Filter::toString(lsst::daf::persistence::LogicalLocation const & location) {
+std::string const image::Filter::toString(lsst::daf::persistence::LogicalLocation const & location) {
     Policy::Ptr      noPolicy;
     Persistence::Ptr persistence = Persistence::getPersistence(noPolicy);
     Storage::Ptr     storage     = persistence->getRetrieveStorage("DbStorage", location);
@@ -74,7 +73,7 @@ std::string const Filter::toString(lsst::daf::persistence::LogicalLocation const
     Returns the name of the filter, using the \b Filter table in the database currently
     set on the given DbStorage to map the filter identifier to a name.
  */
-std::string const Filter::toString(lsst::daf::persistence::DbStorage & db) {
+std::string const image::Filter::toString(lsst::daf::persistence::DbStorage & db) {
     db.setTableForQuery("Filter");
     db.outColumn("filtName");
     // CORAL always maps MYSQL_TYPE_LONG (MySQL internal type specifier for INTEGER columns) to long
@@ -100,7 +99,7 @@ std::string const Filter::toString(lsst::daf::persistence::DbStorage & db) {
 }
 
 
-int Filter::nameToId(lsst::daf::persistence::DbStorage & db, std::string const & name) {
+int image::Filter::nameToId(lsst::daf::persistence::DbStorage & db, std::string const & name) {
     db.setTableForQuery("Filter");
     db.outColumn("filterId");
     db.condParam<std::string>("name", name);

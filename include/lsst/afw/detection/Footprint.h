@@ -1,6 +1,7 @@
 #if !defined(LSST_DETECTION_FOOTPRINT_H)
 #define LSST_DETECTION_FOOTPRINT_H
 //!
+// \file
 // Describe a portion of an image
 //
 #include <list>
@@ -162,13 +163,13 @@ MaskT setMaskFromFootprint(typename image::Mask<MaskT>::Ptr mask,
                            Footprint::Ptr const footprint,
                            MaskT const bitmask);
 template<typename MaskT>
-MaskT setMaskFromFootprintList(typename image::Mask<MaskT>::Ptr mask,
-                               std::vector<Footprint::Ptr> const& footprints,
+MaskT setMaskFromFootprintList(typename lsst::afw::image::Mask<MaskT>::Ptr mask,
+                               std::vector<detection::Footprint::Ptr> const& footprints,
                                MaskT const bitmask);
 template<typename MaskT>
 Footprint::Ptr footprintAndMask(Footprint::Ptr const & foot,
-                                    typename image::Mask<MaskT>::Ptr const & mask,
-                                    MaskT bitmask);
+                                typename image::Mask<MaskT>::Ptr const & mask,
+                                MaskT bitmask);
     
 /************************************************************************************************************/
 /*!

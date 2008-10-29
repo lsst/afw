@@ -1,3 +1,20 @@
+/** \file
+ *
+ * Support statistical operations on images
+ *
+ * The basic strategy is to construct a Statistics object from an Image and
+ * a statement of what we want to know.  The desired results can then be
+ * returned using Statistics methods:
+ * \code
+        math::Statistics<ImageT> stats = math::make_Statistics(*img, math::NPOINT | math::MEAN);
+        
+        double const n = stats.getValue(math::NPOINT);
+        std::pair<double, double> const mean = stats.getResult(math::MEAN); // Returns (value, error)
+        double const meanError = stats.getError(math::MEAN);                // just the error
+ * \endcode
+ * (Note that we used a helper function, \c make_Statistics, rather that the constructor directly so that
+ * the compiler could deduce the types -- cf. \c std::make_pair)
+ */
 #include <limits>
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Statistics.h"
@@ -46,28 +63,37 @@ math::Statistics<Image>::Statistics(Image const& img, ///< Image (or MaskedImage
         }
     }
     _mean = crude_mean + sum/_n;
-    _variance = sumx2/_n - sum*sum/(static_cast<double>(_n)*_n);
+
+    if (flags & (STDEV | VARIANCE)) {
+        if (_n == 1) {
+            throw lsst::pex::exceptions::InvalidParameter("Image contains only one pixel; "
+                                                          "population st. dev. is undefined");
+        }
+    }
+
+    _variance = sumx2/(_n - 1) - sum*sum/(static_cast<double>(_n - 1)*_n); // estimate of population variance
 }
 
 template<typename Image>
-std::pair<double, double> math::Statistics<Image>::getParameter(math::Property const prop ///< Desired property
+std::pair<double, double> math::Statistics<Image>::getResult(math::Property const prop ///< Desired property
                                              ) const {
     if (!(prop & _flags)) {             // we didn't calculate it
         throw lsst::pex::exceptions::InvalidParameter(boost::format("You didn't ask me to calculate %d") % prop);
     }
 
     value_type ret(NaN, NAN);
-    if (prop == MEAN) {
+    if (prop == NPOINT) {
+        ret.first = _n;
+        if (_flags & ERRORS) {
+            ret.second = 0;
+        }
+    } else if (prop == MEAN) {
         ret.first = _mean;
         if (_flags & ERRORS) {
-            ret.second = _variance/sqrt(_n);
+            ret.second = sqrt(_variance/_n);
         }
     } else if (prop == STDEV || prop == VARIANCE) {
-        if (_n == 1) {
-            throw lsst::pex::exceptions::InvalidParameter("Image contains one pixels; population st. dev. is undefined");
-        }
-
-        ret.first = _variance*_n/(_n - 1);
+        ret.first = _variance;
         if (_flags & ERRORS) {
             ret.second = 2*(_n - 1)*ret.first*ret.first/(static_cast<double>(_n)*_n); // assumes a Gaussian
         }
@@ -84,13 +110,13 @@ std::pair<double, double> math::Statistics<Image>::getParameter(math::Property c
 template<typename Image>
 double math::Statistics<Image>::getValue(math::Property const prop ///< Desired property
                      ) const {
-    return getParameter(prop).first;
+    return getResult(prop).first;
 }
 
 template<typename Image>
 double math::Statistics<Image>::getError(math::Property const prop ///< Desired property
                      ) const {
-    return getParameter(prop).second;
+    return getResult(prop).second;
 }
 
 /************************************************************************************************************/

@@ -98,7 +98,7 @@ typename image::ImageBase<PixelT>::PixelConstReference
 }
 
 template<typename PixelT>
-void image::ImageBase<PixelT>::swap(ImageBase<PixelT> &rhs) {
+void image::ImageBase<PixelT>::swap(ImageBase &rhs) {
     using std::swap;                    // See Meyers, Effective C++, Item 25
     
     swap(_gilImage, rhs._gilImage);   // just swapping the pointers

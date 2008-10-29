@@ -7,6 +7,7 @@
 ///         Princeton University
 /// \date   September 2008
 #include <iostream>
+#include <unistd.h>
 #include "boost/static_assert.hpp"
 #include "boost/format.hpp"
 
@@ -21,9 +22,11 @@
 namespace lsst { namespace afw { namespace image {
 
 namespace cfitsio {
+#if !defined(DOXYGEN)
     extern "C" {
 #       include "fitsio.h"
     }
+#endif
 
     void _throw_cfitsio_error(const char *file, const int line,   //!< line in file (from __FILE__, __LINE__)
                               lsst::afw::image::cfitsio::fitsfile *fd, //!< (possibly invalid) file descriptor

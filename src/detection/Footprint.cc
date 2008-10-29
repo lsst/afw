@@ -1,5 +1,6 @@
 /*****************************************************************************/
-/*
+/** \file
+ *
  * Handle Footprints
  */
 #include <cassert>
@@ -146,7 +147,8 @@ void detection::Footprint::normalize() {
  */
 const detection::Span& detection::Footprint::addSpan(const int y, //!< row to add
                                const int x0, //!< range of
-                               const int x1) { //!<        columns
+                               const int x1 //!<        columns
+                                                    ) {
     if (x1 < x0) {
         return this->addSpan(y, x1, x0);
     }
@@ -316,7 +318,8 @@ detection::Footprint::Ptr detection::footprintAndMask(
 template<typename MaskT>
 MaskT detection::setMaskFromFootprint(typename image::Mask<MaskT>::Ptr mask, ///< Mask to set
                                       detection::Footprint::Ptr const foot,  ///< Footprint specifying desired pixels
-                                      MaskT const bitmask) {                 ///< Bitmask to OR into mask
+                                      MaskT const bitmask                    ///< Bitmask to OR into mask
+                                     ) {
 
     int const width = static_cast<int>(mask->getWidth());
     int const height = static_cast<int>(mask->getHeight());    
@@ -352,7 +355,7 @@ MaskT detection::setMaskFromFootprint(typename image::Mask<MaskT>::Ptr mask, ///
 template<typename MaskT>
 MaskT detection::setMaskFromFootprintList(
 	typename image::Mask<MaskT>::Ptr mask, ///< Mask to set
-        std::vector<detection::Footprint::Ptr> const& footprints, ///< Footprints specifying desired pixels
+        std::vector<detection::Footprint::Ptr> const& footprints, ///< Footprint list specifying desired pixels
         MaskT const bitmask             ///< Bitmask to OR into mask
                                                ) {
     for (std::vector<detection::Footprint::Ptr>::const_iterator fiter = footprints.begin();

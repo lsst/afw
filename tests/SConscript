@@ -18,6 +18,7 @@ env.Program(["MaskedImage_1.cc"], LIBS=env.getlibs("afw"))
 env.Program(["MaskedImageIO_1.cc"], LIBS=env.getlibs("afw"))
 env.Program(["MaskedImageIO_2.cc"], LIBS=env.getlibs("afw"))
 env.Program(["MaskIO_1.cc"], LIBS=env.getlibs("afw"))
+env.Program(["Statistics.cc"], LIBS=env.getlibs("afw"))
 # Removed since not ready according to Tim Axelrod. 2007-11-26
 # env.Program(["MaskIO_2.cc"], LIBS=env.getlibs("afw"))
 env.Program(["SourceIO_1.cc"], LIBS=env.getlibs("afw"))

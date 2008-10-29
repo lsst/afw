@@ -328,7 +328,7 @@ namespace image {
         DecoratedImage(DecoratedImage const& rhs, const bool deep=false);
         explicit DecoratedImage(std::string const& fileName, const int hdu=0);
 
-        DecoratedImage& operator=(const DecoratedImage<PixelT>& image);
+        DecoratedImage& operator=(const DecoratedImage& image);
 
 #if 0                                   // use compiler-generated dtor. N.b. not virtual; this isn't a base class
         ~DecoratedImage();

@@ -25,7 +25,6 @@
 #include "lsst/afw/image/fits/fits_io.h"
 #include "lsst/afw/image/fits/fits_io_mpl.h"
 
-using namespace lsst::afw::image;
 namespace image = lsst::afw::image;
 
 template<typename MaskPixelT>
@@ -66,7 +65,7 @@ image::Mask<MaskPixelT>::Mask(Mask const& rhs, const BBox& bbox, const bool deep
 }
 
 template<typename MaskPixelT>
-image::Mask<MaskPixelT>::Mask(image::Mask<MaskPixelT>::Mask const& rhs, bool deep) :
+image::Mask<MaskPixelT>::Mask(image::Mask<MaskPixelT> const& rhs, bool deep) :
     image::ImageBase<MaskPixelT>(rhs, deep),
     _metaData(rhs._metaData),
     _myMaskDictVersion(_myMaskDictVersion) {
@@ -347,17 +346,17 @@ void image::Mask<MaskPixelT>::conformMaskPlanes(MaskPlaneDict& currentPlaneDict
 /************************************************************************************************************/
 
 template<typename MaskPixelT>
-typename ImageBase<MaskPixelT>::PixelReference Mask<MaskPixelT>::operator()(int x, int y) {
+typename image::ImageBase<MaskPixelT>::PixelReference image::Mask<MaskPixelT>::operator()(int x, int y) {
     return this->ImageBase<MaskPixelT>::operator()(x, y);
 }
 
 template<typename MaskPixelT>
-typename ImageBase<MaskPixelT>::PixelConstReference Mask<MaskPixelT>::operator()(int x, int y) const {
+typename image::ImageBase<MaskPixelT>::PixelConstReference image::Mask<MaskPixelT>::operator()(int x, int y) const {
     return this->ImageBase<MaskPixelT>::operator()(x, y);
 }
 
 template<typename MaskPixelT>
-bool Mask<MaskPixelT>::operator()(int x, int y, int plane) const {
+bool image::Mask<MaskPixelT>::operator()(int x, int y, int plane) const {
     return !!(this->ImageBase<MaskPixelT>::operator()(x, y) & getBitMask(plane)); // ! ! converts an int to a bool
 }
 
@@ -518,7 +517,7 @@ void image::Mask<MaskPixelT>::printMaskPlanes() {
  */
 template<typename MaskPixelT>
 static typename image::Mask<MaskPixelT>::MaskPlaneDict initMaskPlanes() {
-    typename Mask<MaskPixelT>::MaskPlaneDict planeDict = typename image::Mask<MaskPixelT>::MaskPlaneDict();
+    typename image::Mask<MaskPixelT>::MaskPlaneDict planeDict = typename image::Mask<MaskPixelT>::MaskPlaneDict();
 
     int i = -1;
     planeDict["BAD"] = ++i;

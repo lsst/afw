@@ -89,7 +89,7 @@ image::DecoratedImage<PixelT>::DecoratedImage(const std::string& fileName, const
 /************************************************************************************************************/
 
 template<typename PixelT>
-void image::DecoratedImage<PixelT>::DecoratedImage::writeFits(
+void image::DecoratedImage<PixelT>::writeFits(
 	const std::string& fileName,
 #if 1                                   // Old name for boost::shared_ptrs
         typename lsst::daf::base::DataProperty::PtrType metaData //!< metadata to write to header; or NULL
