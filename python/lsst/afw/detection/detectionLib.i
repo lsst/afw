@@ -22,6 +22,7 @@ Python interface to lsst::afw::detection classes
 %inline %{
 namespace boost {
     namespace filesystem {}
+    namespace mpl {}
     class bad_any_cast;
 }
 %}
@@ -39,10 +40,15 @@ import lsst.pex.exceptions
 %import "lsst/daf/base/Citizen.h"
 %import "lsst/daf/base/Persistable.h"
 %import "lsst/daf/base/DataProperty.h"
+%import "lsst/daf/data/LsstData.h"
+%import "lsst/daf/data/LsstImpl_DC3.h"
+%import "lsst/daf/data/LsstBase.h"
 %import "lsst/daf/persistence/LogicalLocation.h"
 %import "lsst/daf/persistence/Persistence.h"
 %import "lsst/daf/persistence/Storage.h"
 %import "lsst/pex/policy/Policy.h"
+
+%template(pairIntInt)   std::pair<int, int>;
 
 %include <stdint.i>
 %include <std_vector.i>
@@ -221,3 +227,4 @@ def SourcePtr(*args):
 
 %}
 
+%include "footprints.i"

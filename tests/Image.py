@@ -106,6 +106,13 @@ class ImageTestCase(unittest.TestCase):
         bbox2 = afwImage.BBox(llc, width, height+1)
         self.assertNotEqual(bbox, bbox2)
 
+        bbox = afwImage.BBox()
+        point = afwImage.PointI(1, 1)
+        
+        bbox.grow(point);
+
+        self.assert_(bbox.contains(point))
+
     def checkImgPatch(self, img, x0=0, y0=0):
         """Check that a patch of an image is correct; origin of patch is at (x0, y0)"""
         

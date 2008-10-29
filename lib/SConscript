@@ -6,6 +6,7 @@ env.SharedLibrary(
     ["../src/%s" % (src,) for src in (
         "detection/DetectionSet.cc",
         "detection/Footprint.cc",
+        "detection/Peak.cc",
         "detection/Source.cc",
         "formatters/ExposureFormatter.cc",
         "formatters/ImageFormatter.cc",

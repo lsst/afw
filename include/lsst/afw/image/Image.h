@@ -105,19 +105,34 @@ namespace image {
             ) :
             std::pair<PointI, PointI>(llc, urc - llc + 1) {}
 
+        //! Return true iff the point lies in the BBox
+        bool contains(PointI p) {           ///< The point to check
+            return p.getX() >= getX0() && p.getX() <= getX1() && p.getY() >= getY0() && p.getY() <= getY1();
+        }
+
         //! Grow the BBox to include the specified PointI
-        void grow(PointI p              ///< The point to include
-                 ) {
-            if (p.getX() < first.getX()) {
+        void grow(PointI p) {           ///< The point to include
+            if (getWidth() == 0 && getHeight() == 0) {
                 first.setX(p.getX());
-            } else if (p.getX() > second.getX()) {
-                second.setX(p.getX());
+                first.setY(p.getY());
+                second.setX(1);
+                second.setY(1);
+
+                return;
             }
 
-            if (p.getY() < first.getY()) {
+            if (p.getX() < getX0()) {
+                second.setX(getWidth() + (getX0() - p.getX()));
+                first.setX(p.getX());
+            } else if (p.getX() > getX1()) {
+                second.setX(p.getX() - getX0() + 1);
+            }
+
+            if (p.getY() < getY0()) {
+                second.setY(getHeight() + (getY0() - p.getY()));
                 first.setY(p.getY());
-            } else if (p.getY() > second.getY()) {
-                second.setY(p.getY());
+            } else if (p.getY() > getY1()) {
+                second.setY(p.getY() - getY0() + 1);
             }
         }
         //! Offset a BBox by the specified vector
@@ -126,8 +141,8 @@ namespace image {
                   ) {
             first.setX(first.getX() + dx);
             first.setY(first.getY() + dy);
-            second.setX(second.getX() + dx);
-            second.setY(second.getY() + dy);
+            second.setX(second.getX());
+            second.setY(second.getY());
         }
 
         int getX0() const { return first.getX(); }

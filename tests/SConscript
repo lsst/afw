@@ -10,6 +10,8 @@ import lsst.SConsUtils as scons # scons 1.17 supports "env.ProductDir", but for 
 env.Program(["checkTypeConversions.cc"], LIBS=env.getlibs("afw"))
 env.Program(["Exposure.cc"], LIBS=env.getlibs("afw"))
 
+env.Program(["BBox_1.cc"], LIBS=env.getlibs("afw"))
+env.Program(["Footprint_1.cc"], LIBS=env.getlibs("afw"))
 env.Program(["Image.cc"], LIBS=env.getlibs("afw"))
 env.Program(["MaskedImage.cc"], LIBS=env.getlibs("afw"))
 env.Program(["MaskedImage_1.cc"], LIBS=env.getlibs("afw"))
@@ -52,7 +54,6 @@ else:
     ignoreList=[]
     if True:
         ignoreList += ["SourceIO_1", "SourceIO_2"] # problems in the Source persistence code
-    ignoreList += ["BBox_1", "Footprint_1", "Footprint_1.py"] # not ready yet
             
     tests = lsst.tests.Control(env, args = testArgs, ignoreList=ignoreList, verbose = True)
 

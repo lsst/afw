@@ -81,7 +81,7 @@ detection::Footprint::Footprint(int nspan,         //!< initial number of spans 
  * Create a rectangular Footprint
  */
 detection::Footprint::Footprint(const image::BBox& bbox, //!< The bounding box defining the rectangle
-                     const image::BBox region) //!< Bounding box of MaskedImage footprint lives in
+                                const image::BBox region) //!< Bounding box of MaskedImage footprint lives in
     : lsst::daf::data::LsstBase(typeid(this)),
       _fid(++id),
       _npix(0),
@@ -157,7 +157,7 @@ const detection::Span& detection::Footprint::addSpan(const int y, //!< row to ad
     _npix += x1 - x0 + 1;
 
     _bbox.grow(image::PointI(x0, y));
-    _bbox.grow(image::PointI(x1 + 1, y + 1));
+    _bbox.grow(image::PointI(x1, y));
 
     return *sp.get();
 }

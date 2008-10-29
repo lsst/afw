@@ -88,7 +88,7 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
     : lsst::daf::data::LsstBase(typeid(this)),
       _footprints(*new std::vector<Footprint::Ptr>()),
       _region(*new image::BBox(image::PointI(maskedImg.getX0(), maskedImg.getY0()),
-                               maskedImg.getWidth(), maskedImg.getWidth())) {
+                               maskedImg.getWidth(), maskedImg.getHeight())) {
     int id;				/* object ID */
     int in_span;                        /* object ID of current IdSpan */
     int nobj = 0;			/* number of objects found */
@@ -99,8 +99,8 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
     const typename ImageT::Ptr img = maskedImg.getImage();
     const int row0 = img->getY0();
     const int col0 = img->getX0();
-    const int numRows = img->getWidth();
-    const int numCols = img->getWidth();
+    const int height = img->getHeight();
+    const int width = img->getWidth();
     assert (row0 == 0 && col0 == 0);    // address previous comment
 
     float thresholdParam = -1;          // standard deviation of image (may be needed by Threshold)
@@ -116,17 +116,17 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
     }
 /*
  * Storage for arrays that identify objects by ID. We want to be able to
- * refer to idp[-1] and idp[numCols], hence the (numCols + 2)
+ * refer to idp[-1] and idp[width], hence the (width + 2)
  */
-    std::vector<int> id1(numCols + 2);
+    std::vector<int> id1(width + 2);
     std::fill(id1.begin(), id1.end(), 0);
-    std::vector<int> id2(numCols + 2);
+    std::vector<int> id2(width + 2);
     std::fill(id2.begin(), id2.end(), 0);
     std::vector<int>::iterator idc = id1.begin() + 1; // object IDs in current/
     std::vector<int>::iterator idp = id2.begin() + 1; //                       previous row
 
     std::vector<int> aliases;           // aliases for initially disjoint parts of Footprints
-    aliases.reserve(1 + numRows/20);	// initial size of aliases
+    aliases.reserve(1 + height/20);	// initial size of aliases
 
     std::vector<IdSpan::Ptr> spans; // row:x0,x1 for objects
     spans.reserve(aliases.capacity());	// initial size of spans
@@ -140,7 +140,7 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
     const bool polarity = threshold.getPolarity();
 
     in_span = 0;			// not in a span
-    for (int y = 0; y < numRows; ++y) {
+    for (int y = 0; y != height; ++y) {
         if (idc == id1.begin() + 1) {
             idc = id2.begin() + 1;
             idp = id1.begin() + 1;
@@ -148,12 +148,12 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
             idc = id1.begin() + 1;
             idp = id2.begin() + 1;
         }
-        std::fill_n(idc - 1, numCols + 2, 0);
+        std::fill_n(idc - 1, width + 2, 0);
         
         in_span = 0;			/* not in a span */
 
         x_iterator pixPtr = img->row_begin(y);
-        for (int x = 0; x < numCols; ++x, ++pixPtr) {
+        for (int x = 0; x < width; ++x, ++pixPtr) {
 	     ImagePixelT pixVal = (polarity ? *pixPtr : -(*pixPtr));
 
             if (pixVal < thresholdVal) {
@@ -194,7 +194,7 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
         }
 
         if(in_span) {
-            IdSpan *sp = new IdSpan(in_span, y, x0, numCols - 1);
+            IdSpan *sp = new IdSpan(in_span, y, x0, width - 1);
             IdSpan::Ptr spp(sp);
             spans.push_back(spp);
         }
@@ -406,8 +406,8 @@ namespace {
                                                              ) {
         const int row0 = _image->getY0();
         const int col0 = _image->getOffsetCols();
-        const int numRows = _image->getWidth();
-        const int numCols = _image->getWidth();
+        const int height = _image->getHeight();
+        const int width = _image->getWidth();
     
         /********************************************************************************************************/
         
@@ -449,7 +449,7 @@ namespace {
         const float thresholdVal = threshold.getValue(param);
 	const bool polarity = threshold.getPolarity();
         
-        for (int i = sspan->span->y -row0 + di; i < numRows && i >= 0; i += di) {
+        for (int i = sspan->span->y -row0 + di; i < height && i >= 0; i += di) {
             pixAccessT imgRow = _image->origin().advance(0, i); // row pointer
             //maskPixAccessT maskRow = _mask->origin.advance(0, i);  //  masks's row pointer
             //
@@ -475,8 +475,8 @@ namespace {
                 // Search right in leftmost span
                 //
                 //nx1 = 0;			// make gcc happy
-                for (int j = nx0 + 1; j <= numCols; j++) {
-		    ImagePixelT pixVal = (j >= numCols) ? threshold - 100 : 
+                for (int j = nx0 + 1; j <= width; j++) {
+		    ImagePixelT pixVal = (j >= width) ? threshold - 100 : 
 			  (polarity ? (F32 ? imgRowF32[j] : imgRowS32[j]) : (F32 ? -imgRowF32[j] : -imgRowS32[j]));
                     if ((maskRow[j] & DETECTED) || pixVal < threshold) {
                         nx1 = j - 1;
@@ -498,18 +498,18 @@ namespace {
             // In fact, if the span overhangs to the right we'll have to defer the overhang
             // until later too, as it too can grow in both directions
             //
-            // Note that column numCols exists virtually, and always ends the last span; this
+            // Note that column width exists virtually, and always ends the last span; this
             // is why we claim below that sx1 is always set
             //
             bool first = false;		// is this the first new span detected?
             for (int j = nx1 + 1; j <= x1 + 1; j++) {
-		ImagePixelT pixVal = (j >= numCols) ? threshold - 100 : 
+		ImagePixelT pixVal = (j >= width) ? threshold - 100 : 
 		     (polarity ? (F32 ? imgRowF32[j] : imgRowS32[j]) : (F32 ? -imgRowF32[j] : -imgRowS32[j]));
                 if (!(maskRow[j] & DETECTED) && pixVal >= threshold) {
                     int sx0 = j++;		// span that we're working on is sx0:sx1
                     int sx1 = -1;		// We know that if we got here, we'll also set sx1
-                    for (; j <= numCols; j++) {
-			 ImagePixelT pixVal = (j >= numCols) ? threshold - 100 : 
+                    for (; j <= width; j++) {
+			 ImagePixelT pixVal = (j >= width) ? threshold - 100 : 
 			      (polarity ? (F32 ? imgRowF32[j] : imgRowS32[j]) : (F32 ? -imgRowF32[j] : -imgRowS32[j]));
                         if ((maskRow[j] & DETECTED) || pixVal < threshold) { // end of span
                             sx1 = j;
@@ -603,17 +603,17 @@ pmFindFootprintAtPoint(const psImage *img,	// image to search
    
    const int row0 = img->row0;
    const int col0 = img->col0;
-   const int numRows = img->numRows;
-   const int numCols = img->numCols;
+   const int height = img->getHeight();
+   const int width = img->getWidth();
 /*
  * Is point in image, and above threshold?
  */
    row -= row0; col -= col0;
-   if (row < 0 || row >= numRows ||
-       col < 0 || col >= numCols) {
+   if (row < 0 || row >= height ||
+       col < 0 || col >= width) {
         psError(PS_ERR_BAD_PARAMETER_VALUE, true,
                 "row/col == (%d, %d) are out of bounds [%d--%d, %d--%d]",
-		row + row0, col + col0, row0, row0 + numRows - 1, col0, col0 + numCols - 1);
+		row + row0, col + col0, row0, row0 + height - 1, col0, col0 + width - 1);
        return NULL;
    }
 
@@ -622,13 +622,13 @@ pmFindFootprintAtPoint(const psImage *img,	// image to search
        return pmFootprintAlloc(0, img);
    }
    
-   pmFootprint *fp = pmFootprintAlloc(1 + img->numRows/10, img);
+   pmFootprint *fp = pmFootprintAlloc(1 + img->getHeight()/10, img);
 /*
  * We need a mask for two purposes; to indicate which pixels are already detected,
  * and to store the "stop" pixels --- those that, once reached, should stop us
  * looking for the rest of the pmFootprint.  These are generally set from peaks.
  */
-   psImage *mask = psImageAlloc(numCols, numRows, PS_TYPE_MASK);
+   psImage *mask = psImageAlloc(width, height, PS_TYPE_MASK);
    P_PSIMAGE_SET_ROW0(mask, row0);
    P_PSIMAGE_SET_COL0(mask, col0);
    psImageInit(mask, INITIAL);
@@ -659,7 +659,7 @@ pmFindFootprintAtPoint(const psImage *img,	// image to search
 	   }
        }
        int i0 = i;
-       for (i = col; i < numCols; i++) {
+       for (i = col; i < width; i++) {
 	   pixVal = F32 ? imgRowF32[i] : imgRowS32[i];
 	   if ((maskRow[i] & DETECTED) || pixVal < threshold) {
 	       break;
@@ -717,13 +717,8 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
  */
 template<typename ImagePixelT, typename MaskPixelT>
 typename image::Image<boost::uint16_t>::Ptr detection::DetectionSet<ImagePixelT, MaskPixelT>::insertIntoImage(const bool relativeIDs) {
-#if 0
-    int const width = _region.width();
-    int const height = _region.height();
-    typename image::Image<boost::uint16_t>::Ptr im(new image::Image<boost::uint16_t>(width, height));
-#else
     typename image::Image<boost::uint16_t>::Ptr im(new image::Image<boost::uint16_t>(_region.dimensions()));
-#endif
+    *im = 0;
 
     int id = 0;
     for (std::vector<Footprint::Ptr>::const_iterator fiter = _footprints.begin(); fiter != _footprints.end(); fiter++) {
