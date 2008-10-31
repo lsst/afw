@@ -1,9 +1,12 @@
 #if !defined(LSST_DETECTION_FOOTPRINT_H)
 #define LSST_DETECTION_FOOTPRINT_H
-//!
-// \file
-// Describe a portion of an image
-//
+/**
+ * \file
+ * Represent a set of pixels of an arbitrary shape and size
+ *
+ * Footprint is fundamental in astronomical image processing, as it defines what
+ * is meant by a Source.
+ */
 #include <list>
 #include <cmath>
 #include <boost/cstdint.hpp>
@@ -14,9 +17,9 @@
 namespace lsst { namespace afw { namespace detection {
 namespace image = lsst::afw::image;
 /*!
- * \brief Describe a range of pixels within an image
+ * \brief A range of pixels within one row of an Image
  *
- * This isn't really for public consumption, as it's the insides
+ * \note This isn't really for public consumption, as it's the insides
  * of a Footprint --- it should be made a private class within
  * Footprint (but not until I'm fully checked in, which is hard
  * at 30000' over Peru).  I'm now at 30000' over the Atlantic,
@@ -26,24 +29,24 @@ class Span {
 public:
     typedef boost::shared_ptr<Span> Ptr;
 
-    Span(int y,                         //!< Row that span's in
+    Span(int y,                         //!< Row that Span's in
          int x0,                        //!< Starting column (inclusive)
          int x1)                        //!< Ending column (inclusive)
         : _y(y), _x0(x0), _x1(x1) {}
     ~Span() {}
 
-    int getX0() { return _x0; }
-    int getX1() { return _x1; }
-    int getWidth() { return _x1 - _x0 + 1; }
-    int getY() { return _y; }
+    int getX0() { return _x0; }         ///< Return the starting x-value
+    int getX1() { return _x1; }         ///< Return the ending x-value
+    int getWidth() { return _x1 - _x0 + 1; } ///< Return the number of pixels
+    int getY() { return _y; }                ///< Return the y-value
 
     std::string toString();    
-    
+
     int compareByYX(const void **a, const void **b);
 
     friend class Footprint;
 private:
-    int _y;                             //!< Row that span's in
+    int _y;                             //!< Row that Span's in
     int _x0;                            //!< Starting column (inclusive)
     int _x1;                            //!< Ending column (inclusive)
 };
@@ -61,13 +64,16 @@ private:
  */
 class Threshold {
 public:
-    typedef enum { VALUE, STDEV, VARIANCE } ThresholdType; //!< types of threshold:
-    ;                                   //!< pixel value, number of sigma given s.d.; number of sigma given variance
+    /// Types of threshold:
+    typedef enum { VALUE,               //!< Use pixel value
+                   STDEV,               //!< Use number of sigma given s.d.
+                   VARIANCE             //!< Use number of sigma given variance
+    } ThresholdType;
 
     Threshold(const float value,        //!< desired value
               const ThresholdType type = VALUE, //!< interpretation of type
-              const bool polarity = true)
-        : _value(value), _type(type), _polarity(polarity) {}
+              const bool polarity = true        //!< Search for pixels above threshold? (Useful for -ve thresholds)
+             ) : _value(value), _type(type), _polarity(polarity) {}
 
     //! return type of threshold
     ThresholdType getType() const { return _type; }
@@ -90,7 +96,8 @@ public:
           default:
             throw lsst::pex::exceptions::InvalidParameter(boost::format("Unsopported type: %d") % _type);
         }
-    } 
+    }
+    /// return Threshold's polarity
     bool getPolarity() const { return _polarity; }
 private:
     float _value;                       //!< value of threshold, to be interpreted via _type
@@ -100,20 +107,18 @@ private:
 
 /************************************************************************************************************/
 /*!
- * \brief Represent a set of pixels in an image
+ * \brief A set of pixels in an Image
  *
  * A Footprint is a set of pixels, usually but not necessarily contiguous.
- * There are constructors to find Footprints above some threshold in an image
+ * There are constructors to find Footprints above some threshold in an Image
  * (see DetectionSet), or to create Footprints in the shape of various
  * geometrical figures
  */
 class Footprint : public lsst::daf::data::LsstBase {
 public:
     typedef boost::shared_ptr<Footprint> Ptr;
-
+    /// The Footprint's Span list
     typedef std::vector<Span::Ptr> SpanList;
-    typedef SpanList::iterator span_iterator;
-    typedef SpanList::const_iterator const_span_iterator;
 
     Footprint(int nspan = 0, const image::BBox region=image::BBox());
     Footprint(const image::BBox& bbox, const image::BBox region=image::BBox());
@@ -121,10 +126,10 @@ public:
 
     ~Footprint();
 
-    int getId() const { return _fid; }   //!< Return the footprint's unique ID
-    SpanList &getSpans() { return _spans; } //!< return the Spans contained in this Footprint
-    const SpanList &getSpans() const { return _spans; } //!< return the Spans contained in this Footprint
-    std::vector<Peak::Ptr> &getPeaks() { return _peaks; } //!< Return the Peaks contained in this Footprint
+    int getId() const { return _fid; }   //!< Return the Footprint's unique ID
+    SpanList &getSpans() { return _spans; } //!< return the Span%s contained in this Footprint
+    const SpanList &getSpans() const { return _spans; } //!< return the Span%s contained in this Footprint
+    std::vector<Peak::Ptr> &getPeaks() { return _peaks; } //!< Return the Peak%s contained in this Footprint
     int getNpix() const { return _npix; }     //!< Return the number of pixels in this Footprint
 
     const Span& addSpan(const int y, const int x0, const int x1);
@@ -133,13 +138,12 @@ public:
     void offset(int dx, int dy);
 
     const image::BBox& getBBox() const { return _bbox; } //!< Return the Footprint's bounding box
-    const image::BBox& getRegion() const { return _region; } //!< Return the corners of the MaskedImage the footprints live in
+    /// Return the corners of the MaskedImage the footprints live in
+    const image::BBox& getRegion() const { return _region; }
     
     void normalize();
     int setNpix();
     void setBBox();
-
-    void rectangle(const image::BBox& bbox);
 
     void insertIntoImage(image::Image<boost::uint16_t>& idImage, const int id) const;
 private:
@@ -180,23 +184,25 @@ template<typename ImagePixelT, typename MaskPixelT=lsst::afw::image::MaskPixel>
 class DetectionSet : public lsst::daf::data::LsstBase {
 public:
     typedef boost::shared_ptr<DetectionSet> Ptr;
+    /// The DetectionSet's set of Footprint%s
+    typedef std::vector<Footprint::Ptr> FootprintList;
 
-    DetectionSet(const image::MaskedImage<ImagePixelT, MaskPixelT> &img,
-                 const Threshold& threshold,
-                 const std::string& planeName = "",
-                 const int npixMin = 1);
-    DetectionSet(const image::MaskedImage<ImagePixelT, MaskPixelT> &img,
-                 const Threshold& threshold,
+    DetectionSet(image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
+                 Threshold const& threshold,
+                 std::string const& planeName = "",
+                 int const npixMin=1);
+    DetectionSet(image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
+                 Threshold const& threshold,
                  int x,
                  int y,
-                 const std::vector<Peak> *peaks = NULL);
-    DetectionSet(const DetectionSet &set, int r = 0);
-    DetectionSet(const DetectionSet &footprints1, const DetectionSet &footprints2,
-                 const int includePeaks);
+                 std::vector<Peak> const* peaks = NULL);
+    DetectionSet(DetectionSet const& set, int r=0);
+    DetectionSet(DetectionSet const& footprints1, DetectionSet const& footprints2,
+                 bool const includePeaks);
     ~DetectionSet();
 
-    std::vector<Footprint::Ptr>& getFootprints() { return _footprints; } //!< Retun the Footprints of detected objects
-    const image::BBox& getRegion() const { return _region; } //!< Return the corners of the MaskedImage
+    FootprintList& getFootprints() { return _footprints; } //!< Retun the Footprint%s of detected objects
+    image::BBox const& getRegion() const { return _region; } //!< Return the corners of the MaskedImage
 
 #if 0                                   // these are equivalent, but the former confuses swig
     typename image::Image<boost::uint16_t>::Ptr insertIntoImage(const bool relativeIDs);
@@ -204,7 +210,7 @@ public:
     typename boost::shared_ptr<image::Image<boost::uint16_t> > insertIntoImage(const bool relativeIDs);
 #endif
 private:
-    std::vector<Footprint::Ptr>& _footprints;  //!< the Footprints of detected objects
+    FootprintList & _footprints;  //!< the Footprints of detected objects
     const image::BBox _region;      //!< The corners of the MaskedImage that the detections live in
 };
 

@@ -1,10 +1,27 @@
+/**
+ * \file
+ *
+ * Create and use an lsst::afw::detection::DetectionSet, a collection of pixels above (or below) some threshold
+ * in an Image
+ *
+ * The "collections of pixels" are represented as lsst::afw::detection::Footprint%s, so an example application
+ * would be:
+ * \code
+    namespace image = lsst::afw::image; namespace detection = lsst::afw::detection;
+
+    image::MaskedImage<float> img(10,20);
+    *img.getImage() = 100;
+
+    detection::DetectionSet<float> sources(img, 10);
+    cout << "Found " << sources.getFootprints().size() << " sources" << std::endl;
+ * \endcode
+ */
 #include <algorithm>
 #include <cassert>
 #include <string>
 #include <typeinfo>
 #include <boost/format.hpp>
 #include <lsst/daf/base/DataProperty.h>
-#include "lsst/afw/image/ImageExceptions.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h"
 
@@ -19,6 +36,7 @@ namespace math = lsst::afw::math;
 /************************************************************************************************************/
 
 namespace {
+    /// Don't let doxygen see this block  \cond
 /*
  * run-length code for part of object
  */
@@ -58,6 +76,7 @@ namespace {
         
         return(resolved);
     }
+    /// \endcond
 }
 
 /************************************************************************************************************/
@@ -73,11 +92,13 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::~DetectionSet() {
  * \brief Find a Detection Set given a MaskedImage and a threshold
  *
  * Go through an image, finding sets of connected pixels above threshold
- * and assembling them into Footprints;  the resulting set of objects
- * is returned as an array<Footprint::Ptr>
+ * and assembling them into Footprint%s;  the resulting set of objects
+ * is returned as an \c array<Footprint::Ptr>
  *
- * If threshold.getPolarity() is false, pixels which are more negative than threshold are
- * assembled into Footprints.
+ * If threshold.getPolarity() is true, pixels above the Threshold are
+ * assembled into Footprints; if it's false, then pixels \e below Threshold
+ * are processed (Threshold will probably have to be below the background level
+ * for this to make sense, e.g. for difference imaging)
  */
 template<typename ImagePixelT, typename MaskPixelT>
 detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
@@ -86,7 +107,7 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
         const std::string& planeName,   //!< mask plane to set (if != "")
         const int npixMin)              //!< minimum number of pixels in an object
     : lsst::daf::data::LsstBase(typeid(this)),
-      _footprints(*new std::vector<Footprint::Ptr>()),
+      _footprints(*new FootprintList()),
       _region(*new image::BBox(image::PointI(maskedImg.getX0(), maskedImg.getY0()),
                                maskedImg.getWidth(), maskedImg.getHeight())) {
     int id;				/* object ID */
@@ -220,7 +241,7 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
         i0 = 0;
         for (unsigned int i = 0; i <= spans.size(); i++) { // <= size to catch the last object
             if(i == spans.size() || spans[i]->id != id) {
-                detection::Footprint *fp = new Footprint(i - i0, _region);
+                Footprint *fp = new Footprint(i - i0, _region);
 	    
                 for(; i0 < i; i0++) {
                     fp->addSpan(spans[i0]->y + row0, spans[i0]->x0 + col0, spans[i0]->x1 + col0);
@@ -229,7 +250,7 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
                 if (fp->getNpix() < npixMin) {
                     delete fp;
                 } else {
-                    detection::Footprint::Ptr fpp(fp);
+                    Footprint::Ptr fpp(fp);
                     _footprints.push_back(fpp);
                 }
             }
@@ -255,7 +276,7 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
     //
     // Set the bits where objects are detected
     //
-    for (std::vector<Footprint::Ptr>::const_iterator fiter = _footprints.begin(); fiter != _footprints.end(); ++fiter) {
+    for (FootprintList::const_iterator fiter = _footprints.begin(); fiter != _footprints.end(); ++fiter) {
         const Footprint::Ptr foot = *fiter;
 
         for (std::vector<Span::Ptr>::const_iterator siter = foot->getSpans().begin();
@@ -272,21 +293,24 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
 /************************************************************************************************************/
 /**
  * Return a DetectionSet consisting a Footprint containing the point (x, y) (if above threshold)
+ *
+ * \todo Implement this.  There's RHL Pan-STARRS code to do it, but it isn't yet converted to LSST C++
  */
 template<typename ImagePixelT, typename MaskPixelT>
 detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
 	const image::MaskedImage<ImagePixelT, MaskPixelT> &img, //!< Image to search for objects
         const Threshold& threshold,          //!< threshold to find objects
-        int x,                          //!< Footprint should include this pixel (column)
-        int y,                          //!< Footprint should include this pixel (row) 
-        const std::vector<Peak> *peaks)        //!< Footprint should include at most one of these peaks
+        int x,                               //!< Footprint should include this pixel (column)
+        int y,                               //!< Footprint should include this pixel (row) 
+        const std::vector<Peak> *peaks)      //!< Footprint should include at most one of these peaks
     : lsst::daf::data::LsstBase(typeid(this)),
-      _footprints(*new std::vector<Footprint::Ptr>())
+      _footprints(*new FootprintList())
     {
 }
 
 /************************************************************************************************************/
 namespace {
+    /// Don't let doxygen see this block  \cond
     /*
      * A data structure to hold the starting point for a search for pixels above threshold,
      * used by pmFindFootprintAtPoint
@@ -320,9 +344,9 @@ namespace {
         static int detectedPlane;       // The MaskPlane to use for detected pixels
         static int stopPlane;           // The MaskPlane to use for pixels that signal us to stop searching
     private:
-        const boost::shared_ptr<detection::Span> _span; // The initial Span
+        detection::Span::Ptr const _span; // The initial Span
         DIRECTION _direction;		// How to continue searching for further pixels
-        bool _stop;                      // should we stop searching?
+        bool _stop;                     // should we stop searching?
     };
 
     template<typename MaskPixelT>
@@ -371,8 +395,8 @@ namespace {
     //
     template<typename ImagePixelT, typename MaskPixelT>
     bool StartspanSet<ImagePixelT, MaskPixelT>::add(detection::Span *span, // the span in question
-                                                          const DIRECTION dir, // the desired direction to search
-                                                          bool addToMask) { // should I add the Span to the mask?
+                                                    const DIRECTION dir, // the desired direction to search
+                                                    bool addToMask) { // should I add the Span to the mask?
         if (dir == RESTART) {
             if (add(span,  UP) || add(span, DOWN, false)) {
                 return true;
@@ -563,9 +587,8 @@ namespace {
         sspan->_direction = DONE;
         return stop ? false : true;
     }
-
-
-} // XXX
+    /// \endcond
+} 
 #if 0
     
 
@@ -689,31 +712,37 @@ pmFindFootprintAtPoint(const psImage *img,	// image to search
  * Grow all the Footprints in the input DetectionSet, returning a new DetectionSet
  *
  * The output DetectionSet may contain fewer Footprints, as some may well have been merged
+ *
+ * \todo Implement this.  There's RHL Pan-STARRS code to do it, but it isn't yet converted to LSST C++
  */
 template<typename ImagePixelT, typename MaskPixelT>
 detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
 	const DetectionSet &set,
         int r)                          //!< Grow Footprints by r pixels
     : lsst::daf::data::LsstBase(typeid(this)),
-      _footprints(*new std::vector<Footprint::Ptr>()) {
+      _footprints(*new FootprintList()) {
 }
 
 /************************************************************************************************************/
 /**
  * Return the DetectionSet corresponding to the merge of two input DetectionSets
+ *
+ * \todo Implement this.  There's RHL Pan-STARRS code to do it, but it isn't yet converted to LSST C++
  */
 template<typename ImagePixelT, typename MaskPixelT>
 detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
-	const DetectionSet &footprints1, const DetectionSet &footprints2,
-        const int includePeaks)
+	DetectionSet const& footprints1, DetectionSet const& footprints2,
+        bool const includePeaks)
     : lsst::daf::data::LsstBase(typeid(this)),
-      _footprints(*new std::vector<Footprint::Ptr>())
+      _footprints(*new FootprintList())
     {
 }
 
 /************************************************************************************************************/
 /**
- * Return an Image<boost::uint16_t> consisting of the Footprints in the DetectionSet
+ * Return an Image with pixels set to the Footprint%s in the DetectionSet
+ *
+ * \returns an image::Image::Ptr
  */
 template<typename ImagePixelT, typename MaskPixelT>
 typename image::Image<boost::uint16_t>::Ptr detection::DetectionSet<ImagePixelT, MaskPixelT>::insertIntoImage(const bool relativeIDs) {
@@ -721,8 +750,8 @@ typename image::Image<boost::uint16_t>::Ptr detection::DetectionSet<ImagePixelT,
     *im = 0;
 
     int id = 0;
-    for (std::vector<Footprint::Ptr>::const_iterator fiter = _footprints.begin(); fiter != _footprints.end(); fiter++) {
-        const detection::Footprint::Ptr foot = *fiter;
+    for (FootprintList::const_iterator fiter = _footprints.begin(); fiter != _footprints.end(); fiter++) {
+        const Footprint::Ptr foot = *fiter;
         
         if (relativeIDs) {
             id++;

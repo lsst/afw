@@ -1,7 +1,7 @@
 /*****************************************************************************/
 /** \file
  *
- * Handle Footprints
+ * Footprint and associated classes
  */
 #include <cassert>
 #include <string>
@@ -27,7 +27,10 @@ std::string detection::Span::toString() {
 }
 
 /**
- * Compare two Spans by y, then x0, then x1
+ * Compare two Span%s by y, then x0, then x1
+ *
+ * A utility function passed to qsort
+ * \note This should be replaced by functor so that we can use std::sort
  */
 int detection::Span::compareByYX(const void **a, const void **b) {
     const detection::Span *sa = *reinterpret_cast<const detection::Span **>(a);
@@ -55,14 +58,14 @@ int detection::Span::compareByYX(const void **a, const void **b) {
 }
 
 /************************************************************************************************************/
-
-int detection::Footprint::id = 0;                  //!< Counter for Footprint IDs
+/// Counter for Footprint IDs
+int detection::Footprint::id = 0;
 /**
  * Create a Footprint
  *
  * \throws lsst::pex::exceptions::InvalidParameter in nspan is < 0
  */
-detection::Footprint::Footprint(int nspan,         //!< initial number of spans in this Footprint
+detection::Footprint::Footprint(int nspan,         //!< initial number of Span%s in this Footprint
                                 const image::BBox region) //!< Bounding box of MaskedImage footprint lives in
     : lsst::daf::data::LsstBase(typeid(this)),
       _fid(++id),
@@ -133,6 +136,9 @@ detection::Footprint::~Footprint() {
     delete &_peaks;
 }
 
+/**
+ * Normalise a Footprint, soring spans and setting the BBox
+ */
 void detection::Footprint::normalize() {
     if (!_normalized) {
 	//_peaks = psArraySort(fp->peaks, pmPeakSortBySN);
@@ -142,12 +148,11 @@ void detection::Footprint::normalize() {
 }
 
 /**
- * Add a span to a footprint, returning a reference the new span; note that this reference
- * does not own the span and should not be deleted
+ * Add a Span to a footprint, returning a reference to the new Span.
  */
-const detection::Span& detection::Footprint::addSpan(const int y, //!< row to add
-                               const int x0, //!< range of
-                               const int x1 //!<        columns
+detection::Span const& detection::Footprint::addSpan(int const y, //!< row value
+                                                     int const x0, //!< starting column
+                                                     int const x1 //!< ending column
                                                     ) {
     if (x1 < x0) {
         return this->addSpan(y, x1, x0);
@@ -164,8 +169,7 @@ const detection::Span& detection::Footprint::addSpan(const int y, //!< row to ad
     return *sp.get();
 }
 /**
- * Add a span to a footprint returning a reference to the new span; note that this reference
- * does not own the span and should not be deleted
+ * Add a Span to a Footprint returning a reference to the new Span
  */
 const detection::Span& detection::Footprint::addSpan(detection::Span const& span // new Span being added
                               ) {
@@ -180,12 +184,12 @@ const detection::Span& detection::Footprint::addSpan(detection::Span const& span
     return *sp;
 }
 /**
- * Offset a Footprint by (dx, dy)
+ * Offset a Footprint by <tt>(dx, dy)</tt>
  */
-void detection::Footprint::offset(int dx, //!< How much to move footprint in x
-                       int dy //!< How much to move in y
+void detection::Footprint::offset(int dx, //!< How much to move footprint in column direction
+                                  int dy  //!< How much to move in row direction
                       ) {
-    for (span_iterator siter = _spans.begin(); siter != _spans.end(); ++siter){
+    for (Footprint::SpanList::iterator siter = _spans.begin(); siter != _spans.end(); ++siter){
         detection::Span::Ptr span = *siter;
 
         span->_y += dy;
@@ -197,16 +201,16 @@ void detection::Footprint::offset(int dx, //!< How much to move footprint in x
 }
 
 /**
- * Tell this to calculate its bounding box
+ * Tell \c this to calculate its bounding box
  */
 void detection::Footprint::setBBox() {
     if (_spans.size() == 0) {
 	return;
     }
 
-    detection::Footprint::const_span_iterator spi;
+    SpanList::const_iterator spi;
     spi = _spans.begin();
-    const detection::Span::Ptr sp = *spi;
+    const Span::Ptr sp = *spi;
     int x0 = sp->_x0;
     int x1 = sp->_x1;
     int y0 = sp->_y;
@@ -224,48 +228,24 @@ void detection::Footprint::setBBox() {
 }
 
 /**
- * Tell this to set its number of pixels
+ * Tell \c this to count its pixels
  */
 int detection::Footprint::setNpix() {
     _npix = 0;
-    for (detection::Footprint::const_span_iterator spi = _spans.begin(); spi != _spans.end(); spi++) {
+    for (Footprint::SpanList::const_iterator spi = _spans.begin(); spi != _spans.end(); spi++) {
         const detection::Span::Ptr sp = *spi;
         _npix += sp->_x1 - sp->_x0 + 1;
    }
 
    return _npix;
 }
-/**
- * Convert a Footprint to a rectangle, specified by bbox
- *
- * Throws an exception (TBD) if the Footprint already contains Spans
- *
- * \deprecated This method has been superceded by the ctor taking a BBox2i
- */
-void detection::Footprint::rectangle(const image::BBox& bbox //!< The desired bounding box
-                         ) {
-    if (_spans.size() > 0) {
-        throw lsst::pex::exceptions::InvalidParameter(boost::format("Footprint already has %d spans") %
-                                                      _spans.size());
-    }
-
-    std::cout << "Please use Footprint(BBox2i) not Footprint.rectangle()" << std::endl;
-
-    const int x0 = bbox.getX0();
-    const int y0 = bbox.getY0();
-    const int x1 = bbox.getX1();
-    const int y1 = bbox.getY1();
-
-    for (int i = y0; i <= y1; i++) {
-        addSpan(i, x0, x1);
-    }
-}
 
 /**
- * Set the pixels in idImage which are in Footprint by adding the specified value
+ * Set the pixels in idImage which are in Footprint by adding the specified value to the Image
  */
 void detection::Footprint::insertIntoImage(image::Image<boost::uint16_t>& idImage, //!< Image to contain the footprint
-                                           int const id) const { //!< Add id to idImage for pixels in the Footprint
+                                           int const id //!< Add id to idImage for pixels in the Footprint
+                                          ) const {
     int const width = _region.getWidth();
     int const height = _region.getHeight();
     int const x0 = _region.getX0();
@@ -277,7 +257,7 @@ void detection::Footprint::insertIntoImage(image::Image<boost::uint16_t>& idImag
                                          % idImage.getWidth() % idImage.getHeight() % width % height);
     }
 
-    for (detection::Footprint::const_span_iterator spi = _spans.begin(); spi != _spans.end(); ++spi) {
+    for (Footprint::SpanList::const_iterator spi = _spans.begin(); spi != _spans.end(); ++spi) {
         detection::Span::Ptr const span = *spi;
 
         for (image::Image<boost::uint16_t>::x_iterator ptr = idImage.x_at(span->getX0() - x0, span->getY() - y0),
@@ -311,7 +291,7 @@ detection::Footprint::Ptr detection::footprintAndMask(
 
 /************************************************************************************************************/
 /**
- * \brief OR bitmask into all the pixels in footprint
+ * \brief OR bitmask into all the Mask's pixels which are in the Footprint
  *
  * \return bitmask
  */
@@ -324,7 +304,7 @@ MaskT detection::setMaskFromFootprint(typename image::Mask<MaskT>::Ptr mask, ///
     int const width = static_cast<int>(mask->getWidth());
     int const height = static_cast<int>(mask->getHeight());    
     
-    for (detection::Footprint::const_span_iterator siter = foot->getSpans().begin();
+    for (detection::Footprint::SpanList::const_iterator siter = foot->getSpans().begin();
          siter != foot->getSpans().end(); siter++) {
         detection::Span::Ptr const span = *siter;
         int const y = span->getY();
@@ -348,7 +328,7 @@ MaskT detection::setMaskFromFootprint(typename image::Mask<MaskT>::Ptr mask, ///
 
 /************************************************************************************************************/
 /**
- * \brief OR bitmask into all the pixels in footprints
+ * \brief OR bitmask into all the Mask's pixels which are in the set of Footprint%s
  *
  * \return bitmask
  */
@@ -371,15 +351,14 @@ MaskT detection::setMaskFromFootprintList(
  * Worker routine for the pmSetFootprintArrayIDs/pmSetFootprintID (and pmMergeFootprintArrays)
  */
 template <typename IDPixelT>
-static void
-set_footprint_id(image::Image<IDPixelT> *idImage,	// the image to set
-                 detection::Footprint::Ptr foot, // the footprint to insert
-		 const int id,          // the desired ID
-                 int dx = 0, int dy = 0 // Add these to all x/y in the Footprint
-                ) {
+static void set_footprint_id(typename image::Image<IDPixelT>::Ptr idImage,	// the image to set
+                             detection::Footprint::Ptr foot, // the footprint to insert
+                             const int id,          // the desired ID
+                             int dx = 0, int dy = 0 // Add these to all x/y in the Footprint
+                            ) {
     using image::operator+=;
 
-    for (detection::Footprint::const_span_iterator siter = foot->getSpans().begin();
+    for (detection::Footprint::SpanList::const_iterator siter = foot->getSpans().begin();
 							siter != foot->getSpans().end(); siter++) {
         detection::Span::Ptr const span = *siter;
         for (typename image::Image<IDPixelT>::x_iterator ptr = idImage->x_at(span->getX0() + dx, span->getY() + dy),
@@ -391,7 +370,7 @@ set_footprint_id(image::Image<IDPixelT> *idImage,	// the image to set
 
 template <typename IDPixelT>
 static void
-set_footprint_array_ids(image::Image<IDPixelT> *idImage, // the image to set
+set_footprint_array_ids(typename image::Image<IDPixelT>::Ptr idImage, // the image to set
                         const std::vector<detection::Footprint::Ptr>& footprints, // the footprints to insert
 			const bool relativeIDs) { // show IDs starting at 0, not Footprint->id
     int id = 0;				// first index will be 1
@@ -406,11 +385,11 @@ set_footprint_array_ids(image::Image<IDPixelT> *idImage, // the image to set
             id = foot->getId();
         }
         
-        set_footprint_id(idImage, foot, id);
+        set_footprint_id<IDPixelT>(idImage, foot, id);
     }
 }
 
-template static void set_footprint_array_ids<int>(image::Image<int> *idImage,
+template static void set_footprint_array_ids<int>(image::Image<int>::Ptr idImage,
                                                   const std::vector<detection::Footprint::Ptr>& footprints,
                                                   const bool relativeIDs);
 
@@ -419,21 +398,9 @@ template static void set_footprint_array_ids<int>(image::Image<int> *idImage,
  * Create an image from a Footprint's bounding box
  */
 template <typename IDImageT>
-static image::Image<IDImageT> *makeImageFromBBox(const image::BBox bbox) {
-    const int numCols = bbox.getWidth();
-    const int numRows = bbox.getHeight();
-    if (numCols < 0 || numRows < 0) {
-        throw lsst::pex::exceptions::InvalidParameter(boost::format("Size of BBox is %dx%d") %
-                                                      numCols % numRows);
-    }
-    
-    image::Image<IDImageT> *idImage = new image::Image<IDImageT>(numCols, numRows);
-#if 0                                   // We need this!
-    const int x0 = bbox.getX0();
-    const int y0 = bbox.getY0();
-    idImage->setOffsetRows(y0);
-    idImage->setOffsetCols(x0);
-#endif
+static typename image::Image<IDImageT>::Ptr makeImageFromBBox(const image::BBox bbox) {
+    typename image::Image<IDImageT>::Ptr idImage(new image::Image<IDImageT>(bbox.dimensions()));
+    idImage->setXY0(bbox.getLLC());
 
     return idImage;
 }
@@ -443,9 +410,9 @@ static image::Image<IDImageT> *makeImageFromBBox(const image::BBox bbox) {
  * Set an image to the value of footprint's ID wherever they may fall
  */
 template <typename IDImageT>
-image::Image<IDImageT> *setFootprintArrayIDs(
-	const std::vector<detection::Footprint::Ptr>& footprints, // the footprints to insert
-        const bool relativeIDs          // show IDs starting at 1, not pmFootprint->id
+typename boost::shared_ptr<image::Image<IDImageT> > setFootprintArrayIDs(
+	std::vector<detection::Footprint::Ptr> const& footprints, // the footprints to insert
+        bool const relativeIDs                                    // show IDs starting at 1, not pmFootprint->id
                                                ) {
     std::vector<detection::Footprint::Ptr>::const_iterator fiter = footprints.begin();
     if (fiter == footprints.end()) {
@@ -453,36 +420,36 @@ image::Image<IDImageT> *setFootprintArrayIDs(
     }
     const detection::Footprint::Ptr foot = *fiter;
 
-    image::Image<IDImageT> *idImage = makeImageFromBBox<IDImageT>(foot->getBBox());
-    *idImage *= 0;                      // should just SET image XXX
+    typename image::Image<IDImageT>::Ptr idImage = makeImageFromBBox<IDImageT>(foot->getRegion());
+    *idImage = 0;
     /*
      * do the work
      */
-    set_footprint_array_ids(idImage, footprints, relativeIDs);
+    set_footprint_array_ids<IDImageT>(idImage, footprints, relativeIDs);
     
     return idImage;
 }
 
-template image::Image<int> *setFootprintArrayIDs(const std::vector<detection::Footprint::Ptr>& footprints,
-                                          const bool relativeIDs);
+template image::Image<int>::Ptr setFootprintArrayIDs(std::vector<detection::Footprint::Ptr> const& footprints,
+                                                     bool const relativeIDs);
 /*
  * Set an image to the value of Footprint's ID wherever it may fall
  */
 template <typename IDImageT>
-image::Image<IDImageT> *setFootprintID(const detection::Footprint::Ptr& foot, // the Footprint to insert
-                                          const int id // the desired ID
-                                         ) {
-    image::Image<IDImageT> *idImage = makeImageFromBBox<IDImageT>(foot->getBBox());
-    *idImage *= 0;                      // should just SET image XXX
+typename boost::shared_ptr<image::Image<IDImageT> > setFootprintID(detection::Footprint::Ptr const& foot, // the Footprint to insert
+                                                    int const id // the desired ID
+                                                   ) {
+    typename image::Image<IDImageT>::Ptr idImage = makeImageFromBBox<IDImageT>(foot->getBBox());
+    *idImage = 0;
     /*
      * do the work
      */
-    set_footprint_id(idImage, foot, id);
+    set_footprint_id<IDImageT>(idImage, foot, id);
 
     return idImage;
 }
 
-template image::Image<int> *setFootprintID(const detection::Footprint::Ptr& foot, const int id);
+template image::Image<int>::Ptr setFootprintID(detection::Footprint::Ptr const& foot, int const id);
 
 /************************************************************************************************************/
 /*
@@ -502,9 +469,9 @@ detection::Footprint::Ptr detection::growFootprint(
     image::BBox bbox = foot->getBBox();
     bbox.grow(image::PointI(bbox.getX0() - 2*ngrow - 1, bbox.getY0() - 2*ngrow - 1));
     bbox.grow(image::PointI(bbox.getX1() + 2*ngrow + 1, bbox.getY1() + 2*ngrow + 1));
-    image::Image<int>::Ptr idImage(makeImageFromBBox<int>(bbox));
+    image::Image<int>::Ptr idImage = makeImageFromBBox<int>(bbox);
 
-    set_footprint_id(idImage.get(), foot, 1, -bbox.getX0(), -bbox.getY0());
+    set_footprint_id<int>(idImage, foot, 1, -bbox.getX0(), -bbox.getY0());
 
     image::Image<double>::Ptr circle_im(new image::Image<double>(2*ngrow + 1, 2*ngrow + 1));
     *circle_im = 0;

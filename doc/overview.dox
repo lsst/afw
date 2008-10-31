@@ -1,0 +1,65 @@
+/**
+\mainpage lsst::afw;  the LSST Application Framework
+
+\section secIntro Introduction
+
+The LSST applications framework provides the basic functionality needed
+by an image processing system.  In particular:
+   \li \ref secImage : Representation of Images (and Masks)
+   \li \ref secMath :  Mathematical functions such as convolution and image statistics
+   \li \ref secDetection : Detection of sources in images
+*/
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+namespace lsst { namespace afw { namespace image {
+/**
+\page secImage Images
+
+\section secImage Images
+
+In LSST, 2-dimensional images are represented using a set of templated classes, all of
+which are ultimately derived from ImageBase:
+      \li Image : An %image of arithmetic type (e.g. short; int.; float)
+      \li Mask : An %image representing a set of bitplanes
+      \li DecoratedImage : An Image that has associated metadata (e.g. from a FITS header)
+      \li MaskedImage : A combination of an Image, a Mask, and an Image giving the per-pixel variance
+      \li Exposure : A MaskedImage with additional \link Wcs WCS\endlink information
+
+\subsection secPixelAccess How to Access Pixels
+
+The LSST %image access is modelled after the boost::gil %image interface; see
+   http://www.boost.org/doc/libs/1_36_0/libs/gil/doc/html/giltutorial.html
+and
+   http://www.boost.org/doc/libs/1_36_0/libs/gil/doc/html/gildesignguide.html
+
+Pixels may be accessed via \link imageIterators iterators\endlink or \link imageLocators locators\endlink; the
+former are simpler if you want single-pixel access, while the latter provide
+you with access to a pixel's friends and neighbours.
+
+*/
+}}}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+namespace lsst { namespace afw { namespace math {
+/**
+\page secMath mathPage
+
+\todo Write me
+*/
+}}}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+namespace lsst { namespace afw { namespace detection {
+/**
+\page secDetection DetectionPage
+\section secDetection DetectionSec
+
+Describe:
+\li Footprint
+\li DetectionSet
+
+*/
+}}}

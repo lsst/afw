@@ -65,13 +65,13 @@ template <typename PixelT>
 void y_gradient(const Image<PixelT>& src, const Image<PixelT>& dst) {
     assert(src.dimensions() == dst.dimensions());
 
-    typedef typename Image<PixelT>::const_xy_locator xyl;
-    xyl src_loc = src.xy_at(0, 1);
+    typedef typename Image<PixelT>::const_xy_locator xy_loc;
+    xy_loc src_loc = src.xy_at(0, 1);
 
 #define USE_CACHE_LOCATION 1
 #if USE_CACHE_LOCATION
-    typename xyl::cached_location_t above = src_loc.cache_location(0,  1);
-    typename xyl::cached_location_t below = src_loc.cache_location(0, -1);
+    typename xy_loc::cached_location_t above = src_loc.cache_location(0,  1);
+    typename xy_loc::cached_location_t below = src_loc.cache_location(0, -1);
 #endif
 
     for (int r = 1; r < src.getHeight() - 1; ++r) {

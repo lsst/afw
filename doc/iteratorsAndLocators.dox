@@ -1,0 +1,112 @@
+namespace lsst { namespace afw { namespace image {
+/**
+ \page imageIterators Image Iterators
+
+The simplest way to visit all the pixels in an %image is to use an STL-compliant
+iterator (this code's in Image_1.cc):
+\dontinclude Image_1.cc
+
+Start by including Image.h, and,
+to save typing, defining a namespace alias:
+\until main
+Declare an Image and set it to 0
+\until img = 0
+Set every pixel of the %image to 100
+\until }
+You could use other iterators instead:
+\until }
+\until }
+
+While this works, it isn't the most efficient way to access all the %image's
+pixels as the Image's pixels may not be contiguous in memory so a test for end-of-row
+is needed after every pixel (we do guarantee
+that a \e row's pixels will be contiguous).  It's better to write:
+\until }
+\until }
+
+In addition to \c row_begin there's also \c x_at(X,Y) to start/end the the iteration at
+a given pixel.
+
+Note that we're using an \c x_iterator instead of an \c iterator; this might
+suggest that the following is also possible, and indeed it is:
+\until }
+\until }
+As the comment suggests, this is probably not a good idea unless you really
+must traverse the %image up the columns --- and in that case, you might consider
+doing a few columns at a time to help the cache performance:
+\until }
+\until }
+\until }
+\until }
+
+finally, close out \c main():
+\until }
+
+If you need access to nearby pixels, see \link imageLocators locators\endlink.
+
+\example Image_1.cc
+ */
+}}}
+
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+ 
+namespace lsst { namespace afw { namespace image {
+/**
+ \page imageLocators Image Locators
+
+\link imageIterators Iterators\endlink provide access to an %image, pixel by pixel.  You
+often want access to neighbouring pixels (e.g. computing a gradient, or smoothing).
+Let's consider the problem of smoothing with a
+\code
+1 2 1
+2 4 2
+1 2 1
+\endcode
+kernel (the code's in Image_2.cc):
+\dontinclude Image_2.cc
+
+Start by including Image.h defining a namespace for clarity:
+\until main
+Declare an Image
+\until in(
+Set the %image to a ramp
+\until }
+\until }
+
+That didn't gain us much, did it?  The code's a little messier than using
+\c x_iterator.   But now we can add code to calculate the smoothed
+%image.  First make an output image, and copy the input pixels:
+\until <<=
+(we didn't need to copy all of them, just the ones around the edge
+that we won't smooth, but this is an easy way to do it).
+
+Now do the smoothing:
+\until }
+\until }
+(N.b. you don't really want to do this;  not only is this kernel
+separable into \c 1 \c 2 \c 1 in first the \c x then the \c y directions,
+but \c lsst::afw::math can do convolutions for you).
+
+Here's a faster way to do the same thing (the use of an \c Image::Ptr is
+just for variety)
+\until }
+\until }
+The \c xy_loc::cached_location_t variables remember relative positions.
+
+We can rewrite this to move setting \c nw, \c se etc. out of the loop:
+\until }
+\until }
+
+You may have noticed that that kernel isn't normalised.  We could
+change the coefficients, but that'd slow things down for integer
+images (such as the one here); but we can normalise after the fact
+by making an Image that shares pixels with the central part of \c out2
+and manipulating it via overloaded \c operator/=
+\until }
+
+Finally write some output files and close out \c main():
+\until }
+
+\example Image_2.cc
+ */
+}}}

@@ -1,3 +1,6 @@
+/// \file
+/// Tell doxygen to (usually) ignore this file \cond GIL_IMAGE_INTERNALS
+
 #if !defined(GIL_LSST_H)
 #define GIL_LSST_H 1
 /*
@@ -223,5 +226,5 @@ F transform_pixels(const View1& src1, const View2& src2,const View3& src3,const 
     return fun;
 }
 }}                                  // namespace boost::gil
-
+/// \endcond
 #endif

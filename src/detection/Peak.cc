@@ -1,6 +1,8 @@
 /*****************************************************************************/
-/*
- * Handle Peaks
+/**
+ * \file
+ *
+ * Handle Peak%s
  */
 #include <cassert>
 #include <string>

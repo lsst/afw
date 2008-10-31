@@ -1,3 +1,10 @@
+/// \file
+/// Tell doxygen to (usually) ignore this file \cond GIL_IMAGE_INTERNALS
+/// \brief  Internal support for reading and writing FITS files using boost::mpl
+/// \author Robert Lupton (rhl@astro.princeton.edu)\n
+///         Princeton University
+/// \date   September 2008
+
 #if !defined(LSST_FITS_IO_MPL_H)
 #define LSST_FITS_IO_MPL_H 1
 
@@ -79,5 +86,5 @@ bool fits_read_image(std::string const& file, ImageT& img,
     return false;
 }
 }}}                                     // lsst::afw::image
-
+/// \endcond
 #endif

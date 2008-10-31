@@ -1,12 +1,12 @@
-#if !defined(LSST_FITS_IO_H)
-#define LSST_FITS_IO_H
-
-
 /// \file
+/// Tell doxygen to (usually) ignore this file \cond GIL_IMAGE_INTERNALS
 /// \brief  Internal support for reading and writing FITS files
 /// \author Robert Lupton (rhl@astro.princeton.edu)
 ///         Princeton University
 /// \date   September 2008
+
+#if !defined(LSST_FITS_IO_H)
+#define LSST_FITS_IO_H
 
 #include <cstdio>
 #include <algorithm>
@@ -115,5 +115,5 @@ inline void fits_write_view(const std::string& filename, const View& view,
 }
 
 }}}                                     // namespace lsst::afw::image
-
+/// \endcond
 #endif

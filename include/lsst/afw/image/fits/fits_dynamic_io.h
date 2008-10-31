@@ -1,20 +1,15 @@
 /// \file
+/// Tell doxygen to (usually) ignore this file \cond GIL_IMAGE_INTERNALS
 /// \brief  Internal support for reading and writing FITS files
 /// \author Robert Lupton (rhl@astro.princeton.edu)
 ///         Princeton University
 /// \date   September 2008
+/// \note Requires cfitsio
 
 /*************************************************************************************************/
 
 #if !defined(LSST_FITS_DYNAMIC_IO_H)
 #define LSST_FITS_DYNAMIC_IO_H
-
-/// \file
-/// \brief  Support for reading and writing FITS files
-///         Requires cfitsio
-///
-/// \author Robert Lupton rhl@astro.princeton.edu\n
-///         Princeton University
 
 #include <stdio.h>
 #include <string>
@@ -87,5 +82,5 @@ inline void fits_read_image(const std::string& filename, boost::gil::any_image<I
 }
 
 }}}                                     // namespace lsst::afw::image
-
+/// \endcond
 #endif
