@@ -33,10 +33,13 @@ The LSST %image access is modelled after the boost::gil %image interface; see
 and
    http://www.boost.org/doc/libs/1_36_0/libs/gil/doc/html/gildesignguide.html
 
-Pixels may be accessed via \link imageIterators iterators\endlink or \link imageLocators locators\endlink; the
-former are simpler if you want single-pixel access, while the latter provide
+Image and Mask Pixels may be accessed via \link imageIterators iterators\endlink
+or \link imageLocators locators\endlink; the former
+are simpler if you want single-pixel access, while the latter provide
 you with access to a pixel's friends and neighbours.
 
+The code to use MaskedImage%s is pretty similar; see
+\link maskedImageIterators MaskedImage iterators\endlink and \link maskedImageLocators MaskedImage locators\endlink.
 */
 }}}
 
