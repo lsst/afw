@@ -380,6 +380,14 @@ namespace image {
                 return apply_IMV<mpl::int_<2> >(x, y);
             }
 
+            bool operator==(maskedImageLocatorBase const& rhs) {
+                return _loc.template get<0>() == rhs._loc.template get<0>();
+            }
+
+            bool operator!=(maskedImageLocatorBase const& rhs) {
+                return !(*this == rhs);
+            }
+
             maskedImageLocatorBase& operator+=(std::pair<int, int> p) {
                 return operator+=(detail::difference_type(p.first, p.second));
             }
