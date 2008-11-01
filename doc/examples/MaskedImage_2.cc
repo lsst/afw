@@ -1,8 +1,8 @@
 /// \file
-#include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/MaskedImage.h"
 
 namespace image = lsst::afw::image;
-typedef image::Image<int> ImageT;
+typedef image::MaskedImage<int> ImageT;
 
 int main() {
     ImageT in(10, 6);
@@ -10,7 +10,7 @@ int main() {
     // Set data to a ramp
     for (int y = 0; y != in.getHeight(); ++y) {
         for (ImageT::xy_locator ptr = in.xy_at(0, y), end = in.xy_at(in.getWidth(), y); ptr != end; ++ptr.x()) {
-            *ptr = y;
+            *ptr = ImageT::Pixel(y, 0x1, 10);
         }
     }
     //
