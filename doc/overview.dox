@@ -20,7 +20,7 @@ namespace lsst { namespace afw { namespace image {
 
 In LSST, 2-dimensional images are represented using a set of templated classes, all of
 which are ultimately derived from ImageBase:
-      \li Image : An %image of arithmetic type (e.g. short; int.; float)
+      \li Image : An %image of arithmetic type (e.g. short; int; float)
       \li Mask : An %image representing a set of bitplanes
       \li DecoratedImage : An Image that has associated metadata (e.g. from a FITS header)
       \li MaskedImage : A combination of an Image, a Mask, and an Image giving the per-pixel variance
@@ -33,13 +33,68 @@ The LSST %image access is modelled after the boost::gil %image interface; see
 and
    http://www.boost.org/doc/libs/1_36_0/libs/gil/doc/html/gildesignguide.html
 
-Image and Mask Pixels may be accessed via \link imageIterators iterators\endlink
+\li \ref secPixelAccessTutorial
+\li \ref secPixelAccessReference
+*/
+
+/**
+\page secPixelAccessTutorial Pixel Access Tutorial and Examples
+\section secPixelAccessTutorial Pixel Access Tutorial and Examples
+
+%Image Pixels may be accessed via \link imageIterators iterators\endlink
 or \link imageLocators locators\endlink; the former
 are simpler if you want single-pixel access, while the latter provide
 you with access to a pixel's friends and neighbours.
 
-The code to use MaskedImage%s is pretty similar; see
+These examples cover Image%s and Mask%s, but
+the code to use MaskedImage%s is pretty similar; see
 \link maskedImageIterators MaskedImage iterators\endlink and \link maskedImageLocators MaskedImage locators\endlink.
+
+*/
+
+/**
+\addtogroup secPixelAccessReference Pixel Access Reference Manual
+
+%Image Pixels may be accessed via \link imageIterators iterators\endlink
+or \link imageLocators locators\endlink; the former
+are simpler if you want single-pixel access, while the latter provide
+you with access to a pixel's friends and neighbours.
+
+There are a set of tutorial examples in \link secPixelAccessTutorial\endlink, covering
+access to Image%s and MaskedImage%s using both iterators and locators.
+
+Use an \c iterator
+\li ImageBase::begin() const
+\li ImageBase::end() const
+\li ImageBase::rbegin() const
+\li ImageBase::rend() const
+\li ImageBase::at(int x, int y) const
+
+N.b. These \c iterators aren't the most efficient way to access all the %image's
+pixels as they may not be contiguous in memory so a test for end-of-row
+is needed after every %pixel (we do guarantee that a \e row's pixels will be contiguous).
+
+Incrementing an \c y_iterator moves it across the row
+\li ImageBase::row_begin(int y) const
+\li ImageBase::row_end(int y) const
+\li ImageBase::x_at(int x, int y) const
+
+Incrementing an \c y_iterator moves it up the column
+\li ImageBase::col_begin(int x) const
+\li ImageBase::col_end(int x) const
+\li ImageBase::y_at(int x, int y) const
+
+\c Locators are more flexible than \c iterators, permitting us to manipulate
+regions of an %image
+
+\li ImageBase::xy_at(int x, int y) const
+
+Advance (or retreat) an \c xy_locator
+\li ImageBase::operator+=(xy_locator& loc, pair2I const& off)
+\li ImageBase::operator+=(const_xy_locator& loc, pair2I const& off)
+\li ImageBase::operator-=(xy_locator& loc, pair2I const& off)
+\li ImageBase::operator-=(const_xy_locator& loc, pair2I const& off)
+
 */
 }}}
 

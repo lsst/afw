@@ -327,7 +327,7 @@ void image::Mask<MaskPixelT>::conformMaskPlanes(MaskPlaneDict& currentPlaneDict
     // Now loop over all pixels in Mask
     if (numReMap > 0) {
         for (int r = 0; r != this->getHeight(); ++r) { // "this->": Meyers, Effective C++, Item 43
-            for (x_iterator ptr = this->row_begin(r), end = this->row_end(r); ptr != end; ++ptr) {
+            for (typename Mask::x_iterator ptr = this->row_begin(r), end = this->row_end(r); ptr != end; ++ptr) {
                 MaskPixelT const pixel = *ptr;
 
                 MaskPixelT newPixel = pixel & keepBitmask; // value of invariant mask bits

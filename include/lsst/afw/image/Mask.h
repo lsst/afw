@@ -50,8 +50,6 @@ namespace image {
         };
 #endif
 
-        typedef typename ImageBase<MaskPixelT>::x_iterator x_iterator;
-        
         // Constructors        
         explicit Mask(int nCols=0, int nRows=0, MaskPlaneDict const& planeDefs = MaskPlaneDict());
         explicit Mask(const std::pair<int, int> dimensions, MaskPlaneDict const& planeDefs = MaskPlaneDict());
