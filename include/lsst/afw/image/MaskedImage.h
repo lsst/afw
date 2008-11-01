@@ -309,6 +309,18 @@ namespace image {
                              _loc.template get<2>().x()[0][0]);
             }
 
+            Pixel operator()(int x, int y) {
+		return Pixel(_loc.template get<0>()(x, y)[0],
+                             _loc.template get<1>()(x, y)[0],
+                             _loc.template get<2>()(x, y)[0]);
+            }
+
+            Pixel operator[](cached_location_t const& cached_loc) {
+		return Pixel(_loc.template get<0>()[cached_loc._imv.template get<0>()][0],
+                             _loc.template get<1>()[cached_loc._imv.template get<1>()][0],
+                             _loc.template get<2>()[cached_loc._imv.template get<2>()][0]);
+            }
+
 	    _x_iterator x() {
 		return _x_iterator(this);
             }
