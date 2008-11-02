@@ -48,7 +48,7 @@ inline void copyRegion(OutImageT &outImage,     // destination Image
                        InImageT const &inImage, // source Image
                        lsst::afw::image::BBox const &region, // region to copy
                        int,
-                       lsst::afw::image::detail::image_tag
+                       lsst::afw::image::detail::Image_tag
                       ) {
     OutImageT outPatch(outImage, region); 
     InImageT inPatch(inImage, region);
@@ -60,7 +60,7 @@ inline void copyRegion(InImageT &outImage,     // destination Image
                        InImageT const &inImage, // source Image
                        lsst::afw::image::BBox const &region, // region to copy
                        int,
-                       lsst::afw::image::detail::image_tag
+                       lsst::afw::image::detail::Image_tag
                       ) {
     InImageT outPatch(outImage, region); 
     InImageT inPatch(inImage, region);
@@ -75,7 +75,7 @@ inline void copyRegion(OutImageT &outImage,     // destination Image
                        InImageT const &inImage, // source Image
                        lsst::afw::image::BBox const &region, // region to copy
                        int orMask,                           // data to | into the mask pixels
-                       lsst::afw::image::detail::maskedImage_tag
+                       lsst::afw::image::detail::MaskedImage_tag
                       ) {
     OutImageT outPatch(outImage, region); 
     InImageT inPatch(inImage, region);
@@ -88,7 +88,7 @@ inline void copyRegion(InImageT &outImage,      // destination Image
                        InImageT const &inImage, // source Image
                        lsst::afw::image::BBox const &region, // region to copy
                        int orMask,                           // data to | into the mask pixels
-                       lsst::afw::image::detail::maskedImage_tag
+                       lsst::afw::image::detail::MaskedImage_tag
                       ) {
     InImageT outPatch(outImage, region);
     InImageT inPatch(inImage, region);
@@ -156,7 +156,7 @@ inline typename OutImageT::SinglePixel lsst::afw::math::apply(
     typename OutImageT::SinglePixel outValue = 0;
     for (int y = 0; y != kHeight; ++y) {
         for (int x = 0; x != kWidth; ++x, ++imageLocator.x(), ++kernelLocator.x()) {
-            typename lsst::afw::math::Kernel::Pixel::type const kVal = kernelLocator[0];
+            typename lsst::afw::math::Kernel::Pixel const kVal = kernelLocator[0];
 #if IGNORE_KERNEL_ZERO_PIXELS
             if (kVal != 0)
 #endif
@@ -203,7 +203,7 @@ inline typename OutImageT::SinglePixel lsst::afw::math::apply(
         OutT outValueY = 0;
         for (k_iter kernelXIter = kernelXList.begin(), end = kernelXList.end();
              kernelXIter != end; ++kernelXIter, ++imageLocator.x()) {
-            typename lsst::afw::math::Kernel::Pixel::type const kValX = *kernelXIter;
+            typename lsst::afw::math::Kernel::Pixel const kValX = *kernelXIter;
 #if IGNORE_KERNEL_ZERO_PIXELS
             if (kValX != 0)
 #endif
@@ -413,7 +413,7 @@ void lsst::afw::math::basicConvolve(
         for (int cnvY = cnvStartY; cnvY != cnvEndY; ++cnvY) {
             inXY_locator inImLoc =  inImage.xy_at(0, cnvY - cnvStartY);
             for (cnvX_iterator cnvImIter = convolvedImage.row_begin(cnvY) + cnvStartX,
-                     cnvImEnd = cnvImIter + cnvEndX - cnvStartX; cnvImIter != cnvImEnd; ++inImLoc.x(), ++cnvImIter) {
+                     cnvImEnd = cnvImIter + (cnvEndX - cnvStartX); cnvImIter != cnvImEnd; ++inImLoc.x(), ++cnvImIter) {
                 *cnvImIter = lsst::afw::math::apply<OutImageT, InImageT>(inImLoc, kXVec, kYVec);
             }
         }

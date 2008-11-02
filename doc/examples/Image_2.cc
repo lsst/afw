@@ -6,7 +6,7 @@ typedef image::Image<int> ImageT;
 
 int main() {
     ImageT in(10, 6);
-    
+
     // Set data to a ramp
     for (int y = 0; y != in.getHeight(); ++y) {
         for (ImageT::xy_locator ptr = in.xy_at(0, y), end = in.xy_at(in.getWidth(), y); ptr != end; ++ptr.x()) {
@@ -83,6 +83,14 @@ int main() {
     {
         ImageT center = ImageT(*out2, image::BBox(image::PointI(1, 1), in.getWidth() - 2, in.getHeight() - 2));
         center /= 16;
+    }
+    //
+    // Clear in using the x_iterator embedded in the locator
+    //
+    for (int y = 0; y != in.getHeight(); ++y) {
+        for (ImageT::xy_x_iterator ptr = in.xy_at(0, y).x(), end = in.xy_at(in.getWidth(), y).x(); ptr != end; ++ptr) {
+            *ptr = 0;
+        }
     }
     //
     // Save those images to disk

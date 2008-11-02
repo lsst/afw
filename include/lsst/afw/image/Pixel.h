@@ -34,7 +34,7 @@ template <typename> struct variance_plus;
 // solution very well.
 
 template<typename _ImagePixelT, typename _MaskPixelT, typename _VariancePixelT=double>
-class SinglePixel : detail::maskedImagePixel_tag {
+class SinglePixel : detail::MaskedImagePixel_tag {
 public:
     template<typename, typename, typename> friend class Pixel;
 
@@ -65,7 +65,7 @@ SinglePixel<ImagePixelT, MaskPixelT, VariancePixelT> makeSinglePixel(ImagePixelT
 }
 
 template<typename _ImagePixelT, typename _MaskPixelT, typename _VariancePixelT=double>
-class Pixel : detail::maskedImagePixel_tag {
+class Pixel : detail::MaskedImagePixel_tag {
 public:
     typedef _ImagePixelT ImagePixelT;
     typedef _MaskPixelT MaskPixelT;

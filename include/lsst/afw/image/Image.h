@@ -36,7 +36,7 @@ namespace image {
         // Traits for image types
         //
         struct basic_tag { };
-        struct image_tag : basic_tag { };
+        struct Image_tag : basic_tag { };
 
         template<typename ImageT>
         struct image_traits {
@@ -84,14 +84,10 @@ namespace image {
 
         typedef detail::basic_tag image_category; ///< trait class to identify type of %image
 
-#if !defined(SWIG)
         /// A single pixel of this type (useful when working with MaskedImage%s)
         typedef PixelT SinglePixel;
-        /// A reference to a Pixel (useful when working with MaskedImage%s)
-        struct Pixel {
-            typedef PixelT type;
-        };
-#endif
+        /// A pixel of this type
+        typedef PixelT Pixel;
         /// A Reference to a PixelT
         typedef typename Reference<PixelT>::type PixelReference;
         /// A ConstReference to a PixelT
@@ -110,10 +106,14 @@ namespace image {
         typedef typename _const_view_t::reverse_iterator const_reverse_iterator;
         /// An iterator for traversing the pixels in a row
         typedef typename _view_t::x_iterator x_iterator;
+        /// An iterator for traversing the pixels in a row, created from an xy_locator
+        typedef typename _view_t::x_iterator xy_x_iterator;
         /// A const iterator for traversing the pixels in a row
         typedef typename _const_view_t::x_iterator const_x_iterator;
         /// An iterator for traversing the pixels in a column
         typedef typename _view_t::y_iterator y_iterator;
+        /// An iterator for traversing the pixels in a row, created from an xy_locator
+        typedef typename _view_t::y_iterator xy_y_iterator;
         /// A const iterator for traversing the pixels in a column
         typedef typename _const_view_t::y_iterator const_y_iterator;
         /** \brief advance an \c xy_locator by \c off
@@ -155,19 +155,9 @@ namespace image {
         //
         template<typename> friend class DecoratedImage;
         template<typename, typename, typename> friend class MaskedImage;
-        /// Create an uninitialised ImageBase of the specified size
         explicit ImageBase(const int width=0, const int height=0);
-        /// Create an uninitialised ImageBase of the specified size
-        /// \note Many lsst::afw::image and lsst::afw::math objects define a \c dimensions member
-        /// which may be conveniently used to make objects of an appropriate size
         explicit ImageBase(const std::pair<int, int> dimensions);
-        /// Copy constructor.
-        /// \note Unless \c deep is \c true, the new %image will share the old %image's pixels;
-        /// this may not be what you want.  See also operator<< to copy pixels between Image%s
         ImageBase(const ImageBase& src, const bool deep=false);
-        /// Copy constructor to make a copy of part of an %image.
-        /// \note Unless \c deep is \c true, the new %image will share the old %image's pixels;
-        /// this is probably what you want 
         ImageBase(const ImageBase& src, const BBox& bbox, const bool deep=false);
         /// generalised copy constructor; defined here in the header so that the compiler can instantiate
         /// N(N-1)/2 conversions between N ImageBase types.
@@ -189,37 +179,32 @@ namespace image {
         }
 
         virtual ~ImageBase() { }
-        /// Assignment operator.
-        /// \note that this has the effect of making the lhs share pixels with the rhs which may
-        /// not be what you intended;  to copy the pixels, use \c operator<<
-        /// \note this behaviour is required to make the swig interface work, otherwise I'd
-        /// declare this function private
         ImageBase& operator=(const ImageBase& rhs);
-        /// Set the %image's pixels to rhs
         ImageBase& operator=(const PixelT rhs);
-        /// Set the lhs's %pixel values to equal the rhs's
         void operator<<=(const ImageBase& rhs);
         //
         // Operators etc.
         //
-        /// Return a reference to the pixel <tt>(x, y)</tt>
         PixelReference operator()(int x, int y);
-        /// Return a const reference to the pixel <tt>(x, y)</tt>
         PixelConstReference operator()(int x, int y) const;
 
         /// Return the number of columns in the %image
         int getWidth() const { return _gilView.width(); }
         /// Return the number of rows in the %image
         int getHeight() const { return _gilView.height(); }
-        /// Return the %image's column-origin
-        ///
-        /// This will usually be 0 except for images created using the <tt>ImageBase(ImageBase, BBox)</tt> cctor
-        /// The origin can be reset with setXY0
+        /**
+         * Return the %image's column-origin
+         *
+         * This will usually be 0 except for images created using the <tt>ImageBase(ImageBase, BBox)</tt> cctor
+         * The origin can be reset with \c setXY0
+         */
         int getX0() const { return _x0; }
-        /// Return the %image's row-origin
-        ///
-        /// This will usually be 0 except for images created using the <tt>ImageBase(ImageBase, BBox)</tt> cctor
-        /// The origin can be reset with setXY0
+        /**
+         * Return the %image's row-origin
+         *
+         * This will usually be 0 except for images created using the <tt>ImageBase(ImageBase, BBox)</tt> cctor
+         * The origin can be reset with \c setXY0
+         */
         int getY0() const { return _y0; }
         /// Return the %image's size;  useful for passing to constructors
         const std::pair<int, int> dimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
@@ -228,47 +213,29 @@ namespace image {
         //
         // Iterators and Locators
         //
-        /// Return an STL compliant iterator to the start of the %image
-        ///
-        /// Note that this isn't especially efficient; see \link secPixelAccessTutorial\endlink for
-        /// a discussion
         iterator begin() const;
-        /// Return an STL compliant iterator to the end of the %image
         iterator end() const;
-        /// Return an STL compliant reverse iterator to the start of the %image
         reverse_iterator rbegin() const;
-        /// Return an STL compliant reverse iterator to the end of the %image
         reverse_iterator rend() const;
-        /// Return an STL compliant iterator at the point <tt>(x, y)</tt>
         iterator at(int x, int y) const;
 
-        /// Return an \c x_iterator to the start of the \c y'th row
-        ///
-        /// Incrementing an \c x_iterator moves it across the row
         x_iterator row_begin(int y) const;
-        /// Return an \c x_iterator to the end of the \c y'th row
         x_iterator row_end(int y) const;
-        /// Return an \c x_iterator to the point <tt>(x, y)</tt> in the %image
         x_iterator x_at(int x, int y) const;
 
-        /// Return an \c y_iterator to the start of the \c y'th row
-        ///
-        /// Incrementing an \c y_iterator moves it up the column
         y_iterator col_begin(int x) const;
-        /// Return an \c y_iterator to the end of the \c y'th row
         y_iterator col_end(int x) const;
-        /// Return an \c y_iterator to the point <tt>(x, y)</tt> in the %image
         y_iterator y_at(int x, int y) const;
 
-        /// Return an \c xy_locator at the point <tt>(x, y)</tt> in the %image
-        ///
-        /// Locators may be used to access a patch in an image
         xy_locator xy_at(int x, int y) const;
-
-        //
-        // There are use cases (e.g. memory overlays) that may want to set these values, but
-        // don't do so unless you are an Expert.
-        //
+        /**
+         * Set the ImageBase's origin
+         *
+         * The origin is usually set by the constructor, so you shouldn't need this function
+         *
+         * \note There are use cases (e.g. memory overlays) that may want to set these values, but
+         * don't do so unless you are an Expert.
+         */
         void setXY0(PointI const origin) {
             _x0 = origin.getX();
             _y0 = origin.getY();
@@ -312,7 +279,7 @@ namespace image {
         typedef boost::shared_ptr<Image<PixelT> > Ptr;
         typedef boost::shared_ptr<const Image<PixelT> > ConstPtr;
 
-        typedef detail::image_tag image_category;
+        typedef detail::Image_tag image_category;
 
 #if !defined(SWIG)
         template<typename ImagePT=PixelT>

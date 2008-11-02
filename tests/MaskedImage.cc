@@ -352,7 +352,7 @@ BOOST_AUTO_TEST_CASE(iterators) {
         BOOST_CHECK(begin != end);
     }
     {
-        ImageT::y_iterator end = img.col_end(0), begin = end - img.getWidth();
+        ImageT::y_iterator end = img.col_end(0), begin = end + (-img.getWidth());
         BOOST_CHECK(!(begin == end));
     }
 }

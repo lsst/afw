@@ -16,7 +16,7 @@ namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
 
 int main(int argc, char **argv) {
-    typedef afwMath::Kernel::Pixel::type pixelType;
+    typedef afwMath::Kernel::Pixel pixelType;
     unsigned int kernelCols = 6;
     unsigned int kernelRows = 5;
     

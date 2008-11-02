@@ -60,11 +60,15 @@ or \link imageLocators locators\endlink; the former
 are simpler if you want single-pixel access, while the latter provide
 you with access to a pixel's friends and neighbours.
 
-There are a set of tutorial examples in \link secPixelAccessTutorial\endlink, covering
-access to Image%s and MaskedImage%s using both iterators and locators.
+There are a set of tutorial examples in \link
+secPixelAccessTutorial\endlink, covering access to Image%s and
+MaskedImage%s using both iterators and locators.
 
-Use an \c iterator
+\par Iterators
+
+You can use an STL-compliant \c iterator to access the pixels:
 \li ImageBase::begin() const
+\li MaskedImage::begin() const
 \li ImageBase::end() const
 \li ImageBase::rbegin() const
 \li ImageBase::rend() const
@@ -84,10 +88,39 @@ Incrementing an \c y_iterator moves it up the column
 \li ImageBase::col_end(int x) const
 \li ImageBase::y_at(int x, int y) const
 
+Iterators can be dereferenced:
+\li imageIterator::operator*()
+\li MaskedImage::MaskedImageIteratorBase::operator*()
+
+Additionally, MaskedImage iterators support
+\li MaskedImage::MaskedImageIteratorBase::image()
+\li MaskedImage::MaskedImageIteratorBase::mask()
+\li MaskedImage::MaskedImageIteratorBase::variance()
+
+Iterators may be advanced with
+\li imageIterator::operator++()
+\li imageIterator::operator++(int)
+\li imageIterator::operator+=(std::ptrdiff_t delta)
+\li imageIterator::operator-=(std::ptrdiff_t delta)
+
+and compared with
+\li imageIterator::operator==(imageIterator const& rhs)
+\li imageIterator::operator!=(imageIterator const& rhs)
+\li imageIterator::operator<(imageIterator const& rhs)
+
+\par Locators
+
 \c Locators are more flexible than \c iterators, permitting us to manipulate
 regions of an %image
 
 \li ImageBase::xy_at(int x, int y) const
+
+Locators may be dereferenced with:
+\li imageLocator::operator*()
+\li imageLocator::operator(int x, int y)
+
+Retrieve an x- or y-iterator that may be incremented (but not dereferenced)
+\li imageLocator x()
 
 Advance (or retreat) an \c xy_locator
 \li ImageBase::operator+=(xy_locator& loc, pair2I const& off)
@@ -95,6 +128,9 @@ Advance (or retreat) an \c xy_locator
 \li ImageBase::operator-=(xy_locator& loc, pair2I const& off)
 \li ImageBase::operator-=(const_xy_locator& loc, pair2I const& off)
 
+Save or use a saved relative location
+\li imageLocator::cache_location(int x, int y)
+\li imageLocator::operator[](cached_location_t const&);
 */
 }}}
 

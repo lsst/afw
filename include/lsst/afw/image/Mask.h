@@ -31,7 +31,7 @@ namespace afw {
 namespace image {
     // all masks will initially be instantiated with the same pixel type
     namespace detail {
-        struct mask_tag : detail::basic_tag { };
+        struct Mask_tag : detail::basic_tag { };
     }
 
     template<typename MaskPixelT>
@@ -41,7 +41,7 @@ namespace image {
         typedef boost::shared_ptr<const Mask> ConstPtr;
         typedef std::map<std::string, int> MaskPlaneDict;
         
-        typedef detail::mask_tag image_category;
+        typedef detail::Mask_tag image_category;
 
 #if !defined(SWIG)
         template<typename MaskPT=MaskPixelT>

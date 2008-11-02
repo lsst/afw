@@ -129,6 +129,7 @@ Start by including Image.h defining a namespace for clarity:
 \until main
 Declare an Image
 \until in(
+\skip for
 Set the %image to a ramp
 \until }
 \until }
@@ -164,6 +165,12 @@ by making an Image that shares pixels with the central part of \c out2
 and manipulating it via overloaded \c operator/=
 \until }
 
+N.b. you can use the iterator embedded in the locator directly if you really want to, e.g.
+\skip for
+\until }
+\until }
+we called the iterator \c xy_x_iterator, not \c x_iterator, for consistency with MaskedImage.
+
 Finally write some output files and close out \c main():
 \until }
 
@@ -194,6 +201,8 @@ Start by including Image.h defining a namespace for clarity:
 \until main
 Declare a MaskedImage
 \until in(
+\skip for
+\skip for
 Set the %image (but not the mask or variance) to a ramp
 \until }
 \until }
@@ -228,6 +237,13 @@ images (such as the one here); but we can normalise after the fact
 by making an Image that shares pixels with the central part of \c out2
 and manipulating it via overloaded \c operator/=
 \until }
+
+N.b. you can use the iterator embedded in the locator directly if you really want to, e.g.
+\skip for
+\until }
+\until }
+Note that this isn't quite the same \c x_iterator as before, due to the need to make the \c x_iterator
+move the underlying \c xy_locator.
 
 Finally write some output files and close out \c main():
 \until }

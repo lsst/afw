@@ -129,14 +129,23 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::swap(MaskedIma
 
 // Variance functions
         
-
-// Set the pixel values of the variance based on the image.  The assumption is
-// gaussian statistics, so that variance = image / k, where k is the gain in
-// electrons per ADU
-//
-// Formerly known as setDefaultVariance(), but that name doesn't say what it does
-//
-
+/**
+ * Set the variance from the image and the detector's gain
+ *
+ * Set the pixel values of the variance based on the image.  The assumption is
+ * Gaussian statistics, so that variance = image / k, where k is the gain in
+ * electrons per ADU
+ *
+ * \note Formerly known as setDefaultVariance(), but that name doesn't say what it does
+ *
+ * \deprecated
+ * This function was present (as \c setDefaultVariance) in the DC2 API, but
+ * it isn't really a very good idea.  The gain's taken to be a a single number, so
+ * this function is equivalent to
+ * \code
+  *MaskedImage.getVariance() /= gain
+ * \endcode
+ */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::setVarianceFromGain() {
     double gain = 1.0; 
@@ -157,7 +166,11 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::setVarianceFro
 
 /************************************************************************************************************/
 // Operators
-
+/**
+ * Copy the pixels from the rhs to the lhs
+ *
+ * \note operator=() is not equivalent to this command
+ */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator<<=(MaskedImage const& rhs) {
     *_image <<= *rhs._image;
