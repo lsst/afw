@@ -36,7 +36,6 @@ else:
     env["ENV"]["AFWDATA_DIR"] = os.environ["AFWDATA_DIR"]
     
     if lsst.daf.persistence.DbAuth.available():
-        env["ENV"]["SEAL_PLUGINS"] = os.environ["SEAL_PLUGINS"]    
         if os.environ.has_key("LSST_DB_AUTH"):
             env["ENV"]["LSST_DB_AUTH"] = os.environ["LSST_DB_AUTH"]
     else:

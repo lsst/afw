@@ -169,6 +169,7 @@ private:
         using ImageBase<MaskPixelT>::_getRawView;
         using ImageBase<MaskPixelT>::_getRawImagePtr;
         using ImageBase<MaskPixelT>::_setRawView;
+        using ImageBase<MaskPixelT>::swap;
     };
 
 }}}  // lsst::afw::image

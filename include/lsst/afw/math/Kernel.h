@@ -426,7 +426,7 @@ namespace math {
     class LinearCombinationKernel : public Kernel {
     public:
         typedef boost::shared_ptr<LinearCombinationKernel> PtrT;
-        typedef KernelList<Kernel> KernelList;
+        typedef lsst::afw::math::KernelList<Kernel> KernelList;
 
         explicit LinearCombinationKernel();
 

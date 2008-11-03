@@ -296,7 +296,7 @@ public:
     ~fits_reader() { }
 
     template <typename View>
-    void image::detail::fits_reader::apply(View& view) {
+    void apply(View& view) {
         if (_hdu != 0) {
             throw lsst::pex::exceptions::FitsError(boost::format("Non-default HDUs are not yet supported: %d") % _hdu);
         }

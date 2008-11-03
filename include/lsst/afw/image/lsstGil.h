@@ -194,7 +194,7 @@ namespace lsst { namespace afw { namespace image { namespace detail {
         typedef typename T::const_t type;
     };
 
-    typedef boost::gil::point2<int> difference_type; // type used to advance locators
+    typedef boost::gil::point2<std::ptrdiff_t> difference_type; // type used to advance locators
 }}}}    // namespace lsst::afw::image::detail
 
 namespace boost { namespace gil {

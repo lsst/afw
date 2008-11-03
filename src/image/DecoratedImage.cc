@@ -10,12 +10,10 @@
 
 namespace image = lsst::afw::image;
 
-namespace {
-    template<typename PixelT>
-    void image::DecoratedImage<PixelT>::init() {
-        _metadata = lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData");
-        _gain = 0;
-    }
+template<typename PixelT>
+void image::DecoratedImage<PixelT>::init() {
+    _metadata = lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData");
+    _gain = 0;
 }
 
 /// Create an %image of the specified size
