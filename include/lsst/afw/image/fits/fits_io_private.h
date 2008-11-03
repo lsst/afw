@@ -332,11 +332,11 @@ public:
     
     template <typename Image>
     void read_image(Image& im) {
-        im.recreate(get_dimensions());
+        im.recreate(get_getDimensions());
         apply(view(im));
     }
 
-    boost::gil::point2<std::ptrdiff_t> get_dimensions() const {
+    boost::gil::point2<std::ptrdiff_t> get_getDimensions() const {
         return boost::gil::point2<std::ptrdiff_t>(_naxis1, _naxis2);
     }
 };

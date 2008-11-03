@@ -23,7 +23,7 @@ typedef image::Mask<MaskPixelT> MaskT;
 
 template <typename PixelT>
 void y_gradient(ImageT & src, ImageT & dst) {
-    assert(src.dimensions() == dst.dimensions());
+    assert(src.getDimensions() == dst.getDimensions());
 
 #define CONST 0
 #if CONST
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(setValues) {
     ptr++;
     BOOST_CHECK_EQUAL(*ptr,    201);
 
-    ImageT img2(img.dimensions()); // make a deep copy
+    ImageT img2(img.getDimensions()); // make a deep copy
     img2 = 4;
 
     ImageT::x_iterator ptr2 = img2.x_at(0, 4);

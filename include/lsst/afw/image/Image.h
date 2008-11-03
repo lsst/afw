@@ -171,7 +171,7 @@ namespace image {
                                                               "with different pixel types");
             }
 
-            ImageBase<PixelT> tmp(rhs.dimensions());
+            ImageBase<PixelT> tmp(rhs.getDimensions());
             copy_and_convert_pixels(rhs._gilView, tmp._gilView); // from boost::gil
             tmp._x0 = rhs._x0;
             tmp._y0 = rhs._y0;
@@ -209,7 +209,7 @@ namespace image {
          */
         int getY0() const { return _y0; }
         /// Return the %image's size;  useful for passing to constructors
-        const std::pair<int, int> dimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
+        const std::pair<int, int> getDimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
         
         void swap(ImageBase &rhs);
         //
@@ -387,7 +387,7 @@ namespace image {
         int getY0() const { return _image->getY0(); }
 
         /// Return the %image's size;  useful for passing to constructors
-        const std::pair<int, int> dimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
+        const std::pair<int, int> getDimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
 
         void swap(DecoratedImage &rhs);
         

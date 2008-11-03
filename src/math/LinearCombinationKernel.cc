@@ -86,7 +86,7 @@ double lsst::afw::math::LinearCombinationKernel::computeImage(
     double x,
     double y
 ) const {
-    if (image.dimensions() != this->dimensions()) {
+    if (image.getDimensions() != this->getDimensions()) {
         throw lsst::pex::exceptions::InvalidParameter("image is the wrong size");
     }
     if (this->isSpatiallyVarying()) {
@@ -100,7 +100,7 @@ double lsst::afw::math::LinearCombinationKernel::computeImage(
     // as it'd have to generate a temporary, and I don't think it's a good idea to make tmps
     // without explicit requests from the user.
     //
-    lsst::afw::image::Image<PixelT>::Ptr tmpImage(new lsst::afw::image::Image<PixelT>(image.dimensions()));
+    lsst::afw::image::Image<PixelT>::Ptr tmpImage(new lsst::afw::image::Image<PixelT>(image.getDimensions()));
 
     image <<= **kImPtrIter;
     image *= *kParIter;
@@ -145,7 +145,7 @@ void lsst::afw::math::LinearCombinationKernel::checkKernelList(const KernelList 
     int ctrY = kernelList[0]->getCtrY();
     
     for (unsigned int ii = 0; ii < kernelList.size(); ++ii) {
-        if (kernelList[ii]->dimensions() != kernelList[0]->dimensions()) {
+        if (kernelList[ii]->getDimensions() != kernelList[0]->getDimensions()) {
             throw lsst::pex::exceptions::InvalidParameter(
                                                   boost::format("kernel %d has different size than kernel 0") % ii);
         }
@@ -199,7 +199,7 @@ void lsst::afw::math::LinearCombinationKernel::setKernelParameter(unsigned int i
 void lsst::afw::math::LinearCombinationKernel::_computeKernelImageList() {
     std::vector<double>::const_iterator kParIter = _kernelParams.begin();
     for (KernelList::const_iterator kIter = _kernelList.begin(), kEnd = _kernelList.end(); kIter != kEnd; ++kIter) {
-        lsst::afw::image::Image<PixelT>::Ptr kernelImagePtr(new lsst::afw::image::Image<PixelT>(this->dimensions()));
+        lsst::afw::image::Image<PixelT>::Ptr kernelImagePtr(new lsst::afw::image::Image<PixelT>(this->getDimensions()));
 
         (void)(*kIter)->computeImage(*kernelImagePtr, false);
 

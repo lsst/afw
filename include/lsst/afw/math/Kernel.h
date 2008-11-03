@@ -117,7 +117,7 @@ namespace math {
 
         virtual ~Kernel() {};
         
-        const std::pair<int, int> dimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
+        const std::pair<int, int> getDimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
 
         /**
          * @brief Compute an image (pixellized representation of the kernel) in place

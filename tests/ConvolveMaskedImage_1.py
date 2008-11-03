@@ -187,7 +187,7 @@ class ConvolveTestCase(unittest.TestCase):
         kFunc = afwMath.IntegerDeltaFunction2D(0.0, 0.0)
         k = afwMath.AnalyticKernel(3, 3, kFunc)
         
-        cnvMaskedImage = afwImage.MaskedImageF(self.maskedImage.dimensions())
+        cnvMaskedImage = afwImage.MaskedImageF(self.maskedImage.getDimensions())
         afwMath.convolve(cnvMaskedImage, self.maskedImage, k, True, edgeBit)
 
         origImVarMaskArrays = imTestUtils.arraysFromMaskedImage(self.maskedImage)
@@ -208,7 +208,7 @@ class ConvolveTestCase(unittest.TestCase):
         kFunc =  afwMath.GaussianFunction2D(1.5, 2.5)
         k = afwMath.AnalyticKernel(kCols, kRows, kFunc)
         
-        cnvMaskedImage = afwImage.MaskedImageF(self.maskedImage.dimensions())
+        cnvMaskedImage = afwImage.MaskedImageF(self.maskedImage.getDimensions())
         for doNormalize in (True, False):
             afwMath.convolve(cnvMaskedImage, self.maskedImage, k, doNormalize, edgeBit)
             cnvImage, cnvVariance, cnvMask = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
@@ -217,7 +217,7 @@ class ConvolveTestCase(unittest.TestCase):
             refCnvImage, refCnvVariance, refCnvMask = refConvolve(imVarMask, k, doNormalize, edgeBit)
 
             if display:
-                refMaskedImage = self.maskedImage.Factory(self.maskedImage.dimensions())
+                refMaskedImage = self.maskedImage.Factory(self.maskedImage.getDimensions())
                 imTestUtils.maskedImageFromArrays(refMaskedImage, (refCnvImage, refCnvVariance, refCnvMask))
                 ds9.mtv(displayUtils.makeMosaic(self.maskedImage, refMaskedImage, cnvMaskedImage), frame=0)
                 if False:
@@ -244,7 +244,7 @@ class ConvolveTestCase(unittest.TestCase):
         kFunc =  afwMath.GaussianFunction2D(1.5, 2.5)
         k = afwMath.AnalyticKernel(kCols, kRows, kFunc)
                 
-        cnvMaskedImage = afwImage.MaskedImageF(self.maskedImage.dimensions())
+        cnvMaskedImage = afwImage.MaskedImageF(self.maskedImage.getDimensions())
         for doNormalize in (False, True):
             afwMath.convolve(cnvMaskedImage, self.maskedImage, k, doNormalize, edgeBit)
             cnvImage, cnvVariance, cnvMask = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
@@ -352,7 +352,7 @@ class ConvolveTestCase(unittest.TestCase):
 
         bbox = afwImage.BBox(afwImage.PointI(1, 1), self.width, self.height)
         maskedImage = afwImage.MaskedImageF(self.maskedImage, bbox)
-        cnvMaskedImage = afwImage.MaskedImageF(maskedImage.dimensions())
+        cnvMaskedImage = afwImage.MaskedImageF(maskedImage.getDimensions())
         
         for kCols in range(1, 4):
             for kRows in range(1, 4):
@@ -412,7 +412,7 @@ class ConvolveTestCase(unittest.TestCase):
         lcKernel = afwMath.LinearCombinationKernel(kVec, sFunc)
         lcKernel.setSpatialParameters(sParams)
 
-        cnvMaskedImage = afwImage.MaskedImageF(self.maskedImage.dimensions())
+        cnvMaskedImage = afwImage.MaskedImageF(self.maskedImage.getDimensions())
         afwMath.convolve(cnvMaskedImage, self.maskedImage, lcKernel, doNormalize, edgeBit)
         cnvImage, cnvVariance, cnvMask = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
 
@@ -432,7 +432,7 @@ class ConvolveTestCase(unittest.TestCase):
             cnvImage, cnvVariance, cnvMask = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
     
             if display:
-                refMaskedImage = self.maskedImage.Factory(self.maskedImage.dimensions())
+                refMaskedImage = self.maskedImage.Factory(self.maskedImage.getDimensions())
                 imTestUtils.maskedImageFromArrays(refMaskedImage, (refCnvImage, refCnvVariance, refCnvMask))
                 ds9.mtv(displayUtils.makeMosaic(refMaskedImage, cnvMaskedImage), frame=0)
             if not numpy.allclose(cnvImage, refCnvImage):

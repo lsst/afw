@@ -18,7 +18,7 @@ int main() {
 
     lsst::afw::math::GaussianFunction2<pixelType> gaussFunc(sigmaX, sigmaY);
     lsst::afw::math::AnalyticKernel analyticKernel(kernelCols, kernelRows, gaussFunc);
-    lsst::afw::image::Image<pixelType> analyticImage(analyticKernel.dimensions());
+    lsst::afw::image::Image<pixelType> analyticImage(analyticKernel.getDimensions());
     (void)analyticKernel.computeImage(analyticImage, true);
     analyticImage *= 47.3; // denormalize by some arbitrary factor
     

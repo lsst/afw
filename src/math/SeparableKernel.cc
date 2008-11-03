@@ -61,7 +61,7 @@ double lsst::afw::math::SeparableKernel::computeImage(
     double x,
     double y
 ) const {
-    if (image.dimensions() != this->dimensions()) {
+    if (image.getDimensions() != this->getDimensions()) {
         throw lsst::pex::exceptions::InvalidParameter("image is the wrong size");
     }
     if (this->isSpatiallyVarying()) {

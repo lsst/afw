@@ -748,7 +748,7 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
  */
 template<typename ImagePixelT, typename MaskPixelT>
 typename image::Image<boost::uint16_t>::Ptr detection::DetectionSet<ImagePixelT, MaskPixelT>::insertIntoImage(const bool relativeIDs) {
-    typename image::Image<boost::uint16_t>::Ptr im(new image::Image<boost::uint16_t>(_region.dimensions()));
+    typename image::Image<boost::uint16_t>::Ptr im(new image::Image<boost::uint16_t>(_region.getDimensions()));
     *im = 0;
 
     int id = 0;

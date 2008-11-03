@@ -131,7 +131,7 @@ class ConvolveTestCase(unittest.TestCase):
         kFunc = afwMath.IntegerDeltaFunction2D(0.0, 0.0)
         k = afwMath.AnalyticKernel(3, 3, kFunc)
 
-        cnvImage = afwImage.ImageF(self.inImage.dimensions())
+        cnvImage = afwImage.ImageF(self.inImage.getDimensions())
         afwMath.convolve(cnvImage, self.inImage, k, True)
     
         if display:
@@ -152,7 +152,7 @@ class ConvolveTestCase(unittest.TestCase):
         kFunc =  afwMath.GaussianFunction2D(1.5, 2.5)
         k = afwMath.AnalyticKernel(kCols, kRows, kFunc)
         
-        cnvImage = afwImage.ImageF(self.inImage.dimensions())
+        cnvImage = afwImage.ImageF(self.inImage.getDimensions())
         for doNormalize in (True, False):
             afwMath.convolve(cnvImage, self.inImage, k, doNormalize)
 
@@ -176,7 +176,7 @@ class ConvolveTestCase(unittest.TestCase):
         k = afwMath.AnalyticKernel(kCols, kRows, kFunc)
         
         for doNormalize in (False, True):
-            cnvImage = afwImage.ImageF(self.inImage.dimensions())
+            cnvImage = afwImage.ImageF(self.inImage.getDimensions())
             afwMath.convolve(cnvImage, self.inImage, k, doNormalize)
             cnvImageArr = imTestUtils.arrayFromImage(cnvImage)
     
@@ -206,7 +206,7 @@ class ConvolveTestCase(unittest.TestCase):
         k = afwMath.AnalyticKernel(kCols, kRows, kFunc, sFunc)
         k.setSpatialParameters(sParams)
                 
-        cnvImage = afwImage.ImageF(self.inImage.dimensions())
+        cnvImage = afwImage.ImageF(self.inImage.getDimensions())
         for doNormalize in (False, True):
             afwMath.convolve(cnvImage, self.inImage, k, doNormalize)
             cnvImageArr = imTestUtils.arrayFromImage(cnvImage)
@@ -240,7 +240,7 @@ class ConvolveTestCase(unittest.TestCase):
         separableKernel.setSpatialParameters(sParams)
         analyticKernel.setSpatialParameters(sParams)
                 
-        cnvImage = afwImage.ImageF(self.inImage.dimensions())
+        cnvImage = afwImage.ImageF(self.inImage.getDimensions())
         for doNormalize in (False, True):
             afwMath.convolve(cnvImage, self.inImage, separableKernel, doNormalize)
 
@@ -263,7 +263,7 @@ class ConvolveTestCase(unittest.TestCase):
                     for activeRow in range(kRows):
                         kernel = afwMath.DeltaFunctionKernel(kCols, kRows, afwImage.PointI(activeCol, activeRow))
                         
-                        refCnvImage = afwImage.ImageF(self.inImage.dimensions())
+                        refCnvImage = afwImage.ImageF(self.inImage.getDimensions())
                         afwMath.convolve(refCnvImage, self.inImage, kernel, doNormalize)
                         refCnvImageArr= imTestUtils.arrayFromImage(refCnvImage)
                 
@@ -299,7 +299,7 @@ class ConvolveTestCase(unittest.TestCase):
         lcKernel = afwMath.LinearCombinationKernel(kVec, sFunc)
         lcKernel.setSpatialParameters(sParams)
 
-        cnvImage = afwImage.ImageF(self.inImage.dimensions())
+        cnvImage = afwImage.ImageF(self.inImage.getDimensions())
         afwMath.convolve(cnvImage, self.inImage, lcKernel, doNormalize)
         cnvImageArr = imTestUtils.arrayFromImage(cnvImage)
 
@@ -309,14 +309,14 @@ class ConvolveTestCase(unittest.TestCase):
         if not numpy.allclose(cnvImageArr, refCnvImageArr):
             self.fail("Image from afwMath.convolve does not match image from refConvolve")
 
-        cnvImage = afwImage.ImageF(self.inImage.dimensions())
+        cnvImage = afwImage.ImageF(self.inImage.getDimensions())
         # compute twice, to be sure cnvImage is properly reset
         for ii in range(2):        
             afwMath.convolveLinear(cnvImage, self.inImage, lcKernel)
             cnvImageArr = imTestUtils.arrayFromImage(cnvImage)
             
             if display:
-                refImage = self.inImage.Factory(self.inImage.dimensions())
+                refImage = self.inImage.Factory(self.inImage.getDimensions())
                 imTestUtils.imageFromArray(refImage, refCnvImageArr)
                 ds9.mtv(displayUtils.makeMosaic(self.inImage, cnvImage, refImage))
 
@@ -345,7 +345,7 @@ class ConvolveTestCase(unittest.TestCase):
         lcKernel = afwMath.LinearCombinationKernel(kVec, sFunc)
         lcKernel.setSpatialParameters(sParams)
 
-        refCnvImage = afwImage.ImageF(self.inImage.dimensions())
+        refCnvImage = afwImage.ImageF(self.inImage.getDimensions())
         afwMath.convolve(refCnvImage, self.inImage, lcKernel, doNormalize)
         refCnvImageArr = imTestUtils.arrayFromImage(refCnvImage)
 
@@ -356,7 +356,7 @@ class ConvolveTestCase(unittest.TestCase):
             self.fail("Image from afwMath.convolve does not match image from refConvolve")
 
         # compute twice, to be sure cnvImage is properly reset
-        cnvImage = afwImage.ImageF(self.inImage.dimensions())
+        cnvImage = afwImage.ImageF(self.inImage.getDimensions())
         for ii in range(2):        
             afwMath.convolveLinear(cnvImage, self.inImage, lcKernel)
             cnvImageArr = imTestUtils.arrayFromImage(cnvImage)

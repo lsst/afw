@@ -104,7 +104,7 @@ if __name__ == "__main__":
     siPtr = maskedImage.Factory(maskedImage, bb)
 
     siArrays = arraysFromMaskedImage(si)
-    siCopy = maskedImage.Factory(maskedImage.dimensions())
+    siCopy = maskedImage.Factory(maskedImage.getDimensions())
     siCopy = maskedImageFromArrays(siCopy, siArrays)
 
     maskedImage.writeFits("mi")

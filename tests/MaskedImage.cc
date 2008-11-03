@@ -21,7 +21,7 @@ typedef image::MaskedImage<PixelT> ImageT;
 
 template <typename PixelT>
 void y_gradient(ImageT & src, ImageT & dst) {
-    assert(src.dimensions() == dst.dimensions());
+    assert(src.getDimensions() == dst.getDimensions());
 
 #define CONST 1
 #if CONST
@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(setValues) {
     BOOST_CHECK_EQUAL(ptr.mask(),     img.getWidth() + 2);
     BOOST_CHECK_EQUAL(ptr.variance(), 402);
 
-    ImageT img2(img.dimensions()); // make a deep copy
+    ImageT img2(img.getDimensions()); // make a deep copy
     *img2.getImage() = 4;
     *img2.getMask() = 0x8;
     *img2.getVariance() = 8;
@@ -413,7 +413,7 @@ BOOST_AUTO_TEST_CASE(locators) {
     }
 
     {
-        image::MaskedImage<double> dimg(img.dimensions());
+        image::MaskedImage<double> dimg(img.getDimensions());
         *dimg.getImage() = 1000;
         image::MaskedImage<double>::xy_locator dloc = dimg.xy_at(1,1);
         ImageT::SinglePixel outImage = 10;

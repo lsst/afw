@@ -33,7 +33,7 @@ class ImageTestCase(unittest.TestCase):
     def setUp(self):
         self.val1, self.val2 = 10, 100
         self.image1 = afwImage.ImageF(100, 200); self.image1.set(self.val1)
-        self.image2 = afwImage.ImageF(self.image1.dimensions()); self.image2.set(self.val2)
+        self.image2 = afwImage.ImageF(self.image1.getDimensions()); self.image2.set(self.val2)
 
     def tearDown(self):
         del self.image1
@@ -129,7 +129,7 @@ class ImageTestCase(unittest.TestCase):
         simage = afwImage.ImageF(simage1, afwImage.BBox(afwImage.PointI(1, 1), 3, 2))
         self.assertEqual(simage.getX0(), 2); self.assertEqual(simage.getY0(), 2) # i.e. wrt self.image1
 
-        image2 = afwImage.ImageF(simage.dimensions())
+        image2 = afwImage.ImageF(simage.getDimensions())
         image2.set(666)
         simage <<= image2
         del simage; del image2
@@ -149,7 +149,7 @@ class ImageTestCase(unittest.TestCase):
         simage = afwImage.ImageF(simage1, afwImage.BBox(afwImage.PointI(1, 1), 3, 2))
         self.assertEqual(simage.getX0(), 1); self.assertEqual(simage.getY0(), 1)
 
-        image2 = afwImage.ImageF(simage.dimensions())
+        image2 = afwImage.ImageF(simage.getDimensions())
         image2.set(666)
         simage <<= image2
         del simage; del image2

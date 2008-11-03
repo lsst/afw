@@ -82,7 +82,7 @@ int main(int argc, char **argv) {
         lcSpVarKernel.setSpatialParameters(polyParams);
     
         // convolve with convolveLinear
-        lsst::afw::image::MaskedImage<imagePixelType> resMaskedImage(mImage.dimensions());
+        lsst::afw::image::MaskedImage<imagePixelType> resMaskedImage(mImage.getDimensions());
         lsst::afw::math::convolveLinear(resMaskedImage, mImage, lcSpVarKernel, edgeBit);
         
         // write results
@@ -90,7 +90,7 @@ int main(int argc, char **argv) {
         std::cout << "Wrote " << outFile << "_img.fits, etc." << std::endl;
 
         if (doBothWays) {
-            lsst::afw::image::MaskedImage<imagePixelType> altResMaskedImage(mImage.dimensions());
+            lsst::afw::image::MaskedImage<imagePixelType> altResMaskedImage(mImage.getDimensions());
             lsst::afw::math::convolve(altResMaskedImage, mImage, lcSpVarKernel, edgeBit, false);
             altResMaskedImage.writeFits(altOutFile);
             std::cout << "Wrote " << altOutFile << "_img.fits, etc. (using lsst::afw::math::convolve)" << std::endl;

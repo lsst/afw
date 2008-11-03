@@ -16,7 +16,7 @@ int main() {
     //
     // Convolve with a pseudo-Gaussian kernel ((1, 2, 1), (2, 4, 2), (1, 2, 1))
     //
-    ImageT out(in.dimensions()); // Make an output image the same size as the input image
+    ImageT out(in.getDimensions()); // Make an output image the same size as the input image
     out <<= in;
     for (int y = 1; y != in.getHeight() - 1; ++y) {
         for (ImageT::xy_locator ptr =  in.xy_at(1, y), end = in.xy_at(in.getWidth() - 1, y),
@@ -29,7 +29,7 @@ int main() {
     //
     // Do the same thing a faster way, using cached_location_t
     //
-    ImageT::Ptr out2(new ImageT(in.dimensions()));
+    ImageT::Ptr out2(new ImageT(in.getDimensions()));
     *out2 <<= in;
 
     typedef ImageT::const_xy_locator xy_loc;

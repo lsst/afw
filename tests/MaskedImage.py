@@ -51,7 +51,7 @@ class MaskedImageTestCase(unittest.TestCase):
         #
         # Second MaskedImage
         #
-        self.mimage2 = afwImage.MaskedImageF(self.mimage.dimensions())
+        self.mimage2 = afwImage.MaskedImageF(self.mimage.getDimensions())
         self.mimage2.getImage().set(self.imgVal2)
         self.mimage2.getVariance().set(self.varVal2)
 
@@ -169,7 +169,7 @@ class MaskedImageTestCase(unittest.TestCase):
         simage = afwImage.MaskedImageF(smimage, afwImage.BBox(afwImage.PointI(1, 1), 3, 2))
         self.assertEqual(simage.getX0(), 2); self.assertEqual(simage.getY0(), 2) # i.e. wrt self.mimage
 
-        mimage2 = afwImage.MaskedImageF(simage.dimensions())
+        mimage2 = afwImage.MaskedImageF(simage.getDimensions())
         mimage2.getImage().set(666)
         mimage2.getMask().set(self.BAD)
         simage <<= mimage2
@@ -191,7 +191,7 @@ class MaskedImageTestCase(unittest.TestCase):
         simage = afwImage.MaskedImageF(smimage, afwImage.BBox(afwImage.PointI(1, 1), 3, 2))
         self.assertEqual(simage.getX0(), 1); self.assertEqual(simage.getY0(), 1)
 
-        mimage2 = afwImage.MaskedImageF(simage.dimensions())
+        mimage2 = afwImage.MaskedImageF(simage.getDimensions())
         mimage2.set(666, self.BAD, 0.0)
         simage <<= mimage2
         del simage; del mimage2

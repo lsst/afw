@@ -72,7 +72,7 @@ double lsst::afw::math::AnalyticKernel::computeImage(
 ) const {
     typedef lsst::afw::image::Image<PixelT>::x_iterator x_iterator;
     
-    if (image.dimensions() != this->dimensions()) {
+    if (image.getDimensions() != this->getDimensions()) {
         throw lsst::pex::exceptions::InvalidParameter("image is the wrong size");
     }
     if (this->isSpatiallyVarying()) {

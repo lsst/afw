@@ -399,7 +399,7 @@ template static void set_footprint_array_ids<int>(image::Image<int>::Ptr idImage
  */
 template <typename IDImageT>
 static typename image::Image<IDImageT>::Ptr makeImageFromBBox(const image::BBox bbox) {
-    typename image::Image<IDImageT>::Ptr idImage(new image::Image<IDImageT>(bbox.dimensions()));
+    typename image::Image<IDImageT>::Ptr idImage(new image::Image<IDImageT>(bbox.getDimensions()));
     idImage->setXY0(bbox.getLLC());
 
     return idImage;
@@ -486,7 +486,7 @@ detection::Footprint::Ptr detection::growFootprint(
 
     math::FixedKernel::PtrT circle(new math::FixedKernel(*circle_im));
     // Here's the actual grow step
-    image::MaskedImage<int>::Ptr convolvedImage(new image::MaskedImage<int>(idImage->dimensions()));
+    image::MaskedImage<int>::Ptr convolvedImage(new image::MaskedImage<int>(idImage->getDimensions()));
     math::convolve(*convolvedImage->getImage(), *idImage, *circle, 0, false);
 
     DetectionSet<int>::Ptr grownList(new DetectionSet<int>(*convolvedImage, 0.5, "", 1));

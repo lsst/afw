@@ -42,7 +42,7 @@ inline boost::gil::point2<std::ptrdiff_t> fits_read_dimensions(const char* filen
 #endif
 
     detail::fits_reader m(filename, metaData);
-    return m.get_dimensions();
+    return m.get_getDimensions();
 }
 
 /// \ingroup FITS_IO

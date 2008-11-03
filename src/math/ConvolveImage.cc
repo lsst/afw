@@ -255,10 +255,10 @@ void lsst::afw::math::basicConvolve(
     typedef typename InImageT::const_xy_locator inXY_locator;
     typedef typename OutImageT::x_iterator cnvX_iterator;
 
-    if (convolvedImage.dimensions() != inImage.dimensions()) {
+    if (convolvedImage.getDimensions() != inImage.getDimensions()) {
         throw lsst::pex::exceptions::InvalidParameter("convolvedImage not the same size as inImage");
     }
-    if (inImage.dimensions() < kernel.dimensions()) {
+    if (inImage.getDimensions() < kernel.getDimensions()) {
         throw lsst::pex::exceptions::InvalidParameter("inImage smaller than kernel in columns and/or rows");
     }
     
@@ -273,7 +273,7 @@ void lsst::afw::math::basicConvolve(
     int const cnvEndX = cnvStartX + cnvWidth;  // end index + 1
     int const cnvEndY = cnvStartY + cnvHeight; // end index + 1
 
-    KernelImageT kernelImage(kernel.dimensions()); // the kernel at a point
+    KernelImageT kernelImage(kernel.getDimensions()); // the kernel at a point
 
     if (kernel.isSpatiallyVarying()) {
         lsst::pex::logging::Trace("lsst.afw.kernel.convolve", 3, "kernel is spatially varying");
@@ -322,10 +322,10 @@ void lsst::afw::math::basicConvolve(
 ) {
     assert (!kernel.isSpatiallyVarying());
 
-    if (convolvedImage.dimensions() != inImage.dimensions()) {
+    if (convolvedImage.getDimensions() != inImage.getDimensions()) {
         throw lsst::pex::exceptions::InvalidParameter("convolvedImage not the same size as inImage");
     }
-    if (convolvedImage.dimensions() < kernel.dimensions()) {
+    if (convolvedImage.getDimensions() < kernel.getDimensions()) {
         throw lsst::pex::exceptions::InvalidParameter(
             "inImage smaller than kernel in columns and/or rows");
     }
@@ -365,10 +365,10 @@ void lsst::afw::math::basicConvolve(
     typedef typename InImageT::const_xy_locator inXY_locator;
     typedef typename OutImageT::x_iterator cnvX_iterator;
 
-    if (convolvedImage.dimensions() != inImage.dimensions()) {
+    if (convolvedImage.getDimensions() != inImage.getDimensions()) {
         throw lsst::pex::exceptions::InvalidParameter("convolvedImage not the same size as inImage");
     }
-    if (inImage.dimensions() < kernel.dimensions()) {
+    if (inImage.getDimensions() < kernel.getDimensions()) {
         throw lsst::pex::exceptions::InvalidParameter(
             "inImage smaller than kernel in columns and/or rows");
     }
@@ -476,10 +476,10 @@ void lsst::afw::math::convolveLinear(
         return lsst::afw::math::convolve(convolvedImage, inImage, kernel, false, edgeBit);
     }
 
-    if (convolvedImage.dimensions() != inImage.dimensions()) {
+    if (convolvedImage.getDimensions() != inImage.getDimensions()) {
         throw lsst::pex::exceptions::InvalidParameter("convolvedImage not the same size as inImage");
     }
-    if (inImage.dimensions() < kernel.dimensions()) {
+    if (inImage.getDimensions() < kernel.getDimensions()) {
         throw lsst::pex::exceptions::InvalidParameter("inImage smaller than kernel in columns and/or rows");
     }
     
@@ -504,7 +504,7 @@ void lsst::afw::math::convolveLinear(
         kernelListType basisKernelList = kernel.getKernelList();
         for (typename kernelListType::const_iterator basisKernelIter = basisKernelList.begin();
              basisKernelIter != basisKernelList.end(); ++basisKernelIter) {
-            BasisImagePtr basisImagePtr(new BasisImage(inImage.dimensions()));
+            BasisImagePtr basisImagePtr(new BasisImage(inImage.getDimensions()));
             lsst::afw::math::basicConvolve(*basisImagePtr, inImage, **basisKernelIter, false);
             basisImagePtrList.push_back(basisImagePtr);
         }

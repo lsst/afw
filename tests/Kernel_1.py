@@ -35,7 +35,7 @@ class KernelTestCase(unittest.TestCase):
                 inImage.set(col, row, inArr[col, row])
         
         k = afwMath.FixedKernel(inImage);
-        outImage = afwImage.ImageD(k.dimensions())
+        outImage = afwImage.ImageD(k.getDimensions())
         k.computeImage(outImage, False)
         
         outArr = imTestUtils.arrayFromImage(outImage)
@@ -44,7 +44,7 @@ class KernelTestCase(unittest.TestCase):
                 (k.__class__.__name__, inArr, outArr))
         
         normInArr = inArr / inArr.sum()
-        normOutImage = afwImage.ImageD(k.dimensions())
+        normOutImage = afwImage.ImageD(k.getDimensions())
         k.computeImage(normOutImage, True)
         normOutArr = imTestUtils.arrayFromImage(normOutImage)
         if not numpy.allclose(normOutArr, normInArr):
@@ -72,7 +72,7 @@ class KernelTestCase(unittest.TestCase):
                 fArr /= fArr.sum()
                 
                 k.setKernelParameters((xsigma, ysigma))
-                kImage = afwImage.ImageD(k.dimensions())
+                kImage = afwImage.ImageD(k.getDimensions())
                 k.computeImage(kImage, True)
                 
                 kArr = imTestUtils.arrayFromImage(kImage)
@@ -89,7 +89,7 @@ class KernelTestCase(unittest.TestCase):
                     for activeRow in range(kHeight):
                         kernel = afwMath.DeltaFunctionKernel(kWidth, kHeight,
                                                              afwImage.PointI(activeCol, activeRow))
-                        kImage = afwImage.ImageD(kernel.dimensions())
+                        kImage = afwImage.ImageD(kernel.getDimensions())
                         kSum = kernel.computeImage(kImage, False)
                         self.assertEqual(kSum, 1.0)
                         kArr = imTestUtils.arrayFromImage(kImage)
@@ -128,7 +128,7 @@ class KernelTestCase(unittest.TestCase):
                 fArr /= fArr.sum()
                 
                 k.setKernelParameters((xsigma, ysigma))
-                kImage = afwImage.ImageD(k.dimensions())
+                kImage = afwImage.ImageD(k.getDimensions())
                 k.computeImage(kImage, True)
                 kArr = imTestUtils.arrayFromImage(kImage)
                 if not numpy.allclose(fArr, kArr):
@@ -147,7 +147,7 @@ class KernelTestCase(unittest.TestCase):
         for row in range(kHeight):
             for col in range(kWidth):
                 kernel = afwMath.DeltaFunctionKernel(kWidth, kHeight, afwImage.PointI(col, row))
-                basisImage = afwImage.ImageD(kernel.dimensions())
+                basisImage = afwImage.ImageD(kernel.getDimensions())
                 kernel.computeImage(basisImage, True)
                 basisImArrList.append(imTestUtils.arrayFromImage(basisImage))
                 kVec.append(kernel)
@@ -158,7 +158,7 @@ class KernelTestCase(unittest.TestCase):
             kParams = [0.0]*len(kVec)
             kParams[ii] = 1.0
             k.setKernelParameters(kParams)
-            kIm = afwImage.ImageD(k.dimensions())
+            kIm = afwImage.ImageD(k.getDimensions())
             k.computeImage(kIm, True)
             kImArr = imTestUtils.arrayFromImage(kIm)
             if not numpy.allclose(kImArr, basisImArrList[ii]):

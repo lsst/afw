@@ -104,7 +104,7 @@ class FootprintTestCase(unittest.TestCase):
         self.assertEqual(bbox.getX1(), 15)
         self.assertEqual(bbox.getY1(), 13)
 
-        idImage = afwImage.ImageU(foot.getRegion().dimensions())
+        idImage = afwImage.ImageU(foot.getRegion().getDimensions())
         idImage.set(0)
         
         foot.insertIntoImage(idImage, foot.getId())
@@ -218,7 +218,7 @@ class DetectionSetTestCase(unittest.TestCase):
         ds = afwDetection.DetectionSetD(self.ms, afwDetection.Threshold(10))
         objects = ds.getFootprints()
 
-        idImage = afwImage.ImageU(self.ms.dimensions())
+        idImage = afwImage.ImageU(self.ms.getDimensions())
         idImage.set(0)
         
         for foot in objects:

@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
     std::cout << std::endl;
     std::cout << "ImWidth\tImHeight\tKerWidth\tKerHeight\tMOps\tCnvSec\tMOpsPerSec" << std::endl;
     
-    afwImage::MaskedImage<imageType> resMImage(mImage.dimensions());
+    afwImage::MaskedImage<imageType> resMImage(mImage.getDimensions());
     
     for (unsigned kSize = MinKernelSize; kSize <= MaxKernelSize; kSize += DeltaKernelSize) {
         // construct kernel

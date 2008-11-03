@@ -64,7 +64,7 @@ image::DecoratedImage<PixelT>::DecoratedImage(const DecoratedImage& src, ///< ri
     _image(src._image), _metadata(src._metadata), _gain(src._gain) {
 
     if (deep) {
-        typename Image<PixelT>::Ptr tmp = typename Image<PixelT>::Ptr(new Image<PixelT>(dimensions()));
+        typename Image<PixelT>::Ptr tmp = typename Image<PixelT>::Ptr(new Image<PixelT>(getDimensions()));
         *tmp <<= *_image;                // now copy the pixels
         _image.swap(tmp);
     }

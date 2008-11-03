@@ -5,9 +5,9 @@
 
 The LSST applications framework provides the basic functionality needed
 by an image processing system.  In particular:
-   \li \ref secImage : Representation of Images (and Masks)
-   \li \ref secMath :  Mathematical functions such as convolution and image statistics
-   \li \ref secDetection : Detection of sources in images
+   - \ref secImage : Representation of Images (and Masks)
+   - \ref secMath :  Mathematical functions such as convolution and image statistics
+   - \ref secDetection : Detection of sources in images
 */
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -20,11 +20,11 @@ namespace lsst { namespace afw { namespace image {
 
 In LSST, 2-dimensional images are represented using a set of templated classes, all of
 which are ultimately derived from ImageBase:
-      \li Image : An %image of arithmetic type (e.g. short; int; float)
-      \li Mask : An %image representing a set of bitplanes
-      \li DecoratedImage : An Image that has associated metadata (e.g. from a FITS header)
-      \li MaskedImage : A combination of an Image, a Mask, and an Image giving the per-pixel variance
-      \li Exposure : A MaskedImage with additional \link Wcs WCS\endlink information
+      - Image : An %image of arithmetic type (e.g. short; int; float)
+      - Mask : An %image representing a set of bitplanes
+      - DecoratedImage : An Image that has associated metadata (e.g. from a FITS header)
+      - MaskedImage : A combination of an Image, a Mask, and an Image giving the per-pixel variance
+      - Exposure : A MaskedImage with additional \link Wcs WCS\endlink information
 
 \subsection secPixelAccess How to Access Pixels
 
@@ -33,8 +33,8 @@ The LSST %image access is modelled after the boost::gil %image interface; see
 and
    http://www.boost.org/doc/libs/1_36_0/libs/gil/doc/html/gildesignguide.html
 
-\li \ref secPixelAccessTutorial
-\li \ref secPixelAccessReference
+- \ref secPixelAccessTutorial
+- \ref secPixelAccessReference
 */
 
 /**
@@ -55,14 +55,15 @@ the code to use MaskedImage%s is pretty similar; see
 /**
 \addtogroup secPixelAccessReference Pixel Access Reference Manual
 
-%Image Pixels may be accessed via \link imageIterators iterators\endlink
-or \link imageLocators locators\endlink; the former
+%Image Pixels may be accessed via iterators
+or locators; the former
 are simpler if you want single-pixel access, while the latter provide
 you with access to a pixel's friends and neighbours.
 
-There are a set of tutorial examples in \link
-secPixelAccessTutorial\endlink, covering access to Image%s and
-MaskedImage%s using both iterators and locators.
+There are a set of tutorial examples in \ref secPixelAccessTutorial,
+covering access to Image%s and MaskedImage%s using both \link
+imageIterators iterators\endlink and \link imageLocators
+locators\endlink.
 
 In the case of MaskedImage's, the user-visible \c iterator%s and
 locator%s (and \c const variants) are derived from MaskedImageIteratorBase
@@ -71,123 +72,124 @@ base classes.
 
 \par Iterators
 
-You can use an STL-compliant \c iterator to access the pixels:
-\li ImageBase::begin() const
-\li MaskedImage::begin() const
-\li ImageBase::end() const
-\li MaskedImage::end() const
-\li ImageBase::rbegin() const
-\li MaskedImage::rbegin() const
-\li ImageBase::rend() const
-\li MaskedImage::rend() const
-\li ImageBase::at(int x, int y) const
-\li MaskedImage::at(int x, int y) const
+- You can use an STL-compliant \c iterator to access the pixels:
+ - ImageBase::begin() const
+ - MaskedImage::begin() const
+ - ImageBase::end() const
+ - MaskedImage::end() const
+ - ImageBase::rbegin() const
+ - MaskedImage::rbegin() const
+ - ImageBase::rend() const
+ - MaskedImage::rend() const
+ - ImageBase::at(int x, int y) const
+ - MaskedImage::at(int x, int y) const
 
 N.b. These \c iterators aren't the most efficient way to access all the %image's
 pixels as they may not be contiguous in memory so a test for end-of-row
 is needed after every %pixel (we do guarantee that a \e row's pixels will be contiguous).
 
-Incrementing an \c y_iterator moves it across the row
-\li ImageBase::row_begin(int y) const
-\li MaskedImage::row_begin(int y) const
-\li ImageBase::row_end(int y) const
-\li MaskedImage::row_end(int y) const
-\li ImageBase::x_at(int x, int y) const
-\li MaskedImage::x_at(int x, int y) const
+- Incrementing an \c y_iterator moves it across the row
+ - ImageBase::row_begin(int y) const
+ - MaskedImage::row_begin(int y) const
+ - ImageBase::row_end(int y) const
+ - MaskedImage::row_end(int y) const
+ - ImageBase::x_at(int x, int y) const
+ - MaskedImage::x_at(int x, int y) const
 
-Incrementing an \c y_iterator moves it up the column
-\li ImageBase::col_begin(int x) const
-\li MaskedImage::col_begin(int x) const
-\li ImageBase::col_end(int x) const
-\li MaskedImage::col_end(int x) const
-\li ImageBase::y_at(int x, int y) const
-\li MaskedImage::y_at(int x, int y) const
+- Incrementing an \c y_iterator moves it up the column
+ - ImageBase::col_begin(int x) const
+ - MaskedImage::col_begin(int x) const
+ - ImageBase::col_end(int x) const
+ - MaskedImage::col_end(int x) const
+ - ImageBase::y_at(int x, int y) const
+ - MaskedImage::y_at(int x, int y) const
 
-Iterators can be dereferenced:
-\li imageIterator::operator*()
-\li MaskedImage::MaskedImageIteratorBase::operator*()
+- Iterators can be dereferenced:
+ - imageIterator::operator*()
+ - MaskedImage::MaskedImageIteratorBase::operator*()
 
-Additionally, MaskedImage iterators support
-\li MaskedImage::MaskedImageIteratorBase::image()
-\li MaskedImage::MaskedImageIteratorBase::mask()
-\li MaskedImage::MaskedImageIteratorBase::variance()
+- Additionally, MaskedImage iterators support
+ - MaskedImage::MaskedImageIteratorBase::image()
+ - MaskedImage::MaskedImageIteratorBase::mask()
+ - MaskedImage::MaskedImageIteratorBase::variance()
 
-Iterators may be advanced with
-\li imageIterator::operator++()
-\li MaskedImage::MaskedImageIteratorBase::operator++()
-\li imageIterator::operator++(int)
-\li MaskedImage::MaskedImageIteratorBase::operator++(int)
-\li imageIterator::operator+=(std::ptrdiff_t delta)
-\li MaskedImage::MaskedImageIteratorBase::operator+=(std::ptrdiff_t delta)
-\li imageIterator::operator-=(std::ptrdiff_t delta)
-\li MaskedImage::MaskedImageIteratorBase::operator-=(std::ptrdiff_t delta)
+- Iterators may be advanced with
+ - imageIterator::operator++()
+ - MaskedImage::MaskedImageIteratorBase::operator++()
+ - imageIterator::operator++(int)
+ - MaskedImage::MaskedImageIteratorBase::operator++(int)
+ - imageIterator::operator+=(std::ptrdiff_t delta)
+ - MaskedImage::MaskedImageIteratorBase::operator+=(std::ptrdiff_t delta)
+ - imageIterator::operator-=(std::ptrdiff_t delta)
+ - MaskedImage::MaskedImageIteratorBase::operator-=(std::ptrdiff_t delta)
 
-and compared with
-\li imageIterator::operator==(imageIterator const& rhs)
-\li MaskedImage::MaskedImageIteratorBase::operator==(MaskedImageIteratorBase const& rhs)
-\li imageIterator::operator!=(imageIterator const& rhs)
-\li MaskedImage::MaskedImageIteratorBase::operator!=(MaskedImageIteratorBase const& rhs)
-\li imageIterator::operator<(imageIterator const& rhs)
-\li MaskedImage::MaskedImageIteratorBase::operator<(MaskedImageIteratorBase const& rhs)
+- and compared with
+ - imageIterator::operator==(imageIterator const& rhs)
+ - MaskedImage::MaskedImageIteratorBase::operator==(MaskedImageIteratorBase const& rhs)
+ - imageIterator::operator!=(imageIterator const& rhs)
+ - MaskedImage::MaskedImageIteratorBase::operator!=(MaskedImageIteratorBase const& rhs)
+ - imageIterator::operator<(imageIterator const& rhs)
+ - MaskedImage::MaskedImageIteratorBase::operator<(MaskedImageIteratorBase const& rhs)
 
 \par Locators
 
 \c Locators are more flexible than \c iterators, permitting us to manipulate
 regions of an %image
 
-\li ImageBase::xy_at(int x, int y) const
-\li MaskedImage::xy_at(int x, int y) const
+- locators may be created with
+ - ImageBase::xy_at(int x, int y) const
+ - MaskedImage::xy_at(int x, int y) const
 
-Locators may be dereferenced with:
-\li imageLocator::operator*()
-\li MaskedImage::MaskedImageLocatorBase::operator*()
-\li imageLocator::operator()(int x, int y)
-\li MaskedImage::MaskedImageLocatorBase::operator()(int x, int y)
+- and dereferenced with:
+ - imageLocator::operator*()
+ - MaskedImage::MaskedImageLocatorBase::operator*()
+ - imageLocator::operator()(int x, int y)
+ - MaskedImage::MaskedImageLocatorBase::operator()(int x, int y)
 
-Retrieve an x- or y-iterator that may be dereferenced or incremented
-\li imageLocator::x()
-\li MaskedImage::MaskedImageLocatorBase::x()
-\li imageLocator::y()
-\li MaskedImage::MaskedImageLocatorBase::y()
+- Retrieve an x- or y-iterator that may be dereferenced or incremented
+ - imageLocator::x()
+ - MaskedImage::MaskedImageLocatorBase::x()
+ - imageLocator::y()
+ - MaskedImage::MaskedImageLocatorBase::y()
 
-Manipulate those iterators (n.b. this moves the underlying locator,
+- Manipulate those iterators (n.b. this moves the underlying locator,
 so \c ++locator.x() is the standard way to advance a locator)
-\li imageLocator::xy_x_iterator::operator*()
-\li MaskedImage::MaskedImageLocatorBase::xy_x_iterator::operator*()
-\li imageLocator::xy_y_iterator::operator*()
-\li MaskedImage::MaskedImageLocatorBase::xy_y_iterator::operator*()
+ - imageLocator::xy_x_iterator::operator*()
+ - MaskedImage::MaskedImageLocatorBase::xy_x_iterator::operator*()
+ - imageLocator::xy_y_iterator::operator*()
+ - MaskedImage::MaskedImageLocatorBase::xy_y_iterator::operator*()
 
-Additionally, MaskedImage locator-iterators support
-\li image()
-\li mask()
-\li variance()
+- Additionally, MaskedImage locator-iterators support
+ - image()
+ - mask()
+ - variance()
 
-Move those iterators (n.b. this moves the underlying locator,
+- Move those iterators (n.b. this moves the underlying locator,
 so \c ++locator.x() is the standard way to advance a locator)
-\li imageLocator::xy_x_iterator::operator++()
-\li imageLocator::xy_x_iterator::operator++(int)
-\li imageLocator::xy_y_iterator::operator++()
-\li imageLocator::xy_y_iterator::operator++(int)
+ - imageLocator::xy_x_iterator::operator++()
+ - imageLocator::xy_x_iterator::operator++(int)
+ - imageLocator::xy_y_iterator::operator++()
+ - imageLocator::xy_y_iterator::operator++(int)
 
-Advance (or retreat) an \c xy_locator directly
-\li ImageBase::operator+=(xy_locator& loc, pair2I const& off)
-\li MaskedImage::MaskedImageLocatorBase::operator+=(pair2I const& off)
-\li ImageBase::operator+=(const_xy_locator& loc, pair2I const& off)
-\li ImageBase::operator-=(xy_locator& loc, pair2I const& off)
-\li ImageBase::operator-=(const_xy_locator& loc, pair2I const& off)
+- Advance (or retreat) an \c xy_locator directly
+ - ImageBase::operator+=(xy_locator& loc, pair2I const& off)
+ - MaskedImage::MaskedImageLocatorBase::operator+=(pair2I const& off)
+ - ImageBase::operator+=(const_xy_locator& loc, pair2I const& off)
+ - ImageBase::operator-=(xy_locator& loc, pair2I const& off)
+ - ImageBase::operator-=(const_xy_locator& loc, pair2I const& off)
 
-Save or use a saved relative location
-\li imageLocator::cache_location()
-\li MaskedImage::MaskedImageLocatorBase::cache_location()
-\li imageLocator::cache_location(int x, int y)
-\li MaskedImage::MaskedImageLocatorBase::cache_location(int x, int y) const
-\li imageLocator::operator[](cached_location_t const&);
-\li MaskedImage::MaskedImageLocatorBase::operator[](cached_location_t const&);
+- Save or use a saved relative location
+ - imageLocator::cache_location()
+ - MaskedImage::MaskedImageLocatorBase::cache_location()
+ - imageLocator::cache_location(int x, int y)
+ - MaskedImage::MaskedImageLocatorBase::cache_location(int x, int y) const
+ - imageLocator::operator[](cached_location_t const&);
+ - MaskedImage::MaskedImageLocatorBase::operator[](cached_location_t const&);
 
-MaskedImage locators also support
-\li MaskedImage::MaskedImageLocatorBase::image(cached_location_t const&);
-\li MaskedImage::MaskedImageLocatorBase::mask(cached_location_t const&);
-\li MaskedImage::MaskedImageLocatorBase::variance(cached_location_t const&);
+- MaskedImage locators also support
+ - MaskedImage::MaskedImageLocatorBase::image(cached_location_t const&);
+ - MaskedImage::MaskedImageLocatorBase::mask(cached_location_t const&);
+ - MaskedImage::MaskedImageLocatorBase::variance(cached_location_t const&);
 
 (Note that these are function calls, as opposed to the \c operator[] in the
 previous APIs)
@@ -202,7 +204,7 @@ namespace lsst { namespace afw { namespace math {
 \page secMath Mathematical Operations
 \section secMath Mathematical Operations
 
-\li Statistics
+ - Statistics
 */
 }}}
 
@@ -214,8 +216,8 @@ namespace lsst { namespace afw { namespace detection {
 \section secDetection Detection
 
 Describe:
-\li Footprint
-\li DetectionSet
+ - Footprint
+ - DetectionSet
 
 */
 }}}

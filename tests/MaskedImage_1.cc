@@ -43,7 +43,7 @@ int test(int argc, char**argv) {
     MaskedImage::Image imageCopy(testImage);
     imageCopy = testImage;
 
-    MaskedImage testMaskedImage2(testMaskedImage1->dimensions()); // n.b. could just do a deep copy
+    MaskedImage testMaskedImage2(testMaskedImage1->getDimensions()); // n.b. could just do a deep copy
     testMaskedImage2 = *testMaskedImage1;
 
     MaskedImage::Ptr testFlat;

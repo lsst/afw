@@ -141,7 +141,7 @@ namespace lsst { namespace afw { namespace image {
         PointI getURC() const { return PointI(getX1(), getY1()); } ///< Return upper-right corner
         int getWidth() const { return second.getX(); } ///< Return width of BBox (== <tt>X1 - X0 + 1</tt>)
         int getHeight() const { return second.getY(); } ///< Return height of BBox (== <tt>Y1 - Y0 + 1</tt>)
-        const std::pair<int, int> dimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
+        const std::pair<int, int> getDimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
 
         bool operator==(const BBox& rhs) const {
             return

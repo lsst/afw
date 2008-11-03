@@ -11,7 +11,7 @@ using namespace std;
 
 template <typename PixelT>
 void y_gradient(image::MaskedImage<PixelT> & src, image::MaskedImage<PixelT> & dst) {
-    assert(src.dimensions() == dst.dimensions());
+    assert(src.getDimensions() == dst.getDimensions());
 
 #define CONST 1
 #if CONST
@@ -124,7 +124,7 @@ int main() {
     cout << endl;
 
 #if 1
-    image::MaskedImage<float> grad_y(img.dimensions());
+    image::MaskedImage<float> grad_y(img.getDimensions());
     *grad_y.getImage() = 0;
     y_gradient(img, grad_y);
 

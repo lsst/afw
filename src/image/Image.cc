@@ -60,7 +60,7 @@ image::ImageBase<PixelT>::ImageBase(ImageBase const& rhs, ///< Right-hand-side %
     _y0(rhs._y0)
 {
     if (deep) {
-        ImageBase tmp(dimensions());
+        ImageBase tmp(getDimensions());
         tmp <<= *this;                  // now copy the pixels
         swap(tmp);
     }
@@ -89,7 +89,7 @@ image::ImageBase<PixelT>::ImageBase(ImageBase const& rhs, ///< Right-hand-side %
     }
 
     if (deep) {
-        ImageBase tmp(dimensions());
+        ImageBase tmp(getDimensions());
         tmp <<= *this;                  // now copy the pixels
         swap(tmp);
     }
@@ -113,7 +113,7 @@ image::ImageBase<PixelT>& image::ImageBase<PixelT>::operator=(ImageBase const& r
 /// Set the lhs's %pixel values to equal the rhs's
 template<typename PixelT>
 void image::ImageBase<PixelT>::operator<<=(ImageBase const& rhs) {
-    if (dimensions() != rhs.dimensions()) {
+    if (getDimensions() != rhs.getDimensions()) {
         throw lsst::pex::exceptions::LengthError(boost::format("Dimension mismatch: %dx%d v. %dx%d") %
                                                  getWidth() % getHeight() % rhs.getWidth() % rhs.getHeight());
     }

@@ -45,7 +45,7 @@ class MaskTestCase(unittest.TestCase):
         self.val2 = self.val1 | self.EDGE
 
         self.mask1 = afwImage.MaskU(100, 200); self.mask1.set(self.val1)
-        self.mask2 = afwImage.MaskU(self.mask1.dimensions()); self.mask2.set(self.val2)
+        self.mask2 = afwImage.MaskU(self.mask1.getDimensions()); self.mask2.set(self.val2)
 
         dataDir = eups.productDir("afwdata")
         if dataDir:
@@ -116,7 +116,7 @@ class MaskTestCase(unittest.TestCase):
 
     def testSubmasks(self):
         smask = afwImage.MaskU(self.mask1, afwImage.BBox(afwImage.PointI(1, 1), 3, 2))
-        mask2 = afwImage.MaskU(smask.dimensions())
+        mask2 = afwImage.MaskU(smask.getDimensions())
 
         mask2.set(666)
         smask <<= mask2
@@ -302,7 +302,7 @@ class OldMaskTestCase(unittest.TestCase):
     def testInvalidPlaneOperations(self):
         """Test mask plane operations invalidated by Mask changes"""
 
-        testMask3 = afwImage.MaskU(self.testMask.dimensions())
+        testMask3 = afwImage.MaskU(self.testMask.getDimensions())
         
         name = "Great Timothy"
         testMask3.addMaskPlane(name)
@@ -316,7 +316,7 @@ class OldMaskTestCase(unittest.TestCase):
     def testInvalidPlaneOperations2(self):
         """Test mask plane operations invalidated by Mask changes"""
 
-        testMask3 = afwImage.MaskU(self.testMask.dimensions())
+        testMask3 = afwImage.MaskU(self.testMask.getDimensions())
         
         name = "Great Timothy"
         name2 = "Our Boss"
@@ -345,7 +345,7 @@ class OldMaskTestCase(unittest.TestCase):
     def testConformMaskPlanes(self):
         """Test conformMaskPlanes() when the two planes are actually the same"""
 
-        testMask3 = afwImage.MaskU(self.testMask.dimensions())
+        testMask3 = afwImage.MaskU(self.testMask.getDimensions())
         oldDict = self.testMask.getMaskPlaneDict()
 
         name = "XXX"
@@ -359,7 +359,7 @@ class OldMaskTestCase(unittest.TestCase):
     def testConformMaskPlanes2(self):
         """Test conformMaskPlanes() when the two planes are different"""
 
-        testMask3 = afwImage.MaskU(self.testMask.dimensions())
+        testMask3 = afwImage.MaskU(self.testMask.getDimensions())
         
         name1 = "Great Timothy"
         name2 = "Our Boss"
@@ -371,7 +371,7 @@ class OldMaskTestCase(unittest.TestCase):
         testMask3.setMaskPlaneValues(p2, 0, 5, 1)
 
         if display:
-            im = afwImage.ImageF(self.testMask3.dimensions()); im.set(0)
+            im = afwImage.ImageF(self.testMask3.getDimensions()); im.set(0)
             ds9.mtv(im)                 # bug in ds9's Mask display; needs an Image first
             ds9.mtv(testMask3)
 

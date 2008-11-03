@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
         afwMath::AnalyticKernel kernel(kernelCols, kernelRows, gaussFunc);
     
         // convolve
-        afwImage::MaskedImage<pixelType> resMaskedImage(mImage.dimensions());
+        afwImage::MaskedImage<pixelType> resMaskedImage(mImage.getDimensions());
         afwMath::convolve(resMaskedImage, mImage, kernel, edgeMaskBit, true);
     
         // write results

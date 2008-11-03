@@ -652,7 +652,7 @@ namespace image {
         virtual ~MaskedImage() {}
         
         /// Return the %image's size;  useful for passing to constructors
-        std::pair<int, int> dimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
+        std::pair<int, int> getDimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
 
         void swap(MaskedImage &rhs);
 

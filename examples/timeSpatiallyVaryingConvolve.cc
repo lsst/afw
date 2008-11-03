@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
     
     std::cout << "Image is " << mImage.getWidth() << " by " << mImage.getHeight() << std::endl;
     
-    afwImage::MaskedImage<imageType> resMImage(mImage.dimensions());
+    afwImage::MaskedImage<imageType> resMImage(mImage.getDimensions());
     
     for (unsigned int kSize = MinKernelSize; kSize <= MaxKernelSize; kSize += DeltaKernelSize) {
         // construct kernel

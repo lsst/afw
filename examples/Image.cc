@@ -63,7 +63,7 @@ void printT(Image<PixelT>& src, const std::string& _title = "") {
 
 template <typename PixelT>
 void y_gradient(const Image<PixelT>& src, const Image<PixelT>& dst) {
-    assert(src.dimensions() == dst.dimensions());
+    assert(src.getDimensions() == dst.getDimensions());
 
     typedef typename Image<PixelT>::const_xy_locator xy_loc;
     xy_loc src_loc = src.xy_at(0, 1);
@@ -126,7 +126,7 @@ int main() {
     kmg *= 10;
 #if 1
     {
-        Image<float> tmp(kmg.dimensions());
+        Image<float> tmp(kmg.getDimensions());
         tmp = 10;
         print(tmp, "tmp");
         kmg /= tmp;
@@ -170,13 +170,13 @@ int main() {
     }
     print(img, "ramp img");
     
-    Image<float> grad_y(img.dimensions());
+    Image<float> grad_y(img.getDimensions());
     grad_y = 0;
     y_gradient(img, grad_y);
 
     print(grad_y, "grad_y");
     
-    Image<unsigned short> u16(img.dimensions()); u16 = 100;
+    Image<unsigned short> u16(img.getDimensions()); u16 = 100;
     Image<float> fl32(u16, true); // must be true as all type conversions are deep
     print(fl32, "Float from U16");
 
