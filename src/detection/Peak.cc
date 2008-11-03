@@ -2,7 +2,7 @@
 /**
  * \file
  *
- * Handle Peak%s
+ * \brief Handle Peak%s
  */
 #include <cassert>
 #include <string>

@@ -1,4 +1,8 @@
 // -*- lsst-c++ -*-
+/**
+ * \file
+ * \brief Implementation for MaskedImage
+ */
 #include <typeinfo>
 #include <sys/stat.h>
 #include "boost/lambda/lambda.hpp"
@@ -20,7 +24,7 @@ namespace image = lsst::afw::image;
         
 // Constructors
 //
-// @brief Construct from a supplied dimensions. The Image, Mask, and Variance will be set to zero
+// \brief Construct from a supplied dimensions. The Image, Mask, and Variance will be set to zero
 //
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
@@ -60,7 +64,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
 }
 
 /**
- * @brief Construct from an HDU in a FITS file.  Set metadata if it isn't a NULL pointer
+ * \brief Construct from an HDU in a FITS file.  Set metadata if it isn't a NULL pointer
  */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
@@ -82,14 +86,14 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
 }
 
 /**
- * @brief Construct from a supplied Image and optional Mask and Variance.
+ * \brief Construct from a supplied Image and optional Mask and Variance.
  * The Mask and Variance will be set to zero if omitted
  */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
-	ImagePtr image,
-        MaskPtr mask,
-        VariancePtr variance
+	ImagePtr image,                 ///< %Image
+        MaskPtr mask,                   ///< %Mask
+        VariancePtr variance            ///< Variance %Mask
                                                                         ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _image(image),
@@ -99,10 +103,12 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
 } 
 
 /**
- * @brief Copy constructor;  shallow, unless deep is true.
+ * \brief Copy constructor;  shallow, unless deep is true.
  */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(MaskedImage const& rhs, bool deep) :
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(MaskedImage const& rhs, ///< %Image to copy
+                                                                         bool deep               ///< Make deep copy?
+                                                                        ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _image(new Image(*rhs._image, deep)),
     _mask(new Mask(*rhs._mask, deep)),
@@ -111,7 +117,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(MaskedI
 }
 
 /**
- * @brief Copy constructor of the pixels specified by bbox;  shallow, unless deep is true.
+ * \brief Copy constructor of the pixels specified by bbox;  shallow, unless deep is true.
  */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(MaskedImage const& rhs,
@@ -225,6 +231,7 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator-=(Ima
 }
 
 namespace {
+    /// Functor to calculate the variance of the product of two independent variables
     template<typename ImagePixelT, typename VariancePixelT>
     struct productVariance {
         double operator()(ImagePixelT lhs, ImagePixelT rhs, VariancePixelT varLhs, VariancePixelT varRhs) {
@@ -255,6 +262,7 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator*=(Ima
 
 
 namespace {
+    /// Functor to calculate the variance of the ratio of two independent variables
     template<typename ImagePixelT, typename VariancePixelT>
     struct quotientVariance {
         double operator()(ImagePixelT lhs, ImagePixelT rhs, VariancePixelT varLhs, VariancePixelT varRhs) {

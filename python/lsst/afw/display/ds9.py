@@ -10,6 +10,7 @@ except: print "Cannot import xpa"
 import displayLib
 import lsst.afw.image as afwImage
 
+## An error talking to ds9
 class Ds9Error(IOError):
     """Some problem talking to ds9"""
 

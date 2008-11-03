@@ -169,10 +169,10 @@ class DecoratedImageTestCase(unittest.TestCase):
 
         dataDir = eups.productDir("afwdata")
         if dataDir:
-            self.fileForMetaData = os.path.join(dataDir, "small_MI_img.fits")
-            self.trueMetaData = {"RELHUMID" : 10.69}
+            self.fileForMetadata = os.path.join(dataDir, "small_MI_img.fits")
+            self.trueMetadata = {"RELHUMID" : 10.69}
         else:
-            self.fileForMetaData = None
+            self.fileForMetadata = None
 
     def tearDown(self):
         del self.dimage1
@@ -220,12 +220,12 @@ class DecoratedImageTestCase(unittest.TestCase):
         self.assertEqual(imgF.getImage().getWidth(), 256)
         self.assertEqual(imgU.getImage().get(0,0), imgF.getImage().get(0,0))
         #
-        # Check the metaData
+        # Check the metadata
         #
-        meta = self.trueMetaData
+        meta = self.trueMetadata
         for k in meta.keys():
-            self.assertEqual(imgU.getMetaData().findUnique(k, True).getValueDouble(), meta[k])
-            self.assertEqual(imgF.getMetaData().findUnique(k, True).getValueDouble(), meta[k])
+            self.assertEqual(imgU.getMetadata().findUnique(k, True).getValueDouble(), meta[k])
+            self.assertEqual(imgF.getMetadata().findUnique(k, True).getValueDouble(), meta[k])
         #
         # Read an F32 image
         #
@@ -249,24 +249,24 @@ class DecoratedImageTestCase(unittest.TestCase):
 
         tmpFile = "foo.fits"
 
-        if self.fileForMetaData:
-            imgU = afwImage.DecoratedImageF(self.fileForMetaData)
+        if self.fileForMetadata:
+            imgU = afwImage.DecoratedImageF(self.fileForMetadata)
         else:
             print >> sys.stderr, "Warning: afwdata is not set up; not running the FITS metadata I/O tests"
             imgU = afwImage.DecoratedImageF()
 
-        self.dimage1.writeFits(tmpFile, imgU.getMetaData())
+        self.dimage1.writeFits(tmpFile, imgU.getMetadata())
         #
         # Read it back
         #
         rimage = afwImage.DecoratedImageF(tmpFile)
         self.assertEqual(self.dimage1.getImage().get(0,0), rimage.getImage().get(0,0))
         #
-        # Check that we wrote (and read) the metaData successfully
-        if self.fileForMetaData:
-            meta = self.trueMetaData
+        # Check that we wrote (and read) the metadata successfully
+        if self.fileForMetadata:
+            meta = self.trueMetadata
             for k in meta.keys():
-                self.assertEqual(rimage.getMetaData().findUnique(k, True).getValueDouble(), meta[k])
+                self.assertEqual(rimage.getMetadata().findUnique(k, True).getValueDouble(), meta[k])
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

@@ -1,6 +1,6 @@
 /**
  * \file
- * A set of pseudo-code to permit me to document the Image iterator API.
+ * \brief A set of pseudo-code to permit me to document the Image iterator API.
  *
  * This is needed as the actual implementation is opaque, based on the boost::gil
  * libraries.

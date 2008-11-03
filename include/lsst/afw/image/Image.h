@@ -34,9 +34,11 @@ namespace image {
         //
         // Traits for image types
         //
+        /// Base %image tag
         struct basic_tag { };
+        /// tag for an Image
         struct Image_tag : basic_tag { };
-
+        /// traits class for image categories
         template<typename ImageT>
         struct image_traits {
             typedef typename ImageT::image_category image_category;
@@ -151,7 +153,7 @@ namespace image {
             return SinglePixel(rhs);
         }
         //
-        // DecoratedImage needs enough access to ImageBase to read data from disk;  we might be able to design around this.
+        // DecoratedImage needs enough access to ImageBase to read data from disk; we might be able to design around this
         //
         template<typename> friend class DecoratedImage;
         template<typename, typename, typename> friend class MaskedImage;
@@ -266,7 +268,7 @@ namespace image {
     void swap(ImageBase<PixelT>& a, ImageBase<PixelT>& b);
 
     /************************************************************************************************************/
-
+    /// A class to represent a 2-dimensional array of pixels
     template<typename PixelT>
     class Image : public ImageBase<PixelT> {
     private:
@@ -346,13 +348,19 @@ namespace image {
     void swap(Image<PixelT>& a, Image<PixelT>& b);
     
     /************************************************************************************************************/
-    
+    /**
+     * \brief A container for an Image and its associated metadata
+     */
     template<typename PixelT>
     class DecoratedImage {
     public:
+        /// shared_ptr to a DecoratedImage
         typedef boost::shared_ptr<DecoratedImage> Ptr;
+        /// shared_ptr to a const DecoratedImage
         typedef boost::shared_ptr<const DecoratedImage> ConstPtr;
+        /// shared_ptr to the Image
         typedef typename Image<PixelT>::Ptr ImagePtr;
+        /// shared_ptr to the Image as const
         typedef typename Image<PixelT>::ConstPtr ImageConstPtr;
 
         explicit DecoratedImage(const int width=0, const int height=0);
@@ -366,13 +374,17 @@ namespace image {
 #if 0                                   // use compiler-generated dtor. N.b. not virtual; this isn't a base class
         ~DecoratedImage();
 #endif
-        
+        /// Return the number of columns in the %image
         int getWidth() const { return _image->getWidth(); }
+        /// Return the number of rows in the %image
         int getHeight() const { return _image->getHeight(); }
         
+        /// Return the %image's column-origin
         int getX0() const { return _image->getX0(); }
+        /// Return the %image's row-origin
         int getY0() const { return _image->getY0(); }
 
+        /// Return the %image's size;  useful for passing to constructors
         const std::pair<int, int> dimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
 
         void swap(DecoratedImage &rhs);
@@ -388,21 +400,29 @@ namespace image {
 #endif
                       ) const;
         
+        /// Return a shared_ptr to the DecoratedImage's Image
         ImagePtr      getImage()       { return _image; }
+        /// Return a shared_ptr to the DecoratedImage's Image as const
         ImageConstPtr getImage() const { return _image; }
-        
-#if 1                                   // Old name for boost::shared_ptrs
-        lsst::daf::base::DataProperty::PtrType getMetaData() const { return _metaData; }
-#else
-        lsst::daf::base::DataProperty::Ptr      getMetaData()       { return _metaData; }
-        lsst::daf::base::DataProperty::ConstPtr getMetaData() const { return _metaData; }
-#endif
 
+        /// Return a shared_ptr to the DecoratedImage's metadata
+#if 1                                   // Old name for boost::shared_ptrs
+        lsst::daf::base::DataProperty::PtrType getMetadata() const { return _metadata; }
+#else
+        lsst::daf::base::DataProperty::Ptr      getMetadata()       { return _metadata; }
+        lsst::daf::base::DataProperty::ConstPtr getMetadata() const { return _metadata; }
+#endif
+        /**
+         * Return the DecoratedImage's gain
+         * \note This is mostly just a place holder for other properties that we might
+         * want to associate with a DecoratedImage
+         */
         double getGain() const { return _gain; }
+        /// Set the DecoratedImage's gain
         void setGain(double gain) { _gain = gain; }
     private:
         typename Image<PixelT>::Ptr _image;
-        lsst::daf::base::DataProperty::PtrType _metaData;
+        lsst::daf::base::DataProperty::PtrType _metadata;
         double _gain;
 
         void init();

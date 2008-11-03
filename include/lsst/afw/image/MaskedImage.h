@@ -26,8 +26,10 @@ namespace lsst {
 namespace afw {
 namespace image {
     namespace detail {
+        /// A traits class for MaskedImage
         struct MaskedImage_tag : basic_tag { };
-        struct MaskedImagePixel_tag { }; // used to identify classes that represent MaskedImage pixels
+        /// A class used to identify classes that represent MaskedImage pixels
+        struct MaskedImagePixel_tag { };
     }
 }}}
 

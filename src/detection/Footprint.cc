@@ -1,7 +1,7 @@
 /*****************************************************************************/
 /** \file
  *
- * Footprint and associated classes
+ * \brief Footprint and associated classes
  */
 #include <cassert>
 #include <string>

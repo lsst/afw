@@ -1,5 +1,6 @@
 // -*- lsst-c++ -*-
-// Implementations of Mask class methods
+/// \file
+/// \brief Implementations of Mask class methods
 
 #include <list>
 #include <string>

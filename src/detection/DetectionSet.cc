@@ -1,6 +1,8 @@
 /**
  * \file
  *
+ * \brief Utilities to detect sets of Footprint%s
+ *
  * Create and use an lsst::afw::detection::DetectionSet, a collection of pixels above (or below) some threshold
  * in an Image
  *

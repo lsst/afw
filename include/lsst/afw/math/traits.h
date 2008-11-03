@@ -3,6 +3,7 @@
 
 #include "boost/mpl/bool.hpp"
 /**
+ * @file
  * @brief Traits to describe kernels, allowing for compile-time optimisation
  */
 namespace lsst {

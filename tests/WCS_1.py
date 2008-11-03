@@ -29,7 +29,7 @@ class WCSTestCaseSDSS(unittest.TestCase):
     def setUp(self):
         im = afwImage.DecoratedImageD(InputSmallImagePath)
 
-        self.wcs = afwImage.Wcs(im.getMetaData())
+        self.wcs = afwImage.Wcs(im.getMetadata())
 
         if False:
             import lsst.afw.display.ds9 as ds9; ds9.mtv(im, wcs=self.wcs)
@@ -53,7 +53,7 @@ class WCSTestCaseSDSS(unittest.TestCase):
         # Using MaskedImage with corrupt metadata
         infile = afwImage.MaskedImageF_imageFileName(InputCorruptFilePath)
         decoratedImage = afwImage.DecoratedImageF(infile)
-        metadata = decoratedImage.getMetaData()
+        metadata = decoratedImage.getMetadata()
 
         corruptWcs = afwImage.Wcs(metadata)
         if False:
@@ -102,7 +102,7 @@ class WCSTestCaseCFHT(unittest.TestCase):
     def setUp(self):
         im = afwImage.DecoratedImageD(InputImagePath)
 
-        self.wcs = afwImage.Wcs(im.getMetaData())
+        self.wcs = afwImage.Wcs(im.getMetadata())
 
     def tearDown(self):
         del self.wcs

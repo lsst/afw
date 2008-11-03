@@ -1,5 +1,6 @@
 /**
- * This include file includes the header files from the image directory
+ * \file
+ * \brief An include file to include the header files for lsst::afw::image
  */
 #ifndef LSST_IMAGE_H
 #define LSST_IMAGE_H

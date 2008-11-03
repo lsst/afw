@@ -203,7 +203,7 @@ private:
 };
 
 /************************************************************************************************************/
-
+/// A traits class to return the types of the %image/mask/variance
 template <typename ExprT>
 struct exprTraits {
     typedef ExprT expr_type;
@@ -212,6 +212,7 @@ struct exprTraits {
     typedef typename ExprT::VariancePixelT VariancePixelT;
 };
 
+/// A specialisation of exprTraits for \c double
 template <>
 struct exprTraits<double> {
     typedef double ImagePixelT;
@@ -220,6 +221,7 @@ struct exprTraits<double> {
     typedef SinglePixel<ImagePixelT, MaskPixelT, VariancePixelT> expr_type;
 };
 
+/// A specialisation of exprTraits for \c float
 template <>
 struct exprTraits<float> {
     typedef float ImagePixelT;
@@ -228,6 +230,7 @@ struct exprTraits<float> {
     typedef SinglePixel<ImagePixelT, MaskPixelT, VariancePixelT> expr_type;
 };
 
+/// A specialisation of exprTraits for \c int
 template <>
 struct exprTraits<int> {
     typedef int ImagePixelT;
@@ -236,6 +239,7 @@ struct exprTraits<int> {
     typedef SinglePixel<ImagePixelT, MaskPixelT, VariancePixelT> expr_type;
 };
 
+/// A specialisation of exprTraits for \c unsigned short
 template <>
 struct exprTraits<unsigned short> {
     typedef int ImagePixelT;
@@ -245,9 +249,9 @@ struct exprTraits<unsigned short> {
 };
 
 /************************************************************************************************************/
-//
-// Here's a noop (useful for e.g. masks and variances when changing the sign of the image)
-//
+///
+/// \brief A noop functor (useful for e.g. masks and variances when changing the sign of the image)
+///
 template <typename T1>
 struct noop : public std::unary_function<T1, T1> {
     T1 operator()(const T1& x) const {
@@ -255,9 +259,9 @@ struct noop : public std::unary_function<T1, T1> {
     }
 };
 
-//
-// bitwise_or doesn't seem to be in std::
-//
+///
+/// \brief bitwise_or doesn't seem to be in std::
+///
 template <typename T1>
 struct bitwise_or : public std::binary_function<T1, T1, T1> {
     T1 operator()(const T1& x, const T1& y) const {
@@ -265,9 +269,9 @@ struct bitwise_or : public std::binary_function<T1, T1, T1> {
     }
 };
     
-//
-// Propagate the variance when we divide two Pixels
-//
+///
+/// \brief Calculate the variance when we divide two Pixels
+///
 template <typename T1>
 struct variance_divides {
     T1 operator()(T1 const& x, T1 const& y, T1 const& vx, T1 const& vy) const {
@@ -276,9 +280,9 @@ struct variance_divides {
         return (x2*vy + y2*vx)/(y2*y2);
     }
 };
-//
-// Propagate the variance when we multiply two Pixels
-//
+///
+/// \brief Calculate the variance when we multiply two Pixels
+///
 template <typename T1>
 struct variance_multiplies {
     T1 operator()(T1 const& x, T1 const& y, T1 const& vx, T1 const& vy) const {
@@ -287,16 +291,20 @@ struct variance_multiplies {
         return x2*vy + y2*vx;
     }
 };
-//
-// Propagate the variance when we add (or subtract) two Pixels
-//
+///
+/// \brief Calculate the variance when we add (or subtract) two Pixels
+///
 template <typename T1>
 struct variance_plus {
     T1 operator()(T1 const& x, T1 const& y, T1 const& vx, T1 const& vy) const {
         return vx + vy;
     }
 };
-
+///
+/// \brief The variance of the sum of a pair of correlated pixels
+///
+/// The covariance is modelled as alpha*sqrt(var_x*var_y)
+///
 template <typename T1>
 struct variance_plus_covar {
     variance_plus_covar(double alpha=0) : _alpha(alpha) {}    

@@ -29,9 +29,10 @@ namespace afw {
 namespace image {
     // all masks will initially be instantiated with the same pixel type
     namespace detail {
+        /// tag for a Mask
         struct Mask_tag : detail::basic_tag { };
     }
-
+    /// Represent a 2-dimensional array of bitmask pixels
     template<typename MaskPixelT>
     class Mask : public ImageBase<MaskPixelT> {
     public:

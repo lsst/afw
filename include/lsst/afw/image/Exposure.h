@@ -2,12 +2,11 @@
 /**
   * @file
   *
-  * @class lsst::afw::image::Exposure 
+  * @brief Declaration of the templated Exposure Class for LSST.
+  *
+  * Create an Exposure from a lsst::afw::image::MaskedImage.
   *
   * @ingroup afw
-  *
-  * @brief Declaration of the templated Exposure Class for LSST.  Create an
-  * Exposure from a lsst::afw::image::MaskedImage.
   *
   * @author Nicole M. Silvestri, University of Washington
   *

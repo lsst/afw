@@ -1,3 +1,7 @@
+/**
+ * \file
+ * \brief Implementation for ImageBase and Image
+ */
 #include <iostream>
 #include "boost/mpl/vector.hpp"
 #include "boost/lambda/lambda.hpp"
@@ -254,7 +258,8 @@ image::Image<PixelT>::Image(int const width, int const height) :
  * which may be conveniently used to make objects of an appropriate size
  */
 template<typename PixelT>
-image::Image<PixelT>::Image(std::pair<int, int> const dimensions) :
+image::Image<PixelT>::Image(std::pair<int, int> const dimensions // (width, height) of the desired Image
+                           ) :
     image::ImageBase<PixelT>(dimensions) {}
 
 /**

@@ -2,6 +2,8 @@
 //
 //##====----------------                                ----------------====##/
 //! \file
+//! \brief Formatting utilities
+//!
 //##====----------------                                ----------------====##/
 
 #ifndef LSST_AFW_FORMATTERS_UTILS_H

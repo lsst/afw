@@ -1,6 +1,6 @@
 /**
  * \file
- * Support statistical operations on images
+ * \brief Support statistical operations on images
  */
 #include <limits>
 #include "lsst/afw/image/MaskedImage.h"

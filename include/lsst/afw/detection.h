@@ -1,5 +1,6 @@
 /**
- * This include file includes the header files from the detection directory
+ * \file
+ * \brief An include file to include the header files for lsst::afw::detection
  */
 #ifndef LSST_AFW_DETECTION_H
 #define LSST_AFW_DETECTION_H

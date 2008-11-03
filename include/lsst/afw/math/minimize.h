@@ -4,6 +4,8 @@
 /**
  * @file
  *
+ * @brief Adaptor for minuit
+ *
  * Class that Minuit knows how to minimize, that contains an lsst::afw::math::Function
  *
  * @author Andrew Becker and Russell Owen

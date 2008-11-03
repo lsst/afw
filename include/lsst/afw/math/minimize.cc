@@ -2,9 +2,9 @@
 /**
  * @file
  *
- * Definition of member functions declared in MinimizerFunctionBase.h
+ * @brief Definition of member functions for minuit adaptors
  *
- * This file is meant to be included by lsst/afw/math/MinimizerFunctionBase.h
+ * This file is meant to be included by lsst/afw/math/minimize.h
  *
  * @author Andrew Becker and Russell Owen
  *

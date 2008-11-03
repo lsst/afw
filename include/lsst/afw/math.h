@@ -1,6 +1,7 @@
 /**
- * This include file includes the header files from the math directory
- */
+ * \file
+ * \brief An include file to include the header files for lsst::afw::math
+ */
 #ifndef LSST_AFW_MATH_H
 #define LSST_AFW_MATH_H
 
