@@ -37,6 +37,14 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     *_variance = 0;
 }
 
+/**
+ * Create an MaskedImage of the specified size
+ *
+ * The Image, Mask, and Variance will be set to zero
+ *
+ * \note Many lsst::afw::image and lsst::afw::math objects define a \c dimensions member
+ * which may be conveniently used to make objects of an appropriate size
+ */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
         const std::pair<int, int> dimensions, //!< dimensions of image: width x height
@@ -178,6 +186,13 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator<<=(Ma
     *_variance <<= *rhs._variance;
 }
 
+/// Add a MaskedImage rhs to a MaskedImage
+///
+/// The %image and variances are added; the masks are ORd together
+///
+/// \note The pixels in the two images are taken to be independent.  There is
+/// a Pixel operation (plus) which models the covariance, but this is not (yet?)
+/// available as full-MaskedImage operators
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator+=(MaskedImage& rhs) {
     *_image += *rhs._image;
@@ -185,11 +200,17 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator+=(Mas
     *_variance += *rhs._variance;
 }
 
+/// Add a scalar rhs to a MaskedImage
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator+=(ImagePixelT rhs) {
     *_image += rhs;
 }
 
+/// Subtract a MaskedImage rhs from a MaskedImage
+///
+/// The %images are added; the masks are ORd together; and the variances are added
+///
+/// \note the pixels in the two images are taken to be independent
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator-=(MaskedImage& rhs) {
     *_image -= *rhs._image;
@@ -197,6 +218,7 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator-=(Mas
     *_variance += *rhs._variance;
 }
 
+/// Subtract a scalar rhs from a MaskedImage
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator-=(ImagePixelT rhs) {
     *_image -= rhs;
@@ -322,6 +344,7 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::conformSizes()
 //
 // Iterators and locators
 //
+/// Return an \c iterator to the start of the %image
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::iterator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::begin() const {
 #if 0                                   // this doesn't compile; why?
@@ -335,6 +358,7 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::iterator i
 #endif
 }
 
+/// Return an \c iterator to the end of the %image
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::iterator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::end() const {
     typename Image::iterator imageEnd = getImage()->end();
@@ -344,6 +368,7 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::iterator i
     return iterator(imageEnd, maskEnd, varianceEnd);
 }
 
+/// Return an \c iterator at the point <tt>(x, y)</tt>
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::iterator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::at(int const x, int const y) const {
     typename Image::iterator imageEnd = getImage()->at(x, y);
@@ -353,6 +378,7 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::iterator i
     return iterator(imageEnd, maskEnd, varianceEnd);
 }
 
+/// Return a \c reverse_iterator to the start of the %image
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::reverse_iterator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::rbegin() const {
     typename Image::reverse_iterator imageBegin = _image->rbegin();
@@ -362,6 +388,7 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::reverse_it
     return reverse_iterator(imageBegin, maskBegin, varianceBegin);
 }
 
+/// Return a \c reverse_iterator to the end of the %image
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::reverse_iterator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::rend() const {
     typename Image::reverse_iterator imageEnd = getImage()->rend();
@@ -371,6 +398,7 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::reverse_it
     return reverse_iterator(imageEnd, maskEnd, varianceEnd);
 }
 
+/// Return an \c x_iterator to the start of the %image
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::x_iterator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::row_begin(int y) const {
     typename Image::x_iterator imageBegin = _image->row_begin(y);
@@ -380,6 +408,7 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::x_iterator
     return x_iterator(imageBegin, maskBegin, varianceBegin);
 }
 
+/// Return an \c x_iterator to the end of the %image
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::x_iterator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::row_end(int y) const {
     typename Image::x_iterator imageEnd = getImage()->row_end(y);
@@ -389,6 +418,7 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::x_iterator
     return x_iterator(imageEnd, maskEnd, varianceEnd);
 }
 
+/// Return an \c x_iterator at the point <tt>(x, y)</tt>
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::x_iterator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::x_at(int x, int y) const {
     typename Image::x_iterator imageEnd = getImage()->x_at(x, y);
@@ -400,6 +430,7 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::x_iterator
 
 /************************************************************************************************************/
 
+/// Return an \c y_iterator to the start of the %image
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::y_iterator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::col_begin(int x) const {
     typename Image::y_iterator imageBegin = _image->col_begin(x);
@@ -409,6 +440,7 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::y_iterator
     return y_iterator(imageBegin, maskBegin, varianceBegin);
 }
 
+/// Return an \c y_iterator to the end of the %image
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::y_iterator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::col_end(int x) const {
     typename Image::y_iterator imageEnd = getImage()->col_end(x);
@@ -418,6 +450,7 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::y_iterator
     return y_iterator(imageEnd, maskEnd, varianceEnd);
 }
 
+/// Return an \c y_iterator at the point <tt>(x, y)</tt>
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::y_iterator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::y_at(int x, int y) const {
     typename Image::y_iterator imageEnd = getImage()->y_at(x, y);
@@ -429,6 +462,7 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::y_iterator
 
 /************************************************************************************************************/
 
+/// Return an \c xy_locator at the point <tt>(x, y)</tt>
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::xy_locator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::xy_at(int x, int y) const {
     typename Image::xy_locator imageEnd = getImage()->xy_at(x, y);

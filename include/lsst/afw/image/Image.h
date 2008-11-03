@@ -1,11 +1,10 @@
 // -*- lsst-c++ -*-
-///////////////////////////////////////////////////////////
-//  Image.h
-//  Implementation of the Class Image
-//  Created on:      09-Feb-2007 15:57:46
-//  Original author: Tim Axelrod
-///////////////////////////////////////////////////////////
-
+/**
+ * \file
+ * \brief Support for 2-D images
+ *
+ * This file contains the basic 2-d image support for LSST
+ */
 #ifndef LSST_AFW_IMAGE_IMAGE_H
 #define LSST_AFW_IMAGE_IMAGE_H
 
@@ -53,6 +52,7 @@ namespace image {
     //
     struct pair2I : std::pair<int, int> {
         explicit pair2I(int first, int second) : std::pair<int, int>(first, second) {}
+        pair2I(std::pair<int, int> pair) : std::pair<int, int>(pair) {}
     };
     /// \brief metafunction to extract reference type from PixelT
     template<typename PixelT>
@@ -84,9 +84,9 @@ namespace image {
 
         typedef detail::basic_tag image_category; ///< trait class to identify type of %image
 
-        /// A single pixel of this type (useful when working with MaskedImage%s)
+        /// A single Pixel of the same type as those in the ImageBase
         typedef PixelT SinglePixel;
-        /// A pixel of this type
+        /// A pixel in this ImageBase
         typedef PixelT Pixel;
         /// A Reference to a PixelT
         typedef typename Reference<PixelT>::type PixelReference;

@@ -1,10 +1,12 @@
-/// \file
-/// Tell doxygen to (usually) ignore this file \cond GIL_IMAGE_INTERNALS
-/// \brief  Internal support for reading and writing FITS files
-/// \author Robert Lupton (rhl@astro.princeton.edu)
-///         Princeton University
-/// \date   September 2008
-
+/**
+ * \file
+ * \brief  Internal support for reading and writing FITS files
+ *
+ * Tell doxygen to (usually) ignore this file \cond GIL_IMAGE_INTERNALS
+ * \author Robert Lupton (rhl@astro.princeton.edu)
+ *         Princeton University
+ * \date   September 2008
+ */
 #if !defined(LSST_FITS_IO_H)
 #define LSST_FITS_IO_H
 

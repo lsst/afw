@@ -1,3 +1,6 @@
+## \file
+## \brief Utilities to use with displaying images
+
 import lsst.afw.image as afwImage
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

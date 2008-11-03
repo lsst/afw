@@ -2,7 +2,7 @@
 #define LSST_DETECTION_FOOTPRINT_H
 /**
  * \file
- * Represent a set of pixels of an arbitrary shape and size
+ * \brief Represent a set of pixels of an arbitrary shape and size
  *
  * Footprint is fundamental in astronomical image processing, as it defines what
  * is meant by a Source.

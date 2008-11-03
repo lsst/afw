@@ -1,5 +1,6 @@
-/*
- * Write a fits image to a file descriptor; useful for talking to DS9
+/**
+ * \file
+ * \brief Write a FITS image to a file descriptor; useful for talking to DS9
  *
  * This version knows about LSST data structures
  */
@@ -25,6 +26,7 @@ using lsst::daf::base::DataProperty;
 
 #define FITS_SIZE 2880
 
+/// \cond
 class Card {
 public:
     Card(const std::string &name, bool val, const char *commnt = ""
@@ -52,6 +54,7 @@ public:
     boost::any value;
     std::string comment;
 };
+/// \endcond
 
 /*****************************************************************************/
 /*

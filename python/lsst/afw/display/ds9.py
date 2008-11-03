@@ -1,6 +1,7 @@
-#
-# XPA
-#
+##
+## \file
+## \brief Definitions to talk to ds9 from python
+
 import os, re, math, sys, time
 
 try: import xpa

@@ -1,19 +1,6 @@
-/** \file
- *
+/**
+ * \file
  * Support statistical operations on images
- *
- * The basic strategy is to construct a Statistics object from an Image and
- * a statement of what we want to know.  The desired results can then be
- * returned using Statistics methods:
- * \code
-        math::Statistics<ImageT> stats = math::make_Statistics(*img, math::NPOINT | math::MEAN);
-        
-        double const n = stats.getValue(math::NPOINT);
-        std::pair<double, double> const mean = stats.getResult(math::MEAN); // Returns (value, error)
-        double const meanError = stats.getError(math::MEAN);                // just the error
- * \endcode
- * (Note that we used a helper function, \c make_Statistics, rather that the constructor directly so that
- * the compiler could deduce the types -- cf. \c std::make_pair)
  */
 #include <limits>
 #include "lsst/afw/image/MaskedImage.h"
@@ -26,6 +13,12 @@ namespace {
     double const NaN = std::numeric_limits<double>::quiet_NaN();
 }
 
+/*
+ * Constructor for Statistics
+ *
+ * Most of the actual work is done in this constructor; the results
+ * are retrieved using \c get_value etc.
+ */
 template<typename Image>
 math::Statistics<Image>::Statistics(Image const& img, ///< Image (or MaskedImage) whose properties we want
                                     int const flags   ///< Describe what we want to calculate
@@ -74,6 +67,11 @@ math::Statistics<Image>::Statistics(Image const& img, ///< Image (or MaskedImage
     _variance = sumx2/(_n - 1) - sum*sum/(static_cast<double>(_n - 1)*_n); // estimate of population variance
 }
 
+/// Return the value and error in the specified statistic (e.g. MEAN)
+///
+/// Only quantities requested in the constructor may be retrieved
+///
+/// \sa getValue and getError
 template<typename Image>
 std::pair<double, double> math::Statistics<Image>::getResult(math::Property const prop ///< Desired property
                                              ) const {
@@ -107,12 +105,14 @@ std::pair<double, double> math::Statistics<Image>::getResult(math::Property cons
     return ret;
 }
 
+/// Return the value of the desired property (if specified in the constructor)
 template<typename Image>
 double math::Statistics<Image>::getValue(math::Property const prop ///< Desired property
                      ) const {
     return getResult(prop).first;
 }
 
+/// Return the error in the desired property (if specified in the constructor)
 template<typename Image>
 double math::Statistics<Image>::getError(math::Property const prop ///< Desired property
                      ) const {

@@ -1,5 +1,9 @@
-/// \file
-/// Tell doxygen to (usually) ignore this file \cond GIL_IMAGE_INTERNALS
+/**
+ * \file
+ * \brief Types and classes to interface lsst::afw::image to boost::gil
+ *
+ * Tell doxygen to (usually) ignore this file \cond GIL_IMAGE_INTERNALS
+ */
 
 #if !defined(GIL_LSST_H)
 #define GIL_LSST_H 1

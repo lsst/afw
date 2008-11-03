@@ -1,10 +1,8 @@
 // -*- lsst-c++ -*-
-///////////////////////////////////////////////////////////
-//  Mask.h
-//  Implementation of the Class Mask
-//  Created on:      09-Feb-2007 15:57:46
-//  Original author: Tim Axelrod
-///////////////////////////////////////////////////////////
+/**
+ * \file
+ * \brief LSST bitmasks
+ */
 
 #ifndef LSST_AFW_IMAGE_MASK_H
 #define LSST_AFW_IMAGE_MASK_H

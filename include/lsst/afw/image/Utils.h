@@ -1,7 +1,7 @@
 // -*- lsst-c++ -*-
 /**
  * \file
- * A set of classes of general utility in connection with images
+ * \brief A set of classes of general utility in connection with images
  * 
  * We provide representations of points, bounding boxes, circles etc.
  */

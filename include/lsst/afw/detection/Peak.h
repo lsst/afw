@@ -1,5 +1,9 @@
 #if !defined(LSST_AFW_DETECTION_PEAK_H)
 #define LSST_AFW_DETECTION_PEAK_H
+/*!
+ * \file
+ * \brief Support for peaks in images
+ */
     
 #include <list>
 #include <cmath>
@@ -7,20 +11,19 @@
 #include "lsst/daf/data/LsstBase.h"
 
 namespace lsst { namespace afw { namespace detection {
-/*!
- * \brief A peak in an image
- */
+/// A peak in an %image
 class Peak : public lsst::daf::base::Citizen {
 public:
     typedef boost::shared_ptr<Peak> Ptr;
-
+    /// A peak at the pixel <tt>(ix, iy)</tt>
     explicit Peak(int ix,               //!< column pixel
                   int iy)               //!< row pixel
         : lsst::daf::base::Citizen(typeid(*this)),
           _id(++id),
           _ix(ix), _iy(iy), _fx(ix), _fy(iy) {};
-    explicit Peak(float fx = NAN,       //!< column centre
-                  float fy = NAN)       //!< row centre
+    /// A peak at the floating-point position <tt>(fx, fy)</tt>
+    explicit Peak(float fx=NAN,       //!< column centre
+                  float fy=NAN)       //!< row centre
         : lsst::daf::base::Citizen(typeid(*this)),
           _id(++id),
           _ix(fx > 0 ? static_cast<int>(fx) : -static_cast<int>(-fx) - 1),

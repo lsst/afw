@@ -1,10 +1,8 @@
 // -*- lsst-c++ -*-
-///////////////////////////////////////////////////////////
-//  Wcs.h
-//  Implementation of the Class Wcs
-//  Created on:      09-Feb-2007 15:57:46
-//  Original author: Tim Axelrod
-///////////////////////////////////////////////////////////
+/**
+ * \file
+ * \brief Support for Astrometry
+ */
 
 #ifndef LSST_AFW_IMAGE_WCS_H
 #define LSST_AFW_IMAGE_WCS_H

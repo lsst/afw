@@ -1,3 +1,7 @@
+/**
+ * \file
+ * \brief Definitions to write a FITS image
+ */
 #if !defined(SIMPLE_FITS_H)
 #define SIMPLE_FITS_H 1
 
