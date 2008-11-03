@@ -284,8 +284,10 @@ namespace image {
         typedef detail::Image_tag image_category;
 
 #if !defined(SWIG)
+        /// A templated class to return this classes' type (present in Image/Mask/MaskedImage)
         template<typename ImagePT=PixelT>
         struct ImageTypeFactory {
+            /// Return the desired type
             typedef Image<ImagePT> type;
         };
 #endif

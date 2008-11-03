@@ -71,10 +71,10 @@ namespace image {
         typedef detail::MaskedImage_tag image_category;
 
 #if !defined(SWIG)
-        /// A class to return the type of the Masked Image
+        /// A templated class to return this classes' type (present in Image/Mask/MaskedImage)
         template<typename ImagePT=ImagePixelT, typename MaskPT=MaskPixelT, typename VarPT=VariancePixelT>
         struct ImageTypeFactory {
-            /// Return the Factory type
+            /// Return the desired type
             typedef MaskedImage<ImagePT, MaskPT, VarPT> type;
         };
 #endif

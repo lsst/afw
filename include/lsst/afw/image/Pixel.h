@@ -36,7 +36,7 @@ template <typename> struct variance_plus;
  * solution very well.
  */
 
-/// A single %pixel of the same type as a MaskedImage<_ImagePixelT, _MaskPixelT, _VariancePixelT>
+/// A single %pixel of the same type as a MaskedImage
 template<typename _ImagePixelT, typename _MaskPixelT, typename _VariancePixelT=double>
 class SinglePixel : detail::MaskedImagePixel_tag {
 public:
@@ -72,7 +72,7 @@ SinglePixel<ImagePixelT, MaskPixelT, VariancePixelT> makeSinglePixel(ImagePixelT
     return SinglePixel<ImagePixelT, MaskPixelT, VariancePixelT>(x, m, v);
 }
 
-/// A %pixel of a MaskedImage<_ImagePixelT, _MaskPixelT, _VariancePixelT>
+/// A %pixel of a MaskedImage
 template<typename _ImagePixelT, typename _MaskPixelT, typename _VariancePixelT=double>
 class Pixel : detail::MaskedImagePixel_tag {
 public:
