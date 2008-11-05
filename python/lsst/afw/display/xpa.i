@@ -11,7 +11,7 @@ Simple interface to the xpa routines used to communicate with ds9
 %enddef
 
 %feature("autodoc", "1");
-%module(docstring=xpa_DOCSTRING) xpa
+%module(package="lsst.afw.display", docstring=xpa_DOCSTRING) xpa
 
 %ignore XPAGet;
 %ignore XPASet;

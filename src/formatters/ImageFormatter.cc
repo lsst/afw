@@ -17,6 +17,7 @@
 #endif
 static char const* SVNid __attribute__((unused)) = "$Id$";
 
+#include "boost/scoped_ptr.hpp"
 #include "boost/serialization/shared_ptr.hpp"
 #include "boost/serialization/binary_object.hpp"
 
@@ -27,7 +28,6 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 #include "lsst/afw/formatters/ImageFormatter.h"
 #include "lsst/afw/image/Image.h"
 
-// #include "lsst/afw/image/LSSTFitsResource.h"
 
 #define EXEC_TRACE  20
 static void execTrace(std::string s, int level = EXEC_TRACE) {
@@ -51,6 +51,7 @@ public:
 };
 
 template<> std::string ImageFormatterTraits<boost::uint16_t>::name("ImageU");
+template<> std::string ImageFormatterTraits<int>::name("ImageI");
 template<> std::string ImageFormatterTraits<float>::name("ImageF");
 template<> std::string ImageFormatterTraits<double>::name("ImageD");
 
@@ -145,24 +146,26 @@ void ImageFormatter<ImagePixelT>::delegateSerialize(
     if (ip == 0) {
         throw std::runtime_error("Serializing non-Image");
     }
-    ar & ip->_metaData & ip->_offsetRows & ip->_offsetCols;
-    unsigned int cols;
-    unsigned int rows;
-    unsigned int planes;
+    int width, height;
     if (Archive::is_saving::value) {
-        cols = ip->_vwImagePtr->cols();
-        rows = ip->_vwImagePtr->rows();
-        planes = ip->_vwImagePtr->planes();
+        width = ip->getWidth();
+        height = ip->getHeight();
     }
-    ar & cols & rows & planes;
+    ar & width & height;
+    std::size_t nbytes = width * height * sizeof(ImagePixelT);
     if (Archive::is_loading::value) {
-        ip->_vwImagePtr->set_size(cols, rows, planes);
+        boost::scoped_ptr<Image<ImagePixelT> > ni(new Image<ImagePixelT>(width, height));
+        ImagePixelT * raw = boost::gil::interleaved_view_get_raw_data(view(*ni->_getRawImagePtr()));
+        ar & boost::serialization::make_binary_object(raw, nbytes);
+        ip->swap(*ni);
+    } else if (width == ip->_getRawImagePtr()->width() && height == ip->_getRawImagePtr()->height()) {
+        ImagePixelT * raw = boost::gil::interleaved_view_get_raw_data(view(*ip->_getRawImagePtr()));
+        ar & boost::serialization::make_binary_object(raw, nbytes);
+    } else {
+        typename Image<ImagePixelT>::_image_t img(width, height);
+        boost::gil::copy_pixels(ip->_getRawView(), flipped_up_down_view(view(img)));
+        ar & boost::serialization::make_binary_object(boost::gil::interleaved_view_get_raw_data(view(img)), nbytes);
     }
-    unsigned int pixels = cols * rows * planes;
-    ImagePixelT* data = ip->_vwImagePtr->data();
-    ar & boost::serialization::make_binary_object(
-        data, pixels * sizeof(ImagePixelT));
-    execTrace("ImageFormatter delegateSerialize end");
 }
 
 template <typename ImagePixelT>
@@ -172,6 +175,7 @@ lsst::daf::persistence::Formatter::Ptr ImageFormatter<ImagePixelT>::createInstan
 }
 
 template class ImageFormatter<boost::uint16_t>;
+template class ImageFormatter<int>;
 template class ImageFormatter<float>;
 template class ImageFormatter<double>;
 

@@ -244,8 +244,6 @@ namespace image {
         }
 
     private:
-        //LSST_PERSIST_FORMATTER(lsst::afw::formatters::ImageBaseFormatter<PixelT>);
-
         _image_t_Ptr _gilImage;
         _view_t _gilView;
         //
@@ -343,7 +341,7 @@ namespace image {
     protected:
         using ImageBase<PixelT>::_getRawView;
     private:
-        //LSST_PERSIST_FORMATTER(lsst::afw::formatters::ImageFormatter<PixelT>);
+        LSST_PERSIST_FORMATTER(lsst::afw::formatters::ImageFormatter<PixelT>);
     };
     
     template<typename PixelT>

@@ -39,7 +39,7 @@ namespace image {
 namespace lsst {
 namespace afw {
     namespace formatters {
-        template<typename ImagePixelT, typename MaskPixelT> class MaskedImageFormatter;
+        template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT> class MaskedImageFormatter;
     }
 
 namespace image {
@@ -744,7 +744,7 @@ namespace image {
         }
     private:
 
-        //LSST_PERSIST_FORMATTER(lsst::afw::formatters::MaskedImageFormatter<ImagePixelT, MaskPixelT>);
+        LSST_PERSIST_FORMATTER(lsst::afw::formatters::MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>);
         void conformSizes();
         
         ImagePtr _image;

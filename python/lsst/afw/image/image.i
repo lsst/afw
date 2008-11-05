@@ -9,7 +9,7 @@
 // Must go Before the %include
 //
 %define %imagePtr(NAME, TYPE, PIXEL_TYPE...)
-SWIG_SHARED_PTR(NAME##TYPE##BasePtr, lsst::afw::image::ImageBase<PIXEL_TYPE>);
+SWIG_SHARED_PTR_DERIVED(NAME##TYPE##BasePtr, lsst::daf::base::Persistable, lsst::afw::image::ImageBase<PIXEL_TYPE>);
 SWIG_SHARED_PTR_DERIVED(NAME##TYPE##Ptr, lsst::afw::image::ImageBase<PIXEL_TYPE>, lsst::afw::image::Image<PIXEL_TYPE>);
 SWIG_SHARED_PTR(Decorated##NAME##TYPE##Ptr, lsst::afw::image::DecoratedImage<PIXEL_TYPE>);
 %enddef
@@ -21,10 +21,10 @@ SWIG_SHARED_PTR(Decorated##NAME##TYPE##Ptr, lsst::afw::image::DecoratedImage<PIX
 %template(NAME##TYPE##Base) lsst::afw::image::ImageBase<PIXEL_TYPE>;
 %template(NAME##TYPE) lsst::afw::image::Image<PIXEL_TYPE>;
 %template(Decorated##NAME##TYPE) lsst::afw::image::DecoratedImage<PIXEL_TYPE>;
-
-//%lsst_persistable_shared_ptr(NAME##TYPE##Ptr, lsst::afw::image::Image<PIXEL_TYPE>)
+%lsst_persistable(lsst::afw::image::Image<PIXEL_TYPE>);
 
 %extend lsst::afw::image::Image<PIXEL_TYPE> {
+
     /**
      * Set an image to the value val
      */
@@ -93,6 +93,18 @@ SWIG_SHARED_PTR(Decorated##NAME##TYPE##Ptr, lsst::afw::image::DecoratedImage<PIX
 /************************************************************************************************************/
 
 %ignore swap;
+%ignore lsst::afw::image::ImageBase::begin;
+%ignore lsst::afw::image::ImageBase::end;
+%ignore lsst::afw::image::ImageBase::rbegin;
+%ignore lsst::afw::image::ImageBase::rend;
+%ignore lsst::afw::image::ImageBase::at;
+%ignore lsst::afw::image::ImageBase::row_begin;
+%ignore lsst::afw::image::ImageBase::row_end;
+%ignore lsst::afw::image::ImageBase::x_at;
+%ignore lsst::afw::image::ImageBase::col_begin;
+%ignore lsst::afw::image::ImageBase::col_end;
+%ignore lsst::afw::image::ImageBase::y_at;
+%ignore lsst::afw::image::ImageBase::xy_at;
 
 %imagePtr(Image, U, boost::uint16_t);
 %imagePtr(Image, I, int);
@@ -110,13 +122,13 @@ SWIG_SHARED_PTR(Decorated##NAME##TYPE##Ptr, lsst::afw::image::DecoratedImage<PIX
 %extend lsst::afw::image::Image<boost::uint16_t> {
     %newobject convertFloat;
     lsst::afw::image::Image<float> convertFloat() {
-       return Image<float>(*self, true);
+       return lsst::afw::image::Image<float>(*self, true);
     }
 }
 
 %extend lsst::afw::image::Image<float> {
    %newobject convertU16;
    lsst::afw::image::Image<boost::uint16_t> convertU16() {
-       return Image<boost::uint16_t>(*self, true);
+       return lsst::afw::image::Image<boost::uint16_t>(*self, true);
    }
 }

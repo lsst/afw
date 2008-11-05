@@ -33,7 +33,7 @@
 namespace lsst {
 namespace afw {
     namespace formatters {
-        template<typename ImageT, typename MaskT> class ExposureFormatter;
+        template<typename ImageT, typename MaskT, typename VarianceT> class ExposureFormatter;
     }
 namespace image {
     template<typename ImageT, typename MaskT=lsst::afw::image::MaskPixel,
@@ -66,7 +66,7 @@ namespace image {
         void writeFits(std::string const &expOutFile) const;
         
     private:
-        LSST_PERSIST_FORMATTER(lsst::afw::formatters::ExposureFormatter<ImageT, MaskT>);
+        LSST_PERSIST_FORMATTER(lsst::afw::formatters::ExposureFormatter<ImageT, MaskT, VarianceT>);
 
         lsst::daf::base::DataProperty::PtrType _metaData;
         MaskedImage<ImageT, MaskT> _maskedImage;             

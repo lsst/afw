@@ -8,7 +8,7 @@
 // Must go Before the %include
 //
 %define %maskedImagePtr(NAME, TYPE, PIXEL_TYPES...)
-SWIG_SHARED_PTR(NAME##TYPE##Ptr, lsst::afw::image::MaskedImage<PIXEL_TYPES>);
+SWIG_SHARED_PTR_DERIVED(NAME##TYPE##Ptr, lsst::daf::base::Persistable, lsst::afw::image::MaskedImage<PIXEL_TYPES>);
 %enddef
 
 //
@@ -16,6 +16,7 @@ SWIG_SHARED_PTR(NAME##TYPE##Ptr, lsst::afw::image::MaskedImage<PIXEL_TYPES>);
 //
 %define %maskedImage(NAME, TYPE, PIXEL_TYPES...)
 %template(NAME##TYPE) lsst::afw::image::MaskedImage<PIXEL_TYPES>;
+%lsst_persistable(lsst::afw::image::MaskedImage<PIXEL_TYPES>);
 
 %extend lsst::afw::image::MaskedImage<PIXEL_TYPES> {
     %pythoncode {

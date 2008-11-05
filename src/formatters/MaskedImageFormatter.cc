@@ -39,39 +39,41 @@ using lsst::daf::persistence::FitsStorage;
 using lsst::daf::persistence::Storage;
 using lsst::afw::image::MaskedImage;
 using lsst::afw::image::MaskPixel;
+using lsst::afw::image::VariancePixel;
 
 namespace lsst {
 namespace afw {
 namespace formatters {
 
-template <typename ImagePixelT, typename MaskPixelT>
+template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 class MaskedImageFormatterTraits {
 public:
     static std::string name;
 };
 
-template<> std::string MaskedImageFormatterTraits<boost::uint16_t, MaskPixel>::name("MaskedImageU");
-template<> std::string MaskedImageFormatterTraits<float, MaskPixel>::name("MaskedImageF");
-template<> std::string MaskedImageFormatterTraits<double, MaskPixel>::name("MaskedImageD");
+template<> std::string MaskedImageFormatterTraits<boost::uint16_t, MaskPixel, VariancePixel>::name("MaskedImageU");
+template<> std::string MaskedImageFormatterTraits<int, MaskPixel, VariancePixel>::name("MaskedImageI");
+template<> std::string MaskedImageFormatterTraits<float, MaskPixel, VariancePixel>::name("MaskedImageF");
+template<> std::string MaskedImageFormatterTraits<double, MaskPixel, VariancePixel>::name("MaskedImageD");
 
-template <typename ImagePixelT, typename MaskPixelT>
-lsst::daf::persistence::FormatterRegistration MaskedImageFormatter<ImagePixelT, MaskPixelT>::registration(
-    MaskedImageFormatterTraits<ImagePixelT, MaskPixelT>::name,
-    typeid(MaskedImage<ImagePixelT, MaskPixelT>),
+template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+lsst::daf::persistence::FormatterRegistration MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::registration(
+    MaskedImageFormatterTraits<ImagePixelT, MaskPixelT, VariancePixelT>::name,
+    typeid(MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>),
     createInstance);
 
-template <typename ImagePixelT, typename MaskPixelT>
-MaskedImageFormatter<ImagePixelT, MaskPixelT>::MaskedImageFormatter(
+template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImageFormatter(
     lsst::pex::policy::Policy::Ptr policy) :
     lsst::daf::persistence::Formatter(typeid(*this)) {
 }
 
-template <typename ImagePixelT, typename MaskPixelT>
-MaskedImageFormatter<ImagePixelT, MaskPixelT>::~MaskedImageFormatter(void) {
+template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::~MaskedImageFormatter(void) {
 }
 
-template <typename ImagePixelT, typename MaskPixelT>
-void MaskedImageFormatter<ImagePixelT, MaskPixelT>::write(
+template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
     Persistable const* persistable,
     Storage::Ptr storage,
     lsst::daf::base::DataProperty::PtrType additionalData) {
@@ -98,8 +100,8 @@ void MaskedImageFormatter<ImagePixelT, MaskPixelT>::write(
     throw std::runtime_error("Unrecognized Storage for MaskedImage");
 }
 
-template <typename ImagePixelT, typename MaskPixelT>
-Persistable* MaskedImageFormatter<ImagePixelT, MaskPixelT>::read(
+template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+Persistable* MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::read(
     Storage::Ptr storage,
     lsst::daf::base::DataProperty::PtrType additionalData) {
     execTrace("MaskedImageFormatter read start");
@@ -121,36 +123,44 @@ Persistable* MaskedImageFormatter<ImagePixelT, MaskPixelT>::read(
     throw std::runtime_error("Unrecognized Storage for MaskedImage");
 }
 
-template <typename ImagePixelT, typename MaskPixelT>
-void MaskedImageFormatter<ImagePixelT, MaskPixelT>::update(
+template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::update(
     Persistable* persistable,
     Storage::Ptr storage,
     lsst::daf::base::DataProperty::PtrType additionalData) {
     throw std::runtime_error("Unexpected call to update for MaskedImage");
 }
 
-template <typename ImagePixelT, typename MaskPixelT> template <class Archive>
-void MaskedImageFormatter<ImagePixelT, MaskPixelT>::delegateSerialize(
-    Archive& ar, int const version, Persistable* persistable) {
+template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT> template <class Archive>
+void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::delegateSerialize(
+    Archive& ar, unsigned int const version, Persistable* persistable) {
     execTrace("MaskedImageFormatter delegateSerialize start");
-    MaskedImage<ImagePixelT, MaskPixelT>* ip = dynamic_cast<MaskedImage<ImagePixelT, MaskPixelT>*>(persistable);
+    MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>* ip =
+        dynamic_cast<MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>*>(persistable);
     if (ip == 0) {
         throw std::runtime_error("Serializing non-MaskedImage");
     }
-    ar & ip->_imageRows & ip->_imageCols;
-    ar & ip->_imagePtr & ip->_variancePtr & ip->_maskPtr;
+    ar & ip->_image & ip->_variance & ip->_mask;
     execTrace("MaskedImageFormatter delegateSerialize end");
 }
 
-template <typename ImagePixelT, typename MaskPixelT>
-lsst::daf::persistence::Formatter::Ptr MaskedImageFormatter<ImagePixelT, MaskPixelT>::createInstance(
+template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+lsst::daf::persistence::Formatter::Ptr MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::createInstance(
     lsst::pex::policy::Policy::Ptr policy) {
     return lsst::daf::persistence::Formatter::Ptr(
-        new MaskedImageFormatter<ImagePixelT, MaskPixelT>(policy));
+        new MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>(policy));
 }
 
-template class MaskedImageFormatter<uint16_t, MaskPixel>;
-template class MaskedImageFormatter<float, MaskPixel>;
-template class MaskedImageFormatter<double, MaskPixel>;
+#define INSTANTIATE(I, M, V) \
+    template class MaskedImageFormatter<I, M, V>; \
+    template void MaskedImageFormatter<I, M, V>::delegateSerialize<boost::archive::text_oarchive>( \
+        boost::archive::text_oarchive &, unsigned int const, Persistable *); \
+    template void MaskedImageFormatter<I, M, V>::delegateSerialize<boost::archive::text_iarchive>( \
+        boost::archive::text_iarchive &, unsigned int const, Persistable *);
+
+INSTANTIATE(uint16_t, MaskPixel, VariancePixel)
+INSTANTIATE(int, MaskPixel, VariancePixel)
+INSTANTIATE(float, MaskPixel, VariancePixel)
+INSTANTIATE(double, MaskPixel, VariancePixel)
 
 }}} // namespace lsst::afw::formatters

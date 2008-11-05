@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(locators) {
 
         BOOST_CHECK_EQUAL(loc(1,1), 202);
 
-        loc += image::pair2I(-1, 1);     // loc == img.xy_at(0, 2);
+        loc += image::detail::difference_type(-1, 1);     // loc == img.xy_at(0, 2);
         BOOST_CHECK_EQUAL(*loc, 2);
 
         loc.x() += 2; ++loc.x();        // loc == img.xy_at(3, 2);

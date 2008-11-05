@@ -91,7 +91,3 @@ namespace lsst { namespace afw { namespace image {
 %convolutionFuncs(float, float);
 %convolutionFuncs(boost::uint16_t, boost::uint16_t);
 
-/******************************************************************************/
-// Local Variables: ***
-// eval: (setq indent-tabs-mode nil) ***
-// End: ***

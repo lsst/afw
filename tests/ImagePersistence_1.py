@@ -18,18 +18,18 @@ class ImagePersistenceTestCase(unittest.TestCase):
 
     def checkImages(self, image, image2):
         # Check that two images are identical (well, actually check only every 4th pixel)
-        assert image.getRows() == image2.getRows()
-        assert image.getCols() == image2.getCols()
-        assert image.getOffsetRows() == image2.getOffsetRows()
-        assert image.getOffsetCols() == image2.getOffsetCols()
-        for c in xrange(0, image.getCols(), 2):
-            for r in xrange(0, image.getRows(), 2):
-                pixel1 = image.getVal(c, r)
-                pixel2 = image2.getVal(c, r)
+        assert image.getHeight() == image2.getHeight()
+        assert image.getWidth() == image2.getWidth()
+        assert image.getY0() == image2.getY0()
+        assert image.getX0() == image2.getX0()
+        for x in xrange(0, image.getWidth(), 2):
+            for y in xrange(0, image.getHeight(), 2):
+                pixel1 = image.get(x, y)
+                pixel2 = image2.get(x, y)
                 # Persisting through Boost text archives causes conversion error!
                 # assert abs(pixel1 - pixel2) / pixel1 < 1e-7, \
                 assert pixel1 == pixel2, \
-                        "Differing pixel2 at %d, %d: %f, %f" % (c, r, pixel1, pixel2)
+                        "Differing pixel2 at %d, %d: %f, %f" % (x, y, pixel1, pixel2)
 
     def setUp(self):
         # Create the additionalData DataProperty
@@ -40,7 +40,7 @@ class ImagePersistenceTestCase(unittest.TestCase):
         self.additionalData.addProperty(dafBase.DataProperty("itemName", "foo"))
 
         # Create an empty Policy
-        policy = pexPolicy.PolicyPtr()
+        policy = pexPolicy.Policy()
 
         # Get a Persistence object
         self.persistence = dafPers.Persistence.getPersistence(policy)

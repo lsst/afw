@@ -31,7 +31,7 @@ class MaskedImagePersistenceTestCase(unittest.TestCase):
         self.additionalData.addProperty(dafBase.DataProperty("itemName", "foo"))
 
         # Create an empty Policy
-        policy = pexPolicy.PolicyPtr()
+        policy = pexPolicy.Policy()
 
         # Get a Persistence object
         self.persistence = dafPers.Persistence.getPersistence(policy)
