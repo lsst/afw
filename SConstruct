@@ -9,6 +9,7 @@ env = scons.makeEnv(
     "afw",
     r"$HeadURL$",
     [
+        ["boost", "boost/version.hpp", "boost_system:C++"],
         ["boost", "boost/version.hpp", "boost_filesystem:C++"],
         ["boost", "boost/regex.hpp", "boost_regex:C++"],
         ["boost", "boost/serialization/base_object.hpp", "boost_serialization:C++"],
