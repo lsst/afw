@@ -52,9 +52,6 @@ else:
     )
 
     ignoreList=[]
-    if True:
-        ignoreList += ["SourceIO_1", "SourceIO_2"] # problems in the Source persistence code
-            
     tests = lsst.tests.Control(env, args = testArgs, ignoreList=ignoreList, verbose = True)
 
     tests.run("*.cc")
