@@ -76,19 +76,24 @@ namespace lsst { namespace afw { namespace image {
      * Note that the corners are interpreted as being included in the box, so
      * <tt>BBox(PointI(1, 1), PointI(2, 3))</tt> has width 2 and height 3
      */
-    class BBox : private std::pair<PointI, PointI > {
+    class BBox : private std::pair<PointI, std::pair<int, int> > {
     public:
         //! Create a BBox with origin llc and the specified dimensions
-        BBox(PointI llc=PointI(0,0),       ///< Desired lower left corner
-             int width=0,                  ///< Width of BBox (pixels)
-             int height=0                  ///< Height of BBox (pixels)
+        BBox() :
+            std::pair<PointI, std::pair<int, int> >(PointI(0,0), std::pair<int, int>(0, 0)) {} 
+
+        BBox(PointI llc,                ///< Desired lower left corner
+             int width=1,               ///< Width of BBox (pixels)
+             int height=1               ///< Height of BBox (pixels)
             ) :
-            std::pair<PointI, PointI>(llc, PointI(width, height)) {} 
+            std::pair<PointI, std::pair<int, int> >(llc, std::pair<int, int>(width, height)) {} 
         //! Create a BBox given two corners
         BBox(PointI llc,                ///< Desired lower left corner
              PointI urc                 ///< Desired upper right corner
             ) :
-            std::pair<PointI, PointI>(llc, urc - llc + 1) {}
+            std::pair<PointI, std::pair<int, int> >(llc,
+                                                    std::pair<int, int>(urc.getX() - llc.getX() + 1,
+                                                                        urc.getY() - llc.getY() + 1)) {}
 
         //! Return true iff the point lies in the BBox
         bool contains(PointI p          ///< The point to check
@@ -102,24 +107,24 @@ namespace lsst { namespace afw { namespace image {
             if (getWidth() == 0 && getHeight() == 0) {
                 first.setX(p.getX());
                 first.setY(p.getY());
-                second.setX(1);
-                second.setY(1);
+                second.first = 1;
+                second.second = 1;
 
                 return;
             }
 
             if (p.getX() < getX0()) {
-                second.setX(getWidth() + (getX0() - p.getX()));
+                second.first = getWidth() + (getX0() - p.getX());
                 first.setX(p.getX());
             } else if (p.getX() > getX1()) {
-                second.setX(p.getX() - getX0() + 1);
+                second.first = p.getX() - getX0() + 1;
             }
 
             if (p.getY() < getY0()) {
-                second.setY(getHeight() + (getY0() - p.getY()));
+                second.second = getHeight() + (getY0() - p.getY());
                 first.setY(p.getY());
             } else if (p.getY() > getY1()) {
-                second.setY(p.getY() - getY0() + 1);
+                second.second = p.getY() - getY0() + 1;
             }
         }
         //! Offset a BBox by the specified vector
@@ -128,19 +133,17 @@ namespace lsst { namespace afw { namespace image {
                   ) {
             first.setX(first.getX() + dx);
             first.setY(first.getY() + dy);
-            second.setX(second.getX());
-            second.setY(second.getY());
-
+            second = second;
             }
 
         int getX0() const { return first.getX(); } ///< Return x coordinate of lower-left corner
         int getY0() const { return first.getY(); } ///< Return y coordinate of lower-left corner
-        int getX1() const { return first.getX() + second.getX() - 1; } ///< Return x coordinate of upper-right corner
-        int getY1() const { return first.getY() + second.getY() - 1; } ///< Return y coordinate of upper-right corner
+        int getX1() const { return first.getX() + second.first - 1; } ///< Return x coordinate of upper-right corner
+        int getY1() const { return first.getY() + second.second - 1; } ///< Return y coordinate of upper-right corner
         PointI getLLC() const { return first; } ///< Return lower-left corner
         PointI getURC() const { return PointI(getX1(), getY1()); } ///< Return upper-right corner
-        int getWidth() const { return second.getX(); } ///< Return width of BBox (== <tt>X1 - X0 + 1</tt>)
-        int getHeight() const { return second.getY(); } ///< Return height of BBox (== <tt>Y1 - Y0 + 1</tt>)
+        int getWidth() const { return second.first; } ///< Return width of BBox (== <tt>X1 - X0 + 1</tt>)
+        int getHeight() const { return second.second; } ///< Return height of BBox (== <tt>Y1 - Y0 + 1</tt>)
         const std::pair<int, int> getDimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
 
         bool operator==(const BBox& rhs) const {

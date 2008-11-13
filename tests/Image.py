@@ -90,8 +90,19 @@ class ImageTestCase(unittest.TestCase):
         x1, y1 = x0 + width - 1, y0 + height - 1
         llc = afwImage.PointI(x0, y0)
         
-        bbox = afwImage.BBox(llc, width, height)
+        bbox = afwImage.BBox()
+        self.assertEqual(bbox.getWidth(), 0)
+        self.assertEqual(bbox.getHeight(), 0)
 
+        bbox = afwImage.BBox(llc)
+        self.assertEqual(bbox.getX0(), x0)
+        self.assertEqual(bbox.getY0(), y0)
+        self.assertEqual(bbox.getX1(), bbox.getX0())
+        self.assertEqual(bbox.getY1(), bbox.getY0())
+        self.assertEqual(bbox.getWidth(), 1)
+        self.assertEqual(bbox.getHeight(), 1)
+
+        bbox = afwImage.BBox(llc, width, height)
         self.assertEqual(bbox.getX0(), x0)
         self.assertEqual(bbox.getY0(), y0)
         self.assertEqual(bbox.getX1(), x1)
