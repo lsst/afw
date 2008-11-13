@@ -9,9 +9,9 @@
 // Must go Before the %include
 //
 %define %imagePtr(NAME, TYPE, PIXEL_TYPE...)
-SWIG_SHARED_PTR_DERIVED(NAME##TYPE##BasePtr, lsst::daf::base::Persistable, lsst::afw::image::ImageBase<PIXEL_TYPE>);
-SWIG_SHARED_PTR_DERIVED(NAME##TYPE##Ptr, lsst::afw::image::ImageBase<PIXEL_TYPE>, lsst::afw::image::Image<PIXEL_TYPE>);
-SWIG_SHARED_PTR(Decorated##NAME##TYPE##Ptr, lsst::afw::image::DecoratedImage<PIXEL_TYPE>);
+SWIG_SHARED_PTR_DERIVED(NAME##TYPE##Base, lsst::daf::data::LsstBase, lsst::afw::image::ImageBase<PIXEL_TYPE>);
+SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::afw::image::ImageBase<PIXEL_TYPE>, lsst::afw::image::Image<PIXEL_TYPE>);
+SWIG_SHARED_PTR(Decorated##NAME##TYPE, lsst::afw::image::DecoratedImage<PIXEL_TYPE>);
 %enddef
 
 //

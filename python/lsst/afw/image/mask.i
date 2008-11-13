@@ -11,11 +11,11 @@
 //
 // N.b. assumes that the corresponding image has been declared to swig; otherwise
 // you'll need something like
-//    SWIG_SHARED_PTR(NAME##TYPE##BasePtr, lsst::afw::image::ImageBase<PIXEL_TYPE>);
+//    SWIG_SHARED_PTR(NAME##TYPE##Base, lsst::afw::image::ImageBase<PIXEL_TYPE>);
 //
 //
 %define %maskPtr(NAME, TYPE, PIXEL_TYPE...)
-SWIG_SHARED_PTR_DERIVED(NAME##TYPE##Ptr, lsst::afw::image::ImageBase<PIXEL_TYPE>, lsst::afw::image::Mask<PIXEL_TYPE>);
+SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::afw::image::ImageBase<PIXEL_TYPE>, lsst::afw::image::Mask<PIXEL_TYPE>);
 %enddef
 
 //

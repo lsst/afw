@@ -8,7 +8,7 @@
 // Must go Before the %include
 //
 %define %maskedImagePtr(NAME, TYPE, PIXEL_TYPES...)
-SWIG_SHARED_PTR_DERIVED(NAME##TYPE##Ptr, lsst::daf::base::Persistable, lsst::afw::image::MaskedImage<PIXEL_TYPES>);
+SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::daf::data::LsstBase, lsst::afw::image::MaskedImage<PIXEL_TYPES>);
 %enddef
 
 //

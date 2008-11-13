@@ -102,25 +102,36 @@ def version(HeadURL = r"$HeadURL$"):
 
 %rename(isValid) operator bool;
 
-SWIG_SHARED_PTR(WcsPtr, lsst::afw::image::Wcs);
+SWIG_SHARED_PTR(Wcs, lsst::afw::image::Wcs);
 
 %include "lsst/afw/image/Wcs.h"
 
 /************************************************************************************************************/
 
-SWIG_SHARED_PTR_DERIVED(ExposureUPtr, lsst::daf::base::Persistable, lsst::afw::image::Exposure<boost::uint16_t>);
-SWIG_SHARED_PTR_DERIVED(ExposureIPtr, lsst::daf::base::Persistable, lsst::afw::image::Exposure<int>);
-SWIG_SHARED_PTR_DERIVED(ExposureFPtr, lsst::daf::base::Persistable, lsst::afw::image::Exposure<float>);
-SWIG_SHARED_PTR_DERIVED(ExposureDPtr, lsst::daf::base::Persistable, lsst::afw::image::Exposure<double>);
-
 %{
 #include "lsst/afw/image/Exposure.h"
 %}
 
+// Must go Before the %include
+%define %exposurePtr(TYPE, PIXEL_TYPE)
+SWIG_SHARED_PTR_DERIVED(Exposure##TYPE, lsst::daf::data::LsstBase, lsst::afw::image::Exposure<PIXEL_TYPE>);
+%enddef
+
+// Must go After the %include
+%define %exposure(TYPE, PIXEL_TYPE)
+%template(Exposure##TYPE) lsst::afw::image::Exposure<PIXEL_TYPE>;
+%lsst_persistable(lsst::afw::image::Exposure<PIXEL_TYPE>);
+%enddef
+
+%exposurePtr(U, boost::uint16_t);
+%exposurePtr(I, int);
+%exposurePtr(F, float);
+%exposurePtr(D, double);
+
 %include "lsst/afw/image/Exposure.h"
 
-%template(ExposureU)    lsst::afw::image::Exposure<boost::uint16_t>;
-%template(ExposureI)    lsst::afw::image::Exposure<int>;
-%template(ExposureF)    lsst::afw::image::Exposure<float>;
-%template(ExposureD)    lsst::afw::image::Exposure<double>;
+%exposure(U, boost::uint16_t);
+%exposure(I, int);
+%exposure(F, float);
+%exposure(D, double);
 
