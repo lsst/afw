@@ -1,5 +1,4 @@
 # -*- python -*-
-import sys
 Import('env')
 
 env.Program(["Image_1.cc"], LIBS=env.getlibs("afw"))
