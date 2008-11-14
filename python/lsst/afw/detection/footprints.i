@@ -4,15 +4,11 @@
 #include "lsst/afw/detection/Footprint.h"
 %}
 
-%import "lsst/afw/image/image.i"
-%import "lsst/afw/image/mask.i"
-%import "lsst/afw/image/maskedImage.i"
-
-SWIG_SHARED_PTR(PeakPtr,      lsst::afw::detection::Peak);
-SWIG_SHARED_PTR(FootprintPtr, lsst::afw::detection::Footprint);
-SWIG_SHARED_PTR(SpanPtr,      lsst::afw::detection::Span);
-SWIG_SHARED_PTR(DetectionSetFPtr, lsst::afw::detection::DetectionSet<float, lsst::afw::image::MaskPixel>);
-SWIG_SHARED_PTR(DetectionSetDPtr, lsst::afw::detection::DetectionSet<double, lsst::afw::image::MaskPixel>);
+SWIG_SHARED_PTR(Peak,      lsst::afw::detection::Peak);
+SWIG_SHARED_PTR(Footprint, lsst::afw::detection::Footprint);
+SWIG_SHARED_PTR(Span,      lsst::afw::detection::Span);
+SWIG_SHARED_PTR(DetectionSetF, lsst::afw::detection::DetectionSet<float, lsst::afw::image::MaskPixel>);
+SWIG_SHARED_PTR(DetectionSetD, lsst::afw::detection::DetectionSet<double, lsst::afw::image::MaskPixel>);
 
 %include "lsst/afw/detection/Peak.h"
 %include "lsst/afw/detection/Footprint.h"
@@ -36,7 +32,3 @@ SWIG_SHARED_PTR(DetectionSetDPtr, lsst::afw::detection::DetectionSet<double, lss
     }
 }
 
-/******************************************************************************/
-// Local Variables: ***
-// eval: (setq indent-tabs-mode nil) ***
-// End: ***

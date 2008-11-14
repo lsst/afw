@@ -21,9 +21,9 @@ Basic routines to talk to ds9
 
 %include "lsst/p_lsstSwig.i"
 
-%lsst_exceptions();
-
 %import "lsst/afw/image/imageLib.i"
+
+%lsst_exceptions();
 
 %include "simpleFits.h"
 

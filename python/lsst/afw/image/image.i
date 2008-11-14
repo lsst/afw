@@ -92,7 +92,7 @@ SWIG_SHARED_PTR(Decorated##NAME##TYPE, lsst::afw::image::DecoratedImage<PIXEL_TY
 
 /************************************************************************************************************/
 
-%ignore swap;
+%ignore lsst::afw::image::ImageBase::swap;
 %ignore lsst::afw::image::ImageBase::begin;
 %ignore lsst::afw::image::ImageBase::end;
 %ignore lsst::afw::image::ImageBase::rbegin;

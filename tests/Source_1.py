@@ -32,7 +32,7 @@ class SourceTestCase(unittest.TestCase):
             ds = afwDet.Source()
             ds.setId(m)
             ds.setRa(m*20)
-            self.dsv2.push_back(ds)
+            self.dsv2.append(ds)
 
     def tearDown(self):
         del self.dsv1
@@ -55,34 +55,37 @@ class SourceTestCase(unittest.TestCase):
         assert dsv2Copy == self.dsv1
         dsv1Copy.swap(dsv2Copy)
         if dsv1Copy.size() == 0:
-            dsv1Copy.push_back(afwDet.Source())
+            dsv1Copy.append(afwDet.Source())
         else:
-            dsv1Copy.pop_back()
+            dsv1Copy.pop()
         ds = afwDet.Source()
         ds.setId(123476519374511136)
-        dsv2Copy.push_back(ds)
+        dsv2Copy.append(ds)
         assert dsv1Copy != self.dsv1
         assert dsv2Copy != self.dsv2
 
     def testInsertErase(self):
         dsv1Copy = afwDet.SourceVec(self.dsv1)
-        dsv1Copy.insert(dsv1Copy.begin() + 8, afwDet.Source())
-        dsv1Copy.insert(dsv1Copy.begin() + 9, 3, afwDet.Source())
-        dsv1Copy.erase(dsv1Copy.begin() + 8)
-        dsv1Copy.erase(dsv1Copy.begin() + 8, dsv1Copy.begin() + 11)
+	s = afwDet.Source()
+        dsv1Copy.insert(8, s)
+        dsv1Copy.insert(8, s)
+        dsv1Copy.insert(8, s)
+        dsv1Copy.insert(8, s)
+        del dsv1Copy[8]
+        del dsv1Copy[8:11]
         assert dsv1Copy == self.dsv1
 
     def testSlice(self):
-        slice = self.dsv1[0:3]
+        s = self.dsv1[0:3]
         j = 1
-        for i in slice:
+        for i in s:
             print i
             assert i.getId() == j
             j += 1
 
     def testPersistence(self):
         if dafPers.DbAuth.available():
-            pol  = dafPolicy.PolicyPtr()
+            pol  = dafPolicy.Policy()
             pers = dafPers.Persistence.getPersistence(pol)
             loc  =  dafPers.LogicalLocation("mysql://lsst10.ncsa.uiuc.edu:3306/test")
             dp = dafBase.DataProperty.createPropertyNode("root")
@@ -91,10 +94,10 @@ class SourceTestCase(unittest.TestCase):
             dp.addProperty(dafBase.DataProperty("numSlices", 1))
             dp.addProperty(dafBase.DataProperty("itemName", "Source"))
             stl = dafPers.StorageList()
-            stl.push_back(pers.getPersistStorage("DbStorage", loc))
+            stl.append(pers.getPersistStorage("DbStorage", loc))
             pers.persist(self.dsv1, stl, dp)
             stl = dafPers.StorageList()
-            stl.push_back(pers.getRetrieveStorage("DbStorage", loc))
+            stl.append(pers.getRetrieveStorage("DbStorage", loc))
             persistable = pers.unsafeRetrieve("SourceVector", stl, dp)
             res = afwDet.SourceVec.swigConvert(persistable)
             afwDet.dropAllVisitSliceTables(loc, pol, dp)

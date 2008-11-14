@@ -1,6 +1,6 @@
 # -*- python -*-
 Import("env")
 
-env.CheckSwig("python", ilang="c++", includedProducts="afw utils daf_base")
+env.CheckSwig("python", ilang="c++", includedProducts="utils daf_base pex_policy daf_persistence daf_data security afw")
 env.LoadableModuleIncomplete("_detectionLib", Split("detectionLib.i"), LIBS=env.getlibs("afw"))
 

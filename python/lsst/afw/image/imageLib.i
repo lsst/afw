@@ -100,8 +100,6 @@ def version(HeadURL = r"$HeadURL$"):
 #include "lsst/afw/image/Wcs.h"
 %}
 
-%rename(isValid) operator bool;
-
 SWIG_SHARED_PTR(Wcs, lsst::afw::image::Wcs);
 
 %include "lsst/afw/image/Wcs.h"
