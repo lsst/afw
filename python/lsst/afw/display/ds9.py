@@ -104,9 +104,9 @@ def initDS9(execDs9 = True):
    try:
       ds9Cmd("iconify no; raise")
       ds9Cmd("wcs wcsa")                # include the pixel coordinates WCS (WCSA)
-   except IOError:
+   except IOError, e:
       if execDs9:
-         print "ds9 doesn't appear to be running, I'll exec it for you"
+         print "ds9 doesn't appear to be running (%s), I'll exec it for you" % e
          if not re.search('xpa', os.environ['PATH']):
             raise Ds9Error, 'You need the xpa binaries in your path to use ds9 with python'
 
