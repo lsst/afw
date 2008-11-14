@@ -13,7 +13,7 @@ namespace {
     double const NaN = std::numeric_limits<double>::quiet_NaN();
 }
 
-/*
+/**
  * Constructor for Statistics
  *
  * Most of the actual work is done in this constructor; the results
