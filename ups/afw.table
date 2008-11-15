@@ -1,5 +1,6 @@
 setupRequired(daf_data)
-setupRequired(vw >= 1.0.1+2)
+setupRequired(utils)
+setupRequired(boost >= 1.35.0)
 setupRequired(cfitsio)
 setupRequired(wcslib)
 setupRequired(xpa)

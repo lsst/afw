@@ -42,12 +42,13 @@ using boost::int64_t;
 // forward declarations for formatters
 
 
-/*!
-    Contains attributes for Difference-Image-Analysis Source records. This class is useful
-    when an unadorned data structure is required (e.g. for placement into shared memory) or
-    is all that is necessary.
+/**
+   \brief Contains attributes for Difference-Image-Analysis Source records.
 
-    \p
+   This class is useful
+   when an unadorned data structure is required (e.g. for placement into shared memory) or
+   is all that is necessary.
+
     The C++ fields are derived from the LSST DC2 MySQL schema, which is reproduced below:
 
     \code
@@ -109,7 +110,6 @@ using boost::int64_t;
     ) ENGINE=MyISAM;
     \endcode
 
-    \p
     Note that the C++ fields are listed in a different order than their corresponding database
     columns: fields are sorted by type size to minimize the number of padding bytes that the
     compiler must insert to meet field alignment requirements.
@@ -411,8 +411,8 @@ inline bool operator!=(Source const & d1, Source const & d2) {
 // Classes that require special handling in the SWIG interface file
 #ifndef SWIG
 
-/*!
-    A persistable container of Source instances (implemented using std::vector).
+/**
+ * \brief A persistable container of Source instances (implemented using std::vector).
  */
 class SourceVector :
     public lsst::daf::base::Persistable,

@@ -8,8 +8,6 @@
  *
  * @ingroup afw
  */
-#include "vw/Image.h"
-
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
 
@@ -26,11 +24,11 @@ lsst::afw::math::AnalyticKernel::AnalyticKernel()
  * @brief Construct a spatially invariant AnalyticKernel
  */
 lsst::afw::math::AnalyticKernel::AnalyticKernel(
-    KernelFunction const &kernelFunction,
-    unsigned int cols,
-    unsigned int rows)
+    int width,
+    int height,
+    KernelFunction const &kernelFunction)
 :
-    Kernel(cols, rows, kernelFunction.getNParameters()),
+    Kernel(width, height, kernelFunction.getNParameters()),
     _kernelFunctionPtr(kernelFunction.copy())
 {}
 
@@ -38,12 +36,12 @@ lsst::afw::math::AnalyticKernel::AnalyticKernel(
  * @brief Construct a spatially varying AnalyticKernel, replicating a spatial function once per kernel function parameter
  */
 lsst::afw::math::AnalyticKernel::AnalyticKernel(
+    int width,
+    int height,
     KernelFunction const &kernelFunction,
-    unsigned int cols,
-    unsigned int rows,
     Kernel::SpatialFunction const &spatialFunction)
 :
-    Kernel(cols, rows, kernelFunction.getNParameters(), spatialFunction),
+    Kernel(width, height, kernelFunction.getNParameters(), spatialFunction),
     _kernelFunctionPtr(kernelFunction.copy())
 {}
 
@@ -53,12 +51,12 @@ lsst::afw::math::AnalyticKernel::AnalyticKernel(
  * @throw lsst::pex::exceptions::InvalidParameter if the length of spatialFunctionList != # kernel function parameters.
  */
 lsst::afw::math::AnalyticKernel::AnalyticKernel(
+    int width,
+    int height,
     KernelFunction const &kernelFunction,
-    unsigned int cols,
-    unsigned int rows,
     std::vector<Kernel::SpatialFunctionPtr> const &spatialFunctionList)
 :
-    Kernel(cols, rows, spatialFunctionList),
+    Kernel(width, height, spatialFunctionList),
     _kernelFunctionPtr(kernelFunction.copy())
 {
     if (kernelFunction.getNParameters() != spatialFunctionList.size()) {
@@ -66,31 +64,32 @@ lsst::afw::math::AnalyticKernel::AnalyticKernel(
     }
 }
 
-void lsst::afw::math::AnalyticKernel::computeImage(
+double lsst::afw::math::AnalyticKernel::computeImage(
     lsst::afw::image::Image<PixelT> &image,
-    PixelT &imSum,
     bool doNormalize,
     double x,
     double y
 ) const {
-    typedef lsst::afw::image::Image<PixelT>::pixel_accessor pixelAccessor;
-    if ((image.getCols() != this->getCols()) || (image.getRows() != this->getRows())) {
+    typedef lsst::afw::image::Image<PixelT>::x_iterator x_iterator;
+    
+    if (image.getDimensions() != this->getDimensions()) {
         throw lsst::pex::exceptions::InvalidParameter("image is the wrong size");
     }
     if (this->isSpatiallyVarying()) {
         this->setKernelParametersFromSpatialModel(x, y);
     }
-    pixelAccessor imRow = image.origin();
-    double xOffset = - static_cast<double>(this->getCtrCol());
-    double yOffset = - static_cast<double>(this->getCtrRow());
-    imSum = 0;
-    for (unsigned int row = 0; row < this->getRows(); ++row, imRow.next_row()) {
-        double y = static_cast<double>(row) + yOffset;
-        pixelAccessor imCol = imRow;
-        for (unsigned int col = 0; col < this->getCols(); ++col, imCol.next_col()) {
-            double x = static_cast<double>(col) + xOffset;
-            PixelT pixelVal = (*_kernelFunctionPtr)(x, y);
-            *imCol = pixelVal;
+
+    double xOffset = -this->getCtrX();
+    double yOffset = -this->getCtrY();
+
+    double imSum = 0;
+    for (int y = 0; y != this->getHeight(); ++y) {
+        double const fy = y + yOffset;
+        lsst::afw::image::Image<PixelT>::x_iterator ptr = image.row_begin(y);
+        for (int x = 0; x != this->getWidth(); ++x, ++ptr) {
+            double const fx = x + xOffset;
+            PixelT const pixelVal = (*_kernelFunctionPtr)(fx, fy);
+            *ptr = pixelVal;
             imSum += pixelVal;
         }
     }
@@ -98,6 +97,8 @@ void lsst::afw::math::AnalyticKernel::computeImage(
         image /= imSum;
         imSum = 1;
     }
+
+    return imSum;
 }
 
 /**

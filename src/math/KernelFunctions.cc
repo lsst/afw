@@ -28,18 +28,18 @@ lsst::afw::math::printKernel(
     std::string pixelFmt                ///< format for pixel values
 ) {
     typedef lsst::afw::math::Kernel::PixelT PixelT;
-    typedef lsst::afw::image::Image<PixelT>::pixel_accessor imageAccessorType;
-    PixelT kSum;
-    lsst::afw::image::Image<PixelT> kImage = kernel.computeNewImage(kSum, doNormalize, x, y);
-    imageAccessorType imRow = kImage.origin();
-    imRow.advance(0, kImage.getRows()-1);
-    for (unsigned int row=0; row < kImage.getRows(); ++row, imRow.prev_row()) {
-        imageAccessorType imCol = imRow;
-        for (unsigned int col = 0; col < kImage.getCols(); ++col, imCol.next_col()) {
-            std::cout << boost::format(pixelFmt) % (*imCol) << " ";
+
+    lsst::afw::image::Image<PixelT> kImage(kernel.getDimensions());
+    double kSum = kernel.computeImage(kImage, doNormalize, x, y);
+
+    for (int y = kImage.getHeight() - 1; y >= 0; --y) {
+        for (lsst::afw::image::Image<PixelT>::const_x_iterator ptr = kImage.row_begin(y);
+             ptr != kImage.row_end(y); ++ptr) {
+            std::cout << boost::format(pixelFmt) % *ptr << " ";
         }
         std::cout << std::endl;
     }
+
     if (doNormalize && std::abs(static_cast<double>(kSum) - 1.0) > 1.0e-5) {
         std::cout << boost::format("Warning! Sum of all pixels = %9.5f != 1.0\n") % kSum;
     }

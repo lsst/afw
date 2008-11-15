@@ -6,6 +6,7 @@
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/math/FunctionLibrary.h"
 #include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/math/KernelFunctions.h"
 
@@ -15,7 +16,7 @@ namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
 
 int main(int argc, char **argv) {
-    typedef afwMath::Kernel::PixelT pixelType;
+    typedef afwMath::Kernel::Pixel pixelType;
     unsigned int kernelCols = 6;
     unsigned int kernelRows = 5;
     
@@ -48,16 +49,15 @@ int main(int argc, char **argv) {
         }
         
         // read in fits file
-        afwImage::MaskedImage<pixelType, afwImage::maskPixelType> mImage;
-        mImage.readFits(argv[1]);
+        afwImage::MaskedImage<pixelType> mImage(argv[1]);
         
         // construct kernel
         afwMath::GaussianFunction2<pixelType> gaussFunc(sigma, sigma);
-        afwMath::AnalyticKernel kernel(gaussFunc, kernelCols, kernelRows);
+        afwMath::AnalyticKernel kernel(kernelCols, kernelRows, gaussFunc);
     
         // convolve
-        afwImage::MaskedImage<pixelType, afwImage::maskPixelType>
-            resMaskedImage = afwMath::convolveNew(mImage, kernel, edgeMaskBit, true);
+        afwImage::MaskedImage<pixelType> resMaskedImage(mImage.getDimensions());
+        afwMath::convolve(resMaskedImage, mImage, kernel, edgeMaskBit, true);
     
         // write results
         resMaskedImage.writeFits(outFile);

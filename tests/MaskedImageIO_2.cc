@@ -15,6 +15,7 @@ using lsst::daf::base::DataProperty;
 using lsst::daf::data::FitsFormatter;
 
 namespace pexEx = lsst::pex::exceptions;
+namespace image = lsst::afw::image;
 
 /*
  * Make this a subroutine so that locals go out of scope as part of test
@@ -22,18 +23,13 @@ namespace pexEx = lsst::pex::exceptions;
  */
 void test(char *name) {
 
-    typedef lsst::afw::image::maskPixelType MaskPixelType;
+    typedef image::MaskPixel MaskPixelType;
     typedef float ImagePixelType;
 
-    lsst::afw::image::Mask<MaskPixelType>::MaskPlaneDict LSSTPlaneDefs;
-
-    LSSTPlaneDefs["BAD"] = 0;
-    LSSTPlaneDefs["SAT"] = 1;
-    LSSTPlaneDefs["EDGE"] = 2;
-    LSSTPlaneDefs["OBJ"] = 3;
-
-    lsst::afw::image::MaskedImage<ImagePixelType, MaskPixelType> testMasked(LSSTPlaneDefs);
-    testMasked.readFits(name, true);   // second arg says to conform mask planes
+    const int hdu = 0;
+    lsst::daf::base::DataProperty::PtrType metaData(static_cast<lsst::daf::base::DataProperty *>(NULL));
+    bool const conformMask = true;      // use mask definitions from the file
+    image::MaskedImage<ImagePixelType, MaskPixelType> testMasked(name, hdu, metaData, conformMask);
 
     testMasked.writeFits("testout");
 }

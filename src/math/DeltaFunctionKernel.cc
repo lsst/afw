@@ -8,8 +8,6 @@
  */
 #include <vector>
 
-#include "vw/Image.h"
-
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
 
@@ -17,55 +15,45 @@
  * @brief Construct a spatially invariant DeltaFunctionKernel
  */
 lsst::afw::math::DeltaFunctionKernel::DeltaFunctionKernel(
-    unsigned int pixelCol,  ///< active pixel colum (0 is left column)
-    unsigned int pixelRow,  ///< active pixel row (0 is bottom row)
-    unsigned int cols,  ///< kernel size (columns)
-    unsigned int rows)  ///< kernel size (rows)
+    int width,                          ///< kernel size (columns)
+    int height,                         ///< kernel size (rows)
+    lsst::afw::image::PointI point      //< Active pixel
+                                                         )
 :
-    Kernel(cols, rows, 0),
-    _pixel(pixelCol, pixelRow)
+    Kernel(width, height, 0),
+    _pixel(point.getX(), point.getY())
 {
-#if 0
-    std::vector<double> params;
-    params.push_back(pixelCol);
-    params.push_back(pixelRow);
-    setRHLParameters(params);
-#endif
-
-    if ((pixelCol >= cols) || (pixelRow >= rows)) {
+    if (point.getX() < 0 || point.getX() >= width || point.getY() < 0 || point.getY() >= height) {
         throw lsst::pex::exceptions::InvalidParameter("Active pixel lies outside image");
     }
 }
 
-void lsst::afw::math::DeltaFunctionKernel::computeImage(
+double lsst::afw::math::DeltaFunctionKernel::computeImage(
     lsst::afw::image::Image<PixelT> &image,
-    PixelT &imSum,
     bool doNormalize,
     double x,
     double y
 ) const {
-    typedef lsst::afw::image::Image<PixelT>::pixel_accessor pixelAccessor;
-    if ((image.getCols() != this->getCols()) || (image.getRows() != this->getRows())) {
+    if (image.getDimensions() != this->getDimensions()) {
         throw lsst::pex::exceptions::InvalidParameter("image is the wrong size");
     }
 
-    image *= 0;
-    pixelAccessor imPtr = image.origin();
+    const int pixelX = getPixel().first; // active pixel in Kernel
+    const int pixelY = getPixel().second;
 
-    const int pixelCol = getPixel().first; // active pixel in Kernel
-    const int pixelRow = getPixel().second;
+    image = 0;
+    *image.xy_at(pixelX, pixelY) = 1;
 
-    imPtr.advance(pixelCol, pixelRow);
-    *imPtr = imSum = 1;
+    return 1;
 }
 
 std::string lsst::afw::math::DeltaFunctionKernel::toString(std::string prefix) const {
-    const int pixelCol = getPixel().first; // active pixel in Kernel
-    const int pixelRow = getPixel().second;
+    const int pixelX = getPixel().first; // active pixel in Kernel
+    const int pixelY = getPixel().second;
 
     std::ostringstream os;            
     os << prefix << "DeltaFunctionKernel:" << std::endl;
-    os << prefix << "Pixel (c,r) " << pixelCol << "," << pixelRow << ")" << std::endl;
+    os << prefix << "Pixel (c,r) " << pixelX << "," << pixelY << ")" << std::endl;
     os << Kernel::toString(prefix + "\t");
     return os.str();
 };

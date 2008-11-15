@@ -27,7 +27,7 @@ namespace lsst {
 namespace afw {
 namespace formatters {
 
-template<typename ImagePixelT, typename MaskPixelT>
+template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 class MaskedImageFormatter : public lsst::daf::persistence::Formatter {
 public:       
     virtual ~MaskedImageFormatter(void);
@@ -54,7 +54,7 @@ public:
     template <class Archive>
     static void delegateSerialize(
         Archive& ar,
-        int const version,
+        unsigned int const version,
         lsst::daf::base::Persistable* persistable
     );
 private:

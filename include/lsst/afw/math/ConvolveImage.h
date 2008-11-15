@@ -17,9 +17,6 @@
  *
  * @ingroup afw
  */
-#include "vw/Image.h"
-#include "vw/Math/BBox.h"
-
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/Kernel.h"
 
@@ -27,78 +24,64 @@ namespace lsst {
 namespace afw {
 namespace math {
 
-    template <typename OutPixelT, typename InPixelT>
-    inline void apply(
-        OutPixelT &outPixel,
-        typename lsst::afw::image::Image<InPixelT>::pixel_accessor const &imageAccessor,
-        typename lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::pixel_accessor const &kernelAccessor,
-        unsigned int cols,
-        unsigned int rows
+    template <typename OutImageT, typename InImageT>
+    inline typename OutImageT::SinglePixel apply(
+        typename InImageT::const_xy_locator& inLocator,
+        typename lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::const_xy_locator& kernelLocator,
+        int kWidth, int kHeight);
+    
+    template <typename OutImageT, typename InImageT>
+    inline typename OutImageT::SinglePixel apply(
+        typename InImageT::const_xy_locator& inImage,
+        std::vector<lsst::afw::math::Kernel::PixelT> const& kernelColList,
+        std::vector<lsst::afw::math::Kernel::PixelT> const& kernelRowList
     );
     
-    template <typename OutPixelT, typename InPixelT>
-    inline void apply(
-        OutPixelT &outPixel,
-        typename lsst::afw::image::Image<InPixelT>::pixel_accessor const &imageAccessor,
-        std::vector<lsst::afw::math::Kernel::PixelT> const &kernelColList,
-        std::vector<lsst::afw::math::Kernel::PixelT> const &kernelRowList
-    );
-    
-    template <typename OutPixelT, typename InPixelT>
+    template <typename OutImageT, typename InImageT>
     void basicConvolve(
-        lsst::afw::image::Image<OutPixelT> &convolvedImage,
-        lsst::afw::image::Image<InPixelT> const &inImage,
-        lsst::afw::math::Kernel const &kernel,
+        OutImageT& convolvedImage,
+        InImageT const& inImage,
+        lsst::afw::math::Kernel const& kernel,
         bool doNormalize
     );
     
-    template <typename OutPixelT, typename InPixelT>
+    template <typename OutImageT, typename InImageT>
     void basicConvolve(
-        lsst::afw::image::Image<OutPixelT> &convolvedImage,
-        lsst::afw::image::Image<InPixelT> const &inImage,
-        lsst::afw::math::DeltaFunctionKernel const &kernel,
+        OutImageT& convolvedImage,
+        InImageT const& inImage,
+        lsst::afw::math::DeltaFunctionKernel const& kernel,
         bool doNormalize
     );
     
-    template <typename OutPixelT, typename InPixelT>
+    template <typename OutImageT, typename InImageT>
     void basicConvolve(
-        lsst::afw::image::Image<OutPixelT> &convolvedImage,
-        lsst::afw::image::Image<InPixelT> const &inImage,
-        lsst::afw::math::SeparableKernel const &kernel,
+        OutImageT& convolvedImage,
+        InImageT const& inImage,
+        lsst::afw::math::SeparableKernel const& kernel,
         bool doNormalize
     );
     
-    template <typename OutPixelT, typename InPixelT, typename KernelT>
+    template <typename OutImageT, typename InImageT, typename KernelT>
     void convolve(
-        lsst::afw::image::Image<OutPixelT> &convolvedImage,
-        lsst::afw::image::Image<InPixelT> const &inImage,
-        KernelT const &kernel,
-        bool doNormalize
-    );
-    
-    template <typename InPixelT, typename KernelT>
-    lsst::afw::image::Image<InPixelT> convolveNew(
-        lsst::afw::image::Image<InPixelT> const &inImage,
-        KernelT const &kernel,
-        bool doNormalize
+        OutImageT& convolvedImage,
+        InImageT const& inImage,
+        KernelT const& kernel,
+        bool doNormalize,
+        int edgeBit=-1
     );
 
-    template <typename OutPixelT, typename InPixelT>
+    template <typename OutImageT, typename InImageT>
     void convolveLinear(
-        lsst::afw::image::Image<OutPixelT> &convolvedImage,
-        lsst::afw::image::Image<InPixelT> const &inImage,
-        lsst::afw::math::LinearCombinationKernel const &kernel
-    );
-
-    template <typename InPixelT>
-    lsst::afw::image::Image<InPixelT> convolveLinearNew(
-        lsst::afw::image::Image<InPixelT> const &inImage,
-        lsst::afw::math::LinearCombinationKernel const &kernel
+        OutImageT& convolvedImage,
+        InImageT const& inImage,
+        lsst::afw::math::LinearCombinationKernel const& kernel,
+        int edgeBit=-1
     );
 }}}   // lsst::afw::math
-    
-#ifndef SWIG // don't bother SWIG with .cc files
-#include "lsst/afw/math/ConvolveImage.cc"
-#endif
+
+//
+// lsst/afw/math/ConvolveImage.cc has moved to src/math and all needed convolutions
+// are explicitly instantiated --- probably with full and aggressive optimisation
+//
 
 #endif // !defined(LSST_AFW_MATH_CONVOLVEIMAGE_H)

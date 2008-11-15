@@ -1,6 +1,7 @@
-#
-# XPA
-#
+##
+## \file
+## \brief Definitions to talk to ds9 from python
+
 import os, re, math, sys, time
 
 try: import xpa
@@ -9,6 +10,7 @@ except: print "Cannot import xpa"
 import displayLib
 import lsst.afw.image as afwImage
 
+## An error talking to ds9
 class Ds9Error(IOError):
     """Some problem talking to ds9"""
 
@@ -102,9 +104,9 @@ def initDS9(execDs9 = True):
    try:
       ds9Cmd("iconify no; raise")
       ds9Cmd("wcs wcsa")                # include the pixel coordinates WCS (WCSA)
-   except IOError:
+   except IOError, e:
       if execDs9:
-         print "ds9 doesn't appear to be running, I'll exec it for you"
+         print "ds9 doesn't appear to be running (%s), I'll exec it for you" % e
          if not re.search('xpa', os.environ['PATH']):
             raise Ds9Error, 'You need the xpa binaries in your path to use ds9 with python'
 
@@ -150,13 +152,14 @@ system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
          
    ds9Cmd("frame %d" % frame)
 
-   if re.search("::MaskedImage<", data.repr()): # it's a MaskedImage; display the Image and overlay the Mask
+   if re.search("::DecoratedImage<", data.__repr__()): # it's a DecorateImage; display it
+       _mtv(data.getImage(), wcs, False)
+   elif re.search("::MaskedImage<", data.__repr__()): # it's a MaskedImage; display the Image and overlay the Mask
        _mtv(data.getImage(), wcs, False)
        mtv(data.getMask(), frame, False, wcs, False)
-   elif re.search("::Mask<", data.repr()): # it's a Mask; display it, bitplane by bitplane
+   elif re.search("::Mask<", data.__repr__()): # it's a Mask; display it, bitplane by bitplane
        nMaskPlanes = data.getNumPlanesUsed()
        maskPlanes = data.getMaskPlaneDict()
-       cols, rows = data.getCols(), data.getRows()
 
        planes = {}                      # build inverse dictionary
        for key in maskPlanes.keys():
@@ -168,7 +171,7 @@ system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
                if not getMaskPlaneVisibility(planes[p]):
                    continue
 
-               mask = data.getSubMask(afwImage.BBox2i(0, 0, cols, rows)) # the only way to get a copy
+               mask = afwImage.MaskU(data, True)
                mask &= (1 << p)
 
                color = getMaskPlaneColor(planes[p])
@@ -182,10 +185,10 @@ system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
                setMaskColor(color)
                _mtv(mask, wcs, True)
        return
-   elif re.search("::Image<", data.repr()): # it's an Image; display it
+   elif re.search("::Image<", data.__repr__()): # it's an Image; display it
        _mtv(data, wcs, False)
    else:
-       raise RuntimeError, "Unsupported type %s" % data.repr()
+       raise RuntimeError, "Unsupported type %s" % data.__repr__()
 
 def _mtv(data, wcs=None, isMask=False):
    """Internal routine to display an Image or Mask on a DS9 display"""
@@ -193,6 +196,8 @@ def _mtv(data, wcs=None, isMask=False):
    if True:
        if isMask:
            xpa_cmd = "xpaset ds9 fits mask"
+           if re.search(r"unsigned short|boost::uint16_t", data.__str__()):
+               data |= 0x8000;          # Hack.  ds9 mis-handles BZERO/BSCALE in masks. This is a copy we're modifying
        else:
            xpa_cmd = "xpaset ds9 fits"
            
@@ -202,10 +207,7 @@ def _mtv(data, wcs=None, isMask=False):
 
    try:
        #import pdb; pdb.set_trace()
-       try:
-           displayLib.writeFitsImage(pfd.fileno(), data, wcs)
-       except NotImplementedError:
-           displayLib.writeFitsImage(pfd.fileno(), data.get(), wcs)
+       displayLib.writeFitsImage(pfd.fileno(), data, wcs)
    except Exception, e:
        try:
            pfd.close()

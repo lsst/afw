@@ -104,8 +104,11 @@ lsst::daf::base::DataProperty::PtrType
 WcsFormatter::generateDataProperty(Wcs const& wcs) {
     // Only generates DP for the first wcsInfo.
     using lsst::daf::base::DataProperty;
-    DataProperty::PtrType wcsDP =
-        lsst::daf::base::DataProperty::createPropertyNode("Wcs");
+    DataProperty::PtrType wcsDP = lsst::daf::base::DataProperty::createPropertyNode("Wcs");
+    if (!wcs) {                         // nothing to add
+        return wcsDP;
+    }
+
     wcsDP->addProperty(DataProperty("NAXIS", wcs._wcsInfo[0].naxis));
     wcsDP->addProperty(DataProperty("EQUINOX", wcs._wcsInfo[0].equinox));
     wcsDP->addProperty(DataProperty("RADECSYS", std::string(wcs._wcsInfo[0].radesys)));

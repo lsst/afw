@@ -2,13 +2,16 @@
 #include <sstream>
 #include <ctime>
 
-#include "vw/Image.h"
+#include "lsst/afw/image.h"
+
+namespace image = lsst::afw::image;
 
 int main(int argc, char **argv) {
     typedef float imageType;
-    typedef vw::ImageView<imageType>::pixel_accessor accessorType;
-    const unsigned DefNIter = 100;
-    const unsigned DefNCols = 1024;
+    typedef image::Image<imageType>::x_iterator iteratorType;
+
+    int const DefNIter = 100;
+    int const DefNCols = 1024;
 
     if ((argc == 2) && (argv[1][0] == '-')) {
         std::cout << "Usage: timePixelAccessor [nIter [nCols [nRows]]]" << std::endl;
@@ -18,31 +21,28 @@ int main(int argc, char **argv) {
         return 1;
     }
     
-    unsigned nIter = DefNIter;
+    int nIter = DefNIter;
     if (argc > 1) {
         std::istringstream(argv[1]) >> nIter;
     }
-    unsigned nCols = DefNCols;
+    int nCols = DefNCols;
     if (argc > 2) {
         std::istringstream(argv[2]) >> nCols;
     }
-    unsigned nRows = nCols;
+    int nRows = nCols;
     if (argc > 3) {
         std::istringstream(argv[3]) >> nRows;
     }
     
-    vw::ImageView<imageType> image(nCols, nRows);
-    accessorType imOrigin = image.origin();
-    
+    image::Image<imageType> image(nCols, nRows);
+
     std::cout << "Cols\tRows\tMPix\tSecPerIter\tSecPerIterPerMPix" << std::endl;
     
     clock_t startTime = clock();
-    for (unsigned iter = 0; iter < nIter; ++iter) {
-        accessorType imRow = imOrigin;
-        for (unsigned row = 0; row < nRows; row++, imRow.next_row()) {
-            accessorType imCol = imRow;
-            for (unsigned col = 0; col < nCols; col++, imCol.next_col()) {
-                *imCol += 1.0;
+    for (int iter = 0; iter < nIter; ++iter) {
+        for (int y = 0; y != nRows; ++y) {
+            for (iteratorType ptr = image.row_begin(y), end = image.row_end(y); ptr != end; ++ptr) {
+                (*ptr)[0] += 1.0;
             }
         }
     }

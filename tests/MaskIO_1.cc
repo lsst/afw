@@ -15,10 +15,9 @@ namespace afwImage = lsst::afw::image;
  */
 void test(char *name) {
 
-    typedef afwImage::maskPixelType maskPixelType;
+    typedef afwImage::MaskPixel MaskPixel;
 
-    afwImage::Mask<maskPixelType> testMask;
-    testMask.readFits(name);
+    afwImage::Mask<MaskPixel> testMask(name);
 
     // check whether Mask planes got setup right from FITS header...
     cout << "MaskPlanes from FITS header:" << endl;

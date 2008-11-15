@@ -21,17 +21,16 @@ namespace pexEx = lsst::pex::exceptions;
  */
 void test(char *name) {
 
-    typedef lsst::afw::image::maskPixelType MaskPixelType;
+    typedef lsst::afw::image::MaskPixel MaskPixelType;
     typedef float ImagePixelType;
 
-    lsst::afw::image::MaskedImage<ImagePixelType, MaskPixelType> testMasked;
-    testMasked.readFits(name);
-
-    DataProperty::PtrType metaDataPtr = testMasked.getImage()->getMetaData();
+    DataProperty::PtrType metaDataPtr(DataProperty::createPropertyNode("FitsMetaData"));
+    int const hdu = 0;
+    lsst::afw::image::MaskedImage<ImagePixelType, MaskPixelType> testMasked(name, hdu, metaDataPtr);
 
     Trace("MaskedImageIO_1", 1,
-        boost::format("Number of FITS header cards: %d") 
-            % FitsFormatter::countFITSHeaderCards(metaDataPtr, false));
+          boost::format("Number of FITS header cards: %d") 
+          % FitsFormatter::countFITSHeaderCards(metaDataPtr, false));
 
     Trace("MaskedImageIO_1", 3,
         boost::format("FITS metadata string: %s") 
@@ -39,14 +38,14 @@ void test(char *name) {
 
     lsst::afw::image::Wcs testWcs(metaDataPtr);
 
-    lsst::afw::image::Coord2D pix, sky;
+    lsst::afw::image::PointD pix, sky;
 
 //     pix[0] = testMasked.getCols() / 2.0;
 //     pix[1] = testMasked.getRows() / 2.0;
     pix[0] = 500.0;
     pix[1] = 1000.0;
 
-    testWcs.colRowToRaDec(pix, sky);
+    sky = testWcs.colRowToRaDec(pix);
 
     Trace("MaskedImageIO_1", 1,
           boost::format("pix: %lf %lf") % pix[0] % pix[1]);
@@ -54,7 +53,7 @@ void test(char *name) {
     Trace("MaskedImageIO_1", 1,
           boost::format("sky: %lf %lf") % sky[0] % sky[1]);
 
-    testWcs.raDecToColRow(sky, pix);
+    sky = testWcs.raDecToColRow(pix);
 
     Trace("MaskedImageIO_1", 1,
           boost::format("pix: %lf %lf") % pix[0] % pix[1]);

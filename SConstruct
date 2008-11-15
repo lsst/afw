@@ -12,11 +12,9 @@ env = scons.makeEnv(
         ["boost", "boost/version.hpp", "boost_system:C++"],
         ["boost", "boost/version.hpp", "boost_filesystem:C++"],
         ["boost", "boost/regex.hpp", "boost_regex:C++"],
+        ["boost", "boost/filesystem.hpp", "boost_system:C++"],
         ["boost", "boost/serialization/base_object.hpp", "boost_serialization:C++"],
-        ["vw", "vw/Core.h", "vw:C++"],
-        ["vw", "vw/Core.h", "vwCore:C++"],
-        ["vw", "vw/FileIO.h", "vwFileIO:C++"],
-        ["vw", "vw/Image.h", "vwImage:C++"],
+        ["boost", "boost/test/unit_test.hpp", "boost_unit_test_framework:C++"],
         ["python", "Python.h"],
         ["cfitsio", "fitsio.h", "m cfitsio", "ffopen"],
         ["wcslib", "wcslib/wcs.h", "m wcs"], # remove m once SConsUtils bug fixed
@@ -35,12 +33,14 @@ env = scons.makeEnv(
 #
 # Libraries needed to link libraries/executables
 #
-env.libs["afw"] += env.getlibs("boost vw wcslib cfitsio minuit utils daf_base daf_data daf_persistence pex_exceptions pex_logging pex_policy security")
+env.libs["afw"] += env.getlibs("boost wcslib cfitsio minuit utils daf_base daf_data daf_persistence pex_exceptions pex_logging pex_policy security")
 #
 # Build/install things
 #
 for d in (
+    ".",
     "doc",
+    "doc/examples",
     "examples",
     "include/lsst/afw",
     "lib",
@@ -50,7 +50,10 @@ for d in (
     "python/lsst/afw/math",
     "tests",
 ):
-    SConscript(os.path.join(d, "SConscript"))
+    if d != ".":
+        SConscript(os.path.join(d, "SConscript"))
+    Clean(d, Glob(os.path.join(d, "*~")))
+    Clean(d, Glob(os.path.join(d, "*.pyc")))
 
 env['IgnoreFiles'] = r"(~$|\.pyc$|^\.svn$|\.o$)"
 

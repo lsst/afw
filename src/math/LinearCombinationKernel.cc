@@ -9,9 +9,9 @@
  * @ingroup afw
  */
 #include <stdexcept>
+#include <numeric>
 
 #include "boost/format.hpp"
-#include "vw/Image.h"
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
@@ -34,7 +34,7 @@ lsst::afw::math::LinearCombinationKernel::LinearCombinationKernel(
     KernelList const &kernelList,    ///< list of (shared pointers to) kernels
     std::vector<double> const &kernelParameters) ///< kernel coefficients
 :
-    Kernel(kernelList[0]->getCols(), kernelList[0]->getRows(), kernelList.size()),
+    Kernel(kernelList[0]->getWidth(), kernelList[0]->getHeight(), kernelList.size()),
     _kernelList(kernelList),
     _kernelImagePtrList(),
     _kernelParams(kernelParameters)
@@ -50,7 +50,7 @@ lsst::afw::math::LinearCombinationKernel::LinearCombinationKernel(
     KernelList const &kernelList,    ///< list of (shared pointers to) kernels
     Kernel::SpatialFunction const &spatialFunction)  ///< spatial function
 :
-    Kernel(kernelList[0]->getCols(), kernelList[0]->getRows(), kernelList.size(), spatialFunction),
+    Kernel(kernelList[0]->getWidth(), kernelList[0]->getHeight(), kernelList.size(), spatialFunction),
     _kernelList(kernelList),
     _kernelImagePtrList(),
     _kernelParams(std::vector<double>(kernelList.size()))
@@ -68,7 +68,7 @@ lsst::afw::math::LinearCombinationKernel::LinearCombinationKernel(
     KernelList const &kernelList,    ///< list of (shared pointers to) kernels
     std::vector<Kernel::SpatialFunctionPtr> const &spatialFunctionList)    ///< list of spatial functions, one per kernel
 :
-    Kernel(kernelList[0]->getCols(), kernelList[0]->getRows(), spatialFunctionList),
+    Kernel(kernelList[0]->getWidth(), kernelList[0]->getHeight(), spatialFunctionList),
     _kernelList(kernelList),
     _kernelImagePtrList(),
     _kernelParams(std::vector<double>(kernelList.size()))
@@ -80,37 +80,47 @@ lsst::afw::math::LinearCombinationKernel::LinearCombinationKernel(
     _computeKernelImageList();
 }
 
-void lsst::afw::math::LinearCombinationKernel::computeImage(
+double lsst::afw::math::LinearCombinationKernel::computeImage(
     lsst::afw::image::Image<PixelT> &image,
-    PixelT &imSum,
     bool doNormalize,
     double x,
     double y
 ) const {
-    if ((image.getCols() != this->getCols()) || (image.getRows() != this->getRows())) {
+    if (image.getDimensions() != this->getDimensions()) {
         throw lsst::pex::exceptions::InvalidParameter("image is the wrong size");
     }
     if (this->isSpatiallyVarying()) {
         this->computeKernelParametersFromSpatialModel(this->_kernelParams, x, y);
     }
-    lsst::afw::image::Image<PixelT>::ImageIVwPtrT vwImagePtr = image.getIVwPtr();
     
-    bool isFirst = true;
-    std::vector<boost::shared_ptr<lsst::afw::image::Image<PixelT> > >::const_iterator
-        kImPtrIter = _kernelImagePtrList.begin();
+    std::vector<lsst::afw::image::Image<PixelT>::Ptr>::const_iterator kImPtrIter = _kernelImagePtrList.begin();
     std::vector<double>::const_iterator kParIter = _kernelParams.begin();
-    for ( ; kImPtrIter != _kernelImagePtrList.end(); ++kImPtrIter, ++kParIter, isFirst = false) {
-        if (isFirst) {
-            *vwImagePtr = (*((**kImPtrIter).getIVwPtr())) * static_cast<PixelT>(*kParIter);
-        } else {
-            *vwImagePtr += (*((**kImPtrIter).getIVwPtr())) * static_cast<PixelT>(*kParIter);
-        }
+    //
+    // Temp image to generate the kernel*components into.  Image::operator*() doesn't exist
+    // as it'd have to generate a temporary, and I don't think it's a good idea to make tmps
+    // without explicit requests from the user.
+    //
+    lsst::afw::image::Image<PixelT>::Ptr tmpImage(new lsst::afw::image::Image<PixelT>(image.getDimensions()));
+
+    image <<= **kImPtrIter;
+    image *= *kParIter;
+    ++kImPtrIter, ++kParIter;
+    
+    for ( ; kImPtrIter != _kernelImagePtrList.end(); ++kImPtrIter, ++kParIter) {
+        *tmpImage <<= **kImPtrIter;
+        *tmpImage *= *kParIter;
+        image += *tmpImage;
     }
-    imSum = vw::sum_of_channel_values(*vwImagePtr);
+
+    double imSum = 0;
+    imSum = std::accumulate(image.begin(), image.end(), imSum);
+
     if (doNormalize) {
         image /= imSum;
         imSum = 1;
     }
+
+    return imSum;
 }
 
 /**
@@ -130,24 +140,18 @@ void lsst::afw::math::LinearCombinationKernel::checkKernelList(const KernelList 
     if (kernelList.size() < 1) {
         throw lsst::pex::exceptions::InvalidParameter("kernelList has no elements");
     }
-
-    unsigned int cols = kernelList[0]->getCols();
-    unsigned int rows = kernelList[0]->getRows();
-    unsigned int ctrCol = kernelList[0]->getCtrCol();
-    unsigned int ctrRow = kernelList[0]->getCtrRow();
     
-    for (unsigned int ii = 0; ii < kernelList.size(); ii++) {
-        if (ii > 0) {
-            if ((cols != kernelList[ii]->getCols()) ||
-                (rows != kernelList[ii]->getRows())) {
-                throw lsst::pex::exceptions::InvalidParameter(
-                    boost::format("kernel %d has different size than kernel 0") % ii);
-            }
-            if ((ctrCol != kernelList[ii]->getCtrCol()) ||
-                (ctrRow != kernelList[ii]->getCtrRow())) {
-                throw lsst::pex::exceptions::InvalidParameter(
-                    boost::format("kernel %d has different center than kernel 0") % ii);
-            }
+    int ctrX = kernelList[0]->getCtrX();
+    int ctrY = kernelList[0]->getCtrY();
+    
+    for (unsigned int ii = 0; ii < kernelList.size(); ++ii) {
+        if (kernelList[ii]->getDimensions() != kernelList[0]->getDimensions()) {
+            throw lsst::pex::exceptions::InvalidParameter(
+                                                  boost::format("kernel %d has different size than kernel 0") % ii);
+        }
+        if ((ctrX != kernelList[ii]->getCtrX()) || (ctrY != kernelList[ii]->getCtrY())) {
+            throw lsst::pex::exceptions::InvalidParameter(
+                                                  boost::format("kernel %d has different center than kernel 0") % ii);
         }
         if (kernelList[ii]->isSpatiallyVarying()) {
             throw lsst::pex::exceptions::InvalidParameter(
@@ -193,13 +197,12 @@ void lsst::afw::math::LinearCombinationKernel::setKernelParameter(unsigned int i
  * Compute _kernelImagePtrList, the internal archive of kernel images.
  */
 void lsst::afw::math::LinearCombinationKernel::_computeKernelImageList() {
-    KernelList::const_iterator kIter = _kernelList.begin();
     std::vector<double>::const_iterator kParIter = _kernelParams.begin();
-    for ( ; kIter != _kernelList.end(); ++kIter) {
-        PixelT kSum;
-        boost::shared_ptr<lsst::afw::image::Image<PixelT> >
-            kernelImagePtr(new lsst::afw::image::Image<PixelT>(this->getCols(), this->getRows()));
-        (*kIter)->computeImage(*kernelImagePtr, kSum, false, 0, 0);
+    for (KernelList::const_iterator kIter = _kernelList.begin(), kEnd = _kernelList.end(); kIter != kEnd; ++kIter) {
+        lsst::afw::image::Image<PixelT>::Ptr kernelImagePtr(new lsst::afw::image::Image<PixelT>(this->getDimensions()));
+
+        (void)(*kIter)->computeImage(*kernelImagePtr, false);
+
         _kernelImagePtrList.push_back(kernelImagePtr);
     }
 }

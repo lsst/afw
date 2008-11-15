@@ -1,10 +1,8 @@
 // -*- lsst-c++ -*-
-///////////////////////////////////////////////////////////
-//  Mask.h
-//  Implementation of the Class Mask
-//  Created on:      09-Feb-2007 15:57:46
-//  Original author: Tim Axelrod
-///////////////////////////////////////////////////////////
+/**
+ * \file
+ * \brief LSST bitmasks
+ */
 
 #ifndef LSST_AFW_IMAGE_MASK_H
 #define LSST_AFW_IMAGE_MASK_H
@@ -15,169 +13,145 @@
 
 #include "boost/cstdint.hpp"
 #include "boost/shared_ptr.hpp"
-#include "vw/Image.h"
-#include "vw/Math/BBox.h"
 
 #include "lsst/daf/base.h"
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/daf/base/Persistable.h"
 #include "lsst/afw/formatters/ImageFormatter.h"
-#include "lsst/afw/image/ImageExceptions.h"
+#include "lsst/afw/image/Image.h"
 
 namespace lsst {
 namespace afw {
     namespace formatters {
-        template<typename MaskPixelT> class MaskFormatter;
+        template<typename> class MaskFormatter;
     }
 namespace image {
-    // all masks will be instantiated with the same pixel type
-    typedef boost::uint16_t maskPixelType;
-
-    class PixelCoord {
-    public:
-        PixelCoord(int x = 0, int y = 0) : x(x), y(y) {}
-        ~PixelCoord() {}
-        int x;
-        int y;
-    };
-    
-    template<typename MaskPixelT> class Mask;
-    
-    template <typename MaskPixelT> class MaskPixelBooleanFunc {
-    public:
-        MaskPixelBooleanFunc(Mask<MaskPixelT>& m) : _mask(m) {}
-        virtual bool operator () (MaskPixelT) const;
-        virtual ~MaskPixelBooleanFunc() {}
-    protected:
-        Mask<MaskPixelT>& _mask;
-    };
-    
+    // all masks will initially be instantiated with the same pixel type
+    namespace detail {
+        /// tag for a Mask
+        struct Mask_tag : detail::basic_tag { };
+    }
+    /// Represent a 2-dimensional array of bitmask pixels
     template<typename MaskPixelT>
-    class Mask : public lsst::daf::base::Persistable,
-                 public lsst::daf::data::LsstBase {
+    class Mask : public ImageBase<MaskPixelT> {
     public:
-        typedef typename vw::PixelChannelType<MaskPixelT>::type MaskChannelT;
-        typedef vw::ImageView<MaskPixelT> MaskIVwT;
-        typedef boost::shared_ptr<Mask<MaskPixelT> > Ptr;
-        typedef boost::shared_ptr<Mask<MaskPixelT> > MaskPtrT; // deprecated; use Ptr
-        typedef boost::shared_ptr<MaskIVwT> MaskIVwPtrT;
-        typedef typename vw::ImageView<MaskPixelT>::pixel_accessor pixel_accessor;
+        typedef boost::shared_ptr<Mask> Ptr;
+        typedef boost::shared_ptr<const Mask> ConstPtr;
         typedef std::map<std::string, int> MaskPlaneDict;
+        
+        typedef detail::Mask_tag image_category;
+
+#if !defined(SWIG)
+        /// A templated class to return this classes' type (present in Image/Mask/MaskedImage)
+        template<typename MaskPT=MaskPixelT>
+        struct ImageTypeFactory {
+            /// Return the desired type
+            typedef Mask<MaskPT> type;
+        };
+#endif
 
         // Constructors        
+        explicit Mask(int nCols=0, int nRows=0, MaskPlaneDict const& planeDefs = MaskPlaneDict());
+        explicit Mask(const std::pair<int, int> dimensions, MaskPlaneDict const& planeDefs = MaskPlaneDict());
+        explicit Mask(std::string const& fileName, int const hdu=0,
+#if 1                                   // Old name for boost::shared_ptrs
+                      typename lsst::daf::base::DataProperty::PtrType
+                      metadata=lsst::daf::base::DataProperty::PtrType(static_cast<lsst::daf::base::DataProperty *>(0)),
+#else
+                      typename lsst::daf::base::DataProperty::Ptr
+                      metadata=lsst::daf::base::DataProperty::Ptr(static_cast<lsst::daf::base::DataProperty *>(0)),
+#endif
+                      bool const conformMasks=false
+                     );                      
 
-        explicit Mask(MaskPlaneDict const& planeDefs = MaskPlaneDict());
+        Mask(const Mask& src, const bool deep=false);
+        Mask(const Mask& src, const BBox& bbox, const bool deep=false);
         
-        explicit Mask(MaskIVwPtrT vwImagePtr, MaskPlaneDict const& planeDefs = MaskPlaneDict());
-        
-        explicit Mask(int nCols, int nRows, MaskPlaneDict const& planeDefs = MaskPlaneDict());
-
         // Operators
 
-        Mask<MaskPixelT>& operator=(const Mask<MaskPixelT>& rhs);
+        Mask& operator=(MaskPixelT const rhs);
+        Mask& operator=(const Mask& rhs);
 
-        Mask<MaskPixelT>& operator |= (const Mask<MaskPixelT>& inputMask);
-        Mask<MaskPixelT>& operator |= (MaskPixelT const inputMask);
+        void operator|=(Mask const& rhs);
+        void operator|=(MaskPixelT const rhs);
 
-        Mask<MaskPixelT>& operator &= (MaskPixelT const opMask);
+        void operator&=(Mask const& rhs);
+        void operator&=(MaskPixelT const rhs);
 
-        MaskChannelT operator ()(int x, int y) const;
-        
-        bool operator ()(int x, int y, int plane) const;
+        typename ImageBase<MaskPixelT>::PixelReference operator()(int x, int y);
+        typename ImageBase<MaskPixelT>::PixelConstReference operator()(int x, int y) const;
+        bool operator()(int x, int y, int plane) const;
 
         // I/O and FITS metadata
         
-        void readFits(const std::string& fileName, bool conformMasks=false, int hdu=0);
-        
-        void writeFits(const std::string& fileName);
+        //void readFits(const std::string& fileName, bool conformMasks=false, int hdu=0); // replaced by constructor
+        void writeFits(std::string const& fileName) const;
         
         lsst::daf::base::DataProperty::PtrType getMetaData();
 
         // Mask Plane ops
         
-        int addMaskPlane(const std::string& name);
-        
-        void removeMaskPlane(const std::string& name);
-        
-#if !defined(SWIG)
-        void getMaskPlane(const std::string& name, int& plane) const;
-#endif
-        int getMaskPlane(const std::string& name) const;
-        
-        bool getPlaneBitMask(const std::string& name,
-                             MaskChannelT& bitMask) const;
-        MaskChannelT getPlaneBitMask(const std::string& name) const;
-
-        void clearMaskPlaneDict();
-        
         void clearAllMaskPlanes();
         void clearMaskPlane(int plane);
 
-        void setMaskPlaneValues(int plane, std::list<PixelCoord> pixelList);
+        //void setMaskPlaneValues(int plane, std::list<PixelCoord> pixelList);
 
         void setMaskPlaneValues(const int plane, const int x0, const int x1, const int y);
 
-        void setMaskPlaneValues(int plane, MaskPixelBooleanFunc<MaskPixelT> selectionFunc);
+        //void setMaskPlaneValues(int plane, MaskPixelBooleanFunc<MaskPixelT> selectionFunc);
         
-        MaskPlaneDict parseMaskPlaneMetaData(lsst::daf::base::DataProperty::PtrType const) const;
+        static MaskPlaneDict parseMaskPlaneMetaData(lsst::daf::base::DataProperty::PtrType const);
         
-        void addMaskPlaneMetaData(lsst::daf::base::DataProperty::PtrType);
+        //int countMask(MaskPixelBooleanFunc<MaskPixelT>& testFunc, const vw::BBox2i maskRegion) const;
         
-        int countMask(MaskPixelBooleanFunc<MaskPixelT>& testFunc,
-                      const vw::BBox2i maskRegion) const;
+        //
+        // Operations on the mask plane dictionary
+        //
+        void clearMaskPlaneDict();
+        static int addMaskPlane(const std::string& name);
+        void removeMaskPlane(const std::string& name);
         
-        int getNumPlanesMax() const { return 8 * sizeof(MaskChannelT); }
+        static int getMaskPlane(const std::string& name);
+        static MaskPixelT getPlaneBitMask(const std::string& name);
 
-        int getNumPlanesUsed() const { return _maskPlaneDict.size(); }
+        static int getNumPlanesMax()  { return 8*sizeof(MaskPixelT); }
+        static int getNumPlanesUsed() { return _maskPlaneDict.size(); }
+        static const MaskPlaneDict& getMaskPlaneDict() { return _maskPlaneDict; }
+        static void printMaskPlanes();
 
-        MaskPlaneDict getMaskPlaneDict() const;
-        
-        void printMaskPlanes() const;
-
-        void conformMaskPlanes(MaskPlaneDict masterPlaneDict);
-
-        // SubMask ops
-
-        MaskPtrT getSubMask(const vw::BBox2i &region) const;
-        
-        void replaceSubMask(const vw::BBox2i &region, const Mask &insertMask);
-        
-        void replaceSubMask(const vw::BBox2i &region, MaskPtrT insertMask);
-        
-        pixel_accessor origin() const { return getIVwPtr()->origin(); }
+        static void addMaskPlanesToMetaData(lsst::daf::base::DataProperty::PtrType);
+        //
+        // This one isn't static, it fixes up a given Mask's planes
+        void conformMaskPlanes(MaskPlaneDict& masterPlaneDict);
         
         // Getters
-
-        unsigned int getCols() const { return _vwImagePtr->cols(); }
-        unsigned int getRows() const { return _vwImagePtr->rows(); }
-        unsigned int getOffsetCols() const { return _offsetCols; }
-        unsigned int getOffsetRows() const { return _offsetRows; }
-
-        MaskIVwPtrT getIVwPtr() const {
-            return _vwImagePtr; // did this increment reference count or not....and does this violate const??
-        }                
-
-        MaskIVwT& getIVw() const { return *_vwImagePtr; }
-
+#if 1                                   // Old name for boost::shared_ptrs
+        lsst::daf::base::DataProperty::PtrType getMetaData() const { return _metaData; }
+#else
+        lsst::daf::base::DataProperty::Ptr      getMetaData()       { return _metaData; }
+        lsst::daf::base::DataProperty::ConstPtr getMetaData() const { return _metaData; }
+#endif
         
 private:
-        LSST_PERSIST_FORMATTER(lsst::afw::formatters::MaskFormatter<MaskPixelT>);
-
-        MaskIVwPtrT _vwImagePtr;
+        //LSST_PERSIST_FORMATTER(lsst::afw::formatters::MaskFormatter);
+#if 1                                   // Old name for boost::shared_ptrs
         lsst::daf::base::DataProperty::PtrType _metaData;
+#else
+        lsst::daf::base::DataProperty::Ptr _metaData;
+#endif
+        int _myMaskDictVersion;         // version number for bitplane dictionary for this Mask
+
         static MaskPlaneDict _maskPlaneDict;
         static const std::string maskPlanePrefix;
-        unsigned int _offsetRows;
-        unsigned int _offsetCols;
         
-        void setOffsetRows(unsigned int offset);
-        void setOffsetCols(unsigned int offset);
-        
-        MaskChannelT getBitMask(int plane) const;
+        static int addMaskPlane(std::string name, int plane);
+
+        static int getMaskPlaneNoThrow(const std::string& name);
+        static MaskPixelT getBitMaskNoThrow(int plane);
+        static MaskPixelT getBitMask(int plane);
 
         static int _maskDictVersion;    // version number for bitplane dictionary
-        int _myMaskDictVersion;         // version number for bitplane dictionary for this Mask
         //
         // Check that masks have the same dictionary version
         //
@@ -188,12 +162,16 @@ private:
                 throw lsst::pex::exceptions::Runtime("Mask dictionary versions do not match");
             }
         }        
-
-        int addMaskPlane(std::string name, int plane);
+    private:
+        //
+        // Make names in templatized base class visible (Meyers, Effective C++, Item 43)
+        //
+        using ImageBase<MaskPixelT>::_getRawView;
+        using ImageBase<MaskPixelT>::_getRawImagePtr;
+        using ImageBase<MaskPixelT>::_setRawView;
+        using ImageBase<MaskPixelT>::swap;
     };
 
 }}}  // lsst::afw::image
         
 #endif // LSST_AFW_IMAGE_MASK_H
-
-

@@ -1,3 +1,7 @@
+/**
+ * \file
+ * \brief This include file includes the header files for all of lsst::afw
+ */
 #ifndef _LSST_AFW_H
 #define _LSST_AFW_H
 

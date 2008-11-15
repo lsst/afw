@@ -19,62 +19,37 @@ lsst::afw::math::deltafunction_kernel_tag lsst::afw::math::deltafunction_kernel_
 //
 // Constructors
 //
-
-/**
- * @brief Construct a spatially invariant Kernel with no kernel parameters
- */
-lsst::afw::math::Kernel::Kernel()
-:
-    LsstBase(typeid(this)),
-   _cols(0),
-   _rows(0),
-   _ctrCol(0),
-   _ctrRow(0),
-   _nKernelParams(0),
-   _spatialFunctionList()
-{ }
-
-/**
- * @brief Construct a spatially invariant Kernel
- */
-lsst::afw::math::Kernel::Kernel(
-    unsigned int cols,  ///< number of columns
-    unsigned int rows,  ///< number of rows
-    unsigned int nKernelParams) ///< number of kernel parameters
-:
-    LsstBase(typeid(this)),
-   _cols(cols),
-   _rows(rows),
-   _ctrCol((cols-1)/2),
-   _ctrRow((rows-1)/2),
-   _nKernelParams(nKernelParams),
-   _spatialFunctionList()
-{ }
-
 /**
  * @brief Construct a spatially varying Kernel with one spatial function copied as needed
  *
  * @throw lsst::pex::exceptions::InvalidParameter if the kernel has no parameters.
  */
+namespace {
+}
 lsst::afw::math::Kernel::Kernel(
-    unsigned int cols,  ///< number of columns
-    unsigned int rows,  ///< number of rows
-    unsigned int nKernelParams, ///< number of kernel parameters
-    SpatialFunction const &spatialFunction) ///< spatial function
+    int width,                          ///< number of columns
+    int height,                         ///< number of height
+    unsigned int nKernelParams,         ///< number of kernel parameters
+    SpatialFunction const &spatialFunction) ///< spatial function (or NullSpatialFunction if none is specified)
 :
     LsstBase(typeid(this)),
-   _cols(cols),
-   _rows(rows),
-   _ctrCol((cols-1)/2),
-   _ctrRow((rows-1)/2),
-   _nKernelParams(nKernelParams)
+    _width(width),
+    _height(height),
+    _ctrX((width-1)/2),
+    _ctrY((height-1)/2),
+    _nKernelParams(nKernelParams),
+    _spatialFunctionList()
 {
-    if (nKernelParams == 0) {
-        throw lsst::pex::exceptions::InvalidParameter("Kernel function has no parameters");
-    }
-    for (unsigned int ii = 0; ii < nKernelParams; ++ii) {
-        SpatialFunctionPtr spatialFunctionCopy = spatialFunction.copy();
-        this->_spatialFunctionList.push_back(spatialFunctionCopy);
+    if (dynamic_cast<const NullSpatialFunction*>(&spatialFunction)) {
+        // spatialFunction is not really present
+    } else {
+        if (nKernelParams == 0) {
+            throw lsst::pex::exceptions::InvalidParameter("Kernel function has no parameters");
+        }
+        for (unsigned int ii = 0; ii < nKernelParams; ++ii) {
+            SpatialFunctionPtr spatialFunctionCopy = spatialFunction.copy();
+            this->_spatialFunctionList.push_back(spatialFunctionCopy);
+        }
     }
 }
 
@@ -84,15 +59,15 @@ lsst::afw::math::Kernel::Kernel(
  * Note: if the list of spatial functions is empty then the kernel is not spatially varying.
  */
 lsst::afw::math::Kernel::Kernel(
-    unsigned int cols,  ///< number of columns
-    unsigned int rows,  ///< number of rows
+    int width,                          ///< number of columns
+    int height,                         ///< number of height
     std::vector<SpatialFunctionPtr> spatialFunctionList) ///< list of spatial function, one per kernel parameter
 :
     LsstBase(typeid(this)),
-   _cols(cols),
-   _rows(rows),
-   _ctrCol((cols-1)/2),
-   _ctrRow((rows-1)/2),
+   _width(width),
+   _height(height),
+   _ctrX((width-1)/2),
+   _ctrY((height-1)/2),
    _nKernelParams(spatialFunctionList.size())
 {
     for (unsigned int ii = 0; ii < spatialFunctionList.size(); ++ii) {
@@ -104,26 +79,6 @@ lsst::afw::math::Kernel::Kernel(
 //
 // Public Member Functions
 //
-
-/**
- * @brief Compute an image (pixellized representation of the kernel), returning a new image
- *
- * This would be called computeImage (overloading the other function of the same name)
- * but at least some versions of the g++ compiler cannot then reliably find the function.
- *
- * @return an image (your own copy to do with as you wish)
- */
-lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT> lsst::afw::math::Kernel::computeNewImage(
-    PixelT &imSum,  ///< sum of image pixels
-    bool doNormalize,   ///< normalize the image (so sum is 1)?
-    double x,   ///< x (column position) at which to compute spatial function
-    double y    ///< y (row position) at which to compute spatial function
-) const {
-    lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT> retImage(this->getCols(), this->getRows());
-    this->computeImage(retImage, imSum, doNormalize, x, y);
-    return retImage;
-}
-
 /**
  * @brief Set the parameters of all spatial functions
  *
@@ -184,8 +139,8 @@ std::vector<double> lsst::afw::math::Kernel::getKernelParameters() const {
 std::string lsst::afw::math::Kernel::toString(std::string prefix) const {
     std::ostringstream os;
     os << prefix << "Kernel:" << std::endl;
-    os << prefix << "..rows, cols: " << _rows << ", " << _cols << std::endl;
-    os << prefix << "..ctrRow, Col: " << _ctrRow << ", " << _ctrCol << std::endl;
+    os << prefix << "..height, width: " << _height << ", " << _width << std::endl;
+    os << prefix << "..ctr (X, Y): " << _ctrX << ", " << _ctrY << std::endl;
     os << prefix << "..nKernelParams: " << _nKernelParams << std::endl;
     os << prefix << "..isSpatiallyVarying: " << (this->isSpatiallyVarying() ? "True" : "False") << std::endl;
     if (this->isSpatiallyVarying()) {
@@ -226,7 +181,7 @@ void lsst::afw::math::Kernel::setKernelParameter(unsigned int ind, double value)
  */
 void lsst::afw::math::Kernel::setKernelParametersFromSpatialModel(double x, double y) const {
     std::vector<SpatialFunctionPtr>::const_iterator funcIter = _spatialFunctionList.begin();
-    for (unsigned int ii = 0; funcIter != _spatialFunctionList.end(); ++funcIter, ++ii) {
+    for (int ii = 0; funcIter != _spatialFunctionList.end(); ++funcIter, ++ii) {
         this->setKernelParameter(ii, (*(*funcIter))(x,y));
     }
 }

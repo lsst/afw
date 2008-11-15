@@ -36,13 +36,12 @@ int main(int argc, char **argv) {
     }
     
     // read in fits file
-    afwImage::MaskedImage<imageType, afwImage::maskPixelType> mImage;
-    mImage.readFits(argv[1]);
+    afwImage::MaskedImage<imageType> mImage(argv[1]);
     
-    unsigned imCols = mImage.getCols();
-    unsigned imRows = mImage.getRows();
+    unsigned imWidth = mImage.getWidth();
+    unsigned imHeight = mImage.getHeight();
     
-    std::cout << "Timing convolution for a " << imCols << "x" << imRows << " image." << std::endl;
+    std::cout << "Timing convolution for a " << imWidth << "x" << imHeight << " image." << std::endl;
     std::cout << std::endl;
     std::cout << "Columns:" << std::endl;
     std::cout << "* MOps: the number of operations of a kernel pixel on a masked pixel / 10e6." << std::endl;
@@ -52,14 +51,14 @@ int main(int argc, char **argv) {
     std::cout << "  * four pixel pointer increments (for image, variance, mask and kernel)" << std::endl;
     std::cout << "* CnvSec: time to perform one convolution (sec)" << std::endl;
     std::cout << std::endl;
-    std::cout << "ImCols\tImRows\tKerCols\tKerRows\tMOps\tCnvSec\tMOpsPerSec" << std::endl;
+    std::cout << "ImWidth\tImHeight\tKerWidth\tKerHeight\tMOps\tCnvSec\tMOpsPerSec" << std::endl;
     
-    afwImage::MaskedImage<imageType, afwImage::maskPixelType> resMImage(mImage.getCols(), mImage.getRows());
+    afwImage::MaskedImage<imageType> resMImage(mImage.getDimensions());
     
     for (unsigned kSize = MinKernelSize; kSize <= MaxKernelSize; kSize += DeltaKernelSize) {
         // construct kernel
         afwMath::GaussianFunction2<kernelType> gaussFunc(sigma, sigma);
-        afwMath::AnalyticKernel kernel(gaussFunc, kSize, kSize);
+        afwMath::AnalyticKernel kernel(kSize, kSize, gaussFunc);
         
         clock_t startTime = clock();
         for (unsigned iter = 0; iter < nIter; ++iter) {
@@ -68,9 +67,9 @@ int main(int argc, char **argv) {
         }
         double secPerIter = (clock() - startTime) / static_cast<double> (nIter * CLOCKS_PER_SEC);
         
-        double mOps = static_cast<double>((imRows + 1 - kSize) * (imCols + 1 - kSize) * kSize * kSize) / 1.0e6;
+        double mOps = static_cast<double>((imHeight + 1 - kSize) * (imWidth + 1 - kSize) * kSize * kSize) / 1.0e6;
         double mOpsPerSec = mOps / secPerIter;
-        std::cout << imCols << "\t" << imRows << "\t" << kSize << "\t" << kSize << "\t" << mOps
+        std::cout << imWidth << "\t" << imHeight << "\t" << kSize << "\t" << kSize << "\t" << mOps
             << "\t" << secPerIter << "\t" << mOpsPerSec << std::endl;
     }
 }

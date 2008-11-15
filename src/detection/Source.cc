@@ -3,17 +3,18 @@
 //##====----------------                                ----------------====##/
 //!
 //! \file
+//! \brief Support for Source%s
 //!
 //##====----------------                                ----------------====##/
 
 #include "lsst/daf/base.h"
 #include "lsst/afw/detection/Source.h"
 
-using namespace lsst::afw::detection;
+namespace detection = lsst::afw::detection;
 
 // -- Source ----------------
 
-Source::Source() : 
+detection::Source::Source() : 
     _diaSourceId(0),
     _ccdExposureId(0),
     _objectId(0),
@@ -66,7 +67,7 @@ Source::Source() :
 }
 
 
-Source::Source(
+detection::Source::Source(
     int64_t id,
     double  colc,
     double  rowc,
@@ -125,7 +126,7 @@ Source::Source(
 }
 
 
-bool Source::operator==(Source const & d) const {
+bool detection::Source::operator==(Source const & d) const {
     if (this == &d)  {
         return true;
     }
@@ -186,31 +187,31 @@ bool Source::operator==(Source const & d) const {
 
 // -- SourceVector ----------------
 
-SourceVector::SourceVector()            : lsst::daf::base::Citizen(typeid(*this)), _vec()  {}
-SourceVector::SourceVector(size_type n) : lsst::daf::base::Citizen(typeid(*this)), _vec(n) {}
+detection::SourceVector::SourceVector()            : lsst::daf::base::Citizen(typeid(*this)), _vec()  {}
+detection::SourceVector::SourceVector(size_type n) : lsst::daf::base::Citizen(typeid(*this)), _vec(n) {}
 
-SourceVector::SourceVector(size_type n, value_type const & val) :
+detection::SourceVector::SourceVector(size_type n, value_type const & val) :
     lsst::daf::base::Citizen(typeid(*this)),
     _vec(n, val)
 {}
 
 
-SourceVector::~SourceVector() {}
+detection::SourceVector::~SourceVector() {}
 
 
-SourceVector::SourceVector(SourceVector const & v) :
+detection::SourceVector::SourceVector(SourceVector const & v) :
     lsst::daf::base::Citizen(typeid(*this)),
     _vec(v._vec)
 {}
 
 
-SourceVector::SourceVector(Vector const & v) :
+detection::SourceVector::SourceVector(Vector const & v) :
     lsst::daf::base::Citizen(typeid(*this)),
     _vec(v)
 {}
 
 
-SourceVector & SourceVector::operator=(SourceVector const & v) {
+detection::SourceVector & detection::SourceVector::operator=(SourceVector const & v) {
     if (this != &v) {
         _vec = v._vec;
     }
@@ -218,7 +219,7 @@ SourceVector & SourceVector::operator=(SourceVector const & v) {
 }
 
 
-SourceVector & SourceVector::operator=(Vector const & v) {
+detection::SourceVector & detection::SourceVector::operator=(Vector const & v) {
     _vec = v;
     return *this;
 }

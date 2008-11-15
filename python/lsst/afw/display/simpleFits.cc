@@ -1,5 +1,6 @@
-/*
- * Write a fits image to a file descriptor; useful for talking to DS9
+/**
+ * \file
+ * \brief Write a FITS image to a file descriptor; useful for talking to DS9
  *
  * This version knows about LSST data structures
  */
@@ -15,20 +16,26 @@ namespace posix {
 using namespace posix;
 
 #include "lsst/pex/exceptions.h"
-// no such file: #include "lsst/pex/utils/Utils.h"
 #include "boost/any.hpp"
 
+#include "lsst/afw/image/fits/fits_io_private.h"
 #include "simpleFits.h"
 
+namespace image = lsst::afw::image;
 using lsst::daf::base::DataProperty;
 
 #define FITS_SIZE 2880
 
+/// \cond
 class Card {
 public:
     Card(const std::string &name, bool val, const char *commnt = ""
         ) : keyword(name), value(val), comment(commnt) { }
     Card(const std::string &name, int val, const char *commnt = ""
+        ) : keyword(name), value(val), comment(commnt) { }
+    Card(const std::string &name, double val, const char *commnt = ""
+        ) : keyword(name), value(val), comment(commnt) { }
+    Card(const std::string &name, float val, const char *commnt = ""
         ) : keyword(name), value(val), comment(commnt) { }
     Card(const std::string &name, const std::string &val, const char *commnt = ""
         ) : keyword(name), value(val), comment(commnt) { }
@@ -76,9 +83,9 @@ int Card::write(int fd,
         } else if (value.type() == typeid(int)) {
             sprintf(card, "%20d", boost::any_cast<int>(value));
         } else if (value.type() == typeid(double)) {
-            sprintf(card, "%20g", boost::any_cast<double>(value));
+            sprintf(card, "%20.7f", boost::any_cast<double>(value));
         } else if (value.type() == typeid(float)) {
-            sprintf(card, "%20g", boost::any_cast<float>(value));
+            sprintf(card, "%20.7f", boost::any_cast<float>(value));
         }
         card += 20;
         sprintf(card, " %c%-48s", (comment == "" ? ' ' : '/'), comment.c_str());
@@ -95,8 +102,28 @@ int Card::write(int fd,
    
     return ncard;
 }   
+/// \endcond
 
 /*****************************************************************************/
+/*
+ * Utilities
+ *
+ * Flip high-order bit so as to write unsigned short to FITS.  Grrr.
+ */
+namespace {
+    void flip_high_bit(char *arr,              // array that needs bits swapped
+                       const int n) {          // number of bytes in arr
+        if(n%2 != 0) {
+            throw lsst::pex::exceptions::Runtime(boost::format("Attempt to bit flip odd number of bytes: %d") % n);
+        }
+
+        unsigned short* uarr = reinterpret_cast<unsigned short *>(arr);
+        for(unsigned short *end = uarr + n/2; uarr < end; ++uarr) {
+            *uarr ^= 0x8000;
+        }
+    }
+}
+
 /*
  * Byte swap ABABAB -> BABABAB in place
  */
@@ -104,8 +131,7 @@ namespace {
     void swap_2(char *arr,              // array to swap
                 const int n) {          // number of bytes
         if(n%2 != 0) {
-            throw
-                lsst::pex::exceptions::Runtime(boost::format("Attempt to byte swap odd number of bytes: %d") % n);
+            throw lsst::pex::exceptions::Runtime(boost::format("Attempt to byte swap odd number of bytes: %d") % n);
         }
 
         for(char *end = arr + n;arr < end;arr += 2) {
@@ -239,103 +265,93 @@ namespace {
 
     int write_fits_data(int fd,
                         int bitpix,
-                        int npix,
-                        char *data) {
-        char *buff = NULL;			/* I/O buffer */
+                        char *begin,
+                        char *end
+                       ) {
         const int bytes_per_pixel = (bitpix > 0 ? bitpix : -bitpix)/8;
-        int nbyte = npix*bytes_per_pixel;
-        int swap_bytes = 0;			/* the default */
-        static int warned = 0;		/* Did we warn about BZERO/BSCALE? */
-   
-#if defined(LSST_LITTLE_ENDIAN)		/* we'll need to byte swap FITS */
+        int swap_bytes = 0;             // the default
+#if defined(LSST_LITTLE_ENDIAN)		// we'll need to byte swap FITS
         if(bytes_per_pixel > 1) {
             swap_bytes = 1;
         }
 #endif
 
-        if(swap_bytes) {
+        char *buff = NULL;              // I/O buffer
+        bool allocated = false;         // do I need to free it?
+        if(swap_bytes || bitpix == 16) {
             buff = new char[FITS_SIZE*bytes_per_pixel];
+            allocated = true;
         }
     
-        if(bytes_per_pixel == 2 && !warned) {
-            warned = 1;
-            fprintf(stderr,"Worry about BZERO/BSCALE\n");
-        }
-   
-        while(nbyte > 0) {
-            int nwrite = (nbyte > FITS_SIZE) ? FITS_SIZE : nbyte;
-      
+        int nbyte = end - begin;
+        int nwrite = (nbyte > FITS_SIZE) ? FITS_SIZE : nbyte;
+        for (char *ptr = begin; ptr != end; nbyte -= nwrite, ptr += nwrite) {
+            if (end - ptr < nwrite) {
+                nwrite = end - ptr;
+            }
+            
             if(swap_bytes) {
-                memcpy(buff, data, nwrite);
+                memcpy(buff, ptr, nwrite);
+                if (bitpix == 16) {     // flip high-order bit
+                    flip_high_bit(buff, nwrite);
+                }
+
                 if(bytes_per_pixel == 2) {
-                    swap_2((char *)buff, nwrite);
+                    swap_2(buff, nwrite);
                 } else if(bytes_per_pixel == 4) {
-                    swap_4((char *)buff, nwrite);
+                    swap_4(buff, nwrite);
                 } else if(bytes_per_pixel == 8) {
-                    swap_8((char *)buff, nwrite);
+                    swap_8(buff, nwrite);
                 } else {
                     fprintf(stderr,"You cannot get here\n");
                     abort();
                 }
             } else {
-                buff = data;
+                if (bitpix == 16) {     // flip high-order bit
+                    memcpy(buff, ptr, nwrite);
+                    flip_high_bit(buff, nwrite);
+                } else {
+                    buff = ptr;
+                }
             }
-      
+            
             if(write(fd, buff, nwrite) != nwrite) {
                 perror("Error writing image: ");
                 break;
             }
-
-            nbyte -= nwrite;
-            data += nwrite;
         }
-   
-        if(swap_bytes) {
+        
+        if(allocated) {
             delete buff;
         }
-
+        
         return (nbyte == 0 ? 0 : -1);
     }
 }
 
-void lsst::afw::display::writeVwFits(int fd,                // file descriptor to write to
-                 const vw::ImageBuffer& buff, // The data to write
-                 const lsst::afw::image::Wcs *Wcs         // which Wcs to use for pixel
-                ) {
-    /*
-     * What sort if image is it?
-     */
-    int bitpix = 0;                     // BITPIX for fits file
-    switch (buff.format.channel_type) {
-      case vw::VW_CHANNEL_UINT8:
-      case vw::VW_CHANNEL_INT8:
-	bitpix = 8;
-        break;
-      case vw::VW_CHANNEL_UINT16:
-	bitpix = -16;
-	break;
-      case vw::VW_CHANNEL_INT16:
-	bitpix = 16;
-        break;
-      case vw::VW_CHANNEL_INT32:
-	bitpix = 32;
-	break;
-      case vw::VW_CHANNEL_FLOAT32:
-	bitpix = -32;
-	break;
-      case vw::VW_CHANNEL_FLOAT64:
-	bitpix = -64;
-	break;
-      default:
-        throw lsst::pex::exceptions::Runtime(boost::format("Unsupported channel type: %d") %
-                        buff.format.channel_type);
-    }
-    char *data = static_cast<char *>(buff.data);
-    
+namespace lsst { namespace afw { namespace display {
+
+template<typename ImageT>
+void writeBasicFits(int fd,                                      // file descriptor to write to
+                    ImageT const& data,                          // The data to write
+                    image::Wcs const* Wcs                        // which Wcs to use for pixel
+                   ) {
     /*
      * Allocate cards for FITS headers
      */
     std::list<Card> cards;
+    /*
+     * What sort if image is it?
+     */
+    int bitpix = image::detail::fits_read_support_private<
+    typename image::detail::types_traits<typename ImageT::Pixel>::view_t>::BITPIX;
+    if (bitpix == 20) {                 // cfitsio for "Unsigned short"
+        cards.push_back(Card("BZERO",  32768.0, ""));
+        cards.push_back(Card("BSCALE", 1.0,     ""));
+        bitpix = 16;
+    } else if (bitpix == 0) {
+        throw lsst::pex::exceptions::Runtime(boost::format("Unsupported image type"));
+    }
     /*
      * Generate cards for Wcs, so that pixel (0,0) is correctly labelled
      */
@@ -377,25 +393,26 @@ void lsst::afw::display::writeVwFits(int fd,                // file descriptor t
      */
     const int naxis = 2;		// == NAXIS
     int naxes[naxis];			/* values of NAXIS1 etc */
-    naxes[0] = buff.cols();
-    naxes[1] = buff.rows();
+    naxes[0] = data.getWidth();
+    naxes[1] = data.getHeight();
     
     write_fits_hdr(fd, bitpix, naxis, naxes, cards, 1);
-    for (unsigned int r = 0; r < buff.rows(); r++) {
-	if(write_fits_data(fd, bitpix, buff.cols(), data + r*buff.rstride) < 0){
-	    throw lsst::pex::exceptions::Runtime(boost::format("Error writing data for row %d") % r);
+    for (int y = 0; y != data.getHeight(); ++y) {
+	if(write_fits_data(fd, bitpix, (char *)(data.row_begin(y)), (char *)(data.row_end(y))) < 0){
+	    throw lsst::pex::exceptions::Runtime(boost::format("Error writing data for row %d") % y);
 	}
     }
 
-    pad_to_fits_record(fd, buff.cols()*buff.rows(), bitpix);
+    pad_to_fits_record(fd, data.getWidth()*data.getHeight(), bitpix);
 }   
 
 /******************************************************************************/
 
-void lsst::afw::display::writeVwFits(const std::string &filename, // file to write or "| cmd"
-                 const vw::ImageBuffer &data, // The data to write
-                 const lsst::afw::image::Wcs *Wcs         // which Wcs to use for pixel
-                ) {
+template<typename ImageT>
+void writeBasicFits(std::string const& filename,                 // file to write, or "| cmd"
+                    ImageT const& data,                          // The data to write
+                    image::Wcs const* Wcs                        // which Wcs to use for pixel
+                   ) {
     int fd;
     if ((filename.c_str())[0] == '|') {		// a command
 	const char *cmd = filename.c_str() + 1;
@@ -413,7 +430,7 @@ void lsst::afw::display::writeVwFits(const std::string &filename, // file to wri
     }
 
     try {
-        writeVwFits(fd, data, Wcs);
+        writeBasicFits(fd, data, Wcs);
     } catch(lsst::pex::exceptions::ExceptionStack &e) {
         (void)close(fd);
         throw e;
@@ -421,3 +438,19 @@ void lsst::afw::display::writeVwFits(const std::string &filename, // file to wri
 
     (void)close(fd);
 }
+
+#define INSTANTIATE(IMAGET)                                            \
+    template void writeBasicFits(int,                IMAGET const&, image::Wcs const *); \
+    template void writeBasicFits(std::string const&, IMAGET const&, image::Wcs const *)
+
+#define INSTANTIATE_IMAGE(T) INSTANTIATE(lsst::afw::image::Image<T>)
+#define INSTANTIATE_MASK(T)  INSTANTIATE(lsst::afw::image::Mask<T>)
+
+INSTANTIATE_IMAGE(boost::uint16_t);
+INSTANTIATE_IMAGE(int);
+INSTANTIATE_IMAGE(float);
+INSTANTIATE_IMAGE(double);
+
+INSTANTIATE_MASK(boost::uint16_t);
+            
+}}}

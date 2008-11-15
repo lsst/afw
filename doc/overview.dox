@@ -1,0 +1,223 @@
+/**
+\mainpage lsst::afw;  the LSST Application Framework
+
+\section secIntro Introduction
+
+The LSST applications framework provides the basic functionality needed
+by an image processing system.  In particular:
+   - \ref secImage : Representation of Images (and Masks)
+   - \ref secMath :  Mathematical functions such as convolution and image statistics
+   - \ref secDetection : Detection of sources in images
+*/
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+namespace lsst { namespace afw { namespace image {
+/**
+\page secImage Images
+
+\section secImage Images
+
+In LSST, 2-dimensional images are represented using a set of templated classes, all of
+which are ultimately derived from ImageBase:
+      - Image : An %image of arithmetic type (e.g. short; int; float)
+      - Mask : An %image representing a set of bitplanes
+      - DecoratedImage : An Image that has associated metadata (e.g. from a FITS header)
+      - MaskedImage : A combination of an Image, a Mask, and an Image giving the per-pixel variance
+      - Exposure : A MaskedImage with additional \link Wcs WCS\endlink information
+
+\subsection secPixelAccess How to Access Pixels
+
+The LSST %image access is modelled after the boost::gil %image interface; see
+   http://www.boost.org/doc/libs/1_36_0/libs/gil/doc/html/giltutorial.html
+and
+   http://www.boost.org/doc/libs/1_36_0/libs/gil/doc/html/gildesignguide.html
+
+- \ref secPixelAccessTutorial
+- \ref secPixelAccessReference
+*/
+
+/**
+\page secPixelAccessTutorial Pixel Access Tutorial and Examples
+\section secPixelAccessTutorial Pixel Access Tutorial and Examples
+
+%Image Pixels may be accessed via \link imageIterators iterators\endlink
+or \link imageLocators locators\endlink; the former
+are simpler if you want single-pixel access, while the latter provide
+you with access to a pixel's friends and neighbours.
+
+These examples cover Image%s and Mask%s, but
+the code to use MaskedImage%s is pretty similar; see
+\link maskedImageIterators MaskedImage iterators\endlink and \link maskedImageLocators MaskedImage locators\endlink.
+
+*/
+
+/**
+\addtogroup secPixelAccessReference Pixel Access Reference Manual
+
+%Image Pixels may be accessed via iterators
+or locators; the former
+are simpler if you want single-pixel access, while the latter provide
+you with access to a pixel's friends and neighbours.
+
+There are a set of tutorial examples in \ref secPixelAccessTutorial,
+covering access to Image%s and MaskedImage%s using both \link
+imageIterators iterators\endlink and \link imageLocators
+locators\endlink.
+
+In the case of MaskedImage's, the user-visible \c iterator%s and
+locator%s (and \c const variants) are derived from MaskedImageIteratorBase
+and MaskedImageLocatorBase;  the following documentation refers to these
+base classes.
+
+\par Iterators
+
+- You can use an STL-compliant \c iterator to access the pixels:
+ - ImageBase::begin() const
+ - MaskedImage::begin() const
+ - ImageBase::end() const
+ - MaskedImage::end() const
+ - ImageBase::rbegin() const
+ - MaskedImage::rbegin() const
+ - ImageBase::rend() const
+ - MaskedImage::rend() const
+ - ImageBase::at(int x, int y) const
+ - MaskedImage::at(int x, int y) const
+
+N.b. These \c iterators aren't the most efficient way to access all the %image's
+pixels as they may not be contiguous in memory so a test for end-of-row
+is needed after every %pixel (we do guarantee that a \e row's pixels will be contiguous).
+
+- Incrementing an \c y_iterator moves it across the row
+ - ImageBase::row_begin(int y) const
+ - MaskedImage::row_begin(int y) const
+ - ImageBase::row_end(int y) const
+ - MaskedImage::row_end(int y) const
+ - ImageBase::x_at(int x, int y) const
+ - MaskedImage::x_at(int x, int y) const
+
+- Incrementing an \c y_iterator moves it up the column
+ - ImageBase::col_begin(int x) const
+ - MaskedImage::col_begin(int x) const
+ - ImageBase::col_end(int x) const
+ - MaskedImage::col_end(int x) const
+ - ImageBase::y_at(int x, int y) const
+ - MaskedImage::y_at(int x, int y) const
+
+- Iterators can be dereferenced:
+ - imageIterator::operator*()
+ - MaskedImage::MaskedImageIteratorBase::operator*()
+
+- Additionally, MaskedImage iterators support
+ - MaskedImage::MaskedImageIteratorBase::image()
+ - MaskedImage::MaskedImageIteratorBase::mask()
+ - MaskedImage::MaskedImageIteratorBase::variance()
+
+- Iterators may be advanced with
+ - imageIterator::operator++()
+ - MaskedImage::MaskedImageIteratorBase::operator++()
+ - imageIterator::operator++(int)
+ - MaskedImage::MaskedImageIteratorBase::operator++(int)
+ - imageIterator::operator+=(std::ptrdiff_t delta)
+ - MaskedImage::MaskedImageIteratorBase::operator+=(std::ptrdiff_t delta)
+ - imageIterator::operator-=(std::ptrdiff_t delta)
+ - MaskedImage::MaskedImageIteratorBase::operator-=(std::ptrdiff_t delta)
+
+- and compared with
+ - imageIterator::operator==(imageIterator const& rhs)
+ - MaskedImage::MaskedImageIteratorBase::operator==(MaskedImageIteratorBase const& rhs)
+ - imageIterator::operator!=(imageIterator const& rhs)
+ - MaskedImage::MaskedImageIteratorBase::operator!=(MaskedImageIteratorBase const& rhs)
+ - imageIterator::operator<(imageIterator const& rhs)
+ - MaskedImage::MaskedImageIteratorBase::operator<(MaskedImageIteratorBase const& rhs)
+
+\par Locators
+
+\c Locators are more flexible than \c iterators, permitting us to manipulate
+regions of an %image
+
+- locators may be created with
+ - ImageBase::xy_at(int x, int y) const
+ - MaskedImage::xy_at(int x, int y) const
+
+- and dereferenced with:
+ - imageLocator::operator*()
+ - MaskedImage::MaskedImageLocatorBase::operator*()
+ - imageLocator::operator()(int x, int y)
+ - MaskedImage::MaskedImageLocatorBase::operator()(int x, int y)
+
+- Retrieve an x- or y-iterator that may be dereferenced or incremented
+ - imageLocator::x()
+ - MaskedImage::MaskedImageLocatorBase::x()
+ - imageLocator::y()
+ - MaskedImage::MaskedImageLocatorBase::y()
+
+- Manipulate those iterators (n.b. this moves the underlying locator,
+so \c ++locator.x() is the standard way to advance a locator)
+ - imageLocator::xy_x_iterator::operator*()
+ - MaskedImage::MaskedImageLocatorBase::xy_x_iterator::operator*()
+ - imageLocator::xy_y_iterator::operator*()
+ - MaskedImage::MaskedImageLocatorBase::xy_y_iterator::operator*()
+
+- Additionally, MaskedImage locator-iterators support
+ - image()
+ - mask()
+ - variance()
+
+- Move those iterators (n.b. this moves the underlying locator,
+so \c ++locator.x() is the standard way to advance a locator)
+ - imageLocator::xy_x_iterator::operator++()
+ - imageLocator::xy_x_iterator::operator++(int)
+ - imageLocator::xy_y_iterator::operator++()
+ - imageLocator::xy_y_iterator::operator++(int)
+
+- Advance (or retreat) an \c xy_locator directly
+ - ImageBase::operator+=(xy_locator& loc, pair2I const& off)
+ - MaskedImage::MaskedImageLocatorBase::operator+=(pair2I const& off)
+ - ImageBase::operator+=(const_xy_locator& loc, pair2I const& off)
+ - ImageBase::operator-=(xy_locator& loc, pair2I const& off)
+ - ImageBase::operator-=(const_xy_locator& loc, pair2I const& off)
+
+- Save or use a saved relative location
+ - imageLocator::cache_location()
+ - MaskedImage::MaskedImageLocatorBase::cache_location()
+ - imageLocator::cache_location(int x, int y)
+ - MaskedImage::MaskedImageLocatorBase::cache_location(int x, int y) const
+ - imageLocator::operator[](cached_location_t const&);
+ - MaskedImage::MaskedImageLocatorBase::operator[](cached_location_t const&);
+
+- MaskedImage locators also support
+ - MaskedImage::MaskedImageLocatorBase::image(cached_location_t const&);
+ - MaskedImage::MaskedImageLocatorBase::mask(cached_location_t const&);
+ - MaskedImage::MaskedImageLocatorBase::variance(cached_location_t const&);
+
+(Note that these are function calls, as opposed to the \c operator[] in the
+previous APIs)
+
+*/
+}}}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+namespace lsst { namespace afw { namespace math {
+/**
+\page secMath Mathematical Operations
+\section secMath Mathematical Operations
+
+ - Statistics
+*/
+}}}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+namespace lsst { namespace afw { namespace detection {
+/**
+\page secDetection Detection
+\section secDetection Detection
+
+Describe:
+ - Footprint
+ - DetectionSet
+
+*/
+}}}

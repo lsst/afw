@@ -13,12 +13,12 @@ namespace afwImage = lsst::afw::image;
  */
 void test(char *name, char *masterName) {
 
-    typedef afwImage::maskPixelType maskPixelType;
+    typedef afwImage::MaskPixel MaskPixel;
 
-    afwImage::Mask<afwImage::maskPixelType> testMask;
+    afwImage::Mask<afwImage::MaskPixel> testMask;
     testMask.readFits(name);
 
-    afwImage::Mask<maskPixelType> masterMask;
+    afwImage::Mask<MaskPixel> masterMask;
     masterMask.readFits(masterName);
 
     // check whether Mask planes got setup right from FITS header...

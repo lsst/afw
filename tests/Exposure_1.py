@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Test lsst.afw.image.Exposure
 
@@ -28,7 +29,7 @@ if not dataDir:
 
 InputMaskedImageName = "871034p_1_MI"
 InputMaskedImageNameSmall = "small_MI"
-InputImageNameSmall = "small_"
+InputImageNameSmall = "small"
 OutputMaskedImageName = "871034p_1_MInew"
 
 currDir = os.path.abspath(os.path.dirname(__file__))
@@ -44,23 +45,32 @@ class ExposureTestCase(unittest.TestCase):
     """
 
     def setUp(self):
-        self.maskedImage = afwImage.MaskedImageF()
-        self.maskedImage.readFits(inFilePathSmall)
-        self.wcs = afwImage.Wcs(self.maskedImage.getImage().getMetaData())
+        maskedImage = afwImage.MaskedImageF(inFilePathSmall)
+
+        self.smallExposure = afwImage.ExposureF(inFilePathSmall)
+        self.width =  maskedImage.getWidth()
+        self.height = maskedImage.getHeight()
+        self.wcs = afwImage.Wcs(self.smallExposure.getMetaData())
+
         self.exposureBlank = afwImage.ExposureF()
-        self.exposureMiOnly = afwImage.ExposureF(self.maskedImage)
-        self.exposureMiWcs = afwImage.ExposureF(self.maskedImage, self.wcs)
+        self.exposureMiOnly = afwImage.ExposureF(maskedImage)
+        self.exposureMiWcs = afwImage.ExposureF(maskedImage, self.wcs)
         self.exposureCrWcs = afwImage.ExposureF(100, 100, self.wcs)
         self.exposureCrOnly = afwImage.ExposureF(100, 100)
-
+            
     def tearDown(self):
+        del self.smallExposure
+        del self.wcs
+
         del self.exposureBlank 
         del self.exposureMiOnly
         del self.exposureMiWcs
         del self.exposureCrWcs
         del self.exposureCrOnly
-        del self.maskedImage
-        del self.wcs
+
+    def testTearDown(self):
+        """Test that tearDown tears everything down"""
+        pass
 
     def testGetMaskedImage(self):
         """
@@ -73,40 +83,38 @@ class ExposureTestCase(unittest.TestCase):
         obtained.
         """
         maskedImageBlank = self.exposureBlank.getMaskedImage()        
-        blankCols = maskedImageBlank.getCols()
-        blankRows = maskedImageBlank.getRows()
-        if blankCols != blankRows != 0:
-            self.fail("%s = %s != 0" (blankCols, blankRows))           
+        blankWidth = maskedImageBlank.getWidth()
+        blankHeight = maskedImageBlank.getHeight()
+        if blankWidth != blankHeight != 0:
+            self.fail("%s = %s != 0" (blankWidth, blankHeight))           
         
         maskedImageMiOnly = self.exposureMiOnly.getMaskedImage()
-        miOnlyCols = maskedImageMiOnly.getCols()
-        miOnlyRows = maskedImageMiOnly.getRows()
-        miCols = self.maskedImage.getCols()
-        miRows = self.maskedImage.getRows()
-        self.assertAlmostEqual(miOnlyCols, miCols)
-        self.assertAlmostEqual(miOnlyRows, miRows)
+        miOnlyWidth = maskedImageMiOnly.getWidth()
+        miOnlyHeight = maskedImageMiOnly.getHeight()
+        self.assertAlmostEqual(miOnlyWidth, self.width)
+        self.assertAlmostEqual(miOnlyHeight, self.height)
         
         # NOTE: Unittests for Exposures created from a MaskedImage and
         # a WCS object are incomplete.  No way to test the validity of
         # the WCS being copied/created.
         
         maskedImageMiWcs = self.exposureMiWcs.getMaskedImage()
-        miWcsCols = maskedImageMiWcs.getCols()
-        miWcsRows = maskedImageMiWcs.getRows()
-        self.assertAlmostEqual(miWcsCols, miCols)
-        self.assertAlmostEqual(miWcsRows, miRows)
+        miWcsWidth = maskedImageMiWcs.getWidth()
+        miWcsHeight = maskedImageMiWcs.getHeight()
+        self.assertAlmostEqual(miWcsWidth, self.width)
+        self.assertAlmostEqual(miWcsHeight, self.height)
        
         maskedImageCrWcs = self.exposureCrWcs.getMaskedImage()       
-        crWcsCols = maskedImageCrWcs.getCols()
-        crWcsRows = maskedImageCrWcs.getRows()
-        if crWcsCols != crWcsRows != 0:
-            self.fail("%s != %s != 0" (crWcsCols, crWcsRows))   
+        crWcsWidth = maskedImageCrWcs.getWidth()
+        crWcsHeight = maskedImageCrWcs.getHeight()
+        if crWcsWidth != crWcsHeight != 0:
+            self.fail("%s != %s != 0" (crWcsWidth, crWcsHeight))   
         
         maskedImageCrOnly = self.exposureCrOnly.getMaskedImage()
-        crOnlyCols = maskedImageCrOnly.getCols()
-        crOnlyRows = maskedImageCrOnly.getRows()
-        if crOnlyCols != crOnlyRows != 0:
-            self.fail("%s != %s != 0" (crOnlyCols, crOnlyRows)) 
+        crOnlyWidth = maskedImageCrOnly.getWidth()
+        crOnlyHeight = maskedImageCrOnly.getHeight()
+        if crOnlyWidth != crOnlyHeight != 0:
+            self.fail("%s != %s != 0" (crOnlyWidth, crOnlyRows)) 
        
     def testGetWcs(self):
         """
@@ -121,43 +129,25 @@ class ExposureTestCase(unittest.TestCase):
         The exposureBlank, exposureMiOnly, and exposureCrOnly
         Exposures should throw a lsst::pex::exceptions::NotFound.
         """
-        try:
-            wcsBlank = self.exposureBlank.getWcs()
-            self.fail("No exception raised for wcsBlank")
-        except pexEx.LsstExceptionStack, e:
-            print "caught expected exception (wcsBlank): %s" % e
-            pass
-            
-        try:    
-            wcsMiOnly = self.exposureMiOnly.getWcs()
-            self.fail("No exception raised for wcsMiOnly")
-        except pexEx.LsstExceptionStack, e:
-            print "caught expected exception (wcsMiOnly): %s" % e
-            pass
+
+        self.assertTrue(not self.exposureBlank.getWcs())
+        self.assertTrue(not self.exposureMiOnly.getWcs())
 
         # These two should pass
         wcsMiWcs = self.exposureMiWcs.getWcs()
         wcsCrWcs = self.exposureCrWcs.getWcs()
        
-        try:
-            wcsCrOnly = self.exposureCrOnly.getWcs()
-            self.fail("No exception raised for wcsCrOnly")
-        except pexEx.LsstExceptionStack, e:
-            print "caught expected exception (wcsCrOnly): %s" % e
-            pass
-
+        self.assertTrue(not self.exposureCrOnly.getWcs())
             
     def testSetMembers(self):
         """
         Test that the MaskedImage and the WCS of an Exposure can be set.
         """
-        maskedImage = afwImage.MaskedImageF()           
-        maskedImage.readFits(inFilePathSmall)
-        
         exposure = afwImage.ExposureF()       
-        exposure.setMaskedImage(maskedImage)        
-        wcs = afwImage.Wcs(maskedImage.getImage().getMetaData())
-        exposure.setWcs(wcs)
+
+        maskedImage = afwImage.MaskedImageF(inFilePathSmall)
+        exposure.setMaskedImage(maskedImage)
+        exposure.setWcs(self.wcs)
         
         try:
             theWcs = exposure.getWcs();
@@ -167,17 +157,7 @@ class ExposureTestCase(unittest.TestCase):
                
         # Test that we can set the MaskedImage and WCS of an Exposure
         # that already has both
-        
         self.exposureMiWcs.setMaskedImage(maskedImage)
-        
-        bigMiCols = self.maskedImage.getCols()
-        bigMiRows = self.maskedImage.getRows()
-        smallMiCols = maskedImage.getCols()
-        smallMiRows = maskedImage.getRows()
-       
-      #  if bigMiCols == smallMiCols |  bigMiRows == smallMiRows:
-      #      self.fail("%s = %s or %s = %s; MaskedImage was not set properly" (bigMiCols, smallMiCols, bigMiRows, smallMiRows)) 
-        
         exposure.setWcs(self.wcs)
        
     def testHasWcs(self):
@@ -212,7 +192,7 @@ class ExposureTestCase(unittest.TestCase):
         # are not found (this fails for 871034p_1_MI because the Fits
         # header cards are not found).
         
-        subRegion1 = afwImage.BBox2i(50, 50, 10, 10)
+        subRegion1 = afwImage.BBox(afwImage.PointI(50, 50), 10, 10)
         try:
             subExposure = self.exposureCrWcs.getSubExposure(subRegion1)
            
@@ -220,41 +200,31 @@ class ExposureTestCase(unittest.TestCase):
            
             pass
         
-        smallMaskedImage = afwImage.MaskedImageF()
-        smallMaskedImage.readFits(inFilePathSmall)
-        wcs = afwImage.Wcs(smallMaskedImage.getImage().getMetaData())
-        smallExposure = afwImage.ExposureF(smallMaskedImage, wcs)
-    
-        subRegion2 = afwImage.BBox2i(0, 0, 5, 5)
+        subRegion2 = afwImage.BBox(afwImage.PointI(0, 0), 5, 5)
         try:
-            subExposure = smallExposure.getSubExposure(subRegion2)
+            subExposure = afwImage.ExposureF(self.smallExposure, subRegion2)
         except IndexError, e:
-       
             pass
         
         # this subRegion is not valid and should trigger an exception
         # from the MaskedImage class and should trigger an exception
         # from the WCS class for the MaskedImage 871034p_1_MI.
         
-        subRegion3 = afwImage.BBox2i(100, 100, 10, 10)
-        try:
-            subExposure = self.exposureCrWcs.getSubExposure(subRegion3)
-            self.fail("No exception raised for getSubExposureLargeMI")
-        except pexEx.LsstExceptionStack, e:
-            print "caught expected exception: %s" % e
-            pass
+        def getSubRegion():
+            subExposure = afwImage.ExposureF(self.exposureCrWcs, subRegion3)
+
+        subRegion3 = afwImage.BBox(afwImage.PointI(100, 100), 10, 10)
+        self.assertRaises(pexEx.LsstLengthError, getSubRegion)
 
         # this subRegion is not valid and should trigger an exception
         # from the MaskedImage class only for the MaskedImage small_MI.
         # small_MI (cols, rows) = (256, 256) 
 
-        subRegion4 = afwImage.BBox2i(250, 250, 10, 10)        
-        try:
-            subExposure = smallExposure.getSubExposure(subRegion4)
-            self.fail("No exception raised for getSubExposureSmallMI")
-        except pexEx.LsstExceptionStack, e:
-            print "caught expected exception: %s" % e
-            pass
+        def getSubRegion():
+            subExposure = afwImage.ExposureF(self.exposureCrWcs, subRegion3)
+
+        subRegion4 = afwImage.BBox(afwImage.PointI(250, 250), 10, 10)        
+        self.assertRaises(pexEx.LsstLengthError, getSubRegion)
         
     def testReadWriteFits(self):
          """
@@ -262,8 +232,8 @@ class ExposureTestCase(unittest.TestCase):
          Test that the readFits member can read an Exposure given the
          name of the Exposure.
 
-         The readFits member should read the Exposure's MaskedImage
-         using the MaskedImage class' readFits member and read the WCS
+         The constructor taking a basename should read the Exposure's MaskedImage
+         using the MaskedImage class' constructor and read the WCS
          metadata into a WCS object.  Currently the WCS class lacks
          the capability to return the metadata to the user so a
          readFits request should simply reset the _wcsPtr with the
@@ -275,28 +245,17 @@ class ExposureTestCase(unittest.TestCase):
          19 2007) therefore this member should throw a
          lsst::pex::exceptions::InvalidParameter.
          """
-         exposure = afwImage.ExposureF()
-
          # This should pass without an exception
-         exposure.readFits(inFilePathSmall)
+         exposure = afwImage.ExposureF(inFilePathSmall)
 
          # This should throw an exception
-         try:
-             exposure.readFits(inFilePathSmallImage)
-             self.fail("No exception raised for readFits")
-         except pexEx.LsstNotFound, e:
-             print "caught expected exception: %s" % e
-             pass
+         def getExposure():
+             exposure = afwImage.ExposureF(inFilePathSmallImage)
+             
+         self.assertRaises(pexEx.LsstNotFound, getExposure)
 
          # This should not throw an exception 
-         #try:
          exposure.writeFits(outFilePath)
-         #exposure.writeFits(OutputMaskedImageName)         
-         #    self.fail("No exception raised for writeFits")
-         #except pexEx.LsstInvalidParameter, e:
-         #    print "caught expected exception: %s" % e
-         #    pass
-
          
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -312,5 +271,9 @@ def suite():
 
     return unittest.TestSuite(suites)
 
+def run(exit=False):
+    """Run the tests"""
+    utilsTests.run(suite(), exit)
+
 if __name__ == "__main__":
-    utilsTests.run(suite())
+    run(True)
