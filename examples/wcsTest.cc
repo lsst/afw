@@ -39,10 +39,10 @@ int main(int argc, char **argv) {
     
     std::cout << "Opening file " << inFilename << std::endl;
 
-    DataProperty::PtrType miMetaData = DataProperty::createPropertyNode("FitsMetaData");
+    DataProperty::PtrType miMetadata = DataProperty::createPropertyNode("FitsMetadata");
     int const hdu = 0;
-    image::MaskedImage<pixelType> mskdImage(inFilename, hdu, miMetaData);
-    image::Wcs wcs(miMetaData);
+    image::MaskedImage<pixelType> mskdImage(inFilename, hdu, miMetadata);
+    image::Wcs wcs(miMetadata);
     
     // Testing input col, row values 
 

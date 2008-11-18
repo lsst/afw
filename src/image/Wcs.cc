@@ -30,7 +30,7 @@ using lsst::afw::image::PointD;
  */
 lsst::afw::image::Wcs::Wcs() :
     LsstBase(typeid(this)),
-    _fitsMetaData(),
+    _fitsMetadata(),
     _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0) {
 }
 
@@ -40,10 +40,10 @@ lsst::afw::image::Wcs::Wcs() :
  * @throw lsst::pex::exceptions::Runtime on error
  */
 lsst::afw::image::Wcs::Wcs(
-    lsst::daf::base::DataProperty::PtrType fitsMetaData  ///< The contents of a valid FITS header
+    lsst::daf::base::DataProperty::PtrType fitsMetadata  ///< The contents of a valid FITS header
 ) :
     LsstBase(typeid(this)),
-    _fitsMetaData(fitsMetaData),
+    _fitsMetadata(fitsMetadata),
     _wcsInfo(NULL),
     _nWcsInfo(0),
     _nReject(0)
@@ -54,8 +54,8 @@ lsst::afw::image::Wcs::Wcs(
     _wcsfixCtrl = 2;
     _wcshdrCtrl = 2;
 
-    std::string metadataStr = FitsFormatter::formatDataProperty( fitsMetaData, false );
-    int nCards = FitsFormatter::countFITSHeaderCards( fitsMetaData, false );
+    std::string metadataStr = FitsFormatter::formatDataProperty( fitsMetadata, false );
+    int nCards = FitsFormatter::countFITSHeaderCards( fitsMetadata, false );
     if (nCards <= 0) {
         throw lsst::pex::exceptions::Runtime("Could not parse FITS WCS: no header cards found");
     }
@@ -105,7 +105,7 @@ lsst::afw::image::Wcs::Wcs(
  */
 lsst::afw::image::Wcs::Wcs(Wcs const & rhs):
     LsstBase(typeid(this)),
-    _fitsMetaData(rhs._fitsMetaData),
+    _fitsMetadata(rhs._fitsMetadata),
     _wcsInfo(NULL),
     _nWcsInfo(0),
     _relax(rhs._relax),
@@ -143,7 +143,7 @@ lsst::afw::image::Wcs & lsst::afw::image::Wcs::operator = (const lsst::afw::imag
         if (_nWcsInfo > 0) {
             wcsvfree(&_nWcsInfo, &_wcsInfo);
         }
-        _fitsMetaData = rhs._fitsMetaData;
+        _fitsMetadata = rhs._fitsMetadata;
         _nWcsInfo = 0;
         _wcsInfo = NULL;
         _relax = rhs._relax;

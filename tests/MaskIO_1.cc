@@ -24,13 +24,13 @@ void test(char *name) {
     testMask.printMaskPlanes();
 
     // check the full metadata from the FITS header
-    DataProperty::PtrType metaDataPtr = testMask.getMetaData();
-    cout << metaDataPtr->toString("",true) << endl;
+    DataProperty::PtrType metadataPtr = testMask.getMetadata();
+    cout << metadataPtr->toString("",true) << endl;
 
     // try some pattern matching on metadata
     const string pattern("WAT.*");
     cout << "Searching metadata with pattern " + pattern << endl;
-    DataProperty::iteratorRangeType matches = metaDataPtr->searchAll(pattern);
+    DataProperty::iteratorRangeType matches = metadataPtr->searchAll(pattern);
     DataProperty::ContainerType::const_iterator iter;
     for( iter = matches.first; iter!= matches.second; iter++) {
         cout << "    found " + (*iter)->toString() << endl;

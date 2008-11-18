@@ -73,7 +73,7 @@ lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure(int cols, ///< nu
                                                                lsst::afw::image::Wcs const& wcs ///< the Wcs
                                                               ) :
     lsst::daf::data::LsstBase(typeid(this)),
-    _metaData(lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData")),
+    _metadata(lsst::daf::base::DataProperty::createPropertyNode("FitsMetadata")),
     _maskedImage(cols, rows),
     _wcsPtr(new lsst::afw::image::Wcs (wcs))
 {}
@@ -86,7 +86,7 @@ lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     lsst::afw::image::Wcs const& wcs                                      ///< the Wcs
     ) : 
     lsst::daf::data::LsstBase(typeid(this)),
-    _metaData(lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData")),
+    _metadata(lsst::daf::base::DataProperty::createPropertyNode("FitsMetadata")),
     _maskedImage(maskedImage),
     _wcsPtr(new lsst::afw::image::Wcs (wcs))
 {}
@@ -106,7 +106,7 @@ lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &s
                                                                BBox const& bbox,    ///< Desired region in Exposure 
                                                                bool const deep) :   ///< Should we make copy of pixels?
     lsst::daf::data::LsstBase(typeid(this)),
-    _metaData(lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData")),
+    _metadata(lsst::daf::base::DataProperty::createPropertyNode("FitsMetadata")),
     _maskedImage(src.getMaskedImage(), bbox, deep),
     _wcsPtr(new lsst::afw::image::Wcs(*src._wcsPtr))
 {}
@@ -133,9 +133,9 @@ lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure(std::string const
                                                                bool conformMasks  //!< Make Mask conform to mask layout in file?
                                                          ) :
     lsst::daf::data::LsstBase(typeid(this)),
-    _metaData(lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData")),
-    _maskedImage(baseName, hdu, _metaData, conformMasks),
-    _wcsPtr(new lsst::afw::image::Wcs(_metaData))
+    _metadata(lsst::daf::base::DataProperty::createPropertyNode("FitsMetadata")),
+    _maskedImage(baseName, hdu, _metadata, conformMasks),
+    _wcsPtr(new lsst::afw::image::Wcs(_metadata))
 {
     ;
 }
@@ -181,7 +181,7 @@ void lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::setWcs(lsst::afw::ima
   * Member takes the Exposure's base output file name (as a std::string without
   * the _img.fits, _var.fits, or _msk.fits suffixes) and uses the MaskedImage
   * Class to write the MaskedImage files, _img.fits, _var.fits, and _msk.fits to
-  * disk.  Method also uses the metaData information to update the Exposure's
+  * disk.  Method also uses the metadata information to update the Exposure's
   * fits header cards.
   *
   * @note The MaskedImage Class will throw an pex Exception if the base
@@ -193,16 +193,16 @@ void lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::writeFits(
                                                                     ) const {
     using lsst::daf::base::DataProperty;
 
-    DataProperty::PtrType outputMetaData(new DataProperty(*_metaData));
-    DataProperty::PtrType wcsMetaData = lsst::afw::formatters::WcsFormatter::generateDataProperty(*_wcsPtr);
+    DataProperty::PtrType outputMetadata(new DataProperty(*_metadata));
+    DataProperty::PtrType wcsMetadata = lsst::afw::formatters::WcsFormatter::generateDataProperty(*_wcsPtr);
     //
-    // Copy wcsMetaData over to outputMetaData
+    // Copy wcsMetadata over to outputMetadata
     //
-    for (DataProperty::iteratorRangeType be = wcsMetaData->getChildren(); be.first != be.second; be.first++) {
-        outputMetaData->addProperty(*be.first);
+    for (DataProperty::iteratorRangeType be = wcsMetadata->getChildren(); be.first != be.second; be.first++) {
+        outputMetadata->addProperty(*be.first);
     }
 
-    _maskedImage.writeFits(expOutFile, outputMetaData);
+    _maskedImage.writeFits(expOutFile, outputMetadata);
 }
 
 // Explicit instantiations

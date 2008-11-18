@@ -30,15 +30,15 @@ namespace image {
         typedef boost::shared_ptr<lsst::afw::image::Wcs> Ptr;
         
         Wcs();
-        Wcs(lsst::daf::base::DataProperty::PtrType fitsMetaData);
+        Wcs(lsst::daf::base::DataProperty::PtrType fitsMetadata);
         Wcs(Wcs const &);
         Wcs & operator = (const Wcs &);
 
         ~Wcs();
 
         /// Return the input fits header
-        lsst::daf::base::DataProperty::PtrType getFitsMetaData() const { 
-            return _fitsMetaData; 
+        lsst::daf::base::DataProperty::PtrType getFitsMetadata() const { 
+            return _fitsMetadata; 
         }
 
         /// Return true iff Wcs is valid
@@ -60,7 +60,7 @@ namespace image {
     private:
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::WcsFormatter);
 
-        lsst::daf::base::DataProperty::PtrType _fitsMetaData; ///< Input FITS header.  Caveat Emptor: may contain other keywords
+        lsst::daf::base::DataProperty::PtrType _fitsMetadata; ///< Input FITS header.  Caveat Emptor: may contain other keywords
         // including e.g. SIMPLE and BITPIX
         struct wcsprm* _wcsInfo;
         int _nWcsInfo;

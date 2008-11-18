@@ -317,7 +317,7 @@ image::Image<PixelT>& image::Image<PixelT>::operator=(Image const& rhs) {
 template<typename PixelT>
 image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
                             int const hdu,               ///< Desired HDU
-                            lsst::daf::base::DataProperty::PtrType metaData ///< file metaData (may point to NULL)
+                            lsst::daf::base::DataProperty::PtrType metadata ///< file metadata (may point to NULL)
                            ) :
     image::ImageBase<PixelT>() {
 
@@ -334,7 +334,7 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
         throw lsst::pex::exceptions::NotFound(boost::format("File %s doesn't exist") % fileName);
     }
 
-    if (!image::fits_read_image<fits_img_types>(fileName, *this->_getRawImagePtr(), metaData)) {
+    if (!image::fits_read_image<fits_img_types>(fileName, *this->_getRawImagePtr(), metadata)) {
         throw lsst::pex::exceptions::FitsError(boost::format("Failed to read %s HDU %d") % fileName % hdu);
     }
     this->_setRawView();
@@ -346,13 +346,13 @@ template<typename PixelT>
 void image::Image<PixelT>::writeFits(
 	std::string const& fileName,    ///< File to write
 #if 1                                   // Old name for boost::shared_ptrs
-        typename lsst::daf::base::DataProperty::PtrType metaData //!< metadata to write to header; or NULL
+        typename lsst::daf::base::DataProperty::PtrType metadata //!< metadata to write to header; or NULL
 #else
-        typename lsst::daf::base::DataProperty::ConstPtr metaData //!< metadata to write to header; or NULL
+        typename lsst::daf::base::DataProperty::ConstPtr metadata //!< metadata to write to header; or NULL
 #endif
                                     ) const {
 
-    image::fits_write_view(fileName, _getRawView(), metaData);
+    image::fits_write_view(fileName, _getRawView(), metadata);
 }
 
 /************************************************************************************************************/

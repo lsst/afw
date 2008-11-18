@@ -186,14 +186,14 @@ class MaskTestCase(unittest.TestCase):
         rmask = afwImage.MaskU(tmpFile)
         self.assertEqual(mask.get(0,0), rmask.get(0,0))
         #
-        # Check that we wrote (and read) the metaData successfully
+        # Check that we wrote (and read) the metadata successfully
         #
         for (k, v) in afwImage.MaskU_getMaskPlaneDict().items():
-            #self.assertEqual(rmask.getMetaData().findUnique(k, True).getValueInt(), v)
+            #self.assertEqual(rmask.getMetadata().findUnique(k, True).getValueInt(), v)
             pass
 
         if False:
-            print rmask.getMetaData().toString("", True)
+            print rmask.getMetadata().toString("", True)
             rmask.printMaskPlanes()
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -243,30 +243,30 @@ class OldMaskTestCase(unittest.TestCase):
 
         self.assertEqual(nplane, self.testMask.getNumPlanesUsed(), "Adding and removing planes")
 
-    def testMetaData(self):
-        """Test mask plane metaData interchange with MaskPlaneDict"""
+    def testMetadata(self):
+        """Test mask plane metadata interchange with MaskPlaneDict"""
         #
         # Demonstrate that we can extract a MaskPlaneDict into metadata
         #
-        metaData = lsst.daf.base.DataProperty_createPropertyNode("testMetaData")
+        metadata = lsst.daf.base.DataProperty_createPropertyNode("testMetadata")
 
-        afwImage.MaskU_addMaskPlanesToMetaData(metaData)
+        afwImage.MaskU_addMaskPlanesToMetadata(metadata)
         try:
             for (k, v) in afwImage.MaskU_getMaskPlaneDict().items():
-                self.assertEqual(metaData.findUnique("MP_%s" % k).getValueInt(), v)
+                self.assertEqual(metadata.findUnique("MP_%s" % k).getValueInt(), v)
         except Exception, e:
             print >> sys.stderr, "Failed to use DataPropertyPtr (need >= swig 1.3.35): %s", e
         #
-        # Now add another plane to metaData and make it appear in the mask Dict, albeit
+        # Now add another plane to metadata and make it appear in the mask Dict, albeit
         # in general at another location (hence the getNumPlanesUsed call)
         #
         newPlane = lsst.daf.base.DataProperty("MP_" + "Whatever", afwImage.MaskU_getNumPlanesUsed())
-        metaData.addProperty(newPlane)
+        metadata.addProperty(newPlane)
 
-        self.testMask.conformMaskPlanes(afwImage.MaskU_parseMaskPlaneMetaData(metaData))
+        self.testMask.conformMaskPlanes(afwImage.MaskU_parseMaskPlaneMetadata(metadata))
         try:
             for (k, v) in afwImage.MaskU_getMaskPlaneDict().items():
-                self.assertEqual(metaData.findUnique("MP_%s" % k).getValueInt(), v)
+                self.assertEqual(metadata.findUnique("MP_%s" % k).getValueInt(), v)
         except Exception, e:
             print >> sys.stderr, "Failed to use DataPropertyPtr (need >= swig 1.3.35): %s", e
 

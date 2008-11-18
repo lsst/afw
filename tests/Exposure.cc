@@ -60,10 +60,10 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
     // These have been commented out upon merging to the trunk.
     
     // Read a fits file in as a MaskedImage
-    base::DataProperty::PtrType miMetaData = base::DataProperty::createPropertyNode("FitsMetaData");
+    base::DataProperty::PtrType miMetadata = base::DataProperty::createPropertyNode("FitsMetadata");
     int const hdu = 0;
     image::MaskedImage<pixelType> mImageFOO(afwdata + "/small_MI"); // input CFHT MI
-    image::MaskedImage<pixelType> mImage(afwdata + "/small_MI", hdu, miMetaData); // input CFHT MI
+    image::MaskedImage<pixelType> mImage(afwdata + "/small_MI", hdu, miMetadata); // input CFHT MI
         
     // Write it back out...
         
@@ -90,9 +90,9 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
 
     // (3) Construct an Exposure from a MaskedImage and a Wcs.  Need to
     // construct a Wcs first.  The Wcs class takes the Exposure metadata
-    // as a DataPropertyPtrT.  getMetaData() returns a pointer to the metadata.
+    // as a DataPropertyPtrT.  getMetadata() returns a pointer to the metadata.
 
-    base::DataProperty::PtrType mData = miMetaData;
+    base::DataProperty::PtrType mData = miMetadata;
 
     // make sure it can be copied.
     image::Wcs myWcs(mData);  
@@ -145,7 +145,7 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
        
     try {
         int const hdu = 0;          // the HDU to read
-        base::DataProperty::PtrType mCorData(base::DataProperty::createPropertyNode("FitsMetaData"));
+        base::DataProperty::PtrType mCorData(base::DataProperty::createPropertyNode("FitsMetadata"));
         image::MaskedImage<pixelType> mCorruptImage("tests/data/small_MI_corrupt", hdu,
                                                     mCorData); // CFHT MI with corrupt header
         image::Wcs wcs = image::Wcs(mCorData);

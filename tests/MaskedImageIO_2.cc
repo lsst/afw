@@ -27,9 +27,9 @@ void test(char *name) {
     typedef float ImagePixelType;
 
     const int hdu = 0;
-    lsst::daf::base::DataProperty::PtrType metaData(static_cast<lsst::daf::base::DataProperty *>(NULL));
+    lsst::daf::base::DataProperty::PtrType metadata(static_cast<lsst::daf::base::DataProperty *>(NULL));
     bool const conformMask = true;      // use mask definitions from the file
-    image::MaskedImage<ImagePixelType, MaskPixelType> testMasked(name, hdu, metaData, conformMask);
+    image::MaskedImage<ImagePixelType, MaskPixelType> testMasked(name, hdu, metadata, conformMask);
 
     testMasked.writeFits("testout");
 }

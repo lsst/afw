@@ -59,7 +59,7 @@ namespace cfitsio {
     int getNumKeys(fitsfile* fd);
     void getKey(fitsfile* fd, int n, std::string & keyWord, std::string & keyValue, std::string & keyComment);
 
-    void getMetaData(fitsfile* fd, lsst::daf::base::DataProperty::PtrType metaData);    
+    void getMetadata(fitsfile* fd, lsst::daf::base::DataProperty::PtrType metadata);    
 }
 
 namespace detail {
@@ -223,7 +223,7 @@ class fits_reader : public fits_file_mgr {
     typedef lsst::daf::base::DataProperty DataProperty;
 protected:
     int _hdu;                                            //!< desired HDU
-    DataProperty::PtrType _metaData;                     //!< header metadata
+    DataProperty::PtrType _metadata;                     //!< header metadata
     int _naxis1, _naxis2;                                //!< dimension of image
     int _ttype;                                          //!< cfitsio's name for data type
     int _bitpix;                                         //!< FITS' BITPIX keyword
@@ -278,20 +278,20 @@ protected:
 public:
     fits_reader(cfitsio::fitsfile *file,
 #if 1                                   // Old name for boost::shared_ptrs
-                lsst::daf::base::DataProperty::PtrType metaData, // = typename lsst::daf::base::DataProperty::PtrType(static_cast<lsst::daf::base::DataProperty *>(0)),
+                lsst::daf::base::DataProperty::PtrType metadata, // = typename lsst::daf::base::DataProperty::PtrType(static_cast<lsst::daf::base::DataProperty *>(0)),
 #else
-                lsst::daf::base::DataProperty::ConstPtr metaData, // = typename lsst::daf::base::DataProperty::ConstPtr(static_cast<lsst::daf::base::DataProperty *>(0)),
+                lsst::daf::base::DataProperty::ConstPtr metadata, // = typename lsst::daf::base::DataProperty::ConstPtr(static_cast<lsst::daf::base::DataProperty *>(0)),
 #endif
                 int hdu=0) :
-        fits_file_mgr(file), _hdu(hdu), _metaData(metaData) { init(); }
+        fits_file_mgr(file), _hdu(hdu), _metadata(metadata) { init(); }
     fits_reader(const std::string& filename,
 #if 1                                   // Old name for boost::shared_ptrs
-                lsst::daf::base::DataProperty::PtrType metaData,
+                lsst::daf::base::DataProperty::PtrType metadata,
 #else
-                lsst::daf::base::DataProperty::ConstPtr metaData,
+                lsst::daf::base::DataProperty::ConstPtr metadata,
 #endif
                 int hdu=0) :
-        fits_file_mgr(filename, "rb"), _hdu(hdu), _metaData(metaData) { init(); }
+        fits_file_mgr(filename, "rb"), _hdu(hdu), _metadata(metadata) { init(); }
 
     ~fits_reader() { }
 
@@ -314,7 +314,7 @@ public:
         /*
          * Read metadata
          */
-        cfitsio::getMetaData(_fd.get(), _metaData);
+        cfitsio::getMetadata(_fd.get(), _metadata);
 
         for (int y = 0; y != view.height(); ++y) {
             long fpixel[2];                     // tell cfitsio which pixels to read
@@ -353,9 +353,9 @@ public:
     template <typename View>
     void apply(const View& view,
 #if 1                                   // Old name for boost::shared_ptrs
-               lsst::daf::base::DataProperty::PtrType metaData
+               lsst::daf::base::DataProperty::PtrType metadata
 #else
-               lsst::daf::base::DataProperty::ConstPtr metaData
+               lsst::daf::base::DataProperty::ConstPtr metadata
 #endif
               ) {
         const int nAxis = 2;
@@ -375,10 +375,10 @@ public:
          * since cfitsio will put in its own in any case.
          */
 #if 1
-        if (metaData != NULL) {
+        if (metadata != NULL) {
             using lsst::daf::base::DataProperty;
             
-            DataProperty::iteratorRangeType range = metaData->getChildren();
+            DataProperty::iteratorRangeType range = metadata->getChildren();
             DataProperty::ContainerIteratorType iter;
             for (iter = range.first; iter != range.second; ++iter) {
                 DataProperty::PtrType dpItemPtr = *iter;

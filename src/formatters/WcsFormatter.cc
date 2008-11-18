@@ -137,7 +137,7 @@ void WcsFormatter::delegateSerialize(
     }
 
     // Serialize most fields normally
-    ar & ip->_fitsMetaData & ip->_nWcsInfo & ip->_relax;
+    ar & ip->_fitsMetadata & ip->_nWcsInfo & ip->_relax;
     ar & ip->_wcsfixCtrl & ip->_wcshdrCtrl & ip->_nReject;
 
     // If we are loading, create the array of Wcs parameter structs

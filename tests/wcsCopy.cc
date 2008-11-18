@@ -27,10 +27,10 @@ int main() {
         // Create a wcs from a fits file (so the wcs has some memory to allocate)
         std::cout << "Opening file " << inFilename << std::endl;
 
-        DataProperty::PtrType metaData = DataProperty::createPropertyNode("FitsMetaData");
+        DataProperty::PtrType metadata = DataProperty::createPropertyNode("FitsMetadata");
         int const hdu = 0;
-        lsst::afw::image::MaskedImage<pixelType, lsst::afw::image::MaskPixel> mImage(inFilename, hdu, metaData);
-        lsst::afw::image::Wcs wcs(metaData);
+        lsst::afw::image::MaskedImage<pixelType, lsst::afw::image::MaskPixel> mImage(inFilename, hdu, metadata);
+        lsst::afw::image::Wcs wcs(metadata);
         
         std::cout << "making a copy of a wcs" << std::endl;
         { // use copy constructor and deallocate the copy

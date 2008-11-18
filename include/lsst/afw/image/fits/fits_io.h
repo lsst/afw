@@ -35,13 +35,13 @@ struct fits_read_support {
 inline boost::gil::point2<std::ptrdiff_t> fits_read_dimensions(const char* filename) {
 #if 1                                   // Old name for boost::shared_ptrs
     lsst::daf::base::DataProperty::PtrType
-        metaData = lsst::daf::base::DataProperty::PtrType(static_cast<lsst::daf::base::DataProperty *>(0));
+        metadata = lsst::daf::base::DataProperty::PtrType(static_cast<lsst::daf::base::DataProperty *>(0));
 #else
     lsst::daf::base::DataProperty::ConstPtr
-        metaData = lsst::daf::base::DataProperty::ConstPtr(static_cast<lsst::daf::base::DataProperty *>(0));
+        metadata = lsst::daf::base::DataProperty::ConstPtr(static_cast<lsst::daf::base::DataProperty *>(0));
 #endif
 
-    detail::fits_reader m(filename, metaData);
+    detail::fits_reader m(filename, metadata);
     return m.get_getDimensions();
 }
 
@@ -61,15 +61,15 @@ template <typename View>
 inline void fits_read_view(std::string const& filename,const View& view,
 #if 1                                   // Old name for boost::shared_ptrs
                            typename lsst::daf::base::DataProperty::PtrType
-                           metaData = typename lsst::daf::base::DataProperty::PtrType(static_cast<lsst::daf::base::DataProperty *>(0))
+                           metadata = typename lsst::daf::base::DataProperty::PtrType(static_cast<lsst::daf::base::DataProperty *>(0))
 #else
                            typename lsst::daf::base::DataProperty::ConstPtr
-                           metaData = typename lsst::daf::base::DataProperty::ConstPtr(static_cast<lsst::daf::base::DataProperty *>(0))
+                           metadata = typename lsst::daf::base::DataProperty::ConstPtr(static_cast<lsst::daf::base::DataProperty *>(0))
 #endif
                           ) {
     BOOST_STATIC_ASSERT(fits_read_support<View>::is_supported);
 
-    detail::fits_reader m(filename, metaData);
+    detail::fits_reader m(filename, metadata);
     m.apply(view);
 }
 
@@ -84,15 +84,15 @@ template <typename Image>
 inline void fits_read_image(const std::string& filename, Image& im,
 #if 1                                   // Old name for boost::shared_ptrs
                             typename lsst::daf::base::DataProperty::PtrType
-                            metaData = typename lsst::daf::base::DataProperty::PtrType(static_cast<lsst::daf::base::DataProperty *>(0))
+                            metadata = typename lsst::daf::base::DataProperty::PtrType(static_cast<lsst::daf::base::DataProperty *>(0))
 #else
                             typename lsst::daf::base::DataProperty::ConstPtr
-                            metaData = typename lsst::daf::base::DataProperty::ConstPtr(static_cast<lsst::daf::base::DataProperty *>(0))
+                            metadata = typename lsst::daf::base::DataProperty::ConstPtr(static_cast<lsst::daf::base::DataProperty *>(0))
 #endif
                            ) {
     BOOST_STATIC_ASSERT(fits_read_support<typename Image::view_t>::is_supported);
 
-    detail::fits_reader m(filename, metaData);
+    detail::fits_reader m(filename, metadata);
     m.read_image(im);
 }
 
@@ -104,16 +104,16 @@ template <typename View>
 inline void fits_write_view(const std::string& filename, const View& view,
 #if 1                                   // Old name for boost::shared_ptrs
                             lsst::daf::base::DataProperty::PtrType
-                            metaData = typename lsst::daf::base::DataProperty::PtrType(static_cast<lsst::daf::base::DataProperty *>(0))
+                            metadata = typename lsst::daf::base::DataProperty::PtrType(static_cast<lsst::daf::base::DataProperty *>(0))
 #else
                             lsst::daf::base::DataProperty::ConstPtr
-                            metaData = typename lsst::daf::base::DataProperty::ConstPtr(static_cast<lsst::daf::base::DataProperty *>(0))
+                            metadata = typename lsst::daf::base::DataProperty::ConstPtr(static_cast<lsst::daf::base::DataProperty *>(0))
 #endif
                            ) {
     BOOST_STATIC_ASSERT(fits_read_support<View>::is_supported);
 
     detail::fits_writer m(filename);
-    m.apply(view, metaData);
+    m.apply(view, metadata);
 }
 
 }}}                                     // namespace lsst::afw::image

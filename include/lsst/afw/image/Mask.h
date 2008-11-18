@@ -88,7 +88,7 @@ namespace image {
         //void readFits(const std::string& fileName, bool conformMasks=false, int hdu=0); // replaced by constructor
         void writeFits(std::string const& fileName) const;
         
-        lsst::daf::base::DataProperty::PtrType getMetaData();
+        lsst::daf::base::DataProperty::PtrType getMetadata();
 
         // Mask Plane ops
         
@@ -101,7 +101,7 @@ namespace image {
 
         //void setMaskPlaneValues(int plane, MaskPixelBooleanFunc<MaskPixelT> selectionFunc);
         
-        static MaskPlaneDict parseMaskPlaneMetaData(lsst::daf::base::DataProperty::PtrType const);
+        static MaskPlaneDict parseMaskPlaneMetadata(lsst::daf::base::DataProperty::PtrType const);
         
         //int countMask(MaskPixelBooleanFunc<MaskPixelT>& testFunc, const vw::BBox2i maskRegion) const;
         
@@ -120,25 +120,25 @@ namespace image {
         static const MaskPlaneDict& getMaskPlaneDict() { return _maskPlaneDict; }
         static void printMaskPlanes();
 
-        static void addMaskPlanesToMetaData(lsst::daf::base::DataProperty::PtrType);
+        static void addMaskPlanesToMetadata(lsst::daf::base::DataProperty::PtrType);
         //
         // This one isn't static, it fixes up a given Mask's planes
         void conformMaskPlanes(MaskPlaneDict& masterPlaneDict);
         
         // Getters
 #if 1                                   // Old name for boost::shared_ptrs
-        lsst::daf::base::DataProperty::PtrType getMetaData() const { return _metaData; }
+        lsst::daf::base::DataProperty::PtrType getMetadata() const { return _metadata; }
 #else
-        lsst::daf::base::DataProperty::Ptr      getMetaData()       { return _metaData; }
-        lsst::daf::base::DataProperty::ConstPtr getMetaData() const { return _metaData; }
+        lsst::daf::base::DataProperty::Ptr      getMetadata()       { return _metadata; }
+        lsst::daf::base::DataProperty::ConstPtr getMetadata() const { return _metadata; }
 #endif
         
 private:
         //LSST_PERSIST_FORMATTER(lsst::afw::formatters::MaskFormatter);
 #if 1                                   // Old name for boost::shared_ptrs
-        lsst::daf::base::DataProperty::PtrType _metaData;
+        lsst::daf::base::DataProperty::PtrType _metadata;
 #else
-        lsst::daf::base::DataProperty::Ptr _metaData;
+        lsst::daf::base::DataProperty::Ptr _metadata;
 #endif
         int _myMaskDictVersion;         // version number for bitplane dictionary for this Mask
 

@@ -24,19 +24,19 @@ void test(char *name) {
     typedef lsst::afw::image::MaskPixel MaskPixelType;
     typedef float ImagePixelType;
 
-    DataProperty::PtrType metaDataPtr(DataProperty::createPropertyNode("FitsMetaData"));
+    DataProperty::PtrType metadataPtr(DataProperty::createPropertyNode("FitsMetadata"));
     int const hdu = 0;
-    lsst::afw::image::MaskedImage<ImagePixelType, MaskPixelType> testMasked(name, hdu, metaDataPtr);
+    lsst::afw::image::MaskedImage<ImagePixelType, MaskPixelType> testMasked(name, hdu, metadataPtr);
 
     Trace("MaskedImageIO_1", 1,
           boost::format("Number of FITS header cards: %d") 
-          % FitsFormatter::countFITSHeaderCards(metaDataPtr, false));
+          % FitsFormatter::countFITSHeaderCards(metadataPtr, false));
 
     Trace("MaskedImageIO_1", 3,
         boost::format("FITS metadata string: %s") 
-            % FitsFormatter::formatDataProperty(metaDataPtr, false));
+            % FitsFormatter::formatDataProperty(metadataPtr, false));
 
-    lsst::afw::image::Wcs testWcs(metaDataPtr);
+    lsst::afw::image::Wcs testWcs(metadataPtr);
 
     lsst::afw::image::PointD pix, sky;
 

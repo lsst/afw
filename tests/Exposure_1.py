@@ -50,7 +50,7 @@ class ExposureTestCase(unittest.TestCase):
         self.smallExposure = afwImage.ExposureF(inFilePathSmall)
         self.width =  maskedImage.getWidth()
         self.height = maskedImage.getHeight()
-        self.wcs = afwImage.Wcs(self.smallExposure.getMetaData())
+        self.wcs = afwImage.Wcs(self.smallExposure.getMetadata())
 
         self.exposureBlank = afwImage.ExposureF()
         self.exposureMiOnly = afwImage.ExposureF(maskedImage)

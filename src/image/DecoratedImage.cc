@@ -12,7 +12,7 @@ namespace image = lsst::afw::image;
 
 template<typename PixelT>
 void image::DecoratedImage<PixelT>::init() {
-    _metadata = lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData");
+    _metadata = lsst::daf::base::DataProperty::createPropertyNode("FitsMetadata");
     _gain = 0;
 }
 

@@ -368,7 +368,7 @@ void writeBasicFits(int fd,                                      // file descrip
      * Was there something else?
      */
     if (Wcs != NULL) {
-        DataProperty::iteratorRangeType wcsCards = Wcs->getFitsMetaData()->getChildren();
+        DataProperty::iteratorRangeType wcsCards = Wcs->getFitsMetadata()->getChildren();
         
         for (DataProperty::ContainerIteratorType i = wcsCards.first; i != wcsCards.second; i++) {
             Card card(*(*i));

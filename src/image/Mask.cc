@@ -31,7 +31,7 @@ namespace image = lsst::afw::image;
 template<typename MaskPixelT>
 image::Mask<MaskPixelT>::Mask(int width, int height, MaskPlaneDict const& planeDefs) :
     image::ImageBase<MaskPixelT>(width, height),
-    _metaData(lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData")),
+    _metadata(lsst::daf::base::DataProperty::createPropertyNode("FitsMetadata")),
     _myMaskDictVersion(_maskDictVersion) {
 
     lsst::pex::logging::Trace("afw.Mask", 5,
@@ -46,7 +46,7 @@ image::Mask<MaskPixelT>::Mask(int width, int height, MaskPlaneDict const& planeD
 template<typename MaskPixelT>
 image::Mask<MaskPixelT>::Mask(const std::pair<int, int> dimensions, MaskPlaneDict const& planeDefs) :
     image::ImageBase<MaskPixelT>(dimensions),
-    _metaData(lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData")),
+    _metadata(lsst::daf::base::DataProperty::createPropertyNode("FitsMetadata")),
     _myMaskDictVersion(_maskDictVersion) {
 
     lsst::pex::logging::Trace("afw.Mask", 5,
@@ -61,14 +61,14 @@ image::Mask<MaskPixelT>::Mask(const std::pair<int, int> dimensions, MaskPlaneDic
 template<typename MaskPixelT>
 image::Mask<MaskPixelT>::Mask(Mask const& rhs, const BBox& bbox, const bool deep) :
     image::ImageBase<MaskPixelT>(rhs, bbox, deep),
-    _metaData(rhs._metaData),
+    _metadata(rhs._metadata),
     _myMaskDictVersion(_myMaskDictVersion) {
 }
 
 template<typename MaskPixelT>
 image::Mask<MaskPixelT>::Mask(image::Mask<MaskPixelT> const& rhs, bool deep) :
     image::ImageBase<MaskPixelT>(rhs, deep),
-    _metaData(rhs._metaData),
+    _metadata(rhs._metadata),
     _myMaskDictVersion(_myMaskDictVersion) {
 }
 
@@ -91,8 +91,8 @@ image::Mask<MaskPixelT>& image::Mask<MaskPixelT>::operator=(const MaskPixelT rhs
 }
 
 template<typename MaskPixelT>
-lsst::daf::base::DataProperty::PtrType image::Mask<MaskPixelT>::getMetaData() {
-    return _metaData;
+lsst::daf::base::DataProperty::PtrType image::Mask<MaskPixelT>::getMetadata() {
+    return _metadata;
 }
 
 /**
@@ -106,14 +106,14 @@ lsst::daf::base::DataProperty::PtrType image::Mask<MaskPixelT>::getMetaData() {
 template<typename MaskPixelT>
 image::Mask<MaskPixelT>::Mask(std::string const& fileName, //!< Name of file to read
         int const hdu,                                     //!< HDU to read 
-        lsst::daf::base::DataProperty::PtrType metaData,   //!< file metaData (may point to NULL)
+        lsst::daf::base::DataProperty::PtrType metadata,   //!< file metadata (may point to NULL)
         bool const conformMasks                            //!< Make Mask conform to mask layout in file?
                              ) :
     image::ImageBase<MaskPixelT>(),
-    _metaData(metaData) {
+    _metadata(metadata) {
 
-    if (_metaData.get() == NULL) {
-        _metaData = lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData");
+    if (_metadata.get() == NULL) {
+        _metadata = lsst::daf::base::DataProperty::createPropertyNode("FitsMetadata");
     }
     //
     // These are the permitted input file types
@@ -128,14 +128,14 @@ image::Mask<MaskPixelT>::Mask(std::string const& fileName, //!< Name of file to 
         throw lsst::pex::exceptions::NotFound(boost::format("File %s doesn't exist") % fileName);
     }
 
-    if (!image::fits_read_image<fits_mask_types>(fileName, *_getRawImagePtr(), _metaData)) {
+    if (!image::fits_read_image<fits_mask_types>(fileName, *_getRawImagePtr(), _metadata)) {
         throw lsst::pex::exceptions::FitsError(boost::format("Failed to read %s HDU %d") % fileName % hdu);
     }
     _setRawView();
     //
     // OK, we've read it.  Now make sense of its mask planes
     //
-    MaskPlaneDict fileMaskDict = parseMaskPlaneMetaData(_metaData); // look for mask planes in the file
+    MaskPlaneDict fileMaskDict = parseMaskPlaneMetadata(_metadata); // look for mask planes in the file
 
     if (fileMaskDict == _maskPlaneDict) { // file is consistent with Mask
         return;
@@ -154,8 +154,8 @@ image::Mask<MaskPixelT>::Mask(std::string const& fileName, //!< Name of file to 
 
 template<typename MaskPixelT>
 void image::Mask<MaskPixelT>::writeFits(std::string const& fileName) const {
-    addMaskPlanesToMetaData(getMetaData());
-    image::fits_write_view(fileName, _getRawView(), getMetaData());
+    addMaskPlanesToMetadata(getMetadata());
+    image::fits_write_view(fileName, _getRawView(), getMetadata());
 }
 
 template<typename MaskPixelT>
@@ -427,7 +427,7 @@ void image::Mask<MaskPixelT>::setMaskPlaneValues(const int plane, const int x0, 
  * @throw Throws lsst::pex::exceptions::InvalidParameter if given DataProperty is not a node
  */
 template<typename MaskPixelT>
-void image::Mask<MaskPixelT>::addMaskPlanesToMetaData(lsst::daf::base::DataProperty::PtrType rootPtr) {
+void image::Mask<MaskPixelT>::addMaskPlanesToMetadata(lsst::daf::base::DataProperty::PtrType rootPtr) {
      if( rootPtr->isNode() != true ) {
         throw lsst::pex::exceptions::InvalidParameter( "Given DataProperty object is not a node" );
         
@@ -455,7 +455,7 @@ void image::Mask<MaskPixelT>::addMaskPlanesToMetaData(lsst::daf::base::DataPrope
  * @returns a dictionary of mask names/plane assignments
  */
 template<typename MaskPixelT>
-typename image::Mask<MaskPixelT>::MaskPlaneDict image::Mask<MaskPixelT>::parseMaskPlaneMetaData(
+typename image::Mask<MaskPixelT>::MaskPlaneDict image::Mask<MaskPixelT>::parseMaskPlaneMetadata(
 	lsst::daf::base::DataProperty::PtrType const rootPtr //!< metadata from a Mask
                                                                                                ) {
     MaskPlaneDict newDict;

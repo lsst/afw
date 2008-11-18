@@ -162,15 +162,15 @@ void getKey(fitsfile* fd,
 
 // Private function to build a lsst::daf::base::DataProperty that contains all the FITS kw-value pairs
 
-void getMetaData(fitsfile* fd,
-                 lsst::daf::base::DataProperty::PtrType metaData) {
+void getMetadata(fitsfile* fd,
+                 lsst::daf::base::DataProperty::PtrType metadata) {
     // Get all the kw-value pairs from the FITS file, and add each to DataProperty
 
-    if (metaData.get() == NULL) {
+    if (metadata.get() == NULL) {
         return;
     }
 
-    if( metaData->isNode() != true ) {
+    if( metadata->isNode() != true ) {
         throw lsst::pex::exceptions::InvalidParameter( "Given metadata object is not a lsst::daf::base::DataProperty node" );
     }
     
@@ -186,7 +186,7 @@ void getMetaData(fitsfile* fd,
             lsst::daf::base::DataProperty::PtrType dpItemPtr(
                                                              new lsst::daf::base::DataProperty(keyName,
                                                                                                lsst::utils::stringToAny(val)));
-            metaData->addProperty(dpItemPtr);
+            metadata->addProperty(dpItemPtr);
         }
     }
 }
