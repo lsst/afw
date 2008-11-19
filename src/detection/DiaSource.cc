@@ -14,14 +14,16 @@ namespace lsst{
 namespace afw{
 namespace detection{
 
-
-Source::Source() : 
-    _sourceId(0),
+// -- DiaSource ----------------
+DiaSource::DiaSource() : 
+    _diaSourceId(0),
     _ampExposureId(0),
     _filterId(0),
     _objectId(0),
     _movingObjectId(0),
     _procHistoryId(0),
+    _scId(0);
+    _ssmId(0);
     _ra(0.0),
     _decl(0.0),
     _raErr4detection(0.0),
@@ -49,23 +51,37 @@ Source::Source() :
     _decAstrom(0.0),
     _decAstromErr(0.0),
     _taiMidPoint(0.0),
-    _taiRange(0.0),
+    _taiRange(0.0),    
     _fwhmA(0.0),
     _fwhmB(0.0),
     _fwhmTheta(0.0),
+    _lengthDeg(0.0),
+    _flux(0.0),
+    _fluxErr(0.0),
     _psfMag(0.0),
     _psfMagErr(0.0),
     _apMag(0.0),
     _apMagErr(0.0),
     _modelMag(0.0),
     _modelMagErr(0.0),
-    _petroMag(0.0),
-    _petroMagErr(0.0),
-    _apDia(0.0),        
+    _apDia(0.0),
+    _refMag(0.0),
+    _ixx(0.0),
+    _ixxErr(0.0),
+    _iyy(0.0),
+    _iyyErr(0.0),
+    _ixy(0.0),
+    _ixyErr(0.0),
     _snr(0.0),
     _chi2(0.0),
-    _sky(0.0),
-    _skyErr(0.0),
+    _valX1(0.0),
+    _valX2(0.0),
+    _valY1(0.0),
+    _valY2(0.0),
+    _valXY(0.0),                
+    _obsCode({0,0,0});
+    _isSynthetic(0);
+    _mopsStatus(0);
     _flag4association(0),
     _flag4detection(0),
     _flag4wcs(0),
@@ -73,38 +89,46 @@ Source::Source() :
     _nulls.set();
 }
 
-
-bool Source::operator==(Source const & d) const {
+bool DiaSource::operator==(DiaSource const & d) const {
     if (this == &d)  {
         return true;
     }
-    if (_sourceId         == d._sourceId         &&
+    if (_diaSourceId      == d._diaSourceId      &&
+        _ampExposureId    == d._ampExposureId    &&
         _filterId         == d._filterId         &&
         _procHistoryId    == d._procHistoryId    &&
+        _scId             == d._scId             &&                
         _ra               == d._ra               &&
         _dec              == d._dec              &&
-        _raErr4Wcs        == d._raErr4Wcs        &&
-        _decErr4Wcs       == d._decErr4Wcs       &&
+        _raErr4detection  == d._raErr4detection  &&
+        _decErr4detection == d._decErr4detection &&
         _taiMidPoint      == d._taiMidPoint      &&
+        _taiRange         == d._taiRange         &&
         _fwhmA            == d._fwhmA            &&
         _fwhmB            == d._fwhmB            &&
         _fwhmTheta        == d._fwhmTheta        &&
+        _lengthDeg        == d._lengthDeg        &&        
+        _flux             == d._flux             &&
+        _fluxErr          == d._fluxErr          &&
         _psfMag           == d._psfMag           &&
         _psfMagErr        == d._psfMagErr        &&
         _apMag            == d._apMag            &&
         _apMagErr         == d._apMagErr         &&
         _modelMag         == d._modelMag         &&
-        _modelMagErr      == d._modelMagErr      &&
         _snr              == d._snr              &&
-        _chi2             == d._chi2)
+        _chi2             == d._chi2             &&
+        _valX1            == d._valX1            &&
+        _valX2            == d._valX2            &&
+        _valY1            == d._valY1            &&
+        _valY2            == d._valY2            &&
+        _valXY            == d._valXY)     
     {
         if (_nulls == d._nulls) {
-           
-            return (isNull(AMP_EXPOSURE_ID)    || _ampExposureId    == d._ampExposureId   ) &&
-                   (isNull(OBJECT_ID)          || _objectId         == d._objectId        ) &&
+            return (isNull(OBJECT_ID)          || _objectId         == d._objectId        ) &&
                    (isNull(MOVING_OBJECT_ID)   || _movingObjectId   == d._movingObjectId  ) &&
-                   (isNull(RA_ERR_4_DETECTION) || _raErr4Detection  == d._raErr4Detection ) &&
-                   (isNull(DEC_ERR_4_DETECTION)|| _decErr4Detection == d._decErr4Detection) &&
+                   (isNull(SSM_ID)             || _ssmId            == d._ssmId           ) &&                  
+                   (isNull(RA_ERR_4_WCS)       || _raErr4wcs        == d._raErr4wcs       ) &&
+                   (isNull(DEC_ERR_4_WCS)      || _decErr4wcs       == d._decErr4wcs      ) &&
                    (isNull(X_FLUX)             || _xFlux            == d._xFlux           ) &&
                    (isNull(X_FLUX_ERR)         || _xFluxErr         == d._xFluxErr        ) &&                   
                    (isNull(Y_FLUX)             || _yFlux            == d._yFlux           ) &&
@@ -121,12 +145,18 @@ bool Source::operator==(Source const & d) const {
                    (isNull(RA_ASTROM_ERR)      || _raAstromErr      == d._raAstromErr     ) &&                   
                    (isNull(DEC_ASTROM)         || _decAstrom        == d._decAstrom       ) &&
                    (isNull(DEC_ASTROM_ERR)     || _decAstromErr     == d._decAstromErr    ) &&                                   
-                   (isNull(TAI_RANGE)          || _taiRange         == d._taiRange        ) &&
-                   (isNull(PETRO_MAG)          || _petroMag         == d._petroMag        ) &&                   
-                   (isNull(PETRO_MAG_ERR)      || _petroMagErr      == d._petroMagErr     ) &&
-                   (isNull(AP_DIA)             || _apDia            == d._apDia           ) &&
-                   (isNull(SKY)                || _sky              == d._sky             ) &&                   
-                   (isNull(SKY_ERR)            || _skyErr           == d._skyErr          ) &&
+                   (isNull(MODEL_MAG_ERR)      || _modelMagErr      == d._modelMagErr     ) &&
+                   (isNull(AP_DIA)             || _apDia            == d._apDia           ) &&                   
+                   (isNull(REF_MAG)            || _refMag           == d._refMag          ) &&                   
+                   (isNull(IXX)                || _ixx              == d._ixx             ) &&
+                   (isNull(IXX_ERR)            || _ixxErr           == d._ixxErr          ) &&
+                   (isNull(IYY)                || _iyy              == d._iyy             ) &&
+                   (isNull(IYY_ERR)            || _iyyErr           == d._iyyErr          ) &&
+                   (isNull(IXY)                || _ixy              == d._ixy             ) &&
+                   (isNull(IXY_ERR)            || _ixyErr           == d._ixyErr          ) &&
+                   (isNull(OBS_CODE)           || _obsCode          == d._obsCode         ) &&
+                   (isNull(IS_SYNTHETIC)       || _isSynthetic      == d._isSynthetic     ) &&
+                   (isNull(MOPS_STATUS)        || _mopsStatus       == d._mopsStatus      ) &&
                    (isNull(FLAG_4_ASSOCIATION) || _flag4association == d._flag4association) &&
                    (isNull(FLAG_4_DETECTION)   || _flag4detection   == d._flag4detection  ) &&
                    (isNull(FLAG_4_WCS)         || _flag4wcs         == d._flag4wcs        );
@@ -136,32 +166,32 @@ bool Source::operator==(Source const & d) const {
 }
 
 
-// -- SourceVector ----------------
-SourceVector::SourceVector()            : daf::base::Citizen(typeid(*this)), _vec()  {}
-SourceVector::SourceVector(size_type n) : daf::base::Citizen(typeid(*this)), _vec(n) {}
+// -- DiaSourceVector ----------------
+DiaSourceVector::DiaSourceVector()            : daf::base::Citizen(typeid(*this)), _vec()  {}
+DiaSourceVector::DiaSourceVector(size_type n) : daf::base::Citizen(typeid(*this)), _vec(n) {}
 
-SourceVector::SourceVector(size_type n, value_type const & val) :
+DiaSourceVector::DiaSourceVector(size_type n, value_type const & val) :
     daf::base::Citizen(typeid(*this)),
     _vec(n, val)
 {}
 
 
-SourceVector::~SourceVector() {}
+DiaSourceVector::~DiaSourceVector() {}
 
 
-SourceVector::SourceVector(SourceVector const & v) :
+DiaSourceVector::DiaSourceVector(DiaSourceVector const & v) :
     daf::base::Citizen(typeid(*this)),
     _vec(v._vec)
 {}
 
 
-SourceVector::SourceVector(Vector const & v) :
+DiaSourceVector::DiaSourceVector(Vector const & v) :
     daf::base::Citizen(typeid(*this)),
     _vec(v)
 {}
 
 
-SourceVector & SourceVector::operator=(SourceVector const & v) {
+DiaSourceVector & DiaSourceVector::operator=(DiaSourceVector const & v) {
     if (this != &v) {
         _vec = v._vec;
     }
@@ -169,7 +199,7 @@ SourceVector & SourceVector::operator=(SourceVector const & v) {
 }
 
 
-SourceVector & SourceVector::operator=(Vector const & v) {
+DiaSourceVector & DiaSourceVector::operator=(Vector const & v) {
     _vec = v;
     return *this;
 }
