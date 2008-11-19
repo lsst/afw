@@ -55,7 +55,7 @@ using boost::int64_t;
     CREATE TABLE DIASource
     (
         diaSourceId      BIGINT         NOT NULL,
-        ampExposureId    BIGINT         NOT NULL,
+        ccdExposureId    BIGINT         NOT NULL,
         filterId         TINYINT        NOT NULL,
         objectId         BIGINT         NULL,
         movingObjectId   BIGINT         NULL,
@@ -67,27 +67,14 @@ using boost::int64_t;
         raErr4detection  FLOAT(0)       NOT NULL,
         decErr4detection FLOAT(0)       NOT NULL,
         raErr4wcs        FLOAT(0)       NULL,
-        decErr4wcs       FLOAT(0)       NULL,
-        xFlux            DOUBLE         NULL,
-        xFluxErr         DOUBLE         NULL,
-        yFlux            DOUBLE         NULL,
-        yFluxErr         DOUBLE         NULL,
-        raFlux           DOUBLE         NULL,
-        raFluxErr        DOUBLE         NULL,
-        declFlux         DOUBLE         NULL,
-        declFluxErr      DOUBLE         NULL,
-        xPeak            DOUBLE         NULL,
-        yPeak            DOUBLE         NULL,
-        raPeak           DOUBLE         NULL,
-        declPeak         DOUBLE         NULL,
-        xAstrom          DOUBLE         NULL,
-        xAstromErr       DOUBLE         NULL,
-        yAstrom          DOUBLE         NULL,
-        yAstromErr       DOUBLE         NULL,
-        raAstrom         DOUBLE         NULL,
-        raAstromErr      DOUBLE         NULL,
-        declAstrom       DOUBLE         NULL,
-        declAstromErr    DOUBLE         NULL,        
+        decErr4wcs       FLOAT(0)       NULL,  
+        row              DOUBLE         NOT NULL,
+        col              DOUBLE         NOT NULL,
+        rowErr           FLOAT          NOT NULL,
+        colERR           FLOAT          NOT NULL,
+        cx               DOUBLE         NOT NULL,   
+        cy               DOUBLE         NOT NULL,
+        cz               DOUBLE         NOT NULL,                
         taiMidPoint      DOUBLE         NOT NULL,
         taiRange         FLOAT(0)       NOT NULL,
         fwhmA            FLOAT(0)       NOT NULL,
@@ -112,17 +99,12 @@ using boost::int64_t;
         IxyErr           FLOAT(0)       NULL,
         snr              FLOAT(0)       NOT NULL,
         chi2             FLOAT(0)       NOT NULL,
-        valx1            DOUBLE         NOT NULL,
-        valx2            DOUBLE         NOT NULL,
-        valy1            DOUBLE         NOT NULL,
-        valy2            DOUBLE         NOT NULL,
-        valxy            DOUBLE         NOT NULL,
-        obsCode          CHAR(3)        NULL,
-        isSynthetic      CHAR(1)        NULL,
-        mopsStatus       CHAS(1)        NULL,
-        flag4association SMALLINT      NULL,
-        flag4detection   SMALLINT      NULL,
-        flag4wcs         SMALLINT      NULL,
+        obsCode          CHAR           NULL,
+        isSynthetic      CHAR           NULL,
+        status           CHAR           NULL,
+        flag4association SMALLINT       NULL,
+        flag4detection   SMALLINT       NULL,
+        flag4wcs         SMALLINT       NULL,
         PRIMARY KEY (diaSourceId),
         KEY (ampExposureId),
         KEY (filterId),
@@ -162,18 +144,6 @@ public :
         RA_FLUX_ERR,
         DEC_FLUX,
         DEC_FLUX_ERR,
-        X_PEAK,
-        Y_PEAK,
-        RA_PEAK,
-        DEC_PEAK,
-        X_ASTROM,
-        X_ASTROM_ERR,
-        Y_ASTROM,
-        Y_ASTROM_ERR,
-        RA_ASTROM,
-        RA_ASTROM_ERR,
-        DEC_ASTROM,
-        DEC_ASTROM_ERR,
         MODEL_MAG_ERR,
         AP_DIA,
         REF_MAG,
@@ -185,7 +155,7 @@ public :
         IXY_ERR,
         OBS_CODE,
         IS_SYNTHETIC,
-        MOPS_STATUS,
+        STATUS,
         FLAG_4_ASSOCIATION,
         FLAG_4_DETECTION,
         FLAG_4_WCS,
@@ -196,7 +166,7 @@ public :
 
     // getters
     int64_t getId()               const { return _diaSourceId;      }
-    int64_t getAmpExposureId()    const { return _ampExposureId;    }
+    int64_t getCcdExposureId()    const { return _ccdExposureId;    }
     int8_t  getFilterId()         const { return _filterId;         }
     int64_t getObjectId()         const { return _objectId;         }
     int64_t getMovingObjectId()   const { return _movingObjectId;   }
@@ -209,26 +179,13 @@ public :
     float   getDecErr4detection() const { return _decErr4detection; }
     float   getRaErr4wcs()        const { return _raErr4wcs;        }
     float   getDecErr4wcs()       const { return _decErr4Wcs;       }
-    double  getXFlux()            const { return _xFlux;            }
-    double  getXFluxErr()         const { return _xFluxErr;         }
-    double  getYFlux()            const { return _yFlux;            }
-    double  getYFluxErr()         const { return _yFluxErr;         }
-    double  getRaFlux()           const { return _raFlux;           }
-    double  getRaFluxErr()        const { return _raFluxErr;        }    
-    double  getDecFlux()          const { return _decFlux;          }
-    double  getDecFluxErr()       const { return _decFluxErr;       }        
-    double  getXPeak()            const { return _xPeak;            }
-    double  getYPeak()            const { return _yPeak;            }
-    double  getRaPeak()           const { return _raPeak;           }    
-    double  getDecPeak()          const { return _decPeak;          }       
-    double  getXAstrom()          const { return _xAstrom;          }
-    double  getXAstromErr()       const { return _xAstromErr;       }
-    double  getYAstrom()          const { return _yAstrom;          }
-    double  getYAstromErr()       const { return _yAstromErr;       }
-    double  getRaAstrom()         const { return _raAstrom;         }
-    double  getRaAstromErr()      const { return _raAstromErr;      }    
-    double  getDecAstrom()        const { return _decAstrom;        }
-    double  getDecAstromErr()     const { return _decAstromErr;     }
+    double  getRow()              const { return _row;              }
+    double  getCol()              const { return _col;              }        
+    float   getRowErr()           const { return _rowErr;           }
+    float   getColErr()           const { return _colErr;           }
+    double  getCx()               const { return _cx;               }
+    double  getCy()               const { return _cy;               }
+    double  getCz()               const { return _cz;               }
     double  getTaiMidPoint()      const { return _taiMidPoint;      }
     float   getTaiRange()         const { return _taiRange;         }
     float   getFwhmA()            const { return _fwhmA;            }
@@ -252,34 +209,30 @@ public :
     float   getIxy()              const { return _ixy;              }
     float   getIxyErr()           const { return _ixyErr;           }
     float   getSnr()              const { return _snr;              }
-    float   getChi2()             const { return _chi2;             }
-    double  getValX1()            const { return _valX1;            }
-    double  getValX2()            const { return _valX2;            }
-    double  getValY1()            const { return _valY1;            }
-    double  getValY2()            const { return _valY2;            }
-    double  getValXY()            const { return _valXY;            }  
-    char[3] getObsCode()          const { return _obsCode;          }
+    float   getChi2()             const { return _chi2;             }  
+    char    getObsCode()          const { return _obsCode;          }
     char    isSynthetic()         const { return _isSynthetic;      }
-    char    getMopsStatus()       const { return _mopsStatus;       }
+    char    getStatus()           const { return _status;           }
     int16_t getFlag4association() const { return _flag4association; }
     int16_t getFlag4detection()   const { return _flag4detection;   }
     int16_t getFlag4wcs()         const { return _flag4wcs;         }
+
 
     // setters
     void setId              (int64_t const sourceId        ) { 
         _sourceId = sourceId;         
     }
-    void setAmpExposureId   (int64_t const ampExposureId   ) { 
-        _ampExposureId = ampExposureId;
+    void setCcdExposureId   (int64_t const ccdExposureId   ) { 
+        _ccdExposureId = ccdExposureId;
     }
     void setFilterId        (int8_t  const filterId        ) { 
         _filterId = filterId;         
     }
-    void setObjectId        (int64_t const objectId) {
+    void setObjectId        (int64_t const objectId        ) {
         _objectId = objectId;
         setNotNull(OBJECT_ID);
     }
-    void setMovingObjectId(int64_t const movingObjectId) {
+    void setMovingObjectId  (int64_t const movingObjectId  ) {
         _movingObjectId = movingObjectId;
         setNotNull(MOVING_OBJECT_ID);
     }
@@ -313,86 +266,27 @@ public :
         _decErr4wcs = decErr4wcs;
         setNotNull(DEC_ERR_4_WCS);
     }
-    void setXFlux           (double  const xFlux           ) { 
-        _xFlux = xFlux;            
-        setNotNull(X_FLUX);
+    void setCol             (double  const col             ) { 
+        _col = col ;             
     }
-    void setXFluxErr        (double  const xFluxErr        ) { 
-        _xFluxErr = xFluxErr;            
-        setNotNull(X_FLUX_ERR);
+    void setRow             (double  const row             ) { 
+        _row = row ;
     }    
-    void setYFlux           (double  const yFlux           ) { 
-        _yFlux = yFlux;            
-        setNotNull(Y_FLUX);
-    }    
-    void setYFluxErr        (double  const yFluxErr        ) { 
-        _yFluxErr = yFluxErr;            
-        setNotNull(Y_FLUX_ERR);
-    }    
-    void setRaFlux          (double  const raFlux          ) { 
-        _raFlux = raFlux;            
-        setNotNull(RA_FLUX);
+    void setColErr          (float   const colErr          ) { 
+        _colErr = colErr;          
     }
-    void setRaFluxErr       (double  const raFluxErr       ) { 
-        _raFluxErr = raFluxErr;            
-        setNotNull(RA_FLUX_ERR);
-    }    
-    void setDecFlux         (double  const decFlux         ) { 
-        _decFlux = decFlux;            
-        setNotNull(DEC_FLUX);
-    }    
-    void setDecFluxErr      (double  const decFluxErr      ) { 
-        _decFluxErr = decFluxErr;            
-        setNotNull(DEC_FLUX_ERR);
-    }    
-    void setXPeak           (double  const xPeak           ) { 
-        _xPeak = xPeak;            
-        setNotNull(X_PEAK);
+    void setRowErr          (float   const rowErr          ) { 
+        _rowErr = rowErr;          
     }
-    void setYPeak           (double  const yPeak           ) { 
-        _yPeak = yPeak;            
-        setNotNull(Y_PEAK);
-    }    
-    void setRaPeak          (double  const raPeak          ) { 
-        _raPeak = raPeak;            
-        setNotNull(RA_PEAK);
-    }    
-    void setDecPeak         (double  const decPeak         ) { 
-        _decPeak = decPeak;            
-        setNotNull(DEC_PEAK);
-    }    
-    void setXAstrom         (double  const xAstrom         ) { 
-        _xAstrom = xAstrom;            
-        setNotNull(X_ASTROM);
+    void setCx              (double  const cx              ) { 
+        _cx = cx;               
     }
-    void setXastromErr      (double  const xAstromErr      ) { 
-        _xAstromErr = xAstromErr;            
-        setNotNull(X_ASTROM_ERR);
-    }    
-    void setYAstrom         (double  const yAstrom         ) { 
-        _yAstrom = yAstrom;            
-        setNotNull(Y_ASTROM);
-    }    
-    void setYAstromErr      (double  const yAstromErr      ) { 
-        _yAstromErr = yAstromErr;            
-        setNotNull(Y_ASTROM_ERR);
-    }    
-    void setRaAstrom        (double  const raAstrom        ) { 
-        _raAstrom = raAstrom;            
-        setNotNull(RA_ASTROM);
+    void setCy              (double  const cy              ) { 
+        _cy = cy;               
     }
-    void setRaAstromErr     (double  const raAstromErr     ) { 
-        _raAstromErr = raAstromErr;            
-        setNotNull(RA_ASTROM_ERR);
-    }    
-    void setDecAstrom       (double  const decAstrom       ) { 
-        _decAstrom = decAstrom;            
-        setNotNull(DEC_ASTROM);
-    }    
-    void setDecAstromErr    (double  const decAstromErr    ) { 
-        _decAstromErr = decAstromErr;            
-        setNotNull(DEC_ASTROM_ERR);
-    }           
+    void setCz              (double  const cz              ) { 
+        _cz = cz;               
+    }        
     void setTaiMidPoint     (double  const taiMidPoint     ) { 
         _taiMidPoint = taiMidPoint;      
     }
@@ -472,33 +366,16 @@ public :
     void setChi2            (float   const chi2            ) { 
         _chi2 = chi2;
     }
-    void setValX1           (double  const valX1           ) {
-        _valX1 = valX1;
-    }
-    void setValX2           (double  const valX2           ) {
-        _valX2 = valX2;
-    }
-    void setValY1           (double  const valY1           ) {
-        _valY1 = valY1;
-    }
-    void setValY2           (double  const valY2           ) {
-        _valY2 = valY2;
-    }
-    void setValXY           (double  const valXY           ) {
-        _valXY = valXY;
-    }         
-    void setObsCode         (char[3] const obsCode         ) {
-        _obsCode[0] = obsCode[0];
-        _obsCode[1] = obsCode[1];
-        _obsCode[3] = obsCode[3];
+    void setObsCode         (char    const obsCode         ) {
+        _obsCode = obsCode;
         setNotNull(OBS_CODE);
     }   
     void setIsSynthetic     (char    const isSynthetic     ) {
         _isSynthetic = isSynthetic;
         setNotNull(IS_SYNTHETIC);
     } 
-    void setMopsStatus      (char    const mopsStatus      ) {
-        _mopsStatus = mopsStatus;
+    void setStatus      (char    const status      ) {
+        _status = status;
         setNotNull(MOPS_STATUS);
     }
     void setFlag4association(int16_t const flag4association) {
@@ -528,46 +405,28 @@ public :
 private :
 
     int64_t _diaSourceId;      // BIGINT        NOT NULL
-    int64_t _ampExposureId;    // BIGINT        NOT NULL
+    int64_t _ccdExposureId;    // BIGINT        NOT NULL
     int64_t _objectId;         // BIGINT        NULL
     int64_t _movingObjectId;   // BIGINT        NULL
     int64_t _ssmId;            // BIGINT        NULL
     double  _ra;               // DOUBLE        NOT NULL
-    double  _decl;             // DOUBLE        NOT NULL
-    double  _xFlux;            // DOUBLE        NULL
-    double  _xFluxErr;         // DOUBLE        NULL
-    double  _yFlux;            // DOUBLE        NULL
-    double  _yFluxErr;         // DOUBLE        NULL
-    double  _raFlux;           // DOUBLE        NULL
-    double  _raFluxErr;        // DOUBLE        NULL
-    double  _declFlux;         // DOUBLE        NULL
-    double  _declFluxErr;      // DOUBLE        NULL
-    double  _xPeak;            // DOUBLE        NULL
-    double  _yPeak;            // DOUBLE        NULL
-    double  _raPeak;           // DOUBLE        NULL
-    double  _decPeak;          // DOUBLE        NULL
-    double  _xAstrom;          // DOUBLE        NULL
-    double  _xAstromErr;       // DOUBLE        NULL
-    double  _yAstrom;          // DOUBLE        NULL
-    double  _yAstromErr;       // DOUBLE        NULL
-    double  _raAstrom;         // DOUBLE        NULL
-    double  _raAstromErr;      // DOUBLE        NULL
-    double  _declAstrom;       // DOUBLE        NULL
-    double  _declAstromErr;    // DOUBLE        NULL
+    double  _dec;              // DOUBLE        NOT NULL
+    double  _col;              // DOUBLE        NOT NULL
+    double  _row;              // DOUBLE        NOT NULL
+    double  _cx;               // DOUBLE        NOT NULL
+    double  _cy;               // DOUBLE        NOT NULL
+    double  _cz;               // DOUBLE        NOT NULL
     double  _taiMidPoint;      // DOUBLE        NOT NULL
     double  _lengthDeg;        // DOUBLE        NOT NULL
     double  _psfMag;           // DOUBLE        NOT NULL
     double  _apMag;            // DOUBLE        NOT NULL
     double  _modelMag;         // DOUBLE        NOT NULL
-    double  _valX1;            // DOUBLE        NOT NULL         
-    double  _valX1;            // DOUBLE        NOT NULL
-    double  _valY1;            // DOUBLE        NOT NULL
-    double  _valY2;            // DOUBLE        NOT NULL
-    double  _valXY;            // DOUBLE        NOT NULL    
     float   _raErr4detection;  // FLOAT(0)      NOT NULL
     float   _decErr4detection; // FLOAT(0)      NOT NULL
     float   _raErr4wcs;        // FLOAT(0)      NULL
     float   _decErr4wcs;       // FLOAT(0)      NULL
+    float   _rowErr            // FLOAT         NOT NULL
+    float   _colErr            // FLOAT         NO NULL
     float   _taiRange;         // FLOAT(0)      NOT NULL
     float   _fwhmA;            // DECIMAL(4,2)  NOT NULL
     float   _fwhmB;            // DECIMAL(4,2)  NOT NULL
@@ -589,11 +448,11 @@ private :
     float   _chi2;             // FLOAT(0)      NOT NULL
     int32_t _procHistoryId;    // INTEGER       NOT NULL
     int32_t _scId;             // INTEGER       NOT NULL    
-    char[3] _obsCode;          // CHAR(3)       NULL        
     int16_t _flag4association; // SMALLINT      NULL
     int16_t _flag4detection;   // SMALLINT      NULL
     int16_t _flag4wcs;         // SMALLINT      NULL    
     int8_t  _filterId;         // TINYINT       NOT NULL
+    char    _obsCode;          // CHAR(3)       NULL        
     char    _isSynthetic;      // CHAR(1)       NULL
     char    _mopsStatus;       // CHAR(1)       NULL
 
@@ -601,7 +460,7 @@ private :
 
     template <typename Archive> void serialize(Archive & ar, unsigned int const version) {
         ar & _diaSourceId;
-        ar & _ampExposureId;
+        ar & _ccdExposureId;
         ar & _filterId;
         ar & _objectId;
         ar & _movingObjectId;
@@ -614,26 +473,13 @@ private :
         ar & _decErr4detection;
         ar & _raErr4wcs;
         ar & _decErr4wcs;
-        ar & _xFlux;
-        ar & _xFluxErr;
-        ar & _yFlux;
-        ar & _yFluxErr;
-        ar & _raFlux;
-        ar & _raFluxErr;
-        ar & _decFlux;
-        ar & _decFluxErr;        
-        ar & _xPeak;
-        ar & _yPeak;
-        ar & _raPeak;
-        ar & _decPeak;
-        ar & _xAstrom;
-        ar & _xAstromErr;
-        ar & _yAstrom;
-        ar & _yAstromErr;
-        ar & _raAstrom;
-        ar & _raAstromErr;
-        ar & _decAstrom;
-        ar & _decAstromErr;        
+        ar & _row;
+        ar & _col;
+        ar & _rowErr;
+        ar & _colErr;
+        ar & _cx;
+        ar & _cy;
+        ar & _cz;
         ar & _taiMidPoint;
         ar & _taiRange;
         ar & _fwhmA;

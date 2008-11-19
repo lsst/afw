@@ -65,26 +65,13 @@ using boost::int64_t;
         decErr4wcs          FLOAT(0)    NOT NULL,
         raErr4detection     FLOAT(0)    NULL,
         decErr4detection    FLOAT(0)    NULL,
-        xFlux               DOUBLE      NULL,
-        xFluxErr            DOUBLE      NULL,
-        yFlux               DOUBLE      NULL,
-        yFluxErr            DOUBLE      NULL,
-        raFlux              DOUBLE      NULL,
-        raFluxErr           DOUBLE      NULL,
-        declFlux            DOUBLE      NULL,
-        declFluxErr         DOUBLE      NULL,
-        xPeak               DOUBLE      NULL,
-        yPeak               DOUBLE      NULL,
-        raPeak              DOUBLE      NULL,
-        declPeak            DOUBLE      NULL,
-        xAstrom             DOUBLE      NULL,
-        xAstromErr          DOUBLE      NULL,
-        yAstrom             DOUBLE      NULL,
-        yAstromErr          DOUBLE      NULL,
-        raAstrom            DOUBLE      NULL,
-        raAstromErr         DOUBLE      NULL,
-        declAstrom          DOUBLE      NULL,
-        declAstromErr       DOUBLE      NULL,
+        row                 DOUBLE      NOT NULL,
+        col                 DOUBLE      NOT NULL,
+        rowErr              FLOAT       NOT NULL,
+        colERR              FLOAT       NOT NULL,
+        cx                  DOUBLE      NOT NULL,   
+        cy                  DOUBLE      NOT NULL,
+        cz                  DOUBLE      NOT NULL,                  
         taiMidPoint         DOUBLE      NOT NULL,
         taiRange            FLOAT(0)    NULL,
         fwhmA               FLOAT(0)    NOT NULL,
@@ -133,27 +120,7 @@ public :
         OBJECT_ID,
         MOVING_OBJECT_ID,
         RA_ERR_4_DETECTION,
-        DEC_ERR_4_DETECTION,
-        X_FLUX,
-        X_FLUX_ERR,
-        Y_FLUX,
-        Y_FLUX_ERR,
-        RA_FLUX,
-        RA_FLUX_ERR,
-        DEC_FLUX,
-        DEC_FLUX_ERR,
-        X_PEAK,
-        Y_PEAK,
-        RA_PEAK,
-        DEC_PEAK,
-        X_ASTROM,
-        X_ASTROM_ERR,
-        Y_ASTROM,
-        Y_ASTROM_ERR,
-        RA_ASTROM,
-        RA_ASTROM_ERR,
-        DEC_ASTROM,
-        DEC_ASTROM_ERR,
+        DEC_ERR_4_DETECTION,        
         TAI_RANGE,
         PETRO_MAG,
         PETRO_MAG_ERR,
@@ -181,26 +148,13 @@ public :
     float   getDecErr4wcs()       const { return _decErr4wcs;       }
     float   getRaErr4detection()  const { return _raErr4detection;  }
     float   getDecErr4detection() const { return _decErr4detection; }
-    double  getXFlux()            const { return _xFlux;            }
-    double  getXFluxErr()         const { return _xFluxErr;         }
-    double  getYFlux()            const { return _yFlux;            }
-    double  getYFluxErr()         const { return _yFluxErr;         }
-    double  getRaFlux()           const { return _raFlux;           }
-    double  getRaFluxErr()        const { return _raFluxErr;        }    
-    double  getDecFlux()          const { return _decFlux;          }
-    double  getDecFluxErr()       const { return _decFluxErr;       }        
-    double  getXPeak()            const { return _xPeak;            }
-    double  getYPeak()            const { return _yPeak;            }
-    double  getRaPeak()           const { return _raPeak;           }    
-    double  getDecPeak()          const { return _decPeak;          }       
-    double  getXAstrom()          const { return _xAstrom;          }
-    double  getXAstromErr()       const { return _xAstromErr;       }
-    double  getYAstrom()          const { return _yAstrom;          }
-    double  getYAstromErr()       const { return _yAstromErr;       }
-    double  getRaAstrom()         const { return _raAstrom;         }
-    double  getRaAstromErr()      const { return _raAstromErr;      }    
-    double  getDecAstrom()        const { return _decAstrom;        }
-    double  getDecAstromErr()     const { return _decAstromErr;     }    
+    double  getRow()              const { return _row;              }
+    double  getCol()              const { return _col;              }        
+    float   getRowErr()           const { return _rowErr;           }
+    float   getColErr()           const { return _colErr;           }
+    double  getCx()               const { return _cx;               }
+    double  getCy()               const { return _cy;               }
+    double  getCz()               const { return _cz;               }      
     double  getTaiMidPoint()      const { return _taiMidPoint;      }
     float   getTaiRange()         const { return _taiRange;         }
     float   getFwhmA()            const { return _fwhmA;            }
@@ -260,86 +214,27 @@ public :
         _decErr4detection = decErr4detection; 
         setNotNull(DEC_ERR_4_DETECTION);
     }
-    void setXFlux           (double  const xFlux           ) { 
-        _xFlux = xFlux;            
-        setNotNull(X_FLUX);
+    void setCol             (double  const col             ) { 
+        _col = col ;             
     }
-    void setXFluxErr        (double  const xFluxErr        ) { 
-        _xFluxErr = xFluxErr;            
-        setNotNull(X_FLUX_ERR);
+    void setRow             (double  const row             ) { 
+        _row = row ;
     }    
-    void setYFlux           (double  const yFlux           ) { 
-        _yFlux = yFlux;            
-        setNotNull(Y_FLUX);
-    }    
-    void setYFluxErr        (double  const yFluxErr        ) { 
-        _yFluxErr = yFluxErr;            
-        setNotNull(Y_FLUX_ERR);
-    }    
-    void setRaFlux          (double  const raFlux          ) { 
-        _raFlux = raFlux;            
-        setNotNull(RA_FLUX);
+    void setColErr          (float   const colErr          ) { 
+        _colErr = colErr;          
     }
-    void setRaFluxErr       (double  const raFluxErr       ) { 
-        _raFluxErr = raFluxErr;            
-        setNotNull(RA_FLUX_ERR);
-    }    
-    void setDecFlux         (double  const decFlux         ) { 
-        _decFlux = decFlux;            
-        setNotNull(DEC_FLUX);
-    }    
-    void setDecFluxErr      (double  const decFluxErr      ) { 
-        _decFluxErr = decFluxErr;            
-        setNotNull(DEC_FLUX_ERR);
-    }    
-    void setXPeak           (double  const xPeak           ) { 
-        _xPeak = xPeak;            
-        setNotNull(X_PEAK);
+    void setRowErr          (float   const rowErr          ) { 
+        _rowErr = rowErr;          
     }
-    void setYPeak           (double  const yPeak           ) { 
-        _yPeak = yPeak;            
-        setNotNull(Y_PEAK);
-    }    
-    void setRaPeak          (double  const raPeak          ) { 
-        _raPeak = raPeak;            
-        setNotNull(RA_PEAK);
-    }    
-    void setDecPeak         (double  const decPeak         ) { 
-        _decPeak = decPeak;            
-        setNotNull(DEC_PEAK);
-    }    
-    void setXAstrom         (double  const xAstrom         ) { 
-        _xAstrom = xAstrom;            
-        setNotNull(X_ASTROM);
+    void setCx              (double  const cx              ) { 
+        _cx = cx;               
     }
-    void setXastromErr      (double  const xAstromErr      ) { 
-        _xAstromErr = xAstromErr;            
-        setNotNull(X_ASTROM_ERR);
-    }    
-    void setYAstrom         (double  const yAstrom         ) { 
-        _yAstrom = yAstrom;            
-        setNotNull(Y_ASTROM);
-    }    
-    void setYAstromErr      (double  const yAstromErr      ) { 
-        _yAstromErr = yAstromErr;            
-        setNotNull(Y_ASTROM_ERR);
-    }    
-    void setRaAstrom        (double  const raAstrom        ) { 
-        _raAstrom = raAstrom;            
-        setNotNull(RA_ASTROM);
+    void setCy              (double  const cy              ) { 
+        _cy = cy;               
     }
-    void setRaAstromErr     (double  const raAstromErr     ) { 
-        _raAstromErr = raAstromErr;            
-        setNotNull(RA_ASTROM_ERR);
+    void setCz              (double  const cz              ) { 
+        _cz = cz;               
     }    
-    void setDecAstrom       (double  const decAstrom       ) { 
-        _decAstrom = decAstrom;            
-        setNotNull(DEC_ASTROM);
-    }    
-    void setDecAstromErr    (double  const decAstromErr    ) { 
-        _decAstromErr = decAstromErr;            
-        setNotNull(DEC_ASTROM_ERR);
-    }         
     void setTaiMidPoint     (double  const taiMidPoint     ) { 
         _taiMidPoint = taiMidPoint;      
     }
@@ -432,26 +327,11 @@ private :
     int64_t _movingObjectId;   // BIGINT        NULL
     double  _ra;               // DOUBLE        NOT NULL
     double  _dec;              // DOUBLE        NOT NULL
-    double  _xFlux;            // DOUBLE        NULL
-    double  _xFluxErr;         // DOUBLE        NULL
-    double  _yFlux;            // DOUBLE        NULL
-    double  _yFluxErr;         // DOUBLE        NULL
-    double  _raFlux;           // DOUBLE        NULL
-    double  _raFluxErr;        // DOUBLE        NULL
-    double  _declFlux;         // DOUBLE        NULL
-    double  _declFluxErr;      // DOUBLE        NULL
-    double  _xPeak;            // DOUBLE        NULL
-    double  _yPeak;            // DOUBLE        NULL
-    double  _raPeak;           // DOUBLE        NULL
-    double  _decPeak;          // DOUBLE        NULL
-    double  _xAstrom;          // DOUBLE        NULL
-    double  _xAstromErr;       // DOUBLE        NULL
-    double  _yAstrom;          // DOUBLE        NULL
-    double  _yAstromErr;       // DOUBLE        NULL
-    double  _raAstrom;         // DOUBLE        NULL
-    double  _raAstromErr;      // DOUBLE        NULL
-    double  _declAstrom;       // DOUBLE        NULL
-    double  _declAstromErr;    // DOUBLE        NULL
+    double  _col;              // DOUBLE        NOT NULL
+    double  _row;              // DOUBLE        NOT NULL
+    double  _cx;               // DOUBLE        NOT NULL
+    double  _cy;               // DOUBLE        NOT NULL
+    double  _cz;               // DOUBLE        NOT NULL    
     double  _taiMidPoint;      // DOUBLE        NOT NULL
     double  _psfMag;           // DOUBLE        NOT NULL
     double  _apMag;            // DOUBLE        NOT NULL
@@ -470,13 +350,6 @@ private :
     float   _modelMagErr;      // FLOAT(0)      NOT NULL
     float   _petroMagErr;      // FLOAT(0)      NULL            
     float   _apDia;            // FLOAT(0)      NULL
-    float   _ixx;              // FLOAT(0)      NULL
-    float   _ixxErr;           // FLOAT(0)      NULL
-    float   _iyy;              // FLOAT(0)      NULL
-    float   _iyyErr;           // FLOAT(0)      NULL
-    float   _ixy;              // FLOAT(0)      NULL
-    float   _ixyErr;           // FLOAT(0)      NULL
-    float   _snr;              // FLOAT(0)      NOT NULL
     float   _chi2;             // FLOAT(0)      NOT NULL
     float   _sky;              // FLOAT(0)      NULL
     float   _skyErr;           // FLOAT(0)      NULL    
@@ -502,26 +375,13 @@ private :
         ar & _decErr4detection;
         ar & _raErr4wcs;
         ar & _decErr4wcs;
-        ar & _xFlux;
-        ar & _xFluxErr;
-        ar & _yFlux;
-        ar & _yFluxErr;
-        ar & _raFlux;
-        ar & _raFluxErr;
-        ar & _decFlux;
-        ar & _decFluxErr;        
-        ar & _xPeak;
-        ar & _yPeak;
-        ar & _raPeak;
-        ar & _decPeak;
-        ar & _xAstrom;
-        ar & _xAstromErr;
-        ar & _yAstrom;
-        ar & _yAstromErr;
-        ar & _raAstrom;
-        ar & _raAstromErr;
-        ar & _decAstrom;
-        ar & _decAstromErr;        
+        ar & _row;
+        ar & _col;
+        ar & _rowErr;
+        ar & _colErr;
+        ar & _cx;
+        ar & _cy;
+        ar & _cz;        
         ar & _taiMidPoint;
         ar & _taiRange;
         ar & _fwhmA;

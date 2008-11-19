@@ -15,7 +15,7 @@ namespace det = lsst::afw::detection;
 // -- DiaSource ----------------
 det::DiaSource::DiaSource() : 
     _diaSourceId(0),
-    _ampExposureId(0),
+    _ccdExposureId(0),
     _filterId(0),
     _objectId(0),
     _movingObjectId(0),
@@ -28,26 +28,13 @@ det::DiaSource::DiaSource() :
     _decErr4detection(0.0),
     _raErr4wcs(0.0),
     _decErr4wcs(0.0),
-    _xFlux(0.0),
-    _xFluxErr(0.0),
-    _yFlux(0.0),
-    _yFluxErr(0.0),
-    _raFlux(0.0),
-    _raFluxErr(0.0),
-    _decFlux(0.0),
-    _decFluxErr(0.0),
-    _xPeak(0.0),
-    _yPeak(0.0),
-    _raPeak(0.0),
-    _decPeak(0.0),
-    _xAstrom(0.0),
-    _xAstromErr(0.0),
-    _yAstrom(0.0),
-    _yAstromErr(0.0),
-    _raAstrom(0.0),
-    _raAstromErr(0.0),
-    _decAstrom(0.0),
-    _decAstromErr(0.0),
+    _col(0.0),
+    _row(0.0), 
+    _colErr(0.0),
+    _rowErr(0.0),
+    _cx(0.0),
+    _cy(0.0),
+    _cz(0.0),       
     _taiMidPoint(0.0),
     _taiRange(0.0),    
     _fwhmA(0.0),
@@ -71,15 +58,10 @@ det::DiaSource::DiaSource() :
     _ixy(0.0),
     _ixyErr(0.0),
     _snr(0.0),
-    _chi2(0.0),
-    _valX1(0.0),
-    _valX2(0.0),
-    _valY1(0.0),
-    _valY2(0.0),
-    _valXY(0.0),                
-    _obsCode({0,0,0});
-    _isSynthetic(0);
-    _mopsStatus(0);
+    _chi2(0.0),             
+    _obsCode(0),
+    _isSynthetic(0),
+    _mopsStatus(0),
     _flag4association(0),
     _flag4detection(0),
     _flag4wcs(0),
@@ -92,7 +74,7 @@ bool det::DiaSource::operator==(DiaSource const & d) const {
         return true;
     }
     if (_diaSourceId      == d._diaSourceId      &&
-        _ampExposureId    == d._ampExposureId    &&
+        _ccdExposureId    == d._ccdExposureId    &&
         _filterId         == d._filterId         &&
         _procHistoryId    == d._procHistoryId    &&
         _scId             == d._scId             &&                
@@ -100,6 +82,13 @@ bool det::DiaSource::operator==(DiaSource const & d) const {
         _dec              == d._dec              &&
         _raErr4detection  == d._raErr4detection  &&
         _decErr4detection == d._decErr4detection &&
+        _row              == d._row              &&
+        _col              == d._col              &&
+        _rowErr           == d._rowErr           &&
+        _colErr           == d._colErr           &&
+        _cx               == d._cx               &&
+        _cy               == d._cy               &&
+        _cz               == d._cz               &&        
         _taiMidPoint      == d._taiMidPoint      &&
         _taiRange         == d._taiRange         &&
         _fwhmA            == d._fwhmA            &&
@@ -114,35 +103,14 @@ bool det::DiaSource::operator==(DiaSource const & d) const {
         _apMagErr         == d._apMagErr         &&
         _modelMag         == d._modelMag         &&
         _snr              == d._snr              &&
-        _chi2             == d._chi2             &&
-        _valX1            == d._valX1            &&
-        _valX2            == d._valX2            &&
-        _valY1            == d._valY1            &&
-        _valY2            == d._valY2            &&
-        _valXY            == d._valXY)     
+        _chi2             == d._chi2)     
     {
         if (_nulls == d._nulls) {
             return (isNull(OBJECT_ID)          || _objectId         == d._objectId        ) &&
                    (isNull(MOVING_OBJECT_ID)   || _movingObjectId   == d._movingObjectId  ) &&
                    (isNull(SSM_ID)             || _ssmId            == d._ssmId           ) &&                  
                    (isNull(RA_ERR_4_WCS)       || _raErr4wcs        == d._raErr4wcs       ) &&
-                   (isNull(DEC_ERR_4_WCS)      || _decErr4wcs       == d._decErr4wcs      ) &&
-                   (isNull(X_FLUX)             || _xFlux            == d._xFlux           ) &&
-                   (isNull(X_FLUX_ERR)         || _xFluxErr         == d._xFluxErr        ) &&                   
-                   (isNull(Y_FLUX)             || _yFlux            == d._yFlux           ) &&
-                   (isNull(Y_FLUX_ERR)         || _yFluxErr         == d._yFluxErr        ) &&
-                   (isNull(X_PEAK)             || _xPeak            == d._xPeak           ) && 
-                   (isNull(Y_PEAK)             || _yPeak            == d._yPeak           ) && 
-                   (isNull(RA_PEAK)            || _raPeak           == d._raPeak          ) && 
-                   (isNull(DEC_PEAK)           || _decPeak          == d._decPeak         ) &&   
-                   (isNull(X_ASTROM)           || _xAstrom          == d._xAstrom         ) &&
-                   (isNull(X_ASTROM_ERR)       || _xAstromErr       == d._xAstromErr      ) &&                   
-                   (isNull(Y_ASTROM)           || _yAstrom          == d._yAstrom         ) &&
-                   (isNull(Y_ASTROM_ERR)       || _yAstromErr       == d._yAstromErr      ) &&                                   
-                   (isNull(RA_ASTROM)          || _raAstrom         == d._raAstrom        ) &&
-                   (isNull(RA_ASTROM_ERR)      || _raAstromErr      == d._raAstromErr     ) &&                   
-                   (isNull(DEC_ASTROM)         || _decAstrom        == d._decAstrom       ) &&
-                   (isNull(DEC_ASTROM_ERR)     || _decAstromErr     == d._decAstromErr    ) &&                                   
+                   (isNull(DEC_ERR_4_WCS)      || _decErr4wcs       == d._decErr4wcs      ) &&                      
                    (isNull(MODEL_MAG_ERR)      || _modelMagErr      == d._modelMagErr     ) &&
                    (isNull(AP_DIA)             || _apDia            == d._apDia           ) &&                   
                    (isNull(REF_MAG)            || _refMag           == d._refMag          ) &&                   
@@ -154,7 +122,7 @@ bool det::DiaSource::operator==(DiaSource const & d) const {
                    (isNull(IXY_ERR)            || _ixyErr           == d._ixyErr          ) &&
                    (isNull(OBS_CODE)           || _obsCode          == d._obsCode         ) &&
                    (isNull(IS_SYNTHETIC)       || _isSynthetic      == d._isSynthetic     ) &&
-                   (isNull(MOPS_STATUS)        || _mopsStatus       == d._mopsStatus      ) &&
+                   (isNull(STATUS)             || _status           == d._status          ) &&
                    (isNull(FLAG_4_ASSOCIATION) || _flag4association == d._flag4association) &&
                    (isNull(FLAG_4_DETECTION)   || _flag4detection   == d._flag4detection  ) &&
                    (isNull(FLAG_4_WCS)         || _flag4wcs         == d._flag4wcs        );
