@@ -1,0 +1,15 @@
+setupRequired(daf_data)
+setupRequired(utils)
+setupRequired(boost >= 1.35.0)
+setupRequired(cfitsio)
+setupRequired(wcslib)
+setupRequired(xpa)
+setupRequired(numpy)
+setupRequired(minuit)
+
+setupOptional(afwdata)
+
+envPrepend(LD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
+envPrepend(DYLD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
+
+envPrepend(PYTHONPATH, ${PRODUCT_DIR}/python)

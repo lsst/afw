@@ -1,0 +1,19 @@
+>merge: daf_base
+>merge: daf_data
+>merge: daf_persistence
+>merge: pex_exceptions
+>merge: pex_logging
+>merge: pex_policy
+>merge: vw 1.0.1+2
+>merge: numarray
+>merge: numpy
+>merge: pyfits
+>merge: cfitsio
+>merge: wcstools 3.6.2
+>merge: wcslib
+>merge: xpa
+>merge: minuit
+>merge: swig
+>merge: doxygen
+>self
+

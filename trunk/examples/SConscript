@@ -1,0 +1,54 @@
+# -*- python -*-
+import sys
+Import('env')
+
+env.Program(["Image.cc"], LIBS=env.getlibs("afw"))
+env.Program(["Mask.cc"], LIBS=env.getlibs("afw"))
+env.Program(["DecoratedImage.cc"], LIBS=env.getlibs("afw"))
+env.Program(["MaskedImage.cc"], LIBS=env.getlibs("afw"))
+
+env.Program("maskedImageFitsIO", ["maskedImageFitsIO.cc"], LIBS=env.getlibs("afw"))
+env.Program("timeImageAddition", ["timeImageAddition.cc"], LIBS=env.getlibs("afw"))
+env.Program("timePixelAccessor", ["timePixelAccessor.cc"], LIBS=env.getlibs("afw"))
+
+env.Program("chebyshev1Function", ["chebyshev1Function.cc"], LIBS=env.getlibs("afw"))
+env.Program("gaussianFunction", ["gaussianFunction.cc"], LIBS=env.getlibs("afw"))
+env.Program("integerDeltaFunction", ["integerDeltaFunction.cc"], LIBS=env.getlibs("afw"))
+env.Program("lanczosFunction", ["lanczosFunction.cc"], LIBS=env.getlibs("afw"))
+env.Program("polynomialFunction", ["polynomialFunction.cc"], LIBS=env.getlibs("afw"))
+
+env.Program(["minimize.cc"], LIBS=env.getlibs("afw"))
+
+env.Program("analyticKernel", ["analyticKernel.cc"], LIBS=env.getlibs("afw"))
+env.Program("deltaFunctionKernels", ["deltaFunctionKernels.cc"], LIBS=env.getlibs("afw"))
+env.Program("fixedKernel", ["fixedKernel.cc"], LIBS=env.getlibs("afw"))
+env.Program("lanczosKernel", ["lanczosKernel.cc"], LIBS=env.getlibs("afw"))
+
+env.Program("convolveLinear", ["convolveLinear.cc"], LIBS=env.getlibs("afw"))
+env.Program("simpleConvolve", ["simpleConvolve.cc"], LIBS=env.getlibs("afw"))
+env.Program("spatiallyVaryingConvolve", ["spatiallyVaryingConvolve.cc"], LIBS=env.getlibs("afw"))
+env.Program("timeConvolve", ["timeConvolve.cc"], LIBS=env.getlibs("afw"))
+env.Program("timeSpatiallyVaryingConvolve", ["timeSpatiallyVaryingConvolve.cc"], LIBS=env.getlibs("afw"))
+
+env.Program("makeExposure", ["makeExposure.cc"], LIBS=env.getlibs("afw wcs"))
+env.Program("wcsTest", ["wcsTest.cc"], LIBS=env.getlibs("afw wcs"))
+
+#
+# Tests
+#
+if False:
+    import lsst.tests
+    tests = lsst.tests.Control(env, ignoreList=[
+        "fitsio", "vwconvert", "maskedImageFitsIO",
+        "convolveLinear", "simpleConvolve", "spatiallyVaryingConvolve",
+        "timeConvolve", "timeSpatiallyVaryingConvolve",
+    ])
+
+    if not tests.runExamples:
+        if not env.QuietFlagIsSet():
+            print >> sys.stderr, "Not running the examples; \"chmod o+x examples/%s\" to run them" % tests._tmpDir
+    else:
+        if not env.QuietFlagIsSet():
+            print >> sys.stderr, "Running the examples; \"chmod o-x examples/%s\" to not run them" % tests._tmpDir
+        tests.run("*.cc")
+        tests.run("*.py")

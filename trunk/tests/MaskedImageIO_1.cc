@@ -1,0 +1,83 @@
+// -*- lsst-c++ -*-
+#include <stdexcept>
+
+#include "lsst/daf/base.h"
+#include "lsst/daf/data/FitsFormatter.h"
+#include "lsst/pex/logging/Trace.h"
+#include "lsst/afw/image.h"
+#include "lsst/afw/math.h"
+
+using namespace std;
+
+using lsst::pex::logging::Trace;
+using lsst::daf::base::DataProperty;
+using lsst::daf::data::FitsFormatter;
+
+namespace pexEx = lsst::pex::exceptions;
+
+/*
+ * Make this a subroutine so that locals go out of scope as part of test
+ * of memory management
+ */
+void test(char *name) {
+
+    typedef lsst::afw::image::MaskPixel MaskPixelType;
+    typedef float ImagePixelType;
+
+    DataProperty::PtrType metadataPtr(DataProperty::createPropertyNode("FitsMetadata"));
+    int const hdu = 0;
+    lsst::afw::image::MaskedImage<ImagePixelType, MaskPixelType> testMasked(name, hdu, metadataPtr);
+
+    Trace("MaskedImageIO_1", 1,
+          boost::format("Number of FITS header cards: %d") 
+          % FitsFormatter::countFITSHeaderCards(metadataPtr, false));
+
+    Trace("MaskedImageIO_1", 3,
+        boost::format("FITS metadata string: %s") 
+            % FitsFormatter::formatDataProperty(metadataPtr, false));
+
+    lsst::afw::image::Wcs testWcs(metadataPtr);
+
+    lsst::afw::image::PointD pix, sky;
+
+//     pix[0] = testMasked.getCols() / 2.0;
+//     pix[1] = testMasked.getRows() / 2.0;
+    pix[0] = 500.0;
+    pix[1] = 1000.0;
+
+    sky = testWcs.colRowToRaDec(pix);
+
+    Trace("MaskedImageIO_1", 1,
+          boost::format("pix: %lf %lf") % pix[0] % pix[1]);
+
+    Trace("MaskedImageIO_1", 1,
+          boost::format("sky: %lf %lf") % sky[0] % sky[1]);
+
+    sky = testWcs.raDecToColRow(pix);
+
+    Trace("MaskedImageIO_1", 1,
+          boost::format("pix: %lf %lf") % pix[0] % pix[1]);
+
+
+}
+
+int main(int argc, char *argv[]) {
+    if (argc < 2) {
+        cerr << "Usage: inputBaseName" << endl;
+        return 1;
+    }
+    
+    Trace::setDestination(cout);
+    Trace::setVerbosity(".", 1);
+
+    try {
+        try {
+            test(argv[1]);
+        } catch (pexEx::ExceptionStack &e) {
+            throw pexEx::Runtime(std::string("In handler\n") + e.what());
+        }
+    } catch (pexEx::ExceptionStack &e) {
+        clog << e.what() << endl;
+        return 1;
+    }
+}
