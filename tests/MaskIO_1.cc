@@ -17,14 +17,15 @@ void test(char *name) {
 
     typedef afwImage::MaskPixel MaskPixel;
 
-    afwImage::Mask<MaskPixel> testMask(name);
+    DataProperty::PtrType metadataPtr = lsst::daf::base::DataProperty::createPropertyNode("FitsMetadata");
+    
+    afwImage::Mask<MaskPixel> testMask(name, 0, metadataPtr);
 
     // check whether Mask planes got setup right from FITS header...
     cout << "MaskPlanes from FITS header:" << endl;
     testMask.printMaskPlanes();
 
     // check the full metadata from the FITS header
-    DataProperty::PtrType metadataPtr = testMask.getMetadata();
     cout << metadataPtr->toString("",true) << endl;
 
     // try some pattern matching on metadata

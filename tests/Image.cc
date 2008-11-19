@@ -8,7 +8,6 @@
 #include "boost/test/unit_test.hpp"
 #include "boost/test/floating_point_comparison.hpp"
 
-#include "boost/iterator/zip_iterator.hpp"
 #include "lsst/afw/image/MaskedImage.h"
 
 namespace image = lsst::afw::image;

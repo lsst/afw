@@ -352,7 +352,8 @@ namespace image {
      * \brief A container for an Image and its associated metadata
      */
     template<typename PixelT>
-    class DecoratedImage {
+    class DecoratedImage : public lsst::daf::base::Persistable,
+                           public lsst::daf::data::LsstBase {
     public:
         /// shared_ptr to a DecoratedImage
         typedef boost::shared_ptr<DecoratedImage> Ptr;
@@ -405,12 +406,10 @@ namespace image {
         /// Return a shared_ptr to the DecoratedImage's Image as const
         ImageConstPtr getImage() const { return _image; }
 
-        /// Return a shared_ptr to the DecoratedImage's metadata
-#if 1                                   // Old name for boost::shared_ptrs
-        lsst::daf::base::DataProperty::PtrType getMetadata() const { return _metadata; }
-#else
-        lsst::daf::base::DataProperty::Ptr      getMetadata()       { return _metadata; }
-        lsst::daf::base::DataProperty::ConstPtr getMetadata() const { return _metadata; }
+#if 0
+        /// Return a shared_ptr to the DecoratedImage's metadata; supported by LsstBase
+        lsst::daf::base::DataProperty::Ptr      getMetadata();
+        lsst::daf::base::DataProperty::ConstPtr getMetadata() const;
 #endif
         /**
          * Return the DecoratedImage's gain
@@ -422,7 +421,6 @@ namespace image {
         void setGain(double gain) { _gain = gain; }
     private:
         typename Image<PixelT>::Ptr _image;
-        lsst::daf::base::DataProperty::PtrType _metadata;
         double _gain;
 
         void init();

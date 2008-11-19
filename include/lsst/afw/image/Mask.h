@@ -88,8 +88,6 @@ namespace image {
         //void readFits(const std::string& fileName, bool conformMasks=false, int hdu=0); // replaced by constructor
         void writeFits(std::string const& fileName) const;
         
-        lsst::daf::base::DataProperty::PtrType getMetadata();
-
         // Mask Plane ops
         
         void clearAllMaskPlanes();
@@ -126,20 +124,14 @@ namespace image {
         void conformMaskPlanes(MaskPlaneDict& masterPlaneDict);
         
         // Getters
-#if 1                                   // Old name for boost::shared_ptrs
-        lsst::daf::base::DataProperty::PtrType getMetadata() const { return _metadata; }
-#else
-        lsst::daf::base::DataProperty::Ptr      getMetadata()       { return _metadata; }
-        lsst::daf::base::DataProperty::ConstPtr getMetadata() const { return _metadata; }
+#if 0
+        /// Return a shared_ptr to the DecoratedImage's metadata; supported by LsstBase
+        lsst::daf::base::DataProperty::Ptr      getMetadata();
+        lsst::daf::base::DataProperty::ConstPtr getMetadata() const;
 #endif
         
 private:
         //LSST_PERSIST_FORMATTER(lsst::afw::formatters::MaskFormatter);
-#if 1                                   // Old name for boost::shared_ptrs
-        lsst::daf::base::DataProperty::PtrType _metadata;
-#else
-        lsst::daf::base::DataProperty::Ptr _metadata;
-#endif
         int _myMaskDictVersion;         // version number for bitplane dictionary for this Mask
 
         static MaskPlaneDict _maskPlaneDict;
