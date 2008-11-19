@@ -3,19 +3,17 @@
 //##====----------------                                ----------------====##/
 //!
 //! \file
-//! \brief Support for Source%s
+//! \brief Support for DiaSource%s
 //!
 //##====----------------                                ----------------====##/
 
 #include "lsst/daf/base.h"
 #include "lsst/afw/detection/Source.h"
 
-namespace lsst{
-namespace afw{
-namespace detection{
+namespace det = lsst::afw::detection;
 
 // -- DiaSource ----------------
-DiaSource::DiaSource() : 
+det::DiaSource::DiaSource() : 
     _diaSourceId(0),
     _ampExposureId(0),
     _filterId(0),
@@ -89,7 +87,7 @@ DiaSource::DiaSource() :
     _nulls.set();
 }
 
-bool DiaSource::operator==(DiaSource const & d) const {
+bool det::DiaSource::operator==(DiaSource const & d) const {
     if (this == &d)  {
         return true;
     }
@@ -167,31 +165,21 @@ bool DiaSource::operator==(DiaSource const & d) const {
 
 
 // -- DiaSourceVector ----------------
-DiaSourceVector::DiaSourceVector()            : daf::base::Citizen(typeid(*this)), _vec()  {}
-DiaSourceVector::DiaSourceVector(size_type n) : daf::base::Citizen(typeid(*this)), _vec(n) {}
-
-DiaSourceVector::DiaSourceVector(size_type n, value_type const & val) :
-    daf::base::Citizen(typeid(*this)),
-    _vec(n, val)
-{}
-
-
-DiaSourceVector::~DiaSourceVector() {}
-
-
-DiaSourceVector::DiaSourceVector(DiaSourceVector const & v) :
-    daf::base::Citizen(typeid(*this)),
-    _vec(v._vec)
-{}
+det::DiaSourceVector::DiaSourceVector()            
+    : lsst::daf::base::Citizen(typeid(*this)), _vec()  {}
+det::DiaSourceVector::DiaSourceVector(size_type n) 
+    : lsst::daf::base::Citizen(typeid(*this)), _vec(n) {}
+det::DiaSourceVector::DiaSourceVector(size_type n, value_type const & val) 
+    : lsst::daf::base::Citizen(typeid(*this)), _vec(n, val) {}
+det::DiaSourceVector::DiaSourceVector(DiaSourceVector const & v)
+    : lsst::daf::base::Citizen(typeid(*this)), _vec(v._vec) {}
+det::DiaSourceVector::DiaSourceVector(Vector const & v)
+    : daf::base::Citizen(typeid(*this)), _vec(v) {}
 
 
-DiaSourceVector::DiaSourceVector(Vector const & v) :
-    daf::base::Citizen(typeid(*this)),
-    _vec(v)
-{}
+det::DiaSourceVector::~DiaSourceVector() {}
 
-
-DiaSourceVector & DiaSourceVector::operator=(DiaSourceVector const & v) {
+det::DiaSourceVector & det::DiaSourceVector::operator=(DiaSourceVector const & v) {
     if (this != &v) {
         _vec = v._vec;
     }
@@ -199,11 +187,7 @@ DiaSourceVector & DiaSourceVector::operator=(DiaSourceVector const & v) {
 }
 
 
-DiaSourceVector & DiaSourceVector::operator=(Vector const & v) {
+det::DiaSourceVector & det::DiaSourceVector::operator=(Vector const & v) {
     _vec = v;
     return *this;
 }
-
-} // namespace detection
-} // namespace afw
-} // namespace lsst

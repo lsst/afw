@@ -10,12 +10,9 @@
 #include "lsst/daf/base.h"
 #include "lsst/afw/detection/Source.h"
 
-namespace lsst{
-namespace afw{
-namespace detection{
+namespace det = lsst::afw::detection;
 
-
-Source::Source() : 
+det::Source::Source() : 
     _sourceId(0),
     _ampExposureId(0),
     _filterId(0),
@@ -74,7 +71,7 @@ Source::Source() :
 }
 
 
-bool Source::operator==(Source const & d) const {
+bool det::Source::operator==(Source const & d) const {
     if (this == &d)  {
         return true;
     }
@@ -137,43 +134,27 @@ bool Source::operator==(Source const & d) const {
 
 
 // -- SourceVector ----------------
-SourceVector::SourceVector()            : daf::base::Citizen(typeid(*this)), _vec()  {}
-SourceVector::SourceVector(size_type n) : daf::base::Citizen(typeid(*this)), _vec(n) {}
+det::SourceVector::SourceVector()            
+    : lsst::daf::base::Citizen(typeid(*this)), _vec()  {}
+det::SourceVector::SourceVector(size_type n) 
+    : lsst::daf::base::Citizen(typeid(*this)), _vec(n) {}
+det::SourceVector::SourceVector(size_type n, value_type const & val) 
+    : lsst::daf::base::Citizen(typeid(*this)), _vec(n, val) {}
+det::SourceVector::SourceVector(SourceVector const & v) 
+    : lsst::daf::base::Citizen(typeid(*this)), _vec(v._vec) {}
+det::SourceVector::SourceVector(Vector const & v)
+    : lsst::daf::base::Citizen(typeid(*this)), _vec(v) {}
 
-SourceVector::SourceVector(size_type n, value_type const & val) :
-    daf::base::Citizen(typeid(*this)),
-    _vec(n, val)
-{}
+det::SourceVector::~SourceVector() {}
 
-
-SourceVector::~SourceVector() {}
-
-
-SourceVector::SourceVector(SourceVector const & v) :
-    daf::base::Citizen(typeid(*this)),
-    _vec(v._vec)
-{}
-
-
-SourceVector::SourceVector(Vector const & v) :
-    daf::base::Citizen(typeid(*this)),
-    _vec(v)
-{}
-
-
-SourceVector & SourceVector::operator=(SourceVector const & v) {
+det::SourceVector & det::SourceVector::operator=(SourceVector const & v) {
     if (this != &v) {
         _vec = v._vec;
     }
     return *this;
 }
 
-
-SourceVector & SourceVector::operator=(Vector const & v) {
+det::SourceVector & det::SourceVector::operator=(Vector const & v) {
     _vec = v;
     return *this;
 }
-
-} // namespace detection
-} // namespace afw
-} // namespace lsst
