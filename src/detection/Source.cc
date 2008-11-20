@@ -3,7 +3,7 @@
 //##====----------------                                ----------------====##/
 //!
 //! \file
-//! \brief Support for Source%s
+//! \brief Support for Sources
 //!
 //##====----------------                                ----------------====##/
 
@@ -25,13 +25,26 @@ det::Source::Source() :
     _decErr4detection(0.0),
     _raErr4wcs(0.0),
     _decErr4wcs(0.0),
-    _col(0.0),
-    _row(0.0), 
-    _colErr(0.0),
-    _rowErr(0.0),
-    _cx(0.0),
-    _cy(0.0),
-    _cz(0.0),  
+    _xFlux(0.0),
+    _xFluxErr(0.0),
+    _yFlux(0.0),
+    _yFluxErr(0.0),
+    _raFlux(0.0),
+    _raFluxErr(0.0),
+    _decFlux(0.0),
+    _decFluxErr(0.0),
+    _xPeak(0.0),
+    _yPeak(0.0),
+    _raPeak(0.0),
+    _decPeak(0.0),
+    _xAstrom(0.0),
+    _xAstromErr(0.0),
+    _yAstrom(0.0),
+    _yAstromErr(0.0),
+    _raAstrom(0.0),
+    _raAstromErr(0.0),
+    _decAstrom(0.0),
+    _decAstromErr(0.0),
     _taiMidPoint(0.0),
     _taiRange(0.0),
     _fwhmA(0.0),
@@ -69,13 +82,6 @@ bool det::Source::operator==(Source const & d) const {
         _dec              == d._dec              &&
         _raErr4Wcs        == d._raErr4Wcs        &&
         _decErr4Wcs       == d._decErr4Wcs       &&
-        _row              == d._row              &&
-        _col              == d._col              &&
-        _rowErr           == d._rowErr           &&
-        _colErr           == d._colErr           &&
-        _cx               == d._cx               &&
-        _cy               == d._cy               &&
-        _cz               == d._cz               &&          
         _taiMidPoint      == d._taiMidPoint      &&
         _fwhmA            == d._fwhmA            &&
         _fwhmB            == d._fwhmB            &&
@@ -95,7 +101,23 @@ bool det::Source::operator==(Source const & d) const {
                    (isNull(OBJECT_ID)          || _objectId         == d._objectId        ) &&
                    (isNull(MOVING_OBJECT_ID)   || _movingObjectId   == d._movingObjectId  ) &&
                    (isNull(RA_ERR_4_DETECTION) || _raErr4Detection  == d._raErr4Detection ) &&
-                   (isNull(DEC_ERR_4_DETECTION)|| _decErr4Detection == d._decErr4Detection) &&                                  
+                   (isNull(DEC_ERR_4_DETECTION)|| _decErr4Detection == d._decErr4Detection) &&
+                   (isNull(X_FLUX)             || _xFlux            == d._xFlux           ) &&
+                   (isNull(X_FLUX_ERR)         || _xFluxErr         == d._xFluxErr        ) &&                   
+                   (isNull(Y_FLUX)             || _yFlux            == d._yFlux           ) &&
+                   (isNull(Y_FLUX_ERR)         || _yFluxErr         == d._yFluxErr        ) &&
+                   (isNull(X_PEAK)             || _xPeak            == d._xPeak           ) && 
+                   (isNull(Y_PEAK)             || _yPeak            == d._yPeak           ) && 
+                   (isNull(RA_PEAK)            || _raPeak           == d._raPeak          ) && 
+                   (isNull(DEC_PEAK)           || _decPeak          == d._decPeak         ) &&   
+                   (isNull(X_ASTROM)           || _xAstrom          == d._xAstrom         ) &&
+                   (isNull(X_ASTROM_ERR)       || _xAstromErr       == d._xAstromErr      ) &&                   
+                   (isNull(Y_ASTROM)           || _yAstrom          == d._yAstrom         ) &&
+                   (isNull(Y_ASTROM_ERR)       || _yAstromErr       == d._yAstromErr      ) &&                                   
+                   (isNull(RA_ASTROM)          || _raAstrom         == d._raAstrom        ) &&
+                   (isNull(RA_ASTROM_ERR)      || _raAstromErr      == d._raAstromErr     ) &&                   
+                   (isNull(DEC_ASTROM)         || _decAstrom        == d._decAstrom       ) &&
+                   (isNull(DEC_ASTROM_ERR)     || _decAstromErr     == d._decAstromErr    ) &&                                   
                    (isNull(TAI_RANGE)          || _taiRange         == d._taiRange        ) &&
                    (isNull(PETRO_MAG)          || _petroMag         == d._petroMag        ) &&                   
                    (isNull(PETRO_MAG_ERR)      || _petroMagErr      == d._petroMagErr     ) &&
