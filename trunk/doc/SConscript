@@ -1,8 +1,0 @@
-# -*- python -*-
-Import('env')
-
-if False:
-    print "TURN DOXY BACK ON"
-else:
-    doxy = env.Doxygen("doxygen.conf")
-    env.Depends(doxy, "../include/lsst/afw/image/ImageExceptions.h")
