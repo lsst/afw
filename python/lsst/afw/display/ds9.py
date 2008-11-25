@@ -230,8 +230,8 @@ def erase(frame = 0, len = 2):
 
    ds9Cmd("frame %d; regions delete all" % frame)
 
-def dot(symb, r, c, frame = 0, size = 2, ctype = 'green'):
-   """Draw a symbol onto the specfied DS9 frame at (row,col) = (r,c) [0-based coordinates]
+def dot(symb, c, r, frame = 0, size = 2, ctype = 'green'):
+   """Draw a symbol onto the specfied DS9 frame at (col,row) = (c,r) [0-based coordinates]
 Possible values are:
 	+	Draw a +
 	x	Draw an x
@@ -260,7 +260,7 @@ Any other value is interpreted as a string to be drawn
    ds9Cmd(cmd)
 
 def line(points, frame = 0, symbs = False, ctype = 'green'):
-   """Draw a set of symbols or connect the points, a list of (row,col)
+   """Draw a set of symbols or connect the points, a list of (col,row)
 If symbs is True, draw points at the specified points using the desired symbol,
 otherwise connect the dots.  Ctype is the name of a colour (e.g. 'red')"""
    
@@ -268,15 +268,15 @@ otherwise connect the dots.  Ctype is the name of a colour (e.g. 'red')"""
       return
 
    if symbs:
-      for (r, c) in points:
+      for (c, r) in points:
          dot(symbs, r, c, frame = frame, size = 0.5, ctype = ctype)
    else:
       if len(points) > 0:
           cmd = "frame %d; " % (frame)
 
-          r0, c0 = points[0];
+          c0, r0 = points[0];
           r0 += 1; c0 += 1;             # ds9 uses 1-based coordinates
-          for (r, c) in points[1:]:
+          for (c, r) in points[1:]:
              r += 1; c += 1;            # ds9 uses 1-based coordinates
              cmd += 'regions command { line %g %g %g %g };' % (c0, r0, c, r)
              c0, r0 = c, r
@@ -286,7 +286,7 @@ otherwise connect the dots.  Ctype is the name of a colour (e.g. 'red')"""
 #
 # Zoom and Pan
 #
-def zoom(zoomfac = None, rowc = None, colc = None, frame = 0):
+def zoom(zoomfac=None, colc=None, rowc=None, frame=0):
    """Zoom frame by specified amount, optionally panning also"""
 
    if frame == None:
@@ -307,6 +307,6 @@ def zoom(zoomfac = None, rowc = None, colc = None, frame = 0):
 
    ds9Cmd(cmd)
 
-def pan(rowc = None, colc = None, frame = 0):
+def pan(colc=None, rowc=None, frame=0):
    """Pan to (rowc, colc); see also zoom"""
-   zoom(None, rowc, colc, frame)
+   zoom(None, colc, rowc, frame)
