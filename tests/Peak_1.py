@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Tests for Peaks
 
@@ -12,21 +13,21 @@ import pdb                              # we may want to say pdb.set_trace()
 import unittest
 import lsst.utils.tests as tests
 import lsst.pex.logging as logging
-import lsst.afw.image.imageLib as imageLib
-import lsst.afw.detection.detectionLib as detection
+import lsst.afw.image.imageLib as afwImage
+import lsst.afw.detection.detectionLib as afwDetection
 
 try:
     type(verbose)
 except NameError:
     verbose = 0
-    logging.Trace_setVerbosity("detection.Footprint", verbose)
+    logging.Trace_setVerbosity("afwDetection.Footprint", verbose)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class PeakTestCase(unittest.TestCase):
     """A test case for Peak"""
     def setUp(self):
-        self.peak = detection.Peak()
+        self.peak = afwDetection.Peak()
 
     def tearDown(self):
         del self.peak
@@ -34,14 +35,14 @@ class PeakTestCase(unittest.TestCase):
     def testGC(self):
         """Check that Peaks are automatically garbage collected (when MemoryTestCase runs)"""
         
-        f = detection.Peak()
+        f = afwDetection.Peak()
 
     def testToString(self):
         assert self.peak.toString() != None
         
     def testCentroidInt(self):
         x, y = 10, -10
-        peak = detection.Peak(x, y)
+        peak = afwDetection.Peak(x, y)
         self.assertEqual(peak.getIx(), x)
         self.assertEqual(peak.getIy(), y)
 
@@ -50,7 +51,7 @@ class PeakTestCase(unittest.TestCase):
 
     def testCentroidFloat(self):
         for x, y in [(5, 6), (10.5, -10.5)]:
-            peak = detection.Peak(x, y)
+            peak = afwDetection.Peak(x, y)
             self.assertEqual(peak.getFx(), x)
             self.assertEqual(peak.getFy(), y)
 
@@ -60,7 +61,7 @@ class PeakTestCase(unittest.TestCase):
     def testId(self):
         """Test uniqueness of IDs"""
         
-        self.assertNotEqual(self.peak.getId(), detection.Peak().getId())
+        self.assertNotEqual(self.peak.getId(), afwDetection.Peak().getId())
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
