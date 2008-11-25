@@ -199,6 +199,14 @@ class MaskedImageTestCase(unittest.TestCase):
         self.checkImgPatch(self.mimage, 2, 2)
         self.checkImgPatch(smimage, 1, 1)
 
+    def testVariance(self):
+        """Check that we can set the variance from the gain"""
+        gain = 2
+
+        var = self.mimage.getVariance()
+        var <<= self.mimage.getImage();
+	var /= gain
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def printImg(img):
