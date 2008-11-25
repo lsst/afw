@@ -135,7 +135,7 @@ public:
     const Span& addSpan(const int y, const int x0, const int x1);
     const Span& addSpan(Span const& span);
 
-    void offset(int dx, int dy);
+    void shift(int dx, int dy);
 
     const image::BBox& getBBox() const { return _bbox; } //!< Return the Footprint's bounding box
     /// Return the corners of the MaskedImage the footprints live in
