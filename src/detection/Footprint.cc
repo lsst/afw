@@ -497,7 +497,7 @@ detection::Footprint::Ptr detection::growFootprint(
     //
     // Fix the coordinate system to be that of foot
     //
-    grown->offset(bbox.getX0(), bbox.getY1());
+    grown->shift(bbox.getX0(), bbox.getY1());
 
     return grown;
 }
