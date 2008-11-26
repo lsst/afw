@@ -1,4 +1,4 @@
 # -*- python -*-
 Import('env')
 
-env.Program(['testMatrix.cc'], LIBS=env.libs['boost'] + ['vw'] + ['gslcblas'] + ['gsl'] + ['lapack'])
+env.Program(['testMatrix.cc'], LIBS=env.libs['boost'] + ['vw'] + ['gslcblas'] + ['gsl'])

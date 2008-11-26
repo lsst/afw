@@ -164,8 +164,8 @@ int main(int argc, char** argv)
         gsl_vector_view col2 = gsl_matrix_column(gm2, i);
         for (int j = 0; j < N; ++j) {
             if (N > Nmax) {
-                *gsl_vector_ptr(&col1.vector, j) += (N * i + j) * rand();
-                *gsl_vector_ptr(&col2.vector, j) += (N * i + j) * rand();
+                *gsl_vector_ptr(&col1.vector, j) = (N * i + j) * rand();
+                *gsl_vector_ptr(&col2.vector, j) = (N * i + j) * rand();
             }
             else {
                 for (int k = 0; k < N; ++k) {
