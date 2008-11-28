@@ -185,6 +185,40 @@ typename image::ImageBase<PixelT>::iterator image::ImageBase<PixelT>::at(int x, 
     return _gilView.at(x, y);
 }
 
+/// Return a fast STL compliant iterator to the start of the %image which must be contiguous
+/// \exception lsst::pex::exceptions::Runtime
+/// Argument \a contiguous is false, or the pixels are not in fact contiguous
+template<typename PixelT>
+typename image::ImageBase<PixelT>::x_iterator image::ImageBase<PixelT>::begin(
+		bool contiguous         ///< Pixels are contiguous (must be true)
+                                                                             ) const {
+    if (not contiguous) {
+        throw lsst::pex::exceptions::Runtime("Only contiguous == true makes sense");
+    }
+    if (row_begin(getHeight() - 1) + getWidth()*getHeight() != row_end(0)) {
+        throw lsst::pex::exceptions::Runtime("Image's pixels are not contiguous");
+    }
+
+    return row_begin(getHeight() - 1);
+}
+
+/// Return a fast STL compliant iterator to the start of the %image which must be contiguous
+/// \exception lsst::pex::exceptions::Runtime
+/// Argument \a contiguous is false, or the pixels are not in fact contiguous
+template<typename PixelT>
+typename image::ImageBase<PixelT>::x_iterator image::ImageBase<PixelT>::end(
+		bool contiguous         ///< Pixels are contiguous (must be true)
+                                                                           ) const {
+    if (not contiguous) {
+        throw lsst::pex::exceptions::Runtime("Only contiguous == true makes sense");
+    }
+    if (row_begin(getHeight() - 1) + getWidth()*getHeight() != row_end(0)) {
+        throw lsst::pex::exceptions::Runtime("Image's pixels are not contiguous");
+    }
+
+    return row_end(0);
+}
+
 /// Return an \c xy_locator at the point <tt>(x, y)</tt> in the %image
 ///
 /// Locators may be used to access a patch in an image
