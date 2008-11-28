@@ -184,10 +184,10 @@ const detection::Span& detection::Footprint::addSpan(detection::Span const& span
     return *sp;
 }
 /**
- * Offset a Footprint by <tt>(dx, dy)</tt>
+ * Shift a Footprint by <tt>(dx, dy)</tt>
  */
-void detection::Footprint::offset(int dx, //!< How much to move footprint in column direction
-                                  int dy  //!< How much to move in row direction
+void detection::Footprint::shift(int dx, //!< How much to move footprint in column direction
+                                 int dy  //!< How much to move in row direction
                       ) {
     for (Footprint::SpanList::iterator siter = _spans.begin(); siter != _spans.end(); ++siter){
         detection::Span::Ptr span = *siter;
@@ -470,6 +470,7 @@ detection::Footprint::Ptr detection::growFootprint(
     bbox.grow(image::PointI(bbox.getX0() - 2*ngrow - 1, bbox.getY0() - 2*ngrow - 1));
     bbox.grow(image::PointI(bbox.getX1() + 2*ngrow + 1, bbox.getY1() + 2*ngrow + 1));
     image::Image<int>::Ptr idImage = makeImageFromBBox<int>(bbox);
+    idImage->setXY0(image::PointI(0, 0));
 
     set_footprint_id<int>(idImage, foot, 1, -bbox.getX0(), -bbox.getY0());
 
@@ -496,7 +497,7 @@ detection::Footprint::Ptr detection::growFootprint(
     //
     // Fix the coordinate system to be that of foot
     //
-    grown->offset(bbox.getX0(), bbox.getY1());
+    grown->shift(bbox.getX0(), bbox.getY1());
 
     return grown;
 }
