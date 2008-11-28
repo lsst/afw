@@ -41,13 +41,14 @@ and
 \page secPixelAccessTutorial Pixel Access Tutorial and Examples
 \section secPixelAccessTutorial Pixel Access Tutorial and Examples
 
-%Image Pixels may be accessed via \link imageIterators iterators\endlink
-or \link imageLocators locators\endlink; the former
-are simpler if you want single-pixel access, while the latter provide
+%Image Pixels may be accessed via iterators or locators;
+the former are simpler if you want single-pixel access, while the latter provide
 you with access to a pixel's friends and neighbours.
+Annotated
+examples are available for \link imageIterators iterators\endlink and \link imageLocators locators\endlink.
 
 These examples cover Image%s and Mask%s, but
-the code to use MaskedImage%s is pretty similar; see
+the code to use MaskedImage%s is pretty similar; see example code in
 \link maskedImageIterators MaskedImage iterators\endlink and \link maskedImageLocators MaskedImage locators\endlink.
 
 */
@@ -74,9 +75,13 @@ base classes.
 
 - You can use an STL-compliant \c iterator to access the pixels:
  - ImageBase::begin() const
+ - ImageBase::begin(bool) const
  - MaskedImage::begin() const
+ - MaskedImage::begin(bool) const
  - ImageBase::end() const
+ - ImageBase::end(bool) const
  - MaskedImage::end() const
+ - MaskedImage::end(bool) const
  - ImageBase::rbegin() const
  - MaskedImage::rbegin() const
  - ImageBase::rend() const
@@ -87,6 +92,10 @@ base classes.
 N.b. These \c iterators aren't the most efficient way to access all the %image's
 pixels as they may not be contiguous in memory so a test for end-of-row
 is needed after every %pixel (we do guarantee that a \e row's pixels will be contiguous).
+The exceptions are the \c begin(bool) and \c end(bool) pairs which are only
+valid for contiguous images (they'll throw an exception if the %image isn't), but
+are the fastest way to traverse an %image if available.  Note that they return an
+\c x_iterator not an \c iterator.
 
 - Incrementing an \c y_iterator moves it across the row
  - ImageBase::row_begin(int y) const

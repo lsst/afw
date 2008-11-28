@@ -33,6 +33,12 @@ int main() {
             *ptr = ImageT::Pixel(100, 0x1, 10);
         }
     }
+
+    // This one is just as fast (but only works for contiguous arrays)
+    for (ImageT::x_iterator ptr = img.begin(true); ptr != img.end(true); ++ptr) {
+        *ptr = 100;
+    }
+
     // Set the pixels column by column, with awful consequences upon cache performance
     for (int x = 0; x != img.getWidth(); ++x) {
         for (ImageT::y_iterator ptr = img.col_begin(x), end = img.col_end(x); ptr != end; ++ptr) {

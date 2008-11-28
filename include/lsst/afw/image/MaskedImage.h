@@ -720,6 +720,9 @@ namespace image {
         reverse_iterator rbegin() const;
         reverse_iterator rend() const;
 
+        x_iterator begin(bool) const;
+        x_iterator end(bool) const;
+
         x_iterator row_begin(int y) const;
         x_iterator row_end(int y) const;
         x_iterator x_at(int x, int y) const;

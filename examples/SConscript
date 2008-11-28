@@ -8,6 +8,7 @@ env.Program(["DecoratedImage.cc"], LIBS=env.getlibs("afw"))
 env.Program(["MaskedImage.cc"], LIBS=env.getlibs("afw"))
 
 env.Program("maskedImageFitsIO", ["maskedImageFitsIO.cc"], LIBS=env.getlibs("afw"))
+env.Program("timeImageIterators.cc", LIBS=env.getlibs("afw"))
 env.Program("timeImageAddition", ["timeImageAddition.cc"], LIBS=env.getlibs("afw"))
 env.Program("timePixelAccessor", ["timePixelAccessor.cc"], LIBS=env.getlibs("afw"))
 
