@@ -232,24 +232,24 @@ psArray *pmFootprintArrayToPeaks(const psArray *footprints);
 template <typename ImageT>
 class FootprintFunctor {
 public:
-    FootprintFunctor(Footprint const& foot, ///< The Footprint in question
-                     ImageT const& image    ///< The image that the Footprint lives in
-                    ) : _foot(foot), _image(image) {}
+    FootprintFunctor(ImageT const& image    ///< The image that the Footprint lives in
+                    ) : _image(image) {}
 
     virtual ~FootprintFunctor() {}
     /**
      * \brief Apply operator() to each pixel in the Footprint
      */
-    void apply() {
-        if (_foot.getSpans().empty()) {
+    void apply(Footprint const& foot    ///< The Footprint in question
+              ) {
+        if (foot.getSpans().empty()) {
             return;
         }
 
         int ox1 = 0, oy = 0;            // Current position of the locator (in the SpanList loop)
-        typename ImageT::xy_locator loc = _image.xy_at(ox1, oy);
+        typename ImageT::xy_locator loc = _image.xy_at(-_image.getX0(), -_image.getY0()); // Origin of the Image's pixels
 
-        for (Footprint::SpanList::const_iterator siter = _foot.getSpans().begin();
-             siter != _foot.getSpans().end(); siter++) {
+        for (Footprint::SpanList::const_iterator siter = foot.getSpans().begin();
+             siter != foot.getSpans().end(); siter++) {
             Span::Ptr const span = *siter;
 
             int const y = span->getY();
@@ -267,11 +267,13 @@ public:
     }
     /// Return the image
     ImageT const& getImage() const { return _image; }    
-    /// The operator to be applied to each pixel in the Footprint
+    /// The operator to be applied to each pixel in the Footprint.
+    ///
+    /// N.b. the coordinates (x, y) are relative to the origin of the image's parent
+    /// if it exists.
     virtual void operator()(typename ImageT::xy_locator loc, int x, int y) = 0;
 private:
-    Footprint const& _foot;             // the Footprint to be processed
-    ImageT const& _image;               // _foot's home
+    ImageT const& _image;               // The image that the Footprints live in
 };
             
 }}}
