@@ -15,8 +15,8 @@ namespace lsst {
 namespace afw {
 namespace image {
 
-    const double PixelZeroPos = 0.5; ///< position of center of pixel 0
-    ///< FITS uses 1.0, SDSS uses 0.5, LSST is undecided but RHL proposed 0.0
+    const double PixelZeroPos = 0.0;    ///< position of center of pixel 0
+    ///< FITS uses 1.0, SDSS uses 0.5, LSST uses 0.0 (http://dev.lsstcorp.org/trac/wiki/BottomLeftPixelProposalII%3A)
 
     /**
      * @brief Convert image index to image position
