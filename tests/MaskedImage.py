@@ -199,6 +199,12 @@ class MaskedImageTestCase(unittest.TestCase):
         self.checkImgPatch(self.mimage, 2, 2)
         self.checkImgPatch(smimage, 1, 1)
 
+    def testSetCopiedMask(self):
+        """Check that we can set the Mask with a copied Mask"""
+        
+        crMask = self.mimage.getMask().Factory(self.mimage.getMask(), True)
+        msk = self.mimage.getMask(); msk |= crMask; del msk
+
     def testVariance(self):
         """Check that we can set the variance from the gain"""
         gain = 2

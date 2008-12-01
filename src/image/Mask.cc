@@ -59,13 +59,28 @@ image::Mask<MaskPixelT>::Mask(const std::pair<int, int> dimensions, MaskPlaneDic
 template<typename MaskPixelT>
 image::Mask<MaskPixelT>::Mask(Mask const& rhs, const BBox& bbox, const bool deep) :
     image::ImageBase<MaskPixelT>(rhs, bbox, deep),
-    _myMaskDictVersion(_myMaskDictVersion) {
+    _myMaskDictVersion(rhs._myMaskDictVersion) {
 }
 
 template<typename MaskPixelT>
 image::Mask<MaskPixelT>::Mask(image::Mask<MaskPixelT> const& rhs, bool deep) :
     image::ImageBase<MaskPixelT>(rhs, deep),
-    _myMaskDictVersion(_myMaskDictVersion) {
+    _myMaskDictVersion(rhs._myMaskDictVersion) {
+}
+
+/************************************************************************************************************/
+
+template<typename PixelT>
+void image::Mask<PixelT>::swap(Mask &rhs) {
+    using std::swap;                    // See Meyers, Effective C++, Item 25
+
+    ImageBase<PixelT>::swap(rhs);
+    swap(_myMaskDictVersion, rhs._myMaskDictVersion);    
+}
+
+template<typename PixelT>
+void image::swap(Mask<PixelT>& a, Mask<PixelT>& b) {
+    a.swap(b);
 }
 
 /*

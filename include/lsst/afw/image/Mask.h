@@ -68,6 +68,7 @@ namespace image {
         Mask(const Mask& src, const bool deep=false);
         Mask(const Mask& src, const BBox& bbox, const bool deep=false);
         
+        void swap(Mask& rhs);
         // Operators
 
         Mask& operator=(MaskPixelT const rhs);
@@ -124,11 +125,6 @@ namespace image {
         void conformMaskPlanes(MaskPlaneDict& masterPlaneDict);
         
         // Getters
-#if 0
-        /// Return a shared_ptr to the DecoratedImage's metadata; supported by LsstBase
-        lsst::daf::base::DataProperty::Ptr      getMetadata();
-        lsst::daf::base::DataProperty::ConstPtr getMetadata() const;
-#endif
         
 private:
         //LSST_PERSIST_FORMATTER(lsst::afw::formatters::MaskFormatter);
@@ -164,6 +160,9 @@ private:
         using ImageBase<MaskPixelT>::swap;
     };
 
+    template<typename PixelT>
+    void swap(Mask<PixelT>& a, Mask<PixelT>& b);
+    
 }}}  // lsst::afw::image
         
 #endif // LSST_AFW_IMAGE_MASK_H
