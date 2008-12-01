@@ -171,17 +171,28 @@ detection::Span const& detection::Footprint::addSpan(int const y, //!< row value
 /**
  * Add a Span to a Footprint returning a reference to the new Span
  */
-const detection::Span& detection::Footprint::addSpan(detection::Span const& span // new Span being added
+const detection::Span& detection::Footprint::addSpan(detection::Span const& span ///< new Span being added
                               ) {
     detection::Span::Ptr sp(new detection::Span(span));
+    
     _spans.push_back(sp);
     
     _npix += span._x1 - span._x0 + 1;
 
     _bbox.grow(image::PointI(span._x0, span._y));
-    _bbox.grow(image::PointI(span._x1 + 1, span._y + 1));
+    _bbox.grow(image::PointI(span._x1, span._y));
 
     return *sp;
+}
+
+/**
+ * Add a Span to a Footprint returning a reference to the new Span
+ */
+const detection::Span& detection::Footprint::addSpan(detection::Span const& span, ///< new Span being added
+                                                     int dx,                      ///< Add dx to span's x coords
+                                                     int dy                       ///< Add dy to span's y coords
+                              ) {
+    return addSpan(span._y + dy, span._x0 + dx, span._x1 + dx);
 }
 /**
  * Shift a Footprint by <tt>(dx, dy)</tt>
@@ -307,18 +318,18 @@ MaskT detection::setMaskFromFootprint(typename image::Mask<MaskT>::Ptr mask, ///
     for (detection::Footprint::SpanList::const_iterator siter = foot->getSpans().begin();
          siter != foot->getSpans().end(); siter++) {
         detection::Span::Ptr const span = *siter;
-        int const y = span->getY();
+        int const y = span->getY() - mask->getY0();
         if (y < 0 || y >= height) {
             continue;
         }
         
-        int x0 = span->getX0();
-        int x1 = span->getX1();
+        int x0 = span->getX0() - mask->getX0();
+        int x1 = span->getX1() - mask->getX0();
         x0 = (x0 < 0) ? 0 : (x0 >= width ? width - 1 : x0);
         x1 = (x1 < 0) ? 0 : (x1 >= width ? width - 1 : x1);
         
-        for (typename image::Image<MaskT>::x_iterator ptr = mask->x_at(span->getX0(), y),
-                 end = ptr + span->getWidth(); ptr != end; ++ptr) {
+        for (typename image::Image<MaskT>::x_iterator ptr = mask->x_at(x0, y),
+                 end = mask->x_at(x1 + 1, y); ptr != end; ++ptr) {
             *ptr |= bitmask;
         }
     }

@@ -150,7 +150,7 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
     std::vector<int> aliases;           // aliases for initially disjoint parts of Footprints
     aliases.reserve(1 + height/20);	// initial size of aliases
 
-    std::vector<IdSpan::Ptr> spans; // row:x0,x1 for objects
+    std::vector<IdSpan::Ptr> spans;     // y:x0,x1 for objects
     spans.reserve(aliases.capacity());	// initial size of spans
 
     aliases.push_back(0);               // 0 --> 0

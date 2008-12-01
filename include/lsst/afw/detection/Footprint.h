@@ -42,6 +42,8 @@ public:
 
     std::string toString();    
 
+    void shift(int dx, int dy) { _x0 += dx; _x1 += dx; _y += dy; }
+
     int compareByYX(const void **a, const void **b);
 
     friend class Footprint;
@@ -134,6 +136,7 @@ public:
 
     const Span& addSpan(const int y, const int x0, const int x1);
     const Span& addSpan(Span const& span);
+    const Span& addSpan(Span const& span, int dx, int dy);
 
     void shift(int dx, int dy);
 
