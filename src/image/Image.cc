@@ -22,7 +22,7 @@ image::ImageBase<PixelT>::ImageBase(int const width, int const height) :
     lsst::daf::data::LsstBase(typeid(this)),
     _gilImage(new _image_t(width, height)),
     _gilView(flipped_up_down_view(view(*_gilImage))),
-    _x0(0), _y0(0)
+    _ix0(0), _iy0(0), _x0(0), _y0(0)
 {
 }
 
@@ -37,7 +37,7 @@ image::ImageBase<PixelT>::ImageBase(std::pair<int, int> const dimensions) :
     lsst::daf::data::LsstBase(typeid(this)),
     _gilImage(new _image_t(dimensions.first, dimensions.second)),
     _gilView(flipped_up_down_view(view(*_gilImage))),
-    _x0(0), _y0(0)
+    _ix0(0), _iy0(0), _x0(0), _y0(0)
 {
 }
 
@@ -55,9 +55,8 @@ image::ImageBase<PixelT>::ImageBase(ImageBase const& rhs, ///< Right-hand-side %
     lsst::daf::data::LsstBase(typeid(this)),
     _gilImage(rhs._gilImage), // don't copy the pixels
     _gilView(subimage_view(flipped_up_down_view(view(*_gilImage)),
-                            rhs._x0, rhs._y0, rhs.getWidth(), rhs.getHeight())),
-    _x0(rhs._x0),
-    _y0(rhs._y0)
+                           rhs._ix0, rhs._iy0, rhs.getWidth(), rhs.getHeight())),
+    _ix0(rhs._ix0), _iy0(rhs._iy0), _x0(rhs._x0), _y0(rhs._y0)
 {
     if (deep) {
         ImageBase tmp(getDimensions());
@@ -81,9 +80,10 @@ image::ImageBase<PixelT>::ImageBase(ImageBase const& rhs, ///< Right-hand-side %
     _gilImage(rhs._gilImage), // boost::shared_ptr, so don't copy the pixels
     _gilView(subimage_view(rhs._gilView,
                            bbox.getX0(), bbox.getY0(), bbox.getWidth(), bbox.getHeight())),
+    _ix0(rhs._ix0 + bbox.getX0()), _iy0(rhs._iy0 + bbox.getY0()),
     _x0(rhs._x0 + bbox.getX0()), _y0(rhs._y0 + bbox.getY0())
 {
-    if (_x0 < 0 || _y0 < 0 || _x0 + getWidth() > _gilImage->width() || _y0 + getHeight() > _gilImage->height()) {
+    if (_ix0 < 0 || _iy0 < 0 || _ix0 + getWidth() > _gilImage->width() || _iy0 + getHeight() > _gilImage->height()) {
         throw lsst::pex::exceptions::LengthError(boost::format("BBox (%d,%d) %dx%d doesn't fit in image") %
                                                  bbox.getX0() % bbox.getY0() % bbox.getWidth() % bbox.getHeight());
     }
@@ -141,6 +141,8 @@ void image::ImageBase<PixelT>::swap(ImageBase &rhs) {
     
     swap(_gilImage, rhs._gilImage);   // just swapping the pointers
     swap(_gilView, rhs._gilView);
+    swap(_ix0, rhs._ix0);
+    swap(_iy0, rhs._iy0);
     swap(_x0, rhs._x0);
     swap(_y0, rhs._y0);
 }
@@ -387,6 +389,20 @@ void image::Image<PixelT>::writeFits(
                                     ) const {
 
     image::fits_write_view(fileName, _getRawView(), metadata);
+}
+
+/************************************************************************************************************/
+
+template<typename PixelT>
+void image::Image<PixelT>::swap(Image &rhs) {
+    using std::swap;                    // See Meyers, Effective C++, Item 25
+    ImageBase<PixelT>::swap(rhs);
+    ;                                   // no private variables to swap
+}
+
+template<typename PixelT>
+void image::swap(Image<PixelT>& a, Image<PixelT>& b) {
+    a.swap(b);
 }
 
 /************************************************************************************************************/

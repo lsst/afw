@@ -173,6 +173,8 @@ namespace image {
 
             ImageBase<PixelT> tmp(rhs.getDimensions());
             copy_and_convert_pixels(rhs._gilView, tmp._gilView); // from boost::gil
+            tmp._ix0 = rhs._ix0;
+            tmp._iy0 = rhs._iy0;
             tmp._x0 = rhs._x0;
             tmp._y0 = rhs._y0;
 
@@ -250,8 +252,11 @@ namespace image {
         _image_t_Ptr _gilImage;
         _view_t _gilView;
         //
-        int _x0;                      // origin of ImageBase in some larger image (0 if not a subImageBase)
-        int _y0;
+        int _ix0;                       // origin of ImageBase in some larger image (0 if not a subImageBase)
+        int _iy0;                       // do not lie about this!  You may lie about _[xy]0, but be careful
+
+        int _x0;                        // origin of ImageBase in some larger image (0 if not a subImageBase)
+        int _y0;                        // as returned to and manipulated by the user
         //
         // Provide functions that minimise the temptation to get at the variables directly
         //
@@ -330,6 +335,7 @@ namespace image {
                        metadata=lsst::daf::base::DataProperty::ConstPtr(static_cast<lsst::daf::base::DataProperty *>(0))
 #endif
                       ) const;
+        void swap(Image &rhs);
         //
         // Operators etc.
         //
