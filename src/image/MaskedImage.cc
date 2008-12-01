@@ -472,31 +472,35 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::y_iterator
 /// Fast iterators to contiguous images
 ///
 /// Return a fast \c iterator to the start of the %image, which must be contiguous
+/// Note that this goes through the image backwards (hence rbegin/rend)
+///
 /// \exception lsst::pex::exceptions::Runtime
 /// Argument \a contiguous is false, or the pixels are not in fact contiguous
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::x_iterator
-    image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::begin(
+    image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::rbegin(
 		bool contiguous         ///< Pixels are contiguous (must be true)
                                                                       ) const {
-    typename Image::x_iterator imageBegin = _image->begin(contiguous);
-    typename Mask::x_iterator maskBegin = _mask->begin(contiguous);
-    typename Variance::x_iterator varianceBegin = _variance->begin(contiguous);
+    typename Image::x_iterator imageBegin = _image->rbegin(contiguous);
+    typename Mask::x_iterator maskBegin = _mask->rbegin(contiguous);
+    typename Variance::x_iterator varianceBegin = _variance->rbegin(contiguous);
     
     return x_iterator(imageBegin, maskBegin, varianceBegin);
 }
 
 /// Return a fast \c iterator to the end of the %image, which must be contiguous
+/// Note that this goes through the image backwards (hence rbegin/rend)
+///
 /// \exception lsst::pex::exceptions::Runtime
 /// Argument \a contiguous is false, or the pixels are not in fact contiguous
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::x_iterator
-    image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::end(
+    image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::rend(
         bool contiguous                 ///< Pixels are contiguous (must be true)
                                                                     ) const {
-    typename Image::x_iterator imageEnd = getImage()->end(contiguous);
-    typename Mask::x_iterator maskEnd = getMask()->end(contiguous);
-    typename Variance::x_iterator varianceEnd = getVariance()->end(contiguous);
+    typename Image::x_iterator imageEnd = getImage()->rend(contiguous);
+    typename Mask::x_iterator maskEnd = getMask()->rend(contiguous);
+    typename Variance::x_iterator varianceEnd = getVariance()->rend(contiguous);
 
     return x_iterator(imageEnd, maskEnd, varianceEnd);
 }

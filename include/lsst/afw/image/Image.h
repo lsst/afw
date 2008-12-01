@@ -223,8 +223,8 @@ namespace image {
         reverse_iterator rend() const;
         iterator at(int x, int y) const;
 
-        x_iterator begin(bool) const;
-        x_iterator end(bool) const;
+        x_iterator rbegin(bool) const;
+        x_iterator rend(bool) const;
 
         x_iterator row_begin(int y) const;
         x_iterator row_end(int y) const;

@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
     //
     startTime = clock();
     for (unsigned iter = 0; iter < nIter; ++iter) {
-        for (ImageT::x_iterator ptr = image.begin(true), end = image.end(true); ptr != end; ++ptr){
+        for (ImageT::x_iterator ptr = image.rbegin(true), end = image.rend(true); ptr != end; ++ptr){
             *ptr += 1;
         }
     }

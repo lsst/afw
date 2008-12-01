@@ -188,10 +188,12 @@ typename image::ImageBase<PixelT>::iterator image::ImageBase<PixelT>::at(int x, 
 }
 
 /// Return a fast STL compliant iterator to the start of the %image which must be contiguous
+/// Note that this goes through the image backwards (hence rbegin/rend)
+///
 /// \exception lsst::pex::exceptions::Runtime
 /// Argument \a contiguous is false, or the pixels are not in fact contiguous
 template<typename PixelT>
-typename image::ImageBase<PixelT>::x_iterator image::ImageBase<PixelT>::begin(
+typename image::ImageBase<PixelT>::x_iterator image::ImageBase<PixelT>::rbegin(
 		bool contiguous         ///< Pixels are contiguous (must be true)
                                                                              ) const {
     if (not contiguous) {
@@ -204,11 +206,13 @@ typename image::ImageBase<PixelT>::x_iterator image::ImageBase<PixelT>::begin(
     return row_begin(getHeight() - 1);
 }
 
-/// Return a fast STL compliant iterator to the start of the %image which must be contiguous
+/// Return a fast STL compliant iterator to the end of the %image which must be contiguous
+/// Note that this goes through the image backwards (hence rbegin/rend)
+///
 /// \exception lsst::pex::exceptions::Runtime
 /// Argument \a contiguous is false, or the pixels are not in fact contiguous
 template<typename PixelT>
-typename image::ImageBase<PixelT>::x_iterator image::ImageBase<PixelT>::end(
+typename image::ImageBase<PixelT>::x_iterator image::ImageBase<PixelT>::rend(
 		bool contiguous         ///< Pixels are contiguous (must be true)
                                                                            ) const {
     if (not contiguous) {

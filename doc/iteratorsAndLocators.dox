@@ -28,7 +28,9 @@ a given %pixel.
 For contiguous images (i.e. images that you know not to be subimages created via
 \c Image(\c Image, \c BBox) there's a simple and slightly faster method:
 \until }
-Note that we're using \c x_iterator, not \c iterator. A \c lsst::pex::exceptions::Runtime
+Note that we're using \c x_iterator, not \c iterator, and that we're going
+through the image backwards (due to the underlying physical layout of the pixels).
+A \c lsst::pex::exceptions::Runtime
 exception is thrown if you try to use this on subimages.
 
 Note that we're using an \c x_iterator instead of an \c iterator; this might
@@ -91,7 +93,9 @@ that a \e row's pixels will be contiguous).  It's better to write:
 For contiguous images (i.e. images that you know not to be subimages created via
 \c MaskedImage(\c MaskedImage, \c BBox) there's a simple and slightly faster method:
 \until }
-Note that we're using \c x_iterator, not \c iterator. A \c lsst::pex::exceptions::Runtime
+Note that we're using \c x_iterator, not \c iterator, and that we're going
+through the image backwards (due to the underlying physical layout of the pixels).
+A \c lsst::pex::exceptions::Runtime
 exception is thrown if you try to use this on subimages.
 
 In addition to \c row_begin there's also \c x_at(X,Y) to start/end the the iteration at

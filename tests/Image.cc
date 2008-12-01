@@ -72,10 +72,17 @@ namespace {
 ImageT make_image(int const width=5, int const height=6) {
     ImageT img(width, height);
 
+#if 1
     int i = 0;
     for (ImageT::iterator ptr = img.begin(), end = img.end(); ptr != end; ++ptr, ++i) {
         *ptr = i/img.getWidth() + 100*(i%img.getWidth());
     }
+#else
+    ImageT::x_iterator image = img.rbegin(true);
+    for (int i = 0, size = width*height; i != size; ++i) {
+        image[size - i - 1] = i/width + 100*(i%width);
+    }
+#endif
 
     return img;
 }
@@ -155,6 +162,15 @@ BOOST_AUTO_TEST_CASE(setValues) {
 //
 BOOST_AUTO_TEST_CASE(iterators) {
     ImageT img = make_image();
+    //
+    // Count the pixels between begin() and end() (using a fast iterator)
+    //
+    {
+        int i = 0;
+        for (ImageT::x_iterator ptr = img.rbegin(true), end = img.rend(true); ptr != end; ++ptr, ++i) {
+        }
+        BOOST_CHECK_EQUAL(i, img.getWidth()*img.getHeight());
+    }
     //
     // Count the pixels between begin() and end() (using a const_iterator)
     //
