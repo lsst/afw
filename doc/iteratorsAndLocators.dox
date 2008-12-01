@@ -28,8 +28,8 @@ a given %pixel.
 For contiguous images (i.e. images that you know not to be subimages created via
 \c Image(\c Image, \c BBox) there's a simple and slightly faster method:
 \until }
-Note that we're using \c x_iterator, not \c iterator, and that we're going
-through the image backwards (due to the underlying physical layout of the pixels).
+Note that we're using \c fast_iterator, not \c iterator, and that the order we
+use to traverse the image is undefined.
 A \c lsst::pex::exceptions::Runtime
 exception is thrown if you try to use this on subimages.
 
@@ -93,8 +93,8 @@ that a \e row's pixels will be contiguous).  It's better to write:
 For contiguous images (i.e. images that you know not to be subimages created via
 \c MaskedImage(\c MaskedImage, \c BBox) there's a simple and slightly faster method:
 \until }
-Note that we're using \c x_iterator, not \c iterator, and that we're going
-through the image backwards (due to the underlying physical layout of the pixels).
+Note that we're using \c fast_iterator, not \c iterator, and that the order we
+use to traverse the image is undefined.
 A \c lsst::pex::exceptions::Runtime
 exception is thrown if you try to use this on subimages.
 

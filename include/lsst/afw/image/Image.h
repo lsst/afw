@@ -108,6 +108,9 @@ namespace image {
         typedef typename _const_view_t::reverse_iterator const_reverse_iterator;
         /// An iterator for traversing the pixels in a row
         typedef typename _view_t::x_iterator x_iterator;
+        /// A fast STL compliant iterator for contiguous images
+        /// N.b. The order of pixel access is undefined
+        typedef x_iterator fast_iterator;
         /// An iterator for traversing the pixels in a row, created from an xy_locator
         typedef typename _view_t::x_iterator xy_x_iterator;
         /// A const iterator for traversing the pixels in a row
@@ -223,8 +226,8 @@ namespace image {
         reverse_iterator rend() const;
         iterator at(int x, int y) const;
 
-        x_iterator rbegin(bool) const;
-        x_iterator rend(bool) const;
+        fast_iterator begin(bool) const;
+        fast_iterator end(bool) const;
 
         x_iterator row_begin(int y) const;
         x_iterator row_end(int y) const;

@@ -580,6 +580,9 @@ namespace image {
         /// A const_iterator to a row of a MaskedImage
         typedef const_MaskedImageIterator<typename Image::x_iterator,
                                     typename Mask::x_iterator, typename Variance::x_iterator> const_x_iterator;
+        /// A fast STL compliant iterator for contiguous images
+        /// N.b. The order of pixel access is undefined
+        typedef x_iterator fast_iterator;
         /// An iterator to a column of a MaskedImage
         typedef MaskedImageIterator<typename Image::y_iterator,
                                     typename Mask::y_iterator, typename Variance::y_iterator> y_iterator;
@@ -720,8 +723,8 @@ namespace image {
         reverse_iterator rbegin() const;
         reverse_iterator rend() const;
 
-        x_iterator rbegin(bool) const;
-        x_iterator rend(bool) const;
+        fast_iterator begin(bool) const;
+        fast_iterator end(bool) const;
 
         x_iterator row_begin(int y) const;
         x_iterator row_end(int y) const;

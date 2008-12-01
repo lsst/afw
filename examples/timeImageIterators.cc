@@ -68,11 +68,11 @@ int main(int argc, char **argv) {
     std::cout << "Per row\t" << nCols << "\t" << nRows << "\t" << megaPix << "\t" << secPerIter << "\t\t" <<
         static_cast<double>(megaPix)/secPerIter << std::endl;
     //
-    // Use the per-row iterators, but pretend that they cover the entire image
+    // Use a fast STL compiliant iterator, but the pixel order's undefined
     //
     startTime = clock();
     for (unsigned iter = 0; iter < nIter; ++iter) {
-        for (ImageT::x_iterator ptr = image.rbegin(true), end = image.rend(true); ptr != end; ++ptr){
+        for (ImageT::fast_iterator ptr = image.begin(true), end = image.end(true); ptr != end; ++ptr){
             *ptr += 1;
         }
     }

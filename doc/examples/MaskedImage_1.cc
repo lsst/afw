@@ -35,7 +35,7 @@ int main() {
     }
 
     // This one is just as fast (but only works for contiguous arrays)
-    for (ImageT::x_iterator ptr = img.rbegin(true); ptr != img.rend(true); ++ptr) {
+    for (ImageT::fast_iterator ptr = img.begin(true); ptr != img.end(true); ++ptr) {
         *ptr = 100;
     }
 

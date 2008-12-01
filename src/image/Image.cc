@@ -193,7 +193,7 @@ typename image::ImageBase<PixelT>::iterator image::ImageBase<PixelT>::at(int x, 
 /// \exception lsst::pex::exceptions::Runtime
 /// Argument \a contiguous is false, or the pixels are not in fact contiguous
 template<typename PixelT>
-typename image::ImageBase<PixelT>::x_iterator image::ImageBase<PixelT>::rbegin(
+typename image::ImageBase<PixelT>::fast_iterator image::ImageBase<PixelT>::begin(
 		bool contiguous         ///< Pixels are contiguous (must be true)
                                                                              ) const {
     if (not contiguous) {
@@ -212,7 +212,7 @@ typename image::ImageBase<PixelT>::x_iterator image::ImageBase<PixelT>::rbegin(
 /// \exception lsst::pex::exceptions::Runtime
 /// Argument \a contiguous is false, or the pixels are not in fact contiguous
 template<typename PixelT>
-typename image::ImageBase<PixelT>::x_iterator image::ImageBase<PixelT>::rend(
+typename image::ImageBase<PixelT>::fast_iterator image::ImageBase<PixelT>::end(
 		bool contiguous         ///< Pixels are contiguous (must be true)
                                                                            ) const {
     if (not contiguous) {
