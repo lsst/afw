@@ -40,7 +40,6 @@ env.libs["afw"] += env.getlibs("boost wcslib cfitsio minuit utils daf_base daf_d
 for d in (
     ".",
     "doc",
-    "doc/examples",
     "examples",
     "include/lsst/afw",
     "lib",
