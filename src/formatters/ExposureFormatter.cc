@@ -170,7 +170,7 @@ void ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
                 *(ip->_wcsPtr));
 
         Exposure<ImagePixelT, MaskPixelT, VariancePixelT>* vip = const_cast<Exposure<ImagePixelT, MaskPixelT, VariancePixelT>*>(ip);
-        vip->getMetadata()->addChildren(wcsDP);
+        vip->getMaskedImage().getMetadata()->addChildren(wcsDP);
         ip->_maskedImage.writeFits(fits->getPath());
         execTrace("ExposureFormatter write end");
         return;
@@ -183,7 +183,7 @@ void ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
             lsst::afw::formatters::WcsFormatter::generateDataProperty(*(ip->_wcsPtr));
 
         // Get the image headers.
-        lsst::daf::base::DataProperty::PtrType dp = ip->getMetadata();
+        lsst::daf::base::DataProperty::PtrType dp = ip->getMaskedImage().getMetadata();
         if (!dp) {
             throw lsst::pex::exceptions::Runtime("Unable to retrieve metadata from MaskedImage's Image");
         }
@@ -347,7 +347,7 @@ Persistable* ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::read(
         // Restore image from FITS...
         Exposure<ImagePixelT, MaskPixelT, VariancePixelT>* ip =
             new Exposure<ImagePixelT, MaskPixelT, VariancePixelT>(db->getColumnByPos<std::string>(0));
-        lsst::daf::base::DataProperty::PtrType dp = ip->getMetadata();
+        lsst::daf::base::DataProperty::PtrType dp = ip->getMaskedImage().getMetadata();
 
         // Look up the filter name given the ID.
         int filterId = db->getColumnByPos<int>(1);
@@ -388,7 +388,7 @@ void ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::delegateSeriali
     if (ip == 0) {
         throw lsst::pex::exceptions::Runtime("Serializing non-Exposure");
     }
-    ar & ip->_metadata & ip->_maskedImage & ip->_wcsPtr;
+    ar & *ip->getMaskedImage().getMetadata() & ip->_maskedImage & ip->_wcsPtr;
     execTrace("ExposureFormatter delegateSerialize end");
 }
 

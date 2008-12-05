@@ -233,9 +233,6 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
 } // close memory (de)allocation block
 
 int main() {
-    //typedef double pixelType;
-    typedef float pixelType;
-
     char *afwdataCStr = getenv("AFWDATA_DIR");
     if (afwdataCStr == 0) {
         std::cerr << "afwdata must be set up" << std::endl;

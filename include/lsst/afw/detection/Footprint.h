@@ -231,6 +231,9 @@ psArray *pmFootprintArrayToPeaks(const psArray *footprints);
 /************************************************************************************************************/
 /**
  * \brief A functor class to allow users to process all the pixels in a Footprint
+ *
+ * There's an annotated example of a FootprintFunctor in action
+ * \link FootprintFunctorsExample FootprintFunctors here\endlink
  */
 template <typename ImageT>
 class FootprintFunctor {

@@ -398,7 +398,7 @@ public:
         for (int y = 0; y != view.height(); ++y) {
             int status = 0;                     // cfitsio function return status
             if (fits_write_img(_fd.get(), ttype, 1 + y*view.width(), view.width(), view.row_begin(y), &status) != 0) {
-                throw_cfitsio_error(_fd.get(), status, str(boost::format("Reading row %d") % y));
+                throw_cfitsio_error(_fd.get(), status, str(boost::format("Writing row %d") % y));
             }
         }
     }

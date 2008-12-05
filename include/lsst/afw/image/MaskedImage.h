@@ -45,8 +45,6 @@ namespace afw {
 namespace image {
     namespace mpl = boost::mpl;
 
-    /// default type for variance images
-    typedef float VariancePixel;
     /// A class to manipulate images, masks, and variance as a single object
     template<typename ImagePixelT, typename MaskPixelT=lsst::afw::image::MaskPixel,
              typename VariancePixelT=VariancePixel>
