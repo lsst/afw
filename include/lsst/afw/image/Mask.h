@@ -20,6 +20,7 @@
 #include "lsst/daf/base/Persistable.h"
 #include "lsst/afw/formatters/ImageFormatter.h"
 #include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/LsstImageTypes.h"
 
 namespace lsst {
 namespace afw {
@@ -33,7 +34,7 @@ namespace image {
         struct Mask_tag : detail::basic_tag { };
     }
     /// Represent a 2-dimensional array of bitmask pixels
-    template<typename MaskPixelT>
+    template<typename MaskPixelT=lsst::afw::image::MaskPixel>
     class Mask : public ImageBase<MaskPixelT> {
     public:
         typedef boost::shared_ptr<Mask> Ptr;
