@@ -90,6 +90,7 @@ def suite():
 
     suites = []
     suites += unittest.makeSuite(StatisticsTestCase)
+    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
 def run(exit=False):
