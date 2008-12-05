@@ -3,7 +3,7 @@ namespace lsst { namespace afw { namespace image {
  \page imageIterators Image Iterators
 
 The simplest way to visit all the pixels in an %image is to use an STL-compliant
-iterator (this code's in Image_1.cc):
+iterator (this code's in \link Image_1.cc\endlink):
 \dontinclude Image_1.cc
 
 Start by including Image.h and declaring namespace alias and a typedef for our favoured %image type
@@ -63,7 +63,7 @@ the use of <tt>ImageT::Pixel(100, 0x1, 10)</tt> as the assigned pixel
 value instead of \c 100).
 
 The simplest way to visit all the pixels in an %image is to use an STL-compliant
-iterator (this code's in Image_1.cc):
+iterator (this code's in \link Image_1.cc\endlink):
 \dontinclude MaskedImage_1.cc
 
 Start by including MaskedImage.h and declaring a namespace alias and a typedef for our favoured %image type
@@ -137,7 +137,7 @@ Let's consider the problem of smoothing with a
 2 4 2
 1 2 1
 \endcode
-kernel (the code's in Image_2.cc):
+kernel (the code's in \link Image_2.cc\endlink):
 \dontinclude Image_2.cc
 
 Start by including Image.h defining a namespace for clarity:
@@ -209,7 +209,7 @@ Let's consider the problem of smoothing with a
 2 4 2
 1 2 1
 \endcode
-kernel (the code's in MaskedImage_2.cc):
+kernel (the code's in \link MaskedImage_2.cc\endlink):
 \dontinclude MaskedImage_2.cc
 
 Start by including Image.h defining a namespace for clarity:
