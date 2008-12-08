@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
     unsigned imWidth = mImage.getWidth();
     unsigned imHeight = mImage.getHeight();
     
-    std::cout << "Timing convolution for a " << imWidth << "x" << imHeight << " image." << std::endl;
+    std::cout << "Timing convolution for a " << imWidth << "x" << imHeight << " masked image." << std::endl;
     std::cout << std::endl;
     std::cout << "Columns:" << std::endl;
     std::cout << "* MOps: the number of operations of a kernel pixel on a masked pixel / 10e6." << std::endl;
@@ -50,20 +50,44 @@ int main(int argc, char **argv) {
     std::cout << "  * one OR (for the mask)" << std::endl;
     std::cout << "  * four pixel pointer increments (for image, variance, mask and kernel)" << std::endl;
     std::cout << "* CnvSec: time to perform one convolution (sec)" << std::endl;
-    std::cout << std::endl;
-    std::cout << "ImWidth\tImHeight\tKerWidth\tKerHeight\tMOps\tCnvSec\tMOpsPerSec" << std::endl;
     
     afwImage::MaskedImage<imageType> resMImage(mImage.getDimensions());
+
+    std::cout << std::endl;
+    std::cout << "Gaussian Analytic Kernel" << std::endl;
+    std::cout << "ImWid\tImHt\tKerWid\tKerHt\tMOps\tCnvSec\tMOpsPerSec" << std::endl;
     
     for (unsigned kSize = MinKernelSize; kSize <= MaxKernelSize; kSize += DeltaKernelSize) {
         // construct kernel
         afwMath::GaussianFunction2<kernelType> gaussFunc(sigma, sigma);
-        afwMath::AnalyticKernel kernel(kSize, kSize, gaussFunc);
+        afwMath::AnalyticKernel analyticKernel(kSize, kSize, gaussFunc);
         
         clock_t startTime = clock();
         for (unsigned iter = 0; iter < nIter; ++iter) {
             // convolve
-            afwMath::convolve(resMImage, mImage, kernel, EdgeMaskBit, true);
+            afwMath::convolve(resMImage, mImage, analyticKernel, EdgeMaskBit, true);
+        }
+        double secPerIter = (clock() - startTime) / static_cast<double> (nIter * CLOCKS_PER_SEC);
+        
+        double mOps = static_cast<double>((imHeight + 1 - kSize) * (imWidth + 1 - kSize) * kSize * kSize) / 1.0e6;
+        double mOpsPerSec = mOps / secPerIter;
+        std::cout << imWidth << "\t" << imHeight << "\t" << kSize << "\t" << kSize << "\t" << mOps
+            << "\t" << secPerIter << "\t" << mOpsPerSec << std::endl;
+    }
+
+    std::cout << std::endl;
+    std::cout << "Gaussian Separable Kernel" << std::endl;
+    std::cout << "ImWid\tImHt\tKerWid\tKerHt\tMOps\tCnvSec\tMOpsPerSec" << std::endl;
+    
+    for (unsigned kSize = MinKernelSize; kSize <= MaxKernelSize; kSize += DeltaKernelSize) {
+        // construct kernel
+        afwMath::GaussianFunction1<kernelType> gaussFunc(sigma);
+        afwMath::SeparableKernel separableKernel(kSize, kSize, gaussFunc, gaussFunc);
+        
+        clock_t startTime = clock();
+        for (unsigned iter = 0; iter < nIter; ++iter) {
+            // convolve
+            afwMath::convolve(resMImage, mImage, separableKernel, EdgeMaskBit, true);
         }
         double secPerIter = (clock() - startTime) / static_cast<double> (nIter * CLOCKS_PER_SEC);
         
