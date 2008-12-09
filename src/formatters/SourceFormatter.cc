@@ -399,8 +399,8 @@ void form::SourceVectorFormatter::write(
             throw ex::InvalidParameter("ccdId out of range");
         }
         for (SourceVector::iterator i = v->begin(); i != v->end(); ++i) {
-            i->_sourceId    = generateSourceId(seq, ccdId, visitId);
-            i->_ccdExposureId  = ccdExposureId;
+            i->setSourceId( generateSourceId(seq, ccdId, visitId));
+            i->setAmpExposureId(ccdExposureId);
             ++seq;
             if (seq == 0) { // Overflowed
                 throw ex::Runtime("Too many Sources");
