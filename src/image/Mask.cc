@@ -299,7 +299,7 @@ void image::Mask<MaskPixelT>::clearMaskPlane(int plane) {
 // Any new mask planes in the header are recognised, added to the planeMaskDict, and shifted up into unused slots
 //
 template<typename MaskPixelT>
-void image::Mask<MaskPixelT>::conformMaskPlanes(MaskPlaneDict& currentPlaneDict
+void image::Mask<MaskPixelT>::conformMaskPlanes(const MaskPlaneDict& currentPlaneDict
                                         ) {
 
     if (_maskPlaneDict == currentPlaneDict) {

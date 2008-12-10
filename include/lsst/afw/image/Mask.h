@@ -123,7 +123,7 @@ namespace image {
         static void addMaskPlanesToMetadata(lsst::daf::base::DataProperty::PtrType);
         //
         // This one isn't static, it fixes up a given Mask's planes
-        void conformMaskPlanes(MaskPlaneDict& masterPlaneDict);
+        void conformMaskPlanes(const MaskPlaneDict& masterPlaneDict);
         
         // Getters
         
