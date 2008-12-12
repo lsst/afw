@@ -48,6 +48,7 @@ for d in (
     "python/lsst/afw/display",
     "python/lsst/afw/image",
     "python/lsst/afw/math",
+    "sbtest",
     "tests",
 ):
     if d != ".":

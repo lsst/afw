@@ -56,4 +56,5 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 %include "kernelLib.i"
 %include "minimizeLib.i"
 %include "statistics.i"
+%include "background.i"
 

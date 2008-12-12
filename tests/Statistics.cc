@@ -17,7 +17,8 @@ typedef image::Image<float> ImageT;
 
 BOOST_AUTO_TEST_CASE(Statistics) {
     ImageT img(10,40);
-    img = 100000;
+    ImageT::Pixel const pixval = 10000;
+    img = pixval;
 
     {
         math::Statistics<ImageT> stats = math::make_Statistics(img, math::NPOINT | math::STDEV | math::MEAN);
@@ -44,6 +45,27 @@ BOOST_AUTO_TEST_CASE(Statistics) {
         math::Statistics<ImageT> stats = math::make_Statistics(img, math::NPOINT);
         BOOST_CHECK_THROW(stats.getValue(math::MEAN), lsst::pex::exceptions::InvalidParameter);
     }
+
+    // ===============================================================================
+    // sjb code for percentiles and clipped stats
+    {
+        math::Statistics<ImageT> stats = math::make_Statistics(img, math::MEDIAN);
+        BOOST_CHECK_EQUAL(pixval, stats.getValue(math::MEDIAN));
+    }
+    {
+        math::Statistics<ImageT> stats = math::make_Statistics(img, math::IQRANGE);
+        BOOST_CHECK_EQUAL(0.0, stats.getValue(math::IQRANGE));
+    }
+    {
+        math::Statistics<ImageT> stats = math::make_Statistics(img, math::MEANCLIP);
+        BOOST_CHECK_EQUAL(pixval, stats.getValue(math::MEANCLIP));
+    }
+    {
+        math::Statistics<ImageT> stats = math::make_Statistics(img, math::VARIANCECLIP);
+        BOOST_CHECK_EQUAL(0.0, stats.getValue(math::VARIANCECLIP));
+    }
+
+    
     
     {
         ImageT img2(img);

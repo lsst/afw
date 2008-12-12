@@ -32,6 +32,8 @@ env.SharedLibrary(
         "math/SeparableKernel.cc",
         "math/ConvolveImage.cc",
         "math/Statistics.cc",
+        "math/Background.cc",
+	"math/Interpolate.cc",
     )],
     LIBS=filter(lambda x: x != "afw", env.getlibs("afw"))
 )
