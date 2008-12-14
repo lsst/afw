@@ -25,8 +25,69 @@ namespace {
  *
  */
 template<typename xT, typename yT>
-interpolate::Linear<xT,yT>::Linear(std::vector<xT> const& x, std::vector<yT> const& y) : _x(x), _y(y) {
+interpolate::Interpolator<xT,yT>::Interpolator(vector<xT> const& x, vector<yT> const& y,
+                                               interpolate::InterpControl const& ictrl
+                                              ) : _x(x), _y(y), _ictrl(ictrl) {
     
+    
+    switch( _ictrl.getStyle() ) {
+      case ( LINEAR ):
+          _init_Linear(_x, _y);
+          break;
+      case ( NATURAL_SPLINE ):
+          _dydx0 = std::numeric_limits<yT>::quiet_NaN();
+          _dydxN = std::numeric_limits<yT>::quiet_NaN();
+          _init_Spline(_x, _y);
+          break;
+      case ( NOTAKNOT_SPLINE ):
+          _dydx0 = _ictrl.getDydx0();
+          _dydxN = _ictrl.getDydxN();
+          _init_Spline(_x, _y);
+          break;
+      case ( CUBIC_SPLINE ):
+          _dydx0 = _ictrl.getDydx0();
+          _dydxN = _ictrl.getDydxN();
+          _init_Spline(_x, _y);
+          break;
+    }
+    
+}
+
+template<typename xT, typename yT>
+std::vector<yT> interpolate::Interpolator<xT,yT>::interp(std::vector<xT> const& xinterp) const {
+
+    std::vector<yT> yinterp(xinterp.size());
+    int const style = static_cast<interpolate::Style>(_ictrl.getStyle());
+    if ( style & ( LINEAR ) ) {
+        for (int i = 0; i < static_cast<int>(xinterp.size()); ++i) {        
+            yinterp[i] = _interp_Linear(xinterp[i]);
+        }
+    } else if ( style & (NATURAL_SPLINE | NOTAKNOT_SPLINE | CUBIC_SPLINE) ) {
+        for (int i = 0; i < static_cast<int>(xinterp.size()); ++i) {        
+            yinterp[i] = _interp_Spline(xinterp[i]);
+        }
+    }
+    return yinterp;
+    
+}
+
+template<typename xT, typename yT>
+yT interpolate::Interpolator<xT,yT>::interp(xT const& xinterp) const {
+
+    yT yinterp;
+    int const style = static_cast<interpolate::Style>(_ictrl.getStyle());
+    if ( style & ( LINEAR ) ) {
+        yinterp = _interp_Linear(xinterp);
+    } else if ( style & ( NATURAL_SPLINE | NOTAKNOT_SPLINE | CUBIC_SPLINE) ) {
+        yinterp = _interp_Spline(xinterp);
+    }
+    return yinterp;
+}
+
+
+template<typename xT, typename yT>
+void interpolate::Interpolator<xT,yT>::_init_Linear(std::vector<xT> const& x, std::vector<yT> const& y) {
+
     assert( x.size() == y.size() );
     _n = x.size();
     _dydx.resize(_n-1);
@@ -43,22 +104,16 @@ interpolate::Linear<xT,yT>::Linear(std::vector<xT> const& x, std::vector<yT> con
 
 
 template<typename xT, typename yT>
-std::vector<yT> interpolate::Linear<xT,yT>::interp(std::vector<xT> const& xinterp) const {
+std::vector<yT> interpolate::Interpolator<xT,yT>::_interp_Linear(std::vector<xT> const& xinterp) const {
     std::vector<yT> yinterp(xinterp.size());
     for (int i = 0; i < static_cast<int>(xinterp.size()); ++i) {        
-        yinterp[i] = interpolate::Linear<xT,yT>::_interp(xinterp[i]);
+        yinterp[i] = interpolate::Interpolator<xT,yT>::_interp_Linear(xinterp[i]);
     }
     return yinterp;
 }
 
 template<typename xT, typename yT>
-yT interpolate::Linear<xT,yT>::interp(xT const& xinterp) const {
-    return interpolate::Linear<xT,yT>::_interp(xinterp);
-}
-
-
-template<typename xT, typename yT>
-yT interpolate::Linear<xT,yT>::_interp(xT const& xinterp) const {
+yT interpolate::Interpolator<xT,yT>::_interp_Linear(xT const& xinterp) const {
     
     // Caveat = only good for an even grid spacing.
     int index = static_cast<int>(std::floor((xinterp - _xlo) * _invxgrid));
@@ -79,8 +134,8 @@ yT interpolate::Linear<xT,yT>::_interp(xT const& xinterp) const {
  *
  */
 template<typename xT, typename yT>
-interpolate::NaturalSpline<xT,yT>::NaturalSpline(std::vector<xT> const& x, std::vector<yT> const& y, yT dydx0 = NaN, yT dydxN = NaN) : _x(x), _y(y), _dydx0(dydx0), _dydxN(dydxN) {
-    
+void interpolate::Interpolator<xT,yT>::_init_Spline(std::vector<xT> const& x, std::vector<yT> const& y) {
+
     int const nx = x.size();
     int const ny = y.size();
     assert( nx == ny );
@@ -95,7 +150,7 @@ interpolate::NaturalSpline<xT,yT>::NaturalSpline(std::vector<xT> const& x, std::
     
     // =============================================================
     // the lower boundary condition
-    if ( std::isnan(dydx0) ) {
+    if ( std::isnan(_dydx0) ) {
         _d2ydx2[0] = u[0] = 0.0;
     } else {
         _d2ydx2[0] = -0.5;
@@ -105,27 +160,23 @@ interpolate::NaturalSpline<xT,yT>::NaturalSpline(std::vector<xT> const& x, std::
     // =============================================================
     // decomposition for the tri-diagonal matrix
     for (int i = 1; i < _n - 1; ++i) {
-        if (false) { // probably slower with many quotients
-            double sig = (x[i] - x[i - 1]) / (x[i + 1] - x[i - 1]);
-            double p   = sig * _d2ydx2[i - 1] + 2.0;
-            _d2ydx2[i] = (sig - 1.0)/p;
-            u[i] = (y[i + 1] - y[i]) / (x[i + 1] - x[i]) - (y[i] - y[i - 1]) / (x[i] - x[i - 1]);
-            u[i] = (6.0 * u[i] / (x[i + 1] - x[i - 1]) - sig * u[i - 1]) / p;
-                                        
-        }
-        if (true) {
-            double sig = (x[i] - x[i - 1]) * 0.5 * _invxgrid;
-            double invp   = 1.0 / (sig * _d2ydx2[i - 1] + 2.0);
-            _d2ydx2[i] = (sig - 1.0)*invp;
-            u[i] = _invxgrid * ( y[i + 1] - 2.0 * y[i] + y[i - 1] );
-            u[i] = (6.0*u[i]*0.5*_invxgrid - sig*u[i - 1])*invp;            
-        }
+        
+//         double sig = (x[i] - x[i - 1]) / (x[i + 1] - x[i - 1]);
+//         double p   = sig * _d2ydx2[i - 1] + 2.0;
+//         _d2ydx2[i] = (sig - 1.0)/p;
+//         u[i] = (y[i + 1] - y[i]) / (x[i + 1] - x[i]) - (y[i] - y[i - 1]) / (x[i] - x[i - 1]);
+//         u[i] = (6.0 * u[i] / (x[i + 1] - x[i - 1]) - sig * u[i - 1]) / p;
+        
+        double const invp   = 1.0 / (0.5 * _d2ydx2[i - 1] + 2.0);
+        _d2ydx2[i] = -0.5*invp;
+        u[i] = _invxgrid * ( y[i + 1] - 2.0 * y[i] + y[i - 1] );
+        u[i] = 0.5*(6.0*u[i]*_invxgrid - u[i - 1])*invp;       
     }
 
     // =============================================================
     // the upper boundary condition
     double qn, un;
-    if ( std::isnan(dydxN) ) {
+    if ( std::isnan(_dydxN) ) {
         qn = un = 0.0;
     } else {
         qn = 0.5;
@@ -143,35 +194,29 @@ interpolate::NaturalSpline<xT,yT>::NaturalSpline(std::vector<xT> const& x, std::
 
 
 template<typename xT, typename yT>
-std::vector<yT> interpolate::NaturalSpline<xT,yT>::interp(std::vector<xT> const& xinterp) const {
+std::vector<yT> interpolate::Interpolator<xT,yT>::_interp_Spline(std::vector<xT> const& xinterp) const {
     std::vector<yT> yinterp(xinterp.size());
     for (int i = 0; i < static_cast<int>(xinterp.size()); ++i) {
-        yinterp[i] = interpolate::NaturalSpline<xT,yT>::_interp(xinterp[i]);
+        yinterp[i] = interpolate::Interpolator<xT,yT>::_interp_Spline(xinterp[i]);
     }
     return yinterp;
 }
 
 template<typename xT, typename yT>
-yT interpolate::NaturalSpline<xT,yT>::interp(xT const& xinterp) const {
-    return interpolate::NaturalSpline<xT,yT>::_interp(xinterp);
-}
-
-template<typename xT, typename yT>
-yT interpolate::NaturalSpline<xT,yT>::_interp(xT const& xinterp) const {
-
+yT interpolate::Interpolator<xT,yT>::_interp_Spline(xT const& xinterp) const {
+    
     // Caveat = only good for an even grid spacing.
     int index = static_cast<int>(std::floor((xinterp - _xlo) * _invxgrid));
-    int dindex = index + 1;
-    if ( xinterp < _xlo ) {
-        index = 0;     dindex = 1;
-    } else if ( xinterp >= _xhi ) {
-        index = _n-2;  dindex = _n-1;
+    if ( index < 0 ) {
+        index = 0;
+    } else if ( index > _n - 2 ) {
+        index = _n - 2;
     }
     
-    double const a = (_x[index+1] - xinterp) * _invxgrid;
+    double const a = (_x[index + 1] - xinterp) * _invxgrid;
     double const b = ( xinterp - _x[index] ) * _invxgrid;
-    double const yinterp = a*_y[index] + b*_y[index+1] +
-        ( (a*a*a - a)*_d2ydx2[index] + (b*b*b - b)*_d2ydx2[dindex] ) * (_xgridspace*_xgridspace) / 6.0;
+    double const yinterp = a*_y[index] + b*_y[index + 1] +
+        ( (a*a*a - a)*_d2ydx2[index] + (b*b*b - b)*_d2ydx2[index + 1] ) * (_xgridspace*_xgridspace) / 6.0;
     return static_cast<yT>(yinterp);
 }
 
@@ -183,14 +228,9 @@ yT interpolate::NaturalSpline<xT,yT>::_interp(xT const& xinterp) const {
 //
 // Explicit instantiations
 //
-template class interpolate::Linear<double,double>;
-template class interpolate::Linear<float,float>;
-template class interpolate::Linear<int,double>;
-template class interpolate::Linear<int,float>;
-template class interpolate::Linear<int,int>;
+template class interpolate::Interpolator<double,double>;
+template class interpolate::Interpolator<float,float>;
+template class interpolate::Interpolator<int,double>;
+template class interpolate::Interpolator<int,float>;
+template class interpolate::Interpolator<int,int>;
 
-template class interpolate::NaturalSpline<double,double>;
-template class interpolate::NaturalSpline<float,float>;
-template class interpolate::NaturalSpline<int,double>;
-template class interpolate::NaturalSpline<int,float>;
-template class interpolate::NaturalSpline<int,int>;

@@ -5,42 +5,37 @@
  * \brief ImageT Background
  */
 
+#include "lsst/afw/math/Statistics.h"
 #include "lsst/afw/math/Interpolate.h"
+
 
 namespace lsst { namespace afw { namespace math {
 
+namespace {
+    double const NaN = std::numeric_limits<double>::quiet_NaN();
+}
+    
 /// \brief Pass parameters to a Background object
 class BackgroundControl {
 public:
-    BackgroundControl(
-                      int nxSample = 5,
-                      int nySample = 5,
-                      double numSigmaClip = 3.0, ///< number of standard deviations to clip at
-                      int numIter = 3   ///< Number of iterations
-                     ) : _nxSample(nxSample), _nySample(nySample),
-                         _numSigmaClip(numSigmaClip), _numIter(numIter) {
-        assert(_numSigmaClip > 0);
-        assert(_numIter > 0);
-        assert(_nxSample > 0);
-        assert(_nxSample > 0);
+    BackgroundControl(interpolate::Style style, int const nxSample=10, int const nySample=10)
+        : _nxSample(nxSample), _nySample(nySample) {
+        assert(nxSample > 0);
+        assert(nySample > 0);
+        sctrl = StatisticsControl();
+        ictrl = interpolate::InterpControl(style);
     }
-    int getNxSample() const { return _nxSample; }
-    int getNySample() const { return _nySample; }
-    double getNumSigmaClip() const { return _numSigmaClip; }
-    int getNumIter() const { return _numIter; }
-
+    ~BackgroundControl() {}
     void setNxSample (int nxSample) { assert(nxSample > 0); _nxSample = nxSample; }
     void setNySample (int nySample) { assert(nySample > 0); _nySample = nySample; }
-    void setNumSigmaClip(double numSigmaClip) { assert(numSigmaClip > 0); _numSigmaClip = numSigmaClip; }
-    void setNumIter(int numIter) { assert(numIter > 0); _numIter = numIter; }
-
+    int getNxSample() const { return _nxSample; }
+    int getNySample() const { return _nySample; }
+    StatisticsControl sctrl;
+    interpolate::InterpControl ictrl;
 private:
     int _nxSample;
     int _nySample;
-    double _numSigmaClip;                 // Number of standard deviations to clip at
-    int _numIter;                         // Number of iterations
 };
-
     
 /**
  * A class to evaluate %image background levels
@@ -64,6 +59,7 @@ class Background {
 public:
 
     explicit Background(ImageT const& img, BackgroundControl const& bgCtrl);
+    ~Background() {}
     typename ImageT::Pixel getPixel(int const x, int const y) const;
     ImageT getFrame() const;
     //~Background() { delete _grid; };
@@ -82,6 +78,7 @@ private:
     std::vector<int> _yorig;
     std::vector<std::vector<typename ImageT::Pixel> > _grid;
     std::vector<std::vector<typename ImageT::Pixel> > _gridcolumns;
+    BackgroundControl _bctrl;
 };
 
 /// A convenience function that uses function overloading to make the correct type of Background

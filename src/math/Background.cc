@@ -26,16 +26,16 @@ namespace {
  * are retrieved using \c get_value etc.
  */
 template<typename ImageT>
-math::Background<ImageT>::Background(ImageT const& img, BackgroundControl const& bgCtrl) : _img(img) { ///< ImageT (or MaskedImage) whose properties we want
+math::Background<ImageT>::Background(ImageT const& img, BackgroundControl const& bgCtrl) : _img(img), _bctrl(bgCtrl) { ///< ImageT (or MaskedImage) whose properties we want
 
-    _n = img.getWidth()*img.getHeight();
+    _n = _img.getWidth()*_img.getHeight();
     
     if (_n == 0) {
         throw lsst::pex::exceptions::InvalidParameter("Image contains no pixels");
     }
 
-    _nxSample = bgCtrl.getNxSample();
-    _nySample = bgCtrl.getNySample();
+    _nxSample = _bctrl.getNxSample();
+    _nySample = _bctrl.getNySample();
     cout << _nxSample << " " << _nySample << endl;
     _xcen.resize(_nxSample);
     _ycen.resize(_nySample);
@@ -47,11 +47,6 @@ math::Background<ImageT>::Background(ImageT const& img, BackgroundControl const&
     // Check that an int's large enough to hold the number of pixels
     assert(img.getWidth()*static_cast<double>(img.getHeight()) < std::numeric_limits<int>::max());
 
-
-    // transfer the statistical control info to the sCtrl object.
-    math::StatisticsControl sctrl;
-    sctrl.setNumIter(bgCtrl.getNumIter());
-    sctrl.setNumSigmaClip(bgCtrl.getNumSigmaClip());
 
     // go to each sub image and get the stats
     _subimgWidth = img.getWidth() / _nxSample;
@@ -77,14 +72,14 @@ math::Background<ImageT>::Background(ImageT const& img, BackgroundControl const&
                                    image::BBox(image::PointI(_xorig[i_x], _yorig[i_y]), _subimgWidth, _subimgHeight));
             
             math::Statistics<ImageT> stats = math::make_Statistics(subimg, math::MEAN | math::MEANCLIP | math::MEDIAN |
-                                                                   math::IQRANGE | math::STDEVCLIP, sctrl);
+                                                                   math::IQRANGE | math::STDEVCLIP, _bctrl.sctrl);
             
             _grid[i_x][i_y] = stats.getValue(math::MEANCLIP);
             //cout << i_x << " " << i_y << " " << _grid[i_x][i_y] << endl;
             
         }
         
-        typename interpolate::NaturalSpline<int,typename ImageT::Pixel> intobj = interpolate::init_NaturalSpline(_ycen, _grid[i_x]);
+        typename interpolate::Interpolator<int,typename ImageT::Pixel> intobj(_ycen, _grid[i_x], _bctrl.ictrl);
         _gridcolumns.push_back( intobj.interp(ypix) );
 
     }
@@ -98,7 +93,7 @@ typename ImageT::Pixel math::Background<ImageT>::getPixel(int const x, int const
     // build an interpobj along the row and get the x'th value
     vector<typename ImageT::Pixel> bg_x(_nxSample);
     for(int i = 0; i < _nxSample; i++) { bg_x[i] = _gridcolumns[i][y];  }
-    interpolate::NaturalSpline<int,typename ImageT::Pixel> intobj = interpolate::init_NaturalSpline(_xcen, bg_x);
+    interpolate::Interpolator<int,typename ImageT::Pixel> intobj(_xcen, bg_x, _bctrl.ictrl);
     typename ImageT::Pixel interp = intobj.interp(x);
     
     return interp;
@@ -117,7 +112,7 @@ ImageT math::Background<ImageT>::getFrame() const {
         // build an interp object for this row
         vector<typename ImageT::Pixel> bg_x(_nxSample);
         for(int i_x = 0; i_x < _nxSample; i_x++) { bg_x[i_x] = _gridcolumns[i_x][i_y]; }
-        interpolate::NaturalSpline<int,typename ImageT::Pixel> intobj = interpolate::init_NaturalSpline(_xcen, bg_x);
+        interpolate::Interpolator<int,typename ImageT::Pixel> intobj(_xcen, bg_x, _bctrl.ictrl);
         vector<typename ImageT::Pixel> interp = intobj.interp(xpix);
         
         int i_x = 0;
