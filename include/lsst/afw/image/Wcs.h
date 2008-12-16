@@ -44,16 +44,16 @@ namespace image {
         /// Return true iff Wcs is valid
         operator bool() const { return _wcsInfo != NULL; }
 
-        PointD raDecToColRow(PointD sky) const;
-        PointD raDecToColRow(double const ra, double const dec) const;
-        PointD raDecToColRow(double const radec[2]) const {
-            return raDecToColRow(radec[0], radec[1]);
+        PointD raDecToXY(PointD sky) const;
+        PointD raDecToXY(double const ra, double const dec) const;
+        PointD raDecToXY(double const radec[2]) const {
+            return raDecToXY(radec[0], radec[1]);
         }
 
-        PointD colRowToRaDec(PointD pix) const;
-        PointD colRowToRaDec(double const x, double const y) const;
-        PointD colRowToRaDec(double const xy[2]) const {
-            return colRowToRaDec(xy[0], xy[1]);
+        PointD xyToRaDec(PointD pix) const;
+        PointD xyToRaDec(double const x, double const y) const;
+        PointD xyToRaDec(double const xy[2]) const {
+            return xyToRaDec(xy[0], xy[1]);
         }
 
         double pixArea(PointD pix) const;

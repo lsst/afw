@@ -183,7 +183,7 @@ lsst::afw::image::Wcs::~Wcs() {
 /// Convert from (ra, dec) to (column, row) coordinates
 ///
 /// \return The desired (col, row) position
-lsst::afw::image::PointD lsst::afw::image::Wcs::raDecToColRow(
+lsst::afw::image::PointD lsst::afw::image::Wcs::raDecToXY(
     const double ra,   ///< Input right ascension
     const double dec   ///< Input declination
 ) const {
@@ -201,15 +201,15 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::raDecToColRow(
 /// Convert from (ra, dec) to (column, row) coordinates
 ///
 /// \return The desired (col, row) position
-lsst::afw::image::PointD lsst::afw::image::Wcs::raDecToColRow(
+lsst::afw::image::PointD lsst::afw::image::Wcs::raDecToXY(
     lsst::afw::image::PointD sky        ///< Input (ra, dec)
 ) const {
-    return raDecToColRow(sky.getX(), sky.getY());
+    return raDecToXY(sky.getX(), sky.getY());
 }
 
 /// Convert from (column, row) to (ra, dec) coordinates
 /// \return The desired (ra, dec) position
-lsst::afw::image::PointD lsst::afw::image::Wcs::colRowToRaDec(
+lsst::afw::image::PointD lsst::afw::image::Wcs::xyToRaDec(
     double const x,                     ///< Input column position
     double const y                      ///< Input row position
 ) const {
@@ -226,10 +226,10 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::colRowToRaDec(
 
 /// Convert from (column, row) to (ra, dec) coordinates
 /// \return The desired (ra, dec) position
-lsst::afw::image::PointD lsst::afw::image::Wcs::colRowToRaDec(
+lsst::afw::image::PointD lsst::afw::image::Wcs::xyToRaDec(
     lsst::afw::image::PointD pix        ///< Input (x, y)
 ) const {
-    return colRowToRaDec(pix.getX(), pix.getY());
+    return xyToRaDec(pix.getX(), pix.getY());
 }
 
 /// Return the pixel area in deg^2 at a given pixel coordinate
@@ -238,8 +238,8 @@ double lsst::afw::image::Wcs::pixArea(lsst::afw::image::PointD pix0) const
     lsst::afw::image::PointD sky0, sky1, deltaSky;
     lsst::afw::image::PointD pix1 = pix0 + lsst::afw::image::PointD(1,1);
 
-    sky0 = colRowToRaDec(pix0);
-    sky1 = colRowToRaDec(pix1);
+    sky0 = xyToRaDec(pix0);
+    sky1 = xyToRaDec(pix1);
 
     deltaSky = sky1 - sky0;
 

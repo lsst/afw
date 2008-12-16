@@ -290,17 +290,19 @@ void image::Mask<MaskPixelT>::clearMaskPlane(int plane) {
     *this &= ~getBitMask(plane);
 }
 
-// \brief Convert the current maskPlaneDict to the canonical one defined in Mask
+// \brief Adjust this mask to conform to the standard Mask class's mask plane dictionary,
+// adding any new mask planes to the standard.
 //
-// conformMaskPlanes ensures that this Mask (presumably from some external source)
-// has the same plane assignments as Mask.  If a change in plane assignments is needed,
-// the bits within each pixel are permuted as required
+// Ensures that this mask (presumably from some external source) has the same plane assignments
+// as the Mask class. If a change in plane assignments is needed, the bits within each pixel
+// are permuted as required.
 //
-// Any new mask planes in the header are recognised, added to the planeMaskDict, and shifted up into unused slots
+// Any new mask planes found in this mask are added to unused slots in the Mask class's mask plane dictionary.
 //
 template<typename MaskPixelT>
-void image::Mask<MaskPixelT>::conformMaskPlanes(MaskPlaneDict& currentPlaneDict
-                                        ) {
+void image::Mask<MaskPixelT>::conformMaskPlanes(
+    const MaskPlaneDict& currentPlaneDict   ///< mask plane dictionary for this mask
+) {
 
     if (_maskPlaneDict == currentPlaneDict) {
         _myMaskDictVersion = _maskDictVersion;
