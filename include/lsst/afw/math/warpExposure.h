@@ -31,6 +31,37 @@ namespace afw {
 namespace math {
        
     typedef boost::uint16_t maskPixelType;
+    
+//     class WarpParameters {
+//         const int MinType = 1;
+//         const int Lancsoz = 1;
+//         const int NearestNeighbor = 2;
+//         const int LinearInterpolate = 3;
+//         const int MaxType = 3;
+//         WarpParameters(int type) : _type(type) {
+//             if ((type < 1) || (type > MaxType)) {
+//                 raise std::runtime_error("Invalid type");
+//             }
+//         };
+// 
+//         static WarpParameters lanczos(int order) {
+//             retVal = WarpParameters(WarpParameters::Lanczos);
+//             retVal._setLanczosOrder(order);
+//             return retVal;
+//         static WarpParameters nearestNeighbor() {
+//             return WarpParameters(WarpParameters::NearestNeighbor);
+//     };
+//     class LanczosWarpParameters: WarpParameters {
+//         LancsozParameters(int order) : _order(order) {};
+//         int getOrder() return _order;
+//     private:
+//         int _type;
+//         int _lanczosOrder;
+//     }
+//     class NearestNeighborWarpParameters {
+//     }
+//     class LinearInterpolateWarpParameters {
+//     }
 
     template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
     int warpExposure(

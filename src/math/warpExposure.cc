@@ -130,7 +130,7 @@ int afwMath::warpExposure(
 
     // Create a blank kernel image of the appropriate size and get a pixel locator to it.
     KernelImageT kImage(kernelWidth, kernelHeight);
-    const typename KernelImageT::const_xy_locator kLoc = kImage.xy_at(0, 0);
+    typename KernelImageT::const_xy_locator kLoc = kImage.xy_at(0, 0);
 
     // Get the original MaskedImage and a pixel accessor to it.
     MaskedImageT origMI = origExposure.getMaskedImage();
@@ -192,12 +192,12 @@ int afwMath::warpExposure(
             ++numGoodPixels;
 
             // New original pixel position is usable, advance to it
-            const typename MaskedImageT::const_xy_locator origMILoc = origMI.xy_at(origX, origY);
+            typename MaskedImageT::const_xy_locator origMILoc = origMI.xy_at(origX, origY);
             afwImage::PointD origXY(origX, origY);   
 
             // Compute new kernel image based on fractional pixel position
             remapKernel.setKernelParameters(fracOrigPix); 
-            double kSum;
+            double kSum = 0;
             remapKernel.computeImage(kImage, kSum, false);
             
             // Determine the intensity multipler due to relative pixel scale and kernel sum

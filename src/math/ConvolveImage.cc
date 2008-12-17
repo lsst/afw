@@ -561,7 +561,15 @@ namespace lsst { namespace afw { namespace math {
  g++ -C -E -I$(eups list -s -d boost)/include Convolve.cc | perl -pe 's| *NL *|\n|g'
 */
 #define NL /* */
+
 #define convolutionFuncsByType(IMAGE, PIXTYPE1, PIXTYPE2) \
+    template IMAGE(PIXTYPE1)::SinglePixel \
+        apply<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2)>(IMAGE(PIXTYPE2)::const_xy_locator &, \
+        lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::const_xy_locator &, int, int); NL \
+    template IMAGE(PIXTYPE1)::SinglePixel \
+        apply<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2)>(IMAGE(PIXTYPE2)::const_xy_locator &, \
+        std::vector<lsst::afw::math::Kernel::PixelT> const &, \
+        std::vector<lsst::afw::math::Kernel::PixelT> const &); NL \
     template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, AnalyticKernel const&, bool, int); NL \
     template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, DeltaFunctionKernel const&, bool, int); NL \
     template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, FixedKernel const&, bool, int); NL \
