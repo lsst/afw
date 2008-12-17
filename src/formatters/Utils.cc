@@ -21,91 +21,86 @@ namespace lsst {
 namespace afw {
 namespace formatters {
 
-static int64_t getInt64FromAny(boost::any const & val, std::string const & key) {
-    int64_t i;
-    std::type_info const & type = val.type();
-    if (type == typeid(long long)) {
-        i = boost::any_cast<long long>(val);
-    } else if (type == typeid(long)) {
-        i = boost::any_cast<long>(val);
-    } else if (type == typeid(int)) {
-        i = boost::any_cast<int>(val);
-    } else if (type == typeid(short)) {
-        i = boost::any_cast<short>(val);
-    } else if (type == typeid(signed char)) {
-        i = boost::any_cast<signed char>(val);
-    } else {
-        throw ex::Runtime(key + " property value does not correspond to a signed integral type");
+int extractSliceId(PropertySet::Ptr const & properties) {
+    if (!properties.get()) {
+        throw LSST_EXCEPT(ex::InvalidParameter, "Null data property object");
     }
-    return i;
-}
-
-
-int extractSliceId(DataProperty::PtrType const & properties) {
-    DataProperty::PtrType const & dp1 = properties->findUnique("sliceId");
-    if (!dp1) {
-        throw ex::Runtime("\"sliceId\" property not found");
-    }
-    int sliceId = boost::any_cast<int>(dp1->getValue());
+                
+    int sliceId = properties->getAsInt("sliceId");
     if (sliceId < 0) {
-        throw ex::Runtime("\"sliceId\" property value is negative");
+        throw LSST_EXCEPT(ex::RuntimeException, "\"sliceId\" property value is negative");
     }
+    
     // validate against universeSize if available
-    DataProperty::PtrType const & dp2 = properties->findUnique("universeSize");
-    if (dp2) {
-        int universeSize = boost::any_cast<int>(dp2->getValue());
-        if (sliceId >= universeSize) {
-            throw ex::Runtime("\"sliceId\" must be between 0 and \"universeSize \" - 1");
-        }
+    int universeSize = -1;
+    try {
+        universeSize = properties->getAsInt("universeSize");                
     }
+    catch {
+        // universeSize property does not exist
+        return slizeId;
+    }
+    
+    if (sliceId < 0 || sliceId >= universeSize) 
+    {
+        throw LSST_EXCEPT(ex::RuntimeException, "\"sliceId\" outside range [0, \"universeSize \")");
+    }
+
     return sliceId;
 }
                         
-int extractVisitId(DataProperty::PtrType const & properties) {
-    DataProperty::PtrType const & dp = properties->findUnique("visitId");
-    if (!dp) {
-        throw ex::Runtime("\"visitId\" property not found");
+int extractVisitId(PropertySet::Ptr const & properties) {
+    if (!properties.get()) {
+        throw LSST_EXCEPT(ex::InvalidParameter, "Null data property object");
     }
-    int visitId = boost::any_cast<int>(dp->getValue());
+    
+    int visitID = properties->getAsInt("visistId");
+    
     if (visitId < 0) {
-        throw ex::Runtime("\"visitId\" property value is negative");
+        throw LSST_EXCEPT(ex::RuntimeException, "\"visitId\" property value is negative");
     }
     return visitId;
 }
 
-int64_t extractExposureId(DataProperty::PtrType const & properties) {
-    DataProperty::PtrType const & dp = properties->findUnique("exposureId");
-    if (!dp) {
-        throw ex::Runtime("\"exposureId\" property not found");
+int64_t extractExposureId(PropertySet::Ptr const & properties) {
+    if (!properties.get()) {
+        throw LSST_EXCEPT(ex::InvalidParameter, "Null data property object");
     }
-    int64_t exposureId = getInt64FromAny(dp->getValue(), "\"exposureId\"");
+
+    int64_t exposureId = properties->getAsInt64("exposureId");
+
     if (exposureId < 0) {
-        throw ex::Runtime("\"exposureId\" property value is negative");
+        throw LSST_EXCEPT(ex::RuntimeException, "\"exposureId\" property value is negative");
     }
+    
+    
     if ((exposureId & 0xfffffffe00000000LL) != 0LL) {
-        throw ex::Runtime("\"exposureId\" property value is too big");
+        throw LSST_EXCEPT(ex::RuntimeException, "\"exposureId\" property value is too big");
     }
+    
     return exposureId << 1; // DC2 fix
 }
 
-int extractCcdId(DataProperty::PtrType const & properties) {
-    DataProperty::PtrType const& dp = properties->findUnique("ccdId");
-    if (!dp) {
-        throw ex::Runtime("\"ccdId\" property not found");
+int extractCcdId(PropertySet::Ptr const & properties) {
+    if (!properties.get()) {
+        throw LSST_EXCEPT(ex::InvalidParameter, "Null data property object");
     }
-    std::string ccdIdString = boost::any_cast<std::string>(dp->getValue());
+
+
+    // Ignore leading zeros, rather than treating as octal.
+    std::String ccdIdString = properties->getAsString("ccdId");    
     int ccdId = strtol(ccdIdString.c_str(), 0, 10);
-        // Ignore leading zeros, rather than treating as octal.
+
     if (ccdId < 0) {
-        throw ex::Runtime("\"ccdId\" property value is negative");
+        throw LSST_EXCEPT(ex::RuntimeException, "\"ccdId\" property value is negative");
     }
     if (ccdId > 255) {
-        throw ex::Runtime("\"ccdId\" property value is too big");
+        throw LSST_EXCEPT(ex::RuntimeException, "\"ccdId\" property value is too big");
     }
     return ccdId;
 }
 
-int64_t extractCcdExposureId(DataProperty::PtrType const & properties) {
+int64_t extractCcdExposureId(PropertySet::Ptr const & properties) {
     int64_t exposureId = extractExposureId(properties);
     int ccdId = extractCcdId(properties);
     return (exposureId << 8) + ccdId;
@@ -119,15 +114,11 @@ int64_t extractCcdExposureId(DataProperty::PtrType const & properties) {
                                                     object pointed to does not contain a property named
                                                     \c "itemName".
  */
-std::string const getItemName(DataProperty::PtrType const & properties) {
-    if (!properties) {
-        throw ex::InvalidParameter("Null data property object");
+std::string const getItemName(PropertySet::Ptr const & properties) {
+    if (!properties.get()) {
+        throw LSST_EXCEPT(ex::InvalidParameter, "Null data property object");
     }
-    DataProperty::PtrType const & dp = properties->findUnique("itemName");
-    if (!dp) {
-        throw ex::InvalidParameter("\"itemName\" property not found");
-    }
-    return boost::any_cast<std::string>(dp->getValue());
+    return properties->getAsString("itemName");
 }
 
 
@@ -136,13 +127,16 @@ std::string const getItemName(DataProperty::PtrType const & properties) {
     unique property with the given name that has type \c bool and a value of \c true.
  */
 bool extractOptionalFlag(
-    DataProperty::PtrType const & properties,
+    PropertySet::Ptr const & properties,
     std::string           const & name
 ) {
-    if (properties) {
-        DataProperty::PtrType const & dpFlag = properties->findUnique(name);
-        if (dpFlag) {
-            return boost::any_cast<bool>(dpFlag->getValue());
+    if (properties.get()) {
+        try {
+            return properties.getAsBool(name);
+        }
+        catch {
+            //property "name" does not exist
+            return false;
         }
     }
     return false;
@@ -200,8 +194,8 @@ static char const * const sDefaultVisitSliceNamePat = "_visit%1%_slice%2%";
     a property named \c "sliceId" (a non-negative integer of type \c int ) be present.
  */
 std::string const getVisitSliceTableName(
-    lsst::pex::policy::Policy::Ptr           const & policy,
-    DataProperty::PtrType const & properties
+    lsst::pex::policy::Policy::Ptr const & policy,
+    PropertySet::PtrType const & properties
 ) {
     std::string itemName(getItemName(properties));
     int64_t visitId         = extractVisitId(properties);
@@ -257,7 +251,7 @@ std::string const getVisitSliceTableName(
 void getAllVisitSliceTableNames(
     std::vector<std::string>    & names,
     lsst::pex::policy::Policy::Ptr           const & policy,
-    DataProperty::PtrType const & properties
+    PropertySet::Ptr const & properties
 ) {
     std::string itemName(getItemName(properties));
     int64_t visitId         = extractVisitId(properties);
@@ -267,13 +261,9 @@ void getAllVisitSliceTableNames(
     fmt.exceptions(boost::io::all_error_bits);
 
     if (isPerSliceTable) {
-        DataProperty::PtrType const & dpNumSlices = properties->findUnique(itemName + ".numSlices");
-        if (!dpNumSlices) {
-            throw ex::Runtime(itemName + "\".numSlices\" property not found");
-        }
-        int numSlices = boost::any_cast<int>(dpNumSlices->getValue());
+        int numSlices = properties.getAsInt(itemName + ".numSlices");        ;
         if (numSlices <= 0) {
-            throw ex::Runtime(itemName + " \".numSlices\" property value is non-positive");
+            throw LSST_EXCEPT(ex::RuntimeException, itemName + " \".numSlices\" property value is non-positive");
         }
         fmt.parse(extractPolicyString(
             policy,
@@ -310,7 +300,7 @@ void getAllVisitSliceTableNames(
 void createVisitSliceTable(
     lsst::daf::persistence::LogicalLocation       const & location,
     lsst::pex::policy::Policy::Ptr           const & policy,
-    DataProperty::PtrType const & properties
+    PropertySet::Ptr const & properties
 ) {
     std::string itemName(getItemName(properties));
     std::string name(getVisitSliceTableName(policy, properties));
@@ -326,7 +316,7 @@ void createVisitSliceTable(
 void dropAllVisitSliceTables(
     lsst::daf::persistence::LogicalLocation       const & location,
     lsst::pex::policy::Policy::Ptr           const & policy,
-    DataProperty::PtrType const & properties
+    PropertySet::Ptr const & properties
 ) {
     std::vector<std::string> names;
     getAllVisitSliceTableNames(names, policy, properties);

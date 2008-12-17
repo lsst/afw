@@ -11,7 +11,7 @@
 
 #include <string>
 
-#include "lsst/daf/base/DataProperty.h"
+#include "lsst/daf/base/PropertySet.h"
 #include "lsst/daf/persistence/LogicalLocation.h"
 #include "lsst/pex/policy/Policy.h"
 
@@ -21,7 +21,7 @@ namespace afw {
 namespace formatters {
 
 bool extractOptionalFlag(
-    lsst::daf::base::DataProperty::PtrType const & properties,
+    lsst::daf::base::PropertySet::Ptr const & properties,
     std::string const & name
 );
 
@@ -32,37 +32,37 @@ std::string const extractPolicyString(
 );
 
 std::string const getItemName(
-    lsst::daf::base::DataProperty::PtrType const & properties
+    lsst::daf::base::PropertySet::Ptr const & properties
 );
 
 std::string const getVisitSliceTableName(
     lsst::pex::policy::Policy::Ptr const & policy,
-    lsst::daf::base::DataProperty::PtrType const & properties
+    lsst::daf::base::PropertySet::Ptr const & properties
 );
 
 void getAllVisitSliceTableNames(
     std::vector<std::string> & names,
     lsst::pex::policy::Policy::Ptr const & policy,
-    lsst::daf::base::DataProperty::PtrType const & properties
+    lsst::daf::base::PropertySet::Ptr const & properties
 );
 
 void createVisitSliceTable(
     lsst::daf::persistence::LogicalLocation const & location,
     lsst::pex::policy::Policy::Ptr const & policy,
-    lsst::daf::base::DataProperty::PtrType const & properties
+    lsst::daf::base::PropertySet::Ptr const & properties
 );
 
 void dropAllVisitSliceTables(
     lsst::daf::persistence::LogicalLocation const & location,
     lsst::pex::policy::Policy::Ptr const & policy,
-    lsst::daf::base::DataProperty::PtrType const & properties
+    lsst::daf::base::PropertySet::Ptr const & properties
 );
 
-int extractSliceId(lsst::daf::base::DataProperty::PtrType const& properties);
-int64_t extractExposureId(lsst::daf::base::DataProperty::PtrType const& properties);
-int extractVisitId(lsst::daf::base::DataProperty::PtrType const& properties);
-int extractCcdId(lsst::daf::base::DataProperty::PtrType const& properties);
-int64_t extractCcdExposureId(lsst::daf::base::DataProperty::PtrType const& properties);
+int extractSliceId(lsst::daf::base::PropertySet::Ptr const& properties);
+int64_t extractExposureId(lsst::daf::base::PropertySet::Ptr const& properties);
+int extractVisitId(lsst::daf::base::PropertySet::Ptr const& properties);
+int extractCcdId(lsst::daf::base::PropertySet::Ptr const& properties);
+int64_t extractCcdExposureId(lsst::daf::base::PropertySet::Ptr const& properties);
 
 }}} // namespace lsst::afw::formatters
 
