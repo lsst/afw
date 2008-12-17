@@ -11,7 +11,7 @@ int main() {
     img = 100;
     
     // This is equivalent to that initialisation
-    for (ImageT::iterator ptr = img.begin(); ptr != img.end(); ++ptr) {
+    for (ImageT::iterator ptr = img.begin(), end = img.end(); ptr != end; ++ptr) {
         *ptr = 100;
     }
     // so is this, but fills backwards (and only finds end once)
@@ -19,19 +19,19 @@ int main() {
         *ptr = 100;
     }
     // so is this, but shows a different way of choosing begin()
-    for (ImageT::iterator ptr = img.at(0, 0); ptr != img.end(); ++ptr) {
+    for (ImageT::iterator ptr = img.at(0, 0), end = img.end(); ptr != end; ++ptr) {
         *ptr = 100;
     }
 
     // Set the pixels row by row, to avoid repeated checks for end-of-row
     for (int y = 0; y != img.getHeight(); ++y) {
-        for (ImageT::x_iterator ptr = img.row_begin(y); ptr != img.row_end(y); ++ptr) {
+        for (ImageT::x_iterator ptr = img.row_begin(y), end = img.row_end(y); ptr != end; ++ptr) {
             *ptr = 100;
         }
     }
 
     // This one is just as fast (but only works for contiguous arrays)
-    for (ImageT::fast_iterator ptr = img.begin(true); ptr != img.end(true); ++ptr) {
+    for (ImageT::fast_iterator ptr = img.begin(true), end = img.end(true); ptr != end; ++ptr) {
         *ptr = 100;
     }
 

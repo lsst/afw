@@ -17,7 +17,7 @@ void timePixelAccess(ImageT const &image, int nIter) {
 
     clock_t startTime = clock();
     for (int iter = 0; iter < nIter; ++iter) {
-        for (int y = 0; y < nRows; ++y) {
+        for (int y = 0; y < image.getHeight(); ++y) {
             for (typename ImageT::x_iterator ptr = image.row_begin(y), end = image.row_end(y); ptr != end; ++ptr) {
                 *ptr += pix;
             }
@@ -30,14 +30,13 @@ void timePixelAccess(ImageT const &image, int nIter) {
 
     startTime = clock();
     for (int iter = 0; iter < nIter; ++iter) {
-        for (int y = 0; y < nRows; ++y) {
+        for (int y = 0; y < image.getHeight(); ++y) {
             for (typename ImageT::xy_locator ptr = image.xy_at(0, y), end = image.xy_at(nCols, y); ptr != end; ++ptr.x()) {
                 *ptr += pix;
             }
         }
     }
     secPerIter = (clock() - startTime) / static_cast<double> (nIter * CLOCKS_PER_SEC);
-    megaPix = static_cast<double>(nCols * nRows) / 1.0e6;
     secPerMPixPerIter = secPerIter / static_cast<double>(megaPix);
     std::cout << "Pixel Locator\t" << nCols << "\t" << nRows << "\t" << megaPix << "\t" << secPerIter << "\t\t" << secPerMPixPerIter << std::endl;
 }
