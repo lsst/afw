@@ -45,7 +45,7 @@ void test(char *name) {
     pix[0] = 500.0;
     pix[1] = 1000.0;
 
-    sky = testWcs.colRowToRaDec(pix);
+    sky = testWcs.xyToRaDec(pix);
 
     Trace("MaskedImageIO_1", 1,
           boost::format("pix: %lf %lf") % pix[0] % pix[1]);
@@ -53,7 +53,7 @@ void test(char *name) {
     Trace("MaskedImageIO_1", 1,
           boost::format("sky: %lf %lf") % sky[0] % sky[1]);
 
-    sky = testWcs.raDecToColRow(pix);
+    sky = testWcs.raDecToXY(pix);
 
     Trace("MaskedImageIO_1", 1,
           boost::format("pix: %lf %lf") % pix[0] % pix[1]);
