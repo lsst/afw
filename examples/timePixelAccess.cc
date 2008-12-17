@@ -18,7 +18,7 @@ void timePixelAccess(ImageT const &image, int nIter) {
     clock_t startTime = clock();
     for (int iter = 0; iter < nIter; ++iter) {
         for (int y = 0; y < nRows; ++y) {
-            for (typename ImageT::x_iterator ptr = image.row_begin(y); ptr != image.row_end(y); ++ptr) {
+            for (typename ImageT::x_iterator ptr = image.row_begin(y), end = image.row_end(y); ptr != end; ++ptr) {
                 *ptr += pix;
             }
         }
@@ -31,7 +31,7 @@ void timePixelAccess(ImageT const &image, int nIter) {
     startTime = clock();
     for (int iter = 0; iter < nIter; ++iter) {
         for (int y = 0; y < nRows; ++y) {
-            for (typename ImageT::xy_locator ptr = image.xy_at(0, y); ptr != image.xy_at(nCols, y); ++ptr.x()) {
+            for (typename ImageT::xy_locator ptr = image.xy_at(0, y), end = image.xy_at(nCols, y); ptr != end; ++ptr.x()) {
                 *ptr += pix;
             }
         }
