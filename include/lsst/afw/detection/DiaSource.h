@@ -20,6 +20,7 @@
 #include "lsst/daf/base/Citizen.h"
 #include "lsst/daf/base/Persistable.h"
 
+#include "lsst/afw/detection/BaseSourceAttributes.h"
 
 namespace boost {
 namespace serialization {
@@ -140,90 +141,240 @@ using boost::int64_t;
     columns: fields are sorted by type size to minimize the number of padding bytes that the
     compiler must insert to meet field alignment requirements.
  */
-class DiaSource : public SourceBase {
+class DiaSource : public BaseSourceAttributes{
 
 public :
 
     typedef boost::shared_ptr<DiaSource> Ptr;
 
-    /*! An integer id for each field. */
-    enum FieldId {
-        //Fields added by DiaSource
-        SC_ID = SourceBase::NUM_FIELDS,
+    /*! An integer id for each nullable field. */
+    enum NullableField {
+        DIA_SOURCE_2_ID = 0
+        OBJECT_ID,
+        MOVING_OBJECT_ID,
         SSM_ID,
-        LENGTH_DEG,
-        FLUX,
-        FLUX_ERR,
+        RA_ERR_4_WCS,
+        DEC_ERR_4_WCS,
+        X_FLUX,
+        X_FLUX_ERR,
+        Y_FLUX,
+        Y_FLUX_ERR,
+        RA_FLUX,
+        RA_FLUX_ERR,
+        DEC_FLUX,
+        DEC_FLUX_ERR,
+        X_PEAK,
+        Y_PEAK,
+        RA_PEAK,
+        DEC_PEAK,
+        X_ASTROM,
+        X_ASTROM_ERR,
+        Y_ASTROM,
+        Y_ASTROM_ERR,
+        RA_ASTROM,
+        RA_ASTROM_ERR,
+        DEC_ASTROM,
+        DEC_ASTROM_ERR,
+        MODEL_MAG_ERR,
+        NON_GRAY_CORR_MAG,
+        NON_GRAY_CORR_MAG_ERR,
+        ATM_CORR_MAG,        
+        ATM_CORR_MAG_ERR,
+        AP_DIA,
         REF_MAG,
         IXX,
         IXX_ERR,
         IYY,
-        IYY_ERR,       
+        IYY_ERR,
         IXY,
         IXY_ERR,
-        VAL_X1,
-        VAL_X2,
-        VAL_Y1,
-        VAL_Y2,
-        VAL_XY,
         OBS_CODE,
         IS_SYNTHETIC,
         MOPS_STATUS,
-        NUM_FIELDS                
+        FLAG_4_ASSOCIATION,
+        FLAG_4_DETECTION,
+        FLAG_4_WCS,
+        FLAG_CLASSIFICATION,
+        NUM_NULLABLE_FIELDS
     };
 
     DiaSource();
+    virtual ~DiaSource();
 
-    // getters
-    int32_t getScId() const { return get(SC_ID); }
-    int64_t getSsmId() const { return get(SSM_ID); }
-    double  getLengthDeg() const { return get(LENGTH_DEG);}
-    float   getFlux() const { return get(FLUX);}
-    float   getFluxErr() const { return get(FLUX_ERR);}
-    float   getRefMag() const { return get(REF_MAG);}
-    float   getIxx() const { return get(IXX);}
-    float   getIxxErr() const { return get(IXX_ERR);}
-    float   getIyy() const { return get(IYY);}
-    float   getIyyErr() const { return get(IYY_ERR);}
-    float   getIxy() const { return get(IXY); }
-    float   getIxyErr() const { return get(IXY_ERR); }
-    double  getValX1() const { return get(VAL_X1); }
-    double  getValX2() const { return get(VAL_X2); }
-    double  getValY1() const { return get(VAL_Y1); }
-    double  getValY2() const { return get(VAL_Y2); }
-    double  getValXY() const { return get(VAL_XY); } 
-    char    getObsCode() const { return get(OBS_CODE); } 
-    char    isSynthetic() const { return get(IS_SYNTHETIC); }
-    char    getMopsStatus() const { return get(MOPS_STATUS); }
-
+    // getters    
+    int64_t * getDiaSource2Id()     const { return _diaSource2Id);      }
+    int32_t * getScId()             const { return _scId;               }
+    int64_t * getSsmId()            const { return _ssmId;              }
+    double  * getLengthDeg()        const { return _lengthDeg;          }         
+    float   * getFlux()             const { return _flux;               }
+    float   * getFluxErr()          const { return _fluxErr;            }
+    float   * getRefMag()           const { return _refMag;             }
+    float   * getIxx()              const { return _ixx;                }
+    float   * getIxxErr()           const { return _ixxErr;             }
+    float   * getIyy()              const { return _iyy;                }
+    float   * getIyyErr()           const { return _iyyErr;             }
+    float   * getIxy()              const { return _ixy;                }
+    float   * getIxyErr()           const { return _ixyErr;             }
+    double  * getValX1()            const { return _valX1;              }
+    double  * getValX2()            const { return _valX2;              }
+    double  * getValY1()            const { return _valY1;              }
+    double  * getValY2()            const { return _valY2;              }
+    double  * getValXY()            const { return _valXY;              }  
+    char    * getObsCode()          const { return _obsCode;            }
+    char    * isSynthetic()         const { return _isSynthetic;        }
+    char    * getMopsStatus()       const { return _mopsStatus;         }
+    int64_t * getFlagClassification const { return _flagClassification; }
 
     // setters
-    void setScId (int32_t const scId) { set(SC_ID, scId); }
-    void setSsmId (int64_t const ssmId) { set(SSM_ID, ssmId); }
-    void setLengthDeg (double const lengthDeg) { set(LENGTH_DEG, lengthDeg); }
-    void setFlux (double  const flux) { set(FLUX, flux); }
-    void setFluxErr(double  const fluxErr) { set(FLUX_ERR, fluxErr); }
-    void setRefMag (float const refMag) { set(REF_MAG, refMag); }
-    void setIxx (float const ixx) { set(IXX, ixx); }
-    void setIxxErr (float const ixxErr) { set(IXX_ERR, ixxErr); }         
-    void setIyy (float const iyy) { set(IYY, iyy); }     
-    void setIyyErr (float const iyyErr) { set(IYY_ERR, iyyErr); }         
-    void setIxy (float const ixy) { set(IXY, ixy); }      
-    void setIxyErr(float const ixyErr) { set(IXY_ERR, ixyERR); }         
-    void setValX1 (double const valX1) { set(VAL_X1, valX1); }
-    void setValX2 (double const valX2) { set(VAL_X2, valX2); }
-    void setValY1 (double const valY1) { set(VAL_Y1, valY1); }
-    void setValY2 (double const valY2) { set(VAL_Y2, valY2); }
-    void setValXY (double const valXY) { set(VAL_XY, valXY); }         
-    void setObsCode (char const obsCode) { set(OBS_CODE, obsCode); } 
-    void setIsSynthetic (char const isSynthetic) { set(IS_SYNTHETIC, isSynthetic); } 
-    void setMopsStatus (char const mopsStatus) { set(MOPS_STATUS, mopsStatus); }
-
-    bool operator==(DiaSource const & d) const {
-        return SourceBase::operator==(*static_cast<SourceBase*>(&d));
+    void setDiaSource2Id  (int64_t const diaSource2Id      ) {
+        set(_diaSource2Id, diaSource2Id);
     }
+    void setScId          (int32_t const scId              ) {
+        set(_scId, scId);        
+    }
+    void setSsmId         (int64_t const ssmId             ) {
+        set(_ssmId, ssmId);
+    } 
+    void setLengthDeg       (double  const lengthDeg       ) {
+        set(_lengthDeg, lengthDeg);
+    }        
+    void setFlux            (double  const flux            ) { 
+        set(_flux, flux);             
+    }
+    void setFluxErr         (double  const fluxErr         ) { 
+        set(_fluxErr, fluxErr);          
+    }
+    void setRefMag          (float const refMag            ) {
+        set(_refMag, refMag);
+    }
+    void setIxx             (float const ixx               ) { 
+        set(_ixx, ixx);    
+    }
+    void setIxxErr          (float const ixxErr            ) { 
+        set(_ixxErr, ixxErr); 
+    }         
+    void setIyy             (float const iyy               ) { 
+        set(_iyy, iyy);    
+    }     
+    void setIyyErr          (float const iyyErr            ) { 
+        set(_iyyErr, iyyErr); 
+    }         
+    void setIxy             (float const ixy               ) { 
+        set(_ixy, ixy);    
+    }      
+    void setIxyErr          (float const ixyErr            ) { 
+        set(_ixyErr, ixyErr); 
+    }         
+    void setValX1           (double  const valX1           ) {
+        set(_valX1, valX1);
+    }
+    void setValX2           (double  const valX2           ) {
+        set(_valX2, valX2);
+    }
+    void setValY1           (double  const valY1           ) {
+        set(_valY1, valY1);
+    }
+    void setValY2           (double  const valY2           ) {
+        set(_valY2, valY2);
+    }
+    void setValXY           (double  const valXY           ) {
+        set(_valXY, valXY);
+    }         
+    void setObsCode         (char    const obsCode         ) {
+        set(_obsCode, obsCode);
+    }   
+    void setIsSynthetic     (char    const isSynthetic     ) {
+        set(_isSynthetic, isSynthetic);
+    } 
+    void setMopsStatus      (char    const mopsStatus      ) {
+        set(_mopsStatu, mopsStatus);        
+    }
+    void setFlagClassification(int64_t const flagClassification) {
+        set(_flagClassification, flagClassification);
+    }
+        
+
+
+    // Get/set whether or not fields are null
+    bool isNull    (NullableField const f) const;            
+    void setNull   (NullableField const f);                  
+    void setNotNull(NullableField const f);                  
+    void setNull   (NullableField const f, bool const null); 
+    void setNull   ();                                       
+    void setNotNull();                                       
+
+    virtual void setAllNotNull();
+    virtual void setAllNull();
+    
+    bool operator==(DiaSource const & d) const;
 
 private :
+
+    int64_t * _ssmId;            // BIGINT        NULL
+    int64_t * _diaSource2Id;     // BIGINT        NULL
+    int64_t * _flagClassification;// BIGINT       NULL
+    double  * _lengthDeg;        // DOUBLE        NOT NULL 
+    double  * _valX1;            // DOUBLE        NOT NULL         
+    double  * _valX1;            // DOUBLE        NOT NULL
+    double  * _valY1;            // DOUBLE        NOT NULL
+    double  * _valY2;            // DOUBLE        NOT NULL
+    double  * _valXY;            // DOUBLE        NOT NULL        
+    float   * _flux;             // DECIMAL(12,2) NOT NULL
+    float   * _fluxErr;          // DECIMAL(10,2) NOT NULL    
+    float   * _refMag;           // FLOAT(0)      NULL
+    float   * _ixx;              // FLOAT(0)      NULL
+    float   * _ixxErr;           // FLOAT(0)      NULL
+    float   * _iyy;              // FLOAT(0)      NULL
+    float   * _iyyErr;           // FLOAT(0)      NULL
+    float   * _ixy;              // FLOAT(0)      NULL
+    float   * _ixyErr;           // FLOAT(0)      NULL
+    int32_t * _scId;             // INTEGER       NOT NULL 
+    char    * _obsCode;          // CHAR(3)       NULL       
+    char    * _isSynthetic;      // CHAR          NULL
+    char    * _mopsStatus;       // CHAR          NULL
+
+    template <typename Archive> void serialize(Archive & ar, unsigned int const version) {
+        BaseSourceAttributes::serialze(ar, version);
+        
+        serializeData(ar, version, _diaSource2Id);
+        serializeData(ar, version, _scId);
+        serializeData(ar, version, _ssmId);        
+        serializeData(ar, version, _lengthDeg);        
+        serializeData(ar, version, _flux);
+        serializeData(ar, version, _fluxErr);
+        serializeData(ar, version, _refMag);
+        serializeData(ar, version, _ixx);
+        serializeData(ar, version, _ixxErr);
+        serializeData(ar, version, _iyy);
+        serializeData(ar, version, _iyyErr);
+        serializeData(ar, version, _ixy);
+        serializeData(ar, version, _ixyErr);
+        serializeData(ar, version, _valX1);
+        serializeData(ar, version, _valX2);
+        serializeData(ar, version, _valY1);
+        serializeData(ar, version, _valY2);
+        serializeData(ar, version, _valXY);
+        serializeData(ar, version, _obsCode);
+        serializeData(ar, version, _isSynthetic);
+        serializeData(ar, version, _mopsStatus);
+        serializeData(ar, version, _flagClassification);
+
+        bool b;
+        //go through list of nullable fields,
+        //store true if field is NULL
+        //false if NOT NULL        
+        if (Archive::is_loading::value) {
+            for (int i = 0; i < NUM_NULLABLE_FIELDS; ++i) {
+                ar & b;
+                setNull(i, b);
+            }
+        } else {
+            for (int i = 0; i < NUM_NULLABLE_FIELDS; ++i) {
+                b = isNull(i);
+                ar & b;
+            }
+        }
+    }
 
     friend class boost::serialization::access;
     friend class formatters::DiaSourceVectorFormatter;
@@ -232,6 +383,22 @@ private :
 inline bool operator!=(DiaSource const & d1, DiaSource const & d2) {
     return !(d1 == d2);
 }
+
+class PersistableDiaSourceVector : public Persistable {
+    typedef std::vector<DiaSource> DiaSourceVector;
+public:
+    PersistableDiaSourceVector() {}
+    PersistableDiaSourceVector(DiaSourceVector const & sources)
+        : _sources(sources) {}
+        
+    DiaSourceVector & getSources() {return _sources; }
+    DiaSourceVector getSources() const {return _sources; } 
+    
+    void setSources(DiaSourceVector const & sources) {_sources = sources; }
+private:
+    LSST_PERSIST_FORMATTER(lsst::afw::formatters::DiaSourceVectorFormatter);
+    DiaSourceVector _sources;
+}; 
 
 }}}  // namespace lsst::afw::detection
 

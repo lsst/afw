@@ -21,6 +21,15 @@ namespace lsst {
 namespace afw {
 namespace formatters {
 
+template<typename DbStorage, typename ValueType>
+static void setColumn(DbStorage & db, std::string const & key, ValueType * const & value) {
+    if (value != 0) {
+        db.template setColumn<ValueType>(key, *value);
+    } else {
+        db.setColumnToNull(key);
+    }
+}
+
 static int64_t getInt64FromAny(boost::any const & val, std::string const & key) {
     int64_t i;
     std::type_info const & type = val.type();

@@ -20,6 +20,7 @@
 #include "lsst/daf/base/Citizen.h"
 #include "lsst/daf/base/Persistable.h"
 
+#include "lsst/afw/detection/BaseSourceAttributes.h"
 
 namespace boost {
 namespace serialization {
@@ -113,48 +114,129 @@ using boost::int64_t;
         KEY (objectId),
         KEY (procHistoryId)
     ) TYPE=MyISAM;
-    \endcode    
+    \endcode
+    
+    Note that the C++ fields are listed in a different order than their 
+    corresponding database columns: fields are sorted by type size to minimize 
+    the number of padding bytes that the compiler must insert to meet field 
+    alignment requirements.
 */
 
-class Source : public SourceBase {
+class Source : public BaseSourceAttributes {
 
 public :
 
     typedef boost::shared_ptr<Source> Ptr;
 
-    /*! An integer id for each field. */
-    enum FieldId {
-        //Fields added by Source
-        PETRO_MAG = SourceBase::NUM_FIELDS,
+    /*! An integer id for each nullable field. */
+    enum NullableField {
+        AMP_EXPOSURE_ID = 0,
+        OBJECT_ID,
+        MOVING_OBJECT_ID,
+        RA_ERR_4_DETECTION,
+        DEC_ERR_4_DETECTION,
+        X_FLUX,
+        X_FLUX_ERR,
+        Y_FLUX,
+        Y_FLUX_ERR,
+        RA_FLUX,
+        RA_FLUX_ERR,
+        DEC_FLUX,
+        DEC_FLUX_ERR,
+        X_PEAK,
+        Y_PEAK,
+        RA_PEAK,
+        DEC_PEAK,
+        X_ASTROM,
+        X_ASTROM_ERR,
+        Y_ASTROM,
+        Y_ASTROM_ERR,
+        RA_ASTROM,
+        RA_ASTROM_ERR,
+        DEC_ASTROM,
+        DEC_ASTROM_ERR,
+        TAI_RANGE,
+        PETRO_MAG,
         PETRO_MAG_ERR,
+        NON_GRAY_CORR_MAG,
+        NON_GRAY_CORR_MAG_ERR,
+        ATM_CORR_MAG,        
+        ATM_CORR_MAG_ERR,
+        AP_DIA,
         SKY,
-        SKY_ERR,        
-        NUM_FIELDS
+        SKY_ERR        
+        FLAG_4_ASSOCIATION,
+        FLAG_4_DETECTION,
+        FLAG_4_WCS,
+        NUM_NULLABLE_FIELDS
     };
 
     Source();
-    
+    virtual ~Source();
 
     // getters
-    int64_t getSourceId() const { return getId(); }
-    
-    double  getPetroMag() const { return get(PETRO_MAG); }
-    float   getPetroMagErr() const { return _modelMagErr;      }    
-    float   getSky() const { return get(SKY); }
-    float   getSkyErr() const { return get(SKY_ERR); }
+    double * getModelMag()      const { return _modelMag;       }
+    float  * getModelMagErr()   const { return _modelMagErr;    }    
+    float  * getSky()           const { return _sky;            }
+    float  * getSkyErr()        const { return _skyErr;         }
 
-    //setters
-    void setSourceId(int64_t const & sourceId) {setId(sourceId); }
-    
-    void setPetroMag (double const petroMag) { set(PETRO_MAG, petroMag); }    
-    void setPetroMagErr (float const petroMagErr) { set(PETRO_MAG_ERR, petroMagErr); }
-    void setSky (float const sky) { set(SKY, sky); }
-    void setSkyErr (float const skyErr) { set(SKY_ERR, skyErr); }
-
-    bool operator==(Source const & d) const {
-        return SourceBase::operator==(*static_cast<SourceBase*>(&d));
+    // setters
+    void setPetroMag        (double  const petroMag        ) { 
+        set(_petroMag, petroMag);         
     }
+    void setPetroMagErr     (float   const petroMagErr     ) { 
+        set(_petroMagErr, petroMagErr);    
+    }
+    void setSky             (float   const sky             ) { 
+        set(_sky, sky);       
+    }
+    void setSkyErr          (float   const skyErr          ) {
+        set(_skyErr, skyErr);
+    }   
+
+
+    // Get/set whether or not fields are null
+    bool isNull    (NullableField const f) const;
+    void setNull   (NullableField const f);
+    void setNotNull(NullableField const f);
+    void setNull   (NullableField const f, bool const null);
+    void setNull   ();
+    void setNotNull();
+
+    virtual void setAllNotNull();
+    virtual void setAllNull();
+    
+    bool operator==(Source const & d) const;
+
 private :
+    double * _petroMag;         // DOUBLE        NULL    
+    float  * _petroMagErr;      // FLOAT(0)      NULL            
+    float  * _sky;              // FLOAT(0)      NULL
+    float  * _skyErr;           // FLOAT(0)      NULL    
+
+    template <typename Archive> void serialize(Archive & ar, unsigned int const version) {
+        serializeData(ar, version, _petroMag);
+        serializeData(ar, version, _petroMagErr);
+        serializeData(ar, version, _sky);
+        serializeData(ar, version, _skyErr);
+
+        bool b;
+        
+        //go through list of nullable fields,
+        //store/retrieve true if field is NULL
+        //false if NOT NULL
+        if (Archive::is_loading::value) {
+            for (int i = 0; i < NUM_NULLABLE_FIELDS; ++i) {
+                ar & b;
+                setNull(i, b);
+            }
+        } else {
+            for (int i = 0; i < NUM_NULLABLE_FIELDS; ++i) {
+                b = isNull(i);
+                ar & b;
+            }
+        }
+    }
 
     friend class boost::serialization::access;
     friend class formatters::SourceVectorFormatter;
@@ -163,6 +245,23 @@ private :
 inline bool operator!=(Source const & d1, Source const & d2) {
     return !(d1 == d2);
 }
+
+
+class PersistableSourceVector : public Persistable {
+    typedef std::vector<Source> SourceVector;
+public:
+    PersistableSourceVector() {}
+    PersistableSourceVector(SourceVector const & sources)
+        : _sources(sources) {}
+        
+    SourceVector & getSources() {return _sources; }
+    SourceVector getSources() const {return _sources; } 
+    
+    void setSources(SourceVector const & sources) {_sources = sources; }
+private:
+    LSST_PERSIST_FORMATTER(lsst::afw::formatters::SourceVectorFormatter);
+    SourceVector _sources;
+}; 
 
 }}}  // namespace lsst::afw::detection
 
