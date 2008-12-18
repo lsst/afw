@@ -71,18 +71,6 @@ namespace math {
         int kernelWidth, 
         int kernelHeight
         );
-
-//     template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-//     lsst::afw::image::Exposure<ImagePixelT, MaskPixelT, VariancePixelT> warpExposure(
-//         int &numEdgePixels,
-//         lsst::afw::image::Wcs const &remapWcs,
-//         int remapWidth, 
-//         int remapHeight, 
-//         lsst::afw::image::Exposure<ImagePixelT, MaskPixelT, VariancePixelT> const &origExposure,
-//         std::string const kernelType, 
-//         int kernelWidth, 
-//         int kernelHeight
-//         );
        
 }}} // lsst::afw::math
 

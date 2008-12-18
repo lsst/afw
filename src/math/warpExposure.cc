@@ -204,7 +204,7 @@ int afwMath::warpExposure(
             double multFac = remapWcsPtr->pixArea(remapPosXY) / (origWcsPtr->pixArea(origXY) * kSum);
            
             // Apply remapping kernel to original MaskedImage to compute remapped pixel
-            *remapPtr = afwMath::apply<MaskedImageT, MaskedImageT>(origMILoc, kLoc, kernelWidth, kernelHeight);
+            *remapPtr = afwMath::convolveAtAPoint<MaskedImageT, MaskedImageT>(origMILoc, kLoc, kernelWidth, kernelHeight);
 
             // Correct output by relative area of input and output pixels
             remapPtr.image() *= static_cast<ImagePixelT>(multFac);
@@ -216,90 +216,19 @@ int afwMath::warpExposure(
 } // warpExposure
 
 
-// /** 
-//  * @brief Remap an Exposure to a new WCS.  
-//  *
-//  * This version takes a remapped Exposure's WCS (probably a copy of an existing WCS), the requested size
-//  * of the remapped MaskedImage, the exposure to be remapped (original Exposure), and the remapping kernel
-//  * information (kernel type and size).
-//  *
-//  * @return the final remapped Exposure
-//  */
-// template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT> 
-// afwImage::Exposure<ImagePixelT, MaskPixelT, VariancePixelT> afwMath::warpExposure(
-//     int &numGoodPixels, ///< number of pixels that were not computed because they were too close to the edge
-//                         ///< (or off the edge) of origExposure
-//     afwImage::Wcs const &remapWcs,  ///< remapped exposure's WCS
-//     const int remapWidth,            ///< remapped exposure size - columns
-//     const int remapHeight,            ///< remapped exposure size - height
-//     afwImage::Exposure<ImagePixelT, MaskPixelT, VariancePixelT> const &origExposure, ///< original exposure 
-//     std::string const kernelType,   ///< kernel type (see main function docs for more info)
-//     const int kernelWidth,   ///< kernel size - columns
-//     const int kernelHeight    ///< kernel size - height
-//     )
-// {
-//     afwImage::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> remapMaskedImage(remapWidth, remapHeight);
-//     afwImage::Exposure<ImagePixelT, MaskPixelT, VariancePixelT> remapExposure(remapMaskedImage, remapWcs);
-// 
-//     numGoodPixels = afwMath::warpExposure(
-//         remapExposure, origExposure, kernelType, kernelWidth, kernelHeight); 
-// 
-//     return remapExposure;
-// 
-// } // warpExposure
-
 /************************************************************************************************************/
 //
 // Explicit instantiations
 //
 typedef float imagePixelType;
 
-template
-int afwMath::warpExposure(
-    afwImage::Exposure<boost::uint16_t, afwImage::MaskPixel, afwImage::VariancePixel> &remapExposure,
-    afwImage::Exposure<boost::uint16_t, afwImage::MaskPixel, afwImage::VariancePixel> const &origExposure,
-    std::string const &kernelType, int kernelWidth, int kernelHeight);
+#define warpExposureFuncByType(PIXELT) \
+    template int afwMath::warpExposure( \
+        afwImage::Exposure<PIXELT, afwImage::MaskPixel, afwImage::VariancePixel> &remapExposure, \
+        afwImage::Exposure<PIXELT, afwImage::MaskPixel, afwImage::VariancePixel> const &origExposure, \
+        std::string const &kernelType, int kernelWidth, int kernelHeight);
 
-template
-int afwMath::warpExposure(
-    afwImage::Exposure<float, afwImage::MaskPixel, afwImage::VariancePixel> &remapExposure,
-    afwImage::Exposure<float, afwImage::MaskPixel, afwImage::VariancePixel> const &origExposure,
-    std::string const &kernelType, int kernelWidth, int kernelHeight);
-
-template
-int afwMath::warpExposure(
-    afwImage::Exposure<double, afwImage::MaskPixel, afwImage::VariancePixel> &remapExposure,
-    afwImage::Exposure<double, afwImage::MaskPixel, afwImage::VariancePixel> const &origExposure,
-    std::string const &kernelType, int kernelWidth, int kernelHeight);
-
-// template
-// afwImage::Exposure<boost::uint16_t, afwImage::MaskPixel, afwImage::VariancePixel> afwMath::warpExposure(
-//     int &numGoodPixels,
-//     afwImage::Wcs const &remapWcs,
-//     const int remapWidth,       
-//     const int remapHeight,       
-//     afwImage::Exposure<boost::uint16_t, afwImage::MaskPixel, afwImage::VariancePixel> const &origExposure,
-//     std::string const kernelType, 
-//     const int kernelWidth,  
-//     const int kernelHeight);
-// 
-// template
-// afwImage::Exposure<imagePixelType, afwImage::MaskPixel, afwImage::VariancePixel> afwMath::warpExposure(
-//     int &numGoodPixels,
-//     afwImage::Wcs const &remapWcs,
-//     const int remapWidth,       
-//     const int remapHeight,       
-//     afwImage::Exposure<imagePixelType, afwImage::MaskPixel, afwImage::VariancePixel> const &origExposure,
-//     std::string const kernelType, 
-//     const int kernelWidth,  
-//     const int kernelHeight);
-// template
-// afwImage::Exposure<double, afwImage::MaskPixel, afwImage::VariancePixel> afwMath::warpExposure(
-//     int &numGoodPixels,
-//     afwImage::Wcs const &remapWcs,
-//     const int remapWidth,       
-//     const int remapHeight,       
-//     afwImage::Exposure<double, afwImage::MaskPixel, afwImage::VariancePixel> const &origExposure,
-//     std::string const kernelType, 
-//     const int kernelWidth,  
-//     const int kernelHeight);
+warpExposureFuncByType(boost::uint16_t)
+warpExposureFuncByType(int)
+warpExposureFuncByType(float)
+warpExposureFuncByType(double)
