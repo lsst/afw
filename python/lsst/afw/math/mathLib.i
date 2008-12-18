@@ -6,7 +6,7 @@ Python interface to lsst::afw::math classes
 %enddef
 
 %feature("autodoc", "1");
-%module(package="lsst.afw.math",docstring=mathLib_DOCSTRING) mathLib
+%module(package="lsst.afw.math", docstring=mathLib_DOCSTRING) mathLib
 
 %{
 #   include "lsst/daf/base.h"
@@ -56,4 +56,4 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 %include "kernelLib.i"
 %include "minimizeLib.i"
 %include "statistics.i"
-
+%include "warpExposure.i"
