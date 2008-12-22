@@ -45,9 +45,13 @@ class BackgroundTestCase(unittest.TestCase):
 	"""Test the getPixel() function"""
 
 	xcen, ycen = 50, 100
-	bgCtrl = afwMath.BackgroundControl();
-	back = afwMath.BackgroundF(self.image, bgCtrl);
-	mid = back.getPixel(xcen,ycen);
+	bgCtrl = afwMath.BackgroundControl(afwMath.NATURAL_SPLINE)
+	bgCtrl.setNxSample(3)
+	bgCtrl.setNySample(3)
+	bgCtrl.sctrl.setNumIter(3)
+	bgCtrl.sctrl.setNumSigmaClip(3)
+	back = afwMath.BackgroundF(self.image, bgCtrl)
+	mid = back.getPixel(xcen,ycen)
 	
         self.assertEqual(back.getPixel(xcen,ycen), self.val)
 

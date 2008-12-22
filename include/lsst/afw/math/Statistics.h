@@ -7,8 +7,8 @@
 
 #include "boost/tuple/tuple.hpp"
 
-
 namespace lsst { namespace afw { namespace math {
+    
 /// \brief control what is calculated
 enum Property {
     ERRORS = 0x1,                       ///< Include errors of requested quantities
@@ -67,7 +67,8 @@ public:
     /// The type used to report (value, error) for desired statistics
     typedef std::pair<double, double> value_type;
     
-    explicit Statistics(Image const& img, int const flags, StatisticsControl const& sctrl);
+    explicit Statistics(Image const& img, int const flags,
+                        StatisticsControl const& sctrl=StatisticsControl());
     value_type getResult(Property const prop) const;
 
     double getError(Property const prop) const;

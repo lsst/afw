@@ -4,24 +4,28 @@
  * \file
  * \brief Interpolation Header
  */
-namespace lsst { namespace afw { namespace math { namespace interpolate {
+
+#include "boost/shared_ptr.hpp"
+
+namespace lsst { namespace afw { namespace math {
 
 
     namespace {
         double const NaN = std::numeric_limits<double>::quiet_NaN();
     }
 
-
+    /// \brief Select style of interpolation to use
     enum Style {
-        LINEAR = 0x01,
-        NATURAL_SPLINE = 0x02,
-        NOTAKNOT_SPLINE = 0x04,
-        CUBIC_SPLINE = 0x08,
+        LINEAR = 0x01,                  ///< use linear interpolation
+        NATURAL_SPLINE = 0x02,          ///< use a natural spline    [ y''(0) = y''(n-1) = 0 ]
+        NOTAKNOT_SPLINE = 0x04,         ///< use a not-a-knot spline [ y'''(0,n-1) = y'''(1,n-2) ]
+        CUBIC_SPLINE = 0x08,            ///< use a cubic spline, allow user to set y'(0), y'(n-1)
     };
 
+    /// \brief Pass parameters in to the interpolation routine
     class InterpControl {
     public:
-        InterpControl( Style const style=interpolate::NATURAL_SPLINE,
+        InterpControl( Style const style=math::NATURAL_SPLINE,
                        double const dydx0=NaN, double const dydxN=NaN
                      ) : _style(style), _dydx0(dydx0), _dydxN(dydxN) {
         };
@@ -31,45 +35,118 @@ namespace lsst { namespace afw { namespace math { namespace interpolate {
         double getDydxN() { return _dydxN; }
         Style getStyle() const { return _style; }
     private:
-        Style _style;
-        double _dydx0;
-        double _dydxN;
+        Style _style;                   // interpolation style from "enum Style" above
+        double _dydx0;                  // user-set first deriv at x_i=0 (for spline boundary conditions)
+        double _dydxN;                  // user-set first deriv at x_i=N (for spline boundary conditions)
     };
 
+
+    /** \brief A class to handle interpolation between x,y points in vector<> inputs
+     *
+     * An interpolator object is declared and initialized for a pair of
+     * vector<>s describing x,y coordinates to be interpolated
+     * over. Interpolated points are then obtained by calling an 'interp' method
+     * for the interpolator object.
+     *
+     * \code
+           vector<double> x;                                          // put stuff in this
+           vector<double> y;                                          // put stuff in this too
+           math::LinearInterpolate<double,double> interpobj(x, y);
+           double xinterp;                    // the x coord we'd like an interpolated value for
+           double yinterp = interpobj.interpolate(xinterp1);              // an interpolated value
+     * \endcode
+     *
+     * Notes: The routines assume evenly spaced grid points.  This is not, in general, a requirement for the
+     *  algorithm, but was used here for speed.
+     *
+     */
     
     template<typename xT, typename yT>
-    class Interpolator {
+    class Interpolate {
     public:
-        Interpolator(std::vector<xT> const& x, std::vector<yT> const& y,
-                     InterpControl const& ictrl = InterpControl());
+        Interpolate(std::vector<xT> const& x, std::vector<yT> const& y);
+        virtual ~Interpolate() { delete &_x; delete &_y; };
+        virtual inline yT interpolate(xT const xinterp) const = 0;  // linearly interpolate this object at x=xinterp
+        virtual yT interpolate_safe(xT const xinterp) const = 0;  // linearly interpolate this object at x=xinterp
+        //InterpControl const& ictrl = InterpControl());
         
-        std::vector<yT> interp(std::vector<xT> const& xinterp) const;
-        yT interp(xT const& xinterp) const;
+        //typedef boost::shared_ptr<std::vector<yT> > vectorPtr;
+        //vectorPtr interp(std::vector<xT> const& xinterp) const;
+        //yT interp(xT const xinterp) const;
     private:
-        int _n;
-        std::vector<xT> _x;
-        std::vector<yT> _y;
-        std::vector<double> _dydx;
-        std::vector<double> _d2ydx2;
-        double _xgridspace;
-        double _invxgrid;
-        xT _xlo;
-        xT _xhi;
-        double _dydx0;
-        double _dydxN;
-        InterpControl _ictrl;
-        void _init_Linear(std::vector<xT> const& x, std::vector<yT> const& y);
-        void _init_Spline(std::vector<xT> const& x, std::vector<yT> const& y);
-
-
-        std::vector<yT> _interp_Linear(std::vector<xT> const& xinterp) const;
-        yT _interp_Linear(xT const& xinterp) const;
-        
-        std::vector<yT> _interp_Spline(std::vector<xT> const& xinterp) const;
-        yT _interp_Spline(xT const& xinterp) const;
+    protected:
+        int const _n;                         // the number of points in the _x,_y vectors
+        std::vector<xT>& _x;                  // _n x-coordinates
+        std::vector<yT>& _y;                  // _n y-coordinates        
+        double const _xgridspace;             // the grid spacing
+        double const _invxgrid;               // the inverse grid spacing (1/_xgridspacing)
+        xT const _xlo;                        // the lowest value in _x
+        xT const _xhi;                        // the highest value in _x
     };
 
+
+    template<typename xT, typename yT>
+    class LinearInterpolate : public Interpolate<xT,yT>::Interpolate {
+    public:
+        
+        // pre-calculate dydx values
+        LinearInterpolate(std::vector<xT> const& x, std::vector<yT> const& y);
+        ~LinearInterpolate() { delete &_dydx; };
+
+        // fast methods with *no* bounds checking
+        inline yT interpolate(xT const xinterp) const;  // linearly interpolate this object at x=xinterp
+        inline yT interpolateDyDx(xT const xinterp) const; // linearly interpolate this obejct at x=xinterp
+        inline yT interpolateD2yDx2(xT const xinterp) const; // lineary interpolate this obejct at x=xinterp
+
+        // slow methods with bounds checking
+        yT interpolate_safe(xT const xinterp) const;  // linearly interpolate this object at x=xinterp
+        yT interpolateDyDx_safe(xT const xinterp) const; // linearly interpolate this obejct at x=xinterp
+        yT interpolateD2yDx2_safe(xT const xinterp) const; // linearly interpolate this obejct at x=xinterp
+        
+    private:
+        // see Meyer's Item 43.
+        using Interpolate<xT,yT>::_n;
+        using Interpolate<xT,yT>::_x;
+        using Interpolate<xT,yT>::_y;
+        using Interpolate<xT,yT>::_xgridspace;
+        using Interpolate<xT,yT>::_invxgrid;
+        using Interpolate<xT,yT>::_xlo;           
+        using Interpolate<xT,yT>::_xhi;           
+        std::vector<yT>& _dydx;
+    };
     
-}}}}
+    template<typename xT, typename yT>
+    class SplineInterpolate : public Interpolate<xT,yT>::Interpolate {
+    public:
+        
+        // pre-calculate d2ydx2 values
+        SplineInterpolate(std::vector<xT> const& x, std::vector<yT> const& y);
+        ~SplineInterpolate() { delete &_d2ydx2; };
+
+        // fast methods with *no* bounds checking        
+        inline yT interpolate(xT const xinterp) const; // spline interpolate this obejct at x=xinterp
+        inline yT interpolateDyDx(xT const xinterp) const; // spline interpolate this obejct at x=xinterp
+        inline yT interpolateD2yDx2(xT const xinterp) const; // spline interpolate this obejct at x=xinterp
+
+        // slow methods with bounds checking        
+        yT interpolate_safe(xT const xinterp) const; // spline interpolate this obejct at x=xinterp
+        yT interpolateDyDx_safe(xT const xinterp) const; // spline interpolate this obejct at x=xinterp
+        yT interpolateD2yDx2_safe(xT const xinterp) const; // spline interpolate this obejct at x=xinterp
+        
+    private:
+        using Interpolate<xT,yT>::_n;
+        using Interpolate<xT,yT>::_x;
+        using Interpolate<xT,yT>::_y;
+        using Interpolate<xT,yT>::_xgridspace;
+        using Interpolate<xT,yT>::_invxgrid;
+        using Interpolate<xT,yT>::_xlo;           
+        using Interpolate<xT,yT>::_xhi;           
+        std::vector<yT>& _d2ydx2;    // _n second-derivatives used for spline interp
+        double _dydx0;                  // the first derivative at point 0 (user-set for spline)
+        double _dydxN;                  // the first derivative at point N (user-set for spline)
+    };
+
+        
+}}}
                      
 #endif // LSST_AFW_MATH_INTERPOLATE_H
