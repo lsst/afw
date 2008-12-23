@@ -41,7 +41,6 @@ for d in (
     ".",
     "doc",
     "examples",
-    "include/lsst/afw",
     "lib",
     "python/lsst/afw/detection",
     "python/lsst/afw/display",

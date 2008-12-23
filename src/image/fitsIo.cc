@@ -5,49 +5,44 @@
 /// \date   September 2008
 #include <cstring>
 #include "boost/format.hpp"
-#include "lsst/afw/image/fits/fits_io_private.h"
+#include "boost/regex.hpp"
 
 #include "lsst/pex/exceptions.h"
+
+#include "lsst/afw/image/fits/fits_io_private.h"
 
 
 namespace lsst { namespace afw { namespace image { namespace cfitsio {
                 
-void _throw_cfitsio_error(const char *file, const int line,   //!< line in file (from __FILE__, __LINE__)
-                          lsst::afw::image::cfitsio::fitsfile *fd, //!< (possibly invalid) file descriptor
-                          const int status,                        //!< cfitsio error status (default 0 => no error)
-                          const std::string errStr //!< optional extra information
-                         ) {
-    if (status == 0) {
-        if (errStr == "") {
-            return;
-        }
-
-        throw lsst::pex::exceptions::FitsError(boost::format("%s:%d: %s") % file % line % errStr);
-    } else {
-        char fitsErr[FLEN_ERRMSG];
-        (void)lsst::afw::image::cfitsio::fits_get_errstatus(status, fitsErr);
-        boost::format msg = boost::format("%s:%d: cfitsio error: %s%s%s")
-            % file % line
-            % fitsErr
-            % (errStr == "" ? "" : " : ")
-            % (errStr == "" ? std::string("") : errStr);
-            
-        switch (status) {
-          case FILE_NOT_OPENED:
-            throw lsst::pex::exceptions::FitsError(msg);
-            break;
-          default:
-            throw lsst::pex::exceptions::FitsError(msg) << lsst::daf::base::DataProperty("status", status);
-            break;
-        }
+std::string err_msg(std::string const& fileName, ///< (possibly empty) file name
+                    int const status, ///< cfitsio error status (default 0 => no error)
+                    std::string const & errMsg ///< optional error description
+                   ) {
+    std::ostringstream os;
+    os << "cfitsio error";
+    if (fileName != "") {
+        os << " (" << fileName << ")";
     }
+    if (status != 0) {
+        char fitsErrMsg[FLEN_ERRMSG];
+        (void)lsst::afw::image::cfitsio::fits_get_errstatus(status, fitsErrMsg);
+        os << ": " << fitsErrMsg;
+    }
+    if (errMsg != "") {
+        os << " : " << errMsg;
+    }
+    return os.str();
 }
 
-void _throw_cfitsio_error(const char *file, const int line, //!< line in file (from __FILE__/__LINE__)
-                          lsst::afw::image::cfitsio::fitsfile *fd, //!< (possibly invalid) file descriptor
-                          const std::string errStr //!< optional extra information
-                         ) {
-    _throw_cfitsio_error(file, line, fd, 0, errStr);
+std::string err_msg(lsst::afw::image::cfitsio::fitsfile const * fd, ///< (possibly invalid) file descriptor
+                    int const status, ///< cfitsio error status (default 0 => no error)
+                    std::string const & errMsg ///< optional error description
+                   ) {
+    std::string fileName = "";
+    if (fd != 0 && fd->Fptr != 0 && fd->Fptr->filename != 0) {
+        fileName = fd->Fptr->filename;
+    }
+    return err_msg(fileName, status, errMsg);
 }
 
 /************************************************************************************************************/
@@ -67,7 +62,7 @@ int ttypeFromBitpix(const int bitpix) {
       case DOUBLE_IMG:                  // double
         return TDOUBLE;
       default:
-        throw lsst::pex::exceptions::FitsError(boost::format("Unsupported value BITPIX==%d") % bitpix);
+        throw LSST_EXCEPT(FitsErrorException, (boost::format("Unsupported value BITPIX==%d") % bitpix).str());
     }
 }
 
@@ -81,14 +76,18 @@ void move_to_hdu(lsst::afw::image::cfitsio::fitsfile *fd, //!< cfitsio file desc
         
     if (relative) {
         if (fits_movrel_hdu(fd, hdu, NULL, &status) != 0) {
-            throw_cfitsio_error(fd, status, str(boost::format("Attempted to select relative HDU %d") % hdu));
+            throw LSST_EXCEPT(FitsErrorException,
+                              err_msg(fd, status, boost::format("Attempted to select relative HDU %d") % hdu),
+                              status);
         }
     } else {
         if (hdu == 0) { // PDU; go there
             hdu = 1;
         } else {
             if (fits_movabs_hdu(fd, hdu, NULL, &status) != 0) {
-                throw_cfitsio_error(fd, status, str(boost::format("Attempted to select absolute HDU %d") % hdu));
+                throw LSST_EXCEPT(FitsErrorException,
+                                  err_msg(fd, status, boost::format("Attempted to select absolute HDU %d") % hdu),
+                                  status);
             }
         }
     }
@@ -97,8 +96,8 @@ void move_to_hdu(lsst::afw::image::cfitsio::fitsfile *fd, //!< cfitsio file desc
 /************************************************************************************************************/
 // append a record to the FITS header.   Note the specialization to string values
 
-void appendKey(lsst::afw::image::cfitsio::fitsfile* fd,
-               const std::string & keyWord, const boost::any & keyValue, const std::string & keyComment) {
+void appendKey(lsst::afw::image::cfitsio::fitsfile* fd, std::string const &keyWord,
+               std::string const &keyComment, lsst::daf::base::PropertySet::Ptr metadata) {
 
     // NOTE:  the sizes of arrays are tied to FITS standard
     // These shenanigans are required only because fits_write_key does not take const args...
@@ -111,22 +110,23 @@ void appendKey(lsst::afw::image::cfitsio::fitsfile* fd,
     strncpy(keyCommentChars, keyComment.c_str(), 80);
     
     int status = 0;
-    if (keyValue.type() == typeid(int)) {
-        int tmp = boost::any_cast<const int>(keyValue);
+    std::type_info const & valueType = metadata->typeOf(keyWord); 
+    if (valueType == typeid(int)) {
+        int tmp = metadata->get<int>(keyWord);
         fits_write_key(fd, TINT, keyWordChars, &tmp, keyCommentChars, &status);
 
-    } else if (keyValue.type() == typeid(double)) {
-        double tmp = boost::any_cast<const double>(keyValue);
+    } else if (valueType == typeid(double)) {
+        double tmp = metadata->get<double>(keyWord);
         fits_write_key(fd, TDOUBLE, keyWordChars, &tmp, keyCommentChars, &status);
 
-    } else if (keyValue.type() == typeid(std::string)) {
-        std::string tmp = boost::any_cast<const std::string>(keyValue);
+    } else if (valueType == typeid(std::string)) {
+        std::string tmp = metadata->get<std::string>(keyWord);
         strncpy(keyValueChars, tmp.c_str(), 80);
         fits_write_key(fd, TSTRING, keyWordChars, keyValueChars, keyCommentChars, &status);
     }
 
     if (status) {
-        throw_cfitsio_error(fd, status);
+        throw LSST_EXCEPT(FitsErrorException, err_msg(fd, status), status);
     }
 }
 
@@ -137,7 +137,7 @@ int getNumKeys(fitsfile* fd) {
      int status = 0;
  
      if (fits_get_hdrpos(fd, &numKeys, &keynum, &status) != 0) {
-          throw_cfitsio_error(fd, status);
+          throw LSST_EXCEPT(FitsErrorException, err_msg(fd, status), status);
      }
 
      return numKeys;
@@ -152,7 +152,7 @@ void getKey(fitsfile* fd,
 
      int status = 0;
      if (fits_read_keyn(fd, n, keyWordChars, keyValueChars, keyCommentChars, &status) != 0) {
-          throw_cfitsio_error(fd, status);
+          throw LSST_EXCEPT(FitsErrorException, err_msg(fd, status), status);
      }
          
      keyWord = keyWordChars;
@@ -160,20 +160,37 @@ void getKey(fitsfile* fd,
      keyComment = keyCommentChars;
 }
 
-// Private function to build a lsst::daf::base::DataProperty that contains all the FITS kw-value pairs
+void addKV(lsst::daf::base::PropertySet::Ptr metadata, std::string key, std::string value) {
+    boost::regex const intRegex("(\\Q+\\E|\\Q-\\E){0,1}[0-9]+");
+    boost::regex const doubleRegex("(\\Q+\\E|\\Q-\\E){0,1}([0-9]*\\.[0-9]+|[0-9]+\\.[0-9]*)((e|E)(\\Q+\\E|\\Q-\\E){0,1}[0-9]+){0,1}");
+    boost::regex const fitsStringRegex("'(.*)'");
 
-void getMetadata(fitsfile* fd,
-                 lsst::daf::base::DataProperty::PtrType metadata) {
+    boost::smatch matchStrings;
+    std::istringstream converter(value);
+
+    if (boost::regex_match(value, intRegex)) {
+        // convert the string to an int
+        int val;
+        converter >> val;
+        metadata->add(key, val);
+    } else if (boost::regex_match(value, doubleRegex)) {
+        // convert the string to a double
+        double val;
+        converter >> val;
+        metadata->add(key, val);
+    } else if (boost::regex_match(value, matchStrings, fitsStringRegex)) {
+        // strip off the enclosing single quotes and return the string
+        metadata->add(key, matchStrings[1].str());
+    }
+}
+
+// Private function to build a PropertySet that contains all the FITS kw-value pairs
+void getMetadata(fitsfile* fd, lsst::daf::base::PropertySet::Ptr metadata) {
     // Get all the kw-value pairs from the FITS file, and add each to DataProperty
-
     if (metadata.get() == NULL) {
         return;
     }
 
-    if( metadata->isNode() != true ) {
-        throw lsst::pex::exceptions::InvalidParameter( "Given metadata object is not a lsst::daf::base::DataProperty node" );
-    }
-    
     for (int i=1; i<=getNumKeys(fd); i++) {
         std::string keyName;
         std::string val;
@@ -183,12 +200,9 @@ void getMetadata(fitsfile* fd,
         if (keyName != "SIMPLE" && keyName != "BITPIX" && keyName != "EXTEND" &&
             keyName != "NAXIS" && keyName != "NAXIS1" && keyName != "NAXIS2" &&
             keyName != "BSCALE" && keyName != "BZERO") {
-            lsst::daf::base::DataProperty::PtrType dpItemPtr(
-                                                             new lsst::daf::base::DataProperty(keyName,
-                                                                                               lsst::utils::stringToAny(val)));
-            metadata->addProperty(dpItemPtr);
+            addKV(metadata, keyName, val);
         }
     }
 }
-                
-}}}}                             // namespace lsst::afw::image::cfitsio
+
+}}}} // namespace lsst::afw::image::cfitsio

@@ -70,12 +70,7 @@ template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
 	std::string const& baseName,    //!< The desired file's baseName (e.g. foo will read foo_{img.msk.var}.fits)
         const int hdu,                  //!< The HDU in the file (default: 0)
-#if 1                                   // Old name for boost::shared_ptrs
-        typename lsst::daf::base::DataProperty::PtrType
-#else
-        typename lsst::daf::base::DataProperty::Ptr
-#endif
-        metadata,                       //!< Filled out with metadata from file (default: NULL)
+        lsst::daf::base::PropertySet::Ptr metadata, //!< Filled out with metadata from file (default: NULL)
         bool const conformMasks         //!< Make Mask conform to mask layout in file?
                                                                         ) :
     lsst::daf::data::LsstBase(typeid(this)),
@@ -295,13 +290,8 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator/=(Ima
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
 	std::string const& baseName,    ///< The desired file's baseName (e.g. foo will read foo_{img.msk.var}.fits)
-#if 1                                   // Old name for boost::shared_ptrs
-              typename lsst::daf::base::DataProperty::PtrType
-#else
-              typename lsst::daf::base::DataProperty::ConstPtr
-#endif
-        metadata                        ///< Metadata to write to file; or NULL
-                                                                           ) const {
+        lsst::daf::base::PropertySet::Ptr metadata ///< Metadata to write to file; or NULL
+    ) const {
     _image->writeFits(MaskedImage::imageFileName(baseName), metadata);
     _mask->writeFits(MaskedImage::maskFileName(baseName));
     _variance->writeFits(MaskedImage::varianceFileName(baseName));
@@ -327,8 +317,9 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::conformSizes()
         }
 
         if (width != imageCols || height != imageRows) {
-            throw lsst::pex::exceptions::LengthError(boost::format("Dimension mismatch: Image %dx%d v. Mask %dx%d") %
-                                                     imageCols % imageRows % width % height);
+            throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                              (boost::format("Dimension mismatch: Image %dx%d v. Mask %dx%d") %
+                                  imageCols % imageRows % width % height).str());
         }
     }
 
@@ -342,8 +333,9 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::conformSizes()
         }
 
         if (width != imageCols || height != imageRows) {
-            throw lsst::pex::exceptions::LengthError(boost::format("Dimension mismatch: Image %dx%d v. Variance %dx%d") %
-                                                     imageCols % imageRows % width % height);
+            throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                              (boost::format("Dimension mismatch: Image %dx%d v. Variance %dx%d") %
+                                  imageCols % imageRows % width % height).str());
         }
     }
 }

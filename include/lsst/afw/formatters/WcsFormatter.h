@@ -36,19 +36,19 @@ public:
     virtual void write(
         lsst::daf::base::Persistable const* persistable,
         lsst::daf::persistence::Storage::Ptr storage,
-        lsst::daf::base::DataProperty::PtrType additionalData
+        lsst::daf::base::PropertySet::Ptr additionalData
     );
     virtual lsst::daf::base::Persistable* read(
         lsst::daf::persistence::Storage::Ptr storage,
-        lsst::daf::base::DataProperty::PtrType additionalData
+        lsst::daf::base::PropertySet::Ptr additionalData
     );
     virtual void update(
         lsst::daf::base::Persistable* persistable,
         lsst::daf::persistence::Storage::Ptr storage,
-        lsst::daf::base::DataProperty::PtrType additionalData
+        lsst::daf::base::PropertySet::Ptr additionalData
     );
 
-    static lsst::daf::base::DataProperty::PtrType generateDataProperty(
+    static lsst::daf::base::PropertySet::Ptr generatePropertySet(
         lsst::afw::image::Wcs const& wcs
     );
     static lsst::daf::persistence::Formatter::Ptr createInstance(

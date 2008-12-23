@@ -15,7 +15,7 @@ import sys
 import unittest
 
 import lsst.utils.tests as utilsTests
-import lsst.pex.exceptions
+import lsst.pex.exceptions as pexExcept
 import lsst.daf.base
 import lsst.afw.image.imageLib as afwImage
 import eups
@@ -30,6 +30,7 @@ except NameError:
 
 class MaskTestCase(unittest.TestCase):
     """A test case for Mask"""
+
     def setUp(self):
         tmp = afwImage.MaskU()           # clearMaskPlaneDict isn't static
         tmp.clearMaskPlaneDict()        # reset so tests will be deterministic
@@ -248,27 +249,20 @@ class OldMaskTestCase(unittest.TestCase):
         #
         # Demonstrate that we can extract a MaskPlaneDict into metadata
         #
-        metadata = lsst.daf.base.DataProperty_createPropertyNode("testMetadata")
+        metadata = lsst.daf.base.PropertySet()
 
         afwImage.MaskU_addMaskPlanesToMetadata(metadata)
-        try:
-            for (k, v) in afwImage.MaskU_getMaskPlaneDict().items():
-                self.assertEqual(metadata.findUnique("MP_%s" % k).getValueInt(), v)
-        except Exception, e:
-            print >> sys.stderr, "Failed to use DataPropertyPtr (need >= swig 1.3.35): %s", e
+        for (k, v) in afwImage.MaskU_getMaskPlaneDict().items():
+            self.assertEqual(metadata.getInt("MP_%s" % k), v)
         #
         # Now add another plane to metadata and make it appear in the mask Dict, albeit
         # in general at another location (hence the getNumPlanesUsed call)
         #
-        newPlane = lsst.daf.base.DataProperty("MP_" + "Whatever", afwImage.MaskU_getNumPlanesUsed())
-        metadata.addProperty(newPlane)
+        metadata.addInt("MP_" + "Whatever", afwImage.MaskU_getNumPlanesUsed())
 
         self.testMask.conformMaskPlanes(afwImage.MaskU_parseMaskPlaneMetadata(metadata))
-        try:
-            for (k, v) in afwImage.MaskU_getMaskPlaneDict().items():
-                self.assertEqual(metadata.findUnique("MP_%s" % k).getValueInt(), v)
-        except Exception, e:
-            print >> sys.stderr, "Failed to use DataPropertyPtr (need >= swig 1.3.35): %s", e
+        for (k, v) in afwImage.MaskU_getMaskPlaneDict().items():
+            self.assertEqual(metadata.getInt("MP_%s" % k), v)
 
     def testPlaneOperations(self):
         """Test mask plane operations"""
@@ -297,7 +291,7 @@ class OldMaskTestCase(unittest.TestCase):
         def checkPlaneBP():
             self.testMask.getMaskPlane("BP")
 
-        self.assertRaises(lsst.pex.exceptions.LsstInvalidParameter, checkPlaneBP)
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException, checkPlaneBP)
 
     def testInvalidPlaneOperations(self):
         """Test mask plane operations invalidated by Mask changes"""
@@ -311,7 +305,7 @@ class OldMaskTestCase(unittest.TestCase):
         def tst():
             self.testMask |= testMask3
 
-        self.assertRaises(lsst.pex.exceptions.LsstRuntime, tst)
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.RuntimeErrorException, tst)
 
     def testInvalidPlaneOperations2(self):
         """Test mask plane operations invalidated by Mask changes"""
@@ -334,7 +328,7 @@ class OldMaskTestCase(unittest.TestCase):
         def tst():
             self.testMask |= testMask3
 
-        self.assertRaises(lsst.pex.exceptions.LsstRuntime, tst)
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.RuntimeErrorException, tst)
         #
         # OK, that failed as it should.  Fixup the dictionaries and try again
         #

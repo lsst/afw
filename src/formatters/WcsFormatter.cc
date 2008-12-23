@@ -24,7 +24,7 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 
 #include "lsst/daf/base.h"
 #include "lsst/daf/persistence.h"
-#include "lsst/daf/persistence/DataPropertyFormatter.h"
+#include "lsst/daf/persistence/PropertySetFormatter.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/formatters/WcsFormatter.h"
@@ -61,12 +61,12 @@ WcsFormatter::~WcsFormatter(void) {
 void WcsFormatter::write(
     Persistable const* persistable,
     Storage::Ptr storage,
-    lsst::daf::base::DataProperty::PtrType additionalData) {
+    lsst::daf::base::PropertySet::Ptr additionalData) {
     execTrace("WcsFormatter write start");
     Wcs const* ip =
         dynamic_cast<Wcs const*>(persistable);
     if (ip == 0) {
-        throw lsst::pex::exceptions::Runtime("Persisting non-Wcs");
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Persisting non-Wcs");
     }
     if (typeid(*storage) == typeid(BoostStorage)) {
         execTrace("WcsFormatter write BoostStorage");
@@ -75,12 +75,12 @@ void WcsFormatter::write(
         execTrace("WcsFormatter write end");
         return;
     }
-    throw lsst::pex::exceptions::Runtime("Unrecognized Storage for Wcs");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unrecognized Storage for Wcs");
 }
 
 Persistable* WcsFormatter::read(
     Storage::Ptr storage,
-    lsst::daf::base::DataProperty::PtrType additionalData) {
+    lsst::daf::base::PropertySet::Ptr additionalData) {
     execTrace("WcsFormatter read start");
     Wcs* ip = new Wcs;
     if (typeid(*storage) == typeid(BoostStorage)) {
@@ -90,41 +90,40 @@ Persistable* WcsFormatter::read(
         execTrace("WcsFormatter read end");
         return ip;
     }
-    throw lsst::pex::exceptions::Runtime("Unrecognized Storage for Wcs");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unrecognized Storage for Wcs");
 }
 
 void WcsFormatter::update(
     Persistable* persistable,
     Storage::Ptr storage,
-    lsst::daf::base::DataProperty::PtrType additionalData) {
-    throw lsst::pex::exceptions::Runtime("Unexpected call to update for Wcs");
+    lsst::daf::base::PropertySet::Ptr additionalData) {
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unexpected call to update for Wcs");
 }
 
-lsst::daf::base::DataProperty::PtrType
-WcsFormatter::generateDataProperty(Wcs const& wcs) {
-    // Only generates DP for the first wcsInfo.
-    using lsst::daf::base::DataProperty;
-    DataProperty::PtrType wcsDP = lsst::daf::base::DataProperty::createPropertyNode("Wcs");
+lsst::daf::base::PropertySet::Ptr
+WcsFormatter::generatePropertySet(Wcs const& wcs) {
+    // Only generates properties for the first wcsInfo.
+    lsst::daf::base::PropertySet::Ptr wcsProps(new lsst::daf::base::PropertySet());
     if (!wcs) {                         // nothing to add
-        return wcsDP;
+        return wcsProps;
     }
 
-    wcsDP->addProperty(DataProperty("NAXIS", wcs._wcsInfo[0].naxis));
-    wcsDP->addProperty(DataProperty("EQUINOX", wcs._wcsInfo[0].equinox));
-    wcsDP->addProperty(DataProperty("RADECSYS", std::string(wcs._wcsInfo[0].radesys)));
-    wcsDP->addProperty(DataProperty("CRPIX1", wcs._wcsInfo[0].crpix[0]));
-    wcsDP->addProperty(DataProperty("CRPIX2", wcs._wcsInfo[0].crpix[1]));
-    wcsDP->addProperty(DataProperty("CD1_1", wcs._wcsInfo[0].cd[0]));
-    wcsDP->addProperty(DataProperty("CD1_2", wcs._wcsInfo[0].cd[1]));
-    wcsDP->addProperty(DataProperty("CD2_1", wcs._wcsInfo[0].cd[2]));
-    wcsDP->addProperty(DataProperty("CD2_2", wcs._wcsInfo[0].cd[3]));
-    wcsDP->addProperty(DataProperty("CRVAL1", wcs._wcsInfo[0].crval[0]));
-    wcsDP->addProperty(DataProperty("CRVAL2", wcs._wcsInfo[0].crval[1]));
-    wcsDP->addProperty(DataProperty("CUNIT1", std::string(wcs._wcsInfo[0].cunit[0])));
-    wcsDP->addProperty(DataProperty("CUNIT2", std::string(wcs._wcsInfo[0].cunit[1])));
-    wcsDP->addProperty(DataProperty("CTYPE1", std::string(wcs._wcsInfo[0].ctype[0])));
-    wcsDP->addProperty(DataProperty("CTYPE2", std::string(wcs._wcsInfo[0].ctype[1])));
-    return wcsDP;
+    wcsProps->add("NAXIS", wcs._wcsInfo[0].naxis);
+    wcsProps->add("EQUINOX", wcs._wcsInfo[0].equinox);
+    wcsProps->add("RADECSYS", std::string(wcs._wcsInfo[0].radesys));
+    wcsProps->add("CRPIX1", wcs._wcsInfo[0].crpix[0]);
+    wcsProps->add("CRPIX2", wcs._wcsInfo[0].crpix[1]);
+    wcsProps->add("CD1_1", wcs._wcsInfo[0].cd[0]);
+    wcsProps->add("CD1_2", wcs._wcsInfo[0].cd[1]);
+    wcsProps->add("CD2_1", wcs._wcsInfo[0].cd[2]);
+    wcsProps->add("CD2_2", wcs._wcsInfo[0].cd[3]);
+    wcsProps->add("CRVAL1", wcs._wcsInfo[0].crval[0]);
+    wcsProps->add("CRVAL2", wcs._wcsInfo[0].crval[1]);
+    wcsProps->add("CUNIT1", std::string(wcs._wcsInfo[0].cunit[0]));
+    wcsProps->add("CUNIT2", std::string(wcs._wcsInfo[0].cunit[1]));
+    wcsProps->add("CTYPE1", std::string(wcs._wcsInfo[0].ctype[0]));
+    wcsProps->add("CTYPE2", std::string(wcs._wcsInfo[0].ctype[1]));
+    return wcsProps;
 }
 
 template <class Archive>
@@ -133,7 +132,7 @@ void WcsFormatter::delegateSerialize(
     execTrace("WcsFormatter delegateSerialize start");
     Wcs* ip = dynamic_cast<Wcs*>(persistable);
     if (ip == 0) {
-        throw lsst::pex::exceptions::Runtime("Serializing non-Wcs");
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Serializing non-Wcs");
     }
 
     // Serialize most fields normally

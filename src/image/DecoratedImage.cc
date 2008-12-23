@@ -12,7 +12,7 @@ namespace image = lsst::afw::image;
 
 template<typename PixelT>
 void image::DecoratedImage<PixelT>::init() {
-    setMetadata(lsst::daf::base::DataProperty::createPropertyNode("FitsMetadata"));
+    setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet()));
     _gain = 0;
 }
 
@@ -129,13 +129,8 @@ image::DecoratedImage<PixelT>::DecoratedImage(const std::string& fileName, ///< 
 template<typename PixelT>
 void image::DecoratedImage<PixelT>::writeFits(
 	const std::string& fileName,
-#if 1                                   // Old name for boost::shared_ptrs
-        typename lsst::daf::base::DataProperty::PtrType metadata //!< metadata to write to header; or NULL
-#else
-        typename lsst::daf::base::DataProperty::ConstPtr metadata //!< metadata to write to header; or NULL
-#endif
-                                                        ) const {
-
+        typename lsst::daf::base::PropertySet::Ptr metadata //!< metadata to write to header; or NULL
+                                             ) const {
     image::fits_write_view(fileName, _image->_getRawView(), metadata);
 }
 

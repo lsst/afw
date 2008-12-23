@@ -56,13 +56,7 @@ namespace image {
         explicit Mask(int nCols=0, int nRows=0, MaskPlaneDict const& planeDefs = MaskPlaneDict());
         explicit Mask(const std::pair<int, int> dimensions, MaskPlaneDict const& planeDefs = MaskPlaneDict());
         explicit Mask(std::string const& fileName, int const hdu=0,
-#if 1                                   // Old name for boost::shared_ptrs
-                      typename lsst::daf::base::DataProperty::PtrType
-                      metadata=lsst::daf::base::DataProperty::PtrType(static_cast<lsst::daf::base::DataProperty *>(0)),
-#else
-                      typename lsst::daf::base::DataProperty::Ptr
-                      metadata=lsst::daf::base::DataProperty::Ptr(static_cast<lsst::daf::base::DataProperty *>(0)),
-#endif
+                      lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
                       bool const conformMasks=false
                      );                      
 
@@ -101,7 +95,7 @@ namespace image {
 
         //void setMaskPlaneValues(int plane, MaskPixelBooleanFunc<MaskPixelT> selectionFunc);
         
-        static MaskPlaneDict parseMaskPlaneMetadata(lsst::daf::base::DataProperty::PtrType const);
+        static MaskPlaneDict parseMaskPlaneMetadata(lsst::daf::base::PropertySet::Ptr const);
         
         //int countMask(MaskPixelBooleanFunc<MaskPixelT>& testFunc, const vw::BBox2i maskRegion) const;
         
@@ -120,7 +114,7 @@ namespace image {
         static const MaskPlaneDict& getMaskPlaneDict() { return _maskPlaneDict; }
         static void printMaskPlanes();
 
-        static void addMaskPlanesToMetadata(lsst::daf::base::DataProperty::PtrType);
+        static void addMaskPlanesToMetadata(lsst::daf::base::PropertySet::Ptr);
         //
         // This one isn't static, it fixes up a given Mask's planes
         void conformMaskPlanes(const MaskPlaneDict& masterPlaneDict);
@@ -148,7 +142,7 @@ private:
         //
         void checkMaskDictionaries(Mask const &other) const {
             if (_myMaskDictVersion != other._myMaskDictVersion) {
-                throw lsst::pex::exceptions::Runtime("Mask dictionary versions do not match");
+                throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Mask dictionary versions do not match");
             }
         }        
     private:

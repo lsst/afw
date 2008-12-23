@@ -23,12 +23,12 @@ class MaskedImagePersistenceTestCase(unittest.TestCase):
         pass
 
     def setUp(self):
-        # Create the additionalData DataProperty
-        self.additionalData = dafBase.DataProperty.createPropertyNode("root")
-        self.additionalData.addProperty(dafBase.DataProperty("sliceId", 0))
-        self.additionalData.addProperty(dafBase.DataProperty("visitId", "fov391"))
-        self.additionalData.addProperty(dafBase.DataProperty("universeSize", 100))
-        self.additionalData.addProperty(dafBase.DataProperty("itemName", "foo"))
+        # Create the additionalData PropertySet
+        self.additionalData = dafBase.PropertySet()
+        self.additionalData.addInt("sliceId", 0)
+        self.additionalData.addString("visitId", "fov391")
+        self.additionalData.addInt("universeSize", 100)
+        self.additionalData.addString("itemName", "foo")
 
         # Create an empty Policy
         policy = pexPolicy.Policy()
@@ -72,8 +72,8 @@ class MaskedImagePersistenceTestCase(unittest.TestCase):
         storageList = dafPers.StorageList([storage])
         try:
             self.persistence.persist(self.maskedImage, storageList, self.additionalData)
-        except pexExceptions.LsstInvalidParameter, e:
-            print e.what()
+        except pexExceptions.LsstCppException, e:
+            print e.args[0].what()
             raise
 
 

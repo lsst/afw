@@ -13,6 +13,8 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
 
+namespace ex = lsst::pex::exceptions;
+
 lsst::afw::math::generic_kernel_tag lsst::afw::math::generic_kernel_tag_; ///< Used as default value in argument lists
 lsst::afw::math::deltafunction_kernel_tag lsst::afw::math::deltafunction_kernel_tag_; ///< Used as default value in argument lists
 
@@ -22,7 +24,7 @@ lsst::afw::math::deltafunction_kernel_tag lsst::afw::math::deltafunction_kernel_
 /**
  * @brief Construct a spatially varying Kernel with one spatial function copied as needed
  *
- * @throw lsst::pex::exceptions::InvalidParameter if the kernel has no parameters.
+ * @throw lsst::pex::exceptions::InvalidParameterException  if the kernel has no parameters.
  */
 namespace {
 }
@@ -44,7 +46,7 @@ lsst::afw::math::Kernel::Kernel(
         // spatialFunction is not really present
     } else {
         if (nKernelParams == 0) {
-            throw lsst::pex::exceptions::InvalidParameter("Kernel function has no parameters");
+            throw LSST_EXCEPT(ex::InvalidParameterException, "Kernel function has no parameters");
         }
         for (unsigned int ii = 0; ii < nKernelParams; ++ii) {
             SpatialFunctionPtr spatialFunctionCopy = spatialFunction.copy();
@@ -84,21 +86,21 @@ lsst::afw::math::Kernel::Kernel(
  *
  * Params is indexed as [kernel parameter][spatial parameter]
  *
- * @throw lsst::pex::exceptions::InvalidParameter if params is the wrong shape (and no parameters are changed)
+ * @throw lsst::pex::exceptions::InvalidParameterException if params is the wrong shape (and no parameters are changed)
  */
 void lsst::afw::math::Kernel::setSpatialParameters(const std::vector<std::vector<double> > params) {
     // Check params size before changing anything
     unsigned int nKernelParams = this->getNKernelParameters();
     if (params.size() != nKernelParams) {
-        throw lsst::pex::exceptions::InvalidParameter(
-            boost::format("params has %d entries instead of %d") % params.size() % nKernelParams);
+        throw LSST_EXCEPT(ex::InvalidParameterException,
+            (boost::format("params has %d entries instead of %d") % params.size() % nKernelParams).str());
     }
     unsigned int nSpatialParams = this->getNSpatialParameters();
     for (unsigned int ii = 0; ii < nKernelParams; ++ii) {
         if (params[ii].size() != nSpatialParams) {
-            throw lsst::pex::exceptions::InvalidParameter(
-                boost::format("params[%d] has %d entries instead of %d") %
-                ii % params[ii].size() % nSpatialParams);
+            throw LSST_EXCEPT(ex::InvalidParameterException,
+                (boost::format("params[%d] has %d entries instead of %d") %
+                ii % params[ii].size() % nSpatialParams).str());
         }
     }
     // Set parameters
@@ -165,10 +167,10 @@ std::string lsst::afw::math::Kernel::toString(std::string prefix) const {
  * This function is marked "const", despite modifying unimportant internals,
  * so that computeImage can be const.
  *
- * @throw lsst::pex::exceptions::RuntimeError always (unless subclassed)
+ * @throw lsst::pex::exceptions::InvalidParameterException always (unless subclassed)
  */
 void lsst::afw::math::Kernel::setKernelParameter(unsigned int ind, double value) const {
-    throw lsst::pex::exceptions::InvalidParameter("Kernel has no kernel parameters");
+    throw LSST_EXCEPT(ex::InvalidParameterException, "Kernel has no kernel parameters");
 }
 
 /**

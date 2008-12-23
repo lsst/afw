@@ -14,6 +14,8 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
 
+namespace ex = lsst::pex::exceptions;
+
 //
 // Constructors
 //
@@ -50,7 +52,7 @@ double lsst::afw::math::FixedKernel::computeImage(
     double y
 ) const {
     if (image.getDimensions() != this->getDimensions()) {
-        throw lsst::pex::exceptions::InvalidParameter("image is the wrong size");
+        throw LSST_EXCEPT(ex::InvalidParameterException, "image is the wrong size");
     }
 
     double multFactor = 1.0;

@@ -23,7 +23,6 @@
 #include <string>
 #include <typeinfo>
 #include <boost/format.hpp>
-#include <lsst/daf/base/DataProperty.h>
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h"
 
