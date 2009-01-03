@@ -235,8 +235,8 @@ class DecoratedImageTestCase(unittest.TestCase):
         #
         meta = self.trueMetadata
         for k in meta.keys():
-            self.assertEqual(imgU.getMetadata().findUnique(k, True).getValueDouble(), meta[k])
-            self.assertEqual(imgF.getMetadata().findUnique(k, True).getValueDouble(), meta[k])
+            self.assertEqual(imgU.getMetadata().getAsDouble(k), meta[k])
+            self.assertEqual(imgF.getMetadata().getAsDouble(k), meta[k])
         #
         # Read an F32 image
         #
@@ -277,7 +277,7 @@ class DecoratedImageTestCase(unittest.TestCase):
         if self.fileForMetadata:
             meta = self.trueMetadata
             for k in meta.keys():
-                self.assertEqual(rimage.getMetadata().findUnique(k, True).getValueDouble(), meta[k])
+                self.assertEqual(rimage.getMetadata().getAsDouble(k), meta[k])
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
