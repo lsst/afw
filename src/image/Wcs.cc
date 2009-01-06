@@ -8,25 +8,26 @@
 #include <cmath>
 #include <cstring>
 
+#include "boost/format.hpp"
+
 #include "wcslib/wcs.h"
 #include "wcslib/wcsfix.h"
 #include "wcslib/wcshdr.h"
 
 #include "lsst/daf/base.h"
 #include "lsst/daf/data/LsstBase.h"
-#include "lsst/daf/data/FitsFormatter.h"
+#include "lsst/afw/formatters/Utils.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/Wcs.h"
 
-using lsst::daf::base::DataProperty;
+using lsst::daf::base::PropertySet;
 using lsst::daf::data::LsstBase;
-using lsst::daf::data::FitsFormatter;
 using lsst::afw::image::PointD;
 
 /**
  * @brief Construct an invalid Wcs given no arguments
  *
- * @throw lsst::pex::exceptions::Runtime on error
+ * @throw lsst::pex::exceptions::RuntimeErrorException on error
  */
 lsst::afw::image::Wcs::Wcs() :
     LsstBase(typeid(this)),
@@ -35,12 +36,12 @@ lsst::afw::image::Wcs::Wcs() :
 }
 
 /**
- * @brief Construct a Wcs from a FITS header, represented as DataProperty::PtrType
+ * @brief Construct a Wcs from a FITS header, represented as PropertySet::Ptr
  *
- * @throw lsst::pex::exceptions::Runtime on error
+ * @throw lsst::pex::exceptions::RuntimeErrorException on error
  */
 lsst::afw::image::Wcs::Wcs(
-    lsst::daf::base::DataProperty::PtrType fitsMetadata  ///< The contents of a valid FITS header
+    lsst::daf::base::PropertySet::Ptr fitsMetadata  ///< The contents of a valid FITS header
 ) :
     LsstBase(typeid(this)),
     _fitsMetadata(fitsMetadata),
@@ -54,10 +55,11 @@ lsst::afw::image::Wcs::Wcs(
     _wcsfixCtrl = 2;
     _wcshdrCtrl = 2;
 
-    std::string metadataStr = FitsFormatter::formatDataProperty( fitsMetadata, false );
-    int nCards = FitsFormatter::countFITSHeaderCards( fitsMetadata, false );
+    std::string metadataStr = lsst::afw::formatters::formatFitsProperties(fitsMetadata);
+    int nCards = lsst::afw::formatters::countFitsHeaderCards(fitsMetadata);
     if (nCards <= 0) {
-        throw lsst::pex::exceptions::Runtime("Could not parse FITS WCS: no header cards found");
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                          "Could not parse FITS WCS: no header cards found");
     }
     
     // wcspih takes a non-const char* (because some versions of ctrl modify the string)
@@ -69,8 +71,8 @@ lsst::afw::image::Wcs::Wcs(
     int pihStatus = wcspih(hdrString, nCards, _relax, _wcshdrCtrl, &_nReject, &_nWcsInfo, &_wcsInfo);
     delete hdrString;
     if (pihStatus != 0) {
-        throw lsst::pex::exceptions::Runtime(
-            boost::format("Could not parse FITS WCS: wcspih status = %d") % pihStatus);
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+            (boost::format("Could not parse FITS WCS: wcspih status = %d") % pihStatus).str());
     }
 
     /*
@@ -93,7 +95,7 @@ lsst::afw::image::Wcs::Wcs(
 	  }
 	}
 #if 0	  
-         throw lsst::pex::exceptions::Runtime(errStream.str());
+         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, errStream.str());
 #endif
     }
 }
@@ -101,7 +103,8 @@ lsst::afw::image::Wcs::Wcs(
 /**
  * @brief Wcs copy constructor
  *
- * @throw lsst::pex::exceptions::Memory or lsst::pex::exceptions::Runtime on error
+ * @throw lsst::pex::exceptions::MemoryException 
+ * @throw lsst::pex::exceptions::RuntimeErrorException
  */
 lsst::afw::image::Wcs::Wcs(Wcs const & rhs):
     LsstBase(typeid(this)),
@@ -116,7 +119,7 @@ lsst::afw::image::Wcs::Wcs(Wcs const & rhs):
     if (rhs._nWcsInfo > 0) {
         _wcsInfo = static_cast<struct wcsprm *>(calloc(rhs._nWcsInfo, sizeof(struct wcsprm)));
         if (_wcsInfo == NULL) {
-            throw lsst::pex::exceptions::Memory("Cannot allocate WCS info");
+            throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException, "Cannot allocate WCS info");
         }
         _nWcsInfo = rhs._nWcsInfo;
         for (int ii = 0; ii < rhs._nWcsInfo; ++ii) {
@@ -126,8 +129,8 @@ lsst::afw::image::Wcs::Wcs(Wcs const & rhs):
             int status = wcscopy(1, rhs._wcsInfo + ii, _wcsInfo + ii);
             if (status != 0) {
                 wcsvfree(&_nWcsInfo, &_wcsInfo);
-                throw lsst::pex::exceptions::Runtime(
-                    boost::format("Could not copy WCS: wcscopy status = %d for wcs index %d") % status % ii);
+                throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                    (boost::format("Could not copy WCS: wcscopy status = %d for wcs index %d") % status % ii).str());
             }
         }
     }
@@ -136,7 +139,8 @@ lsst::afw::image::Wcs::Wcs(Wcs const & rhs):
 /**
  * @brief Wcs assignment operator
  *
- * @throw lsst::pex::exceptions::Memory or lsst::pex::exceptions::Runtime on error
+ * @throw lsst::pex::exceptions::MemoryException 
+ * @throw lsst::pex::exceptions::RuntimeErrorException
  */
 lsst::afw::image::Wcs & lsst::afw::image::Wcs::operator = (const lsst::afw::image::Wcs & rhs) {
     if (this != &rhs) {
@@ -154,7 +158,7 @@ lsst::afw::image::Wcs & lsst::afw::image::Wcs::operator = (const lsst::afw::imag
             // allocate wcs structs
             _wcsInfo = static_cast<struct wcsprm *>(calloc(rhs._nWcsInfo, sizeof(struct wcsprm)));
             if (_wcsInfo == NULL) {
-                throw lsst::pex::exceptions::Memory("Cannot allocate WCS info");
+                throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException, "Cannot allocate WCS info");
             }
             _nWcsInfo = rhs._nWcsInfo;
             // deep-copy wcs data
@@ -163,8 +167,8 @@ lsst::afw::image::Wcs & lsst::afw::image::Wcs::operator = (const lsst::afw::imag
                 int status = wcscopy(1, rhs._wcsInfo + ii, _wcsInfo + ii);
                 if (status != 0) {
                     wcsvfree(&_nWcsInfo, &_wcsInfo);
-                    throw lsst::pex::exceptions::Runtime(
-                        boost::format("Failed to copy WCS info; wcscopy status = %d") % status);
+                    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                        (boost::format("Failed to copy WCS info; wcscopy status = %d") % status).str());
                 }
             }
         }

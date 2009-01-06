@@ -85,18 +85,21 @@ public:
         switch (_type) {
           case STDEV:
             if (param <= 0) {
-                throw lsst::pex::exceptions::InvalidParameter(boost::format("St. dev. must be > 0: %g") % param);
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                                  (boost::format("St. dev. must be > 0: %g") % param).str());
             }
             return _value*param;
           case VALUE:
             return _value;
           case VARIANCE:
             if (param <= 0) {
-                throw lsst::pex::exceptions::InvalidParameter(boost::format("Variance must be > 0: %g") % param);
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                                  (boost::format("Variance must be > 0: %g") % param).str());
             }
             return _value*std::sqrt(param);
           default:
-            throw lsst::pex::exceptions::InvalidParameter(boost::format("Unsopported type: %d") % _type);
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                              (boost::format("Unsopported type: %d") % _type).str());
         }
     }
     /// return Threshold's polarity

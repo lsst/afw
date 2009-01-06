@@ -23,7 +23,6 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 
 #include "lsst/daf/base.h"
 #include "lsst/daf/persistence.h"
-#include "lsst/daf/persistence/DataPropertyFormatter.h"
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/formatters/ImageFormatter.h"
 #include "lsst/afw/image/Image.h"
@@ -76,11 +75,11 @@ template <typename ImagePixelT>
 void ImageFormatter<ImagePixelT>::write(
     Persistable const* persistable,
     Storage::Ptr storage,
-    lsst::daf::base::DataProperty::PtrType additionalData) {
+    lsst::daf::base::PropertySet::Ptr additionalData) {
     execTrace("ImageFormatter write start");
     Image<ImagePixelT> const* ip = dynamic_cast<Image<ImagePixelT> const*>(persistable);
     if (ip == 0) {
-        throw std::runtime_error("Persisting non-Image");
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Persisting non-Image");
     }
     if (typeid(*storage) == typeid(BoostStorage)) {
         execTrace("ImageFormatter write BoostStorage");
@@ -100,12 +99,12 @@ void ImageFormatter<ImagePixelT>::write(
         execTrace("ImageFormatter write end");
         return;
     }
-    throw std::runtime_error("Unrecognized Storage for Image");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unrecognized Storage for Image");
 }
 
 template <typename ImagePixelT>
 Persistable* ImageFormatter<ImagePixelT>::read(Storage::Ptr storage,
-                                               lsst::daf::base::DataProperty::PtrType additionalData) {
+                                               lsst::daf::base::PropertySet::Ptr additionalData) {
     execTrace("ImageFormatter read start");
     if (typeid(*storage) == typeid(BoostStorage)) {
         execTrace("ImageFormatter read BoostStorage");
@@ -127,15 +126,15 @@ Persistable* ImageFormatter<ImagePixelT>::read(Storage::Ptr storage,
         execTrace("ImageFormatter read end");
         return ip;
     }
-    throw std::runtime_error("Unrecognized Storage for Image");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unrecognized Storage for Image");
 }
 
 template <typename ImagePixelT>
 void ImageFormatter<ImagePixelT>::update(
     Persistable* persistable,
     Storage::Ptr storage,
-    lsst::daf::base::DataProperty::PtrType additionalData) {
-    throw std::runtime_error("Unexpected call to update for Image");
+    lsst::daf::base::PropertySet::Ptr additionalData) {
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unexpected call to update for Image");
 }
 
 template <typename ImagePixelT> template <class Archive>
@@ -144,7 +143,7 @@ void ImageFormatter<ImagePixelT>::delegateSerialize(
     execTrace("ImageFormatter delegateSerialize start");
     Image<ImagePixelT>* ip = dynamic_cast<Image<ImagePixelT>*>(persistable);
     if (ip == 0) {
-        throw std::runtime_error("Serializing non-Image");
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Serializing non-Image");
     }
     int width, height;
     if (Archive::is_saving::value) {

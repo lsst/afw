@@ -2,16 +2,16 @@
 #include <stdexcept>
 
 #include "lsst/daf/base.h"
-#include "lsst/daf/data/FitsFormatter.h"
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/image.h"
 #include "lsst/afw/math.h"
+#include "lsst/afw/formatters/Utils.h"
 
 using namespace std;
 
 using lsst::pex::logging::Trace;
-using lsst::daf::base::DataProperty;
-using lsst::daf::data::FitsFormatter;
+using lsst::daf::base::PropertySet;
+
 
 namespace pexEx = lsst::pex::exceptions;
 
@@ -24,19 +24,19 @@ void test(char *name) {
     typedef lsst::afw::image::MaskPixel MaskPixelType;
     typedef float ImagePixelType;
 
-    DataProperty::PtrType metadataPtr(DataProperty::createPropertyNode("FitsMetadata"));
+    PropertySet::Ptr metadata(new PropertySet());
     int const hdu = 0;
-    lsst::afw::image::MaskedImage<ImagePixelType, MaskPixelType> testMasked(name, hdu, metadataPtr);
+    lsst::afw::image::MaskedImage<ImagePixelType, MaskPixelType> testMasked(name, hdu, metadata);
 
     Trace("MaskedImageIO_1", 1,
           boost::format("Number of FITS header cards: %d") 
-          % FitsFormatter::countFITSHeaderCards(metadataPtr, false));
+          % lsst::afw::formatters::countFitsHeaderCards(metadata));
 
     Trace("MaskedImageIO_1", 3,
         boost::format("FITS metadata string: %s") 
-            % FitsFormatter::formatDataProperty(metadataPtr, false));
+            % lsst::afw::formatters::formatFitsProperties(metadata));
 
-    lsst::afw::image::Wcs testWcs(metadataPtr);
+    lsst::afw::image::Wcs testWcs(metadata);
 
     lsst::afw::image::PointD pix, sky;
 
@@ -64,20 +64,27 @@ void test(char *name) {
 int main(int argc, char *argv[]) {
     if (argc < 2) {
         cerr << "Usage: inputBaseName" << endl;
-        return 1;
+        return EXIT_FAILURE;
     }
-    
+
+    int status = EXIT_SUCCESS; 
     Trace::setDestination(cout);
     Trace::setVerbosity(".", 1);
 
     try {
-        try {
-            test(argv[1]);
-        } catch (pexEx::ExceptionStack &e) {
-            throw pexEx::Runtime(std::string("In handler\n") + e.what());
-        }
-    } catch (pexEx::ExceptionStack &e) {
+        test(argv[1]);
+    } catch (pexEx::Exception &e) {
         clog << e.what() << endl;
-        return 1;
+        status = EXIT_FAILURE;
     }
+    // Check for memory leaks
+    if (lsst::daf::base::Citizen::census(0) == 0) {
+        cerr << "No leaks detected" << endl;
+    } else {
+        cerr << "Leaked memory blocks:" << endl;
+        lsst::daf::base::Citizen::census(cerr);
+        status = EXIT_FAILURE;
+    }
+    return status;
 }
+

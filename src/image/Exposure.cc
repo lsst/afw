@@ -24,7 +24,7 @@
 #include "boost/format.hpp" 
 #include "boost/shared_ptr.hpp"
 
-#include "lsst/daf/base/DataProperty.h"
+#include "lsst/daf/base/PropertySet.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/Exposure.h"
 #include "lsst/afw/formatters/WcsFormatter.h"
@@ -73,7 +73,7 @@ lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure(int cols, ///< nu
     _maskedImage(cols, rows),
     _wcsPtr(new lsst::afw::image::Wcs (wcs))
 {
-    setMetadata(lsst::daf::base::DataProperty::createPropertyNode("FitsMetadata"));
+    setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet()));
 }
 
 /** @brief Construct an Exposure from a MaskedImage
@@ -82,11 +82,12 @@ template<typename ImageT, typename MaskT, typename VarianceT>
 lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     lsst::afw::image::MaskedImage<ImageT, MaskT, VarianceT> &maskedImage, ///< the MaskedImage
     lsst::afw::image::Wcs const& wcs                                      ///< the Wcs
-    ) : 
+                                                              ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _maskedImage(maskedImage),
-    _wcsPtr(new lsst::afw::image::Wcs (wcs)) {
-    setMetadata(lsst::daf::base::DataProperty::createPropertyNode("FitsMetadata"));
+    _wcsPtr(new lsst::afw::image::Wcs (wcs))
+{
+    setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet()));
 }
 
 /** @brief Construct a subExposure given an Exposure and a bounding box
@@ -104,8 +105,9 @@ lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &s
                                                                bool const deep) :   ///< Should we make copy of pixels?
     lsst::daf::data::LsstBase(typeid(this)),
     _maskedImage(src.getMaskedImage(), bbox, deep),
-    _wcsPtr(new lsst::afw::image::Wcs(*src._wcsPtr)) {
-    setMetadata(lsst::daf::base::DataProperty::createPropertyNode("FitsMetadata"));
+    _wcsPtr(new lsst::afw::image::Wcs(*src._wcsPtr))
+{
+    setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet()));
 }
 
 /** @brief Construct an Image from FITS files.
@@ -130,12 +132,7 @@ lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure(
         bool conformMasks               //!< Make Mask conform to mask layout in file?
                                                               ) :
     lsst::daf::data::LsstBase(typeid(this)) {
-#if 1                                   // Old name for boost::shared_ptrs
-    typename lsst::daf::base::DataProperty::PtrType
-#else
-    typename lsst::daf::base::DataProperty::Ptr
-#endif
-        metadata = lsst::daf::base::DataProperty::createPropertyNode("FitsMetadata");
+    lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertySet());
 
     _maskedImage = lsst::afw::image::MaskedImage<ImageT, MaskT, VarianceT>(baseName, hdu, metadata, conformMasks);
     _wcsPtr = lsst::afw::image::Wcs::Ptr(new lsst::afw::image::Wcs(metadata));
@@ -193,16 +190,14 @@ template<typename ImageT, typename MaskT, typename VarianceT>
 void lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::writeFits(
 	const std::string &expOutFile ///< Exposure's base output file name
                                                                     ) const {
-    using lsst::daf::base::DataProperty;
+    using lsst::daf::base::PropertySet;
 
-    DataProperty::PtrType outputMetadata(new DataProperty(*getMetadata()));
-    DataProperty::PtrType wcsMetadata = lsst::afw::formatters::WcsFormatter::generateDataProperty(*_wcsPtr);
+    PropertySet::Ptr outputMetadata = getMetadata()->deepCopy();
+    PropertySet::Ptr wcsMetadata = lsst::afw::formatters::WcsFormatter::generatePropertySet(*_wcsPtr);
     //
     // Copy wcsMetadata over to outputMetadata
     //
-    for (DataProperty::iteratorRangeType be = wcsMetadata->getChildren(); be.first != be.second; be.first++) {
-        outputMetadata->addProperty(*be.first);
-    }
+    outputMetadata->combine(wcsMetadata);
 
     _maskedImage.writeFits(expOutFile, outputMetadata);
 }

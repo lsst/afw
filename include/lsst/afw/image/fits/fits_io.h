@@ -16,6 +16,7 @@
 #include <boost/static_assert.hpp>
 #include <boost/shared_ptr.hpp>
 #include "boost/gil/extension/io/io_error.hpp"
+#include "lsst/pex/exceptions.h"
 #include "fits_io_private.h"
 
 namespace lsst { namespace afw { namespace image {
@@ -33,14 +34,7 @@ struct fits_read_support {
 /// \brief Returns the width and height of the FITS file at the specified location.
 /// Throws lsst::pex::exceptions::FitsError if the location does not correspond to a valid FITS file
 inline boost::gil::point2<std::ptrdiff_t> fits_read_dimensions(const char* filename) {
-#if 1                                   // Old name for boost::shared_ptrs
-    lsst::daf::base::DataProperty::PtrType
-        metadata = lsst::daf::base::DataProperty::PtrType(static_cast<lsst::daf::base::DataProperty *>(0));
-#else
-    lsst::daf::base::DataProperty::ConstPtr
-        metadata = lsst::daf::base::DataProperty::ConstPtr(static_cast<lsst::daf::base::DataProperty *>(0));
-#endif
-
+    lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertySet());
     detail::fits_reader m(filename, metadata);
     return m.get_getDimensions();
 }
@@ -59,13 +53,7 @@ inline boost::gil::point2<std::ptrdiff_t> fits_read_dimensions(const std::string
 /// compatible with the ones specified by View, or if its dimensions don't match the ones of the view.
 template <typename View>
 inline void fits_read_view(std::string const& filename,const View& view,
-#if 1                                   // Old name for boost::shared_ptrs
-                           typename lsst::daf::base::DataProperty::PtrType
-                           metadata = typename lsst::daf::base::DataProperty::PtrType(static_cast<lsst::daf::base::DataProperty *>(0))
-#else
-                           typename lsst::daf::base::DataProperty::ConstPtr
-                           metadata = typename lsst::daf::base::DataProperty::ConstPtr(static_cast<lsst::daf::base::DataProperty *>(0))
-#endif
+                           lsst::daf::base::PropertySet::Ptr metadata = lsst::daf::base::PropertySet::Ptr()
                           ) {
     BOOST_STATIC_ASSERT(fits_read_support<View>::is_supported);
 
@@ -82,13 +70,7 @@ inline void fits_read_view(std::string const& filename,const View& view,
 /// space or channel depth are not compatible with the ones specified by Image
 template <typename Image>
 inline void fits_read_image(const std::string& filename, Image& im,
-#if 1                                   // Old name for boost::shared_ptrs
-                            typename lsst::daf::base::DataProperty::PtrType
-                            metadata = typename lsst::daf::base::DataProperty::PtrType(static_cast<lsst::daf::base::DataProperty *>(0))
-#else
-                            typename lsst::daf::base::DataProperty::ConstPtr
-                            metadata = typename lsst::daf::base::DataProperty::ConstPtr(static_cast<lsst::daf::base::DataProperty *>(0))
-#endif
+                            lsst::daf::base::PropertySet::Ptr metadata = lsst::daf::base::PropertySet::Ptr()
                            ) {
     BOOST_STATIC_ASSERT(fits_read_support<typename Image::view_t>::is_supported);
 
@@ -102,13 +84,7 @@ inline void fits_read_image(const std::string& filename, Image& im,
 /// Throws lsst::pex::exceptions::FitsError if it fails to create the file.
 template <typename View>
 inline void fits_write_view(const std::string& filename, const View& view,
-#if 1                                   // Old name for boost::shared_ptrs
-                            lsst::daf::base::DataProperty::PtrType
-                            metadata = typename lsst::daf::base::DataProperty::PtrType(static_cast<lsst::daf::base::DataProperty *>(0))
-#else
-                            lsst::daf::base::DataProperty::ConstPtr
-                            metadata = typename lsst::daf::base::DataProperty::ConstPtr(static_cast<lsst::daf::base::DataProperty *>(0))
-#endif
+                            lsst::daf::base::PropertySet::Ptr metadata = lsst::daf::base::PropertySet::Ptr()
                            ) {
     BOOST_STATIC_ASSERT(fits_read_support<View>::is_supported);
 

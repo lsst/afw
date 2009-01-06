@@ -53,8 +53,8 @@ public:
     template <typename Images>
     void read_image(boost::gil::any_image<Images>& im) {
         if (!construct_matched(im,detail::fits_type_format_checker(_bitpix))) {
-            throw lsst::pex::exceptions::FitsError("fits_reader_dynamic::read_image(): "
-                                                   "no matching image type between those of the given any_image and that of the file");
+            throw LSST_EXCEPT(FitsErrorException,
+                              "no matching image type between those of the given any_image and that of the file");
         } else {
             im.recreate(get_getDimensions());
             boost::gil::detail::dynamic_io_fnobj<fits_read_is_supported, fits_reader> op(this);

@@ -265,7 +265,8 @@ namespace math {
             Function1<ReturnT>(params)
         {
             if (params.size() < 1) {
-                throw lsst::pex::exceptions::InvalidParameter("PolynomialFunction1 called with empty vector");
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                                  "PolynomialFunction1 called with empty vector");
             }
         }
         
@@ -331,7 +332,7 @@ namespace math {
          *   order = (sqrt(1 + 8 * length) - 3) / 2
          * and if this is not an integer then the length is unsuitable
          *
-         * @throw lsst::pex::exceptions::InvalidParameter if params length is unsuitable
+         * @throw lsst::pex::exceptions::InvalidParameterException if params length is unsuitable
          * @throw lsst::pex::exceptions::Exception if an internal sanity check fails
          */
         explicit PolynomialFunction2(
@@ -345,10 +346,12 @@ namespace math {
         {
             unsigned int nParams = params.size();
             if (nParams < 1) {
-                throw lsst::pex::exceptions::InvalidParameter("PolynomialFunction2 created with empty vector");
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                                  "PolynomialFunction2 created with empty vector");
             }
             if (nParams != ((_order + 1) * (_order + 2)) / 2) {
-                throw lsst::pex::exceptions::InvalidParameter("PolynomialFunction2 created with vector of unusable length");
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                                  "PolynomialFunction2 created with vector of unusable length");
             }
         }
         
@@ -448,7 +451,7 @@ namespace math {
          *
          * The order of the polynomial is set to the length of the params vector.
          *
-         * @throw lsst::pex::exceptions::InvalidParameter if params is empty
+         * @throw lsst::pex::exceptions::InvalidParameterException if params is empty
          */
         explicit Chebyshev1Function1(
             std::vector<double> params,  ///< polynomial coefficients
@@ -458,7 +461,8 @@ namespace math {
             Function1<ReturnT>(params)
         {
             if (params.size() < 1) {
-                throw lsst::pex::exceptions::InvalidParameter("Chebyshev1Function1 called with empty vector");
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                                  "Chebyshev1Function1 called with empty vector");
             }
             _initialize(xMin, xMax);
         }

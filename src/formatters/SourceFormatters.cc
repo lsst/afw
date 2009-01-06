@@ -284,18 +284,18 @@ template void SourceVectorFormatter::delegateSerialize<boost::archive::text_iarc
 void SourceVectorFormatter::write(
     Persistable const *   persistable,
     Storage::Ptr          storage,
-    lsst::daf::base::DataProperty::PtrType additionalData
+    lsst::daf::base::PropertySet::Ptr additionalData
 ) {
     if (persistable == 0) {
-        throw ex::InvalidParameter("No Persistable provided");
+        throw LSST_EXCEPT(ex::InvalidParameterException, "No Persistable provided");
     }
     if (!storage) {
-        throw ex::InvalidParameter("No Storage provided");
+        throw LSST_EXCEPT(ex::InvalidParameterException, "No Storage provided");
     }
 
     SourceVector const * p = dynamic_cast<SourceVector const *>(persistable);
     if (p == 0) {
-        throw ex::Runtime("Persistable was not of concrete type SourceVector");
+        throw LSST_EXCEPT(ex::RuntimeErrorException, "Persistable was not of concrete type SourceVector");
     }
 
     // Assume all have ids or none do.
@@ -308,14 +308,14 @@ void SourceVectorFormatter::write(
         int64_t ccdExposureId = extractCcdExposureId(additionalData);
         int     ccdId         = extractCcdId(additionalData);
         if (ccdId < 0 || ccdId >= 256) {
-            throw ex::InvalidParameter("ccdId out of range");
+            throw LSST_EXCEPT(ex::InvalidParameterException, "ccdId out of range");
         }
         for (SourceVector::iterator i = v->begin(); i != v->end(); ++i) {
             i->_diaSourceId    = generateSourceId(seq, ccdId, visitId);
             i->_ccdExposureId  = ccdExposureId;
             ++seq;
             if (seq == 0) { // Overflowed
-                throw ex::Runtime("Too many Sources");
+                throw LSST_EXCEPT(ex::RuntimeErrorException, "Too many Sources");
             }
         }
     }
@@ -323,7 +323,7 @@ void SourceVectorFormatter::write(
     if (typeid(*storage) == typeid(BoostStorage)) {
         BoostStorage * bs = dynamic_cast<BoostStorage *>(storage.get());
         if (bs == 0) {
-            throw ex::Runtime("Didn't get BoostStorage");
+            throw LSST_EXCEPT(ex::RuntimeErrorException, "Didn't get BoostStorage");
         }
         bs->getOArchive() & *p;
     } else if (typeid(*storage) == typeid(DbStorage) || typeid(*storage) == typeid(DbTsvStorage)) {
@@ -338,7 +338,7 @@ void SourceVectorFormatter::write(
         if (typeid(*storage) == typeid(DbStorage)) {
             DbStorage * db = dynamic_cast<DbStorage *>(storage.get());
             if (db == 0) {
-                throw ex::Runtime("Didn't get DbStorage");
+                throw LSST_EXCEPT(ex::RuntimeErrorException, "Didn't get DbStorage");
             }
             db->createTableFromTemplate(name, model, mayExist);
             db->setTableForInsert(name);
@@ -349,7 +349,7 @@ void SourceVectorFormatter::write(
         } else {
             DbTsvStorage * db = dynamic_cast<DbTsvStorage *>(storage.get());
             if (db == 0) {
-                throw ex::Runtime("Didn't get DbTsvStorage");
+                throw LSST_EXCEPT(ex::RuntimeErrorException, "Didn't get DbTsvStorage");
             }
             db->createTableFromTemplate(name, model, mayExist);
             db->setTableForInsert(name);
@@ -359,27 +359,27 @@ void SourceVectorFormatter::write(
             }
         }
     } else {
-        throw ex::InvalidParameter("Storage type is not supported"); 
+        throw LSST_EXCEPT(ex::InvalidParameterException, "Storage type is not supported"); 
     }
 }
 
 
 Persistable* SourceVectorFormatter::read(
-    Storage::Ptr          storage,
-    lsst::daf::base::DataProperty::PtrType additionalData
+    Storage::Ptr storage,
+    lsst::daf::base::PropertySet::Ptr additionalData
 ) {
     std::auto_ptr<SourceVector> p(new SourceVector);
 
     if (typeid(*storage) == typeid(BoostStorage)) {
         BoostStorage* bs = dynamic_cast<BoostStorage *>(storage.get());
         if (bs == 0) {
-            throw ex::Runtime("Didn't get BoostStorage");
+            throw LSST_EXCEPT(ex::RuntimeErrorException, "Didn't get BoostStorage");
         }
         bs->getIArchive() & *p;
     } else if (typeid(*storage) == typeid(DbStorage) || typeid(*storage) == typeid(DbTsvStorage)) {
         DbStorage * db = dynamic_cast<DbStorage *>(storage.get());
         if (db == 0) {
-            throw ex::Runtime("Didn't get DbStorage");
+            throw LSST_EXCEPT(ex::RuntimeErrorException, "Didn't get DbStorage");
         }
         std::vector<std::string> tables;
         getAllVisitSliceTableNames(tables, _policy, additionalData);
@@ -393,67 +393,67 @@ Persistable* SourceVectorFormatter::read(
             db->query();
             data.setNotNull();
             while (db->next()) {
-                if (db->columnIsNull( 0)) { throw ex::Runtime("null column \"diaSourceId\"");      }
-                if (db->columnIsNull( 1)) { throw ex::Runtime("null column \"exposureId\"");       }
-                if (db->columnIsNull( 2)) { throw ex::Runtime("null column \"filterId\"");         }
-                if (db->columnIsNull( 3)) { data.setNull(Source::OBJECT_ID);                    }
-                if (db->columnIsNull( 4)) { data.setNull(Source::MOVING_OBJECT_ID);             }
-                if (db->columnIsNull( 5)) { throw ex::Runtime("null column \"scId\"");             }
-                if (db->columnIsNull( 6)) { throw ex::Runtime("null column \"colc\"");             }
-                if (db->columnIsNull( 7)) { throw ex::Runtime("null column \"colcErr\"");          }
-                if (db->columnIsNull( 8)) { throw ex::Runtime("null column \"rowc\"");             }
-                if (db->columnIsNull( 9)) { throw ex::Runtime("null column \"rowcErr\"");          }
-                if (db->columnIsNull(10)) { throw ex::Runtime("null column \"dcol\"");             }
-                if (db->columnIsNull(11)) { throw ex::Runtime("null column \"drow\"");             }
-                if (db->columnIsNull(12)) { throw ex::Runtime("null column \"ra\"");               }
-                if (db->columnIsNull(13)) { throw ex::Runtime("null column \"decl\"");             }
-                if (db->columnIsNull(14)) { throw ex::Runtime("null column \"raErr4detection\"");  }
-                if (db->columnIsNull(15)) { throw ex::Runtime("null column \"decErr4detection\""); }
-                if (db->columnIsNull(16)) { data.setNull(Source::RA_ERR_4_WCS);                 }
-                if (db->columnIsNull(17)) { data.setNull(Source::DEC_ERR_4_WCS);                }
-                if (db->columnIsNull(18)) { throw ex::Runtime("null column \"cx\"");               }
-                if (db->columnIsNull(19)) { throw ex::Runtime("null column \"cy\"");               }
-                if (db->columnIsNull(20)) { throw ex::Runtime("null column \"cz\"");               }
-                if (db->columnIsNull(21)) { throw ex::Runtime("null column \"taiMidPoint\"");      }
-                if (db->columnIsNull(22)) { throw ex::Runtime("null column \"taiRange\"");         }
-                if (db->columnIsNull(23)) { throw ex::Runtime("null column \"fwhmA\"");            }
-                if (db->columnIsNull(24)) { throw ex::Runtime("null column \"fwhmB\"");            }
-                if (db->columnIsNull(25)) { throw ex::Runtime("null column \"fwhmTheta\"");        }
-                if (db->columnIsNull(26)) { throw ex::Runtime("null column \"flux\"");             }
-                if (db->columnIsNull(27)) { throw ex::Runtime("null column \"fluxErr\"");          }
-                if (db->columnIsNull(28)) { throw ex::Runtime("null column \"psfMag\"");           }
-                if (db->columnIsNull(29)) { throw ex::Runtime("null column \"psfMagErr\"");        }
-                if (db->columnIsNull(30)) { throw ex::Runtime("null column \"apMag\"");            }
-                if (db->columnIsNull(31)) { throw ex::Runtime("null column \"apMagErr\"");         }
-                if (db->columnIsNull(32)) { throw ex::Runtime("null column \"modelMag\"");         }
-                if (db->columnIsNull(33)) { throw ex::Runtime("null column \"modelMagErr\"");      }
-                if (db->columnIsNull(34)) { data.setNull(Source::AP_DIA);                       }
-                if (db->columnIsNull(35)) { data.setNull(Source::IXX);                          }
-                if (db->columnIsNull(36)) { data.setNull(Source::IXX_ERR);                      }
-                if (db->columnIsNull(37)) { data.setNull(Source::IYY);                          }
-                if (db->columnIsNull(38)) { data.setNull(Source::IYY_ERR);                      }
-                if (db->columnIsNull(39)) { data.setNull(Source::IXY);                          }
-                if (db->columnIsNull(40)) { data.setNull(Source::IXY_ERR);                      }
-                if (db->columnIsNull(41)) { throw ex::Runtime("null column \"snr\"");              }
-                if (db->columnIsNull(42)) { throw ex::Runtime("null column \"chi2\"");             }
-                if (db->columnIsNull(43)) { data.setNull(Source::FLAG_4_ASSOCIATION);           }
-                if (db->columnIsNull(44)) { data.setNull(Source::FLAG_4_DETECTION);             }
-                if (db->columnIsNull(45)) { data.setNull(Source::FLAG_4_WCS);                   }
-                if (db->columnIsNull(46)) { throw ex::Runtime("null column \"_dataSource\"");      }
+                if (db->columnIsNull( 0)) { throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"diaSourceId\""); }
+                if (db->columnIsNull( 1)) { throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"exposureId\""); }
+                if (db->columnIsNull( 2)) { throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"filterId\""); }
+                if (db->columnIsNull( 3)) { data.setNull(Source::OBJECT_ID); }
+                if (db->columnIsNull( 4)) { data.setNull(Source::MOVING_OBJECT_ID); }
+                if (db->columnIsNull( 5)) { throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"scId\""); }
+                if (db->columnIsNull( 6)) { throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"colc\""); }
+                if (db->columnIsNull( 7)) { throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"colcErr\""); }
+                if (db->columnIsNull( 8)) { throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"rowc\""); }
+                if (db->columnIsNull( 9)) { throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"rowcErr\""); }
+                if (db->columnIsNull(10)) { throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"dcol\""); }
+                if (db->columnIsNull(11)) { throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"drow\""); }
+                if (db->columnIsNull(12)) { throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"ra\""); }
+                if (db->columnIsNull(13)) { throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"decl\""); }
+                if (db->columnIsNull(14)) { throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"raErr4detection\""); }
+                if (db->columnIsNull(15)) { throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"decErr4detection\""); }
+                if (db->columnIsNull(16)) { data.setNull(Source::RA_ERR_4_WCS); }
+                if (db->columnIsNull(17)) { data.setNull(Source::DEC_ERR_4_WCS); }
+                if (db->columnIsNull(18)) { throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"cx\""); }
+                if (db->columnIsNull(19)) { throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"cy\""); }
+                if (db->columnIsNull(20)) { throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"cz\""); }
+                if (db->columnIsNull(21)) { throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"taiMidPoint\""); }
+                if (db->columnIsNull(22)) { throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"taiRange\""); }
+                if (db->columnIsNull(23)) { throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"fwhmA\""); }
+                if (db->columnIsNull(24)) { throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"fwhmB\""); }
+                if (db->columnIsNull(25)) { throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"fwhmTheta\""); }
+                if (db->columnIsNull(26)) { throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"flux\""); }
+                if (db->columnIsNull(27)) { throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"fluxErr\""); }
+                if (db->columnIsNull(28)) { throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"psfMag\""); }
+                if (db->columnIsNull(29)) { throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"psfMagErr\""); }
+                if (db->columnIsNull(30)) { throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"apMag\""); }
+                if (db->columnIsNull(31)) { throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"apMagErr\""); }
+                if (db->columnIsNull(32)) { throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"modelMag\""); }
+                if (db->columnIsNull(33)) { throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"modelMagErr\""); }
+                if (db->columnIsNull(34)) { data.setNull(Source::AP_DIA);  }
+                if (db->columnIsNull(35)) { data.setNull(Source::IXX); }
+                if (db->columnIsNull(36)) { data.setNull(Source::IXX_ERR); }
+                if (db->columnIsNull(37)) { data.setNull(Source::IYY); }
+                if (db->columnIsNull(38)) { data.setNull(Source::IYY_ERR); }
+                if (db->columnIsNull(39)) { data.setNull(Source::IXY); }
+                if (db->columnIsNull(40)) { data.setNull(Source::IXY_ERR); }
+                if (db->columnIsNull(41)) { throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"snr\""); }
+                if (db->columnIsNull(42)) { throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"chi2\""); }
+                if (db->columnIsNull(43)) { data.setNull(Source::FLAG_4_ASSOCIATION); }
+                if (db->columnIsNull(44)) { data.setNull(Source::FLAG_4_DETECTION); }
+                if (db->columnIsNull(45)) { data.setNull(Source::FLAG_4_WCS); }
+                if (db->columnIsNull(46)) { throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"_dataSource\""); }
                 p->push_back(data);
                 data.setNotNull(); // clear out null markers
             }
             db->finishQuery();
         }
     } else {
-        throw ex::InvalidParameter("Storage type is not supported");
+        throw LSST_EXCEPT(ex::InvalidParameterException, "Storage type is not supported");
     }
     return p.release();
 }
 
 
-void SourceVectorFormatter::update(Persistable*, Storage::Ptr, lsst::daf::base::DataProperty::PtrType) {
-    throw ex::Runtime("SourceVectorFormatter: updates not supported");
+void SourceVectorFormatter::update(Persistable*, Storage::Ptr, lsst::daf::base::PropertySet::Ptr) {
+    throw LSST_EXCEPT(ex::RuntimeErrorException, "SourceVectorFormatter: updates not supported");
 }
 
 }}} // namespace lsst::afw::formatters

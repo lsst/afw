@@ -98,7 +98,7 @@ class MaskedImageTestCase(unittest.TestCase):
         def tst(mask=mask):
             mask |= testMask
 
-        self.assertRaises(pexEx.LsstRuntime, tst)
+        utilsTests.assertRaisesLsstCpp(self, pexEx.RuntimeErrorException, tst)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

@@ -17,6 +17,37 @@
 
 #include "boost/gil/gil_all.hpp"
 
+namespace lsst { namespace afw { namespace image {
+
+/// \brief A type like std::pair<int, int>, but in lsst::afw::image thus permitting Koenig lookup
+// 
+// We want to be able to call operator+= in the global namespace, but define it in lsst::afw::image.
+// To make this possible, at least one of its arguments must be in lsst::afw::image, so we define
+// this type to make the argument lookup ("Koenig Lookup") work smoothly
+//
+struct pair2I : std::pair<int, int> {
+    explicit pair2I(int first, int second) : std::pair<int, int>(first, second) {}
+    pair2I(std::pair<int, int> pair) : std::pair<int, int>(pair) {}
+};
+
+/** \brief advance a GIL locator by \c off
+ *
+ * Allow users to use pair2I (basically a \c std::pair<int,int>) to manipulate GIL locator%s.
+ *     
+ * We don't actually usually use \c std::pair<int,int> but our own struct in namespace lsst::afw::image
+ * so as to enable Koenig lookup
+ */
+template <typename T>
+boost::gil::memory_based_2d_locator<T>& operator+=(boost::gil::memory_based_2d_locator<T> &loc, pair2I off) {
+    return (loc += boost::gil::point2<std::ptrdiff_t>(off.first, off.second));
+}
+template <typename T>
+boost::gil::memory_based_2d_locator<T>& operator-=(boost::gil::memory_based_2d_locator<T> &loc, pair2I off) {
+    return (loc -= boost::gil::point2<std::ptrdiff_t>(off.first, off.second));
+}
+
+}}} // namespace lsst::afw::image
+
 namespace boost { namespace gil {
 /*
  * Define a type that's a pure float, without scaling into [0, 1]

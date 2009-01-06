@@ -33,7 +33,7 @@ int main() {
         math::Statistics<ImageT> stats = math::make_Statistics(img, math::NPOINT);
         try {
             stats.getValue(math::MEAN);
-        } catch (lsst::pex::exceptions::InvalidParameter &e) {
+        } catch (lsst::pex::exceptions::InvalidParameterException &e) {
             cout << "You didn't ask for the mean, so we caught an exception: " << e.what() << endl;
         }
     }

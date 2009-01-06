@@ -13,6 +13,7 @@
 #include <string>
 #include <utility>
 
+#include "boost/format.hpp"
 #include "boost/mpl/bool.hpp"
 #include "boost/shared_ptr.hpp"
 
@@ -56,7 +57,7 @@ namespace lsst { namespace afw { namespace image {
             switch (i) {
               case 0: return _x;
               case 1: return _y;
-              default: throw lsst::pex::exceptions::OutOfRange(boost::format("Index i == %d must be 0 or 1") % i);
+              default: throw LSST_EXCEPT(lsst::pex::exceptions::RangeErrorException, (boost::format("Index i == %d must be 0 or 1") % i).str());
             }
         }
         /// Return x (i == 0) or y (i == 1)

@@ -233,9 +233,10 @@ namespace image {
             }
             /// Return a const_MaskedImageIterator that's delta beyond this
             const_MaskedImageIterator& operator+(std::ptrdiff_t delta) {
-                MaskedImageIteratorBase_t::operator+=(delta);
-                
-                return *this;
+                const_MaskedImageIterator lhs = *this;
+                lhs += delta;
+
+                return lhs;
             }
         };
 
@@ -611,13 +612,7 @@ namespace image {
                              VariancePtr variance = VariancePtr(static_cast<Variance *>(0)));
         explicit MaskedImage(const std::pair<int, int> dimensions, MaskPlaneDict const& planeDict=MaskPlaneDict());
         explicit MaskedImage(std::string const& baseName, int const hdu=0,
-#if 1                                   // Old name for boost::shared_ptrs
-                             typename lsst::daf::base::DataProperty::PtrType
-		metadata=lsst::daf::base::DataProperty::PtrType(static_cast<lsst::daf::base::DataProperty *>(NULL)),
-#else
-                             typename lsst::daf::base::DataProperty::Ptr
-		metadata=lsst::daf::base::DataProperty::Ptr(static_cast<lsst::daf::base::DataProperty *>(NULL)),
-#endif
+                             lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
                              bool const conformMasks=false);
         
         MaskedImage(MaskedImage const& rhs, bool const deep=false);
@@ -631,8 +626,8 @@ namespace image {
                     const bool deep) :                                         //!< Must be true; needed to disambiguate
             lsst::daf::data::LsstBase(typeid(this)) {
             if (!deep) {
-                throw lsst::pex::exceptions::InvalidParameter("Only deep copies are permitted for MaskedImages "
-                                                              "with different pixel types");
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                    "Only deep copies are permitted for MaskedImages with different pixel types");
             }
 
             Image tmp(*rhs.getImage(), true);
@@ -678,14 +673,7 @@ namespace image {
         static std::string varianceFileName(std::string const& baseName) { return baseName + "_var.fits"; }
 
         void writeFits(std::string const& baseName,
-#if 1                                   // Old name for boost::shared_ptrs
-              typename lsst::daf::base::DataProperty::PtrType
-              metadata=lsst::daf::base::DataProperty::PtrType(static_cast<lsst::daf::base::DataProperty *>(0))
-#else
-              typename lsst::daf::base::DataProperty::ConstPtr
-              metadata=lsst::daf::base::DataProperty::ConstPtr(static_cast<lsst::daf::base::DataProperty *>(0))
-#endif
-                      ) const;
+              lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr()) const;
         
         // Getters
         /// Return a (Ptr to) the MaskedImage's %image

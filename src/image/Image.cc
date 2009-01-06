@@ -84,8 +84,9 @@ image::ImageBase<PixelT>::ImageBase(ImageBase const& rhs, ///< Right-hand-side %
     _x0(rhs._x0 + bbox.getX0()), _y0(rhs._y0 + bbox.getY0())
 {
     if (_ix0 < 0 || _iy0 < 0 || _ix0 + getWidth() > _gilImage->width() || _iy0 + getHeight() > _gilImage->height()) {
-        throw lsst::pex::exceptions::LengthError(boost::format("BBox (%d,%d) %dx%d doesn't fit in image") %
-                                                 bbox.getX0() % bbox.getY0() % bbox.getWidth() % bbox.getHeight());
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                          (boost::format("BBox (%d,%d) %dx%d doesn't fit in image") %
+                              bbox.getX0() % bbox.getY0() % bbox.getWidth() % bbox.getHeight()).str());
     }
 
     if (deep) {
@@ -114,8 +115,9 @@ image::ImageBase<PixelT>& image::ImageBase<PixelT>::operator=(ImageBase const& r
 template<typename PixelT>
 void image::ImageBase<PixelT>::operator<<=(ImageBase const& rhs) {
     if (getDimensions() != rhs.getDimensions()) {
-        throw lsst::pex::exceptions::LengthError(boost::format("Dimension mismatch: %dx%d v. %dx%d") %
-                                                 getWidth() % getHeight() % rhs.getWidth() % rhs.getHeight());
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                          (boost::format("Dimension mismatch: %dx%d v. %dx%d") %
+                              getWidth() % getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
     copy_pixels(rhs._gilView, _gilView);
 }
@@ -195,12 +197,12 @@ typename image::ImageBase<PixelT>::iterator image::ImageBase<PixelT>::at(int x, 
 template<typename PixelT>
 typename image::ImageBase<PixelT>::fast_iterator image::ImageBase<PixelT>::begin(
 		bool contiguous         ///< Pixels are contiguous (must be true)
-                                                                             ) const {
-    if (not contiguous) {
-        throw lsst::pex::exceptions::Runtime("Only contiguous == true makes sense");
+                                                                                ) const {
+    if (!contiguous) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Only contiguous == true makes sense");
     }
     if (row_begin(getHeight() - 1) + getWidth()*getHeight() != row_end(0)) {
-        throw lsst::pex::exceptions::Runtime("Image's pixels are not contiguous");
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Image's pixels are not contiguous");
     }
 
     return row_begin(getHeight() - 1);
@@ -214,12 +216,12 @@ typename image::ImageBase<PixelT>::fast_iterator image::ImageBase<PixelT>::begin
 template<typename PixelT>
 typename image::ImageBase<PixelT>::fast_iterator image::ImageBase<PixelT>::end(
 		bool contiguous         ///< Pixels are contiguous (must be true)
-                                                                           ) const {
-    if (not contiguous) {
-        throw lsst::pex::exceptions::Runtime("Only contiguous == true makes sense");
+                                                                              ) const {
+    if (!contiguous) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Only contiguous == true makes sense"); 
     }
     if (row_begin(getHeight() - 1) + getWidth()*getHeight() != row_end(0)) {
-        throw lsst::pex::exceptions::Runtime("Image's pixels are not contiguous");
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Image's pixels are not contiguous");
     }
 
     return row_end(0);
@@ -357,7 +359,7 @@ image::Image<PixelT>& image::Image<PixelT>::operator=(Image const& rhs) {
 template<typename PixelT>
 image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
                             int const hdu,               ///< Desired HDU
-                            lsst::daf::base::DataProperty::PtrType metadata ///< file metadata (may point to NULL)
+                            lsst::daf::base::PropertySet::Ptr metadata ///< file metadata (may point to NULL)
                            ) :
     image::ImageBase<PixelT>() {
 
@@ -371,27 +373,25 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
     > fits_img_types;
 
     if (!boost::filesystem::exists(fileName)) {
-        throw lsst::pex::exceptions::NotFound(boost::format("File %s doesn't exist") % fileName);
+        throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException,
+                          (boost::format("File %s doesn't exist") % fileName).str());
     }
 
     if (!image::fits_read_image<fits_img_types>(fileName, *this->_getRawImagePtr(), metadata)) {
-        throw lsst::pex::exceptions::FitsError(boost::format("Failed to read %s HDU %d") % fileName % hdu);
+        throw LSST_EXCEPT(lsst::afw::image::FitsErrorException,
+                          (boost::format("Failed to read %s HDU %d") % fileName % hdu).str());
     }
     this->_setRawView();
 }
+
 /**
  * Write an Image to the specified file
  */
 template<typename PixelT>
 void image::Image<PixelT>::writeFits(
 	std::string const& fileName,    ///< File to write
-#if 1                                   // Old name for boost::shared_ptrs
-        typename lsst::daf::base::DataProperty::PtrType metadata //!< metadata to write to header; or NULL
-#else
-        typename lsst::daf::base::DataProperty::ConstPtr metadata //!< metadata to write to header; or NULL
-#endif
+        lsst::daf::base::PropertySet::Ptr metadata //!< metadata to write to header; or NULL
                                     ) const {
-
     image::fits_write_view(fileName, _getRawView(), metadata);
 }
 

@@ -34,6 +34,8 @@
 
 #define IGNORE_KERNEL_ZERO_PIXELS 1
 
+namespace ex = lsst::pex::exceptions;
+
 namespace {
 /*
  * Private functions to copy the border of an image
@@ -236,8 +238,8 @@ inline typename OutImageT::SinglePixel lsst::afw::math::apply(
  * * kernel.getCtrX/Y() along the left/bottom edge
  * * kernel.getWidth/Height() - 1 - kernel.getCtrX/Y() along the right/top edge
  *
- * @throw lsst::pex::exceptions::InvalidParameter if convolvedImage is not the same size as inImage.
- * @throw lsst::pex::exceptions::InvalidParameter if inImage is smaller (in colums or rows) than kernel.
+ * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage is not the same size as inImage.
+ * @throw lsst::pex::exceptions::InvalidParameterException if inImage is smaller (in colums or rows) than kernel.
  *
  * @ingroup afw
  */
@@ -256,10 +258,10 @@ void lsst::afw::math::basicConvolve(
     typedef typename OutImageT::x_iterator cnvX_iterator;
 
     if (convolvedImage.getDimensions() != inImage.getDimensions()) {
-        throw lsst::pex::exceptions::InvalidParameter("convolvedImage not the same size as inImage");
+        throw LSST_EXCEPT(ex::InvalidParameterException, "convolvedImage not the same size as inImage");
     }
     if (inImage.getDimensions() < kernel.getDimensions()) {
-        throw lsst::pex::exceptions::InvalidParameter("inImage smaller than kernel in columns and/or rows");
+        throw LSST_EXCEPT(ex::InvalidParameterException,"inImage smaller than kernel in columns and/or rows");
     }
     
     int const inImageWidth = inImage.getWidth();
@@ -323,11 +325,10 @@ void lsst::afw::math::basicConvolve(
     assert (!kernel.isSpatiallyVarying());
 
     if (convolvedImage.getDimensions() != inImage.getDimensions()) {
-        throw lsst::pex::exceptions::InvalidParameter("convolvedImage not the same size as inImage");
+        throw LSST_EXCEPT(ex::InvalidParameterException, "convolvedImage not the same size as inImage");
     }
     if (convolvedImage.getDimensions() < kernel.getDimensions()) {
-        throw lsst::pex::exceptions::InvalidParameter(
-            "inImage smaller than kernel in columns and/or rows");
+        throw LSST_EXCEPT(ex::InvalidParameterException, "inImage smaller than kernel in columns and/or rows");
     }
     
     int const mImageWidth = inImage.getWidth(); // size of input region
@@ -366,11 +367,10 @@ void lsst::afw::math::basicConvolve(
     typedef typename OutImageT::x_iterator cnvX_iterator;
 
     if (convolvedImage.getDimensions() != inImage.getDimensions()) {
-        throw lsst::pex::exceptions::InvalidParameter("convolvedImage not the same size as inImage");
+        throw LSST_EXCEPT(ex::InvalidParameterException, "convolvedImage not the same size as inImage");
     }
     if (inImage.getDimensions() < kernel.getDimensions()) {
-        throw lsst::pex::exceptions::InvalidParameter(
-            "inImage smaller than kernel in columns and/or rows");
+        throw LSST_EXCEPT(ex::InvalidParameterException, "inImage smaller than kernel in columns and/or rows");
     }
     
     int const imWidth = inImage.getWidth();
@@ -429,8 +429,8 @@ void lsst::afw::math::basicConvolve(
  * * kernel.getCtrX/Y() along the left/bottom edge
  * * kernel.getWidth/Height() - 1 - kernel.getCtrY/Y() along the right/top edge
  *
- * @throw lsst::pex::exceptions::InvalidParameter if convolvedImage is not the same size as inImage.
- * @throw lsst::pex::exceptions::InvalidParameter if inImage is smaller (in colums or rows) than kernel.
+ * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage is not the same size as inImage.
+ * @throw lsst::pex::exceptions::InvalidParameterException if inImage is smaller (in colums or rows) than kernel.
  *
  * @ingroup afw
  */
@@ -459,8 +459,8 @@ void lsst::afw::math::convolve(
  * Then for each output pixel it solves the spatial model and computes the the pixel as
  * the appropriate linear combination of basis images.
  *
- * @throw lsst::pex::exceptions::InvalidParameter if convolvedImage is not the same size as inImage.
- * @throw lsst::pex::exceptions::InvalidParameter if inImage is smaller (in colums or rows) than kernel.
+ * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage is not the same size as inImage.
+ * @throw lsst::pex::exceptions::InvalidParameterException if inImage is smaller (in colums or rows) than kernel.
  *
  * @ingroup afw
  */
@@ -477,10 +477,10 @@ void lsst::afw::math::convolveLinear(
     }
 
     if (convolvedImage.getDimensions() != inImage.getDimensions()) {
-        throw lsst::pex::exceptions::InvalidParameter("convolvedImage not the same size as inImage");
+        throw LSST_EXCEPT(ex::InvalidParameterException, "convolvedImage not the same size as inImage");
     }
     if (inImage.getDimensions() < kernel.getDimensions()) {
-        throw lsst::pex::exceptions::InvalidParameter("inImage smaller than kernel in columns and/or rows");
+        throw LSST_EXCEPT(ex::InvalidParameterException, "inImage smaller than kernel in columns and/or rows");
     }
     
     typedef typename InImageT::template ImageTypeFactory<double>::type BasisImage;

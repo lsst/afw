@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(Statistics) {
 
     {
         math::Statistics<ImageT> stats = math::make_Statistics(img, math::NPOINT);
-        BOOST_CHECK_THROW(stats.getValue(math::MEAN), lsst::pex::exceptions::InvalidParameter);
+        BOOST_CHECK_THROW(stats.getValue(math::MEAN), lsst::pex::exceptions::InvalidParameterException);
     }
     
     {
