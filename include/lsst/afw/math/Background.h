@@ -66,7 +66,9 @@ public:
 private:
     int _n;                             // number of pixels in the image
     double _meanclip;                   // n-sigma clipped mean
-    ImageT _img;                        // the image
+    int _imgWidth;                      // img.getWidth()
+    int _imgHeight;                     // img.getHeight()
+    //ImageT _img;                        // the image
     int _nxSample;                      // number of sub-image squares in x-dimension
     int _nySample;                      // number of sub-image squares in y-dimension
     int _subimgWidth;                   // width in pixels of a subimage

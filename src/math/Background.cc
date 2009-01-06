@@ -25,9 +25,11 @@ namespace {
  */
 template<typename ImageT>
 math::Background<ImageT>::Background(ImageT const& img, ///< ImageT (or MaskedImage) whose properties we want
-                                     BackgroundControl const& bgCtrl) : _img(img), _bctrl(bgCtrl) { 
+                                     BackgroundControl const& bgCtrl) :
+    _imgWidth(img.getWidth()), _imgHeight(img.getHeight()),
+    _bctrl(bgCtrl) { 
 
-    _n = _img.getWidth()*_img.getHeight();
+    _n = _imgWidth*_imgHeight;
     
     if (_n == 0) {
         throw lsst::pex::exceptions::InvalidParameter("Image contains no pixels");
@@ -42,7 +44,7 @@ math::Background<ImageT>::Background(ImageT const& img, ///< ImageT (or MaskedIm
     _grid.resize(_nxSample);
     _gridcolumns.resize(_nxSample);
     // Check that an int's large enough to hold the number of pixels
-    assert(img.getWidth()*static_cast<double>(img.getHeight()) < std::numeric_limits<int>::max());
+    assert(_imgWidth*static_cast<double>(_imgHeight) < std::numeric_limits<int>::max());
 
     // =============================================================
     // Bulk of the code here
@@ -50,8 +52,8 @@ math::Background<ImageT>::Background(ImageT const& img, ///< ImageT (or MaskedIm
     // --> We'll store _nxSample fully-interpolated columns to spline the rows over
 
     // Compute the centers and origins for the sub-images
-    _subimgWidth = img.getWidth() / _nxSample;
-    _subimgHeight = img.getHeight() / _nySample;
+    _subimgWidth = _imgWidth / _nxSample;
+    _subimgHeight = _imgHeight / _nySample;
     for (int i_x = 0; i_x < _nxSample; ++i_x) {
         _xcen[i_x] = static_cast<int>((i_x + 0.5) * _subimgWidth);
         _xorig[i_x] = i_x * _subimgWidth;
@@ -62,8 +64,8 @@ math::Background<ImageT>::Background(ImageT const& img, ///< ImageT (or MaskedIm
     }
 
     // make a vector containing the y pixel coords for the column
-    vector<int> ypix(img.getHeight());
-    for (int i_y = 0; i_y < img.getHeight(); ++i_y) { ypix[i_y] = i_y; }
+    vector<int> ypix(_imgHeight);
+    for (int i_y = 0; i_y < _imgHeight; ++i_y) { ypix[i_y] = i_y; }
 
 
     // go to each sub-image and get it's stats.
@@ -82,9 +84,9 @@ math::Background<ImageT>::Background(ImageT const& img, ///< ImageT (or MaskedIm
             _grid[i_x][i_y] = stats.getValue(math::MEANCLIP);
         }
         
-        typename math::LinearInterpolate<int,double> intobj(_ycen, _grid[i_x]);
-        _gridcolumns[i_x].resize(img.getHeight());
-        for (int i_y = 0; i_y < img.getHeight(); ++i_y) {
+        typename math::SplineInterpolate<int,double> intobj(_ycen, _grid[i_x]);
+        _gridcolumns[i_x].resize(_imgHeight);
+        for (int i_y = 0; i_y < _imgHeight; ++i_y) {
             _gridcolumns[i_x][i_y] = intobj.interpolate(ypix[i_y]);
         }
 
@@ -101,7 +103,7 @@ typename ImageT::Pixel math::Background<ImageT>::getPixel(int const x, int const
     // build an interpobj along the row and get the x'th value
     vector<double> bg_x(_nxSample);
     for(int i = 0; i < _nxSample; i++) { bg_x[i] = _gridcolumns[i][y];  }
-    math::LinearInterpolate<int,double> intobj(_xcen, bg_x);
+    math::SplineInterpolate<int,double> intobj(_xcen, bg_x);
     return static_cast<typename ImageT::Pixel>(intobj.interpolate(x));
     
 }
@@ -114,7 +116,7 @@ template<typename ImageT>
 typename lsst::afw::image::Image<typename ImageT::Pixel>::Ptr math::Background<ImageT>::getImage() const {
     
     typename lsst::afw::image::Image<typename ImageT::Pixel>::Ptr bg =
-        typename lsst::afw::image::Image<typename ImageT::Pixel>::Ptr(new lsst::afw::image::Image<typename ImageT::Pixel>(_img, true));  // deep copy
+        typename lsst::afw::image::Image<typename ImageT::Pixel>::Ptr(new lsst::afw::image::Image<typename ImageT::Pixel>(_imgWidth, _imgHeight));
 
     // need a vector of all x pixel coords to spline over
     vector<int> xpix(bg->getWidth());
@@ -128,7 +130,7 @@ typename lsst::afw::image::Image<typename ImageT::Pixel>::Ptr math::Background<I
         // build an interp object for this row
         vector<double> bg_x(_nxSample);
         for(int i_x = 0; i_x < _nxSample; i_x++) { bg_x[i_x] = _gridcolumns[i_x][i_y]; }
-        math::LinearInterpolate<int,double> intobj(_xcen, bg_x);
+        math::SplineInterpolate<int,double> intobj(_xcen, bg_x);
 
         int i_x = 0;
         for (typename ImageT::x_iterator ptr = bg->row_begin(i_y), end = ptr + bg->getWidth();
