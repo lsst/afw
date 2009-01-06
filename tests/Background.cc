@@ -36,7 +36,11 @@ BOOST_AUTO_TEST_CASE(Background) {
         math::Background<ImageT> back = math::make_Background(img, bgCtrl);
         double const testval = back.getPixel(xcen, ycen);
         
+        ImageT::Ptr bImage = back.getImage();
+        ImageT::Pixel const testFromImage = *(bImage->xy_at(xcen, ycen));
+        
         BOOST_CHECK_EQUAL(testval, pixval);
+        BOOST_CHECK_EQUAL(testval, testFromImage);
 
     }
 

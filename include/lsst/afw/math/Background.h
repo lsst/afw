@@ -15,7 +15,7 @@ namespace lsst { namespace afw { namespace math {
 /// \brief Pass parameters to a Background object
 class BackgroundControl {
 public:
-    BackgroundControl(math::Style style, int const nxSample=10, int const nySample=10)
+    BackgroundControl(Style const style=math::NATURAL_SPLINE, int const nxSample=10, int const nySample=10)
         : _nxSample(nxSample), _nySample(nySample) {
         assert(nxSample > 0);
         assert(nySample > 0);
@@ -56,11 +56,11 @@ private:
 template<typename ImageT>
 class Background {
 public:
-
-    explicit Background(ImageT const& img, BackgroundControl const& bgCtrl);
+    
+    explicit Background(ImageT const& img, BackgroundControl const& bgCtrl=BackgroundControl());
     ~Background() {}
     typename ImageT::Pixel getPixel(int const x, int const y) const;
-    typename ImageT::Ptr getFrame() const;
+    typename lsst::afw::image::Image<typename ImageT::Pixel>::Ptr getImage() const;
     //~Background() { delete _grid; };
     
 private:

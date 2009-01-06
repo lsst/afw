@@ -111,9 +111,10 @@ typename ImageT::Pixel math::Background<ImageT>::getPixel(int const x, int const
  * \brief Method to compute the background for entire image and return a background image
  */
 template<typename ImageT>
-typename ImageT::Ptr math::Background<ImageT>::getFrame() const {
+typename lsst::afw::image::Image<typename ImageT::Pixel>::Ptr math::Background<ImageT>::getImage() const {
     
-    typename ImageT::Ptr bg = typename ImageT::Ptr(new ImageT(_img, true));  // deep copy
+    typename lsst::afw::image::Image<typename ImageT::Pixel>::Ptr bg =
+        typename lsst::afw::image::Image<typename ImageT::Pixel>::Ptr(new lsst::afw::image::Image<typename ImageT::Pixel>(_img, true));  // deep copy
 
     // need a vector of all x pixel coords to spline over
     vector<int> xpix(bg->getWidth());

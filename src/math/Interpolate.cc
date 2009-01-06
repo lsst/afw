@@ -87,7 +87,7 @@ inline yT math::LinearInterpolate<xT,yT>::interpolate(xT const xinterp) const {
 template<typename xT, typename yT>
 inline yT math::LinearInterpolate<xT,yT>::interpolateDyDx(xT const xinterp) const {
     // assume dydx represents the mid-value of the interval
-    xT const xinterp_tmp = xinterp - 0.5*_xgridspace;
+    xT const xinterp_tmp = static_cast<xT>(xinterp - 0.5*_xgridspace);
     int const index = static_cast<int>((xinterp_tmp - _xlo) * _invxgrid);
     yT const a = static_cast<yT>((_x[index + 1] - xinterp_tmp)*_invxgrid);
     yT const b = static_cast<yT>((xinterp_tmp - _x[index])*_invxgrid );
@@ -121,9 +121,9 @@ yT math::LinearInterpolate<xT,yT>::interpolate_safe(xT const xinterp) const {
  * \brief Private method to return a linearly-interpolated value for a point *without* bounds checking.
  */
 template<typename xT, typename yT>
-inline yT math::LinearInterpolate<xT,yT>::interpolateDyDx_safe(xT const xinterp) const {
+yT math::LinearInterpolate<xT,yT>::interpolateDyDx_safe(xT const xinterp) const {
     // assume dydx represents the mid-value of the interval
-    xT const xinterp_tmp = xinterp - 0.5*_xgridspace;
+    xT const xinterp_tmp = static_cast<xT>(xinterp - 0.5*_xgridspace);
     int index = static_cast<int>((xinterp_tmp - _xlo) * _invxgrid);
     if ( index < 0 ) {
         index = 0;
@@ -138,7 +138,7 @@ inline yT math::LinearInterpolate<xT,yT>::interpolateDyDx_safe(xT const xinterp)
  * \brief Private method to return a linearly-interpolated value for a point *without* bounds checking.
  */
 template<typename xT, typename yT>
-inline yT math::LinearInterpolate<xT,yT>::interpolateD2yDx2_safe(xT const xinterp) const {
+yT math::LinearInterpolate<xT,yT>::interpolateD2yDx2_safe(xT const xinterp) const {
     return 0;
 }
 
@@ -233,7 +233,7 @@ inline yT math::SplineInterpolate<xT,yT>::interpolate(xT const xinterp) const {
  * \brief Public method to return spline-interpolated first derivatives over a vector<> *without* bounds checking
  */
 template<typename xT, typename yT>
-yT math::SplineInterpolate<xT,yT>::interpolateDyDx(xT const xinterp) const {
+inline yT math::SplineInterpolate<xT,yT>::interpolateDyDx(xT const xinterp) const {
     int index = static_cast<int>((xinterp - _xlo) * _invxgrid);
     double const a = (_x[index + 1] - xinterp) * _invxgrid;
     double const b = ( xinterp - _x[index] ) * _invxgrid;
@@ -247,7 +247,7 @@ yT math::SplineInterpolate<xT,yT>::interpolateDyDx(xT const xinterp) const {
  * \brief Public method to return spline-interpolated second derivatives over a vector<> *without* bounds checking
  */
 template<typename xT, typename yT>
-yT math::SplineInterpolate<xT,yT>::interpolateD2yDx2(xT const xinterp) const {
+inline yT math::SplineInterpolate<xT,yT>::interpolateD2yDx2(xT const xinterp) const {
     int index = static_cast<int>((xinterp - _xlo) * _invxgrid);
     double const a = (_x[index + 1] - xinterp) * _invxgrid;
     double const b = ( xinterp - _x[index] ) * _invxgrid;

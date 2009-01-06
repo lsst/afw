@@ -66,7 +66,7 @@ namespace lsst { namespace afw { namespace math {
     public:
         Interpolate(std::vector<xT> const& x, std::vector<yT> const& y);
         virtual ~Interpolate() { delete &_x; delete &_y; };
-        virtual inline yT interpolate(xT const xinterp) const = 0;  // linearly interpolate this object at x=xinterp
+        virtual yT interpolate(xT const xinterp) const = 0;  // linearly interpolate this object at x=xinterp
         virtual yT interpolate_safe(xT const xinterp) const = 0;  // linearly interpolate this object at x=xinterp
         //InterpControl const& ictrl = InterpControl());
         
@@ -86,7 +86,7 @@ namespace lsst { namespace afw { namespace math {
 
 
     template<typename xT, typename yT>
-    class LinearInterpolate : public Interpolate<xT,yT>::Interpolate {
+    class LinearInterpolate : public Interpolate<xT,yT> {
     public:
         
         // pre-calculate dydx values
@@ -94,9 +94,9 @@ namespace lsst { namespace afw { namespace math {
         ~LinearInterpolate() { delete &_dydx; };
 
         // fast methods with *no* bounds checking
-        inline yT interpolate(xT const xinterp) const;  // linearly interpolate this object at x=xinterp
-        inline yT interpolateDyDx(xT const xinterp) const; // linearly interpolate this obejct at x=xinterp
-        inline yT interpolateD2yDx2(xT const xinterp) const; // lineary interpolate this obejct at x=xinterp
+        yT interpolate(xT const xinterp) const;  // linearly interpolate this object at x=xinterp
+        yT interpolateDyDx(xT const xinterp) const; // linearly interpolate this obejct at x=xinterp
+        yT interpolateD2yDx2(xT const xinterp) const; // lineary interpolate this obejct at x=xinterp
 
         // slow methods with bounds checking
         yT interpolate_safe(xT const xinterp) const;  // linearly interpolate this object at x=xinterp
@@ -116,7 +116,7 @@ namespace lsst { namespace afw { namespace math {
     };
     
     template<typename xT, typename yT>
-    class SplineInterpolate : public Interpolate<xT,yT>::Interpolate {
+    class SplineInterpolate : public Interpolate<xT,yT> {
     public:
         
         // pre-calculate d2ydx2 values
@@ -124,9 +124,9 @@ namespace lsst { namespace afw { namespace math {
         ~SplineInterpolate() { delete &_d2ydx2; };
 
         // fast methods with *no* bounds checking        
-        inline yT interpolate(xT const xinterp) const; // spline interpolate this obejct at x=xinterp
-        inline yT interpolateDyDx(xT const xinterp) const; // spline interpolate this obejct at x=xinterp
-        inline yT interpolateD2yDx2(xT const xinterp) const; // spline interpolate this obejct at x=xinterp
+        yT interpolate(xT const xinterp) const; // spline interpolate this obejct at x=xinterp
+        yT interpolateDyDx(xT const xinterp) const; // spline interpolate this obejct at x=xinterp
+        yT interpolateD2yDx2(xT const xinterp) const; // spline interpolate this obejct at x=xinterp
 
         // slow methods with bounds checking        
         yT interpolate_safe(xT const xinterp) const; // spline interpolate this obejct at x=xinterp

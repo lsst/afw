@@ -65,7 +65,7 @@ int main() {
 
     // can get an individual pixel or a whole frame.
     float mid = back.getPixel(xcen,ycen);
-    ImageT::Ptr bg = back.getFrame();
+    ImageT::Ptr bg = back.getImage();
     
     // create a background-subtracted image
     ImageT sub(img.getDimensions());

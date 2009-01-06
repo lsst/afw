@@ -44,6 +44,7 @@ class BackgroundTestCase(unittest.TestCase):
     def testgetPixel(self):
 	"""Test the getPixel() function"""
 
+
 	xcen, ycen = 50, 100
 	bgCtrl = afwMath.BackgroundControl(afwMath.NATURAL_SPLINE)
 	bgCtrl.setNxSample(3)
