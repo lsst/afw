@@ -75,9 +75,9 @@ private:
     std::vector<int> _ycen;             // y center ...
     std::vector<int> _xorig;            // x origin pix coords of sub images
     std::vector<int> _yorig;            // y origin ...
-    std::vector<std::vector<typename ImageT::Pixel> > _grid; // 3-sig clipped means for the grid of sub images.
+    std::vector<std::vector<double> > _grid; // 3-sig clipped means for the grid of sub images.
 
-    std::vector<std::vector<typename ImageT::Pixel> > _gridcolumns; // interpolated columns for the bicubic spline
+    std::vector<std::vector<double> > _gridcolumns; // interpolated columns for the bicubic spline
     BackgroundControl _bctrl;           // control info set by user.
 };
 

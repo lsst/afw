@@ -79,10 +79,10 @@ math::Background<ImageT>::Background(ImageT const& img, ///< ImageT (or MaskedIm
             math::Statistics<ImageT> stats = math::make_Statistics(subimg, math::MEAN | math::MEANCLIP | math::MEDIAN |
                                                                    math::IQRANGE | math::STDEVCLIP, _bctrl.sctrl);
             
-            _grid[i_x][i_y] = static_cast<typename ImageT::Pixel>(stats.getValue(math::MEANCLIP));
+            _grid[i_x][i_y] = stats.getValue(math::MEANCLIP);
         }
         
-        typename math::LinearInterpolate<int,typename ImageT::Pixel> intobj(_ycen, _grid[i_x]);
+        typename math::LinearInterpolate<int,double> intobj(_ycen, _grid[i_x]);
         _gridcolumns[i_x].resize(img.getHeight());
         for (int i_y = 0; i_y < img.getHeight(); ++i_y) {
             _gridcolumns[i_x][i_y] = intobj.interpolate(ypix[i_y]);
@@ -99,10 +99,10 @@ template<typename ImageT>
 typename ImageT::Pixel math::Background<ImageT>::getPixel(int const x, int const y) const {
 
     // build an interpobj along the row and get the x'th value
-    vector<typename ImageT::Pixel> bg_x(_nxSample);
+    vector<double> bg_x(_nxSample);
     for(int i = 0; i < _nxSample; i++) { bg_x[i] = _gridcolumns[i][y];  }
-    math::LinearInterpolate<int,typename ImageT::Pixel> intobj(_xcen, bg_x);
-    return intobj.interpolate(x);
+    math::LinearInterpolate<int,double> intobj(_xcen, bg_x);
+    return static_cast<typename ImageT::Pixel>(intobj.interpolate(x));
     
 }
 
@@ -126,14 +126,14 @@ typename lsst::afw::image::Image<typename ImageT::Pixel>::Ptr math::Background<I
     for (int i_y = 0; i_y < bg->getHeight(); ++i_y) {
 
         // build an interp object for this row
-        vector<typename ImageT::Pixel> bg_x(_nxSample);
+        vector<double> bg_x(_nxSample);
         for(int i_x = 0; i_x < _nxSample; i_x++) { bg_x[i_x] = _gridcolumns[i_x][i_y]; }
-        math::LinearInterpolate<int,typename ImageT::Pixel> intobj(_xcen, bg_x);
+        math::LinearInterpolate<int,double> intobj(_xcen, bg_x);
 
         int i_x = 0;
         for (typename ImageT::x_iterator ptr = bg->row_begin(i_y), end = ptr + bg->getWidth();
              ptr != end; ++ptr, ++i_x) {
-            *ptr = intobj.interpolate(xpix[i_x]);
+            *ptr = static_cast<typename ImageT::Pixel>(intobj.interpolate(xpix[i_x]));
         }
     }
     
