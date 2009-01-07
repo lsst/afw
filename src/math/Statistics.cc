@@ -34,7 +34,7 @@ math::Statistics<Image>::Statistics(Image const& img, ///< Image (or MaskedImage
                                    ) : _flags(flags),
                                        _mean(NaN), _variance(NaN), _min(NaN), _max(NaN),
                                        _meanclip(NaN), _varianceclip(NaN), _median(NaN), _iqrange(NaN) {
-
+    
     _n = img.getWidth()*img.getHeight();
     if (_n == 0) { throw lsst::pex::exceptions::InvalidParameter("Image contains no pixels"); }
     
@@ -54,7 +54,7 @@ math::Statistics<Image>::Statistics(Image const& img, ///< Image (or MaskedImage
 
     // copy the image for any routines that will use median or quantiles
     if (flags & (MEDIAN | IQRANGE | MEANCLIP | VARIANCECLIP)) {
-
+        
         typename Image::Ptr imgcp = typename Image::Ptr(new Image(img, true));  // deep copy
         
         if (flags & (MEDIAN | MEANCLIP | VARIANCECLIP)) {
@@ -63,7 +63,7 @@ math::Statistics<Image>::Statistics(Image const& img, ///< Image (or MaskedImage
         if (flags & (IQRANGE | MEANCLIP | VARIANCECLIP)) {
             _iqrange = std::fabs(_quickSelect(*imgcp, 0.75) - _quickSelect(*imgcp, 0.25));
         }
-            
+        
         if (flags & (MEANCLIP | VARIANCECLIP)) {            
             for(int i_i = 0; i_i < sctrl.getNumIter(); ++i_i) {
                 
@@ -71,10 +71,10 @@ math::Statistics<Image>::Statistics(Image const& img, ///< Image (or MaskedImage
                 double const hwidth = (i_i > 0) ?
                     sctrl.getNumSigmaClip()*std::sqrt(_varianceclip) : sctrl.getNumSigmaClip()*iqToStdev*_iqrange;
                 std::pair<double,double> const clipinfo(center, hwidth);
-
+                
                 // returns a 4-tuple but we'll ignore clipped min and max;
                 boost::tuple<double, double, double, double> clipped = _getStandard(img, flags, clipinfo);
-
+                
                 _meanclip = clipped.get<0>();
                 _varianceclip = clipped.get<1>();
             }
@@ -89,7 +89,7 @@ math::Statistics<Image>::Statistics(Image const& img, ///< Image (or MaskedImage
 // An overloaded version below is used to get clipped versions
 template<typename Image>
 boost::tuple<double, double, double, double> math::Statistics<Image>::_getStandard(Image const &img, int const flags) {
-
+    
     // =====================================================
     // Get a crude estimate of the mean
     int n = 0;
@@ -101,7 +101,7 @@ boost::tuple<double, double, double, double> math::Statistics<Image>::_getStanda
         }
     }
     double const crude_mean = sum/n;    // a crude estimate of the mean, used for numerical stability of variance
-
+    
     // =======================================================
     // Estimate the full precision variance using that crude mean
     // - get the min and max as well
@@ -110,7 +110,7 @@ boost::tuple<double, double, double, double> math::Statistics<Image>::_getStanda
     double sumx2 = 0;                   // sum of (data - crude_mean)^2
     double min = crude_mean;
     double max = crude_mean;
-
+    
     // If we want max or min (you get both)
     if (flags & (MIN | MAX)){
         for (int y = 0; y < img.getHeight(); ++y) {
@@ -153,11 +153,11 @@ boost::tuple<double, double, double, double> math::Statistics<Image>::_getStanda
 //   clipping on std::pair<double,double> = center, cliplimit
 template<typename Image>
 boost::tuple<double, double, double, double> math::Statistics<Image>::_getStandard(Image const &img, int const flags, std::pair<double,double> const clipinfo) {
-
+    
     double const center = clipinfo.first;
     double const cliplimit = clipinfo.second;
     assert(! isnan(center) && ! isnan(cliplimit) );
-
+    
     double const crude_mean = center;    // a crude estimate of the mean for numerical stability of variance
 
     // =======================================================
@@ -211,7 +211,7 @@ boost::tuple<double, double, double, double> math::Statistics<Image>::_getStanda
 // This implementation adapted from Numerical recipes (3rd ed.) Press et al. 2007.
 template<typename Image>
 double math::Statistics<Image>::_quickSelect(Image const &img, double const quartile) {
-
+    
     int const n = img.getWidth() * img.getHeight();
     int const q = static_cast<int>(quartile * n);
 
@@ -277,12 +277,12 @@ double math::Statistics<Image>::_quickSelect(Image const &img, double const quar
 /// \sa getValue and getError
 template<typename Image>
 std::pair<double, double> math::Statistics<Image>::getResult(math::Property const prop ///< Desired property
-                                             ) const {
+                                                            ) const {
     if (!(prop & _flags)) {             // we didn't calculate it
         throw lsst::pex::exceptions::InvalidParameter(boost::format("You didn't ask me to calculate %d") % prop);
     }
-
-
+    
+    
     value_type ret(NaN, NaN);
     switch (prop) {
 

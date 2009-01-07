@@ -10,7 +10,7 @@ namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
 
 typedef image::Image<float> ImageT;
-typedef math::Background<ImageT> ImgTback;
+typedef math::Background BackT;
 
 int main() {
 
@@ -61,11 +61,11 @@ int main() {
     bgCtrl.sctrl.setNumSigmaClip(2.5);
 
     // initialize a background object (derivates for interpolation are computed in the constructor
-    ImgTback back = math::make_Background(img, bgCtrl);
-
+    BackT back = math::make_Background(img, bgCtrl);
+    
     // can get an individual pixel or a whole frame.
     float mid = back.getPixel(xcen,ycen);
-    ImageT::Ptr bg = back.getImage();
+    ImageT::Ptr bg = back.getImage<ImageT::Pixel>();
     
     // create a background-subtracted image
     ImageT sub(img.getDimensions());

@@ -53,22 +53,24 @@ private:
  * (Note that we used a helper function, \c make_Background, rather that the constructor directly so that
  * the compiler could deduce the types -- cf. \c std::make_pair)
  */
-template<typename ImageT>
 class Background {
 public:
     
+    template<typename ImageT>
     explicit Background(ImageT const& img, BackgroundControl const& bgCtrl=BackgroundControl());
+    
     ~Background() {}
-    typename ImageT::Pixel getPixel(int const x, int const y) const;
-    typename lsst::afw::image::Image<typename ImageT::Pixel>::Ptr getImage() const;
-    //~Background() { delete _grid; };
+    
+    double getPixel(int const x, int const y) const;
+
+    template<typename PixelT>
+    typename lsst::afw::image::Image<PixelT>::Ptr getImage() const;
     
 private:
     int _n;                             // number of pixels in the image
     double _meanclip;                   // n-sigma clipped mean
     int _imgWidth;                      // img.getWidth()
     int _imgHeight;                     // img.getHeight()
-    //ImageT _img;                        // the image
     int _nxSample;                      // number of sub-image squares in x-dimension
     int _nySample;                      // number of sub-image squares in y-dimension
     int _subimgWidth;                   // width in pixels of a subimage
@@ -86,8 +88,8 @@ private:
 /// A convenience function that uses function overloading to make the correct type of Background
 /// cf. std::make_pair()
 template<typename ImageT>
-Background<ImageT> make_Background(ImageT const& img, BackgroundControl const& bgCtrl=BackgroundControl()) {
-    return Background<ImageT>(img, bgCtrl);
+Background make_Background(ImageT const& img, BackgroundControl const& bgCtrl=BackgroundControl()) {
+    return Background(img, bgCtrl);
 };
     
 }}}

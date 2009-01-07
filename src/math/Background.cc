@@ -14,9 +14,9 @@ using namespace std;
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
 
-namespace {
-    double const NaN = std::numeric_limits<double>::quiet_NaN();
-}
+//namespace {
+//    double const NaN = std::numeric_limits<double>::quiet_NaN();
+//}
 
 /**
  * Constructor for Background
@@ -24,10 +24,13 @@ namespace {
  * Various things are pre-computed by the constructor to make the interpolation faster.
  */
 template<typename ImageT>
-math::Background<ImageT>::Background(ImageT const& img, ///< ImageT (or MaskedImage) whose properties we want
-                                     BackgroundControl const& bgCtrl) :
+math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) whose properties we want
+                             BackgroundControl const& bgCtrl) :
     _imgWidth(img.getWidth()), _imgHeight(img.getHeight()),
     _bctrl(bgCtrl) { 
+
+    assert(_bctrl.ictrl.getStyle() == math::NATURAL_SPLINE); // hard-coded for the time-being
+
 
     _n = _imgWidth*_imgHeight;
     
@@ -97,14 +100,13 @@ math::Background<ImageT>::Background(ImageT const& img, ///< ImageT (or MaskedIm
 /**
  * \brief Method to retrieve the background level at a pixel coord.
  */
-template<typename ImageT>
-typename ImageT::Pixel math::Background<ImageT>::getPixel(int const x, int const y) const {
+double math::Background::getPixel(int const x, int const y) const {
 
     // build an interpobj along the row and get the x'th value
     vector<double> bg_x(_nxSample);
     for(int i = 0; i < _nxSample; i++) { bg_x[i] = _gridcolumns[i][y];  }
     math::SplineInterpolate<int,double> intobj(_xcen, bg_x);
-    return static_cast<typename ImageT::Pixel>(intobj.interpolate(x));
+    return static_cast<double>(intobj.interpolate(x));
     
 }
 
@@ -112,11 +114,11 @@ typename ImageT::Pixel math::Background<ImageT>::getPixel(int const x, int const
 /**
  * \brief Method to compute the background for entire image and return a background image
  */
-template<typename ImageT>
-typename lsst::afw::image::Image<typename ImageT::Pixel>::Ptr math::Background<ImageT>::getImage() const {
-    
-    typename lsst::afw::image::Image<typename ImageT::Pixel>::Ptr bg =
-        typename lsst::afw::image::Image<typename ImageT::Pixel>::Ptr(new lsst::afw::image::Image<typename ImageT::Pixel>(_imgWidth, _imgHeight));
+template<typename PixelT>
+typename image::Image<PixelT>::Ptr math::Background::getImage() const {
+
+    typename image::Image<PixelT>::Ptr bg =
+        typename image::Image<PixelT>::Ptr(new typename image::Image<PixelT>(_imgWidth, _imgHeight));
 
     // need a vector of all x pixel coords to spline over
     vector<int> xpix(bg->getWidth());
@@ -128,14 +130,14 @@ typename lsst::afw::image::Image<typename ImageT::Pixel>::Ptr math::Background<I
     for (int i_y = 0; i_y < bg->getHeight(); ++i_y) {
 
         // build an interp object for this row
-        vector<double> bg_x(_nxSample);
-        for(int i_x = 0; i_x < _nxSample; i_x++) { bg_x[i_x] = _gridcolumns[i_x][i_y]; }
-        math::SplineInterpolate<int,double> intobj(_xcen, bg_x);
+        vector<PixelT> bg_x(_nxSample);
+        for(int i_x = 0; i_x < _nxSample; i_x++) { bg_x[i_x] = static_cast<PixelT>(_gridcolumns[i_x][i_y]); }
+        math::SplineInterpolate<int,PixelT> intobj(_xcen, bg_x);
 
         int i_x = 0;
-        for (typename ImageT::x_iterator ptr = bg->row_begin(i_y), end = ptr + bg->getWidth();
+        for (typename image::Image<PixelT>::x_iterator ptr = bg->row_begin(i_y), end = ptr + bg->getWidth();
              ptr != end; ++ptr, ++i_x) {
-            *ptr = static_cast<typename ImageT::Pixel>(intobj.interpolate(xpix[i_x]));
+            *ptr = static_cast<PixelT>(intobj.interpolate(xpix[i_x]));
         }
     }
     
@@ -148,6 +150,11 @@ typename lsst::afw::image::Image<typename ImageT::Pixel>::Ptr math::Background<I
 //
 // Explicit instantiations
 //
-template class math::Background<image::Image<double> >;
-template class math::Background<image::Image<float> >;
-template class math::Background<image::Image<int> >;
+#define INSTANTIATE_BACKGROUND(TYPE) \
+    template math::Background::Background(image::Image<TYPE> const& img, math::BackgroundControl const& bgCtrl=BackgroundControl()); \
+    template image::Image<TYPE>::Ptr math::Background::getImage<TYPE>() const;
+
+INSTANTIATE_BACKGROUND(double);
+INSTANTIATE_BACKGROUND(float);
+INSTANTIATE_BACKGROUND(int);
+

@@ -33,10 +33,10 @@ BOOST_AUTO_TEST_CASE(Background) {
         // test methods for public stats objects in bgCtrl
         bgCtrl.sctrl.setNumSigmaClip(3);
         bgCtrl.sctrl.setNumIter(3);
-        math::Background<ImageT> back = math::make_Background(img, bgCtrl);
+        math::Background back = math::make_Background(img, bgCtrl);
         double const testval = back.getPixel(xcen, ycen);
         
-        ImageT::Ptr bImage = back.getImage();
+        image::Image<float>::Ptr bImage = back.getImage<float>();
         ImageT::Pixel const testFromImage = *(bImage->xy_at(xcen, ycen));
         
         BOOST_CHECK_EQUAL(testval, pixval);
