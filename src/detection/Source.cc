@@ -3,223 +3,71 @@
 //##====----------------                                ----------------====##/
 //!
 //! \file
-//! \brief Support for Source%s
+//! \brief Support for Sources
 //!
 //##====----------------                                ----------------====##/
 
 #include "lsst/daf/base.h"
 #include "lsst/afw/detection/Source.h"
+#include "lsst/pex/exceptions/Runtime.h"
 
 namespace detection = lsst::afw::detection;
-
-// -- Source ----------------
-
-detection::Source::Source() : 
-    _diaSourceId(0),
-    _ccdExposureId(0),
-    _objectId(0),
-    _movingObjectId(0),
-    _colc(0.0),
-    _rowc(0.0),
-    _dcol(0.0),
-    _drow(0.0),
-    _ra(0.0),
-    _decl(0.0),
-    _raErr4detection(0.0),
-    _decErr4detection(0.0),
-    _raErr4wcs(0.0),
-    _decErr4wcs(0.0),
-    _cx(0.0),
-    _cy(0.0),
-    _cz(0.0),
-    _taiMidPoint(0.0),
-    _taiRange(0.0),
-    _flux(0.0),
-    _fluxErr(0.0),
-    _psfMag(0.0),
-    _psfMagErr(0.0),
-    _apMag(0.0),
-    _apMagErr(0.0),
-    _modelMag(0.0),
-    _modelMagErr(0.0),
-    _colcErr(0.0),
-    _rowcErr(0.0),
-    _fwhmA(0.0),
-    _fwhmB(0.0),
-    _fwhmTheta(0.0),
-    _apDia(0.0),
-    _ixx(0.0),
-    _ixxErr(0.0),
-    _iyy(0.0),
-    _iyyErr(0.0),
-    _ixy(0.0),
-    _ixyErr(0.0),
-    _snr(0.0),
-    _chi2(0.0),
-    _scId(0),
-    _flag4association(0),
-    _flag4detection(0),
-    _flag4wcs(0),
-    _filterId(0),
-    _dataSource(0)
-{
-    _nulls.set();
-}
-
-
-detection::Source::Source(
-    int64_t id,
-    double  colc,
-    double  rowc,
-    double  dcol,
-    double  drow
-) : 
-    _diaSourceId(id),
-    _ccdExposureId(0),
-    _objectId(0),
-    _movingObjectId(0),
-    _colc(colc),
-    _rowc(rowc),
-    _dcol(dcol),
-    _drow(drow),
-    _ra(0.0),
-    _decl(0.0),
-    _raErr4detection(0.0),
-    _decErr4detection(0.0),
-    _raErr4wcs(0.0),
-    _decErr4wcs(0.0),
-    _cx(0.0),
-    _cy(0.0),
-    _cz(0.0),
-    _taiMidPoint(0.0),
-    _taiRange(0.0),
-    _flux(0.0),
-    _fluxErr(0.0),
-    _psfMag(0.0),
-    _psfMagErr(0.0),
-    _apMag(0.0),
-    _apMagErr(0.0),
-    _modelMag(0.0),
-    _modelMagErr(0.0),
-    _colcErr(0.0),
-    _rowcErr(0.0),
-    _fwhmA(0.0),
-    _fwhmB(0.0),
-    _fwhmTheta(0.0),
-    _apDia(0.0),
-    _ixx(0.0),
-    _ixxErr(0.0),
-    _iyy(0.0),
-    _iyyErr(0.0),
-    _ixy(0.0),
-    _ixyErr(0.0),
-    _snr(0.0),
-    _chi2(0.0),
-    _scId(0),
-    _flag4association(0),
-    _flag4detection(0),
-    _flag4wcs(0),
-    _filterId(0),
-    _dataSource(0)
-{
-    _nulls.set();
-}
-
+namespace detail = lsst::afw::detection::source_detail;
 
 bool detection::Source::operator==(Source const & d) const {
-    if (this == &d)  {
-        return true;
-    }
-    if (_diaSourceId      == d._diaSourceId      &&
-        _ccdExposureId    == d._ccdExposureId    &&
-        _colc             == d._colc             &&
-        _rowc             == d._rowc             &&
-        _dcol             == d._dcol             &&
-        _drow             == d._drow             &&
-        _ra               == d._ra               &&
-        _decl             == d._decl             &&
-        _raErr4detection  == d._raErr4detection  &&
-        _decErr4detection == d._decErr4detection &&
-        _cx               == d._cx               &&
-        _cy               == d._cy               &&
-        _cz               == d._cz               &&
-        _taiMidPoint      == d._taiMidPoint      &&
-        _taiRange         == d._taiRange         &&
-        _flux             == d._flux             &&
-        _fluxErr          == d._fluxErr          &&
-        _psfMag           == d._psfMag           &&
-        _psfMagErr        == d._psfMagErr        &&
-        _apMag            == d._apMag            &&
-        _apMagErr         == d._apMagErr         &&
-        _modelMag         == d._modelMag         &&
-        _modelMagErr      == d._modelMagErr      &&
-        _colcErr          == d._colcErr          &&
-        _rowcErr          == d._rowcErr          &&
-        _fwhmA            == d._fwhmA            &&
-        _fwhmB            == d._fwhmB            &&
-        _fwhmTheta        == d._fwhmTheta        &&
-        _snr              == d._snr              &&
-        _chi2             == d._chi2             &&
-        _scId             == d._scId             &&
-        _filterId         == d._filterId         &&
-        _dataSource       == d._dataSource)
-    {
-        if (_nulls == d._nulls) {
-            return (isNull(OBJECT_ID)          || _objectId         == d._objectId        ) &&
-                   (isNull(MOVING_OBJECT_ID)   || _movingObjectId   == d._movingObjectId  ) &&
-                   (isNull(RA_ERR_4_WCS)       || _raErr4wcs        == d._raErr4wcs       ) &&
-                   (isNull(DEC_ERR_4_WCS)      || _decErr4wcs       == d._decErr4wcs      ) &&
-                   (isNull(AP_DIA)             || _apDia            == d._apDia           ) &&
-                   (isNull(IXX)                || _ixx              == d._ixx             ) &&
-                   (isNull(IXX_ERR)            || _ixxErr           == d._ixxErr          ) &&
-                   (isNull(IYY)                || _iyy              == d._iyy             ) &&
-                   (isNull(IYY_ERR)            || _iyyErr           == d._iyyErr          ) &&
-                   (isNull(IXY)                || _ixy              == d._ixy             ) &&
-                   (isNull(IXY_ERR)            || _ixyErr           == d._ixyErr          ) &&
-                   (isNull(FLAG_4_ASSOCIATION) || _flag4association == d._flag4association) &&
-                   (isNull(FLAG_4_DETECTION)   || _flag4detection   == d._flag4detection  ) &&
-                   (isNull(FLAG_4_WCS)         || _flag4wcs         == d._flag4wcs        );
-        }
-    }
-    return false;
-}
-
-
-// -- SourceVector ----------------
-
-detection::SourceVector::SourceVector()            : lsst::daf::base::Citizen(typeid(*this)), _vec()  {}
-detection::SourceVector::SourceVector(size_type n) : lsst::daf::base::Citizen(typeid(*this)), _vec(n) {}
-
-detection::SourceVector::SourceVector(size_type n, value_type const & val) :
-    lsst::daf::base::Citizen(typeid(*this)),
-    _vec(n, val)
-{}
-
-
-detection::SourceVector::~SourceVector() {}
-
-
-detection::SourceVector::SourceVector(SourceVector const & v) :
-    lsst::daf::base::Citizen(typeid(*this)),
-    _vec(v._vec)
-{}
-
-
-detection::SourceVector::SourceVector(Vector const & v) :
-    lsst::daf::base::Citizen(typeid(*this)),
-    _vec(v)
-{}
-
-
-detection::SourceVector & detection::SourceVector::operator=(SourceVector const & v) {
-    if (this != &v) {
-        _vec = v._vec;
-    }
-    return *this;
-}
-
-
-detection::SourceVector & detection::SourceVector::operator=(Vector const & v) {
-    _vec = v;
-    return *this;
+    return ( areEqual(_id, d._id) &&
+        areEqual(_ampExposureId, d._ampExposureId, detail::AMP_EXPOSURE_ID) &&
+        areEqual(_filterId, d._filterId) &&
+        areEqual(_objectId, d._objectId, detail::OBJECT_ID) &&
+        areEqual(_movingObjectId, d._movingObjectId, detail::MOVING_OBJECT_ID) &&
+        areEqual(_procHistoryId, d._procHistoryId) &&
+        areEqual(_ra, d._ra) &&
+        areEqual(_dec, d._dec) &&
+        areEqual(_raErr4wcs, d._raErr4wcs) &&
+        areEqual(_decErr4wcs, d._decErr4wcs) &&
+        areEqual(_raErr4detection, d._raErr4detection, detail::RA_ERR_4_DETECTION) &&
+        areEqual(_decErr4detection, d._decErr4detection, detail::DEC_ERR_4_DETECTION) &&
+        areEqual(_xFlux, d._xFlux, detail::X_FLUX) &&
+        areEqual(_xFluxErr, d._xFluxErr, detail::X_FLUX_ERR) &&
+        areEqual(_yFlux, d._yFlux, detail::Y_FLUX) &&
+        areEqual(_yFluxErr, d._yFluxErr, detail::Y_FLUX_ERR) &&
+        areEqual(_xPeak, d._xPeak, detail::X_PEAK) && 
+        areEqual(_yPeak, d._yPeak, detail::Y_PEAK) && 
+        areEqual(_raPeak, d._raPeak, detail::RA_PEAK) && 
+        areEqual(_decPeak, d._decPeak, detail::DEC_PEAK) &&   
+        areEqual(_xAstrom, d._xAstrom, detail::X_ASTROM) &&
+        areEqual(_xAstromErr, d._xAstromErr, detail::X_ASTROM_ERR) &&                   
+        areEqual(_yAstrom, d._yAstrom, detail::Y_ASTROM) &&
+        areEqual(_yAstromErr, d._yAstromErr, detail::Y_ASTROM_ERR) &&                                   
+        areEqual(_raAstrom, d._raAstrom, detail::RA_ASTROM) &&
+        areEqual(_raAstromErr, d._raAstromErr, detail::RA_ASTROM_ERR) &&                   
+        areEqual(_decAstrom, d._decAstrom, detail::DEC_ASTROM) &&
+        areEqual(_decAstromErr, d._decAstromErr, detail::DEC_ASTROM_ERR) &&
+        areEqual(_taiMidPoint, d._taiMidPoint) &&
+        areEqual(_taiRange, d._taiRange, detail::TAI_RANGE) &&
+        areEqual(_fwhmA, d._fwhmA) &&
+        areEqual(_fwhmB, d._fwhmB) &&
+        areEqual(_fwhmTheta, d._fwhmTheta) &&
+        areEqual(_psfMag, d._psfMag) &&
+        areEqual(_psfMagErr, d._psfMagErr) &&
+        areEqual(_apMag, d._apMag) &&
+        areEqual(_apMagErr, d._apMagErr) &&
+        areEqual(_modelMag, d._modelMag) &&
+        areEqual(_modelMagErr, d._modelMagErr) &&
+        areEqual(_petroMag, d._petroMag, detail::PETRO_MAG) &&
+        areEqual(_petroMagErr, d._petroMagErr, detail::PETRO_MAG_ERR) &&             
+        areEqual(_instMag, d._instMag) &&
+        areEqual(_instMagErr, d._instMagErr) &&
+        areEqual(_nonGrayCorrMag, d._nonGrayCorrMag, detail::NON_GRAY_CORR_MAG) &&
+        areEqual(_nonGrayCorrMagErr, d._nonGrayCorrMagErr, detail::NON_GRAY_CORR_MAG_ERR) &&
+        areEqual(_atmCorrMag, d._atmCorrMag, detail::ATM_CORR_MAG) &&
+        areEqual(_atmCorrMagErr, d._atmCorrMagErr, detail::ATM_CORR_MAG_ERR) &&
+        areEqual(_apDia, d._apDia, detail::AP_DIA) &&
+        areEqual(_snr, d._snr) &&
+        areEqual(_chi2, d._chi2) &&
+        areEqual(_sky, d._sky, detail::SKY) &&
+        areEqual(_skyErr, d._skyErr, detail::SKY_ERR) &&
+        areEqual(_flag4association, d._flag4association, detail::FLAG_4_ASSOCIATION) &&
+        areEqual(_flag4detection, d._flag4detection, detail::FLAG_4_DETECTION) &&
+        areEqual(_flag4wcs, d._flag4wcs, detail::FLAG_4_WCS));
 }
