@@ -265,7 +265,7 @@ public:
             int const x0 = span->getX0();
             int const x1 = span->getX1();
 
-            loc = _image.xy_at(x0, y);
+            loc += lsst::afw::image::pair2I(x0 - ox1, y - oy);
 
             for (int x = x0; x <= x1; ++x, ++loc.x()) {
                 operator()(loc, x, y);

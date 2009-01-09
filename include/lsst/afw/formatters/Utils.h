@@ -20,12 +20,6 @@ namespace lsst {
 namespace afw {
 namespace formatters {
 
-template<typename DbStorage, typename ValueType>
-static void setColumn(DbStorage & db, 
-    std::string const & key, 
-    ValueType * const & value
-);
-
 bool extractOptionalFlag(
     lsst::daf::base::PropertySet::Ptr const & properties,
     std::string const & name

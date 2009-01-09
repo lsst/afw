@@ -3,7 +3,7 @@
 //##====----------------                                ----------------====##/
 //
 //! \file
-//! \brief  The C++ representation of a Deep Detection Source.
+//! \brief  The C++ representation of a Difference-Image-Analysis Source.
 //
 //##====----------------                                ----------------====##/
 
@@ -20,7 +20,6 @@
 #include "lsst/daf/base/Citizen.h"
 #include "lsst/daf/base/Persistable.h"
 
-#include "lsst/afw/detection/BaseSourceAttributes.h"
 
 namespace boost {
 namespace serialization {
@@ -40,237 +39,482 @@ using boost::int32_t;
 using boost::int64_t;
 #endif
 
-namespace source_detail {
-
-/*! An integer id for each nullable field in Source. */
-enum SourceNullableField {
-    AMP_EXPOSURE_ID = 0,
-    OBJECT_ID,
-    MOVING_OBJECT_ID,
-    RA_ERR_4_DETECTION,
-    DEC_ERR_4_DETECTION,
-    X_FLUX,
-    X_FLUX_ERR,
-    Y_FLUX,
-    Y_FLUX_ERR,
-    RA_FLUX,
-    RA_FLUX_ERR,
-    DEC_FLUX,
-    DEC_FLUX_ERR,
-    X_PEAK,
-    Y_PEAK,
-    RA_PEAK,
-    DEC_PEAK,
-    X_ASTROM,
-    X_ASTROM_ERR,
-    Y_ASTROM,
-    Y_ASTROM_ERR,
-    RA_ASTROM,
-    RA_ASTROM_ERR,
-    DEC_ASTROM,
-    DEC_ASTROM_ERR,
-    TAI_RANGE,
-    PETRO_MAG,
-    PETRO_MAG_ERR,
-    NON_GRAY_CORR_MAG,
-    NON_GRAY_CORR_MAG_ERR,
-    ATM_CORR_MAG,        
-    ATM_CORR_MAG_ERR,
-    AP_DIA,
-    SKY,
-    SKY_ERR,        
-    FLAG_4_ASSOCIATION,
-    FLAG_4_DETECTION,
-    FLAG_4_WCS,
-    NUM_NULLABLE_FIELDS
-};
-
-} //namespace source_detail
+// forward declarations for formatters
 
 
-template class BaseSourceAttributes<source_detail::NUM_NULLABLE_FIELDS>;
-typedef BaseSourceAttributes<source_detail::NUM_NULLABLE_FIELDS> SourceBase;
+/**
+   \brief Contains attributes for Difference-Image-Analysis Source records.
 
-class Source 
-	: public SourceBase {
+   This class is useful
+   when an unadorned data structure is required (e.g. for placement into shared memory) or
+   is all that is necessary.
+
+    The C++ fields are derived from the LSST DC2 MySQL schema, which is reproduced below:
+
+    \code
+    CREATE TABLE DIASource
+    (
+        diaSourceId      BIGINT        NOT NULL,
+        ccdExposureId    BIGINT        NOT NULL,
+        filterId         TINYINT       NOT NULL,
+        objectId         BIGINT        NULL,
+        movingObjectId   BIGINT        NULL,
+        scId             INTEGER       NOT NULL,
+        colc             DOUBLE        NOT NULL,
+        colcErr          DECIMAL(4,2)  NOT NULL,
+        rowc             DOUBLE        NOT NULL,
+        rowcErr          DECIMAL(4,2)  NOT NULL,
+        dcol             DOUBLE        NOT NULL,
+        drow             DOUBLE        NOT NULL,
+        ra               DOUBLE        NOT NULL,
+        decl             DOUBLE        NOT NULL,
+        raErr4detection  DECIMAL(7,5)  NOT NULL,
+        decErr4detection DECIMAL(7,5)  NOT NULL,
+        raErr4wcs        DECIMAL(7,5)  NULL,
+        decErr4wcs       DECIMAL(7,5)  NULL,
+        cx               DOUBLE        NOT NULL,
+        cy               DOUBLE        NOT NULL,
+        cz               DOUBLE        NOT NULL,
+        taiMidPoint      DECIMAL(12,7) NOT NULL,
+        taiRange         DECIMAL(12,7) NOT NULL,
+        fwhmA            DECIMAL(4,2)  NOT NULL,
+        fwhmB            DECIMAL(4,2)  NOT NULL,
+        fwhmTheta        DECIMAL(4,1)  NOT NULL,
+        flux             DECIMAL(12,2) NOT NULL,
+        fluxErr          DECIMAL(10,2) NOT NULL,
+        psfMag           DECIMAL(7,3)  NOT NULL,
+        psfMagErr        DECIMAL(6,3)  NOT NULL,
+        apMag            DECIMAL(7,3)  NOT NULL,
+        apMagErr         DECIMAL(6,3)  NOT NULL,
+        modelMag         DECIMAL(6,3)  NOT NULL,
+        modelMagErr      DECIMAL(6,3)  NOT NULL,
+        apDia            FLOAT(0)      NULL,
+        Ixx              FLOAT(0)      NULL,
+        IxxErr           FLOAT(0)      NULL,
+        Iyy              FLOAT(0)      NULL,
+        IyyErr           FLOAT(0)      NULL,
+        Ixy              FLOAT(0)      NULL,
+        IxyErr           FLOAT(0)      NULL,
+        snr              FLOAT(0)      NOT NULL,
+        chi2             FLOAT(0)      NOT NULL,
+        flag4association SMALLINT      NULL,
+        flag4detection   SMALLINT      NULL,
+        flag4wcs         SMALLINT      NULL,
+        _dataSource      TINYINT       NOT NULL,
+        PRIMARY KEY (diaSourceId),
+        KEY (ccdExposureId),
+        KEY (filterId),
+        KEY (movingObjectId),
+        KEY (objectId),
+        KEY (scId)
+    ) ENGINE=MyISAM;
+    \endcode
+
+    Note that the C++ fields are listed in a different order than their corresponding database
+    columns: fields are sorted by type size to minimize the number of padding bytes that the
+    compiler must insert to meet field alignment requirements.
+ */
+class Source {
+
 public :
 
     typedef boost::shared_ptr<Source> Ptr;
 
+    /*! An integer id for each nullable field. */
+    enum NullableField {
 
-    Source() {setNull();}
-    virtual ~Source(){};
+        OBJECT_ID = 0,
+        MOVING_OBJECT_ID,
+        RA_ERR_4_WCS,
+        DEC_ERR_4_WCS,
+        AP_DIA,
+        IXX,
+        IXX_ERR,
+        IYY,
+        IYY_ERR,
+        IXY,
+        IXY_ERR,
+        FLAG_4_ASSOCIATION,
+        FLAG_4_DETECTION,
+        FLAG_4_WCS,
+        NUM_NULLABLE_FIELDS
+    };
+
+    Source();
+
+    Source(
+        int64_t id,
+        double  colc,
+        double  rowc,
+        double  dcol,
+        double  drow
+    );
 
     // getters
-    int64_t getSourceId()     const { return _id; 			  }
-    double getPetroMag()      const { return _petroMag;       }
-    float  getPetroMagErr()   const { return _petroMagErr;    }    
-    float  getSky()           const { return _sky;            }
-    float  getSkyErr()        const { return _skyErr;         }
+    int64_t getId()               const { return _diaSourceId;      }
+    int64_t getCcdExposureId()    const { return _ccdExposureId;    }
+    int64_t getObjectId()         const { return _objectId;         }
+    int64_t getMovingObjectId()   const { return _movingObjectId;   }
+    double  getColc()             const { return _colc;             }
+    double  getRowc()             const { return _rowc;             }
+    double  getDcol()             const { return _dcol;             }
+    double  getDrow()             const { return _drow;             }
+    double  getRa()               const { return _ra;               }
+    double  getDec()              const { return _decl;             }
+    double  getRaErr4detection()  const { return _raErr4detection;  }
+    double  getDecErr4detection() const { return _decErr4detection; }
+    double  getRaErr4wcs()        const { return _raErr4wcs;        }
+    double  getDecErr4wcs()       const { return _decErr4wcs;       }
+    double  getCx()               const { return _cx;               }
+    double  getCy()               const { return _cy;               }
+    double  getCz()               const { return _cz;               }
+    double  getTaiMidPoint()      const { return _taiMidPoint;      }
+    double  getTaiRange()         const { return _taiRange;         }
+    double  getFlux()             const { return _flux;             }
+    double  getFluxErr()          const { return _fluxErr;          }
+    double  getPsfMag()           const { return _psfMag;           }
+    double  getPsfMagErr()        const { return _psfMagErr;        }
+    double  getApMag()            const { return _apMag;            }
+    double  getApMagErr()         const { return _apMagErr;         }
+    double  getModelMag()         const { return _modelMag;         }
+    double  getModelMagErr()      const { return _modelMagErr;      }
+    float   getColcErr()          const { return _colcErr;          }
+    float   getRowcErr()          const { return _rowcErr;          }
+    float   getFwhmA()            const { return _fwhmA;            }
+    float   getFwhmB()            const { return _fwhmB;            }
+    float   getFwhmTheta()        const { return _fwhmTheta;        }
+    float   getApDia()            const { return _apDia;            }
+    float   getIxx()              const { return _ixx;              }
+    float   getIxxErr()           const { return _ixxErr;           }
+    float   getIyy()              const { return _iyy;              }
+    float   getIyyErr()           const { return _iyyErr;           }
+    float   getIxy()              const { return _ixy;              }
+    float   getIxyErr()           const { return _ixyErr;           }
+    float   getSnr()              const { return _snr;              }
+    float   getChi2()             const { return _chi2;             }
+    int32_t getScId()             const { return _scId;             }
+    int16_t getFlag4association() const { return _flag4association; }
+    int16_t getFlag4detection()   const { return _flag4detection;   }
+    int16_t getFlag4wcs()         const { return _flag4wcs;         }
+    int8_t  getFilterId()         const { return _filterId;         }
+    int8_t  getDataSource()       const { return _dataSource;       }
 
     // setters
-    void setSourceId( int64_t const sourceId) {setId(sourceId);}
-    
-    void setPetroMag (double const petroMag) { 
-        set(_petroMag, petroMag, source_detail::PETRO_MAG);         
+    void setId              (int64_t const diaSourceId     ) { _diaSourceId      = diaSourceId;      }
+    void setCcdExposureId   (int64_t const ccdExposureId   ) { _ccdExposureId    = ccdExposureId;    }
+    void setColc            (double  const colc            ) { _colc             = colc;             }
+    void setRowc            (double  const rowc            ) { _rowc             = rowc;             }
+    void setDcol            (double  const dcol            ) { _dcol             = dcol;             }
+    void setDrow            (double  const drow            ) { _drow             = drow;             }
+    void setRa              (double  const ra              ) { _ra               = ra;               }
+    void setDec             (double  const decl            ) { _decl             = decl;             }
+    void setRaErr4detection (double  const raErr4detection ) { _raErr4detection  = raErr4detection;  }
+    void setDecErr4detection(double  const decErr4detection) { _decErr4detection = decErr4detection; }
+    void setCx              (double  const cx              ) { _cx               = cx;               }
+    void setCy              (double  const cy              ) { _cy               = cy;               }
+    void setCz              (double  const cz              ) { _cz               = cz;               }
+    void setTaiMidPoint     (double  const taiMidPoint     ) { _taiMidPoint      = taiMidPoint;      }
+    void setTaiRange        (double  const taiRange        ) { _taiRange         = taiRange;         }
+    void setFlux            (double  const flux            ) { _flux             = flux;             }
+    void setFluxErr         (double  const fluxErr         ) { _fluxErr          = fluxErr;          }
+    void setPsfMag          (double  const psfMag          ) { _psfMag           = psfMag;           }
+    void setPsfMagErr       (double  const psfMagErr       ) { _psfMagErr        = psfMagErr;        }
+    void setApMag           (double  const apMag           ) { _apMag            = apMag;            }
+    void setApMagErr        (double  const apMagErr        ) { _apMagErr         = apMagErr;         }
+    void setModelMag        (double  const modelMag        ) { _modelMag         = modelMag;         }
+    void setModelMagErr     (double  const modelMagErr     ) { _modelMagErr      = modelMagErr;      }
+    void setColcErr         (float   const colcErr         ) { _colcErr          = colcErr;          }
+    void setRowcErr         (float   const rowcErr         ) { _rowcErr          = rowcErr;          }
+    void setFwhmA           (float   const fwhmA           ) { _fwhmA            = fwhmA;            }
+    void setFwhmB           (float   const fwhmB           ) { _fwhmB            = fwhmB;            }
+    void setFwhmTheta       (float   const fwhmTheta       ) { _fwhmTheta        = fwhmTheta;        }
+    void setSnr             (float   const snr             ) { _snr              = snr;              }
+    void setChi2            (float   const chi2            ) { _chi2             = chi2;             }
+    void setScId            (int32_t const scId            ) { _scId             = scId;             }
+    void setFilterId        (int8_t  const filterId        ) { _filterId         = filterId;         }
+    void setDataSource      (int8_t  const dataSource      ) { _dataSource       = dataSource;       }
+
+    void setObjectId(int64_t const objectId) {
+        _objectId = objectId;
+        setNotNull(OBJECT_ID);
     }
-    void setPetroMagErr (float const petroMagErr) { 
-        set(_petroMagErr, petroMagErr, source_detail::PETRO_MAG_ERR);    
+    void setMovingObjectId(int64_t const movingObjectId) {
+        _movingObjectId = movingObjectId;
+        setNotNull(MOVING_OBJECT_ID);
     }
-    void setSky (float const sky) { 
-        set(_sky, sky, source_detail::SKY);       
+    void setRaErr4wcs(double const raErr4wcs) {
+        _raErr4wcs = raErr4wcs;
+        setNotNull(RA_ERR_4_WCS);
     }
-    void setSkyErr (float const skyErr) {
-        set(_skyErr, skyErr, source_detail::SKY_ERR);
-    }   
-    
-    //overloaded setters
-    void setAmpExposureId (int64_t const ampExposureId) { 
-        set(_ampExposureId, ampExposureId, source_detail::AMP_EXPOSURE_ID);
+    void setDecErr4wcs(double const decErr4wcs) {
+        _decErr4wcs = decErr4wcs;
+        setNotNull(DEC_ERR_4_WCS);
     }
-    void setObjectId (int64_t const objectId) {
-        set(_objectId, objectId, source_detail::OBJECT_ID);
+    void setApDia(float const apDia) {
+        _apDia = apDia;
+        setNotNull(AP_DIA);
     }
-    void setMovingObjectId (int64_t const movingObjectId) {
-    	set(_movingObjectId, movingObjectId, source_detail::MOVING_OBJECT_ID);
-    }
-    void setRaErr4detection (float const raErr4detection) { 
-        set(_raErr4detection, raErr4detection, source_detail::RA_ERR_4_DETECTION);  
-    }
-    void setDecErr4detection(float const decErr4detection) { 
-        set(_decErr4detection, decErr4detection, source_detail::DEC_ERR_4_DETECTION); 
-    }
-    void setXFlux (double const xFlux) { 
-        set(_xFlux, xFlux, source_detail::X_FLUX);            
-    }
-    void setXFluxErr (double const xFluxErr) { 
-        set(_xFluxErr, xFluxErr, source_detail::X_FLUX_ERR);            
-    }    
-    void setYFlux (double const yFlux) { 
-        set(_yFlux, yFlux, source_detail::Y_FLUX);            
-    }    
-    void setYFluxErr (double const yFluxErr) { 
-        set(_yFluxErr, yFluxErr, source_detail::Y_FLUX_ERR);            
-    }    
-    void setRaFlux (double const raFlux) { 
-        set(_raFlux, raFlux, source_detail::RA_FLUX);            
-    }
-    void setRaFluxErr (double const raFluxErr) { 
-        set(_raFluxErr, raFluxErr, source_detail::RA_FLUX_ERR);            
-    }    
-    void setDecFlux (double const decFlux) { 
-        set(_decFlux, decFlux, source_detail::DEC_FLUX);
-    }    
-    void setDecFluxErr (double const decFluxErr) { 
-        set(_decFluxErr, decFluxErr, source_detail::DEC_FLUX_ERR);            
-    }    
-    void setXPeak (double const xPeak) { 
-        set(_xPeak, xPeak, source_detail::X_PEAK);            
-    }
-    void setYPeak (double const yPeak) { 
-        set(_yPeak, yPeak, source_detail::Y_PEAK);            
-    }    
-    void setRaPeak (double const raPeak) { 
-        set(_raPeak, raPeak, source_detail::RA_PEAK);            
-    }    
-    void setDecPeak (double const decPeak) { 
-        set(_decPeak, decPeak, source_detail::DEC_PEAK);            
-    }    
-    void setXAstrom (double const xAstrom) { 
-        set(_xAstrom, xAstrom, source_detail::X_ASTROM);            
-    }
-    void setXastromErr (double const xAstromErr) { 
-        set(_xAstromErr, xAstromErr, source_detail::X_ASTROM_ERR);            
-    }    
-    void setYAstrom (double const yAstrom) { 
-        set(_yAstrom, yAstrom, source_detail::Y_ASTROM);            
-    }    
-    void setYAstromErr (double const yAstromErr) { 
-        set(_yAstromErr, yAstromErr, source_detail::Y_ASTROM_ERR);            
-    }    
-    void setRaAstrom (double const raAstrom) { 
-        set(_raAstrom, raAstrom, source_detail::RA_ASTROM);            
-    }
-    void setRaAstromErr (double const raAstromErr) { 
-        set(_raAstromErr, raAstromErr, source_detail::RA_ASTROM_ERR);            
-    }    
-    void setDecAstrom (double const decAstrom) { 
-        set(_decAstrom, decAstrom, source_detail::DEC_ASTROM);            
-    }    
-    void setDecAstromErr (double const decAstromErr) { 
-        set(_decAstromErr, decAstromErr, source_detail::DEC_ASTROM_ERR);            
-    }         
-    void setTaiRange (float const taiRange) { 
-        set(_taiRange, taiRange, source_detail::TAI_RANGE);         
-    }
-    void setNonGrayCorrMag (double const nonGrayCorrMag) { 
-        set(_nonGrayCorrMag, nonGrayCorrMag, source_detail::NON_GRAY_CORR_MAG);         
-    }
-    void setNonGrayCorrMagErr(double const nonGrayCorrMagErr) { 
-        set(_nonGrayCorrMagErr, nonGrayCorrMagErr, source_detail::NON_GRAY_CORR_MAG_ERR);      
-    }
-    void setAtmCorrMag (double const atmCorrMag) { 
-        set(_atmCorrMag, atmCorrMag, source_detail::ATM_CORR_MAG);         
-    }
-    void setAtmCorrMagErr (double const atmCorrMagErr) { 
-        set(_atmCorrMagErr, atmCorrMagErr, source_detail::ATM_CORR_MAG_ERR);      
-    }        
-    void setApDia (float const apDia) {
-        set(_apDia, apDia, source_detail::AP_DIA);
-    }
+    void setIxx   (float const ixx   ) { _ixx    = ixx;    setNotNull(IXX);     }
+    void setIxxErr(float const ixxErr) { _ixxErr = ixxErr; setNotNull(IXX_ERR); }         
+    void setIyy   (float const iyy   ) { _iyy    = iyy;    setNotNull(IYY);     }     
+    void setIyyErr(float const iyyErr) { _iyyErr = iyyErr; setNotNull(IYY_ERR); }         
+    void setIxy   (float const ixy   ) { _ixy    = ixy;    setNotNull(IXY);     }      
+    void setIxyErr(float const ixyErr) { _ixyErr = ixyErr; setNotNull(IXY_ERR); }         
     void setFlag4association(int16_t const flag4association) {
-        set(_flag4association, flag4association, source_detail::FLAG_4_ASSOCIATION);
+        _flag4association = flag4association;
+        setNotNull(FLAG_4_ASSOCIATION);
     }
-    void setFlag4detection (int16_t const flag4detection) {
-        set(_flag4detection, flag4detection, source_detail::FLAG_4_DETECTION);
+    void setFlag4detection(int16_t const flag4detection) {
+        _flag4detection = flag4detection;
+        setNotNull(FLAG_4_DETECTION);
     }
-    void setFlag4wcs (int16_t const flag4wcs) {
-        set(_flag4wcs, flag4wcs, source_detail::FLAG_4_WCS);
+    void setFlag4wcs(int16_t const flag4wcs) {
+        _flag4wcs = flag4wcs;
+        setNotNull(FLAG_4_WCS);
     }
-    
+
+
+    // Get/set whether or not fields are null
+    bool isNull    (NullableField const f) const            { return _nulls.test(f); }
+    void setNull   (NullableField const f)                  { _nulls.set(f);         }
+    void setNotNull(NullableField const f)                  { _nulls.reset(f);       }
+    void setNull   (NullableField const f, bool const null) { _nulls.set(f, null);   }
+    void setNull   ()                                       { _nulls.set();          }
+    void setNotNull()                                       { _nulls.reset();        }
+
     bool operator==(Source const & d) const;
 
 private :
-    double _petroMag;         // DOUBLE        NULL    
-    float  _petroMagErr;      // FLOAT(0)      NULL            
-    float  _sky;              // FLOAT(0)      NULL
-    float  _skyErr;           // FLOAT(0)      NULL    
+
+    int64_t _diaSourceId;      // BIGINT        NOT NULL
+    int64_t _ccdExposureId;    // BIGINT        NOT NULL
+    int64_t _objectId;         // BIGINT        NULL
+    int64_t _movingObjectId;   // BIGINT        NULL
+    double  _colc;             // DOUBLE        NOT NULL
+    double  _rowc;             // DOUBLE        NOT NULL
+    double  _dcol;             // DOUBLE        NOT NULL
+    double  _drow;             // DOUBLE        NOT NULL
+    double  _ra;               // DOUBLE        NOT NULL
+    double  _decl;             // DOUBLE        NOT NULL
+    double  _raErr4detection;  // DECIMAL(7,5)  NOT NULL
+    double  _decErr4detection; // DECIMAL(7,5)  NOT NULL
+    double  _raErr4wcs;        // DECIMAL(7,5)  NULL
+    double  _decErr4wcs;       // DECIMAL(7,5)  NULL
+    double  _cx;               // DOUBLE        NOT NULL
+    double  _cy;               // DOUBLE        NOT NULL
+    double  _cz;               // DOUBLE        NOT NULL
+    double  _taiMidPoint;      // DECIMAL(12,7) NOT NULL
+    double  _taiRange;         // DECIMAL(12,7) NOT NULL
+    double  _flux;             // DECIMAL(12,2) NOT NULL
+    double  _fluxErr;          // DECIMAL(10,2) NOT NULL
+    double  _psfMag;           // DECIMAL(7,3)  NOT NULL
+    double  _psfMagErr;        // DECIMAL(6,3)  NOT NULL
+    double  _apMag;            // DECIMAL(7,3)  NOT NULL
+    double  _apMagErr;         // DECIMAL(6,3)  NOT NULL
+    double  _modelMag;         // DECIMAL(6,3)  NOT NULL
+    double  _modelMagErr;      // DECIMAL(6,3)  NOT NULL
+    float   _colcErr;          // DECIMAL(4,2)  NOT NULL
+    float   _rowcErr;          // DECIMAL(4,2)  NOT NULL
+    float   _fwhmA;            // DECIMAL(4,2)  NOT NULL
+    float   _fwhmB;            // DECIMAL(4,2)  NOT NULL
+    float   _fwhmTheta;        // DECIMAL(4,1)  NOT NULL
+    float   _apDia;            // FLOAT(0)      NULL
+    float   _ixx;              // FLOAT(0)      NULL
+    float   _ixxErr;           // FLOAT(0)      NULL
+    float   _iyy;              // FLOAT(0)      NULL
+    float   _iyyErr;           // FLOAT(0)      NULL
+    float   _ixy;              // FLOAT(0)      NULL
+    float   _ixyErr;           // FLOAT(0)      NULL
+    float   _snr;              // FLOAT(0)      NOT NULL
+    float   _chi2;             // FLOAT(0)      NOT NULL
+    int32_t _scId;             // INTEGER       NOT NULL
+    int16_t _flag4association; // SMALLINT      NULL
+    int16_t _flag4detection;   // SMALLINT      NULL
+    int16_t _flag4wcs;         // SMALLINT      NULL
+    int8_t  _filterId;         // TINYINT       NOT NULL
+    int8_t  _dataSource;       // TINYINT       NOT NULL
+
+    std::bitset<NUM_NULLABLE_FIELDS> _nulls;
 
     template <typename Archive> void serialize(Archive & ar, unsigned int const version) {
-        ar & _petroMag;
-        ar & _petroMagErr;
-        ar & _sky;
-        ar & _skyErr;
+        ar & _diaSourceId;
+        ar & _ccdExposureId;
+        ar & _objectId;
+        ar & _movingObjectId;
+        ar & _colc;
+        ar & _rowc;
+        ar & _dcol;
+        ar & _drow;
+        ar & _ra;
+        ar & _decl;
+        ar & _raErr4detection;
+        ar & _decErr4detection;
+        ar & _raErr4wcs;
+        ar & _decErr4wcs;
+        ar & _cx;
+        ar & _cy;
+        ar & _cz;
+        ar & _taiMidPoint;
+        ar & _taiRange;
+        ar & _flux;
+        ar & _fluxErr;
+        ar & _psfMag;
+        ar & _psfMagErr;
+        ar & _apMag;
+        ar & _apMagErr;
+        ar & _modelMag;
+        ar & _modelMagErr;
+        ar & _colcErr;
+        ar & _rowcErr;
+        ar & _fwhmA;
+        ar & _fwhmB;
+        ar & _fwhmTheta;
+        ar & _apDia;
+        ar & _ixx;
+        ar & _ixxErr;
+        ar & _iyy;
+        ar & _iyyErr;
+        ar & _ixy;
+        ar & _ixyErr;
+        ar & _snr;
+        ar & _chi2;
+        ar & _scId;
+        ar & _flag4association;
+        ar & _flag4detection;
+        ar & _flag4wcs;
+        ar & _filterId;
+        ar & _dataSource;
 
-		SourceBase::serialize(ar, version);
+        bool b;
+        if (Archive::is_loading::value) {
+            for (int i = 0; i < NUM_NULLABLE_FIELDS; ++i) {
+                ar & b;
+                _nulls.set(i, b);
+            }
+        } else {
+            for (int i = 0; i < NUM_NULLABLE_FIELDS; ++i) {
+                b = _nulls.test(i);
+                ar & b;
+            }
+        }
     }
 
     friend class boost::serialization::access;
-    friend class formatters::SourceVectorFormatter;   
+    friend class formatters::SourceVectorFormatter;
 };
 
-inline bool operator!=(Source const & lhs, Source const & rhs) {
-	return !(lhs==rhs);
+inline bool operator!=(Source const & d1, Source const & d2) {
+    return !(d1 == d2);
 }
 
 
-class PersistableSourceVector : public lsst::daf::base::Persistable {
-    typedef std::vector<Source> SourceVector;
-public:
-    PersistableSourceVector() {}
-    PersistableSourceVector(SourceVector const & sources)
-        : _sources(sources) {}
-        
-    SourceVector & getSources() {return _sources; }
-    SourceVector getSources() const {return _sources; } 
-    
-    void setSources(SourceVector const & sources) {_sources = sources; }
-private:
+// Classes that require special handling in the SWIG interface file
+#ifndef SWIG
+
+/**
+ * \brief A persistable container of Source instances (implemented using std::vector).
+ */
+class SourceVector :
+    public lsst::daf::base::Persistable,
+    public lsst::daf::base::Citizen
+{
+public :
+    typedef boost::shared_ptr<SourceVector> Ptr;
+    typedef std::vector<Source>             Vector;
+
+    typedef Vector::allocator_type         allocator_type;
+    typedef Vector::iterator               iterator;
+    typedef Vector::const_iterator         const_iterator;
+    typedef Vector::reverse_iterator       reverse_iterator;
+    typedef Vector::const_reverse_iterator const_reverse_iterator;
+    typedef Vector::size_type              size_type;
+    typedef Vector::difference_type        difference_type;
+    typedef Vector::reference              reference;
+    typedef Vector::const_reference        const_reference;
+    typedef Vector::value_type             value_type;
+
+    SourceVector();
+    explicit SourceVector(size_type sz);
+    SourceVector(size_type sz, value_type const & val);
+
+    template <typename InputIterator>
+    SourceVector(InputIterator beg, InputIterator end) :
+        lsst::daf::base::Citizen(typeid(*this)),
+        _vec(beg, end)
+    {}
+
+    virtual ~SourceVector();
+
+    SourceVector(SourceVector const & vec);
+    explicit SourceVector(Vector const & vec);
+    SourceVector & operator=(SourceVector const & vec);
+    SourceVector & operator=(Vector const & vec);
+
+    void swap(SourceVector & v) { using std::swap; swap(_vec, v._vec); }
+    void swap(Vector & v)          { using std::swap; swap(_vec, v);      }
+
+    size_type size()     const { return _vec.size();     }
+    size_type max_size() const { return _vec.max_size(); }
+    bool      empty()    const { return _vec.empty();    }
+    size_type capacity() const { return _vec.capacity(); }
+
+    void reserve(size_type const n) { _vec.reserve(n); }
+
+    template <typename InputIterator>
+    void assign(InputIterator beg, InputIterator end)      { _vec.assign(beg, end); }
+    void assign(size_type const n, value_type const & val) { _vec.assign(n, val);   }
+
+    reference       at        (size_type const i)       { return _vec.at(i); }
+    const_reference at        (size_type const i) const { return _vec.at(i); }
+    reference       operator[](size_type const i)       { return _vec[i];    }
+    const_reference operator[](size_type const i) const { return _vec[i];    }
+
+    reference       front()       { return _vec.front(); }
+    const_reference front() const { return _vec.front(); }
+    reference       back ()       { return _vec.back();  }
+    const_reference back () const { return _vec.back();  }
+
+    iterator               begin ()       { return _vec.begin();  }
+    const_iterator         begin () const { return _vec.begin();  }
+    reverse_iterator       rbegin()       { return _vec.rbegin(); }
+    const_reverse_iterator rbegin() const { return _vec.rbegin(); }
+    iterator               end   ()       { return _vec.end();    }
+    const_iterator         end   () const { return _vec.end();    }
+    reverse_iterator       rend  ()       { return _vec.rend();   }
+    const_reverse_iterator rend  () const { return _vec.rend();   }
+
+    void push_back(value_type const & value) { _vec.push_back(value);  }
+
+    void pop_back() { _vec.pop_back();  }
+    void clear()    { _vec.clear();     }
+
+    iterator insert(iterator pos, value_type const & val)              { return _vec.insert(pos, val);    }
+    void     insert(iterator pos, size_type n, value_type const & val) { return _vec.insert(pos, n, val); }
+
+    template <typename InputIterator>
+    void insert(iterator pos, InputIterator beg, InputIterator end) { _vec.insert(pos, beg, end); }
+
+    iterator erase(iterator pos)               { return _vec.erase(pos);      }
+    iterator erase(iterator beg, iterator end) { return _vec.erase(beg, end); }
+
+    void resize(size_type n)                 { _vec.resize(n);      }
+    void resize(size_type n, value_type val) { _vec.resize(n, val); }
+
+    bool operator==(SourceVector const & v) { return _vec == v._vec; }
+    bool operator!=(SourceVector const & v) { return _vec != v._vec; }
+
+private :
+
     LSST_PERSIST_FORMATTER(lsst::afw::formatters::SourceVectorFormatter);
-    SourceVector _sources;
-}; 
+
+    Vector _vec;
+};
+
+#endif // SWIG
+
 
 }}}  // namespace lsst::afw::detection
 
 #endif // LSST_AFW_DETECTION_SOURCE_H
+
 
