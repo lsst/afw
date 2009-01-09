@@ -8,7 +8,6 @@ env.SharedLibrary(
         "detection/Footprint.cc",
         "detection/Peak.cc",
         "detection/Source.cc",
-        "detection/DiaSource.cc",
         "formatters/ExposureFormatter.cc",
         "formatters/ImageFormatter.cc",
         "formatters/MaskedImageFormatter.cc",
