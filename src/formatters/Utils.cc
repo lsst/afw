@@ -235,7 +235,7 @@ void getAllVisitSliceTableNames(
     fmt.exceptions(boost::io::all_error_bits);
 
     if (isPerSliceTable) {
-        int numSlices = properties->getAsInt("numSlices");
+        int numSlices = properties->getAsInt(itemName + ".numSlices");
         if (numSlices <= 0) {
             throw LSST_EXCEPT(ex::RuntimeErrorException,
                               itemName + " \".numSlices\" property value is non-positive");
