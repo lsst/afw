@@ -11,6 +11,8 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
 
+namespace ex = lsst::pex::exceptions;
+
 /**
  * @brief Construct an empty spatially invariant AnalyticKernel of size 0x0
  */
@@ -48,7 +50,8 @@ lsst::afw::math::AnalyticKernel::AnalyticKernel(
 /**
  * @brief Construct a spatially varying AnalyticKernel
  *
- * @throw lsst::pex::exceptions::InvalidParameter if the length of spatialFunctionList != # kernel function parameters.
+ * @throw lsst::pex::exceptions::InvalidParameterException
+ *        if the length of spatialFunctionList != # kernel function parameters.
  */
 lsst::afw::math::AnalyticKernel::AnalyticKernel(
     int width,
@@ -60,7 +63,8 @@ lsst::afw::math::AnalyticKernel::AnalyticKernel(
     _kernelFunctionPtr(kernelFunction.copy())
 {
     if (kernelFunction.getNParameters() != spatialFunctionList.size()) {
-        throw lsst::pex::exceptions::InvalidParameter("Length of spatialFunctionList does not match # of kernel function params");
+        throw LSST_EXCEPT(ex::InvalidParameterException,
+            "Length of spatialFunctionList does not match # of kernel function params");
     }
 }
 
@@ -73,7 +77,7 @@ double lsst::afw::math::AnalyticKernel::computeImage(
     typedef lsst::afw::image::Image<PixelT>::x_iterator x_iterator;
     
     if (image.getDimensions() != this->getDimensions()) {
-        throw lsst::pex::exceptions::InvalidParameter("image is the wrong size");
+        throw LSST_EXCEPT(ex::InvalidParameterException, "image is the wrong size");
     }
     if (this->isSpatiallyVarying()) {
         this->setKernelParametersFromSpatialModel(x, y);

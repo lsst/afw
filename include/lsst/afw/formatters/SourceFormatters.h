@@ -39,16 +39,16 @@ public:
     virtual void write(
         lsst::daf::base::Persistable const *,
         lsst::daf::persistence::Storage::Ptr,
-        lsst::daf::base::DataProperty::PtrType
+        lsst::daf::base::PropertySet::Ptr
     );
     virtual lsst::daf::base::Persistable* read(
         lsst::daf::persistence::Storage::Ptr,
-        lsst::daf::base::DataProperty::PtrType
+        lsst::daf::base::PropertySet::Ptr
     );
     virtual void update(
         lsst::daf::base::Persistable*,
         lsst::daf::persistence::Storage::Ptr,
-        lsst::daf::base::DataProperty::PtrType
+        lsst::daf::base::PropertySet::Ptr
     );
 
     template <class Archive>

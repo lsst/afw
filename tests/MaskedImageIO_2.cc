@@ -2,17 +2,13 @@
 #include <stdexcept>
 
 #include "lsst/daf/base.h"
-#include "lsst/daf/data/FitsFormatter.h"
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/image.h"
-#include "lsst/afw/math.h"
 
 using namespace std;
-using boost::any_cast;
 
 using lsst::pex::logging::Trace;
-using lsst::daf::base::DataProperty;
-using lsst::daf::data::FitsFormatter;
+using lsst::daf::base::PropertySet;
 
 namespace pexEx = lsst::pex::exceptions;
 namespace image = lsst::afw::image;
@@ -26,10 +22,10 @@ void test(char *name) {
     typedef image::MaskPixel MaskPixelType;
     typedef float ImagePixelType;
 
-    const int hdu = 0;
-    lsst::daf::base::DataProperty::PtrType metadata(static_cast<lsst::daf::base::DataProperty *>(NULL));
+    int const hdu = 0;
+    PropertySet::Ptr metadata;
     bool const conformMask = true;      // use mask definitions from the file
-    image::MaskedImage<ImagePixelType, MaskPixelType> testMasked(name, hdu, metadata, conformMask);
+    image::MaskedImage<ImagePixelType, MaskPixelType> testMasked(string(name), hdu, metadata, conformMask);
 
     testMasked.writeFits("testout");
 }
@@ -37,20 +33,26 @@ void test(char *name) {
 int main(int argc, char *argv[]) {
     if (argc < 2) {
         cerr << "Usage: inputBaseName" << endl;
-        return 1;
+        return EXIT_FAILURE;
     }
-    
+
+    int status = EXIT_SUCCESS;
     Trace::setDestination(cout);
     Trace::setVerbosity(".", 1);
-
     try {
-        try {
-            test(argv[1]);
-        } catch (pexEx::ExceptionStack &e) {
-            throw pexEx::Runtime(std::string("In handler\n") + e.what());
-        }
-    } catch (pexEx::ExceptionStack &e) {
+        test(argv[1]);
+    } catch (pexEx::Exception &e) {
         clog << e.what() << endl;
-        return 1;
+        status = EXIT_FAILURE;
     }
+
+    // Check for memory leaks
+    if (lsst::daf::base::Citizen::census(0) == 0) {
+        cerr << "No leaks detected" << endl;
+    } else {
+        cerr << "Leaked memory blocks:" << endl;
+        lsst::daf::base::Citizen::census(cerr);
+        status = EXIT_FAILURE;
+    }
+    return status;
 }

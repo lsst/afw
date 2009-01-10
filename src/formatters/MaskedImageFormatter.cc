@@ -21,7 +21,6 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 
 #include "lsst/daf/base.h"
 #include "lsst/daf/persistence.h"
-#include "lsst/daf/persistence/DataPropertyFormatter.h"
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/formatters/MaskedImageFormatter.h"
 #include "lsst/afw/formatters/ImageFormatter.h"
@@ -76,12 +75,12 @@ template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
     Persistable const* persistable,
     Storage::Ptr storage,
-    lsst::daf::base::DataProperty::PtrType additionalData) {
+    lsst::daf::base::PropertySet::Ptr additionalData) {
     execTrace("MaskedImageFormatter write start");
     MaskedImage<ImagePixelT, MaskPixelT> const* ip =
         dynamic_cast<MaskedImage<ImagePixelT, MaskPixelT> const*>(persistable);
     if (ip == 0) {
-        throw std::runtime_error("Persisting non-MaskedImage");
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Persisting non-MaskedImage");
     }
     if (typeid(*storage) == typeid(BoostStorage)) {
         execTrace("MaskedImageFormatter write BoostStorage");
@@ -97,13 +96,13 @@ void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
         execTrace("MaskedImageFormatter write end");
         return;
     }
-    throw std::runtime_error("Unrecognized Storage for MaskedImage");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unrecognized Storage for MaskedImage");
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 Persistable* MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::read(
     Storage::Ptr storage,
-    lsst::daf::base::DataProperty::PtrType additionalData) {
+    lsst::daf::base::PropertySet::Ptr additionalData) {
     execTrace("MaskedImageFormatter read start");
     if (typeid(*storage) == typeid(BoostStorage)) {
         execTrace("MaskedImageFormatter read BoostStorage");
@@ -120,15 +119,15 @@ Persistable* MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::read
         execTrace("MaskedImageFormatter read end");
         return ip;
     }
-    throw std::runtime_error("Unrecognized Storage for MaskedImage");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unrecognized Storage for MaskedImage");
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::update(
     Persistable* persistable,
     Storage::Ptr storage,
-    lsst::daf::base::DataProperty::PtrType additionalData) {
-    throw std::runtime_error("Unexpected call to update for MaskedImage");
+    lsst::daf::base::PropertySet::Ptr additionalData) {
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unexpected call to update for MaskedImage");
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT> template <class Archive>
@@ -138,7 +137,7 @@ void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::delegateSeri
     MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>* ip =
         dynamic_cast<MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>*>(persistable);
     if (ip == 0) {
-        throw std::runtime_error("Serializing non-MaskedImage");
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Serializing non-MaskedImage");
     }
     ar & ip->_image & ip->_variance & ip->_mask;
     execTrace("MaskedImageFormatter delegateSerialize end");

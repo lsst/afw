@@ -60,7 +60,7 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
     // These have been commented out upon merging to the trunk.
     
     // Read a fits file in as a MaskedImage
-    base::DataProperty::PtrType miMetadata = base::DataProperty::createPropertyNode("FitsMetadata");
+    base::PropertySet::Ptr miMetadata(new base::PropertySet());
     int const hdu = 0;
     image::MaskedImage<pixelType> mImageFOO(afwdata + "/small_MI"); // input CFHT MI
     image::MaskedImage<pixelType> mImage(afwdata + "/small_MI", hdu, miMetadata); // input CFHT MI
@@ -92,7 +92,7 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
     // construct a Wcs first.  The Wcs class takes the Exposure metadata
     // as a DataPropertyPtrT.  getMetadata() returns a pointer to the metadata.
 
-    base::DataProperty::PtrType mData = miMetadata;
+    base::PropertySet::Ptr mData = miMetadata;
 
     // make sure it can be copied.
     image::Wcs myWcs(mData);  
@@ -125,7 +125,7 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
     // try to get the Wcs when there isn't one
     try {
         image::Wcs noWcs = *regExpImage.getWcs();
-    } catch (lsst::pex::exceptions::ExceptionStack &e) {
+    } catch (lsst::pex::exceptions::Exception &e) {
         logging::Trace("lsst.afw.Exposure", 5, "Caught Exception for getting a null Wcs: %s", e.what());
     }
 
@@ -145,14 +145,14 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
        
     try {
         int const hdu = 0;          // the HDU to read
-        base::DataProperty::PtrType mCorData(base::DataProperty::createPropertyNode("FitsMetadata"));
+        base::PropertySet::Ptr mCorData(new base::PropertySet());
         image::MaskedImage<pixelType> mCorruptImage("tests/data/small_MI_corrupt", hdu,
                                                     mCorData); // CFHT MI with corrupt header
         image::Wcs wcs = image::Wcs(mCorData);
             
         image::Exposure<pixelType> newCorExposure(mCorruptImage, wcs);
        
-    } catch (lsst::pex::exceptions::ExceptionStack &e) {
+    } catch (lsst::pex::exceptions::Exception &e) {
         logging::Trace("lsst.afw.Exposure", 1,
                        "Reading Corrupted MaskedImage Failed: %s", e.what());
     }
@@ -182,7 +182,7 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
            
         image::MaskedImage<pixelType> subExpMI = subExpImage.getMaskedImage();
         subExpMI.writeFits(expMIOutFile1);
-    } catch (lsst::pex::exceptions::ExceptionStack &e) {
+    } catch (lsst::pex::exceptions::Exception &e) {
         logging::Trace("lsst.afw.Exposure", 5, "Caught Exception for requested subRegion: %s", e.what());
     }
        
@@ -197,7 +197,7 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
             
         image::MaskedImage<pixelType> subExpMI2 = subExpImage2.getMaskedImage();
         subExpMI2.writeFits(expMIOutFile2);
-    } catch (lsst::pex::exceptions::ExceptionStack &e) {
+    } catch (lsst::pex::exceptions::Exception &e) {
         logging::Trace("lsst.afw.Exposure", 5, "Caught Exception for requested subRegion2: %s", e.what());
     }
        
@@ -219,14 +219,14 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
     // Class...writeFits still needs to be implemented.
     try {
         image::Exposure<pixelType> exposure(afwdata + "/871034p_1_MI"); // input CFHT Exposure
-    } catch (lsst::pex::exceptions::ExceptionStack &e) {
+    } catch (lsst::pex::exceptions::Exception &e) {
         logging::Trace("lsst.afw.Exposure", 5, "Reading MaskedImage Failed - caught Exception: %s", e.what());
     }
 
     try {
         image::Exposure<pixelType> exposure;
         exposure.writeFits(expOutFile1);
-    } catch (lsst::pex::exceptions::ExceptionStack &e) {
+    } catch (lsst::pex::exceptions::Exception &e) {
         logging::Trace("lsst.afw.Exposure", 5, "Writing MaskedImage Failed - caught Exception: %s", e.what());
     }
 
@@ -236,7 +236,7 @@ int main() {
     char *afwdataCStr = getenv("AFWDATA_DIR");
     if (afwdataCStr == 0) {
         std::cerr << "afwdata must be set up" << std::endl;
-        exit(1);
+        return EXIT_FAILURE;
     }
     afwdata = afwdataCStr;
                 
@@ -249,6 +249,8 @@ int main() {
     if (base::Citizen::census(0) != 0) {
         std::cerr << "Leaked memory blocks:" << std::endl;
         base::Citizen::census(std::cerr);
+        return EXIT_FAILURE;
     }
+    return EXIT_SUCCESS;
 
 } //close main

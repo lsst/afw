@@ -16,6 +16,8 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
 
+namespace ex = lsst::pex::exceptions;
+
 /**
  * @brief Construct an empty LinearCombinationKernel of size 0x0
  */
@@ -62,7 +64,7 @@ lsst::afw::math::LinearCombinationKernel::LinearCombinationKernel(
 /**
  * @brief Construct a spatially varying LinearCombinationKernel with the spatially varying parameters specified
  *
- * @throw lsst::pex::exceptions::InvalidParameter if the length of spatialFunctionList != # kernels
+ * @throw lsst::pex::exceptions::InvalidParameterException  if the length of spatialFunctionList != # kernels
  */
 lsst::afw::math::LinearCombinationKernel::LinearCombinationKernel(
     KernelList const &kernelList,    ///< list of (shared pointers to) kernels
@@ -74,7 +76,8 @@ lsst::afw::math::LinearCombinationKernel::LinearCombinationKernel(
     _kernelParams(std::vector<double>(kernelList.size()))
 {
     if (kernelList.size() != spatialFunctionList.size()) {
-        throw lsst::pex::exceptions::InvalidParameter("Length of spatialFunctionList does not match length of kernelList");
+        throw LSST_EXCEPT(ex::InvalidParameterException,
+            "Length of spatialFunctionList does not match length of kernelList");
     }
     checkKernelList(kernelList);
     _computeKernelImageList();
@@ -87,7 +90,7 @@ double lsst::afw::math::LinearCombinationKernel::computeImage(
     double y
 ) const {
     if (image.getDimensions() != this->getDimensions()) {
-        throw lsst::pex::exceptions::InvalidParameter("image is the wrong size");
+        throw LSST_EXCEPT(ex::InvalidParameterException,"image is the wrong size");
     }
     if (this->isSpatiallyVarying()) {
         this->computeKernelParametersFromSpatialModel(this->_kernelParams, x, y);
@@ -134,11 +137,11 @@ lsst::afw::math::LinearCombinationKernel::getKernelList() const {
 /**
  * @brief Check that all kernels have the same size and center and that none are spatially varying
  *
- * @throw lsst::pex::exceptions::InvalidParameter if the check fails
+ * @throw lsst::pex::exceptions::InvalidParameterException  if the check fails
  */
 void lsst::afw::math::LinearCombinationKernel::checkKernelList(const KernelList &kernelList) const {
     if (kernelList.size() < 1) {
-        throw lsst::pex::exceptions::InvalidParameter("kernelList has no elements");
+        throw LSST_EXCEPT(ex::InvalidParameterException, "kernelList has no elements");
     }
     
     int ctrX = kernelList[0]->getCtrX();
@@ -146,16 +149,16 @@ void lsst::afw::math::LinearCombinationKernel::checkKernelList(const KernelList 
     
     for (unsigned int ii = 0; ii < kernelList.size(); ++ii) {
         if (kernelList[ii]->getDimensions() != kernelList[0]->getDimensions()) {
-            throw lsst::pex::exceptions::InvalidParameter(
-                                                  boost::format("kernel %d has different size than kernel 0") % ii);
+            throw LSST_EXCEPT(ex::InvalidParameterException,
+                (boost::format("kernel %d has different size than kernel 0") % ii).str());
         }
         if ((ctrX != kernelList[ii]->getCtrX()) || (ctrY != kernelList[ii]->getCtrY())) {
-            throw lsst::pex::exceptions::InvalidParameter(
-                                                  boost::format("kernel %d has different center than kernel 0") % ii);
+            throw LSST_EXCEPT(ex::InvalidParameterException, 
+                (boost::format("kernel %d has different center than kernel 0") % ii).str());
         }
         if (kernelList[ii]->isSpatiallyVarying()) {
-            throw lsst::pex::exceptions::InvalidParameter(
-                boost::format("kernel %d is spatially varying") % ii);
+            throw LSST_EXCEPT(ex::InvalidParameterException,
+                (boost::format("kernel %d is spatially varying") % ii).str());
         }
     }
 }

@@ -63,7 +63,7 @@ int detection::Footprint::id = 0;
 /**
  * Create a Footprint
  *
- * \throws lsst::pex::exceptions::InvalidParameter in nspan is < 0
+ * \throws lsst::pex::exceptions::InvalidParameterException in nspan is < 0
  */
 detection::Footprint::Footprint(int nspan,         //!< initial number of Span%s in this Footprint
                                 const image::BBox region) //!< Bounding box of MaskedImage footprint lives in
@@ -76,7 +76,8 @@ detection::Footprint::Footprint(int nspan,         //!< initial number of Span%s
       _region(region),
       _normalized(false) {
     if (nspan < 0) {
-        throw lsst::pex::exceptions::InvalidParameter(boost::format("Number of spans requested is -ve: %d") % nspan);
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                          (boost::format("Number of spans requested is -ve: %d") % nspan).str());
     }
     _npix = 0;
 }
@@ -263,9 +264,9 @@ void detection::Footprint::insertIntoImage(image::Image<boost::uint16_t>& idImag
     int const y0 = _region.getY0();
 
     if (width != idImage.getWidth() || height != idImage.getHeight()) {
-        throw lsst::pex::exceptions::InvalidParameter(boost::format("Image of size (%dx%d) doesn't match "
-                                                       "Footprint's host Image of size (%dx%d)")
-                                         % idImage.getWidth() % idImage.getHeight() % width % height);
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                          (boost::format("Image of size (%dx%d) doesn't match Footprint's host Image of size (%dx%d)") %
+                              idImage.getWidth() % idImage.getHeight() % width % height).str());
     }
 
     for (Footprint::SpanList::const_iterator spi = _spans.begin(); spi != _spans.end(); ++spi) {
@@ -367,8 +368,6 @@ static void set_footprint_id(typename image::Image<IDPixelT>::Ptr idImage,	// th
                              const int id,          // the desired ID
                              int dx = 0, int dy = 0 // Add these to all x/y in the Footprint
                             ) {
-    using image::operator+=;
-
     for (detection::Footprint::SpanList::const_iterator siter = foot->getSpans().begin();
 							siter != foot->getSpans().end(); siter++) {
         detection::Span::Ptr const span = *siter;
@@ -427,7 +426,7 @@ typename boost::shared_ptr<image::Image<IDImageT> > setFootprintArrayIDs(
                                                ) {
     std::vector<detection::Footprint::Ptr>::const_iterator fiter = footprints.begin();
     if (fiter == footprints.end()) {
-        throw lsst::pex::exceptions::InvalidParameter("You didn't provide any footprints");
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "You didn't provide any footprints");
     }
     const detection::Footprint::Ptr foot = *fiter;
 

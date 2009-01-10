@@ -36,7 +36,7 @@ DecoratedImageT make_image(int const width=5, int const height=6) {
 
 BOOST_AUTO_TEST_CASE(setValues) {
     DecoratedImageT dimg = make_image();
-    daf_base::DataProperty::PtrType metadata = dimg.getMetadata();
+    daf_base::PropertySet::Ptr metadata = dimg.getMetadata();
 
-    metadata->addProperty(daf_base::DataProperty("RHL"));
+    metadata->add("RHL", 1);
 }

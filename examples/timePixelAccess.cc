@@ -26,7 +26,7 @@ void timePixelAccess(ImageT const &image, int nIter) {
     double secPerIter = (clock() - startTime) / static_cast<double> (nIter * CLOCKS_PER_SEC);
     double megaPix = static_cast<double>(nCols * nRows) / 1.0e6;
     double secPerMPixPerIter = secPerIter / static_cast<double>(megaPix);
-    std::cout << "Pixel Iterator\t" << nCols << "\t" << nRows << "\t" << megaPix << "\t" << secPerIter << "\t\t" << secPerMPixPerIter << std::endl;
+    std::cout << "Pixel Iterator\t" << nCols << "\t" << nRows << "\t" << megaPix << "\t" << secPerIter << "\t" << secPerMPixPerIter << std::endl;
 
     startTime = clock();
     for (int iter = 0; iter < nIter; ++iter) {
@@ -38,7 +38,7 @@ void timePixelAccess(ImageT const &image, int nIter) {
     }
     secPerIter = (clock() - startTime) / static_cast<double> (nIter * CLOCKS_PER_SEC);
     secPerMPixPerIter = secPerIter / static_cast<double>(megaPix);
-    std::cout << "Pixel Locator\t" << nCols << "\t" << nRows << "\t" << megaPix << "\t" << secPerIter << "\t\t" << secPerMPixPerIter << std::endl;
+    std::cout << "Pixel Locator\t" << nCols << "\t" << nRows << "\t" << megaPix << "\t" << secPerIter << "\t" << secPerMPixPerIter << std::endl;
 }
 
 int main(int argc, char **argv) {

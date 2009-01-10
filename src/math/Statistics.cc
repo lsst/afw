@@ -8,6 +8,7 @@
 
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
+namespace ex = lsst::pex::exceptions;
 
 namespace {
     double const NaN = std::numeric_limits<double>::quiet_NaN();
@@ -26,7 +27,7 @@ math::Statistics<Image>::Statistics(Image const& img, ///< Image (or MaskedImage
                                        _mean(NaN), _variance(NaN) {
     _n = img.getWidth()*img.getHeight();
     if (_n == 0) {
-        throw lsst::pex::exceptions::InvalidParameter("Image contains no pixels");
+        throw LSST_EXCEPT(ex::InvalidParameterException, "Image contains no pixels");
     }
     // Check that an int's large enough to hold the number of pixels
     assert(img.getWidth()*static_cast<double>(img.getHeight()) < std::numeric_limits<int>::max());
@@ -59,8 +60,8 @@ math::Statistics<Image>::Statistics(Image const& img, ///< Image (or MaskedImage
 
     if (flags & (STDEV | VARIANCE)) {
         if (_n == 1) {
-            throw lsst::pex::exceptions::InvalidParameter("Image contains only one pixel; "
-                                                          "population st. dev. is undefined");
+            throw LSST_EXCEPT(ex::InvalidParameterException,
+                "Image contains only one pixel; population st. dev. is undefined");
         }
     }
 
@@ -76,7 +77,8 @@ template<typename Image>
 std::pair<double, double> math::Statistics<Image>::getResult(math::Property const prop ///< Desired property
                                              ) const {
     if (!(prop & _flags)) {             // we didn't calculate it
-        throw lsst::pex::exceptions::InvalidParameter(boost::format("You didn't ask me to calculate %d") % prop);
+        throw LSST_EXCEPT(ex::InvalidParameterException,
+            (boost::format("You didn't ask me to calculate %d") % prop).str());
     }
 
     value_type ret(NaN, NAN);

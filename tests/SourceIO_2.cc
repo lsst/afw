@@ -25,7 +25,7 @@
 
 using boost::int64_t;
 
-using lsst::daf::base::DataProperty;
+using lsst::daf::base::PropertySet;
 using lsst::daf::base::Persistable;
 using lsst::pex::policy::Policy;
 using lsst::daf::persistence::LogicalLocation;
@@ -35,14 +35,7 @@ using lsst::daf::persistence::Storage;
 namespace afwFormatters = lsst::afw::formatters;
 using namespace lsst::afw::detection;
 
-
-#define Assert(pred, msg) do { if (!(pred)) { doThrow((msg), __LINE__); } } while(false)
-
-static void doThrow(std::string const & msg, int line) {
-    std::ostringstream oss;
-    oss << __FILE__ << ':' << line << ":\n" << msg << std::ends;
-    throw std::runtime_error(oss.str());
-}
+#define Assert(pred, msg) do { if (!(pred)) { throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, (msg)); } } while (false)
 
 
 static std::string const makeTempFile() {
@@ -132,15 +125,15 @@ static int createVisitId() {
 
 
 static void testBoost(void) {
-    // Create a blank Policy and DataProperty.
-    Policy::Ptr           policy(new Policy);
-    DataProperty::PtrType props = DataProperty::createPropertyNode("root");
+    // Create a blank Policy and PropertySet.
+    Policy::Ptr      policy(new Policy);
+    PropertySet::Ptr props(new PropertySet);
     int visitId = createVisitId();
     // Not really how ccdExposureId should be set, but good enough for now.
-    props->addProperty(DataProperty("visitId",    boost::any(visitId)));
-    props->addProperty(DataProperty("exposureId", boost::any(static_cast<int64_t>(visitId)*2)));
-    props->addProperty(DataProperty("ccdId",      boost::any(std::string("0"))));
-    props->addProperty(DataProperty("sliceId",    boost::any(static_cast<int>(0))));
+    props->add("visitId", visitId);
+    props->add("exposureId", static_cast<int64_t>(visitId)*2);
+    props->add("ccdId", 0);
+    props->add("sliceId", 0);
 
     // Setup test location
     LogicalLocation loc(makeTempFile());
@@ -151,7 +144,6 @@ static void testBoost(void) {
     initTestData(dsv);
     dsv.push_back(ds);
 
-
     Persistence::Ptr pers = Persistence::getPersistence(policy);
 
     // write out data
@@ -159,7 +151,8 @@ static void testBoost(void) {
         Storage::List storageList;
         storageList.push_back(pers->getPersistStorage("BoostStorage", loc));
         pers->persist(dsv, storageList, props);
-        Assert(dsv[0].getId() == (static_cast<int64_t>(visitId) << 24) + 1LL, "Source id not changed to expected value");
+        Assert(dsv[0].getId() == (static_cast<int64_t>(visitId) << 24) + 1LL,
+               "Source id not changed to expected value");
     }
 
     // read in data
@@ -177,28 +170,26 @@ static void testBoost(void) {
 }
 
 
-static DataProperty::PtrType createDbTestProps(
+static PropertySet::Ptr createDbTestProps(
     int         const   sliceId,
     int         const   numSlices,
     std::string const & itemName
 ) {
     Assert(sliceId < numSlices && numSlices > 0, "invalid slice parameters");
 
-    DataProperty::PtrType props = DataProperty::createPropertyNode("root");
+    PropertySet::Ptr props(new PropertySet);
 
     if (numSlices > 1) {
-        DataProperty::PtrType dias = DataProperty::createPropertyNode("Source");
-        dias->addProperty(DataProperty("isPerSliceTable", boost::any(true)));
-        dias->addProperty(DataProperty("numSlices",       boost::any(numSlices)));
-        props->addProperty(dias);
+        props->add("Source.isPerSliceTable", true);
+        props->add("Source.numSlices", numSlices);
     }
     int visitId = createVisitId();
-    props->addProperty(DataProperty("visitId", visitId));
-    props->addProperty(DataProperty("exposureId", boost::any(static_cast<int64_t>(visitId)*2)));
+    props->add("visitId", visitId);
+    props->add("exposureId", static_cast<int64_t>(visitId)*2);
     // Not really how ccdExposureId should be set, but good enough for now.
-    props->addProperty(DataProperty("ccdId",    std::string("0")));
-    props->addProperty(DataProperty("sliceId",  boost::any(sliceId)));
-    props->addProperty(DataProperty("itemName", boost::any(itemName)));
+    props->add("ccdId",    0);
+    props->add("sliceId",  sliceId);
+    props->add("itemName", itemName);
     return props;
 }
 
@@ -213,8 +204,8 @@ struct SourceLessThan {
 
 static void testDb(std::string const & storageType) {
     // Create the required Policy and DataProperty
-    Policy::Ptr           policy(new Policy);
-    DataProperty::PtrType props(createDbTestProps(0, 1, "Source"));
+    Policy::Ptr      policy(new Policy);
+    PropertySet::Ptr props = createDbTestProps(0, 1, "Source");
 
     Persistence::Ptr pers = Persistence::getPersistence(policy);
     LogicalLocation loc("mysql://lsst10.ncsa.uiuc.edu:3306/test");
@@ -223,7 +214,7 @@ static void testDb(std::string const & storageType) {
     Source ds(0, 0.0, 1.0, 2.0, 3.0);
     SourceVector dsv;
     dsv.push_back(ds);
-    int64_t visitId = static_cast<int64_t>(boost::any_cast<int>(props->findUnique("visitId")->getValue()));
+    int64_t visitId = props->getAsInt64("visitId");
     // write out data
     {
         Storage::List storageList;
@@ -290,8 +281,6 @@ int main(int const argc, char const * const * const argv) {
             Assert(false, "Detected memory leaks");
         }
         return EXIT_SUCCESS;
-    } catch (lsst::pex::exceptions::ExceptionStack & exs) {
-        std::clog << exs.what() << exs.getStack()->toString("...", true) << std::endl;
     } catch (std::exception & ex) {
         std::clog << ex.what() << std::endl;
     }

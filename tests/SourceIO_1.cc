@@ -25,7 +25,7 @@
 
 using boost::int64_t;
 
-using lsst::daf::base::DataProperty;
+using lsst::daf::base::PropertySet;
 using lsst::daf::base::Persistable;
 using lsst::daf::persistence::LogicalLocation;
 using lsst::daf::persistence::Persistence;
@@ -36,13 +36,7 @@ namespace afwFormatters = lsst::afw::formatters;
 using namespace lsst::afw::detection;
 
 
-#define Assert(pred, msg) do { if (!(pred)) { doThrow((msg), __LINE__); } } while(false)
-
-static void doThrow(std::string const & msg, int line) {
-    std::ostringstream oss;
-    oss << __FILE__ << ':' << line << ":\n" << msg << std::ends;
-    throw std::runtime_error(oss.str());
-}
+#define Assert(pred, msg) do { if (!(pred)) { throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, (msg)); } } while (false)
 
 
 static std::string const makeTempFile() {
@@ -124,9 +118,9 @@ static void initTestData(SourceVector & v, int sliceId = 0) {
 
 
 static void testBoost(void) {
-    // Create a blank Policy and DataProperty.
-    Policy::Ptr           policy(new Policy);
-    DataProperty::PtrType props = DataProperty::createPropertyNode("root");
+    // Create a blank Policy and PropertySet.
+    Policy::Ptr      policy(new Policy);
+    PropertySet::Ptr props(new PropertySet);
 
     // Setup test location
     LogicalLocation loc(makeTempFile());
@@ -171,25 +165,23 @@ static int createVisitId() {
 }
 
 
-static DataProperty::PtrType createDbTestProps(
+static PropertySet::Ptr createDbTestProps(
     int         const   sliceId,
     int         const   numSlices,
     std::string const & itemName
 ) {
     Assert(sliceId < numSlices && numSlices > 0, "invalid slice parameters");
 
-    DataProperty::PtrType props = DataProperty::createPropertyNode("root");
+    PropertySet::Ptr props(new PropertySet);
 
     if (numSlices > 1) {
-        DataProperty::PtrType dias = DataProperty::createPropertyNode("Source");
-        dias->addProperty(DataProperty("isPerSliceTable", boost::any(true)));
-        dias->addProperty(DataProperty("numSlices",       boost::any(numSlices)));
-        props->addProperty(dias);
+        props->add("Source.isPerSliceTable", true);
+        props->add("Source.numSlices", numSlices);
     }
-    props->addProperty(DataProperty("visitId",  boost::any(createVisitId())));
-    props->addProperty(DataProperty("ccdId",    boost::any(std::string("7"))));
-    props->addProperty(DataProperty("sliceId",  boost::any(sliceId)));
-    props->addProperty(DataProperty("itemName", boost::any(itemName)));
+    props->add("visitId",  createVisitId());
+    props->add("ccdId",    "7");
+    props->add("sliceId",  sliceId);
+    props->add("itemName", itemName);
     return props;
 }
 
@@ -203,9 +195,9 @@ struct SourceLessThan {
 
 
 static void testDb(std::string const & storageType) {
-    // Create the required Policy and DataProperty
-    Policy::Ptr           policy(new Policy);
-    DataProperty::PtrType props(createDbTestProps(0, 1, "Source"));
+    // Create the required Policy and PropertySet
+    Policy::Ptr policy(new Policy);
+    PropertySet::Ptr props = createDbTestProps(0, 1, "Source");
 
     Persistence::Ptr pers = Persistence::getPersistence(policy);
     LogicalLocation loc("mysql://lsst10.ncsa.uiuc.edu:3306/test");
@@ -259,9 +251,9 @@ static void testDb(std::string const & storageType) {
 
 
 static void testDb2(std::string const & storageType) {
-    // Create the required Policy and DataProperty
+    // Create the required Policy and PropertySet
     Policy::Ptr policy(new Policy);
-    std::string policyRoot(std::string("Formatter.") + "SourceVector");
+    std::string policyRoot("Formatter.SourceVector");
     // use custom table name patterns for this test
     policy->set(policyRoot + ".Source.perVisitTableNamePattern", "Source_%1%");
     policy->set(policyRoot + ".Source.perSliceAndVisitTableNamePattern", "Source_%1%_%2%");
@@ -273,12 +265,11 @@ static void testDb2(std::string const & storageType) {
 
     SourceVector all;
     int const numSlices = 3;
-    DataProperty::PtrType props(createDbTestProps(0, numSlices, "Source"));
+    PropertySet::Ptr props = createDbTestProps(0, numSlices, "Source");
 
     // 1. Write out each slice table seperately
     for (int sliceId = 0; sliceId < numSlices; ++sliceId) {
-        DataProperty::PtrType dp = props->findUnique("sliceId");
-        dp->setValue(boost::any(sliceId));
+        props->set("sliceId", sliceId);
         SourceVector dsv;
         initTestData(dsv, sliceId);
         all.insert(all.end(), dsv.begin(), dsv.end());
@@ -318,9 +309,7 @@ int main(int const argc, char const * const * const argv) {
             Assert(false, "Detected memory leaks");
         }
         return EXIT_SUCCESS;
-    } catch (lsst::pex::exceptions::ExceptionStack & exs) {
-        std::clog << exs.what() << exs.getStack()->toString("...", true) << std::endl;
-    } catch (std::exception & ex) {
+    } catch (std::exception const & ex) {
         std::clog << ex.what() << std::endl;
     }
 

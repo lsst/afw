@@ -14,6 +14,8 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
 
+namespace ex = lsst::pex::exceptions;
+
 /**
  * @brief Construct a spatially varying SeparableKernel, replicating a spatial function once per kernel function parameter
  */
@@ -34,7 +36,7 @@ lsst::afw::math::SeparableKernel::SeparableKernel(
 /**
  * @brief Construct a spatially varying SeparableKernel
  *
- * @throw lsst::pex::exceptions::InvalidParameter if the length of spatialFunctionList != # kernel function parameters.
+ * @throw lsst::pex::exceptions::InvalidParameterException if the length of spatialFunctionList != # kernel function parameters.
  */
 lsst::afw::math::SeparableKernel::SeparableKernel(
     int width,
@@ -50,7 +52,7 @@ lsst::afw::math::SeparableKernel::SeparableKernel(
     _localRowList(height)
 {
     if (kernelColFunction.getNParameters() + kernelRowFunction.getNParameters() != spatialFunctionList.size()) {
-        throw lsst::pex::exceptions::InvalidParameter(
+        throw LSST_EXCEPT(ex::InvalidParameterException,
             "Length of spatialFunctionList does not match # of kernel function params");
     }
 }
@@ -62,7 +64,7 @@ double lsst::afw::math::SeparableKernel::computeImage(
     double y
 ) const {
     if (image.getDimensions() != this->getDimensions()) {
-        throw lsst::pex::exceptions::InvalidParameter("image is the wrong size");
+        throw LSST_EXCEPT(ex::InvalidParameterException, "image is the wrong size");
     }
     if (this->isSpatiallyVarying()) {
         this->setKernelParametersFromSpatialModel(x, y);
@@ -86,7 +88,7 @@ double lsst::afw::math::SeparableKernel::computeImage(
  *
  * x, y are ignored if there is no spatial function.
  *
- * @throw lsst::pex::exceptions::InvalidParameter if colList or rowList is the wrong size
+ * @throw lsst::pex::exceptions::InvalidParameterException if colList or rowList is the wrong size
  */
 double lsst::afw::math::SeparableKernel::computeVectors(
     std::vector<PixelT> &colList,   ///< column vector
@@ -96,7 +98,7 @@ double lsst::afw::math::SeparableKernel::computeVectors(
     double y    ///< y (row position) at which to compute spatial function
 ) const {
     if (static_cast<int>(colList.size()) != this->getWidth() || static_cast<int>(rowList.size()) != this->getHeight()) {
-        throw lsst::pex::exceptions::InvalidParameter("colList and/or rowList are the wrong size");
+        throw LSST_EXCEPT(ex::InvalidParameterException, "colList and/or rowList are the wrong size");
     }
     if (this->isSpatiallyVarying()) {
         this->setKernelParametersFromSpatialModel(x, y);

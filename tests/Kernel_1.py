@@ -7,7 +7,7 @@ import unittest
 import numpy
 
 import lsst.utils.tests as utilsTests
-import lsst.pex.exceptions.exceptions as pexExcept
+import lsst.pex.exceptions as pexExcept
 import lsst.pex.logging as pexLog
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
@@ -20,6 +20,7 @@ pexLog.Trace_setVerbosity("lsst.afw", Verbosity)
 
 class KernelTestCase(unittest.TestCase):
     """A test case for Kernels"""
+
     def testFixedKernel(self):
         """Test FixedKernel using a ramp function
         """
@@ -96,11 +97,9 @@ class KernelTestCase(unittest.TestCase):
                         self.assertEqual(kArr[activeCol, activeRow], 1.0)
                         kArr[activeCol, activeRow] = 0.0
                         self.assertEqual(kArr.sum(), 0.0)
-                self.assertRaises(
-                    pexExcept.LsstInvalidParameter,
+                utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
                     afwMath.DeltaFunctionKernel, 0, kHeight, afwImage.PointI(kWidth, kHeight))
-                self.assertRaises(
-                    pexExcept.LsstInvalidParameter,
+                utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
                     afwMath.DeltaFunctionKernel, kWidth, 0, afwImage.PointI(kWidth, kHeight))
                             
 
