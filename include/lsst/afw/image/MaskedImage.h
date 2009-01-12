@@ -623,7 +623,8 @@ namespace image {
         /// We only support converting the Image part
         template<typename OtherPixelT>
         MaskedImage(MaskedImage<OtherPixelT, MaskPixelT, VariancePixelT> const& rhs, //!< Input image
-                    const bool deep) :                                         //!< Must be true; needed to disambiguate
+                    const bool deep     //!< Must be true; needed to disambiguate
+                   ) :
             lsst::daf::data::LsstBase(typeid(this)) {
             if (!deep) {
                 throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
@@ -634,15 +635,6 @@ namespace image {
             _image->swap(tmp);          // See Meyers, Effective C++, Items 11 and 43
         }
 
-        /**
-         * \fn MaskedImage& operator=(MaskedImage const& rhs)
-         * \brief Make the lhs use the rhs's pixels
-         * \param MaskedImage const& rhs
-         *
-         * If you are copying a scalar value, a simple <tt>lhs = scalar;</tt> is OK, but
-         * this is probably not the function that you want to use with an %image. To copy pixel values
-         * from the rhs use \link operator<<\endlink.
-         */
         //MaskedImage& operator=(MaskedImage const& rhs);
         
         virtual ~MaskedImage() {}

@@ -75,7 +75,7 @@ std::string const image::Filter::toString(lsst::daf::persistence::LogicalLocatio
  * Returns the name of the filter, using the \b Filter table in the database currently
  * set on the given DbStorage to map the filter identifier to a name.
  */
-std::string const image::Filter::toString(DbStorage & db) {
+std::string const image::Filter::toString(lsst::daf::persistence::DbStorage & db) {
     db.setTableForQuery("Filter");
     db.outColumn("filtName");
     // CORAL always maps MYSQL_TYPE_LONG (MySQL internal type specifier for INTEGER columns) to long
@@ -101,7 +101,7 @@ std::string const image::Filter::toString(DbStorage & db) {
 }
 
 
-int image::Filter::nameToId(DbStorage & db, std::string const & name) {
+int image::Filter::nameToId(lsst::daf::persistence::DbStorage & db, std::string const & name) {
     db.setTableForQuery("Filter");
     db.outColumn("filterId");
     db.condParam<std::string>("name", name);

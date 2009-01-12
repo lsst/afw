@@ -102,7 +102,8 @@ lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 template<typename ImageT, typename MaskT, typename VarianceT> 
 lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &src, ///< Parent Exposure
                                                                BBox const& bbox,    ///< Desired region in Exposure 
-                                                               bool const deep) :   ///< Should we make copy of pixels?
+                                                               bool const deep      ///< Should we make copy of pixels?
+                                                              ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _maskedImage(src.getMaskedImage(), bbox, deep),
     _wcsPtr(new lsst::afw::image::Wcs(*src._wcsPtr))

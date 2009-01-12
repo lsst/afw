@@ -116,7 +116,7 @@ image::Mask<MaskPixelT>& image::Mask<MaskPixelT>::operator=(const MaskPixelT rhs
 template<typename MaskPixelT>
 image::Mask<MaskPixelT>::Mask(std::string const& fileName, //!< Name of file to read
         int const hdu,                                     //!< HDU to read 
-        PropertySet::Ptr metadata,                         //!< file metadata (may point to NULL)
+        lsst::daf::base::PropertySet::Ptr metadata,                         //!< file metadata (may point to NULL)
         bool const conformMasks                            //!< Make Mask conform to mask layout in file?
                              ) :
     image::ImageBase<MaskPixelT>() {
@@ -440,7 +440,7 @@ void image::Mask<MaskPixelT>::setMaskPlaneValues(const int plane, const int x0, 
  * @brief Given a PropertySet, replace any existing MaskPlane assignments with the current ones.
  */
 template<typename MaskPixelT>
-void image::Mask<MaskPixelT>::addMaskPlanesToMetadata(PropertySet::Ptr metadata) {
+void image::Mask<MaskPixelT>::addMaskPlanesToMetadata(lsst::daf::base::PropertySet::Ptr metadata) {
     if (!metadata) {
         throw LSST_EXCEPT(ex::InvalidParameterException, "Null PropertySet::Ptr");
     }
@@ -473,7 +473,7 @@ void image::Mask<MaskPixelT>::addMaskPlanesToMetadata(PropertySet::Ptr metadata)
  */
 template<typename MaskPixelT>
 typename image::Mask<MaskPixelT>::MaskPlaneDict image::Mask<MaskPixelT>::parseMaskPlaneMetadata(
-	PropertySet::Ptr const metadata //!< metadata from a Mask
+	lsst::daf::base::PropertySet::Ptr const metadata //!< metadata from a Mask
                                                                                                ) {
     MaskPlaneDict newDict;
 

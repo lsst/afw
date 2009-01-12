@@ -725,7 +725,7 @@ pmFindFootprintAtPoint(const psImage *img,	// image to search
  */
 template<typename ImagePixelT, typename MaskPixelT>
 detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
-	const DetectionSet &set,
+	const DetectionSet &set,        //!< the input DetectionSet
         int r)                          //!< Grow Footprints by r pixels
     : lsst::daf::data::LsstBase(typeid(this)),
       _footprints(*new FootprintList()) {
