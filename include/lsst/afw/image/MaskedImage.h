@@ -157,19 +157,19 @@ namespace image {
             }
             /// Return the distance between two iterators
             std::ptrdiff_t operator-(MaskedImageIteratorBase const& rhs) {
-                return this->_iter->template get<0>() - rhs._iter->template get<0>();
+                return &this->_iter->template get<0>() - &rhs._iter->template get<0>();
             }
             /// Return true if the lhs equals the rhs
             bool operator==(MaskedImageIteratorBase const& rhs) {
-                return _iter == rhs._iter;
+                return &this->_iter->template get<0>() == &rhs._iter->template get<0>();
             }
             /// Return true if the lhs doesn't equal the rhs
             bool operator!=(MaskedImageIteratorBase const& rhs) {
-                return _iter != rhs._iter;
+                return &this->_iter->template get<0>() != &rhs._iter->template get<0>();
             }
             /// Return true if the lhs is less than the rhs
             bool operator<(MaskedImageIteratorBase const& rhs) {
-                return _iter < rhs._iter;
+                return &this->_iter->template get<0>() < &rhs._iter->template get<0>();
             }
             /// Convert an iterator to a Pixel
             operator Pixel() const {
