@@ -19,7 +19,7 @@ import lsst.pex.exceptions
 import lsst.daf.base
 import lsst.afw.image.imageLib as afwImage
 import eups
-#import lsst.afw.display.ds9 as ds9
+import lsst.afw.display.ds9 as ds9
 
 try:
     type(display)
@@ -153,8 +153,9 @@ class MaskedImageTestCase(unittest.TestCase):
         self.assertEqual(dimage.getImage().get(0,0), self.imgVal1)
         self.assertEqual(simage.getImage().get(0,0), self.imgVal1 + 2)
 
-    def checkImgPatch(self, img, x0=0, y0=0):
-        """Check that a patch of an image is correct; origin of patch is at (x0, y0)"""
+    def checkImgPatch12(self, img, x0, y0):
+        """Check that a patch of an image is correct; origin of patch is at (x0, y0) in full image
+        N.b. This isn't a general routine!  Works only for testSubimages[12]"""
         
         self.assertEqual(img.get(x0 - 1, y0 - 1), (self.imgVal1, self.EDGE, self.varVal1))
         self.assertEqual(img.get(x0,     y0),     (666,          self.BAD,  0))
@@ -163,7 +164,7 @@ class MaskedImageTestCase(unittest.TestCase):
         self.assertEqual(img.get(x0 + 3, y0 + 1), (self.imgVal1, 0x0,       self.varVal1))
         self.assertEqual(img.get(x0,     y0 + 2), (self.imgVal1, 0x0,       self.varVal1))
 
-    def testSubimages(self):
+    def testSubimages1(self):
         smimage = afwImage.MaskedImageF(self.mimage, afwImage.BBox(afwImage.PointI(1, 1), 10, 5))
         
         simage = afwImage.MaskedImageF(smimage, afwImage.BBox(afwImage.PointI(1, 1), 3, 2))
@@ -176,8 +177,8 @@ class MaskedImageTestCase(unittest.TestCase):
 
         del simage; del mimage2
 
-        self.checkImgPatch(self.mimage, 2, 2)
-        self.checkImgPatch(smimage, 1, 1)
+        self.checkImgPatch12(self.mimage, 2, 2)
+        self.checkImgPatch12(smimage, 1, 1)
 
     def testSubimages2(self):
         """Test subimages when we've played with the (x0, y0) value"""
@@ -196,8 +197,45 @@ class MaskedImageTestCase(unittest.TestCase):
         simage <<= mimage2
         del simage; del mimage2
         
-        self.checkImgPatch(self.mimage, 2, 2)
-        self.checkImgPatch(smimage, 1, 1)
+        self.checkImgPatch12(self.mimage, 2, 2)
+        self.checkImgPatch12(smimage, 1, 1)
+
+    def checkImgPatch3(self, img, deep):
+        """Check that a patch of an image is correct; origin of patch is at (x0, y0) in full image
+        N.b. This isn't a general routine!  Works only for testSubimages3"""
+
+        # Include deep in comparison so we can see which test fails
+        self.assertEqual(img.get(0,   0) + (deep, ), (100, 0x0, self.varVal1, deep))
+        self.assertEqual(img.get(10, 10) + (deep, ), (200, 0xf, self.varVal1, deep))
+
+    def testSubimages3(self):
+        """Test subimages when we've played with the (x0, y0) value"""
+
+        self.mimage.getImage().set(20, 20, 200); self.mimage.getMask().set(20, 20, 0xf)
+
+        for deep in (True, False):
+            mimage = self.mimage.Factory(self.mimage, afwImage.BBox(afwImage.PointI(10, 10), 64, 64), deep)
+            mimage.setXY0(afwImage.PointI(0, 0))
+            mimage2 = mimage.Factory(mimage)
+            
+            if display:
+                ds9.mtv(mimage2)
+                
+            self.checkImgPatch3(mimage2, deep)
+
+    def testSetCopiedMask(self):
+        """Check that we can set the Mask with a copied Mask"""
+        
+        crMask = self.mimage.getMask().Factory(self.mimage.getMask(), True)
+        msk = self.mimage.getMask(); msk |= crMask; del msk
+
+    def testVariance(self):
+        """Check that we can set the variance from the gain"""
+        gain = 2
+
+        var = self.mimage.getVariance()
+        var <<= self.mimage.getImage();
+	var /= gain
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

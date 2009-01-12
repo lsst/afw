@@ -30,37 +30,37 @@ namespace image {
         typedef boost::shared_ptr<lsst::afw::image::Wcs> Ptr;
         
         Wcs();
-        Wcs(lsst::daf::base::DataProperty::PtrType fitsMetaData);
+        Wcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
         Wcs(Wcs const &);
         Wcs & operator = (const Wcs &);
 
         ~Wcs();
 
         /// Return the input fits header
-        lsst::daf::base::DataProperty::PtrType getFitsMetaData() const { 
-            return _fitsMetaData; 
+        lsst::daf::base::PropertySet::Ptr getFitsMetadata() const { 
+            return _fitsMetadata; 
         }
 
         /// Return true iff Wcs is valid
         operator bool() const { return _wcsInfo != NULL; }
 
-        PointD raDecToColRow(PointD sky) const;
-        PointD raDecToColRow(double const ra, double const dec) const;
-        PointD raDecToColRow(double const radec[2]) const {
-            return raDecToColRow(radec[0], radec[1]);
+        PointD raDecToXY(PointD sky) const;
+        PointD raDecToXY(double const ra, double const dec) const;
+        PointD raDecToXY(double const radec[2]) const {
+            return raDecToXY(radec[0], radec[1]);
         }
 
-        PointD colRowToRaDec(PointD pix) const;
-        PointD colRowToRaDec(double const x, double const y) const;
-        PointD colRowToRaDec(double const xy[2]) const {
-            return colRowToRaDec(xy[0], xy[1]);
+        PointD xyToRaDec(PointD pix) const;
+        PointD xyToRaDec(double const x, double const y) const;
+        PointD xyToRaDec(double const xy[2]) const {
+            return xyToRaDec(xy[0], xy[1]);
         }
 
         double pixArea(PointD pix) const;
     private:
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::WcsFormatter);
 
-        lsst::daf::base::DataProperty::PtrType _fitsMetaData; ///< Input FITS header.  Caveat Emptor: may contain other keywords
+        lsst::daf::base::PropertySet::Ptr _fitsMetadata; ///< Input FITS header.  Caveat Emptor: may contain other keywords
         // including e.g. SIMPLE and BITPIX
         struct wcsprm* _wcsInfo;
         int _nWcsInfo;

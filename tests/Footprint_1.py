@@ -90,6 +90,32 @@ class FootprintTestCase(unittest.TestCase):
         self.assertEqual(bbox.getX1(), 105)
         self.assertEqual(bbox.getY1(), 11)
 
+    def testSpanShift(self):
+        """Test our ability to shift spans"""
+
+        span = afwDetection.Span(10, 100, 105)
+        foot = afwDetection.Footprint()
+
+        foot.addSpan(span, 1, 2)
+
+        bbox = foot.getBBox()
+        self.assertEqual(bbox.getWidth(), 6)
+        self.assertEqual(bbox.getHeight(), 1)
+        self.assertEqual(bbox.getX0(), 101)
+        self.assertEqual(bbox.getY0(), 12)
+        #
+        # Shift that span using Span.shift
+        #
+        foot = afwDetection.Footprint()
+        span.shift(-1, -2)
+        foot.addSpan(span)
+
+        bbox = foot.getBBox()
+        self.assertEqual(bbox.getWidth(), 6)
+        self.assertEqual(bbox.getHeight(), 1)
+        self.assertEqual(bbox.getX0(), 99)
+        self.assertEqual(bbox.getY0(), 8)
+
     def testFootprintFromBBox(self):
         """Create a rectangular Footprint"""
         foot = afwDetection.Footprint(afwImage.BBox(afwImage.PointI(9, 10), 7, 4),
@@ -254,7 +280,7 @@ def suite():
     tests.init()
 
     suites = []
-    #suites += unittest.makeSuite(FootprintTestCase)
+    suites += unittest.makeSuite(FootprintTestCase)
     suites += unittest.makeSuite(DetectionSetTestCase)
     suites += unittest.makeSuite(tests.MemoryTestCase)
     return unittest.TestSuite(suites)

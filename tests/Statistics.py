@@ -59,7 +59,7 @@ class StatisticsTestCase(unittest.TestCase):
         def getMean():
             stats.getValue(afwMath.MEAN)
 
-        self.assertRaises(lsst.pex.exceptions.LsstInvalidParameter, getMean)
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException, getMean)
 
     def testStats4(self):
         image2 = self.image.Factory(self.image)
@@ -90,6 +90,7 @@ def suite():
 
     suites = []
     suites += unittest.makeSuite(StatisticsTestCase)
+    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
 def run(exit=False):

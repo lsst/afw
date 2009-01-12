@@ -24,9 +24,9 @@ BOOST_AUTO_TEST_CASE(DetectionSets) {
 
     BOOST_CHECK_THROW(detection::DetectionSet<ImagePixelT>(img,         \
                                                            detection::Threshold(0, detection::Threshold::STDEV)), \
-                      lsst::pex::exceptions::ExceptionStack);
+                      lsst::pex::exceptions::Exception);
     
     BOOST_CHECK_THROW(detection::DetectionSet<ImagePixelT>(img, \
                                                            detection::Threshold(0, detection::Threshold::VARIANCE)), \
-                      lsst::pex::exceptions::ExceptionStack);
+                      lsst::pex::exceptions::Exception);
 }

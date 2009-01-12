@@ -70,12 +70,7 @@ template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
 	std::string const& baseName,    //!< The desired file's baseName (e.g. foo will read foo_{img.msk.var}.fits)
         const int hdu,                  //!< The HDU in the file (default: 0)
-#if 1                                   // Old name for boost::shared_ptrs
-        typename lsst::daf::base::DataProperty::PtrType
-#else
-        typename lsst::daf::base::DataProperty::Ptr
-#endif
-        metadata,                       //!< Filled out with metadata from file (default: NULL)
+        lsst::daf::base::PropertySet::Ptr metadata, //!< Filled out with metadata from file (default: NULL)
         bool const conformMasks         //!< Make Mask conform to mask layout in file?
                                                                         ) :
     lsst::daf::data::LsstBase(typeid(this)),
@@ -129,6 +124,18 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(MaskedI
     _variance(new Variance(*rhs._variance, bbox, deep)) {
     conformSizes();
 }
+
+#if defined(DOXYGEN)
+/**
+ * \brief Make the lhs use the rhs's pixels
+ *
+ * If you are copying a scalar value, a simple <tt>lhs = scalar;</tt> is OK, but
+ * this is probably not the function that you want to use with an %image. To copy pixel values
+ * from the rhs use \link lsst::afw::image::operator<<=\endlink.
+ */
+image::MaskedImage& operator=(image::MaskedImage const& rhs ///< Right hand side
+                      ) {}
+#endif
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::swap(MaskedImage &rhs) {
@@ -295,13 +302,8 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator/=(Ima
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
 	std::string const& baseName,    ///< The desired file's baseName (e.g. foo will read foo_{img.msk.var}.fits)
-#if 1                                   // Old name for boost::shared_ptrs
-              typename lsst::daf::base::DataProperty::PtrType
-#else
-              typename lsst::daf::base::DataProperty::ConstPtr
-#endif
-        metadata                        ///< Metadata to write to file; or NULL
-                                                                           ) const {
+        lsst::daf::base::PropertySet::Ptr metadata ///< Metadata to write to file; or NULL
+    ) const {
     _image->writeFits(MaskedImage::imageFileName(baseName), metadata);
     _mask->writeFits(MaskedImage::maskFileName(baseName));
     _variance->writeFits(MaskedImage::varianceFileName(baseName));
@@ -327,8 +329,9 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::conformSizes()
         }
 
         if (width != imageCols || height != imageRows) {
-            throw lsst::pex::exceptions::LengthError(boost::format("Dimension mismatch: Image %dx%d v. Mask %dx%d") %
-                                                     imageCols % imageRows % width % height);
+            throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                              (boost::format("Dimension mismatch: Image %dx%d v. Mask %dx%d") %
+                                  imageCols % imageRows % width % height).str());
         }
     }
 
@@ -342,8 +345,9 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::conformSizes()
         }
 
         if (width != imageCols || height != imageRows) {
-            throw lsst::pex::exceptions::LengthError(boost::format("Dimension mismatch: Image %dx%d v. Variance %dx%d") %
-                                                     imageCols % imageRows % width % height);
+            throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                              (boost::format("Dimension mismatch: Image %dx%d v. Variance %dx%d") %
+                                  imageCols % imageRows % width % height).str());
         }
     }
 }
@@ -466,6 +470,43 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::y_iterator
     typename Variance::y_iterator varianceEnd = getVariance()->y_at(x, y);
 
     return y_iterator(imageEnd, maskEnd, varianceEnd);
+}
+
+/************************************************************************************************************/
+/// Fast iterators to contiguous images
+///
+/// Return a fast \c iterator to the start of the %image, which must be contiguous
+/// Note that the order in which pixels are visited is undefined.
+///
+/// \exception lsst::pex::exceptions::Runtime
+/// Argument \a contiguous is false, or the pixels are not in fact contiguous
+template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::fast_iterator
+    image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::begin(
+		bool contiguous         ///< Pixels are contiguous (must be true)
+                                                                      ) const {
+    typename Image::fast_iterator imageBegin = _image->begin(contiguous);
+    typename Mask::fast_iterator maskBegin = _mask->begin(contiguous);
+    typename Variance::fast_iterator varianceBegin = _variance->begin(contiguous);
+    
+    return fast_iterator(imageBegin, maskBegin, varianceBegin);
+}
+
+/// Return a fast \c iterator to the end of the %image, which must be contiguous
+/// Note that the order in which pixels are visited is undefined.
+///
+/// \exception lsst::pex::exceptions::Runtime
+/// Argument \a contiguous is false, or the pixels are not in fact contiguous
+template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::fast_iterator
+    image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::end(
+        bool contiguous                 ///< Pixels are contiguous (must be true)
+                                                                    ) const {
+    typename Image::fast_iterator imageEnd = getImage()->end(contiguous);
+    typename Mask::fast_iterator maskEnd = getMask()->end(contiguous);
+    typename Variance::fast_iterator varianceEnd = getVariance()->end(contiguous);
+
+    return fast_iterator(imageEnd, maskEnd, varianceEnd);
 }
 
 /************************************************************************************************************/

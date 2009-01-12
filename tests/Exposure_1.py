@@ -18,7 +18,7 @@ import eups
 import lsst.afw.image as afwImage
 import lsst.utils.tests as utilsTests
 import lsst.pex.logging as pexLog
-import lsst.pex.exceptions as pexEx
+import lsst.pex.exceptions as pexExcept
 
 Verbosity = 0 # increase to see trace
 pexLog.Trace_setVerbosity("lsst.afw.image", Verbosity)
@@ -50,7 +50,7 @@ class ExposureTestCase(unittest.TestCase):
         self.smallExposure = afwImage.ExposureF(inFilePathSmall)
         self.width =  maskedImage.getWidth()
         self.height = maskedImage.getHeight()
-        self.wcs = afwImage.Wcs(self.smallExposure.getMetaData())
+        self.wcs = afwImage.Wcs(self.smallExposure.getMetadata())
 
         self.exposureBlank = afwImage.ExposureF()
         self.exposureMiOnly = afwImage.ExposureF(maskedImage)
@@ -67,10 +67,6 @@ class ExposureTestCase(unittest.TestCase):
         del self.exposureMiWcs
         del self.exposureCrWcs
         del self.exposureCrOnly
-
-    def testTearDown(self):
-        """Test that tearDown tears everything down"""
-        pass
 
     def testGetMaskedImage(self):
         """
@@ -151,7 +147,7 @@ class ExposureTestCase(unittest.TestCase):
         
         try:
             theWcs = exposure.getWcs();
-        except pexEx.LsstExceptionStack, e:
+        except pexExcept.LsstCppException, e:
             print "caught expected exception (getWcs): %s" % e   
             pass
                
@@ -195,15 +191,13 @@ class ExposureTestCase(unittest.TestCase):
         subRegion1 = afwImage.BBox(afwImage.PointI(50, 50), 10, 10)
         try:
             subExposure = self.exposureCrWcs.getSubExposure(subRegion1)
-           
-        except Exception, e:
-           
+        except Exception:
             pass
         
         subRegion2 = afwImage.BBox(afwImage.PointI(0, 0), 5, 5)
         try:
             subExposure = afwImage.ExposureF(self.smallExposure, subRegion2)
-        except IndexError, e:
+        except IndexError:
             pass
         
         # this subRegion is not valid and should trigger an exception
@@ -214,7 +208,7 @@ class ExposureTestCase(unittest.TestCase):
             subExposure = afwImage.ExposureF(self.exposureCrWcs, subRegion3)
 
         subRegion3 = afwImage.BBox(afwImage.PointI(100, 100), 10, 10)
-        self.assertRaises(pexEx.LsstLengthError, getSubRegion)
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.LengthErrorException, getSubRegion)
 
         # this subRegion is not valid and should trigger an exception
         # from the MaskedImage class only for the MaskedImage small_MI.
@@ -224,8 +218,8 @@ class ExposureTestCase(unittest.TestCase):
             subExposure = afwImage.ExposureF(self.exposureCrWcs, subRegion3)
 
         subRegion4 = afwImage.BBox(afwImage.PointI(250, 250), 10, 10)        
-        self.assertRaises(pexEx.LsstLengthError, getSubRegion)
-        
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.LengthErrorException, getSubRegion)
+
     def testReadWriteFits(self):
          """
 
@@ -252,7 +246,7 @@ class ExposureTestCase(unittest.TestCase):
          def getExposure():
              exposure = afwImage.ExposureF(inFilePathSmallImage)
              
-         self.assertRaises(pexEx.LsstNotFound, getExposure)
+         utilsTests.assertRaisesLsstCpp(self, pexExcept.NotFoundException, getExposure)
 
          # This should not throw an exception 
          exposure.writeFits(outFilePath)

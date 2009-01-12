@@ -32,6 +32,7 @@ namespace formatters {
     for SourceVector instances.
  */
 class SourceVectorFormatter : public lsst::daf::persistence::Formatter {
+	typedef lsst::afw::detection::Source Source;
     typedef std::vector<Source> SourceVector;
 public:
 
@@ -115,12 +116,12 @@ private:
         NON_GRAY_CORR_MAG,
         NON_GRAY_CORR_MAG_ERR,
         ATM_CORR_MAG,
-        ATM_CORR_MAG,
+        ATM_CORR_MAG_ERR,
         AP_DIA,
         SNR,
         CHI2,
         SKY,
-        SKY_ERR
+        SKY_ERR,
         FLAG_4_ASSOCIATION,
         FLAG_4_DETECTION,
         FLAG_4_WCS,   

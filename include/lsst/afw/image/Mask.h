@@ -20,6 +20,7 @@
 #include "lsst/daf/base/Persistable.h"
 #include "lsst/afw/formatters/ImageFormatter.h"
 #include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/LsstImageTypes.h"
 
 namespace lsst {
 namespace afw {
@@ -33,7 +34,7 @@ namespace image {
         struct Mask_tag : detail::basic_tag { };
     }
     /// Represent a 2-dimensional array of bitmask pixels
-    template<typename MaskPixelT>
+    template<typename MaskPixelT=lsst::afw::image::MaskPixel>
     class Mask : public ImageBase<MaskPixelT> {
     public:
         typedef boost::shared_ptr<Mask> Ptr;
@@ -55,19 +56,14 @@ namespace image {
         explicit Mask(int nCols=0, int nRows=0, MaskPlaneDict const& planeDefs = MaskPlaneDict());
         explicit Mask(const std::pair<int, int> dimensions, MaskPlaneDict const& planeDefs = MaskPlaneDict());
         explicit Mask(std::string const& fileName, int const hdu=0,
-#if 1                                   // Old name for boost::shared_ptrs
-                      typename lsst::daf::base::DataProperty::PtrType
-                      metadata=lsst::daf::base::DataProperty::PtrType(static_cast<lsst::daf::base::DataProperty *>(0)),
-#else
-                      typename lsst::daf::base::DataProperty::Ptr
-                      metadata=lsst::daf::base::DataProperty::Ptr(static_cast<lsst::daf::base::DataProperty *>(0)),
-#endif
+                      lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
                       bool const conformMasks=false
                      );                      
 
         Mask(const Mask& src, const bool deep=false);
         Mask(const Mask& src, const BBox& bbox, const bool deep=false);
         
+        void swap(Mask& rhs);
         // Operators
 
         Mask& operator=(MaskPixelT const rhs);
@@ -88,8 +84,6 @@ namespace image {
         //void readFits(const std::string& fileName, bool conformMasks=false, int hdu=0); // replaced by constructor
         void writeFits(std::string const& fileName) const;
         
-        lsst::daf::base::DataProperty::PtrType getMetaData();
-
         // Mask Plane ops
         
         void clearAllMaskPlanes();
@@ -101,7 +95,7 @@ namespace image {
 
         //void setMaskPlaneValues(int plane, MaskPixelBooleanFunc<MaskPixelT> selectionFunc);
         
-        static MaskPlaneDict parseMaskPlaneMetaData(lsst::daf::base::DataProperty::PtrType const);
+        static MaskPlaneDict parseMaskPlaneMetadata(lsst::daf::base::PropertySet::Ptr const);
         
         //int countMask(MaskPixelBooleanFunc<MaskPixelT>& testFunc, const vw::BBox2i maskRegion) const;
         
@@ -120,26 +114,15 @@ namespace image {
         static const MaskPlaneDict& getMaskPlaneDict() { return _maskPlaneDict; }
         static void printMaskPlanes();
 
-        static void addMaskPlanesToMetaData(lsst::daf::base::DataProperty::PtrType);
+        static void addMaskPlanesToMetadata(lsst::daf::base::PropertySet::Ptr);
         //
         // This one isn't static, it fixes up a given Mask's planes
-        void conformMaskPlanes(MaskPlaneDict& masterPlaneDict);
+        void conformMaskPlanes(const MaskPlaneDict& masterPlaneDict);
         
         // Getters
-#if 1                                   // Old name for boost::shared_ptrs
-        lsst::daf::base::DataProperty::PtrType getMetaData() const { return _metaData; }
-#else
-        lsst::daf::base::DataProperty::Ptr      getMetaData()       { return _metaData; }
-        lsst::daf::base::DataProperty::ConstPtr getMetaData() const { return _metaData; }
-#endif
         
 private:
         //LSST_PERSIST_FORMATTER(lsst::afw::formatters::MaskFormatter);
-#if 1                                   // Old name for boost::shared_ptrs
-        lsst::daf::base::DataProperty::PtrType _metaData;
-#else
-        lsst::daf::base::DataProperty::Ptr _metaData;
-#endif
         int _myMaskDictVersion;         // version number for bitplane dictionary for this Mask
 
         static MaskPlaneDict _maskPlaneDict;
@@ -159,7 +142,7 @@ private:
         //
         void checkMaskDictionaries(Mask const &other) const {
             if (_myMaskDictVersion != other._myMaskDictVersion) {
-                throw lsst::pex::exceptions::Runtime("Mask dictionary versions do not match");
+                throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Mask dictionary versions do not match");
             }
         }        
     private:
@@ -172,6 +155,9 @@ private:
         using ImageBase<MaskPixelT>::swap;
     };
 
+    template<typename PixelT>
+    void swap(Mask<PixelT>& a, Mask<PixelT>& b);
+    
 }}}  // lsst::afw::image
         
 #endif // LSST_AFW_IMAGE_MASK_H

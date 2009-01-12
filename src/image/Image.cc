@@ -22,7 +22,7 @@ image::ImageBase<PixelT>::ImageBase(int const width, int const height) :
     lsst::daf::data::LsstBase(typeid(this)),
     _gilImage(new _image_t(width, height)),
     _gilView(flipped_up_down_view(view(*_gilImage))),
-    _x0(0), _y0(0)
+    _ix0(0), _iy0(0), _x0(0), _y0(0)
 {
 }
 
@@ -37,7 +37,7 @@ image::ImageBase<PixelT>::ImageBase(std::pair<int, int> const dimensions) :
     lsst::daf::data::LsstBase(typeid(this)),
     _gilImage(new _image_t(dimensions.first, dimensions.second)),
     _gilView(flipped_up_down_view(view(*_gilImage))),
-    _x0(0), _y0(0)
+    _ix0(0), _iy0(0), _x0(0), _y0(0)
 {
 }
 
@@ -55,9 +55,8 @@ image::ImageBase<PixelT>::ImageBase(ImageBase const& rhs, ///< Right-hand-side %
     lsst::daf::data::LsstBase(typeid(this)),
     _gilImage(rhs._gilImage), // don't copy the pixels
     _gilView(subimage_view(flipped_up_down_view(view(*_gilImage)),
-                            rhs._x0, rhs._y0, rhs.getWidth(), rhs.getHeight())),
-    _x0(rhs._x0),
-    _y0(rhs._y0)
+                           rhs._ix0, rhs._iy0, rhs.getWidth(), rhs.getHeight())),
+    _ix0(rhs._ix0), _iy0(rhs._iy0), _x0(rhs._x0), _y0(rhs._y0)
 {
     if (deep) {
         ImageBase tmp(getDimensions());
@@ -81,11 +80,13 @@ image::ImageBase<PixelT>::ImageBase(ImageBase const& rhs, ///< Right-hand-side %
     _gilImage(rhs._gilImage), // boost::shared_ptr, so don't copy the pixels
     _gilView(subimage_view(rhs._gilView,
                            bbox.getX0(), bbox.getY0(), bbox.getWidth(), bbox.getHeight())),
+    _ix0(rhs._ix0 + bbox.getX0()), _iy0(rhs._iy0 + bbox.getY0()),
     _x0(rhs._x0 + bbox.getX0()), _y0(rhs._y0 + bbox.getY0())
 {
-    if (_x0 < 0 || _y0 < 0 || _x0 + getWidth() > _gilImage->width() || _y0 + getHeight() > _gilImage->height()) {
-        throw lsst::pex::exceptions::LengthError(boost::format("BBox (%d,%d) %dx%d doesn't fit in image") %
-                                                 bbox.getX0() % bbox.getY0() % bbox.getWidth() % bbox.getHeight());
+    if (_ix0 < 0 || _iy0 < 0 || _ix0 + getWidth() > _gilImage->width() || _iy0 + getHeight() > _gilImage->height()) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                          (boost::format("BBox (%d,%d) %dx%d doesn't fit in image") %
+                              bbox.getX0() % bbox.getY0() % bbox.getWidth() % bbox.getHeight()).str());
     }
 
     if (deep) {
@@ -114,8 +115,9 @@ image::ImageBase<PixelT>& image::ImageBase<PixelT>::operator=(ImageBase const& r
 template<typename PixelT>
 void image::ImageBase<PixelT>::operator<<=(ImageBase const& rhs) {
     if (getDimensions() != rhs.getDimensions()) {
-        throw lsst::pex::exceptions::LengthError(boost::format("Dimension mismatch: %dx%d v. %dx%d") %
-                                                 getWidth() % getHeight() % rhs.getWidth() % rhs.getHeight());
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                          (boost::format("Dimension mismatch: %dx%d v. %dx%d") %
+                              getWidth() % getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
     copy_pixels(rhs._gilView, _gilView);
 }
@@ -141,6 +143,8 @@ void image::ImageBase<PixelT>::swap(ImageBase &rhs) {
     
     swap(_gilImage, rhs._gilImage);   // just swapping the pointers
     swap(_gilView, rhs._gilView);
+    swap(_ix0, rhs._ix0);
+    swap(_iy0, rhs._iy0);
     swap(_x0, rhs._x0);
     swap(_y0, rhs._y0);
 }
@@ -183,6 +187,44 @@ typename image::ImageBase<PixelT>::reverse_iterator image::ImageBase<PixelT>::re
 template<typename PixelT>
 typename image::ImageBase<PixelT>::iterator image::ImageBase<PixelT>::at(int x, int y) const {
     return _gilView.at(x, y);
+}
+
+/// Return a fast STL compliant iterator to the start of the %image which must be contiguous
+/// Note that this goes through the image backwards (hence rbegin/rend)
+///
+/// \exception lsst::pex::exceptions::Runtime
+/// Argument \a contiguous is false, or the pixels are not in fact contiguous
+template<typename PixelT>
+typename image::ImageBase<PixelT>::fast_iterator image::ImageBase<PixelT>::begin(
+		bool contiguous         ///< Pixels are contiguous (must be true)
+                                                                                ) const {
+    if (!contiguous) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Only contiguous == true makes sense");
+    }
+    if (row_begin(getHeight() - 1) + getWidth()*getHeight() != row_end(0)) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Image's pixels are not contiguous");
+    }
+
+    return row_begin(getHeight() - 1);
+}
+
+/// Return a fast STL compliant iterator to the end of the %image which must be contiguous
+/// Note that this goes through the image backwards (hence rbegin/rend)
+///
+/// \exception lsst::pex::exceptions::Runtime
+/// Argument \a contiguous is false, or the pixels are not in fact contiguous
+template<typename PixelT>
+typename image::ImageBase<PixelT>::fast_iterator image::ImageBase<PixelT>::end(
+		bool contiguous         ///< Pixels are contiguous (must be true)
+                                                                              ) const {
+    if (!contiguous) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Only contiguous == true makes sense"); 
+    }
+    if (row_begin(getHeight() - 1) + getWidth()*getHeight() != row_end(0)) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Image's pixels are not contiguous");
+    }
+
+    return row_end(0);
 }
 
 /// Return an \c xy_locator at the point <tt>(x, y)</tt> in the %image
@@ -317,7 +359,7 @@ image::Image<PixelT>& image::Image<PixelT>::operator=(Image const& rhs) {
 template<typename PixelT>
 image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
                             int const hdu,               ///< Desired HDU
-                            lsst::daf::base::DataProperty::PtrType metaData ///< file metaData (may point to NULL)
+                            lsst::daf::base::PropertySet::Ptr metadata ///< file metadata (may point to NULL)
                            ) :
     image::ImageBase<PixelT>() {
 
@@ -331,28 +373,40 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
     > fits_img_types;
 
     if (!boost::filesystem::exists(fileName)) {
-        throw lsst::pex::exceptions::NotFound(boost::format("File %s doesn't exist") % fileName);
+        throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException,
+                          (boost::format("File %s doesn't exist") % fileName).str());
     }
 
-    if (!image::fits_read_image<fits_img_types>(fileName, *this->_getRawImagePtr(), metaData)) {
-        throw lsst::pex::exceptions::FitsError(boost::format("Failed to read %s HDU %d") % fileName % hdu);
+    if (!image::fits_read_image<fits_img_types>(fileName, *this->_getRawImagePtr(), metadata)) {
+        throw LSST_EXCEPT(lsst::afw::image::FitsErrorException,
+                          (boost::format("Failed to read %s HDU %d") % fileName % hdu).str());
     }
     this->_setRawView();
 }
+
 /**
  * Write an Image to the specified file
  */
 template<typename PixelT>
 void image::Image<PixelT>::writeFits(
 	std::string const& fileName,    ///< File to write
-#if 1                                   // Old name for boost::shared_ptrs
-        typename lsst::daf::base::DataProperty::PtrType metaData //!< metadata to write to header; or NULL
-#else
-        typename lsst::daf::base::DataProperty::ConstPtr metaData //!< metadata to write to header; or NULL
-#endif
+        lsst::daf::base::PropertySet::Ptr metadata //!< metadata to write to header; or NULL
                                     ) const {
+    image::fits_write_view(fileName, _getRawView(), metadata);
+}
 
-    image::fits_write_view(fileName, _getRawView(), metaData);
+/************************************************************************************************************/
+
+template<typename PixelT>
+void image::Image<PixelT>::swap(Image &rhs) {
+    using std::swap;                    // See Meyers, Effective C++, Item 25
+    ImageBase<PixelT>::swap(rhs);
+    ;                                   // no private variables to swap
+}
+
+template<typename PixelT>
+void image::swap(Image<PixelT>& a, Image<PixelT>& b) {
+    a.swap(b);
 }
 
 /************************************************************************************************************/

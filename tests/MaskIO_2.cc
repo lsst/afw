@@ -48,16 +48,14 @@ void test(char *name, char *masterName) {
 int main(int argc, char *argv[]) {
     if (argc < 3) {
         cerr << "Usage: inputBaseName masterBaseName" << endl;
-        return 1;
+        return EXIT_FAILURE;
     }
 
     try {
-        try {
-            test(argv[1], argv[2]);
-        } catch (lsst::pex::exceptions::ExceptionStack &e) {
-            throw lsst::pex::exceptions::Runtime(string("In handler\n") + e.what());
-        }
-    } catch (lsst::pex::exceptions::ExceptionStack &e) {
+        test(argv[1], argv[2]);
+    } catch (std::exception const &e) {
         clog << e.what() << endl;
+        return EXIT_FAILURE;
     }
+    return EXIT_SUCCESS;
 }

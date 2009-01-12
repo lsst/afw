@@ -42,6 +42,8 @@ public:
 
     std::string toString();    
 
+    void shift(int dx, int dy) { _x0 += dx; _x1 += dx; _y += dy; }
+
     int compareByYX(const void **a, const void **b);
 
     friend class Footprint;
@@ -83,18 +85,21 @@ public:
         switch (_type) {
           case STDEV:
             if (param <= 0) {
-                throw lsst::pex::exceptions::InvalidParameter(boost::format("St. dev. must be > 0: %g") % param);
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                                  (boost::format("St. dev. must be > 0: %g") % param).str());
             }
             return _value*param;
           case VALUE:
             return _value;
           case VARIANCE:
             if (param <= 0) {
-                throw lsst::pex::exceptions::InvalidParameter(boost::format("Variance must be > 0: %g") % param);
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                                  (boost::format("Variance must be > 0: %g") % param).str());
             }
             return _value*std::sqrt(param);
           default:
-            throw lsst::pex::exceptions::InvalidParameter(boost::format("Unsopported type: %d") % _type);
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                              (boost::format("Unsopported type: %d") % _type).str());
         }
     }
     /// return Threshold's polarity
@@ -134,8 +139,9 @@ public:
 
     const Span& addSpan(const int y, const int x0, const int x1);
     const Span& addSpan(Span const& span);
+    const Span& addSpan(Span const& span, int dx, int dy);
 
-    void offset(int dx, int dy);
+    void shift(int dx, int dy);
 
     const image::BBox& getBBox() const { return _bbox; } //!< Return the Footprint's bounding box
     /// Return the corners of the MaskedImage the footprints live in
@@ -225,5 +231,59 @@ psErrorCode pmFootprintCullPeaks(const psImage *img, const psImage *weight, pmFo
 psArray *pmFootprintArrayToPeaks(const psArray *footprints);
 #endif
 
+/************************************************************************************************************/
+/**
+ * \brief A functor class to allow users to process all the pixels in a Footprint
+ *
+ * There's an annotated example of a FootprintFunctor in action
+ * \link FootprintFunctorsExample FootprintFunctors here\endlink
+ */
+template <typename ImageT>
+class FootprintFunctor {
+public:
+    FootprintFunctor(ImageT const& image    ///< The image that the Footprint lives in
+                    ) : _image(image) {}
+
+    virtual ~FootprintFunctor() {}
+    /**
+     * \brief Apply operator() to each pixel in the Footprint
+     */
+    void apply(Footprint const& foot    ///< The Footprint in question
+              ) {
+        if (foot.getSpans().empty()) {
+            return;
+        }
+
+        int ox1 = 0, oy = 0;            // Current position of the locator (in the SpanList loop)
+        typename ImageT::xy_locator loc = _image.xy_at(-_image.getX0(), -_image.getY0()); // Origin of the Image's pixels
+
+        for (Footprint::SpanList::const_iterator siter = foot.getSpans().begin();
+             siter != foot.getSpans().end(); siter++) {
+            Span::Ptr const span = *siter;
+
+            int const y = span->getY();
+            int const x0 = span->getX0();
+            int const x1 = span->getX1();
+
+            loc += lsst::afw::image::pair2I(x0 - ox1, y - oy);
+
+            for (int x = x0; x <= x1; ++x, ++loc.x()) {
+                operator()(loc, x, y);
+            }
+
+            ox1 = x1 + 1; oy = y;
+        }
+    }
+    /// Return the image
+    ImageT const& getImage() const { return _image; }    
+    /// The operator to be applied to each pixel in the Footprint.
+    ///
+    /// N.b. the coordinates (x, y) are relative to the origin of the image's parent
+    /// if it exists.
+    virtual void operator()(typename ImageT::xy_locator loc, int x, int y) = 0;
+private:
+    ImageT const& _image;               // The image that the Footprints live in
+};
+            
 }}}
 #endif

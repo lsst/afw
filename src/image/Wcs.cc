@@ -8,42 +8,43 @@
 #include <cmath>
 #include <cstring>
 
+#include "boost/format.hpp"
+
 #include "wcslib/wcs.h"
 #include "wcslib/wcsfix.h"
 #include "wcslib/wcshdr.h"
 
 #include "lsst/daf/base.h"
 #include "lsst/daf/data/LsstBase.h"
-#include "lsst/daf/data/FitsFormatter.h"
+#include "lsst/afw/formatters/Utils.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/Wcs.h"
 
-using lsst::daf::base::DataProperty;
+using lsst::daf::base::PropertySet;
 using lsst::daf::data::LsstBase;
-using lsst::daf::data::FitsFormatter;
 using lsst::afw::image::PointD;
 
 /**
  * @brief Construct an invalid Wcs given no arguments
  *
- * @throw lsst::pex::exceptions::Runtime on error
+ * @throw lsst::pex::exceptions::RuntimeErrorException on error
  */
 lsst::afw::image::Wcs::Wcs() :
     LsstBase(typeid(this)),
-    _fitsMetaData(),
+    _fitsMetadata(),
     _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0) {
 }
 
 /**
- * @brief Construct a Wcs from a FITS header, represented as DataProperty::PtrType
+ * @brief Construct a Wcs from a FITS header, represented as PropertySet::Ptr
  *
- * @throw lsst::pex::exceptions::Runtime on error
+ * @throw lsst::pex::exceptions::RuntimeErrorException on error
  */
 lsst::afw::image::Wcs::Wcs(
-    lsst::daf::base::DataProperty::PtrType fitsMetaData  ///< The contents of a valid FITS header
+    lsst::daf::base::PropertySet::Ptr fitsMetadata  ///< The contents of a valid FITS header
 ) :
     LsstBase(typeid(this)),
-    _fitsMetaData(fitsMetaData),
+    _fitsMetadata(fitsMetadata),
     _wcsInfo(NULL),
     _nWcsInfo(0),
     _nReject(0)
@@ -54,10 +55,11 @@ lsst::afw::image::Wcs::Wcs(
     _wcsfixCtrl = 2;
     _wcshdrCtrl = 2;
 
-    std::string metadataStr = FitsFormatter::formatDataProperty( fitsMetaData, false );
-    int nCards = FitsFormatter::countFITSHeaderCards( fitsMetaData, false );
+    std::string metadataStr = lsst::afw::formatters::formatFitsProperties(fitsMetadata);
+    int nCards = lsst::afw::formatters::countFitsHeaderCards(fitsMetadata);
     if (nCards <= 0) {
-        throw lsst::pex::exceptions::Runtime("Could not parse FITS WCS: no header cards found");
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                          "Could not parse FITS WCS: no header cards found");
     }
     
     // wcspih takes a non-const char* (because some versions of ctrl modify the string)
@@ -69,8 +71,8 @@ lsst::afw::image::Wcs::Wcs(
     int pihStatus = wcspih(hdrString, nCards, _relax, _wcshdrCtrl, &_nReject, &_nWcsInfo, &_wcsInfo);
     delete hdrString;
     if (pihStatus != 0) {
-        throw lsst::pex::exceptions::Runtime(
-            boost::format("Could not parse FITS WCS: wcspih status = %d") % pihStatus);
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+            (boost::format("Could not parse FITS WCS: wcspih status = %d") % pihStatus).str());
     }
 
     /*
@@ -93,7 +95,7 @@ lsst::afw::image::Wcs::Wcs(
 	  }
 	}
 #if 0	  
-         throw lsst::pex::exceptions::Runtime(errStream.str());
+         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, errStream.str());
 #endif
     }
 }
@@ -101,11 +103,12 @@ lsst::afw::image::Wcs::Wcs(
 /**
  * @brief Wcs copy constructor
  *
- * @throw lsst::pex::exceptions::Memory or lsst::pex::exceptions::Runtime on error
+ * @throw lsst::pex::exceptions::MemoryException 
+ * @throw lsst::pex::exceptions::RuntimeErrorException
  */
 lsst::afw::image::Wcs::Wcs(Wcs const & rhs):
     LsstBase(typeid(this)),
-    _fitsMetaData(rhs._fitsMetaData),
+    _fitsMetadata(rhs._fitsMetadata),
     _wcsInfo(NULL),
     _nWcsInfo(0),
     _relax(rhs._relax),
@@ -116,7 +119,7 @@ lsst::afw::image::Wcs::Wcs(Wcs const & rhs):
     if (rhs._nWcsInfo > 0) {
         _wcsInfo = static_cast<struct wcsprm *>(calloc(rhs._nWcsInfo, sizeof(struct wcsprm)));
         if (_wcsInfo == NULL) {
-            throw lsst::pex::exceptions::Memory("Cannot allocate WCS info");
+            throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException, "Cannot allocate WCS info");
         }
         _nWcsInfo = rhs._nWcsInfo;
         for (int ii = 0; ii < rhs._nWcsInfo; ++ii) {
@@ -126,8 +129,8 @@ lsst::afw::image::Wcs::Wcs(Wcs const & rhs):
             int status = wcscopy(1, rhs._wcsInfo + ii, _wcsInfo + ii);
             if (status != 0) {
                 wcsvfree(&_nWcsInfo, &_wcsInfo);
-                throw lsst::pex::exceptions::Runtime(
-                    boost::format("Could not copy WCS: wcscopy status = %d for wcs index %d") % status % ii);
+                throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                    (boost::format("Could not copy WCS: wcscopy status = %d for wcs index %d") % status % ii).str());
             }
         }
     }
@@ -136,14 +139,15 @@ lsst::afw::image::Wcs::Wcs(Wcs const & rhs):
 /**
  * @brief Wcs assignment operator
  *
- * @throw lsst::pex::exceptions::Memory or lsst::pex::exceptions::Runtime on error
+ * @throw lsst::pex::exceptions::MemoryException 
+ * @throw lsst::pex::exceptions::RuntimeErrorException
  */
 lsst::afw::image::Wcs & lsst::afw::image::Wcs::operator = (const lsst::afw::image::Wcs & rhs) {
     if (this != &rhs) {
         if (_nWcsInfo > 0) {
             wcsvfree(&_nWcsInfo, &_wcsInfo);
         }
-        _fitsMetaData = rhs._fitsMetaData;
+        _fitsMetadata = rhs._fitsMetadata;
         _nWcsInfo = 0;
         _wcsInfo = NULL;
         _relax = rhs._relax;
@@ -154,7 +158,7 @@ lsst::afw::image::Wcs & lsst::afw::image::Wcs::operator = (const lsst::afw::imag
             // allocate wcs structs
             _wcsInfo = static_cast<struct wcsprm *>(calloc(rhs._nWcsInfo, sizeof(struct wcsprm)));
             if (_wcsInfo == NULL) {
-                throw lsst::pex::exceptions::Memory("Cannot allocate WCS info");
+                throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException, "Cannot allocate WCS info");
             }
             _nWcsInfo = rhs._nWcsInfo;
             // deep-copy wcs data
@@ -163,8 +167,8 @@ lsst::afw::image::Wcs & lsst::afw::image::Wcs::operator = (const lsst::afw::imag
                 int status = wcscopy(1, rhs._wcsInfo + ii, _wcsInfo + ii);
                 if (status != 0) {
                     wcsvfree(&_nWcsInfo, &_wcsInfo);
-                    throw lsst::pex::exceptions::Runtime(
-                        boost::format("Failed to copy WCS info; wcscopy status = %d") % status);
+                    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                        (boost::format("Failed to copy WCS info; wcscopy status = %d") % status).str());
                 }
             }
         }
@@ -183,7 +187,7 @@ lsst::afw::image::Wcs::~Wcs() {
 /// Convert from (ra, dec) to (column, row) coordinates
 ///
 /// \return The desired (col, row) position
-lsst::afw::image::PointD lsst::afw::image::Wcs::raDecToColRow(
+lsst::afw::image::PointD lsst::afw::image::Wcs::raDecToXY(
     const double ra,   ///< Input right ascension
     const double dec   ///< Input declination
 ) const {
@@ -201,15 +205,15 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::raDecToColRow(
 /// Convert from (ra, dec) to (column, row) coordinates
 ///
 /// \return The desired (col, row) position
-lsst::afw::image::PointD lsst::afw::image::Wcs::raDecToColRow(
+lsst::afw::image::PointD lsst::afw::image::Wcs::raDecToXY(
     lsst::afw::image::PointD sky        ///< Input (ra, dec)
 ) const {
-    return raDecToColRow(sky.getX(), sky.getY());
+    return raDecToXY(sky.getX(), sky.getY());
 }
 
 /// Convert from (column, row) to (ra, dec) coordinates
 /// \return The desired (ra, dec) position
-lsst::afw::image::PointD lsst::afw::image::Wcs::colRowToRaDec(
+lsst::afw::image::PointD lsst::afw::image::Wcs::xyToRaDec(
     double const x,                     ///< Input column position
     double const y                      ///< Input row position
 ) const {
@@ -226,10 +230,10 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::colRowToRaDec(
 
 /// Convert from (column, row) to (ra, dec) coordinates
 /// \return The desired (ra, dec) position
-lsst::afw::image::PointD lsst::afw::image::Wcs::colRowToRaDec(
+lsst::afw::image::PointD lsst::afw::image::Wcs::xyToRaDec(
     lsst::afw::image::PointD pix        ///< Input (x, y)
 ) const {
-    return colRowToRaDec(pix.getX(), pix.getY());
+    return xyToRaDec(pix.getX(), pix.getY());
 }
 
 /// Return the pixel area in deg^2 at a given pixel coordinate
@@ -238,8 +242,8 @@ double lsst::afw::image::Wcs::pixArea(lsst::afw::image::PointD pix0) const
     lsst::afw::image::PointD sky0, sky1, deltaSky;
     lsst::afw::image::PointD pix1 = pix0 + lsst::afw::image::PointD(1,1);
 
-    sky0 = colRowToRaDec(pix0);
-    sky1 = colRowToRaDec(pix1);
+    sky0 = xyToRaDec(pix0);
+    sky1 = xyToRaDec(pix1);
 
     deltaSky = sky1 - sky0;
 

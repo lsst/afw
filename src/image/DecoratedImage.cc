@@ -12,7 +12,7 @@ namespace image = lsst::afw::image;
 
 template<typename PixelT>
 void image::DecoratedImage<PixelT>::init() {
-    _metadata = lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData");
+    setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet()));
     _gain = 0;
 }
 
@@ -21,6 +21,7 @@ template<typename PixelT>
 image::DecoratedImage<PixelT>::DecoratedImage(const int width, ///< desired number of columns
                                               const int height ///< desired number of rows
                                              ) :
+    lsst::daf::data::LsstBase(typeid(this)),
     _image(new Image<PixelT>(width, height))
 {
     init();
@@ -34,6 +35,7 @@ template<typename PixelT>
 image::DecoratedImage<PixelT>::DecoratedImage(
         const std::pair<int, int> dimensions // (width, height) of the desired Image
                                              ) :
+    lsst::daf::data::LsstBase(typeid(this)),
     _image(new Image<PixelT>(dimensions))
 {
     init();
@@ -46,6 +48,7 @@ image::DecoratedImage<PixelT>::DecoratedImage(
 template<typename PixelT>
 image::DecoratedImage<PixelT>::DecoratedImage(typename Image<PixelT>::Ptr rhs ///< Image to go into the DecoratedImage
                                              ) :
+    lsst::daf::data::LsstBase(typeid(this)),
     _image(rhs)
 {
     init();
@@ -59,8 +62,10 @@ template<typename PixelT>
 image::DecoratedImage<PixelT>::DecoratedImage(const DecoratedImage& src, ///< right hand side
                                               const bool deep            ///< Make deep copy?
                                              ) :
-    _image(src._image), _metadata(src._metadata), _gain(src._gain) {
+    lsst::daf::data::LsstBase(typeid(this)),
+    _image(src._image), _gain(src._gain) {
 
+    setMetadata(src.getMetadata());
     if (deep) {
         typename Image<PixelT>::Ptr tmp = typename Image<PixelT>::Ptr(new Image<PixelT>(getDimensions()));
         *tmp <<= *_image;                // now copy the pixels
@@ -85,7 +90,6 @@ void image::DecoratedImage<PixelT>::swap(DecoratedImage &rhs) {
     using std::swap;                    // See Meyers, Effective C++, Item 25
     
     swap(_image, rhs._image);           // just swapping the pointers
-    swap(_metadata, rhs._metadata);
     swap(_gain, rhs._gain);
 }
 
@@ -111,9 +115,12 @@ void image::swap(DecoratedImage<PixelT>& a, DecoratedImage<PixelT>& b) {
  */
 template<typename PixelT>
 image::DecoratedImage<PixelT>::DecoratedImage(const std::string& fileName, ///< File to read
-                                              const int hdu) {             ///< HDU within the file
+                                              const int hdu                ///< The HDU to read
+                                             ) :
+    lsst::daf::data::LsstBase(typeid(this))
+{             ///< HDU within the file
     init();
-    _image = typename Image<PixelT>::Ptr(new Image<PixelT>(fileName, hdu, _metadata));
+    _image = typename Image<PixelT>::Ptr(new Image<PixelT>(fileName, hdu, getMetadata()));
 }
 
 /************************************************************************************************************/
@@ -122,14 +129,9 @@ image::DecoratedImage<PixelT>::DecoratedImage(const std::string& fileName, ///< 
  */
 template<typename PixelT>
 void image::DecoratedImage<PixelT>::writeFits(
-	const std::string& fileName,
-#if 1                                   // Old name for boost::shared_ptrs
-        typename lsst::daf::base::DataProperty::PtrType metadata //!< metadata to write to header; or NULL
-#else
-        typename lsst::daf::base::DataProperty::ConstPtr metadata //!< metadata to write to header; or NULL
-#endif
-                                                        ) const {
-
+	const std::string& fileName,                        //!< the file to write
+        typename lsst::daf::base::PropertySet::Ptr metadata //!< metadata to write to header; or NULL
+                                             ) const {
     image::fits_write_view(fileName, _image->_getRawView(), metadata);
 }
 

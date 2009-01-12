@@ -6,7 +6,7 @@ Python interface to lsst::afw::detection classes
 %enddef
 
 %feature("autodoc", "1");
-%module(docstring=detectionLib_DOCSTRING) detectionLib
+%module(package="lsst.afw.detection", docstring=detectionLib_DOCSTRING) detectionLib
 
 // Suppress swig complaints
 // I had trouble getting %warnfilter to work; hence the pragmas
@@ -29,5 +29,5 @@ Python interface to lsst::afw::detection classes
 
 %lsst_exceptions()
 
-%include "source.i"
+//%include "source.i"
 %include "footprints.i"

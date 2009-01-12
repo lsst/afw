@@ -46,16 +46,6 @@ namespace image {
     }
 
     /************************************************************************************************************/
-    /// \brief A type like std::pair<int, int>, but in lsst::afw::image thus permitting Koenig lookup
-    //
-    // We want to be able to call operator+= in the global namespace, but define it in lsst::afw::image.
-    // To make this possible, at least one of its arguments must be in lsst::afw::image, so we define
-    // this type to make the argument lookup ("Koenig Lookup") work smoothly
-    //
-    struct pair2I : std::pair<int, int> {
-        explicit pair2I(int first, int second) : std::pair<int, int>(first, second) {}
-        pair2I(std::pair<int, int> pair) : std::pair<int, int>(pair) {}
-    };
     /// \brief metafunction to extract reference type from PixelT
     template<typename PixelT>
     struct Reference {
@@ -108,6 +98,9 @@ namespace image {
         typedef typename _const_view_t::reverse_iterator const_reverse_iterator;
         /// An iterator for traversing the pixels in a row
         typedef typename _view_t::x_iterator x_iterator;
+        /// A fast STL compliant iterator for contiguous images
+        /// N.b. The order of pixel access is undefined
+        typedef x_iterator fast_iterator;
         /// An iterator for traversing the pixels in a row, created from an xy_locator
         typedef typename _view_t::x_iterator xy_x_iterator;
         /// A const iterator for traversing the pixels in a row
@@ -118,32 +111,7 @@ namespace image {
         typedef typename _view_t::y_iterator xy_y_iterator;
         /// A const iterator for traversing the pixels in a column
         typedef typename _const_view_t::y_iterator const_y_iterator;
-        /** \brief advance an \c xy_locator by \c off
-         *
-         * Allow users to use pair2I (basically a \c std::pair<int,int>) to manipulate xy_locator%s.  They're
-         * declared here for reasons similar to Meyer's item 46 --- we want to make
-         * sure that they're instantiated along with the class
-         *
-         * We don't actually usually use \c std::pair<int,int> but our own struct in namespace lsst::afw::image
-         * so as to enable Koenig lookup
-         */
-        friend xy_locator& operator+=(xy_locator& loc, pair2I const& off) {
-            return (loc += boost::gil::point2<std::ptrdiff_t>(off.first, off.second));
-        }
-        /// \brief advance a const \c xy_locator by \c off
-        friend const_xy_locator& operator+=(const_xy_locator& loc, pair2I const& off) {
-            return (loc += boost::gil::point2<std::ptrdiff_t>(off.first, off.second));
-        }
 
-        /// \brief retreat a \c xy_locator by \c off
-        friend xy_locator& operator-=(xy_locator& loc, pair2I const& off) {
-            return (loc -= boost::gil::point2<std::ptrdiff_t>(off.first, off.second));
-        }
-        /// \brief retreat a const \c xy_locator by \c off
-        friend const_xy_locator& operator-=(const_xy_locator& loc, pair2I const& off) {
-            return (loc -= boost::gil::point2<std::ptrdiff_t>(off.first, off.second));
-        }
-        //
         template<typename OtherPixelT> friend class ImageBase; // needed by generalised copy constructors
         //
         /// \brief Convert a type to our SinglePixel type
@@ -160,19 +128,21 @@ namespace image {
         explicit ImageBase(const int width=0, const int height=0);
         explicit ImageBase(const std::pair<int, int> dimensions);
         ImageBase(const ImageBase& src, const bool deep=false);
-        ImageBase(const ImageBase& src, const BBox& bbox, const bool deep=false);
+        explicit ImageBase(const ImageBase& src, const BBox& bbox, const bool deep=false);
         /// generalised copy constructor; defined here in the header so that the compiler can instantiate
         /// N(N-1)/2 conversions between N ImageBase types.
         template<typename OtherPixelT>
         ImageBase(const ImageBase<OtherPixelT>& rhs, const bool deep) :
             lsst::daf::data::LsstBase(typeid(this)) {
             if (!deep) {
-                throw lsst::pex::exceptions::InvalidParameter("Only deep copies are permitted for ImageBases "
-                                                              "with different pixel types");
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                    "Only deep copies are permitted for ImageBases with different pixel types");
             }
 
             ImageBase<PixelT> tmp(rhs.getDimensions());
             copy_and_convert_pixels(rhs._gilView, tmp._gilView); // from boost::gil
+            tmp._ix0 = rhs._ix0;
+            tmp._iy0 = rhs._iy0;
             tmp._x0 = rhs._x0;
             tmp._y0 = rhs._y0;
 
@@ -221,6 +191,9 @@ namespace image {
         reverse_iterator rend() const;
         iterator at(int x, int y) const;
 
+        fast_iterator begin(bool) const;
+        fast_iterator end(bool) const;
+
         x_iterator row_begin(int y) const;
         x_iterator row_end(int y) const;
         x_iterator x_at(int x, int y) const;
@@ -247,8 +220,11 @@ namespace image {
         _image_t_Ptr _gilImage;
         _view_t _gilView;
         //
-        int _x0;                      // origin of ImageBase in some larger image (0 if not a subImageBase)
-        int _y0;
+        int _ix0;                       // origin of ImageBase in some larger image (0 if not a subImageBase)
+        int _iy0;                       // do not lie about this!  You may lie about _[xy]0, but be careful
+
+        int _x0;                        // origin of ImageBase in some larger image (0 if not a subImageBase)
+        int _y0;                        // as returned to and manipulated by the user
         //
         // Provide functions that minimise the temptation to get at the variables directly
         //
@@ -294,16 +270,9 @@ namespace image {
         explicit Image(const int width=0, const int height=0);
         explicit Image(const std::pair<int, int> dimensions);
         Image(const Image& rhs, const bool deep=false);
-        Image(const Image& rhs, const BBox& bbox, const bool deep=false);
-        Image(std::string const& fileName, const int hdu = 0,
-#if 1                                   // Old name for boost::shared_ptrs
-              typename lsst::daf::base::DataProperty::PtrType
-              metadata=lsst::daf::base::DataProperty::PtrType(static_cast<lsst::daf::base::DataProperty *>(0))
-#else
-              typename lsst::daf::base::DataProperty::Ptr
-              metadata=lsst::daf::base::DataProperty::Ptr(static_cast<lsst::daf::base::DataProperty *>(0))
-#endif
-             );
+        explicit Image(const Image& rhs, const BBox& bbox, const bool deep=false);
+        explicit Image(std::string const& fileName, const int hdu = 0,
+            lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr());
 
         // generalised copy constructor
         template<typename OtherPixelT>
@@ -319,14 +288,9 @@ namespace image {
 
         //void readFits(std::string const& fileName, ...); // replaced by constructor
         void writeFits(std::string const& fileName,
-#if 1                                   // Old name for boost::shared_ptrs
-                       typename lsst::daf::base::DataProperty::PtrType
-                       metadata=lsst::daf::base::DataProperty::PtrType(static_cast<lsst::daf::base::DataProperty *>(0))
-#else
-                       typename lsst::daf::base::DataProperty::ConstPtr
-                       metadata=lsst::daf::base::DataProperty::ConstPtr(static_cast<lsst::daf::base::DataProperty *>(0))
-#endif
-                      ) const;
+            lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr()) const;
+
+        void swap(Image &rhs);
         //
         // Operators etc.
         //
@@ -352,7 +316,8 @@ namespace image {
      * \brief A container for an Image and its associated metadata
      */
     template<typename PixelT>
-    class DecoratedImage {
+    class DecoratedImage : public lsst::daf::base::Persistable,
+                           public lsst::daf::data::LsstBase {
     public:
         /// shared_ptr to a DecoratedImage
         typedef boost::shared_ptr<DecoratedImage> Ptr;
@@ -371,9 +336,6 @@ namespace image {
 
         DecoratedImage& operator=(const DecoratedImage& image);
 
-#if 0                                   // use compiler-generated dtor. N.b. not virtual; this isn't a base class
-        ~DecoratedImage();
-#endif
         /// Return the number of columns in the %image
         int getWidth() const { return _image->getWidth(); }
         /// Return the number of rows in the %image
@@ -391,27 +353,13 @@ namespace image {
         
         //void readFits(std::string const& fileName, ...); // replaced by constructor
         void writeFits(std::string const& fileName,
-#if 1                                   // Old name for boost::shared_ptrs
-                       typename lsst::daf::base::DataProperty::PtrType
-                       metadata=lsst::daf::base::DataProperty::PtrType(static_cast<lsst::daf::base::DataProperty *>(0))
-#else
-                       typename lsst::daf::base::DataProperty::ConstPtr
-                       metadata=lsst::daf::base::DataProperty::ConstPtr(static_cast<lsst::daf::base::DataProperty *>(0))
-#endif
-                      ) const;
+            lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr()) const;
         
         /// Return a shared_ptr to the DecoratedImage's Image
         ImagePtr      getImage()       { return _image; }
         /// Return a shared_ptr to the DecoratedImage's Image as const
         ImageConstPtr getImage() const { return _image; }
 
-        /// Return a shared_ptr to the DecoratedImage's metadata
-#if 1                                   // Old name for boost::shared_ptrs
-        lsst::daf::base::DataProperty::PtrType getMetadata() const { return _metadata; }
-#else
-        lsst::daf::base::DataProperty::Ptr      getMetadata()       { return _metadata; }
-        lsst::daf::base::DataProperty::ConstPtr getMetadata() const { return _metadata; }
-#endif
         /**
          * Return the DecoratedImage's gain
          * \note This is mostly just a place holder for other properties that we might
@@ -422,7 +370,6 @@ namespace image {
         void setGain(double gain) { _gain = gain; }
     private:
         typename Image<PixelT>::Ptr _image;
-        lsst::daf::base::DataProperty::PtrType _metadata;
         double _gain;
 
         void init();

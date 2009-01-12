@@ -2,7 +2,7 @@
 #
 # Setup our environment
 #
-import glob, os.path
+import glob, os.path, sys
 import lsst.SConsUtils as scons
 
 env = scons.makeEnv(
@@ -40,9 +40,7 @@ env.libs["afw"] += env.getlibs("boost wcslib cfitsio minuit utils daf_base daf_d
 for d in (
     ".",
     "doc",
-    "doc/examples",
     "examples",
-    "include/lsst/afw",
     "lib",
     "python/lsst/afw/detection",
     "python/lsst/afw/display",
@@ -51,7 +49,10 @@ for d in (
     "tests",
 ):
     if d != ".":
-        SConscript(os.path.join(d, "SConscript"))
+        try:
+            SConscript(os.path.join(d, "SConscript"))
+        except Exception, e:
+            print >> sys.stderr, "%s: %s" % (os.path.join(d, "SConscript"), e)
     Clean(d, Glob(os.path.join(d, "*~")))
     Clean(d, Glob(os.path.join(d, "*.pyc")))
 

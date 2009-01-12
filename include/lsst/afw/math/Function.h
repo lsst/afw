@@ -117,13 +117,15 @@ namespace math {
         /**
          * @brief Set all function parameters
          *
-         * @throw lsst::pex::exceptions::InvalidParameter if the wrong number of parameters is supplied.
+         * @throw lsst::pex::exceptions::InvalidParameterException
+         *        if the wrong number of parameters is supplied.
          */
         void setParameters(
             std::vector<double> const &params)   ///< vector of function parameters
         {
             if (_params.size() != params.size()) {
-                throw lsst::pex::exceptions::InvalidParameter("Wrong number of parameters");
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                                  "Wrong number of parameters");
             }
             _params = params;
         }

@@ -11,20 +11,22 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
 
+namespace ex = lsst::pex::exceptions;
+
 /**
  * @brief Construct a spatially invariant DeltaFunctionKernel
  */
 lsst::afw::math::DeltaFunctionKernel::DeltaFunctionKernel(
     int width,                          ///< kernel size (columns)
     int height,                         ///< kernel size (rows)
-    lsst::afw::image::PointI point      //< Active pixel
+    lsst::afw::image::PointI point      ///< Active pixel
                                                          )
 :
     Kernel(width, height, 0),
     _pixel(point.getX(), point.getY())
 {
     if (point.getX() < 0 || point.getX() >= width || point.getY() < 0 || point.getY() >= height) {
-        throw lsst::pex::exceptions::InvalidParameter("Active pixel lies outside image");
+        throw LSST_EXCEPT(ex::InvalidParameterException, "Active pixel lies outside image");
     }
 }
 
@@ -35,7 +37,7 @@ double lsst::afw::math::DeltaFunctionKernel::computeImage(
     double y
 ) const {
     if (image.getDimensions() != this->getDimensions()) {
-        throw lsst::pex::exceptions::InvalidParameter("image is the wrong size");
+        throw LSST_EXCEPT(ex::InvalidParameterException, "image is the wrong size");
     }
 
     const int pixelX = getPixel().first; // active pixel in Kernel

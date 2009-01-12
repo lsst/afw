@@ -2,21 +2,19 @@
 #include <typeinfo>
 
 #include "lsst/daf/base.h"
-#include "lsst/daf/data/FitsFormatter.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/image.h"
 
 using namespace std;
 using lsst::pex::logging::Trace;
-using lsst::daf::data::FitsFormatter;
 namespace pexEx = lsst::pex::exceptions;
 namespace image = lsst::afw::image;
 
 int test(int argc, char**argv) {
     if (argc < 5) {
        cerr << "Usage: inputBaseName1 inputBaseName2 outputBaseName1  outputBaseName2" << endl;
-       return 1;
+       return EXIT_FAILURE;
     }
     
     Trace::setDestination(cout);
@@ -30,9 +28,9 @@ int test(int argc, char**argv) {
     MaskedImage::Ptr testMaskedImage1;
     try {
         testMaskedImage1 = MaskedImage::Ptr(new MaskedImage(argv[1]));
-    } catch (pexEx::ExceptionStack &e) {
+    } catch (pexEx::Exception &e) {
         cerr << "Failed to open " << argv[1] << ": " << e.what() << endl;
-        return 1;
+        return EXIT_FAILURE;
     }
 
     *testMaskedImage1->getVariance() = 10.0;
@@ -49,9 +47,9 @@ int test(int argc, char**argv) {
     MaskedImage::Ptr testFlat;
     try {
         testFlat = MaskedImage::Ptr(new MaskedImage(argv[2]));
-    } catch (pexEx::ExceptionStack &e) {
+    } catch (pexEx::Exception &e) {
         cerr << "Failed to open " << argv[2] << ": " << e.what() << endl;
-        return 1;
+        return EXIT_FAILURE;
     }
     *testFlat->getVariance() = 20.0;
 
@@ -78,27 +76,25 @@ int test(int argc, char**argv) {
 
     testMaskedImage1->writeFits(argv[3]);
     
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 int main(int argc, char **argv) {
+    int status = EXIT_SUCCESS;
     try {
-       try {
-           test(argc, argv);
-       } catch (pexEx::ExceptionStack &e) {
-           throw pexEx::Runtime(std::string("In handler\n") + e.what());
-       }
-    } catch (pexEx::ExceptionStack &e) {
+       status = test(argc, argv);
+    } catch (pexEx::Exception &e) {
        clog << e.what() << endl;
+       status = EXIT_FAILURE;
     }
 
-    //
     // Check for memory leaks
-    //
     if (lsst::daf::base::Citizen::census(0) == 0) {
         cerr << "No leaks detected" << endl;
     } else {
         cerr << "Leaked memory blocks:" << endl;
         lsst::daf::base::Citizen::census(cerr);
+        status = EXIT_FAILURE;
     }
+    return status;
 }

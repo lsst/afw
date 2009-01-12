@@ -51,8 +51,8 @@ namespace image {
         virtual ~Exposure(); 
 
         // Get Members
-        MaskedImage<ImageT, MaskT, VarianceT> getMaskedImage() const { return _maskedImage; };
-        lsst::daf::base::DataProperty::PtrType getMetaData() const { return _metaData; }
+        MaskedImage<ImageT, MaskT, VarianceT>& getMaskedImage() { return _maskedImage; };
+        MaskedImage<ImageT, MaskT, VarianceT> const& getMaskedImage() const { return _maskedImage; };
         Wcs::Ptr getWcs() const;
         
         // Set Members
@@ -68,10 +68,9 @@ namespace image {
     private:
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::ExposureFormatter<ImageT, MaskT, VarianceT>);
 
-        lsst::daf::base::DataProperty::PtrType _metaData;
         MaskedImage<ImageT, MaskT> _maskedImage;             
         Wcs::Ptr _wcsPtr;
-    };     
+    };
 }}} // lsst::afw::image
 
 #endif // LSST_AFW_IMAGE_EXPOSURE_H

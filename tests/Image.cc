@@ -8,7 +8,6 @@
 #include "boost/test/unit_test.hpp"
 #include "boost/test/floating_point_comparison.hpp"
 
-#include "boost/iterator/zip_iterator.hpp"
 #include "lsst/afw/image/MaskedImage.h"
 
 namespace image = lsst::afw::image;
@@ -157,6 +156,15 @@ BOOST_AUTO_TEST_CASE(setValues) {
 BOOST_AUTO_TEST_CASE(iterators) {
     ImageT img = make_image();
     //
+    // Count the pixels between begin() and end() (using a fast iterator)
+    //
+    {
+        int i = 0;
+        for (ImageT::fast_iterator ptr = img.begin(true), end = img.end(true); ptr != end; ++ptr, ++i) {
+        }
+        BOOST_CHECK_EQUAL(i, img.getWidth()*img.getHeight());
+    }
+    //
     // Count the pixels between begin() and end() (using a const_iterator)
     //
     {
@@ -257,7 +265,7 @@ BOOST_AUTO_TEST_CASE(locators) {
 
         BOOST_CHECK_EQUAL(loc(1,1), 202);
 
-        loc += image::detail::difference_type(-1, 1);     // loc == img.xy_at(0, 2);
+        loc += image::pair2I(-1, 1);    // loc == img.xy_at(0, 2);
         BOOST_CHECK_EQUAL(*loc, 2);
 
         loc.x() += 2; ++loc.x();        // loc == img.xy_at(3, 2);

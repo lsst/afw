@@ -21,9 +21,27 @@
 
 #include "lsst/utils/Utils.h"
 #include "lsst/pex/exceptions.h"
+#include "lsst/daf/base/PropertySet.h"
 
 
 namespace lsst { namespace afw { namespace image {
+
+/// \ingroup FITS_IO
+/// \brief Exception thrown when FITS file format errors are encountered
+class FitsErrorException : public lsst::pex::exceptions::Exception {
+public:
+    FitsErrorException(LSST_EARGS_TYPED, int status = 0) :
+        lsst::pex::exceptions::Exception(LSST_EARGS_UNTYPED), _status(status) {}
+
+    virtual char const* getType(void) const throw() {
+        return "lsst::afw::image::FitsErrorException *";
+    }
+
+    int getStatus() const { return _status; }
+
+private:
+    int _status;
+};
 
 namespace cfitsio {
 #if !defined(DOXYGEN)
@@ -32,21 +50,9 @@ namespace cfitsio {
     }
 #endif
 
-    void _throw_cfitsio_error(const char *file, const int line,   //!< line in file (from __FILE__, __LINE__)
-                              lsst::afw::image::cfitsio::fitsfile *fd, //!< (possibly invalid) file descriptor
-                              const int status = 0, //!< cfitsio error status (0 => no error)
-                              const std::string errStr = ""//!< optional extra information
-                             );
-    void _throw_cfitsio_error(const char *file, const int line, //!< line in file (from __FILE__/__LINE__)
-                              lsst::afw::image::cfitsio::fitsfile *fd, //!< (possibly invalid) file descriptor
-                              const std::string errStr = "" //!< optional extra information
-                             );
-    //
-    // A utility routine to throw an error. Note that the macro form includes
-    // the line number, which is helpful as the cfitsio errors don't tell me
-    // where the error was detected
-    //
-#   define throw_cfitsio_error(...) cfitsio::_throw_cfitsio_error(__FILE__, __LINE__, __VA_ARGS__)
+    std::string err_msg(fitsfile const *fd, int const status = 0, std::string const &errMsg = "");
+    std::string err_msg(std::string const &fileName, int const status = 0, std::string const &errMsg = "");
+    inline std::string err_msg(fitsfile const *fd, int const status, boost::format const &fmt) { return err_msg(fd, status, fmt.str()); }
 
     /************************************************************************************************************/
         
@@ -54,12 +60,12 @@ namespace cfitsio {
 
     void move_to_hdu(lsst::afw::image::cfitsio::fitsfile *fd, int hdu, bool relative = false);
 
-    void appendKey(lsst::afw::image::cfitsio::fitsfile* fd,
-                   const std::string & keyWord, const boost::any & keyValue, const std::string & keyComment);
+    void appendKey(lsst::afw::image::cfitsio::fitsfile* fd, std::string const &keyWord,
+                   std::string const& keyComment, lsst::daf::base::PropertySet::Ptr metadata);
     int getNumKeys(fitsfile* fd);
     void getKey(fitsfile* fd, int n, std::string & keyWord, std::string & keyValue, std::string & keyComment);
 
-    void getMetaData(fitsfile* fd, lsst::daf::base::DataProperty::PtrType metaData);    
+    void getMetadata(fitsfile* fd, lsst::daf::base::PropertySet::Ptr metadata);    
 }
 
 namespace detail {
@@ -143,22 +149,22 @@ struct cfitsio_traits {
 template <>
 struct cfitsio_traits<16> {
     BOOST_STATIC_CONSTANT(bool,is_supported=true);
-    typedef lsst::afw::image::detail::types_traits<unsigned short>::view_t view_t;
+    typedef types_traits<unsigned short>::view_t view_t;
 };
 template <>
 struct cfitsio_traits<32> {
     BOOST_STATIC_CONSTANT(bool,is_supported=true);
-    typedef lsst::afw::image::detail::types_traits<int>::view_t view_t;
+    typedef types_traits<int>::view_t view_t;
 };
 template <>
 struct cfitsio_traits<-32> {
     BOOST_STATIC_CONSTANT(bool,is_supported=true);
-    typedef lsst::afw::image::detail::types_traits<float>::view_t view_t;
+    typedef types_traits<float>::view_t view_t;
 };
 template <>
 struct cfitsio_traits<-64> {
     BOOST_STATIC_CONSTANT(bool,is_supported=true);
-    typedef lsst::afw::image::detail::types_traits<double>::view_t view_t;
+    typedef types_traits<double>::view_t view_t;
 };
 //
 // Like gil's file_mgr class (from whence cometh this code), but knows about
@@ -170,7 +176,7 @@ class fits_file_mgr {
     FD *_fd_s;                          // storage for _fd; we're not going to delete it in _fd's dtor so this is OK
 protected:
     boost::shared_ptr<FD> _fd;
-    std::string _filename;                               //!< filename
+    std::string _filename;                               ///< filename
     
     struct null_deleter { void operator()(void const*) const {} };
     //
@@ -181,11 +187,8 @@ protected:
         void operator()(FD* fd) const {
             if (fd != NULL) {
                 int status = 0;
-                if (lsst::afw::image::cfitsio::fits_close_file(fd, &status) != 0) {
-                    char fitsErr[FLEN_ERRMSG];
-                    (void)lsst::afw::image::cfitsio::fits_get_errstatus(status, fitsErr);
-
-                    fprintf(stderr, "Problems closing %s: %s (%d)\n", "filename", fitsErr, status);
+                if (cfitsio::fits_close_file(fd, &status) != 0) {
+                    std::cerr << cfitsio::err_msg(fd, status) << std::endl;
                 }
             }
         }
@@ -198,13 +201,13 @@ protected:
         if (flags == "r" || flags == "rb") {
             int status = 0;
             if (fits_open_file(&_fd_s, filename.c_str(), READONLY, &status) != 0) {
-                throw_cfitsio_error(0, status);
+                throw LSST_EXCEPT(FitsErrorException, cfitsio::err_msg(filename, status), status);
             }
         } else if (flags == "w" || flags == "wb") {
             int status = 0;
             (void)unlink(filename.c_str()); // cfitsio doesn't like over-writing files
             if (fits_create_file(&_fd_s, filename.c_str(), &status) != 0) {
-                throw_cfitsio_error(0, status);
+                throw LSST_EXCEPT(FitsErrorException, cfitsio::err_msg(filename, status), status);
             }
         } else {
             abort();
@@ -220,10 +223,10 @@ public:
 /************************************************************************************************************/
     
 class fits_reader : public fits_file_mgr {
-    typedef lsst::daf::base::DataProperty DataProperty;
+    typedef lsst::daf::base::PropertySet PropertySet;
 protected:
     int _hdu;                                            //!< desired HDU
-    DataProperty::PtrType _metaData;                     //!< header metadata
+    PropertySet::Ptr _metadata;                          //!< header metadata
     int _naxis1, _naxis2;                                //!< dimension of image
     int _ttype;                                          //!< cfitsio's name for data type
     int _bitpix;                                         //!< FITS' BITPIX keyword
@@ -235,7 +238,7 @@ protected:
         int bitpix = 0;     // BITPIX from FITS header
         int status = 0;
         if (fits_get_img_equivtype(_fd.get(), &bitpix, &status) != 0) {
-            throw_cfitsio_error(_fd.get(), status);
+            throw LSST_EXCEPT(FitsErrorException, cfitsio::err_msg(_fd.get(), status), status);
         }
         /*
          * Lookip cfitsio data type
@@ -245,26 +248,30 @@ protected:
         /* get image number of dimensions */
         int nAxis = 0;  // number of axes in file
         if (fits_get_img_dim(_fd.get(), &nAxis, &status) != 0) {
-            throw_cfitsio_error(_fd.get(), status, (boost::format("Getting NAXIS from %s") % _filename).str());
+            throw LSST_EXCEPT(FitsErrorException,
+                cfitsio::err_msg(_fd.get(), status, boost::format("Getting NAXIS from %s") % _filename),
+                status);
         }
 
         /* validate the number of axes */
         if (nAxis != 0 && (nAxis < 2 || nAxis > 3)) {
-            throw_cfitsio_error(_fd.get(), (boost::format("Dimensions of '%s' is not supported (NAXIS=%i)") %
-                                            _filename % nAxis).str());
+            throw LSST_EXCEPT(FitsErrorException,
+                cfitsio::err_msg(_fd.get(), 0, boost::format("Dimensions of '%s' is not supported (NAXIS=%i)") % _filename % nAxis));
         }
         
         long nAxes[3];  // dimensions of image in file
         if (fits_get_img_size(_fd.get(), nAxis, nAxes, &status) != 0) {
-            throw_cfitsio_error(_fd.get(), status, (boost::format("Failed to find number of rows in %s") % _filename).str());
+            throw LSST_EXCEPT(FitsErrorException,
+                cfitsio::err_msg(_fd.get(), status, boost::format("Failed to find number of rows in %s") % _filename),
+                status);
         }
         /* if really a 2D image, assume 3rd dimension is 1 */
         if (nAxis == 2) {
             nAxes[2] = 1;
         }
         if (nAxes[2] != 1) {
-            throw_cfitsio_error(_fd.get(),
-                                (boost::format("3rd dimension %d of %s is not 1") % nAxes[2] % _filename).str());
+            throw LSST_EXCEPT(FitsErrorException,
+                cfitsio::err_msg(_fd.get(), 0, boost::format("3rd dimension %d of %s is not 1") % nAxes[2] % _filename));
         }
 
         _naxis1 = nAxes[0];
@@ -277,35 +284,28 @@ protected:
     
 public:
     fits_reader(cfitsio::fitsfile *file,
-#if 1                                   // Old name for boost::shared_ptrs
-                lsst::daf::base::DataProperty::PtrType metaData, // = typename lsst::daf::base::DataProperty::PtrType(static_cast<lsst::daf::base::DataProperty *>(0)),
-#else
-                lsst::daf::base::DataProperty::ConstPtr metaData, // = typename lsst::daf::base::DataProperty::ConstPtr(static_cast<lsst::daf::base::DataProperty *>(0)),
-#endif
+                lsst::daf::base::PropertySet::Ptr metadata,
                 int hdu=0) :
-        fits_file_mgr(file), _hdu(hdu), _metaData(metaData) { init(); }
+        fits_file_mgr(file), _hdu(hdu), _metadata(metadata) { init(); }
     fits_reader(const std::string& filename,
-#if 1                                   // Old name for boost::shared_ptrs
-                lsst::daf::base::DataProperty::PtrType metaData,
-#else
-                lsst::daf::base::DataProperty::ConstPtr metaData,
-#endif
+                lsst::daf::base::PropertySet::Ptr metadata,
                 int hdu=0) :
-        fits_file_mgr(filename, "rb"), _hdu(hdu), _metaData(metaData) { init(); }
+        fits_file_mgr(filename, "rb"), _hdu(hdu), _metadata(metadata) { init(); }
 
     ~fits_reader() { }
 
     template <typename View>
     void apply(View& view) {
         if (_hdu != 0) {
-            throw lsst::pex::exceptions::FitsError(boost::format("Non-default HDUs are not yet supported: %d") % _hdu);
+            throw LSST_EXCEPT(FitsErrorException,
+                              (boost::format("Non-default HDUs are not yet supported: %d") % _hdu).str());
         }
     
         const int BITPIX = detail::fits_read_support_private<View>::BITPIX;
         if (BITPIX != _bitpix) {
-            const std::string msg = str(boost::format("Incorrect value of BITPIX; saw %d expected %d") % _bitpix % BITPIX);
+            const std::string msg = (boost::format("Incorrect value of BITPIX; saw %d expected %d") % _bitpix % BITPIX).str();
 #if 1
-            throw lsst::pex::exceptions::FitsError(msg);
+            throw LSST_EXCEPT(FitsErrorException, msg);
 #else
             std::cerr << msg << std::endl;
 #endif
@@ -314,7 +314,7 @@ public:
         /*
          * Read metadata
          */
-        cfitsio::getMetaData(_fd.get(), _metaData);
+        cfitsio::getMetadata(_fd.get(), _metadata);
 
         for (int y = 0; y != view.height(); ++y) {
             long fpixel[2];                     // tell cfitsio which pixels to read
@@ -325,7 +325,8 @@ public:
 
             if (fits_read_pix(_fd.get(), _ttype, fpixel, view.width(), NULL,
                               view.row_begin(view.height() - y - 1), &anynull, &status) != 0) {
-                throw_cfitsio_error(_fd.get(), status, str(boost::format("Reading row %d") % y));
+                throw LSST_EXCEPT(FitsErrorException,
+                    cfitsio::err_msg(_fd.get(), status, boost::format("Reading row %d") % y));
             }
         }
     }
@@ -352,11 +353,7 @@ public:
     
     template <typename View>
     void apply(const View& view,
-#if 1                                   // Old name for boost::shared_ptrs
-               lsst::daf::base::DataProperty::PtrType metaData
-#else
-               lsst::daf::base::DataProperty::ConstPtr metaData
-#endif
+               lsst::daf::base::PropertySet::Ptr metadata
               ) {
         const int nAxis = 2;
         long nAxes[nAxis];
@@ -367,7 +364,7 @@ public:
 
         int status = 0;
         if (fits_create_img(_fd.get(), BITPIX, nAxis, nAxes, &status) != 0) {
-            throw_cfitsio_error(_fd.get(), status);
+            throw LSST_EXCEPT(FitsErrorException, cfitsio::err_msg(_fd.get(), status), status);
         }
         /*
          * Write metadata to header.  
@@ -375,18 +372,13 @@ public:
          * since cfitsio will put in its own in any case.
          */
 #if 1
-        if (metaData != NULL) {
-            using lsst::daf::base::DataProperty;
-            
-            DataProperty::iteratorRangeType range = metaData->getChildren();
-            DataProperty::ContainerIteratorType iter;
-            for (iter = range.first; iter != range.second; ++iter) {
-                DataProperty::PtrType dpItemPtr = *iter;
-                std::string keyName = dpItemPtr->getName();
-                if (keyName != "SIMPLE" && keyName != "BITPIX" && 
-                    keyName != "NAXIS" && keyName != "NAXIS1" && keyName != "NAXIS2" &&
-                    keyName != "EXTEND") {
-                    cfitsio::appendKey(_fd.get(), keyName, dpItemPtr->getValue(), "");
+        if (metadata != NULL) {
+            typedef std::vector<std::string> NameList;
+            NameList paramNames = metadata->paramNames(false);
+            for (NameList::const_iterator i = paramNames.begin(), e = paramNames.end(); i != e; ++i) {
+                if (*i != "SIMPLE" && *i != "BITPIX" &&
+                    *i != "NAXIS" && *i != "NAXIS1" && *i != "NAXIS2" && *i != "EXTEND") {
+                    cfitsio::appendKey(_fd.get(), *i, "", metadata);
                 }
             }
         }
@@ -398,7 +390,7 @@ public:
         for (int y = 0; y != view.height(); ++y) {
             int status = 0;                     // cfitsio function return status
             if (fits_write_img(_fd.get(), ttype, 1 + y*view.width(), view.width(), view.row_begin(y), &status) != 0) {
-                throw_cfitsio_error(_fd.get(), status, str(boost::format("Reading row %d") % y));
+                throw LSST_EXCEPT(FitsErrorException, cfitsio::err_msg(_fd.get(), status, boost::format("Writing row %d") % y));
             }
         }
     }

@@ -23,7 +23,6 @@
 #include <string>
 #include <typeinfo>
 #include <boost/format.hpp>
-#include <lsst/daf/base/DataProperty.h>
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h"
 
@@ -124,7 +123,6 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
     const int col0 = img->getX0();
     const int height = img->getHeight();
     const int width = img->getWidth();
-    assert (row0 == 0 && col0 == 0);    // address previous comment
 
     float thresholdParam = -1;          // standard deviation of image (may be needed by Threshold)
     if (threshold.getType() == Threshold::STDEV || threshold.getType() == Threshold::VARIANCE) {
@@ -151,7 +149,7 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
     std::vector<int> aliases;           // aliases for initially disjoint parts of Footprints
     aliases.reserve(1 + height/20);	// initial size of aliases
 
-    std::vector<IdSpan::Ptr> spans; // row:x0,x1 for objects
+    std::vector<IdSpan::Ptr> spans;     // y:x0,x1 for objects
     spans.reserve(aliases.capacity());	// initial size of spans
 
     aliases.push_back(0);               // 0 --> 0
@@ -278,17 +276,25 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
     //
     // Set the bits where objects are detected
     //
+    typedef image::Mask<MaskPixelT> MaskT;
+
+    class MaskFootprint : public detection::FootprintFunctor<MaskT> {
+    public:
+        MaskFootprint(MaskT const& mimage,
+                      MaskPixelT bit) : detection::FootprintFunctor<MaskT>(mimage), _bit(bit) {}
+
+        void operator()(typename MaskT::xy_locator loc, int x, int y) {
+            *loc |= _bit;
+        }
+    private:
+        MaskPixelT _bit;
+    };
+
+    MaskFootprint maskit(*maskedImg.getMask(), bitPlane);
     for (FootprintList::const_iterator fiter = _footprints.begin(); fiter != _footprints.end(); ++fiter) {
         const Footprint::Ptr foot = *fiter;
 
-        for (std::vector<Span::Ptr>::const_iterator siter = foot->getSpans().begin();
-             siter != foot->getSpans().end(); siter++) {
-            const Span::Ptr span = *siter;
-            for (typename image::Mask<MaskPixelT>::x_iterator ptr = mask->x_at(span->getX0(), span->getY()),
-                     end = ptr + span->getX1() - span->getX0() + 1; ptr != end; ++ptr) {
-                *ptr |= bitPlane;
-            }
-        }
+        maskit.apply(*foot);
     }
 }
 
@@ -719,7 +725,7 @@ pmFindFootprintAtPoint(const psImage *img,	// image to search
  */
 template<typename ImagePixelT, typename MaskPixelT>
 detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
-	const DetectionSet &set,
+	const DetectionSet &set,        //!< the input DetectionSet
         int r)                          //!< Grow Footprints by r pixels
     : lsst::daf::data::LsstBase(typeid(this)),
       _footprints(*new FootprintList()) {

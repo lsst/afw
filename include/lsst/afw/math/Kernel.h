@@ -126,7 +126,7 @@ namespace math {
          *
          * @note computeNewImage has been retired; it doesn't need to be a member
          *
-         * @throw lsst::pex::exceptions::InvalidParameter if the image is the wrong size
+         * @throw lsst::pex::exceptions::InvalidParameterException if the image is the wrong size
          */
         virtual double computeImage(
             lsst::afw::image::Image<PixelT> &image,   ///< image whose pixels are to be set (output)
@@ -209,16 +209,16 @@ namespace math {
         /**
          * @brief Set the kernel parameters of a spatially invariant kernel.
          *
-         * @throw lsst::pex::exceptions::Runtime if the kernel has a spatial function
-         * @throw lsst::pex::exceptions::InvalidParameter if the params vector is the wrong length
+         * @throw lsst::pex::exceptions::RuntimeErrorException if the kernel has a spatial function
+         * @throw lsst::pex::exceptions::InvalidParameterException if the params vector is the wrong length
          */
         inline void setKernelParameters(std::vector<double> const &params) {
             if (this->isSpatiallyVarying()) {
-                throw lsst::pex::exceptions::Runtime("Kernel is spatially varying");
+                throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Kernel is spatially varying");
             }
             const unsigned int nParams = this->getNKernelParameters();
             if (nParams != params.size()) {
-                throw lsst::pex::exceptions::InvalidParameter("Number of parameters is wrong");
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "Number of parameters is wrong");
             }
             for (unsigned int ii = 0; ii < nParams; ++ii) {
                 this->setKernelParameter(ii, params[ii]);

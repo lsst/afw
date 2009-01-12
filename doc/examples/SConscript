@@ -1,7 +1,0 @@
-# -*- python -*-
-Import('env')
-
-env.Program(["Image_1.cc"], LIBS=env.getlibs("afw"))
-env.Program(["Image_2.cc"], LIBS=env.getlibs("afw"))
-env.Program(["MaskedImage_1.cc"], LIBS=env.getlibs("afw"))
-env.Program(["MaskedImage_2.cc"], LIBS=env.getlibs("afw"))

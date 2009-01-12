@@ -45,8 +45,6 @@ namespace afw {
 namespace image {
     namespace mpl = boost::mpl;
 
-    /// default type for variance images
-    typedef float VariancePixel;
     /// A class to manipulate images, masks, and variance as a single object
     template<typename ImagePixelT, typename MaskPixelT=lsst::afw::image::MaskPixel,
              typename VariancePixelT=VariancePixel>
@@ -159,19 +157,19 @@ namespace image {
             }
             /// Return the distance between two iterators
             std::ptrdiff_t operator-(MaskedImageIteratorBase const& rhs) {
-                return this->_iter->template get<0>() - rhs._iter->template get<0>();
+                return &this->_iter->template get<0>() - &rhs._iter->template get<0>();
             }
             /// Return true if the lhs equals the rhs
             bool operator==(MaskedImageIteratorBase const& rhs) {
-                return _iter == rhs._iter;
+                return &this->_iter->template get<0>() == &rhs._iter->template get<0>();
             }
             /// Return true if the lhs doesn't equal the rhs
             bool operator!=(MaskedImageIteratorBase const& rhs) {
-                return _iter != rhs._iter;
+                return &this->_iter->template get<0>() != &rhs._iter->template get<0>();
             }
             /// Return true if the lhs is less than the rhs
             bool operator<(MaskedImageIteratorBase const& rhs) {
-                return _iter < rhs._iter;
+                return &this->_iter->template get<0>() < &rhs._iter->template get<0>();
             }
             /// Convert an iterator to a Pixel
             operator Pixel() const {
@@ -235,9 +233,10 @@ namespace image {
             }
             /// Return a const_MaskedImageIterator that's delta beyond this
             const_MaskedImageIterator& operator+(std::ptrdiff_t delta) {
-                MaskedImageIteratorBase_t::operator+=(delta);
-                
-                return *this;
+                const_MaskedImageIterator lhs = *this;
+                lhs += delta;
+
+                return lhs;
             }
         };
 
@@ -580,6 +579,9 @@ namespace image {
         /// A const_iterator to a row of a MaskedImage
         typedef const_MaskedImageIterator<typename Image::x_iterator,
                                     typename Mask::x_iterator, typename Variance::x_iterator> const_x_iterator;
+        /// A fast STL compliant iterator for contiguous images
+        /// N.b. The order of pixel access is undefined
+        typedef x_iterator fast_iterator;
         /// An iterator to a column of a MaskedImage
         typedef MaskedImageIterator<typename Image::y_iterator,
                                     typename Mask::y_iterator, typename Variance::y_iterator> y_iterator;
@@ -610,13 +612,7 @@ namespace image {
                              VariancePtr variance = VariancePtr(static_cast<Variance *>(0)));
         explicit MaskedImage(const std::pair<int, int> dimensions, MaskPlaneDict const& planeDict=MaskPlaneDict());
         explicit MaskedImage(std::string const& baseName, int const hdu=0,
-#if 1                                   // Old name for boost::shared_ptrs
-                             typename lsst::daf::base::DataProperty::PtrType
-		metadata=lsst::daf::base::DataProperty::PtrType(static_cast<lsst::daf::base::DataProperty *>(NULL)),
-#else
-                             typename lsst::daf::base::DataProperty::Ptr
-		metadata=lsst::daf::base::DataProperty::Ptr(static_cast<lsst::daf::base::DataProperty *>(NULL)),
-#endif
+                             lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
                              bool const conformMasks=false);
         
         MaskedImage(MaskedImage const& rhs, bool const deep=false);
@@ -627,26 +623,18 @@ namespace image {
         /// We only support converting the Image part
         template<typename OtherPixelT>
         MaskedImage(MaskedImage<OtherPixelT, MaskPixelT, VariancePixelT> const& rhs, //!< Input image
-                    const bool deep) :                                         //!< Must be true; needed to disambiguate
+                    const bool deep     //!< Must be true; needed to disambiguate
+                   ) :
             lsst::daf::data::LsstBase(typeid(this)) {
             if (!deep) {
-                throw lsst::pex::exceptions::InvalidParameter("Only deep copies are permitted for MaskedImages "
-                                                              "with different pixel types");
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                    "Only deep copies are permitted for MaskedImages with different pixel types");
             }
 
             Image tmp(*rhs.getImage(), true);
             _image->swap(tmp);          // See Meyers, Effective C++, Items 11 and 43
         }
 
-        /**
-         * \fn MaskedImage& operator=(MaskedImage const& rhs)
-         * \brief Make the lhs use the rhs's pixels
-         * \param MaskedImage const& rhs
-         *
-         * If you are copying a scalar value, a simple <tt>lhs = scalar;</tt> is OK, but
-         * this is probably not the function that you want to use with an %image. To copy pixel values
-         * from the rhs use \link operator<<\endlink.
-         */
         //MaskedImage& operator=(MaskedImage const& rhs);
         
         virtual ~MaskedImage() {}
@@ -677,14 +665,7 @@ namespace image {
         static std::string varianceFileName(std::string const& baseName) { return baseName + "_var.fits"; }
 
         void writeFits(std::string const& baseName,
-#if 1                                   // Old name for boost::shared_ptrs
-              typename lsst::daf::base::DataProperty::PtrType
-              metadata=lsst::daf::base::DataProperty::PtrType(static_cast<lsst::daf::base::DataProperty *>(0))
-#else
-              typename lsst::daf::base::DataProperty::ConstPtr
-              metadata=lsst::daf::base::DataProperty::ConstPtr(static_cast<lsst::daf::base::DataProperty *>(0))
-#endif
-                      ) const;
+              lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr()) const;
         
         // Getters
         /// Return a (Ptr to) the MaskedImage's %image
@@ -719,6 +700,9 @@ namespace image {
         iterator at(int const x, int const y) const;
         reverse_iterator rbegin() const;
         reverse_iterator rend() const;
+
+        fast_iterator begin(bool) const;
+        fast_iterator end(bool) const;
 
         x_iterator row_begin(int y) const;
         x_iterator row_end(int y) const;

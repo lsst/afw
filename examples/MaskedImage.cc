@@ -7,6 +7,8 @@
 namespace image = lsst::afw::image;
 using namespace std;
 
+typedef double ImagePixelT;
+
 /************************************************************************************************************/
 
 template <typename PixelT>
@@ -50,26 +52,26 @@ void y_gradient(image::MaskedImage<PixelT> & src, image::MaskedImage<PixelT> & d
 /************************************************************************************************************/
 
 namespace {
-    void printImage(image::MaskedImage<float> const& img, string const& title="") {
+    void printImage(image::MaskedImage<ImagePixelT> const& img, string const& title="") {
         if (title != "") {
             cout << title << endl;
         }
         
         for (int i = img.getHeight() - 1; i >= 0; --i) {
-            for (image::MaskedImage<float>::x_iterator ptr = img.row_begin(i), end = img.row_end(i); ptr != end; ++ptr) {
+            for (image::MaskedImage<ImagePixelT>::x_iterator ptr = img.row_begin(i), end = img.row_end(i); ptr != end; ++ptr) {
                 cout << ptr.image() << " ";
             }
             cout << endl;
         }
     }
 
-    void printVariance(image::MaskedImage<float> const& img, string const& title="") {
+    void printVariance(image::MaskedImage<ImagePixelT> const& img, string const& title="") {
         if (title != "") {
             cout << title << endl;
         }
         
         for (int i = img.getHeight() - 1; i >= 0; --i) {
-            for (image::MaskedImage<float>::x_iterator ptr = img.row_begin(i), end = img.row_end(i); ptr != end; ++ptr) {
+            for (image::MaskedImage<ImagePixelT>::x_iterator ptr = img.row_begin(i), end = img.row_end(i); ptr != end; ++ptr) {
                 cout << ptr.variance() << " ";
             }
             cout << endl;
@@ -80,51 +82,57 @@ namespace {
 /************************************************************************************************************/
 
 int main() {
-    image::MaskedImage<float> img(3, 5);
+    image::MaskedImage<ImagePixelT> img(3, 5);
     *img.getImage() = 100;
     *img.getMask() = 0x10;
     *img.getVariance() = 10;
 
+    {
+        float const gain = 2;
+        *img.getVariance() <<= image::Image<image::VariancePixel>(*img.getImage(), true);
+        *img.getVariance() /= gain;
+    }
+
     int i = 0;
-    for (image::MaskedImage<float>::iterator ptr = img.begin(), end = img.end(); ptr != end; ++ptr, ++i) {
+    for (image::MaskedImage<ImagePixelT>::iterator ptr = img.begin(), end = img.end(); ptr != end; ++ptr, ++i) {
         ptr.image() = i/img.getWidth() + 100*(i%img.getWidth());
         ptr.mask() |= 0x8;
         ptr.variance() *= 2;
     }
 
 #if 1
-    for (image::MaskedImage<float>::const_iterator ptr = img.at(0,2), end = img.end(); ptr != end; ++ptr) {
+    for (image::MaskedImage<ImagePixelT>::const_iterator ptr = img.at(0,2), end = img.end(); ptr != end; ++ptr) {
         cout << ptr.image() << " " << ptr.mask() << " " << ptr.variance() << endl;
     }
     cout << endl;
 
-    for (image::MaskedImage<float>::x_iterator ptr = img.row_begin(0), end = img.row_end(0); ptr != end; ++ptr) {
+    for (image::MaskedImage<ImagePixelT>::x_iterator ptr = img.row_begin(0), end = img.row_end(0); ptr != end; ++ptr) {
         cout << ptr.image() << " " << ptr.mask() << " " << ptr.variance() << endl;
     }
     cout << endl;
 
-    for (image::MaskedImage<float>::reverse_iterator ptr = img.rbegin(), rend = img.rend(); ptr != rend; ++ptr) {
+    for (image::MaskedImage<ImagePixelT>::reverse_iterator ptr = img.rbegin(), rend = img.rend(); ptr != rend; ++ptr) {
         cout << ptr.image() << " " << ptr.mask() << " " << ptr.variance() << endl;
     }
 
-    for (image::MaskedImage<float>::y_iterator ptr = img.col_begin(1), end = img.col_end(1); ptr != end; ++ptr) {
+    for (image::MaskedImage<ImagePixelT>::y_iterator ptr = img.col_begin(1), end = img.col_end(1); ptr != end; ++ptr) {
         cout << ptr.image() << " " << ptr.mask() << " " << ptr.variance() << endl;
     }
     cout << endl;
 
-    for (image::MaskedImage<float>::const_x_iterator ptr = img.x_at(1,1), end = img.x_at(5,1); ptr != end; ++ptr) {
+    for (image::MaskedImage<ImagePixelT>::const_x_iterator ptr = img.x_at(1,1), end = img.x_at(5,1); ptr != end; ++ptr) {
         cout << ptr.image() << " " << ptr.mask() << " " << ptr.variance() << endl;
     }
     cout << endl;
 
 #endif
-    for (image::MaskedImage<float>::y_iterator ptr = img.y_at(1,0), end = img.y_at(1,2); ptr != end; ++ptr) {
+    for (image::MaskedImage<ImagePixelT>::y_iterator ptr = img.y_at(1,0), end = img.y_at(1,2); ptr != end; ++ptr) {
         cout << ptr.image() << " " << ptr.mask() << " " << ptr.variance() << endl;
     }
     cout << endl;
 
 #if 1
-    image::MaskedImage<float> grad_y(img.getDimensions());
+    image::MaskedImage<ImagePixelT> grad_y(img.getDimensions());
     *grad_y.getImage() = 0;
     y_gradient(img, grad_y);
 

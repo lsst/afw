@@ -182,7 +182,7 @@ int main() {
 
     try {
         Image<float> fl32(u16, false);  // will throw
-    } catch(lsst::pex::exceptions::InvalidParameter &e) {
+    } catch(lsst::pex::exceptions::InvalidParameterException &e) {
         printf("Correctly threw exception: %s\n", e.what());
     }
 

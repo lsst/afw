@@ -22,7 +22,7 @@ using namespace posix;
 #include "simpleFits.h"
 
 namespace image = lsst::afw::image;
-using lsst::daf::base::DataProperty;
+using lsst::daf::base::PropertySet;
 
 #define FITS_SIZE 2880
 
@@ -41,10 +41,6 @@ public:
         ) : keyword(name), value(val), comment(commnt) { }
     Card(const std::string &name, const char *val, const char *commnt = ""
         ) : keyword(name), value(std::string(val)), comment(commnt) { }
-
-    Card(const DataProperty& dp, const char *commnt = ""
-        ) : keyword(dp.getName()), value(dp.getValue()), comment(commnt) { }
-    
 
     ~Card() {}
 
@@ -95,7 +91,7 @@ int Card::write(int fd,
  */
     if(++ncard == 36) {
 	if(posix::write(fd, record, FITS_SIZE) != FITS_SIZE) {
-	    throw lsst::pex::exceptions::Runtime("Cannot write header record");
+	    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Cannot write header record");
 	}
 	ncard = 0;
     }
@@ -114,7 +110,8 @@ namespace {
     void flip_high_bit(char *arr,              // array that needs bits swapped
                        const int n) {          // number of bytes in arr
         if(n%2 != 0) {
-            throw lsst::pex::exceptions::Runtime(boost::format("Attempt to bit flip odd number of bytes: %d") % n);
+            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                              (boost::format("Attempt to bit flip odd number of bytes: %d") % n).str());
         }
 
         unsigned short* uarr = reinterpret_cast<unsigned short *>(arr);
@@ -131,7 +128,8 @@ namespace {
     void swap_2(char *arr,              // array to swap
                 const int n) {          // number of bytes
         if(n%2 != 0) {
-            throw lsst::pex::exceptions::Runtime(boost::format("Attempt to byte swap odd number of bytes: %d") % n);
+            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                              (boost::format("Attempt to byte swap odd number of bytes: %d") % n).str());
         }
 
         for(char *end = arr + n;arr < end;arr += 2) {
@@ -146,7 +144,8 @@ namespace {
     void swap_4(char *arr,              // array to swap
                 const int n) {          // number of bytes
         if(n%4 != 0) {
-            throw lsst::pex::exceptions::Runtime(boost::format("Attempt to byte swap non-multiple of 4 bytes: %d") % n);
+            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                              (boost::format("Attempt to byte swap non-multiple of 4 bytes: %d") % n).str());
         }
 
         for(char *end = arr + n;arr < end;arr += 4) {
@@ -165,7 +164,8 @@ namespace {
     void swap_8(char *arr,              // array to swap
                 const int n) {          // number of bytes
         if(n%8 != 0) {
-            throw lsst::pex::exceptions::Runtime(boost::format("Attempt to byte swap non-multiple of 8 bytes: %d") % n);
+            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                              (boost::format("Attempt to byte swap non-multiple of 8 bytes: %d") % n).str());
         }
 
         for(char *end = arr + n;arr < end;arr += 8) {
@@ -258,7 +258,8 @@ namespace {
             nbyte = FITS_SIZE - nbyte%FITS_SIZE;
             memset(record, ' ', nbyte);
             if(write(fd, record, nbyte) != nbyte) {
-                throw lsst::pex::exceptions::Runtime("error padding file to multiple of fits block size");
+                throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                                  "error padding file to multiple of fits block size");
             }
         }
     }
@@ -350,7 +351,7 @@ void writeBasicFits(int fd,                                      // file descrip
         cards.push_back(Card("BSCALE", 1.0,     ""));
         bitpix = 16;
     } else if (bitpix == 0) {
-        throw lsst::pex::exceptions::Runtime(boost::format("Unsupported image type"));
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unsupported image type");
     }
     /*
      * Generate cards for Wcs, so that pixel (0,0) is correctly labelled
@@ -368,24 +369,34 @@ void writeBasicFits(int fd,                                      // file descrip
      * Was there something else?
      */
     if (Wcs != NULL) {
-        DataProperty::iteratorRangeType wcsCards = Wcs->getFitsMetaData()->getChildren();
+        typedef std::vector<std::string> NameList;
+        lsst::daf::base::PropertySet::Ptr metadata = Wcs->getFitsMetadata();
+        NameList paramNames = metadata->paramNames();
         
-        for (DataProperty::ContainerIteratorType i = wcsCards.first; i != wcsCards.second; i++) {
-            Card card(*(*i));
-            
-            if (card.keyword == "SIMPLE" ||
-                card.keyword == "BITPIX" ||
-                card.keyword == "NAXIS" ||
-                card.keyword == "NAXIS1" ||
-                card.keyword == "NAXIS2" ||
-                card.keyword == "XTENSION" ||
-                card.keyword == "PCOUNT" ||
-                card.keyword == "GCOUNT"
+        for (NameList::const_iterator i = paramNames.begin(), end = paramNames.end(); i != end; ++i) {
+            if (*i == "SIMPLE" ||
+                *i == "BITPIX" ||
+                *i == "NAXIS" ||
+                *i == "NAXIS1" ||
+                *i == "NAXIS2" ||
+                *i == "XTENSION" ||
+                *i == "PCOUNT" ||
+                *i == "GCOUNT"
                ) {
                 continue;
             }
-
-            cards.push_back(card);
+            std::type_info const &type = metadata->typeOf(*i);
+            if (type == typeid(bool)) {
+                cards.push_back(Card(*i, metadata->get<bool>(*i)));
+            } else if (type == typeid(int)) {
+                cards.push_back(Card(*i, metadata->get<int>(*i)));
+            } else if (type == typeid(float)) {
+                cards.push_back(Card(*i, metadata->get<float>(*i)));
+            } else if (type == typeid(double)) {
+                cards.push_back(Card(*i, metadata->get<double>(*i)));
+            } else {
+                cards.push_back(Card(*i, metadata->get<std::string>(*i)));
+            }
         }
     }
     /*
@@ -399,7 +410,8 @@ void writeBasicFits(int fd,                                      // file descrip
     write_fits_hdr(fd, bitpix, naxis, naxes, cards, 1);
     for (int y = 0; y != data.getHeight(); ++y) {
 	if(write_fits_data(fd, bitpix, (char *)(data.row_begin(y)), (char *)(data.row_end(y))) < 0){
-	    throw lsst::pex::exceptions::Runtime(boost::format("Error writing data for row %d") % y);
+	    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                              (boost::format("Error writing data for row %d") % y).str());
 	}
     }
 
@@ -426,14 +438,15 @@ void writeBasicFits(std::string const& filename,                 // file to writ
     }
 
     if (fd < 0) {
-        throw lsst::pex::exceptions::Runtime(boost::format("Cannot open \"%s\"") % filename);
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                          (boost::format("Cannot open \"%s\"") % filename).str());
     }
 
     try {
         writeBasicFits(fd, data, Wcs);
-    } catch(lsst::pex::exceptions::ExceptionStack &e) {
+    } catch(lsst::pex::exceptions::Exception &) {
         (void)close(fd);
-        throw e;
+        throw;
     }
 
     (void)close(fd);

@@ -32,6 +32,7 @@ namespace formatters {
     for DiaSourceVector instances.
  */
 class DiaSourceVectorFormatter : public lsst::daf::persistence::Formatter {
+	typedef lsst::afw::detection::DiaSource DiaSource;
     typedef std::vector<DiaSource> DiaSourceVector;
 public:
 
@@ -105,8 +106,8 @@ private:
         FWHM_B,
         FWHM_THETA,
         LENGTH_DEG,
-        FLUX_MAG,
-        FLUX_MAG_ERR,
+        FLUX,
+        FLUX_ERR,
         PSF_MAG,
         PSF_MAG_ERR,
         AP_MAG,
@@ -118,7 +119,7 @@ private:
         NON_GRAY_CORR_MAG,
         NON_GRAY_CORR_MAG_ERR,
         ATM_CORR_MAG,
-        ATM_CORR_MAG,
+        ATM_CORR_MAG_ERR,
         AP_DIA,
         REF_MAG,
         IXX,

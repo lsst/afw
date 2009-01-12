@@ -11,6 +11,7 @@ env.Program(["checkTypeConversions.cc"], LIBS=env.getlibs("afw"))
 env.Program(["Exposure.cc"], LIBS=env.getlibs("afw"))
 
 env.Program(["BBox_1.cc"], LIBS=env.getlibs("afw"))
+env.Program(["DecoratedImage.cc"], LIBS=env.getlibs("afw"))
 env.Program(["Footprint_1.cc"], LIBS=env.getlibs("afw"))
 env.Program(["Image.cc"], LIBS=env.getlibs("afw"))
 env.Program(["MaskedImage.cc"], LIBS=env.getlibs("afw"))
@@ -19,8 +20,6 @@ env.Program(["MaskedImageIO_1.cc"], LIBS=env.getlibs("afw"))
 env.Program(["MaskedImageIO_2.cc"], LIBS=env.getlibs("afw"))
 env.Program(["MaskIO_1.cc"], LIBS=env.getlibs("afw"))
 env.Program(["Statistics.cc"], LIBS=env.getlibs("afw"))
-# Removed since not ready according to Tim Axelrod. 2007-11-26
-# env.Program(["MaskIO_2.cc"], LIBS=env.getlibs("afw"))
 env.Program(["SourceIO_1.cc"], LIBS=env.getlibs("afw"))
 env.Program(["SourceIO_2.cc"], LIBS=env.getlibs("afw"))
     

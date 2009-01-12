@@ -3,7 +3,7 @@ namespace lsst { namespace afw { namespace image {
  \page imageIterators Image Iterators
 
 The simplest way to visit all the pixels in an %image is to use an STL-compliant
-iterator (this code's in Image_1.cc):
+iterator (this code's in \link Image_1.cc\endlink):
 \dontinclude Image_1.cc
 
 Start by including Image.h and declaring namespace alias and a typedef for our favoured %image type
@@ -22,9 +22,16 @@ is needed after every %pixel (we do guarantee
 that a \e row's pixels will be contiguous).  It's better to write:
 \until }
 \until }
-
 In addition to \c row_begin there's also \c x_at(X,Y) to start/end the the iteration at
 a given %pixel.
+
+For contiguous images (i.e. images that you know not to be subimages created via
+\c Image(\c Image, \c BBox) there's a simple and slightly faster method:
+\until }
+Note that we're using \c fast_iterator, not \c iterator, and that the order we
+use to traverse the image is undefined.
+A \c lsst::pex::exceptions::Runtime
+exception is thrown if you try to use this on subimages.
 
 Note that we're using an \c x_iterator instead of an \c iterator; this might
 suggest that the following is also possible, and indeed it is:
@@ -56,7 +63,7 @@ the use of <tt>ImageT::Pixel(100, 0x1, 10)</tt> as the assigned pixel
 value instead of \c 100).
 
 The simplest way to visit all the pixels in an %image is to use an STL-compliant
-iterator (this code's in Image_1.cc):
+iterator (this code's in \link Image_1.cc\endlink):
 \dontinclude MaskedImage_1.cc
 
 Start by including MaskedImage.h and declaring a namespace alias and a typedef for our favoured %image type
@@ -82,6 +89,14 @@ is needed after every %pixel (we do guarantee
 that a \e row's pixels will be contiguous).  It's better to write:
 \until }
 \until }
+
+For contiguous images (i.e. images that you know not to be subimages created via
+\c MaskedImage(\c MaskedImage, \c BBox) there's a simple and slightly faster method:
+\until }
+Note that we're using \c fast_iterator, not \c iterator, and that the order we
+use to traverse the image is undefined.
+A \c lsst::pex::exceptions::Runtime
+exception is thrown if you try to use this on subimages.
 
 In addition to \c row_begin there's also \c x_at(X,Y) to start/end the the iteration at
 a given %pixel.
@@ -122,7 +137,7 @@ Let's consider the problem of smoothing with a
 2 4 2
 1 2 1
 \endcode
-kernel (the code's in Image_2.cc):
+kernel (the code's in \link Image_2.cc\endlink):
 \dontinclude Image_2.cc
 
 Start by including Image.h defining a namespace for clarity:
@@ -194,7 +209,7 @@ Let's consider the problem of smoothing with a
 2 4 2
 1 2 1
 \endcode
-kernel (the code's in MaskedImage_2.cc):
+kernel (the code's in \link MaskedImage_2.cc\endlink):
 \dontinclude MaskedImage_2.cc
 
 Start by including Image.h defining a namespace for clarity:

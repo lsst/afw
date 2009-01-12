@@ -27,15 +27,18 @@
 #include "lsst/afw/image/fits/fits_io_mpl.h"
 
 namespace image = lsst::afw::image;
+namespace ex = lsst::pex::exceptions;
+namespace logging = lsst::pex::logging;
+
+using lsst::daf::base::PropertySet;
 
 template<typename MaskPixelT>
 image::Mask<MaskPixelT>::Mask(int width, int height, MaskPlaneDict const& planeDefs) :
     image::ImageBase<MaskPixelT>(width, height),
-    _metaData(lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData")),
     _myMaskDictVersion(_maskDictVersion) {
 
-    lsst::pex::logging::Trace("afw.Mask", 5,
-              boost::format("Number of mask planes: %d") % getNumPlanesMax());
+    logging::Trace("afw.Mask", 5,
+                   boost::format("Number of mask planes: %d") % getNumPlanesMax());
 
     if (planeDefs.size() > 0 && planeDefs != _maskPlaneDict) {
         _maskPlaneDict = planeDefs;
@@ -46,11 +49,10 @@ image::Mask<MaskPixelT>::Mask(int width, int height, MaskPlaneDict const& planeD
 template<typename MaskPixelT>
 image::Mask<MaskPixelT>::Mask(const std::pair<int, int> dimensions, MaskPlaneDict const& planeDefs) :
     image::ImageBase<MaskPixelT>(dimensions),
-    _metaData(lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData")),
     _myMaskDictVersion(_maskDictVersion) {
 
-    lsst::pex::logging::Trace("afw.Mask", 5,
-              boost::format("Number of mask planes: %d") % getNumPlanesMax());
+    logging::Trace("afw.Mask", 5,
+                   boost::format("Number of mask planes: %d") % getNumPlanesMax());
 
     if (planeDefs.size() > 0 && planeDefs != _maskPlaneDict) {
         _maskPlaneDict = planeDefs;
@@ -61,15 +63,28 @@ image::Mask<MaskPixelT>::Mask(const std::pair<int, int> dimensions, MaskPlaneDic
 template<typename MaskPixelT>
 image::Mask<MaskPixelT>::Mask(Mask const& rhs, const BBox& bbox, const bool deep) :
     image::ImageBase<MaskPixelT>(rhs, bbox, deep),
-    _metaData(rhs._metaData),
-    _myMaskDictVersion(_myMaskDictVersion) {
+    _myMaskDictVersion(rhs._myMaskDictVersion) {
 }
 
 template<typename MaskPixelT>
 image::Mask<MaskPixelT>::Mask(image::Mask<MaskPixelT> const& rhs, bool deep) :
     image::ImageBase<MaskPixelT>(rhs, deep),
-    _metaData(rhs._metaData),
-    _myMaskDictVersion(_myMaskDictVersion) {
+    _myMaskDictVersion(rhs._myMaskDictVersion) {
+}
+
+/************************************************************************************************************/
+
+template<typename PixelT>
+void image::Mask<PixelT>::swap(Mask &rhs) {
+    using std::swap;                    // See Meyers, Effective C++, Item 25
+
+    ImageBase<PixelT>::swap(rhs);
+    swap(_myMaskDictVersion, rhs._myMaskDictVersion);    
+}
+
+template<typename PixelT>
+void image::swap(Mask<PixelT>& a, Mask<PixelT>& b) {
+    a.swap(b);
 }
 
 /*
@@ -90,11 +105,6 @@ image::Mask<MaskPixelT>& image::Mask<MaskPixelT>::operator=(const MaskPixelT rhs
     return *this;
 }
 
-template<typename MaskPixelT>
-lsst::daf::base::DataProperty::PtrType image::Mask<MaskPixelT>::getMetaData() {
-    return _metaData;
-}
-
 /**
  * @brief Create a Mask from a FITS file on disk
  *
@@ -106,14 +116,13 @@ lsst::daf::base::DataProperty::PtrType image::Mask<MaskPixelT>::getMetaData() {
 template<typename MaskPixelT>
 image::Mask<MaskPixelT>::Mask(std::string const& fileName, //!< Name of file to read
         int const hdu,                                     //!< HDU to read 
-        lsst::daf::base::DataProperty::PtrType metaData,   //!< file metaData (may point to NULL)
+        lsst::daf::base::PropertySet::Ptr metadata,                         //!< file metadata (may point to NULL)
         bool const conformMasks                            //!< Make Mask conform to mask layout in file?
                              ) :
-    image::ImageBase<MaskPixelT>(),
-    _metaData(metaData) {
+    image::ImageBase<MaskPixelT>() {
 
-    if (_metaData.get() == NULL) {
-        _metaData = lsst::daf::base::DataProperty::createPropertyNode("FitsMetaData");
+    if (!metadata) {
+        metadata = PropertySet::Ptr(new PropertySet()); //TODOsmm createPropertyNode("FitsMetadata");
     }
     //
     // These are the permitted input file types
@@ -125,17 +134,19 @@ image::Mask<MaskPixelT>::Mask(std::string const& fileName, //!< Name of file to 
     > fits_mask_types;
 
     if (!boost::filesystem::exists(fileName)) {
-        throw lsst::pex::exceptions::NotFound(boost::format("File %s doesn't exist") % fileName);
+        throw LSST_EXCEPT(ex::NotFoundException,
+                          (boost::format("File %s doesn't exist") % fileName).str());
     }
 
-    if (!image::fits_read_image<fits_mask_types>(fileName, *_getRawImagePtr(), _metaData)) {
-        throw lsst::pex::exceptions::FitsError(boost::format("Failed to read %s HDU %d") % fileName % hdu);
+    if (!image::fits_read_image<fits_mask_types>(fileName, *_getRawImagePtr(), metadata)) {
+        throw LSST_EXCEPT(FitsErrorException,
+                          (boost::format("Failed to read %s HDU %d") % fileName % hdu).str());
     }
     _setRawView();
     //
     // OK, we've read it.  Now make sense of its mask planes
     //
-    MaskPlaneDict fileMaskDict = parseMaskPlaneMetaData(_metaData); // look for mask planes in the file
+    MaskPlaneDict fileMaskDict = parseMaskPlaneMetadata(metadata); // look for mask planes in the file
 
     if (fileMaskDict == _maskPlaneDict) { // file is consistent with Mask
         return;
@@ -154,8 +165,10 @@ image::Mask<MaskPixelT>::Mask(std::string const& fileName, //!< Name of file to 
 
 template<typename MaskPixelT>
 void image::Mask<MaskPixelT>::writeFits(std::string const& fileName) const {
-    addMaskPlanesToMetaData(getMetaData());
-    image::fits_write_view(fileName, _getRawView(), getMetaData());
+    PropertySet::Ptr metadata(new PropertySet()); //TODOsmm lsst::daf::base::DataProperty::createPropertyNode("FitsMetadata");
+    addMaskPlanesToMetadata(metadata);
+    
+    image::fits_write_view(fileName, _getRawView(), metadata);
 }
 
 template<typename MaskPixelT>
@@ -174,9 +187,8 @@ int image::Mask<MaskPixelT>::addMaskPlane(const std::string& name)
         return _maskPlaneDict[name];
     } else {
         // Max number of planes already allocated
-        throw lsst::pex::exceptions::Runtime("Max number of planes already used")
-            << lsst::daf::base::DataProperty("numPlanesUsed", _maskPlaneDict.size())
-            << lsst::daf::base::DataProperty("numPlanesMax", getNumPlanesMax());
+        throw LSST_EXCEPT(ex::RuntimeErrorException,
+                          (boost::format("Max number of planes (%1%) already used") % getNumPlanesMax()).str());
     }
 }
 
@@ -187,7 +199,8 @@ template<typename MaskPixelT>
 int image::Mask<MaskPixelT>::addMaskPlane(std::string name, int planeId)
 {
     if (planeId < 0 || planeId >= getNumPlanesMax()) {
-        throw;
+        throw LSST_EXCEPT(ex::RangeErrorException,
+                          (boost::format("mask plane id must be between 0 and %1%") % (getNumPlanesMax() - 1)).str());
     }
 
     _maskPlaneDict[name] = planeId;
@@ -206,8 +219,8 @@ void image::Mask<MaskPixelT>::removeMaskPlane(const std::string& name)
         _myMaskDictVersion = ++_maskDictVersion;
         return;
      } catch (std::exception &e) {
-        lsst::pex::logging::Trace("afw.Mask", 0,
-                                  boost::format("%s Plane %s not present in this Mask") % e.what() % name);
+        logging::Trace("afw.Mask", 0,
+                       boost::format("%s Plane %s not present in this Mask") % e.what() % name);
         return;
      }
      
@@ -221,7 +234,7 @@ MaskPixelT image::Mask<MaskPixelT>::getBitMaskNoThrow(int plane) {
 
 // \brief Return the bitmask corresponding to plane
 //
-// @throw lsst::pex::exceptions::InvalidParameter if plane is invalid
+// @throw lsst::pex::exceptions::InvalidParameterException if plane is invalid
 template<typename MaskPixelT>
 MaskPixelT image::Mask<MaskPixelT>::getBitMask(int plane) {
     for (MaskPlaneDict::const_iterator i = _maskPlaneDict.begin(); i != _maskPlaneDict.end(); ++i) {
@@ -233,7 +246,7 @@ MaskPixelT image::Mask<MaskPixelT>::getBitMask(int plane) {
             return bitmask;
         }
     }
-    throw lsst::pex::exceptions::InvalidParameter(boost::format("Invalid mask plane: %d") % plane);
+    throw LSST_EXCEPT(ex::InvalidParameterException, (boost::format("Invalid mask plane: %d") % plane).str());
 }
 
 template<typename MaskPixelT>
@@ -241,7 +254,7 @@ int image::Mask<MaskPixelT>::getMaskPlane(const std::string& name) {
     const int plane = getMaskPlaneNoThrow(name);
     
     if (plane < 0) {
-        throw lsst::pex::exceptions::InvalidParameter(boost::format("Invalid mask plane: %s") % name);
+        throw LSST_EXCEPT(ex::InvalidParameterException, (boost::format("Invalid mask plane: %s") % name).str());
     } else {
         return plane;
     }
@@ -283,17 +296,19 @@ void image::Mask<MaskPixelT>::clearMaskPlane(int plane) {
     *this &= ~getBitMask(plane);
 }
 
-// \brief Convert the current maskPlaneDict to the canonical one defined in Mask
+// \brief Adjust this mask to conform to the standard Mask class's mask plane dictionary,
+// adding any new mask planes to the standard.
 //
-// conformMaskPlanes ensures that this Mask (presumably from some external source)
-// has the same plane assignments as Mask.  If a change in plane assignments is needed,
-// the bits within each pixel are permuted as required
+// Ensures that this mask (presumably from some external source) has the same plane assignments
+// as the Mask class. If a change in plane assignments is needed, the bits within each pixel
+// are permuted as required.
 //
-// Any new mask planes in the header are recognised, added to the planeMaskDict, and shifted up into unused slots
+// Any new mask planes found in this mask are added to unused slots in the Mask class's mask plane dictionary.
 //
 template<typename MaskPixelT>
-void image::Mask<MaskPixelT>::conformMaskPlanes(MaskPlaneDict& currentPlaneDict
-                                        ) {
+void image::Mask<MaskPixelT>::conformMaskPlanes(
+    const MaskPlaneDict& currentPlaneDict   ///< mask plane dictionary for this mask
+) {
 
     if (_maskPlaneDict == currentPlaneDict) {
         _myMaskDictVersion = _maskDictVersion;
@@ -422,84 +437,79 @@ void image::Mask<MaskPixelT>::setMaskPlaneValues(const int plane, const int x0, 
 }
 
 /**
- * @brief Given a DataProperty, replace any existing MaskPlane assignments with the current ones.
- *
- * @throw Throws lsst::pex::exceptions::InvalidParameter if given DataProperty is not a node
+ * @brief Given a PropertySet, replace any existing MaskPlane assignments with the current ones.
  */
 template<typename MaskPixelT>
-void image::Mask<MaskPixelT>::addMaskPlanesToMetaData(lsst::daf::base::DataProperty::PtrType rootPtr) {
-     if( rootPtr->isNode() != true ) {
-        throw lsst::pex::exceptions::InvalidParameter( "Given DataProperty object is not a node" );
-        
-     }
+void image::Mask<MaskPixelT>::addMaskPlanesToMetadata(lsst::daf::base::PropertySet::Ptr metadata) {
+    if (!metadata) {
+        throw LSST_EXCEPT(ex::InvalidParameterException, "Null PropertySet::Ptr");
+    }
 
     // First, clear existing MaskPlane metadata
-    rootPtr->deleteAll( maskPlanePrefix +".*", false );
+    typedef std::vector<std::string> NameList;
+    NameList paramNames = metadata->paramNames(false);
+    for (NameList::const_iterator i = paramNames.begin(); i != paramNames.end(); ++i) {
+        if (i->compare(0, maskPlanePrefix.size(), maskPlanePrefix) == 0) {
+            metadata->remove(*i);
+        }
+    }
 
     // Add new MaskPlane metadata
     for (MaskPlaneDict::iterator i = _maskPlaneDict.begin(); i != _maskPlaneDict.end() ; ++i) {
         std::string const planeName = i->first;
         int const planeNumber = i->second;
-        
+
         if (planeName != "") {
-            rootPtr->addProperty(
-                lsst::daf::base::DataProperty::PtrType(new lsst::daf::base::DataProperty(Mask::maskPlanePrefix + planeName, planeNumber)));
+            metadata->add(maskPlanePrefix + planeName, planeNumber);
         }
     }
 }
 
 
 /**
- * @brief Given a DataProperty that contains the MaskPlane assignments setup the MaskPlanes.
+ * @brief Given a PropertySet that contains the MaskPlane assignments, setup the MaskPlanes.
  *
  * @returns a dictionary of mask names/plane assignments
  */
 template<typename MaskPixelT>
-typename image::Mask<MaskPixelT>::MaskPlaneDict image::Mask<MaskPixelT>::parseMaskPlaneMetaData(
-	lsst::daf::base::DataProperty::PtrType const rootPtr //!< metadata from a Mask
+typename image::Mask<MaskPixelT>::MaskPlaneDict image::Mask<MaskPixelT>::parseMaskPlaneMetadata(
+	lsst::daf::base::PropertySet::Ptr const metadata //!< metadata from a Mask
                                                                                                ) {
     MaskPlaneDict newDict;
 
-    lsst::daf::base::DataProperty::iteratorRangeType range = rootPtr->searchAll( maskPlanePrefix +".*" );
-    if (std::distance(range.first, range.second) == 0) {
-        return newDict;
-    }
+    // First, clear existing MaskPlane metadata
+    typedef std::vector<std::string> NameList;
+    NameList paramNames = metadata->paramNames(false);
+    int numPlanesUsed = 0; // number of planes used
 
-    int numPlanesUsed = 0;              // number of planes used
-    // Iterate through matching keyWords setting the dictionary
-    lsst::daf::base::DataProperty::ContainerIteratorType iter;
-    for( iter = range.first; iter != range.second; ++iter, ++numPlanesUsed ) {
-        lsst::daf::base::DataProperty::PtrType dpPtr = *iter;
-        // split off the "MP_" to get the planeName
-        std::string const keyWord = dpPtr->getName();
-        std::string const planeName = keyWord.substr(maskPlanePrefix.size());
-        // will throw an exception if the found item does not contain const int
-        int const planeId = boost::any_cast<const int>(dpPtr->getValue());
+    // Iterate over childless properties with names starting with maskPlanePrefix
+    for (NameList::const_iterator i = paramNames.begin(); i != paramNames.end(); ++i) {
+        if (i->compare(0, maskPlanePrefix.size(), maskPlanePrefix) == 0) {
+            // split off maskPlanePrefix to obtain plane name
+            std::string planeName = i->substr(maskPlanePrefix.size());
+            int const planeId = metadata->getAsInt(*i);
 
-        MaskPlaneDict::const_iterator plane = newDict.find(planeName);
-        if (plane != newDict.end() && planeId != plane->second) {
-            throw lsst::pex::exceptions::Runtime("File specifies plane " + planeName + " twice");
-        }
-
-        for (MaskPlaneDict::const_iterator i = newDict.begin(); i != newDict.end(); ++i) {
-            if (planeId == i->second) {
-                throw lsst::pex::exceptions::Runtime(boost::format("File specifies plane %s has same value (%d) as %s") %
-                                                     planeName % planeId % i->first);
+            MaskPlaneDict::const_iterator plane = newDict.find(planeName);
+            if (plane != newDict.end() && planeId != plane->second) {
+               throw LSST_EXCEPT(ex::RuntimeErrorException, "File specifies plane " + planeName + " twice"); 
             }
+            for (MaskPlaneDict::const_iterator i = newDict.begin(); i != newDict.end(); ++i) {
+                if (planeId == i->second) {
+                    throw LSST_EXCEPT(ex::RuntimeErrorException,
+                                      (boost::format("File specifies plane %s has same value (%d) as %s") %
+                                          planeName % planeId % i->first).str());
+                }
+            }
+            // build new entry
+            if (numPlanesUsed >= getNumPlanesMax()) {
+                // Max number of planes already allocated
+                throw LSST_EXCEPT(ex::RuntimeErrorException,
+                                  (boost::format("Max number of planes (%1%) already used") %
+                                      getNumPlanesMax()).str());
+            }
+            newDict[planeName] = planeId; 
         }
-
-        // build new entry
-        if (numPlanesUsed >= getNumPlanesMax()) {
-            // Max number of planes already allocated
-            throw lsst::pex::exceptions::Runtime("Max number of planes already used")
-                << lsst::daf::base::DataProperty("numPlanesUsed", numPlanesUsed)
-                << lsst::daf::base::DataProperty("numPlanesMax", getNumPlanesMax());
-        }
-
-        newDict[planeName] = planeId;
-        
     }
-
     return newDict;
 }
 

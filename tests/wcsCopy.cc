@@ -10,7 +10,7 @@
 #include "lsst/daf/base.h"
 #include "lsst/afw/image.h"
 
-using lsst::daf::base::DataProperty;
+using lsst::daf::base::PropertySet;
 
 int main() {
     typedef float pixelType;
@@ -27,10 +27,10 @@ int main() {
         // Create a wcs from a fits file (so the wcs has some memory to allocate)
         std::cout << "Opening file " << inFilename << std::endl;
 
-        DataProperty::PtrType metaData = DataProperty::createPropertyNode("FitsMetaData");
+        PropertySet::Ptr metadata(new PropertySet);
         int const hdu = 0;
-        lsst::afw::image::MaskedImage<pixelType, lsst::afw::image::MaskPixel> mImage(inFilename, hdu, metaData);
-        lsst::afw::image::Wcs wcs(metaData);
+        lsst::afw::image::MaskedImage<pixelType, lsst::afw::image::MaskPixel> mImage(inFilename, hdu, metadata);
+        lsst::afw::image::Wcs wcs(metadata);
         
         std::cout << "making a copy of a wcs" << std::endl;
         { // use copy constructor and deallocate the copy
@@ -50,5 +50,7 @@ int main() {
     if (lsst::daf::base::Citizen::census(0) != 0) {
         std::cerr << "Leaked memory blocks:" << std::endl;
         lsst::daf::base::Citizen::census(std::cerr);
+        return EXIT_FAILURE;
     }
+    return EXIT_SUCCESS;
 }
