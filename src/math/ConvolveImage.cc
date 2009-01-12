@@ -9,9 +9,6 @@
  * @todo
  * * Speed up convolution
  *
- * @note: the convolution and apply functions assume that data in a row is contiguous,
- * both in the input image and in the kernel. This will eventually be enforced by afw.
- *
  * @author Russell Owen
  *
  * @ingroup afw
@@ -147,7 +144,7 @@ inline void copyBorder(
  * @ingroup afw
  */
 template <typename OutImageT, typename InImageT>
-inline typename OutImageT::SinglePixel lsst::afw::math::apply(
+inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
     typename InImageT::const_xy_locator& imageLocator,
                                         ///< locator for image pixel that overlaps (0,0) pixel of kernel(!)
     lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::const_xy_locator &kernelLocator,
@@ -187,7 +184,7 @@ inline typename OutImageT::SinglePixel lsst::afw::math::apply(
  * @ingroup afw
  */
 template <typename OutImageT, typename InImageT>
-inline typename OutImageT::SinglePixel lsst::afw::math::apply(
+inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
     typename InImageT::const_xy_locator& imageLocator,
                                         ///< locator for image pixel that overlaps (0,0) pixel of kernel(!)
     std::vector<lsst::afw::math::Kernel::PixelT> const &kernelXList,  ///< kernel column vector
@@ -290,7 +287,7 @@ void lsst::afw::math::basicConvolve(
 
                 KernelPixelT kSum = kernel.computeImage(kernelImage, false, colPos, rowPos);
                 kXY_locator kernelLoc = kernelImage.xy_at(0,0);
-                *cnvImIter = lsst::afw::math::apply<OutImageT, InImageT>(inImLoc, kernelLoc, kWidth, kHeight);
+                *cnvImIter = lsst::afw::math::convolveAtAPoint<OutImageT, InImageT>(inImLoc, kernelLoc, kWidth, kHeight);
                 if (doNormalize) {
                     *cnvImIter = *cnvImIter/kSum;
                 }
@@ -305,7 +302,7 @@ void lsst::afw::math::basicConvolve(
             for (cnvX_iterator cnvImIter = convolvedImage.x_at(cnvStartX, cnvY),
                      cnvImEnd = convolvedImage.x_at(cnvEndX, cnvY); cnvImIter != cnvImEnd; ++inImLoc.x(), ++cnvImIter) {
                 kXY_locator kernelLoc = kernelImage.xy_at(0,0);
-                *cnvImIter = lsst::afw::math::apply<OutImageT, InImageT>(inImLoc, kernelLoc, kWidth, kHeight);
+                *cnvImIter = lsst::afw::math::convolveAtAPoint<OutImageT, InImageT>(inImLoc, kernelLoc, kWidth, kHeight);
             }
         }
     }
@@ -398,7 +395,7 @@ void lsst::afw::math::basicConvolve(
 
                 KernelPixelT kSum = kernel.computeVectors(kXVec, kYVec, doNormalize, colPos, rowPos);
 
-                *cnvImIter = lsst::afw::math::apply<OutImageT, InImageT>(inImLoc, kXVec, kYVec);
+                *cnvImIter = lsst::afw::math::convolveAtAPoint<OutImageT, InImageT>(inImLoc, kXVec, kYVec);
                 if (doNormalize) {
                     *cnvImIter = *cnvImIter/kSum;
                 }
@@ -414,7 +411,7 @@ void lsst::afw::math::basicConvolve(
             inXY_locator inImLoc =  inImage.xy_at(0, cnvY - cnvStartY);
             for (cnvX_iterator cnvImIter = convolvedImage.row_begin(cnvY) + cnvStartX,
                      cnvImEnd = cnvImIter + (cnvEndX - cnvStartX); cnvImIter != cnvImEnd; ++inImLoc.x(), ++cnvImIter) {
-                *cnvImIter = lsst::afw::math::apply<OutImageT, InImageT>(inImLoc, kXVec, kYVec);
+                *cnvImIter = lsst::afw::math::convolveAtAPoint<OutImageT, InImageT>(inImLoc, kXVec, kYVec);
             }
         }
     }
@@ -562,6 +559,13 @@ namespace lsst { namespace afw { namespace math {
 */
 #define NL /* */
 #define convolutionFuncsByType(IMAGE, PIXTYPE1, PIXTYPE2) \
+    template IMAGE(PIXTYPE1)::SinglePixel \
+        convolveAtAPoint<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2)>(IMAGE(PIXTYPE2)::const_xy_locator &, \
+        lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::const_xy_locator &, int, int); NL \
+    template IMAGE(PIXTYPE1)::SinglePixel \
+        convolveAtAPoint<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2)>(IMAGE(PIXTYPE2)::const_xy_locator &, \
+        std::vector<lsst::afw::math::Kernel::PixelT> const &, \
+        std::vector<lsst::afw::math::Kernel::PixelT> const &); NL \
     template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, AnalyticKernel const&, bool, int); NL \
     template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, DeltaFunctionKernel const&, bool, int); NL \
     template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, FixedKernel const&, bool, int); NL \

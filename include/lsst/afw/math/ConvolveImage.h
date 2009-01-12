@@ -4,7 +4,7 @@
 /**
  * @file
  *
- * @brief Convolve and convolveAtAPoint functions for Image and Kernel
+ * @brief Convolution functions
  *
  * @todo
  * * Consider adding a flag to convolve indicating which specialized version of basicConvolve was used.
@@ -23,19 +23,6 @@
 namespace lsst {
 namespace afw {
 namespace math {
-
-    template <typename OutImageT, typename InImageT>
-    inline typename OutImageT::SinglePixel convolveAtAPoint(
-        typename InImageT::const_xy_locator& inLocator,
-        typename lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::const_xy_locator& kernelLocator,
-        int kWidth, int kHeight);
-    
-    template <typename OutImageT, typename InImageT>
-    inline typename OutImageT::SinglePixel convolveAtAPoint(
-        typename InImageT::const_xy_locator& inImage,
-        std::vector<lsst::afw::math::Kernel::PixelT> const& kernelColList,
-        std::vector<lsst::afw::math::Kernel::PixelT> const& kernelRowList
-    );
     
     template <typename OutImageT, typename InImageT, typename KernelT>
     void convolve(
@@ -52,6 +39,43 @@ namespace math {
         InImageT const& inImage,
         lsst::afw::math::LinearCombinationKernel const& kernel,
         int edgeBit=-1
+    );
+    
+    template <typename OutImageT, typename InImageT>
+    void basicConvolve(
+        OutImageT& convolvedImage,
+        InImageT const& inImage,
+        lsst::afw::math::Kernel const& kernel,
+        bool doNormalize
+    );
+    
+    template <typename OutImageT, typename InImageT>
+    void basicConvolve(
+        OutImageT& convolvedImage,
+        InImageT const& inImage,
+        lsst::afw::math::DeltaFunctionKernel const& kernel,
+        bool doNormalize
+    );
+    
+    template <typename OutImageT, typename InImageT>
+    void basicConvolve(
+        OutImageT& convolvedImage,
+        InImageT const& inImage,
+        lsst::afw::math::SeparableKernel const& kernel,
+        bool doNormalize
+    );
+
+    template <typename OutImageT, typename InImageT>
+    inline typename OutImageT::SinglePixel convolveAtAPoint(
+        typename InImageT::const_xy_locator& inLocator,
+        typename lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::const_xy_locator& kernelLocator,
+        int kWidth, int kHeight);
+    
+    template <typename OutImageT, typename InImageT>
+    inline typename OutImageT::SinglePixel convolveAtAPoint(
+        typename InImageT::const_xy_locator& inImage,
+        std::vector<lsst::afw::math::Kernel::PixelT> const& kernelColList,
+        std::vector<lsst::afw::math::Kernel::PixelT> const& kernelRowList
     );
 }}}   // lsst::afw::math
 
