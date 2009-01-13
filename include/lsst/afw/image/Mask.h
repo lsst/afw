@@ -142,7 +142,9 @@ private:
         //
         void checkMaskDictionaries(Mask const &other) const {
             if (_myMaskDictVersion != other._myMaskDictVersion) {
-                throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Mask dictionary versions do not match");
+                throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                                  (boost::format("Mask dictionary versions do not match; %d v. %d") %
+                                   _myMaskDictVersion % other._myMaskDictVersion).str());
             }
         }        
     private:
