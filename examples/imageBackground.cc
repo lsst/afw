@@ -74,9 +74,9 @@ int main() {
     
     // output what we've made
     cout << xcen << " " << ycen << " center pixel: " << mid << endl;
-    img.writeFits("exampleBackground_fakestars.fits");
-    bg->writeFits("exampleBackground_background.fits");
-    sub.writeFits("exampleBackground_backsubtr.fits");
+    img.writeFits("example_Background_fak.fits");
+    bg->writeFits("example_Background_bac.fits");
+    sub.writeFits("example_Background_sub.fits");
 
     return 0;
 

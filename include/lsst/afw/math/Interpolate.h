@@ -125,7 +125,7 @@ namespace lsst { namespace afw { namespace math {
     template<typename xT, typename yT>
     class SplineInterpolate : public Interpolate<xT,yT> {
     public:
-        
+
         // pre-calculate d2ydx2 values
         SplineInterpolate(std::vector<xT> const& x, std::vector<yT> const& y, InterpControl const& ictrl = InterpControl());
         ~SplineInterpolate() { delete &_d2ydx2; };
