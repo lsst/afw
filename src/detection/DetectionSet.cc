@@ -128,7 +128,7 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
 
     float thresholdParam = -1;          // standard deviation of image (may be needed by Threshold)
     if (threshold.getType() == Threshold::STDEV || threshold.getType() == Threshold::VARIANCE) {
-        math::Statistics<ImageT> stats = math::make_Statistics(*img, math::STDEV);
+        math::Statistics stats = math::make_Statistics(*img, math::STDEV);
         double const sd = stats.getValue(math::STDEV);
         
         if (threshold.getType() == Threshold::VARIANCE) {

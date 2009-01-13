@@ -30,18 +30,19 @@ int main() {
     
     // put sky and some fake stars in the image, and add uniform noise
     for (int i_s = 0; i_s < numStar; ++i_s) {
-        int const xStar = static_cast<int>(wid * static_cast<float>(rand()) / RAND_MAX);
-        int const yStar = static_cast<int>(wid * static_cast<float>(rand()) / RAND_MAX);
+        int const xStar = static_cast<int>(wid * static_cast<float>(rand())/RAND_MAX);
+        int const yStar = static_cast<int>(wid * static_cast<float>(rand())/RAND_MAX);
         for (int i_y = 0; i_y != img.getHeight(); ++i_y) {
             int i_x = 0;
             for (ImageT::x_iterator ip = img.row_begin(i_y); ip != img.row_end(i_y); ++ip, ++i_x) {
 
-                // use a bivariate gaussian for a stellar PSF
+                // use a bivariate gaussian as a stellar PSF
                 *ip += A*exp( -( (i_x - xStar)*(i_x - xStar) + (i_y - yStar)*(i_y - yStar) )/(2.0*xsig*ysig) );
 
                 // add the noise on the last pass
                 if (i_s == numStar - 1) {
-                    *ip += sqrt(*ip)*2.0*(static_cast<float>(rand())/RAND_MAX - 0.5);  // change to a Poisson variate
+                    /// \todo Change to a Poisson variate
+                    *ip += sqrt(*ip)*2.0*(static_cast<float>(rand())/RAND_MAX - 0.5); 
                 }
                 
             }
@@ -49,7 +50,6 @@ int main() {
     }
 
     // declare a background control object for a natural spline
-    //math::BackgroundControl bgCtrl(math::LINEAR);
     math::BackgroundControl bgCtrl(math::NATURAL_SPLINE);
 
     // we can control the background estimate
@@ -64,7 +64,7 @@ int main() {
     BackT back = math::make_Background(img, bgCtrl);
     
     // can get an individual pixel or a whole frame.
-    float mid = back.getPixel(xcen,ycen);
+    float const mid = back.getPixel(xcen,ycen);
     ImageT::Ptr bg = back.getImage<ImageT::Pixel>();
     
     // create a background-subtracted image
@@ -74,9 +74,9 @@ int main() {
     
     // output what we've made
     cout << xcen << " " << ycen << " center pixel: " << mid << endl;
-    img.writeFits("fakestars.fits");
-    bg->writeFits("background.fits");
-    sub.writeFits("backSubtracted.fits");
+    img.writeFits("examples/example_fakestars.fits");
+    bg->writeFits("examples/example_background.fits");
+    sub.writeFits("examples/example_backSubtracted.fits");
 
     return 0;
 

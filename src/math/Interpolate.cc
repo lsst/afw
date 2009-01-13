@@ -29,13 +29,14 @@ namespace {
  *
  */
 template<typename xT, typename yT>
-math::Interpolate<xT,yT>::Interpolate(vector<xT> const& x, vector<yT> const& y)
+math::Interpolate<xT,yT>::Interpolate(vector<xT> const& x, vector<yT> const& y, math::InterpControl const& ictrl)
     : _n(x.size() + 2),
       _x(*new vector<xT>), _y(*new vector<yT>),
       _xgridspace( static_cast<double>(x[1] - x[0]) ),
       _invxgrid( 1.0/_xgridspace ),
       _xlo( x[0] - static_cast<xT>(_xgridspace) ),
-      _xhi( x[x.size() - 1] + static_cast<xT>(_xgridspace) )  {
+      _xhi( x[x.size() - 1] + static_cast<xT>(_xgridspace)),
+      _ictrl( ictrl )  {
     
     assert ( x.size() == y.size() );
     
@@ -57,8 +58,9 @@ math::Interpolate<xT,yT>::Interpolate(vector<xT> const& x, vector<yT> const& y)
  * This pre-computes the first derivatives over the intervals
  */
 template<typename xT, typename yT>
-math::LinearInterpolate<xT,yT>::LinearInterpolate(vector<xT> const& x, vector<yT> const& y)
-    : Interpolate<xT,yT>::Interpolate(x,y), _dydx(*new vector<yT>) {
+math::LinearInterpolate<xT,yT>::LinearInterpolate(vector<xT> const& x, vector<yT> const& y,
+                                                  math::InterpControl const& ictrl)
+    : Interpolate<xT,yT>::Interpolate(x,y,ictrl), _dydx(*new vector<yT>) {
     
     _dydx.resize(_n - 1);
     for (int i = 1; i < _n - 2; ++i) {
@@ -156,10 +158,12 @@ yT math::LinearInterpolate<xT,yT>::interpolateD2yDx2_safe(xT const xinterp) cons
  * This mainly just pre-computes the second derivatives over the intervals
  */
 template<typename xT, typename yT>
-math::SplineInterpolate<xT,yT>::SplineInterpolate(vector<xT> const& x, vector<yT> const& y)
-    : Interpolate<xT,yT>::Interpolate(x, y), _d2ydx2(*new vector<yT>) {
+math::SplineInterpolate<xT,yT>::SplineInterpolate(vector<xT> const& x, vector<yT> const& y, InterpControl const& ictrl)
+    : Interpolate<xT,yT>::Interpolate(x, y, ictrl), _d2ydx2(*new vector<yT>) {
     
-    _dydx0 = _dydxN = std::numeric_limits<double>::quiet_NaN();
+    //_dydx0 = _dydxN = std::numeric_limits<double>::quiet_NaN();
+    _dydx0 = _ictrl.getDydx0();
+    _dydxN = _ictrl.getDydxN();
     
     _d2ydx2.resize(_n);
     vector<yT> u(_n);
@@ -179,7 +183,7 @@ math::SplineInterpolate<xT,yT>::SplineInterpolate(vector<xT> const& x, vector<yT
         yT const invp   = static_cast<yT>(1.0 / (0.5 * _d2ydx2[i - 1] + 2.0));
         _d2ydx2[i] = static_cast<yT>(-0.5)*invp;
         u[i] = static_cast<yT>(_invxgrid * ( _y[i + 1] - 2.0 * _y[i] + _y[i - 1] ));
-        u[i] = static_cast<yT>(0.5*(6.0*u[i]*_invxgrid - u[i - 1])*invp);       
+        u[i] = static_cast<yT>(0.5*(6.0*u[i]*_invxgrid - u[i - 1])*invp);
     }
 
     // =============================================================
@@ -189,10 +193,9 @@ math::SplineInterpolate<xT,yT>::SplineInterpolate(vector<xT> const& x, vector<yT
         qn = un = static_cast<yT>(0.0);
     } else {
         qn = static_cast<yT>(0.5);
-        un = static_cast<yT>((3.0/(_x[_n - 2] - _x[_n - 3])) *
-                             (_dydxN - (_y[_n - 2] - _y[_n - 3])/(_x[_n - 2] - _x[_n - 3])));
+        un = static_cast<yT>( (3.0*_invxgrid)*(_dydxN - (_y[_n - 2] - _y[_n - 3])*_invxgrid) );
     }
-    _d2ydx2[_n - 2] = static_cast<yT>((un - qn*u[_n - 3]) / (qn*_d2ydx2[_n - 3] + 1.0));
+    _d2ydx2[_n - 2] = static_cast<yT>( (un - qn*u[_n - 3])/(qn*_d2ydx2[_n - 3] + 1.0) );
 
     // =============================================================
     // the back-substitution loop for tri-diag algorithm
@@ -323,6 +326,7 @@ yT math::SplineInterpolate<xT,yT>::interpolateD2yDx2_safe(xT const xinterp) cons
 }
 
 // =========================================  END SPLINE ====================================
+
 
 
 

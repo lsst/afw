@@ -19,10 +19,13 @@ namespace lsst { namespace afw { namespace math {
         LINEAR = 0x01,                  ///< use linear interpolation
         NATURAL_SPLINE = 0x02,          ///< use a natural spline    [ y''(0) = y''(n-1) = 0 ]
         NOTAKNOT_SPLINE = 0x04,         ///< use a not-a-knot spline [ y'''(0,n-1) = y'''(1,n-2) ]
-        CUBIC_SPLINE = 0x08,            ///< use a cubic spline, allow user to set y'(0), y'(n-1)
+        CUBIC_SPLINE = 0x08,            ///< a generic cubic spline, with user-set y'(0), y'(n-1)
     };
 
-    /// \brief Pass parameters in to the interpolation routine
+    /** \brief Pass parameters in to the interpolation routine
+     *
+     *  This class is not currently implemented with the Interpolate class.
+     */
     class InterpControl {
     public:
         InterpControl( Style const style=math::NATURAL_SPLINE,
@@ -49,11 +52,15 @@ namespace lsst { namespace afw { namespace math {
      * for the interpolator object.
      *
      * \code
-           vector<double> x;                                          // put stuff in this
-           vector<double> y;                                          // put stuff in this too
-           math::LinearInterpolate<double,double> interpobj(x, y);
+           vector<double> x;                                          // put x-coords in this
+           vector<double> y;                                          // put f(x) in this
            double xinterp;                    // the x coord we'd like an interpolated value for
-           double yinterp = interpobj.interpolate(xinterp1);              // an interpolated value
+           
+           math::LinearInterpolate<double,double> Linterpobj(x, y);    // make a LinearInterpolate object
+           double yinterp = Linterpobj.interpolate(xinterp1);              // a linear interpolated value
+
+           math::SplineInterpolate<double,double> Sinterpobj(x, y);    // make a SplineInterpolate object
+           double yinterp = Sinterpobj.interpolate(xinterp1);              // a spline interpolated value
      * \endcode
      *
      * Notes: The routines assume evenly spaced grid points.  This is not, in general, a requirement for the
@@ -64,15 +71,13 @@ namespace lsst { namespace afw { namespace math {
     template<typename xT, typename yT>
     class Interpolate {
     public:
-        Interpolate(std::vector<xT> const& x, std::vector<yT> const& y);
+        Interpolate(std::vector<xT> const& x, std::vector<yT> const& y, InterpControl const& ictrl = InterpControl());
         virtual ~Interpolate() { delete &_x; delete &_y; };
         virtual yT interpolate(xT const xinterp) const = 0;  // linearly interpolate this object at x=xinterp
         virtual yT interpolate_safe(xT const xinterp) const = 0;  // linearly interpolate this object at x=xinterp
+
         //InterpControl const& ictrl = InterpControl());
         
-        //typedef boost::shared_ptr<std::vector<yT> > vectorPtr;
-        //vectorPtr interp(std::vector<xT> const& xinterp) const;
-        //yT interp(xT const xinterp) const;
     private:
     protected:
         int const _n;                         // the number of points in the _x,_y vectors
@@ -82,6 +87,7 @@ namespace lsst { namespace afw { namespace math {
         double const _invxgrid;               // the inverse grid spacing (1/_xgridspacing)
         xT const _xlo;                        // the lowest value in _x
         xT const _xhi;                        // the highest value in _x
+        InterpControl _ictrl;
     };
 
 
@@ -90,7 +96,7 @@ namespace lsst { namespace afw { namespace math {
     public:
         
         // pre-calculate dydx values
-        LinearInterpolate(std::vector<xT> const& x, std::vector<yT> const& y);
+        LinearInterpolate(std::vector<xT> const& x, std::vector<yT> const& y, InterpControl const& ictrl = InterpControl());
         ~LinearInterpolate() { delete &_dydx; };
 
         // fast methods with *no* bounds checking
@@ -111,7 +117,8 @@ namespace lsst { namespace afw { namespace math {
         using Interpolate<xT,yT>::_xgridspace;
         using Interpolate<xT,yT>::_invxgrid;
         using Interpolate<xT,yT>::_xlo;           
-        using Interpolate<xT,yT>::_xhi;           
+        using Interpolate<xT,yT>::_xhi;
+        using Interpolate<xT,yT>::_ictrl;
         std::vector<yT>& _dydx;
     };
     
@@ -120,7 +127,7 @@ namespace lsst { namespace afw { namespace math {
     public:
         
         // pre-calculate d2ydx2 values
-        SplineInterpolate(std::vector<xT> const& x, std::vector<yT> const& y);
+        SplineInterpolate(std::vector<xT> const& x, std::vector<yT> const& y, InterpControl const& ictrl = InterpControl());
         ~SplineInterpolate() { delete &_d2ydx2; };
 
         // fast methods with *no* bounds checking        
@@ -140,7 +147,8 @@ namespace lsst { namespace afw { namespace math {
         using Interpolate<xT,yT>::_xgridspace;
         using Interpolate<xT,yT>::_invxgrid;
         using Interpolate<xT,yT>::_xlo;           
-        using Interpolate<xT,yT>::_xhi;           
+        using Interpolate<xT,yT>::_xhi;
+        using Interpolate<xT,yT>::_ictrl;
         std::vector<yT>& _d2ydx2;    // _n second-derivatives used for spline interp
         double _dydx0;                  // the first derivative at point 0 (user-set for spline)
         double _dydxN;                  // the first derivative at point N (user-set for spline)

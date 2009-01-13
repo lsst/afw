@@ -3,9 +3,13 @@ import sys
 Import('env')
 
 env.Program(["Image.cc"], LIBS=env.getlibs("afw"))
+env.Program(["Image_1.cc"], LIBS=env.getlibs("afw"))
+env.Program(["Image_2.cc"], LIBS=env.getlibs("afw"))
 env.Program(["Mask.cc"], LIBS=env.getlibs("afw"))
 env.Program(["DecoratedImage.cc"], LIBS=env.getlibs("afw"))
 env.Program(["MaskedImage.cc"], LIBS=env.getlibs("afw"))
+env.Program(["MaskedImage_1.cc"], LIBS=env.getlibs("afw"))
+env.Program(["MaskedImage_2.cc"], LIBS=env.getlibs("afw"))
 
 env.Program("maskedImageFitsIO", ["maskedImageFitsIO.cc"], LIBS=env.getlibs("afw"))
 env.Program("timeImageAddition", ["timeImageAddition.cc"], LIBS=env.getlibs("afw"))

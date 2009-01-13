@@ -39,19 +39,21 @@ private:
  *
  * Break an image up into nx*ny sub-images and use 3-sigma clipped means to
  * estimate the background levels in each square.  Then use a bicubic spline or
- * bilinear interpolation algorithm to estimate background at a given pixel coordinate.
- * Methods are available return background at a point, or an entire background image.
+ * bilinear interpolation (not currently implemented) algorithm to estimate background
+ * at a given pixel coordinate.
+ * Methods are available return background at a point (inefficiently), or an entire background image.
+ * BackgroundControl contains public StatisticsControl and InterpolateControl members to allow
+ * user control of how the backgrounds are computed.
  * \code
        math::BackgroundControl bctrl(math::NATURAL_SPLINE);
        bctrl.setNxSample(7);            // number of sub-image squares in x-dimension
        bctrl.setNySample(7);            // number of sub-image squares in y-dimention
-       math::Background<ImageT> backobj = math::make_Background(img, bctrl);
+       bctrl.sctrl.getNumSigmaClip(5.0); // use 5-sigma clipping for the sub-image means
+       math::Background backobj = math::make_Background(img, bctrl);
        double somepoint = backobj.getPixel(i_x,i_y); // get the background at a pixel at i_x,i_y
        ImageT back = backobj.getFrame();             // get a whole background image
  * \endcode
  *
- * (Note that we used a helper function, \c make_Background, rather that the constructor directly so that
- * the compiler could deduce the types -- cf. \c std::make_pair)
  */
 class Background {
 public:

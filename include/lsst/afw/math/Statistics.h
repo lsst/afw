@@ -49,28 +49,35 @@ private:
  *
  * The basic strategy is to construct a Statistics object from an Image and
  * a statement of what we want to know.  The desired results can then be
- * returned using Statistics methods:
+ * returned using Statistics methods.  A StatisticsControl object is used to
+ * pass parameters.  The statistics currently implemented are listed in the
+ * enum Properties in Statistics.h.
  * \code
-        math::Statistics<ImageT> stats = math::make_Statistics(*img, math::NPOINT | math::MEAN);
+        math::StatisticsControl sctrl(3.0, 3); // sets NumSigclip (3.0), and NumIter (3) for clipping
+        sctrl.setNumSigmaClip(4.0);            // reset number of standard deviations for N-sigma clipping
+        sctrl.setNumIter(5);                   // reset number of iterations for N-sigma clipping
+
+        math::Statistics statobj = math::make_Statistics(*img, math::NPOINT | math::MEAN | math::MEANCLIP, sctrl);
         
-        double const n = stats.getValue(math::NPOINT);
-        std::pair<double, double> const mean = stats.getResult(math::MEAN); // Returns (value, error)
-        double const meanError = stats.getError(math::MEAN);                // just the error
+        double const n = statobj.getValue(math::NPOINT);
+        std::pair<double, double> const mean = statobj.getResult(math::MEAN); // Returns (value, error)
+        double const meanError = statobj.getError(math::MEAN);                // just the error
  * \endcode
  *
  * (Note that we used a helper function, \c make_Statistics, rather that the constructor directly so that
  * the compiler could deduce the types -- cf. \c std::make_pair)
  */
-template<typename Image>
 class Statistics {
 public:
     /// The type used to report (value, error) for desired statistics
     typedef std::pair<double, double> value_type;
     
+    template<typename Image>
     explicit Statistics(Image const& img, int const flags,
                         StatisticsControl const& sctrl=StatisticsControl());
+    
     value_type getResult(Property const prop) const;
-
+    
     double getError(Property const prop) const;
     double getValue(Property const prop) const;
     
@@ -87,10 +94,13 @@ private:
     double _median;                     // the image's median
     double _iqrange;                    // the image's interquartile range
 
+    template<typename Image>
     boost::tuple<double, double, double, double> _getStandard(Image const& img, int const flags);
+    template<typename Image>
     boost::tuple<double, double, double, double> _getStandard(Image const& img, int const flags,
                                                               std::pair<double,double> clipinfo);
-
+    
+    template<typename Image>
     double _quickSelect(Image const& img, double const quartile);   // compute median with quickselect (Press et al.)
     
     inline double _varianceError(double const variance, int const n) const {
@@ -103,11 +113,11 @@ private:
 ///
 /// cf. std::make_pair()
 template<typename Image>
-Statistics<Image> make_Statistics(Image const& img, ///< Image (or MaskedImage) whose properties we want
-                                  int const flags,   ///< Describe what we want to calculate
-                                  StatisticsControl const& sctrl=StatisticsControl() ///< Control how things are calculated
-                                 ) {
-    return Statistics<Image>(img, flags, sctrl);
+Statistics make_Statistics(Image const& img, ///< Image (or MaskedImage) whose properties we want
+                           int const flags,   ///< Describe what we want to calculate
+                           StatisticsControl const& sctrl=StatisticsControl() ///< Control how things are calculated
+                          ) {
+    return Statistics(img, flags, sctrl);
 }
 
 }}}

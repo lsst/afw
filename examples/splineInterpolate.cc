@@ -9,10 +9,6 @@
 using namespace std;
 namespace math = lsst::afw::math;
 
-namespace {
-    double const NaN = std::numeric_limits<double>::quiet_NaN();
-}
-
 typedef math::LinearInterpolate<double,double> LinearT;
 typedef math::SplineInterpolate<double,double> SplineT;
 
@@ -22,9 +18,9 @@ int main() {
     int const nx = 20;
     vector<double> x(nx);
     vector<double> y(nx);
-    double xlo = 0;
-    double xhi = 2.0 * 3.14159;
-    double range = xhi - xlo;
+    double const xlo = 0;
+    double const xhi = 2.0*M_PI;
+    double const range = xhi - xlo;
     
     for (int i = 0; i < nx; ++i) {
         x[i] = xlo + static_cast<double>(i)/(nx - 1) * range;
@@ -36,12 +32,11 @@ int main() {
     //   of the interpolation range to tests extrapolation properties
     int const nx2 = 100;
     vector<double> x2(nx2);
-    
     for (int i = 0; i < nx2; ++i) {
         x2[i] = xlo + ( ((nx + 2.0)/nx)*static_cast<double>(i)/(nx2 - 1) - 1.0/nx) * range;
     }
     
-    // declare an spline interpolate object.  the constructor computes the derivatives
+    // declare an spline interpolate object.  the constructor computes the first derivatives
     SplineT yinterpS(x, y);
 
     // declare a linear interpolate object. the constructor computes the second derivatives
@@ -59,8 +54,5 @@ int main() {
             endl;
     }
 
-
-    
     return 0;
-
 }

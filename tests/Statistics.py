@@ -110,6 +110,90 @@ class StatisticsTestCase(unittest.TestCase):
 
 	self.assertEqual(stats.getValue(afwMath.VARIANCECLIP), 0)
 
+    def testSampleImageStats(self):
+
+	imgfiles = []
+        imgfiles.append("v1_i1_g_m400_s20_f.fits")
+        imgfiles.append("v1_i1_g_m400_s20_u16.fits")
+        imgfiles.append("v1_i2_g_m400_s20_f.fits")
+        imgfiles.append("v1_i2_g_m400_s20_u16.fits")
+        imgfiles.append("v2_i1_p_m9_f.fits")
+        imgfiles.append("v2_i1_p_m9_u16.fits")
+        imgfiles.append("v2_i2_p_m9_f.fits")
+        imgfiles.append("v2_i2_p_m9_u16.fits")
+
+        afwdata_dir = os.getenv("AFWDATA_DIR")
+	for imgfile in imgfiles:
+            
+            img_path = afwdata_dir + "/Statistics/" + imgfile
+
+            # get the image and header
+	    dimg = afwImage.DecoratedImageF(img_path)
+	    fitsHdr = dimg.getMetadata()
+
+            # get the true values of the mean and stdev
+            true_mean = fitsHdr.findUnique("MEANCOMP", True).getValueDouble()
+            true_stdev = fitsHdr.findUnique("SIGCOMP", True).getValueDouble()
+
+            # measure the mean and stdev with the Statistics class
+            img = dimg.getImage()
+            statobj = afwMath.StatisticsF(img, afwMath.MEAN | afwMath.STDEV)
+            mean = statobj.getValue(afwMath.MEAN)
+            stdev = statobj.getValue(afwMath.STDEV)
+
+            # print true_mean, mean, true_stdev, stdev
+            self.assertAlmostEqual(mean, true_mean, 8)
+            self.assertAlmostEqual(stdev, true_stdev, 8)
+
+
+    # Now do tests on a 'ramp' (image with constant gradient)
+    def testStatisticsRamp(self):
+
+	nx = 101
+	ny = 64
+	img = afwImage.ImageF(nx,ny)
+    
+	z0 = 10.0
+	dzdx = 1.0
+	mean = z0 + (nx/2)*dzdx
+	stdev = 0.0
+	for y in range(ny):
+	    for x in range(nx):
+		z = z0 + dzdx*x
+		img.set(x, y, z)
+		stdev += (z - mean)*(z - mean)
+		
+	stdev = math.sqrt(stdev/(nx*ny-1))
+	    
+	stats = afwMath.StatisticsF(img, afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN)
+	testmean = stats.getValue(afwMath.MEAN)
+	teststdev = stats.getValue(afwMath.STDEV)
+	
+	self.assertEqual(stats.getValue(afwMath.NPOINT), nx*ny)
+	self.assertEqual(testmean, mean)
+	self.assertEqual(teststdev, stdev )
+	    
+	stats = afwMath.StatisticsF(img, afwMath.STDEV | afwMath.MEAN | afwMath.ERRORS)
+	mean, mean_err = stats.getResult(afwMath.MEAN)
+	sd = stats.getValue(afwMath.STDEV)
+	
+	self.assertEqual(mean,  img.get(nx/2,ny/2))
+	self.assertEqual(mean_err, sd/math.sqrt(img.getWidth()*img.getHeight()))
+	
+	# ===============================================================================
+	# sjb code for percentiles and clipped stats
+
+	stats = afwMath.StatisticsF(img, afwMath.MEDIAN)
+	self.assertEqual(z0+dzdx*(nx-1)/2.0, stats.getValue(afwMath.MEDIAN))
+
+	stats = afwMath.StatisticsF(img, afwMath.IQRANGE)
+	self.assertEqual(dzdx*(nx-1)/2.0, stats.getValue(afwMath.IQRANGE))
+
+	stats = afwMath.StatisticsF(img, afwMath.MEANCLIP)
+	self.assertEqual(z0+dzdx*(nx-1)/2.0, stats.getValue(afwMath.MEANCLIP))
+    
+
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():

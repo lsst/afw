@@ -14,10 +14,6 @@ using namespace std;
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
 
-//namespace {
-//    double const NaN = std::numeric_limits<double>::quiet_NaN();
-//}
-
 /**
  * Constructor for Background
  *
@@ -46,6 +42,7 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
     _yorig.resize(_nySample);
     _grid.resize(_nxSample);
     _gridcolumns.resize(_nxSample);
+
     // Check that an int's large enough to hold the number of pixels
     assert(_imgWidth*static_cast<double>(_imgHeight) < std::numeric_limits<int>::max());
 
@@ -81,7 +78,7 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
             ImageT subimg = ImageT(img,
                                    image::BBox(image::PointI(_xorig[i_x], _yorig[i_y]), _subimgWidth, _subimgHeight));
             
-            math::Statistics<ImageT> stats = math::make_Statistics(subimg, math::MEAN | math::MEANCLIP | math::MEDIAN |
+            math::Statistics stats = math::make_Statistics(subimg, math::MEAN | math::MEANCLIP | math::MEDIAN |
                                                                    math::IQRANGE | math::STDEVCLIP, _bctrl.sctrl);
             
             _grid[i_x][i_y] = stats.getValue(math::MEANCLIP);
@@ -99,10 +96,13 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
 
 /**
  * \brief Method to retrieve the background level at a pixel coord.
+ *
+ * Caveat emptor: This can be a very costly function to get a single pixel
+ * If you want an image, use the getImage() method.
  */
 double math::Background::getPixel(int const x, int const y) const {
 
-    // build an interpobj along the row and get the x'th value
+    // build an interpobj along the row y and get the x'th value
     vector<double> bg_x(_nxSample);
     for(int i = 0; i < _nxSample; i++) { bg_x[i] = _gridcolumns[i][y];  }
     math::SplineInterpolate<int,double> intobj(_xcen, bg_x);
@@ -117,6 +117,7 @@ double math::Background::getPixel(int const x, int const y) const {
 template<typename PixelT>
 typename image::Image<PixelT>::Ptr math::Background::getImage() const {
 
+    // create a shared_ptr to put the background image in and return to caller
     typename image::Image<PixelT>::Ptr bg =
         typename image::Image<PixelT>::Ptr(new typename image::Image<PixelT>(_imgWidth, _imgHeight));
 
@@ -134,6 +135,7 @@ typename image::Image<PixelT>::Ptr math::Background::getImage() const {
         for(int i_x = 0; i_x < _nxSample; i_x++) { bg_x[i_x] = static_cast<PixelT>(_gridcolumns[i_x][i_y]); }
         math::SplineInterpolate<int,PixelT> intobj(_xcen, bg_x);
 
+        // fill the image with interpolated objects.
         int i_x = 0;
         for (typename image::Image<PixelT>::x_iterator ptr = bg->row_begin(i_y), end = ptr + bg->getWidth();
              ptr != end; ++ptr, ++i_x) {
