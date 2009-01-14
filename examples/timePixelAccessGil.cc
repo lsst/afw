@@ -1,21 +1,21 @@
+#include "boost/gil/gil_all.hpp"
+
+using namespace boost::gil;
+
 #include <iostream>
 #include <sstream>
 #include <ctime>
 
-#include "lsst/afw/image.h"
-
-namespace afwImage = lsst::afw::image;
-
 template<class ImageT>
-void timePixelAccess(ImageT const &image, typename ImageT::SinglePixel const pix, int nIter) {
-    const int nCols = image.getWidth();
-    const int nRows = image.getHeight();
+void timePixelAccess(ImageT const &image, float const pix, int nIter) {
+    const int nCols = image.width();
+    const int nRows = image.height();
 
     clock_t startTime = clock();
     for (int iter = 0; iter < nIter; ++iter) {
-        for (int y = 0; y < image.getHeight(); ++y) {
+        for (int y = 0; y < image.height(); ++y) {
             for (typename ImageT::x_iterator ptr = image.row_begin(y), end = image.row_end(y); ptr != end; ++ptr) {
-                *ptr += pix;
+                (*ptr)[0] += pix;
             }
         }
     }
@@ -25,9 +25,9 @@ void timePixelAccess(ImageT const &image, typename ImageT::SinglePixel const pix
 
     startTime = clock();
     for (int iter = 0; iter < nIter; ++iter) {
-        for (int y = 0; y < image.getHeight(); ++y) {
+        for (int y = 0; y < image.height(); ++y) {
             for (typename ImageT::xy_locator ptr = image.xy_at(0, y), end = image.xy_at(nCols, y); ptr != end; ++ptr.x()) {
-                *ptr += pix;
+                (*ptr)[0] += pix;
             }
         }
     }
@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
     int const DefNIter = 100;
     int const DefNCols = 1024;
 
-    if ((argc >= 2) && (argv[1][0] == '-')) {
+    if ((argc == 2) && (argv[1][0] == '-')) {
         std::cout << "Usage: timePixelAccess [nIter [nCols [nRows]]]" << std::endl;
         std::cout << "nIter (default " << DefNIter << ") is the number of iterations" << std::endl;
         std::cout << "nCols (default " << DefNCols << ") is the number of columns" << std::endl;
@@ -61,20 +61,12 @@ int main(int argc, char **argv) {
     if (argc > 3) {
         std::istringstream(argv[3]) >> nRows;
     }
-    
-    std::cout << "Accessor Type\tCols\tRows\tMPix\tSecPerIter\tMPixPerSec" << std::endl;
+      
+    std::cout << "Accessor Type\tCols\tRows\tMPix\tSecPerIter\tSecPerIterPerMPix" << std::endl;
+        std::cout << "Image(" << nCols << ", " << nRows << ")" << std::endl;
 
-    std::cout << "Image(" << nCols << ", " << nRows << ")" << std::endl;
-    {
-        afwImage::Image<imageType> image(nCols, nRows);
-        afwImage::Image<imageType>::SinglePixel pix(1.0);
-        timePixelAccess(image, pix, nIter);
-    }
-    
-    std::cout << "MaskedImage(" << nCols << ", " << nRows << ")" << std::endl;
-    {
-        afwImage::MaskedImage<imageType> maskedImage(nCols, nRows);
-        afwImage::MaskedImage<imageType>::SinglePixel pix(1.0, 0x10, 100);
-        timePixelAccess(maskedImage, pix, nIter);
-    }
+    gray32f_image_t image(nCols, nRows);
+
+    float pix = 1.0;
+    timePixelAccess(view(image), pix, nIter);
 }

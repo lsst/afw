@@ -125,6 +125,18 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(MaskedI
     conformSizes();
 }
 
+#if defined(DOXYGEN)
+/**
+ * \brief Make the lhs use the rhs's pixels
+ *
+ * If you are copying a scalar value, a simple <tt>lhs = scalar;</tt> is OK, but
+ * this is probably not the function that you want to use with an %image. To copy pixel values
+ * from the rhs use \link lsst::afw::image::operator<<=\endlink.
+ */
+image::MaskedImage& operator=(image::MaskedImage const& rhs ///< Right hand side
+                      ) {}
+#endif
+
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::swap(MaskedImage &rhs) {
     using std::swap;                    // See Meyers, Effective C++, Item 25

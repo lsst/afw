@@ -19,7 +19,7 @@ namespace ex = lsst::pex::exceptions;
 lsst::afw::math::DeltaFunctionKernel::DeltaFunctionKernel(
     int width,                          ///< kernel size (columns)
     int height,                         ///< kernel size (rows)
-    lsst::afw::image::PointI point      //< Active pixel
+    lsst::afw::image::PointI point      ///< Active pixel
                                                          )
 :
     Kernel(width, height, 0),

@@ -115,7 +115,8 @@ void image::swap(DecoratedImage<PixelT>& a, DecoratedImage<PixelT>& b) {
  */
 template<typename PixelT>
 image::DecoratedImage<PixelT>::DecoratedImage(const std::string& fileName, ///< File to read
-                                              const int hdu) :
+                                              const int hdu                ///< The HDU to read
+                                             ) :
     lsst::daf::data::LsstBase(typeid(this))
 {             ///< HDU within the file
     init();
@@ -128,7 +129,7 @@ image::DecoratedImage<PixelT>::DecoratedImage(const std::string& fileName, ///< 
  */
 template<typename PixelT>
 void image::DecoratedImage<PixelT>::writeFits(
-	const std::string& fileName,
+	const std::string& fileName,                        //!< the file to write
         typename lsst::daf::base::PropertySet::Ptr metadata //!< metadata to write to header; or NULL
                                              ) const {
     image::fits_write_view(fileName, _image->_getRawView(), metadata);
