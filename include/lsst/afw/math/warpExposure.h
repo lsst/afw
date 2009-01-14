@@ -82,7 +82,7 @@ namespace math {
         template<typename MaskedImageT>
         void computePixel(
             typename MaskedImageT::Pixel &destPixel,    ///< destination pixel (warped)
-            typename MaskedImageT::const_pixel_locator const &srcLoc,   ///< locator for source image pixel at lower left corner
+            typename MaskedImageT::const_xy_locator const &srcLoc,  ///< locator for source image pixel at lower left corner
             std::vector<double> const &fracXY   ///< fractional src pixel offset; 0 if none; must be <= 0 and < 1
         );
     private:
@@ -110,7 +110,7 @@ namespace math {
         template<typename MaskedImageT>
         void computePixel(
             typename MaskedImageT::Pixel &destPixel,
-            typename MaskedImageT::const_pixel_locator const &srcLoc,
+            typename MaskedImageT::const_xy_locator const &srcLoc,
             std::vector<double> const & fracXY
         ) {
             _kernel.setKernelParameters(fracXY);
@@ -138,7 +138,7 @@ namespace math {
         template<typename MaskedImageT>
         void computePixel(
             typename MaskedImageT::Pixel &destPixel,
-            typename MaskedImageT::const_pixel_locator const &srcLoc,
+            typename MaskedImageT::const_xy_locator const &srcLoc,
             std::vector<double> const & fracXY
         ) {
             int xOff = fracXY[0] < 0.5 ? 0 : 1;
@@ -160,7 +160,7 @@ namespace math {
         template<typename MaskedImageT>
         void computePixel(
             typename MaskedImageT::Pixel &destPixel,
-            typename MaskedImageT::const_pixel_locator const &srcLoc,
+            typename MaskedImageT::const_xy_locator const &srcLoc,
             std::vector<double> const & fracXY
         ) {
             _xList[0] = 1.0 - fracXY[0];

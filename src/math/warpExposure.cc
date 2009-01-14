@@ -102,6 +102,7 @@ int afwMath::warpExposure(
 
     // Set each pixel of destExposure's MaskedImage
     lsst::pex::logging::Trace("lsst.afw.math", 4, "Remapping masked image");
+    typename MaskedImageT::Pixel tempPixel(0, 0, 0);
     for (int destY = 0; destY < destHeight; ++destY) {
         afwImage::PointD destPosXY(0.0, afwImage::indexToPosition(destY));
         typename MaskedImageT::x_iterator destXIter = destMI.row_begin(destY);
@@ -132,7 +133,10 @@ int afwMath::warpExposure(
             ++numGoodPixels;
 
             // Compute warped pixel
-            warpingKernel.computePixel<MaskedImageT>(*destXIter, srcMI.xy_at(srcX, srcY), fracOrigPix);
+//            warpingKernel.computePixel<MaskedImageT>(*destXIter, srcMI.xy_at(srcX, srcY), fracOrigPix);
+// why does the following code compile but the line above does not?
+            warpingKernel.computePixel<MaskedImageT>(tempPixel, srcMI.xy_at(srcX, srcY), fracOrigPix);
+            *destXIter = tempPixel;
             
             // Correct intensity due to relative pixel spatial scale
             double multFac = destWcsPtr->pixArea(destPosXY) / srcWcsPtr->pixArea(srcPosXY);
