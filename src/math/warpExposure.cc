@@ -58,7 +58,7 @@ template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 int afwMath::warpExposure(
     afwImage::Exposure<ImagePixelT, MaskPixelT, VariancePixelT> &destExposure,      ///< remapped exposure
     afwImage::Exposure<ImagePixelT, MaskPixelT, VariancePixelT> const &srcExposure, ///< source exposure
-    WarpingKernel &warpingKernel ///< warping kernel; determines the warping algorithm
+    WarpingKernel<afwImage::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> > &warpingKernel ///< warping kernel; determines the warping algorithm
     )
 {
     int numGoodPixels = 0;
@@ -135,7 +135,7 @@ int afwMath::warpExposure(
             // Compute warped pixel
 //            warpingKernel.computePixel<MaskedImageT>(*destXIter, srcMI.xy_at(srcX, srcY), fracOrigPix);
 // why does the following code compile but the line above does not?
-            warpingKernel.computePixel<MaskedImageT>(tempPixel, srcMI.xy_at(srcX, srcY), fracOrigPix);
+            warpingKernel.computePixel(tempPixel, srcMI.xy_at(srcX, srcY), fracOrigPix);
             *destXIter = tempPixel;
             
             // Correct intensity due to relative pixel spatial scale
@@ -159,7 +159,8 @@ typedef float imagePixelType;
     template int afwMath::warpExposure( \
         afwImage::Exposure<IMAGEPIXELT, afwImage::MaskPixel, afwImage::VariancePixel> &destExposure, \
         afwImage::Exposure<IMAGEPIXELT, afwImage::MaskPixel, afwImage::VariancePixel> const &srcExposure, \
-        WarpingKernel &WarpingKernel);
+        WarpingKernel<afwImage::MaskedImage<IMAGEPIXELT, afwImage::MaskPixel, afwImage::VariancePixel> > &WarpingKernel);
+
 
 warpExposureFuncByType(boost::uint16_t)
 warpExposureFuncByType(int)

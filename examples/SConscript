@@ -41,6 +41,8 @@ env.Program("timeSpatiallyVaryingConvolve", ["timeSpatiallyVaryingConvolve.cc"],
 env.Program("makeExposure", ["makeExposure.cc"], LIBS=env.getlibs("afw wcs"))
 env.Program("wcsTest", ["wcsTest.cc"], LIBS=env.getlibs("afw wcs"))
 
+env.Program("warpExposure", ["warpExposure.cc"], LIBS=env.getlibs("afw"))
+
 #
 # Tests
 #
