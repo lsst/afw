@@ -11,6 +11,10 @@
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/afw/image/Image.h"
 
+#include "boost/cstdint.hpp"
+#include "boost/shared_ptr.hpp"
+#include "boost/numeric/ublas/matrix.hpp"
+
 struct wcsprm;                          // defined in wcs.h
 
 namespace lsst {
@@ -30,6 +34,7 @@ namespace image {
         typedef boost::shared_ptr<lsst::afw::image::Wcs> Ptr;
         
         Wcs();
+        Wcs(PointD crval, PointD crpix, boost::numeric::ublas::matrix<double> CD);
         Wcs(lsst::daf::base::DataProperty::PtrType fitsMetadata);
         Wcs(Wcs const &);
         Wcs & operator = (const Wcs &);
@@ -43,6 +48,11 @@ namespace image {
 
         /// Return true iff Wcs is valid
         operator bool() const { return _wcsInfo != NULL; }
+
+        boost::numeric::ublas::matrix<double> getLinearTransformMatrix() const;
+
+        lsst::afw::image::PointD getRaDecCenter();
+        lsst::afw::image::PointD getXYCenter();
 
         PointD raDecToColRow(PointD sky) const;
         PointD raDecToColRow(double const ra, double const dec) const;
