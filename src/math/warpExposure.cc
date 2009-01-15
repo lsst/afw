@@ -7,7 +7,7 @@
  * @brief Implementation of the templated utility function, warpExposure, for
  * Astrometric Image Remapping for LSST.  Declared in warpExposure.h.
  *
- * @author Nicole M. Silvestri, University of Washington
+ * @author Nicole M. Silvestri and Russell Owen, University of Washington
  */
 
 #include <string>
@@ -54,16 +54,17 @@ namespace afwMath = lsst::afw::math;
  *
  * * Need to deal with oversampling and/or weight maps. If done we can use faster kernels than sinc.
  */
-template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT> 
+template<typename DestExposureT, typename SrcExposureT>
 int afwMath::warpExposure(
-    afwImage::Exposure<ImagePixelT, MaskPixelT, VariancePixelT> &destExposure,      ///< remapped exposure
-    afwImage::Exposure<ImagePixelT, MaskPixelT, VariancePixelT> const &srcExposure, ///< source exposure
-    WarpingKernel<afwImage::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> > &warpingKernel ///< warping kernel; determines the warping algorithm
+    DestExposureT &destExposure,      ///< remapped exposure
+    SrcExposureT const &srcExposure, ///< source exposure
+    WarpingKernel<typename DestExposureT::MaskedImage, typename SrcExposureT::MaskedImage> &warpingKernel ///< warping kernel; determines the warping algorithm
     )
 {
     int numGoodPixels = 0;
 
-    typedef afwImage::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> MaskedImageT;
+    typedef typename DestExposureT::MaskedImage DestMaskedImageT;
+    typedef typename SrcExposureT::MaskedImage SrcMaskedImageT;
     typedef afwImage::Image<afwMath::Kernel::PixelT> KernelImageT;
     
     // Compute borders; use to prevent applying kernel outside of srcExposure
@@ -73,7 +74,7 @@ int afwMath::warpExposure(
     int yBorder1 = warpingKernel.getHeight() - (1 + yBorder0);
 
     // Get the source MaskedImage and a pixel accessor to it.
-    MaskedImageT srcMI = srcExposure.getMaskedImage();
+    SrcMaskedImageT srcMI = srcExposure.getMaskedImage();
     const int srcWidth = srcMI.getWidth();
     const int srcHeight = srcMI.getHeight();
     typename afwImage::Wcs::Ptr srcWcsPtr = srcExposure.getWcs();
@@ -81,14 +82,14 @@ int afwMath::warpExposure(
         boost::format("source image width=%d; height=%d") % srcWidth % srcHeight);
 
     // Get the remapped MaskedImage and the remapped wcs.
-    MaskedImageT destMI = destExposure.getMaskedImage();
+    DestMaskedImageT destMI = destExposure.getMaskedImage();
     typename afwImage::Wcs::Ptr destWcsPtr = destExposure.getWcs();
    
     // Conform mask plane names of remapped MaskedImage to match source
     destMI.getMask()->conformMaskPlanes(srcMI.getMask()->getMaskPlaneDict());
     
     // Make a pixel mask from the EDGE bit, if available (0 if not available)
-    const MaskPixelT edgePixelMask = srcMI.getMask()->getPlaneBitMask("EDGE");
+    const typename DestMaskedImageT::Mask::SinglePixel edgePixelMask = srcMI.getMask()->getPlaneBitMask("EDGE");
     lsst::pex::logging::Trace("lsst.afw.math", 3, boost::format("edgePixelMask=0x%X") % edgePixelMask);
     
     const int destWidth = destMI.getWidth();
@@ -98,14 +99,14 @@ int afwMath::warpExposure(
 
     // The source image accessor points to (0,0) which corresponds to pixel xBorder0, yBorder0
     // because the accessor points to (0,0) of the kernel rather than the center of the kernel
-    const typename MaskedImageT::SinglePixel blankPixel(0, 0, edgePixelMask);
+    const typename DestMaskedImageT::SinglePixel blankPixel(0, 0, edgePixelMask);
 
     // Set each pixel of destExposure's MaskedImage
     lsst::pex::logging::Trace("lsst.afw.math", 4, "Remapping masked image");
-    typename MaskedImageT::Pixel tempPixel(0, 0, 0);
+    typename DestMaskedImageT::SinglePixel tempPixel(0, 0, 0);
     for (int destY = 0; destY < destHeight; ++destY) {
         afwImage::PointD destPosXY(0.0, afwImage::indexToPosition(destY));
-        typename MaskedImageT::x_iterator destXIter = destMI.row_begin(destY);
+        typename DestMaskedImageT::x_iterator destXIter = destMI.row_begin(destY);
         for (int destX = 0; destX < destWidth; ++destX, ++destXIter) {
             // compute sky position associated with this pixel of remapped MaskedImage
             destPosXY[0] = afwImage::indexToPosition(destX);
@@ -133,15 +134,17 @@ int afwMath::warpExposure(
             ++numGoodPixels;
 
             // Compute warped pixel
-//            warpingKernel.computePixel<MaskedImageT>(*destXIter, srcMI.xy_at(srcX, srcY), fracOrigPix);
-// why does the following code compile but the line above does not?
-            warpingKernel.computePixel(tempPixel, srcMI.xy_at(srcX, srcY), fracOrigPix);
+            // Why can't I just specify *destXIter as the first argument?
+            // Why can't I just pass in srcMI.xy_at as the second argument?
+            // Both are needed for g++ 4.0.1 to find computePixel
+            typename SrcMaskedImageT::const_xy_locator tempSrcLoc = srcMI.xy_at(srcX, srcY);
+            warpingKernel.computePixel(tempPixel, tempSrcLoc, fracOrigPix);
             *destXIter = tempPixel;
             
             // Correct intensity due to relative pixel spatial scale
             double multFac = destWcsPtr->pixArea(destPosXY) / srcWcsPtr->pixArea(srcPosXY);
-            destXIter.image() *= static_cast<ImagePixelT>(multFac);
-            destXIter.variance() *= static_cast<ImagePixelT>(multFac * multFac);
+            destXIter.image() *= static_cast<typename DestMaskedImageT::Image::SinglePixel>(multFac);
+            destXIter.variance() *= static_cast<typename DestMaskedImageT::Variance::SinglePixel>(multFac * multFac);
 
         } // for destX loop
     } // for destY loop      
@@ -155,14 +158,18 @@ int afwMath::warpExposure(
 //
 typedef float imagePixelType;
 
-#define warpExposureFuncByType(IMAGEPIXELT) \
+#define warpExposureFuncByType(DESTIMAGEPIXELT, SRCIMAGEPIXELT) \
     template int afwMath::warpExposure( \
-        afwImage::Exposure<IMAGEPIXELT, afwImage::MaskPixel, afwImage::VariancePixel> &destExposure, \
-        afwImage::Exposure<IMAGEPIXELT, afwImage::MaskPixel, afwImage::VariancePixel> const &srcExposure, \
-        WarpingKernel<afwImage::MaskedImage<IMAGEPIXELT, afwImage::MaskPixel, afwImage::VariancePixel> > &WarpingKernel);
+        afwImage::Exposure<DESTIMAGEPIXELT, afwImage::MaskPixel, afwImage::VariancePixel> &destExposure, \
+        afwImage::Exposure<SRCIMAGEPIXELT, afwImage::MaskPixel, afwImage::VariancePixel> const &srcExposure, \
+        WarpingKernel<afwImage::MaskedImage<DESTIMAGEPIXELT, afwImage::MaskPixel, afwImage::VariancePixel>, \
+                      afwImage::MaskedImage<SRCIMAGEPIXELT, afwImage::MaskPixel, afwImage::VariancePixel> > &warpingKernel);
 
 
-warpExposureFuncByType(boost::uint16_t)
-warpExposureFuncByType(int)
-warpExposureFuncByType(float)
-warpExposureFuncByType(double)
+warpExposureFuncByType(float, boost::uint16_t)
+warpExposureFuncByType(double, boost::uint16_t)
+warpExposureFuncByType(float, int)
+warpExposureFuncByType(double, int)
+warpExposureFuncByType(float, float)
+warpExposureFuncByType(double, float)
+warpExposureFuncByType(double, double)
