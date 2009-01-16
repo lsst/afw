@@ -34,49 +34,6 @@ lsst::afw::image::Wcs::Wcs() :
     _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0) {
 }
 
-
-
-/**
- * @brief Construct a Wcs that performs a linear conversion between pixels and radec
- *
- *
- */
-lsst::afw::image::Wcs::Wcs(PointD crval, ///< ra/dec of centre of image
-                           PointD crpix, ///< pixel coordinates of centre of image
-                           boost::numeric::ublas::matrix<double> CD ///< Conversion matrix with elements as defined
-                                                                    ///< in wcs.h
-                          ) : LsstBase(typeid(this)),
-                              _fitsMetadata(),
-                              _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0) {
-
-    _wcsInfo = (struct wcsprm *) malloc(sizeof (struct wcsprm));
-    wcsini(true, 2, _wcsInfo);   //2 indicates a naxis==2, a two dimensional image
-
-    _wcsInfo->crval[0] = crval.getX();
-    _wcsInfo->crval[1] = crval.getY();
-
-    _wcsInfo->crpix[0] = crpix.getX();
-    _wcsInfo->crpix[1] = crpix.getY();
-
-    strncpy(_wcsInfo->ctype[0], "RA---TAN   ", 72);  //wcsini sets ctype[] to have length 72
-    strncpy(_wcsInfo->ctype[1], "DEC--TAN   ", 72);
-
-    //Set the CD matrix
-    for (int i=0; i<2; ++i) {
-        for (int j=0; j<2; ++j) {
-            _wcsInfo->cd[(2*i) + j] = CD(i,j);
-        }
-    }
-
-    //Specify that we have a CD matrix, but no PC or CROTA
-    _wcsInfo->altlin = 2;
-    _wcsInfo->flag   = 0;   //values have been updated
-
-    _nWcsInfo = 1;   //Specify that we have only one coordinate representation
-    //wcsset(_wcsInfo);
-}
-
-
 /**
  * @brief Construct a Wcs from a FITS header, represented as DataProperty::PtrType
  *
@@ -223,39 +180,6 @@ lsst::afw::image::Wcs::~Wcs() {
     }
 }
 
-
-///\brief Return a transformation matrix that does not address distortion.
-///
-///This is the simplest possible description of the relationship between pixel space and coodinate space
-boost::numeric::ublas::matrix<double> lsst::afw::image::Wcs::getLinearTransformMatrix() const {
-    int const naxis = _wcsInfo->naxis;
-    
-    //If naxis != 2, I'm not sure if any of what follows is correct
-    assert(naxis == 2);
-    
-    boost::numeric::ublas::matrix<double> C(naxis, naxis);
-
-    for (int i=0; i< naxis; ++i){
-        for (int j=0; j<naxis; ++j) {
-            C.insert_element(i, j, _wcsInfo->cd[ (i*naxis) + j ]);
-        }
-    }
-
-    return C;
-}
-
-
-
-lsst::afw::image::PointD lsst::afw::image::Wcs::getRaDecCenter() {
-        return PointD(_wcsInfo->crval);
-}
-
-lsst::afw::image::PointD lsst::afw::image::Wcs::getXYCenter() {
-       return PointD(_wcsInfo->crpix);
-}
- 
-
-
 /// Convert from (ra, dec) to (column, row) coordinates
 ///
 /// \return The desired (col, row) position
@@ -296,6 +220,7 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::colRowToRaDec(
 
     int status = 0;
     wcsp2s(_wcsInfo, 1, 2, pixTmp, imgcrd, &phi, &theta, skyTmp, &status);
+
     return lsst::afw::image::PointD(skyTmp);
 }
 
