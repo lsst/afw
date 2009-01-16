@@ -2,11 +2,15 @@
 /**
  * \file
  * \brief Support for Astrometry
+ *
+ * This is my draft of an improvement to the WCS class. It goes in here because this is more of a scratch
+ * directory, and rhl might cringe if he sees this in the real development code
  */
 
 #ifndef LSST_AFW_IMAGE_WCS_H
 #define LSST_AFW_IMAGE_WCS_H
 
+#include "boost/numeric/ublas/matrix.hpp"
 #include "lsst/daf/base.h"
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/afw/image/Image.h"
@@ -31,6 +35,7 @@ namespace image {
         
         Wcs();
         Wcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
+        Wcs(PointD crval, PointD crpix, boost::numeric::ublas::matrix<double> CD);
         Wcs(Wcs const &);
         Wcs & operator = (const Wcs &);
 
@@ -49,6 +54,7 @@ namespace image {
         PointD raDecToXY(double const radec[2]) const {
             return raDecToXY(radec[0], radec[1]);
         }
+        boost::numeric::ublas::matrix<double> getLinearTransformMatrix() const;
 
         PointD xyToRaDec(PointD pix) const;
         PointD xyToRaDec(double const x, double const y) const;
@@ -56,7 +62,7 @@ namespace image {
             return xyToRaDec(xy[0], xy[1]);
         }
 
-        double pixArea(PointD pix) const;
+        double pixArea(lsst::afw::image::PointD pix) const;
     private:
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::WcsFormatter);
 
@@ -73,5 +79,3 @@ namespace image {
 }}} // lsst::afw::image
 
 #endif // LSST_AFW_IMAGE_WCS_H
-
-

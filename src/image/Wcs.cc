@@ -35,6 +35,41 @@ lsst::afw::image::Wcs::Wcs() :
     _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0) {
 }
 
+
+/**
+ * @brief Construct a Wcs that performs a linear conversion between pixels and radec
+ *
+ * I'm mostly playing here, I have little idea whether any of this is correct
+ *
+ */
+lsst::afw::image::Wcs::Wcs(PointD crval, ///< ra/dec of centre of image
+                           PointD crpix, ///< pixel coordinates of centre of image
+                           boost::numeric::ublas::matrix<double> CD ///< Conversion matrix with elements as defined
+                                                                    ///< in wcs.h
+                          ) : LsstBase(typeid(this)),
+                              _fitsMetadata(),
+                              _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0) {
+    //Allocate memory for the wcs structure
+    wcsini(true, 2, _wcsInfo);   //Is this remotely correct?
+
+    _wcsInfo->crval[0] = crval.getX();
+    _wcsInfo->crval[1] = crval.getY();
+
+    _wcsInfo->crpix[0] = crpix.getX();
+    _wcsInfo->crpix[1] = crpix.getY();
+
+    for (int i=0; i<2; ++i) {
+        for (int j=0; j<2; ++j) {
+            _wcsInfo->cd[(2*i) + j] = CD(i,j);
+        }
+    }
+
+    //Specify that we have a CD matrix, but no PC or CROTA
+    _wcsInfo->altlin &= 2;
+}
+
+    
+    
 /**
  * @brief Construct a Wcs from a FITS header, represented as PropertySet::Ptr
  *
@@ -184,6 +219,47 @@ lsst::afw::image::Wcs::~Wcs() {
     }
 }
 
+
+/// Return (ra, dec) of the central pixel of the image
+lsst::afw::image::PointD lsst::afw::image::Wcs::getRaDecCenter() const {
+    return PointD(_wcsInfo->crval);
+}
+
+
+/// Return row column number of central pixel of the image
+lsst::afw::image::PointD lsst::afw::image::Wcs::getColRowCenter() const {
+    return PointD(_wcsInfo->crpix);
+}
+
+
+/// Convert from (ra, dec) to (column, row) coordinates
+///
+/// The conversion is of the form
+/// / ra \ = / c11 c12 \   [ col ]
+/// \dec /   \ c21 c22 /   [ row ] 
+///
+/// where (col,row) = (0,0) = (ra, dec) is the centre of the image, and the matrix C is return by this function.
+boost::numeric::ublas::matrix<double> lsst::afw::image::Wcs::getLinearTransformMatrix() const {
+    int const naxis = _wcsInfo->naxis;
+
+    //If naxis != 2, I'm not sure if any of what follows is correct
+    assert(naxis == 2);
+    
+    boost::numeric::ublas::matrix<double> C(naxis, naxis);
+
+    for (int i=0; i< naxis; ++i){
+        for (int j=0; j<naxis; ++j) {
+            C.insert_element(i, j, _wcsInfo->cd[ (i*naxis) + j ]);
+        }
+    }
+
+    return C;
+}
+                           
+
+
+
+
 /// Convert from (ra, dec) to (column, row) coordinates
 ///
 /// \return The desired (col, row) position
@@ -202,8 +278,7 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::raDecToXY(
     return lsst::afw::image::PointD(pixTmp);
 }
 
-/// Convert from (ra, dec) to (column, row) coordinates
-///
+
 /// \return The desired (col, row) position
 lsst::afw::image::PointD lsst::afw::image::Wcs::raDecToXY(
     lsst::afw::image::PointD sky        ///< Input (ra, dec)
