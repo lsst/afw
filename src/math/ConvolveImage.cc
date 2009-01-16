@@ -558,32 +558,36 @@ namespace lsst { namespace afw { namespace math {
  g++ -C -E -I$(eups list -s -d boost)/include Convolve.cc | perl -pe 's| *NL *|\n|g'
 */
 #define NL /* */
-#define convolutionFuncsByType(IMAGE, PIXTYPE1, PIXTYPE2) \
-    template IMAGE(PIXTYPE1)::SinglePixel \
-        convolveAtAPoint<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2)>(IMAGE(PIXTYPE2)::const_xy_locator &, \
+#define convolutionFuncsByType(IMAGE, DESTPIXTYPE, SRXPIXTYPE) \
+    template IMAGE(DESTPIXTYPE)::SinglePixel \
+        convolveAtAPoint<IMAGE(DESTPIXTYPE), IMAGE(SRXPIXTYPE)>(IMAGE(SRXPIXTYPE)::const_xy_locator &, \
         lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::const_xy_locator &, int, int); NL \
-    template IMAGE(PIXTYPE1)::SinglePixel \
-        convolveAtAPoint<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2)>(IMAGE(PIXTYPE2)::const_xy_locator &, \
+    template IMAGE(DESTPIXTYPE)::SinglePixel \
+        convolveAtAPoint<IMAGE(DESTPIXTYPE), IMAGE(SRXPIXTYPE)>(IMAGE(SRXPIXTYPE)::const_xy_locator &, \
         std::vector<lsst::afw::math::Kernel::PixelT> const &, \
         std::vector<lsst::afw::math::Kernel::PixelT> const &); NL \
-    template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, AnalyticKernel const&, bool, int); NL \
-    template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, DeltaFunctionKernel const&, bool, int); NL \
-    template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, FixedKernel const&, bool, int); NL \
-    template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, LinearCombinationKernel const&, bool, int); NL \
-    template void convolveLinear(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, LinearCombinationKernel const&, int); NL \
-    template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, SeparableKernel const&, bool, int);
+    template void convolve(IMAGE(DESTPIXTYPE)&, IMAGE(SRXPIXTYPE) const&, AnalyticKernel const&, bool, int); NL \
+    template void convolve(IMAGE(DESTPIXTYPE)&, IMAGE(SRXPIXTYPE) const&, DeltaFunctionKernel const&, bool, int); NL \
+    template void convolve(IMAGE(DESTPIXTYPE)&, IMAGE(SRXPIXTYPE) const&, FixedKernel const&, bool, int); NL \
+    template void convolve(IMAGE(DESTPIXTYPE)&, IMAGE(SRXPIXTYPE) const&, LinearCombinationKernel const&, bool, int); NL \
+    template void convolveLinear(IMAGE(DESTPIXTYPE)&, IMAGE(SRXPIXTYPE) const&, LinearCombinationKernel const&, int); NL \
+    template void convolve(IMAGE(DESTPIXTYPE)&, IMAGE(SRXPIXTYPE) const&, SeparableKernel const&, bool, int);
 
 //
 // Now a macro to specify Image and MaskedImage
 //
-#define convolutionFuncs(PIXTYPE1, PIXTYPE2) \
-    convolutionFuncsByType(IMAGE,       PIXTYPE1, PIXTYPE2) \
-    convolutionFuncsByType(MASKEDIMAGE, PIXTYPE1, PIXTYPE2)
+#define convolutionFuncs(DESTPIXTYPE, SRXPIXTYPE) \
+    convolutionFuncsByType(IMAGE,       DESTPIXTYPE, SRXPIXTYPE) \
+    convolutionFuncsByType(MASKEDIMAGE, DESTPIXTYPE, SRXPIXTYPE)
 
-convolutionFuncs(int, int)
-convolutionFuncs(double, double)
-convolutionFuncs(double, float)
-convolutionFuncs(float, float)
 convolutionFuncs(boost::uint16_t, boost::uint16_t)
+convolutionFuncs(float, boost::uint16_t)
+convolutionFuncs(double, boost::uint16_t)
+convolutionFuncs(int, int)
+convolutionFuncs(float, int)
+convolutionFuncs(double, int)
+convolutionFuncs(float, float)
+convolutionFuncs(double, float)
+convolutionFuncs(double, double)
 
 }}}

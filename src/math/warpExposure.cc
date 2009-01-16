@@ -25,6 +25,34 @@ namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
 
 /**
+* @brief Solve bilinear equation; the only permitted arguments are 0 or 1
+*
+* @throw lsst::pex::exceptions::InvalidParameterException if argument is not 0 or 1
+*/
+afwMath::Kernel::PixelT afwMath::BilinearWarpingKernel::BilinearFunction1::operator() (
+    double x
+) const {
+    if (x == 0.0) {
+        return 1.0 - this->_params[0];
+    } else if (x == 1.0) {
+        return this->_params[0];
+    } else {
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "x must be 0 or 1");
+    }
+}            
+
+/**
+* @brief Return string representation.
+*/
+std::string afwMath::BilinearWarpingKernel::BilinearFunction1::toString(void) const {
+    std::ostringstream os;
+    os << "_BilinearFunction1: ";
+    os << Function1<Kernel::PixelT>::toString();
+    return os.str();
+}
+
+
+/**
  * @brief Remap an Exposure to a new WCS.
  *
  * For pixels in destExposure that cannot be computed because their data comes from pixels that are too close
@@ -58,7 +86,7 @@ template<typename DestExposureT, typename SrcExposureT>
 int afwMath::warpExposure(
     DestExposureT &destExposure,      ///< remapped exposure
     SrcExposureT const &srcExposure, ///< source exposure
-    WarpingKernel<typename DestExposureT::MaskedImage, typename SrcExposureT::MaskedImage> &warpingKernel ///< warping kernel; determines the warping algorithm
+    SeparableKernel const &warpingKernel    ///< warping kernel; determines warping algorithm
     )
 {
     int numGoodPixels = 0;
@@ -100,6 +128,9 @@ int afwMath::warpExposure(
     // The source image accessor points to (0,0) which corresponds to pixel xBorder0, yBorder0
     // because the accessor points to (0,0) of the kernel rather than the center of the kernel
     const typename DestMaskedImageT::SinglePixel blankPixel(0, 0, edgePixelMask);
+    
+    std::vector<double> kernelXList(warpingKernel.getWidth());
+    std::vector<double> kernelYList(warpingKernel.getHeight());
 
     // Set each pixel of destExposure's MaskedImage
     lsst::pex::logging::Trace("lsst.afw.math", 4, "Remapping masked image");
@@ -134,20 +165,17 @@ int afwMath::warpExposure(
             ++numGoodPixels;
 
             // Compute warped pixel
-            // Why can't I just specify *destXIter as the first argument?
-            // Why can't I just pass in srcMI.xy_at as the second argument?
-            // Both are needed for g++ 4.0.1 to find computePixel
-            typename SrcMaskedImageT::const_xy_locator tempSrcLoc = srcMI.xy_at(srcX, srcY);
-            warpingKernel.computePixel(tempPixel, tempSrcLoc, fracOrigPix);
-            *destXIter = tempPixel;
-            
-            // Correct intensity due to relative pixel spatial scale
-            double multFac = destWcsPtr->pixArea(destPosXY) / srcWcsPtr->pixArea(srcPosXY);
+            double kSum = warpingKernel.computeVectors(kernelXList, kernelYList, false);
+            typename SrcMaskedImageT::const_xy_locator srcLoc = srcMI.xy_at(srcX, srcY);
+            *destXIter = afwMath::convolveAtAPoint<DestMaskedImageT, SrcMaskedImageT>(srcLoc, kernelXList, kernelYList);
+
+            // Correct intensity due to relative pixel spatial scale and kernel sum
+            double multFac = destWcsPtr->pixArea(destPosXY) / (srcWcsPtr->pixArea(srcPosXY) * kSum);
             destXIter.image() *= static_cast<typename DestMaskedImageT::Image::SinglePixel>(multFac);
             destXIter.variance() *= static_cast<typename DestMaskedImageT::Variance::SinglePixel>(multFac * multFac);
 
-        } // for destX loop
-    } // for destY loop      
+        } // dest x pixels
+    } // dest y pixels
     return numGoodPixels;
 } // warpExposure
 
@@ -162,8 +190,7 @@ typedef float imagePixelType;
     template int afwMath::warpExposure( \
         afwImage::Exposure<DESTIMAGEPIXELT, afwImage::MaskPixel, afwImage::VariancePixel> &destExposure, \
         afwImage::Exposure<SRCIMAGEPIXELT, afwImage::MaskPixel, afwImage::VariancePixel> const &srcExposure, \
-        WarpingKernel<afwImage::MaskedImage<DESTIMAGEPIXELT, afwImage::MaskPixel, afwImage::VariancePixel>, \
-                      afwImage::MaskedImage<SRCIMAGEPIXELT, afwImage::MaskPixel, afwImage::VariancePixel> > &warpingKernel);
+        SeparableKernel const &warpingKernel);
 
 
 warpExposureFuncByType(float, boost::uint16_t)

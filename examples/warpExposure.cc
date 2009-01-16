@@ -13,7 +13,7 @@ namespace afwMath = lsst::afw::math;
 
 int main() {
     typedef double ImageType;
-    afwMath::LanczosWarpingKernel<afwImage::MaskedImage<ImageType>, afwImage::MaskedImage<ImageType> > warpingKernel(3);
+    afwMath::LanczosWarpingKernel warpingKernel(3);
     
     afwImage::Exposure<ImageType> srcExposure("/Users/rowen/LSST/code/testdata/afwdata/small_MI");
     afwImage::Exposure<ImageType> destExposure("/Users/rowen/LSST/code/testdata/afwdata/small_MI");
