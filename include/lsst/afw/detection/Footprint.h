@@ -170,8 +170,20 @@ Footprint::Ptr growFootprint(Footprint::Ptr const &foot, int ngrow);
 
 template<typename MaskT>
 MaskT setMaskFromFootprint(typename image::Mask<MaskT>::Ptr mask,
-                           Footprint::Ptr const footprint,
+                           Footprint const& footprint,
                            MaskT const bitmask);
+/**
+ * \brief Compatibility function for setMaskFromFootprint's old API
+ *
+ * \deprecated
+ * The API accepting a Footprint::Ptr is replaced by one with a Footprint const&
+ */
+template<typename MaskT>
+MaskT setMaskFromFootprint(typename image::Mask<MaskT>::Ptr mask,
+                           Footprint::Ptr const footprint,
+                           MaskT const bitmask) {
+    return setMaskFromFootprint(mask, *footprint, bitmask);
+}
 template<typename MaskT>
 MaskT setMaskFromFootprintList(typename lsst::afw::image::Mask<MaskT>::Ptr mask,
                                std::vector<detection::Footprint::Ptr> const& footprints,
