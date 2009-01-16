@@ -49,7 +49,7 @@ namespace math {
             _yList(height)
         {};
         
-        virtual ~WarpingKernel();
+        virtual ~WarpingKernel() {};
 
         /**
         * @brief Return width of warping kernel
@@ -85,7 +85,7 @@ namespace math {
             typename DestMaskedImageT::SinglePixel &destPixel,    ///< destination pixel (warped)
             typename SrcMaskedImageT::const_xy_locator &srcLoc,  ///< locator for source image pixel at lower left corner
             std::vector<double> const &fracXY   ///< fractional src pixel offset; 0 if none; must be <= 0 and < 1
-        );
+        ) = 0;
     protected:
         std::vector<lsst::afw::math::Kernel::PixelT> _xList;
         std::vector<lsst::afw::math::Kernel::PixelT> _yList;
@@ -104,7 +104,7 @@ namespace math {
             _kernel(2 * order, 2 * order, LanczosFunction(order), LanczosFunction(order))
         {};
         
-        virtual ~LanczosWarpingKernel();
+        virtual ~LanczosWarpingKernel() {};
 
         /**
         * @brief Return order of Lanczos kernel
@@ -139,7 +139,7 @@ namespace math {
             WarpingKernel<DestMaskedImageT, SrcMaskedImageT>(2, 2)
         {};
 
-        virtual ~NearestNeighborWarpingKernel();
+        virtual ~NearestNeighborWarpingKernel() {};
 
         virtual void computePixel(
             typename DestMaskedImageT::SinglePixel &destPixel,
@@ -163,7 +163,7 @@ namespace math {
             WarpingKernel<DestMaskedImageT, SrcMaskedImageT>(2, 2)
         {};
 
-        virtual ~BilinearWarpingKernel();
+        virtual ~BilinearWarpingKernel() {};
 
         virtual void computePixel(
             typename DestMaskedImageT::SinglePixel &destPixel,
