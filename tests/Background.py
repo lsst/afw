@@ -20,6 +20,7 @@ import lsst.pex.exceptions
 import lsst.afw.image.imageLib as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.display.ds9 as ds9
+import eups
 
 try:
     type(display)
@@ -76,7 +77,7 @@ class BackgroundTestCase(unittest.TestCase):
         #imgfiles.append("v2_i2_p_m9_f.fits")
         #imgfiles.append("v2_i2_p_m9_u16.fits")
         
-        afwdata_dir = os.getenv("AFWDATA_DIR");
+        afwdata_dir = eups.productDir("afwdata")
 	for imginfo in imginfolist:
 
 	    imgfile, center_value = imginfo
@@ -183,6 +184,27 @@ class BackgroundTestCase(unittest.TestCase):
 		#  is a fair (if arbitrary) test.
 		self.assertTrue( (testval - realval) < 0.05 )
 
+    def testCFHT(self):
+        """Test background subtraction on some real CFHT data"""
+
+        mi = afwImage.MaskedImageF(os.path.join(eups.productDir("afwdata"), "CFHT", "D4", "cal-53535-i-797722_1"))
+        mi = mi.Factory(mi, afwImage.BBox(afwImage.PointI(32, 2), afwImage.PointI(2079, 4609)))
+        mi.setXY0(afwImage.PointI(0, 0))
+        
+	bctrl = afwMath.BackgroundControl(afwMath.NATURAL_SPLINE);
+	bctrl.setNxSample(16);
+	bctrl.setNySample(16);
+	bctrl.sctrl.setNumSigmaClip(3.0)  
+	bctrl.sctrl.setNumIter(2)
+	backobj = afwMath.BackgroundF(mi.getImage(), bctrl)
+
+        if display:
+            ds9.mtv(mi, frame=0)
+
+        im = mi.getImage(); im -= backobj.getImageF()
+
+        if display:
+            ds9.mtv(mi, frame=1)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -193,6 +215,7 @@ def suite():
 
     suites = []
     suites += unittest.makeSuite(BackgroundTestCase)
+    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
 def run(exit=False):
