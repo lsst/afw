@@ -2,18 +2,18 @@
 /**
  * \file
  * \brief Support for Astrometry
- *
- * This is my draft of an improvement to the WCS class. It goes in here because this is more of a scratch
- * directory, and rhl might cringe if he sees this in the real development code
  */
 
 #ifndef LSST_AFW_IMAGE_WCS_H
 #define LSST_AFW_IMAGE_WCS_H
 
-#include "boost/numeric/ublas/matrix.hpp"
 #include "lsst/daf/base.h"
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/afw/image/Image.h"
+
+#include "boost/cstdint.hpp"
+#include "boost/shared_ptr.hpp"
+#include "boost/numeric/ublas/matrix.hpp"
 
 struct wcsprm;                          // defined in wcs.h
 
@@ -34,8 +34,8 @@ namespace image {
         typedef boost::shared_ptr<lsst::afw::image::Wcs> Ptr;
         
         Wcs();
-        Wcs(lsst::daf::base::DataProperty::PtrType fitsMetadata);
         Wcs(PointD crval, PointD crpix, boost::numeric::ublas::matrix<double> CD);
+        Wcs(lsst::daf::base::DataProperty::PtrType fitsMetadata);
         Wcs(Wcs const &);
         Wcs & operator = (const Wcs &);
 
@@ -49,23 +49,24 @@ namespace image {
         /// Return true iff Wcs is valid
         operator bool() const { return _wcsInfo != NULL; }
 
-        lsst::afw::image::PointD getRaDecCenter() const;
-        lsst::afw::image::PointD getColRowCenter() const;
         boost::numeric::ublas::matrix<double> getLinearTransformMatrix() const;
-        
-        lsst::afw::image::PointD raDecToColRow(lsst::afw::image::PointD sky) const;
-        lsst::afw::image::PointD raDecToColRow(double const ra, double const dec) const;
-        lsst::afw::image::PointD raDecToColRow(double const radec[2]) const {
+
+        lsst::afw::image::PointD getRaDecCenter();
+        lsst::afw::image::PointD getXYCenter();
+
+        PointD raDecToColRow(PointD sky) const;
+        PointD raDecToColRow(double const ra, double const dec) const;
+        PointD raDecToColRow(double const radec[2]) const {
             return raDecToColRow(radec[0], radec[1]);
         }
 
-        lsst::afw::image::PointD colRowToRaDec(lsst::afw::image::PointD pix) const;
-        lsst::afw::image::PointD colRowToRaDec(double const x, double const y) const;
-        lsst::afw::image::PointD colRowToRaDec(double const xy[2]) const {
+        PointD colRowToRaDec(PointD pix) const;
+        PointD colRowToRaDec(double const x, double const y) const;
+        PointD colRowToRaDec(double const xy[2]) const {
             return colRowToRaDec(xy[0], xy[1]);
         }
 
-        double pixArea(lsst::afw::image::PointD pix) const;
+        double pixArea(PointD pix) const;
     private:
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::WcsFormatter);
 
@@ -82,3 +83,5 @@ namespace image {
 }}} // lsst::afw::image
 
 #endif // LSST_AFW_IMAGE_WCS_H
+
+
