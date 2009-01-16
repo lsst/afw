@@ -4,6 +4,7 @@
  * \file
  * \brief Interpolation Header
  */
+#include <limits>
 
 #include "boost/shared_ptr.hpp"
 
