@@ -58,7 +58,7 @@ std::string afwMath::BilinearWarpingKernel::BilinearFunction1::toString(void) co
  * For pixels in destExposure that cannot be computed because their data comes from pixels that are too close
  * to (or off of) the edge of srcExposure.
  * * The image and variance are set to 0
- * * The mask bit EDGE is set, if present, else the mask pixel is set to 0
+ * * The mask is set to the EDGE bit (if found, else 0).
  *
  * @return the number valid pixels in destExposure (thost that are not off the edge).
  *
@@ -73,6 +73,15 @@ std::string afwMath::BilinearWarpingKernel::BilinearFunction1::toString(void) co
  * * The flux-conserving factor is determined from the source and new WCS.
  *   and is applied to the remapped pixel
  *
+ * A warping kernel has the following properties:
+ * - Has two parameters: fractional x and fractional y position on the source image.
+ *   The fractional position for each axis has value >= 0 and < 1:
+ *   0 if the center of the source along that axis is on the center of the pixel
+ *   0.999... if the center of the source along that axis is almost on the center of the next pixel
+ * - Almost always has even width and height (unusual for a kernel) and a center index = width/height/2.
+ *   This is because the kernel is used to map from a range of pixel positions from
+ *   centered on on (width/2, height/2) to nearly centered on (1 + width/2, 1 + height/2).
+ *
  * TODO 20071129 Nicole M. Silvestri; By DC3:
  * * Need to synchronize warpExposure to the UML model robustness/sequence diagrams.
  *   Remove from the Exposure Class in the diagrams.
@@ -84,8 +93,8 @@ std::string afwMath::BilinearWarpingKernel::BilinearFunction1::toString(void) co
  */
 template<typename DestExposureT, typename SrcExposureT>
 int afwMath::warpExposure(
-    DestExposureT &destExposure,      ///< remapped exposure
-    SrcExposureT const &srcExposure, ///< source exposure
+    DestExposureT &destExposure,        ///< remapped exposure
+    SrcExposureT const &srcExposure,    ///< source exposure
     SeparableKernel const &warpingKernel    ///< warping kernel; determines warping algorithm
     )
 {
@@ -127,7 +136,7 @@ int afwMath::warpExposure(
 
     // The source image accessor points to (0,0) which corresponds to pixel xBorder0, yBorder0
     // because the accessor points to (0,0) of the kernel rather than the center of the kernel
-    const typename DestMaskedImageT::SinglePixel blankPixel(0, 0, edgePixelMask);
+    const typename DestMaskedImageT::SinglePixel edgePixel(0, 0, edgePixelMask);
     
     std::vector<double> kernelXList(warpingKernel.getWidth());
     std::vector<double> kernelYList(warpingKernel.getHeight());
@@ -156,7 +165,7 @@ int afwMath::warpExposure(
             if ((srcX - xBorder0 < 0) || (srcX + xBorder1 >= srcWidth) 
                 || (srcY - yBorder0 < 0) || (srcY + yBorder1 >= srcHeight)) {
                 // skip this pixel
-                *destXIter = blankPixel;
+                *destXIter = edgePixel;
 //                lsst::pex::logging::Trace("lsst.afw.math", 5, "skipping pixel at destX=%d; destY=%d",
 //                    destX, destY);
                 continue;

@@ -91,13 +91,6 @@ namespace math {
         };
     };
 
-
-    /**
-    * @brief Nearest neighbor warping: fast; has good noise conservation but can introduce aliasing.
-    * Best used for weight maps.
-    */
-    class NearestNeighborWarpingKernel {};
-
     template<typename DestExposureT, typename SrcExposureT>
     int warpExposure(
         DestExposureT &destExposure,
