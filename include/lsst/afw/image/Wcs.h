@@ -49,6 +49,10 @@ namespace image {
         /// Return true iff Wcs is valid
         operator bool() const { return _wcsInfo != NULL; }
 
+        lsst::afw::image::PointD getOriginRaDec() ;
+        lsst::afw::image::PointD getOriginXY()  ;
+        boost::numeric::ublas::matrix<double> getLinearTransformMatrix();
+            
         PointD raDecToXY(PointD sky) const;
         PointD raDecToXY(double const ra, double const dec) const;
         PointD raDecToXY(double const radec[2]) const {

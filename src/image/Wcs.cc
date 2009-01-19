@@ -220,14 +220,16 @@ lsst::afw::image::Wcs::~Wcs() {
 }
 
 
-/// Return (ra, dec) of the central pixel of the image
-lsst::afw::image::PointD lsst::afw::image::Wcs::getRaDecCenter() const {
+/// Return (ra, dec) of the origin of the WCS solution. Note that this need not
+/// be the center of the image
+lsst::afw::image::PointD lsst::afw::image::Wcs::getOriginRaDec()  {
     return PointD(_wcsInfo->crval);
 }
 
 
-/// Return row column number of central pixel of the image
-lsst::afw::image::PointD lsst::afw::image::Wcs::getColRowCenter() const {
+/// Return XY  of the origin of the WCS solution. Note that this need not be
+///the centre of the image
+lsst::afw::image::PointD lsst::afw::image::Wcs::getOriginXY()  {
     return PointD(_wcsInfo->crpix);
 }
 
@@ -235,11 +237,11 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::getColRowCenter() const {
 /// Convert from (ra, dec) to (column, row) coordinates
 ///
 /// The conversion is of the form
-/// / ra \ = / c11 c12 \   [ col ]
-/// \dec /   \ c21 c22 /   [ row ] 
+/// [ ra ] = [ c11 c12 ]   [ col ]
+/// [dec ]   [ c21 c22 ]   [ row ] 
 ///
-/// where (col,row) = (0,0) = (ra, dec) is the centre of the image, and the matrix C is return by this function.
-boost::numeric::ublas::matrix<double> lsst::afw::image::Wcs::getLinearTransformMatrix() const {
+/// where (col,row) = (0,0) = (ra, dec) is the centre of the WCS colution, and the matrix C is return by this function.
+boost::numeric::ublas::matrix<double> lsst::afw::image::Wcs::getLinearTransformMatrix()  {
     int const naxis = _wcsInfo->naxis;
 
     //If naxis != 2, I'm not sure if any of what follows is correct
