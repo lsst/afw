@@ -6,7 +6,7 @@ Python interface to lsst::afw::math classes
 %enddef
 
 %feature("autodoc", "1");
-%module(package="lsst.afw.math", docstring=mathLib_DOCSTRING) mathLib
+%module(package="lsst.afw.math",docstring=mathLib_DOCSTRING) mathLib
 
 %{
 #   include "lsst/daf/base.h"
@@ -45,8 +45,10 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 
 %template(vectorF) std::vector<float>;
 %template(vectorD) std::vector<double>;
+%template(vectorI) std::vector<int>;
 %template(vectorVectorF) std::vector<std::vector<float> >;
 %template(vectorVectorD) std::vector<std::vector<double> >;
+%template(vectorVectorI) std::vector<std::vector<int> >;
 
 %import "lsst/afw/image/imageLib.i"
 
@@ -56,4 +58,5 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 %include "kernelLib.i"
 %include "minimizeLib.i"
 %include "statistics.i"
-%include "warpExposure.i"
+%include "interpolate.i"
+%include "background.i"

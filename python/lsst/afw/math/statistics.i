@@ -5,11 +5,11 @@
 
 %include "lsst/afw/math/Statistics.h"
 
-%define %stats(NAME, PIXEL_TYPE)
-%template(NAME) lsst::afw::math::Statistics<lsst::afw::image::Image<PIXEL_TYPE> >;
-%template(make_Statistics) lsst::afw::math::make_Statistics<lsst::afw::image::Image<PIXEL_TYPE> >;
+%define %declareStats(PIXTYPE, SUFFIX)
+    %template(make_Statistics) lsst::afw::math::make_Statistics<lsst::afw::image::Image<PIXTYPE> >;
+    %template(Statistics ## SUFFIX) lsst::afw::math::Statistics::Statistics<lsst::afw::image::Image<PIXTYPE> >;
 %enddef
 
-%stats(StatisticsD, double);
-%stats(StatisticsF, float);
-%stats(StatisticsI, int);
+%declareStats(double, D)
+%declareStats(float, F)
+%declareStats(int, I)

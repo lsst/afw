@@ -309,15 +309,15 @@ detection::Footprint::Ptr detection::footprintAndMask(
  */
 template<typename MaskT>
 MaskT detection::setMaskFromFootprint(typename image::Mask<MaskT>::Ptr mask, ///< Mask to set
-                                      detection::Footprint::Ptr const foot,  ///< Footprint specifying desired pixels
+                                      detection::Footprint const& foot,      ///< Footprint specifying desired pixels
                                       MaskT const bitmask                    ///< Bitmask to OR into mask
                                      ) {
 
     int const width = static_cast<int>(mask->getWidth());
     int const height = static_cast<int>(mask->getHeight());    
     
-    for (detection::Footprint::SpanList::const_iterator siter = foot->getSpans().begin();
-         siter != foot->getSpans().end(); siter++) {
+    for (detection::Footprint::SpanList::const_iterator siter = foot.getSpans().begin();
+         siter != foot.getSpans().end(); siter++) {
         detection::Span::Ptr const span = *siter;
         int const y = span->getY() - mask->getY0();
         if (y < 0 || y >= height) {
@@ -352,7 +352,7 @@ MaskT detection::setMaskFromFootprintList(
                                                ) {
     for (std::vector<detection::Footprint::Ptr>::const_iterator fiter = footprints.begin();
          fiter != footprints.end(); ++fiter) {
-        (void)setMaskFromFootprint(mask, *fiter, bitmask);
+        (void)setMaskFromFootprint(mask, **fiter, bitmask);
     }
     
     return bitmask;
