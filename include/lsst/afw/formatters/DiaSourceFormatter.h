@@ -32,8 +32,6 @@ namespace formatters {
     for DiaSourceVector instances.
  */
 class DiaSourceVectorFormatter : public lsst::daf::persistence::Formatter {
-	typedef lsst::afw::detection::DiaSource DiaSource;
-    typedef std::vector<DiaSource> DiaSourceVector;
 public:
 
     virtual ~DiaSourceVectorFormatter();

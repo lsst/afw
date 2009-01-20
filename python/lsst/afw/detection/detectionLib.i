@@ -29,5 +29,5 @@ Python interface to lsst::afw::detection classes
 
 %lsst_exceptions()
 
-//%include "source.i"
+%include "source.i"
 %include "footprints.i"

@@ -20,7 +20,7 @@
 #include "lsst/afw/detection/DiaSource.h"
 
 namespace ex = lsst::pex::exceptions;
-namespace detail = lsst::afw::detection::diasource_detail;
+namespace detail = lsst::afw::detection::source_detail;
 using lsst::daf::base::Persistable;
 using lsst::daf::persistence::BoostStorage;
 using lsst::daf::persistence::DbStorage;
@@ -28,6 +28,7 @@ using lsst::daf::persistence::DbTsvStorage;
 using lsst::daf::persistence::Storage;
 using lsst::pex::policy::Policy;
 using lsst::afw::detection::DiaSource;
+using lsst::afw::detection::DiaSourceVector;
 using lsst::afw::detection::PersistableDiaSourceVector;
 
 namespace form = lsst::afw::formatters;
@@ -394,10 +395,12 @@ void form::DiaSourceVectorFormatter::delegateSerialize(
     if (Archive::is_loading::value) {        
         DiaSource data;
         archive & sz;
+        DiaSource::Ptr sourcePtr;
         DiaSourceVector sourceVector(sz);
         for (; sz > 0; --sz) {
             archive & data;
-            sourceVector.push_back(data);
+            sourcePtr.reset(new DiaSource(data));
+            sourceVector.push_back(sourcePtr);
         }
         p->setSources(sourceVector);
     } else {
@@ -407,7 +410,7 @@ void form::DiaSourceVectorFormatter::delegateSerialize(
         DiaSourceVector::iterator i = sourceVector.begin();
         DiaSourceVector::iterator const end(sourceVector.end());
         for ( ; i != end; ++i) {
-            archive &  *i;
+            archive &  **i;
         }
     }
 }
@@ -444,7 +447,7 @@ void form::DiaSourceVectorFormatter::write( Persistable const *   persistable,
     DiaSourceVector sourceVector = p->getSources();   
 
     // Assume all have ids or none do.
-    if (sourceVector.begin()->getId() == 0 && 
+    if ( (*(sourceVector.begin()))->getId() == 0 && 
         (!_policy || !_policy->exists("GenerateIds") || _policy->getBool("GenerateIds"))
     ) {
      
@@ -458,8 +461,8 @@ void form::DiaSourceVectorFormatter::write( Persistable const *   persistable,
         
         DiaSourceVector::iterator i = sourceVector.begin();
         for ( ; i != sourceVector.end(); ++i) {
-            i->setId(generateDiaSourceId(seq, ccdId, visitId));
-            i->setAmpExposureId(ampExposureId);
+            (*i)->setId(generateDiaSourceId(seq, ccdId, visitId));
+            (*i)->setAmpExposureId(ampExposureId);
             ++seq;
             if (seq == 0) { // Overflowed
     			throw LSST_EXCEPT(ex::RuntimeErrorException, "Too many Sources");
@@ -493,7 +496,7 @@ void form::DiaSourceVectorFormatter::write( Persistable const *   persistable,
             DiaSourceVector::const_iterator i(sourceVector.begin());
             DiaSourceVector::const_iterator const end(sourceVector.end());
             for ( ; i != end; ++i) {
-                insertRow<DbStorage>(*db, *i);
+                insertRow<DbStorage>(*db, **i);
             }
         } else {
             DbTsvStorage * db = dynamic_cast<DbTsvStorage *>(storage.get());
@@ -506,7 +509,7 @@ void form::DiaSourceVectorFormatter::write( Persistable const *   persistable,
             DiaSourceVector::const_iterator i(sourceVector.begin());
             DiaSourceVector::const_iterator const end(sourceVector.end());
             for (; i != end; ++i) {
-                insertRow<DbTsvStorage>(*db, *i);
+                insertRow<DbTsvStorage>(*db, **i);
             }
         }
     } else {
@@ -535,6 +538,7 @@ Persistable* form::DiaSourceVectorFormatter::read(
         std::vector<std::string> tables;
         getAllVisitSliceTableNames(tables, _policy, additionalData);
 
+		DiaSource::Ptr sourcePtr;
         DiaSourceVector sourceVector;
         // loop over all retrieve tables, reading in everything
         std::vector<std::string>::const_iterator const end = tables.end();
@@ -684,8 +688,10 @@ Persistable* form::DiaSourceVectorFormatter::read(
                 if (db->columnIsNull(FLAG_4_WCS)) { data.setNull(detail::FLAG_4_WCS); }       
                 if (db->columnIsNull(FLAG_CLASSIFICATION)) {data.setNull(detail::FLAG_CLASSIFICATION); }     
 
+				sourcePtr.reset(new DiaSource(data));
+				
 				//add source to vector
-                sourceVector.push_back(data);
+                sourceVector.push_back(sourcePtr);
 
                 //reset nulls for next source
                 data.setNotNull();

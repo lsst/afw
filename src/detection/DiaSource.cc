@@ -11,7 +11,7 @@
 #include "lsst/afw/detection/DiaSource.h"
 
 namespace det = lsst::afw::detection;
-namespace detail = lsst::afw::detection::diasource_detail;
+namespace detail = lsst::afw::detection::source_detail;
 
 
 // -- DiaSource ----------------

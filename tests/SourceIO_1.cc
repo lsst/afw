@@ -51,47 +51,47 @@ static std::string const makeTempFile() {
 
 
 static void initTestData(SourceVector & v, int sliceId = 0) {
-    v.reserve(source_detail::NUM_NULLABLE_FIELDS + 2);
-    for (int i = 0; i < source_detail::NUM_NULLABLE_FIELDS + 2; ++i) {
-        Source data;
+    v.reserve(source_detail::NUM_SOURCE_NULLABLE_FIELDS + 2);
+    for (int i = 0; i < source_detail::NUM_SOURCE_NULLABLE_FIELDS + 2; ++i) {
+        Source::Ptr data(new Source());
         // make sure each field has a different value, and that IO for each nullable field is tested
         // Note: Source ids are generated in ascending order
-        int j = i*source_detail::NUM_NULLABLE_FIELDS;
-        data.setId              (j + sliceId*(source_detail::NUM_NULLABLE_FIELDS + 2)*64 + 1);
-        data.setAmpExposureId   (j +  1);
-        data.setObjectId        (j +  2);
-        data.setMovingObjectId  (j +  3);
-        data.setRa              (static_cast<double>(j +  8));
-        data.setDec             (static_cast<double>(j +  9));
-        data.setRaErr4detection (static_cast<double>(j + 10));
-        data.setDecErr4detection(static_cast<double>(j + 11));
-        data.setRaErr4wcs       (static_cast<double>(j + 12));
-        data.setDecErr4wcs      (static_cast<double>(j + 13));
-        data.setTaiMidPoint     (static_cast<double>(j + 17));
-        data.setTaiRange        (static_cast<double>(j + 18));
-        data.setPsfMag          (static_cast<double>(j + 21));
-        data.setPsfMagErr       (static_cast<double>(j + 22));
-        data.setApMag           (static_cast<double>(j + 23));
-        data.setApMagErr        (static_cast<double>(j + 24));
-        data.setModelMag        (static_cast<double>(j + 25));
-        data.setModelMagErr     (static_cast<double>(j + 26));
-        data.setFwhmA           (static_cast<float> (j + 29));
-        data.setFwhmB           (static_cast<float> (j + 30));
-        data.setFwhmTheta       (static_cast<float> (j + 31));
-        data.setApDia           (static_cast<float> (j + 32));
-        data.setSnr             (static_cast<float> (j + 39));
-        data.setChi2            (static_cast<float> (j + 40));
-        data.setFlag4association(j + 42);
-        data.setFlag4detection  (j + 43);
-        data.setFlag4wcs        (j + 44);
-        data.setFilterId        (-1);
-        if (i < source_detail::NUM_NULLABLE_FIELDS) {
-            data.setNotNull();
-            data.setNull(i);
+        int j = i*source_detail::NUM_SOURCE_NULLABLE_FIELDS;
+        data->setId              (j + sliceId*(source_detail::NUM_SOURCE_NULLABLE_FIELDS + 2)*64 + 1);
+        data->setAmpExposureId   (j +  1);
+        data->setObjectId        (j +  2);
+        data->setMovingObjectId  (j +  3);
+        data->setRa              (static_cast<double>(j +  8));
+        data->setDec             (static_cast<double>(j +  9));
+        data->setRaErr4detection (static_cast<double>(j + 10));
+        data->setDecErr4detection(static_cast<double>(j + 11));
+        data->setRaErr4wcs       (static_cast<double>(j + 12));
+        data->setDecErr4wcs      (static_cast<double>(j + 13));
+        data->setTaiMidPoint     (static_cast<double>(j + 17));
+        data->setTaiRange        (static_cast<double>(j + 18));
+        data->setPsfMag          (static_cast<double>(j + 21));
+        data->setPsfMagErr       (static_cast<double>(j + 22));
+        data->setApMag           (static_cast<double>(j + 23));
+        data->setApMagErr        (static_cast<double>(j + 24));
+        data->setModelMag        (static_cast<double>(j + 25));
+        data->setModelMagErr     (static_cast<double>(j + 26));
+        data->setFwhmA           (static_cast<float> (j + 29));
+        data->setFwhmB           (static_cast<float> (j + 30));
+        data->setFwhmTheta       (static_cast<float> (j + 31));
+        data->setApDia           (static_cast<float> (j + 32));
+        data->setSnr             (static_cast<float> (j + 39));
+        data->setChi2            (static_cast<float> (j + 40));
+        data->setFlag4association(j + 42);
+        data->setFlag4detection  (j + 43);
+        data->setFlag4wcs        (j + 44);
+        data->setFilterId        (-1);
+        if (i < source_detail::NUM_SOURCE_NULLABLE_FIELDS) {
+            data->setNotNull();
+            data->setNull(i);
         } else if ((i & 1) == 0) {
-            data.setNotNull();
+            data->setNotNull();
         } else {
-            data.setNull();
+            data->setNull();
         }
         v.push_back(data);
     }
@@ -107,8 +107,8 @@ static void testBoost(void) {
     LogicalLocation loc(makeTempFile());
 
     // Intialize test data
-    Source       ds;
-    ds.setId(1);
+    Source::Ptr       ds;
+    ds->setId(1);
     SourceVector dsv;
     initTestData(dsv);
     dsv.push_back(ds);
@@ -172,8 +172,8 @@ static PropertySet::Ptr createDbTestProps(
 
 // comparison operator used to sort Source in id order
 struct SourceLessThan {
-    bool operator()(Source const & d1, Source const & d2) {
-        return d1.getId() < d2.getId();
+    bool operator()(Source::Ptr const & d1, Source::Ptr const & d2) {
+        return d1->getId() < d2->getId();
     }
 };
 
@@ -187,8 +187,8 @@ static void testDb(std::string const & storageType) {
     LogicalLocation loc("mysql://lsst10.ncsa.uiuc.edu:3306/test");
 
     // 1. Test on a single Source
-    Source ds;
-    ds.setId(2);
+    Source::Ptr ds;
+    ds->setId(2);
     SourceVector dsv;
     dsv.push_back(ds);
     PersistableSourceVector::Ptr persistPtr(new PersistableSourceVector);
@@ -231,7 +231,7 @@ static void testDb(std::string const & storageType) {
         PersistableSourceVector::Ptr persistVec = 
         		boost::dynamic_pointer_cast<PersistableSourceVector, Persistable>(p);
         Assert(persistVec.get() != 0, "Couldn't cast to PersistableSourceVector");
-        SourceVector & vec(persistVec->getSources());
+        SourceVector vec(persistVec->getSources());
         // sort in ascending id order (database does not give any ordering guarantees
         // in the absence of an ORDER BY clause)
         std::sort(vec.begin(), vec.end(), SourceLessThan());

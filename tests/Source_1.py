@@ -24,15 +24,20 @@ class SourceTestCase(unittest.TestCase):
     """A test case for Source and SourceVec"""
 
     def setUp(self):
-        self.dsv1 = afwDet.SourceVec(16)
-        self.dsv2 = afwDet.SourceVec()
+        container1 = afwDet.SourceContainer(16)
 
+        container2 = afwDet.SourceContainer()
+		
         for m in xrange(16):
-            self.dsv1[m].setId(m + 1)
-            ds = afwDet.Source()
+            ds = afwDet.SourceP(container1[m])
+            ds.setId(m+1)           
+            ds = afwDet.SourceP()
             ds.setId(m)
             ds.setRa(m*20)
-            self.dsv2.append(ds)
+            container2.append(ds)
+
+        self.dsv1 = afwDet.SourceVecPtr(container1)
+        self.dsv2 = afwDet.SourceVecPtr(container2)
 
     def tearDown(self):
         del self.dsv1
@@ -41,18 +46,19 @@ class SourceTestCase(unittest.TestCase):
     def testIterable(self):
         """Check that we can iterate over a SourceVec"""
         j = 1
-        for i in self.dsv1:
-            assert i.getId() == j
+        container = self.dsv1.getSources()
+        for s in container:
+            assert s.getId() == j
             j += 1
 
     def testCopyAndCompare(self):
-        dsv1Copy = afwDet.SourceVec(self.dsv1)
-        dsv2Copy = afwDet.SourceVec(self.dsv2)
-        assert dsv1Copy == self.dsv1
-        assert dsv2Copy == self.dsv2
+        dsv1Copy = afwDet.SourceContainer(self.dsv1.getSources())
+        dsv2Copy = afwDet.SourceContainer(self.dsv2.getSources())
+        assert dsv1Copy == self.dsv1.getSources()
+        assert dsv2Copy == self.dsv2.getSources()
         dsv1Copy.swap(dsv2Copy)
-        assert dsv1Copy == self.dsv2
-        assert dsv2Copy == self.dsv1
+        assert dsv1Copy == self.dsv2.getSources()
+        assert dsv2Copy == self.dsv1.getSources()
         dsv1Copy.swap(dsv2Copy)
         if dsv1Copy.size() == 0:
             dsv1Copy.append(afwDet.Source())
@@ -61,22 +67,22 @@ class SourceTestCase(unittest.TestCase):
         ds = afwDet.Source()
         ds.setId(123476519374511136)
         dsv2Copy.append(ds)
-        assert dsv1Copy != self.dsv1
-        assert dsv2Copy != self.dsv2
+        assert dsv1Copy != self.dsv1.getSources()
+        assert dsv2Copy != self.dsv2.getSources()
 
     def testInsertErase(self):
-        dsv1Copy = afwDet.SourceVec(self.dsv1)
-	s = afwDet.Source()
+        dsv1Copy = afwDet.SourceContainer(self.dsv1.getSources())
+        s = afwDet.Source()
         dsv1Copy.insert(8, s)
         dsv1Copy.insert(8, s)
         dsv1Copy.insert(8, s)
         dsv1Copy.insert(8, s)
         del dsv1Copy[8]
         del dsv1Copy[8:11]
-        assert dsv1Copy == self.dsv1
+        assert dsv1Copy == self.dsv1.getSources()
 
     def testSlice(self):
-        s = self.dsv1[0:3]
+        s = self.dsv1.getSources()[0:3]
         j = 1
         for i in s:
             print i
@@ -98,7 +104,7 @@ class SourceTestCase(unittest.TestCase):
             pers.persist(self.dsv1, stl, dp)
             stl = dafPers.StorageList()
             stl.append(pers.getRetrieveStorage("DbStorage", loc))
-            persistable = pers.unsafeRetrieve("SourceVector", stl, dp)
+            persistable = pers.unsafeRetrieve("PersistableSourceVector", stl, dp)
             res = afwDet.SourceVec.swigConvert(persistable)
             afwDet.dropAllVisitSliceTables(loc, pol, dp)
             assert(res == self.dsv1)

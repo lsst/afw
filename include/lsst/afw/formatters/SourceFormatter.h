@@ -32,8 +32,6 @@ namespace formatters {
     for SourceVector instances.
  */
 class SourceVectorFormatter : public lsst::daf::persistence::Formatter {
-	typedef lsst::afw::detection::Source Source;
-    typedef std::vector<Source> SourceVector;
 public:
 
     virtual ~SourceVectorFormatter();

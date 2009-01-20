@@ -28,6 +28,7 @@ using lsst::daf::persistence::DbTsvStorage;
 using lsst::daf::persistence::Storage;
 using lsst::pex::policy::Policy;
 using lsst::afw::detection::Source;
+using lsst::afw::detection::SourceVector;
 using lsst::afw::detection::PersistableSourceVector;
 
 namespace form = lsst::afw::formatters;
@@ -341,11 +342,13 @@ void form::SourceVectorFormatter::delegateSerialize(
 
     if (Archive::is_loading::value) {        
         Source data;
+        Source::Ptr sourcePtr;
         archive & sz;
         SourceVector sourceVector(sz);
         for (; sz > 0; --sz) {
             archive & data;
-            sourceVector.push_back(data);
+			sourcePtr.reset(new Source(data));
+            sourceVector.push_back(sourcePtr);
         }
         p->setSources(sourceVector);
     } else {
@@ -355,7 +358,7 @@ void form::SourceVectorFormatter::delegateSerialize(
         SourceVector::iterator i = sourceVector.begin();
         SourceVector::iterator const end(sourceVector.end());
         for ( ; i != end; ++i) {
-            archive &  *i;
+            archive &  **i;
         }
     }
 }
@@ -387,7 +390,7 @@ void form::SourceVectorFormatter::write(
     SourceVector sourceVector = p->getSources();   
 
     // Assume all have ids or none do.
-    if (sourceVector.begin()->getId() == 0 && 
+    if ((*(sourceVector.begin()))->getId() == 0 && 
         (!_policy || !_policy->exists("GenerateIds") || _policy->getBool("GenerateIds"))
     ) {
      
@@ -401,8 +404,8 @@ void form::SourceVectorFormatter::write(
         
         SourceVector::iterator i = sourceVector.begin();
         for ( ; i != sourceVector.end(); ++i) {
-            i->setId(generateSourceId(seq, ccdId, visitId));
-            i->setAmpExposureId(ampExposureId);
+            (*i)->setId(generateSourceId(seq, ccdId, visitId));
+            (*i)->setAmpExposureId(ampExposureId);
             ++seq;
             if (seq == 0) { // Overflowed
     			throw LSST_EXCEPT(ex::RuntimeErrorException, "Too many Sources");
@@ -436,7 +439,7 @@ void form::SourceVectorFormatter::write(
             SourceVector::const_iterator i(sourceVector.begin());
             SourceVector::const_iterator const end(sourceVector.end());
             for ( ; i != end; ++i) {
-                insertRow<DbStorage>(*db, *i);
+                insertRow<DbStorage>(*db, **i);
             }
         } else {
             DbTsvStorage * db = dynamic_cast<DbTsvStorage *>(storage.get());
@@ -449,7 +452,7 @@ void form::SourceVectorFormatter::write(
             SourceVector::const_iterator i(sourceVector.begin());
             SourceVector::const_iterator const end(sourceVector.end());
             for (; i != end; ++i) {
-                insertRow<DbTsvStorage>(*db, *i);
+                insertRow<DbTsvStorage>(*db, **i);
             }
         }
     } else {
@@ -479,6 +482,7 @@ Persistable* form::SourceVectorFormatter::read(
         std::vector<std::string> tables;
         getAllVisitSliceTableNames(tables, _policy, additionalData);
 
+        Source::Ptr sourcePtr;
         SourceVector sourceVector;
         // loop over all retrieve tables, reading in everything
         std::vector<std::string>::const_iterator const end = tables.end();
@@ -591,8 +595,10 @@ Persistable* form::SourceVectorFormatter::read(
                 if (db->columnIsNull(FLAG_4_DETECTION)) { data.setNull(detail::FLAG_4_DETECTION); }
                 if (db->columnIsNull(FLAG_4_WCS)) { data.setNull(detail::FLAG_4_WCS); }
                 
+                sourcePtr.reset(new Source(data));
+                
                 //add source to vector
-                sourceVector.push_back(data);
+                sourceVector.push_back(sourcePtr);
                 
                 //reset nulls for next source
                 data.setNotNull();				

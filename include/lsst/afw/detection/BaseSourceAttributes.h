@@ -19,7 +19,45 @@ using boost::int32_t;
 using boost::int64_t;
 #endif
 
-template<int const numNullableFields>
+namespace source_detail {
+
+enum SharedNullableField {
+    OBJECT_ID,
+    MOVING_OBJECT_ID,
+    X_FLUX,
+    X_FLUX_ERR,
+    Y_FLUX,
+    Y_FLUX_ERR,
+    RA_FLUX,
+    RA_FLUX_ERR,
+    DEC_FLUX,
+    DEC_FLUX_ERR,
+    X_PEAK,
+    Y_PEAK,
+    RA_PEAK,
+    DEC_PEAK,
+    X_ASTROM,
+    X_ASTROM_ERR,
+    Y_ASTROM,
+    Y_ASTROM_ERR,
+    RA_ASTROM,
+    RA_ASTROM_ERR,
+    DEC_ASTROM,
+    DEC_ASTROM_ERR,
+    NON_GRAY_CORR_MAG,
+    NON_GRAY_CORR_MAG_ERR,
+    ATM_CORR_MAG,        
+    ATM_CORR_MAG_ERR,
+    AP_DIA,       
+    FLAG_4_ASSOCIATION,
+    FLAG_4_DETECTION,
+    FLAG_4_WCS,
+    NUM_SHARED_NULLABLE_FIELDS
+};
+
+}
+
+template<int numNullableFields>
 class BaseSourceAttributes
 {
 public:
@@ -94,10 +132,10 @@ public:
         set(_filterId, filterId);         
     }
     void setObjectId        (int64_t const objectId) {
-        set(_objectId, objectId);
+        set(_objectId, objectId, source_detail::OBJECT_ID);
     }
     void setMovingObjectId (int64_t const movingObjectId) {
-    	set(_movingObjectId, movingObjectId);
+    	set(_movingObjectId, movingObjectId, source_detail::MOVING_OBJECT_ID);
     }
     void setProcHistoryId (int32_t const procHistoryId   ) {
         set(_procHistoryId, procHistoryId);   
@@ -120,65 +158,65 @@ public:
     void setDecErr4detection(float   const decErr4detection) {
         set(_decErr4detection, decErr4detection);
     }
-    void setXFlux           (double  const xFlux           ) {
-        set(_xFlux, xFlux);           
+    void setXFlux (double const xFlux) { 
+        set(_xFlux, xFlux, source_detail::X_FLUX);            
     }
-    void setXFluxErr        (double  const xFluxErr        ) {
-        set(_xFluxErr, xFluxErr);           
-    }   
-    void setYFlux           (double  const yFlux           ) {
-        set(_yFlux, yFlux);           
-    }   
-    void setYFluxErr        (double  const yFluxErr        ) {
-        set(_yFluxErr, yFluxErr);           
-    }   
-    void setRaFlux          (double  const raFlux          ) {
-        set(_raFlux, raFlux);           
+    void setXFluxErr (double const xFluxErr) { 
+        set(_xFluxErr, xFluxErr, source_detail::X_FLUX_ERR);            
+    }    
+    void setYFlux (double const yFlux) { 
+        set(_yFlux, yFlux, source_detail::Y_FLUX);            
+    }    
+    void setYFluxErr (double const yFluxErr) { 
+        set(_yFluxErr, yFluxErr, source_detail::Y_FLUX_ERR);            
+    }    
+    void setRaFlux (double const raFlux) { 
+        set(_raFlux, raFlux, source_detail::RA_FLUX);            
     }
-    void setRaFluxErr       (double  const raFluxErr       ) {
-        set(_raFluxErr, raFluxErr);           
-    }   
-    void setDecFlux         (double  const decFlux         ) {
-        set(_decFlux, decFlux);           
-    }   
-    void setDecFluxErr      (double  const decFluxErr      ) {
-        set(_decFluxErr, decFluxErr);           
-    }   
-    void setXPeak           (double  const xPeak           ) {
-        set(_xPeak, xPeak);           
+    void setRaFluxErr (double const raFluxErr) { 
+        set(_raFluxErr, raFluxErr, source_detail::RA_FLUX_ERR);            
+    }    
+    void setDecFlux (double const decFlux) { 
+        set(_decFlux, decFlux, source_detail::DEC_FLUX);
+    }    
+    void setDecFluxErr (double const decFluxErr) { 
+        set(_decFluxErr, decFluxErr, source_detail::DEC_FLUX_ERR);            
+    }    
+    void setXPeak (double const xPeak) { 
+        set(_xPeak, xPeak, source_detail::X_PEAK);            
     }
-    void setYPeak           (double  const yPeak           ) {
-        set(_yPeak, yPeak);           
-    }   
-    void setRaPeak          (double  const raPeak          ) {
-        set(_raPeak, raPeak);           
-    }   
-    void setDecPeak         (double  const decPeak         ) {
-        set(_decPeak, decPeak);           
-    }   
-    void setXAstrom         (double  const xAstrom         ) {
-        set(_xAstrom, xAstrom);           
+    void setYPeak (double const yPeak) { 
+        set(_yPeak, yPeak, source_detail::Y_PEAK);            
+    }    
+    void setRaPeak (double const raPeak) { 
+        set(_raPeak, raPeak, source_detail::RA_PEAK);            
+    }    
+    void setDecPeak (double const decPeak) { 
+        set(_decPeak, decPeak, source_detail::DEC_PEAK);            
+    }    
+    void setXAstrom (double const xAstrom) { 
+        set(_xAstrom, xAstrom, source_detail::X_ASTROM);            
     }
-    void setXastromErr      (double  const xAstromErr      ) {
-        set(_xAstromErr, xAstromErr);           
-    }   
-    void setYAstrom         (double  const yAstrom         ) {
-        set(_yAstrom, yAstrom);           
-    }   
-    void setYAstromErr      (double  const yAstromErr      ) {
-        set(_yAstromErr, yAstromErr);           
-    }   
-    void setRaAstrom        (double  const raAstrom        ) {
-        set(_raAstrom, raAstrom);           
+    void setXastromErr (double const xAstromErr) { 
+        set(_xAstromErr, xAstromErr, source_detail::X_ASTROM_ERR);            
+    }    
+    void setYAstrom (double const yAstrom) { 
+        set(_yAstrom, yAstrom, source_detail::Y_ASTROM);            
+    }    
+    void setYAstromErr (double const yAstromErr) { 
+        set(_yAstromErr, yAstromErr, source_detail::Y_ASTROM_ERR);            
+    }    
+    void setRaAstrom (double const raAstrom) { 
+        set(_raAstrom, raAstrom, source_detail::RA_ASTROM);            
     }
-    void setRaAstromErr     (double  const raAstromErr     ) {
-        set(_raAstromErr, raAstromErr);           
-    }   
-    void setDecAstrom       (double  const decAstrom       ) {
-        set(_decAstrom, decAstrom);           
-    }   
-    void setDecAstromErr    (double  const decAstromErr    ) {
-        set(_decAstromErr, decAstromErr);           
+    void setRaAstromErr (double const raAstromErr) { 
+        set(_raAstromErr, raAstromErr, source_detail::RA_ASTROM_ERR);            
+    }    
+    void setDecAstrom (double const decAstrom) { 
+        set(_decAstrom, decAstrom, source_detail::DEC_ASTROM);            
+    }    
+    void setDecAstromErr (double const decAstromErr) { 
+        set(_decAstromErr, decAstromErr, source_detail::DEC_ASTROM_ERR);            
     }         
     void setTaiMidPoint     (double  const taiMidPoint     ) {
         set(_taiMidPoint, taiMidPoint);     
@@ -219,20 +257,20 @@ public:
     void setInstMagErr      (double  const instMagErr      ) {
         set(_instMagErr, instMagErr);     
     }
-    void setNonGrayCorrMag  (double  const nonGrayCorrMag  ) {
-        set(_nonGrayCorrMag, nonGrayCorrMag);         
+    void setNonGrayCorrMag (double const nonGrayCorrMag) { 
+        set(_nonGrayCorrMag, nonGrayCorrMag, source_detail::NON_GRAY_CORR_MAG);         
     }
-    void setNonGrayCorrMagErr(double  const nonGrayCorrMagErr) {
-        set(_nonGrayCorrMagErr, nonGrayCorrMagErr);     
+    void setNonGrayCorrMagErr(double const nonGrayCorrMagErr) { 
+        set(_nonGrayCorrMagErr, nonGrayCorrMagErr, source_detail::NON_GRAY_CORR_MAG_ERR);      
     }
-    void setAtmCorrMag       (double  const atmCorrMag         ) {
-        set(_atmCorrMag, atmCorrMag);         
+    void setAtmCorrMag (double const atmCorrMag) { 
+        set(_atmCorrMag, atmCorrMag, source_detail::ATM_CORR_MAG);         
     }
-    void setAtmCorrMagErr      (double  const atmCorrMagErr      ) {
-        set(_atmCorrMagErr, atmCorrMagErr);     
-    }       
-    void setApDia           (float   const apDia           ) {
-        set(_apDia, apDia);
+    void setAtmCorrMagErr (double const atmCorrMagErr) { 
+        set(_atmCorrMagErr, atmCorrMagErr, source_detail::ATM_CORR_MAG_ERR);      
+    }     
+    void setApDia (float const apDia) {
+        set(_apDia, apDia, source_detail::AP_DIA);
     }
     void setSnr             (float   const snr             ) {
         set(_snr, snr);             
@@ -241,15 +279,14 @@ public:
         set(_chi2, chi2);             
     }   
     void setFlag4association(int16_t const flag4association) {
-        set(_flag4association, flag4association);
+        set(_flag4association, flag4association, source_detail::FLAG_4_ASSOCIATION);
     }
-    void setFlag4detection  (int16_t const flag4detection  ) {
-        set(_flag4detection, flag4detection);
+    void setFlag4detection (int16_t const flag4detection) {
+        set(_flag4detection, flag4detection, source_detail::FLAG_4_DETECTION);
     }
-    void setFlag4wcs        (int16_t const flag4wcs        ) {
-        set(_flag4wcs, flag4wcs);
-    }
-    
+    void setFlag4wcs (int16_t const flag4wcs) {
+        set(_flag4wcs, flag4wcs, source_detail::FLAG_4_WCS);
+    }    
     
     inline bool isNull(int const field) const { 
     	if(field >= 0 && field < numNullableFields)    	

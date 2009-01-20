@@ -1,20 +1,28 @@
 // -*- lsst-c++ -*-
 
 %{
+#include "lsst/afw/detection/BaseSourceAttributes.h"
 #include "lsst/afw/detection/Source.h"
 #include "lsst/afw/detection/DiaSource.h"
-#include "lsst/afw/formatters/Utils.h"
 #include <sstream>
 %}
 
-%rename(SourceVec)  lsst::afw::detection::SourceVector;
+SWIG_SHARED_PTR(SourcePtr, lsst::afw::detection::Source);
+SWIG_SHARED_PTR(DiaSourcePtr, lsst::afw::detection::DiaSource);
+SWIG_SHARED_PTR_DERIVED(SourceVec, lsst::daf::base::Persistable, lsst::afw::detection::PersistableSourceVector);
+SWIG_SHARED_PTR_DERIVED(DiaSourceVec, lsst::daf::base::Persistable, lsst::afw::detection::PersistableDiaSourceVector);
 
-SWIG_SHARED_PTR(Source, lsst::afw::detection::Source);
-SWIG_SHARED_PTR_DERIVED(SourceVec, lsst::daf::base::Persistable, lsst::afw::detection::SourceVector);
+%include "lsst/afw/detection/BaseSourceAttributes.h"
+
+%template(SourceBase)	lsst::afw::detection::BaseSourceAttributes<lsst::afw::detection::source_detail::NUM_SOURCE_NULLABLE_FIELDS>;
+%template(DiaSourceBase)lsst::afw::detection::BaseSourceAttributes<lsst::afw::detection::source_detail::NUM_DIASOURCE_NULLABLE_FIELDS>;
 
 %include "lsst/afw/detection/Source.h"
 %include "lsst/afw/detection/DiaSource.h"
-%include "lsst/afw/formatters/Utils.h"
+
+
+%template(SourceContainer)      std::vector<lsst::afw::detection::Source::Ptr>;
+%template(DiaSourceContainer)   std::vector<lsst::afw::detection::DiaSource::Ptr>;
 
 // Provide semi-useful printing of catalog records
 %extend lsst::afw::detection::Source {
@@ -27,10 +35,23 @@ SWIG_SHARED_PTR_DERIVED(SourceVec, lsst::daf::base::Persistable, lsst::afw::dete
     }
 };
 
+%extend lsst::afw::detection::DiaSource {
+    std::string toString() {
+        std::ostringstream os;
+        os << "DiaSource " << $self->getId();
+        os.precision(9);
+        os << " (" << $self->getRa() << ", " << $self->getDec() << ")";
+        return os.str();
+    }
+};
+
 %pythoncode %{
 Source.__str__ = Source.toString
 %}
 
+%pythoncode %{
+DiaSource.__str__ = DiaSource.toString
+%}
 
 %lsst_persistable(lsst::afw::detection::PersistableSourceVector);
-
+%lsst_persistable(lsst::afw::detection::PersistableDiaSourceVector);
