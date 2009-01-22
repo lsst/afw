@@ -119,8 +119,9 @@ image::Mask<MaskPixelT>::Mask(std::string const& fileName, //!< Name of file to 
         lsst::daf::base::PropertySet::Ptr metadata,                         //!< file metadata (may point to NULL)
         bool const conformMasks                            //!< Make Mask conform to mask layout in file?
                              ) :
-    image::ImageBase<MaskPixelT>() {
-
+    image::ImageBase<MaskPixelT>(),
+    _myMaskDictVersion(_maskDictVersion) {
+    
     if (!metadata) {
         metadata = PropertySet::Ptr(new PropertySet()); //TODOsmm createPropertyNode("FitsMetadata");
     }

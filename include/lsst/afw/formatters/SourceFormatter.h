@@ -51,12 +51,14 @@ public:
         lsst::daf::base::PropertySet::Ptr
     );
 
+
     template <class Archive>
     static void delegateSerialize(
         Archive &,
         unsigned int const,
         lsst::daf::base::Persistable *
     );
+
 
 private:
 

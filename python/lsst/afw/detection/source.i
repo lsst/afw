@@ -7,22 +7,35 @@
 #include <sstream>
 %}
 
-SWIG_SHARED_PTR(SourcePtr, lsst::afw::detection::Source);
-SWIG_SHARED_PTR(DiaSourcePtr, lsst::afw::detection::DiaSource);
-SWIG_SHARED_PTR_DERIVED(SourceVec, lsst::daf::base::Persistable, lsst::afw::detection::PersistableSourceVector);
-SWIG_SHARED_PTR_DERIVED(DiaSourceVec, lsst::daf::base::Persistable, lsst::afw::detection::PersistableDiaSourceVector);
+
+//these lines cause TypeErrors
+//SWIG_SHARED_PTR(SourcePtr, lsst::afw::detection::Source);
+//SWIG_SHARED_PTR(DiaSourcePtr, lsst::afw::detection::DiaSource);  
+SWIG_SHARED_PTR_DERIVED(SourceVec,
+    lsst::daf::base::Persistable,
+    lsst::afw::detection::PersistableSourceVector);
+SWIG_SHARED_PTR_DERIVED(DiaSourceVec,
+    lsst::daf::base::Persistable,
+    lsst::afw::detection::PersistableDiaSourceVector);
+    
+%rename(SourcePtr) lsst::afw::detection::Source::Ptr;
+%rename(DiaSourcePtr) lsst::afw::detection::DiaSource::Ptr;
+%rename(SourceVec) lsst::afw::detection::PersistableSourceVector;
+%rename(DiaSourceVec) lsst::afw::detection::PersistableDiaSourceVector;
 
 %include "lsst/afw/detection/BaseSourceAttributes.h"
 
-%template(SourceBase)	lsst::afw::detection::BaseSourceAttributes<lsst::afw::detection::source_detail::NUM_SOURCE_NULLABLE_FIELDS>;
-%template(DiaSourceBase)lsst::afw::detection::BaseSourceAttributes<lsst::afw::detection::source_detail::NUM_DIASOURCE_NULLABLE_FIELDS>;
+%template(SourceBase)	lsst::afw::detection::BaseSourceAttributes<lsst::afw::detection::NUM_SOURCE_NULLABLE_FIELDS>;
+%template(DiaSourceBase)lsst::afw::detection::BaseSourceAttributes<lsst::afw::detection::NUM_DIASOURCE_NULLABLE_FIELDS>;
+
+  
 
 %include "lsst/afw/detection/Source.h"
 %include "lsst/afw/detection/DiaSource.h"
 
 
-%template(SourceContainer)      std::vector<lsst::afw::detection::Source::Ptr>;
-%template(DiaSourceContainer)   std::vector<lsst::afw::detection::DiaSource::Ptr>;
+%template(SourceContainer)      std::vector<lsst::afw::detection::Source>;
+%template(DiaSourceContainer)   std::vector<lsst::afw::detection::DiaSource>;
 
 // Provide semi-useful printing of catalog records
 %extend lsst::afw::detection::Source {

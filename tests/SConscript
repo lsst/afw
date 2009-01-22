@@ -20,6 +20,8 @@ env.Program(["MaskedImageIO_1.cc"], LIBS=env.getlibs("afw"))
 env.Program(["MaskedImageIO_2.cc"], LIBS=env.getlibs("afw"))
 env.Program(["MaskIO_1.cc"], LIBS=env.getlibs("afw"))
 env.Program(["Statistics.cc"], LIBS=env.getlibs("afw"))
+env.Program(["Background.cc"], LIBS=env.getlibs("afw"))
+env.Program(["Interpolate.cc"], LIBS=env.getlibs("afw"))
 env.Program(["SourceIO_1.cc"], LIBS=env.getlibs("afw"))
 env.Program(["SourceIO_2.cc"], LIBS=env.getlibs("afw"))
     

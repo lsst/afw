@@ -21,8 +21,8 @@ env = scons.makeEnv(
         ["xpa", "xpa.h", "xpa", "XPAPuts"],
         ["minuit", "Minuit/FCNBase.h", "lcg_Minuit:C++"],
         ["utils", "lsst/utils/Utils.h", "utils:C++"],
-        ["daf_base", "lsst/daf/base.h", "daf_base:C++"],
         ["pex_exceptions", "lsst/pex/exceptions.h", "pex_exceptions:C++"],
+        ["daf_base", "lsst/daf/base.h", "daf_base:C++"],
         ["pex_logging", "lsst/pex/logging/Trace.h", "pex_logging:C++"],
         ["security", "lsst/security/Security.h", "security:C++"],
         ["pex_policy", "lsst/pex/policy/Policy.h", "pex_policy:C++"],
@@ -45,7 +45,7 @@ for d in (
     "python/lsst/afw/detection",
     "python/lsst/afw/display",
     "python/lsst/afw/image",
-    "python/lsst/afw/math",
+    "python/lsst/afw/math", 
     "tests",
 ):
     if d != ".":

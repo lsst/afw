@@ -40,7 +40,6 @@ using boost::int32_t;
 using boost::int64_t;
 #endif
 
-namespace source_detail {
 
 /*! An integer id for each nullable field in Source. */
 enum SourceNullableField {
@@ -55,16 +54,16 @@ enum SourceNullableField {
     NUM_SOURCE_NULLABLE_FIELDS
 };
 
-} //namespace source_detail
-
 class Source 
-	: public BaseSourceAttributes<source_detail::NUM_SOURCE_NULLABLE_FIELDS> {
+	: public BaseSourceAttributes< NUM_SOURCE_NULLABLE_FIELDS> {
 public :
 
     typedef boost::shared_ptr<Source> Ptr;
 
 
-    Source() {setNull();}
+    Source();
+    Source(Source const & other);
+    
     virtual ~Source(){};
 
     // getters
@@ -78,30 +77,30 @@ public :
     void setSourceId( int64_t const sourceId) {setId(sourceId);}
     
     void setPetroMag (double const petroMag) { 
-        set(_petroMag, petroMag, source_detail::PETRO_MAG);         
+        set(_petroMag, petroMag,  PETRO_MAG);         
     }
     void setPetroMagErr (float const petroMagErr) { 
-        set(_petroMagErr, petroMagErr, source_detail::PETRO_MAG_ERR);    
+        set(_petroMagErr, petroMagErr,  PETRO_MAG_ERR);    
     }
     void setSky (float const sky) { 
-        set(_sky, sky, source_detail::SKY);       
+        set(_sky, sky,  SKY);       
     }
     void setSkyErr (float const skyErr) {
-        set(_skyErr, skyErr, source_detail::SKY_ERR);
+        set(_skyErr, skyErr,  SKY_ERR);
     }   
     
     //overloaded setters
     void setAmpExposureId (int64_t const ampExposureId) { 
-        set(_ampExposureId, ampExposureId, source_detail::AMP_EXPOSURE_ID);
+        set(_ampExposureId, ampExposureId,  AMP_EXPOSURE_ID);
     }
     void setRaErr4detection (float const raErr4detection) { 
-        set(_raErr4detection, raErr4detection, source_detail::RA_ERR_4_DETECTION);  
+        set(_raErr4detection, raErr4detection,  RA_ERR_4_DETECTION);  
     }
     void setDecErr4detection(float const decErr4detection) { 
-        set(_decErr4detection, decErr4detection, source_detail::DEC_ERR_4_DETECTION); 
+        set(_decErr4detection, decErr4detection,  DEC_ERR_4_DETECTION); 
     }
     void setTaiRange (float const taiRange) { 
-        set(_taiRange, taiRange, source_detail::TAI_RANGE);         
+        set(_taiRange, taiRange,  TAI_RANGE);         
     }
 
     
@@ -120,7 +119,7 @@ private :
         ar & _sky;
         ar & _skyErr;
 
-		BaseSourceAttributes<source_detail::NUM_SOURCE_NULLABLE_FIELDS>::serialize(ar, version);
+		BaseSourceAttributes< NUM_SOURCE_NULLABLE_FIELDS>::serialize(ar, version);
     }
 
     friend class boost::serialization::access;
@@ -132,7 +131,7 @@ inline bool operator!=(Source const & lhs, Source const & rhs) {
 }
 
  
-typedef std::vector<Source::Ptr> SourceVector;
+typedef std::vector<Source> SourceVector;
 
 class PersistableSourceVector : public lsst::daf::base::Persistable {
 public:
@@ -143,10 +142,29 @@ public:
         
     SourceVector getSources() const {return _sources; }
     void setSources(SourceVector const & sources) {_sources = sources; }
+    
+    bool operator==(SourceVector const & other) const {
+        if(_sources.size() != other.size())
+        	return false;
+        	        
+    	SourceVector::size_type i;
+        for(i =0; i<_sources.size();i++) {
+			if(_sources[i] != other[i])
+				return false;			
+    	}
+    	
+    	return true;
+    }
+    
+    bool operator==(PersistableSourceVector const & other) const {
+    	return other==_sources;
+    }
 private:
+
     LSST_PERSIST_FORMATTER(lsst::afw::formatters::SourceVectorFormatter);
     SourceVector _sources;
 }; 
+
 
 }}}  // namespace lsst::afw::detection
 

@@ -29,15 +29,14 @@ class SourceTestCase(unittest.TestCase):
         container2 = afwDet.SourceContainer()
 		
         for m in xrange(16):
-            ds = afwDet.SourceP(container1[m])
-            ds.setId(m+1)           
-            ds = afwDet.SourceP()
+            container1[m].setId(m+1)           
+            ds = afwDet.Source()
             ds.setId(m)
             ds.setRa(m*20)
             container2.append(ds)
 
-        self.dsv1 = afwDet.SourceVecPtr(container1)
-        self.dsv2 = afwDet.SourceVecPtr(container2)
+        self.dsv1 = afwDet.SourceVec(container1)
+        self.dsv2 = afwDet.SourceVec(container2)
 
     def tearDown(self):
         del self.dsv1
@@ -47,45 +46,62 @@ class SourceTestCase(unittest.TestCase):
         """Check that we can iterate over a SourceVec"""
         j = 1
         container = self.dsv1.getSources()
-        for s in container:
+        for s in container[:]:
             assert s.getId() == j
             j += 1
 
     def testCopyAndCompare(self):
-        dsv1Copy = afwDet.SourceContainer(self.dsv1.getSources())
-        dsv2Copy = afwDet.SourceContainer(self.dsv2.getSources())
-        assert dsv1Copy == self.dsv1.getSources()
-        assert dsv2Copy == self.dsv2.getSources()
+        dsv1Copy = self.dsv1.getSources()
+        dsv2Copy = self.dsv2.getSources()
+        
+        assert dsv1Copy.size() == self.dsv1.getSources().size()
+        for i in xrange(dsv1Copy.size()):
+            assert dsv1Copy[i] == self.dsv1.getSources()[i]        
+        assert dsv2Copy.size() == self.dsv2.getSources().size()
+        for i in xrange(dsv2Copy.size()):
+            assert dsv2Copy[i] == self.dsv2.getSources()[i]
+
         dsv1Copy.swap(dsv2Copy)
-        assert dsv1Copy == self.dsv2.getSources()
-        assert dsv2Copy == self.dsv1.getSources()
+        assert dsv2Copy.size() == self.dsv1.getSources().size()
+        for i in xrange(dsv2Copy.size()):
+            assert dsv2Copy[i] == self.dsv1.getSources()[i]           
+        assert dsv1Copy.size() == self.dsv2.getSources().size()
+        for i in xrange(dsv1Copy.size()):
+            assert dsv1Copy[i] == self.dsv2.getSources()[i]
+            
         dsv1Copy.swap(dsv2Copy)
+        
         if dsv1Copy.size() == 0:
             dsv1Copy.append(afwDet.Source())
         else:
             dsv1Copy.pop()
         ds = afwDet.Source()
-        ds.setId(123476519374511136)
         dsv2Copy.append(ds)
-        assert dsv1Copy != self.dsv1.getSources()
-        assert dsv2Copy != self.dsv2.getSources()
+        
+        assert dsv1Copy.size() != self.dsv1.getSources().size()
+        assert dsv2Copy.size() != self.dsv2.getSources().size()
 
     def testInsertErase(self):
-        dsv1Copy = afwDet.SourceContainer(self.dsv1.getSources())
+    	dsv1Copy = self.dsv1.getSources()[:8]
+    	back = self.dsv1.getSources()[8:]
+
         s = afwDet.Source()
-        dsv1Copy.insert(8, s)
-        dsv1Copy.insert(8, s)
-        dsv1Copy.insert(8, s)
-        dsv1Copy.insert(8, s)
+        for i in xrange(4):
+            dsv1Copy.append(s)
+		
+        for b in back[:]:
+            dsv1Copy.append(b)
+					
         del dsv1Copy[8]
         del dsv1Copy[8:11]
-        assert dsv1Copy == self.dsv1.getSources()
+        assert dsv1Copy.size() == self.dsv1.getSources().size()
+        for i in xrange(dsv1Copy.size()):
+            assert dsv1Copy[i] == self.dsv1.getSources()[i]       
 
     def testSlice(self):
-        s = self.dsv1.getSources()[0:3]
+        containerSlice = self.dsv1.getSources()[0:3]
         j = 1
-        for i in s:
-            print i
+        for i in containerSlice[:]:
             assert i.getId() == j
             j += 1
 

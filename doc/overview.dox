@@ -214,8 +214,10 @@ namespace lsst { namespace afw { namespace math {
 \section secMath Mathematical Operations
 
  - Statistics
-
 Annotated examples are available for \link StatisticsExample Statistics\endlink.
+ - Background
+ - Interpolate
+
 */
 }}}
 

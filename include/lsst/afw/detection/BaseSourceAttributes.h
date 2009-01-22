@@ -19,8 +19,6 @@ using boost::int32_t;
 using boost::int64_t;
 #endif
 
-namespace source_detail {
-
 enum SharedNullableField {
     OBJECT_ID,
     MOVING_OBJECT_ID,
@@ -55,12 +53,11 @@ enum SharedNullableField {
     NUM_SHARED_NULLABLE_FIELDS
 };
 
-}
-
 template<int numNullableFields>
 class BaseSourceAttributes
 {
 public:
+	
     virtual ~BaseSourceAttributes(){};
     
     // getters
@@ -132,10 +129,10 @@ public:
         set(_filterId, filterId);         
     }
     void setObjectId        (int64_t const objectId) {
-        set(_objectId, objectId, source_detail::OBJECT_ID);
+        set(_objectId, objectId,  OBJECT_ID);
     }
     void setMovingObjectId (int64_t const movingObjectId) {
-    	set(_movingObjectId, movingObjectId, source_detail::MOVING_OBJECT_ID);
+    	set(_movingObjectId, movingObjectId,  MOVING_OBJECT_ID);
     }
     void setProcHistoryId (int32_t const procHistoryId   ) {
         set(_procHistoryId, procHistoryId);   
@@ -159,64 +156,64 @@ public:
         set(_decErr4detection, decErr4detection);
     }
     void setXFlux (double const xFlux) { 
-        set(_xFlux, xFlux, source_detail::X_FLUX);            
+        set(_xFlux, xFlux,  X_FLUX);            
     }
     void setXFluxErr (double const xFluxErr) { 
-        set(_xFluxErr, xFluxErr, source_detail::X_FLUX_ERR);            
+        set(_xFluxErr, xFluxErr,  X_FLUX_ERR);            
     }    
     void setYFlux (double const yFlux) { 
-        set(_yFlux, yFlux, source_detail::Y_FLUX);            
+        set(_yFlux, yFlux,  Y_FLUX);            
     }    
     void setYFluxErr (double const yFluxErr) { 
-        set(_yFluxErr, yFluxErr, source_detail::Y_FLUX_ERR);            
+        set(_yFluxErr, yFluxErr,  Y_FLUX_ERR);            
     }    
     void setRaFlux (double const raFlux) { 
-        set(_raFlux, raFlux, source_detail::RA_FLUX);            
+        set(_raFlux, raFlux,  RA_FLUX);            
     }
     void setRaFluxErr (double const raFluxErr) { 
-        set(_raFluxErr, raFluxErr, source_detail::RA_FLUX_ERR);            
+        set(_raFluxErr, raFluxErr,  RA_FLUX_ERR);            
     }    
     void setDecFlux (double const decFlux) { 
-        set(_decFlux, decFlux, source_detail::DEC_FLUX);
+        set(_decFlux, decFlux,  DEC_FLUX);
     }    
     void setDecFluxErr (double const decFluxErr) { 
-        set(_decFluxErr, decFluxErr, source_detail::DEC_FLUX_ERR);            
+        set(_decFluxErr, decFluxErr,  DEC_FLUX_ERR);            
     }    
     void setXPeak (double const xPeak) { 
-        set(_xPeak, xPeak, source_detail::X_PEAK);            
+        set(_xPeak, xPeak,  X_PEAK);            
     }
     void setYPeak (double const yPeak) { 
-        set(_yPeak, yPeak, source_detail::Y_PEAK);            
+        set(_yPeak, yPeak,  Y_PEAK);            
     }    
     void setRaPeak (double const raPeak) { 
-        set(_raPeak, raPeak, source_detail::RA_PEAK);            
+        set(_raPeak, raPeak,  RA_PEAK);            
     }    
     void setDecPeak (double const decPeak) { 
-        set(_decPeak, decPeak, source_detail::DEC_PEAK);            
+        set(_decPeak, decPeak,  DEC_PEAK);            
     }    
     void setXAstrom (double const xAstrom) { 
-        set(_xAstrom, xAstrom, source_detail::X_ASTROM);            
+        set(_xAstrom, xAstrom,  X_ASTROM);            
     }
-    void setXastromErr (double const xAstromErr) { 
-        set(_xAstromErr, xAstromErr, source_detail::X_ASTROM_ERR);            
+    void setXAstromErr (double const xAstromErr) { 
+        set(_xAstromErr, xAstromErr,  X_ASTROM_ERR);            
     }    
     void setYAstrom (double const yAstrom) { 
-        set(_yAstrom, yAstrom, source_detail::Y_ASTROM);            
+        set(_yAstrom, yAstrom,  Y_ASTROM);            
     }    
     void setYAstromErr (double const yAstromErr) { 
-        set(_yAstromErr, yAstromErr, source_detail::Y_ASTROM_ERR);            
+        set(_yAstromErr, yAstromErr,  Y_ASTROM_ERR);            
     }    
     void setRaAstrom (double const raAstrom) { 
-        set(_raAstrom, raAstrom, source_detail::RA_ASTROM);            
+        set(_raAstrom, raAstrom,  RA_ASTROM);            
     }
     void setRaAstromErr (double const raAstromErr) { 
-        set(_raAstromErr, raAstromErr, source_detail::RA_ASTROM_ERR);            
+        set(_raAstromErr, raAstromErr,  RA_ASTROM_ERR);            
     }    
     void setDecAstrom (double const decAstrom) { 
-        set(_decAstrom, decAstrom, source_detail::DEC_ASTROM);            
+        set(_decAstrom, decAstrom,  DEC_ASTROM);            
     }    
     void setDecAstromErr (double const decAstromErr) { 
-        set(_decAstromErr, decAstromErr, source_detail::DEC_ASTROM_ERR);            
+        set(_decAstromErr, decAstromErr,  DEC_ASTROM_ERR);            
     }         
     void setTaiMidPoint     (double  const taiMidPoint     ) {
         set(_taiMidPoint, taiMidPoint);     
@@ -258,19 +255,19 @@ public:
         set(_instMagErr, instMagErr);     
     }
     void setNonGrayCorrMag (double const nonGrayCorrMag) { 
-        set(_nonGrayCorrMag, nonGrayCorrMag, source_detail::NON_GRAY_CORR_MAG);         
+        set(_nonGrayCorrMag, nonGrayCorrMag,  NON_GRAY_CORR_MAG);         
     }
     void setNonGrayCorrMagErr(double const nonGrayCorrMagErr) { 
-        set(_nonGrayCorrMagErr, nonGrayCorrMagErr, source_detail::NON_GRAY_CORR_MAG_ERR);      
+        set(_nonGrayCorrMagErr, nonGrayCorrMagErr,  NON_GRAY_CORR_MAG_ERR);      
     }
     void setAtmCorrMag (double const atmCorrMag) { 
-        set(_atmCorrMag, atmCorrMag, source_detail::ATM_CORR_MAG);         
+        set(_atmCorrMag, atmCorrMag,  ATM_CORR_MAG);         
     }
     void setAtmCorrMagErr (double const atmCorrMagErr) { 
-        set(_atmCorrMagErr, atmCorrMagErr, source_detail::ATM_CORR_MAG_ERR);      
+        set(_atmCorrMagErr, atmCorrMagErr,  ATM_CORR_MAG_ERR);      
     }     
     void setApDia (float const apDia) {
-        set(_apDia, apDia, source_detail::AP_DIA);
+        set(_apDia, apDia,  AP_DIA);
     }
     void setSnr             (float   const snr             ) {
         set(_snr, snr);             
@@ -279,13 +276,13 @@ public:
         set(_chi2, chi2);             
     }   
     void setFlag4association(int16_t const flag4association) {
-        set(_flag4association, flag4association, source_detail::FLAG_4_ASSOCIATION);
+        set(_flag4association, flag4association,  FLAG_4_ASSOCIATION);
     }
     void setFlag4detection (int16_t const flag4detection) {
-        set(_flag4detection, flag4detection, source_detail::FLAG_4_DETECTION);
+        set(_flag4detection, flag4detection,  FLAG_4_DETECTION);
     }
     void setFlag4wcs (int16_t const flag4wcs) {
-        set(_flag4wcs, flag4wcs, source_detail::FLAG_4_WCS);
+        set(_flag4wcs, flag4wcs,  FLAG_4_WCS);
     }    
     
     inline bool isNull(int const field) const { 
@@ -314,6 +311,96 @@ protected:
     
     std::bitset<numNullableFields> _nulls;
     
+	BaseSourceAttributes(): 
+		_id(0), _ampExposureId(0), _filterId(0),
+        _objectId(0), _movingObjectId(0), _procHistoryId(0),
+        _ra(0.0), _dec(0.0), 
+        _raErr4detection(0.0), _decErr4detection(0.0),
+        _raErr4wcs(0.0), _decErr4wcs(0.0),
+        _xFlux(0.0), _xFluxErr(0.0),
+        _yFlux(0.0), _yFluxErr(0.0),
+        _raFlux(0.0),_raFluxErr(0.0),
+        _decFlux(0.0), _decFluxErr(0.0),
+        _xPeak(0.0), _yPeak(0.0), _raPeak(0.0), _decPeak(0.0),
+        _xAstrom(0.0), _xAstromErr(0.0),
+        _yAstrom(0.0), _yAstromErr(0.0),
+        _raAstrom(0.0), _raAstromErr(0.0),
+        _decAstrom(0.0), _decAstromErr(0.0),
+        _taiMidPoint(0.0), _taiRange(0.0),
+        _fwhmA(0.0), _fwhmB(0.0), _fwhmTheta(0.0),
+        _psfMag(0.0), _psfMagErr(0.0),
+        _apMag(0.0), _apMagErr(0.0),
+        _modelMag(0.0), _modelMagErr(0.0),
+        _instMag(0.0), _instMagErr(0.0),
+        _nonGrayCorrMag(0.0), _nonGrayCorrMagErr(0.0),
+        _atmCorrMag(0.0), _atmCorrMagErr(0.0),
+        _apDia(0.0), 
+        _snr(0.0), _chi2(0.0),
+		_flag4association(0), _flag4detection(0), _flag4wcs(0)
+    {
+    	setNull();
+    }
+	
+	/*
+    BaseSourceAttributes(BaseSourceAttributes const & other) :
+     	_id(other._id),
+        _ampExposureId(other._ampExposureId), 
+        _filterId(other._filterId),
+        _objectId(other._objectId), 
+        _movingObjectId(other._movingObjectId), 
+        _procHistoryId(other._procHistoryId),
+        _ra(other._ra), 
+        _dec(other._dec), 
+        _raErr4detection(other._raErr4detection), 
+        _decErr4detection(other._decErr4detection),
+        _raErr4wcs(other._raErr4wcs), 
+        _decErr4wcs(other._decErr4wcs),
+        _xFlux(other._xFlux), 
+        _xFluxErr(other._xFluxErr),
+        _yFlux(other._yFlux), 
+        _yFluxErr(other._yFluxErr),
+        _raFlux(other._raFlux),
+        _raFluxErr(other._raFluxErr),
+        _decFlux(other._decFlux), 
+        _decFluxErr(other._decFluxErr),
+        _xPeak(other._xPeak), 
+        _yPeak(other._yPeak), 
+        _raPeak(other._raPeak), 
+        _decPeak(other._decPeak),
+        _xAstrom(other._xAstrom), 
+        _xAstromErr(other._xAstromErr),
+        _yAstrom(other._yAstrom), 
+        _yAstromErr(other._yAstromErr),
+        _raAstrom(other._raAstrom), 
+        _raAstromErr(other._raAstromErr),
+        _decAstrom(other._decAstrom), 
+        _decAstromErr(other._decAstromErr),
+        _taiMidPoint(other._taiMidPoint), 
+        _taiRange(other._taiRange),
+        _fwhmA(other._fwhmA), 
+        _fwhmB(other._fwhmB), 
+        _fwhmTheta(other._fwhmTheta),
+        _psfMag(other._psfMag), 
+        _psfMagErr(other._psfMagErr),
+        _apMag(other._apMag), 
+        _apMagErr(other._apMagErr),
+        _modelMag(other._modelMag), 
+        _modelMagErr(other._modelMagErr),
+        _instMag(other._instMag), 
+        _instMagErr(other._instMagErr),
+        _nonGrayCorrMag(other._nonGrayCorrMag), 
+        _nonGrayCorrMagErr(other._nonGrayCorrMagErr),
+        _atmCorrMag(other._atmCorrMag), 
+        _atmCorrMagErr(other._atmCorrMagErr),
+        _apDia(other._apDia), 
+        _snr(other._snr), 
+        _chi2(other._chi2),
+        _flag4association(other._flag4association), 
+        _flag4detection(other._flag4detection), 
+        _flag4wcs(other._flag4wcs)
+    {}	
+	*/
+	
     template<typename T> 
     inline bool areEqual(T const & a, T const & b, int const field = -1) const {
     

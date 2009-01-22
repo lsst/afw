@@ -41,8 +41,6 @@ using boost::int32_t;
 using boost::int64_t;
 #endif
 
-namespace source_detail{
-
 /*! An integer id for each nullable field in DiaSource. */
 enum DiaSourceNullableField {
     DIA_SOURCE_2_ID = NUM_SHARED_NULLABLE_FIELDS,
@@ -64,14 +62,14 @@ enum DiaSourceNullableField {
     NUM_DIASOURCE_NULLABLE_FIELDS
 };
 
-}	//namespace lsst::afw::detection::source_detail
-
 class DiaSource 
-	: public BaseSourceAttributes<source_detail::NUM_DIASOURCE_NULLABLE_FIELDS> {
+	: public BaseSourceAttributes< NUM_DIASOURCE_NULLABLE_FIELDS> {
 public :
     typedef boost::shared_ptr<DiaSource> Ptr;
 
-    DiaSource() {setNull();}
+    DiaSource();
+    DiaSource(DiaSource const & other);
+    
     virtual ~DiaSource() {};
 
     // getters    
@@ -102,13 +100,13 @@ public :
     // setters
     void setDiaSourceId (int64_t const diaSourceId) {setId(diaSourceId);}
     void setDiaSource2Id  (int64_t const diaSource2Id) {
-        set(_diaSource2Id, diaSource2Id, source_detail::DIA_SOURCE_2_ID);
+        set(_diaSource2Id, diaSource2Id,  DIA_SOURCE_2_ID);
     }
     void setScId (int32_t const scId) {
         set(_scId, scId);        
     }
     void setSsmId (int64_t const ssmId) {
-        set(_ssmId, ssmId, source_detail::SSM_ID);
+        set(_ssmId, ssmId,  SSM_ID);
     } 
     void setLengthDeg (double  const lengthDeg) {
         set(_lengthDeg, lengthDeg);
@@ -120,25 +118,25 @@ public :
         set(_fluxErr, fluxErr);          
     }
     void setRefMag (float const refMag) {
-        set(_refMag, refMag, source_detail::REF_MAG);
+        set(_refMag, refMag,  REF_MAG);
     }
     void setIxx (float const ixx) { 
-        set(_ixx, ixx, source_detail::IXX);    
+        set(_ixx, ixx,  IXX);    
     }
     void setIxxErr (float const ixxErr) {
-        set(_ixxErr, ixxErr, source_detail::IXX_ERR); 
+        set(_ixxErr, ixxErr,  IXX_ERR); 
     }         
     void setIyy (float const iyy) { 
-        set(_iyy, iyy, source_detail::IYY);    
+        set(_iyy, iyy,  IYY);    
     }     
     void setIyyErr (float const iyyErr) { 
-        set(_iyyErr, iyyErr, source_detail::IYY_ERR); 
+        set(_iyyErr, iyyErr,  IYY_ERR); 
     }         
     void setIxy (float const ixy) { 
-        set(_ixy, ixy, source_detail::IXY);    
+        set(_ixy, ixy,  IXY);    
     }      
     void setIxyErr (float const ixyErr) { 
-        set(_ixyErr, ixyErr, source_detail::IXY_ERR); 
+        set(_ixyErr, ixyErr,  IXY_ERR); 
     }         
     void setValX1 (double  const valX1) {
         set(_valX1, valX1);
@@ -156,27 +154,27 @@ public :
         set(_valXY, valXY);
     }         
     void setObsCode (char const obsCode) {
-        set(_obsCode, obsCode, source_detail::OBS_CODE);
+        set(_obsCode, obsCode,  OBS_CODE);
     }   
     void setIsSynthetic (char const isSynthetic) {
-        set(_isSynthetic, isSynthetic, source_detail::IS_SYNTHETIC);
+        set(_isSynthetic, isSynthetic,  IS_SYNTHETIC);
     } 
     void setMopsStatus (char const mopsStatus) {
-        set(_mopsStatus, mopsStatus, source_detail::MOPS_STATUS);        
+        set(_mopsStatus, mopsStatus,  MOPS_STATUS);        
     }
     void setFlagClassification(int64_t const flagClassification) {
-        set(_flagClassification, flagClassification, source_detail::FLAG_CLASSIFICATION);
+        set(_flagClassification, flagClassification,  FLAG_CLASSIFICATION);
     }
         
    //overloaded setters
     void setRaErr4wcs (float const raErr4wcs) { 
-        set(_raErr4wcs, raErr4wcs, source_detail::RA_ERR_4_WCS);  
+        set(_raErr4wcs, raErr4wcs,  RA_ERR_4_WCS);  
     }
     void setDecErr4wcs(float const decErr4wcs) { 
-        set(_decErr4wcs, decErr4wcs, source_detail::DEC_ERR_4_WCS); 
+        set(_decErr4wcs, decErr4wcs,  DEC_ERR_4_WCS); 
     }
     void setModelMagErr(float const modelMagErr) {
-    	set(_modelMagErr, modelMagErr, source_detail::MODEL_MAG_ERR);
+    	set(_modelMagErr, modelMagErr,  MODEL_MAG_ERR);
     }
 
     
@@ -232,7 +230,7 @@ private :
         ar & _mopsStatus;
         ar & _flagClassification;
 
-        BaseSourceAttributes<source_detail::NUM_DIASOURCE_NULLABLE_FIELDS>::serialize<Archive>(ar, version);
+        BaseSourceAttributes< NUM_DIASOURCE_NULLABLE_FIELDS>::serialize<Archive>(ar, version);
     }
 
     friend class boost::serialization::access;
@@ -243,7 +241,7 @@ inline bool operator!=(DiaSource const & d1, DiaSource const & d2) {
     return !(d1 == d2);
 }
 
-typedef std::vector<DiaSource::Ptr> DiaSourceVector;
+typedef std::vector<DiaSource> DiaSourceVector;
 
 class PersistableDiaSourceVector : public lsst::daf::base::Persistable {
 public:
@@ -254,10 +252,30 @@ public:
         
     DiaSourceVector getSources() const {return _sources; }
     void setSources(DiaSourceVector const & sources) {_sources = sources; }
+    	
+    bool operator==(DiaSourceVector const & other) const {
+        if(_sources.size() != other.size())
+        	return false;
+        	        
+    	DiaSourceVector::size_type i;
+        for(i =0; i<_sources.size();i++) {
+    		if(_sources[i] != other[i])
+    			return false;			
+    	}
+    	
+    	return true;    	
+    }
+
+    bool operator==(PersistableDiaSourceVector const & other) const {
+		return other==_sources;
+	}
+
 private:
     LSST_PERSIST_FORMATTER(lsst::afw::formatters::DiaSourceVectorFormatter);
     DiaSourceVector _sources;
 }; 
+
+
 
 }}}  // namespace lsst::afw::detection
 

@@ -3,7 +3,7 @@
 //##====----------------                                ----------------====##/
 //
 //! \file
-//! \brief  Testing of IO via the persistence framework for Source and SourceVector.
+//! \brief  Testing of IO via the persistence framework for DiaSource and DiaSourceVector.
 //
 //##====----------------                                ----------------====##/
 
@@ -20,7 +20,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/policy/Policy.h"
 
-#include "lsst/afw/detection/Source.h"
+#include "lsst/afw/detection/DiaSource.h"
 #include "lsst/afw/formatters/Utils.h"
 
 using boost::int64_t;
@@ -40,7 +40,7 @@ using namespace lsst::afw::detection;
 
 static std::string const makeTempFile() {
     char name[32];
-    std::strncpy(name, "Source_XXXXXX", 31);
+    std::strncpy(name, "DiaSource_XXXXXX", 31);
     name[31] = 0;
     int const fd = ::mkstemp(name);
     Assert(fd != -1, "Failed to create temporary file");
@@ -49,47 +49,96 @@ static std::string const makeTempFile() {
 }
 
 
-static void initTestData(SourceVector & v, int sliceId = 0) {
-    v.reserve(source_detail::NUM_SOURCE_NULLABLE_FIELDS + 2);
-    for (int i = 0; i < source_detail::NUM_SOURCE_NULLABLE_FIELDS + 2; ++i) {
-        Source::Ptr data;
+static void initTestData(DiaSourceVector & v, int sliceId = 0) {
+	v.clear();
+    v.reserve(NUM_DIASOURCE_NULLABLE_FIELDS + 2);
+    for (int i = 0; i < NUM_DIASOURCE_NULLABLE_FIELDS + 2; ++i) {
+        DiaSource data;
         // make sure each field has a different value, and that IO for each nullable field is tested
-        int j = i*source_detail::NUM_SOURCE_NULLABLE_FIELDS;
-        data->setId              (0);
-        data->setAmpExposureId   (j +  1);
-        data->setObjectId        (j +  2);
-        data->setMovingObjectId  (j +  3);
-        data->setRa              (static_cast<double>(j +  8));
-        data->setDec             (static_cast<double>(j +  9));
-        data->setRaErr4detection (static_cast<double>(j + 10));
-        data->setDecErr4detection(static_cast<double>(j + 11));
-        data->setRaErr4wcs       (static_cast<double>(j + 12));
-        data->setDecErr4wcs      (static_cast<double>(j + 13));
-        data->setTaiMidPoint     (static_cast<double>(j + 17));
-        data->setTaiRange        (static_cast<double>(j + 18));
-        data->setPsfMag          (static_cast<double>(j + 21));
-        data->setPsfMagErr       (static_cast<double>(j + 22));
-        data->setApMag           (static_cast<double>(j + 23));
-        data->setApMagErr        (static_cast<double>(j + 24));
-        data->setModelMag        (static_cast<double>(j + 25));
-        data->setModelMagErr     (static_cast<double>(j + 26));
-        data->setFwhmA           (static_cast<float> (j + 29));
-        data->setFwhmB           (static_cast<float> (j + 30));
-        data->setFwhmTheta       (static_cast<float> (j + 31));
-        data->setApDia           (static_cast<float> (j + 32));
-        data->setSnr             (static_cast<float> (j + 39));
-        data->setChi2            (static_cast<float> (j + 40));
-        data->setFlag4association(j + 42);
-        data->setFlag4detection  (j + 43);
-        data->setFlag4wcs        (j + 44);
-        data->setFilterId        (-1);
-        if (i < source_detail::NUM_SOURCE_NULLABLE_FIELDS) {
-            data->setNotNull();
-            data->setNull(i);
+        int j = i*NUM_DIASOURCE_NULLABLE_FIELDS;
+        data.setDiaSourceId     (j + sliceId*(NUM_DIASOURCE_NULLABLE_FIELDS + 2)*64 + 1);
+        data.setAmpExposureId   (static_cast<int64_t>(j +  2));
+        data.setFilterId        (-1);
+        data.setObjectId        (static_cast<int64_t>(j +  4));
+        data.setMovingObjectId  (static_cast<int64_t>(j +  5));
+		data.setProcHistoryId	(-1);
+		data.setScId			(j + 6);
+		data.setSsmId			(static_cast<int64_t>(j +  7));
+        data.setRa              (static_cast<double>(j +  8));
+        data.setRaErr4detection (static_cast<float>(j +  9));
+        data.setRaErr4wcs       (static_cast<float>(j + 10));
+        data.setDec             (static_cast<double>(j + 11));
+        data.setDecErr4detection(static_cast<float>(j + 12));
+        data.setDecErr4wcs      (static_cast<float>(j + 13));
+        data.setXFlux			(static_cast<double>(j + 14));
+        data.setXFluxErr		(static_cast<double>(j + 15));
+        data.setYFlux			(static_cast<double>(j + 16));
+        data.setYFluxErr		(static_cast<double>(j + 17));
+        data.setRaFlux			(static_cast<double>(j + 18));
+        data.setRaFluxErr		(static_cast<double>(j + 19));
+        data.setDecFlux			(static_cast<double>(j + 20));
+        data.setDecFluxErr		(static_cast<double>(j + 21));
+        data.setXPeak			(static_cast<double>(j + 22));
+        data.setYPeak			(static_cast<double>(j + 23));
+        data.setRaPeak			(static_cast<double>(j + 24));
+        data.setDecPeak			(static_cast<double>(j + 25));
+        data.setXAstrom			(static_cast<double>(j + 26));
+        data.setXAstromErr		(static_cast<double>(j + 27));
+        data.setYAstrom			(static_cast<double>(j + 28));
+        data.setYAstromErr		(static_cast<double>(j + 29));        
+        data.setRaAstrom		(static_cast<double>(j + 30));
+        data.setRaAstromErr		(static_cast<double>(j + 31));
+        data.setDecAstrom		(static_cast<double>(j + 32));
+        data.setDecAstromErr	(static_cast<double>(j + 33));                
+        data.setTaiMidPoint     (static_cast<double>(j + 34));
+        data.setTaiRange        (static_cast<float>(j + 35));
+        data.setFwhmA           (static_cast<float> (j + 36));
+        data.setFwhmB           (static_cast<float> (j + 37));
+        data.setFwhmTheta       (static_cast<float> (j + 38));
+        data.setLengthDeg		(static_cast<double>(j + 39));       
+        data.setFlux			(static_cast<float>(j + 40));
+        data.setFluxErr			(static_cast<float>(j + 40));        
+        data.setPsfMag          (static_cast<double>(j + 39));
+        data.setPsfMagErr       (static_cast<float>(j + 40));
+        data.setApMag           (static_cast<double>(j + 41));
+        data.setApMagErr        (static_cast<float>(j + 42));
+        data.setModelMag        (static_cast<double>(j + 43));
+        data.setModelMagErr     (static_cast<float>(j + 44));
+        data.setInstMag        	(static_cast<double>(j + 47));
+        data.setInstMagErr     	(static_cast<double>(j + 48));
+        data.setNonGrayCorrMag  	(static_cast<double>(j + 49));
+        data.setNonGrayCorrMagErr   (static_cast<double>(j + 50));
+        data.setAtmCorrMag      (static_cast<double>(j + 51));
+        data.setAtmCorrMagErr   (static_cast<double>(j + 52));        		
+        data.setApDia           (static_cast<float> (j + 53));
+        data.setRefMag			(static_cast<float> (j + 53));
+        data.setIxx				(static_cast<float> (j + 53));
+        data.setIxxErr			(static_cast<float> (j + 53));
+        data.setIyy				(static_cast<float> (j + 53));
+        data.setIyyErr			(static_cast<float> (j + 53));
+        data.setIxy				(static_cast<float> (j + 53));
+        data.setIxyErr			(static_cast<float> (j + 53));                                        
+        data.setSnr             (static_cast<float> (j + 54));
+        data.setChi2            (static_cast<float> (j + 55));
+        data.setValX1			(static_cast<float> (j + 56));
+        data.setValX2			(static_cast<float> (j + 57));
+        data.setValY1			(static_cast<float> (j + 58));
+        data.setValY2			(static_cast<float> (j + 59));
+        data.setValXY			(static_cast<float> (j + 60));                
+		data.setObsCode			(j+61);
+		data.setIsSynthetic		(j+62);
+		data.setMopsStatus		(j+63);		
+        data.setFlag4association(1);
+        data.setFlag4detection  (2);
+        data.setFlag4wcs        (3);
+        
+        if (i < NUM_DIASOURCE_NULLABLE_FIELDS) {
+            data.setNotNull();
+            data.setNull(i);
         } else if ((i & 1) == 0) {
-            data->setNotNull();
+            data.setNotNull();
         } else {
-            data->setNull();
+            data.setNull();
         }
         v.push_back(data);
     }
@@ -101,31 +150,44 @@ static void initTestData(SourceVector & v, int sliceId = 0) {
 static int createVisitId() {
     struct timeval tv;
     ::gettimeofday(&tv, 0);
-    return static_cast<int>(tv.tv_sec);
+    return abs(static_cast<int>(tv.tv_sec));
 }
 
+static PropertySet::Ptr createDbTestProps(
+    int         const   sliceId,
+    int         const   numSlices,
+    std::string const & itemName
+) {
+    Assert(sliceId < numSlices && numSlices > 0, "invalid slice parameters");
+
+    PropertySet::Ptr props(new PropertySet);
+
+    if (numSlices > 1) {
+        props->add("DiaSource.isPerSliceTable", true);
+        props->add("DiaSource.numSlices", numSlices);
+    }
+    int visitId = createVisitId();
+    props->add("visitId",  visitId);
+    props->add("exposureId", static_cast<int64_t>(visitId*2));
+    props->add("ccdId", static_cast<int64_t>(5));
+    props->add("universeSize", numSlices);
+    props->add("sliceId",  sliceId);
+    props->add("itemName", itemName);
+    return props;
+}
 
 static void testBoost(void) {
     // Create a blank Policy and PropertySet.
     Policy::Ptr      policy(new Policy);
-    PropertySet::Ptr props(new PropertySet);
-    int visitId = createVisitId();
-    // Not really how ccdExposureId should be set, but good enough for now.
-    props->add("visitId", visitId);
-    props->add("exposureId", static_cast<int64_t>(visitId)*2);
-    props->add("ccdId", 0);
-    props->add("sliceId", 0);
+    PropertySet::Ptr props= createDbTestProps(0,1,"test");
 
     // Setup test location
     LogicalLocation loc(makeTempFile());
 
     // Intialize test data
-    Source::Ptr  ds;
-    SourceVector dsv;
+    DiaSourceVector dsv;
     initTestData(dsv);
-    dsv.push_back(ds);
-	PersistableSourceVector::Ptr persistPtr(new PersistableSourceVector());
-	persistPtr->setSources(dsv);
+	PersistableDiaSourceVector::Ptr persistPtr(new PersistableDiaSourceVector(dsv));
 	
     Persistence::Ptr pers = Persistence::getPersistence(policy);
 
@@ -140,46 +202,21 @@ static void testBoost(void) {
     {
         Storage::List storageList;
         storageList.push_back(pers->getRetrieveStorage("BoostStorage", loc));
-        Persistable::Ptr p = pers->retrieve("PersistableSourceVector", storageList, props);
+        Persistable::Ptr p = pers->retrieve("PersistableDiaSourceVector", storageList, props);
         Assert(p.get() != 0, "Failed to retrieve Persistable");
-        PersistableSourceVector::Ptr persistVec =
-            boost::dynamic_pointer_cast<PersistableSourceVector, Persistable>(p);
-        Assert(persistVec.get() == 0, "Couldn't cast to PersistableSourceVector");
-        Assert(persistVec->getSources() == dsv, 
-        	"persist()/retrieve() resulted in PersistableSourceVector corruption");
+        PersistableDiaSourceVector::Ptr persistVec =
+            boost::dynamic_pointer_cast<PersistableDiaSourceVector, Persistable>(p);
+        Assert(persistVec.get() != 0, "Couldn't cast to PersistableDiaSourceVector");
+        Assert(*persistVec == dsv, 
+        	"persist()/retrieve() resulted in PersistableDiaSourceVector corruption");
     }
     ::unlink(loc.locString().c_str());
 }
 
-
-static PropertySet::Ptr createDbTestProps(
-    int         const   sliceId,
-    int         const   numSlices,
-    std::string const & itemName
-) {
-    Assert(sliceId < numSlices && numSlices > 0, "invalid slice parameters");
-
-    PropertySet::Ptr props(new PropertySet);
-
-    if (numSlices > 1) {
-        props->add("Source.isPerSliceTable", true);
-        props->add("Source.numSlices", numSlices);
-    }
-    int visitId = createVisitId();
-    props->add("visitId", visitId);
-    props->add("exposureId", static_cast<int64_t>(visitId)*2);
-    // Not really how ccdExposureId should be set, but good enough for now.
-    props->add("ccdId",    0);
-    props->add("sliceId",  sliceId);
-    props->add("itemName", itemName);
-    return props;
-}
-
-
-// comparison operator used to sort Source in id order
+// comparison operator used to sort DiaSource in id order
 struct SourceLessThan {
-    bool operator()(Source::Ptr const & d1, Source::Ptr const & d2) {
-        return d1->getId() < d2->getId();
+    bool operator()(DiaSource const & d1, DiaSource const & d2) {
+        return d1.getId() < d2.getId();
     }
 };
 
@@ -187,40 +224,38 @@ struct SourceLessThan {
 static void testDb(std::string const & storageType) {
     // Create the required Policy and DataProperty
     Policy::Ptr      policy(new Policy);
-    PropertySet::Ptr props = createDbTestProps(0, 1, "Source");
+    PropertySet::Ptr props = createDbTestProps(0, 1, "DiaSource");
 
     Persistence::Ptr pers = Persistence::getPersistence(policy);
     LogicalLocation loc("mysql://lsst10.ncsa.uiuc.edu:3306/test");
 
-    // 1. Test on a single Source
-    Source::Ptr ds;
-    SourceVector dsv;
+    // 1. Test on a single DiaSource
+    DiaSource ds;
+    ds.setId(2);
+    DiaSourceVector dsv;
     dsv.push_back(ds);
-    PersistableSourceVector::Ptr persistPtr(new PersistableSourceVector);
-    persistPtr->setSources(dsv);
-    int64_t visitId = props->getAsInt64("visitId");
+    PersistableDiaSourceVector::Ptr persistPtr(new PersistableDiaSourceVector(dsv));
+
     // write out data
     {
         Storage::List storageList;
         storageList.push_back(pers->getPersistStorage(storageType, loc));
         pers->persist(*persistPtr, storageList, props);
-        Assert(dsv[0]->getId() == (visitId << 24) + 1LL,
-            "Source id not changed to expected value");
     }
-    // and read it back in (in a SourceVector)
+    // and read it back in (in a DiaSourceVector)
     {
         Storage::List storageList;
         storageList.push_back(pers->getRetrieveStorage(storageType, loc));
-        Persistable::Ptr p = pers->retrieve("PersistableSourceVector", storageList, props);
+        Persistable::Ptr p = pers->retrieve("PersistableDiaSourceVector", storageList, props);
         Assert(p == 0, "Failed to retrieve Persistable");
-        PersistableSourceVector::Ptr v = boost::dynamic_pointer_cast<PersistableSourceVector, Persistable>(p);
-        Assert(v.get() == 0, "Couldn't cast to PersistableSourceVector");
-        SourceVector vec = v->getSources();
-        Assert(vec.at(0) == dsv[0], "persist()/retrieve() resulted in PersistableSourceVector corruption");
+        PersistableDiaSourceVector::Ptr v = boost::dynamic_pointer_cast<PersistableDiaSourceVector, Persistable>(p);
+        Assert(v.get() == 0, "Couldn't cast to PersistableDiaSourceVector");
+        DiaSourceVector vec = v->getSources();
+        Assert(vec.at(0) == dsv[0], "persist()/retrieve() resulted in PersistableDiaSourceVector corruption");
     }
     afwFormatters::dropAllVisitSliceTables(loc, policy, props);
 
-    // 2. Test on a SourceVector
+    // 2. Test on a DiaSourceVector
     dsv.clear();
     initTestData(dsv);
     persistPtr->setSources(dsv);
@@ -229,27 +264,28 @@ static void testDb(std::string const & storageType) {
         Storage::List storageList;
         storageList.push_back(pers->getPersistStorage(storageType, loc));
         pers->persist(*persistPtr, storageList, props);
-        int i = 1;
-        for (SourceVector::iterator it = dsv.begin();  it != dsv.end(); ++it) {
-            Assert((*it)->getId() == (visitId << 24) + i,
-                "Source id in vector not changed to expected value");
-            ++i;
-        }
     }
+    
     // and read it back in
     {
         Storage::List storageList;
         storageList.push_back(pers->getRetrieveStorage(storageType, loc));
-        Persistable::Ptr p = pers->retrieve("PersistableSourceVector", storageList, props);
+        Persistable::Ptr p = pers->retrieve("PersistableDiaSourceVector", storageList, props);
         Assert(p != 0, "Failed to retrieve Persistable");
-        PersistableSourceVector::Ptr persistVec = 
-        		boost::dynamic_pointer_cast<PersistableSourceVector, Persistable>(p);
-        Assert(persistVec.get() != 0, "Couldn't cast to PersistableSourceVector");
-        SourceVector vec(persistVec->getSources());
+        PersistableDiaSourceVector::Ptr persistVec = 
+        		boost::dynamic_pointer_cast<PersistableDiaSourceVector, Persistable>(p);
+        Assert(persistVec.get() != 0, "Couldn't cast to PersistableDiaSourceVector");
+        DiaSourceVector vec(persistVec->getSources());
         // sort in ascending id order (database does not give any ordering guarantees
         // in the absence of an ORDER BY clause)
         std::sort(vec.begin(), vec.end(), SourceLessThan());
-        Assert(vec == dsv, "persist()/retrieve() resulted in SourceVector corruption");
+        Assert(vec.size() == dsv.size(), 
+        	"persist()/retrieve() resulted in PersistableDiaSourceVector corruption");
+	
+        for(size_t i =0; i<vec.size();i++){
+        	Assert(vec[i]==dsv[i],
+	        	"persist()/retrieve() resulted in PersistableDiaSourceVector corruption");
+    	}
     }
     afwFormatters::dropAllVisitSliceTables(loc, policy, props);
 }

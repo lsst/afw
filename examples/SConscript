@@ -3,12 +3,12 @@ import sys
 Import('env')
 
 env.Program(["Image.cc"], LIBS=env.getlibs("afw"))
+env.Program(["Image_1.cc"], LIBS=env.getlibs("afw"))
+env.Program(["Image_2.cc"], LIBS=env.getlibs("afw"))
 env.Program(["Mask.cc"], LIBS=env.getlibs("afw"))
 env.Program(["DecoratedImage.cc"], LIBS=env.getlibs("afw"))
 env.Program(["MaskedImage.cc"], LIBS=env.getlibs("afw"))
 env.Program(["Statistics.cc"], LIBS=env.getlibs("afw"))
-env.Program(["Image_1.cc"], LIBS=env.getlibs("afw"))
-env.Program(["Image_2.cc"], LIBS=env.getlibs("afw"))
 env.Program(["MaskedImage_1.cc"], LIBS=env.getlibs("afw"))
 env.Program(["MaskedImage_2.cc"], LIBS=env.getlibs("afw"))
 env.Program(["FootprintFunctor.cc"], LIBS=env.getlibs("afw"))
@@ -40,6 +40,11 @@ env.Program("timeSpatiallyVaryingConvolve", ["timeSpatiallyVaryingConvolve.cc"],
 
 env.Program("makeExposure", ["makeExposure.cc"], LIBS=env.getlibs("afw wcs"))
 env.Program("wcsTest", ["wcsTest.cc"], LIBS=env.getlibs("afw wcs"))
+
+env.Program("imageBackground", ["imageBackground.cc"], LIBS=env.getlibs("afw"))
+env.Program("imageStatistics", ["imageStatistics.cc"], LIBS=env.getlibs("afw"))
+env.Program("splineInterpolate", ["splineInterpolate.cc"], LIBS=env.getlibs("afw"))
+	    
 
 #
 # Tests
