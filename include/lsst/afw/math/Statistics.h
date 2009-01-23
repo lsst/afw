@@ -1,15 +1,19 @@
+// -*- LSST-C++ -*-
 #if !defined(LSST_AFW_MATH_STATISTICS_H)
 #define LSST_AFW_MATH_STATISTICS_H
 /**
- * \file
- * \brief Image Statistics
+ * @file Statistics.h
+ * @brief Compute Image Statistics
+ * @ingroup afw
+ * @author Steve Bickerton
  */
 
 #include "boost/tuple/tuple.hpp"
 
 namespace lsst { namespace afw { namespace math {
     
-/// \brief control what is calculated
+/* @brief control what is calculated
+ */
 enum Property {
     ERRORS = 0x1,                       ///< Include errors of requested quantities
     NPOINT = 0x2,                       ///< number of sample points
@@ -25,7 +29,12 @@ enum Property {
     MAX = 0x800,                        ///< estimate sample maximum
 };
 
-/// \brief Pass parameters to a Statistics object
+/* @class Pass parameters to a Statistics object
+ * @ingroup afw
+ *
+ * A class to pass parameters which control how the stats are calculated.
+ * 
+ */
 class StatisticsControl {
 public:
     StatisticsControl(double numSigmaClip = 3.0, ///< number of standard deviations to clip at
@@ -45,6 +54,9 @@ private:
 };
             
 /**
+ * @class Statistics
+ * @ingroup afw
+ *
  * A class to evaluate %image statistics
  *
  * The basic strategy is to construct a Statistics object from an Image and
@@ -52,7 +64,8 @@ private:
  * returned using Statistics methods.  A StatisticsControl object is used to
  * pass parameters.  The statistics currently implemented are listed in the
  * enum Properties in Statistics.h.
- * \code
+ *
+ * @code
         math::StatisticsControl sctrl(3.0, 3); // sets NumSigclip (3.0), and NumIter (3) for clipping
         sctrl.setNumSigmaClip(4.0);            // reset number of standard deviations for N-sigma clipping
         sctrl.setNumIter(5);                   // reset number of iterations for N-sigma clipping
@@ -62,10 +75,10 @@ private:
         double const n = statobj.getValue(math::NPOINT);
         std::pair<double, double> const mean = statobj.getResult(math::MEAN); // Returns (value, error)
         double const meanError = statobj.getError(math::MEAN);                // just the error
- * \endcode
+ * @endcode
  *
- * (Note that we used a helper function, \c make_Statistics, rather that the constructor directly so that
- * the compiler could deduce the types -- cf. \c std::make_pair)
+ * @note we used a helper function, \c make_Statistics, rather that the constructor directly so that
+ *       the compiler could deduce the types -- cf. \c std::make_pair)
  */
 class Statistics {
 public:
@@ -109,9 +122,10 @@ private:
 
 };
 
-/// A convenience function that uses function overloading to make the correct type of Statistics
-///
-/// cf. std::make_pair()
+/* @brief A convenience function that uses function overloading to make the correct type of Statistics
+ * @ingroup afw
+ * cf. std::make_pair()
+ */
 template<typename Image>
 Statistics make_Statistics(Image const& img, ///< Image (or MaskedImage) whose properties we want
                            int const flags,   ///< Describe what we want to calculate

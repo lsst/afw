@@ -1,6 +1,11 @@
+// -*- LSST-C++ -*-
 /**
- * \file
- * \brief Support statistical operations on images
+ * @file
+ *
+ * @brief Support statistical operations on images
+ *
+ * @author Steve Bickerton
+ * @ingroup afw
  */
 #include <iostream>
 #include <limits>
@@ -22,14 +27,16 @@ namespace {
 }
 
 /**
- * Constructor for Statistics
+ * @brief Constructor for Statistics object
  *
- * Most of the actual work is done in this constructor; the results
+ * @note Most of the actual work is done in this constructor; the results
  * are retrieved using \c getValue etc.
+ *
+ * @ingroup afw
  */
 template<typename Image>
 math::Statistics::Statistics(Image const& img, ///< Image (or MaskedImage) whose properties we want
-                             int const flags, ///< Describe what we want to calculate
+                             int const flags,  ///< Describe what we want to calculate
                              StatisticsControl const& sctrl ///< Control how things are calculated
                             ) : _flags(flags),
                                 _mean(NaN), _variance(NaN), _min(NaN), _max(NaN),
@@ -83,10 +90,15 @@ math::Statistics::Statistics(Image const& img, ///< Image (or MaskedImage) whose
 }
 
 
-// =========================================================================
-// _getStandard(img, flags)
-// compute the standard stats: mean, variance, min, max
-// An overloaded version below is used to get clipped versions
+/* =========================================================================
+ * _getStandard(img, flags)
+ * *brief Compute the standard stats: mean, variance, min, max
+ *
+ * *param img    an afw::Image to compute the stats over
+ * *param flags  an integer (bit field indicating which statistics are to be computed
+ *
+ * *note An overloaded version below is used to get clipped versions
+ */
 template<typename Image>
 boost::tuple<double, double, double, double> math::Statistics::_getStandard(Image const &img, int const flags) {
     
@@ -147,10 +159,16 @@ boost::tuple<double, double, double, double> math::Statistics::_getStandard(Imag
 }
 
 
-//==========================================================
-// _getStandard(img, flags, clipinfo)
-// A routine to get standard stats: mean, variance, min, max with
-//   clipping on std::pair<double,double> = center, cliplimit
+/* ==========================================================
+ * *overload _getStandard(img, flags, clipinfo)
+ *
+ * *param img      an afw::Image to compute stats for
+ * *param flags    an int (bit field indicating which stats to compute
+ * *param clipinfo the center and cliplimit for the first clip iteration
+ *
+ * *brief A routine to get standard stats: mean, variance, min, max with
+ *   clipping on std::pair<double,double> = center, cliplimit
+ */
 template<typename Image>
 boost::tuple<double, double, double, double> math::Statistics::_getStandard(Image const &img, int const flags, std::pair<double,double> const clipinfo) {
     
@@ -206,9 +224,16 @@ boost::tuple<double, double, double, double> math::Statistics::_getStandard(Imag
     
 }
 
-
-// The Floyd & Rivest _quickSelect algorithm for fast computation of a median
-// This implementation adapted from Numerical recipes (3rd ed.) Press et al. 2007.
+/* _quickSelect()
+ *
+ * *brief A fast algorithm for computing percentiles for an image
+ *
+ * *param img       an afw::Image
+ * *param quartile  the desired percentile.
+ *
+ * *note Uses the Floyd & Rivest _quickSelect algorithm for fast computation of a median
+ * *note Implementation adapted from Numerical recipes (3rd ed.) Press et al. 2007.
+ */
 template<typename Image>
 double math::Statistics::_quickSelect(Image const &img, double const quartile) {
     
@@ -270,13 +295,21 @@ double math::Statistics::_quickSelect(Image const &img, double const quartile) {
 }
 
 
-/// Return the value and error in the specified statistic (e.g. MEAN)
-///
-/// Only quantities requested in the constructor may be retrieved
-///
-/// \sa getValue and getError
+/* @brief Return the value and error in the specified statistic (e.g. MEAN)
+ *
+ * @param prop the property (see Statistics.h header) to retrieve
+ *
+ * @note Only quantities requested in the constructor may be retrieved
+ *
+ * @sa getValue and getError
+ *
+ * @todo uncertainties on MEANCLIP,STDEVCLIP are sketchy.  _n != _nClip
+ *
+ * @ingroup afw
+ */
 std::pair<double, double> math::Statistics::getResult(math::Property const prop ///< Desired property
                                                      ) const {
+    
     if (!(prop & _flags)) {             // we didn't calculate it
         throw lsst::pex::exceptions::InvalidParameter(boost::format("You didn't ask me to calculate %d") % prop);
     }
@@ -295,6 +328,7 @@ std::pair<double, double> math::Statistics::getResult(math::Property const prop 
           ret.first = _mean;
           if (_flags & ERRORS) { ret.second = sqrt(_variance/_n); }
           break;
+
       case ( MEANCLIP ):
           ret.first = _meanclip;
           if ( _flags & ERRORS ) { ret.second = sqrt(_varianceclip/_n); }  // this is a bug ... _nClip != _n
@@ -344,25 +378,31 @@ std::pair<double, double> math::Statistics::getResult(math::Property const prop 
      return ret;
 }
 
-/// Return the value of the desired property (if specified in the constructor)
+/* @brief Return the value of the desired property (if specified in the constructor)
+ * @param prop - the property (see Statistics.h) to retrieve
+ * @ingroup afw
+ */
 double math::Statistics::getValue(math::Property const prop ///< Desired property
                                  ) const {
     return getResult(prop).first;
 }
 
-/// Return the error in the desired property (if specified in the constructor)
+/* @brief Return the error in the desired property (if specified in the constructor)
+ * @param prop - the property (see Statistics.h) to retrieve
+ * @ingroup afw
+ */
 double math::Statistics::getError(math::Property const prop ///< Desired property
                                  ) const {
     return getResult(prop).second;
 }
 
-/************************************************************************************************************/
-//
-// Explicit instantiations
-//
-//explicit Statistics(Image const& img, int const flags,
-//                        StatisticsControl const& sctrl=StatisticsControl());
-
+/* **********************************************************************************************************
+ *
+ * Explicit instantiations
+ *
+ * explicit Statistics(Image const& img, int const flags,
+ *                        StatisticsControl const& sctrl=StatisticsControl());
+ */
 #define INSTANTIATE_STATISTICS(TYPE) \
     template math::Statistics::Statistics(image::Image<TYPE> const& img, int const flags, StatisticsControl const& sctrl);\
     template boost::tuple<double, double, double, double> math::Statistics::_getStandard(image::Image<TYPE> const& img, int const flags);\
