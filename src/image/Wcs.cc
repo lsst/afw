@@ -72,8 +72,13 @@ lsst::afw::image::Wcs::Wcs(PointD crval, ///< ra/dec of centre of image
     _wcsInfo->altlin = 2;
     _wcsInfo->flag   = 0;   //values have been updated
 
+    //This is a work around for what I think is a bug in wcslib. ->types is neither
+    //initialised or set to NULL by default, so if I try to delete a Wcs object,
+    //wcslib then attempts to free non-existent space, and the code can crash.
+    _wcsInfo->types = NULL;
+    
     _nWcsInfo = 1;   //Specify that we have only one coordinate representation
-    //wcsset(_wcsInfo);
+
 }
 
 
