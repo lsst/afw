@@ -635,7 +635,9 @@ namespace image {
             _image->swap(tmp);          // See Meyers, Effective C++, Items 11 and 43
         }
 
-        //MaskedImage& operator=(MaskedImage const& rhs);
+#if defined(DOXYGEN)
+        MaskedImage& operator=(MaskedImage const& rhs);
+#endif
         
         virtual ~MaskedImage() {}
         
