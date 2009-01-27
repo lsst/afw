@@ -9,6 +9,7 @@
 //
 SWIG_SHARED_PTR_DERIVED(LanczosWarpingKernel, lsst::afw::math::SeparableKernel, lsst::afw::math::LanczosWarpingKernel);
 SWIG_SHARED_PTR_DERIVED(BilinearWarpingKernel, lsst::afw::math::SeparableKernel, lsst::afw::math::BilinearWarpingKernel);
+%ignore lsst::afw::math::BilinearWarpingKernel::BilinearFunction1;
 
 %include "lsst/afw/math/warpExposure.h"
 

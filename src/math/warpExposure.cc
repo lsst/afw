@@ -197,8 +197,8 @@ typedef float imagePixelType;
 
 #define warpExposureFuncByType(DESTIMAGEPIXELT, SRCIMAGEPIXELT) \
     template int afwMath::warpExposure( \
-        afwImage::Exposure<DESTIMAGEPIXELT, afwImage::MaskPixel, afwImage::VariancePixel> &destExposure, \
-        afwImage::Exposure<SRCIMAGEPIXELT, afwImage::MaskPixel, afwImage::VariancePixel> const &srcExposure, \
+        afwImage::Exposure<DESTIMAGEPIXELT> &destExposure, \
+        afwImage::Exposure<SRCIMAGEPIXELT> const &srcExposure, \
         SeparableKernel const &warpingKernel);
 
 

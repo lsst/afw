@@ -11,66 +11,76 @@ import lsst.daf.base as dafBase
 import lsst.pex.logging
 
 def main():
-    defDataDir = eups.productDir("afwdata") or ""
+    DefDataDir = eups.productDir("afwdata") or ""
     
-    defSciencePath = os.path.join(defDataDir, "871034p_1_MI")
-    defTemplatePath = os.path.join(defDataDir, "871034p_1_MI")
-    defOutputPath = "remappedImage"
-    defKernelType = "lanczos"
-    defKernelSize = 5
-    defVerbosity = 5 # change to 0 once this all works to hide all messages
+    DefOriginalExposurePath = os.path.join(DefDataDir, "871034p_1_MI")
+    DefWCSExposurePath = os.path.join(DefDataDir, "871034p_1_MI")
+    DefOutputExposurePath = "warpedExposure"
+    DefKernel = "lanczos3"
+    DefVerbosity = 5 # change to 0 once this all works to hide all messages
     
-    usage = """usage: %%prog [options] [originalImage [remapImage [outputImage]]]
+    usage = """usage: %%prog [options] [originalExposure [warpedWCSExposure [outputExposure]]]
+
+    Computes outputExposure = originalExposure warped to match warpedWCSExposure's WCS and size
+
     Note:
-    - image arguments are paths to MaskedImage fits files;
+    - exposure arguments are paths to Exposure fits files;
       they must NOT include the final _img.fits|_var.fits|_msk.fits
-    - output image is the original image remapped to match the remap image's WCS and size
-    - default originalImage = %s
-    - default remapImage = %s
-    - default outputImage = %s
-    """ % (defSciencePath, defTemplatePath, defOutputPath)
+    - default originalExposure = %s
+    - default warpedWCSExposure = %s
+    - default outputExposure = %s
+    """ % (DefOriginalExposurePath, DefWCSExposurePath, DefOutputExposurePath)
     
     parser = optparse.OptionParser(usage)
-    parser.add_option("", "--kernelSize",
-                      type=int, default=defKernelSize,
-                      help="kernel size (cols=rows); should be even; default=%s" % (defKernelSize,))
-    parser.add_option("", "--kernelType",
-                      type=str, default=defKernelType,
-                      help="kernel type; default=%s" % (defKernelType,))
+    parser.add_option("", "--kernel",
+                      type=str, default=DefKernel,
+                      help="kernel type: bilinear or lancszosN where N = order; default=%s" % (DefKernel,))
     parser.add_option("-v", "--verbosity",
-                      type=int, default=defVerbosity,
+                      type=int, default=DefVerbosity,
                       help="verbosity of diagnostic trace messages; 1 for just warnings, more for more" + \
-                      " information; default=%s" % (defVerbosity,))
+                      " information; default=%s" % (DefVerbosity,))
     
     (opt, args) = parser.parse_args()
+    
+    kernelName = opt.kernel.lower()
+    if kernelName == "bilinear":
+        print "Bilinear"
+        kernel = afwMath.BilinearWarpingKernel()
+    elif kernelName.startswith("lanczos"):
+        kernelOrder = int(kernelName[7:])
+        print "Lanczos order", kernelOrder
+        kernel = afwMath.LanczosWarpingKernel(kernelOrder)
+    else:
+        print "Error: unknown kernel %r" % (kernelName,)
+        parser.help()
+        sys.exit(1)
     
     def getArg(ind, defValue):
         if ind < len(args):
             return args[ind]
         return defValue
     
-    originalPath = getArg(0, defTemplatePath)
-    remapPath = getArg(1, defSciencePath)
-    outputPath = getArg(2, defOutputPath)
-    print "Remapping masked image  ", originalPath
-    print "to match wcs and size of", remapPath
+    originalExposurePath = getArg(0, DefWCSExposurePath)
+    warpedWCSExposurePath = getArg(1, DefOriginalExposurePath)
+    outputExposurePath = getArg(2, DefOutputExposurePath)
+    print "Remapping masked image  ", originalExposurePath
+    print "to match wcs and size of", warpedWCSExposurePath
     
-    originalExposure = afwImage.ExposureD()
-    originalExposure.readFits(originalPath)
+    originalExposure = afwImage.ExposureD(originalExposurePath)
+    print "originalExposure=%r" % (originalExposure,)
     
-    remapExposure  = afwImage.ExposureD()
-    remapExposure.readFits(remapPath)
+    warpedExposure = afwImage.ExposureD(warpedWCSExposurePath)
+    print "warpedExposure=%r" % (warpedExposure,)
     
     if opt.verbosity > 0:
         print "Verbosity =", opt.verbosity
         lsst.pex.logging.Trace_setVerbosity("lsst.afw.math", opt.verbosity)
     
-    numGoodPixels = afwMath.warpExposure(
-        remapExposure, originalExposure, opt.kernelType, opt.kernelSize, opt.kernelSize)
-    print "Remapped masked image has %s good pixels" % (numGoodPixels)
+    numGoodPixels = afwMath.warpExposure(warpedExposure, originalExposure, kernel)
+    print "Warped exposure has %s good pixels" % (numGoodPixels)
     
-    print "Writing remapped masked image to %s" % (outputPath,)
-    remapExposure.getMaskedImage().writeFits(outputPath)
+    print "Writing warped exposure to %s" % (outputExposurePath,)
+    warpedExposure.writeFits(outputExposurePath)
 
 if __name__ == "__main__":
     memId0 = dafBase.Citizen_getNextMemId()
