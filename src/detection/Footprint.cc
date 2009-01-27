@@ -856,6 +856,7 @@ psArray *pmFootprintArrayToPeaks(const psArray *footprints) {
 /************************************************************************************************************/
 //
 // Explicit instantiations
+// \cond
 //
 template
 detection::Footprint::Ptr detection::footprintAndMask(detection::Footprint::Ptr const & foot,
@@ -866,3 +867,4 @@ template
 image::MaskPixel detection::setMaskFromFootprintList(image::Mask<image::MaskPixel>::Ptr mask,
                                                      std::vector<detection::Footprint::Ptr> const& footprints,
                                                      image::MaskPixel const bitmask);
+// \endcond
