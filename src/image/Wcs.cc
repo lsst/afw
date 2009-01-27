@@ -222,14 +222,14 @@ lsst::afw::image::Wcs::~Wcs() {
 
 /// Return (ra, dec) of the origin of the WCS solution. Note that this need not
 /// be the center of the image
-lsst::afw::image::PointD lsst::afw::image::Wcs::getOriginRaDec()  {
+lsst::afw::image::PointD lsst::afw::image::Wcs::getOriginRaDec() const {
     return PointD(_wcsInfo->crval);
 }
 
 
 /// Return XY  of the origin of the WCS solution. Note that this need not be
 ///the centre of the image
-lsst::afw::image::PointD lsst::afw::image::Wcs::getOriginXY()  {
+lsst::afw::image::PointD lsst::afw::image::Wcs::getOriginXY() const {
     return PointD(_wcsInfo->crpix);
 }
 
@@ -241,7 +241,7 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::getOriginXY()  {
 /// [dec ]   [ c21 c22 ]   [ row ] 
 ///
 /// where (col,row) = (0,0) = (ra, dec) is the centre of the WCS colution, and the matrix C is return by this function.
-boost::numeric::ublas::matrix<double> lsst::afw::image::Wcs::getLinearTransformMatrix()  {
+boost::numeric::ublas::matrix<double> lsst::afw::image::Wcs::getLinearTransformMatrix() const {
     int const naxis = _wcsInfo->naxis;
 
     //If naxis != 2, I'm not sure if any of what follows is correct

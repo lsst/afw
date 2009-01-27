@@ -23,7 +23,8 @@ namespace ex = lsst::pex::exceptions;
  */
 template<typename ImageT>
 math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) whose properties we want
-                             BackgroundControl const& bgCtrl) :
+                             BackgroundControl const& bgCtrl ///< Control how the Background is estimated
+                            ) :
     _imgWidth(img.getWidth()), _imgHeight(img.getHeight()),
     _bctrl(bgCtrl) { 
 

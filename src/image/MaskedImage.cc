@@ -131,9 +131,10 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(MaskedI
  *
  * If you are copying a scalar value, a simple <tt>lhs = scalar;</tt> is OK, but
  * this is probably not the function that you want to use with an %image. To copy pixel values
- * from the rhs use \link lsst::afw::image::operator<<=\endlink.
+ * from the rhs use operator<<=()
  */
-image::MaskedImage& operator=(image::MaskedImage const& rhs ///< Right hand side
+template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>& image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator=(image::MaskedImage const& rhs ///< Right hand side
                       ) {}
 #endif
 

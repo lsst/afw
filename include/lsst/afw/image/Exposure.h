@@ -36,6 +36,7 @@ namespace afw {
         template<typename ImageT, typename MaskT, typename VarianceT> class ExposureFormatter;
     }
 namespace image {
+    /// A class to contain the data, WCS, and other information needed to describe an %image of the sky
     template<typename ImageT, typename MaskT=lsst::afw::image::MaskPixel,
              typename VarianceT=lsst::afw::image::VariancePixel>
     class Exposure : public lsst::daf::base::Persistable,

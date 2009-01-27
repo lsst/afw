@@ -45,7 +45,7 @@ private:
 };
             
 /**
- * A class to evaluate %image statistics
+ * \brief A class to evaluate %image statistics
  *
  * The basic strategy is to construct a Statistics object from an Image and
  * a statement of what we want to know.  The desired results can then be
