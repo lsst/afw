@@ -1,6 +1,10 @@
+// -*- LSST-C++ -*-
 /**
- * \file
- * \brief Support statistical operations on images
+ * @file Background.cc
+ * @ingroup afw
+ * @brief Background estimation class code
+ * @author Steve Bickerton
+ * @date Jan 26, 2009
  */
 #include <iostream>
 #include <limits>
@@ -17,13 +21,18 @@ namespace ex = lsst::pex::exceptions;
 
 
 /**
- * Constructor for Background
+ * @brief Constructor for Background
  *
  * Various things are pre-computed by the constructor to make the interpolation faster.
+ *
+ * @note This is hard-coded to use bicubic spline for interpolation, attempt to use linear interpolate
+ *       will cause an assertion failure.
+ * @todo Implement user-settable intepolation style
  */
 template<typename ImageT>
 math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) whose properties we want
-                             BackgroundControl const& bgCtrl) :
+                             BackgroundControl const& bgCtrl ///< Control how the Background is estimated
+                            ) :
     _imgWidth(img.getWidth()), _imgHeight(img.getHeight()),
     _bctrl(bgCtrl) { 
 
@@ -97,10 +106,15 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
 }
 
 /**
- * \brief Method to retrieve the background level at a pixel coord.
+ * @brief Method to retrieve the background level at a pixel coord.
  *
- * Caveat emptor: This can be a very costly function to get a single pixel
- * If you want an image, use the getImage() method.
+ * @param x x-pixel coordinate (column)
+ * @param y y-pixel coordinate (row)
+ *
+ * @warning This can be a very costly function to get a single pixel
+ *          If you want an image, use the getImage() method.
+ *
+ * @return an estimated background at x,y (double)
  */
 double math::Background::getPixel(int const x, int const y) const {
 
@@ -114,7 +128,9 @@ double math::Background::getPixel(int const x, int const y) const {
 
 
 /**
- * \brief Method to compute the background for entire image and return a background image
+ * @brief Method to compute the background for entire image and return a background image
+ *
+ * @return A boost shared-pointer to an image containing the estimated background
  */
 template<typename PixelT>
 typename image::Image<PixelT>::Ptr math::Background::getImage() const {
@@ -150,10 +166,10 @@ typename image::Image<PixelT>::Ptr math::Background::getImage() const {
 
 
 
-/************************************************************************************************************/
-//
-// Explicit instantiations
-//
+/**
+ * @brief Explicit instantiations
+ *
+ */
 #define INSTANTIATE_BACKGROUND(TYPE) \
     template math::Background::Background(image::Image<TYPE> const& img, math::BackgroundControl const& bgCtrl=BackgroundControl()); \
     template image::Image<TYPE>::Ptr math::Background::getImage<TYPE>() const;

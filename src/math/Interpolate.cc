@@ -1,6 +1,10 @@
+// -*- LSST-C++ -*-
 /**
- * \file
- * \brief Interpolation Classes, Linear, Spline, SplineNatural, SplineNotAKnot
+ * @file Interpolate.cc
+ * @ingroup afw
+ * @brief Interpolation Classes, Linear, Spline, SplineNatural, SplineNotAKnot
+ * @author Steve Bickerton
+ * @date Jan 26, 2009
  */
 #include <iostream>
 #include <cmath>
@@ -22,14 +26,19 @@ namespace {
 
 // =======================================================================================
 /**
- * \brief Constructor for Generic interpolation
+ * @brief Constructor for Generic interpolation
  *
  * The constructor makes (allocates) private copies of the input x/y vectors and sets private member values
  * for x-vector bounds, and gridspacings.
  *
+ * @note All routines include an extrapolation point at each end of the x,y vectors
+ *       This results in some index-fiddling for [0] and [_n - 1] indices.
+ *
  */
 template<typename xT, typename yT>
-math::Interpolate<xT,yT>::Interpolate(vector<xT> const& x, vector<yT> const& y, math::InterpControl const& ictrl)
+math::Interpolate<xT,yT>::Interpolate(std::vector<xT> const& x,         ///< x-coords of function to interpolate 
+                                      std::vector<yT> const& y,         ///< y-value of function to interpolate  
+                                      math::InterpControl const& ictrl) ///< object with interpolation parameters
     : _n(x.size() + 2),
       _x(*new vector<xT>), _y(*new vector<yT>),
       _xgridspace( static_cast<double>(x[1] - x[0]) ),
@@ -53,13 +62,14 @@ math::Interpolate<xT,yT>::Interpolate(vector<xT> const& x, vector<yT> const& y, 
 // ======================  LINEAR ===========================================
 
 /**
- * \brief A private method to intialize for linear interpolation
+ * @brief A private method to intialize for linear interpolation
  *
  * This pre-computes the first derivatives over the intervals
  */
 template<typename xT, typename yT>
-math::LinearInterpolate<xT,yT>::LinearInterpolate(vector<xT> const& x, vector<yT> const& y,
-                                                  math::InterpControl const& ictrl)
+math::LinearInterpolate<xT,yT>::LinearInterpolate(std::vector<xT> const& x, ///< x-coords of function to interpolate 
+                                                  std::vector<yT> const& y, ///< y-value of function to interpolate  
+                                                  math::InterpControl const& ictrl) ///< object with interpolation parameters
     : Interpolate<xT,yT>::Interpolate(x,y,ictrl), _dydx(*new vector<yT>) {
     
     _dydx.resize(_n - 1);
@@ -74,9 +84,11 @@ math::LinearInterpolate<xT,yT>::LinearInterpolate(vector<xT> const& x, vector<yT
     _y[_n - 1] = _y[_n - 2] + static_cast<yT>(_dydx[_n - 2]*_xgridspace);
 }
 
-// ==== LINEAR no-safe ===
+// ==== LINEAR no-safe (no bounds checking to gain speed) ===
 /**
- * \brief Private method to return a linearly-interpolated value for a point *without* bounds checking.
+ * @brief Private method to return a linearly-interpolated value for a point *without* bounds checking
+ * @param xinterp the x-coord at which to interpolate a value
+ * @return The value linearly-interpolated at xinterp
  */
 template<typename xT, typename yT>
 inline yT math::LinearInterpolate<xT,yT>::interpolate(xT const xinterp) const {
@@ -84,7 +96,9 @@ inline yT math::LinearInterpolate<xT,yT>::interpolate(xT const xinterp) const {
     return _y[index] + static_cast<yT>(_dydx[index]*(xinterp - _x[index]));
 }
 /**
- * \brief Private method to return a linearly-interpolated value for a point *without* bounds checking.
+ * @brief Private method to return a linearly-interpolated value for a point *without* bounds checking.
+ * @param xinterp the x-coord at which to interpolate a value
+ * @return The function derivative linearly-interpolated at xinterp
  */
 template<typename xT, typename yT>
 inline yT math::LinearInterpolate<xT,yT>::interpolateDyDx(xT const xinterp) const {
@@ -96,16 +110,20 @@ inline yT math::LinearInterpolate<xT,yT>::interpolateDyDx(xT const xinterp) cons
     return a*_dydx[index] + b*_dydx[index + 1];
 }
 /**
- * \brief Private method to return a linearly-interpolated value for a point *without* bounds checking.
+ * @brief Private method to return a linearly-interpolated value for a point *without* bounds checking.
+ * @param xinterp the x-coord at which to interpolate a value
+ * @return The function second derivative linearly-interpolated at xinterp
  */
 template<typename xT, typename yT>
 inline yT math::LinearInterpolate<xT,yT>::interpolateD2yDx2(xT const xinterp) const {
     return 0;
 }
 
-// ==== LINEAR safe ====
+// ==== LINEAR safe (with bounds checking, at the cost of being slower) ====
 /**
- * \brief Private method to return a linearly-interpolated value for a point *with* bounds checking.
+ * @brief Private method to return a linearly-interpolated value for a point *with* bounds checking.
+ * @param xinterp the x-coord at which to interpolate a value
+ * @return The value interpolated at xinterp
  */
 template<typename xT, typename yT>
 yT math::LinearInterpolate<xT,yT>::interpolate_safe(xT const xinterp) const {
@@ -120,7 +138,9 @@ yT math::LinearInterpolate<xT,yT>::interpolate_safe(xT const xinterp) const {
 }
 
 /**
- * \brief Private method to return a linearly-interpolated value for a point *without* bounds checking.
+ * @brief Private method to return a linearly-interpolated value for a point *without* bounds checking.
+ * @param xinterp the x-coord at which to interpolate a value
+ * @return The function derivative linearly-interpolated at xinterp
  */
 template<typename xT, typename yT>
 yT math::LinearInterpolate<xT,yT>::interpolateDyDx_safe(xT const xinterp) const {
@@ -137,7 +157,11 @@ yT math::LinearInterpolate<xT,yT>::interpolateDyDx_safe(xT const xinterp) const 
     return a*_dydx[index] + b*_dydx[index + 1];
 }
 /**
- * \brief Private method to return a linearly-interpolated value for a point *without* bounds checking.
+ * @brief Private method to return a linearly-interpolated value for a point *without* bounds checking.
+ * @param xinterp the x-coord at which to interpolate a value
+ * @return The function second derivative linearly-interpolated at xinterp
+ * @note This function returns zero as d2ydx2 = 0 for linearly function.
+ * @warning See note!
  */
 template<typename xT, typename yT>
 yT math::LinearInterpolate<xT,yT>::interpolateD2yDx2_safe(xT const xinterp) const {
@@ -153,12 +177,14 @@ yT math::LinearInterpolate<xT,yT>::interpolateD2yDx2_safe(xT const xinterp) cons
 // ==========================  SPLINE ======================================
 
 /**
- * \brief Initialization for Cubic Spline interpolation - Press et al. 2007
+ * @brief Initialization for Cubic Spline interpolation - Press et al. 2007
  *
  * This mainly just pre-computes the second derivatives over the intervals
  */
 template<typename xT, typename yT>
-math::SplineInterpolate<xT,yT>::SplineInterpolate(vector<xT> const& x, vector<yT> const& y, InterpControl const& ictrl)
+math::SplineInterpolate<xT,yT>::SplineInterpolate(std::vector<xT> const& x,   ///< x-coords of function to interpolate 
+                                                  std::vector<yT> const& y,   ///< y-value of function to interpolate  
+                                                  InterpControl const& ictrl) ///< object with interpolation parameters
     : Interpolate<xT,yT>::Interpolate(x, y, ictrl), _d2ydx2(*new vector<yT>) {
     
     //_dydx0 = _dydxN = std::numeric_limits<double>::quiet_NaN();
@@ -217,10 +243,12 @@ math::SplineInterpolate<xT,yT>::SplineInterpolate(vector<xT> const& x, vector<yT
 }
 
 
-// ==== SPLINE no-safe ====
+// ==== SPLINE no-safe (no bounds checking for faster execution) ====
 
 /**
- * \brief Public method to return spline-interpolated values over a vector<> *without* bounds checking
+ * @brief Public method to return spline-interpolated values over a vector<> *without* bounds checking
+ * @param xinterp the x-coord at which to interpolate a value
+ * @return the function value spline-interpolated at xinterp
  */
 template<typename xT, typename yT>
 inline yT math::SplineInterpolate<xT,yT>::interpolate(xT const xinterp) const {
@@ -233,7 +261,9 @@ inline yT math::SplineInterpolate<xT,yT>::interpolate(xT const xinterp) const {
 }
 
 /**
- * \brief Public method to return spline-interpolated first derivatives over a vector<> *without* bounds checking
+ * @brief Public method to return spline-interpolated first derivatives over a vector<> *without* bounds checking
+ * @param xinterp the x-coord at which to interpolate a value
+ * @return the function derivative value spline-interpolated at xinterp
  */
 template<typename xT, typename yT>
 inline yT math::SplineInterpolate<xT,yT>::interpolateDyDx(xT const xinterp) const {
@@ -247,7 +277,9 @@ inline yT math::SplineInterpolate<xT,yT>::interpolateDyDx(xT const xinterp) cons
 }
 
 /**
- * \brief Public method to return spline-interpolated second derivatives over a vector<> *without* bounds checking
+ * @brief Public method to return spline-interpolated second derivatives over a vector<> *without* bounds checking
+ * @param xinterp the x-coord at which to interpolate a value
+ * @return the function second derivative spline-interpolated at xinterp
  */
 template<typename xT, typename yT>
 inline yT math::SplineInterpolate<xT,yT>::interpolateD2yDx2(xT const xinterp) const {
@@ -259,10 +291,12 @@ inline yT math::SplineInterpolate<xT,yT>::interpolateD2yDx2(xT const xinterp) co
 }
 
 
-// ==== SPLINE safe ====
+// ==== SPLINE safe (with bounds-checking, at the cost of being slower ====
 
 /**
- * \brief Public method to return spline-interpolated values over a vector<> *with* bounds checking
+ * @brief Public method to return spline-interpolated values over a vector<> *with* bounds checking
+ * @param xinterp the x-coord at which to interpolate a value
+ * @return the function value spline-interpolated at xinterp
  */
 template<typename xT, typename yT>
 yT math::SplineInterpolate<xT,yT>::interpolate_safe(xT const xinterp) const {
@@ -283,7 +317,9 @@ yT math::SplineInterpolate<xT,yT>::interpolate_safe(xT const xinterp) const {
 }
 
 /**
- * \brief Public method to return spline-interpolated first derivatives over a vector<> *with* bounds checking
+ * @brief Public method to return spline-interpolated first derivatives over a vector<> *with* bounds checking
+ * @param xinterp the x-coord at which to interpolate a value
+ * @return the function derivative spline-interpolated at xinterp
  */
 template<typename xT, typename yT>
 yT math::SplineInterpolate<xT,yT>::interpolateDyDx_safe(xT const xinterp) const {
@@ -306,7 +342,9 @@ yT math::SplineInterpolate<xT,yT>::interpolateDyDx_safe(xT const xinterp) const 
 }
 
 /**
- * \brief Public method to return spline-interpolated second derivatives over a vector<> *with* bounds checking
+ * @brief Public method to return spline-interpolated second derivatives over a vector<> *with* bounds checking
+ * @param xinterp the x-coord at which to interpolate a value
+ * @return the function second derivative spline-interpolated at xinterp
  */
 template<typename xT, typename yT>
 yT math::SplineInterpolate<xT,yT>::interpolateD2yDx2_safe(xT const xinterp) const {
@@ -331,10 +369,11 @@ yT math::SplineInterpolate<xT,yT>::interpolateD2yDx2_safe(xT const xinterp) cons
 
 
 
-/************************************************************************************************************/
-//
-// Explicit instantiations
-//
+/**
+ * @brief Explicit instantiations
+ *
+ */
+
 template class math::Interpolate<double,double>;
 template class math::Interpolate<float,float>;
 template class math::Interpolate<int,double>;
