@@ -39,7 +39,6 @@ lsst::afw::image::Wcs::Wcs() :
 /**
  * @brief Construct a Wcs that performs a linear conversion between pixels and radec
  *
- * I'm mostly playing here, I have little idea whether any of this is correct
  *
  */
 lsst::afw::image::Wcs::Wcs(PointD crval, ///< ra/dec of centre of image
@@ -49,8 +48,9 @@ lsst::afw::image::Wcs::Wcs(PointD crval, ///< ra/dec of centre of image
                           ) : LsstBase(typeid(this)),
                               _fitsMetadata(),
                               _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0) {
-    //Allocate memory for the wcs structure
-    wcsini(true, 2, _wcsInfo);   //Is this remotely correct?
+
+    _wcsInfo = (struct wcsprm *) malloc(sizeof (struct wcsprm));
+    wcsini(true, 2, _wcsInfo);   //2 indicates a naxis==2, a two dimensional image
 
     _wcsInfo->crval[0] = crval.getX();
     _wcsInfo->crval[1] = crval.getY();
@@ -58,6 +58,10 @@ lsst::afw::image::Wcs::Wcs(PointD crval, ///< ra/dec of centre of image
     _wcsInfo->crpix[0] = crpix.getX();
     _wcsInfo->crpix[1] = crpix.getY();
 
+    strncpy(_wcsInfo->ctype[0], "RA---TAN   ", 72);  //wcsini sets ctype[] to have length 72
+    strncpy(_wcsInfo->ctype[1], "DEC--TAN   ", 72);
+
+    //Set the CD matrix
     for (int i=0; i<2; ++i) {
         for (int j=0; j<2; ++j) {
             _wcsInfo->cd[(2*i) + j] = CD(i,j);
@@ -65,8 +69,18 @@ lsst::afw::image::Wcs::Wcs(PointD crval, ///< ra/dec of centre of image
     }
 
     //Specify that we have a CD matrix, but no PC or CROTA
-    _wcsInfo->altlin &= 2;
+    _wcsInfo->altlin = 2;
+    _wcsInfo->flag   = 0;   //values have been updated
+
+    //This is a work around for what I think is a bug in wcslib. ->types is neither
+    //initialised or set to NULL by default, so if I try to delete a Wcs object,
+    //wcslib then attempts to free non-existent space, and the code can crash.
+    _wcsInfo->types = NULL;
+    
+    _nWcsInfo = 1;   //Specify that we have only one coordinate representation
+
 }
+
 
     
     

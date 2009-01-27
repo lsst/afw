@@ -24,7 +24,8 @@ env.Program(["Background.cc"], LIBS=env.getlibs("afw"))
 env.Program(["Interpolate.cc"], LIBS=env.getlibs("afw"))
 env.Program(["SourceIO_1.cc"], LIBS=env.getlibs("afw"))
 env.Program(["SourceIO_2.cc"], LIBS=env.getlibs("afw"))
-    
+
+env.Program(["testWcs.cc"], LIBS=env.getlibs("afw"))
 env.Program(["wcsCopy.cc"], LIBS=env.getlibs("afw"))
 #
 # Tests
