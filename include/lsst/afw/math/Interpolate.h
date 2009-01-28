@@ -1,8 +1,11 @@
+// -*- LSST-C++ -*-
 #if !defined(LSST_AFW_MATH_INTERPOLATE_H)
 #define LSST_AFW_MATH_INTERPOLATE_H
 /**
- * \file
- * \brief Interpolation Header
+ * @file Interpolate.h
+ * @brief Interpolate values for a set of x,y vector<>s
+ * @ingroup afw
+ * @author Steve Bickerton
  */
 #include <limits>
 
@@ -15,7 +18,10 @@ namespace lsst { namespace afw { namespace math {
         double const NaN = std::numeric_limits<double>::quiet_NaN();
     }
 
-    /// \brief Select style of interpolation to use
+    /* @brief Select the style of interpolation to use
+     * @note This is not yet implemented.  User must instantiate Linear or Spline interplation object.
+     * @todo Implement this 
+     */
     enum Style {
         LINEAR = 0x01,                  ///< use linear interpolation
         NATURAL_SPLINE = 0x02,          ///< use a natural spline    [ y''(0) = y''(n-1) = 0 ]
@@ -23,9 +29,12 @@ namespace lsst { namespace afw { namespace math {
         CUBIC_SPLINE = 0x08,            ///< a generic cubic spline, with user-set y'(0), y'(n-1)
     };
 
-    /** \brief Pass parameters in to the interpolation routine
+    /**
+     * @class InterpControl
+     * @brief Pass parameters in to the interpolation routine
+     * @ingroup afw
      *
-     *  This class is not currently implemented with the Interpolate class.
+     * @note This class is not currently implemented with the Interpolate class.
      */
     class InterpControl {
     public:
@@ -45,14 +54,17 @@ namespace lsst { namespace afw { namespace math {
     };
 
 
-    /** \brief A class to handle interpolation between x,y points in vector<> inputs
+    /**
+     * @class Interpolate
+     * @brief A class to handle interpolation between x,y points in vector<> inputs
+     * @ingroup afw
      *
      * An interpolator object is declared and initialized for a pair of
      * vector<>s describing x,y coordinates to be interpolated
      * over. Interpolated points are then obtained by calling an 'interp' method
      * for the interpolator object.
      *
-     * \code
+     * @code
            vector<double> x;                                          // put x-coords in this
            vector<double> y;                                          // put f(x) in this
            double xinterp;                    // the x coord we'd like an interpolated value for
@@ -62,17 +74,19 @@ namespace lsst { namespace afw { namespace math {
 
            math::SplineInterpolate<double,double> Sinterpobj(x, y);    // make a SplineInterpolate object
            double yinterp = Sinterpobj.interpolate(xinterp1);              // a spline interpolated value
-     * \endcode
+     * @endcode
      *
-     * Notes: The routines assume evenly spaced grid points.  This is not, in general, a requirement for the
-     *  algorithm, but was used here for speed.
+     * @note: The routines assume evenly spaced grid points.  This is not, in general, a requirement for the
+     *  algorithm, but was used here for speed.  Uneven grid spacing will not yield correct answers.
      *
      */
     
     template<typename xT, typename yT>
     class Interpolate {
     public:
-        Interpolate(std::vector<xT> const& x, std::vector<yT> const& y, InterpControl const& ictrl = InterpControl());
+        Interpolate(std::vector<xT> const& x,
+                    std::vector<yT> const& y,
+                    InterpControl const& ictrl = InterpControl());
         virtual ~Interpolate() { delete &_x; delete &_y; };
         virtual yT interpolate(xT const xinterp) const = 0;  // linearly interpolate this object at x=xinterp
         virtual yT interpolate_safe(xT const xinterp) const = 0;  // linearly interpolate this object at x=xinterp
@@ -97,7 +111,10 @@ namespace lsst { namespace afw { namespace math {
     public:
         
         // pre-calculate dydx values
-        LinearInterpolate(std::vector<xT> const& x, std::vector<yT> const& y, InterpControl const& ictrl = InterpControl());
+        LinearInterpolate(std::vector<xT> const& x, ///< x-coords of the function to interpolate over
+                          std::vector<yT> const& y, ///< y-coords of the function to interpolate over
+                          InterpControl const& ictrl = InterpControl()); ///< Specify Interpolation Parameters
+        
         ~LinearInterpolate() { delete &_dydx; };
 
         // fast methods with *no* bounds checking
@@ -128,7 +145,10 @@ namespace lsst { namespace afw { namespace math {
     public:
 
         // pre-calculate d2ydx2 values
-        SplineInterpolate(std::vector<xT> const& x, std::vector<yT> const& y, InterpControl const& ictrl = InterpControl());
+        SplineInterpolate(std::vector<xT> const& x, ///< x-coords of the function to interpolate over
+                          std::vector<yT> const& y, ///< y-coords of the function to interpolate over
+                          InterpControl const& ictrl = InterpControl()); ///< Specify Interpolation parameters
+        
         ~SplineInterpolate() { delete &_d2ydx2; };
 
         // fast methods with *no* bounds checking        
