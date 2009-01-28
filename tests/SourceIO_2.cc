@@ -13,6 +13,11 @@
 #include <sstream>
 #include <cstring>
 
+
+#define BOOST_TEST_DYN_LINK
+#define BOOST_TEST_MODULE SourceIO
+
+#include "boost/test/unit_test.hpp"
 #include "boost/cstdint.hpp"
 
 #include "lsst/daf/base.h"
@@ -58,6 +63,7 @@ static void initTestData(DiaSourceVector & v, int sliceId = 0) {
         int j = i*NUM_DIASOURCE_NULLABLE_FIELDS;
         data.setDiaSourceId     (j + sliceId*(NUM_DIASOURCE_NULLABLE_FIELDS + 2)*64 + 1);
         data.setAmpExposureId   (static_cast<int64_t>(j +  2));
+        data.setDiaSource2Id    (j + sliceId*(NUM_DIASOURCE_NULLABLE_FIELDS + 2)*64 + 3);
         data.setFilterId        (-1);
         data.setObjectId        (static_cast<int64_t>(j +  4));
         data.setMovingObjectId  (static_cast<int64_t>(j +  5));
@@ -125,9 +131,9 @@ static void initTestData(DiaSourceVector & v, int sliceId = 0) {
         data.setValY1			(static_cast<float> (j + 58));
         data.setValY2			(static_cast<float> (j + 59));
         data.setValXY			(static_cast<float> (j + 60));                
-		data.setObsCode			(j+61);
-		data.setIsSynthetic		(j+62);
-		data.setMopsStatus		(j+63);		
+		data.setObsCode			(1);
+		data.setIsSynthetic		(2);
+		data.setMopsStatus		(3);		
         data.setFlag4association(1);
         data.setFlag4detection  (2);
         data.setFlag4wcs        (3);
@@ -163,8 +169,8 @@ static PropertySet::Ptr createDbTestProps(
     PropertySet::Ptr props(new PropertySet);
 
     if (numSlices > 1) {
-        props->add("DiaSource.isPerSliceTable", true);
-        props->add("DiaSource.numSlices", numSlices);
+        props->add("DIASource.isPerSliceTable", true);
+        props->add("DIASource.numSlices", numSlices);
     }
     int visitId = createVisitId();
     props->add("visitId",  visitId);
@@ -179,7 +185,7 @@ static PropertySet::Ptr createDbTestProps(
 static void testBoost(void) {
     // Create a blank Policy and PropertySet.
     Policy::Ptr      policy(new Policy);
-    PropertySet::Ptr props= createDbTestProps(0,1,"test");
+    PropertySet::Ptr props= createDbTestProps(0,1,"DIASource");
 
     // Setup test location
     LogicalLocation loc(makeTempFile());
@@ -203,11 +209,11 @@ static void testBoost(void) {
         Storage::List storageList;
         storageList.push_back(pers->getRetrieveStorage("BoostStorage", loc));
         Persistable::Ptr p = pers->retrieve("PersistableDiaSourceVector", storageList, props);
-        Assert(p.get() != 0, "Failed to retrieve Persistable");
+        BOOST_CHECK_MESSAGE(p.get() != 0, "Failed to retrieve Persistable");
         PersistableDiaSourceVector::Ptr persistVec =
             boost::dynamic_pointer_cast<PersistableDiaSourceVector, Persistable>(p);
-        Assert(persistVec.get() != 0, "Couldn't cast to PersistableDiaSourceVector");
-        Assert(*persistVec == dsv, 
+        BOOST_CHECK_MESSAGE(persistVec.get() != 0, "Couldn't cast to PersistableDiaSourceVector");
+        BOOST_CHECK_MESSAGE(*persistVec == dsv, 
         	"persist()/retrieve() resulted in PersistableDiaSourceVector corruption");
     }
     ::unlink(loc.locString().c_str());
@@ -224,10 +230,10 @@ struct SourceLessThan {
 static void testDb(std::string const & storageType) {
     // Create the required Policy and DataProperty
     Policy::Ptr      policy(new Policy);
-    PropertySet::Ptr props = createDbTestProps(0, 1, "DiaSource");
+    PropertySet::Ptr props = createDbTestProps(0, 1, "DIASource");
 
     Persistence::Ptr pers = Persistence::getPersistence(policy);
-    LogicalLocation loc("mysql://lsst10.ncsa.uiuc.edu:3306/test");
+    LogicalLocation loc("mysql://lsst10.ncsa.uiuc.edu:3306/source_test");
 
     // 1. Test on a single DiaSource
     DiaSource ds;
@@ -247,11 +253,13 @@ static void testDb(std::string const & storageType) {
         Storage::List storageList;
         storageList.push_back(pers->getRetrieveStorage(storageType, loc));
         Persistable::Ptr p = pers->retrieve("PersistableDiaSourceVector", storageList, props);
-        Assert(p == 0, "Failed to retrieve Persistable");
-        PersistableDiaSourceVector::Ptr v = boost::dynamic_pointer_cast<PersistableDiaSourceVector, Persistable>(p);
-        Assert(v.get() == 0, "Couldn't cast to PersistableDiaSourceVector");
-        DiaSourceVector vec = v->getSources();
-        Assert(vec.at(0) == dsv[0], "persist()/retrieve() resulted in PersistableDiaSourceVector corruption");
+        BOOST_CHECK_MESSAGE(p != 0, "Failed to retrieve Persistable");
+        PersistableDiaSourceVector::Ptr persistVec = 
+        	boost::dynamic_pointer_cast<PersistableDiaSourceVector, Persistable>(p);
+        BOOST_CHECK_MESSAGE(persistVec.get() != 0, "Couldn't cast to PersistableDiaSourceVector");
+        DiaSourceVector vec = persistVec->getSources();
+        BOOST_CHECK_MESSAGE(vec.at(0) == dsv[0], 
+        	"persist()/retrieve() resulted in PersistableDiaSourceVector corruption");
     }
     afwFormatters::dropAllVisitSliceTables(loc, policy, props);
 
@@ -271,19 +279,19 @@ static void testDb(std::string const & storageType) {
         Storage::List storageList;
         storageList.push_back(pers->getRetrieveStorage(storageType, loc));
         Persistable::Ptr p = pers->retrieve("PersistableDiaSourceVector", storageList, props);
-        Assert(p != 0, "Failed to retrieve Persistable");
+        BOOST_CHECK_MESSAGE(p != 0, "Failed to retrieve Persistable");
         PersistableDiaSourceVector::Ptr persistVec = 
         		boost::dynamic_pointer_cast<PersistableDiaSourceVector, Persistable>(p);
-        Assert(persistVec.get() != 0, "Couldn't cast to PersistableDiaSourceVector");
+        BOOST_CHECK_MESSAGE(persistVec.get() != 0, "Couldn't cast to PersistableDiaSourceVector");
         DiaSourceVector vec(persistVec->getSources());
         // sort in ascending id order (database does not give any ordering guarantees
         // in the absence of an ORDER BY clause)
         std::sort(vec.begin(), vec.end(), SourceLessThan());
-        Assert(vec.size() == dsv.size(), 
+        BOOST_CHECK_MESSAGE(vec.size() == dsv.size(), 
         	"persist()/retrieve() resulted in PersistableDiaSourceVector corruption");
 	
         for(size_t i =0; i<vec.size();i++){
-        	Assert(vec[i]==dsv[i],
+        	BOOST_CHECK_MESSAGE(vec[i]==dsv[i],
 	        	"persist()/retrieve() resulted in PersistableDiaSourceVector corruption");
     	}
     }
@@ -291,27 +299,15 @@ static void testDb(std::string const & storageType) {
 }
 
 
-int main(int const argc, char const * const * const argv) {
+BOOST_AUTO_TEST_CASE(DiaSourceIO) {
     try {
         testBoost();
         if (lsst::daf::persistence::DbAuth::available()) {
             testDb("DbStorage");
             testDb("DbTsvStorage");
         }
-        if (lsst::daf::base::Citizen::census(0) == 0) {
-            std::clog << "No leaks detected" << std::endl;
-        } else {
-            Assert(false, "Detected memory leaks");
-        }
-        return EXIT_SUCCESS;
+        BOOST_CHECK_MESSAGE(lsst::daf::base::Citizen::census(0) == 0, "Detected memory leaks");
     } catch (std::exception & ex) {
-        std::clog << ex.what() << std::endl;
+    	BOOST_FAIL(ex.what());
     }
-
-    if (lsst::daf::base::Citizen::census(0) != 0) {
-        std::clog << "Leaked memory blocks:" << std::endl;
-        lsst::daf::base::Citizen::census(std::clog);
-    }
-
-    return EXIT_FAILURE;
 }

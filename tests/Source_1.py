@@ -25,7 +25,6 @@ class SourceTestCase(unittest.TestCase):
 
     def setUp(self):
         container1 = afwDet.SourceContainer(16)
-
         container2 = afwDet.SourceContainer()
 		
         for m in xrange(16):
@@ -109,7 +108,7 @@ class SourceTestCase(unittest.TestCase):
         if dafPers.DbAuth.available():
             pol  = dafPolicy.Policy()
             pers = dafPers.Persistence.getPersistence(pol)
-            loc  =  dafPers.LogicalLocation("mysql://lsst10.ncsa.uiuc.edu:3306/test")
+            loc  =  dafPers.LogicalLocation("mysql://lsst10.ncsa.uiuc.edu:3306/source_test")
             dp = dafBase.PropertySet()
             dp.addInt("visitId", int(time.clock())*16384 + random.randint(0,16383))
             dp.addInt("sliceId", 0)

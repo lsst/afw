@@ -13,6 +13,11 @@
 #include <cstring>
 #include <stdexcept>
 
+
+#define BOOST_TEST_DYN_LINK
+#define BOOST_TEST_MODULE SourceIO
+
+#include "boost/test/unit_test.hpp"
 #include "boost/cstdint.hpp"
 
 #include "lsst/daf/base.h"
@@ -164,7 +169,7 @@ static PropertySet::Ptr createDbTestProps(
 static void testBoost(void) {
     // Create a blank Policy and PropertySet.
     Policy::Ptr      policy(new Policy);
-    PropertySet::Ptr props = createDbTestProps(0,1,"test");
+    PropertySet::Ptr props = createDbTestProps(0,1,"Source");
 
     // Setup test location
     LogicalLocation loc(makeTempFile());
@@ -172,8 +177,7 @@ static void testBoost(void) {
     // Intialize test data
     SourceVector dsv;
     initTestData(dsv);
-	PersistableSourceVector::Ptr persistPtr(new PersistableSourceVector(dsv));
-
+	PersistableSourceVector::Ptr persistPtr(new PersistableSourceVector(dsv));	
     Persistence::Ptr pers = Persistence::getPersistence(policy);
 
     // write out data
@@ -188,12 +192,11 @@ static void testBoost(void) {
         Storage::List storageList;
         storageList.push_back(pers->getRetrieveStorage("BoostStorage", loc));
         Persistable::Ptr p = pers->retrieve("PersistableSourceVector", storageList, props);
-        Assert(p.get() != 0, "Failed to retrieve Persistable");
+		BOOST_CHECK_MESSAGE(p.get() != 0, "Failed to retrieve Persistable");
         PersistableSourceVector::Ptr persistVec =
             boost::dynamic_pointer_cast<PersistableSourceVector, Persistable>(p);
-        Assert(persistVec.get() != 0, "Couldn't cast to PersistableSourceVector"); 
-               
-        Assert(*persistVec == dsv, 
+    	BOOST_CHECK_MESSAGE(persistVec.get() != 0, "Couldn't cast to PersistableSourceVector");
+        BOOST_CHECK_MESSAGE(*persistVec == dsv, 
         	"persist()/retrieve() resulted in PersistableSourceVector corruption");
     }
     ::unlink(loc.locString().c_str());
@@ -215,17 +218,16 @@ static void testDb(std::string const & storageType) {
     // Create the required Policy and PropertySet
     Policy::Ptr policy(new Policy);
     PropertySet::Ptr props = createDbTestProps(0, 1, "Source");
-
+    
     Persistence::Ptr pers = Persistence::getPersistence(policy);
-    LogicalLocation loc("mysql://lsst10.ncsa.uiuc.edu:3306/test");
-
+    LogicalLocation loc("mysql://lsst10.ncsa.uiuc.edu:3306/source_test");
+	
     // 1. Test on a single Source
     Source ds;
     ds.setId(2);
     SourceVector dsv;
     dsv.push_back(ds);
-    PersistableSourceVector::Ptr persistPtr(new PersistableSourceVector);
-    persistPtr->setSources(dsv);
+    PersistableSourceVector::Ptr persistPtr(new PersistableSourceVector(dsv));
     // write out data
     {
         Storage::List storageList;
@@ -237,11 +239,13 @@ static void testDb(std::string const & storageType) {
         Storage::List storageList;
         storageList.push_back(pers->getRetrieveStorage(storageType, loc));
         Persistable::Ptr p = pers->retrieve("PersistableSourceVector", storageList, props);
-        Assert(p != 0, "Failed to retrieve Persistable");
-        PersistableSourceVector::Ptr v = boost::dynamic_pointer_cast<PersistableSourceVector, Persistable>(p);
-        Assert(v.get() != 0, "Couldn't cast to PersistableSourceVector");
-        SourceVector vec = v->getSources();
-        Assert(vec.at(0) == dsv[0], "persist()/retrieve() resulted in PersistableSourceVector corruption");
+		BOOST_CHECK_MESSAGE(p.get() != 0, "Failed to retrieve Persistable");
+        PersistableSourceVector::Ptr persistVec = 
+        	boost::dynamic_pointer_cast<PersistableSourceVector, Persistable>(p);
+    	BOOST_CHECK_MESSAGE(persistVec.get() != 0, "Couldn't cast to PersistableSourceVector");
+        SourceVector vec = persistVec->getSources();
+        BOOST_CHECK_MESSAGE(vec.at(0) == dsv[0], 
+        	"persist()/retrieve() resulted in PersistableSourceVector corruption");
     }
     afwFormatters::dropAllVisitSliceTables(loc, policy, props);
 
@@ -260,20 +264,20 @@ static void testDb(std::string const & storageType) {
         Storage::List storageList;
         storageList.push_back(pers->getRetrieveStorage(storageType, loc));
         Persistable::Ptr p = pers->retrieve("PersistableSourceVector", storageList, props);
-        Assert(p != 0, "Failed to retrieve Persistable");
+		BOOST_CHECK_MESSAGE(p.get() != 0, "Failed to retrieve Persistable");
         PersistableSourceVector::Ptr persistVec = 
         		boost::dynamic_pointer_cast<PersistableSourceVector, Persistable>(p);
-        Assert(persistVec.get() != 0, "Couldn't cast to PersistableSourceVector");
+    	BOOST_CHECK_MESSAGE(persistVec.get() != 0, "Couldn't cast to PersistableSourceVector");
         SourceVector vec(persistVec->getSources());
         
         // sort in ascending id order (database does not give any ordering guarantees
         // in the absence of an ORDER BY clause)
         std::sort(vec.begin(), vec.end(), SourceLessThan());
-        Assert(vec.size() == dsv.size(), 
+        BOOST_CHECK_MESSAGE(vec.size() == dsv.size(),
         	"persist()/retrieve() resulted in PersistableSourceVector corruption");
 	
         for(size_t i =0; i<vec.size();i++){
-        	Assert(vec[i]==dsv[i],
+        	BOOST_CHECK_MESSAGE(vec[i] == dsv[i],
 	        	"persist()/retrieve() resulted in PersistableSourceVector corruption");
     	}
     }
@@ -284,15 +288,15 @@ static void testDb(std::string const & storageType) {
 static void testDb2(std::string const & storageType) {
     // Create the required Policy and PropertySet
     Policy::Ptr policy(new Policy);
-    std::string policyRoot("Formatter.SourceVector");
+    std::string policyRoot("Formatter.PersistableSourceVector");
     // use custom table name patterns for this test
-    policy->set(policyRoot + ".Source.perVisitTableNamePattern", "Source_%1%");
-    policy->set(policyRoot + ".Source.perSliceAndVisitTableNamePattern", "Source_%1%_%2%");
+    policy->set(policyRoot + ".Source.perVisitTableNamePattern", "tmp_test_Source_%1%");
+    policy->set(policyRoot + ".Source.perSliceAndVisitTableNamePattern", "tmp_test_Source_%1%_%2%");
 
     Policy::Ptr nested(policy->getPolicy(policyRoot));
 
     Persistence::Ptr pers = Persistence::getPersistence(policy);
-    LogicalLocation loc("mysql://lsst10.ncsa.uiuc.edu:3306/test");
+    LogicalLocation loc("mysql://lsst10.ncsa.uiuc.edu:3306/source_test");
 
     SourceVector all;
     int const numSlices = 3;
@@ -317,27 +321,27 @@ static void testDb2(std::string const & storageType) {
     Storage::List storageList;
     storageList.push_back(pers->getRetrieveStorage(storageType, loc));
     Persistable::Ptr p = pers->retrieve("PersistableSourceVector", storageList, props);
-    Assert(p != 0, "Failed to retrieve Persistable");
+    BOOST_CHECK_MESSAGE(p.get() != 0, "Failed to retrieve Persistable");
     PersistableSourceVector::Ptr persistPtr = 
     	boost::dynamic_pointer_cast<PersistableSourceVector, Persistable>(p);
-    Assert(persistPtr.get() != 0, "Couldn't cast to PersistableSourceVector");
+    BOOST_CHECK_MESSAGE(persistPtr.get() != 0, "Couldn't cast to PersistableSourceVector");
     
     // sort in ascending id order (database does not give any ordering guarantees
     // in the absence of an ORDER BY clause)
     SourceVector vec = persistPtr->getSources();
     std::sort(vec.begin(), vec.end(), SourceLessThan());
-    Assert(vec.size() == all.size(), 
+    BOOST_CHECK_MESSAGE(vec.size() == all.size(),
     	"persist()/retrieve() resulted in PersistableSourceVector corruption");
 
-    for(size_t i =0; i<vec.size();i++){
-    	Assert(vec[i]==all[i],
-        	"persist()/retrieve() resulted in PersistableSourceVector corruption");
-	}
+    for(size_t i =0; i< vec.size();i++){
+    	BOOST_CHECK_MESSAGE(vec[i] == all[i],
+	    	"persist()/retrieve() resulted in PersistableSourceVector corruption");
+	}    
     afwFormatters::dropAllVisitSliceTables(loc, nested, props);
 }
 
 
-int main(int const argc, char const * const * const argv) {
+BOOST_AUTO_TEST_CASE(SourceIO) {
     try {
         testBoost();
         if (lsst::daf::persistence::DbAuth::available()) {
@@ -346,20 +350,8 @@ int main(int const argc, char const * const * const argv) {
             testDb2("DbStorage");
             testDb2("DbTsvStorage");
         }
-        if (lsst::daf::base::Citizen::census(0) == 0) {
-            std::clog << "No leaks detected" << std::endl;
-        } else {
-            Assert(false, "Detected memory leaks");
-        }
-        return EXIT_SUCCESS;
+        BOOST_CHECK_MESSAGE(lsst::daf::base::Citizen::census(0) == 0, "Detected memory leaks");
     } catch (std::exception const & ex) {
-        std::clog << ex.what() << std::endl;
+    	BOOST_FAIL(ex.what());
     }
-
-    if (lsst::daf::base::Citizen::census(0) != 0) {
-        std::clog << "Leaked memory blocks:" << std::endl;
-        lsst::daf::base::Citizen::census(std::clog);
-    }
-
-    return EXIT_FAILURE;
 }

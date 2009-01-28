@@ -1,6 +1,7 @@
 // -*- lsst-c++ -*-
 
 %{
+#include "lsst/afw/formatters/Utils.h"
 #include "lsst/afw/detection/BaseSourceAttributes.h"
 #include "lsst/afw/detection/Source.h"
 #include "lsst/afw/detection/DiaSource.h"
@@ -23,6 +24,7 @@ SWIG_SHARED_PTR_DERIVED(DiaSourceVec,
 %rename(SourceVec) lsst::afw::detection::PersistableSourceVector;
 %rename(DiaSourceVec) lsst::afw::detection::PersistableDiaSourceVector;
 
+%include "lsst/afw/formatters/Utils.h"
 %include "lsst/afw/detection/BaseSourceAttributes.h"
 
 %template(SourceBase)	lsst::afw::detection::BaseSourceAttributes<lsst::afw::detection::NUM_SOURCE_NULLABLE_FIELDS>;

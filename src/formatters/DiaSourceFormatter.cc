@@ -100,10 +100,10 @@ void form::DiaSourceVectorFormatter::insertRow(T & db, DiaSource const & d) {
    	else db.setColumnToNull("raErr4wcs");
 
     db.template setColumn<double>("decl", d._dec);
-    db.template setColumn<float>("decErr4detection", d._decErr4detection);
+    db.template setColumn<float>("declErr4detection", d._decErr4detection);
     if(!d.isNull(det::DEC_ERR_4_WCS))
-        db. template setColumn<float>("decErr4wcs", d._decErr4wcs);    
-    else db.setColumnToNull("decErr4wcs");
+        db. template setColumn<float>("declErr4wcs", d._decErr4wcs);    
+    else db.setColumnToNull("declErr4wcs");
 
     if(!d.isNull(det::X_FLUX))
     	db. template setColumn<double>("xFlux", d._xFlux);
@@ -130,12 +130,12 @@ void form::DiaSourceVectorFormatter::insertRow(T & db, DiaSource const & d) {
     else db.setColumnToNull("raFluxErr");
     
     if(!d.isNull(det::DEC_FLUX))
-        db. template setColumn<double>("decFlux", d._decFlux);
-    else db.setColumnToNull("decFlux");
+        db. template setColumn<double>("declFlux", d._decFlux);
+    else db.setColumnToNull("declFlux");
     
     if(!d.isNull(det::DEC_FLUX_ERR))
-        db. template setColumn<double>("decFluxErr", d._decFluxErr);
-    else db.setColumnToNull("decFluxErr");
+        db. template setColumn<double>("declFluxErr", d._decFluxErr);
+    else db.setColumnToNull("declFluxErr");
     
     if(!d.isNull(det::X_PEAK))
         db. template setColumn<double>("xPeak", d._xPeak);
@@ -150,8 +150,8 @@ void form::DiaSourceVectorFormatter::insertRow(T & db, DiaSource const & d) {
     else db.setColumnToNull("raPeak");
         
     if(!d.isNull(det::DEC_PEAK))    
-    	db. template setColumn<double>("decPeak", d._decPeak);
-    else db.setColumnToNull("decPeak");
+    	db. template setColumn<double>("declPeak", d._decPeak);
+    else db.setColumnToNull("declPeak");
     
     if(!d.isNull(det::X_ASTROM))
         db. template setColumn<double>("xAstrom", d._xAstrom);
@@ -178,12 +178,12 @@ void form::DiaSourceVectorFormatter::insertRow(T & db, DiaSource const & d) {
     else db.setColumnToNull("raAstromErr");
     
     if(!d.isNull(det::DEC_ASTROM))
-        db. template setColumn<double>("decAstrom", d._decAstrom);
-    else db.setColumnToNull("decAstrom");
+        db. template setColumn<double>("declAstrom", d._decAstrom);
+    else db.setColumnToNull("declAstrom");
     
     if(!d.isNull(det::DEC_ASTROM_ERR))
-        db. template setColumn<double>("decAstromErr", d._decAstromErr);        
-    else db.setColumnToNull("decAstromErr");
+        db. template setColumn<double>("declAstromErr", d._decAstromErr);        
+    else db.setColumnToNull("declAstromErr");
     
     db.template setColumn<double>("taiMidPoint", d._taiMidPoint);
     db.template setColumn<float>("taiRange", d._taiRange);
@@ -314,28 +314,28 @@ void form::DiaSourceVectorFormatter::setupFetch(DbStorage & db, DiaSource & d) {
     db.outParam("raErr4detection",  &(d._raErr4detection));
     db.outParam("raErr4wcs",        &(d._raErr4wcs));
     db.outParam("decl",             &(d._dec));
-    db.outParam("decErr4detection", &(d._decErr4detection));
-    db.outParam("decErr4wcs",       &(d._decErr4wcs));
+    db.outParam("declErr4detection", &(d._decErr4detection));
+    db.outParam("declErr4wcs",       &(d._decErr4wcs));
     db.outParam("xFlux",            &(d._xFlux));
     db.outParam("xFluxErr",         &(d._xFluxErr));
     db.outParam("yFlux",            &(d._yFlux));    
     db.outParam("yFluxErr",         &(d._yFluxErr));
     db.outParam("raFlux",           &(d._raFlux));
     db.outParam("raFluxErr",        &(d._raFluxErr));
-    db.outParam("decFlux",          &(d._decFlux));    
-    db.outParam("decFluxErr",       &(d._decFluxErr));
+    db.outParam("declFlux",          &(d._decFlux));    
+    db.outParam("declFluxErr",       &(d._decFluxErr));
     db.outParam("xPeak",            &(d._xPeak));
     db.outParam("yPeak",            &(d._yPeak));
     db.outParam("raPeak",           &(d._raPeak));
-    db.outParam("decPeak",          &(d._decPeak));            
+    db.outParam("declPeak",          &(d._decPeak));            
     db.outParam("xAstrom",          &(d._xAstrom));
     db.outParam("xAstromErr",       &(d._xAstromErr));    
     db.outParam("yAstrom",          &(d._yAstrom));
     db.outParam("yAstromErr",       &(d._yAstromErr));  
     db.outParam("raAstrom",         &(d._raAstrom));
     db.outParam("raAstromErr",      &(d._raAstromErr));    
-    db.outParam("decAstrom",        &(d._decAstrom));
-    db.outParam("decAstromErr",     &(d._decAstromErr));    
+    db.outParam("declAstrom",        &(d._decAstrom));
+    db.outParam("declAstromErr",     &(d._decAstromErr));    
     db.outParam("taiMidPoint",      &(d._taiMidPoint));
     db.outParam("taiRange",         &(d._taiRange));
     db.outParam("fwhmA",            &(d._fwhmA));
@@ -479,7 +479,7 @@ void form::DiaSourceVectorFormatter::write( Persistable const *   persistable,
         std::string model = extractPolicyString(
             _policy,
             itemName + ".templateTableName",
-            itemName + "Template"
+            "DIASource"
         );
         bool mayExist = !extractOptionalFlag(additionalData, itemName + ".isPerSliceTable");
         if (typeid(*storage) == typeid(DbStorage)) {
@@ -543,6 +543,7 @@ Persistable* form::DiaSourceVectorFormatter::read(
             DiaSource data;
             setupFetch(*db, data);
             db->query();
+            
             while (db->next()) {
                 if (db->columnIsNull(DIA_SOURCE_ID)) {
                 	throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"diaSourceId\""); 
@@ -574,7 +575,7 @@ Persistable* form::DiaSourceVectorFormatter::read(
                 	throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"decl\""); 
                 }
                 if (db->columnIsNull(DEC_ERR_4_DETECTION)) {
-                	throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"decErr4detection\""); 
+                	throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"declErr4detection\""); 
                 }                
                 if (db->columnIsNull(DEC_ERR_4_WCS)) { data.setNull(det::DEC_ERR_4_WCS);                }
                 if (db->columnIsNull(X_FLUX)) { data.setNull(det::X_FLUX); }

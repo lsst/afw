@@ -57,6 +57,7 @@ lsst::daf::persistence::FormatterRegistration form::SourceVectorFormatter::regis
 
 
 /*!
+
     \internal   Generates a unique identifier for a Source given the id of the
                 originating visit, the id of the originating ccd, and the sequence
                 number of the Source within that slice.
@@ -72,13 +73,15 @@ inline static int64_t generateSourceId(unsigned short seqNum, int ccdId, int64_t
  */
 template <typename T>
 void form::SourceVectorFormatter::insertRow(T & db, Source const & d) {
+
     db.template setColumn<int64_t>("sourceId", d._id);
+
     if(!d.isNull(det::AMP_EXPOSURE_ID))
 	    db.template setColumn<int64_t>("ampExposureId", d._ampExposureId);    
    	else db.setColumnToNull("ampExposureId");
-   	
+  	
     db.template setColumn<char>("filterId", static_cast<char>(d._filterId));
-    
+   
     if(!d.isNull(det::OBJECT_ID))
     	db. template setColumn<int64_t>("objectId", d._objectId);
    	else db.setColumnToNull("objectId");
@@ -86,9 +89,9 @@ void form::SourceVectorFormatter::insertRow(T & db, Source const & d) {
     if(!d.isNull(det::MOVING_OBJECT_ID))
     	db. template setColumn<int64_t>("movingObjectId", d._movingObjectId);
    	else db.setColumnToNull("movingObjectId");
-   	
+  	
     db.template setColumn<int32_t>("procHistoryID", d._procHistoryId);
-   	
+
     db.template setColumn<double>("ra", d._ra);
     
     if(!d.isNull(det::RA_ERR_4_DETECTION))
@@ -99,10 +102,11 @@ void form::SourceVectorFormatter::insertRow(T & db, Source const & d) {
     db.template setColumn<double>("decl", d._dec);
 	
 	if(!d.isNull(det::DEC_ERR_4_DETECTION))
-	    db.template setColumn<float>("decErr4detection", d._decErr4detection);
-    else db.setColumnToNull("decErr4detection");
+	    db.template setColumn<float>("declErr4detection", d._decErr4detection);
+    else db.setColumnToNull("declErr4detection");
     
-    db. template setColumn<float>("decErr4wcs", d._decErr4wcs);    
+    db. template setColumn<float>("declErr4wcs", d._decErr4wcs);    
+
 
     if(!d.isNull(det::X_FLUX))
     	db. template setColumn<double>("xFlux", d._xFlux);
@@ -129,12 +133,12 @@ void form::SourceVectorFormatter::insertRow(T & db, Source const & d) {
     else db.setColumnToNull("raFluxErr");
     
     if(!d.isNull(det::DEC_FLUX))
-        db. template setColumn<double>("decFlux", d._decFlux);
-    else db.setColumnToNull("decFlux");
+        db. template setColumn<double>("declFlux", d._decFlux);
+    else db.setColumnToNull("declFlux");
     
     if(!d.isNull(det::DEC_FLUX_ERR))
-        db. template setColumn<double>("decFluxErr", d._decFluxErr);
-    else db.setColumnToNull("decFluxErr");
+        db. template setColumn<double>("declFluxErr", d._decFluxErr);
+    else db.setColumnToNull("declFluxErr");
     
     if(!d.isNull(det::X_PEAK))
         db. template setColumn<double>("xPeak", d._xPeak);
@@ -149,8 +153,8 @@ void form::SourceVectorFormatter::insertRow(T & db, Source const & d) {
     else db.setColumnToNull("raPeak");
         
     if(!d.isNull(det::DEC_PEAK))    
-    	db. template setColumn("decPeak", d._decPeak);
-    else db.setColumnToNull("decPeak");
+    	db. template setColumn("declPeak", d._decPeak);
+    else db.setColumnToNull("declPeak");
     
     if(!d.isNull(det::X_ASTROM))
         db. template setColumn<double>("xAstrom", d._xAstrom);
@@ -177,13 +181,13 @@ void form::SourceVectorFormatter::insertRow(T & db, Source const & d) {
     else db.setColumnToNull("raAstromErr");
     
     if(!d.isNull(det::DEC_ASTROM))
-        db. template setColumn<double>("decAstrom", d._decAstrom);
-    else db.setColumnToNull("decAstrom");
+        db. template setColumn<double>("declAstrom", d._decAstrom);
+    else db.setColumnToNull("declAstrom");
     
     if(!d.isNull(det::DEC_ASTROM_ERR))
-        db. template setColumn<double>("decAstromErr", d._decAstromErr);        
-    else db.setColumnToNull("decAstromErr");
-    
+        db. template setColumn<double>("declAstromErr", d._decAstromErr);        
+    else db.setColumnToNull("declAstromErr");
+  
     db.template setColumn<double>("taiMidPoint", d._taiMidPoint);
     
     if(!d.isNull(det::TAI_RANGE))
@@ -235,13 +239,14 @@ void form::SourceVectorFormatter::insertRow(T & db, Source const & d) {
     db.template setColumn<float>("snr", d._snr);
     db.template setColumn("chi2", d._chi2);
 
+	
 	if(!d.isNull(det::SKY))
     	db.template setColumn<float>("sky", d._sky);
     else db.setColumnToNull("sky");
        	
    	if(!d.isNull(det::SKY_ERR))
     	db.template setColumn<float>("skyErr", d._skyErr);
-    else db.setColumnToNull("skyErr");
+    else db.setColumnToNull("skyErr");      
         
     if(!d.isNull(det::FLAG_4_ASSOCIATION))
         db.template setColumn<int16_t>("flag4association", d._flag4association);
@@ -266,9 +271,12 @@ template void form::SourceVectorFormatter::insertRow<DbTsvStorage>(DbTsvStorage 
 
 /*! Prepares for reading Source instances from a database table. */
 void form::SourceVectorFormatter::setupFetch(DbStorage & db, Source & d) {
+
     db.outParam("sourceId",         &(d._id));
     db.outParam("ampExposureId",    &(d._ampExposureId));
+
     db.outParam("filterId",         reinterpret_cast<char *>(&(d._filterId)));
+
     db.outParam("objectId",         &(d._objectId));
     db.outParam("movingObjectId",   &(d._movingObjectId));
     db.outParam("procHistoryId",    &(d._procHistoryId));
@@ -276,28 +284,28 @@ void form::SourceVectorFormatter::setupFetch(DbStorage & db, Source & d) {
     db.outParam("raErr4detection",  &(d._raErr4detection));
     db.outParam("raErr4wcs",        &(d._raErr4wcs));
     db.outParam("decl",             &(d._dec));
-    db.outParam("decErr4detection", &(d._decErr4detection));
-    db.outParam("decErr4wcs",       &(d._decErr4wcs));
+    db.outParam("declErr4detection", &(d._decErr4detection));
+    db.outParam("declErr4wcs",       &(d._decErr4wcs));
     db.outParam("xFlux",            &(d._xFlux));
     db.outParam("xFluxErr",         &(d._xFluxErr));
     db.outParam("yFlux",            &(d._yFlux));    
     db.outParam("yFluxErr",         &(d._yFluxErr));
     db.outParam("raFlux",           &(d._raFlux));
     db.outParam("raFluxErr",        &(d._raFluxErr));
-    db.outParam("decFlux",          &(d._decFlux));    
-    db.outParam("decFluxErr",       &(d._decFluxErr));
+    db.outParam("declFlux",          &(d._decFlux));    
+    db.outParam("declFluxErr",       &(d._decFluxErr));
     db.outParam("xPeak",            &(d._xPeak));
     db.outParam("yPeak",            &(d._yPeak));
     db.outParam("raPeak",           &(d._raPeak));
-    db.outParam("decPeak",          &(d._decPeak));            
+    db.outParam("declPeak",          &(d._decPeak));            
     db.outParam("xAstrom",          &(d._xAstrom));
     db.outParam("xAstromErr",       &(d._xAstromErr));    
     db.outParam("yAstrom",          &(d._yAstrom));
     db.outParam("yAstromErr",       &(d._yAstromErr));  
     db.outParam("raAstrom",         &(d._raAstrom));
     db.outParam("raAstromErr",      &(d._raAstromErr));    
-    db.outParam("decAstrom",        &(d._decAstrom));
-    db.outParam("decAstromErr",     &(d._decAstromErr));    
+    db.outParam("declAstrom",        &(d._decAstrom));
+    db.outParam("declAstromErr",     &(d._decAstromErr));    
     db.outParam("taiMidPoint",      &(d._taiMidPoint));
     db.outParam("taiRange",         &(d._taiRange));
     db.outParam("fwhmA",            &(d._fwhmA));
@@ -325,6 +333,7 @@ void form::SourceVectorFormatter::setupFetch(DbStorage & db, Source & d) {
     db.outParam("flag4association", &(d._flag4association));
     db.outParam("flag4detection",   &(d._flag4detection));
     db.outParam("flag4wcs",         &(d._flag4wcs));
+
 }
 
 
@@ -425,7 +434,7 @@ void form::SourceVectorFormatter::write(
         std::string model = extractPolicyString(
             _policy,
             itemName + ".templateTableName",
-            itemName + "Template"
+            "Source"
         );
         bool mayExist = !extractOptionalFlag(additionalData, itemName + ".isPerSliceTable");
         if (typeid(*storage) == typeid(DbStorage)) {
@@ -433,6 +442,7 @@ void form::SourceVectorFormatter::write(
             if (db == 0) {
         		throw LSST_EXCEPT(ex::RuntimeErrorException, "Didn't get DbStorage");
             }
+
             db->createTableFromTemplate(name, model, mayExist);
             db->setTableForInsert(name);
             
@@ -492,13 +502,16 @@ Persistable* form::SourceVectorFormatter::read(
             db->query();
             data.setNotNull();
             while (db->next()) {
+
             	if (db->columnIsNull(SOURCE_ID)) { 
             		throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"sourceId\""); 
         		}
                 if (db->columnIsNull(AMP_EXPOSURE_ID)) { data.setNull(det::AMP_EXPOSURE_ID); }
+
                 if (db->columnIsNull(FILTER_ID)) { 
             		throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"filterId\""); 
         		}
+
                 if (db->columnIsNull(OBJECT_ID)) { data.setNull(det::OBJECT_ID); }
                 if (db->columnIsNull(MOVING_OBJECT_ID)) { data.setNull(det::MOVING_OBJECT_ID); }
                 if (db->columnIsNull(PROC_HISTORY_ID)) { 
@@ -514,7 +527,7 @@ Persistable* form::SourceVectorFormatter::read(
             		throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"raErr4wcs\""); 
             	}
                 if (db->columnIsNull(DEC_ERR_4_WCS)) {  
-            		throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"decErr4wcs\""); 
+            		throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"declErr4wcs\""); 
             	}
                 if (db->columnIsNull(RA_ERR_4_DETECTION)) { data.setNull(det::RA_ERR_4_DETECTION); }
                 if (db->columnIsNull(DEC_ERR_4_DETECTION)) { data.setNull(det::DEC_ERR_4_DETECTION); }

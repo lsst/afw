@@ -92,7 +92,7 @@ public :
     double  getValY1()            const { return _valY1;              }
     double  getValY2()            const { return _valY2;              }
     double  getValXY()            const { return _valXY;              }  
-    char    getObsCode()          const { return _obsCode;            }
+    char   getObsCode()          const { return _obsCode;            }
     char    isSynthetic()         const { return _isSynthetic;        }
     char    getMopsStatus()       const { return _mopsStatus;         }
     int64_t getFlagClassification() const { return _flagClassification; }
@@ -153,7 +153,7 @@ public :
     void setValXY           (double  const valXY           ) {
         set(_valXY, valXY);
     }         
-    void setObsCode (char const obsCode) {
+    void setObsCode (char  const obsCode) {
         set(_obsCode, obsCode,  OBS_CODE);
     }   
     void setIsSynthetic (char const isSynthetic) {
@@ -191,7 +191,7 @@ private :
     double  _valY1;            // DOUBLE        NOT NULL
     double  _valY2;            // DOUBLE        NOT NULL
     double  _valXY;            // DOUBLE        NOT NULL        
-    float  _flux;             // DECIMAL(12,2) NOT NULL
+    float   _flux;             // DECIMAL(12,2) NOT NULL
     float   _fluxErr;          // DECIMAL(10,2) NOT NULL    
     float   _refMag;           // FLOAT(0)      NULL
     float   _ixx;              // FLOAT(0)      NULL
