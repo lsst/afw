@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Tests for C++ Source and SourceVector Python wrappers (including persistence)
 

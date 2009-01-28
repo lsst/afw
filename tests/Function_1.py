@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import itertools
 import math
 import pdb                          # we may want to say pdb.set_trace()
