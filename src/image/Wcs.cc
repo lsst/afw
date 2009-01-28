@@ -114,14 +114,15 @@ lsst::afw::image::Wcs::Wcs(
     // wcspih takes a non-const char* (because some versions of ctrl modify the string)
     // but we cannot afford to allow that to happen, so make a copy...
     int len = metadataStr.size();
-    char *hdrString = new(char[len+1]);
-    std::strcpy(hdrString, metadataStr.c_str());
+    boost::shared_ptr<char> hdrString = boost::shared_ptr<char>(new char[len + 1]);
+    std::strcpy(hdrString.get(), metadataStr.c_str());
 
-    int pihStatus = wcspih(hdrString, nCards, _relax, _wcshdrCtrl, &_nReject, &_nWcsInfo, &_wcsInfo);
-    delete hdrString;
+    int pihStatus = wcspih(hdrString.get(), nCards, _relax, _wcshdrCtrl, &_nReject, &_nWcsInfo, &_wcsInfo);
+
     if (pihStatus != 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
-            (boost::format("Could not parse FITS WCS: wcspih status = %d") % pihStatus).str());
+                          (boost::format("Could not parse FITS WCS: wcspih status = %d (%s)") %
+                           pihStatus % wcs_errmsg[pihStatus]).str());
     }
 
     /*
