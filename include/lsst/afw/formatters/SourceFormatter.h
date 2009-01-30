@@ -29,7 +29,7 @@ namespace formatters {
     - lsst::daf::persistence::DbTsvStorage
     - lsst::daf::persistence::BoostStorage
 
-    for SourceVector instances.
+    for PersistableSourceVector instances.
  */
 class SourceVectorFormatter : public lsst::daf::persistence::Formatter {
 public:
@@ -51,6 +51,7 @@ public:
         lsst::daf::base::PropertySet::Ptr
     );
 
+
     template <class Archive>
     static void delegateSerialize(
         Archive &,
@@ -58,7 +59,72 @@ public:
         lsst::daf::base::Persistable *
     );
 
+
 private:
+
+    // ordered list of columns in Source table of the DC3b schema
+    enum Columns {
+        SOURCE_ID = 0,
+        AMP_EXPOSURE_ID,
+        FILTER_ID,
+        OBJECT_ID,
+        MOVING_OBJECT_ID,
+        PROC_HISTORY_ID,
+        RA,
+        RA_ERR_FOR_DETECTION,
+        RA_ERR_FOR_WCS,
+        DECL,
+        DEC_ERR_FOR_DETECTION,
+        DEC_ERR_FOR_WCS,
+        X_FLUX,
+        X_FLUX_ERR,
+        Y_FLUX,
+        Y_FLUX_ERR,
+        RA_FLUX,
+        RA_FLUX_ERR,
+        DEC_FLUX,
+        DEC_FLUX_ERR,
+        X_PEAK,
+        Y_PEAK,
+        RA_PEAK,
+        DEC_PEAK,
+        X_ASTROM,
+        X_ASTROM_ERR,
+        Y_ASTROM,
+        Y_ASTROM_ERR,
+        RA_ASTROM,
+        RA_ASTROM_ERR,
+        DEC_ASTROM,
+        DEC_ASTROM_ERR,
+        TAI_MID_POINT,
+        TAI_RANGE,
+        FWHM_A,
+        FWHM_B,
+        FWHM_THETA,
+        PSF_MAG,
+        PSF_MAG_ERR,
+        AP_MAG,
+        AP_MAG_ERR,
+        MODEL_MAG,
+        MODEL_MAG_ERR,
+        PETRO_MAG,
+        PETRO_MAG_ERR,
+        INST_MAG,
+        INST_MAG_ERR,
+        NON_GRAY_CORR_MAG,
+        NON_GRAY_CORR_MAG_ERR,
+        ATM_CORR_MAG,
+        ATM_CORR_MAG_ERR,
+        AP_DIA,
+        SNR,
+        CHI2,
+        SKY,
+        SKY_ERR,
+        FLAG_FOR_ASSOCIATION,
+        FLAG_FOR_DETECTION,
+        FLAG_FOR_WCS,   
+    };
+
 
     lsst::pex::policy::Policy::Ptr _policy;
 
