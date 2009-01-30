@@ -29,7 +29,7 @@ namespace formatters {
     - lsst::daf::persistence::DbTsvStorage
     - lsst::daf::persistence::BoostStorage
 
-    for DiaSourceVector instances.
+    for PersistableDiaSourceVector instances.
  */
 class DiaSourceVectorFormatter : public lsst::daf::persistence::Formatter {
 public:
@@ -59,13 +59,11 @@ public:
     );
 
 private:
-    /**
-     * \brief List of columns in DiaSource table in order of the DC3b schema
-     */
+    //Ordered list of columns in DiaSource table of the DC3b schema    
     enum Columns {
         DIA_SOURCE_ID = 0,
         AMP_EXPOSURE_ID,
-        DIA_SOURCE_2_ID,
+        DIA_SOURCE_TO_ID,
         FILTER_ID,
         OBJECT_ID,
         MOVING_OBJECT_ID,
@@ -73,11 +71,11 @@ private:
         SC_ID,
         SSM_ID,
         RA,
-        RA_ERR_4_DETECTION,
-        RA_ERR_4_WCS,
+        RA_ERR_FOR_DETECTION,
+        RA_ERR_FOR_WCS,
         DECL,
-        DEC_ERR_4_DETECTION,
-        DEC_ERR_4_WCS,
+        DEC_ERR_FOR_DETECTION,
+        DEC_ERR_FOR_WCS,
         X_FLUX,
         X_FLUX_ERR,
         Y_FLUX,
@@ -136,9 +134,9 @@ private:
         OBS_CODE,
         IS_SYNTHETIC,
         MOPS_STATUS,
-        FLAG_4_ASSOCIATION,
-        FLAG_4_DETECTION,
-        FLAG_4_WCS,
+        FLAG_FOR_ASSOCIATION,
+        FLAG_FOR_DETECTION,
+        FLAG_FOR_WCS,
         FLAG_CLASSIFICATION
     };
     

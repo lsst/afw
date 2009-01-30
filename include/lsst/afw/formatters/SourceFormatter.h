@@ -29,7 +29,7 @@ namespace formatters {
     - lsst::daf::persistence::DbTsvStorage
     - lsst::daf::persistence::BoostStorage
 
-    for SourceVector instances.
+    for PersistableSourceVector instances.
  */
 class SourceVectorFormatter : public lsst::daf::persistence::Formatter {
 public:
@@ -62,9 +62,7 @@ public:
 
 private:
 
-    /**
-     * \brief List of columns in Source table in order of the DC3b schema
-     */
+    // ordered list of columns in Source table of the DC3b schema
     enum Columns {
         SOURCE_ID = 0,
         AMP_EXPOSURE_ID,
@@ -73,11 +71,11 @@ private:
         MOVING_OBJECT_ID,
         PROC_HISTORY_ID,
         RA,
-        RA_ERR_4_DETECTION,
-        RA_ERR_4_WCS,
+        RA_ERR_FOR_DETECTION,
+        RA_ERR_FOR_WCS,
         DECL,
-        DEC_ERR_4_DETECTION,
-        DEC_ERR_4_WCS,
+        DEC_ERR_FOR_DETECTION,
+        DEC_ERR_FOR_WCS,
         X_FLUX,
         X_FLUX_ERR,
         Y_FLUX,
@@ -122,9 +120,9 @@ private:
         CHI2,
         SKY,
         SKY_ERR,
-        FLAG_4_ASSOCIATION,
-        FLAG_4_DETECTION,
-        FLAG_4_WCS,   
+        FLAG_FOR_ASSOCIATION,
+        FLAG_FOR_DETECTION,
+        FLAG_FOR_WCS,   
     };
 
 

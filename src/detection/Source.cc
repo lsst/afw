@@ -13,26 +13,37 @@
 
 namespace det = lsst::afw::detection;
 
+/**
+ * Default Contructor
+ */
 det::Source::Source()
-	: _petroMag(0.0),
+    : _petroMag(0.0),
       _petroMagErr(0.0),
       _sky(0.0),
       _skyErr(0.0)
 {}
 
+/**
+ * Copy Constructor
+ */
 det::Source::Source(Source const & other)
-	: BaseSourceAttributes<NUM_SOURCE_NULLABLE_FIELDS>(other),
-	  _petroMag(other._petroMag),
+    : BaseSourceAttributes<NUM_SOURCE_NULLABLE_FIELDS>(other),
+      _petroMag(other._petroMag),
       _petroMagErr(other._petroMagErr),
       _sky(other._sky),
-      _skyErr(other._skyErr)
+      _skyErr(other._skyErr)      
 {
-	for(int i =0; i < NUM_SOURCE_NULLABLE_FIELDS; i++)
-		setNull(i, other.isNull(i));
+    for (int i =0; i != NUM_SOURCE_NULLABLE_FIELDS; ++i) {
+        setNull(i, other.isNull(i));
+    }
 }
 
+/**
+ * Test for equality between DiaSource
+ * \return true if all of the fields are equal or null in both DiaSource
+ */
 bool det::Source::operator==(Source const & d) const {
-    return ( areEqual(_id, d._id) &&
+    if (areEqual(_id, d._id) &&
         areEqual(_ampExposureId, d._ampExposureId,  AMP_EXPOSURE_ID) &&
         areEqual(_filterId, d._filterId) &&
         areEqual(_objectId, d._objectId,  OBJECT_ID) &&
@@ -40,10 +51,10 @@ bool det::Source::operator==(Source const & d) const {
         areEqual(_procHistoryId, d._procHistoryId) &&
         areEqual(_ra, d._ra) &&
         areEqual(_dec, d._dec) &&
-        areEqual(_raErr4wcs, d._raErr4wcs) &&
-        areEqual(_decErr4wcs, d._decErr4wcs) &&
-        areEqual(_raErr4detection, d._raErr4detection,  RA_ERR_4_DETECTION) &&
-        areEqual(_decErr4detection, d._decErr4detection,  DEC_ERR_4_DETECTION) &&
+        areEqual(_raErrForWcs, d._raErrForWcs) &&
+        areEqual(_decErrForWcs, d._decErrForWcs) &&
+        areEqual(_raErrForDetection, d._raErrForDetection,  RA_ERR_FOR_DETECTION) &&
+        areEqual(_decErrForDetection, d._decErrForDetection,  DEC_ERR_FOR_DETECTION) &&
         areEqual(_xFlux, d._xFlux,  X_FLUX) &&
         areEqual(_xFluxErr, d._xFluxErr,  X_FLUX_ERR) &&
         areEqual(_yFlux, d._yFlux,  Y_FLUX) &&
@@ -84,7 +95,18 @@ bool det::Source::operator==(Source const & d) const {
         areEqual(_chi2, d._chi2) &&
         areEqual(_sky, d._sky,  SKY) &&
         areEqual(_skyErr, d._skyErr,  SKY_ERR) &&
-        areEqual(_flag4association, d._flag4association,  FLAG_4_ASSOCIATION) &&
-        areEqual(_flag4detection, d._flag4detection,  FLAG_4_DETECTION) &&
-        areEqual(_flag4wcs, d._flag4wcs,  FLAG_4_WCS));
+        areEqual(_flagForAssociation, d._flagForAssociation,  FLAG_FOR_ASSOCIATION) &&
+        areEqual(_flagForDetection, d._flagForDetection,  FLAG_FOR_DETECTION) &&
+        areEqual(_flagForWcs, d._flagForWcs,  FLAG_FOR_WCS)) 
+    {
+    	//check NULLABLE field state equality
+        for (int i = 0; i < NUM_SOURCE_NULLABLE_FIELDS; ++i) {
+            if (isNull(i) != d.isNull(i)) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    return false;
 }
