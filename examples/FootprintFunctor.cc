@@ -32,7 +32,6 @@ void printBits(image::Mask<image::MaskPixel> mask, detection::DetectionSet<float
     FindSetBits<image::Mask<image::MaskPixel> > count(mask);
 
     for (detection::DetectionSet<float>::FootprintList::iterator fiter = feet.begin(); fiter != feet.end(); ++fiter) {
-        count.reset();
         count.apply(**fiter);
 
         printf("0x%x\n", count.getBits());

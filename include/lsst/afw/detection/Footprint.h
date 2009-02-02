@@ -257,11 +257,20 @@ public:
                     ) : _image(image) {}
 
     virtual ~FootprintFunctor() {}
+
+    /**
+     * A function that's called at the beginning of apply; useful if apply
+     * calculates a per-footprint quantity
+     */
+    virtual void reset() {}
+
     /**
      * \brief Apply operator() to each pixel in the Footprint
      */
     void apply(Footprint const& foot    ///< The Footprint in question
               ) {
+        reset();
+
         if (foot.getSpans().empty()) {
             return;
         }
