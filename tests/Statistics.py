@@ -86,6 +86,13 @@ class StatisticsTestCase(unittest.TestCase):
         self.assertEqual(sd, 1/math.sqrt(4.0)*math.sqrt(n/(n - 1)))
         self.assertAlmostEqual(mean[1], sd/math.sqrt(image2.getWidth()*image2.getHeight()), 10)
 
+    def testStatsStdevclip(self):
+	"""Test STDEVCLIP; cf. #611"""
+        image2 = self.image.Factory(self.image, True)
+
+        stats = afwMath.StatisticsF(image2, afwMath.STDEVCLIP)
+        self.assertEqual(stats.getValue(afwMath.STDEVCLIP), 0)
+
     def testMedian(self):
 	"""Test the median code"""
         stats = afwMath.StatisticsF(self.image, afwMath.MEDIAN)
@@ -103,6 +110,12 @@ class StatisticsTestCase(unittest.TestCase):
 	stats = afwMath.StatisticsF(self.image, afwMath.MEANCLIP)
 
 	self.assertEqual(stats.getValue(afwMath.MEANCLIP), self.val)
+
+    def testVarianceClip(self):
+	"""Test the 3-sigma clipped variance"""
+	stats = afwMath.StatisticsF(self.image, afwMath.STDEVCLIP)
+
+	self.assertEqual(stats.getValue(afwMath.STDEVCLIP), 0)
 
     def testVarianceClip(self):
 	"""Test the 3-sigma clipped variance"""

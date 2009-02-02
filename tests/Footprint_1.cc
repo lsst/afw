@@ -5,6 +5,7 @@
 #include "boost/test/unit_test.hpp"
 #include "boost/test/floating_point_comparison.hpp"
 
+#include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/detection/Footprint.h"
 
 namespace image = lsst::afw::image;
@@ -13,6 +14,8 @@ namespace detection = lsst::afw::detection;
 typedef float ImagePixelT;
 
 BOOST_AUTO_TEST_CASE(DetectionSets) {
+    lsst::pex::logging::Trace::setVerbosity("afw.detection", 0);
+
     image::MaskedImage<ImagePixelT> img(10,20);
     *img.getImage() = 100;
 

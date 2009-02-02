@@ -59,18 +59,18 @@ math::Statistics::Statistics(Image const& img, ///< Image (or MaskedImage) whose
     // now only calculate it if it's specifically requested - these all cost more!
 
     // copy the image for any routines that will use median or quantiles
-    if (flags & (MEDIAN | IQRANGE | MEANCLIP | VARIANCECLIP)) {
+    if (flags & (MEDIAN | IQRANGE | MEANCLIP | STDEVCLIP | VARIANCECLIP)) {
         
         typename Image::Ptr imgcp = typename Image::Ptr(new Image(img, true));  // deep copy
         
-        if (flags & (MEDIAN | MEANCLIP | VARIANCECLIP)) {
+        if (flags & (MEDIAN | MEANCLIP | STDEVCLIP | VARIANCECLIP)) {
             _median = _quickSelect(*imgcp, 0.5);
         }
-        if (flags & (IQRANGE | MEANCLIP | VARIANCECLIP)) {
+        if (flags & (IQRANGE | MEANCLIP | STDEVCLIP | VARIANCECLIP)) {
             _iqrange = std::fabs(_quickSelect(*imgcp, 0.75) - _quickSelect(*imgcp, 0.25));
         }
         
-        if (flags & (MEANCLIP | VARIANCECLIP)) {            
+        if (flags & (MEANCLIP | STDEVCLIP | VARIANCECLIP)) {            
             for(int i_i = 0; i_i < sctrl.getNumIter(); ++i_i) {
                 
                 double const center = (i_i > 0) ? _meanclip : _median;
