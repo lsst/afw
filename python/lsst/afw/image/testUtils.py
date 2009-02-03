@@ -24,9 +24,6 @@ def arrayFromImage(im, dtype=float):
 def arrayFromMask(im, dtype=int):
     """Return a numpy array representation of a mask.
     The data is presently copied but do not rely on that.
-    
-    Warning: will fail for uint8 masks because lssgImageTypes.i maps uint8 to char;
-    use ord(im.getPtr(col, row)) to get each pixel value
     """
     arr = numpy.zeros([im.getWidth(), im.getHeight()], dtype=dtype)
     for row in range(im.getHeight()):
@@ -53,7 +50,7 @@ def getImageVarianceMaskFromMaskedImage(maskedImage):
     return (maskedImage.getImage(), maskedImage.getVariance(), maskedImage.getMask())
 
 def imageFromArray(im, arr):
-    """Create an lsst.afwImage.ImageD from a numpy array.
+    """Fill an existing lsst.afwImage.ImageD from a numpy array.
     The data is presently copied but do not rely on that.
     """
 
@@ -66,7 +63,7 @@ def imageFromArray(im, arr):
     return im
 
 def maskFromArray(mask, arr):
-    """Create an lsst.afwImage.MaskD from a numpy array
+    """Fill an existing lsst.afwImage.MaskD from a numpy array
     The data is presently copied but do not rely on that.
     """
 
@@ -80,7 +77,7 @@ def maskFromArray(mask, arr):
     return mask
 
 def maskedImageFromArrays(maskedImage, imVarMaskArrays):
-    """Create a MaskedImage from a tuple of (image, variance, mask) arrays
+    """Fill an existing MaskedImage from a tuple of (image, variance, mask) arrays
     The data is presently copied but do not rely on that.
     """
     imArr, varArr, maskArr = imVarMaskArrays

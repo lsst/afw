@@ -10,29 +10,33 @@ import lsst.afw.math as afwMath
 import lsst.daf.base as dafBase
 import lsst.pex.logging
 
+dataDir = eups.productDir("afwdata")
+if not dataDir:
+    raise RuntimeError("Must set up afwdata to run these tests")
+
 def main():
     DefDataDir = eups.productDir("afwdata") or ""
     
-    DefOriginalExposurePath = os.path.join(DefDataDir, "871034p_1_MI")
-    DefWCSExposurePath = os.path.join(DefDataDir, "871034p_1_MI")
+    DefOriginalExposurePath = os.path.join(DefDataDir, "med")
+    DefWcsExposurePath = os.path.join(DefDataDir, "medswarp2_img")
     DefOutputExposurePath = "warpedExposure"
-    DefKernel = "lanczos3"
-    DefVerbosity = 5 # change to 0 once this all works to hide all messages
+    DefKernel = "lanczos4"
+    DefVerbosity = 6 # change to 0 once this all works to hide all messages
     
-    usage = """usage: %%prog [options] [originalExposure [warpedWCSExposure [outputExposure]]]
+    usage = """usage: %%prog [options] [originalExposure [warpedWcsExposure [outputExposure]]]
 
-    Computes outputExposure = originalExposure warped to match warpedWCSExposure's WCS and size
+    Computes outputExposure = originalExposure warped to match warpedWcsExposure's WCS and size
 
     Note:
     - exposure arguments are paths to Exposure fits files;
       they must NOT include the final _img.fits|_var.fits|_msk.fits
     - default originalExposure = %s
-    - default warpedWCSExposure = %s
+    - default warpedWcsExposure = %s
     - default outputExposure = %s
-    """ % (DefOriginalExposurePath, DefWCSExposurePath, DefOutputExposurePath)
+    """ % (DefOriginalExposurePath, DefWcsExposurePath, DefOutputExposurePath)
     
     parser = optparse.OptionParser(usage)
-    parser.add_option("", "--kernel",
+    parser.add_option("-k", "--kernel",
                       type=str, default=DefKernel,
                       help="kernel type: bilinear or lancszosN where N = order; default=%s" % (DefKernel,))
     parser.add_option("-v", "--verbosity",
@@ -60,17 +64,19 @@ def main():
             return args[ind]
         return defValue
     
-    originalExposurePath = getArg(0, DefWCSExposurePath)
-    warpedWCSExposurePath = getArg(1, DefOriginalExposurePath)
+    originalExposurePath = getArg(0, DefWcsExposurePath)
+    warpedWcsExposurePath = getArg(1, DefOriginalExposurePath)
     outputExposurePath = getArg(2, DefOutputExposurePath)
     print "Remapping masked image  ", originalExposurePath
-    print "to match wcs and size of", warpedWCSExposurePath
+    print "to match wcs and size of", warpedWcsExposurePath
     
     originalExposure = afwImage.ExposureD(originalExposurePath)
-    print "originalExposure=%r" % (originalExposure,)
     
-    warpedExposure = afwImage.ExposureD(warpedWCSExposurePath)
-    print "warpedExposure=%r" % (warpedExposure,)
+    warpedExposure = afwImage.ExposureD(warpedWcsExposurePath)
+    
+    originalWcs = originalExposure.getWcs()
+    originalMetadata = getFitsMetadata()
+    warpedWcs = warpedExposure.getWcs()
     
     if opt.verbosity > 0:
         print "Verbosity =", opt.verbosity

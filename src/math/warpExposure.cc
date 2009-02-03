@@ -144,30 +144,37 @@ int afwMath::warpExposure(
     // Set each pixel of destExposure's MaskedImage
     lsst::pex::logging::Trace("lsst.afw.math", 4, "Remapping masked image");
     typename DestMaskedImageT::SinglePixel tempPixel(0, 0, 0);
-    for (int destY = 0; destY < destHeight; ++destY) {
-        afwImage::PointD destPosXY(0.0, afwImage::indexToPosition(destY));
-        typename DestMaskedImageT::x_iterator destXIter = destMI.row_begin(destY);
-        for (int destX = 0; destX < destWidth; ++destX, ++destXIter) {
-            // compute sky position associated with this pixel of remapped MaskedImage
-            destPosXY[0] = afwImage::indexToPosition(destX);
-            afwImage::PointD raDec = destWcsPtr->xyToRaDec(destPosXY);            
-            
-            // compute associated pixel position on source MaskedImage
-            afwImage::PointD srcPosXY = srcWcsPtr->raDecToXY(raDec);
+    for (int destIndY = 0; destIndY < destHeight; ++destIndY) {
+        afwImage::PointD destPosXY(0.0, afwImage::indexToPosition(destIndY));
+        typename DestMaskedImageT::x_iterator destXIter = destMI.row_begin(destIndY);
+        for (int destIndX = 0; destIndX < destWidth; ++destIndX, ++destXIter) {
+            lsst::pex::logging::Trace("lsst.afw.math", 6, "destIndXY=%d, %d", destIndX, destIndY);
 
-            // Compute new corresponding position on source image and break it into integer and fractional
+            // compute sky position associated with this pixel of remapped MaskedImage
+            destPosXY[0] = afwImage::indexToPosition(destIndX);
+            lsst::pex::logging::Trace("lsst.afw.math", 6, "destPosXY=%0.2f, %0.2f", destPosXY[0], destPosXY[1]);
+
+            afwImage::PointD raDec = destWcsPtr->xyToRaDec(destPosXY);            
+            lsst::pex::logging::Trace("lsst.afw.math", 6, "raDec=%0.5f, %0.5f", raDec[0], raDec[1]);
+            
+            // Compute associated pixel position on source MaskedImage
+            afwImage::PointD srcPosXY = srcWcsPtr->raDecToXY(raDec);
+            lsst::pex::logging::Trace("lsst.afw.math", 6, "srcPosXY=%0.2f, %0.2f", srcPosXY[0], srcPosXY[1]);
+
+            // Compute associated source pixel index and break it into integer and fractional
             // parts; the latter is used to compute the remapping kernel.
-            std::vector<double> fracOrigPix(2);
-            int srcX = afwImage::positionToIndex(fracOrigPix[0], srcPosXY[0]);
-            int srcY = afwImage::positionToIndex(fracOrigPix[1], srcPosXY[1]);
+            std::vector<double> srcFracInd(2);
+            int srcIndX = afwImage::positionToIndex(srcFracInd[0], srcPosXY[0]);
+            int srcIndY = afwImage::positionToIndex(srcFracInd[1], srcPosXY[1]);
+            lsst::pex::logging::Trace("lsst.afw.math", 6, "intSrcInd=%d, %d; fracSrcInd=%0.2f, %0.2f", srcIndX, srcIndY, srcFracInd[0], srcFracInd[1]);
             
             // If location is too near the edge of the source, or off the source, mark the dest as edge
-            if ((srcX - xBorder0 < 0) || (srcX + xBorder1 >= srcWidth) 
-                || (srcY - yBorder0 < 0) || (srcY + yBorder1 >= srcHeight)) {
+            if ((srcIndX - xBorder0 < 0) || (srcIndX + xBorder1 >= srcWidth) 
+                || (srcIndY - yBorder0 < 0) || (srcIndY + yBorder1 >= srcHeight)) {
                 // skip this pixel
                 *destXIter = edgePixel;
-//                lsst::pex::logging::Trace("lsst.afw.math", 5, "skipping pixel at destX=%d; destY=%d",
-//                    destX, destY);
+                lsst::pex::logging::Trace("lsst.afw.math", 5, "skipping pixel at destInd=%d, %d; srcInd=%d, %d",
+                    destIndX, destIndY, srcIndX, srcIndY);
                 continue;
             }
             
@@ -175,7 +182,7 @@ int afwMath::warpExposure(
 
             // Compute warped pixel
             double kSum = warpingKernel.computeVectors(kernelXList, kernelYList, false);
-            typename SrcMaskedImageT::const_xy_locator srcLoc = srcMI.xy_at(srcX, srcY);
+            typename SrcMaskedImageT::const_xy_locator srcLoc = srcMI.xy_at(srcIndX, srcIndY);
             *destXIter = afwMath::convolveAtAPoint<DestMaskedImageT, SrcMaskedImageT>(srcLoc, kernelXList, kernelYList);
 
             // Correct intensity due to relative pixel spatial scale and kernel sum
