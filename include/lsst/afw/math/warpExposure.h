@@ -95,7 +95,7 @@ namespace math {
     int warpExposure(
         DestExposureT &destExposure,
         SrcExposureT const &srcExposure,
-        SeparableKernel const &warpingKernel
+        SeparableKernel &warpingKernel
         );
        
 }}} // lsst::afw::math

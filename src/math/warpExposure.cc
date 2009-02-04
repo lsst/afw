@@ -95,7 +95,7 @@ template<typename DestExposureT, typename SrcExposureT>
 int afwMath::warpExposure(
     DestExposureT &destExposure,        ///< remapped exposure
     SrcExposureT const &srcExposure,    ///< source exposure
-    SeparableKernel const &warpingKernel    ///< warping kernel; determines warping algorithm
+    SeparableKernel &warpingKernel      ///< warping kernel; determines warping algorithm
     )
 {
     int numGoodPixels = 0;
@@ -105,10 +105,10 @@ int afwMath::warpExposure(
     typedef afwImage::Image<afwMath::Kernel::PixelT> KernelImageT;
     
     // Compute borders; use to prevent applying kernel outside of srcExposure
-    int xBorder0 = warpingKernel.getCtrX();
-    int yBorder0 = warpingKernel.getCtrY();
-    int xBorder1 = warpingKernel.getWidth() - (1 + xBorder0);
-    int yBorder1 = warpingKernel.getHeight() - (1 + yBorder0);
+    const int kernelWidth = warpingKernel.getWidth();
+    const int kernelHeight = warpingKernel.getHeight();
+    const int kernelCtrX = warpingKernel.getCtrX();
+    const int kernelCtrY = warpingKernel.getCtrY();
 
     // Get the source MaskedImage and a pixel accessor to it.
     SrcMaskedImageT srcMI = srcExposure.getMaskedImage();
@@ -134,53 +134,45 @@ int afwMath::warpExposure(
     lsst::pex::logging::Trace("lsst.afw.math", 3,
         boost::format("remap image width=%d; height=%d") % destWidth % destHeight);
 
-    // The source image accessor points to (0,0) which corresponds to pixel xBorder0, yBorder0
-    // because the accessor points to (0,0) of the kernel rather than the center of the kernel
     const typename DestMaskedImageT::SinglePixel edgePixel(0, 0, edgePixelMask);
     
-    std::vector<double> kernelXList(warpingKernel.getWidth());
-    std::vector<double> kernelYList(warpingKernel.getHeight());
+    std::vector<double> kernelXList(kernelWidth);
+    std::vector<double> kernelYList(kernelHeight);
 
     // Set each pixel of destExposure's MaskedImage
     lsst::pex::logging::Trace("lsst.afw.math", 4, "Remapping masked image");
-    typename DestMaskedImageT::SinglePixel tempPixel(0, 0, 0);
     for (int destIndY = 0; destIndY < destHeight; ++destIndY) {
         afwImage::PointD destPosXY(0.0, afwImage::indexToPosition(destIndY));
         typename DestMaskedImageT::x_iterator destXIter = destMI.row_begin(destIndY);
         for (int destIndX = 0; destIndX < destWidth; ++destIndX, ++destXIter) {
-            lsst::pex::logging::Trace("lsst.afw.math", 6, "destIndXY=%d, %d", destIndX, destIndY);
-
             // compute sky position associated with this pixel of remapped MaskedImage
             destPosXY[0] = afwImage::indexToPosition(destIndX);
-            lsst::pex::logging::Trace("lsst.afw.math", 6, "destPosXY=%0.2f, %0.2f", destPosXY[0], destPosXY[1]);
 
             afwImage::PointD raDec = destWcsPtr->xyToRaDec(destPosXY);            
-            lsst::pex::logging::Trace("lsst.afw.math", 6, "raDec=%0.5f, %0.5f", raDec[0], raDec[1]);
             
             // Compute associated pixel position on source MaskedImage
             afwImage::PointD srcPosXY = srcWcsPtr->raDecToXY(raDec);
-            lsst::pex::logging::Trace("lsst.afw.math", 6, "srcPosXY=%0.2f, %0.2f", srcPosXY[0], srcPosXY[1]);
 
             // Compute associated source pixel index and break it into integer and fractional
             // parts; the latter is used to compute the remapping kernel.
+            // To convolve at source pixel (x, y) point source accessor to (x - kernelCtrX, y - kernelCtrY)
+            // because the accessor must point to kernel pixel (0, 0), not the center of the kernel.
             std::vector<double> srcFracInd(2);
-            int srcIndX = afwImage::positionToIndex(srcFracInd[0], srcPosXY[0]);
-            int srcIndY = afwImage::positionToIndex(srcFracInd[1], srcPosXY[1]);
-            lsst::pex::logging::Trace("lsst.afw.math", 6, "intSrcInd=%d, %d; fracSrcInd=%0.2f, %0.2f", srcIndX, srcIndY, srcFracInd[0], srcFracInd[1]);
-            
+            int srcIndX = afwImage::positionToIndex(srcFracInd[0], srcPosXY[0]) - kernelCtrX;
+            int srcIndY = afwImage::positionToIndex(srcFracInd[1], srcPosXY[1]) - kernelCtrY;
+          
             // If location is too near the edge of the source, or off the source, mark the dest as edge
-            if ((srcIndX - xBorder0 < 0) || (srcIndX + xBorder1 >= srcWidth) 
-                || (srcIndY - yBorder0 < 0) || (srcIndY + yBorder1 >= srcHeight)) {
+            if ((srcIndX < 0) || (srcIndX + kernelWidth > srcWidth) 
+                || (srcIndY < 0) || (srcIndY + kernelHeight > srcHeight)) {
                 // skip this pixel
                 *destXIter = edgePixel;
-                lsst::pex::logging::Trace("lsst.afw.math", 5, "skipping pixel at destInd=%d, %d; srcInd=%d, %d",
-                    destIndX, destIndY, srcIndX, srcIndY);
                 continue;
             }
             
             ++numGoodPixels;
 
             // Compute warped pixel
+            warpingKernel.setKernelParameters(srcFracInd);
             double kSum = warpingKernel.computeVectors(kernelXList, kernelYList, false);
             typename SrcMaskedImageT::const_xy_locator srcLoc = srcMI.xy_at(srcIndX, srcIndY);
             *destXIter = afwMath::convolveAtAPoint<DestMaskedImageT, SrcMaskedImageT>(srcLoc, kernelXList, kernelYList);
@@ -206,7 +198,7 @@ typedef float imagePixelType;
     template int afwMath::warpExposure( \
         afwImage::Exposure<DESTIMAGEPIXELT> &destExposure, \
         afwImage::Exposure<SRCIMAGEPIXELT> const &srcExposure, \
-        SeparableKernel const &warpingKernel);
+        SeparableKernel &warpingKernel);
 
 
 warpExposureFuncByType(float, boost::uint16_t)
