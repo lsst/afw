@@ -41,8 +41,8 @@ class WarpExposureTestCase(unittest.TestCase):
         Note: bad pixel areas do get smoothed out so we have to excluded
         all masked bits in the output image, even non-edge pixels.
         """
-        originalExposure = afwImage.ExposureD(OriginalExposurePath)
-        afwWarpedExposure = afwImage.ExposureD(OriginalExposurePath)
+        originalExposure = afwImage.ExposureF(OriginalExposurePath)
+        afwWarpedExposure = afwImage.ExposureF(OriginalExposurePath)
         warpingKernel = afwMath.LanczosWarpingKernel(4)
         numGoodPix = afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingKernel)
         afwWarpedExposure.writeFits("afwWarpedNull")
@@ -59,22 +59,22 @@ class WarpExposureTestCase(unittest.TestCase):
         
         Note that swarp only warps the image plane, so only test that plane.
         """
-        originalExposure = afwImage.ExposureD(OriginalExposurePath)
-        swarpedDecoratedImage = afwImage.DecoratedImageD(SwarpedImagePath)
+        originalExposure = afwImage.ExposureF(OriginalExposurePath)
+        swarpedDecoratedImage = afwImage.DecoratedImageF(SwarpedImagePath)
         swarpedImage = swarpedDecoratedImage.getImage()
 
         swarpedMetadata = swarpedDecoratedImage.getMetadata()
         warpedWcs = afwImage.Wcs(swarpedMetadata)
 
-        afwWarpedMaskedImage = afwImage.MaskedImageD(swarpedImage.getWidth(), swarpedImage.getHeight())
-        afwWarpedExposure = afwImage.ExposureD(afwWarpedMaskedImage, warpedWcs)
+        afwWarpedMaskedImage = afwImage.MaskedImageF(swarpedImage.getWidth(), swarpedImage.getHeight())
+        afwWarpedExposure = afwImage.ExposureF(afwWarpedMaskedImage, warpedWcs)
         
         warpingKernel = afwMath.LanczosWarpingKernel(4)
         numGoodPix = afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingKernel)
         afwWarpedExposure.writeFits("afwWarped")
         
         # supplying (incorrect) variance and mask planes works around PR #617
-        swarpedMaskedImage = afwImage.MaskedImageD(swarpedImage,
+        swarpedMaskedImage = afwImage.MaskedImageF(swarpedImage,
             afwWarpedMaskedImage.getMask(), afwWarpedMaskedImage.getVariance())
         badPlanes = self.compareMaskedImages(afwWarpedExposure.getMaskedImage(), swarpedMaskedImage,
             doImage=True, doVariance=False, doMask=False, skipBadMask1=0xFFFF)

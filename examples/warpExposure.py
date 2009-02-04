@@ -71,16 +71,16 @@ def main():
     print "Remapping masked image  ", originalExposurePath
     print "to match wcs and size of", warpedWcsImageOrExposurePath
     
-    originalExposure = afwImage.ExposureD(originalExposurePath)
+    originalExposure = afwImage.ExposureF(originalExposurePath)
     
     if warpedWcsImageOrExposurePath.lower().endswith(".fits"):
         # user specified an image, not an exposure
-        warpedDI = afwImage.DecoratedImageD(warpedWcsImageOrExposurePath)
+        warpedDI = afwImage.DecoratedImageF(warpedWcsImageOrExposurePath)
         warpedWcs = afwImage.Wcs(warpedDI.getMetadata())
-        warpedMI = afwImage.MaskedImageD(warpedDI.getWidth(), warpedDI.getHeight())
-        warpedExposure = afwImage.ExposureD(warpedMI, warpedWcs)
+        warpedMI = afwImage.MaskedImageF(warpedDI.getWidth(), warpedDI.getHeight())
+        warpedExposure = afwImage.ExposureF(warpedMI, warpedWcs)
     else:
-        warpedExposure = afwImage.ExposureD(warpedWcsImageOrExposurePath)
+        warpedExposure = afwImage.ExposureF(warpedWcsImageOrExposurePath)
     
     if opt.verbosity > 0:
         print "Verbosity =", opt.verbosity
