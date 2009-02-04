@@ -59,7 +59,7 @@ class BackgroundTestCase(unittest.TestCase):
 	bgCtrl.setNySample(3)
 	bgCtrl.sctrl.setNumIter(3)
 	bgCtrl.sctrl.setNumSigmaClip(3)
-	back = afwMath.BackgroundF(self.image, bgCtrl)
+	back = afwMath.make_Background(self.image, bgCtrl)
 	mid = back.getPixel(xcen,ycen)
 	
         self.assertEqual(back.getPixel(xcen,ycen), self.val)
@@ -101,7 +101,7 @@ class BackgroundTestCase(unittest.TestCase):
             bctrl.setNySample(3);
 	    
             # run the background constructor and call the getPixel() and getImage() functions.
-            backobj = afwMath.BackgroundD(img,bctrl)
+            backobj = afwMath.make_Background(img,bctrl)
 
 	    pix_per_subimage = img.getWidth()*img.getHeight()/(bctrl.getNxSample()*bctrl.getNySample())
 	    stdev_interp = req_stdev/math.sqrt(pix_per_subimage)
@@ -135,7 +135,7 @@ class BackgroundTestCase(unittest.TestCase):
 	bctrl.setNySample(6);
 	bctrl.sctrl.setNumSigmaClip(20.0)  # something large enough to avoid clipping entirely
 	bctrl.sctrl.setNumIter(1)
-	backobj = afwMath.BackgroundD(rampimg,bctrl)
+	backobj = afwMath.make_Background(rampimg,bctrl)
 
 	xpixels = [0,nx/2,nx-1]
 	ypixels = [0,ny/2,ny-1]
@@ -163,7 +163,7 @@ class BackgroundTestCase(unittest.TestCase):
 	bctrl.setNySample(16);
 	bctrl.sctrl.setNumSigmaClip(10.0)  
 	bctrl.sctrl.setNumIter(1)
-	backobj = afwMath.BackgroundD(parabimg,bctrl)
+	backobj = afwMath.make_Background(parabimg,bctrl)
 
 	# debug
 	#bimg = backobj.getImageD()
@@ -196,7 +196,7 @@ class BackgroundTestCase(unittest.TestCase):
 	bctrl.setNySample(16);
 	bctrl.sctrl.setNumSigmaClip(3.0)  
 	bctrl.sctrl.setNumIter(2)
-	backobj = afwMath.BackgroundF(mi.getImage(), bctrl)
+	backobj = afwMath.make_Background(mi.getImage(), bctrl)
 
         if display:
             ds9.mtv(mi, frame=0)

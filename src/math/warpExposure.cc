@@ -134,7 +134,7 @@ int afwMath::warpExposure(
     lsst::pex::logging::Trace("lsst.afw.math", 3,
         boost::format("remap image width=%d; height=%d") % destWidth % destHeight);
 
-    const typename DestMaskedImageT::SinglePixel edgePixel(0, 0, edgePixelMask);
+    const typename DestMaskedImageT::SinglePixel edgePixel(0, edgePixelMask, 0);
     
     std::vector<double> kernelXList(kernelWidth);
     std::vector<double> kernelYList(kernelHeight);

@@ -1,6 +1,11 @@
+// -*- LSST-C++ -*-
 /**
- * \file
- * \brief Support statistical operations on images
+ * @file
+ *
+ * @brief Support statistical operations on images
+ *
+ * @author Steve Bickerton
+ * @ingroup afw
  */
 #include <iostream>
 #include <limits>
@@ -8,9 +13,6 @@
 #include "boost/tuple/tuple.hpp"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Statistics.h"
-
-// remove this for new API 
-#define fast_iterator iterator          
 
 using namespace std;
 namespace image = lsst::afw::image;
@@ -23,10 +25,11 @@ namespace {
 }
 
 /**
- * Constructor for Statistics
+ * @brief Constructor for Statistics object
  *
- * Most of the actual work is done in this constructor; the results
+ * @note Most of the actual work is done in this constructor; the results
  * are retrieved using \c getValue etc.
+ *
  */
 template<typename Image>
 math::Statistics::Statistics(Image const& img, ///< Image (or MaskedImage) whose properties we want
@@ -56,18 +59,18 @@ math::Statistics::Statistics(Image const& img, ///< Image (or MaskedImage) whose
     // now only calculate it if it's specifically requested - these all cost more!
 
     // copy the image for any routines that will use median or quantiles
-    if (flags & (MEDIAN | IQRANGE | MEANCLIP | VARIANCECLIP)) {
+    if (flags & (MEDIAN | IQRANGE | MEANCLIP | STDEVCLIP | VARIANCECLIP)) {
         
         typename Image::Ptr imgcp = typename Image::Ptr(new Image(img, true));  // deep copy
         
-        if (flags & (MEDIAN | MEANCLIP | VARIANCECLIP)) {
+        if (flags & (MEDIAN | MEANCLIP | STDEVCLIP | VARIANCECLIP)) {
             _median = _quickSelect(*imgcp, 0.5);
         }
-        if (flags & (IQRANGE | MEANCLIP | VARIANCECLIP)) {
+        if (flags & (IQRANGE | MEANCLIP | STDEVCLIP | VARIANCECLIP)) {
             _iqrange = std::fabs(_quickSelect(*imgcp, 0.75) - _quickSelect(*imgcp, 0.25));
         }
         
-        if (flags & (MEANCLIP | VARIANCECLIP)) {            
+        if (flags & (MEANCLIP | STDEVCLIP | VARIANCECLIP)) {            
             for(int i_i = 0; i_i < sctrl.getNumIter(); ++i_i) {
                 
                 double const center = (i_i > 0) ? _meanclip : _median;
@@ -86,10 +89,15 @@ math::Statistics::Statistics(Image const& img, ///< Image (or MaskedImage) whose
 }
 
 
-// =========================================================================
-// _getStandard(img, flags)
-// compute the standard stats: mean, variance, min, max
-// An overloaded version below is used to get clipped versions
+/* =========================================================================
+ * _getStandard(img, flags)
+ * *brief Compute the standard stats: mean, variance, min, max
+ *
+ * *param img    an afw::Image to compute the stats over
+ * *param flags  an integer (bit field indicating which statistics are to be computed
+ *
+ * *note An overloaded version below is used to get clipped versions
+ */
 template<typename Image>
 boost::tuple<double, double, double, double> math::Statistics::_getStandard(Image const &img, int const flags) {
     
@@ -157,10 +165,16 @@ boost::tuple<double, double, double, double> math::Statistics::_getStandard(Imag
 }
 
 
-//==========================================================
-// _getStandard(img, flags, clipinfo)
-// A routine to get standard stats: mean, variance, min, max with
-//   clipping on std::pair<double,double> = center, cliplimit
+/* ==========================================================
+ * *overload _getStandard(img, flags, clipinfo)
+ *
+ * *param img      an afw::Image to compute stats for
+ * *param flags    an int (bit field indicating which stats to compute
+ * *param clipinfo the center and cliplimit for the first clip iteration
+ *
+ * *brief A routine to get standard stats: mean, variance, min, max with
+ *   clipping on std::pair<double,double> = center, cliplimit
+ */
 template<typename Image>
 boost::tuple<double, double, double, double> math::Statistics::_getStandard(Image const &img, int const flags, std::pair<double,double> const clipinfo) {
     
@@ -223,8 +237,16 @@ boost::tuple<double, double, double, double> math::Statistics::_getStandard(Imag
 }
 
 
-// The Floyd & Rivest _quickSelect algorithm for fast computation of a median
-// This implementation adapted from Numerical recipes (3rd ed.) Press et al. 2007.
+/* _quickSelect()
+ *
+ * *brief A fast algorithm for computing percentiles for an image
+ *
+ * *param img       an afw::Image
+ * *param quartile  the desired percentile.
+ *
+ * *note Uses the Floyd & Rivest _quickSelect algorithm for fast computation of a median
+ * *note Implementation adapted from Numerical recipes (3rd ed.) Press et al. 2007.
+ */
 template<typename Image>
 double math::Statistics::_quickSelect(Image const &img, double const quartile) {
     
@@ -233,7 +255,7 @@ double math::Statistics::_quickSelect(Image const &img, double const quartile) {
 
     // this routine should only be called with a (contiguous) copy of the image
     // so this declaration should be fine to treat like a vector
-    typename Image::fast_iterator arr = img.begin(/* true */);
+    typename Image::fast_iterator arr = img.begin(true);
     
     // apply the algorithm
     int i_mid;
@@ -286,11 +308,17 @@ double math::Statistics::_quickSelect(Image const &img, double const quartile) {
 }
 
 
-/// Return the value and error in the specified statistic (e.g. MEAN)
-///
-/// Only quantities requested in the constructor may be retrieved
-///
-/// \sa getValue and getError
+/* @brief Return the value and error in the specified statistic (e.g. MEAN)
+ *
+ * @param prop the property (see Statistics.h header) to retrieve
+ *
+ * @note Only quantities requested in the constructor may be retrieved
+ *
+ * @sa getValue and getError
+ *
+ * @todo uncertainties on MEANCLIP,STDEVCLIP are sketchy.  _n != _nClip
+ *
+ */
 std::pair<double, double> math::Statistics::getResult(math::Property const prop ///< Desired property
                                                      ) const {
     if (!(prop & _flags)) {             // we didn't calculate it
@@ -360,24 +388,30 @@ std::pair<double, double> math::Statistics::getResult(math::Property const prop 
      return ret;
 }
 
-/// Return the value of the desired property (if specified in the constructor)
+/* @brief Return the value of the desired property (if specified in the constructor)
+ * @param prop - the property (see Statistics.h) to retrieve
+ */
 double math::Statistics::getValue(math::Property const prop ///< Desired property
                                  ) const {
     return getResult(prop).first;
 }
 
-/// Return the error in the desired property (if specified in the constructor)
+
+/* @brief Return the error in the desired property (if specified in the constructor)
+ * @param prop - the property (see Statistics.h) to retrieve
+ */
 double math::Statistics::getError(math::Property const prop ///< Desired property
                                  ) const {
     return getResult(prop).second;
 }
 
-/************************************************************************************************************/
-//
-// Explicit instantiations
-//
-//explicit Statistics(Image const& img, int const flags,
-//                        StatisticsControl const& sctrl=StatisticsControl());
+
+/**
+ * @brief Explicit instantiations
+ *
+ * explicit Statistics(Image const& img, int const flags,
+ *                        StatisticsControl const& sctrl=StatisticsControl());
+ */
 
 #define INSTANTIATE_STATISTICS(TYPE) \
     template math::Statistics::Statistics(image::Image<TYPE> const& img, int const flags, StatisticsControl const& sctrl);\

@@ -1,8 +1,11 @@
+// -*- LSST-C++ -*-
 #if !defined(LSST_AFW_MATH_BACKGROUND_H)
 #define LSST_AFW_MATH_BACKGROUND_H
 /**
- * \file
- * \brief ImageT Background
+ * @file Background.h
+ * @brief Use bi-cubic interpolation to estimate image background
+ * @ingroup afw
+ * @author Steve Bickerton
  */
 
 #include "boost/shared_ptr.hpp"
@@ -12,10 +15,15 @@
 
 namespace lsst { namespace afw { namespace math {
 
-/// \brief Pass parameters to a Background object
+/**
+ * @class BackgroundControl
+ * @brief Pass parameters to a Background object
+ */
 class BackgroundControl {
 public:
-    BackgroundControl(Style const style=math::NATURAL_SPLINE, int const nxSample=10, int const nySample=10)
+    BackgroundControl(Style const style=math::NATURAL_SPLINE,  ///< Style of the interpolation (not yet implemented)
+                      int const nxSample=10,                   ///< Num. grid samples in x
+                      int const nySample=10)                   ///< Num. grid samples in y
         : _nxSample(nxSample), _nySample(nySample) {
         assert(nxSample > 0);
         assert(nySample > 0);
@@ -35,7 +43,8 @@ private:
 };
     
 /**
- * A class to evaluate %image background levels
+ * @class Background
+ * @brief A class to evaluate %image background levels
  *
  * Break an image up into nx*ny sub-images and use 3-sigma clipped means to
  * estimate the background levels in each square.  Then use a bicubic spline or
@@ -44,7 +53,7 @@ private:
  * Methods are available return background at a point (inefficiently), or an entire background image.
  * BackgroundControl contains public StatisticsControl and InterpolateControl members to allow
  * user control of how the backgrounds are computed.
- * \code
+ * @code
        math::BackgroundControl bctrl(math::NATURAL_SPLINE);
        bctrl.setNxSample(7);            // number of sub-image squares in x-dimension
        bctrl.setNySample(7);            // number of sub-image squares in y-dimention
@@ -52,14 +61,15 @@ private:
        math::Background backobj = math::make_Background(img, bctrl);
        double somepoint = backobj.getPixel(i_x,i_y); // get the background at a pixel at i_x,i_y
        ImageT back = backobj.getFrame();             // get a whole background image
- * \endcode
+ * @endcode
  *
  */
 class Background {
 public:
     
     template<typename ImageT>
-    explicit Background(ImageT const& img, BackgroundControl const& bgCtrl=BackgroundControl());
+    explicit Background(ImageT const& img, ///< Image (or MaskedImage) whose background we want
+                        BackgroundControl const& bgCtrl=BackgroundControl()); ///< Parameters to control Statistics and Interpolation
     
     ~Background() {}
     
@@ -87,8 +97,11 @@ private:
     BackgroundControl _bctrl;           // control info set by user.
 };
 
-/// A convenience function that uses function overloading to make the correct type of Background
-/// cf. std::make_pair()
+/**
+ * @brief A convenience function that uses function overloading to make the correct type of Background
+ *
+ * cf. std::make_pair()
+ */
 template<typename ImageT>
 Background make_Background(ImageT const& img, BackgroundControl const& bgCtrl=BackgroundControl()) {
     return Background(img, bgCtrl);
