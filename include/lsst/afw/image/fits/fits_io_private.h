@@ -30,12 +30,6 @@
 
 namespace pexExcept = lsst::pex::exceptions;
 
-namespace lsst {
-namespace pex {
-namespace exceptions {
-LSST_EXCEPTION_TYPE(FitsErrorException, Exception, lsst::pex::exceptions::LogicErrorException)
-}}}
-
 /************************************************************************************************************/
 
 namespace lsst { namespace afw { namespace image {
@@ -47,7 +41,8 @@ namespace cfitsio {
     }
 #endif
 
-    using lsst::pex::exceptions::FitsErrorException;
+    LSST_EXCEPTION_TYPE(FitsErrorException,
+                        lsst::pex::exceptions::Exception, lsst::pex::exceptions::LogicErrorException)
 
     std::string err_msg(fitsfile const *fd, int const status = 0, std::string const &errMsg = "");
     std::string err_msg(std::string const &fileName, int const status = 0, std::string const &errMsg = "");
