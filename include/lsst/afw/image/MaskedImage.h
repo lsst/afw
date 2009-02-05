@@ -653,13 +653,13 @@ namespace image {
         void operator<<=(MaskedImage const& rhs);
 
         void operator+=(ImagePixelT const rhs);
-        void operator+=(MaskedImage& rhs);
+        void operator+=(MaskedImage const& rhs);
         void operator-=(ImagePixelT const rhs);
-        void operator-=(MaskedImage& rhs);
+        void operator-=(MaskedImage const& rhs);
         void operator*=(ImagePixelT const rhs);
-        void operator*=(MaskedImage& rhs);
+        void operator*=(MaskedImage const& rhs);
         void operator/=(ImagePixelT const rhs);
-        void operator/=(MaskedImage& rhs);
+        void operator/=(MaskedImage const& rhs);
         
         // IO functions
         static std::string imageFileName(std::string const& baseName) { return baseName + "_img.fits"; }
