@@ -26,7 +26,7 @@ std::string err_msg(std::string const& fileName, ///< (possibly empty) file name
     if (status != 0) {
         char fitsErrMsg[FLEN_ERRMSG];
         (void)lsst::afw::image::cfitsio::fits_get_errstatus(status, fitsErrMsg);
-        os << ": " << fitsErrMsg;
+        os << ": " << fitsErrMsg << " (" << status << ")";
     }
     if (errMsg != "") {
         os << " : " << errMsg;
@@ -77,8 +77,7 @@ void move_to_hdu(lsst::afw::image::cfitsio::fitsfile *fd, //!< cfitsio file desc
     if (relative) {
         if (fits_movrel_hdu(fd, hdu, NULL, &status) != 0) {
             throw LSST_EXCEPT(FitsErrorException,
-                              err_msg(fd, status, boost::format("Attempted to select relative HDU %d") % hdu),
-                              status);
+                              err_msg(fd, status, boost::format("Attempted to select relative HDU %d") % hdu));
         }
     } else {
         if (hdu == 0) { // PDU; go there
@@ -86,8 +85,7 @@ void move_to_hdu(lsst::afw::image::cfitsio::fitsfile *fd, //!< cfitsio file desc
         } else {
             if (fits_movabs_hdu(fd, hdu, NULL, &status) != 0) {
                 throw LSST_EXCEPT(FitsErrorException,
-                                  err_msg(fd, status, boost::format("Attempted to select absolute HDU %d") % hdu),
-                                  status);
+                                  err_msg(fd, status, boost::format("Attempted to select absolute HDU %d") % hdu));
             }
         }
     }
@@ -126,7 +124,7 @@ void appendKey(lsst::afw::image::cfitsio::fitsfile* fd, std::string const &keyWo
     }
 
     if (status) {
-        throw LSST_EXCEPT(FitsErrorException, err_msg(fd, status), status);
+        throw LSST_EXCEPT(FitsErrorException, err_msg(fd, status));
     }
 }
 
@@ -137,7 +135,7 @@ int getNumKeys(fitsfile* fd) {
      int status = 0;
  
      if (fits_get_hdrpos(fd, &numKeys, &keynum, &status) != 0) {
-          throw LSST_EXCEPT(FitsErrorException, err_msg(fd, status), status);
+          throw LSST_EXCEPT(FitsErrorException, err_msg(fd, status));
      }
 
      return numKeys;
@@ -152,7 +150,7 @@ void getKey(fitsfile* fd,
 
      int status = 0;
      if (fits_read_keyn(fd, n, keyWordChars, keyValueChars, keyCommentChars, &status) != 0) {
-          throw LSST_EXCEPT(FitsErrorException, err_msg(fd, status), status);
+          throw LSST_EXCEPT(FitsErrorException, err_msg(fd, status));
      }
          
      keyWord = keyWordChars;

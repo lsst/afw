@@ -368,8 +368,8 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
         lsst::afw::image::detail::types_traits<unsigned short>::image_t,
         lsst::afw::image::detail::types_traits<short>::image_t,
         lsst::afw::image::detail::types_traits<int>::image_t,
-        lsst::afw::image::detail::types_traits<float>::image_t // ,
-        //lsst::afw::image::detail::types_traits<double>::image_t
+        lsst::afw::image::detail::types_traits<float>::image_t,
+        lsst::afw::image::detail::types_traits<double>::image_t
     > fits_img_types;
 
     if (!boost::filesystem::exists(fileName)) {
@@ -378,7 +378,7 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
     }
 
     if (!image::fits_read_image<fits_img_types>(fileName, *this->_getRawImagePtr(), metadata)) {
-        throw LSST_EXCEPT(lsst::afw::image::FitsErrorException,
+        throw LSST_EXCEPT(image::cfitsio::FitsErrorException,
                           (boost::format("Failed to read %s HDU %d") % fileName % hdu).str());
     }
     this->_setRawView();
