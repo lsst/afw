@@ -320,7 +320,7 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::conformSizes()
     int const imageCols = _image->getWidth();
     int const imageRows = _image->getHeight();
 
-    {
+    if (_mask.get()) {
         int const width = _mask->getWidth();
         int const height = _mask->getHeight();
         
@@ -336,7 +336,7 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::conformSizes()
         }
     }
 
-    {
+    if (_variance.get()) {
         int const width = _variance->getWidth();
         int const height = _variance->getHeight();
         
