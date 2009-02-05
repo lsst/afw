@@ -378,7 +378,7 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
     }
 
     if (!image::fits_read_image<fits_img_types>(fileName, *this->_getRawImagePtr(), metadata)) {
-        throw LSST_EXCEPT(image::cfitsio::FitsErrorException,
+        throw LSST_EXCEPT(image::cfitsio::FitsException,
                           (boost::format("Failed to read %s HDU %d") % fileName % hdu).str());
     }
     this->_setRawView();

@@ -53,7 +53,7 @@ public:
     template <typename Images>
     void read_image(boost::gil::any_image<Images>& im) {
         if (!construct_matched(im,detail::fits_type_format_checker(_bitpix))) {
-            throw LSST_EXCEPT(FitsErrorException,
+            throw LSST_EXCEPT(FitsException,
                               "no matching image type between those of the given any_image and that of the file");
         } else {
             im.recreate(get_getDimensions());
