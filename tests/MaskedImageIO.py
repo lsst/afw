@@ -100,6 +100,11 @@ class MaskedImageTestCase(unittest.TestCase):
 
         utilsTests.assertRaisesLsstCpp(self, pexEx.RuntimeErrorException, tst)
 
+    def testTicket617(self):
+        """Test reading an F64 image and converting it to a MaskedImage"""
+        im = afwImage.ImageD(100, 100); im.set(666)
+        mi = afwImage.MaskedImageD(im)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
