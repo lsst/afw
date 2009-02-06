@@ -79,7 +79,7 @@ int Card::write(int fd,
         } else if (value.type() == typeid(int)) {
             sprintf(card, "%20d", boost::any_cast<int>(value));
         } else if (value.type() == typeid(double)) {
-            sprintf(card, "%20.7f", boost::any_cast<double>(value));
+            sprintf(card, "%20.10f", boost::any_cast<double>(value));
         } else if (value.type() == typeid(float)) {
             sprintf(card, "%20.7f", boost::any_cast<float>(value));
         }
