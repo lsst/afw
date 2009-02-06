@@ -178,7 +178,7 @@ int afwMath::warpExposure(
             *destXIter = afwMath::convolveAtAPoint<DestMaskedImageT, SrcMaskedImageT>(srcLoc, kernelXList, kernelYList);
 
             // Correct intensity due to relative pixel spatial scale and kernel sum
-            double multFac = destWcsPtr->pixArea(destPosXY) / (srcWcsPtr->pixArea(srcPosXY) * kSum);
+            double multFac = srcWcsPtr->pixArea(srcPosXY) / (destWcsPtr->pixArea(destPosXY) * kSum);
             destXIter.image() *= static_cast<typename DestMaskedImageT::Image::SinglePixel>(multFac);
             destXIter.variance() *= static_cast<typename DestMaskedImageT::Variance::SinglePixel>(multFac * multFac);
 
