@@ -104,6 +104,20 @@ SWIG_SHARED_PTR(Wcs, lsst::afw::image::Wcs);
 
 %include "lsst/afw/image/Wcs.h"
 
+%extend lsst::afw::image::Point<double> {
+    %pythoncode {
+    def __str__(self):
+        return "(%.6f, %.6f)" % (self.getX(), self.getY())
+    }    
+}
+
+%extend lsst::afw::image::Point<int> {
+    %pythoncode {
+    def __str__(self):
+        return "(%d, %d)" % (self.getX(), self.getY())
+    }    
+}
+
 /************************************************************************************************************/
 
 %{
