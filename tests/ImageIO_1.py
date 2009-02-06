@@ -55,6 +55,20 @@ class ReadFitsTestCase(unittest.TestCase):
         col, row, val = 32, 1, 39.11672
         self.assertAlmostEqual(im.get(col, row), val, 5)
 
+    def testF64(self):
+        """Test reading a U16 file into a F64 image"""
+        im = afwImage.ImageD(os.path.join(dataDir, "small_img.fits"))
+        col, row, val = 0, 0, 1154
+        self.assertEqual(im.get(col, row), val)
+        
+        #print "IM = ", im
+    def testWriteReadF64(self):
+        """Test writing then reading an F64 image"""
+
+        im = afwImage.ImageD(100, 100); im.set(666)
+        im.writeFits("smallD.fits")
+        newIm = afwImage.ImageD("smallD.fits")
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
@@ -67,5 +81,9 @@ def suite():
 
     return unittest.TestSuite(suites)
 
+def run(exit=False):
+    """Run the tests"""
+    utilsTests.run(suite(), exit)
+ 
 if __name__ == "__main__":
-    utilsTests.run(suite())
+    run(True)
