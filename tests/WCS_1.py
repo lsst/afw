@@ -69,7 +69,7 @@ class WCSTestCaseSDSS(unittest.TestCase):
 
     def test_RaTan_DecTan(self):
         """Check the RA---TAN, DEC--TAN WCS conversion"""
-        raDec = self.wcs.xyToRaDec(1.0, 1.0)
+        raDec = self.wcs.xyToRaDec(0.0, 0.0)
         raDec0 = afwImage.PointD(19.1960467992, 245.1598413385) # values from wcstools' xy2sky, transposed
 
         self.assertAlmostEqual(raDec.getX(), raDec0.getX(), 5)
@@ -109,10 +109,10 @@ class WCSTestCaseCFHT(unittest.TestCase):
 
     def test_RaTan_DecTan(self):
         """Check the RA---TAN, DEC--TAN WCS conversion"""
-        raDec = self.wcs.xyToRaDec(33.0, 1.0 ) # position read off ds9
+        raDec = self.wcs.xyToRaDec(0.0, 0.0) # position read off ds9
 
-        self.assertAlmostEqual(raDec.getX(), 17.87840, 5) # ra from ds9
-        self.assertAlmostEqual(raDec.getY(), 7.72231, 5) # dec from ds9
+        self.assertAlmostEqual(raDec.getX(), 17.87673, 5) # ra from ds9
+        self.assertAlmostEqual(raDec.getY(),  7.72231, 5) # dec from ds9
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
