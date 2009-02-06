@@ -332,24 +332,20 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::xyToRaDec(
 }
 
 /// Return the pixel area in deg^2 at a given pixel coordinate
-///
-/// \note This is an expensive routine, and should NOT be called for every pixel.  If you need a distortion
-/// map, it'd be better to evaluate the scale at a number of points and interpolate
-///
-double lsst::afw::image::Wcs::pixArea(lsst::afw::image::PointD pix00) const
+double lsst::afw::image::Wcs::pixArea(lsst::afw::image::PointD pix0) const
 {
-    //
-    // Figure out the (0, 0), (0, 1), and (1, 0) pixel coordinates of the corners of a square drawn in ra/dec
-    // It'd be better to centre the square at pix00, but that would involve another conversion from sky to
-    // pixel coordinates so I didn't bother
-    //
-    const double side = 1e-3;           // length of the square's sides in degrees
+    lsst::afw::image::PointD sky0, sky1, deltaSky;
+    lsst::afw::image::PointD pix1 = pix0 + lsst::afw::image::PointD(1,1);
 
-    lsst::afw::image::PointD const sky00 = xyToRaDec(pix00);
-    double const cosDec = cos((sky00.getY() + side/2)*M_PI/180.0);
-    
-    lsst::afw::image::PointD const dpix01 = raDecToXY(sky00 + lsst::afw::image::PointD(0,           side)) - pix00;
-    lsst::afw::image::PointD const dpix10 = raDecToXY(sky00 + lsst::afw::image::PointD(side*cosDec, 0))    - pix00;
+    sky0 = xyToRaDec(pix0);
+    sky1 = xyToRaDec(pix1);
 
-    return (side*side)/fabs(dpix01.getX()*dpix10.getY() - dpix01.getY()*dpix10.getX());
+    deltaSky = sky1 - sky0;
+
+    double cosDec, area;
+
+    cosDec = cos(sky0.getY() * M_PI/180.0);
+    area = std::fabs(deltaSky.getX()*cosDec * deltaSky.getY());
+
+    return area;
 }

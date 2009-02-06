@@ -7,7 +7,6 @@ import unittest
 import eups
 import lsst.afw.image as afwImage
 import lsst.utils.tests as utilsTests
-import lsst.afw.display.ds9 as ds9
 
 try:
     type(verbose)
@@ -17,7 +16,7 @@ except NameError:
 dataDir = eups.productDir("afwdata")
 if not dataDir:
     raise RuntimeError("Must set up afwdata to run these tests")
-InputImagePath = os.path.join(dataDir, "871034p_1_MI")
+InputImagePath = os.path.join(dataDir, "871034p_1_MI_img.fits")
 InputSmallImagePath = os.path.join(dataDir, "small_img.fits")
 InputCorruptMaskedImageName = "small_MI_corrupt"
 currDir = os.path.abspath(os.path.dirname(__file__))
@@ -33,7 +32,7 @@ class WCSTestCaseSDSS(unittest.TestCase):
         self.wcs = afwImage.Wcs(im.getMetadata())
 
         if False:
-            ds9.mtv(im, wcs=self.wcs)
+            import lsst.afw.display.ds9 as ds9; ds9.mtv(im, wcs=self.wcs)
 
     def tearDown(self):
         del self.wcs
@@ -101,16 +100,12 @@ class WCSTestCaseCFHT(unittest.TestCase):
     """A test case for WCS"""
 
     def setUp(self):
-        e = afwImage.ExposureF(InputImagePath)
-        self.wcs = e.getWcs()
-        self.metadata = e.getMetadata()
+        im = afwImage.DecoratedImageD(InputImagePath)
 
-        if False:
-            ds9.mtv(e)
+        self.wcs = afwImage.Wcs(im.getMetadata())
 
     def tearDown(self):
         del self.wcs
-        del self.metadata
 
     def test_RaTan_DecTan(self):
         """Check the RA---TAN, DEC--TAN WCS conversion"""
@@ -118,28 +113,6 @@ class WCSTestCaseCFHT(unittest.TestCase):
 
         self.assertAlmostEqual(raDec.getX(), 17.87673, 5) # ra from ds9
         self.assertAlmostEqual(raDec.getY(),  7.72231, 5) # dec from ds9
-
-    def testPlateScale(self):
-        """Test that we can measure the area of a pixel"""
-
-        p00 = afwImage.PointD(10, 10)
-        p00 = afwImage.PointD(self.metadata.getAsDouble("CRPIX1"), self.metadata.getAsDouble("CRPIX2"))
-
-        sky00 = self.wcs.xyToRaDec(p00)
-        cosdec = math.cos(math.pi/180*sky00.getY())
-
-        side = 1e-3
-        p10 = self.wcs.raDecToXY(sky00 + afwImage.PointD(side*cosdec, 0))    - p00
-        p01 = self.wcs.raDecToXY(sky00 + afwImage.PointD(0,           side)) - p00
-
-        area = side*side/abs(p10.getX()*p01.getY() - p01.getX()*p10.getY())
-        #
-        # Don't run this; we don't get quite the same answers as the CD1_1 numbers in the header; why?
-        #
-        if False:
-            self.assertAlmostEqual(3600*math.sqrt(area), 3600*self.metadata.getAsDouble("CD1_1"))
-
-        self.assertAlmostEqual(math.sqrt(self.wcs.pixArea(p00)), math.sqrt(area))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
