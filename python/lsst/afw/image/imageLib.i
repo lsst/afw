@@ -88,6 +88,20 @@ def version(HeadURL = r"$HeadURL$"):
 %template(PointD) lsst::afw::image::Point<double>;
 %template(PointI) lsst::afw::image::Point<int>;
 
+%extend lsst::afw::image::Point<double> {
+    %pythoncode {
+    def __str__(self):
+        return "(%.6f, %.6f)" % (self.getX(), self.getY())
+    }    
+}
+
+%extend lsst::afw::image::Point<int> {
+    %pythoncode {
+    def __str__(self):
+        return "(%d, %d)" % (self.getX(), self.getY())
+    }    
+}
+
 %apply double &OUTPUT { double & };
 %rename(positionToIndexAndResidual) lsst::afw::image::positionToIndex(double &, double);
 %clear double &OUTPUT;
