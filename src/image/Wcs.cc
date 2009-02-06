@@ -18,6 +18,7 @@
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/afw/formatters/Utils.h"
 #include "lsst/pex/exceptions.h"
+#include "lsst/afw/image/ImageUtils.h"
 #include "lsst/afw/image/Wcs.h"
 
 using lsst::daf::base::PropertySet;
@@ -292,7 +293,8 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::raDecToXY(
     int status = 0;
     wcss2p(_wcsInfo, 1, 2, skyTmp, &phi, &theta, imgcrd, pixTmp, &status);
 
-    return lsst::afw::image::PointD(pixTmp);
+    return lsst::afw::image::PointD(pixTmp[0] + lsst::afw::image::PixelZeroPos - 1,
+                                    pixTmp[1] + lsst::afw::image::PixelZeroPos - 1); // wcslib assumes 1-indexed coords
 }
 
 
@@ -309,7 +311,8 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::xyToRaDec(
     double const x,                     ///< Input column position
     double const y                      ///< Input row position
 ) const {
-    double const pixTmp[2] = { x, y };
+    double const pixTmp[2] = { x - lsst::afw::image::PixelZeroPos + 1,
+                               y - lsst::afw::image::PixelZeroPos + 1}; // wcslib assumes 1-indexed coordinates
     double imgcrd[2];
     double phi, theta;
     double skyTmp[2];

@@ -157,6 +157,11 @@ system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
    elif re.search("::MaskedImage<", data.__repr__()): # it's a MaskedImage; display the Image and overlay the Mask
        _mtv(data.getImage(), wcs, False)
        mtv(data.getMask(), frame, False, wcs, False)
+   elif re.search("::Exposure<", data.__repr__()): # it's an Exposure; display the MaskedImage with the WCS
+       if wcs:
+           raise RuntimeError, "You may not specify a wcs with an Exposure"
+
+       mtv(data.getMaskedImage(), frame, False, data.getWcs(), False)
    elif re.search("::Mask<", data.__repr__()): # it's a Mask; display it, bitplane by bitplane
        nMaskPlanes = data.getNumPlanesUsed()
        maskPlanes = data.getMaskPlaneDict()
