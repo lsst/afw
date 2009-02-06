@@ -34,15 +34,18 @@ namespace pexExcept = lsst::pex::exceptions;
 
 namespace lsst { namespace afw { namespace image {
 
+/**
+ * @brief An exception thrown when problems are found connected with FITS files
+ */
+LSST_EXCEPTION_TYPE(FitsException,
+                    lsst::pex::exceptions::Exception, lsst::pex::exceptions::LogicErrorException)
+
 namespace cfitsio {
 #if !defined(DOXYGEN)
     extern "C" {
 #       include "fitsio.h"
     }
 #endif
-
-    LSST_EXCEPTION_TYPE(FitsException,
-                        lsst::pex::exceptions::Exception, lsst::pex::exceptions::LogicErrorException)
 
     std::string err_msg(fitsfile const *fd, int const status = 0, std::string const &errMsg = "");
     std::string err_msg(std::string const &fileName, int const status = 0, std::string const &errMsg = "");
@@ -194,13 +197,13 @@ protected:
         if (flags == "r" || flags == "rb") {
             int status = 0;
             if (fits_open_file(&_fd_s, filename.c_str(), READONLY, &status) != 0) {
-                throw LSST_EXCEPT(cfitsio::FitsException, cfitsio::err_msg(filename, status));
+                throw LSST_EXCEPT(FitsException, cfitsio::err_msg(filename, status));
             }
         } else if (flags == "w" || flags == "wb") {
             int status = 0;
             (void)unlink(filename.c_str()); // cfitsio doesn't like over-writing files
             if (fits_create_file(&_fd_s, filename.c_str(), &status) != 0) {
-                throw LSST_EXCEPT(cfitsio::FitsException, cfitsio::err_msg(filename, status));
+                throw LSST_EXCEPT(FitsException, cfitsio::err_msg(filename, status));
             }
         } else {
             abort();
@@ -231,7 +234,7 @@ protected:
         int bitpix = 0;     // BITPIX from FITS header
         int status = 0;
         if (fits_get_img_equivtype(_fd.get(), &bitpix, &status) != 0) {
-            throw LSST_EXCEPT(cfitsio::FitsException, cfitsio::err_msg(_fd.get(), status));
+            throw LSST_EXCEPT(FitsException, cfitsio::err_msg(_fd.get(), status));
         }
         /*
          * Lookip cfitsio data type
@@ -241,20 +244,19 @@ protected:
         /* get image number of dimensions */
         int nAxis = 0;  // number of axes in file
         if (fits_get_img_dim(_fd.get(), &nAxis, &status) != 0) {
-            throw LSST_EXCEPT(cfitsio::FitsException,
+            throw LSST_EXCEPT(FitsException,
                               cfitsio::err_msg(_fd.get(), status, boost::format("Getting NAXIS from %s") % _filename));
         }
 
         /* validate the number of axes */
         if (nAxis != 0 && (nAxis < 2 || nAxis > 3)) {
-            throw LSST_EXCEPT(cfitsio::FitsException,
-                cfitsio::err_msg(_fd.get(), 0,
+            throw LSST_EXCEPT(FitsException, cfitsio::err_msg(_fd.get(), 0,
                                  boost::format("Dimensions of '%s' is not supported (NAXIS=%i)") % _filename % nAxis));
         }
         
         long nAxes[3];  // dimensions of image in file
         if (fits_get_img_size(_fd.get(), nAxis, nAxes, &status) != 0) {
-            throw LSST_EXCEPT(cfitsio::FitsException,
+            throw LSST_EXCEPT(FitsException,
                 cfitsio::err_msg(_fd.get(), status, boost::format("Failed to find number of rows in %s") % _filename));
         }
         /* if really a 2D image, assume 3rd dimension is 1 */
@@ -262,8 +264,7 @@ protected:
             nAxes[2] = 1;
         }
         if (nAxes[2] != 1) {
-            throw LSST_EXCEPT(cfitsio::FitsException,
-                cfitsio::err_msg(_fd.get(), 0,
+            throw LSST_EXCEPT(FitsException, cfitsio::err_msg(_fd.get(), 0,
                                  boost::format("3rd dimension %d of %s is not 1") % nAxes[2] % _filename));
         }
 
@@ -290,7 +291,7 @@ public:
     template <typename View>
     void apply(View& view) {
         if (_hdu != 0) {
-            throw LSST_EXCEPT(cfitsio::FitsException,
+            throw LSST_EXCEPT(FitsException,
                               (boost::format("Non-default HDUs are not yet supported: %d") % _hdu).str());
         }
     
@@ -298,7 +299,7 @@ public:
         if (BITPIX != _bitpix) {
             const std::string msg = (boost::format("Incorrect value of BITPIX; saw %d expected %d") % _bitpix % BITPIX).str();
 #if 1
-            throw LSST_EXCEPT(cfitsio::FitsException, msg);
+            throw LSST_EXCEPT(FitsException, msg);
 #else
             std::cerr << msg << std::endl;
 #endif
@@ -318,8 +319,8 @@ public:
 
             if (fits_read_pix(_fd.get(), _ttype, fpixel, view.width(), NULL,
                               view.row_begin(view.height() - y - 1), &anynull, &status) != 0) {
-                throw LSST_EXCEPT(cfitsio::FitsException,
-                    cfitsio::err_msg(_fd.get(), status, boost::format("Reading row %d") % y));
+                throw LSST_EXCEPT(FitsException,
+                                  cfitsio::err_msg(_fd.get(), status, boost::format("Reading row %d") % y));
             }
         }
     }
@@ -357,7 +358,7 @@ public:
 
         int status = 0;
         if (fits_create_img(_fd.get(), BITPIX, nAxis, nAxes, &status) != 0) {
-            throw LSST_EXCEPT(cfitsio::FitsException, cfitsio::err_msg(_fd.get(), status));
+            throw LSST_EXCEPT(FitsException, cfitsio::err_msg(_fd.get(), status));
         }
         /*
          * Write metadata to header.  
@@ -383,7 +384,7 @@ public:
         for (int y = 0; y != view.height(); ++y) {
             int status = 0;                     // cfitsio function return status
             if (fits_write_img(_fd.get(), ttype, 1 + y*view.width(), view.width(), view.row_begin(y), &status) != 0) {
-                throw LSST_EXCEPT(cfitsio::FitsException,
+                throw LSST_EXCEPT(FitsException,
                                   cfitsio::err_msg(_fd.get(), status, boost::format("Writing row %d") % y));
             }
         }

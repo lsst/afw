@@ -140,8 +140,7 @@ image::Mask<MaskPixelT>::Mask(std::string const& fileName, //!< Name of file to 
     }
 
     if (!image::fits_read_image<fits_mask_types>(fileName, *_getRawImagePtr(), metadata)) {
-        throw LSST_EXCEPT(image::cfitsio::FitsException,
-                          (boost::format("Failed to read %s HDU %d") % fileName % hdu).str());
+        throw LSST_EXCEPT(image::FitsException, (boost::format("Failed to read %s HDU %d") % fileName % hdu).str());
     }
     _setRawView();
     //

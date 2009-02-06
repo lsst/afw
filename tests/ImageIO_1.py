@@ -56,14 +56,14 @@ class ReadFitsTestCase(unittest.TestCase):
         self.assertAlmostEqual(im.get(col, row), val, 5)
 
     def testF64(self):
-        """Test reading an F64 image"""
+        """Test reading a U16 file into a F64 image"""
         im = afwImage.ImageD(os.path.join(dataDir, "small_img.fits"))
         col, row, val = 0, 0, 1154
         self.assertEqual(im.get(col, row), val)
         
         #print "IM = ", im
-    def testWriteF64(self):
-        """Test writing an F64 image"""
+    def testWriteReadF64(self):
+        """Test writing then reading an F64 image"""
 
         im = afwImage.ImageD(100, 100); im.set(666)
         im.writeFits("smallD.fits")
