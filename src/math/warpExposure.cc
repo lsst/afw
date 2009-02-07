@@ -179,16 +179,6 @@ int afwMath::warpExposure(
 
             // Correct intensity due to relative pixel spatial scale and kernel sum
             double multFac = destWcsPtr->pixArea(destPosXY) / (srcWcsPtr->pixArea(srcPosXY) * kSum);
-            if ((destIndX == 300) && (destIndY == 400)) {
-                std::cout 
-                    << "srcLoc.image()=" << srcLoc.image()
-                    << "; raw destXIter.image()=" << destXIter.image()
-                    << "; kSum=" << kSum
-                    << "; srcWcsPtr->pixArea(srcPosXY)=" << srcWcsPtr->pixArea(srcPosXY)
-                    << "; destWcsPtr->pixArea(destPosXY)=" << destWcsPtr->pixArea(destPosXY)
-                    << "; multFac=" << multFac
-                    << std::endl;
-            }
             destXIter.image() *= static_cast<typename DestMaskedImageT::Image::SinglePixel>(multFac);
             destXIter.variance() *= static_cast<typename DestMaskedImageT::Variance::SinglePixel>(multFac * multFac);
 
