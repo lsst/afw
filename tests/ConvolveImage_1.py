@@ -124,7 +124,7 @@ class ConvolveTestCase(unittest.TestCase):
     def tearDown(self):
         del self.inImage
         
-    def XXXtestUnityConvolution(self):
+    def testUnityConvolution(self):
         """Verify that convolution with a centered delta function reproduces the original.
         """
         # create a delta function kernel that has 1,1 in the center
@@ -144,7 +144,7 @@ class ConvolveTestCase(unittest.TestCase):
                 if not numpy.allclose(origImageArr, cnvImageArr):
                     self.fail("Convolved image does not match reference")
  
-    def XXXtestSpatiallyInvariantInPlaceConvolve(self):
+    def testSpatiallyInvariantInPlaceConvolve(self):
         """Test convolve with a spatially invariant Gaussian function
         """
         kCols, kRows = 6, 7
@@ -166,7 +166,7 @@ class ConvolveTestCase(unittest.TestCase):
             if not numpy.allclose(cnvImageArr, refCnvImageArr):
                 self.fail("Convolved image does not match reference for doNormalize=%s" % doNormalize)
                     
-    def XXXtestSpatiallyInvariantConvolve(self):
+    def testSpatiallyInvariantConvolve(self):
         """Test convolve with a spatially invariant Gaussian function
         """
         kCols = 7
@@ -186,7 +186,7 @@ class ConvolveTestCase(unittest.TestCase):
             if not numpy.allclose(cnvImageArr, refCnvImageArr):
                 self.fail("Convolved image does not match reference for doNormalize=%s" % doNormalize)
 
-    def XXXtestSpatiallyVaryingInPlaceConvolve(self):
+    def testSpatiallyVaryingInPlaceConvolve(self):
         """Test convolve with a spatially varying Gaussian function
         """
         kCols = 7
@@ -217,7 +217,7 @@ class ConvolveTestCase(unittest.TestCase):
             if not numpy.allclose(cnvImageArr, refCnvImageArr):
                 self.fail("Convolved image does not match reference for doNormalize=%s" % doNormalize)
 
-    def XXXtestSpatiallyVaryingSeparableInPlaceConvolve(self):
+    def testSpatiallyVaryingSeparableInPlaceConvolve(self):
         """Test convolve of a separable kernel with a spatially varying Gaussian function
         """
         kCols = 7
@@ -252,7 +252,7 @@ class ConvolveTestCase(unittest.TestCase):
             if not numpy.allclose(cnvImageArr, refCnvImageArr):
                 self.fail("Convolved image does not match reference for doNormalize=%s" % doNormalize)
     
-    def XXXtestDeltaConvolve(self):
+    def testDeltaConvolve(self):
         """Test convolve with various delta function kernels using optimized code
         """
         doNormalize = True
@@ -323,7 +323,7 @@ class ConvolveTestCase(unittest.TestCase):
             if not numpy.allclose(cnvImageArr, refCnvImageArr):
                 self.fail("Image from afwMath.convolveLinear does not match image from refConvolve in iter %d" % ii)
 
-    def XXXtestConvolveLinearNewImage(self):
+    def testConvolveLinearNewImage(self):
         """Test convolveLinearNew
         """
         kCols = 5
