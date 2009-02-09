@@ -567,7 +567,8 @@ namespace lsst { namespace afw { namespace math {
     template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, FixedKernel const&, bool, int); NL \
     template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, LinearCombinationKernel const&, bool, int); NL \
     template void convolveLinear(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, LinearCombinationKernel const&, int); NL \
-    template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, SeparableKernel const&, bool, int);
+    template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, SeparableKernel const&, bool, int); NL \
+    template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, Kernel const&, bool, int);
 
 //
 // Now a macro to specify Image and MaskedImage
