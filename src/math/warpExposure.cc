@@ -142,16 +142,16 @@ int afwMath::warpExposure(
     // Set each pixel of destExposure's MaskedImage
     lsst::pex::logging::Trace("lsst.afw.math", 4, "Remapping masked image");
     for (int destIndY = 0; destIndY < destHeight; ++destIndY) {
-        afwImage::PointD destPosXY(0.0, afwImage::indexToPosition(destIndY));
+        afwImage::PointD destPosXY(afwImage::indexToPosition(-1), afwImage::indexToPosition(destIndY));
+        afwImage::PointD prevSrcPosXY = srcWcsPtr->raDecToXY(destWcsPtr->xyToRaDec(destPosXY));
+        afwImage::PointD srcPosXY;
         typename DestMaskedImageT::x_iterator destXIter = destMI.row_begin(destIndY);
-        for (int destIndX = 0; destIndX < destWidth; ++destIndX, ++destXIter) {
+        for (int destIndX = 0; destIndX < destWidth; ++destIndX, ++destXIter, prevSrcPosXY = srcPosXY) {
             // compute sky position associated with this pixel of remapped MaskedImage
             destPosXY[0] = afwImage::indexToPosition(destIndX);
 
-            afwImage::PointD raDec = destWcsPtr->xyToRaDec(destPosXY);            
-            
             // Compute associated pixel position on source MaskedImage
-            afwImage::PointD srcPosXY = srcWcsPtr->raDecToXY(raDec);
+            srcPosXY = srcWcsPtr->raDecToXY(destWcsPtr->xyToRaDec(destPosXY));
 
             // Compute associated source pixel index and break it into integer and fractional
             // parts; the latter is used to compute the remapping kernel.
@@ -178,7 +178,8 @@ int afwMath::warpExposure(
             *destXIter = afwMath::convolveAtAPoint<DestMaskedImageT, SrcMaskedImageT>(srcLoc, kernelXList, kernelYList);
 
             // Correct intensity due to relative pixel spatial scale and kernel sum
-            double multFac = destWcsPtr->pixArea(destPosXY) / (srcWcsPtr->pixArea(srcPosXY) * kSum);
+            afwImage::PointD dSrcXY = srcPosXY - prevSrcPosXY;
+            double multFac = (dSrcXY.getX() * dSrcXY.getX()) + (dSrcXY.getY() * dSrcXY.getY()) / kSum;
             destXIter.image() *= static_cast<typename DestMaskedImageT::Image::SinglePixel>(multFac);
             destXIter.variance() *= static_cast<typename DestMaskedImageT::Variance::SinglePixel>(multFac * multFac);
 

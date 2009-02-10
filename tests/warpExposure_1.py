@@ -9,6 +9,7 @@ import unittest
 import numpy
 
 import eups
+import lsst.afw.detection as afwDet
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.image.testUtils as imageTestUtils
@@ -59,9 +60,8 @@ class WarpExposureTestCase(unittest.TestCase):
         
         Note that swarp only warps the image plane, so only test that plane.
         
-        Note: the edge is slightly different for the two; unless I can fix that,
-        the best solution is to ignore pixels too near the edge -- e.g. grow EDGE by one
-        before masking out the edge pixels.
+        Note: the edge of the good area is slightly different for for swarp and warpExposure
+        so I grow the EDGE mask by one pixel before comparing the images.
         """
         originalExposure = afwImage.ExposureF(OriginalExposurePath)
         swarpedDecoratedImage = afwImage.DecoratedImageF(SwarpedImagePath)
@@ -77,9 +77,34 @@ class WarpExposureTestCase(unittest.TestCase):
         numGoodPix = afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingKernel)
         afwWarpedExposure.writeFits("afwWarped")
         
-        # supplying (incorrect) variance and mask planes works around PR #617
-        swarpedMaskedImage = afwImage.MaskedImageF(swarpedImage,
-            afwWarpedMaskedImage.getMask(), afwWarpedMaskedImage.getVariance())
+        # grow afwWarped exposure EDGE mask
+        afwWarpedMask = afwWarpedMaskedImage.getMask()
+        edgeBitMask = afwWarpedMask.getPlaneBitMask("EDGE")
+        if edgeBitMask == 0:
+            self.fail("warped mask has no EDGE bit")
+        imageBBox = afwImage.BBox(afwImage.PointI(0, 0),
+            afwImage.PointI(*afwWarpedMask.getDimensions()) - afwImage.PointI(1, 1))
+        foot = afwDet.Footpring(imageBBox, imageBBox)
+        afwDet.footprintAndMask(foot, afwWarpedMask, edgeBitMask)
+        newFoot = afwDet.growFootprint(foot, 1)
+        afwDet.setMaskFromFootprint(afwWarpedMask, newFoot, edgeBitMask)
+
+
+        edgeMask = afwImage.MaskU(afwWarpedMask, True)
+        edgeMask &=  edgeBitMask
+        growKernelImage = afwImage.ImageF(3, 3)
+        growKernelImage.set(1)
+        for i in (0, 2):
+            for j in (0, 2):
+                growKernelImage.set(i, j, 0)
+        growKernel = afwMath.FixedKernel(growKernelImage)
+        grownEdgeMask = afwImage.MaskU(edgeMask, True)
+        afwMath.convolve(grownEdgeMask, edgeMask, growKernel, False, 0)
+# then set the bottom and top row of the grown mask -- not implemented yet, then...
+        afwWarpedMask |= grownEdgeMask
+        afwWarpedMask.writeFits("afwWarpedGrownMask")
+        
+        swarpedMaskedImage = afwImage.MaskedImageF(swarpedImage)
         badPlanes = self.compareMaskedImages(afwWarpedExposure.getMaskedImage(), swarpedMaskedImage,
             doImage=True, doVariance=False, doMask=False, skipBadMask1=0xFFFF, rtol=0.1)
         if badPlanes:
