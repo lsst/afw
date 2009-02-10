@@ -9,8 +9,8 @@
  * @todo
  * * Speed up convolution
  *
- * @note: the convolution and apply functions assume that data in a row is contiguous,
- * both in the input image and in the kernel. This will eventually be enforced by afw.
+ * @note: the convolution and convolveAtAPoint functions assume that data in a row is contiguous,
+ * both in the input image and in the kernel. This is enforced by afw.
  *
  * @author Russell Owen
  *
@@ -37,198 +37,106 @@
 namespace ex = lsst::pex::exceptions;
 
 namespace {
-/*
- * Private functions to copy the border of an image
- *
- * copyRegion gets a bit complicated --- is it really worth it for private functions?
- */
-/*
- * Copy a rectangular region from one Image to another
- */
-template<typename OutImageT, typename InImageT>
-inline void copyRegion(OutImageT &outImage,     // destination Image
-                       InImageT const &inImage, // source Image
-                       lsst::afw::image::BBox const &region, // region to copy
-                       int,
-                       lsst::afw::image::detail::Image_tag
-                      ) {
-    OutImageT outPatch(outImage, region); 
-    InImageT inPatch(inImage, region);
-    outPatch <<= OutImageT(inPatch, true);
-}
-// Specialization when the two types are the same
-template<typename InImageT>
-inline void copyRegion(InImageT &outImage,     // destination Image
-                       InImageT const &inImage, // source Image
-                       lsst::afw::image::BBox const &region, // region to copy
-                       int,
-                       lsst::afw::image::detail::Image_tag
-                      ) {
-    InImageT outPatch(outImage, region); 
-    InImageT inPatch(inImage, region);
-    outPatch <<= inPatch;
-}
-
-/*
- * Copy a rectangular region from one MaskedImage to another, setting the bits in orMask
- */
-template<typename OutImageT, typename InImageT>
-inline void copyRegion(OutImageT &outImage,     // destination Image
-                       InImageT const &inImage, // source Image
-                       lsst::afw::image::BBox const &region, // region to copy
-                       int orMask,                           // data to | into the mask pixels
-                       lsst::afw::image::detail::MaskedImage_tag
-                      ) {
-    OutImageT outPatch(outImage, region); 
-    InImageT inPatch(inImage, region);
-    outPatch <<= OutImageT(inPatch, true);
-    *outPatch.getMask() |= orMask;
-}
-// Specialization when the two types are the same
-template<typename InImageT>
-inline void copyRegion(InImageT &outImage,      // destination Image
-                       InImageT const &inImage, // source Image
-                       lsst::afw::image::BBox const &region, // region to copy
-                       int orMask,                           // data to | into the mask pixels
-                       lsst::afw::image::detail::MaskedImage_tag
-                      ) {
-    InImageT outPatch(outImage, region);
-    InImageT inPatch(inImage, region);
-    outPatch <<= inPatch;
-    *outPatch.getMask() |= orMask;
-}
-
-
-template <typename OutImageT, typename InImageT>
-inline void copyBorder(
-    OutImageT& convolvedImage,                           ///< convolved image
-    InImageT const& inImage,                             ///< image to convolve
-    lsst::afw::math::Kernel const &kernel,               ///< convolution kernel
-    int edgeBit                         ///< bit to set to indicate border pixel;  if negative then no bit is set
-) {
-    const unsigned int imWidth = inImage.getWidth();
-    const unsigned int imHeight = inImage.getHeight();
-    const unsigned int kWidth = kernel.getWidth();
-    const unsigned int kHeight = kernel.getHeight();
-    const unsigned int kCtrX = kernel.getCtrX();
-    const unsigned int kCtrY = kernel.getCtrY();
-
-    const int edgeBitMask = (edgeBit < 0) ? 0 : (1 << edgeBit);
-
-    using lsst::afw::image::BBox;
-    using lsst::afw::image::PointI;
-    BBox bottomEdge(PointI(0, 0), imWidth, kCtrY);
-    copyRegion(convolvedImage, inImage, bottomEdge, edgeBitMask,
-                typename lsst::afw::image::detail::image_traits<OutImageT>::image_category());
-    
-    int numHeight = kHeight - (1 + kCtrY);
-    BBox topEdge(PointI(0, imHeight - numHeight), imWidth, numHeight);
-    copyRegion(convolvedImage, inImage, topEdge, edgeBitMask,
-                typename lsst::afw::image::detail::image_traits<OutImageT>::image_category());
-    
-    BBox leftEdge(PointI(0, kCtrY), kCtrX, imHeight + 1 - kHeight);
-    copyRegion(convolvedImage, inImage, leftEdge, edgeBitMask,
-                typename lsst::afw::image::detail::image_traits<OutImageT>::image_category());
-    
-    int numWidth = kWidth - (1 + kCtrX);
-    BBox rightEdge(PointI(imWidth - numWidth, kCtrY), numWidth, imHeight + 1 - kHeight);
-    copyRegion(convolvedImage, inImage, rightEdge, edgeBitMask,
-                typename lsst::afw::image::detail::image_traits<OutImageT>::image_category());
-}
-}
-
-/**
- * @brief Apply convolution kernel to an image at one point
- *
- * @note: this is a high performance routine; the user is expected to:
- * - figure out the kernel center and adjust the supplied pixel accessors accordingly
- * For an example of how to do this see the convolve function.
- *
- * @ingroup afw
- */
-template <typename OutImageT, typename InImageT>
-inline typename OutImageT::SinglePixel lsst::afw::math::apply(
-    typename InImageT::const_xy_locator& imageLocator,
-                                        ///< locator for image pixel that overlaps (0,0) pixel of kernel(!)
-    lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::const_xy_locator &kernelLocator,
-                                        ///< locator for (0,0) pixel of kernel
-    int kWidth,                         ///< number of columns in kernel
-    int kHeight                         ///< number of rows in kernel
-                                  ) {
-    typename OutImageT::SinglePixel outValue = 0;
-    for (int y = 0; y != kHeight; ++y) {
-        for (int x = 0; x != kWidth; ++x, ++imageLocator.x(), ++kernelLocator.x()) {
-            typename lsst::afw::math::Kernel::Pixel const kVal = kernelLocator[0];
-#if IGNORE_KERNEL_ZERO_PIXELS
-            if (kVal != 0)
-#endif
-            {
-                outValue += *imageLocator*kVal;
-            }
-        }
-
-        imageLocator  += lsst::afw::image::detail::difference_type(-kWidth, 1);
-        kernelLocator += lsst::afw::image::detail::difference_type(-kWidth, 1);
+    /*
+     * Private functions to copy the border of an image
+     *
+     * copyRegion gets a bit complicated --- is it really worth it for private functions?
+     */
+    /*
+     * Copy a rectangular region from one Image to another
+     */
+    template<typename OutImageT, typename InImageT>
+    inline void copyRegion(OutImageT &outImage,     // destination Image
+                           InImageT const &inImage, // source Image
+                           lsst::afw::image::BBox const &region, // region to copy
+                           int,
+                           lsst::afw::image::detail::Image_tag
+                          ) {
+        OutImageT outPatch(outImage, region); 
+        InImageT inPatch(inImage, region);
+        outPatch <<= OutImageT(inPatch, true);
     }
-
-    imageLocator  += lsst::afw::image::detail::difference_type(0, -kHeight);
-    kernelLocator += lsst::afw::image::detail::difference_type(0, -kHeight);
-
-    return outValue;
-}
-
-/**
- * @brief Apply separable convolution kernel to an image at one point
- *
- * @note: this is a high performance routine; the user is expected to:
- * - figure out the kernel center and adjust the supplied pixel accessors accordingly
- * For an example of how to do this see the convolve function.
- *
- * @ingroup afw
- */
-template <typename OutImageT, typename InImageT>
-inline typename OutImageT::SinglePixel lsst::afw::math::apply(
-    typename InImageT::const_xy_locator& imageLocator,
-                                        ///< locator for image pixel that overlaps (0,0) pixel of kernel(!)
-    std::vector<lsst::afw::math::Kernel::PixelT> const &kernelXList,  ///< kernel column vector
-    std::vector<lsst::afw::math::Kernel::PixelT> const &kernelYList   ///< kernel row vector
-) {
-    typedef typename std::vector<lsst::afw::math::Kernel::PixelT>::const_iterator k_iter;
-
-    std::vector<lsst::afw::math::Kernel::PixelT>::const_iterator kernelYIter = kernelYList.begin();
-
-    typedef typename OutImageT::SinglePixel OutT;
-    OutT outValue = 0;
-    for (k_iter kernelYIter = kernelYList.begin(), end = kernelYList.end();
-         kernelYIter != end; ++kernelYIter) {
-
-        OutT outValueY = 0;
-        for (k_iter kernelXIter = kernelXList.begin(), end = kernelXList.end();
-             kernelXIter != end; ++kernelXIter, ++imageLocator.x()) {
-            typename lsst::afw::math::Kernel::Pixel const kValX = *kernelXIter;
-#if IGNORE_KERNEL_ZERO_PIXELS
-            if (kValX != 0)
-#endif
-            {
-                outValueY += *imageLocator*kValX;
-            }
-        }
-        
-        double const kValY = *kernelYIter;
-#if IGNORE_KERNEL_ZERO_PIXELS
-        if (kValY != 0)
-#endif
-        {
-            outValue += outValueY*kValY;
-        }
-        
-        imageLocator += lsst::afw::image::detail::difference_type(-kernelXList.size(), 1);
+    // Specialization when the two types are the same
+    template<typename InImageT>
+    inline void copyRegion(InImageT &outImage,     // destination Image
+                           InImageT const &inImage, // source Image
+                           lsst::afw::image::BBox const &region, // region to copy
+                           int,
+                           lsst::afw::image::detail::Image_tag
+                          ) {
+        InImageT outPatch(outImage, region); 
+        InImageT inPatch(inImage, region);
+        outPatch <<= inPatch;
     }
     
-    imageLocator += lsst::afw::image::detail::difference_type(0, -kernelYList.size());
+    /*
+     * Copy a rectangular region from one MaskedImage to another, setting the bits in orMask
+     */
+    template<typename OutImageT, typename InImageT>
+    inline void copyRegion(OutImageT &outImage,     // destination Image
+                           InImageT const &inImage, // source Image
+                           lsst::afw::image::BBox const &region, // region to copy
+                           int orMask,                           // data to | into the mask pixels
+                           lsst::afw::image::detail::MaskedImage_tag
+                          ) {
+        OutImageT outPatch(outImage, region); 
+        InImageT inPatch(inImage, region);
+        outPatch <<= OutImageT(inPatch, true);
+        *outPatch.getMask() |= orMask;
+    }
+    // Specialization when the two types are the same
+    template<typename InImageT>
+    inline void copyRegion(InImageT &outImage,      // destination Image
+                           InImageT const &inImage, // source Image
+                           lsst::afw::image::BBox const &region, // region to copy
+                           int orMask,                           // data to | into the mask pixels
+                           lsst::afw::image::detail::MaskedImage_tag
+                          ) {
+        InImageT outPatch(outImage, region);
+        InImageT inPatch(inImage, region);
+        outPatch <<= inPatch;
+        *outPatch.getMask() |= orMask;
+    }
+    
+    
+    template <typename OutImageT, typename InImageT>
+    inline void copyBorder(
+        OutImageT& convolvedImage,                           ///< convolved image
+        InImageT const& inImage,                             ///< image to convolve
+        lsst::afw::math::Kernel const &kernel,               ///< convolution kernel
+        int edgeBit                         ///< bit to set to indicate border pixel;  if negative then no bit is set
+    ) {
+        const unsigned int imWidth = inImage.getWidth();
+        const unsigned int imHeight = inImage.getHeight();
+        const unsigned int kWidth = kernel.getWidth();
+        const unsigned int kHeight = kernel.getHeight();
+        const unsigned int kCtrX = kernel.getCtrX();
+        const unsigned int kCtrY = kernel.getCtrY();
+    
+        const int edgeBitMask = (edgeBit < 0) ? 0 : (1 << edgeBit);
+    
+        using lsst::afw::image::BBox;
+        using lsst::afw::image::PointI;
+        BBox bottomEdge(PointI(0, 0), imWidth, kCtrY);
+        copyRegion(convolvedImage, inImage, bottomEdge, edgeBitMask,
+                    typename lsst::afw::image::detail::image_traits<OutImageT>::image_category());
+        
+        int numHeight = kHeight - (1 + kCtrY);
+        BBox topEdge(PointI(0, imHeight - numHeight), imWidth, numHeight);
+        copyRegion(convolvedImage, inImage, topEdge, edgeBitMask,
+                    typename lsst::afw::image::detail::image_traits<OutImageT>::image_category());
+        
+        BBox leftEdge(PointI(0, kCtrY), kCtrX, imHeight + 1 - kHeight);
+        copyRegion(convolvedImage, inImage, leftEdge, edgeBitMask,
+                    typename lsst::afw::image::detail::image_traits<OutImageT>::image_category());
+        
+        int numWidth = kWidth - (1 + kCtrX);
+        BBox rightEdge(PointI(imWidth - numWidth, kCtrY), numWidth, imHeight + 1 - kHeight);
+        copyRegion(convolvedImage, inImage, rightEdge, edgeBitMask,
+                    typename lsst::afw::image::detail::image_traits<OutImageT>::image_category());
+    }
+}   // anonymous namespace
 
-    return outValue;
-}
 
 /**
  * @brief Low-level convolution function that does not set edge pixels.
@@ -290,7 +198,7 @@ void lsst::afw::math::basicConvolve(
 
                 KernelPixelT kSum = kernel.computeImage(kernelImage, false, colPos, rowPos);
                 kXY_locator kernelLoc = kernelImage.xy_at(0,0);
-                *cnvImIter = lsst::afw::math::apply<OutImageT, InImageT>(inImLoc, kernelLoc, kWidth, kHeight);
+                *cnvImIter = lsst::afw::math::convolveAtAPoint<OutImageT, InImageT>(inImLoc, kernelLoc, kWidth, kHeight);
                 if (doNormalize) {
                     *cnvImIter = *cnvImIter/kSum;
                 }
@@ -305,7 +213,7 @@ void lsst::afw::math::basicConvolve(
             for (cnvX_iterator cnvImIter = convolvedImage.x_at(cnvStartX, cnvY),
                      cnvImEnd = convolvedImage.x_at(cnvEndX, cnvY); cnvImIter != cnvImEnd; ++inImLoc.x(), ++cnvImIter) {
                 kXY_locator kernelLoc = kernelImage.xy_at(0,0);
-                *cnvImIter = lsst::afw::math::apply<OutImageT, InImageT>(inImLoc, kernelLoc, kWidth, kHeight);
+                *cnvImIter = lsst::afw::math::convolveAtAPoint<OutImageT, InImageT>(inImLoc, kernelLoc, kWidth, kHeight);
             }
         }
     }
@@ -398,7 +306,7 @@ void lsst::afw::math::basicConvolve(
 
                 KernelPixelT kSum = kernel.computeVectors(kXVec, kYVec, doNormalize, colPos, rowPos);
 
-                *cnvImIter = lsst::afw::math::apply<OutImageT, InImageT>(inImLoc, kXVec, kYVec);
+                *cnvImIter = lsst::afw::math::convolveAtAPoint<OutImageT, InImageT>(inImLoc, kXVec, kYVec);
                 if (doNormalize) {
                     *cnvImIter = *cnvImIter/kSum;
                 }
@@ -414,7 +322,7 @@ void lsst::afw::math::basicConvolve(
             inXY_locator inImLoc =  inImage.xy_at(0, cnvY - cnvStartY);
             for (cnvX_iterator cnvImIter = convolvedImage.row_begin(cnvY) + cnvStartX,
                      cnvImEnd = cnvImIter + (cnvEndX - cnvStartX); cnvImIter != cnvImEnd; ++inImLoc.x(), ++cnvImIter) {
-                *cnvImIter = lsst::afw::math::apply<OutImageT, InImageT>(inImLoc, kXVec, kYVec);
+                *cnvImIter = lsst::afw::math::convolveAtAPoint<OutImageT, InImageT>(inImLoc, kXVec, kYVec);
             }
         }
     }
