@@ -324,8 +324,7 @@ class ConvolveTestCase(unittest.TestCase):
             cnvImageArr = imTestUtils.arrayFromImage(cnvImage)
             
             if display:
-                refImage = self.inImage.Factory(self.inImage.getDimensions())
-                imTestUtils.imageFromArray(refImage, refCnvImageArr)
+                refImage = imTestUtils.imageFromArray(refCnvImageArr)
                 ds9.mtv(displayUtils.makeMosaic(self.inImage, cnvImage, refImage))
 
             if not numpy.allclose(cnvImageArr, refCnvImageArr):

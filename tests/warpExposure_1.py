@@ -48,8 +48,9 @@ class WarpExposureTestCase(unittest.TestCase):
         afwWarpedExposure.writeFits("afwWarpedNull")
         afwWarpedMaskedImage = afwWarpedExposure.getMaskedImage()
         afwWarpedMask = afwWarpedMaskedImage.getMask()
+        afwWarpedMaskArr = imageTestUtils.arrayFromMask(afwWarpedMask)
         badPlanes = self.compareMaskedImages(afwWarpedMaskedImage,
-            originalExposure.getMaskedImage(), skipBadMask1 = 0xFFFF)
+            originalExposure.getMaskedImage(), skipMaskArr = afwWarpedMaskArr)
         if badPlanes:
             badPlanesStr = str(badPlanes)[1:-1]
             self.fail("afw warped %s do/does not match swarped image (ignoring bad pixels)" % (badPlanesStr,))
@@ -59,10 +60,9 @@ class WarpExposureTestCase(unittest.TestCase):
         
         Note that swarp only warps the image plane, so only test that plane.
         
-        Note: the edge of the good area is slightly different for for swarp and warpExposure
-        so I grow the EDGE mask by one pixel before comparing the images.
-        
-        BROKEN: cannot convolve a mask, so need to turn into an image and...sigh.
+        Note: the edge of the good area is slightly different for for swarp and warpExposure.
+        I would prefer to grow the EDGE mask by one pixel before comparing the images
+        but that is too much hassle with the current afw so instead I ignore edge pixels from swarp and afw.
         """
         originalExposure = afwImage.ExposureF(OriginalExposurePath)
         swarpedDecoratedImage = afwImage.DecoratedImageF(SwarpedImagePath)
@@ -86,43 +86,22 @@ class WarpExposureTestCase(unittest.TestCase):
         edgeBitMask = afwWarpedMask.getPlaneBitMask("EDGE")
         if edgeBitMask == 0:
             self.fail("warped mask has no EDGE bit")
+        skipMaskArr = imageTestUtils.arrayFromMask(afwWarpedMask)
+        skipMaskArr &= edgeBitMask
         swarpedImageArr = imageTestUtils.arrayFromMask(swarpedImage)
         swarpedEdgeMaskArr = (swarpedImageArr == 0) * edgeBitMask
         swarpedEdgeMask = imageTestUtils.maskFromArray(swarpedEdgeMaskArr)
         swarpedEdgeMask.writeFits("warpedEdgeMask")
-        afwWarpedMask |= swarpedEdgeMask
-
-#         # grow afwWarped exposure EDGE mask by 1 pixel
-#         edgeBitMask = afwWarpedMask.getPlaneBitMask("EDGE")
-#         if edgeBitMask == 0:
-#             self.fail("warped mask has no EDGE bit")
-#         edgeMask = afwImage.MaskU(afwWarpedMask, True)
-#         edgeMask &= edgeBitMask
-#         growKernelImage = afwImage.ImageD(3, 3)
-#         growKernelImage.set(1)
-#         for i in (0, 2):
-#             for j in (0, 2):
-#                 growKernelImage.set(i, j, 0)
-#         growKernel = afwMath.FixedKernel(growKernelImage)
-#         grownEdgeMask = afwImage.MaskU(edgeMask, True)
-#         afwMath.convolve(grownEdgeMask, edgeMask, growKernel, False, 0)
-#         afwWarpedMask |= grownEdgeMask
-#         afwWarpedMask.writeFits("afwWarpedGrownMask")
-# 
-#         # when comparing, ignore pixels on border of width 1 since those mask bits were not grown properly
-#         bbox = afwImage.BBox(afwImage.PointI(1, 1), destWidth-2, destHeight-2)
-#         subAfwMaskedImage = afwImage.MaskedImageF(afwMaskedImage, bbox)
-
+        skipMaskArr |= swarpedEdgeMaskArr
         swarpedMaskedImage = afwImage.MaskedImageF(swarpedImage)
-        subSwarpedMaskedImage = afwImage.MaskedImageF(swarpedMaskedImage, bbox)
         
-        badPlanes = self.compareMaskedImages(subAfwMaskedImage, subSwarpedMaskedImage,
-            doImage=True, doVariance=False, doMask=False, skipBadMask1=0xFFFF, rtol=0.1)
+        badPlanes = self.compareMaskedImages(afwWarpedMaskedImage, swarpedMaskedImage,
+            doImage=True, doMask=False, doVariance=False, skipMaskArr=skipMaskArr, rtol=0.1)
         if badPlanes:
             self.fail("afw warped image does not match swarped image (ignoring bad pixels)")
 
     def compareMaskedImages(self, maskedImage1, maskedImage2,
-        doImage=True, doMask=True, doVariance=True, skipBadMask1=0, rtol=1.0e-05, atol=1e-08):
+        doImage=True, doMask=True, doVariance=True, skipMaskArr=None, rtol=1.0e-05, atol=1e-08):
         """Compare pixels from two masked images
         
         Inputs:
@@ -131,25 +110,23 @@ class WarpExposureTestCase(unittest.TestCase):
         - doImage: compare image planes if True
         - doMask: compare mask planes if True
         - doVariance: compare variance planes if True
-        - skipBad1: ignore pixels marked bad (mask != 0) in maskedImage1 if True
+        - skipMaskArr: pixels to ingore on the image, mask and variance arrays; nonzero values are skipped
         
         Returns a list of names of tested planes that did not match (empty if all match).
         """
         arr1Set = imageTestUtils.arraysFromMaskedImage(maskedImage1)
         arr2Set = imageTestUtils.arraysFromMaskedImage(maskedImage2)
 
-        if skipBadMask1:
-            badPixArr1 = (arr1Set[2] & skipBadMask1 != 0)
-        
         badPlanes = []
-        for ind, planeName in enumerate(("image", "variance", "mask")):
-#            print "testing", planeName
+        for ind, (doPlane, planeName) in enumerate(((doImage, "image"), (doMask, "mask"), (doVariance, "variance"))):
+            if not doPlane:
+                continue
             arr1 = arr1Set[ind]
             arr2 = arr2Set[ind]
             
-            if skipBadMask1:
-                maskedArr1 = numpy.ma.array(arr1, copy=False, mask = badPixArr1)
-                maskedArr2 = numpy.ma.array(arr2, copy=False, mask = badPixArr1)
+            if skipMaskArr != None:
+                maskedArr1 = numpy.ma.array(arr1, copy=False, mask = skipMaskArr)
+                maskedArr2 = numpy.ma.array(arr2, copy=False, mask = skipMaskArr)
                 filledArr1 = maskedArr1.filled(0.0)
                 filledArr2 = maskedArr2.filled(0.0)
             else:
