@@ -48,7 +48,7 @@ else:
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def refConvolve(imVarMask, kernel, doNormalize, edgeBit, ignoreKernelZeroPixels=True):
+def refConvolve(imMaskVar, kernel, doNormalize, edgeBit, ignoreKernelZeroPixels=True):
     """Reference code to convolve a kernel with masked image data.
     
     Does NOT normalize the kernel.
@@ -56,7 +56,7 @@ def refConvolve(imVarMask, kernel, doNormalize, edgeBit, ignoreKernelZeroPixels=
     Warning: slow (especially for spatially varying kernels).
     
     Inputs:
-    - imVarMask: (image, variance, mask) numpy arrays
+    - imMaskVar: (image, mask, variance) numpy arrays
     - kernel: lsst::afw::Core.Kernel object
     - edgeBit: this bit is set in the output mask for border pixels; no bit set if < 0
     - doNormalize: normalize the kernel
@@ -64,7 +64,7 @@ def refConvolve(imVarMask, kernel, doNormalize, edgeBit, ignoreKernelZeroPixels=
     Border pixels (pixels too close to the edge to compute) are copied from the input,
     and if edgeBit >= 0 then border mask pixels have the edgeBit bit set
     """
-    image, variance, mask = imVarMask
+    image, mask, variance = imMaskVar
     
     # copy input data, handling the outer border and edge bit
     retImage = image.copy()
@@ -113,7 +113,7 @@ def refConvolve(imVarMask, kernel, doNormalize, edgeBit, ignoreKernelZeroPixels=
 
             retCol += 1
         retRow += 1
-    return (retImage, retVariance, retMask)
+    return (retImage, retMask, retVariance)
 
 def makeGaussianKernelVec(kCols, kRows):
     """Create a afwImage.VectorKernel of gaussian kernels.
@@ -190,10 +190,10 @@ class ConvolveTestCase(unittest.TestCase):
         cnvMaskedImage = afwImage.MaskedImageF(self.maskedImage.getDimensions())
         afwMath.convolve(cnvMaskedImage, self.maskedImage, k, True, edgeBit)
 
-        origImVarMaskArrays = imTestUtils.arraysFromMaskedImage(self.maskedImage)
-        cnvImVarMaskArrays = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
-        for name, ind in (("image", 0), ("variance", 1), ("mask", 2)):
-            if not numpy.allclose(origImVarMaskArrays[ind], cnvImVarMaskArrays[ind]):
+        origImMaskVarArrays = imTestUtils.arraysFromMaskedImage(self.maskedImage)
+        cnvImMaskVarArrays = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
+        for name, ind in (("image", 0), ("mask", 1), ("variance", 2)):
+            if not numpy.allclose(origImMaskVarArrays[ind], cnvImMaskVarArrays[ind]):
                 if display:
                     ds9.mtv(displayUtils.makeMosaic(self.maskedImage, cnvMaskedImage), frame=0)
                 self.fail("Convolved %s does not match reference" % (name,))
@@ -216,14 +216,13 @@ class ConvolveTestCase(unittest.TestCase):
             fixedK = afwMath.FixedKernel(kImg)
 
             afwMath.convolve(cnvMaskedImage, self.maskedImage, fixedK, doNormalize, edgeBit)
-            cnvImage, cnvVariance, cnvMask = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
+            cnvImage, cnvMask, cnvVariance = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
 
-            imVarMask = imTestUtils.arraysFromMaskedImage(self.maskedImage)
-            refCnvImage, refCnvVariance, refCnvMask = refConvolve(imVarMask, fixedK, doNormalize, edgeBit)
+            imMaskVar = imTestUtils.arraysFromMaskedImage(self.maskedImage)
+            refCnvImage, refCnvMask, refCnvVariance = refConvolve(imMaskVar, fixedK, doNormalize, edgeBit)
 
             if display:
-                refMaskedImage = self.maskedImage.Factory(self.maskedImage.getDimensions())
-                imTestUtils.maskedImageFromArrays(refMaskedImage, (refCnvImage, refCnvVariance, refCnvMask))
+                refMaskedImage = imTestUtils.maskedImageFromArrays((refCnvImage, refCnvMask, refCnvVariance))
                 ds9.mtv(displayUtils.makeMosaic(self.maskedImage, refMaskedImage, cnvMaskedImage), frame=0)
                 if False:
                     for (x, y) in ((0, 0), (1, 0), (0, 1), (50, 50)):
@@ -252,14 +251,13 @@ class ConvolveTestCase(unittest.TestCase):
         cnvMaskedImage = afwImage.MaskedImageF(self.maskedImage.getDimensions())
         for doNormalize in (True, False):
             afwMath.convolve(cnvMaskedImage, self.maskedImage, k, doNormalize, edgeBit)
-            cnvImage, cnvVariance, cnvMask = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
+            cnvImage, cnvMask, cnvVariance = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
 
-            imVarMask = imTestUtils.arraysFromMaskedImage(self.maskedImage)
-            refCnvImage, refCnvVariance, refCnvMask = refConvolve(imVarMask, k, doNormalize, edgeBit)
+            imMaskVar = imTestUtils.arraysFromMaskedImage(self.maskedImage)
+            refCnvImage, refCnvMask, refCnvVariance = refConvolve(imMaskVar, k, doNormalize, edgeBit)
 
             if display:
-                refMaskedImage = self.maskedImage.Factory(self.maskedImage.getDimensions())
-                imTestUtils.maskedImageFromArrays(refMaskedImage, (refCnvImage, refCnvVariance, refCnvMask))
+                refMaskedImage = imTestUtils.maskedImageFromArrays((refCnvImage, refCnvMask, refCnvVariance))
                 ds9.mtv(displayUtils.makeMosaic(self.maskedImage, refMaskedImage, cnvMaskedImage), frame=0)
                 if False:
                     for (x, y) in ((0, 0), (1, 0), (0, 1), (50, 50)):
@@ -299,10 +297,10 @@ class ConvolveTestCase(unittest.TestCase):
         cnvMaskedImage = afwImage.MaskedImageF(self.width, self.height)
         for doNormalize in (False, True):
             afwMath.convolve(cnvMaskedImage, self.maskedImage, k, doNormalize, edgeBit)
-            cnvImage, cnvVariance, cnvMask = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
+            cnvImage, cnvMask, cnvVariance = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
     
-            imVarMask = imTestUtils.arraysFromMaskedImage(self.maskedImage)
-            refCnvImage, refCnvVariance, refCnvMask = refConvolve(imVarMask, k, doNormalize, edgeBit)
+            imMaskVar = imTestUtils.arraysFromMaskedImage(self.maskedImage)
+            refCnvImage, refCnvMask, refCnvVariance = refConvolve(imMaskVar, k, doNormalize, edgeBit)
     
             if not numpy.allclose(cnvImage, refCnvImage):
                 self.fail("Convolved image does not match reference for doNormalize=%s" % doNormalize)
@@ -340,10 +338,10 @@ class ConvolveTestCase(unittest.TestCase):
         cnvMaskedImage = afwImage.MaskedImageF(self.width, self.height)
         for doNormalize in (False, True):
             afwMath.convolve(cnvMaskedImage, self.maskedImage, separableKernel, doNormalize, edgeBit)
-            cnvImage, cnvVariance, cnvMask = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
+            cnvImage, cnvMask, cnvVariance = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
     
-            imVarMask = imTestUtils.arraysFromMaskedImage(self.maskedImage)
-            refCnvImage, refCnvVariance, refCnvMask = refConvolve(imVarMask, analyticKernel, doNormalize, edgeBit)
+            imMaskVar = imTestUtils.arraysFromMaskedImage(self.maskedImage)
+            refCnvImage, refCnvMask, refCnvVariance = refConvolve(imMaskVar, analyticKernel, doNormalize, edgeBit)
     
             if not numpy.allclose(cnvImage, refCnvImage):
                 self.fail("Convolved image does not match reference for doNormalize=%s" % doNormalize)
@@ -373,14 +371,14 @@ class ConvolveTestCase(unittest.TestCase):
                         kernel = afwMath.DeltaFunctionKernel(kCols, kRows, afwImage.PointI(activeCol, activeRow))
 
                         afwMath.convolve(cnvMaskedImage, maskedImage, kernel, doNormalize, edgeBit)
-                        cnvImage, cnvVariance, cnvMask = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
+                        cnvImage, cnvMask, cnvVariance = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
                 
-                        imVarMask = imTestUtils.arraysFromMaskedImage(maskedImage)
-                        refCnvImage, refCnvVariance, refCnvMask = \
-                                     refConvolve(imVarMask, kernel, doNormalize, edgeBit, True)
+                        imMaskVar = imTestUtils.arraysFromMaskedImage(maskedImage)
+                        refCnvImage, refCnvMask, refCnvVariance = \
+                                     refConvolve(imMaskVar, kernel, doNormalize, edgeBit, True)
                 
                         if display and False:
-                            refMaskedImage = imTestUtils.maskedImageFromArrays((refCnvImage, refCnvVariance, refCnvMask))
+                            refMaskedImage = imTestUtils.maskedImageFromArrays((refCnvImage, refCnvMask, refCnvVariance))
 
                             if False:
                                 for (x, y) in ((0,0), (0, 11)) :
@@ -426,10 +424,10 @@ class ConvolveTestCase(unittest.TestCase):
 
         cnvMaskedImage = afwImage.MaskedImageF(self.maskedImage.getDimensions())
         afwMath.convolve(cnvMaskedImage, self.maskedImage, lcKernel, doNormalize, edgeBit)
-        cnvImage, cnvVariance, cnvMask = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
+        cnvImage, cnvMask, cnvVariance = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
 
-        imVarMask = imTestUtils.arraysFromMaskedImage(self.maskedImage)
-        refCnvImage, refCnvVariance, refCnvMask = refConvolve(imVarMask, lcKernel, doNormalize, edgeBit)
+        imMaskVar = imTestUtils.arraysFromMaskedImage(self.maskedImage)
+        refCnvImage, refCnvMask, refCnvVariance = refConvolve(imMaskVar, lcKernel, doNormalize, edgeBit)
 
         if not numpy.allclose(cnvImage, refCnvImage):
             self.fail("Image from afwMath.convolveNew does not match image from refConvolve")
@@ -441,11 +439,10 @@ class ConvolveTestCase(unittest.TestCase):
         # compute twice, to be sure cnvMaskedImage is properly reset
         for ii in range(2):        
             afwMath.convolveLinear(cnvMaskedImage, self.maskedImage, lcKernel, edgeBit)
-            cnvImage, cnvVariance, cnvMask = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
+            cnvImage, cnvMask, cnvVariance = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
     
             if display:
-                refMaskedImage = self.maskedImage.Factory(self.maskedImage.getDimensions())
-                imTestUtils.maskedImageFromArrays(refMaskedImage, (refCnvImage, refCnvVariance, refCnvMask))
+                refMaskedImage = imTestUtils.maskedImageFromArrays((refCnvImage, refCnvMask, refCnvVariance))
                 ds9.mtv(displayUtils.makeMosaic(refMaskedImage, cnvMaskedImage), frame=0)
             if not numpy.allclose(cnvImage, refCnvImage):
                 self.fail("Image from afwMath.convolveLinear does not match image from refConvolve in iter %d" % ii)

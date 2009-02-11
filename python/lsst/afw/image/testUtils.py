@@ -24,9 +24,6 @@ def arrayFromImage(im, dtype=float):
 def arrayFromMask(im, dtype=int):
     """Return a numpy array representation of a mask.
     The data is presently copied but do not rely on that.
-    
-    Warning: will fail for uint8 masks because lssgImageTypes.i maps uint8 to char;
-    use ord(im.getPtr(col, row)) to get each pixel value
     """
     arr = numpy.zeros([im.getWidth(), im.getHeight()], dtype=dtype)
     for row in range(im.getHeight()):
@@ -35,68 +32,82 @@ def arrayFromMask(im, dtype=int):
     return arr
 
 def arraysFromMaskedImage(maskedImage):
-    """Return a tuple of (image, variance, mask) arrays from a MaskedImage.
+    """Return a tuple of (image, mask, variance) arrays from a MaskedImage.
     The data is presently copied but do not rely on that.
     """
     return (
             arrayFromImage(maskedImage.getImage()),
-            arrayFromImage(maskedImage.getVariance()),
             arrayFromMask(maskedImage.getMask()),
+            arrayFromImage(maskedImage.getVariance()),
         )
 
-def getImageVarianceMaskFromMaskedImage(maskedImage):
-    """Return the image, variance and mask from a MaskedImage.
-    Image and variance are of type lsst.afwImage.ImageD
-    and mask is of type lsst.afwImage.MaskD.
+def getImageMaskVarianceFromMaskedImage(maskedImage):
+    """Return the image, mask and variance from a MaskedImage.
     The data is NOT copied.
     """
-    return (maskedImage.getImage(), maskedImage.getVariance(), maskedImage.getMask())
+    return (maskedImage.getImage(), maskedImage.getMask(), maskedImage.getVariance())
 
-def imageFromArray(im, arr):
-    """Create an lsst.afwImage.ImageD from a numpy array.
+def imageFromArray(arr, retType=afwImage.ImageF):
+    """Return an Image representation of a numpy array.
     The data is presently copied but do not rely on that.
     """
+    im = retType(arr.shape[0], arr.shape[1])
+    setImageFromArray(im, arr)
+    return im
 
+def maskFromArray(arr):
+    """Return a mask representation of a numpy array
+    The data is presently copied but do not rely on that.
+    """
+    mask = afwImage.MaskU(arr.shape[0], arr.shape[1])
+    setMaskFromArray(mask, arr)
+    return mask
+
+def maskedImageFromArrays(imVarMaskArrays, retType=afwImage.MaskedImageF):
+    """Return a MaskedImage representation of a tuple of (image, variance, mask) numpy arrays.
+    The data is presently copied but do not rely on that.
+    """
+    imArr = imVarMaskArrays[0]
+    maskedImage = retType(imArr.shape[0], imArr.shape[1])
+    setMaskedImageFromArrays(maskedImage, imVarMaskArrays)
+    return maskedImage
+
+def setImageFromArray(im, arr):
+    """Set an existing lsst.afwImage.Image (of any type) from a numpy array.
+    The data is presently copied but do not rely on that.
+    """
     assert im.getWidth() == arr.shape[0] and im.getHeight() == arr.shape[1]
     
     for row in range(im.getHeight()):
         for col in range(im.getWidth()):
             im.set(col, row, arr[col, row])
-
-    return im
-
-def maskFromArray(mask, arr):
-    """Create an lsst.afwImage.MaskD from a numpy array
+    
+def setMaskFromArray(mask, arr):
+    """Set an existing lsst.afwImage.Mask from a numpy array
     The data is presently copied but do not rely on that.
     """
-
     assert mask.getWidth() == arr.shape[0] and mask.getHeight() == arr.shape[1]
-    
-    mask = afwImage.MaskD(arr.shape[0], arr.shape[1])
+
     for row in range(mask.getHeight()):
         for col in range(mask.getWidth()):
             mask.set(col, row, int(arr[col, row]))
 
-    return mask
-
-def maskedImageFromArrays(maskedImage, imVarMaskArrays):
-    """Create a MaskedImage from a tuple of (image, variance, mask) arrays
+def setMaskedImageFromArrays(maskedImage, imVarMaskArrays):
+    """Set an existing lsst.afwImage.MaskedImage (of any type) from a numpy array.
     The data is presently copied but do not rely on that.
     """
     imArr, varArr, maskArr = imVarMaskArrays
     if not (imArr.shape == varArr.shape == maskArr.shape):
         raise RuntimeError("The arrays must all be the same shape")
+    if not (maskedImage.getWidth() == imArr.shape[0] and maskedImage.getHeight() == imArr.shape[1]):
+        raise RuntimeError("The arrays must be the same shape as maskedImage")
 
-    assert maskedImage.getWidth() == imArr.shape[0] and maskedImage.getHeight() == imArr.shape[1]
-
-    im, var, mask = getImageVarianceMaskFromMaskedImage(maskedImage)
+    im, mask, var = getImageMaskVarianceFromMaskedImage(maskedImage)
     for row in range(maskedImage.getHeight()):
         for col in range(maskedImage.getWidth()):
             im.set(col, row, imArr[col, row])
-            var.set(col, row, varArr[col, row])
             mask.set(col, row, maskArr[col, row])
-
-    return maskedImage
+            var.set(col, row, varArr[col, row])
 
 if __name__ == "__main__":
     maskedImage = afwImage.MaskedImageD("data/small")

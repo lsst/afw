@@ -184,8 +184,7 @@ class KernelTestCase(unittest.TestCase):
         # create a list of basis kernels from the images
         kVec = afwMath.KernelListD()
         for basisImArr in basisImArrList:
-            basisImage = afwImage.ImageD(kWidth, kHeight)
-            imTestUtils.imageFromArray(basisImage, basisImArr)
+            basisImage = imTestUtils.imageFromArray(basisImArr, retType=afwImage.ImageD)
             kernel = afwMath.FixedKernel(basisImage)
             kVec.append(kernel)
 
