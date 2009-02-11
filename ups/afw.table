@@ -1,6 +1,4 @@
-setupRequired(daf_data >= 3.2.1)
-setupRequired(utils >= 3.4)
-setupRequired(boost >= 1.36.0+1)
+setupRequired(daf_data >= 3.2.2)
 setupRequired(cfitsio >= 3006.2)
 setupRequired(wcslib >= 4.2+3)
 setupRequired(xpa >= 2.1.7b2)

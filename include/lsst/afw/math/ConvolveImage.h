@@ -4,7 +4,7 @@
 /**
  * @file
  *
- * @brief Convolution functions
+ * @brief Convolve and convolveAtAPoint functions for Image and Kernel
  *
  * @todo
  * * Consider adding a flag to convolve indicating which specialized version of basicConvolve was used.
@@ -23,22 +23,18 @@
 namespace lsst {
 namespace afw {
 namespace math {
-    
-    template <typename OutImageT, typename InImageT, typename KernelT>
-    void convolve(
-        OutImageT& convolvedImage,
-        InImageT const& inImage,
-        KernelT const& kernel,
-        bool doNormalize,
-        int edgeBit=-1
-    );
 
     template <typename OutImageT, typename InImageT>
-    void convolveLinear(
-        OutImageT& convolvedImage,
-        InImageT const& inImage,
-        lsst::afw::math::LinearCombinationKernel const& kernel,
-        int edgeBit=-1
+    inline typename OutImageT::SinglePixel convolveAtAPoint(
+        typename InImageT::const_xy_locator& inLocator,
+        typename lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::const_xy_locator& kernelLocator,
+        int kWidth, int kHeight);
+    
+    template <typename OutImageT, typename InImageT>
+    inline typename OutImageT::SinglePixel convolveAtAPoint(
+        typename InImageT::const_xy_locator& inImage,
+        std::vector<lsst::afw::math::Kernel::PixelT> const& kernelColList,
+        std::vector<lsst::afw::math::Kernel::PixelT> const& kernelRowList
     );
     
     template <typename OutImageT, typename InImageT>
@@ -64,24 +60,107 @@ namespace math {
         lsst::afw::math::SeparableKernel const& kernel,
         bool doNormalize
     );
+    
+    template <typename OutImageT, typename InImageT, typename KernelT>
+    void convolve(
+        OutImageT& convolvedImage,
+        InImageT const& inImage,
+        KernelT const& kernel,
+        bool doNormalize,
+        int edgeBit=-1
+    );
 
     template <typename OutImageT, typename InImageT>
-    inline typename OutImageT::SinglePixel convolveAtAPoint(
-        typename InImageT::const_xy_locator& imageLocator,
-        typename lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::const_xy_locator& kernelLocator,
-        int kWidth, int kHeight);
-    
-    template <typename OutImageT, typename InImageT>
-    inline typename OutImageT::SinglePixel convolveAtAPoint(
-        typename InImageT::const_xy_locator& imageLocator,
-        std::vector<lsst::afw::math::Kernel::PixelT> const& kernelXList,
-        std::vector<lsst::afw::math::Kernel::PixelT> const& kernelYList
+    void convolveLinear(
+        OutImageT& convolvedImage,
+        InImageT const& inImage,
+        lsst::afw::math::LinearCombinationKernel const& kernel,
+        int edgeBit=-1
     );
 }}}   // lsst::afw::math
 
-//
-// lsst/afw/math/ConvolveImage.cc has moved to src/math and all needed convolutions
-// are explicitly instantiated --- probably with full and aggressive optimisation
-//
+/**
+ * @brief Apply convolution kernel to an image at one point
+ *
+ * @note: this is a high performance routine; the user is expected to:
+ * - figure out the kernel center and adjust the supplied pixel accessors accordingly
+ * For an example of how to do this see the convolve function.
+ *
+ * @ingroup afw
+ */
+template <typename OutImageT, typename InImageT>
+inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
+    typename InImageT::const_xy_locator& imageLocator,
+                                        ///< locator for image pixel that overlaps (0,0) pixel of kernel(!)
+    lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::const_xy_locator &kernelLocator,
+                                        ///< locator for (0,0) pixel of kernel
+    int kWidth,                         ///< number of columns in kernel
+    int kHeight                         ///< number of rows in kernel
+                                  ) {
+    typename OutImageT::SinglePixel outValue = 0;
+    for (int y = 0; y != kHeight; ++y) {
+        for (int x = 0; x != kWidth; ++x, ++imageLocator.x(), ++kernelLocator.x()) {
+            typename lsst::afw::math::Kernel::Pixel const kVal = kernelLocator[0];
+            if (kVal != 0) {
+                outValue += *imageLocator*kVal;
+            }
+        }
+
+        imageLocator  += lsst::afw::image::detail::difference_type(-kWidth, 1);
+        kernelLocator += lsst::afw::image::detail::difference_type(-kWidth, 1);
+    }
+
+    imageLocator  += lsst::afw::image::detail::difference_type(0, -kHeight);
+    kernelLocator += lsst::afw::image::detail::difference_type(0, -kHeight);
+
+    return outValue;
+}
+
+/**
+ * @brief Apply separable convolution kernel to an image at one point
+ *
+ * @note: this is a high performance routine; the user is expected to:
+ * - figure out the kernel center and adjust the supplied pixel accessors accordingly
+ * For an example of how to do this see the convolve function.
+ *
+ * @ingroup afw
+ */
+template <typename OutImageT, typename InImageT>
+inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
+    typename InImageT::const_xy_locator& imageLocator,
+                                        ///< locator for image pixel that overlaps (0,0) pixel of kernel(!)
+    std::vector<lsst::afw::math::Kernel::PixelT> const &kernelXList,  ///< kernel column vector
+    std::vector<lsst::afw::math::Kernel::PixelT> const &kernelYList   ///< kernel row vector
+) {
+    typedef typename std::vector<lsst::afw::math::Kernel::PixelT>::const_iterator k_iter;
+
+    std::vector<lsst::afw::math::Kernel::PixelT>::const_iterator kernelYIter = kernelYList.begin();
+
+    typedef typename OutImageT::SinglePixel OutT;
+    OutT outValue = 0;
+    for (k_iter kernelYIter = kernelYList.begin(), end = kernelYList.end();
+         kernelYIter != end; ++kernelYIter) {
+
+        OutT outValueY = 0;
+        for (k_iter kernelXIter = kernelXList.begin(), end = kernelXList.end();
+             kernelXIter != end; ++kernelXIter, ++imageLocator.x()) {
+            typename lsst::afw::math::Kernel::Pixel const kValX = *kernelXIter;
+            if (kValX != 0) {
+                outValueY += *imageLocator*kValX;
+            }
+        }
+        
+        double const kValY = *kernelYIter;
+        if (kValY != 0) {
+            outValue += outValueY*kValY;
+        }
+        
+        imageLocator += lsst::afw::image::detail::difference_type(-kernelXList.size(), 1);
+    }
+    
+    imageLocator += lsst::afw::image::detail::difference_type(0, -kernelYList.size());
+
+    return outValue;
+}
 
 #endif // !defined(LSST_AFW_MATH_CONVOLVEIMAGE_H)
