@@ -81,26 +81,37 @@ class WarpExposureTestCase(unittest.TestCase):
         numGoodPix = afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingKernel)
         afwWarpedExposure.writeFits("afwWarped")
         
-        # grow afwWarped exposure EDGE mask by 1 pixel
+        # set 0-value warped image pixels as EDGE in afwWarpedMask
+        # and zero pixels from the swarped exposure
         edgeBitMask = afwWarpedMask.getPlaneBitMask("EDGE")
         if edgeBitMask == 0:
             self.fail("warped mask has no EDGE bit")
-        edgeMask = afwImage.MaskU(afwWarpedMask, True)
-        edgeMask &= edgeBitMask
-        growKernelImage = afwImage.ImageD(3, 3)
-        growKernelImage.set(1)
-        for i in (0, 2):
-            for j in (0, 2):
-                growKernelImage.set(i, j, 0)
-        growKernel = afwMath.FixedKernel(growKernelImage)
-        grownEdgeMask = afwImage.MaskU(edgeMask, True)
-        afwMath.convolve(grownEdgeMask, edgeMask, growKernel, False, 0)
-        afwWarpedMask |= grownEdgeMask
-        afwWarpedMask.writeFits("afwWarpedGrownMask")
+        swarpedImageArr = imageTestUtils.arrayFromMask(swarpedImage)
+        swarpedEdgeMaskArr = (swarpedImageArr == 0) * edgeBitMask
+        swarpedEdgeMask = imageTestUtils.maskFromArray(swarpedEdgeMaskArr)
+        swarpedEdgeMask.writeFits("warpedEdgeMask")
+        afwWarpedMask |= swarpedEdgeMask
 
-        # when comparing, ignore pixels on border of width 1 since those mask bits were not grown properly
-        bbox = afwImage.BBox(afwImage.PointI(1, 1), destWidth-2, destHeight-2)
-        subAfwMaskedImage = afwImage.MaskedImageF(afwMaskedImage, bbox)
+#         # grow afwWarped exposure EDGE mask by 1 pixel
+#         edgeBitMask = afwWarpedMask.getPlaneBitMask("EDGE")
+#         if edgeBitMask == 0:
+#             self.fail("warped mask has no EDGE bit")
+#         edgeMask = afwImage.MaskU(afwWarpedMask, True)
+#         edgeMask &= edgeBitMask
+#         growKernelImage = afwImage.ImageD(3, 3)
+#         growKernelImage.set(1)
+#         for i in (0, 2):
+#             for j in (0, 2):
+#                 growKernelImage.set(i, j, 0)
+#         growKernel = afwMath.FixedKernel(growKernelImage)
+#         grownEdgeMask = afwImage.MaskU(edgeMask, True)
+#         afwMath.convolve(grownEdgeMask, edgeMask, growKernel, False, 0)
+#         afwWarpedMask |= grownEdgeMask
+#         afwWarpedMask.writeFits("afwWarpedGrownMask")
+# 
+#         # when comparing, ignore pixels on border of width 1 since those mask bits were not grown properly
+#         bbox = afwImage.BBox(afwImage.PointI(1, 1), destWidth-2, destHeight-2)
+#         subAfwMaskedImage = afwImage.MaskedImageF(afwMaskedImage, bbox)
 
         swarpedMaskedImage = afwImage.MaskedImageF(swarpedImage)
         subSwarpedMaskedImage = afwImage.MaskedImageF(swarpedMaskedImage, bbox)
