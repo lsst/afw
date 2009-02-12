@@ -73,6 +73,12 @@ std::string afwMath::BilinearWarpingKernel::BilinearFunction1::toString(void) co
  * * The flux-conserving factor is determined from the source and new WCS.
  *   and is applied to the remapped pixel
  *
+ * The scaling of intensity for relative area of source and destination uses two approximations:
+ * - The area of the sky marked out by a pixel on the destination image
+ *   corresponds to a parallellogram on the source image.
+ * - The area varies slowly enough across the image that we can get away with computing
+ *   the source area shifted by half a pixel up and to the left of the true area.
+ *
  * A warping kernel has the following properties:
  * - Has two parameters: fractional x and fractional y position on the source image.
  *   The fractional position for each axis has value >= 0 and < 1:
@@ -141,12 +147,21 @@ int afwMath::warpExposure(
 
     // Set each pixel of destExposure's MaskedImage
     lsst::pex::logging::Trace("lsst.afw.math", 4, "Remapping masked image");
+    
+    // compute source position X,Y corresponding to row -1 of the destination image;
+    // this is used for computing relative pixel scale
+    std::vector<afwImage::PointD> prevRowSrcPosXY(destWidth+1);
+    for (int destIndX = 0; destIndX < destWidth; ++destIndX) {
+        afwImage::PointD destPosXY(afwImage::indexToPosition(destIndX), afwImage::indexToPosition(-1));
+        afwImage::PointD srcPosXY = srcWcsPtr->raDecToXY(destWcsPtr->xyToRaDec(destPosXY));
+        prevRowSrcPosXY[destIndX] = srcPosXY;
+    }
     for (int destIndY = 0; destIndY < destHeight; ++destIndY) {
         afwImage::PointD destPosXY(afwImage::indexToPosition(-1), afwImage::indexToPosition(destIndY));
         afwImage::PointD prevSrcPosXY = srcWcsPtr->raDecToXY(destWcsPtr->xyToRaDec(destPosXY));
         afwImage::PointD srcPosXY;
         typename DestMaskedImageT::x_iterator destXIter = destMI.row_begin(destIndY);
-        for (int destIndX = 0; destIndX < destWidth; ++destIndX, ++destXIter, prevSrcPosXY = srcPosXY) {
+        for (int destIndX = 0; destIndX < destWidth; ++destIndX, ++destXIter) {
             // compute sky position associated with this pixel of remapped MaskedImage
             destPosXY[0] = afwImage::indexToPosition(destIndX);
 
@@ -166,22 +181,29 @@ int afwMath::warpExposure(
                 || (srcIndY < 0) || (srcIndY + kernelHeight > srcHeight)) {
                 // skip this pixel
                 *destXIter = edgePixel;
-                continue;
+            } else {
+                ++numGoodPixels;
+    
+                // Compute warped pixel
+                warpingKernel.setKernelParameters(srcFracInd);
+                double kSum = warpingKernel.computeVectors(kernelXList, kernelYList, false);
+                typename SrcMaskedImageT::const_xy_locator srcLoc = srcMI.xy_at(srcIndX, srcIndY);
+                *destXIter = afwMath::convolveAtAPoint<DestMaskedImageT, SrcMaskedImageT>(srcLoc, kernelXList, kernelYList);
+    
+                // Correct intensity due to relative pixel spatial scale and kernel sum.
+                // The area computation is for a parallellogram.
+                afwImage::PointD dSrcA = srcPosXY - prevSrcPosXY;
+                afwImage::PointD dSrcB = srcPosXY - prevRowSrcPosXY[destIndX];
+                double multFac = std::abs((dSrcA.getX() * dSrcB.getY()) - (dSrcA.getY() * dSrcB.getX())) / kSum;
+                destXIter.image() *= static_cast<typename DestMaskedImageT::Image::SinglePixel>(multFac);
+                destXIter.variance() *= static_cast<typename DestMaskedImageT::Variance::SinglePixel>(multFac * multFac);
             }
-            
-            ++numGoodPixels;
 
-            // Compute warped pixel
-            warpingKernel.setKernelParameters(srcFracInd);
-            double kSum = warpingKernel.computeVectors(kernelXList, kernelYList, false);
-            typename SrcMaskedImageT::const_xy_locator srcLoc = srcMI.xy_at(srcIndX, srcIndY);
-            *destXIter = afwMath::convolveAtAPoint<DestMaskedImageT, SrcMaskedImageT>(srcLoc, kernelXList, kernelYList);
-
-            // Correct intensity due to relative pixel spatial scale and kernel sum
-            afwImage::PointD dSrcXY = srcPosXY - prevSrcPosXY;
-            double multFac = (dSrcXY.getX() * dSrcXY.getX()) + (dSrcXY.getY() * dSrcXY.getY()) / kSum;
-            destXIter.image() *= static_cast<typename DestMaskedImageT::Image::SinglePixel>(multFac);
-            destXIter.variance() *= static_cast<typename DestMaskedImageT::Variance::SinglePixel>(multFac * multFac);
+            // Copy srcPosXY to prevRowSrcPosXY to use for computing area scaling for pixels in the next row
+            // (we've finished with that value in prevRowSrcPosXY for this row)
+            // and to prevSrcPosXY for computation the area scaling of the next pixel in this row
+            prevRowSrcPosXY[destIndX] = srcPosXY;
+            prevSrcPosXY = srcPosXY;
 
         } // dest x pixels
     } // dest y pixels
