@@ -52,42 +52,67 @@ class WarpExposureTestCase(unittest.TestCase):
             badPlanesStr = str(badPlanes)[1:-1]
             self.fail("afw warped %s do/does not match swarped image (ignoring bad pixels)" % (badPlanesStr,))
 
-    def testMatchSwarp(self):
-        """Test that warpExposure matches swarp for a significant change in WCS.
+    def testMatchSwarpBilinear(self):
+        """Test that warpExposure matches swarp using a bilinear warping kernel
+        """
+        # maxDiff=2219.74499512 at position (455, 4); value=-1276.12097168 vs. 943.624023438
+        # a pixel very near the bad column
+        self.compareSwarped("bilinear")
+
+    def testMatchSwarpLanczos2(self):
+        """Test that warpExposure matches swarp using a lanczos4 warping kernel.
+        """
+        # use a large rtol because a few pixels are significantly off, the worst being:
+        # maxDiff=135.429199219 at position (559, 63); value=2298.32055664 vs. 2433.74975586
+        self.compareSwarped("lanczos2", rtol=1.0)
+
+    def testMatchSwarpLanczos3(self):
+        """Test that warpExposure matches swarp using a lanczos4 warping kernel.
+        """
+        # use a large rtol because a few pixels are significantly off, the worst being:
+        # maxDiff=53.94140625 at position (469, 8); value=2766.74536133 vs. 2712.80395508
+        self.compareSwarped("lanczos3", rtol=0.5)
+
+    def testMatchSwarpLanczos4(self):
+        """Test that warpExposure matches swarp using a lanczos4 warping kernel.
+        """
+        # use a large rtol because a few pixels are significantly off, the worst being:
+        # maxDiff=25.6 at position (468, 6); value=3710.5 vs. 3736.1
+        self.compareSwarped("lanczos4", rtol=0.5)
+
+    def compareSwarped(self, kernelName, rtol=0.1):
+        """Compare remapExposure to swarp for given warping kernel.
         
         Note that swarp only warps the image plane, so only test that plane.
-        
-        Split into two tests (so Lanczos and Bilinear are tested separately)
-        but with most of the code in a common method.
-        
+       
         Note: the edge of the good area is slightly different for for swarp and warpExposure.
         I would prefer to grow the EDGE mask by one pixel before comparing the images
         but that is too much hassle with the current afw so instead I ignore edge pixels from swarp and afw.
         """
+        if kernelName.startswith("lanczos"):
+            order = int(kernelName[7:])
+            warpingKernel = afwMath.LanczosWarpingKernel(order)
+        elif kernelName == "bilinear":
+            warpingKernel = afwMath.BilinearWarpingKernel()
+        else:
+            raise RuntimeError("unknown warping kernel %r" % (kernelName))
+
         originalExposure = afwImage.ExposureF(OriginalExposurePath)
 
-        for warpingKernel, kernelName in (
-            (afwMath.LanczosWarpingKernel(4), "Lanczos4"),
-            (afwMath.BilinearWarpingKernel(), "Bilinear"),
-        ):
-            swarpedImageName = "medswarp1%s.fits" % (kernelName.lower(),)
-            swarpedImagePath = os.path.join(dataDir, swarpedImageName)
-            swarpedDecoratedImage = afwImage.DecoratedImageF(swarpedImagePath)
-            swarpedImage = swarpedDecoratedImage.getImage()
-            swarpedMetadata = swarpedDecoratedImage.getMetadata()
-            warpedWcs = afwImage.Wcs(swarpedMetadata)
-            destWidth = swarpedImage.getWidth()
-            destHeight = swarpedImage.getHeight()
+        swarpedImageName = "medswarp1%s.fits" % (kernelName,)
+        swarpedImagePath = os.path.join(dataDir, swarpedImageName)
+        swarpedDecoratedImage = afwImage.DecoratedImageF(swarpedImagePath)
+        swarpedImage = swarpedDecoratedImage.getImage()
+        swarpedMetadata = swarpedDecoratedImage.getMetadata()
+        warpedWcs = afwImage.Wcs(swarpedMetadata)
+        destWidth = swarpedImage.getWidth()
+        destHeight = swarpedImage.getHeight()
 
-            afwWarpedMaskedImage = afwImage.MaskedImageF(destWidth, destHeight)
-            afwWarpedExposure = afwImage.ExposureF(afwWarpedMaskedImage, warpedWcs)
-            numGoodPix = afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingKernel)
-            afwWarpedExposure.writeFits("afwWarped1%s" % (kernelName,))
-            
-            self.compareSwarped(afwWarpedMaskedImage, swarpedImage, kernelName)
+        afwWarpedMaskedImage = afwImage.MaskedImageF(destWidth, destHeight)
+        afwWarpedExposure = afwImage.ExposureF(afwWarpedMaskedImage, warpedWcs)
+        numGoodPix = afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingKernel)
+        afwWarpedExposure.writeFits("afwWarped1%s" % (kernelName,))
 
-    def compareSwarped(self, afwWarpedMaskedImage, swarpedImage, kernelName):
-        """Compare a MaskedImage warped with warpExposure to a swarped Image"""
         # set 0-value warped image pixels as EDGE in afwWarpedMask
         # and zero pixels from the swarped exposure
         afwWarpedMask = afwWarpedMaskedImage.getMask()
@@ -102,10 +127,8 @@ class WarpExposureTestCase(unittest.TestCase):
         skipMaskArr |= swarpedEdgeMaskArr
         swarpedMaskedImage = afwImage.MaskedImageF(swarpedImage)
         
-        # use a large rtol because a few pixels are significantly off, for example:
-        # maxDiff=25.6 at position (468, 6); value=3710.5 vs. 3736.1
         badPlanes = self.compareMaskedImages(afwWarpedMaskedImage, swarpedMaskedImage,
-            doImage=True, doMask=False, doVariance=False, skipMaskArr=skipMaskArr, rtol=0.5)
+            doImage=True, doMask=False, doVariance=False, skipMaskArr=skipMaskArr, rtol=rtol)
         if badPlanes:
             self.fail("afw and swarp %s-warped images do not match (ignoring bad pixels)" % (kernelName,))
 
