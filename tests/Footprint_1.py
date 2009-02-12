@@ -168,19 +168,41 @@ class FootprintTestCase(unittest.TestCase):
 
     def testGrow(self):
         """Test growing a footprint"""
-        foot1 = afwDetection.Footprint(afwImage.BBox(afwImage.PointI(0, 0), 20, 30))
+        x0, y0 = 20, 20;  width, height = 20, 30
+        foot1 = afwDetection.Footprint(afwImage.BBox(afwImage.PointI(x0, y0), width, height),
+                                       afwImage.BBox(afwImage.PointI(0, 0), 100, 100))
         bbox1 = foot1.getBBox()
 
-        foot2 = afwDetection.growFootprint(foot1, 1)
+        self.assertEqual(bbox1.getX0(), x0)
+        self.assertEqual(bbox1.getX1(), x0 + width - 1)
+        self.assertEqual(bbox1.getWidth(), width)
+
+        self.assertEqual(bbox1.getY0(), y0)
+        self.assertEqual(bbox1.getY1(), y0 + height - 1)
+        self.assertEqual(bbox1.getHeight(), height)
+
+        ngrow = 1
+        foot2 = afwDetection.growFootprint(foot1, ngrow)
         bbox2 = foot2.getBBox()
 
-        self.assertEqual(bbox2.getX0(), bbox1.getX0() - 1)
-        self.assertEqual(bbox2.getX1(), bbox1.getX1() + 1)
-        self.assertEqual(bbox2.getWidth(), bbox1.getWidth() + 2)
+        # check bbox1
+        self.assertEqual(bbox1.getX0(), x0)
+        self.assertEqual(bbox1.getX1(), x0 + width - ngrow)
+        self.assertEqual(bbox1.getWidth(), width)
 
-        self.assertEqual(bbox2.getY0(), bbox1.getY0() - 1)
-        self.assertEqual(bbox2.getY1(), bbox1.getY1() + 1)
-        self.assertEqual(bbox2.getHeight(), bbox1.getHeight() + 2)
+        self.assertEqual(bbox1.getY0(), y0)
+        self.assertEqual(bbox1.getY1(), y0 + height - ngrow)
+        self.assertEqual(bbox1.getHeight(), height)
+        # check bbox2
+        self.assertEqual(bbox2.getX0(), bbox1.getX0() - ngrow)
+        self.assertEqual(bbox2.getX1(), bbox1.getX1() + ngrow)
+        self.assertEqual(bbox2.getWidth(), bbox1.getWidth() + 2*ngrow)
+
+        self.assertEqual(bbox2.getY0(), bbox1.getY0() - ngrow)
+        self.assertEqual(bbox2.getY1(), bbox1.getY1() + ngrow)
+        self.assertEqual(bbox2.getHeight(), bbox1.getHeight() + 2*ngrow)
+        # Check that region was preserved
+        self.assertEqual(foot1.getRegion(), foot2.getRegion())
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -188,6 +210,78 @@ class DetectionSetTestCase(unittest.TestCase):
     """A test case for DetectionSet"""
     class Object(object):
         def __init__(self, val, spans):
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            
             self.val = val
             self.spans = spans
 
