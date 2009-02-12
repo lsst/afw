@@ -166,6 +166,22 @@ class FootprintTestCase(unittest.TestCase):
         if False:
             ds9.mtv(idImage, frame=2)
 
+    def testGrow(self):
+        """Test growing a footprint"""
+        foot1 = afwDetection.Footprint(afwImage.BBox(afwImage.PointI(0, 0), 20, 30))
+        bbox1 = foot1.getBBox()
+
+        foot2 = afwDetection.growFootprint(foot1, 1)
+        bbox2 = foot2.getBBox()
+
+        self.assertEqual(bbox2.getX0(), bbox1.getX0() - 1)
+        self.assertEqual(bbox2.getX1(), bbox1.getX1() + 1)
+        self.assertEqual(bbox2.getWidth(), bbox1.getWidth() + 2)
+
+        self.assertEqual(bbox2.getY0(), bbox1.getY0() - 1)
+        self.assertEqual(bbox2.getY1(), bbox1.getY1() + 1)
+        self.assertEqual(bbox2.getHeight(), bbox1.getHeight() + 2)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class DetectionSetTestCase(unittest.TestCase):
