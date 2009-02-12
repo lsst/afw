@@ -26,10 +26,7 @@ if not dataDir:
     raise RuntimeError("Must set up afwdata to run these tests")
 
 OriginalExposureName = "med"
-SwarpedImageName = "medswarp1lanczos4.fits"
-
 OriginalExposurePath = os.path.join(dataDir, OriginalExposureName)
-SwarpedImagePath = os.path.join(dataDir, SwarpedImageName)
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class WarpExposureTestCase(unittest.TestCase):
@@ -54,35 +51,46 @@ class WarpExposureTestCase(unittest.TestCase):
         if badPlanes:
             badPlanesStr = str(badPlanes)[1:-1]
             self.fail("afw warped %s do/does not match swarped image (ignoring bad pixels)" % (badPlanesStr,))
-        
+
     def testMatchSwarp(self):
         """Test that warpExposure matches swarp for a significant change in WCS.
         
         Note that swarp only warps the image plane, so only test that plane.
+        
+        Split into two tests (so Lanczos and Bilinear are tested separately)
+        but with most of the code in a common method.
         
         Note: the edge of the good area is slightly different for for swarp and warpExposure.
         I would prefer to grow the EDGE mask by one pixel before comparing the images
         but that is too much hassle with the current afw so instead I ignore edge pixels from swarp and afw.
         """
         originalExposure = afwImage.ExposureF(OriginalExposurePath)
-        swarpedDecoratedImage = afwImage.DecoratedImageF(SwarpedImagePath)
-        swarpedImage = swarpedDecoratedImage.getImage()
-        destWidth = swarpedImage.getWidth()
-        destHeight = swarpedImage.getHeight()
 
-        swarpedMetadata = swarpedDecoratedImage.getMetadata()
-        warpedWcs = afwImage.Wcs(swarpedMetadata)
+        for warpingKernel, kernelName in (
+            (afwMath.LanczosWarpingKernel(4), "Lanczos4"),
+            (afwMath.BilinearWarpingKernel(), "Bilinear"),
+        ):
+            swarpedImageName = "medswarp1%s.fits" % (kernelName.lower(),)
+            swarpedImagePath = os.path.join(dataDir, swarpedImageName)
+            swarpedDecoratedImage = afwImage.DecoratedImageF(swarpedImagePath)
+            swarpedImage = swarpedDecoratedImage.getImage()
+            swarpedMetadata = swarpedDecoratedImage.getMetadata()
+            warpedWcs = afwImage.Wcs(swarpedMetadata)
+            destWidth = swarpedImage.getWidth()
+            destHeight = swarpedImage.getHeight()
 
-        afwWarpedMaskedImage = afwImage.MaskedImageF(destWidth, destHeight)
-        afwWarpedExposure = afwImage.ExposureF(afwWarpedMaskedImage, warpedWcs)
-        afwWarpedMask = afwWarpedMaskedImage.getMask()
-        
-        warpingKernel = afwMath.LanczosWarpingKernel(4)
-        numGoodPix = afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingKernel)
-        afwWarpedExposure.writeFits("afwWarped")
-        
+            afwWarpedMaskedImage = afwImage.MaskedImageF(destWidth, destHeight)
+            afwWarpedExposure = afwImage.ExposureF(afwWarpedMaskedImage, warpedWcs)
+            numGoodPix = afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingKernel)
+            afwWarpedExposure.writeFits("afwWarped1%s" % (kernelName,))
+            
+            self.compareSwarped(afwWarpedMaskedImage, swarpedImage, kernelName)
+
+    def compareSwarped(self, afwWarpedMaskedImage, swarpedImage, kernelName):
+        """Compare a MaskedImage warped with warpExposure to a swarped Image"""
         # set 0-value warped image pixels as EDGE in afwWarpedMask
         # and zero pixels from the swarped exposure
+        afwWarpedMask = afwWarpedMaskedImage.getMask()
         edgeBitMask = afwWarpedMask.getPlaneBitMask("EDGE")
         if edgeBitMask == 0:
             self.fail("warped mask has no EDGE bit")
@@ -91,7 +99,6 @@ class WarpExposureTestCase(unittest.TestCase):
         swarpedImageArr = imageTestUtils.arrayFromMask(swarpedImage)
         swarpedEdgeMaskArr = (swarpedImageArr == 0) * edgeBitMask
         swarpedEdgeMask = imageTestUtils.maskFromArray(swarpedEdgeMaskArr)
-        swarpedEdgeMask.writeFits("swarpedEdgeMask.fits")
         skipMaskArr |= swarpedEdgeMaskArr
         swarpedMaskedImage = afwImage.MaskedImageF(swarpedImage)
         
@@ -100,7 +107,7 @@ class WarpExposureTestCase(unittest.TestCase):
         badPlanes = self.compareMaskedImages(afwWarpedMaskedImage, swarpedMaskedImage,
             doImage=True, doMask=False, doVariance=False, skipMaskArr=skipMaskArr, rtol=0.5)
         if badPlanes:
-            self.fail("afw warped image does not match swarped image (ignoring bad pixels)")
+            self.fail("afw and swarp %s-warped images do not match (ignoring bad pixels)" % (kernelName,))
 
     def compareMaskedImages(self, maskedImage1, maskedImage2,
         doImage=True, doMask=True, doVariance=True, skipMaskArr=None, rtol=1.0e-05, atol=1e-08):
