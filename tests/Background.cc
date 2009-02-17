@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(BackgroundBasic) {
         // test methods for public stats objects in bgCtrl
         bgCtrl.sctrl.setNumSigmaClip(3);
         bgCtrl.sctrl.setNumIter(3);
-        math::Background back = math::make_Background(img, bgCtrl);
+        math::Background back = math::makeBackground(img, bgCtrl);
         double const testval = back.getPixel(xcen, ycen);
         
         image::Image<float>::Ptr bImage = back.getImage<float>();
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(BackgroundTestImages) {
             float stdev_subimg = req_stdev / sqrt(naxis1*naxis2/(bctrl.getNxSample()*bctrl.getNySample()));
 
             // run the background constructor and call the getPixel() and getImage() functions.
-            math::Background backobj = math::make_Background(*img, bctrl);
+            math::Background backobj = math::makeBackground(*img, bctrl);
 
             // test getPixel()
             float const testval = static_cast<float>(backobj.getPixel(naxis1/2,naxis2/2));

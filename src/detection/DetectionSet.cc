@@ -127,7 +127,7 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
 
     float thresholdParam = -1;          // standard deviation of image (may be needed by Threshold)
     if (threshold.getType() == Threshold::STDEV || threshold.getType() == Threshold::VARIANCE) {
-        math::Statistics stats = math::make_Statistics(*img, math::STDEVCLIP);
+        math::Statistics stats = math::makeStatistics(*img, math::STDEVCLIP);
         double const sd = stats.getValue(math::STDEVCLIP);
 
         pexLogging::TTrace<3>("afw.detection", "St. Dev = %g", sd);

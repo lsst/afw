@@ -42,7 +42,7 @@ int main() {
     sctrl.setNumSigmaClip(5.0);
 
     // initialize a Statistics object with any stats we might want
-    ImgTstat stats = math::make_Statistics(img, math::NPOINT | math::STDEV | math::MEAN | math::VARIANCE |
+    ImgTstat stats = math::makeStatistics(img, math::NPOINT | math::STDEV | math::MEAN | math::VARIANCE |
                                            math::ERRORS | math::MIN | math::MAX | math::VARIANCECLIP |
                                            math::MEANCLIP | math::MEDIAN | math::IQRANGE | math::STDEVCLIP,
                                            sctrl);

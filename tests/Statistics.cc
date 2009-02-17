@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(StatisticsBasic) {
     img = pixval;
 
     {
-        math::Statistics stats = math::make_Statistics(img, math::NPOINT | math::STDEV | math::MEAN);
+        math::Statistics stats = math::makeStatistics(img, math::NPOINT | math::STDEV | math::MEAN);
         double const mean = stats.getValue(math::MEAN);
         double const dmean = stats.getError(math::MEAN);
         double const sd = stats.getValue(math::STDEV);
@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(StatisticsBasic) {
     }
 
     {
-        math::Statistics stats = math::make_Statistics(img, math::STDEV | math::MEAN | math::ERRORS);
+        math::Statistics stats = math::makeStatistics(img, math::STDEV | math::MEAN | math::ERRORS);
         std::pair<double, double> const mean = stats.getResult(math::MEAN);
         double const sd = stats.getValue(math::STDEV);
         
@@ -45,26 +45,26 @@ BOOST_AUTO_TEST_CASE(StatisticsBasic) {
     }
 
     {
-        math::Statistics stats = math::make_Statistics(img, math::NPOINT);
+        math::Statistics stats = math::makeStatistics(img, math::NPOINT);
         BOOST_CHECK_THROW(stats.getValue(math::MEAN), lsst::pex::exceptions::InvalidParameterException);
     }
 
     // ===============================================================================
     // sjb code for percentiles and clipped stats
     {
-        math::Statistics stats = math::make_Statistics(img, math::MEDIAN);
+        math::Statistics stats = math::makeStatistics(img, math::MEDIAN);
         BOOST_CHECK_EQUAL(pixval, stats.getValue(math::MEDIAN));
     }
     {
-        math::Statistics stats = math::make_Statistics(img, math::IQRANGE);
+        math::Statistics stats = math::makeStatistics(img, math::IQRANGE);
         BOOST_CHECK_EQUAL(0.0, stats.getValue(math::IQRANGE));
     }
     {
-        math::Statistics stats = math::make_Statistics(img, math::MEANCLIP);
+        math::Statistics stats = math::makeStatistics(img, math::MEANCLIP);
         BOOST_CHECK_EQUAL(pixval, stats.getValue(math::MEANCLIP));
     }
     {
-        math::Statistics stats = math::make_Statistics(img, math::VARIANCECLIP);
+        math::Statistics stats = math::makeStatistics(img, math::VARIANCECLIP);
         BOOST_CHECK_EQUAL(0.0, stats.getValue(math::VARIANCECLIP));
     }
 
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(StatisticsBasic) {
             }
         }
 
-        math::Statistics stats = math::make_Statistics(img2,
+        math::Statistics stats = math::makeStatistics(img2,
                                                                math::NPOINT | math::STDEV | math::MEAN | math::ERRORS);
         std::pair<double, double> const mean = stats.getResult(math::MEAN);
         double const n = stats.getValue(math::NPOINT);
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(StatisticsRamp) {
     stdev = sqrt(stdev/(nx*ny-1));
     
     {
-        math::Statistics stats = math::make_Statistics(img, math::NPOINT | math::STDEV | math::MEAN);
+        math::Statistics stats = math::makeStatistics(img, math::NPOINT | math::STDEV | math::MEAN);
         double const testmean = stats.getValue(math::MEAN);
         double const teststdev = stats.getValue(math::STDEV);
         
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(StatisticsRamp) {
     }
 
     {
-        math::Statistics stats = math::make_Statistics(img, math::STDEV | math::MEAN | math::ERRORS);
+        math::Statistics stats = math::makeStatistics(img, math::STDEV | math::MEAN | math::ERRORS);
         std::pair<double, double> const mean = stats.getResult(math::MEAN);
         double const sd = stats.getValue(math::STDEV);
         
@@ -140,19 +140,19 @@ BOOST_AUTO_TEST_CASE(StatisticsRamp) {
     // ===============================================================================
     // sjb code for percentiles and clipped stats
     {
-        math::Statistics stats = math::make_Statistics(img, math::MEDIAN);
+        math::Statistics stats = math::makeStatistics(img, math::MEDIAN);
         BOOST_CHECK_EQUAL(z0+dzdx*(nx-1)/2.0, stats.getValue(math::MEDIAN));
     }
     {
-        math::Statistics stats = math::make_Statistics(img, math::IQRANGE);
+        math::Statistics stats = math::makeStatistics(img, math::IQRANGE);
         BOOST_CHECK_EQUAL(dzdx*(nx-1)/2.0, stats.getValue(math::IQRANGE));
     }
     {
-        math::Statistics stats = math::make_Statistics(img, math::MEANCLIP);
+        math::Statistics stats = math::makeStatistics(img, math::MEANCLIP);
         BOOST_CHECK_EQUAL(z0+dzdx*(nx-1)/2.0, stats.getValue(math::MEANCLIP));
     }
     //{
-    //    math::Statistics stats = math::make_Statistics(img, math::VARIANCECLIP);
+    //    math::Statistics stats = math::makeStatistics(img, math::VARIANCECLIP);
     //    BOOST_CHECK_EQUAL(0.0, stats.getValue(math::VARIANCECLIP));
     //}
 
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(StatisticsTestImages) {
 
             // measure the mean and stdev with the Statistics class
             ImageT::Ptr img = dimg.getImage();
-            math::Statistics statobj = math::make_Statistics(*img,math::MEAN | math::STDEV);
+            math::Statistics statobj = math::makeStatistics(*img,math::MEAN | math::STDEV);
             //int n = img->getWidth() * img->getHeight();
             //double sampleToPop = 1.0; //sqrt( n/static_cast<double>(n - 1) );
             double const mean  = statobj.getValue(math::MEAN);

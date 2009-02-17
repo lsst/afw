@@ -89,7 +89,7 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
             ImageT subimg = ImageT(img,
                                    image::BBox(image::PointI(_xorig[i_x], _yorig[i_y]), _subimgWidth, _subimgHeight));
             
-            math::Statistics stats = math::make_Statistics(subimg, math::MEAN | math::MEANCLIP | math::MEDIAN |
+            math::Statistics stats = math::makeStatistics(subimg, math::MEAN | math::MEANCLIP | math::MEDIAN |
                                                                    math::IQRANGE | math::STDEVCLIP, _bctrl.sctrl);
             
             _grid[i_x][i_y] = stats.getValue(math::MEANCLIP);
