@@ -48,17 +48,7 @@ def main():
     (opt, args) = parser.parse_args()
     
     kernelName = opt.kernel.lower()
-    if kernelName == "bilinear":
-        print "Bilinear"
-        kernel = afwMath.BilinearWarpingKernel()
-    elif kernelName.startswith("lanczos"):
-        kernelOrder = int(kernelName[7:])
-        print "Lanczos order", kernelOrder
-        kernel = afwMath.LanczosWarpingKernel(kernelOrder)
-    else:
-        print "Error: unknown kernel %r" % (kernelName,)
-        parser.help()
-        sys.exit(1)
+    kernel = afwMath.makeWarpingKernel(kernelName)
     
     def getArg(ind, defValue):
         if ind < len(args):

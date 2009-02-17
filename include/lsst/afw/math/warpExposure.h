@@ -1,15 +1,15 @@
 // -*- LSST-C++ -*- // fixed format comment for emacs
 /**
-  * @file 
+  * \file 
   *
-  * @ingroup afw
+  * \ingroup afw
   *
-  * @brief Implementation of the templated utility function, warpExposure, for
+  * \brief Implementation of the templated utility function, warpExposure, for
   * Astrometric Image Remapping for the LSST.
   *
-  * @author Nicole M. Silvestri and Russell Owen, University of Washington
+  * \author Nicole M. Silvestri and Russell Owen, University of Washington
   *
-  * @todo
+  * \todo
   * * Modify WarpingKernel so the class is not templated but the method computePixel is.
   *   That was the original design, but it tended to hide code errors so I switched for now.
   */
@@ -33,7 +33,7 @@ namespace afw {
 namespace math {
        
     /**
-    * @brief Lanczos warping: accurate but slow; can introduce ringing artifacts.
+    * \brief Lanczos warping: accurate but slow; can introduce ringing artifacts.
     */
     class LanczosWarpingKernel : public SeparableKernel {
     public:
@@ -48,7 +48,7 @@ namespace math {
 
 
     /**
-    * @brief Bilinear warping: fast; good for undersampled data.
+    * \brief Bilinear warping: fast; good for undersampled data.
     */
     class BilinearWarpingKernel : public SeparableKernel {
     public:
@@ -60,7 +60,7 @@ namespace math {
         virtual ~BilinearWarpingKernel() {};
 
         /**
-         * @brief 1-dimensional bilinear interpolation function.
+         * \brief 1-dimensional bilinear interpolation function.
          *
          * Optimized for bilinear warping so only accepts two values: 0 and 1
          * (which is why it defined in the BilinearWarpingKernel class instead of standalone)
@@ -70,7 +70,7 @@ namespace math {
             typedef Function1<Kernel::PixelT>::Ptr Function1Ptr;
     
             /**
-             * @brief Construct a Bilinear interpolation function
+             * \brief Construct a Bilinear interpolation function
              */
             explicit BilinearFunction1(
                 double fracPos)    ///< fractional position; must be >= 0 and < 1
@@ -90,6 +90,8 @@ namespace math {
             virtual std::string toString(void) const;
         };
     };
+    
+    boost::shared_ptr<SeparableKernel> makeWarpingKernel(std::string name);
 
     template<typename DestExposureT, typename SrcExposureT>
     int warpExposure(

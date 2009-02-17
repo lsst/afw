@@ -1,21 +1,24 @@
 // -*- LSST-C++ -*- // fixed format comment for emacs
 /**
- * @file
+ * \file
  *
- * @ingroup afw
+ * \ingroup afw
  *
- * @brief Implementation of the templated utility function, warpExposure, for
+ * \brief Implementation of the templated utility function, warpExposure, for
  * Astrometric Image Remapping for LSST.  Declared in warpExposure.h.
  *
- * @author Nicole M. Silvestri and Russell Owen, University of Washington
+ * \author Nicole M. Silvestri and Russell Owen, University of Washington
  */
 
+#include <cmath>
+#include <limits>
+#include <sstream>
 #include <string>
 #include <vector>
-#include <cmath>
 
 #include <boost/cstdint.hpp> 
 #include <boost/format.hpp> 
+#include <boost/regex.hpp>
 
 #include "lsst/pex/logging/Trace.h" 
 #include "lsst/afw/image.h"
@@ -25,9 +28,9 @@ namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
 
 /**
-* @brief Solve bilinear equation; the only permitted arguments are 0 or 1
+* \brief Solve bilinear equation; the only permitted arguments are 0 or 1
 *
-* @throw lsst::pex::exceptions::InvalidParameterException if argument is not 0 or 1
+* \throw lsst::pex::exceptions::InvalidParameterException if argument is not 0 or 1
 */
 afwMath::Kernel::PixelT afwMath::BilinearWarpingKernel::BilinearFunction1::operator() (
     double x
@@ -37,13 +40,15 @@ afwMath::Kernel::PixelT afwMath::BilinearWarpingKernel::BilinearFunction1::opera
     } else if (x == 1.0) {
         return this->_params[0];
     } else {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "x must be 0 or 1");
+        std::ostringstream errStream;
+        errStream << "x = " << x << "; must be 0 or 1";
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, errStream.str());
     }
 }            
 
 /**
-* @brief Return string representation.
-*/
+ * \brief Return string representation.
+ */
 std::string afwMath::BilinearWarpingKernel::BilinearFunction1::toString(void) const {
     std::ostringstream os;
     os << "_BilinearFunction1: ";
@@ -51,16 +56,39 @@ std::string afwMath::BilinearWarpingKernel::BilinearFunction1::toString(void) co
     return os.str();
 }
 
+/**
+ * \brief Return a warping kernel given its name
+ *
+ * Allowed names are:
+ * * bilinear
+ * * lanczosN where N is an integer, e.g. lanczos4
+ */
+boost::shared_ptr<lsst::afw::math::SeparableKernel> lsst::afw::math::makeWarpingKernel(std::string name) {
+    typedef boost::shared_ptr<lsst::afw::math::SeparableKernel> KernelPtr;
+    boost::cmatch matches;
+    const boost::regex LanczosRE("lanczos(\\d+)");
+    if (name == "bilinear") {
+        return KernelPtr(new BilinearWarpingKernel());
+    } else if (boost::regex_match(name.c_str(), matches, LanczosRE)) {
+        std::string orderStr(matches[1].first, matches[1].second);
+        int order;
+        std::istringstream(orderStr) >> order;
+        return KernelPtr(new LanczosWarpingKernel(order));
+    } else {
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+            "unknown warping kernel name: \"" + name + "\"");
+    }
+}
 
 /**
- * @brief Remap an Exposure to a new WCS.
+ * \brief Remap an Exposure to a new WCS.
  *
  * For pixels in destExposure that cannot be computed because their data comes from pixels that are too close
  * to (or off of) the edge of srcExposure.
  * * The image and variance are set to 0
  * * The mask is set to the EDGE bit (if found, else 0).
  *
- * @return the number valid pixels in destExposure (thost that are not off the edge).
+ * \return the number valid pixels in destExposure (thost that are not off the edge).
  *
  * Algorithm:
  *
@@ -121,32 +149,31 @@ int afwMath::warpExposure(
     const int srcWidth = srcMI.getWidth();
     const int srcHeight = srcMI.getHeight();
     typename afwImage::Wcs::Ptr srcWcsPtr = srcExposure.getWcs();
-    lsst::pex::logging::Trace("lsst.afw.math", 3,
-        boost::format("source image width=%d; height=%d") % srcWidth % srcHeight);
+    lsst::pex::logging::TTrace<3>("lsst.afw.math.warp",
+        "source image width=%d; height=%d", srcWidth, srcHeight);
 
     // Get the remapped MaskedImage and the remapped wcs.
     DestMaskedImageT destMI = destExposure.getMaskedImage();
     typename afwImage::Wcs::Ptr destWcsPtr = destExposure.getWcs();
-   
-    // Conform mask plane names of remapped MaskedImage to match source
-    destMI.getMask()->conformMaskPlanes(srcMI.getMask()->getMaskPlaneDict());
     
     // Make a pixel mask from the EDGE bit, if available (0 if not available)
     const typename DestMaskedImageT::Mask::SinglePixel edgePixelMask = srcMI.getMask()->getPlaneBitMask("EDGE");
-    lsst::pex::logging::Trace("lsst.afw.math", 3, boost::format("edgePixelMask=0x%X") % edgePixelMask);
+    lsst::pex::logging::TTrace<3>("lsst.afw.math.warp", "edgePixelMask=0x%X", edgePixelMask);
     
     const int destWidth = destMI.getWidth();
     const int destHeight = destMI.getHeight();
-    lsst::pex::logging::Trace("lsst.afw.math", 3,
-        boost::format("remap image width=%d; height=%d") % destWidth % destHeight);
+    lsst::pex::logging::TTrace<3>("lsst.afw.math.warp",
+        "remap image width=%d; height=%d", destWidth, destHeight);
 
-    const typename DestMaskedImageT::SinglePixel edgePixel(0, edgePixelMask, 0);
+    typedef typename DestMaskedImageT::Variance::Pixel VariancePixel;
+    const typename DestMaskedImageT::SinglePixel edgePixel(
+        0, edgePixelMask, std::numeric_limits<VariancePixel>::max());
     
     std::vector<double> kernelXList(kernelWidth);
     std::vector<double> kernelYList(kernelHeight);
 
     // Set each pixel of destExposure's MaskedImage
-    lsst::pex::logging::Trace("lsst.afw.math", 4, "Remapping masked image");
+    lsst::pex::logging::TTrace<4>("lsst.afw.math.warp", "Remapping masked image");
     
     // compute source position X,Y corresponding to row -1 of the destination image;
     // this is used for computing relative pixel scale

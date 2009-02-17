@@ -469,8 +469,8 @@ detection::Footprint::Ptr detection::growFootprint(
 	detection::Footprint::Ptr const &foot, //!< The Footprint to grow 
         int ngrow                       //!< how much to grow foot
                                                  ) {
-    if (ngrow <= 0) {
-	ngrow = 1;                      // ngrow == 1 => no grow
+    if (ngrow < 0) {
+	ngrow = 0;                      // ngrow == 0 => no grow
     }
     /*
      * We'll insert the footprints into an image, then convolve with a disk,
@@ -480,6 +480,7 @@ detection::Footprint::Ptr detection::growFootprint(
     bbox.grow(image::PointI(bbox.getX0() - 2*ngrow - 1, bbox.getY0() - 2*ngrow - 1));
     bbox.grow(image::PointI(bbox.getX1() + 2*ngrow + 1, bbox.getY1() + 2*ngrow + 1));
     image::Image<int>::Ptr idImage = makeImageFromBBox<int>(bbox);
+    *idImage = 0;
     idImage->setXY0(image::PointI(0, 0));
 
     set_footprint_id<int>(idImage, foot, 1, -bbox.getX0(), -bbox.getY0());
@@ -499,7 +500,7 @@ detection::Footprint::Ptr detection::growFootprint(
     // Here's the actual grow step
     image::MaskedImage<int>::Ptr convolvedImage(new image::MaskedImage<int>(idImage->getDimensions()));
     math::convolve(*convolvedImage->getImage(), *idImage, *circle, 0, false);
-
+    
     DetectionSet<int>::Ptr grownList(new DetectionSet<int>(*convolvedImage, 0.5, "", 1));
 
     assert (grownList->getFootprints().size() > 0);
@@ -508,6 +509,7 @@ detection::Footprint::Ptr detection::growFootprint(
     // Fix the coordinate system to be that of foot
     //
     grown->shift(bbox.getX0(), bbox.getY0());
+    grown->setRegion(foot->getRegion());
 
     return grown;
 }

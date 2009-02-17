@@ -96,13 +96,7 @@ class WarpExposureTestCase(unittest.TestCase):
         I would prefer to grow the EDGE mask by one pixel before comparing the images
         but that is too much hassle with the current afw so instead I ignore edge pixels from swarp and afw.
         """
-        if kernelName.startswith("lanczos"):
-            order = int(kernelName[7:])
-            warpingKernel = afwMath.LanczosWarpingKernel(order)
-        elif kernelName == "bilinear":
-            warpingKernel = afwMath.BilinearWarpingKernel()
-        else:
-            raise RuntimeError("unknown warping kernel %r" % (kernelName))
+        warpingKernel = afwMath.makeWarpingKernel(kernelName)
 
         originalExposure = afwImage.ExposureF(OriginalExposurePath)
 

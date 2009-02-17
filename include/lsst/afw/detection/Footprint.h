@@ -145,7 +145,9 @@ public:
 
     const image::BBox& getBBox() const { return _bbox; } //!< Return the Footprint's bounding box
     /// Return the corners of the MaskedImage the footprints live in
-    const image::BBox& getRegion() const { return _region; }
+    image::BBox const& getRegion() const { return _region; }
+    /// Set the corners of the MaskedImage wherein the footprints dwell
+    void setRegion(image::BBox const& region) { _region = region; }
     
     void normalize();
     int setNpix();
@@ -153,17 +155,17 @@ public:
 
     void insertIntoImage(image::Image<boost::uint16_t>& idImage, const int id) const;
 private:
-    Footprint(const Footprint &);       //!< No copy constructor
+    Footprint(const Footprint &);                   //!< No copy constructor
     Footprint operator = (Footprint const &) const; //!< no assignment
     static int id;
     mutable int _fid;                    //!< unique ID
-    int _npix;                          //!< number of pixels in this Footprint
+    int _npix;                           //!< number of pixels in this Footprint
     
-    SpanList &_spans; //!< the Spans contained in this Footprint
+    SpanList &_spans;                    //!< the Spans contained in this Footprint
     image::BBox _bbox;                   //!< the Footprint's bounding box
-    std::vector<Peak::Ptr> &_peaks; //!< the Peaks lying in this footprint
-    const image::BBox _region;           //!< The corners of the MaskedImage the footprints live in
-    bool _normalized;                   //!< Are the spans sorted? 
+    std::vector<Peak::Ptr> &_peaks;      //!< the Peaks lying in this footprint
+    mutable image::BBox _region;         //!< The corners of the MaskedImage the footprints live in
+    bool _normalized;                    //!< Are the spans sorted? 
 };
 
 Footprint::Ptr growFootprint(Footprint::Ptr const &foot, int ngrow);

@@ -73,7 +73,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(int cols, ///< number of 
                                                               ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _maskedImage(cols, rows),
-    _wcsPtr(new afwImage::Wcs (wcs))
+    _wcsPtr(new afwImage::Wcs(wcs))
 {
     setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet()));
 }
@@ -87,7 +87,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
                                                               ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _maskedImage(maskedImage),
-    _wcsPtr(new afwImage::Wcs (wcs))
+    _wcsPtr(new afwImage::Wcs(wcs))
 {
     setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet()));
 }
