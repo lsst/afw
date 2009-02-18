@@ -1,4 +1,5 @@
 // -*- lsst-c++ -*-
+%ignore lsst::afw::detection::FootprintFunctor::operator();
 
 %{
 #include "lsst/afw/detection/Footprint.h"
@@ -17,6 +18,14 @@ SWIG_SHARED_PTR(DetectionSetD, lsst::afw::detection::DetectionSet<double, lsst::
 %template(SpanContainerT)      std::vector<lsst::afw::detection::Span::Ptr>;
 %template(FootprintContainerT) std::vector<lsst::afw::detection::Footprint::Ptr>;
 
+%define %footprintFunctor(NAME, PIXEL_TYPE)
+    %template(FootprintFunctor ##NAME) lsst::afw::detection::FootprintFunctor<lsst::afw::image::Image<PIXEL_TYPE> >;
+    %template(FootprintFunctorMI ##NAME)
+                       lsst::afw::detection::FootprintFunctor<lsst::afw::image::MaskedImage<PIXEL_TYPE> >;
+%enddef
+
+%footprintFunctor(F, float);
+
 %template(DetectionSetF) lsst::afw::detection::DetectionSet<float, lsst::afw::image::MaskPixel>;
 %template(DetectionSetD) lsst::afw::detection::DetectionSet<double, lsst::afw::image::MaskPixel>;
 
@@ -32,4 +41,3 @@ SWIG_SHARED_PTR(DetectionSetD, lsst::afw::detection::DetectionSet<double, lsst::
         return self.toString()
     }
 }
-
