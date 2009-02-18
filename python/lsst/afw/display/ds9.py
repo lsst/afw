@@ -17,9 +17,14 @@ class Ds9Error(IOError):
 #
 # Symbolic names for mask colours
 #
-WHITE = "white"; BLACK = "black"
-RED = "red"; GREEN = "green"; BLUE = "blue"
-CYAN = "cyan"; MAGENTA = "magenta"; YELLOW = "yellow"
+WHITE = "white"
+BLACK = "black"
+RED = "red"
+GREEN = "green"
+BLUE = "blue"
+CYAN = "cyan"
+MAGENTA = "magenta"
+YELLOW = "yellow"
 _maskColors = [WHITE, BLACK, RED, GREEN, BLUE, CYAN, MAGENTA, YELLOW]
 
 def setMaskPlaneColor(name, color=None):
