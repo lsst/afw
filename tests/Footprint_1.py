@@ -300,7 +300,7 @@ class DetectionSetTestCase(unittest.TestCase):
             return True
     
     def setUp(self):
-        self.ms = afwImage.MaskedImageD(12, 8)
+        self.ms = afwImage.MaskedImageF(12, 8)
         im = self.ms.getImage()
         #
         # Objects that we should detect
@@ -323,11 +323,11 @@ class DetectionSetTestCase(unittest.TestCase):
     def testGC(self):
         """Check that DetectionSets are automatically garbage collected (when MemoryTestCase runs)"""
         
-        ds = afwDetection.DetectionSetD(afwImage.MaskedImageD(10, 20), afwDetection.Threshold(10))
+        ds = afwDetection.DetectionSetF(afwImage.MaskedImageF(10, 20), afwDetection.Threshold(10))
 
     def testFootprints(self):
         """Check that we found the correct number of objects and that they are correct"""
-        ds = afwDetection.DetectionSetD(self.ms, afwDetection.Threshold(10))
+        ds = afwDetection.DetectionSetF(self.ms, afwDetection.Threshold(10))
 
         objects = ds.getFootprints()
 
@@ -337,7 +337,7 @@ class DetectionSetTestCase(unittest.TestCase):
             
     def testFootprintsMasks(self):
         """Check that detectionSets have the proper mask bits set"""
-        ds = afwDetection.DetectionSetD(self.ms, afwDetection.Threshold(10), "OBJECT")
+        ds = afwDetection.DetectionSetF(self.ms, afwDetection.Threshold(10), "OBJECT")
         objects = ds.getFootprints()
 
         if display:
@@ -351,7 +351,7 @@ class DetectionSetTestCase(unittest.TestCase):
 
     def testFootprintsImageId(self):
         """Check that we can insert footprints into an Image"""
-        ds = afwDetection.DetectionSetD(self.ms, afwDetection.Threshold(10))
+        ds = afwDetection.DetectionSetF(self.ms, afwDetection.Threshold(10))
         objects = ds.getFootprints()
 
         idImage = afwImage.ImageU(self.ms.getDimensions())
@@ -371,7 +371,7 @@ class DetectionSetTestCase(unittest.TestCase):
 
     def testDetectionSetImageId(self):
         """Check that we can insert a DetectionSet into an Image, setting relative IDs"""
-        ds = afwDetection.DetectionSetD(self.ms, afwDetection.Threshold(10))
+        ds = afwDetection.DetectionSetF(self.ms, afwDetection.Threshold(10))
         objects = ds.getFootprints()
 
         idImage = ds.insertIntoImage(True)
