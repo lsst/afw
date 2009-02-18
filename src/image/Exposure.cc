@@ -29,12 +29,14 @@
 #include "lsst/afw/image/Exposure.h"
 #include "lsst/afw/formatters/WcsFormatter.h"
 
+namespace afwImage = lsst::afw::image;
+
 /** @brief Exposure Class Implementation for LSST: a templated framework class
   * for creating an Exposure from a MaskedImage and a Wcs.
   *
-  * An Exposure is required to take one lsst::afw::image::MaskedImage or a region (col,
+  * An Exposure is required to take one afwImage::MaskedImage or a region (col,
   * row) defining the size of a MaskedImage (this can be of size 0,0).  An
-  * Exposure can (but is not required to) contain a lsst::afw::image::Wcs.
+  * Exposure can (but is not required to) contain a afwImage::Wcs.
   *
   * The template types should optimally be a float, double, unsigned int 16 bit,
   * or unsigned int 32 bit for the image (pixel) type and an unsigned int 32 bit
@@ -65,13 +67,13 @@
   * a Wcs (which may be default constructed)
   */          
 template<typename ImageT, typename MaskT, typename VarianceT> 
-lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure(int cols, ///< number of columns (default: 0)
+afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(int cols, ///< number of columns (default: 0)
                                                                int rows, ///< number of rows (default: 0)
-                                                               lsst::afw::image::Wcs const& wcs ///< the Wcs
+                                                               afwImage::Wcs const& wcs ///< the Wcs
                                                               ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _maskedImage(cols, rows),
-    _wcsPtr(new lsst::afw::image::Wcs (wcs))
+    _wcsPtr(new afwImage::Wcs(wcs))
 {
     setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet()));
 }
@@ -79,13 +81,13 @@ lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure(int cols, ///< nu
 /** @brief Construct an Exposure from a MaskedImage
   */               
 template<typename ImageT, typename MaskT, typename VarianceT> 
-lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure(
-    lsst::afw::image::MaskedImage<ImageT, MaskT, VarianceT> &maskedImage, ///< the MaskedImage
-    lsst::afw::image::Wcs const& wcs                                      ///< the Wcs
+afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
+    MaskedImage &maskedImage, ///< the MaskedImage
+    afwImage::Wcs const& wcs                                      ///< the Wcs
                                                               ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _maskedImage(maskedImage),
-    _wcsPtr(new lsst::afw::image::Wcs (wcs))
+    _wcsPtr(new afwImage::Wcs(wcs))
 {
     setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet()));
 }
@@ -100,13 +102,13 @@ lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure(
   * is not fully contained by the original MaskedImage BBox.
   */        
 template<typename ImageT, typename MaskT, typename VarianceT> 
-lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &src, ///< Parent Exposure
+afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &src, ///< Parent Exposure
                                                                BBox const& bbox,    ///< Desired region in Exposure 
                                                                bool const deep      ///< Should we make copy of pixels?
                                                               ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _maskedImage(src.getMaskedImage(), bbox, deep),
-    _wcsPtr(new lsst::afw::image::Wcs(*src._wcsPtr))
+    _wcsPtr(new afwImage::Wcs(*src._wcsPtr))
 {
     setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet()));
 }
@@ -127,7 +129,7 @@ lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &s
   * read or the base file name could not be found.
   */
 template<typename ImageT, typename MaskT, typename VarianceT> 
-lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure(
+afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 	std::string const& baseName,    ///< Exposure's base input file name
         int const hdu,                  ///< Desired HDU
         bool conformMasks               //!< Make Mask conform to mask layout in file?
@@ -135,15 +137,15 @@ lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     lsst::daf::data::LsstBase(typeid(this)) {
     lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertySet());
 
-    _maskedImage = lsst::afw::image::MaskedImage<ImageT, MaskT, VarianceT>(baseName, hdu, metadata, conformMasks);
-    _wcsPtr = lsst::afw::image::Wcs::Ptr(new lsst::afw::image::Wcs(metadata));
+    _maskedImage = MaskedImage(baseName, hdu, metadata, conformMasks);
+    _wcsPtr = afwImage::Wcs::Ptr(new afwImage::Wcs(metadata));
     setMetadata(metadata);
 }
 
 /** Destructor
  */
 template<typename ImageT, typename MaskT, typename VarianceT> 
-lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::~Exposure(){}
+afwImage::Exposure<ImageT, MaskT, VarianceT>::~Exposure(){}
 
 
 /** @brief Get the Wcs of an Exposure.
@@ -151,7 +153,7 @@ lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::~Exposure(){}
   * @return a boost::shared_ptr to the Wcs.
   */
 template<typename ImageT, typename MaskT, typename VarianceT> 
-lsst::afw::image::Wcs::Ptr lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::getWcs() const { 
+afwImage::Wcs::Ptr afwImage::Exposure<ImageT, MaskT, VarianceT>::getWcs() const { 
     return _wcsPtr;
 }
 
@@ -160,7 +162,7 @@ lsst::afw::image::Wcs::Ptr lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>:
 /** @brief Set the MaskedImage of the Exposure.
   */   
 template<typename ImageT, typename MaskT, typename VarianceT> 
-void lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::setMaskedImage(lsst::afw::image::MaskedImage<ImageT, MaskT, VarianceT> &maskedImage){
+void afwImage::Exposure<ImageT, MaskT, VarianceT>::setMaskedImage(MaskedImage &maskedImage){
     _maskedImage = maskedImage; 
 }
 
@@ -168,8 +170,8 @@ void lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::setMaskedImage(lsst::
 /** @brief Set the Wcs of the Exposure.  
  */   
 template<typename ImageT, typename MaskT, typename VarianceT> 
-void lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::setWcs(lsst::afw::image::Wcs const &wcs){
-    _wcsPtr.reset(new lsst::afw::image::Wcs(wcs)); 
+void afwImage::Exposure<ImageT, MaskT, VarianceT>::setWcs(afwImage::Wcs const &wcs){
+    _wcsPtr.reset(new afwImage::Wcs(wcs)); 
 }
 
 
@@ -188,7 +190,7 @@ void lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::setWcs(lsst::afw::ima
   * filename is not found.
   */
 template<typename ImageT, typename MaskT, typename VarianceT> 
-void lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::writeFits(
+void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(
 	const std::string &expOutFile ///< Exposure's base output file name
                                                                     ) const {
     using lsst::daf::base::PropertySet;
@@ -204,7 +206,7 @@ void lsst::afw::image::Exposure<ImageT, MaskT, VarianceT>::writeFits(
 }
 
 // Explicit instantiations
-template class lsst::afw::image::Exposure<boost::uint16_t>;
-template class lsst::afw::image::Exposure<int>;
-template class lsst::afw::image::Exposure<float>;
-template class lsst::afw::image::Exposure<double>;
+template class afwImage::Exposure<boost::uint16_t>;
+template class afwImage::Exposure<int>;
+template class afwImage::Exposure<float>;
+template class afwImage::Exposure<double>;

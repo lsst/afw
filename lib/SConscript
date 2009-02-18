@@ -37,6 +37,7 @@ env.SharedLibrary(
         "math/Statistics.cc",
         "math/Background.cc",
         "math/Interpolate.cc",
+        "math/warpExposure.cc",
     )],
     LIBS=filter(lambda x: x != "afw", env.getlibs("afw"))
 )

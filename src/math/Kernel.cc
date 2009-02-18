@@ -68,8 +68,8 @@ lsst::afw::math::Kernel::Kernel(
     LsstBase(typeid(this)),
    _width(width),
    _height(height),
-   _ctrX((width-1)/2),
-   _ctrY((height-1)/2),
+   _ctrX(width/2),
+   _ctrY(height/2),
    _nKernelParams(spatialFunctionList.size())
 {
     for (unsigned int ii = 0; ii < spatialFunctionList.size(); ++ii) {

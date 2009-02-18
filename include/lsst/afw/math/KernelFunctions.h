@@ -4,16 +4,9 @@
 /**
  * @file
  *
- * @brief Convolve and apply functions for kernels
+ * @brief Utility functions for kernels
  *
  * @todo
- * * Add versions of these functions that work with lsst::afw::image::Image.
- *   This is not a high priority because it is not needed for DC3.
- * * Consider adding a flag to convolve indicating which specialized version of basicConvolve was used.
- *   This would only be used for unit testing and trace messages suffice (barely), so not a high priority.
- * * Consider a way to disable use of specialized versions of basicConvolve.
- *   This could be used to replace convolveLinear with an automatic specialization.
- *   It might also be useful for unit tests to verify that the specialized version gives the same answer.
  *
  * @author Russell Owen
  *
