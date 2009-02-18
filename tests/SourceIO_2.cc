@@ -3,7 +3,7 @@
 //##====----------------                                ----------------====##/
 //
 //! \file
-//! \brief  Testing of IO via the persistence framework for DiaSource and DiaSourceVector.
+//! \brief  Testing of IO via the persistence framework for DiaSource and DiaSourceSet.
 //
 //##====----------------                                ----------------====##/
 
@@ -51,7 +51,7 @@ static std::string const makeTempFile() {
 }
 
 
-static void initTestData(DiaSourceVector & v, int sliceId = 0) {
+static void initTestData(DiaSourceSet & v, int sliceId = 0) {
     v.clear();
     v.reserve(NUM_DIASOURCE_NULLABLE_FIELDS + 2);
     DiaSource data;
@@ -190,7 +190,7 @@ static void testBoost(void) {
     LogicalLocation loc(makeTempFile());
 
     // Intialize test data
-    DiaSourceVector dsv;
+    DiaSourceSet dsv;
     initTestData(dsv);
     PersistableDiaSourceVector::Ptr persistPtr(new PersistableDiaSourceVector(dsv));    
     Persistence::Ptr pers = Persistence::getPersistence(policy);
@@ -236,7 +236,7 @@ static void testDb(std::string const & storageType) {
     // 1. Test on a single DiaSource
     DiaSource::Ptr ds(new DiaSource);
     ds->setId(2);
-    DiaSourceVector dsv;
+    DiaSourceSet dsv;
     dsv.push_back(ds);
     PersistableDiaSourceVector::Ptr persistPtr(new PersistableDiaSourceVector(dsv));
 
@@ -246,7 +246,7 @@ static void testDb(std::string const & storageType) {
         storageList.push_back(pers->getPersistStorage(storageType, loc));
         pers->persist(*persistPtr, storageList, props);
     }
-    // and read it back in (in a DiaSourceVector)
+    // and read it back in (in a DiaSourceSet)
     {
         Storage::List storageList;
         storageList.push_back(pers->getRetrieveStorage(storageType, loc));
@@ -255,13 +255,13 @@ static void testDb(std::string const & storageType) {
         PersistableDiaSourceVector::Ptr persistVec = 
             boost::dynamic_pointer_cast<PersistableDiaSourceVector, Persistable>(p);
         BOOST_CHECK_MESSAGE(persistVec.get() != 0, "Couldn't cast to PersistableDiaSourceVector");
-        DiaSourceVector vec = persistVec->getSources();
+        DiaSourceSet vec = persistVec->getSources();
         BOOST_CHECK_MESSAGE(*vec.at(0) == *dsv[0], 
             "persist()/retrieve() resulted in PersistableDiaSourceVector corruption");
     }
     afwFormatters::dropAllVisitSliceTables(loc, policy, props);
 
-    // 2. Test on a DiaSourceVector
+    // 2. Test on a DiaSourceSet
     dsv.clear();
     initTestData(dsv);
     persistPtr->setSources(dsv);
@@ -281,7 +281,7 @@ static void testDb(std::string const & storageType) {
         PersistableDiaSourceVector::Ptr persistVec = 
                 boost::dynamic_pointer_cast<PersistableDiaSourceVector, Persistable>(p);
         BOOST_CHECK_MESSAGE(persistVec.get() != 0, "Couldn't cast to PersistableDiaSourceVector");
-        DiaSourceVector vec(persistVec->getSources());
+        DiaSourceSet vec(persistVec->getSources());
         // sort in ascending id order (database does not give any ordering guarantees
         // in the absence of an ORDER BY clause)
         std::sort(vec.begin(), vec.end(), SourceLessThan());
@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE(DiaSourceEquality) {
     b->setMovingObjectId(5);    
     BOOST_CHECK_MESSAGE(*a == *b && *b == *a, "field equality fails");
     
-    DiaSourceVector av, bv;
+    DiaSourceSet av, bv;
     av.push_back(a);
     PersistableDiaSourceVector apv(av);
     BOOST_CHECK(apv.getSources()[0]->isNull(0) == a->isNull(0));

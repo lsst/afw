@@ -28,7 +28,7 @@ using lsst::daf::persistence::DbTsvStorage;
 using lsst::daf::persistence::Storage;
 using lsst::pex::policy::Policy;
 using lsst::afw::detection::Source;
-using lsst::afw::detection::SourceVector;
+using lsst::afw::detection::SourceSet;
 using lsst::afw::detection::PersistableSourceVector;
 
 namespace form = lsst::afw::formatters;
@@ -340,7 +340,7 @@ void form::SourceVectorFormatter::delegateSerialize(
 
     archive & boost::serialization::base_object<Persistable>(*p);
     
-    SourceVector::size_type sz;
+    SourceSet::size_type sz;
 
     if (Archive::is_loading::value) {        
         Source data;        
@@ -355,8 +355,8 @@ void form::SourceVectorFormatter::delegateSerialize(
     } else {
         sz = p->_sources.size();
         archive & sz;
-        SourceVector::iterator i = p->_sources.begin();
-        SourceVector::iterator const end(p->_sources.end());
+        SourceSet::iterator i = p->_sources.begin();
+        SourceSet::iterator const end(p->_sources.end());
         for ( ; i != end; ++i) {
             archive &  **i;
         }
@@ -390,7 +390,7 @@ void form::SourceVectorFormatter::write(
     if (p == 0) {
         throw LSST_EXCEPT(ex::RuntimeErrorException, "Persistable was not of concrete type SourceVector");
     }
-    SourceVector sourceVector = p->getSources();   
+    SourceSet sourceVector = p->getSources();   
 
     // Assume all have ids or none do.
     if ((*sourceVector.begin())->getId() == 0 && 
@@ -405,7 +405,7 @@ void form::SourceVectorFormatter::write(
             throw LSST_EXCEPT(ex::InvalidParameterException, "ampExposureId out of range");
         }
         
-        SourceVector::iterator i = sourceVector.begin();
+        SourceSet::iterator i = sourceVector.begin();
         for ( ; i != sourceVector.end(); ++i) {
             (*i)->setId(generateSourceId(seq, ccdId, visitId));
             (*i)->setAmpExposureId(ampExposureId);
@@ -444,8 +444,8 @@ void form::SourceVectorFormatter::write(
             db->createTableFromTemplate(name, model, mayExist);
             db->setTableForInsert(name);
             
-            SourceVector::const_iterator i(sourceVector.begin());
-            SourceVector::const_iterator const end(sourceVector.end());
+            SourceSet::const_iterator i(sourceVector.begin());
+            SourceSet::const_iterator const end(sourceVector.end());
             for ( ; i != end; ++i) {
                 insertRow<DbStorage>(*db, **i);
             }
@@ -458,8 +458,8 @@ void form::SourceVectorFormatter::write(
             db->createTableFromTemplate(name, model, mayExist);
             db->setTableForInsert(name);
 
-            SourceVector::const_iterator i(sourceVector.begin());
-            SourceVector::const_iterator const end(sourceVector.end());
+            SourceSet::const_iterator i(sourceVector.begin());
+            SourceSet::const_iterator const end(sourceVector.end());
             for (; i != end; ++i) {
                 insertRow<DbTsvStorage>(*db, **i);
             }
@@ -497,7 +497,7 @@ Persistable* form::SourceVectorFormatter::read(
         std::vector<std::string> tables;
         getAllVisitSliceTableNames(tables, _policy, additionalData);
 
-        SourceVector sourceVector;
+        SourceSet sourceVector;
         // loop over all retrieve tables, reading in everything
         std::vector<std::string>::const_iterator const end = tables.end();
         for (std::vector<std::string>::const_iterator i = tables.begin(); i != end; ++i) {

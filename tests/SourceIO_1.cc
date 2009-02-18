@@ -3,7 +3,7 @@
 //##====----------------                                ----------------====##/
 //
 //! \file
-//! \brief  Testing of IO via the persistence framework for Source and SourceVector.
+//! \brief  Testing of IO via the persistence framework for Source and SourceSet.
 //
 //##====----------------                                ----------------====##/
 
@@ -52,7 +52,7 @@ static std::string const makeTempFile() {
 }
 
 
-static void initTestData(SourceVector & v, int sliceId = 0) {
+static void initTestData(SourceSet & v, int sliceId = 0) {
     v.clear();
     v.reserve(NUM_SOURCE_NULLABLE_FIELDS + 2);
     Source data;
@@ -174,7 +174,7 @@ static void testBoost(void) {
     LogicalLocation loc(makeTempFile());
 
     // Intialize test data
-    SourceVector dsv;
+    SourceSet dsv;
     initTestData(dsv);
     PersistableSourceVector::Ptr persistPtr(new PersistableSourceVector(dsv));    
     Persistence::Ptr pers = Persistence::getPersistence(policy);
@@ -224,7 +224,7 @@ static void testDb(std::string const & storageType) {
     // 1. Test on a single Source
     Source::Ptr ds(new Source());
     ds->setId(2);
-    SourceVector dsv;
+    SourceSet dsv;
     dsv.push_back(ds);
     PersistableSourceVector::Ptr persistPtr(new PersistableSourceVector(dsv));
     // write out data
@@ -233,7 +233,7 @@ static void testDb(std::string const & storageType) {
         storageList.push_back(pers->getPersistStorage(storageType, loc));
         pers->persist(*persistPtr, storageList, props);
     }
-    // and read it back in (in a SourceVector)
+    // and read it back in (in a SourceSet)
     {
         Storage::List storageList;
         storageList.push_back(pers->getRetrieveStorage(storageType, loc));
@@ -242,13 +242,13 @@ static void testDb(std::string const & storageType) {
         PersistableSourceVector::Ptr persistVec = 
             boost::dynamic_pointer_cast<PersistableSourceVector, Persistable>(p);
         BOOST_CHECK_MESSAGE(persistVec.get() != 0, "Couldn't cast to PersistableSourceVector");
-        SourceVector vec = persistVec->getSources();
+        SourceSet vec = persistVec->getSources();
         BOOST_CHECK_MESSAGE(*vec.at(0) == *dsv[0], 
             "persist()/retrieve() resulted in PersistableSourceVector corruption");
     }
     afwFormatters::dropAllVisitSliceTables(loc, policy, props);
 
-    // 2. Test on a SourceVector
+    // 2. Test on a SourceSet
     dsv.clear();
     initTestData(dsv);
     persistPtr->setSources(dsv);
@@ -267,7 +267,7 @@ static void testDb(std::string const & storageType) {
         PersistableSourceVector::Ptr persistVec = 
                 boost::dynamic_pointer_cast<PersistableSourceVector, Persistable>(p);
         BOOST_CHECK_MESSAGE(persistVec.get() != 0, "Couldn't cast to PersistableSourceVector");
-        SourceVector vec(persistVec->getSources());
+        SourceSet vec(persistVec->getSources());
         
         // sort in ascending id order (database does not give any ordering guarantees
         // in the absence of an ORDER BY clause)
@@ -299,14 +299,14 @@ static void testDb2(std::string const & storageType) {
     Persistence::Ptr pers = Persistence::getPersistence(policy);
     LogicalLocation loc("mysql://lsst10.ncsa.uiuc.edu:3306/source_test");
 
-    SourceVector all;
+    SourceSet all;
     int const numSlices = 3;
     PropertySet::Ptr props = createDbTestProps(0, numSlices, "Source");
 
     // 1. Write out each slice table seperately
     for (int sliceId = 0; sliceId < numSlices; ++sliceId) {
         props->set("sliceId", sliceId);
-        SourceVector dsv;
+        SourceSet dsv;
         initTestData(dsv, sliceId);
 
         all.insert(all.end(), dsv.begin(), dsv.end());
@@ -329,7 +329,7 @@ static void testDb2(std::string const & storageType) {
     
     // sort in ascending id order (database does not give any ordering guarantees
     // in the absence of an ORDER BY clause)
-    SourceVector vec = persistPtr->getSources();
+    SourceSet vec = persistPtr->getSources();
     std::sort(vec.begin(), vec.end(), SourceLessThan());
     BOOST_CHECK_MESSAGE(vec.size() == all.size(),
         "persist()/retrieve() resulted in PersistableSourceVector corruption");
@@ -358,7 +358,7 @@ BOOST_AUTO_TEST_CASE(SourceEquality) {
     b->setMovingObjectId(5);    
     BOOST_CHECK_MESSAGE(*a == *b && *b == *a, "field equality fails");
     
-    SourceVector av, bv;
+    SourceSet av, bv;
     av.push_back(a);
     PersistableSourceVector apv(av);
     BOOST_CHECK(apv.getSources()[0]->isNull(0) == a->isNull(0));
