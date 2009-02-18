@@ -22,6 +22,13 @@ Python interface to lsst::afw::detection classes
 #include "lsst/afw/image.h"
 %}
 
+%inline %{
+namespace boost {
+    typedef short int16_t;
+    typedef unsigned short uint16_t;
+}
+%}
+
 %include "lsst/p_lsstSwig.i"
 %include "lsst/daf/base/persistenceMacros.i"
 
