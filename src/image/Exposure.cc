@@ -82,7 +82,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(int cols, ///< number of 
   */               
 template<typename ImageT, typename MaskT, typename VarianceT> 
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
-    MaskedImage &maskedImage, ///< the MaskedImage
+    MaskedImageT &maskedImage, ///< the MaskedImage
     afwImage::Wcs const& wcs                                      ///< the Wcs
                                                               ) :
     lsst::daf::data::LsstBase(typeid(this)),
@@ -137,7 +137,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     lsst::daf::data::LsstBase(typeid(this)) {
     lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertySet());
 
-    _maskedImage = MaskedImage(baseName, hdu, metadata, conformMasks);
+    _maskedImage = MaskedImageT(baseName, hdu, metadata, conformMasks);
     _wcsPtr = afwImage::Wcs::Ptr(new afwImage::Wcs(metadata));
     setMetadata(metadata);
 }
@@ -162,7 +162,7 @@ afwImage::Wcs::Ptr afwImage::Exposure<ImageT, MaskT, VarianceT>::getWcs() const 
 /** @brief Set the MaskedImage of the Exposure.
   */   
 template<typename ImageT, typename MaskT, typename VarianceT> 
-void afwImage::Exposure<ImageT, MaskT, VarianceT>::setMaskedImage(MaskedImage &maskedImage){
+void afwImage::Exposure<ImageT, MaskT, VarianceT>::setMaskedImage(MaskedImageT &maskedImage){
     _maskedImage = maskedImage; 
 }
 
