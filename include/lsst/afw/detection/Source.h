@@ -127,25 +127,24 @@ inline bool operator!=(Source const & lhs, Source const & rhs) {
 }
 
 
-typedef std::vector<Source::Ptr> SourceVector;
-typedef boost::shared_ptr<SourceVector> SourceVectorPtr;
+typedef std::vector<Source::Ptr> SourceSet;
  
 class PersistableSourceVector : public lsst::daf::base::Persistable {
 public:
     typedef boost::shared_ptr<PersistableSourceVector> Ptr;
     PersistableSourceVector() {}
-    PersistableSourceVector(SourceVector const & sources)
+    PersistableSourceVector(SourceSet const & sources)
         : _sources(sources) {}
     ~PersistableSourceVector(){_sources.clear();}
         
-    SourceVector getSources() const {return _sources; }
-    void setSources(SourceVector const & sources) {_sources = sources; }
+    SourceSet getSources() const {return _sources; }
+    void setSources(SourceSet const & sources) {_sources = sources; }
     
-    bool operator==(SourceVector const & other) const {
+    bool operator==(SourceSet const & other) const {
         if (_sources.size() != other.size())
             return false;
                     
-        SourceVector::size_type i;
+        SourceSet::size_type i;
         for (i = 0; i < _sources.size(); ++i) {
             if (*_sources[i] != *other[i])
                 return false;            
@@ -160,7 +159,7 @@ public:
 private:
 
     LSST_PERSIST_FORMATTER(lsst::afw::formatters::SourceVectorFormatter);
-    SourceVector _sources;
+    SourceSet _sources;
 }; 
 
 

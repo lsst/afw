@@ -237,23 +237,23 @@ inline bool operator!=(DiaSource const & d1, DiaSource const & d2) {
     return !(d1 == d2);
 }
 
-typedef std::vector<DiaSource::Ptr> DiaSourceVector;
+typedef std::vector<DiaSource::Ptr> DiaSourceSet;
 
 class PersistableDiaSourceVector : public lsst::daf::base::Persistable {
 public:
     typedef boost::shared_ptr<PersistableDiaSourceVector> Ptr;
     PersistableDiaSourceVector() {}
-    PersistableDiaSourceVector(DiaSourceVector const & sources)
+    PersistableDiaSourceVector(DiaSourceSet const & sources)
         : _sources(sources) {}
     ~PersistableDiaSourceVector(){_sources.clear();}
-    DiaSourceVector getSources() const {return _sources; }
-    void setSources(DiaSourceVector const & sources) {_sources = sources; }
+    DiaSourceSet getSources() const {return _sources; }
+    void setSources(DiaSourceSet const & sources) {_sources = sources; }
         
-    bool operator==(DiaSourceVector const & other) const {
+    bool operator==(DiaSourceSet const & other) const {
         if (_sources.size() != other.size())
             return false;
                     
-        DiaSourceVector::size_type i;
+        DiaSourceSet::size_type i;
         for (i = 0; i < _sources.size(); ++i) {
             if (*_sources[i] != *other[i])
                 return false;            
@@ -268,7 +268,7 @@ public:
 
 private:
     LSST_PERSIST_FORMATTER(lsst::afw::formatters::DiaSourceVectorFormatter);
-    DiaSourceVector _sources;
+    DiaSourceSet _sources;
 }; 
 
 

@@ -22,11 +22,11 @@ import lsst.afw.detection as afwDet
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class DiaSourceTestCase(unittest.TestCase):
-    """A test case for DiaSource and DiaSourceVec"""
+    """A test case for DiaSource and PersistableDiaSourceVector"""
 
     def setUp(self):
-        self.container1 = afwDet.DiaSourceContainer(16)
-        self.container2 = afwDet.DiaSourceContainer()
+        self.container1 = afwDet.DiaSourceSet(16)
+        self.container2 = afwDet.DiaSourceSet()
         
         for m in xrange(16):
             ds = afwDet.DiaSource()
@@ -38,26 +38,24 @@ class DiaSourceTestCase(unittest.TestCase):
             ds.setRa(m*20)
             self.container2.push_back(ds)
 
-        self.dsv1 = afwDet.DiaSourceVec(self.container1)
-        self.dsv2 = afwDet.DiaSourceVec(self.container2)
+        self.dsv1 = afwDet.PersistableDiaSourceVector(self.container1)
+        self.dsv2 = afwDet.PersistableDiaSourceVector(self.container2)
 
     def tearDown(self):
         del self.dsv1
         del self.dsv2
 
     def testIterable(self):
-        """Check that we can iterate over a SourceContainer"""
+        """Check that we can iterate over a SourceSet"""
         j = 1
         container = self.container1[:]
-        for s in xrange(container.size()):
-            assert container[s].getId() == j
+        for s in container:
+            assert s.getId() == j
             j += 1
 
     def testCopyAndCompare(self):
-        dsv1Copy = afwDet.DiaSourceContainer()
-        self.dsv1.getSources(dsv1Copy)
-        dsv2Copy = afwDet.DiaSourceContainer()
-        self.dsv2.getSources(dsv2Copy)
+        dsv1Copy = self.dsv1.getSources()
+        dsv2Copy = self.dsv2.getSources()
         
         assert dsv1Copy.size() == self.container1.size()
         for i in xrange(dsv1Copy.size()):
@@ -87,14 +85,12 @@ class DiaSourceTestCase(unittest.TestCase):
         assert dsv2Copy.size() != self.container2.size()
 
     def testInsertErase(self):
-        container = afwDet.DiaSourceContainer()
-        self.dsv1.getSources(container)
-
+        container = self.dsv1.getSources()
         
         front = container[:8]
         back = container[8:]
 
-        copy = afwDet.DiaSourceContainer()
+        copy = afwDet.DiaSourceSet()
         
         for i in xrange(front.size()):
             copy.append(front[i])
@@ -113,13 +109,11 @@ class DiaSourceTestCase(unittest.TestCase):
             assert copy[i] == self.container1[i]       
 
     def testSlice(self):
-        containerSlice = afwDet.DiaSourceContainer()
-        self.dsv1.getSources(containerSlice)
-        containerSlice = containerSlice[0:3]
+        containerSlice = self.dsv1.getSources()[0:3]
         
         j = 1
-        for i in xrange(containerSlice.size()):
-            assert containerSlice[i].getId() == j
+        for s in containerSlice:
+            assert s.getId() == j
             j += 1
 
     def testPersistence(self):
@@ -138,7 +132,7 @@ class DiaSourceTestCase(unittest.TestCase):
             stl = dafPers.StorageList()
             stl.append(pers.getRetrieveStorage("DbStorage", loc))
             persistable = pers.unsafeRetrieve("PersistableDiaSourceVector", stl, dp)
-            res = afwDet.DiaSourceVec.swigConvert(persistable)
+            res = afwDet.PersistableDiaSourceVector.swigConvert(persistable)
             afwDet.dropAllVisitSliceTables(loc, pol, dp)
             assert(res == self.dsv1)
         else:

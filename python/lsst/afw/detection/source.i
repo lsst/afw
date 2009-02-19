@@ -8,63 +8,39 @@
 #include <sstream>
 %}
 
-//Explicit STL container instantiation
-%template(SourceContainer) std::vector<lsst::afw::detection::Source::Ptr>;
-%template(DiaSourceContainer)   std::vector<lsst::afw::detection::DiaSource::Ptr>;
-
 //shared_ptr declarations
 SWIG_SHARED_PTR(SourceBase, lsst::afw::detection::BaseSourceAttributes<lsst::afw::detection::NUM_SOURCE_NULLABLE_FIELDS>);
 SWIG_SHARED_PTR(DiaSourceBase, lsst::afw::detection::BaseSourceAttributes<lsst::afw::detection::NUM_DIASOURCE_NULLABLE_FIELDS>); 
  
-SWIG_SHARED_PTR_DERIVED(Source, 
+SWIG_SHARED_PTR_DERIVED(SourceP, 
     lsst::afw::detection::BaseSourceAttributes<lsst::afw::detection::NUM_SOURCE_NULLABLE_FIELDS>, 
     lsst::afw::detection::Source);
-SWIG_SHARED_PTR_DERIVED(DiaSource,
+SWIG_SHARED_PTR_DERIVED(DiaSourceP,
     lsst::afw::detection::BaseSourceAttributes<lsst::afw::detection::NUM_DIASOURCE_NULLABLE_FIELDS>,
     lsst::afw::detection::DiaSource);  
 
-
-SWIG_SHARED_PTR_DERIVED(SourceVec,
+SWIG_SHARED_PTR_DERIVED(PersistableSourceVector,
     lsst::daf::base::Persistable,
     lsst::afw::detection::PersistableSourceVector);
-SWIG_SHARED_PTR_DERIVED(DiaSourceVec,
+SWIG_SHARED_PTR_DERIVED(PersistableDiaSourceVector,
     lsst::daf::base::Persistable,
     lsst::afw::detection::PersistableDiaSourceVector);
-
-%rename(SourceVec) lsst::afw::detection::PersistableSourceVector;
-%rename(DiaSourceVec) lsst::afw::detection::PersistableDiaSourceVector;
-
 
 %include "lsst/afw/formatters/Utils.h"
 %include "lsst/afw/detection/BaseSourceAttributes.h"    
 
 //Explicit instantiation of BaseSourceAttributes
 %template(SourceBase)
-	lsst::afw::detection::BaseSourceAttributes<lsst::afw::detection::NUM_SOURCE_NULLABLE_FIELDS>;
+    lsst::afw::detection::BaseSourceAttributes<lsst::afw::detection::NUM_SOURCE_NULLABLE_FIELDS>;
 %template(DiaSourceBase)
     lsst::afw::detection::BaseSourceAttributes<lsst::afw::detection::NUM_DIASOURCE_NULLABLE_FIELDS>;
-
-//provide working accessors for persistable vectors
-%extend lsst::afw::detection::PersistableSourceVector {
-	void getSources(SourceVector & sourceVector) {
-		sourceVector.clear();
-		sourceVector = $self->getSources();
-	}
-};
-%extend lsst::afw::detection::PersistableDiaSourceVector {
-	void getSources(DiaSourceVector & sourceVector) {
-		sourceVector.clear();
-		sourceVector = $self->getSources();
-	}
-};
-
-%ignore lsst::afw::detection::PersistableSourceVector::getSources;
-%ignore lsst::afw::detection::PersistableDiaSourceVector::getSources;
 
 %include "lsst/afw/detection/Source.h"
 %include "lsst/afw/detection/DiaSource.h"
 
-
+//Explicit STL container instantiation
+%template(SourceSet) std::vector<lsst::afw::detection::Source::Ptr>;
+%template(DiaSourceSet)   std::vector<lsst::afw::detection::DiaSource::Ptr>;
 
 // Provide semi-useful printing of catalog records
 %extend lsst::afw::detection::Source {

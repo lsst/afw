@@ -28,7 +28,7 @@ using lsst::daf::persistence::DbTsvStorage;
 using lsst::daf::persistence::Storage;
 using lsst::pex::policy::Policy;
 using lsst::afw::detection::DiaSource;
-using lsst::afw::detection::DiaSourceVector;
+using lsst::afw::detection::DiaSourceSet;
 using lsst::afw::detection::PersistableDiaSourceVector;
 
 namespace form = lsst::afw::formatters;
@@ -390,7 +390,7 @@ void form::DiaSourceVectorFormatter::delegateSerialize(
     
     archive & boost::serialization::base_object<Persistable>(*p);
     
-    DiaSourceVector::size_type sz;
+    DiaSourceSet::size_type sz;
 
     if (Archive::is_loading::value) {        
         DiaSource data;
@@ -405,8 +405,8 @@ void form::DiaSourceVectorFormatter::delegateSerialize(
     } else {
         sz = p->_sources.size();
         archive & sz;
-        DiaSourceVector::iterator i = p->_sources.begin();
-        DiaSourceVector::iterator const end(p->_sources.end());
+        DiaSourceSet::iterator i = p->_sources.begin();
+        DiaSourceSet::iterator const end(p->_sources.end());
         for ( ; i != end; ++i) {
             archive &  **i;
         }
@@ -438,7 +438,7 @@ void form::DiaSourceVectorFormatter::write( Persistable const * persistable,
     if (p == 0) {
         throw LSST_EXCEPT(ex::RuntimeErrorException, "Persistable was not of concrete type SourceVector");
     }
-    DiaSourceVector sourceVector = p->getSources();   
+    DiaSourceSet sourceVector = p->getSources();   
 
     // Assume all have ids or none do.
     if ((*sourceVector.begin())->getId() == 0 && 
@@ -453,7 +453,7 @@ void form::DiaSourceVectorFormatter::write( Persistable const * persistable,
             throw LSST_EXCEPT(ex::InvalidParameterException, "ampExposureId out of range");
         }
         
-        DiaSourceVector::iterator i = sourceVector.begin();
+        DiaSourceSet::iterator i = sourceVector.begin();
         for ( ; i != sourceVector.end(); ++i) {
             (*i)->setId(generateDiaSourceId(seq, ccdId, visitId));
             (*i)->setAmpExposureId(ampExposureId);
@@ -491,8 +491,8 @@ void form::DiaSourceVectorFormatter::write( Persistable const * persistable,
             db->createTableFromTemplate(name, model, mayExist);
             db->setTableForInsert(name);
             
-            DiaSourceVector::const_iterator i(sourceVector.begin());
-            DiaSourceVector::const_iterator const end(sourceVector.end());
+            DiaSourceSet::const_iterator i(sourceVector.begin());
+            DiaSourceSet::const_iterator const end(sourceVector.end());
             for ( ; i != end; ++i) {
                 insertRow<DbStorage>(*db, **i);
             }
@@ -505,8 +505,8 @@ void form::DiaSourceVectorFormatter::write( Persistable const * persistable,
             db->createTableFromTemplate(name, model, mayExist);
             db->setTableForInsert(name);
 
-            DiaSourceVector::const_iterator i(sourceVector.begin());
-            DiaSourceVector::const_iterator const end(sourceVector.end());
+            DiaSourceSet::const_iterator i(sourceVector.begin());
+            DiaSourceSet::const_iterator const end(sourceVector.end());
             for (; i != end; ++i) {
                 insertRow<DbTsvStorage>(*db, **i);
             }
@@ -544,7 +544,7 @@ Persistable* form::DiaSourceVectorFormatter::read(
         std::vector<std::string> tables;
         getAllVisitSliceTableNames(tables, _policy, additionalData);
 
-        DiaSourceVector sourceVector;
+        DiaSourceSet sourceVector;
         // loop over all retrieve tables, reading in everything
         std::vector<std::string>::const_iterator const end = tables.end();
         for (std::vector<std::string>::const_iterator i = tables.begin(); i != end; ++i) {
