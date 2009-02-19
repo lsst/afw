@@ -31,12 +31,12 @@ public:
           _fx(fx), _fy(fy) {};
     ~Peak() {};
 
-    int getId() { return _id; }         //!< Return the Peak's unique ID
+    int getId() const { return _id; }   //!< Return the Peak's unique ID
 
-    int getIx() { return _ix; }         //!< Return the column pixel position
-    int getIy() { return _iy; }         //!< Return the row pixel position
-    float getFx() { return _fx; }       //!< Return the column centroid
-    float getFy() { return _fy; }       //!< Return the row centroid
+    int getIx() const { return _ix; }         //!< Return the column pixel position
+    int getIy() const { return _iy; }         //!< Return the row pixel position
+    float getFx() const { return _fx; }       //!< Return the column centroid
+    float getFy() const { return _fy; }       //!< Return the row centroid
 
     std::string toString();    
 private:

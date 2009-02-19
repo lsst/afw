@@ -258,7 +258,7 @@ public:
     FootprintFunctor(ImageT const& image    ///< The image that the Footprint lives in
                     ) : _image(image) {}
 
-    virtual ~FootprintFunctor() {}
+    virtual ~FootprintFunctor() = 0;
 
     /**
      * A function that's called at the beginning of apply; useful if apply
@@ -299,14 +299,24 @@ public:
     }
     /// Return the image
     ImageT const& getImage() const { return _image; }    
+
     /// The operator to be applied to each pixel in the Footprint.
     ///
     /// N.b. the coordinates (x, y) are relative to the origin of the image's parent
-    /// if it exists.
+    /// if it exists (i.e. they obey getX0/getY0)
     virtual void operator()(typename ImageT::xy_locator loc, int x, int y) = 0;
 private:
     ImageT const& _image;               // The image that the Footprints live in
 };
+
+/************************************************************************************************************/
+///
+/// Although FootprintFunctor is pure virtual, this is needed by subclasses
+///
+/// It wasn't defined in the class body as I want swig to know that the class is pure virtual
+///
+template <typename ImageT>
+FootprintFunctor<ImageT>::~FootprintFunctor() {}
             
 }}}
 #endif

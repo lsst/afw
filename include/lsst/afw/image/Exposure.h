@@ -42,12 +42,12 @@ namespace image {
     class Exposure : public lsst::daf::base::Persistable,
                      public lsst::daf::data::LsstBase {
     public:
-        typedef MaskedImage<ImageT, MaskT, VarianceT> MaskedImage;
+        typedef MaskedImage<ImageT, MaskT, VarianceT> MaskedImageT;
         typedef boost::shared_ptr<Exposure> Ptr;
         
         // Class Constructors and Destructor
         explicit Exposure(int const cols=0, int const rows=0, Wcs const& wcs=Wcs());
-        explicit Exposure(MaskedImage & maskedImage, Wcs const& wcs=Wcs());
+        explicit Exposure(MaskedImageT & maskedImage, Wcs const& wcs=Wcs());
         explicit Exposure(std::string const &baseName, int const hdu=0, bool const conformMasks=false);
 
         Exposure(Exposure const &src, BBox const& bbox, bool const deep=false);
@@ -55,12 +55,12 @@ namespace image {
         virtual ~Exposure(); 
 
         // Get Members
-        MaskedImage& getMaskedImage() { return _maskedImage; };
-        MaskedImage const& getMaskedImage() const { return _maskedImage; };
+        MaskedImageT& getMaskedImage() { return _maskedImage; };
+        MaskedImageT const& getMaskedImage() const { return _maskedImage; };
         Wcs::Ptr getWcs() const;
         
         // Set Members
-        void setMaskedImage(MaskedImage &maskedImage);
+        void setMaskedImage(MaskedImageT &maskedImage);
         void setWcs(Wcs const& wcs);
         
         // Has Member (inline)
@@ -72,7 +72,7 @@ namespace image {
     private:
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::ExposureFormatter<ImageT, MaskT, VarianceT>);
 
-        MaskedImage _maskedImage;             
+        MaskedImageT _maskedImage;             
         Wcs::Ptr _wcsPtr;
     };
 }}} // lsst::afw::image

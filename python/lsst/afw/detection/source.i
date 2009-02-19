@@ -8,10 +8,6 @@
 #include <sstream>
 %}
 
-//Explicit STL container instantiation
-//%template(SourceSet) std::vector<lsst::afw::detection::Source::Ptr>;
-//%template(DiaSourceSet)   std::vector<lsst::afw::detection::DiaSource::Ptr>;
-
 //shared_ptr declarations
 SWIG_SHARED_PTR(SourceBase, lsst::afw::detection::BaseSourceAttributes<lsst::afw::detection::NUM_SOURCE_NULLABLE_FIELDS>);
 SWIG_SHARED_PTR(DiaSourceBase, lsst::afw::detection::BaseSourceAttributes<lsst::afw::detection::NUM_DIASOURCE_NULLABLE_FIELDS>); 

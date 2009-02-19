@@ -67,6 +67,9 @@ image::ImageBase<PixelT>::ImageBase(ImageBase const& rhs, ///< Right-hand-side %
 
 /**
  * Copy constructor to make a copy of part of an %image.
+ *
+ * The BBox is in the @em pixel coordinate system, that is, it ignores X0/Y0
+ *
  * \note Unless \c deep is \c true, the new %image will share the old %image's pixels;
  * this is probably what you want 
  */
@@ -319,6 +322,9 @@ image::Image<PixelT>::Image(Image const& rhs, ///< Right-hand-side Image
 
 /**
  * Copy constructor to make a copy of part of an Image.
+ *
+ * The BBox is in the @em pixel coordinate system, that is, it ignores X0/Y0
+ *
  * \note Unless \c deep is \c true, the new %image will share the old %image's pixels;
  * this is probably what you want 
  */

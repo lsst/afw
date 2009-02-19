@@ -358,13 +358,29 @@ void writeBasicFits(int fd,                                      // file descrip
      */
     std::string wcsName = "A";
     cards.push_back(Card(str(boost::format("CRVAL1%s") % wcsName), 0, "(output) Column pixel of Reference Pixel"));
-    cards.push_back(Card(str(boost::format("CRVAL2%s") %wcsName), 0, "(output) Row pixel of Reference Pixel"));
-    cards.push_back(Card(str(boost::format("CRPIX1%s") %wcsName), 1, "Column Pixel Coordinate of Reference"));
-    cards.push_back(Card(str(boost::format("CRPIX2%s") %wcsName), 1, "Row Pixel Coordinate of Reference"));
-    cards.push_back(Card(str(boost::format("CTYPE1%s") %wcsName), "LINEAR", "Type of projection"));
-    cards.push_back(Card(str(boost::format("CTYPE1%s") %wcsName), "LINEAR", "Type of projection"));
-    cards.push_back(Card(str(boost::format("CUNIT1%s") %wcsName), "PIXEL", "Column unit"));
-    cards.push_back(Card(str(boost::format("CUNIT2%s") %wcsName), "PIXEL", "Row unit"));
+    cards.push_back(Card(str(boost::format("CRVAL2%s") % wcsName), 0, "(output) Row pixel of Reference Pixel"));
+    cards.push_back(Card(str(boost::format("CRPIX1%s") % wcsName), 1, "Column Pixel Coordinate of Reference"));
+    cards.push_back(Card(str(boost::format("CRPIX2%s") % wcsName), 1, "Row Pixel Coordinate of Reference"));
+    cards.push_back(Card(str(boost::format("CTYPE1%s") % wcsName), "LINEAR", "Type of projection"));
+    cards.push_back(Card(str(boost::format("CTYPE1%s") % wcsName), "LINEAR", "Type of projection"));
+    cards.push_back(Card(str(boost::format("CUNIT1%s") % wcsName), "PIXEL", "Column unit"));
+    cards.push_back(Card(str(boost::format("CUNIT2%s") % wcsName), "PIXEL", "Row unit"));
+    /*
+     * Now WCSB if X0 or Y0 is different from 0
+     */
+    if (data.getX0() != 0 || data.getY0() != 0) {
+        std::string wcsName = "B";
+        cards.push_back(Card(str(boost::format("CRVAL1%s") % wcsName),
+                             data.getX0(), "(output) Column pixel of Reference Pixel"));
+        cards.push_back(Card(str(boost::format("CRVAL2%s") % wcsName),
+                             data.getY0(), "(output) Row pixel of Reference Pixel"));
+        cards.push_back(Card(str(boost::format("CRPIX1%s") % wcsName), 1, "Column Pixel Coordinate of Reference"));
+        cards.push_back(Card(str(boost::format("CRPIX2%s") % wcsName), 1, "Row Pixel Coordinate of Reference"));
+        cards.push_back(Card(str(boost::format("CTYPE1%s") % wcsName), "LINEAR", "Type of projection"));
+        cards.push_back(Card(str(boost::format("CTYPE1%s") % wcsName), "LINEAR", "Type of projection"));
+        cards.push_back(Card(str(boost::format("CUNIT1%s") % wcsName), "PIXEL", "Column unit"));
+        cards.push_back(Card(str(boost::format("CUNIT2%s") % wcsName), "PIXEL", "Row unit"));
+    }
     /*
      * Was there something else?
      */

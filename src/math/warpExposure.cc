@@ -134,8 +134,8 @@ int afwMath::warpExposure(
 {
     int numGoodPixels = 0;
 
-    typedef typename DestExposureT::MaskedImage DestMaskedImageT;
-    typedef typename SrcExposureT::MaskedImage SrcMaskedImageT;
+    typedef typename DestExposureT::MaskedImageT DestMaskedImageT;
+    typedef typename SrcExposureT::MaskedImageT SrcMaskedImageT;
     typedef afwImage::Image<afwMath::Kernel::PixelT> KernelImageT;
     
     // Compute borders; use to prevent applying kernel outside of srcExposure
