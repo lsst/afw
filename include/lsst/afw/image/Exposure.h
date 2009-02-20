@@ -75,6 +75,17 @@ namespace image {
         MaskedImageT _maskedImage;             
         Wcs::Ptr _wcsPtr;
     };
+
+/**
+ * A function to return an Exposure of the correct type (cf. std::make_pair)
+ */
+    template<typename MaskedImageT>
+    Exposure<typename MaskedImageT::Image::Pixel>* makeExposure(MaskedImageT & mimage, ///< the Exposure's image
+                                                                Wcs const& wcs=Wcs() ///< the Exposure's WCS
+                                                               ) {
+        return new Exposure<typename MaskedImageT::Image::Pixel>(mimage, wcs);
+    }
+
 }}} // lsst::afw::image
 
 #endif // LSST_AFW_IMAGE_EXPOSURE_H
