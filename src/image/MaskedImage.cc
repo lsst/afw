@@ -105,9 +105,12 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(MaskedI
                                                                          bool deep               ///< Make deep copy?
                                                                         ) :
     lsst::daf::data::LsstBase(typeid(this)),
-    _image(new Image(*rhs._image, deep)),
-    _mask(new Mask(*rhs._mask, deep)),
-    _variance(new Variance(*rhs._variance, deep)) {
+    _image(rhs._image), _mask(rhs._mask), _variance(rhs._variance) {
+    if (deep) {
+        _image =    typename Image::Ptr(new Image(*rhs._image, deep));
+        _mask =     typename Mask::Ptr(new Mask(*rhs._mask, deep));
+        _variance = typename Variance::Ptr(new Variance(*rhs._variance, deep));
+    }
     conformSizes();
 }
 

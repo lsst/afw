@@ -384,7 +384,7 @@ void writeBasicFits(int fd,                                      // file descrip
     /*
      * Was there something else?
      */
-    if (Wcs != NULL) {
+    if (Wcs != NULL && *Wcs) {
         typedef std::vector<std::string> NameList;
         lsst::daf::base::PropertySet::Ptr metadata = Wcs->getFitsMetadata();
         NameList paramNames = metadata->paramNames();

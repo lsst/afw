@@ -608,8 +608,8 @@ namespace image {
         // Constructors
         explicit MaskedImage(int width=0, int height=0, MaskPlaneDict const& planeDict=MaskPlaneDict());
         explicit MaskedImage(ImagePtr image,
-                             MaskPtr mask = MaskPtr(static_cast<Mask *>(0)),
-                             VariancePtr variance = VariancePtr(static_cast<Variance *>(0)));
+                             MaskPtr mask = MaskPtr(),
+                             VariancePtr variance = VariancePtr());
         explicit MaskedImage(const std::pair<int, int> dimensions, MaskPlaneDict const& planeDict=MaskPlaneDict());
         explicit MaskedImage(std::string const& baseName, int const hdu=0,
                              lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
@@ -686,14 +686,14 @@ namespace image {
          * This will usually be 0 except for images created using the <tt>ImageBase(ImageBase, BBox)</tt> cctor
          * The origin can be reset with setXY0()
          */
-        unsigned int getX0() const { return _image->getX0(); }
+        int getX0() const { return _image->getX0(); }
         /**
          * Return the %image's column-origin
          *
          * This will usually be 0 except for images created using the <tt>ImageBase(ImageBase, BBox)</tt> cctor
          * The origin can be reset with setXY0()
          */
-        unsigned int getY0() const { return _image->getY0(); }
+        int getY0() const { return _image->getY0(); }
         //
         // Iterators and Locators
         //
