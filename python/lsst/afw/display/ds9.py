@@ -102,8 +102,11 @@ def ds9Cmd(cmd):
    
    try:
       xpa.set(None, "ds9", cmd, "", "", 0)
-   except IOError:
-      raise Ds9Error, "XPA: (%s)" % cmd
+   except IOError, e:
+      if False:
+          raise Ds9Error, "XPA: %s, (%s)" % (e, cmd)
+      else:
+          print >> sys.stderr, "Caught ds9 exception processing ellipse command \"%s\": %s" % (cmd, e)
 
 def initDS9(execDs9 = True):
    try:
