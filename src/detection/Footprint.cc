@@ -18,7 +18,40 @@ namespace math = lsst::afw::math;
 namespace detection = lsst::afw::detection;
 namespace image = lsst::afw::image;
 
-/************************************************************************************************************/
+/******************************************************************************/
+detection::Threshold::Threshold(lsst::pex::policy::Policy const & policy) 
+: _value(0.0f), _type(VALUE), _polarity(true) {    
+    //must include a value
+    if (!policy.exists("value")) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+            "Threshold Policy missing component \"value\"");
+    } else {
+        _value = static_cast<float>(policy.getDouble("value"));
+    } 
+
+    //type is optional, defaults to VALUE
+    if (policy.exists("type")) {
+        std::string thresholdTypeStr = policy.getString("type");
+        if (thresholdTypeStr.compare("value") == 0) {
+            _type = VALUE;           
+        } else if (thresholdTypeStr.compare("stdev") == 0) {
+            _type = STDEV;
+        } else if (thresholdTypeStr.compare("variance") == 0) {
+            _type = VARIANCE;
+        } else {
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                (boost::format("Unsopported type: %d") % thresholdTypeStr).str());
+        }    
+    }
+
+    //polarity is optional, defaults to true (for positive values)
+    if(policy.exists("polarity")) {
+        _polarity = policy.getBool("polarity");
+    }
+}
+
+
+/******************************************************************************/
 /**
  * Return a string-representation of a Span
  */

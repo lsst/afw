@@ -11,6 +11,7 @@
 #include <cmath>
 #include <boost/cstdint.hpp>
 #include <boost/shared_ptr.hpp>
+#include "lsst/pex/policy/Policy.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/detection/Peak.h"
 
@@ -76,6 +77,8 @@ public:
               const ThresholdType type = VALUE, //!< interpretation of type
               const bool polarity = true        //!< Search for pixels above threshold? (Useful for -ve thresholds)
              ) : _value(value), _type(type), _polarity(polarity) {}
+
+    Threshold(lsst::pex::policy::Policy const & policy);
 
     //! return type of threshold
     ThresholdType getType() const { return _type; }

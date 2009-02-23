@@ -12,6 +12,7 @@ or
 import pdb                              # we may want to say pdb.set_trace()
 import unittest
 import lsst.utils.tests as tests
+import lsst.pex.policy as pexPolicy
 import lsst.pex.logging as logging
 import lsst.afw.image.imageLib as afwImage
 import lsst.afw.detection.detectionLib as afwDetection
@@ -37,6 +38,60 @@ def toString(*args):
     return "%d: %d..%d" % (y, x0, x1)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+class ThresholdTestCase(unittest.TestCase):
+    def testPolicyConstructor(self):
+        """
+        Test the creation of a Threshold object from a Policy Object
+
+        This is a white-box test.
+        -tests missing policy parameters
+        -tests mal-formed parameters
+
+        Cannot test polarity settings due to bug in lsst.pex.policy.Policy.
+        lsst.pex.policy.Policy 
+        """
+        policy = pexPolicy.Policy()
+
+        try:
+            threshold = afwDetection.Threshold(policy)
+        except:
+            pass
+        else:
+            self.fail("Threhold policy not properly validated")
+
+        policy.add("value", 3.4)
+        try:
+            threhold = afwDetection.Threshold(policy)
+        except:
+            self.fail("Threshold failed to build with proper policy")
+
+        
+        policy.add("type", "foo bar")
+        try:
+            threshold = afwDetection.Threshold(policy)
+        except:
+            pass
+        else:
+            self.fail("Threhold policy not properly validated")
+
+        policy.set("type", "stdev")
+        try:
+            threhold = afwDetection.Threshold(policy)
+        except:
+            self.fail("Threshold failed to build with proper policy")
+
+        policy.set("type", "value")
+        try:
+            threhold = afwDetection.Threshold(policy)
+        except:
+            self.fail("Threshold failed to build with proper policy")
+
+        policy.set("type", "variance")
+        try:
+            threhold = afwDetection.Threshold(policy)
+        except:
+            self.fail("Threshold failed to build with proper policy")
 
 class FootprintTestCase(unittest.TestCase):
     """A test case for Footprint"""
@@ -390,6 +445,7 @@ def suite():
     tests.init()
 
     suites = []
+    suites += unittest.makeSuite(ThresholdTestCase)
     suites += unittest.makeSuite(FootprintTestCase)
     suites += unittest.makeSuite(DetectionSetTestCase)
     suites += unittest.makeSuite(tests.MemoryTestCase)
