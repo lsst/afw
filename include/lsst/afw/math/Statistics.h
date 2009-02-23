@@ -71,14 +71,14 @@ private:
         sctrl.setNumSigmaClip(4.0);            // reset number of standard deviations for N-sigma clipping
         sctrl.setNumIter(5);                   // reset number of iterations for N-sigma clipping
 
-        math::Statistics statobj = math::make_Statistics(*img, math::NPOINT | math::MEAN | math::MEANCLIP, sctrl);
+        math::Statistics statobj = math::makeStatistics(*img, math::NPOINT | math::MEAN | math::MEANCLIP, sctrl);
         
         double const n = statobj.getValue(math::NPOINT);
         std::pair<double, double> const mean = statobj.getResult(math::MEAN); // Returns (value, error)
         double const meanError = statobj.getError(math::MEAN);                // just the error
  * @endcode
  *
- * @note we used a helper function, \c make_Statistics, rather that the constructor directly so that
+ * @note we used a helper function, \c makeStatistics, rather that the constructor directly so that
  *       the compiler could deduce the types -- cf. \c std::make_pair)
  */
 class Statistics {
@@ -130,7 +130,7 @@ private:
  * cf. std::make_pair()
  */
 template<typename Image>
-Statistics make_Statistics(Image const& img, ///< Image (or MaskedImage) whose properties we want
+Statistics makeStatistics(Image const& img, ///< Image (or MaskedImage) whose properties we want
                            int const flags,   ///< Describe what we want to calculate
                            StatisticsControl const& sctrl=StatisticsControl() ///< Control how things are calculated
                           ) {

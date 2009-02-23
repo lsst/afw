@@ -102,8 +102,11 @@ def ds9Cmd(cmd):
    
    try:
       xpa.set(None, "ds9", cmd, "", "", 0)
-   except IOError:
-      raise Ds9Error, "XPA: (%s)" % cmd
+   except IOError, e:
+      if False:
+          raise Ds9Error, "XPA: %s, (%s)" % (e, cmd)
+      else:
+          print >> sys.stderr, "Caught ds9 exception processing ellipse command \"%s\": %s" % (cmd, e)
 
 def initDS9(execDs9 = True):
    try:
@@ -135,8 +138,11 @@ def setMaskColor(color = GREEN):
     """Set the ds9 mask colour to; eg. ds9.setMaskColor(ds9.RED)"""
     ds9Cmd("mask color %s" % color)
 
-def mtv(data, frame=0, init=True, wcs=None, isMask=False):
+def mtv(data, frame=0, init=True, wcs=None, isMask=False, lowOrderBits=False):
    """Display an Image or Mask on a DS9 display
+
+   If lowOrderBits is True, give low-order-bits priority in display (i.e.
+overlay them last)
 
 Historical note: the name "mtv" comes from Jim Gunn's forth imageprocessing
 system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
@@ -161,12 +167,12 @@ system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
        _mtv(data.getImage(), wcs, False)
    elif re.search("::MaskedImage<", data.__repr__()): # it's a MaskedImage; display the Image and overlay the Mask
        _mtv(data.getImage(), wcs, False)
-       mtv(data.getMask(), frame, False, wcs, False)
+       mtv(data.getMask(), frame, False, wcs, False, lowOrderBits=lowOrderBits)
    elif re.search("::Exposure<", data.__repr__()): # it's an Exposure; display the MaskedImage with the WCS
        if wcs:
            raise RuntimeError, "You may not specify a wcs with an Exposure"
 
-       mtv(data.getMaskedImage(), frame, False, data.getWcs(), False)
+       mtv(data.getMaskedImage(), frame, False, data.getWcs(), False, lowOrderBits=lowOrderBits)
    elif re.search("::Mask<", data.__repr__()): # it's a Mask; display it, bitplane by bitplane
        nMaskPlanes = data.getNumPlanesUsed()
        maskPlanes = data.getMaskPlaneDict()
@@ -176,8 +182,14 @@ system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
            planes[maskPlanes[key]] = key
 
        colorIndex = 0                   # index into maskColors
-       for p in range(nMaskPlanes):
-           if planes[p]:
+
+       if lowOrderBits:
+           planeList = range(nMaskPlanes - 1, -1, -1)
+       else:
+           planeList = range(nMaskPlanes)
+           
+       for p in planeList:
+           if planes[p] or True:
                if not getMaskPlaneVisibility(planes[p]):
                    continue
 
@@ -240,36 +252,54 @@ def erase(frame = 0, len = 2):
 
    ds9Cmd("frame %d; regions delete all" % frame)
 
-def dot(symb, c, r, frame = 0, size = 2, ctype = 'green'):
+def dot(symb, c, r, frame=0, size=2, ctype=GREEN):
    """Draw a symbol onto the specfied DS9 frame at (col,row) = (c,r) [0-based coordinates]
 Possible values are:
-	+	Draw a +
-	x	Draw an x
-        o	Draw a circle
+	+	         Draw a +
+	x	         Draw an x
+        o	         Draw a circle
+        @:Mxx,Mxy,Myy    Draw an ellipse with moments (Mxx, Mxy, Myy) (size is ignored)
 Any other value is interpreted as a string to be drawn
 """
    if frame == None:
-      return
+       return
+
+   if ctype == GREEN:
+       color = ""                       # the default
+   else:
+       color = ' # color=%s' % ctype
 
    cmd = "frame %d; " % frame
    r += 1; c += 1;                      # ds9 uses 1-based coordinates
-   if (symb == '+'):
-      cmd += 'regions command {line %g %g %g %g}; ' % (c, r+size, c, r-size)
-      cmd += 'regions command {line %g %g %g %g}; ' % (c-size, r, c+size, r)
-   elif (symb == 'x'):
+   if symb == '+':
+      cmd += 'regions command {line %g %g %g %g%s}; ' % (c, r+size, c, r-size, color)
+      cmd += 'regions command {line %g %g %g %g%s}; ' % (c-size, r, c+size, r, color)
+   elif symb == 'x':
       size = size/math.sqrt(2)
-      cmd += 'regions command {line %g %g %g %g}; ' % (c+size, r+size, c-size, r-size)
-      cmd += 'regions command {line %g %g %g %g}; ' % (c-size, r+size, c+size, r-size)
-   elif (symb == 'o'):
-      cmd += 'regions command {circle %g %g %g}; ' % (c, r, size)
-   else:
-      cmd += 'regions command {text %g %g \"%s\"}; ' % (c, r, symb)
+      cmd += 'regions command {line %g %g %g %g%s}; ' % (c+size, r+size, c-size, r-size, color)
+      cmd += 'regions command {line %g %g %g %g%s}; ' % (c-size, r+size, c+size, r-size, color)
+   elif symb == 'o':
+      cmd += 'regions command {circle %g %g %g%s}; ' % (c, r, size, color)
+   elif re.search(r"^@:", symb):
+       mat = re.search(r"^@:([^,]+),([^,]+),([^,]+)", symb)
+       mxx, mxy, myy = map(lambda x: float(x), mat.groups())
 
-   #cmd += ' # color=%s' % ctype
+       theta = (0.5*math.atan2(2*mxy, mxx - myy))
+       ct, st = math.cos(theta), math.sin(theta)
+       theta *= 180/math.pi
+       A = math.sqrt(mxx*ct*ct + mxy*2*ct*st + myy*st*st)
+       B = math.sqrt(mxx*st*st - mxy*2*ct*st + myy*ct*ct)
+       if A < B:
+           A, B = B, A
+           theta += 90
+       
+       cmd += 'regions command {ellipse %g %g %g %g %g%s}; ' % (c, r, A, B, theta, color)
+   else:
+      cmd += 'regions command {text %g %g \"%s\"%s}; ' % (c, r, symb, color)
 
    ds9Cmd(cmd)
 
-def line(points, frame = 0, symbs = False, ctype = 'green'):
+def line(points, frame=0, symbs=False, ctype=GREEN):
    """Draw a set of symbols or connect the points, a list of (col,row)
 If symbs is True, draw points at the specified points using the desired symbol,
 otherwise connect the dots.  Ctype is the name of a colour (e.g. 'red')"""

@@ -61,7 +61,7 @@ int main() {
     bgCtrl.sctrl.setNumSigmaClip(2.5);
 
     // initialize a background object (derivates for interpolation are computed in the constructor
-    BackT back = math::make_Background(img, bgCtrl);
+    BackT back = math::makeBackground(img, bgCtrl);
     
     // can get an individual pixel or a whole frame.
     float const mid = back.getPixel(xcen,ycen);
