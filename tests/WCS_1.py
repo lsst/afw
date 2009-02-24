@@ -141,6 +141,14 @@ class WCSTestCaseCFHT(unittest.TestCase):
 
         self.assertAlmostEqual(math.sqrt(self.wcs.pixArea(p00)), math.sqrt(area))
 
+    def testReadWcs(self):
+        """Test reading a Wcs directly from a fits file"""
+
+        meta = afwImage.readMetadata(InputImagePath + "_img.fits")
+        wcs = afwImage.Wcs(meta)
+
+        self.assertEqual(wcs.xyToRaDec(0.0, 0.0), self.wcs.xyToRaDec(0.0, 0.0))
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():

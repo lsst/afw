@@ -174,6 +174,11 @@ namespace lsst { namespace afw { namespace image {
         PointI const& getCenter() const { return first; } ///< Return the circle's centre
         float getRadius() const { return second; }        ///< Return the circle's radius
     };
+
+/************************************************************************************************************/
+
+lsst::daf::base::PropertySet::Ptr readMetadata(std::string const& fileName, const int hdu=0);
+
 }}}
 
 #endif
