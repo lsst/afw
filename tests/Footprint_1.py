@@ -12,7 +12,6 @@ or
 import pdb                              # we may want to say pdb.set_trace()
 import unittest
 import lsst.utils.tests as tests
-import lsst.pex.policy as pexPolicy
 import lsst.pex.logging as logging
 import lsst.afw.image.imageLib as afwImage
 import lsst.afw.detection.detectionLib as afwDetection
@@ -40,58 +39,46 @@ def toString(*args):
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class ThresholdTestCase(unittest.TestCase):
-    def testPolicyConstructor(self):
+    def testTresholdFactory(self):
         """
-        Test the creation of a Threshold object from a Policy Object
+        Test the creation of a Threshold object
 
         This is a white-box test.
-        -tests missing policy parameters
+        -tests missing parameters
         -tests mal-formed parameters
-
-        Cannot test polarity settings due to bug in lsst.pex.policy.Policy.
-        lsst.pex.policy.Policy 
         """
-        policy = pexPolicy.Policy()
-
         try:
-            threshold = afwDetection.Threshold(policy)
+            afwDetection.createThreshold(3.4)
         except:
-            pass
-        else:
-            self.fail("Threhold policy not properly validated")
-
-        policy.add("value", 3.4)
-        try:
-            threhold = afwDetection.Threshold(policy)
-        except:
-            self.fail("Threshold failed to build with proper policy")
-
+            self.fail("Failed to build Threshold with proper parameters")
         
-        policy.add("type", "foo bar")
         try:
-            threshold = afwDetection.Threshold(policy)
+            afwDetection.createThreshold(3.4, "foo bar")
         except:
             pass
         else:
-            self.fail("Threhold policy not properly validated")
+            self.fail("Threhold parameters not properly validated")
 
-        policy.set("type", "stdev")
         try:
-            threhold = afwDetection.Threshold(policy)
+            afwDetection.createThreshold(3.4, "variance")
         except:
-            self.fail("Threshold failed to build with proper policy")
+            self.fail("Failed to build Threshold with proper parameters")
 
-        policy.set("type", "value")
         try:
-            threhold = afwDetection.Threshold(policy)
+            afwDetection.createThreshold(3.4, "stdev")
         except:
-            self.fail("Threshold failed to build with proper policy")
+            self.fail("Failed to build Threshold with proper parameters")
 
-        policy.set("type", "variance")
         try:
-            threhold = afwDetection.Threshold(policy)
+            afwDetection.createThreshold(3.4, "value")
         except:
-            self.fail("Threshold failed to build with proper policy")
+            self.fail("Failed to build Threshold with proper parameters")
+        
+        try:
+            afwDetection.createThreshold(3.4, "value", False)
+        except:
+            self.fail("Failed to build Threshold with proper parameters")
+        
 
 class FootprintTestCase(unittest.TestCase):
     """A test case for Footprint"""

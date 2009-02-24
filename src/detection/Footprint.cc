@@ -19,35 +19,34 @@ namespace detection = lsst::afw::detection;
 namespace image = lsst::afw::image;
 
 /******************************************************************************/
-detection::Threshold::Threshold(lsst::pex::policy::Policy const & policy) 
-: _value(0.0f), _type(VALUE), _polarity(true) {    
-    //must include a value
-    if (!policy.exists("value")) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
-            "Threshold Policy missing component \"value\"");
+/**
+ * \brief Factory method for creating Threshold objects
+ * \param value value of threshold
+ * \param typeStr string representation of a ThresholdType. This parameter is 
+ *        optional. Allowed values are:
+ *        "variance", "value", "stdev"
+ * \param polarity If true detect positive objects, false for negative
+ * \return Threshold object
+ */
+detection::Threshold detection::createThreshold(
+    const float value,
+    const std::string typeStr,
+    const bool polarity
+) {
+
+    Threshold::ThresholdType thresholdType;
+    if (typeStr.compare("value") == 0) {
+        thresholdType = Threshold::VALUE;           
+    } else if (typeStr.compare("stdev") == 0) {
+        thresholdType = Threshold::STDEV;
+    } else if (typeStr.compare("variance") == 0) {
+        thresholdType = Threshold::VARIANCE;
     } else {
-        _value = static_cast<float>(policy.getDouble("value"));
-    } 
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+            (boost::format("Unsopported Threshold type: %s") % typeStr).str());
+    }    
 
-    //type is optional, defaults to VALUE
-    if (policy.exists("type")) {
-        std::string thresholdTypeStr = policy.getString("type");
-        if (thresholdTypeStr.compare("value") == 0) {
-            _type = VALUE;           
-        } else if (thresholdTypeStr.compare("stdev") == 0) {
-            _type = STDEV;
-        } else if (thresholdTypeStr.compare("variance") == 0) {
-            _type = VARIANCE;
-        } else {
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
-                (boost::format("Unsopported type: %d") % thresholdTypeStr).str());
-        }    
-    }
-
-    //polarity is optional, defaults to true (for positive values)
-    if(policy.exists("polarity")) {
-        _polarity = policy.getBool("polarity");
-    }
+    return Threshold(value, thresholdType, polarity);
 }
 
 

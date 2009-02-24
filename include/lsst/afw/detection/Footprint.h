@@ -78,8 +78,6 @@ public:
               const bool polarity = true        //!< Search for pixels above threshold? (Useful for -ve thresholds)
              ) : _value(value), _type(type), _polarity(polarity) {}
 
-    Threshold(lsst::pex::policy::Policy const & policy);
-
     //! return type of threshold
     ThresholdType getType() const { return _type; }
     //! return value of threshold, to be interpreted via type
@@ -113,6 +111,10 @@ private:
     bool _polarity;                     //!< true for positive polarity, false for negative
 };
 
+// brief Factory method for creating Threshold objects
+Threshold createThreshold(const float value,
+                          const std::string type = "value",
+                          const bool polarity = true);
 /************************************************************************************************************/
 /*!
  * \brief A set of pixels in an Image
