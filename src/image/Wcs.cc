@@ -50,7 +50,11 @@ lsst::afw::image::Wcs::Wcs(PointD crval, ///< ra/dec of centre of image
                               _fitsMetadata(),
                               _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0) {
 
-    _wcsInfo = (struct wcsprm *) malloc(sizeof (struct wcsprm));
+    _wcsInfo = static_cast<struct wcsprm *>(malloc(sizeof(struct wcsprm)));
+    if (_wcsInfo == NULL) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException, "Cannot allocate WCS info");
+    }
+    _wcsInfo->flag = -1;
     wcsini(true, 2, _wcsInfo);   //2 indicates a naxis==2, a two dimensional image
 
     _wcsInfo->crval[0] = crval.getX();
@@ -172,6 +176,7 @@ lsst::afw::image::Wcs::Wcs(Wcs const & rhs):
         if (_wcsInfo == NULL) {
             throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException, "Cannot allocate WCS info");
         }
+        _wcsInfo->flag = -1;
         _nWcsInfo = rhs._nWcsInfo;
         for (int ii = 0; ii < rhs._nWcsInfo; ++ii) {
             // wcssub deep copies each _wcsInfo structure into newly allocated memory
@@ -211,6 +216,7 @@ lsst::afw::image::Wcs & lsst::afw::image::Wcs::operator = (const lsst::afw::imag
             if (_wcsInfo == NULL) {
                 throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException, "Cannot allocate WCS info");
             }
+            _wcsInfo->flag = -1;
             _nWcsInfo = rhs._nWcsInfo;
             // deep-copy wcs data
             for (int ii = 0; ii < rhs._nWcsInfo; ++ii) {
