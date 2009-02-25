@@ -41,8 +41,8 @@ enum DiaSourceNullableField {
     SSM_ID,
     RA_ERR_FOR_WCS,
     DEC_ERR_FOR_WCS,
-    MODEL_MAG_ERR,
-    REF_MAG,
+    MODEL_FLUX_ERR,
+    REF_FLUX,
     IXX,
     IXX_ERR,
     IYY,
@@ -77,7 +77,7 @@ public :
     double  getLengthDeg() const { return _lengthDeg; }
     float   getFlux() const { return _flux; }
     float   getFluxErr() const { return _fluxErr; }
-    float   getRefMag() const { return _refMag; }
+    float   getRefFlux() const { return _refFlux; }
     float   getIxx() const { return _ixx; }
     float   getIxxErr() const { return _ixxErr; }
     float   getIyy() const { return _iyy; }
@@ -114,8 +114,8 @@ public :
     void setFluxErr(float  const fluxErr ) { 
         set(_fluxErr, fluxErr);          
     }
-    void setRefMag(float const refMag) {
-        set(_refMag, refMag, REF_MAG);
+    void setRefFlux(float const refFlux) {
+        set(_refFlux, refFlux, REF_FLUX);
     }
     void setIxx(float const ixx) { 
         set(_ixx, ixx, IXX);    
@@ -172,8 +172,8 @@ public :
     void setDecErrForWcs(float const decErrForWcs) { 
         set(_decErrForWcs, decErrForWcs, DEC_ERR_FOR_WCS); 
     }
-    void setModelMagErr(float const modelMagErr) {
-        set(_modelMagErr, modelMagErr, MODEL_MAG_ERR);
+    void setModelFluxErr(float const modelFluxErr) {
+        set(_modelFluxErr, modelFluxErr, MODEL_FLUX_ERR);
     }
     
     bool operator==(DiaSource const & d) const;
@@ -189,7 +189,7 @@ private :
     double  _valXY;
     float   _flux;
     float   _fluxErr;
-    float   _refMag;
+    float   _refFlux;
     float   _ixx;
     float   _ixxErr;
     float   _iyy;
@@ -209,7 +209,7 @@ private :
         ar & _lengthDeg;        
         ar & _flux;
         ar & _fluxErr;
-        ar & _refMag;
+        ar & _refFlux;
         ar & _ixx;
         ar & _ixxErr;
         ar & _iyy;

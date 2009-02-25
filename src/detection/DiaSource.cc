@@ -23,7 +23,7 @@ det::DiaSource::DiaSource()
       _valY1(0.0), _valY2(0.0),
       _valXY(0.0),
       _flux(0.0), _fluxErr(0.0),
-      _refMag(0.0), 
+      _refFlux(0.0), 
       _ixx(0.0), _ixxErr(0.0),
       _iyy(0.0), _iyyErr(0.0),
       _ixy(0.0), _ixyErr(0.0),            
@@ -49,7 +49,7 @@ det::DiaSource::DiaSource(DiaSource const & other)
       _valXY(other._valXY),    
       _flux(other._flux), 
       _fluxErr(other._fluxErr),
-      _refMag(other._refMag), 
+      _refFlux(other._refFlux), 
       _ixx(other._ixx), 
       _ixxErr(other._ixxErr),
       _iyy(other._iyy), 
@@ -110,20 +110,20 @@ bool det::DiaSource::operator==(DiaSource const & d) const {
         areEqual(_lengthDeg, d._lengthDeg) &&
         areEqual(_flux, d._flux) &&
         areEqual(_fluxErr, d._fluxErr) &&        
-        areEqual(_psfMag, d._psfMag) &&
-        areEqual(_psfMagErr, d._psfMagErr) &&
-        areEqual(_apMag, d._apMag) &&
-        areEqual(_apMagErr, d._apMagErr) &&
-        areEqual(_modelMag, d._modelMag) &&
-        areEqual(_modelMagErr, d._modelMagErr, det::MODEL_MAG_ERR) &&           
-        areEqual(_instMag, d._instMag) &&
-        areEqual(_instMagErr, d._instMagErr) &&
-        areEqual(_nonGrayCorrMag, d._nonGrayCorrMag, det::NON_GRAY_CORR_MAG) &&
-        areEqual(_nonGrayCorrMagErr, d._nonGrayCorrMagErr, det::NON_GRAY_CORR_MAG_ERR) &&
-        areEqual(_atmCorrMag, d._atmCorrMag, det::ATM_CORR_MAG) &&
-        areEqual(_atmCorrMagErr, d._atmCorrMagErr, det::ATM_CORR_MAG_ERR) &&
+        areEqual(_psfFlux, d._psfFlux) &&
+        areEqual(_psfFluxErr, d._psfFluxErr) &&
+        areEqual(_apFlux, d._apFlux) &&
+        areEqual(_apFluxErr, d._apFluxErr) &&
+        areEqual(_modelFlux, d._modelFlux) &&
+        areEqual(_modelFluxErr, d._modelFluxErr, det::MODEL_FLUX_ERR) &&           
+        areEqual(_instFlux, d._instFlux) &&
+        areEqual(_instFluxErr, d._instFluxErr) &&
+        areEqual(_nonGrayCorrFlux, d._nonGrayCorrFlux, det::NON_GRAY_CORR_FLUX) &&
+        areEqual(_nonGrayCorrFluxErr, d._nonGrayCorrFluxErr, det::NON_GRAY_CORR_FLUX_ERR) &&
+        areEqual(_atmCorrFlux, d._atmCorrFlux, det::ATM_CORR_FLUX) &&
+        areEqual(_atmCorrFluxErr, d._atmCorrFluxErr, det::ATM_CORR_FLUX_ERR) &&
         areEqual(_apDia, d._apDia, det::AP_DIA) &&
-        areEqual(_refMag, d._refMag, det::REF_MAG) &&                   
+        areEqual(_refFlux, d._refFlux, det::REF_FLUX) &&                   
         areEqual(_ixx, d._ixx, det::IXX) &&
         areEqual(_ixxErr, d._ixxErr, det::IXX_ERR) &&
         areEqual(_iyy, d._iyy, det::IYY) &&

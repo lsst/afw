@@ -39,8 +39,8 @@ enum SourceNullableField {
     RA_ERR_FOR_DETECTION,
     DEC_ERR_FOR_DETECTION,
     TAI_RANGE,
-    PETRO_MAG,
-    PETRO_MAG_ERR,
+    PETRO_FLUX,
+    PETRO_FLUX_ERR,
     SKY,
     SKY_ERR,        
     NUM_SOURCE_NULLABLE_FIELDS
@@ -62,19 +62,19 @@ public :
 
     // getters
     boost::int64_t getSourceId() const { return _id; }
-    double getPetroMag() const { return _petroMag; }
-    float  getPetroMagErr() const { return _petroMagErr; }    
+    double getPetroFlux() const { return _petroFlux; }
+    float  getPetroFluxErr() const { return _petroFluxErr; }    
     float  getSky() const { return _sky; }
     float  getSkyErr() const { return _skyErr; }
 
     // setters
     void setSourceId( boost::int64_t const sourceId) {setId(sourceId);}
     
-    void setPetroMag(double const petroMag) { 
-        set(_petroMag, petroMag, PETRO_MAG);         
+    void setPetroFlux(double const petroFlux) { 
+        set(_petroFlux, petroFlux, PETRO_FLUX);         
     }
-    void setPetroMagErr(float const petroMagErr) { 
-        set(_petroMagErr, petroMagErr, PETRO_MAG_ERR);    
+    void setPetroFluxErr(float const petroFluxErr) { 
+        set(_petroFluxErr, petroFluxErr, PETRO_FLUX_ERR);    
     }
     void setSky(float const sky) { 
         set(_sky, sky, SKY);       
@@ -103,15 +103,15 @@ public :
     bool operator==(Source const & d) const;
 
 private :
-    double _petroMag;  
-    float  _petroMagErr;
+    double _petroFlux;  
+    float  _petroFluxErr;
     float  _sky;
     float  _skyErr;
 
     template <typename Archive> 
     void serialize(Archive & ar, unsigned int const version) {
-        ar & _petroMag;
-        ar & _petroMagErr;
+        ar & _petroFlux;
+        ar & _petroFluxErr;
         ar & _sky;
         ar & _skyErr;
 

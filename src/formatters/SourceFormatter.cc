@@ -196,39 +196,39 @@ void form::SourceVectorFormatter::insertRow(T & db, Source const & d) {
     db.template setColumn<float>("fwhmA", d._fwhmA);
     db.template setColumn<float>("fwhmB", d._fwhmB);
     db.template setColumn<float>("fwhmTheta", d._fwhmTheta);     
-    db.template setColumn<double>("psfMag", d._psfMag);
-    db.template setColumn<float>("psfMagErr", d._psfMagErr);
-    db.template setColumn<double>("apMag", d._apMag);
-    db.template setColumn<float>("apMagErr", d._apMagErr);
-    db.template setColumn<double>("modelMag", d._modelMag);            
-    db.template setColumn<float>("modelMagErr", d._modelMagErr);   
+    db.template setColumn<double>("psfFlux", d._psfFlux);
+    db.template setColumn<float>("psfFluxErr", d._psfFluxErr);
+    db.template setColumn<double>("apFlux", d._apFlux);
+    db.template setColumn<float>("apFluxErr", d._apFluxErr);
+    db.template setColumn<double>("modelFlux", d._modelFlux);            
+    db.template setColumn<float>("modelFluxErr", d._modelFluxErr);   
 
-    if (!d.isNull(det::PETRO_MAG))
-        db. template setColumn<double>("petroMag", d._petroMag);
-    else db.setColumnToNull("petroMag");
+    if (!d.isNull(det::PETRO_FLUX))
+        db. template setColumn<double>("petroFlux", d._petroFlux);
+    else db.setColumnToNull("petroFlux");
     
-    if (!d.isNull(det::PETRO_MAG_ERR))
-        db. template setColumn<float>("petroMagErr", d._petroMagErr);  
-    else db.setColumnToNull("petroMagErr");    
+    if (!d.isNull(det::PETRO_FLUX_ERR))
+        db. template setColumn<float>("petroFluxErr", d._petroFluxErr);  
+    else db.setColumnToNull("petroFluxErr");    
     
-    db.template setColumn<double>("instMag", d._instMag);
-    db.template setColumn("instMagErr", d._instMagErr);
+    db.template setColumn<double>("instFlux", d._instFlux);
+    db.template setColumn("instFluxErr", d._instFluxErr);
     
-    if (!d.isNull(det::NON_GRAY_CORR_MAG))
-        db.template setColumn<double>("nonGrayCorrMag", d._nonGrayCorrMag);
-    else db.setColumnToNull("nonGrayCorrMag");
+    if (!d.isNull(det::NON_GRAY_CORR_FLUX))
+        db.template setColumn<double>("nonGrayCorrFlux", d._nonGrayCorrFlux);
+    else db.setColumnToNull("nonGrayCorrFlux");
     
-    if (!d.isNull(det::NON_GRAY_CORR_MAG_ERR))
-        db.template setColumn<double>("nonGrayCorrMagErr", d._nonGrayCorrMagErr);
-    else db.setColumnToNull("nonGrayCorrMagErr");
+    if (!d.isNull(det::NON_GRAY_CORR_FLUX_ERR))
+        db.template setColumn<double>("nonGrayCorrFluxErr", d._nonGrayCorrFluxErr);
+    else db.setColumnToNull("nonGrayCorrFluxErr");
         
-    if (!d.isNull(det::ATM_CORR_MAG))
-        db.template setColumn<double>("atmCorrMag", d._atmCorrMag);
-    else db.setColumnToNull("atmCorrMag");
+    if (!d.isNull(det::ATM_CORR_FLUX))
+        db.template setColumn<double>("atmCorrFlux", d._atmCorrFlux);
+    else db.setColumnToNull("atmCorrFlux");
     
-    if (!d.isNull(det::ATM_CORR_MAG_ERR))
-        db.template setColumn<double>("atmCorrMagErr", d._atmCorrMagErr);
-    else db.setColumnToNull("atmCorrMagErr");
+    if (!d.isNull(det::ATM_CORR_FLUX_ERR))
+        db.template setColumn<double>("atmCorrFluxErr", d._atmCorrFluxErr);
+    else db.setColumnToNull("atmCorrFluxErr");
     
     if (!d.isNull(det::AP_DIA))
         db.template setColumn<float>("apDia", d._apDia);
@@ -305,20 +305,20 @@ void form::SourceVectorFormatter::setupFetch(DbStorage & db, Source & d) {
     db.outParam("fwhmA",            &(d._fwhmA));
     db.outParam("fwhmB",            &(d._fwhmB));
     db.outParam("fwhmTheta",        &(d._fwhmTheta));
-    db.outParam("psfMag",           &(d._psfMag));
-    db.outParam("psfMagErr",        &(d._psfMagErr));
-    db.outParam("apMag",            &(d._apMag));
-    db.outParam("apMagErr",         &(d._apMagErr));
-    db.outParam("modelMag",         &(d._modelMag));
-    db.outParam("modelMagErr",      &(d._modelMagErr));
-    db.outParam("petroMag",         &(d._petroMag));
-    db.outParam("petroMagErr",      &(d._petroMagErr));
-    db.outParam("instMag",          &(d._instMag));
-    db.outParam("instMagErr",       &(d._instMagErr));
-    db.outParam("nonGrayCorrMag",   &(d._nonGrayCorrMag));
-    db.outParam("nonGrayCorrMagErr",&(d._nonGrayCorrMagErr));    
-    db.outParam("atmCorrMag",       &(d._atmCorrMag));
-    db.outParam("atmCorrMagErr",    &(d._atmCorrMagErr));     
+    db.outParam("psfFlux",          &(d._psfFlux));
+    db.outParam("psfFluxErr",       &(d._psfFluxErr));
+    db.outParam("apFlux",           &(d._apFlux));
+    db.outParam("apFluxErr",        &(d._apFluxErr));
+    db.outParam("modelFlux",        &(d._modelFlux));
+    db.outParam("modelFluxErr",     &(d._modelFluxErr));
+    db.outParam("petroFlux",        &(d._petroFlux));
+    db.outParam("petroFluxErr",     &(d._petroFluxErr));
+    db.outParam("instFlux",         &(d._instFlux));
+    db.outParam("instFluxErr",      &(d._instFluxErr));
+    db.outParam("nonGrayCorrFlux",  &(d._nonGrayCorrFlux));
+    db.outParam("nonGrayCorrFluxErr",&(d._nonGrayCorrFluxErr));    
+    db.outParam("atmCorrFlux",      &(d._atmCorrFlux));
+    db.outParam("atmCorrFluxErr",   &(d._atmCorrFluxErr));     
     db.outParam("apDia",            &(d._apDia));    
     db.outParam("snr",              &(d._snr));
     db.outParam("chi2",             &(d._chi2));
@@ -578,36 +578,36 @@ Persistable* form::SourceVectorFormatter::read(
                 if (db->columnIsNull(FWHM_THETA)) { 
                     throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"fwhmTheta\"");        
                 }
-                if (db->columnIsNull(PSF_MAG)) {  
-                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"psfMag\"");           
+                if (db->columnIsNull(PSF_FLUX)) {  
+                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"psfFlux\"");           
                 }
-                if (db->columnIsNull(PSF_MAG_ERR)) {  
-                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"psfMagErr\"");        
+                if (db->columnIsNull(PSF_FLUX_ERR)) {  
+                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"psfFluxErr\"");        
                 }
-                if (db->columnIsNull(AP_MAG)) {  
-                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"apMag\"");  
+                if (db->columnIsNull(AP_FLUX)) {  
+                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"apFlux\"");  
                 }
-                if (db->columnIsNull(AP_MAG_ERR)) {  
-                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"apMagErr\"");  
+                if (db->columnIsNull(AP_FLUX_ERR)) {  
+                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"apFluxErr\"");  
                 }
-                if (db->columnIsNull(MODEL_MAG)) { 
-                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"modelMag\""); 
+                if (db->columnIsNull(MODEL_FLUX)) { 
+                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"modelFlux\""); 
                 }
-                if (db->columnIsNull(MODEL_MAG_ERR)) { 
-                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"modelMagErr\""); 
+                if (db->columnIsNull(MODEL_FLUX_ERR)) { 
+                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"modelFluxErr\""); 
                 }
-                if (db->columnIsNull(PETRO_MAG)) { data.setNull(det::PETRO_MAG); }
-                if (db->columnIsNull(PETRO_MAG_ERR)) { data.setNull(det::PETRO_MAG_ERR); }    
-                if (db->columnIsNull(INST_MAG)) { 
-                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"instMag\""); 
+                if (db->columnIsNull(PETRO_FLUX)) { data.setNull(det::PETRO_FLUX); }
+                if (db->columnIsNull(PETRO_FLUX_ERR)) { data.setNull(det::PETRO_FLUX_ERR); }    
+                if (db->columnIsNull(INST_FLUX)) { 
+                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"instFlux\""); 
                 }
-                if (db->columnIsNull(INST_MAG_ERR)) { 
-                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"instMagErr\"");
+                if (db->columnIsNull(INST_FLUX_ERR)) { 
+                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"instFluxErr\"");
                 }
-                if (db->columnIsNull(NON_GRAY_CORR_MAG)) { data.setNull(det::NON_GRAY_CORR_MAG); }
-                if (db->columnIsNull(NON_GRAY_CORR_MAG_ERR)) { data.setNull(det::NON_GRAY_CORR_MAG_ERR); }
-                if (db->columnIsNull(ATM_CORR_MAG)) { data.setNull(det::ATM_CORR_MAG); }
-                if (db->columnIsNull(ATM_CORR_MAG_ERR)) { data.setNull(det::ATM_CORR_MAG_ERR); }
+                if (db->columnIsNull(NON_GRAY_CORR_FLUX)) { data.setNull(det::NON_GRAY_CORR_FLUX); }
+                if (db->columnIsNull(NON_GRAY_CORR_FLUX_ERR)) { data.setNull(det::NON_GRAY_CORR_FLUX_ERR); }
+                if (db->columnIsNull(ATM_CORR_FLUX)) { data.setNull(det::ATM_CORR_FLUX); }
+                if (db->columnIsNull(ATM_CORR_FLUX_ERR)) { data.setNull(det::ATM_CORR_FLUX_ERR); }
                 if (db->columnIsNull(AP_DIA)) { data.setNull(det::AP_DIA); }                
                 if (db->columnIsNull(SNR)) {  
                     throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"snr\""); 

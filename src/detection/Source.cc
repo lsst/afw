@@ -17,8 +17,8 @@ namespace det = lsst::afw::detection;
  * Default Contructor
  */
 det::Source::Source()
-    : _petroMag(0.0),
-      _petroMagErr(0.0),
+    : _petroFlux(0.0),
+      _petroFluxErr(0.0),
       _sky(0.0),
       _skyErr(0.0)
 {}
@@ -28,8 +28,8 @@ det::Source::Source()
  */
 det::Source::Source(Source const & other)
     : BaseSourceAttributes<NUM_SOURCE_NULLABLE_FIELDS>(other),
-      _petroMag(other._petroMag),
-      _petroMagErr(other._petroMagErr),
+      _petroFlux(other._petroFlux),
+      _petroFluxErr(other._petroFluxErr),
       _sky(other._sky),
       _skyErr(other._skyErr)      
 {
@@ -76,20 +76,20 @@ bool det::Source::operator==(Source const & d) const {
         areEqual(_fwhmA, d._fwhmA) &&
         areEqual(_fwhmB, d._fwhmB) &&
         areEqual(_fwhmTheta, d._fwhmTheta) &&
-        areEqual(_psfMag, d._psfMag) &&
-        areEqual(_psfMagErr, d._psfMagErr) &&
-        areEqual(_apMag, d._apMag) &&
-        areEqual(_apMagErr, d._apMagErr) &&
-        areEqual(_modelMag, d._modelMag) &&
-        areEqual(_modelMagErr, d._modelMagErr) &&
-        areEqual(_petroMag, d._petroMag,  PETRO_MAG) &&
-        areEqual(_petroMagErr, d._petroMagErr,  PETRO_MAG_ERR) &&             
-        areEqual(_instMag, d._instMag) &&
-        areEqual(_instMagErr, d._instMagErr) &&
-        areEqual(_nonGrayCorrMag, d._nonGrayCorrMag,  NON_GRAY_CORR_MAG) &&
-        areEqual(_nonGrayCorrMagErr, d._nonGrayCorrMagErr,  NON_GRAY_CORR_MAG_ERR) &&
-        areEqual(_atmCorrMag, d._atmCorrMag,  ATM_CORR_MAG) &&
-        areEqual(_atmCorrMagErr, d._atmCorrMagErr,  ATM_CORR_MAG_ERR) &&
+        areEqual(_psfFlux, d._psfFlux) &&
+        areEqual(_psfFluxErr, d._psfFluxErr) &&
+        areEqual(_apFlux, d._apFlux) &&
+        areEqual(_apFluxErr, d._apFluxErr) &&
+        areEqual(_modelFlux, d._modelFlux) &&
+        areEqual(_modelFluxErr, d._modelFluxErr) &&
+        areEqual(_petroFlux, d._petroFlux,  PETRO_FLUX) &&
+        areEqual(_petroFluxErr, d._petroFluxErr,  PETRO_FLUX_ERR) &&             
+        areEqual(_instFlux, d._instFlux) &&
+        areEqual(_instFluxErr, d._instFluxErr) &&
+        areEqual(_nonGrayCorrFlux, d._nonGrayCorrFlux,  NON_GRAY_CORR_FLUX) &&
+        areEqual(_nonGrayCorrFluxErr, d._nonGrayCorrFluxErr,  NON_GRAY_CORR_FLUX_ERR) &&
+        areEqual(_atmCorrFlux, d._atmCorrFlux,  ATM_CORR_FLUX) &&
+        areEqual(_atmCorrFluxErr, d._atmCorrFluxErr,  ATM_CORR_FLUX_ERR) &&
         areEqual(_apDia, d._apDia,  AP_DIA) &&
         areEqual(_snr, d._snr) &&
         areEqual(_chi2, d._chi2) &&

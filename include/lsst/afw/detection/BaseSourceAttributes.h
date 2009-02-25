@@ -39,10 +39,10 @@ enum SharedNullableField {
     RA_ASTROM_ERR,
     DEC_ASTROM,
     DEC_ASTROM_ERR,
-    NON_GRAY_CORR_MAG,
-    NON_GRAY_CORR_MAG_ERR,
-    ATM_CORR_MAG,        
-    ATM_CORR_MAG_ERR,
+    NON_GRAY_CORR_FLUX,
+    NON_GRAY_CORR_FLUX_ERR,
+    ATM_CORR_FLUX,        
+    ATM_CORR_FLUX_ERR,
     AP_DIA,       
     FLAG_FOR_ASSOCIATION,
     FLAG_FOR_DETECTION,
@@ -100,18 +100,18 @@ public:
     float   getFwhmA() const { return _fwhmA; }
     float   getFwhmB() const { return _fwhmB; }
     float   getFwhmTheta() const { return _fwhmTheta; }
-    double  getPsfMag() const { return _psfMag; }
-    float   getPsfMagErr() const { return _psfMagErr; }
-    double  getApMag() const { return _apMag; }
-    float   getApMagErr() const { return _apMagErr; }
-    double  getModelMag() const { return _modelMag; }
-    float   getModelMagErr() const { return _modelMagErr; }
-    double  getInstMag() const { return _instMag; }
-    double  getInstMagErr() const { return _instMagErr; }
-    double  getNonGrayCorrMag() const { return _nonGrayCorrMag; }
-    double  getNonGrayCorrMagErr() const { return _nonGrayCorrMagErr;}
-    double  getAtmCorrMag() const { return _atmCorrMag; }
-    double  getAtmCorrMagErr() const { return _atmCorrMagErr; }
+    double  getPsfFlux() const { return _psfFlux; }
+    float   getPsfFluxErr() const { return _psfFluxErr; }
+    double  getApFlux() const { return _apFlux; }
+    float   getApFluxErr() const { return _apFluxErr; }
+    double  getModelFlux() const { return _modelFlux; }
+    float   getModelFluxErr() const { return _modelFluxErr; }
+    double  getInstFlux() const { return _instFlux; }
+    double  getInstFluxErr() const { return _instFluxErr; }
+    double  getNonGrayCorrFlux() const { return _nonGrayCorrFlux; }
+    double  getNonGrayCorrFluxErr() const { return _nonGrayCorrFluxErr;}
+    double  getAtmCorrFlux() const { return _atmCorrFlux; }
+    double  getAtmCorrFluxErr() const { return _atmCorrFluxErr; }
     float   getApDia() const { return _apDia; }
     float   getSnr() const { return _snr; }
     float   getChi2() const { return _chi2; }
@@ -231,41 +231,41 @@ public:
     void setFwhmTheta(float const fwhmTheta) {
         set(_fwhmTheta, fwhmTheta);
     }
-    void setPsfMag(double const psfMag) {
-        set(_psfMag, psfMag);           
+    void setPsfFlux(double const psfFlux) {
+        set(_psfFlux, psfFlux);           
     }
-    void setPsfMagErr(float const psfMagErr) {
-        set(_psfMagErr, psfMagErr);       
+    void setPsfFluxErr(float const psfFluxErr) {
+        set(_psfFluxErr, psfFluxErr);       
     }
-    void setApMag(double const apMag) {
-        set(_apMag, apMag);           
+    void setApFlux(double const apFlux) {
+        set(_apFlux, apFlux);           
     }
-    void setApMagErr(float const apMagErr) {
-        set(_apMagErr, apMagErr);         
+    void setApFluxErr(float const apFluxErr) {
+        set(_apFluxErr, apFluxErr);         
     }
-    void setModelMag(double const modelMag) {
-        set(_modelMag, modelMag);
+    void setModelFlux(double const modelFlux) {
+        set(_modelFlux, modelFlux);
     }
-    void setModelMagErr(float const modelMagErr) {
-        set(_modelMagErr, modelMagErr);
+    void setModelFluxErr(float const modelFluxErr) {
+        set(_modelFluxErr, modelFluxErr);
     }
-    void setInstMag(double const instMag) {
-        set(_instMag, instMag);
+    void setInstFlux(double const instFlux) {
+        set(_instFlux, instFlux);
     }
-    void setInstMagErr(double const instMagErr      ) {
-        set(_instMagErr, instMagErr);     
+    void setInstFluxErr(double const instFluxErr      ) {
+        set(_instFluxErr, instFluxErr);     
     }
-    void setNonGrayCorrMag(double const nonGrayCorrMag) { 
-        set(_nonGrayCorrMag, nonGrayCorrMag,  NON_GRAY_CORR_MAG);         
+    void setNonGrayCorrFlux(double const nonGrayCorrFlux) { 
+        set(_nonGrayCorrFlux, nonGrayCorrFlux,  NON_GRAY_CORR_FLUX);         
     }
-    void setNonGrayCorrMagErr(double const nonGrayCorrMagErr) { 
-        set(_nonGrayCorrMagErr, nonGrayCorrMagErr,  NON_GRAY_CORR_MAG_ERR);      
+    void setNonGrayCorrFluxErr(double const nonGrayCorrFluxErr) { 
+        set(_nonGrayCorrFluxErr, nonGrayCorrFluxErr,  NON_GRAY_CORR_FLUX_ERR);      
     }
-    void setAtmCorrMag(double const atmCorrMag) { 
-        set(_atmCorrMag, atmCorrMag, ATM_CORR_MAG);         
+    void setAtmCorrFlux(double const atmCorrFlux) { 
+        set(_atmCorrFlux, atmCorrFlux, ATM_CORR_FLUX);         
     }
-    void setAtmCorrMagErr(double const atmCorrMagErr) { 
-        set(_atmCorrMagErr, atmCorrMagErr, ATM_CORR_MAG_ERR);      
+    void setAtmCorrFluxErr(double const atmCorrFluxErr) { 
+        set(_atmCorrFluxErr, atmCorrFluxErr, ATM_CORR_FLUX_ERR);      
     }     
     void setApDia(float const apDia) {
         set(_apDia, apDia, AP_DIA);
@@ -341,15 +341,15 @@ protected:
         _raAstrom(0.0), _raAstromErr(0.0),
         _decAstrom(0.0), _decAstromErr(0.0),
         _taiMidPoint(0.0), 
-        _psfMag(0.0), _apMag(0.0), _modelMag(0.0),
-        _instMag(0.0), _instMagErr(0.0),
-        _nonGrayCorrMag(0.0), _nonGrayCorrMagErr(0.0),
-        _atmCorrMag(0.0), _atmCorrMagErr(0.0),
+        _psfFlux(0.0), _apFlux(0.0), _modelFlux(0.0),
+        _instFlux(0.0), _instFluxErr(0.0),
+        _nonGrayCorrFlux(0.0), _nonGrayCorrFluxErr(0.0),
+        _atmCorrFlux(0.0), _atmCorrFluxErr(0.0),
         _raErrForDetection(0.0), _decErrForDetection(0.0),
         _raErrForWcs(0.0), _decErrForWcs(0.0),                
         _taiRange(0.0),
         _fwhmA(0.0), _fwhmB(0.0), _fwhmTheta(0.0),
-        _psfMagErr(0.0), _apMagErr(0.0), _modelMagErr(0.0),
+        _psfFluxErr(0.0), _apFluxErr(0.0), _modelFluxErr(0.0),
         _apDia(0.0), _snr(0.0), _chi2(0.0),
         _procHistoryId(0),
         _flagForAssociation(0), _flagForDetection(0), _flagForWcs(0),
@@ -422,18 +422,18 @@ protected:
         ar & _fwhmA;
         ar & _fwhmB;
         ar & _fwhmTheta;
-        ar & _psfMag;
-        ar & _psfMagErr;
-        ar & _apMag;
-        ar & _apMagErr;
-        ar & _modelMag;
-        ar & _modelMagErr;
-        ar & _instMag;
-        ar & _instMagErr;
-        ar & _nonGrayCorrMag;
-        ar & _nonGrayCorrMagErr;
-        ar & _atmCorrMag;
-        ar & _atmCorrMagErr;
+        ar & _psfFlux;
+        ar & _psfFluxErr;
+        ar & _apFlux;
+        ar & _apFluxErr;
+        ar & _modelFlux;
+        ar & _modelFluxErr;
+        ar & _instFlux;
+        ar & _instFluxErr;
+        ar & _nonGrayCorrFlux;
+        ar & _nonGrayCorrFluxErr;
+        ar & _atmCorrFlux;
+        ar & _atmCorrFluxErr;
         ar & _apDia;        
         ar & _snr;
         ar & _chi2;
@@ -483,15 +483,15 @@ protected:
     double  _decAstrom;
     double  _decAstromErr;
     double  _taiMidPoint;
-    double  _psfMag;
-    double  _apMag;
-    double  _modelMag;
-    double  _instMag;
-    double  _instMagErr;
-    double  _nonGrayCorrMag;
-    double  _nonGrayCorrMagErr;
-    double  _atmCorrMag;
-    double  _atmCorrMagErr;
+    double  _psfFlux;
+    double  _apFlux;
+    double  _modelFlux;
+    double  _instFlux;
+    double  _instFluxErr;
+    double  _nonGrayCorrFlux;
+    double  _nonGrayCorrFluxErr;
+    double  _atmCorrFlux;
+    double  _atmCorrFluxErr;
     float   _raErrForDetection;
     float   _decErrForDetection;
     float   _raErrForWcs;
@@ -500,9 +500,9 @@ protected:
     float   _fwhmA;
     float   _fwhmB;
     float   _fwhmTheta;
-    float   _psfMagErr;
-    float   _apMagErr;
-    float   _modelMagErr;
+    float   _psfFluxErr;
+    float   _apFluxErr;
+    float   _modelFluxErr;
     float   _apDia;
     float   _snr;
     float   _chi2;
