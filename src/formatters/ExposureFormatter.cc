@@ -163,7 +163,7 @@ void ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
         FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
 
         lsst::daf::base::PropertySet::Ptr wcsProps =
-            lsst::afw::formatters::WcsFormatter::generatePropertySet(*(ip->_wcsPtr));
+            lsst::afw::formatters::WcsFormatter::generatePropertySet(*(ip->_wcs));
 
         Exposure<ImagePixelT, MaskPixelT, VariancePixelT>* vip =
             const_cast<Exposure<ImagePixelT, MaskPixelT, VariancePixelT>*>(ip);
@@ -177,7 +177,7 @@ void ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
 
         // Get the Wcs headers.
         lsst::daf::base::PropertySet::Ptr wcsProps =
-            lsst::afw::formatters::WcsFormatter::generatePropertySet(*(ip->_wcsPtr));
+            lsst::afw::formatters::WcsFormatter::generatePropertySet(*(ip->_wcs));
 
         // Get the image headers.
         lsst::daf::base::PropertySet::Ptr dp = ip->getMaskedImage().getMetadata();
@@ -351,7 +351,7 @@ Persistable* ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::read(
         dp->set("FILTER", filterName);
 
         // Set the image headers.
-        // Set the Wcs headers in ip->_wcsPtr.
+        // Set the Wcs headers in ip->_wcs.
 
         //! \todo Need to implement overwriting of FITS metadata PropertySet
         // with values from database. - KTL - 2007-12-18
@@ -381,7 +381,7 @@ void ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::delegateSeriali
     if (ip == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Serializing non-Exposure");
     }
-    ar & *ip->getMaskedImage().getMetadata() & ip->_maskedImage & ip->_wcsPtr;
+    ar & *ip->getMaskedImage().getMetadata() & ip->_maskedImage & ip->_wcs;
     execTrace("ExposureFormatter delegateSerialize end");
 }
 

@@ -153,7 +153,7 @@ class MaskTestCase(unittest.TestCase):
             return
 
         hdu = 0
-        mask = afwImage.MaskU(self.maskFile, hdu, None, True)
+        mask = afwImage.MaskU(self.maskFile, hdu, None, afwImage.BBox(), True)
 
         if False:
             import lsst.afw.display.ds9 as ds9

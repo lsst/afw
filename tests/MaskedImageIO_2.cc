@@ -23,9 +23,10 @@ void test(char *name) {
     typedef float ImagePixelType;
 
     int const hdu = 0;
+    image::BBox bbox;
     PropertySet::Ptr metadata;
     bool const conformMask = true;      // use mask definitions from the file
-    image::MaskedImage<ImagePixelType, MaskPixelType> testMasked(string(name), hdu, metadata, conformMask);
+    image::MaskedImage<ImagePixelType, MaskPixelType> testMasked(string(name), hdu, metadata, bbox, conformMask);
 
     testMasked.writeFits("testout");
 }

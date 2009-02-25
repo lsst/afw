@@ -365,7 +365,8 @@ image::Image<PixelT>& image::Image<PixelT>::operator=(Image const& rhs) {
 template<typename PixelT>
 image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
                             int const hdu,               ///< Desired HDU
-                            lsst::daf::base::PropertySet::Ptr metadata ///< file metadata (may point to NULL)
+                            lsst::daf::base::PropertySet::Ptr metadata, ///< file metadata (may point to NULL)
+                            BBox const& bbox                            ///< Only read these pixels
                            ) :
     image::ImageBase<PixelT>() {
 
@@ -383,10 +384,14 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
                           (boost::format("File %s doesn't exist") % fileName).str());
     }
 
-    if (!image::fits_read_image<fits_img_types>(fileName, *this->_getRawImagePtr(), metadata)) {
+    if (!image::fits_read_image<fits_img_types>(fileName, *this->_getRawImagePtr(), metadata, hdu, bbox)) {
         throw LSST_EXCEPT(image::FitsException, (boost::format("Failed to read %s HDU %d") % fileName % hdu).str());
     }
     this->_setRawView();
+
+    if (bbox) {
+        this->setXY0(bbox.getLLC());
+    }
 }
 
 /**
