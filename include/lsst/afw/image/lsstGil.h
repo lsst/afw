@@ -34,19 +34,41 @@ struct pair2I : std::pair<int, int> {
  *
  * Allow users to use pair2I (basically a \c std::pair<int,int>) to manipulate GIL locator%s.
  *     
- * We don't actually usually use \c std::pair<int,int> but our own struct in namespace lsst::afw::image
- * so as to enable Koenig lookup
+ * We use our own struct in namespace lsst::afw::image so as to enable Koenig lookup
  */
 template <typename T>
 boost::gil::memory_based_2d_locator<T>& operator+=(boost::gil::memory_based_2d_locator<T> &loc, pair2I off) {
     return (loc += boost::gil::point2<std::ptrdiff_t>(off.first, off.second));
 }
+/** \brief retreat a GIL locator by \c off
+ *
+ * Allow users to use pair2I (basically a \c std::pair<int,int>) to manipulate GIL locator%s.
+ */
 template <typename T>
 boost::gil::memory_based_2d_locator<T>& operator-=(boost::gil::memory_based_2d_locator<T> &loc, pair2I off) {
     return (loc -= boost::gil::point2<std::ptrdiff_t>(off.first, off.second));
 }
 
 }}} // namespace lsst::afw::image
+
+/** \brief advance a GIL locator by \c off
+ *
+ * Allow users to use std::pair<int,int> to manipulate GIL locator%s.
+ */
+template <typename T>
+boost::gil::memory_based_2d_locator<T>& operator+=(boost::gil::memory_based_2d_locator<T> &loc,
+                                                   std::pair<int, int> off) {
+    return (loc += boost::gil::point2<std::ptrdiff_t>(off.first, off.second));
+}
+/** \brief retreat a GIL locator by \c off
+ *
+ * Allow users to use std::pair<int,int> to manipulate GIL locator%s.
+ */
+template <typename T>
+boost::gil::memory_based_2d_locator<T>& operator-=(boost::gil::memory_based_2d_locator<T> &loc,
+                                                   std::pair<int, int> off) {
+    return (loc -= boost::gil::point2<std::ptrdiff_t>(off.first, off.second));
+}
 
 namespace boost { namespace gil {
 /*
