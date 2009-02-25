@@ -176,6 +176,8 @@ namespace math {
         inline int getNSpatialParameters() const {
             return this->isSpatiallyVarying() ? _spatialFunctionList[0]->getNParameters() : 0;
         };
+        
+        SpatialFunctionPtr getSpatialFunction(unsigned int index) const;
 
         virtual std::vector<double> getKernelParameters() const;
         

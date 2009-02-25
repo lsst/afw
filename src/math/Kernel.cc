@@ -125,6 +125,27 @@ void lsst::afw::math::Kernel::computeKernelParametersFromSpatialModel(std::vecto
 }
 
 /**
+ * @brief Return a copy of the specified spatial function (one component of the spatial model)
+ *
+ * @throw lsst::pex::exceptions::InvalidParameterException if kernel not spatially varying
+ * @throw lsst::pex::exceptions::InvalidParameterException if index out of range
+ */
+lsst::afw::math::Kernel::SpatialFunctionPtr lsst::afw::math::Kernel::getSpatialFunction(
+    unsigned int index  ///< index of desired spatial function; must be in range [0, #spatial parameters - 1]
+) const {
+    if (index > _spatialFunctionList.size()) {
+        if (!this->isSpatiallyVarying()) {
+            throw LSST_EXCEPT(ex::InvalidParameterException, "kernel is not spatially varying");
+        } else {
+            std::ostringstream errStream;
+            errStream << "index = " << index << "; must be < , " << _spatialFunctionList.size();
+            throw LSST_EXCEPT(ex::InvalidParameterException, errStream.str());
+        }
+    }
+    return _spatialFunctionList[index]->copy();
+}
+
+/**
  * @brief Return the current kernel parameters
  *
  * If the kernel is spatially varying then the parameters are those last computed.
