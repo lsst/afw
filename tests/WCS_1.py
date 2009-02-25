@@ -149,6 +149,14 @@ class WCSTestCaseCFHT(unittest.TestCase):
 
         self.assertEqual(wcs.xyToRaDec(0.0, 0.0), self.wcs.xyToRaDec(0.0, 0.0))
 
+    def testShiftWcs(self):
+        """Test shifting the reference pixel"""
+        sky10_10 = self.wcs.xyToRaDec(afwImage.PointD(10, 10))
+
+        self.wcs.shiftReferencePixel(-10, -10)
+        sky00 = self.wcs.xyToRaDec(afwImage.PointD(0, 0))
+        self.assertEqual((sky00.getX(), sky00.getY()), (sky10_10.getX(), sky10_10.getY()))
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
