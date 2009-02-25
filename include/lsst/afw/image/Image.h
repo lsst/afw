@@ -271,8 +271,9 @@ namespace image {
         explicit Image(const std::pair<int, int> dimensions);
         Image(const Image& rhs, const bool deep=false);
         explicit Image(const Image& rhs, const BBox& bbox, const bool deep=false);
-        explicit Image(std::string const& fileName, const int hdu = 0,
-            lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr());
+        explicit Image(std::string const& fileName, const int hdu=0,
+                       lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
+                       BBox const& bbox=BBox());
 
         // generalised copy constructor
         template<typename OtherPixelT>

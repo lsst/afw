@@ -140,6 +140,13 @@ SWIG_SHARED_PTR_DERIVED(Exposure##TYPE, lsst::daf::data::LsstBase, lsst::afw::im
 %template(Exposure##TYPE) lsst::afw::image::Exposure<PIXEL_TYPE>;
 %lsst_persistable(lsst::afw::image::Exposure<PIXEL_TYPE>);
 %template(makeExposure) lsst::afw::image::makeExposure<lsst::afw::image::MaskedImage<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> >;
+%extend lsst::afw::image::Exposure<PIXEL_TYPE> {
+    %pythoncode {
+    def Factory(self, *args):
+        """Return an Exposure of this type"""
+        return Exposure##TYPE(*args)
+    }
+}
 %enddef
 
 %exposurePtr(U, boost::uint16_t);

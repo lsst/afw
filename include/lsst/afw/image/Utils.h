@@ -147,6 +147,10 @@ namespace lsst { namespace afw { namespace image {
         int getHeight() const { return second.second; } ///< Return height of BBox (== <tt>Y1 - Y0 + 1</tt>)
         const std::pair<int, int> getDimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
 
+        operator bool() const {
+            return !(getWidth() == 0 && getHeight() == 0);
+        }
+
         bool operator==(const BBox& rhs) const {
             return
                 getX0() == rhs.getX0() && getY0() == rhs.getY0() &&

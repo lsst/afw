@@ -73,7 +73,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(int cols, ///< number of 
                                                               ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _maskedImage(cols, rows),
-    _wcsPtr(new afwImage::Wcs(wcs))
+    _wcs(new afwImage::Wcs(wcs))
 {
     setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet()));
 }
@@ -87,16 +87,12 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
                                                               ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _maskedImage(maskedImage),
-    _wcsPtr(new afwImage::Wcs(wcs))
+    _wcs(new afwImage::Wcs(wcs))
 {
     setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet()));
 }
 
 /** @brief Construct a subExposure given an Exposure and a bounding box
-  *
-  * This addresses Ticket #111 (assigned to NMS on
-  * 20070726).  The current implementation makes no effort to alter the existing
-  * Wcs - a copy of the original Wcs is passed to the new subExposure.
   *
   * @throw a lsst::pex::exceptions::InvalidParameter if the requested subRegion
   * is not fully contained by the original MaskedImage BBox.
@@ -108,8 +104,9 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &src, ///<
                                                               ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _maskedImage(src.getMaskedImage(), bbox, deep),
-    _wcsPtr(new afwImage::Wcs(*src._wcsPtr))
+    _wcs(new afwImage::Wcs(*src._wcs))
 {
+    _wcs->shiftReferencePixel(-bbox.getX0(), -bbox.getY0());
     setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet()));
 }
 
@@ -132,13 +129,24 @@ template<typename ImageT, typename MaskT, typename VarianceT>
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 	std::string const& baseName,    ///< Exposure's base input file name
         int const hdu,                  ///< Desired HDU
+        BBox const& bbox,               //!< Only read these pixels
         bool conformMasks               //!< Make Mask conform to mask layout in file?
                                                               ) :
     lsst::daf::data::LsstBase(typeid(this)) {
     lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertySet());
 
-    _maskedImage = MaskedImageT(baseName, hdu, metadata, conformMasks);
-    _wcsPtr = afwImage::Wcs::Ptr(new afwImage::Wcs(metadata));
+    _maskedImage = MaskedImageT(baseName, hdu, metadata, bbox, conformMasks);
+
+    if (bbox) {
+        try {
+            metadata->set("CRPIX1", metadata->getAsDouble("CRPIX1") - bbox.getX0());
+            metadata->set("CRPIX2", metadata->getAsDouble("CRPIX2") - bbox.getY0());
+        } catch(lsst::pex::exceptions::NotFoundException &e) {
+            ;                           // OK, no WCS is present in header
+        }
+    }
+
+    _wcs = afwImage::Wcs::Ptr(new afwImage::Wcs(metadata));
     setMetadata(metadata);
 }
 
@@ -154,7 +162,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::~Exposure(){}
   */
 template<typename ImageT, typename MaskT, typename VarianceT> 
 afwImage::Wcs::Ptr afwImage::Exposure<ImageT, MaskT, VarianceT>::getWcs() const { 
-    return _wcsPtr;
+    return _wcs;
 }
 
 // SET METHODS
@@ -171,7 +179,7 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::setMaskedImage(MaskedImageT &
  */   
 template<typename ImageT, typename MaskT, typename VarianceT> 
 void afwImage::Exposure<ImageT, MaskT, VarianceT>::setWcs(afwImage::Wcs const &wcs){
-    _wcsPtr.reset(new afwImage::Wcs(wcs)); 
+    _wcs.reset(new afwImage::Wcs(wcs)); 
 }
 
 
@@ -196,7 +204,7 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(
     using lsst::daf::base::PropertySet;
 
     PropertySet::Ptr outputMetadata = getMetadata()->deepCopy();
-    PropertySet::Ptr wcsMetadata = lsst::afw::formatters::WcsFormatter::generatePropertySet(*_wcsPtr);
+    PropertySet::Ptr wcsMetadata = lsst::afw::formatters::WcsFormatter::generatePropertySet(*_wcs);
     //
     // Copy wcsMetadata over to outputMetadata
     //

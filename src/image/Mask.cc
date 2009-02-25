@@ -116,7 +116,8 @@ image::Mask<MaskPixelT>& image::Mask<MaskPixelT>::operator=(const MaskPixelT rhs
 template<typename MaskPixelT>
 image::Mask<MaskPixelT>::Mask(std::string const& fileName, //!< Name of file to read
         int const hdu,                                     //!< HDU to read 
-        lsst::daf::base::PropertySet::Ptr metadata,                         //!< file metadata (may point to NULL)
+        lsst::daf::base::PropertySet::Ptr metadata,        //!< file metadata (may point to NULL)
+        BBox const& bbox,                                  //!< Only read these pixels
         bool const conformMasks                            //!< Make Mask conform to mask layout in file?
                              ) :
     image::ImageBase<MaskPixelT>(),
@@ -139,10 +140,14 @@ image::Mask<MaskPixelT>::Mask(std::string const& fileName, //!< Name of file to 
                           (boost::format("File %s doesn't exist") % fileName).str());
     }
 
-    if (!image::fits_read_image<fits_mask_types>(fileName, *_getRawImagePtr(), metadata)) {
+    if (!image::fits_read_image<fits_mask_types>(fileName, *_getRawImagePtr(), metadata, hdu, bbox)) {
         throw LSST_EXCEPT(image::FitsException, (boost::format("Failed to read %s HDU %d") % fileName % hdu).str());
     }
     _setRawView();
+
+    if (bbox) {
+        this->setXY0(bbox.getLLC());
+    }
     //
     // OK, we've read it.  Now make sense of its mask planes
     //
