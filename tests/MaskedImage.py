@@ -237,6 +237,18 @@ class MaskedImageTestCase(unittest.TestCase):
         var <<= self.mimage.getImage();
 	var /= gain
 
+    def testTicket653(self):
+        """How-to-repeat for #653"""
+        # The original ticket read this file, but it doesn't reproduce for me,
+        # As I don't see how reading an exposure from disk could make a difference
+        # it's easier to just build an Image
+        if False:
+            im = afwImage.ImageF(os.path.join(eups.productDir("afwdata"), "med_img.fits"))
+        else:
+            im = afwImage.ImageF(10, 10)
+        mi = afwImage.MaskedImageF(im)
+        exp = afwImage.ExposureF(mi)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def printImg(img):
