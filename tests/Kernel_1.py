@@ -260,13 +260,8 @@ class KernelTestCase(unittest.TestCase):
                     kernel.setSpatialParameters(spatialParams)
                     self.assert_(numpy.alltrue(numpy.equal(kernel.getSpatialParameters(), spatialParams)))
                 else:
-                    try:
-                        kernel.setSpatialParameters(spatialParams)
-                        self.fail("test failed: spatialParams=%s" % (spatialParams,))
-                    except pexExcept.LsstCppException:
-                        pass
-#                     utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
-#                         kernel.setSpatialParameters, spatialParams)
+                    utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
+                        kernel.setSpatialParameters, spatialParams)
         
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
