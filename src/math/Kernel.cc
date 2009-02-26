@@ -104,8 +104,10 @@ void lsst::afw::math::Kernel::setSpatialParameters(const std::vector<std::vector
         }
     }
     // Set parameters
-    for (unsigned int ii = 0; ii < nKernelParams; ++ii) {
-        this->_spatialFunctionList[ii]->setParameters(params[ii]);
+    if (nSpatialParams > 0) {
+        for (unsigned int ii = 0; ii < nKernelParams; ++ii) {
+            this->_spatialFunctionList[ii]->setParameters(params[ii]);
+        }
     }
 }
 

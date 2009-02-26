@@ -36,7 +36,7 @@ class KernelTestCase(unittest.TestCase):
                 inImage.set(col, row, inArr[col, row])
         
         kernel = afwMath.FixedKernel(inImage);
-        self.basicSpInvarTests(kernel, 0)
+        self.basicTests(kernel, 0)
         outImage = afwImage.ImageD(kernel.getDimensions())
         kernel.computeImage(outImage, False)
         
@@ -61,7 +61,7 @@ class KernelTestCase(unittest.TestCase):
 
         gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0)
         kernel = afwMath.AnalyticKernel(kWidth, kHeight, gaussFunc)
-        self.basicSpInvarTests(kernel, 2)
+        self.basicTests(kernel, 2)
         fArr = numpy.zeros(shape=[kernel.getWidth(), kernel.getHeight()], dtype=float)
         for xsigma in (0.1, 1.0, 3.0):
             for ysigma in (0.1, 1.0, 3.0):
@@ -105,7 +105,7 @@ class KernelTestCase(unittest.TestCase):
                     afwMath.DeltaFunctionKernel, kWidth, 0, afwImage.PointI(kWidth, kHeight))
                             
         kernel = afwMath.DeltaFunctionKernel(kWidth, kHeight, afwImage.PointI(1, 1))
-        self.basicSpInvarTests(kernel, 0)
+        self.basicTests(kernel, 0)
 
     def testSeparableKernel(self):
         """Test SeparableKernel using a Gaussian function
@@ -115,7 +115,7 @@ class KernelTestCase(unittest.TestCase):
 
         gaussFunc1 = afwMath.GaussianFunction1D(1.0)
         kernel = afwMath.SeparableKernel(kWidth, kHeight, gaussFunc1, gaussFunc1)
-        self.basicSpInvarTests(kernel, 2)
+        self.basicTests(kernel, 2)
         fArr = numpy.zeros(shape=[kernel.getWidth(), kernel.getHeight()], dtype=float)
         gArr = numpy.zeros(shape=[kernel.getWidth(), kernel.getHeight()], dtype=float)
         gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0)
@@ -158,7 +158,7 @@ class KernelTestCase(unittest.TestCase):
 
         kParams = [0.0]*len(kVec)
         kernel = afwMath.LinearCombinationKernel(kVec, kParams)
-        self.basicSpInvarTests(kernel, len(kParams))
+        self.basicTests(kernel, len(kParams))
         for ii in range(len(kVec)):
             kParams = [0.0]*len(kVec)
             kParams[ii] = 1.0
@@ -205,7 +205,7 @@ class KernelTestCase(unittest.TestCase):
         )
         
         kernel = afwMath.LinearCombinationKernel(kVec, spFunc)
-        self.basicSpVarTests(kernel, 2, 3)
+        self.basicTests(kernel, 2, 3)
         kernel.setSpatialParameters(sParams)
         kImage = afwImage.ImageD(kWidth, kHeight)
         for colPos, rowPos, coeff0, coeff1 in [
@@ -236,43 +236,37 @@ class KernelTestCase(unittest.TestCase):
                 self.assertEqual(kernel.getCtrX(), xCtr)
                 self.assertEqual(kernel.getCtrY(), yCtr)
 
-    def basicSpInvarTests(self, kernel, nKernelParams):
-        """Basic tests of a spatially invariant kernel"""
-        self.assert_(not kernel.isSpatiallyVarying())
-        self.assert_(kernel.getNSpatialParameters() == 0)
-        self.assert_(kernel.getNKernelParameters() == nKernelParams)
-        for ii in range(nKernelParams+5):
-            utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
-                kernel.getSpatialFunction, ii)
-        # NOTE: setSpatialParameters([[],...[]]) with nKernelParams inner empty lists segfaults
-        # Once that problem is resolved change the following two ranges from range(1, X) to range(X)
-        for nkp in range(1, nKernelParams + 2):
-            spatialParamsForOneKernel = (1.0,)*nkp
-            for nsp in range(1, 5):
-                spatialParams = (spatialParamsForOneKernel,)*nsp
-                utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
-                    kernel.setSpatialParameters, spatialParams)        
-
-    def basicSpVarTests(self, kernel, nKernelParams, nSpatialParams):
-        """Basic tests of a spatially varying kernel"""
-        self.assert_(kernel.isSpatiallyVarying())
+    def basicTests(self, kernel, nKernelParams, nSpatialParams=0):
+        """Basic tests of a kernel"""
         self.assert_(kernel.getNSpatialParameters() == nSpatialParams)
         self.assert_(kernel.getNKernelParameters() == nKernelParams)
-        for ii in range(nKernelParams):
-            kernel.getSpatialFunction(ii)
-        for ii in range(nKernelParams, nKernelParams+5):
-            utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
-                kernel.getSpatialFunction, ii)
+        if nSpatialParams == 0:
+            self.assert_(not kernel.isSpatiallyVarying())
+            for ii in range(nKernelParams+5):
+                utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
+                    kernel.getSpatialFunction, ii)
+        else:
+            self.assert_(kernel.isSpatiallyVarying())
+            for ii in range(nKernelParams):
+                kernel.getSpatialFunction(ii)
+            for ii in range(nKernelParams, nKernelParams+5):
+                utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
+                    kernel.getSpatialFunction, ii)
         for nsp in range(nSpatialParams + 2):
             spatialParamsForOneKernel = (1.0,)*nsp
             for nkp in range(nKernelParams + 2):
                 spatialParams = (spatialParamsForOneKernel,)*nkp
-                if (nkp == nKernelParams) and (nsp == nSpatialParams):
+                if ((nkp == nKernelParams) and ((nsp == nSpatialParams) or (nkp == 0))):
                     kernel.setSpatialParameters(spatialParams)
                     self.assert_(numpy.alltrue(numpy.equal(kernel.getSpatialParameters(), spatialParams)))
                 else:
-                    utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
-                        kernel.setSpatialParameters, spatialParams)
+                    try:
+                        kernel.setSpatialParameters(spatialParams)
+                        self.fail("test failed: spatialParams=%s" % (spatialParams,))
+                    except pexExcept.LsstCppException:
+                        pass
+#                     utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
+#                         kernel.setSpatialParameters, spatialParams)
         
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
