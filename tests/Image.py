@@ -85,6 +85,24 @@ class ImageTestCase(unittest.TestCase):
         self.assertEqual(imageU.get(0,0), self.val1)
         self.assertEqual(imageF.get(0,0), self.val1)
             
+    def testPoint(self):
+        """Test PointD and PointI"""
+        x, y = 10, 20
+        for point in (afwImage.PointD, afwImage.PointI):
+            p = point(x, y)
+
+            self.assertEqual(x, p.getX())
+            self.assertEqual(x, p[0])
+
+            self.assertEqual(y, p.getY())
+            self.assertEqual(y, p[1])
+
+            def tst(): p[-1]
+            self.assertRaises(IndexError, tst)
+
+            def tst(): p[2]
+            self.assertRaises(IndexError, tst)
+        
     def testBBox(self):
         x0, y0, width, height = 1, 2, 10, 20
         x1, y1 = x0 + width - 1, y0 + height - 1
@@ -168,6 +186,12 @@ class ImageTestCase(unittest.TestCase):
         self.checkImgPatch(self.image1, 2, 2)
         self.checkImgPatch(simage1, 1, 1)
 
+    def testBadSubimages(self):
+        def tst():
+            simage1 = afwImage.ImageF(self.image1, afwImage.BBox(afwImage.PointI(1, -1), 10, 5))
+
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst)
+        
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class DecoratedImageTestCase(unittest.TestCase):

@@ -36,7 +36,7 @@ struct fits_read_support {
 inline boost::gil::point2<std::ptrdiff_t> fits_read_dimensions(const char* filename) {
     lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertySet());
     detail::fits_reader m(filename, metadata);
-    return m.get_getDimensions();
+    return m.get_Dimensions();
 }
 
 /// \ingroup FITS_IO
@@ -71,11 +71,13 @@ inline void fits_read_view(std::string const& filename,const View& view,
 /// if its color space or channel depth are not compatible with the ones specified by Image
 template <typename Image>
 inline void fits_read_image(const std::string& filename, Image& im,
-                            lsst::daf::base::PropertySet::Ptr metadata = lsst::daf::base::PropertySet::Ptr()
+                            lsst::daf::base::PropertySet::Ptr metadata = lsst::daf::base::PropertySet::Ptr(),
+                            int hdu=0,
+                            BBox const& bbox=BBox()
                            ) {
     BOOST_STATIC_ASSERT(fits_read_support<typename Image::view_t>::is_supported);
 
-    detail::fits_reader m(filename, metadata);
+    detail::fits_reader m(filename, metadata, hdu, bbox);
     m.read_image(im);
 }
 

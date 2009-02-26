@@ -12,7 +12,10 @@
 #include "lsst/afw/image/fits/fits_io_private.h"
 
 
-namespace lsst { namespace afw { namespace image { namespace cfitsio {
+namespace lsst {
+namespace afw {
+namespace image {
+namespace cfitsio {
                 
 std::string err_msg(std::string const& fileName, ///< (possibly empty) file name
                     int const status, ///< cfitsio error status (default 0 => no error)
@@ -202,5 +205,20 @@ void getMetadata(fitsfile* fd, lsst::daf::base::PropertySet::Ptr metadata) {
         }
     }
 }
+} // namespace cfitsio
 
-}}}} // namespace lsst::afw::image::cfitsio
+/************************************************************************************************************/
+
+/**
+ * \brief Return the metadata from a fits file
+ */
+lsst::daf::base::PropertySet::Ptr readMetadata(std::string const& fileName, const int hdu) {
+    lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertySet);
+
+    detail::fits_reader m(fileName, metadata, hdu);
+    cfitsio::getMetadata(m.get(), metadata);
+
+    return metadata;
+}
+    
+}}} // namespace lsst::afw::image

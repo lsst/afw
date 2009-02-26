@@ -71,12 +71,13 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
 	std::string const& baseName,    //!< The desired file's baseName (e.g. foo will read foo_{img.msk.var}.fits)
         const int hdu,                  //!< The HDU in the file (default: 0)
         lsst::daf::base::PropertySet::Ptr metadata, //!< Filled out with metadata from file (default: NULL)
+        BBox const& bbox,                           //!< Only read these pixels
         bool const conformMasks         //!< Make Mask conform to mask layout in file?
                                                                         ) :
     lsst::daf::data::LsstBase(typeid(this)),
-    _image(new Image(MaskedImage::imageFileName(baseName), hdu, metadata)),
-    _mask(new Mask(MaskedImage::maskFileName(baseName), hdu, metadata, conformMasks)),
-    _variance(new Variance(MaskedImage::varianceFileName(baseName), hdu, metadata)) {
+    _image(new Image(MaskedImage::imageFileName(baseName), hdu, metadata, bbox)),
+    _mask(new Mask(MaskedImage::maskFileName(baseName), hdu, metadata, bbox, conformMasks)),
+    _variance(new Variance(MaskedImage::varianceFileName(baseName), hdu, metadata, bbox)) {
     ;
 }
 

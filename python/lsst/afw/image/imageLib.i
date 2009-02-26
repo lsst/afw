@@ -88,19 +88,25 @@ def version(HeadURL = r"$HeadURL$"):
 %template(PointD) lsst::afw::image::Point<double>;
 %template(PointI) lsst::afw::image::Point<int>;
 
-%extend lsst::afw::image::Point<double> {
+%define %EXTEND_POINT(TYPE)
+%extend lsst::afw::image::Point<TYPE> {
     %pythoncode {
     def __str__(self):
         return "(%.6f, %.6f)" % (self.getX(), self.getY())
-    }    
-}
 
-%extend lsst::afw::image::Point<int> {
-    %pythoncode {
-    def __str__(self):
-        return "(%d, %d)" % (self.getX(), self.getY())
+    def __getitem__(self, i):
+        if i == 0:
+            return self.getX()
+        elif i == 1:
+            return self.getY()
+        else:
+            raise IndexError, i
     }    
 }
+%enddef
+
+%EXTEND_POINT(double);
+%EXTEND_POINT(int);
 
 %apply double &OUTPUT { double & };
 %rename(positionToIndexAndResidual) lsst::afw::image::positionToIndex(double &, double);
@@ -134,6 +140,13 @@ SWIG_SHARED_PTR_DERIVED(Exposure##TYPE, lsst::daf::data::LsstBase, lsst::afw::im
 %template(Exposure##TYPE) lsst::afw::image::Exposure<PIXEL_TYPE>;
 %lsst_persistable(lsst::afw::image::Exposure<PIXEL_TYPE>);
 %template(makeExposure) lsst::afw::image::makeExposure<lsst::afw::image::MaskedImage<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> >;
+%extend lsst::afw::image::Exposure<PIXEL_TYPE> {
+    %pythoncode {
+    def Factory(self, *args):
+        """Return an Exposure of this type"""
+        return Exposure##TYPE(*args)
+    }
+}
 %enddef
 
 %exposurePtr(U, boost::uint16_t);

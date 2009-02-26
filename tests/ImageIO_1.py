@@ -9,6 +9,7 @@ import unittest
 import eups
 import lsst.afw.image as afwImage
 import lsst.utils.tests as utilsTests
+import lsst.afw.display.ds9 as ds9
 
 try:
     type(verbose)
@@ -43,7 +44,7 @@ class ReadFitsTestCase(unittest.TestCase):
         im = afwImage.ImageD(os.path.join(dataDir, "871034p_1_img.fits"))
 
         if False:
-            import lsst.afw.display.ds9 as ds9; ds9.mtv(im)
+            ds9.mtv(im)
         
         col, row, val = 32, 1, 62
         self.assertEqual(im.get(col, row), val)
@@ -68,6 +69,22 @@ class ReadFitsTestCase(unittest.TestCase):
         im = afwImage.ImageD(100, 100); im.set(666)
         im.writeFits("smallD.fits")
         newIm = afwImage.ImageD("smallD.fits")
+
+    def testSubimage(self):
+        """Test reading a subimage image"""
+        fileName, hdu = os.path.join(dataDir, "871034p_1_MI_var.fits"), 0
+        im = afwImage.ImageF(fileName)
+
+        bbox = afwImage.BBox(afwImage.PointI(110, 120), 20, 15)
+        sim = im.Factory(im, bbox) 
+
+        im2 = afwImage.ImageF(fileName, hdu, None, bbox)
+
+        self.assertEqual(im2.getDimensions(), sim.getDimensions())
+        self.assertEqual(im2.get(1,1), sim.get(1, 1))
+
+        self.assertEqual(im2.getX0(), sim.getX0())
+        self.assertEqual(im2.getY0(), sim.getY0())
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
