@@ -35,22 +35,23 @@ class KernelTestCase(unittest.TestCase):
             for col in range(inImage.getWidth()):
                 inImage.set(col, row, inArr[col, row])
         
-        k = afwMath.FixedKernel(inImage);
-        outImage = afwImage.ImageD(k.getDimensions())
-        k.computeImage(outImage, False)
+        kernel = afwMath.FixedKernel(inImage);
+        self.basicSpInvarTests(kernel, 0)
+        outImage = afwImage.ImageD(kernel.getDimensions())
+        kernel.computeImage(outImage, False)
         
         outArr = imTestUtils.arrayFromImage(outImage)
         if not numpy.allclose(inArr, outArr):
             self.fail("%s = %s != %s (not normalized)" % \
-                (k.__class__.__name__, inArr, outArr))
+                (kernel.__class__.__name__, inArr, outArr))
         
         normInArr = inArr / inArr.sum()
-        normOutImage = afwImage.ImageD(k.getDimensions())
-        k.computeImage(normOutImage, True)
+        normOutImage = afwImage.ImageD(kernel.getDimensions())
+        kernel.computeImage(normOutImage, True)
         normOutArr = imTestUtils.arrayFromImage(normOutImage)
         if not numpy.allclose(normOutArr, normInArr):
             self.fail("%s = %s != %s (normalized)" % \
-                (k.__class__.__name__, normInArr, normOutArr))
+                (kernel.__class__.__name__, normInArr, normOutArr))
 
     def testAnalyticKernel(self):
         """Test AnalyticKernel using a Gaussian function
@@ -59,27 +60,28 @@ class KernelTestCase(unittest.TestCase):
         kHeight = 8
 
         gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0)
-        k = afwMath.AnalyticKernel(kWidth, kHeight, gaussFunc)
-        fArr = numpy.zeros(shape=[k.getWidth(), k.getHeight()], dtype=float)
+        kernel = afwMath.AnalyticKernel(kWidth, kHeight, gaussFunc)
+        self.basicSpInvarTests(kernel, 2)
+        fArr = numpy.zeros(shape=[kernel.getWidth(), kernel.getHeight()], dtype=float)
         for xsigma in (0.1, 1.0, 3.0):
             for ysigma in (0.1, 1.0, 3.0):
                 gaussFunc.setParameters((xsigma, ysigma))
                 # compute array of function values and normalize
-                for row in range(k.getHeight()):
-                    y = row - k.getCtrY()
-                    for col in range(k.getWidth()):
-                        x = col - k.getCtrX()
+                for row in range(kernel.getHeight()):
+                    y = row - kernel.getCtrY()
+                    for col in range(kernel.getWidth()):
+                        x = col - kernel.getCtrX()
                         fArr[col, row] = gaussFunc(x, y)
                 fArr /= fArr.sum()
                 
-                k.setKernelParameters((xsigma, ysigma))
-                kImage = afwImage.ImageD(k.getDimensions())
-                k.computeImage(kImage, True)
+                kernel.setKernelParameters((xsigma, ysigma))
+                kImage = afwImage.ImageD(kernel.getDimensions())
+                kernel.computeImage(kImage, True)
                 
                 kArr = imTestUtils.arrayFromImage(kImage)
                 if not numpy.allclose(fArr, kArr):
                     self.fail("%s = %s != %s for xsigma=%s, ysigma=%s" % \
-                        (k.__class__.__name__, kArr, fArr, xsigma, ysigma))
+                        (kernel.__class__.__name__, kArr, fArr, xsigma, ysigma))
     
     def testDeltaFunctionKernel(self):
         """Test DeltaFunctionKernel
@@ -102,6 +104,8 @@ class KernelTestCase(unittest.TestCase):
                 utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
                     afwMath.DeltaFunctionKernel, kWidth, 0, afwImage.PointI(kWidth, kHeight))
                             
+        kernel = afwMath.DeltaFunctionKernel(kWidth, kHeight, afwImage.PointI(1, 1))
+        self.basicSpInvarTests(kernel, 0)
 
     def testSeparableKernel(self):
         """Test SeparableKernel using a Gaussian function
@@ -110,29 +114,30 @@ class KernelTestCase(unittest.TestCase):
         kHeight = 8
 
         gaussFunc1 = afwMath.GaussianFunction1D(1.0)
-        k = afwMath.SeparableKernel(kWidth, kHeight, gaussFunc1, gaussFunc1)
-        fArr = numpy.zeros(shape=[k.getWidth(), k.getHeight()], dtype=float)
-        gArr = numpy.zeros(shape=[k.getWidth(), k.getHeight()], dtype=float)
+        kernel = afwMath.SeparableKernel(kWidth, kHeight, gaussFunc1, gaussFunc1)
+        self.basicSpInvarTests(kernel, 2)
+        fArr = numpy.zeros(shape=[kernel.getWidth(), kernel.getHeight()], dtype=float)
+        gArr = numpy.zeros(shape=[kernel.getWidth(), kernel.getHeight()], dtype=float)
         gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0)
         for xsigma in (0.1, 1.0, 3.0):
             gaussFunc1.setParameters((xsigma,))
             for ysigma in (0.1, 1.0, 3.0):
                 gaussFunc.setParameters((xsigma, ysigma))
                 # compute array of function values and normalize
-                for row in range(k.getHeight()):
-                    y = row - k.getCtrY()
-                    for col in range(k.getWidth()):
-                        x = col - k.getCtrX()
+                for row in range(kernel.getHeight()):
+                    y = row - kernel.getCtrY()
+                    for col in range(kernel.getWidth()):
+                        x = col - kernel.getCtrX()
                         fArr[col, row] = gaussFunc(x, y)
                 fArr /= fArr.sum()
                 
-                k.setKernelParameters((xsigma, ysigma))
-                kImage = afwImage.ImageD(k.getDimensions())
-                k.computeImage(kImage, True)
+                kernel.setKernelParameters((xsigma, ysigma))
+                kImage = afwImage.ImageD(kernel.getDimensions())
+                kernel.computeImage(kImage, True)
                 kArr = imTestUtils.arrayFromImage(kImage)
                 if not numpy.allclose(fArr, kArr):
                     self.fail("%s = %s != %s for xsigma=%s, ysigma=%s" % \
-                        (k.__class__.__name__, kArr, fArr, xsigma, ysigma))
+                        (kernel.__class__.__name__, kArr, fArr, xsigma, ysigma))
     
     def testLinearCombinationKernel(self):
         """Test LinearCombinationKernel using a set of delta basis functions
@@ -150,19 +155,20 @@ class KernelTestCase(unittest.TestCase):
                 kernel.computeImage(basisImage, True)
                 basisImArrList.append(imTestUtils.arrayFromImage(basisImage))
                 kVec.append(kernel)
-        
+
         kParams = [0.0]*len(kVec)
-        k = afwMath.LinearCombinationKernel(kVec, kParams)
+        kernel = afwMath.LinearCombinationKernel(kVec, kParams)
+        self.basicSpInvarTests(kernel, len(kParams))
         for ii in range(len(kVec)):
             kParams = [0.0]*len(kVec)
             kParams[ii] = 1.0
-            k.setKernelParameters(kParams)
-            kIm = afwImage.ImageD(k.getDimensions())
-            k.computeImage(kIm, True)
+            kernel.setKernelParameters(kParams)
+            kIm = afwImage.ImageD(kernel.getDimensions())
+            kernel.computeImage(kIm, True)
             kImArr = imTestUtils.arrayFromImage(kIm)
             if not numpy.allclose(kImArr, basisImArrList[ii]):
                 self.fail("%s = %s != %s for the %s'th basis kernel" % \
-                    (k.__class__.__name__, kImArr, basisImArrList[ii], ii))
+                    (kernel.__class__.__name__, kImArr, basisImArrList[ii], ii))
 
     def testSVLinearCombinationKernel(self):
         """Test a spatially varying LinearCombinationKernel
@@ -198,8 +204,9 @@ class KernelTestCase(unittest.TestCase):
             (0.0, 0.0, 1.0),
         )
         
-        k = afwMath.LinearCombinationKernel(kVec, spFunc)
-        k.setSpatialParameters(sParams)
+        kernel = afwMath.LinearCombinationKernel(kVec, spFunc)
+        self.basicSpVarTests(kernel, 2, 3)
+        kernel.setSpatialParameters(sParams)
         kImage = afwImage.ImageD(kWidth, kHeight)
         for colPos, rowPos, coeff0, coeff1 in [
             (0.0, 0.0, 0.0, 0.0),
@@ -208,12 +215,12 @@ class KernelTestCase(unittest.TestCase):
             (1.0, 1.0, 1.0, 1.0),
             (0.5, 0.5, 0.5, 0.5),
         ]:
-            k.computeImage(kImage, False, colPos, rowPos)
+            kernel.computeImage(kImage, False, colPos, rowPos)
             kImArr = imTestUtils.arrayFromImage(kImage)
             refKImArr = (basisImArrList[0] * coeff0) + (basisImArrList[1] * coeff1)
             if not numpy.allclose(kImArr, refKImArr):
                 self.fail("%s = %s != %s at colPos=%s, rowPos=%s" % \
-                    (k.__class__.__name__, kImArr, refKImArr, colPos, rowPos))
+                    (kernel.__class__.__name__, kImArr, refKImArr, colPos, rowPos))
     
     def testSetCtr(self):
         """Test setCtrCol/Row"""
@@ -221,15 +228,50 @@ class KernelTestCase(unittest.TestCase):
         kHeight = 4
 
         gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0)
-        k = afwMath.AnalyticKernel(kWidth, kHeight, gaussFunc)
+        kernel = afwMath.AnalyticKernel(kWidth, kHeight, gaussFunc)
         for xCtr in range(kWidth):
-            k.setCtrX(xCtr)
+            kernel.setCtrX(xCtr)
             for yCtr in range(kHeight):
-                k.setCtrY(yCtr)
-                self.assertEqual(k.getCtrX(), xCtr)
-                self.assertEqual(k.getCtrY(), yCtr)
-        
+                kernel.setCtrY(yCtr)
+                self.assertEqual(kernel.getCtrX(), xCtr)
+                self.assertEqual(kernel.getCtrY(), yCtr)
 
+    def basicSpInvarTests(self, kernel, nKernelParams):
+        """Basic tests of a spatially invariant kernel"""
+        self.assert_(not kernel.isSpatiallyVarying())
+        self.assert_(kernel.getNSpatialParameters() == 0)
+        self.assert_(kernel.getNKernelParameters() == nKernelParams)
+        for ii in range(nKernelParams+5):
+            utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
+                kernel.getSpatialFunction, ii)
+        for nkp in range(1, nKernelParams + 2):
+            spatialParamsForOneKernel = (1.0,)*nkp
+            for nsp in range(1, 5):
+                spatialParams = (spatialParamsForOneKernel,)*nsp
+                utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
+                    kernel.setSpatialParameters, spatialParams)        
+
+    def basicSpVarTests(self, kernel, nKernelParams, nSpatialParams):
+        """Basic tests of a spatially varying kernel"""
+        self.assert_(kernel.isSpatiallyVarying())
+        self.assert_(kernel.getNSpatialParameters() == nSpatialParams)
+        self.assert_(kernel.getNKernelParameters() == nKernelParams)
+        for ii in range(nKernelParams):
+            kernel.getSpatialFunction(ii)
+        for ii in range(nKernelParams, nKernelParams+5):
+            utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
+                kernel.getSpatialFunction, ii)
+        for nsp in range(nSpatialParams + 2):
+            spatialParamsForOneKernel = (1.0,)*nsp
+            for nkp in range(nKernelParams + 2):
+                spatialParams = (spatialParamsForOneKernel,)*nkp
+                if (nkp == nKernelParams) and (nsp == nSpatialParams):
+                    kernel.setSpatialParameters(spatialParams)
+                    self.assert_(numpy.alltrue(numpy.equal(kernel.getSpatialParameters(), spatialParams)))
+                else:
+                    utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
+                        kernel.setSpatialParameters, spatialParams)
+        
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
