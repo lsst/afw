@@ -244,6 +244,8 @@ class KernelTestCase(unittest.TestCase):
         for ii in range(nKernelParams+5):
             utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
                 kernel.getSpatialFunction, ii)
+        # NOTE: setSpatialParameters([[],...[]]) with nKernelParams inner empty lists segfaults
+        # Once that problem is resolved change the following two ranges from range(1, X) to range(X)
         for nkp in range(1, nKernelParams + 2):
             spatialParamsForOneKernel = (1.0,)*nkp
             for nsp in range(1, 5):
