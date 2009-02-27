@@ -6,7 +6,8 @@
 #include <cassert>
 #include <string>
 #include <typeinfo>
-#include <boost/format.hpp>
+#include <algorithm>
+#include "boost/format.hpp"
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/Mask.h"
@@ -272,8 +273,20 @@ void detection::Footprint::insertIntoImage(image::Image<boost::uint16_t>& idImag
     for (Footprint::SpanList::const_iterator spi = _spans.begin(); spi != _spans.end(); ++spi) {
         detection::Span::Ptr const span = *spi;
 
-        for (image::Image<boost::uint16_t>::x_iterator ptr = idImage.x_at(span->getX0() - x0, span->getY() - y0),
-                 end = ptr + span->getWidth(); ptr != end; ++ptr) {
+        const int sy0 = span->getY() - y0;
+        if (sy0 < 0 || sy0 >= height) {
+            continue;
+        }
+
+        int sx0 = span->getX0() - x0;
+        if (sx0 < 0) {
+            sx0 = 0;
+        }
+        int sx1 = span->getX1() - x0;
+        const int swidth = (sx1 >= width) ? width - sx0 : sx1 - sx0 + 1;
+        
+        for (image::Image<boost::uint16_t>::x_iterator ptr = idImage.x_at(sx0, sy0),
+                 end = ptr + swidth; ptr != end; ++ptr) {
             *ptr += id;
         }
     }
@@ -464,10 +477,13 @@ template image::Image<int>::Ptr setFootprintID(detection::Footprint::Ptr const& 
 /************************************************************************************************************/
 /*
  * Grow a Footprint isotropically by r pixels, returning a new Footprint
+ *
+ * N.b. this is slow, as it uses a convolution with a disk
  */
-detection::Footprint::Ptr detection::growFootprint(
+namespace {
+detection::Footprint::Ptr growFootprintSlow(
 	detection::Footprint::Ptr const &foot, //!< The Footprint to grow 
-        int ngrow                       //!< how much to grow foot
+        int ngrow                              //!< how much to grow foot
                                                  ) {
     if (ngrow < 0) {
 	ngrow = 0;                      // ngrow == 0 => no grow
@@ -501,8 +517,99 @@ detection::Footprint::Ptr detection::growFootprint(
     image::MaskedImage<int>::Ptr convolvedImage(new image::MaskedImage<int>(idImage->getDimensions()));
     math::convolve(*convolvedImage->getImage(), *idImage, *circle, 0, false);
     
-    DetectionSet<int>::Ptr grownList(new DetectionSet<int>(*convolvedImage, 0.5, "", 1));
+    detection::DetectionSet<int>::Ptr grownList(new detection::DetectionSet<int>(*convolvedImage, 0.5, "", 1));
 
+    assert (grownList->getFootprints().size() > 0);
+    detection::Footprint::Ptr grown = *grownList->getFootprints().begin();
+    //
+    // Fix the coordinate system to be that of foot
+    //
+    grown->shift(bbox.getX0(), bbox.getY0());
+    grown->setRegion(foot->getRegion());
+
+    return grown;
+}
+}
+
+/************************************************************************************************************/
+/**
+ * Grow a Footprint isotropically by r pixels, returning a new Footprint
+ */
+detection::Footprint::Ptr detection::growFootprint(
+	detection::Footprint::Ptr const &foot, //!< The Footprint to grow 
+        int ngrow,                             //!< how much to grow foot
+        bool isotropic                         //!< Grow isotropically (as opposed to a Manhattan metric)
+                                               //!< @note Isotropic grows are significantly slower
+                                                 ) {
+
+    if (isotropic) {
+        return growFootprintSlow(foot, ngrow);
+    }
+
+    if (ngrow < 0) {
+	ngrow = 0;                      // ngrow == 0 => no grow
+    }
+    /*
+     * We'll insert the footprints into an image, then convolve with a disk,
+     * then extract a footprint from the result --- this is magically what we want.
+     */
+    image::BBox bbox = foot->getBBox();
+    bbox.grow(image::PointI(bbox.getX0() - ngrow - 1, bbox.getY0() - ngrow - 1));
+    bbox.grow(image::PointI(bbox.getX1() + ngrow + 1, bbox.getY1() + ngrow + 1));
+    image::Image<int>::Ptr idImage = makeImageFromBBox<int>(bbox);
+    *idImage = 0;
+    idImage->setXY0(image::PointI(0, 0));
+    set_footprint_id<int>(idImage, foot, 1, -bbox.getX0(), -bbox.getY0()); // Set all the pixels in the footprint to 1
+
+    image::Image<int>::Ptr idImage2;
+    //
+    // Set the idImage to the Manhattan distance from the nearest set pixel
+    // Cf. http://ostermiller.org/dilate_and_erode.html
+    //
+    int const height = idImage->getHeight();
+    int const width = idImage->getWidth();
+
+    // traverse from bottom left to top right
+    for (int y = 0; y != height; ++y) {
+        image::Image<int>::xy_locator im = idImage->xy_at(0, y);
+
+        for (int x = 0; x != width; ++x, ++im.x()) {
+            if (im(0,0) == 1) {
+                // first pass and pixel was on, it gets a zero
+                im(0, 0) = 0;
+            } else {
+                // pixel was off. It is at most the sum of the lengths of the array away from a pixel that is on
+                im(0, 0) = width + height;
+                // or one more than the pixel to the north
+                if (y > 0) {
+                    im(0, 0) = std::min(im(0, 0)[0], im(0, -1) + 1); // im(0, 0)[0] == static_cast<int>(im(0, 0))
+                }
+                // or one more than the pixel to the west
+                if (x > 0) {
+                    im(0, 0) = std::min(im(0, 0)[0], im(-1, 0) + 1);
+                }
+            }
+        }
+    }
+    // traverse from top right to bottom left
+    for (int y = height - 1; y >= 0; --y) {
+        image::Image<int>::xy_locator im = idImage->xy_at(width - 1, y);
+        for (int x = width - 1; x >= 0; --x, --im.x()) {
+            // either what we had on the first pass or one more than the pixel to the south
+            if (y + 1 < height) {
+                im(0, 0) = std::min(im(0, 0)[0], im(0, 1) + 1);
+            }
+            // or one more than the pixel to the east
+            if (x + 1 < width) {
+                im(0, 0) = std::min(im(0, 0)[0], im(1, 0) + 1);
+            }
+        }
+    }
+    
+    image::MaskedImage<int>::Ptr midImage(new image::MaskedImage<int>(idImage));
+    // XXX Why do I need a -ve threshold when parity == false? I'm looking for pixels below ngrow
+    DetectionSet<int>::Ptr grownList(new DetectionSet<int>(*midImage,
+                                                           Threshold(-ngrow, detection::Threshold::VALUE, false)));
     assert (grownList->getFootprints().size() > 0);
     detection::Footprint::Ptr grown = *grownList->getFootprints().begin();
     //

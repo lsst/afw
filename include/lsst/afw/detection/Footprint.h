@@ -168,7 +168,7 @@ private:
     bool _normalized;                    //!< Are the spans sorted? 
 };
 
-Footprint::Ptr growFootprint(Footprint::Ptr const &foot, int ngrow);
+Footprint::Ptr growFootprint(Footprint::Ptr const &foot, int ngrow, bool isotropic=true);
 
 template<typename MaskT>
 MaskT setMaskFromFootprint(typename image::Mask<MaskT>::Ptr mask,
