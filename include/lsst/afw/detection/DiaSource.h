@@ -41,14 +41,11 @@ enum DiaSourceNullableField {
     SSM_ID,
     RA_ERR_FOR_WCS,
     DEC_ERR_FOR_WCS,
+    PSF_FLUX_ERR,
+    AP_FLUX_ERR,
     MODEL_FLUX_ERR,
+    INST_FLUX_ERR,
     REF_FLUX,
-    IXX,
-    IXX_ERR,
-    IYY,
-    IYY_ERR,
-    IXY,
-    IXY_ERR,
     OBS_CODE,
     IS_SYNTHETIC,
     MOPS_STATUS,
@@ -75,15 +72,7 @@ public :
     boost::int32_t getScId() const { return _scId; }
     boost::int64_t getSsmId() const { return _ssmId; }
     double  getLengthDeg() const { return _lengthDeg; }
-    float   getFlux() const { return _flux; }
-    float   getFluxErr() const { return _fluxErr; }
     float   getRefFlux() const { return _refFlux; }
-    float   getIxx() const { return _ixx; }
-    float   getIxxErr() const { return _ixxErr; }
-    float   getIyy() const { return _iyy; }
-    float   getIyyErr() const { return _iyyErr; }
-    float   getIxy() const { return _ixy; }
-    float   getIxyErr() const { return _ixyErr; }
     double  getValX1() const { return _valX1; }
     double  getValX2() const { return _valX2; }
     double  getValY1() const { return _valY1; }
@@ -108,33 +97,10 @@ public :
     void setLengthDeg(double  const lengthDeg) {
         set(_lengthDeg, lengthDeg);
     }        
-    void setFlux(float  const flux) { 
-        set(_flux, flux);             
-    }
-    void setFluxErr(float  const fluxErr ) { 
-        set(_fluxErr, fluxErr);          
-    }
     void setRefFlux(float const refFlux) {
         set(_refFlux, refFlux, REF_FLUX);
     }
-    void setIxx(float const ixx) { 
-        set(_ixx, ixx, IXX);    
-    }
-    void setIxxErr(float const ixxErr) {
-        set(_ixxErr, ixxErr, IXX_ERR); 
-    }         
-    void setIyy(float const iyy) { 
-        set(_iyy, iyy, IYY);    
-    }     
-    void setIyyErr(float const iyyErr) { 
-        set(_iyyErr, iyyErr, IYY_ERR); 
-    }         
-    void setIxy(float const ixy) { 
-        set(_ixy, ixy, IXY);    
-    }      
-    void setIxyErr(float const ixyErr) { 
-        set(_ixyErr, ixyErr, IXY_ERR); 
-    }         
+
     void setValX1(double  const valX1) {
         set(_valX1, valX1);
     }
@@ -172,9 +138,20 @@ public :
     void setDecErrForWcs(float const decErrForWcs) { 
         set(_decErrForWcs, decErrForWcs, DEC_ERR_FOR_WCS); 
     }
+    void setPsfFluxErr(float const psfFluxErr) {
+        set(_psfFluxErr, psfFluxErr, PSF_FLUX_ERR);
+    }
+    void setApFluxErr(float const apFluxErr) {
+        set(_apFluxErr, apFluxErr, AP_FLUX_ERR);
+    }
     void setModelFluxErr(float const modelFluxErr) {
         set(_modelFluxErr, modelFluxErr, MODEL_FLUX_ERR);
     }
+    void setInstFluxErr(float const instFluxErr) {
+        set(_instFluxErr, instFluxErr, INST_FLUX_ERR);
+    }
+
+
     
     bool operator==(DiaSource const & d) const;
 private :
@@ -187,19 +164,12 @@ private :
     double  _valY1;
     double  _valY2;
     double  _valXY;
-    float   _flux;
-    float   _fluxErr;
     float   _refFlux;
-    float   _ixx;
-    float   _ixxErr;
-    float   _iyy;
-    float   _iyyErr;
-    float   _ixy;
-    float   _ixyErr;
     boost::int32_t _scId;
     char    _obsCode;
     char    _isSynthetic;
     char    _mopsStatus;
+
 
     template <typename Archive> 
     void serialize(Archive & ar, unsigned int const version) {    
@@ -207,15 +177,7 @@ private :
         ar & _scId;
         ar & _ssmId;        
         ar & _lengthDeg;        
-        ar & _flux;
-        ar & _fluxErr;
         ar & _refFlux;
-        ar & _ixx;
-        ar & _ixxErr;
-        ar & _iyy;
-        ar & _iyyErr;
-        ar & _ixy;
-        ar & _ixyErr;
         ar & _valX1;
         ar & _valX2;
         ar & _valY1;

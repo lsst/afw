@@ -22,11 +22,7 @@ det::DiaSource::DiaSource()
       _valX1(0.0), _valX2(0.0),
       _valY1(0.0), _valY2(0.0),
       _valXY(0.0),
-      _flux(0.0), _fluxErr(0.0),
-      _refFlux(0.0), 
-      _ixx(0.0), _ixxErr(0.0),
-      _iyy(0.0), _iyyErr(0.0),
-      _ixy(0.0), _ixyErr(0.0),            
+      _refFlux(0.0),
       _scId(0),      
       _obsCode(0),
       _isSynthetic(0),
@@ -47,15 +43,6 @@ det::DiaSource::DiaSource(DiaSource const & other)
       _valY1(other._valY1), 
       _valY2(other._valY2),
       _valXY(other._valXY),    
-      _flux(other._flux), 
-      _fluxErr(other._fluxErr),
-      _refFlux(other._refFlux), 
-      _ixx(other._ixx), 
-      _ixxErr(other._ixxErr),
-      _iyy(other._iyy), 
-      _iyyErr(other._iyyErr),
-      _ixy(other._ixy), 
-      _ixyErr(other._ixyErr),
       _scId(other._scId), 
       _obsCode(other._obsCode),
       _isSynthetic(other._isSynthetic),
@@ -84,8 +71,8 @@ bool det::DiaSource::operator==(DiaSource const & d) const {
         areEqual(_dec, d._dec) &&
         areEqual(_raErrForWcs, d._raErrForWcs, det::RA_ERR_FOR_WCS) &&
         areEqual(_decErrForWcs, d._decErrForWcs, det::DEC_ERR_FOR_WCS) &&
-        areEqual(_raErrForDetection, d._raErrForDetection) &&
-        areEqual(_decErrForDetection, d._decErrForDetection) &&
+        areEqual(_raErrForDetection, d._raErrForDetection, det::RA_ERR_FOR_DETECTION) &&
+        areEqual(_decErrForDetection, d._decErrForDetection, det::DEC_ERR_FOR_DETECTION) &&
         areEqual(_xFlux, d._xFlux, det::X_FLUX) &&
         areEqual(_xFluxErr, d._xFluxErr, det::X_FLUX_ERR) &&
         areEqual(_yFlux, d._yFlux, det::Y_FLUX) &&
@@ -94,9 +81,9 @@ bool det::DiaSource::operator==(DiaSource const & d) const {
         areEqual(_yPeak, d._yPeak, det::Y_PEAK) && 
         areEqual(_raPeak, d._raPeak, det::RA_PEAK) && 
         areEqual(_decPeak, d._decPeak, det::DEC_PEAK) &&   
-        areEqual(_xAstrom, d._xAstrom, det::X_ASTROM) &&
-        areEqual(_xAstromErr, d._xAstromErr, det::X_ASTROM_ERR) &&                   
-        areEqual(_yAstrom, d._yAstrom, det::Y_ASTROM) &&
+        areEqual(_xAstrom, d._xAstrom) &&
+        areEqual(_xAstromErr, d._xAstromErr, det::X_ASTROM_ERR) &&
+        areEqual(_yAstrom, d._yAstrom) &&
         areEqual(_yAstromErr, d._yAstromErr, det::Y_ASTROM_ERR) &&
         areEqual(_raAstrom, d._raAstrom, det::RA_ASTROM) &&
         areEqual(_raAstromErr, d._raAstromErr, det::RA_ASTROM_ERR) &&                   
@@ -104,20 +91,15 @@ bool det::DiaSource::operator==(DiaSource const & d) const {
         areEqual(_decAstromErr, d._decAstromErr, det::DEC_ASTROM_ERR) &&
         areEqual(_taiMidPoint, d._taiMidPoint) &&
         areEqual(_taiRange, d._taiRange) &&
-        areEqual(_fwhmA, d._fwhmA) &&
-        areEqual(_fwhmB, d._fwhmB) &&
-        areEqual(_fwhmTheta, d._fwhmTheta) &&
         areEqual(_lengthDeg, d._lengthDeg) &&
-        areEqual(_flux, d._flux) &&
-        areEqual(_fluxErr, d._fluxErr) &&        
         areEqual(_psfFlux, d._psfFlux) &&
-        areEqual(_psfFluxErr, d._psfFluxErr) &&
+        areEqual(_psfFluxErr, d._psfFluxErr, det::PSF_FLUX_ERR) &&
         areEqual(_apFlux, d._apFlux) &&
-        areEqual(_apFluxErr, d._apFluxErr) &&
+        areEqual(_apFluxErr, d._apFluxErr, det::AP_FLUX_ERR) &&
         areEqual(_modelFlux, d._modelFlux) &&
         areEqual(_modelFluxErr, d._modelFluxErr, det::MODEL_FLUX_ERR) &&           
         areEqual(_instFlux, d._instFlux) &&
-        areEqual(_instFluxErr, d._instFluxErr) &&
+        areEqual(_instFluxErr, d._instFluxErr, det::INST_FLUX_ERR) &&
         areEqual(_nonGrayCorrFlux, d._nonGrayCorrFlux, det::NON_GRAY_CORR_FLUX) &&
         areEqual(_nonGrayCorrFluxErr, d._nonGrayCorrFluxErr, det::NON_GRAY_CORR_FLUX_ERR) &&
         areEqual(_atmCorrFlux, d._atmCorrFlux, det::ATM_CORR_FLUX) &&

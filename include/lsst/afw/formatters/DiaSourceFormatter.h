@@ -59,7 +59,50 @@ public:
     );
 
 private:
-    //Ordered list of columns in DiaSource table of the DC3b schema    
+    //Ordered list of columns in DiaSource table of the DC3a schema.
+    enum Columns {
+        DIA_SOURCE_ID = 0,
+        CCD_EXPOSURE_ID,
+        DIA_SOURCE_TO_ID,
+        FILTER_ID,
+        OBJECT_ID,
+        MOVING_OBJECT_ID,
+        PROC_HISTORY_ID,
+        X_ASTROM,
+        X_ASTROM_ERR,
+        Y_ASTROM,
+        Y_ASTROM_ERR,
+        RA,
+        RA_ERR_FOR_DETECTION,
+        RA_ERR_FOR_WCS,
+        DECL,
+        DEC_ERR_FOR_DETECTION,
+        DEC_ERR_FOR_WCS,
+        TAI_MID_POINT,
+        TAI_RANGE,
+        IXX,
+        IXX_ERR,
+        IYY,
+        IYY_ERR,       
+        IXY,
+        IXY_ERR,
+        PSF_FLUX,
+        PSF_FLUX_ERR,
+        AP_FLUX,
+        AP_FLUX_ERR,
+        MODEL_FLUX,
+        MODEL_FLUX_ERR,
+        INST_FLUX,
+        INST_FLUX_ERR,
+        AP_DIA,
+        FLAG_FOR_CLASSIFICATION,
+        FLAG_FOR_DETECTION,
+        SNR,
+        CHI2
+    };
+    #if 0
+    //Ordered list of columns in DiaSource table of the DC3b schema.
+    //leave commented out until switch to DC3b
     enum Columns {
         DIA_SOURCE_ID = 0,
         AMP_EXPOSURE_ID,
@@ -139,7 +182,8 @@ private:
         FLAG_FOR_WCS,
         FLAG_CLASSIFICATION
     };
-    
+    #endif
+
 
     lsst::pex::policy::Policy::Ptr _policy;
 

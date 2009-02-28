@@ -73,30 +73,27 @@ static void initTestData(SourceSet & v, int sliceId = 0) {
         data.setDecErrForDetection(static_cast<float>(j + 12));
         data.setDecErrForWcs(static_cast<float>(j + 13));
         data.setXFlux(static_cast<double>(j + 14));
-        data.setXFluxErr(static_cast<double>(j + 15));
+        data.setXFluxErr(static_cast<float>(j + 15));
         data.setYFlux(static_cast<double>(j + 16));
-        data.setYFluxErr(static_cast<double>(j + 17));
+        data.setYFluxErr(static_cast<float>(j + 17));
         data.setRaFlux(static_cast<double>(j + 18));
-        data.setRaFluxErr(static_cast<double>(j + 19));
+        data.setRaFluxErr(static_cast<float>(j + 19));
         data.setDecFlux(static_cast<double>(j + 20));
-        data.setDecFluxErr(static_cast<double>(j + 21));
+        data.setDecFluxErr(static_cast<float>(j + 21));
         data.setXPeak(static_cast<double>(j + 22));
         data.setYPeak(static_cast<double>(j + 23));
         data.setRaPeak(static_cast<double>(j + 24));
         data.setDecPeak(static_cast<double>(j + 25));
         data.setXAstrom(static_cast<double>(j + 26));
-        data.setXAstromErr(static_cast<double>(j + 27));
+        data.setXAstromErr(static_cast<float>(j + 27));
         data.setYAstrom(static_cast<double>(j + 28));
-        data.setYAstromErr(static_cast<double>(j + 29));        
+        data.setYAstromErr(static_cast<float>(j + 29));        
         data.setRaAstrom(static_cast<double>(j + 30));
-        data.setRaAstromErr(static_cast<double>(j + 31));
+        data.setRaAstromErr(static_cast<float>(j + 31));
         data.setDecAstrom(static_cast<double>(j + 32));
-        data.setDecAstromErr(static_cast<double>(j + 33));                
+        data.setDecAstromErr(static_cast<float>(j + 33));                
         data.setTaiMidPoint(static_cast<double>(j + 34));
-        data.setTaiRange(static_cast<float>(j + 35));
-        data.setFwhmA(static_cast<float>(j + 36));
-        data.setFwhmB(static_cast<float>(j + 37));
-        data.setFwhmTheta(static_cast<float>(j + 38));       
+        data.setTaiRange(static_cast<double>(j + 35));
         data.setPsfFlux(static_cast<double>(j + 39));
         data.setPsfFluxErr(static_cast<float>(j + 40));
         data.setApFlux(static_cast<double>(j + 41));
@@ -106,11 +103,11 @@ static void initTestData(SourceSet & v, int sliceId = 0) {
         data.setPetroFlux(static_cast<double>(j + 45));
         data.setPetroFluxErr(static_cast<float>(j + 46));
         data.setInstFlux(static_cast<double>(j + 47));
-        data.setInstFluxErr(static_cast<double>(j + 48));
+        data.setInstFluxErr(static_cast<float>(j + 48));
         data.setNonGrayCorrFlux(static_cast<double>(j + 49));
-        data.setNonGrayCorrFluxErr(static_cast<double>(j + 50));
+        data.setNonGrayCorrFluxErr(static_cast<float>(j + 50));
         data.setAtmCorrFlux(static_cast<double>(j + 51));
-        data.setAtmCorrFluxErr(static_cast<double>(j + 52));
+        data.setAtmCorrFluxErr(static_cast<float>(j + 52));
         data.setApDia(static_cast<float>(j + 53));
         data.setSnr(static_cast<float>(j + 54));
         data.setChi2(static_cast<float>(j + 55));
@@ -190,11 +187,13 @@ static void testBoost(void) {
     {
         Storage::List storageList;
         storageList.push_back(pers->getRetrieveStorage("BoostStorage", loc));
-        Persistable::Ptr p = pers->retrieve("PersistableSourceVector", storageList, props);
+        Persistable::Ptr p = pers->retrieve("PersistableSourceVector", 
+            storageList, props);
         BOOST_CHECK_MESSAGE(p.get() != 0, "Failed to retrieve Persistable");
         PersistableSourceVector::Ptr persistVec =
-            boost::dynamic_pointer_cast<PersistableSourceVector, Persistable>(p);
-        BOOST_CHECK_MESSAGE(persistVec.get() != 0, "Couldn't cast to PersistableSourceVector");
+           boost::dynamic_pointer_cast<PersistableSourceVector, Persistable>(p);
+        BOOST_CHECK_MESSAGE(persistVec.get() != 0, 
+            "Couldn't cast to PersistableSourceVector");
         BOOST_CHECK_MESSAGE(*persistVec == dsv, 
             "persist()/retrieve() resulted in PersistableSourceVector corruption");
     }
@@ -237,14 +236,16 @@ static void testDb(std::string const & storageType) {
     {
         Storage::List storageList;
         storageList.push_back(pers->getRetrieveStorage(storageType, loc));
-        Persistable::Ptr p = pers->retrieve("PersistableSourceVector", storageList, props);
+        Persistable::Ptr p = pers->retrieve("PersistableSourceVector", 
+            storageList, props);
         BOOST_CHECK_MESSAGE(p.get() != 0, "Failed to retrieve Persistable");
         PersistableSourceVector::Ptr persistVec = 
             boost::dynamic_pointer_cast<PersistableSourceVector, Persistable>(p);
-        BOOST_CHECK_MESSAGE(persistVec.get() != 0, "Couldn't cast to PersistableSourceVector");
+        BOOST_CHECK_MESSAGE(persistVec.get() != 0, 
+            "Couldn't cast to PersistableSourceVector");
         SourceSet vec = persistVec->getSources();
         BOOST_CHECK_MESSAGE(*vec.at(0) == *dsv[0], 
-            "persist()/retrieve() resulted in PersistableSourceVector corruption");
+            "persist()/retrieve() resulted in corruption");
     }
     afwFormatters::dropAllVisitSliceTables(loc, policy, props);
 
@@ -262,22 +263,26 @@ static void testDb(std::string const & storageType) {
     {
         Storage::List storageList;
         storageList.push_back(pers->getRetrieveStorage(storageType, loc));
-        Persistable::Ptr p = pers->retrieve("PersistableSourceVector", storageList, props);
-        BOOST_CHECK_MESSAGE(p.get() != 0, "Failed to retrieve Persistable");
+        Persistable::Ptr p = pers->retrieve("PersistableSourceVector", 
+            storageList, props);
+        BOOST_CHECK_MESSAGE(p.get() != 0, 
+            "Failed to retrieve Persistable");
         PersistableSourceVector::Ptr persistVec = 
-                boost::dynamic_pointer_cast<PersistableSourceVector, Persistable>(p);
-        BOOST_CHECK_MESSAGE(persistVec.get() != 0, "Couldn't cast to PersistableSourceVector");
+            boost::dynamic_pointer_cast<PersistableSourceVector, Persistable>(p);
+        BOOST_CHECK_MESSAGE(persistVec.get() != 0, 
+            "Couldn't cast to PersistableSourceVector");
         SourceSet vec(persistVec->getSources());
         
-        // sort in ascending id order (database does not give any ordering guarantees
+        // sort in ascending id order 
+        // (database does not give any ordering guarantees
         // in the absence of an ORDER BY clause)
         std::sort(vec.begin(), vec.end(), SourceLessThan());
         BOOST_CHECK_MESSAGE(vec.size() == dsv.size(),
-            "persist()/retrieve() resulted in PersistableSourceVector corruption");
+            "persist()/retrieve() resulted in corruption");
     
         for (size_t i =0; i<vec.size();i++){
             if (*vec[i] != *dsv[i]){
-                BOOST_ERROR("persist()/retrieve() resulted in PersistableSourceVector corruption");
+                BOOST_ERROR("persist()/retrieve() resulted in corruption");
                 break;
             }
         }
@@ -291,8 +296,10 @@ static void testDb2(std::string const & storageType) {
     Policy::Ptr policy(new Policy);
     std::string policyRoot("Formatter.PersistableSourceVector");
     // use custom table name patterns for this test
-    policy->set(policyRoot + ".Source.perVisitTableNamePattern", "tmp_test_Source_%1%");
-    policy->set(policyRoot + ".Source.perSliceAndVisitTableNamePattern", "tmp_test_Source_%1%_%2%");
+    policy->set(policyRoot + ".Source.perVisitTableNamePattern", 
+        "tmp_test_Source_%1%");
+    policy->set(policyRoot + ".Source.perSliceAndVisitTableNamePattern", 
+        "tmp_test_Source_%1%_%2%");
 
     Policy::Ptr nested(policy->getPolicy(policyRoot));
 
@@ -321,22 +328,25 @@ static void testDb2(std::string const & storageType) {
     //    gathering the results of numSlices image processing pipeline slices
     Storage::List storageList;
     storageList.push_back(pers->getRetrieveStorage(storageType, loc));
-    Persistable::Ptr p = pers->retrieve("PersistableSourceVector", storageList, props);
+    Persistable::Ptr p = pers->retrieve("PersistableSourceVector", 
+        storageList, props);
     BOOST_CHECK_MESSAGE(p.get() != 0, "Failed to retrieve Persistable");
     PersistableSourceVector::Ptr persistPtr = 
         boost::dynamic_pointer_cast<PersistableSourceVector, Persistable>(p);
-    BOOST_CHECK_MESSAGE(persistPtr.get() != 0, "Couldn't cast to PersistableSourceVector");
+    BOOST_CHECK_MESSAGE(persistPtr.get() != 0, 
+        "Couldn't cast to PersistableSourceVector");
     
-    // sort in ascending id order (database does not give any ordering guarantees
+    // sort in ascending id order 
+    // (database does not give any ordering guarantees
     // in the absence of an ORDER BY clause)
     SourceSet vec = persistPtr->getSources();
     std::sort(vec.begin(), vec.end(), SourceLessThan());
     BOOST_CHECK_MESSAGE(vec.size() == all.size(),
-        "persist()/retrieve() resulted in PersistableSourceVector corruption");
+        "persist()/retrieve() resulted in corruption");
 
     for (size_t i =0; i< vec.size();i++){
         if (*vec[i] != *all[i]){
-            BOOST_ERROR("persist()/retrieve() resulted in PersistableSourceVector corruption");
+            BOOST_ERROR("persist()/retrieve() resulted in corruption");
             break;
         }            
     }    
@@ -376,7 +386,9 @@ BOOST_AUTO_TEST_CASE(SourceIO) {
             testDb2("DbStorage");
             testDb2("DbTsvStorage");
         }
-        BOOST_CHECK_MESSAGE(lsst::daf::base::Citizen::census(0) == 0, "Detected memory leaks");
+        else BOOST_TEST_MESSAGE("Skipping DB tests");
+        BOOST_CHECK_MESSAGE(lsst::daf::base::Citizen::census(0) == 0, 
+            "Detected memory leaks");
     } catch(std::exception const & ex) {
         BOOST_FAIL(ex.what());
     }

@@ -70,11 +70,11 @@ inline static int64_t generateDiaSourceId(unsigned short seqNum, int ccdId, int6
 template <typename T>
 void form::DiaSourceVectorFormatter::insertRow(T & db, DiaSource const & d) {
     db.template setColumn<int64_t>("diaSourceId", d._id);
-    db.template setColumn<int64_t>("ampExposureId", d._ampExposureId);
+    db.template setColumn<int64_t>("ccdExposureId", d._ampExposureId);
     
     if (!d.isNull( det::DIA_SOURCE_TO_ID))
-        db.template setColumn<int64_t>("diaSource2Id", d._diaSourceToId);
-    else db.setColumnToNull("diaSource2Id");
+        db.template setColumn<int64_t>("diaSourceToId", d._diaSourceToId);
+    else db.setColumnToNull("diaSourceToId");
        
     db.template setColumn<char>("filterId", static_cast<char>(d._filterId));
     
@@ -86,24 +86,106 @@ void form::DiaSourceVectorFormatter::insertRow(T & db, DiaSource const & d) {
         db. template setColumn<int64_t>("movingObjectId", d._movingObjectId);
     else db.setColumnToNull("movingObjectId");
     
+    db.template setColumn<double>("ra", d._ra);
+    if (!d.isNull(det::RA_ERR_FOR_DETECTION))
+        db.template setColumn<float>("raErrForDetection", d._raErrForDetection);
+    else db.setColumnToNull("raErrForDetection");
+    if (!d.isNull(det::RA_ERR_FOR_WCS))
+        db. template setColumn<float>("raErrForwcs", d._raErrForWcs);    
+    else db.setColumnToNull("raErrForwcs");
+
+    db.template setColumn<double>("decl", d._dec);
+    if (!d.isNull(det::DEC_ERR_FOR_DETECTION))
+        db. template setColumn<float>("declErrForDetection", d._decErrForDetection);         
+    else db.setColumnToNull("declErrForDetection");
+    if (!d.isNull(det::DEC_ERR_FOR_WCS))
+        db. template setColumn<float>("declErrForwcs", d._decErrForWcs);    
+    else db.setColumnToNull("declErrForwcs");
+
+    db. template setColumn<double>("xAstrom", d._xAstrom);
+    if(!d.isNull(det::X_ASTROM_ERR))
+        db. template setColumn<float>("xAstromErr", d._xAstromErr);
+    else db.setColumnToNull("xAstromErr");
+
+    db. template setColumn<double>("yAstrom", d._yAstrom);
+    if(!d.isNull(det::X_ASTROM_ERR))
+        db. template setColumn<float>("yAstromErr", d._yAstromErr);
+    else db.setColumnToNull("xAstromErr");
+
+    db.template setColumn<double>("taiMidPoint", d._taiMidPoint);
+    db.template setColumn<double>("taiRange", d._taiRange);
+
+    db.template setColumn<double>("psfFlux", d._psfFlux);
+    if (!d.isNull(det::PSF_FLUX_ERR))
+        db.template setColumn<float>("psfFluxErr", d._psfFluxErr);
+    else db.setColumnToNull("psfFluxErr");
+    
+    db.template setColumn<double>("apFlux", d._apFlux);
+    if (!d.isNull(det::PSF_FLUX_ERR))
+        db.template setColumn<float>("apFluxErr", d._apFluxErr);
+    else db.setColumnToNull("apFluxErr");
+
+    db.template setColumn<double>("modelFlux", d._modelFlux);               
+    if (!d.isNull(det::PSF_FLUX_ERR))
+        db.template setColumn<float>("modelFluxErr", d._modelFluxErr);   
+    else db.setColumnToNull("modelFluxErr");
+    
+    db.template setColumn<double>("instFlux", d._instFlux);
+    if (!d.isNull(det::PSF_FLUX_ERR))
+        db.template setColumn<float>("instFluxErr", d._instFluxErr);
+    else db.setColumnToNull("instFluxErr");
+   
+    if (!d.isNull(det::AP_DIA))
+        db.template setColumn<float>("apDia", d._apDia);
+    else db.setColumnToNull("apDia");
+        
+    if (!d.isNull(det::IXX))
+        db.template setColumn<float>("Ixx", d._ixx);
+    else db.setColumnToNull("Ixx");
+    
+    if (!d.isNull(det::IXX_ERR))
+        db.template setColumn<float>("IxxErr", d._ixxErr);
+    else db.setColumnToNull("IxxErr");
+    
+    if (!d.isNull(det::IYY))    
+        db.template setColumn<float>("Iyy", d._iyy);
+    else db.setColumnToNull("Iyy");
+    
+    if (!d.isNull(det::IYY_ERR))
+        db.template setColumn<float>("IyyErr", d._iyyErr);
+    else db.setColumnToNull("IyyErr");
+    
+    if (!d.isNull(det::IXY))
+        db.template setColumn<float>("Ixy", d._ixy);
+    else db.setColumnToNull("Ixy");
+    
+    if (!d.isNull(det::IXY_ERR))
+        db.template setColumn<float>("IxyErr", d._ixyErr);        
+    else db.setColumnToNull("IxyErr");
+    
+    if (!d.isNull(det::FLAG_FOR_DETECTION)) {
+        db.template setColumn<boost::int64_t>("flagForDetection", 
+                d._flagForDetection);
+    }
+    else db.setColumnToNull("flagForDetection");
+    
+    if (!d.isNull(det::FLAG_CLASSIFICATION)) {
+        db.template setColumn<boost::int64_t>("flagForClassification", 
+                d._flagClassification);  
+    }
+    else db.setColumnToNull("flagForClassification");  
+
+    db.template setColumn<float>("snr", d._snr);
+    db.template setColumn<float>("chi2", d._chi2); 
+
+    #if 0
+    //not defined in DC3a. Keep for DC3b
     db.template setColumn<int32_t>("procHistoryID", d._procHistoryId);
     db.template setColumn<int32_t>("scId", d._scId);
     
     if (!d.isNull(det::SSM_ID))
         db. template setColumn<int64_t>("ssmId", d._ssmId);        
-    else db.setColumnToNull("ssmId");
-       
-    db.template setColumn<double>("ra", d._ra);
-    db.template setColumn<float>("raErr4detection", d._raErrForDetection);
-    if (!d.isNull(det::RA_ERR_FOR_WCS))
-        db. template setColumn<float>("raErr4wcs", d._raErrForWcs);    
-    else db.setColumnToNull("raErr4wcs");
-
-    db.template setColumn<double>("decl", d._dec);
-    db.template setColumn<float>("declErr4detection", d._decErrForDetection);
-    if (!d.isNull(det::DEC_ERR_FOR_WCS))
-        db. template setColumn<float>("declErr4wcs", d._decErrForWcs);    
-    else db.setColumnToNull("declErr4wcs");
+    else db.setColumnToNull("ssmId");    
 
     if (!d.isNull(det::X_FLUX))
         db. template setColumn<double>("xFlux", d._xFlux);
@@ -153,22 +235,6 @@ void form::DiaSourceVectorFormatter::insertRow(T & db, DiaSource const & d) {
         db. template setColumn<double>("declPeak", d._decPeak);
     else db.setColumnToNull("declPeak");
     
-    if (!d.isNull(det::X_ASTROM))
-        db. template setColumn<double>("xAstrom", d._xAstrom);
-    else db.setColumnToNull("xAstrom");
-    
-    if (!d.isNull(det::X_ASTROM_ERR))
-        db. template setColumn<double>("xAstromErr", d._xAstromErr);
-    else db.setColumnToNull("xAstromErr");
-    
-    if (!d.isNull(det::Y_ASTROM))
-        db. template setColumn<double>("yAstrom", d._yAstrom);
-    else db.setColumnToNull("yAstrom");
-    
-    if (!d.isNull(det::Y_ASTROM_ERR))
-        db. template setColumn<double>("yAstromErr", d._yAstromErr);
-    else db.setColumnToNull("yAstromErr");
-    
     if (!d.isNull(det::RA_ASTROM))
         db. template setColumn<double>("raAstrom", d._raAstrom);
     else db.setColumnToNull("raAstrom");
@@ -184,34 +250,17 @@ void form::DiaSourceVectorFormatter::insertRow(T & db, DiaSource const & d) {
     if (!d.isNull(det::DEC_ASTROM_ERR))
         db. template setColumn<double>("declAstromErr", d._decAstromErr);        
     else db.setColumnToNull("declAstromErr");
-    
-    db.template setColumn<double>("taiMidPoint", d._taiMidPoint);
-    db.template setColumn<float>("taiRange", d._taiRange);
-    db.template setColumn<float>("fwhmA", d._fwhmA);
-    db.template setColumn<float>("fwhmB", d._fwhmB);
-    db.template setColumn<float>("fwhmTheta", d._fwhmTheta);
+
     db.template setColumn<double>("lengthDeg", d._lengthDeg);
-    db.template setColumn<float>("flux", d._flux);
-    db.template setColumn<float>("fluxErr", d._fluxErr);         
-    db.template setColumn<double>("psfFlux", d._psfFlux);
-    db.template setColumn<float>("psfFluxErr", d._psfFluxErr);
-    db.template setColumn<double>("apFlux", d._apFlux);
-    db.template setColumn<float>("apFluxErr", d._apFluxErr);
-    db.template setColumn<double>("modelFlux", d._modelFlux);            
-    
-    if (!d.isNull(det::MODEL_FLUX_ERR))
-        db.template setColumn<float>("modelFluxErr", d._modelFluxErr);   
-    else db.setColumnToNull("modelFluxErr");
-    
-    db.template setColumn<double>("instFlux", d._instFlux);
-    db.template setColumn<double>("instFluxErr", d._instFluxErr);
-    
+
     if (!d.isNull(det::NON_GRAY_CORR_FLUX))
         db.template setColumn<double>("nonGrayCorrFlux", d._nonGrayCorrFlux);
     else db.setColumnToNull("nonGrayCorrFlux");
     
-    if (!d.isNull(det::NON_GRAY_CORR_FLUX_ERR))
-        db.template setColumn<double>("nonGrayCorrFluxErr", d._nonGrayCorrFluxErr);
+    if (!d.isNull(det::NON_GRAY_CORR_FLUX_ERR)) {
+        db.template setColumn<double>("nonGrayCorrFluxErr", 
+                d._nonGrayCorrFluxErr);
+    }
     else db.setColumnToNull("nonGrayCorrFluxErr");
         
     if (!d.isNull(det::ATM_CORR_FLUX))
@@ -221,41 +270,11 @@ void form::DiaSourceVectorFormatter::insertRow(T & db, DiaSource const & d) {
     if (!d.isNull(det::ATM_CORR_FLUX_ERR))
         db.template setColumn<double>("atmCorrFluxErr", d._atmCorrFluxErr);
     else db.setColumnToNull("atmCorrFluxErr");
-    
-    if (!d.isNull(det::AP_DIA))
-        db.template setColumn<float>("apDia", d._apDia);
-    else db.setColumnToNull("apDia");
-    
+
     if (!d.isNull(det::REF_FLUX))
         db.template setColumn<float>("refFlux", d._refFlux);
     else db.setColumnToNull("refFlux");
-    
-    if (!d.isNull(det::IXX))
-        db.template setColumn<float>("Ixx", d._ixx);
-    else db.setColumnToNull("Ixx");
-    
-    if (!d.isNull(det::IXX_ERR))
-        db.template setColumn<float>("IxxErr", d._ixxErr);
-    else db.setColumnToNull("IxxErr");
-    
-    if (!d.isNull(det::IYY))    
-        db.template setColumn<float>("Iyy", d._iyy);
-    else db.setColumnToNull("Iyy");
-    
-    if (!d.isNull(det::IYY_ERR))
-        db.template setColumn<float>("IyyErr", d._iyyErr);
-    else db.setColumnToNull("IyyErr");
-    
-    if (!d.isNull(det::IXY))
-        db.template setColumn<float>("Ixy", d._ixy);
-    else db.setColumnToNull("Ixy");
-    
-    if (!d.isNull(det::IXY_ERR))
-        db.template setColumn<float>("IxyErr", d._ixyErr);        
-    else db.setColumnToNull("IxyErr");
-    
-    db.template setColumn<float>("snr", d._snr);
-    db.template setColumn<float>("chi2", d._chi2);
+
     db.template setColumn<double>("valx1", d._valX1);
     db.template setColumn<double>("valx2", d._valX2);
     db.template setColumn<double>("valy1", d._valY1);
@@ -274,21 +293,16 @@ void form::DiaSourceVectorFormatter::insertRow(T & db, DiaSource const & d) {
         db.template setColumn<char>("mopsStatus", d._mopsStatus);      
     else db.setColumnToNull("mopsStatus");
     
-    if (!d.isNull(det::FLAG_FOR_ASSOCIATION))
-        db.template setColumn<boost::int16_t>("flag4association", d._flagForAssociation);
-    else db.setColumnToNull("flag4association");
-    
-    if (!d.isNull(det::FLAG_FOR_DETECTION))
-        db.template setColumn<boost::int16_t>("flag4detection", d._flagForDetection);
-    else db.setColumnToNull("flag4detection");
-    
+    if (!d.isNull(det::FLAG_FOR_ASSOCIATION)) {
+        db.template setColumn<boost::int16_t>("flagForAssociation", 
+                d._flagForAssociation);
+    }
+    else db.setColumnToNull("flagForAssociation");
+
     if (!d.isNull(det::FLAG_FOR_WCS))
-        db.template setColumn<boost::int16_t>("flag4wcs", d._flagForWcs);
-    else db.setColumnToNull("flag4wcs");
-    
-    if (!d.isNull(det::FLAG_CLASSIFICATION))
-        db.template setColumn<boost::int64_t>("flagClassification", d._flagClassification);  
-    else db.setColumnToNull("flagClassification");  
+        db.template setColumn<boost::int16_t>("flagForWcs", d._flagForWcs);
+    else db.setColumnToNull("flagForWcs");
+    #endif
 
     db.insertRow();
 }
@@ -301,21 +315,49 @@ template void form::DiaSourceVectorFormatter::insertRow<DbTsvStorage>(DbTsvStora
 
 /*! Prepares for reading DiaSource instances from a database table. */
 void form::DiaSourceVectorFormatter::setupFetch(DbStorage & db, DiaSource & d) {
-    db.outParam("diaSourceId",        &(d._id));
-    db.outParam("ampExposureId",      &(d._ampExposureId));
-    db.outParam("diaSource2Id",       &(d._diaSourceToId));
-    db.outParam("filterId",           reinterpret_cast<char *>(&(d._filterId)));
-    db.outParam("objectId",           &(d._objectId));
-    db.outParam("movingObjectId",     &(d._movingObjectId));
+    db.outParam("diaSourceId",          &(d._id));
+    db.outParam("ccdExposureId",        &(d._ampExposureId));
+    db.outParam("diaSourceToId",        &(d._diaSourceToId));
+    db.outParam("filterId",         reinterpret_cast<char *>(&(d._filterId)));
+    db.outParam("objectId",             &(d._objectId));
+    db.outParam("movingObjectId",       &(d._movingObjectId));
+    db.outParam("xAstrom",              &(d._xAstrom));
+    db.outParam("xAstromErr",           &(d._xAstromErr));    
+    db.outParam("yAstrom",              &(d._yAstrom));
+    db.outParam("yAstromErr",           &(d._yAstromErr));  
+    db.outParam("ra",                   &(d._ra));
+    db.outParam("raErrForDetection",    &(d._raErrForDetection));
+    db.outParam("raErrForWcs",          &(d._raErrForWcs));
+    db.outParam("decl",                 &(d._dec));
+    db.outParam("declErrForDetection",  &(d._decErrForDetection));
+    db.outParam("declErrForWcs",        &(d._decErrForWcs));
+    db.outParam("taiMidPoint",          &(d._taiMidPoint));
+    db.outParam("taiRange",             &(d._taiRange)); 
+    db.outParam("Ixx",                  &(d._ixx));
+    db.outParam("IxxErr",               &(d._ixxErr));
+    db.outParam("Iyy",                  &(d._iyy));
+    db.outParam("IyyErr",               &(d._iyyErr));
+    db.outParam("Ixy",                  &(d._ixy));
+    db.outParam("IxyErr",               &(d._ixyErr)); 
+    db.outParam("psfFlux",              &(d._psfFlux));
+    db.outParam("psfFluxErr",           &(d._psfFluxErr));
+    db.outParam("apFlux",               &(d._apFlux));
+    db.outParam("apFluxErr",            &(d._apFluxErr));
+    db.outParam("modelFlux",            &(d._modelFlux));
+    db.outParam("modelFluxErr",         &(d._modelFluxErr));
+    db.outParam("instFlux",             &(d._instFlux));
+    db.outParam("instFluxErr",          &(d._instFluxErr));
+    db.outParam("apDia",                &(d._apDia));      
+    db.outParam("flagForClassification",&(d._flagClassification));
+    db.outParam("flagForDetection",     &(d._flagForDetection));
+    db.outParam("snr",                  &(d._snr));
+    db.outParam("chi2",                 &(d._chi2));
+
+    #if 0
+    //not defined in DC3a. Keep for DC3b
     db.outParam("procHistoryId",      &(d._procHistoryId));
     db.outParam("scId",               &(d._scId));
-    db.outParam("ssmId",              &(d._ssmId));      
-    db.outParam("ra",                 &(d._ra));
-    db.outParam("raErr4detection",    &(d._raErrForDetection));
-    db.outParam("raErr4wcs",          &(d._raErrForWcs));
-    db.outParam("decl",               &(d._dec));
-    db.outParam("declErr4detection",  &(d._decErrForDetection));
-    db.outParam("declErr4wcs",        &(d._decErrForWcs));
+    db.outParam("ssmId",              &(d._ssmId));  
     db.outParam("xFlux",              &(d._xFlux));
     db.outParam("xFluxErr",           &(d._xFluxErr));
     db.outParam("yFlux",              &(d._yFlux));    
@@ -328,44 +370,18 @@ void form::DiaSourceVectorFormatter::setupFetch(DbStorage & db, DiaSource & d) {
     db.outParam("yPeak",              &(d._yPeak));
     db.outParam("raPeak",             &(d._raPeak));
     db.outParam("declPeak",           &(d._decPeak));            
-    db.outParam("xAstrom",            &(d._xAstrom));
-    db.outParam("xAstromErr",         &(d._xAstromErr));    
-    db.outParam("yAstrom",            &(d._yAstrom));
-    db.outParam("yAstromErr",         &(d._yAstromErr));  
     db.outParam("raAstrom",           &(d._raAstrom));
     db.outParam("raAstromErr",        &(d._raAstromErr));    
     db.outParam("declAstrom",         &(d._decAstrom));
-    db.outParam("declAstromErr",      &(d._decAstromErr));    
-    db.outParam("taiMidPoint",        &(d._taiMidPoint));
-    db.outParam("taiRange",           &(d._taiRange));
-    db.outParam("fwhmA",              &(d._fwhmA));
-    db.outParam("fwhmB",              &(d._fwhmB));
-    db.outParam("fwhmTheta",          &(d._fwhmTheta));
+    db.outParam("declAstromErr",      &(d._decAstromErr));
     db.outParam("lengthDeg",          &(d._lengthDeg));
-    db.outParam("flux",               &(d._flux));
-    db.outParam("fluxErr",            &(d._fluxErr));      
-    db.outParam("psfFlux",            &(d._psfFlux));
-    db.outParam("psfFluxErr",         &(d._psfFluxErr));
-    db.outParam("apFlux",             &(d._apFlux));
-    db.outParam("apFluxErr",          &(d._apFluxErr));
-    db.outParam("modelFlux",          &(d._modelFlux));
-    db.outParam("modelFluxErr",       &(d._modelFluxErr));
-    db.outParam("instFlux",           &(d._instFlux));
-    db.outParam("instFluxErr",        &(d._instFluxErr));
     db.outParam("nonGrayCorrFlux",    &(d._nonGrayCorrFlux));
     db.outParam("nonGrayCorrFluxErr", &(d._nonGrayCorrFluxErr));    
     db.outParam("atmCorrFlux",        &(d._atmCorrFlux));
-    db.outParam("atmCorrFluxErr",     &(d._atmCorrFluxErr));     
-    db.outParam("apDia",              &(d._apDia));  
+    db.outParam("atmCorrFluxErr",     &(d._atmCorrFluxErr)); 
     db.outParam("refFlux",            &(d._refFlux));
-    db.outParam("Ixx",                &(d._ixx));
-    db.outParam("IxxErr",             &(d._ixxErr));
-    db.outParam("Iyy",                &(d._iyy));
-    db.outParam("IyyErr",             &(d._iyyErr));
-    db.outParam("Ixy",                &(d._ixy));
-    db.outParam("IxyErr",             &(d._ixyErr));              
-    db.outParam("snr",                &(d._snr));
-    db.outParam("chi2",               &(d._chi2));
+    db.outParam("flag4wcs",           &(d._flagForWcs));
+    db.outParam("flag4association",   &(d._flagForAssociation));
     db.outParam("valx1",              &(d._valX1));
     db.outParam("valx2",              &(d._valX2));
     db.outParam("valy1",              &(d._valY1));
@@ -373,11 +389,10 @@ void form::DiaSourceVectorFormatter::setupFetch(DbStorage & db, DiaSource & d) {
     db.outParam("valxy",              &(d._valXY));  
     db.outParam("obsCode",            &(d._obsCode));
     db.outParam("isSynthetic",        &(d._isSynthetic));
-    db.outParam("mopsStatus",         &(d._mopsStatus));                          
-    db.outParam("flag4association",   &(d._flagForAssociation));
-    db.outParam("flag4detection",     &(d._flagForDetection));
-    db.outParam("flag4wcs",           &(d._flagForWcs));
-    db.outParam("flagClassification", &(d._flagClassification));
+    db.outParam("mopsStatus",         &(d._mopsStatus));  
+    #endif
+
+    
 }
 
 template <class Archive>
@@ -565,17 +580,119 @@ Persistable* form::DiaSourceVectorFormatter::read(
             	//If NULLABLE column is null, set that field null in resulting DiaSource
             	//else if NON-NULLABLE column is null, throw exception            	
                 if (db->columnIsNull(DIA_SOURCE_ID)) {
-                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"diaSourceId\""); 
+                    throw LSST_EXCEPT(ex::RuntimeErrorException, 
+                            "null column \"diaSourceId\""); 
                 }
-                if (db->columnIsNull(AMP_EXPOSURE_ID)) {
-                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"ampExposureId\""); 
+                if (db->columnIsNull(CCD_EXPOSURE_ID)) {
+                    throw LSST_EXCEPT(ex::RuntimeErrorException, 
+                            "null column \"ccdExposureId\""); 
                 }
-                if (db->columnIsNull(DIA_SOURCE_TO_ID)) { data.setNull(det::DIA_SOURCE_TO_ID); }
+                if (db->columnIsNull(DIA_SOURCE_TO_ID)) { 
+                    data.setNull(det::DIA_SOURCE_TO_ID); 
+                }
                 if (db->columnIsNull(FILTER_ID)) {
-                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"filterId\""); 
+                    throw LSST_EXCEPT(ex::RuntimeErrorException, 
+                            "null column \"filterId\""); 
                 }
-                if (db->columnIsNull(OBJECT_ID)) { data.setNull(det::OBJECT_ID); }
-                if (db->columnIsNull(MOVING_OBJECT_ID)) { data.setNull(det::MOVING_OBJECT_ID); }
+                if (db->columnIsNull(OBJECT_ID)) { 
+                    data.setNull(det::OBJECT_ID); 
+                }
+                if (db->columnIsNull(MOVING_OBJECT_ID)) { 
+                    data.setNull(det::MOVING_OBJECT_ID); 
+                }
+                if (db->columnIsNull(RA)) {
+                    throw LSST_EXCEPT(ex::RuntimeErrorException, 
+                            "null column \"ra\""); 
+                }                
+                if (db->columnIsNull(RA_ERR_FOR_DETECTION)) { 
+                    data.setNull(det::RA_ERR_FOR_DETECTION); 
+                } 
+                if (db->columnIsNull(RA_ERR_FOR_WCS)) { 
+                    data.setNull(det::RA_ERR_FOR_WCS); 
+                }
+                if (db->columnIsNull(DECL)) {
+                    throw LSST_EXCEPT(ex::RuntimeErrorException, 
+                            "null column \"decl\""); 
+                }
+                if (db->columnIsNull(DEC_ERR_FOR_DETECTION)) { 
+                    data.setNull(det::DEC_ERR_FOR_DETECTION); 
+                }                 
+                if (db->columnIsNull(DEC_ERR_FOR_WCS)) { 
+                    data.setNull(det::DEC_ERR_FOR_WCS);
+                }
+                if (db->columnIsNull(X_ASTROM)) {
+                    throw LSST_EXCEPT(ex::RuntimeErrorException, 
+                            "null column \"xAstrom\""); 
+                } 
+                if (db->columnIsNull(X_ASTROM_ERR)) { 
+                    data.setNull(det::X_ASTROM_ERR); 
+                }
+                if (db->columnIsNull(Y_ASTROM)) {
+                    throw LSST_EXCEPT(ex::RuntimeErrorException, 
+                            "null column \"yAstrom\""); 
+                } 
+                if (db->columnIsNull(Y_ASTROM_ERR)) { 
+                    data.setNull(det::Y_ASTROM_ERR); 
+                }
+                if (db->columnIsNull(TAI_MID_POINT)) {
+                    throw LSST_EXCEPT(ex::RuntimeErrorException, 
+                            "null column \"taiMidPoint\""); 
+                }
+                if (db->columnIsNull(TAI_RANGE)) {
+                    throw LSST_EXCEPT(ex::RuntimeErrorException, 
+                            "null column \"taiRange\""); 
+                }
+                if (db->columnIsNull(IXX)) { data.setNull(det::IXX);}
+                if (db->columnIsNull(IXX_ERR)) { data.setNull(det::IXX_ERR);}
+                if (db->columnIsNull(IYY)) { data.setNull(det::IYY); }
+                if (db->columnIsNull(IYY_ERR)) { data.setNull(det::IYY_ERR);}
+                if (db->columnIsNull(IXY)) { data.setNull(det::IXY);}
+                if (db->columnIsNull(IXY_ERR)) { data.setNull(det::IXY_ERR); }
+                if (db->columnIsNull(PSF_FLUX)) {
+                    throw LSST_EXCEPT(ex::RuntimeErrorException, 
+                            "null column \"psfFlux\"");           
+                }
+                if (db->columnIsNull(PSF_FLUX_ERR)) { 
+                    data.setNull(det::PSF_FLUX_ERR); 
+                }
+                if (db->columnIsNull(AP_FLUX)) {
+                    throw LSST_EXCEPT(ex::RuntimeErrorException, 
+                            "null column \"apFlux\"");  
+                }
+                if (db->columnIsNull(AP_FLUX_ERR)) { 
+                    data.setNull(det::AP_FLUX_ERR); 
+                }
+                if (db->columnIsNull(MODEL_FLUX)) {
+                    throw LSST_EXCEPT(ex::RuntimeErrorException, 
+                            "null column \"modelFlux\""); 
+                }
+                if (db->columnIsNull(MODEL_FLUX_ERR)) { 
+                    data.setNull(det::MODEL_FLUX_ERR);                  
+                } 
+                if (db->columnIsNull(INST_FLUX)) {
+                    throw LSST_EXCEPT(ex::RuntimeErrorException, 
+                            "null column \"instFlux\""); 
+                }
+                if (db->columnIsNull(INST_FLUX_ERR)) { 
+                    data.setNull(det::INST_FLUX_ERR); 
+                } 
+                if (db->columnIsNull(AP_DIA)) { data.setNull(det::AP_DIA); }
+                if (db->columnIsNull(FLAG_FOR_CLASSIFICATION)) {
+                    data.setNull(det::FLAG_CLASSIFICATION); 
+                }    
+                if (db->columnIsNull(FLAG_FOR_DETECTION)) { 
+                    data.setNull(det::FLAG_FOR_DETECTION); 
+                }
+                if (db->columnIsNull(SNR)) { 
+                    throw LSST_EXCEPT(ex::RuntimeErrorException, 
+                            "null column \"snr\""); 
+                }
+                if (db->columnIsNull(CHI2)) {
+                    throw LSST_EXCEPT(ex::RuntimeErrorException, 
+                            "null column \"chi2\""); 
+                }
+                #if 0
+                //Not defined in DC3a. Keep for DC3b.
                 if (db->columnIsNull(PROC_HISTORY_ID)) {
                     throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"procHistoryId\""); 
                 }
@@ -583,22 +700,6 @@ Persistable* form::DiaSourceVectorFormatter::read(
                     throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"scId\""); 
                 }                
                 if (db->columnIsNull(SSM_ID)) { data.setNull(det::SSM_ID); }
-                if (db->columnIsNull(RA)) {
-                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"ra\""); 
-                }                
-                if (db->columnIsNull(RA_ERR_FOR_DETECTION)) { 
-                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"raErr4detection\"");
-                }
-                if (db->columnIsNull(RA_ERR_FOR_WCS)) { data.setNull(det::RA_ERR_FOR_WCS); }
-                if (db->columnIsNull(DECL)) {
-                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"decl\""); 
-                }
-                if (db->columnIsNull(DEC_ERR_FOR_DETECTION)) {
-                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"declErr4detection\""); 
-                }                
-                if (db->columnIsNull(DEC_ERR_FOR_WCS)) { data.setNull(det::DEC_ERR_FOR_WCS);                }
-                if (db->columnIsNull(X_FLUX)) { data.setNull(det::X_FLUX); }
-                if (db->columnIsNull(X_FLUX_ERR)) { data.setNull(det::X_FLUX_ERR); }
                 if (db->columnIsNull(Y_FLUX)) { data.setNull(det::Y_FLUX); }
                 if (db->columnIsNull(Y_FLUX_ERR)) { data.setNull(det::Y_FLUX_ERR); }
                 if (db->columnIsNull(RA_FLUX)) { data.setNull(det::RA_FLUX); }
@@ -609,78 +710,18 @@ Persistable* form::DiaSourceVectorFormatter::read(
                 if (db->columnIsNull(Y_PEAK)) { data.setNull(det::Y_PEAK); }
                 if (db->columnIsNull(RA_PEAK)) { data.setNull(det::RA_PEAK); }
                 if (db->columnIsNull(DEC_PEAK)) { data.setNull(det::DEC_PEAK); }
-                if (db->columnIsNull(X_ASTROM)) { data.setNull(det::X_ASTROM); }
-                if (db->columnIsNull(X_ASTROM_ERR)) { data.setNull(det::X_ASTROM_ERR); }
-                if (db->columnIsNull(Y_ASTROM)) { data.setNull(det::Y_ASTROM); }
-                if (db->columnIsNull(Y_ASTROM_ERR)) { data.setNull(det::Y_ASTROM_ERR); }
                 if (db->columnIsNull(RA_ASTROM)) { data.setNull(det::RA_ASTROM); }
                 if (db->columnIsNull(RA_ASTROM_ERR)) { data.setNull(det::RA_ASTROM_ERR); }
                 if (db->columnIsNull(DEC_ASTROM)) { data.setNull(det::DEC_ASTROM); }
                 if (db->columnIsNull(DEC_ASTROM_ERR)) { data.setNull(det::DEC_ASTROM_ERR); }
-                if (db->columnIsNull(TAI_MID_POINT)) {
-                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"taiMidPoint\""); 
-                }
-                if (db->columnIsNull(TAI_RANGE)) {
-                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"taiRange\""); 
-                }
-                if (db->columnIsNull(FWHM_A)) {
-                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"fwhmA\""); 
-                }
-                if (db->columnIsNull(FWHM_B)) {
-                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"fwhmB\""); 
-                }
-                if (db->columnIsNull(FWHM_THETA)) {
-                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"fwhmTheta\""); 
-                }
                 if (db->columnIsNull(LENGTH_DEG)) {
                     throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"lengthDeg\"");        
-                }               
-                if (db->columnIsNull(FLUX)) {
-                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"flux\"");             
-                }
-                if (db->columnIsNull(FLUX_ERR)) {
-                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"fluxErr\"");          
-                }                
-                if (db->columnIsNull(PSF_FLUX)) {
-                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"psfFlux\"");           
-                }
-                if (db->columnIsNull(PSF_FLUX_ERR)) {
-                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"psfFluxErr\"");        
-                }
-                if (db->columnIsNull(AP_FLUX)) {
-                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"apFlux\"");  
-                }
-                if (db->columnIsNull(AP_FLUX_ERR)) {
-                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"apFluxErr\"");  
-                }
-                if (db->columnIsNull(MODEL_FLUX)) {
-                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"modelFlux\""); 
-                }
-                if (db->columnIsNull(MODEL_FLUX_ERR)) { data.setNull(det::MODEL_FLUX_ERR);  } 
-                if (db->columnIsNull(INST_FLUX)) {
-                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"instFlux\""); 
-                }
-                if (db->columnIsNull(INST_FLUX_ERR)) { 
-                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"instFluxErr\""); 
-                }                            
+                }     
                 if (db->columnIsNull(NON_GRAY_CORR_FLUX)) { data.setNull(det::NON_GRAY_CORR_FLUX); }
                 if (db->columnIsNull(NON_GRAY_CORR_FLUX_ERR)) { data.setNull(det::NON_GRAY_CORR_FLUX_ERR);}
                 if (db->columnIsNull(ATM_CORR_FLUX)) { data.setNull(det::ATM_CORR_FLUX); }
                 if (db->columnIsNull(ATM_CORR_FLUX_ERR)) { data.setNull(det::ATM_CORR_FLUX_ERR); }
-                if (db->columnIsNull(AP_DIA)) { data.setNull(det::AP_DIA); }
-                if (db->columnIsNull(REF_FLUX)) { data.setNull(det::REF_FLUX);}                
-                if (db->columnIsNull(IXX)) { data.setNull(det::IXX);}
-                if (db->columnIsNull(IXX_ERR)) { data.setNull(det::IXX_ERR);}
-                if (db->columnIsNull(IYY)) { data.setNull(det::IYY); }
-                if (db->columnIsNull(IYY_ERR)) { data.setNull(det::IYY_ERR);}
-                if (db->columnIsNull(IXY)) { data.setNull(det::IXY);}
-                if (db->columnIsNull(IXY_ERR)) { data.setNull(det::IXY_ERR); }
-                if (db->columnIsNull(SNR)) { 
-                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"snr\""); 
-                }
-                if (db->columnIsNull(CHI2)) {
-                    throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"chi2\""); 
-                }
+                if (db->columnIsNull(REF_FLUX)) { data.setNull(det::REF_FLUX);}  
                 if (db->columnIsNull(VAL_X1)) {
                     throw LSST_EXCEPT(ex::RuntimeErrorException, "null column \"valx1\"");
                 }
@@ -700,9 +741,8 @@ Persistable* form::DiaSourceVectorFormatter::read(
                 if (db->columnIsNull(IS_SYNTHETIC)) { data.setNull(det::IS_SYNTHETIC); }
                 if (db->columnIsNull(MOPS_STATUS)) { data.setNull(det::MOPS_STATUS); }
                 if (db->columnIsNull(FLAG_FOR_ASSOCIATION)) { data.setNull(det::FLAG_FOR_ASSOCIATION);}
-                if (db->columnIsNull(FLAG_FOR_DETECTION)) { data.setNull(det::FLAG_FOR_DETECTION); }
                 if (db->columnIsNull(FLAG_FOR_WCS)) { data.setNull(det::FLAG_FOR_WCS); }       
-                if (db->columnIsNull(FLAG_CLASSIFICATION)) {data.setNull(det::FLAG_CLASSIFICATION); }     
+                #endif 
 
                 //add source to vector
                 DiaSource::Ptr sourcePtr(new DiaSource(data));
