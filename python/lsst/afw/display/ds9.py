@@ -309,8 +309,13 @@ otherwise connect the dots.  Ctype is the name of a colour (e.g. 'red')"""
 
    if symbs:
       for (c, r) in points:
-         dot(symbs, r, c, frame = frame, size = 0.5, ctype = ctype)
+         dot(symbs, r, c, frame = frame, size = 0.5, ctype=ctype)
    else:
+      if ctype == GREEN:                # default
+          color = ""
+      else:
+          color = "# color=%s" % ctype
+
       if len(points) > 0:
           cmd = "frame %d; " % (frame)
 
@@ -318,9 +323,8 @@ otherwise connect the dots.  Ctype is the name of a colour (e.g. 'red')"""
           r0 += 1; c0 += 1;             # ds9 uses 1-based coordinates
           for (c, r) in points[1:]:
              r += 1; c += 1;            # ds9 uses 1-based coordinates
-             cmd += 'regions command { line %g %g %g %g };' % (c0, r0, c, r)
+             cmd += 'regions command { line %g %g %g %g %s};' % (c0, r0, c, r, color)
              c0, r0 = c, r
-          #cmd += ' # color=%s' % ctype
 
           ds9Cmd(cmd)
 #
