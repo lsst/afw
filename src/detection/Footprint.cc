@@ -321,7 +321,7 @@ detection::Footprint::Ptr detection::footprintAndMask(
  * \return bitmask
  */
 template<typename MaskT>
-MaskT detection::setMaskFromFootprint(typename image::Mask<MaskT>::Ptr mask, ///< Mask to set
+MaskT detection::setMaskFromFootprint(image::Mask<MaskT> *mask,              ///< Mask to set
                                       detection::Footprint const& foot,      ///< Footprint specifying desired pixels
                                       MaskT const bitmask                    ///< Bitmask to OR into mask
                                      ) {
@@ -359,9 +359,9 @@ MaskT detection::setMaskFromFootprint(typename image::Mask<MaskT>::Ptr mask, ///
  */
 template<typename MaskT>
 MaskT detection::setMaskFromFootprintList(
-	typename image::Mask<MaskT>::Ptr mask, ///< Mask to set
+	image::Mask<MaskT> *mask,                                 ///< Mask to set
         std::vector<detection::Footprint::Ptr> const& footprints, ///< Footprint list specifying desired pixels
-        MaskT const bitmask             ///< Bitmask to OR into mask
+        MaskT const bitmask                                       ///< Bitmask to OR into mask
                                                ) {
     for (std::vector<detection::Footprint::Ptr>::const_iterator fiter = footprints.begin();
          fiter != footprints.end(); ++fiter) {
@@ -377,12 +377,12 @@ MaskT detection::setMaskFromFootprintList(
  */
 template <typename IDPixelT>
 static void set_footprint_id(typename image::Image<IDPixelT>::Ptr idImage,	// the image to set
-                             detection::Footprint::Ptr foot, // the footprint to insert
+                             detection::Footprint const& foot, // the footprint to insert
                              const int id,          // the desired ID
                              int dx = 0, int dy = 0 // Add these to all x/y in the Footprint
                             ) {
-    for (detection::Footprint::SpanList::const_iterator siter = foot->getSpans().begin();
-							siter != foot->getSpans().end(); siter++) {
+    for (detection::Footprint::SpanList::const_iterator siter = foot.getSpans().begin();
+							siter != foot.getSpans().end(); siter++) {
         detection::Span::Ptr const span = *siter;
         for (typename image::Image<IDPixelT>::x_iterator ptr = idImage->x_at(span->getX0() + dx, span->getY() + dy),
                  end = ptr + span->getWidth(); ptr != end; ++ptr) {
@@ -408,7 +408,7 @@ set_footprint_array_ids(typename image::Image<IDPixelT>::Ptr idImage, // the ima
             id = foot->getId();
         }
         
-        set_footprint_id<IDPixelT>(idImage, foot, id);
+        set_footprint_id<IDPixelT>(idImage, *foot, id);
     }
 }
 
@@ -467,7 +467,7 @@ typename boost::shared_ptr<image::Image<IDImageT> > setFootprintID(detection::Fo
     /*
      * do the work
      */
-    set_footprint_id<IDImageT>(idImage, foot, id);
+    set_footprint_id<IDImageT>(idImage, *foot, id);
 
     return idImage;
 }
@@ -482,7 +482,7 @@ template image::Image<int>::Ptr setFootprintID(detection::Footprint::Ptr const& 
  */
 namespace {
 detection::Footprint::Ptr growFootprintSlow(
-	detection::Footprint::Ptr const &foot, //!< The Footprint to grow 
+	detection::Footprint const& foot, //!< The Footprint to grow 
         int ngrow                              //!< how much to grow foot
                                                  ) {
     if (ngrow < 0) {
@@ -492,7 +492,7 @@ detection::Footprint::Ptr growFootprintSlow(
      * We'll insert the footprints into an image, then convolve with a disk,
      * then extract a footprint from the result --- this is magically what we want.
      */
-    image::BBox bbox = foot->getBBox();
+    image::BBox bbox = foot.getBBox();
     bbox.grow(image::PointI(bbox.getX0() - 2*ngrow - 1, bbox.getY0() - 2*ngrow - 1));
     bbox.grow(image::PointI(bbox.getX1() + 2*ngrow + 1, bbox.getY1() + 2*ngrow + 1));
     image::Image<int>::Ptr idImage = makeImageFromBBox<int>(bbox);
@@ -525,7 +525,7 @@ detection::Footprint::Ptr growFootprintSlow(
     // Fix the coordinate system to be that of foot
     //
     grown->shift(bbox.getX0(), bbox.getY0());
-    grown->setRegion(foot->getRegion());
+    grown->setRegion(foot.getRegion());
 
     return grown;
 }
@@ -533,10 +533,10 @@ detection::Footprint::Ptr growFootprintSlow(
 
 /************************************************************************************************************/
 /**
- * Grow a Footprint isotropically by r pixels, returning a new Footprint
+ * Grow a Footprint by r pixels, returning a new Footprint
  */
 detection::Footprint::Ptr detection::growFootprint(
-	detection::Footprint::Ptr const &foot, //!< The Footprint to grow 
+	detection::Footprint const &foot,      //!< The Footprint to grow 
         int ngrow,                             //!< how much to grow foot
         bool isotropic                         //!< Grow isotropically (as opposed to a Manhattan metric)
                                                //!< @note Isotropic grows are significantly slower
@@ -550,10 +550,12 @@ detection::Footprint::Ptr detection::growFootprint(
 	ngrow = 0;                      // ngrow == 0 => no grow
     }
     /*
-     * We'll insert the footprints into an image, then convolve with a disk,
-     * then extract a footprint from the result --- this is magically what we want.
+     * We'll insert the footprints into an image, set all the pixels to the Manhatten distance from the
+     * nearest set pixel, then extract a footprint from the result
+     *
+     * Cf. http://ostermiller.org/dilate_and_erode.html
      */
-    image::BBox bbox = foot->getBBox();
+    image::BBox bbox = foot.getBBox();
     bbox.grow(image::PointI(bbox.getX0() - ngrow - 1, bbox.getY0() - ngrow - 1));
     bbox.grow(image::PointI(bbox.getX1() + ngrow + 1, bbox.getY1() + ngrow + 1));
     image::Image<int>::Ptr idImage = makeImageFromBBox<int>(bbox);
@@ -564,7 +566,6 @@ detection::Footprint::Ptr detection::growFootprint(
     image::Image<int>::Ptr idImage2;
     //
     // Set the idImage to the Manhattan distance from the nearest set pixel
-    // Cf. http://ostermiller.org/dilate_and_erode.html
     //
     int const height = idImage->getHeight();
     int const width = idImage->getWidth();
@@ -616,9 +617,13 @@ detection::Footprint::Ptr detection::growFootprint(
     // Fix the coordinate system to be that of foot
     //
     grown->shift(bbox.getX0(), bbox.getY0());
-    grown->setRegion(foot->getRegion());
+    grown->setRegion(foot.getRegion());
 
     return grown;
+}
+
+detection::Footprint::Ptr detection::growFootprint(Footprint::Ptr const &foot, int ngrow, bool isotropic) {
+    return growFootprint(*foot, ngrow, isotropic);
 }
 
 #if 0
@@ -973,7 +978,7 @@ detection::Footprint::Ptr detection::footprintAndMask(detection::Footprint::Ptr 
                                                       image::MaskPixel bitMask);
         
 template
-image::MaskPixel detection::setMaskFromFootprintList(image::Mask<image::MaskPixel>::Ptr mask,
+image::MaskPixel detection::setMaskFromFootprintList(image::Mask<image::MaskPixel> *mask,
                                                      std::vector<detection::Footprint::Ptr> const& footprints,
                                                      image::MaskPixel const bitmask);
 // \endcond
