@@ -7,6 +7,11 @@ import lsst.tests
 import lsst.daf.persistence
 import lsst.SConsUtils as scons # scons 1.17 supports "env.ProductDir", but for now use scons.ProductDir
 
+env.CheckSwig("python", ilang="c++",
+              includedProducts="afw utils daf_base pex_exceptions pex_logging pex_policy daf_persistence daf_data security")
+
+testLib = env.LoadableModuleIncomplete("_testLib", ["testLib.i"], LIBS=env.getlibs("afw"))
+
 env.Program(["checkTypeConversions.cc"], LIBS=env.getlibs("afw"))
 env.Program(["Exposure.cc"], LIBS=env.getlibs("afw"))
 

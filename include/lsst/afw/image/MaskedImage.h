@@ -59,6 +59,7 @@ namespace image {
         typedef typename Image<VariancePixelT>::Ptr VariancePtr;
         /// shared pointer to a MaskedImage
         typedef boost::shared_ptr<MaskedImage> Ptr;
+        typedef boost::shared_ptr<const MaskedImage> ConstPtr;
         /// The Mask's MaskPlaneDict
         typedef typename Mask<MaskPixelT>::MaskPlaneDict MaskPlaneDict;
 
