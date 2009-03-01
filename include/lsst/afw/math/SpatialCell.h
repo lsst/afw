@@ -65,11 +65,10 @@ namespace math {
     };
 
     /** 
-     * 
      * @brief Class to ensure constraints for spatial modeling
      * 
      * A given %image is be divided up into cells, with each cell represented by an instance of this class.
-     * Each cell itself contains a list of instances of classes dertived from SpatialCellItemBase.  One class
+     * Each cell itself contains a list of instances of classes derived from SpatialCellCandidate.  One class
      * member from each cell will be chosen to fit to a spatial model.  In case of a poor fit, the next class
      * instance in the list will be fit for.  If all instances in a list are rejected from the spatial model,
      * the best one will be used.
@@ -102,6 +101,10 @@ namespace math {
          * Get SpatialCell's label
          */
         std::string const& getLabel() const { return _label; }
+        /**
+         * Get SpatialCell's BBox
+         */
+        lsst::afw::image::BBox const& getBBox() const { return _bbox; }
 
         bool isUsable() const;
     private:
@@ -110,6 +113,34 @@ namespace math {
         CandidateList _candidateList;   // List of candidates in the cell
 
         CandidateList::iterator _currentCandidate; // The current candidate in this Cell
+    };
+
+    /** 
+     * @brief A collection of SpatialCells covering an entire %image
+     */
+    class SpatialCellSet {
+    public:
+        typedef boost::shared_ptr<SpatialCellSet> Ptr;
+        typedef boost::shared_ptr<const SpatialCellSet> ConstPtr;
+        
+        typedef std::vector<SpatialCell::Ptr> CellList;
+
+        SpatialCellSet(lsst::afw::image::BBox const& region, int nx, int ny);
+        
+        /**
+         * Destructor
+         */
+        virtual ~SpatialCellSet() {;};
+
+        /**
+         * Return our SpatialCells
+         */
+        CellList& getCellList() { return _cellList; }
+
+        void insertCandidate(SpatialCellCandidate::Ptr candidate);
+    private:
+        lsst::afw::image::BBox _region;   // Dimensions of overall image
+        CellList _cellList;               // List of SpatialCells
     };
 }}}
 

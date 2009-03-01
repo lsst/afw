@@ -27,20 +27,20 @@ try:
 except NameError:
     display = False
 
+def getFlux(x):
+    return 1000 - 10*x
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class SpatialCellTestCase(unittest.TestCase):
     """A test case for SpatialCell"""
-
-    def getFlux(self, x):
-        return 1000 - 10*x
 
     def setUp(self):
         candidateList = afwMath.SpatialCellCandidateList()
         self.nCandidate = 5
         for i in (0, 1, 4, 3, 2):       # must be all numbers in range(self.nCandidate)
             x, y = i, 5*i
-            candidateList.append(testLib.TestCandidate(x, y, self.getFlux(x)))
+            candidateList.append(testLib.TestCandidate(x, y, getFlux(x)))
     
         self.cell = afwMath.SpatialCell("Test", afwImage.BBox(), candidateList)
         self.assertEqual(self.cell.getLabel(), "Test")
@@ -84,7 +84,7 @@ class SpatialCellTestCase(unittest.TestCase):
 
         self.cell = afwMath.SpatialCell("Test", afwImage.BBox())
         for x, y in ([5, 0], [1, 1], [2, 2], [0, 0], [4, 4], [3, 4]):
-            self.cell.insertCandidate(testLib.TestCandidate(x, y, self.getFlux(x)))
+            self.cell.insertCandidate(testLib.TestCandidate(x, y, getFlux(x)))
         #
         # The first candidate installed will be current
         #
@@ -102,11 +102,66 @@ class SpatialCellTestCase(unittest.TestCase):
         self.assertEqual(self.cell.getCurrentCandidate().getXCenter(), 2)
 
         x, y = 2.5, 0
-        self.cell.insertCandidate(testLib.TestCandidate(x, y, self.getFlux(x)))
+        self.cell.insertCandidate(testLib.TestCandidate(x, y, getFlux(x)))
         self.assertEqual(self.cell.getCurrentCandidate().getXCenter(), 2)
 
         self.cell.nextCandidate()
         self.assertEqual(self.cell.getCurrentCandidate().getXCenter(), 2.5)
+
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+class SpatialCellSetTestCase(unittest.TestCase):
+    """A test case for SpatialCellSet"""
+
+    def setUp(self):
+        self.cellSet = afwMath.SpatialCellSet(afwImage.BBox(afwImage.PointI(0, 0), 501, 501), 2, 3)
+
+    def tearDown(self):
+        del self.cellSet
+
+    def testNoCells(self):
+        """Test that we check for a request to make a SpatialCellSet with no cells"""
+        def tst():
+            afwMath.SpatialCellSet(afwImage.BBox(afwImage.PointI(0, 0), 500, 500), 0, 3)
+
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.LengthErrorException, tst)
+
+    def testInsertCandidate(self):
+        """Insert candidates into the SpatialCellSet"""
+
+        self.assertEqual(len(self.cellSet.getCellList()), 6)
+
+        for x, y in ([5, 0], [1, 1], [2, 2], [0, 0], [4, 4], [3, 4]): # all in cell0
+            self.cellSet.insertCandidate(testLib.TestCandidate(x, y, -x))
+
+        self.cellSet.insertCandidate(testLib.TestCandidate(305, 0, 100))        # in cell1
+        self.cellSet.insertCandidate(testLib.TestCandidate(500, 500, 100))      # the top right corner of cell5
+
+        def tst():
+            self.cellSet.insertCandidate(testLib.TestCandidate(501, 501, 100))      # Doesn't fit
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.OutOfRangeException, tst)
+        #
+        # OK, the SpatialCellList is populated
+        #
+        if False:
+            print
+            for i in range(len(self.cellSet.getCellList())):
+                cell = self.cellSet.getCellList()[i]
+                print i, "%3d,%3d -- %3d,%3d" % (cell.getBBox().getX0(), cell.getBBox().getY0(),
+                                                 cell.getBBox().getX1(), cell.getBBox().getY1()), cell.isUsable()
+
+        self.assertEqual(self.cellSet.getCellList()[0].isUsable(), True)
+        self.assertEqual(self.cellSet.getCellList()[0].getCurrentCandidate().getXCenter(), 5.0)
+        
+        self.assertEqual(self.cellSet.getCellList()[1].getCurrentCandidate().getXCenter(), 305.0)
+
+        def tst():
+            self.cellSet.getCellList()[2].getCurrentCandidate()
+
+        self.assertEqual(self.cellSet.getCellList()[2].isUsable(), False)
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.NotFoundException, tst)
+
+        self.assertEqual(self.cellSet.getCellList()[5].isUsable(), True)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -117,6 +172,7 @@ def suite():
 
     suites = []
     suites += unittest.makeSuite(SpatialCellTestCase)
+    suites += unittest.makeSuite(SpatialCellSetTestCase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 

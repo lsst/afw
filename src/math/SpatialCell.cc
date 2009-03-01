@@ -8,12 +8,14 @@
  */
 #include <algorithm>
 
-#include "lsst/afw/image/Mask.h"
-#include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/ImageUtils.h"
+#include "lsst/afw/image/Utils.h"
 
 #include "lsst/pex/exceptions/Exception.h"
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/math/SpatialCell.h"
+
+namespace image = lsst::afw::image;
 
 namespace lsst {
 namespace afw {
@@ -36,7 +38,7 @@ int SpatialCellCandidate::_CandidateId = 0;
  * Ctor
  */
 SpatialCell::SpatialCell(std::string const& label, ///< string representing "name" of cell
-                         lsst::afw::image::BBox const& bbox, ///< Bounding box of cell in overall image
+                         image::BBox const& bbox,  ///< Bounding box of cell in overall image
                          CandidateList const& candidateList  ///< list of candidates to represent this cell
                         ) :
     _label(label),
@@ -167,6 +169,72 @@ bool SpatialCell::nextCandidate() {
 
         return true;
     }
+}
+
+/************************************************************************************************************/
+
+/**
+ * Constructor
+ *
+ * @throw lsst::pex::exceptions::LengthErrorException if nx or ny is non-positive
+ */
+SpatialCellSet::SpatialCellSet(image::BBox const& region, ///< Bounding box for %image
+                               int nx,  ///< number of cells in the column direction
+                               int ny   ///< number of cells in the row direction
+                              ) :
+    _region(region), _cellList(CellList()) {
+    if (nx <= 0 || ny <= 0) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                          (boost::format("Please specify at least one cell in x and y, not %dx%d") %
+                           nx % ny).str());
+    }
+    
+    float const dx = region.getWidth()/static_cast<float>(nx);
+    float const dy = region.getHeight()/static_cast<float>(ny);
+    //
+    // N.b. the SpatialCells will be sorted in y at the end of this
+    //
+    for (int y = 0; y < ny; ++y) {
+        int const y1 = (y == ny - 1) ? region.getHeight() - 1 : (y + 1)*dy; // ny may not be a factor of height
+        for (int x = 0; x < nx; ++x) {
+            int const x1 = (x == nx - 1) ? region.getWidth() - 1 : (x + 1)*dx; // nx may not be a factor of width
+            image::BBox bbox(image::PointI(x*dx, y*dy), image::PointI(x1, y1));
+            std::string label = (boost::format("Cell %dx%d") % x % y).str();
+
+            _cellList.push_back(SpatialCell::Ptr(new SpatialCell(label, bbox)));        
+        }
+    }
+}
+
+/************************************************************************************************************/
+
+namespace {
+    struct CellContains : public std::unary_function<SpatialCell::Ptr,
+                                                     bool> {
+        CellContains(SpatialCellCandidate::Ptr candidate) : _candidate(candidate) {}
+
+        bool operator()(SpatialCell::Ptr cell) {
+            return cell->getBBox().contains(image::PointI(image::positionToIndex(_candidate->getXCenter()),
+                                                          image::positionToIndex(_candidate->getYCenter())));
+        }
+    private:
+        SpatialCellCandidate::Ptr _candidate;
+    };
+}
+
+/**
+ * Insert a candidate into the correct cell
+ */
+void SpatialCellSet::insertCandidate(SpatialCellCandidate::Ptr candidate) {
+    CellList::iterator pos = std::find_if(_cellList.begin(), _cellList.end(), CellContains(candidate));
+
+    if (pos == _cellList.end()) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::OutOfRangeException,
+                          (boost::format("Unable to insert a candidate at (%.2f, %.2f)") %
+                           candidate->getXCenter() % candidate->getYCenter()).str());
+    }
+
+    (*pos)->insertCandidate(candidate);
 }
 
 }}}
