@@ -194,15 +194,20 @@ SpatialCellSet::SpatialCellSet(image::BBox const& region, ///< Bounding box for 
     //
     // N.b. the SpatialCells will be sorted in y at the end of this
     //
+    int y0 = 0;
     for (int y = 0; y < ny; ++y) {
         int const y1 = (y == ny - 1) ? region.getHeight() - 1 : (y + 1)*dy; // ny may not be a factor of height
+        int x0 = 0;
         for (int x = 0; x < nx; ++x) {
             int const x1 = (x == nx - 1) ? region.getWidth() - 1 : (x + 1)*dx; // nx may not be a factor of width
-            image::BBox bbox(image::PointI(x*dx, y*dy), image::PointI(x1, y1));
+            image::BBox bbox(image::PointI(x0, y0), image::PointI(x1, y1));
             std::string label = (boost::format("Cell %dx%d") % x % y).str();
 
             _cellList.push_back(SpatialCell::Ptr(new SpatialCell(label, bbox)));        
+
+            x0 = x1 + 1;
         }
+        y0 = y1 + 1;
     }
 }
 
