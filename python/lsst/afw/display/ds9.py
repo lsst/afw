@@ -136,7 +136,7 @@ def initDS9(execDs9 = True):
 
 def show(frame=0):
     """Uniconify and Raise ds9.  N.b. throws an exception if frame doesn't exit"""
-    ds9.ds9Cmd("frame %d; raise" % frame, trap=False)
+    ds9Cmd("frame %d; raise" % frame, trap=False)
 
 def setMaskColor(color = GREEN):
     """Set the ds9 mask colour to; eg. ds9.setMaskColor(ds9.RED)"""
