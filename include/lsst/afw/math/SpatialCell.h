@@ -21,6 +21,8 @@
 namespace lsst {
 namespace afw {
 namespace math {
+
+    /************************************************************************************************************/
     /**
      * Base class for candidate objects in a SpatialCell
      */
@@ -64,6 +66,31 @@ namespace math {
                                         // following insertion
     };
 
+    /************************************************************************************************************/
+    /**
+     * Base class for candidate objects in a SpatialCell that are able to return an %image of some sort
+     * (e.g. a PSF or a DIA kernel)
+     */
+    template<typename ImageT>
+    class SpatialCellImageCandidate : public SpatialCellCandidate {
+    public:
+        typedef boost::shared_ptr<SpatialCellImageCandidate> Ptr;
+        typedef boost::shared_ptr<const SpatialCellImageCandidate> ConstPtr;
+
+        SpatialCellImageCandidate(float const xCenter, ///< The object's column-centre
+                                  float const yCenter  ///< The object's row-centre
+                                 ) : SpatialCellCandidate(xCenter, yCenter),
+                                     _image(typename ImageT::Ptr()) {
+        }
+
+        /** Return the Candidate's Image */
+        virtual typename ImageT::ConstPtr getImage() const = 0;
+    protected:
+        typename ImageT::Ptr mutable _image; ///< a pointer to the %image, for the use of the base class
+    private:
+    };
+
+    /************************************************************************************************************/
     /** 
      * @brief Class to ensure constraints for spatial modeling
      * 

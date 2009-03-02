@@ -22,15 +22,17 @@ Various swigged-up C++ classes for testing
 %import "lsst/afw/math/mathLib.i"
 
 SWIG_SHARED_PTR_DERIVED(TestCandidate, lsst::afw::math::SpatialCellCandidate, TestCandidate);
+SWIG_SHARED_PTR_DERIVED(TestImageCandidate,
+                        lsst::afw::math::SpatialCellImageCandidate<lsst::afw::image::Image<float> >,
+                        TestImageCandidate);
 
 %inline %{
-
     /*
-     * Test class for SpatialCell
+     * Test class for SpatialCellCandidate
      */
     class TestCandidate : public lsst::afw::math::SpatialCellCandidate {
     public:
-        TestCandidate(float const xCenter, ///< The object's column-centrew
+        TestCandidate(float const xCenter, ///< The object's column-centre
                       float const yCenter, ///< The object's row-centre
                       float const flux     ///< The object's flux
                     ) :
@@ -44,6 +46,37 @@ SWIG_SHARED_PTR_DERIVED(TestCandidate, lsst::afw::math::SpatialCellCandidate, Te
     private:
         double _flux;
     };
+
+    /************************************************************************************************************/
+    /*
+     * Test class for SpatialCellImageCandidate
+     */
+    class TestImageCandidate : public lsst::afw::math::SpatialCellImageCandidate<lsst::afw::image::Image<float> > {
+    public:
+        typedef lsst::afw::image::Image<float> ImageT;
+
+        TestImageCandidate(float const xCenter, ///< The object's column-centre
+                           float const yCenter, ///< The object's row-centre
+                           float const flux     ///< The object's flux
+                    ) :
+            lsst::afw::math::SpatialCellImageCandidate<ImageT>(xCenter, yCenter), _flux(flux) {
+        }
+
+        /// Return candidates rating
+        double getCandidateRating() const {
+            return _flux;
+        }
+
+        /// Return the %image
+        ImageT::ConstPtr getImage() const {
+            if (_image.get() == NULL) {
+                _image = ImageT::Ptr(new ImageT(11, 11));
+                *_image = _flux;
+            }
+
+            return _image;
+        }
+    private:
+        double _flux;
+    };
 %}
-
-
