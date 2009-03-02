@@ -70,7 +70,7 @@ SWIG_SHARED_PTR_DERIVED(TestImageCandidate,
         /// Return the %image
         ImageT::ConstPtr getImage() const {
             if (_image.get() == NULL) {
-                _image = ImageT::Ptr(new ImageT(11, 11));
+                _image = ImageT::Ptr(new ImageT(getWidth(), getHeight()));
                 *_image = _flux;
             }
 

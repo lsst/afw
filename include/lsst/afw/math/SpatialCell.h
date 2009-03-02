@@ -85,10 +85,31 @@ namespace math {
 
         /** Return the Candidate's Image */
         virtual typename ImageT::ConstPtr getImage() const = 0;
+
+        /** Set the width of the image that getImage should return */
+        void setWidth(int width) { _width = width; }
+        /** Return the width of the image that getImage should return */
+        int getWidth() const { return _width; }
+
+        /** Set the height of the image that getImage should return */
+        void setHeight(int height) { _height = height; }
+        /** Return the height of the image that getImage should return */
+        int getHeight() const { return _height; }
+
     protected:
         typename ImageT::Ptr mutable _image; ///< a pointer to the %image, for the use of the base class
     private:
+        static int _width;              // the width of images to return; may be ignored by subclasses
+        static int _height;             // the height of images to return; may be ignored by subclasses
     };
+
+    /// The width of images that SpatialCellImageCandidate should return; may be ignored by subclasses
+    template<typename ImageT>
+    int SpatialCellImageCandidate<ImageT>::_width = 0;
+
+    /// The height of images that SpatialCellImageCandidate should return; may be ignored by subclasses
+    template<typename ImageT>
+    int SpatialCellImageCandidate<ImageT>::_height = 0;
 
     /************************************************************************************************************/
     /** 

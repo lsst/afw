@@ -190,7 +190,14 @@ class TestImageCandidateCase(unittest.TestCase):
         self.assertEqual(afwMath.cast_SpatialCellImageCandidateMF(cand), None)
 
         cand = afwMath.cast_SpatialCellImageCandidateF(cand)
-        self.assertEqual(cand.getImage().get(0,0), flux)
+
+        width, height = 15, 21
+        cand.setWidth(width); cand.setHeight(height);
+
+        im = cand.getImage()
+        self.assertEqual(im.get(0,0), flux) # This is how TestImageCandidate sets its pixels
+        self.assertEqual(im.getWidth(), width)
+        self.assertEqual(im.getHeight(), height)
         
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
