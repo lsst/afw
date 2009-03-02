@@ -57,7 +57,7 @@ namespace image {
         explicit Mask(const std::pair<int, int> dimensions, MaskPlaneDict const& planeDefs = MaskPlaneDict());
         explicit Mask(std::string const& fileName, int const hdu=0,
                       lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
-                      bool const conformMasks=false
+                      BBox const& bbox=BBox(), bool const conformMasks=false
                      );                      
 
         Mask(const Mask& src, const bool deep=false);

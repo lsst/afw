@@ -98,7 +98,7 @@ namespace lsst { namespace afw { namespace image {
 
         //! Return true iff the point lies in the BBox
         bool contains(PointI p          ///< The point to check
-                     ) {
+                     ) const {
             return p.getX() >= getX0() && p.getX() <= getX1() && p.getY() >= getY0() && p.getY() <= getY1();
         }
 
@@ -146,6 +146,10 @@ namespace lsst { namespace afw { namespace image {
         int getWidth() const { return second.first; } ///< Return width of BBox (== <tt>X1 - X0 + 1</tt>)
         int getHeight() const { return second.second; } ///< Return height of BBox (== <tt>Y1 - Y0 + 1</tt>)
         const std::pair<int, int> getDimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
+
+        operator bool() const {
+            return !(getWidth() == 0 && getHeight() == 0);
+        }
 
         bool operator==(const BBox& rhs) const {
             return

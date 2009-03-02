@@ -100,6 +100,29 @@ void WcsFormatter::update(
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unexpected call to update for Wcs");
 }
 
+static void copyMetadata(std::string const& prefix,
+                         lsst::daf::base::PropertySet::Ptr src,
+                         lsst::daf::base::PropertySet::Ptr dest) {
+    std::string header = prefix + "_ORDER";
+    if (!src->exists(header)) {
+        return;
+    }
+    int order = src->get<int>(header);
+    boost::format param("%1%_%2%_%3%");
+    for (int i = 0; i <= order; ++i) {
+        for (int j = 0; j <= order - i; ++j) {
+            header = (param % prefix % i % j).str();
+            if (src->exists(header)) {
+                dest->set(header, src->get<double>(header));
+            }
+        }
+    }
+    header = prefix + "_DMAX";
+    if (src->exists(header)) {
+        dest->set(header, src->get<double>(header));
+    }
+}
+
 lsst::daf::base::PropertySet::Ptr
 WcsFormatter::generatePropertySet(Wcs const& wcs) {
     // Only generates properties for the first wcsInfo.
@@ -123,6 +146,12 @@ WcsFormatter::generatePropertySet(Wcs const& wcs) {
     wcsProps->add("CUNIT2", std::string(wcs._wcsInfo[0].cunit[1]));
     wcsProps->add("CTYPE1", std::string(wcs._wcsInfo[0].ctype[0]));
     wcsProps->add("CTYPE2", std::string(wcs._wcsInfo[0].ctype[1]));
+
+    copyMetadata("A", wcs._fitsMetadata, wcsProps);
+    copyMetadata("B", wcs._fitsMetadata, wcsProps);
+    copyMetadata("AP", wcs._fitsMetadata, wcsProps);
+    copyMetadata("BP", wcs._fitsMetadata, wcsProps);
+
     return wcsProps;
 }
 

@@ -148,6 +148,11 @@ namespace math {
 
     protected:
         std::vector<double> _params;
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+            void serialize(Archive& ar, unsigned int const version);
     };   
     
     /**
@@ -202,6 +207,11 @@ namespace math {
         virtual std::string toString(void) const {
             return std::string("Function1: ") + Function<ReturnT>::toString();
         };
+        
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+            void serialize(Archive& ar, unsigned int const version);
     };    
     
     /**
@@ -258,6 +268,11 @@ namespace math {
         virtual std::string toString(void) const {
             return std::string("Function2: ") + Function<ReturnT>::toString();
         };
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+            void serialize(Archive& ar, unsigned int const version);
     };
     /**
      * @brief a class used in function calls to indicate that no Function1 is being provided
@@ -270,6 +285,11 @@ namespace math {
 
     private:
         ReturnT operator() (double x) const { return static_cast<ReturnT>(0); }
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+            void serialize(Archive& ar, unsigned int const version);
     };
 
     /**
@@ -283,6 +303,11 @@ namespace math {
 
     private:
         ReturnT operator() (double x, double y) const { return static_cast<ReturnT>(0); }
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+            void serialize(Archive& ar, unsigned int const version);
     };
 
 }}}   // lsst::afw::math

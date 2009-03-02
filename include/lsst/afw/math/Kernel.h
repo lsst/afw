@@ -18,6 +18,12 @@
 #include "boost/type_traits/is_same.hpp"
 #include "boost/type_traits/is_base_and_derived.hpp"
 
+#include "boost/serialization/shared_ptr.hpp"
+#include "boost/serialization/vector.hpp"
+#include "boost/serialization/export.hpp"
+
+using boost::serialization::make_nvp;
+
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/Function.h"
@@ -243,6 +249,17 @@ namespace math {
         int _ctrY;
         unsigned int _nKernelParams;
         std::vector<SpatialFunctionPtr> _spatialFunctionList;
+
+        friend class boost::serialization::access;
+        template <class Archive>
+            void serialize(Archive& ar, unsigned int const version) {
+                ar & make_nvp("w", _width);
+                ar & make_nvp("h", _height);
+                ar & make_nvp("ctrX", _ctrX);
+                ar & make_nvp("ctrY", _ctrY);
+                ar & make_nvp("n", _nKernelParams);
+//                ar & _spatialFunctionList;
+            };
     };
 
     /**
@@ -275,8 +292,9 @@ namespace math {
 #endif
                 copy(k2l.begin(), k2l.end(), this->begin());
             }
+
     };
-    
+
     /**
      * @brief A kernel created from an Image
      *
@@ -308,6 +326,16 @@ namespace math {
     private:
         lsst::afw::image::Image<PixelT> _image;
         PixelT _sum;
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+            void serialize(Archive& ar, unsigned int const version) {
+                ar & make_nvp("k",
+                        boost::serialization::base_object<Kernel>(*this));
+//                ar & _image;
+//                ar & _sum;
+            };
     };
     
     
@@ -373,6 +401,15 @@ namespace math {
     
     private:
         KernelFunctionPtr _kernelFunctionPtr;
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+            void serialize(Archive& ar, unsigned int const version) {
+                ar & make_nvp("k",
+                        boost::serialization::base_object<Kernel>(*this));
+//                ar & _kernelFunctionPtr;
+            };
     };
     
     
@@ -406,8 +443,11 @@ namespace math {
 
     private:
         std::pair<int, int> _pixel;
+
+    private:
+        friend class boost::serialization::access;
     };
-    
+
 
     /**
      * @brief A kernel that is a linear combination of fixed basis kernels.
@@ -470,6 +510,17 @@ namespace math {
         KernelList _kernelList;
         std::vector<boost::shared_ptr<lsst::afw::image::Image<PixelT> > > _kernelImagePtrList;
         mutable std::vector<double> _kernelParams;
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+            void serialize(Archive& ar, unsigned int const version) {
+                ar & make_nvp("k",
+                        boost::serialization::base_object<Kernel>(*this));
+//                ar & _kernelList;
+//                ar & _kernelImagePtrList;
+                ar & make_nvp("params", _kernelParams);
+            };
     };
 
     
@@ -543,8 +594,58 @@ namespace math {
         KernelFunctionPtr _kernelRowFunctionPtr;
         mutable std::vector<PixelT> _localColList;  // used by computeImage
         mutable std::vector<PixelT> _localRowList;
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+            void serialize(Archive& ar, unsigned int const version) {
+                ar & make_nvp("k",
+                    boost::serialization::base_object<Kernel>(*this));
+//                ar & _kernelColFunctionPtr;
+//                ar & _kernelRowFunctionPtr;
+//                ar & _localColList;
+//                ar & _localRowList;
+            };
     };
     
 }}}   // lsst:afw::math
 
+namespace boost {
+namespace serialization {
+
+template <class Archive>
+inline void save_construct_data(
+    Archive& ar, lsst::afw::math::DeltaFunctionKernel const* k,
+    unsigned int const file_version) {
+    int x = k->getPixel().first;
+    int y = k->getPixel().second;
+    ar << make_nvp("kernel",
+        boost::serialization::base_object<lsst::afw::math::Kernel>(*k));
+    ar << make_nvp("width", x);
+    ar << make_nvp("height", y);
+};
+
+template <class Archive>
+inline void load_construct_data(
+    Archive& ar, lsst::afw::math::DeltaFunctionKernel* k,
+    unsigned int const file_version) {
+    int x;
+    int y;
+    ar >> make_nvp("kernel",
+        boost::serialization::base_object<lsst::afw::math::Kernel>(*k));
+    ar >> make_nvp("width", x);
+    ar >> make_nvp("height", y);
+    ::new(k) lsst::afw::math::DeltaFunctionKernel(
+        k->getWidth(), k->getHeight(), lsst::afw::image::PointI(x, y));
+};
+
+}}
+
+BOOST_CLASS_EXPORT(lsst::afw::math::Kernel);
+BOOST_CLASS_EXPORT(lsst::afw::math::FixedKernel);
+BOOST_CLASS_EXPORT(lsst::afw::math::AnalyticKernel);
+BOOST_CLASS_EXPORT(lsst::afw::math::DeltaFunctionKernel);
+BOOST_CLASS_EXPORT(lsst::afw::math::LinearCombinationKernel);
+BOOST_CLASS_EXPORT(lsst::afw::math::SeparableKernel);
+    
 #endif // !defined(LSST_AFW_MATH_KERNEL_H)

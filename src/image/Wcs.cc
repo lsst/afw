@@ -241,6 +241,15 @@ lsst::afw::image::Wcs::~Wcs() {
     }
 }
 
+///
+/// Move the pixel reference position by (dx, dy)
+///
+void lsst::afw::image::Wcs::shiftReferencePixel(double const dx, ///< How many pixels to shift in the column direction
+                                                double const dy  ///< How many pixels to shift in the row direction
+                                               ) {
+    _wcsInfo->crpix[0] += dx;
+    _wcsInfo->crpix[1] += dy;
+}
 
 /// Return (ra, dec) of the origin of the WCS solution. Note that this need not
 /// be the center of the image

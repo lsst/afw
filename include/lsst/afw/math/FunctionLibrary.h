@@ -65,6 +65,11 @@ namespace math {
     private:
         double _xo;
         double _yo;
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+            void serialize(Archive& ar, unsigned int const version);
     };
 
 
@@ -113,6 +118,11 @@ namespace math {
 
     private:
         const double _multFac; ///< precomputed scale factor
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+            void serialize(Archive& ar, unsigned int const version);
     };
     
     
@@ -167,6 +177,11 @@ namespace math {
 
     private:
         const double _multFac; ///< precomputed scale factor
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+            void serialize(Archive& ar, unsigned int const version);
     };
     
     /**
@@ -227,6 +242,11 @@ namespace math {
 
     private:
         const double _multFac; ///< precomputed scale factor
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+            void serialize(Archive& ar, unsigned int const version);
     };
     
     /**
@@ -292,6 +312,11 @@ namespace math {
             return os.str();
         };
 
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+            void serialize(Archive& ar, unsigned int const version);
     };
 
 
@@ -407,6 +432,11 @@ namespace math {
 
     private:
         unsigned int _order; ///< order of polynomial
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+            void serialize(Archive& ar, unsigned int const version);
     };
 
     
@@ -523,6 +553,11 @@ namespace math {
             _offset = -(xMin + xMax) / 2.0;
             _maxInd = this->getNParameters() - 1;
         }
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+            void serialize(Archive& ar, unsigned int const version);
     };
 
 
@@ -582,6 +617,11 @@ namespace math {
 
     private:
         double _invN;   ///< 1/n
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+            void serialize(Archive& ar, unsigned int const version);
     };
 
 
@@ -649,6 +689,11 @@ namespace math {
 
     private:
         double _invN;   ///< 1/n
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+            void serialize(Archive& ar, unsigned int const version);
     };
 
 }}}   // lsst::afw::math

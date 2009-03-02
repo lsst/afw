@@ -165,13 +165,31 @@ void lsst::afw::math::basicConvolve(
     typedef typename InImageT::const_xy_locator inXY_locator;
     typedef typename OutImageT::x_iterator cnvX_iterator;
 
+    //
+    // Because convolve isn't a method of Kernel we can't use Kernel's vtbl to dynamically
+    // dispatch the correct version of basicConvolve, so we have to do it by hand
+    //
+    if (dynamic_cast<lsst::afw::math::DeltaFunctionKernel const*>(&kernel) != NULL) {
+        lsst::afw::math::basicConvolve(convolvedImage, inImage,
+                                       *dynamic_cast<lsst::afw::math::DeltaFunctionKernel const*>(&kernel),
+                                       doNormalize);
+        return;
+    } else if (dynamic_cast<lsst::afw::math::SeparableKernel const*>(&kernel) != NULL) {
+        lsst::afw::math::basicConvolve(convolvedImage, inImage,
+                                       *dynamic_cast<lsst::afw::math::SeparableKernel const*>(&kernel),
+                                       doNormalize);
+        return;
+    } else {
+        // OK, use general (and slow) form
+    }
+
     if (convolvedImage.getDimensions() != inImage.getDimensions()) {
         throw LSST_EXCEPT(ex::InvalidParameterException, "convolvedImage not the same size as inImage");
     }
     if (inImage.getDimensions() < kernel.getDimensions()) {
         throw LSST_EXCEPT(ex::InvalidParameterException,"inImage smaller than kernel in columns and/or rows");
     }
-    
+
     int const inImageWidth = inImage.getWidth();
     int const inImageHeight = inImage.getHeight();
     int const kWidth = kernel.getWidth();
@@ -391,7 +409,11 @@ void lsst::afw::math::convolveLinear(
         throw LSST_EXCEPT(ex::InvalidParameterException, "inImage smaller than kernel in columns and/or rows");
     }
     
+#if 1                                   // This is the version that REO checked in
     typedef typename InImageT::template ImageTypeFactory<double>::type BasisImage;
+#else
+    typedef InImageT BasisImage;
+#endif
     typedef typename BasisImage::Ptr BasisImagePtr;
     typedef typename BasisImage::x_iterator BasisX_iterator;
     typedef std::vector<BasisX_iterator> BasisX_iteratorList;

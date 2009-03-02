@@ -422,4 +422,5 @@ double math::Statistics::getError(math::Property const prop ///< Desired propert
 INSTANTIATE_STATISTICS(double);
 INSTANTIATE_STATISTICS(float);
 INSTANTIATE_STATISTICS(int);
+INSTANTIATE_STATISTICS(unsigned short);
 

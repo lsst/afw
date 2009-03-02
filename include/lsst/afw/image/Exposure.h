@@ -48,7 +48,7 @@ namespace image {
         // Class Constructors and Destructor
         explicit Exposure(int const cols=0, int const rows=0, Wcs const& wcs=Wcs());
         explicit Exposure(MaskedImageT & maskedImage, Wcs const& wcs=Wcs());
-        explicit Exposure(std::string const &baseName, int const hdu=0, bool const conformMasks=false);
+        explicit Exposure(std::string const &baseName, int const hdu=0, BBox const& bbox=BBox(), bool const conformMasks=false);
 
         Exposure(Exposure const &src, BBox const& bbox, bool const deep=false);
 
@@ -64,7 +64,7 @@ namespace image {
         void setWcs(Wcs const& wcs);
         
         // Has Member (inline)
-        bool hasWcs() const { return static_cast<bool>(*_wcsPtr); };
+        bool hasWcs() const { return static_cast<bool>(*_wcs); };
         
         // FITS
         void writeFits(std::string const &expOutFile) const;
@@ -73,7 +73,7 @@ namespace image {
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::ExposureFormatter<ImageT, MaskT, VarianceT>);
 
         MaskedImageT _maskedImage;             
-        Wcs::Ptr _wcsPtr;
+        Wcs::Ptr _wcs;
     };
 
 /**
