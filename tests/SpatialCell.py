@@ -114,7 +114,7 @@ class SpatialCellSetTestCase(unittest.TestCase):
     """A test case for SpatialCellSet"""
 
     def setUp(self):
-        self.cellSet = afwMath.SpatialCellSet(afwImage.BBox(afwImage.PointI(0, 0), 501, 501), 2, 3)
+        self.cellSet = afwMath.SpatialCellSet(afwImage.BBox(afwImage.PointI(0, 0), 501, 501), 260, 200)
 
     def tearDown(self):
         del self.cellSet
@@ -129,6 +129,12 @@ class SpatialCellSetTestCase(unittest.TestCase):
     def testInsertCandidate(self):
         """Insert candidates into the SpatialCellSet"""
 
+        if False:                       # Print the bboxes for the cells
+            print
+            for i in range(len(self.cellSet.getCellList())):
+                cell = self.cellSet.getCellList()[i]
+                print i, "%3d,%3d -- %3d,%3d" % (cell.getBBox().getX0(), cell.getBBox().getY0(),
+                                                 cell.getBBox().getX1(), cell.getBBox().getY1()), cell.isUsable()
         self.assertEqual(len(self.cellSet.getCellList()), 6)
 
         for x, y in ([5, 0], [1, 1], [2, 2], [0, 0], [4, 4], [3, 4]): # all in cell0
@@ -143,13 +149,6 @@ class SpatialCellSetTestCase(unittest.TestCase):
         #
         # OK, the SpatialCellList is populated
         #
-        if False:
-            print
-            for i in range(len(self.cellSet.getCellList())):
-                cell = self.cellSet.getCellList()[i]
-                print i, "%3d,%3d -- %3d,%3d" % (cell.getBBox().getX0(), cell.getBBox().getY0(),
-                                                 cell.getBBox().getX1(), cell.getBBox().getY1()), cell.isUsable()
-
         self.assertEqual(self.cellSet.getCellList()[0].isUsable(), True)
         self.assertEqual(self.cellSet.getCellList()[0].getCurrentCandidate().getXCenter(), 5.0)
         
@@ -207,9 +206,8 @@ def suite():
     utilsTests.init()
 
     suites = []
-    if False:
-        suites += unittest.makeSuite(SpatialCellTestCase)
-        suites += unittest.makeSuite(SpatialCellSetTestCase)
+    suites += unittest.makeSuite(SpatialCellTestCase)
+    suites += unittest.makeSuite(SpatialCellSetTestCase)
     suites += unittest.makeSuite(TestImageCandidateCase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)

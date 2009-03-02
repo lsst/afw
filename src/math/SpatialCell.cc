@@ -132,6 +132,10 @@ SpatialCellCandidate::Ptr SpatialCell::getCurrentCandidate() {
 bool SpatialCell::prevCandidate(bool first ///< If true, rewind to the beginning of the list
                                ) {
     if (first) {
+        if (_candidateList.empty()) {
+            return false;
+        }
+
         _currentCandidate = _candidateList.begin();
     } else if (_currentCandidate == _candidateList.begin()) {
         /* You are at the beginning; return the best we saw (if any) */
@@ -179,27 +183,38 @@ bool SpatialCell::nextCandidate() {
  * @throw lsst::pex::exceptions::LengthErrorException if nx or ny is non-positive
  */
 SpatialCellSet::SpatialCellSet(image::BBox const& region, ///< Bounding box for %image
-                               int nx,  ///< number of cells in the column direction
-                               int ny   ///< number of cells in the row direction
+                               int xSize,                 ///< size of cells in the column direction
+                               int ySize                  ///< size of cells in the row direction (0: == xSize)
                               ) :
     _region(region), _cellList(CellList()) {
-    if (nx <= 0 || ny <= 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
-                          (boost::format("Please specify at least one cell in x and y, not %dx%d") %
-                           nx % ny).str());
+    if (ySize == 0) {
+        ySize = xSize;
     }
     
-    float const dx = region.getWidth()/static_cast<float>(nx);
-    float const dy = region.getHeight()/static_cast<float>(ny);
+    if (xSize <= 0 || ySize <= 0) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                          (boost::format("Please specify cells that contain pixels, not %dx%d") %
+                           xSize % ySize).str());
+    }
+    
+    int nx = region.getWidth()/xSize;
+    if (nx*xSize != region.getWidth()) {
+        nx++;
+    }
+
+    int ny = region.getHeight()/ySize;
+    if (ny*ySize != region.getHeight()) {
+        ny++;
+    }
     //
     // N.b. the SpatialCells will be sorted in y at the end of this
     //
     int y0 = 0;
     for (int y = 0; y < ny; ++y) {
-        int const y1 = (y == ny - 1) ? region.getHeight() - 1 : (y + 1)*dy; // ny may not be a factor of height
+        int const y1 = (y == ny - 1) ? region.getHeight() - 1 : (y + 1)*ySize; // ny may not be a factor of height
         int x0 = 0;
         for (int x = 0; x < nx; ++x) {
-            int const x1 = (x == nx - 1) ? region.getWidth() - 1 : (x + 1)*dx; // nx may not be a factor of width
+            int const x1 = (x == nx - 1) ? region.getWidth() - 1 : (x + 1)*xSize; // nx may not be a factor of width
             image::BBox bbox(image::PointI(x0, y0), image::PointI(x1, y1));
             std::string label = (boost::format("Cell %dx%d") % x % y).str();
 

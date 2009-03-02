@@ -173,7 +173,7 @@ namespace math {
         
         typedef std::vector<SpatialCell::Ptr> CellList;
 
-        SpatialCellSet(lsst::afw::image::BBox const& region, int nx, int ny);
+        SpatialCellSet(lsst::afw::image::BBox const& region, int xSize, int ySize=0);
         
         /**
          * Destructor
