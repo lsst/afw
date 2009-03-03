@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Tests for MaskedImages
+Tests for Masks
 
 Run with:
    python Mask.py

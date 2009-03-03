@@ -1,3 +1,4 @@
+// -*- lsst-c++ -*-
 %{
 #include "lsst/afw/math/warpExposure.h"
 %}
@@ -25,3 +26,14 @@ SWIG_SHARED_PTR_DERIVED(BilinearWarpingKernel, lsst::afw::math::SeparableKernel,
 %warpExposureFuncByType(float, float);
 %warpExposureFuncByType(double, float);
 %warpExposureFuncByType(double, double);
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+%{
+#include "lsst/afw/math/offsetImage.h"
+%}
+
+%include "lsst/afw/math/offsetImage.h"
+
+%template(offsetImage) lsst::afw::math::offsetImage<lsst::afw::image::Image<double> >;
+%template(offsetImage) lsst::afw::math::offsetImage<lsst::afw::image::Image<float> >;

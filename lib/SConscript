@@ -39,6 +39,7 @@ env.SharedLibrary(
         "math/Background.cc",
         "math/Interpolate.cc",
         "math/warpExposure.cc",
+        "math/offsetImage.cc",
         "math/SpatialCell.cc",
     )],
     LIBS=filter(lambda x: x != "afw", env.getlibs("afw"))

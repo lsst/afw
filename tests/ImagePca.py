@@ -122,11 +122,6 @@ class ImagePcaTestCase(unittest.TestCase):
             mos = displayUtils.Mosaic(background=-10)
             ds9.mtv(mos.makeMosaic(eImages), frame=1)
 
-        mean = self.ImageSet.getMean()
-
-        self.assertEqual(mean.getWidth(), width)
-        self.assertEqual(mean.getHeight(), height)
-
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 def suite():
