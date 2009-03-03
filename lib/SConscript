@@ -22,6 +22,7 @@ env.SharedLibrary(
         "image/Filter.cc",
         "image/fitsIo.cc",
         "image/Image.cc",
+        "image/ImagePca.cc",
         "image/DecoratedImage.cc",
         "image/Mask.cc",
         "image/MaskedImage.cc",

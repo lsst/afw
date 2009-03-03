@@ -181,10 +181,11 @@ class TestImageCandidateCase(unittest.TestCase):
 
         cand = self.cellSet.getCellList()[0].getCurrentCandidate()
         #
-        # Swig doesn't know that we inherited from SpatialCellImageCandidate;  all
-        # it knows is that we have a SpatialCellCandidate, and SpatialCellCandidates
-        # don't know about getImage;  so cast the pointer to SpatialCellImageCandidate<Image<float> >
-        # and all will be well;  first check that we _can't_ case to SpatialCellImageCandidate<MaskedImage<float> >
+        # Swig doesn't know that we're a SpatialCellImageCandidate;  all it knows is that we have
+        # a SpatialCellCandidate, and SpatialCellCandidates don't know about getImage;  so cast the
+        # pointer to SpatialCellImageCandidate<Image<float> > and all will be well;
+        #
+        # First check that we _can't_ cast to SpatialCellImageCandidate<MaskedImage<float> >
         #
         self.assertEqual(afwMath.cast_SpatialCellImageCandidateMF(cand), None)
 

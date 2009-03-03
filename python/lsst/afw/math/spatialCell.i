@@ -25,22 +25,28 @@ SWIG_SHARED_PTR_DERIVED(SpatialCellImageCandidate##NAME,
    %SpatialCellImageCandidatePtr_(M##NAME, %MASKEDIMAGE(TYPE))
 %enddef
 //
-// Must go AFTER the include
+// Must go AFTER the include (N.b. %SpatialCellImageCandidate_ is internal)
 //
-%define %SpatialCellImageCandidate_(NAME, TYPE, ...)
-%template(SpatialCellCandidateImage##NAME) lsst::afw::math::SpatialCellImageCandidate<TYPE >;
+%define %SpatialCellImageCandidate_(NAME, TYPE)
+%template(SpatialCellImageCandidate##NAME) lsst::afw::math::SpatialCellImageCandidate<TYPE>;
 
+//
+// When swig sees a SpatialCellCandidate it doesn't know about SpatialCellImageCandidates; all it knows is that it
+// has a SpatialCellCandidate, and SpatialCellCandidates don't know about e.g. getSource()
+//
+// We therefore provide a cast to SpatialCellImageCandidate<> and swig can go from there
+//
 %inline %{
-    lsst::afw::math::SpatialCellImageCandidate<TYPE > *
+    lsst::afw::math::SpatialCellImageCandidate<TYPE> *
         cast_SpatialCellImageCandidate##NAME(lsst::afw::math::SpatialCellCandidate* candidate) {
-        return dynamic_cast<lsst::afw::math::SpatialCellImageCandidate<TYPE > *>(candidate);
+        return dynamic_cast<lsst::afw::math::SpatialCellImageCandidate<TYPE> *>(candidate);
     }
 %}
 %enddef
 
 %define %SpatialCellImageCandidate(NAME, TYPE, ...)
-   %SpatialCellImageCandidate_(NAME, %IMAGE(TYPE))
-   %SpatialCellImageCandidate_(M##NAME, %MASKEDIMAGE(TYPE))
+    %SpatialCellImageCandidate_(NAME, %IMAGE(TYPE))
+    %SpatialCellImageCandidate_(M##NAME, %MASKEDIMAGE(TYPE))
 %enddef
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
