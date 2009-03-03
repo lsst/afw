@@ -14,12 +14,23 @@
 #include <sstream>
 #include <vector>
 
+#include "boost/archive/text_iarchive.hpp"
+#include "boost/archive/text_oarchive.hpp"
+#include "boost/archive/xml_iarchive.hpp"
+#include "boost/archive/xml_oarchive.hpp"
+#include "boost/serialization/vector.hpp"
+#include "boost/serialization/export.hpp"
+
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/pex/exceptions.h"
 
 namespace lsst {
 namespace afw {
 namespace math {
+
+#ifndef SWIG
+using boost::serialization::make_nvp;
+#endif
 
     /**
      * @brief Basic Function class.
@@ -152,8 +163,10 @@ namespace math {
     private:
         friend class boost::serialization::access;
         template <class Archive>
-            void serialize(Archive& ar, unsigned int const version);
+        void serialize(Archive& ar, unsigned int const version) {
+        };
     };   
+
     
     /**
      * @brief A Function taking one argument.
@@ -207,12 +220,8 @@ namespace math {
         virtual std::string toString(void) const {
             return std::string("Function1: ") + Function<ReturnT>::toString();
         };
-        
-    private:
-        friend class boost::serialization::access;
-        template <class Archive>
-            void serialize(Archive& ar, unsigned int const version);
     };    
+
     
     /**
      * @brief A Function taking two arguments.
@@ -268,12 +277,9 @@ namespace math {
         virtual std::string toString(void) const {
             return std::string("Function2: ") + Function<ReturnT>::toString();
         };
-
-    private:
-        friend class boost::serialization::access;
-        template <class Archive>
-            void serialize(Archive& ar, unsigned int const version);
     };
+
+
     /**
      * @brief a class used in function calls to indicate that no Function1 is being provided
      */
@@ -289,7 +295,11 @@ namespace math {
     private:
         friend class boost::serialization::access;
         template <class Archive>
-            void serialize(Archive& ar, unsigned int const version);
+        void serialize(Archive& ar, unsigned int const version) {
+            ar & make_nvp("fn",
+                          boost::serialization::base_object<
+                          Function<ReturnT> >(*this));
+        };
     };
 
     /**
@@ -307,9 +317,44 @@ namespace math {
     private:
         friend class boost::serialization::access;
         template <class Archive>
-            void serialize(Archive& ar, unsigned int const version);
+        void serialize(Archive& ar, unsigned int const version) {
+            ar & make_nvp("fn",
+                          boost::serialization::base_object<
+                          Function<ReturnT> >(*this));
+        };
     };
 
 }}}   // lsst::afw::math
+
+namespace boost {
+namespace serialization {
+
+template <class Archive, typename ReturnT>
+inline void save_construct_data(Archive& ar,
+                                lsst::afw::math::Function<ReturnT> const* f,
+                                unsigned int const version) {
+    ar << make_nvp("params", f->getParameters());
+};
+
+template <class Archive, typename ReturnT>
+inline void load_construct_data(Archive& ar,
+                                lsst::afw::math::Function<ReturnT>* f,
+                                unsigned int const version) {
+    std::vector<double> params;
+    ar >> make_nvp("params", params);
+    ::new(f) lsst::afw::math::Function<ReturnT>(params);
+};
+
+}}
+
+#ifndef SWIG
+BOOST_CLASS_EXPORT(lsst::afw::math::Function<float>);
+BOOST_CLASS_EXPORT(lsst::afw::math::NullFunction1<float>);
+BOOST_CLASS_EXPORT(lsst::afw::math::NullFunction2<float>);
+
+BOOST_CLASS_EXPORT(lsst::afw::math::Function<double>);
+BOOST_CLASS_EXPORT(lsst::afw::math::NullFunction1<double>);
+BOOST_CLASS_EXPORT(lsst::afw::math::NullFunction2<double>);
+#endif
 
 #endif // #ifndef LSST_AFW_MATH_FUNCTION_H

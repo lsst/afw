@@ -18,6 +18,10 @@ namespace lsst {
 namespace afw {
 namespace math {
 
+#ifndef SWIG
+using boost::serialization::make_nvp;
+#endif
+
     /**
      * @brief 2-dimensional integer delta function.
      *
@@ -69,9 +73,11 @@ namespace math {
     private:
         friend class boost::serialization::access;
         template <class Archive>
-            void serialize(Archive& ar, unsigned int const version);
+        void serialize(Archive& ar, unsigned int const version) {
+        };
+        template <class Archive>
+        friend void boost::serialization::save_construct_data(Archive& ar, IntegerDeltaFunction2<ReturnT> const* f, unsigned int const version);
     };
-
 
     /**
      * @brief 1-dimensional Gaussian
@@ -122,9 +128,9 @@ namespace math {
     private:
         friend class boost::serialization::access;
         template <class Archive>
-            void serialize(Archive& ar, unsigned int const version);
+        void serialize(Archive& ar, unsigned int const version) {
+        };
     };
-    
     
     /**
      * @brief 2-dimensional Gaussian
@@ -181,7 +187,8 @@ namespace math {
     private:
         friend class boost::serialization::access;
         template <class Archive>
-            void serialize(Archive& ar, unsigned int const version);
+        void serialize(Archive& ar, unsigned int const version) {
+        };
     };
     
     /**
@@ -246,7 +253,8 @@ namespace math {
     private:
         friend class boost::serialization::access;
         template <class Archive>
-            void serialize(Archive& ar, unsigned int const version);
+        void serialize(Archive& ar, unsigned int const version) {
+        };
     };
     
     /**
@@ -316,9 +324,9 @@ namespace math {
     private:
         friend class boost::serialization::access;
         template <class Archive>
-            void serialize(Archive& ar, unsigned int const version);
+        void serialize(Archive& ar, unsigned int const version) {
+        };
     };
-
 
     /**
      * @brief 2-dimensional polynomial function with cross terms
@@ -436,9 +444,13 @@ namespace math {
     private:
         friend class boost::serialization::access;
         template <class Archive>
-            void serialize(Archive& ar, unsigned int const version);
+        void serialize(Archive& ar, unsigned int const version) {
+            ar & make_nvp("fn2",
+                          boost::serialization::base_object<
+                          Function2<ReturnT> >(*this));
+            ar & make_nvp("order", _order);
+        };
     };
-
     
     /**
      * @brief 1-dimensional weighted sum of Chebyshev polynomials of the first kind.
@@ -557,7 +569,10 @@ namespace math {
     private:
         friend class boost::serialization::access;
         template <class Archive>
-            void serialize(Archive& ar, unsigned int const version);
+        void serialize(Archive& ar, unsigned int const version) {
+        };
+        template <class Archive>
+        friend void boost::serialization::save_construct_data(Archive& ar, Chebyshev1Function1<ReturnT> const* f, unsigned int const version);
     };
 
 
@@ -621,9 +636,11 @@ namespace math {
     private:
         friend class boost::serialization::access;
         template <class Archive>
-            void serialize(Archive& ar, unsigned int const version);
+        void serialize(Archive& ar, unsigned int const version) {
+        };
+        template <class Archive>
+        friend void boost::serialization::save_construct_data(Archive& ar, LanczosFunction1<ReturnT> const* f, unsigned int const version);
     };
-
 
     /**
      * @brief 2-dimensional separable Lanczos function
@@ -693,9 +710,211 @@ namespace math {
     private:
         friend class boost::serialization::access;
         template <class Archive>
-            void serialize(Archive& ar, unsigned int const version);
+        void serialize(Archive& ar, unsigned int const version) {
+        };
+        template <class Archive>
+        friend void boost::serialization::save_construct_data(Archive& ar, LanczosFunction2<ReturnT> const* f, unsigned int const version);
     };
 
 }}}   // lsst::afw::math
+
+namespace boost {
+namespace serialization {
+
+template <class Archive, typename ReturnT>
+inline void save_construct_data(Archive& ar,
+                                lsst::afw::math::IntegerDeltaFunction2<ReturnT> const* f,
+                                unsigned int const version) {
+    ar << make_nvp("xo", f->_xo) << make_nvp("yo", f->_yo);
+};
+
+template <class Archive, typename ReturnT>
+inline void load_construct_data(Archive& ar,
+                                lsst::afw::math::IntegerDeltaFunction2<ReturnT>* f,
+                                unsigned int const version) {
+    double xo;
+    double yo;
+    ar >> make_nvp("xo", xo) >> make_nvp("yo", yo);
+    ::new(f) lsst::afw::math::IntegerDeltaFunction2<ReturnT>(xo, yo);
+};
+
+template <class Archive, typename ReturnT>
+inline void save_construct_data(Archive& ar,
+                                lsst::afw::math::GaussianFunction1<ReturnT> const* f,
+                                unsigned int const version) {
+    ar << make_nvp("sigma", f->getParameters()[0]);
+};
+
+template <class Archive, typename ReturnT>
+inline void load_construct_data(Archive& ar,
+                                lsst::afw::math::GaussianFunction1<ReturnT>* f,
+                                unsigned int const version) {
+    double sigma;
+    ar >> make_nvp("sigma", sigma);
+    ::new(f) lsst::afw::math::GaussianFunction1<ReturnT>(sigma);
+};
+    
+template <class Archive, typename ReturnT>
+inline void save_construct_data(Archive& ar,
+                                lsst::afw::math::GaussianFunction2<ReturnT> const* f,
+                                unsigned int const version) {
+    ar << make_nvp("xSigma", f->getParameters()[0]);
+    ar << make_nvp("ySigma", f->getParameters()[1]);
+};
+
+template <class Archive, typename ReturnT>
+inline void load_construct_data(Archive& ar,
+                                lsst::afw::math::GaussianFunction2<ReturnT>* f,
+                                unsigned int const version) {
+    double xSigma;
+    double ySigma;
+    ar >> make_nvp("xSigma", xSigma);
+    ar >> make_nvp("ySigma", ySigma);
+    ::new(f) lsst::afw::math::GaussianFunction2<ReturnT>(xSigma, ySigma);
+};
+
+template <class Archive, typename ReturnT>
+inline void save_construct_data(Archive& ar,
+                                lsst::afw::math::DoubleGaussianFunction2<ReturnT> const* f,
+                                unsigned int const version) {
+    ar << make_nvp("sigma1", f->getParameters()[0]);
+    ar << make_nvp("sigma2", f->getParameters()[1]);
+    ar << make_nvp("ampl2", f->getParameters()[2]);
+};
+
+template <class Archive, typename ReturnT>
+inline void load_construct_data(Archive& ar,
+                                lsst::afw::math::DoubleGaussianFunction2<ReturnT>* f,
+                                unsigned int const version) {
+    double sigma1;
+    double sigma2;
+    double ampl2;
+    ar >> make_nvp("sigma1", sigma1);
+    ar >> make_nvp("sigma2", sigma2);
+    ar >> make_nvp("ampl2", ampl2);
+    ::new(f) lsst::afw::math::DoubleGaussianFunction2<ReturnT>(sigma1, sigma2, ampl2);
+};
+    
+template <class Archive, typename ReturnT>
+inline void save_construct_data(Archive& ar,
+                                lsst::afw::math::PolynomialFunction1<ReturnT> const* f,
+                                unsigned int const version) {
+    ar << make_nvp("params", f->getParameters());
+};
+
+template <class Archive, typename ReturnT>
+inline void load_construct_data(Archive& ar,
+                                lsst::afw::math::PolynomialFunction1<ReturnT>* f,
+                                unsigned int const version) {
+    std::vector<double> params;
+    ar >> make_nvp("params", params);
+    ::new(f) lsst::afw::math::PolynomialFunction1<ReturnT>(params);
+};
+
+template <class Archive, typename ReturnT>
+inline void save_construct_data(Archive& ar,
+                                lsst::afw::math::PolynomialFunction2<ReturnT> const* f,
+                                unsigned int const version) {
+    ar << make_nvp("params", f->getParameters());
+};
+
+template <class Archive, typename ReturnT>
+inline void load_construct_data(Archive& ar,
+                                lsst::afw::math::PolynomialFunction2<ReturnT>* f,
+                                unsigned int const version) {
+    std::vector<double> params;
+    ar >> make_nvp("params", params);
+    ::new(f) lsst::afw::math::PolynomialFunction2<ReturnT>(params);
+};
+    
+template <class Archive, typename ReturnT>
+inline void save_construct_data(Archive& ar,
+                                lsst::afw::math::Chebyshev1Function1<ReturnT> const* f,
+                                unsigned int const version) {
+    ar << make_nvp("params", f->getParameters());
+    ar << make_nvp("minX", f->_minX);
+    ar << make_nvp("maxX", f->_maxX);
+};
+
+template <class Archive, typename ReturnT>
+inline void load_construct_data(Archive& ar,
+                                lsst::afw::math::Chebyshev1Function1<ReturnT>* f,
+                                unsigned int const version) {
+    std::vector<double> params;
+    double minX;
+    double maxX;
+    ar >> make_nvp("params", params);
+    ar >> make_nvp("minX", minX);
+    ar >> make_nvp("maxX", maxX);
+    ::new(f) lsst::afw::math::Chebyshev1Function1<ReturnT>(params, minX, maxX);
+};
+
+template <class Archive, typename ReturnT>
+inline void save_construct_data(Archive& ar,
+                                lsst::afw::math::LanczosFunction1<ReturnT> const* f,
+                                unsigned int const version) {
+    unsigned int n = static_cast<unsigned int>(0.5 + (1.0 / f->_invN));
+    ar << make_nvp("n", n);
+    ar << make_nvp("xOffset", f->getParameters()[0]);
+};
+
+template <class Archive, typename ReturnT>
+inline void load_construct_data(Archive& ar,
+                                lsst::afw::math::LanczosFunction1<ReturnT>* f,
+                                unsigned int const version) {
+    unsigned int n;
+    double xOffset;
+    ar >> make_nvp("n", n);
+    ar >> make_nvp("xOffset", xOffset);
+    ::new(f) lsst::afw::math::LanczosFunction1<ReturnT>(n, xOffset);
+};
+    
+template <class Archive, typename ReturnT>
+inline void save_construct_data(Archive& ar,
+                                lsst::afw::math::LanczosFunction2<ReturnT> const* f,
+                                unsigned int const version) {
+    unsigned int n = static_cast<unsigned int>(0.5 + (1.0 / f->_invN));
+    ar << make_nvp("n", n);
+    ar << make_nvp("xOffset", f->getParameters()[0]);
+    ar << make_nvp("yOffset", f->getParameters()[1]);
+};
+
+template <class Archive, typename ReturnT>
+inline void load_construct_data(Archive& ar,
+                                lsst::afw::math::LanczosFunction2<ReturnT>* f,
+                                unsigned int const version) {
+    unsigned int n;
+    double xOffset;
+    double yOffset;
+    ar >> make_nvp("n", n);
+    ar >> make_nvp("xOffset", xOffset);
+    ar >> make_nvp("yOffset", yOffset);
+    ::new(f) lsst::afw::math::LanczosFunction2<ReturnT>(n, xOffset, yOffset);
+};
+
+}}
+
+
+#ifndef SWIG
+BOOST_CLASS_EXPORT(lsst::afw::math::IntegerDeltaFunction2<float>);
+BOOST_CLASS_EXPORT(lsst::afw::math::GaussianFunction1<float>);
+BOOST_CLASS_EXPORT(lsst::afw::math::GaussianFunction2<float>);
+BOOST_CLASS_EXPORT(lsst::afw::math::DoubleGaussianFunction2<float>);
+BOOST_CLASS_EXPORT(lsst::afw::math::PolynomialFunction1<float>);
+BOOST_CLASS_EXPORT(lsst::afw::math::PolynomialFunction2<float>);
+BOOST_CLASS_EXPORT(lsst::afw::math::Chebyshev1Function1<float>);
+BOOST_CLASS_EXPORT(lsst::afw::math::LanczosFunction1<float>);
+BOOST_CLASS_EXPORT(lsst::afw::math::LanczosFunction2<float>);
+
+BOOST_CLASS_EXPORT(lsst::afw::math::IntegerDeltaFunction2<double>);
+BOOST_CLASS_EXPORT(lsst::afw::math::GaussianFunction1<double>);
+BOOST_CLASS_EXPORT(lsst::afw::math::GaussianFunction2<double>);
+BOOST_CLASS_EXPORT(lsst::afw::math::DoubleGaussianFunction2<double>);
+BOOST_CLASS_EXPORT(lsst::afw::math::PolynomialFunction1<double>);
+BOOST_CLASS_EXPORT(lsst::afw::math::PolynomialFunction2<double>);
+BOOST_CLASS_EXPORT(lsst::afw::math::Chebyshev1Function1<double>);
+BOOST_CLASS_EXPORT(lsst::afw::math::LanczosFunction1<double>);
+BOOST_CLASS_EXPORT(lsst::afw::math::LanczosFunction2<double>);
+#endif
 
 #endif // #ifndef LSST_AFW_MATH_FUNCTIONLIBRARY_H

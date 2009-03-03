@@ -22,8 +22,6 @@
 #include "boost/serialization/vector.hpp"
 #include "boost/serialization/export.hpp"
 
-using boost::serialization::make_nvp;
-
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/Function.h"
@@ -32,6 +30,10 @@ using boost::serialization::make_nvp;
 namespace lsst {
 namespace afw {
 namespace math {
+
+#ifndef SWIG
+using boost::serialization::make_nvp;
+#endif
 
     /**
      * @brief Kernels are used for convolution with MaskedImages and (eventually) Images
@@ -237,6 +239,8 @@ namespace math {
     
         virtual std::string toString(std::string prefix = "") const;
 
+        virtual void toFile(std::string fileName) const;
+
     protected:
         virtual void setKernelParameter(unsigned int ind, double value) const;
 
@@ -258,7 +262,7 @@ namespace math {
                 ar & make_nvp("ctrX", _ctrX);
                 ar & make_nvp("ctrY", _ctrY);
                 ar & make_nvp("n", _nKernelParams);
-//                ar & _spatialFunctionList;
+//                ar & make_nvp("fns", _spatialFunctionList);
             };
     };
 
@@ -292,6 +296,16 @@ namespace math {
 #endif
                 copy(k2l.begin(), k2l.end(), this->begin());
             }
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+        void serialize(Archive& ar, unsigned int const version) {
+            ar & make_nvp("list",
+                          boost::serialization::base_object<
+                              std::vector<typename _KernelT::PtrT>
+                          >(*this));
+        };
 
     };
 
@@ -333,8 +347,8 @@ namespace math {
             void serialize(Archive& ar, unsigned int const version) {
                 ar & make_nvp("k",
                         boost::serialization::base_object<Kernel>(*this));
-//                ar & _image;
-//                ar & _sum;
+                ar & make_nvp("img", _image);
+                ar & make_nvp("sum", _sum);
             };
     };
     
@@ -408,7 +422,7 @@ namespace math {
             void serialize(Archive& ar, unsigned int const version) {
                 ar & make_nvp("k",
                         boost::serialization::base_object<Kernel>(*this));
-//                ar & _kernelFunctionPtr;
+                ar & make_nvp("fn", _kernelFunctionPtr);
             };
     };
     
@@ -446,6 +460,10 @@ namespace math {
 
     private:
         friend class boost::serialization::access;
+        template <class Archive>
+        void serialize(Archive& ar, unsigned int const version) {
+            // Handle with load/save_construct_data.
+        };
     };
 
 
@@ -517,8 +535,8 @@ namespace math {
             void serialize(Archive& ar, unsigned int const version) {
                 ar & make_nvp("k",
                         boost::serialization::base_object<Kernel>(*this));
-//                ar & _kernelList;
-//                ar & _kernelImagePtrList;
+                ar & make_nvp("klist", _kernelList);
+                ar & make_nvp("kimglist", _kernelImagePtrList);
                 ar & make_nvp("params", _kernelParams);
             };
     };
@@ -601,10 +619,10 @@ namespace math {
             void serialize(Archive& ar, unsigned int const version) {
                 ar & make_nvp("k",
                     boost::serialization::base_object<Kernel>(*this));
-//                ar & _kernelColFunctionPtr;
-//                ar & _kernelRowFunctionPtr;
-//                ar & _localColList;
-//                ar & _localRowList;
+//                ar & make_nvp("colfn", _kernelColFunctionPtr);
+//                ar & make_nvp("rowfn", _kernelRowFunctionPtr);
+                ar & make_nvp("cols", _localColList);
+                ar & make_nvp("rows", _localRowList);
             };
     };
     
@@ -641,11 +659,13 @@ inline void load_construct_data(
 
 }}
 
+#ifndef SWIG
 BOOST_CLASS_EXPORT(lsst::afw::math::Kernel);
 BOOST_CLASS_EXPORT(lsst::afw::math::FixedKernel);
 BOOST_CLASS_EXPORT(lsst::afw::math::AnalyticKernel);
 BOOST_CLASS_EXPORT(lsst::afw::math::DeltaFunctionKernel);
 BOOST_CLASS_EXPORT(lsst::afw::math::LinearCombinationKernel);
 BOOST_CLASS_EXPORT(lsst::afw::math::SeparableKernel);
+#endif
     
 #endif // !defined(LSST_AFW_MATH_KERNEL_H)
