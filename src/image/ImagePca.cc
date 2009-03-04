@@ -96,9 +96,21 @@ void ImagePca<ImageT>::analyze() {
     bool constantWeight = true;         // should all stars have the same weight?
 
     int const nImage = _imageList.size();
-  /*
-   * Find the eigenvectors/values of the scalar product matrix, R' (Eq. 7.4)
-   */
+    /*
+     * Eigen doesn't like 1x1 matrices, but we don't really need it to handle a single matrix...
+     */
+    if (nImage == 1) {
+        _eigenImages.clear();
+        _eigenImages.push_back(typename ImageT::Ptr(new ImageT(*_imageList[0], true)));
+
+        _eigenValues.clear();
+        _eigenValues.push_back(1.0);
+
+        return;
+    }
+    /*
+     * Find the eigenvectors/values of the scalar product matrix, R' (Eq. 7.4)
+     */
     Eigen::MatrixXd R(nImage, nImage);	// residuals' inner products
 
     double flux_bar = 0;              // mean of flux for all regions
@@ -137,6 +149,7 @@ void ImagePca<ImageT>::analyze() {
     //
     // Save the (sorted) eigen values
     //
+    _eigenValues.clear();
     _eigenValues.reserve(nImage);
     for (int i = 0; i != nImage; ++i) {
         _eigenValues.push_back(lambdaAndIndex[i].first);
