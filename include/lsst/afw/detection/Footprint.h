@@ -153,7 +153,8 @@ public:
     int setNpix();
     void setBBox();
 
-    void insertIntoImage(image::Image<boost::uint16_t>& idImage, const int id) const;
+    void insertIntoImage(image::Image<boost::uint16_t>& idImage, int const id,
+                         image::BBox const& region=image::BBox()) const;
 private:
     Footprint(const Footprint &);                   //!< No copy constructor
     Footprint operator = (Footprint const &) const; //!< no assignment
@@ -170,6 +171,8 @@ private:
 
 Footprint::Ptr growFootprint(Footprint const &foot, int ngrow, bool isotropic=true);
 Footprint::Ptr growFootprint(Footprint::Ptr const &foot, int ngrow, bool isotropic=true);
+
+std::vector<lsst::afw::image::BBox> footprintToBBoxList(Footprint const& foot);
 
 template<typename MaskT>
 MaskT setMaskFromFootprint(image::Mask<MaskT> *mask,

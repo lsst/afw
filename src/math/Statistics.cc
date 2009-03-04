@@ -11,6 +11,7 @@
 #include <limits>
 #include <cmath>
 #include "boost/tuple/tuple.hpp"
+#include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Statistics.h"
 
@@ -310,7 +311,8 @@ double math::Statistics::_quickSelect(Image const &img, double const quartile) {
 
 /* @brief Return the value and error in the specified statistic (e.g. MEAN)
  *
- * @param prop the property (see Statistics.h header) to retrieve
+ * @param prop the property (see Statistics.h header) to retrieve. If NOTHING (default) and you only asked for one
+ * property (and maybe its error), that property is returned
  *
  * @note Only quantities requested in the constructor may be retrieved
  *
@@ -319,8 +321,11 @@ double math::Statistics::_quickSelect(Image const &img, double const quartile) {
  * @todo uncertainties on MEANCLIP,STDEVCLIP are sketchy.  _n != _nClip
  *
  */
-std::pair<double, double> math::Statistics::getResult(math::Property const prop ///< Desired property
+std::pair<double, double> math::Statistics::getResult(math::Property const iProp ///< Desired property
                                                      ) const {
+    // if iProp == NOTHING try to return their heart's delight, as specified in the constructor
+    math::Property const prop = (iProp == NOTHING) ? static_cast<math::Property>(_flags & ~ERRORS) : iProp;
+
     if (!(prop & _flags)) {             // we didn't calculate it
         throw LSST_EXCEPT(ex::InvalidParameterException, (boost::format("You didn't ask me to calculate %d") % prop).str());
     }
@@ -384,6 +389,10 @@ std::pair<double, double> math::Statistics::getResult(math::Property const prop 
       case ( ERRORS ):
           break;
           // default: redundant as 'ret' is initialized to NaN, NaN
+      default:                          // we must have set prop to _flags
+        assert (iProp == 0);
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                          "You may only call getValue without a parameter if you asked for only one statistic");
     }
      return ret;
 }
