@@ -214,7 +214,7 @@ unsigned long math::RandomNumberGenerator::get() {
  *          number in the range [0, 1).
  * @sa uniformPositiveDouble()
  */
-double math::RandomNumberGenerator::uniformDouble() {
+double math::RandomNumberGenerator::uniform() {
     return ::gsl_rng_uniform(_rng);
 }
 
@@ -229,7 +229,7 @@ double math::RandomNumberGenerator::uniformDouble() {
  * @return  a uniformly distributed random double precision floating point
  *          number in the range (0, 1).
  */
-double math::RandomNumberGenerator::uniformPositiveDouble() {
+double math::RandomNumberGenerator::uniformPos() {
     return ::gsl_rng_uniform_pos(_rng);
 }
 
@@ -267,9 +267,6 @@ unsigned long math::RandomNumberGenerator::uniformInt(unsigned long n) {
  * @param[in] a     lower endpoint of uniform distribution range (inclusive)
  * @param[in] b     upper endpoint of uniform distribution range (exclusive)
  * @return          a uniform random variate.
- *
- * @note    The implementation uses the
- *          <a href="http://en.wikipedia.org/wiki/Ziggurat_algorithm">Ziggurat algorithm</a>.
  */
 double math::RandomNumberGenerator::flat(double const a, double const b) {
     return ::gsl_ran_flat(_rng, a, b);

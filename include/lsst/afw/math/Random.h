@@ -80,8 +80,8 @@ public:
 
     // -- Mutators: generating random numbers --------
     unsigned long get();
-    double uniformDouble();
-    double uniformPositiveDouble();
+    double uniform();
+    double uniformPos();
     unsigned long uniformInt(unsigned long n);
 
     // -- Mutators: computing random variates for various distributions --------
