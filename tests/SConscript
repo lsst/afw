@@ -61,16 +61,14 @@ else:
     ignoreList=[]
     tests = lsst.tests.Control(env, args = testArgs, ignoreList=ignoreList, verbose = True)
 
-    if True:
-        print "NOT RUNNING TESTS"
-        tests.run("SpatialCell.py")
-        env.Depends("SpatialCell.py", "testLib%s" % (env["LDMODULESUFFIX"]))
-    else:
-        tests.run("*.cc")
+    tests.run("*.cc")
 
-        # set up python tests
-        for target in tests.run("*.py"):
-            env.Depends(target, "../python/lsst/afw/detection/_detectionLib%s" % (env["LDMODULESUFFIX"]))
-            env.Depends(target, "../python/lsst/afw/display/_displayLib%s" % (env["LDMODULESUFFIX"]))
-            env.Depends(target, "../python/lsst/afw/image/_imageLib%s" % (env["LDMODULESUFFIX"]))
-            env.Depends(target, "../python/lsst/afw/math/_mathLib%s" % (env["LDMODULESUFFIX"]))
+    # set up python tests
+    for target in tests.run("*.py"):
+        env.Depends(target, "../python/lsst/afw/detection/_detectionLib%s" % (env["LDMODULESUFFIX"]))
+        env.Depends(target, "../python/lsst/afw/display/_displayLib%s" % (env["LDMODULESUFFIX"]))
+        env.Depends(target, "../python/lsst/afw/image/_imageLib%s" % (env["LDMODULESUFFIX"]))
+        env.Depends(target, "../python/lsst/afw/math/_mathLib%s" % (env["LDMODULESUFFIX"]))
+
+    for fileName in ["SpatialCell.py"]:
+        env.Depends(fileName, "_testLib%s" % (env["LDMODULESUFFIX"]))
