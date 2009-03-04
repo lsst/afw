@@ -96,11 +96,11 @@ void form::DiaSourceVectorFormatter::insertRow(T & db, DiaSource const & d) {
 
     db.template setColumn<double>("decl", d._dec);
     if (!d.isNull(det::DEC_ERR_FOR_DETECTION))
-        db. template setColumn<float>("decErrForDetection", d._decErrForDetection);         
-    else db.setColumnToNull("decErrForDetection");
+        db. template setColumn<float>("declErrForDetection", d._decErrForDetection);         
+    else db.setColumnToNull("declErrForDetection");
     if (!d.isNull(det::DEC_ERR_FOR_WCS))
-        db. template setColumn<float>("decErrForWcs", d._decErrForWcs);    
-    else db.setColumnToNull("decErrForWcs");
+        db. template setColumn<float>("declErrForWcs", d._decErrForWcs);    
+    else db.setColumnToNull("declErrForWcs");
 
     db. template setColumn<double>("xAstrom", d._xAstrom);
     if(!d.isNull(det::X_ASTROM_ERR))
@@ -329,8 +329,8 @@ void form::DiaSourceVectorFormatter::setupFetch(DbStorage & db, DiaSource & d) {
     db.outParam("raErrForDetection",    &(d._raErrForDetection));
     db.outParam("raErrForWcs",          &(d._raErrForWcs));
     db.outParam("decl",                 &(d._dec));
-    db.outParam("decErrForDetection",  &(d._decErrForDetection));
-    db.outParam("decErrForWcs",        &(d._decErrForWcs));
+    db.outParam("declErrForDetection",  &(d._decErrForDetection));
+    db.outParam("declErrForWcs",        &(d._decErrForWcs));
     db.outParam("taiMidPoint",          &(d._taiMidPoint));
     db.outParam("taiRange",             &(d._taiRange)); 
     db.outParam("Ixx",                  &(d._ixx));
