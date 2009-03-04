@@ -98,7 +98,7 @@ namespace lsst { namespace afw { namespace image {
 
         //! Return true iff the point lies in the BBox
         bool contains(PointI p          ///< The point to check
-                     ) {
+                     ) const {
             return p.getX() >= getX0() && p.getX() <= getX1() && p.getY() >= getY0() && p.getY() <= getY1();
         }
 

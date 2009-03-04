@@ -181,107 +181,47 @@ class FootprintTestCase(unittest.TestCase):
         self.assertEqual(bbox1.getY1(), y0 + height - 1)
         self.assertEqual(bbox1.getHeight(), height)
 
-        ngrow = 1
-        foot2 = afwDetection.growFootprint(foot1, ngrow)
-        bbox2 = foot2.getBBox()
+        ngrow = 5
+        for isotropic in (True, False):
+            foot2 = afwDetection.growFootprint(foot1, ngrow, isotropic)
+            bbox2 = foot2.getBBox()
 
-        # check bbox1
-        self.assertEqual(bbox1.getX0(), x0)
-        self.assertEqual(bbox1.getX1(), x0 + width - ngrow)
-        self.assertEqual(bbox1.getWidth(), width)
+            if False and display:
+                idImage = afwImage.ImageU(foot1.getRegion().getDimensions())
+                idImage.set(0)
 
-        self.assertEqual(bbox1.getY0(), y0)
-        self.assertEqual(bbox1.getY1(), y0 + height - ngrow)
-        self.assertEqual(bbox1.getHeight(), height)
-        # check bbox2
-        self.assertEqual(bbox2.getX0(), bbox1.getX0() - ngrow)
-        self.assertEqual(bbox2.getX1(), bbox1.getX1() + ngrow)
-        self.assertEqual(bbox2.getWidth(), bbox1.getWidth() + 2*ngrow)
+                i = 1
+                for foot in [foot1, foot2]:
+                    foot.insertIntoImage(idImage, i); i += 1
 
-        self.assertEqual(bbox2.getY0(), bbox1.getY0() - ngrow)
-        self.assertEqual(bbox2.getY1(), bbox1.getY1() + ngrow)
-        self.assertEqual(bbox2.getHeight(), bbox1.getHeight() + 2*ngrow)
-        # Check that region was preserved
-        self.assertEqual(foot1.getRegion(), foot2.getRegion())
+                metricImage = afwImage.ImageF("foo.fits"); ds9.mtv(metricImage, frame=1)
+                ds9.mtv(idImage)
+
+            # check bbox1
+            self.assertEqual(bbox1.getX0(), x0)
+            self.assertEqual(bbox1.getX1(), x0 + width - 1)
+            self.assertEqual(bbox1.getWidth(), width)
+
+            self.assertEqual(bbox1.getY0(), y0)
+            self.assertEqual(bbox1.getY1(), y0 + height - 1)
+            self.assertEqual(bbox1.getHeight(), height)
+            # check bbox2
+            self.assertEqual(bbox2.getX0(), bbox1.getX0() - ngrow)
+            self.assertEqual(bbox2.getX1(), bbox1.getX1() + ngrow)
+            self.assertEqual(bbox2.getWidth(), bbox1.getWidth() + 2*ngrow)
+
+            self.assertEqual(bbox2.getY0(), bbox1.getY0() - ngrow)
+            self.assertEqual(bbox2.getY1(), bbox1.getY1() + ngrow)
+            self.assertEqual(bbox2.getHeight(), bbox1.getHeight() + 2*ngrow)
+            # Check that region was preserved
+            self.assertEqual(foot1.getRegion(), foot2.getRegion())
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class DetectionSetTestCase(unittest.TestCase):
     """A test case for DetectionSet"""
     class Object(object):
-        def __init__(self, val, spans):
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            
+        def __init__(self, val, spans):            
             self.val = val
             self.spans = spans
 
@@ -314,7 +254,7 @@ class DetectionSetTestCase(unittest.TestCase):
         for obj in self.objects:
             obj.insert(im)
 
-        if display:
+        if False and display:
             ds9.mtv(im, frame=0)
         
     def tearDown(self):
@@ -382,6 +322,23 @@ class DetectionSetTestCase(unittest.TestCase):
             for sp in objects[i].getSpans():
                 for x in range(sp.getX0(), sp.getX1() + 1):
                     self.assertEqual(idImage.get(x, sp.getY()), i + 1)
+
+    def testGrow2(self):
+        """Grow some more interesting shaped Footprints.  Informative with display, but no numerical tests"""
+        
+        ds = afwDetection.DetectionSetF(self.ms, afwDetection.Threshold(10), "OBJECT")
+
+        idImage = afwImage.ImageU(self.ms.getDimensions())
+        idImage.set(0)
+
+        i = 1
+        for foot in ds.getFootprints()[0:1]:
+            gfoot = afwDetection.growFootprint(foot, 3, False)
+            gfoot.insertIntoImage(idImage, i); i += 1
+
+        if display:
+            ds9.mtv(self.ms, frame=0)
+            ds9.mtv(idImage, frame=1)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
