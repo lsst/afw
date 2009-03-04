@@ -138,9 +138,13 @@ namespace lsst { namespace afw { namespace image {
             }
 
         int getX0() const { return first.getX(); } ///< Return x coordinate of lower-left corner
+        void setX0(int x0) { first.setX(x0); }     ///< Set x coordinate of lower-left corner
         int getY0() const { return first.getY(); } ///< Return y coordinate of lower-left corner
+        void setY0(int y0) { first.setY(y0); }     ///< Set y coordinate of lower-left corner
         int getX1() const { return first.getX() + second.first - 1; } ///< Return x coordinate of upper-right corner
+        void setX1(int x1) { second.first = x1 - getX0() + 1; } ///< Set x coordinate of lower-left corner
         int getY1() const { return first.getY() + second.second - 1; } ///< Return y coordinate of upper-right corner
+        void setY1(int y1) { second.second = y1 - getY0() + 1; } ///< Set y coordinate of lower-left corner
         PointI getLLC() const { return first; } ///< Return lower-left corner
         PointI getURC() const { return PointI(getX1(), getY1()); } ///< Return upper-right corner
         int getWidth() const { return second.first; } ///< Return width of BBox (== <tt>X1 - X0 + 1</tt>)

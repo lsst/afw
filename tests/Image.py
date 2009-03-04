@@ -141,6 +141,20 @@ class ImageTestCase(unittest.TestCase):
         bbox.grow(point);
 
         self.assert_(bbox.contains(point))
+        #
+        # Test changing the corners
+        #
+        bbox = afwImage.BBox(llc, width, height)
+
+        bbox.setX0(x0 - 1) 
+        self.assertEqual(bbox.getX0(), x0 - 1)
+        bbox.setX1(x1 + 1) 
+        self.assertEqual(bbox.getX1(), x1 + 1)
+
+        bbox.setY0(y0 - 1) 
+        self.assertEqual(bbox.getY0(), y0 - 1)
+        bbox.setY1(y1 + 1) 
+        self.assertEqual(bbox.getY1(), y1 + 1)
 
     def checkImgPatch(self, img, x0=0, y0=0):
         """Check that a patch of an image is correct; origin of patch is at (x0, y0)"""
