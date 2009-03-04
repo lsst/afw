@@ -165,6 +165,24 @@ void lsst::afw::math::basicConvolve(
     typedef typename InImageT::const_xy_locator InXYLocator;
     typedef typename OutImageT::x_iterator OutXIterator;
 
+    // Because convolve isn't a method of Kernel we can't always use Kernel's vtbl to dynamically
+    // dispatch the correct version of basicConvolve; sometimes we have to do it by hand.
+    // The case that fails is convolving with a kernel obtained from a shared_ptr to a Kernel (base class),
+    // e.g. as used in linearCombinationKernel.
+    if (dynamic_cast<lsst::afw::math::DeltaFunctionKernel const*>(&kernel) != NULL) {
+        lsst::afw::math::basicConvolve(convolvedImage, inImage,
+            *dynamic_cast<lsst::afw::math::DeltaFunctionKernel const*>(&kernel),
+            doNormalize);
+        return;
+    } else if (dynamic_cast<lsst::afw::math::SeparableKernel const*>(&kernel) != NULL) {
+        lsst::afw::math::basicConvolve(convolvedImage, inImage,
+            *dynamic_cast<lsst::afw::math::SeparableKernel const*>(&kernel),
+            doNormalize);
+        return;
+    } else {
+        // OK, use general (and slow) form
+    }
+
     if (convolvedImage.getDimensions() != inImage.getDimensions()) {
         throw LSST_EXCEPT(ex::InvalidParameterException, "convolvedImage not the same size as inImage");
     }
