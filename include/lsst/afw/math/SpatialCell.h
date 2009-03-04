@@ -17,6 +17,7 @@
 #include <string>
 
 #include "boost/shared_ptr.hpp"
+#include "lsst/pex/exceptions.h"
 
 namespace lsst {
 namespace afw {
@@ -31,10 +32,13 @@ namespace math {
         typedef boost::shared_ptr<SpatialCellCandidate> Ptr;
         typedef boost::shared_ptr<const SpatialCellCandidate> ConstPtr;
 
+        enum Status {BAD = 0, GOOD = 1, UNKNOWN = 2};
+
         SpatialCellCandidate(float const xCenter, ///< The object's column-centre
                              float const yCenter  ///< The object's row-centre
                     ) :
             _id(++_CandidateId),
+            _status(UNKNOWN),
             _xCenter(xCenter), _yCenter(yCenter) {
         }
 
@@ -57,8 +61,24 @@ namespace math {
 
         /// Return the candidate's unique ID
         int getId() const { return _id; }
+        /// Return the candidate's status
+        Status getStatus() const { return _status; }
+        /// Set the candidate's status
+        void setStatus(Status status) {
+            switch (status) {
+              case GOOD:
+              case BAD:
+              case UNKNOWN:
+                _status = status;
+                return;
+            }
+
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                              (boost::format("Saw unknown status %d") % status).str());
+        }
     private:
         int _id;                        // Unique ID for object
+        Status _status;                 // Is this Candidate good?
         float const _xCenter;           // The object's column-centre
         float const _yCenter;           // The object's row-centre
 
