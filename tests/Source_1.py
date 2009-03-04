@@ -121,7 +121,7 @@ class SourceTestCase(unittest.TestCase):
         if dafPers.DbAuth.available():
             pol  = dafPolicy.Policy()
             pers = dafPers.Persistence.getPersistence(pol)
-            loc  = dafPers.LogicalLocation("mysql://lsst10.ncsa.uiuc.edu:3306/source_test")
+            loc  = dafPers.LogicalLocation("mysql://lsst10.ncsa.uiuc.edu:3306/test_source")
             dp = dafBase.PropertySet()
             dp.addInt("visitId", int(time.clock())*16384 + random.randint(0,16383))
             dp.addInt("sliceId", 0)

@@ -67,7 +67,6 @@ private:
         FILTER_ID,
         OBJECT_ID,
         MOVING_OBJECT_ID,
-        PROC_HISTORY_ID,
         X_ASTROM,
         X_ASTROM_ERR,
         Y_ASTROM,

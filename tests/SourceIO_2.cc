@@ -33,9 +33,12 @@ using lsst::pex::policy::Policy;
 using lsst::daf::persistence::LogicalLocation;
 using lsst::daf::persistence::Persistence;
 using lsst::daf::persistence::Storage;
+using lsst::afw::detection::DiaSource;
+using lsst::afw::detection::DiaSourceSet;
+using lsst::afw::detection::PersistableDiaSourceVector;
 
 namespace afwFormatters = lsst::afw::formatters;
-using namespace lsst::afw::detection;
+namespace afwDet = lsst::afw::detection;
 
 #define Assert(pred, msg) do { if (!(pred)) { throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, (msg)); } } while (false)
 
@@ -50,29 +53,86 @@ static std::string const makeTempFile() {
     return std::string(name);
 }
 
+//not all fields are defined in DC3a
+//this array is a hack to facilitate testing, and nothing else
+//use this until DC3b when fields are reintroduced to schema
+int DiaSourceFieldsToTest[] = {
+        afwDet::OBJECT_ID,
+        afwDet::MOVING_OBJECT_ID,
+        afwDet::RA_ERR_FOR_DETECTION,
+        afwDet::DEC_ERR_FOR_DETECTION,
+        afwDet::X_ASTROM_ERR,
+        afwDet::Y_ASTROM_ERR,
+        afwDet::AP_DIA,
+        afwDet::IXX,
+        afwDet::IXX_ERR,
+        afwDet::IYY,
+        afwDet::IYY_ERR,
+        afwDet::IXY,
+        afwDet::IXY_ERR,
+        afwDet::FLAG_FOR_DETECTION,   
+        afwDet::DIA_SOURCE_TO_ID,
+        afwDet::RA_ERR_FOR_WCS,
+        afwDet::DEC_ERR_FOR_WCS,
+        afwDet::PSF_FLUX_ERR,
+        afwDet::AP_FLUX_ERR,
+        afwDet::MODEL_FLUX_ERR,
+        afwDet::INST_FLUX_ERR,
+        afwDet::FLAG_CLASSIFICATION,        
+};
+int const NUM_FIELDS = 22;
 
 static void initTestData(DiaSourceSet & v, int sliceId = 0) {
     v.clear();
-    v.reserve(NUM_DIASOURCE_NULLABLE_FIELDS + 2);
+    v.reserve(NUM_FIELDS + 2);
     DiaSource data;
-    for (int i = 0; i != NUM_DIASOURCE_NULLABLE_FIELDS + 2; ++i) {
+    for (int i = 0; i != NUM_FIELDS + 2; ++i) {
         // make sure each field has a different value, and that IO for each nullable field is tested
-        int j = i*NUM_DIASOURCE_NULLABLE_FIELDS;
-        data.setDiaSourceId(j + sliceId*(NUM_DIASOURCE_NULLABLE_FIELDS + 2)*64 + 1);
+        int j = i*NUM_FIELDS;
+        data.setNull();
+        data.setDiaSourceId(j + sliceId*(NUM_FIELDS + 2)*64 + 1);
         data.setAmpExposureId(static_cast<int64_t>(j + 2));
-        data.setDiaSourceToId(j + sliceId*(NUM_DIASOURCE_NULLABLE_FIELDS + 2)*64 + 3);
+        data.setDiaSourceToId(j + sliceId*(NUM_FIELDS + 2)*64 + 3);
         data.setFilterId(-1);
         data.setObjectId(static_cast<int64_t>(j + 4));
         data.setMovingObjectId(static_cast<int64_t>(j + 5));
-        data.setProcHistoryId(-1);
-        data.setScId(j + 6);
-        data.setSsmId(static_cast<int64_t>(j + 7));        
         data.setRa(static_cast<double>(j + 8));
         data.setRaErrForDetection(static_cast<float>(j + 9));
         data.setRaErrForWcs(static_cast<float>(j + 10));
         data.setDec(static_cast<double>(j + 11));
         data.setDecErrForDetection(static_cast<float>(j + 12));
         data.setDecErrForWcs(static_cast<float>(j + 13));
+        data.setXAstrom(static_cast<double>(j + 26));
+        data.setXAstromErr(static_cast<float>(j + 27));
+        data.setYAstrom(static_cast<double>(j + 28));
+        data.setYAstromErr(static_cast<float>(j + 29));                   
+        data.setTaiMidPoint(static_cast<double>(j + 34));
+        data.setTaiRange(static_cast<double>(j + 35));
+        data.setPsfFlux(static_cast<double>(j + 39));
+        data.setPsfFluxErr(static_cast<float>(j + 40));
+        data.setApFlux(static_cast<double>(j + 41));
+        data.setApFluxErr(static_cast<float>(j + 42));
+        data.setModelFlux(static_cast<double>(j + 43));
+        data.setModelFluxErr(static_cast<float>(j + 44));
+        data.setInstFlux(static_cast<double>(j + 47));
+        data.setInstFluxErr(static_cast<float>(j + 48));
+        data.setApDia(static_cast<float>(j + 53));
+        data.setIxx(static_cast<float> (j + 53));
+        data.setIxxErr(static_cast<float> (j + 53));
+        data.setIyy(static_cast<float> (j + 53));
+        data.setIyyErr(static_cast<float> (j + 53));
+        data.setIxy(static_cast<float> (j + 53));
+        data.setIxyErr(static_cast<float> (j + 53));        
+        data.setSnr(static_cast<float>(j + 54));
+        data.setChi2(static_cast<float>(j + 55));
+        data.setFlagClassification(4);
+        data.setFlagForDetection(2);
+       
+        #if 0
+        //The following are not defined in DC3a Schema
+        data.setProcHistoryId(-1);
+        data.setScId(j + 6);
+        data.setSsmId(static_cast<int64_t>(j + 7));       
         data.setXFlux(static_cast<double>(j + 14));
         data.setXFluxErr(static_cast<float>(j + 15));
         data.setYFlux(static_cast<double>(j + 16));
@@ -85,39 +145,16 @@ static void initTestData(DiaSourceSet & v, int sliceId = 0) {
         data.setYPeak(static_cast<double>(j + 23));
         data.setRaPeak(static_cast<double>(j + 24));
         data.setDecPeak(static_cast<double>(j + 25));
-        data.setXAstrom(static_cast<double>(j + 26));
-        data.setXAstromErr(static_cast<float>(j + 27));
-        data.setYAstrom(static_cast<double>(j + 28));
-        data.setYAstromErr(static_cast<float>(j + 29));        
         data.setRaAstrom(static_cast<double>(j + 30));
         data.setRaAstromErr(static_cast<float>(j + 31));
         data.setDecAstrom(static_cast<double>(j + 32));
-        data.setDecAstromErr(static_cast<float>(j + 33));                
-        data.setTaiMidPoint(static_cast<double>(j + 34));
-        data.setTaiRange(static_cast<double>(j + 35));
+        data.setDecAstromErr(static_cast<float>(j + 33));     
         data.setLengthDeg(static_cast<double>(j + 39));       
-        data.setPsfFlux(static_cast<double>(j + 39));
-        data.setPsfFluxErr(static_cast<float>(j + 40));
-        data.setApFlux(static_cast<double>(j + 41));
-        data.setApFluxErr(static_cast<float>(j + 42));
-        data.setModelFlux(static_cast<double>(j + 43));
-        data.setModelFluxErr(static_cast<float>(j + 44));
-        data.setInstFlux(static_cast<double>(j + 47));
-        data.setInstFluxErr(static_cast<float>(j + 48));
         data.setNonGrayCorrFlux(static_cast<double>(j + 49));
         data.setNonGrayCorrFluxErr(static_cast<float>(j + 50));
         data.setAtmCorrFlux(static_cast<double>(j + 51));
         data.setAtmCorrFluxErr(static_cast<float>(j + 52));
-        data.setApDia(static_cast<float>(j + 53));
         data.setRefFlux(static_cast<float> (j + 53));
-        data.setIxx(static_cast<float> (j + 53));
-        data.setIxxErr(static_cast<float> (j + 53));
-        data.setIyy(static_cast<float> (j + 53));
-        data.setIyyErr(static_cast<float> (j + 53));
-        data.setIxy(static_cast<float> (j + 53));
-        data.setIxyErr(static_cast<float> (j + 53));        
-        data.setSnr(static_cast<float>(j + 54));
-        data.setChi2(static_cast<float>(j + 55));
         data.setValX1(static_cast<float>(j + 56));
         data.setValX2(static_cast<float>(j + 57));
         data.setValY1(static_cast<float>(j + 58));
@@ -127,17 +164,17 @@ static void initTestData(DiaSourceSet & v, int sliceId = 0) {
         data.setIsSynthetic(2);
         data.setMopsStatus(3);
         data.setFlagForAssociation(1);
-        data.setFlagForDetection(2);
         data.setFlagForWcs(3);        
-        data.setFlagClassification(4);
+        #endif
         
-        if (i < NUM_DIASOURCE_NULLABLE_FIELDS) {
-            data.setNotNull();
-            data.setNull(i);
+        if (i < NUM_FIELDS) {
+            data.setNull(DiaSourceFieldsToTest[i]);
         } else if ((i & 1) == 0) {
-            data.setNotNull();
+            for(int j =0; j < NUM_FIELDS; j++)
+                data.setNotNull(DiaSourceFieldsToTest[j]);
         } else {
-            data.setNull();
+            for(int j =0; j < NUM_FIELDS; j++)
+                data.setNull(DiaSourceFieldsToTest[j]);
         }
         
         DiaSource::Ptr sourcePtr(new DiaSource(data));
@@ -230,7 +267,7 @@ static void testDb(std::string const & storageType) {
     PropertySet::Ptr props = createDbTestProps(0, 1, "DIASource");
 
     Persistence::Ptr pers = Persistence::getPersistence(policy);
-    LogicalLocation loc("mysql://lsst10.ncsa.uiuc.edu:3306/source_test");
+    LogicalLocation loc("mysql://lsst10.ncsa.uiuc.edu:3306/test_diasource");
 
     // 1. Test on a single DiaSource
     DiaSource::Ptr ds(new DiaSource);

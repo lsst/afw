@@ -234,7 +234,31 @@ void form::SourceVectorFormatter::insertRow(T & db, Source const & d) {
     if (!d.isNull(det::AP_DIA))
         db.template setColumn<float>("apDia", d._apDia);
     else db.setColumnToNull("apDia");
+   
+    if (!d.isNull(det::IXX))
+        db.template setColumn<float>("Ixx", d._ixx);
+    else db.setColumnToNull("Ixx");
     
+    if (!d.isNull(det::IXX_ERR))
+        db.template setColumn<float>("IxxErr", d._ixxErr);
+    else db.setColumnToNull("IxxErr");
+    
+    if (!d.isNull(det::IYY))    
+        db.template setColumn<float>("Iyy", d._iyy);
+    else db.setColumnToNull("Iyy");
+    
+    if (!d.isNull(det::IYY_ERR))
+        db.template setColumn<float>("IyyErr", d._iyyErr);
+    else db.setColumnToNull("IyyErr");
+    
+    if (!d.isNull(det::IXY))
+        db.template setColumn<float>("Ixy", d._ixy);
+    else db.setColumnToNull("Ixy");
+    
+    if (!d.isNull(det::IXY_ERR))
+        db.template setColumn<float>("IxyErr", d._ixyErr);        
+    else db.setColumnToNull("IxyErr");
+
     db.template setColumn<float>("snr", d._snr);
     db.template setColumn<float>("chi2", d._chi2);
     
@@ -318,6 +342,12 @@ void form::SourceVectorFormatter::setupFetch(DbStorage & db, Source & d) {
     db.outParam("atmCorrFlux",        &(d._atmCorrFlux));
     db.outParam("atmCorrFluxErr",     &(d._atmCorrFluxErr));     
     db.outParam("apDia",              &(d._apDia));    
+    db.outParam("Ixx",                &(d._ixx));
+    db.outParam("IxxErr",             &(d._ixxErr));
+    db.outParam("Iyy",                &(d._iyy));
+    db.outParam("IyyErr",             &(d._iyyErr));
+    db.outParam("Ixy",                &(d._ixy));
+    db.outParam("IxyErr",             &(d._ixyErr)); 
     db.outParam("snr",                &(d._snr));
     db.outParam("chi2",               &(d._chi2));
     db.outParam("sky",                &(d._sky));
@@ -672,6 +702,13 @@ Persistable* form::SourceVectorFormatter::read(
                     data.setNull(det::ATM_CORR_FLUX_ERR); 
                 }
                 if (db->columnIsNull(AP_DIA)) { data.setNull(det::AP_DIA); }
+                if (db->columnIsNull(IXX)) { data.setNull(det::IXX);}
+                if (db->columnIsNull(IXX_ERR)) { data.setNull(det::IXX_ERR);}
+                if (db->columnIsNull(IYY)) { data.setNull(det::IYY); }
+                if (db->columnIsNull(IYY_ERR)) { data.setNull(det::IYY_ERR);}
+                if (db->columnIsNull(IXY)) { data.setNull(det::IXY);}
+                if (db->columnIsNull(IXY_ERR)) { data.setNull(det::IXY_ERR); }
+
                 if (db->columnIsNull(SNR)) {  
                     throw LSST_EXCEPT(ex::RuntimeErrorException, 
                             "null column \"snr\""); 

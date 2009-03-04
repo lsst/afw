@@ -91,6 +91,12 @@ bool det::Source::operator==(Source const & d) const {
         areEqual(_atmCorrFlux, d._atmCorrFlux,  ATM_CORR_FLUX) &&
         areEqual(_atmCorrFluxErr, d._atmCorrFluxErr,  ATM_CORR_FLUX_ERR) &&
         areEqual(_apDia, d._apDia,  AP_DIA) &&
+        areEqual(_ixx, d._ixx, det::IXX) &&
+        areEqual(_ixxErr, d._ixxErr, det::IXX_ERR) &&
+        areEqual(_iyy, d._iyy, det::IYY) &&
+        areEqual(_iyyErr, d._iyyErr, det::IYY_ERR) &&
+        areEqual(_ixy, d._ixy, det::IXY) &&
+        areEqual(_ixyErr, d._ixyErr, det::IXY_ERR) &&
         areEqual(_snr, d._snr) &&
         areEqual(_chi2, d._chi2) &&
         areEqual(_sky, d._sky,  SKY) &&
