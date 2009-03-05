@@ -134,6 +134,13 @@ SWIG_SHARED_PTR_DERIVED(Wcs, lsst::daf::data::LsstBase, lsst::afw::image::Wcs);
     }
 }
 
+%extend lsst::afw::image::Image<double> {
+    %newobject convertFloat;
+    lsst::afw::image::Image<float> convertFloat() {
+       return lsst::afw::image::Image<float>(*self, true);
+    }
+}
+
 %extend lsst::afw::image::Image<float> {
    %newobject convertU16;
    lsst::afw::image::Image<boost::uint16_t> convertU16() {
