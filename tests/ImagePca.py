@@ -66,11 +66,17 @@ class ImagePcaTestCase(unittest.TestCase):
             val = 1
             im.set(val)
 
-            self.ImageSet.addImage(im)
+            self.ImageSet.addImage(im, 1.0)
 
         vec = self.ImageSet.getImageList()
         self.assertEqual(len(vec), nImage)
         self.assertEqual(vec[nImage - 1].get(0, 0), val)
+
+        def tst():
+            """Try adding an image with no flux"""
+            self.ImageSet.addImage(im, 0.0)
+
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.OutOfRangeException, tst)
         
     def testMean(self):
         """Test calculating mean image"""
@@ -83,7 +89,7 @@ class ImagePcaTestCase(unittest.TestCase):
             im = afwImage.ImageF(width, height)
             im.set(val)
 
-            self.ImageSet.addImage(im)
+            self.ImageSet.addImage(im, 1.0)
             meanVal += val
 
         meanVal = meanVal/len(values)
@@ -106,7 +112,7 @@ class ImagePcaTestCase(unittest.TestCase):
             im = afwImage.ImageF(width, height)
             im.set(val)
 
-            self.ImageSet.addImage(im)
+            self.ImageSet.addImage(im, 1.0)
         
         self.ImageSet.analyze()
 
@@ -114,11 +120,7 @@ class ImagePcaTestCase(unittest.TestCase):
         for img in self.ImageSet.getEigenImages():
             eImages.append(img)
 
-        print
-        for eValue in self.ImageSet.getEigenValues():
-            print eValue
-
-        if True or display:
+        if display:
             mos = displayUtils.Mosaic(background=-10)
             ds9.mtv(mos.makeMosaic(eImages), frame=1)
 

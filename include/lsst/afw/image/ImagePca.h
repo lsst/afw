@@ -30,7 +30,7 @@ namespace image {
 
         ImagePca();
 
-        void addImage(typename ImageT::Ptr img, double flux);
+        void addImage(typename ImageT::Ptr img, double flux=0.0);
         ImageList getImageList() const;
 
         /// Return the dimension of the images being analyzed

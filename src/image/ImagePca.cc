@@ -43,6 +43,10 @@ void ImagePca<ImageT>::addImage(typename ImageT::Ptr img, ///< Image to add to s
         }
     }
 
+    if (flux == 0.0) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::OutOfRangeException, "Flux may not be zero");
+    }
+
     _imageList.push_back(img);
     _fluxList.push_back(flux);
 }
