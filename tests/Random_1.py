@@ -24,6 +24,8 @@ def checkRngEquivalence(rng1, rng2):
     for i in xrange(1000):
         assert rng1.get() == rng2.get()
 
+def getSeed():
+    return int(time.time() * 1000000.0) % 1000000
 
 class RandomTestCase(unittest.TestCase):
     """A test case for lsst.afw.math.Random"""
@@ -50,7 +52,7 @@ class RandomTestCase(unittest.TestCase):
         Test that the generator returned by deepCopy() produces an
         identical random number sequence to its prototype
         """
-        rng1 = afwMath.Random(afwMath.Random.MT19937, int(time.clock()))
+        rng1 = afwMath.Random(afwMath.Random.MT19937, getSeed())
         rng2 = rng1.deepCopy()
         checkRngEquivalence(rng1, rng2)
 
@@ -61,7 +63,7 @@ class RandomTestCase(unittest.TestCase):
         """
         pol = pexPolicy.Policy()
         emptyPol = pexPolicy.Policy()
-        seed = int(time.clock() * 1000000.0) % 1000000
+        seed = getSeed()
         pol.set("rngSeed", str(seed))
         pol.set("rngAlgorithm", afwMath.Random.getAlgorithmNames()[afwMath.Random.RANLXD2])
         if (os.environ.has_key("LSST_RNG_ALGORITHM") and os.environ.has_key("LSST_RNG_SEED")):
