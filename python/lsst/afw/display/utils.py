@@ -34,9 +34,13 @@ class Mosaic(object):
         self.xsize, self.ysize = image1.getWidth(), image1.getHeight()
 
         if self.mode == "square":
-            nx = int(math.sqrt(nImage)); ny = nImage/int(nx)
-            if nx*ny != nImage:
+            nx = math.sqrt(nImage)
+            nx, ny = int(nx), int(nImage/nx)
+            if nx*ny < nImage:
                 nx += 1
+            if nx*ny < nImage:
+                ny += 1
+            assert(nx*ny >= nImage)
         elif self.mode == "x":
             nx, ny = nImage, 1
         elif self.mode == "y":
