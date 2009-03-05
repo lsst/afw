@@ -50,34 +50,9 @@ class SpatialCellTestCase(unittest.TestCase):
 
     def testCandidateList(self):
         """Check that we can retrieve candidates, and that they are sorted by ranking"""
-        self.assertEqual(self.cell.getCurrentCandidate().getXCenter(), 0)
-
-        self.cell.nextCandidate()
-        self.assertEqual(self.cell.getCurrentCandidate().getXCenter(), 1)
-        self.assertEqual(self.cell.getCurrentCandidate().getYCenter(), 5)
-
-    def testCandidateList2(self):
-        """Check that we can traverse the candidate list, but not fall off the end"""
-
-        self.assertEqual(self.cell.isUsable(), True)
-        for i in range(1, self.nCandidate):
-            self.assertEqual(self.cell.nextCandidate(), True)
-            self.assertEqual(self.cell.isUsable(), True)
-
-        for i in range(2):              # or any range for that matter
-            self.assertEqual(self.cell.nextCandidate(), False)
-            self.assertEqual(self.cell.isUsable(), False)
-        #
-        # Let's go back one
-        #
-        self.cell.prevCandidate()
-        self.assertEqual(self.cell.isUsable(), True)
-        self.assertEqual(self.cell.getCurrentCandidate().getXCenter(), 4)
-        #
-        # And back to the beginning
-        #
-        self.cell.prevCandidate(True)
-        self.assertEqual(self.cell.getCurrentCandidate().getXCenter(), 0)
+        self.assertEqual(self.cell[0].getXCenter(), 0)
+        self.assertEqual(self.cell[1].getXCenter(), 1)
+        self.assertEqual(self.cell[1].getYCenter(), 5)
 
     def testBuildCandidateListByInsertion(self):
         """Build a candidate list by inserting candidates"""
@@ -85,28 +60,32 @@ class SpatialCellTestCase(unittest.TestCase):
         self.cell = afwMath.SpatialCell("Test", afwImage.BBox())
         for x, y in ([5, 0], [1, 1], [2, 2], [0, 0], [4, 4], [3, 4]):
             self.cell.insertCandidate(testLib.TestCandidate(x, y, getFlux(x)))
+
+        self.assertEqual(self.cell[0].getXCenter(), 0)
+
+    def testIterators(self):
+        """Test the SpatialCell iterators"""
         #
-        # The first candidate installed will be current
+        # Count the candidates
         #
-        self.assertEqual(self.cell.getCurrentCandidate().getXCenter(), 5)
+        self.assertEqual(self.cell.size(), self.nCandidate)
+        self.assertEqual(self.cell.end() - self.cell.begin(), self.nCandidate)
 
-        self.cell.prevCandidate(True)
-        self.assertEqual(self.cell.getCurrentCandidate().getXCenter(), 0)
+        ptr = self.cell.begin(); ptr.__incr__()
+        self.assertEqual(self.cell.end() - ptr, self.nCandidate - 1)
+        
+        self.assertEqual(ptr - self.cell.begin(), 1)
+        #
+        # Now label one candidate as bad
+        #
+        ptr = self.cell[2].setStatus(afwMath.SpatialCellCandidate.BAD)
 
-    def testInsertCandidateList(self):
-        """Check that inserting new candidates doesn't invalidate currentCandidate, and
-        preserves sort order"""
+        self.assertEqual(self.cell.size(), self.nCandidate - 1)
+        self.assertEqual(self.cell.end() - self.cell.begin(), self.nCandidate - 1)
 
-        self.cell.nextCandidate()
-        self.cell.nextCandidate()
-        self.assertEqual(self.cell.getCurrentCandidate().getXCenter(), 2)
-
-        x, y = 2.5, 0
-        self.cell.insertCandidate(testLib.TestCandidate(x, y, getFlux(x)))
-        self.assertEqual(self.cell.getCurrentCandidate().getXCenter(), 2)
-
-        self.cell.nextCandidate()
-        self.assertEqual(self.cell.getCurrentCandidate().getXCenter(), 2.5)
+        self.cell.setIgnoreBad(False)
+        self.assertEqual(self.cell.size(), self.nCandidate)
+        self.assertEqual(self.cell.end() - self.cell.begin(), self.nCandidate)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -134,7 +113,7 @@ class SpatialCellSetTestCase(unittest.TestCase):
             for i in range(len(self.cellSet.getCellList())):
                 cell = self.cellSet.getCellList()[i]
                 print i, "%3d,%3d -- %3d,%3d" % (cell.getBBox().getX0(), cell.getBBox().getY0(),
-                                                 cell.getBBox().getX1(), cell.getBBox().getY1()), cell.isUsable()
+                                                 cell.getBBox().getX1(), cell.getBBox().getY1()), cell
         self.assertEqual(len(self.cellSet.getCellList()), 6)
 
         for x, y in ([5, 0], [1, 1], [2, 2], [0, 0], [4, 4], [3, 4]): # all in cell0
@@ -149,18 +128,23 @@ class SpatialCellSetTestCase(unittest.TestCase):
         #
         # OK, the SpatialCellList is populated
         #
-        self.assertEqual(self.cellSet.getCellList()[0].isUsable(), True)
-        self.assertEqual(self.cellSet.getCellList()[0].getCurrentCandidate().getXCenter(), 5.0)
+        cell0 = self.cellSet.getCellList()[0]
+        self.assertFalse(cell0.empty())
+        self.assertEqual(cell0[0].getXCenter(), 0.0)
         
-        self.assertEqual(self.cellSet.getCellList()[1].getCurrentCandidate().getXCenter(), 305.0)
+        self.assertEqual(self.cellSet.getCellList()[1][0].getXCenter(), 305.0)
+
+        self.assertTrue(self.cellSet.getCellList()[2].empty())
 
         def tst():
-            self.cellSet.getCellList()[2].getCurrentCandidate()
+            self.cellSet.getCellList()[2][0]
+        self.assertRaises(IndexError, tst)
 
-        self.assertEqual(self.cellSet.getCellList()[2].isUsable(), False)
+        def tst():
+            self.cellSet.getCellList()[2].begin().__deref__()
         utilsTests.assertRaisesLsstCpp(self, pexExcept.NotFoundException, tst)
 
-        self.assertEqual(self.cellSet.getCellList()[5].isUsable(), True)
+        self.assertFalse(self.cellSet.getCellList()[5].empty())
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -179,7 +163,7 @@ class TestImageCandidateCase(unittest.TestCase):
         flux = 10
         self.cellSet.insertCandidate(testLib.TestImageCandidate(0, 0, flux))
 
-        cand = self.cellSet.getCellList()[0].getCurrentCandidate()
+        cand = self.cellSet.getCellList()[0][0]
         #
         # Swig doesn't know that we're a SpatialCellImageCandidate;  all it knows is that we have
         # a SpatialCellCandidate, and SpatialCellCandidates don't know about getImage;  so cast the

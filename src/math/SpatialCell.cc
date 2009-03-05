@@ -43,8 +43,7 @@ SpatialCell::SpatialCell(std::string const& label, ///< string representing "nam
                         ) :
     _label(label),
     _bbox(bbox),
-    _candidateList(candidateList),
-    _currentCandidate()
+    _candidateList(candidateList)
 {
     lsst::pex::logging::TTrace<3>("lsst.afw.math.SpatialCell", 
                                   "Cell %s : created with %d candidates",
@@ -53,8 +52,6 @@ SpatialCell::SpatialCell(std::string const& label, ///< string representing "nam
     // Sort the list to have the Larger things at the beginning.
     //
     sort(_candidateList.begin(), _candidateList.end(), CandidatePtrMore());
-
-    _currentCandidate = _candidateList.begin();
 }
 
 /************************************************************************************************************/
@@ -70,113 +67,111 @@ namespace {
 }
 /**
  * Add a candidate to the list, preserving ranking
- *
- * @note doesn't invalid currentCandidate
  */
 void SpatialCell::insertCandidate(SpatialCellCandidate::Ptr candidate) {
     CandidateList::iterator pos = std::lower_bound(_candidateList.begin(), _candidateList.end(),
                                                    candidate, CandidatePtrMore());
-    int currentId = -1;
-    if (_currentCandidate != _candidateList.end()) { // remember current candidate
-        currentId = (*_currentCandidate)->getId();    
-    }
-
     _candidateList.insert(pos, candidate);
+}
 
-    if (currentId >= 0) {
-        _currentCandidate = std::find_if(_candidateList.begin(), _candidateList.end(), equal_to_id(currentId));        
-    } else {
-        _currentCandidate = _candidateList.begin();
+/**
+ * Determine if cell has no usable candidates
+ */
+bool SpatialCell::empty() const {
+    // Cast away const;  begin/end are only non-const as they provide access to the Candidates
+    return const_cast<SpatialCell *>(this)->begin(_ignoreBad) == const_cast<SpatialCell *>(this)->end(_ignoreBad);
+}
+
+/**
+ * Return number of usable candidates in Cell
+ */
+size_t SpatialCell::size() const {
+    // Cast away const;  begin/end are only non-const as they provide access to the Candidates
+    return const_cast<SpatialCell *>(this)->end(_ignoreBad) - const_cast<SpatialCell *>(this)->begin(_ignoreBad);
+}
+
+/************************************************************************************************************/
+/// ctor; designed to be used to pass begin to SpatialCellCandidateIterator
+SpatialCellCandidateIterator::SpatialCellCandidateIterator(
+        CandidateList::iterator iterator, ///< Where this iterator should start
+        CandidateList::iterator end,      ///< One-past-the-end of iterator's range
+        bool ignoreBad                      ///< Should we pass over bad Candidates?
+                                                          )
+    : _iterator(iterator), _end(end), _ignoreBad(ignoreBad) {
+    for (; _iterator != _end; ++iterator) {
+        (*_iterator)->instantiate();
+        
+        if (!_ignoreBad || *(*_iterator)) { // found a good enough Candidate
+            return;
+        }
     }
 }
+
+/// ctor; designed to be used to pass end to SpatialCellCandidateIterator
+SpatialCellCandidateIterator::SpatialCellCandidateIterator(
+        CandidateList::iterator,          ///< start of of iterator's range; not used
+        CandidateList::iterator end,      ///< Where this iterator should start
+        bool ignoreBad,                     ///< Should we pass over bad Candidates?
+        bool
+                                                          )
+    : _iterator(end), _end(end), _ignoreBad(ignoreBad) {
+    if (ignoreBad) {
+        // We could decrement end if there are bad Candidates at the end of the list, but it's probably
+        // not worth the trouble
+    }
+}
+
+/**
+ * Advance the iterator, maybe skipping over candidates labelled BAD
+ */
+void SpatialCellCandidateIterator::operator++() {
+    if (_iterator != _end) {
+        ++_iterator;
+    }
     
-/**
- * Select best candidate, returning true if an acceptable candidate in available
- *
- * @note Currently this does *not* use Sdqa objects, but it will.  It
- * only selects the first "good" candidate.
- * 
- * @note For now, we just give up
- */
-bool SpatialCell::selectBestCandidate(bool) {
-    lsst::pex::logging::TTrace<4>("lsst.ip.diffim.SpatialModelCell.selectBestModel", 
-                                  "Cell %s : Locking with no good candidates", this->_label.c_str());
-
-    return false;
+    for (; _iterator != _end; ++_iterator) {
+        (*_iterator)->instantiate();
+        
+        if (!_ignoreBad || *(*_iterator)) { // found a good candidate, or don't care
+            return;
+        }
+    }
 }
 
 /**
- * Determine if cell has a usable candidate
+ * Return the number of candidate between this and rhs
  */
-bool SpatialCell::isUsable() const {
-    return _currentCandidate != _candidateList.end();
+size_t SpatialCellCandidateIterator::operator-(SpatialCellCandidateIterator const& rhs) {
+    size_t n = 0;
+    for (SpatialCellCandidateIterator ptr = rhs; ptr._iterator != _iterator; ++ptr) {
+        ++n;
+    }
+    
+    return n;
 }
 
 /**
- * Return the current candidate (if there is one)
+ * Dereference the iteraror to return the Candidate (if there is one)
  *
  * @throw lsst::pex::exceptions::NotFoundErrorException if no candidate is available
  */
-SpatialCellCandidate::Ptr SpatialCell::getCurrentCandidate() {
-    if (_currentCandidate == _candidateList.end()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException,
-                          (boost::format("SpatialCell %s has no candidate") % _label.c_str()).str());
+SpatialCellCandidate::ConstPtr SpatialCellCandidateIterator::operator*() const {
+    if (_iterator == _end) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException, "Iterator points to end");
     }
 
-    return *_currentCandidate;
+    return *_iterator;
+}
+
+/// Return the CellCandidate::Ptr
+SpatialCellCandidate::Ptr SpatialCellCandidateIterator::operator*() {
+    if (_iterator == _end) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException, "Iterator points to end");
+    }
+
+    return *_iterator;
 }
     
-/**
- * Move to the previous (or first) candidate in the list
- */
-bool SpatialCell::prevCandidate(bool first ///< If true, rewind to the beginning of the list
-                               ) {
-    if (first) {
-        if (_candidateList.empty()) {
-            return false;
-        }
-
-        _currentCandidate = _candidateList.begin();
-    } else if (_currentCandidate == _candidateList.begin()) {
-        /* You are at the beginning; return the best we saw (if any) */
-        return selectBestCandidate(true);
-    } else {
-        if (_candidateList.empty()) {
-            return false;
-        }
-
-        --_currentCandidate;
-    }
-
-    if ((*_currentCandidate)->getStatus() == SpatialCellCandidate::BAD ||
-        !(*_currentCandidate)->instantiate()) { // candidate may need to do something, e.g. build a model
-        return prevCandidate();
-    }
-    
-    return true;
-}
-
-/**
- * Move to the next candidate in the list
- */
-bool SpatialCell::nextCandidate() {
-    if (_currentCandidate != _candidateList.end()) {
-        ++_currentCandidate;
-    }
-
-    if (_currentCandidate == _candidateList.end()) {
-        /* You are at the last one; go back and choose the best we saw (if any) */
-        return selectBestCandidate(true);
-    } else {
-        if ((*_currentCandidate)->getStatus() == SpatialCellCandidate::BAD ||
-            !(*_currentCandidate)->instantiate()) { // candidate may need to do something, e.g. build a model
-            return nextCandidate();
-        }
-
-        return true;
-    }
-}
-
 /************************************************************************************************************/
 
 /**

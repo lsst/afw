@@ -76,6 +76,10 @@ namespace math {
             throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
                               (boost::format("Saw unknown status %d") % status).str());
         }
+        /// Is this candidate acceptable?
+        virtual operator bool() const {
+            return (_status != BAD);
+        }
     private:
         int _id;                        // Unique ID for object
         Status _status;                 // Is this Candidate good?
@@ -132,6 +136,41 @@ namespace math {
     int SpatialCellImageCandidate<ImageT>::_height = 0;
 
     /************************************************************************************************************/
+    /**
+     * @brief An iterator that only returns usable members of the SpatialCell
+     */
+    class SpatialCellCandidateIterator {
+        friend class SpatialCell;
+        typedef std::vector<SpatialCellCandidate::Ptr> CandidateList;
+
+    public:
+        // ctors are protected
+        void operator++();
+        size_t operator-(SpatialCellCandidateIterator const& rhs);
+
+        SpatialCellCandidate::ConstPtr operator*() const;
+        SpatialCellCandidate::Ptr      operator*();
+
+        /// Are two SpatialCellCandidateIterator%s equal?
+        bool operator==(SpatialCellCandidateIterator const& rhs) {
+            return _iterator == rhs._iterator;
+        }
+        /// Are two SpatialCellCandidateIterator%s unequal?
+        bool operator!=(SpatialCellCandidateIterator const& rhs) {
+            return _iterator != rhs._iterator;
+        }
+
+    protected:
+        SpatialCellCandidateIterator(CandidateList::iterator iterator, CandidateList::iterator end, bool ignoreBad);
+        SpatialCellCandidateIterator(CandidateList::iterator iterator, CandidateList::iterator end, bool ignoreBad, bool);
+
+    private:
+        CandidateList::iterator _iterator;
+        CandidateList::iterator _end;
+        bool _ignoreBad;
+    };
+
+    /************************************************************************************************************/
     /** 
      * @brief Class to ensure constraints for spatial modeling
      * 
@@ -146,7 +185,7 @@ namespace math {
         typedef boost::shared_ptr<SpatialCell> Ptr;
         typedef boost::shared_ptr<const SpatialCell> ConstPtr;
         typedef std::vector<SpatialCellCandidate::Ptr> CandidateList;
-        
+        typedef SpatialCellCandidateIterator iterator;
         /**
          * Constructor
          */
@@ -159,12 +198,30 @@ namespace math {
          */
         virtual ~SpatialCell() {;};
 
-        void insertCandidate(SpatialCellCandidate::Ptr candidate);
+        bool empty() const;
+        size_t size() const;
 
-        bool nextCandidate();
-        bool prevCandidate(bool first=false);
-        SpatialCellCandidate::Ptr getCurrentCandidate();
-        bool selectBestCandidate(bool fix=false);
+        /**
+         * Return an iterator to the beginning of the Candidates
+         */
+        SpatialCellCandidateIterator begin() {
+            return SpatialCellCandidateIterator(_candidateList.begin(), _candidateList.end(), _ignoreBad);
+        }
+        SpatialCellCandidateIterator begin(bool ignoreBad) {
+            return SpatialCellCandidateIterator(_candidateList.begin(), _candidateList.end(), ignoreBad);
+        }
+        SpatialCellCandidateIterator end() {
+            return SpatialCellCandidateIterator(_candidateList.begin(), _candidateList.end(), _ignoreBad, true);
+        }
+        SpatialCellCandidateIterator end(bool ignoreBad) {
+            return SpatialCellCandidateIterator(_candidateList.begin(), _candidateList.end(), ignoreBad, true);
+        }
+        //
+        void insertCandidate(SpatialCellCandidate::Ptr candidate);
+        /// Set whether we should omit BAD candidates from candidate list when traversing
+        void setIgnoreBad(bool ignoreBad) { _ignoreBad = ignoreBad; }
+        /// Get whether we are omitting BAD candidates from candidate list when traversing
+        bool getIgnoreBad() const { return _ignoreBad; }
         /**
          * Get SpatialCell's label
          */
@@ -173,14 +230,11 @@ namespace math {
          * Get SpatialCell's BBox
          */
         lsst::afw::image::BBox const& getBBox() const { return _bbox; }
-
-        bool isUsable() const;
     private:
         std::string _label;             // Name of cell for logging/trace
         lsst::afw::image::BBox _bbox;   // Bounding box of cell in overall image
         CandidateList _candidateList;   // List of candidates in the cell
-
-        CandidateList::iterator _currentCandidate; // The current candidate in this Cell
+        bool _ignoreBad;                // Don't include BAD candidates when traversing the list
     };
 
     /** 

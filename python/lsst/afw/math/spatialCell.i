@@ -63,9 +63,35 @@ SWIG_SHARED_PTR(SpatialCell, lsst::afw::math::SpatialCell);
 
 %SpatialCellImageCandidatePtr(F, float);
 
+%rename(__incr__) lsst::afw::math::SpatialCellCandidateIterator::operator++;
+%rename(__deref__) lsst::afw::math::SpatialCellCandidateIterator::operator*;
+%rename(__eq__) lsst::afw::math::SpatialCellCandidateIterator::operator==;
+%rename(__ne__) lsst::afw::math::SpatialCellCandidateIterator::operator!=;
+
 %include "lsst/afw/math/SpatialCell.h"
 
 %template(SpatialCellCandidateList) std::vector<lsst::afw::math::SpatialCellCandidate::Ptr>;
 %template(SpatialCellList) std::vector<lsst::afw::math::SpatialCell::Ptr>;
 
 %SpatialCellImageCandidate(F, float);
+
+
+%extend lsst::afw::math::SpatialCell {
+    %pythoncode {
+        def __getitem__(self, ind):
+            return [c for c in self.begin()][ind]
+    }
+}
+
+%extend lsst::afw::math::SpatialCellCandidateIterator {
+    %pythoncode {
+    def __iter__(self):
+        while True:
+            try:
+                yield self.__deref__()
+            except:
+                raise StopIteration
+            
+            self.__incr__()
+    }
+}
