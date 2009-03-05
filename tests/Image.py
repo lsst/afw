@@ -39,6 +39,15 @@ class ImageTestCase(unittest.TestCase):
         del self.image1
         del self.image2
 
+    def testInitializeImages(self):
+        val = 666
+        for ctor in (afwImage.ImageU, afwImage.ImageI, afwImage.ImageF, afwImage.ImageD):
+            im = ctor(10, 10, val)
+            self.assertEqual(im.get(0,0), val)
+
+            im2 = ctor(afwImage.pairIntInt(10, 10), val)
+            self.assertEqual(im2.get(0,0), val)
+
     def testSetGetImages(self):
         self.assertEqual(self.image1.get(0,0), self.val1)
     
