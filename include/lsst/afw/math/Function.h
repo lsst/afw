@@ -14,11 +14,9 @@
 #include <sstream>
 #include <vector>
 
-#include "boost/archive/text_iarchive.hpp"
-#include "boost/archive/text_oarchive.hpp"
-#include "boost/archive/xml_iarchive.hpp"
-#include "boost/archive/xml_oarchive.hpp"
+#include "boost/serialization/nvp.hpp"
 #include "boost/serialization/vector.hpp"
+#include "boost/serialization/void_cast.hpp"
 #include "boost/serialization/export.hpp"
 
 #include "lsst/daf/data/LsstBase.h"
@@ -220,6 +218,16 @@ using boost::serialization::make_nvp;
         virtual std::string toString(void) const {
             return std::string("Function1: ") + Function<ReturnT>::toString();
         };
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+        void serialize(Archive& ar, unsigned int const version) {
+            boost::serialization::void_cast_register<
+                Function1<ReturnT>, Function<ReturnT> >(
+                    static_cast< Function1<ReturnT>* >(0),
+                    static_cast< Function<ReturnT>* >(0));
+        };
     };    
 
     
@@ -277,6 +285,18 @@ using boost::serialization::make_nvp;
         virtual std::string toString(void) const {
             return std::string("Function2: ") + Function<ReturnT>::toString();
         };
+
+    private:
+        friend class boost::serialization::access;
+#ifndef SWIG
+        template <class Archive>
+        void serialize(Archive& ar, unsigned const int version) {
+            boost::serialization::void_cast_register<
+                Function2<ReturnT>, Function<ReturnT> >(
+                    static_cast< Function2<ReturnT>* >(0),
+                    static_cast< Function<ReturnT>* >(0));
+        };
+#endif
     };
 
 
@@ -346,15 +366,5 @@ inline void load_construct_data(Archive& ar,
 };
 
 }}
-
-#ifndef SWIG
-BOOST_CLASS_EXPORT(lsst::afw::math::Function<float>);
-BOOST_CLASS_EXPORT(lsst::afw::math::NullFunction1<float>);
-BOOST_CLASS_EXPORT(lsst::afw::math::NullFunction2<float>);
-
-BOOST_CLASS_EXPORT(lsst::afw::math::Function<double>);
-BOOST_CLASS_EXPORT(lsst::afw::math::NullFunction1<double>);
-BOOST_CLASS_EXPORT(lsst::afw::math::NullFunction2<double>);
-#endif
 
 #endif // #ifndef LSST_AFW_MATH_FUNCTION_H

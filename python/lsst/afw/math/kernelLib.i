@@ -15,9 +15,11 @@
 //
 %define %kernelPtr(TYPE...)
 SWIG_SHARED_PTR_DERIVED(TYPE, lsst::afw::math::Kernel, lsst::afw::math::TYPE);
+%lsst_persistable(lsst::afw::math::TYPE)
 %enddef
 
 SWIG_SHARED_PTR_DERIVED(Kernel, lsst::daf::data::LsstBase, lsst::afw::math::Kernel); // the base class
+%lsst_persistable(lsst::afw::math::Kernel)
 
 %kernelPtr(AnalyticKernel);
 %kernelPtr(DeltaFunctionKernel);
