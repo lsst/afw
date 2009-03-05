@@ -297,12 +297,16 @@ namespace image {
         //
         void operator+=(PixelT const rhs);
         void operator+=(Image<PixelT>const & rhs);
+        void scaledPlus(double const c, Image<PixelT>const & rhs);
         void operator-=(PixelT const rhs);
         void operator-=(Image<PixelT> const& rhs);
+        void scaledMinus(double const c, Image<PixelT>const & rhs);
         void operator*=(PixelT const rhs);
         void operator*=(Image<PixelT> const& rhs);
+        void scaledMultiplies(double const c, Image<PixelT>const & rhs);
         void operator/=(PixelT const rhs);
         void operator/=(Image<PixelT> const& rhs);
+        void scaledDivides(double const c, Image<PixelT>const & rhs);
     protected:
         using ImageBase<PixelT>::_getRawView;
     private:

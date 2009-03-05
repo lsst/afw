@@ -49,12 +49,24 @@ class ImageTestCase(unittest.TestCase):
         self.assertEqual(self.image1.get(0,0), 2*self.val1)
         self.assertEqual(self.image2.get(0,0), self.val1 + self.val2)
     
+    def testAddScaledImages(self):
+        c = 10.0
+        self.image1.scaledPlus(c, self.image2)
+        
+        self.assertEqual(self.image1.get(0,0), self.val1 + c*self.val2)
+    
     def testSubtractImages(self):
         self.image2 -= self.image1
         self.image1 -= self.val1
         
         self.assertEqual(self.image1.get(0,0), 0)
         self.assertEqual(self.image2.get(0,0), self.val2 - self.val1)
+    
+    def testSubtractScaledImages(self):
+        c = 10.0
+        self.image1.scaledMinus(c, self.image2)
+        
+        self.assertEqual(self.image1.get(0,0), self.val1 - c*self.val2)
     
     def testMultiplyImages(self):
         self.image2 *= self.image1
@@ -63,12 +75,24 @@ class ImageTestCase(unittest.TestCase):
         self.assertEqual(self.image1.get(0,0), self.val1*self.val1)
         self.assertEqual(self.image2.get(0,0), self.val2*self.val1)
     
+    def testMultiplesScaledImages(self):
+        c = 10.0
+        self.image1.scaledMultiplies(c, self.image2)
+        
+        self.assertEqual(self.image1.get(0,0), self.val1 * c*self.val2)
+    
     def testDivideImages(self):
         self.image2 /= self.image1
         self.image1 /= self.val1
         
         self.assertEqual(self.image1.get(0,0), 1)
         self.assertEqual(self.image2.get(0,0), self.val2/self.val1)
+    
+    def testDividesScaledImages(self):
+        c = 10.0
+        self.image1.scaledDivides(c, self.image2)
+        
+        self.assertAlmostEqual(self.image1.get(0,0), self.val1/(c*self.val2))
     
     def testCopyConstructors(self):
         dimage = afwImage.ImageF(self.image1, True) # deep copy

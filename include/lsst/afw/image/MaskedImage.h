@@ -654,12 +654,16 @@ namespace image {
 
         void operator+=(ImagePixelT const rhs);
         void operator+=(MaskedImage const& rhs);
+        void scaledPlus(double const c, MaskedImage const& rhs);
         void operator-=(ImagePixelT const rhs);
         void operator-=(MaskedImage const& rhs);
+        void scaledMinus(double const c, MaskedImage const& rhs);
         void operator*=(ImagePixelT const rhs);
         void operator*=(MaskedImage const& rhs);
+        void scaledMultiplies(double const c, MaskedImage const& rhs);
         void operator/=(ImagePixelT const rhs);
         void operator/=(MaskedImage const& rhs);
+        void scaledDivides(double const c, MaskedImage const& rhs);
         
         // IO functions
         static std::string imageFileName(std::string const& baseName) { return baseName + "_img.fits"; }
