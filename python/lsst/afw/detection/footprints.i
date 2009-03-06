@@ -35,10 +35,6 @@ SWIG_SHARED_PTR(DetectionSetD, lsst::afw::detection::DetectionSet<double, lsst::
 %template(setMaskFromFootprint) lsst::afw::detection::setMaskFromFootprint<lsst::afw::image::MaskPixel>;
 %template(setMaskFromFootprintList) lsst::afw::detection::setMaskFromFootprintList<lsst::afw::image::MaskPixel>;
 
-//%template(FootprintFunctorMaU) lsst::afw::detection::FootprintFunctor<lsst::afw::image::Mask<lsst::afw::image::MaskPixel> >;
-//%template(FootprintFunctorMID) lsst::afw::detection::FootprintFunctor<lsst::afw::image::MaskedImage<double> >;
-//%template(FootprintFunctorMIF) lsst::afw::detection::FootprintFunctor<lsst::afw::image::MaskedImage<float> >;
-
 %extend lsst::afw::detection::Span {
     %pythoncode {
     def __str__(self):
