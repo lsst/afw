@@ -18,6 +18,11 @@
 #include "boost/type_traits/is_same.hpp"
 #include "boost/type_traits/is_base_and_derived.hpp"
 
+#include "boost/serialization/shared_ptr.hpp"
+#include "boost/serialization/vector.hpp"
+#include "boost/serialization/export.hpp"
+
+#include "lsst/daf/base/Persistable.h"
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/Function.h"
@@ -25,7 +30,17 @@
 
 namespace lsst {
 namespace afw {
+
+namespace formatters {
+class KernelFormatter;
+}
+
 namespace math {
+
+#ifndef SWIG
+using boost::serialization::make_nvp;
+#endif
+
 
     /**
      * @brief Kernels are used for convolution with MaskedImages and (eventually) Images
@@ -98,7 +113,7 @@ namespace math {
      *
      * @ingroup afw
      */
-    class Kernel : public lsst::daf::data::LsstBase {
+    class Kernel : public lsst::daf::data::LsstBase, public lsst::daf::base::Persistable {
     
     public:
         typedef double PixelT;
@@ -233,12 +248,16 @@ namespace math {
     
         virtual std::string toString(std::string prefix = "") const;
 
+        virtual void toFile(std::string fileName) const;
+
     protected:
         virtual void setKernelParameter(unsigned int ind, double value) const;
 
         void setKernelParametersFromSpatialModel(double x, double y) const;
            
     private:
+        LSST_PERSIST_FORMATTER(lsst::afw::formatters::KernelFormatter);
+
         int _width;
         int _height;
         int _ctrX;
@@ -277,8 +296,19 @@ namespace math {
 #endif
                 copy(k2l.begin(), k2l.end(), this->begin());
             }
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+        void serialize(Archive& ar, unsigned int const version) {
+            ar & make_nvp("list",
+                          boost::serialization::base_object<
+                              std::vector<typename _KernelT::PtrT>
+                          >(*this));
+        };
+
     };
-    
+
     /**
      * @brief A kernel created from an Image
      *
@@ -310,6 +340,16 @@ namespace math {
     private:
         lsst::afw::image::Image<PixelT> _image;
         PixelT _sum;
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+            void serialize(Archive& ar, unsigned int const version) {
+                ar & make_nvp("k",
+                        boost::serialization::base_object<Kernel>(*this));
+                ar & make_nvp("img", _image);
+                ar & make_nvp("sum", _sum);
+            };
     };
     
     
@@ -375,6 +415,15 @@ namespace math {
     
     private:
         KernelFunctionPtr _kernelFunctionPtr;
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+            void serialize(Archive& ar, unsigned int const version) {
+                ar & make_nvp("k",
+                        boost::serialization::base_object<Kernel>(*this));
+                ar & make_nvp("fn", _kernelFunctionPtr);
+            };
     };
     
     
@@ -408,8 +457,18 @@ namespace math {
 
     private:
         std::pair<int, int> _pixel;
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+        void serialize(Archive& ar, unsigned int const version) {
+            boost::serialization::void_cast_register<
+                DeltaFunctionKernel, Kernel>(
+                    static_cast<DeltaFunctionKernel*>(0),
+                    static_cast<Kernel*>(0));
+        };
     };
-    
+
 
     /**
      * @brief A kernel that is a linear combination of fixed basis kernels.
@@ -472,6 +531,17 @@ namespace math {
         KernelList _kernelList;
         std::vector<boost::shared_ptr<lsst::afw::image::Image<PixelT> > > _kernelImagePtrList;
         mutable std::vector<double> _kernelParams;
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+            void serialize(Archive& ar, unsigned int const version) {
+                ar & make_nvp("k",
+                        boost::serialization::base_object<Kernel>(*this));
+                ar & make_nvp("klist", _kernelList);
+                ar & make_nvp("kimglist", _kernelImagePtrList);
+                ar & make_nvp("params", _kernelParams);
+            };
     };
 
     
@@ -545,8 +615,55 @@ namespace math {
         KernelFunctionPtr _kernelRowFunctionPtr;
         mutable std::vector<PixelT> _localColList;  // used by computeImage
         mutable std::vector<PixelT> _localRowList;
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+            void serialize(Archive& ar, unsigned int const version) {
+                ar & make_nvp("k",
+                    boost::serialization::base_object<Kernel>(*this));
+                ar & make_nvp("colfn", _kernelColFunctionPtr);
+                ar & make_nvp("rowfn", _kernelRowFunctionPtr);
+                ar & make_nvp("cols", _localColList);
+                ar & make_nvp("rows", _localRowList);
+            };
     };
     
 }}}   // lsst:afw::math
+
+namespace boost {
+namespace serialization {
+
+template <class Archive>
+inline void save_construct_data(
+    Archive& ar, lsst::afw::math::DeltaFunctionKernel const* k,
+    unsigned int const file_version) {
+    int width = k->getWidth();
+    int height = k->getHeight();
+    int x = k->getPixel().first;
+    int y = k->getPixel().second;
+    ar << make_nvp("width", width);
+    ar << make_nvp("height", height);
+    ar << make_nvp("pixX", x);
+    ar << make_nvp("pixY", y);
+};
+
+template <class Archive>
+inline void load_construct_data(
+    Archive& ar, lsst::afw::math::DeltaFunctionKernel* k,
+    unsigned int const file_version) {
+    int width;
+    int height;
+    int x;
+    int y;
+    ar >> make_nvp("width", width);
+    ar >> make_nvp("height", height);
+    ar >> make_nvp("pixX", x);
+    ar >> make_nvp("pixY", y);
+    ::new(k) lsst::afw::math::DeltaFunctionKernel(
+        width, height, lsst::afw::image::PointI(x, y));
+};
+
+}}
 
 #endif // !defined(LSST_AFW_MATH_KERNEL_H)

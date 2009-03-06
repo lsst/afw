@@ -8,7 +8,10 @@
  */
 #include <stdexcept>
 
+#include <fstream>
+
 #include "boost/format.hpp"
+#include "boost/archive/text_oarchive.hpp"
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
@@ -178,6 +181,13 @@ std::string lsst::afw::math::Kernel::toString(std::string prefix) const {
     return os.str();
 };
 
+
+void lsst::afw::math::Kernel::toFile(std::string fileName) const {
+    std::ofstream os(fileName.c_str());
+    boost::archive::text_oarchive oa(os);
+    oa << this;
+}
+
 //
 // Protected Member Functions
 //
@@ -210,3 +220,4 @@ void lsst::afw::math::Kernel::setKernelParametersFromSpatialModel(double x, doub
         this->setKernelParameter(ii, (*(*funcIter))(x,y));
     }
 }
+
