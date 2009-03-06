@@ -45,7 +45,9 @@ BOOST_AUTO_TEST_CASE(constructors_test) {
     image::Wcs wcs();
 
     image::Wcs wcs2(crval, crpix, CD);
-    
+
+    //Create a Wcs with sip polynomials.
+    image::Wcs wcs3(crval, crpix, CD, CD, CD, CD, CD);
 }
 
 
