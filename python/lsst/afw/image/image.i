@@ -120,6 +120,8 @@ SWIG_SHARED_PTR_DERIVED(Wcs, lsst::daf::data::LsstBase, lsst::afw::image::Wcs);
 %image(Image, F, float);
 %image(Image, D, double);
 
+%template(vectorBBox) std::vector<lsst::afw::image::BBox>;         
+
 %extend lsst::afw::image::Image<boost::uint16_t> {
     %newobject convertFloat;
     lsst::afw::image::Image<float> convertFloat() {

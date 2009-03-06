@@ -87,23 +87,39 @@ class MaskedImageTestCase(unittest.TestCase):
 
         self.assertEqual(self.mimage.getVariance().get(0,0), self.varVal1)
     
+    def testAddScaledImages(self):
+        "Test addition by a scaled MaskedImage"
+        # add an image
+        c = 10.0
+        mimage2_copy = self.mimage2.Factory(self.mimage2, True) # make a copy
+        self.mimage2.scaledPlus(c, self.mimage)
+        #
+        # Now repeat calculation using a temporary
+        #
+        tmp = self.mimage.Factory(self.mimage, True)
+        tmp *= c
+        mimage2_copy += tmp
+
+        self.assertEqual(self.mimage2.getImage().get(0,0), mimage2_copy.getImage().get(0,0))
+        self.assertEqual(self.mimage2.getMask().get(0,0), mimage2_copy.getMask().get(0,0))
+        self.assertEqual(self.mimage2.getVariance().get(0,0), mimage2_copy.getVariance().get(0,0))
+
     def testSubtractImages(self):
-        "Test subtraction"
-        # subtract an image
-        self.mimage2 -= self.mimage
+        "Test subtraction by a scaled MaskedImage"
+        # subtract a scaled image
+        c = 10.0
+        mimage2_copy = self.mimage2.Factory(self.mimage2, True) # make a copy
+        self.mimage2.scaledMinus(c, self.mimage)
+        #
+        # Now repeat calculation using a temporary
+        #
+        tmp = self.mimage.Factory(self.mimage, True)
+        tmp *= c
+        mimage2_copy -= tmp
 
-        self.assertEqual(self.mimage2.getImage().get(0,0), self.imgVal2 - self.imgVal1)
-        self.assertEqual(self.mimage2.getMask().get(0,0), self.EDGE)
-        self.assertEqual(self.mimage2.getVariance().get(0,0), self.varVal1 + self.varVal2)
-        # subtract a scalar
-        self.mimage -= self.imgVal1
-        
-        self.assertEqual(self.mimage.getImage().get(0,0), 0)
-
-        self.assertEqual(self.mimage.getMask().get(0,0), self.EDGE)
-        self.assertEqual(self.mimage.getMask().get(1,1), self.EDGE)
-        self.assertEqual(self.mimage.getMask().get(2,2), 0x0)
-        self.assertEqual(self.mimage.getVariance().get(0,0), self.varVal1)
+        self.assertEqual(self.mimage2.getImage().get(0,0), mimage2_copy.getImage().get(0,0))
+        self.assertEqual(self.mimage2.getMask().get(0,0), mimage2_copy.getMask().get(0,0))
+        self.assertEqual(self.mimage2.getVariance().get(0,0), mimage2_copy.getVariance().get(0,0))
     
     def testMultiplyImages(self):
         """Test multiplication"""
@@ -125,8 +141,25 @@ class MaskedImageTestCase(unittest.TestCase):
 
         self.assertEqual(self.mimage.getVariance().get(0,0), self.varVal1*pow(self.imgVal1, 2))
     
+    def testScaledMultiplyImages(self):
+        """Test multiplication by a scaled image"""
+        # Multiply by an image
+        c = 10.0
+        mimage2_copy = self.mimage2.Factory(self.mimage2, True) # make a copy
+        self.mimage2.scaledMultiplies(c, self.mimage)
+        #
+        # Now repeat calculation using a temporary
+        #
+        tmp = self.mimage.Factory(self.mimage, True)
+        tmp *= c
+        mimage2_copy *= tmp
+
+        self.assertEqual(self.mimage2.getImage().get(0,0), mimage2_copy.getImage().get(0,0))
+        self.assertEqual(self.mimage2.getMask().get(0,0), mimage2_copy.getMask().get(0,0))
+        self.assertEqual(self.mimage2.getVariance().get(0,0), mimage2_copy.getVariance().get(0,0))
+
     def testDivideImages(self):
-        """Test multiplication"""
+        """Test division"""
         # Divide by an image
         self.mimage2 /= self.mimage
 
@@ -145,6 +178,23 @@ class MaskedImageTestCase(unittest.TestCase):
 
         self.assertAlmostEqual(self.mimage.getVariance().get(0,0), self.varVal1/pow(self.imgVal1, 2), 10)
         
+    def testScaledDivideImages(self):
+        """Test division by a scaled image"""
+        # Divide by an image
+        c = 10.0
+        mimage2_copy = self.mimage2.Factory(self.mimage2, True) # make a copy
+        self.mimage2.scaledDivides(c, self.mimage)
+        #
+        # Now repeat calculation using a temporary
+        #
+        tmp = self.mimage.Factory(self.mimage, True)
+        tmp *= c
+        mimage2_copy /= tmp
+
+        self.assertEqual(self.mimage2.getImage().get(0,0), mimage2_copy.getImage().get(0,0))
+        self.assertEqual(self.mimage2.getMask().get(0,0), mimage2_copy.getMask().get(0,0))
+        self.assertEqual(self.mimage2.getVariance().get(0,0), mimage2_copy.getVariance().get(0,0))
+
     def testCopyConstructors(self):
         dimage = afwImage.MaskedImageF(self.mimage, True) # deep copy
         simage = afwImage.MaskedImageF(self.mimage) # shallow copy

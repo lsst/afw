@@ -126,8 +126,10 @@ SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::daf::data::LsstBase, lsst::afw::image:
 
 %maskedImagePtr(MaskedImage, F, float,  lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
 %maskedImagePtr(MaskedImage, D, double, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
+%maskedImagePtr(MaskedImage, I, int,    lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
 
 %include "lsst/afw/image/MaskedImage.h"
 
 %maskedImage(MaskedImage, D, double,  lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
-%maskedImage(MaskedImage, F, float,  lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
+%maskedImage(MaskedImage, F, float,   lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
+%maskedImage(MaskedImage, I, int,     lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);

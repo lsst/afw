@@ -291,21 +291,49 @@ image::ImageBase<PixelT>& image::ImageBase<PixelT>::operator=(PixelT const rhs) 
 //
 // On to Image itself.  ctors, cctors, and operator=
 //
-/// Create an uninitialised Image of the specified size 
-template<typename PixelT>
-image::Image<PixelT>::Image(int const width, int const height) :
-    image::ImageBase<PixelT>(width, height) {}
-
 /**
- * Create an uninitialised Image of the specified size
+ * Create an uninitialised Image of the specified size 
  *
  * \note Many lsst::afw::image and lsst::afw::math objects define a \c dimensions member
  * which may be conveniently used to make objects of an appropriate size
  */
 template<typename PixelT>
+image::Image<PixelT>::Image(int const width, int const height) :
+    image::ImageBase<PixelT>(width, height) {}
+
+/**
+ * Create an initialised Image of the specified size 
+ *
+ * \note Many lsst::afw::image and lsst::afw::math objects define a \c dimensions member
+ * which may be conveniently used to make objects of an appropriate size
+ */
+template<typename PixelT>
+image::Image<PixelT>::Image(int const width, ///< Number of columns
+                            int const height, ///< Number of rows
+                            PixelT initialValue ///< Initial value
+                           ) :
+    image::ImageBase<PixelT>(width, height) {
+    *this = initialValue;
+}
+
+/**
+ * Create an initialised Image of the specified size
+ */
+template<typename PixelT>
 image::Image<PixelT>::Image(std::pair<int, int> const dimensions // (width, height) of the desired Image
                            ) :
     image::ImageBase<PixelT>(dimensions) {}
+
+/**
+ * Create an uninitialized Image of the specified size
+ */
+template<typename PixelT>
+image::Image<PixelT>::Image(std::pair<int, int> const dimensions, // (width, height) of the desired Image
+                            PixelT initialValue ///< Initial value
+                           ) :
+    image::ImageBase<PixelT>(dimensions) {
+    *this = initialValue;
+}
 
 /**
  * Copy constructor.
@@ -443,6 +471,12 @@ void image::Image<PixelT>::operator+=(Image<PixelT> const& rhs) {
     transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<PixelT>(_1 + _2));
 }
 
+/// Add Image c*rhs to lhs
+template<typename PixelT>
+void image::Image<PixelT>::scaledPlus(double const c, Image<PixelT> const& rhs) {
+    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<PixelT>(_1 + ret<PixelT>(c*_2)));
+}
+
 /// Subtract scalar rhs from lhs
 template<typename PixelT>
 void image::Image<PixelT>::operator-=(PixelT const rhs) {
@@ -453,6 +487,12 @@ void image::Image<PixelT>::operator-=(PixelT const rhs) {
 template<typename PixelT>
 void image::Image<PixelT>::operator-=(Image<PixelT> const& rhs) {
     transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<PixelT>(_1 - _2));
+}
+
+/// Subtract Image c*rhs from lhs
+template<typename PixelT>
+void image::Image<PixelT>::scaledMinus(double const c, Image<PixelT> const& rhs) {
+    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<PixelT>(_1 - ret<PixelT>(c*_2)));
 }
 
 /// Multiply lhs by scalar rhs
@@ -467,6 +507,12 @@ void image::Image<PixelT>::operator*=(Image<PixelT> const& rhs) {
     transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<PixelT>(_1 * _2));
 }
 
+/// Multiply lhs by Image c*rhs (i.e. %pixel-by-%pixel multiplication)
+template<typename PixelT>
+void image::Image<PixelT>::scaledMultiplies(double const c, Image<PixelT> const& rhs) {
+    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<PixelT>(_1 * ret<PixelT>(c*_2)));
+}
+
 /// Divide lhs by scalar rhs
 template<typename PixelT>
 void image::Image<PixelT>::operator/=(PixelT const rhs) {
@@ -477,6 +523,12 @@ void image::Image<PixelT>::operator/=(PixelT const rhs) {
 template<typename PixelT>
 void image::Image<PixelT>::operator/=(Image<PixelT> const& rhs) {
     transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<PixelT>(_1 / _2));
+}
+
+/// Divide lhs by Image c*rhs (i.e. %pixel-by-%pixel division)
+template<typename PixelT>
+void image::Image<PixelT>::scaledDivides(double const c, Image<PixelT> const& rhs) {
+    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<PixelT>(_1 / ret<PixelT>(c*_2)));
 }
 
 /************************************************************************************************************/

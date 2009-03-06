@@ -32,11 +32,10 @@ namespace logging = lsst::pex::logging;
 
 using lsst::daf::base::PropertySet;
 
+///
+/// initialise mask planes; called by ctors
 template<typename MaskPixelT>
-image::Mask<MaskPixelT>::Mask(int width, int height, MaskPlaneDict const& planeDefs) :
-    image::ImageBase<MaskPixelT>(width, height),
-    _myMaskDictVersion(_maskDictVersion) {
-
+void image::Mask<MaskPixelT>::_initializePlanes(MaskPlaneDict const& planeDefs) {
     logging::Trace("afw.Mask", 5,
                    boost::format("Number of mask planes: %d") % getNumPlanesMax());
 
@@ -46,18 +45,50 @@ image::Mask<MaskPixelT>::Mask(int width, int height, MaskPlaneDict const& planeD
     }
 }
 
+/// Constructor of uninitialised mask
 template<typename MaskPixelT>
-image::Mask<MaskPixelT>::Mask(const std::pair<int, int> dimensions, MaskPlaneDict const& planeDefs) :
+image::Mask<MaskPixelT>::Mask(int width, ///< Number of columns
+                              int height, ///< Number of rows
+                              MaskPlaneDict const& planeDefs ///< desired mask planes
+                             ) :
+    image::ImageBase<MaskPixelT>(width, height),
+    _myMaskDictVersion(_maskDictVersion) {
+    _initializePlanes(planeDefs);
+}
+
+/// Constructor of initialised mask
+template<typename MaskPixelT>
+image::Mask<MaskPixelT>::Mask(int width, ///< Number of columns
+                              int height, ///< Number of rows
+                              MaskPixelT initialValue, ///< Initial value
+                              MaskPlaneDict const& planeDefs ///< desired mask planes
+                             ) :
+    image::ImageBase<MaskPixelT>(width, height),
+    _myMaskDictVersion(_maskDictVersion) {
+    _initializePlanes(planeDefs);
+    *this = initialValue;
+}
+
+/// Constructor of uninitialised mask
+template<typename MaskPixelT>
+image::Mask<MaskPixelT>::Mask(const std::pair<int, int> dimensions, ///< Desired number of columns/rows
+                              MaskPlaneDict const& planeDefs ///< desired mask planes
+                             ) :
     image::ImageBase<MaskPixelT>(dimensions),
     _myMaskDictVersion(_maskDictVersion) {
+    _initializePlanes(planeDefs);
+}
 
-    logging::Trace("afw.Mask", 5,
-                   boost::format("Number of mask planes: %d") % getNumPlanesMax());
-
-    if (planeDefs.size() > 0 && planeDefs != _maskPlaneDict) {
-        _maskPlaneDict = planeDefs;
-        _myMaskDictVersion = ++_maskDictVersion;
-    }
+/// Constructor of uninitialised mask
+template<typename MaskPixelT>
+image::Mask<MaskPixelT>::Mask(const std::pair<int, int> dimensions, ///< Desired number of columns/rows
+                              MaskPixelT initialValue, ///< Initial value
+                              MaskPlaneDict const& planeDefs ///< desired mask planes
+                             ) :
+    image::ImageBase<MaskPixelT>(dimensions),
+    _myMaskDictVersion(_maskDictVersion) {
+    _initializePlanes(planeDefs);
+    *this = initialValue;
 }
 
 template<typename MaskPixelT>

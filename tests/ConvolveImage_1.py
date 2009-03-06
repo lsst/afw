@@ -111,6 +111,15 @@ def makeGaussianKernelVec(kCols, kRows):
 
     return kVec
 
+def makeDeltaFunctionKernelVec(kCols, kRows):
+    """Create an afwImage.VectorKernel of delta function kernels
+    """
+    kVec = afwMath.KernelListD()
+    for activeCol in range(kCols):
+        for activeRow in range(kRows):
+            kVec.append(afwMath.DeltaFunctionKernel(kCols, kRows, afwImage.PointI(activeCol, activeRow)))
+    return kVec
+
 class ConvolveTestCase(unittest.TestCase):
     def setUp(self):
         self.width, self.height = 45, 55
@@ -279,8 +288,8 @@ class ConvolveTestCase(unittest.TestCase):
                         ref2CnvImageArr = refConvolve(inImageArr, kernel, doNormalize)
                 
                         if not numpy.allclose(refCnvImageArr, ref2CnvImageArr):
-                            print "kCols=%s, kRows=%s, refCnvImageArr=%r, ref2CnvImageArr=%r" % (kCols, kRows, refCnvImageArr, ref2CnvImageArr)
-                            self.fail("Image from afwMath.convolve does not match image from refConvolve")
+                            infoStr = "kCols=%s, kRows=%s, refCnvImageArr=%r, ref2CnvImageArr=%r" % (kCols, kRows, refCnvImageArr, ref2CnvImageArr)
+                            self.fail("Image from afwMath.convolve does not match image from refConvolve: %s" % (infoStr,))
         
 
     def testConvolveLinear(self):
@@ -321,6 +330,56 @@ class ConvolveTestCase(unittest.TestCase):
         # compute twice, to be sure cnvImage is properly reset
         for ii in range(2):        
             afwMath.convolveLinear(cnvImage, self.inImage, lcKernel)
+            cnvImageArr = imTestUtils.arrayFromImage(cnvImage)
+            
+            if display:
+                refImage = imTestUtils.imageFromArray(refCnvImageArr)
+                ds9.mtv(displayUtils.makeMosaic(self.inImage, cnvImage, refImage))
+
+            if not numpy.allclose(cnvImageArr, refCnvImageArr):
+                self.fail("Image from afwMath.convolveLinear does not match image from refConvolve in iter %d" % ii)
+
+    def testConvolveLinearDelta(self):
+        """Test convolution with a spatially varying LinearCombinationKernel using some delta basis kernels
+        by comparing the results of afwMath.convolveLinear to afwMath.convolve or refConvolve,
+        depending on the value of compareToFwConvolve.
+        """
+        kCols = 2
+        kRows = 2
+        doNormalize = False # must be false because convolveLinear cannot normalize
+
+        # create spatially varying linear combination kernel
+        sFunc = afwMath.PolynomialFunction2D(1)
+        
+        # spatial parameters are a list of entries, one per kernel parameter;
+        # each entry is a list of spatial parameters
+        sParams = (
+            (1.0, -0.5/self.width, -0.5/self.height),
+            (0.0,  1.0/self.width,  0.0/self.height),
+            (0.0,  0.0/self.width,  1.0/self.height),
+            (0.5, 0.0, 0.0),
+            )
+        
+        kVec = makeDeltaFunctionKernelVec(kCols, kRows)
+        lcKernel = afwMath.LinearCombinationKernel(kVec, sFunc)
+        lcKernel.setSpatialParameters(sParams)
+
+        cnvImage = afwImage.ImageF(self.inImage.getDimensions())
+        afwMath.convolve(cnvImage, self.inImage, lcKernel, doNormalize)
+        cnvImageArr = imTestUtils.arrayFromImage(cnvImage)
+
+        inImageArr = imTestUtils.arrayFromImage(self.inImage)
+        refCnvImageArr = refConvolve(inImageArr, lcKernel, doNormalize)
+        
+        if not numpy.allclose(cnvImageArr, refCnvImageArr):
+            self.fail("Image from afwMath.convolve does not match image from refConvolve")
+
+        cnvImage = afwImage.ImageF(self.inImage.getDimensions())
+        # compute twice, to be sure cnvImage is properly reset
+        for ii in range(2):
+            pexLog.Trace("lsst.afw", 3, "Start convolution with delta functions")
+            afwMath.convolveLinear(cnvImage, self.inImage, lcKernel)
+            pexLog.Trace("lsst.afw", 3, "End convolution with delta functions")
             cnvImageArr = imTestUtils.arrayFromImage(cnvImage)
             
             if display:
