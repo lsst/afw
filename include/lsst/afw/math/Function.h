@@ -14,12 +14,21 @@
 #include <sstream>
 #include <vector>
 
+#include "boost/serialization/nvp.hpp"
+#include "boost/serialization/vector.hpp"
+#include "boost/serialization/void_cast.hpp"
+#include "boost/serialization/export.hpp"
+
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/pex/exceptions.h"
 
 namespace lsst {
 namespace afw {
 namespace math {
+
+#ifndef SWIG
+using boost::serialization::make_nvp;
+#endif
 
     /**
      * @brief Basic Function class.
@@ -148,7 +157,14 @@ namespace math {
 
     protected:
         std::vector<double> _params;
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+        void serialize(Archive& ar, unsigned int const version) {
+        };
     };   
+
     
     /**
      * @brief A Function taking one argument.
@@ -202,7 +218,18 @@ namespace math {
         virtual std::string toString(void) const {
             return std::string("Function1: ") + Function<ReturnT>::toString();
         };
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+        void serialize(Archive& ar, unsigned int const version) {
+            boost::serialization::void_cast_register<
+                Function1<ReturnT>, Function<ReturnT> >(
+                    static_cast< Function1<ReturnT>* >(0),
+                    static_cast< Function<ReturnT>* >(0));
+        };
     };    
+
     
     /**
      * @brief A Function taking two arguments.
@@ -258,7 +285,21 @@ namespace math {
         virtual std::string toString(void) const {
             return std::string("Function2: ") + Function<ReturnT>::toString();
         };
+
+    private:
+        friend class boost::serialization::access;
+#ifndef SWIG
+        template <class Archive>
+        void serialize(Archive& ar, unsigned const int version) {
+            boost::serialization::void_cast_register<
+                Function2<ReturnT>, Function<ReturnT> >(
+                    static_cast< Function2<ReturnT>* >(0),
+                    static_cast< Function<ReturnT>* >(0));
+        };
+#endif
     };
+
+
     /**
      * @brief a class used in function calls to indicate that no Function1 is being provided
      */
@@ -270,6 +311,15 @@ namespace math {
 
     private:
         ReturnT operator() (double x) const { return static_cast<ReturnT>(0); }
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+        void serialize(Archive& ar, unsigned int const version) {
+            ar & make_nvp("fn",
+                          boost::serialization::base_object<
+                          Function<ReturnT> >(*this));
+        };
     };
 
     /**
@@ -283,8 +333,38 @@ namespace math {
 
     private:
         ReturnT operator() (double x, double y) const { return static_cast<ReturnT>(0); }
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+        void serialize(Archive& ar, unsigned int const version) {
+            ar & make_nvp("fn",
+                          boost::serialization::base_object<
+                          Function<ReturnT> >(*this));
+        };
     };
 
 }}}   // lsst::afw::math
+
+namespace boost {
+namespace serialization {
+
+template <class Archive, typename ReturnT>
+inline void save_construct_data(Archive& ar,
+                                lsst::afw::math::Function<ReturnT> const* f,
+                                unsigned int const version) {
+    ar << make_nvp("params", f->getParameters());
+};
+
+template <class Archive, typename ReturnT>
+inline void load_construct_data(Archive& ar,
+                                lsst::afw::math::Function<ReturnT>* f,
+                                unsigned int const version) {
+    std::vector<double> params;
+    ar >> make_nvp("params", params);
+    ::new(f) lsst::afw::math::Function<ReturnT>(params);
+};
+
+}}
 
 #endif // #ifndef LSST_AFW_MATH_FUNCTION_H

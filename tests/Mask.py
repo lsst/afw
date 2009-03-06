@@ -61,17 +61,25 @@ class MaskTestCase(unittest.TestCase):
         del self.mask1
         del self.mask2
 
-    def testSetGetImages(self):
+    def testInitializeMasks(self):
+        val = 0x1234
+        msk = afwImage.MaskU(10, 10, val)
+        self.assertEqual(msk.get(0,0), val)
+
+        msk2 = afwImage.MaskU(afwImage.pairIntInt(10, 10), val)
+        self.assertEqual(msk2.get(0,0), val)
+        
+    def testSetGetMasks(self):
         self.assertEqual(self.mask1.get(0,0), self.val1)
     
-    def testOrImages(self):
+    def testOrMasks(self):
         self.mask2 |= self.mask1
         self.mask1 |= self.val2
         
         self.assertEqual(self.mask1.get(0,0), self.val1 | self.val2)
         self.assertEqual(self.mask2.get(0,0), self.val1 | self.val2)
     
-    def testAndImages(self):
+    def testAndMasks(self):
         self.mask2 &= self.mask1
         self.mask1 &= self.val2
         

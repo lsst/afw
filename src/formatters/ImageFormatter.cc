@@ -20,6 +20,7 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 #include "boost/scoped_ptr.hpp"
 #include "boost/serialization/shared_ptr.hpp"
 #include "boost/serialization/binary_object.hpp"
+#include "boost/serialization/nvp.hpp"
 
 #include "lsst/daf/base.h"
 #include "lsst/daf/persistence.h"
@@ -33,8 +34,10 @@ static void execTrace(std::string s, int level = EXEC_TRACE) {
     lsst::pex::logging::Trace("afw.ImageFormatter", level, s);
 }
 
+using boost::serialization::make_nvp;
 using lsst::daf::base::Persistable;
 using lsst::daf::persistence::BoostStorage;
+using lsst::daf::persistence::XmlStorage;
 using lsst::daf::persistence::FitsStorage;
 using lsst::daf::persistence::Storage;
 using lsst::afw::image::Image;
@@ -87,7 +90,15 @@ void ImageFormatter<ImagePixelT>::write(
         boost->getOArchive() & *ip;
         execTrace("ImageFormatter write end");
         return;
-    } else if (typeid(*storage) == typeid(FitsStorage)) {
+    }
+    else if (typeid(*storage) == typeid(XmlStorage)) {
+        execTrace("ImageFormatter write XmlStorage");
+        XmlStorage* boost = dynamic_cast<XmlStorage*>(storage.get());
+        boost->getOArchive() & make_nvp("img", *ip);
+        execTrace("ImageFormatter write end");
+        return;
+    }
+    else if (typeid(*storage) == typeid(FitsStorage)) {
         execTrace("ImageFormatter write FitsStorage");
         FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
         typedef Image<ImagePixelT> Image;
@@ -113,7 +124,16 @@ Persistable* ImageFormatter<ImagePixelT>::read(Storage::Ptr storage,
         boost->getIArchive() & *ip;
         execTrace("ImageFormatter read end");
         return ip;
-    } else if(typeid(*storage) == typeid(FitsStorage)) {
+    }
+    else if (typeid(*storage) == typeid(XmlStorage)) {
+        execTrace("ImageFormatter read XmlStorage");
+        XmlStorage* boost = dynamic_cast<XmlStorage*>(storage.get());
+        Image<ImagePixelT>* ip = new Image<ImagePixelT>;
+        boost->getIArchive() & make_nvp("img", *ip);
+        execTrace("ImageFormatter read end");
+        return ip;
+    }
+    else if(typeid(*storage) == typeid(FitsStorage)) {
 
         execTrace("ImageFormatter read FitsStorage");
         FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
@@ -150,20 +170,23 @@ void ImageFormatter<ImagePixelT>::delegateSerialize(
         width = ip->getWidth();
         height = ip->getHeight();
     }
-    ar & width & height;
+    ar & make_nvp("width", width) & make_nvp("height", height);
     std::size_t nbytes = width * height * sizeof(ImagePixelT);
     if (Archive::is_loading::value) {
         boost::scoped_ptr<Image<ImagePixelT> > ni(new Image<ImagePixelT>(width, height));
         ImagePixelT * raw = boost::gil::interleaved_view_get_raw_data(view(*ni->_getRawImagePtr()));
-        ar & boost::serialization::make_binary_object(raw, nbytes);
+        ar & make_nvp("bytes",
+                      boost::serialization::make_binary_object(raw, nbytes));
         ip->swap(*ni);
     } else if (width == ip->_getRawImagePtr()->width() && height == ip->_getRawImagePtr()->height()) {
         ImagePixelT * raw = boost::gil::interleaved_view_get_raw_data(view(*ip->_getRawImagePtr()));
-        ar & boost::serialization::make_binary_object(raw, nbytes);
+        ar & make_nvp("bytes",
+                      boost::serialization::make_binary_object(raw, nbytes));
     } else {
         typename Image<ImagePixelT>::_image_t img(width, height);
         boost::gil::copy_pixels(ip->_getRawView(), flipped_up_down_view(view(img)));
-        ar & boost::serialization::make_binary_object(boost::gil::interleaved_view_get_raw_data(view(img)), nbytes);
+        ar & make_nvp("bytes",
+                      boost::serialization::make_binary_object(boost::gil::interleaved_view_get_raw_data(view(img)), nbytes));
     }
 }
 

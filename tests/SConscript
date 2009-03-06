@@ -2,31 +2,17 @@
 Import("env")
 import os
 import sys
+import glob
 
 import lsst.tests
 import lsst.daf.persistence
 import lsst.SConsUtils as scons # scons 1.17 supports "env.ProductDir", but for now use scons.ProductDir
 
-env.Program(["checkTypeConversions.cc"], LIBS=env.getlibs("afw"))
-env.Program(["Exposure.cc"], LIBS=env.getlibs("afw"))
+for i in glob.glob("*.cc"):
+    # This test appears to be invalid
+    if i != "MaskIO_2.cc":
+        env.Program(i, LIBS=env.getlibs("afw"))
 
-env.Program(["BBox_1.cc"], LIBS=env.getlibs("afw"))
-env.Program(["DecoratedImage.cc"], LIBS=env.getlibs("afw"))
-env.Program(["Footprint_1.cc"], LIBS=env.getlibs("afw"))
-env.Program(["Image.cc"], LIBS=env.getlibs("afw"))
-env.Program(["MaskedImage.cc"], LIBS=env.getlibs("afw"))
-env.Program(["MaskedImage_1.cc"], LIBS=env.getlibs("afw"))
-env.Program(["MaskedImageIO_1.cc"], LIBS=env.getlibs("afw"))
-env.Program(["MaskedImageIO_2.cc"], LIBS=env.getlibs("afw"))
-env.Program(["MaskIO_1.cc"], LIBS=env.getlibs("afw"))
-env.Program(["Statistics.cc"], LIBS=env.getlibs("afw"))
-env.Program(["Background.cc"], LIBS=env.getlibs("afw"))
-env.Program(["Interpolate.cc"], LIBS=env.getlibs("afw"))
-env.Program(["SourceIO_1.cc"], LIBS=env.getlibs("afw"))
-env.Program(["SourceIO_2.cc"], LIBS=env.getlibs("afw"))
-
-env.Program(["testWcs.cc"], LIBS=env.getlibs("afw"))
-env.Program(["wcsCopy.cc"], LIBS=env.getlibs("afw"))
 #
 # Tests
 #
