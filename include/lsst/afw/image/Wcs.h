@@ -74,6 +74,8 @@ namespace image {
 
         double pixArea(lsst::afw::image::PointD pix) const;
     private:
+        void initWcslib(PointD crval, PointD crpix, boost::numeric::ublas::matrix<double> CD);
+        
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::WcsFormatter);
 
         lsst::daf::base::PropertySet::Ptr _fitsMetadata; ///< Input FITS header.  Caveat Emptor: may contain other keywords

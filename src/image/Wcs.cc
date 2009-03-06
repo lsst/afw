@@ -56,19 +56,9 @@ lsst::afw::image::Wcs::Wcs() :
 }
 
 
-/**
- * @brief Construct a Wcs that performs a linear conversion between pixels and radec
- *
- *
- */
-lsst::afw::image::Wcs::Wcs(PointD crval, ///< ra/dec of centre of image
-                           PointD crpix, ///< pixel coordinates of centre of image
-                           ublas::matrix<double> CD ///< Conversion matrix with elements as defined
-                                                    ///< in wcs.h
-                          ) : LsstBase(typeid(this)),
-                              _fitsMetadata(),
-                              _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0),
-                              _sipA(0,0), _sipB(0,0), _sipAp(0,0), _sipBp(0,0) {
+///
+/// Function to initialise the wcslib structure. Should only be called from Wcs constructors
+void lsst::afw::image::Wcs::initWcslib(PointD crval, PointD crpix, ublas::matrix<double> CD){
 
     _wcsInfo = (struct wcsprm *) malloc(sizeof (struct wcsprm));
     wcsini(true, 2, _wcsInfo);   //2 indicates a naxis==2, a two dimensional image
@@ -79,8 +69,12 @@ lsst::afw::image::Wcs::Wcs(PointD crval, ///< ra/dec of centre of image
     _wcsInfo->crpix[0] = crpix.getX();
     _wcsInfo->crpix[1] = crpix.getY();
 
-    strncpy(_wcsInfo->ctype[0], "RA---TAN-SIP", 72);  //wcsini sets ctype[] to have length 72
-    strncpy(_wcsInfo->ctype[1], "DEC--TAN-SIP", 72);
+    //Setting this to TAN-SIP gives the wrong result causes the test
+    //testWcs.cc::radec_to_xy to fail when I construct using
+    //wcs(crval, crpix, CD);
+    strncpy(_wcsInfo->ctype[0], "RA---TAN", 72);  //wcsini sets ctype[] to have length 72
+    strncpy(_wcsInfo->ctype[1], "DEC--TAN", 72);
+
 
     //Set the CD matrix
     for (int i=0; i<2; ++i) {
@@ -98,19 +92,35 @@ lsst::afw::image::Wcs::Wcs(PointD crval, ///< ra/dec of centre of image
     //wcslib then attempts to free non-existent space, and the code can crash.
     _wcsInfo->types = NULL;
     
-    _nWcsInfo = 1;   //Specify that we have only one coordinate representation
+    _nWcsInfo = 1;   //Specify that we have only one coordinate representation   
+}
+    
 
-    std::cout << _sipA(0,0) << std::endl;
+/**
+ * @brief Construct a Wcs that performs a linear conversion between pixels and radec
+ *
+ *
+ */
+lsst::afw::image::Wcs::Wcs(PointD crval, ///< ra/dec of centre of image
+                           PointD crpix, ///< pixel coordinates of centre of image
+                           ublas::matrix<double> CD ///< Conversion matrix with elements as defined
+                                                    ///< in wcs.h
+                          ) : LsstBase(typeid(this)),
+                              _fitsMetadata(),
+                              _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0),
+                              _sipA(0,0), _sipB(0,0), _sipAp(0,0), _sipBp(0,0) {
+
+    initWcslib(crval, crpix, CD);
 }
 
 lsst::afw::image::Wcs::Wcs(
     PointD crval, ///< (ra, dec)
     PointD crpix,  ///< (x,y) pixel coords corresponding to crval
-    boost::numeric::ublas::matrix<double> CD, ///< Linear mapping from crpix to crval
-    boost::numeric::ublas::matrix<double> sipA, ///< Forward distortion Matrix A
-    boost::numeric::ublas::matrix<double> sipB, ///< Forward distortion Matrix B
-    boost::numeric::ublas::matrix<double> sipAp, ///<Reverse distortion Matrix Ap
-    boost::numeric::ublas::matrix<double> sipBp  ///<Reverse distortion Matrix Bp
+    ublas::matrix<double> CD, ///< Linear mapping from crpix to crval
+    ublas::matrix<double> sipA, ///< Forward distortion Matrix A
+    ublas::matrix<double> sipB, ///< Forward distortion Matrix B
+    ublas::matrix<double> sipAp, ///<Reverse distortion Matrix Ap
+    ublas::matrix<double> sipBp  ///<Reverse distortion Matrix Bp
                           ): LsstBase(typeid(this)), _fitsMetadata(),
                              _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0),
                              _sipA(0,0), _sipB(0,0), _sipAp(0,0), _sipBp(0,0) {
@@ -136,47 +146,14 @@ lsst::afw::image::Wcs::Wcs(
     }
 
     
-
-    //Init the Wcs structure
-     _wcsInfo = (struct wcsprm *) malloc(sizeof (struct wcsprm));
-    wcsini(true, 2, _wcsInfo);   //2 indicates a naxis==2, a two dimensional image
-
-    _wcsInfo->crval[0] = crval.getX();
-    _wcsInfo->crval[1] = crval.getY();
-
-    _wcsInfo->crpix[0] = crpix.getX();
-    _wcsInfo->crpix[1] = crpix.getY();
-
-    strncpy(_wcsInfo->ctype[0], "RA---TAN-SIP", 72);  //wcsini sets ctype[] to have length 72
-    strncpy(_wcsInfo->ctype[1], "DEC--TAN-SIP", 72);
-
-    //Set the CD matrix
-    for (int i=0; i<2; ++i) {
-        for (int j=0; j<2; ++j) {
-            _wcsInfo->cd[(2*i) + j] = CD(i,j);
-        }
-    }
-
-    //Specify that we have a CD matrix, but no PC or CROTA
-    _wcsInfo->altlin = 2;
-    _wcsInfo->flag   = 0;   //values have been updated
-
-    //This is a work around for what I think is a bug in wcslib. ->types is neither
-    //initialised or set to NULL by default, so if I try to delete a Wcs object,
-    //wcslib then attempts to free non-existent space, and the code can crash.
-    _wcsInfo->types = NULL;
-    
-    _nWcsInfo = 1;   //Specify that we have only one coordinate representation
+    initWcslib(crval, crpix, CD);
 
     //Init the SIP matrices
-    std::cout << "CP3" << std::endl;
     _sipA = sipA;
     _sipB = sipB;
     _sipAp = sipAp;
     _sipBp = sipBp;
 
-    std::cout << sipA(0,0) << std::endl;
-    
 }
     
     
@@ -261,7 +238,12 @@ lsst::afw::image::Wcs::Wcs(Wcs const & rhs):
     _relax(rhs._relax),
     _wcsfixCtrl(rhs._wcsfixCtrl),
     _wcshdrCtrl(rhs._wcshdrCtrl),
-    _nReject(rhs._nReject)
+    _nReject(rhs._nReject),
+
+    _sipA(rhs._sipA),
+    _sipB(rhs._sipB),
+    _sipAp(rhs._sipAp),
+    _sipBp(rhs._sipBp)
 {
     if (rhs._nWcsInfo > 0) {
         _wcsInfo = static_cast<struct wcsprm *>(calloc(rhs._nWcsInfo, sizeof(struct wcsprm)));
@@ -387,8 +369,9 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::raDecToXY(
     double pixTmp[2];
 
     //Estimate undistorted pixel coordinates
+    int stat[1];
     int status = 0;
-    wcss2p(_wcsInfo, 1, 2, skyTmp, &phi, &theta, imgcrd, pixTmp, &status);
+    status = wcss2p(_wcsInfo, 1, 2, skyTmp, &phi, &theta, imgcrd, pixTmp, stat);
     if (status > 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                           (boost::format("Error: wcslib returned a status code of  %d") % status).str());
@@ -454,7 +437,6 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::xyToRaDec(
     double phi, theta;
     double skyTmp[2];
 
-
     //Correct pixel positions for distortion if necessary
     if( _sipA.size1() > 0) {
         //If the following assertions aren't true then something has gone seriously wrong.
@@ -463,7 +445,7 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::xyToRaDec(
         assert(_sipB.size1() == _sipB.size2());
 
         double u = x - _wcsInfo->crpix[0];  //Relative pixel coords
-        double v = y-  _wcsInfo->crpix[1];
+        double v = y -  _wcsInfo->crpix[1];
         
         double f = 0;
         for(unsigned int i=0; i< _sipA.size1(); ++i) {
@@ -485,10 +467,10 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::xyToRaDec(
         pixTmp[0]+= f;
         pixTmp[1]+= g;
     }
-    
-    
+
+    int stat[1];
     int status = 0;
-    wcsp2s(_wcsInfo, 1, 2, pixTmp, imgcrd, &phi, &theta, skyTmp, &status);
+    status = wcsp2s(_wcsInfo, 1, 2, pixTmp, imgcrd, &phi, &theta, skyTmp, stat);
     if (status > 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                           (boost::format("Error: wcslib returned a status code of  %d") % status).str());
