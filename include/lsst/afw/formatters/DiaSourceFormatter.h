@@ -62,7 +62,7 @@ private:
     //Ordered list of columns in DiaSource table of the DC3a schema.
     enum Columns {
         DIA_SOURCE_ID = 0,
-        CCD_EXPOSURE_ID,
+        AMP_EXPOSURE_ID,
         DIA_SOURCE_TO_ID,
         FILTER_ID,
         OBJECT_ID,

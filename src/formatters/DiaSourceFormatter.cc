@@ -70,7 +70,7 @@ inline static int64_t generateDiaSourceId(unsigned short seqNum, int ccdId, int6
 template <typename T>
 void form::DiaSourceVectorFormatter::insertRow(T & db, DiaSource const & d) {
     db.template setColumn<int64_t>("diaSourceId", d._id);
-    db.template setColumn<int64_t>("ccdExposureId", d._ampExposureId);
+    db.template setColumn<int64_t>("ampExposureId", d._ampExposureId);
     
     if (!d.isNull( det::DIA_SOURCE_TO_ID))
         db.template setColumn<int64_t>("diaSourceToId", d._diaSourceToId);
@@ -316,7 +316,7 @@ template void form::DiaSourceVectorFormatter::insertRow<DbTsvStorage>(DbTsvStora
 /*! Prepares for reading DiaSource instances from a database table. */
 void form::DiaSourceVectorFormatter::setupFetch(DbStorage & db, DiaSource & d) {
     db.outParam("diaSourceId",          &(d._id));
-    db.outParam("ccdExposureId",        &(d._ampExposureId));
+    db.outParam("ampExposureId",        &(d._ampExposureId));
     db.outParam("diaSourceToId",        &(d._diaSourceToId));
     db.outParam("filterId",         reinterpret_cast<char *>(&(d._filterId)));
     db.outParam("objectId",             &(d._objectId));
@@ -583,9 +583,9 @@ Persistable* form::DiaSourceVectorFormatter::read(
                     throw LSST_EXCEPT(ex::RuntimeErrorException, 
                             "null column \"diaSourceId\""); 
                 }
-                if (db->columnIsNull(CCD_EXPOSURE_ID)) {
+                if (db->columnIsNull(AMP_EXPOSURE_ID)) {
                     throw LSST_EXCEPT(ex::RuntimeErrorException, 
-                            "null column \"ccdExposureId\""); 
+                            "null column \"ampExposureId\""); 
                 }
                 if (db->columnIsNull(DIA_SOURCE_TO_ID)) { 
                     data.setNull(det::DIA_SOURCE_TO_ID); 
