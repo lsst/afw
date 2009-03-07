@@ -1,7 +1,21 @@
 // -*- lsst-c++ -*-
 /**
  * @file
- * @brief Implementation of Wcs as a thin wrapper around wcslib
+ * @brief Implementation of Wcs, wrapping wcslib and treating the effect of distortion
+ *
+ * Image distortion is treated using the Simple Imaging Polynomial (SIP) convention.
+ * This convention is described in Shupe et al. (2005) (Astronomical Data Analysis Software and Systems
+ * XIV, Asp Conf. Series Vol XXX, Ed: Shopbell et al.), and descibed in some more detail in
+ * http://web.ipac.caltech.edu/staff/fmasci/home/wise/codeVdist.html
+ *
+ * To convert from pixel coordintates to radec ("intermediate world coordinates"), first use the matrices
+ * _sipA and _sipB to calculate undistorted coorinates (i.e where on the chip the image would lie if
+ * the optics gave undistorted images), then pass these undistorted coorinates wcsp2s() to calculate radec.
+ *
+ * For the reverse, radec -> pixels, convert the radec to undistorted coords, and then use the _sipAp and
+ * _sipBp matrices to add in the distortion terms.
+ *
+ *
  */
 #include <iostream>
 #include <sstream>
@@ -23,7 +37,11 @@
 
 using lsst::daf::base::PropertySet;
 using lsst::daf::data::LsstBase;
-using lsst::afw::image::PointD;
+using namespace std;
+
+typedef lsst::afw::image::PointD PointD;
+namespace ublas = boost::numeric::ublas;
+
 
 /**
  * @brief Construct an invalid Wcs given no arguments
@@ -33,22 +51,14 @@ using lsst::afw::image::PointD;
 lsst::afw::image::Wcs::Wcs() :
     LsstBase(typeid(this)),
     _fitsMetadata(),
-    _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0) {
+    _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0),
+    _sipA(0,0), _sipB(0,0), _sipAp(0,0), _sipBp(0,0){
 }
 
 
-/**
- * @brief Construct a Wcs that performs a linear conversion between pixels and radec
- *
- *
- */
-lsst::afw::image::Wcs::Wcs(PointD crval, ///< ra/dec of centre of image
-                           PointD crpix, ///< pixel coordinates of centre of image
-                           boost::numeric::ublas::matrix<double> CD ///< Conversion matrix with elements as defined
-                                                                    ///< in wcs.h
-                          ) : LsstBase(typeid(this)),
-                              _fitsMetadata(),
-                              _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0) {
+///
+/// Function to initialise the wcslib structure. Should only be called from Wcs constructors
+void lsst::afw::image::Wcs::initWcslib(PointD crval, PointD crpix, ublas::matrix<double> CD){
 
     _wcsInfo = static_cast<struct wcsprm *>(malloc(sizeof(struct wcsprm)));
     if (_wcsInfo == NULL) {
@@ -63,8 +73,12 @@ lsst::afw::image::Wcs::Wcs(PointD crval, ///< ra/dec of centre of image
     _wcsInfo->crpix[0] = crpix.getX();
     _wcsInfo->crpix[1] = crpix.getY();
 
-    strncpy(_wcsInfo->ctype[0], "RA---TAN   ", 72);  //wcsini sets ctype[] to have length 72
-    strncpy(_wcsInfo->ctype[1], "DEC--TAN   ", 72);
+    //Setting this to TAN-SIP gives the wrong result causes the test
+    //testWcs.cc::radec_to_xy to fail when I construct using
+    //wcs(crval, crpix, CD);
+    strncpy(_wcsInfo->ctype[0], "RA---TAN", 72);  //wcsini sets ctype[] to have length 72
+    strncpy(_wcsInfo->ctype[1], "DEC--TAN", 72);
+
 
     //Set the CD matrix
     for (int i=0; i<2; ++i) {
@@ -82,11 +96,70 @@ lsst::afw::image::Wcs::Wcs(PointD crval, ///< ra/dec of centre of image
     //wcslib then attempts to free non-existent space, and the code can crash.
     _wcsInfo->types = NULL;
     
-    _nWcsInfo = 1;   //Specify that we have only one coordinate representation
+    _nWcsInfo = 1;   //Specify that we have only one coordinate representation   
+}
+    
 
+/**
+ * @brief Construct a Wcs that performs a linear conversion between pixels and radec
+ *
+ *
+ */
+lsst::afw::image::Wcs::Wcs(PointD crval, ///< ra/dec of centre of image
+                           PointD crpix, ///< pixel coordinates of centre of image
+                           ublas::matrix<double> CD ///< Conversion matrix with elements as defined
+                                                    ///< in wcs.h
+                          ) : LsstBase(typeid(this)),
+                              _fitsMetadata(),
+                              _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0),
+                              _sipA(0,0), _sipB(0,0), _sipAp(0,0), _sipBp(0,0) {
+
+    initWcslib(crval, crpix, CD);
 }
 
+lsst::afw::image::Wcs::Wcs(
+    PointD crval, ///< (ra, dec)
+    PointD crpix,  ///< (x,y) pixel coords corresponding to crval
+    ublas::matrix<double> CD, ///< Linear mapping from crpix to crval
+    ublas::matrix<double> sipA, ///< Forward distortion Matrix A
+    ublas::matrix<double> sipB, ///< Forward distortion Matrix B
+    ublas::matrix<double> sipAp, ///<Reverse distortion Matrix Ap
+    ublas::matrix<double> sipBp  ///<Reverse distortion Matrix Bp
+                          ): LsstBase(typeid(this)), _fitsMetadata(),
+                             _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0),
+                             _sipA(0,0), _sipB(0,0), _sipAp(0,0), _sipBp(0,0) {
 
+    if (sipA.size1() != sipA.size2() ){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                          "Error: Matrix sipA must be square");
+    }
+
+    if (sipB.size1() != sipB.size2() ){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                          "Error: Matrix sipB must be square");
+    }
+
+    if (sipAp.size1() != sipAp.size2() ){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                          "Error: Matrix sipAp must be square");
+    }
+
+    if (sipBp.size1() != sipBp.size2() ){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                          "Error: Matrix sipBp must be square");
+    }
+
+    
+    initWcslib(crval, crpix, CD);
+
+    //Init the SIP matrices
+    _sipA = sipA;
+    _sipB = sipB;
+    _sipAp = sipAp;
+    _sipBp = sipBp;
+
+}
+    
     
     
 /**
@@ -169,7 +242,12 @@ lsst::afw::image::Wcs::Wcs(Wcs const & rhs):
     _relax(rhs._relax),
     _wcsfixCtrl(rhs._wcsfixCtrl),
     _wcshdrCtrl(rhs._wcshdrCtrl),
-    _nReject(rhs._nReject)
+    _nReject(rhs._nReject),
+
+    _sipA(rhs._sipA),
+    _sipB(rhs._sipB),
+    _sipAp(rhs._sipAp),
+    _sipBp(rhs._sipBp)
 {
     if (rhs._nWcsInfo > 0) {
         _wcsInfo = static_cast<struct wcsprm *>(calloc(rhs._nWcsInfo, sizeof(struct wcsprm)));
@@ -305,12 +383,54 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::raDecToXY(
     double phi, theta;
     double pixTmp[2];
 
+    //Estimate undistorted pixel coordinates
+    int stat[1];
     int status = 0;
-    wcss2p(_wcsInfo, 1, 2, skyTmp, &phi, &theta, imgcrd, pixTmp, &status);
+    status = wcss2p(_wcsInfo, 1, 2, skyTmp, &phi, &theta, imgcrd, pixTmp, stat);
+    if (status > 0) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                          (boost::format("Error: wcslib returned a status code of  %d") % status).str());
+    }
+
+    //Correct for distortion. We follow the notation of Shupe et al. here, including
+    //capitalisation
+    if( _sipAp.size1() > 0){
+        //If the following assertions aren't true then something has gone seriously wrong.
+        assert(_sipBp.size1() > 0 );
+        assert(_sipAp.size1() == _sipAp.size2());
+        assert(_sipBp.size1() == _sipBp.size2());        
+        
+        double U = pixTmp[0] - _wcsInfo->crpix[0];  //Relative, undistorted pixel coords
+        double V = pixTmp[1]-  _wcsInfo->crpix[1];
+    
+        double F = 0;
+        for(unsigned int i=0; i< _sipAp.size1(); ++i) {
+            for(unsigned int j=0; j< _sipAp.size2(); ++j) {
+                if (i+j>1 && i+j < _sipAp.size1() ) {
+                    F += _sipAp(i,j)* pow(U, (int) i) * pow(V, (int) j);
+                }
+            }
+        }    
+
+        double G = 0;
+        for(unsigned int i=0; i< _sipBp.size1(); ++i) {
+            for(unsigned int j=0; j< _sipBp.size2(); ++j) {
+                if (i+j>1 && i+j < _sipBp.size1() ) {
+                    G += _sipBp(i,j)* pow(U, (int) i) * pow(V, (int) j);
+                }
+            }
+        }
+
+        pixTmp[0] = U + F + _wcsInfo->crpix[0];
+        pixTmp[1] = V + G + _wcsInfo->crpix[1];
+    }
+
 
     return lsst::afw::image::PointD(pixTmp[0] + lsst::afw::image::PixelZeroPos - 1,
                                     pixTmp[1] + lsst::afw::image::PixelZeroPos - 1); // wcslib assumes 1-indexed coords
 }
+
+
 
 
 /// \return The desired (col, row) position
@@ -326,14 +446,50 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::xyToRaDec(
     double const x,                     ///< Input column position
     double const y                      ///< Input row position
 ) const {
-    double const pixTmp[2] = { x - lsst::afw::image::PixelZeroPos + 1,
+    double pixTmp[2] = { x - lsst::afw::image::PixelZeroPos + 1,
                                y - lsst::afw::image::PixelZeroPos + 1}; // wcslib assumes 1-indexed coordinates
     double imgcrd[2];
     double phi, theta;
     double skyTmp[2];
 
+    //Correct pixel positions for distortion if necessary
+    if( _sipA.size1() > 0) {
+        //If the following assertions aren't true then something has gone seriously wrong.
+        assert(_sipB.size1() > 0 );
+        assert(_sipA.size1() == _sipA.size2());
+        assert(_sipB.size1() == _sipB.size2());
+
+        double u = x - _wcsInfo->crpix[0];  //Relative pixel coords
+        double v = y -  _wcsInfo->crpix[1];
+        
+        double f = 0;
+        for(unsigned int i=0; i< _sipA.size1(); ++i) {
+            for(unsigned int j=0; j< _sipA.size2(); ++j) {
+                if (i+j>1 && i+j < _sipA.size1() ) {
+                    f += _sipA(i,j)* pow(u, (int) i) * pow(v, (int) j);
+                }
+            }
+        }
+
+        double g = 0;
+        for(unsigned int i=0; i< _sipB.size1(); ++i) {
+            for(unsigned int j=0; j< _sipB.size2(); ++j) {
+                if (i+j>1 && i+j < _sipB.size1() ) {
+                    g += _sipB(i,j)* pow(u, (int) i) * pow(v, (int) j);
+                }
+            }
+        }
+        pixTmp[0]+= f;
+        pixTmp[1]+= g;
+    }
+
+    int stat[1];
     int status = 0;
-    wcsp2s(_wcsInfo, 1, 2, pixTmp, imgcrd, &phi, &theta, skyTmp, &status);
+    status = wcsp2s(_wcsInfo, 1, 2, pixTmp, imgcrd, &phi, &theta, skyTmp, stat);
+    if (status > 0) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                          (boost::format("Error: wcslib returned a status code of  %d") % status).str());
+    }
 
     return lsst::afw::image::PointD(skyTmp);
 }
