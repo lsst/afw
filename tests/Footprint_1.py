@@ -10,12 +10,14 @@ or
 """
 
 import pdb                              # we may want to say pdb.set_trace()
+import sys
 import unittest
 import lsst.utils.tests as tests
 import lsst.pex.logging as logging
 import lsst.afw.image.imageLib as afwImage
 import lsst.afw.math.mathLib as afwMath
 import lsst.afw.detection.detectionLib as afwDetection
+import lsst.afw.detection.utils as afwDetectionUtils
 import lsst.afw.display.ds9 as ds9
 
 try:
@@ -47,27 +49,27 @@ class FootprintTestCase(unittest.TestCase):
     def tearDown(self):
         del self.foot
 
-    def XXXtestToString(self):
+    def testToString(self):
         y, x0, x1 = 10, 100, 101
         s = afwDetection.Span(y, x0, x1)
         self.assertEqual(s.toString(), toString(y, x0, x1))
 
-    def XXXtestBbox(self):
+    def testBbox(self):
         """Test setBBox"""
         
         self.assertEqual(self.foot.setBBox(), None)
 
-    def XXXtestGC(self):
+    def testGC(self):
         """Check that Footprints are automatically garbage collected (when MemoryTestCase runs)"""
         
         f = afwDetection.Footprint()
 
-    def XXXtestId(self):
+    def testId(self):
         """Test uniqueness of IDs"""
         
         self.assertNotEqual(self.foot.getId(), afwDetection.Footprint().getId())
 
-    def XXXtestAddSpans(self):
+    def testAddSpans(self):
         """Add spans to a Footprint"""
         for y, x0, x1 in [(10, 100, 105), (11, 99, 104)]:
             self.foot.addSpan(y, x0, x1)
@@ -76,7 +78,7 @@ class FootprintTestCase(unittest.TestCase):
         
         self.assertEqual(sp[-1].toString(), toString(y, x0, x1))
 
-    def XXXtestBbox(self):
+    def testBbox(self):
         """Add Spans and check bounding box"""
         foot = afwDetection.Footprint()
         for y, x0, x1 in [(10, 100, 105),
@@ -91,7 +93,7 @@ class FootprintTestCase(unittest.TestCase):
         self.assertEqual(bbox.getX1(), 105)
         self.assertEqual(bbox.getY1(), 11)
 
-    def XXXtestSpanShift(self):
+    def testSpanShift(self):
         """Test our ability to shift spans"""
 
         span = afwDetection.Span(10, 100, 105)
@@ -117,7 +119,7 @@ class FootprintTestCase(unittest.TestCase):
         self.assertEqual(bbox.getX0(), 99)
         self.assertEqual(bbox.getY0(), 8)
 
-    def XXXtestFootprintFromBBox(self):
+    def testFootprintFromBBox(self):
         """Create a rectangular Footprint"""
         foot = afwDetection.Footprint(afwImage.BBox(afwImage.PointI(9, 10), 7, 4),
                                       afwImage.BBox(afwImage.PointI(0, 0), 30, 20))
@@ -139,7 +141,7 @@ class FootprintTestCase(unittest.TestCase):
         if False:
             ds9.mtv(idImage, frame=2)
 
-    def XXXtestBCircle2i(self):
+    def testBCircle2i(self):
         """Test the BCircle2i constructors"""
         
         x = 100; y = 200; r = 1.5
@@ -153,7 +155,7 @@ class FootprintTestCase(unittest.TestCase):
 
             bc = afwImage.BCircle(afwImage.PointI(x, y), r)
 
-    def XXXtestFootprintFromBCircle(self):
+    def testFootprintFromBCircle(self):
         """Create a circular Footprint"""
 
         foot = afwDetection.Footprint(afwImage.BCircle(afwImage.PointI(9, 15), 6),
@@ -167,7 +169,7 @@ class FootprintTestCase(unittest.TestCase):
         if False:
             ds9.mtv(idImage, frame=2)
 
-    def XXXtestGrow(self):
+    def testGrow(self):
         """Test growing a footprint"""
         x0, y0 = 20, 20;  width, height = 20, 30
         foot1 = afwDetection.Footprint(afwImage.BBox(afwImage.PointI(x0, y0), width, height),
@@ -254,6 +256,20 @@ class FootprintTestCase(unittest.TestCase):
 
         self.assertEqual(stats.getValue(), 0)
 
+    def testWriteDefect(self):
+        """Write a Footprint as a set of Defects"""
+
+        foot = afwDetection.Footprint(0, afwImage.BBox(afwImage.PointI(0, 0), 12, 10))
+        for y, x0, x1 in [(3, 3, 5), (3, 7, 7),
+                          (4, 2, 3), (4, 5, 7),
+                          (5, 2, 3), (5, 5, 8),
+                          (6, 3, 5), 
+                          ]:
+            foot.addSpan(y, x0, x1)
+        
+        fd = sys.stdout
+        afwDetectionUtils.writeFootprintAsDefects(fd, foot)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class DetectionSetTestCase(unittest.TestCase):
@@ -298,12 +314,12 @@ class DetectionSetTestCase(unittest.TestCase):
     def tearDown(self):
         del self.ms
 
-    def XXXtestGC(self):
+    def testGC(self):
         """Check that DetectionSets are automatically garbage collected (when MemoryTestCase runs)"""
         
         ds = afwDetection.DetectionSetF(afwImage.MaskedImageF(10, 20), afwDetection.Threshold(10))
 
-    def XXXtestFootprints(self):
+    def testFootprints(self):
         """Check that we found the correct number of objects and that they are correct"""
         ds = afwDetection.DetectionSetF(self.ms, afwDetection.Threshold(10))
 
@@ -313,7 +329,7 @@ class DetectionSetTestCase(unittest.TestCase):
         for i in range(len(objects)):
             self.assertEqual(objects[i], self.objects[i])
             
-    def XXXtestFootprintsMasks(self):
+    def testFootprintsMasks(self):
         """Check that detectionSets have the proper mask bits set"""
         ds = afwDetection.DetectionSetF(self.ms, afwDetection.Threshold(10), "OBJECT")
         objects = ds.getFootprints()
@@ -327,7 +343,7 @@ class DetectionSetTestCase(unittest.TestCase):
                 for x in range(sp.getX0(), sp.getX1() + 1):
                     self.assertEqual(mask.get(x, sp.getY()), mask.getPlaneBitMask("OBJECT"))
 
-    def XXXtestFootprintsImageId(self):
+    def testFootprintsImageId(self):
         """Check that we can insert footprints into an Image"""
         ds = afwDetection.DetectionSetF(self.ms, afwDetection.Threshold(10))
         objects = ds.getFootprints()
@@ -347,7 +363,7 @@ class DetectionSetTestCase(unittest.TestCase):
                     self.assertEqual(idImage.get(x, sp.getY()), objects[i].getId())
 
 
-    def XXXtestDetectionSetImageId(self):
+    def testDetectionSetImageId(self):
         """Check that we can insert a DetectionSet into an Image, setting relative IDs"""
         ds = afwDetection.DetectionSetF(self.ms, afwDetection.Threshold(10))
         objects = ds.getFootprints()
@@ -361,7 +377,7 @@ class DetectionSetTestCase(unittest.TestCase):
                 for x in range(sp.getX0(), sp.getX1() + 1):
                     self.assertEqual(idImage.get(x, sp.getY()), i + 1)
 
-    def XXXtestGrow2(self):
+    def testGrow2(self):
         """Grow some more interesting shaped Footprints.  Informative with display, but no numerical tests"""
         
         ds = afwDetection.DetectionSetF(self.ms, afwDetection.Threshold(10), "OBJECT")
