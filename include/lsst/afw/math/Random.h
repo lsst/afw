@@ -94,7 +94,7 @@ public:
 
     // -- Modifiers: computing random variates for various distributions --------
     double flat(double const a, double const b);
-    double gaussian(double const mu = 0.0, double const sigma = 1.0);
+    double gaussian(double const sigma = 1.0, double const mu = 0.0);
     double chisq(double const nu);
 
     // -- Factory functions --------

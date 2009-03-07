@@ -293,14 +293,14 @@ double math::Random::flat(double const a, double const b) {
 /**
  * Returns a gaussian random variate with mean @a mu and standard deviation @a sigma.
  *
- * @param[in] mu    the mean of the gaussian distribution
  * @param[in] sigma the standard deviation of the gaussian distribution
+ * @param[in] mu    the mean of the gaussian distribution
  * @return          a gaussian random variate
  *
  * @note    The implementation uses the
  *          <a href="http://en.wikipedia.org/wiki/Ziggurat_algorithm">Ziggurat algorithm</a>.
  */
-double math::Random::gaussian(double mu, double sigma) {
+double math::Random::gaussian(double sigma, double mu) {
     return ::gsl_ran_gaussian_ziggurat(_rng.get(), sigma) + mu;
 }
 
