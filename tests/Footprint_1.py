@@ -267,7 +267,11 @@ class FootprintTestCase(unittest.TestCase):
                           ]:
             foot.addSpan(y, x0, x1)
         
-        fd = sys.stdout
+        if True:
+            fd = open("/dev/null", "w")
+        else:
+            fd = sys.stdout
+            
         afwDetectionUtils.writeFootprintAsDefects(fd, foot)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
