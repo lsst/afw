@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include "lsst/afw/image/ImagePca.h"
+#include "lsst/afw/math/Statistics.h"
 
 namespace lsst {
 namespace afw {
@@ -15,16 +16,18 @@ namespace image {
 
 /// ctor
 template <typename ImageT>
-ImagePca<ImageT>::ImagePca() :
+ImagePca<ImageT>::ImagePca(bool constantWeight ///< Should all stars be weighted equally?
+                          ) :
     _imageList(),
     _fluxList(),
     _width(0), _height(0),
+    _constantWeight(constantWeight),
     _eigenValues(std::vector<double>()),
     _eigenImages(ImageList()) {
 }
 
 /**
- * Add an image to the set to be analysed
+ * Add an image to the set to be analyzed
  *
  * @throw lsst::pex::exceptions::LengthErrorException if all the images aren't the same size
  */
@@ -96,10 +99,12 @@ namespace {
 
 template <typename ImageT>
 void ImagePca<ImageT>::analyze() {
-    //int border;                       // how many pixels to ignore around regions
-    bool constantWeight = true;         // should all stars have the same weight?
-
     int const nImage = _imageList.size();
+
+    if (nImage == 0) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                          "Please provide at least one Image for me to analyze");
+    }
     /*
      * Eigen doesn't like 1x1 matrices, but we don't really need it to handle a single matrix...
      */
@@ -123,12 +128,12 @@ void ImagePca<ImageT>::analyze() {
         double const flux_i = getFlux(i);
         flux_bar += flux_i;
 
-        for (int j = 0; j != nImage; ++j) {
+        for (int j = i; j != nImage; ++j) {
             ImageT const& im_j = *_imageList[j];
             double const flux_j = getFlux(j);
 
             double dot = innerProduct(im_i, im_j);
-            if(constantWeight) {
+            if (_constantWeight) {
                 dot /= flux_i*flux_j;
             }
             R(i, j) = R(j, i) = dot/nImage;
@@ -178,15 +183,18 @@ void ImagePca<ImageT>::analyze() {
 
         for (int _j = 0; _j != nImage; ++_j) {
             int const j = lambdaAndIndex[_j].second; // the index after sorting (backwards) by eigenvalue
-            
-            ImageT tmp = ImageT(*_imageList[j], true); // deep copy
+#if 0                                                // scaledPlus is on trunk
+            double const weight = Q(j, i)*(_constantWeight ? flux_bar/getFlux(j) : 1);
+            *eImage.scaledPlus(weight, *_imageList[j]);
+#else       
+            ImageT tmp = ImageT(*_imageList[j], true); // deep copy --- use scaledPlus on trunk
 
-            tmp *= Q(j, i)*(constantWeight ? flux_bar/getFlux(j) : 1);
+            tmp *= Q(j, i)*(_constantWeight ? flux_bar/getFlux(j) : 1);
 
             *eImage += tmp;
+#endif
         }
 
-        _eigenImages.push_back(eImage);
 #define FIX_BKGD_LEVEL 0
 #if FIX_BKGD_LEVEL
 /*
@@ -197,6 +205,8 @@ void ImagePca<ImageT>::analyze() {
  *
  * It is not at all clear that doing this is a good idea; it'd be
  * better to get the sky level right in the first place.
+ *
+ * N.b. this is unconverted SDSS code, so it won't compile for LSST
  */
         if(i > 0) {                             /* not the zeroth KL component */
             float sky = 0;			/* estimate of sky level */
@@ -224,6 +234,20 @@ void ImagePca<ImageT>::analyze() {
             shRegDel(sreg);
         }
 #endif
+        /*
+         * Normalise eigenImages to have a maximum of 1.0.  For n > 0 they
+         * (should) have mean == 0, so we can't use that to normalize
+         */
+        lsst::afw::math::Statistics stats(*eImage, (lsst::afw::math::MIN | lsst::afw::math::MAX));
+        double const min = stats.getValue(lsst::afw::math::MIN);
+        double const max = stats.getValue(lsst::afw::math::MAX);
+
+        double const extreme = (fabs(min) > max) ? min :max;
+        if (extreme != 0.0) {
+            *eImage /= extreme;
+        }
+
+        _eigenImages.push_back(eImage);
     }
 }
 

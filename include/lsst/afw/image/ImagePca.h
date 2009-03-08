@@ -28,7 +28,7 @@ namespace image {
 
         typedef std::vector<typename ImageT::Ptr> ImageList;
 
-        ImagePca();
+        ImagePca(bool constantWeight=true);
 
         void addImage(typename ImageT::Ptr img, double flux=0.0);
         ImageList getImageList() const;
@@ -51,6 +51,9 @@ namespace image {
         int _width;                     // width of images on _imageList
         int _height;                    // height of images on _imageList
 
+        //int _border;                  // how many pixels to ignore around regions
+        bool _constantWeight;           // should all stars have the same weight?
+        
         std::vector<double> _eigenValues; // Eigen values
         ImageList _eigenImages;           // Eigen images
     };

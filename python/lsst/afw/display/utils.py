@@ -3,6 +3,7 @@
 
 import math
 import lsst.afw.image as afwImage
+import lsst.afw.display.ds9 as ds9
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -24,29 +25,37 @@ class Mosaic(object):
         self.xsize = 0                  # column size of panels
         self.ysize = 0                  # row size of panels
 
-    def makeMosaic(self, images):
-        """Return a mosaic of all the images provided"""
-        nImage = len(images)
-        if nImage == 0:
+    def makeMosaic(self, images, frame=None, mode=None):
+        """Return a mosaic of all the images provided; if frame is specified, display it"""
+        self.nImage = len(images)
+        if self.nImage == 0:
             raise RuntimeError, "You must provide at least one image"
 
         image1 = images[0]
         self.xsize, self.ysize = image1.getWidth(), image1.getHeight()
 
-        if self.mode == "square":
-            nx = math.sqrt(nImage)
-            nx, ny = int(nx), int(nImage/nx)
-            if nx*ny < nImage:
+        if not mode:
+            mode = self.mode
+
+        if mode == "square":
+            nx = math.sqrt(self.nImage)
+            nx, ny = int(nx), int(self.nImage/nx)
+            if nx*ny < self.nImage:
                 nx += 1
-            if nx*ny < nImage:
+            if nx*ny < self.nImage:
                 ny += 1
-            assert(nx*ny >= nImage)
-        elif self.mode == "x":
-            nx, ny = nImage, 1
-        elif self.mode == "y":
-            nx, ny = 1, nImage
+            assert(nx*ny >= self.nImage)
+        elif mode == "x":
+            nx, ny = self.nImage, 1
+        elif mode == "y":
+            nx, ny = 1, self.nImage
+        elif isinstance(mode, int):
+            nx = mode
+            ny = self.nImage//nx
+            if nx*ny < self.nImage:
+                ny += 1
         else:
-            raise RuntimeError, ("Unknown mosaicing mode: %s" % self.mode)
+            raise RuntimeError, ("Unknown mosaicing mode: %s" % mode)
 
         self.nx, self.ny = nx, ny
 
@@ -56,6 +65,9 @@ class Mosaic(object):
         for i in range(len(images)):
             smosaic = mosaic.Factory(mosaic, self.getBBox(i%nx, i//nx))
             smosaic <<= images[i]
+
+        if frame is not None:
+            ds9.mtv(mosaic, frame=frame)
             
         return mosaic
 
@@ -87,3 +99,12 @@ class Mosaic(object):
 
         return afwImage.BBox(afwImage.PointI(ix*(self.xsize + self.gutter), iy*(self.ysize + self.gutter)),
                              self.xsize, self.ysize)
+
+    def drawLabels(self, labels, frame=0):
+        """Draw the list labels at the corners of each panel"""
+
+        if len(labels) != self.nImage:
+            raise RuntimeError, ("You provided %d labels for %d panels" % (len(labels), self.nImage))
+
+        for i in range(len(labels)):
+            ds9.dot(labels[i], self.getBBox(i).getX0(), self.getBBox(i).getY0(), frame=frame)

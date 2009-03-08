@@ -95,3 +95,23 @@ namespace lsst { namespace afw { namespace image {
 %convolutionFuncs(float, float);
 %convolutionFuncs(boost::uint16_t, boost::uint16_t);
 
+//
+// When swig sees a Kernel it doesn't know about KERNEL_TYPE; all it knows is that it
+// has a Kernel, and Kernels don't know about e.g. LinearCombinationKernel's getKernelParameters()
+//
+// We therefore provide a cast to KERNEL_TYPE* and swig can go from there
+//
+%define %dynamic_cast(KERNEL_TYPE)
+%inline %{
+    lsst::afw::math::KERNEL_TYPE *
+        cast_##KERNEL_TYPE(lsst::afw::math::Kernel *candidate) {
+        return dynamic_cast<lsst::afw::math::KERNEL_TYPE *>(candidate);
+    }
+%}
+%enddef
+
+%dynamic_cast(AnalyticKernel);
+%dynamic_cast(DeltaFunctionKernel);
+%dynamic_cast(FixedKernel);
+%dynamic_cast(LinearCombinationKernel);
+%dynamic_cast(SeparableKernel);
