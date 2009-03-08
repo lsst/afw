@@ -97,16 +97,16 @@ def getMaskPlaneVisibility(name):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def ds9Cmd(cmd):
+def ds9Cmd(cmd, trap=True):
    """Issue a ds9 command, raising errors as appropriate"""
    
    try:
       xpa.set(None, "ds9", cmd, "", "", 0)
    except IOError, e:
-      if False:
+      if not trap:
           raise Ds9Error, "XPA: %s, (%s)" % (e, cmd)
       else:
-          print >> sys.stderr, "Caught ds9 exception processing ellipse command \"%s\": %s" % (cmd, e)
+          print >> sys.stderr, "Caught ds9 exception processing command \"%s\": %s" % (cmd, e)
 
 def initDS9(execDs9 = True):
    try:
@@ -133,6 +133,10 @@ def initDS9(execDs9 = True):
          sys.stdout.flush();
 
       raise Ds9Error
+
+def show(frame=0):
+    """Uniconify and Raise ds9.  N.b. throws an exception if frame doesn't exit"""
+    ds9Cmd("frame %d; raise" % frame, trap=False)
 
 def setMaskColor(color = GREEN):
     """Set the ds9 mask colour to; eg. ds9.setMaskColor(ds9.RED)"""
@@ -261,6 +265,9 @@ Possible values are:
         @:Mxx,Mxy,Myy    Draw an ellipse with moments (Mxx, Mxy, Myy) (size is ignored)
 Any other value is interpreted as a string to be drawn
 """
+   if isinstance(symb, int):
+       symb = "%d" % (symb)
+
    if frame == None:
        return
 
@@ -295,7 +302,13 @@ Any other value is interpreted as a string to be drawn
        
        cmd += 'regions command {ellipse %g %g %g %g %g%s}; ' % (c, r, A, B, theta, color)
    else:
-      cmd += 'regions command {text %g %g \"%s\"%s}; ' % (c, r, symb, color)
+       try:
+           # We have to check for the frame's existance with show() as the text command crashed ds9 5.4
+           # if it doesn't
+           show(frame)
+           cmd += 'regions command {text %g %g \"%s\"%s}' % (c, r, symb, color)
+       except:
+           print >> sys.stderr, "Ds9 frame %d doesn't exist" % frame
 
    ds9Cmd(cmd)
 
@@ -309,8 +322,13 @@ otherwise connect the dots.  Ctype is the name of a colour (e.g. 'red')"""
 
    if symbs:
       for (c, r) in points:
-         dot(symbs, r, c, frame = frame, size = 0.5, ctype = ctype)
+         dot(symbs, r, c, frame = frame, size = 0.5, ctype=ctype)
    else:
+      if ctype == GREEN:                # default
+          color = ""
+      else:
+          color = "# color=%s" % ctype
+
       if len(points) > 0:
           cmd = "frame %d; " % (frame)
 
@@ -318,9 +336,8 @@ otherwise connect the dots.  Ctype is the name of a colour (e.g. 'red')"""
           r0 += 1; c0 += 1;             # ds9 uses 1-based coordinates
           for (c, r) in points[1:]:
              r += 1; c += 1;            # ds9 uses 1-based coordinates
-             cmd += 'regions command { line %g %g %g %g };' % (c0, r0, c, r)
+             cmd += 'regions command { line %g %g %g %g %s};' % (c0, r0, c, r, color)
              c0, r0 = c, r
-          #cmd += ' # color=%s' % ctype
 
           ds9Cmd(cmd)
 #

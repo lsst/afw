@@ -28,6 +28,7 @@ env = scons.makeEnv(
         ["pex_policy", "lsst/pex/policy/Policy.h", "pex_policy:C++"],
         ["daf_persistence", "lsst/daf/persistence.h", "daf_persistence:C++"],
         ["daf_data", "lsst/daf/data.h", "daf_data:C++"],
+        ["eigen", "Eigen/Core.h"],
     ],
 )
 #

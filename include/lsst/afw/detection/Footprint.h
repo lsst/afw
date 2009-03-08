@@ -277,6 +277,7 @@ public:
      * calculates a per-footprint quantity
      */
     virtual void reset() {}
+    virtual void reset(Footprint const& foot) {}
 
     /**
      * \brief Apply operator() to each pixel in the Footprint
@@ -284,6 +285,7 @@ public:
     void apply(Footprint const& foot    ///< The Footprint in question
               ) {
         reset();
+        reset(foot);
 
         if (foot.getSpans().empty()) {
             return;

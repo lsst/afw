@@ -1,17 +1,25 @@
 # -*- python -*-
 Import("env")
-import os
-import sys
+import os, re, sys
 import glob
 
 import lsst.tests
 import lsst.daf.persistence
 import lsst.SConsUtils as scons # scons 1.17 supports "env.ProductDir", but for now use scons.ProductDir
 
-for i in glob.glob("*.cc"):
-    # This test appears to be invalid
-    if i != "MaskIO_2.cc":
-        env.Program(i, LIBS=env.getlibs("afw"))
+for fileName in glob.glob("*.cc"):
+    if fileName == "MaskIO_2.cc":       # This test appears to be invalid
+        continue
+
+    if re.search(r"_wrap.cc", fileName): # not designed to be independently built!
+        continue
+
+    env.Program(fileName, LIBS=env.getlibs("afw"))
+
+env.CheckSwig("python", ilang="c++",
+              includedProducts="afw utils daf_base pex_exceptions pex_logging pex_policy daf_persistence daf_data security")
+
+testLib = env.LoadableModuleIncomplete("_testLib", ["testLib.i"], LIBS=env.getlibs("afw"))
 
 #
 # Tests
@@ -43,10 +51,13 @@ else:
     tests = lsst.tests.Control(env, args = testArgs, ignoreList=ignoreList, verbose = True)
 
     tests.run("*.cc")
-    
+
     # set up python tests
     for target in tests.run("*.py"):
         env.Depends(target, "../python/lsst/afw/detection/_detectionLib%s" % (env["LDMODULESUFFIX"]))
         env.Depends(target, "../python/lsst/afw/display/_displayLib%s" % (env["LDMODULESUFFIX"]))
         env.Depends(target, "../python/lsst/afw/image/_imageLib%s" % (env["LDMODULESUFFIX"]))
         env.Depends(target, "../python/lsst/afw/math/_mathLib%s" % (env["LDMODULESUFFIX"]))
+
+    for fileName in ["SpatialCell.py"]:
+        env.Depends(fileName, "_testLib%s" % (env["LDMODULESUFFIX"]))

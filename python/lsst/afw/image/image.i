@@ -1,6 +1,7 @@
 // -*- lsst-c++ -*-
 %{
 #   include "lsst/afw/image/Image.h"
+#   include "lsst/afw/image/ImagePca.h"
 %}
 
 %ignore lsst::afw::image::ImageBase::operator();
@@ -22,6 +23,11 @@ SWIG_SHARED_PTR(Decorated##NAME##TYPE, lsst::afw::image::DecoratedImage<PIXEL_TY
 %template(NAME##TYPE) lsst::afw::image::Image<PIXEL_TYPE>;
 %template(Decorated##NAME##TYPE) lsst::afw::image::DecoratedImage<PIXEL_TYPE>;
 %lsst_persistable(lsst::afw::image::Image<PIXEL_TYPE>);
+
+%template(vector##NAME##TYPE) std::vector<boost::shared_ptr<lsst::afw::image::Image<PIXEL_TYPE> > >;
+%template(NAME##Pca##TYPE) lsst::afw::image::ImagePca<lsst::afw::image::Image<PIXEL_TYPE> >;
+
+%template(innerProduct) lsst::afw::image::innerProduct<lsst::afw::image::Image<PIXEL_TYPE> >;
 
 %extend lsst::afw::image::Image<PIXEL_TYPE> {
 
@@ -114,6 +120,7 @@ SWIG_SHARED_PTR_DERIVED(Wcs, lsst::daf::data::LsstBase, lsst::afw::image::Wcs);
 
 %include "lsst/afw/image/Utils.h"
 %include "lsst/afw/image/Image.h"
+%include "lsst/afw/image/ImagePca.h"
 
 %image(Image, U, boost::uint16_t);
 %image(Image, I, int);
@@ -123,6 +130,13 @@ SWIG_SHARED_PTR_DERIVED(Wcs, lsst::daf::data::LsstBase, lsst::afw::image::Wcs);
 %template(vectorBBox) std::vector<lsst::afw::image::BBox>;         
 
 %extend lsst::afw::image::Image<boost::uint16_t> {
+    %newobject convertFloat;
+    lsst::afw::image::Image<float> convertFloat() {
+       return lsst::afw::image::Image<float>(*self, true);
+    }
+}
+
+%extend lsst::afw::image::Image<double> {
     %newobject convertFloat;
     lsst::afw::image::Image<float> convertFloat() {
        return lsst::afw::image::Image<float>(*self, true);
