@@ -9,7 +9,7 @@ namespace afw {
 namespace math {
 
 template<typename ImageT>
-typename ImageT::Ptr offsetImage(std::string const& algorithmName, ImageT const& image, float dx, float dy);
+typename ImageT::Ptr offsetImage(ImageT const& image, float dx, float dy, std::string const& algorithmName="lanczos5");
     
 }}}
 #endif

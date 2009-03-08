@@ -35,6 +35,7 @@ class offsetImageTestCase(unittest.TestCase):
         self.inImage = afwImage.ImageF(200, 100)
         self.background = 200
         self.inImage.set(self.background);
+        self.algorithm = "lanczos5"
 
     def tearDown(self):
         del self.inImage
@@ -42,13 +43,13 @@ class offsetImageTestCase(unittest.TestCase):
     def testSetFluxConvervation(self):
         """Test that flux is preserved"""
 
-        outImage = afwMath.offsetImage("lanczos5", self.inImage, 0, 0)
+        outImage = afwMath.offsetImage(self.inImage, 0, 0, self.algorithm)
         self.assertEqual(outImage.get(50, 50), self.background)
 
-        outImage = afwMath.offsetImage("lanczos5", self.inImage, 0.5, 0)
+        outImage = afwMath.offsetImage(self.inImage, 0.5, 0, self.algorithm)
         self.assertAlmostEqual(outImage.get(50, 50), self.background, 4)
 
-        outImage = afwMath.offsetImage("lanczos5", self.inImage, 0.5, 0.5)
+        outImage = afwMath.offsetImage(self.inImage, 0.5, 0.5, self.algorithm)
         self.assertAlmostEqual(outImage.get(50, 50), self.background, 4)
 
     def testSetIntegerOffset(self):
@@ -64,7 +65,7 @@ class offsetImageTestCase(unittest.TestCase):
 
         for delta in [-0.49, 0.51]:
             for dx, dy in [(2, 3), (-2, 3), (-2, -3), (2, -3)]:
-                outImage = afwMath.offsetImage("lanczos5", self.inImage, dx + delta, dy + delta)
+                outImage = afwMath.offsetImage(self.inImage, dx + delta, dy + delta, self.algorithm)
                 
                 if display:
                     frame += 1

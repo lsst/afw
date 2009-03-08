@@ -18,10 +18,10 @@ namespace math {
  * @throw lsst::pex::exceptions::InvalidParameterException if the algorithm's invalid
  */
 template<typename ImageT>
-typename ImageT::Ptr offsetImage(std::string const& algorithmName, ///< Type of resampling Kernel to use
-                                 ImageT const& inImage,            ///< The %image to offset
+typename ImageT::Ptr offsetImage(ImageT const& inImage,            ///< The %image to offset
                                  float dx,                         ///< move the %image this far in the column direction
-                                 float dy                          ///< move the %image this far in the row direction
+                                 float dy,                         ///< move the %image this far in the row direction
+                                 std::string const& algorithmName  ///< Type of resampling Kernel to use
                                 ) {
     SeparableKernel::Ptr offsetKernel = makeWarpingKernel(algorithmName);
 
@@ -53,8 +53,10 @@ typename ImageT::Ptr offsetImage(std::string const& algorithmName, ///< Type of 
 // Explicit instantiations
 //
 #define INSTANTIATE(TYPE) \
-    template afwImage::Image<TYPE>::Ptr offsetImage(std::string const&, afwImage::Image<TYPE> const&, float, float);\
-    template afwImage::Image<TYPE>::Ptr offsetImage(std::string const&, afwImage::MaskedImage<TYPE> const&, float, float);
+    template afwImage::Image<TYPE>::Ptr offsetImage(afwImage::Image<TYPE> const&, float, float, \
+                                                    std::string const&); \
+    template afwImage::Image<TYPE>::Ptr offsetImage(afwImage::MaskedImage<TYPE> const&, float, float, \
+                                                    std::string const&);
 
 INSTANTIATE(double)
 INSTANTIATE(float)
