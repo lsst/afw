@@ -47,6 +47,24 @@ SWIG_SHARED_PTR_DERIVED(TestImageCandidate,
         double _flux;
     };
 
+    /// A class to pass around to all our TestCandidates
+    class TestCandidateVisitor : public lsst::afw::math::CandidateVisitor {
+    public:
+        TestCandidateVisitor() : lsst::afw::math::CandidateVisitor(), _n(0) {}
+
+        // Called by SpatialCellSet::visitCandidates before visiting any Candidates
+        void reset() { _n = 0; }
+
+        // Called by SpatialCellSet::visitCandidates for each Candidate
+        void processCandidate(lsst::afw::math::SpatialCellCandidate *candidate) {
+            ++_n;
+        }
+
+        int getN() const { return _n; }
+    private:
+        int _n;                         // number of TestCandidates
+    };
+
     /************************************************************************************************************/
     /*
      * Test class for SpatialCellImageCandidate

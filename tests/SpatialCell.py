@@ -95,6 +95,27 @@ class SpatialCellSetTestCase(unittest.TestCase):
     def setUp(self):
         self.cellSet = afwMath.SpatialCellSet(afwImage.BBox(afwImage.PointI(0, 0), 501, 501), 260, 200)
 
+    def makeTestCandidateCellSet(self):
+        """Populate a SpatialCellSet"""
+        
+        if False:                       # Print the bboxes for the cells
+            print
+            for i in range(len(self.cellSet.getCellList())):
+                cell = self.cellSet.getCellList()[i]
+                print i, "%3d,%3d -- %3d,%3d" % (cell.getBBox().getX0(), cell.getBBox().getY0(),
+                                                 cell.getBBox().getX1(), cell.getBBox().getY1()), cell
+        self.assertEqual(len(self.cellSet.getCellList()), 6)
+
+        self.NTestCandidates = 0                                      # number of candidates
+        for x, y in ([5, 0], [1, 1], [2, 2], [0, 0], [4, 4], [3, 4]): # all in cell0
+            self.cellSet.insertCandidate(testLib.TestCandidate(x, y, -x))
+            self.NTestCandidates += 1
+
+        self.cellSet.insertCandidate(testLib.TestCandidate(305, 0, 100))        # in cell1
+        self.NTestCandidates += 1
+        self.cellSet.insertCandidate(testLib.TestCandidate(500, 500, 100))      # the top right corner of cell5
+        self.NTestCandidates += 1
+
     def tearDown(self):
         del self.cellSet
 
@@ -108,19 +129,7 @@ class SpatialCellSetTestCase(unittest.TestCase):
     def testInsertCandidate(self):
         """Insert candidates into the SpatialCellSet"""
 
-        if False:                       # Print the bboxes for the cells
-            print
-            for i in range(len(self.cellSet.getCellList())):
-                cell = self.cellSet.getCellList()[i]
-                print i, "%3d,%3d -- %3d,%3d" % (cell.getBBox().getX0(), cell.getBBox().getY0(),
-                                                 cell.getBBox().getX1(), cell.getBBox().getY1()), cell
-        self.assertEqual(len(self.cellSet.getCellList()), 6)
-
-        for x, y in ([5, 0], [1, 1], [2, 2], [0, 0], [4, 4], [3, 4]): # all in cell0
-            self.cellSet.insertCandidate(testLib.TestCandidate(x, y, -x))
-
-        self.cellSet.insertCandidate(testLib.TestCandidate(305, 0, 100))        # in cell1
-        self.cellSet.insertCandidate(testLib.TestCandidate(500, 500, 100))      # the top right corner of cell5
+        self.makeTestCandidateCellSet()
 
         def tst():
             self.cellSet.insertCandidate(testLib.TestCandidate(501, 501, 100))      # Doesn't fit
@@ -146,6 +155,19 @@ class SpatialCellSetTestCase(unittest.TestCase):
 
         self.assertFalse(self.cellSet.getCellList()[5].empty())
 
+    def testVisitor(self):
+        """Test the candidate visitors"""
+
+        self.makeTestCandidateCellSet()
+
+        visitor = testLib.TestCandidateVisitor()
+
+        self.cellSet.visitCandidates(visitor)
+        self.assertEqual(visitor.getN(), self.NTestCandidates)
+    
+        self.cellSet.visitCandidates(visitor, 1)
+        self.assertEqual(visitor.getN(), 3)
+    
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class TestImageCandidateCase(unittest.TestCase):

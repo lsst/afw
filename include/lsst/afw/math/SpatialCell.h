@@ -24,6 +24,19 @@ namespace afw {
 namespace math {
 
     /************************************************************************************************************/
+    /// A class to pass around to all our Candidates
+    class SpatialCellCandidate;
+
+    class CandidateVisitor {
+    public:
+        CandidateVisitor() {}
+        virtual ~CandidateVisitor() {}
+
+        virtual void reset() {}
+        virtual void processCandidate(SpatialCellCandidate *candidate) {}
+    };
+
+    /************************************************************************************************************/
     /**
      * Base class for candidate objects in a SpatialCell
      */
@@ -63,19 +76,7 @@ namespace math {
         int getId() const { return _id; }
         /// Return the candidate's status
         Status getStatus() const { return _status; }
-        /// Set the candidate's status
-        void setStatus(Status status) {
-            switch (status) {
-              case GOOD:
-              case BAD:
-              case UNKNOWN:
-                _status = status;
-                return;
-            }
-
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
-                              (boost::format("Saw unknown status %d") % status).str());
-        }
+        void setStatus(Status status);
         /// Is this candidate acceptable?
         virtual operator bool() const {
             return (_status != BAD);
@@ -101,30 +102,40 @@ namespace math {
         typedef boost::shared_ptr<SpatialCellImageCandidate> Ptr;
         typedef boost::shared_ptr<const SpatialCellImageCandidate> ConstPtr;
 
+        /// ctor
         SpatialCellImageCandidate(float const xCenter, ///< The object's column-centre
                                   float const yCenter  ///< The object's row-centre
                                  ) : SpatialCellCandidate(xCenter, yCenter),
-                                     _image(typename ImageT::Ptr()) {
+                                     _image(typename ImageT::Ptr()),
+                                     _chi2(std::numeric_limits<double>::max()) {
         }
 
-        /** Return the Candidate's Image */
+        /// Return the Candidate's Image
         virtual typename ImageT::ConstPtr getImage() const = 0;
 
-        /** Set the width of the image that getImage should return */
-        void setWidth(int width) { _width = width; }
-        /** Return the width of the image that getImage should return */
-        int getWidth() const { return _width; }
+        /// Set the width of the image that getImage should return
+        static void setWidth(int width) {
+            _width = width;
+        }
+        /// Return the width of the image that getImage should return
+        static int getWidth() { return _width; }
 
-        /** Set the height of the image that getImage should return */
-        void setHeight(int height) { _height = height; }
-        /** Return the height of the image that getImage should return */
-        int getHeight() const { return _height; }
+        /// Set the height of the image that getImage should return
+        static void setHeight(int height) { _height = height; }
+        /// Return the height of the image that getImage should return
+        static int getHeight() { return _height; }
+
+        /// Return the candidate's chi^2
+        double getChi2() const { return _chi2; }
+        /// Set the candidate's chi^2
+        void setChi2(double chi2) { _chi2 = chi2; }
 
     protected:
         typename ImageT::Ptr mutable _image; ///< a pointer to the %image, for the use of the base class
     private:
         static int _width;              // the width of images to return; may be ignored by subclasses
         static int _height;             // the height of images to return; may be ignored by subclasses
+        double _chi2;                   // chi^2 for fit
     };
 
     /// The width of images that SpatialCellImageCandidate should return; may be ignored by subclasses
@@ -233,10 +244,10 @@ namespace math {
     private:
         std::string _label;             // Name of cell for logging/trace
         lsst::afw::image::BBox _bbox;   // Bounding box of cell in overall image
-        CandidateList _candidateList;   // List of candidates in the cell
+        CandidateList _candidateList;   // List of all candidates in the cell
         bool _ignoreBad;                // Don't include BAD candidates when traversing the list
     };
-
+    
     /** 
      * @brief A collection of SpatialCells covering an entire %image
      */
@@ -260,6 +271,9 @@ namespace math {
         CellList& getCellList() { return _cellList; }
 
         void insertCandidate(SpatialCellCandidate::Ptr candidate);
+
+        void visitCandidates(CandidateVisitor * visitor, int const nMaxPerCell=-1);
+        void visitCandidates(CandidateVisitor const * visitor, int const nMaxPerCell=-1) const;
     private:
         lsst::afw::image::BBox _region;   // Dimensions of overall image
         CellList _cellList;               // List of SpatialCells

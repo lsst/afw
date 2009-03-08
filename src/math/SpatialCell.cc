@@ -34,6 +34,23 @@ namespace {
 /// Unique identifier for candidates; useful for preserving current candidate following insertion
 int SpatialCellCandidate::_CandidateId = 0;
 
+/// Set the candidate's status
+void SpatialCellCandidate::setStatus(Status status) {
+    switch (status) {
+      case GOOD:
+      case UNKNOWN:
+        _status = status;
+        return;
+      case BAD:
+        _status = status;
+        return;
+    }
+    
+    throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                      (boost::format("Saw unknown status %d") % status).str());
+}
+
+/************************************************************************************************************/
 /**
  * Ctor
  */
@@ -55,16 +72,6 @@ SpatialCell::SpatialCell(std::string const& label, ///< string representing "nam
 }
 
 /************************************************************************************************************/
-namespace {
-    struct equal_to_id : public std::unary_function<SpatialCellCandidate::Ptr, bool> {
-        equal_to_id(int id2) : _id2(id2) { }
-        bool operator()(SpatialCellCandidate::Ptr const& candidate) const {
-            return candidate->getId() == _id2;
-        }
-    private:
-        int _id2;
-    };
-}
 /**
  * Add a candidate to the list, preserving ranking
  */
@@ -252,6 +259,67 @@ void SpatialCellSet::insertCandidate(SpatialCellCandidate::Ptr candidate) {
     }
 
     (*pos)->insertCandidate(candidate);
+}
+
+/************************************************************************************************************/
+/**
+ * Call the visitor's processCandidate method for each Candidate in the SpatialSetCell
+ *
+ * @note This is obviously similar to the Design Patterns (Go4) Visitor pattern, but we've simplified the
+ * double dispatch (i.e. we don't call a virtual method on SpatialCellCandidate that in turn calls
+ * processCandidate(*this), but can be re-defined)
+ */
+void SpatialCellSet::visitCandidates(CandidateVisitor *visitor, ///< Pass this object to every Candidate
+                                     int const nMaxPerCell      ///< Visit no more than this many Candidates (<= 0: all)
+                                    ) {
+    visitor->reset();
+    
+    for (CellList::iterator cell = _cellList.begin(), end = _cellList.end(); cell != end; ++cell) {
+        int i = 0;
+        for (SpatialCell::iterator candidate = (*cell)->begin(), candidateEnd = (*cell)->end();
+             candidate != candidateEnd; ++candidate, ++i) {
+            if (nMaxPerCell > 0 && i == nMaxPerCell) { // we've processed all the candidates we want
+                break;
+            }
+            
+            visitor->processCandidate((*candidate).get());
+        }
+    }
+}
+    
+/**
+ * Call the visitor's processCandidate method for each Candidate in the SpatialSetCell (const version)
+ *
+ * This is the const version of SpatialCellSet::visitCandidates
+ *
+ * @todo This is currently implemented via a const_cast (arghhh). The problem is that
+ * SpatialCell::begin() const isn't yet implemented
+ */
+void SpatialCellSet::visitCandidates(CandidateVisitor const* visitor, ///< Pass this object to every Candidate
+                                     int const nMaxPerCell      ///< Visit no more than this many Candidates (-ve: all)
+                                    ) const {
+#if 1
+    //
+    // These const_cast must go!
+    //
+    SpatialCellSet *mthis = const_cast<SpatialCellSet *>(this);
+    CandidateVisitor *mvisitor = const_cast<CandidateVisitor *>(visitor);
+    mthis->visitCandidates(mvisitor, nMaxPerCell);
+#else
+    visitor->reset();
+
+    for (CellList::const_iterator cell = _cellList.begin(), end = _cellList.end(); cell != end; ++cell) {
+        int i = 0;
+        for (SpatialCell::const_iterator candidate = (*cell)->begin(), candidateEnd = (*cell)->end();
+             candidate != candidateEnd; ++candidate, ++i) {
+            if (i == nMaxPerCell) {   // we've processed all the candidates we want
+                break;
+            }
+            
+            visitor->processCandidate((*candidate).get());
+        }
+    }
+#endif
 }
 
 }}}
