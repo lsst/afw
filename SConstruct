@@ -20,7 +20,7 @@ env = scons.makeEnv(
         ["wcslib", "wcslib/wcs.h", "m wcs"], # remove m once SConsUtils bug fixed
         ["xpa", "xpa.h", "xpa", "XPAPuts"],
         ["minuit", "Minuit/FCNBase.h", "lcg_Minuit:C++"],
-        ["gsl", "gsl/gsl_rng.h", "gsl gslcblas"],
+        ["gsl", "gsl/gsl_rng.h", "gslcblas gsl"],
         ["pex_exceptions", "lsst/pex/exceptions.h", "pex_exceptions:C++"],
         ["utils", "lsst/utils/Utils.h", "utils:C++"],
         ["daf_base", "lsst/daf/base.h", "daf_base:C++"],
