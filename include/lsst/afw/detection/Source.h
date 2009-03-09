@@ -36,11 +36,11 @@ namespace detection {
 /*! An integer id for each nullable field in Source. */
 enum SourceNullableField {
     AMP_EXPOSURE_ID = NUM_SHARED_NULLABLE_FIELDS,
-    RA_ERR_FOR_DETECTION,
-    DEC_ERR_FOR_DETECTION,
     TAI_RANGE,
-    PETRO_MAG,
-    PETRO_MAG_ERR,
+    X_ASTROM,
+    Y_ASTROM,
+    PETRO_FLUX,
+    PETRO_FLUX_ERR,
     SKY,
     SKY_ERR,        
     NUM_SOURCE_NULLABLE_FIELDS
@@ -62,19 +62,19 @@ public :
 
     // getters
     boost::int64_t getSourceId() const { return _id; }
-    double getPetroMag() const { return _petroMag; }
-    float  getPetroMagErr() const { return _petroMagErr; }    
+    double getPetroFlux() const { return _petroFlux; }
+    float  getPetroFluxErr() const { return _petroFluxErr; }    
     float  getSky() const { return _sky; }
     float  getSkyErr() const { return _skyErr; }
 
     // setters
     void setSourceId( boost::int64_t const sourceId) {setId(sourceId);}
-    
-    void setPetroMag(double const petroMag) { 
-        set(_petroMag, petroMag, PETRO_MAG);         
+
+    void setPetroFlux(double const petroFlux) { 
+        set(_petroFlux, petroFlux, PETRO_FLUX);         
     }
-    void setPetroMagErr(float const petroMagErr) { 
-        set(_petroMagErr, petroMagErr, PETRO_MAG_ERR);    
+    void setPetroFluxErr(float const petroFluxErr) { 
+        set(_petroFluxErr, petroFluxErr, PETRO_FLUX_ERR);    
     }
     void setSky(float const sky) { 
         set(_sky, sky, SKY);       
@@ -89,29 +89,28 @@ public :
     void setAmpExposureId (boost::int64_t const ampExposureId) { 
         set(_ampExposureId, ampExposureId, AMP_EXPOSURE_ID);
     }
-    void setRaErrForDetection (float const raErrForDetection) { 
-        set(_raErrForDetection, raErrForDetection, RA_ERR_FOR_DETECTION);  
-    }
-    void setDecErrForDetection(float const decErrForDetection) { 
-        set(_decErrForDetection, decErrForDetection, DEC_ERR_FOR_DETECTION); 
-    }
-    void setTaiRange (float const taiRange) { 
+    void setTaiRange (double const taiRange) { 
         set(_taiRange, taiRange, TAI_RANGE);         
     }
-
+    void setXAstrom(double const xAstrom) { 
+        set(_xAstrom, xAstrom, X_ASTROM);            
+    }
+    void setYAstrom(double const yAstrom) { 
+        set(_yAstrom, yAstrom, Y_ASTROM);            
+    }
     
     bool operator==(Source const & d) const;
 
 private :
-    double _petroMag;  
-    float  _petroMagErr;
+    double _petroFlux;  
+    float  _petroFluxErr;
     float  _sky;
     float  _skyErr;
 
     template <typename Archive> 
     void serialize(Archive & ar, unsigned int const version) {
-        ar & _petroMag;
-        ar & _petroMagErr;
+        ar & _petroFlux;
+        ar & _petroFluxErr;
         ar & _sky;
         ar & _skyErr;
 
