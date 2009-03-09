@@ -176,7 +176,7 @@ class MaskedImageTestCase(unittest.TestCase):
         self.assertEqual(self.mimage.getMask().get(1,1), self.EDGE)
         self.assertEqual(self.mimage.getMask().get(2,2), 0x0)
 
-        self.assertAlmostEqual(self.mimage.getVariance().get(0,0), self.varVal1/pow(self.imgVal1, 2), 10)
+        self.assertAlmostEqual(self.mimage.getVariance().get(0,0), self.varVal1/pow(self.imgVal1, 2), 9)
         
     def testScaledDivideImages(self):
         """Test division by a scaled image"""

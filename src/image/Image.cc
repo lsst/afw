@@ -514,10 +514,28 @@ void image::Image<PixelT>::scaledMultiplies(double const c, Image<PixelT> const&
 }
 
 /// Divide lhs by scalar rhs
+///
+/// \note Floating point types implement this by multiplying by the 1/rhs
 template<typename PixelT>
 void image::Image<PixelT>::operator/=(PixelT const rhs) {
     transform_pixels(_getRawView(), _getRawView(), ret<PixelT>(_1 / rhs));
 }
+//
+// Specialize float and double for efficiency
+//
+namespace lsst { namespace afw { namespace image {
+template<>
+void Image<double>::operator/=(double const rhs) {
+    double const irhs = 1/rhs;
+    *this *= irhs;
+}
+
+template<>
+void Image<float>::operator/=(float const rhs) {
+    float const irhs = 1/rhs;
+    *this *= irhs;
+}
+}}}
 
 /// Divide lhs by Image rhs (i.e. %pixel-by-%pixel division)
 template<typename PixelT>
