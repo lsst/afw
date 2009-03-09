@@ -174,7 +174,9 @@ lsst::afw::image::Wcs::Wcs(
     _fitsMetadata(fitsMetadata),
     _wcsInfo(NULL),
     _nWcsInfo(0),
-    _nReject(0)
+    _nReject(0),
+    _sipA(0,0), _sipB(0,0),
+    _sipAp(0,0), _sipBp(0,0)
 {
     // these should be set via policy - but for the moment...
 
