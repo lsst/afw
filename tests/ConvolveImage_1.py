@@ -27,7 +27,7 @@ try:
     Verbosity
 except NameError:
     Verbosity = 0 # increase to see trace
-pexLog.Trace_setVerbosity("lsst.afw", Verbosity)
+pexLog.Log.getDefaultLog().setThresholdFor("lsst.afw", -1*Verbosity)
 
 try:
     display
@@ -377,9 +377,9 @@ class ConvolveTestCase(unittest.TestCase):
         cnvImage = afwImage.ImageF(self.inImage.getDimensions())
         # compute twice, to be sure cnvImage is properly reset
         for ii in range(2):
-            pexLog.Trace("lsst.afw", 3, "Start convolution with delta functions")
+            pexLog.Debug("lsst.afw").debug(3, "Start convolution with delta functions")
             afwMath.convolveLinear(cnvImage, self.inImage, lcKernel)
-            pexLog.Trace("lsst.afw", 3, "End convolution with delta functions")
+            pexLog.Debug("lsst.afw").debug(3, "End convolution with delta functions")
             cnvImageArr = imTestUtils.arrayFromImage(cnvImage)
             
             if display:
