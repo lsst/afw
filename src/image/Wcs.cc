@@ -341,9 +341,9 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::getOriginRaDec() const {
     if(_wcsInfo != NULL) {
         return PointD(_wcsInfo->crval);
     } else {
-        throw(LSST_EXCEPT(Except::RuntimeErrorException, "Wcs structure not initialised"));
+        throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
     }
-       
+   
 }
 
 
@@ -354,7 +354,7 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::getOriginXY() const {
     if(_wcsInfo != NULL) {
         return PointD(_wcsInfo->crpix);
     } else {
-        throw(LSST_EXCEPT(Except::RuntimeErrorException, "Wcs structure not initialised"));
+        throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
     }
 
 }
@@ -370,7 +370,7 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::getOriginXY() const {
 boost::numeric::ublas::matrix<double> lsst::afw::image::Wcs::getLinearTransformMatrix() const {
 
     if(_wcsInfo == NULL) {
-        throw(LSST_EXCEPT(Except::RuntimeErrorException, "Wcs structure not initialised"));
+        throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
     }
     
     int const naxis = _wcsInfo->naxis;
@@ -402,7 +402,7 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::raDecToXY(
 ) const {
 
     if(_wcsInfo == NULL) {
-        throw(LSST_EXCEPT(Except::RuntimeErrorException, "Wcs structure not initialised"));
+        throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
     }
 
     double const skyTmp[2] = { ra, dec };
@@ -475,7 +475,7 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::xyToRaDec(
 ) const {
 
     if(_wcsInfo == NULL) {
-        throw(LSST_EXCEPT(Except::RuntimeErrorException, "Wcs structure not initialised"));
+        throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
     }
 
     double pixTmp[2] = { x - lsst::afw::image::PixelZeroPos + 1,
