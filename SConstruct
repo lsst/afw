@@ -20,6 +20,7 @@ env = scons.makeEnv(
         ["wcslib", "wcslib/wcs.h", "m wcs"], # remove m once SConsUtils bug fixed
         ["xpa", "xpa.h", "xpa", "XPAPuts"],
         ["minuit", "Minuit/FCNBase.h", "lcg_Minuit:C++"],
+        ["gsl", "gsl/gsl_rng.h", "gsl gslcblas"],
         ["pex_exceptions", "lsst/pex/exceptions.h", "pex_exceptions:C++"],
         ["utils", "lsst/utils/Utils.h", "utils:C++"],
         ["daf_base", "lsst/daf/base.h", "daf_base:C++"],
@@ -34,7 +35,7 @@ env = scons.makeEnv(
 #
 # Libraries needed to link libraries/executables
 #
-env.libs["afw"] += env.getlibs("boost wcslib cfitsio minuit utils daf_base daf_data daf_persistence pex_exceptions pex_logging pex_policy security")
+env.libs["afw"] += env.getlibs("boost wcslib cfitsio minuit gsl utils daf_base daf_data daf_persistence pex_exceptions pex_logging pex_policy security")
 #
 # Build/install things
 #

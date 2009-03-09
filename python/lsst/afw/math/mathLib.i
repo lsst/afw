@@ -62,3 +62,5 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 %include "background.i"
 %include "warpExposure.i"
 %include "spatialCell.i"
+%include "random.i"
+
