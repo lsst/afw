@@ -341,7 +341,7 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::getOriginRaDec() const {
     if(_wcsInfo != NULL) {
         return PointD(_wcsInfo->crval);
     } else {
-        throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
+        throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure is not initialised"));
     }
    
 }
