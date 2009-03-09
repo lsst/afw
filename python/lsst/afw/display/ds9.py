@@ -249,7 +249,7 @@ def _mtv(data, wcs=None, isMask=False):
 #
 # Graphics commands
 #
-def erase(frame = 0, len = 2):
+def erase(frame = 0):
    """Erase the specified DS9 frame"""
    if frame == None:
       return
