@@ -337,14 +337,26 @@ void lsst::afw::image::Wcs::shiftReferencePixel(double const dx, ///< How many p
 /// Return (ra, dec) of the origin of the WCS solution. Note that this need not
 /// be the center of the image
 lsst::afw::image::PointD lsst::afw::image::Wcs::getOriginRaDec() const {
-    return PointD(_wcsInfo->crval);
+
+    if(_wcsInfo != NULL) {
+        return PointD(_wcsInfo->crval);
+    } else {
+        throw(LSST_EXCEPT(Except::RuntimeErrorException, "Wcs structure not initialised"));
+    }
+       
 }
 
 
 /// Return XY  of the origin of the WCS solution. Note that this need not be
 ///the centre of the image
 lsst::afw::image::PointD lsst::afw::image::Wcs::getOriginXY() const {
-    return PointD(_wcsInfo->crpix);
+
+    if(_wcsInfo != NULL) {
+        return PointD(_wcsInfo->crpix);
+    } else {
+        throw(LSST_EXCEPT(Except::RuntimeErrorException, "Wcs structure not initialised"));
+    }
+
 }
 
 
@@ -356,6 +368,11 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::getOriginXY() const {
 ///
 /// where (col,row) = (0,0) = (ra, dec) is the centre of the WCS colution, and the matrix C is return by this function.
 boost::numeric::ublas::matrix<double> lsst::afw::image::Wcs::getLinearTransformMatrix() const {
+
+    if(_wcsInfo == NULL) {
+        throw(LSST_EXCEPT(Except::RuntimeErrorException, "Wcs structure not initialised"));
+    }
+    
     int const naxis = _wcsInfo->naxis;
 
     //If naxis != 2, I'm not sure if any of what follows is correct
@@ -383,6 +400,11 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::raDecToXY(
     const double ra,   ///< Input right ascension
     const double dec   ///< Input declination
 ) const {
+
+    if(_wcsInfo == NULL) {
+        throw(LSST_EXCEPT(Except::RuntimeErrorException, "Wcs structure not initialised"));
+    }
+
     double const skyTmp[2] = { ra, dec };
     double imgcrd[2];
     double phi, theta;
@@ -451,6 +473,11 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::xyToRaDec(
     double const x,                     ///< Input column position
     double const y                      ///< Input row position
 ) const {
+
+    if(_wcsInfo == NULL) {
+        throw(LSST_EXCEPT(Except::RuntimeErrorException, "Wcs structure not initialised"));
+    }
+
     double pixTmp[2] = { x - lsst::afw::image::PixelZeroPos + 1,
                                y - lsst::afw::image::PixelZeroPos + 1}; // wcslib assumes 1-indexed coordinates
     double imgcrd[2];
