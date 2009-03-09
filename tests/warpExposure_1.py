@@ -22,7 +22,7 @@ try:
     type(verbose)
 except NameError:
     verbose = 0
-    logging.Log.getDefaultLog().setThresholdFor("lsst.afw.math", -1*verbose)
+    logging.Debug("lsst.afw.math", verbose)
 
 dataDir = eups.productDir("afwdata")
 if not dataDir:

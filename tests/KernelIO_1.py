@@ -17,8 +17,8 @@ import lsst.afw.math as afwMath
 import lsst.afw.image.testUtils as imTestUtils
 
 Verbosity = 0 # increase to see trace
-pexLog.Log.getDefaultLog().setThresholdFor("lsst.afw", -1*Verbosity)
-# pexLog.Log.getDefaultLog().setThresholdFor("afw.math.KernelFormatter", -30)
+pexLog.Debug("lsst.afw", Verbosity)
+# pexLog.Debug("afw.math.KernelFormatter", 30)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

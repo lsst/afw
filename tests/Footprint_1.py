@@ -24,7 +24,7 @@ try:
     type(verbose)
 except NameError:
     verbose = 0
-    logging.Log.getDefaultLog().setThresholdFor("afwDetection.Footprint", -1*verbose)
+    logging.Debug("afwDetection.Footprint", verbose)
 
 try:
     type(display)

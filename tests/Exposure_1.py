@@ -22,7 +22,7 @@ import lsst.pex.exceptions as pexExcept
 import lsst.afw.display.ds9 as ds9
 
 Verbosity = 0 # increase to see trace
-pexLog.Log.getDefaultLog().setThresholdFor("lsst.afw.image", -1*Verbosity)
+pexLog.Debug("lsst.afw.image", Verbosity)
 
 dataDir = eups.productDir("afwdata")
 if not dataDir:

@@ -26,8 +26,8 @@ import lsst.afw.image.testUtils as imTestUtils
 try:
     Verbosity
 except NameError:
-    Verbosity = 0 # increase to see trace
-pexLog.Log.getDefaultLog().setThresholdFor("lsst.afw", -1*Verbosity)
+    Verbosity = 3 # increase to see trace
+pexLog.Debug("lsst.afw", Verbosity)
 
 try:
     display
