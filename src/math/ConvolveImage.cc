@@ -32,11 +32,45 @@
 
 // if true, ignore kernel pixels that have value 0 when convolving (only affects propagation of mask bits)
 
-#define IGNORE_KERNEL_ZERO_PIXELS 1
+namespace pexExcept = lsst::pex::exceptions;
+namespace afwImage = lsst::afw::image;
+namespace afwMath = lsst::afw::math;
 
-namespace ex = lsst::pex::exceptions;
 
 namespace {
+    /**
+     * \brief Compute the portion of one pixel of a convolved image from one row of a kernel.
+     *
+     * The new component is added to the existing component. When you handle all rows
+     * of the kernel the output pixel is complete.
+     *
+     * The pixel computed is at position inImageIter + kernel center.
+     *
+     * \todo The first argument should be a pixel, not a pixel iterator,
+     *  but I can't figure out how to do it and have the function found
+     */
+    template <typename OutImageT, typename InImageT>
+    inline void convolveOneKernelRow(
+        typename OutImageT::x_iterator outImageIter,    ///< component of output pixel as x iterator
+//        typename OutImageT::SinglePixel &outPixel,   ///< component of output pixel
+        typename InImageT::const_x_iterator inImageIter,    ///< start of input image that overlaps kernel row
+        typename afwImage::Image<afwMath::Kernel::PixelT>::const_x_iterator kernelIter, ///< start of kernel row
+        int kWidth  ///< width of kernel
+    ) {
+
+        // to avoid slowdown due to multiple accesses to outPixel,
+        // copy outPixel, increment the copy in the loop, then copy it back
+        typename OutImageT::SinglePixel locOutPixel(*outImageIter);
+        for (int x = 0; x != kWidth; ++x, ++inImageIter, ++kernelIter) {
+            typename afwMath::Kernel::Pixel const kVal = kernelIter[0];
+            if (kVal != 0) {
+                locOutPixel += *inImageIter*kVal;
+            }
+        }
+        
+        *outImageIter = locOutPixel;
+    };
+
     /*
      * Private functions to copy the border of an image
      *
@@ -48,9 +82,9 @@ namespace {
     template<typename OutImageT, typename InImageT>
     inline void copyRegion(OutImageT &outImage,     // destination Image
                            InImageT const &inImage, // source Image
-                           lsst::afw::image::BBox const &region, // region to copy
+                           afwImage::BBox const &region, // region to copy
                            int,
-                           lsst::afw::image::detail::Image_tag
+                           afwImage::detail::Image_tag
                           ) {
         OutImageT outPatch(outImage, region); 
         InImageT inPatch(inImage, region);
@@ -60,9 +94,9 @@ namespace {
     template<typename InImageT>
     inline void copyRegion(InImageT &outImage,     // destination Image
                            InImageT const &inImage, // source Image
-                           lsst::afw::image::BBox const &region, // region to copy
+                           afwImage::BBox const &region, // region to copy
                            int,
-                           lsst::afw::image::detail::Image_tag
+                           afwImage::detail::Image_tag
                           ) {
         InImageT outPatch(outImage, region); 
         InImageT inPatch(inImage, region);
@@ -75,9 +109,9 @@ namespace {
     template<typename OutImageT, typename InImageT>
     inline void copyRegion(OutImageT &outImage,     // destination Image
                            InImageT const &inImage, // source Image
-                           lsst::afw::image::BBox const &region, // region to copy
+                           afwImage::BBox const &region, // region to copy
                            int orMask,                           // data to | into the mask pixels
-                           lsst::afw::image::detail::MaskedImage_tag
+                           afwImage::detail::MaskedImage_tag
                           ) {
         OutImageT outPatch(outImage, region); 
         InImageT inPatch(inImage, region);
@@ -88,9 +122,9 @@ namespace {
     template<typename InImageT>
     inline void copyRegion(InImageT &outImage,      // destination Image
                            InImageT const &inImage, // source Image
-                           lsst::afw::image::BBox const &region, // region to copy
+                           afwImage::BBox const &region, // region to copy
                            int orMask,                           // data to | into the mask pixels
-                           lsst::afw::image::detail::MaskedImage_tag
+                           afwImage::detail::MaskedImage_tag
                           ) {
         InImageT outPatch(outImage, region);
         InImageT inPatch(inImage, region);
@@ -103,7 +137,7 @@ namespace {
     inline void copyBorder(
         OutImageT& convolvedImage,                           ///< convolved image
         InImageT const& inImage,                             ///< image to convolve
-        lsst::afw::math::Kernel const &kernel,               ///< convolution kernel
+        afwMath::Kernel const &kernel,               ///< convolution kernel
         int edgeBit                         ///< bit to set to indicate border pixel;  if negative then no bit is set
     ) {
         const unsigned int imWidth = inImage.getWidth();
@@ -115,25 +149,25 @@ namespace {
     
         const int edgeBitMask = (edgeBit < 0) ? 0 : (1 << edgeBit);
     
-        using lsst::afw::image::BBox;
-        using lsst::afw::image::PointI;
+        using afwImage::BBox;
+        using afwImage::PointI;
         BBox bottomEdge(PointI(0, 0), imWidth, kCtrY);
         copyRegion(convolvedImage, inImage, bottomEdge, edgeBitMask,
-                    typename lsst::afw::image::detail::image_traits<OutImageT>::image_category());
+                    typename afwImage::detail::image_traits<OutImageT>::image_category());
         
         int numHeight = kHeight - (1 + kCtrY);
         BBox topEdge(PointI(0, imHeight - numHeight), imWidth, numHeight);
         copyRegion(convolvedImage, inImage, topEdge, edgeBitMask,
-                    typename lsst::afw::image::detail::image_traits<OutImageT>::image_category());
+                    typename afwImage::detail::image_traits<OutImageT>::image_category());
         
         BBox leftEdge(PointI(0, kCtrY), kCtrX, imHeight + 1 - kHeight);
         copyRegion(convolvedImage, inImage, leftEdge, edgeBitMask,
-                    typename lsst::afw::image::detail::image_traits<OutImageT>::image_category());
+                    typename afwImage::detail::image_traits<OutImageT>::image_category());
         
         int numWidth = kWidth - (1 + kCtrX);
         BBox rightEdge(PointI(imWidth - numWidth, kCtrY), numWidth, imHeight + 1 - kHeight);
         copyRegion(convolvedImage, inImage, rightEdge, edgeBitMask,
-                    typename lsst::afw::image::detail::image_traits<OutImageT>::image_category());
+                    typename afwImage::detail::image_traits<OutImageT>::image_category());
     }
 }   // anonymous namespace
 
@@ -152,42 +186,42 @@ namespace {
  * @ingroup afw
  */
 template <typename OutImageT, typename InImageT>
-void lsst::afw::math::basicConvolve(
+void afwMath::basicConvolve(
     OutImageT &convolvedImage,                  ///< convolved image
     InImageT const& inImage,                    ///< image to convolve
-    lsst::afw::math::Kernel const& kernel,      ///< convolution kernel
+    afwMath::Kernel const& kernel,      ///< convolution kernel
     bool doNormalize                            ///< if True, normalize the kernel, else use "as is"
 ) {
-    typedef typename lsst::afw::math::Kernel::PixelT KernelPixelT;
-    typedef lsst::afw::image::Image<KernelPixelT> KernelImageT;
+    typedef typename afwMath::Kernel::PixelT KernelPixelT;
+    typedef afwImage::Image<KernelPixelT> KernelImageT;
 
+    typedef typename KernelImageT::const_x_iterator KernelXIterator;
     typedef typename KernelImageT::const_xy_locator KernelXYLocator;
+    typedef typename InImageT::const_x_iterator InXYIterator;
     typedef typename InImageT::const_xy_locator InXYLocator;
     typedef typename OutImageT::x_iterator OutXIterator;
 
     // Because convolve isn't a method of Kernel we can't always use Kernel's vtbl to dynamically
-    // dispatch the correct version of basicConvolve; sometimes we have to do it by hand.
-    // The case that fails is convolving with a kernel obtained from a shared_ptr to a Kernel (base class),
-    // e.g. as used in linearCombinationKernel.
-    if (dynamic_cast<lsst::afw::math::DeltaFunctionKernel const*>(&kernel) != NULL) {
-        lsst::afw::math::basicConvolve(convolvedImage, inImage,
-            *dynamic_cast<lsst::afw::math::DeltaFunctionKernel const*>(&kernel),
+    // dispatch the correct version of basicConvolve. The case that fails is convolving with a kernel
+    // obtained from a shared_ptr to a Kernel (base class), e.g. as used in linearCombinationKernel.
+    if (dynamic_cast<afwMath::DeltaFunctionKernel const*>(&kernel) != NULL) {
+        afwMath::basicConvolve(convolvedImage, inImage,
+            *dynamic_cast<afwMath::DeltaFunctionKernel const*>(&kernel),
             doNormalize);
         return;
-    } else if (dynamic_cast<lsst::afw::math::SeparableKernel const*>(&kernel) != NULL) {
-        lsst::afw::math::basicConvolve(convolvedImage, inImage,
-            *dynamic_cast<lsst::afw::math::SeparableKernel const*>(&kernel),
+    } else if (dynamic_cast<afwMath::SeparableKernel const*>(&kernel) != NULL) {
+        afwMath::basicConvolve(convolvedImage, inImage,
+            *dynamic_cast<afwMath::SeparableKernel const*>(&kernel),
             doNormalize);
         return;
-    } else {
-        // OK, use general (and slow) form
     }
+    // OK, use general (and slower) form
 
     if (convolvedImage.getDimensions() != inImage.getDimensions()) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "convolvedImage not the same size as inImage");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "convolvedImage not the same size as inImage");
     }
     if (inImage.getDimensions() < kernel.getDimensions()) {
-        throw LSST_EXCEPT(ex::InvalidParameterException,"inImage smaller than kernel in columns and/or rows");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException,"inImage smaller than kernel in columns and/or rows");
     }
     
     int const inImageWidth = inImage.getWidth();
@@ -204,34 +238,41 @@ void lsst::afw::math::basicConvolve(
     KernelImageT kernelImage(kernel.getDimensions()); // the kernel at a point
 
     if (kernel.isSpatiallyVarying()) {
-        lsst::pex::logging::Trace("lsst.afw.kernel.convolve", 3, "kernel is spatially varying");
+        lsst::pex::logging::TTrace<3>("lsst.afw.kernel.convolve", "kernel is spatially varying");
 
         for (int cnvY = cnvStartY; cnvY != cnvEndY; ++cnvY) {
-            double const rowPos = lsst::afw::image::indexToPosition(cnvY);
+            double const rowPos = afwImage::indexToPosition(cnvY);
             
             InXYLocator  inImLoc =  inImage.xy_at(0, cnvY - cnvStartY);
-            OutXIterator cnvImIter = convolvedImage.x_at(cnvStartX, cnvY);
-            for (int cnvX = cnvStartX; cnvX != cnvEndX; ++cnvX, ++inImLoc.x(), ++cnvImIter) {
-                double const colPos = lsst::afw::image::indexToPosition(cnvX);
+            OutXIterator cnvXIter = convolvedImage.x_at(cnvStartX, cnvY);
+            for (int cnvX = cnvStartX; cnvX != cnvEndX; ++cnvX, ++inImLoc.x(), ++cnvXIter) {
+                double const colPos = afwImage::indexToPosition(cnvX);
 
                 KernelPixelT kSum = kernel.computeImage(kernelImage, false, colPos, rowPos);
                 KernelXYLocator kernelLoc = kernelImage.xy_at(0,0);
-                *cnvImIter = lsst::afw::math::convolveAtAPoint<OutImageT, InImageT>(inImLoc, kernelLoc, kWidth, kHeight);
+                *cnvXIter = afwMath::convolveAtAPoint<OutImageT, InImageT>(inImLoc, kernelLoc, kWidth, kHeight);
                 if (doNormalize) {
-                    *cnvImIter = *cnvImIter/kSum;
+                    *cnvXIter = *cnvXIter/kSum;
                 }
             }
         }
-    } else {                            // kernel is spatially invariant
-        lsst::pex::logging::Trace("lsst.afw.kernel.convolve", 3, "kernel is spatially invariant");
+    } else {
+        lsst::pex::logging::TTrace<3>("lsst.afw.kernel.convolve", "kernel is spatially invariant");
         (void)kernel.computeImage(kernelImage, doNormalize);
-
-        for (int cnvY = cnvStartY; cnvY != cnvEndY; ++cnvY) {
-            InXYLocator inImLoc =  inImage.xy_at(0, cnvY - cnvStartY);
-            for (OutXIterator cnvImIter = convolvedImage.x_at(cnvStartX, cnvY),
-                     cnvImEnd = convolvedImage.x_at(cnvEndX, cnvY); cnvImIter != cnvImEnd; ++inImLoc.x(), ++cnvImIter) {
-                KernelXYLocator kernelLoc = kernelImage.xy_at(0,0);
-                *cnvImIter = lsst::afw::math::convolveAtAPoint<OutImageT, InImageT>(inImLoc, kernelLoc, kWidth, kHeight);
+        
+        for (int inStartY = 0, cnvY = cnvStartY; inStartY < cnvHeight; ++inStartY, ++cnvY) {
+            for (OutXIterator cnvXIter=convolvedImage.x_at(cnvStartX, cnvY),
+                cnvXEnd = convolvedImage.row_end(cnvY); cnvXIter != cnvXEnd; ++cnvXIter) {
+                *cnvXIter = 0;
+            }
+            for (int kernelY = 0, inY = inStartY; kernelY < kHeight; ++inY, ++kernelY) {
+                KernelXIterator kernelXIter = kernelImage.x_at(0, kernelY);
+                InXYIterator inXIter = inImage.x_at(0, inY);
+                OutXIterator cnvXIter = convolvedImage.x_at(cnvStartX, cnvY);
+                for (int x = 0; x < cnvWidth; ++x, ++cnvXIter, ++inXIter) {
+                    // template parameters must be explicitly specified, at least for g++ 4.0.1
+                    convolveOneKernelRow<OutImageT, InImageT>(cnvXIter, inXIter, kernelXIter, kWidth);
+                }
             }
         }
     }
@@ -242,19 +283,19 @@ void lsst::afw::math::basicConvolve(
  * @brief A version of basicConvolve that should be used when convolving delta function kernels
  */
 template <typename OutImageT, typename InImageT>
-void lsst::afw::math::basicConvolve(
+void afwMath::basicConvolve(
     OutImageT& convolvedImage,            ///< convolved image
     InImageT const& inImage,          ///< image to convolve
-    lsst::afw::math::DeltaFunctionKernel const &kernel,    ///< convolution kernel
+    afwMath::DeltaFunctionKernel const &kernel,    ///< convolution kernel
     bool doNormalize    ///< if True, normalize the kernel, else use "as is"
 ) {
     assert (!kernel.isSpatiallyVarying());
 
     if (convolvedImage.getDimensions() != inImage.getDimensions()) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "convolvedImage not the same size as inImage");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "convolvedImage not the same size as inImage");
     }
     if (convolvedImage.getDimensions() < kernel.getDimensions()) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "inImage smaller than kernel in columns and/or rows");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "inImage smaller than kernel in columns and/or rows");
     }
     
     int const mImageWidth = inImage.getWidth(); // size of input region
@@ -266,7 +307,7 @@ void lsst::afw::math::basicConvolve(
     int const inStartX = kernel.getPixel().first;
     int const inStartY = kernel.getPixel().second;
 
-    lsst::pex::logging::Trace("lsst.afw.kernel.convolve", 3, "kernel is a spatially invariant delta function basis");
+    lsst::pex::logging::TTrace<3>("lsst.afw.kernel.convolve", "kernel is a spatially invariant delta function basis");
 
     for (int i = 0; i < cnvHeight; ++i) {
         typename InImageT::x_iterator inPtr = inImage.x_at(inStartX, i +  inStartY);
@@ -281,22 +322,22 @@ void lsst::afw::math::basicConvolve(
  * @brief A version of basicConvolve that should be used when convolving separable kernels
  */
 template <typename OutImageT, typename InImageT>
-void lsst::afw::math::basicConvolve(
+void afwMath::basicConvolve(
     OutImageT& convolvedImage,        ///< convolved image
     InImageT const& inImage,          ///< image to convolve
-    lsst::afw::math::SeparableKernel const &kernel,  ///< convolution kernel
+    afwMath::SeparableKernel const &kernel,  ///< convolution kernel
     bool doNormalize                                 ///< if True, normalize the kernel, else use "as is"
 ) {
-    typedef typename lsst::afw::math::Kernel::PixelT KernelPixelT;
+    typedef typename afwMath::Kernel::PixelT KernelPixelT;
 
     typedef typename InImageT::const_xy_locator InXYLocator;
     typedef typename OutImageT::x_iterator OutXIterator;
 
     if (convolvedImage.getDimensions() != inImage.getDimensions()) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "convolvedImage not the same size as inImage");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "convolvedImage not the same size as inImage");
     }
     if (inImage.getDimensions() < kernel.getDimensions()) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "inImage smaller than kernel in columns and/or rows");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "inImage smaller than kernel in columns and/or rows");
     }
     
     int const imWidth = inImage.getWidth();
@@ -308,39 +349,39 @@ void lsst::afw::math::basicConvolve(
     int const cnvEndX = cnvStartX + static_cast<int>(cnvWidth); // end index + 1
     int const cnvEndY = cnvStartY + static_cast<int>(cnvHeight); // end index + 1
 
-    std::vector<lsst::afw::math::Kernel::PixelT> kXVec(kernel.getWidth());
-    std::vector<lsst::afw::math::Kernel::PixelT> kYVec(kernel.getHeight());
+    std::vector<afwMath::Kernel::PixelT> kXVec(kernel.getWidth());
+    std::vector<afwMath::Kernel::PixelT> kYVec(kernel.getHeight());
     
     if (kernel.isSpatiallyVarying()) {
-        lsst::pex::logging::Trace("lsst.afw.kernel.convolve", 3, "kernel is a spatially varying separable kernel");
+        lsst::pex::logging::TTrace<3>("lsst.afw.kernel.convolve", "kernel is a spatially varying separable kernel");
 
         for (int cnvY = cnvStartY; cnvY != cnvEndY; ++cnvY) {
-            double const rowPos = lsst::afw::image::indexToPosition(cnvY);
+            double const rowPos = afwImage::indexToPosition(cnvY);
             
             InXYLocator  inImLoc =  inImage.xy_at(0, cnvY - cnvStartY);
-            OutXIterator cnvImIter = convolvedImage.row_begin(cnvY) + cnvStartX;
-            for (int cnvX = cnvStartX; cnvX != cnvEndX; ++cnvX, ++inImLoc.x(), ++cnvImIter) {
-                double const colPos = lsst::afw::image::indexToPosition(cnvX);
+            OutXIterator cnvXIter = convolvedImage.row_begin(cnvY) + cnvStartX;
+            for (int cnvX = cnvStartX; cnvX != cnvEndX; ++cnvX, ++inImLoc.x(), ++cnvXIter) {
+                double const colPos = afwImage::indexToPosition(cnvX);
 
                 KernelPixelT kSum = kernel.computeVectors(kXVec, kYVec, doNormalize, colPos, rowPos);
 
-                *cnvImIter = lsst::afw::math::convolveAtAPoint<OutImageT, InImageT>(inImLoc, kXVec, kYVec);
+                *cnvXIter = afwMath::convolveAtAPoint<OutImageT, InImageT>(inImLoc, kXVec, kYVec);
                 if (doNormalize) {
-                    *cnvImIter = *cnvImIter/kSum;
+                    *cnvXIter = *cnvXIter/kSum;
                 }
             }
         }
     } else {
         // kernel is spatially invariant
-        lsst::pex::logging::Trace("lsst.afw.kernel.convolve", 3, "kernel is a spatially invariant separable kernel");
+        lsst::pex::logging::TTrace<3>("lsst.afw.kernel.convolve", "kernel is a spatially invariant separable kernel");
 
         (void)kernel.computeVectors(kXVec, kYVec, doNormalize);
 
         for (int cnvY = cnvStartY; cnvY != cnvEndY; ++cnvY) {
             InXYLocator inImLoc =  inImage.xy_at(0, cnvY - cnvStartY);
-            for (OutXIterator cnvImIter = convolvedImage.row_begin(cnvY) + cnvStartX,
-                     cnvImEnd = cnvImIter + (cnvEndX - cnvStartX); cnvImIter != cnvImEnd; ++inImLoc.x(), ++cnvImIter) {
-                *cnvImIter = lsst::afw::math::convolveAtAPoint<OutImageT, InImageT>(inImLoc, kXVec, kYVec);
+            for (OutXIterator cnvXIter = convolvedImage.row_begin(cnvY) + cnvStartX,
+                     cnvImEnd = cnvXIter + (cnvEndX - cnvStartX); cnvXIter != cnvImEnd; ++inImLoc.x(), ++cnvXIter) {
+                *cnvXIter = afwMath::convolveAtAPoint<OutImageT, InImageT>(inImLoc, kXVec, kYVec);
             }
         }
     }
@@ -361,7 +402,7 @@ void lsst::afw::math::basicConvolve(
  * @ingroup afw
  */
 template <typename OutImageT, typename InImageT, typename KernelT>
-void lsst::afw::math::convolve(
+void afwMath::convolve(
     OutImageT& convolvedImage,          ///< convolved image
     InImageT const& inImage,            ///< image to convolve
     KernelT const& kernel,              ///< convolution kernel
@@ -369,7 +410,7 @@ void lsst::afw::math::convolve(
     int edgeBit                         ///< mask bit to indicate pixel includes edge-extended data;
                                         ///< if negative (default) then no bit is set; only relevant for MaskedImages
 ) {
-    lsst::afw::math::basicConvolve(convolvedImage, inImage, kernel, doNormalize);
+    afwMath::basicConvolve(convolvedImage, inImage, kernel, doNormalize);
     copyBorder(convolvedImage, inImage, kernel, edgeBit);
 }
 
@@ -390,28 +431,28 @@ void lsst::afw::math::convolve(
  * @ingroup afw
  */
 template <typename OutImageT, typename InImageT>
-void lsst::afw::math::convolveLinear(
+void afwMath::convolveLinear(
     OutImageT& convolvedImage,          ///< convolved image
     InImageT const& inImage,            ///< image to convolve
-    lsst::afw::math::LinearCombinationKernel const& kernel, ///< convolution kernel
+    afwMath::LinearCombinationKernel const& kernel, ///< convolution kernel
     int edgeBit				///< mask bit to indicate pixel includes edge-extended data;
                                         ///< if negative (default) then no bit is set; only relevant for MaskedImages
                                     ) {
     if (!kernel.isSpatiallyVarying()) {
-        return lsst::afw::math::convolve(convolvedImage, inImage, kernel, false, edgeBit);
+        return afwMath::convolve(convolvedImage, inImage, kernel, false, edgeBit);
     }
 
     if (convolvedImage.getDimensions() != inImage.getDimensions()) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "convolvedImage not the same size as inImage");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "convolvedImage not the same size as inImage");
     }
     if (inImage.getDimensions() < kernel.getDimensions()) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "inImage smaller than kernel in columns and/or rows");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "inImage smaller than kernel in columns and/or rows");
     }
     
     typedef typename InImageT::template ImageTypeFactory<double>::type BasisImage;
     typedef typename BasisImage::x_iterator BasisXIterator;
     typedef typename OutImageT::x_iterator OutXIterator;
-    typedef lsst::afw::math::LinearCombinationKernel::KernelList KernelList;
+    typedef afwMath::LinearCombinationKernel::KernelList KernelList;
 
     int const imWidth = inImage.getWidth();
     int const imHeight = inImage.getHeight();
@@ -439,25 +480,25 @@ void lsst::afw::math::convolveLinear(
     int i = 0;
     for (typename KernelList::const_iterator basisKernelIter = basisKernelList.begin();
         basisKernelIter != basisKernelList.end(); ++basisKernelIter, ++i) {
-        lsst::afw::math::basicConvolve(basisImage, inImage, **basisKernelIter, false);
+        afwMath::basicConvolve(basisImage, inImage, **basisKernelIter, false);
 
         // iterate over matching pixels of all images to compute output image
-        lsst::afw::math::Kernel::SpatialFunctionPtr spatialFunctionPtr = kernel.getSpatialFunction(i);
+        afwMath::Kernel::SpatialFunctionPtr spatialFunctionPtr = kernel.getSpatialFunction(i);
         std::vector<double> kernelCoeffList(kernel.getNKernelParameters()); // weights of basis images at this point
         for (int cnvY = cnvStartY; cnvY < cnvEndY; ++cnvY) {
-            double const rowPos = lsst::afw::image::indexToPosition(cnvY);
+            double const rowPos = afwImage::indexToPosition(cnvY);
         
             OutXIterator cnvXIter = convolvedImage.row_begin(cnvY) + cnvStartX;
             BasisXIterator basisXIter = basisImage.row_begin(cnvY) + cnvStartX;
             for (int cnvX = cnvStartX; cnvX != cnvEndX; ++cnvX, ++cnvXIter, ++basisXIter) {
-                double const colPos = lsst::afw::image::indexToPosition(cnvX);
+                double const colPos = afwImage::indexToPosition(cnvX);
                 double basisCoeff = (*spatialFunctionPtr)(colPos, rowPos);
                 
                 typename OutImageT::SinglePixel cnvPixel(*cnvXIter);
-                cnvPixel = lsst::afw::image::pixel::plus(cnvPixel, (*basisXIter) * basisCoeff, 1.0);
+                cnvPixel = afwImage::pixel::plus(cnvPixel, (*basisXIter) * basisCoeff, 1.0);
                 *cnvXIter = cnvPixel;
                 // note: cnvPixel avoids compiler complaints; the following does not build:
-                // *cnvXIter = lsst::afw::image::pixel::plus(*cnvXIter, (*basisXIter) * basisCoeff, 1.0);
+                // *cnvXIter = afwImage::pixel::plus(*cnvXIter, (*basisXIter) * basisCoeff, 1.0);
             }
         }
     }
@@ -473,8 +514,8 @@ void lsst::afw::math::convolveLinear(
  */
 namespace lsst { namespace afw { namespace math {
 
-#define IMAGE(PIXTYPE) lsst::afw::image::Image<PIXTYPE>
-#define MASKEDIMAGE(PIXTYPE) lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>
+#define IMAGE(PIXTYPE) afwImage::Image<PIXTYPE>
+#define MASKEDIMAGE(PIXTYPE) afwImage::MaskedImage<PIXTYPE, afwImage::MaskPixel, afwImage::VariancePixel>
 //
 // Next a macro to generate needed instantiations for IMAGE (e.g. MASKEDIMAGE) and the specified pixel types
 //
