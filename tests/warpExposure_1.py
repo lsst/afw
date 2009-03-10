@@ -22,7 +22,7 @@ try:
     type(verbose)
 except NameError:
     verbose = 0
-    logging.Trace_setVerbosity("lsst.afw.math", verbose)
+    logging.Debug("lsst.afw.math", verbose)
 
 dataDir = eups.productDir("afwdata")
 if not dataDir:

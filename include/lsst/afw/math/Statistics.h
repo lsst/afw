@@ -8,6 +8,7 @@
  * @author Steve Bickerton
  */
 
+#include <cassert>
 #include "boost/tuple/tuple.hpp"
 
 namespace lsst { namespace afw { namespace math {

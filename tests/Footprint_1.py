@@ -24,7 +24,7 @@ try:
     type(verbose)
 except NameError:
     verbose = 0
-    logging.Trace_setVerbosity("afwDetection.Footprint", verbose)
+    logging.Debug("afwDetection.Footprint", verbose)
 
 try:
     type(display)

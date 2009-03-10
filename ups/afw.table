@@ -5,6 +5,7 @@ setupRequired(xpa >= 2.1.7b2)
 setupRequired(numpy >= 1.0.1)
 setupRequired(minuit >= 1.7.9)
 setupRequired(eigen >= 2.0)
+setupRequired(gsl >= 1.8)
 
 setupOptional(afwdata)
 
