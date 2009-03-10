@@ -291,12 +291,14 @@ public:
             return;
         }
 
-        image::BBox const bbox = foot.getBBox();
-        if (foot.getRegion() &&
-            (!foot.getRegion().contains(bbox.getLLC()) || !foot.getRegion().contains(bbox.getURC()))) {
+        image::BBox const& bbox = foot.getBBox();
+        image::BBox region = foot.getRegion();
+        if (region &&
+            (!region.contains(bbox.getLLC()) || !region.contains(bbox.getURC()))) {
             throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
-                              (boost::format("Footprint with BBox (%d,%d) %dx%d doesn't fit in image") %
-                               bbox.getX0() % bbox.getY0() % bbox.getWidth() % bbox.getHeight()).str());
+                              (boost::format("Footprint with BBox (%d,%d) -- (%dx%d) doesn't fit in image with BBox (%d,%d) -- (%dx%d)") %
+                               bbox.getX0() % bbox.getY0() % bbox.getX1() % bbox.getY0() %
+                               region.getX0() % region.getY0() % region.getX1() % region.getY1()).str());
         }
 
         int ox1 = 0, oy = 0;            // Current position of the locator (in the SpanList loop)
