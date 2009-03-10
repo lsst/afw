@@ -462,10 +462,7 @@ void form::SourceVectorFormatter::write(
             || typeid(*storage) == typeid(DbTsvStorage)) {
         std::string itemName(getItemName(additionalData));
         std::string name(getVisitSliceTableName(_policy, additionalData));
-        std::string model = extractPolicyString(
-            _policy,
-            itemName + ".templateTableName",
-            "Source");
+        std::string model = _policy->getString(itemName + ".templateTableName");
 
         bool mayExist = !extractOptionalFlag(
             additionalData, 

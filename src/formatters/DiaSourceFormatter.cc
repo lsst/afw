@@ -491,14 +491,10 @@ void form::DiaSourceVectorFormatter::write( Persistable const * persistable,
     } else if (typeid(*storage) == typeid(DbStorage) || typeid(*storage) == typeid(DbTsvStorage)) {
         std::string itemName(getItemName(additionalData));
         std::string name(getVisitSliceTableName(_policy, additionalData));
-        std::string model = extractPolicyString(
-            _policy,
-            itemName + ".templateTableName",
-            "DIASource"
-        );
+        std::string model = _policy->getString(itemName + ".templateTableName");
         bool mayExist = !extractOptionalFlag(additionalData, itemName + ".isPerSliceTable");
         if (typeid(*storage) == typeid(DbStorage)) {
-        	//handle persisting to DbStorage
+            //handle persisting to DbStorage
             DbStorage * db = dynamic_cast<DbStorage *>(storage.get());
             if (db == 0) {
                 throw LSST_EXCEPT(ex::RuntimeErrorException, "Didn't get DbStorage");

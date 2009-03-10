@@ -263,7 +263,14 @@ struct SourceLessThan {
 
 static void testDb(std::string const & storageType) {
     // Create the required Policy and DataProperty
-    Policy::Ptr      policy(new Policy);
+    Policy::Ptr policy(new Policy);
+    std::string policyRoot = "Formatter.PersistableDiaSourceVector";
+    policy->set(policyRoot + ".DIASource.templateTableName", "DIASource");
+    policy->set(policyRoot + ".DIASource.perVisitTableNamePattern",
+                "_tmp_test_DIASource_%1%");
+    policy->set(policyRoot + ".DIASource.perSliceAndVisitTableNamePattern",
+                "_tmp_test_DIASource_%1%_%2%");
+    Policy::Ptr nested = policy->getPolicy(policyRoot);
     PropertySet::Ptr props = createDbTestProps(0, 1, "DIASource");
 
     Persistence::Ptr pers = Persistence::getPersistence(policy);
@@ -299,7 +306,7 @@ static void testDb(std::string const & storageType) {
         BOOST_CHECK_MESSAGE(*vec.at(0) == *dsv[0], 
             "persist()/retrieve() resulted in corruption");
     }
-    afwFormatters::dropAllVisitSliceTables(loc, policy, props);
+    afwFormatters::dropAllVisitSliceTables(loc, nested, props);
 
     // 2. Test on a DiaSourceSet
     dsv.clear();
@@ -337,7 +344,7 @@ static void testDb(std::string const & storageType) {
                 BOOST_ERROR("persist()/retrieve() resulted in corruption");
         }
     }
-    afwFormatters::dropAllVisitSliceTables(loc, policy, props);
+    afwFormatters::dropAllVisitSliceTables(loc, nested, props);
 }
 
 BOOST_AUTO_TEST_CASE(DiaSourceEquality) {

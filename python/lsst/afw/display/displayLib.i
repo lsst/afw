@@ -12,8 +12,7 @@ Basic routines to talk to ds9
 #   include <lsst/daf/base.h>
 #   include <lsst/daf/data.h>
 #   include <lsst/daf/persistence.h>
-#   include <lsst/pex/policy/Policy.h>
-#   include <lsst/pex/policy/PolicyFile.h>
+#   include <lsst/pex/policy.h>
 #   include <lsst/afw/image.h>
 
 #   include "simpleFits.h"

@@ -16,6 +16,7 @@ Various swigged-up C++ classes for testing
 %lsst_exceptions()
 
 %{
+#include "lsst/pex/policy.h"
 #include "lsst/afw/math.h"
 %}
 

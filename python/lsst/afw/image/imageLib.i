@@ -18,8 +18,7 @@ Basic routines to talk to lsst::afw::image classes
 #include <lsst/daf/persistence.h>
 #include <lsst/pex/exceptions.h>
 #include <lsst/pex/logging/Trace.h>
-#include <lsst/pex/policy/Policy.h>
-#include <lsst/pex/policy/PolicyFile.h>
+#include <lsst/pex/policy.h>
 #include <lsst/afw/image.h>
 %}
 

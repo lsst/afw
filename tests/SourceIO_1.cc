@@ -215,8 +215,15 @@ struct SourceLessThan {
 static void testDb(std::string const & storageType) {
     // Create the required Policy and PropertySet
     Policy::Ptr policy(new Policy);
+    std::string policyRoot("Formatter.PersistableSourceVector");
+    policy->set(policyRoot + ".Source.templateTableName", "Source");
+    policy->set(policyRoot + ".Source.perVisitTableNamePattern",
+                "_tmp_test_Source_%1%");
+    policy->set(policyRoot + ".Source.perSliceAndVisitTableNamePattern",
+                "_tmp_test_Source_%1%_%2%");
+    Policy::Ptr nested(policy->getPolicy(policyRoot));
+
     PropertySet::Ptr props = createDbTestProps(0, 1, "Source");
-    
     Persistence::Ptr pers = Persistence::getPersistence(policy);
     LogicalLocation loc("mysql://lsst10.ncsa.uiuc.edu:3306/test_source");
     
@@ -247,7 +254,7 @@ static void testDb(std::string const & storageType) {
         BOOST_CHECK_MESSAGE(*vec.at(0) == *dsv[0], 
             "persist()/retrieve() resulted in corruption");
     }
-    afwFormatters::dropAllVisitSliceTables(loc, policy, props);
+    afwFormatters::dropAllVisitSliceTables(loc, nested, props);
 
     // 2. Test on a SourceSet
     dsv.clear();
@@ -287,7 +294,7 @@ static void testDb(std::string const & storageType) {
             }
         }
     }
-    afwFormatters::dropAllVisitSliceTables(loc, policy, props);
+    afwFormatters::dropAllVisitSliceTables(loc, nested, props);
 }
 
 
@@ -295,11 +302,11 @@ static void testDb2(std::string const & storageType) {
     // Create the required Policy and PropertySet
     Policy::Ptr policy(new Policy);
     std::string policyRoot("Formatter.PersistableSourceVector");
-    // use custom table name patterns for this test
+    policy->set(policyRoot + ".Source.templateTableName", "Source");
     policy->set(policyRoot + ".Source.perVisitTableNamePattern", 
-        "tmp_test_Source_%1%");
+                "_tmp_test_Source_%1%");
     policy->set(policyRoot + ".Source.perSliceAndVisitTableNamePattern", 
-        "tmp_test_Source_%1%_%2%");
+                "_tmp_test_Source_%1%_%2%");
 
     Policy::Ptr nested(policy->getPolicy(policyRoot));
 
