@@ -261,14 +261,13 @@ void afwMath::basicConvolve(
         (void)kernel.computeImage(kernelImage, doNormalize);
         
         for (int inStartY = 0, cnvY = cnvStartY; inStartY < cnvHeight; ++inStartY, ++cnvY) {
-            for (OutXIterator cnvXIter=convolvedImage.x_at(cnvStartX, cnvY),
-                cnvXEnd = convolvedImage.row_end(cnvY); cnvXIter != cnvXEnd; ++cnvXIter) {
-                *cnvXIter = 0;
-            }
             for (int kernelY = 0, inY = inStartY; kernelY < kHeight; ++inY, ++kernelY) {
                 KernelXIterator kernelXIter = kernelImage.x_at(0, kernelY);
                 InXYIterator inXIter = inImage.x_at(0, inY);
                 OutXIterator cnvXIter = convolvedImage.x_at(cnvStartX, cnvY);
+                if (kernelY == 0) {
+                    *cnvXIter = 0;
+                }
                 for (int x = 0; x < cnvWidth; ++x, ++cnvXIter, ++inXIter) {
                     // template parameters must be explicitly specified, at least for g++ 4.0.1
                     convolveOneKernelRow<OutImageT, InImageT>(cnvXIter, inXIter, kernelXIter, kWidth);
