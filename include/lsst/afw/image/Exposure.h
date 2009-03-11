@@ -55,9 +55,16 @@ namespace image {
         virtual ~Exposure(); 
 
         // Get Members
+        /// Return the MaskedImage
         MaskedImageT& getMaskedImage() { return _maskedImage; };
+        /// Return the MaskedImage
         MaskedImageT const& getMaskedImage() const { return _maskedImage; };
         Wcs::Ptr getWcs() const;
+
+        /// Return the Exposure's width
+        int getWidth() const { return _maskedImage.getWidth(); }
+        /// Return the Exposure's height
+        int getHeight() const { return _maskedImage.getHeight(); }
         
         // Set Members
         void setMaskedImage(MaskedImageT &maskedImage);

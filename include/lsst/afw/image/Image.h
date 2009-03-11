@@ -15,6 +15,11 @@
 
 #include "boost/mpl/bool.hpp"
 #include "boost/shared_ptr.hpp"
+#include "boost/serialization/nvp.hpp"
+#include "boost/serialization/binary_object.hpp"
+#include "boost/serialization/shared_ptr.hpp"
+#include "boost/archive/xml_oarchive.hpp"
+#include "boost/serialization/export.hpp"
 
 #include "lsst/afw/image/lsstGil.h"
 #include "lsst/afw/image/Utils.h"
@@ -45,6 +50,10 @@ namespace image {
         };
     }
 
+#ifndef SWIG
+    using boost::serialization::make_nvp;
+#endif
+
     /************************************************************************************************************/
     /// \brief metafunction to extract reference type from PixelT
     template<typename PixelT>
@@ -62,8 +71,8 @@ namespace image {
     // specialised subclasses
     //
     template<typename PixelT>
-    class ImageBase : public lsst::daf::base::Persistable,
-                      public lsst::daf::data::LsstBase {
+    class ImageBase : public lsst::daf::data::LsstBase,
+                      public lsst::daf::base::Persistable {
     private:
         typedef typename lsst::afw::image::detail::types_traits<PixelT>::image_t _image_t;
         typedef typename lsst::afw::image::detail::types_traits<PixelT>::view_t _view_t;
@@ -214,7 +223,12 @@ namespace image {
         void setXY0(PointI const origin) {
             _x0 = origin.getX();
             _y0 = origin.getY();
-        }
+        };
+
+        void writeBoost(void) const {
+            boost::archive::xml_oarchive ar(std::cout);
+            ar << make_nvp("ib", this);
+        };
 
     private:
         _image_t_Ptr _gilImage;
@@ -236,6 +250,47 @@ namespace image {
             _gilView = flipped_up_down_view(view(*_gilImage));
         }
 #endif
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+        void serialize(Archive& ar, unsigned int const version) {
+            int width;
+            int height;
+            int ix0;
+            int iy0;
+            int x0;
+            int y0;
+            int nbytes;
+            if (Archive::is_saving::value) {
+                width = getWidth();
+                height = getHeight();
+                ix0 = _ix0;
+                iy0 = _iy0;
+                x0 = _x0;
+                y0 = _y0;
+                nbytes = _gilView.height() * _gilView.width() * sizeof(PixelT);
+            }
+            ar & make_nvp("width", width) & make_nvp("height", height);
+            ar & make_nvp("ix0", ix0) & make_nvp("iy0", iy0);
+            ar & make_nvp("x0", x0) & make_nvp("y0", y0);
+            ar & make_nvp("nbytes", nbytes);
+            if (Archive::is_loading::value) {
+                ImageBase<PixelT> tmp(width, height);
+                tmp._ix0 = ix0;
+                tmp._iy0 = iy0;
+                tmp._x0 = x0;
+                tmp._y0 = y0;
+                ar & make_nvp("img", boost::serialization::make_binary_object(
+                        tmp._gilView.row_begin(height - 1), nbytes));
+                using std::swap;
+                ImageBase<PixelT>::swap(tmp);
+            }
+            else {
+                ar & make_nvp("img", boost::serialization::make_binary_object(
+                        _gilView.row_begin(height - 1), nbytes));
+            }
+        };
     };
 
     template<typename PixelT>
@@ -385,5 +440,12 @@ namespace image {
     template<typename PixelT>
     void swap(DecoratedImage<PixelT>& a, DecoratedImage<PixelT>& b);
 }}}  // lsst::afw::image
+
+#ifndef SWIG
+BOOST_CLASS_EXPORT(lsst::afw::image::Image<float>);
+BOOST_CLASS_EXPORT(lsst::afw::image::Image<double>);
+BOOST_CLASS_EXPORT(lsst::afw::image::ImageBase<float>);
+BOOST_CLASS_EXPORT(lsst::afw::image::ImageBase<double>);
+#endif
 
 #endif

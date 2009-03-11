@@ -235,11 +235,23 @@ using boost::serialization::make_nvp;
             }
             const unsigned int nParams = this->getNKernelParameters();
             if (nParams != params.size()) {
-                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "Number of parameters is wrong");
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                                  (boost::format("Number of parameters is wrong, saw %d expected %d") %
+                                   nParams % params.size()).str());                                   
             }
             for (unsigned int ii = 0; ii < nParams; ++ii) {
                 this->setKernelParameter(ii, params[ii]);
             }
+        };
+        
+        /**
+         * @brief Set the kernel parameters of a 2-component spatially invariant kernel.
+         *
+         * @note no checking of the kernel;  use the std::vector<double> form if you want that
+         */
+        inline void setKernelParameters(std::pair<double, double> const& params) {
+            this->setKernelParameter(0, params.first);
+            this->setKernelParameter(1, params.second);
         };
         
         void setSpatialParameters(const std::vector<std::vector<double> > params);
@@ -560,6 +572,7 @@ using boost::serialization::make_nvp;
      */
     class SeparableKernel : public Kernel {
     public:
+        typedef boost::shared_ptr<SeparableKernel> Ptr;
         typedef boost::shared_ptr<SeparableKernel> PtrT;
         typedef lsst::afw::math::Function1<PixelT> KernelFunction;
         typedef lsst::afw::math::NullFunction1<PixelT> NullKernelFunction;

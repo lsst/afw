@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 """
-Tests for MaskedImages
+Tests for Masks
 
 Run with:
-   python MaskedImage_1.py
+   python Mask.py
 or
    python
-   >>> import MaskedImage_1; MaskedImage_1.run()
+   >>> import Mask; Mask.run()
 """
 
 import os

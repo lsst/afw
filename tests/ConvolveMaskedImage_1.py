@@ -28,7 +28,7 @@ try:
     Verbosity
 except NameError:
     Verbosity = 0                       # increase to see trace
-pexLog.Trace_setVerbosity("lsst.afw", Verbosity)
+pexLog.Debug("lsst.afw", Verbosity)
 
 try:
     display

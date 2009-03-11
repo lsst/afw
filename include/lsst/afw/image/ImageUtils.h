@@ -68,6 +68,19 @@ namespace image {
         residual = fullIndex - roundedIndex;
         return static_cast<int>(roundedIndex);
     }     
+    /**
+     * @brief Convert image position to index (nearest integer and fractional parts)
+     *
+     * @return std::pair(nearest integer index, fractional part)
+     */
+    inline std::pair<int, double> positionToIndex(double const pos,                ///< image position
+                                                  bool                             ///< ignored; just to disambiguate
+    ) {
+        double residual;                // fractional part of index
+        int const ind = positionToIndex(residual, pos); // integral part
+
+        return std::pair<int, double>(ind, residual);
+    }     
 
 }}} // lsst::afw::image
 

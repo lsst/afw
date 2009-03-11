@@ -25,12 +25,6 @@ bool extractOptionalFlag(
     std::string const & name
 );
 
-std::string const extractPolicyString(
-    lsst::pex::policy::Policy::Ptr const & policy,
-    std::string const & key,
-    std::string const & def
-);
-
 std::string const getItemName(
     lsst::daf::base::PropertySet::Ptr const & properties
 );

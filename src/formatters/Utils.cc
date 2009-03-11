@@ -139,26 +139,6 @@ bool extractOptionalFlag(
 
 
 /**
- * Extracts the string-valued parameter with the given name from the specified policy. If the provided
- * policy pointer is null or contains no such parameter, the given default string is returned instead.
- */
-std::string const extractPolicyString(
-    Policy::Ptr const & policy,
-    std::string const & key,
-    std::string const & def
-) {
-    if (policy) {
-        return policy->getString(key, def);
-    }
-    return def;
-}
-
-
-static char const * const sDefaultVisitNamePat      = "_tmp_visit%1%_";
-static char const * const sDefaultVisitSliceNamePat = "_tmp_visit%1%_slice%2%_";
-
-
-/**
  * Returns the name of the table that a single slice of a pipeline involved in the processing
  * of a single visit should use for persistence of a particular output. All slices can be
  * configured to use the same (per-visit) table name using policy parameters.
@@ -199,18 +179,10 @@ std::string const getVisitSliceTableName(
 
     if (isPerSliceTable) {
         int sliceId = extractSliceId(properties);
-        fmt.parse(extractPolicyString(
-            policy,
-            itemName + ".perSliceAndVisitTableNamePattern",
-            sDefaultVisitSliceNamePat + itemName
-        ));
+        fmt.parse(policy->getString(itemName + ".perSliceAndVisitTableNamePattern"));
         fmt % visitId % sliceId;
     } else {
-        fmt.parse(extractPolicyString(
-            policy,
-            itemName + ".perVisitTableNamePattern",
-            sDefaultVisitNamePat + itemName
-        ));
+        fmt.parse(policy->getString(itemName + ".perVisitTableNamePattern"));
         fmt % visitId;
     }
     return fmt.str();
@@ -259,11 +231,7 @@ void getAllVisitSliceTableNames(
             throw LSST_EXCEPT(ex::RuntimeErrorException,
                               itemName + " \".numSlices\" property value is non-positive");
         }
-        fmt.parse(extractPolicyString(
-            policy,
-            itemName + ".perSliceAndVisitTableNamePattern",
-            sDefaultVisitSliceNamePat + itemName
-        ));
+        fmt.parse(policy->getString(itemName + ".perSliceAndVisitTableNamePattern"));
         fmt.bind_arg(1, visitId);
         for (int i = 0; i < numSlices; ++i) {
             fmt % i;
@@ -271,11 +239,7 @@ void getAllVisitSliceTableNames(
             fmt.clear();
         }
     } else {
-        fmt.parse(extractPolicyString(
-            policy,
-            itemName + ".perVisitTableNamePattern",
-            sDefaultVisitNamePat + itemName
-        ));
+        fmt.parse(policy->getString(itemName + ".perVisitTableNamePattern"));
         fmt % visitId;
         names.push_back(fmt.str());
     }
@@ -298,7 +262,7 @@ void createVisitSliceTable(
 ) {
     std::string itemName(getItemName(properties));
     std::string name(getVisitSliceTableName(policy, properties));
-    std::string model = extractPolicyString(policy, itemName + ".templateTableName", "tmpl_" + itemName);
+    std::string model = policy->getString(itemName + ".templateTableName");
 
     lsst::daf::persistence::DbTsvStorage db;
     db.setPersistLocation(location);

@@ -42,8 +42,8 @@ void test(char *name) {
 
 //     pix[0] = testMasked.getCols() / 2.0;
 //     pix[1] = testMasked.getRows() / 2.0;
-    pix[0] = 500.0;
-    pix[1] = 1000.0;
+    pix[0] = 200;
+    pix[1] = 180;
 
     sky = testWcs.xyToRaDec(pix);
 

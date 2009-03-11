@@ -165,29 +165,8 @@ void ImageFormatter<ImagePixelT>::delegateSerialize(
     if (ip == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Serializing non-Image");
     }
-    int width, height;
-    if (Archive::is_saving::value) {
-        width = ip->getWidth();
-        height = ip->getHeight();
-    }
-    ar & make_nvp("width", width) & make_nvp("height", height);
-    std::size_t nbytes = width * height * sizeof(ImagePixelT);
-    if (Archive::is_loading::value) {
-        boost::scoped_ptr<Image<ImagePixelT> > ni(new Image<ImagePixelT>(width, height));
-        ImagePixelT * raw = boost::gil::interleaved_view_get_raw_data(view(*ni->_getRawImagePtr()));
-        ar & make_nvp("bytes",
-                      boost::serialization::make_binary_object(raw, nbytes));
-        ip->swap(*ni);
-    } else if (width == ip->_getRawImagePtr()->width() && height == ip->_getRawImagePtr()->height()) {
-        ImagePixelT * raw = boost::gil::interleaved_view_get_raw_data(view(*ip->_getRawImagePtr()));
-        ar & make_nvp("bytes",
-                      boost::serialization::make_binary_object(raw, nbytes));
-    } else {
-        typename Image<ImagePixelT>::_image_t img(width, height);
-        boost::gil::copy_pixels(ip->_getRawView(), flipped_up_down_view(view(img)));
-        ar & make_nvp("bytes",
-                      boost::serialization::make_binary_object(boost::gil::interleaved_view_get_raw_data(view(img)), nbytes));
-    }
+    ar & make_nvp("base", boost::serialization::base_object<
+        lsst::afw::image::ImageBase<ImagePixelT> >(*ip));
 }
 
 template <typename ImagePixelT>

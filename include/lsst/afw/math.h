@@ -11,5 +11,7 @@
 #include "lsst/afw/math/KernelFunctions.h"
 #include "lsst/afw/math/minimize.h"
 #include "lsst/afw/math/warpExposure.h"
+#include "lsst/afw/math/SpatialCell.h"
+#include "lsst/afw/math/offsetImage.h"
 
 #endif // LSST_AFW_MATH_H
