@@ -334,6 +334,27 @@ private:
 };
 
 /************************************************************************************************************/
+
+template<typename ImagePixelT, typename MaskPixelT>
+typename detection::DetectionSet<ImagePixelT, MaskPixelT>::Ptr makeDetectionSet(
+        image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
+        Threshold const& threshold,
+        std::string const& planeName = "",
+        int const npixMin=1) {
+    return typename detection::DetectionSet<ImagePixelT, MaskPixelT>::Ptr(new DetectionSet<ImagePixelT, MaskPixelT>(img, threshold, planeName, npixMin));
+}
+
+template<typename ImagePixelT, typename MaskPixelT>
+typename detection::DetectionSet<ImagePixelT, MaskPixelT>::Ptr makeDetectionSet(
+        image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
+        Threshold const& threshold,
+        int x,
+        int y,
+        std::vector<Peak> const* peaks = NULL) {
+    return typename detection::DetectionSet<ImagePixelT, MaskPixelT>::Ptr(new DetectionSet<ImagePixelT, MaskPixelT>(img, threshold, x, y, peaks));
+}
+
+/************************************************************************************************************/
 ///
 /// Although FootprintFunctor is pure virtual, this is needed by subclasses
 ///
