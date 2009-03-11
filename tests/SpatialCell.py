@@ -227,9 +227,3 @@ def run(exit=False):
 
 if __name__ == "__main__":
     run(True)
-else:
-    def dummy_assertRaisesLsstCpp(this, exception, test):
-        """Disable assertRaisesLsstCpp as at it fails when run from the python prompt; #656"""
-        print "Not running test %s" % test
-
-    utilsTests.assertRaisesLsstCpp = dummy_assertRaisesLsstCpp
