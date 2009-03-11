@@ -118,7 +118,7 @@ SpatialCellCandidateIterator::SpatialCellCandidateIterator(
         bool ignoreBad                      ///< Should we pass over bad Candidates?
                                                           )
     : _iterator(iterator), _end(end), _ignoreBad(ignoreBad) {
-    for (; _iterator != _end; ++iterator) {
+    for (; _iterator != _end; ++_iterator) {
         (*_iterator)->instantiate();
         
         if (!(_ignoreBad && (*_iterator)->isBad())) { // found a good candidate, or don't care
