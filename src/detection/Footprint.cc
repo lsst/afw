@@ -23,39 +23,32 @@ namespace image = lsst::afw::image;
 /**
  * Return a string-representation of a Span
  */
-std::string detection::Span::toString() {
+std::string detection::Span::toString() const {
     return (boost::format("%d: %d..%d") % _y % _x0 % _x1).str();
 }
 
-/**
+namespace {
+/*
  * Compare two Span%s by y, then x0, then x1
  *
- * A utility function passed to qsort
- * \note This should be replaced by functor so that we can use std::sort
+ * A utility functor passed to sort
  */
-int detection::Span::compareByYX(const void **a, const void **b) {
-    const detection::Span *sa = *reinterpret_cast<const detection::Span **>(a);
-    const detection::Span *sb = *reinterpret_cast<const detection::Span **>(b);
-
-    if (sa->_y < sb->_y) {
-	return -1;
-    } else if (sa->_y == sb->_y) {
-	if (sa->_x0 < sb->_x0) {
-	    return -1;
-	} else if (sa->_x0 == sb->_x0) {
-	    if (sa->_x1 < sb->_x1) {
-		return -1;
-	    } else if (sa->_x1 == sb->_x1) {
-		return 0;
-	    } else {
-		return 1;
-	    }
-	} else {
-	    return 1;
-	}
-    } else {
-	return 1;
-    }
+    struct compareSpanByYX : public std::binary_function<detection::Span::ConstPtr, detection::Span::ConstPtr, bool> {
+        int operator()(detection::Span::ConstPtr a, detection::Span::ConstPtr b) {
+            if (a->getY() < b->getY()) {
+                return true;
+            } else if (a->getY() == b->getY()) {
+                if (a->getX0() < b->getX0()) {
+                    return true;
+                } else if (a->getX0() == b->getX0()) {
+                    if (a->getX1() < b->getX1()) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+    };
 }
 
 /************************************************************************************************************/
@@ -143,6 +136,40 @@ detection::Footprint::~Footprint() {
  */
 void detection::Footprint::normalize() {
     if (!_normalized) {
+        assert(!_spans.empty());
+
+        //
+        // Check that the spans are sorted, and (more importantly) that each pixel appears
+        // in only one span
+        //
+        sort(_spans.begin(), _spans.end(), compareSpanByYX());
+
+        detection::Footprint::SpanList::iterator ptr = _spans.begin(), end = _spans.end();
+        
+        detection::Span *lspan = ptr->get();  // Left span
+        int y = (*ptr)->_y;
+        int x1 = (*ptr)->_x1;
+        ++ptr;
+
+        for (; ptr != end; ++ptr) {
+            detection::Span *rspan = ptr->get(); // Right span
+            if (rspan->_y == y) {
+                if (rspan->_x0 <= x1 + 1) { // Spans overlap or touch
+                    if (rspan->_x1 > x1) {  // right span extends left span
+                        lspan->_x1 = rspan->_x1;
+                    }
+                    
+                    ptr = _spans.erase(ptr); --end; // delete the right span
+                    x1 = lspan->_x1;
+                }
+            }
+
+            y = rspan->_y;
+            x1 = rspan->_x1;
+            
+            lspan = rspan;
+        }
+
 	//_peaks = psArraySort(fp->peaks, pmPeakSortBySN);
         setBBox();
 	_normalized = true;

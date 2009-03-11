@@ -28,6 +28,7 @@ namespace image = lsst::afw::image;
 class Span {
 public:
     typedef boost::shared_ptr<Span> Ptr;
+    typedef boost::shared_ptr<const Span> ConstPtr;
 
     Span(int y,                         //!< Row that Span's in
          int x0,                        //!< Starting column (inclusive)
@@ -35,16 +36,14 @@ public:
         : _y(y), _x0(x0), _x1(x1) {}
     ~Span() {}
 
-    int getX0() { return _x0; }         ///< Return the starting x-value
-    int getX1() { return _x1; }         ///< Return the ending x-value
-    int getWidth() { return _x1 - _x0 + 1; } ///< Return the number of pixels
-    int getY() { return _y; }                ///< Return the y-value
+    int getX0() const { return _x0; }         ///< Return the starting x-value
+    int getX1() const { return _x1; }         ///< Return the ending x-value
+    int getY()  const { return _y; }          ///< Return the y-value
+    int getWidth() const { return _x1 - _x0 + 1; } ///< Return the number of pixels
 
-    std::string toString();    
+    std::string toString() const;    
 
     void shift(int dx, int dy) { _x0 += dx; _x1 += dx; _y += dy; }
-
-    int compareByYX(const void **a, const void **b);
 
     friend class Footprint;
 private:
