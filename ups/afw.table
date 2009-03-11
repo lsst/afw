@@ -1,4 +1,4 @@
-setupRequired(daf_data >= 3.2.2)
+setupRequired(daf_data >= 3.2.3)
 setupRequired(cfitsio >= 3006.2)
 setupRequired(wcslib >= 4.2+3)
 setupRequired(xpa >= 2.1.7b2)
