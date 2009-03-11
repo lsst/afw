@@ -318,10 +318,8 @@ double math::Random::flat(double const a, double const b) {
 }
 
 /**
- * Returns a gaussian random variate with mean @a mu and standard deviation @a sigma.
+ * Returns a gaussian random variate with mean @a 0 and standard deviation @a 1
  *
- * @param[in] sigma the standard deviation of the gaussian distribution
- * @param[in] mu    the mean of the gaussian distribution
  * @return          a gaussian random variate
  *
  * @note    The implementation uses the
