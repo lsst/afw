@@ -199,6 +199,28 @@ class ImageTestCase(unittest.TestCase):
         self.assertEqual(img.get(x0 + 3, y0 + 1), self.val1)
         self.assertEqual(img.get(x0,     y0 + 2), self.val1)
 
+    def testOrigin(self):
+        """Check that we can set and read the origin"""
+
+        im = afwImage.ImageF(10, 20)
+        x0 = y0 = 0
+        
+        self.assertEqual(im.getX0(), x0)
+        self.assertEqual(im.getY0(), y0)
+        self.assertEqual(im.getXY0(), afwImage.PointI(x0, y0))
+
+        x0, y0 = 3, 5
+        im.setXY0(x0, y0)
+        self.assertEqual(im.getX0(), x0)
+        self.assertEqual(im.getY0(), y0)
+        self.assertEqual(im.getXY0(), afwImage.PointI(x0, y0))
+
+        x0, y0 = 30, 50
+        im.setXY0(afwImage.PointI(x0, y0))
+        self.assertEqual(im.getX0(), x0)
+        self.assertEqual(im.getY0(), y0)
+        self.assertEqual(im.getXY0(), afwImage.PointI(x0, y0))
+
     def testSubimages(self):
         simage1 = afwImage.ImageF(self.image1, afwImage.BBox(afwImage.PointI(1, 1), 10, 5))
         

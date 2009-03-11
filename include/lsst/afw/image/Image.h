@@ -178,8 +178,17 @@ namespace image {
          * The origin can be reset with \c setXY0
          */
         int getY0() const { return _y0; }
+
+        /**
+         * Return the %image's origin
+         *
+         * This will usually be (0, 0) except for images created using the <tt>ImageBase(ImageBase, BBox)</tt> cctor
+         * The origin can be reset with \c setXY0
+         */
+        PointI getXY0() const { return PointI(_x0, _y0); }
+        
         /// Return the %image's size;  useful for passing to constructors
-        const std::pair<int, int> getDimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
+        std::pair<int, int> getDimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
         
         void swap(ImageBase &rhs);
         //
@@ -214,6 +223,18 @@ namespace image {
         void setXY0(PointI const origin) {
             _x0 = origin.getX();
             _y0 = origin.getY();
+        }
+        /**
+         * Set the ImageBase's origin
+         *
+         * The origin is usually set by the constructor, so you shouldn't need this function
+         *
+         * \note There are use cases (e.g. memory overlays) that may want to set these values, but
+         * don't do so unless you are an Expert.
+         */
+        void setXY0(int const x0, int const y0) {
+            _x0 = x0;
+            _y0 = y0;
         }
 
     private:

@@ -701,6 +701,14 @@ namespace image {
          * The origin can be reset with setXY0()
          */
         int getY0() const { return _image->getY0(); }
+
+        /**
+         * Return the %image's origin
+         *
+         * This will usually be (0, 0) except for images created using the <tt>ImageBase(ImageBase, BBox)</tt> cctor
+         * The origin can be reset with \c setXY0
+         */
+        PointI getXY0() const { return _image->getXY0(); }
         //
         // Iterators and Locators
         //
@@ -734,6 +742,19 @@ namespace image {
             _image->setXY0(origin);
             _mask->setXY0(origin);
             _variance->setXY0(origin);
+        }
+        /**
+         * Set the MaskedImage's origin
+         *
+         * The origin is usually set by the constructor, so you shouldn't need this function
+         *
+         * \note There are use cases (e.g. memory overlays) that may want to set these values, but
+         * don't do so unless you are an Expert.
+         */
+        void setXY0(int const x0, int const y0) {
+            _image->setXY0(x0, y0);
+            _mask->setXY0(x0, y0);
+            _variance->setXY0(x0, y0);
         }
     private:
 
