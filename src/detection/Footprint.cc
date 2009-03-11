@@ -590,8 +590,6 @@ detection::Footprint::Ptr detection::growFootprint(
     *idImage = 0;
     idImage->setXY0(image::PointI(0, 0));
     set_footprint_id<int>(idImage, foot, 1, -bbox.getX0(), -bbox.getY0()); // Set all the pixels in the footprint to 1
-
-    image::Image<int>::Ptr idImage2;
     //
     // Set the idImage to the Manhattan distance from the nearest set pixel
     //
