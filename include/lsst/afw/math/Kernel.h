@@ -22,6 +22,7 @@
 #include "boost/serialization/vector.hpp"
 #include "boost/serialization/export.hpp"
 
+#include "lsst/pex/logging/Trace.h"
 #include "lsst/daf/base/Persistable.h"
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/afw/image/Image.h"
@@ -313,10 +314,12 @@ using boost::serialization::make_nvp;
         friend class boost::serialization::access;
         template <class Archive>
         void serialize(Archive& ar, unsigned int const version) {
+            lsst::pex::logging::TTrace<5>("afw.serialize", "KernelList");
             ar & make_nvp("list",
                           boost::serialization::base_object<
                               std::vector<typename _KernelT::PtrT>
                           >(*this));
+            lsst::pex::logging::TTrace<5>("afw.serialize", "KernelList end");
         };
 
     };
@@ -356,12 +359,17 @@ using boost::serialization::make_nvp;
     private:
         friend class boost::serialization::access;
         template <class Archive>
-            void serialize(Archive& ar, unsigned int const version) {
-                ar & make_nvp("k",
-                        boost::serialization::base_object<Kernel>(*this));
-                ar & make_nvp("img", _image);
-                ar & make_nvp("sum", _sum);
-            };
+        void serialize(Archive& ar, unsigned int const version) {
+            lsst::pex::logging::TTrace<5>("afw.serialize", "FixedKernel");
+            lsst::pex::logging::TTrace<6>("afw.serialize", "k");
+            ar & make_nvp("k",
+                          boost::serialization::base_object<Kernel>(*this));
+            lsst::pex::logging::TTrace<6>("afw.serialize", "img");
+            ar & make_nvp("img", _image);
+            lsst::pex::logging::TTrace<6>("afw.serialize", "sum");
+            ar & make_nvp("sum", _sum);
+            lsst::pex::logging::TTrace<5>("afw.serialize", "FixedKernel done");
+        };
     };
     
     
@@ -431,11 +439,15 @@ using boost::serialization::make_nvp;
     private:
         friend class boost::serialization::access;
         template <class Archive>
-            void serialize(Archive& ar, unsigned int const version) {
-                ar & make_nvp("k",
-                        boost::serialization::base_object<Kernel>(*this));
-                ar & make_nvp("fn", _kernelFunctionPtr);
-            };
+        void serialize(Archive& ar, unsigned int const version) {
+            lsst::pex::logging::TTrace<5>("afw.serialize", "AnalyticKernel");
+            lsst::pex::logging::TTrace<6>("afw.serialize", "k");
+            ar & make_nvp("k",
+                          boost::serialization::base_object<Kernel>(*this));
+            lsst::pex::logging::TTrace<6>("afw.serialize", "fn");
+            ar & make_nvp("fn", _kernelFunctionPtr);
+            lsst::pex::logging::TTrace<5>("afw.serialize", "AnalyticKernel end");
+        };
     };
     
     
@@ -474,10 +486,12 @@ using boost::serialization::make_nvp;
         friend class boost::serialization::access;
         template <class Archive>
         void serialize(Archive& ar, unsigned int const version) {
+            lsst::pex::logging::TTrace<5>("afw.serialize", "DeltaFunctionKernel");
             boost::serialization::void_cast_register<
                 DeltaFunctionKernel, Kernel>(
                     static_cast<DeltaFunctionKernel*>(0),
                     static_cast<Kernel*>(0));
+            lsst::pex::logging::TTrace<5>("afw.serialize", "DeltaFunctionKernel end");
         };
     };
 
@@ -547,13 +561,19 @@ using boost::serialization::make_nvp;
     private:
         friend class boost::serialization::access;
         template <class Archive>
-            void serialize(Archive& ar, unsigned int const version) {
-                ar & make_nvp("k",
-                        boost::serialization::base_object<Kernel>(*this));
-                ar & make_nvp("klist", _kernelList);
-                ar & make_nvp("kimglist", _kernelImagePtrList);
-                ar & make_nvp("params", _kernelParams);
-            };
+        void serialize(Archive& ar, unsigned int const version) {
+            lsst::pex::logging::TTrace<5>("afw.serialize", "LinearCombinationKernel");
+            lsst::pex::logging::TTrace<6>("afw.serialize", "k");
+            ar & make_nvp("k",
+                          boost::serialization::base_object<Kernel>(*this));
+            lsst::pex::logging::TTrace<6>("afw.serialize", "klist");
+            ar & make_nvp("klist", _kernelList);
+            lsst::pex::logging::TTrace<6>("afw.serialize", "kimglist");
+            ar & make_nvp("kimglist", _kernelImagePtrList);
+            lsst::pex::logging::TTrace<6>("afw.serialize", "params");
+            ar & make_nvp("params", _kernelParams);
+            lsst::pex::logging::TTrace<5>("afw.serialize", "LinearCombinationKernel end");
+        };
     };
 
     
@@ -632,13 +652,20 @@ using boost::serialization::make_nvp;
     private:
         friend class boost::serialization::access;
         template <class Archive>
-            void serialize(Archive& ar, unsigned int const version) {
-                ar & make_nvp("k",
-                    boost::serialization::base_object<Kernel>(*this));
-                ar & make_nvp("colfn", _kernelColFunctionPtr);
-                ar & make_nvp("rowfn", _kernelRowFunctionPtr);
-                ar & make_nvp("cols", _localColList);
-                ar & make_nvp("rows", _localRowList);
+        void serialize(Archive& ar, unsigned int const version) {
+            lsst::pex::logging::TTrace<5>("afw.serialize", "SeparableKernel");
+            lsst::pex::logging::TTrace<6>("afw.serialize", "k");
+            ar & make_nvp("k",
+                          boost::serialization::base_object<Kernel>(*this));
+            lsst::pex::logging::TTrace<6>("afw.serialize", "colfn");
+            ar & make_nvp("colfn", _kernelColFunctionPtr);
+            lsst::pex::logging::TTrace<6>("afw.serialize", "rowfn");
+            ar & make_nvp("rowfn", _kernelRowFunctionPtr);
+            lsst::pex::logging::TTrace<6>("afw.serialize", "cols");
+            ar & make_nvp("cols", _localColList);
+            lsst::pex::logging::TTrace<6>("afw.serialize", "rows");
+            ar & make_nvp("rows", _localRowList);
+            lsst::pex::logging::TTrace<5>("afw.serialize", "SeparableKernel end");
             };
     };
     
@@ -651,30 +678,43 @@ template <class Archive>
 inline void save_construct_data(
     Archive& ar, lsst::afw::math::DeltaFunctionKernel const* k,
     unsigned int const file_version) {
+    lsst::pex::logging::TTrace<5>("afw.serialize", "DeltaFunctionKernel scd");
     int width = k->getWidth();
     int height = k->getHeight();
     int x = k->getPixel().first;
     int y = k->getPixel().second;
+    lsst::pex::logging::TTrace<6>("afw.serialize", "width");
     ar << make_nvp("width", width);
+    lsst::pex::logging::TTrace<6>("afw.serialize", "height");
     ar << make_nvp("height", height);
+    lsst::pex::logging::TTrace<6>("afw.serialize", "pixX");
     ar << make_nvp("pixX", x);
+    lsst::pex::logging::TTrace<6>("afw.serialize", "pixY");
     ar << make_nvp("pixY", y);
+    lsst::pex::logging::TTrace<5>("afw.serialize", "DeltaFunctionKernel scd end");
 };
 
 template <class Archive>
 inline void load_construct_data(
     Archive& ar, lsst::afw::math::DeltaFunctionKernel* k,
     unsigned int const file_version) {
+    lsst::pex::logging::TTrace<5>("afw.serialize", "DeltaFunctionKernel lcd");
     int width;
     int height;
     int x;
     int y;
+    lsst::pex::logging::TTrace<6>("afw.serialize", "width");
     ar >> make_nvp("width", width);
+    lsst::pex::logging::TTrace<6>("afw.serialize", "height");
     ar >> make_nvp("height", height);
+    lsst::pex::logging::TTrace<6>("afw.serialize", "pixX");
     ar >> make_nvp("pixX", x);
+    lsst::pex::logging::TTrace<6>("afw.serialize", "pixY");
     ar >> make_nvp("pixY", y);
+    lsst::pex::logging::TTrace<6>("afw.serialize", "placement new");
     ::new(k) lsst::afw::math::DeltaFunctionKernel(
         width, height, lsst::afw::image::PointI(x, y));
+    lsst::pex::logging::TTrace<5>("afw.serialize", "DeltaFunctionKernel lcd end");
 };
 
 }}
