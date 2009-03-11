@@ -213,6 +213,16 @@ BOOST_AUTO_TEST_CASE(setValues) {
 
     BOOST_CHECK_EQUAL(*ptr, *ptr);
     BOOST_CHECK_EQUAL(*ptr, SinglePixel(ptr.image(), ptr.mask(), ptr.variance()));
+
+    img = ImageT::Pixel(111);
+    BOOST_CHECK_EQUAL((*img.getImage())(0,0), 111);
+    BOOST_CHECK_EQUAL((*img.getMask())(0,0), 0);
+    BOOST_CHECK_EQUAL((*img.getVariance())(0,0), 0);
+    
+    img = ImageT::Pixel(333, 0x666, 666);
+    BOOST_CHECK_EQUAL((*img.getImage())(0,0), 333);
+    BOOST_CHECK_EQUAL((*img.getMask())(0,0), 0x666);
+    BOOST_CHECK_EQUAL((*img.getVariance())(0,0), 666);
 }
 
 /************************************************************************************************************/
