@@ -227,6 +227,7 @@ public:
     
     FootprintList& getFootprints() { return _footprints; } //!< Retun the Footprint%s of detected objects
     FootprintList const& getFootprints() const { return _footprints; } //!< Retun the Footprint%s of detected objects
+    void setRegion(image::BBox const& region);
     image::BBox const& getRegion() const { return _region; } //!< Return the corners of the MaskedImage
 
 #if 0                                   // these are equivalent, but the former confuses swig
