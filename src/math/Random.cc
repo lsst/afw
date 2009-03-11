@@ -72,7 +72,7 @@ char const * const math::Random::_seedEnvVarName = "LSST_RNG_SEED";
  */
 void math::Random::initialize() {
     if (_seed == 0) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "Invalid RNG seed");
+        throw LSST_EXCEPT(ex::InvalidParameterException, (boost::format("Invalid RNG seed: %lu") % _seed).str());
     }
     ::gsl_rng * rng = ::gsl_rng_alloc(_gslRngTypes[_algorithm]);
     if (rng == 0) {
