@@ -651,6 +651,8 @@ namespace image {
         void setVarianceFromGain();     // was setDefaultVariance();
         
         // Operators
+        MaskedImage& operator=(Pixel const& rhs);
+
         void operator<<=(MaskedImage const& rhs);
 
         void operator+=(ImagePixelT const rhs);
