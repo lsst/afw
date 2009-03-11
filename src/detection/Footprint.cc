@@ -151,7 +151,7 @@ void detection::Footprint::normalize() {
         int x1 = (*ptr)->_x1;
         ++ptr;
 
-        for (; ptr != end; ++ptr) {
+        for (; ptr < end; ++ptr) {
             detection::Span *rspan = ptr->get(); // Right span
             if (rspan->_y == y) {
                 if (rspan->_x0 <= x1 + 1) { // Spans overlap or touch

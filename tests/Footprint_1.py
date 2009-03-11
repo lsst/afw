@@ -283,40 +283,40 @@ class FootprintTestCase(unittest.TestCase):
         #
         # Create a footprint;  note that these Spans overlap
         #
-        foot = afwDetection.Footprint(0, afwImage.BBox(afwImage.PointI(0, 0), w, h))
-        for y, x0, x1 in [(3, 3, 5), (3, 5, 7),
-                          (4, 2, 3), (4, 5, 7), (4, 8, 9),
-                          (5, 2, 3), (5, 5, 8), (5, 6, 7),
-                          (6, 3, 5), 
-                          ]:
-            foot.addSpan(y, x0, x1)
+        for spans in ([(3, 5, 6), (4, 7, 7), ],
+                      [(3, 3, 5), (3, 5, 7),
+                       (4, 2, 3), (4, 5, 7), (4, 8, 9),
+                       (5, 2, 3), (5, 5, 8), (5, 6, 7),
+                       (6, 3, 5), 
+                       ],
+                      ):
 
-            for x in range(x0, x1 + 1): # also insert into im
-                im.set(x, y, 1)
+            foot = afwDetection.Footprint(0, afwImage.BBox(afwImage.PointI(0, 0), w, h))
+            for y, x0, x1 in spans:
+                foot.addSpan(y, x0, x1)
 
-        idImage = afwImage.ImageU(foot.getRegion().getDimensions())
-        idImage.set(0)
+                for x in range(x0, x1 + 1): # also insert into im
+                    im.set(x, y, 1)
 
-        foot.insertIntoImage(idImage, 1)
-        if display:             # overlaping pixels will be > 1
-            ds9.mtv(idImage)
+            idImage = afwImage.ImageU(foot.getRegion().getDimensions())
+            idImage.set(0)
 
-        idImage -= im
+            foot.insertIntoImage(idImage, 1)
+            if display:             # overlaping pixels will be > 1
+                ds9.mtv(idImage)
+            #
+            # Normalise the Footprint, removing overlapping spans
+            #
+            foot.normalize();
 
-        self.assertEqual(afwMath.makeStatistics(idImage, afwMath.MAX).getValue(), 1) # some pixels are still set
-        #
-        # Normalise the Footprint, removing overlapping spans
-        #
-        foot.normalize();
+            idImage.set(0)
+            foot.insertIntoImage(idImage, 1)
+            if display:
+                ds9.mtv(idImage, frame=1)
 
-        idImage.set(0)
-        foot.insertIntoImage(idImage, 1)
-        if display:
-            ds9.mtv(idImage, frame=1)
+            idImage -= im
 
-        idImage -= im
-
-        self.assertEqual(afwMath.makeStatistics(idImage, afwMath.MAX).getValue(), 0)
+            self.assertEqual(afwMath.makeStatistics(idImage, afwMath.MAX).getValue(), 0)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
