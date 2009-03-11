@@ -117,7 +117,7 @@ class DiaSourceTestCase(unittest.TestCase):
             j += 1
 
     def testPersistence(self):
-        if dafPers.DbAuth.available():
+        if dafPers.DbAuth.available("lsst10.ncsa.uiuc.edu", "3306"):
             pol  = dafPolicy.Policy()
             pol.set("Formatter.PersistableDiaSourceVector.DiaSource.templateTableName", "DIASource")
             pol.set("Formatter.PersistableDiaSourceVector.DiaSource.perVisitTableNamePattern", "_tmp_visit%1%_DiaSource")

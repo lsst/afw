@@ -22,7 +22,7 @@ import lsst.afw.math as afwMath
 
 def checkRngEquivalence(rng1, rng2):
     for i in xrange(1000):
-        assert rng1.get() == rng2.get()
+        assert rng1.uniform() == rng2.uniform()
 
 def getSeed():
     return int(time.time() * 1000000.0) % 1000000
@@ -41,11 +41,10 @@ class RandomTestCase(unittest.TestCase):
         for name in afwMath.Random.getAlgorithmNames():
             rngs.append(afwMath.Random(name))
         for r in rngs:
-            assert r.getMin() < r.getMax()
-            assert afwMath.Random(r.getAlgorithmName()).get() == r.get()
+            assert afwMath.Random(r.getAlgorithmName()).uniform() == r.uniform()
             r2 = afwMath.Random(r.getAlgorithm())
-            r2.get()
-            assert r2.get() == r.get()
+            r2.uniform()
+            assert r2.uniform() == r.uniform()
 
     def testCopy(self):
         """
@@ -56,26 +55,18 @@ class RandomTestCase(unittest.TestCase):
         rng2 = rng1.deepCopy()
         checkRngEquivalence(rng1, rng2)
 
-    def testOverride(self):
+    def testPolicy(self):
         """
         Tests that policy files and environment variables can override
         user specified algorithms and seed values.
         """
         pol = pexPolicy.Policy()
-        emptyPol = pexPolicy.Policy()
         seed = getSeed()
         pol.set("rngSeed", str(seed))
         pol.set("rngAlgorithm", afwMath.Random.getAlgorithmNames()[afwMath.Random.RANLXD2])
-        if (os.environ.has_key("LSST_RNG_ALGORITHM") and os.environ.has_key("LSST_RNG_SEED")):
-            ref1 = afwMath.Random(os.environ["LSST_RNG_ALGORITHM"],
-                                  long(os.environ["LSST_RNG_SEED"]))
-        else:
-            ref1 = afwMath.Random(afwMath.Random.MT19937, 53)
-        ref2 = afwMath.Random(afwMath.Random.RANLXD2, seed)
-        r1 = afwMath.Random.create(emptyPol, afwMath.Random.MT19937, 53)
-        r2 = afwMath.Random.create(pol, afwMath.Random.MT19937, 53)
-        checkRngEquivalence(ref1, r1)
-        checkRngEquivalence(ref2, r2)
+        r1 = afwMath.Random(afwMath.Random.RANLXD2, seed)
+        r2 = afwMath.Random(pol)
+        checkRngEquivalence(r1, r2)
 
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

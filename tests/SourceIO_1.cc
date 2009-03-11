@@ -387,7 +387,7 @@ BOOST_AUTO_TEST_CASE(SourceEquality) {
 BOOST_AUTO_TEST_CASE(SourceIO) {
     try {
         testBoost();
-        if (lsst::daf::persistence::DbAuth::available()) {
+        if (lsst::daf::persistence::DbAuth::available("lsst10.ncsa.uiuc.edu", "3306")) {
             testDb("DbStorage");
             testDb("DbTsvStorage");
             testDb2("DbStorage");

@@ -372,7 +372,7 @@ BOOST_AUTO_TEST_CASE(DiaSourceEquality) {
 BOOST_AUTO_TEST_CASE(DiaSourceIO) {
     try {
         testBoost();
-        if (lsst::daf::persistence::DbAuth::available()) {
+        if (lsst::daf::persistence::DbAuth::available("lsst10.ncsa.uiuc.edu", "3306")) {
             BOOST_TEST_MESSAGE("Skipping DB tests");
             testDb("DbStorage");
             testDb("DbTsvStorage");

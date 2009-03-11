@@ -31,11 +31,8 @@ else:
     # copy AFWDATA_DIR to the test's environment
     env["ENV"]["AFWDATA_DIR"] = os.environ["AFWDATA_DIR"]
     
-    if lsst.daf.persistence.DbAuth.available():
-        if os.environ.has_key("LSST_DB_AUTH"):
-            env["ENV"]["LSST_DB_AUTH"] = os.environ["LSST_DB_AUTH"]
-    else:
-        print "WARNING: No fallback database authenticator seen"
+    if not lsst.daf.persistence.DbAuth.available("lsst10.ncsa.uiuc.edu", "3306"):
+        print "WARNING: No database authenticator seen"
         print "Database tests may be skipped or may fail"
 
     # set up arguments for C++ tests
