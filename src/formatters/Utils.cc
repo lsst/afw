@@ -62,7 +62,7 @@ int64_t extractExposureId(PropertySet::Ptr const & properties) {
     if ((exposureId & 0xfffffffe00000000LL) != 0LL) {
         throw LSST_EXCEPT(ex::RangeErrorException, "\"exposureId\" is too large");
     }
-    return exposureId << 1; // DC2 fix
+    return exposureId;
 }
 
 int extractCcdId(PropertySet::Ptr const & properties) {
@@ -79,12 +79,31 @@ int extractCcdId(PropertySet::Ptr const & properties) {
     return ccdId;
 }
 
+int extractAmpId(PropertySet::Ptr const & properties) {
+    if (properties->isArray("ampId")) {
+        throw LSST_EXCEPT(ex::RuntimeErrorException, "\"ampId\" property has multiple values");
+    }
+    int ampId = properties->getAsInt64("ampId");
+    if (ampId < 0) {
+        throw LSST_EXCEPT(ex::RangeErrorException, "negative \"ampId\"");
+    }
+    if (ampId > 63) {
+        throw LSST_EXCEPT(ex::RangeErrorException, "\"ampId\" is too large");
+    }
+    return (extractCcdId(properties) << 6) + ampId;
+}
+
 int64_t extractCcdExposureId(PropertySet::Ptr const & properties) {
     int64_t exposureId = extractExposureId(properties);
     int ccdId = extractCcdId(properties);
     return (exposureId << 8) + ccdId;
 }
 
+int64_t extractAmpExposureId(PropertySet::Ptr const & properties) {
+    int64_t exposureId = extractExposureId(properties);
+    int ampId = extractAmpId(properties);
+    return (exposureId << 14) + ampId;
+}
 
 /**
  * Extracts and returns the string-valued @c "itemName" property from the given data property object.
