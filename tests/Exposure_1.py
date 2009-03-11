@@ -37,7 +37,7 @@ currDir = os.path.abspath(os.path.dirname(__file__))
 inFilePath = os.path.join(dataDir, InputMaskedImageName)
 inFilePathSmall = os.path.join(dataDir, InputMaskedImageNameSmall)
 inFilePathSmallImage = os.path.join(dataDir, InputImageNameSmall)
-outFilePath = os.path.join(dataDir, OutputMaskedImageName)
+outFilePath = OutputMaskedImageName
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class ExposureTestCase(unittest.TestCase):
@@ -211,23 +211,7 @@ class ExposureTestCase(unittest.TestCase):
         utilsTests.assertRaisesLsstCpp(self, pexExcept.LengthErrorException, getSubRegion)
 
     def testReadWriteFits(self):
-         """
-
-         Test that the readFits member can read an Exposure given the
-         name of the Exposure.
-
-         The constructor taking a basename should read the Exposure's MaskedImage
-         using the MaskedImage class' constructor and read the WCS
-         metadata into a WCS object.  Currently the WCS class lacks
-         the capability to return the metadata to the user so a
-         readFits request should simply reset the _wcsPtr with the
-         metadata obtained frm the MaskedImage.  Exposure's readFits
-         only take a MaskedImage for now.  The MaskedImage class will
-         throw an exception if the MaskedImage can't be found.
-
-         The writeFits member is not yet fully implemented (as of Sep
-         19 2007) therefore this member should throw a
-         lsst::pex::exceptions::InvalidParameter.
+         """Test readFits and writeFits.
          """
          # This should pass without an exception
          exposure = afwImage.ExposureF(inFilePathSmall)
@@ -250,8 +234,10 @@ class ExposureTestCase(unittest.TestCase):
              
          utilsTests.assertRaisesLsstCpp(self, pexExcept.NotFoundException, getExposure)
 
-         # This should not throw an exception 
+         # Make sure we can write without an exception
          exposure.writeFits(outFilePath)
+         for compName in ("img", "msk", "var"):
+            os.remove("%s_%s.fits" % (outFilePath, compName))
          
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
