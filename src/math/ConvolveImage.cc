@@ -259,15 +259,13 @@ void afwMath::basicConvolve(
     } else {
         lsst::pex::logging::TTrace<3>("lsst.afw.kernel.convolve", "kernel is spatially invariant");
         (void)kernel.computeImage(kernelImage, doNormalize);
-
-// This code is an attempted variant that performs all work on one row of the input image
-// before moving on to the next. It turns out to be no faster. It could use some minor refinements;
-// but I see no point since it is no faster and slightly more complicated.
-        convolvedImage *= 0;
-        for (int inY = 0; inY < inImageHeight; ++inY) {
-            for (int kernelY = 0, cnvY = inY + cnvStartY; kernelY < kHeight; ++kernelY, --cnvY) {
-                if ((cnvY < cnvStartY) || (cnvY >= cnvEndY)) continue;
-                
+        
+        for (int inStartY = 0, cnvY = cnvStartY; inStartY < cnvHeight; ++inStartY, ++cnvY) {
+            for (OutXIterator cnvXIter=convolvedImage.x_at(cnvStartX, cnvY),
+                cnvXEnd = convolvedImage.row_end(cnvY); cnvXIter != cnvXEnd; ++cnvXIter) {
+                *cnvXIter = 0;
+            }
+            for (int kernelY = 0, inY = inStartY; kernelY < kHeight; ++inY, ++kernelY) {
                 KernelXIterator kernelXIter = kernelImage.x_at(0, kernelY);
                 InXYIterator inXIter = inImage.x_at(0, inY);
                 OutXIterator cnvXIter = convolvedImage.x_at(cnvStartX, cnvY);
@@ -277,21 +275,6 @@ void afwMath::basicConvolve(
                 }
             }
         }
-        
-//         for (int inStartY = 0, cnvY = cnvStartY; inStartY < cnvHeight; ++inStartY, ++cnvY) {
-//             for (int kernelY = 0, inY = inStartY; kernelY < kHeight; ++inY, ++kernelY) {
-//                 KernelXIterator kernelXIter = kernelImage.x_at(0, kernelY);
-//                 InXYIterator inXIter = inImage.x_at(0, inY);
-//                 OutXIterator cnvXIter = convolvedImage.x_at(cnvStartX, cnvY);
-//                 if (kernelY == 0) {
-//                     *cnvXIter = 0;
-//                 }
-//                 for (int x = 0; x < cnvWidth; ++x, ++cnvXIter, ++inXIter) {
-//                     // template parameters must be explicitly specified, at least for g++ 4.0.1
-//                     convolveOneKernelRow<OutImageT, InImageT>(cnvXIter, inXIter, kernelXIter, kWidth);
-//                 }
-//             }
-//         }
     }
 }
 
