@@ -21,12 +21,12 @@
 #include "lsst/daf/base.h"
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/formatters/ImageFormatter.h"
 
 namespace lsst { namespace afw {
 
 namespace formatters {
     template <typename PixelT> class ImageFormatter;
+    template <typename PixelT> class DecoratedImageFormatter;
 }
 
 namespace image {
@@ -397,6 +397,7 @@ namespace image {
         /// Set the DecoratedImage's gain
         void setGain(double gain) { _gain = gain; }
     private:
+        LSST_PERSIST_FORMATTER(lsst::afw::formatters::DecoratedImageFormatter<PixelT>);
         typename Image<PixelT>::Ptr _image;
         double _gain;
 
