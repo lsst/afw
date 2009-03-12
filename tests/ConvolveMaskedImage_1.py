@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 """Test lsst.afwMath.convolve
 
@@ -238,6 +238,35 @@ class ConvolveTestCase(unittest.TestCase):
             self.assert_(sameMaskPlaneDicts(cnvMaskedImage, self.maskedImage),
                 "Convolved mask dictionary does not match input for doNormalize=%s" % doNormalize)
 
+    def testSeparableConvolve(self):
+        """Test convolve of a separable kernel with a spatially invariant Gaussian function
+        """
+        kCols = 7
+        kRows = 6
+        edgeBit = self.edgeBit
+
+        gaussFunc1 = afwMath.GaussianFunction1D(1.0)
+        gaussFunc2 = afwMath.GaussianFunction2D(1.0, 1.0)
+        separableKernel = afwMath.SeparableKernel(kCols, kRows, gaussFunc1, gaussFunc1)
+        analyticKernel = afwMath.AnalyticKernel(kCols, kRows, gaussFunc2)
+                
+        cnvMaskedImage = afwImage.MaskedImageF(self.maskedImage.getDimensions())
+        for doNormalize in (False, True):
+            afwMath.convolve(cnvMaskedImage, self.maskedImage, separableKernel, doNormalize, edgeBit)
+            cnvImage, cnvMask, cnvVariance = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
+
+            imMaskVar = imTestUtils.arraysFromMaskedImage(self.maskedImage)
+            refCnvImage, refCnvMask, refCnvVariance = refConvolve(imMaskVar, analyticKernel, doNormalize, edgeBit)
+
+            if not numpy.allclose(cnvImage, refCnvImage):
+                self.fail("Convolved image does not match reference for doNormalize=%s" % doNormalize)
+            if not numpy.allclose(cnvVariance, refCnvVariance):
+                self.fail("Convolved variance does not match reference for doNormalize=%s" % doNormalize)
+            if not numpy.allclose(cnvMask, refCnvMask):
+                self.fail("Convolved mask does not match reference for doNormalize=%s" % doNormalize)
+            self.assert_(sameMaskPlaneDicts(cnvMaskedImage, self.maskedImage),
+                "Convolved mask dictionary does not match input for doNormalize=%s" % doNormalize)
+
     def testSpatiallyInvariantConvolve(self):
         """Test convolution with a spatially invariant Gaussian function
         """
@@ -280,7 +309,7 @@ class ConvolveTestCase(unittest.TestCase):
         kRows = 6
         edgeBit = self.edgeBit
 
-        # create spatially varying linear combination kernel
+        # create spatial model
         sFunc = afwMath.PolynomialFunction2D(1)
         
         # spatial parameters are a list of entries, one per kernel parameter;
@@ -318,7 +347,7 @@ class ConvolveTestCase(unittest.TestCase):
         kRows = 6
         edgeBit = self.edgeBit
 
-        # create spatially varying linear combination kernel
+        # create spatial model
         sFunc = afwMath.PolynomialFunction2D(1)
         
         # spatial parameters are a list of entries, one per kernel parameter;
@@ -407,7 +436,7 @@ class ConvolveTestCase(unittest.TestCase):
         edgeBit = self.edgeBit
         doNormalize = False             # must be false because convolveLinear cannot normalize
 
-        # create spatially varying linear combination kernel
+        # create spatial model
         sFunc = afwMath.PolynomialFunction2D(1)
         
         # spatial parameters are a list of entries, one per kernel parameter;

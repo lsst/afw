@@ -26,7 +26,7 @@ import lsst.afw.image.testUtils as imTestUtils
 try:
     Verbosity
 except NameError:
-    Verbosity = 3 # increase to see trace
+    Verbosity = 0 # increase to see trace
 pexLog.Debug("lsst.afw", Verbosity)
 
 try:
@@ -209,7 +209,7 @@ class ConvolveTestCase(unittest.TestCase):
         kCols = 7
         kRows = 6
 
-        # create spatially varying linear combination kernel
+        # create spatially model
         sFunc = afwMath.PolynomialFunction2D(1)
         
         # spatial parameters are a list of entries, one per kernel parameter;
@@ -234,13 +234,39 @@ class ConvolveTestCase(unittest.TestCase):
             if not numpy.allclose(cnvImageArr, refCnvImageArr):
                 self.fail("Convolved image does not match reference for doNormalize=%s" % doNormalize)
 
+    def testSeparableConvolve(self):
+        """Test convolve of a separable kernel with a spatially invariant Gaussian function
+        """
+        kCols = 7
+        kRows = 6
+
+        gaussFunc1 = afwMath.GaussianFunction1D(1.0)
+        gaussFunc2 = afwMath.GaussianFunction2D(1.0, 1.0)
+        separableKernel = afwMath.SeparableKernel(kCols, kRows, gaussFunc1, gaussFunc1)
+        analyticKernel = afwMath.AnalyticKernel(kCols, kRows, gaussFunc2)
+                
+        cnvImage = afwImage.ImageF(self.inImage.getDimensions())
+        for doNormalize in (False, True):
+            afwMath.convolve(cnvImage, self.inImage, separableKernel, doNormalize)
+
+            cnvImageArr = imTestUtils.arrayFromImage(cnvImage)
+    
+            inImageArr = imTestUtils.arrayFromImage(self.inImage)
+            refCnvImageArr = refConvolve(inImageArr, analyticKernel, doNormalize)
+
+            if not numpy.allclose(cnvImageArr, refCnvImageArr):
+                cnvImage.writeFits("sepcnv.fits")
+                refCnvImage = imTestUtils.imageFromArray(refCnvImageArr)
+                refCnvImage.writeFits("refsepcnv.fits")
+                self.fail("Convolved image does not match reference for doNormalize=%s" % doNormalize)
+
     def testSpatiallyVaryingSeparableConvolve(self):
         """Test convolve of a separable kernel with a spatially varying Gaussian function
         """
         kCols = 7
         kRows = 6
 
-        # create spatially varying linear combination kernel
+        # create spatially model
         sFunc = afwMath.PolynomialFunction2D(1)
         
         # spatial parameters are a list of entries, one per kernel parameter;
@@ -301,7 +327,7 @@ class ConvolveTestCase(unittest.TestCase):
         kRows = 5
         doNormalize = False # must be false because convolveLinear cannot normalize
 
-        # create spatially varying linear combination kernel
+        # create spatially model
         sFunc = afwMath.PolynomialFunction2D(1)
         
         # spatial parameters are a list of entries, one per kernel parameter;
@@ -348,7 +374,7 @@ class ConvolveTestCase(unittest.TestCase):
         kRows = 2
         doNormalize = False # must be false because convolveLinear cannot normalize
 
-        # create spatially varying linear combination kernel
+        # create spatially model
         sFunc = afwMath.PolynomialFunction2D(1)
         
         # spatial parameters are a list of entries, one per kernel parameter;
@@ -396,7 +422,7 @@ class ConvolveTestCase(unittest.TestCase):
         kRows = 5
         doNormalize = False # must be false because convolveLinear cannot normalize
 
-        # create spatially varying linear combination kernel
+        # create spatially model
         sFunc = afwMath.PolynomialFunction2D(1)
         
         # spatial parameters are a list of entries, one per kernel parameter;
