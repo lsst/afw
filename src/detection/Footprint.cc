@@ -19,7 +19,39 @@ namespace math = lsst::afw::math;
 namespace detection = lsst::afw::detection;
 namespace image = lsst::afw::image;
 
-/************************************************************************************************************/
+/******************************************************************************/
+/**
+ * \brief Factory method for creating Threshold objects
+ * \param value value of threshold
+ * \param typeStr string representation of a ThresholdType. This parameter is 
+ *        optional. Allowed values are:
+ *        "variance", "value", "stdev"
+ * \param polarity If true detect positive objects, false for negative
+ * \return Threshold object
+ */
+detection::Threshold detection::createThreshold(
+    const float value,
+    const std::string typeStr,
+    const bool polarity
+) {
+
+    Threshold::ThresholdType thresholdType;
+    if (typeStr.compare("value") == 0) {
+        thresholdType = Threshold::VALUE;           
+    } else if (typeStr.compare("stdev") == 0) {
+        thresholdType = Threshold::STDEV;
+    } else if (typeStr.compare("variance") == 0) {
+        thresholdType = Threshold::VARIANCE;
+    } else {
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+            (boost::format("Unsopported Threshold type: %s") % typeStr).str());
+    }    
+
+    return Threshold(value, thresholdType, polarity);
+}
+
+
+/******************************************************************************/
 /**
  * Return a string-representation of a Span
  */

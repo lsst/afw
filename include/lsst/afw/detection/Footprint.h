@@ -11,6 +11,7 @@
 #include <cmath>
 #include <boost/cstdint.hpp>
 #include <boost/shared_ptr.hpp>
+#include "lsst/pex/policy/Policy.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/detection/Peak.h"
 
@@ -109,6 +110,10 @@ private:
     bool _polarity;                     //!< true for positive polarity, false for negative
 };
 
+// brief Factory method for creating Threshold objects
+Threshold createThreshold(const float value,
+                          const std::string type = "value",
+                          const bool polarity = true);
 /************************************************************************************************************/
 /*!
  * \brief A set of pixels in an Image

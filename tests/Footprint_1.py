@@ -41,6 +41,48 @@ def toString(*args):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+class ThresholdTestCase(unittest.TestCase):
+    def testTresholdFactory(self):
+        """
+        Test the creation of a Threshold object
+
+        This is a white-box test.
+        -tests missing parameters
+        -tests mal-formed parameters
+        """
+        try:
+            afwDetection.createThreshold(3.4)
+        except:
+            self.fail("Failed to build Threshold with proper parameters")
+        
+        try:
+            afwDetection.createThreshold(3.4, "foo bar")
+        except:
+            pass
+        else:
+            self.fail("Threhold parameters not properly validated")
+
+        try:
+            afwDetection.createThreshold(3.4, "variance")
+        except:
+            self.fail("Failed to build Threshold with proper parameters")
+
+        try:
+            afwDetection.createThreshold(3.4, "stdev")
+        except:
+            self.fail("Failed to build Threshold with proper parameters")
+
+        try:
+            afwDetection.createThreshold(3.4, "value")
+        except:
+            self.fail("Failed to build Threshold with proper parameters")
+        
+        try:
+            afwDetection.createThreshold(3.4, "value", False)
+        except:
+            self.fail("Failed to build Threshold with proper parameters")
+        
+
 class FootprintTestCase(unittest.TestCase):
     """A test case for Footprint"""
     def setUp(self):
@@ -459,6 +501,7 @@ def suite():
     tests.init()
 
     suites = []
+    suites += unittest.makeSuite(ThresholdTestCase)
     suites += unittest.makeSuite(FootprintTestCase)
     suites += unittest.makeSuite(DetectionSetTestCase)
     suites += unittest.makeSuite(tests.MemoryTestCase)
