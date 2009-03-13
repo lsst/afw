@@ -30,7 +30,6 @@ if not dataDir:
 
 OriginalExposureName = "med"
 OriginalExposurePath = os.path.join(dataDir, OriginalExposureName)
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class WarpExposureTestCase(unittest.TestCase):
     """Test case for warpExposure
@@ -55,6 +54,33 @@ class WarpExposureTestCase(unittest.TestCase):
         if badPlanes:
             badPlanesStr = str(badPlanes)[1:-1]
             self.fail("afw warped %s do/does not match swarped image (ignoring bad pixels)" % (badPlanesStr,))
+
+    def testNullWcs(self):
+        """Cannot warp from or into an exposure without a Wcs"""
+        exposureWithWcs = afwImage.ExposureF(OriginalExposurePath)
+        mi = exposureWithWcs.getMaskedImage()
+        exposureWithoutWcs = afwImage.ExposureF(mi.getWidth(), mi.getHeight())
+        warpingKernel = afwMath.BilinearWarpingKernel()
+        try:
+            afwMath.warpExposure(exposureWithWcs, exposureWithoutWcs, warpingKernel)
+            self.fail("warping from a source Exception with no Wcs should fail")
+        except Exception:
+            pass
+        try:
+            afwMath.warpExposure(exposureWithoutWcs, exposureWithWcs, warpingKernel)
+            self.fail("warping into a destination Exception with no Wcs should fail")
+        except Exception:
+            pass
+    
+    def testWarpIntoSelf(self):
+        """Cannot warp in place"""
+        originalExposure = afwImage.ExposureF(100, 100)
+        warpingKernel = afwMath.BilinearWarpingKernel()
+        try:
+            afwMath.warpExposure(originalExposure, originalExposure, warpingKernel)
+            self.fail("warping in place (dest is src) should fail")
+        except Exception:
+            pass
 
     def DISABLEDtestMatchSwarpBilinear(self):
         """Test that warpExposure matches swarp using a bilinear warping kernel

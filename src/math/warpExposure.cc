@@ -21,11 +21,25 @@
 #include <boost/regex.hpp>
 
 #include "lsst/pex/logging/Trace.h" 
+#include "lsst/pex/exceptions.h"
 #include "lsst/afw/image.h"
 #include "lsst/afw/math.h"
 
 namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
+namespace pexExcept = lsst::pex::exceptions;
+
+namespace {
+    template <typename A, typename B>
+    bool isSameObject(A const& a, B const& b) {
+        return false;
+    }
+    
+    template <typename A>
+    bool isSameObject(A const& a, A const& b) {
+        return &a == &b;
+    }
+}
 
 /**
 * \brief Solve bilinear equation; the only permitted arguments are 0 or 1
@@ -116,14 +130,13 @@ boost::shared_ptr<lsst::afw::math::SeparableKernel> lsst::afw::math::makeWarping
  *   This is because the kernel is used to map from a range of pixel positions from
  *   centered on on (width/2, height/2) to nearly centered on (1 + width/2, 1 + height/2).
  *
- * TODO 20071129 Nicole M. Silvestri; By DC3:
- * * Need to synchronize warpExposure to the UML model robustness/sequence diagrams.
- *   Remove from the Exposure Class in the diagrams.
+ * \raise lsst::pex::exceptions::InvalidParameterException if destExposure is srcExposure
+ * \raise lsst::pex::exceptions::InvalidParameterException if destExposure or srcExposure has no Wcs
  *
- * * Should support an additional color-based position correction in the remapping (differential chromatic
+ * \todo Should support an additional color-based position correction in the remapping (differential chromatic
  *   refraction). This can be done either object-by-object or pixel-by-pixel.
  *
- * * Need to deal with oversampling and/or weight maps. If done we can use faster kernels than sinc.
+ * \todo Need to deal with oversampling and/or weight maps. If done we can use faster kernels than sinc.
  */
 template<typename DestExposureT, typename SrcExposureT>
 int afwMath::warpExposure(
@@ -132,6 +145,9 @@ int afwMath::warpExposure(
     SeparableKernel &warpingKernel      ///< warping kernel; determines warping algorithm
     )
 {
+    if (isSameObject(destExposure, srcExposure)) {
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "destExposure is srcExposure; cannot warp in place");
+    }
     int numGoodPixels = 0;
 
     typedef typename DestExposureT::MaskedImageT DestMaskedImageT;
@@ -148,12 +164,19 @@ int afwMath::warpExposure(
     SrcMaskedImageT srcMI = srcExposure.getMaskedImage();
     const int srcWidth = srcMI.getWidth();
     const int srcHeight = srcMI.getHeight();
+    if (!srcExposure.hasWcs()) {
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "srcExposure has no Wcs");
+    }
     typename afwImage::Wcs::Ptr srcWcsPtr = srcExposure.getWcs();
+
     lsst::pex::logging::TTrace<3>("lsst.afw.math.warp",
         "source image width=%d; height=%d", srcWidth, srcHeight);
 
     // Get the remapped MaskedImage and the remapped wcs.
     DestMaskedImageT destMI = destExposure.getMaskedImage();
+    if (!destExposure.hasWcs()) {
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "destExposure has no Wcs");
+    }
     typename afwImage::Wcs::Ptr destWcsPtr = destExposure.getWcs();
     
     // Make a pixel mask from the EDGE bit, if available (0 if not available)
