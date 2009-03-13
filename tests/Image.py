@@ -410,6 +410,18 @@ class DecoratedImageTestCase(unittest.TestCase):
             for k in meta.keys():
                 self.assertEqual(rimage.getMetadata().getAsDouble(k), meta[k])
 
+    def testReadMetadata(self):
+        if self.fileForMetadata:
+            im = afwImage.DecoratedImageF(self.fileForMetadata)
+        else:
+            print >> sys.stderr, "Warning: afwdata is not set up; not running the FITS metadata I/O tests"
+            return
+
+        meta = afwImage.readMetadata(self.fileForMetadata)
+        self.assertTrue("NAXIS1" in meta.names())
+        self.assertEqual(im.getWidth(), meta.get("NAXIS1"))
+        self.assertEqual(im.getHeight(), meta.get("NAXIS2"))
+        
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def printImg(img):
