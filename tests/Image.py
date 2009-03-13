@@ -181,13 +181,51 @@ class ImageTestCase(unittest.TestCase):
 
         bbox.setX0(x0 - 1) 
         self.assertEqual(bbox.getX0(), x0 - 1)
+        self.assertEqual(bbox.getX1(), x1)
         bbox.setX1(x1 + 1) 
         self.assertEqual(bbox.getX1(), x1 + 1)
 
         bbox.setY0(y0 - 1) 
         self.assertEqual(bbox.getY0(), y0 - 1)
+        self.assertEqual(bbox.getY1(), y1)
         bbox.setY1(y1 + 1) 
         self.assertEqual(bbox.getY1(), y1 + 1)
+        #
+        # Test clipping a BBox
+        #
+        bbox = afwImage.BBox(llc, width, height)
+        cbox = afwImage.BBox(llc, width - 1, height - 1)
+
+        bbox2 = bbox.clip(cbox)
+
+        self.assertEqual(bbox.getX0(), x0)
+        self.assertEqual(bbox.getY0(), y0)
+        self.assertEqual(bbox.getX1(), x1 - 1)
+        self.assertEqual(bbox.getY1(), y1 - 1)
+        self.assertEqual(bbox.getWidth(), width - 1)
+        self.assertEqual(bbox.getHeight(), height - 1)
+
+        bbox = afwImage.BBox(llc, width, height)
+        cbox = afwImage.BBox(afwImage.PointI(x0 + 1, y0 + 2), width + 10, height + 10)
+        bbox2 = bbox.clip(cbox)
+
+        self.assertEqual(bbox.getX0(), x0 + 1)
+        self.assertEqual(bbox.getY0(), y0 + 2)
+        self.assertEqual(bbox.getX1(), x1)
+        self.assertEqual(bbox.getY1(), y1)
+        self.assertEqual(bbox.getWidth(), width - 1)
+        self.assertEqual(bbox.getHeight(), height - 2)
+
+        bbox = afwImage.BBox(llc, width, height)
+        cbox = afwImage.BBox(afwImage.PointI(x0 - 1, y0 - 2), width + 10, height + 20)
+        bbox2 = bbox.clip(cbox)
+
+        self.assertEqual(bbox.getX0(), x0)
+        self.assertEqual(bbox.getY0(), y0)
+        self.assertEqual(bbox.getX1(), x1)
+        self.assertEqual(bbox.getY1(), y1)
+        self.assertEqual(bbox.getWidth(), width)
+        self.assertEqual(bbox.getHeight(), height)
 
     def checkImgPatch(self, img, x0=0, y0=0):
         """Check that a patch of an image is correct; origin of patch is at (x0, y0)"""

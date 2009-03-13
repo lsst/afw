@@ -138,9 +138,17 @@ namespace lsst { namespace afw { namespace image {
             }
 
         int getX0() const { return first.getX(); } ///< Return x coordinate of lower-left corner
-        void setX0(int x0) { first.setX(x0); }     ///< Set x coordinate of lower-left corner
+        /// Set x coordinate of lower-left corner
+        void setX0(int x0) {
+            second.first += (first.getX() - x0);
+            first.setX(x0);
+        }
         int getY0() const { return first.getY(); } ///< Return y coordinate of lower-left corner
-        void setY0(int y0) { first.setY(y0); }     ///< Set y coordinate of lower-left corner
+        /// Set y coordinate of lower-left corner
+        void setY0(int y0) {
+            second.second += (first.getY() - y0);
+            first.setY(y0);
+        }
         int getX1() const { return first.getX() + second.first - 1; } ///< Return x coordinate of upper-right corner
         void setX1(int x1) { second.first = x1 - getX0() + 1; } ///< Set x coordinate of lower-left corner
         int getY1() const { return first.getY() + second.second - 1; } ///< Return y coordinate of upper-right corner
@@ -150,6 +158,15 @@ namespace lsst { namespace afw { namespace image {
         int getWidth() const { return second.first; } ///< Return width of BBox (== <tt>X1 - X0 + 1</tt>)
         int getHeight() const { return second.second; } ///< Return height of BBox (== <tt>Y1 - Y0 + 1</tt>)
         const std::pair<int, int> getDimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
+
+        /// Clip this with rhs
+        void clip(BBox const&rhs) {
+            if (rhs.getX1() < getX1()) { setX1(rhs.getX1()); } // do the width, which is set from (x0, y0), first
+            if (rhs.getY1() < getY1()) { setY1(rhs.getY1()); }
+
+            if (rhs.getX0() > getX0()) { setX0(rhs.getX0()); }
+            if (rhs.getY0() > getY0()) { setY0(rhs.getY0()); }
+        }
 
         operator bool() const {
             return !(getWidth() == 0 && getHeight() == 0);
