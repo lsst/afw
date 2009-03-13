@@ -68,6 +68,14 @@ class MaskedImageTestCase(unittest.TestCase):
         
         self.assertEqual(self.mimage.getVariance().get(0,0), self.varVal1)
     
+    def testMaskedImageFromImage(self):
+        w, h = 10, 20
+        im, mask, var = afwImage.ImageF(w, h), afwImage.MaskU(w, h), afwImage.ImageF(w, h)
+
+        maskedImage = afwImage.MaskedImageF(im, mask, var)
+
+        maskedImage = afwImage.makeMaskedImage(im, mask, var)
+
     def testAddImages(self):
         "Test addition"
         # add an image
