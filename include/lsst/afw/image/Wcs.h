@@ -54,6 +54,8 @@ namespace image {
         /// Return true iff Wcs is valid
         operator bool() const { return _wcsInfo != NULL; }
 
+        bool isFlipped();
+
         void shiftReferencePixel(double const dx, double const dy);
 
         lsst::afw::image::PointD getOriginRaDec() const;

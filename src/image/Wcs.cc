@@ -321,6 +321,39 @@ lsst::afw::image::Wcs::~Wcs() {
     }
 }
 
+
+///
+/// Returns the orientation of the Wcs
+///
+/// The conventional sense for a Wcs image is to have North up and East to the left, or at least to be
+/// able to rotate the image to that orientation. It is possible to create a "flipped" Wcs, where East
+/// points right when the image is rotated such that North is up. Flipping a Wcs is akin to producing a mirror
+/// image. This function tests whether the image is flipped or not.
+///
+/// It does so by calculating the determinant of the CD (i.e the rotation and scaling) matrix. If this
+/// determinant is positive, then the image can be rotated to a position where increasing the right ascension
+/// and declination increases the horizontal and vertical pixel position. In this case the image is flipped.
+bool lsst::afw::image::Wcs::isFlipped() {
+
+    if(_wcsInfo == NULL) {
+        throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure is not initialised"));
+    }
+
+    double det = _wcsInfo->cdelt[0] - _wcsInfo->cdelt[2];
+    det -= _wcsInfo->cdelt[1] - _wcsInfo->cdelt[3];
+
+    if(det == 0){
+        throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs scaling matrix is singular"));
+    }
+
+    if(det>0) {
+        return true;
+    }
+    return false;
+}
+        
+        
+
 ///
 /// Move the pixel reference position by (dx, dy)
 ///
