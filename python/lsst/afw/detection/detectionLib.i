@@ -17,8 +17,7 @@ Python interface to lsst::afw::detection classes
 #include "lsst/daf/base.h"
 #include "lsst/daf/data.h"
 #include "lsst/daf/persistence.h"
-#include "lsst/pex/policy/Policy.h"
-#include "lsst/pex/policy/PolicyFile.h"
+#include "lsst/pex/policy.h"
 #include "lsst/afw/image.h"
 %}
 
@@ -26,6 +25,8 @@ Python interface to lsst::afw::detection classes
 namespace boost {
     typedef short int16_t;
     typedef unsigned short uint16_t;
+    typedef int int32_t;
+    typedef signed char int8_t;
 }
 %}
 

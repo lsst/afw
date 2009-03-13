@@ -38,72 +38,105 @@ static void execTrace(std::string s, int level = EXEC_TRACE) {
     lsst::pex::logging::Trace("afw.WcsFormatter", level, s);
 }
 
-using lsst::daf::base::Persistable;
-using lsst::daf::persistence::BoostStorage;
-using lsst::daf::persistence::Storage;
-using lsst::afw::image::Wcs;
 
-namespace lsst {
-namespace afw {
-namespace formatters {
+namespace afwForm = lsst::afw::formatters;
+namespace afwImg = lsst::afw::image;
+namespace dafBase = lsst::daf::base;
+namespace dafPersist = lsst::daf::persistence;
+namespace pexPolicy = lsst::pex::policy;
+namespace pexExcept = lsst::pex::exceptions;
 
-lsst::daf::persistence::FormatterRegistration WcsFormatter::registration(
-    "Wcs", typeid(Wcs), createInstance);
 
-WcsFormatter::WcsFormatter(
-    lsst::pex::policy::Policy::Ptr policy) :
-    lsst::daf::persistence::Formatter(typeid(*this)) {
+dafPersist::FormatterRegistration afwForm::WcsFormatter::registration(
+    "Wcs", typeid(afwImg::Wcs), createInstance);
+
+afwForm::WcsFormatter::WcsFormatter(
+    pexPolicy::Policy::Ptr policy) :
+    dafPersist::Formatter(typeid(*this)) {
 }
 
-WcsFormatter::~WcsFormatter(void) {
+afwForm::WcsFormatter::~WcsFormatter(void) {
 }
 
-void WcsFormatter::write(
-    Persistable const* persistable,
-    Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr additionalData) {
+void afwForm::WcsFormatter::write(
+    dafBase::Persistable const* persistable,
+    dafPersist::Storage::Ptr storage,
+    dafBase::PropertySet::Ptr additionalData) {
     execTrace("WcsFormatter write start");
-    Wcs const* ip =
-        dynamic_cast<Wcs const*>(persistable);
+    afwImg::Wcs const* ip =
+        dynamic_cast<afwImg::Wcs const*>(persistable);
     if (ip == 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Persisting non-Wcs");
+        throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Persisting non-Wcs");
     }
-    if (typeid(*storage) == typeid(BoostStorage)) {
+    if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
         execTrace("WcsFormatter write BoostStorage");
-        BoostStorage* boost = dynamic_cast<BoostStorage*>(storage.get());
+        dafPersist::BoostStorage* boost = dynamic_cast<dafPersist::BoostStorage*>(storage.get());
         boost->getOArchive() & *ip;
         execTrace("WcsFormatter write end");
         return;
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unrecognized Storage for Wcs");
+    throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Unrecognized Storage for Wcs");
 }
 
-Persistable* WcsFormatter::read(
-    Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr additionalData) {
+dafBase::Persistable* afwForm::WcsFormatter::read(
+    dafPersist::Storage::Ptr storage,
+    dafBase::PropertySet::Ptr additionalData) {
     execTrace("WcsFormatter read start");
-    Wcs* ip = new Wcs;
-    if (typeid(*storage) == typeid(BoostStorage)) {
+    if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
+        afwImg::Wcs* ip = new afwImg::Wcs;
         execTrace("WcsFormatter read BoostStorage");
-        BoostStorage* boost = dynamic_cast<BoostStorage*>(storage.get());
+        dafPersist::BoostStorage* boost = dynamic_cast<dafPersist::BoostStorage*>(storage.get());
         boost->getIArchive() & *ip;
         execTrace("WcsFormatter read end");
         return ip;
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unrecognized Storage for Wcs");
+    else if (typeid(*storage) == typeid(dafPersist::FitsStorage)) {
+        execTrace("WcsFormatter read FitsStorage");
+        dafPersist::FitsStorage* fits = dynamic_cast<dafPersist::FitsStorage*>(storage.get());
+        int hdu = additionalData->get<int>("hdu", 0);
+        dafBase::PropertySet::Ptr md =
+            afwImg::readMetadata(fits->getPath(), hdu);
+        afwImg::Wcs* ip = new afwImg::Wcs(md);
+        execTrace("WcsFormatter read end");
+        return ip;
+    }
+    throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Unrecognized Storage for Wcs");
 }
 
-void WcsFormatter::update(
-    Persistable* persistable,
-    Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr additionalData) {
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unexpected call to update for Wcs");
+void afwForm::WcsFormatter::update(
+    dafBase::Persistable* persistable,
+    dafPersist::Storage::Ptr storage,
+    dafBase::PropertySet::Ptr additionalData) {
+    throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Unexpected call to update for Wcs");
 }
 
-lsst::daf::base::PropertySet::Ptr
-WcsFormatter::generatePropertySet(Wcs const& wcs) {
+static void copyMetadata(std::string const& prefix,
+                         dafBase::PropertySet::Ptr src,
+                         dafBase::PropertySet::Ptr dest) {
+    std::string header = prefix + "_ORDER";
+    if (!src->exists(header)) {
+        return;
+    }
+    int order = src->get<int>(header);
+    boost::format param("%1%_%2%_%3%");
+    for (int i = 0; i <= order; ++i) {
+        for (int j = 0; j <= order - i; ++j) {
+            header = (param % prefix % i % j).str();
+            if (src->exists(header)) {
+                dest->set(header, src->get<double>(header));
+            }
+        }
+    }
+    header = prefix + "_DMAX";
+    if (src->exists(header)) {
+        dest->set(header, src->get<double>(header));
+    }
+}
+
+dafBase::PropertySet::Ptr
+afwForm::WcsFormatter::generatePropertySet(afwImg::Wcs const& wcs) {
     // Only generates properties for the first wcsInfo.
-    lsst::daf::base::PropertySet::Ptr wcsProps(new lsst::daf::base::PropertySet());
+    dafBase::PropertySet::Ptr wcsProps(new dafBase::PropertySet());
     if (!wcs) {                         // nothing to add
         return wcsProps;
     }
@@ -123,16 +156,22 @@ WcsFormatter::generatePropertySet(Wcs const& wcs) {
     wcsProps->add("CUNIT2", std::string(wcs._wcsInfo[0].cunit[1]));
     wcsProps->add("CTYPE1", std::string(wcs._wcsInfo[0].ctype[0]));
     wcsProps->add("CTYPE2", std::string(wcs._wcsInfo[0].ctype[1]));
+
+    copyMetadata("A", wcs._fitsMetadata, wcsProps);
+    copyMetadata("B", wcs._fitsMetadata, wcsProps);
+    copyMetadata("AP", wcs._fitsMetadata, wcsProps);
+    copyMetadata("BP", wcs._fitsMetadata, wcsProps);
+
     return wcsProps;
 }
 
 template <class Archive>
-void WcsFormatter::delegateSerialize(
-    Archive& ar, int const version, Persistable* persistable) {
+void afwForm::WcsFormatter::delegateSerialize(
+    Archive& ar, int const version, dafBase::Persistable* persistable) {
     execTrace("WcsFormatter delegateSerialize start");
-    Wcs* ip = dynamic_cast<Wcs*>(persistable);
+    afwImg::Wcs* ip = dynamic_cast<afwImg::Wcs*>(persistable);
     if (ip == 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Serializing non-Wcs");
+        throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Serializing non-Wcs");
     }
 
     // Serialize most fields normally
@@ -180,9 +219,7 @@ void WcsFormatter::delegateSerialize(
     execTrace("WcsFormatter delegateSerialize end");
 }
 
-lsst::daf::persistence::Formatter::Ptr WcsFormatter::createInstance(
-    lsst::pex::policy::Policy::Ptr policy) {
-    return lsst::daf::persistence::Formatter::Ptr(new WcsFormatter(policy));
+dafPersist::Formatter::Ptr afwForm::WcsFormatter::createInstance(
+    pexPolicy::Policy::Ptr policy) {
+    return dafPersist::Formatter::Ptr(new afwForm::WcsFormatter(policy));
 }
-
-}}} // namespace lsst::afw::formatters

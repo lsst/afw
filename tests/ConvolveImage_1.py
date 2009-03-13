@@ -27,7 +27,7 @@ try:
     Verbosity
 except NameError:
     Verbosity = 0 # increase to see trace
-pexLog.Trace_setVerbosity("lsst.afw", Verbosity)
+pexLog.Debug("lsst.afw", Verbosity)
 
 try:
     display
@@ -109,6 +109,15 @@ def makeGaussianKernelVec(kCols, kRows):
         kFunc = afwMath.GaussianFunction2D(1.5, 2.5) # XXX ? xSigma, ySigma?
         kVec.append(afwMath.AnalyticKernel(kCols, kRows, kFunc))
 
+    return kVec
+
+def makeDeltaFunctionKernelVec(kCols, kRows):
+    """Create an afwImage.VectorKernel of delta function kernels
+    """
+    kVec = afwMath.KernelListD()
+    for activeCol in range(kCols):
+        for activeRow in range(kRows):
+            kVec.append(afwMath.DeltaFunctionKernel(kCols, kRows, afwImage.PointI(activeCol, activeRow)))
     return kVec
 
 class ConvolveTestCase(unittest.TestCase):
@@ -200,7 +209,7 @@ class ConvolveTestCase(unittest.TestCase):
         kCols = 7
         kRows = 6
 
-        # create spatially varying linear combination kernel
+        # create spatially model
         sFunc = afwMath.PolynomialFunction2D(1)
         
         # spatial parameters are a list of entries, one per kernel parameter;
@@ -225,13 +234,36 @@ class ConvolveTestCase(unittest.TestCase):
             if not numpy.allclose(cnvImageArr, refCnvImageArr):
                 self.fail("Convolved image does not match reference for doNormalize=%s" % doNormalize)
 
+    def testSeparableConvolve(self):
+        """Test convolve of a separable kernel with a spatially invariant Gaussian function
+        """
+        kCols = 7
+        kRows = 6
+
+        gaussFunc1 = afwMath.GaussianFunction1D(1.0)
+        gaussFunc2 = afwMath.GaussianFunction2D(1.0, 1.0)
+        separableKernel = afwMath.SeparableKernel(kCols, kRows, gaussFunc1, gaussFunc1)
+        analyticKernel = afwMath.AnalyticKernel(kCols, kRows, gaussFunc2)
+                
+        cnvImage = afwImage.ImageF(self.inImage.getDimensions())
+        for doNormalize in (False, True):
+            afwMath.convolve(cnvImage, self.inImage, separableKernel, doNormalize)
+
+            cnvImageArr = imTestUtils.arrayFromImage(cnvImage)
+    
+            inImageArr = imTestUtils.arrayFromImage(self.inImage)
+            refCnvImageArr = refConvolve(inImageArr, analyticKernel, doNormalize)
+
+            if not numpy.allclose(cnvImageArr, refCnvImageArr):
+                self.fail("Convolved image does not match reference for doNormalize=%s" % doNormalize)
+
     def testSpatiallyVaryingSeparableConvolve(self):
         """Test convolve of a separable kernel with a spatially varying Gaussian function
         """
         kCols = 7
         kRows = 6
 
-        # create spatially varying linear combination kernel
+        # create spatially model
         sFunc = afwMath.PolynomialFunction2D(1)
         
         # spatial parameters are a list of entries, one per kernel parameter;
@@ -279,8 +311,8 @@ class ConvolveTestCase(unittest.TestCase):
                         ref2CnvImageArr = refConvolve(inImageArr, kernel, doNormalize)
                 
                         if not numpy.allclose(refCnvImageArr, ref2CnvImageArr):
-                            print "kCols=%s, kRows=%s, refCnvImageArr=%r, ref2CnvImageArr=%r" % (kCols, kRows, refCnvImageArr, ref2CnvImageArr)
-                            self.fail("Image from afwMath.convolve does not match image from refConvolve")
+                            infoStr = "kCols=%s, kRows=%s, refCnvImageArr=%r, ref2CnvImageArr=%r" % (kCols, kRows, refCnvImageArr, ref2CnvImageArr)
+                            self.fail("Image from afwMath.convolve does not match image from refConvolve: %s" % (infoStr,))
         
 
     def testConvolveLinear(self):
@@ -292,7 +324,7 @@ class ConvolveTestCase(unittest.TestCase):
         kRows = 5
         doNormalize = False # must be false because convolveLinear cannot normalize
 
-        # create spatially varying linear combination kernel
+        # create spatially model
         sFunc = afwMath.PolynomialFunction2D(1)
         
         # spatial parameters are a list of entries, one per kernel parameter;
@@ -330,6 +362,56 @@ class ConvolveTestCase(unittest.TestCase):
             if not numpy.allclose(cnvImageArr, refCnvImageArr):
                 self.fail("Image from afwMath.convolveLinear does not match image from refConvolve in iter %d" % ii)
 
+    def testConvolveLinearDelta(self):
+        """Test convolution with a spatially varying LinearCombinationKernel using some delta basis kernels
+        by comparing the results of afwMath.convolveLinear to afwMath.convolve or refConvolve,
+        depending on the value of compareToFwConvolve.
+        """
+        kCols = 2
+        kRows = 2
+        doNormalize = False # must be false because convolveLinear cannot normalize
+
+        # create spatially model
+        sFunc = afwMath.PolynomialFunction2D(1)
+        
+        # spatial parameters are a list of entries, one per kernel parameter;
+        # each entry is a list of spatial parameters
+        sParams = (
+            (1.0, -0.5/self.width, -0.5/self.height),
+            (0.0,  1.0/self.width,  0.0/self.height),
+            (0.0,  0.0/self.width,  1.0/self.height),
+            (0.5, 0.0, 0.0),
+            )
+        
+        kVec = makeDeltaFunctionKernelVec(kCols, kRows)
+        lcKernel = afwMath.LinearCombinationKernel(kVec, sFunc)
+        lcKernel.setSpatialParameters(sParams)
+
+        cnvImage = afwImage.ImageF(self.inImage.getDimensions())
+        afwMath.convolve(cnvImage, self.inImage, lcKernel, doNormalize)
+        cnvImageArr = imTestUtils.arrayFromImage(cnvImage)
+
+        inImageArr = imTestUtils.arrayFromImage(self.inImage)
+        refCnvImageArr = refConvolve(inImageArr, lcKernel, doNormalize)
+        
+        if not numpy.allclose(cnvImageArr, refCnvImageArr):
+            self.fail("Image from afwMath.convolve does not match image from refConvolve")
+
+        cnvImage = afwImage.ImageF(self.inImage.getDimensions())
+        # compute twice, to be sure cnvImage is properly reset
+        for ii in range(2):
+            pexLog.Debug("lsst.afw").debug(3, "Start convolution with delta functions")
+            afwMath.convolveLinear(cnvImage, self.inImage, lcKernel)
+            pexLog.Debug("lsst.afw").debug(3, "End convolution with delta functions")
+            cnvImageArr = imTestUtils.arrayFromImage(cnvImage)
+            
+            if display:
+                refImage = imTestUtils.imageFromArray(refCnvImageArr)
+                ds9.mtv(displayUtils.makeMosaic(self.inImage, cnvImage, refImage))
+
+            if not numpy.allclose(cnvImageArr, refCnvImageArr):
+                self.fail("Image from afwMath.convolveLinear does not match image from refConvolve in iter %d" % ii)
+
     def testConvolveLinearNewImage(self):
         """Test convolveLinearNew
         """
@@ -337,7 +419,7 @@ class ConvolveTestCase(unittest.TestCase):
         kRows = 5
         doNormalize = False # must be false because convolveLinear cannot normalize
 
-        # create spatially varying linear combination kernel
+        # create spatially model
         sFunc = afwMath.PolynomialFunction2D(1)
         
         # spatial parameters are a list of entries, one per kernel parameter;

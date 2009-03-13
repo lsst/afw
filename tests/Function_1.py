@@ -10,7 +10,7 @@ import lsst.utils.tests as utilsTests
 import lsst.pex.logging as pexLog
 
 Verbosity = 0 # increase to see trace
-pexLog.Trace_setVerbosity("lsst.afwMath", Verbosity)
+pexLog.Debug("lsst.afwMath", Verbosity)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

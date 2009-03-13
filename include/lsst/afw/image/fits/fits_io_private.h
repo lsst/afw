@@ -18,6 +18,7 @@
 #include "boost/gil/gil_all.hpp"
 #include "boost/gil/extension/io/io_error.hpp"
 #include "lsst/afw/image/lsstGil.h"
+#include "lsst/afw/image/Utils.h"
 
 #include "lsst/utils/Utils.h"
 #include "lsst/pex/exceptions.h"
@@ -226,6 +227,7 @@ protected:
     int _naxis1, _naxis2;                                //!< dimension of image
     int _ttype;                                          //!< cfitsio's name for data type
     int _bitpix;                                         //!< FITS' BITPIX keyword
+    BBox const& _bbox;                                   //!< Bounding Box of desired part of data
 
     void init() {
         move_to_hdu(_fd.get(), _hdu);
@@ -279,12 +281,12 @@ protected:
 public:
     fits_reader(cfitsio::fitsfile *file,
                 lsst::daf::base::PropertySet::Ptr metadata,
-                int hdu=0) :
-        fits_file_mgr(file), _hdu(hdu), _metadata(metadata) { init(); }
+                int hdu=0, BBox const& bbox=BBox()) :
+        fits_file_mgr(file), _hdu(hdu), _metadata(metadata), _bbox(bbox) { init(); }
     fits_reader(const std::string& filename,
                 lsst::daf::base::PropertySet::Ptr metadata,
-                int hdu=0) :
-        fits_file_mgr(filename, "rb"), _hdu(hdu), _metadata(metadata) { init(); }
+                int hdu=0, BBox const& bbox=BBox()) :
+        fits_file_mgr(filename, "rb"), _hdu(hdu), _metadata(metadata), _bbox(bbox) { init(); }
 
     ~fits_reader() { }
 
@@ -310,10 +312,14 @@ public:
          */
         cfitsio::getMetadata(_fd.get(), _metadata);
 
+        int x0 = 0, y0 = 0;             // Origin of part of image to read
+        if (_bbox) {
+            x0 = _bbox.getX0(); y0 = _bbox.getY0();
+        }
         for (int y = 0; y != view.height(); ++y) {
             long fpixel[2];                     // tell cfitsio which pixels to read
-            fpixel[0] = 1;                      // 1 indexed.
-            fpixel[1] = 1 + y;                  //            grrrrrr
+            fpixel[0] = x0 + 1;                 // 1 indexed.
+            fpixel[1] = y0 + y + 1;             //            grrrrrr
             int anynull = 0;
             int status = 0;                     // cfitsio function return status
 
@@ -327,12 +333,16 @@ public:
     
     template <typename Image>
     void read_image(Image& im) {
-        im.recreate(get_getDimensions());
+        im.recreate(get_Dimensions());
         apply(view(im));
     }
 
-    boost::gil::point2<std::ptrdiff_t> get_getDimensions() const {
-        return boost::gil::point2<std::ptrdiff_t>(_naxis1, _naxis2);
+    boost::gil::point2<std::ptrdiff_t> get_Dimensions() const {
+        if (_bbox) {
+            return boost::gil::point2<std::ptrdiff_t>(_bbox.getWidth(), _bbox.getHeight());
+        } else {
+            return boost::gil::point2<std::ptrdiff_t>(_naxis1, _naxis2);
+        }
     }
 };
     

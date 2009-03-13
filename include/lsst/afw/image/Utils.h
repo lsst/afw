@@ -98,7 +98,7 @@ namespace lsst { namespace afw { namespace image {
 
         //! Return true iff the point lies in the BBox
         bool contains(PointI p          ///< The point to check
-                     ) {
+                     ) const {
             return p.getX() >= getX0() && p.getX() <= getX1() && p.getY() >= getY0() && p.getY() <= getY1();
         }
 
@@ -138,14 +138,22 @@ namespace lsst { namespace afw { namespace image {
             }
 
         int getX0() const { return first.getX(); } ///< Return x coordinate of lower-left corner
+        void setX0(int x0) { first.setX(x0); }     ///< Set x coordinate of lower-left corner
         int getY0() const { return first.getY(); } ///< Return y coordinate of lower-left corner
+        void setY0(int y0) { first.setY(y0); }     ///< Set y coordinate of lower-left corner
         int getX1() const { return first.getX() + second.first - 1; } ///< Return x coordinate of upper-right corner
+        void setX1(int x1) { second.first = x1 - getX0() + 1; } ///< Set x coordinate of lower-left corner
         int getY1() const { return first.getY() + second.second - 1; } ///< Return y coordinate of upper-right corner
+        void setY1(int y1) { second.second = y1 - getY0() + 1; } ///< Set y coordinate of lower-left corner
         PointI getLLC() const { return first; } ///< Return lower-left corner
         PointI getURC() const { return PointI(getX1(), getY1()); } ///< Return upper-right corner
         int getWidth() const { return second.first; } ///< Return width of BBox (== <tt>X1 - X0 + 1</tt>)
         int getHeight() const { return second.second; } ///< Return height of BBox (== <tt>Y1 - Y0 + 1</tt>)
         const std::pair<int, int> getDimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
+
+        operator bool() const {
+            return !(getWidth() == 0 && getHeight() == 0);
+        }
 
         bool operator==(const BBox& rhs) const {
             return
@@ -174,6 +182,11 @@ namespace lsst { namespace afw { namespace image {
         PointI const& getCenter() const { return first; } ///< Return the circle's centre
         float getRadius() const { return second; }        ///< Return the circle's radius
     };
+
+/************************************************************************************************************/
+
+lsst::daf::base::PropertySet::Ptr readMetadata(std::string const& fileName, const int hdu=0);
+
 }}}
 
 #endif

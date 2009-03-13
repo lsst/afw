@@ -294,7 +294,7 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
     };
 
     MaskFootprint maskit(*maskedImg.getMask(), bitPlane);
-    for (FootprintList::const_iterator fiter = _footprints.begin(); fiter != _footprints.end(); ++fiter) {
+    for (FootprintList::const_iterator fiter = _footprints.begin(), end = _footprints.end(); fiter != end; ++fiter) {
         const Footprint::Ptr foot = *fiter;
 
         maskit.apply(*foot);
@@ -720,18 +720,80 @@ pmFindFootprintAtPoint(const psImage *img,	// image to search
 
 /************************************************************************************************************/
 /**
- * Grow all the Footprints in the input DetectionSet, returning a new DetectionSet
- *
- * The output DetectionSet may contain fewer Footprints, as some may well have been merged
- *
- * \todo Implement this.  There's RHL Pan-STARRS code to do it, but it isn't yet converted to LSST C++
+ * Copy constructor
  */
 template<typename ImagePixelT, typename MaskPixelT>
 detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
-	const DetectionSet &set,        //!< the input DetectionSet
-        int r)                          //!< Grow Footprints by r pixels
+	DetectionSet const &rhs         //!< the input DetectionSet
+                                                              ) :
+    lsst::daf::data::LsstBase(typeid(this)),
+    _footprints(rhs._footprints) {
+}
+
+/// Assignment operator.
+template<typename ImagePixelT, typename MaskPixelT>
+detection::DetectionSet<ImagePixelT, MaskPixelT> &
+detection::DetectionSet<ImagePixelT, MaskPixelT>::operator=(DetectionSet const& rhs) {
+    DetectionSet tmp(rhs);
+    swap(tmp);                          // See Meyers, Effective C++, Item 11
+    
+    return *this;
+}
+
+/// Set the corners of the DetectionSet's MaskedImage to region
+///
+/// N.b. updates all the Footprints' regions too
+//
+template<typename ImagePixelT, typename MaskPixelT>
+void detection::DetectionSet<ImagePixelT, MaskPixelT>::setRegion(image::BBox const& region // the desired region
+                                                                ) {
+    _region = region;
+    typename DetectionSet::FootprintList footprintList = getFootprints();
+
+    for (typename DetectionSet::FootprintList::iterator ptr = getFootprints().begin(), end = getFootprints().end();
+         ptr != end; ++ptr) {
+        (*ptr)->setRegion(region);
+    }
+}
+
+/************************************************************************************************************/
+/**
+ * Grow all the Footprints in the input DetectionSet, returning a new DetectionSet
+ *
+ * The output DetectionSet may contain fewer Footprints, as some may well have been merged
+ */
+template<typename ImagePixelT, typename MaskPixelT>
+detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
+	DetectionSet const &rhs,        //!< the input DetectionSet
+        int r,                          //!< Grow Footprints by r pixels
+        bool isotropic                  //!< Grow isotropically (as opposed to a Manhattan metric)
+                                        //!< @note Isotropic grows are significantly slower
+                                                              )
     : lsst::daf::data::LsstBase(typeid(this)),
-      _footprints(*new FootprintList()) {
+      _footprints(*new FootprintList())  // We don't use this, but it's a reference type so should be initialised
+      {
+
+    if (r == 0) {
+        *this = rhs;
+        return;
+    } else if (r < 0) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                          (boost::format("I cannot grow by negative numbers: %d") % r).str());
+    }
+
+    typedef unsigned short ImageT;
+    image::Image<ImageT>::Ptr idImage(new image::Image<ImageT>(rhs.getRegion().getDimensions()));
+    idImage->setXY0(rhs.getRegion().getLLC());
+    *idImage = 0;
+
+    FootprintList rhsFootprints = rhs.getFootprints();
+    for (FootprintList::const_iterator ptr = rhsFootprints.begin(), end = rhsFootprints.end(); ptr != end; ++ptr) {
+        Footprint::Ptr gfoot = growFootprint(**ptr, r, isotropic);
+        gfoot->insertIntoImage(*idImage, 10); // The value 10 is random; more than 1 anyway
+    }
+
+    DetectionSet<ImageT> ds(image::MaskedImage<ImageT>(idImage), Threshold(1));
+    swap(ds);
 }
 
 /************************************************************************************************************/

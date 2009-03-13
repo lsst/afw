@@ -56,7 +56,7 @@ public:
             throw LSST_EXCEPT(FitsException,
                               "no matching image type between those of the given any_image and that of the file");
         } else {
-            im.recreate(get_getDimensions());
+            im.recreate(get_Dimensions());
             boost::gil::detail::dynamic_io_fnobj<fits_read_is_supported, fits_reader> op(this);
             apply_operation(view(im),op);
         }

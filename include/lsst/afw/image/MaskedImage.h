@@ -59,6 +59,7 @@ namespace image {
         typedef typename Image<VariancePixelT>::Ptr VariancePtr;
         /// shared pointer to a MaskedImage
         typedef boost::shared_ptr<MaskedImage> Ptr;
+        typedef boost::shared_ptr<const MaskedImage> ConstPtr;
         /// The Mask's MaskPlaneDict
         typedef typename Mask<MaskPixelT>::MaskPlaneDict MaskPlaneDict;
 
@@ -613,7 +614,7 @@ namespace image {
         explicit MaskedImage(const std::pair<int, int> dimensions, MaskPlaneDict const& planeDict=MaskPlaneDict());
         explicit MaskedImage(std::string const& baseName, int const hdu=0,
                              lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
-                             bool const conformMasks=false);
+                             BBox const& bbox=BBox(), bool const conformMasks=false);
         
         MaskedImage(MaskedImage const& rhs, bool const deep=false);
         MaskedImage(const MaskedImage& rhs, const BBox& bbox, const bool deep=false);
@@ -650,16 +651,22 @@ namespace image {
         void setVarianceFromGain();     // was setDefaultVariance();
         
         // Operators
+        MaskedImage& operator=(Pixel const& rhs);
+
         void operator<<=(MaskedImage const& rhs);
 
         void operator+=(ImagePixelT const rhs);
         void operator+=(MaskedImage const& rhs);
+        void scaledPlus(double const c, MaskedImage const& rhs);
         void operator-=(ImagePixelT const rhs);
         void operator-=(MaskedImage const& rhs);
+        void scaledMinus(double const c, MaskedImage const& rhs);
         void operator*=(ImagePixelT const rhs);
         void operator*=(MaskedImage const& rhs);
+        void scaledMultiplies(double const c, MaskedImage const& rhs);
         void operator/=(ImagePixelT const rhs);
         void operator/=(MaskedImage const& rhs);
+        void scaledDivides(double const c, MaskedImage const& rhs);
         
         // IO functions
         static std::string imageFileName(std::string const& baseName) { return baseName + "_img.fits"; }
@@ -694,6 +701,14 @@ namespace image {
          * The origin can be reset with setXY0()
          */
         int getY0() const { return _image->getY0(); }
+
+        /**
+         * Return the %image's origin
+         *
+         * This will usually be (0, 0) except for images created using the <tt>ImageBase(ImageBase, BBox)</tt> cctor
+         * The origin can be reset with \c setXY0
+         */
+        PointI getXY0() const { return _image->getXY0(); }
         //
         // Iterators and Locators
         //
@@ -727,6 +742,19 @@ namespace image {
             _image->setXY0(origin);
             _mask->setXY0(origin);
             _variance->setXY0(origin);
+        }
+        /**
+         * Set the MaskedImage's origin
+         *
+         * The origin is usually set by the constructor, so you shouldn't need this function
+         *
+         * \note There are use cases (e.g. memory overlays) that may want to set these values, but
+         * don't do so unless you are an Expert.
+         */
+        void setXY0(int const x0, int const y0) {
+            _image->setXY0(x0, y0);
+            _mask->setXY0(x0, y0);
+            _variance->setXY0(x0, y0);
         }
     private:
 

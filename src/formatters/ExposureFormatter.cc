@@ -37,19 +37,10 @@ static void execTrace(std::string s, int level = EXEC_TRACE) {
     lsst::pex::logging::Trace("afw.ExposureFormatter", level, s);
 }
 
-using lsst::daf::base::Persistable;
-using lsst::daf::persistence::Storage;
-using lsst::daf::persistence::BoostStorage;
-using lsst::daf::persistence::DbStorage;
-using lsst::daf::persistence::FitsStorage;
-using lsst::daf::base::Persistable;
-using lsst::afw::image::Exposure;
-using lsst::afw::image::MaskPixel;
-using lsst::afw::image::VariancePixel;
-
-namespace lsst {
-namespace afw {
-namespace formatters {
+namespace afwForm = lsst::afw::formatters;
+namespace afwImg = lsst::afw::image;
+namespace dafBase = lsst::daf::base;
+namespace dafPersist = lsst::daf::persistence;
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 class ExposureFormatterTraits {
@@ -57,32 +48,32 @@ public:
     static std::string name;
 };
 
-template<> std::string ExposureFormatterTraits<boost::uint16_t, MaskPixel, VariancePixel>::name("ExposureU");
-template<> std::string ExposureFormatterTraits<int, MaskPixel, VariancePixel>::name("ExposureI");
-template<> std::string ExposureFormatterTraits<float, MaskPixel, VariancePixel>::name("ExposureF");
-template<> std::string ExposureFormatterTraits<double, MaskPixel, VariancePixel>::name("ExposureD");
+template<> std::string ExposureFormatterTraits<boost::uint16_t, afwImg::MaskPixel, afwImg::VariancePixel>::name("ExposureU");
+template<> std::string ExposureFormatterTraits<int, afwImg::MaskPixel, afwImg::VariancePixel>::name("ExposureI");
+template<> std::string ExposureFormatterTraits<float, afwImg::MaskPixel, afwImg::VariancePixel>::name("ExposureF");
+template<> std::string ExposureFormatterTraits<double, afwImg::MaskPixel, afwImg::VariancePixel>::name("ExposureD");
 
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-lsst::daf::persistence::FormatterRegistration ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::registration(
+lsst::daf::persistence::FormatterRegistration afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::registration(
     ExposureFormatterTraits<ImagePixelT, MaskPixelT, VariancePixelT>::name,
-    typeid(Exposure<ImagePixelT, MaskPixelT, VariancePixelT>),
+    typeid(afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>),
     createInstance);
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::ExposureFormatter(
+afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::ExposureFormatter(
     lsst::pex::policy::Policy::Ptr policy) :
     lsst::daf::persistence::Formatter(typeid(*this)), _policy(policy) {
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::~ExposureFormatter(void) {
+afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::~ExposureFormatter(void) {
 }
 
 /** Lookup a filter number in the database to find a filter name.
  */
 static std::string lookupFilterName(
-    DbStorage* db,  //!< Database to look in
+    dafPersist::DbStorage* db,  //!< Database to look in
     int filterId    //!< Number of filter to lookup
     ) {
     db->setTableForQuery("Filter");
@@ -110,7 +101,7 @@ static std::string lookupFilterName(
  */
 template <typename T>
 static void setColumn(
-    DbStorage* db,                            //!< Destination database
+    dafPersist::DbStorage* db,                            //!< Destination database
     std::string const& colName,               //!< Output column name
     lsst::daf::base::PropertySet::Ptr source, //!< Source PropertySet
     std::string const& propName               //!< Property name
@@ -128,7 +119,7 @@ static void setColumn(
  */
 template <typename T1, typename T2>
 static void setColumn(
-    DbStorage* db,                            //!< Destination database
+    dafPersist::DbStorage* db,                            //!< Destination database
     std::string const& colName,               //!< Output column name
     lsst::daf::base::PropertySet::Ptr source, //!< Source PropertySet
     std::string const& propName               //!< Property name
@@ -141,43 +132,43 @@ static void setColumn(
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-void ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
-    Persistable const* persistable,
-    Storage::Ptr storage,
+void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
+    dafBase::Persistable const* persistable,
+    dafPersist::Storage::Ptr storage,
     lsst::daf::base::PropertySet::Ptr additionalData) {
     execTrace("ExposureFormatter write start");
-    Exposure<ImagePixelT, MaskPixelT, VariancePixelT> const* ip =
-        dynamic_cast<Exposure<ImagePixelT, MaskPixelT, VariancePixelT> const*>(persistable);
+    afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT> const* ip =
+        dynamic_cast<afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT> const*>(persistable);
     if (ip == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Persisting non-Exposure");
     }
-    if (typeid(*storage) == typeid(BoostStorage)) {
+    if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
         execTrace("ExposureFormatter write BoostStorage");
-        BoostStorage* boost = dynamic_cast<BoostStorage*>(storage.get());
+        dafPersist::BoostStorage* boost = dynamic_cast<dafPersist::BoostStorage*>(storage.get());
         boost->getOArchive() & *ip;
         execTrace("ExposureFormatter write end");
         return;
     }
-    else if (typeid(*storage) == typeid(FitsStorage)) {
+    else if (typeid(*storage) == typeid(dafPersist::FitsStorage)) {
         execTrace("ExposureFormatter write FitsStorage");
-        FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
+        dafPersist::FitsStorage* fits = dynamic_cast<dafPersist::FitsStorage*>(storage.get());
 
         lsst::daf::base::PropertySet::Ptr wcsProps =
-            lsst::afw::formatters::WcsFormatter::generatePropertySet(*(ip->_wcsPtr));
+            lsst::afw::formatters::WcsFormatter::generatePropertySet(*(ip->_wcs));
 
-        Exposure<ImagePixelT, MaskPixelT, VariancePixelT>* vip =
-            const_cast<Exposure<ImagePixelT, MaskPixelT, VariancePixelT>*>(ip);
+        afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>* vip =
+            const_cast<afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>*>(ip);
         vip->getMaskedImage().getMetadata()->add("Wcs", wcsProps);
         ip->_maskedImage.writeFits(fits->getPath());
         execTrace("ExposureFormatter write end");
         return;
-    } else if (typeid(*storage) == typeid(DbStorage)) {
+    } else if (typeid(*storage) == typeid(dafPersist::DbStorage)) {
         execTrace("ExposureFormatter write DbStorage");
-        DbStorage* db = dynamic_cast<DbStorage*>(storage.get());
+        dafPersist::DbStorage* db = dynamic_cast<dafPersist::DbStorage*>(storage.get());
 
         // Get the Wcs headers.
         lsst::daf::base::PropertySet::Ptr wcsProps =
-            lsst::afw::formatters::WcsFormatter::generatePropertySet(*(ip->_wcsPtr));
+            lsst::afw::formatters::WcsFormatter::generatePropertySet(*(ip->_wcs));
 
         // Get the image headers.
         lsst::daf::base::PropertySet::Ptr dp = ip->getMaskedImage().getMetadata();
@@ -195,8 +186,8 @@ void ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
                 tableName = itemPolicy->getString("TableName");
             }
         }
-        if (tableName != "Raw_CCD_Exposure" &&
-            tableName != "Science_CCD_Exposure") {
+        if (tableName != "Raw_Amp_Exposure" &&
+            tableName != "Science_Amp_Exposure") {
             throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                               "Unknown table name for persisting Exposure to DbStorage: " +
                               tableName + "for item " + itemName);
@@ -205,23 +196,25 @@ void ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
 
         // Set the identifier columns.
 
-        int ccdId = extractCcdId(additionalData);
-        int64_t exposureId = extractExposureId(additionalData);
+        int ampId = extractAmpId(additionalData);
+        // int ccdId = extractCcdId(additionalData);
+        // int64_t exposureId = extractExposureId(additionalData);
         int64_t ccdExposureId = extractCcdExposureId(additionalData);
+        int64_t ampExposureId = extractAmpExposureId(additionalData);
 
-        if (tableName == "Raw_CCD_Exposure") {
+        if (tableName == "Raw_Amp_Exposure") {
+            db->setColumn<long long>("rawAmpExposureId", ampExposureId);
             db->setColumn<long long>("rawCCDExposureId", ccdExposureId);
-            db->setColumn<long long>("rawFPAExposureId", exposureId);
         }
-        else { // Science_CCD_Exposure
+        else { // Science_Amp_Exposure
+            db->setColumn<long long>("scienceAmpExposureId", ampExposureId);
             db->setColumn<long long>("scienceCCDExposureId", ccdExposureId);
-            db->setColumn<long long>("scienceFPAExposureId", exposureId);
-            db->setColumn<long long>("rawCCDExposureId", ccdExposureId);
+            db->setColumn<long long>("rawAmpExposureId", ampExposureId);
             /// \todo Check that rawCCDExposureId == scienceCCDExposureId --
             /// KTL -- 2008-01-25
         }
 
-        db->setColumn<int>("ccdDetectorId", ccdId);
+        db->setColumn<int>("ampId", ampId);
 
         // Set the URL column with the location of the FITS file.
         setColumn<std::string>(db, "url",
@@ -240,7 +233,7 @@ void ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
         setColumn<double>(db, "cd12", wcsProps, "CD1_2");
         setColumn<double>(db, "cd22", wcsProps, "CD2_2");
 
-        if (tableName == "Science_CCD_Exposure") {
+        if (tableName == "Science_Amp_Exposure") {
             // Set calibration data columns.
             setColumn<float, double>(db, "photoFlam", dp, "PHOTFLAM");
             setColumn<float, double>(db, "photoZP", dp, "PHOTZP");
@@ -256,28 +249,38 @@ void ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-Persistable* ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::read(
-    Storage::Ptr storage,
+dafBase::Persistable* afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::read(
+    dafPersist::Storage::Ptr storage,
     lsst::daf::base::PropertySet::Ptr additionalData) {
     execTrace("ExposureFormatter read start");
-    if (typeid(*storage) == typeid(BoostStorage)) {
+    if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
         execTrace("ExposureFormatter read BoostStorage");
-        BoostStorage* boost = dynamic_cast<BoostStorage*>(storage.get());
-        Exposure<ImagePixelT, MaskPixelT, VariancePixelT>* ip =
-            new Exposure<ImagePixelT, MaskPixelT, VariancePixelT>;
+        dafPersist::BoostStorage* boost = dynamic_cast<dafPersist::BoostStorage*>(storage.get());
+        afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>* ip =
+            new afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>;
         boost->getIArchive() & *ip;
         execTrace("ExposureFormatter read end");
         return ip;
-    } else if (typeid(*storage) == typeid(FitsStorage)) {
+    } else if (typeid(*storage) == typeid(dafPersist::FitsStorage)) {
         execTrace("ExposureFormatter read FitsStorage");
-        FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
-        Exposure<ImagePixelT, MaskPixelT, VariancePixelT>* ip =
-            new Exposure<ImagePixelT, MaskPixelT, VariancePixelT>(fits->getPath());
+        dafPersist::FitsStorage* fits = dynamic_cast<dafPersist::FitsStorage*>(storage.get());
+        int hdu = additionalData->get<int>("hdu", 0);
+        afwImg::BBox box;
+        if (additionalData->exists("llcX")) {
+            int llcX = additionalData->get<int>("llcX");
+            int llcY = additionalData->get<int>("llcY");
+            int width = additionalData->get<int>("width");
+            int height = additionalData->get<int>("height");
+            box = afwImg::BBox(afwImg::PointI(llcX, llcY), width, height);
+        }
+        afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>* ip =
+            new afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>(
+                fits->getPath(), hdu, box);
         execTrace("ExposureFormatter read end");
         return ip;
-    } else if (typeid(*storage) == typeid(DbStorage)) {
+    } else if (typeid(*storage) == typeid(dafPersist::DbStorage)) {
         execTrace("ExposureFormatter read DbStorage");
-        DbStorage* db = dynamic_cast<DbStorage*>(storage.get());
+        dafPersist::DbStorage* db = dynamic_cast<dafPersist::DbStorage*>(storage.get());
 
         // Select a table to retrieve from based on the itemName.
         std::string itemName = additionalData->get<std::string>("itemName");
@@ -289,8 +292,8 @@ Persistable* ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::read(
                 tableName = itemPolicy->getString("TableName");
             }
         }
-        if (tableName != "Raw_CCD_Exposure" &&
-            tableName != "Science_CCD_Exposure") {
+        if (tableName != "Raw_Amp_Exposure" &&
+            tableName != "Science_Amp_Exposure") {
             throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                               "Unknown table name for retrieving Exposure from DbStorage: " +
                               tableName + " for item " + itemName);
@@ -298,17 +301,17 @@ Persistable* ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::read(
         db->setTableForQuery(tableName);
 
         // Set the identifier column tests.
-        db->condParam<int64_t>("id", additionalData->getAsInt64("ccdExposureId"));
-        if (tableName == "Raw_CCD_Exposure") {
-            db->setQueryWhere("rawCCDExposureId = :id");
+        db->condParam<int64_t>("id", additionalData->getAsInt64("ampExposureId"));
+        if (tableName == "Raw_Amp_Exposure") {
+            db->setQueryWhere("rawAmpExposureId = :id");
         }
-        else { // Science_CCD_Exposure
-            db->setQueryWhere("scienceCCDExposureId = :id");
+        else { // Science_Amp_Exposure
+            db->setQueryWhere("scienceAmpExposureId = :id");
         }
 
         db->outColumn("url");
 
-        if (tableName == "Science_CCD_Exposure") {
+        if (tableName == "Science_Amp_Exposure") {
             // Set the Wcs information columns.
             db->outColumn("ctype1");
             db->outColumn("ctype2");
@@ -341,8 +344,8 @@ Persistable* ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::read(
         // - KTL - 2007-11-29
 
         // Restore image from FITS...
-        Exposure<ImagePixelT, MaskPixelT, VariancePixelT>* ip =
-            new Exposure<ImagePixelT, MaskPixelT, VariancePixelT>(db->getColumnByPos<std::string>(0));
+        afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>* ip =
+            new afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>(db->getColumnByPos<std::string>(0));
         lsst::daf::base::PropertySet::Ptr dp = ip->getMaskedImage().getMetadata();
 
         // Look up the filter name given the ID.
@@ -351,7 +354,7 @@ Persistable* ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::read(
         dp->set("FILTER", filterName);
 
         // Set the image headers.
-        // Set the Wcs headers in ip->_wcsPtr.
+        // Set the Wcs headers in ip->_wcs.
 
         //! \todo Need to implement overwriting of FITS metadata PropertySet
         // with values from database. - KTL - 2007-12-18
@@ -363,9 +366,9 @@ Persistable* ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::read(
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-void ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::update(
-    Persistable* persistable,
-    Storage::Ptr storage,
+void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::update(
+    dafBase::Persistable* persistable,
+    dafPersist::Storage::Ptr storage,
     lsst::daf::base::PropertySet::Ptr additionalData) {
     //! \todo Implement update from FitsStorage, keeping DB-provided headers.
     // - KTL - 2007-11-29
@@ -373,34 +376,32 @@ void ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::update(
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT> template <class Archive>
-void ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::delegateSerialize(
-    Archive& ar, unsigned int const version, Persistable* persistable) {
+void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::delegateSerialize(
+    Archive& ar, unsigned int const version, dafBase::Persistable* persistable) {
     execTrace("ExposureFormatter delegateSerialize start");
-    Exposure<ImagePixelT, MaskPixelT, VariancePixelT>* ip =
-        dynamic_cast<Exposure<ImagePixelT, MaskPixelT, VariancePixelT>*>(persistable);
+    afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>* ip =
+        dynamic_cast<afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>*>(persistable);
     if (ip == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Serializing non-Exposure");
     }
-    ar & *ip->getMaskedImage().getMetadata() & ip->_maskedImage & ip->_wcsPtr;
+    ar & *ip->getMaskedImage().getMetadata() & ip->_maskedImage & ip->_wcs;
     execTrace("ExposureFormatter delegateSerialize end");
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-lsst::daf::persistence::Formatter::Ptr ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::createInstance(
+lsst::daf::persistence::Formatter::Ptr afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::createInstance(
     lsst::pex::policy::Policy::Ptr policy) {
-    return lsst::daf::persistence::Formatter::Ptr(new ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>(policy));
+    return lsst::daf::persistence::Formatter::Ptr(new afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>(policy));
 }
 
 #define INSTANTIATE(I, M, V) \
-    template class ExposureFormatter<I, M, V>; \
-    template void ExposureFormatter<I, M, V>::delegateSerialize<boost::archive::text_oarchive>( \
-        boost::archive::text_oarchive &, unsigned int const, Persistable *); \
-    template void ExposureFormatter<I, M, V>::delegateSerialize<boost::archive::text_iarchive>( \
-        boost::archive::text_iarchive &, unsigned int const, Persistable *);
+    template class afwForm::ExposureFormatter<I, M, V>; \
+    template void afwForm::ExposureFormatter<I, M, V>::delegateSerialize<boost::archive::text_oarchive>( \
+        boost::archive::text_oarchive &, unsigned int const, dafBase::Persistable *); \
+    template void afwForm::ExposureFormatter<I, M, V>::delegateSerialize<boost::archive::text_iarchive>( \
+        boost::archive::text_iarchive &, unsigned int const, dafBase::Persistable *);
 
-INSTANTIATE(uint16_t, MaskPixel, VariancePixel)
-INSTANTIATE(int, MaskPixel, VariancePixel)
-INSTANTIATE(float, MaskPixel, VariancePixel)
-INSTANTIATE(double, MaskPixel, VariancePixel)
-
-}}} // namespace lsst::afw::formatters
+INSTANTIATE(uint16_t, afwImg::MaskPixel, afwImg::VariancePixel)
+INSTANTIATE(int, afwImg::MaskPixel, afwImg::VariancePixel)
+INSTANTIATE(float, afwImg::MaskPixel, afwImg::VariancePixel)
+INSTANTIATE(double, afwImg::MaskPixel, afwImg::VariancePixel)

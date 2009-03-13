@@ -1,9 +1,12 @@
-setupRequired(daf_data >= 3.2.2)
+setupRequired(daf_persistence >= 3.3.4)
+setupRequired(daf_data >= 3.2.3)
 setupRequired(cfitsio >= 3006.2)
 setupRequired(wcslib >= 4.2+3)
 setupRequired(xpa >= 2.1.7b2)
 setupRequired(numpy >= 1.0.1)
 setupRequired(minuit >= 1.7.9)
+setupRequired(eigen >= 2.0.0)
+setupRequired(gsl >= 1.8)
 
 setupOptional(afwdata)
 

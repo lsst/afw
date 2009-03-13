@@ -32,11 +32,10 @@ namespace logging = lsst::pex::logging;
 
 using lsst::daf::base::PropertySet;
 
+///
+/// initialise mask planes; called by ctors
 template<typename MaskPixelT>
-image::Mask<MaskPixelT>::Mask(int width, int height, MaskPlaneDict const& planeDefs) :
-    image::ImageBase<MaskPixelT>(width, height),
-    _myMaskDictVersion(_maskDictVersion) {
-
+void image::Mask<MaskPixelT>::_initializePlanes(MaskPlaneDict const& planeDefs) {
     logging::Trace("afw.Mask", 5,
                    boost::format("Number of mask planes: %d") % getNumPlanesMax());
 
@@ -46,18 +45,50 @@ image::Mask<MaskPixelT>::Mask(int width, int height, MaskPlaneDict const& planeD
     }
 }
 
+/// Constructor of uninitialised mask
 template<typename MaskPixelT>
-image::Mask<MaskPixelT>::Mask(const std::pair<int, int> dimensions, MaskPlaneDict const& planeDefs) :
+image::Mask<MaskPixelT>::Mask(int width, ///< Number of columns
+                              int height, ///< Number of rows
+                              MaskPlaneDict const& planeDefs ///< desired mask planes
+                             ) :
+    image::ImageBase<MaskPixelT>(width, height),
+    _myMaskDictVersion(_maskDictVersion) {
+    _initializePlanes(planeDefs);
+}
+
+/// Constructor of initialised mask
+template<typename MaskPixelT>
+image::Mask<MaskPixelT>::Mask(int width, ///< Number of columns
+                              int height, ///< Number of rows
+                              MaskPixelT initialValue, ///< Initial value
+                              MaskPlaneDict const& planeDefs ///< desired mask planes
+                             ) :
+    image::ImageBase<MaskPixelT>(width, height),
+    _myMaskDictVersion(_maskDictVersion) {
+    _initializePlanes(planeDefs);
+    *this = initialValue;
+}
+
+/// Constructor of uninitialised mask
+template<typename MaskPixelT>
+image::Mask<MaskPixelT>::Mask(const std::pair<int, int> dimensions, ///< Desired number of columns/rows
+                              MaskPlaneDict const& planeDefs ///< desired mask planes
+                             ) :
     image::ImageBase<MaskPixelT>(dimensions),
     _myMaskDictVersion(_maskDictVersion) {
+    _initializePlanes(planeDefs);
+}
 
-    logging::Trace("afw.Mask", 5,
-                   boost::format("Number of mask planes: %d") % getNumPlanesMax());
-
-    if (planeDefs.size() > 0 && planeDefs != _maskPlaneDict) {
-        _maskPlaneDict = planeDefs;
-        _myMaskDictVersion = ++_maskDictVersion;
-    }
+/// Constructor of uninitialised mask
+template<typename MaskPixelT>
+image::Mask<MaskPixelT>::Mask(const std::pair<int, int> dimensions, ///< Desired number of columns/rows
+                              MaskPixelT initialValue, ///< Initial value
+                              MaskPlaneDict const& planeDefs ///< desired mask planes
+                             ) :
+    image::ImageBase<MaskPixelT>(dimensions),
+    _myMaskDictVersion(_maskDictVersion) {
+    _initializePlanes(planeDefs);
+    *this = initialValue;
 }
 
 template<typename MaskPixelT>
@@ -116,7 +147,8 @@ image::Mask<MaskPixelT>& image::Mask<MaskPixelT>::operator=(const MaskPixelT rhs
 template<typename MaskPixelT>
 image::Mask<MaskPixelT>::Mask(std::string const& fileName, //!< Name of file to read
         int const hdu,                                     //!< HDU to read 
-        lsst::daf::base::PropertySet::Ptr metadata,                         //!< file metadata (may point to NULL)
+        lsst::daf::base::PropertySet::Ptr metadata,        //!< file metadata (may point to NULL)
+        BBox const& bbox,                                  //!< Only read these pixels
         bool const conformMasks                            //!< Make Mask conform to mask layout in file?
                              ) :
     image::ImageBase<MaskPixelT>(),
@@ -139,10 +171,14 @@ image::Mask<MaskPixelT>::Mask(std::string const& fileName, //!< Name of file to 
                           (boost::format("File %s doesn't exist") % fileName).str());
     }
 
-    if (!image::fits_read_image<fits_mask_types>(fileName, *_getRawImagePtr(), metadata)) {
+    if (!image::fits_read_image<fits_mask_types>(fileName, *_getRawImagePtr(), metadata, hdu, bbox)) {
         throw LSST_EXCEPT(image::FitsException, (boost::format("Failed to read %s HDU %d") % fileName % hdu).str());
     }
     _setRawView();
+
+    if (bbox) {
+        this->setXY0(bbox.getLLC());
+    }
     //
     // OK, we've read it.  Now make sense of its mask planes
     //

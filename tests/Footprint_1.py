@@ -10,18 +10,21 @@ or
 """
 
 import pdb                              # we may want to say pdb.set_trace()
+import sys
 import unittest
 import lsst.utils.tests as tests
 import lsst.pex.logging as logging
 import lsst.afw.image.imageLib as afwImage
+import lsst.afw.math.mathLib as afwMath
 import lsst.afw.detection.detectionLib as afwDetection
+import lsst.afw.detection.utils as afwDetectionUtils
 import lsst.afw.display.ds9 as ds9
 
 try:
     type(verbose)
 except NameError:
     verbose = 0
-    logging.Trace_setVerbosity("afwDetection.Footprint", verbose)
+    logging.Debug("afwDetection.Footprint", verbose)
 
 try:
     type(display)
@@ -223,107 +226,146 @@ class FootprintTestCase(unittest.TestCase):
         self.assertEqual(bbox1.getY1(), y0 + height - 1)
         self.assertEqual(bbox1.getHeight(), height)
 
-        ngrow = 1
-        foot2 = afwDetection.growFootprint(foot1, ngrow)
-        bbox2 = foot2.getBBox()
+        ngrow = 5
+        for isotropic in (True, False):
+            foot2 = afwDetection.growFootprint(foot1, ngrow, isotropic)
+            bbox2 = foot2.getBBox()
 
-        # check bbox1
-        self.assertEqual(bbox1.getX0(), x0)
-        self.assertEqual(bbox1.getX1(), x0 + width - ngrow)
-        self.assertEqual(bbox1.getWidth(), width)
+            if False and display:
+                idImage = afwImage.ImageU(foot1.getRegion().getDimensions())
+                idImage.set(0)
 
-        self.assertEqual(bbox1.getY0(), y0)
-        self.assertEqual(bbox1.getY1(), y0 + height - ngrow)
-        self.assertEqual(bbox1.getHeight(), height)
-        # check bbox2
-        self.assertEqual(bbox2.getX0(), bbox1.getX0() - ngrow)
-        self.assertEqual(bbox2.getX1(), bbox1.getX1() + ngrow)
-        self.assertEqual(bbox2.getWidth(), bbox1.getWidth() + 2*ngrow)
+                i = 1
+                for foot in [foot1, foot2]:
+                    foot.insertIntoImage(idImage, i); i += 1
 
-        self.assertEqual(bbox2.getY0(), bbox1.getY0() - ngrow)
-        self.assertEqual(bbox2.getY1(), bbox1.getY1() + ngrow)
-        self.assertEqual(bbox2.getHeight(), bbox1.getHeight() + 2*ngrow)
-        # Check that region was preserved
-        self.assertEqual(foot1.getRegion(), foot2.getRegion())
+                metricImage = afwImage.ImageF("foo.fits"); ds9.mtv(metricImage, frame=1)
+                ds9.mtv(idImage)
+
+            # check bbox1
+            self.assertEqual(bbox1.getX0(), x0)
+            self.assertEqual(bbox1.getX1(), x0 + width - 1)
+            self.assertEqual(bbox1.getWidth(), width)
+
+            self.assertEqual(bbox1.getY0(), y0)
+            self.assertEqual(bbox1.getY1(), y0 + height - 1)
+            self.assertEqual(bbox1.getHeight(), height)
+            # check bbox2
+            self.assertEqual(bbox2.getX0(), bbox1.getX0() - ngrow)
+            self.assertEqual(bbox2.getX1(), bbox1.getX1() + ngrow)
+            self.assertEqual(bbox2.getWidth(), bbox1.getWidth() + 2*ngrow)
+
+            self.assertEqual(bbox2.getY0(), bbox1.getY0() - ngrow)
+            self.assertEqual(bbox2.getY1(), bbox1.getY1() + ngrow)
+            self.assertEqual(bbox2.getHeight(), bbox1.getHeight() + 2*ngrow)
+            # Check that region was preserved
+            self.assertEqual(foot1.getRegion(), foot2.getRegion())
+
+    def testFootprintToBBoxList(self):
+        """Test footprintToBBoxList"""
+        foot = afwDetection.Footprint(0, afwImage.BBox(afwImage.PointI(0, 0), 12, 10))
+        for y, x0, x1 in [(3, 3, 5), (3, 7, 7),
+                          (4, 2, 3), (4, 5, 7),
+                          (5, 2, 3), (5, 5, 8),
+                          (6, 3, 5), 
+                          ]:
+            foot.addSpan(y, x0, x1)
+
+        idImage = afwImage.ImageU(foot.getRegion().getDimensions())
+        idImage.set(0)
+
+        foot.insertIntoImage(idImage, 1)
+        if display:
+            ds9.mtv(idImage)
+
+        idImageFromBBox = idImage.Factory(idImage, True); idImageFromBBox.set(0)
+        bboxes = afwDetection.footprintToBBoxList(foot)
+        for bbox in bboxes:
+            x0, y0, x1, y1 = bbox.getX0(), bbox.getY0(), bbox.getX1(), bbox.getY1()
+
+            for y in range(y0, y1 + 1):
+                for x in range(x0, x1 + 1):
+                    idImageFromBBox.set(x, y, 1)
+
+            if display:
+                x0 -= 0.5; y0 -= 0.5
+                x1 += 0.5; y1 += 0.5
+
+                ds9.line([(x0, y0), (x1, y0), (x1, y1), (x0, y1), (x0, y0)], ctype=ds9.RED)
+
+        idImageFromBBox -= idImage      # should be blank
+        stats = afwMath.makeStatistics(idImageFromBBox, afwMath.MAX)
+
+        self.assertEqual(stats.getValue(), 0)
+
+    def testWriteDefect(self):
+        """Write a Footprint as a set of Defects"""
+
+        foot = afwDetection.Footprint(0, afwImage.BBox(afwImage.PointI(0, 0), 12, 10))
+        for y, x0, x1 in [(3, 3, 5), (3, 7, 7),
+                          (4, 2, 3), (4, 5, 7),
+                          (5, 2, 3), (5, 5, 8),
+                          (6, 3, 5), 
+                          ]:
+            foot.addSpan(y, x0, x1)
+        
+        if True:
+            fd = open("/dev/null", "w")
+        else:
+            fd = sys.stdout
+            
+        afwDetectionUtils.writeFootprintAsDefects(fd, foot)
+
+
+    def testNormalize(self):
+        """Test Footprint.normalize"""
+
+        w, h = 12, 10
+        im = afwImage.ImageU(w, h); im.set(0)
+        #
+        # Create a footprint;  note that these Spans overlap
+        #
+        for spans in ([(3, 5, 6), (4, 7, 7), ],
+                      [(3, 3, 5), (3, 5, 7),
+                       (4, 2, 3), (4, 5, 7), (4, 8, 9),
+                       (5, 2, 3), (5, 5, 8), (5, 6, 7),
+                       (6, 3, 5), 
+                       ],
+                      ):
+
+            foot = afwDetection.Footprint(0, afwImage.BBox(afwImage.PointI(0, 0), w, h))
+            for y, x0, x1 in spans:
+                foot.addSpan(y, x0, x1)
+
+                for x in range(x0, x1 + 1): # also insert into im
+                    im.set(x, y, 1)
+
+            idImage = afwImage.ImageU(foot.getRegion().getDimensions())
+            idImage.set(0)
+
+            foot.insertIntoImage(idImage, 1)
+            if display:             # overlaping pixels will be > 1
+                ds9.mtv(idImage)
+            #
+            # Normalise the Footprint, removing overlapping spans
+            #
+            foot.normalize();
+
+            idImage.set(0)
+            foot.insertIntoImage(idImage, 1)
+            if display:
+                ds9.mtv(idImage, frame=1)
+
+            idImage -= im
+
+            self.assertEqual(afwMath.makeStatistics(idImage, afwMath.MAX).getValue(), 0)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class DetectionSetTestCase(unittest.TestCase):
     """A test case for DetectionSet"""
     class Object(object):
-        def __init__(self, val, spans):
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            
+        def __init__(self, val, spans):            
             self.val = val
             self.spans = spans
 
@@ -356,7 +398,7 @@ class DetectionSetTestCase(unittest.TestCase):
         for obj in self.objects:
             obj.insert(im)
 
-        if display:
+        if False and display:
             ds9.mtv(im, frame=0)
         
     def tearDown(self):
@@ -370,6 +412,16 @@ class DetectionSetTestCase(unittest.TestCase):
     def testFootprints(self):
         """Check that we found the correct number of objects and that they are correct"""
         ds = afwDetection.DetectionSetF(self.ms, afwDetection.Threshold(10))
+
+        objects = ds.getFootprints()
+
+        self.assertEqual(len(objects), len(self.objects))
+        for i in range(len(objects)):
+            self.assertEqual(objects[i], self.objects[i])
+            
+    def testFootprints(self):
+        """Check that we found the correct number of objects using makeDetectionSet"""
+        ds = afwDetection.makeDetectionSet(self.ms, afwDetection.Threshold(10))
 
         objects = ds.getFootprints()
 
@@ -424,6 +476,23 @@ class DetectionSetTestCase(unittest.TestCase):
             for sp in objects[i].getSpans():
                 for x in range(sp.getX0(), sp.getX1() + 1):
                     self.assertEqual(idImage.get(x, sp.getY()), i + 1)
+
+    def testGrow2(self):
+        """Grow some more interesting shaped Footprints.  Informative with display, but no numerical tests"""
+        
+        ds = afwDetection.DetectionSetF(self.ms, afwDetection.Threshold(10), "OBJECT")
+
+        idImage = afwImage.ImageU(self.ms.getDimensions())
+        idImage.set(0)
+
+        i = 1
+        for foot in ds.getFootprints()[0:1]:
+            gfoot = afwDetection.growFootprint(foot, 3, False)
+            gfoot.insertIntoImage(idImage, i); i += 1
+
+        if display:
+            ds9.mtv(self.ms, frame=0)
+            ds9.mtv(idImage, frame=1)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

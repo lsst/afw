@@ -1,5 +1,5 @@
 # -*- python -*-
-import sys
+import glob, sys
 Import('env')
 
 env.Program(["Image.cc"], LIBS=env.getlibs("afw"))
@@ -44,24 +44,8 @@ env.Program("wcsTest", ["wcsTest.cc"], LIBS=env.getlibs("afw wcs"))
 env.Program("imageBackground", ["imageBackground.cc"], LIBS=env.getlibs("afw"))
 env.Program("imageStatistics", ["imageStatistics.cc"], LIBS=env.getlibs("afw"))
 env.Program("splineInterpolate", ["splineInterpolate.cc"], LIBS=env.getlibs("afw"))
-	    
-
 #
-# Tests
+# Build all ticket test files
 #
-if False:
-    import lsst.tests
-    tests = lsst.tests.Control(env, ignoreList=[
-        "fitsio", "vwconvert", "maskedImageFitsIO",
-        "convolveLinear", "simpleConvolve", "spatiallyVaryingConvolve",
-        "timeConvolve", "timeSpatiallyVaryingConvolve",
-    ])
-
-    if not tests.runExamples:
-        if not env.QuietFlagIsSet():
-            print >> sys.stderr, "Not running the examples; \"chmod o+x examples/%s\" to run them" % tests._tmpDir
-    else:
-        if not env.QuietFlagIsSet():
-            print >> sys.stderr, "Running the examples; \"chmod o-x examples/%s\" to not run them" % tests._tmpDir
-        tests.run("*.cc")
-        tests.run("*.py")
+for cfile in glob.glob("ticket*.cc"):
+    env.Program(cfile, LIBS=env.getlibs("afw"))

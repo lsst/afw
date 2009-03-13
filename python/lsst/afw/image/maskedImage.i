@@ -41,8 +41,10 @@ SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::daf::data::LsstBase, lsst::afw::image:
         else:
             try:
                 self.getImage().set(x, y, values[0])
-                self.getMask().set(x, y, values[1])
-                self.getVariance().set(x, y, values[2])
+                if len(values) > 1:
+                    self.getMask().set(x, y, values[1])
+                if len(values) > 2:
+                   self.getVariance().set(x, y, values[2])
             except TypeError:
                 self.getImage().set(x)
                 self.getMask().set(y)
@@ -126,8 +128,10 @@ SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::daf::data::LsstBase, lsst::afw::image:
 
 %maskedImagePtr(MaskedImage, F, float,  lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
 %maskedImagePtr(MaskedImage, D, double, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
+%maskedImagePtr(MaskedImage, I, int,    lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
 
 %include "lsst/afw/image/MaskedImage.h"
 
 %maskedImage(MaskedImage, D, double,  lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
-%maskedImage(MaskedImage, F, float,  lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
+%maskedImage(MaskedImage, F, float,   lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
+%maskedImage(MaskedImage, I, int,     lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);

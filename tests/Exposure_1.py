@@ -19,9 +19,10 @@ import lsst.afw.image as afwImage
 import lsst.utils.tests as utilsTests
 import lsst.pex.logging as pexLog
 import lsst.pex.exceptions as pexExcept
+import lsst.afw.display.ds9 as ds9
 
 Verbosity = 0 # increase to see trace
-pexLog.Trace_setVerbosity("lsst.afw.image", Verbosity)
+pexLog.Debug("lsst.afw.image", Verbosity)
 
 dataDir = eups.productDir("afwdata")
 if not dataDir:
@@ -36,7 +37,7 @@ currDir = os.path.abspath(os.path.dirname(__file__))
 inFilePath = os.path.join(dataDir, InputMaskedImageName)
 inFilePathSmall = os.path.join(dataDir, InputMaskedImageNameSmall)
 inFilePathSmallImage = os.path.join(dataDir, InputImageNameSmall)
-outFilePath = os.path.join(dataDir, OutputMaskedImageName)
+outFilePath = OutputMaskedImageName
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class ExposureTestCase(unittest.TestCase):
@@ -170,36 +171,25 @@ class ExposureTestCase(unittest.TestCase):
         """
         Test that a subExposure of the original Exposure can be obtained.
 
-        Member has not been fully implemented yet (as of Sep 19 2007)
-        so this test should throw a
-        lsst::pex::exceptions::InvalidParameter when a subExposure is
-        requested.
- 
         The MaskedImage class should throw a
         lsst::pex::exceptions::InvalidParameter if the requested
         subRegion is not fully contained within the original
         MaskedImage.
         
         """
+        #
+        # This subExposure is valid
+        #
+        bbox = afwImage.BBox(afwImage.PointI(50, 50), 10, 10)
+        subExposure = self.exposureCrWcs.Factory(self.exposureCrWcs, bbox)
+
+        # Check the WCS.  The origin of subExposure's at the same location as bbox's lower-left-corner
+
+        p0 = self.exposureCrWcs.getWcs().xyToRaDec(afwImage.PointD(bbox.getX0(), bbox.getY0()))
+        p1 = subExposure.getWcs().xyToRaDec(afwImage.PointD(0, 0))
         
-        # the following subRegion is valid and should not trigger an
-        # exception from the MaskedImage class, however the WCS class
-        # may throw an exception if the WCS FITS cards for the image
-        # are not found (this fails for 871034p_1_MI because the Fits
-        # header cards are not found).
-        
-        subRegion1 = afwImage.BBox(afwImage.PointI(50, 50), 10, 10)
-        try:
-            subExposure = self.exposureCrWcs.getSubExposure(subRegion1)
-        except Exception:
-            pass
-        
-        subRegion2 = afwImage.BBox(afwImage.PointI(0, 0), 5, 5)
-        try:
-            subExposure = afwImage.ExposureF(self.smallExposure, subRegion2)
-        except IndexError:
-            pass
-        
+        self.assertEqual((p0.getX(), p0.getY()), (p1.getX(), p1.getY()))
+
         # this subRegion is not valid and should trigger an exception
         # from the MaskedImage class and should trigger an exception
         # from the WCS class for the MaskedImage 871034p_1_MI.
@@ -221,26 +211,22 @@ class ExposureTestCase(unittest.TestCase):
         utilsTests.assertRaisesLsstCpp(self, pexExcept.LengthErrorException, getSubRegion)
 
     def testReadWriteFits(self):
-         """
-
-         Test that the readFits member can read an Exposure given the
-         name of the Exposure.
-
-         The constructor taking a basename should read the Exposure's MaskedImage
-         using the MaskedImage class' constructor and read the WCS
-         metadata into a WCS object.  Currently the WCS class lacks
-         the capability to return the metadata to the user so a
-         readFits request should simply reset the _wcsPtr with the
-         metadata obtained frm the MaskedImage.  Exposure's readFits
-         only take a MaskedImage for now.  The MaskedImage class will
-         throw an exception if the MaskedImage can't be found.
-
-         The writeFits member is not yet fully implemented (as of Sep
-         19 2007) therefore this member should throw a
-         lsst::pex::exceptions::InvalidParameter.
+         """Test readFits and writeFits.
          """
          # This should pass without an exception
          exposure = afwImage.ExposureF(inFilePathSmall)
+
+         # Check that we can read sub-exposures
+         bbox = afwImage.BBox(afwImage.PointI(50, 50), 10, 10)
+
+         p0 = exposure.getWcs().xyToRaDec(afwImage.PointD(bbox.getX0(), bbox.getY0()))
+
+         hdu = 0
+         subExposure = afwImage.ExposureF(inFilePathSmall, hdu, bbox)
+
+         p1 = subExposure.getWcs().xyToRaDec(afwImage.PointD(0, 0))
+        
+         self.assertEqual((p0.getX(), p0.getY()), (p1.getX(), p1.getY()))
 
          # This should throw an exception
          def getExposure():
@@ -248,8 +234,10 @@ class ExposureTestCase(unittest.TestCase):
              
          utilsTests.assertRaisesLsstCpp(self, pexExcept.NotFoundException, getExposure)
 
-         # This should not throw an exception 
+         # Make sure we can write without an exception
          exposure.writeFits(outFilePath)
+         for compName in ("img", "msk", "var"):
+            os.remove("%s_%s.fits" % (outFilePath, compName))
          
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

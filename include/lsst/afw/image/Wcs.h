@@ -36,6 +36,13 @@ namespace image {
         Wcs();
         Wcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
         Wcs(PointD crval, PointD crpix, boost::numeric::ublas::matrix<double> CD);
+        Wcs(PointD crval, PointD crpix, boost::numeric::ublas::matrix<double> CD, 
+            boost::numeric::ublas::matrix<double> sipA, ///< Forward distortion Matrix A
+            boost::numeric::ublas::matrix<double> sipB, ///< Forward distortion Matrix B
+            boost::numeric::ublas::matrix<double> sipAp, ///<Reverse distortion Matrix Ap
+            boost::numeric::ublas::matrix<double> sipBp  ///<Reverse distortion Matrix Bp
+           );
+
         Wcs(Wcs const &);
         Wcs & operator = (const Wcs &);
 
@@ -48,6 +55,8 @@ namespace image {
 
         /// Return true iff Wcs is valid
         operator bool() const { return _wcsInfo != NULL; }
+
+        void shiftReferencePixel(double const dx, double const dy);
 
         lsst::afw::image::PointD getOriginRaDec() const;
         lsst::afw::image::PointD getOriginXY() const;
@@ -67,6 +76,8 @@ namespace image {
 
         double pixArea(lsst::afw::image::PointD pix) const;
     private:
+        void initWcslib(PointD crval, PointD crpix, boost::numeric::ublas::matrix<double> CD);
+        
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::WcsFormatter);
 
         lsst::daf::base::PropertySet::Ptr _fitsMetadata; ///< Input FITS header.  Caveat Emptor: may contain other keywords
@@ -77,6 +88,11 @@ namespace image {
         int _wcsfixCtrl; ///< Do potentially unsafe translations of non-standard unit strings? 0/1 = no/yes
         int _wcshdrCtrl; ///< Controls messages to stderr from wcshdr (0 for none); see wcshdr.h for details
         int _nReject;
+
+        //SIP keywords
+        boost::numeric::ublas::matrix<double> _sipA, _sipB; ///< Forward transformation
+        boost::numeric::ublas::matrix<double> _sipAp, _sipBp;   ///<Reverse transformation
+        
     };
   
 }}} // lsst::afw::image

@@ -29,6 +29,7 @@ namespace image = lsst::afw::image;
 class Span {
 public:
     typedef boost::shared_ptr<Span> Ptr;
+    typedef boost::shared_ptr<const Span> ConstPtr;
 
     Span(int y,                         //!< Row that Span's in
          int x0,                        //!< Starting column (inclusive)
@@ -36,16 +37,14 @@ public:
         : _y(y), _x0(x0), _x1(x1) {}
     ~Span() {}
 
-    int getX0() { return _x0; }         ///< Return the starting x-value
-    int getX1() { return _x1; }         ///< Return the ending x-value
-    int getWidth() { return _x1 - _x0 + 1; } ///< Return the number of pixels
-    int getY() { return _y; }                ///< Return the y-value
+    int getX0() const { return _x0; }         ///< Return the starting x-value
+    int getX1() const { return _x1; }         ///< Return the ending x-value
+    int getY()  const { return _y; }          ///< Return the y-value
+    int getWidth() const { return _x1 - _x0 + 1; } ///< Return the number of pixels
 
-    std::string toString();    
+    std::string toString() const;    
 
     void shift(int dx, int dy) { _x0 += dx; _x1 += dx; _y += dy; }
-
-    int compareByYX(const void **a, const void **b);
 
     friend class Footprint;
 private:
@@ -158,7 +157,8 @@ public:
     int setNpix();
     void setBBox();
 
-    void insertIntoImage(image::Image<boost::uint16_t>& idImage, const int id) const;
+    void insertIntoImage(image::Image<boost::uint16_t>& idImage, int const id,
+                         image::BBox const& region=image::BBox()) const;
 private:
     Footprint(const Footprint &);                   //!< No copy constructor
     Footprint operator = (Footprint const &) const; //!< no assignment
@@ -173,26 +173,17 @@ private:
     bool _normalized;                    //!< Are the spans sorted? 
 };
 
-Footprint::Ptr growFootprint(Footprint::Ptr const &foot, int ngrow);
+Footprint::Ptr growFootprint(Footprint const &foot, int ngrow, bool isotropic=true);
+Footprint::Ptr growFootprint(Footprint::Ptr const &foot, int ngrow, bool isotropic=true);
+
+std::vector<lsst::afw::image::BBox> footprintToBBoxList(Footprint const& foot);
 
 template<typename MaskT>
-MaskT setMaskFromFootprint(typename image::Mask<MaskT>::Ptr mask,
+MaskT setMaskFromFootprint(image::Mask<MaskT> *mask,
                            Footprint const& footprint,
                            MaskT const bitmask);
-/**
- * \brief Compatibility function for setMaskFromFootprint's old API
- *
- * \deprecated
- * The API accepting a Footprint::Ptr is replaced by one with a Footprint const&
- */
 template<typename MaskT>
-MaskT setMaskFromFootprint(typename image::Mask<MaskT>::Ptr mask,
-                           Footprint::Ptr const footprint,
-                           MaskT const bitmask) {
-    return setMaskFromFootprint(mask, *footprint, bitmask);
-}
-template<typename MaskT>
-MaskT setMaskFromFootprintList(typename lsst::afw::image::Mask<MaskT>::Ptr mask,
+MaskT setMaskFromFootprintList(lsst::afw::image::Mask<MaskT> *mask,
                                std::vector<detection::Footprint::Ptr> const& footprints,
                                MaskT const bitmask);
 template<typename MaskT>
@@ -221,12 +212,26 @@ public:
                  int x,
                  int y,
                  std::vector<Peak> const* peaks = NULL);
-    DetectionSet(DetectionSet const& set, int r=0);
+    DetectionSet(DetectionSet const&);
+    DetectionSet(DetectionSet const& set, int r, bool isotropic=true);
     DetectionSet(DetectionSet const& footprints1, DetectionSet const& footprints2,
                  bool const includePeaks);
     ~DetectionSet();
 
+    DetectionSet& operator=(DetectionSet const& rhs);
+
+    template<typename RhsImagePixelT, typename RhsMaskPixelT>
+    void swap(DetectionSet<RhsImagePixelT, RhsMaskPixelT> &rhs) {
+        using std::swap;                    // See Meyers, Effective C++, Item 25
+        
+        swap(_footprints, rhs.getFootprints());
+        image::BBox rhsRegion = rhs.getRegion();
+        swap(_region, rhsRegion);
+    }
+    
     FootprintList& getFootprints() { return _footprints; } //!< Retun the Footprint%s of detected objects
+    FootprintList const& getFootprints() const { return _footprints; } //!< Retun the Footprint%s of detected objects
+    void setRegion(image::BBox const& region);
     image::BBox const& getRegion() const { return _region; } //!< Return the corners of the MaskedImage
 
 #if 0                                   // these are equivalent, but the former confuses swig
@@ -234,9 +239,16 @@ public:
 #else
     typename boost::shared_ptr<image::Image<boost::uint16_t> > insertIntoImage(const bool relativeIDs);
 #endif
+
+    void setMask(image::Mask<MaskPixelT> *mask, ///< Set bits in the mask
+                 std::string const& planeName   ///< Here's the name of the mask plane to fit
+                ) {
+        detection::setMaskFromFootprintList(mask, getFootprints(),
+                                            image::Mask<MaskPixelT>::getPlaneBitMask(planeName));        
+    }
 private:
-    FootprintList & _footprints;  //!< the Footprints of detected objects
-    const image::BBox _region;      //!< The corners of the MaskedImage that the detections live in
+    FootprintList & _footprints;        //!< the Footprints of detected objects
+    image::BBox _region;                //!< The corners of the MaskedImage that the detections live in
 };
 
 #if 0
@@ -270,6 +282,7 @@ public:
      * calculates a per-footprint quantity
      */
     virtual void reset() {}
+    virtual void reset(Footprint const& foot) {}
 
     /**
      * \brief Apply operator() to each pixel in the Footprint
@@ -277,9 +290,20 @@ public:
     void apply(Footprint const& foot    ///< The Footprint in question
               ) {
         reset();
+        reset(foot);
 
         if (foot.getSpans().empty()) {
             return;
+        }
+
+        image::BBox const& bbox = foot.getBBox();
+        image::BBox region = foot.getRegion();
+        if (region &&
+            (!region.contains(bbox.getLLC()) || !region.contains(bbox.getURC()))) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                              (boost::format("Footprint with BBox (%d,%d) -- (%dx%d) doesn't fit in image with BBox (%d,%d) -- (%dx%d)") %
+                               bbox.getX0() % bbox.getY0() % bbox.getX1() % bbox.getY0() %
+                               region.getX0() % region.getY0() % region.getX1() % region.getY1()).str());
         }
 
         int ox1 = 0, oy = 0;            // Current position of the locator (in the SpanList loop)
@@ -313,6 +337,27 @@ public:
 private:
     ImageT const& _image;               // The image that the Footprints live in
 };
+
+/************************************************************************************************************/
+
+template<typename ImagePixelT, typename MaskPixelT>
+typename detection::DetectionSet<ImagePixelT, MaskPixelT>::Ptr makeDetectionSet(
+        image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
+        Threshold const& threshold,
+        std::string const& planeName = "",
+        int const npixMin=1) {
+    return typename detection::DetectionSet<ImagePixelT, MaskPixelT>::Ptr(new DetectionSet<ImagePixelT, MaskPixelT>(img, threshold, planeName, npixMin));
+}
+
+template<typename ImagePixelT, typename MaskPixelT>
+typename detection::DetectionSet<ImagePixelT, MaskPixelT>::Ptr makeDetectionSet(
+        image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
+        Threshold const& threshold,
+        int x,
+        int y,
+        std::vector<Peak> const* peaks = NULL) {
+    return typename detection::DetectionSet<ImagePixelT, MaskPixelT>::Ptr(new DetectionSet<ImagePixelT, MaskPixelT>(img, threshold, x, y, peaks));
+}
 
 /************************************************************************************************************/
 ///

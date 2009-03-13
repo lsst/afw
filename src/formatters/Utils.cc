@@ -62,7 +62,7 @@ int64_t extractExposureId(PropertySet::Ptr const & properties) {
     if ((exposureId & 0xfffffffe00000000LL) != 0LL) {
         throw LSST_EXCEPT(ex::RangeErrorException, "\"exposureId\" is too large");
     }
-    return exposureId << 1; // DC2 fix
+    return exposureId;
 }
 
 int extractCcdId(PropertySet::Ptr const & properties) {
@@ -71,12 +71,26 @@ int extractCcdId(PropertySet::Ptr const & properties) {
     }
     int ccdId = properties->getAsInt64("ccdId");
     if (ccdId < 0) {
-        throw LSST_EXCEPT(ex::RangeErrorException, "negative \"exposureId\"");
+        throw LSST_EXCEPT(ex::RangeErrorException, "negative \"ccdId\"");
     }
     if (ccdId > 255) {
         throw LSST_EXCEPT(ex::RangeErrorException, "\"ccdId\" is too large");
     }
     return ccdId;
+}
+
+int extractAmpId(PropertySet::Ptr const & properties) {
+    if (properties->isArray("ampId")) {
+        throw LSST_EXCEPT(ex::RuntimeErrorException, "\"ampId\" property has multiple values");
+    }
+    int ampId = properties->getAsInt64("ampId");
+    if (ampId < 0) {
+        throw LSST_EXCEPT(ex::RangeErrorException, "negative \"ampId\"");
+    }
+    if (ampId > 63) {
+        throw LSST_EXCEPT(ex::RangeErrorException, "\"ampId\" is too large");
+    }
+    return (extractCcdId(properties) << 6) + ampId;
 }
 
 int64_t extractCcdExposureId(PropertySet::Ptr const & properties) {
@@ -85,6 +99,11 @@ int64_t extractCcdExposureId(PropertySet::Ptr const & properties) {
     return (exposureId << 8) + ccdId;
 }
 
+int64_t extractAmpExposureId(PropertySet::Ptr const & properties) {
+    int64_t exposureId = extractExposureId(properties);
+    int ampId = extractAmpId(properties);
+    return (exposureId << 14) + ampId;
+}
 
 /**
  * Extracts and returns the string-valued @c "itemName" property from the given data property object.
@@ -117,26 +136,6 @@ bool extractOptionalFlag(
     }
     return false;
 }
-
-
-/**
- * Extracts the string-valued parameter with the given name from the specified policy. If the provided
- * policy pointer is null or contains no such parameter, the given default string is returned instead.
- */
-std::string const extractPolicyString(
-    Policy::Ptr const & policy,
-    std::string const & key,
-    std::string const & def
-) {
-    if (policy) {
-        return policy->getString(key, def);
-    }
-    return def;
-}
-
-
-static char const * const sDefaultVisitNamePat      = "_tmp_visit%1%_";
-static char const * const sDefaultVisitSliceNamePat = "_tmp_visit%1%_slice%2%_";
 
 
 /**
@@ -180,18 +179,10 @@ std::string const getVisitSliceTableName(
 
     if (isPerSliceTable) {
         int sliceId = extractSliceId(properties);
-        fmt.parse(extractPolicyString(
-            policy,
-            itemName + ".perSliceAndVisitTableNamePattern",
-            sDefaultVisitSliceNamePat + itemName
-        ));
+        fmt.parse(policy->getString(itemName + ".perSliceAndVisitTableNamePattern"));
         fmt % visitId % sliceId;
     } else {
-        fmt.parse(extractPolicyString(
-            policy,
-            itemName + ".perVisitTableNamePattern",
-            sDefaultVisitNamePat + itemName
-        ));
+        fmt.parse(policy->getString(itemName + ".perVisitTableNamePattern"));
         fmt % visitId;
     }
     return fmt.str();
@@ -240,11 +231,7 @@ void getAllVisitSliceTableNames(
             throw LSST_EXCEPT(ex::RuntimeErrorException,
                               itemName + " \".numSlices\" property value is non-positive");
         }
-        fmt.parse(extractPolicyString(
-            policy,
-            itemName + ".perSliceAndVisitTableNamePattern",
-            sDefaultVisitSliceNamePat + itemName
-        ));
+        fmt.parse(policy->getString(itemName + ".perSliceAndVisitTableNamePattern"));
         fmt.bind_arg(1, visitId);
         for (int i = 0; i < numSlices; ++i) {
             fmt % i;
@@ -252,11 +239,7 @@ void getAllVisitSliceTableNames(
             fmt.clear();
         }
     } else {
-        fmt.parse(extractPolicyString(
-            policy,
-            itemName + ".perVisitTableNamePattern",
-            sDefaultVisitNamePat + itemName
-        ));
+        fmt.parse(policy->getString(itemName + ".perVisitTableNamePattern"));
         fmt % visitId;
         names.push_back(fmt.str());
     }
@@ -279,7 +262,7 @@ void createVisitSliceTable(
 ) {
     std::string itemName(getItemName(properties));
     std::string name(getVisitSliceTableName(policy, properties));
-    std::string model = extractPolicyString(policy, itemName + ".templateTableName", "tmpl_" + itemName);
+    std::string model = policy->getString(itemName + ".templateTableName");
 
     lsst::daf::persistence::DbTsvStorage db;
     db.setPersistLocation(location);

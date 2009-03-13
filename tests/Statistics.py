@@ -37,6 +37,24 @@ class StatisticsTestCase(unittest.TestCase):
     def tearDown(self):
         del self.image
 
+    def testDefaultGet(self):
+	"""Test that we can get a single statistic without specifying it"""
+        stats = afwMath.StatisticsF(self.image, afwMath.MEDIAN)
+
+        self.assertEqual(stats.getValue(), stats.getValue(afwMath.MEDIAN))
+        self.assertEqual(stats.getResult()[0], stats.getResult(afwMath.MEDIAN)[0])
+        #
+        stats = afwMath.StatisticsF(self.image, afwMath.MEDIAN | afwMath.ERRORS)
+
+        self.assertEqual(stats.getValue(), stats.getValue(afwMath.MEDIAN))
+        self.assertEqual(stats.getResult(), stats.getResult(afwMath.MEDIAN))
+        self.assertEqual(stats.getError(), stats.getError(afwMath.MEDIAN))
+
+        def tst():
+            stats.getValue()
+        stats = afwMath.StatisticsF(self.image, afwMath.MEDIAN | afwMath.MEAN)
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException, tst)
+
     def testStats1(self):
         stats = afwMath.StatisticsF(self.image, afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN)
 

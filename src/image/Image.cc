@@ -291,21 +291,49 @@ image::ImageBase<PixelT>& image::ImageBase<PixelT>::operator=(PixelT const rhs) 
 //
 // On to Image itself.  ctors, cctors, and operator=
 //
-/// Create an uninitialised Image of the specified size 
-template<typename PixelT>
-image::Image<PixelT>::Image(int const width, int const height) :
-    image::ImageBase<PixelT>(width, height) {}
-
 /**
- * Create an uninitialised Image of the specified size
+ * Create an uninitialised Image of the specified size 
  *
  * \note Many lsst::afw::image and lsst::afw::math objects define a \c dimensions member
  * which may be conveniently used to make objects of an appropriate size
  */
 template<typename PixelT>
+image::Image<PixelT>::Image(int const width, int const height) :
+    image::ImageBase<PixelT>(width, height) {}
+
+/**
+ * Create an initialised Image of the specified size 
+ *
+ * \note Many lsst::afw::image and lsst::afw::math objects define a \c dimensions member
+ * which may be conveniently used to make objects of an appropriate size
+ */
+template<typename PixelT>
+image::Image<PixelT>::Image(int const width, ///< Number of columns
+                            int const height, ///< Number of rows
+                            PixelT initialValue ///< Initial value
+                           ) :
+    image::ImageBase<PixelT>(width, height) {
+    *this = initialValue;
+}
+
+/**
+ * Create an initialised Image of the specified size
+ */
+template<typename PixelT>
 image::Image<PixelT>::Image(std::pair<int, int> const dimensions // (width, height) of the desired Image
                            ) :
     image::ImageBase<PixelT>(dimensions) {}
+
+/**
+ * Create an uninitialized Image of the specified size
+ */
+template<typename PixelT>
+image::Image<PixelT>::Image(std::pair<int, int> const dimensions, // (width, height) of the desired Image
+                            PixelT initialValue ///< Initial value
+                           ) :
+    image::ImageBase<PixelT>(dimensions) {
+    *this = initialValue;
+}
 
 /**
  * Copy constructor.
@@ -365,7 +393,8 @@ image::Image<PixelT>& image::Image<PixelT>::operator=(Image const& rhs) {
 template<typename PixelT>
 image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
                             int const hdu,               ///< Desired HDU
-                            lsst::daf::base::PropertySet::Ptr metadata ///< file metadata (may point to NULL)
+                            lsst::daf::base::PropertySet::Ptr metadata, ///< file metadata (may point to NULL)
+                            BBox const& bbox                            ///< Only read these pixels
                            ) :
     image::ImageBase<PixelT>() {
 
@@ -383,10 +412,14 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
                           (boost::format("File %s doesn't exist") % fileName).str());
     }
 
-    if (!image::fits_read_image<fits_img_types>(fileName, *this->_getRawImagePtr(), metadata)) {
+    if (!image::fits_read_image<fits_img_types>(fileName, *this->_getRawImagePtr(), metadata, hdu, bbox)) {
         throw LSST_EXCEPT(image::FitsException, (boost::format("Failed to read %s HDU %d") % fileName % hdu).str());
     }
     this->_setRawView();
+
+    if (bbox) {
+        this->setXY0(bbox.getLLC());
+    }
 }
 
 /**
@@ -438,6 +471,12 @@ void image::Image<PixelT>::operator+=(Image<PixelT> const& rhs) {
     transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<PixelT>(_1 + _2));
 }
 
+/// Add Image c*rhs to lhs
+template<typename PixelT>
+void image::Image<PixelT>::scaledPlus(double const c, Image<PixelT> const& rhs) {
+    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<PixelT>(_1 + ret<PixelT>(c*_2)));
+}
+
 /// Subtract scalar rhs from lhs
 template<typename PixelT>
 void image::Image<PixelT>::operator-=(PixelT const rhs) {
@@ -448,6 +487,12 @@ void image::Image<PixelT>::operator-=(PixelT const rhs) {
 template<typename PixelT>
 void image::Image<PixelT>::operator-=(Image<PixelT> const& rhs) {
     transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<PixelT>(_1 - _2));
+}
+
+/// Subtract Image c*rhs from lhs
+template<typename PixelT>
+void image::Image<PixelT>::scaledMinus(double const c, Image<PixelT> const& rhs) {
+    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<PixelT>(_1 - ret<PixelT>(c*_2)));
 }
 
 /// Multiply lhs by scalar rhs
@@ -462,16 +507,46 @@ void image::Image<PixelT>::operator*=(Image<PixelT> const& rhs) {
     transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<PixelT>(_1 * _2));
 }
 
+/// Multiply lhs by Image c*rhs (i.e. %pixel-by-%pixel multiplication)
+template<typename PixelT>
+void image::Image<PixelT>::scaledMultiplies(double const c, Image<PixelT> const& rhs) {
+    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<PixelT>(_1 * ret<PixelT>(c*_2)));
+}
+
 /// Divide lhs by scalar rhs
+///
+/// \note Floating point types implement this by multiplying by the 1/rhs
 template<typename PixelT>
 void image::Image<PixelT>::operator/=(PixelT const rhs) {
     transform_pixels(_getRawView(), _getRawView(), ret<PixelT>(_1 / rhs));
 }
+//
+// Specialize float and double for efficiency
+//
+namespace lsst { namespace afw { namespace image {
+template<>
+void Image<double>::operator/=(double const rhs) {
+    double const irhs = 1/rhs;
+    *this *= irhs;
+}
+
+template<>
+void Image<float>::operator/=(float const rhs) {
+    float const irhs = 1/rhs;
+    *this *= irhs;
+}
+}}}
 
 /// Divide lhs by Image rhs (i.e. %pixel-by-%pixel division)
 template<typename PixelT>
 void image::Image<PixelT>::operator/=(Image<PixelT> const& rhs) {
     transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<PixelT>(_1 / _2));
+}
+
+/// Divide lhs by Image c*rhs (i.e. %pixel-by-%pixel division)
+template<typename PixelT>
+void image::Image<PixelT>::scaledDivides(double const c, Image<PixelT> const& rhs) {
+    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<PixelT>(_1 / ret<PixelT>(c*_2)));
 }
 
 /************************************************************************************************************/

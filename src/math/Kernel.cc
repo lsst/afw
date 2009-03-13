@@ -8,7 +8,10 @@
  */
 #include <stdexcept>
 
+#include <fstream>
+
 #include "boost/format.hpp"
+#include "boost/archive/text_oarchive.hpp"
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
@@ -104,8 +107,10 @@ void lsst::afw::math::Kernel::setSpatialParameters(const std::vector<std::vector
         }
     }
     // Set parameters
-    for (unsigned int ii = 0; ii < nKernelParams; ++ii) {
-        this->_spatialFunctionList[ii]->setParameters(params[ii]);
+    if (nSpatialParams > 0) {
+        for (unsigned int ii = 0; ii < nKernelParams; ++ii) {
+            this->_spatialFunctionList[ii]->setParameters(params[ii]);
+        }
     }
 }
 
@@ -122,6 +127,27 @@ void lsst::afw::math::Kernel::computeKernelParametersFromSpatialModel(std::vecto
     for ( ; funcIter != _spatialFunctionList.end(); ++funcIter, ++paramIter) {
         *paramIter = (*(*funcIter))(x,y);
     }
+}
+
+/**
+ * @brief Return a copy of the specified spatial function (one component of the spatial model)
+ *
+ * @throw lsst::pex::exceptions::InvalidParameterException if kernel not spatially varying
+ * @throw lsst::pex::exceptions::InvalidParameterException if index out of range
+ */
+lsst::afw::math::Kernel::SpatialFunctionPtr lsst::afw::math::Kernel::getSpatialFunction(
+    unsigned int index  ///< index of desired spatial function; must be in range [0, #spatial parameters - 1]
+) const {
+    if (index >= _spatialFunctionList.size()) {
+        if (!this->isSpatiallyVarying()) {
+            throw LSST_EXCEPT(ex::InvalidParameterException, "kernel is not spatially varying");
+        } else {
+            std::ostringstream errStream;
+            errStream << "index = " << index << "; must be < , " << _spatialFunctionList.size();
+            throw LSST_EXCEPT(ex::InvalidParameterException, errStream.str());
+        }
+    }
+    return _spatialFunctionList[index]->copy();
 }
 
 /**
@@ -155,6 +181,13 @@ std::string lsst::afw::math::Kernel::toString(std::string prefix) const {
     return os.str();
 };
 
+
+void lsst::afw::math::Kernel::toFile(std::string fileName) const {
+    std::ofstream os(fileName.c_str());
+    boost::archive::text_oarchive oa(os);
+    oa << this;
+}
+
 //
 // Protected Member Functions
 //
@@ -187,3 +220,4 @@ void lsst::afw::math::Kernel::setKernelParametersFromSpatialModel(double x, doub
         this->setKernelParameter(ii, (*(*funcIter))(x,y));
     }
 }
+

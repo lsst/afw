@@ -8,6 +8,7 @@
  * @author Steve Bickerton
  */
 
+#include <cassert>
 #include "boost/tuple/tuple.hpp"
 
 namespace lsst { namespace afw { namespace math {
@@ -15,6 +16,7 @@ namespace lsst { namespace afw { namespace math {
 /* @brief control what is calculated
  */
 enum Property {
+    NOTHING = 0x0,                      ///< We don't want anything
     ERRORS = 0x1,                       ///< Include errors of requested quantities
     NPOINT = 0x2,                       ///< number of sample points
     MEAN = 0x4,                         ///< estimate sample mean
@@ -87,14 +89,12 @@ public:
     typedef std::pair<double, double> value_type;
     
     template<typename Image>
-    explicit Statistics(Image const& img, ///< Image (or MaskedImage) whose properties we want
-                        int const flags,  ///< Describe what we want to calculate
-                        StatisticsControl const& sctrl=StatisticsControl()); ///< Specify clipping parameters
+    explicit Statistics(Image const& img, int const flags, StatisticsControl const& sctrl=StatisticsControl());
     
-    value_type getResult(Property const prop) const;
+    value_type getResult(Property const prop=NOTHING) const;
     
-    double getError(Property const prop) const;
-    double getValue(Property const prop) const;
+    double getError(Property const prop=NOTHING) const;
+    double getValue(Property const prop=NOTHING) const;
     
 private:
     long _flags;                        // The desired calculation

@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 """
-Tests for MaskedImages
+Tests for Masks
 
 Run with:
-   python MaskedImage_1.py
+   python Mask.py
 or
    python
-   >>> import MaskedImage_1; MaskedImage_1.run()
+   >>> import Mask; Mask.run()
 """
 
 import os
@@ -61,17 +61,25 @@ class MaskTestCase(unittest.TestCase):
         del self.mask1
         del self.mask2
 
-    def testSetGetImages(self):
+    def testInitializeMasks(self):
+        val = 0x1234
+        msk = afwImage.MaskU(10, 10, val)
+        self.assertEqual(msk.get(0,0), val)
+
+        msk2 = afwImage.MaskU(afwImage.pairIntInt(10, 10), val)
+        self.assertEqual(msk2.get(0,0), val)
+        
+    def testSetGetMasks(self):
         self.assertEqual(self.mask1.get(0,0), self.val1)
     
-    def testOrImages(self):
+    def testOrMasks(self):
         self.mask2 |= self.mask1
         self.mask1 |= self.val2
         
         self.assertEqual(self.mask1.get(0,0), self.val1 | self.val2)
         self.assertEqual(self.mask2.get(0,0), self.val1 | self.val2)
     
-    def testAndImages(self):
+    def testAndMasks(self):
         self.mask2 &= self.mask1
         self.mask1 &= self.val2
         
@@ -153,7 +161,7 @@ class MaskTestCase(unittest.TestCase):
             return
 
         hdu = 0
-        mask = afwImage.MaskU(self.maskFile, hdu, None, True)
+        mask = afwImage.MaskU(self.maskFile, hdu, None, afwImage.BBox(), True)
 
         if False:
             import lsst.afw.display.ds9 as ds9

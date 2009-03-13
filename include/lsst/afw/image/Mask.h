@@ -54,10 +54,14 @@ namespace image {
 
         // Constructors        
         explicit Mask(int nCols=0, int nRows=0, MaskPlaneDict const& planeDefs = MaskPlaneDict());
-        explicit Mask(const std::pair<int, int> dimensions, MaskPlaneDict const& planeDefs = MaskPlaneDict());
+        explicit Mask(int nCols, int nRows, MaskPixelT initialValue, MaskPlaneDict const& planeDefs = MaskPlaneDict());
+        explicit Mask(const std::pair<int, int> dimensions,
+                      MaskPlaneDict const& planeDefs = MaskPlaneDict());
+        explicit Mask(const std::pair<int, int> dimensions, MaskPixelT initialValue,
+                      MaskPlaneDict const& planeDefs = MaskPlaneDict());
         explicit Mask(std::string const& fileName, int const hdu=0,
                       lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
-                      bool const conformMasks=false
+                      BBox const& bbox=BBox(), bool const conformMasks=false
                      );                      
 
         Mask(const Mask& src, const bool deep=false);
@@ -135,6 +139,8 @@ private:
         static MaskPixelT getBitMask(int plane);
 
         static int _maskDictVersion;    // version number for bitplane dictionary
+
+        void _initializePlanes(MaskPlaneDict const& planeDefs); // called by ctors
         //
         // Check that masks have the same dictionary version
         //

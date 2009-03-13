@@ -71,12 +71,13 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
 	std::string const& baseName,    //!< The desired file's baseName (e.g. foo will read foo_{img.msk.var}.fits)
         const int hdu,                  //!< The HDU in the file (default: 0)
         lsst::daf::base::PropertySet::Ptr metadata, //!< Filled out with metadata from file (default: NULL)
+        BBox const& bbox,                           //!< Only read these pixels
         bool const conformMasks         //!< Make Mask conform to mask layout in file?
                                                                         ) :
     lsst::daf::data::LsstBase(typeid(this)),
-    _image(new Image(MaskedImage::imageFileName(baseName), hdu, metadata)),
-    _mask(new Mask(MaskedImage::maskFileName(baseName), hdu, metadata, conformMasks)),
-    _variance(new Variance(MaskedImage::varianceFileName(baseName), hdu, metadata)) {
+    _image(new Image(MaskedImage::imageFileName(baseName), hdu, metadata, bbox)),
+    _mask(new Mask(MaskedImage::maskFileName(baseName), hdu, metadata, bbox, conformMasks)),
+    _variance(new Variance(MaskedImage::varianceFileName(baseName), hdu, metadata, bbox)) {
     ;
 }
 
@@ -192,6 +193,19 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::setVarianceFro
 /************************************************************************************************************/
 // Operators
 /**
+ * Set the pixels in the MaskedImage to the rhs
+ */
+template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator=(MaskedImage::Pixel const& rhs) {
+    *_image = rhs.image();
+    *_mask = rhs.mask();
+    *_variance = rhs.variance();
+
+    return *this;
+}
+
+/**
  * Copy the pixels from the rhs to the lhs
  *
  * \note operator=() is not equivalent to this command
@@ -217,6 +231,20 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator+=(Mas
     *_variance += *rhs._variance;
 }
 
+/// Add a scaled MaskedImage c*rhs to a MaskedImage
+///
+/// The %image and variances are added; the masks are ORd together
+///
+/// \note The pixels in the two images are taken to be independent.  There is
+/// a Pixel operation (plus) which models the covariance, but this is not (yet?)
+/// available as full-MaskedImage operators
+template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledPlus(double const c, MaskedImage const& rhs) {
+    (*_image).scaledPlus(c, *rhs._image);
+    *_mask  |= *rhs._mask;
+    (*_variance).scaledPlus(c*c, *rhs._variance);
+}
+
 /// Add a scalar rhs to a MaskedImage
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator+=(ImagePixelT const rhs) {
@@ -235,6 +263,18 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator-=(Mas
     *_variance += *rhs._variance;
 }
 
+/// Subtract a scaled MaskedImage c*rhs from a MaskedImage
+///
+/// The %images are added; the masks are ORd together; and the variances are added
+///
+/// \note the pixels in the two images are taken to be independent
+template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledMinus(double const c, MaskedImage const& rhs) {
+    (*_image).scaledMinus(c, *rhs._image);
+    *_mask  |= *rhs._mask;
+    (*_variance).scaledPlus(c*c, *rhs._variance);
+}
+
 /// Subtract a scalar rhs from a MaskedImage
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator-=(ImagePixelT const rhs) {
@@ -247,6 +287,16 @@ namespace {
     struct productVariance {
         double operator()(ImagePixelT lhs, ImagePixelT rhs, VariancePixelT varLhs, VariancePixelT varRhs) {
             return lhs*lhs*varRhs + rhs*rhs*varLhs;
+        }
+    };
+
+    /// Functor to calculate the variance of the product of two independent variables, with the rhs scaled by c
+    template<typename ImagePixelT, typename VariancePixelT>
+    struct scaledProductVariance {
+        double _c;
+        scaledProductVariance(double const c) : _c(c) {}
+        double operator()(ImagePixelT lhs, ImagePixelT rhs, VariancePixelT varLhs, VariancePixelT varRhs) {
+            return _c*_c*(lhs*lhs*varRhs + rhs*rhs*varLhs);
         }
     };
 }
@@ -266,6 +316,21 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator*=(Mas
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledMultiplies(double const c,
+                                                                                   MaskedImage const& rhs) {
+    // Must do variance before we modify the image values
+    transform_pixels(_image->_getRawView(), // lhs 
+                     rhs._image->_getRawView(), // rhs,
+                     _variance->_getRawView(),  // Var(lhs),
+                     rhs._variance->_getRawView(), // Var(rhs)
+                     _variance->_getRawView(), // result
+                     scaledProductVariance<ImagePixelT, VariancePixelT>(c));
+
+    (*_image).scaledMultiplies(c, *rhs._image);
+    *_mask  |= *rhs._mask;
+}
+
+template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator*=(ImagePixelT const rhs) {
     *_image *= rhs;
     *_variance *= rhs*rhs;
@@ -281,6 +346,16 @@ namespace {
             return (lhs*lhs*varRhs + rhs2*varLhs)/(rhs2*rhs2);
         }
     };
+    /// Functor to calculate the variance of the ratio of two independent variables, the second scaled by c
+    template<typename ImagePixelT, typename VariancePixelT>
+    struct scaledQuotientVariance {
+        double _c;
+        scaledQuotientVariance(double c) : _c(c) {}
+        double operator()(ImagePixelT lhs, ImagePixelT rhs, VariancePixelT varLhs, VariancePixelT varRhs) {
+            ImagePixelT const rhs2 = rhs*rhs;
+            return (lhs*lhs*varRhs + rhs2*varLhs)/(_c*_c*rhs2*rhs2);
+        }
+    };
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
@@ -294,6 +369,20 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator/=(Mas
                      quotientVariance<ImagePixelT, VariancePixelT>());
 
     *_image /= *rhs._image;
+    *_mask  |= *rhs._mask;
+}
+
+template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledDivides(double const c, MaskedImage const& rhs) {
+    // Must do variance before we modify the image values
+    transform_pixels(_image->_getRawView(), // lhs 
+                     rhs._image->_getRawView(), // rhs,
+                     _variance->_getRawView(),  // Var(lhs),
+                     rhs._variance->_getRawView(), // Var(rhs)
+                     _variance->_getRawView(), // result
+                     scaledQuotientVariance<ImagePixelT, VariancePixelT>(c));
+
+    (*_image).scaledDivides(c, *rhs._image);
     *_mask  |= *rhs._mask;
 }
 

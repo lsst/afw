@@ -88,7 +88,7 @@ public:
     //
     // This constructor casts away const.  This should be fixed by making const Pixels.
     //
-    Pixel(ImagePixelT const& image, MaskPixelT const& mask, VariancePixelT const& variance) :
+    Pixel(ImagePixelT const& image, MaskPixelT const& mask=0x0, VariancePixelT const& variance=0) :
         _image(const_cast<ImagePixelT&>(image)),
         _mask(const_cast<MaskPixelT&>(mask)),
         _variance(const_cast<VariancePixelT&>(variance)) {

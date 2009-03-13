@@ -25,12 +25,6 @@ bool extractOptionalFlag(
     std::string const & name
 );
 
-std::string const extractPolicyString(
-    lsst::pex::policy::Policy::Ptr const & policy,
-    std::string const & key,
-    std::string const & def
-);
-
 std::string const getItemName(
     lsst::daf::base::PropertySet::Ptr const & properties
 );
@@ -60,9 +54,11 @@ void dropAllVisitSliceTables(
 
 int extractSliceId(lsst::daf::base::PropertySet::Ptr const& properties);
 int64_t extractExposureId(lsst::daf::base::PropertySet::Ptr const& properties);
+int64_t extractCcdExposureId(lsst::daf::base::PropertySet::Ptr const& properties);
+int64_t extractAmpExposureId(lsst::daf::base::PropertySet::Ptr const& properties);
 int extractVisitId(lsst::daf::base::PropertySet::Ptr const& properties);
 int extractCcdId(lsst::daf::base::PropertySet::Ptr const& properties);
-int64_t extractCcdExposureId(lsst::daf::base::PropertySet::Ptr const& properties);
+int extractAmpId(lsst::daf::base::PropertySet::Ptr const& properties);
 
 std::string const formatFitsProperties(lsst::daf::base::PropertySet::Ptr prop);
 int countFitsHeaderCards(lsst::daf::base::PropertySet::Ptr prop);

@@ -21,12 +21,12 @@
 #include "lsst/daf/base.h"
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/formatters/ImageFormatter.h"
 
 namespace lsst { namespace afw {
 
 namespace formatters {
     template <typename PixelT> class ImageFormatter;
+    template <typename PixelT> class DecoratedImageFormatter;
 }
 
 namespace image {
@@ -178,8 +178,17 @@ namespace image {
          * The origin can be reset with \c setXY0
          */
         int getY0() const { return _y0; }
+
+        /**
+         * Return the %image's origin
+         *
+         * This will usually be (0, 0) except for images created using the <tt>ImageBase(ImageBase, BBox)</tt> cctor
+         * The origin can be reset with \c setXY0
+         */
+        PointI getXY0() const { return PointI(_x0, _y0); }
+        
         /// Return the %image's size;  useful for passing to constructors
-        const std::pair<int, int> getDimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
+        std::pair<int, int> getDimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
         
         void swap(ImageBase &rhs);
         //
@@ -214,6 +223,18 @@ namespace image {
         void setXY0(PointI const origin) {
             _x0 = origin.getX();
             _y0 = origin.getY();
+        }
+        /**
+         * Set the ImageBase's origin
+         *
+         * The origin is usually set by the constructor, so you shouldn't need this function
+         *
+         * \note There are use cases (e.g. memory overlays) that may want to set these values, but
+         * don't do so unless you are an Expert.
+         */
+        void setXY0(int const x0, int const y0) {
+            _x0 = x0;
+            _y0 = y0;
         }
 
     private:
@@ -267,12 +288,15 @@ namespace image {
 #endif
         template<typename OtherPixelT> friend class Image; // needed by generalised copy constructors
         
-        explicit Image(const int width=0, const int height=0);
+        explicit Image(const int width=0, int const height=0);
+        explicit Image(const int width, int const height, PixelT initialValue);
         explicit Image(const std::pair<int, int> dimensions);
+        explicit Image(const std::pair<int, int> dimensions, PixelT initialValue);
         Image(const Image& rhs, const bool deep=false);
         explicit Image(const Image& rhs, const BBox& bbox, const bool deep=false);
-        explicit Image(std::string const& fileName, const int hdu = 0,
-            lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr());
+        explicit Image(std::string const& fileName, const int hdu=0,
+                       lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
+                       BBox const& bbox=BBox());
 
         // generalised copy constructor
         template<typename OtherPixelT>
@@ -296,12 +320,16 @@ namespace image {
         //
         void operator+=(PixelT const rhs);
         void operator+=(Image<PixelT>const & rhs);
+        void scaledPlus(double const c, Image<PixelT>const & rhs);
         void operator-=(PixelT const rhs);
         void operator-=(Image<PixelT> const& rhs);
+        void scaledMinus(double const c, Image<PixelT>const & rhs);
         void operator*=(PixelT const rhs);
         void operator*=(Image<PixelT> const& rhs);
+        void scaledMultiplies(double const c, Image<PixelT>const & rhs);
         void operator/=(PixelT const rhs);
         void operator/=(Image<PixelT> const& rhs);
+        void scaledDivides(double const c, Image<PixelT>const & rhs);
     protected:
         using ImageBase<PixelT>::_getRawView;
     private:
@@ -369,6 +397,7 @@ namespace image {
         /// Set the DecoratedImage's gain
         void setGain(double gain) { _gain = gain; }
     private:
+        LSST_PERSIST_FORMATTER(lsst::afw::formatters::DecoratedImageFormatter<PixelT>);
         typename Image<PixelT>::Ptr _image;
         double _gain;
 

@@ -87,23 +87,39 @@ class MaskedImageTestCase(unittest.TestCase):
 
         self.assertEqual(self.mimage.getVariance().get(0,0), self.varVal1)
     
+    def testAddScaledImages(self):
+        "Test addition by a scaled MaskedImage"
+        # add an image
+        c = 10.0
+        mimage2_copy = self.mimage2.Factory(self.mimage2, True) # make a copy
+        self.mimage2.scaledPlus(c, self.mimage)
+        #
+        # Now repeat calculation using a temporary
+        #
+        tmp = self.mimage.Factory(self.mimage, True)
+        tmp *= c
+        mimage2_copy += tmp
+
+        self.assertEqual(self.mimage2.getImage().get(0,0), mimage2_copy.getImage().get(0,0))
+        self.assertEqual(self.mimage2.getMask().get(0,0), mimage2_copy.getMask().get(0,0))
+        self.assertEqual(self.mimage2.getVariance().get(0,0), mimage2_copy.getVariance().get(0,0))
+
     def testSubtractImages(self):
-        "Test subtraction"
-        # subtract an image
-        self.mimage2 -= self.mimage
+        "Test subtraction by a scaled MaskedImage"
+        # subtract a scaled image
+        c = 10.0
+        mimage2_copy = self.mimage2.Factory(self.mimage2, True) # make a copy
+        self.mimage2.scaledMinus(c, self.mimage)
+        #
+        # Now repeat calculation using a temporary
+        #
+        tmp = self.mimage.Factory(self.mimage, True)
+        tmp *= c
+        mimage2_copy -= tmp
 
-        self.assertEqual(self.mimage2.getImage().get(0,0), self.imgVal2 - self.imgVal1)
-        self.assertEqual(self.mimage2.getMask().get(0,0), self.EDGE)
-        self.assertEqual(self.mimage2.getVariance().get(0,0), self.varVal1 + self.varVal2)
-        # subtract a scalar
-        self.mimage -= self.imgVal1
-        
-        self.assertEqual(self.mimage.getImage().get(0,0), 0)
-
-        self.assertEqual(self.mimage.getMask().get(0,0), self.EDGE)
-        self.assertEqual(self.mimage.getMask().get(1,1), self.EDGE)
-        self.assertEqual(self.mimage.getMask().get(2,2), 0x0)
-        self.assertEqual(self.mimage.getVariance().get(0,0), self.varVal1)
+        self.assertEqual(self.mimage2.getImage().get(0,0), mimage2_copy.getImage().get(0,0))
+        self.assertEqual(self.mimage2.getMask().get(0,0), mimage2_copy.getMask().get(0,0))
+        self.assertEqual(self.mimage2.getVariance().get(0,0), mimage2_copy.getVariance().get(0,0))
     
     def testMultiplyImages(self):
         """Test multiplication"""
@@ -125,8 +141,25 @@ class MaskedImageTestCase(unittest.TestCase):
 
         self.assertEqual(self.mimage.getVariance().get(0,0), self.varVal1*pow(self.imgVal1, 2))
     
+    def testScaledMultiplyImages(self):
+        """Test multiplication by a scaled image"""
+        # Multiply by an image
+        c = 10.0
+        mimage2_copy = self.mimage2.Factory(self.mimage2, True) # make a copy
+        self.mimage2.scaledMultiplies(c, self.mimage)
+        #
+        # Now repeat calculation using a temporary
+        #
+        tmp = self.mimage.Factory(self.mimage, True)
+        tmp *= c
+        mimage2_copy *= tmp
+
+        self.assertEqual(self.mimage2.getImage().get(0,0), mimage2_copy.getImage().get(0,0))
+        self.assertEqual(self.mimage2.getMask().get(0,0), mimage2_copy.getMask().get(0,0))
+        self.assertEqual(self.mimage2.getVariance().get(0,0), mimage2_copy.getVariance().get(0,0))
+
     def testDivideImages(self):
-        """Test multiplication"""
+        """Test division"""
         # Divide by an image
         self.mimage2 /= self.mimage
 
@@ -143,8 +176,25 @@ class MaskedImageTestCase(unittest.TestCase):
         self.assertEqual(self.mimage.getMask().get(1,1), self.EDGE)
         self.assertEqual(self.mimage.getMask().get(2,2), 0x0)
 
-        self.assertAlmostEqual(self.mimage.getVariance().get(0,0), self.varVal1/pow(self.imgVal1, 2), 10)
+        self.assertAlmostEqual(self.mimage.getVariance().get(0,0), self.varVal1/pow(self.imgVal1, 2), 9)
         
+    def testScaledDivideImages(self):
+        """Test division by a scaled image"""
+        # Divide by an image
+        c = 10.0
+        mimage2_copy = self.mimage2.Factory(self.mimage2, True) # make a copy
+        self.mimage2.scaledDivides(c, self.mimage)
+        #
+        # Now repeat calculation using a temporary
+        #
+        tmp = self.mimage.Factory(self.mimage, True)
+        tmp *= c
+        mimage2_copy /= tmp
+
+        self.assertEqual(self.mimage2.getImage().get(0,0), mimage2_copy.getImage().get(0,0))
+        self.assertEqual(self.mimage2.getMask().get(0,0), mimage2_copy.getMask().get(0,0))
+        self.assertEqual(self.mimage2.getVariance().get(0,0), mimage2_copy.getVariance().get(0,0))
+
     def testCopyConstructors(self):
         dimage = afwImage.MaskedImageF(self.mimage, True) # deep copy
         simage = afwImage.MaskedImageF(self.mimage) # shallow copy
@@ -163,6 +213,28 @@ class MaskedImageTestCase(unittest.TestCase):
         self.assertEqual(img.get(x0,     y0 + 1), (666,          self.BAD,  0))
         self.assertEqual(img.get(x0 + 3, y0 + 1), (self.imgVal1, 0x0,       self.varVal1))
         self.assertEqual(img.get(x0,     y0 + 2), (self.imgVal1, 0x0,       self.varVal1))
+
+    def testOrigin(self):
+        """Check that we can set and read the origin"""
+
+        im = afwImage.MaskedImageF(10, 20)
+        x0 = y0 = 0
+        
+        self.assertEqual(im.getX0(), x0)
+        self.assertEqual(im.getY0(), y0)
+        self.assertEqual(im.getXY0(), afwImage.PointI(x0, y0))
+
+        x0, y0 = 3, 5
+        im.setXY0(x0, y0)
+        self.assertEqual(im.getX0(), x0)
+        self.assertEqual(im.getY0(), y0)
+        self.assertEqual(im.getXY0(), afwImage.PointI(x0, y0))
+
+        x0, y0 = 30, 50
+        im.setXY0(afwImage.PointI(x0, y0))
+        self.assertEqual(im.getX0(), x0)
+        self.assertEqual(im.getY0(), y0)
+        self.assertEqual(im.getXY0(), afwImage.PointI(x0, y0))
 
     def testSubimages1(self):
         smimage = afwImage.MaskedImageF(self.mimage, afwImage.BBox(afwImage.PointI(1, 1), 10, 5))
@@ -236,6 +308,18 @@ class MaskedImageTestCase(unittest.TestCase):
         var = self.mimage.getVariance()
         var <<= self.mimage.getImage();
 	var /= gain
+
+    def testTicket653(self):
+        """How-to-repeat for #653"""
+        # The original ticket read this file, but it doesn't reproduce for me,
+        # As I don't see how reading an exposure from disk could make a difference
+        # it's easier to just build an Image
+        if False:
+            im = afwImage.ImageF(os.path.join(eups.productDir("afwdata"), "med_img.fits"))
+        else:
+            im = afwImage.ImageF(10, 10)
+        mi = afwImage.MaskedImageF(im)
+        exp = afwImage.ExposureF(mi)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

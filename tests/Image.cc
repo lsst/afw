@@ -147,6 +147,12 @@ BOOST_AUTO_TEST_CASE(setValues) {
     *ptr = 25 + *ptr;
     BOOST_CHECK_EQUAL(*ptr,    100);
     BOOST_CHECK_EQUAL(*ptr, *ptr);
+
+    img = ImageT::Pixel(111);
+    BOOST_CHECK_EQUAL(img(0,0), 111);
+    
+    mask = MaskT::Pixel(0x666);
+    BOOST_CHECK_EQUAL(mask(0,0), 0x666);
 }
 
 /************************************************************************************************************/
