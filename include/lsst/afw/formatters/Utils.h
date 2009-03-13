@@ -29,24 +29,23 @@ std::string const getItemName(
     lsst::daf::base::PropertySet::Ptr const & properties
 );
 
-std::string const getVisitSliceTableName(
+std::string const getTableName(
     lsst::pex::policy::Policy::Ptr const & policy,
     lsst::daf::base::PropertySet::Ptr const & properties
 );
 
-void getAllVisitSliceTableNames(
-    std::vector<std::string> & names,
+std::vector<std::string> getAllSliceTableNames(
     lsst::pex::policy::Policy::Ptr const & policy,
     lsst::daf::base::PropertySet::Ptr const & properties
 );
 
-void createVisitSliceTable(
+void createTable(
     lsst::daf::persistence::LogicalLocation const & location,
     lsst::pex::policy::Policy::Ptr const & policy,
     lsst::daf::base::PropertySet::Ptr const & properties
 );
 
-void dropAllVisitSliceTables(
+void dropAllSliceTables(
     lsst::daf::persistence::LogicalLocation const & location,
     lsst::pex::policy::Policy::Ptr const & policy,
     lsst::daf::base::PropertySet::Ptr const & properties

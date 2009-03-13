@@ -121,13 +121,14 @@ class SourceTestCase(unittest.TestCase):
         if dafPers.DbAuth.available("lsst10.ncsa.uiuc.edu", "3306"):
             pol  = dafPolicy.Policy()
             pol.set("Formatter.PersistableSourceVector.Source.templateTableName", "Source")
-            pol.set("Formatter.PersistableSourceVector.Source.perVisitTableNamePattern", "_tmp_visit%1%_Source")
+            pol.set("Formatter.PersistableSourceVector.Source.tableNamePattern", "_tmp_v%(visitId)_Source")
             pers = dafPers.Persistence.getPersistence(pol)
             loc  = dafPers.LogicalLocation("mysql://lsst10.ncsa.uiuc.edu:3306/test_source")
             dp = dafBase.PropertySet()
             dp.addInt("visitId", int(time.clock())*16384 + random.randint(0,16383))
             dp.addInt("sliceId", 0)
             dp.addInt("numSlices", 1)
+            dp.addInt64("ampExposureId", 10)
             dp.addString("itemName", "Source")
 
             stl = dafPers.StorageList()
@@ -137,7 +138,7 @@ class SourceTestCase(unittest.TestCase):
             stl.append(pers.getRetrieveStorage("DbStorage", loc))
             persistable = pers.unsafeRetrieve("PersistableSourceVector", stl, dp)
             res = afwDet.PersistableSourceVector.swigConvert(persistable)
-            afwDet.dropAllVisitSliceTables(loc, pol.getPolicy("Formatter.PersistableSourceVector"), dp)
+            afwDet.dropAllSliceTables(loc, pol.getPolicy("Formatter.PersistableSourceVector"), dp)
             assert(res == self.dsv1)
         else:
             print "skipping database tests"
