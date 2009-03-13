@@ -20,14 +20,16 @@ Basic routines to talk to lsst::afw::image classes
 #include <lsst/pex/logging/Trace.h>
 #include <lsst/pex/policy.h>
 #include <lsst/afw/image.h>
+#include <boost/cstdint.hpp>
 %}
 
-%inline %{
+
 namespace boost {
-    typedef unsigned short uint16_t;
     namespace mpl { }
+    typedef signed char  int8_t;
+    typedef int int32_t;
+    typedef unsigned short uint16_t;
 }
-%}
 
 /************************************************************************************************************/
 
