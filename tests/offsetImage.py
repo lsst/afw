@@ -76,7 +76,7 @@ class offsetImageTestCase(unittest.TestCase):
                             frame=frame)
 
     def calcGaussian(self, im, x, y, amp, sigma1):
-        """Insert a DoubleGaussian into the image centered at (x, y)"""
+        """Insert a Gaussian into the image centered at (x, y)"""
 
         x = x - im.getX0(); y = y - im.getY0()
 
