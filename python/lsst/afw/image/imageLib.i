@@ -92,8 +92,11 @@ def version(HeadURL = r"$HeadURL$"):
 %define %EXTEND_POINT(TYPE)
 %extend lsst::afw::image::Point<TYPE> {
     %pythoncode {
+    def __repr__(self):
+        return "(%.10g, %.10g)" % (self.getX(), self.getY())
+
     def __str__(self):
-        return "(%.6f, %.6f)" % (self.getX(), self.getY())
+        return "(%g, %g)" % (self.getX(), self.getY())
 
     def __getitem__(self, i):
         if i == 0:
@@ -102,12 +105,22 @@ def version(HeadURL = r"$HeadURL$"):
             return self.getY()
         else:
             raise IndexError, i
-    }    
+    }
 }
 %enddef
 
 %EXTEND_POINT(double);
 %EXTEND_POINT(int);
+
+%extend lsst::afw::image::BBox {
+    %pythoncode {
+    def __repr__(self):
+        return "BBox(PointI(%d, %d), %d, %d)" % (self.getX0(), self.getY0(), self.getWidth(), self.getHeight())
+
+    def __str__(self):
+        return "(%d, %d) -- (%d, %d)" % (self.getX0(), self.getY0(), self.getX1(), self.getY1())
+    }
+}
 
 %apply double &OUTPUT { double & };
 %rename(positionToIndexAndResidual) lsst::afw::image::positionToIndex(double &, double);
