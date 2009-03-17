@@ -99,12 +99,29 @@ def version(HeadURL = r"$HeadURL$"):
         return "(%g, %g)" % (self.getX(), self.getY())
 
     def __getitem__(self, i):
+        """Treat a Point as an array of length 2, [x, y]"""
         if i == 0:
             return self.getX()
         elif i == 1:
             return self.getY()
         else:
             raise IndexError, i
+
+    def __setitem__(self, i, val):
+        """Treat a Point as an array of length 2, [x, y]"""
+        if i == 0:
+            self.setX(val)
+        elif i == 1:
+            self.setY(val)
+        else:
+            raise IndexError, i
+
+    def __len__(self):
+        return 2
+                
+    def clone(self):
+        return self.__class__(self.getX(), self.getY())
+                
     }
 }
 %enddef
