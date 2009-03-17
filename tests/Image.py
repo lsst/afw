@@ -19,7 +19,7 @@ import lsst.pex.exceptions
 import lsst.daf.base
 import lsst.afw.image.imageLib as afwImage
 import eups
-#import lsst.afw.display.ds9 as ds9
+import lsst.afw.display.ds9 as ds9
 
 try:
     type(display)
@@ -71,6 +71,31 @@ class ImageTestCase(unittest.TestCase):
         self.assertEqual(self.image1.get(0,0), 0)
         self.assertEqual(self.image2.get(0,0), self.val2 - self.val1)
     
+    def testArithmeticImagesMismatch(self):
+        "Test arithmetic operations on Images of different sizes"
+        i1 = afwImage.ImageF(100,100); i1.set(100)
+        i2 = afwImage.ImageF(10,10);   i2.set(10)
+        
+        def tst(i1, i2): i1 -= i2
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i1, i2)
+        def tst(i1, i2): i1.scaledMinus(1.0, i2)
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i2, i1)
+
+        def tst(i1, i2): i1 += i2
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i1, i2)
+        def tst(i1, i2): i1.scaledPlus(1.0, i2)
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i2, i1)
+
+        def tst(i1, i2): i1 *= i2
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i1, i2)
+        def tst(i1, i2): i1.scaledMultiplies(1.0, i2)
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i2, i1)
+
+        def tst(i1, i2): i1 /= i2
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i1, i2)
+        def tst(i1, i2): i1.scaledDivides(1.0, i2)
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i2, i1)
+
     def testSubtractScaledImages(self):
         c = 10.0
         self.image1.scaledMinus(c, self.image2)

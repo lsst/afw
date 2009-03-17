@@ -439,6 +439,11 @@ template<typename MaskPixelT>
 void image::Mask<MaskPixelT>::operator|=(const Mask& rhs) {
     checkMaskDictionaries(rhs);
 
+    if (this->getDimensions() != rhs.getDimensions()) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                          (boost::format("Images are of different size, %dx%d v %dx%d") %
+                           this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
+    }
     transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<MaskPixelT>(_1 | _2));
 }
 
@@ -457,6 +462,11 @@ template<typename MaskPixelT>
 void image::Mask<MaskPixelT>::operator&=(const Mask& rhs) {
     checkMaskDictionaries(rhs);
 
+    if (this->getDimensions() != rhs.getDimensions()) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                          (boost::format("Images are of different size, %dx%d v %dx%d") %
+                           this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
+    }
     transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<MaskPixelT>(_1 & _2));
 }
 

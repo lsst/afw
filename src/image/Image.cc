@@ -468,12 +468,22 @@ void image::Image<PixelT>::operator+=(PixelT const rhs) {
 /// Add Image rhs to lhs
 template<typename PixelT>
 void image::Image<PixelT>::operator+=(Image<PixelT> const& rhs) {
+    if (this->getDimensions() != rhs.getDimensions()) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                          (boost::format("Images are of different size, %dx%d v %dx%d") %
+                           this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
+    }
     transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<PixelT>(_1 + _2));
 }
 
 /// Add Image c*rhs to lhs
 template<typename PixelT>
 void image::Image<PixelT>::scaledPlus(double const c, Image<PixelT> const& rhs) {
+    if (this->getDimensions() != rhs.getDimensions()) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                          (boost::format("Images are of different size, %dx%d v %dx%d") %
+                           this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
+    }
     transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<PixelT>(_1 + ret<PixelT>(c*_2)));
 }
 
@@ -486,12 +496,22 @@ void image::Image<PixelT>::operator-=(PixelT const rhs) {
 /// Subtract Image rhs from lhs
 template<typename PixelT>
 void image::Image<PixelT>::operator-=(Image<PixelT> const& rhs) {
+    if (this->getDimensions() != rhs.getDimensions()) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                          (boost::format("Images are of different size, %dx%d v %dx%d") %
+                           this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
+    }
     transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<PixelT>(_1 - _2));
 }
 
 /// Subtract Image c*rhs from lhs
 template<typename PixelT>
 void image::Image<PixelT>::scaledMinus(double const c, Image<PixelT> const& rhs) {
+    if (this->getDimensions() != rhs.getDimensions()) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                          (boost::format("Images are of different size, %dx%d v %dx%d") %
+                           this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
+    }
     transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<PixelT>(_1 - ret<PixelT>(c*_2)));
 }
 
@@ -504,12 +524,22 @@ void image::Image<PixelT>::operator*=(PixelT const rhs) {
 /// Multiply lhs by Image rhs (i.e. %pixel-by-%pixel multiplication)
 template<typename PixelT>
 void image::Image<PixelT>::operator*=(Image<PixelT> const& rhs) {
+    if (this->getDimensions() != rhs.getDimensions()) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                          (boost::format("Images are of different size, %dx%d v %dx%d") %
+                           this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
+    }
     transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<PixelT>(_1 * _2));
 }
 
 /// Multiply lhs by Image c*rhs (i.e. %pixel-by-%pixel multiplication)
 template<typename PixelT>
 void image::Image<PixelT>::scaledMultiplies(double const c, Image<PixelT> const& rhs) {
+    if (this->getDimensions() != rhs.getDimensions()) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                          (boost::format("Images are of different size, %dx%d v %dx%d") %
+                           this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
+    }
     transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<PixelT>(_1 * ret<PixelT>(c*_2)));
 }
 
@@ -540,12 +570,22 @@ void Image<float>::operator/=(float const rhs) {
 /// Divide lhs by Image rhs (i.e. %pixel-by-%pixel division)
 template<typename PixelT>
 void image::Image<PixelT>::operator/=(Image<PixelT> const& rhs) {
+    if (this->getDimensions() != rhs.getDimensions()) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                          (boost::format("Images are of different size, %dx%d v %dx%d") %
+                           this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
+    }
     transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<PixelT>(_1 / _2));
 }
 
 /// Divide lhs by Image c*rhs (i.e. %pixel-by-%pixel division)
 template<typename PixelT>
 void image::Image<PixelT>::scaledDivides(double const c, Image<PixelT> const& rhs) {
+    if (this->getDimensions() != rhs.getDimensions()) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                          (boost::format("Images are of different size, %dx%d v %dx%d") %
+                           this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
+    }
     transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<PixelT>(_1 / ret<PixelT>(c*_2)));
 }
 
