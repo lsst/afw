@@ -173,15 +173,15 @@ void addKV(lsst::daf::base::PropertySet::Ptr metadata, std::string key, std::str
         // convert the string to an int
         int val;
         converter >> val;
-        metadata->add(key, val);
+        metadata->set(key, val);
     } else if (boost::regex_match(value, doubleRegex)) {
         // convert the string to a double
         double val;
         converter >> val;
-        metadata->add(key, val);
+        metadata->set(key, val);
     } else if (boost::regex_match(value, matchStrings, fitsStringRegex)) {
         // strip off the enclosing single quotes and return the string
-        metadata->add(key, matchStrings[1].str());
+        metadata->set(key, matchStrings[1].str());
     }
 }
 
