@@ -285,7 +285,8 @@ void SpatialCellSet::insertCandidate(SpatialCellCandidate::Ptr candidate) {
  * processCandidate(*this), but can be re-defined)
  */
 void SpatialCellSet::visitCandidates(CandidateVisitor *visitor, ///< Pass this object to every Candidate
-                                     int const nMaxPerCell      ///< Visit no more than this many Candidates (<= 0: all)
+                                     int const nMaxPerCell,     ///< Visit no more than this many Candidates (<= 0: all)
+                                     bool const ignoreExceptions ///< Ignore any exceptions thrown by the processing
                                     ) {
     visitor->reset();
     
@@ -297,7 +298,16 @@ void SpatialCellSet::visitCandidates(CandidateVisitor *visitor, ///< Pass this o
                 break;
             }
             
-            visitor->processCandidate((*candidate).get());
+            try {
+                visitor->processCandidate((*candidate).get());
+            } catch(lsst::pex::exceptions::LengthErrorException &e) {
+                if (ignoreExceptions) {
+                    ;
+                } else {
+                    LSST_EXCEPT_ADD(e, "Visiting candidate");
+                    throw e;
+                }
+            }
         }
     }
 }
@@ -311,7 +321,8 @@ void SpatialCellSet::visitCandidates(CandidateVisitor *visitor, ///< Pass this o
  * SpatialCell::begin() const isn't yet implemented
  */
 void SpatialCellSet::visitCandidates(CandidateVisitor const* visitor, ///< Pass this object to every Candidate
-                                     int const nMaxPerCell      ///< Visit no more than this many Candidates (-ve: all)
+                                     int const nMaxPerCell,      ///< Visit no more than this many Candidates (-ve: all)
+                                     bool const ignoreExceptions ///< Ignore any exceptions thrown by the processing
                                     ) const {
 #if 1
     //
@@ -331,7 +342,16 @@ void SpatialCellSet::visitCandidates(CandidateVisitor const* visitor, ///< Pass 
                 break;
             }
             
-            visitor->processCandidate((*candidate).get());
+            try {
+                visitor->processCandidate((*candidate).get());
+            } catch(lsst::pex::exceptions::LengthErrorException &e) {
+                if (ignoreExceptions) {
+                    ;
+                } else {
+                    LSST_EXCEPT_ADD(e, "Visiting candidate");
+                    throw e;
+                }
+            }
         }
     }
 #endif
