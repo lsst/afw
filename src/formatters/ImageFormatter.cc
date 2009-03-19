@@ -42,6 +42,8 @@ using lsst::daf::persistence::FitsStorage;
 using lsst::daf::persistence::Storage;
 using lsst::afw::image::Image;
 
+namespace afwImg = lsst::afw::image;
+
 namespace lsst {
 namespace afw {
 namespace formatters {
@@ -138,7 +140,17 @@ Persistable* ImageFormatter<ImagePixelT>::read(Storage::Ptr storage,
         execTrace("ImageFormatter read FitsStorage");
         FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
         
-        Image<ImagePixelT>* ip = new Image<ImagePixelT>(fits->getPath(), fits->getHdu());
+        afwImg::BBox box;
+        if (additionalData->exists("llcX")) {
+            int llcX = additionalData->get<int>("llcX");
+            int llcY = additionalData->get<int>("llcY");
+            int width = additionalData->get<int>("width");
+            int height = additionalData->get<int>("height");
+            box = afwImg::BBox(afwImg::PointI(llcX, llcY), width, height);
+        }
+        lsst::daf::base::PropertySet::Ptr metadata();
+
+        Image<ImagePixelT>* ip = new Image<ImagePixelT>(fits->getPath(), fits->getHdu(), lsst::daf::base::PropertySet::Ptr(), box);
         // \note We're throwing away the metadata
         // \todo Do something with these fields?
         // int _X0;
