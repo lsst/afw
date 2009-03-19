@@ -86,14 +86,13 @@ def version(HeadURL = r"$HeadURL$"):
 %include "mask.i"
 %include "maskedImage.i"
 
-%template(PointD) lsst::afw::image::Point<double>;
-%template(PointI) lsst::afw::image::Point<int>;
+%define %POINT(NAME, TYPE)
+%template(Point##NAME) lsst::afw::image::Point<TYPE>;
 
-%define %EXTEND_POINT(TYPE)
 %extend lsst::afw::image::Point<TYPE> {
     %pythoncode {
     def __repr__(self):
-        return "(%.10g, %.10g)" % (self.getX(), self.getY())
+        return "Point" + "NAME(%.10g, %.10g)" % (self.getX(), self.getY())
 
     def __str__(self):
         return "(%g, %g)" % (self.getX(), self.getY())
@@ -126,8 +125,8 @@ def version(HeadURL = r"$HeadURL$"):
 }
 %enddef
 
-%EXTEND_POINT(double);
-%EXTEND_POINT(int);
+%POINT(D, double);
+%POINT(I, int);
 
 %extend lsst::afw::image::BBox {
     %pythoncode {

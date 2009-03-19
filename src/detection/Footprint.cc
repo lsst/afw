@@ -438,15 +438,15 @@ MaskT detection::setMaskFromFootprintList(
 template <typename IDPixelT>
 static void set_footprint_id(typename image::Image<IDPixelT>::Ptr idImage,	// the image to set
                              detection::Footprint const& foot, // the footprint to insert
-                             const int id,          // the desired ID
-                             int dx = 0, int dy = 0 // Add these to all x/y in the Footprint
+                             const int id,                     // the desired ID
+                             int dx=0, int dy=0                // Add these to all x/y in the Footprint
                             ) {
     for (detection::Footprint::SpanList::const_iterator siter = foot.getSpans().begin();
 							siter != foot.getSpans().end(); siter++) {
         detection::Span::Ptr const span = *siter;
         for (typename image::Image<IDPixelT>::x_iterator ptr = idImage->x_at(span->getX0() + dx, span->getY() + dy),
                  end = ptr + span->getWidth(); ptr != end; ++ptr) {
-            *ptr += id;
+            *ptr = id;
         }
     }
 }
