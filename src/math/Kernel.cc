@@ -136,7 +136,7 @@ void lsst::afw::math::Kernel::computeKernelParametersFromSpatialModel(std::vecto
  * @throw lsst::pex::exceptions::InvalidParameterException if index out of range
  */
 lsst::afw::math::Kernel::SpatialFunctionPtr lsst::afw::math::Kernel::getSpatialFunction(
-    unsigned int index  ///< index of desired spatial function; must be in range [0, #spatial parameters - 1]
+    unsigned int index  ///< index of desired spatial function; must be in range [0, number spatial parameters - 1]
 ) const {
     if (index >= _spatialFunctionList.size()) {
         if (!this->isSpatiallyVarying()) {

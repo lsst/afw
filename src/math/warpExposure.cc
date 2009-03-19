@@ -130,8 +130,8 @@ boost::shared_ptr<lsst::afw::math::SeparableKernel> lsst::afw::math::makeWarping
  *   This is because the kernel is used to map from a range of pixel positions from
  *   centered on on (width/2, height/2) to nearly centered on (1 + width/2, 1 + height/2).
  *
- * \raise lsst::pex::exceptions::InvalidParameterException if destExposure is srcExposure
- * \raise lsst::pex::exceptions::InvalidParameterException if destExposure or srcExposure has no Wcs
+ * \throw lsst::pex::exceptions::InvalidParameterException if destExposure is srcExposure
+ * \throw lsst::pex::exceptions::InvalidParameterException if destExposure or srcExposure has no Wcs
  *
  * \todo Should support an additional color-based position correction in the remapping (differential chromatic
  *   refraction). This can be done either object-by-object or pixel-by-pixel.
