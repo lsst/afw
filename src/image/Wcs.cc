@@ -339,9 +339,9 @@ bool lsst::afw::image::Wcs::isFlipped() {
         throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure is not initialised"));
     }
 
-    double det = _wcsInfo->cdelt[0] - _wcsInfo->cdelt[2];
-    det -= _wcsInfo->cdelt[1] - _wcsInfo->cdelt[3];
-
+    double det = _wcsInfo->cd[0] * _wcsInfo->cd[3];
+    det -= _wcsInfo->cd[1] * _wcsInfo->cd[2];
+    
     if(det == 0){
         throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs scaling matrix is singular"));
     }

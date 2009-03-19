@@ -92,22 +92,52 @@ def version(HeadURL = r"$HeadURL$"):
 %define %EXTEND_POINT(TYPE)
 %extend lsst::afw::image::Point<TYPE> {
     %pythoncode {
+    def __repr__(self):
+        return "(%.10g, %.10g)" % (self.getX(), self.getY())
+
     def __str__(self):
-        return "(%.6f, %.6f)" % (self.getX(), self.getY())
+        return "(%g, %g)" % (self.getX(), self.getY())
 
     def __getitem__(self, i):
+        """Treat a Point as an array of length 2, [x, y]"""
         if i == 0:
             return self.getX()
         elif i == 1:
             return self.getY()
         else:
             raise IndexError, i
-    }    
+
+    def __setitem__(self, i, val):
+        """Treat a Point as an array of length 2, [x, y]"""
+        if i == 0:
+            self.setX(val)
+        elif i == 1:
+            self.setY(val)
+        else:
+            raise IndexError, i
+
+    def __len__(self):
+        return 2
+                
+    def clone(self):
+        return self.__class__(self.getX(), self.getY())
+                
+    }
 }
 %enddef
 
 %EXTEND_POINT(double);
 %EXTEND_POINT(int);
+
+%extend lsst::afw::image::BBox {
+    %pythoncode {
+    def __repr__(self):
+        return "BBox(PointI(%d, %d), %d, %d)" % (self.getX0(), self.getY0(), self.getWidth(), self.getHeight())
+
+    def __str__(self):
+        return "(%d, %d) -- (%d, %d)" % (self.getX0(), self.getY0(), self.getX1(), self.getY1())
+    }
+}
 
 %apply double &OUTPUT { double & };
 %rename(positionToIndexAndResidual) lsst::afw::image::positionToIndex(double &, double);
@@ -124,6 +154,24 @@ def version(HeadURL = r"$HeadURL$"):
 SWIG_SHARED_PTR(Wcs, lsst::afw::image::Wcs);
 
 %include "lsst/afw/image/Wcs.h"
+
+%inline {
+    /**
+     * Create a WCS from crval, image, and the elements of CD
+     */
+    lsst::afw::image::Wcs::Ptr createWcs(lsst::afw::image::PointD crval,
+                                                                lsst::afw::image::PointD crpix,
+                                                                double CD11, double CD12, double CD21, double CD22) {
+
+    boost::numeric::ublas::matrix<double> CD(2, 2);
+    CD(0, 0) = CD11;
+    CD(0, 1) = CD12;
+    CD(1, 0) = CD21;
+    CD(1, 1) = CD22;
+    
+    return lsst::afw::image::Wcs::Ptr(new lsst::afw::image::Wcs(crval, crpix, CD));
+}
+}
 
 /************************************************************************************************************/
 
