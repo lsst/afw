@@ -29,6 +29,7 @@ enum Property {
     VARIANCECLIP = 0x200,               ///< estimate sample 3 sigma clipped variance
     MIN = 0x400,                        ///< estimate sample minimum
     MAX = 0x800,                        ///< estimate sample maximum
+    SUM = 0x1000,                       ///< find sum of pixels in the image
 };
 
     
@@ -97,6 +98,8 @@ public:
     double getValue(Property const prop=NOTHING) const;
     
 private:
+    typedef boost::tuple<double, double, double, double, double> StandardReturnT; // return type for _getStandard
+
     long _flags;                        // The desired calculation
 
     int _n;                             // number of pixels in the image
@@ -104,16 +107,16 @@ private:
     double _variance;                   // the image's variance
     double _min;                        // the image's minimum
     double _max;                        // the image's maximum
+    double _sum;                        // the sum of all the image's pixels
     double _meanclip;                   // the image's 3-sigma clipped mean
     double _varianceclip;               // the image's 3-sigma clipped variance
     double _median;                     // the image's median
     double _iqrange;                    // the image's interquartile range
 
     template<typename Image>
-    boost::tuple<double, double, double, double> _getStandard(Image const& img, int const flags);
+    StandardReturnT _getStandard(Image const& img, int const flags);
     template<typename Image>
-    boost::tuple<double, double, double, double> _getStandard(Image const& img, int const flags,
-                                                              std::pair<double,double> clipinfo);
+    StandardReturnT _getStandard(Image const& img, int const flags, std::pair<double,double> clipinfo);
     
     template<typename Image>
     double _quickSelect(Image const& img, double const quartile);   // compute median with quickselect (Press et al.)

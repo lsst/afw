@@ -173,20 +173,20 @@ void addKV(lsst::daf::base::PropertySet::Ptr metadata, std::string key, std::str
         // convert the string to an int
         int val;
         converter >> val;
-        metadata->add(key, val);
+        metadata->set(key, val);
     } else if (boost::regex_match(value, doubleRegex)) {
         // convert the string to a double
         double val;
         converter >> val;
-        metadata->add(key, val);
+        metadata->set(key, val);
     } else if (boost::regex_match(value, matchStrings, fitsStringRegex)) {
         // strip off the enclosing single quotes and return the string
-        metadata->add(key, matchStrings[1].str());
+        metadata->set(key, matchStrings[1].str());
     }
 }
 
 // Private function to build a PropertySet that contains all the FITS kw-value pairs
-void getMetadata(fitsfile* fd, lsst::daf::base::PropertySet::Ptr metadata) {
+    void getMetadata(fitsfile* fd, lsst::daf::base::PropertySet::Ptr metadata, bool strip) {
     // Get all the kw-value pairs from the FITS file, and add each to DataProperty
     if (metadata.get() == NULL) {
         return;
@@ -198,9 +198,11 @@ void getMetadata(fitsfile* fd, lsst::daf::base::PropertySet::Ptr metadata) {
         std::string comment;
         getKey(fd, i, keyName, val, comment);
 
-        if (keyName != "SIMPLE" && keyName != "BITPIX" && keyName != "EXTEND" &&
-            keyName != "NAXIS" && keyName != "NAXIS1" && keyName != "NAXIS2" &&
-            keyName != "BSCALE" && keyName != "BZERO") {
+        if (strip && (keyName == "SIMPLE" || keyName == "BITPIX" || keyName == "EXTEND" ||
+                      keyName == "NAXIS" || keyName == "NAXIS1" || keyName == "NAXIS2" ||
+                      keyName == "BSCALE" || keyName == "BZERO")) {
+            ;
+        } else {
             addKV(metadata, keyName, val);
         }
     }
@@ -212,11 +214,14 @@ void getMetadata(fitsfile* fd, lsst::daf::base::PropertySet::Ptr metadata) {
 /**
  * \brief Return the metadata from a fits file
  */
-lsst::daf::base::PropertySet::Ptr readMetadata(std::string const& fileName, const int hdu) {
+lsst::daf::base::PropertySet::Ptr readMetadata(std::string const& fileName, ///< File to read
+                                               const int hdu,               ///< HDU to read
+                                               bool strip                   ///< Should I strip e.g. NAXIS1 from header?
+                                              ) {
     lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertySet);
 
     detail::fits_reader m(fileName, metadata, hdu);
-    cfitsio::getMetadata(m.get(), metadata);
+    cfitsio::getMetadata(m.get(), metadata, strip);
 
     return metadata;
 }

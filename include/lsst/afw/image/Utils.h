@@ -51,6 +51,14 @@ namespace lsst { namespace afw { namespace image {
         
         Point operator+(const Point& rhs) const { return Point(_x + rhs._x, _y + rhs._y); }
         Point operator-(const Point& rhs) const { return Point(_x - rhs._x, _y - rhs._y); }
+
+        //! Offset a Point by the specified vector
+        Point& shift(T dx,                ///< How much to offset in x
+                     T dy                 ///< How much to offset in y
+                    ) {
+            *this = *this + Point(dx, dy);
+            return *this;
+        }
 #if !defined(SWIG)
         /// Return x (i == 0) or y (i == 1)
         T const& operator[](int const i) const {
@@ -202,7 +210,7 @@ namespace lsst { namespace afw { namespace image {
 
 /************************************************************************************************************/
 
-lsst::daf::base::PropertySet::Ptr readMetadata(std::string const& fileName, const int hdu=0);
+lsst::daf::base::PropertySet::Ptr readMetadata(std::string const& fileName, const int hdu=0, bool strip=false);
 
 }}}
 

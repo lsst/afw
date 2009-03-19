@@ -11,6 +11,7 @@
 #include "boost/format.hpp"
 
 #include "lsst/pex/exceptions.h"
+#include "lsst/daf/persistence/LogicalLocation.h"
 #include "lsst/daf/persistence/DbTsvStorage.h"
 #include "lsst/afw/formatters/Utils.h"
 
@@ -18,6 +19,7 @@ using boost::int64_t;
 namespace ex = lsst::pex::exceptions;
 using lsst::daf::base::PropertySet;
 using lsst::pex::policy::Policy;
+using lsst::daf::persistence::LogicalLocation;
 
 namespace lsst {
 namespace afw {
@@ -69,21 +71,21 @@ int extractCcdId(PropertySet::Ptr const & properties) {
     if (properties->isArray("ccdId")) {
         throw LSST_EXCEPT(ex::RuntimeErrorException, "\"ccdId\" property has multiple values");
     }
-    int ccdId = properties->getAsInt64("ccdId");
+    int ccdId = properties->getAsInt("ccdId");
     if (ccdId < 0) {
         throw LSST_EXCEPT(ex::RangeErrorException, "negative \"ccdId\"");
     }
     if (ccdId > 255) {
         throw LSST_EXCEPT(ex::RangeErrorException, "\"ccdId\" is too large");
     }
-    return ccdId;
+    return static_cast<int>(ccdId);
 }
 
 int extractAmpId(PropertySet::Ptr const & properties) {
     if (properties->isArray("ampId")) {
         throw LSST_EXCEPT(ex::RuntimeErrorException, "\"ampId\" property has multiple values");
     }
-    int ampId = properties->getAsInt64("ampId");
+    int ampId = properties->getAsInt("ampId");
     if (ampId < 0) {
         throw LSST_EXCEPT(ex::RangeErrorException, "negative \"ampId\"");
     }
@@ -94,15 +96,25 @@ int extractAmpId(PropertySet::Ptr const & properties) {
 }
 
 int64_t extractCcdExposureId(PropertySet::Ptr const & properties) {
-    int64_t exposureId = extractExposureId(properties);
-    int ccdId = extractCcdId(properties);
-    return (exposureId << 8) + ccdId;
+    if (properties->isArray("ccdExposureId")) {
+        throw LSST_EXCEPT(ex::RuntimeErrorException, "\"ccdExposureId\" property has multiple values");
+    }
+    int64_t ccdExposureId = properties->getAsInt64("ccdExposureId");
+    if (ccdExposureId < 0) {
+        throw LSST_EXCEPT(ex::RangeErrorException, "negative \"ccdExposureId\"");
+    }
+    return ccdExposureId;
 }
 
 int64_t extractAmpExposureId(PropertySet::Ptr const & properties) {
-    int64_t exposureId = extractExposureId(properties);
-    int ampId = extractAmpId(properties);
-    return (exposureId << 14) + ampId;
+    if (properties->isArray("ampExposureId")) {
+        throw LSST_EXCEPT(ex::RuntimeErrorException, "\"ampExposureId\" property has multiple values");
+    }
+    int64_t ampExposureId = properties->getAsInt64("ampExposureId");
+    if (ampExposureId < 0) {
+        throw LSST_EXCEPT(ex::RangeErrorException, "negative \"ampExposureId\"");
+    }
+    return ampExposureId;
 }
 
 /**
@@ -143,49 +155,22 @@ bool extractOptionalFlag(
  * of a single visit should use for persistence of a particular output. All slices can be
  * configured to use the same (per-visit) table name using policy parameters.
  *
- * @param[in] policy   The @c Policy containing the table name patterns from which the
- *                     the actual table name is derived. One of two possible keys is
- * expected; the first is necessary when a single per-visit table is being used, the
- * second is necessary when each pipeline slice should send output to a seperate
- * table (e.g. to avoid write contention). In what follows, @c ${itemName} refers
- * to the value of a property named @c "itemName" extracted from @a properties.
- * <dl>
- * <dt> <tt>"${itemName}.perVisitTableNamePattern"</tt> </dt>
- * <dd> A @c boost::format compatible pattern string taking a single parameter: an id for
- *      the current visit. The default is @c "_tmp_visit%1%_${itemName}". </dd>
- * <dt> <tt>"${itemName}.perSliceAndVisitTableNamePattern"</tt> </dt>
- * <dd> A @c boost::format compatible pattern string taking two parameters: an id for the
- *      current visit followed by an id for the current slice is passed to the format. The
- *      default is @c "_tmp_visit%1%_slice%2%_${itemName}" </dd>
- * </dl>
+ * @param[in] policy   The @c Policy containing the table name pattern ("${itemName}.tableNamePattern",
+ *                     where ${itemName} is looked up in @a properties using the "itemName" key)
+ *                     from which the the actual table name is derived. This pattern may contain
+ * a set of parameters in @c %(key) format - these are interpolated by looking up @c "key" in
+ * the @a properties PropertySet.
  *
  * @param[in] properties   Provides runtime specific properties necessary to construct the
- *                         output table name. The @c "itemName" property must be present and
- * set to a non empty string. The @c "visitId" property must also be present and should
- * uniquely identify the current LSST visit. If the @c "${itemName}.isPerSliceTable" property 
- * is present, is of type @c bool and is set to @c true, and a @c "sliceId" property exists,
- * then each slice will output to a seperate per-visit table.
+ *                         output table name.
+ * @return table name
  */
-std::string const getVisitSliceTableName(
+std::string const getTableName(
     Policy::Ptr      const & policy,
     PropertySet::Ptr const & properties
 ) {
     std::string itemName(getItemName(properties));
-    int64_t visitId         = extractVisitId(properties);
-    bool    isPerSliceTable = extractOptionalFlag(properties, itemName + ".isPerSliceTable");
-
-    boost::format fmt;
-    fmt.exceptions(boost::io::all_error_bits);
-
-    if (isPerSliceTable) {
-        int sliceId = extractSliceId(properties);
-        fmt.parse(policy->getString(itemName + ".perSliceAndVisitTableNamePattern"));
-        fmt % visitId % sliceId;
-    } else {
-        fmt.parse(policy->getString(itemName + ".perVisitTableNamePattern"));
-        fmt % visitId;
-    }
-    return fmt.str();
+    return LogicalLocation(policy->getString(itemName + ".tableNamePattern"), properties).locString();
 }
 
 
@@ -194,75 +179,65 @@ std::string const getVisitSliceTableName(
  * used for persistence of its outputs. If slices were configured to all use the same (per-visit)
  * table name, a single name is stored.
  *
- * @param[out] names   The vector to store table names in.
+ * @param[in] policy   The @c Policy containing the table name pattern ("${itemName}.tableNamePattern",
+ *                     where ${itemName} is looked up in @a properties using the "itemName" key)
+ *                     from which the the actual table name is derived. This pattern may contain
+ * a set of parameters in @c %(key) format - these are interpolated by looking up @c "key" in
+ * the @a properties PropertySet.
  *
- * @param[in] policy   The Policy containing the table name patterns from which actual table
- *                     names are derived. A key named @c "${itemName}.perVisitTableNamePattern"
- *                     or @c "${itemName}.perSliceAndVisitTableNamePattern" is expected, where
- *                     @c ${itemName} refers to the value of a property named @c "itemName" extracted
- *                     from @a properties. See the documentation for getVisitSliceTableName()
- *                     for details.
+ * @param[in] properties   The runtime specific properties necessary to construct the table names.
  *
- * @param[in] properties   The runtime specific properties necessary to construct the retrieve
- *                         table names. The @c "itemName" property must be present and set to a non-empty
  * string. The @c "visitId" property must also be present, and shall be a non-negative integer of type
  * @c int64_t uniquely identifying the current LSST visit. If the @c "${itemName}.isPerSliceTable"
  * property is present, is of type @c bool and is set to @c true, then it is assumed that
  * @c "${itemName}.numSlices" (a positive integer of type @c int) output tables exist and
  * are to be read in.
  *
- * @sa getVisitSliceTableName()
+ * @return 	a list of table names
+ * @sa getTableName()
  */
-void getAllVisitSliceTableNames(
-    std::vector<std::string> & names,
+std::vector<std::string> getAllSliceTableNames(
     Policy::Ptr        const & policy,
     PropertySet::Ptr   const & properties
 ) {
     std::string itemName(getItemName(properties));
-    int64_t visitId         = extractVisitId(properties);
-    bool    isPerSliceTable = extractOptionalFlag(properties, itemName + ".isPerSliceTable");
-
-    boost::format fmt;
-    fmt.exceptions(boost::io::all_error_bits);
-
-    if (isPerSliceTable) {
-        int numSlices = properties->getAsInt(itemName + ".numSlices");
-        if (numSlices <= 0) {
-            throw LSST_EXCEPT(ex::RuntimeErrorException,
-                              itemName + " \".numSlices\" property value is non-positive");
-        }
-        fmt.parse(policy->getString(itemName + ".perSliceAndVisitTableNamePattern"));
-        fmt.bind_arg(1, visitId);
-        for (int i = 0; i < numSlices; ++i) {
-            fmt % i;
-            names.push_back(fmt.str());
-            fmt.clear();
-        }
-    } else {
-        fmt.parse(policy->getString(itemName + ".perVisitTableNamePattern"));
-        fmt % visitId;
-        names.push_back(fmt.str());
+    std::string pattern(policy->getString(itemName + ".tableNamePattern"));
+    int numSlices = 1;
+    if (properties->exists(itemName + ".numSlices")) {
+        numSlices = properties->getAsInt(itemName + ".numSlices");
     }
+    if (numSlices <= 0) {
+        throw LSST_EXCEPT(ex::RuntimeErrorException,
+                          itemName + " \".numSlices\" property value must be positive");
+    }
+    std::vector<std::string> names;
+    names.reserve(numSlices);
+    PropertySet::Ptr props = properties->deepCopy();
+    for (int i = 0; i < numSlices; ++i) {
+        props->set("sliceId", i);
+        names.push_back(LogicalLocation(pattern, props).locString());
+    }
+    return names;
 }
 
 
 /**
- * Creates the per visit and slice table identified by calling getVisitTableName() with
- * the given @a policy and @a properties. If @a policy contains a key named 
- * @c "${itemName}.templateTableName" (where where @c ${itemName} refers to the value of a property
- * named @c "itemName" extracted from @a properties), then the value of the key is used as creation
- * template. Otherwise, the template table is assumed to be named @c "${itemName}Template". Note that
- * the template table must exist in the database identified by @a location, and that if the desired
- * table already exists, an exception is thrown.
+ * Creates the table identified by calling getTableName() with the given @a policy and @a properties.
+ * A key named  @c "${itemName}.templateTableName" (where @c ${itemName} refers to the value of a
+ * property named @c "itemName" extracted from @a properties) must be available and set to the name
+ * of the template table to use for creation.
+ *
+ * Note that the template table must exist in the database identified by @a location, and that if
+ * the desired table already exists, an exception is thrown.
  */
-void createVisitSliceTable(
+void createTable(
     lsst::daf::persistence::LogicalLocation const & location,
     lsst::pex::policy::Policy::Ptr const & policy,
     PropertySet::Ptr const & properties
 ) {
     std::string itemName(getItemName(properties));
-    std::string name(getVisitSliceTableName(policy, properties));
-    std::string model = policy->getString(itemName + ".templateTableName");
+    std::string name(getTableName(policy, properties));
+    std::string model(policy->getString(itemName + ".templateTableName"));
 
     lsst::daf::persistence::DbTsvStorage db;
     db.setPersistLocation(location);
@@ -270,19 +245,17 @@ void createVisitSliceTable(
 }
 
 
-/** Drops the database table(s) identified by getAllVisitSliceTables(). */
-void dropAllVisitSliceTables(
+/** Drops the database table(s) identified by getAllSliceTables(). */
+void dropAllSliceTables(
     lsst::daf::persistence::LogicalLocation const & location,
     lsst::pex::policy::Policy::Ptr const & policy,
     PropertySet::Ptr const & properties
 ) {
-    std::vector<std::string> names;
-    getAllVisitSliceTableNames(names, policy, properties);
+    std::vector<std::string> names = getAllSliceTableNames(policy, properties);
 
     lsst::daf::persistence::DbTsvStorage db;
     db.setPersistLocation(location);
-    std::vector<std::string>::const_iterator const end = names.end();
-    for (std::vector<std::string>::const_iterator i = names.begin(); i != end; ++i) {
+    for (std::vector<std::string>::const_iterator i(names.begin()), end(names.end()); i != end; ++i) {
         db.dropTable(*i);
     }
 }

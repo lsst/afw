@@ -63,7 +63,7 @@ namespace cfitsio {
     int getNumKeys(fitsfile* fd);
     void getKey(fitsfile* fd, int n, std::string & keyWord, std::string & keyValue, std::string & keyComment);
 
-    void getMetadata(fitsfile* fd, lsst::daf::base::PropertySet::Ptr metadata);    
+    void getMetadata(fitsfile* fd, lsst::daf::base::PropertySet::Ptr metadata, bool strip=true);
 }
 
 namespace detail {

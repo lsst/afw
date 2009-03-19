@@ -189,6 +189,16 @@ class WCSTestCaseCFHT(unittest.TestCase):
         sky00 = self.wcs.xyToRaDec(afwImage.PointD(0, 0))
         self.assertEqual((sky00.getX(), sky00.getY()), (sky10_10.getX(), sky10_10.getY()))
 
+    def testCloneWcs(self):
+        """Test Cloning a Wcs"""
+        sky00 = self.wcs.xyToRaDec(afwImage.PointD(0, 0))
+
+        new = self.wcs.clone()
+        self.wcs.xyToRaDec(afwImage.PointD(10, 10)) # shouldn't affect new
+
+        nsky00 = new.xyToRaDec(afwImage.PointD(0, 0))
+        self.assertEqual((sky00.getX(), sky00.getY()), (nsky00.getX(), nsky00.getY()))
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():

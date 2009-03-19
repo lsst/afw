@@ -230,10 +230,10 @@ SpatialCellSet::SpatialCellSet(image::BBox const& region, ///< Bounding box for 
     //
     int y0 = region.getY0();
     for (int y = 0; y < ny; ++y) {
-        int const y1 = (y == ny - 1) ? region.getY1() : (y + 1)*ySize; // ny may not be a factor of height
+        int const y1 = (y == ny - 1) ? region.getY1() : (y + 1)*ySize - 1; // ny may not be a factor of height
         int x0 = region.getX0();
         for (int x = 0; x < nx; ++x) {
-            int const x1 = (x == nx - 1) ? region.getX1() : (x + 1)*xSize; // nx may not be a factor of width
+            int const x1 = (x == nx - 1) ? region.getX1() : (x + 1)*xSize - 1; // nx may not be a factor of width
             image::BBox bbox(image::PointI(x0, y0), image::PointI(x1, y1));
             std::string label = (boost::format("Cell %dx%d") % x % y).str();
 
@@ -285,7 +285,8 @@ void SpatialCellSet::insertCandidate(SpatialCellCandidate::Ptr candidate) {
  * processCandidate(*this), but can be re-defined)
  */
 void SpatialCellSet::visitCandidates(CandidateVisitor *visitor, ///< Pass this object to every Candidate
-                                     int const nMaxPerCell      ///< Visit no more than this many Candidates (<= 0: all)
+                                     int const nMaxPerCell,     ///< Visit no more than this many Candidates (<= 0: all)
+                                     bool const ignoreExceptions ///< Ignore any exceptions thrown by the processing
                                     ) {
     visitor->reset();
     
@@ -297,7 +298,16 @@ void SpatialCellSet::visitCandidates(CandidateVisitor *visitor, ///< Pass this o
                 break;
             }
             
-            visitor->processCandidate((*candidate).get());
+            try {
+                visitor->processCandidate((*candidate).get());
+            } catch(lsst::pex::exceptions::LengthErrorException &e) {
+                if (ignoreExceptions) {
+                    ;
+                } else {
+                    LSST_EXCEPT_ADD(e, "Visiting candidate");
+                    throw e;
+                }
+            }
         }
     }
 }
@@ -311,7 +321,8 @@ void SpatialCellSet::visitCandidates(CandidateVisitor *visitor, ///< Pass this o
  * SpatialCell::begin() const isn't yet implemented
  */
 void SpatialCellSet::visitCandidates(CandidateVisitor const* visitor, ///< Pass this object to every Candidate
-                                     int const nMaxPerCell      ///< Visit no more than this many Candidates (-ve: all)
+                                     int const nMaxPerCell,      ///< Visit no more than this many Candidates (-ve: all)
+                                     bool const ignoreExceptions ///< Ignore any exceptions thrown by the processing
                                     ) const {
 #if 1
     //
@@ -331,7 +342,16 @@ void SpatialCellSet::visitCandidates(CandidateVisitor const* visitor, ///< Pass 
                 break;
             }
             
-            visitor->processCandidate((*candidate).get());
+            try {
+                visitor->processCandidate((*candidate).get());
+            } catch(lsst::pex::exceptions::LengthErrorException &e) {
+                if (ignoreExceptions) {
+                    ;
+                } else {
+                    LSST_EXCEPT_ADD(e, "Visiting candidate");
+                    throw e;
+                }
+            }
         }
     }
 #endif

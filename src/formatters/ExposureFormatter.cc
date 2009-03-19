@@ -29,6 +29,7 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 #include "lsst/afw/formatters/WcsFormatter.h"
 #include "lsst/afw/image/Exposure.h"
 
+#include <iostream>
 
 // #include "lsst/afw/image/LSSTFitsResource.h"
 
@@ -153,13 +154,7 @@ void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
         execTrace("ExposureFormatter write FitsStorage");
         dafPersist::FitsStorage* fits = dynamic_cast<dafPersist::FitsStorage*>(storage.get());
 
-        lsst::daf::base::PropertySet::Ptr wcsProps =
-            lsst::afw::formatters::WcsFormatter::generatePropertySet(*(ip->_wcs));
-
-        afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>* vip =
-            const_cast<afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>*>(ip);
-        vip->getMaskedImage().getMetadata()->add("Wcs", wcsProps);
-        ip->_maskedImage.writeFits(fits->getPath());
+        ip->writeFits(fits->getPath());
         execTrace("ExposureFormatter write end");
         return;
     } else if (typeid(*storage) == typeid(dafPersist::DbStorage)) {

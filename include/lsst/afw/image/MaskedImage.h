@@ -765,6 +765,19 @@ namespace image {
         MaskPtr _mask;
         VariancePtr _variance;
     };
+
+/**
+ * A function to return a MaskedImage of the correct type (cf. std::make_pair)
+ */
+    template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+    MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>* makeMaskedImage(
+        typename Image<ImagePixelT>::Ptr image, ///< %image
+        typename Mask<MaskPixelT>::Ptr mask,    ///< mask
+        typename Image<VariancePixelT>::Ptr variance ///< variance
+                                                                         ) {
+        return new MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>(image, mask, variance);
+    }
+    
 }}}  // lsst::afw::image
         
 #endif //  LSST_IMAGE_MASKEDIMAGE_H

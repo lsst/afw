@@ -109,6 +109,29 @@ private:
     void initialize(std::string const &);
 };
 
+/************************************************************************************************************/
+/*
+ * Create Images containing random numbers
+ */
+template<typename ImageT>
+void randomUniformImage(ImageT *image, Random &rand);
+
+template<typename ImageT>
+void randomUniformPosImage(ImageT *image, Random &rand);
+
+template<typename ImageT>
+void randomUniformIntImage(ImageT *image, Random &rand, unsigned long n);
+
+template<typename ImageT>
+void randomFlatImage(ImageT *image, Random &rand, double const a, double const b);
+
+template<typename ImageT>
+void randomGaussianImage(ImageT *image, Random &rand);
+
+template<typename ImageT>
+void randomChisqImage(ImageT *image, Random &rand, double const nu);
+
+            
 }}} // end of namespace lsst::afw::math
 
 #endif // LSST_AFW_MATH_RANDOM_H

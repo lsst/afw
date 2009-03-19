@@ -86,14 +86,13 @@ def version(HeadURL = r"$HeadURL$"):
 %include "mask.i"
 %include "maskedImage.i"
 
-%template(PointD) lsst::afw::image::Point<double>;
-%template(PointI) lsst::afw::image::Point<int>;
+%define %POINT(NAME, TYPE)
+%template(Point##NAME) lsst::afw::image::Point<TYPE>;
 
-%define %EXTEND_POINT(TYPE)
 %extend lsst::afw::image::Point<TYPE> {
     %pythoncode {
     def __repr__(self):
-        return "(%.10g, %.10g)" % (self.getX(), self.getY())
+        return "Point" + "NAME(%.10g, %.10g)" % (self.getX(), self.getY())
 
     def __str__(self):
         return "(%g, %g)" % (self.getX(), self.getY())
@@ -126,8 +125,8 @@ def version(HeadURL = r"$HeadURL$"):
 }
 %enddef
 
-%EXTEND_POINT(double);
-%EXTEND_POINT(int);
+%POINT(D, double);
+%POINT(I, int);
 
 %extend lsst::afw::image::BBox {
     %pythoncode {
@@ -155,6 +154,7 @@ SWIG_SHARED_PTR(Wcs, lsst::afw::image::Wcs);
 
 %include "lsst/afw/image/Wcs.h"
 
+
 %inline {
     /**
      * Create a WCS from crval, image, and the elements of CD
@@ -173,6 +173,12 @@ SWIG_SHARED_PTR(Wcs, lsst::afw::image::Wcs);
 }
 }
 
+%extend lsst::afw::image::Wcs {
+    lsst::afw::image::Wcs::Ptr clone() {
+        return lsst::afw::image::Wcs::Ptr(new lsst::afw::image::Wcs::Wcs(*self));
+    }
+}
+
 /************************************************************************************************************/
 
 %{
@@ -181,15 +187,15 @@ SWIG_SHARED_PTR(Wcs, lsst::afw::image::Wcs);
 
 // Must go Before the %include
 %define %exposurePtr(TYPE, PIXEL_TYPE)
-SWIG_SHARED_PTR_DERIVED(Exposure##TYPE, lsst::daf::data::LsstBase, lsst::afw::image::Exposure<PIXEL_TYPE>);
+SWIG_SHARED_PTR_DERIVED(Exposure##TYPE, lsst::daf::data::LsstBase, lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>);
 %enddef
 
 // Must go After the %include
 %define %exposure(TYPE, PIXEL_TYPE)
-%template(Exposure##TYPE) lsst::afw::image::Exposure<PIXEL_TYPE>;
-%lsst_persistable(lsst::afw::image::Exposure<PIXEL_TYPE>);
+%template(Exposure##TYPE) lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>;
+%lsst_persistable(lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>);
 %template(makeExposure) lsst::afw::image::makeExposure<lsst::afw::image::MaskedImage<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> >;
-%extend lsst::afw::image::Exposure<PIXEL_TYPE> {
+%extend lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> {
     %pythoncode {
     def Factory(self, *args):
         """Return an Exposure of this type"""

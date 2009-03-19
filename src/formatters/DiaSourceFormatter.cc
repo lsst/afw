@@ -54,12 +54,11 @@ lsst::daf::persistence::FormatterRegistration form::DiaSourceVectorFormatter::re
 
 
 /*!
-    \internal   Generates a unique identifier for a DiaSource given the id of the
-                originating visit, the id of the originating ccd, and the sequence
-                number of the DiaSource within that slice.
+    \internal   Generates a unique identifier for a DiaSource given the ampExposureId of the
+                originating amplifier and the sequence number of the DiaSource within the amplifier.
  */
-inline static int64_t generateDiaSourceId(unsigned short seqNum, int ccdId, int64_t visitId) {
-    return (visitId << 24) + (ccdId << 16) + seqNum;
+inline static int64_t generateDiaSourceId(unsigned short seqNum, int64_t ampExposureId) {
+    return (ampExposureId << 16) + seqNum;
 }
 
 
@@ -460,17 +459,16 @@ void form::DiaSourceVectorFormatter::write( Persistable const * persistable,
         (!_policy || !_policy->exists("GenerateIds") || _policy->getBool("GenerateIds"))
     ) {
      
-        unsigned short seq    = 1;
-        boost::int64_t visitId       = extractVisitId(additionalData);
-        boost::int64_t ampExposureId = extractCcdExposureId(additionalData);
-        int     ccdId         = extractCcdId(additionalData);
-        if (ccdId < 0 || ccdId >= 256) {
-            throw LSST_EXCEPT(ex::InvalidParameterException, "ampExposureId out of range");
+        unsigned short seq = 1;
+        boost::int64_t ampExposureId = extractAmpExposureId(additionalData);
+        if (sourceVector.size() >= 65536) {
+            throw LSST_EXCEPT(ex::RangeErrorException, "too many DiaSources per-amp: "
+                "sequence number overflows 16 bits, causing unique-id conflicts");
         }
         
         DiaSourceSet::iterator i = sourceVector.begin();
         for ( ; i != sourceVector.end(); ++i) {
-            (*i)->setId(generateDiaSourceId(seq, ccdId, visitId));
+            (*i)->setId(generateDiaSourceId(seq, ampExposureId));
             (*i)->setAmpExposureId(ampExposureId);
             ++seq;
             if (seq == 0) { // Overflowed
@@ -490,16 +488,15 @@ void form::DiaSourceVectorFormatter::write( Persistable const * persistable,
         bs->getOArchive() & *p;
     } else if (typeid(*storage) == typeid(DbStorage) || typeid(*storage) == typeid(DbTsvStorage)) {
         std::string itemName(getItemName(additionalData));
-        std::string name(getVisitSliceTableName(_policy, additionalData));
+        std::string name(getTableName(_policy, additionalData));
         std::string model = _policy->getString(itemName + ".templateTableName");
-        bool mayExist = !extractOptionalFlag(additionalData, itemName + ".isPerSliceTable");
         if (typeid(*storage) == typeid(DbStorage)) {
             //handle persisting to DbStorage
             DbStorage * db = dynamic_cast<DbStorage *>(storage.get());
             if (db == 0) {
                 throw LSST_EXCEPT(ex::RuntimeErrorException, "Didn't get DbStorage");
             }
-            db->createTableFromTemplate(name, model, mayExist);
+            db->createTableFromTemplate(name, model, true);
             db->setTableForInsert(name);
             
             DiaSourceSet::const_iterator i(sourceVector.begin());
@@ -513,7 +510,7 @@ void form::DiaSourceVectorFormatter::write( Persistable const * persistable,
             if (db == 0) {
                 throw LSST_EXCEPT(ex::RuntimeErrorException, "Didn't get DbTsvStorage");
             }
-            db->createTableFromTemplate(name, model, mayExist);
+            db->createTableFromTemplate(name, model, true);
             db->setTableForInsert(name);
 
             DiaSourceSet::const_iterator i(sourceVector.begin());
@@ -552,8 +549,7 @@ Persistable* form::DiaSourceVectorFormatter::read(
         }
         
         //get a list of tables from policy and additionalData
-        std::vector<std::string> tables;
-        getAllVisitSliceTableNames(tables, _policy, additionalData);
+        std::vector<std::string> tables = getAllSliceTableNames(_policy, additionalData);
 
         DiaSourceSet sourceVector;
         // loop over all retrieve tables, reading in everything

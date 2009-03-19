@@ -3,6 +3,7 @@
  *
  * Offset an Image (or Mask or MaskedImage) by a constant vector (dx, dy)
  */
+#include <iterator>
 #include "lsst/afw/math/offsetImage.h"
 #include "lsst/afw/image/ImageUtils.h"
 
@@ -14,6 +15,12 @@ namespace math {
 
 /**
  * @brief Return an image offset by (dx, dy) using the specified algorithm
+ *
+ * @note in general, the output image will be offset by a fractional amount
+ * and X0/Y0 will be set.  However, if the offset lies in (-1, 1) in both
+ * row and column, we guarantee to perform the shift as requested, and
+ * not modify X0/Y0.  This makes it possible for client code to use this
+ * routine to e.g. center an image in a given pixel
  *
  * @throw lsst::pex::exceptions::InvalidParameterException if the algorithm's invalid
  */
@@ -30,18 +37,39 @@ typename ImageT::Ptr offsetImage(ImageT const& inImage,            ///< The %ima
     std::pair<int, double> deltaX = afwImage::positionToIndex(dx, true); // true => return the std::pair
     std::pair<int, double> deltaY = afwImage::positionToIndex(dy, true);
     //
+    // If the offset is in (-1, 1) use it as is, and don't allow an integral part
+    //
+    if (dx > -1 && dx < 1 && dy > -1 && dy < 1) {
+        if(deltaX.first != 0) {
+            deltaX.second += deltaX.first;  deltaX.first = 0;
+        }
+        if (deltaY.first != 0) {
+            deltaY.second += deltaY.first;  deltaY.first = 0;
+        }
+    }
+    //
     // We won't do the integral part of the shift, but we will set [XY]0 correctly
     //
     outImage->setXY0(afwImage::PointI(inImage.getX0() + deltaX.first, inImage.getY0() + deltaY.first));
     //
-    // And now the fractional part
+    // And now the fractional part.  N.b. the fraction parts
     //
-    std::vector<double> kernelXList(offsetKernel->getWidth());
-    std::vector<double> kernelYList(offsetKernel->getHeight());
     // We seem to have to pass -dx, -dy to setKernelParameters, for reasons RHL doesn't understand
-    offsetKernel->setKernelParameters(std::make_pair(-deltaX.second, -deltaY.second));
-    // Setting doNormalize to true doesn't work as convolve() recalculates the kernel; #
-    (void)offsetKernel->computeVectors(kernelXList, kernelYList, true);
+    dx = -deltaX.second; dy = -deltaY.second;
+
+    //
+    // If the shift is -ve, the generated shift kernel (e.g. Lanczos5) is quite asymmetric, with the
+    // largest coefficients to the left of centre.  We therefore move the centre of calculated shift kernel
+    // one to the right to center up the largest coefficients
+    //
+    if (dx < 0) {
+        offsetKernel->setCtrX(offsetKernel->getCtrX() + 1);
+    }
+    if (dy < 0) {
+        offsetKernel->setCtrY(offsetKernel->getCtrY() + 1);
+    }
+    
+    offsetKernel->setKernelParameters(std::make_pair(dx, dy));
 
     convolve(*outImage, inImage, *offsetKernel, true);
 

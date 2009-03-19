@@ -15,8 +15,8 @@ SWIG_SHARED_PTR_DERIVED(BilinearWarpingKernel, lsst::afw::math::SeparableKernel,
 
 %define %warpExposureFuncByType(DESTIMAGEPIXELT, SRCIMAGEPIXELT)
 %template(warpExposure) lsst::afw::math::warpExposure<
-    lsst::afw::image::Exposure<DESTIMAGEPIXELT>,
-    lsst::afw::image::Exposure<SRCIMAGEPIXELT> >;
+    lsst::afw::image::Exposure<DESTIMAGEPIXELT, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>,
+    lsst::afw::image::Exposure<SRCIMAGEPIXELT, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> >;
 %enddef
 
 %warpExposureFuncByType(float, boost::uint16_t);
