@@ -160,6 +160,31 @@ SWIG_SHARED_PTR(Wcs, lsst::afw::image::Wcs);
     }
 }
 
+
+%inline {
+    /**
+     * Create a WCS from crval, image, and the elements of CD
+     */
+    lsst::afw::image::Wcs::Ptr createWcs(lsst::afw::image::PointD crval,
+                                                                lsst::afw::image::PointD crpix,
+                                                                double CD11, double CD12, double CD21, double CD22) {
+
+    boost::numeric::ublas::matrix<double> CD(2, 2);
+    CD(0, 0) = CD11;
+    CD(0, 1) = CD12;
+    CD(1, 0) = CD21;
+    CD(1, 1) = CD22;
+    
+    return lsst::afw::image::Wcs::Ptr(new lsst::afw::image::Wcs(crval, crpix, CD));
+}
+}
+
+%extend lsst::afw::image::Wcs {
+    lsst::afw::image::Wcs::Ptr clone() {
+        return lsst::afw::image::Wcs::Ptr(new lsst::afw::image::Wcs::Wcs(*self));
+    }
+}
+
 /************************************************************************************************************/
 
 %{

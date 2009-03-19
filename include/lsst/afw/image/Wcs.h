@@ -3,8 +3,6 @@
  * \file
  * \brief Support for Astrometry
  *
- * This is my draft of an improvement to the WCS class. It goes in here because this is more of a scratch
- * directory, and rhl might cringe if he sees this in the real development code
  */
 
 #ifndef LSST_AFW_IMAGE_WCS_H
@@ -55,6 +53,8 @@ namespace image {
 
         /// Return true iff Wcs is valid
         operator bool() const { return _wcsInfo != NULL; }
+
+        bool isFlipped();
 
         void shiftReferencePixel(double const dx, double const dy);
 
