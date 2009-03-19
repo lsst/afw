@@ -460,10 +460,6 @@ void form::SourceVectorFormatter::write(
         std::string name(getTableName(_policy, additionalData));
         std::string model = _policy->getString(itemName + ".templateTableName");
 
-        bool mayExist = !extractOptionalFlag(
-            additionalData, 
-            itemName + ".isPerSliceTable");
-
         if (typeid(*storage) == typeid(DbStorage)) {
         	//handle persisting to DbStorag
             DbStorage * db = dynamic_cast<DbStorage *>(storage.get());
@@ -472,7 +468,7 @@ void form::SourceVectorFormatter::write(
                         "Didn't get DbStorage");
             }
 
-            db->createTableFromTemplate(name, model, mayExist);
+            db->createTableFromTemplate(name, model, true);
             db->setTableForInsert(name);
             
             SourceSet::const_iterator i(sourceVector.begin());
@@ -487,7 +483,7 @@ void form::SourceVectorFormatter::write(
                 throw LSST_EXCEPT(ex::RuntimeErrorException, 
                         "Didn't get DbTsvStorage");
             }
-            db->createTableFromTemplate(name, model, mayExist);
+            db->createTableFromTemplate(name, model, true);
             db->setTableForInsert(name);
 
             SourceSet::const_iterator i(sourceVector.begin());

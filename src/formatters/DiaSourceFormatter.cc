@@ -490,14 +490,13 @@ void form::DiaSourceVectorFormatter::write( Persistable const * persistable,
         std::string itemName(getItemName(additionalData));
         std::string name(getTableName(_policy, additionalData));
         std::string model = _policy->getString(itemName + ".templateTableName");
-        bool mayExist = !extractOptionalFlag(additionalData, itemName + ".isPerSliceTable");
         if (typeid(*storage) == typeid(DbStorage)) {
             //handle persisting to DbStorage
             DbStorage * db = dynamic_cast<DbStorage *>(storage.get());
             if (db == 0) {
                 throw LSST_EXCEPT(ex::RuntimeErrorException, "Didn't get DbStorage");
             }
-            db->createTableFromTemplate(name, model, mayExist);
+            db->createTableFromTemplate(name, model, true);
             db->setTableForInsert(name);
             
             DiaSourceSet::const_iterator i(sourceVector.begin());
@@ -511,7 +510,7 @@ void form::DiaSourceVectorFormatter::write( Persistable const * persistable,
             if (db == 0) {
                 throw LSST_EXCEPT(ex::RuntimeErrorException, "Didn't get DbTsvStorage");
             }
-            db->createTableFromTemplate(name, model, mayExist);
+            db->createTableFromTemplate(name, model, true);
             db->setTableForInsert(name);
 
             DiaSourceSet::const_iterator i(sourceVector.begin());
