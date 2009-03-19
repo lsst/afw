@@ -154,6 +154,8 @@ SWIG_SHARED_PTR(Wcs, lsst::afw::image::Wcs);
 
 %include "lsst/afw/image/Wcs.h"
 
+%lsst_persistable(lsst::afw::image::Wcs);
+
 %extend lsst::afw::image::Wcs {
     lsst::afw::image::Wcs::Ptr clone() {
         return lsst::afw::image::Wcs::Ptr(new lsst::afw::image::Wcs::Wcs(*self));
