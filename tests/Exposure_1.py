@@ -245,15 +245,15 @@ class ExposureTestCase(unittest.TestCase):
         mainWcs = parentExposure.getWcs()
         subWcs = subExposure.getWcs()
 
-        for xOff in (0, subDim[0]-1):
-            for yOff in (0, subDim[1]-1):
+        for xInd in (0, subDim[0]-1):
+            for yInd in (0, subDim[1]-1):
                 p0 = mainWcs.xyToRaDec(
-                    parentMI.indexToPosition(subBBox.getX0() + xOff, afwImage.X),
-                    parentMI.indexToPosition(subBBox.getY0() + yOff, afwImage.Y),
+                    afwImage.indexToPosition(xInd, afwImage.X),
+                    afwImage.indexToPosition(yInd, afwImage.Y),
                 )
                 p1 = subWcs.xyToRaDec(
-                    subMI.indexToPosition(mainBBox.getX0() + xOff, afwImage.X),
-                    subMI.indexToPosition(mainBBox.getY0() + yOff, afwImage.Y),
+                    afwImage.indexToPosition(xInd, afwImage.X),
+                    afwImage.indexToPosition(yInd, afwImage.Y),
                 )
                 self.assertEqual((p0.getX(), p0.getY()), (p1.getX(), p1.getY()))
 

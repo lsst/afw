@@ -203,21 +203,21 @@ int afwMath::warpExposure(
     std::vector<afwImage::PointD> prevRowSrcPosXY(destWidth+1);
     for (int destIndX = 0; destIndX < destWidth; ++destIndX) {
         afwImage::PointD destPosXY(
-            destMI.indexToPosition(destIndX, afwImage::X),
-            destMI.indexToPosition(-1, afwImage::Y));
+            afwImage::indexToPosition(destIndX),
+            afwImage::indexToPosition(-1));
         afwImage::PointD srcPosXY = srcWcsPtr->raDecToXY(destWcsPtr->xyToRaDec(destPosXY));
         prevRowSrcPosXY[destIndX] = srcPosXY;
     }
     for (int destIndY = 0; destIndY < destHeight; ++destIndY) {
         afwImage::PointD destPosXY(
-            destMI.indexToPosition(-1, afwImage::X),
-            destMI.indexToPosition(destIndY, afwImage::Y));
+            afwImage::indexToPosition(-1),
+            afwImage::indexToPosition(destIndY));
         afwImage::PointD prevSrcPosXY = srcWcsPtr->raDecToXY(destWcsPtr->xyToRaDec(destPosXY));
         afwImage::PointD srcPosXY;
         typename DestMaskedImageT::x_iterator destXIter = destMI.row_begin(destIndY);
         for (int destIndX = 0; destIndX < destWidth; ++destIndX, ++destXIter) {
             // compute sky position associated with this pixel of remapped MaskedImage
-            destPosXY[0] = destMI.indexToPosition(destIndX, afwImage::X);
+            destPosXY[0] = afwImage::indexToPosition(destIndX);
 
             // Compute associated pixel position on source MaskedImage
             srcPosXY = srcWcsPtr->raDecToXY(destWcsPtr->xyToRaDec(destPosXY));
