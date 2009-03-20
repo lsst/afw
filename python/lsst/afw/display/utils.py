@@ -31,8 +31,13 @@ class Mosaic(object):
         if self.nImage == 0:
             raise RuntimeError, "You must provide at least one image"
 
-        image1 = images[0]
-        self.xsize, self.ysize = image1.getWidth(), image1.getHeight()
+        self.xsize, self.ysize = 0, 0
+        for im in images:
+            w, h = im.getWidth(), im.getHeight()
+            if w > self.xsize:
+                self.xsize = w
+            if h > self.ysize:
+                self.ysize = h
 
         if not mode:
             mode = self.mode
@@ -59,12 +64,19 @@ class Mosaic(object):
 
         self.nx, self.ny = nx, ny
 
-        mosaic = image1.Factory(nx*self.xsize + (nx - 1)*self.gutter, ny*self.ysize + (ny - 1)*self.gutter)
+        mosaic = images[0].Factory(nx*self.xsize + (nx - 1)*self.gutter, ny*self.ysize + (ny - 1)*self.gutter)
         mosaic.set(self.background)
 
         for i in range(len(images)):
             smosaic = mosaic.Factory(mosaic, self.getBBox(i%nx, i//nx))
-            smosaic <<= images[i]
+            im = images[i]
+
+            if smosaic.getDimensions() != im.getDimensions(): # im is smaller than smosaic
+                llc = afwImage.PointI((smosaic.getWidth() - im.getWidth())//2,
+                                      (smosaic.getHeight() - im.getHeight())//2)
+                smosaic = smosaic.Factory(smosaic, afwImage.BBox(llc, im.getWidth(), im.getHeight()))
+
+            smosaic <<= im
 
         if frame is not None:
             ds9.mtv(mosaic, frame=frame)
