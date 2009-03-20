@@ -129,6 +129,10 @@ def version(HeadURL = r"$HeadURL$"):
 %POINT(I, int);
 
 %extend lsst::afw::image::BBox {
+    lsst::afw::image::BBox clone() {
+        return lsst::afw::image::BBox(*self);
+    }
+
     %pythoncode {
     def __repr__(self):
         return "BBox(PointI(%d, %d), %d, %d)" % (self.getX0(), self.getY0(), self.getWidth(), self.getHeight())
