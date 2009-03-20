@@ -220,11 +220,6 @@ namespace image {
         /// Return the %image's size;  useful for passing to constructors
         std::pair<int, int> getDimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
         
-        /**
-        * Return the %image's bounding box starting at XY0
-        */
-        inline BBox getBBox() const { return BBox(getXY0(), getWidth(), getHeight()); }
-        
         void swap(ImageBase &rhs);
         //
         // Iterators and Locators
