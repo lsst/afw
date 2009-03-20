@@ -237,22 +237,22 @@ class ExposureTestCase(unittest.TestCase):
         """
         parentMI = parentExposure.getMaskedImage()
         subMI = subExposure.getMaskedImage()
-        subBBox = subMI.getBBox()
         subDim = subMI.getDimensions()
+        subXY0 = subMI.getXY0()
 
         # Note: pixel positions must be computed relative to XY0 when working with WCS
         mainWcs = parentExposure.getWcs()
         subWcs = subExposure.getWcs()
 
-        for xInd in (0, subDim[0]-1):
-            for yInd in (0, subDim[1]-1):
+        for xSubInd in (0, subDim[0]-1):
+            for ySubInd in (0, subDim[1]-1):
                 p0 = mainWcs.xyToRaDec(
-                    afwImage.indexToPosition(xInd),
-                    afwImage.indexToPosition(yInd),
+                    afwImage.indexToPosition(xSubInd + subXY0[0]),
+                    afwImage.indexToPosition(ySubInd + subXY0[1]),
                 )
                 p1 = subWcs.xyToRaDec(
-                    afwImage.indexToPosition(xInd),
-                    afwImage.indexToPosition(yInd),
+                    afwImage.indexToPosition(xSubInd),
+                    afwImage.indexToPosition(ySubInd),
                 )
                 self.assertEqual((p0.getX(), p0.getY()), (p1.getX(), p1.getY()))
 
