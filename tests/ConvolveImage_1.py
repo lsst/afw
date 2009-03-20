@@ -255,6 +255,9 @@ class ConvolveTestCase(unittest.TestCase):
             refCnvImageArr = refConvolve(inImageArr, analyticKernel, doNormalize)
 
             if not numpy.allclose(cnvImageArr, refCnvImageArr):
+                cnvImage.writeFits("sepcnv.fits")
+                refCnvImage = imTestUtils.imageFromArray(refCnvImageArr)
+                refCnvImage.writeFits("refsepcnv.fits")
                 self.fail("Convolved image does not match reference for doNormalize=%s" % doNormalize)
 
     def testSpatiallyVaryingSeparableConvolve(self):

@@ -19,7 +19,7 @@ import lsst.pex.exceptions as pexExcept
 import lsst.daf.base
 import lsst.afw.image.imageLib as afwImage
 import eups
-#import lsst.afw.display.ds9 as ds9
+import lsst.afw.display.ds9 as ds9
 
 try:
     type(display)
@@ -223,7 +223,8 @@ class OldMaskTestCase(unittest.TestCase):
     and modified to run with the new (DC3) APIs"""
 
     def setUp(self):
-        self.testMask = afwImage.MaskU(300,400)
+        self.testMask = afwImage.MaskU(300,400,0)
+        #self.testMask.set(0)
 
         self.testMask.clearMaskPlaneDict() # reset so tests will be deterministic
 
