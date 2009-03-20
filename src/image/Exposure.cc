@@ -106,6 +106,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &src, ///<
     _maskedImage(src.getMaskedImage(), bbox, deep),
     _wcs(new afwImage::Wcs(*src._wcs))
 {
+    _wcs->shiftReferencePixel(-bbox.getX0(), -bbox.getY0());
     setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet()));
 }
 
@@ -135,6 +136,17 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertySet());
 
     _maskedImage = MaskedImageT(baseName, hdu, metadata, bbox, conformMasks);
+
+    if (bbox) {
+        try {
+            metadata->set("CRPIX1", metadata->getAsDouble("CRPIX1") - bbox.getX0());
+            metadata->set("CRPIX2", metadata->getAsDouble("CRPIX2") - bbox.getY0());
+        }
+        catch (lsst::pex::exceptions::NotFoundException &e) {
+            ; // OK, no WCS is present in header
+        }
+    }
+
     _wcs = afwImage::Wcs::Ptr(new afwImage::Wcs(metadata));
     setMetadata(metadata);
 }
