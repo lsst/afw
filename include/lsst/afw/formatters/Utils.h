@@ -29,24 +29,23 @@ std::string const getItemName(
     lsst::daf::base::PropertySet::Ptr const & properties
 );
 
-std::string const getVisitSliceTableName(
+std::string const getTableName(
     lsst::pex::policy::Policy::Ptr const & policy,
     lsst::daf::base::PropertySet::Ptr const & properties
 );
 
-void getAllVisitSliceTableNames(
-    std::vector<std::string> & names,
+std::vector<std::string> getAllSliceTableNames(
     lsst::pex::policy::Policy::Ptr const & policy,
     lsst::daf::base::PropertySet::Ptr const & properties
 );
 
-void createVisitSliceTable(
+void createTable(
     lsst::daf::persistence::LogicalLocation const & location,
     lsst::pex::policy::Policy::Ptr const & policy,
     lsst::daf::base::PropertySet::Ptr const & properties
 );
 
-void dropAllVisitSliceTables(
+void dropAllSliceTables(
     lsst::daf::persistence::LogicalLocation const & location,
     lsst::pex::policy::Policy::Ptr const & policy,
     lsst::daf::base::PropertySet::Ptr const & properties
@@ -54,9 +53,11 @@ void dropAllVisitSliceTables(
 
 int extractSliceId(lsst::daf::base::PropertySet::Ptr const& properties);
 int64_t extractExposureId(lsst::daf::base::PropertySet::Ptr const& properties);
+int64_t extractCcdExposureId(lsst::daf::base::PropertySet::Ptr const& properties);
+int64_t extractAmpExposureId(lsst::daf::base::PropertySet::Ptr const& properties);
 int extractVisitId(lsst::daf::base::PropertySet::Ptr const& properties);
 int extractCcdId(lsst::daf::base::PropertySet::Ptr const& properties);
-int64_t extractCcdExposureId(lsst::daf::base::PropertySet::Ptr const& properties);
+int extractAmpId(lsst::daf::base::PropertySet::Ptr const& properties);
 
 std::string const formatFitsProperties(lsst::daf::base::PropertySet::Ptr prop);
 int countFitsHeaderCards(lsst::daf::base::PropertySet::Ptr prop);

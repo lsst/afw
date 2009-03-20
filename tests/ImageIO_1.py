@@ -66,9 +66,11 @@ class ReadFitsTestCase(unittest.TestCase):
     def testWriteReadF64(self):
         """Test writing then reading an F64 image"""
 
+        imPath = os.path.join("tests", "data", "smallD.fits")
         im = afwImage.ImageD(100, 100); im.set(666)
-        im.writeFits("smallD.fits")
-        newIm = afwImage.ImageD("smallD.fits")
+        im.writeFits(imPath)
+        newIm = afwImage.ImageD(imPath)
+        os.remove(imPath)
 
     def testSubimage(self):
         """Test reading a subimage image"""

@@ -72,8 +72,9 @@ public:
     };
 
     // -- Constructor --------
-    explicit Random(Algorithm algorithm = MT19937, unsigned long seed = 0);
-    explicit Random(std::string const & algorithm, unsigned long seed = 0);
+    explicit Random(Algorithm algorithm = MT19937, unsigned long seed = 1);
+    explicit Random(std::string const & algorithm, unsigned long seed = 1);
+    explicit Random(lsst::pex::policy::Policy::Ptr const policy);
     // Use compiler generated destructor and shallow copy constructor/assignment operator
 
     Random deepCopy() const;
@@ -83,37 +84,16 @@ public:
     std::string getAlgorithmName() const;
     static std::vector<std::string> const & getAlgorithmNames();
     unsigned long getSeed() const;
-    unsigned long getMin() const;
-    unsigned long getMax() const;
 
     // -- Modifiers: generating random numbers --------
-    unsigned long get();
     double uniform();
     double uniformPos();
     unsigned long uniformInt(unsigned long n);
 
     // -- Modifiers: computing random variates for various distributions --------
     double flat(double const a, double const b);
-    double gaussian(double const sigma = 1.0, double const mu = 0.0);
+    double gaussian();
     double chisq(double const nu);
-
-    // -- Factory functions --------
-
-    // create RNGs, allowing policy/environment variables to override the algorithm and seed.
-    static Random create(
-        lsst::pex::policy::Policy::Ptr policy,
-        Algorithm algorithm = MT19937,
-        unsigned long seed = 0
-    );
-    static Random create(
-        lsst::pex::policy::Policy::Ptr policy,
-        std::string const & algorithm,
-        unsigned long seed = 0
-    );
-
-    // create RNGs, allowing environment variables to override the algorithm and seed.
-    static inline Random create(Algorithm algorithm = MT19937, unsigned long seed = 0);
-    static inline Random create(std::string const & algorithm, unsigned long seed = 0);
 
 private:
     boost::shared_ptr< ::gsl_rng> _rng;
@@ -126,33 +106,32 @@ private:
     static char const * const _seedEnvVarName;
 
     void initialize();
+    void initialize(std::string const &);
 };
 
-
-// -- Inline function implementations --------
-
-/**
- * Equivalent to calling @c create() with a null (or empty) policy and
- * the given algorithm/seed. 
- *
- * @copydoc create(lsst::pex::Policy::Ptr, Algorithm, unsigned long)
- * @sa create(lsst::pex::Policy::Ptr, Algorithm, unsigned long)
+/************************************************************************************************************/
+/*
+ * Create Images containing random numbers
  */
-Random Random::create(Random::Algorithm algorithm, unsigned long seed) {
-    return create(lsst::pex::policy::Policy::Ptr(), algorithm, seed);
-}
+template<typename ImageT>
+void randomUniformImage(ImageT *image, Random &rand);
 
-/**
- * Equivalent to calling @c create() with a null (or empty) policy and
- * the given algorithm/seed. 
- *
- * @copydoc create(lsst::pex::Policy::Ptr, std::string const &, unsigned long)
- * @sa create(lsst::pex::Policy::Ptr, std::string const &, unsigned long)
- */
-Random Random::create(std::string const & algorithm, unsigned long seed) {
-    return create(lsst::pex::policy::Policy::Ptr(), algorithm, seed);
-}
+template<typename ImageT>
+void randomUniformPosImage(ImageT *image, Random &rand);
 
+template<typename ImageT>
+void randomUniformIntImage(ImageT *image, Random &rand, unsigned long n);
+
+template<typename ImageT>
+void randomFlatImage(ImageT *image, Random &rand, double const a, double const b);
+
+template<typename ImageT>
+void randomGaussianImage(ImageT *image, Random &rand);
+
+template<typename ImageT>
+void randomChisqImage(ImageT *image, Random &rand, double const nu);
+
+            
 }}} // end of namespace lsst::afw::math
 
 #endif // LSST_AFW_MATH_RANDOM_H

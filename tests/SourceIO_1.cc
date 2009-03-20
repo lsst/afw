@@ -155,7 +155,7 @@ static PropertySet::Ptr createDbTestProps(
     int visitId = createVisitId();
     props->add("visitId",  visitId);
     props->add("exposureId", static_cast<int64_t>(visitId*2));
-    props->add("ccdId", static_cast<int64_t>(5));
+    props->add("ampExposureId", static_cast<int64_t>(visitId)*32);
     props->add("universeSize", numSlices);
     props->add("sliceId",  sliceId);
     props->add("itemName", itemName);
@@ -217,10 +217,7 @@ static void testDb(std::string const & storageType) {
     Policy::Ptr policy(new Policy);
     std::string policyRoot("Formatter.PersistableSourceVector");
     policy->set(policyRoot + ".Source.templateTableName", "Source");
-    policy->set(policyRoot + ".Source.perVisitTableNamePattern",
-                "_tmp_test_Source_%1%");
-    policy->set(policyRoot + ".Source.perSliceAndVisitTableNamePattern",
-                "_tmp_test_Source_%1%_%2%");
+    policy->set(policyRoot + ".Source.tableNamePattern", "_tmp_test_Source_%(visitId)");
     Policy::Ptr nested(policy->getPolicy(policyRoot));
 
     PropertySet::Ptr props = createDbTestProps(0, 1, "Source");
@@ -254,7 +251,7 @@ static void testDb(std::string const & storageType) {
         BOOST_CHECK_MESSAGE(*vec.at(0) == *dsv[0], 
             "persist()/retrieve() resulted in corruption");
     }
-    afwFormatters::dropAllVisitSliceTables(loc, nested, props);
+    afwFormatters::dropAllSliceTables(loc, nested, props);
 
     // 2. Test on a SourceSet
     dsv.clear();
@@ -294,7 +291,7 @@ static void testDb(std::string const & storageType) {
             }
         }
     }
-    afwFormatters::dropAllVisitSliceTables(loc, nested, props);
+    afwFormatters::dropAllSliceTables(loc, nested, props);
 }
 
 
@@ -303,10 +300,7 @@ static void testDb2(std::string const & storageType) {
     Policy::Ptr policy(new Policy);
     std::string policyRoot("Formatter.PersistableSourceVector");
     policy->set(policyRoot + ".Source.templateTableName", "Source");
-    policy->set(policyRoot + ".Source.perVisitTableNamePattern", 
-                "_tmp_test_Source_%1%");
-    policy->set(policyRoot + ".Source.perSliceAndVisitTableNamePattern", 
-                "_tmp_test_Source_%1%_%2%");
+    policy->set(policyRoot + ".Source.tableNamePattern", "_tmp_test_Source_v%(visitId)_s%(sliceId)");
 
     Policy::Ptr nested(policy->getPolicy(policyRoot));
 
@@ -320,6 +314,7 @@ static void testDb2(std::string const & storageType) {
     // 1. Write out each slice table seperately
     for (int sliceId = 0; sliceId < numSlices; ++sliceId) {
         props->set("sliceId", sliceId);
+        props->set("ampExposureId", static_cast<int64_t>(sliceId));
         SourceSet dsv;
         initTestData(dsv, sliceId);
 
@@ -357,7 +352,7 @@ static void testDb2(std::string const & storageType) {
             break;
         }            
     }    
-    afwFormatters::dropAllVisitSliceTables(loc, nested, props);
+    afwFormatters::dropAllSliceTables(loc, nested, props);
 }
 
 BOOST_AUTO_TEST_CASE(SourceEquality) {
@@ -387,7 +382,7 @@ BOOST_AUTO_TEST_CASE(SourceEquality) {
 BOOST_AUTO_TEST_CASE(SourceIO) {
     try {
         testBoost();
-        if (lsst::daf::persistence::DbAuth::available()) {
+        if (lsst::daf::persistence::DbAuth::available("lsst10.ncsa.uiuc.edu", "3306")) {
             testDb("DbStorage");
             testDb("DbTsvStorage");
             testDb2("DbStorage");

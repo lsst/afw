@@ -19,7 +19,7 @@ import lsst.pex.exceptions
 import lsst.daf.base
 import lsst.afw.image.imageLib as afwImage
 import eups
-#import lsst.afw.display.ds9 as ds9
+import lsst.afw.display.ds9 as ds9
 
 try:
     type(display)
@@ -71,6 +71,31 @@ class ImageTestCase(unittest.TestCase):
         self.assertEqual(self.image1.get(0,0), 0)
         self.assertEqual(self.image2.get(0,0), self.val2 - self.val1)
     
+    def testArithmeticImagesMismatch(self):
+        "Test arithmetic operations on Images of different sizes"
+        i1 = afwImage.ImageF(100,100); i1.set(100)
+        i2 = afwImage.ImageF(10,10);   i2.set(10)
+        
+        def tst(i1, i2): i1 -= i2
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i1, i2)
+        def tst(i1, i2): i1.scaledMinus(1.0, i2)
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i2, i1)
+
+        def tst(i1, i2): i1 += i2
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i1, i2)
+        def tst(i1, i2): i1.scaledPlus(1.0, i2)
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i2, i1)
+
+        def tst(i1, i2): i1 *= i2
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i1, i2)
+        def tst(i1, i2): i1.scaledMultiplies(1.0, i2)
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i2, i1)
+
+        def tst(i1, i2): i1 /= i2
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i1, i2)
+        def tst(i1, i2): i1.scaledDivides(1.0, i2)
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i2, i1)
+
     def testSubtractScaledImages(self):
         c = 10.0
         self.image1.scaledMinus(c, self.image2)
@@ -181,13 +206,51 @@ class ImageTestCase(unittest.TestCase):
 
         bbox.setX0(x0 - 1) 
         self.assertEqual(bbox.getX0(), x0 - 1)
+        self.assertEqual(bbox.getX1(), x1)
         bbox.setX1(x1 + 1) 
         self.assertEqual(bbox.getX1(), x1 + 1)
 
         bbox.setY0(y0 - 1) 
         self.assertEqual(bbox.getY0(), y0 - 1)
+        self.assertEqual(bbox.getY1(), y1)
         bbox.setY1(y1 + 1) 
         self.assertEqual(bbox.getY1(), y1 + 1)
+        #
+        # Test clipping a BBox
+        #
+        bbox = afwImage.BBox(llc, width, height)
+        cbox = afwImage.BBox(llc, width - 1, height - 1)
+
+        bbox2 = bbox.clip(cbox)
+
+        self.assertEqual(bbox.getX0(), x0)
+        self.assertEqual(bbox.getY0(), y0)
+        self.assertEqual(bbox.getX1(), x1 - 1)
+        self.assertEqual(bbox.getY1(), y1 - 1)
+        self.assertEqual(bbox.getWidth(), width - 1)
+        self.assertEqual(bbox.getHeight(), height - 1)
+
+        bbox = afwImage.BBox(llc, width, height)
+        cbox = afwImage.BBox(afwImage.PointI(x0 + 1, y0 + 2), width + 10, height + 10)
+        bbox2 = bbox.clip(cbox)
+
+        self.assertEqual(bbox.getX0(), x0 + 1)
+        self.assertEqual(bbox.getY0(), y0 + 2)
+        self.assertEqual(bbox.getX1(), x1)
+        self.assertEqual(bbox.getY1(), y1)
+        self.assertEqual(bbox.getWidth(), width - 1)
+        self.assertEqual(bbox.getHeight(), height - 2)
+
+        bbox = afwImage.BBox(llc, width, height)
+        cbox = afwImage.BBox(afwImage.PointI(x0 - 1, y0 - 2), width + 10, height + 20)
+        bbox2 = bbox.clip(cbox)
+
+        self.assertEqual(bbox.getX0(), x0)
+        self.assertEqual(bbox.getY0(), y0)
+        self.assertEqual(bbox.getX1(), x1)
+        self.assertEqual(bbox.getY1(), y1)
+        self.assertEqual(bbox.getWidth(), width)
+        self.assertEqual(bbox.getHeight(), height)
 
     def checkImgPatch(self, img, x0=0, y0=0):
         """Check that a patch of an image is correct; origin of patch is at (x0, y0)"""
@@ -198,6 +261,28 @@ class ImageTestCase(unittest.TestCase):
         self.assertEqual(img.get(x0,     y0 + 1), 666)
         self.assertEqual(img.get(x0 + 3, y0 + 1), self.val1)
         self.assertEqual(img.get(x0,     y0 + 2), self.val1)
+
+    def testOrigin(self):
+        """Check that we can set and read the origin"""
+
+        im = afwImage.ImageF(10, 20)
+        x0 = y0 = 0
+        
+        self.assertEqual(im.getX0(), x0)
+        self.assertEqual(im.getY0(), y0)
+        self.assertEqual(im.getXY0(), afwImage.PointI(x0, y0))
+
+        x0, y0 = 3, 5
+        im.setXY0(x0, y0)
+        self.assertEqual(im.getX0(), x0)
+        self.assertEqual(im.getY0(), y0)
+        self.assertEqual(im.getXY0(), afwImage.PointI(x0, y0))
+
+        x0, y0 = 30, 50
+        im.setXY0(afwImage.PointI(x0, y0))
+        self.assertEqual(im.getX0(), x0)
+        self.assertEqual(im.getY0(), y0)
+        self.assertEqual(im.getXY0(), afwImage.PointI(x0, y0))
 
     def testSubimages(self):
         simage1 = afwImage.ImageF(self.image1, afwImage.BBox(afwImage.PointI(1, 1), 10, 5))
@@ -350,6 +435,18 @@ class DecoratedImageTestCase(unittest.TestCase):
             for k in meta.keys():
                 self.assertEqual(rimage.getMetadata().getAsDouble(k), meta[k])
 
+    def testReadMetadata(self):
+        if self.fileForMetadata:
+            im = afwImage.DecoratedImageF(self.fileForMetadata)
+        else:
+            print >> sys.stderr, "Warning: afwdata is not set up; not running the FITS metadata I/O tests"
+            return
+
+        meta = afwImage.readMetadata(self.fileForMetadata)
+        self.assertTrue("NAXIS1" in meta.names())
+        self.assertEqual(im.getWidth(), meta.get("NAXIS1"))
+        self.assertEqual(im.getHeight(), meta.get("NAXIS2"))
+        
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def printImg(img):

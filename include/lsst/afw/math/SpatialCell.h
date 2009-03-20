@@ -272,8 +272,10 @@ namespace math {
 
         void insertCandidate(SpatialCellCandidate::Ptr candidate);
 
-        void visitCandidates(CandidateVisitor * visitor, int const nMaxPerCell=-1);
-        void visitCandidates(CandidateVisitor const * visitor, int const nMaxPerCell=-1) const;
+        void visitCandidates(CandidateVisitor * visitor, int const nMaxPerCell=-1,
+                             bool const ignoreExceptions=false);
+        void visitCandidates(CandidateVisitor const * visitor, int const nMaxPerCell=-1,
+                             bool const ignoreExceptions=false) const;
     private:
         lsst::afw::image::BBox _region;   // Dimensions of overall image
         CellList _cellList;               // List of SpatialCells

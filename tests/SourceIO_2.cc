@@ -205,8 +205,8 @@ static PropertySet::Ptr createDbTestProps(
     }
     int visitId = createVisitId();
     props->add("visitId",  visitId);
-    props->add("exposureId", static_cast<int64_t>(visitId*2));
-    props->add("ccdId", static_cast<int64_t>(5));
+    props->add("exposureId", static_cast<int64_t>(visitId)*2);
+    props->add("ampExposureId", static_cast<int64_t>(visitId)*32);
     props->add("universeSize", numSlices);
     props->add("sliceId",  sliceId);
     props->add("itemName", itemName);
@@ -266,10 +266,7 @@ static void testDb(std::string const & storageType) {
     Policy::Ptr policy(new Policy);
     std::string policyRoot = "Formatter.PersistableDiaSourceVector";
     policy->set(policyRoot + ".DIASource.templateTableName", "DIASource");
-    policy->set(policyRoot + ".DIASource.perVisitTableNamePattern",
-                "_tmp_test_DIASource_%1%");
-    policy->set(policyRoot + ".DIASource.perSliceAndVisitTableNamePattern",
-                "_tmp_test_DIASource_%1%_%2%");
+    policy->set(policyRoot + ".DIASource.tableNamePattern", "_tmp_test_DIASource_%(visitId)");
     Policy::Ptr nested = policy->getPolicy(policyRoot);
     PropertySet::Ptr props = createDbTestProps(0, 1, "DIASource");
 
@@ -306,7 +303,7 @@ static void testDb(std::string const & storageType) {
         BOOST_CHECK_MESSAGE(*vec.at(0) == *dsv[0], 
             "persist()/retrieve() resulted in corruption");
     }
-    afwFormatters::dropAllVisitSliceTables(loc, nested, props);
+    afwFormatters::dropAllSliceTables(loc, nested, props);
 
     // 2. Test on a DiaSourceSet
     dsv.clear();
@@ -344,7 +341,7 @@ static void testDb(std::string const & storageType) {
                 BOOST_ERROR("persist()/retrieve() resulted in corruption");
         }
     }
-    afwFormatters::dropAllVisitSliceTables(loc, nested, props);
+    afwFormatters::dropAllSliceTables(loc, nested, props);
 }
 
 BOOST_AUTO_TEST_CASE(DiaSourceEquality) {
@@ -372,7 +369,7 @@ BOOST_AUTO_TEST_CASE(DiaSourceEquality) {
 BOOST_AUTO_TEST_CASE(DiaSourceIO) {
     try {
         testBoost();
-        if (lsst::daf::persistence::DbAuth::available()) {
+        if (lsst::daf::persistence::DbAuth::available("lsst10.ncsa.uiuc.edu", "3306")) {
             BOOST_TEST_MESSAGE("Skipping DB tests");
             testDb("DbStorage");
             testDb("DbTsvStorage");

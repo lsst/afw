@@ -31,11 +31,8 @@ else:
     # copy AFWDATA_DIR to the test's environment
     env["ENV"]["AFWDATA_DIR"] = os.environ["AFWDATA_DIR"]
     
-    if lsst.daf.persistence.DbAuth.available():
-        if os.environ.has_key("LSST_DB_AUTH"):
-            env["ENV"]["LSST_DB_AUTH"] = os.environ["LSST_DB_AUTH"]
-    else:
-        print "WARNING: No fallback database authenticator seen"
+    if not lsst.daf.persistence.DbAuth.available("lsst10.ncsa.uiuc.edu", "3306"):
+        print "WARNING: No database authenticator seen"
         print "Database tests may be skipped or may fail"
 
     # set up arguments for C++ tests
@@ -47,17 +44,16 @@ else:
         MaskIO_1 =         "%s_msk.fits" % inFile,
     )
 
-    ignoreList=[]
+    ignoreList=["testLib.py"]
     tests = lsst.tests.Control(env, args = testArgs, ignoreList=ignoreList, verbose = True)
 
     tests.run("*.cc")
 
     # set up python tests
     for target in tests.run("*.py"):
-        env.Depends(target, "../python/lsst/afw/detection/_detectionLib%s" % (env["LDMODULESUFFIX"]))
-        env.Depends(target, "../python/lsst/afw/display/_displayLib%s" % (env["LDMODULESUFFIX"]))
-        env.Depends(target, "../python/lsst/afw/image/_imageLib%s" % (env["LDMODULESUFFIX"]))
-        env.Depends(target, "../python/lsst/afw/math/_mathLib%s" % (env["LDMODULESUFFIX"]))
-
-    for fileName in ["SpatialCell.py"]:
-        env.Depends(fileName, "_testLib%s" % (env["LDMODULESUFFIX"]))
+        for pkgName in ("detection", "display", "image", "math"):
+            env.Depends(target, os.path.join(
+                "#python", "lsst", "afw", pkgName, "_%sLib%s" % (pkgName, env["LDMODULESUFFIX"])))
+        if target.endswith("SpatialCell.py"):
+            env.Depends(target, "_testLib%s" % (env["LDMODULESUFFIX"]))
+            env.Depends(target, "testLib.py")

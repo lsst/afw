@@ -14,8 +14,21 @@ import lsst.afw.image as afwImage
 class Ds9Error(IOError):
     """Some problem talking to ds9"""
 
+try:
+    type(_defaultFrame)
+except NameError:
+    def setDefaultFrame(frame):
+        """Set the default frame for ds9"""
+        global _defaultFrame
+        _defaultFrame = frame
+
+    def getDefaultFrame():
+        """Get the default frame for ds9"""
+        return _defaultFrame
+
+    setDefaultFrame(0)
 #
-# Symbolic names for mask colours
+# Symbolic names for mask/line colours.  N.b. ds9 5.3+ supports any X11 colour for masks
 #
 WHITE = "white"
 BLACK = "black"
@@ -43,12 +56,8 @@ def setMaskPlaneColor(name, color=None):
     except:
         _maskPlaneColors = {}
 
-    for c in _maskColors:
-        if color == c:
-            _maskPlaneColors[name] = color
-            return
+    _maskPlaneColors[name] = color
 
-    raise RuntimeError, "%s is not a supported colour" % color
 #
 # Default mapping from mask plane names to colours
 #
@@ -100,6 +109,9 @@ def getMaskPlaneVisibility(name):
 def ds9Cmd(cmd, trap=True):
    """Issue a ds9 command, raising errors as appropriate"""
    
+   if getDefaultFrame() is None:
+       return
+
    try:
       xpa.set(None, "ds9", cmd, "", "", 0)
    except IOError, e:
@@ -134,15 +146,21 @@ def initDS9(execDs9 = True):
 
       raise Ds9Error
 
-def show(frame=0):
+def show(frame=-1):
     """Uniconify and Raise ds9.  N.b. throws an exception if frame doesn't exit"""
+    if frame < 0:
+        frame = getDefaultFrame()
+
+    if frame is None:
+        return
+        
     ds9Cmd("frame %d; raise" % frame, trap=False)
 
-def setMaskColor(color = GREEN):
+def setMaskColor(color=GREEN):
     """Set the ds9 mask colour to; eg. ds9.setMaskColor(ds9.RED)"""
     ds9Cmd("mask color %s" % color)
 
-def mtv(data, frame=0, init=True, wcs=None, isMask=False, lowOrderBits=False):
+def mtv(data, frame=-1, init=True, wcs=None, isMask=False, lowOrderBits=False):
    """Display an Image or Mask on a DS9 display
 
    If lowOrderBits is True, give low-order-bits priority in display (i.e.
@@ -152,8 +170,11 @@ Historical note: the name "mtv" comes from Jim Gunn's forth imageprocessing
 system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
    """
 	
-   if frame == None:
-      return
+   if frame < 0:
+        frame = getDefaultFrame()
+
+   if frame is None:
+       return
    
    if init:
       for i in range(0,3):
@@ -249,14 +270,17 @@ def _mtv(data, wcs=None, isMask=False):
 #
 # Graphics commands
 #
-def erase(frame = 0):
+def erase(frame=-1):
    """Erase the specified DS9 frame"""
-   if frame == None:
-      return
+   if frame < 0:
+        frame = getDefaultFrame()
+
+   if frame is None:
+       return
 
    ds9Cmd("frame %d; regions delete all" % frame)
 
-def dot(symb, c, r, frame=0, size=2, ctype=GREEN):
+def dot(symb, c, r, frame=-1, size=2, ctype=GREEN):
    """Draw a symbol onto the specfied DS9 frame at (col,row) = (c,r) [0-based coordinates]
 Possible values are:
 	+	         Draw a +
@@ -265,11 +289,14 @@ Possible values are:
         @:Mxx,Mxy,Myy    Draw an ellipse with moments (Mxx, Mxy, Myy) (size is ignored)
 Any other value is interpreted as a string to be drawn
 """
+   if frame < 0:
+        frame = getDefaultFrame()
+
+   if frame is None:
+       return
+
    if isinstance(symb, int):
        symb = "%d" % (symb)
-
-   if frame == None:
-       return
 
    if ctype == GREEN:
        color = ""                       # the default
@@ -312,13 +339,16 @@ Any other value is interpreted as a string to be drawn
 
    ds9Cmd(cmd)
 
-def line(points, frame=0, symbs=False, ctype=GREEN):
+def line(points, frame=-1, symbs=False, ctype=GREEN):
    """Draw a set of symbols or connect the points, a list of (col,row)
 If symbs is True, draw points at the specified points using the desired symbol,
 otherwise connect the dots.  Ctype is the name of a colour (e.g. 'red')"""
    
-   if frame == None:
-      return
+   if frame < 0:
+        frame = getDefaultFrame()
+
+   if frame is None:
+       return
 
    if symbs:
       for (c, r) in points:
@@ -343,11 +373,14 @@ otherwise connect the dots.  Ctype is the name of a colour (e.g. 'red')"""
 #
 # Zoom and Pan
 #
-def zoom(zoomfac=None, colc=None, rowc=None, frame=0):
+def zoom(zoomfac=None, colc=None, rowc=None, frame=-1):
    """Zoom frame by specified amount, optionally panning also"""
 
-   if frame == None:
-      return
+   if frame < 0:
+       frame = getDefaultFrame()
+
+   if frame is None:
+       return
 
    if (rowc and not colc) or (not rowc and colc):
       raise Ds9Error, "Please specify row and column center to pan about"
@@ -355,7 +388,7 @@ def zoom(zoomfac=None, colc=None, rowc=None, frame=0):
    if zoomfac == None and rowc == None:
       zoomfac = 2
 
-   cmd = ""
+   cmd = "frame %d; " % frame
    if zoomfac != None:
       cmd += "zoom to %d; " % zoomfac
 
@@ -364,6 +397,13 @@ def zoom(zoomfac=None, colc=None, rowc=None, frame=0):
 
    ds9Cmd(cmd)
 
-def pan(colc=None, rowc=None, frame=0):
+def pan(colc=None, rowc=None, frame=-1):
    """Pan to (rowc, colc); see also zoom"""
+
+   if frame < 0:
+        frame = getDefaultFrame()
+
+   if frame is None:
+       return
+
    zoom(None, colc, rowc, frame)

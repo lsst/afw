@@ -18,15 +18,16 @@
 
 #include "lsst/afw/image/lsstGil.h"
 #include "lsst/afw/image/Utils.h"
+#include "lsst/afw/image/ImageUtils.h"
 #include "lsst/daf/base.h"
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/formatters/ImageFormatter.h"
 
 namespace lsst { namespace afw {
 
 namespace formatters {
     template <typename PixelT> class ImageFormatter;
+    template <typename PixelT> class DecoratedImageFormatter;
 }
 
 namespace image {
@@ -178,8 +179,46 @@ namespace image {
          * The origin can be reset with \c setXY0
          */
         int getY0() const { return _y0; }
+
+        /**
+         * Return the %image's origin
+         *
+         * This will usually be (0, 0) except for images created using the <tt>ImageBase(ImageBase, BBox)</tt> cctor
+         * The origin can be reset with \c setXY0
+         */
+        PointI getXY0() const { return PointI(_x0, _y0); }
+        
+        /**
+         * @brief Convert image position to index (nearest integer and fractional parts)
+         *
+         * @return std::pair(nearest integer index, fractional part)
+         */
+        std::pair<int, double> positionToIndex(double const pos, ///< image position
+                                               lsst::afw::image::xOrY const xy ///< Is this a column or row coordinate?
+                                              ) {
+            double const fullIndex = pos - PixelZeroPos - (xy == X ? getX0() : getY0());
+            double const roundedIndex = std::floor(fullIndex + 0.5);
+            double const residual = fullIndex - roundedIndex;
+            return std::pair<int, double>(static_cast<int>(roundedIndex), residual);
+        }
+
+        /**
+         * @brief Convert image index to image position
+         *
+         * The LSST indexing convention is:
+         * * the index of the bottom left pixel is 0,0
+         * * the position of the center of the bottom left pixel is PixelZeroPos, PixelZeroPos
+         *
+         * @return image position
+         */
+        inline double indexToPosition(int ind, ///< image index
+                                      lsst::afw::image::xOrY const xy ///< Is this a column or row coordinate?
+                                     ) {
+            return static_cast<double>(ind) + PixelZeroPos + (xy == X ? getX0() : getY0());
+        }
+        
         /// Return the %image's size;  useful for passing to constructors
-        const std::pair<int, int> getDimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
+        std::pair<int, int> getDimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
         
         void swap(ImageBase &rhs);
         //
@@ -214,6 +253,18 @@ namespace image {
         void setXY0(PointI const origin) {
             _x0 = origin.getX();
             _y0 = origin.getY();
+        }
+        /**
+         * Set the ImageBase's origin
+         *
+         * The origin is usually set by the constructor, so you shouldn't need this function
+         *
+         * \note There are use cases (e.g. memory overlays) that may want to set these values, but
+         * don't do so unless you are an Expert.
+         */
+        void setXY0(int const x0, int const y0) {
+            _x0 = x0;
+            _y0 = y0;
         }
 
     private:
@@ -376,6 +427,7 @@ namespace image {
         /// Set the DecoratedImage's gain
         void setGain(double gain) { _gain = gain; }
     private:
+        LSST_PERSIST_FORMATTER(lsst::afw::formatters::DecoratedImageFormatter<PixelT>);
         typename Image<PixelT>::Ptr _image;
         double _gain;
 

@@ -740,13 +740,27 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::operator=(DetectionSet const& 
     return *this;
 }
 
+/// Set the corners of the DetectionSet's MaskedImage to region
+///
+/// N.b. updates all the Footprints' regions too
+//
+template<typename ImagePixelT, typename MaskPixelT>
+void detection::DetectionSet<ImagePixelT, MaskPixelT>::setRegion(image::BBox const& region // the desired region
+                                                                ) {
+    _region = region;
+    typename DetectionSet::FootprintList footprintList = getFootprints();
+
+    for (typename DetectionSet::FootprintList::iterator ptr = getFootprints().begin(), end = getFootprints().end();
+         ptr != end; ++ptr) {
+        (*ptr)->setRegion(region);
+    }
+}
+
 /************************************************************************************************************/
 /**
  * Grow all the Footprints in the input DetectionSet, returning a new DetectionSet
  *
  * The output DetectionSet may contain fewer Footprints, as some may well have been merged
- *
- * \todo Implement this.  There's RHL Pan-STARRS code to do it, but it isn't yet converted to LSST C++
  */
 template<typename ImagePixelT, typename MaskPixelT>
 detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(

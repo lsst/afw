@@ -68,6 +68,14 @@ class MaskedImageTestCase(unittest.TestCase):
         
         self.assertEqual(self.mimage.getVariance().get(0,0), self.varVal1)
     
+    def testMaskedImageFromImage(self):
+        w, h = 10, 20
+        im, mask, var = afwImage.ImageF(w, h), afwImage.MaskU(w, h), afwImage.ImageF(w, h)
+
+        maskedImage = afwImage.MaskedImageF(im, mask, var)
+
+        maskedImage = afwImage.makeMaskedImage(im, mask, var)
+
     def testAddImages(self):
         "Test addition"
         # add an image
@@ -120,6 +128,31 @@ class MaskedImageTestCase(unittest.TestCase):
         self.assertEqual(self.mimage2.getImage().get(0,0), mimage2_copy.getImage().get(0,0))
         self.assertEqual(self.mimage2.getMask().get(0,0), mimage2_copy.getMask().get(0,0))
         self.assertEqual(self.mimage2.getVariance().get(0,0), mimage2_copy.getVariance().get(0,0))
+
+    def testArithmeticImagesMismatch(self):
+        "Test arithmetic operations on MaskedImages of different sizes"
+        i1 = afwImage.MaskedImageF(100,100); i1.set(100)
+        i2 = afwImage.MaskedImageF(10,10);   i2.set(10)
+        
+        def tst(i1, i2): i1 -= i2
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i1, i2)
+        def tst(i1, i2): i1.scaledMinus(1.0, i2)
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i2, i1)
+
+        def tst(i1, i2): i1 += i2
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i1, i2)
+        def tst(i1, i2): i1.scaledPlus(1.0, i2)
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i2, i1)
+
+        def tst(i1, i2): i1 *= i2
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i1, i2)
+        def tst(i1, i2): i1.scaledMultiplies(1.0, i2)
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i2, i1)
+
+        def tst(i1, i2): i1 /= i2
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i1, i2)
+        def tst(i1, i2): i1.scaledDivides(1.0, i2)
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i2, i1)
     
     def testMultiplyImages(self):
         """Test multiplication"""
@@ -213,6 +246,28 @@ class MaskedImageTestCase(unittest.TestCase):
         self.assertEqual(img.get(x0,     y0 + 1), (666,          self.BAD,  0))
         self.assertEqual(img.get(x0 + 3, y0 + 1), (self.imgVal1, 0x0,       self.varVal1))
         self.assertEqual(img.get(x0,     y0 + 2), (self.imgVal1, 0x0,       self.varVal1))
+
+    def testOrigin(self):
+        """Check that we can set and read the origin"""
+
+        im = afwImage.MaskedImageF(10, 20)
+        x0 = y0 = 0
+        
+        self.assertEqual(im.getX0(), x0)
+        self.assertEqual(im.getY0(), y0)
+        self.assertEqual(im.getXY0(), afwImage.PointI(x0, y0))
+
+        x0, y0 = 3, 5
+        im.setXY0(x0, y0)
+        self.assertEqual(im.getX0(), x0)
+        self.assertEqual(im.getY0(), y0)
+        self.assertEqual(im.getXY0(), afwImage.PointI(x0, y0))
+
+        x0, y0 = 30, 50
+        im.setXY0(afwImage.PointI(x0, y0))
+        self.assertEqual(im.getX0(), x0)
+        self.assertEqual(im.getY0(), y0)
+        self.assertEqual(im.getXY0(), afwImage.PointI(x0, y0))
 
     def testSubimages1(self):
         smimage = afwImage.MaskedImageF(self.mimage, afwImage.BBox(afwImage.PointI(1, 1), 10, 5))

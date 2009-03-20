@@ -27,8 +27,13 @@ SWIG_SHARED_PTR(DetectionSetD, lsst::afw::detection::DetectionSet<double, lsst::
 %footprintFunctor(F, float);
 %template(FootprintFunctorMaskU) lsst::afw::detection::FootprintFunctor<lsst::afw::image::Mask<boost::uint16_t> >;
 
-%template(DetectionSetF) lsst::afw::detection::DetectionSet<float, lsst::afw::image::MaskPixel>;
-%template(DetectionSetD) lsst::afw::detection::DetectionSet<double, lsst::afw::image::MaskPixel>;
+%define %DetectionSet(TYPE, NAME)
+%template(DetectionSet##NAME) lsst::afw::detection::DetectionSet<TYPE, lsst::afw::image::MaskPixel>;
+%template(makeDetectionSet) lsst::afw::detection::makeDetectionSet<TYPE, lsst::afw::image::MaskPixel>;
+%enddef
+
+%DetectionSet(double, D);
+%DetectionSet(float, F);
 
 //%template(MaskU) lsst::afw::image::Mask<maskPixelType>;
 %template(footprintAndMask) lsst::afw::detection::footprintAndMask<lsst::afw::image::MaskPixel>;

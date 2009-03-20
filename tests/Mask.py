@@ -87,6 +87,17 @@ class MaskTestCase(unittest.TestCase):
         self.assertEqual(self.mask1.get(0,0), self.BAD | self.CR)
         self.assertEqual(self.mask2.get(0,0), self.val1 & self.val2)
 
+    def testLogicalMasksMismatch(self):
+        "Test logical operations on Masks of different sizes"
+        i1 = afwImage.MaskU(100,100); i1.set(100)
+        i2 = afwImage.MaskU(10,10);   i2.set(10)
+        
+        def tst(i1, i2): i1 |= i2
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i1, i2)
+
+        def tst(i1, i2): i1 &= i2
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i1, i2)
+    
     def testMaskPlanes(self):
         planes = afwImage.MaskU_getMaskPlaneDict()
         self.assertEqual(len(planes), afwImage.MaskU_getNumPlanesUsed())

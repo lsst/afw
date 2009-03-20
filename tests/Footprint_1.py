@@ -41,6 +41,48 @@ def toString(*args):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+class ThresholdTestCase(unittest.TestCase):
+    def testTresholdFactory(self):
+        """
+        Test the creation of a Threshold object
+
+        This is a white-box test.
+        -tests missing parameters
+        -tests mal-formed parameters
+        """
+        try:
+            afwDetection.createThreshold(3.4)
+        except:
+            self.fail("Failed to build Threshold with proper parameters")
+        
+        try:
+            afwDetection.createThreshold(3.4, "foo bar")
+        except:
+            pass
+        else:
+            self.fail("Threhold parameters not properly validated")
+
+        try:
+            afwDetection.createThreshold(3.4, "variance")
+        except:
+            self.fail("Failed to build Threshold with proper parameters")
+
+        try:
+            afwDetection.createThreshold(3.4, "stdev")
+        except:
+            self.fail("Failed to build Threshold with proper parameters")
+
+        try:
+            afwDetection.createThreshold(3.4, "value")
+        except:
+            self.fail("Failed to build Threshold with proper parameters")
+        
+        try:
+            afwDetection.createThreshold(3.4, "value", False)
+        except:
+            self.fail("Failed to build Threshold with proper parameters")
+        
+
 class FootprintTestCase(unittest.TestCase):
     """A test case for Footprint"""
     def setUp(self):
@@ -274,6 +316,50 @@ class FootprintTestCase(unittest.TestCase):
             
         afwDetectionUtils.writeFootprintAsDefects(fd, foot)
 
+
+    def testNormalize(self):
+        """Test Footprint.normalize"""
+
+        w, h = 12, 10
+        im = afwImage.ImageU(w, h); im.set(0)
+        #
+        # Create a footprint;  note that these Spans overlap
+        #
+        for spans in ([(3, 5, 6), (4, 7, 7), ],
+                      [(3, 3, 5), (3, 5, 7),
+                       (4, 2, 3), (4, 5, 7), (4, 8, 9),
+                       (5, 2, 3), (5, 5, 8), (5, 6, 7),
+                       (6, 3, 5), 
+                       ],
+                      ):
+
+            foot = afwDetection.Footprint(0, afwImage.BBox(afwImage.PointI(0, 0), w, h))
+            for y, x0, x1 in spans:
+                foot.addSpan(y, x0, x1)
+
+                for x in range(x0, x1 + 1): # also insert into im
+                    im.set(x, y, 1)
+
+            idImage = afwImage.ImageU(foot.getRegion().getDimensions())
+            idImage.set(0)
+
+            foot.insertIntoImage(idImage, 1)
+            if display:             # overlaping pixels will be > 1
+                ds9.mtv(idImage)
+            #
+            # Normalise the Footprint, removing overlapping spans
+            #
+            foot.normalize();
+
+            idImage.set(0)
+            foot.insertIntoImage(idImage, 1)
+            if display:
+                ds9.mtv(idImage, frame=1)
+
+            idImage -= im
+
+            self.assertEqual(afwMath.makeStatistics(idImage, afwMath.MAX).getValue(), 0)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class DetectionSetTestCase(unittest.TestCase):
@@ -326,6 +412,16 @@ class DetectionSetTestCase(unittest.TestCase):
     def testFootprints(self):
         """Check that we found the correct number of objects and that they are correct"""
         ds = afwDetection.DetectionSetF(self.ms, afwDetection.Threshold(10))
+
+        objects = ds.getFootprints()
+
+        self.assertEqual(len(objects), len(self.objects))
+        for i in range(len(objects)):
+            self.assertEqual(objects[i], self.objects[i])
+            
+    def testFootprints(self):
+        """Check that we found the correct number of objects using makeDetectionSet"""
+        ds = afwDetection.makeDetectionSet(self.ms, afwDetection.Threshold(10))
 
         objects = ds.getFootprints()
 
@@ -405,6 +501,7 @@ def suite():
     tests.init()
 
     suites = []
+    suites += unittest.makeSuite(ThresholdTestCase)
     suites += unittest.makeSuite(FootprintTestCase)
     suites += unittest.makeSuite(DetectionSetTestCase)
     suites += unittest.makeSuite(tests.MemoryTestCase)

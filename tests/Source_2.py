@@ -117,17 +117,18 @@ class DiaSourceTestCase(unittest.TestCase):
             j += 1
 
     def testPersistence(self):
-        if dafPers.DbAuth.available():
+        if dafPers.DbAuth.available("lsst10.ncsa.uiuc.edu", "3306"):
             pol  = dafPolicy.Policy()
             pol.set("Formatter.PersistableDiaSourceVector.DiaSource.templateTableName", "DIASource")
-            pol.set("Formatter.PersistableDiaSourceVector.DiaSource.perVisitTableNamePattern", "_tmp_visit%1%_DiaSource")
+            pol.set("Formatter.PersistableDiaSourceVector.DiaSource.tableNamePattern", "_tmp_v%(visitId)_DiaSource")
             pers = dafPers.Persistence.getPersistence(pol)
             loc  = dafPers.LogicalLocation("mysql://lsst10.ncsa.uiuc.edu:3306/test_diasource")
             dp = dafBase.PropertySet()
-            dp.addInt("visitId", int(time.clock())*16384 + random.randint(0,16383))
-            dp.addInt("sliceId", 0)
-            dp.addInt("numSlices", 1)
-            dp.addString("itemName", "DiaSource")
+            dp.setInt("visitId", int(time.clock())*16384 + random.randint(0,16383))
+            dp.setInt("sliceId", 0)
+            dp.setInt("numSlices", 1)
+            dp.setLongLong("ampExposureId", 10)
+            dp.setString("itemName", "DiaSource")
             stl = dafPers.StorageList()
             stl.append(pers.getPersistStorage("DbStorage", loc))
             pers.persist(self.dsv1, stl, dp)
@@ -135,7 +136,7 @@ class DiaSourceTestCase(unittest.TestCase):
             stl.append(pers.getRetrieveStorage("DbStorage", loc))
             persistable = pers.unsafeRetrieve("PersistableDiaSourceVector", stl, dp)
             res = afwDet.PersistableDiaSourceVector.swigConvert(persistable)
-            afwDet.dropAllVisitSliceTables(loc, pol.getPolicy("Formatter.PersistableDiaSourceVector"), dp)
+            afwDet.dropAllSliceTables(loc, pol.getPolicy("Formatter.PersistableDiaSourceVector"), dp)
             assert(res == self.dsv1)
         else:
             print "skipping database tests"

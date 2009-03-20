@@ -67,7 +67,8 @@ class MaskedImagePersistenceTestCase(unittest.TestCase):
     def testBoostPersistence(self):
         """Persist the MaskedImage using boost"""
 
-        logicalLocation = dafPers.LogicalLocation("Dest")
+        miPath = os.path.join("tests", "data", "Dest")
+        logicalLocation = dafPers.LogicalLocation(miPath)
         storage = self.persistence.getPersistStorage("FitsStorage", logicalLocation)
         storageList = dafPers.StorageList([storage])
         try:
@@ -75,6 +76,7 @@ class MaskedImagePersistenceTestCase(unittest.TestCase):
         except pexExceptions.LsstCppException, e:
             print e.args[0].what()
             raise
+        
 
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

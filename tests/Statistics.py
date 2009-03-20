@@ -56,9 +56,10 @@ class StatisticsTestCase(unittest.TestCase):
         utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException, tst)
 
     def testStats1(self):
-        stats = afwMath.StatisticsF(self.image, afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN)
+        stats = afwMath.StatisticsF(self.image, afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN | afwMath.SUM)
 
         self.assertEqual(stats.getValue(afwMath.NPOINT), self.image.getWidth()*self.image.getHeight())
+        self.assertEqual(stats.getValue(afwMath.NPOINT)*stats.getValue(afwMath.MEAN), stats.getValue(afwMath.SUM))
         self.assertEqual(stats.getValue(afwMath.MEAN), self.val)
         #BOOST_CHECK(std::isnan(stats.getError(afwMath.MEAN))) // we didn't ask for the error, so it's a NaN
         self.assertEqual(stats.getValue(afwMath.STDEV), 0)
@@ -95,7 +96,7 @@ class StatisticsTestCase(unittest.TestCase):
 	    ds9.mtv(self.image, frame=0)
 	    ds9.mtv(image2, frame=1)
 
-        stats = afwMath.StatisticsF(image2, afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN | afwMath.ERRORS)
+        stats = afwMath.makeStatistics(image2, afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN | afwMath.ERRORS)
         mean = stats.getResult(afwMath.MEAN)
         n = stats.getValue(afwMath.NPOINT)
         sd = stats.getValue(afwMath.STDEV)
@@ -108,8 +109,13 @@ class StatisticsTestCase(unittest.TestCase):
 	"""Test STDEVCLIP; cf. #611"""
         image2 = self.image.Factory(self.image, True)
 
-        stats = afwMath.StatisticsF(image2, afwMath.STDEVCLIP)
+        stats = afwMath.makeStatistics(image2, afwMath.STDEVCLIP | afwMath.NPOINT | afwMath.SUM)
         self.assertEqual(stats.getValue(afwMath.STDEVCLIP), 0)
+        #
+        # Check we get the correct sum even when clipping
+        #
+        self.assertEqual(stats.getValue(afwMath.NPOINT)*afwMath.makeStatistics(image2, afwMath.MEAN).getValue(),
+                         stats.getValue(afwMath.SUM))
 
     def testMedian(self):
 	"""Test the median code"""

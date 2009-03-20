@@ -57,13 +57,11 @@ lsst::daf::persistence::FormatterRegistration form::SourceVectorFormatter::regis
 
 
 /*!
-
-    \internal   Generates a unique identifier for a Source given the id of the
-                originating visit, the id of the originating ccd, and the sequence
-                number of the Source within that slice.
+    \internal   Generates a unique identifier for a Source given the ampExposureId of the
+                originating amplifier ad the sequence number of the Source within the amplifier.
  */
-inline static boost::int64_t generateSourceId(unsigned short seqNum, int ccdId, boost::int64_t visitId) {
-    return (visitId << 24) + (ccdId << 16) + seqNum;
+inline static int64_t generateSourceId(unsigned short seqNum, boost::int64_t ampExposureId) {
+    return (ampExposureId << 16) + seqNum;
 }
 
 
@@ -427,18 +425,16 @@ void form::SourceVectorFormatter::write(
         || _policy->getBool("GenerateIds"))
     ) {
      
-        unsigned short seq    = 1;
-        boost::int64_t visitId       = extractVisitId(additionalData);
-        boost::int64_t ampExposureId = extractCcdExposureId(additionalData);
-        int     ccdId         = extractCcdId(additionalData);
-        if (ccdId < 0 || ccdId >= 256) {
-            throw LSST_EXCEPT(ex::InvalidParameterException, 
-                    "ampExposureId out of range");
+        unsigned short seq = 1;
+        boost::int64_t ampExposureId = extractAmpExposureId(additionalData);
+        if (sourceVector.size() > 65536) {
+            throw LSST_EXCEPT(ex::RangeErrorException, "too many Sources per-amp: "
+                "sequence number overflows 16 bits, potentially causing unique-id conflicts");
         }
         
         SourceSet::iterator i = sourceVector.begin();
         for ( ; i != sourceVector.end(); ++i) {
-            (*i)->setId(generateSourceId(seq, ccdId, visitId));
+            (*i)->setId(generateSourceId(seq, ampExposureId));
             (*i)->setAmpExposureId(ampExposureId);
             ++seq;
             if (seq == 0) { // Overflowed
@@ -461,12 +457,8 @@ void form::SourceVectorFormatter::write(
     } else if (typeid(*storage) == typeid(DbStorage) 
             || typeid(*storage) == typeid(DbTsvStorage)) {
         std::string itemName(getItemName(additionalData));
-        std::string name(getVisitSliceTableName(_policy, additionalData));
+        std::string name(getTableName(_policy, additionalData));
         std::string model = _policy->getString(itemName + ".templateTableName");
-
-        bool mayExist = !extractOptionalFlag(
-            additionalData, 
-            itemName + ".isPerSliceTable");
 
         if (typeid(*storage) == typeid(DbStorage)) {
         	//handle persisting to DbStorag
@@ -476,7 +468,7 @@ void form::SourceVectorFormatter::write(
                         "Didn't get DbStorage");
             }
 
-            db->createTableFromTemplate(name, model, mayExist);
+            db->createTableFromTemplate(name, model, true);
             db->setTableForInsert(name);
             
             SourceSet::const_iterator i(sourceVector.begin());
@@ -491,7 +483,7 @@ void form::SourceVectorFormatter::write(
                 throw LSST_EXCEPT(ex::RuntimeErrorException, 
                         "Didn't get DbTsvStorage");
             }
-            db->createTableFromTemplate(name, model, mayExist);
+            db->createTableFromTemplate(name, model, true);
             db->setTableForInsert(name);
 
             SourceSet::const_iterator i(sourceVector.begin());
@@ -534,8 +526,7 @@ Persistable* form::SourceVectorFormatter::read(
                     "Didn't get DbStorage");
         }
         //get a list of tables from policy and additionalData
-        std::vector<std::string> tables;
-        getAllVisitSliceTableNames(tables, _policy, additionalData);
+        std::vector<std::string> tables = getAllSliceTableNames(_policy, additionalData);
 
         SourceSet sourceVector;
         // loop over all retrieve tables, reading in everything

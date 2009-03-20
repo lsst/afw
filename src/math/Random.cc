@@ -67,14 +67,42 @@ char const * const math::Random::_seedEnvVarName = "LSST_RNG_SEED";
 /**
  * @internal
  * @brief   Initializes the underlying GSL random number generator.
+ * @throw lsst::pex::exceptions::InvalidParameterException
+ *      Thrown if a seed value of zero (corresponding to an algorithm specific seed) is chosen.
  */
 void math::Random::initialize() {
+    if (_seed == 0) {
+        throw LSST_EXCEPT(ex::InvalidParameterException, (boost::format("Invalid RNG seed: %lu") % _seed).str());
+    }
     ::gsl_rng * rng = ::gsl_rng_alloc(_gslRngTypes[_algorithm]);
     if (rng == 0) {
         throw LSST_EXCEPT(ex::MemoryException, "gsl_rng_alloc() failed");
     }
     ::gsl_rng_set(rng, _seed);
     _rng.reset(rng, ::gsl_rng_free);
+}
+
+/**
+ * @internal
+ * @brief   Initializes the underlying GSL random number generator.
+ *
+ * @param[in] algorithm     the algorithm to use for random number generation
+ *
+ * @throw lsst::pex::exceptions::InvalidParameterException
+ *      Thrown if the requested algorithm is not supported or a seed value of zero
+ *      (corresponding to an algorithm specific seed) is chosen.
+ */
+void math::Random::initialize(std::string const & algorithm) {
+   // linear search (the number of algorithms is small)
+   for (int i = 0; i < NUM_ALGORITHMS; ++i) {
+        if (_algorithmNames[i] == algorithm) {
+            _algorithm = static_cast<Algorithm>(i);
+            initialize();
+            return;
+        }
+    }
+    throw LSST_EXCEPT(ex::InvalidParameterException, "RNG algorithm " +
+                      algorithm + " is not supported");
 }
 
 
@@ -91,7 +119,8 @@ void math::Random::initialize() {
  * @param[in] seed          the seed value to initialize the generator with
  *
  * @throw lsst::pex::exceptions::InvalidParameterException
- *      Thrown if the requested algorithm is not supported.
+ *      Thrown if the requested algorithm is not supported or a seed value of zero
+ *      (corresponding to an algorithm specific seed) is chosen.
  * @throw lsst::pex::exceptions::MemoryException
  *      Thrown if memory allocation for internal generator state fails.
  */
@@ -114,23 +143,47 @@ math::Random::Random(Algorithm const algorithm, unsigned long seed)
  * @param[in] seed          the seed value to initialize the generator with
  *
  * @throw lsst::pex::exceptions::InvalidParameterException
- *      Thrown if the requested algorithm is not supported.
+ *      Thrown if the requested algorithm is not supported or a seed value of zero
+ *      (corresponding to an algorithm specific seed) is chosen.
  * @throw lsst::pex::exceptions::MemoryException
  *      Thrown if memory allocation for internal generator state fails.
  */
 math::Random::Random(std::string const & algorithm, unsigned long seed)
     : _rng(), _seed(seed)
 {
-    // linear search (the number of algorithms is small)
-    for (int i = 0; i < NUM_ALGORITHMS; ++i) {
-        if (_algorithmNames[i] == algorithm) {
-            _algorithm = static_cast<Algorithm>(i);
-            initialize();
-            return;
-        }
+    initialize(algorithm);
+}
+
+
+/**
+ * Creates a random number generator using the algorithm and seed specified
+ * in the given policy. The algorithm name and seed are expected to be specified
+ * in string-valued keys named "rngAlgorithm" and "rngSeed" respectively. The
+ * "rngSeed" value is expected to be convertible to an unsigned long integer
+ * and must not be positive.
+ *
+ * @param[in] policy    policy which contains the algorithm and seed to
+ *                      to use for random number generation 
+ * @return              a newly created random number generator
+ *
+ * @throw lsst::pex::exceptions::InvalidParameterException
+ *      Thrown if the requested algorithm is not supported.
+ * @throw lsst::pex::exceptions::MemoryException
+ *      Thrown if memory allocation for internal generator state fails.
+ * @throw lsst::pex::exceptions::RuntimeErrorException
+ *      Thrown if the "rngSeed" policy value cannot be converted to an unsigned long int.
+ */
+math::Random::Random(lsst::pex::policy::Policy::Ptr const policy)
+    : _rng(), _seed()
+{
+    std::string const seed(policy->getString("rngSeed"));
+    try {
+        _seed = boost::lexical_cast<unsigned long>(seed);
+    } catch(boost::bad_lexical_cast & b) {
+        throw LSST_EXCEPT(ex::RuntimeErrorException,
+        (boost::format("Invalid \"rngSeed\" policy value: \"%1%\"") % seed).str());
     }
-    throw LSST_EXCEPT(ex::InvalidParameterException, "RNG algorithm " +
-                      algorithm + " is not supported");
+    initialize(policy->getString("rngAlgorithm"));
 }
 
 
@@ -191,34 +244,8 @@ unsigned long math::Random::getSeed() const {
     return _seed;
 }
 
-/**
- * @return  The algorithm specific minimum value (inclusive) that
- *          will be returned by calls to get()
- */
-unsigned long math::Random::getMin() const {
-    return ::gsl_rng_min(_rng.get());
-}
-
-/**
- * @return  The algorithm specific maximum value (inclusive) that
- *          will be returned by calls to get()
- */
-unsigned long math::Random::getMax() const {
-    return ::gsl_rng_max(_rng.get());
-}
-
 
 // -- Mutators: generating random numbers --------
-
-/**
- * Returns a random integer from the generator. The minimum and maximum values depend on the
- * algorithm used, but all integers in the range [getMin(),getMax()] are equally likely.
- *
- * @return  a uniformly distributed random integer covering an algorithm specific range.
- */
-unsigned long math::Random::get() {
-    return ::gsl_rng_get(_rng.get());
-}
 
 /**
  * Returns a uniformly distributed random double precision floating point number from the
@@ -270,7 +297,7 @@ double math::Random::uniformPos() {
  * @sa getMax()
  */
 unsigned long math::Random::uniformInt(unsigned long n) {
-    if (n > getMax() - getMin()) {
+    if (n > ::gsl_rng_max(_rng.get()) - ::gsl_rng_min(_rng.get())) {
         throw LSST_EXCEPT(ex::RangeErrorException,
                           "Desired random number range exceeds generator range");
     }
@@ -291,17 +318,15 @@ double math::Random::flat(double const a, double const b) {
 }
 
 /**
- * Returns a gaussian random variate with mean @a mu and standard deviation @a sigma.
+ * Returns a gaussian random variate with mean @a 0 and standard deviation @a 1
  *
- * @param[in] sigma the standard deviation of the gaussian distribution
- * @param[in] mu    the mean of the gaussian distribution
  * @return          a gaussian random variate
  *
  * @note    The implementation uses the
  *          <a href="http://en.wikipedia.org/wiki/Ziggurat_algorithm">Ziggurat algorithm</a>.
  */
-double math::Random::gaussian(double sigma, double mu) {
-    return ::gsl_ran_gaussian_ziggurat(_rng.get(), sigma) + mu;
+double math::Random::gaussian() {
+    return ::gsl_ran_gaussian_ziggurat(_rng.get(), 1.0);
 }
 
 /**
@@ -312,84 +337,5 @@ double math::Random::gaussian(double sigma, double mu) {
  */
 double math::Random::chisq(double nu) {
     return ::gsl_ran_chisq(_rng.get(), nu);
-}
-
-
-// -- Factory functions --------
-
-/**
- * Creates a random number generator using the given algorithm and seed, both of which may
- * be overriden by policy as well as environment variables. The actual algorithm and seed
- * value are determined as follows:
- *
- *   - First, @a policy is checked for string-valued keys named "rngAlgorithm" and "rngSeed".
- *     If both keys exist, the corresponding policy values are used to create the generator.
- *   - If @a policy doesn't contain these keys, the environment is checked for the
- *     @c LSST_RNG_ALGORITHM and @c LSST_RNG_SEED environment variables. If both exist,
- *     their values are used in place of the user specified algorithm and seed.
- *
- * Note that the "rngSeed" policy value and @c LSST_RNG_SEED environment variable value
- * must be convertible to an unsigned long integer.
- *
- * @param[in] policy        policy which can potentially override the values
- *                          of @a algorithm and @a seed
- * @param[in] algorithm     the algorithm to use for random number generation
- * @param[in] seed          the seed value to initialize the generator with
- * @return                  a newly created random number generator
- *
- * @throw lsst::pex::exceptions::InvalidParameterException
- *      Thrown if the requested algorithm is not supported.
- * @throw lsst::pex::exceptions::MemoryException
- *      Thrown if memory allocation for internal generator state fails.
- * @throw lsst::pex::exceptions::RuntimeErrorException
- *      Thrown if the "rngSeed" policy value or @c LSST_RNG_SEED environment variable
- *      value cannot be converted to an unsigned long int.
- */
-math::Random math::Random::create(
-    lsst::pex::policy::Policy::Ptr policy,
-    Algorithm algorithm,
-    unsigned long seed
-) {
-    if (algorithm < 0 || algorithm >= NUM_ALGORITHMS) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "Invalid RNG algorithm");
-    }
-    return create(policy, _algorithmNames[algorithm], seed);
-}
-
-/**
- * @copydoc create(lsst::pex::Policy::Ptr, Algorithm, unsigned long)
- */
-math::Random math::Random::create(
-    lsst::pex::policy::Policy::Ptr policy,
-    std::string const & algorithm,
-    unsigned long seed
-) {
-    std::string rngAlgorithm = algorithm;
-    unsigned long rngSeed = seed;
-
-    if (policy && policy->exists("rngAlgorithm") && policy->exists("rngSeed")) {
-        std::string const seedString(policy->getString("rngSeed"));
-        rngAlgorithm = policy->getString("rngAlgorithm");
-        try {
-            rngSeed = boost::lexical_cast<unsigned long>(seedString);
-        } catch(boost::bad_lexical_cast & b) {
-            throw LSST_EXCEPT(ex::RuntimeErrorException,
-                (boost::format("Invalid \"rngSeed\" policy value: \"%1%\"") % seedString).str());
-        }
-    } else {
-        char * envAlg = std::getenv(_algorithmEnvVarName);
-        char * envSeed = std::getenv(_seedEnvVarName);
-        if (envAlg != 0 && envSeed != 0) {
-            rngAlgorithm = envAlg;
-            try {
-                rngSeed = boost::lexical_cast<unsigned long>(envSeed);
-            } catch(boost::bad_lexical_cast & b) {
-                throw LSST_EXCEPT(ex::RuntimeErrorException,
-                    (boost::format("Invalid \"%1%\" environment variable value: \"%2%\"") %
-                        _seedEnvVarName % envSeed).str());
-            }
-        }
-    }
-    return Random(rngAlgorithm, rngSeed);
 }
 

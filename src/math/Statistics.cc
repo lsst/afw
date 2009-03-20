@@ -37,7 +37,7 @@ math::Statistics::Statistics(Image const& img, ///< Image (or MaskedImage) whose
                              int const flags, ///< Describe what we want to calculate
                              StatisticsControl const& sctrl ///< Control how things are calculated
                             ) : _flags(flags),
-                                _mean(NaN), _variance(NaN), _min(NaN), _max(NaN),
+                                _mean(NaN), _variance(NaN), _min(NaN), _max(NaN), _sum(NaN),
                                 _meanclip(NaN), _varianceclip(NaN), _median(NaN), _iqrange(NaN) {
     
     _n = img.getWidth()*img.getHeight();
@@ -49,12 +49,13 @@ math::Statistics::Statistics(Image const& img, ///< Image (or MaskedImage) whose
     assert(img.getWidth()*static_cast<double>(img.getHeight()) < std::numeric_limits<int>::max());
 
     // get the standard statistics
-    boost::tuple<double, double, double, double> standard = _getStandard(img, flags);
+    StandardReturnT standard = _getStandard(img, flags);
 
     _mean = standard.get<0>();
     _variance = standard.get<1>();
     _min = standard.get<2>();
     _max = standard.get<3>();
+    _sum = standard.get<4>();
 
     // ==========================================================
     // now only calculate it if it's specifically requested - these all cost more!
@@ -79,8 +80,8 @@ math::Statistics::Statistics(Image const& img, ///< Image (or MaskedImage) whose
                     sctrl.getNumSigmaClip()*std::sqrt(_varianceclip) : sctrl.getNumSigmaClip()*iqToStdev*_iqrange;
                 std::pair<double,double> const clipinfo(center, hwidth);
                 
-                // returns a 4-tuple but we'll ignore clipped min and max;
-                boost::tuple<double, double, double, double> clipped = _getStandard(img, flags, clipinfo);
+                // returns a tuple but we'll ignore clipped min, max, and sum;
+                StandardReturnT clipped = _getStandard(img, flags, clipinfo);
                 
                 _meanclip = clipped.get<0>();
                 _varianceclip = clipped.get<1>();
@@ -100,7 +101,7 @@ math::Statistics::Statistics(Image const& img, ///< Image (or MaskedImage) whose
  * *note An overloaded version below is used to get clipped versions
  */
 template<typename Image>
-boost::tuple<double, double, double, double> math::Statistics::_getStandard(Image const &img, int const flags) {
+math::Statistics::StandardReturnT math::Statistics::_getStandard(Image const &img, int const flags) {
     
     // =====================================================
     // Get a crude estimate of the mean
@@ -149,7 +150,6 @@ boost::tuple<double, double, double, double> math::Statistics::_getStandard(Imag
 
     }
 
-
     if (n == 0) {
         throw LSST_EXCEPT(ex::InvalidParameterException,"Image has no valid pixels; mean is undefined.");
     }
@@ -161,8 +161,7 @@ boost::tuple<double, double, double, double> math::Statistics::_getStandard(Imag
     }
     double variance = sumx2/(n - 1) - sum*sum/(static_cast<double>(n - 1)*n); // estimate of population variance
     
-    boost::tuple<double, double, double, double> standard = boost::make_tuple(mean, variance, min, max);
-    return standard;
+    return boost::make_tuple(mean, variance, min, max, sum + n*crude_mean);
 }
 
 
@@ -177,7 +176,8 @@ boost::tuple<double, double, double, double> math::Statistics::_getStandard(Imag
  *   clipping on std::pair<double,double> = center, cliplimit
  */
 template<typename Image>
-boost::tuple<double, double, double, double> math::Statistics::_getStandard(Image const &img, int const flags, std::pair<double,double> const clipinfo) {
+math::Statistics::StandardReturnT math::Statistics::_getStandard(Image const &img, int const flags,
+                                               std::pair<double,double> const clipinfo) {
     
     double const center = clipinfo.first;
     double const cliplimit = clipinfo.second;
@@ -232,9 +232,7 @@ boost::tuple<double, double, double, double> math::Statistics::_getStandard(Imag
     }
     double variance = sumx2/(n - 1) - sum*sum/(static_cast<double>(n - 1)*n); // estimate of population variance
 
-    boost::tuple<double, double, double, double> standard = boost::make_tuple(mean, variance, min, max);
-    return standard;
-    
+    return boost::make_tuple(mean, variance, min, max, sum + crude_mean*n);
 }
 
 
@@ -339,6 +337,11 @@ std::pair<double, double> math::Statistics::getResult(math::Property const iProp
           if (_flags & ERRORS) { ret.second = 0; }
           break;
 
+      case SUM:
+          ret.first = static_cast<double>(_sum);
+          if (_flags & ERRORS) { ret.second = 0; }
+          break;
+
           // == means ==
       case ( MEAN ):
           ret.first = _mean;
@@ -421,11 +424,10 @@ double math::Statistics::getError(math::Property const prop ///< Desired propert
  * explicit Statistics(Image const& img, int const flags,
  *                        StatisticsControl const& sctrl=StatisticsControl());
  */
-
 #define INSTANTIATE_STATISTICS(TYPE) \
     template math::Statistics::Statistics(image::Image<TYPE> const& img, int const flags, StatisticsControl const& sctrl);\
-    template boost::tuple<double, double, double, double> math::Statistics::_getStandard(image::Image<TYPE> const& img, int const flags);\
-    template boost::tuple<double, double, double, double> math::Statistics::_getStandard(image::Image<TYPE> const& img, int const flags, std::pair<double,double> clipinfo);\
+    template math::Statistics::StandardReturnT math::Statistics::_getStandard(image::Image<TYPE> const& img, int const flags); \
+    template math::Statistics::StandardReturnT math::Statistics::_getStandard(image::Image<TYPE> const& img, int const flags, std::pair<double,double> clipinfo);\
     template double math::Statistics::_quickSelect(image::Image<TYPE> const& img, double const quartile);
 
 INSTANTIATE_STATISTICS(double);

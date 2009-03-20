@@ -651,6 +651,8 @@ namespace image {
         void setVarianceFromGain();     // was setDefaultVariance();
         
         // Operators
+        MaskedImage& operator=(Pixel const& rhs);
+
         void operator<<=(MaskedImage const& rhs);
 
         void operator+=(ImagePixelT const rhs);
@@ -699,6 +701,37 @@ namespace image {
          * The origin can be reset with setXY0()
          */
         int getY0() const { return _image->getY0(); }
+
+        /**
+         * Return the %image's origin
+         *
+         * This will usually be (0, 0) except for images created using the <tt>ImageBase(ImageBase, BBox)</tt> cctor
+         * The origin can be reset with \c setXY0
+         */
+        PointI getXY0() const { return _image->getXY0(); }
+
+        /**
+         * @brief Convert image index to image position (see Image::indexToPosition)
+         *
+         * @return image position
+         */
+        inline double indexToPosition(int ind, ///< image index
+                                      lsst::afw::image::xOrY const xy ///< Is this a column or row coordinate?
+                                     ) {
+            return getImage()->indexToPosition(ind, xy);
+        }
+        
+        /**
+         * @brief Convert image position to index  (see Image::positionToIndex)
+         *
+         * @return std::pair(nearest integer index, fractional part)
+         */
+        std::pair<int, double> positionToIndex(double const pos, ///< image position
+                                               lsst::afw::image::xOrY const xy ///< Is this a column or row coordinate?
+                                              ) {
+            return getImage()->positionToIndex(pos, xy);
+        }
+
         //
         // Iterators and Locators
         //
@@ -733,6 +766,19 @@ namespace image {
             _mask->setXY0(origin);
             _variance->setXY0(origin);
         }
+        /**
+         * Set the MaskedImage's origin
+         *
+         * The origin is usually set by the constructor, so you shouldn't need this function
+         *
+         * \note There are use cases (e.g. memory overlays) that may want to set these values, but
+         * don't do so unless you are an Expert.
+         */
+        void setXY0(int const x0, int const y0) {
+            _image->setXY0(x0, y0);
+            _mask->setXY0(x0, y0);
+            _variance->setXY0(x0, y0);
+        }
     private:
 
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>);
@@ -742,6 +788,19 @@ namespace image {
         MaskPtr _mask;
         VariancePtr _variance;
     };
+
+/**
+ * A function to return a MaskedImage of the correct type (cf. std::make_pair)
+ */
+    template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+    MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>* makeMaskedImage(
+        typename Image<ImagePixelT>::Ptr image, ///< %image
+        typename Mask<MaskPixelT>::Ptr mask,    ///< mask
+        typename Image<VariancePixelT>::Ptr variance ///< variance
+                                                                         ) {
+        return new MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>(image, mask, variance);
+    }
+    
 }}}  // lsst::afw::image
         
 #endif //  LSST_IMAGE_MASKEDIMAGE_H

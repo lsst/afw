@@ -19,43 +19,68 @@ namespace math = lsst::afw::math;
 namespace detection = lsst::afw::detection;
 namespace image = lsst::afw::image;
 
-/************************************************************************************************************/
+/******************************************************************************/
+/**
+ * \brief Factory method for creating Threshold objects
+ * \param value value of threshold
+ * \param typeStr string representation of a ThresholdType. This parameter is 
+ *        optional. Allowed values are:
+ *        "variance", "value", "stdev"
+ * \param polarity If true detect positive objects, false for negative
+ * \return Threshold object
+ */
+detection::Threshold detection::createThreshold(
+    const float value,
+    const std::string typeStr,
+    const bool polarity
+) {
+
+    Threshold::ThresholdType thresholdType;
+    if (typeStr.compare("value") == 0) {
+        thresholdType = Threshold::VALUE;           
+    } else if (typeStr.compare("stdev") == 0) {
+        thresholdType = Threshold::STDEV;
+    } else if (typeStr.compare("variance") == 0) {
+        thresholdType = Threshold::VARIANCE;
+    } else {
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+            (boost::format("Unsopported Threshold type: %s") % typeStr).str());
+    }    
+
+    return Threshold(value, thresholdType, polarity);
+}
+
+
+/******************************************************************************/
 /**
  * Return a string-representation of a Span
  */
-std::string detection::Span::toString() {
+std::string detection::Span::toString() const {
     return (boost::format("%d: %d..%d") % _y % _x0 % _x1).str();
 }
 
-/**
+namespace {
+/*
  * Compare two Span%s by y, then x0, then x1
  *
- * A utility function passed to qsort
- * \note This should be replaced by functor so that we can use std::sort
+ * A utility functor passed to sort
  */
-int detection::Span::compareByYX(const void **a, const void **b) {
-    const detection::Span *sa = *reinterpret_cast<const detection::Span **>(a);
-    const detection::Span *sb = *reinterpret_cast<const detection::Span **>(b);
-
-    if (sa->_y < sb->_y) {
-	return -1;
-    } else if (sa->_y == sb->_y) {
-	if (sa->_x0 < sb->_x0) {
-	    return -1;
-	} else if (sa->_x0 == sb->_x0) {
-	    if (sa->_x1 < sb->_x1) {
-		return -1;
-	    } else if (sa->_x1 == sb->_x1) {
-		return 0;
-	    } else {
-		return 1;
-	    }
-	} else {
-	    return 1;
-	}
-    } else {
-	return 1;
-    }
+    struct compareSpanByYX : public std::binary_function<detection::Span::ConstPtr, detection::Span::ConstPtr, bool> {
+        int operator()(detection::Span::ConstPtr a, detection::Span::ConstPtr b) {
+            if (a->getY() < b->getY()) {
+                return true;
+            } else if (a->getY() == b->getY()) {
+                if (a->getX0() < b->getX0()) {
+                    return true;
+                } else if (a->getX0() == b->getX0()) {
+                    if (a->getX1() < b->getX1()) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+    };
 }
 
 /************************************************************************************************************/
@@ -143,6 +168,40 @@ detection::Footprint::~Footprint() {
  */
 void detection::Footprint::normalize() {
     if (!_normalized) {
+        assert(!_spans.empty());
+
+        //
+        // Check that the spans are sorted, and (more importantly) that each pixel appears
+        // in only one span
+        //
+        sort(_spans.begin(), _spans.end(), compareSpanByYX());
+
+        detection::Footprint::SpanList::iterator ptr = _spans.begin(), end = _spans.end();
+        
+        detection::Span *lspan = ptr->get();  // Left span
+        int y = (*ptr)->_y;
+        int x1 = (*ptr)->_x1;
+        ++ptr;
+
+        for (; ptr < end; ++ptr) {
+            detection::Span *rspan = ptr->get(); // Right span
+            if (rspan->_y == y) {
+                if (rspan->_x0 <= x1 + 1) { // Spans overlap or touch
+                    if (rspan->_x1 > x1) {  // right span extends left span
+                        lspan->_x1 = rspan->_x1;
+                    }
+                    
+                    ptr = _spans.erase(ptr); --end; // delete the right span
+                    x1 = lspan->_x1;
+                }
+            }
+
+            y = rspan->_y;
+            x1 = rspan->_x1;
+            
+            lspan = rspan;
+        }
+
 	//_peaks = psArraySort(fp->peaks, pmPeakSortBySN);
         setBBox();
 	_normalized = true;
@@ -379,15 +438,15 @@ MaskT detection::setMaskFromFootprintList(
 template <typename IDPixelT>
 static void set_footprint_id(typename image::Image<IDPixelT>::Ptr idImage,	// the image to set
                              detection::Footprint const& foot, // the footprint to insert
-                             const int id,          // the desired ID
-                             int dx = 0, int dy = 0 // Add these to all x/y in the Footprint
+                             const int id,                     // the desired ID
+                             int dx=0, int dy=0                // Add these to all x/y in the Footprint
                             ) {
     for (detection::Footprint::SpanList::const_iterator siter = foot.getSpans().begin();
 							siter != foot.getSpans().end(); siter++) {
         detection::Span::Ptr const span = *siter;
         for (typename image::Image<IDPixelT>::x_iterator ptr = idImage->x_at(span->getX0() + dx, span->getY() + dy),
                  end = ptr + span->getWidth(); ptr != end; ++ptr) {
-            *ptr += id;
+            *ptr = id;
         }
     }
 }
@@ -563,8 +622,6 @@ detection::Footprint::Ptr detection::growFootprint(
     *idImage = 0;
     idImage->setXY0(image::PointI(0, 0));
     set_footprint_id<int>(idImage, foot, 1, -bbox.getX0(), -bbox.getY0()); // Set all the pixels in the footprint to 1
-
-    image::Image<int>::Ptr idImage2;
     //
     // Set the idImage to the Manhattan distance from the nearest set pixel
     //
