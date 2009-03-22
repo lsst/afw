@@ -46,10 +46,7 @@ namespace image {
 
         ~Wcs();
 
-        /// Return the input fits header
-        lsst::daf::base::PropertySet::Ptr getFitsMetadata() const { 
-            return _fitsMetadata; 
-        }
+        lsst::daf::base::PropertySet::Ptr getFitsMetadata() const;
 
         /// Return true iff Wcs is valid
         operator bool() const { return _wcsInfo != NULL; }
@@ -80,8 +77,6 @@ namespace image {
         
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::WcsFormatter);
 
-        lsst::daf::base::PropertySet::Ptr _fitsMetadata; ///< Input FITS header.  Caveat Emptor: may contain other keywords
-        // including e.g. SIMPLE and BITPIX
         struct wcsprm* _wcsInfo;
         int _nWcsInfo;
         int _relax; ///< Degree of permissiveness for wcspih (0 for strict); see wcshdr.h for details.

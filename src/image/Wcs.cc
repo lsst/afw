@@ -31,6 +31,7 @@
 #include "lsst/daf/base.h"
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/afw/formatters/Utils.h"
+#include "lsst/afw/formatters/WcsFormatter.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/ImageUtils.h"
 #include "lsst/afw/image/Wcs.h"
@@ -50,7 +51,6 @@ namespace ublas = boost::numeric::ublas;
  */
 lsst::afw::image::Wcs::Wcs() :
     LsstBase(typeid(this)),
-    _fitsMetadata(),
     _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0),
     _sipA(0,0), _sipB(0,0), _sipAp(0,0), _sipBp(0,0){
 }
@@ -110,7 +110,6 @@ lsst::afw::image::Wcs::Wcs(PointD crval, ///< ra/dec of centre of image
                            ublas::matrix<double> CD ///< Conversion matrix with elements as defined
                                                     ///< in wcs.h
                           ) : LsstBase(typeid(this)),
-                              _fitsMetadata(),
                               _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0),
                               _sipA(0,0), _sipB(0,0), _sipAp(0,0), _sipBp(0,0) {
 
@@ -125,7 +124,7 @@ lsst::afw::image::Wcs::Wcs(
     ublas::matrix<double> sipB, ///< Forward distortion Matrix B
     ublas::matrix<double> sipAp, ///<Reverse distortion Matrix Ap
     ublas::matrix<double> sipBp  ///<Reverse distortion Matrix Bp
-                          ): LsstBase(typeid(this)), _fitsMetadata(),
+                          ): LsstBase(typeid(this)),
                              _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0),
                              _sipA(0,0), _sipB(0,0), _sipAp(0,0), _sipBp(0,0) {
 
@@ -171,7 +170,6 @@ lsst::afw::image::Wcs::Wcs(
     lsst::daf::base::PropertySet::Ptr fitsMetadata  ///< The contents of a valid FITS header
 ) :
     LsstBase(typeid(this)),
-    _fitsMetadata(fitsMetadata),
     _wcsInfo(NULL),
     _nWcsInfo(0),
     _nReject(0),
@@ -238,7 +236,6 @@ lsst::afw::image::Wcs::Wcs(
  */
 lsst::afw::image::Wcs::Wcs(Wcs const & rhs):
     LsstBase(typeid(this)),
-    _fitsMetadata(rhs._fitsMetadata),
     _wcsInfo(NULL),
     _nWcsInfo(0),
     _relax(rhs._relax),
@@ -283,7 +280,6 @@ lsst::afw::image::Wcs & lsst::afw::image::Wcs::operator = (const lsst::afw::imag
         if (_nWcsInfo > 0) {
             wcsvfree(&_nWcsInfo, &_wcsInfo);
         }
-        _fitsMetadata = rhs._fitsMetadata;
         _nWcsInfo = 0;
         _wcsInfo = NULL;
         _relax = rhs._relax;
@@ -321,6 +317,10 @@ lsst::afw::image::Wcs::~Wcs() {
     }
 }
 
+/// Return this, converted to a set of FITS cards
+lsst::daf::base::PropertySet::Ptr lsst::afw::image::Wcs::getFitsMetadata() const { 
+    return lsst::afw::formatters::WcsFormatter::generatePropertySet(*this);
+}
 
 ///
 /// Returns the orientation of the Wcs

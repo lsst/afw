@@ -192,7 +192,9 @@ system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
        _mtv(data.getImage(), wcs, False)
    elif re.search("::MaskedImage<", data.__repr__()): # it's a MaskedImage; display the Image and overlay the Mask
        _mtv(data.getImage(), wcs, False)
-       mtv(data.getMask(), frame, False, wcs, False, lowOrderBits=lowOrderBits)
+       mask = data.getMask()
+       if mask:
+           mtv(mask, frame, False, wcs, False, lowOrderBits=lowOrderBits)
    elif re.search("::Exposure<", data.__repr__()): # it's an Exposure; display the MaskedImage with the WCS
        if wcs:
            raise RuntimeError, "You may not specify a wcs with an Exposure"

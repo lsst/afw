@@ -389,6 +389,9 @@ image::Image<PixelT>& image::Image<PixelT>::operator=(Image const& rhs) {
 /************************************************************************************************************/
 /**
  * Construct an Image from a FITS file
+ *
+ * @note We use FITS numbering, so the first HDU is HDU 1, not 0 (although we're nice and interpret 0 meaning
+ * the first HDU, i.e. HDU 1).  I.e. if you have a PDU, the numbering is thus [PDU, HDU2, HDU3, ...]
  */
 template<typename PixelT>
 image::Image<PixelT>::Image(std::string const& fileName, ///< File to read

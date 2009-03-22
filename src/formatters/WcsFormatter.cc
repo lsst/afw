@@ -157,11 +157,6 @@ afwForm::WcsFormatter::generatePropertySet(afwImg::Wcs const& wcs) {
     wcsProps->add("CTYPE1", std::string(wcs._wcsInfo[0].ctype[0]));
     wcsProps->add("CTYPE2", std::string(wcs._wcsInfo[0].ctype[1]));
 
-    copyMetadata("A", wcs._fitsMetadata, wcsProps);
-    copyMetadata("B", wcs._fitsMetadata, wcsProps);
-    copyMetadata("AP", wcs._fitsMetadata, wcsProps);
-    copyMetadata("BP", wcs._fitsMetadata, wcsProps);
-
     return wcsProps;
 }
 
@@ -175,7 +170,6 @@ void afwForm::WcsFormatter::delegateSerialize(
     }
 
     // Serialize most fields normally
-    ar & ip->_fitsMetadata & ip->_nWcsInfo & ip->_relax;
     ar & ip->_wcsfixCtrl & ip->_wcshdrCtrl & ip->_nReject;
 
     // If we are loading, create the array of Wcs parameter structs
