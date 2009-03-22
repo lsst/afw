@@ -254,23 +254,33 @@ protected:
         }
 
         /* validate the number of axes */
-        if (nAxis < 2 || nAxis > 3) {
-            throw LSST_EXCEPT(FitsException, cfitsio::err_msg(_fd.get(), 0,
-                                 boost::format("Dimensions of '%s' is not supported (NAXIS=%i)") % _filename % nAxis));
-        }
-        
         long nAxes[3];  // dimensions of image in file
-        if (fits_get_img_size(_fd.get(), nAxis, nAxes, &status) != 0) {
-            throw LSST_EXCEPT(FitsException,
-                cfitsio::err_msg(_fd.get(), status, boost::format("Failed to find number of rows in %s") % _filename));
-        }
-        /* if really a 2D image, assume 3rd dimension is 1 */
-        if (nAxis == 2) {
-            nAxes[2] = 1;
-        }
-        if (nAxes[2] != 1) {
-            throw LSST_EXCEPT(FitsException, cfitsio::err_msg(_fd.get(), 0,
-                                 boost::format("3rd dimension %d of %s is not 1") % nAxes[2] % _filename));
+
+        if (nAxis == 0) {
+            nAxes[0] = nAxes[1] = 0;
+        } else {
+            if (nAxis < 2 || nAxis > 3) {
+                throw LSST_EXCEPT(FitsException,
+                                  cfitsio::err_msg(_fd.get(), 0,
+                                                   boost::format("Dimensions of '%s' is not supported (NAXIS=%i)") %
+                                                   _filename % nAxis));
+            }
+        
+            if (fits_get_img_size(_fd.get(), nAxis, nAxes, &status) != 0) {
+                throw LSST_EXCEPT(FitsException,
+                                  cfitsio::err_msg(_fd.get(), status,
+                                                   boost::format("Failed to find number of rows in %s") % _filename));
+            }
+            /* if really a 2D image, assume 3rd dimension is 1 */
+            if (nAxis == 2) {
+                nAxes[2] = 1;
+            }
+            if (nAxes[2] != 1) {
+                throw LSST_EXCEPT(FitsException,
+                                  cfitsio::err_msg(_fd.get(), 0,
+                                                   boost::format("3rd dimension %d of %s is not 1") % nAxes[2] %
+                                                   _filename));
+            }
         }
 
         _naxis1 = nAxes[0];
