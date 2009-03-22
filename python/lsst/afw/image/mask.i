@@ -67,6 +67,11 @@ SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::afw::image::ImageBase<PIXEL_TYPE>, lss
         """__iand__(self, NAME##TYPE src) -> self"""
         _imageLib.NAME##TYPE##___iand__(*args)
         return args[0]
+
+    def __ixor__(*args):
+        """__ixor__(self, NAME##TYPE src) -> self"""
+        _imageLib.NAME##TYPE##___ixor__(*args)
+        return args[0]
     }
 }
 %enddef
