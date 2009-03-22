@@ -87,6 +87,13 @@ class MaskTestCase(unittest.TestCase):
         self.assertEqual(self.mask1.get(0,0), self.BAD | self.CR)
         self.assertEqual(self.mask2.get(0,0), self.val1 & self.val2)
 
+    def testXorMasks(self):
+        self.mask2 ^= self.mask1
+        self.mask1 ^= self.val2
+        
+        self.assertEqual(self.mask1.get(0,0), self.val1 ^ self.val2)
+        self.assertEqual(self.mask2.get(0,0), self.val1 ^ self.val2)
+
     def testLogicalMasksMismatch(self):
         "Test logical operations on Masks of different sizes"
         i1 = afwImage.MaskU(100,100); i1.set(100)
