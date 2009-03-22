@@ -795,8 +795,8 @@ namespace image {
     template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
     MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>* makeMaskedImage(
         typename Image<ImagePixelT>::Ptr image, ///< %image
-        typename Mask<MaskPixelT>::Ptr mask,    ///< mask
-        typename Image<VariancePixelT>::Ptr variance ///< variance
+        typename Mask<MaskPixelT>::Ptr mask = typename Mask<MaskPixelT>::Ptr(),    ///< mask
+        typename Image<VariancePixelT>::Ptr variance = typename Image<VariancePixelT>::Ptr() ///< variance
                                                                          ) {
         return new MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>(image, mask, variance);
     }
