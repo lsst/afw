@@ -65,6 +65,9 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
 
 /**
  * \brief Construct from an HDU in a FITS file.  Set metadata if it isn't a NULL pointer
+ *
+ * @note We use FITS numbering, so the first HDU is HDU 1, not 0 (although we politely interpret 0 as meaning
+ * the first HDU, i.e. HDU 1).  I.e. if you have a PDU, the numbering is thus [PDU, HDU2, HDU3, ...]
  */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
@@ -124,8 +127,8 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(MaskedI
                                                                          bool deep) :
     lsst::daf::data::LsstBase(typeid(this)),
     _image(new Image(*rhs._image, bbox, deep)),
-    _mask(new Mask(*rhs._mask, bbox, deep)),
-    _variance(new Variance(*rhs._variance, bbox, deep)) {
+    _mask(rhs._mask ? new Mask(*rhs._mask, bbox, deep) : static_cast<Mask *>(NULL)),
+    _variance(rhs._variance ? new Variance(*rhs._variance, bbox, deep) : static_cast<Variance *>(NULL)) {
     conformSizes();
 }
 

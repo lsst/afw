@@ -762,9 +762,17 @@ namespace image {
          * don't do so unless you are an Expert.
          */
         void setXY0(PointI const origin) {
-            _image->setXY0(origin);
-            _mask->setXY0(origin);
-            _variance->setXY0(origin);
+            if (_image) {
+                _image->setXY0(origin);
+            }
+            
+            if (_mask) {
+                _mask->setXY0(origin);
+            }
+            
+            if (_variance) {
+                _variance->setXY0(origin);
+            }
         }
         /**
          * Set the MaskedImage's origin
