@@ -360,6 +360,9 @@ class FootprintTestCase(unittest.TestCase):
 
             self.assertEqual(afwMath.makeStatistics(idImage, afwMath.MAX).getValue(), 0)
 
+    def testSetMaskFromFootprint(self):
+        pass
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class DetectionSetTestCase(unittest.TestCase):
