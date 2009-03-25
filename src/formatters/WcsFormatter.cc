@@ -158,8 +158,12 @@ afwForm::WcsFormatter::generatePropertySet(afwImg::Wcs const& wcs) {
     std::string ctype2(wcs._wcsInfo[0].ctype[1]);
     if (wcs._sipA.size1() > 0 || wcs._sipB.size1() > 0 ||
         wcs._sipAp.size1() > 0 || wcs._sipBp.size1() > 0) {
-        ctype1 += "-SIP";
-        ctype2 += "-SIP";
+        if (ctype1.rfind("-SIP") == std::string::npos) {
+            ctype1 += "-SIP";
+        }
+        if (ctype2.rfind("-SIP") == std::string::npos) {
+            ctype2 += "-SIP";
+        }
         encodeSipHeader(wcsProps, "A", wcs._sipA);
         encodeSipHeader(wcsProps, "B", wcs._sipB);
         encodeSipHeader(wcsProps, "AP", wcs._sipAp);
