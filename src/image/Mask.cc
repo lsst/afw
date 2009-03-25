@@ -471,6 +471,29 @@ void image::Mask<MaskPixelT>::operator&=(const Mask& rhs) {
 }
 
 /**
+ * @brief XOR a bitmask into a Mask
+ */
+template<typename MaskPixelT>
+void image::Mask<MaskPixelT>::operator^=(const MaskPixelT val) {
+    transform_pixels(_getRawView(), _getRawView(), ret<MaskPixelT>(_1 ^ val));
+}
+
+/**
+ * @brief XOR a Mask into a Mask
+ */
+template<typename MaskPixelT>
+void image::Mask<MaskPixelT>::operator^=(const Mask& rhs) {
+    checkMaskDictionaries(rhs);
+
+    if (this->getDimensions() != rhs.getDimensions()) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                          (boost::format("Images are of different size, %dx%d v %dx%d") %
+                           this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
+    }
+    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<MaskPixelT>(_1 ^ _2));
+}
+
+/**
  * @brief Set the bit specified by "plane" for pixels (x0, y) ... (x1, y)
  */
 template<typename MaskPixelT>

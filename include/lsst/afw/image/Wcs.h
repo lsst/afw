@@ -33,12 +33,15 @@ namespace image {
         
         Wcs();
         Wcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
-        Wcs(PointD crval, PointD crpix, boost::numeric::ublas::matrix<double> CD);
+        Wcs(PointD crval, PointD crpix, boost::numeric::ublas::matrix<double> CD, double equinox=2000.0,
+            std::string raDecSys="FK5");
         Wcs(PointD crval, PointD crpix, boost::numeric::ublas::matrix<double> CD, 
             boost::numeric::ublas::matrix<double> sipA, ///< Forward distortion Matrix A
             boost::numeric::ublas::matrix<double> sipB, ///< Forward distortion Matrix B
             boost::numeric::ublas::matrix<double> sipAp, ///<Reverse distortion Matrix Ap
-            boost::numeric::ublas::matrix<double> sipBp  ///<Reverse distortion Matrix Bp
+            boost::numeric::ublas::matrix<double> sipBp,  ///<Reverse distortion Matrix Bp
+            double equinox=2000.0,
+            std::string raDecSys="FK5"
            );
 
         Wcs(Wcs const &);
@@ -46,10 +49,7 @@ namespace image {
 
         ~Wcs();
 
-        /// Return the input fits header
-        lsst::daf::base::PropertySet::Ptr getFitsMetadata() const { 
-            return _fitsMetadata; 
-        }
+        lsst::daf::base::PropertySet::Ptr getFitsMetadata() const;
 
         /// Return true iff Wcs is valid
         operator bool() const { return _wcsInfo != NULL; }
@@ -76,12 +76,10 @@ namespace image {
 
         double pixArea(lsst::afw::image::PointD pix) const;
     private:
-        void initWcslib(PointD crval, PointD crpix, boost::numeric::ublas::matrix<double> CD);
+        void initWcslib(PointD crval, PointD crpix, boost::numeric::ublas::matrix<double> CD, double equinox, std::string raDecSys);
         
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::WcsFormatter);
 
-        lsst::daf::base::PropertySet::Ptr _fitsMetadata; ///< Input FITS header.  Caveat Emptor: may contain other keywords
-        // including e.g. SIMPLE and BITPIX
         struct wcsprm* _wcsInfo;
         int _nWcsInfo;
         int _relax; ///< Degree of permissiveness for wcspih (0 for strict); see wcshdr.h for details.

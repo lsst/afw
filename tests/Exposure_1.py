@@ -180,15 +180,11 @@ class ExposureTestCase(unittest.TestCase):
         #
         # This subExposure is valid
         #
-        bbox = afwImage.BBox(afwImage.PointI(50, 50), 10, 10)
-        subExposure = self.exposureCrWcs.Factory(self.exposureCrWcs, bbox)
-
-        # Check the WCS.  The origin of subExposure's at the same location as bbox's lower-left-corner
-
-        p0 = self.exposureCrWcs.getWcs().xyToRaDec(afwImage.PointD(bbox.getX0(), bbox.getY0()))
-        p1 = subExposure.getWcs().xyToRaDec(afwImage.PointD(0, 0))
+        parentExposure = self.exposureCrWcs
+        subBBox = afwImage.BBox(afwImage.PointI(40, 50), 10, 10)
+        subExposure = afwImage.ExposureF(self.exposureCrWcs, subBBox)
         
-        self.assertEqual((p0.getX(), p0.getY()), (p1.getX(), p1.getY()))
+        self.checkWcs(self.exposureCrWcs, subExposure)
 
         # this subRegion is not valid and should trigger an exception
         # from the MaskedImage class and should trigger an exception
@@ -211,33 +207,56 @@ class ExposureTestCase(unittest.TestCase):
         utilsTests.assertRaisesLsstCpp(self, pexExcept.LengthErrorException, getSubRegion)
 
     def testReadWriteFits(self):
-         """Test readFits and writeFits.
-         """
-         # This should pass without an exception
-         exposure = afwImage.ExposureF(inFilePathSmall)
-
-         # Check that we can read sub-exposures
-         bbox = afwImage.BBox(afwImage.PointI(50, 50), 10, 10)
-
-         p0 = exposure.getWcs().xyToRaDec(afwImage.PointD(bbox.getX0(), bbox.getY0()))
-
-         hdu = 0
-         subExposure = afwImage.ExposureF(inFilePathSmall, hdu, bbox)
-
-         p1 = subExposure.getWcs().xyToRaDec(afwImage.PointD(0, 0))
+        """Test readFits and writeFits.
+        """
+        # This should pass without an exception
+        mainExposure = afwImage.ExposureF(inFilePathSmall)
         
-         self.assertEqual((p0.getX(), p0.getY()), (p1.getX(), p1.getY()))
-
-         # This should throw an exception
-         def getExposure():
-             exposure = afwImage.ExposureF(inFilePathSmallImage)
-             
-         utilsTests.assertRaisesLsstCpp(self, pexExcept.NotFoundException, getExposure)
-
-         # Make sure we can write without an exception
-         exposure.writeFits(outFilePath)
-         for compName in ("img", "msk", "var"):
+        subBBox = afwImage.BBox(afwImage.PointI(10, 10), 40, 50)
+        subExposure = afwImage.ExposureF(mainExposure, subBBox)
+        self.checkWcs(mainExposure, subExposure)
+        
+        hdu = 0
+        subExposure = afwImage.ExposureF(inFilePathSmall, hdu, subBBox)
+        
+        self.checkWcs(mainExposure, subExposure)
+        
+        # This should throw an exception
+        def getExposure():
+            exposure = afwImage.ExposureF(inFilePathSmallImage)
+        
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.NotFoundException, getExposure)
+        
+        # Make sure we can write without an exception
+        mainExposure.writeFits(outFilePath)
+        for compName in ("img", "msk", "var"):
             os.remove("%s_%s.fits" % (outFilePath, compName))
+
+    def checkWcs(self, parentExposure, subExposure):
+        """Compare WCS at corner points of a sub-exposure and its parent exposure
+        """
+        parentMI = parentExposure.getMaskedImage()
+        subMI = subExposure.getMaskedImage()
+        subDim = subMI.getDimensions()
+        subXY0 = subMI.getXY0()
+
+        # Note: pixel positions must be computed relative to XY0 when working with WCS
+        mainWcs = parentExposure.getWcs()
+        subWcs = subExposure.getWcs()
+
+        for xSubInd in (0, subDim[0]-1):
+            for ySubInd in (0, subDim[1]-1):
+                p0 = mainWcs.xyToRaDec(
+                    afwImage.indexToPosition(xSubInd + subXY0[0]),
+                    afwImage.indexToPosition(ySubInd + subXY0[1]),
+                )
+                p1 = subWcs.xyToRaDec(
+                    afwImage.indexToPosition(xSubInd),
+                    afwImage.indexToPosition(ySubInd),
+                )
+                self.assertEqual((p0.getX(), p0.getY()), (p1.getX(), p1.getY()))
+
+
          
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

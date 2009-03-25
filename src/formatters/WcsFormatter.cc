@@ -110,29 +110,6 @@ void afwForm::WcsFormatter::update(
     throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Unexpected call to update for Wcs");
 }
 
-static void copyMetadata(std::string const& prefix,
-                         dafBase::PropertySet::Ptr src,
-                         dafBase::PropertySet::Ptr dest) {
-    std::string header = prefix + "_ORDER";
-    if (!src->exists(header)) {
-        return;
-    }
-    int order = src->get<int>(header);
-    boost::format param("%1%_%2%_%3%");
-    for (int i = 0; i <= order; ++i) {
-        for (int j = 0; j <= order - i; ++j) {
-            header = (param % prefix % i % j).str();
-            if (src->exists(header)) {
-                dest->set(header, src->get<double>(header));
-            }
-        }
-    }
-    header = prefix + "_DMAX";
-    if (src->exists(header)) {
-        dest->set(header, src->get<double>(header));
-    }
-}
-
 dafBase::PropertySet::Ptr
 afwForm::WcsFormatter::generatePropertySet(afwImg::Wcs const& wcs) {
     // Only generates properties for the first wcsInfo.
@@ -154,13 +131,50 @@ afwForm::WcsFormatter::generatePropertySet(afwImg::Wcs const& wcs) {
     wcsProps->add("CRVAL2", wcs._wcsInfo[0].crval[1]);
     wcsProps->add("CUNIT1", std::string(wcs._wcsInfo[0].cunit[0]));
     wcsProps->add("CUNIT2", std::string(wcs._wcsInfo[0].cunit[1]));
-    wcsProps->add("CTYPE1", std::string(wcs._wcsInfo[0].ctype[0]));
-    wcsProps->add("CTYPE2", std::string(wcs._wcsInfo[0].ctype[1]));
+    std::string ctype1(wcs._wcsInfo[0].ctype[0]);
+    std::string ctype2(wcs._wcsInfo[0].ctype[1]);
+    wcsProps->add("CTYPE1", ctype1);
+    wcsProps->add("CTYPE2", ctype2);
 
-    copyMetadata("A", wcs._fitsMetadata, wcsProps);
-    copyMetadata("B", wcs._fitsMetadata, wcsProps);
-    copyMetadata("AP", wcs._fitsMetadata, wcsProps);
-    copyMetadata("BP", wcs._fitsMetadata, wcsProps);
+    if (ctype1.rfind("TAN-SIP") != std::string::npos) {
+        if (ctype2.rfind("TAN-SIP") == std::string::npos) {
+            throw LSST_EXCEPT(pexExcept::DomainErrorException,
+                              "TAN-SIP for ctype1 but not ctype2");
+        }
+
+        typedef boost::numeric::ublas::matrix<double>
+            afwImg::Wcs::*WcsMatrixPtr;
+        typedef std::pair<std::string, WcsMatrixPtr> SipPair;
+        std::vector<SipPair> sipPairs;
+        sipPairs.push_back(SipPair("A", &afwImg::Wcs::_sipA));
+        sipPairs.push_back(SipPair("B", &afwImg::Wcs::_sipB));
+        sipPairs.push_back(SipPair("AP", &afwImg::Wcs::_sipAp));
+        sipPairs.push_back(SipPair("BP", &afwImg::Wcs::_sipBp));
+
+        for (std::vector<SipPair>::const_iterator i = sipPairs.begin();
+             i != sipPairs.end(); ++i) {
+
+            std::string which = (*i).first;
+            boost::numeric::ublas::matrix<double> const& m(wcs.*((*i).second));
+            size_t order = m.size1();
+            if (m.size2() != order) {
+                throw LSST_EXCEPT(pexExcept::DomainErrorException,
+                                  "sip" + which + " matrix is not square");
+            }
+            if (order > 0) {
+                wcsProps->add(which + "_ORDER", static_cast<int>(order - 1));
+                for (size_t i = 0; i < order; ++i) {
+                    for (size_t j = 0; j < order; ++j) {
+                        double val = m(i, j);
+                        if (val != 0.0) {
+                        wcsProps->add((boost::format("%1%_%2%_%3%")
+                                           % which % i % j).str(), val);
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     return wcsProps;
 }
@@ -175,8 +189,9 @@ void afwForm::WcsFormatter::delegateSerialize(
     }
 
     // Serialize most fields normally
-    ar & ip->_fitsMetadata & ip->_nWcsInfo & ip->_relax;
+    ar & ip->_nWcsInfo & ip->_relax;
     ar & ip->_wcsfixCtrl & ip->_wcshdrCtrl & ip->_nReject;
+    ar & ip->_sipA & ip->_sipB & ip->_sipAp & ip->_sipBp;
 
     // If we are loading, create the array of Wcs parameter structs
     if (Archive::is_loading::value) {

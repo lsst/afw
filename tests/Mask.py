@@ -19,7 +19,7 @@ import lsst.pex.exceptions as pexExcept
 import lsst.daf.base
 import lsst.afw.image.imageLib as afwImage
 import eups
-#import lsst.afw.display.ds9 as ds9
+import lsst.afw.display.ds9 as ds9
 
 try:
     type(display)
@@ -86,6 +86,13 @@ class MaskTestCase(unittest.TestCase):
         self.assertEqual(self.mask1.get(0,0), self.val1 & self.val2)
         self.assertEqual(self.mask1.get(0,0), self.BAD | self.CR)
         self.assertEqual(self.mask2.get(0,0), self.val1 & self.val2)
+
+    def testXorMasks(self):
+        self.mask2 ^= self.mask1
+        self.mask1 ^= self.val2
+        
+        self.assertEqual(self.mask1.get(0,0), self.val1 ^ self.val2)
+        self.assertEqual(self.mask2.get(0,0), self.val1 ^ self.val2)
 
     def testLogicalMasksMismatch(self):
         "Test logical operations on Masks of different sizes"
@@ -223,7 +230,8 @@ class OldMaskTestCase(unittest.TestCase):
     and modified to run with the new (DC3) APIs"""
 
     def setUp(self):
-        self.testMask = afwImage.MaskU(300,400)
+        self.testMask = afwImage.MaskU(300,400,0)
+        #self.testMask.set(0)
 
         self.testMask.clearMaskPlaneDict() # reset so tests will be deterministic
 

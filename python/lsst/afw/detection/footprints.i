@@ -18,22 +18,26 @@ SWIG_SHARED_PTR(DetectionSetD, lsst::afw::detection::DetectionSet<double, lsst::
 %template(SpanContainerT)      std::vector<lsst::afw::detection::Span::Ptr>;
 %template(FootprintContainerT) std::vector<lsst::afw::detection::Footprint::Ptr>;
 
-%define %footprintFunctor(NAME, PIXEL_TYPE)
+%define %footprintOperations(NAME, PIXEL_TYPE)
     %template(FootprintFunctor ##NAME) lsst::afw::detection::FootprintFunctor<lsst::afw::image::Image<PIXEL_TYPE> >;
     %template(FootprintFunctorMI ##NAME)
                        lsst::afw::detection::FootprintFunctor<lsst::afw::image::MaskedImage<PIXEL_TYPE> >;
+    %template(setImageFromFootprint) lsst::afw::detection::setImageFromFootprint<lsst::afw::image::Image<PIXEL_TYPE> >;
+    %template(setImageFromFootprintList)
+                       lsst::afw::detection::setImageFromFootprintList<lsst::afw::image::Image<PIXEL_TYPE> >
 %enddef
 
-%footprintFunctor(F, float);
+%define %DetectionSet(NAME, PIXEL_TYPE)
+%template(DetectionSet##NAME) lsst::afw::detection::DetectionSet<PIXEL_TYPE, lsst::afw::image::MaskPixel>;
+%template(makeDetectionSet) lsst::afw::detection::makeDetectionSet<PIXEL_TYPE, lsst::afw::image::MaskPixel>;
+%enddef
+
+
+%footprintOperations(F, float);
 %template(FootprintFunctorMaskU) lsst::afw::detection::FootprintFunctor<lsst::afw::image::Mask<boost::uint16_t> >;
 
-%define %DetectionSet(TYPE, NAME)
-%template(DetectionSet##NAME) lsst::afw::detection::DetectionSet<TYPE, lsst::afw::image::MaskPixel>;
-%template(makeDetectionSet) lsst::afw::detection::makeDetectionSet<TYPE, lsst::afw::image::MaskPixel>;
-%enddef
-
-%DetectionSet(double, D);
-%DetectionSet(float, F);
+%DetectionSet(D, double);
+%DetectionSet(F, float);
 
 //%template(MaskU) lsst::afw::image::Mask<maskPixelType>;
 %template(footprintAndMask) lsst::afw::detection::footprintAndMask<lsst::afw::image::MaskPixel>;

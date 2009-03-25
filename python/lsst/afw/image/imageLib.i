@@ -129,6 +129,10 @@ def version(HeadURL = r"$HeadURL$"):
 %POINT(I, int);
 
 %extend lsst::afw::image::BBox {
+    lsst::afw::image::BBox clone() {
+        return lsst::afw::image::BBox(*self);
+    }
+
     %pythoncode {
     def __repr__(self):
         return "BBox(PointI(%d, %d), %d, %d)" % (self.getX0(), self.getY0(), self.getWidth(), self.getHeight())
@@ -153,6 +157,14 @@ def version(HeadURL = r"$HeadURL$"):
 SWIG_SHARED_PTR(Wcs, lsst::afw::image::Wcs);
 
 %include "lsst/afw/image/Wcs.h"
+
+%lsst_persistable(lsst::afw::image::Wcs);
+
+%extend lsst::afw::image::Wcs {
+    lsst::afw::image::Wcs::Ptr clone() {
+        return lsst::afw::image::Wcs::Ptr(new lsst::afw::image::Wcs::Wcs(*self));
+    }
+}
 
 
 %inline {

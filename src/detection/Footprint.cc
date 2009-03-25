@@ -432,6 +432,59 @@ MaskT detection::setMaskFromFootprintList(
 }
 
 /************************************************************************************************************/
+namespace {
+    template<typename ImageT>
+    class SetFootprint : public detection::FootprintFunctor<ImageT> {
+    public:
+        SetFootprint(ImageT const& image,
+                     typename ImageT::Pixel value) : detection::FootprintFunctor<ImageT>(image), _value(value) {} 
+
+        void operator()(typename ImageT::xy_locator loc, int x, int y) {
+            *loc = _value;
+        }
+    private:
+        typename ImageT::Pixel _value;
+    };
+}
+
+/**
+ * \brief Set all image pixels in a Footprint to a given value
+ *
+ * \return value
+ */
+template<typename ImageT>
+typename ImageT::Pixel detection::setImageFromFootprint(
+        ImageT *image,                    ///< image to set
+        detection::Footprint const& foot, ///< Footprint defining desired pixels
+        typename ImageT::Pixel const value ///< value to set Image to
+                                                       ) {
+    SetFootprint<ImageT> setit(*image, value);
+    setit.apply(foot);
+
+    return value;
+}
+
+/**
+ * \brief Set all image pixels in a set of Footprint%s to a given value
+ *
+ * \return value
+ */
+template<typename ImageT>
+typename ImageT::Pixel detection::setImageFromFootprintList(
+        ImageT *image,                                            ///< image to set
+        std::vector<detection::Footprint::Ptr> const& footprints, ///< Footprint list specifying desired pixels
+        typename ImageT::Pixel const value                        ///< value to set Image to
+                                                           ) {
+    SetFootprint<ImageT> setit(*image, value);
+    for (std::vector<detection::Footprint::Ptr>::const_iterator fiter = footprints.begin(), end = footprints.end();
+         fiter != end; ++fiter) {
+        setit.apply(**fiter);
+    }
+
+    return value;
+}
+
+/************************************************************************************************************/
 /*
  * Worker routine for the pmSetFootprintArrayIDs/pmSetFootprintID (and pmMergeFootprintArrays)
  */
@@ -1108,4 +1161,17 @@ template
 image::MaskPixel detection::setMaskFromFootprintList(image::Mask<image::MaskPixel> *mask,
                                                      std::vector<detection::Footprint::Ptr> const& footprints,
                                                      image::MaskPixel const bitmask);
+
+#define INSTANTIATE(TYPE) \
+template \
+TYPE detection::setImageFromFootprint(image::Image<TYPE> *image,        \
+                                      detection::Footprint const& footprint, \
+                                      TYPE const value);                \
+template \
+TYPE detection::setImageFromFootprintList(image::Image<TYPE> *image, \
+                                          std::vector<detection::Footprint::Ptr> const& footprints, \
+                                          TYPE const value); \
+
+INSTANTIATE(float)
+
 // \endcond

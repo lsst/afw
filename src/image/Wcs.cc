@@ -31,6 +31,7 @@
 #include "lsst/daf/base.h"
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/afw/formatters/Utils.h"
+#include "lsst/afw/formatters/WcsFormatter.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/ImageUtils.h"
 #include "lsst/afw/image/Wcs.h"
@@ -50,7 +51,6 @@ namespace ublas = boost::numeric::ublas;
  */
 lsst::afw::image::Wcs::Wcs() :
     LsstBase(typeid(this)),
-    _fitsMetadata(),
     _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0),
     _sipA(0,0), _sipB(0,0), _sipAp(0,0), _sipBp(0,0){
 }
@@ -58,7 +58,9 @@ lsst::afw::image::Wcs::Wcs() :
 
 ///
 /// Function to initialise the wcslib structure. Should only be called from Wcs constructors
-void lsst::afw::image::Wcs::initWcslib(PointD crval, PointD crpix, ublas::matrix<double> CD){
+void lsst::afw::image::Wcs::initWcslib(PointD crval, PointD crpix, ublas::matrix<double> CD,
+                                       double equinox,
+                                       std::string raDecSys){
 
     _wcsInfo = static_cast<struct wcsprm *>(malloc(sizeof(struct wcsprm)));
     if (_wcsInfo == NULL) {
@@ -95,6 +97,11 @@ void lsst::afw::image::Wcs::initWcslib(PointD crval, PointD crpix, ublas::matrix
     //initialised or set to NULL by default, so if I try to delete a Wcs object,
     //wcslib then attempts to free non-existent space, and the code can crash.
     _wcsInfo->types = NULL;
+
+    //Set the coordinate system
+    //72 is a magic number defined in wcslib/C/wcs.h
+    strncpy(_wcsInfo->radesys, raDecSys.c_str(), 72);
+    _wcsInfo->equinox = equinox;
     
     _nWcsInfo = 1;   //Specify that we have only one coordinate representation   
 }
@@ -107,14 +114,15 @@ void lsst::afw::image::Wcs::initWcslib(PointD crval, PointD crpix, ublas::matrix
  */
 lsst::afw::image::Wcs::Wcs(PointD crval, ///< ra/dec of centre of image
                            PointD crpix, ///< pixel coordinates of centre of image
-                           ublas::matrix<double> CD ///< Conversion matrix with elements as defined
+                           ublas::matrix<double> CD, ///< Conversion matrix with elements as defined
                                                     ///< in wcs.h
+                           double equinox,         /// Equinox used to define coord sys, e.g J2000
+                           std::string raDecSys   ///  Astrometry System, e.g FK5 or ICRS
                           ) : LsstBase(typeid(this)),
-                              _fitsMetadata(),
                               _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0),
                               _sipA(0,0), _sipB(0,0), _sipAp(0,0), _sipBp(0,0) {
 
-    initWcslib(crval, crpix, CD);
+    initWcslib(crval, crpix, CD, equinox, raDecSys);
 }
 
 lsst::afw::image::Wcs::Wcs(
@@ -124,8 +132,10 @@ lsst::afw::image::Wcs::Wcs(
     ublas::matrix<double> sipA, ///< Forward distortion Matrix A
     ublas::matrix<double> sipB, ///< Forward distortion Matrix B
     ublas::matrix<double> sipAp, ///<Reverse distortion Matrix Ap
-    ublas::matrix<double> sipBp  ///<Reverse distortion Matrix Bp
-                          ): LsstBase(typeid(this)), _fitsMetadata(),
+    ublas::matrix<double> sipBp,  ///<Reverse distortion Matrix Bp
+    double equinox,               /// Equinox of coord system, e.g J2000
+    std::string raDecSys          ///Celestial reference frame used, e.g FK5 or ICRS
+                          ): LsstBase(typeid(this)),
                              _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0),
                              _sipA(0,0), _sipB(0,0), _sipAp(0,0), _sipBp(0,0) {
 
@@ -150,7 +160,7 @@ lsst::afw::image::Wcs::Wcs(
     }
 
     
-    initWcslib(crval, crpix, CD);
+    initWcslib(crval, crpix, CD, equinox, raDecSys);
 
     //Init the SIP matrices
     _sipA = sipA;
@@ -171,7 +181,6 @@ lsst::afw::image::Wcs::Wcs(
     lsst::daf::base::PropertySet::Ptr fitsMetadata  ///< The contents of a valid FITS header
 ) :
     LsstBase(typeid(this)),
-    _fitsMetadata(fitsMetadata),
     _wcsInfo(NULL),
     _nWcsInfo(0),
     _nReject(0),
@@ -238,7 +247,6 @@ lsst::afw::image::Wcs::Wcs(
  */
 lsst::afw::image::Wcs::Wcs(Wcs const & rhs):
     LsstBase(typeid(this)),
-    _fitsMetadata(rhs._fitsMetadata),
     _wcsInfo(NULL),
     _nWcsInfo(0),
     _relax(rhs._relax),
@@ -283,7 +291,6 @@ lsst::afw::image::Wcs & lsst::afw::image::Wcs::operator = (const lsst::afw::imag
         if (_nWcsInfo > 0) {
             wcsvfree(&_nWcsInfo, &_wcsInfo);
         }
-        _fitsMetadata = rhs._fitsMetadata;
         _nWcsInfo = 0;
         _wcsInfo = NULL;
         _relax = rhs._relax;
@@ -321,6 +328,10 @@ lsst::afw::image::Wcs::~Wcs() {
     }
 }
 
+/// Return this, converted to a set of FITS cards
+lsst::daf::base::PropertySet::Ptr lsst::afw::image::Wcs::getFitsMetadata() const { 
+    return lsst::afw::formatters::WcsFormatter::generatePropertySet(*this);
+}
 
 ///
 /// Returns the orientation of the Wcs

@@ -709,6 +709,29 @@ namespace image {
          * The origin can be reset with \c setXY0
          */
         PointI getXY0() const { return _image->getXY0(); }
+
+        /**
+         * @brief Convert image index to image position (see Image::indexToPosition)
+         *
+         * @return image position
+         */
+        inline double indexToPosition(int ind, ///< image index
+                                      lsst::afw::image::xOrY const xy ///< Is this a column or row coordinate?
+                                     ) {
+            return getImage()->indexToPosition(ind, xy);
+        }
+        
+        /**
+         * @brief Convert image position to index  (see Image::positionToIndex)
+         *
+         * @return std::pair(nearest integer index, fractional part)
+         */
+        std::pair<int, double> positionToIndex(double const pos, ///< image position
+                                               lsst::afw::image::xOrY const xy ///< Is this a column or row coordinate?
+                                              ) {
+            return getImage()->positionToIndex(pos, xy);
+        }
+
         //
         // Iterators and Locators
         //
@@ -739,9 +762,17 @@ namespace image {
          * don't do so unless you are an Expert.
          */
         void setXY0(PointI const origin) {
-            _image->setXY0(origin);
-            _mask->setXY0(origin);
-            _variance->setXY0(origin);
+            if (_image) {
+                _image->setXY0(origin);
+            }
+            
+            if (_mask) {
+                _mask->setXY0(origin);
+            }
+            
+            if (_variance) {
+                _variance->setXY0(origin);
+            }
         }
         /**
          * Set the MaskedImage's origin
@@ -772,8 +803,8 @@ namespace image {
     template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
     MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>* makeMaskedImage(
         typename Image<ImagePixelT>::Ptr image, ///< %image
-        typename Mask<MaskPixelT>::Ptr mask,    ///< mask
-        typename Image<VariancePixelT>::Ptr variance ///< variance
+        typename Mask<MaskPixelT>::Ptr mask = typename Mask<MaskPixelT>::Ptr(),    ///< mask
+        typename Image<VariancePixelT>::Ptr variance = typename Image<VariancePixelT>::Ptr() ///< variance
                                                                          ) {
         return new MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>(image, mask, variance);
     }

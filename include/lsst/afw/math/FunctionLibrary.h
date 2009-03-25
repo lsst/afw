@@ -23,6 +23,66 @@ using boost::serialization::make_nvp;
 #endif
 
     /**
+     * @brief 1-dimensional integer delta function.
+     *
+     * f(x) = 1 if x == xo, 0 otherwise.
+     *
+     * For use as a kernel function be sure to handle the offset for row and column center;
+     * see examples/deltaFunctionKernel for an example.
+     *
+     * @ingroup afw
+     */
+    template<typename ReturnT>
+    class IntegerDeltaFunction1: public Function1<ReturnT> {
+    public:
+        typedef typename Function1<ReturnT>::Ptr Function1Ptr;
+
+        /**
+         * @brief Construct an integer delta function with specified xo, yo
+         */
+        explicit IntegerDeltaFunction1(
+            double xo)
+        :
+            Function1<ReturnT>(0),
+            _xo(xo)
+        {}
+        
+        virtual ~IntegerDeltaFunction1() {};
+        
+        virtual Function1Ptr copy() const {
+            return Function1Ptr(new IntegerDeltaFunction1(_xo));
+        }
+        
+        virtual ReturnT operator() (double x, double y) const {
+            return static_cast<ReturnT>(x == _xo);
+        }
+
+        virtual std::string toString(void) const {
+            std::ostringstream os;
+            os << "IntegerDeltaFunction1 [" << _xo << "]: ";
+            os << Function1<ReturnT>::toString();
+            return os.str();
+        };
+
+    private:
+        double _xo;
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+        void serialize(Archive& ar, unsigned int const version) {
+#ifndef SWIG
+            boost::serialization::void_cast_register<
+                IntegerDeltaFunction1<ReturnT>, Function1<ReturnT> >(
+                    static_cast<IntegerDeltaFunction1<ReturnT>*>(0),
+                    static_cast<Function1<ReturnT>*>(0));
+#endif
+        };
+        template <typename R, class Archive>
+        friend void boost::serialization::save_construct_data(Archive& ar, IntegerDeltaFunction1<R> const* f, unsigned int const version);
+    };
+
+    /**
      * @brief 2-dimensional integer delta function.
      *
      * f(x) = 1 if x == xo and y == yo, 0 otherwise.
@@ -768,6 +828,13 @@ using boost::serialization::make_nvp;
 
 namespace boost {
 namespace serialization {
+
+template <typename ReturnT, class Archive>
+inline void save_construct_data(Archive& ar,
+                                lsst::afw::math::IntegerDeltaFunction1<ReturnT> const* f,
+                                unsigned int const version) {
+    ar << make_nvp("xo", f->_xo);
+};
 
 template <typename ReturnT, class Archive>
 inline void save_construct_data(Archive& ar,

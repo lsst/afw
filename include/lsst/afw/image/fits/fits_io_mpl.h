@@ -35,7 +35,7 @@ public:
         try {
             lsst::afw::image::fits_read_image(_file, _img, _metadata, _hdu, _bbox);
             throw ExceptionT();         // signal that we've succeeded
-        } catch(lsst::afw::image::FitsException const&) {
+        } catch(lsst::afw::image::FitsWrongTypeException const&) {
             // ah well.  We'll try another image type
         }
     }
@@ -48,8 +48,8 @@ public:
             _img.recreate(img.dimensions());
             boost::gil::copy_and_convert_pixels(const_view(img), view(_img));
 
-            throw found_type();
-        } catch(lsst::afw::image::FitsException const&) {
+            throw ExceptionT();         // signal that we've succeeded
+        } catch(lsst::afw::image::FitsWrongTypeException const&) {
             // pass
         }
     }

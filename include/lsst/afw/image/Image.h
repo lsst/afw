@@ -18,6 +18,7 @@
 
 #include "lsst/afw/image/lsstGil.h"
 #include "lsst/afw/image/Utils.h"
+#include "lsst/afw/image/ImageUtils.h"
 #include "lsst/daf/base.h"
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/pex/exceptions.h"
@@ -186,6 +187,35 @@ namespace image {
          * The origin can be reset with \c setXY0
          */
         PointI getXY0() const { return PointI(_x0, _y0); }
+        
+        /**
+         * @brief Convert image position to index (nearest integer and fractional parts)
+         *
+         * @return std::pair(nearest integer index, fractional part)
+         */
+        std::pair<int, double> positionToIndex(double const pos, ///< image position
+                                               lsst::afw::image::xOrY const xy ///< Is this a column or row coordinate?
+                                              ) {
+            double const fullIndex = pos - PixelZeroPos - (xy == X ? getX0() : getY0());
+            double const roundedIndex = std::floor(fullIndex + 0.5);
+            double const residual = fullIndex - roundedIndex;
+            return std::pair<int, double>(static_cast<int>(roundedIndex), residual);
+        }
+
+        /**
+         * @brief Convert image index to image position
+         *
+         * The LSST indexing convention is:
+         * * the index of the bottom left pixel is 0,0
+         * * the position of the center of the bottom left pixel is PixelZeroPos, PixelZeroPos
+         *
+         * @return image position
+         */
+        inline double indexToPosition(int ind, ///< image index
+                                      lsst::afw::image::xOrY const xy ///< Is this a column or row coordinate?
+                                     ) {
+            return static_cast<double>(ind) + PixelZeroPos + (xy == X ? getX0() : getY0());
+        }
         
         /// Return the %image's size;  useful for passing to constructors
         std::pair<int, int> getDimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }

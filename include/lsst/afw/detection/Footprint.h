@@ -178,6 +178,14 @@ Footprint::Ptr growFootprint(Footprint::Ptr const &foot, int ngrow, bool isotrop
 
 std::vector<lsst::afw::image::BBox> footprintToBBoxList(Footprint const& foot);
 
+template<typename ImageT>
+typename ImageT::Pixel setImageFromFootprint(ImageT *image,
+                                             Footprint const& footprint,
+                                             typename ImageT::Pixel const value);
+template<typename ImageT>
+typename ImageT::Pixel setImageFromFootprintList(ImageT *image,
+                                                 std::vector<detection::Footprint::Ptr> const& footprints,
+                                                 typename ImageT::Pixel  const value);
 template<typename MaskT>
 MaskT setMaskFromFootprint(image::Mask<MaskT> *mask,
                            Footprint const& footprint,
