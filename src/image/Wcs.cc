@@ -160,6 +160,30 @@ lsst::afw::image::Wcs::Wcs(
 }
     
     
+/**
+ * @brief Decode the SIP headers for a given matrix, if present.
+ */
+static void decodeSipHeader(lsst::daf::base::PropertySet::Ptr fitsMetadata,
+                            std::string const& which,
+                            boost::numeric::ublas::matrix<double>* m) {
+    std::string header = which + "_ORDER";
+    if (!fitsMetadata->exists(header)) return;
+    int order = fitsMetadata->get<int>(header);
+    m->resize(order + 1, order + 1);
+    boost::format format("%1%_%2%_%3%");
+    for (int i = 0; i <= order; ++i) {
+        for (int j = 0; j <= order; ++j) {
+            header = (format % which % i % j).str();
+            if (fitsMetadata->exists(header)) {
+                m->insert_element(i, j, fitsMetadata->get<double>(header));
+            }
+            else {
+                m->insert_element(i, j, 0.0);
+            }
+        }
+    }
+}
+
     
 /**
  * @brief Construct a Wcs from a FITS header, represented as PropertySet::Ptr
@@ -226,7 +250,16 @@ lsst::afw::image::Wcs::Wcs(
          throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, errStream.str());
 #endif
     }
+
+    /*
+     * Decipher SIP headers if present.
+     */
+    decodeSipHeader(fitsMetadata, "A", &_sipA);
+    decodeSipHeader(fitsMetadata, "B", &_sipB);
+    decodeSipHeader(fitsMetadata, "AP", &_sipAp);
+    decodeSipHeader(fitsMetadata, "BP", &_sipBp);
 }
+
 
 /**
  * @brief Wcs copy constructor

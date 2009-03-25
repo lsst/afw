@@ -110,6 +110,29 @@ void afwForm::WcsFormatter::update(
     throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Unexpected call to update for Wcs");
 }
 
+static void encodeSipHeader(lsst::daf::base::PropertySet::Ptr wcsProps,
+                            std::string const& which,
+                            boost::numeric::ublas::matrix<double> const& m) {
+    size_t order = m.size1();
+    if (m.size2() != order) {
+        throw LSST_EXCEPT(pexExcept::DomainErrorException,
+            "sip" + which + " matrix is not square");
+    }
+    if (order > 0) {
+        order -= 1; // match SIP convention
+        wcsProps->add(which + "_ORDER", static_cast<int>(order));
+        for (size_t i = 0; i <= order; ++i) {
+            for (size_t j = 0; j <= order; ++j) {
+                double val = m(i, j);
+                if (val != 0.0) {
+                    wcsProps->add((boost::format("%1%_%2%_%3%")
+                                   % which % i % j).str(), val);
+                }
+            }
+        }
+    }
+}
+
 dafBase::PropertySet::Ptr
 afwForm::WcsFormatter::generatePropertySet(afwImg::Wcs const& wcs) {
     // Only generates properties for the first wcsInfo.
@@ -133,48 +156,21 @@ afwForm::WcsFormatter::generatePropertySet(afwImg::Wcs const& wcs) {
     wcsProps->add("CUNIT2", std::string(wcs._wcsInfo[0].cunit[1]));
     std::string ctype1(wcs._wcsInfo[0].ctype[0]);
     std::string ctype2(wcs._wcsInfo[0].ctype[1]);
+    if (wcs._sipA.size1() > 0 || wcs._sipB.size1() > 0 ||
+        wcs._sipAp.size1() > 0 || wcs._sipBp.size1() > 0) {
+        if (ctype1.rfind("-SIP") == std::string::npos) {
+            ctype1 += "-SIP";
+        }
+        if (ctype2.rfind("-SIP") == std::string::npos) {
+            ctype2 += "-SIP";
+        }
+        encodeSipHeader(wcsProps, "A", wcs._sipA);
+        encodeSipHeader(wcsProps, "B", wcs._sipB);
+        encodeSipHeader(wcsProps, "AP", wcs._sipAp);
+        encodeSipHeader(wcsProps, "BP", wcs._sipBp);
+    }
     wcsProps->add("CTYPE1", ctype1);
     wcsProps->add("CTYPE2", ctype2);
-
-    if (ctype1.rfind("TAN-SIP") != std::string::npos) {
-        if (ctype2.rfind("TAN-SIP") == std::string::npos) {
-            throw LSST_EXCEPT(pexExcept::DomainErrorException,
-                              "TAN-SIP for ctype1 but not ctype2");
-        }
-
-        typedef boost::numeric::ublas::matrix<double>
-            afwImg::Wcs::*WcsMatrixPtr;
-        typedef std::pair<std::string, WcsMatrixPtr> SipPair;
-        std::vector<SipPair> sipPairs;
-        sipPairs.push_back(SipPair("A", &afwImg::Wcs::_sipA));
-        sipPairs.push_back(SipPair("B", &afwImg::Wcs::_sipB));
-        sipPairs.push_back(SipPair("AP", &afwImg::Wcs::_sipAp));
-        sipPairs.push_back(SipPair("BP", &afwImg::Wcs::_sipBp));
-
-        for (std::vector<SipPair>::const_iterator i = sipPairs.begin();
-             i != sipPairs.end(); ++i) {
-
-            std::string which = (*i).first;
-            boost::numeric::ublas::matrix<double> const& m(wcs.*((*i).second));
-            size_t order = m.size1();
-            if (m.size2() != order) {
-                throw LSST_EXCEPT(pexExcept::DomainErrorException,
-                                  "sip" + which + " matrix is not square");
-            }
-            if (order > 0) {
-                wcsProps->add(which + "_ORDER", static_cast<int>(order - 1));
-                for (size_t i = 0; i < order; ++i) {
-                    for (size_t j = 0; j < order; ++j) {
-                        double val = m(i, j);
-                        if (val != 0.0) {
-                        wcsProps->add((boost::format("%1%_%2%_%3%")
-                                           % which % i % j).str(), val);
-                        }
-                    }
-                }
-            }
-        }
-    }
 
     return wcsProps;
 }
