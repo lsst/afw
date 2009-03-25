@@ -106,6 +106,22 @@ def getMaskPlaneVisibility(name):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+def getXpaAccessPoint():
+    """Parse XPA_PORT and send return an identifier to send ds9 commands there, instead of "ds9"
+    If you don't have XPA_PORT set, the usual xpans tricks will be played when we return "ds9".
+    """
+    xpa_port = os.environ.get("XPA_PORT")
+    if xpa_port:
+        mat = re.search(r"^DS9:ds9\s+(\d+)\s+(\d+)", xpa_port)
+        if mat:
+            port1, port2 = mat.groups()
+
+            return "localhost:%s" % (port1)
+        else:
+            print >> sys.stderr, "Failed to parse XPA_PORT=%s" % xpa_port
+            
+    return "ds9"
+
 def ds9Cmd(cmd, trap=True):
    """Issue a ds9 command, raising errors as appropriate"""
    
@@ -113,7 +129,7 @@ def ds9Cmd(cmd, trap=True):
        return
 
    try:
-      xpa.set(None, "ds9", cmd, "", "", 0)
+      xpa.set(None, getXpaAccessPoint(), cmd, "", "", 0)
    except IOError, e:
       if not trap:
           raise Ds9Error, "XPA: %s, (%s)" % (e, cmd)
@@ -244,11 +260,11 @@ def _mtv(data, wcs=None, isMask=False):
 
    if True:
        if isMask:
-           xpa_cmd = "xpaset ds9 fits mask"
+           xpa_cmd = "xpaset %s fits mask" % getXpaAccessPoint()
            if re.search(r"unsigned short|boost::uint16_t", data.__str__()):
                data |= 0x8000;          # Hack.  ds9 mis-handles BZERO/BSCALE in masks. This is a copy we're modifying
        else:
-           xpa_cmd = "xpaset ds9 fits"
+           xpa_cmd = "xpaset %s fits" % getXpaAccessPoint()
            
        pfd = os.popen(xpa_cmd, "w")
    else:
@@ -283,7 +299,7 @@ def erase(frame=-1):
    ds9Cmd("frame %d; regions delete all" % frame)
 
 def dot(symb, c, r, frame=-1, size=2, ctype=GREEN):
-   """Draw a symbol onto the specfied DS9 frame at (col,row) = (c,r) [0-based coordinates]
+   """Draw a symbol onto the specified DS9 frame at (col,row) = (c,r) [0-based coordinates]
 Possible values are:
 	+	         Draw a +
 	x	         Draw an x
@@ -384,7 +400,7 @@ def zoom(zoomfac=None, colc=None, rowc=None, frame=-1):
    if frame is None:
        return
 
-   if (rowc and not colc) or (not rowc and colc):
+   if (rowc and colc is None) or (colc and rowc is None):
       raise Ds9Error, "Please specify row and column center to pan about"
    
    if zoomfac == None and rowc == None:
