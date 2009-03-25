@@ -41,6 +41,27 @@ def toString(*args):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+class Object(object):
+    def __init__(self, val, spans):            
+        self.val = val
+        self.spans = spans
+
+    def insert(self, im):
+        """Insert self into an image"""
+        for sp in self.spans:
+            y, x0, x1 = sp
+            for x in range(x0, x1+1):
+                im.set(x, y, self.val)
+
+    def __eq__(self, other):
+        for osp, sp in zip(other.getSpans(), self.spans):
+            if osp.toString() != toString(sp):
+                return False
+
+        return True
+
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 class ThresholdTestCase(unittest.TestCase):
     def testTresholdFactory(self):
         """
@@ -360,32 +381,47 @@ class FootprintTestCase(unittest.TestCase):
 
             self.assertEqual(afwMath.makeStatistics(idImage, afwMath.MAX).getValue(), 0)
 
-    def testSetMaskFromFootprint(self):
-        pass
+    def testSetFromFootprint(self):
+        """Test setting mask/image pixels from a Footprint list"""
+        
+        mi = afwImage.MaskedImageF(12, 8)
+        im = mi.getImage()
+        #
+        # Objects that we should detect
+        #
+        self.objects = []
+        self.objects += [Object(10, [(1, 4, 4), (2, 3, 5), (3, 4, 4)])]
+        self.objects += [Object(20, [(5, 7, 8), (5, 10, 10), (6, 8, 9)])]
+        self.objects += [Object(20, [(6, 3, 3)])]
+
+        im.set(0)                       # clear image
+        for obj in self.objects:
+            obj.insert(im)
+
+        if False and display:
+            ds9.mtv(mi, frame=0)
+
+        ds = afwDetection.makeDetectionSet(mi, afwDetection.Threshold(15))
+
+        objects = ds.getFootprints()
+        afwDetection.setMaskFromFootprintList(mi.getMask(), objects, 0x1)
+
+        self.assertEqual(mi.getMask().get(4, 2), 0x0)
+        self.assertEqual(mi.getMask().get(3, 6), 0x1)
+        
+        self.assertEqual(mi.getImage().get(3, 6), 20)
+        afwDetection.setImageFromFootprintList(mi.getImage(), objects, 5.0)
+        self.assertEqual(mi.getImage().get(4, 2), 10)
+        self.assertEqual(mi.getImage().get(3, 6), 5)
+        
+        if False and display:
+            ds9.mtv(mi, frame=1)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class DetectionSetTestCase(unittest.TestCase):
     """A test case for DetectionSet"""
-    class Object(object):
-        def __init__(self, val, spans):            
-            self.val = val
-            self.spans = spans
 
-        def insert(self, im):
-            """Insert self into an image"""
-            for sp in self.spans:
-                y, x0, x1 = sp
-                for x in range(x0, x1+1):
-                    im.set(x, y, self.val)
-
-        def __eq__(self, other):
-            for osp, sp in zip(other.getSpans(), self.spans):
-                if osp.toString() != toString(sp):
-                    return False
-                
-            return True
-    
     def setUp(self):
         self.ms = afwImage.MaskedImageF(12, 8)
         im = self.ms.getImage()
@@ -393,9 +429,9 @@ class DetectionSetTestCase(unittest.TestCase):
         # Objects that we should detect
         #
         self.objects = []
-        self.objects += [self.Object(10, [(1, 4, 4), (2, 3, 5), (3, 4, 4)])]
-        self.objects += [self.Object(20, [(5, 7, 8), (5, 10, 10), (6, 8, 9)])]
-        self.objects += [self.Object(20, [(6, 3, 3)])]
+        self.objects += [Object(10, [(1, 4, 4), (2, 3, 5), (3, 4, 4)])]
+        self.objects += [Object(20, [(5, 7, 8), (5, 10, 10), (6, 8, 9)])]
+        self.objects += [Object(20, [(6, 3, 3)])]
 
         im.set(0)                       # clear image
         for obj in self.objects:
