@@ -211,6 +211,8 @@ class MaskTestCase(unittest.TestCase):
         # Read it back
         #
         rmask = afwImage.MaskU(tmpFile)
+        os.remove(tmpFile)
+
         self.assertEqual(mask.get(0,0), rmask.get(0,0))
         #
         # Check that we wrote (and read) the metadata successfully
@@ -222,6 +224,21 @@ class MaskTestCase(unittest.TestCase):
         if False:
             print rmask.getMetadata().toString("", True)
             rmask.printMaskPlanes()
+
+    def testReadWriteXY0(self):
+        """Test that we read and write (X0, Y0) correctly"""
+        mask = afwImage.MaskU(10, 20)
+
+        x0, y0 = 1, 2
+        mask.setXY0(x0, y0)
+        tmpFile = "foo.fits"
+        mask.writeFits(tmpFile)
+
+        mask2 = mask.Factory(tmpFile)
+        os.remove(tmpFile)
+
+        self.assertEqual(mask2.getX0(), x0)
+        self.assertEqual(mask2.getY0(), y0)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

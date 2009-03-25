@@ -13,6 +13,7 @@
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h"
+#include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/image/Mask.h"
 
 #include "lsst/afw/image/LsstImageTypes.h"
@@ -171,6 +172,10 @@ image::Mask<MaskPixelT>::Mask(std::string const& fileName, //!< Name of file to 
                           (boost::format("File %s doesn't exist") % fileName).str());
     }
 
+    if (!metadata) {
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet);
+    }
+
     if (!image::fits_read_image<fits_mask_types>(fileName, *_getRawImagePtr(), metadata, hdu, bbox)) {
         throw LSST_EXCEPT(image::FitsException, (boost::format("Failed to read %s HDU %d") % fileName % hdu).str());
     }
@@ -179,6 +184,10 @@ image::Mask<MaskPixelT>::Mask(std::string const& fileName, //!< Name of file to 
     if (bbox) {
         this->setXY0(bbox.getLLC());
     }
+    /*
+     * We will interpret one of the header WCSs as providing the (X0, Y0) values
+     */
+    this->setXY0(this->getXY0() + image::detail::getImageXY0FromMetadata(image::detail::wcsNameForXY0, metadata.get()));
     //
     // OK, we've read it.  Now make sense of its mask planes
     //
@@ -201,8 +210,14 @@ image::Mask<MaskPixelT>::Mask(std::string const& fileName, //!< Name of file to 
 
 template<typename MaskPixelT>
 void image::Mask<MaskPixelT>::writeFits(std::string const& fileName) const {
-    PropertySet::Ptr metadata(new PropertySet()); //TODOsmm lsst::daf::base::DataProperty::createPropertyNode("FitsMetadata");
+    PropertySet::Ptr metadata(new PropertySet());
     addMaskPlanesToMetadata(metadata);
+    //
+    // Add WCS with (X0, Y0) information
+    //
+    PropertySet::Ptr wcsAMetadata = image::detail::createTrivialWcsAsPropertySet(image::detail::wcsNameForXY0,
+                                                                                 this->getX0(), this->getY0());
+    metadata->combine(wcsAMetadata);
     
     image::fits_write_view(fileName, _getRawView(), metadata);
 }

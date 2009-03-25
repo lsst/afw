@@ -354,11 +354,13 @@ void writeBasicFits(int fd,                                      // file descrip
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unsupported image type");
     }
     /*
-     * Generate cards for Wcs, so that pixel (0,0) is correctly labelled
+     * Generate WcsA, pixel coordinates, allowing for X0 and Y0
      */
     std::string wcsName = "A";
-    cards.push_back(Card(str(boost::format("CRVAL1%s") % wcsName), 0, "(output) Column pixel of Reference Pixel"));
-    cards.push_back(Card(str(boost::format("CRVAL2%s") % wcsName), 0, "(output) Row pixel of Reference Pixel"));
+    cards.push_back(Card(str(boost::format("CRVAL1%s") % wcsName),
+                         data.getX0(), "(output) Column pixel of Reference Pixel"));
+    cards.push_back(Card(str(boost::format("CRVAL2%s") % wcsName),
+                         data.getY0(), "(output) Row pixel of Reference Pixel"));
     cards.push_back(Card(str(boost::format("CRPIX1%s") % wcsName), 1.0, "Column Pixel Coordinate of Reference"));
     cards.push_back(Card(str(boost::format("CRPIX2%s") % wcsName), 1.0, "Row Pixel Coordinate of Reference"));
     cards.push_back(Card(str(boost::format("CTYPE1%s") % wcsName), "LINEAR", "Type of projection"));
@@ -366,13 +368,11 @@ void writeBasicFits(int fd,                                      // file descrip
     cards.push_back(Card(str(boost::format("CUNIT1%s") % wcsName), "PIXEL", "Column unit"));
     cards.push_back(Card(str(boost::format("CUNIT2%s") % wcsName), "PIXEL", "Row unit"));
     /*
-     * Now WCSB, pixel coordinates, but allowing for X0 and Y0
+     * Now WcsB, so that pixel (0,0) is correctly labelled (but ignoring XY0)
      */
     wcsName = "B";
-    cards.push_back(Card(str(boost::format("CRVAL1%s") % wcsName),
-                         data.getX0(), "(output) Column pixel of Reference Pixel"));
-    cards.push_back(Card(str(boost::format("CRVAL2%s") % wcsName),
-                         data.getY0(), "(output) Row pixel of Reference Pixel"));
+    cards.push_back(Card(str(boost::format("CRVAL1%s") % wcsName), 0, "(output) Column pixel of Reference Pixel"));
+    cards.push_back(Card(str(boost::format("CRVAL2%s") % wcsName), 0, "(output) Row pixel of Reference Pixel"));
     cards.push_back(Card(str(boost::format("CRPIX1%s") % wcsName), 1.0, "Column Pixel Coordinate of Reference"));
     cards.push_back(Card(str(boost::format("CRPIX2%s") % wcsName), 1.0, "Row Pixel Coordinate of Reference"));
     cards.push_back(Card(str(boost::format("CTYPE1%s") % wcsName), "LINEAR", "Type of projection"));

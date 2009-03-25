@@ -427,6 +427,8 @@ class DecoratedImageTestCase(unittest.TestCase):
         # Read it back
         #
         rimage = afwImage.DecoratedImageF(tmpFile)
+        os.remove(tmpFile)
+
         self.assertEqual(self.dimage1.getImage().get(0,0), rimage.getImage().get(0,0))
         #
         # Check that we wrote (and read) the metadata successfully
@@ -434,6 +436,21 @@ class DecoratedImageTestCase(unittest.TestCase):
             meta = self.trueMetadata
             for k in meta.keys():
                 self.assertEqual(rimage.getMetadata().getAsDouble(k), meta[k])
+
+    def testReadWriteXY0(self):
+        """Test that we read and write (X0, Y0) correctly"""
+        im = afwImage.ImageF(10, 20)
+
+        x0, y0 = 1, 2
+        im.setXY0(x0, y0)
+        tmpFile = "foo.fits"
+        im.writeFits(tmpFile)
+
+        im2 = im.Factory(tmpFile)
+        os.remove(tmpFile)
+
+        self.assertEqual(im2.getX0(), x0)
+        self.assertEqual(im2.getY0(), y0)
 
     def testReadMetadata(self):
         if self.fileForMetadata:

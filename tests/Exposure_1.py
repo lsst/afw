@@ -229,8 +229,10 @@ class ExposureTestCase(unittest.TestCase):
         
         # Make sure we can write without an exception
         mainExposure.writeFits(outFilePath)
-        for compName in ("img", "msk", "var"):
-            os.remove("%s_%s.fits" % (outFilePath, compName))
+
+        os.remove(afwImage.MaskedImageF.imageFileName(outFilePath))
+        os.remove(afwImage.MaskedImageF.maskFileName(outFilePath))
+        os.remove(afwImage.MaskedImageF.varianceFileName(outFilePath))
 
     def checkWcs(self, parentExposure, subExposure):
         """Compare WCS at corner points of a sub-exposure and its parent exposure

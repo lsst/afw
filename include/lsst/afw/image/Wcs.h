@@ -90,6 +90,13 @@ namespace image {
         
     };
   
+    namespace detail {
+        lsst::daf::base::PropertySet::Ptr
+        createTrivialWcsAsPropertySet(std::string const& wcsName, int const x0=0, int const y0=0);
+
+        image::PointI getImageXY0FromMetadata(std::string const& wcsName, lsst::daf::base::PropertySet *metadata);
+    }
+
 }}} // lsst::afw::image
 
 #endif // LSST_AFW_IMAGE_WCS_H

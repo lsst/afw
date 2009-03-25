@@ -622,3 +622,74 @@ double lsst::afw::image::Wcs::pixArea(lsst::afw::image::PointD pix00) const
 
     return (side*side)/fabs(dpix01.getX()*dpix10.getY() - dpix01.getY()*dpix10.getX());
 }
+
+/************************************************************************************************************/
+/*
+ * Now WCSA, pixel coordinates, but allowing for X0 and Y0
+ */
+namespace lsst {
+namespace afw {
+namespace image {
+namespace detail {
+
+/**
+ * Define a trivial WCS that maps the lower left corner (LLC) pixel of an image to a given value
+ */
+lsst::daf::base::PropertySet::Ptr
+createTrivialWcsAsPropertySet(std::string const& wcsName, ///< Name of desired WCS
+                              int const x0,               ///< Column coordinate of LLC pixel
+                              int const y0                ///< Row coordinate of LLC pixel
+                             ) {
+    lsst::daf::base::PropertySet::Ptr wcsMetaData(new lsst::daf::base::PropertySet);
+
+    wcsMetaData->set("CRVAL1" + wcsName, x0); // (output) Column pixel of Reference Pixel
+    wcsMetaData->set("CRVAL2" + wcsName, y0); // (output) Row pixel of Reference Pixel
+    wcsMetaData->set("CRPIX1" + wcsName, 1);  //  Column Pixel Coordinate of Reference
+    wcsMetaData->set("CRPIX2" + wcsName, 1);  //  Row Pixel Coordinate of Reference
+    wcsMetaData->set("CTYPE1" + wcsName, "LINEAR"); // Type of projection
+    wcsMetaData->set("CTYPE1" + wcsName, "LINEAR"); // Type of projection
+    wcsMetaData->set("CUNIT1" + wcsName, "PIXEL");  // Column unit
+    wcsMetaData->set("CUNIT2" + wcsName, "PIXEL");  // Row unit
+
+    return wcsMetaData;
+}
+/**
+ * Return a PointI(x0, y0) given a PropertySet containing a suitable WCS (e.g. "A")
+ *
+ * The WCS must have CRPIX[12] == 1 and CRVAL[12] must be present.  If this is true, the WCS
+ * cards are removed from the metadata
+ */
+image::PointI getImageXY0FromMetadata(std::string const& wcsName,            ///< the WCS to search (E.g. "A")
+                                      lsst::daf::base::PropertySet *metadata ///< the metadata, maybe containing the WCS
+                                     ) {
+        
+    int x0 = 0;                         // Our value of X0
+    int y0 = 0;                         // Our value of Y0
+    
+    try {
+        //
+        // Only use WCS if CRPIX[12] == 1 and CRVAL[12] is present
+        //
+        if (metadata->getAsDouble("CRPIX1" + wcsName) == 1 && metadata->getAsDouble("CRPIX2" + wcsName) == 1) {
+            x0 = metadata->getAsInt("CRVAL1" + wcsName);
+            y0 = metadata->getAsInt("CRVAL2" + wcsName);
+            //
+            // OK, we've got it.  Remove it from the header
+            //
+            metadata->remove("CRVAL1" + wcsName);
+            metadata->remove("CRVAL2" + wcsName);
+            metadata->remove("CRPIX1" + wcsName);
+            metadata->remove("CRPIX2" + wcsName);
+            metadata->remove("CTYPE1" + wcsName);
+            metadata->remove("CTYPE1" + wcsName);
+            metadata->remove("CUNIT1" + wcsName);
+            metadata->remove("CUNIT2" + wcsName);
+        }
+    } catch(lsst::pex::exceptions::NotFoundException &e) {
+        ;                               // OK, not present
+    }
+
+    return image::PointI(x0, y0);
+}
+    
+}}}}

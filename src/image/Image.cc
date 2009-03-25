@@ -11,6 +11,7 @@
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/image/fits/fits_io.h"
 #include "lsst/afw/image/fits/fits_io_mpl.h"
 
@@ -415,6 +416,10 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
                           (boost::format("File %s doesn't exist") % fileName).str());
     }
 
+    if (!metadata) {
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet);
+    }
+
     if (!image::fits_read_image<fits_img_types>(fileName, *this->_getRawImagePtr(), metadata, hdu, bbox)) {
         throw LSST_EXCEPT(image::FitsException, (boost::format("Failed to read %s HDU %d") % fileName % hdu).str());
     }
@@ -423,6 +428,10 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
     if (bbox) {
         this->setXY0(bbox.getLLC());
     }
+    /*
+     * We will interpret one of the header WCSs as providing the (X0, Y0) values
+     */
+    this->setXY0(this->getXY0() + image::detail::getImageXY0FromMetadata(image::detail::wcsNameForXY0, metadata.get()));
 }
 
 /**
@@ -433,6 +442,18 @@ void image::Image<PixelT>::writeFits(
 	std::string const& fileName,    ///< File to write
         lsst::daf::base::PropertySet::Ptr metadata //!< metadata to write to header; or NULL
                                     ) const {
+    using lsst::daf::base::PropertySet;
+
+    PropertySet::Ptr wcsAMetadata = image::detail::createTrivialWcsAsPropertySet(image::detail::wcsNameForXY0,
+                                                                                 this->getX0(), this->getY0());
+
+    if (metadata) {
+        metadata = metadata->deepCopy();
+        metadata->combine(wcsAMetadata);
+    } else {
+        metadata = wcsAMetadata;
+    }
+
     image::fits_write_view(fileName, _getRawView(), metadata);
 }
 

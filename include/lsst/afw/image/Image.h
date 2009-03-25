@@ -44,6 +44,8 @@ namespace image {
         struct image_traits {
             typedef typename ImageT::image_category image_category;
         };
+        //
+        std::string const wcsNameForXY0 = "A"; // the name of the WCS to use to save (X0, Y0) to FITS files; e.g. "A"
     }
 
     /************************************************************************************************************/
