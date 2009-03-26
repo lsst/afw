@@ -77,7 +77,7 @@ image::ImageBase<PixelT>::ImageBase(ImageBase const& rhs, ///< Right-hand-side %
 template<typename PixelT>
 image::ImageBase<PixelT>::ImageBase(ImageBase const& rhs, ///< Right-hand-side %image
                                     BBox const& bbox,     ///< Specify desired region
-                                    bool const deep       ///< If true, new ImageBase shares storage with rhs; if false
+                                    bool const deep       ///< If false, new ImageBase shares storage with rhs; if true
                                                           ///< make a new, standalone, ImageBase
                                    ) :
     lsst::daf::data::LsstBase(typeid(this)),
@@ -344,7 +344,7 @@ image::Image<PixelT>::Image(std::pair<int, int> const dimensions, // (width, hei
  */
 template<typename PixelT>
 image::Image<PixelT>::Image(Image const& rhs, ///< Right-hand-side Image
-                            bool const deep       ///< If true, new Image shares storage with rhs; if false
+                            bool const deep       ///< If false, new Image shares storage with rhs; if true
                                                   ///< make a new, standalone, ImageBase
                            ) :
     image::ImageBase<PixelT>(rhs, deep) {}
@@ -360,7 +360,7 @@ image::Image<PixelT>::Image(Image const& rhs, ///< Right-hand-side Image
 template<typename PixelT>
 image::Image<PixelT>::Image(Image const& rhs,             ///< Right-hand-side Image
                             BBox const& bbox,             ///< Specify desired region
-                            bool const deep               ///< If true, new ImageBase shares storage with rhs; if false
+                            bool const deep               ///< If false, new ImageBase shares storage with rhs; if true
                                                           ///< make a new, standalone, ImageBase
                            ) :
     image::ImageBase<PixelT>(rhs, bbox, deep) {}
