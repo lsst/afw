@@ -50,7 +50,7 @@ image::ImageBase<PixelT>::ImageBase(std::pair<int, int> const dimensions) :
  */
 template<typename PixelT>
 image::ImageBase<PixelT>::ImageBase(ImageBase const& rhs, ///< Right-hand-side %image
-                                    bool const deep       ///< If true, new ImageBase shares storage with rhs; if false
+                                    bool const deep       ///< If false, new ImageBase shares storage with rhs; if true
                                                           ///< make a new, standalone, ImageBase
                                    ) :
     lsst::daf::data::LsstBase(typeid(this)),
