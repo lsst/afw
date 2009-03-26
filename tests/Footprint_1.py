@@ -182,19 +182,19 @@ class FootprintTestCase(unittest.TestCase):
         self.assertEqual(bbox.getX0(), 99)
         self.assertEqual(bbox.getY0(), 8)
 
-    def testFootprintFromBBox(self):
+    def testFootprintFromBBox1(self):
         """Create a rectangular Footprint"""
-        foot = afwDetection.Footprint(afwImage.BBox(afwImage.PointI(9, 10), 7, 4),
-                                      afwImage.BBox(afwImage.PointI(0, 0), 30, 20))
+        x0, y0, w, h = 9, 10, 7, 4
+        foot = afwDetection.Footprint(afwImage.BBox(afwImage.PointI(x0, y0), w, h))
 
         bbox = foot.getBBox()
 
-        self.assertEqual(bbox.getWidth(), 7)
-        self.assertEqual(bbox.getHeight(), 4)
-        self.assertEqual(bbox.getX0(), 9)
-        self.assertEqual(bbox.getY0(), 10)
-        self.assertEqual(bbox.getX1(), 15)
-        self.assertEqual(bbox.getY1(), 13)
+        self.assertEqual(bbox.getWidth(), w)
+        self.assertEqual(bbox.getHeight(), h)
+        self.assertEqual(bbox.getX0(), x0)
+        self.assertEqual(bbox.getY0(), y0)
+        self.assertEqual(bbox.getX1(), x0 + w - 1)
+        self.assertEqual(bbox.getY1(), y0 + h - 1)
 
         idImage = afwImage.ImageU(foot.getRegion().getDimensions())
         idImage.set(0)

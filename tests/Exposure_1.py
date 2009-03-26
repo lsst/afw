@@ -112,7 +112,11 @@ class ExposureTestCase(unittest.TestCase):
         crOnlyHeight = maskedImageCrOnly.getHeight()
         if crOnlyWidth != crOnlyHeight != 0:
             self.fail("%s != %s != 0" (crOnlyWidth, crOnlyRows)) 
-       
+
+        # Check Exposure.getWidth() returns the MaskedImage's width
+        self.assertEqual(crOnlyWidth, self.exposureCrOnly.getWidth())
+        self.assertEqual(crOnlyHeight, self.exposureCrOnly.getHeight())
+
     def testGetWcs(self):
         """
         Test if a WCS can be obtained from each Exposure created with
