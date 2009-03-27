@@ -330,6 +330,11 @@ lsst::afw::image::Wcs & lsst::afw::image::Wcs::operator = (const lsst::afw::imag
         _wcsfixCtrl = rhs._wcsfixCtrl;
         _wcshdrCtrl = rhs._wcshdrCtrl;
         _nReject = rhs._nReject;
+        _sipA = rhs._sipA;
+        _sipB = rhs._sipB;
+        _sipAp = rhs._sipAp;
+        _sipBp = rhs._sipBp;
+
         if (rhs._nWcsInfo > 0) {
             // allocate wcs structs
             _wcsInfo = static_cast<struct wcsprm *>(calloc(rhs._nWcsInfo, sizeof(struct wcsprm)));
