@@ -32,64 +32,54 @@ SWIG_SHARED_PTR_DERIVED(NAME##N##TYPE, lsst::afw::math::Function##N<CTYPE>, lsst
 %define %function(NAME, N, TYPE, CTYPE)
 %template(NAME##N##TYPE) lsst::afw::math::NAME##N<CTYPE>;
 %enddef
+//
+// Macros to define float or double versions of things
+//
+%define %definePointers(NAME, TYPE)
+    // Must be called BEFORE %include
+    %baseFunctionPtr(NAME, TYPE);
+    %baseFunctionNPtr(1, NAME, TYPE);
+    %baseFunctionNPtr(2, NAME, TYPE);
 
+    %functionPtr(Chebyshev1Function, 1, NAME, TYPE);
+    %functionPtr(DoubleGaussianFunction, 2, NAME, TYPE);
+    %functionPtr(GaussianFunction, 1, NAME, TYPE);
+    %functionPtr(GaussianFunction, 2, NAME, TYPE);
+    %functionPtr(IntegerDeltaFunction, 2, NAME, TYPE);
+    %functionPtr(LanczosFunction, 1, NAME, TYPE);
+    %functionPtr(LanczosFunction, 2, NAME, TYPE);
+    %functionPtr(NullFunction, 1, NAME, TYPE);
+    %functionPtr(NullFunction, 2, NAME, TYPE);
+    %functionPtr(PolynomialFunction, 1, NAME, TYPE);
+    %functionPtr(PolynomialFunction, 2, NAME, TYPE);
+%enddef
 
-%baseFunctionPtr(F, float);
-%baseFunctionNPtr(1, F, float);
-%baseFunctionNPtr(2, F, float);
+%define %defineTemplates(NAME, TYPE)
+    // Must be called AFTER %include
+    %baseFunction(NAME, TYPE);
+    %baseFunctionN(1, NAME, TYPE);
+    %baseFunctionN(2, NAME, TYPE);
 
-%functionPtr(Chebyshev1Function, 1, F, float);
-%functionPtr(DoubleGaussianFunction, 2, F, float);
-%functionPtr(GaussianFunction, 1, F, float);
-%functionPtr(GaussianFunction, 2, F, float);
-%functionPtr(IntegerDeltaFunction, 2, F, float);
-%functionPtr(LanczosFunction, 1, F, float);
-%functionPtr(LanczosFunction, 2, F, float);
-%functionPtr(PolynomialFunction, 1, F, float);
-%functionPtr(PolynomialFunction, 2, F, float);
+    %function(Chebyshev1Function, 1, NAME, TYPE);
+    %function(DoubleGaussianFunction, 2, NAME, TYPE);
+    %function(GaussianFunction, 1, NAME, TYPE);
+    %function(GaussianFunction, 2, NAME, TYPE);
+    %function(IntegerDeltaFunction, 2, NAME, TYPE);
+    %function(LanczosFunction, 1, NAME, TYPE);
+    %function(LanczosFunction, 2, NAME, TYPE);
+    %function(NullFunction, 1, NAME, TYPE);
+    %function(NullFunction, 2, NAME, TYPE);
+    %function(PolynomialFunction, 1, NAME, TYPE);
+    %function(PolynomialFunction, 2, NAME, TYPE);
+%enddef
 
-%baseFunctionPtr(D, double);
-%baseFunctionNPtr(1, D, double);
-%baseFunctionNPtr(2, D, double);
+/************************************************************************************************************/
 
-%functionPtr(Chebyshev1Function, 1, D, double);
-%functionPtr(DoubleGaussianFunction, 2, D, double);
-%functionPtr(GaussianFunction, 1, D, double);
-%functionPtr(GaussianFunction, 2, D, double);
-%functionPtr(IntegerDeltaFunction, 2, D, double);
-%functionPtr(LanczosFunction, 1, D, double);
-%functionPtr(LanczosFunction, 2, D, double);
-%functionPtr(PolynomialFunction, 1, D, double);
-%functionPtr(PolynomialFunction, 2, D, double);
+%definePointers(D, double);
+%definePointers(F, float);
 
 %include "lsst/afw/math/Function.h"
 %include "lsst/afw/math/FunctionLibrary.h"
 
-%baseFunction(F, float);
-%baseFunctionN(1, F, float);
-%baseFunctionN(2, F, float);
-
-%function(Chebyshev1Function, 1, F, float);
-%function(DoubleGaussianFunction, 2, F, float);
-%function(GaussianFunction, 1, F, float);
-%function(GaussianFunction, 2, F, float);
-%function(IntegerDeltaFunction, 2, F, float);
-%function(LanczosFunction, 1, F, float);
-%function(LanczosFunction, 2, F, float);
-%function(PolynomialFunction, 1, F, float);
-%function(PolynomialFunction, 2, F, float);
-
-%baseFunction(D, double);
-%baseFunctionN(1, D, double);
-%baseFunctionN(2, D, double);
-
-%function(Chebyshev1Function, 1, D, double);
-%function(DoubleGaussianFunction, 2, D, double);
-%function(GaussianFunction, 1, D, double);
-%function(GaussianFunction, 2, D, double);
-%function(IntegerDeltaFunction, 2, D, double);
-%function(LanczosFunction, 1, D, double);
-%function(LanczosFunction, 2, D, double);
-%function(PolynomialFunction, 1, D, double);
-%function(PolynomialFunction, 2, D, double);
-
+%defineTemplates(D, double)
+%defineTemplates(F, float)
