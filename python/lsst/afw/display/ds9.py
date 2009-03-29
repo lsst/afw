@@ -9,6 +9,7 @@ except: print "Cannot import xpa"
 
 import displayLib
 import lsst.afw.image as afwImage
+import lsst.afw.math as afwMath
 
 ## An error talking to ds9
 class Ds9Error(IOError):
@@ -65,9 +66,13 @@ setMaskPlaneColor({
     "BAD": RED,
     "CR" : MAGENTA,
     "EDGE": YELLOW,
+    "INTERPOLATED" : GREEN,
+    "SATURATED" : GREEN,
+    "DETECTED" : BLUE,
+    "DETECTED_NEGATIVE" : CYAN,
+    # deprecated names
     "INTRP" : GREEN,
     "SAT" : GREEN,
-    "DETECTED" : BLUE,
     })
 
 def getMaskPlaneColor(name):
@@ -231,12 +236,18 @@ system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
        else:
            planeList = range(nMaskPlanes)
            
+       usedPlanes = long(afwMath.makeStatistics(data, afwMath.SUM).getValue())
+       mask = data.Factory(data.getDimensions())
+       
        for p in planeList:
            if planes[p] or True:
                if not getMaskPlaneVisibility(planes[p]):
                    continue
 
-               mask = afwImage.MaskU(data, True)
+               if not ((1 << p) & usedPlanes): # no pixels have this bitplane set
+                   continue
+
+               mask <<= data
                mask &= (1 << p)
 
                color = getMaskPlaneColor(planes[p])
