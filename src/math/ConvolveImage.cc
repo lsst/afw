@@ -449,10 +449,12 @@ void afwMath::convolve(
     // Because convolve isn't a method of Kernel we can't always use Kernel's vtbl to dynamically
     // dispatch the correct version of convolve
     if (dynamic_cast<afwMath::LinearCombinationKernel const*>(&kernel) != NULL) {
-        afwMath::convolveLinear(convolvedImage, inImage,
-                                *dynamic_cast<afwMath::LinearCombinationKernel const*>(&kernel),
-                                edgeBit);
-        return;
+        if (kernel.isSpatiallyVarying()) {
+            afwMath::convolveLinear(convolvedImage, inImage,
+                                    *dynamic_cast<afwMath::LinearCombinationKernel const*>(&kernel),
+                                    edgeBit);
+            return;
+        }
     }
     
     afwMath::basicConvolve(convolvedImage, inImage, kernel, doNormalize);
