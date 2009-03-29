@@ -616,10 +616,12 @@ static typename image::Mask<MaskPixelT>::MaskPlaneDict initMaskPlanes() {
 
     int i = -1;
     planeDict["BAD"] = ++i;
-    planeDict["SAT"] = ++i;
-    planeDict["INTRP"] = ++i;
+    planeDict["SAT"] = ++i;             // should be SATURATED
+    planeDict["INTRP"] = ++i;           // should be INTERPOLATED
     planeDict["CR"] = ++i;
     planeDict["EDGE"] = ++i;
+    planeDict["DETECTED"] = ++i;
+    planeDict["DETECTED_NEGATIVE"] = ++i;
 
     return planeDict;
 }

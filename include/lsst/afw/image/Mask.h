@@ -95,17 +95,8 @@ namespace image {
         
         void clearAllMaskPlanes();
         void clearMaskPlane(int plane);
-
-        //void setMaskPlaneValues(int plane, std::list<PixelCoord> pixelList);
-
         void setMaskPlaneValues(const int plane, const int x0, const int x1, const int y);
-
-        //void setMaskPlaneValues(int plane, MaskPixelBooleanFunc<MaskPixelT> selectionFunc);
-        
         static MaskPlaneDict parseMaskPlaneMetadata(lsst::daf::base::PropertySet::Ptr const);
-        
-        //int countMask(MaskPixelBooleanFunc<MaskPixelT>& testFunc, const vw::BBox2i maskRegion) const;
-        
         //
         // Operations on the mask plane dictionary
         //
