@@ -202,7 +202,7 @@ void afwMath::basicConvolve(
 
     // Because convolve isn't a method of Kernel we can't always use Kernel's vtbl to dynamically
     // dispatch the correct version of basicConvolve. The case that fails is convolving with a kernel
-    // obtained from a shared_ptr to a Kernel (base class), e.g. as used in linearCombinationKernel.
+    // obtained from a pointer or reference to a Kernel (base class), e.g. as used in linearCombinationKernel.
     if (dynamic_cast<afwMath::DeltaFunctionKernel const*>(&kernel) != NULL) {
         afwMath::basicConvolve(convolvedImage, inImage,
             *dynamic_cast<afwMath::DeltaFunctionKernel const*>(&kernel),
@@ -446,6 +446,15 @@ void afwMath::convolve(
     int edgeBit     ///< mask bit to indicate pixel includes edge-extended data;
                     ///< if negative (default) then no bit is set; only relevant for MaskedImages
 ) {
+    // Because convolve isn't a method of Kernel we can't always use Kernel's vtbl to dynamically
+    // dispatch the correct version of convolve
+    if (dynamic_cast<afwMath::LinearCombinationKernel const*>(&kernel) != NULL) {
+        afwMath::convolveLinear(convolvedImage, inImage,
+                                *dynamic_cast<afwMath::LinearCombinationKernel const*>(&kernel),
+                                edgeBit);
+        return;
+    }
+    
     afwMath::basicConvolve(convolvedImage, inImage, kernel, doNormalize);
     copyBorder(convolvedImage, inImage, kernel, edgeBit);
 }
