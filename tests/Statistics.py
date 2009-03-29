@@ -229,7 +229,21 @@ class StatisticsTestCase(unittest.TestCase):
 	stats = afwMath.StatisticsF(img, afwMath.MEANCLIP)
 	self.assertEqual(z0+dzdx*(nx-1)/2.0, stats.getValue(afwMath.MEANCLIP))
     
+    def testMask(self):
+        mask = afwImage.MaskU(10, 10); mask.set(0x0)
 
+        mask.set(1, 1, 0x10)
+        mask.set(3, 1, 0x08)
+        mask.set(5, 4, 0x08)
+        mask.set(4, 5, 0x02)
+
+        stats = afwMath.makeStatistics(mask, afwMath.SUM | afwMath.NPOINT)
+        self.assertEqual(mask.getWidth()*mask.getHeight(), stats.getValue(afwMath.NPOINT))
+        self.assertEqual(0x1a, stats.getValue(afwMath.SUM))
+
+        def tst():
+            stats = afwMath.makeStatistics(mask, afwMath.MEAN)
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException, tst)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

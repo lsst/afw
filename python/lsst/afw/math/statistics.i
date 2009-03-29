@@ -14,3 +14,7 @@
 %declareStats(double, D)
 %declareStats(float, F)
 %declareStats(int, I)
+// We also support Mask<MaskPixel>
+%template(makeStatistics) lsst::afw::math::makeStatistics<lsst::afw::image::Mask<lsst::afw::image::MaskPixel> >;
+%template(StatisticsMU) lsst::afw::math::Statistics::Statistics<lsst::afw::image::Mask<lsst::afw::image::MaskPixel> >;
+

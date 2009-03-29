@@ -417,7 +417,48 @@ double math::Statistics::getError(math::Property const prop ///< Desired propert
     return getResult(prop).second;
 }
 
+/************************************************************************************************************/
+/**
+ * Specialisation for Masks; just calculate the "Sum" as the bitwise OR of all pixels
+ */
+namespace lsst {
+namespace afw {
+namespace math {
+template<>
+Statistics::Statistics(
+        image::Mask<image::MaskPixel> const& msk, ///< Mask whose properties we want
+        int const flags,                          ///< Describe what we want to calculate
+        StatisticsControl const& sctrl            ///< Control how things are calculated
+                            ) :
+    _flags(flags),
+    _mean(NaN), _variance(NaN), _min(NaN), _max(NaN),
+    _meanclip(NaN), _varianceclip(NaN), _median(NaN), _iqrange(NaN) {
 
+    if ((flags & ~(NPOINT | SUM)) != 0x0) {
+        throw LSST_EXCEPT(ex::InvalidParameterException, "Statistics<Mask> only supports NPOINT and SUM");
+    }
+
+    typedef image::Mask<image::MaskPixel> MaskT;
+    
+    _n = msk.getWidth()*msk.getHeight();
+    if (_n == 0) {
+        throw LSST_EXCEPT(ex::InvalidParameterException, "Image contains no pixels");
+    }
+    
+    // Check that an int's large enough to hold the number of pixels
+    assert(msk.getWidth()*static_cast<double>(msk.getHeight()) < std::numeric_limits<int>::max());
+
+    image::MaskPixel sum = 0x0;
+    for (int y = 0; y != msk.getHeight(); ++y) {
+        for (MaskT::x_iterator ptr = msk.row_begin(y), end = msk.row_end(y); ptr != end; ++ptr) {
+            sum |= (*ptr)[0];
+        }
+    }
+    _sum = sum;
+}
+}}}
+
+/************************************************************************************************************/
 /**
  * @brief Explicit instantiations
  *
