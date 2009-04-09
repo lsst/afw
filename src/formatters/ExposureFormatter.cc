@@ -193,17 +193,19 @@ void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
 
         int ampId = extractAmpId(additionalData);
         // int ccdId = extractCcdId(additionalData);
-        // int64_t exposureId = extractExposureId(additionalData);
+        int64_t fpaExposureId = extractFpaExposureId(additionalData);
         int64_t ccdExposureId = extractCcdExposureId(additionalData);
         int64_t ampExposureId = extractAmpExposureId(additionalData);
 
         if (tableName == "Raw_Amp_Exposure") {
             db->setColumn<long long>("rawAmpExposureId", ampExposureId);
             db->setColumn<long long>("rawCCDExposureId", ccdExposureId);
+            db->setColumn<long long>("rawFPAExposureId", fpaExposureId);
         }
         else { // Science_Amp_Exposure
             db->setColumn<long long>("scienceAmpExposureId", ampExposureId);
             db->setColumn<long long>("scienceCCDExposureId", ccdExposureId);
+            db->setColumn<long long>("scienceFPAExposureId", fpaExposureId);
             db->setColumn<long long>("rawAmpExposureId", ampExposureId);
             /// \todo Check that rawCCDExposureId == scienceCCDExposureId --
             /// KTL -- 2008-01-25

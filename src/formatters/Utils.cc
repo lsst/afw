@@ -53,18 +53,18 @@ int extractVisitId(PropertySet::Ptr const & properties) {
     return visitId;
 }
 
-int64_t extractExposureId(PropertySet::Ptr const & properties) {
-    if (properties->isArray("exposureId")) {
-        throw LSST_EXCEPT(ex::RuntimeErrorException, "\"exposureId\" property has multiple values");
+int64_t extractFpaExposureId(PropertySet::Ptr const & properties) {
+    if (properties->isArray("fpaExposureId")) {
+        throw LSST_EXCEPT(ex::RuntimeErrorException, "\"fpaExposureId\" property has multiple values");
     }
-    int64_t exposureId = properties->getAsInt64("exposureId");
+    int64_t fpaExposureId = properties->getAsInt64("fpaExposureId");
     if (exposureId < 0) {
-        throw LSST_EXCEPT(ex::RangeErrorException, "negative \"exposureId\"");
+        throw LSST_EXCEPT(ex::RangeErrorException, "negative \"fpaExposureId\"");
     }
-    if ((exposureId & 0xfffffffe00000000LL) != 0LL) {
-        throw LSST_EXCEPT(ex::RangeErrorException, "\"exposureId\" is too large");
+    if ((fpaExposureId & 0xfffffffe00000000LL) != 0LL) {
+        throw LSST_EXCEPT(ex::RangeErrorException, "\"fpaExposureId\" is too large");
     }
-    return exposureId;
+    return fpaExposureId;
 }
 
 int extractCcdId(PropertySet::Ptr const & properties) {
