@@ -801,12 +801,14 @@ namespace image {
  * A function to return a MaskedImage of the correct type (cf. std::make_pair)
  */
     template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-    MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>* makeMaskedImage(
+    boost::shared_ptr< MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> > makeMaskedImage(
         typename Image<ImagePixelT>::Ptr image, ///< %image
         typename Mask<MaskPixelT>::Ptr mask = typename Mask<MaskPixelT>::Ptr(),    ///< mask
         typename Image<VariancePixelT>::Ptr variance = typename Image<VariancePixelT>::Ptr() ///< variance
                                                                          ) {
-        return new MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>(image, mask, variance);
+        boost::shared_ptr< MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> > maskedImagePtr;
+        maskedImagePtr.reset(new MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>(image, mask, variance));
+        return maskedImagePtr;
     }
     
 }}}  // lsst::afw::image
