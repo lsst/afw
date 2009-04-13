@@ -43,16 +43,16 @@ def arraysFromMaskedImage(maskedImage):
     The data is presently copied but do not rely on that.
     """
     return (
-            arrayFromImage(maskedImage.getImage()),
-            arrayFromMask(maskedImage.getMask()),
-            arrayFromImage(maskedImage.getVariance()),
+            arrayFromImage(maskedImage.getImage(True)),
+            arrayFromMask(maskedImage.getMask(True)),
+            arrayFromImage(maskedImage.getVariance(True)),
         )
 
 def getImageMaskVarianceFromMaskedImage(maskedImage):
     """Return the image, mask and variance from a MaskedImage.
     The data is NOT copied.
     """
-    return (maskedImage.getImage(), maskedImage.getMask(), maskedImage.getVariance())
+    return (maskedImage.getImage(True), maskedImage.getMask(True), maskedImage.getVariance(True))
 
 def imageFromArray(arr, retType=afwImage.ImageF):
     """Return an Image representation of a numpy array.

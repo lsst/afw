@@ -111,9 +111,9 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(MaskedI
     lsst::daf::data::LsstBase(typeid(this)),
     _image(rhs._image), _mask(rhs._mask), _variance(rhs._variance) {
     if (deep) {
-        _image =    typename Image::Ptr(new Image(*rhs._image, deep));
-        _mask =     typename Mask::Ptr(new Mask(*rhs._mask, deep));
-        _variance = typename Variance::Ptr(new Variance(*rhs._variance, deep));
+        _image =    typename Image::Ptr(new Image(*rhs.getImage(), deep));
+        _mask =     typename Mask::Ptr(new Mask(*rhs.getMask(), deep));
+        _variance = typename Variance::Ptr(new Variance(*rhs.getVariance(), deep));
     }
     conformSizes();
 }
@@ -126,9 +126,9 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(MaskedI
                                                                          const BBox& bbox,
                                                                          bool deep) :
     lsst::daf::data::LsstBase(typeid(this)),
-    _image(new Image(*rhs._image, bbox, deep)),
-    _mask(rhs._mask ? new Mask(*rhs._mask, bbox, deep) : static_cast<Mask *>(NULL)),
-    _variance(rhs._variance ? new Variance(*rhs._variance, bbox, deep) : static_cast<Variance *>(NULL)) {
+    _image(new Image(*rhs.getImage(), bbox, deep)),
+    _mask(rhs._mask ? new Mask(*rhs.getMask(), bbox, deep) : static_cast<Mask *>(NULL)),
+    _variance(rhs._variance ? new Variance(*rhs.getVariance(), bbox, deep) : static_cast<Variance *>(NULL)) {
     conformSizes();
 }
 
@@ -215,9 +215,9 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator=(MaskedIma
  */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator<<=(MaskedImage const& rhs) {
-    *_image <<= *rhs._image;
-    *_mask <<= *rhs._mask;
-    *_variance <<= *rhs._variance;
+    *_image <<= *rhs.getImage();
+    *_mask <<= *rhs.getMask();
+    *_variance <<= *rhs.getVariance();
 }
 
 /// Add a MaskedImage rhs to a MaskedImage
@@ -229,9 +229,9 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator<<=(Ma
 /// available as full-MaskedImage operators
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator+=(MaskedImage const& rhs) {
-    *_image += *rhs._image;
-    *_mask  |= *rhs._mask;
-    *_variance += *rhs._variance;
+    *_image += *rhs.getImage();
+    *_mask  |= *rhs.getMask();
+    *_variance += *rhs.getVariance();
 }
 
 /// Add a scaled MaskedImage c*rhs to a MaskedImage
@@ -243,9 +243,9 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator+=(Mas
 /// available as full-MaskedImage operators
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledPlus(double const c, MaskedImage const& rhs) {
-    (*_image).scaledPlus(c, *rhs._image);
-    *_mask  |= *rhs._mask;
-    (*_variance).scaledPlus(c*c, *rhs._variance);
+    (*_image).scaledPlus(c, *rhs.getImage());
+    *_mask  |= *rhs.getMask();
+    (*_variance).scaledPlus(c*c, *rhs.getVariance());
 }
 
 /// Add a scalar rhs to a MaskedImage
@@ -261,9 +261,9 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator+=(Ima
 /// \note the pixels in the two images are taken to be independent
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator-=(MaskedImage const& rhs) {
-    *_image -= *rhs._image;
-    *_mask  |= *rhs._mask;
-    *_variance += *rhs._variance;
+    *_image -= *rhs.getImage();
+    *_mask  |= *rhs.getMask();
+    *_variance += *rhs.getVariance();
 }
 
 /// Subtract a scaled MaskedImage c*rhs from a MaskedImage
@@ -273,9 +273,9 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator-=(Mas
 /// \note the pixels in the two images are taken to be independent
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledMinus(double const c, MaskedImage const& rhs) {
-    (*_image).scaledMinus(c, *rhs._image);
-    *_mask  |= *rhs._mask;
-    (*_variance).scaledPlus(c*c, *rhs._variance);
+    (*_image).scaledMinus(c, *rhs.getImage());
+    *_mask  |= *rhs.getMask();
+    (*_variance).scaledPlus(c*c, *rhs.getVariance());
 }
 
 /// Subtract a scalar rhs from a MaskedImage
@@ -314,8 +314,8 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator*=(Mas
                      _variance->_getRawView(), // result
                      productVariance<ImagePixelT, VariancePixelT>());
 
-    *_image *= *rhs._image;
-    *_mask  |= *rhs._mask;
+    *_image *= *rhs.getImage();
+    *_mask  |= *rhs.getMask();
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
@@ -329,8 +329,8 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledMultipli
                      _variance->_getRawView(), // result
                      scaledProductVariance<ImagePixelT, VariancePixelT>(c));
 
-    (*_image).scaledMultiplies(c, *rhs._image);
-    *_mask  |= *rhs._mask;
+    (*_image).scaledMultiplies(c, *rhs.getImage());
+    *_mask  |= *rhs.getMask();
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
@@ -371,8 +371,8 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator/=(Mas
                      _variance->_getRawView(), // result
                      quotientVariance<ImagePixelT, VariancePixelT>());
 
-    *_image /= *rhs._image;
-    *_mask  |= *rhs._mask;
+    *_image /= *rhs.getImage();
+    *_mask  |= *rhs.getMask();
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
@@ -385,7 +385,7 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledDivides(
                      _variance->_getRawView(), // result
                      scaledQuotientVariance<ImagePixelT, VariancePixelT>(c));
 
-    (*_image).scaledDivides(c, *rhs._image);
+    (*_image).scaledDivides(c, *rhs.getImage());
     *_mask  |= *rhs._mask;
 }
 
