@@ -17,6 +17,7 @@ SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::daf::data::LsstBase, lsst::afw::image:
 %define %maskedImage(NAME, TYPE, PIXEL_TYPES...)
 %template(NAME##TYPE) lsst::afw::image::MaskedImage<PIXEL_TYPES>;
 %template(makeMaskedImage) lsst::afw::image::makeMaskedImage<PIXEL_TYPES>;
+%newobject makeMaskedImage;
 %lsst_persistable(lsst::afw::image::MaskedImage<PIXEL_TYPES>);
 
 %extend lsst::afw::image::MaskedImage<PIXEL_TYPES> {

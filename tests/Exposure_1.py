@@ -54,8 +54,8 @@ class ExposureTestCase(unittest.TestCase):
         self.wcs = afwImage.Wcs(self.smallExposure.getMetadata())
 
         self.exposureBlank = afwImage.ExposureF()
-        self.exposureMiOnly = afwImage.ExposureF(maskedImage)
-        self.exposureMiWcs = afwImage.ExposureF(maskedImage, self.wcs)
+        self.exposureMiOnly = afwImage.makeExposure(maskedImage)
+        self.exposureMiWcs = afwImage.makeExposure(maskedImage, self.wcs)
         self.exposureCrWcs = afwImage.ExposureF(100, 100, self.wcs)
         self.exposureCrOnly = afwImage.ExposureF(100, 100)
             
@@ -186,7 +186,7 @@ class ExposureTestCase(unittest.TestCase):
         #
         parentExposure = self.exposureCrWcs
         subBBox = afwImage.BBox(afwImage.PointI(40, 50), 10, 10)
-        subExposure = afwImage.ExposureF(self.exposureCrWcs, subBBox)
+        subExposure = self.exposureCrWcs.Factory(self.exposureCrWcs, subBBox)
         
         self.checkWcs(self.exposureCrWcs, subExposure)
 
@@ -195,7 +195,7 @@ class ExposureTestCase(unittest.TestCase):
         # from the WCS class for the MaskedImage 871034p_1_MI.
         
         def getSubRegion():
-            subExposure = afwImage.ExposureF(self.exposureCrWcs, subRegion3)
+            subExposure = self.exposureCrWcs.Factory(self.exposureCrWcs, subRegion3)
 
         subRegion3 = afwImage.BBox(afwImage.PointI(100, 100), 10, 10)
         utilsTests.assertRaisesLsstCpp(self, pexExcept.LengthErrorException, getSubRegion)
@@ -205,7 +205,7 @@ class ExposureTestCase(unittest.TestCase):
         # small_MI (cols, rows) = (256, 256) 
 
         def getSubRegion():
-            subExposure = afwImage.ExposureF(self.exposureCrWcs, subRegion3)
+            subExposure = self.exposureCrWcs.Factory(self.exposureCrWcs, subRegion3)
 
         subRegion4 = afwImage.BBox(afwImage.PointI(250, 250), 10, 10)        
         utilsTests.assertRaisesLsstCpp(self, pexExcept.LengthErrorException, getSubRegion)
@@ -217,7 +217,7 @@ class ExposureTestCase(unittest.TestCase):
         mainExposure = afwImage.ExposureF(inFilePathSmall)
         
         subBBox = afwImage.BBox(afwImage.PointI(10, 10), 40, 50)
-        subExposure = afwImage.ExposureF(mainExposure, subBBox)
+        subExposure = mainExposure.Factory(mainExposure, subBBox)
         self.checkWcs(mainExposure, subExposure)
         
         hdu = 0
