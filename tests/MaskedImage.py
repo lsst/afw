@@ -76,6 +76,53 @@ class MaskedImageTestCase(unittest.TestCase):
 
         maskedImage = afwImage.makeMaskedImage(im, mask, var)
 
+    def testCopyMaskedImage(self):
+        """Test copy constructor"""
+        #
+        # shallow copy
+        #
+        mi = self.mimage.Factory(self.mimage, False)
+
+        val00 = self.mimage.get(0,0)
+        nval00 = (100, 0xff, -1)        # the new value we'll set
+        self.assertNotEqual(val00, nval00)
+
+        self.assertEqual(mi.get(0,0), val00)
+        mi.set(0, 0, nval00)
+
+        self.assertEqual(self.mimage.get(0,0), nval00)
+        self.assertEqual(mi.get(0,0), nval00)
+        mi.set(0, 0, val00)             # reinstate initial value
+        #
+        # deep copy
+        #
+        mi = self.mimage.Factory(self.mimage, True)
+
+        self.assertEqual(mi.get(0,0), val00)
+        mi.set(0, 0, nval00)
+
+        self.assertEqual(self.mimage.get(0,0), val00)
+        self.assertEqual(mi.get(0,0), nval00)
+        #
+        # Copy with change of Image type
+        #
+        mi = self.mimage.convertDouble()
+
+        self.assertEqual(mi.get(0,0), val00)
+        mi.set(0, 0, nval00)
+
+        self.assertEqual(self.mimage.get(0,0), val00)
+        self.assertEqual(mi.get(0,0), nval00)
+        #
+        # Mask or Variance is not set
+        #
+        im = afwImage.ImageF(10, 20)
+        mi = afwImage.makeMaskedImage(im)
+
+        def tst(mi):
+            mi2 = mi.Factory(mi, True)
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.RuntimeErrorException, tst, mi)
+
     def testAddImages(self):
         "Test addition"
         # add an image

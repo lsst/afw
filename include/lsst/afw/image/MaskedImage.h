@@ -626,14 +626,15 @@ namespace image {
         MaskedImage(MaskedImage<OtherPixelT, MaskPixelT, VariancePixelT> const& rhs, //!< Input image
                     const bool deep     //!< Must be true; needed to disambiguate
                    ) :
-            lsst::daf::data::LsstBase(typeid(this)) {
+            lsst::daf::data::LsstBase(typeid(this)), _image(), _mask(), _variance() {
             if (!deep) {
                 throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
                     "Only deep copies are permitted for MaskedImages with different pixel types");
             }
 
-            Image tmp(*rhs.getImage(), true);
-            _image->swap(tmp);          // See Meyers, Effective C++, Items 11 and 43
+            _image =    typename Image::Ptr(new Image(*rhs.getImage(), deep));
+            _mask =     typename Mask::Ptr(new Mask(*rhs.getMask(), deep));
+            _variance = typename Variance::Ptr(new Variance(*rhs.getVariance(), deep));
         }
 
 #if defined(DOXYGEN)
@@ -678,11 +679,28 @@ namespace image {
         
         // Getters
         /// Return a (Ptr to) the MaskedImage's %image
-        ImagePtr getImage() const { return _image; }
+        ImagePtr getImage(bool const noThrow=false) const {
+            if (!_image && !noThrow) {
+                throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "MaskedImage's Image is NULL");
+            }
+            return _image;
+        }
         /// Return a (Ptr to) the MaskedImage's %mask
-        MaskPtr getMask() const { return _mask; }
+        MaskPtr getMask(bool const noThrow=false) const {
+            if (!_mask && !noThrow) {
+                throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "MaskedImage's Mask is NULL");
+            }
+
+            return _mask;
+        }
         /// Return a (Ptr to) the MaskedImage's variance
-        VariancePtr getVariance() const { return _variance; }
+        VariancePtr getVariance(bool const noThrow=false) const {
+            if (!_variance && !noThrow) {
+                throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "MaskedImage's Variance is NULL");
+            }
+
+            return _variance;
+        }
         /// Return the number of columns in the %image
         int getWidth() const { return _image->getWidth(); }
         /// Return the number of rows in the %image
@@ -801,14 +819,12 @@ namespace image {
  * A function to return a MaskedImage of the correct type (cf. std::make_pair)
  */
     template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-    boost::shared_ptr< MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> > makeMaskedImage(
+    MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>* makeMaskedImage(
         typename Image<ImagePixelT>::Ptr image, ///< %image
         typename Mask<MaskPixelT>::Ptr mask = typename Mask<MaskPixelT>::Ptr(),    ///< mask
         typename Image<VariancePixelT>::Ptr variance = typename Image<VariancePixelT>::Ptr() ///< variance
                                                                          ) {
-        boost::shared_ptr< MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> > maskedImagePtr;
-        maskedImagePtr.reset(new MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>(image, mask, variance));
-        return maskedImagePtr;
+        return new MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>(image, mask, variance);
     }
     
 }}}  // lsst::afw::image
