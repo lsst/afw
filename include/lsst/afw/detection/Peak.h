@@ -15,8 +15,6 @@ namespace lsst { namespace afw { namespace detection {
 class Peak : public lsst::daf::base::Citizen {
 public:
     typedef boost::shared_ptr<Peak> Ptr;
-
-    typedef std::vector<Peak::Ptr> List; ///< A collection of Peaks
     /// A peak at the pixel <tt>(ix, iy)</tt>
     explicit Peak(int ix,               //!< column pixel
                   int iy)               //!< row pixel

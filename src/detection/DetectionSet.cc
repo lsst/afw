@@ -313,7 +313,7 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
         const Threshold& threshold,          //!< threshold to find objects
         int x,                               //!< Footprint should include this pixel (column)
         int y,                               //!< Footprint should include this pixel (row) 
-        std::vector<Peak::Ptr> const& peaks) //!< Footprint should include at most one of these peaks
+        const std::vector<Peak> *peaks)      //!< Footprint should include at most one of these peaks
     : lsst::daf::data::LsstBase(typeid(this)),
       _footprints(*new FootprintList())
     {

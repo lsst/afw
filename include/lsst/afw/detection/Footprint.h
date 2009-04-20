@@ -219,7 +219,7 @@ public:
                  Threshold const& threshold,
                  int x,
                  int y,
-                 std::vector<Peak::Ptr> const& peaks = std::vector<Peak::Ptr>());
+                 std::vector<Peak> const* peaks = NULL);
     DetectionSet(DetectionSet const&);
     DetectionSet(DetectionSet const& set, int r, bool isotropic=true);
     DetectionSet(DetectionSet const& footprints1, DetectionSet const& footprints2,
@@ -363,7 +363,7 @@ typename detection::DetectionSet<ImagePixelT, MaskPixelT>::Ptr makeDetectionSet(
         Threshold const& threshold,
         int x,
         int y,
-        std::vector<Peak::Ptr> const& peaks=std::vector<Peak::Ptr>()) {
+        std::vector<Peak> const* peaks = NULL) {
     return typename detection::DetectionSet<ImagePixelT, MaskPixelT>::Ptr(new DetectionSet<ImagePixelT, MaskPixelT>(img, threshold, x, y, peaks));
 }
 
