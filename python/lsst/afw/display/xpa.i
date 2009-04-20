@@ -22,21 +22,50 @@ Simple interface to the xpa routines used to communicate with ds9
 %rename(setFd1) XPASetFd1;
 
 %{
+#include "boost/noncopyable.hpp"
 #include "xpa.h"
+#include "lsst/pex/exceptions/Runtime.h"
 
-static char *
-xmalloc(long n)
-{
-    char *ptr = (char *)malloc(n);
-    assert(ptr != NULL);
+namespace {
+    class myXPA : boost::noncopyable {
+    public:
+        static XPA get(bool reset=false) {
+            static myXPA *singleton = NULL;
 
-    return(ptr);
+            if (reset && singleton != NULL) {
+                delete singleton;
+                singleton = NULL;
+            }
+
+            if (singleton == NULL) {
+                singleton = new myXPA("w");
+            }
+
+            return singleton->_xpa;
+        }
+    private:
+        myXPA(char const *mode) {
+            _xpa = XPAOpen((char *)mode);
+
+            if (_xpa == NULL) {
+                throw LSST_EXCEPT(lsst::pex::exceptions::IoErrorException, "Unable to open XPA");
+            }
+        }
+        
+        ~myXPA() {
+            XPAClose(_xpa);
+        }
+
+        static XPA _xpa;                // the real XPA connection
+    };
+
+    XPA myXPA::_xpa = NULL;
 }
 
 /*
  * A binding for XPAGet that talks to only one server, but doesn't have to talk (char **) with SWIG
  */
-char *
+const char *
 XPAGet1(XPA xpa,
 	char *xtemplate,
 	char *paramlist,
@@ -46,6 +75,10 @@ XPAGet1(XPA xpa,
     int len = 0;			/* length of buf; ignored */
     char *error = NULL;			/* returned error if any*/
 
+    if (xpa == NULL) {
+        xpa = myXPA::get();
+    }
+
     int n = XPAGet(xpa, xtemplate, paramlist, mode,
 		   &buf, &len, NULL, &error, 1);
 
@@ -53,9 +86,7 @@ XPAGet1(XPA xpa,
 	return(NULL);
     }
     if(error != NULL) {
-	char *errStr = xmalloc(strlen(error) + 1);
-	strcpy(errStr, error);
-	return(errStr);
+	return(error);
     }
 
     return(buf);
@@ -63,7 +94,7 @@ XPAGet1(XPA xpa,
 
 /*****************************************************************************/
 
-char *
+const char *
 XPASet1(XPA xpa,
 	char *xtemplate,
 	char *paramlist,
@@ -76,6 +107,10 @@ XPASet1(XPA xpa,
     }
     char *error = NULL;			// returned error if any
 
+    if (xpa == NULL) {
+        xpa = myXPA::get();
+    }
+
     int n = XPASet(xpa, xtemplate, paramlist, mode,
 		   buf, len, NULL, &error, 1);
 
@@ -83,9 +118,7 @@ XPASet1(XPA xpa,
 	return(NULL);
     }
     if(error != NULL) {
-	char *errStr = xmalloc(strlen(error) + 1);
-	strcpy(errStr, error);
-	return(errStr);
+	return(error);
     }
 
     return "";
@@ -94,7 +127,7 @@ XPASet1(XPA xpa,
 
 /*****************************************************************************/
 
-char *
+const char *
 XPASetFd1(XPA xpa,
 	  char *xtemplate,
 	  char *paramlist,
@@ -103,6 +136,10 @@ XPASetFd1(XPA xpa,
 {
     char *error = NULL;			/* returned error if any*/
 
+    if (xpa == NULL) {
+        xpa = myXPA::get();
+    }
+
     int n = XPASetFd(xpa, xtemplate, paramlist, mode,
 		     fd, NULL, &error, 1);
 
@@ -110,10 +147,7 @@ XPASetFd1(XPA xpa,
 	return(NULL);
     }
     if(error != NULL) {
-	char *errStr = xmalloc(strlen(error) + 1);
-	strcpy(errStr, error);
-
-	return(errStr);
+	return(error);
     }
 
     return NULL;
@@ -125,6 +159,12 @@ XPASetFd1(XPA xpa,
 %import "prsetup.h"
 %import "xpa.h"
 
+%inline %{
+    void reset() {
+        myXPA::get(true);
+    }
+%}
+
 %include "exception.i"
 
 %exception {
@@ -134,6 +174,6 @@ XPASetFd1(XPA xpa,
     }
 }
 
-char *XPAGet1(XPA xpa, char *xtemplate, char *paramlist, char *mode);
-char *XPASet1(XPA xpa, char *xtemplate, char *paramlist, char *mode, char *buf, int len);	
-char *XPASetFd1(XPA xpa, char *xtemplate, char *paramlist, char *mode, int fd);
+const char *XPAGet1(XPA xpa, char *xtemplate, char *paramlist, char *mode);
+const char *XPASet1(XPA xpa, char *xtemplate, char *paramlist, char *mode, char *buf, int len);	
+const char *XPASetFd1(XPA xpa, char *xtemplate, char *paramlist, char *mode, int fd);

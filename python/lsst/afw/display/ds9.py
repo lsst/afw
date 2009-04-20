@@ -141,28 +141,29 @@ def ds9Cmd(cmd, trap=True):
       else:
           print >> sys.stderr, "Caught ds9 exception processing command \"%s\": %s" % (cmd, e)
 
-def initDS9(execDs9 = True):
+def initDS9(execDs9=True):
    try:
-      ds9Cmd("iconify no; raise")
-      ds9Cmd("wcs wcsa")                # include the pixel coordinates WCS (WCSA)
-   except IOError, e:
+      xpa.reset()
+      ds9Cmd("iconify no; raise", False)
+      ds9Cmd("wcs wcsa", False)         # include the pixel coordinates WCS (WCSA)
+   except Ds9Error, e:
       if execDs9:
          print "ds9 doesn't appear to be running (%s), I'll exec it for you" % e
          if not re.search('xpa', os.environ['PATH']):
             raise Ds9Error, 'You need the xpa binaries in your path to use ds9 with python'
 
          os.system('ds9 &')
-         for i in range(0,10):
+         for i in range(10):
             try:
-               ds9Cmd("frame 0; scale histequ; scale mode minmax")
+               ds9Cmd("frame 0", False)
                break
-            except IOError:
-               print "waiting for ds9...\r",
+            except Ds9Error:
+               print "waiting for ds9...\r",; sys.stdout.flush()
                time.sleep(0.5)
             else:
+               print "                  \r",
                break
 
-         print "                  \r",
          sys.stdout.flush();
 
       raise Ds9Error
@@ -198,13 +199,14 @@ system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
        return
    
    if init:
-      for i in range(0,3):
+      for i in range(3):
          try:
             initDS9(i == 0)
-         except IOError:
+         except Ds9Error:
             print "waiting for ds9...\r", ; sys.stdout.flush();
             time.sleep(0.5)
          else:
+            print "                                     \r", ; sys.stdout.flush();
             break
          
    ds9Cmd("frame %d" % frame)
