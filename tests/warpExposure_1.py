@@ -82,43 +82,30 @@ class WarpExposureTestCase(unittest.TestCase):
         except Exception:
             pass
 
-    def DISABLEDtestMatchSwarpBilinear(self):
+    def testMatchSwarpBilinear(self):
         """Test that warpExposure matches swarp using a bilinear warping kernel
-        
-        The values are too different near the bad column so this test is disable for now.
-        I need to make a gentler test or fix the source of the differences.
         """
-        # maxDiff=2219.74499512 at position (455, 4); value=-1276.12097168 vs. 943.624023438
-        # a pixel very near the bad column
         self.compareSwarped("bilinear")
 
     def testMatchSwarpLanczos2(self):
         """Test that warpExposure matches swarp using a lanczos4 warping kernel.
         """
-        # use a large rtol because a few pixels are significantly off
-        self.compareSwarped("lanczos2", rtol=1.0)
+        self.compareSwarped("lanczos2")
 
     def testMatchSwarpLanczos3(self):
         """Test that warpExposure matches swarp using a lanczos4 warping kernel.
         """
-        # use a large rtol because a few pixels are significantly off, the worst being:
-        # maxDiff=968.875 at position (205, 482); value=35155.1132812 vs. 34186.2382812
-        self.compareSwarped("lanczos3", rtol=1.0)
+        self.compareSwarped("lanczos3")
 
     def testMatchSwarpLanczos4(self):
         """Test that warpExposure matches swarp using a lanczos4 warping kernel.
         """
-        # use a large rtol because a few pixels are significantly off
-        self.compareSwarped("lanczos4", rtol=0.5)
+        self.compareSwarped("lanczos4")
 
     def compareSwarped(self, kernelName, rtol=0.1):
         """Compare remapExposure to swarp for given warping kernel.
         
         Note that swarp only warps the image plane, so only test that plane.
-       
-        Note: the edge of the good area is slightly different for for swarp and warpExposure.
-        I would prefer to grow the EDGE mask by one pixel before comparing the images
-        but that is too much hassle with the current afw so instead I ignore edge pixels from swarp and afw.
         """
         warpingKernel = afwMath.makeWarpingKernel(kernelName)
 
@@ -139,22 +126,15 @@ class WarpExposureTestCase(unittest.TestCase):
         if SaveFitsFiles:
             afwWarpedExposure.writeFits("afwWarped1%s" % (kernelName,))
 
-        # set 0-value warped image pixels as EDGE in afwWarpedMask
-        # and zero pixels from the swarped exposure
         afwWarpedMask = afwWarpedMaskedImage.getMask()
         edgeBitMask = afwWarpedMask.getPlaneBitMask("EDGE")
         if edgeBitMask == 0:
             self.fail("warped mask has no EDGE bit")
-        skipMaskArr = imageTestUtils.arrayFromMask(afwWarpedMask)
-        skipMaskArr &= edgeBitMask
-        swarpedImageArr = imageTestUtils.arrayFromMask(swarpedImage)
-        swarpedEdgeMaskArr = (swarpedImageArr == 0) * edgeBitMask
-        swarpedEdgeMask = imageTestUtils.maskFromArray(swarpedEdgeMaskArr)
-        skipMaskArr |= swarpedEdgeMaskArr
+        afwWarpedMaskArr = imageTestUtils.arrayFromMask(afwWarpedMask)
         swarpedMaskedImage = afwImage.MaskedImageF(swarpedImage)
         
         badPlanes = self.compareMaskedImages(afwWarpedMaskedImage, swarpedMaskedImage,
-            doImage=True, doMask=False, doVariance=False, skipMaskArr=skipMaskArr, rtol=rtol)
+            doImage=True, doMask=False, doVariance=False, skipMaskArr=afwWarpedMaskArr, rtol=rtol)
         if badPlanes:
             afwWarpedImageName = "afwWarped_%s.fits" % (kernelName,)
             afwWarpedImage = afwWarpedMaskedImage.getImage()
