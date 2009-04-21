@@ -39,3 +39,4 @@ namespace boost {
 
 %include "source.i"
 %include "footprints.i"
+%include "match.i"
