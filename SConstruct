@@ -2,7 +2,7 @@
 #
 # Setup our environment
 #
-import glob, os.path, sys
+import glob, os.path, sys, traceback
 import lsst.SConsUtils as scons
 
 env = scons.makeEnv(
@@ -54,7 +54,8 @@ for d in (
         try:
             SConscript(os.path.join(d, "SConscript"))
         except Exception, e:
-            print >> sys.stderr, "%s: %s" % (os.path.join(d, "SConscript"), e)
+            print >> sys.stderr, "In processing file %s:" % (os.path.join(d, "SConscript"))
+            print >> sys.stderr, traceback.format_exc()
     Clean(d, Glob(os.path.join(d, "*~")))
     Clean(d, Glob(os.path.join(d, "*.pyc")))
 
