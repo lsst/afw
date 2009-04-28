@@ -11,16 +11,8 @@
 
 #include "lsst/afw/image/MaskedImage.h"
 
-using boost::lambda::ret;
-using boost::lambda::_1;
-using boost::lambda::_2;
-using boost::lambda::_3;
-#if 0
-using boost::lambda::_4;                // doesn't exist
-#endif
-
+namespace bl = boost::lambda;
 namespace image = lsst::afw::image;
-
         
 // Constructors
 //
@@ -186,7 +178,7 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::setVarianceFro
                                   boost::format("Gain could not be set in setVarianceFromGain().  Using gain=%g") % gain);
     }
 
-    transform_pixels(_image->_getRawView(), _variance->_getRawView(), ret<VariancePixelT>(_1/gain));
+    transform_pixels(_image->_getRawView(), _variance->_getRawView(), bl::ret<VariancePixelT>(bl::_1/gain));
 
     lsst::pex::logging::Trace("afw.MaskedImage", 1,
                               boost::format("Using gain = %f in setVarianceFromGain()") % gain);

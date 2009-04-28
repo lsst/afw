@@ -4,7 +4,10 @@ import os, re, sys
 import glob
 
 import lsst.tests
-import lsst.daf.persistence
+if False:
+    import lsst.daf.persistence as dafPersistence
+else:
+    dafPersistence = None
 import lsst.SConsUtils as scons # scons 1.17 supports "env.ProductDir", but for now use scons.ProductDir
 
 for fileName in glob.glob("*.cc"):
@@ -31,7 +34,7 @@ else:
     # copy AFWDATA_DIR to the test's environment
     env["ENV"]["AFWDATA_DIR"] = os.environ["AFWDATA_DIR"]
     
-    if not lsst.daf.persistence.DbAuth.available("lsst10.ncsa.uiuc.edu", "3306"):
+    if False and not dafPersistence.DbAuth.available("lsst10.ncsa.uiuc.edu", "3306"):
         print "WARNING: No database authenticator seen"
         print "Database tests may be skipped or may fail"
 

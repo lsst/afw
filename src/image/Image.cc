@@ -479,14 +479,12 @@ void image::swap(Image<PixelT>& a, Image<PixelT>& b) {
 // is equivalent to
 //    transform_pixels(_gilView, _gilView, std::bind2nd(std::plus<PixelT>(), rhs));
 //
-using boost::lambda::ret;
-using boost::lambda::_1;
-using boost::lambda::_2;
+namespace bl = boost::lambda;
 
 /// Add scalar rhs to lhs
 template<typename PixelT>
 void image::Image<PixelT>::operator+=(PixelT const rhs) {
-    transform_pixels(_getRawView(), _getRawView(), ret<PixelT>(_1 + rhs));
+    transform_pixels(_getRawView(), _getRawView(), bl::ret<PixelT>(bl::_1 + rhs));
 }
 
 /// Add Image rhs to lhs
@@ -497,7 +495,7 @@ void image::Image<PixelT>::operator+=(Image<PixelT> const& rhs) {
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
-    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<PixelT>(_1 + _2));
+    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), bl::ret<PixelT>(bl::_1 + bl::_2));
 }
 
 /// Add Image c*rhs to lhs
@@ -508,13 +506,13 @@ void image::Image<PixelT>::scaledPlus(double const c, Image<PixelT> const& rhs) 
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
-    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<PixelT>(_1 + ret<PixelT>(c*_2)));
+    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), bl::ret<PixelT>(bl::_1 + bl::ret<PixelT>(c*bl::_2)));
 }
 
 /// Subtract scalar rhs from lhs
 template<typename PixelT>
 void image::Image<PixelT>::operator-=(PixelT const rhs) {
-    transform_pixels(_getRawView(), _getRawView(), ret<PixelT>(_1 - rhs));
+    transform_pixels(_getRawView(), _getRawView(), bl::ret<PixelT>(bl::_1 - rhs));
 }
 
 /// Subtract Image rhs from lhs
@@ -525,7 +523,7 @@ void image::Image<PixelT>::operator-=(Image<PixelT> const& rhs) {
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
-    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<PixelT>(_1 - _2));
+    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), bl::ret<PixelT>(bl::_1 - bl::_2));
 }
 
 /// Subtract Image c*rhs from lhs
@@ -536,13 +534,13 @@ void image::Image<PixelT>::scaledMinus(double const c, Image<PixelT> const& rhs)
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
-    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<PixelT>(_1 - ret<PixelT>(c*_2)));
+    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), bl::ret<PixelT>(bl::_1 - bl::ret<PixelT>(c*bl::_2)));
 }
 
 /// Multiply lhs by scalar rhs
 template<typename PixelT>
 void image::Image<PixelT>::operator*=(PixelT const rhs) {
-    transform_pixels(_getRawView(), _getRawView(), ret<PixelT>(_1 * rhs));
+    transform_pixels(_getRawView(), _getRawView(), bl::ret<PixelT>(bl::_1 * rhs));
 }
 
 /// Multiply lhs by Image rhs (i.e. %pixel-by-%pixel multiplication)
@@ -553,7 +551,7 @@ void image::Image<PixelT>::operator*=(Image<PixelT> const& rhs) {
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
-    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<PixelT>(_1 * _2));
+    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), bl::ret<PixelT>(bl::_1 * bl::_2));
 }
 
 /// Multiply lhs by Image c*rhs (i.e. %pixel-by-%pixel multiplication)
@@ -564,7 +562,7 @@ void image::Image<PixelT>::scaledMultiplies(double const c, Image<PixelT> const&
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
-    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<PixelT>(_1 * ret<PixelT>(c*_2)));
+    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), bl::ret<PixelT>(bl::_1 * bl::ret<PixelT>(c*bl::_2)));
 }
 
 /// Divide lhs by scalar rhs
@@ -572,7 +570,7 @@ void image::Image<PixelT>::scaledMultiplies(double const c, Image<PixelT> const&
 /// \note Floating point types implement this by multiplying by the 1/rhs
 template<typename PixelT>
 void image::Image<PixelT>::operator/=(PixelT const rhs) {
-    transform_pixels(_getRawView(), _getRawView(), ret<PixelT>(_1 / rhs));
+    transform_pixels(_getRawView(), _getRawView(), bl::ret<PixelT>(bl::_1 / rhs));
 }
 //
 // Specialize float and double for efficiency
@@ -599,7 +597,7 @@ void image::Image<PixelT>::operator/=(Image<PixelT> const& rhs) {
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
-    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<PixelT>(_1 / _2));
+    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), bl::ret<PixelT>(bl::_1 / bl::_2));
 }
 
 /// Divide lhs by Image c*rhs (i.e. %pixel-by-%pixel division)
@@ -610,7 +608,7 @@ void image::Image<PixelT>::scaledDivides(double const c, Image<PixelT> const& rh
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
-    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<PixelT>(_1 / ret<PixelT>(c*_2)));
+    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), bl::ret<PixelT>(bl::_1 / bl::ret<PixelT>(c*bl::_2)));
 }
 
 /************************************************************************************************************/
