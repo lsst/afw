@@ -182,7 +182,7 @@ def setMaskColor(color=GREEN):
     """Set the ds9 mask colour to; eg. ds9.setMaskColor(ds9.RED)"""
     ds9Cmd("mask color %s" % color)
 
-def mtv(data, frame=-1, init=True, wcs=None, isMask=False, lowOrderBits=False):
+def mtv(data, frame=-1, init=True, wcs=None, isMask=False, lowOrderBits=False, title=None):
    """Display an Image or Mask on a DS9 display
 
    If lowOrderBits is True, give low-order-bits priority in display (i.e.
@@ -212,9 +212,9 @@ system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
    ds9Cmd("frame %d" % frame)
 
    if re.search("::DecoratedImage<", data.__repr__()): # it's a DecorateImage; display it
-       _mtv(data.getImage(), wcs, False)
+       _mtv(data.getImage(), wcs, title, False)
    elif re.search("::MaskedImage<", data.__repr__()): # it's a MaskedImage; display the Image and overlay the Mask
-       _mtv(data.getImage(), wcs, False)
+       _mtv(data.getImage(), wcs, title, False)
        mask = data.getMask(True)
        if mask:
            mtv(mask, frame, False, wcs, False, lowOrderBits=lowOrderBits)
@@ -261,14 +261,14 @@ system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
                            break
 
                setMaskColor(color)
-               _mtv(mask, wcs, True)
+               _mtv(mask, wcs, title, True)
        return
    elif re.search("::Image<", data.__repr__()): # it's an Image; display it
-       _mtv(data, wcs, False)
+       _mtv(data, wcs, title, False)
    else:
        raise RuntimeError, "Unsupported type %s" % data.__repr__()
 
-def _mtv(data, wcs=None, isMask=False):
+def _mtv(data, wcs, title, isMask):
    """Internal routine to display an Image or Mask on a DS9 display"""
 
    if True:
@@ -285,7 +285,7 @@ def _mtv(data, wcs=None, isMask=False):
 
    try:
        #import pdb; pdb.set_trace()
-       displayLib.writeFitsImage(pfd.fileno(), data, wcs)
+       displayLib.writeFitsImage(pfd.fileno(), data, wcs, title)
    except Exception, e:
        try:
            pfd.close()

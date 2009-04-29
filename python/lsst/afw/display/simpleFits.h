@@ -14,14 +14,11 @@ namespace afw {
 namespace display {
 
 template<typename ImageT>
-void writeBasicFits(int fd,                                      // file descriptor to write to
-                    ImageT const& data,                          // The data to write
-                    lsst::afw::image::Wcs const* Wcs = NULL);    // which Wcs to use for pixel
+void writeBasicFits(int fd, ImageT const& data, lsst::afw::image::Wcs const* Wcs=NULL, char const* title=NULL);
 
 template<typename ImageT>
-void writeBasicFits(std::string const& filename,                 // file to write, or "| cmd"
-                    ImageT const& data,                          // The data to write
-                    lsst::afw::image::Wcs const* Wcs = NULL);    // which Wcs to use for pixel
+void writeBasicFits(std::string const& filename, ImageT const& data, lsst::afw::image::Wcs const* Wcs=NULL,
+                    const char* title=NULL);
 
 }}} // namespace lsst::afw::display
 #endif
