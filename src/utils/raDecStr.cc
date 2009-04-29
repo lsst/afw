@@ -44,21 +44,22 @@ string decToStr(double dec) {
     double sec = dec*3600;
 
     string str = sgn;
-    return str + " " + boost::str(boost::format("%02i:%02i:%04.1f") %  degrees % min % sec);
+    return str +  boost::str(boost::format("%02i:%02i:%04.1f") %  degrees % min % sec);
    
 }
 
 string raDecToStr(double ra, double dec){
 
     string answer = raToStr(ra);
-    answer = answer + decToStr(dec);
+    answer = answer + " "+ decToStr(dec);
     return answer;
 }
 
-string raDecToStr(const lsst::afw::image::PointD p) {
+string raDecToStr(lsst::afw::image::PointD p) {
     return raDecToStr(p.getX(), p.getY());
 }
 
+            
 
 double strToRa(const std::string &str, const std::string &sep){
 
@@ -68,7 +69,7 @@ double strToRa(const std::string &str, const std::string &sep){
 
     if( ! boost::regex_search(str, what, reg) ) {
         string err = boost::str(boost::format("Error parsing ra string  %s")%str);
-        throw(LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException, "Error"));
+        throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, str));
     }
 
     if( what.size() != 4) {
@@ -142,8 +143,6 @@ double strToDec(const std::string &str, const std::string &sep){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, str);\
     }
 
-     cout << what[1] << " " << what[2] << " " << what[3] << endl;
-     cout << deg << " " << mn << " " << sc << endl;
      double dec = fabs(deg) + (mn + sc/60.)/60. ;
 
      //Check if the value is less than zero
@@ -154,5 +153,37 @@ double strToDec(const std::string &str, const std::string &sep){
      
      return dec;
 }
+
+lsst::afw::image::PointD strToRaDec(const std::string &str, const std::string &sep){
+    string r = "([\\-\\d]+)"+sep+"(\\d+)"+sep+"([\\.\\d]+)";  //ra portion of regex
+    r = r+sep+"([\\-\\d]+)"+sep+"(\\d+)"+sep+"([\\.\\d]+)";       //dec portion of regex
+    
+    const boost::regex reg(r);
+    boost::smatch what;
+
+    if( ! boost::regex_search(str, what, reg) ) {
+        string err = boost::str(boost::format("Error parsing ra/dec string  %s")%str);
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, str);
+    }
+
+
+    string hr = boost::lexical_cast<string>(what[1]);
+    string mn = boost::lexical_cast<string>(what[2]);
+    string sc = boost::lexical_cast<string>(what[3]);
+    cout << hr << " " << mn << " " << sc << endl;
+    string raStr = boost::str(boost::format("%s:%s:%s") % hr % mn % sc);
+    double ra = strToRa(raStr);
+
+    string deg = boost::lexical_cast<string>(what[4]);
+    mn = boost::lexical_cast<string>(what[5]);
+    sc = boost::lexical_cast<string>(what[6]);
+    cout << deg << " " << mn << " " << sc << endl;
+    string decStr = boost::str(boost::format("%s:%s:%s") % deg % mn % sc);
+    double dec = strToDec(decStr);
+
+    return lsst::afw::image::PointD(ra, dec);
+                              
+}                            
+
             
 }}}
