@@ -102,7 +102,7 @@ boost::shared_ptr<lsst::afw::math::SeparableKernel> lsst::afw::math::makeWarping
  * * The image and variance are set to 0
  * * The mask is set to the EDGE bit (if found, else 0).
  *
- * \return the number valid pixels in destExposure (thost that are not off the edge).
+ * \return the number of valid pixels in destExposure (those that are not off the edge).
  *
  * Algorithm:
  *
@@ -229,6 +229,14 @@ int afwMath::warpExposure(
             std::vector<double> srcFracInd(2);
             int srcIndX = afwImage::positionToIndex(srcFracInd[0], srcPosXY[0]) - kernelCtrX;
             int srcIndY = afwImage::positionToIndex(srcFracInd[1], srcPosXY[1]) - kernelCtrY;
+            if (srcFracInd[0] < 0) {
+                ++srcFracInd[0];
+                --srcIndX;
+            }
+            if (srcFracInd[1] < 0) {
+                ++srcFracInd[1];
+                --srcIndY;
+            }
           
             // If location is too near the edge of the source, or off the source, mark the dest as edge
             if ((srcIndX < 0) || (srcIndX + kernelWidth > srcWidth) 
@@ -237,10 +245,11 @@ int afwMath::warpExposure(
                 *destXIter = edgePixel;
             } else {
                 ++numGoodPixels;
-    
+                    
                 // Compute warped pixel
                 warpingKernel.setKernelParameters(srcFracInd);
                 double kSum = warpingKernel.computeVectors(kernelXList, kernelYList, false);
+
                 typename SrcMaskedImageT::const_xy_locator srcLoc = srcMI.xy_at(srcIndX, srcIndY);
                 *destXIter = afwMath::convolveAtAPoint<DestMaskedImageT, SrcMaskedImageT>(srcLoc, kernelXList, kernelYList);
     

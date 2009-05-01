@@ -134,16 +134,16 @@ void afwForm::KernelFormatter::write(
     dafPersist::Storage::Ptr storage,
     dafBase::PropertySet::Ptr additionalData) {
     execTrace("KernelFormatter write start");
-    afwMath::Kernel const* ps =
+    afwMath::Kernel const* kp =
         dynamic_cast<afwMath::Kernel const*>(persistable);
-    if (ps == 0) {
+    if (kp == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Persisting non-Kernel");
     }
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
         execTrace("KernelFormatter write BoostStorage");
         dafPersist::BoostStorage* boost =
             dynamic_cast<dafPersist::BoostStorage*>(storage.get());
-        boost->getOArchive() & ps;
+        boost->getOArchive() & kp;
         execTrace("KernelFormatter write end");
         return;
     }
@@ -151,7 +151,7 @@ void afwForm::KernelFormatter::write(
         execTrace("KernelFormatter write XmlStorage");
         dafPersist::XmlStorage* xml =
             dynamic_cast<dafPersist::XmlStorage*>(storage.get());
-        xml->getOArchive() & make_nvp("ptr", ps);
+        xml->getOArchive() & make_nvp("ptr", kp);
         execTrace("KernelFormatter write end");
         return;
     }
@@ -161,22 +161,22 @@ void afwForm::KernelFormatter::write(
 dafBase::Persistable* afwForm::KernelFormatter::read(
     dafPersist::Storage::Ptr storage, dafBase::PropertySet::Ptr additionalData) {
     execTrace("KernelFormatter read start");
-    afwMath::Kernel* ps;
+    afwMath::Kernel* kp;
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
         execTrace("KernelFormatter read BoostStorage");
         dafPersist::BoostStorage* boost =
             dynamic_cast<dafPersist::BoostStorage*>(storage.get());
-        boost->getIArchive() & ps;
+        boost->getIArchive() & kp;
         execTrace("KernelFormatter read end");
-        return ps;
+        return kp;
     }
     else if (typeid(*storage) == typeid(dafPersist::XmlStorage)) {
         execTrace("KernelFormatter read XmlStorage");
         dafPersist::XmlStorage* xml =
             dynamic_cast<dafPersist::XmlStorage*>(storage.get());
-        xml->getIArchive() & make_nvp("dataProperty", ps);
+        xml->getIArchive() & make_nvp("ptr", kp);
         execTrace("KernelFormatter read end");
-        return ps;
+        return kp;
     }
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unrecognized Storage for Kernel");
 }
@@ -197,19 +197,19 @@ template <class Archive>
 void afwForm::KernelFormatter::delegateSerialize(
     Archive& ar, unsigned int const version, dafBase::Persistable* persistable) {
     execTrace("KernelFormatter delegateSerialize start");
-    afwMath::Kernel* ps =
+    afwMath::Kernel* kp =
         dynamic_cast<afwMath::Kernel*>(persistable);
-    if (ps == 0) {
+    if (kp == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Serializing non-Kernel");
     }
     ar & make_nvp("base",
-                  boost::serialization::base_object<dafBase::Persistable>(*ps));
-    ar & make_nvp("width", ps->_width);
-    ar & make_nvp("height", ps->_height);
-    ar & make_nvp("ctrX", ps->_ctrX);
-    ar & make_nvp("ctrY", ps->_ctrY);
-    ar & make_nvp("nParams", ps->_nKernelParams);
-    ar & make_nvp("spatialFunctionList", ps->_spatialFunctionList);
+                  boost::serialization::base_object<dafBase::Persistable>(*kp));
+    ar & make_nvp("width", kp->_width);
+    ar & make_nvp("height", kp->_height);
+    ar & make_nvp("ctrX", kp->_ctrX);
+    ar & make_nvp("ctrY", kp->_ctrY);
+    ar & make_nvp("nParams", kp->_nKernelParams);
+    ar & make_nvp("spatialFunctionList", kp->_spatialFunctionList);
                   
     execTrace("KernelFormatter delegateSerialize end");
 }

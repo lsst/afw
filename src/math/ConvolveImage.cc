@@ -204,11 +204,15 @@ void afwMath::basicConvolve(
     // dispatch the correct version of basicConvolve. The case that fails is convolving with a kernel
     // obtained from a pointer or reference to a Kernel (base class), e.g. as used in linearCombinationKernel.
     if (dynamic_cast<afwMath::DeltaFunctionKernel const*>(&kernel) != NULL) {
+        pexLog::TTrace<4>("lsst.afw.kernel.convolve",
+            "generic basicConvolve: dispatch to DeltaFunctionKernel basicConvolve");
         afwMath::basicConvolve(convolvedImage, inImage,
             *dynamic_cast<afwMath::DeltaFunctionKernel const*>(&kernel),
             doNormalize);
         return;
     } else if (dynamic_cast<afwMath::SeparableKernel const*>(&kernel) != NULL) {
+        pexLog::TTrace<4>("lsst.afw.kernel.convolve",
+            "generic basicConvolve: dispatch to SeparableKernel basicConvolve");
         afwMath::basicConvolve(convolvedImage, inImage,
             *dynamic_cast<afwMath::SeparableKernel const*>(&kernel),
             doNormalize);
@@ -220,7 +224,7 @@ void afwMath::basicConvolve(
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, "convolvedImage not the same size as inImage");
     }
     if (inImage.getDimensions() < kernel.getDimensions()) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException,"inImage smaller than kernel in columns and/or rows");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "inImage smaller than kernel in columns and/or rows");
     }
     
     int const inImageWidth = inImage.getWidth();
@@ -237,7 +241,7 @@ void afwMath::basicConvolve(
     KernelImage kernelImage(kernel.getDimensions()); // the kernel at a point
 
     if (kernel.isSpatiallyVarying()) {
-        pexLog::TTrace<3>("lsst.afw.kernel.convolve", "kernel is spatially varying");
+        pexLog::TTrace<3>("lsst.afw.kernel.convolve", "generic basicConvolve: kernel is spatially varying");
 
         for (int cnvY = cnvStartY; cnvY != cnvEndY; ++cnvY) {
             double const rowPos = afwImage::indexToPosition(cnvY);
@@ -256,7 +260,7 @@ void afwMath::basicConvolve(
             }
         }
     } else {
-        pexLog::TTrace<3>("lsst.afw.kernel.convolve", "kernel is spatially invariant");
+        pexLog::TTrace<3>("lsst.afw.kernel.convolve", "generic basicConvolve: kernel is spatially invariant");
         (void)kernel.computeImage(kernelImage, doNormalize);
         
         for (int inStartY = 0, cnvY = cnvStartY; inStartY < cnvHeight; ++inStartY, ++cnvY) {
@@ -306,7 +310,7 @@ void afwMath::basicConvolve(
     int const inStartX = kernel.getPixel().first;
     int const inStartY = kernel.getPixel().second;
 
-    pexLog::TTrace<3>("lsst.afw.kernel.convolve", "kernel is a spatially invariant delta function basis");
+    pexLog::TTrace<3>("lsst.afw.kernel.convolve", "DeltaFunctionKernel basicConvolve");
 
     for (int i = 0; i < cnvHeight; ++i) {
         typename InImageT::x_iterator inPtr = inImage.x_at(inStartX, i +  inStartY);
@@ -358,7 +362,8 @@ void afwMath::basicConvolve(
     KernelVector kYVec(kHeight);
     
     if (kernel.isSpatiallyVarying()) {
-        pexLog::TTrace<3>("lsst.afw.kernel.convolve", "kernel is a spatially varying separable kernel");
+        pexLog::TTrace<3>("lsst.afw.kernel.convolve",
+            "SeparableKernel basicConvolve: kernel is spatially varying");
 
         for (int cnvY = cnvStartY; cnvY != cnvEndY; ++cnvY) {
             double const rowPos = afwImage::indexToPosition(cnvY);
@@ -379,7 +384,8 @@ void afwMath::basicConvolve(
         }
     } else {
         // kernel is spatially invariant
-        pexLog::TTrace<3>("lsst.afw.kernel.convolve", "kernel is a spatially invariant separable kernel");
+        pexLog::TTrace<3>("lsst.afw.kernel.convolve",
+            "SeparableKernel basicConvolve: kernel is spatially invariant");
 
         kernel.computeVectors(kXVec, kYVec, doNormalize);
         KernelIterator const kXVecBegin = kXVec.begin();
@@ -450,11 +456,15 @@ void afwMath::convolve(
     // dispatch the correct version of convolve
     if (dynamic_cast<afwMath::LinearCombinationKernel const*>(&kernel) != NULL) {
         if (kernel.isSpatiallyVarying()) {
+            pexLog::TTrace<4>("lsst.afw.kernel.convolve",
+                "convolve: dispatch spatially varying LinearCombinationKernel to convolveLinear");
             afwMath::convolveLinear(convolvedImage, inImage,
                                     *dynamic_cast<afwMath::LinearCombinationKernel const*>(&kernel),
                                     edgeBit);
             return;
         }
+        pexLog::TTrace<4>("lsst.afw.kernel.convolve",
+            "convolve: handle spatially invariant LinearCombinationKernel here");
     }
     
     afwMath::basicConvolve(convolvedImage, inImage, kernel, doNormalize);
@@ -491,8 +501,11 @@ void afwMath::convolveLinear(
                     ///< if negative (default) then no bit is set; only relevant for MaskedImages
                                     ) {
     if (!kernel.isSpatiallyVarying()) {
+        pexLog::TTrace<4>("lsst.afw.kernel.convolve",
+            "convolveLinear: dispatch spatially invariant LinearCombinationKernel to convolve");
         return afwMath::convolve(convolvedImage, inImage, kernel, false, edgeBit);
     }
+    pexLog::TTrace<3>("lsst.afw.kernel.convolve", "convolveLinear: LinearCombinationKernel is spatially varying");
 
     if (convolvedImage.getDimensions() != inImage.getDimensions()) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, "convolvedImage not the same size as inImage");

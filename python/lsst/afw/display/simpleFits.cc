@@ -335,7 +335,8 @@ namespace lsst { namespace afw { namespace display {
 template<typename ImageT>
 void writeBasicFits(int fd,                                      // file descriptor to write to
                     ImageT const& data,                          // The data to write
-                    image::Wcs const* Wcs                        // which Wcs to use for pixel
+                    image::Wcs const* Wcs,                       // which Wcs to use for pixel
+                    char const *title                            // title to write to DS9
                    ) {
     /*
      * Allocate cards for FITS headers
@@ -379,6 +380,10 @@ void writeBasicFits(int fd,                                      // file descrip
     cards.push_back(Card(str(boost::format("CTYPE1%s") % wcsName), "LINEAR", "Type of projection"));
     cards.push_back(Card(str(boost::format("CUNIT1%s") % wcsName), "PIXEL", "Column unit"));
     cards.push_back(Card(str(boost::format("CUNIT2%s") % wcsName), "PIXEL", "Row unit"));
+
+    if (title) {
+        cards.push_back(Card("OBJECT", title, "Image being displayed"));
+    }
     /*
      * Was there something else?
      */
@@ -437,7 +442,8 @@ void writeBasicFits(int fd,                                      // file descrip
 template<typename ImageT>
 void writeBasicFits(std::string const& filename,                 // file to write, or "| cmd"
                     ImageT const& data,                          // The data to write
-                    image::Wcs const* Wcs                        // which Wcs to use for pixel
+                    image::Wcs const* Wcs,                       // which Wcs to use for pixel
+                    char const* title                            // title to write to DS9
                    ) {
     int fd;
     if ((filename.c_str())[0] == '|') {		// a command
@@ -457,7 +463,7 @@ void writeBasicFits(std::string const& filename,                 // file to writ
     }
 
     try {
-        writeBasicFits(fd, data, Wcs);
+        writeBasicFits(fd, data, Wcs, title);
     } catch(lsst::pex::exceptions::Exception &) {
         (void)close(fd);
         throw;
@@ -467,8 +473,8 @@ void writeBasicFits(std::string const& filename,                 // file to writ
 }
 
 #define INSTANTIATE(IMAGET)                                            \
-    template void writeBasicFits(int,                IMAGET const&, image::Wcs const *); \
-    template void writeBasicFits(std::string const&, IMAGET const&, image::Wcs const *)
+    template void writeBasicFits(int,                IMAGET const&, image::Wcs const *, char const *); \
+    template void writeBasicFits(std::string const&, IMAGET const&, image::Wcs const *, char const *)
 
 #define INSTANTIATE_IMAGE(T) INSTANTIATE(lsst::afw::image::Image<T>)
 #define INSTANTIATE_MASK(T)  INSTANTIATE(lsst::afw::image::Mask<T>)
