@@ -435,16 +435,14 @@ bool image::Mask<MaskPixelT>::operator()(int x, int y, int plane) const {
 // is equivalent to
 //    transform_pixels(_getRawView(), _getRawView(), std::bind2nd(std::plus<PixelT>(), val));
 //
-using boost::lambda::ret;
-using boost::lambda::_1;
-using boost::lambda::_2;
+namespace bl = boost::lambda;
 
 /**
  * @brief OR a bitmask into a Mask
  */
 template<typename MaskPixelT>
 void image::Mask<MaskPixelT>::operator|=(const MaskPixelT val) {
-    transform_pixels(_getRawView(), _getRawView(), ret<MaskPixelT>(_1 | val));
+    transform_pixels(_getRawView(), _getRawView(), bl::ret<MaskPixelT>(bl::_1 | val));
 }
 
 /**
@@ -459,7 +457,7 @@ void image::Mask<MaskPixelT>::operator|=(const Mask& rhs) {
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
-    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<MaskPixelT>(_1 | _2));
+    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), bl::ret<MaskPixelT>(bl::_1 | bl::_2));
 }
 
 /**
@@ -467,7 +465,7 @@ void image::Mask<MaskPixelT>::operator|=(const Mask& rhs) {
  */
 template<typename MaskPixelT>
 void image::Mask<MaskPixelT>::operator&=(const MaskPixelT val) {
-    transform_pixels(_getRawView(), _getRawView(), ret<MaskPixelT>(_1 & val));
+    transform_pixels(_getRawView(), _getRawView(), bl::ret<MaskPixelT>(bl::_1 & val));
 }
 
 /**
@@ -482,7 +480,7 @@ void image::Mask<MaskPixelT>::operator&=(const Mask& rhs) {
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
-    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<MaskPixelT>(_1 & _2));
+    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), bl::ret<MaskPixelT>(bl::_1 & bl::_2));
 }
 
 /**
@@ -490,7 +488,7 @@ void image::Mask<MaskPixelT>::operator&=(const Mask& rhs) {
  */
 template<typename MaskPixelT>
 void image::Mask<MaskPixelT>::operator^=(const MaskPixelT val) {
-    transform_pixels(_getRawView(), _getRawView(), ret<MaskPixelT>(_1 ^ val));
+    transform_pixels(_getRawView(), _getRawView(), bl::ret<MaskPixelT>(bl::_1 ^ val));
 }
 
 /**
@@ -505,7 +503,7 @@ void image::Mask<MaskPixelT>::operator^=(const Mask& rhs) {
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
-    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), ret<MaskPixelT>(_1 ^ _2));
+    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), bl::ret<MaskPixelT>(bl::_1 ^ bl::_2));
 }
 
 /**
