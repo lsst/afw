@@ -78,7 +78,7 @@ public :
     double  getValY1() const { return _valY1; }
     double  getValY2() const { return _valY2; }
     double  getValXY() const { return _valXY; }
-    char    getObsCode() const { return _obsCode; }
+    std::string getObsCode() const { return _obsCode; }
     char    isSynthetic() const { return _isSynthetic; }
     char    getMopsStatus() const { return _mopsStatus; }
     boost::int64_t  getFlagClassification() const { return _flagClassification; }
@@ -116,7 +116,7 @@ public :
     void setValXY(double  const valXY) {
         set(_valXY, valXY);
     }         
-    void setObsCode(char  const obsCode) {
+    void setObsCode(std::string const& obsCode) {
         set(_obsCode, obsCode, OBS_CODE);
     }   
     void setIsSynthetic(char const isSynthetic) {
@@ -166,7 +166,7 @@ private :
     double  _valXY;
     float   _refFlux;
     boost::int32_t _scId;
-    char    _obsCode;
+    std::string _obsCode;
     char    _isSynthetic;
     char    _mopsStatus;
 
