@@ -166,7 +166,7 @@ void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
             lsst::afw::formatters::WcsFormatter::generatePropertySet(*(ip->_wcs));
 
         // Get the image headers.
-        lsst::daf::base::PropertySet::Ptr dp = ip->getMaskedImage().getMetadata();
+        lsst::daf::base::PropertySet::Ptr dp = ip->getMetadata();
         if (!dp) {
             throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                               "Unable to retrieve metadata from MaskedImage's Image");
@@ -193,9 +193,9 @@ void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
 
         int ampId = extractAmpId(additionalData);
         // int ccdId = extractCcdId(additionalData);
-        int64_t fpaExposureId = extractFpaExposureId(additionalData);
-        int64_t ccdExposureId = extractCcdExposureId(additionalData);
-        int64_t ampExposureId = extractAmpExposureId(additionalData);
+        int64_t fpaExposureId = extractFpaExposureId(dp);
+        int64_t ccdExposureId = extractCcdExposureId(dp);
+        int64_t ampExposureId = extractAmpExposureId(dp);
 
         if (tableName == "Raw_Amp_Exposure") {
             db->setColumn<long long>("rawAmpExposureId", ampExposureId);
@@ -225,10 +225,19 @@ void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
         setColumn<float, double>(db, "crpix2", wcsProps, "CRPIX2");
         setColumn<double>(db, "crval1", wcsProps, "CRVAL1");
         setColumn<double>(db, "crval2", wcsProps, "CRVAL2");
-        setColumn<double>(db, "cd11", wcsProps, "CD1_1");
-        setColumn<double>(db, "cd21", wcsProps, "CD2_1");
-        setColumn<double>(db, "cd12", wcsProps, "CD1_2");
-        setColumn<double>(db, "cd22", wcsProps, "CD2_2");
+        if (tableName == "Raw_Amp_Exposure") {
+            setColumn<double>(db, "cd11", wcsProps, "CD1_1");
+            setColumn<double>(db, "cd21", wcsProps, "CD2_1");
+            setColumn<double>(db, "cd12", wcsProps, "CD1_2");
+            setColumn<double>(db, "cd22", wcsProps, "CD2_2");
+        }
+        else {
+            setColumn<double>(db, "cd1_1", wcsProps, "CD1_1");
+            setColumn<double>(db, "cd2_1", wcsProps, "CD2_1");
+            setColumn<double>(db, "cd1_2", wcsProps, "CD1_2");
+            setColumn<double>(db, "cd2_2", wcsProps, "CD2_2");
+        }
+
 
         if (tableName == "Science_Amp_Exposure") {
             // Set calibration data columns.
@@ -343,7 +352,7 @@ dafBase::Persistable* afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, Varian
         // Restore image from FITS...
         afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>* ip =
             new afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>(db->getColumnByPos<std::string>(0));
-        lsst::daf::base::PropertySet::Ptr dp = ip->getMaskedImage().getMetadata();
+        lsst::daf::base::PropertySet::Ptr dp = ip->getMetadata();
 
         // Look up the filter name given the ID.
         int filterId = db->getColumnByPos<int>(1);
@@ -381,7 +390,7 @@ void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::delega
     if (ip == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Serializing non-Exposure");
     }
-    ar & *ip->getMaskedImage().getMetadata() & ip->_maskedImage & ip->_wcs;
+    ar & *ip->getMetadata() & ip->_maskedImage & ip->_wcs;
     execTrace("ExposureFormatter delegateSerialize end");
 }
 

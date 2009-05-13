@@ -58,7 +58,7 @@ int64_t extractFpaExposureId(PropertySet::Ptr const & properties) {
         throw LSST_EXCEPT(ex::RuntimeErrorException, "\"fpaExposureId\" property has multiple values");
     }
     int64_t fpaExposureId = properties->getAsInt64("fpaExposureId");
-    if (exposureId < 0) {
+    if (fpaExposureId < 0) {
         throw LSST_EXCEPT(ex::RangeErrorException, "negative \"fpaExposureId\"");
     }
     if ((fpaExposureId & 0xfffffffe00000000LL) != 0LL) {
