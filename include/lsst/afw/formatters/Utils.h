@@ -52,7 +52,7 @@ void dropAllSliceTables(
 );
 
 int extractSliceId(lsst::daf::base::PropertySet::Ptr const& properties);
-int64_t extractExposureId(lsst::daf::base::PropertySet::Ptr const& properties);
+int64_t extractFpaExposureId(lsst::daf::base::PropertySet::Ptr const& properties);
 int64_t extractCcdExposureId(lsst::daf::base::PropertySet::Ptr const& properties);
 int64_t extractAmpExposureId(lsst::daf::base::PropertySet::Ptr const& properties);
 int extractVisitId(lsst::daf::base::PropertySet::Ptr const& properties);

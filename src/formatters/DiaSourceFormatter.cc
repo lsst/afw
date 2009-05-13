@@ -281,7 +281,7 @@ void form::DiaSourceVectorFormatter::insertRow(T & db, DiaSource const & d) {
     db.template setColumn<double>("valxy", d._valXY);        
 
     if (!d.isNull(det::OBS_CODE))
-        db.template setColumn<char>("obsCode", d._obsCode);
+        db.template setColumn<std::string>("obsCode", d._obsCode);
     else db.setColumnToNull("obsCode");
     
     if (!d.isNull(det::IS_SYNTHETIC))
