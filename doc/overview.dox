@@ -44,11 +44,8 @@ and
 %Image Pixels may be accessed via iterators or locators;
 the former are simpler if you want single-pixel access, while the latter provide
 you with access to a pixel's friends and neighbours.
-Annotated
-examples are available for \link imageIterators iterators\endlink and \link imageLocators locators\endlink.
-
-These examples cover Image%s and Mask%s, but
-the code to use MaskedImage%s is pretty similar; see example code in
+Annotated examples are available for
+\link imageIterators Image iterators\endlink, \link imageLocators Image locators\endlink,
 \link maskedImageIterators MaskedImage iterators\endlink and \link maskedImageLocators MaskedImage locators\endlink.
 
 */
@@ -62,9 +59,9 @@ are simpler if you want single-pixel access, while the latter provide
 you with access to a pixel's friends and neighbours.
 
 There are a set of tutorial examples in \ref secPixelAccessTutorial,
-covering access to Image%s and MaskedImage%s using both \link
-imageIterators iterators\endlink and \link imageLocators
-locators\endlink.
+covering access to Image%s and MaskedImage%s:
+\link imageIterators Image iterators\endlink, \link imageLocators Image locators\endlink,
+\link maskedImageIterators MaskedImage iterators\endlink and \link maskedImageLocators MaskedImage locators\endlink.
 
 In the case of MaskedImage's, the user-visible \c iterator%s and
 locator%s (and \c const variants) are derived from MaskedImageIteratorBase

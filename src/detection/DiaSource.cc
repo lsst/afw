@@ -24,7 +24,7 @@ det::DiaSource::DiaSource()
       _valXY(0.0),
       _refFlux(0.0),
       _scId(0),      
-      _obsCode(0),
+      _obsCode(std::string()),
       _isSynthetic(0),
       _mopsStatus(0)
 {

@@ -18,6 +18,7 @@
  * @ingroup afw
  */
 #include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Kernel.h"
 
 namespace lsst {
@@ -77,6 +78,36 @@ namespace math {
         lsst::afw::math::LinearCombinationKernel const& kernel,
         int edgeBit=-1
     );
+    
+    /**
+     * \brief Return an edge pixel appropriate for a given Image type
+     */
+    template <typename ImageT>
+    typename ImageT::SinglePixel edgePixel(
+        lsst::afw::image::detail::Image_tag ///< lsst::afw::image::detail::image_traits<ImageT>::image_category()
+    ) {
+        typedef typename ImageT::SinglePixel SinglePixelT;
+        return SinglePixelT(
+            std::numeric_limits<SinglePixelT>::has_quiet_NaN ?
+                std::numeric_limits<SinglePixelT>::quiet_NaN() : 0);
+    };
+    
+    /**
+     * \brief Return an edge pixel appropriate for a given MaskedImage type
+     */
+    template <typename MaskedImageT>
+    typename MaskedImageT::SinglePixel edgePixel(
+        lsst::afw::image::detail::MaskedImage_tag   ///< lsst::afw::image::detail::image_traits<MaskedImageT>::image_category()
+    ) {
+        typedef typename MaskedImageT::Image::Pixel ImagePixelT;
+        typedef typename MaskedImageT::Variance::Pixel VariancePixelT;
+        
+        return typename MaskedImageT::SinglePixel(
+            std::numeric_limits<ImagePixelT>::has_quiet_NaN ?
+                std::numeric_limits<ImagePixelT>::quiet_NaN() : 0,
+            MaskedImageT::Mask::getPlaneBitMask("EDGE"),
+            std::numeric_limits<VariancePixelT>::infinity());
+    };
 }}}   // lsst::afw::math
 
 /**

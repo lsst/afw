@@ -100,8 +100,15 @@ namespace math {
     int warpExposure(
         DestExposureT &destExposure,
         SrcExposureT const &srcExposure,
-        SeparableKernel &warpingKernel
-        );
+        SeparableKernel &warpingKernel);
+
+    template<typename DestImageT, typename SrcImageT>
+    int warpImage(
+        DestImageT &destImage,
+        lsst::afw::image::Wcs const &destWcs,
+        SrcImageT const &srcImage,
+        lsst::afw::image::Wcs const &srcWcs,
+        SeparableKernel &warpingKernel);
        
 }}} // lsst::afw::math
 
