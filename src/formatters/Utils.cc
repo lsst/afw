@@ -92,7 +92,7 @@ int extractAmpId(PropertySet::Ptr const & properties) {
     if (ampId > 63) {
         throw LSST_EXCEPT(ex::RangeErrorException, "\"ampId\" is too large");
     }
-    return (extractCcdId(properties) << 6) + ampId;
+    return ampId;
 }
 
 int64_t extractCcdExposureId(PropertySet::Ptr const & properties) {

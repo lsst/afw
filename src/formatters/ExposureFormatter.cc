@@ -71,30 +71,43 @@ template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::~ExposureFormatter(void) {
 }
 
-/** Lookup a filter number in the database to find a filter name.
- */
-static std::string lookupFilterName(
-    dafPersist::DbStorage* db,  //!< Database to look in
-    int filterId    //!< Number of filter to lookup
-    ) {
-    db->setTableForQuery("Filter");
-    db->outColumn("filterName");
-    db->condParam<int>("id", filterId);
-    db->setQueryWhere("filterId = :id");
-    db->query();
-    if (!db->next() || db->columnIsNull(0)) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
-                          "Unable to get name for filter id: " + filterId);
-    }
-    std::string filterName = db->getColumnByPos<std::string>(0);
-    if (db->next()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
-                          "Multiple names for filter id: " + filterId);
+class FilterMap {
+public:
+    explicit FilterMap(dafPersist::DbStorage* db);
 
+    int getId(std::string const& filterName) const;
+    std::string getName(int filterId) const;
+
+private:
+    std::tr1::unordered_map<int, std::string> _idToName;
+    std::tr1::unordered_map<std::string, int> _nameToId;
+};
+
+/** Constructor.
+  * \param[in] db Database to look in
+  */
+FilterMap::FilterMap(dafPersist::DbStorage* db) {
+    db->setTableForQuery("Filter");
+    db->outColumn("filterId");
+    db->outColumn("filterName");
+    db->query();
+    while (db->next()) {
+        int filterId = db->getColumnByPos<int>(0);
+        std::string filterName = db->getColumnByPos<std::string>(1);
+        _idToName[filterId] = filterName;
+        _nameToId[filterName] = filterId;
     }
     db->finishQuery();
-    return filterName;
 }
+
+int FilterMap::getId(std::string const& filterName) const {
+    return _nameToId.find(filterName)->second;
+}
+
+std::string FilterMap::getName(int filterId) const {
+    return _idToName.find(filterId)->second;
+}
+
 
 
 /** Set an output column's value from a PropertySet, setting it to NULL if
@@ -160,14 +173,15 @@ void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
     } else if (typeid(*storage) == typeid(dafPersist::DbStorage)) {
         execTrace("ExposureFormatter write DbStorage");
         dafPersist::DbStorage* db = dynamic_cast<dafPersist::DbStorage*>(storage.get());
+        FilterMap filterMap(db);
 
         // Get the Wcs headers.
         lsst::daf::base::PropertySet::Ptr wcsProps =
             lsst::afw::formatters::WcsFormatter::generatePropertySet(*(ip->_wcs));
 
         // Get the image headers.
-        lsst::daf::base::PropertySet::Ptr dp = ip->getMetadata();
-        if (!dp) {
+        lsst::daf::base::PropertySet::Ptr metadata = ip->getMetadata();
+        if (!metadata) {
             throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                               "Unable to retrieve metadata from MaskedImage's Image");
         }
@@ -192,10 +206,11 @@ void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
         // Set the identifier columns.
 
         int ampId = extractAmpId(additionalData);
-        // int ccdId = extractCcdId(additionalData);
-        int64_t fpaExposureId = extractFpaExposureId(dp);
-        int64_t ccdExposureId = extractCcdExposureId(dp);
-        int64_t ampExposureId = extractAmpExposureId(dp);
+        db->setColumn<int>("ampId", ampId);
+
+        int64_t ampExposureId = extractAmpExposureId(metadata);
+        int64_t ccdExposureId = extractCcdExposureId(metadata);
+        int64_t fpaExposureId = extractFpaExposureId(metadata);
 
         if (tableName == "Raw_Amp_Exposure") {
             db->setColumn<long long>("rawAmpExposureId", ampExposureId);
@@ -207,18 +222,25 @@ void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
             db->setColumn<long long>("scienceCCDExposureId", ccdExposureId);
             db->setColumn<long long>("scienceFPAExposureId", fpaExposureId);
             db->setColumn<long long>("rawAmpExposureId", ampExposureId);
-            /// \todo Check that rawCCDExposureId == scienceCCDExposureId --
-            /// KTL -- 2008-01-25
         }
 
-        db->setColumn<int>("ampId", ampId);
+        if (tableName == "Science_Amp_Exposure") {
+            // Set the filterId column
+            int filterId =
+                filterMap.getId(metadata->get<std::string>("filter"));
+            db->setColumn<int>("filterId", filterId);
+
+            setColumn<float, double>(db, "equinox", metadata, "EQUINOX");
+        }
 
         // Set the URL column with the location of the FITS file.
         setColumn<std::string>(db, "url",
                               additionalData, "StorageLocation.FitsStorage");
 
-
         // Set the Wcs information columns.
+        if (tableName == "Raw_Amp_Exposure") {
+            setColumn<std::string>(db, "radecSys", wcsProps, "RADECSYS");
+        }
         setColumn<std::string>(db, "ctype1", wcsProps, "CTYPE1");
         setColumn<std::string>(db, "ctype2", wcsProps, "CTYPE2");
         setColumn<float, double>(db, "crpix1", wcsProps, "CRPIX1");
@@ -238,11 +260,23 @@ void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
             setColumn<double>(db, "cd2_2", wcsProps, "CD2_2");
         }
 
-
-        if (tableName == "Science_Amp_Exposure") {
-            // Set calibration data columns.
-            setColumn<float, double>(db, "photoFlam", dp, "PHOTFLAM");
-            setColumn<float, double>(db, "photoZP", dp, "PHOTZP");
+        if (tableName == "Raw_Amp_Exposure") {
+            db->setColumn<dafBase::DateTime>(
+                "taiObs", dafBase::DateTime(metadata->get<double>("dateObs")));
+            // darkTime? zd?
+        }
+        else {
+            dafBase::DateTime dateObs(metadata->get<double>("dateObs"));
+            db->setColumn<dafBase::DateTime>("dateObs", dateObs);
+            setColumn<float, double>(db, "expTime", metadata, "expTime");
+            // ccdSize?
+            setColumn<float, double>(db, "photoFlam", metadata, "PHOTFLAM");
+            setColumn<float, double>(db, "photoZP", metadata, "PHOTZP");
+            // nCombine?
+            db->setColumn<double>("taiMjd", dateObs.mjd());
+            // binX?  binY?  readNoise?  saturationLimit?
+            // dataSection?
+            setColumn<double>(db, "gain", metadata, "gain");
         }
 
         // Phew!  Insert the row now.
@@ -287,6 +321,7 @@ dafBase::Persistable* afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, Varian
     } else if (typeid(*storage) == typeid(dafPersist::DbStorage)) {
         execTrace("ExposureFormatter read DbStorage");
         dafPersist::DbStorage* db = dynamic_cast<dafPersist::DbStorage*>(storage.get());
+        FilterMap filterMap(db);
 
         // Select a table to retrieve from based on the itemName.
         std::string itemName = additionalData->get<std::string>("itemName");
@@ -316,6 +351,7 @@ dafBase::Persistable* afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, Varian
         }
 
         db->outColumn("url");
+        db->outColumn("filterId");
 
         if (tableName == "Science_Amp_Exposure") {
             // Set the Wcs information columns.
@@ -344,7 +380,6 @@ dafBase::Persistable* afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, Varian
         if (db->next()) {
             throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Non-unique Exposure retrieved");
         }
-        db->finishQuery();
 
         //! \todo Should really have FITS be a separate Storage.
         // - KTL - 2007-11-29
@@ -352,18 +387,19 @@ dafBase::Persistable* afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, Varian
         // Restore image from FITS...
         afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>* ip =
             new afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>(db->getColumnByPos<std::string>(0));
-        lsst::daf::base::PropertySet::Ptr dp = ip->getMetadata();
+        lsst::daf::base::PropertySet::Ptr metadata = ip->getMetadata();
 
         // Look up the filter name given the ID.
         int filterId = db->getColumnByPos<int>(1);
-        std::string filterName = lookupFilterName(db, filterId);
-        dp->set("FILTER", filterName);
+        metadata->set("FILTER", filterMap.getName(filterId));
 
-        // Set the image headers.
-        // Set the Wcs headers in ip->_wcs.
+        // \todo Set the image headers.
+        // \todo Set the Wcs headers in ip->_wcs.
 
         //! \todo Need to implement overwriting of FITS metadata PropertySet
         // with values from database. - KTL - 2007-12-18
+
+        db->finishQuery();
 
         execTrace("ExposureFormatter read end");
         return ip;
