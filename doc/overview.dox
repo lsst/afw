@@ -28,42 +28,34 @@ which are ultimately derived from ImageBase:
 
 \subsection secPixelAccess How to Access Pixels
 
-The LSST %image access is modelled after the boost::gil %image interface; see
+%Image Pixels may be accessed via iterators or locators;
+the former are simpler if you want single-pixel access, while the latter provide
+you with access to a pixel's friends and neighbours. The following tutorials are available:   
+- \link imageIterators Image iterators\endlink
+- \link imageLocators Image locators\endlink
+- \link maskedImageIterators MaskedImage iterators\endlink
+- \link maskedImageLocators MaskedImage locators\endlink
+
+See also \ref secPixelAccessReference. LSST %image access is modelled after the boost::gil %image interface; see
    http://www.boost.org/doc/libs/1_36_0/libs/gil/doc/html/giltutorial.html
 and
    http://www.boost.org/doc/libs/1_36_0/libs/gil/doc/html/gildesignguide.html
-
-- \ref secPixelAccessTutorial
-- \ref secPixelAccessReference
-*/
-
-/**
-\page secPixelAccessTutorial Pixel Access Tutorial and Examples
-\section secPixelAccessTutorial Pixel Access Tutorial and Examples
-
-%Image Pixels may be accessed via iterators or locators;
-the former are simpler if you want single-pixel access, while the latter provide
-you with access to a pixel's friends and neighbours.
-Annotated examples are available for
-\link imageIterators Image iterators\endlink, \link imageLocators Image locators\endlink,
-\link maskedImageIterators MaskedImage iterators\endlink and \link maskedImageLocators MaskedImage locators\endlink.
-
 */
 
 /**
 \addtogroup secPixelAccessReference Pixel Access Reference Manual
 
-%Image Pixels may be accessed via iterators
-or locators; the former
-are simpler if you want single-pixel access, while the latter provide
-you with access to a pixel's friends and neighbours.
+(Return to \ref secImage)
 
-There are a set of tutorial examples in \ref secPixelAccessTutorial,
-covering access to Image%s and MaskedImage%s:
-\link imageIterators Image iterators\endlink, \link imageLocators Image locators\endlink,
-\link maskedImageIterators MaskedImage iterators\endlink and \link maskedImageLocators MaskedImage locators\endlink.
+%Image Pixels may be accessed via iterators or locators;
+the former are simpler if you want single-pixel access, while the latter provide
+you with access to a pixel's friends and neighbours. There are a set of tutorials:
+- \link imageIterators Image iterators\endlink
+- \link imageLocators Image locators\endlink
+- \link maskedImageIterators MaskedImage iterators\endlink
+- \link maskedImageLocators MaskedImage locators\endlink
 
-In the case of MaskedImage's, the user-visible \c iterator%s and
+In the case of MaskedImage, the user-visible \c iterator%s and
 locator%s (and \c const variants) are derived from MaskedImageIteratorBase
 and MaskedImageLocatorBase;  the following documentation refers to these
 base classes.

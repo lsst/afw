@@ -162,7 +162,7 @@ void image::swap(ImageBase<PixelT>& a, ImageBase<PixelT>& b) {
 //
 /// Return an STL compliant iterator to the start of the %image
 ///
-/// Note that this isn't especially efficient; see \link secPixelAccessTutorial\endlink for
+/// Note that this isn't especially efficient; see \link imageIterators\endlink for
 /// a discussion
 template<typename PixelT>
 typename image::ImageBase<PixelT>::iterator image::ImageBase<PixelT>::begin() const {
