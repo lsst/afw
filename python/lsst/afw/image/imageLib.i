@@ -50,7 +50,7 @@ def version(HeadURL = r"$HeadURL$"):
         return version_svn
     else:
         try:
-            version_eups = eups.setup("afw")
+            version_eups = eups.getSetupVersion("afw")
         except AttributeError:
             return version_svn
 

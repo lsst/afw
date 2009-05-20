@@ -71,10 +71,19 @@ class MaskedImageTestCase(unittest.TestCase):
     def testMaskedImageFromImage(self):
         w, h = 10, 20
         im, mask, var = afwImage.ImageF(w, h), afwImage.MaskU(w, h), afwImage.ImageF(w, h)
+        im.set(666)
 
         maskedImage = afwImage.MaskedImageF(im, mask, var)
 
         maskedImage = afwImage.makeMaskedImage(im, mask, var)
+
+        maskedImage = afwImage.MaskedImageF(im)
+        self.assertEqual(im.getDimensions(), maskedImage.getImage().getDimensions())
+        self.assertEqual(maskedImage.getImage().get(0, 0), im.get(0,0))
+        self.assertEqual(im.getDimensions(), maskedImage.getMask().getDimensions())
+        self.assertEqual(maskedImage.getMask().get(0, 0), 0x0)
+        self.assertEqual(im.getDimensions(), maskedImage.getVariance().getDimensions())
+        self.assertEqual(maskedImage.getVariance().get(0, 0), 0.0)
 
     def testCopyMaskedImage(self):
         """Test copy constructor"""
@@ -113,15 +122,6 @@ class MaskedImageTestCase(unittest.TestCase):
 
         self.assertEqual(self.mimage.get(0,0), val00)
         self.assertEqual(mi.get(0,0), nval00)
-        #
-        # Mask or Variance is not set
-        #
-        im = afwImage.ImageF(10, 20)
-        mi = afwImage.makeMaskedImage(im)
-
-        def tst(mi):
-            mi2 = mi.Factory(mi, True)
-        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.RuntimeErrorException, tst, mi)
 
     def testAddImages(self):
         "Test addition"

@@ -209,8 +209,22 @@ protected:
             if (fits_create_file(&_fd_s, filename.c_str(), &status) != 0) {
                 throw LSST_EXCEPT(FitsException, cfitsio::err_msg(filename, status));
             }
+        } else if (flags == "a" || flags == "ab") {
+            int status = 0;
+            if (fits_open_file(&_fd_s, filename.c_str(), READWRITE, &status) != 0) {
+                throw LSST_EXCEPT(FitsException, cfitsio::err_msg(filename, status));
+            }
+            /*
+             * Seek to end of the file
+             */
+            int nHdu = 0;
+            if (fits_get_num_hdus(_fd_s, &nHdu, &status) != 0 ||
+                fits_movabs_hdu(_fd_s, nHdu, NULL, &status) != 0) {
+                (void)cfitsio::fits_close_file(_fd_s, &status);
+                throw LSST_EXCEPT(FitsException, cfitsio::err_msg(filename, status));
+            }
         } else {
-            abort();
+            throw LSST_EXCEPT(FitsException, "Unknown mode " + flags);
         }
 
         _fd = boost::shared_ptr<FD>(_fd_s, close_cfitsio());
@@ -356,7 +370,7 @@ class fits_writer : public fits_file_mgr {
     }
 public:
     fits_writer(cfitsio::fitsfile *file) :     fits_file_mgr(file)           { init(); }
-    fits_writer(std::string const& filename) : fits_file_mgr(filename, "wb") { init(); }
+    fits_writer(std::string const& filename, std::string const&mode) : fits_file_mgr(filename, mode) { init(); }
     ~fits_writer() { }
     
     template <typename View>

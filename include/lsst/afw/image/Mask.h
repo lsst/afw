@@ -89,7 +89,7 @@ namespace image {
         // I/O and FITS metadata
         
         //void readFits(const std::string& fileName, bool conformMasks=false, int hdu=0); // replaced by constructor
-        void writeFits(std::string const& fileName) const;
+        void writeFits(std::string const& fileName, std::string const& mode="w") const;
         
         // Mask Plane ops
         

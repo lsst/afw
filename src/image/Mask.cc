@@ -209,7 +209,7 @@ image::Mask<MaskPixelT>::Mask(std::string const& fileName, //!< Name of file to 
 }
 
 template<typename MaskPixelT>
-void image::Mask<MaskPixelT>::writeFits(std::string const& fileName) const {
+void image::Mask<MaskPixelT>::writeFits(std::string const& fileName, std::string const& mode) const {
     PropertySet::Ptr metadata(new PropertySet());
     addMaskPlanesToMetadata(metadata);
     //
@@ -219,7 +219,7 @@ void image::Mask<MaskPixelT>::writeFits(std::string const& fileName) const {
                                                                                  this->getX0(), this->getY0());
     metadata->combine(wcsAMetadata);
     
-    image::fits_write_view(fileName, _getRawView(), metadata);
+    image::fits_write_view(fileName, _getRawView(), metadata, mode);
 }
 
 template<typename MaskPixelT>

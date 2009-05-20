@@ -439,8 +439,9 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
  */
 template<typename PixelT>
 void image::Image<PixelT>::writeFits(
-	std::string const& fileName,    ///< File to write
-        lsst::daf::base::PropertySet::Ptr metadata //!< metadata to write to header; or NULL
+	std::string const& fileName,                ///< File to write
+        lsst::daf::base::PropertySet::Ptr metadata, //!< metadata to write to header; or NULL
+        std::string const& mode                     //!< "w" to write a new file; "a" to append
                                     ) const {
     using lsst::daf::base::PropertySet;
 
@@ -454,7 +455,7 @@ void image::Image<PixelT>::writeFits(
         metadata = wcsAMetadata;
     }
 
-    image::fits_write_view(fileName, _getRawView(), metadata);
+    image::fits_write_view(fileName, _getRawView(), metadata, mode);
 }
 
 /************************************************************************************************************/

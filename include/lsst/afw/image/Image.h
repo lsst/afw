@@ -170,14 +170,16 @@ namespace image {
         /**
          * Return the %image's column-origin
          *
-         * This will usually be 0 except for images created using the <tt>ImageBase(ImageBase, BBox)</tt> cctor
+         * This will usually be 0 except for images created using the
+         * <tt>ImageBase(fileName, hdu, BBox, mode)</tt> ctor or <tt>ImageBase(ImageBase, BBox)</tt> cctor
          * The origin can be reset with \c setXY0
          */
         int getX0() const { return _x0; }
         /**
          * Return the %image's row-origin
          *
-         * This will usually be 0 except for images created using the <tt>ImageBase(ImageBase, BBox)</tt> cctor
+         * This will usually be 0 except for images created using the
+         * <tt>ImageBase(fileName, hdu, BBox, mode)</tt> ctor or <tt>ImageBase(ImageBase, BBox)</tt> cctor
          * The origin can be reset with \c setXY0
          */
         int getY0() const { return _y0; }
@@ -185,7 +187,8 @@ namespace image {
         /**
          * Return the %image's origin
          *
-         * This will usually be (0, 0) except for images created using the <tt>ImageBase(ImageBase, BBox)</tt> cctor
+         * This will usually be (0, 0) except for images created using the
+         * <tt>ImageBase(fileName, hdu, BBox, mode)</tt> ctor or <tt>ImageBase(ImageBase, BBox)</tt> cctor
          * The origin can be reset with \c setXY0
          */
         PointI getXY0() const { return PointI(_x0, _y0); }
@@ -344,7 +347,9 @@ namespace image {
 
         //void readFits(std::string const& fileName, ...); // replaced by constructor
         void writeFits(std::string const& fileName,
-            lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr()) const;
+                       lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
+                       std::string const& mode="w"
+                      ) const;
 
         void swap(Image &rhs);
         //
@@ -413,7 +418,9 @@ namespace image {
         
         //void readFits(std::string const& fileName, ...); // replaced by constructor
         void writeFits(std::string const& fileName,
-            lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr()) const;
+                       lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
+                       std::string const& mode="w"
+                      ) const;
         
         /// Return a shared_ptr to the DecoratedImage's Image
         ImagePtr      getImage()       { return _image; }

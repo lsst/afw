@@ -87,11 +87,12 @@ inline void fits_read_image(const std::string& filename, Image& im,
 /// Throws lsst::afw::image::FitsException if it fails to create the file.
 template <typename View>
 inline void fits_write_view(const std::string& filename, const View& view,
-                            lsst::daf::base::PropertySet::Ptr metadata = lsst::daf::base::PropertySet::Ptr()
+                            lsst::daf::base::PropertySet::Ptr metadata = lsst::daf::base::PropertySet::Ptr(),
+                            std::string const& mode="w"
                            ) {
     BOOST_STATIC_ASSERT(fits_read_support<View>::is_supported);
 
-    detail::fits_writer m(filename);
+    detail::fits_writer m(filename, mode);
     m.apply(view, metadata);
 }
 

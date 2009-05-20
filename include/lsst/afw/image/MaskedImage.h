@@ -30,6 +30,8 @@ namespace image {
         struct MaskedImage_tag : basic_tag { };
         /// A class used to identify classes that represent MaskedImage pixels
         struct MaskedImagePixel_tag { };
+
+        std::string const fitsFileRE = "\\.fits$"; /// regexp to identify when MaskedImages should be written as MEF
     }
 }}}
 
@@ -675,7 +677,10 @@ namespace image {
         static std::string varianceFileName(std::string const& baseName) { return baseName + "_var.fits"; }
 
         void writeFits(std::string const& baseName,
-              lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr()) const;
+                       lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
+                       std::string const& mode="w",
+                       bool const writeMef=false
+                      ) const;
         
         // Getters
         /// Return a (Ptr to) the MaskedImage's %image
@@ -708,14 +713,16 @@ namespace image {
         /**
          * Return the %image's row-origin
          *
-         * This will usually be 0 except for images created using the <tt>ImageBase(ImageBase, BBox)</tt> cctor
+         * This will usually be 0 except for images created using the
+         * <tt>MaskedImage(fileName, hdu, BBox, mode)</tt> ctor or <tt>MaskedImage(ImageBase, BBox)</tt> cctor
          * The origin can be reset with setXY0()
          */
         int getX0() const { return _image->getX0(); }
         /**
          * Return the %image's column-origin
          *
-         * This will usually be 0 except for images created using the <tt>ImageBase(ImageBase, BBox)</tt> cctor
+         * This will usually be 0 except for images created using the
+         * <tt>MaskedImage(fileName, hdu, BBox, mode)</tt> ctor or <tt>MaskedImage(ImageBase, BBox)</tt> cctor
          * The origin can be reset with setXY0()
          */
         int getY0() const { return _image->getY0(); }
@@ -723,7 +730,8 @@ namespace image {
         /**
          * Return the %image's origin
          *
-         * This will usually be (0, 0) except for images created using the <tt>ImageBase(ImageBase, BBox)</tt> cctor
+         * This will usually be (0, 0) except for images created using the
+         * <tt>MaskedImage(fileName, hdu, BBox, mode)</tt> ctor or <tt>MaskedImage(ImageBase, BBox)</tt> cctor
          * The origin can be reset with \c setXY0
          */
         PointI getXY0() const { return _image->getXY0(); }

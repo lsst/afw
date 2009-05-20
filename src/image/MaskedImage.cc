@@ -6,6 +6,8 @@
 #include <typeinfo>
 #include <sys/stat.h>
 #include "boost/lambda/lambda.hpp"
+#include "boost/regex.hpp"
+#include "boost/filesystem/path.hpp"
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/pex/exceptions.h"
 
@@ -58,6 +60,10 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
 /**
  * \brief Construct from an HDU in a FITS file.  Set metadata if it isn't a NULL pointer
  *
+ * @note If baseName doesn't exist and ends ".fits" it's taken to be a single MEF file, with data, mask, and
+ * variance in three successive HDUs; otherwise it's taken to be the basename of three separate files,
+ * imageFileName(baseName), maskFileName(baseName), and varianceFileName(baseName)
+ *
  * @note We use FITS numbering, so the first HDU is HDU 1, not 0 (although we politely interpret 0 as meaning
  * the first HDU, i.e. HDU 1).  I.e. if you have a PDU, the numbering is thus [PDU, HDU2, HDU3, ...]
  */
@@ -70,10 +76,36 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
         bool const conformMasks         //!< Make Mask conform to mask layout in file?
                                                                         ) :
     lsst::daf::data::LsstBase(typeid(this)),
-    _image(new Image(MaskedImage::imageFileName(baseName), hdu, metadata, bbox)),
-    _mask(new Mask(MaskedImage::maskFileName(baseName), hdu, metadata, bbox, conformMasks)),
-    _variance(new Variance(MaskedImage::varianceFileName(baseName), hdu, metadata, bbox)) {
-    ;
+    _image(), _mask(), _variance() {
+
+    bool isMef = boost::regex_search(baseName, boost::regex(image::detail::fitsFileRE)); // looks like an MEF file
+    //
+    // If foo.fits doesn't exist, revert to old behaviour and read foo.fits_{img,msk,var}.fits;
+    // contrariwise, if foo_img.fits doesn't exist but foo does, read it as an MEF file
+    //
+    if (isMef) {
+        if (!boost::filesystem::exists(baseName) &&
+            boost::filesystem::exists(MaskedImage::imageFileName(baseName))) {
+            isMef = false;
+        }
+    } else {
+        if (boost::filesystem::exists(baseName) &&
+            !boost::filesystem::exists(MaskedImage::imageFileName(baseName))) {
+            isMef = true;
+        }
+    }
+
+    if (isMef) {
+        const int real_hdu = (hdu == 0) ? 1 : hdu; // see notes about HDU==0 being interpreted as HDU==1,
+        ;                                          // but we have to do it here as we'll be adding 1 and 2
+        _image = typename Image::Ptr(new Image(baseName, real_hdu, metadata, bbox));
+        _mask = typename Mask::Ptr(new Mask(baseName, real_hdu + 1, metadata, bbox, conformMasks));
+        _variance = typename Variance::Ptr(new Variance(baseName, real_hdu + 2, metadata, bbox));
+    } else {
+        _image = typename Image::Ptr(new Image(MaskedImage::imageFileName(baseName), hdu, metadata, bbox));
+        _mask = typename Mask::Ptr(new Mask(MaskedImage::maskFileName(baseName), hdu, metadata, bbox, conformMasks));
+        _variance = typename Variance::Ptr(new Variance(MaskedImage::varianceFileName(baseName), hdu, metadata, bbox));
+    }
 }
 
 /**
@@ -389,12 +421,22 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator/=(Ima
         
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
-	std::string const& baseName,    ///< The desired file's baseName (e.g. foo will read foo_{img.msk.var}.fits)
-        lsst::daf::base::PropertySet::Ptr metadata ///< Metadata to write to file; or NULL
+	std::string const& baseName,    ///< The desired file's baseName (e.g. foo will read foo_{img.msk.var}.fits),
+                                       ///< unless file's has a .fits suffix (or you set writeMef to true)
+        lsst::daf::base::PropertySet::Ptr metadata, ///< Metadata to write to file; or NULL
+        std::string const& mode,                    //!< "w" to write a new file; "a" to append
+        bool const writeMef                         ///< should I write an MEF file, even if basename doesn't look like a fully qualified FITS file
     ) const {
-    _image->writeFits(MaskedImage::imageFileName(baseName), metadata);
-    _mask->writeFits(MaskedImage::maskFileName(baseName));
-    _variance->writeFits(MaskedImage::varianceFileName(baseName));
+    if (writeMef ||
+        boost::regex_search(baseName, boost::regex(image::detail::fitsFileRE))) { // write an MEF if they call it *.fits"
+        _image->writeFits(baseName, metadata, mode);
+        _mask->writeFits(baseName, "a");
+        _variance->writeFits(baseName, lsst::daf::base::PropertySet::Ptr(), "a");
+    } else {
+        _image->writeFits(MaskedImage::imageFileName(baseName), metadata, mode);
+        _mask->writeFits(MaskedImage::maskFileName(baseName), mode);
+        _variance->writeFits(MaskedImage::varianceFileName(baseName), lsst::daf::base::PropertySet::Ptr(), mode);
+    }
 }
         
 /************************************************************************************************************/
@@ -404,38 +446,34 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::conformSizes() {
-    int const imageCols = _image->getWidth();
-    int const imageRows = _image->getHeight();
+    int const imageWidth = _image->getWidth();
+    int const imageHeight = _image->getHeight();
 
-    if (_mask.get()) {
+    if (!_mask.get() || _mask->getWidth() == 0 || _mask->getHeight() == 0) {
+        _mask = MaskPtr(new Mask(imageWidth, imageHeight));
+        *_mask = 0;
+    } else {
         int const width = _mask->getWidth();
         int const height = _mask->getHeight();
-        
-        if (width == 0 && height == 0) {
-            _mask = MaskPtr(new Mask(width, height));
-            *_mask = 0;
-        }
 
-        if (width != imageCols || height != imageRows) {
+        if (width != imageWidth || height != imageHeight) {
             throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
                               (boost::format("Dimension mismatch: Image %dx%d v. Mask %dx%d") %
-                                  imageCols % imageRows % width % height).str());
+                                  imageWidth % imageHeight % width % height).str());
         }
     }
 
-    if (_variance.get()) {
-        int const width = _variance->getWidth();
+    if (!_variance.get() || _variance->getWidth() == 0 || _variance->getHeight() == 0) {
+        _variance = VariancePtr(new Variance(imageWidth, imageHeight));
+        *_variance = 0;
+    } else {
         int const height = _variance->getHeight();
-        
-        if (width == 0 && height == 0) {
-            _variance = VariancePtr(new Variance(width, height));
-            *_variance = 0;
-        }
+        int const width = _variance->getWidth();
 
-        if (width != imageCols || height != imageRows) {
+        if (width != imageWidth || height != imageHeight) {
             throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
                               (boost::format("Dimension mismatch: Image %dx%d v. Variance %dx%d") %
-                                  imageCols % imageRows % width % height).str());
+                                  imageWidth % imageHeight % width % height).str());
         }
     }
 }
