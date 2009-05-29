@@ -279,12 +279,12 @@ namespace {
     /**
      * @class FunctionWrapper
      *
-     * @brief Wrap an integrand in a call to a 1D integrator: romb()
+     * @brief Wrap an integrand in a call to a 1D integrator: romberg()
      *
-     * When romb2D() is called, it wraps the integrand it was given
-     * in a FunctionWrapper functor.  This wrapper calls romb() on the integrand
+     * When romberg2D() is called, it wraps the integrand it was given
+     * in a FunctionWrapper functor.  This wrapper calls romberg() on the integrand
      * to get a 1D (along the x-coord, for constant y) result .
-     * romb2D() then calls romb() with the FunctionWrapper functor as an
+     * romberg2D() then calls romberg() with the FunctionWrapper functor as an
      * integrand.
      *
      * @author S. Bickerton
@@ -296,7 +296,7 @@ namespace {
             {}
         double operator() (double y) {
             _func.setY(y);
-            return romb(_func, _x1, _x2);
+            return romberg(_func, _x1, _x2);
         }
     private:
         IntegrandBase &_func;
@@ -315,7 +315,7 @@ namespace {
  * @todo Throw a proper exception when JMAX is exceeded.
  */
 template<typename FunctionT>            
-double romb(FunctionT &func, double a, double b, double const eps) {
+double romberg(FunctionT &func, double a, double b, double const eps) {
 
     static int call_count = 0;
     static int fail_count = 0;
@@ -353,14 +353,14 @@ double romb(FunctionT &func, double a, double b, double const eps) {
  * @brief The 2D Romberg integrator
  * @note Adapted from RHL's SDSS code.
  */
-double romb2D(IntegrandBase &func, double x1, double x2, double y1, double y2, double const eps) {
+double romberg2D(IntegrandBase &func, double x1, double x2, double y1, double y2, double const eps) {
     FunctionWrapper fwrap(func, x1, x2);
-    return romb<FunctionWrapper>(fwrap, y1, y2, eps);
+    return romberg<FunctionWrapper>(fwrap, y1, y2, eps);
 }
             
 }}}
 
 
-//template double lsst::afw::math::romb<double (double)>(double &func(double), double a, double b, double const eps);
+//template double lsst::afw::math::romberg<double (double)>(double &func(double), double a, double b, double const eps);
 //template class lsst::afw::math::IntegrandBase<double (double)>;
 

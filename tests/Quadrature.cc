@@ -71,7 +71,7 @@ private:
 
 /**
  * @brief Test the 1D integrator on a Parabola
- * @note default precision is 1e-6 for romb()
+ * @note default precision is 1e-6 for romberg()
  */
 BOOST_AUTO_TEST_CASE(Parabola1D) {
 
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(Parabola1D) {
     // ==========   The 1D integrator ==========
     // instantiate a Parab1D Functor, integrate numerically, and analytically
     Parab1D<double> parab1d(K, kx);
-    double parab_area_romberg  = math::romb<math::IntegrandBase>(parab1d, x1, x2);
+    double parab_area_romberg  = math::romberg<math::IntegrandBase>(parab1d, x1, x2);
     double parab_area_analytic = parab1d.getAnalyticArea(x1, x2);
 
     BOOST_CHECK_CLOSE(parab_area_romberg, parab_area_analytic, 1e-6);
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(Parabola1D) {
 
 /**
  * @brief Test the 2D integrator on a Paraboloid
- * @note default precision is 1e-6 from romb2D()
+ * @note default precision is 1e-6 from romberg2D()
  */
 BOOST_AUTO_TEST_CASE(Parabola2D) {
 
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(Parabola2D) {
     // ==========   The 2D integrator ==========
     // instantiate a Parab2D, integrate numerically and analytically
     Parab2D<double> parab2d(K, kx, ky);
-    double parab_volume_romberg  = math::romb2D(parab2d, x1, x2, y1, y2);
+    double parab_volume_romberg  = math::romberg2D(parab2d, x1, x2, y1, y2);
     double parab_volume_analytic = parab2d.getAnalyticVolume(x1, x2, y1, y2);
     
     BOOST_CHECK_CLOSE(parab_volume_romberg, parab_volume_analytic, 1e-6);

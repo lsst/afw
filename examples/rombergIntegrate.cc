@@ -95,9 +95,9 @@ int main() {
     Parab1D<double> parab1d(K, kx);
 
     // integrate the area under the curve, and then get the analytic result
-    double parab_area_romberg  = math::romb<math::IntegrandBase>(parab1d, x1, x2);
+    double parab_area_romberg  = math::romberg<math::IntegrandBase>(parab1d, x1, x2);
     double parab_area_analytic = parab1d.getAnalyticArea(x1, x2);
-    std::cout << "1D integrator: romb = " << parab_area_romberg << 
+    std::cout << "1D integrator: romberg = " << parab_area_romberg << 
         "  analytic = " << parab_area_analytic << std::endl;
 
 
@@ -107,9 +107,9 @@ int main() {
     Parab2D<double> parab2d(K, kx, ky);
 
     // integrate the volume under the function, and then get the analytic result
-    double parab_volume_romberg  = math::romb2D(parab2d, x1, x2, y1, y2);
+    double parab_volume_romberg  = math::romberg2D(parab2d, x1, x2, y1, y2);
     double parab_volume_analytic = parab2d.getAnalyticVolume(x1, x2, y1, y2);
-    std::cout << "2D integrator: romb = " << parab_volume_romberg <<
+    std::cout << "2D integrator: romberg = " << parab_volume_romberg <<
         "  analytic = " << parab_volume_analytic << std::endl;
     
     return 0;
