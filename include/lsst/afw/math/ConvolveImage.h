@@ -67,16 +67,14 @@ namespace math {
         OutImageT& convolvedImage,
         InImageT const& inImage,
         KernelT const& kernel,
-        bool doNormalize,
-        int edgeBit=-1
+        bool doNormalize
     );
 
     template <typename OutImageT, typename InImageT>
     void convolveLinear(
         OutImageT& convolvedImage,
         InImageT const& inImage,
-        lsst::afw::math::LinearCombinationKernel const& kernel,
-        int edgeBit=-1
+        lsst::afw::math::LinearCombinationKernel const& kernel
     );
     
     /**

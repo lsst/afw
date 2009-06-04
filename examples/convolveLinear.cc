@@ -20,13 +20,10 @@ int main(int argc, char **argv) {
     unsigned int KernelRows = 8;
     double MinSigma = 1.5;
     double MaxSigma = 2.5;
-    int DefEdgeBit = 0;
     
     if (argc < 2) {
-        std::cerr << "Usage: linearConvolve fitsFile [edgeBit [doBothWays]]" << std::endl;
+        std::cerr << "Usage: linearConvolve fitsFile [doBothWays]" << std::endl;
         std::cerr << "fitsFile excludes the \"_img.fits\" suffix" << std::endl;
-        std::cerr << "edgeBit (default " << DefEdgeBit
-            << ") bit to set around the edge (none if < 0)" << std::endl;
         std::cerr << "doBothWays (default 0); if 1 then also compute using the normal convolve function"
             << std::endl;
         return 1;
@@ -34,11 +31,6 @@ int main(int argc, char **argv) {
     
     { // block in which to allocate and deallocate memory
     
-        int edgeBit = DefEdgeBit;
-        if (argc > 2) {
-            std::istringstream(argv[2]) >> edgeBit;
-        }
-        
         bool doBothWays = 0;
         if (argc > 3) {
             std::istringstream(argv[3]) >> doBothWays;
@@ -83,7 +75,7 @@ int main(int argc, char **argv) {
     
         // convolve with convolveLinear
         lsst::afw::image::MaskedImage<imagePixelType> resMaskedImage(mImage.getDimensions());
-        lsst::afw::math::convolveLinear(resMaskedImage, mImage, lcSpVarKernel, edgeBit);
+        lsst::afw::math::convolveLinear(resMaskedImage, mImage, lcSpVarKernel);
         
         // write results
         resMaskedImage.writeFits(outFile);
@@ -91,7 +83,7 @@ int main(int argc, char **argv) {
 
         if (doBothWays) {
             lsst::afw::image::MaskedImage<imagePixelType> altResMaskedImage(mImage.getDimensions());
-            lsst::afw::math::convolve(altResMaskedImage, mImage, lcSpVarKernel, edgeBit, false);
+            lsst::afw::math::convolve(altResMaskedImage, mImage, lcSpVarKernel, false);
             altResMaskedImage.writeFits(altOutFile);
             std::cout << "Wrote " << altOutFile << "_img.fits, etc. (using lsst::afw::math::convolve)" << std::endl;
         }

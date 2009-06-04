@@ -124,6 +124,18 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(MaskedI
     conformSizes();
 }
 
+/**
+ * \brief Set the MaskedImage's pixels to rhs
+ */
+template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator=(
+        SinglePixel const &rhs ///< set image to this 
+) {
+    *(this->getImage()) = rhs.image();
+    *(this->getMask()) = rhs.mask();
+    *(this->getVariance()) = rhs.variance();
+}
+
 #if defined(DOXYGEN)
 /**
  * \brief Make the lhs use the rhs's pixels

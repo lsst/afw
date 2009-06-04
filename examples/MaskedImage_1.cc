@@ -8,9 +8,9 @@ int main() {
     ImageT img(10, 6);
 
     // Set img's initial values
-    *img.getImage() = 100;
-    *img.getMask() = 0x1;
-    *img.getVariance() = 10;
+//     ImageT::SinglePixel initialValue(100, 0x1, 10);
+//     img = initialValue;
+    img = ImageT::SinglePixel(100, 0x1, 10);
 
     // This is equivalent to those initialisations
     for (ImageT::iterator ptr = img.begin(); ptr != img.end(); ++ptr) {

@@ -32,13 +32,13 @@ namespace afwMath = lsst::afw::math;
 
 namespace {
     /**
-     * \brief Compute the dot product of a kernel row or column and the overlapping portion of an image
+     * @brief Compute the dot product of a kernel row or column and the overlapping portion of an image
      *
-     * \return computed dot product
+     * @return computed dot product
      *
      * The pixel computed belongs at position imageIter + kernel center.
      *
-     * \todo get rid of KernelPixelT parameter if possible. At present compilation fails with this sort of message
+     * @todo get rid of KernelPixelT parameter if possible. At present compilation fails with this sort of message
 include/lsst/afw/image/Pixel.h: In instantiation of Ôlsst::afw::image::pixel::exprTraits<boost::gil::pixel<double, boost::gil::layout<boost::mpl::vector1<boost::gil::gray_color_t>, boost::mpl::range_c<int, 0, 1> > > >Õ:
 include/lsst/afw/image/Pixel.h:385:   instantiated from Ôlsst::afw::image::pixel::BinaryExpr<lsst::afw::image::pixel::Pixel<int, short unsigned int, float>, boost::gil::pixel<double, boost::gil::layout<boost::mpl::vector1<boost::gil::gray_color_t>, boost::mpl::range_c<int, 0, 1> > >, std::multiplies<int>, lsst::afw::image::pixel::bitwise_or<short unsigned int>, lsst::afw::image::pixel::variance_multiplies<float> >Õ
 src/math/ConvolveImage.cc:59:   instantiated from ÔOutPixelT<unnamed>::kernelDotProduct(ImageIterT, KernelIterT, int) [with OutPixelT = lsst::afw::image::pixel::SinglePixel<int, short unsigned int, float>, ImageIterT = lsst::afw::image::MaskedImage<int, short unsigned int, float>::const_MaskedImageIterator<boost::gil::gray32s_pixel_t*, boost::gil::gray16_pixel_t*, boost::gil::gray32f_noscale_pixel_t*>, KernelIterT = const boost::gil::gray64f_noscalec_pixel_t*]Õ
@@ -69,104 +69,39 @@ include/lsst/afw/image/Pixel.h:420:   instantiated from ÔExprT1 lsst::afw::image
         }
         return outPixel;
     }
-
-    /*
-     * Private functions to copy the border of an image
-     *
-     * copyRegion gets a bit complicated --- is it really worth it for private functions?
-     */
-    /*
-     * Copy a rectangular region from one Image to another
-     */
-    template<typename OutImageT, typename InImageT>
-    inline void copyRegion(OutImageT &outImage,     // destination Image
-                           InImageT const &inImage, // source Image
-                           afwImage::BBox const &region, // region to copy
-                           int,
-                           afwImage::detail::Image_tag
-                          ) {
-        OutImageT outPatch(outImage, region); 
-        InImageT inPatch(inImage, region);
-        outPatch <<= OutImageT(inPatch, true);
-    }
-    // Specialization when the two types are the same
-    template<typename InImageT>
-    inline void copyRegion(InImageT &outImage,     // destination Image
-                           InImageT const &inImage, // source Image
-                           afwImage::BBox const &region, // region to copy
-                           int,
-                           afwImage::detail::Image_tag
-                          ) {
-        InImageT outPatch(outImage, region); 
-        InImageT inPatch(inImage, region);
-        outPatch <<= inPatch;
-    }
     
-    /*
-     * Copy a rectangular region from one MaskedImage to another, setting the bits in orMask
-     */
-    template<typename OutImageT, typename InImageT>
-    inline void copyRegion(OutImageT &outImage,     // destination Image
-                           InImageT const &inImage, // source Image
-                           afwImage::BBox const &region, // region to copy
-                           int orMask,                           // data to | into the mask pixels
-                           afwImage::detail::MaskedImage_tag
-                          ) {
-        OutImageT outPatch(outImage, region); 
-        InImageT inPatch(inImage, region);
-        outPatch <<= OutImageT(inPatch, true);
-        *outPatch.getMask() |= orMask;
-    }
-    // Specialization when the two types are the same
-    template<typename InImageT>
-    inline void copyRegion(InImageT &outImage,      // destination Image
-                           InImageT const &inImage, // source Image
-                           afwImage::BBox const &region, // region to copy
-                           int orMask,                           // data to | into the mask pixels
-                           afwImage::detail::MaskedImage_tag
-                          ) {
-        InImageT outPatch(outImage, region);
-        InImageT inPatch(inImage, region);
-        outPatch <<= inPatch;
-        *outPatch.getMask() |= orMask;
-    }
-    
-    
-    template <typename OutImageT, typename InImageT>
-    inline void copyBorder(
-        OutImageT& convolvedImage,                           ///< convolved image
-        InImageT const& inImage,                             ///< image to convolve
-        afwMath::Kernel const &kernel,               ///< convolution kernel
-        int edgeBit                         ///< bit to set to indicate border pixel;  if negative then no bit is set
+    /**
+    * @brief Set the edge pixels of a convolved image based on size of the convolution kernel used
+    */
+    template <typename OutImageT>
+    inline void setEdgePixels(
+        OutImageT& image,      ///< image whose edge pixels are to be set
+        afwMath::Kernel const &kernel   ///< convolution kernel; kernel size is used to determine the edge
     ) {
-        const unsigned int imWidth = inImage.getWidth();
-        const unsigned int imHeight = inImage.getHeight();
+        const unsigned int imWidth = image.getWidth();
+        const unsigned int imHeight = image.getHeight();
         const unsigned int kWidth = kernel.getWidth();
         const unsigned int kHeight = kernel.getHeight();
         const unsigned int kCtrX = kernel.getCtrX();
         const unsigned int kCtrY = kernel.getCtrY();
+
+        const typename OutImageT::SinglePixel edgePixel = afwMath::edgePixel<OutImageT>(
+            typename lsst::afw::image::detail::image_traits<OutImageT>::image_category()
+        );
     
-        const int edgeBitMask = (edgeBit < 0) ? 0 : (1 << edgeBit);
-    
-        using afwImage::BBox;
-        using afwImage::PointI;
-        BBox bottomEdge(PointI(0, 0), imWidth, kCtrY);
-        copyRegion(convolvedImage, inImage, bottomEdge, edgeBitMask,
-                    typename afwImage::detail::image_traits<OutImageT>::image_category());
+        afwImage::BBox bottomEdge(afwImage::PointI(0, 0), imWidth, kCtrY);
+        OutImageT(image, bottomEdge) = edgePixel;
         
         int numHeight = kHeight - (1 + kCtrY);
-        BBox topEdge(PointI(0, imHeight - numHeight), imWidth, numHeight);
-        copyRegion(convolvedImage, inImage, topEdge, edgeBitMask,
-                    typename afwImage::detail::image_traits<OutImageT>::image_category());
+        afwImage::BBox topEdge(afwImage::PointI(0, imHeight - numHeight), imWidth, numHeight);
+        OutImageT(image, topEdge) = edgePixel;
         
-        BBox leftEdge(PointI(0, kCtrY), kCtrX, imHeight + 1 - kHeight);
-        copyRegion(convolvedImage, inImage, leftEdge, edgeBitMask,
-                    typename afwImage::detail::image_traits<OutImageT>::image_category());
+        afwImage::BBox leftEdge(afwImage::PointI(0, kCtrY), kCtrX, imHeight + 1 - kHeight);
+        OutImageT(image, leftEdge) = edgePixel;
         
         int numWidth = kWidth - (1 + kCtrX);
-        BBox rightEdge(PointI(imWidth - numWidth, kCtrY), numWidth, imHeight + 1 - kHeight);
-        copyRegion(convolvedImage, inImage, rightEdge, edgeBitMask,
-                    typename afwImage::detail::image_traits<OutImageT>::image_category());
+        afwImage::BBox rightEdge(afwImage::PointI(imWidth - numWidth, kCtrY), numWidth, imHeight + 1 - kHeight);
+        OutImageT(image, rightEdge) = edgePixel;
     }
 }   // anonymous namespace
 
@@ -449,9 +384,7 @@ void afwMath::convolve(
     OutImageT& convolvedImage,          ///< convolved image
     InImageT const& inImage,            ///< image to convolve
     KernelT const& kernel,              ///< convolution kernel
-    bool doNormalize,                   ///< if True, normalize the kernel, else use "as is"
-    int edgeBit     ///< mask bit to indicate pixel includes edge-extended data;
-                    ///< if negative (default) then no bit is set; only relevant for MaskedImages
+    bool doNormalize                    ///< if True, normalize the kernel, else use "as is"
 ) {
     // Because convolve isn't a method of Kernel we can't always use Kernel's vtbl to dynamically
     // dispatch the correct version of convolve
@@ -460,8 +393,7 @@ void afwMath::convolve(
             pexLog::TTrace<4>("lsst.afw.kernel.convolve",
                 "convolve: dispatch spatially varying LinearCombinationKernel to convolveLinear");
             afwMath::convolveLinear(convolvedImage, inImage,
-                                    *dynamic_cast<afwMath::LinearCombinationKernel const*>(&kernel),
-                                    edgeBit);
+                                    *dynamic_cast<afwMath::LinearCombinationKernel const*>(&kernel));
             return;
         }
         pexLog::TTrace<4>("lsst.afw.kernel.convolve",
@@ -469,7 +401,7 @@ void afwMath::convolve(
     }
     
     afwMath::basicConvolve(convolvedImage, inImage, kernel, doNormalize);
-    copyBorder(convolvedImage, inImage, kernel, edgeBit);
+    setEdgePixels(convolvedImage, kernel);
 }
 
 /**
@@ -497,14 +429,12 @@ template <typename OutImageT, typename InImageT>
 void afwMath::convolveLinear(
     OutImageT& convolvedImage,      ///< convolved image
     InImageT const& inImage,        ///< image to convolve
-    afwMath::LinearCombinationKernel const& kernel, ///< convolution kernel
-    int edgeBit     ///< mask bit to indicate pixel includes edge-extended data;
-                    ///< if negative (default) then no bit is set; only relevant for MaskedImages
-                                    ) {
+    afwMath::LinearCombinationKernel const& kernel  ///< convolution kernel
+) {
     if (!kernel.isSpatiallyVarying()) {
         pexLog::TTrace<4>("lsst.afw.kernel.convolve",
             "convolveLinear: dispatch spatially invariant LinearCombinationKernel to convolve");
-        return afwMath::convolve(convolvedImage, inImage, kernel, false, edgeBit);
+        return afwMath::convolve(convolvedImage, inImage, kernel, false);
     }
     pexLog::TTrace<3>("lsst.afw.kernel.convolve", "convolveLinear: LinearCombinationKernel is spatially varying");
 
@@ -568,7 +498,7 @@ void afwMath::convolveLinear(
             }
         }
     }
-    copyBorder(convolvedImage, inImage, kernel, edgeBit);
+    setEdgePixels(convolvedImage, kernel);
 }
 
 /************************************************************************************************************/
@@ -592,13 +522,13 @@ namespace lsst { namespace afw { namespace math {
 */
 #define NL /* */
 #define convolutionFuncsByType(IMAGE, PIXTYPE1, PIXTYPE2) \
-    template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, AnalyticKernel const&, bool, int); NL \
-    template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, DeltaFunctionKernel const&, bool, int); NL \
-    template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, FixedKernel const&, bool, int); NL \
-    template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, LinearCombinationKernel const&, bool, int); NL \
-    template void convolveLinear(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, LinearCombinationKernel const&, int); NL \
-    template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, SeparableKernel const&, bool, int); NL \
-    template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, Kernel const&, bool, int);
+    template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, AnalyticKernel const&, bool); NL \
+    template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, DeltaFunctionKernel const&, bool); NL \
+    template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, FixedKernel const&, bool); NL \
+    template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, LinearCombinationKernel const&, bool); NL \
+    template void convolveLinear(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, LinearCombinationKernel const&); NL \
+    template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, SeparableKernel const&, bool); NL \
+    template void convolve(IMAGE(PIXTYPE1)&, IMAGE(PIXTYPE2) const&, Kernel const&, bool);
 
 //
 // Now a macro to specify Image and MaskedImage
