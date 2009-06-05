@@ -11,6 +11,8 @@ the main difference being how pixel values are set.
 If you need access to nearby pixels, see the \link imageLocators Image locator\endlink tutorial.
 
 \include Image_1.cc
+
+\example Image_1.cc
  */
 
 /**
@@ -25,6 +27,8 @@ the main difference being how pixel values are set.
 If you need access to nearby pixels, see the \link maskedImageLocators MaskedImage locator\endlink tutorial.
 
 \include MaskedImage_1.cc
+
+\example MaskedImage_1.cc
  */
 }}}
 
