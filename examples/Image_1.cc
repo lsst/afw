@@ -1,47 +1,78 @@
-/// \file
+/**
+ * \file
+ *
+ * \brief Image iterator tutorial.
+ */
+ 
+// Include the necessary headers;
+// if using many image modules then you may prefer to include "lsst/afw/image.h"
 #include "lsst/afw/image/Image.h"
 
-namespace image = lsst::afw::image;
-typedef image::Image<int> ImageT;
+// Declare the desired Image type.
+// Note: only specific types are supported; for the list of available types
+// see the explicit instantiation code at the end of lsst/afw/image/src/Image.cc
+namespace afwImage = lsst::afw::image;
+typedef afwImage::Image<int> ImageT;
 
 int main() {
+
+    // Declare an Image; its pixels are not yet initialized.
     ImageT img(10, 6);
 
-    // Set img's initial values
+    // Initialize all pixels to a given value.
     img = 100;
     
-    // This is equivalent to that initialisation
-    for (ImageT::iterator ptr = img.begin(), end = img.end(); ptr != end; ++ptr) {
-        *ptr = 100;
-    }
-    // so is this, but fills backwards (and only finds end once)
-    for (ImageT::reverse_iterator ptr = img.rbegin(), rend = img.rend(); ptr != rend; ++ptr) {
-        *ptr = 100;
-    }
-    // so is this, but shows a different way of choosing begin()
-    for (ImageT::iterator ptr = img.at(0, 0), end = img.end(); ptr != end; ++ptr) {
-        *ptr = 100;
-    }
+    // Alternatively you can specify an initial value in the constructor.
+    ImageT img(10, 6, 100.0);
 
-    // Set the pixels row by row, to avoid repeated checks for end-of-row
+    // Here is a common and efficient way to set all pixels of the image.
+    // Note that the end condition is only computed once, for efficiency.
     for (int y = 0; y != img.getHeight(); ++y) {
         for (ImageT::x_iterator ptr = img.row_begin(y), end = img.row_end(y); ptr != end; ++ptr) {
             *ptr = 100;
         }
     }
 
-    // This one is just as fast (but only works for contiguous arrays)
+    // It is probably slower to compute the end condition each time, as is done here.
+    for (int y = 0; y != img.getHeight(); ++y) {
+        for (ImageT::x_iterator ptr = img.row_begin(y); ptr != img.row_end(y); ++ptr) {
+            *ptr = 100;
+        }
+    }
+    
+    // STL-compliant iterators are available.
+    // However, they are not very efficient because the image data may not be contiguous
+    // so these iterators must test for end-of-row on every increment.
+    // (By the way, we do guarantee that an image's row data is contiguous).
+    // iterator
+    for (ImageT::iterator ptr = img.begin(), end = img.end(); ptr != end; ++ptr) {
+        *ptr = 100;
+    }
+    // reverse_iterator
+    for (ImageT::reverse_iterator ptr = img.rbegin(), end = img.rend(); ptr != end; ++ptr) {
+        *ptr = 100;
+    }
+    // A different way of choosing begin() for use with (inefficient) iterator
+    for (ImageT::iterator ptr = img.at(0, 0), end = img.end(); ptr != end; ++ptr) {
+        *ptr = 100;
+    }
+
+    // There is one efficient STL-compliant iterator: "fast_iterator", but it only works for contiguous images
+    // (such as newly allocated images). If you attempt to use this on a subimage you will get an exception.
     for (ImageT::fast_iterator ptr = img.begin(true), end = img.end(true); ptr != end; ++ptr) {
         *ptr = 100;
     }
 
-    // Set the pixels column by column, with awful consequences upon cache performance
+    // It is possible to traverse the image by columns instead of by rows,
+    // but because the data is row-contiguous, this has awful consequences upon cache performance.
     for (int x = 0; x != img.getWidth(); ++x) {
         for (ImageT::y_iterator ptr = img.col_begin(x), end = img.col_end(x); ptr != end; ++ptr) {
             *ptr = 100;
         }
     }
-    // Set the pixels column by column in batches to avoid some of the worst effects upon cache performance
+
+    // If you must traverse the image by columns then consider doing it in batches to improve
+    // cache performance, as shown here:
     int x = 0;
     for (; x != img.getWidth()%4; ++x) {
         for (ImageT::y_iterator ptr = img.col_begin(x), end = img.col_end(x); ptr != end; ++ptr) {
@@ -57,9 +88,8 @@ int main() {
             *ptr0 = *ptr1 = *ptr2 = *ptr3 = 100;
         }
     }
-    //
-    // Save that image to disk
-    //
+
+    // Save the image to disk
     img.writeFits("foo.fits");
 
     return 0;
