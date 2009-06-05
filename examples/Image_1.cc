@@ -22,8 +22,8 @@ int main() {
     // Initialize all pixels to a given value.
     img = 100;
     
-    // Alternatively you can specify an initial value in the constructor.
-    ImageT img(10, 6, 100.0);
+    // Alternatively you can specify an initial value in the constructor:
+    ImageT img2(10, 6, 100.0);
 
     // Here is a common and efficient way to set all pixels of the image.
     // Note that the end condition is only computed once, for efficiency.

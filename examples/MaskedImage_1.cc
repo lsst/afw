@@ -20,7 +20,7 @@ int main() {
     ImageT img(10, 6);
 
     // Initialize all pixels to a given value.
-    img = ImageT::SinglePixel(100, 0x1, 10);
+    img = ImageT::Pixel(100, 0x1, 10);
 
     // Here is a common and efficient way to set all pixels of the image.
     // Note that the end condition is only computed once, for efficiency.

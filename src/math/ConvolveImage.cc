@@ -73,9 +73,9 @@ include/lsst/afw/image/Pixel.h:420:   instantiated from ÔExprT1 lsst::afw::image
     /**
     * @brief Set the edge pixels of a convolved image based on size of the convolution kernel used
     */
-    template <typename OutImageT>
+    template <typename ImageT>
     inline void setEdgePixels(
-        OutImageT& image,      ///< image whose edge pixels are to be set
+        ImageT& image,      ///< image whose edge pixels are to be set
         afwMath::Kernel const &kernel   ///< convolution kernel; kernel size is used to determine the edge
     ) {
         const unsigned int imWidth = image.getWidth();
@@ -85,23 +85,31 @@ include/lsst/afw/image/Pixel.h:420:   instantiated from ÔExprT1 lsst::afw::image
         const unsigned int kCtrX = kernel.getCtrX();
         const unsigned int kCtrY = kernel.getCtrY();
 
-        const typename OutImageT::SinglePixel edgePixel = afwMath::edgePixel<OutImageT>(
-            typename lsst::afw::image::detail::image_traits<OutImageT>::image_category()
+        const typename ImageT::SinglePixel edgePixel = afwMath::edgePixel<ImageT>(
+            typename lsst::afw::image::detail::image_traits<ImageT>::image_category()
         );
     
         afwImage::BBox bottomEdge(afwImage::PointI(0, 0), imWidth, kCtrY);
-        OutImageT(image, bottomEdge) = edgePixel;
+//        ImageT(image, bottomEdge) = edgePixel;
+        ImageT bottomView(image, bottomEdge);
+        bottomView = edgePixel;
         
         int numHeight = kHeight - (1 + kCtrY);
         afwImage::BBox topEdge(afwImage::PointI(0, imHeight - numHeight), imWidth, numHeight);
-        OutImageT(image, topEdge) = edgePixel;
+//        ImageT(image, topEdge) = edgePixel;
+        ImageT topView(image, topEdge);
+        topView = edgePixel;
         
         afwImage::BBox leftEdge(afwImage::PointI(0, kCtrY), kCtrX, imHeight + 1 - kHeight);
-        OutImageT(image, leftEdge) = edgePixel;
+//        ImageT(image, leftEdge) = edgePixel;
+        ImageT leftEdgeView(image, leftEdge);
+        leftEdgeView = edgePixel;
         
         int numWidth = kWidth - (1 + kCtrX);
         afwImage::BBox rightEdge(afwImage::PointI(imWidth - numWidth, kCtrY), numWidth, imHeight + 1 - kHeight);
-        OutImageT(image, rightEdge) = edgePixel;
+//        ImageT(image, rightEdge) = edgePixel;
+        ImageT rightEdgeView(image, rightEdge);
+        rightEdgeView = edgePixel;
     }
 }   // anonymous namespace
 

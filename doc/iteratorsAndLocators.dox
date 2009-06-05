@@ -18,7 +18,7 @@ If you need access to nearby pixels, see the \link imageLocators Image locator\e
 
 (Return to \ref secImage)
 
-This code is in \link MaskedImage_1.cc\endlink.
+This code is in \link MaskedImage_2.cc\endlink.
 Note that \link imageIterators Image iterators\endlink work almost identically,
 the main difference being how pixel values are set.
 

@@ -96,8 +96,6 @@ namespace image {
         /// A single Pixel of the same type as those in the MaskedImage
         typedef lsst::afw::image::pixel::SinglePixel<ImagePixelT, MaskPixelT, VariancePixelT> SinglePixel;
 
-        void operator=(const SinglePixel& rhs);
-
         /************************************************************************************************************/
         /// The base class for MaskedImageIterators (const and non-const)        
         template<typename ImageIterator, typename MaskIterator, typename VarianceIterator,
@@ -655,6 +653,7 @@ namespace image {
         
         // Operators
         MaskedImage& operator=(Pixel const& rhs);
+        MaskedImage& operator=(SinglePixel const& rhs);
 
         void operator<<=(MaskedImage const& rhs);
 
