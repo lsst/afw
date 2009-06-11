@@ -214,7 +214,8 @@ void lsst::afw::image::Wcs::printSipHeader(std::string const& which) {
         m = _sipBp;
     }
     else{
-        throw ValueException("Illegal choice, choose one of A[p] B[p]");
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                          "Illegal choice, choose one of A[p] B[p]");
     }
     
         
