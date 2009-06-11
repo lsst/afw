@@ -227,7 +227,7 @@ lsst::afw::image::Wcs::Wcs(
     // wcspih takes a non-const char* (because some versions of ctrl modify the string)
     // but we cannot afford to allow that to happen, so make a copy...
     int len = metadataStr.size();
-    boost::shared_ptr<char> hdrString = boost::shared_ptr<char>(new char[len + 1]);
+    boost::scoped_array<char> hdrString(new char[len + 1]);
     std::strcpy(hdrString.get(), metadataStr.c_str());
 
     int pihStatus = wcspih(hdrString.get(), nCards, _relax, _wcshdrCtrl, &_nReject, &_nWcsInfo, &_wcsInfo);
