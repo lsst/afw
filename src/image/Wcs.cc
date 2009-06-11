@@ -204,10 +204,19 @@ void lsst::afw::image::Wcs::printSipHeader(std::string const& which) {
     if (which == "A"){
         m = _sipA;
     }
-    if (which == "Ap"){
+    else if (which == "Ap"){
+        m = _sipAp;
+    }
+    else if (which == "B"){
         m = _sipB;
     }
-        
+    else if (which == "Bp"){
+        m = _sipBp;
+    }
+    else{
+        throw ValueException("Illegal choice, choose one of A[p] B[p]");
+    }
+    
         
     cout << "Sip" << which << endl;
     
