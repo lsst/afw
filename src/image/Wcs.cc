@@ -195,7 +195,33 @@ static void decodeSipHeader(lsst::daf::base::PropertySet::Ptr fitsMetadata,
     }
 }
 
+ /**
+ * @brief Strictly debugging code.
+ */
+void lsst::afw::image::Wcs::printSipHeader(std::string const& which) {
+
+    boost::numeric::ublas::matrix<double> m;
+    if (which == "A"){
+        m = _sipA;
+    }
+    if (which == "Ap"){
+        m = _sipB;
+    }
+        
+        
+    cout << "Sip" << which << endl;
     
+    int order = m.size1();
+    boost::format format("%1%_%2%_%3%");
+    for (int i = 0; i < order; ++i) {
+        for (int j = 0; j < order; ++j) {
+            std::string header = (format % which % i % j).str();
+
+            cout << header << " "<< m(i,j);
+        }
+    }
+}
+   
 /**
  * @brief Construct a Wcs from a FITS header, represented as PropertySet::Ptr
  *
