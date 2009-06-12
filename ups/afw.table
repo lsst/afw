@@ -5,7 +5,7 @@ setupRequired(cfitsio >= 3006.2)
 setupRequired(wcslib >= 4.2+3)
 setupRequired(xpa >= 2.1.7b2)
 setupRequired(numpy >= 1.0.1)
-setupRequired(minuit >= 1.7.9)
+setupRequired(minuit2 >= 5.22.00)
 setupRequired(eigen >= 2.0.0)
 setupRequired(gsl >= 1.8)
 
