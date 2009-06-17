@@ -160,6 +160,22 @@ class MaskedImageTestCase(unittest.TestCase):
         self.assertEqual(self.mimage2.getVariance().get(0,0), mimage2_copy.getVariance().get(0,0))
 
     def testSubtractImages(self):
+        "Test subtraction"
+        # subtract an image
+        self.mimage2 -= self.mimage
+        self.assertEqual(self.mimage2.getImage().get(0,0), self.imgVal2 - self.imgVal1)
+        self.assertEqual(self.mimage2.getMask().get(0,0), self.EDGE)
+        self.assertEqual(self.mimage2.getVariance().get(0,0), self.varVal2 + self.varVal1)
+
+        # subtract a scalar
+        self.mimage -= self.imgVal1
+        self.assertEqual(self.mimage.getImage().get(0,0), 0.)
+        self.assertEqual(self.mimage.getMask().get(0,0), self.EDGE)
+        self.assertEqual(self.mimage.getMask().get(1,1), self.EDGE)
+        self.assertEqual(self.mimage.getMask().get(2,2), 0x0)
+        self.assertEqual(self.mimage.getVariance().get(0,0), self.varVal1)
+
+    def testSubtractScaledImages(self):
         "Test subtraction by a scaled MaskedImage"
         # subtract a scaled image
         c = 10.0
