@@ -9,6 +9,7 @@
  */
 #include <cmath>
 #include <vector>
+#include <functional>
 
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE Quadrature
@@ -28,7 +29,7 @@ namespace math = lsst::afw::math;
  * We have to inherit from IntegrandBase for the integrator to work.
  */
 template<typename IntegrandT>
-class Parab1D : public math::IntegrandBase {
+class Parab1D : public std::unary_function<IntegrandT,IntegrandT> {
 public:
     Parab1D(double K, double kx) : _K(K), _kx(kx) {}
     
@@ -36,11 +37,16 @@ public:
     double getAnalyticArea(double const x1, double const x2) { return _K*(x2-x1) - _kx*(x2*x2*x2-x1*x1*x1)/3.0; }
     
     // operator() must be overloaded to return the evaluation of the function
-    IntegrandT operator() (IntegrandT const x) { return (_K - _kx*x*x); }
+    IntegrandT operator() (IntegrandT const x) const { return (_K - _kx*x*x); }
     
 private:
     double _K, _kx;
 };
+
+double parabola1d(double x) {
+    double K = 100.0, kx = 1.0;
+    return K - kx*x*x;
+}
 
 /* define a simple 2D function as a functor to be integrated.
  * I've chosen a 2D paraboloid: f(x) = K - kx*x*x - ky*y*y
@@ -49,7 +55,7 @@ private:
  * Note that we have to inherit from IntegrandBase
  */
 template<typename IntegrandT>
-class Parab2D : public math::IntegrandBase {
+class Parab2D : public std::binary_function<IntegrandT,IntegrandT,IntegrandT> {
 public:
     Parab2D(double K, double kx, double ky) : _K(K), _kx(kx), _ky(ky) {}
     
@@ -61,13 +67,17 @@ public:
     }
     
     // operator() must be overloaded to return the evaluation of the function
-    IntegrandT operator() (IntegrandT const x) { return (_K - _kx*x*x - _ky*_y*_y); }
+    IntegrandT operator() (IntegrandT const x, IntegrandT const y) const { return (_K - _kx*x*x - _ky*y*y); }
     
 private:
     double _K, _kx, _ky;
-    using IntegrandBase::_y;
 };
 
+
+double parabola2d (double const x, double const y) {
+    double const K = 100.0, kx = 1.0, ky = 1.0;
+    return K - kx*x*x - ky*y*y;
+}
 
 /**
  * @brief Test the 1D integrator on a Parabola
@@ -83,10 +93,13 @@ BOOST_AUTO_TEST_CASE(Parabola1D) {
     // ==========   The 1D integrator ==========
     // instantiate a Parab1D Functor, integrate numerically, and analytically
     Parab1D<double> parab1d(K, kx);
-    double parab_area_romberg  = math::romberg<math::IntegrandBase>(parab1d, x1, x2);
+    double parab_area_romberg  = math::romberg(parab1d, x1, x2);
     double parab_area_analytic = parab1d.getAnalyticArea(x1, x2);
 
+    double parab_area_romberg_function = math::romberg(std::ptr_fun(parabola1d), x1, x2);
+    
     BOOST_CHECK_CLOSE(parab_area_romberg, parab_area_analytic, 1e-6);
+    BOOST_CHECK_CLOSE(parab_area_romberg_function, parab_area_analytic, 1e-6);
 }
 
 
@@ -106,7 +119,10 @@ BOOST_AUTO_TEST_CASE(Parabola2D) {
     Parab2D<double> parab2d(K, kx, ky);
     double parab_volume_romberg  = math::romberg2D(parab2d, x1, x2, y1, y2);
     double parab_volume_analytic = parab2d.getAnalyticVolume(x1, x2, y1, y2);
-    
+
+    double parab_volume_romberg_function = math::romberg2D(std::ptr_fun(parabola2d), x1, x2, y1, y2);
+
     BOOST_CHECK_CLOSE(parab_volume_romberg, parab_volume_analytic, 1e-6);
+    BOOST_CHECK_CLOSE(parab_volume_romberg_function, parab_volume_analytic, 1e-6);
 }
 
