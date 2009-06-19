@@ -45,6 +45,8 @@ env.Program("imageBackground", ["imageBackground.cc"], LIBS=env.getlibs("afw"))
 env.Program("imageStatistics", ["imageStatistics.cc"], LIBS=env.getlibs("afw"))
 env.Program("splineInterpolate", ["splineInterpolate.cc"], LIBS=env.getlibs("afw"))
 env.Program("rombergIntegrate", ["rombergIntegrate.cc"], LIBS=env.getlibs("afw"))
+env.Program("rombergPolar", ["rombergPolar.cc"], LIBS=env.getlibs("afw"))
+
 #
 # Build all ticket test files
 #
