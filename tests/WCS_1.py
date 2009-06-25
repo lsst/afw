@@ -161,15 +161,18 @@ class WCSTestCaseCFHT(unittest.TestCase):
         cosdec = math.cos(math.pi/180*sky00.getY())
 
         side = 1e-3
-        p10 = self.wcs.raDecToXY(sky00 + afwImage.PointD(side*cosdec, 0))    - p00
+        p10 = self.wcs.raDecToXY(sky00 + afwImage.PointD(side/cosdec, 0))    - p00
         p01 = self.wcs.raDecToXY(sky00 + afwImage.PointD(0,           side)) - p00
 
         area = side*side/abs(p10.getX()*p01.getY() - p01.getX()*p10.getY())
+
+        self.assertAlmostEqual(math.sqrt(self.wcs.pixArea(p00)), math.sqrt(area))
         #
-        # Don't run this; we don't get quite the same answers as the CD1_1 numbers in the header; why?
+        # Now check that the area's the same as the CD matrix gives.
         #
-        if False:
-            self.assertAlmostEqual(3600*math.sqrt(area), 3600*self.metadata.getAsDouble("CD1_1"))
+        cd = [self.metadata.get("CD1_1"), self.metadata.get("CD1_2"),
+              self.metadata.get("CD2_1"), self.metadata.get("CD2_2")]
+        area = math.fabs(cd[0]*cd[3] - cd[1]*cd[2])
 
         self.assertAlmostEqual(math.sqrt(self.wcs.pixArea(p00)), math.sqrt(area))
 

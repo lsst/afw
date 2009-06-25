@@ -634,7 +634,7 @@ double lsst::afw::image::Wcs::pixArea(lsst::afw::image::PointD pix00) const
     double const cosDec = cos((sky00.getY() + side/2)*M_PI/180.0);
     
     lsst::afw::image::PointD const dpix01 = raDecToXY(sky00 + lsst::afw::image::PointD(0,           side)) - pix00;
-    lsst::afw::image::PointD const dpix10 = raDecToXY(sky00 + lsst::afw::image::PointD(side*cosDec, 0))    - pix00;
+    lsst::afw::image::PointD const dpix10 = raDecToXY(sky00 + lsst::afw::image::PointD(side/cosDec, 0))    - pix00;
 
     return (side*side)/fabs(dpix01.getX()*dpix10.getY() - dpix01.getY()*dpix10.getX());
 }
