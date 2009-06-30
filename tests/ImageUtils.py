@@ -45,15 +45,13 @@ class ImageUtilsTestCase(unittest.TestCase):
             ind2 = afwImage.positionToIndex(pos)
             self.assertEqual(floatInd, ind2)
 
-    def disabledTestPairPositionToIndex(self):
-        """Test version of PositionToIndex that returns a pair
-        only it cannot be called from Python
-        """
-        for basicFloatPos in numpy.arange(-10.0, 10.0):
-            for offset in [-0.00000000001, 0, 0.00000000001]:
-                floatPos = basicFloatPos + offset
-                indResidPair = positionToIndex(floatPos, True)
-                # this cannot be unpacked so forget it
+    def testPositionToIndexAndResidual(self):
+        for ind in range(-10, 10):
+            ctrPos = afwImage.indexToPosition(ind)
+            for resid in [-0.5, 0, 0.4999999999]:
+                outInd, outResid = afwImage.positionToIndexAndResidual(ctrPos + resid)
+                self.assertEqual(ind, outInd)
+                self.assertEqual(resid, outResid)
 
         
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
