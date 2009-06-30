@@ -17,7 +17,7 @@ import unittest
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions as pexExcept
 import lsst.daf.base
-import lsst.afw.image.imageLib as afwImage
+import lsst.afw.image as afwImage
 import lsst.afw.display.utils as displayUtils
 import lsst.afw.display.ds9 as ds9
 

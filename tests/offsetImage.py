@@ -18,8 +18,8 @@ import unittest
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions as pexExcept
 import lsst.daf.base
-import lsst.afw.image.imageLib as afwImage
-import lsst.afw.math.mathLib as afwMath
+import lsst.afw.image as afwImage
+import lsst.afw.math as afwMath
 import lsst.afw.display.ds9 as ds9
 
 try:

@@ -13,7 +13,7 @@ import pdb                              # we may want to say pdb.set_trace()
 import unittest
 import lsst.utils.tests as tests
 import lsst.pex.logging as logging
-import lsst.afw.image.imageLib as afwImage
+import lsst.afw.image as afwImage
 import lsst.afw.detection.detectionLib as afwDetection
 
 try:

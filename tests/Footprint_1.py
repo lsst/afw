@@ -14,8 +14,8 @@ import sys
 import unittest
 import lsst.utils.tests as tests
 import lsst.pex.logging as logging
-import lsst.afw.image.imageLib as afwImage
-import lsst.afw.math.mathLib as afwMath
+import lsst.afw.image as afwImage
+import lsst.afw.math as afwMath
 import lsst.afw.detection.detectionLib as afwDetection
 import lsst.afw.detection.utils as afwDetectionUtils
 import lsst.afw.display.ds9 as ds9

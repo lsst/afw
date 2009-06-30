@@ -33,6 +33,21 @@ namespace image {
     ) {
         return static_cast<double>(ind) + PixelZeroPos;
     }
+
+    /**
+     * @brief Convert image index to image position
+     *
+     * The LSST indexing convention is:
+     * * the index of the bottom left pixel is 0,0
+     * * the position of the center of the bottom left pixel is PixelZeroPos, PixelZeroPos
+     *
+     * @return image position
+     */
+    inline double indexToPosition(
+        double ind ///< image index
+    ) {
+        return ind + PixelZeroPos;
+    }
     
     /**
      * @brief Convert image position to nearest integer index

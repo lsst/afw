@@ -17,7 +17,7 @@ import unittest
 
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions
-import lsst.afw.image.imageLib as afwImage
+import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.display.ds9 as ds9
 import eups
