@@ -12,7 +12,6 @@ or
 import os
 import pdb  # we may want to say pdb.set_trace()
 import sys
-import numpy
 import unittest
 
 import lsst.utils.tests as utilsTests
@@ -27,31 +26,34 @@ try:
 except NameError:
     display = False
 
+Precision = 1.0e-10
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class ImageUtilsTestCase(unittest.TestCase):
     """A test case for Image"""
     def testIntIndexToPosition(self):
-        for ind in range(-10, 10):
+        for ind in [-100000, -100, -10, -2, -1, 0, 1, 2, 10, 100, 1000, 100000]:
             pos = afwImage.indexToPosition(ind)
             self.assertEqual(pos, float(ind + afwImage.PixelZeroPos))
             ind2 = afwImage.positionToIndex(pos)
             self.assertEqual(float(ind), ind2)
 
     def testFloatIndexToPosition(self):
-        for floatInd in numpy.arange(-10.0, 10.0):
+        for ind in [-100000, -100, -10, -2, -1, 0, 1, 2, 10, 100, 1000, 100000]:
+            floatInd = float(ind)
             pos = afwImage.indexToPosition(floatInd)
             self.assertEqual(pos, floatInd + afwImage.PixelZeroPos)
             ind2 = afwImage.positionToIndex(pos)
             self.assertEqual(floatInd, ind2)
 
     def testPositionToIndexAndResidual(self):
-        for ind in range(-10, 10):
+        for ind in [-100000, -100, -10, -2, -1, 0, 1, 2, 10, 100, 1000, 100000]:
             ctrPos = afwImage.indexToPosition(ind)
-            for resid in [-0.5, 0, 0.4999999999]:
+            for resid in [-0.5, 0, 0.5 - Precision]:
                 outInd, outResid = afwImage.positionToIndexAndResidual(ctrPos + resid)
                 self.assertEqual(ind, outInd)
-                self.assertEqual(resid, outResid)
+                self.assertTrue(abs(resid - outResid) < Precision)
 
         
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
