@@ -6,6 +6,7 @@
 The LSST applications framework provides the basic functionality needed
 by an image processing system.  In particular:
    - \ref secImage : Representation of Images (and Masks)
+   - \ref secDisplay : How to display images
    - \ref secMath :  Mathematical functions such as convolution and image statistics
    - \ref secDetection : Detection of sources in images
 */
