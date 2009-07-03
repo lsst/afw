@@ -129,8 +129,8 @@ namespace lsst { namespace afw { namespace detection { namespace {
   * @param[in] set2     second set of sources
   * @param[in] radius   match radius (arcsec)
   */
-std::vector<det::SourceMatch> det::matchRaDec(det::SourceSet const &set1,
-                                              det::SourceSet const &set2,
+std::vector<det::SourceMatch> det::matchRaDec(lsst::afw::detection::SourceSet const &set1,
+                                              lsst::afw::detection::SourceSet const &set2,
                                               double radius) {
     if (&set1 == &set2) {
         return matchRaDec(set1, radius, true);
@@ -211,7 +211,7 @@ std::vector<det::SourceMatch> det::matchRaDec(det::SourceSet const &set1,
   * @param[in] symmetric    if set to @c true symmetric matches are produced: i.e.
   *                         if (s1, s2, d) is reported, then so is (s2, s1, d).
   */
-std::vector<det::SourceMatch> det::matchRaDec(det::SourceSet const &set,
+std::vector<det::SourceMatch> det::matchRaDec(lsst::afw::detection::SourceSet const &set,
                                               double radius,
                                               bool symmetric) {
     if (radius < 0.0 || radius > 45.0*3600.0) {
@@ -289,8 +289,8 @@ std::vector<det::SourceMatch> det::matchRaDec(det::SourceSet const &set,
   * @param[in] set2     second set of sources
   * @param[in] radius   match radius (pixels)
   */
-std::vector<det::SourceMatch> det::matchXy(det::SourceSet const &set1,
-                                           det::SourceSet const &set2,
+std::vector<det::SourceMatch> det::matchXy(lsst::afw::detection::SourceSet const &set1,
+                                           lsst::afw::detection::SourceSet const &set2,
                                            double radius) {
     if (&set1 == &set2) {
        return matchXy(set1, radius);
@@ -347,7 +347,7 @@ std::vector<det::SourceMatch> det::matchXy(det::SourceSet const &set1,
   * @param[in] symmetric    if set to @c true symmetric matches are produced: i.e.
   *                         if (s1, s2, d) is reported, then so is (s2, s1, d).
   */
-std::vector<det::SourceMatch> det::matchXy(det::SourceSet const &set,
+std::vector<det::SourceMatch> det::matchXy(lsst::afw::detection::SourceSet const &set,
                                            double radius,
                                            bool symmetric) {
     // setup match parameters
