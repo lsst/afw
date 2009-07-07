@@ -46,7 +46,7 @@ if False:
 else:
     InputMaskedImagePath = os.path.join(dataDir, "small_MI")
     
-EdgeMaskPixel = 2 << (afwImage.MaskU.getMaskPlane("EDGE") - 1)
+EdgeMaskPixel = 1 << afwImage.MaskU.getMaskPlane("EDGE")
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

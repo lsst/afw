@@ -321,7 +321,7 @@ image::Image<PixelT>::Image(int const width, ///< Number of columns
  * Create an initialised Image of the specified size
  */
 template<typename PixelT>
-image::Image<PixelT>::Image(std::pair<int, int> const dimensions // (width, height) of the desired Image
+image::Image<PixelT>::Image(std::pair<int, int> const dimensions ///< (width, height) of the desired Image
                            ) :
     image::ImageBase<PixelT>(dimensions) {}
 
@@ -329,7 +329,7 @@ image::Image<PixelT>::Image(std::pair<int, int> const dimensions // (width, heig
  * Create an uninitialized Image of the specified size
  */
 template<typename PixelT>
-image::Image<PixelT>::Image(std::pair<int, int> const dimensions, // (width, height) of the desired Image
+image::Image<PixelT>::Image(std::pair<int, int> const dimensions, ///< (width, height) of the desired Image
                             PixelT initialValue ///< Initial value
                            ) :
     image::ImageBase<PixelT>(dimensions) {
