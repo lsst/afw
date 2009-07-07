@@ -62,11 +62,11 @@ namespace cfitsio {
     void move_to_hdu(lsst::afw::image::cfitsio::fitsfile *fd, int hdu, bool relative = false);
 
     void appendKey(lsst::afw::image::cfitsio::fitsfile* fd, std::string const &keyWord,
-                   std::string const& keyComment, lsst::daf::base::PropertySet::Ptr metadata);
+                   std::string const& keyComment, boost::shared_ptr<const lsst::daf::base::PropertySet> metadata);
     int getNumKeys(fitsfile* fd);
     void getKey(fitsfile* fd, int n, std::string & keyWord, std::string & keyValue, std::string & keyComment);
 
-    void getMetadata(fitsfile* fd, lsst::daf::base::PropertySet::Ptr metadata, bool strip=true);
+    void getMetadata(fitsfile* fd, lsst::daf::base::PropertySet::Ptr  metadata, bool strip=true);
 }
 
 namespace detail {
@@ -307,11 +307,11 @@ protected:
     
 public:
     fits_reader(cfitsio::fitsfile *file,
-                lsst::daf::base::PropertySet::Ptr metadata,
+                lsst::daf::base::PropertySet::Ptr  metadata,
                 int hdu=0, BBox const& bbox=BBox()) :
         fits_file_mgr(file), _hdu(hdu), _metadata(metadata), _bbox(bbox) { init(); }
     fits_reader(const std::string& filename,
-                lsst::daf::base::PropertySet::Ptr metadata,
+                lsst::daf::base::PropertySet::Ptr  metadata,
                 int hdu=0, BBox const& bbox=BBox()) :
         fits_file_mgr(filename, "rb"), _hdu(hdu), _metadata(metadata), _bbox(bbox) { init(); }
 
@@ -375,7 +375,7 @@ public:
     
     template <typename View>
     void apply(const View& view,
-               lsst::daf::base::PropertySet::Ptr metadata
+               boost::shared_ptr<const lsst::daf::base::PropertySet> metadata
               ) {
         const int nAxis = 2;
         long nAxes[nAxis];

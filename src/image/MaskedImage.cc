@@ -10,6 +10,7 @@
 #include "boost/filesystem/path.hpp"
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/pex/exceptions.h"
+#include "boost/algorithm/string/trim.hpp"
 
 #include "lsst/afw/image/MaskedImage.h"
 
@@ -94,17 +95,78 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
             isMef = true;
         }
     }
+    /*
+     * We need to read the metadata so's to check that the EXTTYPEs are correct
+     */
+    if (!metadata) {
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet);
+    }
 
     if (isMef) {
         const int real_hdu = (hdu == 0) ? 1 : hdu; // see notes about HDU==0 being interpreted as HDU==1,
         ;                                          // but we have to do it here as we'll be adding 1 and 2
+
         _image = typename Image::Ptr(new Image(baseName, real_hdu, metadata, bbox));
+        try {
+            std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
+            if (exttype != "" && exttype != "IMAGE") {
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                                  (boost::format("Reading %s (hdu %d) Expected EXTTYPE==\"IMAGE\", saw \"%s\"") %
+                                   baseName % real_hdu % exttype).str());           
+            }
+        } catch(lsst::pex::exceptions::NotFoundException) {}
+
         _mask = typename Mask::Ptr(new Mask(baseName, real_hdu + 1, metadata, bbox, conformMasks));
+        try {
+            std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
+
+            if (exttype != "" && exttype != "MASK") {
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                                  (boost::format("Reading %s (hdu %d) Expected EXTTYPE==\"MASK\", saw \"%s\"") %
+                                   baseName % (real_hdu + 1) % exttype).str());
+            }
+        } catch(lsst::pex::exceptions::NotFoundException) {}
+
         _variance = typename Variance::Ptr(new Variance(baseName, real_hdu + 2, metadata, bbox));
+        try {
+            std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
+
+            if (exttype != "" && exttype != "VARIANCE") {
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                                  (boost::format("Reading %s (hdu %d) Expected EXTTYPE==\"VARIANCE\", saw \"%s\"") %
+                                   baseName % (real_hdu + 2) % exttype).str());
+            }
+        } catch(lsst::pex::exceptions::NotFoundException) {}
     } else {
         _image = typename Image::Ptr(new Image(MaskedImage::imageFileName(baseName), hdu, metadata, bbox));
+        try {
+            std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
+            if (exttype != "" && exttype != "IMAGE") {
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                                  (boost::format("Reading %s (hdu %d) Expected EXTTYPE==\"IMAGE\", saw \"%s\"") %
+                                   MaskedImage::imageFileName(baseName) % hdu % exttype).str());           
+            }
+        } catch(lsst::pex::exceptions::NotFoundException) {}
+
         _mask = typename Mask::Ptr(new Mask(MaskedImage::maskFileName(baseName), hdu, metadata, bbox, conformMasks));
+        try {
+            std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
+            if (exttype != "" && exttype != "MASK") {
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                                  (boost::format("Reading %s (hdu %d) Expected EXTTYPE==\"MASK\", saw \"%s\"") %
+                                   MaskedImage::maskFileName(baseName) % hdu % exttype).str());           
+            }
+        } catch(lsst::pex::exceptions::NotFoundException) {}
+
         _variance = typename Variance::Ptr(new Variance(MaskedImage::varianceFileName(baseName), hdu, metadata, bbox));
+        try {
+            std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
+            if (exttype != "" && exttype != "VARIANCE") {
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                                  (boost::format("Reading %s (hdu %d) Expected EXTTYPE==\"VARIANCE\", saw \"%s\"") %
+                                   MaskedImage::varianceFileName(baseName) % hdu % exttype).str());           
+            }
+        } catch(lsst::pex::exceptions::NotFoundException) {}
     }
 }
 
@@ -418,24 +480,50 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator/=(Ima
     *_image /= rhs;
     *_variance /= rhs*rhs;
 }
-        
+/**
+ * Write \c this to a FITS file
+ *
+ * \deprecated Please avoid using the interface that writes three separate files;  it may be
+ * removed in some future release.
+ */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
 	std::string const& baseName,    ///< The desired file's baseName (e.g. foo will read foo_{img.msk.var}.fits),
                                        ///< unless file's has a .fits suffix (or you set writeMef to true)
-        lsst::daf::base::PropertySet::Ptr metadata, ///< Metadata to write to file; or NULL
+        boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, ///< Metadata to write to file; or NULL
         std::string const& mode,                    //!< "w" to write a new file; "a" to append
         bool const writeMef                         ///< should I write an MEF file, even if basename doesn't look like a fully qualified FITS file
     ) const {
+
+    lsst::daf::base::PropertySet::Ptr metadata;
+    if (metadata_i) {
+        metadata = metadata_i->deepCopy();
+    } else {
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet());
+    }
+    metadata->set("EXTTYPE", "IMAGE");
+
     if (writeMef ||
         boost::regex_search(baseName, boost::regex(image::detail::fitsFileRE))) { // write an MEF if they call it *.fits"
         _image->writeFits(baseName, metadata, mode);
-        _mask->writeFits(baseName, "a");
-        _variance->writeFits(baseName, lsst::daf::base::PropertySet::Ptr(), "a");
+
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet());
+        metadata->set("EXTTYPE", "MASK");
+        _mask->writeFits(baseName, metadata, "a");
+
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet());
+        metadata->set("EXTTYPE", "VARIANCE");
+        _variance->writeFits(baseName, metadata, "a");
     } else {
         _image->writeFits(MaskedImage::imageFileName(baseName), metadata, mode);
-        _mask->writeFits(MaskedImage::maskFileName(baseName), mode);
-        _variance->writeFits(MaskedImage::varianceFileName(baseName), lsst::daf::base::PropertySet::Ptr(), mode);
+
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet());
+        metadata->set("EXTTYPE", "MASK");
+        _mask->writeFits(MaskedImage::maskFileName(baseName), metadata, mode);
+
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet());
+        metadata->set("EXTTYPE", "VARIANCE");
+        _variance->writeFits(MaskedImage::varianceFileName(baseName), metadata, mode);
     }
 }
         

@@ -677,7 +677,8 @@ namespace image {
         static std::string varianceFileName(std::string const& baseName) { return baseName + "_var.fits"; }
 
         void writeFits(std::string const& baseName,
-                       lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
+                       boost::shared_ptr<const lsst::daf::base::PropertySet> metadata =
+								lsst::daf::base::PropertySet::Ptr(),
                        std::string const& mode="w",
                        bool const writeMef=false
                       ) const;

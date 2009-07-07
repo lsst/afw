@@ -113,7 +113,7 @@ def setMaskTransparency(transparency=None):
     """Specify ds9's mask transparency (percent); or None to not set it when loading masks"""
 
     global _maskTransparency
-    if transparency is not None and transparency < 0 or transparency > 100:
+    if transparency is not None and (transparency < 0 or transparency > 100):
         print >> sys.stderr, "Mask transparency should be in the range [0, 100]; clipping"
         if transparency < 0:
             transparency = 0

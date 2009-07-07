@@ -225,7 +225,7 @@ Image::Image(fileName, hdu=0, metadata=lsst::daf::base::PropertySet::Ptr(), bbox
 of data in the file.  As a special favour, "0" is intepreted as the first HDU, and if
 it's empty, the next is read instead.
 - The \c metadata is basically the contents of the
-FITS header (n.b. it's read automatically if you call \link Exposure::Exposure\endlink(fileName).
+FITS header (n.b. it's read automatically if you call \link Exposure::Exposure\endlink(fileName)).
 - If the bounding box \c bbox is supplied, only that part of the file is read (n.b. in this
 case the image's origin is set correctly, cf. Image::getXY0).
 
@@ -246,6 +246,12 @@ data should be written to a single Multi Extension Fits (MEF) file.  I.e.
 - <code>MaskedImage::writeFits("foo.fits")</code> writes the single MEF file, \b foo.fits
 - <code>MaskedImage::writeFits("foo")</code> still writes three files, \b foo_{img,msk,var}.fits,
 unless you explictly set <code>writeMef</code> in which case a single file, foo, will be written.
+
+In both cases, the FITS HDUs are identified with the \c EXTTYPE keyword; the possible
+values are \c IMAGE, \c MASK, and \c VARIANCE.  If the \c EXTTYPE keyword is present
+in the file, it must have the expected value or \c lsst::pex::exceptions::InvalidParameterException is thrown.
+
+\deprecated Please do not use the three-separate-files APIs in new code.
 
 The corresponding constructors obeyed and obey the same conventions, so
 - <code> MaskedImage::MaskedImage("foo")</code>  reads \b foo_{img,msk,var}.fits if \b foo_img.fits exists, otherwise it reads \b foo
