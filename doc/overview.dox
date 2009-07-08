@@ -204,8 +204,10 @@ namespace lsst { namespace afw { namespace math {
 
  - Statistics
 Annotated examples are available for \link StatisticsExample Statistics\endlink.
- - Background
+ - Background estimation of images
  - Interpolate
+ - Convolution of images is handled by convolve()
+ - Warping Images is handled by warpImage()
 
 */
 }}}

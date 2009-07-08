@@ -81,6 +81,8 @@ namespace math {
     
     /**
      * \brief Return an edge pixel appropriate for a given Image type
+     *
+     * The value is quiet_NaN if that exists for the pixel type, else 0
      */
     template <typename ImageT>
     typename ImageT::SinglePixel edgePixel(
@@ -94,6 +96,11 @@ namespace math {
     
     /**
      * \brief Return an edge pixel appropriate for a given MaskedImage type
+     *
+     * The components are:
+     * - %image = quiet_NaN if that exists for the pixel type, else 0
+     * - mask = EDGE bit set
+     * - variance = infinity
      */
     template <typename MaskedImageT>
     typename MaskedImageT::SinglePixel edgePixel(
@@ -111,22 +118,22 @@ namespace math {
 }}}   // lsst::afw::math
 
 /**
- * @brief Apply convolution kernel to an image at one point
+ * @brief Apply convolution kernel to an %image at one point
  *
- * @note: this is a high performance routine; the user is expected to:
- * - figure out the kernel center and adjust the supplied pixel accessors accordingly
- * For an example of how to do this see the convolve function.
+ * @note This subroutine sacrifices convenience for performance. The user is expected to figure out
+ * the kernel center and adjust the supplied pixel accessors accordingly.
+ * For an example of how to do this see convolve().
  *
  * @ingroup afw
  */
 template <typename OutImageT, typename InImageT>
 inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
-    typename InImageT::const_xy_locator& imageLocator,
-                                        ///< locator for image pixel that overlaps (0,0) pixel of kernel(!)
+    typename InImageT::const_xy_locator& imageLocator, ///< locator for %image pixel that overlaps
+        ///< pixel (0,0) of kernel (the origin of the kernel, not its center)
     lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::const_xy_locator &kernelLocator,
-                                        ///< locator for (0,0) pixel of kernel
-    int kWidth,                         ///< number of columns in kernel
-    int kHeight                         ///< number of rows in kernel
+                    ///< locator for (0,0) pixel of kernel (the origin of the kernel, not its center)
+    int kWidth,     ///< number of columns in kernel
+    int kHeight     ///< number of rows in kernel
                                   ) {
     typename OutImageT::SinglePixel outValue = 0;
     for (int y = 0; y != kHeight; ++y) {
@@ -148,18 +155,18 @@ inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
 }
 
 /**
- * @brief Apply separable convolution kernel to an image at one point
+ * @brief Apply separable convolution kernel to an %image at one point
  *
- * @note: this is a high performance routine; the user is expected to:
- * - figure out the kernel center and adjust the supplied pixel accessors accordingly
- * For an example of how to do this see the convolve function.
+ * @note This subroutine sacrifices convenience for performance. The user is expected to figure out
+ * the kernel center and adjust the supplied pixel accessors accordingly.
+ * For an example of how to do this see convolve().
  *
  * @ingroup afw
  */
 template <typename OutImageT, typename InImageT>
 inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
     typename InImageT::const_xy_locator& imageLocator,
-                                        ///< locator for image pixel that overlaps (0,0) pixel of kernel(!)
+                                        ///< locator for %image pixel that overlaps (0,0) pixel of kernel(!)
     std::vector<lsst::afw::math::Kernel::PixelT> const &kernelXList,  ///< kernel column vector
     std::vector<lsst::afw::math::Kernel::PixelT> const &kernelYList   ///< kernel row vector
 ) {

@@ -4,12 +4,7 @@
  *
  * \ingroup afw
  *
- * \brief Implementation of the templated utility function, warpExposure, for
- * Astrometric Image Remapping for LSST.  Declared in warpExposure.h.
- *
- * \todo: Figure out a better EDGE pixel; max() is not so good
- * because any subsequent operation will then overflow. inf avoids that problem,
- * but doesn't work for int-like images.
+ * \brief Support for warping an %image to a new Wcs.
  *
  * \author Nicole M. Silvestri and Russell Owen, University of Washington
  */
@@ -75,11 +70,13 @@ std::string afwMath::BilinearWarpingKernel::BilinearFunction1::toString(void) co
 }
 
 /**
- * \brief Return a warping kernel given its name
+ * \brief Return a warping kernel given its name.
+ *
+ * Intended for use with warpImage() and warpExposure().
  *
  * Allowed names are:
- * * bilinear
- * * lanczosN where N is an integer, e.g. lanczos4
+ * - bilinear: return a BilinearWarpingKernel
+ * - lanczos#: return a LanczosWarpingKernel of order #, e.g. lanczos4
  */
 boost::shared_ptr<lsst::afw::math::SeparableKernel> lsst::afw::math::makeWarpingKernel(std::string name) {
     typedef boost::shared_ptr<lsst::afw::math::SeparableKernel> KernelPtr;
@@ -99,7 +96,7 @@ boost::shared_ptr<lsst::afw::math::SeparableKernel> lsst::afw::math::makeWarping
 }
 
 /**
- * \brief convenience wrapper around warpImage
+ * \brief Convenience wrapper around warpImage()
  */
 template<typename DestExposureT, typename SrcExposureT>
 int afwMath::warpExposure(
@@ -119,40 +116,48 @@ int afwMath::warpExposure(
 }
 
 /**
- * \brief Remap an image or masked image to a new WCS.
+ * \brief Remap an Image or MaskedImage to a new Wcs. See also convenience function
+ * warpExposure() to warp an Exposure.
  *
- * For pixels in destImage that cannot be computed because their data comes from pixels that are too close
- * to (or off of) the edge of srcImage:
- * * The image and variance are set to 0
- * * The mask is set to the EDGE bit (if found, else 0).
+ * Edge pixels of destImage are set to the value returned by edgePixel().
+ * These are pixels whose data comes from pixels that are too close to, or off of, the edge of srcImage.
  *
- * \return the number of valid pixels in destImage (those that are not off the edge).
+ * \return the number of valid pixels in destImage (those that are not edge pixels).
  *
- * Algorithm:
+ * \b Warping \b Kernels:
+ *
+ * This function requires a warping kernel to perform the interpolation.
+ * Available options include:
+ * - BilinearWarpingKernel
+ * - LanczosWarpingKernel
+ *
+ * makeWarpingKernel() is a handy factory function for constructing a warping kernel given its name.
+ *
+ * A warping kernel is a subclass of SeparableKernel with the following properties:
+ * - It has two parameters: fractional x and fractional y position on the source %image.
+ *   The fractional position for each axis is in the range [0, 1):
+ *   - 0 if the position on the source along that axis is on the center of the pixel.
+ *   - 0.999... if the position on the source along that axis is almost on the center of the next pixel.
+ * - It almost always has even width and height (which is unusual for a kernel) and a center index of
+ *   (width/2, /height/2). This is because the kernel is used to map source positions that range from
+ *   centered on on pixel (width/2, height/2) to nearly centered on pixel (width/2 + 1, height/2 + 1).
+ *
+ * \b Algorithm:
  *
  * For each integer pixel position in the remapped Exposure:
- * * The associated sky coordinates are determined using the remapped WCS.
- * * The associated pixel position on srcImage is determined using the source WCS.
- * * A remapping kernel is computed based on the fractional part of the pixel position on srcImage
- * * The remapping kernel is applied to srcImage at the integer portion of the pixel position
+ * - The associated sky coordinates are determined using the remapped WCS.
+ * - The associated pixel position on srcImage is determined using the source WCS.
+ * - A remapping kernel is computed based on the fractional part of the pixel position on srcImage
+ * - The remapping kernel is applied to srcImage at the integer portion of the pixel position
  *   to compute the remapped pixel value
- * * The flux-conserving factor is determined from the source and new WCS.
+ * - The flux-conserving factor is determined from the source and new WCS.
  *   and is applied to the remapped pixel
  *
  * The scaling of intensity for relative area of source and destination uses two approximations:
- * - The area of the sky marked out by a pixel on the destination image
- *   corresponds to a parallellogram on the source image.
- * - The area varies slowly enough across the image that we can get away with computing
+ * - The area of the sky marked out by a pixel on the destination %image
+ *   corresponds to a parallellogram on the source %image.
+ * - The area varies slowly enough across the %image that we can get away with computing
  *   the source area shifted by half a pixel up and to the left of the true area.
- *
- * A warping kernel has the following properties:
- * - Has two parameters: fractional x and fractional y position on the source image.
- *   The fractional position for each axis has value >= 0 and < 1:
- *   0 if the center of the source along that axis is on the center of the pixel
- *   0.999... if the center of the source along that axis is almost on the center of the next pixel
- * - Almost always has even width and height (unusual for a kernel) and a center index = width/height/2.
- *   This is because the kernel is used to map from a range of pixel positions from
- *   centered on on (width/2, height/2) to nearly centered on (1 + width/2, 1 + height/2).
  *
  * \throw lsst::pex::exceptions::InvalidParameterException if destImage is srcImage
  *
@@ -163,10 +168,10 @@ int afwMath::warpExposure(
  */
 template<typename DestImageT, typename SrcImageT>
 int afwMath::warpImage(
-    DestImageT &destImage,       ///< remapped image
-    afwImage::Wcs const &destWcs,   ///< WCS of remapped image
-    SrcImageT const &srcImage,   ///< source image
-    afwImage::Wcs const &srcWcs,    ///< WCS of source image
+    DestImageT &destImage,       ///< remapped %image
+    afwImage::Wcs const &destWcs,   ///< WCS of remapped %image
+    SrcImageT const &srcImage,   ///< source %image
+    afwImage::Wcs const &srcWcs,    ///< WCS of source %image
     SeparableKernel &warpingKernel  ///< warping kernel; determines warping algorithm
     )
 {

@@ -1,18 +1,13 @@
 // -*- LSST-C++ -*- // fixed format comment for emacs
 /**
-  * \file 
-  *
-  * \ingroup afw
-  *
-  * \brief Implementation of the templated utility function, warpExposure, for
-  * Astrometric Image Remapping for the LSST.
-  *
-  * \author Nicole M. Silvestri and Russell Owen, University of Washington
-  *
-  * \todo
-  * * Modify WarpingKernel so the class is not templated but the method computePixel is.
-  *   That was the original design, but it tended to hide code errors so I switched for now.
-  */
+ * \file 
+ *
+ * \ingroup afw
+ *
+ * \brief Support for warping an image to a new WCS.
+ *
+ * \author Nicole M. Silvestri and Russell Owen, University of Washington
+ */
 
 #ifndef LSST_AFW_MATH_WARPEXPOSURE_H
 #define LSST_AFW_MATH_WARPEXPOSURE_H
@@ -33,11 +28,18 @@ namespace afw {
 namespace math {
        
     /**
-    * \brief Lanczos warping: accurate but slow; can introduce ringing artifacts.
+    * \brief Lanczos warping: accurate but slow and can introduce ringing artifacts.
+    *
+    * This kernel is the product of two 1-dimensional Lanczos functions.
+    * The number of minima and maxima in the 1-dimensional Lanczos function is 2*order + 1.
+    * The kernel has one pixel per function minimum or maximum; but as applied to warping,
+    * the first or last pixel is always zero and can be omitted. Thus the kernel size is 2*order x 2*order.
     */
     class LanczosWarpingKernel : public SeparableKernel {
     public:
-        explicit LanczosWarpingKernel(int order)
+        explicit LanczosWarpingKernel(
+            int order ///< order of Lanczos function
+        )
         :
             SeparableKernel(2 * order, 2 * order,
                 LanczosFunction1<Kernel::PixelT>(order), LanczosFunction1<Kernel::PixelT>(order))
@@ -49,6 +51,8 @@ namespace math {
 
     /**
     * \brief Bilinear warping: fast; good for undersampled data.
+    *
+    * The kernel size is 2 x 2.
     */
 #if defined(SWIG)
     #pragma SWIG nowarn=SWIGWARN_PARSE_NESTED_CLASS
@@ -66,7 +70,8 @@ namespace math {
          * \brief 1-dimensional bilinear interpolation function.
          *
          * Optimized for bilinear warping so only accepts two values: 0 and 1
-         * (which is why it defined in the BilinearWarpingKernel class instead of standalone)
+         * (which is why it defined in the BilinearWarpingKernel class instead of
+         * being made available as a standalone function).
          */
         class BilinearFunction1: public Function1<Kernel::PixelT> {
         public:
