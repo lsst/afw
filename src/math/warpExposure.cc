@@ -120,7 +120,7 @@ int afwMath::warpExposure(
  * warpExposure() to warp an Exposure.
  *
  * Edge pixels of destImage are set to the value returned by edgePixel().
- * These are pixels whose data comes from pixels that are too close to, or off of, the edge of srcImage.
+ * These are pixels whose data comes from too near the edge of srcImage, or misses srcImage entirely.
  *
  * \return the number of valid pixels in destImage (those that are not edge pixels).
  *
