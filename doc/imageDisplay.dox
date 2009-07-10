@@ -1,7 +1,12 @@
 namespace lsst { namespace afw { namespace image {
 /**
 \page secDisplay  How to %display images
+\section secDisplay  How to display images
 
+ - \ref secDs9Mosaics
+ - \ref secDs9Commands
+ - \ref secDs9Firewall
+ 
 \section secDs9  Using DS9 in the LSST framework
 
 At present (July 2009) we are using ds9 (http://hea-www.harvard.edu/RD/ds9) to %display
@@ -10,17 +15,61 @@ unstable API;  awkward to use with firewalls) as well as a number of advantages:
 by the CfA; ubiquitous in astronomy;  support for WCS;  support for multiple frames).
 
 The basic functionality is in \c lsst.afw.display.ds9, and the workhorse routine
-is \c mtv which is able to %display
-an Exposure, an Image, or a MaskedImage (it's also able to overlay a Mask on an
-Image of identical size --- a bug in ds9 prevents you from displaying a pure Mask). The
-simplest use is simply to setup afw and ds9, start ds9 and python, and type:
+is \c mtv. The simplest use is simply to setup afw and ds9, start ds9 and python, and type:
 \code
 import lsst.afw.display.ds9 as ds9
 import lsst.afw.image as afwImage
 
-im = afwImage("myFile.fits")
+im = afwImageF("myFile.fits")
 ds9.mtv(im)
 \endcode
+
+You can %display images in multiple frames, either by explicitly specifying the
+frame, or by setting the default with \c ds9.setDefaultFrame().  If there's a
+strong desire for multiple instances of ds9 this could be supported (by choosing
+different tcp ports); file a ticket if this is really important for you.
+
+The \c mtv command handles all of the LSST %image types:
+<DL>
+<DT>Image
+<DD> The pixels are displayed on ds9.  Image%s don't have a Wcs, so no
+astronomical WCS information is available, but we do support \c WCSA and \c WCSB;
+the former is 0-indexed %pixel coordinates allowing for the Image's \c XY0; the latter
+is 0-indexed %pixel coordinates relative to the bottom left %pixel being \c (0, \c 0).
+
+\c mtv accepts an optional \c wcs argument, which allows you to provide an astronomical Wcs (but
+if you have an DecoratedImage or Exposure this is done for you)
+
+<DT> DecoratedImage
+<DD> Displayed like Image, but with the default WCS set from the DecoratedImage's \c Wcs
+
+<DT> Mask
+<DD> Overlay the current %display with the Mask. A bug in ds9 prevents you from displaying a pure Mask,
+but you can use the \c isMask argument to force the Mask to be treated as a 16-bit %image.
+
+The Mask %display isn't as fast as you might like,
+as ds9's current API requires us to send each mask plane as a separate 16-bit %image (I
+have asked Bill Joy at CfA to change this).  Each bitplane may be given a separate
+colour;  you can inspect the current mapping with \c getMaskPlaneColor or set it with
+\c setMaskPlaneColor.  If a mask plane has no defined colour, one will be chosen for
+you.
+
+Recent versions of ds9 allow you to vary the mask's transparency, either via the GUI or
+with e.g. \c setMaskTransparency(50).
+
+<DT> MaskedImage
+<DD> The image-plane pixels are displayed, overlaid with the mask.  If you want to look
+at the variance too, you'll need to say something like:
+\code
+mi = afwImage.MaskedImageF("mi.fits")
+ds9.mtv(mi, frame=0)
+ds9.mtv(mi.getVariance(), frame=1)
+ds9.mtv(mi.getMask(), frame=1)
+\endcode
+
+<DT> Exposure
+<DD> Displayed like MaskedImage, but with the default WCS set from the MaskedImage's \c Wcs
+</DL>
 
 \subsection secDs9Mosaics   How to build a mosaic image
 
@@ -32,15 +81,44 @@ m = Mosaic()
 m.setGutter(5)
 m.setBackground(10)
 m.setMode("square")                   # the default
-mosaic = m.makeMosaic(im1, im2, im3)
-\endcode
-You can return the (ix, iy)th (or nth) BBox with getBBox()
 
-N.b. you could also have said <tt>ims = [im1, im2, im3]; mosaic = m.makeMosaic(ims)</tt>
+mosaic = m.makeMosaic(im1, im2, im3)   # build the mosaic
+ds9.mtv(mosaic)                        # display it
+m.drawLabels(["Label 1", "Label 2", "Label 3"]) # label the panels
+
+# alternative way to build a mosaic
+images = [im1, im2, im3]               
+labels = ["Label 1", "Label 2", "Label 3"]
+
+mosaic = m.makeMosaic(images)
+ds9.mtv(mosaic)
+m.drawLabels(labels)
+
+# Yet another way to build a mosaic (no need to build the images/labels lists)
+for i in range(len(images)):
+    m.append(images[i], labels[i])
+
+mosaic = m.makeMosaic()
+ds9.mtv(mosaic)
+m.drawLabels()
+\endcode
+You can return the (ix, iy)th (or nth) bounding box with getBBox()
+
+<UL><LI> The Mosaic class API
 
 <dl>
 <dt>__init__() [self, gutter=3, background=0, mode='square']
 <dd>
+
+<dt> append() [self, %image, label=None]
+<dd>
+      Add an %image to the list of images to be mosaiced
+      Set may be cleared with Mosaic.reset()
+
+<dt> drawLabels() [self, labels=None, frame=0]
+<dd>
+      Draw the list labels at the corners of each panel.  If labels is None, use the ones
+      specified by Mosaic.append()
 
 <dt>drawLabels() [self, labels, frame=0]
 <dd>
@@ -48,11 +126,14 @@ N.b. you could also have said <tt>ims = [im1, im2, im3]; mosaic = m.makeMosaic(i
 
 <dt> getBBox() [self, ix, iy=None]
 <dd>
-      Get the BBox for the nth or (ix, iy)the panel
+      Get the bounding box for the nth or (ix, iy)the panel
 
 <dt> makeMosaic() [self, images, frame=None, mode=None]
 <dd>
-      Return a mosaic of all the images provided; if frame is specified, display it
+      Return a mosaic of all the images provided; if none are specified,
+      use the list accumulated with Mosaic.append()
+
+      If frame is specified, %display it
 
 <dt> setBackground() [self, background]
 <dd>
@@ -70,6 +151,7 @@ N.b. you could also have said <tt>ims = [im1, im2, im3]; mosaic = m.makeMosaic(i
         <tr><td>x</td>     <td>Make mosaic one %image high</td></tr>
         <tr><td>y</td>     <td>Make mosaic one %image wide</td></tr>
       </table>
+</LI>
 
 \subsection secDs9Commands  All supported ds9 commands
 
@@ -83,9 +165,9 @@ N.b. you could also have said <tt>ims = [im1, im2, im3]; mosaic = m.makeMosaic(i
     
 <dt> mtv() [data, frame=-1, init=True, wcs=None, isMask=False, lowOrderBits=False, title=None]
 <dd>
-        Display an Image or Mask on a DS9 display
+        Display an Image or Mask on a DS9 %display
         
-           If lowOrderBits is True, give low-order-bits priority in display (i.e.
+           If lowOrderBits is True, give low-order-bits priority in %display (i.e.
         overlay them last)
         
         Historical note: the name "mtv" comes from Jim Gunn's forth imageprocessing
@@ -168,7 +250,7 @@ Any other value is interpreted as a string to be drawn
     
 <dt> getMaskPlaneVisibility() [name]
 <dd>
-        Should we display the specified mask plane name?
+        Should we %display the specified mask plane name?
     
 <dt> getMaskTransparency()
 <dd>
@@ -210,7 +292,7 @@ python
 >>> ds9.erase()
 \endcode
 
-xpa afficianados will note that I'm bypassing the xpa name s erver; it needs
+xpa afficianados will note that I'm bypassing the xpa name server; it needs
 another set of 2 or 3 ports tunnelled, and setting up ACLs.
 
 Here's \link tunnelDs9 a script\endlink (in \c afw/examples) to run on your home machine that should simplify setting
