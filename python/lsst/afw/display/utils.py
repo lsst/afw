@@ -14,9 +14,28 @@ class Mosaic(object):
     m.setGutter(5)
     m.setBackground(10)
     m.setMode("square")                   # the default
-    mosaic = m.makeMosaic(im1, im2, im3)
 
-    You can return the (ix, iy)th (or nth) BBox with getBBox()
+    mosaic = m.makeMosaic(im1, im2, im3)   # build the mosaic
+    ds9.mtv(mosaic)			   # display it
+    m.drawLabels(["Label 1", "Label 2", "Label 3"]) # label the panels
+
+    # alternative way to build a mosaic
+    images = [im1, im2, im3]               
+    labels = ["Label 1", "Label 2", "Label 3"]
+
+    mosaic = m.makeMosaic(images)
+    ds9.mtv(mosaic)
+    m.drawLabels(labels)
+
+    # Yet another way to build a mosaic (no need to build the images/labels lists)
+    for i in range(len(images)):
+        m.append(images[i], labels[i])
+
+    mosaic = m.makeMosaic()
+    ds9.mtv(mosaic)
+    m.drawLabels()
+
+    You can return the (ix, iy)th (or nth) bounding box (in pixels) with getBBox()
     """
     def __init__(self, gutter=3, background=0, mode="square"):
         self.gutter = 3                 # number of pixels between panels in a mosaic
