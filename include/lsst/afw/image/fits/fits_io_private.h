@@ -62,11 +62,11 @@ namespace cfitsio {
     void move_to_hdu(lsst::afw::image::cfitsio::fitsfile *fd, int hdu, bool relative = false);
 
     void appendKey(lsst::afw::image::cfitsio::fitsfile* fd, std::string const &keyWord,
-                   std::string const& keyComment, lsst::daf::base::PropertySet::Ptr metadata);
+                   std::string const& keyComment, boost::shared_ptr<const lsst::daf::base::PropertySet> metadata);
     int getNumKeys(fitsfile* fd);
     void getKey(fitsfile* fd, int n, std::string & keyWord, std::string & keyValue, std::string & keyComment);
 
-    void getMetadata(fitsfile* fd, lsst::daf::base::PropertySet::Ptr metadata, bool strip=true);
+    void getMetadata(fitsfile* fd, lsst::daf::base::PropertySet::Ptr  metadata, bool strip=true);
 }
 
 namespace detail {
@@ -209,8 +209,22 @@ protected:
             if (fits_create_file(&_fd_s, filename.c_str(), &status) != 0) {
                 throw LSST_EXCEPT(FitsException, cfitsio::err_msg(filename, status));
             }
+        } else if (flags == "a" || flags == "ab") {
+            int status = 0;
+            if (fits_open_file(&_fd_s, filename.c_str(), READWRITE, &status) != 0) {
+                throw LSST_EXCEPT(FitsException, cfitsio::err_msg(filename, status));
+            }
+            /*
+             * Seek to end of the file
+             */
+            int nHdu = 0;
+            if (fits_get_num_hdus(_fd_s, &nHdu, &status) != 0 ||
+                fits_movabs_hdu(_fd_s, nHdu, NULL, &status) != 0) {
+                (void)cfitsio::fits_close_file(_fd_s, &status);
+                throw LSST_EXCEPT(FitsException, cfitsio::err_msg(filename, status));
+            }
         } else {
-            abort();
+            throw LSST_EXCEPT(FitsException, "Unknown mode " + flags);
         }
 
         _fd = boost::shared_ptr<FD>(_fd_s, close_cfitsio());
@@ -293,11 +307,11 @@ protected:
     
 public:
     fits_reader(cfitsio::fitsfile *file,
-                lsst::daf::base::PropertySet::Ptr metadata,
+                lsst::daf::base::PropertySet::Ptr  metadata,
                 int hdu=0, BBox const& bbox=BBox()) :
         fits_file_mgr(file), _hdu(hdu), _metadata(metadata), _bbox(bbox) { init(); }
     fits_reader(const std::string& filename,
-                lsst::daf::base::PropertySet::Ptr metadata,
+                lsst::daf::base::PropertySet::Ptr  metadata,
                 int hdu=0, BBox const& bbox=BBox()) :
         fits_file_mgr(filename, "rb"), _hdu(hdu), _metadata(metadata), _bbox(bbox) { init(); }
 
@@ -356,12 +370,12 @@ class fits_writer : public fits_file_mgr {
     }
 public:
     fits_writer(cfitsio::fitsfile *file) :     fits_file_mgr(file)           { init(); }
-    fits_writer(std::string const& filename) : fits_file_mgr(filename, "wb") { init(); }
+    fits_writer(std::string const& filename, std::string const&mode) : fits_file_mgr(filename, mode) { init(); }
     ~fits_writer() { }
     
     template <typename View>
     void apply(const View& view,
-               lsst::daf::base::PropertySet::Ptr metadata
+               boost::shared_ptr<const lsst::daf::base::PropertySet> metadata
               ) {
         const int nAxis = 2;
         long nAxes[nAxis];
