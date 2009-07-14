@@ -195,7 +195,43 @@ static void decodeSipHeader(lsst::daf::base::PropertySet::Ptr fitsMetadata,
     }
 }
 
+ /**
+ * @brief Strictly debugging code.
+ */
+void lsst::afw::image::Wcs::printSipHeader(std::string const& which) {
+
+    boost::numeric::ublas::matrix<double> m;
+    if (which == "A"){
+        m = _sipA;
+    }
+    else if (which == "Ap"){
+        m = _sipAp;
+    }
+    else if (which == "B"){
+        m = _sipB;
+    }
+    else if (which == "Bp"){
+        m = _sipBp;
+    }
+    else{
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                          "Illegal choice, choose one of A[p] B[p]");
+    }
     
+        
+    cout << "Sip" << which << endl;
+    
+    int order = m.size1();
+    boost::format format("%1%_%2%_%3%");
+    for (int i = 0; i < order; ++i) {
+        for (int j = 0; j < order; ++j) {
+            std::string header = (format % which % i % j).str();
+
+            cout << header << " "<< m(i,j);
+        }
+    }
+}
+   
 /**
  * @brief Construct a Wcs from a FITS header, represented as PropertySet::Ptr
  *
@@ -269,6 +305,11 @@ lsst::afw::image::Wcs::Wcs(
     decodeSipHeader(fitsMetadata, "B", &_sipB);
     decodeSipHeader(fitsMetadata, "AP", &_sipAp);
     decodeSipHeader(fitsMetadata, "BP", &_sipBp);
+
+    //Hack. Workaround a bug in wcslib that gets thinks RA---TAN-* is different to RA---TAN
+    //Horrible consequences surely follow from this
+    strncpy(_wcsInfo->ctype[0], "RA---TAN", 72);
+    strncpy(_wcsInfo->ctype[1], "DEC--TAN", 72);
 }
 
 
