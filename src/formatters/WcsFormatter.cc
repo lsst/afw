@@ -154,10 +154,17 @@ afwForm::WcsFormatter::generatePropertySet(afwImg::Wcs const& wcs) {
     wcsProps->add("CRVAL2", wcs._wcsInfo[0].crval[1]);
     wcsProps->add("CUNIT1", std::string(wcs._wcsInfo[0].cunit[0]));
     wcsProps->add("CUNIT2", std::string(wcs._wcsInfo[0].cunit[1]));
+    
+    //Hack. Because wcslib4.3 gets confused when it's passed RA---TAN-SIP, 
+    //we set the value of ctypes to just RA---TAN, regardless of whether
+    //the SIP types are present. But when we persist to a file, we need to 
+    //check whether the SIP polynomials were actually there and correct 
+    //ctypes if necessary. Bad things will happen if someone tries to 
+    //use a system other than RA---TAN and DEC--TAN
     std::string ctype1(wcs._wcsInfo[0].ctype[0]);
     std::string ctype2(wcs._wcsInfo[0].ctype[1]);
-    if (wcs._sipA.size1() > 0 || wcs._sipB.size1() > 0 ||
-        wcs._sipAp.size1() > 0 || wcs._sipBp.size1() > 0) {
+    if (wcs._sipA.size1() > 1 || wcs._sipB.size1() > 1 ||
+        wcs._sipAp.size1() > 1 || wcs._sipBp.size1() > 1) {
         if (ctype1.rfind("-SIP") == std::string::npos) {
             ctype1 += "-SIP";
         }

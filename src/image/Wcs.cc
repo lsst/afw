@@ -305,6 +305,11 @@ lsst::afw::image::Wcs::Wcs(
     decodeSipHeader(fitsMetadata, "B", &_sipB);
     decodeSipHeader(fitsMetadata, "AP", &_sipAp);
     decodeSipHeader(fitsMetadata, "BP", &_sipBp);
+
+    //Hack. Workaround a bug in wcslib that gets thinks RA---TAN-* is different to RA---TAN
+    //Horrible consequences surely follow from this
+    strncpy(_wcsInfo->ctype[0], "RA---TAN", 72);
+    strncpy(_wcsInfo->ctype[1], "DEC--TAN", 72);
 }
 
 
