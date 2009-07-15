@@ -254,7 +254,5 @@ void afwForm::WcsFormatter::delegateSerialize(
 
 dafPersist::Formatter::Ptr afwForm::WcsFormatter::createInstance(
     pexPolicy::Policy::Ptr policy) {
-    afwForm::WcsFormatter wcsF =  afwForm::WcsFormatter(policy);
-    return dafPersist::Formatter::Ptr(&wcsF);
-    //return dafPersist::Formatter::Ptr(new afwForm::WcsFormatter(policy));
+    return dafPersist::Formatter::Ptr(new afwForm::WcsFormatter(policy));
 }
