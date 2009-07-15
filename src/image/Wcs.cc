@@ -308,8 +308,10 @@ lsst::afw::image::Wcs::Wcs(
 
     //Hack. Workaround a bug in wcslib that gets thinks RA---TAN-* is different to RA---TAN
     //Horrible consequences surely follow from this
-    strncpy(_wcsInfo->ctype[0], "RA---TAN", 72);
-    strncpy(_wcsInfo->ctype[1], "DEC--TAN", 72);
+    strncpy(_wcsInfo->ctype[0], "RA---TAN\0\0\0\0\0", 72);
+    strncpy(_wcsInfo->ctype[1], "DEC--TAN\0\0\0\0\0", 72);
+    wcsset(_wcsInfo); //Update the structure with this new information
+
 }
 
 
@@ -542,6 +544,7 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::raDecToXY(
                           (boost::format("Error: wcslib returned a status code of  %d") % status).str());
     }
 
+    
     //Correct for distortion. We follow the notation of Shupe et al. here, including
     //capitalisation
     if( _sipAp.size1() > 0){
@@ -607,6 +610,7 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::xyToRaDec(
     double phi, theta;
     double skyTmp[2];
 
+    
     //Correct pixel positions for distortion if necessary
     if( _sipA.size1() > 0) {
         //If the following assertions aren't true then something has gone seriously wrong.
@@ -637,7 +641,7 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::xyToRaDec(
         pixTmp[0]+= f;
         pixTmp[1]+= g;
     }
-
+ 
     int stat[1];
     int status = 0;
     status = wcsp2s(_wcsInfo, 1, 2, pixTmp, imgcrd, &phi, &theta, skyTmp, stat);
