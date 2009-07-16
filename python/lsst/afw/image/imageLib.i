@@ -20,6 +20,7 @@ Basic routines to talk to lsst::afw::image classes
 #include <lsst/pex/logging/Trace.h>
 #include <lsst/pex/policy.h>
 #include <lsst/afw/image.h>
+
 #include <boost/cstdint.hpp>
 %}
 
@@ -175,7 +176,7 @@ SWIG_SHARED_PTR(Wcs, lsst::afw::image::Wcs);
                                                                 lsst::afw::image::PointD crpix,
                                                                 double CD11, double CD12, double CD21, double CD22) {
 
-    boost::numeric::ublas::matrix<double> CD(2, 2);
+    Eigen::Matrix2d CD;
     CD(0, 0) = CD11;
     CD(0, 1) = CD12;
     CD(1, 0) = CD21;

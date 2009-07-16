@@ -41,7 +41,6 @@ using lsst::daf::data::LsstBase;
 using namespace std;
 
 typedef lsst::afw::image::PointD PointD;
-namespace ublas = boost::numeric::ublas;
 
 
 /**
@@ -52,13 +51,13 @@ namespace ublas = boost::numeric::ublas;
 lsst::afw::image::Wcs::Wcs() :
     LsstBase(typeid(this)),
     _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0),
-    _sipA(0,0), _sipB(0,0), _sipAp(0,0), _sipBp(0,0){
+    _sipA(1,1), _sipB(1,1), _sipAp(1,1), _sipBp(1,1){
 }
 
 
 ///
 /// Function to initialise the wcslib structure. Should only be called from Wcs constructors
-void lsst::afw::image::Wcs::initWcslib(PointD crval, PointD crpix, ublas::matrix<double> CD,
+void lsst::afw::image::Wcs::initWcslib(PointD crval, PointD crpix, Eigen::Matrix2d CD,
                                        double equinox,
                                        std::string raDecSys){
 
@@ -75,12 +74,10 @@ void lsst::afw::image::Wcs::initWcslib(PointD crval, PointD crpix, ublas::matrix
     _wcsInfo->crpix[0] = crpix.getX();
     _wcsInfo->crpix[1] = crpix.getY();
 
-    //Setting this to TAN-SIP gives the wrong result causes the test
-    //testWcs.cc::radec_to_xy to fail when I construct using
-    //wcs(crval, crpix, CD);
-    strncpy(_wcsInfo->ctype[0], "RA---TAN", 72);  //wcsini sets ctype[] to have length 72
-    strncpy(_wcsInfo->ctype[1], "DEC--TAN", 72);
-
+    //This, as far as this function is concerned, is correct. _wcsInfo only deals with distortion
+    //free coord systems, so any mention of -SIP doesn't apply here. The constructor with
+    //SIP terms should reset these strings to include the "-SIP" string
+    setCtypesToLinear();
 
     //Set the CD matrix
     for (int i=0; i<2; ++i) {
@@ -105,7 +102,21 @@ void lsst::afw::image::Wcs::initWcslib(PointD crval, PointD crpix, ublas::matrix
     
     _nWcsInfo = 1;   //Specify that we have only one coordinate representation   
 }
-    
+
+
+/// Set the ctype[] strings in wcslib for a linear Wcs without distortion terms
+void lsst::afw::image::Wcs::setCtypesToLinear(){
+    strncpy(_wcsInfo->ctype[0], "RA---TAN", 72);  //wcsini sets ctype[] to have length 72
+    strncpy(_wcsInfo->ctype[1], "DEC--TAN", 72);
+}
+
+
+/// Set the ctype[] strings in wcslib for a Wcs that includes SIP distortion terms
+void lsst::afw::image::Wcs::setCtypesToSIP(){
+    strncpy(_wcsInfo->ctype[0], "RA---TAN-SIP", 72);  //wcsini sets ctype[] to have length 72
+    strncpy(_wcsInfo->ctype[1], "DEC--TAN-SIP", 72);
+}
+
 
 /**
  * @brief Construct a Wcs that performs a linear conversion between pixels and radec
@@ -114,53 +125,55 @@ void lsst::afw::image::Wcs::initWcslib(PointD crval, PointD crpix, ublas::matrix
  */
 lsst::afw::image::Wcs::Wcs(PointD crval, ///< ra/dec of centre of image
                            PointD crpix, ///< pixel coordinates of centre of image
-                           ublas::matrix<double> CD, ///< Conversion matrix with elements as defined
+                           Eigen::Matrix2d CD, ///< Conversion matrix with elements as defined
                                                     ///< in wcs.h
                            double equinox,         /// Equinox used to define coord sys, e.g J2000
                            std::string raDecSys   ///  Astrometry System, e.g FK5 or ICRS
                           ) : LsstBase(typeid(this)),
                               _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0),
-                              _sipA(0,0), _sipB(0,0), _sipAp(0,0), _sipBp(0,0) {
+                              _sipA(1,1), _sipB(1,1), _sipAp(1,1), _sipBp(1,1) {
 
     initWcslib(crval, crpix, CD, equinox, raDecSys);
+    setCtypesToLinear();
 }
 
 lsst::afw::image::Wcs::Wcs(
     PointD crval, ///< (ra, dec)
     PointD crpix,  ///< (x,y) pixel coords corresponding to crval
-    ublas::matrix<double> CD, ///< Linear mapping from crpix to crval
-    ublas::matrix<double> sipA, ///< Forward distortion Matrix A
-    ublas::matrix<double> sipB, ///< Forward distortion Matrix B
-    ublas::matrix<double> sipAp, ///<Reverse distortion Matrix Ap
-    ublas::matrix<double> sipBp,  ///<Reverse distortion Matrix Bp
+    Eigen::Matrix2d CD, ///< Linear mapping from crpix to crval
+    Eigen::MatrixXd sipA, ///< Forward distortion Matrix A
+    Eigen::MatrixXd sipB, ///< Forward distortion Matrix B
+    Eigen::MatrixXd sipAp, ///<Reverse distortion Matrix Ap
+    Eigen::MatrixXd sipBp,  ///<Reverse distortion Matrix Bp
     double equinox,               /// Equinox of coord system, e.g J2000
     std::string raDecSys          ///Celestial reference frame used, e.g FK5 or ICRS
                           ): LsstBase(typeid(this)),
                              _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0),
-                             _sipA(0,0), _sipB(0,0), _sipAp(0,0), _sipBp(0,0) {
+                             _sipA(sipA), _sipB(sipB), _sipAp(sipAp), _sipBp(sipBp) {
 
-    if (sipA.size1() != sipA.size2() ){
+    if (sipA.rows() != sipA.cols() ){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                           "Error: Matrix sipA must be square");
     }
 
-    if (sipB.size1() != sipB.size2() ){
+    if (sipB.rows() != sipB.cols() ){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                           "Error: Matrix sipB must be square");
     }
 
-    if (sipAp.size1() != sipAp.size2() ){
+    if (sipAp.rows() != sipAp.cols() ){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                           "Error: Matrix sipAp must be square");
     }
 
-    if (sipBp.size1() != sipBp.size2() ){
+    if (sipBp.rows() != sipBp.cols() ){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                           "Error: Matrix sipBp must be square");
     }
 
     
     initWcslib(crval, crpix, CD, equinox, raDecSys);
+    setCtypesToSIP();
 
     //Init the SIP matrices
     _sipA = sipA;
@@ -176,7 +189,7 @@ lsst::afw::image::Wcs::Wcs(
  */
 static void decodeSipHeader(lsst::daf::base::PropertySet::Ptr fitsMetadata,
                             std::string const& which,
-                            boost::numeric::ublas::matrix<double>* m) {
+                            Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>* m) {
     std::string header = which + "_ORDER";
     if (!fitsMetadata->exists(header)) return;
     int order = fitsMetadata->get<int>(header);
@@ -186,51 +199,15 @@ static void decodeSipHeader(lsst::daf::base::PropertySet::Ptr fitsMetadata,
         for (int j = 0; j <= order; ++j) {
             header = (format % which % i % j).str();
             if (fitsMetadata->exists(header)) {
-                m->insert_element(i, j, fitsMetadata->get<double>(header));
+                (*m)(i,j) = fitsMetadata->get<double>(header);
             }
             else {
-                m->insert_element(i, j, 0.0);
+                (*m)(i,j) = 0.0;
             }
         }
     }
 }
 
- /**
- * @brief Strictly debugging code.
- */
-void lsst::afw::image::Wcs::printSipHeader(std::string const& which) {
-
-    boost::numeric::ublas::matrix<double> m;
-    if (which == "A"){
-        m = _sipA;
-    }
-    else if (which == "Ap"){
-        m = _sipAp;
-    }
-    else if (which == "B"){
-        m = _sipB;
-    }
-    else if (which == "Bp"){
-        m = _sipBp;
-    }
-    else{
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
-                          "Illegal choice, choose one of A[p] B[p]");
-    }
-    
-        
-    cout << "Sip" << which << endl;
-    
-    int order = m.size1();
-    boost::format format("%1%_%2%_%3%");
-    for (int i = 0; i < order; ++i) {
-        for (int j = 0; j < order; ++j) {
-            std::string header = (format % which % i % j).str();
-
-            cout << header << " "<< m(i,j);
-        }
-    }
-}
    
 /**
  * @brief Construct a Wcs from a FITS header, represented as PropertySet::Ptr
@@ -244,8 +221,8 @@ lsst::afw::image::Wcs::Wcs(
     _wcsInfo(NULL),
     _nWcsInfo(0),
     _nReject(0),
-    _sipA(0,0), _sipB(0,0),
-    _sipAp(0,0), _sipBp(0,0)
+    _sipA(1,1), _sipB(1,1),
+    _sipAp(1,1), _sipBp(1,1)
 {
     // these should be set via policy - but for the moment...
 
@@ -492,7 +469,7 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::getOriginXY() const {
 /// [dec ]   [ c21 c22 ]   [ row ] 
 ///
 /// where (col,row) = (0,0) = (ra, dec) is the centre of the WCS colution, and the matrix C is return by this function.
-boost::numeric::ublas::matrix<double> lsst::afw::image::Wcs::getLinearTransformMatrix() const {
+Eigen::Matrix2d lsst::afw::image::Wcs::getLinearTransformMatrix() const {
 
     if(_wcsInfo == NULL) {
         throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
@@ -503,11 +480,11 @@ boost::numeric::ublas::matrix<double> lsst::afw::image::Wcs::getLinearTransformM
     //If naxis != 2, I'm not sure if any of what follows is correct
     assert(naxis == 2);
     
-    boost::numeric::ublas::matrix<double> C(naxis, naxis);
+    Eigen::Matrix2d C;
 
     for (int i=0; i< naxis; ++i){
         for (int j=0; j<naxis; ++j) {
-            C.insert_element(i, j, _wcsInfo->cd[ (i*naxis) + j ]);
+            C(i,j) = _wcsInfo->cd[ (i*naxis) + j ];
         }
     }
 
@@ -547,28 +524,28 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::raDecToXY(
     
     //Correct for distortion. We follow the notation of Shupe et al. here, including
     //capitalisation
-    if( _sipAp.size1() > 0){
+    if( _sipAp.rows() > 1){
         //If the following assertions aren't true then something has gone seriously wrong.
-        assert(_sipBp.size1() > 0 );
-        assert(_sipAp.size1() == _sipAp.size2());
-        assert(_sipBp.size1() == _sipBp.size2());        
+        assert(_sipBp.rows() > 0 );
+        assert(_sipAp.rows() == _sipAp.cols());
+        assert(_sipBp.rows() == _sipBp.cols());        
         
         double U = pixTmp[0] - _wcsInfo->crpix[0];  //Relative, undistorted pixel coords
         double V = pixTmp[1]-  _wcsInfo->crpix[1];
     
         double F = 0;
-        for(unsigned int i=0; i< _sipAp.size1(); ++i) {
-            for(unsigned int j=0; j< _sipAp.size2(); ++j) {
-                if (i+j>1 && i+j < _sipAp.size1() ) {
+        for(int i=0; i< _sipAp.rows(); ++i) {
+            for(int j=0; j< _sipAp.cols(); ++j) {
+                if (i+j>1 && i+j < _sipAp.rows() ) {
                     F += _sipAp(i,j)* pow(U, (int) i) * pow(V, (int) j);
                 }
             }
         }    
 
         double G = 0;
-        for(unsigned int i=0; i< _sipBp.size1(); ++i) {
-            for(unsigned int j=0; j< _sipBp.size2(); ++j) {
-                if (i+j>1 && i+j < _sipBp.size1() ) {
+        for(int i=0; i< _sipBp.rows(); ++i) {
+            for(int j=0; j< _sipBp.cols(); ++j) {
+                if (i+j>1 && i+j < _sipBp.rows() ) {
                     G += _sipBp(i,j)* pow(U, (int) i) * pow(V, (int) j);
                 }
             }
@@ -612,28 +589,28 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::xyToRaDec(
 
     
     //Correct pixel positions for distortion if necessary
-    if( _sipA.size1() > 0) {
+    if( _sipA.rows() > 1) {
         //If the following assertions aren't true then something has gone seriously wrong.
-        assert(_sipB.size1() > 0 );
-        assert(_sipA.size1() == _sipA.size2());
-        assert(_sipB.size1() == _sipB.size2());
+        assert(_sipB.rows() > 0 );
+        assert(_sipA.rows() == _sipA.cols());
+        assert(_sipB.rows() == _sipB.cols());
 
         double u = x - _wcsInfo->crpix[0];  //Relative pixel coords
         double v = y -  _wcsInfo->crpix[1];
         
         double f = 0;
-        for(unsigned int i=0; i< _sipA.size1(); ++i) {
-            for(unsigned int j=0; j< _sipA.size2(); ++j) {
-                if (i+j>1 && i+j < _sipA.size1() ) {
+        for(int i=0; i< _sipA.rows(); ++i) {
+            for(int j=0; j< _sipA.cols(); ++j) {
+                if (i+j>1 && i+j < _sipA.rows() ) {
                     f += _sipA(i,j)* pow(u, (int) i) * pow(v, (int) j);
                 }
             }
         }
 
         double g = 0;
-        for(unsigned int i=0; i< _sipB.size1(); ++i) {
-            for(unsigned int j=0; j< _sipB.size2(); ++j) {
-                if (i+j>1 && i+j < _sipB.size1() ) {
+        for(int i=0; i< _sipB.rows(); ++i) {
+            for(int j=0; j< _sipB.cols(); ++j) {
+                if (i+j>1 && i+j < _sipB.rows() ) {
                     g += _sipB(i,j)* pow(u, (int) i) * pow(v, (int) j);
                 }
             }
