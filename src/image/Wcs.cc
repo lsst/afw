@@ -516,7 +516,7 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::raDecToXY(
 
     //Correct for distortion. We follow the notation of Shupe et al. here, including
     //capitalisation
-    if( _sipAp.rows() > 0){
+    if( _sipAp.rows() > 1){
         //If the following assertions aren't true then something has gone seriously wrong.
         assert(_sipBp.rows() > 0 );
         assert(_sipAp.rows() == _sipAp.cols());

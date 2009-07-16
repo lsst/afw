@@ -174,8 +174,8 @@ afwForm::WcsFormatter::generatePropertySet(afwImg::Wcs const& wcs) {
     wcsProps->add("CUNIT2", std::string(wcs._wcsInfo[0].cunit[1]));
     std::string ctype1(wcs._wcsInfo[0].ctype[0]);
     std::string ctype2(wcs._wcsInfo[0].ctype[1]);
-    if (wcs._sipA.rows() > 0 || wcs._sipB.rows() > 0 ||
-        wcs._sipAp.rows() > 0 || wcs._sipBp.rows() > 0) {
+    if (wcs._sipA.rows() > 1 || wcs._sipB.rows() > 1 ||
+        wcs._sipAp.rows() > 1 || wcs._sipBp.rows() > 1) {
         if (ctype1.rfind("-SIP") == std::string::npos) {
             ctype1 += "-SIP";
         }
