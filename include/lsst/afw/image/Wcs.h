@@ -76,9 +76,6 @@ namespace image {
 
         double pixArea(lsst::afw::image::PointD pix) const;
 
-        //Debugging code
-        void printSipHeader(std::string const& which);
-
     private:
         void initWcslib(PointD crval, PointD crpix, Eigen::Matrix2d CD, double equinox, std::string raDecSys);
         void setCtypesToLinear();
