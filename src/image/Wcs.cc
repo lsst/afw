@@ -103,7 +103,10 @@ void lsst::afw::image::Wcs::initWcslib(PointD crval, PointD crpix, ublas::matrix
     strncpy(_wcsInfo->radesys, raDecSys.c_str(), 72);
     _wcsInfo->equinox = equinox;
     
-    _nWcsInfo = 1;   //Specify that we have only one coordinate representation   
+    _nWcsInfo = 1;   //Specify that we have only one coordinate representation
+
+    //Tell wcslib that we are set up
+    wcsset(_wcsInfo);
 }
     
 
@@ -259,7 +262,9 @@ lsst::afw::image::Wcs::Wcs(
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                           "Could not parse FITS WCS: no header cards found");
     }
-    
+
+#define OLD 0
+#if OLD
     // wcspih takes a non-const char* (because some versions of ctrl modify the string)
     // but we cannot afford to allow that to happen, so make a copy...
     int len = metadataStr.size();
@@ -273,13 +278,35 @@ lsst::afw::image::Wcs::Wcs(
                           (boost::format("Could not parse FITS WCS: wcspih status = %d (%s)") %
                            pihStatus % wcs_errmsg[pihStatus]).str());
     }
+#else
+    
+    //Read out the bits of Wcs info that wcslib needs from the header
+    try {
+        PointD crval(fitsMetadata->getAsDouble("CRVAL1"), fitsMetadata->getAsDouble("CRVAL2") );
+        PointD crpix(fitsMetadata->getAsDouble("CRPIX1"), fitsMetadata->getAsDouble("CRPIX2") ); 
 
-    /*
-     * Fix any bad values in the Wcs
-     * Should we throw an exception or continue if this fails?
-     * For now be paranoid...
-     */
+        //This should be updated to be Eigen::Matrix
+        boost::numeric::ublas::matrix<double> CD(2,2);
+        CD(0,0) = fitsMetadata->getAsDouble("CD1_1");
+        CD(0,1) = fitsMetadata->getAsDouble("CD1_2");
+        CD(1,0) = fitsMetadata->getAsDouble("CD2_1");
+        CD(1,1) = fitsMetadata->getAsDouble("CD2_2");
 
+        
+        double  equinox = fitsMetadata->getAsDouble("EQUINOX");
+        std::string raDecSys = fitsMetadata->getAsString("RADECSYS");
+        
+        initWcslib(crval, crpix, CD, equinox, raDecSys);
+        
+    } catch(lsst::pex::exceptions::NotFoundException &e) {
+        std::string msg = "An error occurred in Wcs() while parsing a fits header";
+        e.addMessage(__FILE__, __LINE__, "Wcs", msg);
+        throw;
+    }
+#endif
+
+
+    //Run wcsfix on _wcsInfo to try and fix any problems it knows about.
     const int *naxes = NULL;            // should be {NAXIS1, NAXIS2, ...} to check cylindrical projections
     int stats[NWCSFIX];			// status returns from wcsfix
     int fixStatus = wcsfix(_wcsfixCtrl, naxes, _wcsInfo, stats);
@@ -307,7 +334,8 @@ lsst::afw::image::Wcs::Wcs(
     decodeSipHeader(fitsMetadata, "BP", &_sipBp);
 
     //Hack. Workaround a bug in wcslib that gets thinks RA---TAN-* is different to RA---TAN
-    //Horrible consequences surely follow from this
+    //Horrible consequences surely follow from this. This line should be removed when wcslib 4.4
+    //appears
     strncpy(_wcsInfo->ctype[0], "RA---TAN\0\0\0\0\0", 72);
     strncpy(_wcsInfo->ctype[1], "DEC--TAN\0\0\0\0\0", 72);
     wcsset(_wcsInfo); //Update the structure with this new information
