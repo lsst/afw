@@ -109,6 +109,26 @@ def getMaskPlaneVisibility(name):
     else:
         return True
 
+def setMaskTransparency(transparency=None):
+    """Specify ds9's mask transparency (percent); or None to not set it when loading masks"""
+
+    global _maskTransparency
+    if transparency is not None and (transparency < 0 or transparency > 100):
+        print >> sys.stderr, "Mask transparency should be in the range [0, 100]; clipping"
+        if transparency < 0:
+            transparency = 0
+        else:
+            transparency = 100
+
+    _maskTransparency = transparency
+
+setMaskTransparency()
+
+def getMaskTransparency():
+    """Return ds9's mask transparency"""
+
+    return _maskTransparency
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def getXpaAccessPoint():
@@ -217,12 +237,14 @@ system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
        _mtv(data.getImage(), wcs, title, False)
        mask = data.getMask(True)
        if mask:
-           mtv(mask, frame, False, wcs, False, lowOrderBits=lowOrderBits)
+           mtv(mask, frame, False, wcs, False, lowOrderBits=lowOrderBits, title=title)
+           if getMaskTransparency() is not None:
+               ds9Cmd("mask transparency %d" % getMaskTransparency())
    elif re.search("::Exposure<", data.__repr__()): # it's an Exposure; display the MaskedImage with the WCS
        if wcs:
            raise RuntimeError, "You may not specify a wcs with an Exposure"
 
-       mtv(data.getMaskedImage(), frame, False, data.getWcs(), False, lowOrderBits=lowOrderBits)
+       mtv(data.getMaskedImage(), frame, False, data.getWcs(), False, lowOrderBits=lowOrderBits, title=title)
    elif re.search("::Mask<", data.__repr__()): # it's a Mask; display it, bitplane by bitplane
        nMaskPlanes = data.getNumPlanesUsed()
        maskPlanes = data.getMaskPlaneDict()
