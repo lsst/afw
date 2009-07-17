@@ -19,7 +19,7 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 
 // not used? #include <stdlib.h>
 
-#include "boost/serialization/shared_ptr.hpp"
+//#include "boost/serialization/shared_ptr.hpp"
 #include "wcslib/wcs.h"
 
 #include "lsst/daf/base.h"
@@ -110,19 +110,37 @@ void afwForm::WcsFormatter::update(
     throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Unexpected call to update for Wcs");
 }
 
+
+/// Provide a function to serialise an Eigen::Matrix so we can persist the SIP matrices
+template <class Archive>
+void serializeEigenArray(Archive& ar, Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>& m) {
+    int rows = m.rows();
+    int cols = m.cols();
+    ar & rows & cols;
+    if (Archive::is_loading::value) {
+        m = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>(rows, cols);
+    }
+    for (int j = 0; j < m.cols(); ++j) {
+        for (int i = 0; i < m.rows(); ++i) {
+            ar & m(i,j);
+        }
+    }
+}
+
+
 static void encodeSipHeader(lsst::daf::base::PropertySet::Ptr wcsProps,
-                            std::string const& which,
-                            boost::numeric::ublas::matrix<double> const& m) {
-    size_t order = m.size1();
-    if (m.size2() != order) {
+                            std::string const& which,   ///< Either A,B, Ap or Bp
+                            Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> const& m) {
+    int order = m.rows();
+    if (m.cols() != order) {
         throw LSST_EXCEPT(pexExcept::DomainErrorException,
             "sip" + which + " matrix is not square");
     }
     if (order > 0) {
         order -= 1; // match SIP convention
         wcsProps->add(which + "_ORDER", static_cast<int>(order));
-        for (size_t i = 0; i <= order; ++i) {
-            for (size_t j = 0; j <= order; ++j) {
+        for (int i = 0; i <= order; ++i) {
+            for (int j = 0; j <= order; ++j) {
                 double val = m(i, j);
                 if (val != 0.0) {
                     wcsProps->add((boost::format("%1%_%2%_%3%")
@@ -163,8 +181,9 @@ afwForm::WcsFormatter::generatePropertySet(afwImg::Wcs const& wcs) {
     //use a system other than RA---TAN and DEC--TAN
     std::string ctype1(wcs._wcsInfo[0].ctype[0]);
     std::string ctype2(wcs._wcsInfo[0].ctype[1]);
-    if (wcs._sipA.size1() > 1 || wcs._sipB.size1() > 1 ||
-        wcs._sipAp.size1() > 1 || wcs._sipBp.size1() > 1) {
+    if (wcs._sipA.rows() > 1 || wcs._sipB.rows() > 1 ||
+        wcs._sipAp.rows() > 1 || wcs._sipBp.rows() > 1) {
+
         if (ctype1.rfind("-SIP") == std::string::npos) {
             ctype1 += "-SIP";
         }
@@ -194,8 +213,12 @@ void afwForm::WcsFormatter::delegateSerialize(
     // Serialize most fields normally
     ar & ip->_nWcsInfo & ip->_relax;
     ar & ip->_wcsfixCtrl & ip->_wcshdrCtrl & ip->_nReject;
-    ar & ip->_sipA & ip->_sipB & ip->_sipAp & ip->_sipBp;
-
+    
+    serializeEigenArray(ar, ip->_sipA);
+    serializeEigenArray(ar, ip->_sipAp);
+    serializeEigenArray(ar, ip->_sipB);
+    serializeEigenArray(ar, ip->_sipBp);
+    
     // If we are loading, create the array of Wcs parameter structs
     if (Archive::is_loading::value) {
         ip->_wcsInfo =
