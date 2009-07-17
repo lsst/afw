@@ -130,7 +130,9 @@ class WCSTestCaseCFHT(unittest.TestCase):
     """A test case for WCS"""
 
     def setUp(self):
-        self.metadata = afwImage.readMetadata(InputImagePath)
+        path=InputImagePath+"_img.fits"
+        self.metadata = afwImage.readMetadata(path)
+        self.wcs = afwImage.Wcs(self.metadata)
         if False:
             ds9.mtv(e)
 
