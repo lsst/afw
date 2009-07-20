@@ -77,10 +77,14 @@ namespace image {
         double pixArea(lsst::afw::image::PointD pix) const;
 
     private:
-        void initWcslib(PointD crval, PointD crpix, Eigen::Matrix2d CD, double equinox, std::string raDecSys);
-        void setCtypesToLinear();
-        void setCtypesToSIP();
-
+        void initWcslib(PointD crval,                   
+                        PointD crpix,                   
+                        Eigen::Matrix2d CD,             
+                        double equinox,                 
+                        std::string raDecSys,           
+                        std::string ctype1="RA---TAN",  
+                        std::string ctype2="DEC--TAN"   
+                        );
 
         
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::WcsFormatter);

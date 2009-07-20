@@ -42,6 +42,24 @@ using namespace std;
 
 typedef lsst::afw::image::PointD PointD;
 
+//The amount of space allocated to strings in wcslib
+const int STRLEN = 72;
+
+//Error codes
+static std::string wcslibErrorMsg(int status)
+{
+    int numCodes = 13;
+    
+    if(status < 0)
+    {   return std::string("Illegal status code in wcslib");
+    }
+    
+    if(status > numCodes)
+    {   return std::string("Unknown error code");
+    }
+    
+    return wcs_errmsg[status];
+}
 
 /**
  * @brief Construct an invalid Wcs given no arguments
@@ -57,27 +75,35 @@ lsst::afw::image::Wcs::Wcs() :
 
 ///
 /// Function to initialise the wcslib structure. Should only be called from Wcs constructors
-void lsst::afw::image::Wcs::initWcslib(PointD crval, PointD crpix, Eigen::Matrix2d CD,
-                                       double equinox,
-                                       std::string raDecSys){
+void lsst::afw::image::Wcs::initWcslib(
+                PointD crval,                   ///< Origin in sky coords
+                PointD crpix,                   ///< Origin in pixel coords
+                Eigen::Matrix2d CD,             ///< Transformation matrix
+                double equinox,                 ///< Equinox of coordinate system, eg 2000
+                std::string raDecSys,           ////< Definition of coordinate system, eg. FK5 or ICRS
+                std::string ctype1,  ///< Type of 1st coordinate axis
+                std::string ctype2   ///< Type of 2nd coordinate axis
+                ) {
 
     _wcsInfo = static_cast<struct wcsprm *>(malloc(sizeof(struct wcsprm)));
     if (_wcsInfo == NULL) {
         throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException, "Cannot allocate WCS info");
     }
-    _wcsInfo->flag = -1;
-    wcsini(true, 2, _wcsInfo);   //2 indicates a naxis==2, a two dimensional image
 
+    _wcsInfo->flag = -1;
+    int status = wcsini(true, 2, _wcsInfo);   //2 indicates a naxis==2, a two dimensional image
+    if(status != 0) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException,
+                          (boost::format("Failed to allocate memory with wcsini. Status %d: %s") %
+                           status % wcslibErrorMsg(status) ).str());
+    }
+    
     _wcsInfo->crval[0] = crval.getX();
     _wcsInfo->crval[1] = crval.getY();
 
     _wcsInfo->crpix[0] = crpix.getX();
     _wcsInfo->crpix[1] = crpix.getY();
 
-    //This, as far as this function is concerned, is correct. _wcsInfo only deals with distortion
-    //free coord systems, so any mention of -SIP doesn't apply here. The constructor with
-    //SIP terms should reset these strings to include the "-SIP" string
-    setCtypesToLinear();
 
     //Set the CD matrix
     for (int i=0; i<2; ++i) {
@@ -96,27 +122,21 @@ void lsst::afw::image::Wcs::initWcslib(PointD crval, PointD crpix, Eigen::Matrix
     _wcsInfo->types = NULL;
 
     //Set the coordinate system
-    //72 is a magic number defined in wcslib/C/wcs.h
-    strncpy(_wcsInfo->radesys, raDecSys.c_str(), 72);
+    strncpy(_wcsInfo->ctype[0], ctype1.c_str(), STRLEN);
+    strncpy(_wcsInfo->ctype[1], ctype2.c_str(), STRLEN);
+    strncpy(_wcsInfo->radesys, raDecSys.c_str(), STRLEN);
     _wcsInfo->equinox = equinox;
     
-    _nWcsInfo = 1;   //Specify that we have only one coordinate representation   
+    _nWcsInfo = 1;   //Specify that we have only one coordinate representation
+
+    //Tell wcslib that we are set up
+    status=wcsset(_wcsInfo);
+    if(status != 0) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                          (boost::format("Failed to setup wcs structure with wcsset. Status %d: %s") %
+                           status % wcslibErrorMsg(status) ).str());
+    }
 }
-
-
-/// Set the ctype[] strings in wcslib for a linear Wcs without distortion terms
-void lsst::afw::image::Wcs::setCtypesToLinear(){
-    strncpy(_wcsInfo->ctype[0], "RA---TAN", 72);  //wcsini sets ctype[] to have length 72
-    strncpy(_wcsInfo->ctype[1], "DEC--TAN", 72);
-}
-
-
-/// Set the ctype[] strings in wcslib for a Wcs that includes SIP distortion terms
-void lsst::afw::image::Wcs::setCtypesToSIP(){
-    strncpy(_wcsInfo->ctype[0], "RA---TAN-SIP", 72);  //wcsini sets ctype[] to have length 72
-    strncpy(_wcsInfo->ctype[1], "DEC--TAN-SIP", 72);
-}
-
 
 /**
  * @brief Construct a Wcs that performs a linear conversion between pixels and radec
@@ -133,8 +153,7 @@ lsst::afw::image::Wcs::Wcs(PointD crval, ///< ra/dec of centre of image
                               _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0),
                               _sipA(1,1), _sipB(1,1), _sipAp(1,1), _sipBp(1,1) {
 
-    initWcslib(crval, crpix, CD, equinox, raDecSys);
-    setCtypesToLinear();
+    initWcslib(crval, crpix, CD, equinox, raDecSys, "RA---TAN", "DEC--TAN");
 }
 
 lsst::afw::image::Wcs::Wcs(
@@ -171,10 +190,11 @@ lsst::afw::image::Wcs::Wcs(
                           "Error: Matrix sipBp must be square");
     }
 
+    //FIXME: When wcslib4.4 is released, the coordinate system should specify SIP. Until
+    //then we need to work around the bug in earlier versions
+    //initWcslib(crval, crpix, CD, equinox, raDecSys, "RA---TAN-SIP", "DEC--TAN-SIP"); //Wcslib >= 4.4
+    initWcslib(crval, crpix, CD, equinox, raDecSys, "RA---TAN", "DEC--TAN");    
     
-    initWcslib(crval, crpix, CD, equinox, raDecSys);
-    setCtypesToSIP();
-
     //Init the SIP matrices
     _sipA = sipA;
     _sipB = sipB;
@@ -182,14 +202,14 @@ lsst::afw::image::Wcs::Wcs(
     _sipBp = sipBp;
 
 }
-    
-    
+
+
 /**
  * @brief Decode the SIP headers for a given matrix, if present.
  */
 static void decodeSipHeader(lsst::daf::base::PropertySet::Ptr fitsMetadata,
                             std::string const& which,
-                            Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>* m) {
+                            Eigen::MatrixXd *m) {
     std::string header = which + "_ORDER";
     if (!fitsMetadata->exists(header)) return;
     int order = fitsMetadata->get<int>(header);
@@ -202,13 +222,14 @@ static void decodeSipHeader(lsst::daf::base::PropertySet::Ptr fitsMetadata,
                 (*m)(i,j) = fitsMetadata->get<double>(header);
             }
             else {
-                (*m)(i,j) = 0.0;
+                (*m)(i, j) = 0.0;
             }
         }
     }
 }
 
-   
+
+
 /**
  * @brief Construct a Wcs from a FITS header, represented as PropertySet::Ptr
  *
@@ -236,7 +257,9 @@ lsst::afw::image::Wcs::Wcs(
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                           "Could not parse FITS WCS: no header cards found");
     }
-    
+
+#define OLD 0
+#if OLD
     // wcspih takes a non-const char* (because some versions of ctrl modify the string)
     // but we cannot afford to allow that to happen, so make a copy...
     int len = metadataStr.size();
@@ -248,15 +271,46 @@ lsst::afw::image::Wcs::Wcs(
     if (pihStatus != 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                           (boost::format("Could not parse FITS WCS: wcspih status = %d (%s)") %
-                           pihStatus % wcs_errmsg[pihStatus]).str());
+                           pihStatus % wcslibErrorMsg(pihStatus) ).str());
     }
+#else
+    
+    //Read out the bits of Wcs info that wcslib needs from the header
+    try {
+        PointD crval(fitsMetadata->getAsDouble("CRVAL1"), fitsMetadata->getAsDouble("CRVAL2") );
+        PointD crpix(fitsMetadata->getAsDouble("CRPIX1"), fitsMetadata->getAsDouble("CRPIX2") ); 
 
-    /*
-     * Fix any bad values in the Wcs
-     * Should we throw an exception or continue if this fails?
-     * For now be paranoid...
-     */
+        //This should be updated to be Eigen::Matrix
+        Eigen::Matrix2d CD;
+        CD(0,0) = fitsMetadata->getAsDouble("CD1_1");
+        CD(0,1) = fitsMetadata->getAsDouble("CD1_2");
+        CD(1,0) = fitsMetadata->getAsDouble("CD2_1");
+        CD(1,1) = fitsMetadata->getAsDouble("CD2_2");
 
+        
+        double  equinox = fitsMetadata->getAsDouble("EQUINOX");
+        
+        std::string raDecSys;
+        if( fitsMetadata->exists("RADESYS")) {
+            raDecSys = fitsMetadata->getAsString("RADESYS");
+        } else {
+            raDecSys = fitsMetadata->getAsString("RADECSYS");   //Throws exception on fail
+        }
+        
+        std::string ctype1 = fitsMetadata->getAsString("CTYPE1");
+        std::string ctype2 = fitsMetadata->getAsString("CTYPE2");
+        
+        initWcslib(crval, crpix, CD, equinox, raDecSys, ctype1, ctype2);
+        
+    } catch(lsst::pex::exceptions::NotFoundException &e) {
+        std::string msg = "An error occurred in Wcs() while parsing a fits header";
+        e.addMessage(__FILE__, __LINE__, "Wcs", msg);
+        throw;
+    }
+#endif
+
+
+    //Run wcsfix on _wcsInfo to try and fix any problems it knows about.
     const int *naxes = NULL;            // should be {NAXIS1, NAXIS2, ...} to check cylindrical projections
     int stats[NWCSFIX];			// status returns from wcsfix
     int fixStatus = wcsfix(_wcsfixCtrl, naxes, _wcsInfo, stats);
@@ -283,13 +337,34 @@ lsst::afw::image::Wcs::Wcs(
     decodeSipHeader(fitsMetadata, "AP", &_sipAp);
     decodeSipHeader(fitsMetadata, "BP", &_sipBp);
 
+#if OLD == 0
+    //FIXME:
     //Hack. Workaround a bug in wcslib that gets thinks RA---TAN-* is different to RA---TAN
-    //Horrible consequences surely follow from this
-    strncpy(_wcsInfo->ctype[0], "RA---TAN\0\0\0\0\0", 72);
-    strncpy(_wcsInfo->ctype[1], "DEC--TAN\0\0\0\0\0", 72);
-    wcsset(_wcsInfo); //Update the structure with this new information
+    //Horrible consequences surely follow from this. This line should be removed when wcslib 4.4
+    //appears. Note that is the ctypes are flipped (e.g SDSS images), this workaround will fail to
+    //clean out the sip polynomials.
+    if(!strncmp(_wcsInfo->ctype[0], "RA---TAN-SIP", STRLEN)) {
+        strncpy(_wcsInfo->ctype[0], "RA---TAN", STRLEN);
+        cout << "Changed RA\n";
+    }
 
+    if(!strncmp(_wcsInfo->ctype[1], "DEC--TAN-SIP", STRLEN)) {
+        strncpy(_wcsInfo->ctype[1], "DEC--TAN", STRLEN);
+        cout << "Changed Dec\n";
+    }
+
+    int status=wcsset(_wcsInfo);
+    if(status != 0) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                          (boost::format("Failed to setup wcs structure with wcsset. Status %d: %s") %
+                           status % wcslibErrorMsg(status) ).str());
+    }
+    
+#endif
 }
+
+
+
 
 
 /**
@@ -323,11 +398,13 @@ lsst::afw::image::Wcs::Wcs(Wcs const & rhs):
             // wcssub deep copies each _wcsInfo structure into newly allocated memory
             // this memory is managed by wcslib and so must be freed by wcsfree
             _wcsInfo[ii].flag = -1;
-            int status = wcscopy(1, rhs._wcsInfo + ii, _wcsInfo + ii);
+            int alloc=1;    //Unconditionally allocate memory when calling wcsini
+            int status = wcscopy(alloc, rhs._wcsInfo + ii, _wcsInfo + ii);
             if (status != 0) {
                 wcsvfree(&_nWcsInfo, &_wcsInfo);
                 throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
-                    (boost::format("Could not copy WCS: wcscopy status = %d for wcs index %d") % status % ii).str());
+                    (boost::format("Could not copy WCS: wcscopy status = %d for wcs index %d. %s") % status % ii % wcslibErrorMsg(status) ).str());
+
             }
         }
     }
@@ -370,7 +447,7 @@ lsst::afw::image::Wcs & lsst::afw::image::Wcs::operator = (const lsst::afw::imag
                 if (status != 0) {
                     wcsvfree(&_nWcsInfo, &_wcsInfo);
                     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
-                        (boost::format("Failed to copy WCS info; wcscopy status = %d") % status).str());
+                        (boost::format("Failed to copy WCS info; wcscopy status = %d. %s") % status % wcslibErrorMsg(status)).str());
                 }
             }
         }
@@ -518,7 +595,7 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::raDecToXY(
     status = wcss2p(_wcsInfo, 1, 2, skyTmp, &phi, &theta, imgcrd, pixTmp, stat);
     if (status > 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
-                          (boost::format("Error: wcslib returned a status code of  %d") % status).str());
+                          (boost::format("Error: wcslib returned a status code of %d. %s") % status % wcslibErrorMsg(status)).str());
     }
 
     
@@ -623,8 +700,10 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::xyToRaDec(
     int status = 0;
     status = wcsp2s(_wcsInfo, 1, 2, pixTmp, imgcrd, &phi, &theta, skyTmp, stat);
     if (status > 0) {
+        wcsprt(_wcsInfo);
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
-                          (boost::format("Error: wcslib returned a status code of  %d") % status).str());
+                          (boost::format("Error: wcslib returned a status code of  %d. %s") % status % wcslibErrorMsg(status) ).str());
+                          
     }
 
     return lsst::afw::image::PointD(skyTmp);

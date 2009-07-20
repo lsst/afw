@@ -24,7 +24,7 @@ class TanSipTestCases(unittest.TestCase):
         metadata.set("NAXIS",                    2) 
         metadata.set("NAXIS1",                 1024) 
         metadata.set("NAXIS2",                 1153) 
-        metadata.set("RADECSYS", 'FK5     ')
+        metadata.set("RADECSYS", 'FK5')
         metadata.set("EQUINOX",                2000.)
 
 
@@ -35,10 +35,10 @@ class TanSipTestCases(unittest.TestCase):
         metadata.set("CTYPE1", 'RA---TAN-SIP')
         metadata.set("CTYPE2", 'DEC--TAN-SIP')
 
-        metadata.setDouble("CD1_1 ", 5.10808596133527E-05)
-        metadata.setDouble("CD1_2 ", 1.85579539217196E-07)
-        metadata.setDouble("CD2_2 ", -5.10281493481982E-05)
-        metadata.setDouble("CD2_1 ", -8.27440751733828E-07)
+        metadata.setDouble("CD1_1", 5.10808596133527E-05)
+        metadata.setDouble("CD1_2", 1.85579539217196E-07)
+        metadata.setDouble("CD2_2", -5.10281493481982E-05)
+        metadata.setDouble("CD2_1", -8.27440751733828E-07)
 
 
 
