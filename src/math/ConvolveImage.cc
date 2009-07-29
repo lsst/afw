@@ -30,6 +30,8 @@ namespace pexLog = lsst::pex::logging;
 namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
 
+# define ISINSTANCE(A, B) (dynamic_cast<B const*>(&(A)) != NULL)
+
 namespace {
     /**
      * @brief Compute the dot product of a kernel row or column and the overlapping portion of an %image
@@ -155,20 +157,27 @@ void afwMath::basicConvolve(
 
     // Because convolve isn't a method of Kernel we can't always use Kernel's vtbl to dynamically
     // dispatch the correct version of basicConvolve. The case that fails is convolving with a kernel
-    // obtained from a pointer or reference to a Kernel (base class), e.g. as used in linearCombinationKernel.
-    if (dynamic_cast<afwMath::DeltaFunctionKernel const*>(&kernel) != NULL) {
+    // obtained from a pointer or reference to a Kernel (base class), e.g. as used in LinearCombinationKernel.
+    if (ISINSTANCE(kernel, afwMath::DeltaFunctionKernel)) {
         pexLog::TTrace<4>("lsst.afw.kernel.convolve",
             "generic basicConvolve: dispatch to DeltaFunctionKernel basicConvolve");
         afwMath::basicConvolve(convolvedImage, inImage,
             *dynamic_cast<afwMath::DeltaFunctionKernel const*>(&kernel),
             doNormalize);
         return;
-    } else if (dynamic_cast<afwMath::SeparableKernel const*>(&kernel) != NULL) {
+    } else if (ISINSTANCE(kernel, afwMath::SeparableKernel)) {
         pexLog::TTrace<4>("lsst.afw.kernel.convolve",
             "generic basicConvolve: dispatch to SeparableKernel basicConvolve");
         afwMath::basicConvolve(convolvedImage, inImage,
             *dynamic_cast<afwMath::SeparableKernel const*>(&kernel),
             doNormalize);
+        return;
+    } else if (ISINSTANCE(kernel, afwMath::LinearCombinationKernel) && kernel.isSpatiallyVarying()) {
+        pexLog::TTrace<4>("lsst.afw.kernel.convolve",
+            "generic basicConvolve: dispatch to spatially varying LinearCombinationKernel basicConvolve");
+        afwMath::basicConvolve(convolvedImage, inImage,
+            *dynamic_cast<afwMath::LinearCombinationKernel const*>(&kernel),
+            false); // note: change to doNormalize once normalization is supported: ticket #833
         return;
     }
     // OK, use general (and slower) form
@@ -283,8 +292,15 @@ void afwMath::basicConvolve(
  * - If the kernel is not spatially varying, then computes a fixed kernel and calls the
  *   the general version of basicConvolve.
  *
- * Warning: cannot normalize a spatially varying LinearCombinationKernel (trying will raise an exception).
- * This will be fixed in PR 833.
+ * @warning Cannot normalize a spatially varying LinearCombinationKernel (trying will raise an exception).
+ * This will be fixed in Ticket #833. When implementing Ticket #833, be sure to:
+ * - change the dynamic dispatch code in the generic basicConvolve code (false -> doNormalize).
+ * - fix the exception list just below
+ *
+ * @warning The variance will be mis-computed if your basis kernels contain home-brew delta function kernels
+ * (instead of instances of afwMath::DeltaFunctionKernel). It may also be mis-computed if your basis kernels
+ * contain many pixels with value zero, or if your basis kernels contain a mix of
+ * afwMath::DeltaFunctionKernel with other kernels.
  *
  * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage is not the same size as inImage.
  * @throw lsst::pex::exceptions::InvalidParameterException if inImage is smaller (in colums or rows) than kernel.
@@ -309,7 +325,7 @@ void afwMath::basicConvolve(
         afwImage::Image<KernelPixel> kernelImage(kernel.getWidth(), kernel.getHeight());
         kernel.computeImage(kernelImage, 0, 0, doNormalize);
         afwMath::FixedKernel fixedKernel(kernelImage);
-        return basicConvolve(inImage, convolvedImage, fixedKernel, doNormalize);
+        return basicConvolve(convolvedImage, inImage, fixedKernel, doNormalize);
     }
     
 
@@ -361,6 +377,10 @@ void afwMath::basicConvolve(
     for (typename KernelList::const_iterator basisKernelIter = basisKernelList.begin();
         basisKernelIter != basisKernelList.end(); ++basisKernelIter, ++i) {
         afwMath::basicConvolve(basisImage, inImage, **basisKernelIter, false);
+        double noiseCorrelationCoeff = 1.0;
+        if (ISINSTANCE(**basisKernelIter, afwMath::DeltaFunctionKernel)) {
+            noiseCorrelationCoeff = 0.0;
+        }
 
         // iterate over matching pixels of all images to compute output image
         afwMath::Kernel::SpatialFunctionPtr spatialFunctionPtr = kernel.getSpatialFunction(i);
@@ -375,10 +395,10 @@ void afwMath::basicConvolve(
                 double basisCoeff = (*spatialFunctionPtr)(colPos, rowPos);
                 
                 typename OutImageT::SinglePixel cnvPixel(*cnvXIter);
-                cnvPixel = afwImage::pixel::plus(cnvPixel, (*basisXIter) * basisCoeff, 1.0);
+                cnvPixel = afwImage::pixel::plus(cnvPixel, (*basisXIter) * basisCoeff, noiseCorrelationCoeff);
                 *cnvXIter = cnvPixel;
                 // note: cnvPixel avoids compiler complaints; the following does not build:
-                // *cnvXIter = afwImage::pixel::plus(*cnvXIter, (*basisXIter) * basisCoeff, 1.0);
+                // *cnvXIter = afwImage::pixel::plus(*cnvXIter, (*basisXIter) * basisCoeff, noiseCorrelationCoeff);
             }
         }
     }

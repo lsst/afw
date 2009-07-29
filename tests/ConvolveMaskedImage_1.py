@@ -27,7 +27,7 @@ import lsst.afw.image.testUtils as imTestUtils
 try:
     Verbosity
 except NameError:
-    Verbosity = 0                       # increase to see trace
+    Verbosity = 5                       # increase to see trace
 pexLog.Debug("lsst.afw", Verbosity)
 
 try:
@@ -423,11 +423,15 @@ class ConvolveTestCase(unittest.TestCase):
 
         imMaskVar = imTestUtils.arraysFromMaskedImage(self.maskedImage)
         refCnvImMaskVar = refConvolve(imMaskVar, lcKernel, doNormalize)
+        refCnvMaskedImage = imTestUtils.maskedImageFromArrays(refCnvImMaskVar)
+        refCnvMaskedImage.writeFits("ref_spVarGaussLCK")
 
         # compute twice, to be sure cnvMaskedImage is properly reset
         cnvMaskedImage = afwImage.MaskedImageF(self.maskedImage.getDimensions())
         for ii in range(2):        
             afwMath.convolve(cnvMaskedImage, self.maskedImage, lcKernel, doNormalize)
+            if (ii == 0):
+                cnvMaskedImage.writeFits("afw_spVarGaussLCK")
             cnvImMaskVar = imTestUtils.arraysFromMaskedImage(cnvMaskedImage)
     
             if display:
