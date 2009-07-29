@@ -6,12 +6,8 @@
  *
  * @brief Convolve and convolveAtAPoint functions for Image and Kernel
  *
- * @todo
- * * Consider adding a flag to convolve indicating which specialized version of basicConvolve was used.
+ * @todo Consider adding a flag to convolve indicating which specialized version of basicConvolve was used.
  *   This would only be used for unit testing and trace messages suffice (barely), so not a high priority.
- * * Consider a way to disable use of specialized versions of basicConvolve.
- *   This could be used to replace convolveLinear with an automatic specialization.
- *   It might also be useful for unit tests to verify that the specialized version gives the same answer.
  *
  * @author Russell Owen
  *
@@ -60,6 +56,14 @@ namespace math {
     void basicConvolve(
         OutImageT& convolvedImage,
         InImageT const& inImage,
+        lsst::afw::math::LinearCombinationKernel const& kernel,
+        bool doNormalize
+    );
+    
+    template <typename OutImageT, typename InImageT>
+    void basicConvolve(
+        OutImageT& convolvedImage,
+        InImageT const& inImage,
         lsst::afw::math::SeparableKernel const& kernel,
         bool doNormalize
     );
@@ -69,14 +73,8 @@ namespace math {
         OutImageT& convolvedImage,
         InImageT const& inImage,
         KernelT const& kernel,
-        bool doNormalize
-    );
-
-    template <typename OutImageT, typename InImageT>
-    void convolveLinear(
-        OutImageT& convolvedImage,
-        InImageT const& inImage,
-        lsst::afw::math::LinearCombinationKernel const& kernel
+        bool doNormalize,
+        bool copyEdge = false
     );
     
     /**

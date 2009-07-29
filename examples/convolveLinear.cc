@@ -73,9 +73,9 @@ int main(int argc, char **argv) {
         // Set spatial function parameters for kernel parameter 1
         lcSpVarKernel.setSpatialParameters(polyParams);
     
-        // convolve with convolveLinear
+        // convolve
         lsst::afw::image::MaskedImage<imagePixelType> resMaskedImage(mImage.getDimensions());
-        lsst::afw::math::convolveLinear(resMaskedImage, mImage, lcSpVarKernel);
+        lsst::afw::math::convolve(resMaskedImage, mImage, lcSpVarKernel, false);
         
         // write results
         resMaskedImage.writeFits(outFile);

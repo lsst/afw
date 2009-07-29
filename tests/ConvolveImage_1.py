@@ -40,7 +40,10 @@ import lsst.afw.display.utils as displayUtils
 dataDir = eups.productDir("afwdata")
 if not dataDir:
     raise RuntimeError("Must set up afwdata to run these tests")
-InputImagePath = os.path.join(dataDir, "871034p_1_MI_img.fits")
+
+# input image contains a saturated star, a bad column, and a faint star
+InputImagePath = os.path.join(dataDir, "med_img.fits")
+InputBBox = afwImage.BBox(afwImage.PointI(50, 500), 100, 100)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -126,10 +129,7 @@ class ConvolveTestCase(unittest.TestCase):
         self.width, self.height = 45, 55
 
         fullImage = afwImage.ImageF(InputImagePath)
-            
-        # pick a small piece of the image to save time
-        bbox = afwImage.BBox(afwImage.PointI(50, 50), self.width, self.height)
-        self.inImage = afwImage.ImageF(fullImage, bbox)
+        self.inImage = afwImage.ImageF(fullImage, InputBBox)
 
     def tearDown(self):
         del self.inImage
@@ -323,14 +323,12 @@ class ConvolveTestCase(unittest.TestCase):
                                 (kCols, kRows, activeCol, activeRow, refCnvImageArr, ref2CnvImageArr)
                             self.fail(infoStr)
 
-    def testConvolveLinear(self):
-        """Test convolution with a spatially varying LinearCombinationKernel
-        by comparing the results of afwMath.convolveLinear to afwMath.convolve or refConvolve,
-        depending on the value of compareToFwConvolve.
+    def testSpatiallyVaryingGaussianLinerCombination(self):
+        """Test convolution with a spatially varying LinearCombinationKernel.
         """
         kCols = 5
         kRows = 5
-        doNormalize = False # must be false because convolveLinear cannot normalize
+        doNormalize = False # convolution with spatially varying LC Kernel does not yet support normalization
 
         # create spatially model
         sFunc = afwMath.PolynomialFunction2D(1)
@@ -352,8 +350,8 @@ class ConvolveTestCase(unittest.TestCase):
 
         cnvImage = afwImage.ImageF(self.inImage.getDimensions())
         # compute twice, to be sure cnvImage is properly reset
-        for ii in range(2):        
-            afwMath.convolveLinear(cnvImage, self.inImage, lcKernel)
+        for ii in range(2):     
+            afwMath.convolve(cnvImage, self.inImage, lcKernel, doNormalize)
             cnvImageArr = imTestUtils.arrayFromImage(cnvImage)
             
             if display:
@@ -364,14 +362,12 @@ class ConvolveTestCase(unittest.TestCase):
             if errStr:
                 self.fail("%s (on iter %d)" % (errStr, ii))
 
-    def testConvolveLinearDelta(self):
-        """Test convolution with a spatially varying LinearCombinationKernel using some delta basis kernels
-        by comparing the results of afwMath.convolveLinear to afwMath.convolve or refConvolve,
-        depending on the value of compareToFwConvolve.
+    def testSpatiallyVaryingDeltaFunctionLinearCombination(self):
+        """Test convolution with a spatially varying LinearCombinationKernel using some delta basis kernels.
         """
         kCols = 2
         kRows = 2
-        doNormalize = False # must be false because convolveLinear cannot normalize
+        doNormalize = False # convolution with spatially varying LC Kernel does not yet support normalization
 
         # create spatially model
         sFunc = afwMath.PolynomialFunction2D(1)
@@ -396,7 +392,7 @@ class ConvolveTestCase(unittest.TestCase):
         # compute twice, to be sure cnvImage is properly reset
         for ii in range(2):
             pexLog.Debug("lsst.afw").debug(3, "Start convolution with delta functions")
-            afwMath.convolveLinear(cnvImage, self.inImage, lcKernel)
+            afwMath.convolve(cnvImage, self.inImage, lcKernel, doNormalize)
             pexLog.Debug("lsst.afw").debug(3, "End convolution with delta functions")
             cnvImageArr = imTestUtils.arrayFromImage(cnvImage)
             
@@ -404,41 +400,6 @@ class ConvolveTestCase(unittest.TestCase):
                 refImage = imTestUtils.imageFromArray(refCnvImageArr)
                 ds9.mtv(displayUtils.makeMosaic(self.inImage, cnvImage, refImage))
 
-            errStr = imTestUtils.imagesDiffer(cnvImageArr, refCnvImageArr)
-            if errStr:
-                self.fail("%s (on iter %d)" % (errStr, ii))
-
-    def testConvolveLinearNewImage(self):
-        """Test convolveLinearNew
-        """
-        kCols = 5
-        kRows = 5
-        doNormalize = False # must be false because convolveLinear cannot normalize
-
-        # create spatially model
-        sFunc = afwMath.PolynomialFunction2D(1)
-        
-        # spatial parameters are a list of entries, one per kernel parameter;
-        # each entry is a list of spatial parameters
-        sParams = (
-            (1.0, -0.5 / self.width, -0.5 / self.height),
-            (0.0,  1.0 / self.width,  0.0 / self.height),
-            (0.0,  0.0 / self.width,  1.0 / self.height),
-        )
-        
-        kVec = makeGaussianKernelVec(kCols, kRows)
-        lcKernel = afwMath.LinearCombinationKernel(kVec, sFunc)
-        lcKernel.setSpatialParameters(sParams)
-
-        inImageArr = imTestUtils.arrayFromImage(self.inImage)
-        refCnvImageArr = refConvolve(inImageArr, lcKernel, doNormalize)
-
-        # compute twice, to be sure cnvImage is properly reset
-        cnvImage = afwImage.ImageF(self.inImage.getDimensions())
-        for ii in range(2):        
-            afwMath.convolveLinear(cnvImage, self.inImage, lcKernel)
-            cnvImageArr = imTestUtils.arrayFromImage(cnvImage)
-    
             errStr = imTestUtils.imagesDiffer(cnvImageArr, refCnvImageArr)
             if errStr:
                 self.fail("%s (on iter %d)" % (errStr, ii))
