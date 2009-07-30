@@ -49,9 +49,13 @@ ShiftedBBox = afwImage.BBox(afwImage.PointI(50, 450), 100, 100)
     
 EdgeMaskPixel = 1 << afwImage.MaskU.getMaskPlane("EDGE")
 
+# Ignore kernel pixels whose value is exactly 0 when smearing the mask plane?
+# Set this to match the afw code
+IgnoreKernelZeroPixels = True
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def refConvolve(imMaskVar, kernel, doNormalize, ignoreKernelZeroPixels=True):
+def refConvolve(imMaskVar, kernel, doNormalize, copyEdge):
     """Reference code to convolve a kernel with masked image data.
     
     Does NOT normalize the kernel.
@@ -62,18 +66,27 @@ def refConvolve(imMaskVar, kernel, doNormalize, ignoreKernelZeroPixels=True):
     - imMaskVar: (image, mask, variance) numpy arrays
     - kernel: lsst::afw::Core.Kernel object
     - doNormalize: normalize the kernel
+    - copyEdge: if True: copy edge pixels from input image to convolved image;
+                if False: set edge pixels to the standard edge pixel (image=nan, var=inf, mask=EDGE)
     
     Border pixels (pixels too close to the edge to compute) are set to the standard edge pixel
     """
     image, mask, variance = imMaskVar
     
-    # initialize output array to all edge pixels; non-edge pixels will get overridden below
-    retImage = numpy.zeros(image.shape, dtype=image.dtype)
-    retImage += numpy.nan
-    retVariance = numpy.zeros(variance.shape, dtype=image.dtype)
-    retVariance += numpy.inf
-    retMask = numpy.zeros(mask.shape, dtype=mask.dtype)
-    retMask += EdgeMaskPixel
+    if copyEdge:
+        # copy input arrays to output arrays and set EDGE bit of mask; non-edge pixels will be overwritten below
+        retImage = imMaskVar[0].copy()
+        retMask = imMaskVar[1].copy()
+        retMask += EdgeMaskPixel
+        retVariance = imMaskVar[2].copy()
+    else:
+        # initialize output arrays to all edge pixels; non-edge pixels will be overwritten below
+        retImage = numpy.zeros(image.shape, dtype=image.dtype)
+        retImage[:,:] = numpy.nan
+        retMask = numpy.zeros(mask.shape, dtype=mask.dtype)
+        retMask[:,:] = EdgeMaskPixel
+        retVariance = numpy.zeros(variance.shape, dtype=image.dtype)
+        retVariance[:,:] = numpy.inf
     
     kCols = kernel.getWidth()
     kRows = kernel.getHeight()
@@ -107,7 +120,7 @@ def refConvolve(imMaskVar, kernel, doNormalize, ignoreKernelZeroPixels=True):
             subMask = mask[inColBeg:inColEnd, inRowBeg:inRowEnd]
             retImage[retCol, retRow] = numpy.add.reduce((kImArr * subImage).flat)
             retVariance[retCol, retRow] = numpy.add.reduce((kImArr * kImArr * subVariance).flat)
-            if ignoreKernelZeroPixels:
+            if IgnoreKernelZeroPixels:
                 retMask[retCol, retRow] = numpy.bitwise_or.reduce((subMask * (kImArr != 0)).flat)
             else:
                 retMask[retCol, retRow] = numpy.bitwise_or.reduce(subMask.flat)
@@ -191,8 +204,10 @@ class ConvolveTestCase(unittest.TestCase):
         # create a delta function kernel that has 1,1 in the center
         kFunc = afwMath.IntegerDeltaFunction2D(0.0, 0.0)
         k = afwMath.AnalyticKernel(3, 3, kFunc)
+        doNormalize = False
+        copyEdge = False
         
-        afwMath.convolve(self.cnvMaskedImage, self.maskedImage, k, True)
+        afwMath.convolve(self.cnvMaskedImage, self.maskedImage, k, doNormalize, copyEdge)
 
         origImMaskVarArrays = imTestUtils.arraysFromMaskedImage(self.maskedImage)
         cnvImMaskVarArrays = imTestUtils.arraysFromMaskedImage(self.cnvMaskedImage)
@@ -212,29 +227,31 @@ class ConvolveTestCase(unittest.TestCase):
         analyticK = afwMath.AnalyticKernel(kCols, kRows, kFunc)
         kImg = afwImage.ImageD(kCols, kRows)
         
-        for doNormalize in (True, False):
-            analyticK.computeImage(kImg, doNormalize)
-            fixedK = afwMath.FixedKernel(kImg)
-
-            afwMath.convolve(self.cnvMaskedImage, self.maskedImage, fixedK, doNormalize)
-            cnvImMaskVar = imTestUtils.arraysFromMaskedImage(self.cnvMaskedImage)
-
-            imMaskVar = imTestUtils.arraysFromMaskedImage(self.maskedImage)
-            refCnvImMaskVar = refConvolve(imMaskVar, fixedK, doNormalize)
-
-            if display:
-                refMaskedImage = imTestUtils.maskedImageFromArrays(refCnvImMaskVar)
-                ds9.mtv(displayUtils.makeMosaic(self.maskedImage, refMaskedImage, self.cnvMaskedImage), frame=0)
-                if False:
-                    for (x, y) in ((0, 0), (1, 0), (0, 1), (50, 50)):
-                        print "Mask(%d,%d) 0x%x 0x%x" % \
-                              (x, y, refMaskedImage.getMask().get(x, y), self.cnvMaskedImage.getMask().get(x, y))
-
-            errStr = imTestUtils.maskedImagesDiffer(cnvImMaskVar, refCnvImMaskVar)
-            if errStr:
-                self.fail("%s (for doNormalize=%s)" % (errStr, doNormalize))
-            self.assert_(sameMaskPlaneDicts(self.cnvMaskedImage, self.maskedImage),
-                "Convolved mask dictionary does not match input for doNormalize=%s" % doNormalize)
+        imMaskVar = imTestUtils.arraysFromMaskedImage(self.maskedImage)
+        for doNormalize in (False, True):
+            for copyEdge in (False, True):
+                analyticK.computeImage(kImg, doNormalize)
+                fixedK = afwMath.FixedKernel(kImg)
+    
+                refCnvImMaskVar = refConvolve(imMaskVar, fixedK, doNormalize, copyEdge)
+    
+                afwMath.convolve(self.cnvMaskedImage, self.maskedImage, fixedK, doNormalize, copyEdge)
+                cnvImMaskVar = imTestUtils.arraysFromMaskedImage(self.cnvMaskedImage)
+    
+                if display:
+                    refMaskedImage = imTestUtils.maskedImageFromArrays(refCnvImMaskVar)
+                    ds9.mtv(displayUtils.makeMosaic(self.maskedImage, refMaskedImage, self.cnvMaskedImage), frame=0)
+                    if False:
+                        for (x, y) in ((0, 0), (1, 0), (0, 1), (50, 50)):
+                            print "Mask(%d,%d) 0x%x 0x%x" % \
+                                  (x, y, refMaskedImage.getMask().get(x, y), self.cnvMaskedImage.getMask().get(x, y))
+    
+                errStr = imTestUtils.maskedImagesDiffer(cnvImMaskVar, refCnvImMaskVar)
+                if errStr:
+                    self.fail("%s (for doNormalize=%s, copyEdge=%s)" % (errStr, doNormalize, copyEdge))
+                self.assert_(sameMaskPlaneDicts(self.cnvMaskedImage, self.maskedImage),
+                    "Convolved mask dictionary does not match input for doNormalize=%s, copyEdge=%s" % \
+                    (doNormalize, copyEdge))
 
     def testSeparableConvolve(self):
         """Test convolve of a separable kernel with a spatially invariant Gaussian function
@@ -247,18 +264,20 @@ class ConvolveTestCase(unittest.TestCase):
         separableKernel = afwMath.SeparableKernel(kCols, kRows, gaussFunc1, gaussFunc1)
         analyticKernel = afwMath.AnalyticKernel(kCols, kRows, gaussFunc2)
                 
+        imMaskVar = imTestUtils.arraysFromMaskedImage(self.maskedImage)
         for doNormalize in (False, True):
-            afwMath.convolve(self.cnvMaskedImage, self.maskedImage, separableKernel, doNormalize)
-            cnvImMaskVar = imTestUtils.arraysFromMaskedImage(self.cnvMaskedImage)
+            for copyEdge in (False, True):
+                refCnvImMaskVar = refConvolve(imMaskVar, analyticKernel, doNormalize, copyEdge)
 
-            imMaskVar = imTestUtils.arraysFromMaskedImage(self.maskedImage)
-            refCnvImMaskVar = refConvolve(imMaskVar, analyticKernel, doNormalize)
-
-            errStr = imTestUtils.maskedImagesDiffer(cnvImMaskVar, refCnvImMaskVar)
-            if errStr:
-                self.fail("%s (for doNormalize=%s)" % (errStr, doNormalize))
-            self.assert_(sameMaskPlaneDicts(self.cnvMaskedImage, self.maskedImage),
-                "Convolved mask dictionary does not match input for doNormalize=%s" % doNormalize)
+                afwMath.convolve(self.cnvMaskedImage, self.maskedImage, separableKernel, doNormalize, copyEdge)
+                cnvImMaskVar = imTestUtils.arraysFromMaskedImage(self.cnvMaskedImage)
+    
+                errStr = imTestUtils.maskedImagesDiffer(cnvImMaskVar, refCnvImMaskVar)
+                if errStr:
+                    self.fail("%s (for doNormalize=%s, copyEdge=%s)" % (errStr, doNormalize, copyEdge))
+                self.assert_(sameMaskPlaneDicts(self.cnvMaskedImage, self.maskedImage),
+                    "Convolved mask dictionary does not match input for doNormalize=%s, copyEdge=%s" % \
+                    (doNormalize, copyEdge))
 
     def testSpatiallyInvariantConvolve(self):
         """Test convolution with a spatially invariant Gaussian function
@@ -268,27 +287,29 @@ class ConvolveTestCase(unittest.TestCase):
 
         kFunc =  afwMath.GaussianFunction2D(1.5, 2.5)
         k = afwMath.AnalyticKernel(kCols, kRows, kFunc)
-        
-        for doNormalize in (True, False):
-            afwMath.convolve(self.cnvMaskedImage, self.maskedImage, k, doNormalize)
-            cnvImMaskVar = imTestUtils.arraysFromMaskedImage(self.cnvMaskedImage)
 
-            imMaskVar = imTestUtils.arraysFromMaskedImage(self.maskedImage)
-            refCnvImMaskVar = refConvolve(imMaskVar, k, doNormalize)
-
-            if display:
-                refMaskedImage = imTestUtils.maskedImageFromArrays(refCnvImMaskVar)
-                ds9.mtv(displayUtils.makeMosaic(self.maskedImage, refMaskedImage, self.cnvMaskedImage), frame=0)
-                if False:
-                    for (x, y) in ((0, 0), (1, 0), (0, 1), (50, 50)):
-                        print "Mask(%d,%d) 0x%x 0x%x" % \
-                              (x, y, refMaskedImage.getMask().get(x, y), self.cnvMaskedImage.getMask().get(x, y))
-
-            errStr = imTestUtils.maskedImagesDiffer(cnvImMaskVar, refCnvImMaskVar)
-            if errStr:
-                self.fail("%s (for doNormalize=%s)" % (errStr, doNormalize))
-            self.assert_(sameMaskPlaneDicts(self.cnvMaskedImage, self.maskedImage),
-                "Convolved mask dictionary does not match input for doNormalize=%s" % doNormalize)
+        imMaskVar = imTestUtils.arraysFromMaskedImage(self.maskedImage)
+        for doNormalize in (False, True):
+            for copyEdge in (False, True):
+                refCnvImMaskVar = refConvolve(imMaskVar, k, doNormalize, copyEdge)
+    
+                afwMath.convolve(self.cnvMaskedImage, self.maskedImage, k, doNormalize, copyEdge)
+                cnvImMaskVar = imTestUtils.arraysFromMaskedImage(self.cnvMaskedImage)
+    
+                if display:
+                    refMaskedImage = imTestUtils.maskedImageFromArrays(refCnvImMaskVar)
+                    ds9.mtv(displayUtils.makeMosaic(self.maskedImage, refMaskedImage, self.cnvMaskedImage), frame=0)
+                    if False:
+                        for (x, y) in ((0, 0), (1, 0), (0, 1), (50, 50)):
+                            print "Mask(%d,%d) 0x%x 0x%x" % \
+                                  (x, y, refMaskedImage.getMask().get(x, y), self.cnvMaskedImage.getMask().get(x, y))
+    
+                errStr = imTestUtils.maskedImagesDiffer(cnvImMaskVar, refCnvImMaskVar)
+                if errStr:
+                    self.fail("%s (for doNormalize=%s, copyEdge=%s)" % (errStr, doNormalize, copyEdge))
+                self.assert_(sameMaskPlaneDicts(self.cnvMaskedImage, self.maskedImage),
+                    "Convolved mask dictionary does not match input for doNormalize=%s, copyEdge=%s" % \
+                    (doNormalize, copyEdge))
 
     def testSpatiallyVaryingConvolve(self):
         """Test in-place convolution with a spatially varying Gaussian function
@@ -310,18 +331,20 @@ class ConvolveTestCase(unittest.TestCase):
         k = afwMath.AnalyticKernel(kCols, kRows, kFunc, sFunc)
         k.setSpatialParameters(sParams)
         
+        imMaskVar = imTestUtils.arraysFromMaskedImage(self.maskedImage)
         for doNormalize in (False, True):
-            afwMath.convolve(self.cnvMaskedImage, self.maskedImage, k, doNormalize)
-            cnvImMaskVar = imTestUtils.arraysFromMaskedImage(self.cnvMaskedImage)
-    
-            imMaskVar = imTestUtils.arraysFromMaskedImage(self.maskedImage)
-            refCnvImMaskVar = refConvolve(imMaskVar, k, doNormalize)
-    
-            errStr = imTestUtils.maskedImagesDiffer(cnvImMaskVar, refCnvImMaskVar)
-            if errStr:
-                self.fail("%s (for doNormalize=%s)" % (errStr, doNormalize))
-            self.assert_(sameMaskPlaneDicts(self.cnvMaskedImage, self.maskedImage),
-                "Convolved mask dictionary does not match input for doNormalize=%s" % doNormalize)
+            for copyEdge in (False, True):
+                refCnvImMaskVar = refConvolve(imMaskVar, k, doNormalize, copyEdge)
+
+                afwMath.convolve(self.cnvMaskedImage, self.maskedImage, k, doNormalize, copyEdge)
+                cnvImMaskVar = imTestUtils.arraysFromMaskedImage(self.cnvMaskedImage)
+        
+                errStr = imTestUtils.maskedImagesDiffer(cnvImMaskVar, refCnvImMaskVar)
+                if errStr:
+                    self.fail("%s (for doNormalize=%s, copyEdge=%s)" % (errStr, doNormalize, copyEdge))
+                self.assert_(sameMaskPlaneDicts(self.cnvMaskedImage, self.maskedImage),
+                    "Convolved mask dictionary does not match input for doNormalize=%s, copyEdge=%s" % \
+                    (doNormalize, copyEdge))
 
     def testSpatiallyVaryingSeparableConvolve(self):
         """Test in-place separable convolution with a spatially varying Gaussian function
@@ -346,51 +369,54 @@ class ConvolveTestCase(unittest.TestCase):
         separableKernel.setSpatialParameters(sParams)
         analyticKernel.setSpatialParameters(sParams)
                 
+        imMaskVar = imTestUtils.arraysFromMaskedImage(self.maskedImage)
         for doNormalize in (False, True):
-            afwMath.convolve(self.cnvMaskedImage, self.maskedImage, separableKernel, doNormalize)
-            cnvImMaskVar = imTestUtils.arraysFromMaskedImage(self.cnvMaskedImage)
-    
-            imMaskVar = imTestUtils.arraysFromMaskedImage(self.maskedImage)
-            refCnvImMaskVar = refConvolve(imMaskVar, analyticKernel, doNormalize)
-    
-            errStr = imTestUtils.maskedImagesDiffer(cnvImMaskVar, refCnvImMaskVar)
-            if errStr:
-                self.fail("%s (for doNormalize=%s)" % (errStr, doNormalize))
-            self.assert_(sameMaskPlaneDicts(self.cnvMaskedImage, self.maskedImage),
-                "Convolved mask dictionary does not match input for doNormalize=%s" % doNormalize)
+            for copyEdge in (False, True):
+                refCnvImMaskVar = refConvolve(imMaskVar, analyticKernel, doNormalize, copyEdge)
+
+                afwMath.convolve(self.cnvMaskedImage, self.maskedImage, separableKernel, doNormalize, copyEdge)
+                cnvImMaskVar = imTestUtils.arraysFromMaskedImage(self.cnvMaskedImage)
+        
+                errStr = imTestUtils.maskedImagesDiffer(cnvImMaskVar, refCnvImMaskVar)
+                if errStr:
+                    self.fail("%s (for doNormalize=%s, copyEdge=%s)" % (errStr, doNormalize, copyEdge))
+                self.assert_(sameMaskPlaneDicts(self.cnvMaskedImage, self.maskedImage),
+                    "Convolved mask dictionary does not match input for doNormalize=%s, copyEdge=%s" % \
+                    (doNormalize, copyEdge))
     
     def testDeltaConvolve(self):
         """Test convolution with various delta function kernels using optimized code
         """
         doNormalize = True
         
-        for kCols in range(1, 4):
-            for kRows in range(1, 4):
-                for activeCol in range(kCols):
-                    for activeRow in range(kRows):
-                        kernel = afwMath.DeltaFunctionKernel(kCols, kRows, afwImage.PointI(activeCol, activeRow))
+        imMaskVar = imTestUtils.arraysFromMaskedImage(self.maskedImage)
+        for copyEdge in (False, True):
+            for kCols in range(1, 4):
+                for kRows in range(1, 4):
+                    for activeCol in range(kCols):
+                        for activeRow in range(kRows):
+                            kernel = afwMath.DeltaFunctionKernel(kCols, kRows, afwImage.PointI(activeCol, activeRow))
+    
+                            refCnvImMaskVar = refConvolve(imMaskVar, kernel, doNormalize, copyEdge)
 
-                        afwMath.convolve(self.cnvMaskedImage, self.maskedImage, kernel, doNormalize)
-                        cnvImMaskVar = imTestUtils.arraysFromMaskedImage(self.cnvMaskedImage)
-                
-                        imMaskVar = imTestUtils.arraysFromMaskedImage(self.maskedImage)
-                        refCnvImMaskVar = refConvolve(imMaskVar, kernel, doNormalize, True)
-                
-                        if display and False:
-                            refMaskedImage = imTestUtils.maskedImageFromArrays(refCnvImMaskVar)
-
-                            if False:
-                                for (x, y) in ((0,0), (0, 11)) :
-                                    print "Mask %dx%d:(%d,%d): At (%d,%d) 0x%x  0x%x" % (
-                                        kCols, kRows, activeCol, activeRow,
-                                        x, y,
-                                        refMaskedImage.getMask().get(x,y),
-                                        self.cnvMaskedImage.getMask().get(x,y))
-                            ds9.mtv(displayUtils.makeMosaic(refMaskedImage, self.cnvMaskedImage), frame=0)
-
-                        errStr = imTestUtils.maskedImagesDiffer(cnvImMaskVar, refCnvImMaskVar)
-                        if errStr:
-                            self.fail(errStr)
+                            afwMath.convolve(self.cnvMaskedImage, self.maskedImage, kernel, doNormalize, copyEdge)
+                            cnvImMaskVar = imTestUtils.arraysFromMaskedImage(self.cnvMaskedImage)
+                    
+                            if display and False:
+                                refMaskedImage = imTestUtils.maskedImageFromArrays(refCnvImMaskVar)
+    
+                                if False:
+                                    for (x, y) in ((0,0), (0, 11)) :
+                                        print "Mask %dx%d:(%d,%d): At (%d,%d) 0x%x  0x%x" % (
+                                            kCols, kRows, activeCol, activeRow,
+                                            x, y,
+                                            refMaskedImage.getMask().get(x,y),
+                                            self.cnvMaskedImage.getMask().get(x,y))
+                                ds9.mtv(displayUtils.makeMosaic(refMaskedImage, self.cnvMaskedImage), frame=0)
+    
+                            errStr = imTestUtils.maskedImagesDiffer(cnvImMaskVar, refCnvImMaskVar)
+                            if errStr:
+                                self.fail("%s (for doNormalize=%s, copyEdge=%s)" % (errStr, doNormalize, copyEdge))
 
     def testSpatiallyVaryingGaussianLinerCombination(self):
         """Test convolution with a spatially varying LinearCombinationKernel.
@@ -418,20 +444,22 @@ class ConvolveTestCase(unittest.TestCase):
         # add True once ticket #833 is resolved: support normalization of convolution with
         # spatially varying LinearCombinationKernel)
         for doNormalize in (False,): # True):
-            refCnvImMaskVar = refConvolve(imMaskVar, lcKernel, doNormalize)
-
-            afwMath.convolve(self.cnvMaskedImage, self.maskedImage, lcKernel, doNormalize)
-            cnvImMaskVar = imTestUtils.arraysFromMaskedImage(self.cnvMaskedImage)
+            for copyEdge in (False, True):
+                refCnvImMaskVar = refConvolve(imMaskVar, lcKernel, doNormalize, copyEdge)
     
-            if display:
-                refMaskedImage = imTestUtils.maskedImageFromArrays(refCnvImMaskVar)
-                ds9.mtv(displayUtils.makeMosaic(refMaskedImage, self.cnvMaskedImage), frame=0)
-
-            errStr = imTestUtils.maskedImagesDiffer(cnvImMaskVar, refCnvImMaskVar)
-            if errStr:
-                self.fail("%s (for doNormalize=%s)" % (errStr, doNormalize))
-            self.assert_(sameMaskPlaneDicts(self.cnvMaskedImage, self.maskedImage),
-                "Convolved mask dictionary does not match input for doNormalize=%s" % doNormalize)
+                afwMath.convolve(self.cnvMaskedImage, self.maskedImage, lcKernel, doNormalize, copyEdge)
+                cnvImMaskVar = imTestUtils.arraysFromMaskedImage(self.cnvMaskedImage)
+        
+                if display:
+                    refMaskedImage = imTestUtils.maskedImageFromArrays(refCnvImMaskVar)
+                    ds9.mtv(displayUtils.makeMosaic(refMaskedImage, self.cnvMaskedImage), frame=0)
+    
+                errStr = imTestUtils.maskedImagesDiffer(cnvImMaskVar, refCnvImMaskVar)
+                if errStr:
+                    self.fail("%s (for doNormalize=%s, copyEdge=%s)" % (errStr, doNormalize, copyEdge))
+                self.assert_(sameMaskPlaneDicts(self.cnvMaskedImage, self.maskedImage),
+                    "Convolved mask dictionary does not match input for doNormalize=%s, copyEdge=%s" % \
+                    (doNormalize, copyEdge))
 
     def testSpatiallyVaryingDeltaFunctionLinearCombination(self):
         """Test convolution with a spatially varying LinearCombinationKernel using some delta basis kernels.
@@ -460,22 +488,24 @@ class ConvolveTestCase(unittest.TestCase):
         # add True once ticket #833 is resolved: support normalization of convolution with
         # spatially varying LinearCombinationKernel)
         for doNormalize in (False,): # True):
-            refCnvImMaskVar = refConvolve(imMaskVar, lcKernel, doNormalize)
-
-            pexLog.Debug("lsst.afw").debug(3, "Start convolution with delta functions")
-            afwMath.convolve(self.cnvMaskedImage, self.maskedImage, lcKernel, doNormalize)
-            pexLog.Debug("lsst.afw").debug(3, "End convolution with delta functions")
-            cnvImMaskVar = imTestUtils.arraysFromMaskedImage(self.cnvMaskedImage)
-            
-            if display:
-                refMaskedImage = imTestUtils.maskedImageFromArrays(refCnvImMaskVar)
-                ds9.mtv(displayUtils.makeMosaic(refMaskedImage, self.cnvMaskedImage), frame=0)
-
-            errStr = imTestUtils.maskedImagesDiffer(cnvImMaskVar, refCnvImMaskVar)
-            if errStr:
-                self.fail("%s (for doNormalize=%s)" % (errStr, doNormalize))
-            self.assert_(sameMaskPlaneDicts(self.cnvMaskedImage, self.maskedImage),
-                "Convolved mask dictionary does not match input for doNormalize=%s" % doNormalize)
+            for copyEdge in (False, True):
+                refCnvImMaskVar = refConvolve(imMaskVar, lcKernel, doNormalize, copyEdge)
+    
+                pexLog.Debug("lsst.afw").debug(3, "Start convolution with delta functions")
+                afwMath.convolve(self.cnvMaskedImage, self.maskedImage, lcKernel, doNormalize, copyEdge)
+                pexLog.Debug("lsst.afw").debug(3, "End convolution with delta functions")
+                cnvImMaskVar = imTestUtils.arraysFromMaskedImage(self.cnvMaskedImage)
+                
+                if display:
+                    refMaskedImage = imTestUtils.maskedImageFromArrays(refCnvImMaskVar)
+                    ds9.mtv(displayUtils.makeMosaic(refMaskedImage, self.cnvMaskedImage), frame=0)
+    
+                errStr = imTestUtils.maskedImagesDiffer(cnvImMaskVar, refCnvImMaskVar)
+                if errStr:
+                    self.fail("%s (for doNormalize=%s, copyEdge=%s)" % (errStr, doNormalize, copyEdge))
+                self.assert_(sameMaskPlaneDicts(self.cnvMaskedImage, self.maskedImage),
+                    "Convolved mask dictionary does not match input for doNormalize=%s, copyEdge=%s" % \
+                    (doNormalize, copyEdge))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

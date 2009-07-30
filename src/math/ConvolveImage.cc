@@ -75,15 +75,19 @@ include/lsst/afw/image/Pixel.h:420:   instantiated from ÔExprT1 lsst::afw::image
     }
     
     /**
-    * @brief Set the edge pixels of a convolved %image based on size of the convolution kernel used
+    * @brief Set the edge pixels of a convolved Image based on size of the convolution kernel used
+    *
+    * Separate specializations for Image and MaskedImage are required to set the EDGE bit of the Mask plane
+    * (if there is one) when copyEdge is true.
     */
     template <typename OutImageT, typename InImageT>
     inline void setEdgePixels(
         OutImageT& outImage,        ///< %image whose edge pixels are to be set
         afwMath::Kernel const &kernel,  ///< convolution kernel; kernel size is used to determine the edge
         InImageT const &inImage,    ///< %image whose edge pixels are to be copied; ignored if copyEdge is false
-        bool copyEdge               ///< if false (default), set edge pixels to the standard edge pixel;
+        bool copyEdge,              ///< if false (default), set edge pixels to the standard edge pixel;
                                     ///< if true, copy edge pixels from input and set EDGE bit of mask
+        lsst::afw::image::detail::Image_tag ///< lsst::afw::image::detail::image_traits<ImageT>::image_category()
                                 
     ) {
         const unsigned int imWidth = outImage.getWidth();
@@ -120,6 +124,60 @@ include/lsst/afw/image/Pixel.h:420:   instantiated from ÔExprT1 lsst::afw::image
             }
         }
     }
+
+    /**
+    * @brief Set the edge pixels of a convolved MaskedImage based on size of the convolution kernel used
+    *
+    * Separate specializations for Image and MaskedImage are required to set the EDGE bit of the Mask plane
+    * (if there is one) when copyEdge is true.
+    */
+    template <typename OutImageT, typename InImageT>
+    inline void setEdgePixels(
+        OutImageT& outImage,        ///< %image whose edge pixels are to be set
+        afwMath::Kernel const &kernel,  ///< convolution kernel; kernel size is used to determine the edge
+        InImageT const &inImage,    ///< %image whose edge pixels are to be copied; ignored if copyEdge is false
+        bool copyEdge,              ///< if false (default), set edge pixels to the standard edge pixel;
+                                    ///< if true, copy edge pixels from input and set EDGE bit of mask
+        lsst::afw::image::detail::MaskedImage_tag   ///< lsst::afw::image::detail::image_traits<MaskedImageT>::image_category()
+                                
+    ) {
+        const unsigned int imWidth = outImage.getWidth();
+        const unsigned int imHeight = outImage.getHeight();
+        const unsigned int kWidth = kernel.getWidth();
+        const unsigned int kHeight = kernel.getHeight();
+        const unsigned int kCtrX = kernel.getCtrX();
+        const unsigned int kCtrY = kernel.getCtrY();
+
+        const typename OutImageT::SinglePixel edgePixel = afwMath::edgePixel<OutImageT>(
+            typename lsst::afw::image::detail::image_traits<OutImageT>::image_category()
+        );
+        std::vector<afwImage::BBox> bboxList;
+    
+        // create a list of bounding boxes describing edge regions, in this order:
+        // bottom edge, top edge (both edge to edge),
+        // left edge, right edge (both omitting pixels already in the bottom and top edge regions)
+        int const numHeight = kHeight - (1 + kCtrY);
+        int const numWidth = kWidth - (1 + kCtrX);
+        bboxList.push_back(afwImage::BBox(afwImage::PointI(0, 0), imWidth, kCtrY));
+        bboxList.push_back(afwImage::BBox(afwImage::PointI(0, imHeight - numHeight), imWidth, numHeight));
+        bboxList.push_back(afwImage::BBox(afwImage::PointI(0, kCtrY), kCtrX, imHeight + 1 - kHeight));
+        bboxList.push_back(afwImage::BBox(afwImage::PointI(imWidth - numWidth, kCtrY), numWidth, imHeight + 1 - kHeight));
+
+        afwImage::MaskPixel const edgeMask = afwImage::Mask<afwImage::MaskPixel>::getPlaneBitMask("EDGE");
+        for (std::vector<afwImage::BBox>::const_iterator bboxIter = bboxList.begin();
+            bboxIter != bboxList.end(); ++bboxIter) {
+            OutImageT outView(outImage, *bboxIter);
+            if (copyEdge) {
+                // note: <<= only works with data of the same type
+                // so convert the input image to output format
+                outView <<= OutImageT(inImage, *bboxIter);
+                *(outView.getMask()) |= edgeMask;
+            } else {
+                outView = edgePixel;
+            }
+        }
+    }
+
 }   // anonymous namespace
 
 
@@ -402,7 +460,6 @@ void afwMath::basicConvolve(
             }
         }
     }
-    setEdgePixels(convolvedImage, kernel, inImage, false);
 }
 
 /**
@@ -581,7 +638,9 @@ void afwMath::convolve(
                                 
 ) {
     afwMath::basicConvolve(convolvedImage, inImage, kernel, doNormalize);
-    setEdgePixels(convolvedImage, kernel, inImage, copyEdge);
+    setEdgePixels(convolvedImage, kernel, inImage, copyEdge,
+        typename lsst::afw::image::detail::image_traits<OutImageT>::image_category()
+    );
 }
 
 

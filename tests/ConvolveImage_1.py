@@ -48,7 +48,7 @@ ShiftedBBox = afwImage.BBox(afwImage.PointI(50, 450), 100, 100)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def refConvolve(image, kernel, doNormalize):
+def refConvolve(image, kernel, doNormalize, copyEdge):
     """Reference code to convolve a kernel with image data.
     
     Does NOT normalize the kernel.
@@ -59,12 +59,18 @@ def refConvolve(image, kernel, doNormalize):
     - image: image to be convolved (a numpy array)
     - kernel: lsst::afw::Core.Kernel object
     - doNormalize: normalize the kernel
+    - copyEdge: if True: copy edge pixels from input image to convolved image;
+                if False: set edge pixels to NaN
     
     Border pixels (pixels too close to the edge to compute) are copied from the input.
     """
-    # initialize input data to nan; non-edge pixels will be set below
-    retImage = numpy.zeros(image.shape, dtype=image.dtype)
-    retImage += numpy.nan
+    if copyEdge:
+        # copy input image; non-edge pixels will be overwritten below
+        retImage = image.copy()
+    else:
+        # initialize input data to nan; non-edge pixels will be overwritten below
+        retImage = numpy.zeros(image.shape, dtype=image.dtype)
+        retImage[:,:] = numpy.nan
     
     kCols = kernel.getWidth()
     kRows = kernel.getHeight()
@@ -146,8 +152,10 @@ class ConvolveTestCase(unittest.TestCase):
         # create a delta function kernel that has 1,1 in the center
         kFunc = afwMath.IntegerDeltaFunction2D(0.0, 0.0)
         k = afwMath.AnalyticKernel(3, 3, kFunc)
+        doNormalize = False
+        copyEdge = False
 
-        afwMath.convolve(self.cnvImage, self.inImage, k, True)
+        afwMath.convolve(self.cnvImage, self.inImage, k, doNormalize, copyEdge)
     
         if display:
             ds9.mtv(displayUtils.makeMosaic(self.inImage, self.cnvImage))
@@ -168,24 +176,25 @@ class ConvolveTestCase(unittest.TestCase):
         kFunc =  afwMath.GaussianFunction2D(1.5, 2.5)
         analyticK = afwMath.AnalyticKernel(kCols, kRows, kFunc)
         kImg = afwImage.ImageD(kCols, kRows)
+
+        inImageArr = imTestUtils.arrayFromImage(self.inImage)
         
         for doNormalize in (False, True):
-            analyticK.computeImage(kImg, doNormalize)
-            fixedK = afwMath.FixedKernel(kImg)
+            for copyEdge in (False, True):
+                analyticK.computeImage(kImg, doNormalize)
+                fixedK = afwMath.FixedKernel(kImg)
 
-            afwMath.convolve(self.cnvImage, self.inImage, fixedK, doNormalize)
-
-            if doNormalize and display and True:    # display as two panels
-                ds9.mtv(displayUtils.makeMosaic(self.inImage, self.cnvImage))
-
-            cnvImageArr = imTestUtils.arrayFromImage(self.cnvImage)
-            inImageArr = imTestUtils.arrayFromImage(self.inImage)
-            refCnvImageArr = refConvolve(inImageArr, fixedK, doNormalize)
-            refCnvImage = imTestUtils.imageFromArray(refCnvImageArr)
+                refCnvImageArr = refConvolve(inImageArr, fixedK, doNormalize, copyEdge)
     
-            errStr = imTestUtils.imagesDiffer(cnvImageArr, refCnvImageArr)
-            if errStr:
-                self.fail("%s (for doNormalize=%s)" % (errStr, doNormalize))
+                afwMath.convolve(self.cnvImage, self.inImage, fixedK, doNormalize, copyEdge)
+                cnvImageArr = imTestUtils.arrayFromImage(self.cnvImage)
+    
+                if doNormalize and display and True:    # display as two panels
+                    ds9.mtv(displayUtils.makeMosaic(self.inImage, self.cnvImage))
+        
+                errStr = imTestUtils.imagesDiffer(cnvImageArr, refCnvImageArr)
+                if errStr:
+                    self.fail("%s (for doNormalize=%s, copyEdge=%s)" % (errStr, doNormalize, copyEdge))
 
     def testSpatiallyInvariantConvolve(self):
         """Test convolve with a spatially invariant Gaussian function
@@ -196,19 +205,21 @@ class ConvolveTestCase(unittest.TestCase):
         kFunc =  afwMath.GaussianFunction2D(1.5, 2.5)
         k = afwMath.AnalyticKernel(kCols, kRows, kFunc)
         
+        inImageArr = imTestUtils.arrayFromImage(self.inImage)
         for doNormalize in (False, True):
-            afwMath.convolve(self.cnvImage, self.inImage, k, doNormalize)
+            for copyEdge in (False, True):
+                refCnvImageArr = refConvolve(inImageArr, k, doNormalize, copyEdge)
 
-            if doNormalize and display and True:    # display as two panels
-                ds9.mtv(displayUtils.makeMosaic(self.inImage, self.cnvImage))
-
-            cnvImageArr = imTestUtils.arrayFromImage(self.cnvImage)
-            inImageArr = imTestUtils.arrayFromImage(self.inImage)
-            refCnvImageArr = refConvolve(inImageArr, k, doNormalize)
+                afwMath.convolve(self.cnvImage, self.inImage, k, doNormalize, copyEdge)
     
-            errStr = imTestUtils.imagesDiffer(cnvImageArr, refCnvImageArr)
-            if errStr:
-                self.fail("%s (for doNormalize=%s)" % (errStr, doNormalize))
+                if doNormalize and display and True:    # display as two panels
+                    ds9.mtv(displayUtils.makeMosaic(self.inImage, self.cnvImage))
+    
+                cnvImageArr = imTestUtils.arrayFromImage(self.cnvImage)
+        
+                errStr = imTestUtils.imagesDiffer(cnvImageArr, refCnvImageArr)
+                if errStr:
+                    self.fail("%s (for doNormalize=%s, copyEdge=%s)" % (errStr, doNormalize, copyEdge))
 
     def testSpatiallyVaryingConvolve(self):
         """Test convolve with a spatially varying Gaussian function
@@ -230,16 +241,18 @@ class ConvolveTestCase(unittest.TestCase):
         k = afwMath.AnalyticKernel(kCols, kRows, kFunc, sFunc)
         k.setSpatialParameters(sParams)
                 
+        inImageArr = imTestUtils.arrayFromImage(self.inImage)
+
         for doNormalize in (False, True):
-            afwMath.convolve(self.cnvImage, self.inImage, k, doNormalize)
-            cnvImageArr = imTestUtils.arrayFromImage(self.cnvImage)
-    
-            inImageArr = imTestUtils.arrayFromImage(self.inImage)
-            refCnvImageArr= refConvolve(inImageArr, k, doNormalize)
-    
-            errStr = imTestUtils.imagesDiffer(cnvImageArr, refCnvImageArr)
-            if errStr:
-                self.fail("%s (for doNormalize=%s)" % (errStr, doNormalize))
+            for copyEdge in (False, True):
+                refCnvImageArr= refConvolve(inImageArr, k, doNormalize, copyEdge)
+
+                afwMath.convolve(self.cnvImage, self.inImage, k, doNormalize, copyEdge)
+                cnvImageArr = imTestUtils.arrayFromImage(self.cnvImage)
+        
+                errStr = imTestUtils.imagesDiffer(cnvImageArr, refCnvImageArr)
+                if errStr:
+                    self.fail("%s (for doNormalize=%s, copyEdge=%s)" % (errStr, doNormalize, copyEdge))
 
     def testSeparableConvolve(self):
         """Test convolve of a separable kernel with a spatially invariant Gaussian function
@@ -252,17 +265,18 @@ class ConvolveTestCase(unittest.TestCase):
         separableKernel = afwMath.SeparableKernel(kCols, kRows, gaussFunc1, gaussFunc1)
         analyticKernel = afwMath.AnalyticKernel(kCols, kRows, gaussFunc2)
                 
+        inImageArr = imTestUtils.arrayFromImage(self.inImage)
+
         for doNormalize in (False, True):
-            afwMath.convolve(self.cnvImage, self.inImage, separableKernel, doNormalize)
-
-            cnvImageArr = imTestUtils.arrayFromImage(self.cnvImage)
+            for copyEdge in (False, True):
+                refCnvImageArr = refConvolve(inImageArr, analyticKernel, doNormalize, copyEdge)
     
-            inImageArr = imTestUtils.arrayFromImage(self.inImage)
-            refCnvImageArr = refConvolve(inImageArr, analyticKernel, doNormalize)
-
-            errStr = imTestUtils.imagesDiffer(cnvImageArr, refCnvImageArr)
-            if errStr:
-                self.fail("%s (for doNormalize=%s)" % (errStr, doNormalize))
+                afwMath.convolve(self.cnvImage, self.inImage, separableKernel, doNormalize, copyEdge)
+                cnvImageArr = imTestUtils.arrayFromImage(self.cnvImage)
+    
+                errStr = imTestUtils.imagesDiffer(cnvImageArr, refCnvImageArr)
+                if errStr:
+                    self.fail("%s (for doNormalize=%s, copyEdge=%s)" % (errStr, doNormalize, copyEdge))
 
     def testSpatiallyVaryingSeparableConvolve(self):
         """Test convolve of a separable kernel with a spatially varying Gaussian function
@@ -287,42 +301,41 @@ class ConvolveTestCase(unittest.TestCase):
         separableKernel.setSpatialParameters(sParams)
         analyticKernel.setSpatialParameters(sParams)
                 
+        inImageArr = imTestUtils.arrayFromImage(self.inImage)
         for doNormalize in (False, True):
-            afwMath.convolve(self.cnvImage, self.inImage, separableKernel, doNormalize)
+            for copyEdge in (False, True):
+                refCnvImageArr = refConvolve(inImageArr, analyticKernel, doNormalize, copyEdge)
 
-            cnvImageArr = imTestUtils.arrayFromImage(self.cnvImage)
-    
-            inImageArr = imTestUtils.arrayFromImage(self.inImage)
-            refCnvImageArr = refConvolve(inImageArr, analyticKernel, doNormalize)
-
-            errStr = imTestUtils.imagesDiffer(cnvImageArr, refCnvImageArr)
-            if errStr:
-                self.fail("%s (for doNormalize=%s)" % (errStr, doNormalize))
+                afwMath.convolve(self.cnvImage, self.inImage, separableKernel, doNormalize, copyEdge)
+                cnvImageArr = imTestUtils.arrayFromImage(self.cnvImage)
+        
+                errStr = imTestUtils.imagesDiffer(cnvImageArr, refCnvImageArr)
+                if errStr:
+                    self.fail("%s (for doNormalize=%s, copyEdge=%s)" % (errStr, doNormalize, copyEdge))
     
     def testDeltaConvolve(self):
         """Test convolve with various delta function kernels using optimized code
         """
         doNormalize = True
         
-        for kCols in range(1, 4):
-            for kRows in range(1, 4):
-                for activeCol in range(kCols):
-                    for activeRow in range(kRows):
-                        kernel = afwMath.DeltaFunctionKernel(kCols, kRows, afwImage.PointI(activeCol, activeRow))
-                        
-                        refCnvImage = afwImage.ImageF(self.inImage.getDimensions())
-                        afwMath.convolve(refCnvImage, self.inImage, kernel, doNormalize)
-                        refCnvImageArr= imTestUtils.arrayFromImage(refCnvImage)
-                
-                        inImageArr = imTestUtils.arrayFromImage(self.inImage)
-                        ref2CnvImageArr = refConvolve(inImageArr, kernel, doNormalize)
-                
-                        errStr = imTestUtils.imagesDiffer(refCnvImageArr, ref2CnvImageArr)
-                        if errStr:
-                            infoStr = "testDeltaConvolve failed: kCols=%s, kRows=%s, activeCol=%s, activeRow=%s\nrefCnvImageArr=%r\nref2CnvImageArr=%r" % \
-                                (kCols, kRows, activeCol, activeRow, refCnvImageArr, ref2CnvImageArr)
-                            self.fail(infoStr)
+        inImageArr = imTestUtils.arrayFromImage(self.inImage)
+        for copyEdge in (False, True):
+            for kCols in range(1, 4):
+                for kRows in range(1, 4):
+                    for activeCol in range(kCols):
+                        for activeRow in range(kRows):
+                            kernel = afwMath.DeltaFunctionKernel(kCols, kRows, afwImage.PointI(activeCol, activeRow))
 
+                            refCnvImageArr = refConvolve(inImageArr, kernel, doNormalize, copyEdge)
+                            
+                            afwMath.convolve(self.cnvImage, self.inImage, kernel, doNormalize, copyEdge)
+                            cnvImageArr= imTestUtils.arrayFromImage(self.cnvImage)
+                    
+                            errStr = imTestUtils.imagesDiffer(cnvImageArr, refCnvImageArr)
+                            if errStr:
+                                self.fail("%s (for doNormalize=%s, copyEdge=%s, kCols=%s, kRows=%s, activeCol=%s, activeRow=%s)" % \
+                                    (errStr, doNormalize, copyEdge, kCols, kRows, activeCol, activeRow))
+    
     def testSpatiallyVaryingGaussianLinerCombination(self):
         """Test convolution with a spatially varying LinearCombinationKernel.
         """
@@ -349,18 +362,19 @@ class ConvolveTestCase(unittest.TestCase):
         # add True once ticket #833 is resolved: support normalization of convolution with
         # spatially varying LinearCombinationKernel)
         for doNormalize in (False,): # True):
-            refCnvImageArr = refConvolve(inImageArr, lcKernel, doNormalize)
-            
-            afwMath.convolve(self.cnvImage, self.inImage, lcKernel, doNormalize)
-            cnvImageArr = imTestUtils.arrayFromImage(self.cnvImage)
-            
-            if display:
-                refImage = imTestUtils.imageFromArray(refCnvImageArr)
-                ds9.mtv(displayUtils.makeMosaic(self.inImage, self.cnvImage, refImage))
-
-            errStr = imTestUtils.imagesDiffer(cnvImageArr, refCnvImageArr)
-            if errStr:
-                self.fail("%s (for doNormalize=%s)" % (errStr, doNormalize))
+            for copyEdge in (False, True):
+                refCnvImageArr = refConvolve(inImageArr, lcKernel, doNormalize, copyEdge)
+                
+                afwMath.convolve(self.cnvImage, self.inImage, lcKernel, doNormalize, copyEdge)
+                cnvImageArr = imTestUtils.arrayFromImage(self.cnvImage)
+                
+                if display:
+                    refImage = imTestUtils.imageFromArray(refCnvImageArr)
+                    ds9.mtv(displayUtils.makeMosaic(self.inImage, self.cnvImage, refImage))
+    
+                errStr = imTestUtils.imagesDiffer(cnvImageArr, refCnvImageArr)
+                if errStr:
+                    self.fail("%s (for doNormalize=%s, copyEdge=%s)" % (errStr, doNormalize, copyEdge))
 
     def testSpatiallyVaryingDeltaFunctionLinearCombination(self):
         """Test convolution with a spatially varying LinearCombinationKernel using some delta basis kernels.
@@ -389,22 +403,23 @@ class ConvolveTestCase(unittest.TestCase):
         # add True once ticket #833 is resolved: support normalization of convolution with
         # spatially varying LinearCombinationKernel)
         for doNormalize in (False,): # True):
-            refCnvImageArr = refConvolve(inImageArr, lcKernel, doNormalize)
-            
-            # the debug statements show whether the delta function specialization is used for convolution;
-            # they use the same verbosity as dispatch trace statements in the generic version of basicConvolve
-            pexLog.Debug("lsst.afw").debug(4, "Start convolution with delta functions")
-            afwMath.convolve(self.cnvImage, self.inImage, lcKernel, doNormalize)
-            pexLog.Debug("lsst.afw").debug(4, "End convolution with delta functions")
-            cnvImageArr = imTestUtils.arrayFromImage(self.cnvImage)
-            
-            if display:
-                refImage = imTestUtils.imageFromArray(refCnvImageArr)
-                ds9.mtv(displayUtils.makeMosaic(self.inImage, self.cnvImage, refImage))
-
-            errStr = imTestUtils.imagesDiffer(cnvImageArr, refCnvImageArr)
-            if errStr:
-                self.fail("%s (for doNormalize=%s)" % (errStr, doNormalize))
+            for copyEdge in (False, True):
+                refCnvImageArr = refConvolve(inImageArr, lcKernel, doNormalize, copyEdge)
+                
+                # the debug statements show whether the delta function specialization is used for convolution;
+                # they use the same verbosity as dispatch trace statements in the generic version of basicConvolve
+                pexLog.Debug("lsst.afw").debug(4, "Start convolution with delta functions")
+                afwMath.convolve(self.cnvImage, self.inImage, lcKernel, doNormalize, copyEdge)
+                pexLog.Debug("lsst.afw").debug(4, "End convolution with delta functions")
+                cnvImageArr = imTestUtils.arrayFromImage(self.cnvImage)
+                
+                if display:
+                    refImage = imTestUtils.imageFromArray(refCnvImageArr)
+                    ds9.mtv(displayUtils.makeMosaic(self.inImage, self.cnvImage, refImage))
+    
+                errStr = imTestUtils.imagesDiffer(cnvImageArr, refCnvImageArr)
+                if errStr:
+                    self.fail("%s (for doNormalize=%s, copyEdge=%s)" % (errStr, doNormalize, copyEdge))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
