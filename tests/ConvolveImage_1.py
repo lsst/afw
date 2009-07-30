@@ -5,8 +5,6 @@
 The convolve function is overloaded in two flavors:
 - in-place convolve: user supplies the output image as an argument
 - new-image convolve: the convolve function returns the convolved image
-
-All tests use the new-image version unless otherwise noted.
 """
 import os
 import math
@@ -44,6 +42,9 @@ if not dataDir:
 # input image contains a saturated star, a bad column, and a faint star
 InputImagePath = os.path.join(dataDir, "med_img.fits")
 InputBBox = afwImage.BBox(afwImage.PointI(50, 500), 100, 100)
+# the shifted BBox is for a same-sized region containing different pixels;
+# this is used to initialize the convolved image, to make sure convolve fully overwrites it
+ShiftedBBox = afwImage.BBox(afwImage.PointI(50, 450), 100, 100)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -130,6 +131,11 @@ class ConvolveTestCase(unittest.TestCase):
 
         fullImage = afwImage.ImageF(InputImagePath)
         self.inImage = afwImage.ImageF(fullImage, InputBBox)
+        
+        # provide a destination for the convolved data that contains junk
+        # to verify that convolve overwrites all pixels;
+        # make it a deep copy so we can mess with it without affecting self.inImage
+        self.cnvImage = afwImage.ImageF(fullImage, ShiftedBBox, True)
 
     def tearDown(self):
         del self.inImage
@@ -141,14 +147,13 @@ class ConvolveTestCase(unittest.TestCase):
         kFunc = afwMath.IntegerDeltaFunction2D(0.0, 0.0)
         k = afwMath.AnalyticKernel(3, 3, kFunc)
 
-        cnvImage = afwImage.ImageF(self.inImage.getDimensions())
-        afwMath.convolve(cnvImage, self.inImage, k, True)
+        afwMath.convolve(self.cnvImage, self.inImage, k, True)
     
         if display:
-            ds9.mtv(displayUtils.makeMosaic(self.inImage, cnvImage))
+            ds9.mtv(displayUtils.makeMosaic(self.inImage, self.cnvImage))
 
         origImageArr = imTestUtils.arrayFromImage(self.inImage)
-        cnvImageArr = imTestUtils.arrayFromImage(cnvImage)
+        cnvImageArr = imTestUtils.arrayFromImage(self.cnvImage)
         skipMaskArr = numpy.isnan(cnvImageArr)
         errStr = imTestUtils.imagesDiffer(cnvImageArr, origImageArr, skipMaskArr)
         if errStr:
@@ -168,13 +173,12 @@ class ConvolveTestCase(unittest.TestCase):
             analyticK.computeImage(kImg, doNormalize)
             fixedK = afwMath.FixedKernel(kImg)
 
-            cnvImage = afwImage.ImageF(self.inImage.getDimensions())
-            afwMath.convolve(cnvImage, self.inImage, fixedK, doNormalize)
+            afwMath.convolve(self.cnvImage, self.inImage, fixedK, doNormalize)
 
             if doNormalize and display and True:    # display as two panels
-                ds9.mtv(displayUtils.makeMosaic(self.inImage, cnvImage))
+                ds9.mtv(displayUtils.makeMosaic(self.inImage, self.cnvImage))
 
-            cnvImageArr = imTestUtils.arrayFromImage(cnvImage)
+            cnvImageArr = imTestUtils.arrayFromImage(self.cnvImage)
             inImageArr = imTestUtils.arrayFromImage(self.inImage)
             refCnvImageArr = refConvolve(inImageArr, fixedK, doNormalize)
             refCnvImage = imTestUtils.imageFromArray(refCnvImageArr)
@@ -193,13 +197,12 @@ class ConvolveTestCase(unittest.TestCase):
         k = afwMath.AnalyticKernel(kCols, kRows, kFunc)
         
         for doNormalize in (False, True):
-            cnvImage = afwImage.ImageF(self.inImage.getDimensions())
-            afwMath.convolve(cnvImage, self.inImage, k, doNormalize)
+            afwMath.convolve(self.cnvImage, self.inImage, k, doNormalize)
 
             if doNormalize and display and True:    # display as two panels
-                ds9.mtv(displayUtils.makeMosaic(self.inImage, cnvImage))
+                ds9.mtv(displayUtils.makeMosaic(self.inImage, self.cnvImage))
 
-            cnvImageArr = imTestUtils.arrayFromImage(cnvImage)
+            cnvImageArr = imTestUtils.arrayFromImage(self.cnvImage)
             inImageArr = imTestUtils.arrayFromImage(self.inImage)
             refCnvImageArr = refConvolve(inImageArr, k, doNormalize)
     
@@ -227,10 +230,9 @@ class ConvolveTestCase(unittest.TestCase):
         k = afwMath.AnalyticKernel(kCols, kRows, kFunc, sFunc)
         k.setSpatialParameters(sParams)
                 
-        cnvImage = afwImage.ImageF(self.inImage.getDimensions())
         for doNormalize in (False, True):
-            afwMath.convolve(cnvImage, self.inImage, k, doNormalize)
-            cnvImageArr = imTestUtils.arrayFromImage(cnvImage)
+            afwMath.convolve(self.cnvImage, self.inImage, k, doNormalize)
+            cnvImageArr = imTestUtils.arrayFromImage(self.cnvImage)
     
             inImageArr = imTestUtils.arrayFromImage(self.inImage)
             refCnvImageArr= refConvolve(inImageArr, k, doNormalize)
@@ -250,11 +252,10 @@ class ConvolveTestCase(unittest.TestCase):
         separableKernel = afwMath.SeparableKernel(kCols, kRows, gaussFunc1, gaussFunc1)
         analyticKernel = afwMath.AnalyticKernel(kCols, kRows, gaussFunc2)
                 
-        cnvImage = afwImage.ImageF(self.inImage.getDimensions())
         for doNormalize in (False, True):
-            afwMath.convolve(cnvImage, self.inImage, separableKernel, doNormalize)
+            afwMath.convolve(self.cnvImage, self.inImage, separableKernel, doNormalize)
 
-            cnvImageArr = imTestUtils.arrayFromImage(cnvImage)
+            cnvImageArr = imTestUtils.arrayFromImage(self.cnvImage)
     
             inImageArr = imTestUtils.arrayFromImage(self.inImage)
             refCnvImageArr = refConvolve(inImageArr, analyticKernel, doNormalize)
@@ -286,11 +287,10 @@ class ConvolveTestCase(unittest.TestCase):
         separableKernel.setSpatialParameters(sParams)
         analyticKernel.setSpatialParameters(sParams)
                 
-        cnvImage = afwImage.ImageF(self.inImage.getDimensions())
         for doNormalize in (False, True):
-            afwMath.convolve(cnvImage, self.inImage, separableKernel, doNormalize)
+            afwMath.convolve(self.cnvImage, self.inImage, separableKernel, doNormalize)
 
-            cnvImageArr = imTestUtils.arrayFromImage(cnvImage)
+            cnvImageArr = imTestUtils.arrayFromImage(self.cnvImage)
     
             inImageArr = imTestUtils.arrayFromImage(self.inImage)
             refCnvImageArr = refConvolve(inImageArr, analyticKernel, doNormalize)
@@ -328,7 +328,6 @@ class ConvolveTestCase(unittest.TestCase):
         """
         kCols = 5
         kRows = 5
-        doNormalize = False # convolution with spatially varying LC Kernel does not yet support normalization
 
         # create spatially model
         sFunc = afwMath.PolynomialFunction2D(1)
@@ -346,28 +345,28 @@ class ConvolveTestCase(unittest.TestCase):
         lcKernel.setSpatialParameters(sParams)
 
         inImageArr = imTestUtils.arrayFromImage(self.inImage)
-        refCnvImageArr = refConvolve(inImageArr, lcKernel, doNormalize)
 
-        cnvImage = afwImage.ImageF(self.inImage.getDimensions())
-        # compute twice, to be sure cnvImage is properly reset
-        for ii in range(2):     
-            afwMath.convolve(cnvImage, self.inImage, lcKernel, doNormalize)
-            cnvImageArr = imTestUtils.arrayFromImage(cnvImage)
+        # add True once ticket #833 is resolved: support normalization of convolution with
+        # spatially varying LinearCombinationKernel)
+        for doNormalize in (False,): # True):
+            refCnvImageArr = refConvolve(inImageArr, lcKernel, doNormalize)
+            
+            afwMath.convolve(self.cnvImage, self.inImage, lcKernel, doNormalize)
+            cnvImageArr = imTestUtils.arrayFromImage(self.cnvImage)
             
             if display:
                 refImage = imTestUtils.imageFromArray(refCnvImageArr)
-                ds9.mtv(displayUtils.makeMosaic(self.inImage, cnvImage, refImage))
+                ds9.mtv(displayUtils.makeMosaic(self.inImage, self.cnvImage, refImage))
 
             errStr = imTestUtils.imagesDiffer(cnvImageArr, refCnvImageArr)
             if errStr:
-                self.fail("%s (on iter %d)" % (errStr, ii))
+                self.fail("%s (for doNormalize=%s)" % (errStr, doNormalize))
 
     def testSpatiallyVaryingDeltaFunctionLinearCombination(self):
         """Test convolution with a spatially varying LinearCombinationKernel using some delta basis kernels.
         """
         kCols = 2
         kRows = 2
-        doNormalize = False # convolution with spatially varying LC Kernel does not yet support normalization
 
         # create spatially model
         sFunc = afwMath.PolynomialFunction2D(1)
@@ -386,23 +385,26 @@ class ConvolveTestCase(unittest.TestCase):
         lcKernel.setSpatialParameters(sParams)
 
         inImageArr = imTestUtils.arrayFromImage(self.inImage)
-        refCnvImageArr = refConvolve(inImageArr, lcKernel, doNormalize)
 
-        cnvImage = afwImage.ImageF(self.inImage.getDimensions())
-        # compute twice, to be sure cnvImage is properly reset
-        for ii in range(2):
-            pexLog.Debug("lsst.afw").debug(3, "Start convolution with delta functions")
-            afwMath.convolve(cnvImage, self.inImage, lcKernel, doNormalize)
-            pexLog.Debug("lsst.afw").debug(3, "End convolution with delta functions")
-            cnvImageArr = imTestUtils.arrayFromImage(cnvImage)
+        # add True once ticket #833 is resolved: support normalization of convolution with
+        # spatially varying LinearCombinationKernel)
+        for doNormalize in (False,): # True):
+            refCnvImageArr = refConvolve(inImageArr, lcKernel, doNormalize)
+            
+            # the debug statements show whether the delta function specialization is used for convolution;
+            # they use the same verbosity as dispatch trace statements in the generic version of basicConvolve
+            pexLog.Debug("lsst.afw").debug(4, "Start convolution with delta functions")
+            afwMath.convolve(self.cnvImage, self.inImage, lcKernel, doNormalize)
+            pexLog.Debug("lsst.afw").debug(4, "End convolution with delta functions")
+            cnvImageArr = imTestUtils.arrayFromImage(self.cnvImage)
             
             if display:
                 refImage = imTestUtils.imageFromArray(refCnvImageArr)
-                ds9.mtv(displayUtils.makeMosaic(self.inImage, cnvImage, refImage))
+                ds9.mtv(displayUtils.makeMosaic(self.inImage, self.cnvImage, refImage))
 
             errStr = imTestUtils.imagesDiffer(cnvImageArr, refCnvImageArr)
             if errStr:
-                self.fail("%s (on iter %d)" % (errStr, ii))
+                self.fail("%s (for doNormalize=%s)" % (errStr, doNormalize))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
