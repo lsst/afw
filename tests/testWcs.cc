@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(constructors_test) {
     matrixD CD(2,2);
 
     //An identity matrix
-    CD(0,0) = CD(1,0) = 1;
+    CD(0,0) = CD(1,1) = 1;
     CD(1,0) = CD(0,1) = 0;
 
 
