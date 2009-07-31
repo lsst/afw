@@ -576,7 +576,7 @@ void afwMath::basicConvolve(
  * Various convolution kernels are available, including:
  * - FixedKernel: a kernel based on an %image
  * - AnalyticKernel: a kernel based on a Function
- * - SeparableKernel: a kernel described by the product of two one-dimensional Functions: f(x) - g(y)
+ * - SeparableKernel: a kernel described by the product of two one-dimensional Functions: f0(x) * f1(y)
  * - LinearCombinationKernel: a linear combination of a set of spatially invariant basis kernels.
  * - DeltaFunctionKernel: a kernel that is all zeros except one pixel whose value is 1.
  *   Typically used as a basis kernel for LinearCombinationKernel.
@@ -589,11 +589,11 @@ void afwMath::basicConvolve(
  * pixels that have very small values. Larger kernels smear the mask more and are also slower to convolve.
  * Use the smallest kernel that will do the job.
  *
- * Edge pixels:
- * convolvedImage has a border of edge pixels which cannot be computed normally. By default these pixels
+ * convolvedImage has a border of edge pixels which cannot be computed normally. Normally these pixels
  * are set to the standard edge pixel, as returned by edgePixel(). However, if your code cannot handle
- * nans in the image or infs in the variance, you may set copyEdge true, in which case the edge pixels
- * will be set to the corresponding pixels of the input %image, but with the mask plane (if any) EDGE bit set.
+ * nans in the %image or infs in the variance, you may set copyEdge true, in which case the edge pixels
+ * are set to the corresponding pixels of the input %image and (if there is a mask) the mask EDGE bit is set.
+ *
  * The border of edge pixels has size:
  * - kernel.getCtrX() along the left edge
  * - kernel.getCtrY() along the bottom edge
@@ -625,6 +625,8 @@ void afwMath::basicConvolve(
  * 
  * afw/examples offers programs that time convolution, including timeConvolve and timeSpatiallyVaryingConvolve.
  *
+ * @throw lsst::pex::exceptions::InvalidParameterException if doNormalize is true and kernel is a
+ * spatially varying LinearCombinationKernel (see ticket #833).
  * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage is not the same size as inImage.
  * @throw lsst::pex::exceptions::InvalidParameterException if inImage is smaller (in colums or rows) than kernel.
  *
@@ -651,7 +653,7 @@ void afwMath::convolve(
 /*
  *  Explicit instantiation of all convolve functions.
  *
- * This code needs to be compiled with full optimisation, and there's no need why
+ * This code needs to be compiled with full optimization, and there's no need why
  * it should be instantiated in the swig wrappers.
  */
 namespace lsst { namespace afw { namespace math {
