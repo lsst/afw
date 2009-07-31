@@ -8,7 +8,7 @@
 #ifndef LSST_AFW_IMAGE_WCS_H
 #define LSST_AFW_IMAGE_WCS_H
 
-#include "boost/numeric/ublas/matrix.hpp"
+#include "Eigen/Core.h"
 #include "lsst/daf/base.h"
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/afw/image/Image.h"
@@ -33,13 +33,13 @@ namespace image {
         
         Wcs();
         Wcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
-        Wcs(PointD crval, PointD crpix, boost::numeric::ublas::matrix<double> CD, double equinox=2000.0,
+        Wcs(PointD crval, PointD crpix, Eigen::Matrix2d CD, double equinox=2000.0,
             std::string raDecSys="FK5");
-        Wcs(PointD crval, PointD crpix, boost::numeric::ublas::matrix<double> CD, 
-            boost::numeric::ublas::matrix<double> sipA, ///< Forward distortion Matrix A
-            boost::numeric::ublas::matrix<double> sipB, ///< Forward distortion Matrix B
-            boost::numeric::ublas::matrix<double> sipAp, ///<Reverse distortion Matrix Ap
-            boost::numeric::ublas::matrix<double> sipBp,  ///<Reverse distortion Matrix Bp
+        Wcs(PointD crval, PointD crpix, Eigen::Matrix2d CD, 
+            Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> sipA, ///< Forward distortion Matrix A
+            Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> sipB, ///< Forward distortion Matrix B
+            Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> sipAp, ///<Reverse distortion Matrix Ap
+            Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> sipBp,  ///<Reverse distortion Matrix Bp
             double equinox=2000.0,
             std::string raDecSys="FK5"
            );
@@ -66,7 +66,7 @@ namespace image {
         PointD raDecToXY(double const radec[2]) const {
             return raDecToXY(radec[0], radec[1]);
         }
-        boost::numeric::ublas::matrix<double> getLinearTransformMatrix() const;
+        Eigen::Matrix<double, 2, 2> getLinearTransformMatrix() const;
 
         PointD xyToRaDec(PointD pix) const;
         PointD xyToRaDec(double const x, double const y) const;
@@ -75,8 +75,17 @@ namespace image {
         }
 
         double pixArea(lsst::afw::image::PointD pix) const;
+
     private:
-        void initWcslib(PointD crval, PointD crpix, boost::numeric::ublas::matrix<double> CD, double equinox, std::string raDecSys);
+        void initWcslib(PointD crval,                   
+                        PointD crpix,                   
+                        Eigen::Matrix2d CD,             
+                        double equinox,                 
+                        std::string raDecSys,           
+                        std::string ctype1="RA---TAN",  
+                        std::string ctype2="DEC--TAN"   
+                        );
+
         
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::WcsFormatter);
 
@@ -88,8 +97,8 @@ namespace image {
         int _nReject;
 
         //SIP keywords
-        boost::numeric::ublas::matrix<double> _sipA, _sipB; ///< Forward transformation
-        boost::numeric::ublas::matrix<double> _sipAp, _sipBp;   ///<Reverse transformation
+        Eigen::MatrixXd _sipA, _sipB; ///< Forward transformation
+        Eigen::MatrixXd _sipAp, _sipBp;   ///<Reverse transformation
         
     };
   

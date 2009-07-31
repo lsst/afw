@@ -571,15 +571,7 @@ void afwMath::basicConvolve(
 }
 
 /**
- * @brief Convolve an Image or MaskedImage with a Kernel, setting pixels of an existing %image.s
- *
- * convolvedImage must be the same size as inImage.
- * convolvedImage has a border in which the output pixels are set to the edge pixel,
- * as returned by edgePixel(). This border has size:
- * - kernel.getCtrX() along the left edge
- * - kernel.getCtrY() along the bottom edge
- * - kernel.getWidth()  - 1 - kernel.getCtrX() along the right edge
- * - kernel.getHeight() - 1 - kernel.getCtrY() along the top edge
+ * @brief Convolve an Image or MaskedImage with a Kernel, setting pixels of an existing output %image.
  * 
  * Various convolution kernels are available, including:
  * - FixedKernel: a kernel based on an %image
@@ -589,19 +581,24 @@ void afwMath::basicConvolve(
  * - DeltaFunctionKernel: a kernel that is all zeros except one pixel whose value is 1.
  *   Typically used as a basis kernel for LinearCombinationKernel.
  * 
- * Additional convolution functions include:
- *  - convolveAtAPoint(): applies a Kernel to an Image or MaskedImage at a point
- *  - basicConvolve(): convolve a Kernel with an Image or MaskedImage, but does not set the edge pixels
- *    of the output. Specialization of convolution for different types of Kernel are handled by
- *    different versions of basicConvolve().
- * 
  * All convolution is performed in real space. This allows convolution to handle masked pixels
- * and spatially varying kernels. Note that convolution of an Image with a spatially invariant kernel could,
- * in fact, be performed in fourier space, but the code does not yet do this.
+ * and spatially varying kernels. Although convolution of an Image with a spatially invariant kernel could,
+ * in fact, be performed in Fourier space, the code does not do this.
  * 
  * Note that mask bits are smeared by convolution; all nonzero pixels in the kernel smear the mask, even
  * pixels that have very small values. Larger kernels smear the mask more and are also slower to convolve.
  * Use the smallest kernel that will do the job.
+ *
+ * Edge pixels:
+ * convolvedImage has a border of edge pixels which cannot be computed normally. By default these pixels
+ * are set to the standard edge pixel, as returned by edgePixel(). However, if your code cannot handle
+ * nans in the image or infs in the variance, you may set copyEdge true, in which case the edge pixels
+ * will be set to the corresponding pixels of the input %image, but with the mask plane (if any) EDGE bit set.
+ * The border of edge pixels has size:
+ * - kernel.getCtrX() along the left edge
+ * - kernel.getCtrY() along the bottom edge
+ * - kernel.getWidth()  - 1 - kernel.getCtrX() along the right edge
+ * - kernel.getHeight() - 1 - kernel.getCtrY() along the top edge
  * 
  * Convolution has been optimized for the various kinds of kernels, as follows (listed approximately
  * in order of decreasing speed):
@@ -619,6 +616,12 @@ void afwMath::basicConvolve(
  *   the output one pixel at a time by computing the AnalyticKernel at that point and applying it to
  *   the input %image. This is not favorable for cache performance (especially for large kernels)
  *   but avoids recomputing the AnalyticKernel. It is probably possible to do better.
+ *
+ * Additional convolution functions include:
+ *  - convolveAtAPoint(): convolve a Kernel to an Image or MaskedImage at a point.
+ *  - basicConvolve(): convolve a Kernel with an Image or MaskedImage, but do not set the edge pixels
+ *    of the output. Optimization of convolution for different types of Kernel are handled by different
+ *    specializations of basicConvolve().
  * 
  * afw/examples offers programs that time convolution, including timeConvolve and timeSpatiallyVaryingConvolve.
  *
@@ -629,7 +632,7 @@ void afwMath::basicConvolve(
  */
 template <typename OutImageT, typename InImageT, typename KernelT>
 void afwMath::convolve(
-    OutImageT& convolvedImage,  ///< convolved %image
+    OutImageT& convolvedImage,  ///< convolved %image; must be the same size as inImage
     InImageT const& inImage,    ///< %image to convolve
     KernelT const& kernel,      ///< convolution kernel
     bool doNormalize,           ///< if true, normalize the kernel, else use "as is"

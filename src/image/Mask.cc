@@ -208,9 +208,22 @@ image::Mask<MaskPixelT>::Mask(std::string const& fileName, //!< Name of file to 
     ;                                   // defined by Mask::_maskPlaneDict
 }
 
+/**
+ * Write a Mask to the specified file
+ */
 template<typename MaskPixelT>
-void image::Mask<MaskPixelT>::writeFits(std::string const& fileName) const {
-    PropertySet::Ptr metadata(new PropertySet());
+void image::Mask<MaskPixelT>::writeFits(
+        std::string const& fileName, ///< File to write
+        boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, //!< metadata to write to header; or NULL
+        std::string const& mode    ///< "w" to write a new file; "a" to append
+                                       ) const {
+
+    lsst::daf::base::PropertySet::Ptr metadata;
+    if (metadata_i) {
+        metadata = metadata_i->deepCopy();
+    } else {
+        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet());
+    }
     addMaskPlanesToMetadata(metadata);
     //
     // Add WCS with (X0, Y0) information
@@ -218,8 +231,8 @@ void image::Mask<MaskPixelT>::writeFits(std::string const& fileName) const {
     PropertySet::Ptr wcsAMetadata = image::detail::createTrivialWcsAsPropertySet(image::detail::wcsNameForXY0,
                                                                                  this->getX0(), this->getY0());
     metadata->combine(wcsAMetadata);
-    
-    image::fits_write_view(fileName, _getRawView(), metadata);
+
+    image::fits_write_view(fileName, _getRawView(), metadata, mode);
 }
 
 template<typename MaskPixelT>

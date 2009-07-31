@@ -88,6 +88,26 @@ class ReadFitsTestCase(unittest.TestCase):
         self.assertEqual(im2.getX0(), sim.getX0())
         self.assertEqual(im2.getY0(), sim.getY0())
 
+    def testMEF(self):
+        """Test writing a set of images to an MEF fits file, and then reading them back"""
+        
+        imPath = os.path.join("tests", "data", "MEF.fits")
+        im = afwImage.ImageF(20, 20)
+
+        for hdu in range(1, 5):
+            im.set(100*hdu)
+            if hdu == 1:
+                mode = "w"
+            else:
+                mode = "a"
+            im.writeFits(imPath, None, mode)
+
+        for hdu in range(1, 5):
+            im = afwImage.ImageF(imPath, hdu)
+            self.assertEqual(im.get(0, 0), 100*hdu)
+
+        os.remove(imPath)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
