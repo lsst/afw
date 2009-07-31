@@ -507,6 +507,69 @@ class ConvolveTestCase(unittest.TestCase):
                     "Convolved mask dictionary does not match input for doNormalize=%s, copyEdge=%s" % \
                     (doNormalize, copyEdge))
 
+    def DISABLEDtestTicket873(self):
+        """Demonstrate ticket 873: convolution of a MaskedImage with a spatially varying
+        LinearCombinationKernel can give incorrect variance.
+        """
+        kCols = 5
+        kRows = 5
+
+        # create spatial model
+        sFunc = afwMath.PolynomialFunction2D(1)
+        
+        # spatial parameters are a list of entries, one per kernel parameter;
+        # each entry is a list of spatial parameters
+        sParams = (
+            (1.0, -0.5/self.width, -0.5/self.height),
+            (0.0,  1.0/self.width,  0.0/self.height),
+            (0.0,  0.0/self.width,  1.0/self.height),
+        )
+        
+        # create three kernels with some non-overlapping pixels
+        # (non-zero pixels in one kernel vs. zero pixels in other kernels);
+        # note: the extreme example of this is delta function kernels, but this is less extreme
+        kVec = afwMath.KernelListD()
+        kImArr = numpy.zeros([5, 5], dtype=float)
+        kImArr[1:4, 1:4] = 0.5
+        kImArr[2, 2] = 1.0
+        kImage = imTestUtils.imageFromArray(kImArr, afwImage.ImageD)
+        kVec.append(afwMath.FixedKernel(kImage))
+        kImArr[:,:] = 0.0
+        kImArr[0:2, 0:2] = 0.125
+        kImArr[3:5, 3:5] = 0.125
+        kImage = imTestUtils.imageFromArray(kImArr, afwImage.ImageD)
+        kVec.append(afwMath.FixedKernel(kImage))
+        kImArr[:,:] = 0.0
+        kImArr[0:2, 3:5] = 0.125
+        kImArr[3:5, 0:2] = 0.125
+        kImage = imTestUtils.imageFromArray(kImArr, afwImage.ImageD)
+        kVec.append(afwMath.FixedKernel(kImage))
+
+        lcKernel = afwMath.LinearCombinationKernel(kVec, sFunc)
+        lcKernel.setSpatialParameters(sParams)
+
+        imMaskVar = imTestUtils.arraysFromMaskedImage(self.maskedImage)
+
+        # add True once ticket #833 is resolved: support normalization of convolution with
+        # spatially varying LinearCombinationKernel)
+        for doNormalize in (False,): # True):
+            for copyEdge in (False, True):
+                refCnvImMaskVar = refConvolve(imMaskVar, lcKernel, doNormalize, copyEdge)
+    
+                afwMath.convolve(self.cnvMaskedImage, self.maskedImage, lcKernel, doNormalize, copyEdge)
+                cnvImMaskVar = imTestUtils.arraysFromMaskedImage(self.cnvMaskedImage)
+        
+                if display:
+                    refMaskedImage = imTestUtils.maskedImageFromArrays(refCnvImMaskVar)
+                    ds9.mtv(displayUtils.makeMosaic(refMaskedImage, self.cnvMaskedImage), frame=0)
+    
+                errStr = imTestUtils.maskedImagesDiffer(cnvImMaskVar, refCnvImMaskVar)
+                if errStr:
+                    self.fail("%s (for doNormalize=%s, copyEdge=%s)" % (errStr, doNormalize, copyEdge))
+                self.assert_(sameMaskPlaneDicts(self.cnvMaskedImage, self.maskedImage),
+                    "Convolved mask dictionary does not match input for doNormalize=%s, copyEdge=%s" % \
+                    (doNormalize, copyEdge))
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
