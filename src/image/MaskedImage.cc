@@ -295,6 +295,19 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator=(MaskedIma
 }
 
 /**
+ * Set the pixels in the MaskedImage to the rhs
+ */
+template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator=(MaskedImage::SinglePixel const& rhs) {
+    *_image = rhs.image();
+    *_mask = rhs.mask();
+    *_variance = rhs.variance();
+
+    return *this;
+}
+
+/**
  * Copy the pixels from the rhs to the lhs
  *
  * \note operator=() is not equivalent to this command

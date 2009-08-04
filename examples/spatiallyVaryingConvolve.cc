@@ -32,19 +32,11 @@ int main(int argc, char **argv) {
     double maxSigma = 3.0;
     unsigned int kernelCols = 5;
     unsigned int kernelRows = 5;
-    const int DefEdgeMaskBit = 15;
 
     if (argc < 2) {
-        std::cerr << "Usage: simpleConvolve fitsFile [edgeMaskBit]" << std::endl;
+        std::cerr << "Usage: simpleConvolve fitsFile" << std::endl;
         std::cerr << "fitsFile excludes the \"_img.fits\" suffix" << std::endl;
-        std::cerr << "edgeMaskBit (default " << DefEdgeMaskBit
-            << ")  is the edge-extended mask bit (-1 to disable)" << std::endl;
         return 1;
-    }
-    
-    int edgeMaskBit = DefEdgeMaskBit;
-    if (argc > 2) {
-        istringstream(argv[2]) >> edgeMaskBit;
     }
     
     // read in fits file
@@ -84,7 +76,7 @@ int main(int argc, char **argv) {
 
     // convolve
     afwImage::MaskedImage<pixelType> resMaskedImage(mImage.getDimensions());
-    afwMath::convolve(resMaskedImage, mImage, gaussSpVarKernel, edgeMaskBit, true);
+    afwMath::convolve(resMaskedImage, mImage, gaussSpVarKernel, true);
 
     // write results
     resMaskedImage.writeFits(outFile);

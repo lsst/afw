@@ -655,6 +655,7 @@ namespace image {
         
         // Operators
         MaskedImage& operator=(Pixel const& rhs);
+        MaskedImage& operator=(SinglePixel const& rhs);
 
         void operator<<=(MaskedImage const& rhs);
 
