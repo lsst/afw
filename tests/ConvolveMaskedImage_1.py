@@ -183,7 +183,7 @@ class ConvolveTestCase(unittest.TestCase):
             
         del tmp
 
-        self.maskedImage = afwImage.MaskedImageF(FullImage, InputBBox)
+        self.maskedImage = afwImage.MaskedImageF(FullImage, InputBBox, True)
 
         # provide a destination for the convolved data that contains junk
         # to verify that convolve overwrites all pixels;
