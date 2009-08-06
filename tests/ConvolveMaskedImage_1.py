@@ -46,7 +46,8 @@ InputBBox = afwImage.BBox(afwImage.PointI(50, 500), 100, 100)
 # the shifted BBox is for a same-sized region containing different pixels;
 # this is used to initialize the convolved image, to make sure convolve fully overwrites it
 ShiftedBBox = afwImage.BBox(afwImage.PointI(50, 450), 100, 100)
-    
+FullImage = afwImage.MaskedImageF(InputMaskedImagePath)
+
 EdgeMaskPixel = 1 << afwImage.MaskU.getMaskPlane("EDGE")
 
 # Ignore kernel pixels whose value is exactly 0 when smearing the mask plane?
@@ -182,13 +183,12 @@ class ConvolveTestCase(unittest.TestCase):
             
         del tmp
 
-        fullImage = afwImage.MaskedImageF(InputMaskedImagePath)
-        self.maskedImage = afwImage.MaskedImageF(fullImage, InputBBox)
+        self.maskedImage = afwImage.MaskedImageF(FullImage, InputBBox)
 
         # provide a destination for the convolved data that contains junk
         # to verify that convolve overwrites all pixels;
         # make it a deep copy so we can mess with it without affecting self.inImage
-        self.cnvMaskedImage = afwImage.MaskedImageF(fullImage, ShiftedBBox, True)
+        self.cnvMaskedImage = afwImage.MaskedImageF(FullImage, ShiftedBBox, True)
 
         self.width = self.maskedImage.getWidth()
         self.height = self.maskedImage.getHeight()
@@ -441,9 +441,7 @@ class ConvolveTestCase(unittest.TestCase):
 
         imMaskVar = imTestUtils.arraysFromMaskedImage(self.maskedImage)
 
-        # add True once ticket #833 is resolved: support normalization of convolution with
-        # spatially varying LinearCombinationKernel)
-        for doNormalize in (False,): # True):
+        for doNormalize in (False, True):
             for copyEdge in (False, True):
                 refCnvImMaskVar = refConvolve(imMaskVar, lcKernel, doNormalize, copyEdge)
     
@@ -485,9 +483,7 @@ class ConvolveTestCase(unittest.TestCase):
 
         imMaskVar = imTestUtils.arraysFromMaskedImage(self.maskedImage)
 
-        # add True once ticket #833 is resolved: support normalization of convolution with
-        # spatially varying LinearCombinationKernel)
-        for doNormalize in (False,): # True):
+        for doNormalize in (False, True):
             for copyEdge in (False, True):
                 refCnvImMaskVar = refConvolve(imMaskVar, lcKernel, doNormalize, copyEdge)
     
@@ -550,9 +546,7 @@ class ConvolveTestCase(unittest.TestCase):
 
         imMaskVar = imTestUtils.arraysFromMaskedImage(self.maskedImage)
 
-        # add True once ticket #833 is resolved: support normalization of convolution with
-        # spatially varying LinearCombinationKernel)
-        for doNormalize in (False,): # True):
+        for doNormalize in (False, True):
             for copyEdge in (False, True):
                 refCnvImMaskVar = refConvolve(imMaskVar, lcKernel, doNormalize, copyEdge)
     

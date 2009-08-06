@@ -193,6 +193,8 @@ using boost::serialization::make_nvp;
         };
         
         SpatialFunctionPtr getSpatialFunction(unsigned int index) const;
+        
+        std::vector<SpatialFunctionPtr> getSpatialFunctionList() const;
 
         virtual std::vector<double> getKernelParameters() const;
         
@@ -440,7 +442,9 @@ using boost::serialization::make_nvp;
     
     
     /**
-     * @brief A kernel that has only one non-zero pixel
+     * @brief A kernel that has only one non-zero pixel (of value 1)
+     *
+     * It has no adjustable parameters and so cannot be spatially varying.
      *
      * @ingroup afw
      */
@@ -531,6 +535,10 @@ using boost::serialization::make_nvp;
                 
         virtual KernelList const &getKernelList() const;
         
+        std::vector<double> getKernelSumList() const {
+            return _kernelSumList;
+        }
+        
         void checkKernelList(const KernelList &kernelList) const;
         
         virtual std::string toString(std::string prefix = "") const;
@@ -540,8 +548,9 @@ using boost::serialization::make_nvp;
     
     private:
         void _computeKernelImageList();
-        KernelList _kernelList;
-        std::vector<boost::shared_ptr<lsst::afw::image::Image<PixelT> > > _kernelImagePtrList;
+        KernelList _kernelList; ///< basis kernels
+        std::vector<boost::shared_ptr<lsst::afw::image::Image<PixelT> > > _kernelImagePtrList; ///< image of each basis kernel (a cache)
+        std::vector<double> _kernelSumList; ///< sum of each basis kernel (a cache)
         mutable std::vector<double> _kernelParams;
 
     private:
@@ -552,6 +561,7 @@ using boost::serialization::make_nvp;
                         boost::serialization::base_object<Kernel>(*this));
                 ar & make_nvp("klist", _kernelList);
                 ar & make_nvp("kimglist", _kernelImagePtrList);
+                ar & make_nvp("ksumlist", _kernelSumList);
                 ar & make_nvp("params", _kernelParams);
             };
     };
