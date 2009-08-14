@@ -24,15 +24,12 @@ int main(int argc, char **argv) {
     lsst::pex::logging::Trace::setVerbosity("lsst.afw.kernel", 5);
 
     const double DefSigma = 2.0;
-    int DefEdgeMaskBit = 0;
     
     if (argc < 2) {
-        std::cerr << "Usage: simpleConvolve fitsFile [sigma [edgeMaskBit]]" << std::endl;
+        std::cerr << "Usage: simpleConvolve fitsFile [sigma]" << std::endl;
         std::cerr << "fitsFile excludes the \"_img.fits\" suffix" << std::endl;
         std::cerr << "sigma (default " << DefSigma << ") is the width of the gaussian kernel, in pixels"
             << std::endl;
-        std::cerr << "edgeMaskBit (default " << DefEdgeMaskBit
-            << ") bit to set around the edge (none if < 0)" << std::endl;
         return 1;
     }
     
@@ -41,11 +38,6 @@ int main(int argc, char **argv) {
         double sigma = DefSigma;
         if (argc > 2) {
             std::istringstream(argv[2]) >> sigma;
-        }
-        
-        int edgeMaskBit = DefEdgeMaskBit;
-        if (argc > 3) {
-            std::istringstream(argv[3]) >> edgeMaskBit;
         }
         
         // read in fits file
@@ -57,7 +49,7 @@ int main(int argc, char **argv) {
     
         // convolve
         afwImage::MaskedImage<pixelType> resMaskedImage(mImage.getDimensions());
-        afwMath::convolve(resMaskedImage, mImage, kernel, edgeMaskBit, true);
+        afwMath::convolve(resMaskedImage, mImage, kernel, true);
     
         // write results
         resMaskedImage.writeFits(outFile);

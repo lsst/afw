@@ -14,6 +14,7 @@ import math
 import pdb  # we may want to say pdb.set_trace()
 import sys
 import unittest
+import numpy
 
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions as pexExcept
@@ -21,6 +22,7 @@ import lsst.daf.base
 import lsst.afw.image.imageLib as afwImage
 import lsst.afw.math.mathLib as afwMath
 import lsst.afw.display.ds9 as ds9
+import lsst.afw.image.testUtils as imTestUtils
 
 try:
     type(display)
@@ -115,16 +117,31 @@ class offsetImageTestCase(unittest.TestCase):
         if display:
             ds9.mtv(im, frame=1)
 
-        stats = afwMath.makeStatistics(im, afwMath.MEAN | afwMath.MAX | afwMath.MIN)
+        imArr = imTestUtils.arrayFromImage(im)
+        imGoodVals = numpy.ma.array(imArr, copy=False, mask=numpy.isnan(imArr)).compressed()
+        imMean = imGoodVals.mean()
+        imMax = imGoodVals.max()
+        imMin = imGoodVals.min()
 
         if not False:
-            print "mean = %g, min = %g, max = %g" % (stats.getValue(afwMath.MEAN),
-                                                     stats.getValue(afwMath.MIN),
-                                                     stats.getValue(afwMath.MAX))
+            print "mean = %g, min = %g, max = %g" % (imMean, imMin, imMax)
             
-        self.assertTrue(abs(stats.getValue(afwMath.MEAN)) < 1e-7)
-        self.assertTrue(abs(stats.getValue(afwMath.MIN)) < 1.2e-3*amp)
-        self.assertTrue(abs(stats.getValue(afwMath.MAX)) < 1.2e-3*amp)
+        self.assertTrue(abs(imMean) < 1e-7)
+        self.assertTrue(abs(imMin) < 1.2e-3*amp)
+        self.assertTrue(abs(imMax) < 1.2e-3*amp)
+
+# the following would be preferable if there was an easy way to NaN pixels
+#
+#         stats = afwMath.makeStatistics(im, afwMath.MEAN | afwMath.MAX | afwMath.MIN)
+# 
+#         if not False:
+#             print "mean = %g, min = %g, max = %g" % (stats.getValue(afwMath.MEAN),
+#                                                      stats.getValue(afwMath.MIN),
+#                                                      stats.getValue(afwMath.MAX))
+#             
+#         self.assertTrue(abs(stats.getValue(afwMath.MEAN)) < 1e-7)
+#         self.assertTrue(abs(stats.getValue(afwMath.MIN)) < 1.2e-3*amp)
+#         self.assertTrue(abs(stats.getValue(afwMath.MAX)) < 1.2e-3*amp)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

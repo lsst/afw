@@ -24,7 +24,6 @@ int main(int argc, char **argv) {
     typedef double kernelType;
     double minSigma = 0.1;
     double maxSigma = 3.0;
-    const int EdgeMaskBit = -1;
     const unsigned int DefNIter = 10;
     const unsigned int MinKernelSize = 5;
     const unsigned int MaxKernelSize = 15;
@@ -71,7 +70,7 @@ int main(int argc, char **argv) {
         clock_t startTime = clock();
         for (unsigned int iter = 0; iter < nIter; ++iter) {
             // convolve
-            afwMath::convolve(resMImage, mImage, gaussSpVarKernel, EdgeMaskBit, true);
+            afwMath::convolve(resMImage, mImage, gaussSpVarKernel, true);
         }
         double secPerIter = (clock() - startTime) / static_cast<double> (nIter * CLOCKS_PER_SEC);
         std::cout << secPerIter << " sec/convolution for a " << kSize << " by " << kSize << " kernel" << std::endl;
