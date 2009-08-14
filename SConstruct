@@ -4,6 +4,12 @@
 #
 import glob, os.path, sys, traceback
 import lsst.SConsUtils as scons
+import platform
+
+if platform.system().lower() == "darwin":
+    minuitLibs = "Minuit2:C++"
+else:
+    minuitLibs = "gomp Minuit2:C++"
 
 env = scons.makeEnv(
     "afw",
@@ -19,7 +25,7 @@ env = scons.makeEnv(
         ["cfitsio", "fitsio.h", "m cfitsio", "ffopen"],
         ["wcslib", "wcslib/wcs.h", "m wcs"], # remove m once SConsUtils bug fixed
         ["xpa", "xpa.h", "xpa", "XPAPuts"],
-        ["minuit2", "Minuit2/FCNBase.h", "Minuit2:C++"],
+        ["minuit2", "Minuit2/FCNBase.h", minuitLibs],
         ["gsl", "gsl/gsl_rng.h", "gslcblas gsl"],
         ["pex_exceptions", "lsst/pex/exceptions.h", "pex_exceptions:C++"],
         ["utils", "lsst/utils/Utils.h", "utils:C++"],
