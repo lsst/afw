@@ -22,11 +22,14 @@ namespace math = lsst::afw::math;
 
 namespace lsst { namespace afw { namespace math {
 
+using namespace details;
+            
 /**
  * @brief See NR 3rd pg. 115.
  *
  */
-int Base_interp::locate(double const x) {
+template <typename T>
+int Base_interp<T>::locate(T const x) {
     
     int ju, jm, jl;
     if ( _n < 2 || _m < 2 || _m > _n ) {
@@ -52,7 +55,8 @@ int Base_interp::locate(double const x) {
  * @brief See NR 3rd pg. 116.
  *
  */
-int Base_interp::hunt(double const x) {
+template <typename T>
+int Base_interp<T>::hunt(T const x) {
     
     int jl = _jsav, jm, ju, inc = 1;
     if (_n < 2 || _m < 2 || _m > _n) { throw ("hunt size error"); }
@@ -108,12 +112,13 @@ int Base_interp::hunt(double const x) {
  * @brief See NR 3rd pg. 119.
  *
  */
-double Poly_interp::rawinterp(int const jl, double const x) {
+template <typename T>
+T Poly_interp<T>::rawinterp(int const jl, T const x) {
     int i, m, ns = 0;
     double y, den, dif, dift, ho, hp, w;
-    std::vector<double>::pointer xa = &_x[jl];
-    std::vector<double>::pointer ya = &_y[jl];
-    std::vector<double> c(_m), d(_m);
+    typename std::vector<T>::pointer xa = &_x[jl];
+    typename std::vector<T>::pointer ya = &_y[jl];
+    std::vector<T> c(_m), d(_m);
     dif = std::fabs(x - xa[0]);
     for (i = 0; i < _m; ++i) {
         if ((dift = std::fabs(x - xa[i])) < dif) {
@@ -141,5 +146,13 @@ double Poly_interp::rawinterp(int const jl, double const x) {
     return y;
 }
 
+            
+#define INSTANTIATE_QUADRATURE(TYPE) \
+            template int Base_interp<TYPE>::locate(const TYPE); \
+            template int Base_interp<TYPE>::hunt(const TYPE);   \
+            template TYPE Poly_interp<TYPE>::rawinterp(int const, TYPE const);         
 
+INSTANTIATE_QUADRATURE(double);            
+INSTANTIATE_QUADRATURE(float);            
+            
 }}}

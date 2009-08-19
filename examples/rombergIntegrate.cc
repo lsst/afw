@@ -5,7 +5,7 @@
  * @date   May 25, 2009
  *
  * This example demonstrates how to use the romberg 1D and 2D
- * integrators in the afw::math (Quadrature) suite.
+ * integrators in afw::math (Quadrature).
  *
  */
 #include <iostream>

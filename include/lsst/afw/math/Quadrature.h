@@ -4,6 +4,12 @@
 
 #include <iostream>
 #include <functional>
+#include <string>
+#include <sstream>
+#include "boost/format.hpp"
+#include "lsst/pex/exceptions.h"
+
+namespace ex = lsst::pex::exceptions;
 
 namespace lsst { namespace afw { namespace math {
 
@@ -25,6 +31,7 @@ namespace lsst { namespace afw { namespace math {
  *
  */
 
+namespace details {            
 
 // =============================================================
 /**
@@ -46,10 +53,11 @@ double const epsilon_f = 1.19209e-7;
  * @brief A base class for NR intepolation objects.
  * @note Adapted from NR 3rd Ed. Ch 3.
  */
+template<typename T>            
 class Base_interp {
 public:
     
-    Base_interp( std::vector<double> &x, std::vector<double> &y, int m)
+    Base_interp( std::vector<T> &x, std::vector<T> &y, int m)
         : _x(x), _y(y), _m(m) {
         _jsav = 0;
         _n = x.size();
@@ -59,20 +67,20 @@ public:
 
     virtual ~Base_interp() {};
     
-    double interp(double x) {
+    T interp(T x) {
         int const jlo = _cor ? hunt(x) : locate(x);
         return rawinterp(jlo, x);
     }
     
-    int locate(const double x);
-    int hunt(const double x);
+    int locate(const T x);
+    int hunt(const T x);
     
-    double virtual rawinterp(int jlo, double x) = 0;
+    T virtual rawinterp(int jlo, T x) = 0;
     
     
 protected:
-    std::vector<double> &_x;
-    std::vector<double> &_y;
+    std::vector<T> &_x;
+    std::vector<T> &_y;
     int _n, _m;
 private:
     int _jsav, _cor, _dj;
@@ -86,18 +94,19 @@ private:
  * @brief A Polynomial interpolation object.
  * @note Adapted from NR 3rd Ed. Chap. 3
  */
-class Poly_interp : public Base_interp {
+template <typename T>            
+class Poly_interp : public Base_interp<T> {
 public:
-    Poly_interp(std::vector<double> &xv, std::vector<double>  &yv, int m) :
-        Base_interp(xv, yv, m), _dy(0.0) {}
-    double rawinterp(int jl, double x);
-    double getDy() { return _dy; }
+    Poly_interp(std::vector<T> &xv, std::vector<T>  &yv, int m) :
+        Base_interp<T>(xv, yv, m), _dy(0.0) {}
+    T rawinterp(int jl, T x);
+    T getDy() { return _dy; }
 private:
-    double _dy;
-    using Base_interp::_x;
-    using Base_interp::_y;
-    using Base_interp::_n;
-    using Base_interp::_m;
+    T _dy;
+    using Base_interp<T>::_x;
+    using Base_interp<T>::_y;
+    using Base_interp<T>::_n;
+    using Base_interp<T>::_m;
 };
 
 
@@ -176,8 +185,9 @@ private:
     double _eps;
 };
 
+} // end of namespace afw::math::details
 
-
+            
 // =============================================================
 /**
  * @brief The 1D Romberg integrator
@@ -191,6 +201,8 @@ typename UnaryFunctionT::result_type romberg(UnaryFunctionT func,
                typename UnaryFunctionT::argument_type const a,
                typename UnaryFunctionT::argument_type const b,
                double eps=1.0e-6)  {
+
+    using namespace details;
     
     static int call_count = 0;
     static int fail_count = 0;
@@ -200,7 +212,7 @@ typename UnaryFunctionT::result_type romberg(UnaryFunctionT func,
     int const JMAX = 20, JMAXP = JMAX + 1, K = 5;
     
     std::vector<typename UnaryFunctionT::argument_type> s(JMAX), h(JMAXP);
-    Poly_interp polint(h, s, K);
+    Poly_interp<typename UnaryFunctionT::argument_type> polint(h, s, K);
     h[0] = 1.0;
     Trapzd<UnaryFunctionT> t(func, a, b);
     typename UnaryFunctionT::result_type ss_bail = 0;
@@ -217,10 +229,9 @@ typename UnaryFunctionT::result_type romberg(UnaryFunctionT func,
     }
     fail_count++;
     
-    // ==== THROW A PROPER EXCEPTION HERE ====
-    std::cout << "Failed to converge in " << JMAX << " iterations. fail/call="
-              << fail_count << "/" << call_count << "\n" ;
-    return ss_bail;
+    throw LSST_EXCEPT(ex::RuntimeErrorException,
+                      (boost::format("Failed to converge in %d iterations\n") % JMAX).str() );
+    return ss_bail; // never gets here.
 }
 
 
@@ -239,6 +250,7 @@ typename BinaryFunctionT::result_type romberg2D(BinaryFunctionT func,
                                        typename BinaryFunctionT::second_argument_type const y1,
                                        typename BinaryFunctionT::second_argument_type const y2,
                                        double eps=1.0e-6) {
+    using namespace details;
     FunctionWrapper<BinaryFunctionT> fwrap(func, x1, x2, eps);
     return romberg(fwrap, y1, y2, eps);
 }

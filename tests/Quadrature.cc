@@ -6,6 +6,12 @@
  *
  * This test evaluates the romberg 1D and 2D
  * integrators in the afw::math (Quadrature) suite.
+ *
+ * Outline:
+ *
+ * Integrate functions which have analytic solutions and compare.
+ * I chose parabolae.
+ *
  */
 #include <cmath>
 #include <vector>
