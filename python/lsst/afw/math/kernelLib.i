@@ -71,7 +71,6 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
                                                         lsst::afw::math::FixedKernel>;
     %template(convolve)       lsst::afw::math::convolve<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2),
                                                         lsst::afw::math::LinearCombinationKernel>;
-    %template(convolveLinear) lsst::afw::math::convolveLinear<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2)>;
     %template(convolve)       lsst::afw::math::convolve<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2),
                                                         lsst::afw::math::SeparableKernel>;
 %enddef

@@ -162,7 +162,7 @@ void image::swap(ImageBase<PixelT>& a, ImageBase<PixelT>& b) {
 //
 /// Return an STL compliant iterator to the start of the %image
 ///
-/// Note that this isn't especially efficient; see \link secPixelAccessTutorial\endlink for
+/// Note that this isn't especially efficient; see \link imageIterators\endlink for
 /// a discussion
 template<typename PixelT>
 typename image::ImageBase<PixelT>::iterator image::ImageBase<PixelT>::begin() const {
@@ -321,7 +321,7 @@ image::Image<PixelT>::Image(int const width, ///< Number of columns
  * Create an initialised Image of the specified size
  */
 template<typename PixelT>
-image::Image<PixelT>::Image(std::pair<int, int> const dimensions // (width, height) of the desired Image
+image::Image<PixelT>::Image(std::pair<int, int> const dimensions ///< (width, height) of the desired Image
                            ) :
     image::ImageBase<PixelT>(dimensions) {}
 
@@ -329,7 +329,7 @@ image::Image<PixelT>::Image(std::pair<int, int> const dimensions // (width, heig
  * Create an uninitialized Image of the specified size
  */
 template<typename PixelT>
-image::Image<PixelT>::Image(std::pair<int, int> const dimensions, // (width, height) of the desired Image
+image::Image<PixelT>::Image(std::pair<int, int> const dimensions, ///< (width, height) of the desired Image
                             PixelT initialValue ///< Initial value
                            ) :
     image::ImageBase<PixelT>(dimensions) {
@@ -439,22 +439,24 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
  */
 template<typename PixelT>
 void image::Image<PixelT>::writeFits(
-	std::string const& fileName,    ///< File to write
-        lsst::daf::base::PropertySet::Ptr metadata //!< metadata to write to header; or NULL
+	std::string const& fileName,                ///< File to write
+        boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, //!< metadata to write to header; or NULL
+        std::string const& mode                     //!< "w" to write a new file; "a" to append
                                     ) const {
     using lsst::daf::base::PropertySet;
 
     PropertySet::Ptr wcsAMetadata = image::detail::createTrivialWcsAsPropertySet(image::detail::wcsNameForXY0,
                                                                                  this->getX0(), this->getY0());
 
-    if (metadata) {
-        metadata = metadata->deepCopy();
+    lsst::daf::base::PropertySet::Ptr metadata;
+    if (metadata_i) {
+        metadata = metadata_i->deepCopy();
         metadata->combine(wcsAMetadata);
     } else {
         metadata = wcsAMetadata;
     }
 
-    image::fits_write_view(fileName, _getRawView(), metadata);
+    image::fits_write_view(fileName, _getRawView(), metadata, mode);
 }
 
 /************************************************************************************************************/

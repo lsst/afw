@@ -10,7 +10,7 @@ or
 """
 
 import pdb                              # we may want to say pdb.set_trace()
-import os
+import os, re
 import unittest
 
 import eups
@@ -104,6 +104,37 @@ class MaskedImageTestCase(unittest.TestCase):
         """Test reading an F64 image and converting it to a MaskedImage"""
         im = afwImage.ImageD(100, 100); im.set(666)
         mi = afwImage.MaskedImageD(im)
+
+    def testReadWriteMEF(self):
+        """Test that we read and write MEF and non-MEF representions of MaskedImages correctly"""
+        im = afwImage.MaskedImageF(10, 20)
+        im.set(666, 0x10, 10)
+
+        x0, y0 = 1, 2
+        im.setXY0(x0, y0)
+
+        for tmpFile, writeMef in [("foo", False), ("foo", True), ("foo.fits", False)]:
+            im.writeFits(tmpFile, None, "w", writeMef)
+
+            im2 = im.Factory(tmpFile)
+            self.assertEqual(im2.getX0(), x0)
+            self.assertEqual(im2.getY0(), y0)
+
+            self.assertEqual(im2.getImage().getX0(), x0)
+            self.assertEqual(im2.getImage().getY0(), y0)
+
+            self.assertEqual(im2.getMask().getX0(), x0)
+            self.assertEqual(im2.getMask().getY0(), y0)
+
+            self.assertEqual(im2.getVariance().getX0(), x0)
+            self.assertEqual(im2.getVariance().getY0(), y0)
+
+            if writeMef or re.search(r"\.fits$", tmpFile):
+                os.remove(tmpFile)
+            else:
+                os.remove(afwImage.MaskedImageF.imageFileName(tmpFile))
+                os.remove(afwImage.MaskedImageF.maskFileName(tmpFile))
+                os.remove(afwImage.MaskedImageF.varianceFileName(tmpFile))
 
     def testReadWriteXY0(self):
         """Test that we read and write (X0, Y0) correctly"""

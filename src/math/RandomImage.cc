@@ -104,7 +104,7 @@ void randomUniformPosImage(ImageT *image,  ///< The image to set
 template<typename ImageT>
 void randomUniformIntImage(ImageT *image,  ///< The image to set
                            Random &rand,   ///< definition of random number algorithm, seed, etc.
-                           unsigned long n
+                           unsigned long n ///< (exclusive) upper limit for random variates
                           ) {
     for_each_pixel(image, do_uniformInt(rand, n));
 }
@@ -115,8 +115,8 @@ void randomUniformIntImage(ImageT *image,  ///< The image to set
 template<typename ImageT>
 void randomFlatImage(ImageT *image,     ///< The image to set
                      Random &rand,      ///< definition of random number algorithm, seed, etc.
-                     double const a,
-                     double const b
+                     double const a,    ///< (inclusive) lower limit for random variates
+                     double const b     ///< (exclusive) upper limit for random variates
                     ) {
     for_each_pixel(image, do_flat(rand, a, b));
 }

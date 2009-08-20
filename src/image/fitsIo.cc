@@ -98,7 +98,7 @@ void move_to_hdu(lsst::afw::image::cfitsio::fitsfile *fd, //!< cfitsio file desc
 // append a record to the FITS header.   Note the specialization to string values
 
 void appendKey(lsst::afw::image::cfitsio::fitsfile* fd, std::string const &keyWord,
-               std::string const &keyComment, lsst::daf::base::PropertySet::Ptr metadata) {
+               std::string const &keyComment, boost::shared_ptr<const lsst::daf::base::PropertySet> metadata) {
 
     // NOTE:  the sizes of arrays are tied to FITS standard
     // These shenanigans are required only because fits_write_key does not take const args...

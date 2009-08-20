@@ -13,19 +13,25 @@ SWIG_SHARED_PTR_DERIVED(BilinearWarpingKernel, lsst::afw::math::SeparableKernel,
 
 %include "lsst/afw/math/warpExposure.h"
 
-%define %warpExposureFuncByType(DESTIMAGEPIXELT, SRCIMAGEPIXELT)
+%define %WarpFuncsByType(DESTIMAGEPIXELT, SRCIMAGEPIXELT)
 %template(warpExposure) lsst::afw::math::warpExposure<
     lsst::afw::image::Exposure<DESTIMAGEPIXELT, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>,
     lsst::afw::image::Exposure<SRCIMAGEPIXELT, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> >;
+%template(warpImage) lsst::afw::math::warpImage<
+    lsst::afw::image::MaskedImage<DESTIMAGEPIXELT, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>,
+    lsst::afw::image::MaskedImage<SRCIMAGEPIXELT, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> >;
+%template(warpImage) lsst::afw::math::warpImage<
+    lsst::afw::image::Image<DESTIMAGEPIXELT>,
+    lsst::afw::image::Image<SRCIMAGEPIXELT> >;
 %enddef
 
-%warpExposureFuncByType(float, boost::uint16_t);
-%warpExposureFuncByType(double, boost::uint16_t);
-%warpExposureFuncByType(float, int);
-%warpExposureFuncByType(double, int);
-%warpExposureFuncByType(float, float);
-%warpExposureFuncByType(double, float);
-%warpExposureFuncByType(double, double);
+%WarpFuncsByType(float, boost::uint16_t);
+%WarpFuncsByType(double, boost::uint16_t);
+%WarpFuncsByType(float, int);
+%WarpFuncsByType(double, int);
+%WarpFuncsByType(float, float);
+%WarpFuncsByType(double, float);
+%WarpFuncsByType(double, double);
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

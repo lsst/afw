@@ -14,9 +14,28 @@ class Mosaic(object):
     m.setGutter(5)
     m.setBackground(10)
     m.setMode("square")                   # the default
-    mosaic = m.makeMosaic(im1, im2, im3)
 
-    You can return the (ix, iy)th (or nth) BBox with getBBox()
+    mosaic = m.makeMosaic(im1, im2, im3)   # build the mosaic
+    ds9.mtv(mosaic)			   # display it
+    m.drawLabels(["Label 1", "Label 2", "Label 3"]) # label the panels
+
+    # alternative way to build a mosaic
+    images = [im1, im2, im3]               
+    labels = ["Label 1", "Label 2", "Label 3"]
+
+    mosaic = m.makeMosaic(images)
+    ds9.mtv(mosaic)
+    m.drawLabels(labels)
+
+    # Yet another way to build a mosaic (no need to build the images/labels lists)
+    for i in range(len(images)):
+        m.append(images[i], labels[i])
+
+    mosaic = m.makeMosaic()
+    ds9.mtv(mosaic)
+    m.drawLabels()
+
+    You can return the (ix, iy)th (or nth) bounding box (in pixels) with getBBox()
     """
     def __init__(self, gutter=3, background=0, mode="square"):
         self.gutter = 3                 # number of pixels between panels in a mosaic
@@ -25,8 +44,29 @@ class Mosaic(object):
         self.xsize = 0                  # column size of panels
         self.ysize = 0                  # row size of panels
 
-    def makeMosaic(self, images, frame=None, mode=None):
-        """Return a mosaic of all the images provided; if frame is specified, display it"""
+        self.reset()
+
+    def reset(self):
+        """Reset the list of images to be mosaiced"""
+        self.images = []                # images to mosaic together
+        self.labels = []                # labels for images
+        
+    def append(self, image, label=None):
+        """Add an image to the list of images to be mosaiced
+        Set may be cleared with Mosaic.reset()"""
+        self.images.append(image)
+        self.labels.append(label)
+
+    def makeMosaic(self, images=None, frame=None, mode=None):
+        """Return a mosaic of all the images provided; if none are specified,
+        use the list accumulated with Mosaic.append()
+        
+        If frame is specified, display it
+        """
+
+        if not images:
+            images = self.images
+
         self.nImage = len(images)
         if self.nImage == 0:
             raise RuntimeError, "You must provide at least one image"
@@ -80,6 +120,9 @@ class Mosaic(object):
 
         if frame is not None:
             ds9.mtv(mosaic, frame=frame)
+
+            if images == self.images:
+                self.drawLabels(frame=frame)
             
         return mosaic
 
@@ -112,11 +155,19 @@ class Mosaic(object):
         return afwImage.BBox(afwImage.PointI(ix*(self.xsize + self.gutter), iy*(self.ysize + self.gutter)),
                              self.xsize, self.ysize)
 
-    def drawLabels(self, labels, frame=0):
-        """Draw the list labels at the corners of each panel"""
+    def drawLabels(self, labels=None, frame=0):
+        """Draw the list labels at the corners of each panel.  If labels is None, use the ones
+        specified by Mosaic.append()"""
+
+        if not labels:
+            labels = self.labels
+
+        if not labels:
+            return
 
         if len(labels) != self.nImage:
             raise RuntimeError, ("You provided %d labels for %d panels" % (len(labels), self.nImage))
 
         for i in range(len(labels)):
-            ds9.dot(labels[i], self.getBBox(i).getX0(), self.getBBox(i).getY0(), frame=frame)
+            if labels[i]:
+                ds9.dot(labels[i], self.getBBox(i).getX0(), self.getBBox(i).getY0(), frame=frame)

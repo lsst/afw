@@ -29,6 +29,9 @@ void test(char *name) {
     image::MaskedImage<ImagePixelType, MaskPixelType> testMasked(string(name), hdu, metadata, bbox, conformMask);
 
     testMasked.writeFits("testout");
+    ::unlink("testout_img.fits");
+    ::unlink("testout_msk.fits");
+    ::unlink("testout_var.fits");
 }
 
 int main(int argc, char *argv[]) {

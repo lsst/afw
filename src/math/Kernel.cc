@@ -119,7 +119,6 @@ void lsst::afw::math::Kernel::setSpatialParameters(const std::vector<std::vector
  *
  * Warning: this is a low-level function that assumes kernelParams is the right length.
  * It will fail in unpredictable ways if that condition is not met.
- * The only reason it is not protected is because the convolveLinear function needs it.
  */
 void lsst::afw::math::Kernel::computeKernelParametersFromSpatialModel(std::vector<double> &kernelParams, double x, double y) const {
     std::vector<double>::iterator paramIter = kernelParams.begin();

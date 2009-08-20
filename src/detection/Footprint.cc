@@ -15,9 +15,9 @@
 #include "lsst/afw/math/KernelFunctions.h"
 #include "lsst/afw/detection/Footprint.h"
 
-namespace math = lsst::afw::math;
-namespace detection = lsst::afw::detection;
-namespace image = lsst::afw::image;
+namespace afwMath = lsst::afw::math;
+namespace afwDetect = lsst::afw::detection;
+namespace afwImage = lsst::afw::image;
 
 /******************************************************************************/
 /**
@@ -29,7 +29,7 @@ namespace image = lsst::afw::image;
  * \param polarity If true detect positive objects, false for negative
  * \return Threshold object
  */
-detection::Threshold detection::createThreshold(
+afwDetect::Threshold afwDetect::createThreshold(
     const float value,
     const std::string typeStr,
     const bool polarity
@@ -55,7 +55,7 @@ detection::Threshold detection::createThreshold(
 /**
  * Return a string-representation of a Span
  */
-std::string detection::Span::toString() const {
+std::string afwDetect::Span::toString() const {
     return (boost::format("%d: %d..%d") % _y % _x0 % _x1).str();
 }
 
@@ -65,8 +65,8 @@ namespace {
  *
  * A utility functor passed to sort
  */
-    struct compareSpanByYX : public std::binary_function<detection::Span::ConstPtr, detection::Span::ConstPtr, bool> {
-        int operator()(detection::Span::ConstPtr a, detection::Span::ConstPtr b) {
+    struct compareSpanByYX : public std::binary_function<afwDetect::Span::ConstPtr, afwDetect::Span::ConstPtr, bool> {
+        int operator()(afwDetect::Span::ConstPtr a, afwDetect::Span::ConstPtr b) {
             if (a->getY() < b->getY()) {
                 return true;
             } else if (a->getY() == b->getY()) {
@@ -85,19 +85,19 @@ namespace {
 
 /************************************************************************************************************/
 /// Counter for Footprint IDs
-int detection::Footprint::id = 0;
+int afwDetect::Footprint::id = 0;
 /**
  * Create a Footprint
  *
  * \throws lsst::pex::exceptions::InvalidParameterException in nspan is < 0
  */
-detection::Footprint::Footprint(int nspan,         //!< initial number of Span%s in this Footprint
-                                const image::BBox region) //!< Bounding box of MaskedImage footprint lives in
+afwDetect::Footprint::Footprint(int nspan,         //!< initial number of Span%s in this Footprint
+                                const afwImage::BBox region) //!< Bounding box of MaskedImage footprint lives in
     : lsst::daf::data::LsstBase(typeid(this)),
       _fid(++id),
       _npix(0),
-      _spans(*new detection::Footprint::SpanList),
-      _bbox(image::BBox()),
+      _spans(*new afwDetect::Footprint::SpanList),
+      _bbox(afwImage::BBox()),
       _peaks(*new std::vector<Peak::Ptr>),
       _region(region),
       _normalized(false) {
@@ -111,13 +111,13 @@ detection::Footprint::Footprint(int nspan,         //!< initial number of Span%s
 /**
  * Create a rectangular Footprint
  */
-detection::Footprint::Footprint(const image::BBox& bbox, //!< The bounding box defining the rectangle
-                                const image::BBox region) //!< Bounding box of MaskedImage footprint lives in
+afwDetect::Footprint::Footprint(const afwImage::BBox& bbox, //!< The bounding box defining the rectangle
+                                const afwImage::BBox region) //!< Bounding box of MaskedImage footprint lives in
     : lsst::daf::data::LsstBase(typeid(this)),
       _fid(++id),
       _npix(0),
-      _spans(*new detection::Footprint::SpanList),
-      _bbox(image::BBox()),
+      _spans(*new afwDetect::Footprint::SpanList),
+      _bbox(afwImage::BBox()),
       _peaks(*new std::vector<Peak::Ptr>),
       _region(region),
       _normalized(false) {
@@ -134,13 +134,13 @@ detection::Footprint::Footprint(const image::BBox& bbox, //!< The bounding box d
 /**
  * Create a circular Footprint
  */
-detection::Footprint::Footprint(image::BCircle const& circle, //!< The center and radius of the circle
-                                image::BBox const region)     //!< Bounding box of MaskedImage footprint lives in
+afwDetect::Footprint::Footprint(afwImage::BCircle const& circle, //!< The center and radius of the circle
+                                afwImage::BBox const region)     //!< Bounding box of MaskedImage footprint lives in
     : lsst::daf::data::LsstBase(typeid(this)),
       _fid(++id),
       _npix(0),
-      _spans(*new detection::Footprint::SpanList),
-      _bbox(image::BBox()),
+      _spans(*new afwDetect::Footprint::SpanList),
+      _bbox(afwImage::BBox()),
       _peaks(*new std::vector<Peak::Ptr>),
       _region(region),
       _normalized(false) {
@@ -158,7 +158,7 @@ detection::Footprint::Footprint(image::BCircle const& circle, //!< The center an
 /**
  * Destroy a Footprint
  */
-detection::Footprint::~Footprint() {
+afwDetect::Footprint::~Footprint() {
     delete &_spans;
     delete &_peaks;
 }
@@ -166,7 +166,7 @@ detection::Footprint::~Footprint() {
 /**
  * Normalise a Footprint, soring spans and setting the BBox
  */
-void detection::Footprint::normalize() {
+void afwDetect::Footprint::normalize() {
     if (!_normalized) {
         assert(!_spans.empty());
 
@@ -176,15 +176,15 @@ void detection::Footprint::normalize() {
         //
         sort(_spans.begin(), _spans.end(), compareSpanByYX());
 
-        detection::Footprint::SpanList::iterator ptr = _spans.begin(), end = _spans.end();
+        afwDetect::Footprint::SpanList::iterator ptr = _spans.begin(), end = _spans.end();
         
-        detection::Span *lspan = ptr->get();  // Left span
+        afwDetect::Span *lspan = ptr->get();  // Left span
         int y = (*ptr)->_y;
         int x1 = (*ptr)->_x1;
         ++ptr;
 
         for (; ptr < end; ++ptr) {
-            detection::Span *rspan = ptr->get(); // Right span
+            afwDetect::Span *rspan = ptr->get(); // Right span
             if (rspan->_y == y) {
                 if (rspan->_x0 <= x1 + 1) { // Spans overlap or touch
                     if (rspan->_x1 > x1) {  // right span extends left span
@@ -211,7 +211,7 @@ void detection::Footprint::normalize() {
 /**
  * Add a Span to a footprint, returning a reference to the new Span.
  */
-detection::Span const& detection::Footprint::addSpan(int const y, //!< row value
+afwDetect::Span const& afwDetect::Footprint::addSpan(int const y, //!< row value
                                                      int const x0, //!< starting column
                                                      int const x1 //!< ending column
                                                     ) {
@@ -219,29 +219,29 @@ detection::Span const& detection::Footprint::addSpan(int const y, //!< row value
         return this->addSpan(y, x1, x0);
     }
 
-    detection::Span::Ptr sp(new detection::Span(y, x0, x1));
+    afwDetect::Span::Ptr sp(new afwDetect::Span(y, x0, x1));
     _spans.push_back(sp);
 
     _npix += x1 - x0 + 1;
 
-    _bbox.grow(image::PointI(x0, y));
-    _bbox.grow(image::PointI(x1, y));
+    _bbox.grow(afwImage::PointI(x0, y));
+    _bbox.grow(afwImage::PointI(x1, y));
 
     return *sp.get();
 }
 /**
  * Add a Span to a Footprint returning a reference to the new Span
  */
-const detection::Span& detection::Footprint::addSpan(detection::Span const& span ///< new Span being added
+const afwDetect::Span& afwDetect::Footprint::addSpan(afwDetect::Span const& span ///< new Span being added
                               ) {
-    detection::Span::Ptr sp(new detection::Span(span));
+    afwDetect::Span::Ptr sp(new afwDetect::Span(span));
 
     _spans.push_back(sp);
 
     _npix += span._x1 - span._x0 + 1;
 
-    _bbox.grow(image::PointI(span._x0, span._y));
-    _bbox.grow(image::PointI(span._x1, span._y));
+    _bbox.grow(afwImage::PointI(span._x0, span._y));
+    _bbox.grow(afwImage::PointI(span._x1, span._y));
 
     return *sp;
 }
@@ -249,7 +249,7 @@ const detection::Span& detection::Footprint::addSpan(detection::Span const& span
 /**
  * Add a Span to a Footprint returning a reference to the new Span
  */
-const detection::Span& detection::Footprint::addSpan(detection::Span const& span, ///< new Span being added
+const afwDetect::Span& afwDetect::Footprint::addSpan(afwDetect::Span const& span, ///< new Span being added
                                                      int dx,                      ///< Add dx to span's x coords
                                                      int dy                       ///< Add dy to span's y coords
                               ) {
@@ -258,11 +258,11 @@ const detection::Span& detection::Footprint::addSpan(detection::Span const& span
 /**
  * Shift a Footprint by <tt>(dx, dy)</tt>
  */
-void detection::Footprint::shift(int dx, //!< How much to move footprint in column direction
+void afwDetect::Footprint::shift(int dx, //!< How much to move footprint in column direction
                                  int dy  //!< How much to move in row direction
                       ) {
     for (Footprint::SpanList::iterator siter = _spans.begin(); siter != _spans.end(); ++siter){
-        detection::Span::Ptr span = *siter;
+        afwDetect::Span::Ptr span = *siter;
 
         span->_y += dy;
         span->_x0 += dx;
@@ -275,7 +275,7 @@ void detection::Footprint::shift(int dx, //!< How much to move footprint in colu
 /**
  * Tell \c this to calculate its bounding box
  */
-void detection::Footprint::setBBox() {
+void afwDetect::Footprint::setBBox() {
     if (_spans.size() == 0) {
 	return;
     }
@@ -289,23 +289,23 @@ void detection::Footprint::setBBox() {
     int y1 = sp->_y;
 
     for (; spi != _spans.end(); spi++) {
-        const detection::Span::Ptr sp = *spi;
+        const afwDetect::Span::Ptr sp = *spi;
 	if (sp->_x0 < x0) x0 = sp->_x0;
 	if (sp->_x1 > x1) x1 = sp->_x1;
 	if (sp->_y < y0) y0 = sp->_y;
 	if (sp->_y > y1) y1 = sp->_y;
     }
 
-    _bbox = image::BBox(image::PointI(x0, y0), image::PointI(x1, y1));
+    _bbox = afwImage::BBox(afwImage::PointI(x0, y0), afwImage::PointI(x1, y1));
 }
 
 /**
  * Tell \c this to count its pixels
  */
-int detection::Footprint::setNpix() {
+int afwDetect::Footprint::setNpix() {
     _npix = 0;
     for (Footprint::SpanList::const_iterator spi = _spans.begin(); spi != _spans.end(); spi++) {
-        const detection::Span::Ptr sp = *spi;
+        const afwDetect::Span::Ptr sp = *spi;
         _npix += sp->_x1 - sp->_x0 + 1;
    }
 
@@ -315,9 +315,9 @@ int detection::Footprint::setNpix() {
 /**
  * Set the pixels in idImage which are in Footprint by adding the specified value to the Image
  */
-void detection::Footprint::insertIntoImage(image::Image<boost::uint16_t>& idImage, //!< Image to contain the footprint
+void afwDetect::Footprint::insertIntoImage(afwImage::Image<boost::uint16_t>& idImage, //!< Image to contain the footprint
                                            int const id, //!< Add id to idImage for pixels in the Footprint
-                                           image::BBox const& region //!< Footprint's region (default: getRegion())
+                                           afwImage::BBox const& region //!< Footprint's region (default: getRegion())
                                           ) const {
     int const width =  (region ? region : _region).getWidth();
     int const height = (region ? region : _region).getHeight();
@@ -331,7 +331,7 @@ void detection::Footprint::insertIntoImage(image::Image<boost::uint16_t>& idImag
     }
 
     for (Footprint::SpanList::const_iterator spi = _spans.begin(); spi != _spans.end(); ++spi) {
-        detection::Span::Ptr const span = *spi;
+        afwDetect::Span::Ptr const span = *spi;
 
         const int sy0 = span->getY() - y0;
         if (sy0 < 0 || sy0 >= height) {
@@ -345,7 +345,7 @@ void detection::Footprint::insertIntoImage(image::Image<boost::uint16_t>& idImag
         int sx1 = span->getX1() - x0;
         const int swidth = (sx1 >= width) ? width - sx0 : sx1 - sx0 + 1;
 
-        for (image::Image<boost::uint16_t>::x_iterator ptr = idImage.x_at(sx0, sy0),
+        for (afwImage::Image<boost::uint16_t>::x_iterator ptr = idImage.x_at(sx0, sy0),
                  end = ptr + swidth; ptr != end; ++ptr) {
             *ptr += id;
         }
@@ -364,12 +364,12 @@ void detection::Footprint::insertIntoImage(image::Image<boost::uint16_t>& idImag
  * \returns Returns the new Footprint
  */
 template<typename MaskT>
-detection::Footprint::Ptr detection::footprintAndMask(
-	detection::Footprint::Ptr const& foot,          ///< The initial Footprint
-        typename image::Mask<MaskT>::Ptr const& mask,   ///< The mask to & with foot
+afwDetect::Footprint::Ptr afwDetect::footprintAndMask(
+	afwDetect::Footprint::Ptr const& foot,          ///< The initial Footprint
+        typename afwImage::Mask<MaskT>::Ptr const& mask,   ///< The mask to & with foot
         MaskT bitMask                   ///< Only consider these bits
                                                      ) {
-    detection::Footprint::Ptr out(new detection::Footprint());
+    afwDetect::Footprint::Ptr out(new afwDetect::Footprint());
 
     return out;
 }
@@ -381,17 +381,17 @@ detection::Footprint::Ptr detection::footprintAndMask(
  * \return bitmask
  */
 template<typename MaskT>
-MaskT detection::setMaskFromFootprint(image::Mask<MaskT> *mask,              ///< Mask to set
-                                      detection::Footprint const& foot,      ///< Footprint specifying desired pixels
+MaskT afwDetect::setMaskFromFootprint(afwImage::Mask<MaskT> *mask,              ///< Mask to set
+                                      afwDetect::Footprint const& foot,      ///< Footprint specifying desired pixels
                                       MaskT const bitmask                    ///< Bitmask to OR into mask
                                      ) {
 
     int const width = static_cast<int>(mask->getWidth());
     int const height = static_cast<int>(mask->getHeight());
 
-    for (detection::Footprint::SpanList::const_iterator siter = foot.getSpans().begin();
+    for (afwDetect::Footprint::SpanList::const_iterator siter = foot.getSpans().begin();
          siter != foot.getSpans().end(); siter++) {
-        detection::Span::Ptr const span = *siter;
+        afwDetect::Span::Ptr const span = *siter;
         int const y = span->getY() - mask->getY0();
         if (y < 0 || y >= height) {
             continue;
@@ -402,7 +402,7 @@ MaskT detection::setMaskFromFootprint(image::Mask<MaskT> *mask,              ///
         x0 = (x0 < 0) ? 0 : (x0 >= width ? width - 1 : x0);
         x1 = (x1 < 0) ? 0 : (x1 >= width ? width - 1 : x1);
 
-        for (typename image::Image<MaskT>::x_iterator ptr = mask->x_at(x0, y),
+        for (typename afwImage::Image<MaskT>::x_iterator ptr = mask->x_at(x0, y),
                  end = mask->x_at(x1 + 1, y); ptr != end; ++ptr) {
             *ptr |= bitmask;
         }
@@ -418,12 +418,12 @@ MaskT detection::setMaskFromFootprint(image::Mask<MaskT> *mask,              ///
  * \return bitmask
  */
 template<typename MaskT>
-MaskT detection::setMaskFromFootprintList(
-	image::Mask<MaskT> *mask,                                 ///< Mask to set
-        std::vector<detection::Footprint::Ptr> const& footprints, ///< Footprint list specifying desired pixels
+MaskT afwDetect::setMaskFromFootprintList(
+	afwImage::Mask<MaskT> *mask,                                 ///< Mask to set
+        std::vector<afwDetect::Footprint::Ptr> const& footprints, ///< Footprint list specifying desired pixels
         MaskT const bitmask                                       ///< Bitmask to OR into mask
                                                ) {
-    for (std::vector<detection::Footprint::Ptr>::const_iterator fiter = footprints.begin();
+    for (std::vector<afwDetect::Footprint::Ptr>::const_iterator fiter = footprints.begin();
          fiter != footprints.end(); ++fiter) {
         (void)setMaskFromFootprint(mask, **fiter, bitmask);
     }
@@ -434,10 +434,10 @@ MaskT detection::setMaskFromFootprintList(
 /************************************************************************************************************/
 namespace {
     template<typename ImageT>
-    class SetFootprint : public detection::FootprintFunctor<ImageT> {
+    class SetFootprint : public afwDetect::FootprintFunctor<ImageT> {
     public:
         SetFootprint(ImageT const& image,
-                     typename ImageT::Pixel value) : detection::FootprintFunctor<ImageT>(image), _value(value) {} 
+                     typename ImageT::Pixel value) : afwDetect::FootprintFunctor<ImageT>(image), _value(value) {} 
 
         void operator()(typename ImageT::xy_locator loc, int x, int y) {
             *loc = _value;
@@ -453,9 +453,9 @@ namespace {
  * \return value
  */
 template<typename ImageT>
-typename ImageT::Pixel detection::setImageFromFootprint(
+typename ImageT::Pixel afwDetect::setImageFromFootprint(
         ImageT *image,                    ///< image to set
-        detection::Footprint const& foot, ///< Footprint defining desired pixels
+        afwDetect::Footprint const& foot, ///< Footprint defining desired pixels
         typename ImageT::Pixel const value ///< value to set Image to
                                                        ) {
     SetFootprint<ImageT> setit(*image, value);
@@ -470,13 +470,13 @@ typename ImageT::Pixel detection::setImageFromFootprint(
  * \return value
  */
 template<typename ImageT>
-typename ImageT::Pixel detection::setImageFromFootprintList(
+typename ImageT::Pixel afwDetect::setImageFromFootprintList(
         ImageT *image,                                            ///< image to set
-        std::vector<detection::Footprint::Ptr> const& footprints, ///< Footprint list specifying desired pixels
+        std::vector<afwDetect::Footprint::Ptr> const& footprints, ///< Footprint list specifying desired pixels
         typename ImageT::Pixel const value                        ///< value to set Image to
                                                            ) {
     SetFootprint<ImageT> setit(*image, value);
-    for (std::vector<detection::Footprint::Ptr>::const_iterator fiter = footprints.begin(), end = footprints.end();
+    for (std::vector<afwDetect::Footprint::Ptr>::const_iterator fiter = footprints.begin(), end = footprints.end();
          fiter != end; ++fiter) {
         setit.apply(**fiter);
     }
@@ -489,15 +489,15 @@ typename ImageT::Pixel detection::setImageFromFootprintList(
  * Worker routine for the pmSetFootprintArrayIDs/pmSetFootprintID (and pmMergeFootprintArrays)
  */
 template <typename IDPixelT>
-static void set_footprint_id(typename image::Image<IDPixelT>::Ptr idImage,	// the image to set
-                             detection::Footprint const& foot, // the footprint to insert
+static void set_footprint_id(typename afwImage::Image<IDPixelT>::Ptr idImage,	// the image to set
+                             afwDetect::Footprint const& foot, // the footprint to insert
                              const int id,                     // the desired ID
                              int dx=0, int dy=0                // Add these to all x/y in the Footprint
                             ) {
-    for (detection::Footprint::SpanList::const_iterator siter = foot.getSpans().begin();
+    for (afwDetect::Footprint::SpanList::const_iterator siter = foot.getSpans().begin();
 							siter != foot.getSpans().end(); siter++) {
-        detection::Span::Ptr const span = *siter;
-        for (typename image::Image<IDPixelT>::x_iterator ptr = idImage->x_at(span->getX0() + dx, span->getY() + dy),
+        afwDetect::Span::Ptr const span = *siter;
+        for (typename afwImage::Image<IDPixelT>::x_iterator ptr = idImage->x_at(span->getX0() + dx, span->getY() + dy),
                  end = ptr + span->getWidth(); ptr != end; ++ptr) {
             *ptr = id;
         }
@@ -506,14 +506,14 @@ static void set_footprint_id(typename image::Image<IDPixelT>::Ptr idImage,	// th
 
 template <typename IDPixelT>
 static void
-set_footprint_array_ids(typename image::Image<IDPixelT>::Ptr idImage, // the image to set
-                        const std::vector<detection::Footprint::Ptr>& footprints, // the footprints to insert
+set_footprint_array_ids(typename afwImage::Image<IDPixelT>::Ptr idImage, // the image to set
+                        const std::vector<afwDetect::Footprint::Ptr>& footprints, // the footprints to insert
 			const bool relativeIDs) { // show IDs starting at 0, not Footprint->id
     int id = 0;				// first index will be 1
 
-    for (std::vector<detection::Footprint::Ptr>::const_iterator fiter = footprints.begin();
+    for (std::vector<afwDetect::Footprint::Ptr>::const_iterator fiter = footprints.begin();
          fiter != footprints.end(); ++fiter) {
-        const detection::Footprint::Ptr foot = *fiter;
+        const afwDetect::Footprint::Ptr foot = *fiter;
 
         if (relativeIDs) {
             id++;
@@ -525,8 +525,8 @@ set_footprint_array_ids(typename image::Image<IDPixelT>::Ptr idImage, // the ima
     }
 }
 
-template static void set_footprint_array_ids<int>(image::Image<int>::Ptr idImage,
-                                                  const std::vector<detection::Footprint::Ptr>& footprints,
+template static void set_footprint_array_ids<int>(afwImage::Image<int>::Ptr idImage,
+                                                  const std::vector<afwDetect::Footprint::Ptr>& footprints,
                                                   const bool relativeIDs);
 
 /************************************************************************************************************/
@@ -534,8 +534,8 @@ template static void set_footprint_array_ids<int>(image::Image<int>::Ptr idImage
  * Create an image from a Footprint's bounding box
  */
 template <typename IDImageT>
-static typename image::Image<IDImageT>::Ptr makeImageFromBBox(const image::BBox bbox) {
-    typename image::Image<IDImageT>::Ptr idImage(new image::Image<IDImageT>(bbox.getDimensions()));
+static typename afwImage::Image<IDImageT>::Ptr makeImageFromBBox(const afwImage::BBox bbox) {
+    typename afwImage::Image<IDImageT>::Ptr idImage(new afwImage::Image<IDImageT>(bbox.getDimensions()));
     idImage->setXY0(bbox.getLLC());
 
     return idImage;
@@ -546,17 +546,17 @@ static typename image::Image<IDImageT>::Ptr makeImageFromBBox(const image::BBox 
  * Set an image to the value of footprint's ID wherever they may fall
  */
 template <typename IDImageT>
-typename boost::shared_ptr<image::Image<IDImageT> > setFootprintArrayIDs(
-	std::vector<detection::Footprint::Ptr> const& footprints, // the footprints to insert
+typename boost::shared_ptr<afwImage::Image<IDImageT> > setFootprintArrayIDs(
+	std::vector<afwDetect::Footprint::Ptr> const& footprints, // the footprints to insert
         bool const relativeIDs                                    // show IDs starting at 1, not pmFootprint->id
                                                ) {
-    std::vector<detection::Footprint::Ptr>::const_iterator fiter = footprints.begin();
+    std::vector<afwDetect::Footprint::Ptr>::const_iterator fiter = footprints.begin();
     if (fiter == footprints.end()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "You didn't provide any footprints");
     }
-    const detection::Footprint::Ptr foot = *fiter;
+    const afwDetect::Footprint::Ptr foot = *fiter;
 
-    typename image::Image<IDImageT>::Ptr idImage = makeImageFromBBox<IDImageT>(foot->getRegion());
+    typename afwImage::Image<IDImageT>::Ptr idImage = makeImageFromBBox<IDImageT>(foot->getRegion());
     *idImage = 0;
     /*
      * do the work
@@ -566,16 +566,16 @@ typename boost::shared_ptr<image::Image<IDImageT> > setFootprintArrayIDs(
     return idImage;
 }
 
-template image::Image<int>::Ptr setFootprintArrayIDs(std::vector<detection::Footprint::Ptr> const& footprints,
+template afwImage::Image<int>::Ptr setFootprintArrayIDs(std::vector<afwDetect::Footprint::Ptr> const& footprints,
                                                      bool const relativeIDs);
 /*
  * Set an image to the value of Footprint's ID wherever it may fall
  */
 template <typename IDImageT>
-typename boost::shared_ptr<image::Image<IDImageT> > setFootprintID(detection::Footprint::Ptr const& foot, // the Footprint to insert
+typename boost::shared_ptr<afwImage::Image<IDImageT> > setFootprintID(afwDetect::Footprint::Ptr const& foot, // the Footprint to insert
                                                     int const id // the desired ID
                                                    ) {
-    typename image::Image<IDImageT>::Ptr idImage = makeImageFromBBox<IDImageT>(foot->getBBox());
+    typename afwImage::Image<IDImageT>::Ptr idImage = makeImageFromBBox<IDImageT>(foot->getBBox());
     *idImage = 0;
     /*
      * do the work
@@ -585,7 +585,7 @@ typename boost::shared_ptr<image::Image<IDImageT> > setFootprintID(detection::Fo
     return idImage;
 }
 
-template image::Image<int>::Ptr setFootprintID(detection::Footprint::Ptr const& foot, int const id);
+template afwImage::Image<int>::Ptr setFootprintID(afwDetect::Footprint::Ptr const& foot, int const id);
 
 /************************************************************************************************************/
 /*
@@ -594,8 +594,8 @@ template image::Image<int>::Ptr setFootprintID(detection::Footprint::Ptr const& 
  * N.b. this is slow, as it uses a convolution with a disk
  */
 namespace {
-detection::Footprint::Ptr growFootprintSlow(
-	detection::Footprint const& foot, //!< The Footprint to grow
+afwDetect::Footprint::Ptr growFootprintSlow(
+	afwDetect::Footprint const& foot, //!< The Footprint to grow
         int ngrow                              //!< how much to grow foot
                                                  ) {
     if (ngrow < 0) {
@@ -605,19 +605,19 @@ detection::Footprint::Ptr growFootprintSlow(
      * We'll insert the footprints into an image, then convolve with a disk,
      * then extract a footprint from the result --- this is magically what we want.
      */
-    image::BBox bbox = foot.getBBox();
-    bbox.grow(image::PointI(bbox.getX0() - 2*ngrow - 1, bbox.getY0() - 2*ngrow - 1));
-    bbox.grow(image::PointI(bbox.getX1() + 2*ngrow + 1, bbox.getY1() + 2*ngrow + 1));
-    image::Image<int>::Ptr idImage = makeImageFromBBox<int>(bbox);
+    afwImage::BBox bbox = foot.getBBox();
+    bbox.grow(afwImage::PointI(bbox.getX0() - 2*ngrow - 1, bbox.getY0() - 2*ngrow - 1));
+    bbox.grow(afwImage::PointI(bbox.getX1() + 2*ngrow + 1, bbox.getY1() + 2*ngrow + 1));
+    afwImage::Image<int>::Ptr idImage = makeImageFromBBox<int>(bbox);
     *idImage = 0;
-    idImage->setXY0(image::PointI(0, 0));
+    idImage->setXY0(afwImage::PointI(0, 0));
 
     set_footprint_id<int>(idImage, foot, 1, -bbox.getX0(), -bbox.getY0());
 
-    image::Image<double>::Ptr circle_im(new image::Image<double>(2*ngrow + 1, 2*ngrow + 1));
+    afwImage::Image<double>::Ptr circle_im(new afwImage::Image<double>(2*ngrow + 1, 2*ngrow + 1));
     *circle_im = 0;
     for (int r = -ngrow; r <= ngrow; ++r) {
-        image::Image<double>::x_iterator row = circle_im->x_at(0, r + ngrow);
+        afwImage::Image<double>::x_iterator row = circle_im->x_at(0, r + ngrow);
 	for (int c = -ngrow; c <= ngrow; ++c, ++row) {
 	    if (r*r + c*c <= ngrow*ngrow) {
                 *row = 8;
@@ -625,15 +625,15 @@ detection::Footprint::Ptr growFootprintSlow(
 	}
     }
 
-    math::FixedKernel::PtrT circle(new math::FixedKernel(*circle_im));
+    afwMath::FixedKernel::PtrT circle(new afwMath::FixedKernel(*circle_im));
     // Here's the actual grow step
-    image::MaskedImage<int>::Ptr convolvedImage(new image::MaskedImage<int>(idImage->getDimensions()));
-    math::convolve(*convolvedImage->getImage(), *idImage, *circle, 0, false);
+    afwImage::MaskedImage<int>::Ptr convolvedImage(new afwImage::MaskedImage<int>(idImage->getDimensions()));
+    afwMath::convolve(*convolvedImage->getImage(), *idImage, *circle, false);
 
-    detection::DetectionSet<int>::Ptr grownList(new detection::DetectionSet<int>(*convolvedImage, 0.5, "", 1));
+    afwDetect::DetectionSet<int>::Ptr grownList(new afwDetect::DetectionSet<int>(*convolvedImage, 0.5, "", 1));
 
     assert (grownList->getFootprints().size() > 0);
-    detection::Footprint::Ptr grown = *grownList->getFootprints().begin();
+    afwDetect::Footprint::Ptr grown = *grownList->getFootprints().begin();
     //
     // Fix the coordinate system to be that of foot
     //
@@ -648,8 +648,8 @@ detection::Footprint::Ptr growFootprintSlow(
 /**
  * Grow a Footprint by r pixels, returning a new Footprint
  */
-detection::Footprint::Ptr detection::growFootprint(
-	detection::Footprint const &foot,      //!< The Footprint to grow
+afwDetect::Footprint::Ptr afwDetect::growFootprint(
+	afwDetect::Footprint const &foot,      //!< The Footprint to grow
         int ngrow,                             //!< how much to grow foot
         bool isotropic                         //!< Grow isotropically (as opposed to a Manhattan metric)
                                                //!< @note Isotropic grows are significantly slower
@@ -668,12 +668,12 @@ detection::Footprint::Ptr detection::growFootprint(
      *
      * Cf. http://ostermiller.org/dilate_and_erode.html
      */
-    image::BBox bbox = foot.getBBox();
-    bbox.grow(image::PointI(bbox.getX0() - ngrow - 1, bbox.getY0() - ngrow - 1));
-    bbox.grow(image::PointI(bbox.getX1() + ngrow + 1, bbox.getY1() + ngrow + 1));
-    image::Image<int>::Ptr idImage = makeImageFromBBox<int>(bbox);
+    afwImage::BBox bbox = foot.getBBox();
+    bbox.grow(afwImage::PointI(bbox.getX0() - ngrow - 1, bbox.getY0() - ngrow - 1));
+    bbox.grow(afwImage::PointI(bbox.getX1() + ngrow + 1, bbox.getY1() + ngrow + 1));
+    afwImage::Image<int>::Ptr idImage = makeImageFromBBox<int>(bbox);
     *idImage = 0;
-    idImage->setXY0(image::PointI(0, 0));
+    idImage->setXY0(afwImage::PointI(0, 0));
     set_footprint_id<int>(idImage, foot, 1, -bbox.getX0(), -bbox.getY0()); // Set all the pixels in the footprint to 1
     //
     // Set the idImage to the Manhattan distance from the nearest set pixel
@@ -683,7 +683,7 @@ detection::Footprint::Ptr detection::growFootprint(
 
     // traverse from bottom left to top right
     for (int y = 0; y != height; ++y) {
-        image::Image<int>::xy_locator im = idImage->xy_at(0, y);
+        afwImage::Image<int>::xy_locator im = idImage->xy_at(0, y);
 
         for (int x = 0; x != width; ++x, ++im.x()) {
             if (im(0,0) == 1) {
@@ -705,7 +705,7 @@ detection::Footprint::Ptr detection::growFootprint(
     }
     // traverse from top right to bottom left
     for (int y = height - 1; y >= 0; --y) {
-        image::Image<int>::xy_locator im = idImage->xy_at(width - 1, y);
+        afwImage::Image<int>::xy_locator im = idImage->xy_at(width - 1, y);
         for (int x = width - 1; x >= 0; --x, --im.x()) {
             // either what we had on the first pass or one more than the pixel to the south
             if (y + 1 < height) {
@@ -718,12 +718,12 @@ detection::Footprint::Ptr detection::growFootprint(
         }
     }
 
-    image::MaskedImage<int>::Ptr midImage(new image::MaskedImage<int>(idImage));
+    afwImage::MaskedImage<int>::Ptr midImage(new afwImage::MaskedImage<int>(idImage));
     // XXX Why do I need a -ve threshold when parity == false? I'm looking for pixels below ngrow
     DetectionSet<int>::Ptr grownList(new DetectionSet<int>(*midImage,
-                                                           Threshold(-ngrow, detection::Threshold::VALUE, false)));
+                                                           Threshold(-ngrow, afwDetect::Threshold::VALUE, false)));
     assert (grownList->getFootprints().size() > 0);
-    detection::Footprint::Ptr grown = *grownList->getFootprints().begin();
+    afwDetect::Footprint::Ptr grown = *grownList->getFootprints().begin();
     //
     // Fix the coordinate system to be that of foot
     //
@@ -733,7 +733,7 @@ detection::Footprint::Ptr detection::growFootprint(
     return grown;
 }
 
-detection::Footprint::Ptr detection::growFootprint(Footprint::Ptr const &foot, int ngrow, bool isotropic) {
+afwDetect::Footprint::Ptr afwDetect::growFootprint(Footprint::Ptr const &foot, int ngrow, bool isotropic) {
     return growFootprint(*foot, ngrow, isotropic);
 }
 
@@ -743,16 +743,16 @@ detection::Footprint::Ptr detection::growFootprint(Footprint::Ptr const &foot, i
  *
  * Useful in generating sets of meas::algorithms::Defects for the ISR
  */
-std::vector<image::BBox> detection::footprintToBBoxList(detection::Footprint const& foot
+std::vector<afwImage::BBox> afwDetect::footprintToBBoxList(afwDetect::Footprint const& foot
                                                        ) {
     typedef boost::uint16_t ImageT;
-    image::Image<ImageT>::Ptr idImage(new image::Image<ImageT>(foot.getBBox().getDimensions()));
+    afwImage::Image<ImageT>::Ptr idImage(new afwImage::Image<ImageT>(foot.getBBox().getDimensions()));
     *idImage = 0;
     int const height = idImage->getHeight();
 
     foot.insertIntoImage(*idImage, 1, foot.getBBox());
 
-    std::vector<image::BBox> bboxes;
+    std::vector<afwImage::BBox> bboxes;
     /*
      * Our strategy is to find a row of pixels in the Footprint and interpret it as the first
      * row of a rectangular set of pixels.  We then extend this rectangle upwards as far as it
@@ -768,21 +768,21 @@ std::vector<image::BBox> detection::footprintToBBoxList(detection::Footprint con
 
     int y0 = 0;                         // the first row with non-zero pixels in it
     while (y0 < height) {
-        image::BBox bbox;            // our next BBox
+        afwImage::BBox bbox;            // our next BBox
         for (int y = y0; y != height; ++y) {
             // Look for a set pixel in this row
-            image::Image<ImageT>::x_iterator begin = idImage->row_begin(y), end = idImage->row_end(y);
-            image::Image<ImageT>::x_iterator first = std::find(begin, end, 1);
+            afwImage::Image<ImageT>::x_iterator begin = idImage->row_begin(y), end = idImage->row_end(y);
+            afwImage::Image<ImageT>::x_iterator first = std::find(begin, end, 1);
 
             if (first != end) {                     // A pixel is set in this row
-                image::Image<ImageT>::x_iterator last = std::find(first, end, 0) - 1;
+                afwImage::Image<ImageT>::x_iterator last = std::find(first, end, 0) - 1;
                 int const x0 = first - begin;
                 int const x1 = last  - begin;
 
                 std::fill(first, last + 1, 0);       // clear pixels; we don't want to see them again
 
-                bbox.grow(image::PointI(x0, y));     // the LLC
-                bbox.grow(image::PointI(x1, y));     // the LRC; initial guess for URC
+                bbox.grow(afwImage::PointI(x0, y));     // the LLC
+                bbox.grow(afwImage::PointI(x1, y));     // the LRC; initial guess for URC
                 
                 // we found at least one pixel so extend the BBox upwards
                 for (++y; y != height; ++y) {
@@ -791,7 +791,7 @@ std::vector<image::BBox> detection::footprintToBBoxList(detection::Footprint con
                     }
                     std::fill(idImage->at(x0, y), idImage->at(x1 + 1, y), 0);
                     
-                    bbox.grow(image::PointI(x1, y)); // the new URC
+                    bbox.grow(afwImage::PointI(x1, y)); // the new URC
                 }
 
                 bbox.shift(foot.getBBox().getX0(), foot.getBBox().getY0());
@@ -1153,23 +1153,23 @@ psArray *pmFootprintArrayToPeaks(const psArray *footprints) {
 // \cond
 //
 template
-detection::Footprint::Ptr detection::footprintAndMask(detection::Footprint::Ptr const & foot,
-                                                      image::Mask<image::MaskPixel>::Ptr const & mask,
-                                                      image::MaskPixel bitMask);
+afwDetect::Footprint::Ptr afwDetect::footprintAndMask(afwDetect::Footprint::Ptr const & foot,
+                                                      afwImage::Mask<afwImage::MaskPixel>::Ptr const & mask,
+                                                      afwImage::MaskPixel bitMask);
 
 template
-image::MaskPixel detection::setMaskFromFootprintList(image::Mask<image::MaskPixel> *mask,
-                                                     std::vector<detection::Footprint::Ptr> const& footprints,
-                                                     image::MaskPixel const bitmask);
+afwImage::MaskPixel afwDetect::setMaskFromFootprintList(afwImage::Mask<afwImage::MaskPixel> *mask,
+                                                     std::vector<afwDetect::Footprint::Ptr> const& footprints,
+                                                     afwImage::MaskPixel const bitmask);
 
 #define INSTANTIATE(TYPE) \
 template \
-TYPE detection::setImageFromFootprint(image::Image<TYPE> *image,        \
-                                      detection::Footprint const& footprint, \
+TYPE afwDetect::setImageFromFootprint(afwImage::Image<TYPE> *image,        \
+                                      afwDetect::Footprint const& footprint, \
                                       TYPE const value);                \
 template \
-TYPE detection::setImageFromFootprintList(image::Image<TYPE> *image, \
-                                          std::vector<detection::Footprint::Ptr> const& footprints, \
+TYPE afwDetect::setImageFromFootprintList(afwImage::Image<TYPE> *image, \
+                                          std::vector<afwDetect::Footprint::Ptr> const& footprints, \
                                           TYPE const value); \
 
 INSTANTIATE(float)

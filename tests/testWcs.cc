@@ -21,7 +21,7 @@
 #include "boost/test/unit_test.hpp"
 #include "boost/test/floating_point_comparison.hpp"
 
-#include "boost/numeric/ublas/matrix.hpp"
+#include "Eigen/Core.h"
 
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/Wcs.h"
@@ -29,7 +29,7 @@
 #include "lsst/afw/math/Background.h"
 
 namespace image = lsst::afw::image;
-typedef boost::numeric::ublas::matrix<double> matrixD;
+typedef Eigen::Matrix2d matrixD;
 
 
 BOOST_AUTO_TEST_CASE(constructors_test) {
@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(constructors_test) {
     matrixD CD(2,2);
 
     //An identity matrix
-    CD(0,0) = CD(1,0) = 1;
+    CD(0,0) = CD(1,1) = 1;
     CD(1,0) = CD(0,1) = 0;
 
 
@@ -50,7 +50,34 @@ BOOST_AUTO_TEST_CASE(constructors_test) {
     image::Wcs wcs3(crval, crpix, CD, CD, CD, CD, CD);
 }
 
+//A trivially easy example of the linear constructor
+BOOST_AUTO_TEST_CASE(linearConstructor) {
+    image::PointD crval(0.,0.);
+    image::PointD crpix(8.,8.);
+    
+    matrixD CD;
+    CD  << 1,0,0,1; //Identity matrix
+    
+    image::Wcs wcs(crval, crpix, CD);
 
+    //Remember, Wcs puts the origin of the chip at 1,1 while LSST
+    //puts it at 0,0. This means that your coordinate transformation
+    //will be one off what you expect it to be.
+    //That said, I'm disturbed about how high my tolerance has to be
+    //for what should be a simple computation
+    double expect=2.0;
+    image::PointD ad = wcs.xyToRaDec(9,9);
+    BOOST_CHECK_CLOSE(ad.getX(), expect, .05);
+    BOOST_CHECK_CLOSE(ad.getY(), 2., .11);    
+    
+    image::PointD xy = wcs.raDecToXY(2,2);
+    BOOST_CHECK_CLOSE(xy.getX(), 9., .05);
+    BOOST_CHECK_CLOSE(xy.getY(), 9., .05);    
+}
+
+
+//A more complicated example. These numbers are taken from a visual inspection
+//of the field of the white dwarf GD66
 BOOST_AUTO_TEST_CASE(radec_to_xy) {
     image::PointD crval(80.159679, 30.806568);
     image::PointD crpix(891.500000, 893.500000);

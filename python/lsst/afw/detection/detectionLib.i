@@ -30,6 +30,8 @@ namespace boost {
 }
 %}
 
+%include "std_string.i"
+
 %include "lsst/p_lsstSwig.i"
 %include "lsst/daf/base/persistenceMacros.i"
 
