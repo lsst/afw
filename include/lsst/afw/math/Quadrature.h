@@ -31,129 +31,117 @@ namespace lsst { namespace afw { namespace math {
  *
  */
 
-namespace details {            
 
-// =============================================================
 /**
- * @brief Generic functions to get max and min of two numbers.
- */
-template<typename T>
-inline T max(T a, T b) { return (a >= b) ? a : b; }
-template<typename T>
-inline T min(T a, T b) { return (a >= b) ? b : a; }
-
-double const epsilon_f = 1.19209e-7;
-
-
-
-// =============================================================
-/**
- * @class Base_interp
  *
- * @brief A base class for NR intepolation objects.
- * @note Adapted from NR 3rd Ed. Ch 3.
- */
-template<typename T>            
-class Base_interp {
-public:
-    
-    Base_interp( std::vector<T> &x, std::vector<T> &y, int m)
-        : _x(x), _y(y), _m(m) {
-        _jsav = 0;
-        _n = x.size();
-        _cor = 0;
-        _dj = min<int>(1, (int) pow((double) _n, 0.25));
-    }
-
-    virtual ~Base_interp() {};
-    
-    T interp(T x) {
-        int const jlo = _cor ? hunt(x) : locate(x);
-        return rawinterp(jlo, x);
-    }
-    
-    int locate(const T x);
-    int hunt(const T x);
-    
-    T virtual rawinterp(int jlo, T x) = 0;
-    
-    
-protected:
-    std::vector<T> &_x;
-    std::vector<T> &_y;
-    int _n, _m;
-private:
-    int _jsav, _cor, _dj;
-};
-
-
-// =============================================================
-/**
- * @class Poly_interp
+ * This polynomial interpolator is based the Lagrange formula described
+ * in NR 3rd ed. p 118.  It uses no actual NR code, but does not take advantage
+ * of neville's algorithm.
+ * I was included to see if extrapolation of the romberg solutions improved efficiency
+ * but romberg's algorithm usually converged in fewer than 5 terms (suitable for a 4th order polynom).
  *
- * @brief A Polynomial interpolation object.
- * @note Adapted from NR 3rd Ed. Chap. 3
  */
-template <typename T>            
-class Poly_interp : public Base_interp<T> {
-public:
-    Poly_interp(std::vector<T> &xv, std::vector<T>  &yv, int m) :
-        Base_interp<T>(xv, yv, m), _dy(0.0) {}
-    T rawinterp(int jl, T x);
-    T getDy() { return _dy; }
-private:
-    T _dy;
-    using Base_interp<T>::_x;
-    using Base_interp<T>::_y;
-    using Base_interp<T>::_n;
-    using Base_interp<T>::_m;
-};
 
-
-
+/*
+ *double poly_interp(double x, int const order, std::vector<double> xx, std::vector<double> yy, int const i0) {
+ *  
+ *  std::vector<double> coeffs(order + 1, 1.0);
+ *
+ *  double result = 0.0;
+ *    for(int i = 0; i < order + 1; ++i) {
+ *	for (int j = 0; j < order + 1; ++j) {
+ *	    if ( j != i ){
+ *		coeffs[i] *= (x - xx[i0 + j])/(xx[i0 + i]-xx[i0 + j]);
+ *	    }
+ *	}
+ *	result += coeffs[i] * yy[i0+i];
+ *	printf("%.4f %.4f\n", xx[i0+i], yy[i0+i]);
+ *    }
+ *    return result;
+ *}
+ */
 
 // =============================================================
 /**
- * @class Trapzd
- * @brief Perform trapezoid-rule integration.
- * @note Adapted from NR 3d Ed. Chap. 4 pg 163
+ * @brief The 1D Romberg integrator
+ *
+ * @note This code is adapted from the standard romberg algorithm,
+ *       a perfectly adequate description of which can be found at:
+ *       http://en.wikipedia.org/wiki/Romberg%27s_method
+ *
  */
 template<typename UnaryFunctionT>
-class Trapzd {
-public:
-    Trapzd() {};
-    Trapzd(UnaryFunctionT func, double a, double b) :
-        _func(func), _a(a), _b(b), _s(0) { _n = 0; }
-    double next() {
-        double x, tnm, sum, del;
-        int it, j;
-        _n++;
-        if (_n == 1) {
-            _s = 0.5*(_b - _a)*(_func(_a) + _func(_b));
-            return _s;
-        } else {
-            for (it = 1, j = 1; j < _n - 1; ++j) {
-                it <<= 1;
-            }
-            tnm = it;
-            del = (_b - _a)/tnm;
-            x = _a + 0.5*del;
-            for(sum = 0.0, j = 0; j < it; ++j, x += del) {
-                sum += _func(x);
-            }
-            
-            _s = 0.5*(_s + (_b - _a)*sum/tnm);
-            return _s;
-        }
+typename UnaryFunctionT::result_type romberg(UnaryFunctionT func,
+					     typename UnaryFunctionT::argument_type const a,
+					     typename UnaryFunctionT::argument_type const b,
+					     double eps=1.0e-6)  {
+
+    typedef typename UnaryFunctionT::argument_type Argtype;
+
+    int const max_steps = 20;
+    //int const poly_order = 5;  // can include if we want to extrapolate
+
+    // create an R matrix to hold the successive trapezoids and romberg expansions
+    std::vector<std::vector<Argtype> > R(1, std::vector<Argtype>(1));
+
+    // these two vectors could be constants but 
+    // vectors will allow the solution to be extrapolate to stepsize = 0
+    // (a currently unused functionality)
+    std::vector<Argtype> h(max_steps);
+    std::vector<Argtype> results(max_steps);
+
+    h[0] = b - a;
+    R[0][0] = 0.5*h[0]*(func(a) + func(b));
+
+    Argtype tolerance = 1.0;  // a relative tolerance
+    //Argtype extrapolated_result_prev = func(a);
+    int j = 1, m = 1;
+    while ( j < max_steps && eps < tolerance ) {
+
+	// push on a new vector to hold the next row
+	R.push_back(std::vector<Argtype>(j, 0.0));
+	
+	// do the trapezoid to get 0-entry for the j-1 row
+	h[j] = 0.5*h[j-1];
+	Argtype sum = 0.0;
+	for (int k = 0; k < m; ++k) {
+	    sum += func(a + h[j]*(2*(k+1) - 1));
+	}
+	R[j][0] = 0.5*R[j - 1][0] + h[j]*sum;
+	m = 2*m;
+
+	// do the romberg summation
+	for (int k = 0; k < j-1; ++k) {
+	    R[j][k+1] = R[j][k] + (R[j][k] - R[j-1][k]) / (std::pow(4.0, k+1) - 1);
+	}
+	results[j-1] = R[j][j-1];
+
+	// could extrapolate to stepsize here, but not currently implemented
+	//Argtype extrapolated_result = results[j-1];
+	//if (j > poly_order + 2) {
+	//    extrapolated_result = poly_interp(0.0, poly_order, h, results, j-poly_order-2);
+	//}
+	//tolerance = std::fabs(extrapolated_result - extrapolated_result_prev);
+	//extrapolated_result_prev = extrapolated_result;
+
+	tolerance = std::fabs(R[j][j-1] - R[j-1][j-2]);
+
+	j++;
     }
-private:
-    UnaryFunctionT _func;
-    double _a, _b, _s;
-    int _n;
-};
     
-    
-// =============================================================
+    if (j >= max_steps) {
+        throw LSST_EXCEPT(ex::RuntimeErrorException,"Exceed max number of steps in Romberg integration.");
+    }
+    return results[j-2];
+    //return extrapolated_result_prev;
+
+}
+
+
+
+namespace details {            
+
+
 /**
  * @class FunctionWrapper
  *
@@ -187,52 +175,8 @@ private:
 
 } // end of namespace afw::math::details
 
-            
-// =============================================================
-/**
- * @brief The 1D Romberg integrator
- *
- * @note Adapted from NR 3rd Ed. Chapter 4, pg 166
- *
- * @todo Throw a proper exception when JMAX is exceeded.
- */
-template<typename UnaryFunctionT>
-typename UnaryFunctionT::result_type romberg(UnaryFunctionT func,
-               typename UnaryFunctionT::argument_type const a,
-               typename UnaryFunctionT::argument_type const b,
-               double eps=1.0e-6)  {
 
-    using namespace details;
-    
-    static int call_count = 0;
-    static int fail_count = 0;
-    
-    call_count++;
-    
-    int const JMAX = 20, JMAXP = JMAX + 1, K = 5;
-    
-    std::vector<typename UnaryFunctionT::argument_type> s(JMAX), h(JMAXP);
-    Poly_interp<typename UnaryFunctionT::argument_type> polint(h, s, K);
-    h[0] = 1.0;
-    Trapzd<UnaryFunctionT> t(func, a, b);
-    typename UnaryFunctionT::result_type ss_bail = 0;
-    for (int j = 1; j <= JMAX; ++j) {
-        s[j - 1] = t.next();
-        if (j >= K) {
-            typename UnaryFunctionT::result_type ss = ss_bail = polint.rawinterp(j - K, 0.0);
-            if ( (std::fabs(polint.getDy()) < std::fabs(eps*ss)) ||
-                 (std::fabs(polint.getDy()) < std::fabs(epsilon_f) ) ) {
-                return ss;
-            }
-        }
-        h[j] = 0.25*h[j - 1];
-    }
-    fail_count++;
-    
-    throw LSST_EXCEPT(ex::RuntimeErrorException,
-                      (boost::format("Failed to converge in %d iterations\n") % JMAX).str() );
-    return ss_bail; // never gets here.
-}
+
 
 
 // =============================================================
@@ -251,7 +195,10 @@ typename BinaryFunctionT::result_type romberg2D(BinaryFunctionT func,
                                        typename BinaryFunctionT::second_argument_type const y2,
                                        double eps=1.0e-6) {
     using namespace details;
-    FunctionWrapper<BinaryFunctionT> fwrap(func, x1, x2, eps);
+    
+    // note the more stringent eps requirement to ensure the requested limit
+    // can be reached.
+    FunctionWrapper<BinaryFunctionT> fwrap(func, x1, x2, 1.0e-2*eps);
     return romberg(fwrap, y1, y2, eps);
 }
 
