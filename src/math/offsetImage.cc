@@ -71,7 +71,7 @@ typename ImageT::Ptr offsetImage(ImageT const& inImage,            ///< The %ima
     
     offsetKernel->setKernelParameters(std::make_pair(dx, dy));
 
-    convolve(*outImage, inImage, *offsetKernel, true);
+    convolve(*outImage, inImage, *offsetKernel, true, true);
 
     return outImage;
 }
