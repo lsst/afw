@@ -235,7 +235,7 @@ void afwMath::basicConvolve(
             "generic basicConvolve: dispatch to spatially varying LinearCombinationKernel basicConvolve");
         afwMath::basicConvolve(convolvedImage, inImage,
             *dynamic_cast<afwMath::LinearCombinationKernel const*>(&kernel),
-            false); // note: change to doNormalize once normalization is supported: ticket #833
+            doNormalize);
         return;
     }
     // OK, use general (and slower) form
@@ -350,11 +350,6 @@ void afwMath::basicConvolve(
  * - If the kernel is not spatially varying, then computes a fixed kernel and calls the
  *   the general version of basicConvolve.
  *
- * @warning Cannot normalize a spatially varying LinearCombinationKernel (trying will raise an exception).
- * This will be fixed in Ticket #833. When implementing Ticket #833, be sure to:
- * - change the dynamic dispatch code in the generic basicConvolve code (false -> doNormalize).
- * - fix the exception list just below
- *
  * @warning The variance will be mis-computed if your basis kernels contain home-brew delta function kernels
  * (instead of instances of afwMath::DeltaFunctionKernel). It may also be mis-computed if your basis kernels
  * contain many pixels with value zero, or if your basis kernels contain a mix of
@@ -371,8 +366,7 @@ void afwMath::basicConvolve(
     OutImageT& convolvedImage,      ///< convolved %image
     InImageT const& inImage,        ///< %image to convolve
     afwMath::LinearCombinationKernel const& kernel, ///< convolution kernel
-    bool doNormalize                ///< if True, normalize the kernel, else use "as is";
-                                    ///< warning: must not be true if kernel is spatially varying!
+    bool doNormalize                ///< if True, normalize the kernel, else use "as is"
 ) {
     if (!kernel.isSpatiallyVarying()) {
         // use the standard algorithm for the spatially invariant case
@@ -396,11 +390,6 @@ void afwMath::basicConvolve(
     
     pexLog::TTrace<3>("lsst.afw.kernel.convolve",
         "basicConvolve for LinearCombinationKernel: kernel is spatially varying");
-    
-    if (doNormalize) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
-            "cannot yet normalize convolution with a spatially varying LinearCombinationKernel");
-    }
     
     typedef typename InImageT::template ImageTypeFactory<double>::type BasisImage;
     typedef typename BasisImage::x_iterator BasisXIterator;
@@ -429,7 +418,7 @@ void afwMath::basicConvolve(
     }
     
     // iterate over basis kernels
-    KernelList basisKernelList = kernel.getKernelList();
+    KernelList const basisKernelList = kernel.getKernelList();
     std::vector<double> kernelSumList;
     int i = 0;
     for (typename KernelList::const_iterator basisKernelIter = basisKernelList.begin();
@@ -457,6 +446,32 @@ void afwMath::basicConvolve(
                 *cnvXIter = cnvPixel;
                 // note: cnvPixel avoids compiler complaints; the following does not build:
                 // *cnvXIter = afwImage::pixel::plus(*cnvXIter, (*basisXIter) * basisCoeff, noiseCorrelationCoeff);
+            }
+        }
+    }
+
+    if (doNormalize) {
+        // For each pixel of the output image: compute the kernel sum for that pixel and scale the output image.
+        // An alternative approach is to create a temporary kernel sum image by adding one basis kernel at a time
+        // (for each basis kernel iterate over the pixels), much like the output image was just computed above,
+        // and use that to scale the image. But that would require a temporary image the same size as
+        // the output image, so it is likely to suffer from cache issues.
+        std::vector<double> const kernelSumList = kernel.getKernelSumList();
+        std::vector<Kernel::SpatialFunctionPtr> spatialFunctionList = kernel.getSpatialFunctionList();
+        for (int cnvY = cnvStartY; cnvY < cnvEndY; ++cnvY) {
+            double const rowPos = afwImage::indexToPosition(cnvY);
+        
+            OutXIterator cnvXIter = convolvedImage.row_begin(cnvY) + cnvStartX;
+            for (int cnvX = cnvStartX; cnvX != cnvEndX; ++cnvX, ++cnvXIter) {
+                double const colPos = afwImage::indexToPosition(cnvX);
+
+                std::vector<double>::const_iterator kSumIter = kernelSumList.begin();
+                std::vector<Kernel::SpatialFunctionPtr>::const_iterator spFuncIter = spatialFunctionList.begin();
+                double kSum = 0.0;
+                for ( ; kSumIter != kernelSumList.end(); ++kSumIter, ++spFuncIter) {
+                    kSum += (**spFuncIter)(colPos, rowPos) * (*kSumIter);
+                }
+                *cnvXIter /= kSum;
             }
         }
     }
@@ -625,8 +640,6 @@ void afwMath::basicConvolve(
  * 
  * afw/examples offers programs that time convolution, including timeConvolve and timeSpatiallyVaryingConvolve.
  *
- * @throw lsst::pex::exceptions::InvalidParameterException if doNormalize is true and kernel is a
- * spatially varying LinearCombinationKernel (see ticket #833).
  * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage is not the same size as inImage.
  * @throw lsst::pex::exceptions::InvalidParameterException if inImage is smaller (in colums or rows) than kernel.
  *

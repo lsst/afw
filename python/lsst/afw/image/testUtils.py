@@ -130,7 +130,7 @@ def imagesDiffer(imageArr1, imageArr2, skipMaskArr=None, rtol=1.0e-05, atol=1e-0
     - atol: absolute tolerance (see below)
     
     rtol and atol are positive, typically very small numbers.
-    The relative difference ("rtol" * abs("b")) and the absolute difference "atol" are added together
+    The relative difference (rtol * abs(b)) and the absolute difference "atol" are added together
     to compare against the absolute difference between "a" and "b".
     
     Return a string describing the error if the images differ significantly, an empty string otherwise
@@ -220,6 +220,12 @@ def maskedImagesDiffer(maskedImageArrSet1, maskedImageArrSet2,
     - doMask: compare mask planes if True
     - doVariance: compare variance planes if True
     - skipMaskArr: pixels to ingore on the image, mask and variance arrays; nonzero values are skipped
+    - rtol: relative tolerance (see below)
+    - atol: absolute tolerance (see below)
+    
+    rtol and atol are positive, typically very small numbers.
+    The relative difference (rtol * abs(b)) and the absolute difference "atol" are added together
+    to compare against the absolute difference between "a" and "b".
     
     Return a string describing the error if the images differ significantly, an empty string otherwise
     """
