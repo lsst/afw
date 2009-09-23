@@ -8,6 +8,7 @@ setupRequired(numpy >= 1.0.1)
 setupRequired(minuit >= 1.7.9)
 setupRequired(eigen >= 2.0.0)
 setupRequired(gsl >= 1.8)
+setupRequired(fftw >= 3.1.2)
 
 setupOptional(afwdata >=svn8736)
 

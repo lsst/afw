@@ -14,6 +14,7 @@
 
 #include "boost/mpl/or.hpp"
 #include "boost/shared_ptr.hpp"
+#include "boost/make_shared.hpp"
 #include "boost/static_assert.hpp"
 #include "boost/type_traits/is_same.hpp"
 #include "boost/type_traits/is_base_and_derived.hpp"
@@ -25,8 +26,10 @@
 #include "lsst/daf/base/Persistable.h"
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/Utils.h"
 #include "lsst/afw/math/Function.h"
 #include "lsst/afw/math/traits.h"
+#include "lsst/afw/math/ConvolutionVisitor.h"
 
 namespace lsst {
 namespace afw {
@@ -149,7 +152,26 @@ using boost::serialization::make_nvp;
             double x = 0.0, ///< x (column position) at which to compute spatial function
             double y = 0.0  ///< y (row position) at which to compute spatial function
         ) const = 0;
-    
+   
+
+#if !defined(SWIG)
+        /**
+         *  @brief Return a bitwise OR of all supported convolution methods.
+         *
+         *  All Kernels will support at least IMAGE and FOURIER convolution.
+         */
+        virtual ConvolutionVisitor::TypeFlag getConvolutionTypeFlag() const { 
+            return static_cast<ConvolutionVisitor::TypeFlag>(
+                ConvolutionVisitor::IMAGE | ConvolutionVisitor::FOURIER
+            );
+        }
+
+
+        virtual ConvolutionVisitor::Ptr computeConvolutionVisitor(
+            ConvolutionVisitor::TypeFlag const & visitorType,
+            lsst::afw::image::PointD const & location
+        ) const;
+#endif
         /**
          * @brief Return the Kernel's width
          */
@@ -366,7 +388,7 @@ using boost::serialization::make_nvp;
     
     
     /**
-     * @brief A kernel described by a function.
+     * @briewould'vef A kernel described by a function.
      *
      * The function's x, y arguments are as follows:
      * * -getCtrX(), -getCtrY() for the lower left corner pixel
@@ -526,6 +548,13 @@ using boost::serialization::make_nvp;
             double x = 0.0,
             double y = 0.0
         ) const;
+
+#if !defined(SWIG)
+        virtual ConvolutionVisitor::Ptr computeConvolutionVisitor(
+            ConvolutionVisitor::TypeFlag const & visitorType,
+            lsst::afw::image::PointD const & location
+        ) const;
+#endif
 
         virtual std::vector<double> getKernelParameters() const;
                 

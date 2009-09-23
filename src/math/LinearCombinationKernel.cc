@@ -209,3 +209,41 @@ void lsst::afw::math::LinearCombinationKernel::_computeKernelImageList() {
         _kernelImagePtrList.push_back(kernelImagePtr);
     }
 }
+
+/**
+ *  Return a ConvolutionVisitor that matches the type requested,at the given 
+ *  location.
+ *
+ *  The default implementation would support the creation of IMAGE and FOURIER 
+ *  visitors without derivatives. LinearCombinationKernel (and possibly 
+ *  AnalyticKernel) can override to provide versions with derivatives.  
+ */
+lsst::afw::math::ConvolutionVisitor::Ptr lsst::afw::math::LinearCombinationKernel::computeConvolutionVisitor(
+        lsst::afw::math::ConvolutionVisitor::TypeFlag const & visitorType,
+        lsst::afw::image::PointD const & location
+) const{
+    lsst::afw::math::ConvolutionVisitor::Ptr visitor;
+    switch(visitorType) {
+        case lsst::afw::math::ConvolutionVisitor::IMAGE: 
+        {
+            lsst::afw::image::Image<PixelT> * image = 
+                    new lsst::afw::image::Image<PixelT>(getWidth(), getHeight());
+            lsst::afw::image::Image<PixelT>::Ptr imagePtr(image);
+            computeImage(*image, false, location.getX(), location.getY());
+            visitor.reset(new ImageConvolutionVisitor(imagePtr, _kernelImagePtrList));
+            break;
+        }
+        case lsst::afw::math::ConvolutionVisitor::FOURIER:
+        {
+            lsst::afw::image::Image<PixelT> * image =
+                    new lsst::afw::image::Image<PixelT>(getWidth(), getHeight());
+            lsst::afw::image::Image<PixelT>::Ptr imagePtr(image);
+            computeImage(*image, false, location.getX(), location.getY());
+            visitor.reset(new FourierConvolutionVisitor(imagePtr, _kernelImagePtrList));
+            break;
+        }
+    }    
+    
+    return visitor;
+}
+
