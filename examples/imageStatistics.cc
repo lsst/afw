@@ -1,5 +1,6 @@
 // -*- lsst-c++ -*-
 #include <iostream>
+#include <limits>
 #include <cmath>
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
@@ -72,13 +73,14 @@ void printStats(Image &img, math::StatisticsControl const &sctrl) {
 int main() {
 
     double const pi = M_PI;
-    double const pi_2 = pi/2;
+    //double const pi_2 = pi/2;
+    double const NaN = std::numeric_limits<double>::quiet_NaN();
 
     // declare an image and a masked image
     int const wid = 1024;
     ImageT img(wid, wid);
     MaskedImageT mimg(wid, wid);
-    std::vector<float> v(0);
+    std::vector<double> v(0);
     
     // fill it with some noise (Cauchy noise in this case)
     for (int j = 0; j != img.getHeight(); ++j) {
@@ -87,8 +89,11 @@ int main() {
         MaskedImageT::x_iterator mip = mimg.row_begin(j);
         for (ImageT::x_iterator ip = img.row_begin(j); ip != img.row_end(j); ++ip, ++mip) {
             double const x_uniform = pi*static_cast<ImageT::Pixel>(std::rand())/RAND_MAX;
-            double const x_lorentz = x_uniform; //tan(x_uniform - pi_2);
+            double x_lorentz = x_uniform; //tan(x_uniform - pi_2);
 
+            // throw in the occassional nan ... 1% of the time
+            if ( static_cast<double>(std::rand())/RAND_MAX < 0.01 ) { x_lorentz = NaN; }
+            
             *ip = x_lorentz;
             
             // mask the odd rows
@@ -105,6 +110,7 @@ int main() {
     sctrl.setNumIter(3);
     sctrl.setNumSigmaClip(5.0);
     sctrl.setAndMask(0x1);        // pixels with this mask bit set will be ignored.
+    sctrl.setNanSafe(true);
 
 
     // ==================================================================
