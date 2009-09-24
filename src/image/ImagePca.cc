@@ -238,7 +238,8 @@ void ImagePca<ImageT>::analyze() {
          * Normalise eigenImages to have a maximum of 1.0.  For n > 0 they
          * (should) have mean == 0, so we can't use that to normalize
          */
-        lsst::afw::math::Statistics stats(*eImage, (lsst::afw::math::MIN | lsst::afw::math::MAX));
+        lsst::afw::math::Statistics stats =
+            lsst::afw::math::makeStatistics(*eImage, (lsst::afw::math::MIN | lsst::afw::math::MAX));
         double const min = stats.getValue(lsst::afw::math::MIN);
         double const max = stats.getValue(lsst::afw::math::MAX);
 

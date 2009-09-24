@@ -9,7 +9,13 @@
  */
 
 #include <cassert>
+#include <boost/iterator/iterator_adaptor.hpp>
 #include "boost/tuple/tuple.hpp"
+#include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/MaskedImage.h"
+
+namespace image = lsst::afw::image;
+
 
 namespace lsst { namespace afw { namespace math {
     
@@ -42,19 +48,29 @@ enum Property {
 class StatisticsControl {
 public:
     StatisticsControl(double numSigmaClip = 3.0, ///< number of standard deviations to clip at
-                      int numIter = 3   ///< Number of iterations
-                     ) : _numSigmaClip(numSigmaClip), _numIter(numIter) {
+                      int numIter = 3,   ///< Number of iterations
+                      int andMask = 0x1  ///< and-Mask to specify which mask planes to pay attention to
+                     ) :
+        _numSigmaClip(numSigmaClip),
+        _numIter(numIter),
+        _andMask(andMask)
+        {
         assert(_numSigmaClip > 0);
         assert(_numIter > 0);
-    }
+        }
+
     double getNumSigmaClip() const { return _numSigmaClip; }
     int getNumIter() const { return _numIter; }
+    int getAndMask() const { return _andMask; }
+    
     void setNumSigmaClip(double numSigmaClip) { assert(numSigmaClip > 0); _numSigmaClip = numSigmaClip; }
     void setNumIter(int numIter) { assert(numIter > 0); _numIter = numIter; }
+    void setAndMask(int andMask) { _andMask = andMask; }
 
 private:
     double _numSigmaClip;                 // Number of standard deviations to clip at
     int _numIter;                         // Number of iterations
+    int _andMask;                         // and-Mask to specify which mask planes to pay attention to
 };
             
 /**
@@ -89,8 +105,11 @@ public:
     /// The type used to report (value, error) for desired statistics
     typedef std::pair<double, double> value_type;
     
-    template<typename Image>
-    explicit Statistics(Image const& img, int const flags, StatisticsControl const& sctrl=StatisticsControl());
+    template<typename Image, typename Mask>
+    explicit Statistics(Image &img,
+                        Mask &msk,
+                        int const flags,
+                        StatisticsControl const& sctrl=StatisticsControl());
     
     value_type getResult(Property const prop=NOTHING) const;
     
@@ -113,13 +132,17 @@ private:
     double _median;                     // the image's median
     double _iqrange;                    // the image's interquartile range
 
-    template<typename Image>
-    StandardReturnT _getStandard(Image const& img, int const flags);
-    template<typename Image>
-    StandardReturnT _getStandard(Image const& img, int const flags, std::pair<double,double> clipinfo);
+    StatisticsControl _sctrl;           // the control structure
+    
+    template<typename Image, typename Mask>
+    StandardReturnT _getStandard(Image &img, Mask &msk, int const flags);
+    template<typename Image, typename Mask>
+    StandardReturnT _getStandard(Image &img, Mask &msk,
+                                 int const flags, std::pair<double,double> clipinfo);
     
     template<typename Image>
-    double _quickSelect(Image const& img, double const quartile);   // compute median with quickselect (Press et al.)
+    double _percentile(Image &img,
+                       double const quartile);   // compute median with quickselect (Press et al.)
     
     inline double _varianceError(double const variance, int const n) const {
         return 2*(n - 1)*variance*variance/(static_cast<double>(n)*n); // assumes a Gaussian
@@ -127,19 +150,105 @@ private:
 
 };
 
-    
-/* @brief A convenience function that uses function overloading to make the correct type of Statistics
- * @ingroup afw
- * cf. std::make_pair()
+
+
+
+
+
+/*
+ * MaskedImage
  */
-template<typename Image>
-Statistics makeStatistics(Image const& img, ///< Image (or MaskedImage) whose properties we want
-                           int const flags,   ///< Describe what we want to calculate
-                           StatisticsControl const& sctrl=StatisticsControl() ///< Control how things are calculated
-                          ) {
-    return Statistics(img, flags, sctrl);
+template<typename Pixel>
+Statistics makeStatistics(image::MaskedImage<Pixel> &mimg, ///< Image (or MaskedImage) whose properties we want
+                          int const flags,   ///< Describe what we want to calculate
+                          StatisticsControl const& sctrl=StatisticsControl() ///< Control how things are calculated
+                         ) {
+    return Statistics(*mimg.getImage(), *mimg.getMask(), flags, sctrl);
 }
 
+
+            
+/*
+ * Image
+ */
+            
+template <typename ValueT>
+class infinite_iterator
+    : public boost::iterator_adaptor<infinite_iterator<ValueT>, ValueT*, ValueT, boost::forward_traversal_tag> {
+public:
+    infinite_iterator() : infinite_iterator::iterator_adaptor_(0) {}
+    explicit infinite_iterator(ValueT* p) : infinite_iterator::iterator_adaptor_(p) {}
+private:
+    friend class boost::iterator_core_access;
+    void increment() { ; }              // never actually advance the iterator
+};
+
+template<typename ValueT>
+class MaskImposter {
+    ValueT _val[1];
+public:
+    typedef infinite_iterator<ValueT> x_iterator;
+    MaskImposter(ValueT val = 0) { _val[0] = val; }
+    x_iterator row_begin(int) {
+        return x_iterator(_val);
+    }
+};
+            
+
+/* @brief 
+ * @ingroup afw
+ */
+template<typename Pixel>
+Statistics makeStatistics(image::Image<Pixel> &img, ///< Image (or Image) whose properties we want
+                          int const flags,   ///< Describe what we want to calculate
+                          StatisticsControl const& sctrl=StatisticsControl() ///< Control how things are calculated
+                         ) {
+    MaskImposter<image::MaskPixel> msk;
+    return Statistics(img, msk, flags, sctrl);
+}
+
+
+/*
+ * Vector
+ */
+
+
+template<typename ValueT>
+class ImageImposter : public std::vector<ValueT> {
+public:
+    
+    typedef typename std::vector<ValueT>::iterator x_iterator;
+    typedef typename std::vector<ValueT>::iterator fast_iterator;
+    typedef typename boost::shared_ptr<ImageImposter<ValueT> > Ptr;
+    
+    ImageImposter(std::vector<ValueT> &v) : std::vector<ValueT>(v.begin(), v.end()) {}
+    ImageImposter(ImageImposter<ValueT> &v) : 
+        std::vector<ValueT>(v.row_begin(0), v.row_end(0)) {}
+    ImageImposter(ImageImposter<ValueT> &v, bool deep) :
+        std::vector<ValueT>(v.row_begin(0), v.row_end(0)) {}
+
+    //~ImageImposter() {}
+    
+    fast_iterator begin(bool) { return std::vector<ValueT>::begin(); }
+    x_iterator row_begin(int) { return std::vector<ValueT>::begin(); }
+    x_iterator row_end(int) { return std::vector<ValueT>::end();   }
+    int getWidth()  { return std::vector<ValueT>::size(); }
+    int getHeight() { return 1; }
+
+private:
+};
+            
+
+template<typename EntryT>
+Statistics makeStatistics(std::vector<EntryT> &v, ///< Image (or MaskedImage) whose properties we want
+                          int const flags,   ///< Describe what we want to calculate
+                          StatisticsControl const& sctrl=StatisticsControl() ///< Control how things are calculated
+                         ) {
+    ImageImposter<EntryT> img(v);
+    MaskImposter<image::MaskPixel> msk;
+    return Statistics(img, msk, flags, sctrl);
+}
+            
 }}}
 
 #endif
