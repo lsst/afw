@@ -67,18 +67,8 @@ using boost::serialization::make_nvp;
      * The one spatial function is used to compute the kernel parameters at a given spatial position
      * by computing each kernel parameter using its associated vector of spatial function parameters.
      *
-     * One may only specify a single spatial function to describe the variation of all kernel parameters
-     * (though the spatial parameters can, and usually will, be different for each kernel parameter).
-     * The only use cases we had used the same spatial model for all parameters, and I felt it
-     * would be a burden to the user to have to create one function per kernel parameter.
-     * (I would gladly change this design if wanted, since it would simplify the internal code.)
-     * You still can assign a different spatial model to each kernel parameter by defining
-     * one function that is the sum of all the desired spatial models. Then for each kernel parameter,
-     * then zero all but the few spatial parameters that control the spatial model for that kernel parameter.
-     *
-     * When determining the parameters for a spatial function or a kernel function,
-     * please keep the LSST convention for pixel position vs. pixel index in mind.
-     * See lsst/afw/image/ImageUtils.h for the convention.
+     * The convolve function computes the spatial function at the pixel position (not index) of the image.
+     * See the convolve function for details.
      *
      * Note that if a kernel is spatially varying then you may not set the kernel parameters directly;
      * that is the job of the spatial function! However, you may change the spatial parameters at any time.
