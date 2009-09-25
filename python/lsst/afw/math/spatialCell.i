@@ -62,6 +62,7 @@ SWIG_SHARED_PTR(SpatialCellCandidate, lsst::afw::math::SpatialCellCandidate);
 SWIG_SHARED_PTR(SpatialCell, lsst::afw::math::SpatialCell);
 
 %SpatialCellImageCandidatePtr(F, float);
+%SpatialCellImageCandidatePtr(D, double);
 
 %rename(__incr__) lsst::afw::math::SpatialCellCandidateIterator::operator++;
 %rename(__deref__) lsst::afw::math::SpatialCellCandidateIterator::operator*;
@@ -74,6 +75,7 @@ SWIG_SHARED_PTR(SpatialCell, lsst::afw::math::SpatialCell);
 %template(SpatialCellList) std::vector<lsst::afw::math::SpatialCell::Ptr>;
 
 %SpatialCellImageCandidate(F, float);
+%SpatialCellImageCandidate(D, double);
 
 
 %extend lsst::afw::math::SpatialCell {
