@@ -115,10 +115,17 @@ int main() {
 
     // ==================================================================
     // Get stats for the Image, MaskedImage, and vector
+    std::cout << "image::Image" << std::endl;
     printStats(img, sctrl);
+    std::cout << "image::MaskedImage" << std::endl;
     printStats(mimg, sctrl);
+    std::cout << "std::vector" << std::endl;
     printStats(v, sctrl);
 
+    // Now try the specialization to get NPOINT and SUM (bitwise OR) for an image::Mask
+    math::Statistics mskstat = makeStatistics(*mimg.getMask(), (math::NPOINT | math::SUM), sctrl);
+    std::cout << "image::Mask" << std::endl;
+    std::cout << mskstat.getValue(math::NPOINT) << " " << mskstat.getValue(math::SUM) << std::endl;
     
     return 0;
 

@@ -21,7 +21,7 @@ namespace math = lsst::afw::math;
 namespace ex = lsst::pex::exceptions;
 
 namespace {
-    double const NaN = std::numeric_limits<double>::quiet_NaN();
+    //double const NaN = std::numeric_limits<double>::quiet_NaN();
     double const iqToStdev = 0.741301109252802;   // 1 sigma in units of iqrange (assume Gaussian)
 }
 
@@ -470,11 +470,12 @@ double math::Statistics::getError(math::Property const prop ///< Desired propert
 /**
  * Specialisation for Masks; just calculate the "Sum" as the bitwise OR of all pixels
  */
-/*
+
 namespace lsst { namespace afw { namespace math {
 template<>
 Statistics::Statistics(
                        image::Mask<image::MaskPixel> const& msk, ///< Mask whose properties we want
+                       image::Mask<image::MaskPixel> const& dmsk, ///
                        int const flags,                          ///< Describe what we want to calculate
                        StatisticsControl const& sctrl            ///< Control how things are calculated
                       ) :
@@ -505,8 +506,23 @@ Statistics::Statistics(
     }
     _sum = sum;
 }
+
+/*
+ * @brief Specialization to handle Masks
+ * @note Although short, the definition can't be in the header as it must follow the specialization definition
+ *       (I think)
+ *
+ */            
+Statistics makeStatistics(image::Mask<image::MaskPixel> const &msk, ///< Image (or MaskedImage) whose properties we want
+                                int const flags,   ///< Describe what we want to calculate
+                                StatisticsControl const& sctrl ///< Control how things are calculated
+                               ) {
+    
+    return Statistics(msk, msk, flags, sctrl);
+}
+
 }}}
-*/
+
 /************************************************************************************************************/
 /**
  * @brief Explicit instantiations
@@ -530,7 +546,11 @@ Statistics::Statistics(
     template math::Statistics::StandardReturnT math::Statistics::_getStandard(math::ImageImposter<TYPE> const &img, math::MaskImposter<image::MaskPixel> const &msk, int const flags); \
     template math::Statistics::StandardReturnT math::Statistics::_getStandard(math::ImageImposter<TYPE> const &img, math::MaskImposter<image::MaskPixel> const &msk, int const flags, std::pair<double,double> clipinfo);
 
-
+/*
+#define INSTANTIATE_MASK_STATISTICS(TYPE) \
+    template math::Statistics::Statistics(image::Mask<image::MaskPixel> const &msk, image::Mask<image::MaskPixel> const &dmsk, int const flags, StatisticsControl const &sctrl);
+*/
+    
 #define INSTANTIATE_IMAGE_STATISTICS(TYPE) \
     INSTANTIATE_MASKEDIMAGE_STATISTICS(TYPE) \
     INSTANTIATE_REGULARIMAGE_STATISTICS(TYPE) \

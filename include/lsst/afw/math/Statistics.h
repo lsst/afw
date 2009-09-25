@@ -15,10 +15,18 @@
  */
 
 #include <cassert>
+#include <limits>
 #include <boost/iterator/iterator_adaptor.hpp>
 #include "boost/tuple/tuple.hpp"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
+
+
+namespace ex = lsst::pex::exceptions;
+
+namespace {
+    double const NaN = std::numeric_limits<double>::quiet_NaN();
+}
 
 namespace image = lsst::afw::image;
 
@@ -183,6 +191,18 @@ Statistics makeStatistics(image::MaskedImage<Pixel> const &mimg, ///< Image (or 
     return Statistics(*mimg.getImage(), *mimg.getMask(), flags, sctrl);
 }
 
+
+
+/*
+ * @brief Front end for specialization to handle Masks
+ * @note The definition (in Statistics.cc) simply calls the specialized constructor
+ *
+ */            
+Statistics makeStatistics(image::Mask<image::MaskPixel> const &msk, ///< Image (or MaskedImage) whose properties we want
+                          int const flags,   ///< Describe what we want to calculate
+                          StatisticsControl const& sctrl=StatisticsControl() ///< Control how things are calculated
+                         );
+            
 
 /*
  * @class infinite_iterator
