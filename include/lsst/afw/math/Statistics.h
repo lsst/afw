@@ -21,13 +21,6 @@
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
 
-
-namespace ex = lsst::pex::exceptions;
-
-namespace {
-    double const NaN = std::numeric_limits<double>::quiet_NaN();
-}
-
 namespace image = lsst::afw::image;
 
 namespace lsst { namespace afw { namespace math {

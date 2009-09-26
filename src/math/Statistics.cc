@@ -21,7 +21,7 @@ namespace math = lsst::afw::math;
 namespace ex = lsst::pex::exceptions;
 
 namespace {
-    //double const NaN = std::numeric_limits<double>::quiet_NaN();
+    double const NaN = std::numeric_limits<double>::quiet_NaN();
     double const iqToStdev = 0.741301109252802;   // 1 sigma in units of iqrange (assume Gaussian)
 }
 
@@ -284,7 +284,7 @@ math::Statistics::StandardReturnT math::Statistics::_getStandard(Image const &im
                 
                 if ( ! (*mptr & _sctrl.getAndMask()) ){                
                     if ( !isnan(*ptr) &&
-                         (fabs(*ptr - center) < cliplimit) ) { // clip
+                         (fabs(*ptr - center) <= cliplimit) ) { // clip
                         double const delta = *ptr - crude_mean;
                         sum += delta;
                         sumx2 += delta*delta;
@@ -305,7 +305,7 @@ math::Statistics::StandardReturnT math::Statistics::_getStandard(Image const &im
                 
                 if ( ! (*mptr & _sctrl.getAndMask()) ){
                     if ( !isnan(*ptr) &&
-                         (fabs(*ptr - center) < cliplimit) ) { // clip
+                         (fabs(*ptr - center) <= cliplimit) ) { // clip
                         double const delta = *ptr - crude_mean;
                         sum += delta;
                         sumx2 += delta*delta;
