@@ -88,6 +88,8 @@ double lsst::afw::math::SeparableKernel::computeImage(
  *
  * x, y are ignored if there is no spatial function.
  *
+ * @return the kernel sum (1.0 if doNormalize true)
+ *
  * @throw lsst::pex::exceptions::InvalidParameterException if colList or rowList is the wrong size
  */
 double lsst::afw::math::SeparableKernel::computeVectors(
@@ -159,6 +161,8 @@ void lsst::afw::math::SeparableKernel::setKernelParameter(unsigned int ind, doub
 /**
  * @brief Compute the column and row arrays in place, where kernel(col, row) = colList(col) * rowList(row)
  *
+ * @return the kernel sum (1.0 if doNormalize true)
+ *
  * Warning: no range checking!
  */
 double lsst::afw::math::SeparableKernel::basicComputeVectors(
@@ -167,41 +171,31 @@ double lsst::afw::math::SeparableKernel::basicComputeVectors(
     bool doNormalize   ///< normalize the arrays (so sum of each is 1)?
 ) const {
     double colSum = 0.0;
-    double colFuncValue;
-    std::vector<PixelT>::iterator colIter = colList.begin();
-    double xOffset = - static_cast<double>(this->getCtrX());
-
-    for (double x = xOffset; colIter != colList.end(); ++colIter, x += 1.0) {
-        colFuncValue = (*_kernelColFunctionPtr)(x);
+    double xArg = - static_cast<double>(this->getCtrX());
+    for (std::vector<PixelT>::iterator colIter = colList.begin(); colIter != colList.end(); ++colIter, ++xArg) {
+        double colFuncValue = (*_kernelColFunctionPtr)(xArg);
         *colIter = colFuncValue;
         colSum += colFuncValue;
     }
 
     double rowSum = 0.0;
-    double rowFuncValue;
-    std::vector<PixelT>::iterator rowIter = rowList.begin();
-    double yOffset = - static_cast<double>(this->getCtrY());
-    for (double y = yOffset; rowIter != rowList.end(); ++rowIter, y += 1.0) {
-        rowFuncValue = (*_kernelRowFunctionPtr)(y);
+    double yArg = - static_cast<double>(this->getCtrY());
+    for (std::vector<PixelT>::iterator rowIter = rowList.begin(); rowIter != rowList.end(); ++rowIter, ++yArg) {
+        double rowFuncValue = (*_kernelRowFunctionPtr)(yArg);
         *rowIter = rowFuncValue;
         rowSum += rowFuncValue;
     }
 
-    double imSum = 0;                   // sum of image pixels
+    double imSum = colSum * rowSum;
     if (doNormalize) {
-        colIter = colList.begin();
-        for ( ; colIter != colList.end(); ++colIter) {
+        for (std::vector<PixelT>::iterator colIter = colList.begin(); colIter != colList.end(); ++colIter) {
             *colIter /= colSum;
         }
 
-        rowIter = rowList.begin();
-        for ( ; rowIter != rowList.end(); ++rowIter) {
+        for (std::vector<PixelT>::iterator rowIter = rowList.begin(); rowIter != rowList.end(); ++rowIter) {
             *rowIter /= rowSum;
         }
-        imSum = 1;
-    } else {
-        imSum = colSum * rowSum;
+        imSum = 1.0;
     }
-
     return imSum;
 }

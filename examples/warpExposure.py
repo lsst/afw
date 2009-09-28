@@ -60,6 +60,7 @@ def main():
     outputExposurePath = getArg(2, DefOutputExposurePath)
     print "Remapping masked image  ", originalExposurePath
     print "to match wcs and size of", warpedWcsImageOrExposurePath
+    print "using", kernelName, "kernel"
     
     originalExposure = afwImage.ExposureF(originalExposurePath)
     

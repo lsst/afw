@@ -15,7 +15,6 @@ typedef float ImageType;
 typedef double KernelType;
 
 const double Sigma = 3;
-const int EdgeMaskBit = -1;
 const unsigned DefNIter = 10;
 const unsigned MinKernelSize = 5;
 const unsigned MaxKernelSize = 15;
@@ -41,7 +40,7 @@ void timeConvolution(ImageClass &image, unsigned int nIter) {
         clock_t startTime = clock();
         for (unsigned int iter = 0; iter < nIter; ++iter) {
             // convolve
-            afwMath::convolve(resImage, image, analyticKernel, EdgeMaskBit, true);
+            afwMath::convolve(resImage, image, analyticKernel, true);
         }
         double secPerIter = (clock() - startTime) / static_cast<double> (nIter * CLOCKS_PER_SEC);
         
@@ -62,7 +61,7 @@ void timeConvolution(ImageClass &image, unsigned int nIter) {
         clock_t startTime = clock();
         for (unsigned int iter = 0; iter < nIter; ++iter) {
             // convolve
-            afwMath::convolve(resImage, image, separableKernel, EdgeMaskBit, true);
+            afwMath::convolve(resImage, image, separableKernel, true);
         }
         double secPerIter = (clock() - startTime) / static_cast<double> (nIter * CLOCKS_PER_SEC);
         

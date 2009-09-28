@@ -57,7 +57,7 @@ class Mosaic(object):
         self.images.append(image)
         self.labels.append(label)
 
-    def makeMosaic(self, images=None, frame=None, mode=None):
+    def makeMosaic(self, images=None, frame=None, mode=None, title=""):
         """Return a mosaic of all the images provided; if none are specified,
         use the list accumulated with Mosaic.append()
         
@@ -119,7 +119,7 @@ class Mosaic(object):
             smosaic <<= im
 
         if frame is not None:
-            ds9.mtv(mosaic, frame=frame)
+            ds9.mtv(mosaic, frame=frame, title=title)
 
             if images == self.images:
                 self.drawLabels(frame=frame)

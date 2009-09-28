@@ -36,10 +36,10 @@ namespace image {
         Wcs(PointD crval, PointD crpix, Eigen::Matrix2d CD, double equinox=2000.0,
             std::string raDecSys="FK5");
         Wcs(PointD crval, PointD crpix, Eigen::Matrix2d CD, 
-            Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> sipA, ///< Forward distortion Matrix A
-            Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> sipB, ///< Forward distortion Matrix B
-            Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> sipAp, ///<Reverse distortion Matrix Ap
-            Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> sipBp,  ///<Reverse distortion Matrix Bp
+            Eigen::MatrixXd sipA, ///< Forward distortion Matrix A
+            Eigen::MatrixXd sipB, ///< Forward distortion Matrix B
+            Eigen::MatrixXd sipAp, ///<Reverse distortion Matrix Ap
+            Eigen::MatrixXd sipBp,  ///<Reverse distortion Matrix Bp
             double equinox=2000.0,
             std::string raDecSys="FK5"
            );
@@ -77,10 +77,14 @@ namespace image {
         double pixArea(lsst::afw::image::PointD pix) const;
 
     private:
-        void initWcslib(PointD crval, PointD crpix, Eigen::Matrix2d CD, double equinox, std::string raDecSys);
-        void setCtypesToLinear();
-        void setCtypesToSIP();
-
+        void initWcslib(PointD crval,                   
+                        PointD crpix,                   
+                        Eigen::Matrix2d CD,             
+                        double equinox,                 
+                        std::string raDecSys,           
+                        std::string ctype1="RA---TAN",  
+                        std::string ctype2="DEC--TAN"   
+                        );
 
         
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::WcsFormatter);

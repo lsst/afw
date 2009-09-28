@@ -119,7 +119,6 @@ void lsst::afw::math::Kernel::setSpatialParameters(const std::vector<std::vector
  *
  * Warning: this is a low-level function that assumes kernelParams is the right length.
  * It will fail in unpredictable ways if that condition is not met.
- * The only reason it is not protected is because the convolveLinear function needs it.
  */
 void lsst::afw::math::Kernel::computeKernelParametersFromSpatialModel(std::vector<double> &kernelParams, double x, double y) const {
     std::vector<double>::iterator paramIter = kernelParams.begin();
@@ -131,6 +130,9 @@ void lsst::afw::math::Kernel::computeKernelParametersFromSpatialModel(std::vecto
 
 /**
  * @brief Return a copy of the specified spatial function (one component of the spatial model)
+ *
+ * @return a pointer to a spatial function. The function is a copy, so setting its parameters
+ * has no effect on the kernel.
  *
  * @throw lsst::pex::exceptions::InvalidParameterException if kernel not spatially varying
  * @throw lsst::pex::exceptions::InvalidParameterException if index out of range
@@ -148,6 +150,22 @@ lsst::afw::math::Kernel::SpatialFunctionPtr lsst::afw::math::Kernel::getSpatialF
         }
     }
     return _spatialFunctionList[index]->copy();
+}
+
+/**
+ * @brief Return a list of copies of the spatial functions.
+ *
+ * @return a list of pointers to spatial functions. The functions are copies, so setting their parameters
+ * has no effect on the kernel.
+ */
+std::vector<lsst::afw::math::Kernel::SpatialFunctionPtr> lsst::afw::math::Kernel::getSpatialFunctionList(
+) const {
+    std::vector<SpatialFunctionPtr> spFuncCopyList;
+    for (std::vector<SpatialFunctionPtr>::const_iterator spFuncIter = _spatialFunctionList.begin();
+        spFuncIter != _spatialFunctionList.end(); ++spFuncIter) {
+        spFuncCopyList.push_back((**spFuncIter).copy());
+    }
+    return spFuncCopyList;
 }
 
 /**

@@ -2,53 +2,15 @@ namespace lsst { namespace afw { namespace image {
 /**
  \page imageIterators Image Iterators
 
-The simplest way to visit all the pixels in an %image is to use an STL-compliant
-iterator (this code's in \link Image_1.cc\endlink):
-\dontinclude Image_1.cc
+(Return to \ref secImage)
 
-Start by including Image.h and declaring namespace alias and a typedef for our favoured %image type
-\until main
-Declare an Image and set it to 100
-\until img = 100
-Set every %pixel of the %image to 100
-\until }
-You could use other iterators instead:
-\until }
-\until }
+This code is in \link Image_1.cc\endlink.
+Note that \link maskedImageIterators MaskedImage iterators\endlink work almost identically,
+the main difference being how pixel values are set.
 
-While this works, it isn't the most efficient way to access all the %image's
-pixels as the Image's pixels may not be contiguous in memory so a test for end-of-row
-is needed after every %pixel (we do guarantee
-that a \e row's pixels will be contiguous).  It's better to write:
-\until }
-\until }
-In addition to \c row_begin there's also \c x_at(X,Y) to start/end the the iteration at
-a given %pixel.
+If you need access to nearby pixels, see the \link imageLocators Image locator\endlink tutorial.
 
-For contiguous images (i.e. images that you know not to be subimages created via
-\c Image(\c Image, \c BBox) there's a simple and slightly faster method:
-\until }
-Note that we're using \c fast_iterator, not \c iterator, and that the order we
-use to traverse the image is undefined.
-A \c lsst::pex::exceptions::Runtime
-exception is thrown if you try to use this on subimages.
-
-Note that we're using an \c x_iterator instead of an \c iterator; this might
-suggest that the following is also possible, and indeed it is:
-\until }
-\until }
-As the comment suggests, this is probably not a good idea unless you really
-must traverse the %image up the columns --- and in that case, you might consider
-doing a few columns at a time to help the cache performance:
-\until }
-\until }
-\until }
-\until }
-
-Finally write some output files and close out \c main():
-\until }
-
-If you need access to nearby pixels, see \link imageLocators locators\endlink.
+\include Image_1.cc
 
 \example Image_1.cc
  */
@@ -56,68 +18,15 @@ If you need access to nearby pixels, see \link imageLocators locators\endlink.
 /**
  \page maskedImageIterators MaskedImage Iterators
 
-(You might be interested to compare this example with the discussion
-of Image \link imageIterators iterators\endlink; apart from an include
-file and a typedef and some pedagogical code, the only difference is
-the use of <tt>ImageT::Pixel(100, 0x1, 10)</tt> as the assigned pixel
-value instead of \c 100).
+(Return to \ref secImage)
 
-The simplest way to visit all the pixels in an %image is to use an STL-compliant
-iterator (this code's in \link Image_1.cc\endlink):
-\dontinclude MaskedImage_1.cc
+This code is in \link MaskedImage_2.cc\endlink.
+Note that \link imageIterators Image iterators\endlink work almost identically,
+the main difference being how pixel values are set.
 
-Start by including MaskedImage.h and declaring a namespace alias and a typedef for our favoured %image type
-\until main
-Declare a MaskedImage and set it to 100
-\until getImage()
-Set the mask and variance too
-\until getVariance()
-Set every %pixel of the %image to (100, 0x1, 10).
-\until }
-Note how we can access the e.g. mask.  If we had
-said <tt>*ptr = 100;</tt> we'd have set the %image to \c 100 and cleared the mask and variance.
+If you need access to nearby pixels, see the \link maskedImageLocators MaskedImage locator\endlink tutorial.
 
-You could use other iterators instead:
-\until }
-Here we're setting all three pixel components (%image, mask, and variance) in one assignment,
-as well as using a different style of iterator.  Here's another iterator in action:
-\until }
-
-While this works, it isn't the most efficient way to access all the %image's
-pixels as the Image's pixels may not be contiguous in memory so a test for end-of-row
-is needed after every %pixel (we do guarantee
-that a \e row's pixels will be contiguous).  It's better to write:
-\until }
-\until }
-
-For contiguous images (i.e. images that you know not to be subimages created via
-\c MaskedImage(\c MaskedImage, \c BBox) there's a simple and slightly faster method:
-\until }
-Note that we're using \c fast_iterator, not \c iterator, and that the order we
-use to traverse the image is undefined.
-A \c lsst::pex::exceptions::Runtime
-exception is thrown if you try to use this on subimages.
-
-In addition to \c row_begin there's also \c x_at(X,Y) to start/end the the iteration at
-a given %pixel.
-
-Note that we're using an \c x_iterator instead of an \c iterator; this might
-suggest that the following is also possible, and indeed it is:
-\until }
-\until }
-As the comment suggests, this is probably not a good idea unless you really
-must traverse the %image up the columns --- and in that case, you might consider
-doing a few columns at a time to help the cache performance:
-\until }
-\until }
-\until }
-\until }
-
-Finally write an output file and close out \c main():
-
-\until }
-
-If you need access to nearby pixels, see \link maskedImageLocators MaskedImage locators\endlink.
+\include MaskedImage_1.cc
 
 \example MaskedImage_1.cc
  */
@@ -128,6 +37,8 @@ If you need access to nearby pixels, see \link maskedImageLocators MaskedImage l
 namespace lsst { namespace afw { namespace image {
 /**
  \page imageLocators Image Locators
+
+(Return to \ref secImage)
 
 \link imageIterators Iterators\endlink provide access to an %image, %pixel by %pixel.  You
 often want access to neighbouring pixels (e.g. computing a gradient, or smoothing).
@@ -194,6 +105,8 @@ Finally write some output files and close out \c main():
 
 /**
  \page maskedImageLocators MaskedImage Locators
+
+(Return to \ref secImage)
 
 (You might be interested to compare this example with the discussion
 of Image \link imageLocators locators\endlink; apart from an include

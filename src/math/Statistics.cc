@@ -35,7 +35,7 @@ namespace {
  */
 template<typename Image, typename Mask>
 math::Statistics::Statistics(Image const &img, ///< Image whose properties we want
-                             Mask const &msk,   
+                             Mask const &msk,   ///< Mask to control which pixels are included
                              int const flags, ///< Describe what we want to calculate
                              StatisticsControl const& sctrl ///< Control how things are calculated
                             ) : _flags(flags),
@@ -475,7 +475,7 @@ namespace lsst { namespace afw { namespace math {
 template<>
 Statistics::Statistics(
                        image::Mask<image::MaskPixel> const& msk, ///< Mask whose properties we want
-                       image::Mask<image::MaskPixel> const& dmsk, ///
+                       image::Mask<image::MaskPixel> const& dmsk, ///< A mask (currently dummy) to control which pixels
                        int const flags,                          ///< Describe what we want to calculate
                        StatisticsControl const& sctrl            ///< Control how things are calculated
                       ) :
@@ -550,12 +550,13 @@ Statistics makeStatistics(image::Mask<image::MaskPixel> const &msk, ///< Image (
 #define INSTANTIATE_MASK_STATISTICS(TYPE) \
     template math::Statistics::Statistics(image::Mask<image::MaskPixel> const &msk, image::Mask<image::MaskPixel> const &dmsk, int const flags, StatisticsControl const &sctrl);
 */
-    
-#define INSTANTIATE_IMAGE_STATISTICS(TYPE) \
-    INSTANTIATE_MASKEDIMAGE_STATISTICS(TYPE) \
-    INSTANTIATE_REGULARIMAGE_STATISTICS(TYPE) \
-    INSTANTIATE_VECTOR_STATISTICS(TYPE)
-    
+
+
+#define INSTANTIATE_IMAGE_STATISTICS(T) \
+    INSTANTIATE_MASKEDIMAGE_STATISTICS(T); \
+    INSTANTIATE_REGULARIMAGE_STATISTICS(T);     \
+    INSTANTIATE_VECTOR_STATISTICS(T);
+
 
 INSTANTIATE_IMAGE_STATISTICS(double);
 INSTANTIATE_IMAGE_STATISTICS(float);

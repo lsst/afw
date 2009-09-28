@@ -26,6 +26,7 @@ lsst::afw::math::LinearCombinationKernel::LinearCombinationKernel()
     Kernel(),
     _kernelList(),
     _kernelImagePtrList(),
+    _kernelSumList(),
     _kernelParams()
 { }
 
@@ -39,6 +40,7 @@ lsst::afw::math::LinearCombinationKernel::LinearCombinationKernel(
     Kernel(kernelList[0]->getWidth(), kernelList[0]->getHeight(), kernelList.size()),
     _kernelList(kernelList),
     _kernelImagePtrList(),
+    _kernelSumList(),
     _kernelParams(kernelParameters)
 {
     checkKernelList(kernelList);
@@ -55,6 +57,7 @@ lsst::afw::math::LinearCombinationKernel::LinearCombinationKernel(
     Kernel(kernelList[0]->getWidth(), kernelList[0]->getHeight(), kernelList.size(), spatialFunction),
     _kernelList(kernelList),
     _kernelImagePtrList(),
+    _kernelSumList(),
     _kernelParams(std::vector<double>(kernelList.size()))
 {
     checkKernelList(kernelList);
@@ -73,6 +76,7 @@ lsst::afw::math::LinearCombinationKernel::LinearCombinationKernel(
     Kernel(kernelList[0]->getWidth(), kernelList[0]->getHeight(), spatialFunctionList),
     _kernelList(kernelList),
     _kernelImagePtrList(),
+    _kernelSumList(),
     _kernelParams(std::vector<double>(kernelList.size()))
 {
     if (kernelList.size() != spatialFunctionList.size()) {
@@ -95,28 +99,17 @@ double lsst::afw::math::LinearCombinationKernel::computeImage(
     if (this->isSpatiallyVarying()) {
         this->computeKernelParametersFromSpatialModel(this->_kernelParams, x, y);
     }
-    
+
+    image = 0.0;
+    double imSum = 0.0;
     std::vector<lsst::afw::image::Image<PixelT>::Ptr>::const_iterator kImPtrIter = _kernelImagePtrList.begin();
+    std::vector<double>::const_iterator kSumIter = _kernelSumList.begin();
     std::vector<double>::const_iterator kParIter = _kernelParams.begin();
-    //
-    // Temp image to generate the kernel*components into.  Image::operator*() doesn't exist
-    // as it'd have to generate a temporary, and I don't think it's a good idea to make tmps
-    // without explicit requests from the user.
-    //
     lsst::afw::image::Image<PixelT>::Ptr tmpImage(new lsst::afw::image::Image<PixelT>(image.getDimensions()));
-
-    image <<= **kImPtrIter;
-    image *= *kParIter;
-    ++kImPtrIter, ++kParIter;
-    
-    for ( ; kImPtrIter != _kernelImagePtrList.end(); ++kImPtrIter, ++kParIter) {
-        *tmpImage <<= **kImPtrIter;
-        *tmpImage *= *kParIter;
-        image += *tmpImage;
+    for ( ; kImPtrIter != _kernelImagePtrList.end(); ++kImPtrIter, ++kSumIter, ++kParIter) {
+        image.scaledPlus(*kParIter, **kImPtrIter);
+        imSum += (*kSumIter) * (*kParIter);
     }
-
-    double imSum = 0;
-    imSum = std::accumulate(image.begin(), image.end(), imSum);
 
     if (doNormalize) {
         image /= imSum;
@@ -197,15 +190,12 @@ void lsst::afw::math::LinearCombinationKernel::setKernelParameter(unsigned int i
 //
 
 /**
- * Compute _kernelImagePtrList, the internal archive of kernel images.
+ * Compute _kernelImagePtrList, the internal archive of kernel images, and _kernelSumList, the sum of each kernel image.
  */
 void lsst::afw::math::LinearCombinationKernel::_computeKernelImageList() {
-    std::vector<double>::const_iterator kParIter = _kernelParams.begin();
     for (KernelList::const_iterator kIter = _kernelList.begin(), kEnd = _kernelList.end(); kIter != kEnd; ++kIter) {
         lsst::afw::image::Image<PixelT>::Ptr kernelImagePtr(new lsst::afw::image::Image<PixelT>(this->getDimensions()));
-
-        (void)(*kIter)->computeImage(*kernelImagePtr, false);
-
+        _kernelSumList.push_back((*kIter)->computeImage(*kernelImagePtr, false));
         _kernelImagePtrList.push_back(kernelImagePtr);
     }
 }
