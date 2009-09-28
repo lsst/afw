@@ -42,7 +42,7 @@ namespace math {
         )
         :
             SeparableKernel(2 * order, 2 * order,
-                LanczosFunction1<Kernel::PixelT>(order), LanczosFunction1<Kernel::PixelT>(order))
+                LanczosFunction1<Kernel::Pixel>(order), LanczosFunction1<Kernel::Pixel>(order))
         {};
         
         virtual ~LanczosWarpingKernel() {};
@@ -73,9 +73,9 @@ namespace math {
          * (which is why it defined in the BilinearWarpingKernel class instead of
          * being made available as a standalone function).
          */
-        class BilinearFunction1: public Function1<Kernel::PixelT> {
+        class BilinearFunction1: public Function1<Kernel::Pixel> {
         public:
-            typedef Function1<Kernel::PixelT>::Ptr Function1Ptr;
+            typedef Function1<Kernel::Pixel>::Ptr Function1Ptr;
     
             /**
              * \brief Construct a Bilinear interpolation function
@@ -83,7 +83,7 @@ namespace math {
             explicit BilinearFunction1(
                 double fracPos)    ///< fractional position; must be >= 0 and < 1
             :
-                Function1<Kernel::PixelT>(1)
+                Function1<Kernel::Pixel>(1)
             {
                 this->_params[0] = fracPos;
             }
@@ -93,7 +93,7 @@ namespace math {
                 return Function1Ptr(new BilinearFunction1(this->_params[0]));
             }
             
-            virtual Kernel::PixelT operator() (double x) const;
+            virtual Kernel::Pixel operator() (double x) const;
             
             virtual std::string toString(void) const;
         };

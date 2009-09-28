@@ -44,8 +44,8 @@ int main(int argc, char **argv) {
         for (int ii = 0; ii < 3; ++ii) {
             double xSigma = (ii == 1) ? MaxSigma : MinSigma;
             double ySigma = (ii == 2) ? MinSigma : MaxSigma;
-            lsst::afw::math::GaussianFunction2<lsst::afw::math::Kernel::PixelT> gaussFunc(xSigma, ySigma);
-            lsst::afw::math::Kernel::PtrT basisKernelPtr(
+            lsst::afw::math::GaussianFunction2<lsst::afw::math::Kernel::Pixel> gaussFunc(xSigma, ySigma);
+            lsst::afw::math::Kernel::Ptr basisKernelPtr(
 			new lsst::afw::math::AnalyticKernel(KernelCols, KernelRows, gaussFunc)
             );
             kernelVec.push_back(basisKernelPtr);

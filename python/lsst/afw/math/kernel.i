@@ -30,18 +30,29 @@ SWIG_SHARED_PTR_DERIVED(Kernel, lsst::daf::data::LsstBase, lsst::afw::math::Kern
 %include "lsst/afw/math/Kernel.h"
 %include "lsst/afw/math/KernelFunctions.h"
 
-%template(VectorKernel)         std::vector<lsst::afw::math::Kernel::PtrT>;
-%template(VectorKernelA)        std::vector<lsst::afw::math::AnalyticKernel::PtrT>;
-%template(VectorKernelDF)       std::vector<lsst::afw::math::DeltaFunctionKernel::PtrT>;
-%template(KernelListD_)         lsst::afw::math::KernelList<>;
-%template(KernelListD)          lsst::afw::math::KernelList<lsst::afw::math::Kernel>;
-%template(AnalyticKernelListD)  lsst::afw::math::KernelList<lsst::afw::math::AnalyticKernel>;
-%template(DeltaFunctionKernelListD)  lsst::afw::math::KernelList<lsst::afw::math::DeltaFunctionKernel>;
+%template(VectorKernel)                     std::vector<lsst::afw::math::Kernel::Ptr>;
+// these are required for KernelList below
+%template(VectorAnalyticKernel)             std::vector<lsst::afw::math::AnalyticKernel::Ptr>;
+%template(VectorDeltaFunctionKernel)        std::vector<lsst::afw::math::DeltaFunctionKernel::Ptr>;
+%template(VectorFixedKernel)                std::vector<lsst::afw::math::FixedKernel::Ptr>;
+%template(VectorLinearCombinationKernel)    std::vector<lsst::afw::math::LinearCombinationKernel::Ptr>;
+%template(VectorSeparableKernel)            std::vector<lsst::afw::math::SeparableKernel::Ptr>;
+%template(KernelList_)                  lsst::afw::math::KernelList<>;
+// the trailing D required; nothing happens if one uses KernelList
+%template(KernelListD)                   lsst::afw::math::KernelList<lsst::afw::math::Kernel>;
+%template(AnalyticKernelList)           lsst::afw::math::KernelList<lsst::afw::math::AnalyticKernel>;
+%template(DeltaFunctionKernelList)      lsst::afw::math::KernelList<lsst::afw::math::DeltaFunctionKernel>;
+%template(FixedKernelList)              lsst::afw::math::KernelList<lsst::afw::math::FixedKernel>;
+%template(LinearCombinationKernelList)  lsst::afw::math::KernelList<lsst::afw::math::LinearCombinationKernel>;
+%template(SeparableKernelList)          lsst::afw::math::KernelList<lsst::afw::math::SeparableKernel>;
 
 // Create conversion constructors 
 %extend lsst::afw::math::KernelList<lsst::afw::math::Kernel> {
     %template(KernelListDD) KernelList<lsst::afw::math::AnalyticKernel>; // Conversion constructor
     %template(KernelListDD) KernelList<lsst::afw::math::DeltaFunctionKernel>; // Conversion constructor
+    %template(KernelListDD) KernelList<lsst::afw::math::FixedKernel>; // Conversion constructor
+    %template(KernelListDD) KernelList<lsst::afw::math::LinearCombinationKernel>; // Conversion constructor
+    %template(KernelListDD) KernelList<lsst::afw::math::SeparableKernel>; // Conversion constructor
 };
 
 //
@@ -61,18 +72,18 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
 //
 // Note that IMAGE is a macro, not a class name
 %define %convolutionFuncsByType(IMAGE, PIXTYPE1, PIXTYPE2)
-    %template(convolve)       lsst::afw::math::convolve<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2),
-                                                        lsst::afw::math::Kernel>;
-    %template(convolve)       lsst::afw::math::convolve<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2),
-                                                        lsst::afw::math::AnalyticKernel>;
-    %template(convolve)       lsst::afw::math::convolve<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2),
-                                                        lsst::afw::math::DeltaFunctionKernel>;
-    %template(convolve)       lsst::afw::math::convolve<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2),
-                                                        lsst::afw::math::FixedKernel>;
-    %template(convolve)       lsst::afw::math::convolve<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2),
-                                                        lsst::afw::math::LinearCombinationKernel>;
-    %template(convolve)       lsst::afw::math::convolve<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2),
-                                                        lsst::afw::math::SeparableKernel>;
+    %template(convolve) lsst::afw::math::convolve<
+        IMAGE(PIXTYPE1), IMAGE(PIXTYPE2), lsst::afw::math::Kernel>;
+    %template(convolve) lsst::afw::math::convolve<
+        IMAGE(PIXTYPE1), IMAGE(PIXTYPE2), lsst::afw::math::AnalyticKernel>;
+    %template(convolve) lsst::afw::math::convolve<
+        IMAGE(PIXTYPE1), IMAGE(PIXTYPE2), lsst::afw::math::DeltaFunctionKernel>;
+    %template(convolve) lsst::afw::math::convolve<
+        IMAGE(PIXTYPE1), IMAGE(PIXTYPE2), lsst::afw::math::FixedKernel>;
+    %template(convolve) lsst::afw::math::convolve<
+        IMAGE(PIXTYPE1), IMAGE(PIXTYPE2), lsst::afw::math::LinearCombinationKernel>;
+    %template(convolve) lsst::afw::math::convolve<
+        IMAGE(PIXTYPE1), IMAGE(PIXTYPE2), lsst::afw::math::SeparableKernel>;
 %enddef
 //
 // Now a macro to specify Image and MaskedImage

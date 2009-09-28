@@ -625,7 +625,7 @@ afwDetect::Footprint::Ptr growFootprintSlow(
 	}
     }
 
-    afwMath::FixedKernel::PtrT circle(new afwMath::FixedKernel(*circle_im));
+    afwMath::FixedKernel::Ptr circle(new afwMath::FixedKernel(*circle_im));
     // Here's the actual grow step
     afwImage::MaskedImage<int>::Ptr convolvedImage(new afwImage::MaskedImage<int>(idImage->getDimensions()));
     afwMath::convolve(*convolvedImage->getImage(), *idImage, *circle, false);

@@ -13,7 +13,7 @@
 using lsst::daf::base::PropertySet;
 
 int main() {
-    typedef float pixelType;
+    typedef float Pixel;
 
     { //memory (de)allocation block
         char *afwdataCStr = getenv("AFWDATA_DIR");
@@ -29,7 +29,7 @@ int main() {
 
         PropertySet::Ptr metadata(new PropertySet);
         int const hdu = 0;
-        lsst::afw::image::MaskedImage<pixelType, lsst::afw::image::MaskPixel> mImage(inFilename, hdu, metadata);
+        lsst::afw::image::MaskedImage<Pixel, lsst::afw::image::MaskPixel> mImage(inFilename, hdu, metadata);
         lsst::afw::image::Wcs wcs(metadata);
         
         std::cout << "making a copy of a wcs" << std::endl;

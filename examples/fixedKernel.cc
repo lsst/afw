@@ -9,16 +9,16 @@
 using namespace std;
 
 int main() {
-    typedef lsst::afw::math::Kernel::PixelT pixelType;
+    typedef lsst::afw::math::Kernel::Pixel Pixel;
 
     double sigmaX = 2.0;
     double sigmaY = 2.5;
     unsigned int kernelCols = 5;
     unsigned int kernelRows = 4;
 
-    lsst::afw::math::GaussianFunction2<pixelType> gaussFunc(sigmaX, sigmaY);
+    lsst::afw::math::GaussianFunction2<Pixel> gaussFunc(sigmaX, sigmaY);
     lsst::afw::math::AnalyticKernel analyticKernel(kernelCols, kernelRows, gaussFunc);
-    lsst::afw::image::Image<pixelType> analyticImage(analyticKernel.getDimensions());
+    lsst::afw::image::Image<Pixel> analyticImage(analyticKernel.getDimensions());
     (void)analyticKernel.computeImage(analyticImage, true);
     analyticImage *= 47.3; // denormalize by some arbitrary factor
     

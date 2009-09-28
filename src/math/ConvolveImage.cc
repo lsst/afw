@@ -84,10 +84,12 @@ include/lsst/afw/image/Pixel.h:420:   instantiated from ÔExprT1 lsst::afw::image
     inline void setEdgePixels(
         OutImageT& outImage,        ///< %image whose edge pixels are to be set
         afwMath::Kernel const &kernel,  ///< convolution kernel; kernel size is used to determine the edge
-        InImageT const &inImage,    ///< %image whose edge pixels are to be copied; ignored if copyEdge is false
+        InImageT const &inImage,    ///< %image whose edge pixels are to be copied;
+                                    ///< ignored if copyEdge is false
         bool copyEdge,              ///< if false (default), set edge pixels to the standard edge pixel;
                                     ///< if true, copy edge pixels from input and set EDGE bit of mask
-        lsst::afw::image::detail::Image_tag ///< lsst::afw::image::detail::image_traits<ImageT>::image_category()
+        lsst::afw::image::detail::Image_tag
+            ///< lsst::afw::image::detail::image_traits<ImageT>::image_category()
                                 
     ) {
         const unsigned int imWidth = outImage.getWidth();
@@ -110,7 +112,8 @@ include/lsst/afw/image/Pixel.h:420:   instantiated from ÔExprT1 lsst::afw::image
         bboxList.push_back(afwImage::BBox(afwImage::PointI(0, 0), imWidth, kCtrY));
         bboxList.push_back(afwImage::BBox(afwImage::PointI(0, imHeight - numHeight), imWidth, numHeight));
         bboxList.push_back(afwImage::BBox(afwImage::PointI(0, kCtrY), kCtrX, imHeight + 1 - kHeight));
-        bboxList.push_back(afwImage::BBox(afwImage::PointI(imWidth - numWidth, kCtrY), numWidth, imHeight + 1 - kHeight));
+        bboxList.push_back(afwImage::BBox(afwImage::PointI(imWidth - numWidth, kCtrY),
+            numWidth, imHeight + 1 - kHeight));
 
         for (std::vector<afwImage::BBox>::const_iterator bboxIter = bboxList.begin();
             bboxIter != bboxList.end(); ++bboxIter) {
@@ -135,10 +138,11 @@ include/lsst/afw/image/Pixel.h:420:   instantiated from ÔExprT1 lsst::afw::image
     inline void setEdgePixels(
         OutImageT& outImage,        ///< %image whose edge pixels are to be set
         afwMath::Kernel const &kernel,  ///< convolution kernel; kernel size is used to determine the edge
-        InImageT const &inImage,    ///< %image whose edge pixels are to be copied; ignored if copyEdge is false
+        InImageT const &inImage,    ///< %image whose edge pixels are to be copied; ignored if copyEdge false
         bool copyEdge,              ///< if false (default), set edge pixels to the standard edge pixel;
                                     ///< if true, copy edge pixels from input and set EDGE bit of mask
-        lsst::afw::image::detail::MaskedImage_tag   ///< lsst::afw::image::detail::image_traits<MaskedImageT>::image_category()
+        lsst::afw::image::detail::MaskedImage_tag
+            ///< lsst::afw::image::detail::image_traits<MaskedImageT>::image_category()
                                 
     ) {
         const unsigned int imWidth = outImage.getWidth();
@@ -161,7 +165,8 @@ include/lsst/afw/image/Pixel.h:420:   instantiated from ÔExprT1 lsst::afw::image
         bboxList.push_back(afwImage::BBox(afwImage::PointI(0, 0), imWidth, kCtrY));
         bboxList.push_back(afwImage::BBox(afwImage::PointI(0, imHeight - numHeight), imWidth, numHeight));
         bboxList.push_back(afwImage::BBox(afwImage::PointI(0, kCtrY), kCtrX, imHeight + 1 - kHeight));
-        bboxList.push_back(afwImage::BBox(afwImage::PointI(imWidth - numWidth, kCtrY), numWidth, imHeight + 1 - kHeight));
+        bboxList.push_back(afwImage::BBox(afwImage::PointI(imWidth - numWidth, kCtrY),
+            numWidth, imHeight + 1 - kHeight));
 
         afwImage::MaskPixel const edgeMask = afwImage::Mask<afwImage::MaskPixel>::getPlaneBitMask("EDGE");
         for (std::vector<afwImage::BBox>::const_iterator bboxIter = bboxList.begin();
@@ -204,7 +209,7 @@ void afwMath::basicConvolve(
     afwMath::Kernel const& kernel,  ///< convolution kernel
     bool doNormalize                ///< if True, normalize the kernel, else use "as is"
 ) {
-    typedef typename afwMath::Kernel::PixelT KernelPixel;
+    typedef typename afwMath::Kernel::Pixel KernelPixel;
     typedef afwImage::Image<KernelPixel> KernelImage;
 
     typedef typename KernelImage::const_x_iterator KernelXIterator;
@@ -276,7 +281,8 @@ void afwMath::basicConvolve(
 
                 KernelPixel kSum = kernel.computeImage(kernelImage, false, colPos, rowPos);
                 KernelXYLocator kernelLoc = kernelImage.xy_at(0,0);
-                *cnvXIter = afwMath::convolveAtAPoint<OutImageT, InImageT>(inImLoc, kernelLoc, kWidth, kHeight);
+                *cnvXIter = afwMath::convolveAtAPoint<OutImageT, InImageT>(
+                    inImLoc, kernelLoc, kWidth, kHeight);
                 if (doNormalize) {
                     *cnvXIter = *cnvXIter/kSum;
                 }
@@ -319,10 +325,12 @@ void afwMath::basicConvolve(
     assert (!kernel.isSpatiallyVarying());
 
     if (convolvedImage.getDimensions() != inImage.getDimensions()) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "convolvedImage not the same size as inImage");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+            "convolvedImage not the same size as inImage");
     }
     if (convolvedImage.getDimensions() < kernel.getDimensions()) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "inImage smaller than kernel in columns and/or rows");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+            "inImage smaller than kernel in columns and/or rows");
     }
     
     int const mImageWidth = inImage.getWidth(); // size of input region
@@ -375,7 +383,7 @@ void afwMath::basicConvolve(
 ) {
     if (!kernel.isSpatiallyVarying()) {
         // use the standard algorithm for the spatially invariant case
-        typedef typename afwMath::Kernel::PixelT KernelPixel;
+        typedef typename afwMath::Kernel::Pixel KernelPixel;
 
         pexLog::TTrace<4>("lsst.afw.kernel.convolve",
             "basicConvolve LinearCombinationKernel; kernel is not spatially varying");
@@ -438,7 +446,8 @@ void afwMath::basicConvolve(
 
         // iterate over matching pixels of all images to compute output image
         afwMath::Kernel::SpatialFunctionPtr spatialFunctionPtr = kernel.getSpatialFunction(i);
-        std::vector<double> kernelCoeffList(kernel.getNKernelParameters()); // weights of basis images at this point
+        std::vector<double> kernelCoeffList(kernel.getNKernelParameters());
+            // weights of basis images at this point
         for (int cnvY = cnvStartY; cnvY < cnvEndY; ++cnvY) {
             double const rowPos = afwImage::indexToPosition(cnvY);
         
@@ -452,7 +461,8 @@ void afwMath::basicConvolve(
                 cnvPixel = afwImage::pixel::plus(cnvPixel, (*basisXIter) * basisCoeff, noiseCorrelationCoeff);
                 *cnvXIter = cnvPixel;
                 // note: cnvPixel avoids compiler complaints; the following does not build:
-                // *cnvXIter = afwImage::pixel::plus(*cnvXIter, (*basisXIter) * basisCoeff, noiseCorrelationCoeff);
+                // *cnvXIter = afwImage::pixel::plus(
+                //      *cnvXIter, (*basisXIter) * basisCoeff, noiseCorrelationCoeff);
             }
         }
     }
@@ -475,7 +485,8 @@ void afwMath::basicConvolve(
                 double const colPos = afwImage::indexToPosition(cnvX);
 
                 std::vector<double>::const_iterator kSumIter = kernelSumList.begin();
-                std::vector<Kernel::SpatialFunctionPtr>::const_iterator spFuncIter = spatialFunctionList.begin();
+                std::vector<Kernel::SpatialFunctionPtr>::const_iterator spFuncIter =
+                    spatialFunctionList.begin();
                 double kSum = 0.0;
                 for ( ; kSumIter != kernelSumList.end(); ++kSumIter, ++spFuncIter) {
                     kSum += (**spFuncIter)(colPos, rowPos) * (*kSumIter);
@@ -498,7 +509,7 @@ void afwMath::basicConvolve(
     afwMath::SeparableKernel const &kernel, ///< convolution kernel
     bool doNormalize                ///< if True, normalize the kernel, else use "as is"
 ) {
-    typedef typename afwMath::Kernel::PixelT KernelPixel;
+    typedef typename afwMath::Kernel::Pixel KernelPixel;
     typedef typename std::vector<KernelPixel> KernelVector;
     typedef KernelVector::const_iterator KernelIterator;
     typedef typename InImageT::const_x_iterator InXIterator;

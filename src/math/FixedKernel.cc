@@ -14,7 +14,9 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
 
-namespace ex = lsst::pex::exceptions;
+namespace pexExcept = lsst::pex::exceptions;
+namespace afwMath = lsst::afw::math;
+namespace afwImage = lsst::afw::image;
 
 //
 // Constructors
@@ -23,7 +25,7 @@ namespace ex = lsst::pex::exceptions;
 /**
  * @brief Construct an empty FixedKernel of size 0x0
  */
-lsst::afw::math::FixedKernel::FixedKernel()
+afwMath::FixedKernel::FixedKernel()
 :
     Kernel(),
     _image(),
@@ -33,14 +35,14 @@ lsst::afw::math::FixedKernel::FixedKernel()
 /**
  * @brief Construct a FixedKernel from an image
  */
-lsst::afw::math::FixedKernel::FixedKernel(
-    lsst::afw::image::Image<PixelT> const &image)     ///< image for kernel
+afwMath::FixedKernel::FixedKernel(
+    afwImage::Image<Pixel> const &image)     ///< image for kernel
 :
     Kernel(image.getWidth(), image.getHeight(), 0),
     _image(image, true),
     _sum(0) {
 
-    typedef lsst::afw::image::Image<PixelT>::x_iterator x_iterator;
+    typedef afwImage::Image<Pixel>::x_iterator x_iterator;
     double imSum = 0.0;
     for (int y = 0; y != image.getHeight(); ++y) {
         for (x_iterator imPtr = image.row_begin(y), imEnd = image.row_end(y); imPtr != imEnd; ++imPtr) {
@@ -53,14 +55,14 @@ lsst::afw::math::FixedKernel::FixedKernel(
 //
 // Member Functions
 //
-double lsst::afw::math::FixedKernel::computeImage(
-    lsst::afw::image::Image<PixelT> &image,
+double afwMath::FixedKernel::computeImage(
+    afwImage::Image<Pixel> &image,
     bool doNormalize,
     double x,
     double y
 ) const {
     if (image.getDimensions() != this->getDimensions()) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "image is the wrong size");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "image is the wrong size");
     }
 
     double multFactor = 1.0;
@@ -71,11 +73,12 @@ double lsst::afw::math::FixedKernel::computeImage(
         imSum = this->_sum;
     }
 
-    typedef lsst::afw::image::Image<PixelT>::x_iterator x_iterator;
+    typedef afwImage::Image<Pixel>::x_iterator x_iterator;
 
     for (int y = 0; y != this->getHeight(); ++y) {
         x_iterator kPtr = this->_image.row_begin(y);
-        for (x_iterator imPtr = image.row_begin(y), imEnd = image.row_end(y); imPtr != imEnd; ++imPtr, ++kPtr) {
+        for (x_iterator imPtr = image.row_begin(y), imEnd = image.row_end(y);
+            imPtr != imEnd; ++imPtr, ++kPtr) {
             imPtr[0] = multFactor*kPtr[0];
         }
     }
@@ -83,7 +86,7 @@ double lsst::afw::math::FixedKernel::computeImage(
     return imSum;
 }
 
-std::string lsst::afw::math::FixedKernel::toString(std::string prefix) const {
+std::string afwMath::FixedKernel::toString(std::string prefix) const {
     std::ostringstream os;
     os << prefix << "FixedKernel:" << std::endl;
     os << prefix << "..sum: " << _sum << std::endl;
