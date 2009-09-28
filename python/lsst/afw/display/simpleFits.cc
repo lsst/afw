@@ -63,7 +63,7 @@ int Card::write(int fd,
 
     if (value.type() == typeid(std::string)) {
         const char *str = boost::any_cast<std::string>(value).c_str();
-        if(keyword == "" ||
+        if (keyword == "" ||
            keyword == "COMMENT" || keyword == "END" || keyword == "HISTORY") {
             sprintf(card, "%-8.8s%-72s", keyword.c_str(), str);
         } else {
@@ -89,11 +89,11 @@ int Card::write(int fd,
 /*
  * Write record if full
  */
-    if(++ncard == 36) {
-	if(posix::write(fd, record, FITS_SIZE) != FITS_SIZE) {
-	    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Cannot write header record");
-	}
-	ncard = 0;
+    if (++ncard == 36) {
+        if (posix::write(fd, record, FITS_SIZE) != FITS_SIZE) {
+                throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Cannot write header record");
+            }
+            ncard = 0;
     }
    
     return ncard;
@@ -109,7 +109,7 @@ int Card::write(int fd,
 namespace {
     void flip_high_bit(char *arr,              // array that needs bits swapped
                        const int n) {          // number of bytes in arr
-        if(n%2 != 0) {
+        if (n%2 != 0) {
             throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                               (boost::format("Attempt to bit flip odd number of bytes: %d") % n).str());
         }
@@ -127,7 +127,7 @@ namespace {
 namespace {
     void swap_2(char *arr,              // array to swap
                 const int n) {          // number of bytes
-        if(n%2 != 0) {
+        if (n%2 != 0) {
             throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                               (boost::format("Attempt to byte swap odd number of bytes: %d") % n).str());
         }
@@ -143,7 +143,7 @@ namespace {
      */
     void swap_4(char *arr,              // array to swap
                 const int n) {          // number of bytes
-        if(n%4 != 0) {
+        if (n%4 != 0) {
             throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                               (boost::format("Attempt to byte swap non-multiple of 4 bytes: %d") % n).str());
         }
@@ -163,7 +163,7 @@ namespace {
      */
     void swap_8(char *arr,              // array to swap
                 const int n) {          // number of bytes
-        if(n%8 != 0) {
+        if (n%8 != 0) {
             throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                               (boost::format("Attempt to byte swap non-multiple of 8 bytes: %d") % n).str());
         }
@@ -191,13 +191,13 @@ namespace {
                        int naxis,
                        int *naxes,
                        std::list<Card>& cards,  /* extra header cards */
-                       int primary)		/* is this the primary HDU? */
+                       int primary)             /* is this the primary HDU? */
     {
         int i;
-        char record[FITS_SIZE + 1];		/* write buffer */
+        char record[FITS_SIZE + 1];             /* write buffer */
    
         int ncard = 0;
-        if(primary) {
+        if (primary) {
             Card card("SIMPLE", true);
             ncard = card.write(fd, ncard, record);
         } else {
@@ -219,7 +219,7 @@ namespace {
             Card card(key, naxes[i]);
             ncard = card.write(fd, ncard, record);
         }
-        if(primary) {
+        if (primary) {
             Card card("EXTEND", true, "There may be extensions");
             ncard = card.write(fd,ncard,record);
         }
@@ -245,19 +245,19 @@ namespace {
 /*
  * Pad out to a FITS record boundary
  */
-    void pad_to_fits_record(int fd,		// output file descriptor
-                            int npixel,	// number of pixels already written to HDU
-                            int bitpix	// bitpix for this datatype
+    void pad_to_fits_record(int fd,             // output file descriptor
+                            int npixel, // number of pixels already written to HDU
+                            int bitpix  // bitpix for this datatype
                            ) {
         const int bytes_per_pixel = (bitpix > 0 ? bitpix : -bitpix)/8;
         int nbyte = npixel*bytes_per_pixel;
     
-        if(nbyte%FITS_SIZE != 0) {
-            char record[FITS_SIZE + 1];	/* write buffer */
-	
+        if (nbyte%FITS_SIZE != 0) {
+            char record[FITS_SIZE + 1]; /* write buffer */
+        
             nbyte = FITS_SIZE - nbyte%FITS_SIZE;
             memset(record, ' ', nbyte);
-            if(write(fd, record, nbyte) != nbyte) {
+            if (write(fd, record, nbyte) != nbyte) {
                 throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                                   "error padding file to multiple of fits block size");
             }
@@ -271,15 +271,15 @@ namespace {
                        ) {
         const int bytes_per_pixel = (bitpix > 0 ? bitpix : -bitpix)/8;
         int swap_bytes = 0;             // the default
-#if defined(LSST_LITTLE_ENDIAN)		// we'll need to byte swap FITS
-        if(bytes_per_pixel > 1) {
+#if defined(LSST_LITTLE_ENDIAN)         // we'll need to byte swap FITS
+        if (bytes_per_pixel > 1) {
             swap_bytes = 1;
         }
 #endif
 
         char *buff = NULL;              // I/O buffer
         bool allocated = false;         // do I need to free it?
-        if(swap_bytes || bitpix == 16) {
+        if (swap_bytes || bitpix == 16) {
             buff = new char[FITS_SIZE*bytes_per_pixel];
             allocated = true;
         }
@@ -291,17 +291,17 @@ namespace {
                 nwrite = end - ptr;
             }
             
-            if(swap_bytes) {
+            if (swap_bytes) {
                 memcpy(buff, ptr, nwrite);
                 if (bitpix == 16) {     // flip high-order bit
                     flip_high_bit(buff, nwrite);
                 }
 
-                if(bytes_per_pixel == 2) {
+                if (bytes_per_pixel == 2) {
                     swap_2(buff, nwrite);
-                } else if(bytes_per_pixel == 4) {
+                } else if (bytes_per_pixel == 4) {
                     swap_4(buff, nwrite);
-                } else if(bytes_per_pixel == 8) {
+                } else if (bytes_per_pixel == 8) {
                     swap_8(buff, nwrite);
                 } else {
                     fprintf(stderr,"You cannot get here\n");
@@ -316,13 +316,13 @@ namespace {
                 }
             }
             
-            if(write(fd, buff, nwrite) != nwrite) {
+            if (write(fd, buff, nwrite) != nwrite) {
                 perror("Error writing image: ");
                 break;
             }
         }
         
-        if(allocated) {
+        if (allocated) {
             delete buff;
         }
         
@@ -421,17 +421,17 @@ void writeBasicFits(int fd,                                      // file descrip
     /*
      * Basic FITS stuff
      */
-    const int naxis = 2;		// == NAXIS
-    int naxes[naxis];			/* values of NAXIS1 etc */
+    const int naxis = 2;                // == NAXIS
+    int naxes[naxis];                   /* values of NAXIS1 etc */
     naxes[0] = data.getWidth();
     naxes[1] = data.getHeight();
     
     write_fits_hdr(fd, bitpix, naxis, naxes, cards, 1);
     for (int y = 0; y != data.getHeight(); ++y) {
-	if(write_fits_data(fd, bitpix, (char *)(data.row_begin(y)), (char *)(data.row_end(y))) < 0){
-	    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        if (write_fits_data(fd, bitpix, (char *)(data.row_begin(y)), (char *)(data.row_end(y))) < 0){
+            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                               (boost::format("Error writing data for row %d") % y).str());
-	}
+        }
     }
 
     pad_to_fits_record(fd, data.getWidth()*data.getHeight(), bitpix);
@@ -446,15 +446,15 @@ void writeBasicFits(std::string const& filename,                 // file to writ
                     char const* title                            // title to write to DS9
                    ) {
     int fd;
-    if ((filename.c_str())[0] == '|') {		// a command
-	const char *cmd = filename.c_str() + 1;
-	while (isspace(*cmd)) {
-	    cmd++;
-	}
+    if ((filename.c_str())[0] == '|') {         // a command
+        const char *cmd = filename.c_str() + 1;
+        while (isspace(*cmd)) {
+            cmd++;
+        }
 
-	fd = fileno(popen(cmd, "w"));
+        fd = fileno(popen(cmd, "w"));
     } else {
-	fd = creat(filename.c_str(), 777);
+        fd = creat(filename.c_str(), 777);
     }
 
     if (fd < 0) {

@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(convertGilTypes) {
         gil::gray8_image_t,
         gil::gray16_image_t,
         gil::gray16s_image_t,
-	gil::gray32s_image_t,
+        gil::gray32s_image_t,
         gil::gray32f_noscale_image_t,
         gil::gray64f_noscale_image_t
     > image_types;

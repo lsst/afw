@@ -478,7 +478,7 @@ void form::DiaSourceVectorFormatter::write( Persistable const * persistable,
     }
 
     if (typeid(*storage) == typeid(BoostStorage)) {
-    	//persist to BoostStorage
+        //persist to BoostStorage
         BoostStorage * bs = dynamic_cast<BoostStorage *>(storage.get());
         if (bs == 0) {
             throw LSST_EXCEPT(ex::RuntimeErrorException, "Didn't get BoostStorage");
@@ -505,7 +505,7 @@ void form::DiaSourceVectorFormatter::write( Persistable const * persistable,
                 insertRow<DbStorage>(*db, **i);
             }
         } else {
-        	//handle persisting to DbTsvStorage
+            //handle persisting to DbTsvStorage
             DbTsvStorage * db = dynamic_cast<DbTsvStorage *>(storage.get());
             if (db == 0) {
                 throw LSST_EXCEPT(ex::RuntimeErrorException, "Didn't get DbTsvStorage");
@@ -534,7 +534,7 @@ Persistable* form::DiaSourceVectorFormatter::read(
     std::auto_ptr<PersistableDiaSourceVector> p(new PersistableDiaSourceVector());
 
     if (typeid(*storage) == typeid(BoostStorage)) {
-    	//handle retrieval from BoostStorage
+        //handle retrieval from BoostStorage
         BoostStorage* bs = dynamic_cast<BoostStorage *>(storage.get());
         if (bs == 0) {
             throw LSST_EXCEPT(ex::RuntimeErrorException, "Didn't get BoostStorage");
@@ -542,7 +542,7 @@ Persistable* form::DiaSourceVectorFormatter::read(
         //calls serializeDelegate
         bs->getIArchive() & *p;
     } else if (typeid(*storage) == typeid(DbStorage) || typeid(*storage) == typeid(DbTsvStorage)) {
-    	//handle retrieval from DbStorage, DbTsvStorage
+        //handle retrieval from DbStorage, DbTsvStorage
         DbStorage * db = dynamic_cast<DbStorage *>(storage.get());
         if (db == 0) {
             throw LSST_EXCEPT(ex::RuntimeErrorException, "Didn't get DbStorage");
@@ -568,9 +568,9 @@ Persistable* form::DiaSourceVectorFormatter::read(
             //add a DiaSource to sourceVector
             data.setNotNull();
             while (db->next()) {
-            	//Now validate each column. 
-            	//If NULLABLE column is null, set that field null in resulting DiaSource
-            	//else if NON-NULLABLE column is null, throw exception            	
+                //Now validate each column. 
+                //If NULLABLE column is null, set that field null in resulting DiaSource
+                //else if NON-NULLABLE column is null, throw exception
                 if (db->columnIsNull(DIA_SOURCE_ID)) {
                     throw LSST_EXCEPT(ex::RuntimeErrorException, 
                             "null column \"diaSourceId\""); 

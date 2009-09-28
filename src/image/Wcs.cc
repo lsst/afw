@@ -312,19 +312,19 @@ lsst::afw::image::Wcs::Wcs(
 
     //Run wcsfix on _wcsInfo to try and fix any problems it knows about.
     const int *naxes = NULL;            // should be {NAXIS1, NAXIS2, ...} to check cylindrical projections
-    int stats[NWCSFIX];			// status returns from wcsfix
+    int stats[NWCSFIX];                 // status returns from wcsfix
     int fixStatus = wcsfix(_wcsfixCtrl, naxes, _wcsInfo, stats);
     if (fixStatus != 0) {
         std::stringstream errStream;
         errStream << "Could not parse FITS WCS: wcsfix failed " << std::endl;
         for (int ii = 0; ii < NWCSFIX; ++ii) {
-	  if (stats[ii] >= 0) {
-	    errStream << "\t" << ii << ": " << stats[ii] << " " << wcsfix_errmsg[stats[ii]] << std::endl;
-	  } else {
-	    errStream << "\t" << ii << ": " << stats[ii] << std::endl;
-	  }
-	}
-#if 0	  
+            if (stats[ii] >= 0) {
+                errStream << "\t" << ii << ": " << stats[ii] << " " << wcsfix_errmsg[stats[ii]] << std::endl;
+            } else {
+                errStream << "\t" << ii << ": " << stats[ii] << std::endl;
+            }
+        }
+#if 0     
          throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, errStream.str());
 #endif
     }

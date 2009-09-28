@@ -21,8 +21,8 @@ int main() {
         for (unsigned int col = 0; col < kernelCols; ++col) {
             cout << boost::format("Delta function kernel %3d: col=%d, row=%d\n") % ind % col % row;
             lsst::afw::math::Kernel::Ptr kernelPtr(
-		new lsst::afw::math::DeltaFunctionKernel(kernelCols, kernelRows, lsst::afw::image::PointI(col, row))
-                                                   );
+                new lsst::afw::math::DeltaFunctionKernel(kernelCols, kernelRows, lsst::afw::image::PointI(col, row))
+            );
             kernelVec.push_back(kernelPtr);
             ++ind;
         }
