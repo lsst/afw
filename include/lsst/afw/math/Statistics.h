@@ -11,7 +11,7 @@
  *       The philosophy has been to handle other types by making them look like
  *       image::MaskedImage() and reusing that code.
  *       Users should have no need to instantiate a Statistics object directly,
- *       but should use the makeStatistics() factory function.
+ *       but should use the overloaded makeStatistics() factory functions.
  */
 
 #include <cassert>
