@@ -13,7 +13,7 @@
 #include <cmath>
 #include <functional>
 
-#include "lsst/afw/math/Quadrature.h"
+#include "lsst/afw/math/Integrate.h"
 
 namespace math = lsst::afw::math;
 
@@ -33,7 +33,7 @@ public:
     
     // operator() must be overloaded to return the evaluation of the function
     // ** This is the function to be integrated **
-    IntegrandT operator()(IntegrandT const x) {
+    IntegrandT operator()(IntegrandT const x) const {
         return (_K - _kx*x*x);
     }
 
@@ -118,15 +118,15 @@ int main() {
     Parab1D<double> parab1d(K, kx);
     
     // integrate the area under the curve, and then get the analytic result
-    double const parab_area_romberg  = math::romberg(parab1d, x1, x2);
+    double const parab_area_integrate  = math::integrate(parab1d, x1, x2);
     double const parab_area_analytic = parab1d.getAnalyticArea(x1, x2);
 
     // now run it on the 1d function (you *need* to wrap the function in ptr_fun())
-    double const parab_area_romberg_func = math::romberg(std::ptr_fun(parabola), x1, x2);
+    double const parab_area_integrate_func = math::integrate(std::ptr_fun(parabola), x1, x2);
 
     // output
-    std::cout << "1D romberg: functor = " << parab_area_romberg << 
-        "  function = " << parab_area_romberg_func <<
+    std::cout << "1D integrate: functor = " << parab_area_integrate << 
+        "  function = " << parab_area_integrate_func <<
         "  analytic = " << parab_area_analytic << std::endl;
 
     
@@ -136,15 +136,15 @@ int main() {
     Parab2D<double> parab2d(K, kx, ky);
 
     // integrate the volume under the function, and then get the analytic result
-    double const parab_volume_romberg  = math::romberg2D(parab2d, x1, x2, y1, y2);
+    double const parab_volume_integrate  = math::integrate2d(parab2d, x1, x2, y1, y2);
     double const parab_volume_analytic = parab2d.getAnalyticVolume(x1, x2, y1, y2);
 
     // now run it on the 2d function (you *need* to wrap the function in ptr_fun())
-    double const parab_volume_romberg_func = math::romberg2D(std::ptr_fun(parabola2d), x1, x2, y1, y2);
+    double const parab_volume_integrate_func = math::integrate2d(std::ptr_fun(parabola2d), x1, x2, y1, y2);
 
     // output
-    std::cout << "2D romberg: functor = " << parab_volume_romberg <<
-        "  function = " << parab_volume_romberg_func <<
+    std::cout << "2D integrate: functor = " << parab_volume_integrate <<
+        "  function = " << parab_volume_integrate_func <<
         "  analytic = " << parab_volume_analytic << std::endl;
     
     return 0;

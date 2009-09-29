@@ -13,7 +13,7 @@
 #include <cmath>
 #include <functional>
 
-#include "lsst/afw/math/Quadrature.h"
+#include "lsst/afw/math/Integrate.h"
 
 namespace math = lsst::afw::math;
 
@@ -81,15 +81,15 @@ int main() {
     Parab2D<double> parab2d(K, kr);
 
     // integrate the volume under the function, and then get the analytic result
-    double const parab_volume_romberg  = math::romberg2D(parab2d, r1, r2, theta1, theta2);
+    double const parab_volume_integrate  = math::integrate2d(parab2d, r1, r2, theta1, theta2);
     double const parab_volume_analytic = parab2d.getAnalyticVolume(r1, r2, theta1, theta2);
 
     // now run it on the 2d function (you *need* to wrap the function in ptr_fun())
-    double const parab_volume_romberg_func = math::romberg2D(std::ptr_fun(parabola2d), r1, r2, theta1, theta2);
+    double const parab_volume_integrate_func = math::integrate2d(std::ptr_fun(parabola2d), r1, r2, theta1, theta2);
 
     // output
-    std::cout << "2D romberg: functor = " << parab_volume_romberg <<
-        "  function = " << parab_volume_romberg_func <<
+    std::cout << "2D integrate: functor = " << parab_volume_integrate <<
+        "  function = " << parab_volume_integrate_func <<
         "  analytic = " << parab_volume_analytic << std::endl;
     
     return 0;
