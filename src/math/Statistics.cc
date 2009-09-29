@@ -512,7 +512,7 @@ Statistics::Statistics(
 /*
  * @brief Specialization to handle Masks
  * @note Although short, the definition can't be in the header as it must follow the specialization definition
- *       (I think)
+ *       (g++ complained when this was in the header.)
  *
  */            
 Statistics makeStatistics(image::Mask<image::MaskPixel> const &msk, ///< Image (or MaskedImage) whose properties we want
@@ -550,12 +550,6 @@ Statistics makeStatistics(image::Mask<image::MaskPixel> const &msk, ///< Image (
     template math::Statistics::Statistics(math::ImageImposter<TYPE> const &img, math::MaskImposter<image::MaskPixel> const &msk, int const flags, StatisticsControl const& sctrl); \
     template math::Statistics::StandardReturnT math::Statistics::_getStandard(math::ImageImposter<TYPE> const &img, math::MaskImposter<image::MaskPixel> const &msk, int const flags); \
     template math::Statistics::StandardReturnT math::Statistics::_getStandard(math::ImageImposter<TYPE> const &img, math::MaskImposter<image::MaskPixel> const &msk, int const flags, std::pair<double,double> clipinfo);
-
-/*
-#define INSTANTIATE_MASK_STATISTICS(TYPE) \
-    template math::Statistics::Statistics(image::Mask<image::MaskPixel> const &msk, image::Mask<image::MaskPixel> const &dmsk, int const flags, StatisticsControl const &sctrl);
-*/
-
 
 #define INSTANTIATE_IMAGE_STATISTICS(T) \
     INSTANTIATE_MASKEDIMAGE_STATISTICS(T); \

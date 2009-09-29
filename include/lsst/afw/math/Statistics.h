@@ -69,18 +69,18 @@ public:
 
     double getNumSigmaClip() const { return _numSigmaClip; }
     int getNumIter() const { return _numIter; }
-    int getAndMask() const { return _andMask; }
+    image::MaskPixel getAndMask() const { return _andMask; }
     bool useNanSafe() const { return _nanSafe; }
     
     void setNumSigmaClip(double numSigmaClip) { assert(numSigmaClip > 0); _numSigmaClip = numSigmaClip; }
     void setNumIter(int numIter) { assert(numIter > 0); _numIter = numIter; }
-    void setAndMask(int andMask) { _andMask = andMask; }
+    void setAndMask(image::MaskPixel andMask) { _andMask = andMask; }
     void setNanSafe(bool nanSafe) { _nanSafe = nanSafe; }
 
 private:
     double _numSigmaClip;                 // Number of standard deviations to clip at
     int _numIter;                         // Number of iterations
-    int _andMask;                         // and-Mask to specify which mask planes to pay attention to
+    image::MaskPixel _andMask;            // and-Mask to specify which mask planes to pay attention to
     bool _nanSafe;                         // Check for NaNs before running (slower)
 };
 
@@ -101,7 +101,9 @@ private:
         math::StatisticsControl sctrl(3.0, 3); // sets NumSigclip (3.0), and NumIter (3) for clipping
         sctrl.setNumSigmaClip(4.0);            // reset number of standard deviations for N-sigma clipping
         sctrl.setNumIter(5);                   // reset number of iterations for N-sigma clipping
-
+        sctrl.setAndMask(0x1);                 // ignore pixels with these mask bits set
+        sctrl.setNanSafe(true);                // check for NaNs, a bit slower (default=true)
+        
         math::Statistics statobj = math::makeStatistics(*img, math::NPOINT | math::MEAN | math::MEANCLIP, sctrl);
         
         double const n = statobj.getValue(math::NPOINT);
@@ -112,10 +114,10 @@ private:
  * @note we used a helper function, \c makeStatistics, rather that the constructor directly so that
  *       the compiler could deduce the types -- cf. \c std::make_pair)
  *
- * The class Statistics is templatized over Image and Mask, and makeStatistics() can take either:
- * (1) an image, (2) a maskedImage, or (3) a std::vector<>
- * Overloaded makeStatistics() functions then wrap what they were passed in Image/Mask-like classes
- *   and call the Statistics constructor.
+ * @note The class Statistics is templatized over Image and Mask, and makeStatistics() can take either:
+ *       (1) an image, (2) a maskedImage, or (3) a std::vector<>
+ *       Overloaded makeStatistics() functions then wrap what they were passed in Image/Mask-like classes
+ *       and call the Statistics constructor.
  */
 class Statistics {
 public:
