@@ -8,6 +8,9 @@
 #include <sstream>
 #include "boost/format.hpp"
 #include "lsst/pex/exceptions.h"
+//#include "gsl/gsl_integration.h"
+
+#include "lsst/afw/math/Integrate.h"
 
 namespace ex = lsst::pex::exceptions;
 
@@ -43,24 +46,23 @@ namespace lsst { namespace afw { namespace math {
  */
 
 /*
- *double poly_interp(double x, int const order, std::vector<double> xx, std::vector<double> yy, int const i0) {
- *  
- *  std::vector<double> coeffs(order + 1, 1.0);
- *
- *  double result = 0.0;
- *    for(int i = 0; i < order + 1; ++i) {
- *	for (int j = 0; j < order + 1; ++j) {
- *	    if ( j != i ){
- *		coeffs[i] *= (x - xx[i0 + j])/(xx[i0 + i]-xx[i0 + j]);
- *	    }
- *	}
- *	result += coeffs[i] * yy[i0+i];
- *	printf("%.4f %.4f\n", xx[i0+i], yy[i0+i]);
- *    }
- *    return result;
- *}
- */
-
+double poly_interp(double x, int const order, std::vector<double> xx, std::vector<double> yy, int const i0) {
+    
+    std::vector<double> coeffs(order + 1, 1.0);
+ 
+    double result = 0.0;
+    for(int i = 0; i < order + 1; ++i) {
+        for (int j = 0; j < order + 1; ++j) {
+            if ( j != i ){
+                coeffs[i] *= (x - xx[i0 + j])/(xx[i0 + i] - xx[i0 + j]);
+            }
+        }
+        result += coeffs[i] * yy[i0+i];
+        //printf("%.4f %.4f  %.4f\n", xx[i0+i], yy[i0+i], result);
+    }
+    return result;
+}
+*/
 // =============================================================
 /**
  * @brief The 1D Romberg integrator
@@ -75,7 +77,7 @@ typename UnaryFunctionT::result_type romberg(UnaryFunctionT func,
 					     typename UnaryFunctionT::argument_type const a,
 					     typename UnaryFunctionT::argument_type const b,
 					     double eps=1.0e-6)  {
-
+    
     typedef typename UnaryFunctionT::argument_type Argtype;
 
     int const max_steps = 20;
@@ -90,11 +92,12 @@ typename UnaryFunctionT::result_type romberg(UnaryFunctionT func,
     std::vector<Argtype> h(max_steps);
     std::vector<Argtype> results(max_steps);
 
+    Argtype h0 = b - a;
     h[0] = b - a;
     R[0][0] = 0.5*h[0]*(func(a) + func(b));
 
     Argtype tolerance = 1.0;  // a relative tolerance
-    //Argtype extrapolated_result_prev = func(a);
+    Argtype extrapolated_result_prev = func(a);
     int j = 1, m = 1;
     while ( j < max_steps && eps < tolerance ) {
 
@@ -102,12 +105,13 @@ typename UnaryFunctionT::result_type romberg(UnaryFunctionT func,
 	R.push_back(std::vector<Argtype>(j, 0.0));
 	
 	// do the trapezoid to get 0-entry for the j-1 row
-	h[j] = 0.5*h[j-1];
+	h0 *= 0.5;
+        h[j] = 0.25*h[j - 1];
 	Argtype sum = 0.0;
 	for (int k = 0; k < m; ++k) {
-	    sum += func(a + h[j]*(2*(k+1) - 1));
+	    sum += func(a + h0*(2*(k+1) - 1));
 	}
-	R[j][0] = 0.5*R[j - 1][0] + h[j]*sum;
+	R[j][0] = 0.5*R[j - 1][0] + h0*sum;
 	m = 2*m;
 
 	// do the romberg summation
@@ -115,29 +119,85 @@ typename UnaryFunctionT::result_type romberg(UnaryFunctionT func,
 	    R[j][k+1] = R[j][k] + (R[j][k] - R[j-1][k]) / (std::pow(4.0, k+1) - 1);
 	}
 	results[j-1] = R[j][j-1];
+	//results[j-1] = R[j][0];
 
 	// could extrapolate to stepsize here, but not currently implemented
-	//Argtype extrapolated_result = results[j-1];
+	Argtype extrapolated_result = results[j-1];
 	//if (j > poly_order + 2) {
 	//    extrapolated_result = poly_interp(0.0, poly_order, h, results, j-poly_order-2);
+        //    if (std::fabs(extrapolated_result - extrapolated_result_prev) < eps) {
+        //        return extrapolated_result;
+        //    }
 	//}
-	//tolerance = std::fabs(extrapolated_result - extrapolated_result_prev);
-	//extrapolated_result_prev = extrapolated_result;
-
-	tolerance = std::fabs(R[j][j-1] - R[j-1][j-2]);
+	tolerance = std::fabs(extrapolated_result - extrapolated_result_prev);
+	extrapolated_result_prev = extrapolated_result;
+        //std::cout << "toll: " << tolerance << std::endl;
+        
+	//tolerance = std::fabs(R[j][j-1] - R[j-1][j-2]);
 
 	j++;
     }
     
     if (j >= max_steps) {
+        std::cout << "busted" << std::endl;
         throw LSST_EXCEPT(ex::RuntimeErrorException,"Exceed max number of steps in Romberg integration.");
     }
-    return results[j-2];
-    //return extrapolated_result_prev;
+    //return results[j-2];
+    return extrapolated_result_prev;
 
 }
 
+// =============================================================
+/**
+ * @brief The 1D integrator
+ *
+ * @note This simply wraps the int1d function provided by Mike Jarvis.
+ *
+ */
+template<typename UnaryFunctionT>
+typename UnaryFunctionT::result_type integrate(UnaryFunctionT func,
+                                               typename UnaryFunctionT::argument_type const a,
+                                               typename UnaryFunctionT::argument_type const b,
+                                               double eps=1.0e-6)  {
+    
+    typedef typename UnaryFunctionT::argument_type Argtype;
+    IntRegion<Argtype> region(a, b);
 
+    return int1d(func, region);
+}
+            
+
+/*            
+template<typename UnaryFunctionT>
+typename UnaryFunctionT::result_type myromberg(UnaryFunctionT func,
+                                               typename UnaryFunctionT::argument_type const a,
+                                               typename UnaryFunctionT::argument_type const b,
+                                               double eps=1.0e-6)  {
+
+    //typedef typename UnaryFunctionT::argument_type Argtype;
+
+    double (UnaryFunctionT::* parop) (double) = &UnaryFunctionT::operator();
+
+    gsl_function f;
+    f.function = func.*parop;
+    f.params = NULL;
+
+    //double const L = b - a;
+    //gsl::gsl_integration_qawo_table_alloc(omega, L, GSL_INTEG_SINE, );
+    double const epsrel = eps;
+    double const epsabs = eps;
+    int limit = 100;
+    int n = limit;
+    ::gsl_integration_workspace *ws = ::gsl_integration_workspace_alloc(n);
+    double result;
+    double abserr;
+    int const key = 4; // GSL_INTEG_GAUSS41
+    ::gsl_integration_qag(&f, a, b, epsabs, epsrel, limit, key, ws, &result, &abserr);
+
+    return result;
+    
+}
+*/          
 
 namespace details {            
 
@@ -198,7 +258,7 @@ typename BinaryFunctionT::result_type romberg2D(BinaryFunctionT func,
     
     // note the more stringent eps requirement to ensure the requested limit
     // can be reached.
-    FunctionWrapper<BinaryFunctionT> fwrap(func, x1, x2, 1.0e-2*eps);
+    FunctionWrapper<BinaryFunctionT> fwrap(func, x1, x2, eps);
     return romberg(fwrap, y1, y2, eps);
 }
 

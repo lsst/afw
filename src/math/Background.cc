@@ -171,7 +171,7 @@ typename image::Image<PixelT>::Ptr math::Background::getImage() const {
  *
  */
 #define INSTANTIATE_BACKGROUND(TYPE) \
-    template math::Background::Background(image::Image<TYPE> const& img, math::BackgroundControl const& bgCtrl=BackgroundControl()); \
+    template math::Background::Background(image::Image<TYPE> const& img, math::BackgroundControl const& bgCtrl); \
     template image::Image<TYPE>::Ptr math::Background::getImage<TYPE>() const;
 
 INSTANTIATE_BACKGROUND(double);

@@ -39,7 +39,15 @@ lsst::afw::math::FixedKernel::FixedKernel(
     Kernel(image.getWidth(), image.getHeight(), 0),
     _image(image, true),
     _sum(0) {
-    _sum = std::accumulate(_image.begin(), _image.end(), _sum); // (a loop over y + row_begin())'s a bit faster, but who cares?
+
+    typedef lsst::afw::image::Image<PixelT>::x_iterator x_iterator;
+    double imSum = 0.0;
+    for (int y = 0; y != image.getHeight(); ++y) {
+        for (x_iterator imPtr = image.row_begin(y), imEnd = image.row_end(y); imPtr != imEnd; ++imPtr) {
+            imSum += *imPtr;
+        }
+    }
+    this->_sum = imSum;
 }
 
 //
@@ -66,9 +74,9 @@ double lsst::afw::math::FixedKernel::computeImage(
     typedef lsst::afw::image::Image<PixelT>::x_iterator x_iterator;
 
     for (int y = 0; y != this->getHeight(); ++y) {
-        x_iterator kRow = this->_image.row_begin(y);
-        for (x_iterator imRow = image.row_begin(y), imEnd = image.row_end(y); imRow != imEnd; ++imRow, ++kRow) {
-            imRow[0] = multFactor*kRow[0];
+        x_iterator kPtr = this->_image.row_begin(y);
+        for (x_iterator imPtr = image.row_begin(y), imEnd = image.row_end(y); imPtr != imEnd; ++imPtr, ++kPtr) {
+            imPtr[0] = multFactor*kPtr[0];
         }
     }
 

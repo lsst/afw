@@ -192,7 +192,8 @@ include/lsst/afw/image/Pixel.h:420:   instantiated from ÔExprT1 lsst::afw::image
  * - kernel.getHeight() - 1 - kernel.getCtrY() along the top edge
  *
  * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage is not the same size as inImage.
- * @throw lsst::pex::exceptions::InvalidParameterException if inImage is smaller (in colums or rows) than kernel.
+ * @throw lsst::pex::exceptions::InvalidParameterException if inImage is smaller than kernel
+ *  in columns or rows.
  *
  * @ingroup afw
  */
@@ -235,16 +236,18 @@ void afwMath::basicConvolve(
             "generic basicConvolve: dispatch to spatially varying LinearCombinationKernel basicConvolve");
         afwMath::basicConvolve(convolvedImage, inImage,
             *dynamic_cast<afwMath::LinearCombinationKernel const*>(&kernel),
-            false); // note: change to doNormalize once normalization is supported: ticket #833
+            doNormalize);
         return;
     }
     // OK, use general (and slower) form
 
     if (convolvedImage.getDimensions() != inImage.getDimensions()) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "convolvedImage not the same size as inImage");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+            "convolvedImage not the same size as inImage");
     }
     if (inImage.getDimensions() < kernel.getDimensions()) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "inImage smaller than kernel in columns and/or rows");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+            "inImage smaller than kernel in columns and/or rows");
     }
     
     int const inImageWidth = inImage.getWidth();
@@ -301,9 +304,10 @@ void afwMath::basicConvolve(
     }
 }
 
-/************************************************************************************************************/
 /**
  * @brief A version of basicConvolve that should be used when convolving delta function kernels
+ *
+ * @ingroup afw
  */
 template <typename OutImageT, typename InImageT>
 void afwMath::basicConvolve(
@@ -350,18 +354,14 @@ void afwMath::basicConvolve(
  * - If the kernel is not spatially varying, then computes a fixed kernel and calls the
  *   the general version of basicConvolve.
  *
- * @warning Cannot normalize a spatially varying LinearCombinationKernel (trying will raise an exception).
- * This will be fixed in Ticket #833. When implementing Ticket #833, be sure to:
- * - change the dynamic dispatch code in the generic basicConvolve code (false -> doNormalize).
- * - fix the exception list just below
- *
  * @warning The variance will be mis-computed if your basis kernels contain home-brew delta function kernels
  * (instead of instances of afwMath::DeltaFunctionKernel). It may also be mis-computed if your basis kernels
  * contain many pixels with value zero, or if your basis kernels contain a mix of
  * afwMath::DeltaFunctionKernel with other kernels.
  *
  * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage is not the same size as inImage.
- * @throw lsst::pex::exceptions::InvalidParameterException if inImage is smaller (in colums or rows) than kernel.
+ * @throw lsst::pex::exceptions::InvalidParameterException if inImage is smaller than kernel
+ *  in columns or rows.
  * @throw lsst::pex::exception::InvalidParameterException if doNormalize true and kernel is spatially varying.
  *
  * @ingroup afw
@@ -371,8 +371,7 @@ void afwMath::basicConvolve(
     OutImageT& convolvedImage,      ///< convolved %image
     InImageT const& inImage,        ///< %image to convolve
     afwMath::LinearCombinationKernel const& kernel, ///< convolution kernel
-    bool doNormalize                ///< if True, normalize the kernel, else use "as is";
-                                    ///< warning: must not be true if kernel is spatially varying!
+    bool doNormalize                ///< if True, normalize the kernel, else use "as is"
 ) {
     if (!kernel.isSpatiallyVarying()) {
         // use the standard algorithm for the spatially invariant case
@@ -388,19 +387,16 @@ void afwMath::basicConvolve(
     
 
     if (convolvedImage.getDimensions() != inImage.getDimensions()) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "convolvedImage not the same size as inImage");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+            "convolvedImage not the same size as inImage");
     }
     if (inImage.getDimensions() < kernel.getDimensions()) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "inImage smaller than kernel in columns and/or rows");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+            "inImage smaller than kernel in columns and/or rows");
     }
     
     pexLog::TTrace<3>("lsst.afw.kernel.convolve",
         "basicConvolve for LinearCombinationKernel: kernel is spatially varying");
-    
-    if (doNormalize) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
-            "cannot yet normalize convolution with a spatially varying LinearCombinationKernel");
-    }
     
     typedef typename InImageT::template ImageTypeFactory<double>::type BasisImage;
     typedef typename BasisImage::x_iterator BasisXIterator;
@@ -429,7 +425,7 @@ void afwMath::basicConvolve(
     }
     
     // iterate over basis kernels
-    KernelList basisKernelList = kernel.getKernelList();
+    KernelList const basisKernelList = kernel.getKernelList();
     std::vector<double> kernelSumList;
     int i = 0;
     for (typename KernelList::const_iterator basisKernelIter = basisKernelList.begin();
@@ -460,10 +456,40 @@ void afwMath::basicConvolve(
             }
         }
     }
+
+    if (doNormalize) {
+        /*
+        For each pixel of the output image: compute the kernel sum for that pixel and scale
+        the output image. One obvious alternative is to create a temporary kernel sum image
+        and accumulate into that while iterating over the basis kernels above. This saves
+        computing the spatial functions again here, but requires a temporary image
+        the same size as the output image, so it is likely to suffer from cache issues.
+        */
+        std::vector<double> const kernelSumList = kernel.getKernelSumList();
+        std::vector<Kernel::SpatialFunctionPtr> spatialFunctionList = kernel.getSpatialFunctionList();
+        for (int cnvY = cnvStartY; cnvY < cnvEndY; ++cnvY) {
+            double const rowPos = afwImage::indexToPosition(cnvY);
+        
+            OutXIterator cnvXIter = convolvedImage.row_begin(cnvY) + cnvStartX;
+            for (int cnvX = cnvStartX; cnvX != cnvEndX; ++cnvX, ++cnvXIter) {
+                double const colPos = afwImage::indexToPosition(cnvX);
+
+                std::vector<double>::const_iterator kSumIter = kernelSumList.begin();
+                std::vector<Kernel::SpatialFunctionPtr>::const_iterator spFuncIter = spatialFunctionList.begin();
+                double kSum = 0.0;
+                for ( ; kSumIter != kernelSumList.end(); ++kSumIter, ++spFuncIter) {
+                    kSum += (**spFuncIter)(colPos, rowPos) * (*kSumIter);
+                }
+                *cnvXIter /= kSum;
+            }
+        }
+    }
 }
 
 /**
  * @brief A version of basicConvolve that should be used when convolving separable kernels
+ *
+ * @ingroup afw
  */
 template <typename OutImageT, typename InImageT>
 void afwMath::basicConvolve(
@@ -482,10 +508,12 @@ void afwMath::basicConvolve(
     typedef typename OutImageT::SinglePixel OutPixel;
 
     if (convolvedImage.getDimensions() != inImage.getDimensions()) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "convolvedImage not the same size as inImage");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+            "convolvedImage not the same size as inImage");
     }
     if (inImage.getDimensions() < kernel.getDimensions()) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "inImage smaller than kernel in columns and/or rows");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+            "inImage smaller than kernel in columns and/or rows");
     }
     
     int const imWidth = inImage.getWidth();
@@ -580,6 +608,11 @@ void afwMath::basicConvolve(
  * - LinearCombinationKernel: a linear combination of a set of spatially invariant basis kernels.
  * - DeltaFunctionKernel: a kernel that is all zeros except one pixel whose value is 1.
  *   Typically used as a basis kernel for LinearCombinationKernel.
+ *
+ * If a kernel is spatially varying, its spatial model is computed at each pixel position on the image
+ * (pixel position, not pixel index). At present (2009-09-24) this position is computed relative
+ * to the lower left corner of the sub-image, but it will almost certainly change to be
+ * the lower left corner of the parent image.
  * 
  * All convolution is performed in real space. This allows convolution to handle masked pixels
  * and spatially varying kernels. Although convolution of an Image with a spatially invariant kernel could,
@@ -623,12 +656,11 @@ void afwMath::basicConvolve(
  *    of the output. Optimization of convolution for different types of Kernel are handled by different
  *    specializations of basicConvolve().
  * 
- * afw/examples offers programs that time convolution, including timeConvolve and timeSpatiallyVaryingConvolve.
+ * afw/examples offers programs that time convolution including timeConvolve and timeSpatiallyVaryingConvolve.
  *
- * @throw lsst::pex::exceptions::InvalidParameterException if doNormalize is true and kernel is a
- * spatially varying LinearCombinationKernel (see ticket #833).
  * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage is not the same size as inImage.
- * @throw lsst::pex::exceptions::InvalidParameterException if inImage is smaller (in colums or rows) than kernel.
+ * @throw lsst::pex::exceptions::InvalidParameterException if inImage is smaller than kernel
+ *  in columns and/or rows.
  *
  * @ingroup afw
  */
@@ -649,15 +681,12 @@ void afwMath::convolve(
 }
 
 
-/************************************************************************************************************/
 /*
  *  Explicit instantiation of all convolve functions.
  *
  * This code needs to be compiled with full optimization, and there's no need why
  * it should be instantiated in the swig wrappers.
  */
-namespace lsst { namespace afw { namespace math {
-
 #define IMAGE(PIXTYPE) afwImage::Image<PIXTYPE>
 #define MASKEDIMAGE(PIXTYPE) afwImage::MaskedImage<PIXTYPE, afwImage::MaskPixel, afwImage::VariancePixel>
 //
@@ -669,25 +698,29 @@ namespace lsst { namespace afw { namespace math {
  g++ -C -E -I$(eups list -s -d boost)/include Convolve.cc | perl -pe 's| *NL *|\n|g'
 */
 #define NL /* */
-#define convolutionFuncsByType(IMAGE, OUTPIXTYPE, INPIXTYPE) \
-    template void convolve(IMAGE(OUTPIXTYPE)&, IMAGE(INPIXTYPE) const&, AnalyticKernel const&, bool, bool); NL \
-    template void convolve(IMAGE(OUTPIXTYPE)&, IMAGE(INPIXTYPE) const&, DeltaFunctionKernel const&, bool, bool); NL \
-    template void convolve(IMAGE(OUTPIXTYPE)&, IMAGE(INPIXTYPE) const&, FixedKernel const&, bool, bool); NL \
-    template void convolve(IMAGE(OUTPIXTYPE)&, IMAGE(INPIXTYPE) const&, LinearCombinationKernel const&, bool, bool); NL \
-    template void convolve(IMAGE(OUTPIXTYPE)&, IMAGE(INPIXTYPE) const&, SeparableKernel const&, bool, bool); NL \
-    template void convolve(IMAGE(OUTPIXTYPE)&, IMAGE(INPIXTYPE) const&, Kernel const&, bool, bool);
+#define CONVOLUTIONFUNCSBYTYPE(IMAGE, OUTPIXTYPE, INPIXTYPE) \
+    template void afwMath::convolve( \
+        IMAGE(OUTPIXTYPE)&, IMAGE(INPIXTYPE) const&, AnalyticKernel const&, bool, bool); NL \
+    template void afwMath::convolve( \
+        IMAGE(OUTPIXTYPE)&, IMAGE(INPIXTYPE) const&, DeltaFunctionKernel const&, bool, bool); NL \
+    template void afwMath::convolve( \
+        IMAGE(OUTPIXTYPE)&, IMAGE(INPIXTYPE) const&, FixedKernel const&, bool, bool); NL \
+    template void afwMath::convolve( \
+        IMAGE(OUTPIXTYPE)&, IMAGE(INPIXTYPE) const&, LinearCombinationKernel const&, bool, bool); NL \
+    template void afwMath::convolve( \
+        IMAGE(OUTPIXTYPE)&, IMAGE(INPIXTYPE) const&, SeparableKernel const&, bool, bool); NL \
+    template void afwMath::convolve( \
+        IMAGE(OUTPIXTYPE)&, IMAGE(INPIXTYPE) const&, Kernel const&, bool, bool);
 
 //
 // Now a macro to specify Image and MaskedImage
 //
-#define convolutionFuncs(OUTPIXTYPE, INPIXTYPE) \
-    convolutionFuncsByType(IMAGE,       OUTPIXTYPE, INPIXTYPE) \
-    convolutionFuncsByType(MASKEDIMAGE, OUTPIXTYPE, INPIXTYPE)
+#define CONVOLUTIONFUNCS(OUTPIXTYPE, INPIXTYPE) \
+    CONVOLUTIONFUNCSBYTYPE(IMAGE,       OUTPIXTYPE, INPIXTYPE) \
+    CONVOLUTIONFUNCSBYTYPE(MASKEDIMAGE, OUTPIXTYPE, INPIXTYPE)
 
-convolutionFuncs(double, double)
-convolutionFuncs(double, float)
-convolutionFuncs(float, float)
-convolutionFuncs(int, int)
-convolutionFuncs(boost::uint16_t, boost::uint16_t)
-
-}}} // lsst::afw::math
+CONVOLUTIONFUNCS(double, double)
+CONVOLUTIONFUNCS(double, float)
+CONVOLUTIONFUNCS(float, float)
+CONVOLUTIONFUNCS(int, int)
+CONVOLUTIONFUNCS(boost::uint16_t, boost::uint16_t)

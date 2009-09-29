@@ -67,18 +67,8 @@ using boost::serialization::make_nvp;
      * The one spatial function is used to compute the kernel parameters at a given spatial position
      * by computing each kernel parameter using its associated vector of spatial function parameters.
      *
-     * One may only specify a single spatial function to describe the variation of all kernel parameters
-     * (though the spatial parameters can, and usually will, be different for each kernel parameter).
-     * The only use cases we had used the same spatial model for all parameters, and I felt it
-     * would be a burden to the user to have to create one function per kernel parameter.
-     * (I would gladly change this design if wanted, since it would simplify the internal code.)
-     * You still can assign a different spatial model to each kernel parameter by defining
-     * one function that is the sum of all the desired spatial models. Then for each kernel parameter,
-     * then zero all but the few spatial parameters that control the spatial model for that kernel parameter.
-     *
-     * When determining the parameters for a spatial function or a kernel function,
-     * please keep the LSST convention for pixel position vs. pixel index in mind.
-     * See lsst/afw/image/ImageUtils.h for the convention.
+     * The convolve function computes the spatial function at the pixel position (not index) of the image.
+     * See the convolve function for details.
      *
      * Note that if a kernel is spatially varying then you may not set the kernel parameters directly;
      * that is the job of the spatial function! However, you may change the spatial parameters at any time.
@@ -193,6 +183,8 @@ using boost::serialization::make_nvp;
         };
         
         SpatialFunctionPtr getSpatialFunction(unsigned int index) const;
+        
+        std::vector<SpatialFunctionPtr> getSpatialFunctionList() const;
 
         virtual std::vector<double> getKernelParameters() const;
         
@@ -440,7 +432,9 @@ using boost::serialization::make_nvp;
     
     
     /**
-     * @brief A kernel that has only one non-zero pixel
+     * @brief A kernel that has only one non-zero pixel (of value 1)
+     *
+     * It has no adjustable parameters and so cannot be spatially varying.
      *
      * @ingroup afw
      */
@@ -531,6 +525,10 @@ using boost::serialization::make_nvp;
                 
         virtual KernelList const &getKernelList() const;
         
+        std::vector<double> getKernelSumList() const {
+            return _kernelSumList;
+        }
+        
         void checkKernelList(const KernelList &kernelList) const;
         
         virtual std::string toString(std::string prefix = "") const;
@@ -540,8 +538,9 @@ using boost::serialization::make_nvp;
     
     private:
         void _computeKernelImageList();
-        KernelList _kernelList;
-        std::vector<boost::shared_ptr<lsst::afw::image::Image<PixelT> > > _kernelImagePtrList;
+        KernelList _kernelList; ///< basis kernels
+        std::vector<boost::shared_ptr<lsst::afw::image::Image<PixelT> > > _kernelImagePtrList; ///< image of each basis kernel (a cache)
+        std::vector<double> _kernelSumList; ///< sum of each basis kernel (a cache)
         mutable std::vector<double> _kernelParams;
 
     private:
@@ -552,6 +551,7 @@ using boost::serialization::make_nvp;
                         boost::serialization::base_object<Kernel>(*this));
                 ar & make_nvp("klist", _kernelList);
                 ar & make_nvp("kimglist", _kernelImagePtrList);
+                ar & make_nvp("ksumlist", _kernelSumList);
                 ar & make_nvp("params", _kernelParams);
             };
     };
