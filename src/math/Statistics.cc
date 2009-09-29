@@ -11,6 +11,7 @@
 #include <limits>
 #include <cmath>
 #include "boost/tuple/tuple.hpp"
+#include "boost/shared_ptr.hpp"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/Statistics.h"
@@ -67,13 +68,14 @@ math::Statistics::Statistics(Image const &img, ///< Image whose properties we wa
     if (flags & (MEDIAN | IQRANGE | MEANCLIP | STDEVCLIP | VARIANCECLIP)) {
 
         // make a vector copy of the image to get the median and quartiles (will move values)
-        std::vector<typename Image::Pixel> imgcp(0);
+        boost::shared_ptr<std::vector<typename Image::Pixel> > imgcp(new std::vector<typename Image::Pixel>(0));
+        
         if (_sctrl.useNanSafe()) {
             for (int i_y = 0; i_y < img.getHeight(); ++i_y) {
                 typename Mask::x_iterator mptr = msk.row_begin(i_y);
                 for (typename Image::x_iterator ptr = img.row_begin(i_y); ptr != img.row_end(i_y); ++ptr, ++mptr) {
                     if ( !isnan(*ptr) && !(*mptr & _sctrl.getAndMask()) ) {
-                        imgcp.push_back(*ptr);
+                        imgcp->push_back(*ptr);
                     }
                 }
             }
@@ -82,7 +84,7 @@ math::Statistics::Statistics(Image const &img, ///< Image whose properties we wa
                 typename Mask::x_iterator mptr = msk.row_begin(i_y);
                 for (typename Image::x_iterator ptr = img.row_begin(i_y); ptr != img.row_end(i_y); ++ptr, ++mptr) {
                     if ( ! (*mptr & _sctrl.getAndMask()) ) {
-                        imgcp.push_back(*ptr);
+                        imgcp->push_back(*ptr);
                     }
                 }
             }
@@ -91,10 +93,10 @@ math::Statistics::Statistics(Image const &img, ///< Image whose properties we wa
         //typename Image::Ptr imgcp = typename Image::Ptr(new Image(img, true));  // deep copy
         
         if (flags & (MEDIAN | MEANCLIP | STDEVCLIP | VARIANCECLIP)) {
-            _median = _percentile(imgcp, 0.5);
+            _median = _percentile(*imgcp, 0.5);
         }
         if (flags & (IQRANGE | MEANCLIP | STDEVCLIP | VARIANCECLIP)) {
-            _iqrange = std::fabs(_percentile(imgcp, 0.75) - _percentile(imgcp, 0.25));
+            _iqrange = std::fabs(_percentile(*imgcp, 0.75) - _percentile(*imgcp, 0.25));
         }
         
         if (flags & (MEANCLIP | STDEVCLIP | VARIANCECLIP)) {            
@@ -514,33 +516,36 @@ Statistics::Statistics(
  *
  */            
 Statistics makeStatistics(image::Mask<image::MaskPixel> const &msk, ///< Image (or MaskedImage) whose properties we want
-                                int const flags,   ///< Describe what we want to calculate
-                                StatisticsControl const& sctrl ///< Control how things are calculated
-                               ) {
-    
+                          int const flags,   ///< Describe what we want to calculate
+                          StatisticsControl const& sctrl ///< Control how things are calculated
+                         ) {
     return Statistics(msk, msk, flags, sctrl);
 }
 
 }}}
 
 /************************************************************************************************************/
-/**
- * @brief Explicit instantiations
+/*
+ * Explicit instantiations
  *
  * explicit Statistics(MaskedImage const& img, int const flags,
  *                        StatisticsControl const& sctrl=StatisticsControl());
  */
+
+//
 #define INSTANTIATE_MASKEDIMAGE_STATISTICS(TYPE) \
     template math::Statistics::Statistics(image::Image<TYPE> const &img, image::Mask<image::MaskPixel> const &msk, int const flags, StatisticsControl const& sctrl); \
     template math::Statistics::StandardReturnT math::Statistics::_getStandard(image::Image<TYPE> const &img, image::Mask<image::MaskPixel> const &msk, int const flags); \
     template math::Statistics::StandardReturnT math::Statistics::_getStandard(image::Image<TYPE> const &img, image::Mask<image::MaskPixel> const &msk, int const flags, std::pair<double,double> clipinfo); \
     template double math::Statistics::_percentile(std::vector<TYPE> &img, double const quartile);
 
+//
 #define INSTANTIATE_REGULARIMAGE_STATISTICS(TYPE) \
     template math::Statistics::Statistics(image::Image<TYPE> const &img, math::MaskImposter<image::MaskPixel> const &msk, int const flags, StatisticsControl const& sctrl); \
     template math::Statistics::StandardReturnT math::Statistics::_getStandard(image::Image<TYPE> const &img, math::MaskImposter<image::MaskPixel> const &msk, int const flags); \
     template math::Statistics::StandardReturnT math::Statistics::_getStandard(image::Image<TYPE> const &img, math::MaskImposter<image::MaskPixel> const &msk, int const flags, std::pair<double,double> clipinfo);
 
+//
 #define INSTANTIATE_VECTOR_STATISTICS(TYPE) \
     template math::Statistics::Statistics(math::ImageImposter<TYPE> const &img, math::MaskImposter<image::MaskPixel> const &msk, int const flags, StatisticsControl const& sctrl); \
     template math::Statistics::StandardReturnT math::Statistics::_getStandard(math::ImageImposter<TYPE> const &img, math::MaskImposter<image::MaskPixel> const &msk, int const flags); \

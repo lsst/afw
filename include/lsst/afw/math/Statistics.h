@@ -171,20 +171,18 @@ private:
             
 /*************************************  The factory functions **********************************/
 
-            
 /*
  * @brief Handle MaskedImages, just pass the getImage() and getMask() values right on through.
  *
  */
+//template<typename IPixel, typename MPixel, typename VPixel>
 template<typename Pixel>
-Statistics makeStatistics(image::MaskedImage<Pixel> const &mimg, ///< Image (or MaskedImage) whose properties we want
+Statistics makeStatistics(image::MaskedImage<Pixel, image::MaskPixel, image::VariancePixel> const &mimg, ///< Image (or MaskedImage) whose properties we want
                           int const flags,   ///< Describe what we want to calculate
                           StatisticsControl const& sctrl=StatisticsControl() ///< Control how things are calculated
                          ) {
     return Statistics(*mimg.getImage(), *mimg.getMask(), flags, sctrl);
 }
-
-
 
 /*
  * @brief Front end for specialization to handle Masks
