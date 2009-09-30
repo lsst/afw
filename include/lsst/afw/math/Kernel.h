@@ -273,48 +273,6 @@ using boost::serialization::make_nvp;
         std::vector<SpatialFunctionPtr> _spatialFunctionList;
     };
 
-    /**
-     * @brief A list of Kernels
-     *
-     * This is basically a wrapper for an stl container, but defines
-     * a conversion from KernelList<K1> to KernelList<K2> providing
-     * that K1 is derived from K2 (or that K1 == K2)
-     *
-     * @ingroup afw
-     */
-    template<typename _KernelT=Kernel>
-    class KernelList : public std::vector<typename _KernelT::Ptr> {
-    public:
-        typedef _KernelT KernelT;
-
-        KernelList() { }
-        
-        template<typename Kernel2T>
-        KernelList(const KernelList<Kernel2T>& k2l) :
-            std::vector<typename KernelT::Ptr>(k2l.size())
-            {
-#if !defined(SWIG)
-                BOOST_STATIC_ASSERT((
-                                     boost::mpl::or_<
-                                     boost::is_same<KernelT, Kernel2T>,
-                                     boost::is_base_and_derived<KernelT, Kernel2T>
-                                     >::value
-                                    ));
-#endif
-                copy(k2l.begin(), k2l.end(), this->begin());
-            }
-
-    private:
-        friend class boost::serialization::access;
-        template <class Archive>
-        void serialize(Archive& ar, unsigned int const version) {
-            ar & make_nvp("list",
-                          boost::serialization::base_object<
-                              std::vector<typename _KernelT::Ptr>
-                          >(*this));
-        };
-
-    };
 
     /**
      * @brief A kernel created from an Image
@@ -326,6 +284,7 @@ using boost::serialization::make_nvp;
     class FixedKernel : public Kernel {
     public:
         typedef boost::shared_ptr<FixedKernel> Ptr;
+        typedef boost::shared_ptr<const FixedKernel> ConstPtr;
 
         explicit FixedKernel();
 
@@ -376,6 +335,7 @@ using boost::serialization::make_nvp;
     class AnalyticKernel : public Kernel {
     public:
         typedef boost::shared_ptr<AnalyticKernel> Ptr;
+        typedef boost::shared_ptr<const AnalyticKernel> ConstPtr;
         typedef lsst::afw::math::Function2<Pixel> KernelFunction;
         typedef lsst::afw::math::NullFunction2<Pixel> NullKernelFunction;
         typedef boost::shared_ptr<lsst::afw::math::Function2<Pixel> > KernelFunctionPtr;
@@ -444,6 +404,7 @@ using boost::serialization::make_nvp;
     class DeltaFunctionKernel : public Kernel {
     public:
         typedef boost::shared_ptr<DeltaFunctionKernel> Ptr;
+        typedef boost::shared_ptr<const DeltaFunctionKernel> ConstPtr;
         // Traits values for this class of Kernel
         typedef deltafunction_kernel_tag kernel_fill_factor;
 
@@ -496,7 +457,8 @@ using boost::serialization::make_nvp;
     class LinearCombinationKernel : public Kernel {
     public:
         typedef boost::shared_ptr<LinearCombinationKernel> Ptr;
-        typedef lsst::afw::math::KernelList<Kernel> KernelList;
+        typedef boost::shared_ptr<const LinearCombinationKernel> ConstPtr;
+        typedef std::vector<Kernel::Ptr> KernelList;
 
         explicit LinearCombinationKernel();
 
@@ -528,6 +490,9 @@ using boost::serialization::make_nvp;
                 
         virtual KernelList const &getKernelList() const;
         
+        /**
+        * @brief Return the sum of each basis kernel
+        */
         std::vector<double> getKernelSumList() const {
             return _kernelSumList;
         }
@@ -551,15 +516,13 @@ using boost::serialization::make_nvp;
         friend class boost::serialization::access;
         template <class Archive>
             void serialize(Archive& ar, unsigned int const version) {
-                ar & make_nvp("k",
-                        boost::serialization::base_object<Kernel>(*this));
+                ar & make_nvp("k", boost::serialization::base_object<Kernel>(*this));
                 ar & make_nvp("klist", _kernelList);
                 ar & make_nvp("kimglist", _kernelImagePtrList);
                 ar & make_nvp("ksumlist", _kernelSumList);
                 ar & make_nvp("params", _kernelParams);
             };
     };
-
     
     /**
      * @brief A kernel described by a pair of functions: func(x, y) = colFunc(x) * rowFunc(y)
@@ -577,6 +540,7 @@ using boost::serialization::make_nvp;
     class SeparableKernel : public Kernel {
     public:
         typedef boost::shared_ptr<SeparableKernel> Ptr;
+        typedef boost::shared_ptr<const SeparableKernel> ConstPtr;
         typedef lsst::afw::math::Function1<Pixel> KernelFunction;
         typedef lsst::afw::math::NullFunction1<Pixel> NullKernelFunction;
         typedef boost::shared_ptr<KernelFunction> KernelFunctionPtr;
