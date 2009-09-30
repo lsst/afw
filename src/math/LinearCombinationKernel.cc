@@ -91,6 +91,35 @@ afwMath::LinearCombinationKernel::LinearCombinationKernel(
     _computeKernelImageList();
 }
 
+/**
+ * @brief Check that all kernels have the same size and center and that none are spatially varying
+ *
+ * @throw lsst::pex::exceptions::InvalidParameterException if the check fails
+ */
+void afwMath::LinearCombinationKernel::checkKernelList(const KernelList &kernelList) const {
+    if (kernelList.size() < 1) {
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "kernelList has no elements");
+    }
+    
+    int ctrX = kernelList[0]->getCtrX();
+    int ctrY = kernelList[0]->getCtrY();
+    
+    for (unsigned int ii = 0; ii < kernelList.size(); ++ii) {
+        if (kernelList[ii]->getDimensions() != kernelList[0]->getDimensions()) {
+            throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+                (boost::format("kernel %d has different size than kernel 0") % ii).str());
+        }
+        if ((ctrX != kernelList[ii]->getCtrX()) || (ctrY != kernelList[ii]->getCtrY())) {
+            throw LSST_EXCEPT(pexExcept::InvalidParameterException, 
+                (boost::format("kernel %d has different center than kernel 0") % ii).str());
+        }
+        if (kernelList[ii]->isSpatiallyVarying()) {
+            throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+                (boost::format("kernel %d is spatially varying") % ii).str());
+        }
+    }
+}
+
 double afwMath::LinearCombinationKernel::computeImage(
     afwImage::Image<Pixel> &image,
     bool doNormalize,
@@ -126,40 +155,21 @@ double afwMath::LinearCombinationKernel::computeImage(
 /**
  * @brief Get the fixed basis kernels
  */
-afwMath::LinearCombinationKernel::KernelList const &
-afwMath::LinearCombinationKernel::getKernelList() const {
+afwMath::KernelList const & afwMath::LinearCombinationKernel::getKernelList() const {
     return _kernelList;
 }
-    
+
 /**
- * @brief Check that all kernels have the same size and center and that none are spatially varying
- *
- * @throw lsst::pex::exceptions::InvalidParameterException  if the check fails
- */
-void afwMath::LinearCombinationKernel::checkKernelList(const KernelList &kernelList) const {
-    if (kernelList.size() < 1) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "kernelList has no elements");
-    }
-    
-    int ctrX = kernelList[0]->getCtrX();
-    int ctrY = kernelList[0]->getCtrY();
-    
-    for (unsigned int ii = 0; ii < kernelList.size(); ++ii) {
-        if (kernelList[ii]->getDimensions() != kernelList[0]->getDimensions()) {
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException,
-                (boost::format("kernel %d has different size than kernel 0") % ii).str());
-        }
-        if ((ctrX != kernelList[ii]->getCtrX()) || (ctrY != kernelList[ii]->getCtrY())) {
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException, 
-                (boost::format("kernel %d has different center than kernel 0") % ii).str());
-        }
-        if (kernelList[ii]->isSpatiallyVarying()) {
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException,
-                (boost::format("kernel %d is spatially varying") % ii).str());
-        }
-    }
+* @brief Get the sum of the pixels of each fixed basis kernel
+*/
+std::vector<double> afwMath::LinearCombinationKernel::getKernelSumList() const {
+    return _kernelSumList;
 }
 
+std::vector<double> afwMath::LinearCombinationKernel::getKernelParameters() const {
+    return _kernelParams;
+}
+ 
 std::string afwMath::LinearCombinationKernel::toString(std::string prefix) const {
     std::ostringstream os;
     os << prefix << "LinearCombinationKernel:" << std::endl;
@@ -177,11 +187,6 @@ std::string afwMath::LinearCombinationKernel::toString(std::string prefix) const
     return os.str();
 };
 
-
-std::vector<double> afwMath::LinearCombinationKernel::getKernelParameters() const {
-    return _kernelParams;
-}
-
 //
 // Protected Member Functions
 //
@@ -192,7 +197,6 @@ void afwMath::LinearCombinationKernel::setKernelParameter(unsigned int ind, doub
 //
 // Private Member Functions
 //
-
 /**
  * Compute _kernelImagePtrList, the internal archive of kernel images,
  *  and _kernelSumList, the sum of each kernel image.

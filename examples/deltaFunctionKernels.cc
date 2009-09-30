@@ -14,7 +14,7 @@ int main() {
     unsigned int nPixels = kernelCols * kernelRows;
     
     // create linear combination kernel as a set of delta function basis kernels
-    afwMath::LinearCombinationKernel::KernelList kernelList;
+    afwMath::KernelList kernelList;
     unsigned int ind = 0;
     for (unsigned int row = 0; row < kernelRows; ++row) {
         for (unsigned int col = 0; col < kernelCols; ++col) {

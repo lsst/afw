@@ -273,6 +273,7 @@ using boost::serialization::make_nvp;
         std::vector<SpatialFunctionPtr> _spatialFunctionList;
     };
 
+    typedef std::vector<Kernel::Ptr> KernelList;
 
     /**
      * @brief A kernel created from an Image
@@ -458,7 +459,6 @@ using boost::serialization::make_nvp;
     public:
         typedef boost::shared_ptr<LinearCombinationKernel> Ptr;
         typedef boost::shared_ptr<const LinearCombinationKernel> ConstPtr;
-        typedef std::vector<Kernel::Ptr> KernelList;
 
         explicit LinearCombinationKernel();
 
@@ -490,12 +490,7 @@ using boost::serialization::make_nvp;
                 
         virtual KernelList const &getKernelList() const;
         
-        /**
-        * @brief Return the sum of each basis kernel
-        */
-        std::vector<double> getKernelSumList() const {
-            return _kernelSumList;
-        }
+        std::vector<double> getKernelSumList() const;
         
         void checkKernelList(const KernelList &kernelList) const;
         

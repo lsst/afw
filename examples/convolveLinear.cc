@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
         afwImage::MaskedImage<imagePixelType> mImage(argv[1]);
         
         // construct basis kernels
-        afwMath::LinearCombinationKernel::KernelList kernelList;
+        afwMath::KernelList kernelList;
         for (int ii = 0; ii < 3; ++ii) {
             double xSigma = (ii == 1) ? MaxSigma : MinSigma;
             double ySigma = (ii == 2) ? MinSigma : MaxSigma;

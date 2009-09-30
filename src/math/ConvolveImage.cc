@@ -409,7 +409,7 @@ void afwMath::basicConvolve(
     typedef typename InImageT::template ImageTypeFactory<double>::type BasisImage;
     typedef typename BasisImage::x_iterator BasisXIterator;
     typedef typename OutImageT::x_iterator OutXIterator;
-    typedef afwMath::LinearCombinationKernel::KernelList KernelList;
+    typedef afwMath::KernelList KernelList;
 
     int const imWidth = inImage.getWidth();
     int const imHeight = inImage.getHeight();
