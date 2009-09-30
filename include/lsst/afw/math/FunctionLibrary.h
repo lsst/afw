@@ -79,7 +79,8 @@ using boost::serialization::make_nvp;
 #endif
         };
         template <typename R, class Archive>
-        friend void boost::serialization::save_construct_data(Archive& ar, IntegerDeltaFunction1<R> const* f, unsigned int const version);
+        friend void boost::serialization::save_construct_data(
+            Archive& ar, IntegerDeltaFunction1<R> const* f, unsigned int const version);
     };
 
     /**
@@ -142,7 +143,8 @@ using boost::serialization::make_nvp;
 #endif
         };
         template <typename R, class Archive>
-        friend void boost::serialization::save_construct_data(Archive& ar, IntegerDeltaFunction2<R> const* f, unsigned int const version);
+        friend void boost::serialization::save_construct_data(
+            Archive& ar, IntegerDeltaFunction2<R> const* f, unsigned int const version);
     };
 
     /**
@@ -304,7 +306,8 @@ using boost::serialization::make_nvp;
         virtual ~DoubleGaussianFunction2() {};
         
         virtual Function2Ptr copy() const {
-            return Function2Ptr(new DoubleGaussianFunction2(this->_params[0], this->_params[1], this->_params[2]));
+            return Function2Ptr(
+                new DoubleGaussianFunction2(this->_params[0], this->_params[1], this->_params[2]));
         }
         
         virtual ReturnT operator() (double x, double y) const {
@@ -668,7 +671,8 @@ using boost::serialization::make_nvp;
 #endif
         };
         template <typename R, class Archive>
-        friend void boost::serialization::save_construct_data(Archive& ar, Chebyshev1Function1<R> const* f, unsigned int const version);
+        friend void boost::serialization::save_construct_data(
+            Archive& ar, Chebyshev1Function1<R> const* f, unsigned int const version);
     };
 
 
@@ -741,7 +745,8 @@ using boost::serialization::make_nvp;
 #endif
         };
         template <typename R, class Archive>
-        friend void boost::serialization::save_construct_data(Archive& ar, LanczosFunction1<R> const* f, unsigned int const version);
+        friend void boost::serialization::save_construct_data(
+            Archive& ar, LanczosFunction1<R> const* f, unsigned int const version);
     };
 
     /**
@@ -821,7 +826,8 @@ using boost::serialization::make_nvp;
 #endif
         };
         template <typename R, class Archive>
-        friend void boost::serialization::save_construct_data(Archive& ar, LanczosFunction2<R> const* f, unsigned int const version);
+        friend void boost::serialization::save_construct_data(
+            Archive& ar, LanczosFunction2<R> const* f, unsigned int const version);
     };
 
 }}}   // lsst::afw::math

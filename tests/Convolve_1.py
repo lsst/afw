@@ -125,7 +125,7 @@ def refConvolve(imMaskVar, kernel, doNormalize, copyEdge):
     return (retImage, retMask, retVariance)
 
 def makeGaussianKernelVec(kCols, kRows):
-    """Create a afwImage.VectorKernel of gaussian kernels.
+    """Create a list of gaussian kernels.
 
     This is useful for constructing a LinearCombinationKernel.
     """
@@ -134,16 +134,16 @@ def makeGaussianKernelVec(kCols, kRows):
         (1.5, 2.5),
         (2.5, 1.5),
     ]
-    kVec = afwMath.KernelListD()
+    kVec = afwMath.KernelList()
     for xSigma, ySigma in xySigmaList:
         kFunc = afwMath.GaussianFunction2D(1.5, 2.5)
         kVec.append(afwMath.AnalyticKernel(kCols, kRows, kFunc))
     return kVec
 
 def makeDeltaFunctionKernelVec(kCols, kRows):
-    """Create an afwImage.VectorKernel of delta function kernels
+    """Create a list of delta function kernels
     """
-    kVec = afwMath.KernelListD()
+    kVec = afwMath.KernelList()
     for activeCol in range(kCols):
         for activeRow in range(kRows):
             kVec.append(afwMath.DeltaFunctionKernel(kCols, kRows, afwImage.PointI(activeCol, activeRow)))
@@ -443,7 +443,7 @@ class ConvolveTestCase(unittest.TestCase):
         # create three kernels with some non-overlapping pixels
         # (non-zero pixels in one kernel vs. zero pixels in other kernels);
         # note: the extreme example of this is delta function kernels, but this is less extreme
-        kVec = afwMath.KernelListD()
+        kVec = afwMath.KernelList()
         kImArr = numpy.zeros([5, 5], dtype=float)
         kImArr[1:4, 1:4] = 0.5
         kImArr[2, 2] = 1.0

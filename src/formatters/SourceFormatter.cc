@@ -445,7 +445,7 @@ void form::SourceVectorFormatter::write(
     }
 
     if (typeid(*storage) == typeid(BoostStorage)) {
-    	//persist to BoostStorage    
+        //persist to BoostStorage    
         BoostStorage * bs = dynamic_cast<BoostStorage *>(storage.get());
         if (bs == 0) {
             throw LSST_EXCEPT(ex::RuntimeErrorException, 
@@ -461,7 +461,7 @@ void form::SourceVectorFormatter::write(
         std::string model = _policy->getString(itemName + ".templateTableName");
 
         if (typeid(*storage) == typeid(DbStorage)) {
-        	//handle persisting to DbStorag
+            //handle persisting to DbStorag
             DbStorage * db = dynamic_cast<DbStorage *>(storage.get());
             if (db == 0) {
                 throw LSST_EXCEPT(ex::RuntimeErrorException, 
@@ -477,7 +477,7 @@ void form::SourceVectorFormatter::write(
                 insertRow<DbStorage>(*db, **i);
             }
         } else {
-        	//handle persisting to DbTsvStorage
+            //handle persisting to DbTsvStorage
             DbTsvStorage * db = dynamic_cast<DbTsvStorage *>(storage.get());
             if (db == 0) {
                 throw LSST_EXCEPT(ex::RuntimeErrorException, 
@@ -509,7 +509,7 @@ Persistable* form::SourceVectorFormatter::read(
     std::auto_ptr<PersistableSourceVector> p(new PersistableSourceVector);
     
     if (typeid(*storage) == typeid(BoostStorage)) {
-    	//handle retrieval from BoostStorage
+        //handle retrieval from BoostStorage
         BoostStorage* bs = dynamic_cast<BoostStorage *>(storage.get());
         if (bs == 0) { 
             throw LSST_EXCEPT(ex::RuntimeErrorException, 
@@ -519,7 +519,7 @@ Persistable* form::SourceVectorFormatter::read(
         bs->getIArchive() & *p;
     } else if (typeid(*storage) == typeid(DbStorage) 
             || typeid(*storage) == typeid(DbTsvStorage)) {
-    	//handle retrieval from DbStorage, DbTsvStorage    
+        //handle retrieval from DbStorage, DbTsvStorage    
         DbStorage * db = dynamic_cast<DbStorage *>(storage.get());
         if (db == 0) {  
             throw LSST_EXCEPT(ex::RuntimeErrorException, 
@@ -546,9 +546,9 @@ Persistable* form::SourceVectorFormatter::read(
             //add a DiaSource to sourceVector
             data.setNotNull();
             while (db->next()) {
-            	//Now validate each column. 
-            	//If NULLABLE column is null, set that field null in resulting DiaSource
-            	//else if NON-NULLABLE column is null, throw exception            	
+                //Now validate each column. 
+                //If NULLABLE column is null, set that field null in resulting DiaSource
+                //else if NON-NULLABLE column is null, throw exception
                 if (db->columnIsNull(SOURCE_ID)) { 
                     throw LSST_EXCEPT(ex::RuntimeErrorException, 
                             "null column \"sourceId\""); 

@@ -26,14 +26,14 @@ namespace math {
     template <typename OutImageT, typename InImageT>
     inline typename OutImageT::SinglePixel convolveAtAPoint(
         typename InImageT::const_xy_locator& inLocator,
-        typename lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::const_xy_locator& kernelLocator,
+        typename lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel>::const_xy_locator& kernelLocator,
         int kWidth, int kHeight);
     
     template <typename OutImageT, typename InImageT>
     inline typename OutImageT::SinglePixel convolveAtAPoint(
         typename InImageT::const_xy_locator& inImage,
-        std::vector<lsst::afw::math::Kernel::PixelT> const& kernelColList,
-        std::vector<lsst::afw::math::Kernel::PixelT> const& kernelRowList
+        std::vector<lsst::afw::math::Kernel::Pixel> const& kernelColList,
+        std::vector<lsst::afw::math::Kernel::Pixel> const& kernelRowList
     );
     
     template <typename OutImageT, typename InImageT>
@@ -128,7 +128,7 @@ template <typename OutImageT, typename InImageT>
 inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
     typename InImageT::const_xy_locator& imageLocator, ///< locator for %image pixel that overlaps
         ///< pixel (0,0) of kernel (the origin of the kernel, not its center)
-    lsst::afw::image::Image<lsst::afw::math::Kernel::PixelT>::const_xy_locator &kernelLocator,
+    lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel>::const_xy_locator &kernelLocator,
                     ///< locator for (0,0) pixel of kernel (the origin of the kernel, not its center)
     int kWidth,     ///< number of columns in kernel
     int kHeight     ///< number of rows in kernel
@@ -165,12 +165,12 @@ template <typename OutImageT, typename InImageT>
 inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
     typename InImageT::const_xy_locator& imageLocator,
                                         ///< locator for %image pixel that overlaps (0,0) pixel of kernel(!)
-    std::vector<lsst::afw::math::Kernel::PixelT> const &kernelXList,  ///< kernel column vector
-    std::vector<lsst::afw::math::Kernel::PixelT> const &kernelYList   ///< kernel row vector
+    std::vector<lsst::afw::math::Kernel::Pixel> const &kernelXList,  ///< kernel column vector
+    std::vector<lsst::afw::math::Kernel::Pixel> const &kernelYList   ///< kernel row vector
 ) {
-    typedef typename std::vector<lsst::afw::math::Kernel::PixelT>::const_iterator k_iter;
+    typedef typename std::vector<lsst::afw::math::Kernel::Pixel>::const_iterator k_iter;
 
-    std::vector<lsst::afw::math::Kernel::PixelT>::const_iterator kernelYIter = kernelYList.begin();
+    std::vector<lsst::afw::math::Kernel::Pixel>::const_iterator kernelYIter = kernelYList.begin();
 
     typedef typename OutImageT::SinglePixel OutT;
     OutT outValue = 0;

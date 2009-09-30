@@ -28,25 +28,15 @@ SWIG_SHARED_PTR_DERIVED(Kernel, lsst::daf::data::LsstBase, lsst::afw::math::Kern
 %kernelPtr(SeparableKernel);
 
 %include "lsst/afw/math/Kernel.h"
+
+%template(KernelList) std::vector<boost::shared_ptr<lsst::afw::math::Kernel> >;
+
 %include "lsst/afw/math/KernelFunctions.h"
 
-%template(VectorKernel)         std::vector<lsst::afw::math::Kernel::PtrT>;
-%template(VectorKernelA)        std::vector<lsst::afw::math::AnalyticKernel::PtrT>;
-%template(VectorKernelDF)       std::vector<lsst::afw::math::DeltaFunctionKernel::PtrT>;
-%template(KernelListD_)         lsst::afw::math::KernelList<>;
-%template(KernelListD)          lsst::afw::math::KernelList<lsst::afw::math::Kernel>;
-%template(AnalyticKernelListD)  lsst::afw::math::KernelList<lsst::afw::math::AnalyticKernel>;
-%template(DeltaFunctionKernelListD)  lsst::afw::math::KernelList<lsst::afw::math::DeltaFunctionKernel>;
-
-// Create conversion constructors 
-%extend lsst::afw::math::KernelList<lsst::afw::math::Kernel> {
-    %template(KernelListDD) KernelList<lsst::afw::math::AnalyticKernel>; // Conversion constructor
-    %template(KernelListDD) KernelList<lsst::afw::math::DeltaFunctionKernel>; // Conversion constructor
-};
-
+%include "lsst/afw/math/ConvolveImage.h"
 //
-// Functions to convolve a (Masked)?Image with a Kernel.  There are a lot of these,
-// so write a set of macros to do the instantiations
+// Functions to convolve a MaskedImage or Image with a Kernel.
+// There are a lot of these, so write a set of macros to do the instantiations
 //
 // First a couple of macros (%IMAGE and %MASKEDIMAGE) to provide MaskedImage's default arguments,
 %define %IMAGE(PIXTYPE)
@@ -61,18 +51,18 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
 //
 // Note that IMAGE is a macro, not a class name
 %define %convolutionFuncsByType(IMAGE, PIXTYPE1, PIXTYPE2)
-    %template(convolve)       lsst::afw::math::convolve<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2),
-                                                        lsst::afw::math::Kernel>;
-    %template(convolve)       lsst::afw::math::convolve<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2),
-                                                        lsst::afw::math::AnalyticKernel>;
-    %template(convolve)       lsst::afw::math::convolve<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2),
-                                                        lsst::afw::math::DeltaFunctionKernel>;
-    %template(convolve)       lsst::afw::math::convolve<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2),
-                                                        lsst::afw::math::FixedKernel>;
-    %template(convolve)       lsst::afw::math::convolve<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2),
-                                                        lsst::afw::math::LinearCombinationKernel>;
-    %template(convolve)       lsst::afw::math::convolve<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2),
-                                                        lsst::afw::math::SeparableKernel>;
+    %template(convolve) lsst::afw::math::convolve<
+        IMAGE(PIXTYPE1), IMAGE(PIXTYPE2), lsst::afw::math::Kernel>;
+    %template(convolve) lsst::afw::math::convolve<
+        IMAGE(PIXTYPE1), IMAGE(PIXTYPE2), lsst::afw::math::AnalyticKernel>;
+    %template(convolve) lsst::afw::math::convolve<
+        IMAGE(PIXTYPE1), IMAGE(PIXTYPE2), lsst::afw::math::DeltaFunctionKernel>;
+    %template(convolve) lsst::afw::math::convolve<
+        IMAGE(PIXTYPE1), IMAGE(PIXTYPE2), lsst::afw::math::FixedKernel>;
+    %template(convolve) lsst::afw::math::convolve<
+        IMAGE(PIXTYPE1), IMAGE(PIXTYPE2), lsst::afw::math::LinearCombinationKernel>;
+    %template(convolve) lsst::afw::math::convolve<
+        IMAGE(PIXTYPE1), IMAGE(PIXTYPE2), lsst::afw::math::SeparableKernel>;
 %enddef
 //
 // Now a macro to specify Image and MaskedImage
@@ -84,18 +74,11 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
 //
 // Finally, specify the functions we want
 //
-namespace lsst { namespace afw { namespace image {
-             //typedef unsigned short MaskPixel;
-             typedef float VariancePixel;
-}}}
-         
-%include "lsst/afw/math/ConvolveImage.h"
-
 %convolutionFuncs(double, double);
 %convolutionFuncs(double, float);
 %convolutionFuncs(float, float);
 %convolutionFuncs(boost::uint16_t, boost::uint16_t);
-
+         
 //
 // When swig sees a Kernel it doesn't know about KERNEL_TYPE; all it knows is that it
 // has a Kernel, and Kernels don't know about e.g. LinearCombinationKernel's getKernelParameters()

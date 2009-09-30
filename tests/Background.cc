@@ -110,38 +110,38 @@ BOOST_AUTO_TEST_CASE(BackgroundRamp) {
     {
         
         // make a ramping image (spline should be exact for linear increasing image
-	int const nx = 512;
-	int const ny = 512;
+        int const nx = 512;
+        int const ny = 512;
         image::Image<double> rampimg = image::Image<double>(nx,ny);
-	double dzdx = 0.1;
+        double dzdx = 0.1;
         double dzdy = 0.2;
         double z0 = 10000.0;
 
-	for (int i = 0; i < nx; ++i) {
+        for (int i = 0; i < nx; ++i) {
             double x = static_cast<double>(i);
-	    for ( int j = 0; j < ny; ++j) {
+            for ( int j = 0; j < ny; ++j) {
                 double y = static_cast<double>(j);
-		*rampimg.xy_at(i, j) = dzdx*x + dzdy*y + z0;
+                *rampimg.xy_at(i, j) = dzdx*x + dzdy*y + z0;
             }
         }
-	
-	// check corner, edge, and center pixels
+        
+        // check corner, edge, and center pixels
         math::BackgroundControl bctrl = math::BackgroundControl(math::NATURAL_SPLINE);
-	bctrl.setNxSample(6);
-	bctrl.setNySample(6);
-	bctrl.sctrl.setNumSigmaClip(20.0);  // something large enough to avoid clipping entirely
-	bctrl.sctrl.setNumIter(1);
+        bctrl.setNxSample(6);
+        bctrl.setNySample(6);
+        bctrl.sctrl.setNumSigmaClip(20.0);  // something large enough to avoid clipping entirely
+        bctrl.sctrl.setNumIter(1);
         math::Background backobj = math::Background(rampimg,bctrl);
 
         // test the values at the corners and in the middle
         int const ntest = 3;
-	for (int i = 0; i < ntest; ++i) {
+        for (int i = 0; i < ntest; ++i) {
             int xpix = i*(nx - 1)/(ntest - 1);
-	    for(int j = 0; j < ntest; ++j) {
+            for(int j = 0; j < ntest; ++j) {
                 int ypix = j*(ny - 1)/(ntest - 1);
-		double testval = backobj.getPixel(xpix, ypix);
+                double testval = backobj.getPixel(xpix, ypix);
                 double realval = *rampimg.xy_at(xpix, ypix);
-		BOOST_CHECK_CLOSE( testval, realval, 1.0e-10 );
+                BOOST_CHECK_CLOSE( testval, realval, 1.0e-10 );
             }
         }
                     
@@ -152,50 +152,50 @@ BOOST_AUTO_TEST_CASE(BackgroundParabola) {
 
     {
         
-	// make an image which varies parabolicly (spline should be exact for 2rd order polynomial)
-	int const nx = 512;
-	int const ny = 512;
+        // make an image which varies parabolicly (spline should be exact for 2rd order polynomial)
+        int const nx = 512;
+        int const ny = 512;
         image::Image<double> parabimg = image::Image<double>(nx,ny);
-	double d2zdx2 = -1.0e-4;
+        double d2zdx2 = -1.0e-4;
         double d2zdy2 = -1.0e-4;
         double dzdx   = 0.1;
         double dzdy   = 0.2;
         double z0 = 10000.0;  // no cross-terms
 
-	for ( int i = 0; i < nx; ++i ) {
-	    for ( int j = 0; j < ny; ++j ) {
-		*parabimg.xy_at(i, j) = d2zdx2*i*i + d2zdy2*j*j + dzdx*i + dzdy*j + z0;
+        for ( int i = 0; i < nx; ++i ) {
+            for ( int j = 0; j < ny; ++j ) {
+                *parabimg.xy_at(i, j) = d2zdx2*i*i + d2zdy2*j*j + dzdx*i + dzdy*j + z0;
             }
         }
-	
-	// check corner, edge, and center pixels
+        
+        // check corner, edge, and center pixels
         math::BackgroundControl bctrl = math::BackgroundControl(math::NATURAL_SPLINE);
-	bctrl.setNxSample(16);
-	bctrl.setNySample(16);
-	bctrl.sctrl.setNumSigmaClip(10.0);
-	bctrl.sctrl.setNumIter(1);
+        bctrl.setNxSample(16);
+        bctrl.setNySample(16);
+        bctrl.sctrl.setNumSigmaClip(10.0);
+        bctrl.sctrl.setNumIter(1);
         math::Background backobj = math::Background(parabimg,bctrl);
 
-	// debug
-	//bimg = backobj.getImageD()
-	//ds9.mtv(parabimg)
-	//ds9.mtv(bimg, frame=1)
-	//parabimg.writeFits("a.fits")
-	//bimg.writeFits("b.fits")
+        // debug
+        //bimg = backobj.getImageD()
+        //ds9.mtv(parabimg)
+        //ds9.mtv(bimg, frame=1)
+        //parabimg.writeFits("a.fits")
+        //bimg.writeFits("b.fits")
 
         // check the values at the corners and int he middle
         int const ntest = 3;
-	for (int i = 0; i < ntest; ++i) {
+        for (int i = 0; i < ntest; ++i) {
             int xpix = i*(nx - 1)/(ntest - 1);
-	    for(int j = 0; j < ntest; ++j) {
+            for(int j = 0; j < ntest; ++j) {
                 int ypix = j*(ny - 1)/(ntest - 1);
-		double testval = backobj.getPixel(xpix, ypix);
-		double realval = *parabimg.xy_at(xpix,ypix);
-		//print xpix, ypix, testval, realval
-		// quadratic terms skew the averages of the subimages and the clipped mean for
-		// a subimage != value of center pixel.  1/20 counts on a 10000 count sky
-		//  is a fair (if arbitrary) test.
-		BOOST_CHECK_CLOSE( testval, realval, 0.05 );
+                double testval = backobj.getPixel(xpix, ypix);
+                double realval = *parabimg.xy_at(xpix,ypix);
+                //print xpix, ypix, testval, realval
+                // quadratic terms skew the averages of the subimages and the clipped mean for
+                // a subimage != value of center pixel.  1/20 counts on a 10000 count sky
+                //  is a fair (if arbitrary) test.
+                BOOST_CHECK_CLOSE( testval, realval, 0.05 );
             }
         }
     }
