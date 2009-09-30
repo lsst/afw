@@ -19,10 +19,7 @@ import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.image.testUtils as imTestUtils
 
-try:
-    Verbosity
-except NameError:
-    Verbosity = 0                       # increase to see trace
+Verbosity = 0   # increase to see trace; 3 will show the convolutions specializations being used
 pexLog.Debug("lsst.afw", Verbosity)
 
 try:
@@ -208,6 +205,8 @@ class ConvolveTestCase(unittest.TestCase):
         The relative difference (rtol * abs(b)) and the absolute difference "atol" are added together
         to compare against the absolute difference between "a" and "b".
         """
+        if Verbosity > 0:
+            print "Test convolution with", kernelDescr
         if refKernel == None:
             refKernel = kernel
 
