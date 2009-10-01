@@ -1,11 +1,11 @@
 // -*- LSST-C++ -*-
 /**
- * @file   Quadrature.cc
+ * @file   Integrate.cc
  * @author S. Bickerton
  * @date   May 25, 2009
  *
- * This test evaluates the romberg 1D and 2D
- * integrators in the afw::math (Quadrature) suite.
+ * This test evaluates the 1D and 2D integrators
+ * integrators in the afw::math (Integrate) suite.
  *
  * Outline:
  *
@@ -18,7 +18,7 @@
 #include <functional>
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE Quadrature
+#define BOOST_TEST_MODULE Integrate
 
 #include "boost/test/unit_test.hpp"
 

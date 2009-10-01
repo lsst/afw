@@ -7,386 +7,433 @@
 namespace lsst { namespace afw { namespace math {
 
 namespace details {            
-            
+
+// ==============================================================================
 template <class Ret, class T>
 class MemberLess_t : public std::binary_function<const T&,const T&,bool> {
-  public:
+public:
     explicit MemberLess_t(Ret (T::*_f)() const) : f(_f) {}
     bool operator()(const T& t1, const T& t2) const {return (t1.*f)() < (t2.*f)(); }
-  private:
+private:
     Ret (T::*f)() const;
 };
-  
+    
+
+// ==============================================================================
 template <class Ret, class T>
 class PtrMemberLess_t : public std::binary_function<const T&,const T&,bool> {
-  public:
+public:
     explicit PtrMemberLess_t(Ret (T::*_f)() const) : f(_f) {}
     bool operator()(const T* t1, const T* t2) const {return (t1->*f)() < (t2->*f)(); }
-  private:
+private:
     Ret (T::*f)() const;
 };
-  
-template <class Ret, class T>
-inline MemberLess_t<Ret,T> MemberLess(Ret (T::*f)() const)
-  {return MemberLess_t<Ret,T>(f);}
 
+    
+// ==============================================================================
 template <class Ret, class T>
-inline PtrMemberLess_t<Ret,T> PtrMemberLess(Ret (T::*f)() const)
-  {return PtrMemberLess_t<Ret,T>(f);}
+inline MemberLess_t<Ret,T> MemberLess(Ret (T::*f)() const) {return MemberLess_t<Ret,T>(f);}
 
+// ==============================================================================
+template <class Ret, class T>
+inline PtrMemberLess_t<Ret,T> PtrMemberLess(Ret (T::*f)() const) {return PtrMemberLess_t<Ret,T>(f);}
+
+// ==============================================================================
 template <class Ret, class T>
 class MemberGreater_t : public std::binary_function<const T&,const T&,bool> {
-  public:
+public:
     explicit MemberGreater_t(Ret (T::*_f)() const) : f(_f) {}
     bool operator()(const T& t1, const T& t2) const {return (t1.*f)() < (t2.*f)(); }
-  private:
+private:
     Ret (T::*f)() const;
 };
-  
+
+
+// ==============================================================================
 template <class Ret, class T>
 class PtrMemberGreater_t : public std::binary_function<const T&,const T&,bool> {
-  public:
+public:
     explicit PtrMemberGreater_t(Ret (T::*_f)() const) : f(_f) {}
     bool operator()(const T* t1, const T* t2) const {return (t1->*f)() < (t2->*f)(); }
-  private:
+private:
     Ret (T::*f)() const;
 };
-  
-template <class Ret, class T>
-inline MemberGreater_t<Ret,T> MemberGreater(Ret (T::*f)() const)
-  {return MemberGreater_t<Ret,T>(f);}
 
+    
+// ==============================================================================
 template <class Ret, class T>
-inline PtrMemberGreater_t<Ret,T> PtrMemberGreater(Ret (T::*f)() const)
-  {return PtrMemberGreater_t<Ret,T>(f);}
+inline MemberGreater_t<Ret,T> MemberGreater(Ret (T::*f)() const) {return MemberGreater_t<Ret,T>(f);}
 
+// ==============================================================================
+template <class Ret, class T>
+inline PtrMemberGreater_t<Ret,T> PtrMemberGreater(Ret (T::*f)() const) {return PtrMemberGreater_t<Ret,T>(f);}
+
+    
+
+// ==============================================================================
 template <class Ret, class T>
 class MemberEqual_t : public std::binary_function<const T&,const T&,bool> {
-  public:
+public:
     explicit MemberEqual_t(Ret (T::*_f)() const) : f(_f) {}
     bool operator()(const T& t1, const T& t2) const {return (t1.*f)() < (t2.*f)(); }
-  private:
+private:
     Ret (T::*f)() const;
 };
-  
+    
+
+// ==============================================================================
 template <class Ret, class T>
 class PtrMemberEqual_t : public std::binary_function<const T&,const T&,bool> {
-  public:
+public:
     explicit PtrMemberEqual_t(Ret (T::*_f)() const) : f(_f) {}
     bool operator()(const T* t1, const T* t2) const {return (t1->*f)() < (t2->*f)(); }
-  private:
+private:
     Ret (T::*f)() const;
 };
-  
+    
+// ==============================================================================
 template <class Ret, class T>
-inline MemberEqual_t<Ret,T> MemberEqual(Ret (T::*f)() const)
-  {return MemberEqual_t<Ret,T>(f);}
+inline MemberEqual_t<Ret,T> MemberEqual(Ret (T::*f)() const) {return MemberEqual_t<Ret,T>(f);}
 
+// ==============================================================================
 template <class Ret, class T>
-inline PtrMemberEqual_t<Ret,T> PtrMemberEqual(Ret (T::*f)() const)
-  {return PtrMemberEqual_t<Ret,T>(f);}
+inline PtrMemberEqual_t<Ret,T> PtrMemberEqual(Ret (T::*f)() const) {return PtrMemberEqual_t<Ret,T>(f);}
 
+// ==============================================================================
 template <class T>
 struct PtrLess : std::binary_function<T*,T*,bool> {
-  bool operator()(const T* p1, const T* p2) const {return *p1<*p2;}
+    bool operator()(const T* p1, const T* p2) const {return *p1<*p2;}
 };
 
+// ==============================================================================
 template <class T>
 struct PtrGreater : std::binary_function<T*,T*,bool> {
-  bool operator()(const T* p1, const T* p2) const {return *p1>*p2;}
+    bool operator()(const T* p1, const T* p2) const {return *p1>*p2;}
 };
 
+// ==============================================================================
 template <class T>
 struct PtrEqual : std::binary_function<T*,T*,bool> {
-  bool operator()(const T* p1, const T* p2) const {return *p1==*p2;}
+    bool operator()(const T* p1, const T* p2) const {return *p1==*p2;}
 };
 
 
-// Extend standard unary and binary functions to 
-// nullary, trinary, tetranary, pentanary, hexanary, heptanary, octanary 
-// functions
+/**
+ * @brief Extend standard unary and binary functions
+ *
+ * @note Extend to nullary, trinary, tetranary, pentanary,
+ *       hexanary, heptanary, octanary functions
+ *      
+ */
 
+// ==============================================================================
 template <class _Result>
 struct nullary_function {
-  typedef _Result result_type;
+    typedef _Result result_type;
 };      
 
+// ==============================================================================
 template <class _Arg1, class _Arg2, class _Arg3, class _Result>
 struct trinary_function {
-  typedef _Arg1 firstof3_argument_type;
-  typedef _Arg2 secondof3_argument_type;
-  typedef _Arg3 thirdof3_argument_type;
-  typedef _Result result_type;
+    typedef _Arg1 firstof3_argument_type;
+    typedef _Arg2 secondof3_argument_type;
+    typedef _Arg3 thirdof3_argument_type;
+    typedef _Result result_type;
 };      
-
+    
+// ==============================================================================
 template <class _Arg1, class _Arg2, class _Arg3, class _Arg4, class _Result>
 struct tetranary_function {
-  typedef _Arg1 firstof4_argument_type;
-  typedef _Arg2 secondof4_argument_type;
-  typedef _Arg3 thirdof4_argument_type;
-  typedef _Arg4 fourthof4_argument_type;
-  typedef _Result result_type;
+    typedef _Arg1 firstof4_argument_type;
+    typedef _Arg2 secondof4_argument_type;
+    typedef _Arg3 thirdof4_argument_type;
+    typedef _Arg4 fourthof4_argument_type;
+    typedef _Result result_type;
 };      
 
+// ==============================================================================
 template <class _Arg1, class _Arg2, class _Arg3, class _Arg4, 
-	class _Arg5, class _Result>
+          class _Arg5, class _Result>
 struct pentanary_function {
-  typedef _Arg1 firstof5_argument_type;
-  typedef _Arg2 secondof5_argument_type;
-  typedef _Arg3 thirdof5_argument_type;
-  typedef _Arg4 fourthof5_argument_type;
-  typedef _Arg5 fifthof5_argument_type;
-  typedef _Result result_type;
+    typedef _Arg1 firstof5_argument_type;
+    typedef _Arg2 secondof5_argument_type;
+    typedef _Arg3 thirdof5_argument_type;
+    typedef _Arg4 fourthof5_argument_type;
+    typedef _Arg5 fifthof5_argument_type;
+    typedef _Result result_type;
 };      
 
+// ==============================================================================
 template <class _Arg1, class _Arg2, class _Arg3, class _Arg4, 
-	class _Arg5, class _Arg6, class _Result>
+          class _Arg5, class _Arg6, class _Result>
 struct hexanary_function {
-  typedef _Arg1 firstof6_argument_type;
-  typedef _Arg2 secondof6_argument_type;
-  typedef _Arg3 thirdof6_argument_type;
-  typedef _Arg4 fourthof6_argument_type;
-  typedef _Arg5 fifthof6_argument_type;
-  typedef _Arg6 sixthof6_argument_type;
-  typedef _Result result_type;
+    typedef _Arg1 firstof6_argument_type;
+    typedef _Arg2 secondof6_argument_type;
+    typedef _Arg3 thirdof6_argument_type;
+    typedef _Arg4 fourthof6_argument_type;
+    typedef _Arg5 fifthof6_argument_type;
+    typedef _Arg6 sixthof6_argument_type;
+    typedef _Result result_type;
 };      
 
+// ==============================================================================
 template <class _Arg1, class _Arg2, class _Arg3, class _Arg4, 
-	class _Arg5, class _Arg6, class _Arg7, class _Result>
+          class _Arg5, class _Arg6, class _Arg7, class _Result>
 struct heptanary_function {
-  typedef _Arg1 firstof7_argument_type;
-  typedef _Arg2 secondof7_argument_type;
-  typedef _Arg3 thirdof7_argument_type;
-  typedef _Arg4 fourthof7_argument_type;
-  typedef _Arg5 fifthof7_argument_type;
-  typedef _Arg6 sixthof7_argument_type;
-  typedef _Arg7 seventhof7_argument_type;
-  typedef _Result result_type;
+    typedef _Arg1 firstof7_argument_type;
+    typedef _Arg2 secondof7_argument_type;
+    typedef _Arg3 thirdof7_argument_type;
+    typedef _Arg4 fourthof7_argument_type;
+    typedef _Arg5 fifthof7_argument_type;
+    typedef _Arg6 sixthof7_argument_type;
+    typedef _Arg7 seventhof7_argument_type;
+    typedef _Result result_type;
 };      
 
+// ==============================================================================
 template <class _Arg1, class _Arg2, class _Arg3, class _Arg4, 
-	class _Arg5, class _Arg6, class _Arg7, class _Arg8, class _Result>
+          class _Arg5, class _Arg6, class _Arg7, class _Arg8, class _Result>
 struct octanary_function {
-  typedef _Arg1 firstof8_argument_type;
-  typedef _Arg2 secondof8_argument_type;
-  typedef _Arg3 thirdof8_argument_type;
-  typedef _Arg4 fourthof8_argument_type;
-  typedef _Arg5 fifthof8_argument_type;
-  typedef _Arg6 sixthof8_argument_type;
-  typedef _Arg7 seventhof8_argument_type;
-  typedef _Arg8 eighthof8_argument_type;
-  typedef _Result result_type;
+    typedef _Arg1 firstof8_argument_type;
+    typedef _Arg2 secondof8_argument_type;
+    typedef _Arg3 thirdof8_argument_type;
+    typedef _Arg4 fourthof8_argument_type;
+    typedef _Arg5 fifthof8_argument_type;
+    typedef _Arg6 sixthof8_argument_type;
+    typedef _Arg7 seventhof8_argument_type;
+    typedef _Arg8 eighthof8_argument_type;
+    typedef _Result result_type;
 };      
 
+    
+// ==============================================================================
 template <class _UF>
 class binder1_1 : public nullary_function<typename _UF::result_type> {
 protected:
-  const _UF& op;
-  typename _UF::argument_type value;
+    const _UF& op;
+    typename _UF::argument_type value;
 public:
-  binder1_1(const _UF& __x,
-            typename _UF::argument_type __y)
-      : op(__x), value(__y) {}
-  typename _UF::result_type operator()() const {
-    return op(value); 
-  }
+    binder1_1(const _UF& __x,
+              typename _UF::argument_type __y)
+        : op(__x), value(__y) {}
+    typename _UF::result_type operator()() const {
+        return op(value); 
+    }
 };
 
+// ==============================================================================
 template <class _UF, class _Tp>
 inline binder1_1<_UF>
 bind11(const _UF& __oper, const _Tp& __x) 
 {
-  typedef typename _UF::argument_type _Arg;
-  return binder1_1<_UF>(__oper, static_cast<_Arg>(__x));
+    typedef typename _UF::argument_type _Arg;
+    return binder1_1<_UF>(__oper, static_cast<_Arg>(__x));
 }
 
+// ==============================================================================
 template <class _BF>
 class binder2_1 
-  : public std::unary_function<typename _BF::second_argument_type,
-			  typename _BF::result_type> {
+    : public std::unary_function<typename _BF::second_argument_type,
+                                 typename _BF::result_type> {
 protected:
-  _BF oper;
-  typename _BF::first_argument_type value;
+    _BF oper;
+    typename _BF::first_argument_type value;
 public:
-  binder2_1(const _BF& __oper,
-            typename _BF::first_argument_type __val)
-      : oper(__oper), value(__val) {}
-  typename _BF::result_type 
-  operator()(const typename _BF::second_argument_type& __x) const {
-    return oper(value, __x); 
-  }
+    binder2_1(const _BF& __oper,
+              typename _BF::first_argument_type __val)
+        : oper(__oper), value(__val) {}
+    typename _BF::result_type 
+    operator()(const typename _BF::second_argument_type& __x) const {
+        return oper(value, __x); 
+    }
 };
 
+    
+// ==============================================================================
 template <class _BF, class _Tp>
 inline binder2_1<_BF>
 bind21(const _BF& __oper, const _Tp& __x) 
 {
-  typedef typename _BF::first_argument_type _Arg;
-  return binder2_1<_BF>(__oper, static_cast<_Arg>(__x));
+    typedef typename _BF::first_argument_type _Arg;
+    return binder2_1<_BF>(__oper, static_cast<_Arg>(__x));
 }
 
+// ==============================================================================
 template <class _BF>
 class binder2_2 
-  : public std::unary_function<typename _BF::first_argument_type,
-			  typename _BF::result_type> {
+    : public std::unary_function<typename _BF::first_argument_type,
+                                 typename _BF::result_type> {
 protected:
-  _BF oper;
-  typename _BF::second_argument_type value;
+    _BF oper;
+    typename _BF::second_argument_type value;
 public:
-  binder2_2(const _BF& __oper,
-            typename _BF::second_argument_type __val)
-      : oper(__oper), value(__val) {}
-  typename _BF::result_type 
-  operator()(const typename _BF::first_argument_type& __x) const {
-    return oper(__x, value); 
-  }
+    binder2_2(const _BF& __oper,
+              typename _BF::second_argument_type __val)
+        : oper(__oper), value(__val) {}
+    typename _BF::result_type 
+    operator()(const typename _BF::first_argument_type& __x) const {
+        return oper(__x, value); 
+    }
 };
-
+    
+// ==============================================================================
 template <class _BF, class _Tp>
 inline binder2_2<_BF>
 bind22(const _BF& __oper, const _Tp& __x) 
 {
-  typedef typename _BF::second_argument_type _Arg;
-  return binder2_2<_BF>(__oper, static_cast<_Arg>(__x));
+    typedef typename _BF::second_argument_type _Arg;
+    return binder2_2<_BF>(__oper, static_cast<_Arg>(__x));
 }
-
+    
+// ==============================================================================
 template <class _TF>
 class binder3_1 
-  : public std::binary_function<typename _TF::secondof3_argument_type,
-                           typename _TF::thirdof3_argument_type,
-			   typename _TF::result_type> {
+    : public std::binary_function<typename _TF::secondof3_argument_type,
+                                  typename _TF::thirdof3_argument_type,
+                                  typename _TF::result_type> {
 protected:
-  _TF oper;
-  typename _TF::firstof3_argument_type value;
+    _TF oper;
+    typename _TF::firstof3_argument_type value;
 public:
-  binder3_1(const _TF& __oper,
-            typename _TF::firstof3_argument_type __val)
-      : oper(__oper), value(__val) {}
-  typename _TF::result_type 
-  operator()(const typename _TF::secondof3_argument_type& __x1, 
-             const typename _TF::thirdof3_argument_type& __x2) const {
-    return oper(value, __x1, __x2); 
-  }
+    binder3_1(const _TF& __oper,
+              typename _TF::firstof3_argument_type __val)
+        : oper(__oper), value(__val) {}
+    typename _TF::result_type 
+    operator()(const typename _TF::secondof3_argument_type& __x1, 
+               const typename _TF::thirdof3_argument_type& __x2) const {
+        return oper(value, __x1, __x2); 
+    }
 };
-
+    
+// ==============================================================================
 template <class _TF, class _Tp>
 inline binder3_1<_TF>
 bind31(const _TF& __oper, const _Tp& __x) 
 {
-  typedef typename _TF::firstof3_argument_type _Arg;
-  return binder3_1<_TF>(__oper, static_cast<_Arg>(__x));
+    typedef typename _TF::firstof3_argument_type _Arg;
+    return binder3_1<_TF>(__oper, static_cast<_Arg>(__x));
 }
-
+    
+// ==============================================================================
 template <class _TF>
 class binder3_2 
-  : public std::binary_function<typename _TF::firstof3_argument_type,
-                           typename _TF::thirdof3_argument_type,
-			   typename _TF::result_type> {
+    : public std::binary_function<typename _TF::firstof3_argument_type,
+                                  typename _TF::thirdof3_argument_type,
+                                  typename _TF::result_type> {
 protected:
-  _TF oper;
-  typename _TF::secondof3_argument_type value;
+    _TF oper;
+    typename _TF::secondof3_argument_type value;
 public:
-  binder3_2(const _TF& __oper,
-            typename _TF::secondof3_argument_type __val)
-      : oper(__oper), value(__val) {}
-  typename _TF::result_type
-  operator()(const typename _TF::firstof3_argument_type& __x1, 
-             const typename _TF::thirdof3_argument_type& __x2) const {
-    return oper(__x1, value, __x2); 
-  }
+    binder3_2(const _TF& __oper,
+              typename _TF::secondof3_argument_type __val)
+        : oper(__oper), value(__val) {}
+    typename _TF::result_type
+    operator()(const typename _TF::firstof3_argument_type& __x1, 
+               const typename _TF::thirdof3_argument_type& __x2) const {
+        return oper(__x1, value, __x2); 
+    }
 };
 
+// ==============================================================================
 template <class _TF, class _Tp>
 inline binder3_2<_TF>
 bind32(const _TF& __oper, const _Tp& __x) 
 {
-  typedef typename _TF::secondof3_argument_type _Arg;
-  return binder3_2<_TF>(__oper, static_cast<_Arg>(__x));
+    typedef typename _TF::secondof3_argument_type _Arg;
+    return binder3_2<_TF>(__oper, static_cast<_Arg>(__x));
 }
 
+// ==============================================================================
 template <class _TF>
 class binder3_3 
-  : public std::binary_function<typename _TF::firstof3_argument_type,
-                           typename _TF::secondof3_argument_type,
-			   typename _TF::result_type> {
+    : public std::binary_function<typename _TF::firstof3_argument_type,
+                                  typename _TF::secondof3_argument_type,
+                                  typename _TF::result_type> {
 protected:
-  _TF oper;
-  typename _TF::thirdof3_argument_type value;
+    _TF oper;
+    typename _TF::thirdof3_argument_type value;
 public:
-  binder3_3(const _TF& __oper,
-            typename _TF::thirdof3_argument_type __val)
-      : oper(__oper), value(__val) {}
-  typename _TF::result_type 
-  operator()(const typename _TF::firstof3_argument_type& __x1, 
-             const typename _TF::secondof3_argument_type& __x2) const {
-    return oper(__x1, __x2, value); 
-  }
+    binder3_3(const _TF& __oper,
+              typename _TF::thirdof3_argument_type __val)
+        : oper(__oper), value(__val) {}
+    typename _TF::result_type 
+    operator()(const typename _TF::firstof3_argument_type& __x1, 
+               const typename _TF::secondof3_argument_type& __x2) const {
+        return oper(__x1, __x2, value); 
+    }
 };
-
+    
+// ==============================================================================
 template <class _TF, class _Tp>
 inline binder3_3<_TF>
 bind33(const _TF& __oper, const _Tp& __x) 
 {
-  typedef typename _TF::thirdof3_argument_type _Arg;
-  return binder3_3<_TF>(__oper, static_cast<_Arg>(__x));
+    typedef typename _TF::thirdof3_argument_type _Arg;
+    return binder3_3<_TF>(__oper, static_cast<_Arg>(__x));
 }
-
+    
+// ==============================================================================
 template <class _Result>
 class pointer_to_nullary_function : public nullary_function<_Result> {
 protected:
-  _Result (*_M_ptr)();
+    _Result (*_M_ptr)();
 public:
-  pointer_to_nullary_function() {}
-  explicit pointer_to_nullary_function(_Result (*__x)()) : _M_ptr(__x) {}
-  _Result operator()() const { return _M_ptr(); }
+    pointer_to_nullary_function() {}
+    explicit pointer_to_nullary_function(_Result (*__x)()) : _M_ptr(__x) {}
+    _Result operator()() const { return _M_ptr(); }
 };
 
+// ==============================================================================
 template <class _Result>
 inline pointer_to_nullary_function<_Result> ptr_fun(_Result (*__x)())
 {
-  return pointer_to_nullary_function<_Result>(__x);
+    return pointer_to_nullary_function<_Result>(__x);
 }
 
+// ==============================================================================
 template <class _Arg1, class _Arg2, class _Arg3, class _Result>
 class pointer_to_trinary_function : 
-  public trinary_function<_Arg1,_Arg2,_Arg3,_Result> {
+        public trinary_function<_Arg1,_Arg2,_Arg3,_Result> {
 protected:
     _Result (*_M_ptr)(_Arg1, _Arg2, _Arg3);
 public:
     pointer_to_trinary_function() {}
     explicit pointer_to_trinary_function(_Result (*__x)(_Arg1, _Arg2, _Arg3)) 
-      : _M_ptr(__x) {}
+    : _M_ptr(__x) {}
     _Result operator()(_Arg1 __x1, _Arg2 __x2, _Arg3 __x3) const {
-      return _M_ptr(__x1, __x2, __x3);
+        return _M_ptr(__x1, __x2, __x3);
     }
 };
-
+    
+// ==============================================================================
 template <class _Arg1, class _Arg2, class _Arg3, class _Result>
 inline pointer_to_trinary_function<_Arg1,_Arg2,_Arg3,_Result> 
 ptr_fun(_Result (*__x)(_Arg1, _Arg2, _Arg3)) {
-  return pointer_to_trinary_function<_Arg1,_Arg2,_Arg3,_Result>(__x);
+    return pointer_to_trinary_function<_Arg1,_Arg2,_Arg3,_Result>(__x);
 }
 
+// ==============================================================================
 template <class _Arg1, class _Arg2, class _Arg3, class _Arg4, class _Result>
 class pointer_to_tetranary_function : 
-  public tetranary_function<_Arg1,_Arg2,_Arg3,_Arg4,_Result> {
+        public tetranary_function<_Arg1,_Arg2,_Arg3,_Arg4,_Result> {
 protected:
     _Result (*_M_ptr)(_Arg1, _Arg2, _Arg3, _Arg4);
 public:
     pointer_to_tetranary_function() {}
     explicit pointer_to_tetranary_function(_Result (*__x)(_Arg1, _Arg2, _Arg3, _Arg4)) 
-      : _M_ptr(__x) {}
+    : _M_ptr(__x) {}
     _Result operator()(_Arg1 __x1, _Arg2 __x2, _Arg3 __x3, _Arg4 __x4) const {
-      return _M_ptr(__x1, __x2, __x3, __x4);
+        return _M_ptr(__x1, __x2, __x3, __x4);
     }
 };
 
+// ==============================================================================
 template <class _Arg1, class _Arg2, class _Arg3, class _Arg4, class _Result>
 inline pointer_to_tetranary_function<_Arg1,_Arg2,_Arg3,_Arg4,_Result> 
 ptr_fun(_Result (*__x)(_Arg1, _Arg2, _Arg3, _Arg4)) {
-  return pointer_to_tetranary_function<_Arg1,_Arg2,_Arg3,_Arg4,_Result>(__x);
+    return pointer_to_tetranary_function<_Arg1,_Arg2,_Arg3,_Arg4,_Result>(__x);
 }
-
+    
 /* These are the STL for Project in case I want to extend them to the other
  * function types some day
 // project1st and project2nd are extensions: they are not part of the standard
@@ -412,55 +459,61 @@ struct project2nd : public _Project2nd<_Arg1, _Arg2> {};
 // is true of the helper functions constant0, constant1, and constant2.)
 
 #ifndef GCCCOMP
+// ==============================================================================
 template <class _Result>
 struct constant_nullary_fun : public nullary_function<_Result>
 {
-  _Result __val;
-  constant_nullary_fun(const _Result& __v) : __val(__v) {}
-  const _Result& operator()() const { return __val; }
+    _Result __val;
+    constant_nullary_fun(const _Result& __v) : __val(__v) {}
+    const _Result& operator()() const { return __val; }
 };  
-
+    
+// ==============================================================================
 #ifndef __STL_LIMITED_DEFAULT_TEMPLATES
 template <class _Result, class _Argument = _Result>
 #else
 template <class _Result, class _Argument>
 #endif
 struct constant_unary_fun : public std::unary_function<_Argument, _Result> {
-  _Result _M_val;
-  constant_unary_fun(const _Result& __v) : _M_val(__v) {}
-  const _Result& operator()(const _Argument&) const { return _M_val; }
+    _Result _M_val;
+    constant_unary_fun(const _Result& __v) : _M_val(__v) {}
+    const _Result& operator()(const _Argument&) const { return _M_val; }
 };
 
+// ==============================================================================
 #ifndef __STL_LIMITED_DEFAULT_TEMPLATES
 template <class _Result, class _Arg1 = _Result, class _Arg2 = _Arg1>
 #else
 template <class _Result, class _Arg1, class _Arg2>
 #endif
 struct constant_binary_fun : public std::binary_function<_Arg1, _Arg2, _Result> {
-  _Result _M_val;
-  constant_binary_fun(const _Result& __v) : _M_val(__v) {}
-  const _Result& operator()(const _Arg1&, const _Arg2&) const {
-    return _M_val;
-  }
+    _Result _M_val;
+    constant_binary_fun(const _Result& __v) : _M_val(__v) {}
+    const _Result& operator()(const _Arg1&, const _Arg2&) const {
+        return _M_val;
+    }
 };
 
+// ==============================================================================
 template <class _Result>
 inline constant_nullary_fun<_Result> constant0(const _Result& __val)
 {
-  return constant_nullary_fun<_Result>(__val);
+    return constant_nullary_fun<_Result>(__val);
 }
 
+// ==============================================================================
 template <class _Result>
 inline constant_unary_fun<_Result,_Result> constant1(const _Result& __val)
 {
-  return constant_unary_fun<_Result,_Result>(__val);
+    return constant_unary_fun<_Result,_Result>(__val);
 }
 
+// ==============================================================================
 template <class _Result>
 inline constant_binary_fun<_Result,_Result,_Result> 
 constant2(const _Result& __val)
 {
-  return constant_binary_fun<_Result,_Result,_Result>(__val);
+    return constant_binary_fun<_Result,_Result,_Result>(__val);
 }
 #endif
 
@@ -712,169 +765,183 @@ mem_fun1_ref(_Ret (_Tp::*__f)(_Arg) const)
 // Add others as needed
 //
 
+// ==============================================================================
 template <class OP1, class OP2>
 class compose_f_gx_t 
-  : public std::unary_function<typename OP2::argument_type,
-                               typename OP1::result_type>
+    : public std::unary_function<typename OP2::argument_type,
+                                 typename OP1::result_type>
 {
-  private:
+private:
     OP1 op1;
     OP2 op2;
-  public:
+public:
     compose_f_gx_t(const OP1& o1, const OP2& o2) : op1(o1),op2(o2) {}
     typename OP1::result_type 
-      operator()(const typename OP2::argument_type& x) const 
+    operator()(const typename OP2::argument_type& x) const 
         { return op1(op2(x)); }
 };
 
+// ==============================================================================
 template <class OP1,class OP2>
 inline compose_f_gx_t<OP1,OP2>
 compose_f_gx(const OP1& o1, const OP2& o2) {
-  return compose_f_gx_t<OP1,OP2>(o1,o2);
+    return compose_f_gx_t<OP1,OP2>(o1,o2);
 }
 
+// ==============================================================================
 template <class OP1, class OP2, class OP3>
 class compose_f_gx_hx_t 
-  : public std::unary_function<typename OP2::argument_type,
-                               typename OP1::result_type>
+    : public std::unary_function<typename OP2::argument_type,
+                                 typename OP1::result_type>
 {
-  private:
+private:
     OP1 op1;
     OP2 op2;
     OP3 op3;
-  public:
+public:
     compose_f_gx_hx_t(const OP1& o1, const OP2& o2, const OP3& o3) 
-      : op1(o1),op2(o2),op3(o3) {}
+        : op1(o1),op2(o2),op3(o3) {}
     typename OP1::result_type 
-      operator()(const typename OP2::argument_type& x) const 
+    operator()(const typename OP2::argument_type& x) const 
         { return op1(op2(x),op3(x)); }
 };
 
+// ==============================================================================
 template <class OP1,class OP2,class OP3>
 inline compose_f_gx_hx_t<OP1,OP2,OP3>
 compose_f_gx_hx(const OP1& o1, const OP2& o2, const OP3& o3) {
-  return compose_f_gx_hx_t<OP1,OP2,OP3>(o1,o2,o3);
+    return compose_f_gx_hx_t<OP1,OP2,OP3>(o1,o2,o3);
 }
 
+// ==============================================================================
 template <class OP1, class OP2, class OP3>
 class compose_f_gx_hy_t 
-  : public std::binary_function<typename OP2::argument_type,
-                                typename OP3::argument_type,
-                                typename OP1::result_type>
+    : public std::binary_function<typename OP2::argument_type,
+                                  typename OP3::argument_type,
+                                  typename OP1::result_type>
 {
-  private:
+private:
     OP1 op1;
     OP2 op2;
     OP3 op3;
-  public:
+public:
     compose_f_gx_hy_t(const OP1& o1, const OP2& o2, const OP3& o3) 
-      : op1(o1),op2(o2),op3(o3) {}
+        : op1(o1),op2(o2),op3(o3) {}
     typename OP1::result_type 
-      operator()(const typename OP2::argument_type& x,
-                 const typename OP3::argument_type& y) const 
+    operator()(const typename OP2::argument_type& x,
+               const typename OP3::argument_type& y) const 
         { return op1(op2(x),op3(y)); }
 };
 
+// ==============================================================================
 template <class OP1,class OP2,class OP3>
 inline compose_f_gx_hy_t<OP1,OP2,OP3>
 compose_f_gx_hy(const OP1& o1, const OP2& o2, const OP3& o3) {
-  return compose_f_gx_hy_t<OP1,OP2,OP3>(o1,o2,o3);
+    return compose_f_gx_hy_t<OP1,OP2,OP3>(o1,o2,o3);
 }
 
+// ==============================================================================
 template <class OP1, class OP2>
 class compose_f_gx_gy_t 
-  : public std::binary_function<typename OP2::argument_type,
-                                typename OP2::argument_type,
-                                typename OP1::result_type>
+    : public std::binary_function<typename OP2::argument_type,
+                                  typename OP2::argument_type,
+                                  typename OP1::result_type>
 {
-  private:
+private:
     OP1 op1;
     OP2 op2;
-  public:
+public:
     compose_f_gx_gy_t(const OP1& o1, const OP2& o2) 
-      : op1(o1),op2(o2) {}
+        : op1(o1),op2(o2) {}
     typename OP1::result_type 
-      operator()(const typename OP2::argument_type& x,
-                 const typename OP2::argument_type& y) const 
+    operator()(const typename OP2::argument_type& x,
+               const typename OP2::argument_type& y) const 
         { return op1(op2(x),op2(y)); }
 };
 
+// ==============================================================================
 template <class OP1,class OP2>
 inline compose_f_gx_gy_t<OP1,OP2>
 compose_f_gx_gy(const OP1& o1, const OP2& o2) {
-  return compose_f_gx_gy_t<OP1,OP2>(o1,o2);
+    return compose_f_gx_gy_t<OP1,OP2>(o1,o2);
 }
 
+// ==============================================================================
 template <class OP1, class OP2>
 class compose_f_gxy_t 
-  : public std::binary_function<typename OP2::first_argument_type,
-                                typename OP2::second_argument_type,
-                                typename OP1::result_type>
+    : public std::binary_function<typename OP2::first_argument_type,
+                                  typename OP2::second_argument_type,
+                                  typename OP1::result_type>
 {
-  private:
+private:
     OP1 op1;
     OP2 op2;
-  public:
+public:
     compose_f_gxy_t(const OP1& o1, const OP2& o2) 
-      : op1(o1),op2(o2) {}
+        : op1(o1),op2(o2) {}
     typename OP1::result_type 
-      operator()(const typename OP2::first_argument_type& x,
-                 const typename OP2::second_argument_type& y) const 
+    operator()(const typename OP2::first_argument_type& x,
+               const typename OP2::second_argument_type& y) const 
         { return op1(op2(x,y)); }
 };
 
+// ==============================================================================
 template <class OP1,class OP2>
 inline compose_f_gxy_t<OP1,OP2>
 compose_f_gxy(const OP1& o1, const OP2& o2) {
-  return compose_f_gxy_t<OP1,OP2>(o1,o2);
+    return compose_f_gxy_t<OP1,OP2>(o1,o2);
 }
 
+// ==============================================================================
 template <class OP1, class OP2, class YTYPE>
 class compose_f_gx_y_t 
-  : public std::binary_function<typename OP2::argument_type,
-                                YTYPE,
-                                typename OP1::result_type>
+    : public std::binary_function<typename OP2::argument_type,
+                                  YTYPE,
+                                  typename OP1::result_type>
 {
-  private:
+private:
     OP1 op1;
     OP2 op2;
-  public:
+public:
     compose_f_gx_y_t(const OP1& o1, const OP2& o2, const YTYPE& y) 
-      : op1(o1),op2(o2) {}
+        : op1(o1),op2(o2) {}
     typename OP1::result_type 
-      operator()(const typename OP2::argument_type& x,
-                 const YTYPE& y) const 
+    operator()(const typename OP2::argument_type& x,
+               const YTYPE& y) const 
         { return op1(op2(x),y); }
 };
 
+// ==============================================================================
 template <class OP1,class OP2,class YTYPE>
 inline compose_f_gx_y_t<OP1,OP2,YTYPE>
 compose_f_gx_y(const OP1& o1, const OP2& o2, const YTYPE& y) {
-  return compose_f_gx_y_t<OP1,OP2,YTYPE>(o1,o2,y);
+    return compose_f_gx_y_t<OP1,OP2,YTYPE>(o1,o2,y);
 }
 
+// ==============================================================================
 template <class OP1, class OP2, class XTYPE>
 class compose_f_x_gy_t 
-  : public std::binary_function<XTYPE,
-                                typename OP2::argument_type,
-                                typename OP1::result_type>
+    : public std::binary_function<XTYPE,
+                                  typename OP2::argument_type,
+                                  typename OP1::result_type>
 {
-  private:
+private:
     OP1 op1;
     OP2 op2;
-  public:
+public:
     compose_f_x_gy_t(const OP1& o1, const OP2& o2, const XTYPE& x) 
-      : op1(o1),op2(o2) {}
+        : op1(o1),op2(o2) {}
     typename OP1::result_type 
-      operator()(const XTYPE& x,
-                 const typename OP2::argument_type& y) const 
+    operator()(const XTYPE& x,
+               const typename OP2::argument_type& y) const 
         { return op1(x,op2(y)); }
 };
 
+// ==============================================================================
 template <class OP1,class OP2,class XTYPE>
 inline compose_f_x_gy_t<OP1,OP2,XTYPE>
 compose_f_x_gy(const OP1& o1, const XTYPE& x, const OP2& o2) {
-  return compose_f_x_gy_t<OP1,OP2,XTYPE>(o1,o2,x);
+    return compose_f_x_gy_t<OP1,OP2,XTYPE>(o1,o2,x);
 }
 
 } // end namespace details
