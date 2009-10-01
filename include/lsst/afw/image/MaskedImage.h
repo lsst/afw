@@ -367,37 +367,37 @@ namespace image {
 
             /// Dereference a locator, returning a Pixel
             Pixel operator*() {
-		return Pixel(_loc.template get<0>().x()[0][0],
+                return Pixel(_loc.template get<0>().x()[0][0],
                              _loc.template get<1>().x()[0][0],
                              _loc.template get<2>().x()[0][0]);
             }
 
             /// Dereference a locator, returning a Pixel offset by <tt>(x, y)</tt> from the locator
             Pixel operator()(int x, int y) {
-		return Pixel(_loc.template get<0>()(x, y)[0],
+                return Pixel(_loc.template get<0>()(x, y)[0],
                              _loc.template get<1>()(x, y)[0],
                              _loc.template get<2>()(x, y)[0]);
             }
 
             /// Dereference a locator, returning a Pixel offset by the amount set when we created the \c cached_location_t
             Pixel operator[](cached_location_t const& cached_loc) {
-		return Pixel(_loc.template get<0>()[cached_loc._imv.template get<0>()][0],
+                return Pixel(_loc.template get<0>()[cached_loc._imv.template get<0>()][0],
                              _loc.template get<1>()[cached_loc._imv.template get<1>()][0],
                              _loc.template get<2>()[cached_loc._imv.template get<2>()][0]);
             }
             /// Return an iterator that can be used to move (or dereference) a locator
             ///
             /// \note this x_locator is xy_locator::x_locator, not MaskedImage::x_locator
-	    x_iterator x() {
-		return x_iterator(this);
+            x_iterator x() {
+                return x_iterator(this);
             }
         
             /// Return an iterator that can be used to move (or dereference) a locator
             ///
             /// \note this y_locator is xy_locator::y_locator, not MaskedImage::y_locator
             y_iterator y() {
-		return y_iterator(this);
-	    }
+                return y_iterator(this);
+            }
 
             /// Create a cached_location_t offset by <tt>(x, y)</tt> from locator
             cached_location_t cache_location(int x, int y) const {
@@ -679,7 +679,7 @@ namespace image {
 
         void writeFits(std::string const& baseName,
                        boost::shared_ptr<const lsst::daf::base::PropertySet> metadata =
-								lsst::daf::base::PropertySet::Ptr(),
+                            lsst::daf::base::PropertySet::Ptr(),
                        std::string const& mode="w",
                        bool const writeMef=false
                       ) const;

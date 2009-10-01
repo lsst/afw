@@ -120,7 +120,7 @@ void ImagePca<ImageT>::analyze() {
     /*
      * Find the eigenvectors/values of the scalar product matrix, R' (Eq. 7.4)
      */
-    Eigen::MatrixXd R(nImage, nImage);	// residuals' inner products
+    Eigen::MatrixXd R(nImage, nImage);  // residuals' inner products
 
     double flux_bar = 0;              // mean of flux for all regions
     for (int i = 0; i != nImage; ++i) {
@@ -208,13 +208,13 @@ void ImagePca<ImageT>::analyze() {
  *
  * N.b. this is unconverted SDSS code, so it won't compile for LSST
  */
-        if(i > 0) {                             /* not the zeroth KL component */
-            float sky = 0;			/* estimate of sky level */
-            REGION *sreg;			/* reg_i minus the border */
+        if(i > 0) {                 /* not the zeroth KL component */
+            float sky = 0;          /* estimate of sky level */
+            REGION *sreg;           /* reg_i minus the border */
 
             reg_i = basis->regs[i-1][0][0]->reg;
             shAssert(reg_i->type == TYPE_FL32);
-	 
+
             for(j = border + 1; j < nrow - border - 1; j++) {
                 sky += reg_i->rows_fl32[j][border] +
                     reg_i->rows_fl32[j][ncol - border - 1];
@@ -224,12 +224,12 @@ void ImagePca<ImageT>::analyze() {
                     reg_i->rows_fl32[nrow - border - 1][k];
             }
             sky /= 2*((nrow - 2*border) + (ncol - 2*border)) - 4;
-	 
+ 
             sreg = shSubRegNew("", basis->regs[i-1][0][0]->reg,
                                nrow - 2*border, ncol - 2*border,
                                border, border, NO_FLAGS);
             shAssert(sreg != NULL);
-	 
+ 
             shRegIntConstAdd(sreg, -sky, 0);
             shRegDel(sreg);
         }

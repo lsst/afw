@@ -70,7 +70,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
  */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
-	std::string const& baseName,    //!< The desired file's baseName (e.g. foo will read foo_{img.msk.var}.fits)
+        std::string const& baseName,    //!< The desired file's baseName (e.g. foo will read foo_{img.msk.var}.fits)
         const int hdu,                  //!< The HDU in the file (default: 0)
         lsst::daf::base::PropertySet::Ptr metadata, //!< Filled out with metadata from file (default: NULL)
         BBox const& bbox,                           //!< Only read these pixels
@@ -176,7 +176,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
  */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
-	ImagePtr image,                 ///< %Image
+        ImagePtr image,                 ///< %Image
         MaskPtr mask,                   ///< %Mask
         VariancePtr variance            ///< Variance %Mask
                                                                         ) :
@@ -501,7 +501,7 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator/=(Ima
  */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
-	std::string const& baseName,    ///< The desired file's baseName (e.g. foo will read foo_{img.msk.var}.fits),
+        std::string const& baseName,    ///< The desired file's baseName (e.g. foo will read foo_{img.msk.var}.fits),
                                        ///< unless file's has a .fits suffix (or you set writeMef to true)
         boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, ///< Metadata to write to file; or NULL
         std::string const& mode,                    //!< "w" to write a new file; "a" to append
@@ -710,7 +710,7 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::y_iterator
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::fast_iterator
     image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::begin(
-		bool contiguous         ///< Pixels are contiguous (must be true)
+        bool contiguous         ///< Pixels are contiguous (must be true)
                                                                       ) const {
     typename Image::fast_iterator imageBegin = _image->begin(contiguous);
     typename Mask::fast_iterator maskBegin = _mask->begin(contiguous);

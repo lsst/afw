@@ -51,7 +51,10 @@ SWIG_SHARED_PTR(Decorated##NAME##TYPE, lsst::afw::image::DecoratedImage<PIXEL_TY
 
     %pythoncode {
     def Factory(self, *args):
-        """Return an Image of this type"""
+        """Return an Image class of this type
+        
+        A synonym for the attribute __class__
+        """
         return NAME##TYPE(*args)
     #
     # Deal with incorrect swig wrappers for C++ "void operator op=()"

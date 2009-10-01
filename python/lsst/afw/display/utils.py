@@ -13,10 +13,10 @@ class Mosaic(object):
     m = Mosaic()
     m.setGutter(5)
     m.setBackground(10)
-    m.setMode("square")                   # the default
+    m.setMode("square")                     # the default
 
-    mosaic = m.makeMosaic(im1, im2, im3)   # build the mosaic
-    ds9.mtv(mosaic)			   # display it
+    mosaic = m.makeMosaic(im1, im2, im3)    # build the mosaic
+    ds9.mtv(mosaic)                         # display it
     m.drawLabels(["Label 1", "Label 2", "Label 3"]) # label the panels
 
     # alternative way to build a mosaic

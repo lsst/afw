@@ -568,7 +568,7 @@ void image::Mask<MaskPixelT>::addMaskPlanesToMetadata(lsst::daf::base::PropertyS
  */
 template<typename MaskPixelT>
 typename image::Mask<MaskPixelT>::MaskPlaneDict image::Mask<MaskPixelT>::parseMaskPlaneMetadata(
-	lsst::daf::base::PropertySet::Ptr const metadata //!< metadata from a Mask
+        lsst::daf::base::PropertySet::Ptr const metadata //!< metadata from a Mask
                                                                                                ) {
     MaskPlaneDict newDict;
 

@@ -23,7 +23,7 @@ const std::string outFile("svcOut");
  * ySigma varies linearly from minSigma to maxSigma as image row goes from 0 to max
  */
 int main(int argc, char **argv) {
-    typedef double pixelType;
+    typedef afwMath::Kernel::Pixel Pixel;
 
     pexLog::Trace::setDestination(std::cout);
     pexLog::Trace::setVerbosity("lsst.afw.kernel", 5);
@@ -40,10 +40,10 @@ int main(int argc, char **argv) {
     }
     
     // read in fits file
-    afwImage::MaskedImage<pixelType> mImage(argv[1]);
+    afwImage::MaskedImage<Pixel> mImage(argv[1]);
     
     // construct kernel
-    afwMath::GaussianFunction2<pixelType> gaussFunc(1, 1);
+    afwMath::GaussianFunction2<Pixel> gaussFunc(1, 1);
     unsigned int polyOrder = 1;
     afwMath::PolynomialFunction2<double> polyFunc(polyOrder);
     afwMath::AnalyticKernel gaussSpVarKernel(kernelCols, kernelRows, gaussFunc, polyFunc);
@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
     cout << endl;
 
     // convolve
-    afwImage::MaskedImage<pixelType> resMaskedImage(mImage.getDimensions());
+    afwImage::MaskedImage<Pixel> resMaskedImage(mImage.getDimensions());
     afwMath::convolve(resMaskedImage, mImage, gaussSpVarKernel, true);
 
     // write results
