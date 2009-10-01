@@ -5,21 +5,15 @@
 
 %include "lsst/afw/math/Interpolate.h"
 
-%template(InterpolateDD) lsst::afw::math::Interpolate<double,double>;
-%template(InterpolateFF) lsst::afw::math::Interpolate<float,float>;
-%template(InterpolateID) lsst::afw::math::Interpolate<int,double>;
-%template(InterpolateIF) lsst::afw::math::Interpolate<int,float>;
-%template(InterpolateII) lsst::afw::math::Interpolate<int,int>;
+%define %declareInterp(TYPE1, TYPE2, SUFFIX)
+	%template(Interpolate ## SUFFIX) lsst::afw::math::Interpolate<TYPE1,TYPE2>;
+	%template(LinearInterpolate ## SUFFIX) lsst::afw::math::LinearInterpolate<TYPE1,TYPE2>;
+	%template(SplineInterpolate ## SUFFIX) lsst::afw::math::SplineInterpolate<TYPE1,TYPE2>;
+%enddef
 
-%template(LinearInterpolateDD) lsst::afw::math::LinearInterpolate<double,double>;
-%template(LinearInterpolateFF) lsst::afw::math::LinearInterpolate<float,float>;
-%template(LinearInterpolateID) lsst::afw::math::LinearInterpolate<int,double>;
-%template(LinearInterpolateIF) lsst::afw::math::LinearInterpolate<int,float>;
-%template(LinearInterpolateII) lsst::afw::math::LinearInterpolate<int,int>;
-
-%template(SplineInterpolateDD) lsst::afw::math::SplineInterpolate<double,double>;
-%template(SplineInterpolateFF) lsst::afw::math::SplineInterpolate<float,float>;
-%template(SplineInterpolateID) lsst::afw::math::SplineInterpolate<int,double>;
-%template(SplineInterpolateIF) lsst::afw::math::SplineInterpolate<int,float>;
-%template(SplineInterpolateII) lsst::afw::math::SplineInterpolate<int,int>;
+%declareInterp(double, double, DD);
+%declareInterp(float, float, FF);
+%declareInterp(int, double, ID);
+%declareInterp(int, float, IF);
+%declareInterp(int, int, II);
 
