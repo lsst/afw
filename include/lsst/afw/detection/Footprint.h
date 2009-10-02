@@ -16,7 +16,6 @@
 #include "lsst/afw/detection/Peak.h"
 
 namespace lsst { namespace afw { namespace detection {
-namespace image = lsst::afw::image;
 /*!
  * \brief A range of pixels within one row of an Image
  *
@@ -151,13 +150,13 @@ public:
     /// Return the corners of the MaskedImage the footprints live in
     image::BBox const& getRegion() const { return _region; }
     /// Set the corners of the MaskedImage wherein the footprints dwell
-    void setRegion(image::BBox const& region) { _region = region; }
+    void setRegion(lsst::afw::image::BBox const& region) { _region = region; }
     
     void normalize();
     int setNpix();
     void setBBox();
 
-    void insertIntoImage(image::Image<boost::uint16_t>& idImage, int const id,
+    void insertIntoImage(lsst::afw::image::Image<boost::uint16_t>& idImage, int const id,
                          image::BBox const& region=image::BBox()) const;
 private:
     Footprint(const Footprint &);                   //!< No copy constructor
@@ -184,15 +183,15 @@ typename ImageT::Pixel setImageFromFootprint(ImageT *image,
                                              typename ImageT::Pixel const value);
 template<typename ImageT>
 typename ImageT::Pixel setImageFromFootprintList(ImageT *image,
-                                                 std::vector<detection::Footprint::Ptr> const& footprints,
+                                                 std::vector<Footprint::Ptr> const& footprints,
                                                  typename ImageT::Pixel  const value);
 template<typename MaskT>
-MaskT setMaskFromFootprint(image::Mask<MaskT> *mask,
+MaskT setMaskFromFootprint(lsst::afw::image::Mask<MaskT> *mask,
                            Footprint const& footprint,
                            MaskT const bitmask);
 template<typename MaskT>
 MaskT setMaskFromFootprintList(lsst::afw::image::Mask<MaskT> *mask,
-                               std::vector<detection::Footprint::Ptr> const& footprints,
+                               std::vector<Footprint::Ptr> const& footprints,
                                MaskT const bitmask);
 template<typename MaskT>
 Footprint::Ptr footprintAndMask(Footprint::Ptr const & foot,
@@ -211,11 +210,11 @@ public:
     /// The DetectionSet's set of Footprint%s
     typedef std::vector<Footprint::Ptr> FootprintList;
 
-    DetectionSet(image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
+    DetectionSet(lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
                  Threshold const& threshold,
                  std::string const& planeName = "",
                  int const npixMin=1);
-    DetectionSet(image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
+    DetectionSet(lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
                  Threshold const& threshold,
                  int x,
                  int y,
@@ -239,7 +238,7 @@ public:
     
     FootprintList& getFootprints() { return _footprints; } //!< Retun the Footprint%s of detected objects
     FootprintList const& getFootprints() const { return _footprints; } //!< Retun the Footprint%s of detected objects
-    void setRegion(image::BBox const& region);
+    void setRegion(lsst::afw::image::BBox const& region);
     image::BBox const& getRegion() const { return _region; } //!< Return the corners of the MaskedImage
 
 #if 0                                   // these are equivalent, but the former confuses swig
@@ -248,7 +247,7 @@ public:
     typename boost::shared_ptr<image::Image<boost::uint16_t> > insertIntoImage(const bool relativeIDs);
 #endif
 
-    void setMask(image::Mask<MaskPixelT> *mask, ///< Set bits in the mask
+    void setMask(lsst::afw::image::Mask<MaskPixelT> *mask, ///< Set bits in the mask
                  std::string const& planeName   ///< Here's the name of the mask plane to fit
                 ) {
         detection::setMaskFromFootprintList(mask, getFootprints(),

@@ -16,7 +16,7 @@ namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
 
 int main(int argc, char **argv) {
-    typedef afwMath::Kernel::Pixel pixelType;
+    typedef afwMath::Kernel::Pixel Pixel;
     unsigned int kernelCols = 6;
     unsigned int kernelRows = 5;
     
@@ -41,14 +41,14 @@ int main(int argc, char **argv) {
         }
         
         // read in fits file
-        afwImage::MaskedImage<pixelType> mImage(argv[1]);
+        afwImage::MaskedImage<Pixel> mImage(argv[1]);
         
         // construct kernel
-        afwMath::GaussianFunction2<pixelType> gaussFunc(sigma, sigma);
+        afwMath::GaussianFunction2<Pixel> gaussFunc(sigma, sigma);
         afwMath::AnalyticKernel kernel(kernelCols, kernelRows, gaussFunc);
     
         // convolve
-        afwImage::MaskedImage<pixelType> resMaskedImage(mImage.getDimensions());
+        afwImage::MaskedImage<Pixel> resMaskedImage(mImage.getDimensions());
         afwMath::convolve(resMaskedImage, mImage, kernel, true);
     
         // write results

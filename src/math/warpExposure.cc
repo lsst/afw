@@ -24,9 +24,10 @@
 #include "lsst/afw/image.h"
 #include "lsst/afw/math.h"
 
+namespace pexExcept = lsst::pex::exceptions;
+namespace pexLog = lsst::pex::logging;
 namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
-namespace pexExcept = lsst::pex::exceptions;
 
 namespace {
     template <typename A, typename B>
@@ -45,7 +46,7 @@ namespace {
 *
 * \throw lsst::pex::exceptions::InvalidParameterException if argument is not 0 or 1
 */
-afwMath::Kernel::PixelT afwMath::BilinearWarpingKernel::BilinearFunction1::operator() (
+afwMath::Kernel::Pixel afwMath::BilinearWarpingKernel::BilinearFunction1::operator() (
     double x
 ) const {
     if (x == 0.0) {
@@ -55,7 +56,7 @@ afwMath::Kernel::PixelT afwMath::BilinearWarpingKernel::BilinearFunction1::opera
     } else {
         std::ostringstream errStream;
         errStream << "x = " << x << "; must be 0 or 1";
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, errStream.str());
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, errStream.str());
     }
 }            
 
@@ -65,7 +66,7 @@ afwMath::Kernel::PixelT afwMath::BilinearWarpingKernel::BilinearFunction1::opera
 std::string afwMath::BilinearWarpingKernel::BilinearFunction1::toString(void) const {
     std::ostringstream os;
     os << "_BilinearFunction1: ";
-    os << Function1<Kernel::PixelT>::toString();
+    os << Function1<Kernel::Pixel>::toString();
     return os.str();
 }
 
@@ -78,8 +79,8 @@ std::string afwMath::BilinearWarpingKernel::BilinearFunction1::toString(void) co
  * - bilinear: return a BilinearWarpingKernel
  * - lanczos#: return a LanczosWarpingKernel of order #, e.g. lanczos4
  */
-boost::shared_ptr<lsst::afw::math::SeparableKernel> lsst::afw::math::makeWarpingKernel(std::string name) {
-    typedef boost::shared_ptr<lsst::afw::math::SeparableKernel> KernelPtr;
+boost::shared_ptr<afwMath::SeparableKernel> afwMath::makeWarpingKernel(std::string name) {
+    typedef boost::shared_ptr<afwMath::SeparableKernel> KernelPtr;
     boost::cmatch matches;
     const boost::regex LanczosRE("lanczos(\\d+)");
     if (name == "bilinear") {
@@ -90,7 +91,7 @@ boost::shared_ptr<lsst::afw::math::SeparableKernel> lsst::afw::math::makeWarping
         std::istringstream(orderStr) >> order;
         return KernelPtr(new LanczosWarpingKernel(order));
     } else {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
             "unknown warping kernel name: \"" + name + "\"");
     }
 }
@@ -176,11 +177,12 @@ int afwMath::warpImage(
     )
 {
     if (isSameObject(destImage, srcImage)) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "destImage is srcImage; cannot warp in place");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+            "destImage is srcImage; cannot warp in place");
     }
     int numGoodPixels = 0;
 
-    typedef afwImage::Image<afwMath::Kernel::PixelT> KernelImageT;
+    typedef afwImage::Image<afwMath::Kernel::Pixel> KernelImageT;
     
     // Compute borders; use to prevent applying kernel outside of srcImage
     const int kernelWidth = warpingKernel.getWidth();
@@ -192,23 +194,21 @@ int afwMath::warpImage(
     const int srcWidth = srcImage.getWidth();
     const int srcHeight = srcImage.getHeight();
 
-    lsst::pex::logging::TTrace<3>("lsst.afw.math.warp",
-        "source image width=%d; height=%d", srcWidth, srcHeight);
+    pexLog::TTrace<3>("lsst.afw.math.warp", "source image width=%d; height=%d", srcWidth, srcHeight);
 
     const int destWidth = destImage.getWidth();
     const int destHeight = destImage.getHeight();
-    lsst::pex::logging::TTrace<3>("lsst.afw.math.warp",
-        "remap image width=%d; height=%d", destWidth, destHeight);
+    pexLog::TTrace<3>("lsst.afw.math.warp", "remap image width=%d; height=%d", destWidth, destHeight);
 
     const typename DestImageT::SinglePixel edgePixel = afwMath::edgePixel<DestImageT>(
-        typename lsst::afw::image::detail::image_traits<DestImageT>::image_category()
+        typename afwImage::detail::image_traits<DestImageT>::image_category()
     );
     
     std::vector<double> kernelXList(kernelWidth);
     std::vector<double> kernelYList(kernelHeight);
 
     // Set each pixel of destExposure's MaskedImage
-    lsst::pex::logging::TTrace<4>("lsst.afw.math.warp", "Remapping masked image");
+    pexLog::TTrace<4>("lsst.afw.math.warp", "Remapping masked image");
     
     // compute source position X,Y corresponding to row -1 of the destination image;
     // this is used for computing relative pixel scale
@@ -263,13 +263,15 @@ int afwMath::warpImage(
                 double kSum = warpingKernel.computeVectors(kernelXList, kernelYList, false);
 
                 typename SrcImageT::const_xy_locator srcLoc = srcImage.xy_at(srcIndX, srcIndY);
-                *destXIter = afwMath::convolveAtAPoint<DestImageT, SrcImageT>(srcLoc, kernelXList, kernelYList);
+                *destXIter = afwMath::convolveAtAPoint<DestImageT, SrcImageT>(
+                    srcLoc, kernelXList, kernelYList);
     
                 // Correct intensity due to relative pixel spatial scale and kernel sum.
                 // The area computation is for a parallellogram.
                 afwImage::PointD dSrcA = srcPosXY - prevSrcPosXY;
                 afwImage::PointD dSrcB = srcPosXY - prevRowSrcPosXY[destIndX];
-                double multFac = std::abs((dSrcA.getX() * dSrcB.getY()) - (dSrcA.getY() * dSrcB.getX())) / kSum;
+                double multFac = std::abs((dSrcA.getX() * dSrcB.getY())
+                    - (dSrcA.getY() * dSrcB.getX())) / kSum;
                 *destXIter *= multFac;
 //                destXIter.image() *= static_cast<typename DestImageT::Image::SinglePixel>(multFac);
 //                destXIter.variance() *= static_cast<typename DestImageT::Variance::SinglePixel>(multFac * multFac);
@@ -287,7 +289,6 @@ int afwMath::warpImage(
 } // warpExposure
 
 
-/************************************************************************************************************/
 //
 // Explicit instantiations
 //

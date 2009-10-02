@@ -403,7 +403,7 @@ class MaskedImageTestCase(unittest.TestCase):
 
         var = self.mimage.getVariance()
         var <<= self.mimage.getImage();
-	var /= gain
+        var /= gain
 
     def testTicket653(self):
         """How-to-repeat for #653"""

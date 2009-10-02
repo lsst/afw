@@ -24,7 +24,6 @@
 
 #include "lsst/pex/exceptions.h"
 
-#include "lsst/afw/math/MoreFunctional.h"
 #include "lsst/afw/math/IntGKPData10.h"
 
 namespace ex = lsst::pex::exceptions;
@@ -614,6 +613,32 @@ struct ConstantReg2 : public std::binary_function<T, T, IntRegion<T> > {
     IntRegion<T> ir;
 };
 
+
+// pulled from MoreFunctional.h.  Needed in class Int2DAuxType and Int3DAuxType
+template <class BF>
+class binder2_1 
+    : public std::unary_function<typename BF::second_argument_type,
+                                 typename BF::result_type> {
+protected:
+    BF _oper;
+    typename BF::first_argument_type _value;
+public:
+    binder2_1(const BF& oper,
+              typename BF::first_argument_type val)
+        : _oper(oper), _value(val) {}
+    typename BF::result_type 
+    operator()(const typename BF::second_argument_type& x) const {
+        return _oper(_value, x); 
+    }
+};
+    
+template <class BF, class Tp>
+inline binder2_1<BF> bind21(const BF& oper, const Tp& x) {
+    typedef typename BF::first_argument_type Arg;
+    return binder2_1<BF>(oper, static_cast<Arg>(x));
+}
+
+    
 template <class BF, class YREG>
 class Int2DAuxType : public std::unary_function<typename BF::first_argument_type, typename BF::result_type> {
 public:
@@ -636,6 +661,34 @@ private:
     const YREG& _yreg;
     typename BF::result_type _abserr, _relerr;
 };
+
+    
+// pulled from MoreFunctional.h.  Needed in class Int3DAuxtype    
+template <class TF>
+class binder3_1 
+    : public std::binary_function<typename TF::secondof3_argument_type,
+                                  typename TF::thirdof3_argument_type,
+                                  typename TF::result_type> {
+protected:
+    TF _oper;
+    typename TF::firstof3_argument_type _value;
+public:
+    binder3_1(const TF& oper,
+              typename TF::firstof3_argument_type val)
+        : _oper(oper), _value(val) {}
+    typename TF::result_type 
+    operator()(const typename TF::secondof3_argument_type& x1, 
+               const typename TF::thirdof3_argument_type& x2) const {
+        return _oper(_value, x1, x2); 
+    }
+};
+
+template <class TF, class Tp>
+inline binder3_1<TF>
+bind31(const TF& oper, const Tp& x) {
+    typedef typename TF::firstof3_argument_type Arg;
+    return binder3_1<TF>(oper, static_cast<Arg>(x));
+}
 
 
 template <class TF, class YREG, class ZREG>

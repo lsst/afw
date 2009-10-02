@@ -343,9 +343,9 @@ def erase(frame=-1):
 def dot(symb, c, r, frame=-1, size=2, ctype=GREEN):
    """Draw a symbol onto the specified DS9 frame at (col,row) = (c,r) [0-based coordinates]
 Possible values are:
-	+	         Draw a +
-	x	         Draw an x
-        o	         Draw a circle
+        +                Draw a +
+        x                Draw an x
+        o                Draw a circle
         @:Mxx,Mxy,Myy    Draw an ellipse with moments (Mxx, Mxy, Myy) (size is ignored)
 Any other value is interpreted as a string to be drawn
 """

@@ -130,11 +130,11 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &src, ///<
  */
 template<typename ImageT, typename MaskT, typename VarianceT> 
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
-	std::string const& baseName,    ///< Exposure's base input file name
-        int const hdu,                  ///< Desired HDU
-        BBox const& bbox,               //!< Only read these pixels
-        bool conformMasks               //!< Make Mask conform to mask layout in file?
-                                                              ) :
+    std::string const& baseName,    ///< Exposure's base input file name
+    int const hdu,                  ///< Desired HDU
+    BBox const& bbox,               //!< Only read these pixels
+    bool conformMasks               //!< Make Mask conform to mask layout in file?
+) :
     lsst::daf::data::LsstBase(typeid(this)) {
     lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertySet());
 
@@ -203,8 +203,8 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::setWcs(afwImage::Wcs const &w
   */
 template<typename ImageT, typename MaskT, typename VarianceT> 
 void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(
-	const std::string &expOutFile ///< Exposure's base output file name
-                                                                    ) const {
+    const std::string &expOutFile ///< Exposure's base output file name
+) const {
     using lsst::daf::base::PropertySet;
 
     PropertySet::Ptr outputMetadata = getMetadata()->deepCopy();

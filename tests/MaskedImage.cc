@@ -39,7 +39,7 @@ void y_gradient(ImageT & src, ImageT & dst) {
 
     for (int r = 1; r < src.getHeight() - 1; ++r) {
         for (typename ImageT::x_iterator dst_it = dst.row_begin(r);
-             						dst_it != dst.row_end(r); ++dst_it, ++src_loc.x()) {
+            dst_it != dst.row_end(r); ++dst_it, ++src_loc.x()) {
 #if USE_CACHE_LOCATION                  // this version is faster
             dst_it.image() = (src_loc.image(above) - src_loc.image(below))/2;
 #else  // but this is possible too, and more general (but slower)

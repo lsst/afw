@@ -147,7 +147,7 @@ class KernelTestCase(unittest.TestCase):
         
         # create list of kernels
         basisImArrList = []
-        kVec = afwMath.KernelListD()
+        kVec = afwMath.KernelList()
         for row in range(kHeight):
             for col in range(kWidth):
                 kernel = afwMath.DeltaFunctionKernel(kWidth, kHeight, afwImage.PointI(col, row))
@@ -188,7 +188,7 @@ class KernelTestCase(unittest.TestCase):
         basisImArrList.append(imArr)
         
         # create a list of basis kernels from the images
-        kVec = afwMath.KernelListD()
+        kVec = afwMath.KernelList()
         for basisImArr in basisImArrList:
             basisImage = imTestUtils.imageFromArray(basisImArr, retType=afwImage.ImageD)
             kernel = afwMath.FixedKernel(basisImage)

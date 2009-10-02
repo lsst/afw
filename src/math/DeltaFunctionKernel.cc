@@ -11,33 +11,35 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
 
-namespace ex = lsst::pex::exceptions;
+namespace pexExcept = lsst::pex::exceptions;
+namespace afwMath = lsst::afw::math;
+namespace afwImage = lsst::afw::image;
 
 /**
  * @brief Construct a spatially invariant DeltaFunctionKernel
  */
-lsst::afw::math::DeltaFunctionKernel::DeltaFunctionKernel(
+afwMath::DeltaFunctionKernel::DeltaFunctionKernel(
     int width,                          ///< kernel size (columns)
     int height,                         ///< kernel size (rows)
-    lsst::afw::image::PointI point      ///< Active pixel
+    afwImage::PointI point      ///< Active pixel
                                                          )
 :
     Kernel(width, height, 0),
     _pixel(point.getX(), point.getY())
 {
     if (point.getX() < 0 || point.getX() >= width || point.getY() < 0 || point.getY() >= height) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "Active pixel lies outside image");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "Active pixel lies outside image");
     }
 }
 
-double lsst::afw::math::DeltaFunctionKernel::computeImage(
-    lsst::afw::image::Image<PixelT> &image,
+double afwMath::DeltaFunctionKernel::computeImage(
+    afwImage::Image<Pixel> &image,
     bool doNormalize,
     double x,
     double y
 ) const {
     if (image.getDimensions() != this->getDimensions()) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "image is the wrong size");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "image is the wrong size");
     }
 
     const int pixelX = getPixel().first; // active pixel in Kernel
@@ -49,7 +51,7 @@ double lsst::afw::math::DeltaFunctionKernel::computeImage(
     return 1;
 }
 
-std::string lsst::afw::math::DeltaFunctionKernel::toString(std::string prefix) const {
+std::string afwMath::DeltaFunctionKernel::toString(std::string prefix) const {
     const int pixelX = getPixel().first; // active pixel in Kernel
     const int pixelY = getPixel().second;
 
