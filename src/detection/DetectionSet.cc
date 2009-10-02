@@ -36,6 +36,21 @@ namespace math = lsst::afw::math;
 namespace pexLogging = lsst::pex::logging;
 
 /************************************************************************************************************/
+namespace {
+    //
+    // Define our own functions to handle NaN tests;  this gives us the
+    // option to define a value for e.g. image::MaskPixel or int
+    //
+    template<typename T>
+    inline bool isBadPixel(T val) {
+        return std::isnan(val);
+    }
+
+    template<>
+    inline bool isBadPixel(image::MaskPixel) {
+        return false;
+    }
+}
 
 namespace {
     /// Don't let doxygen see this block  \cond
@@ -180,7 +195,7 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
         for (int x = 0; x < width; ++x, ++pixPtr) {
              ImagePixelT pixVal = (polarity ? *pixPtr : -(*pixPtr));
 
-            if (pixVal < thresholdVal) {
+             if (isBadPixel(pixVal) || pixVal < thresholdVal) {
                 if (in_span) {
                     IdSpan *sp = new IdSpan(in_span, y, x0, x - 1);
                     IdSpan::Ptr spp(sp);
