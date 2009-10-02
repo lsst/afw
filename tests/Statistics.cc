@@ -1,4 +1,5 @@
 #include <iostream>
+#include <limits>
 #include <cmath>
 
 #define BOOST_TEST_DYN_LINK
@@ -160,6 +161,53 @@ BOOST_AUTO_TEST_CASE(StatisticsRamp) {
     
 }
 
+
+BOOST_AUTO_TEST_CASE(StatisticsTestAllNanButOne) {
+
+    /*
+     * The mean/stddev/min/max are computed in a single pass, but there's a pre-pass
+     *   to get a crude mean with a stride of 10.  If there are no valid points
+     *   in the pre-pass, 'crude_mean' is set to zero, and min/max are initialized
+     *   to +/- MaxDouble.
+     * This test verifies that when the only valid numbers present aren't on a 10-stride,
+     *   the mean,min,max are set correctly.
+     * The problem was apparent when parasoft found a possible div-by-zero error
+     *   for crude_mean = sum/n with no valid points.
+     */
+    
+    double const NaN = std::numeric_limits<double>::quiet_NaN();
+
+    int nx = 101;
+    int ny = 64;
+    ImageT img(nx,ny);
+    img = NaN;
+    double z0 = 10.0;
+
+    // set two pixels to non-nan ... neither on stride 10
+    img(4,4) = z0;
+    img(3,3) = z0 + 1.0;
+    
+    double const mean = z0 + 0.5;
+    double const stdev = std::sqrt( (0.5*0.5 + 0.5*0.5)/(2.0 - 1.0) );
+    double const min = z0;
+    double const max = z0 + 1.0;
+    
+    {
+        math::Statistics stats = math::makeStatistics(img, math::NPOINT | math::STDEV | math::MEAN |
+                                                      math::MIN | math::MAX);
+        double const testmean = stats.getValue(math::MEAN);
+        double const teststdev = stats.getValue(math::STDEV);
+        double const testmin = stats.getValue(math::MIN);
+        double const testmax = stats.getValue(math::MAX);
+        
+        BOOST_CHECK_EQUAL(stats.getValue(math::NPOINT), 2);
+        BOOST_CHECK_EQUAL(testmean, mean);
+        BOOST_CHECK_EQUAL(teststdev, stdev );
+        BOOST_CHECK_EQUAL(testmin, min);
+        BOOST_CHECK_EQUAL(testmax, max);
+    }
+
+}
 
 BOOST_AUTO_TEST_CASE(StatisticsTestImages) {
     

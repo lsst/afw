@@ -23,6 +23,7 @@ namespace ex = lsst::pex::exceptions;
 
 namespace {
     double const NaN = std::numeric_limits<double>::quiet_NaN();
+    double const MaxDouble = std::numeric_limits<double>::max();
     double const iqToStdev = 0.741301109252802;   // 1 sigma in units of iqrange (assume Gaussian)
 }
 
@@ -162,16 +163,19 @@ math::Statistics::StandardReturnT math::Statistics::_getStandard(Image const &im
             }
         }
     }
-    double const crude_mean = sum/n;    // a crude estimate of the mean, used for numerical stability of variance
-    
+
+    // a crude estimate of the mean, used for numerical stability of variance
+    double crude_mean = 0.0;
+    if ( n > 0 ) { crude_mean = sum/n; }
+
     // =======================================================
     // Estimate the full precision variance using that crude mean
     // - get the min and max as well
     sum = 0;
     n = 0;
     double sumx2 = 0;                   // sum of (data - crude_mean)^2
-    double min = crude_mean;
-    double max = crude_mean;
+    double min = (n) ? crude_mean : MaxDouble;
+    double max = (n) ? crude_mean : -MaxDouble;
     
     // If we want max or min (you get both)
     if (flags & (MIN | MAX)){
@@ -192,6 +196,10 @@ math::Statistics::StandardReturnT math::Statistics::_getStandard(Image const &im
                 }
                 
             }
+        }
+        if (n == 0) {
+            min = NaN;
+            max = NaN;
         }
     // fast loop ... just the mean & variance
     } else {
