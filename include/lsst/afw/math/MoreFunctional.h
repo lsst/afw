@@ -12,10 +12,10 @@ namespace details {
 template <class Ret, class T>
 class MemberLess_t : public std::binary_function<const T&,const T&,bool> {
 public:
-    explicit MemberLess_t(Ret (T::*_f)() const) : f(_f) {}
-    bool operator()(const T& t1, const T& t2) const {return (t1.*f)() < (t2.*f)(); }
+    explicit MemberLess_t(Ret (T::*f)() const) : _f(f) {}
+    bool operator()(const T& t1, const T& t2) const {return (t1.*_f)() < (t2.*_f)(); }
 private:
-    Ret (T::*f)() const;
+    Ret (T::*_f)() const;
 };
     
 
@@ -23,10 +23,10 @@ private:
 template <class Ret, class T>
 class PtrMemberLess_t : public std::binary_function<const T&,const T&,bool> {
 public:
-    explicit PtrMemberLess_t(Ret (T::*_f)() const) : f(_f) {}
-    bool operator()(const T* t1, const T* t2) const {return (t1->*f)() < (t2->*f)(); }
+    explicit PtrMemberLess_t(Ret (T::*f)() const) : _f(f) {}
+    bool operator()(const T* t1, const T* t2) const {return (t1->*_f)() < (t2->*_f)(); }
 private:
-    Ret (T::*f)() const;
+    Ret (T::*_f)() const;
 };
 
     
@@ -42,10 +42,10 @@ inline PtrMemberLess_t<Ret,T> PtrMemberLess(Ret (T::*f)() const) {return PtrMemb
 template <class Ret, class T>
 class MemberGreater_t : public std::binary_function<const T&,const T&,bool> {
 public:
-    explicit MemberGreater_t(Ret (T::*_f)() const) : f(_f) {}
-    bool operator()(const T& t1, const T& t2) const {return (t1.*f)() < (t2.*f)(); }
+    explicit MemberGreater_t(Ret (T::*f)() const) : _f(f) {}
+    bool operator()(const T& t1, const T& t2) const {return (t1.*_f)() < (t2.*_f)(); }
 private:
-    Ret (T::*f)() const;
+    Ret (T::*_f)() const;
 };
 
 
@@ -53,10 +53,10 @@ private:
 template <class Ret, class T>
 class PtrMemberGreater_t : public std::binary_function<const T&,const T&,bool> {
 public:
-    explicit PtrMemberGreater_t(Ret (T::*_f)() const) : f(_f) {}
-    bool operator()(const T* t1, const T* t2) const {return (t1->*f)() < (t2->*f)(); }
+    explicit PtrMemberGreater_t(Ret (T::*f)() const) : _f(f) {}
+    bool operator()(const T* t1, const T* t2) const {return (t1->*_f)() < (t2->*_f)(); }
 private:
-    Ret (T::*f)() const;
+    Ret (T::*_f)() const;
 };
 
     
@@ -74,10 +74,10 @@ inline PtrMemberGreater_t<Ret,T> PtrMemberGreater(Ret (T::*f)() const) {return P
 template <class Ret, class T>
 class MemberEqual_t : public std::binary_function<const T&,const T&,bool> {
 public:
-    explicit MemberEqual_t(Ret (T::*_f)() const) : f(_f) {}
-    bool operator()(const T& t1, const T& t2) const {return (t1.*f)() < (t2.*f)(); }
+    explicit MemberEqual_t(Ret (T::*f)() const) : _f(f) {}
+    bool operator()(const T& t1, const T& t2) const {return (t1.*_f)() < (t2.*_f)(); }
 private:
-    Ret (T::*f)() const;
+    Ret (T::*_f)() const;
 };
     
 
@@ -85,10 +85,10 @@ private:
 template <class Ret, class T>
 class PtrMemberEqual_t : public std::binary_function<const T&,const T&,bool> {
 public:
-    explicit PtrMemberEqual_t(Ret (T::*_f)() const) : f(_f) {}
-    bool operator()(const T* t1, const T* t2) const {return (t1->*f)() < (t2->*f)(); }
+    explicit PtrMemberEqual_t(Ret (T::*f)() const) : _f(f) {}
+    bool operator()(const T* t1, const T* t2) const {return (t1->*_f)() < (t2->*_f)(); }
 private:
-    Ret (T::*f)() const;
+    Ret (T::*_f)() const;
 };
     
 // ==============================================================================
@@ -133,12 +133,12 @@ struct nullary_function {
 };      
 
 // ==============================================================================
-template <class _Arg1, class _Arg2, class _Arg3, class _Result>
+template <class Arg1, class Arg2, class Arg3, class Result>
 struct trinary_function {
-    typedef _Arg1 firstof3_argument_type;
-    typedef _Arg2 secondof3_argument_type;
-    typedef _Arg3 thirdof3_argument_type;
-    typedef _Result result_type;
+    typedef Arg1 firstof3_argument_type;
+    typedef Arg2 secondof3_argument_type;
+    typedef Arg3 thirdof3_argument_type;
+    typedef Result result_type;
 };      
     
 // ==============================================================================
