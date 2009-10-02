@@ -202,7 +202,8 @@ def setMaskColor(color=GREEN):
     """Set the ds9 mask colour to; eg. ds9.setMaskColor(ds9.RED)"""
     ds9Cmd("mask color %s" % color)
 
-def mtv(data, frame=-1, init=True, wcs=None, isMask=False, lowOrderBits=False, title=None):
+
+def mtv(data, frame=-1, init=True, wcs=None, isMask=False, lowOrderBits=False, title=None, settings=None):
    """Display an Image or Mask on a DS9 display
 
    If lowOrderBits is True, give low-order-bits priority in display (i.e.
@@ -231,20 +232,26 @@ system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
          
    ds9Cmd("frame %d" % frame)
 
+   if settings:
+       for setting in settings:
+           ds9Cmd("%s %s" % (setting, settings[setting]))
+
    if re.search("::DecoratedImage<", data.__repr__()): # it's a DecorateImage; display it
        _mtv(data.getImage(), wcs, title, False)
    elif re.search("::MaskedImage<", data.__repr__()): # it's a MaskedImage; display the Image and overlay the Mask
        _mtv(data.getImage(), wcs, title, False)
        mask = data.getMask(True)
        if mask:
-           mtv(mask, frame, False, wcs, False, lowOrderBits=lowOrderBits, title=title)
+           mtv(mask, frame, False, wcs, False, lowOrderBits=lowOrderBits, title=title, settings=settings)
            if getMaskTransparency() is not None:
                ds9Cmd("mask transparency %d" % getMaskTransparency())
+
    elif re.search("::Exposure<", data.__repr__()): # it's an Exposure; display the MaskedImage with the WCS
        if wcs:
            raise RuntimeError, "You may not specify a wcs with an Exposure"
 
-       mtv(data.getMaskedImage(), frame, False, data.getWcs(), False, lowOrderBits=lowOrderBits, title=title)
+       mtv(data.getMaskedImage(), frame, False, data.getWcs(), False, lowOrderBits=lowOrderBits, title=title, settings=settings)
+
    elif re.search("::Mask<", data.__repr__()): # it's a Mask; display it, bitplane by bitplane
        nMaskPlanes = data.getNumPlanesUsed()
        maskPlanes = data.getMaskPlaneDict()
@@ -303,7 +310,7 @@ def _mtv(data, wcs, title, isMask):
            
        pfd = os.popen(xpa_cmd, "w")
    else:
-      pfd = file("foo.fits", "w")
+       pfd = file("foo.fits", "w")
 
    try:
        #import pdb; pdb.set_trace()
