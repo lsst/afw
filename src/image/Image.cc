@@ -18,8 +18,8 @@
 namespace image = lsst::afw::image;
 
 /// Create an uninitialised ImageBase of the specified size
-template<typename PixelT>
-image::ImageBase<PixelT>::ImageBase(int const width, int const height) :
+template<typename PixelT, bool isScalar>
+image::ImageBase<PixelT, isScalar>::ImageBase(int const width, int const height) :
     lsst::daf::data::LsstBase(typeid(this)),
     _gilImage(new _image_t(width, height)),
     _gilView(flipped_up_down_view(view(*_gilImage))),
@@ -33,8 +33,8 @@ image::ImageBase<PixelT>::ImageBase(int const width, int const height) :
  * \note Many lsst::afw::image and lsst::afw::math objects define a \c dimensions member
  * which may be conveniently used to make objects of an appropriate size
  */
-template<typename PixelT>
-image::ImageBase<PixelT>::ImageBase(std::pair<int, int> const dimensions) :
+template<typename PixelT, bool isScalar>
+image::ImageBase<PixelT, isScalar>::ImageBase(std::pair<int, int> const dimensions) :
     lsst::daf::data::LsstBase(typeid(this)),
     _gilImage(new _image_t(dimensions.first, dimensions.second)),
     _gilView(flipped_up_down_view(view(*_gilImage))),
@@ -48,12 +48,11 @@ image::ImageBase<PixelT>::ImageBase(std::pair<int, int> const dimensions) :
  * \note Unless \c deep is \c true, the new %image will share the old %image's pixels;
  * this may not be what you want.  See also operator<<=() to copy pixels between Image%s
  */
-template<typename PixelT>
-image::ImageBase<PixelT>::ImageBase(
-    ImageBase const& rhs, ///< Right-hand-side %image
-    bool const deep       ///< If false, new ImageBase shares storage with rhs;
-                          ///< if true make a new, standalone, ImageBase
-) :
+template<typename PixelT, bool isScalar>
+image::ImageBase<PixelT, isScalar>::ImageBase(ImageBase const& rhs, ///< Right-hand-side %image
+                                    bool const deep       ///< If false, new ImageBase shares storage with rhs;
+                                                          ///< if true make a new, standalone, ImageBase
+                                   ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _gilImage(rhs._gilImage), // don't copy the pixels
     _gilView(subimage_view(flipped_up_down_view(view(*_gilImage)),
@@ -75,13 +74,12 @@ image::ImageBase<PixelT>::ImageBase(
  * \note Unless \c deep is \c true, the new %image will share the old %image's pixels;
  * this is probably what you want 
  */
-template<typename PixelT>
-image::ImageBase<PixelT>::ImageBase(
-    ImageBase const& rhs, ///< Right-hand-side %image
-    BBox const& bbox,     ///< Specify desired region
-    bool const deep       ///< If false, new ImageBase shares storage with rhs;
-                          ///< if true make a new, standalone, ImageBase
-) :
+template<typename PixelT, bool isScalar>
+image::ImageBase<PixelT, isScalar>::ImageBase(ImageBase const& rhs, ///< Right-hand-side %image
+                                    BBox const& bbox,     ///< Specify desired region
+                                    bool const deep       ///< If false, new ImageBase shares storage with rhs;
+                                                          ///< if true make a new, standalone, ImageBase
+                                   ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _gilImage(rhs._gilImage), // boost::shared_ptr, so don't copy the pixels
     _gilView(subimage_view(rhs._gilView,
@@ -109,8 +107,8 @@ image::ImageBase<PixelT>::ImageBase(
 ///
 /// \note this behaviour is required to make the swig interface work, otherwise I'd
 /// declare this function private
-template<typename PixelT>
-image::ImageBase<PixelT>& image::ImageBase<PixelT>::operator=(ImageBase const& rhs) {
+template<typename PixelT, bool isScalar>
+image::ImageBase<PixelT, isScalar>& image::ImageBase<PixelT, isScalar>::operator=(ImageBase const& rhs) {
     ImageBase tmp(rhs);
     swap(tmp);                          // See Meyers, Effective C++, Item 11
     
@@ -118,8 +116,8 @@ image::ImageBase<PixelT>& image::ImageBase<PixelT>::operator=(ImageBase const& r
 }
 
 /// Set the lhs's %pixel values to equal the rhs's
-template<typename PixelT>
-void image::ImageBase<PixelT>::operator<<=(ImageBase const& rhs) {
+template<typename PixelT, bool isScalar>
+void image::ImageBase<PixelT, isScalar>::operator<<=(ImageBase const& rhs) {
     if (getDimensions() != rhs.getDimensions()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
                           (boost::format("Dimension mismatch: %dx%d v. %dx%d") %
@@ -129,22 +127,23 @@ void image::ImageBase<PixelT>::operator<<=(ImageBase const& rhs) {
 }
 
 /// Return a reference to the pixel <tt>(x, y)</tt>
-template<typename PixelT>
-typename image::ImageBase<PixelT>::PixelReference image::ImageBase<PixelT>::operator()(int x, int y) {
-    return const_cast<typename image::ImageBase<PixelT>::PixelReference>(
-        static_cast<typename image::ImageBase<PixelT>::PixelConstReference>(_gilView(x, y)[0])
-    );
+template<typename PixelT, bool isScalar>
+typename image::ImageBase<PixelT, isScalar>::PixelReference
+         image::ImageBase<PixelT, isScalar>::operator()(int x, int y) {
+    return const_cast<typename image::ImageBase<PixelT, isScalar>::PixelReference>(
+	static_cast<typename image::ImageBase<PixelT, isScalar>::PixelConstReference>(_gilView(x, y)[0])
+                       );
 }
 
 /// Return a const reference to the pixel <tt>(x, y)</tt>
-template<typename PixelT>
-typename image::ImageBase<PixelT>::PixelConstReference
-    image::ImageBase<PixelT>::operator()(int x, int y) const {
+template<typename PixelT, bool isScalar>
+typename image::ImageBase<PixelT, isScalar>::PixelConstReference
+	image::ImageBase<PixelT, isScalar>::operator()(int x, int y) const {
     return _gilView(x, y)[0];
 }
 
-template<typename PixelT>
-void image::ImageBase<PixelT>::swap(ImageBase &rhs) {
+template<typename PixelT, bool isScalar>
+void image::ImageBase<PixelT, isScalar>::swap(ImageBase &rhs) {
     using std::swap;                    // See Meyers, Effective C++, Item 25
     
     swap(_gilImage, rhs._gilImage);   // just swapping the pointers
@@ -155,7 +154,7 @@ void image::ImageBase<PixelT>::swap(ImageBase &rhs) {
     swap(_y0, rhs._y0);
 }
 
-template<typename PixelT>
+template<typename PixelT, bool isScalar>
 void image::swap(ImageBase<PixelT>& a, ImageBase<PixelT>& b) {
     a.swap(b);
 }
@@ -166,32 +165,32 @@ void image::swap(ImageBase<PixelT>& a, ImageBase<PixelT>& b) {
 ///
 /// Note that this isn't especially efficient; see \link imageIterators\endlink for
 /// a discussion
-template<typename PixelT>
-typename image::ImageBase<PixelT>::iterator image::ImageBase<PixelT>::begin() const {
+template<typename PixelT, bool isScalar>
+typename image::ImageBase<PixelT, isScalar>::iterator image::ImageBase<PixelT, isScalar>::begin() const {
     return _gilView.begin();
 }
 
 /// Return an STL compliant iterator to the end of the %image
-template<typename PixelT>
-typename image::ImageBase<PixelT>::iterator image::ImageBase<PixelT>::end() const {
+template<typename PixelT, bool isScalar>
+typename image::ImageBase<PixelT, isScalar>::iterator image::ImageBase<PixelT, isScalar>::end() const {
     return _gilView.end();
 }
 
 /// Return an STL compliant reverse iterator to the start of the %image
-template<typename PixelT>
-typename image::ImageBase<PixelT>::reverse_iterator image::ImageBase<PixelT>::rbegin() const {
+template<typename PixelT, bool isScalar>
+typename image::ImageBase<PixelT, isScalar>::reverse_iterator image::ImageBase<PixelT, isScalar>::rbegin() const {
     return _gilView.rbegin();
 }
 
 /// Return an STL compliant reverse iterator to the end of the %image
-template<typename PixelT>
-typename image::ImageBase<PixelT>::reverse_iterator image::ImageBase<PixelT>::rend() const {
+template<typename PixelT, bool isScalar>
+typename image::ImageBase<PixelT, isScalar>::reverse_iterator image::ImageBase<PixelT, isScalar>::rend() const {
     return _gilView.rend();
 }
 
 /// Return an STL compliant iterator at the point <tt>(x, y)</tt>
-template<typename PixelT>
-typename image::ImageBase<PixelT>::iterator image::ImageBase<PixelT>::at(int x, int y) const {
+template<typename PixelT, bool isScalar>
+typename image::ImageBase<PixelT, isScalar>::iterator image::ImageBase<PixelT, isScalar>::at(int x, int y) const {
     return _gilView.at(x, y);
 }
 
@@ -200,8 +199,8 @@ typename image::ImageBase<PixelT>::iterator image::ImageBase<PixelT>::at(int x, 
 ///
 /// \exception lsst::pex::exceptions::Runtime
 /// Argument \a contiguous is false, or the pixels are not in fact contiguous
-template<typename PixelT>
-typename image::ImageBase<PixelT>::fast_iterator image::ImageBase<PixelT>::begin(
+template<typename PixelT, bool isScalar>
+typename image::ImageBase<PixelT, isScalar>::fast_iterator image::ImageBase<PixelT, isScalar>::begin(
     bool contiguous         ///< Pixels are contiguous (must be true)
 ) const {
     if (!contiguous) {
@@ -219,8 +218,8 @@ typename image::ImageBase<PixelT>::fast_iterator image::ImageBase<PixelT>::begin
 ///
 /// \exception lsst::pex::exceptions::Runtime
 /// Argument \a contiguous is false, or the pixels are not in fact contiguous
-template<typename PixelT>
-typename image::ImageBase<PixelT>::fast_iterator image::ImageBase<PixelT>::end(
+template<typename PixelT, bool isScalar>
+typename image::ImageBase<PixelT, isScalar>::fast_iterator image::ImageBase<PixelT, isScalar>::end(
     bool contiguous         ///< Pixels are contiguous (must be true)
 ) const {
     if (!contiguous) {
@@ -236,55 +235,55 @@ typename image::ImageBase<PixelT>::fast_iterator image::ImageBase<PixelT>::end(
 /// Return an \c xy_locator at the point <tt>(x, y)</tt> in the %image
 ///
 /// Locators may be used to access a patch in an image
-template<typename PixelT>
-typename image::ImageBase<PixelT>::xy_locator image::ImageBase<PixelT>::xy_at(int x, int y) const {
+template<typename PixelT, bool isScalar>
+typename image::ImageBase<PixelT, isScalar>::xy_locator image::ImageBase<PixelT, isScalar>::xy_at(int x, int y) const {
     return xy_locator(_gilView.xy_at(x, y));
 }
 
 /// Return an \c x_iterator to the start of the \c y'th row
 ///
 /// Incrementing an \c x_iterator moves it across the row
-template<typename PixelT>
-typename image::ImageBase<PixelT>::x_iterator image::ImageBase<PixelT>::row_begin(int y) const {
+template<typename PixelT, bool isScalar>
+typename image::ImageBase<PixelT, isScalar>::x_iterator image::ImageBase<PixelT, isScalar>::row_begin(int y) const {
     return _gilView.row_begin(y);
 }
 
 /// Return an \c x_iterator to the end of the \c y'th row
-template<typename PixelT>
-typename image::ImageBase<PixelT>::x_iterator image::ImageBase<PixelT>::row_end(int y) const {
+template<typename PixelT, bool isScalar>
+typename image::ImageBase<PixelT, isScalar>::x_iterator image::ImageBase<PixelT, isScalar>::row_end(int y) const {
     return _gilView.row_end(y);
 }
 
 /// Return an \c x_iterator to the point <tt>(x, y)</tt> in the %image
-template<typename PixelT>
-typename image::ImageBase<PixelT>::x_iterator image::ImageBase<PixelT>::x_at(int x, int y) const {
+template<typename PixelT, bool isScalar>
+typename image::ImageBase<PixelT, isScalar>::x_iterator image::ImageBase<PixelT, isScalar>::x_at(int x, int y) const {
     return _gilView.x_at(x, y);
 }
 
 /// Return an \c y_iterator to the start of the \c y'th row
 ///
 /// Incrementing an \c y_iterator moves it up the column
-template<typename PixelT>
-typename image::ImageBase<PixelT>::y_iterator image::ImageBase<PixelT>::col_begin(int x) const {
+template<typename PixelT, bool isScalar>
+typename image::ImageBase<PixelT, isScalar>::y_iterator image::ImageBase<PixelT, isScalar>::col_begin(int x) const {
     return _gilView.col_begin(x);
 }
 
 /// Return an \c y_iterator to the end of the \c y'th row
-template<typename PixelT>
-typename image::ImageBase<PixelT>::y_iterator image::ImageBase<PixelT>::col_end(int x) const {
+template<typename PixelT, bool isScalar>
+typename image::ImageBase<PixelT, isScalar>::y_iterator image::ImageBase<PixelT, isScalar>::col_end(int x) const {
     return _gilView.col_end(x);
 }
 
 /// Return an \c y_iterator to the point <tt>(x, y)</tt> in the %image
-template<typename PixelT>
-typename image::ImageBase<PixelT>::y_iterator image::ImageBase<PixelT>::y_at(int x, int y) const {
+template<typename PixelT, bool isScalar>
+typename image::ImageBase<PixelT, isScalar>::y_iterator image::ImageBase<PixelT, isScalar>::y_at(int x, int y) const {
     return _gilView.y_at(x, y);
 }
 
 /************************************************************************************************************/
 /// Set the %image's pixels to rhs
-template<typename PixelT>
-image::ImageBase<PixelT>& image::ImageBase<PixelT>::operator=(PixelT const rhs) {
+template<typename PixelT, bool isScalar>
+image::ImageBase<PixelT, isScalar>& image::ImageBase<PixelT, isScalar>::operator=(PixelT const rhs) {
     fill_pixels(_gilView, rhs);
 
     return *this;

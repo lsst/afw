@@ -64,7 +64,7 @@ namespace image {
     // You are not expected to use this class directly in your own code; use one of the
     // specialised subclasses
     //
-    template<typename PixelT>
+    template<typename PixelT, bool isScalar=false>
     class ImageBase : public lsst::daf::base::Persistable,
                       public lsst::daf::data::LsstBase {
     private:
@@ -115,7 +115,7 @@ namespace image {
         /// A const iterator for traversing the pixels in a column
         typedef typename _const_view_t::y_iterator const_y_iterator;
 
-        template<typename OtherPixelT> friend class ImageBase; // needed by generalised copy constructors
+        template<typename, bool> friend class ImageBase; // needed by generalised copy constructors
         //
         /// \brief Convert a type to our SinglePixel type
         //

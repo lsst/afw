@@ -13,6 +13,7 @@
 #include "boost/algorithm/string/trim.hpp"
 
 #include "lsst/afw/image/MaskedImage.h"
+#include "lsst/afw/image/InfiniteImage.h"
 
 namespace bl = boost::lambda;
 namespace image = lsst::afw::image;
@@ -258,25 +259,28 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::swap(MaskedIma
  * it isn't really a very good idea.  The gain's taken to be a a single number, so
  * this function is equivalent to
  * \code
+  *MaskedImage.getVariance() <<= *MaskedImage.getImage()
   *MaskedImage.getVariance() /= gain
  * \endcode
  */
-template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::setVarianceFromGain() {
+template<typename ImagePixelT, typename VariancePixelT>
+static void setVarianceFromGain_impl(image::Image<ImagePixelT> const& img, image::Image<VariancePixelT> *var) {
     double gain = 1.0; 
 
-    try {
-        //gain = _image->getGain();
-    } catch (...) {                     // Should specify and propagate an exception XXX
-        lsst::pex::logging::Trace("afw.MaskedImage", 0,
-                                  boost::format("Gain could not be set in setVarianceFromGain().  Using gain=%g") % gain);
-    }
-
-    transform_pixels(_image->_getRawView(), _variance->_getRawView(), bl::ret<VariancePixelT>(bl::_1/gain));
+    transform_pixels(img._getRawView(), var->_getRawView(), bl::ret<VariancePixelT>(bl::_1/gain));
 
     lsst::pex::logging::Trace("afw.MaskedImage", 1,
                               boost::format("Using gain = %f in setVarianceFromGain()") % gain);
+}
 
+template<typename ImagePixelT, typename VariancePixelT>
+static void setVarianceFromGain_impl(image::Image<ImagePixelT> const& img,
+                                     image::Image<image::InfinitePixel<VariancePixelT> > *var) {
+}
+
+template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::setVarianceFromGain() {
+    setVarianceFromGain_impl(*_image, _variance.get());
 }
 
 /************************************************************************************************************/
@@ -755,4 +759,9 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::xy_locator
 template class image::MaskedImage<boost::uint16_t>;
 template class image::MaskedImage<int>;
 template class image::MaskedImage<float>;
+#if 0
+template class image::MaskedImage<float, image::InfinitePixel<short>, image::InfinitePixel<float> >;
+#else
+template class image::MaskedImage<float, image::InfinitePixel<short> >;
+#endif
 template class image::MaskedImage<double>;
