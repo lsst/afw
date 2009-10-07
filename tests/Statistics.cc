@@ -20,7 +20,7 @@ typedef image::Image<float> Image;
 typedef image::DecoratedImage<float> DecoratedImage;
 
 BOOST_AUTO_TEST_CASE(StatisticsBasic) {
-    Image img(10,40);
+    Image img(10, 40);
     Image::Pixel const pixval = 10000;
     img = pixval;
 
@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(StatisticsBasic) {
         double const sd = stats.getValue(math::STDEV);
         
         BOOST_CHECK_EQUAL(stats.getValue(math::NPOINT), img.getWidth()*img.getHeight());
-        BOOST_CHECK_EQUAL(mean, img(0,0));
+        BOOST_CHECK_EQUAL(mean, img(0, 0));
         BOOST_CHECK(std::isnan(dmean)); // we didn't ask for the error, so it's a NaN
         BOOST_CHECK_EQUAL(sd, 0);
     }
@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(StatisticsBasic) {
         std::pair<double, double> const mean = stats.getResult(math::MEAN);
         double const sd = stats.getValue(math::STDEV);
         
-        BOOST_CHECK_EQUAL(mean.first,  img(0,0));
+        BOOST_CHECK_EQUAL(mean.first,  img(0, 0));
         BOOST_CHECK_EQUAL(mean.second, sd/sqrt(img.getWidth()*img.getHeight()));
     }
 
@@ -83,13 +83,13 @@ BOOST_AUTO_TEST_CASE(StatisticsBasic) {
             }
         }
 
-        math::Statistics stats = math::makeStatistics(img2,
-                                                               math::NPOINT | math::STDEV | math::MEAN | math::ERRORS);
+        math::Statistics stats =
+            math::makeStatistics(img2, math::NPOINT | math::STDEV | math::MEAN | math::ERRORS);
         std::pair<double, double> const mean = stats.getResult(math::MEAN);
         double const n = stats.getValue(math::NPOINT);
         double const sd = stats.getValue(math::STDEV);
         
-        BOOST_CHECK_EQUAL(mean.first,  img(0,0) + 0.5);
+        BOOST_CHECK_EQUAL(mean.first,  img(0, 0) + 0.5);
         BOOST_CHECK_EQUAL(sd, 1/sqrt(4.0)*sqrt(n/(n - 1)));
         BOOST_CHECK_CLOSE(mean.second, sd/sqrt(img.getWidth()*img.getHeight()), 1e-10);
     }
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(StatisticsRamp) {
 
     int nx = 101;
     int ny = 64;
-    Image img(nx,ny);
+    Image img(nx, ny);
     
     double z0 = 10.0;
     double dzdx = 1.0;
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(StatisticsRamp) {
             stdev += (*ptr - mean)*(*ptr - mean);
         }
     }
-    stdev = sqrt(stdev/(nx*ny-1));
+    stdev = sqrt(stdev/(nx*ny - 1));
     
     {
         math::Statistics stats = math::makeStatistics(img, math::NPOINT | math::STDEV | math::MEAN);
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(StatisticsRamp) {
         std::pair<double, double> const mean = stats.getResult(math::MEAN);
         double const sd = stats.getValue(math::STDEV);
         
-        BOOST_CHECK_EQUAL(mean.first,  img(nx/2,ny/2));
+        BOOST_CHECK_EQUAL(mean.first,  img(nx/2, ny/2));
         BOOST_CHECK_EQUAL(mean.second, sd/sqrt(img.getWidth()*img.getHeight()));
     }
 
@@ -142,15 +142,15 @@ BOOST_AUTO_TEST_CASE(StatisticsRamp) {
     // sjb code for percentiles and clipped stats
     {
         math::Statistics stats = math::makeStatistics(img, math::MEDIAN);
-        BOOST_CHECK_EQUAL(z0+dzdx*(nx-1)/2.0, stats.getValue(math::MEDIAN));
+        BOOST_CHECK_EQUAL(z0 + dzdx*(nx - 1)/2.0, stats.getValue(math::MEDIAN));
     }
     {
         math::Statistics stats = math::makeStatistics(img, math::IQRANGE);
-        BOOST_CHECK_EQUAL(dzdx*(nx-1)/2.0, stats.getValue(math::IQRANGE));
+        BOOST_CHECK_EQUAL(dzdx*(nx - 1)/2.0, stats.getValue(math::IQRANGE));
     }
     {
         math::Statistics stats = math::makeStatistics(img, math::MEANCLIP);
-        BOOST_CHECK_EQUAL(z0+dzdx*(nx-1)/2.0, stats.getValue(math::MEANCLIP));
+        BOOST_CHECK_EQUAL(z0 + dzdx*(nx - 1)/2.0, stats.getValue(math::MEANCLIP));
     }
     //{
     //    math::Statistics stats = math::makeStatistics(img, math::VARIANCECLIP);
@@ -179,13 +179,13 @@ BOOST_AUTO_TEST_CASE(StatisticsTestAllNanButOne) {
 
     int nx = 101;
     int ny = 64;
-    Image img(nx,ny);
+    Image img(nx, ny);
     img = NaN;
     double z0 = 10.0;
 
     // set two pixels to non-nan ... neither on stride 10
-    img(4,4) = z0;
-    img(3,3) = z0 + 1.0;
+    img(4, 4) = z0;
+    img(3, 3) = z0 + 1.0;
     
     double const mean = z0 + 0.5;
     double const stdev = std::sqrt( (0.5*0.5 + 0.5*0.5)/(2.0 - 1.0) );
@@ -241,7 +241,7 @@ BOOST_AUTO_TEST_CASE(StatisticsTestImages) {
 
             // measure the mean and stdev with the Statistics class
             Image::Ptr img = dimg.getImage();
-            math::Statistics statobj = math::makeStatistics(*img,math::MEAN | math::STDEV);
+            math::Statistics statobj = math::makeStatistics(*img, math::MEAN | math::STDEV);
             //int n = img->getWidth() * img->getHeight();
             //double sampleToPop = 1.0; //sqrt( n/static_cast<double>(n - 1) );
             double const mean  = statobj.getValue(math::MEAN);

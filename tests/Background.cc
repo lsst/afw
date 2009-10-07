@@ -30,10 +30,10 @@ BOOST_AUTO_TEST_CASE(BackgroundBasic) {
     {
         int xcen = NX/2;
         int ycen = NY/2;
-        math::BackgroundControl bgCtrl(math::NATURAL_SPLINE);
+        math::BackgroundControl bgCtrl(math::AKIMA_SPLINE);
         // test methods native BackgroundControl
-        bgCtrl.setNxSample(3);
-        bgCtrl.setNySample(3);
+        bgCtrl.setNxSample(5);
+        bgCtrl.setNySample(5);
         // test methods for public stats objects in bgCtrl
         bgCtrl.sctrl.setNumSigmaClip(3);
         bgCtrl.sctrl.setNumIter(3);
@@ -81,21 +81,21 @@ BOOST_AUTO_TEST_CASE(BackgroundTestImages) {
             int const NAXIS2 = img->getHeight();
             
             // create a background control object
-            math::BackgroundControl bctrl(math::NATURAL_SPLINE);
-            bctrl.setNxSample(3);
-            bctrl.setNySample(3);
+            math::BackgroundControl bctrl(math::AKIMA_SPLINE);
+            bctrl.setNxSample(5);
+            bctrl.setNySample(5);
             float stdev_subimg = req_stdev / sqrt(NAXIS1*NAXIS2/(bctrl.getNxSample()*bctrl.getNySample()));
 
             // run the background constructor and call the getPixel() and getImage() functions.
             math::Background backobj = math::makeBackground(*img, bctrl);
 
             // test getPixel()
-            float testval = static_cast<float>(backobj.getPixel(NAXIS1/2,NAXIS2/2));
+            float testval = static_cast<float>(backobj.getPixel(NAXIS1/2, NAXIS2/2));
             BOOST_REQUIRE( fabs(testval - req_mean) < 2.0*stdev_subimg );
 
             // test getImage() by checking the center pixel
             image::Image<float>::Ptr bimg = backobj.getImage<float>();
-            float testImgval = static_cast<float>(*(bimg->xy_at(NAXIS1/2,NAXIS2/2)));
+            float testImgval = static_cast<float>(*(bimg->xy_at(NAXIS1/2, NAXIS2/2)));
             BOOST_REQUIRE( fabs(testImgval - req_mean) < 2.0*stdev_subimg );
             
         }
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(BackgroundRamp) {
         // make a ramping image (spline should be exact for linear increasing image
         int const NX = 512;
         int const NY = 512;
-        image::Image<double> rampimg = image::Image<double>(NX,NY);
+        image::Image<double> rampimg = image::Image<double>(NX, NY);
         double dzdx = 0.1;
         double dzdy = 0.2;
         double z0 = 10000.0;
@@ -126,12 +126,12 @@ BOOST_AUTO_TEST_CASE(BackgroundRamp) {
         }
         
         // check corner, edge, and center pixels
-        math::BackgroundControl bctrl = math::BackgroundControl(math::NATURAL_SPLINE);
+        math::BackgroundControl bctrl = math::BackgroundControl(math::AKIMA_SPLINE);
         bctrl.setNxSample(6);
         bctrl.setNySample(6);
         bctrl.sctrl.setNumSigmaClip(20.0);  // something large enough to avoid clipping entirely
         bctrl.sctrl.setNumIter(1);
-        math::Background backobj = math::Background(rampimg,bctrl);
+        math::Background backobj = math::Background(rampimg, bctrl);
 
         // test the values at the corners and in the middle
         int ntest = 3;
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(BackgroundParabola) {
         // make an image which varies parabolicly (spline should be exact for 2rd order polynomial)
         int const NX = 512;
         int const NY = 512;
-        image::Image<double> parabimg = image::Image<double>(NX,NY);
+        image::Image<double> parabimg = image::Image<double>(NX, NY);
         double d2zdx2 = -1.0e-4;
         double d2zdy2 = -1.0e-4;
         double dzdx   = 0.1;
@@ -169,12 +169,12 @@ BOOST_AUTO_TEST_CASE(BackgroundParabola) {
         }
         
         // check corner, edge, and center pixels
-        math::BackgroundControl bctrl = math::BackgroundControl(math::NATURAL_SPLINE);
-        bctrl.setNxSample(16);
-        bctrl.setNySample(16);
+        math::BackgroundControl bctrl = math::BackgroundControl(math::CUBIC_SPLINE);
+        bctrl.setNxSample(24);
+        bctrl.setNySample(24);
         bctrl.sctrl.setNumSigmaClip(10.0);
         bctrl.sctrl.setNumIter(1);
-        math::Background backobj = math::Background(parabimg,bctrl);
+        math::Background backobj = math::Background(parabimg, bctrl);
 
         // debug
         //bimg = backobj.getImageD()
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(BackgroundParabola) {
             for(int j = 0; j < ntest; ++j) {
                 int ypix = j*(NY - 1)/(ntest - 1);
                 double testval = backobj.getPixel(xpix, ypix);
-                double realval = *parabimg.xy_at(xpix,ypix);
+                double realval = *parabimg.xy_at(xpix, ypix);
                 //print xpix, ypix, testval, realval
                 // quadratic terms skew the averages of the subimages and the clipped mean for
                 // a subimage != value of center pixel.  1/20 counts on a 10000 count sky

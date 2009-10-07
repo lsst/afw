@@ -55,7 +55,7 @@ class StatisticsControl {
 public:
     StatisticsControl(double numSigmaClip = 3.0, ///< number of standard deviations to clip at
                       int numIter = 3,     ///< Number of iterations
-                      image::MaskPixel andMask = ~0x0,///< and-Mask to specify which mask planes to pay attention to
+                      image::MaskPixel andMask = ~0x0, ///< and-Mask to specify planes to use
                       bool nanSafe = true  ///< flag NaNs
                      ) :
         _numSigmaClip(numSigmaClip),
@@ -104,7 +104,8 @@ private:
         sctrl.setAndMask(0x1);                 // ignore pixels with these mask bits set
         sctrl.setNanSafe(true);                // check for NaNs, a bit slower (default=true)
         
-        math::Statistics statobj = math::makeStatistics(*img, math::NPOINT | math::MEAN | math::MEANCLIP, sctrl);
+        math::Statistics statobj =
+              math::makeStatistics(*img, math::NPOINT | math::MEAN | math::MEANCLIP, sctrl);
         
         double const n = statobj.getValue(math::NPOINT);
         std::pair<double, double> const mean = statobj.getResult(math::MEAN); // Returns (value, error)
@@ -122,7 +123,7 @@ private:
 class Statistics {
 public:
     /// The type used to report (value, error) for desired statistics
-    typedef std::pair<double, double> value_type;
+    typedef std::pair<double, double> Value;
     
     template<typename Image, typename Mask>
     explicit Statistics(Image const &img,
@@ -130,13 +131,15 @@ public:
                         int const flags,
                         StatisticsControl const& sctrl=StatisticsControl());
 
-    value_type getResult(Property const prop=NOTHING) const;
+    Value getResult(Property const prop=NOTHING) const;
     
     double getError(Property const prop=NOTHING) const;
     double getValue(Property const prop=NOTHING) const;
     
 private:
-    typedef boost::tuple<double, double, double, double, double> StandardReturnT; // return type for _getStandard
+    
+    // return type for _getStandard
+    typedef boost::tuple<double, double, double, double, double> StandardReturn; 
 
     long _flags;                        // The desired calculation
 
@@ -154,14 +157,13 @@ private:
     StatisticsControl _sctrl;           // the control structure
     
     template<typename Image, typename Mask>
-    StandardReturnT _getStandard(Image const &img, Mask const &msk, int const flags);
+    StandardReturn _getStandard(Image const &img, Mask const &msk, int const flags);
     template<typename Image, typename Mask>
-    StandardReturnT _getStandard(Image const &img, Mask const &msk,
-                                 int const flags, std::pair<double,double> clipinfo);
-    
+    StandardReturn _getStandard(Image const &img, Mask const &msk,
+                                int const flags, std::pair<double, double> clipinfo);
+
     template<typename Pixel>
-    double _percentile(std::vector<Pixel> &img,
-                       double const quartile);   // compute median with quickselect (Press et al.)
+    double _percentile(std::vector<Pixel> &img, double const quartile);   
     
     inline double _varianceError(double const variance, int const n) const {
         return 2*(n - 1)*variance*variance/(static_cast<double>(n)*n); // assumes a Gaussian
@@ -177,11 +179,10 @@ private:
  * @brief Handle MaskedImages, just pass the getImage() and getMask() values right on through.
  *
  */
-//template<typename IPixel, typename MPixel, typename VPixel>
 template<typename Pixel>
-Statistics makeStatistics(image::MaskedImage<Pixel, image::MaskPixel, image::VariancePixel> const &mimg, ///< Image (or MaskedImage) whose properties we want
-                          int const flags,   ///< Describe what we want to calculate
-                          StatisticsControl const& sctrl=StatisticsControl() ///< Control how things are calculated
+Statistics makeStatistics(image::MaskedImage<Pixel, image::MaskPixel, image::VariancePixel> const &mimg, 
+                          int const flags,  
+                          StatisticsControl const& sctrl=StatisticsControl() 
                          ) {
     return Statistics(*mimg.getImage(), *mimg.getMask(), flags, sctrl);
 }
@@ -191,10 +192,9 @@ Statistics makeStatistics(image::MaskedImage<Pixel, image::MaskPixel, image::Var
  * @note The definition (in Statistics.cc) simply calls the specialized constructor
  *
  */            
-Statistics makeStatistics(image::Mask<image::MaskPixel> const &msk, ///< Image (or MaskedImage) whose properties we want
-                          int const flags,   ///< Describe what we want to calculate
-                          StatisticsControl const& sctrl=StatisticsControl() ///< Control how things are calculated
-                         );
+Statistics makeStatistics(image::Mask<image::MaskPixel> const &msk, 
+                          int const flags,  
+                          StatisticsControl const& sctrl=StatisticsControl());
             
 
 /*
@@ -207,7 +207,9 @@ Statistics makeStatistics(image::Mask<image::MaskPixel> const &msk, ///< Image (
  */
 template <typename ValueT>
 class infinite_iterator
-    : public boost::iterator_adaptor<infinite_iterator<ValueT>, const ValueT*, const ValueT, boost::forward_traversal_tag> {
+    : public boost::iterator_adaptor<infinite_iterator<ValueT>,
+                                     const ValueT*, const ValueT,
+                                     boost::forward_traversal_tag> {
 public:
     infinite_iterator() : infinite_iterator::iterator_adaptor_(0) {}
     explicit infinite_iterator(const ValueT* p) : infinite_iterator::iterator_adaptor_(p) {}
@@ -238,7 +240,7 @@ public:
 template<typename Pixel>
 Statistics makeStatistics(image::Image<Pixel> const &img, ///< Image (or Image) whose properties we want
                           int const flags,   ///< Describe what we want to calculate
-                          StatisticsControl const& sctrl=StatisticsControl() ///< Control how things are calculated
+                          StatisticsControl const& sctrl=StatisticsControl() ///< Control calculation
                          ) {
     // make a phony mask that will be compiled out
     MaskImposter<image::MaskPixel> msk;
@@ -274,7 +276,7 @@ public:
     
 private:
     std::vector<ValueT> const &_v;                  // a private reference to the data
-    std::vector<ValueT> const &_getVector() const { return _v; } // a way to get the private ref for the copyCon
+    std::vector<ValueT> const &_getVector() const { return _v; } // get the ref for the copyCon
 };
 
 /*
@@ -283,7 +285,7 @@ private:
 template<typename EntryT>
 Statistics makeStatistics(std::vector<EntryT> &v, ///< Image (or MaskedImage) whose properties we want
                           int const flags,   ///< Describe what we want to calculate
-                          StatisticsControl const& sctrl=StatisticsControl() ///< Control how things are calculated
+                          StatisticsControl const& sctrl=StatisticsControl() ///< Control calculation
                          ) {
     
     ImageImposter<EntryT> img(v);           // wrap the vector in a fake image

@@ -287,87 +287,87 @@ inline bool IntGKPNA(
                      const typename UF::result_type epsrel,
                      std::map<typename UF::result_type, typename UF::result_type>* fxmap=0) {
     
-    typedef typename UF::result_type T;
-    const T a = reg.Left();
-    const T b = reg.Right();
+    typedef typename UF::result_type UfResult;
+    const UfResult a = reg.Left();
+    const UfResult b = reg.Right();
     
-    const T half_length =  0.5 * (b - a);
-    const T abs_half_length = fabs (half_length);
-    const T center = 0.5 * (b + a);
-    const T f_center = func(center);
+    const UfResult half_length =  0.5 * (b - a);
+    const UfResult abs_half_length = fabs (half_length);
+    const UfResult center = 0.5 * (b + a);
+    const UfResult f_center = func(center);
 #ifdef COUNTFEVAL
     nfeval++;
 #endif
     
-    assert(gkp_wb<T>(0).size() == gkp_x<T>(0).size()+1);
-    T area1 = gkp_wb<T>(0).back() * f_center;
-    std::vector<T> fv1, fv2;
-    fv1.reserve(2*gkp_x<T>(0).size()+1);
-    fv2.reserve(2*gkp_x<T>(0).size()+1);
-    for (size_t k=0; k<gkp_x<T>(0).size(); k++) {
-        const T abscissa = half_length * gkp_x<T>(0)[k];
-        const T fval1 = func(center - abscissa);
-        const T fval2 = func(center + abscissa);
-        area1 += gkp_wb<T>(0)[k] * (fval1+fval2);
+    assert(gkp_wb<UfResult>(0).size() == gkp_x<UfResult>(0).size() + 1);
+    UfResult area1 = gkp_wb<UfResult>(0).back() * f_center;
+    std::vector<UfResult> fv1, fv2;
+    fv1.reserve(2*gkp_x<UfResult>(0).size() + 1);
+    fv2.reserve(2*gkp_x<UfResult>(0).size() + 1);
+    for (size_t k=0; k<gkp_x<UfResult>(0).size(); k++) {
+        const UfResult abscissa = half_length * gkp_x<UfResult>(0)[k];
+        const UfResult fval1 = func(center - abscissa);
+        const UfResult fval2 = func(center + abscissa);
+        area1 += gkp_wb<UfResult>(0)[k] * (fval1 + fval2);
         fv1.push_back(fval1);
         fv2.push_back(fval2);
         if (fxmap) {
-            (*fxmap)[center-abscissa] = fval1;
-            (*fxmap)[center+abscissa] = fval2;
+            (*fxmap)[center - abscissa] = fval1;
+            (*fxmap)[center + abscissa] = fval2;
         }
     }
 #ifdef COUNTFEVAL
-    nfeval+=gkp_x<T>(0).size()*2;
+    nfeval += gkp_x<UfResult>(0).size()*2;
 #endif
     
     integ_dbg2 << "level 0 rule: area = " << area1 << std::endl;
     
-    T err=0; 
+    UfResult err=0; 
     bool calcabsasc = true;
-    T resabs=0., resasc=0.;
+    UfResult resabs=0., resasc=0.;
     for (int level=1; level<NGKPLEVELS; level++) {
-        assert(gkp_wa<T>(level).size() == fv1.size());
-        assert(gkp_wa<T>(level).size() == fv2.size());
-        assert(gkp_wb<T>(level).size() == gkp_x<T>(level).size()+1);
-        T area2 = gkp_wb<T>(level).back() * f_center;
+        assert(gkp_wa<UfResult>(level).size() == fv1.size());
+        assert(gkp_wa<UfResult>(level).size() == fv2.size());
+        assert(gkp_wb<UfResult>(level).size() == gkp_x<UfResult>(level).size() + 1);
+        UfResult area2 = gkp_wb<UfResult>(level).back() * f_center;
         // resabs = approximation to integral of abs(f)
         if (calcabsasc) resabs = fabs(area2);
         for (size_t k=0; k<fv1.size(); k++) {
-            area2 += gkp_wa<T>(level)[k] * (fv1[k]+fv2[k]);
-            if (calcabsasc) { resabs += gkp_wa<T>(level)[k] * (fabs(fv1[k]) + fabs(fv2[k])); }
+            area2 += gkp_wa<UfResult>(level)[k] * (fv1[k] + fv2[k]);
+            if (calcabsasc) { resabs += gkp_wa<UfResult>(level)[k] * (fabs(fv1[k]) + fabs(fv2[k])); }
         }
-        for (size_t k=0; k<gkp_x<T>(level).size(); k++) {
-            const T abscissa = half_length * gkp_x<T>(level)[k];
-            const T fval1 = func(center - abscissa);
-            const T fval2 = func(center + abscissa);
-            const T fval = fval1 + fval2;
-            area2 += gkp_wb<T>(level)[k] * fval;
-            if (calcabsasc) { resabs += gkp_wb<T>(level)[k] * (fabs(fval1) + fabs(fval2)); }
+        for (size_t k=0; k<gkp_x<UfResult>(level).size(); k++) {
+            const UfResult abscissa = half_length * gkp_x<UfResult>(level)[k];
+            const UfResult fval1 = func(center - abscissa);
+            const UfResult fval2 = func(center + abscissa);
+            const UfResult fval = fval1 + fval2;
+            area2 += gkp_wb<UfResult>(level)[k] * fval;
+            if (calcabsasc) { resabs += gkp_wb<UfResult>(level)[k] * (fabs(fval1) + fabs(fval2)); }
             fv1.push_back(fval1);
             fv2.push_back(fval2);
             if (fxmap) {
-                (*fxmap)[center-abscissa] = fval1;
-                (*fxmap)[center+abscissa] = fval2;
+                (*fxmap)[center - abscissa] = fval1;
+                (*fxmap)[center + abscissa] = fval2;
             }
         }
 #ifdef COUNTFEVAL
-        nfeval+=gkp_x<T>(level).size()*2;
+        nfeval += gkp_x<UfResult>(level).size()*2;
 #endif
         if (calcabsasc) {
-            const T mean = area1*T(0.5);
+            const UfResult mean = area1*UfResult(0.5);
             // resasc = approximation to the integral of abs(f-mean) 
-            resasc = gkp_wb<T>(level).back() * fabs(f_center-mean);
-            for (size_t k=0; k<gkp_wa<T>(level).size(); k++) {
-                resasc += gkp_wa<T>(level)[k] * (fabs(fv1[k]-mean) + fabs(fv2[k]-mean));
+            resasc = gkp_wb<UfResult>(level).back() * fabs(f_center - mean);
+            for (size_t k=0; k<gkp_wa<UfResult>(level).size(); k++) {
+                resasc += gkp_wa<UfResult>(level)[k] * (fabs(fv1[k] - mean) + fabs(fv2[k] - mean));
             }
-            for (size_t k=0; k<gkp_x<T>(level).size(); k++) {
-                resasc += gkp_wb<T>(level)[k] * (fabs(fv1[k]-mean) + fabs(fv2[k]-mean));
+            for (size_t k=0; k<gkp_x<UfResult>(level).size(); k++) {
+                resasc += gkp_wb<UfResult>(level)[k] * (fabs(fv1[k] - mean) + fabs(fv2[k] - mean));
             }
             resasc *= abs_half_length ;
             resabs *= abs_half_length;
         }
         area2 *= half_length;
-        err = rescale_error (fabs(area2-area1), resabs, resasc) ;
+        err = rescale_error (fabs(area2 - area1), resabs, resasc) ;
         if (err < resasc) { calcabsasc = false; }
         
         integ_dbg2 << "at level " << level << " area2 = " << area2;
@@ -413,7 +413,7 @@ inline void IntGKP (
                     const typename UF::result_type epsrel,
                     std::map<typename UF::result_type, typename UF::result_type>* fxmap=0) {
 
-    typedef typename UF::result_type T;
+    typedef typename UF::result_type UfResult;
     integ_dbg2 << "Start IntGKP\n";
     
     assert(epsabs >= 0.);
@@ -427,47 +427,47 @@ inline void IntGKP (
     integ_dbg2 << "Intial range = " << reg.Left() << ".." << reg.Right() << std::endl;
     
     int roundoff_type1 = 0, error_type = 0;
-    T roundoff_type2 = 0.;
+    UfResult roundoff_type2 = 0.;
     size_t iteration = 1;
     
-    std::priority_queue<IntRegion<T>, std::vector<IntRegion<T> > > allregions;
+    std::priority_queue<IntRegion<UfResult>, std::vector<IntRegion<UfResult> > > allregions;
     allregions.push(reg);
-    T finalarea = reg.Area();
-    T finalerr = reg.Err();
-    T tolerance= std::max(epsabs, epsrel * fabs(finalarea));
+    UfResult finalarea = reg.Area();
+    UfResult finalerr = reg.Err();
+    UfResult tolerance= std::max(epsabs, epsrel * fabs(finalarea));
     assert(finalerr > tolerance);
     
     while(!error_type && finalerr > tolerance) {
         // Bisect the subinterval with the largest error estimate 
         integ_dbg2 << "Current answer = " << finalarea << " +- " << finalerr;
         integ_dbg2 << "  (tol = " << tolerance << ")\n";
-        IntRegion<T> parent = allregions.top(); 
+        IntRegion<UfResult> parent = allregions.top(); 
         allregions.pop();
         integ_dbg2 << "Subdividing largest error region ";
         integ_dbg2 << parent.Left() << ".." << parent.Right() << std::endl;
         integ_dbg2 << "parent area = " << parent.Area();
         integ_dbg2 << " +- " << parent.Err() << std::endl;
-        std::vector<IntRegion<T> > children;
+        std::vector<IntRegion<UfResult> > children;
         parent.SubDivide(&children);
         // For "GKP", there are only two, but for GKPOSC, there is one 
         // for each oscillation in region
         
         // Try to do at least 3x better with the children
-        T factor = 3*children.size()*finalerr/tolerance;
-        T newepsabs = fabs(parent.Err()/factor);
-        T newepsrel = newepsabs/fabs(parent.Area());
+        UfResult factor = 3*children.size()*finalerr/tolerance;
+        UfResult newepsabs = fabs(parent.Err()/factor);
+        UfResult newepsrel = newepsabs/fabs(parent.Area());
         integ_dbg2 << "New epsabs, rel = " << newepsabs << ", " << newepsrel;
         integ_dbg2 << "  (" << children.size() << " children)\n";
         
-        T newarea = T(0.0);
-        T newerror = 0.0;
+        UfResult newarea = UfResult(0.0);
+        UfResult newerror = 0.0;
         for(size_t i=0;i<children.size();i++) {
-            IntRegion<T>& child = children[i];
+            IntRegion<UfResult>& child = children[i];
             integ_dbg2 << "Integrating child " << child.Left();
             integ_dbg2 << ".." << child.Right() << std::endl;
             bool converged;
             converged = IntGKPNA(func, child, newepsabs, newepsrel);
-            integ_dbg2 << "child (" << i+1 << '/' << children.size() << ") ";
+            integ_dbg2 << "child (" << i + 1 << '/' << children.size() << ") ";
             if (converged) {integ_dbg2 << " converged.";}
             else {integ_dbg2 << " failed.";}
             integ_dbg2 << "  Area = " << child.Area() << " +- " << child.Err() << std::endl;
@@ -481,7 +481,7 @@ inline void IntGKP (
         finalerr += (newerror - parent.Err());
         finalarea += newarea - parent.Area();
         
-        T delta = parent.Area() - newarea;
+        UfResult delta = parent.Area() - newarea;
         if (newerror <= parent.Err() && fabs (delta) <=  parent.Err()
             && newerror >= 0.99 * parent.Err()) {
             integ_dbg2 << "roundoff type 1: delta/newarea = ";
@@ -490,10 +490,10 @@ inline void IntGKP (
             roundoff_type1++;
         }
         if (iteration >= 10 && newerror > parent.Err() && 
-            fabs(delta) <= newerror-parent.Err()) {
+            fabs(delta) <= newerror - parent.Err()) {
             integ_dbg2 << "roundoff type 2: newerror/error = ";
             integ_dbg2 << newerror/parent.Err() << std::endl;
-            roundoff_type2+=std::min(newerror/parent.Err()-1., T(1.));
+            roundoff_type2 += std::min(newerror/parent.Err() - 1.0, UfResult(1.0));
         }
         
         tolerance = std::max(epsabs, epsrel * fabs(finalarea));
@@ -506,7 +506,7 @@ inline void IntGKP (
                 error_type = 2;	// round off error 
                 integ_dbg2 << "GKP: Round off error 2\n";
             }
-            if (fabs((parent.Right()-parent.Left())/(reg.Right()-reg.Left())) 
+            if (fabs((parent.Right() - parent.Left())/(reg.Right() - reg.Left())) 
                 < Epsilon<double>()) {
                 error_type = 3; // found singularity
                 integ_dbg2 << "GKP: Probable singularity\n";
@@ -519,7 +519,7 @@ inline void IntGKP (
     // Recalculate finalarea in case there are any slight rounding errors
     finalarea=0.; finalerr=0.;
     while (!allregions.empty()) {
-        const IntRegion<T>& r=allregions.top();
+        const IntRegion<UfResult>& r=allregions.top();
         finalarea += r.Area();
         finalerr += r.Err();
         allregions.pop();
@@ -560,7 +560,7 @@ struct AuxFunc1 : // f(1/x-1) for int(a..infinity)
         public std::unary_function<typename UF::argument_type, typename UF::result_type> {
 public:
     AuxFunc1(const UF& f) : _f(f) {}
-    typename UF::result_type operator()(typename UF::argument_type x) const { return _f(1./x-1.)/(x*x); }
+    typename UF::result_type operator()(typename UF::argument_type x) const { return _f(1.0/x - 1.0)/(x*x); }
 private:
     const UF& _f;
 };
@@ -578,7 +578,7 @@ template <class UF> struct AuxFunc2 : // f(1/x+1) for int(-infinity..b)
         public std::unary_function<typename UF::argument_type, typename UF::result_type> {
 public:
     AuxFunc2(const UF& f) : _f(f) {}
-    typename UF::result_type operator()(typename UF::argument_type x) const { return _f(1./x+1.)/(x*x); }
+    typename UF::result_type operator()(typename UF::argument_type x) const { return _f(1.0/x + 1.0)/(x*x); }
 private:
     const UF& _f;
 };
@@ -599,7 +599,7 @@ AuxFunc2<UF> inline Aux2(UF uf) { return AuxFunc2<UF>(uf); }
  */
 template <class T>
 struct ConstantReg1 : public std::unary_function<T, IntRegion<T> > {
-    ConstantReg1(T a,T b) : ir(a,b) {}
+    ConstantReg1(T a, T b) : ir(a, b) {}
     ConstantReg1(const IntRegion<T>& r) : ir(r) {}
     IntRegion<T> operator()(T x) const {return ir;}
     IntRegion<T> ir;
@@ -607,7 +607,7 @@ struct ConstantReg1 : public std::unary_function<T, IntRegion<T> > {
     
 template <class T>
 struct ConstantReg2 : public std::binary_function<T, T, IntRegion<T> > {
-    ConstantReg2(T a,T b) : ir(a,b) {}
+    ConstantReg2(T a, T b) : ir(a, b) {}
     ConstantReg2(const IntRegion<T>& r) : ir(r) {}
     IntRegion<T> operator()(T x, T y) const {return ir;}
     IntRegion<T> ir;
@@ -692,7 +692,8 @@ bind31(const TF& oper, const Tp& x) {
 
 
 template <class TF, class YREG, class ZREG>
-class Int3DAuxType : public std::unary_function<typename TF::firstof3_argument_type, typename TF::result_type> {
+class Int3DAuxType :
+        public std::unary_function<typename TF::firstof3_argument_type, typename TF::result_type> {
 public:
     Int3DAuxType(const TF& func, const YREG& yreg, const ZREG& zreg, 
                  const typename TF::result_type& abserr,
@@ -729,7 +730,7 @@ inline typename UF::result_type int1d(
                                       const typename UF::result_type& abserr=DEFABSERR,
                                       const typename UF::result_type& relerr=DEFRELERR) {
     
-    typedef typename UF::result_type T;
+    typedef typename UF::result_type UfResult;
     using namespace details;
 
     integ_dbg2 << "start int1d: " << reg.Left() << ".." << reg.Right() << std::endl;
@@ -739,15 +740,15 @@ inline typename UF::result_type int1d(
     }
 
     if (reg.NSplit() > 0) {
-        std::vector<IntRegion<T> > children;
+        std::vector<IntRegion<UfResult> > children;
         reg.SubDivide(&children);
         integ_dbg2 << "Subdivided into " << children.size() << " children\n";
-        T answer=T();
-        T err = 0; 
+        UfResult answer=UfResult();
+        UfResult err = 0; 
         for(size_t i=0;i<children.size();i++) {
-            IntRegion<T>& child = children[i];
+            IntRegion<UfResult>& child = children[i];
             integ_dbg2 << "i = " << i;
-            integ_dbg2 << ": bounds = " << child.Left() << ',' << child.Right() << std::endl;
+            integ_dbg2 << ": bounds = " << child.Left() << ", " << child.Right() << std::endl;
             answer += int1d(func, child, abserr, relerr);
             err += child.Err();
             integ_dbg2 << "subint = " << child.Area() << " +- " << child.Err() << std::endl;
@@ -759,13 +760,13 @@ inline typename UF::result_type int1d(
         if (reg.Left() <= -MOCK_INF) {
             integ_dbg2 << "left = -infinity, right = " << reg.Right() << std::endl;
             assert(reg.Right() <= 0.);
-            IntRegion<T> modreg(1./(reg.Right()-1.), 0., reg.getDbgout());
+            IntRegion<UfResult> modreg(1.0/(reg.Right() - 1.0), 0.0, reg.getDbgout());
             IntGKP(Aux2<UF>(func), modreg, abserr, relerr);
 	reg.SetArea(modreg.Area(), modreg.Err());
         } else if (reg.Right() >= MOCK_INF) {
             integ_dbg2 << "left = " << reg.Left() << ", right = infinity\n";
             assert(reg.Left() >= 0.);
-            IntRegion<T> modreg(0., 1./(reg.Left()+1.), reg.getDbgout());
+            IntRegion<UfResult> modreg(0., 1.0/(reg.Left() + 1.0), reg.getDbgout());
             IntGKP(Aux1<UF>(func), modreg, abserr, relerr);
             reg.SetArea(modreg.Area(), modreg.Err());
         } else {
@@ -869,8 +870,8 @@ typename UnaryFunctionT::result_type integrate(UnaryFunctionT func,
                                                typename UnaryFunctionT::argument_type const b,
                                                double eps=1.0e-6)  {
     
-    typedef typename UnaryFunctionT::argument_type Argtype;
-    IntRegion<Argtype> region(a, b);
+    typedef typename UnaryFunctionT::argument_type Arg;
+    IntRegion<Arg> region(a, b);
     
     return int1d(func, region, DEFABSERR, eps);
 }
@@ -902,7 +903,8 @@ public:
                     typename BinaryFunctionT::first_argument_type const x2,
                     double const eps=1.0e-6) :
         _func(func), _x1(x1), _x2(x2), _eps(eps) {}
-    typename BinaryFunctionT::result_type operator() (typename BinaryFunctionT::second_argument_type const y) const {
+    typename BinaryFunctionT::result_type operator()(typename
+                                                     BinaryFunctionT::second_argument_type const y) const {
         return integrate(std::bind2nd(_func, y), _x1, _x2, _eps);
     }
 private:

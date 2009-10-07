@@ -35,13 +35,13 @@ namespace math = lsst::afw::math;
  * We have to inherit from IntegrandBase for the integrator to work.
  */
 template<typename IntegrandT>
-class Parab1D : public std::unary_function<IntegrandT,IntegrandT> {
+class Parab1D : public std::unary_function<IntegrandT, IntegrandT> {
 public:
     Parab1D(double k, double kx) : _k(k), _kx(kx) {}
     
     // for this example we have an analytic answer to check
     double getAnalyticArea(double const x1, double const x2) {
-        return _k*(x2-x1) - _kx*(x2*x2*x2-x1*x1*x1)/3.0;
+        return _k*(x2 - x1) - _kx*(x2*x2*x2 - x1*x1*x1)/3.0;
     }
     
     // operator() must be overloaded to return the evaluation of the function
@@ -63,7 +63,7 @@ double parabola1d(double x) {
  * Note that we have to inherit from IntegrandBase
  */
 template<typename IntegrandT>
-class Parab2D : public std::binary_function<IntegrandT,IntegrandT,IntegrandT> {
+class Parab2D : public std::binary_function<IntegrandT, IntegrandT, IntegrandT> {
 public:
     Parab2D(double k, double kx, double ky) : _k(k), _kx(kx), _ky(ky) {}
     

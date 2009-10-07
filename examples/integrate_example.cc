@@ -27,7 +27,7 @@ public :
     
     double operator()(double x) const { 
         const double SQRTTWOPI = 2.50662827463;
-        return exp(-pow(x - _mu, 2)/2./_sigsq)/SQRTTWOPI/_sig; 
+        return exp( -pow(x - _mu, 2)/2.0/_sigsq)/SQRTTWOPI/_sig; 
     }
     
 private :
@@ -94,7 +94,7 @@ double Cosmology::calc_w(double z) {
     // For w(a) = w0 + wa(1-a), we can do the internal integral:
     // ... Om_de exp( -3(1+w0+wa) ln(a) - 3 wa(1-a) )
     
-    math::IntRegion<double> intreg(1./(1.+z), 1);
+    math::IntRegion<double> intreg(1.0/(1.0 + z), 1);
     W_Integrator winteg(*this);
     
     return int1d(winteg, intreg);

@@ -9,8 +9,8 @@
 using namespace std;
 namespace math = lsst::afw::math;
 
-typedef math::LinearInterpolate<double,double> Linear;
-typedef math::SplineInterpolate<double,double> Spline;
+
+typedef math::Interpolate Interp;
 
 int main() {
 
@@ -37,20 +37,16 @@ int main() {
     }
     
     // declare an spline interpolate object.  the constructor computes the first derivatives
-    Spline yinterpS(x, y);
+    Interp yinterpS(x, y, ::gsl_interp_linear);
 
     // declare a linear interpolate object. the constructor computes the second derivatives
-    Linear yinterpL(x, y);
+    Interp yinterpL(x, y, ::gsl_interp_cspline);
     
     // output the interpolated y values, 1st derivatives, and 2nd derivatives.
     for (int i = 0; i < NX2; ++i) {
         cout << i << " " << x2[i] << " " <<
             yinterpL.interpolate(x2[i]) << " " <<
             yinterpS.interpolate(x2[i]) << " " <<
-            yinterpL.interpolateDyDx(x2[i]) << " " <<
-            yinterpS.interpolateDyDx(x2[i]) << " " <<
-            yinterpL.interpolateD2yDx2(x2[i]) << " " <<
-            yinterpS.interpolateD2yDx2(x2[i]) << " " <<
             endl;
     }
 

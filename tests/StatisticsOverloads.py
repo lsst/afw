@@ -70,17 +70,20 @@ class StatisticsTestCase(unittest.TestCase):
 
     # The guts of the testing: grab a mean, stddev, and sum for whatever you're called with
     def compareMakeStatistics(self, image, n):
-        stats = afwMath.makeStatistics(image, afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN | afwMath.SUM, self.sctrl)
+        stats = afwMath.makeStatistics(image, afwMath.NPOINT | afwMath.STDEV |
+                                       afwMath.MEAN | afwMath.SUM, self.sctrl)
 
         self.assertEqual(stats.getValue(afwMath.NPOINT), n)
-        self.assertEqual(stats.getValue(afwMath.NPOINT)*stats.getValue(afwMath.MEAN), stats.getValue(afwMath.SUM))
+        self.assertEqual(stats.getValue(afwMath.NPOINT)*stats.getValue(afwMath.MEAN),
+                         stats.getValue(afwMath.SUM))
         self.assertEqual(stats.getValue(afwMath.MEAN), self.val)
         self.assertEqual(stats.getValue(afwMath.STDEV), 0)
 
     # same as compareMakeStatistics but calls constructor directly (only for masked image)
     def compareStatistics(self, stats, n):
         self.assertEqual(stats.getValue(afwMath.NPOINT), n)
-        self.assertEqual(stats.getValue(afwMath.NPOINT)*stats.getValue(afwMath.MEAN), stats.getValue(afwMath.SUM))
+        self.assertEqual(stats.getValue(afwMath.NPOINT)*stats.getValue(afwMath.MEAN),
+                         stats.getValue(afwMath.SUM))
         self.assertEqual(stats.getValue(afwMath.MEAN), self.val)
         self.assertEqual(stats.getValue(afwMath.STDEV), 0)
 

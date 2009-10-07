@@ -25,7 +25,7 @@ namespace math = lsst::afw::math;
  * @note that we *have* to inherit from binary_function<>
  */
 template<typename IntegrandT>
-class Parab2D : public std::binary_function<IntegrandT,IntegrandT,IntegrandT> {
+class Parab2D : public std::binary_function<IntegrandT, IntegrandT, IntegrandT> {
 public:
     // declare coefficients at instantiation.
     Parab2D(IntegrandT const K, IntegrandT const kr) : _K(K), _kr(kr) {}
