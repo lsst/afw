@@ -3,7 +3,7 @@
  *
  * \brief Utilities to detect sets of Footprint%s
  *
- * Create and use an lsst::afw::detection::DetectionSet, a collection of pixels above (or below) some threshold
+ * Create and use an lsst::afw::detection::FootprintSet, a collection of pixels above (or below) some threshold
  * in an Image
  *
  * The "collections of pixels" are represented as lsst::afw::detection::Footprint%s, so an example application
@@ -14,7 +14,7 @@
     image::MaskedImage<float> img(10,20);
     *img.getImage() = 100;
 
-    detection::DetectionSet<float> sources(img, 10);
+    detection::FootprintSet<float> sources(img, 10);
     cout << "Found " << sources.getFootprints().size() << " sources" << std::endl;
  * \endcode
  */
@@ -98,10 +98,10 @@ namespace {
 
 /************************************************************************************************************/
 /**
- * Dtor for DetectionSet
+ * Dtor for FootprintSet
  */
 template<typename ImagePixelT, typename MaskPixelT>
-detection::DetectionSet<ImagePixelT, MaskPixelT>::~DetectionSet() {
+detection::FootprintSet<ImagePixelT, MaskPixelT>::~FootprintSet() {
     delete &_footprints;
 }
 
@@ -118,7 +118,7 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::~DetectionSet() {
  * for this to make sense, e.g. for difference imaging)
  */
 template<typename ImagePixelT, typename MaskPixelT>
-detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
+detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         const image::MaskedImage<ImagePixelT, MaskPixelT> &maskedImg, //!< MaskedImage to search for objects
         const Threshold& threshold,     //!< threshold to find objects
         const std::string& planeName,   //!< mask plane to set (if != "")
@@ -318,12 +318,12 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
 
 /************************************************************************************************************/
 /**
- * Return a DetectionSet consisting a Footprint containing the point (x, y) (if above threshold)
+ * Return a FootprintSet consisting a Footprint containing the point (x, y) (if above threshold)
  *
  * \todo Implement this.  There's RHL Pan-STARRS code to do it, but it isn't yet converted to LSST C++
  */
 template<typename ImagePixelT, typename MaskPixelT>
-detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
+detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         const image::MaskedImage<ImagePixelT, MaskPixelT> &img, //!< Image to search for objects
         const Threshold& threshold,          //!< threshold to find objects
         int x,                               //!< Footprint should include this pixel (column)
@@ -738,8 +738,8 @@ pmFindFootprintAtPoint(const psImage *img,      // image to search
  * Copy constructor
  */
 template<typename ImagePixelT, typename MaskPixelT>
-detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
-        DetectionSet const &rhs         //!< the input DetectionSet
+detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
+        FootprintSet const &rhs         //!< the input FootprintSet
                                                               ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _footprints(rhs._footprints) {
@@ -747,25 +747,25 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
 
 /// Assignment operator.
 template<typename ImagePixelT, typename MaskPixelT>
-detection::DetectionSet<ImagePixelT, MaskPixelT> &
-detection::DetectionSet<ImagePixelT, MaskPixelT>::operator=(DetectionSet const& rhs) {
-    DetectionSet tmp(rhs);
+detection::FootprintSet<ImagePixelT, MaskPixelT> &
+detection::FootprintSet<ImagePixelT, MaskPixelT>::operator=(FootprintSet const& rhs) {
+    FootprintSet tmp(rhs);
     swap(tmp);                          // See Meyers, Effective C++, Item 11
     
     return *this;
 }
 
-/// Set the corners of the DetectionSet's MaskedImage to region
+/// Set the corners of the FootprintSet's MaskedImage to region
 ///
 /// N.b. updates all the Footprints' regions too
 //
 template<typename ImagePixelT, typename MaskPixelT>
-void detection::DetectionSet<ImagePixelT, MaskPixelT>::setRegion(image::BBox const& region // the desired region
+void detection::FootprintSet<ImagePixelT, MaskPixelT>::setRegion(image::BBox const& region // the desired region
                                                                 ) {
     _region = region;
-    typename DetectionSet::FootprintList footprintList = getFootprints();
+    typename FootprintSet::FootprintList footprintList = getFootprints();
 
-    for (typename DetectionSet::FootprintList::iterator ptr = getFootprints().begin(), end = getFootprints().end();
+    for (typename FootprintSet::FootprintList::iterator ptr = getFootprints().begin(), end = getFootprints().end();
          ptr != end; ++ptr) {
         (*ptr)->setRegion(region);
     }
@@ -773,13 +773,13 @@ void detection::DetectionSet<ImagePixelT, MaskPixelT>::setRegion(image::BBox con
 
 /************************************************************************************************************/
 /**
- * Grow all the Footprints in the input DetectionSet, returning a new DetectionSet
+ * Grow all the Footprints in the input FootprintSet, returning a new FootprintSet
  *
- * The output DetectionSet may contain fewer Footprints, as some may well have been merged
+ * The output FootprintSet may contain fewer Footprints, as some may well have been merged
  */
 template<typename ImagePixelT, typename MaskPixelT>
-detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
-        DetectionSet const &rhs,        //!< the input DetectionSet
+detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
+        FootprintSet const &rhs,        //!< the input FootprintSet
         int r,                          //!< Grow Footprints by r pixels
         bool isotropic                  //!< Grow isotropically (as opposed to a Manhattan metric)
                                         //!< @note Isotropic grows are significantly slower
@@ -807,19 +807,19 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
         gfoot->insertIntoImage(*idImage, 10); // The value 10 is random; more than 1 anyway
     }
 
-    DetectionSet<ImageT> ds(image::MaskedImage<ImageT>(idImage), Threshold(1));
+    FootprintSet<ImageT> ds(image::MaskedImage<ImageT>(idImage), Threshold(1));
     swap(ds);
 }
 
 /************************************************************************************************************/
 /**
- * Return the DetectionSet corresponding to the merge of two input DetectionSets
+ * Return the FootprintSet corresponding to the merge of two input FootprintSets
  *
  * \todo Implement this.  There's RHL Pan-STARRS code to do it, but it isn't yet converted to LSST C++
  */
 template<typename ImagePixelT, typename MaskPixelT>
-detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
-        DetectionSet const& footprints1, DetectionSet const& footprints2,
+detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
+        FootprintSet const& footprints1, FootprintSet const& footprints2,
         bool const includePeaks)
     : lsst::daf::data::LsstBase(typeid(this)),
       _footprints(*new FootprintList())
@@ -828,12 +828,12 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
 
 /************************************************************************************************************/
 /**
- * Return an Image with pixels set to the Footprint%s in the DetectionSet
+ * Return an Image with pixels set to the Footprint%s in the FootprintSet
  *
  * \returns an image::Image::Ptr
  */
 template<typename ImagePixelT, typename MaskPixelT>
-typename image::Image<boost::uint16_t>::Ptr detection::DetectionSet<ImagePixelT, MaskPixelT>::insertIntoImage(const bool relativeIDs) {
+typename image::Image<boost::uint16_t>::Ptr detection::FootprintSet<ImagePixelT, MaskPixelT>::insertIntoImage(const bool relativeIDs) {
     typename image::Image<boost::uint16_t>::Ptr im(new image::Image<boost::uint16_t>(_region.getDimensions()));
     *im = 0;
 
@@ -857,6 +857,6 @@ typename image::Image<boost::uint16_t>::Ptr detection::DetectionSet<ImagePixelT,
 //
 // Explicit instantiations
 //
-template class detection::DetectionSet<int, image::MaskPixel>;
-template class detection::DetectionSet<float, image::MaskPixel>;
-template class detection::DetectionSet<double, image::MaskPixel>;
+template class detection::FootprintSet<int, image::MaskPixel>;
+template class detection::FootprintSet<float, image::MaskPixel>;
+template class detection::FootprintSet<double, image::MaskPixel>;

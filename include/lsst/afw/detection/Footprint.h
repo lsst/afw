@@ -54,7 +54,7 @@ private:
 
 /************************************************************************************************************/
 /**
- * \brief A Threshold is used to pass a threshold value to the DetectionSet constructors
+ * \brief A Threshold is used to pass a threshold value to the FootprintSet constructors
  *
  * The threshold may be a simple value (type == VALUE), or in units of the image
  * standard deviation; you may specify that you'll provide the standard deviation
@@ -119,7 +119,7 @@ Threshold createThreshold(const float value,
  *
  * A Footprint is a set of pixels, usually but not necessarily contiguous.
  * There are constructors to find Footprints above some threshold in an Image
- * (see DetectionSet), or to create Footprints in the shape of various
+ * (see FootprintSet), or to create Footprints in the shape of various
  * geometrical figures
  */
 class Footprint : public lsst::daf::data::LsstBase {
@@ -204,31 +204,31 @@ Footprint::Ptr footprintAndMask(Footprint::Ptr const & foot,
  *
  */
 template<typename ImagePixelT, typename MaskPixelT=lsst::afw::image::MaskPixel>
-class DetectionSet : public lsst::daf::data::LsstBase {
+class FootprintSet : public lsst::daf::data::LsstBase {
 public:
-    typedef boost::shared_ptr<DetectionSet> Ptr;
-    /// The DetectionSet's set of Footprint%s
+    typedef boost::shared_ptr<FootprintSet> Ptr;
+    /// The FootprintSet's set of Footprint%s
     typedef std::vector<Footprint::Ptr> FootprintList;
 
-    DetectionSet(lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
+    FootprintSet(lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
                  Threshold const& threshold,
                  std::string const& planeName = "",
                  int const npixMin=1);
-    DetectionSet(lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
+    FootprintSet(lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
                  Threshold const& threshold,
                  int x,
                  int y,
                  std::vector<Peak> const* peaks = NULL);
-    DetectionSet(DetectionSet const&);
-    DetectionSet(DetectionSet const& set, int r, bool isotropic=true);
-    DetectionSet(DetectionSet const& footprints1, DetectionSet const& footprints2,
+    FootprintSet(FootprintSet const&);
+    FootprintSet(FootprintSet const& set, int r, bool isotropic=true);
+    FootprintSet(FootprintSet const& footprints1, FootprintSet const& footprints2,
                  bool const includePeaks);
-    ~DetectionSet();
+    ~FootprintSet();
 
-    DetectionSet& operator=(DetectionSet const& rhs);
+    FootprintSet& operator=(FootprintSet const& rhs);
 
     template<typename RhsImagePixelT, typename RhsMaskPixelT>
-    void swap(DetectionSet<RhsImagePixelT, RhsMaskPixelT> &rhs) {
+    void swap(FootprintSet<RhsImagePixelT, RhsMaskPixelT> &rhs) {
         using std::swap;                    // See Meyers, Effective C++, Item 25
         
         swap(_footprints, rhs.getFootprints());
@@ -348,22 +348,22 @@ private:
 /************************************************************************************************************/
 
 template<typename ImagePixelT, typename MaskPixelT>
-typename detection::DetectionSet<ImagePixelT, MaskPixelT>::Ptr makeDetectionSet(
+typename detection::FootprintSet<ImagePixelT, MaskPixelT>::Ptr makeFootprintSet(
         image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
         Threshold const& threshold,
         std::string const& planeName = "",
         int const npixMin=1) {
-    return typename detection::DetectionSet<ImagePixelT, MaskPixelT>::Ptr(new DetectionSet<ImagePixelT, MaskPixelT>(img, threshold, planeName, npixMin));
+    return typename detection::FootprintSet<ImagePixelT, MaskPixelT>::Ptr(new FootprintSet<ImagePixelT, MaskPixelT>(img, threshold, planeName, npixMin));
 }
 
 template<typename ImagePixelT, typename MaskPixelT>
-typename detection::DetectionSet<ImagePixelT, MaskPixelT>::Ptr makeDetectionSet(
+typename detection::FootprintSet<ImagePixelT, MaskPixelT>::Ptr makeFootprintSet(
         image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
         Threshold const& threshold,
         int x,
         int y,
         std::vector<Peak> const* peaks = NULL) {
-    return typename detection::DetectionSet<ImagePixelT, MaskPixelT>::Ptr(new DetectionSet<ImagePixelT, MaskPixelT>(img, threshold, x, y, peaks));
+    return typename detection::FootprintSet<ImagePixelT, MaskPixelT>::Ptr(new FootprintSet<ImagePixelT, MaskPixelT>(img, threshold, x, y, peaks));
 }
 
 /************************************************************************************************************/

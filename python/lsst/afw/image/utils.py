@@ -11,9 +11,9 @@ def clipImage(im, min, max):
         mi = afwImage.makeMaskedImage(im, afwImage.MaskU(im.getDimensions()))
 
     if min is not None:
-        ds = afwDetection.makeDetectionSet(mi, afwDetection.Threshold(-min, afwDetection.Threshold.VALUE, False))
+        ds = afwDetection.makeFootprintSet(mi, afwDetection.Threshold(-min, afwDetection.Threshold.VALUE, False))
         afwDetection.setImageFromFootprintList(mi.getImage(), ds.getFootprints(), min)
 
     if max is not None:
-        ds = afwDetection.makeDetectionSet(mi, afwDetection.Threshold(max))
+        ds = afwDetection.makeFootprintSet(mi, afwDetection.Threshold(max))
         afwDetection.setImageFromFootprintList(mi.getImage(), ds.getFootprints(), max)

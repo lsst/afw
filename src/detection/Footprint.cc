@@ -630,7 +630,7 @@ afwDetect::Footprint::Ptr growFootprintSlow(
     afwImage::MaskedImage<int>::Ptr convolvedImage(new afwImage::MaskedImage<int>(idImage->getDimensions()));
     afwMath::convolve(*convolvedImage->getImage(), *idImage, *circle, false);
 
-    afwDetect::DetectionSet<int>::Ptr grownList(new afwDetect::DetectionSet<int>(*convolvedImage, 0.5, "", 1));
+    afwDetect::FootprintSet<int>::Ptr grownList(new afwDetect::FootprintSet<int>(*convolvedImage, 0.5, "", 1));
 
     assert (grownList->getFootprints().size() > 0);
     afwDetect::Footprint::Ptr grown = *grownList->getFootprints().begin();
@@ -720,7 +720,7 @@ afwDetect::Footprint::Ptr afwDetect::growFootprint(
 
     afwImage::MaskedImage<int>::Ptr midImage(new afwImage::MaskedImage<int>(idImage));
     // XXX Why do I need a -ve threshold when parity == false? I'm looking for pixels below ngrow
-    DetectionSet<int>::Ptr grownList(new DetectionSet<int>(*midImage,
+    FootprintSet<int>::Ptr grownList(new FootprintSet<int>(*midImage,
                                                            Threshold(-ngrow, afwDetect::Threshold::VALUE, false)));
     assert (grownList->getFootprints().size() > 0);
     afwDetect::Footprint::Ptr grown = *grownList->getFootprints().begin();
