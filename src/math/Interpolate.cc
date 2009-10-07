@@ -36,9 +36,10 @@ namespace {
  *
  */
 template<typename xT, typename yT>
-math::Interpolate<xT,yT>::Interpolate(std::vector<xT> const& x,         ///< x-coords of function to interpolate 
-                                      std::vector<yT> const& y,         ///< y-value of function to interpolate  
-                                      math::InterpControl const& ictrl) ///< object with interpolation parameters
+math::Interpolate<xT,yT>::Interpolate(
+    std::vector<xT> const& x,         ///< x-coords of function to interpolate
+    std::vector<yT> const& y,         ///< y-value of function to interpolate 
+    math::InterpControl const& ictrl) ///< object with interpolation parameters
     : _n(x.size() + 2),
       _x(*new vector<xT>), _y(*new vector<yT>),
       _xgridspace( static_cast<double>(x[1] - x[0]) ),
@@ -67,9 +68,10 @@ math::Interpolate<xT,yT>::Interpolate(std::vector<xT> const& x,         ///< x-c
  * This pre-computes the first derivatives over the intervals
  */
 template<typename xT, typename yT>
-math::LinearInterpolate<xT,yT>::LinearInterpolate(std::vector<xT> const& x, ///< x-coords of function to interpolate 
-                                                  std::vector<yT> const& y, ///< y-value of function to interpolate  
-                                                  math::InterpControl const& ictrl) ///< object with interpolation parameters
+math::LinearInterpolate<xT,yT>::LinearInterpolate(
+    std::vector<xT> const& x,         ///< x-coords of function to interpolate
+    std::vector<yT> const& y,         ///< y-value of function to interpolate  
+    math::InterpControl const& ictrl) ///< object with interpolation parameters
     : Interpolate<xT,yT>::Interpolate(x,y,ictrl), _dydx(*new vector<yT>) {
     
     _dydx.resize(_n - 1);
@@ -182,9 +184,10 @@ yT math::LinearInterpolate<xT,yT>::interpolateD2yDx2_safe(xT const xinterp) cons
  * This mainly just pre-computes the second derivatives over the intervals
  */
 template<typename xT, typename yT>
-math::SplineInterpolate<xT,yT>::SplineInterpolate(std::vector<xT> const& x,   ///< x-coords of function to interpolate 
-                                                  std::vector<yT> const& y,   ///< y-value of function to interpolate  
-                                                  InterpControl const& ictrl) ///< object with interpolation parameters
+math::SplineInterpolate<xT,yT>::SplineInterpolate(
+    std::vector<xT> const& x,   ///< x-coords of function to interpolate 
+    std::vector<yT> const& y,   ///< y-value of function to interpolate  
+    InterpControl const& ictrl) ///< object with interpolation parameters
     : Interpolate<xT,yT>::Interpolate(x, y, ictrl), _d2ydx2(*new vector<yT>) {
     
     //_dydx0 = _dydxN = std::numeric_limits<double>::quiet_NaN();
@@ -261,7 +264,8 @@ inline yT math::SplineInterpolate<xT,yT>::interpolate(xT const xinterp) const {
 }
 
 /**
- * @brief Public method to return spline-interpolated first derivatives over a vector<> *without* bounds checking
+ * @brief Public method to return spline-interpolated first derivatives over a
+ *        vector<> *without* bounds checking
  * @param xinterp the x-coord at which to interpolate a value
  * @return the function derivative value spline-interpolated at xinterp
  */
@@ -277,7 +281,8 @@ inline yT math::SplineInterpolate<xT,yT>::interpolateDyDx(xT const xinterp) cons
 }
 
 /**
- * @brief Public method to return spline-interpolated second derivatives over a vector<> *without* bounds checking
+ * @brief Public method to return spline-interpolated second derivatives over a
+ *        vector<> *without* bounds checking
  * @param xinterp the x-coord at which to interpolate a value
  * @return the function second derivative spline-interpolated at xinterp
  */
@@ -317,7 +322,8 @@ yT math::SplineInterpolate<xT,yT>::interpolate_safe(xT const xinterp) const {
 }
 
 /**
- * @brief Public method to return spline-interpolated first derivatives over a vector<> *with* bounds checking
+ * @brief Public method to return spline-interpolated first derivatives over a
+ *        vector<> *with* bounds checking
  * @param xinterp the x-coord at which to interpolate a value
  * @return the function derivative spline-interpolated at xinterp
  */
@@ -342,7 +348,8 @@ yT math::SplineInterpolate<xT,yT>::interpolateDyDx_safe(xT const xinterp) const 
 }
 
 /**
- * @brief Public method to return spline-interpolated second derivatives over a vector<> *with* bounds checking
+ * @brief Public method to return spline-interpolated second derivatives over a
+ *        vector<> *with* bounds checking
  * @param xinterp the x-coord at which to interpolate a value
  * @return the function second derivative spline-interpolated at xinterp
  */

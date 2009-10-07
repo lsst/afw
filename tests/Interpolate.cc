@@ -58,15 +58,15 @@ BOOST_AUTO_TEST_CASE(SplineInterpolateRamp) {
 
 BOOST_AUTO_TEST_CASE(SplineInterpolateParabola) {
 
-    int const n = 20;
-    vector<double> x(n);
-    vector<double> y(n);
-    double const dydx = 1.0;
-    double const d2ydx2 = 0.5;
-    double const y0 = 10.0;
+    int const N = 20;
+    vector<double> x(N);
+    vector<double> y(N);
+    double dydx = 1.0;
+    double d2ydx2 = 0.5;
+    double y0 = 10.0;
     
     //float const NaN = std::numeric_limits<float>::quiet_NaN();
-    for(int i = 0; i < n; ++i) {
+    for(int i = 0; i < N; ++i) {
         x[i] = static_cast<double>(i);
         y[i] = d2ydx2*x[i]*x[i] + dydx*x[i] + y0;
     }
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(SplineInterpolateParabola) {
         // === test the Spline interpolator =======================
         math::InterpControl ictrl(math::NATURAL_SPLINE);
         ictrl.setDydx0( 2.0*d2ydx2*x[0] + dydx);
-        ictrl.setDydxN( 2.0*d2ydx2*x[n - 1] + dydx);
+        ictrl.setDydxN( 2.0*d2ydx2*x[N - 1] + dydx);
         math::SplineInterpolate<double,double> yinterpS(x, y, ictrl);
         double youtS = yinterpS.interpolate(xtest);
 

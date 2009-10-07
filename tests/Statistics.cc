@@ -16,12 +16,12 @@ using namespace std;
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
 
-typedef image::Image<float> ImageT;
-typedef image::DecoratedImage<float> DecoratedImageT;
+typedef image::Image<float> Image;
+typedef image::DecoratedImage<float> DecoratedImage;
 
 BOOST_AUTO_TEST_CASE(StatisticsBasic) {
-    ImageT img(10,40);
-    ImageT::Pixel const pixval = 10000;
+    Image img(10,40);
+    Image::Pixel const pixval = 10000;
     img = pixval;
 
     {
@@ -72,13 +72,13 @@ BOOST_AUTO_TEST_CASE(StatisticsBasic) {
     
     
     {
-        ImageT img2(img);
+        Image img2(img);
         //
         // Add 1 to every other row, so the variance is 1/4
         //
         BOOST_REQUIRE(img.getHeight()%2 == 0);
         for (int y = 1; y < img.getHeight(); y += 2) {
-            for (ImageT::x_iterator ptr = img.row_begin(y), end = ptr + img.getWidth(); ptr != end; ++ptr) {
+            for (Image::x_iterator ptr = img.row_begin(y), end = ptr + img.getWidth(); ptr != end; ++ptr) {
                 *ptr += 1;
             }
         }
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(StatisticsRamp) {
 
     int nx = 101;
     int ny = 64;
-    ImageT img(nx,ny);
+    Image img(nx,ny);
     
     double z0 = 10.0;
     double dzdx = 1.0;
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(StatisticsRamp) {
     double stdev = 0.0;
     for (int i_y=0; i_y < ny; ++i_y) {
         double x = 0;
-        for (ImageT::x_iterator ptr=img.row_begin(i_y); ptr != img.row_end(i_y); ++ptr) {
+        for (Image::x_iterator ptr=img.row_begin(i_y); ptr != img.row_end(i_y); ++ptr) {
             *ptr = z0 + dzdx*x;
             x += 1.0;
             stdev += (*ptr - mean)*(*ptr - mean);
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(StatisticsTestAllNanButOne) {
 
     int nx = 101;
     int ny = 64;
-    ImageT img(nx,ny);
+    Image img(nx,ny);
     img = NaN;
     double z0 = 10.0;
 
@@ -232,7 +232,7 @@ BOOST_AUTO_TEST_CASE(StatisticsTestImages) {
             string img_path = afwdata_dir + "/Statistics/" + *imgfile;
 
             // get the image and header
-            DecoratedImageT dimg(img_path);
+            DecoratedImage dimg(img_path);
             lsst::daf::base::PropertySet::Ptr fitsHdr = dimg.getMetadata(); // the FITS header
 
             // get the true values of the mean and stdev
@@ -240,7 +240,7 @@ BOOST_AUTO_TEST_CASE(StatisticsTestImages) {
             double const true_stdev = fitsHdr->getAsDouble("SIGCOMP");
 
             // measure the mean and stdev with the Statistics class
-            ImageT::Ptr img = dimg.getImage();
+            Image::Ptr img = dimg.getImage();
             math::Statistics statobj = math::makeStatistics(*img,math::MEAN | math::STDEV);
             //int n = img->getWidth() * img->getHeight();
             //double sampleToPop = 1.0; //sqrt( n/static_cast<double>(n - 1) );

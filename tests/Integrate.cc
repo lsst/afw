@@ -29,7 +29,7 @@ namespace math = lsst::afw::math;
 
 
 /* define a simple 1D function as a functor to be integrated.
- * I've chosen a parabola here: f(x) = K + kx*x*x
+ * I've chosen a parabola here: f(x) = k + kx*x*x
  * as it's got an easy-to-check analytic answer.
  *
  * We have to inherit from IntegrandBase for the integrator to work.
@@ -37,25 +37,27 @@ namespace math = lsst::afw::math;
 template<typename IntegrandT>
 class Parab1D : public std::unary_function<IntegrandT,IntegrandT> {
 public:
-    Parab1D(double K, double kx) : _K(K), _kx(kx) {}
+    Parab1D(double k, double kx) : _k(k), _kx(kx) {}
     
     // for this example we have an analytic answer to check
-    double getAnalyticArea(double const x1, double const x2) { return _K*(x2-x1) - _kx*(x2*x2*x2-x1*x1*x1)/3.0; }
+    double getAnalyticArea(double const x1, double const x2) {
+        return _k*(x2-x1) - _kx*(x2*x2*x2-x1*x1*x1)/3.0;
+    }
     
     // operator() must be overloaded to return the evaluation of the function
-    IntegrandT operator() (IntegrandT const x) const { return (_K - _kx*x*x); }
+    IntegrandT operator() (IntegrandT const x) const { return (_k - _kx*x*x); }
     
 private:
-    double _K, _kx;
+    double _k, _kx;
 };
 
 double parabola1d(double x) {
-    double K = 100.0, kx = 1.0;
-    return K - kx*x*x;
+    double k = 100.0, kx = 1.0;
+    return k - kx*x*x;
 }
 
 /* define a simple 2D function as a functor to be integrated.
- * I've chosen a 2D paraboloid: f(x) = K - kx*x*x - ky*y*y
+ * I've chosen a 2D paraboloid: f(x) = k - kx*x*x - ky*y*y
  * as it's got an easy-to-check analytic answer.
  *
  * Note that we have to inherit from IntegrandBase
@@ -63,26 +65,28 @@ double parabola1d(double x) {
 template<typename IntegrandT>
 class Parab2D : public std::binary_function<IntegrandT,IntegrandT,IntegrandT> {
 public:
-    Parab2D(double K, double kx, double ky) : _K(K), _kx(kx), _ky(ky) {}
+    Parab2D(double k, double kx, double ky) : _k(k), _kx(kx), _ky(ky) {}
     
     // for this example we have an analytic answer to check
     double getAnalyticVolume(double const x1, double const x2, double const y1, double const y2) {
         double const xw = x2 - x1;
         double const yw = y2 - y1;
-        return _K*xw*yw - _kx*(x2*x2*x2-x1*x1*x1)*yw/3.0 - _ky*(y2*y2*y2-y1*y1*y1)*xw/3.0;
+        return _k*xw*yw - _kx*(x2*x2*x2 - x1*x1*x1)*yw/3.0 - _ky*(y2*y2*y2 - y1*y1*y1)*xw/3.0;
     }
     
     // operator() must be overloaded to return the evaluation of the function
-    IntegrandT operator() (IntegrandT const x, IntegrandT const y) const { return (_K - _kx*x*x - _ky*y*y); }
+    IntegrandT operator() (IntegrandT const x, IntegrandT const y) const {
+        return (_k - _kx*x*x - _ky*y*y);
+    }
     
 private:
-    double _K, _kx, _ky;
+    double _k, _kx, _ky;
 };
 
 
 double parabola2d (double const x, double const y) {
-    double const K = 100.0, kx = 1.0, ky = 1.0;
-    return K - kx*x*x - ky*y*y;
+    double const K = 100.0, KX = 1.0, KY = 1.0;
+    return K - KX*x*x - KY*y*y;
 }
 
 /**
@@ -93,12 +97,12 @@ BOOST_AUTO_TEST_CASE(Parabola1D) {
 
     // set limits of integration
     double x1 = 0, x2 = 9;
-    // set the coefficients for the quadratic equation (parabola f(x) = K + kx*x*x)
-    double K = 100, kx = 1.0;
+    // set the coefficients for the quadratic equation (parabola f(x) = k + kx*x*x)
+    double k = 100, kx = 1.0;
 
     // ==========   The 1D integrator ==========
     // instantiate a Parab1D Functor, integrate numerically, and analytically
-    Parab1D<double> parab1d(K, kx);
+    Parab1D<double> parab1d(k, kx);
     double parab_area_integrate  = math::integrate(parab1d, x1, x2);
     double parab_area_analytic = parab1d.getAnalyticArea(x1, x2);
 
@@ -117,12 +121,12 @@ BOOST_AUTO_TEST_CASE(Parabola2D) {
 
     // set limits of integration
     double x1 = 0, x2 = 9, y1 = 0, y2 = 9;
-    // set the coefficients for the quadratic equation (parabola f(x) = K + kx*x*x + ky*y*y)
-    double K = 100, kx = 1.0, ky = 1.0;
+    // set the coefficients for the quadratic equation (parabola f(x) = k + kx*x*x + ky*y*y)
+    double k = 100, kx = 1.0, ky = 1.0;
 
     // ==========   The 2D integrator ==========
     // instantiate a Parab2D, integrate numerically and analytically
-    Parab2D<double> parab2d(K, kx, ky);
+    Parab2D<double> parab2d(k, kx, ky);
     double parab_volume_integrate  = math::integrate2d(parab2d, x1, x2, y1, y2);
     double parab_volume_analytic = parab2d.getAnalyticVolume(x1, x2, y1, y2);
 

@@ -69,7 +69,8 @@ public:
     }
 
     // for this example we have an analytic answer to check
-    IntegrandT getAnalyticVolume(IntegrandT const x1, IntegrandT const x2, IntegrandT const y1, IntegrandT const y2) {
+    IntegrandT getAnalyticVolume(IntegrandT const x1, IntegrandT const x2,
+                                 IntegrandT const y1, IntegrandT const y2) {
         IntegrandT const xw = x2 - x1;
         IntegrandT const yw = y2 - y1;
         return _K*xw*yw - _kx*(x2*x2*x2-x1*x1*x1)*yw/3.0 - _ky*(y2*y2*y2-y1*y1*y1)*xw/3.0;
@@ -106,23 +107,23 @@ double parabola2d(double const x, double const y) {
 int main() {
 
     // set limits of integration
-    double const x1 = 0, x2 = 9, y1 = 0, y2 = 9;
+    double const X1 = 0, X2 = 9, Y1 = 0, Y2 = 9;
     // set the coefficients for the quadratic equation
-    // (parabola f(x) = K + kx*x*x + ky*y*y)
-    double const K = 100, kx = 1.0, ky = 1.0;
+    // (parabola f(x) = K + KX*x*x + KY*y*y)
+    double const K = 100, KX = 1.0, KY = 1.0;
 
     
     // ==========   1D integrator ==========
 
     // instantiate a Parab1D Functor
-    Parab1D<double> parab1d(K, kx);
+    Parab1D<double> parab1d(K, KX);
     
     // integrate the area under the curve, and then get the analytic result
-    double const parab_area_integrate  = math::integrate(parab1d, x1, x2);
-    double const parab_area_analytic = parab1d.getAnalyticArea(x1, x2);
+    double const parab_area_integrate  = math::integrate(parab1d, X1, X2);
+    double const parab_area_analytic = parab1d.getAnalyticArea(X1, X2);
 
     // now run it on the 1d function (you *need* to wrap the function in ptr_fun())
-    double const parab_area_integrate_func = math::integrate(std::ptr_fun(parabola), x1, x2);
+    double const parab_area_integrate_func = math::integrate(std::ptr_fun(parabola), X1, X2);
 
     // output
     std::cout << "1D integrate: functor = " << parab_area_integrate << 
@@ -133,14 +134,14 @@ int main() {
     // ==========  2D integrator ==========
 
     // instantiate a Parab2D
-    Parab2D<double> parab2d(K, kx, ky);
+    Parab2D<double> parab2d(K, KX, KY);
 
     // integrate the volume under the function, and then get the analytic result
-    double const parab_volume_integrate  = math::integrate2d(parab2d, x1, x2, y1, y2);
-    double const parab_volume_analytic = parab2d.getAnalyticVolume(x1, x2, y1, y2);
+    double const parab_volume_integrate  = math::integrate2d(parab2d, X1, X2, Y1, Y2);
+    double const parab_volume_analytic = parab2d.getAnalyticVolume(X1, X2, Y1, Y2);
 
     // now run it on the 2d function (you *need* to wrap the function in ptr_fun())
-    double const parab_volume_integrate_func = math::integrate2d(std::ptr_fun(parabola2d), x1, x2, y1, y2);
+    double const parab_volume_integrate_func = math::integrate2d(std::ptr_fun(parabola2d), X1, X2, Y1, Y2);
 
     // output
     std::cout << "2D integrate: functor = " << parab_volume_integrate <<
