@@ -6,19 +6,18 @@
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Statistics.h"
 
-using namespace std;
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
 
-typedef image::Image<float> ImageT;
-typedef image::MaskedImage<float> MaskedImageT;
-typedef math::Statistics ImgTstat;
+typedef image::Image<float> ImageF;
+typedef image::MaskedImage<float> MaskedImageF;
+typedef math::Statistics ImgStat;
 
 
 /**
- * \file imageStatistics.cc - an example of how to use the Statistics class
- * \author Steve Bickerton
- * \date Jan 8, 2009
+ * @file imageStatistics.cc - an example of how to use the Statistics class
+ * @author Steve Bickerton
+ * @date Jan 8, 2009
  */
 
 
@@ -29,13 +28,13 @@ template<typename Image>
 void printStats(Image &img, math::StatisticsControl const &sctrl) {
     
     // initialize a Statistics object with any stats we might want
-    ImgTstat stats = math::makeStatistics(img, math::NPOINT | math::STDEV | math::MEAN | math::VARIANCE |
+    ImgStat stats = math::makeStatistics(img, math::NPOINT | math::STDEV | math::MEAN | math::VARIANCE |
                                            math::ERRORS | math::MIN | math::MAX | math::VARIANCECLIP |
                                            math::MEANCLIP | math::MEDIAN | math::IQRANGE | math::STDEVCLIP,
                                            sctrl);
     
     // get various stats with getValue() and their errors with getError()
-    double const npoint      = stats.getValue(math::NPOINT);
+    double const npoint    = stats.getValue(math::NPOINT);
     double const mean      = stats.getValue(math::MEAN);
     double const var       = stats.getValue(math::VARIANCE);
     double const dmean     = stats.getError(math::MEAN);
@@ -49,59 +48,56 @@ void printStats(Image &img, math::StatisticsControl const &sctrl) {
     double const iqrange   = stats.getValue(math::IQRANGE);
 
     // output
-    cout << "N          " << npoint << endl;
-    cout << "dmean      " << dmean << endl;
+    std::cout << "N          " << npoint << std::endl;
+    std::cout << "dmean      " << dmean << std::endl;
 
-    cout << "mean:      " << mean << endl;
-    cout << "meanclip:  " << meanclip << endl;
+    std::cout << "mean:      " << mean << std::endl;
+    std::cout << "meanclip:  " << meanclip << std::endl;
 
-    cout << "var:       " << var << endl;
-    cout << "varclip:   " << varclip << endl;
+    std::cout << "var:       " << var << std::endl;
+    std::cout << "varclip:   " << varclip << std::endl;
 
-    cout << "stdev:     " << sd << endl;
-    cout << "stdevclip: " << stdevclip << endl;
+    std::cout << "stdev:     " << sd << std::endl;
+    std::cout << "stdevclip: " << stdevclip << std::endl;
 
-    cout << "min:       " << min << endl;
-    cout << "max:       " << max <<  endl;
-    cout << "median:    " << median << endl;
-    cout << "iqrange:   " << iqrange << endl;
-    cout << endl;
+    std::cout << "min:       " << min << std::endl;
+    std::cout << "max:       " << max <<  std::endl;
+    std::cout << "median:    " << median << std::endl;
+    std::cout << "iqrange:   " << iqrange << std::endl;
+    std::cout << std::endl;
     
 }
 
 
 int main() {
 
-    double const pi = M_PI;
-    //double const pi_2 = pi/2;
-    double const NaN = std::numeric_limits<double>::quiet_NaN();
-
     // declare an image and a masked image
-    int const wid = 1024;
-    ImageT img(wid, wid);
-    MaskedImageT mimg(wid, wid);
+    int const WID = 1024;
+    ImageF img(WID, WID);
+    MaskedImageF mimg(WID, WID);
     std::vector<double> v(0);
     
     // fill it with some noise (Cauchy noise in this case)
     for (int j = 0; j != img.getHeight(); ++j) {
         
         int k = 0;
-        MaskedImageT::x_iterator mip = mimg.row_begin(j);
-        for (ImageT::x_iterator ip = img.row_begin(j); ip != img.row_end(j); ++ip, ++mip) {
-            double const x_uniform = pi*static_cast<ImageT::Pixel>(std::rand())/RAND_MAX;
-            double x_lorentz = x_uniform; //tan(x_uniform - pi_2);
+        MaskedImageF::x_iterator mip = mimg.row_begin(j);
+        for (ImageF::x_iterator ip = img.row_begin(j); ip != img.row_end(j); ++ip) {
+            double const x_uniform = M_PI*static_cast<ImageF::Pixel>(std::rand())/RAND_MAX;
+            double x_lorentz = x_uniform; //tan(x_uniform - M_PI/2.0);
 
             // throw in the occassional nan ... 1% of the time
-            if ( static_cast<double>(std::rand())/RAND_MAX < 0.01 ) { x_lorentz = NaN; }
+            if ( static_cast<double>(std::rand())/RAND_MAX < 0.01 ) { x_lorentz = NAN; }
             
             *ip = x_lorentz;
             
             // mask the odd rows
             // variance actually diverges for Cauchy noise ... but stats doesn't access this.
-            *mip = MaskedImageT::Pixel(x_lorentz, (k%2) ? 0x1 : 0x0, 10.0);
+            *mip = MaskedImageF::Pixel(x_lorentz, (k%2) ? 0x1 : 0x0, 10.0);
 
             v.push_back(x_lorentz);
-            k++;
+            ++k;
+            ++mip;
         }
     }
 

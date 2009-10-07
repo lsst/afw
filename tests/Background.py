@@ -54,21 +54,24 @@ class BackgroundTestCase(unittest.TestCase):
 
 
         xcen, ycen = 50, 100
-        bgCtrl = afwMath.BackgroundControl(afwMath.NATURAL_SPLINE)
-        bgCtrl.setNxSample(3)
-        bgCtrl.setNySample(3)
+        bgCtrl = afwMath.BackgroundControl(afwMath.AKIMA_SPLINE)
+        bgCtrl.setNxSample(5)
+        bgCtrl.setNySample(5)
         bgCtrl.sctrl.setNumIter(3)
         bgCtrl.sctrl.setNumSigmaClip(3)
         back = afwMath.makeBackground(self.image, bgCtrl)
-        mid = back.getPixel(xcen,ycen)
+        mid = back.getPixel(xcen, ycen)
         
-        self.assertEqual(back.getPixel(xcen,ycen), self.val)
+        self.assertEqual(back.getPixel(xcen, ycen), self.val)
 
 
     def testBackgroundTestImages(self):
 
         imginfolist = []
-        imginfolist.append( ["v1_i1_g_m400_s20_f.fits", 400.05551471441612] ) # cooked to known value
+        #imginfolist.append( ["v1_i1_g_m400_s20_f.fits", 400.05551471441612] ) # cooked to known value
+        #imginfolist.append( ["v1_i1_g_m400_s20_f.fits", 400.00295902395123] ) # cooked to known value
+        #imginfolist.append( ["v1_i1_g_m400_s20_f.fits", 400.08468385712251] ) # cooked to known value
+        imginfolist.append( ["v1_i1_g_m400_s20_f.fits", 400.00305806663295] ) # cooked to known value
         #imgfiles.append("v1_i1_g_m400_s20_u16.fits")
         #imgfiles.append("v1_i2_g_m400_s20_f.fits"
         #imgfiles.append("v1_i2_g_m400_s20_u16.fits")
@@ -96,12 +99,12 @@ class BackgroundTestCase(unittest.TestCase):
             naxis2 = img.getHeight()
             
             # create a background control object
-            bctrl = afwMath.BackgroundControl(afwMath.NATURAL_SPLINE);
-            bctrl.setNxSample(3);
-            bctrl.setNySample(3);
+            bctrl = afwMath.BackgroundControl(afwMath.AKIMA_SPLINE);
+            bctrl.setNxSample(5);
+            bctrl.setNySample(5);
             
             # run the background constructor and call the getPixel() and getImage() functions.
-            backobj = afwMath.makeBackground(img,bctrl)
+            backobj = afwMath.makeBackground(img, bctrl)
 
             pix_per_subimage = img.getWidth()*img.getHeight()/(bctrl.getNxSample()*bctrl.getNySample())
             stdev_interp = req_stdev/math.sqrt(pix_per_subimage)
@@ -113,7 +116,7 @@ class BackgroundTestCase(unittest.TestCase):
 
             # test getImage() by checking the center pixel
             bimg = backobj.getImageD()
-            testImgval = bimg.get(naxis1/2,naxis2/2)
+            testImgval = bimg.get(naxis1/2, naxis2/2)
             self.assertTrue( abs(testImgval - req_mean) < 2*stdev_interp )
             
 
@@ -122,7 +125,7 @@ class BackgroundTestCase(unittest.TestCase):
         # make a ramping image (spline should be exact for linear increasing image
         nx = 512
         ny = 512
-        rampimg = afwImage.ImageD(nx,ny)
+        rampimg = afwImage.ImageD(nx, ny)
         dzdx, dzdy, z0 = 0.1, 0.2, 10000.0
 
         for x in range(nx):
@@ -130,19 +133,20 @@ class BackgroundTestCase(unittest.TestCase):
                 rampimg.set(x, y, dzdx*x + dzdy*y + z0)
         
         # check corner, edge, and center pixels
-        bctrl = afwMath.BackgroundControl(afwMath.NATURAL_SPLINE);
+        bctrl = afwMath.BackgroundControl();
+        bctrl.setStyle(afwMath.CUBIC_SPLINE);
         bctrl.setNxSample(6);
         bctrl.setNySample(6);
         bctrl.sctrl.setNumSigmaClip(20.0)  # something large enough to avoid clipping entirely
         bctrl.sctrl.setNumIter(1)
-        backobj = afwMath.makeBackground(rampimg,bctrl)
+        backobj = afwMath.makeBackground(rampimg, bctrl)
 
-        xpixels = [0,nx/2,nx-1]
-        ypixels = [0,ny/2,ny-1]
+        xpixels = [0, nx/2, nx - 1]
+        ypixels = [0, ny/2, ny - 1]
         for xpix in xpixels:
             for ypix in ypixels:
                 testval = backobj.getPixel(xpix, ypix)
-                self.assertAlmostEqual( testval, rampimg.get(xpix,ypix),10 )
+                self.assertAlmostEqual( testval, rampimg.get(xpix, ypix), 10 )
                 
 
     def testParabola(self):
@@ -150,7 +154,7 @@ class BackgroundTestCase(unittest.TestCase):
         # make an image which varies parabolicly (spline should be exact for 2rd order polynomial)
         nx = 512
         ny = 512
-        parabimg = afwImage.ImageD(nx,ny)
+        parabimg = afwImage.ImageD(nx, ny)
         d2zdx2, d2zdy2, dzdx, dzdy, z0 = -1.0e-4, -1.0e-4, 0.1, 0.2, 10000.0  # no cross-terms
 
         for x in range(nx):
@@ -158,12 +162,12 @@ class BackgroundTestCase(unittest.TestCase):
                 parabimg.set(x, y, d2zdx2*x*x + d2zdy2*y*y + dzdx*x + dzdy*y + z0)
         
         # check corner, edge, and center pixels
-        bctrl = afwMath.BackgroundControl(afwMath.NATURAL_SPLINE);
-        bctrl.setNxSample(16);
-        bctrl.setNySample(16);
+        bctrl = afwMath.BackgroundControl(afwMath.CUBIC_SPLINE);
+        bctrl.setNxSample(24);
+        bctrl.setNySample(24);
         bctrl.sctrl.setNumSigmaClip(10.0)  
         bctrl.sctrl.setNumIter(1)
-        backobj = afwMath.makeBackground(parabimg,bctrl)
+        backobj = afwMath.makeBackground(parabimg, bctrl)
 
         # debug
         #bimg = backobj.getImageD()
@@ -171,27 +175,29 @@ class BackgroundTestCase(unittest.TestCase):
         #ds9.mtv(bimg, frame=1)
         #parabimg.writeFits("a.fits")
         #bimg.writeFits("b.fits")
-        
-        xpixels = [0,nx/2,nx-1]
-        ypixels = [0,ny/2,ny-1]
+
+        segmentCenter = int(0.5*nx/bctrl.getNxSample())
+        xpixels = [segmentCenter, nx/2, nx - segmentCenter]
+        ypixels = [segmentCenter, ny/2, ny - segmentCenter]
         for xpix in xpixels:
             for ypix in ypixels:
                 testval = backobj.getPixel(xpix, ypix)
-                realval = parabimg.get(xpix,ypix)
-                #print xpix, ypix, testval, realval
+                realval = parabimg.get(xpix, ypix)
+                #print "Parab: ", xpix, ypix, realval, -(testval - realval)
                 # quadratic terms skew the averages of the subimages and the clipped mean for
                 # a subimage != value of center pixel.  1/20 counts on a 10000 count sky
                 #  is a fair (if arbitrary) test.
-                self.assertTrue( (testval - realval) < 0.05 )
+                self.assertTrue( abs(testval - realval) < 0.5 )
 
     def testCFHT(self):
         """Test background subtraction on some real CFHT data"""
 
-        mi = afwImage.MaskedImageF(os.path.join(eups.productDir("afwdata"), "CFHT", "D4", "cal-53535-i-797722_1"))
+        mi = afwImage.MaskedImageF(os.path.join(eups.productDir("afwdata"),
+                                                "CFHT", "D4", "cal-53535-i-797722_1"))
         mi = mi.Factory(mi, afwImage.BBox(afwImage.PointI(32, 2), afwImage.PointI(2079, 4609)))
         mi.setXY0(afwImage.PointI(0, 0))
         
-        bctrl = afwMath.BackgroundControl(afwMath.NATURAL_SPLINE);
+        bctrl = afwMath.BackgroundControl(afwMath.AKIMA_SPLINE);
         bctrl.setNxSample(16);
         bctrl.setNySample(16);
         bctrl.sctrl.setNumSigmaClip(3.0)  

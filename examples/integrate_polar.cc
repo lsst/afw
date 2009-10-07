@@ -39,7 +39,8 @@ public:
     }
 
     // for this example we have an analytic answer to check
-    IntegrandT getAnalyticVolume(IntegrandT const r1, IntegrandT const r2, IntegrandT const theta1, IntegrandT const theta2) {
+    IntegrandT getAnalyticVolume(IntegrandT const r1, IntegrandT const r2,
+                                 IntegrandT const theta1, IntegrandT const theta2) {
         return (theta2 - theta1) *
             ( (0.5*_K*r2*r2 - (1.0/3.0)*_kr*r2*r2*r2) -
               (0.5*_K*r1*r1 - (1.0/3.0)*_kr*r1*r1*r1) );
@@ -69,23 +70,24 @@ double parabola2d(double const r, double const theta) {
 int main() {
 
     // set limits of integration
-    double const r1 = 0, r2 = 1, theta1 = 0, theta2 = 2.0*M_PI;
+    double const R1 = 0, R2 = 1, THETA1 = 0, THETA2 = 2.0*M_PI;
     // set the coefficients for the quadratic equation
     // (parabola f(r) = K - kr*r*r)
-    double const K = 1.0, kr = 0.0;  // not really a parabola ... force the answer to be 'pi'
+    double const K = 1.0, KR = 0.0;  // not really a parabola ... force the answer to be 'pi'
 
     
     // ==========  2D integrator ==========
 
     // instantiate a Parab2D
-    Parab2D<double> parab2d(K, kr);
+    Parab2D<double> parab2d(K, KR);
 
     // integrate the volume under the function, and then get the analytic result
-    double const parab_volume_integrate  = math::integrate2d(parab2d, r1, r2, theta1, theta2);
-    double const parab_volume_analytic = parab2d.getAnalyticVolume(r1, r2, theta1, theta2);
+    double const parab_volume_integrate  = math::integrate2d(parab2d, R1, R2, THETA1, THETA2);
+    double const parab_volume_analytic = parab2d.getAnalyticVolume(R1, R2, THETA1, THETA2);
 
     // now run it on the 2d function (you *need* to wrap the function in ptr_fun())
-    double const parab_volume_integrate_func = math::integrate2d(std::ptr_fun(parabola2d), r1, r2, theta1, theta2);
+    double const parab_volume_integrate_func =
+        math::integrate2d(std::ptr_fun(parabola2d), R1, R2, THETA1, THETA2);
 
     // output
     std::cout << "2D integrate: functor = " << parab_volume_integrate <<

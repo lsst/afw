@@ -9,6 +9,7 @@
 #include <iostream>
 #include <limits>
 #include <vector>
+#include <cmath>
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Interpolate.h"
 #include "lsst/afw/math/Background.h"
@@ -36,7 +37,7 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
     _imgWidth(img.getWidth()), _imgHeight(img.getHeight()),
     _bctrl(bgCtrl) { 
 
-    assert(_bctrl.ictrl.getStyle() == math::NATURAL_SPLINE); // hard-coded for the time-being
+    //assert(_bctrl.ictrl.getStyle() == math::NATURAL_SPLINE); // hard-coded for the time-being
 
 
     _n = _imgWidth*_imgHeight;
@@ -66,11 +67,11 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
     _subimgWidth = _imgWidth / _nxSample;
     _subimgHeight = _imgHeight / _nySample;
     for (int i_x = 0; i_x < _nxSample; ++i_x) {
-        _xcen[i_x] = static_cast<int>((i_x + 0.5) * _subimgWidth);
+        _xcen[i_x] = std::floor((i_x + 0.5)*_subimgWidth);
         _xorig[i_x] = i_x * _subimgWidth;
     }
     for (int i_y = 0; i_y < _nySample; ++i_y) {
-        _ycen[i_y] = static_cast<int>((i_y + 0.5) * _subimgHeight);
+        _ycen[i_y] = std::floor((i_y + 0.5)*_subimgHeight);
         _yorig[i_y] = i_y * _subimgHeight;
     }
 
@@ -95,7 +96,7 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
             _grid[i_x][i_y] = stats.getValue(math::MEANCLIP);
         }
         
-        typename math::SplineInterpolate<int,double> intobj(_ycen, _grid[i_x]);
+        typename math::Interpolate intobj(_ycen, _grid[i_x], _bctrl.getStyle());
         _gridcolumns[i_x].resize(_imgHeight);
         for (int i_y = 0; i_y < _imgHeight; ++i_y) {
             _gridcolumns[i_x][i_y] = intobj.interpolate(ypix[i_y]);
@@ -121,7 +122,7 @@ double math::Background::getPixel(int const x, int const y) const {
     // build an interpobj along the row y and get the x'th value
     vector<double> bg_x(_nxSample);
     for(int i = 0; i < _nxSample; i++) { bg_x[i] = _gridcolumns[i][y];  }
-    math::SplineInterpolate<int,double> intobj(_xcen, bg_x);
+    math::Interpolate intobj(_xcen, bg_x, _bctrl.getStyle());
     return static_cast<double>(intobj.interpolate(x));
     
 }
@@ -149,9 +150,9 @@ typename image::Image<PixelT>::Ptr math::Background::getImage() const {
     for (int i_y = 0; i_y < bg->getHeight(); ++i_y) {
 
         // build an interp object for this row
-        vector<PixelT> bg_x(_nxSample);
-        for(int i_x = 0; i_x < _nxSample; i_x++) { bg_x[i_x] = static_cast<PixelT>(_gridcolumns[i_x][i_y]); }
-        math::SplineInterpolate<int,PixelT> intobj(_xcen, bg_x);
+        vector<double> bg_x(_nxSample);
+        for(int i_x = 0; i_x < _nxSample; i_x++) { bg_x[i_x] = static_cast<double>(_gridcolumns[i_x][i_y]); }
+        math::Interpolate intobj(_xcen, bg_x, _bctrl.getStyle());
 
         // fill the image with interpolated objects.
         int i_x = 0;

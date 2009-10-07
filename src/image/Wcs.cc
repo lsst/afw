@@ -145,10 +145,9 @@ void lsst::afw::image::Wcs::initWcslib(
  */
 lsst::afw::image::Wcs::Wcs(PointD crval, ///< ra/dec of centre of image
                            PointD crpix, ///< pixel coordinates of centre of image
-                           Eigen::Matrix2d CD, ///< Conversion matrix with elements as defined
-                                                    ///< in wcs.h
-                           double equinox,         /// Equinox used to define coord sys, e.g J2000
-                           std::string raDecSys   ///  Astrometry System, e.g FK5 or ICRS
+                           Eigen::Matrix2d CD, ///< Conversion matrix with elements as defined in wcs.h
+                           double equinox,         ///< Equinox used to define coord sys, e.g J2000
+                           std::string raDecSys   ///<  Astrometry System, e.g FK5 or ICRS
                           ) : LsstBase(typeid(this)),
                               _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0),
                               _sipA(1,1), _sipB(1,1), _sipAp(1,1), _sipBp(1,1) {
@@ -164,8 +163,8 @@ lsst::afw::image::Wcs::Wcs(
     Eigen::MatrixXd sipB, ///< Forward distortion Matrix B
     Eigen::MatrixXd sipAp, ///<Reverse distortion Matrix Ap
     Eigen::MatrixXd sipBp,  ///<Reverse distortion Matrix Bp
-    double equinox,               /// Equinox of coord system, e.g J2000
-    std::string raDecSys          ///Celestial reference frame used, e.g FK5 or ICRS
+    double equinox,               ///< Equinox of coord system, e.g J2000
+    std::string raDecSys          ///< Celestial reference frame used, e.g FK5 or ICRS
                           ): LsstBase(typeid(this)),
                              _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0),
                              _sipA(sipA), _sipB(sipB), _sipAp(sipAp), _sipBp(sipBp) {
