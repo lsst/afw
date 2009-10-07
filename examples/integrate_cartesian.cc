@@ -25,7 +25,7 @@ namespace math = lsst::afw::math;
  * @note We *have* to inherit from unary_function<>
  */
 template<typename IntegrandT>
-class Parab1D : public std::unary_function<IntegrandT,IntegrandT>  {
+class Parab1D : public std::unary_function<IntegrandT, IntegrandT>  {
 public:
     
     // declare coefficients at instantiation
@@ -39,7 +39,7 @@ public:
 
     // for this example we have an analytic answer to check
     IntegrandT getAnalyticArea(IntegrandT const x1, IntegrandT const x2) {
-        return _K*(x2-x1) - _kx*(x2*x2*x2-x1*x1*x1)/3.0;
+        return _K*(x2 - x1) - _kx*(x2*x2*x2 - x1*x1*x1)/3.0;
     }
     
 private:
@@ -56,7 +56,7 @@ private:
  * @note we *have* to inherit from binary_function<>
  */
 template<typename IntegrandT>
-class Parab2D : public std::binary_function<IntegrandT,IntegrandT,IntegrandT> {
+class Parab2D : public std::binary_function<IntegrandT, IntegrandT, IntegrandT> {
 public:
     // declare coefficients at instantiation.
     Parab2D(IntegrandT const K, IntegrandT const kx, IntegrandT const ky) : _K(K), _kx(kx), _ky(ky) {}
@@ -73,7 +73,7 @@ public:
                                  IntegrandT const y1, IntegrandT const y2) {
         IntegrandT const xw = x2 - x1;
         IntegrandT const yw = y2 - y1;
-        return _K*xw*yw - _kx*(x2*x2*x2-x1*x1*x1)*yw/3.0 - _ky*(y2*y2*y2-y1*y1*y1)*xw/3.0;
+        return _K*xw*yw - _kx*(x2*x2*x2 - x1*x1*x1)*yw/3.0 - _ky*(y2*y2*y2 - y1*y1*y1)*xw/3.0;
     }
 
 private:

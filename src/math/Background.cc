@@ -87,11 +87,13 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
         _grid[i_x].resize(_nySample);
         for (int i_y = 0; i_y < _nySample; ++i_y) {
             
-            ImageT subimg = ImageT(img,
-                                   image::BBox(image::PointI(_xorig[i_x], _yorig[i_y]), _subimgWidth, _subimgHeight));
+            ImageT subimg =
+                ImageT(img, image::BBox(image::PointI(_xorig[i_x], _yorig[i_y]),
+                                        _subimgWidth, _subimgHeight));
             
-            math::Statistics stats = math::makeStatistics(subimg, math::MEAN | math::MEANCLIP | math::MEDIAN |
-                                                                   math::IQRANGE | math::STDEVCLIP, _bctrl.sctrl);
+            math::Statistics stats =
+                math::makeStatistics(subimg, math::MEAN | math::MEANCLIP | math::MEDIAN |
+                                     math::IQRANGE | math::STDEVCLIP, _bctrl.sctrl);
             
             _grid[i_x][i_y] = stats.getValue(math::MEANCLIP);
         }
@@ -171,8 +173,9 @@ typename image::Image<PixelT>::Ptr math::Background::getImage() const {
  * @brief Explicit instantiations
  *
  */
-#define INSTANTIATE_BACKGROUND(TYPE) \
-    template math::Background::Background(image::Image<TYPE> const& img, math::BackgroundControl const& bgCtrl); \
+#define INSTANTIATE_BACKGROUND(TYPE)                                    \
+    template math::Background::Background(image::Image<TYPE> const& img, \
+                                          math::BackgroundControl const& bgCtrl); \
     template image::Image<TYPE>::Ptr math::Background::getImage<TYPE>() const;
 
 INSTANTIATE_BACKGROUND(double);

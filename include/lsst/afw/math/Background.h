@@ -21,7 +21,7 @@ namespace lsst { namespace afw { namespace math {
  */
 class BackgroundControl {
 public:
-    BackgroundControl(Style const style=math::AKIMA_SPLINE, ///< Style of the interpolation (not yet implemented)
+    BackgroundControl(Style const style=math::AKIMA_SPLINE, ///< Style of the interpolation
                       int const nxSample=10,                   ///< Num. grid samples in x
                       int const nySample=10)                   ///< Num. grid samples in y
         : _style(style), _nxSample(nxSample), _nySample(nySample) {
@@ -70,7 +70,7 @@ public:
     
     template<typename ImageT>
     explicit Background(ImageT const& img, ///< Image (or MaskedImage) whose background we want
-                        BackgroundControl const& bgCtrl=BackgroundControl()); ///< Parameters to control Statistics and Interpolation
+                        BackgroundControl const& bgCtrl=BackgroundControl()); ///< Control Parameters
     
     ~Background() {}
     
