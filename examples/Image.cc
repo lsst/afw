@@ -76,7 +76,7 @@ void y_gradient(const Image<PixelT>& src, const Image<PixelT>& dst) {
 
     for (int r = 1; r < src.getHeight() - 1; ++r) {
         for (typename Image<PixelT>::x_iterator dst_it = dst.row_begin(r);
-             						dst_it != dst.row_end(r); ++dst_it, ++src_loc.x()) {            
+            dst_it != dst.row_end(r); ++dst_it, ++src_loc.x()) {            
 #if USE_CACHE_LOCATION                  // this version is faster
             *dst_it = (src_loc[above] - src_loc[below])/2;
 #else  // but this is possible too, and more general (but slower)

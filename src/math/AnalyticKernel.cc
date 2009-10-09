@@ -11,12 +11,14 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
 
-namespace ex = lsst::pex::exceptions;
+namespace pexExcept = lsst::pex::exceptions;
+namespace afwMath = lsst::afw::math;
+namespace afwImage = lsst::afw::image;
 
 /**
  * @brief Construct an empty spatially invariant AnalyticKernel of size 0x0
  */
-lsst::afw::math::AnalyticKernel::AnalyticKernel()
+afwMath::AnalyticKernel::AnalyticKernel()
 :
     Kernel(),
     _kernelFunctionPtr()
@@ -25,7 +27,7 @@ lsst::afw::math::AnalyticKernel::AnalyticKernel()
 /**
  * @brief Construct a spatially invariant AnalyticKernel
  */
-lsst::afw::math::AnalyticKernel::AnalyticKernel(
+afwMath::AnalyticKernel::AnalyticKernel(
     int width,
     int height,
     KernelFunction const &kernelFunction)
@@ -35,9 +37,10 @@ lsst::afw::math::AnalyticKernel::AnalyticKernel(
 {}
 
 /**
- * @brief Construct a spatially varying AnalyticKernel, replicating a spatial function once per kernel function parameter
+ * @brief Construct a spatially varying AnalyticKernel,
+ *  replicating one spatial function once per kernel function parameter
  */
-lsst::afw::math::AnalyticKernel::AnalyticKernel(
+afwMath::AnalyticKernel::AnalyticKernel(
     int width,
     int height,
     KernelFunction const &kernelFunction,
@@ -53,7 +56,7 @@ lsst::afw::math::AnalyticKernel::AnalyticKernel(
  * @throw lsst::pex::exceptions::InvalidParameterException
  *        if the length of spatialFunctionList != # kernel function parameters.
  */
-lsst::afw::math::AnalyticKernel::AnalyticKernel(
+afwMath::AnalyticKernel::AnalyticKernel(
     int width,
     int height,
     KernelFunction const &kernelFunction,
@@ -63,21 +66,21 @@ lsst::afw::math::AnalyticKernel::AnalyticKernel(
     _kernelFunctionPtr(kernelFunction.copy())
 {
     if (kernelFunction.getNParameters() != spatialFunctionList.size()) {
-        throw LSST_EXCEPT(ex::InvalidParameterException,
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
             "Length of spatialFunctionList does not match # of kernel function params");
     }
 }
 
-double lsst::afw::math::AnalyticKernel::computeImage(
-    lsst::afw::image::Image<PixelT> &image,
+double afwMath::AnalyticKernel::computeImage(
+    afwImage::Image<Pixel> &image,
     bool doNormalize,
     double x,
     double y
 ) const {
-    typedef lsst::afw::image::Image<PixelT>::x_iterator x_iterator;
+    typedef afwImage::Image<Pixel>::x_iterator x_iterator;
     
     if (image.getDimensions() != this->getDimensions()) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "image is the wrong size");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "image is the wrong size");
     }
     if (this->isSpatiallyVarying()) {
         this->setKernelParametersFromSpatialModel(x, y);
@@ -89,10 +92,10 @@ double lsst::afw::math::AnalyticKernel::computeImage(
     double imSum = 0;
     for (int y = 0; y != this->getHeight(); ++y) {
         double const fy = y + yOffset;
-        lsst::afw::image::Image<PixelT>::x_iterator ptr = image.row_begin(y);
+        afwImage::Image<Pixel>::x_iterator ptr = image.row_begin(y);
         for (int x = 0; x != this->getWidth(); ++x, ++ptr) {
             double const fx = x + xOffset;
-            PixelT const pixelVal = (*_kernelFunctionPtr)(fx, fy);
+            Pixel const pixelVal = (*_kernelFunctionPtr)(fx, fy);
             *ptr = pixelVal;
             imSum += pixelVal;
         }
@@ -108,26 +111,27 @@ double lsst::afw::math::AnalyticKernel::computeImage(
 /**
  * @brief Get a deep copy of the kernel function
  */
-lsst::afw::math::AnalyticKernel::KernelFunctionPtr lsst::afw::math::AnalyticKernel::getKernelFunction(
+afwMath::AnalyticKernel::KernelFunctionPtr afwMath::AnalyticKernel::getKernelFunction(
 ) const {
     return _kernelFunctionPtr->copy();
 }
 
-std::string lsst::afw::math::AnalyticKernel::toString(std::string prefix) const {
+std::string afwMath::AnalyticKernel::toString(std::string prefix) const {
     std::ostringstream os;
     os << prefix << "AnalyticKernel:" << std::endl;
-    os << prefix << "..function: " << (_kernelFunctionPtr ? _kernelFunctionPtr->toString() : "None") << std::endl;
+    os << prefix << "..function: " << (_kernelFunctionPtr ? _kernelFunctionPtr->toString() : "None")
+        << std::endl;
     os << Kernel::toString(prefix + "\t");
     return os.str();
 };
 
-std::vector<double> lsst::afw::math::AnalyticKernel::getKernelParameters() const {
+std::vector<double> afwMath::AnalyticKernel::getKernelParameters() const {
     return _kernelFunctionPtr->getParameters();
 }
 
 //
 // Protected Member Functions
 //
-void lsst::afw::math::AnalyticKernel::setKernelParameter(unsigned int ind, double value) const {
+void afwMath::AnalyticKernel::setKernelParameter(unsigned int ind, double value) const {
     _kernelFunctionPtr->setParameter(ind, value);
 }

@@ -23,7 +23,10 @@ SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::daf::data::LsstBase, lsst::afw::image:
 %extend lsst::afw::image::MaskedImage<PIXEL_TYPES> {
     %pythoncode {
     def Factory(self, *args):
-        """Return a MaskedImage of this type"""
+        """Return a MaskedImage class of this type
+        
+        A synonym for the attribute __class__
+        """
         return NAME##TYPE(*args)
 
     def set(self, x, y=None, values=None):

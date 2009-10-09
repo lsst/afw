@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Tests for Footprints, and DetectionSets
+Tests for Footprints, and FootprintSets
 
 Run with:
    Footprint_1.py
@@ -401,7 +401,7 @@ class FootprintTestCase(unittest.TestCase):
         if False and display:
             ds9.mtv(mi, frame=0)
 
-        ds = afwDetection.makeDetectionSet(mi, afwDetection.Threshold(15))
+        ds = afwDetection.makeFootprintSet(mi, afwDetection.Threshold(15))
 
         objects = ds.getFootprints()
         afwDetection.setMaskFromFootprintList(mi.getMask(), objects, 0x1)
@@ -419,8 +419,8 @@ class FootprintTestCase(unittest.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-class DetectionSetTestCase(unittest.TestCase):
-    """A test case for DetectionSet"""
+class FootprintSetTestCase(unittest.TestCase):
+    """A test case for FootprintSet"""
 
     def setUp(self):
         self.ms = afwImage.MaskedImageF(12, 8)
@@ -444,13 +444,13 @@ class DetectionSetTestCase(unittest.TestCase):
         del self.ms
 
     def testGC(self):
-        """Check that DetectionSets are automatically garbage collected (when MemoryTestCase runs)"""
+        """Check that FootprintSets are automatically garbage collected (when MemoryTestCase runs)"""
         
-        ds = afwDetection.DetectionSetF(afwImage.MaskedImageF(10, 20), afwDetection.Threshold(10))
+        ds = afwDetection.FootprintSetF(afwImage.MaskedImageF(10, 20), afwDetection.Threshold(10))
 
     def testFootprints(self):
         """Check that we found the correct number of objects and that they are correct"""
-        ds = afwDetection.DetectionSetF(self.ms, afwDetection.Threshold(10))
+        ds = afwDetection.FootprintSetF(self.ms, afwDetection.Threshold(10))
 
         objects = ds.getFootprints()
 
@@ -458,9 +458,9 @@ class DetectionSetTestCase(unittest.TestCase):
         for i in range(len(objects)):
             self.assertEqual(objects[i], self.objects[i])
             
-    def testFootprints(self):
-        """Check that we found the correct number of objects using makeDetectionSet"""
-        ds = afwDetection.makeDetectionSet(self.ms, afwDetection.Threshold(10))
+    def testFootprints2(self):
+        """Check that we found the correct number of objects using makeFootprintSet"""
+        ds = afwDetection.makeFootprintSet(self.ms, afwDetection.Threshold(10))
 
         objects = ds.getFootprints()
 
@@ -470,7 +470,7 @@ class DetectionSetTestCase(unittest.TestCase):
             
     def testFootprintsMasks(self):
         """Check that detectionSets have the proper mask bits set"""
-        ds = afwDetection.DetectionSetF(self.ms, afwDetection.Threshold(10), "OBJECT")
+        ds = afwDetection.FootprintSetF(self.ms, afwDetection.Threshold(10), "OBJECT")
         objects = ds.getFootprints()
 
         if display:
@@ -484,7 +484,7 @@ class DetectionSetTestCase(unittest.TestCase):
 
     def testFootprintsImageId(self):
         """Check that we can insert footprints into an Image"""
-        ds = afwDetection.DetectionSetF(self.ms, afwDetection.Threshold(10))
+        ds = afwDetection.FootprintSetF(self.ms, afwDetection.Threshold(10))
         objects = ds.getFootprints()
 
         idImage = afwImage.ImageU(self.ms.getDimensions())
@@ -502,9 +502,9 @@ class DetectionSetTestCase(unittest.TestCase):
                     self.assertEqual(idImage.get(x, sp.getY()), objects[i].getId())
 
 
-    def testDetectionSetImageId(self):
-        """Check that we can insert a DetectionSet into an Image, setting relative IDs"""
-        ds = afwDetection.DetectionSetF(self.ms, afwDetection.Threshold(10))
+    def testFootprintSetImageId(self):
+        """Check that we can insert a FootprintSet into an Image, setting relative IDs"""
+        ds = afwDetection.FootprintSetF(self.ms, afwDetection.Threshold(10))
         objects = ds.getFootprints()
 
         idImage = ds.insertIntoImage(True)
@@ -519,7 +519,7 @@ class DetectionSetTestCase(unittest.TestCase):
     def testGrow2(self):
         """Grow some more interesting shaped Footprints.  Informative with display, but no numerical tests"""
         
-        ds = afwDetection.DetectionSetF(self.ms, afwDetection.Threshold(10), "OBJECT")
+        ds = afwDetection.FootprintSetF(self.ms, afwDetection.Threshold(10), "OBJECT")
 
         idImage = afwImage.ImageU(self.ms.getDimensions())
         idImage.set(0)
@@ -535,6 +535,53 @@ class DetectionSetTestCase(unittest.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+class NaNFootprintSetTestCase(unittest.TestCase):
+    """A test case for FootprintSet when the image contains NaNs"""
+
+    def setUp(self):
+        self.ms = afwImage.MaskedImageF(12, 8)
+        im = self.ms.getImage()
+        #
+        # Objects that we should detect
+        #
+        self.objects = []
+        self.objects += [Object(10, [(1, 4, 4), (2, 3, 5), (3, 4, 4)])]
+        self.objects += [Object(20, [(5, 7, 8), (6, 8, 8)])]
+        self.objects += [Object(20, [(5, 10, 10)])]
+        self.objects += [Object(30, [(6, 3, 3)])]
+
+        im.set(0)                       # clear image
+        for obj in self.objects:
+            obj.insert(im)
+
+        self.NaN = float("NaN")
+        im.set(3, 7, self.NaN)
+        im.set(0, 0, self.NaN)
+        im.set(8, 2, self.NaN)
+
+        im.set(9, 6, self.NaN)          # connects the two objects with value==20 together if NaN is detected
+
+        if False and display:
+            ds9.mtv(im, frame=0)
+        
+    def tearDown(self):
+        del self.ms
+
+    def testFootprints(self):
+        """Check that we found the correct number of objects using makeFootprintSet"""
+        ds = afwDetection.makeFootprintSet(self.ms, afwDetection.Threshold(10), "DETECTED")
+
+        objects = ds.getFootprints()
+
+        if display:
+            ds9.mtv(self.ms, frame=0)
+
+        self.assertEqual(len(objects), len(self.objects))
+        for i in range(len(objects)):
+            self.assertEqual(objects[i], self.objects[i])
+            
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
     tests.init()
@@ -542,7 +589,8 @@ def suite():
     suites = []
     suites += unittest.makeSuite(ThresholdTestCase)
     suites += unittest.makeSuite(FootprintTestCase)
-    suites += unittest.makeSuite(DetectionSetTestCase)
+    suites += unittest.makeSuite(FootprintSetTestCase)
+    suites += unittest.makeSuite(NaNFootprintSetTestCase)
     suites += unittest.makeSuite(tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 

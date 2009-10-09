@@ -28,10 +28,10 @@ namespace {
     };
 }
 
-void printBits(image::Mask<image::MaskPixel> mask, detection::DetectionSet<float>::FootprintList& feet) {
+void printBits(image::Mask<image::MaskPixel> mask, detection::FootprintSet<float>::FootprintList& feet) {
     FindSetBits<image::Mask<image::MaskPixel> > count(mask);
 
-    for (detection::DetectionSet<float>::FootprintList::iterator fiter = feet.begin(); fiter != feet.end(); ++fiter) {
+    for (detection::FootprintSet<float>::FootprintList::iterator fiter = feet.begin(); fiter != feet.end(); ++fiter) {
         count.apply(**fiter);
 
         printf("0x%x\n", count.getBits());
@@ -48,7 +48,7 @@ int main() {
     (*mimage.getMask())(5, 6) |= 0x2;
     (*mimage.getMask())(5, 7) |= 0x4;
 
-    detection::DetectionSet<float> ds(mimage, 10);
+    detection::FootprintSet<float> ds(mimage, 10);
 
     printBits(*mimage.getMask(), ds.getFootprints());
 }

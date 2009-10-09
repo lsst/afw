@@ -49,10 +49,11 @@ image::ImageBase<PixelT>::ImageBase(std::pair<int, int> const dimensions) :
  * this may not be what you want.  See also operator<<=() to copy pixels between Image%s
  */
 template<typename PixelT>
-image::ImageBase<PixelT>::ImageBase(ImageBase const& rhs, ///< Right-hand-side %image
-                                    bool const deep       ///< If false, new ImageBase shares storage with rhs; if true
-                                                          ///< make a new, standalone, ImageBase
-                                   ) :
+image::ImageBase<PixelT>::ImageBase(
+    ImageBase const& rhs, ///< Right-hand-side %image
+    bool const deep       ///< If false, new ImageBase shares storage with rhs;
+                          ///< if true make a new, standalone, ImageBase
+) :
     lsst::daf::data::LsstBase(typeid(this)),
     _gilImage(rhs._gilImage), // don't copy the pixels
     _gilView(subimage_view(flipped_up_down_view(view(*_gilImage)),
@@ -75,11 +76,12 @@ image::ImageBase<PixelT>::ImageBase(ImageBase const& rhs, ///< Right-hand-side %
  * this is probably what you want 
  */
 template<typename PixelT>
-image::ImageBase<PixelT>::ImageBase(ImageBase const& rhs, ///< Right-hand-side %image
-                                    BBox const& bbox,     ///< Specify desired region
-                                    bool const deep       ///< If false, new ImageBase shares storage with rhs; if true
-                                                          ///< make a new, standalone, ImageBase
-                                   ) :
+image::ImageBase<PixelT>::ImageBase(
+    ImageBase const& rhs, ///< Right-hand-side %image
+    BBox const& bbox,     ///< Specify desired region
+    bool const deep       ///< If false, new ImageBase shares storage with rhs;
+                          ///< if true make a new, standalone, ImageBase
+) :
     lsst::daf::data::LsstBase(typeid(this)),
     _gilImage(rhs._gilImage), // boost::shared_ptr, so don't copy the pixels
     _gilView(subimage_view(rhs._gilView,
@@ -130,14 +132,14 @@ void image::ImageBase<PixelT>::operator<<=(ImageBase const& rhs) {
 template<typename PixelT>
 typename image::ImageBase<PixelT>::PixelReference image::ImageBase<PixelT>::operator()(int x, int y) {
     return const_cast<typename image::ImageBase<PixelT>::PixelReference>(
-	static_cast<typename image::ImageBase<PixelT>::PixelConstReference>(_gilView(x, y)[0])
-                       );
+        static_cast<typename image::ImageBase<PixelT>::PixelConstReference>(_gilView(x, y)[0])
+    );
 }
 
 /// Return a const reference to the pixel <tt>(x, y)</tt>
 template<typename PixelT>
 typename image::ImageBase<PixelT>::PixelConstReference
-	image::ImageBase<PixelT>::operator()(int x, int y) const {
+    image::ImageBase<PixelT>::operator()(int x, int y) const {
     return _gilView(x, y)[0];
 }
 
@@ -200,8 +202,8 @@ typename image::ImageBase<PixelT>::iterator image::ImageBase<PixelT>::at(int x, 
 /// Argument \a contiguous is false, or the pixels are not in fact contiguous
 template<typename PixelT>
 typename image::ImageBase<PixelT>::fast_iterator image::ImageBase<PixelT>::begin(
-		bool contiguous         ///< Pixels are contiguous (must be true)
-                                                                                ) const {
+    bool contiguous         ///< Pixels are contiguous (must be true)
+) const {
     if (!contiguous) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Only contiguous == true makes sense");
     }
@@ -219,8 +221,8 @@ typename image::ImageBase<PixelT>::fast_iterator image::ImageBase<PixelT>::begin
 /// Argument \a contiguous is false, or the pixels are not in fact contiguous
 template<typename PixelT>
 typename image::ImageBase<PixelT>::fast_iterator image::ImageBase<PixelT>::end(
-		bool contiguous         ///< Pixels are contiguous (must be true)
-                                                                              ) const {
+    bool contiguous         ///< Pixels are contiguous (must be true)
+) const {
     if (!contiguous) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Only contiguous == true makes sense"); 
     }
@@ -439,10 +441,10 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
  */
 template<typename PixelT>
 void image::Image<PixelT>::writeFits(
-	std::string const& fileName,                ///< File to write
-        boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, //!< metadata to write to header; or NULL
-        std::string const& mode                     //!< "w" to write a new file; "a" to append
-                                    ) const {
+    std::string const& fileName,                ///< File to write
+    boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, //!< metadata to write to header; or NULL
+    std::string const& mode                     //!< "w" to write a new file; "a" to append
+) const {
     using lsst::daf::base::PropertySet;
 
     PropertySet::Ptr wcsAMetadata = image::detail::createTrivialWcsAsPropertySet(image::detail::wcsNameForXY0,

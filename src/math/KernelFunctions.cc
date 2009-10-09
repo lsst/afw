@@ -27,13 +27,13 @@ lsst::afw::math::printKernel(
     double y,                           ///< y at which to evaluate kernel
     std::string pixelFmt                ///< format for pixel values
 ) {
-    typedef lsst::afw::math::Kernel::PixelT PixelT;
+    typedef lsst::afw::math::Kernel::Pixel Pixel;
 
-    lsst::afw::image::Image<PixelT> kImage(kernel.getDimensions());
+    lsst::afw::image::Image<Pixel> kImage(kernel.getDimensions());
     double kSum = kernel.computeImage(kImage, doNormalize, x, y);
 
     for (int y = kImage.getHeight() - 1; y >= 0; --y) {
-        for (lsst::afw::image::Image<PixelT>::const_x_iterator ptr = kImage.row_begin(y);
+        for (lsst::afw::image::Image<Pixel>::const_x_iterator ptr = kImage.row_begin(y);
              ptr != kImage.row_end(y); ++ptr) {
             std::cout << boost::format(pixelFmt) % *ptr << " ";
         }

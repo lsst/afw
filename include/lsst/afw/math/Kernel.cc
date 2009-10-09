@@ -12,6 +12,9 @@
  */
 #include <lsst/pex/exceptions.h>
 
+namespace afwMath = lsst::afw::math;
+namespace afwImage = lsst::afw::image;
+
 //
 // Inline Member Functions
 //
@@ -19,14 +22,14 @@
 /**
  * \brief Return the number of kernel parameters (0 if none)
  */
-inline unsigned lsst::afw::math::Kernel::getNKernelParameters() const {
+inline unsigned afwMath::Kernel::getNKernelParameters() const {
     return _nKernelParams;
 }
 
 /**
  * \brief Return the number of spatial parameters (0 if not spatially varying)
  */
-inline unsigned lsst::afw::math::Kernel::getNSpatialParameters() const { 
+inline unsigned afwMath::Kernel::getNSpatialParameters() const { 
     if (!isSpatiallyVarying()) {
         return 0;
     } else {
@@ -37,14 +40,14 @@ inline unsigned lsst::afw::math::Kernel::getNSpatialParameters() const {
 /**
  * \brief Return the spatial parameters parameters (an empty vector if not spatially varying)
  */
-inline std::vector<std::vector<double> > lsst::afw::math::Kernel::getSpatialParameters() const {
+inline std::vector<std::vector<double> > afwMath::Kernel::getSpatialParameters() const {
     return _spatialParams;
 }
 
 /**
  * \brief Return true if the kernel is spatially varying (has a spatial function)
  */
-inline bool lsst::afw::math::Kernel::isSpatiallyVarying() const {
+inline bool afwMath::Kernel::isSpatiallyVarying() const {
     return _isSpatiallyVarying;
 }
 
@@ -57,9 +60,9 @@ inline bool lsst::afw::math::Kernel::isSpatiallyVarying() const {
  * \throw lsst::pex::exceptions::Runtime if the kernel has a spatial function
  * \throw lsst::pex::exceptions::InvalidParameter if the params vector is the wrong length
  */
-inline void lsst::afw::math::Kernel::setKernelParameters(std::vector<double> const &params) {
+inline void afwMath::Kernel::setKernelParameters(std::vector<double> const &params) {
     if (this->isSpatiallyVarying()) {
-        throw lsst::pex::exceptions::Runtime("Kernel is spatially varying");
+        throw LSST_EXCEPT(lsst::pex::exceptions::Runtime, "Kernel is spatially varying");
     }
     this->basicSetKernelParameters(params);
 }

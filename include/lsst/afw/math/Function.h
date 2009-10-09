@@ -307,7 +307,8 @@ using boost::serialization::make_nvp;
     class NullFunction1 : public Function1<ReturnT> {
     public:
         explicit NullFunction1() : Function1<ReturnT>(0) {}
-        typename Function1<ReturnT>::Ptr copy() const { return typename Function1<ReturnT>::Ptr(new NullFunction1()); }
+        typename Function1<ReturnT>::Ptr copy() const {
+            return typename Function1<ReturnT>::Ptr(new NullFunction1()); }
 
     private:
         ReturnT operator() (double x) const { return static_cast<ReturnT>(0); }
@@ -329,7 +330,8 @@ using boost::serialization::make_nvp;
     class NullFunction2 : public Function2<ReturnT> {
     public:
         explicit NullFunction2() : Function2<ReturnT>(0) {}
-        typename Function2<ReturnT>::Ptr copy() const { return typename Function2<ReturnT>::Ptr(new NullFunction2()); }
+        typename Function2<ReturnT>::Ptr copy() const {
+            return typename Function2<ReturnT>::Ptr(new NullFunction2()); }
 
     private:
         ReturnT operator() (double x, double y) const { return static_cast<ReturnT>(0); }

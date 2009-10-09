@@ -7,7 +7,9 @@
 #include "lsst/afw/image.h"
 #include "lsst/afw/math.h"
 
-using namespace std;
+namespace afwImage = lsst::afw::image;
+namespace afwMath= lsst::afw::math;
+
 const std::string outFile("clOut");
 const std::string altOutFile("clAltOut");
 
@@ -37,27 +39,27 @@ int main(int argc, char **argv) {
         }
         
         // read in fits file
-        lsst::afw::image::MaskedImage<imagePixelType> mImage(argv[1]);
+        afwImage::MaskedImage<imagePixelType> mImage(argv[1]);
         
         // construct basis kernels
-        lsst::afw::math::KernelList<> kernelVec;
+        afwMath::KernelList kernelList;
         for (int ii = 0; ii < 3; ++ii) {
             double xSigma = (ii == 1) ? MaxSigma : MinSigma;
             double ySigma = (ii == 2) ? MinSigma : MaxSigma;
-            lsst::afw::math::GaussianFunction2<lsst::afw::math::Kernel::PixelT> gaussFunc(xSigma, ySigma);
-            lsst::afw::math::Kernel::PtrT basisKernelPtr(
-			new lsst::afw::math::AnalyticKernel(KernelCols, KernelRows, gaussFunc)
+            afwMath::GaussianFunction2<afwMath::Kernel::Pixel> gaussFunc(xSigma, ySigma);
+            afwMath::Kernel::Ptr basisKernelPtr(
+                new afwMath::AnalyticKernel(KernelCols, KernelRows, gaussFunc)
             );
-            kernelVec.push_back(basisKernelPtr);
+            kernelList.push_back(basisKernelPtr);
         }
         
         // construct spatially varying linear combination kernel
         unsigned int polyOrder = 1;
-        lsst::afw::math::PolynomialFunction2<double> polyFunc(polyOrder);
-        lsst::afw::math::LinearCombinationKernel lcSpVarKernel(kernelVec, polyFunc);
+        afwMath::PolynomialFunction2<double> polyFunc(polyOrder);
+        afwMath::LinearCombinationKernel lcSpVarKernel(kernelList, polyFunc);
     
         // Get copy of spatial parameters (all zeros), set and feed back to the kernel
-        vector<vector<double> > polyParams = lcSpVarKernel.getSpatialParameters();
+        std::vector<std::vector<double> > polyParams = lcSpVarKernel.getSpatialParameters();
         // Set spatial parameters for basis kernel 0
         polyParams[0][0] =  1.0;
         polyParams[0][1] = -0.5 / static_cast<double>(mImage.getWidth());
@@ -74,18 +76,18 @@ int main(int argc, char **argv) {
         lcSpVarKernel.setSpatialParameters(polyParams);
     
         // convolve
-        lsst::afw::image::MaskedImage<imagePixelType> resMaskedImage(mImage.getDimensions());
-        lsst::afw::math::convolve(resMaskedImage, mImage, lcSpVarKernel, false);
+        afwImage::MaskedImage<imagePixelType> resMaskedImage(mImage.getDimensions());
+        afwMath::convolve(resMaskedImage, mImage, lcSpVarKernel, false);
         
         // write results
         resMaskedImage.writeFits(outFile);
         std::cout << "Wrote " << outFile << "_img.fits, etc." << std::endl;
 
         if (doBothWays) {
-            lsst::afw::image::MaskedImage<imagePixelType> altResMaskedImage(mImage.getDimensions());
-            lsst::afw::math::convolve(altResMaskedImage, mImage, lcSpVarKernel, false);
+            afwImage::MaskedImage<imagePixelType> altResMaskedImage(mImage.getDimensions());
+            afwMath::convolve(altResMaskedImage, mImage, lcSpVarKernel, false);
             altResMaskedImage.writeFits(altOutFile);
-            std::cout << "Wrote " << altOutFile << "_img.fits, etc. (using lsst::afw::math::convolve)" << std::endl;
+            std::cout << "Wrote " << altOutFile << "_img.fits, etc. (using afwMath::convolve)" << std::endl;
         }
     }
 

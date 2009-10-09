@@ -18,8 +18,8 @@
 typedef lsst::afw::math::Kernel Kernel;
 typedef lsst::afw::math::FixedKernel FixedKernel;
 typedef lsst::afw::math::LinearCombinationKernel LinearCombinationKernel;
-typedef LinearCombinationKernel::KernelList KernelList;
-typedef lsst::afw::image::Image<Kernel::PixelT> Image;
+typedef lsst::afw::math::KernelList KernelList;
+typedef lsst::afw::image::Image<Kernel::Pixel> Image;
 typedef lsst::afw::math::ConvolutionVisitor ConvolutionVisitor;
 typedef lsst::afw::math::ImageConvolutionVisitor ImageConvolutionVisitor;
 typedef lsst::afw::math::FourierConvolutionVisitor FourierConvolutionVisitor;
