@@ -73,16 +73,40 @@ public:
         //SHAPELET=0x8 
     };
 
+    /**
+     * @brief visit a convolvable model
+     *
+     * This is the first step of the double-dispatch.
+     * Every subclass of ConvolutionVisitor must implement this method
+     */
     virtual void visit(Convolvable & model) = 0;
 
+    /**
+     * @brief Retrieve the number of kernel Parameters
+     */
+    virtual int getNParameters() const = 0;
     /**
      *  This allows Psf to set a covariance matrix for a visitor after
      *  it has been constructed by a Kernel (which has no knowledge of
      *  uncertainty, and hence initializes the covariance to zero).
      */
-    void setCovarianceMatrix(CovariancePtr covariance) {
+    void setCovariance(CovariancePtr covariance) {
+        int nRows = getNParameters();
+        int nCols = nRows - 1;
+        if(covariance->rows() != nRows && covariance->cols() != nCols) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, 
+                    (boost::format("Covariance dimensions must be (%1%, %2%)") 
+                    % nRows % nCols).str()
+            );
+
+        }
+
         _covariance = covariance;
     }
+
+    /**
+     * @brief Retrieve a shared_ptr to the covariance matrix
+     */
     CovariancePtr getCovariance() const {
         return _covariance;
     }
@@ -101,42 +125,109 @@ public:
     typedef boost::shared_ptr<ImageConvolutionVisitor const> ConstPtr;
 
     typedef lsst::afw::image::Image<PixelT> Image;
-    typedef std::vector<Image::Ptr> ImagePtrList;
+    typedef std::vector<boost::shared_ptr<Image> > ImagePtrList;
    
-    ImageConvolutionVisitor(Image::Ptr image) : _image(image) {}
-    ImageConvolutionVisitor(Image::Ptr image, ImagePtrList derivative) : 
-        _image(image), 
-        _derivativeImageList(derivative)
-    {}
-        
-    virtual ~ImageConvolutionVisitor() {
-        _image.reset();
-        ImagePtrList::iterator const end(_derivativeImageList.end());
-        ImagePtrList::iterator i(_derivativeImageList.begin());
-        for (; i != end; ++i) {
-            i->reset();
+    ImageConvolutionVisitor(
+            std::pair<int, int> center,
+            std::vector<double> const & parameterList, 
+            Image::Ptr image, 
+            ImagePtrList derivativeImageList = ImagePtrList()
+    ) : _center(center), _parameterList(parameterList), _image(image), _derivativeImageList(derivativeImageList) {
+        if(!image) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                "NULL Kernel Image::Ptr.");
+        }
+        else if(image->getHeight() == 0 || image->getWidth() == 0) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                "Kerenl image has zero size");
+        }
+        validateDerivatives(); 
+
+        unsigned int nDerivatives = _derivativeImageList.size();
+        if(parameterList.size() != nDerivatives && nDerivatives != 0 ) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                "Parameter list must have same size as list of derivatives");
         }
     }
-    /**
-     *  Create an image of the kernel.
-     */
-    Image::Ptr getImage() const {return _image;}
+        
+    virtual ~ImageConvolutionVisitor() { }
 
     /**
-     *  Create images of the derivative of the kernel w.r.t. its local
+     * @brief Retrieve the center point of the Kernel
+     */
+    std::pair<int, int> getCenter() const {return _center;}
+
+    /**
+     * @brief Retrieve the number of Kernel Parameters
+     */
+    virtual int getNParameters() const {return _parameterList.size();}
+   
+    /**
+     * @brief Determine if visitor has list of derivative images
+     */
+    bool hasDerivatives() const {return !_derivativeImageList.empty();}
+
+    /**
+     * @brief Retrieve an image of the kernel.
+     */
+    Image::Ptr getImage() const {return _image;}
+    
+    /**
+     *  @brief Retrieve an image list of the derivatives of the kernel 
+     *  
+     *  These are the derivatives of the kernel w.r.t. its local
      *  parameters (evaluated at the values of those parameters).
      *
      */
-    ImagePtrList getDerivative() const {
+    ImagePtrList getDerivativeImageList() const {
         return _derivativeImageList;
     }
-    int getNParameters() const {return _derivativeImageList.size();}
+
+    /**
+     * @brief Retrieve the height of the kernel
+     */
+    int getHeight() const {return _image->getHeight();}
+    
+    /**
+     *@brief Retrieve the width of the kernel
+     */
+    int getWidth() const {return _image->getWidth();}
+    
+    /**
+     * @brief Retrieve the kernel parameters
+     * A ConvolutionVisitor represents a 
+     */
+    std::vector<double> const & getParameterList() const {return _parameterList;}
 
     virtual void visit(Convolvable & model) { model.convolve(*this); }
 private:
-    friend class FourierConvolutionVisitor;
+    void validateDerivatives() {
+        //remove any null pointers, and zero sized images to the derivative list
+        ImagePtrList::iterator i(_derivativeImageList.begin());
+        ImagePtrList::iterator end(_derivativeImageList.end());
+        Image::Ptr derivative;
+        for( ; i != end; ++i) {
+            derivative = *i;
+            if(!derivative) {
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                    "Vector of kernel derivative images contains null pointer(s)");
+            }            
+            else if(derivative->getWidth() == 0 || derivative->getHeight() == 0) {
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                    "Vector of kernel derivative images contains zero size image(s)");
+            }
+            else if(derivative->getWidth() != getWidth() || derivative->getHeight() != getHeight()) {
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                    "kernel derivative image(s) do not match the dimensions of the kernel image");
+            }
+        }    
+    }
+    
+    std::pair<int, int> _center;
+    std::vector<double> _parameterList;
     Image::Ptr _image;
     ImagePtrList _derivativeImageList;
+
 };
 
 /**
@@ -148,49 +239,102 @@ public:
     typedef boost::shared_ptr<FourierConvolutionVisitor> Ptr;
     typedef boost::shared_ptr<FourierConvolutionVisitor const> ConstPtr;
     
-    typedef FourierCutoutStack::FourierCutoutVector FourierCutoutVector;
     typedef lsst::afw::image::Image<PixelT> Image;    
-    typedef std::vector<Image::Ptr> ImagePtrList;
+    typedef std::vector<boost::shared_ptr<Image> > ImagePtrList;
     
-    explicit FourierConvolutionVisitor(Image::Ptr & image, ImagePtrList derivative) :
-        _imageVisitor(image, derivative) {
-    }
-    explicit FourierConvolutionVisitor(Image::Ptr image) :
-        _imageVisitor(image) {           
-    }
-    explicit FourierConvolutionVisitor(ImageConvolutionVisitor const & imageVisitor) :
-        _imageVisitor(imageVisitor) {
-    }
+    explicit FourierConvolutionVisitor(
+            std::pair<int, int> const & center,
+            std::vector<double> const & parameterList, 
+            Image::Ptr & image, 
+            ImagePtrList const & derivative = ImagePtrList()
+    ) : _imageVisitor(center, parameterList, image, derivative) 
+    {}
     
-    /**
-     *  Create a Fourier image of the kernel.
-     */
-    FourierCutout::Ptr getFourierImage() const {return _fourierStack.getCutout(0);}
+    explicit FourierConvolutionVisitor(ImageConvolutionVisitor const & imageVisitor) 
+            : _imageVisitor(imageVisitor) 
+    { }
 
     /**
-     *  Create FourierCutout images of the derivative of the kernel w.r.t. its local
+     * @brief Retrieve the real-space image representation of the kernel
+     */
+    Image::Ptr getImage() const {return _imageVisitor.getImage();} 
+
+    /**
+     *  @brief Retrieve an image list of the derivatives of the kernel 
+     *  
+     *  These are the derivatives of the kernel w.r.t. its local
      *  parameters (evaluated at the values of those parameters).
      *
      */
-    FourierCutoutVector getFourierDerivative() const {
-        if(_fourierStack.getStackDepth() > 1)
-            return _fourierStack.getCutoutVector(1);
-        else return FourierCutoutVector();
-    }
+    ImagePtrList getDerivativeImageList() const {return _imageVisitor.getDerivativeImageList();}
+
+    /**
+     * @brief retrieve the fourier transform of the kernel image, shifted
+     *      such that the center of the kernel is at the origin
+     */
+    FourierCutout::Ptr getFourierImage() const;        
+
+    /** 
+     * @brief Retrieve a list of fourier-transformed kernel derivatives
+     *
+     * These are the derivatives of the kernel w.r.t. its local parameters
+     * The returned list of fourier images are shifted such that the center
+     * of the kernel is at the origin
+     */
+    std::vector<FourierCutout::Ptr> getFourierDerivativeImageList() const; 
+    
     virtual ~FourierConvolutionVisitor(){}
 
-    int getNParameters() const {return _imageVisitor.getNParameters();}
+    /**
+     * @brief Retrieve the center of the kernel
+     */
+    std::pair<int, int> getCenter() const {return _imageVisitor.getCenter();}
+
+    /**
+     * @brief retrieve the number of kernel parameters
+     */
+    virtual int getNParameters() const {return _imageVisitor.getNParameters();}
+
+    /**
+     * @brief determine if the visitor has list of kernel derivatives
+     */
+    bool hasDerivatives() const {return _imageVisitor.hasDerivatives();}
+
+    /**
+     * @brief retrieve kernel's local parameters
+     */
+    std::vector<double> getParameterList() const {return _imageVisitor.getParameterList();}
+
+    /**
+     * @brief Retrieve kernel's width
+     */
+    int getWidth() const {return _imageVisitor.getWidth();}
+
+    /**
+     * @brief Retrieve kernel's height
+     */
+    int getHeight() const {return _imageVisitor.getHeight();}
+
     virtual void visit(Convolvable & model) { model.convolve(*this); }
 
-    void fft(std::pair<int,int> const & imageDimensions);
-    
-private:
-    void copyImage(PixelT * dest, Image::Ptr image, int const & destWidth);
-    void fillImageStack(PixelT * imageStack, std::pair<int,int> const & imageDimensions);
-    
+    /**
+     * @brief fourier transform the kernel image
+     * 
+     * the fft operation may ask to generate a fourier image that is larger than the kernel
+     * However, calling fft with dimensions smaller than the kernel's, will result in 
+     *   an lsst::pex::exceptions::InvalidParameterException being thrown
+     *
+     * When transforming to dimensions, the extra rows/cols are zeroed, act as padding
+     */
+    void fft(int const & width, int const & height, bool normalizeFft = false);
+
 protected:
     ImageConvolutionVisitor _imageVisitor;
-    FourierCutoutStack _fourierStack; 
+    FourierCutoutStack _fourierStack;  
+
+private:
+    void copyImage(PixelT * dest, Image::Ptr image, int const & destWidth);
+    void fillImageStack(PixelT * imageStack, int const & imageSize, int const & imageWidth);    
 };
 
 #if 0

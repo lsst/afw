@@ -17,6 +17,8 @@ Python interface to lsst::afw::math classes
 
 %include "lsst/p_lsstSwig.i"
 
+
+
 %pythoncode %{
 import lsst.utils
 

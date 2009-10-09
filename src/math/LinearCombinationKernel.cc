@@ -218,32 +218,21 @@ void lsst::afw::math::LinearCombinationKernel::_computeKernelImageList() {
  *  visitors without derivatives. LinearCombinationKernel (and possibly 
  *  AnalyticKernel) can override to provide versions with derivatives.  
  */
-lsst::afw::math::ConvolutionVisitor::Ptr lsst::afw::math::LinearCombinationKernel::computeConvolutionVisitor(
-        lsst::afw::math::ConvolutionVisitor::TypeFlag const & visitorType,
+lsst::afw::math::ImageConvolutionVisitor::Ptr 
+lsst::afw::math::LinearCombinationKernel::computeImageConvolutionVisitor(
         lsst::afw::image::PointD const & location
 ) const{
-    lsst::afw::math::ConvolutionVisitor::Ptr visitor;
-    switch(visitorType) {
-        case lsst::afw::math::ConvolutionVisitor::IMAGE: 
-        {
-            lsst::afw::image::Image<PixelT> * image = 
-                    new lsst::afw::image::Image<PixelT>(getWidth(), getHeight());
-            lsst::afw::image::Image<PixelT>::Ptr imagePtr(image);
-            computeImage(*image, false, location.getX(), location.getY());
-            visitor.reset(new ImageConvolutionVisitor(imagePtr, _kernelImagePtrList));
-            break;
-        }
-        case lsst::afw::math::ConvolutionVisitor::FOURIER:
-        {
-            lsst::afw::image::Image<PixelT> * image =
-                    new lsst::afw::image::Image<PixelT>(getWidth(), getHeight());
-            lsst::afw::image::Image<PixelT>::Ptr imagePtr(image);
-            computeImage(*image, false, location.getX(), location.getY());
-            visitor.reset(new FourierConvolutionVisitor(imagePtr, _kernelImagePtrList));
-            break;
-        }
-    }    
-    
-    return visitor;
+    std::pair<int, int> center = std::make_pair(getCtrX(), getCtrY());
+    lsst::afw::image::Image<PixelT>::Ptr imagePtr = 
+            boost::make_shared<lsst::afw::image::Image<PixelT> >(getWidth(), getHeight());
+    computeImage(*imagePtr, false, location.getX(), location.getY());
+    std::vector<double> kernelParameters(getNKernelParameters());
+    computeKernelParametersFromSpatialModel(kernelParameters, location.getX(), location.getY());
+    return boost::make_shared<ImageConvolutionVisitor>(
+            center, 
+            kernelParameters, 
+            imagePtr, 
+            _kernelImagePtrList
+    );
 }
 

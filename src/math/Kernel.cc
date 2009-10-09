@@ -221,39 +221,36 @@ void lsst::afw::math::Kernel::setKernelParametersFromSpatialModel(double x, doub
 }
 
 /**
- *  Return a ConvolutionVisitor that matches the type requested,at the given 
- *  location.
+ *  @brief Construct an ImageConvolutionVisitor
  *
- *  The default implementation would support the creation of IMAGE and FOURIER 
- *  visitors without derivatives. LinearCombinationKernel (and possibly 
- *  AnalyticKernel) can override to provide versions with derivatives.  
+ *  This default implementation does not include derivatives 
+ *  Subclasses should override to provide versions with derivatives.
  */
-lsst::afw::math::ConvolutionVisitor::Ptr lsst::afw::math::Kernel::computeConvolutionVisitor(
-        lsst::afw::math::ConvolutionVisitor::TypeFlag const & visitorType,
+lsst::afw::math::ImageConvolutionVisitor::Ptr lsst::afw::math::Kernel::computeImageConvolutionVisitor(
         lsst::afw::image::PointD const & location
 ) const{
-    lsst::afw::math::ConvolutionVisitor::Ptr visitor;
-    switch(visitorType) {
-        case lsst::afw::math::ConvolutionVisitor::IMAGE: 
-        {
-            lsst::afw::image::Image<PixelT> * image = 
-                    new lsst::afw::image::Image<PixelT>(getWidth(), getHeight());
-            lsst::afw::image::Image<PixelT>::Ptr imagePtr(image);
-            computeImage(*image, false, location.getX(), location.getY());
-            visitor.reset(new ImageConvolutionVisitor(imagePtr));
-            break;
-        }
-        case lsst::afw::math::ConvolutionVisitor::FOURIER:
-        {
-            lsst::afw::image::Image<PixelT> * image =
-                    new lsst::afw::image::Image<PixelT>(getWidth(), getHeight());
-            lsst::afw::image::Image<PixelT>::Ptr imagePtr(image);
-            computeImage(*image, false, location.getX(), location.getY());
-            visitor.reset(new FourierConvolutionVisitor(imagePtr));
-            break;
-        }
-    }   
-
-    return visitor;
+    std::pair<int, int> center = std::make_pair(getCtrX(), getCtrY());
+    lsst::afw::image::Image<PixelT>::Ptr imagePtr = 
+            boost::make_shared<lsst::afw::image::Image<PixelT> >(getWidth(), getHeight());
+    computeImage(*imagePtr, false, location.getX(), location.getY());
+    std::vector<double> kernelParameters(getNKernelParameters());
+    computeKernelParametersFromSpatialModel(kernelParameters, location.getX(), location.getY());
+    return boost::make_shared<ImageConvolutionVisitor>(center, kernelParameters, imagePtr);
 }
 
+/**
+ *  @brief Construct a FourierConvolutionVisitor
+ *
+ *  This default implementation does not include derivatives. 
+ *  Subclasses should override to provide versions with derivatives.
+ *
+ *  @note Because a FourierConvolutionVisitor can be constructed from an 
+ *  ImageConvolutionVisitor, overriding computeLinearConvolutionVisitor
+ *  will modify the output of computeFourierConvolutionVisitor as well.
+ */
+lsst::afw::math::FourierConvolutionVisitor::Ptr lsst::afw::math::Kernel::computeFourierConvolutionVisitor(
+        lsst::afw::image::PointD const & location
+) const{
+    ImageConvolutionVisitor::Ptr imageVisitor = computeImageConvolutionVisitor(location);
+    return boost::make_shared<FourierConvolutionVisitor>(*imageVisitor);
+}

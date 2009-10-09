@@ -153,25 +153,15 @@ using boost::serialization::make_nvp;
             double y = 0.0  ///< y (row position) at which to compute spatial function
         ) const = 0;
    
-
-#if !defined(SWIG)
-        /**
-         *  @brief Return a bitwise OR of all supported convolution methods.
-         *
-         *  All Kernels will support at least IMAGE and FOURIER convolution.
-         */
-        virtual ConvolutionVisitor::TypeFlag getConvolutionTypeFlag() const { 
-            return static_cast<ConvolutionVisitor::TypeFlag>(
-                ConvolutionVisitor::IMAGE | ConvolutionVisitor::FOURIER
-            );
-        }
-
-
-        virtual ConvolutionVisitor::Ptr computeConvolutionVisitor(
-            ConvolutionVisitor::TypeFlag const & visitorType,
+        virtual ImageConvolutionVisitor::Ptr computeImageConvolutionVisitor(
             lsst::afw::image::PointD const & location
         ) const;
-#endif
+
+        
+        virtual FourierConvolutionVisitor::Ptr computeFourierConvolutionVisitor(
+           lsst::afw::image::PointD const & location
+        ) const;
+
         /**
          * @brief Return the Kernel's width
          */
@@ -388,7 +378,7 @@ using boost::serialization::make_nvp;
     
     
     /**
-     * @briewould'vef A kernel described by a function.
+     * @brief A kernel described by a function.
      *
      * The function's x, y arguments are as follows:
      * * -getCtrX(), -getCtrY() for the lower left corner pixel
@@ -549,12 +539,9 @@ using boost::serialization::make_nvp;
             double y = 0.0
         ) const;
 
-#if !defined(SWIG)
-        virtual ConvolutionVisitor::Ptr computeConvolutionVisitor(
-            ConvolutionVisitor::TypeFlag const & visitorType,
+        virtual ImageConvolutionVisitor::Ptr computeImageConvolutionVisitor(
             lsst::afw::image::PointD const & location
         ) const;
-#endif
 
         virtual std::vector<double> getKernelParameters() const;
                 
