@@ -14,6 +14,7 @@
 
 #include "boost/mpl/or.hpp"
 #include "boost/shared_ptr.hpp"
+#include "boost/make_shared.hpp"
 #include "boost/static_assert.hpp"
 #include "boost/type_traits/is_same.hpp"
 #include "boost/type_traits/is_base_and_derived.hpp"
@@ -25,8 +26,10 @@
 #include "lsst/daf/base/Persistable.h"
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/Utils.h"
 #include "lsst/afw/math/Function.h"
 #include "lsst/afw/math/traits.h"
+#include "lsst/afw/math/ConvolutionVisitor.h"
 
 namespace lsst {
 namespace afw {
@@ -140,7 +143,16 @@ using boost::serialization::make_nvp;
             double x = 0.0, ///< x (column position) at which to compute spatial function
             double y = 0.0  ///< y (row position) at which to compute spatial function
         ) const = 0;
-    
+   
+        virtual ImageConvolutionVisitor::Ptr computeImageConvolutionVisitor(
+            lsst::afw::image::PointD const & location
+        ) const;
+
+        
+        virtual FourierConvolutionVisitor::Ptr computeFourierConvolutionVisitor(
+           lsst::afw::image::PointD const & location
+        ) const;
+
         /**
          * @brief Return the Kernel's width
          */
@@ -484,6 +496,10 @@ using boost::serialization::make_nvp;
             bool doNormalize,
             double x = 0.0,
             double y = 0.0
+        ) const;
+
+        virtual ImageConvolutionVisitor::Ptr computeImageConvolutionVisitor(
+            lsst::afw::image::PointD const & location
         ) const;
 
         virtual std::vector<double> getKernelParameters() const;

@@ -1,8 +1,48 @@
 // -*- lsst-c++ -*-
 %{
+#include "lsst/afw/math/FourierCutout.h"
+#include "lsst/afw/math/ConvolutionVisitor.h"
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/math/KernelFunctions.h"
 %}
+
+%include "std_complex.i"
+
+%ignore lsst::afw::math::FourierCutout::operator();
+%ignore lsst::afw::math::FourierCutout::swap;
+%ignore lsst::afw::math::FourierCutout::begin;
+%ignore lsst::afw::math::FourierCutout::end;
+%ignore lsst::afw::math::FourierCutout::at;
+%extend lsst::afw::math::FourierCutout {
+    /**
+     * Set an image to the value val
+     */
+    void set(Real val) {
+        *self = val;
+    }
+    
+    Complex get(int x, int y) {
+        return self->operator()(x,y);    
+    }
+};
+
+SWIG_SHARED_PTR(FourierCutoutPtr, lsst::afw::math::FourierCutout);
+SWIG_SHARED_PTR(FourierCutoutStackPtr, lsst::afw::math::FourierCutoutStack);
+
+SWIG_SHARED_PTR_DERIVED(
+    ImageConvolutionVisitor, 
+    lsst::afw::math::ConvolutionVisitor, 
+    lsst::afw::math::ImageConvolutionVisitor
+)
+
+SWIG_SHARED_PTR_DERIVED(
+    FourierConvolutionVisitor, 
+    lsst::afw::math::ConvolutionVisitor, 
+    lsst::afw::math::FourierConvolutionVisitor
+)
+
+%include "lsst/afw/math/FourierCutout.h"
+%include "lsst/afw/math/ConvolutionVisitor.h"
 
 // I doubt newobject is needed; the code seems to work just as well without it.
 %newobject lsst::afw::math::convolve;

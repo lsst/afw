@@ -30,12 +30,13 @@ env = scons.makeEnv(
         ["daf_persistence", "lsst/daf/persistence.h", "daf_persistence:C++"],
         ["daf_data", "lsst/daf/data.h", "daf_data:C++"],
         ["eigen", "Eigen/Core.h"],
+        ["fftw3", "fftw3.h", "fftw3"],
     ],
 )
 #
 # Libraries needed to link libraries/executables
 #
-env.libs["afw"] += env.getlibs("boost wcslib cfitsio minuit gsl utils daf_base daf_data daf_persistence pex_exceptions pex_logging pex_policy security")
+env.libs["afw"] += env.getlibs("boost wcslib cfitsio minuit gsl utils daf_base daf_data daf_persistence pex_exceptions pex_logging pex_policy security fftw3")
 #
 # Build/install things
 #

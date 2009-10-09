@@ -209,3 +209,30 @@ void afwMath::LinearCombinationKernel::_computeKernelImageList() {
         _kernelImagePtrList.push_back(kernelImagePtr);
     }
 }
+
+/**
+ *  Return a ConvolutionVisitor that matches the type requested,at the given 
+ *  location.
+ *
+ *  The default implementation would support the creation of IMAGE and FOURIER 
+ *  visitors without derivatives. LinearCombinationKernel (and possibly 
+ *  AnalyticKernel) can override to provide versions with derivatives.  
+ */
+lsst::afw::math::ImageConvolutionVisitor::Ptr 
+lsst::afw::math::LinearCombinationKernel::computeImageConvolutionVisitor(
+        lsst::afw::image::PointD const & location
+) const{
+    std::pair<int, int> center = std::make_pair(getCtrX(), getCtrY());
+    lsst::afw::image::Image<Pixel>::Ptr imagePtr = 
+            boost::make_shared<lsst::afw::image::Image<Pixel> >(getWidth(), getHeight());
+    computeImage(*imagePtr, false, location.getX(), location.getY());
+    std::vector<double> kernelParameters(getNKernelParameters());
+    computeKernelParametersFromSpatialModel(kernelParameters, location.getX(), location.getY());
+    return boost::make_shared<ImageConvolutionVisitor>(
+            center, 
+            kernelParameters, 
+            imagePtr, 
+            _kernelImagePtrList
+    );
+}
+
