@@ -128,7 +128,30 @@ private:
 #if !defined SWIG
 
     friend class FourierCutoutStack;
-    explicit FourierCutout(int const & width, int const & height, Complex * data, boost::shared_ptr<Complex> owner) :
+    /**
+     * @brief create a Fourier over existing memory
+     *
+     * This protected constructor allow a FourierCutoutStack to allocate
+     * a single large, contiguous block of memory, and then construct 
+     * FourierCutouts over that block. 
+     *
+     * Derived classes may also take advantage of this use.
+     * @note the data pointer should point within the data block allocated 
+     *  by owner. Behaviour is not guaranteed otherwise.
+     *
+     * @param width real-space width of the image
+     * @param height real-space height of the image
+     * @param data offset pointer to the start of this cutout's data 
+     *  within its owner. 
+     * @param owner shared_ptr to a block of memory wherin this cutout's data
+     *  is contained.
+     */
+    explicit FourierCutout(
+            int const & width, 
+            int const & height, 
+            Complex * data, 
+            boost::shared_ptr<Complex> owner
+    ) :
         _imageDimensions(height, width),
         _fourierWidth(computeFourierWidth(width)),
         _data(data),
