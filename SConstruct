@@ -30,7 +30,7 @@ env = scons.makeEnv(
         ["daf_persistence", "lsst/daf/persistence.h", "daf_persistence:C++"],
         ["daf_data", "lsst/daf/data.h", "daf_data:C++"],
         ["eigen", "Eigen/Core.h"],
-        ["fftw3", "fftw3.h", "fftw3"],
+        ["fftw", "fftw3.h", "fftw3"],
     ],
 )
 #
