@@ -13,23 +13,23 @@ namespace detection = lsst::afw::detection;
 
 typedef float ImagePixelT;
 
-BOOST_AUTO_TEST_CASE(DetectionSets) {
+BOOST_AUTO_TEST_CASE(FootprintSets) {
     lsst::pex::logging::Trace::setVerbosity("afw.detection", 0);
 
     image::MaskedImage<ImagePixelT> img(10,20);
     *img.getImage() = 100;
 
-    detection::DetectionSet<ImagePixelT> ds_by_value1(img, 0);
+    detection::FootprintSet<ImagePixelT> ds_by_value1(img, 0);
     BOOST_CHECK(ds_by_value1.getFootprints().size() == 1);
 
-    detection::DetectionSet<ImagePixelT> ds_by_value2(img, detection::Threshold(0, detection::Threshold::VALUE));
+    detection::FootprintSet<ImagePixelT> ds_by_value2(img, detection::Threshold(0, detection::Threshold::VALUE));
     BOOST_CHECK(ds_by_value2.getFootprints().size() == 1);
 
-    BOOST_CHECK_THROW(detection::DetectionSet<ImagePixelT>(img,         \
+    BOOST_CHECK_THROW(detection::FootprintSet<ImagePixelT>(img,         \
                                                            detection::Threshold(0, detection::Threshold::STDEV)), \
                       lsst::pex::exceptions::Exception);
     
-    BOOST_CHECK_THROW(detection::DetectionSet<ImagePixelT>(img, \
+    BOOST_CHECK_THROW(detection::FootprintSet<ImagePixelT>(img, \
                                                            detection::Threshold(0, detection::Threshold::VARIANCE)), \
                       lsst::pex::exceptions::Exception);
 }
@@ -70,12 +70,12 @@ BOOST_AUTO_TEST_CASE(FootprintFunctor) {
     img(5, 5) = 100;
     img(5, 10) = 100;
 
-    detection::DetectionSet<ImagePixelT> ds(mimg, 10);
+    detection::FootprintSet<ImagePixelT> ds(mimg, 10);
 
     BOOST_CHECK(ds.getFootprints().size() == 2);
 
     PixelSum<image::Image<ImagePixelT> > countDN(img);
-    for (detection::DetectionSet<ImagePixelT>::FootprintList::iterator ptr = ds.getFootprints().begin(),
+    for (detection::FootprintSet<ImagePixelT>::FootprintList::iterator ptr = ds.getFootprints().begin(),
              end = ds.getFootprints().end(); ptr != end; ++ptr) {
         countDN.apply(**ptr);
         BOOST_CHECK(countDN.getCounts() == 100);

@@ -16,10 +16,12 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
 
-namespace ex = lsst::pex::exceptions;
+namespace pexExcept = lsst::pex::exceptions;
+namespace afwMath = lsst::afw::math;
 
-lsst::afw::math::generic_kernel_tag lsst::afw::math::generic_kernel_tag_; ///< Used as default value in argument lists
-lsst::afw::math::deltafunction_kernel_tag lsst::afw::math::deltafunction_kernel_tag_; ///< Used as default value in argument lists
+afwMath::generic_kernel_tag afwMath::generic_kernel_tag_; ///< Used as default value in argument lists
+afwMath::deltafunction_kernel_tag afwMath::deltafunction_kernel_tag_;
+    ///< Used as default value in argument lists
 
 //
 // Constructors
@@ -31,11 +33,11 @@ lsst::afw::math::deltafunction_kernel_tag lsst::afw::math::deltafunction_kernel_
  */
 namespace {
 }
-lsst::afw::math::Kernel::Kernel(
+afwMath::Kernel::Kernel(
     int width,                          ///< number of columns
     int height,                         ///< number of height
     unsigned int nKernelParams,         ///< number of kernel parameters
-    SpatialFunction const &spatialFunction) ///< spatial function (or NullSpatialFunction if none is specified)
+    SpatialFunction const &spatialFunction) ///< spatial function (or NullSpatialFunction if none specified)
 :
     LsstBase(typeid(this)),
     _width(width),
@@ -49,7 +51,7 @@ lsst::afw::math::Kernel::Kernel(
         // spatialFunction is not really present
     } else {
         if (nKernelParams == 0) {
-            throw LSST_EXCEPT(ex::InvalidParameterException, "Kernel function has no parameters");
+            throw LSST_EXCEPT(pexExcept::InvalidParameterException, "Kernel function has no parameters");
         }
         for (unsigned int ii = 0; ii < nKernelParams; ++ii) {
             SpatialFunctionPtr spatialFunctionCopy = spatialFunction.copy();
@@ -63,10 +65,11 @@ lsst::afw::math::Kernel::Kernel(
  *
  * Note: if the list of spatial functions is empty then the kernel is not spatially varying.
  */
-lsst::afw::math::Kernel::Kernel(
+afwMath::Kernel::Kernel(
     int width,                          ///< number of columns
     int height,                         ///< number of height
-    std::vector<SpatialFunctionPtr> spatialFunctionList) ///< list of spatial function, one per kernel parameter
+    std::vector<SpatialFunctionPtr> spatialFunctionList)
+        ///< list of spatial function, one per kernel parameter
 :
     LsstBase(typeid(this)),
    _width(width),
@@ -89,19 +92,20 @@ lsst::afw::math::Kernel::Kernel(
  *
  * Params is indexed as [kernel parameter][spatial parameter]
  *
- * @throw lsst::pex::exceptions::InvalidParameterException if params is the wrong shape (and no parameters are changed)
+ * @throw lsst::pex::exceptions::InvalidParameterException if params is the wrong shape
+ *  (if this exception is thrown then no parameters are changed)
  */
-void lsst::afw::math::Kernel::setSpatialParameters(const std::vector<std::vector<double> > params) {
+void afwMath::Kernel::setSpatialParameters(const std::vector<std::vector<double> > params) {
     // Check params size before changing anything
     unsigned int nKernelParams = this->getNKernelParameters();
     if (params.size() != nKernelParams) {
-        throw LSST_EXCEPT(ex::InvalidParameterException,
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
             (boost::format("params has %d entries instead of %d") % params.size() % nKernelParams).str());
     }
     unsigned int nSpatialParams = this->getNSpatialParameters();
     for (unsigned int ii = 0; ii < nKernelParams; ++ii) {
         if (params[ii].size() != nSpatialParams) {
-            throw LSST_EXCEPT(ex::InvalidParameterException,
+            throw LSST_EXCEPT(pexExcept::InvalidParameterException,
                 (boost::format("params[%d] has %d entries instead of %d") %
                 ii % params[ii].size() % nSpatialParams).str());
         }
@@ -120,7 +124,8 @@ void lsst::afw::math::Kernel::setSpatialParameters(const std::vector<std::vector
  * Warning: this is a low-level function that assumes kernelParams is the right length.
  * It will fail in unpredictable ways if that condition is not met.
  */
-void lsst::afw::math::Kernel::computeKernelParametersFromSpatialModel(std::vector<double> &kernelParams, double x, double y) const {
+void afwMath::Kernel::computeKernelParametersFromSpatialModel(
+    std::vector<double> &kernelParams, double x, double y) const {
     std::vector<double>::iterator paramIter = kernelParams.begin();
     std::vector<SpatialFunctionPtr>::const_iterator funcIter = _spatialFunctionList.begin();
     for ( ; funcIter != _spatialFunctionList.end(); ++funcIter, ++paramIter) {
@@ -131,22 +136,42 @@ void lsst::afw::math::Kernel::computeKernelParametersFromSpatialModel(std::vecto
 /**
  * @brief Return a copy of the specified spatial function (one component of the spatial model)
  *
+ * @return a pointer to a spatial function. The function is a copy, so setting its parameters
+ * has no effect on the kernel.
+ *
  * @throw lsst::pex::exceptions::InvalidParameterException if kernel not spatially varying
  * @throw lsst::pex::exceptions::InvalidParameterException if index out of range
  */
-lsst::afw::math::Kernel::SpatialFunctionPtr lsst::afw::math::Kernel::getSpatialFunction(
-    unsigned int index  ///< index of desired spatial function; must be in range [0, number spatial parameters - 1]
+afwMath::Kernel::SpatialFunctionPtr afwMath::Kernel::getSpatialFunction(
+    unsigned int index  ///< index of desired spatial function;
+                        ///< must be in range [0, number spatial parameters - 1]
 ) const {
     if (index >= _spatialFunctionList.size()) {
         if (!this->isSpatiallyVarying()) {
-            throw LSST_EXCEPT(ex::InvalidParameterException, "kernel is not spatially varying");
+            throw LSST_EXCEPT(pexExcept::InvalidParameterException, "kernel is not spatially varying");
         } else {
             std::ostringstream errStream;
             errStream << "index = " << index << "; must be < , " << _spatialFunctionList.size();
-            throw LSST_EXCEPT(ex::InvalidParameterException, errStream.str());
+            throw LSST_EXCEPT(pexExcept::InvalidParameterException, errStream.str());
         }
     }
     return _spatialFunctionList[index]->copy();
+}
+
+/**
+ * @brief Return a list of copies of the spatial functions.
+ *
+ * @return a list of pointers to spatial functions. The functions are copies, so setting their parameters
+ * has no effect on the kernel.
+ */
+std::vector<afwMath::Kernel::SpatialFunctionPtr> afwMath::Kernel::getSpatialFunctionList(
+) const {
+    std::vector<SpatialFunctionPtr> spFuncCopyList;
+    for (std::vector<SpatialFunctionPtr>::const_iterator spFuncIter = _spatialFunctionList.begin();
+        spFuncIter != _spatialFunctionList.end(); ++spFuncIter) {
+        spFuncCopyList.push_back((**spFuncIter).copy());
+    }
+    return spFuncCopyList;
 }
 
 /**
@@ -156,14 +181,14 @@ lsst::afw::math::Kernel::SpatialFunctionPtr lsst::afw::math::Kernel::getSpatialF
  * See also computeKernelParametersFromSpatialModel.
  * If there are no kernel parameters then returns an empty vector.
  */
-std::vector<double> lsst::afw::math::Kernel::getKernelParameters() const {
+std::vector<double> afwMath::Kernel::getKernelParameters() const {
     return std::vector<double>();
 }
 
 /**
  * @brief Return a string representation of the kernel
  */
-std::string lsst::afw::math::Kernel::toString(std::string prefix) const {
+std::string afwMath::Kernel::toString(std::string prefix) const {
     std::ostringstream os;
     os << prefix << "Kernel:" << std::endl;
     os << prefix << "..height, width: " << _height << ", " << _width << std::endl;
@@ -181,7 +206,7 @@ std::string lsst::afw::math::Kernel::toString(std::string prefix) const {
 };
 
 
-void lsst::afw::math::Kernel::toFile(std::string fileName) const {
+void afwMath::Kernel::toFile(std::string fileName) const {
     std::ofstream os(fileName.c_str());
     boost::archive::text_oarchive oa(os);
     oa << this;
@@ -201,8 +226,8 @@ void lsst::afw::math::Kernel::toFile(std::string fileName) const {
  *
  * @throw lsst::pex::exceptions::InvalidParameterException always (unless subclassed)
  */
-void lsst::afw::math::Kernel::setKernelParameter(unsigned int ind, double value) const {
-    throw LSST_EXCEPT(ex::InvalidParameterException, "Kernel has no kernel parameters");
+void afwMath::Kernel::setKernelParameter(unsigned int ind, double value) const {
+    throw LSST_EXCEPT(pexExcept::InvalidParameterException, "Kernel has no kernel parameters");
 }
 
 /**
@@ -213,10 +238,44 @@ void lsst::afw::math::Kernel::setKernelParameter(unsigned int ind, double value)
  * This function is marked "const", despite modifying unimportant internals,
  * so that computeImage can be const.
  */
-void lsst::afw::math::Kernel::setKernelParametersFromSpatialModel(double x, double y) const {
+void afwMath::Kernel::setKernelParametersFromSpatialModel(double x, double y) const {
     std::vector<SpatialFunctionPtr>::const_iterator funcIter = _spatialFunctionList.begin();
     for (int ii = 0; funcIter != _spatialFunctionList.end(); ++funcIter, ++ii) {
         this->setKernelParameter(ii, (*(*funcIter))(x,y));
     }
 }
 
+/**
+ *  @brief Construct an ImageConvolutionVisitor
+ *
+ *  This default implementation does not include derivatives 
+ *  Subclasses should override to provide versions with derivatives.
+ */
+lsst::afw::math::ImageConvolutionVisitor::Ptr lsst::afw::math::Kernel::computeImageConvolutionVisitor(
+        lsst::afw::image::PointD const & location
+) const{
+    std::pair<int, int> center = std::make_pair(getCtrX(), getCtrY());
+    lsst::afw::image::Image<Pixel>::Ptr imagePtr = 
+            boost::make_shared<lsst::afw::image::Image<Pixel> >(getWidth(), getHeight());
+    computeImage(*imagePtr, false, location.getX(), location.getY());
+    std::vector<double> kernelParameters(getNKernelParameters());
+    computeKernelParametersFromSpatialModel(kernelParameters, location.getX(), location.getY());
+    return boost::make_shared<ImageConvolutionVisitor>(center, kernelParameters, imagePtr);
+}
+
+/**
+ *  @brief Construct a FourierConvolutionVisitor
+ *
+ *  This default implementation does not include derivatives. 
+ *  Subclasses should override to provide versions with derivatives.
+ *
+ *  @note Because a FourierConvolutionVisitor can be constructed from an 
+ *  ImageConvolutionVisitor, overriding computeLinearConvolutionVisitor
+ *  will modify the output of computeFourierConvolutionVisitor as well.
+ */
+lsst::afw::math::FourierConvolutionVisitor::Ptr lsst::afw::math::Kernel::computeFourierConvolutionVisitor(
+        lsst::afw::image::PointD const & location
+) const{
+    ImageConvolutionVisitor::Ptr imageVisitor = computeImageConvolutionVisitor(location);
+    return boost::make_shared<FourierConvolutionVisitor>(*imageVisitor);
+}

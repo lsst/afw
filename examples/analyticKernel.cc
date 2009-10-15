@@ -8,7 +8,7 @@
  * Demonstrate an AnalyticKernel, both spatially invariant and spatially varying.
  */
 
-typedef lsst::afw::math::Kernel::PixelT PixelT;
+typedef lsst::afw::math::Kernel::Pixel Pixel;
 
 using namespace std;
 
@@ -18,7 +18,7 @@ int main() {
     unsigned int kernelCols = 6;
     unsigned int kernelRows = 5;
 
-    lsst::afw::math::GaussianFunction2<PixelT> gaussFunc(sigmaX, sigmaY);
+    lsst::afw::math::GaussianFunction2<Pixel> gaussFunc(sigmaX, sigmaY);
     lsst::afw::math::AnalyticKernel gaussKernel(kernelCols, kernelRows, gaussFunc);
     
     cout << boost::format("Gaussian Kernel with sigmaX=%.1f, sigmaY=%.1f\n\n") % sigmaX % sigmaY;
@@ -27,7 +27,7 @@ int main() {
     
     // now show a spatially varying version
     unsigned int polyOrder = 1;
-    lsst::afw::math::PolynomialFunction2<PixelT> polyFunc(polyOrder);
+    lsst::afw::math::PolynomialFunction2<Pixel> polyFunc(polyOrder);
 
     lsst::afw::math::AnalyticKernel gaussSpVarKernel(kernelCols, kernelRows, gaussFunc, polyFunc);
 

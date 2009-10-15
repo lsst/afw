@@ -3,7 +3,7 @@
  *
  * \brief Utilities to detect sets of Footprint%s
  *
- * Create and use an lsst::afw::detection::DetectionSet, a collection of pixels above (or below) some threshold
+ * Create and use an lsst::afw::detection::FootprintSet, a collection of pixels above (or below) some threshold
  * in an Image
  *
  * The "collections of pixels" are represented as lsst::afw::detection::Footprint%s, so an example application
@@ -14,7 +14,7 @@
     image::MaskedImage<float> img(10,20);
     *img.getImage() = 100;
 
-    detection::DetectionSet<float> sources(img, 10);
+    detection::FootprintSet<float> sources(img, 10);
     cout << "Found " << sources.getFootprints().size() << " sources" << std::endl;
  * \endcode
  */
@@ -36,6 +36,21 @@ namespace math = lsst::afw::math;
 namespace pexLogging = lsst::pex::logging;
 
 /************************************************************************************************************/
+namespace {
+    //
+    // Define our own functions to handle NaN tests;  this gives us the
+    // option to define a value for e.g. image::MaskPixel or int
+    //
+    template<typename T>
+    inline bool isBadPixel(T val) {
+        return std::isnan(val);
+    }
+
+    template<>
+    inline bool isBadPixel(image::MaskPixel) {
+        return false;
+    }
+}
 
 namespace {
     /// Don't let doxygen see this block  \cond
@@ -48,7 +63,7 @@ namespace {
         
         explicit IdSpan(int id, int y, int x0, int x1) : id(id), y(y), x0(x0), x1(x1) {}
         int id;                         /* ID for object */
-        int y;				/* Row wherein IdSpan dwells */
+        int y;                          /* Row wherein IdSpan dwells */
         int x0, x1;                     /* inclusive range of columns */
     };
 /*
@@ -83,10 +98,10 @@ namespace {
 
 /************************************************************************************************************/
 /**
- * Dtor for DetectionSet
+ * Dtor for FootprintSet
  */
 template<typename ImagePixelT, typename MaskPixelT>
-detection::DetectionSet<ImagePixelT, MaskPixelT>::~DetectionSet() {
+detection::FootprintSet<ImagePixelT, MaskPixelT>::~FootprintSet() {
     delete &_footprints;
 }
 
@@ -103,8 +118,8 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::~DetectionSet() {
  * for this to make sense, e.g. for difference imaging)
  */
 template<typename ImagePixelT, typename MaskPixelT>
-detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
-	const image::MaskedImage<ImagePixelT, MaskPixelT> &maskedImg, //!< MaskedImage to search for objects
+detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
+        const image::MaskedImage<ImagePixelT, MaskPixelT> &maskedImg, //!< MaskedImage to search for objects
         const Threshold& threshold,     //!< threshold to find objects
         const std::string& planeName,   //!< mask plane to set (if != "")
         const int npixMin)              //!< minimum number of pixels in an object
@@ -112,10 +127,10 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
       _footprints(*new FootprintList()),
       _region(*new image::BBox(image::PointI(maskedImg.getX0(), maskedImg.getY0()),
                                maskedImg.getWidth(), maskedImg.getHeight())) {
-    int id;				/* object ID */
+    int id;                             /* object ID */
     int in_span;                        /* object ID of current IdSpan */
-    int nobj = 0;			/* number of objects found */
-    int x0 = 0;			        /* unpacked from a IdSpan */
+    int nobj = 0;                       /* number of objects found */
+    int x0 = 0;                         /* unpacked from a IdSpan */
 
     typedef typename image::Image<ImagePixelT> ImageT;
     
@@ -150,10 +165,10 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
     std::vector<int>::iterator idp = id2.begin() + 1; //                       previous row
 
     std::vector<int> aliases;           // aliases for initially disjoint parts of Footprints
-    aliases.reserve(1 + height/20);	// initial size of aliases
+    aliases.reserve(1 + height/20);     // initial size of aliases
 
     std::vector<IdSpan::Ptr> spans;     // y:x0,x1 for objects
-    spans.reserve(aliases.capacity());	// initial size of spans
+    spans.reserve(aliases.capacity());  // initial size of spans
 
     aliases.push_back(0);               // 0 --> 0
 /*
@@ -163,7 +178,7 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
     const float thresholdVal = threshold.getValue(thresholdParam);
     const bool polarity = threshold.getPolarity();
 
-    in_span = 0;			// not in a span
+    in_span = 0;                        // not in a span
     for (int y = 0; y != height; ++y) {
         if (idc == id1.begin() + 1) {
             idc = id2.begin() + 1;
@@ -174,13 +189,13 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
         }
         std::fill_n(idc - 1, width + 2, 0);
         
-        in_span = 0;			/* not in a span */
+        in_span = 0;                    /* not in a span */
 
         x_iterator pixPtr = img->row_begin(y);
         for (int x = 0; x < width; ++x, ++pixPtr) {
-	     ImagePixelT pixVal = (polarity ? *pixPtr : -(*pixPtr));
+             ImagePixelT pixVal = (polarity ? *pixPtr : -(*pixPtr));
 
-            if (pixVal < thresholdVal) {
+             if (isBadPixel(pixVal) || pixVal < thresholdVal) {
                 if (in_span) {
                     IdSpan *sp = new IdSpan(in_span, y, x0, x - 1);
                     IdSpan::Ptr spp(sp);
@@ -188,7 +203,7 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
 
                     in_span = 0;
                 }
-            } else {			/* a pixel to fix */
+            } else {                    /* a pixel to fix */
                 if(idc[x - 1] != 0) {
                     id = idc[x - 1];
                 } else if(idp[x - 1] != 0) {
@@ -211,7 +226,7 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
  */
                 if(idp[x + 1] != 0 && idp[x + 1] != id) {
                     aliases[resolve_alias(aliases, idp[x + 1])] = resolve_alias(aliases, id);
-	       
+               
                     idc[x] = id = idp[x + 1];
                 }
             }
@@ -245,7 +260,7 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
         for (unsigned int i = 0; i <= spans.size(); i++) { // <= size to catch the last object
             if(i == spans.size() || spans[i]->id != id) {
                 Footprint *fp = new Footprint(i - i0, _region);
-	    
+            
                 for(; i0 < i; i0++) {
                     fp->addSpan(spans[i0]->y + row0, spans[i0]->x0 + col0, spans[i0]->x1 + col0);
                 }
@@ -303,13 +318,13 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
 
 /************************************************************************************************************/
 /**
- * Return a DetectionSet consisting a Footprint containing the point (x, y) (if above threshold)
+ * Return a FootprintSet consisting a Footprint containing the point (x, y) (if above threshold)
  *
  * \todo Implement this.  There's RHL Pan-STARRS code to do it, but it isn't yet converted to LSST C++
  */
 template<typename ImagePixelT, typename MaskPixelT>
-detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
-	const image::MaskedImage<ImagePixelT, MaskPixelT> &img, //!< Image to search for objects
+detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
+        const image::MaskedImage<ImagePixelT, MaskPixelT> &img, //!< Image to search for objects
         const Threshold& threshold,          //!< threshold to find objects
         int x,                               //!< Footprint should include this pixel (column)
         int y,                               //!< Footprint should include this pixel (row) 
@@ -332,10 +347,10 @@ namespace {
     //
     // An enum for what we should do with a Startspan
     //
-    enum DIRECTION {DOWN = 0,	// scan down from this span
-                    UP,		// scan up from this span
+    enum DIRECTION {DOWN = 0,   // scan down from this span
+                    UP,         // scan up from this span
                     RESTART,     // restart scanning from this span
-                    DONE		// this span is processed
+                    DONE                // this span is processed
     };
     //
     // A Class that remembers how to [re-]start scanning the image for pixels
@@ -356,7 +371,7 @@ namespace {
         static int stopPlane;           // The MaskPlane to use for pixels that signal us to stop searching
     private:
         detection::Span::Ptr const _span; // The initial Span
-        DIRECTION _direction;		// How to continue searching for further pixels
+        DIRECTION _direction;           // How to continue searching for further pixels
         bool _stop;                     // should we stop searching?
     };
 
@@ -369,7 +384,7 @@ namespace {
         _direction(dir),
         _stop(false) {
 
-        if (mask != NULL) {			// remember that we've detected these pixels
+        if (mask != NULL) {                     // remember that we've detected these pixels
             mask->setMaskPlaneValues(detectedPlane, span->getX0(), span->getX1(), span->getY());
 
             const int y = span->getY() - mask->getY0();
@@ -435,7 +450,7 @@ namespace {
      */
     template<typename ImagePixelT, typename MaskPixelT>
     bool StartspanSet<ImagePixelT, MaskPixelT>::process(
-		detection::Footprint *fp,              // the footprint that we're building
+                detection::Footprint *fp,              // the footprint that we're building
                 const detection::Threshold& threshold, // Threshold
                 const float param                      // parameter that Threshold may need
                                                              ) {
@@ -462,7 +477,7 @@ namespace {
         if (sspan == NULL || sspan->getDirection() == DONE) { // no more Startspans to process
             return false;
         }
-        if (sspan->Stop()) {			// they don't want any more spans processed
+        if (sspan->Stop()) {                    // they don't want any more spans processed
             return false;
         }
         /*
@@ -476,13 +491,13 @@ namespace {
         /*
          * Go through image identifying objects
          */
-        int nx0, nx1 = -1;			// new values of x0, x1
+        int nx0, nx1 = -1;                      // new values of x0, x1
         const int di = (dir == UP) ? 1 : -1; // how much i changes to get to the next row
-        bool stop = false;			// should I stop searching for spans?
+        bool stop = false;                      // should I stop searching for spans?
 
         typedef typename image::Image<ImagePixelT>::pixel_accessor pixAccessT;
         const float thresholdVal = threshold.getValue(param);
-	const bool polarity = threshold.getPolarity();
+        const bool polarity = threshold.getPolarity();
         
         for (int i = sspan->span->y -row0 + di; i < height && i >= 0; i += di) {
             pixAccessT imgRow = _image->origin().advance(0, i); // row pointer
@@ -494,33 +509,33 @@ namespace {
             //
             nx0 = -1;
             for (int j = x0 - 1; j >= -1; j--) {
-		ImagePixelT pixVal = (j < 0) ? thresholdVal - 100 : (polarity ? imgRow[j] : -imgRow[j]);
+                ImagePixelT pixVal = (j < 0) ? thresholdVal - 100 : (polarity ? imgRow[j] : -imgRow[j]);
                 if (_mask(j, i, Startspan<MaskPixelT>::detectedPlane) || pixVal < threshold) {
-                    if (j < x0 - 1) {	// we found some pixels above threshold
+                    if (j < x0 - 1) {   // we found some pixels above threshold
                         nx0 = j + 1;
                     }
                     break;
                 }
             }
 #if 0
-            if (nx0 < 0) {			// no span to the left
-                nx1 = x0 - 1;		// we're going to resume searching at nx1 + 1
+            if (nx0 < 0) {                      // no span to the left
+                nx1 = x0 - 1;           // we're going to resume searching at nx1 + 1
             } else {
                 //
                 // Search right in leftmost span
                 //
-                //nx1 = 0;			// make gcc happy
+                //nx1 = 0;                      // make gcc happy
                 for (int j = nx0 + 1; j <= width; j++) {
-		    ImagePixelT pixVal = (j >= width) ? threshold - 100 : 
-			  (polarity ? (F32 ? imgRowF32[j] : imgRowS32[j]) : (F32 ? -imgRowF32[j] : -imgRowS32[j]));
+                    ImagePixelT pixVal = (j >= width) ? threshold - 100 : 
+                          (polarity ? (F32 ? imgRowF32[j] : imgRowS32[j]) : (F32 ? -imgRowF32[j] : -imgRowS32[j]));
                     if ((maskRow[j] & DETECTED) || pixVal < threshold) {
                         nx1 = j - 1;
                         break;
                     }
                 }
-	    
+            
                 const pmSpan *sp = pmFootprintAddSpan(fp, i + row0, nx0 + col0, nx1 + col0);
-	    
+            
                 if (add_startspan(startspans, sp, mask, RESTART)) {
                     stop = true;
                     break;
@@ -536,16 +551,16 @@ namespace {
             // Note that column width exists virtually, and always ends the last span; this
             // is why we claim below that sx1 is always set
             //
-            bool first = false;		// is this the first new span detected?
+            bool first = false;         // is this the first new span detected?
             for (int j = nx1 + 1; j <= x1 + 1; j++) {
-		ImagePixelT pixVal = (j >= width) ? threshold - 100 : 
-		     (polarity ? (F32 ? imgRowF32[j] : imgRowS32[j]) : (F32 ? -imgRowF32[j] : -imgRowS32[j]));
+                ImagePixelT pixVal = (j >= width) ? threshold - 100 : 
+                     (polarity ? (F32 ? imgRowF32[j] : imgRowS32[j]) : (F32 ? -imgRowF32[j] : -imgRowS32[j]));
                 if (!(maskRow[j] & DETECTED) && pixVal >= threshold) {
-                    int sx0 = j++;		// span that we're working on is sx0:sx1
-                    int sx1 = -1;		// We know that if we got here, we'll also set sx1
+                    int sx0 = j++;              // span that we're working on is sx0:sx1
+                    int sx1 = -1;               // We know that if we got here, we'll also set sx1
                     for (; j <= width; j++) {
-			 ImagePixelT pixVal = (j >= width) ? threshold - 100 : 
-			      (polarity ? (F32 ? imgRowF32[j] : imgRowS32[j]) : (F32 ? -imgRowF32[j] : -imgRowS32[j]));
+                         ImagePixelT pixVal = (j >= width) ? threshold - 100 : 
+                              (polarity ? (F32 ? imgRowF32[j] : imgRowS32[j]) : (F32 ? -imgRowF32[j] : -imgRowS32[j]));
                         if ((maskRow[j] & DETECTED) || pixVal < threshold) { // end of span
                             sx1 = j;
                             break;
@@ -561,7 +576,7 @@ namespace {
                                 stop = true;
                                 break;
                             }
-                        } else {		// overhangs to right
+                        } else {                // overhangs to right
                             sp = pmFootprintAddSpan(fp, i + row0, sx0 + col0, x1 + col0);
                             if (add_startspan(startspans, sp, mask, DONE)) {
                                 stop = true;
@@ -584,7 +599,7 @@ namespace {
                 }
             }
 
-            if (stop || first == false) {	// we're done
+            if (stop || first == false) {       // we're done
                 break;
             }
 
@@ -617,23 +632,23 @@ namespace {
  * pmFootprintNormalize()
  */
 pmFootprint *
-pmFindFootprintAtPoint(const psImage *img,	// image to search
-		       const Threshold& threshold, // Threshold
-		       const psArray *peaks, // array of peaks; finding one terminates search for footprint
-		       int row, int col) { // starting position (in img's parent's coordinate system)
+pmFindFootprintAtPoint(const psImage *img,      // image to search
+                       const Threshold& threshold, // Threshold
+                       const psArray *peaks, // array of peaks; finding one terminates search for footprint
+                       int row, int col) { // starting position (in img's parent's coordinate system)
    assert(img != NULL);
 
-   bool F32 = false;			// is this an F32 image?
+   bool F32 = false;                    // is this an F32 image?
    if (img->type.type == PS_TYPE_F32) {
        F32 = true;
    } else if (img->type.type == PS_TYPE_S32) {
        F32 = false;
-   } else {				// N.b. You can't trivially add more cases here; F32 is just a bool
+   } else {                             // N.b. You can't trivially add more cases here; F32 is just a bool
        psError(PS_ERR_UNKNOWN, true, "Unsupported psImage type: %d", img->type.type);
        return NULL;
    }
-   psF32 *imgRowF32 = NULL;		// row pointer if F32
-   psS32 *imgRowS32 = NULL;		//  "   "   "  "  !F32
+   psF32 *imgRowF32 = NULL;             // row pointer if F32
+   psS32 *imgRowS32 = NULL;             //  "   "   "  "  !F32
    
    const int row0 = img->row0;
    const int col0 = img->col0;
@@ -647,7 +662,7 @@ pmFindFootprintAtPoint(const psImage *img,	// image to search
        col < 0 || col >= width) {
         psError(PS_ERR_BAD_PARAMETER_VALUE, true,
                 "row/col == (%d, %d) are out of bounds [%d--%d, %d--%d]",
-		row + row0, col + col0, row0, row0 + height - 1, col0, col0 + width - 1);
+                row + row0, col + col0, row0, row0 + height - 1, col0, col0 + width - 1);
        return NULL;
    }
 
@@ -672,8 +687,8 @@ pmFindFootprintAtPoint(const psImage *img,	// image to search
    assert (peaks == NULL || peaks->n == 0 || pmIsPeak(peaks->data[0]));
    if (peaks != NULL) {
        for (int i = 0; i < peaks->n; i++) {
-	   pmPeak *peak = peaks->data[i];
-	   mask->data.PS_TYPE_MASK_DATA[peak->y - mask->row0][peak->x - mask->col0] |= STOP;
+           pmPeak *peak = peaks->data[i];
+           mask->data.PS_TYPE_MASK_DATA[peak->y - mask->row0][peak->x - mask->col0] |= STOP;
        }
    }
 /*
@@ -681,23 +696,23 @@ pmFindFootprintAtPoint(const psImage *img,	// image to search
  */
    psArray *startspans = psArrayAllocEmpty(1); // spans where we have to restart the search
    
-   imgRowF32 = img->data.F32[row];	// only one of
-   imgRowS32 = img->data.S32[row];	//      these is valid!
+   imgRowF32 = img->data.F32[row];      // only one of
+   imgRowS32 = img->data.S32[row];      //      these is valid!
    psMaskType *maskRow = mask->data.PS_TYPE_MASK_DATA[row];
    {
        int i;
        for (i = col; i >= 0; i--) {
-	   pixVal = F32 ? imgRowF32[i] : imgRowS32[i];
-	   if ((maskRow[i] & DETECTED) || pixVal < threshold) {
-	       break;
-	   }
+           pixVal = F32 ? imgRowF32[i] : imgRowS32[i];
+           if ((maskRow[i] & DETECTED) || pixVal < threshold) {
+               break;
+           }
        }
        int i0 = i;
        for (i = col; i < width; i++) {
-	   pixVal = F32 ? imgRowF32[i] : imgRowS32[i];
-	   if ((maskRow[i] & DETECTED) || pixVal < threshold) {
-	       break;
-	   }
+           pixVal = F32 ? imgRowF32[i] : imgRowS32[i];
+           if ((maskRow[i] & DETECTED) || pixVal < threshold) {
+               break;
+           }
        }
        int i1 = i;
        const pmSpan *sp = pmFootprintAddSpan(fp, row + row0, i0 + col0 + 1, i1 + col0 - 1);
@@ -712,9 +727,9 @@ pmFindFootprintAtPoint(const psImage *img,	// image to search
     * Cleanup
     */
    psFree(mask);
-   psFree(startspans);			// restores the image pixel
+   psFree(startspans);                  // restores the image pixel
 
-   return fp;				// pmFootprint really
+   return fp;                           // pmFootprint really
 }
 #endif
 
@@ -723,8 +738,8 @@ pmFindFootprintAtPoint(const psImage *img,	// image to search
  * Copy constructor
  */
 template<typename ImagePixelT, typename MaskPixelT>
-detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
-	DetectionSet const &rhs         //!< the input DetectionSet
+detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
+        FootprintSet const &rhs         //!< the input FootprintSet
                                                               ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _footprints(rhs._footprints) {
@@ -732,25 +747,25 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
 
 /// Assignment operator.
 template<typename ImagePixelT, typename MaskPixelT>
-detection::DetectionSet<ImagePixelT, MaskPixelT> &
-detection::DetectionSet<ImagePixelT, MaskPixelT>::operator=(DetectionSet const& rhs) {
-    DetectionSet tmp(rhs);
+detection::FootprintSet<ImagePixelT, MaskPixelT> &
+detection::FootprintSet<ImagePixelT, MaskPixelT>::operator=(FootprintSet const& rhs) {
+    FootprintSet tmp(rhs);
     swap(tmp);                          // See Meyers, Effective C++, Item 11
     
     return *this;
 }
 
-/// Set the corners of the DetectionSet's MaskedImage to region
+/// Set the corners of the FootprintSet's MaskedImage to region
 ///
 /// N.b. updates all the Footprints' regions too
 //
 template<typename ImagePixelT, typename MaskPixelT>
-void detection::DetectionSet<ImagePixelT, MaskPixelT>::setRegion(image::BBox const& region // the desired region
+void detection::FootprintSet<ImagePixelT, MaskPixelT>::setRegion(image::BBox const& region // the desired region
                                                                 ) {
     _region = region;
-    typename DetectionSet::FootprintList footprintList = getFootprints();
+    typename FootprintSet::FootprintList footprintList = getFootprints();
 
-    for (typename DetectionSet::FootprintList::iterator ptr = getFootprints().begin(), end = getFootprints().end();
+    for (typename FootprintSet::FootprintList::iterator ptr = getFootprints().begin(), end = getFootprints().end();
          ptr != end; ++ptr) {
         (*ptr)->setRegion(region);
     }
@@ -758,13 +773,13 @@ void detection::DetectionSet<ImagePixelT, MaskPixelT>::setRegion(image::BBox con
 
 /************************************************************************************************************/
 /**
- * Grow all the Footprints in the input DetectionSet, returning a new DetectionSet
+ * Grow all the Footprints in the input FootprintSet, returning a new FootprintSet
  *
- * The output DetectionSet may contain fewer Footprints, as some may well have been merged
+ * The output FootprintSet may contain fewer Footprints, as some may well have been merged
  */
 template<typename ImagePixelT, typename MaskPixelT>
-detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
-	DetectionSet const &rhs,        //!< the input DetectionSet
+detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
+        FootprintSet const &rhs,        //!< the input FootprintSet
         int r,                          //!< Grow Footprints by r pixels
         bool isotropic                  //!< Grow isotropically (as opposed to a Manhattan metric)
                                         //!< @note Isotropic grows are significantly slower
@@ -792,19 +807,19 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
         gfoot->insertIntoImage(*idImage, 10); // The value 10 is random; more than 1 anyway
     }
 
-    DetectionSet<ImageT> ds(image::MaskedImage<ImageT>(idImage), Threshold(1));
+    FootprintSet<ImageT> ds(image::MaskedImage<ImageT>(idImage), Threshold(1));
     swap(ds);
 }
 
 /************************************************************************************************************/
 /**
- * Return the DetectionSet corresponding to the merge of two input DetectionSets
+ * Return the FootprintSet corresponding to the merge of two input FootprintSets
  *
  * \todo Implement this.  There's RHL Pan-STARRS code to do it, but it isn't yet converted to LSST C++
  */
 template<typename ImagePixelT, typename MaskPixelT>
-detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
-	DetectionSet const& footprints1, DetectionSet const& footprints2,
+detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
+        FootprintSet const& footprints1, FootprintSet const& footprints2,
         bool const includePeaks)
     : lsst::daf::data::LsstBase(typeid(this)),
       _footprints(*new FootprintList())
@@ -813,12 +828,12 @@ detection::DetectionSet<ImagePixelT, MaskPixelT>::DetectionSet(
 
 /************************************************************************************************************/
 /**
- * Return an Image with pixels set to the Footprint%s in the DetectionSet
+ * Return an Image with pixels set to the Footprint%s in the FootprintSet
  *
  * \returns an image::Image::Ptr
  */
 template<typename ImagePixelT, typename MaskPixelT>
-typename image::Image<boost::uint16_t>::Ptr detection::DetectionSet<ImagePixelT, MaskPixelT>::insertIntoImage(const bool relativeIDs) {
+typename image::Image<boost::uint16_t>::Ptr detection::FootprintSet<ImagePixelT, MaskPixelT>::insertIntoImage(const bool relativeIDs) {
     typename image::Image<boost::uint16_t>::Ptr im(new image::Image<boost::uint16_t>(_region.getDimensions()));
     *im = 0;
 
@@ -842,6 +857,6 @@ typename image::Image<boost::uint16_t>::Ptr detection::DetectionSet<ImagePixelT,
 //
 // Explicit instantiations
 //
-template class detection::DetectionSet<int, image::MaskPixel>;
-template class detection::DetectionSet<float, image::MaskPixel>;
-template class detection::DetectionSet<double, image::MaskPixel>;
+template class detection::FootprintSet<int, image::MaskPixel>;
+template class detection::FootprintSet<float, image::MaskPixel>;
+template class detection::FootprintSet<double, image::MaskPixel>;

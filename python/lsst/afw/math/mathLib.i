@@ -17,6 +17,8 @@ Python interface to lsst::afw::math classes
 
 %include "lsst/p_lsstSwig.i"
 
+
+
 %pythoncode %{
 import lsst.utils
 
@@ -53,9 +55,9 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 
 %lsst_exceptions();
 
-%include "functionLib.i"
-%include "kernelLib.i"
-%include "minimizeLib.i"
+%include "function.i"
+%include "kernel.i"
+%include "minimize.i"
 %include "statistics.i"
 %include "interpolate.i"
 %include "background.i"

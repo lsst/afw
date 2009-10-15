@@ -30,12 +30,13 @@ env = scons.makeEnv(
         ["daf_persistence", "lsst/daf/persistence.h", "daf_persistence:C++"],
         ["daf_data", "lsst/daf/data.h", "daf_data:C++"],
         ["eigen", "Eigen/Core.h"],
+        ["fftw", "fftw3.h", "fftw3"],
     ],
 )
 #
 # Libraries needed to link libraries/executables
 #
-env.libs["afw"] += env.getlibs("boost wcslib cfitsio minuit gsl utils daf_base daf_data daf_persistence pex_exceptions pex_logging pex_policy security")
+env.libs["afw"] += env.getlibs("boost wcslib cfitsio minuit gsl utils daf_base daf_data daf_persistence pex_exceptions pex_logging pex_policy security fftw3")
 #
 # Build/install things
 #
@@ -66,7 +67,7 @@ Alias("install", [
     env.Install(env['prefix'], "include"),
     env.Install(env['prefix'], "lib"),
     env.InstallAs(os.path.join(env['prefix'], "doc", "doxygen"), os.path.join("doc", "htmlDir")),
-    env.InstallEups(os.path.join(env['prefix'], "ups"), glob.glob(os.path.join("ups", "*.table")))
+    env.InstallEups(env['prefix'] + "/ups"),
 ])
 
 scons.CleanTree(r"*~ core *.so *.os *.o")

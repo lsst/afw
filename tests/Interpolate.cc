@@ -6,28 +6,29 @@
 #define BOOST_TEST_MODULE Interpolate
 
 #include "boost/test/unit_test.hpp"
-
 #include "lsst/afw/math/Interpolate.h"
 
 using namespace std;
 namespace math = lsst::afw::math;
 
+typedef math::Interpolate Interp;
+
 BOOST_AUTO_TEST_CASE(LinearInterpolateRamp) {
 
     int n = 10;
-    vector<float> x(n);
-    vector<float> y(n);
+    vector<double> x(n);
+    vector<double> y(n);
     for(int i = 0; i < n; ++i) {
-        x[i] = static_cast<float>(i);
-        y[i] = static_cast<float>(i);
+        x[i] = static_cast<double>(i);
+        y[i] = static_cast<double>(i);
     }
-    float xtest = 4.5;
+    double xtest = 4.5;
 
     {
         // === test the Linear interpolator ============================
         //math::InterpControl ictrl1(math::LINEAR, NaN, NaN);
-        math::LinearInterpolate<float,float> yinterpL(x, y);
-        float youtL = yinterpL.interpolate(xtest);
+        Interp yinterpL(x, y, ::gsl_interp_linear);
+        double youtL = yinterpL.interpolate(xtest);
 
         BOOST_CHECK_EQUAL(youtL, xtest);
     }
@@ -36,20 +37,20 @@ BOOST_AUTO_TEST_CASE(LinearInterpolateRamp) {
 BOOST_AUTO_TEST_CASE(SplineInterpolateRamp) {
 
     int n = 10;
-    vector<float> x(n);
-    vector<float> y(n);
-    //float const NaN = std::numeric_limits<float>::quiet_NaN();
+    vector<double> x(n);
+    vector<double> y(n);
+    //double const NaN = std::numeric_limits<double>::quiet_NaN();
     for(int i = 0; i < n; ++i) {
-        x[i] = static_cast<float>(i);
-        y[i] = static_cast<float>(i);
+        x[i] = static_cast<double>(i);
+        y[i] = static_cast<double>(i);
     }
-    float xtest = 4.5;
+    double xtest = 4.5;
 
     {
         // === test the Spline interpolator =======================
         //math::InterpControl ictrl2(math::NATURAL_SPLINE, NaN, NaN);
-        math::SplineInterpolate<float,float> yinterpS(x, y);
-        float youtS = yinterpS.interpolate(xtest);
+        Interp yinterpS(x, y, ::gsl_interp_cspline);
+        double youtS = yinterpS.interpolate(xtest);
         
         BOOST_CHECK_EQUAL(youtS, xtest);
     }
@@ -58,15 +59,15 @@ BOOST_AUTO_TEST_CASE(SplineInterpolateRamp) {
 
 BOOST_AUTO_TEST_CASE(SplineInterpolateParabola) {
 
-    int const n = 20;
-    vector<double> x(n);
-    vector<double> y(n);
-    double const dydx = 1.0;
-    double const d2ydx2 = 0.5;
-    double const y0 = 10.0;
+    int const N = 20;
+    vector<double> x(N);
+    vector<double> y(N);
+    double dydx = 1.0;
+    double d2ydx2 = 0.5;
+    double y0 = 10.0;
     
-    //float const NaN = std::numeric_limits<float>::quiet_NaN();
-    for(int i = 0; i < n; ++i) {
+    //double const NaN = std::numeric_limits<double>::quiet_NaN();
+    for(int i = 0; i < N; ++i) {
         x[i] = static_cast<double>(i);
         y[i] = d2ydx2*x[i]*x[i] + dydx*x[i] + y0;
     }
@@ -75,14 +76,10 @@ BOOST_AUTO_TEST_CASE(SplineInterpolateParabola) {
     
     {
         // === test the Spline interpolator =======================
-        math::InterpControl ictrl(math::NATURAL_SPLINE);
-        ictrl.setDydx0( 2.0*d2ydx2*x[0] + dydx);
-        ictrl.setDydxN( 2.0*d2ydx2*x[n - 1] + dydx);
-        math::SplineInterpolate<double,double> yinterpS(x, y, ictrl);
+        Interp yinterpS(x, y, ::gsl_interp_akima);
         double youtS = yinterpS.interpolate(xtest);
-
         
-        BOOST_CHECK_EQUAL(youtS, ytest);
+        BOOST_CHECK_CLOSE(youtS, ytest, 1.0e-8);
     }
 }
 
