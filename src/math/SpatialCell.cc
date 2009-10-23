@@ -111,6 +111,29 @@ size_t SpatialCell::size() const {
 }
 
 /************************************************************************************************************/
+/**
+ * Return the SpatialCellCandidate with the specified id
+ *
+ * @throw lsst::pex::exceptions::NotFoundException if no candidate matches the id
+ */
+SpatialCellCandidate::Ptr SpatialCell::getCandidateById(int id, ///< The desired ID
+                                                        bool noThrow ///< Return NULL in case of error
+                                                       ) {
+    for (SpatialCellCandidateIterator ptr = begin(), end = this->end(); ptr != end; ++ptr) {
+        if ((*ptr)->getId() == id) {
+            return *ptr;
+        }
+    }
+
+    if (noThrow) {
+        return SpatialCellCandidate::Ptr();
+    } else {
+        throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException,
+                          (boost::format("Unable to find object with ID == %d") % id).str());
+    }
+}
+    
+/************************************************************************************************************/
 /// ctor; designed to be used to pass begin to SpatialCellCandidateIterator
 SpatialCellCandidateIterator::SpatialCellCandidateIterator(
         CandidateList::iterator iterator, ///< Where this iterator should start
@@ -175,7 +198,7 @@ size_t SpatialCellCandidateIterator::operator-(SpatialCellCandidateIterator cons
 /**
  * Dereference the iterator to return the Candidate (if there is one)
  *
- * @throw lsst::pex::exceptions::NotFoundErrorException if no candidate is available
+ * @throw lsst::pex::exceptions::NotFoundException if no candidate is available
  */
 SpatialCellCandidate::ConstPtr SpatialCellCandidateIterator::operator*() const {
     if (_iterator == _end) {
@@ -355,6 +378,32 @@ void SpatialCellSet::visitCandidates(CandidateVisitor const* visitor, ///< Pass 
         }
     }
 #endif
+}
+
+/************************************************************************************************************/
+/**
+ * Return the SpatialCellCandidate with the specified id
+ *
+ * @throw lsst::pex::exceptions::NotFoundException if no candidate matches the id (unless noThrow
+ * is true, in which case a Ptr(NULL) is returned
+ */
+SpatialCellCandidate::Ptr SpatialCellSet::getCandidateById(int id, ///< The desired ID
+                                                           bool noThrow ///< Return NULL in case of error
+                                                       ) {
+    for (CellList::iterator cell = _cellList.begin(), end = _cellList.end(); cell != end; ++cell) {
+        SpatialCellCandidate::Ptr cand = (*cell)->getCandidateById(id, true);
+
+        if (cand) {
+            return cand;
+        }
+    }
+
+    if (noThrow) {
+        return SpatialCellCandidate::Ptr();
+    } else {
+        throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException,
+                          (boost::format("Unable to find object with ID == %d") % id).str());
+    }
 }
 
 }}}
