@@ -323,10 +323,8 @@ namespace image {
 #endif
         template<typename OtherPixelT> friend class Image; // needed by generalised copy constructors
         
-        explicit Image(const int width=0, int const height=0);
-        explicit Image(const int width, int const height, PixelT initialValue);
-        explicit Image(const std::pair<int, int> dimensions);
-        explicit Image(const std::pair<int, int> dimensions, PixelT initialValue);
+        explicit Image(const int width=0, int const height=0, PixelT initialValue=0);
+        explicit Image(const std::pair<int, int> dimensions, PixelT initialValue=0);
         Image(const Image& rhs, const bool deep=false);
         explicit Image(const Image& rhs, const BBox& bbox, const bool deep=false);
         explicit Image(std::string const& fileName, const int hdu=0,

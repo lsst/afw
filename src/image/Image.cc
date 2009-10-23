@@ -295,16 +295,6 @@ image::ImageBase<PixelT>& image::ImageBase<PixelT>::operator=(PixelT const rhs) 
 // On to Image itself.  ctors, cctors, and operator=
 //
 /**
- * Create an uninitialised Image of the specified size 
- *
- * \note Many lsst::afw::image and lsst::afw::math objects define a \c dimensions member
- * which may be conveniently used to make objects of an appropriate size
- */
-template<typename PixelT>
-image::Image<PixelT>::Image(int const width, int const height) :
-    image::ImageBase<PixelT>(width, height) {}
-
-/**
  * Create an initialised Image of the specified size 
  *
  * \note Many lsst::afw::image and lsst::afw::math objects define a \c dimensions member
@@ -320,15 +310,7 @@ image::Image<PixelT>::Image(int const width, ///< Number of columns
 }
 
 /**
- * Create an initialised Image of the specified size
- */
-template<typename PixelT>
-image::Image<PixelT>::Image(std::pair<int, int> const dimensions ///< (width, height) of the desired Image
-                           ) :
-    image::ImageBase<PixelT>(dimensions) {}
-
-/**
- * Create an uninitialized Image of the specified size
+ * Create an initialized Image of the specified size
  */
 template<typename PixelT>
 image::Image<PixelT>::Image(std::pair<int, int> const dimensions, ///< (width, height) of the desired Image

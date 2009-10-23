@@ -417,6 +417,20 @@ class MaskedImageTestCase(unittest.TestCase):
         mi = afwImage.MaskedImageF(im)
         exp = afwImage.ExposureF(mi)
 
+    def testMaskedImageInitialisation(self):
+        dims = self.mimage.getDimensions()
+        factory = self.mimage.Factory
+
+        self.mimage.set(666)
+
+        del self.mimage                 # tempt C++ to reuse the memory
+        self.mimage = factory(dims)
+        self.assertEqual(self.mimage.get(10, 10), (0, 0x0, 0))
+
+        del self.mimage
+        self.mimage = factory(20, 20)
+        self.assertEqual(self.mimage.get(10, 10), (0, 0x0, 0))
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def printImg(img):
