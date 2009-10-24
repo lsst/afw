@@ -6,6 +6,55 @@
 
 namespace ellipses = lsst::afw::math::ellipses;
 
+ellipses::LogShear const & ellipses::LogShearEllipse::getCore() const { 
+    return static_cast<LogShear const &>(*_core); 
+}
+ellipses::LogShear & ellipses::LogShearEllipse::getCore() { 
+    return static_cast<LogShear &>(*_core); 
+}   
+
+void ellipses::LogShearEllipse::setComplex(std::complex<double> const & gamma) {
+    getCore().setComplex(gamma); 
+}
+std::complex<double> ellipses::LogShearEllipse::getComplex() const { 
+    return getCore().getComplex(); 
+}
+
+void ellipses::LogShearEllipse::setGamma(double gamma) { 
+    getCore().setGamma(gamma); 
+}
+double ellipses::LogShearEllipse::getGamma() const { 
+    return getCore().getGamma(); 
+}
+
+ellipses::LogShearEllipse::LogShearEllipse(
+    lsst::afw::math::Coordinate const & center
+) : Ellipse(new LogShear(), center) {} 
+
+template <typename Derived>
+ellipses::LogShearEllipse::LogShearEllipse(
+        Eigen::MatrixBase<Derived> const & vector
+) : Ellipse(vector.segment<2>(0)) {
+    _core.reset(new LogShear(vector.segment<3>(2)));
+}
+
+ellipses::LogShearEllipse::LogShearEllipse(
+        ellipses::LogShear const & core, 
+        lsst::afw::math::Coordinate const & center
+) : Ellipse(core,center) {}
+
+ellipses::LogShearEllipse::LogShearEllipse(
+        ellipses::Ellipse const & other
+) : Ellipse(new LogShear(other.getCore()), other.getCenter()) {}
+
+ellipses::LogShearEllipse::LogShearEllipse(
+        ellipses::LogShearEllipse const & other
+) : Ellipse(new LogShear(other.getCore()), other.getCenter()) {}
+
+
+
+
+
 ellipses::LogShear::Ellipse * ellipses::LogShear::makeEllipse(
     lsst::afw::math::Coordinate const & center
 ) const {

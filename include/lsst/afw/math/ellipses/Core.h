@@ -12,6 +12,8 @@ namespace afw {
 namespace math {
 namespace ellipses {
 
+//hide forward declaration from swig
+#if !defined SWIG
 //forward declaration of subclasses of class Core
 class Quadrupole;
 class Axes;
@@ -20,10 +22,12 @@ class LogShear;
 
 //forward declaration of class Ellipse
 class Ellipse;
+#endif 
 
 class Core {
 public:
 
+#if !defined SWIG
     class TransformDerivative {
     public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
@@ -53,20 +57,23 @@ public:
         Eigen::Matrix3d _jacobian_inv;
     };
 
-
+#endif
     typedef boost::shared_ptr<Core> Ptr;
     typedef boost::shared_ptr<const Core> ConstPtr;
+
 
     virtual std::string const getName() const = 0;
 
     virtual void scale(double ratio) = 0;
 
+#if !defined SWIG
     // Acale the core by the given ratio, and return the derivative of the
     // scaled parameters with respect to unscaled parameters.
     virtual Eigen::Matrix3d getScalingDerivative(double ratio) const = 0;
+#endif
 
     // default implementation converts to Quadrupole and back.
-    virtual void transform(AffineTransform const & transform);
+    virtual void transform(lsst::afw::math::AffineTransform const & transform);
 
     // put the parameters into a "standard form", if possible, and return
     // false if they are entirely invalid.
@@ -75,33 +82,43 @@ public:
     // default implementation converts to Axes and back.
     virtual AffineTransform getGenerator() const;
 
+
     double & operator[](int i) { return _vector[i]; }
     double const operator[](int i) const { return _vector[i]; }
 
-    Eigen::Vector3d const getVector() const { return _vector; }
+    Eigen::Vector3d const & getVector() const { return _vector; }
 
     template <typename Derived>
-    void setVector(Eigen::MatrixBase<Derived> const & vector) { _vector = vector; }
+    void setVector(Eigen::MatrixBase<Derived> const & vector) { 
+        _vector = vector; 
+    }
+
 
     virtual Core & operator=(Core const & other) = 0;
     
+#if !defined SWIG
     // Assign other to this and return the
     // derivative of the conversion, d(this)/d(other).
     virtual Eigen::Matrix3d differentialAssign(Core const & other) = 0;
 
+
     virtual Core * clone() const = 0;
 
-    virtual Ellipse * makeEllipse(Coordinate const & center = Coordinate(0,0)) const = 0;
+    virtual Ellipse * makeEllipse(
+        Coordinate const & center = Coordinate(0,0)
+    ) const = 0;
+#endif
 
     virtual ~Core() {}
-
-protected:
-
     template <typename Derived>
-    explicit Core(Eigen::MatrixBase<Derived> const & vector) : _vector(vector) {}
+    explicit Core(Eigen::MatrixBase<Derived> const & vector) 
+        : _vector(vector) {}
 
-    explicit Core(double v1=0, double v2=0, double v3=0) : _vector(v1,v2,v3) {}
+    Core() : _vector(0,0,0) {}
 
+    Core(double v1, double v2, double v3) 
+        : _vector(v1,v2,v3) {}
+protected:
     virtual void assignTo(Quadrupole & other) const = 0;
     virtual void assignTo(Axes & other) const = 0;
     virtual void assignTo(Distortion & other) const = 0;

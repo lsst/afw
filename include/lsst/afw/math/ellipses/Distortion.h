@@ -9,63 +9,55 @@ namespace afw {
 namespace math {
 namespace ellipses {
 
+class Distortion;
+
+class DistortionEllipse : public Ellipse {
+public:
+    typedef boost::shared_ptr<DistortionEllipse> Ptr;
+    typedef boost::shared_ptr<const DistortionEllipse> ConstPtr;
+
+    enum Parameters {X= 0, Y, E1, E2, R};
+
+    Distortion const & getCore() const;
+    Distortion & getCore();
+
+    DistortionEllipse * clone() const { return new DistortionEllipse(*this); }
+
+    DistortionEllipse & operator=(Ellipse const & other) {
+        return static_cast<DistortionEllipse &>(Ellipse::operator=(other));
+    }
+
+    void setComplex(std::complex<double> const & e);
+    std::complex<double> getComplex() const;
+
+    void setE(double e);
+    double getE() const;
+    
+    explicit DistortionEllipse(Coordinate const & center = Coordinate(0,0));
+    
+
+    template <typename Derived>
+    explicit DistortionEllipse(Eigen::MatrixBase<Derived> const & vector);
+
+    explicit DistortionEllipse(
+            Distortion const & core, 
+            Coordinate const & center = Coordinate(0,0)
+    );
+
+    DistortionEllipse(Ellipse const & other);
+
+    DistortionEllipse(DistortionEllipse const & other);
+};
+
+
 class Distortion : public Core {
 public:
     typedef boost::shared_ptr<Distortion> Ptr;
     typedef boost::shared_ptr<const Distortion> ConstPtr;
+    typedef DistortionEllipse Ellipse;
 
-    enum Parameters { E1=0, E2=1, R=2 };
+    enum Parameters { E1=0, E2, R};
 
-    class Ellipse : public lsst::afw::math::ellipses::Ellipse {
-        typedef lsst::afw::math::ellipses::Ellipse Super;
-    public:
-
-        typedef boost::shared_ptr<Ellipse> Ptr;
-        typedef boost::shared_ptr<const Ellipse> ConstPtr;
-
-        enum Parameters {
-            X=Super::X, Y=Super::Y, 
-            E1=Distortion::E1+2, E2=Distortion::E2+2, R=Distortion::R+2 
-        };
-
-        Distortion const & getCore() const { return static_cast<Distortion const &>(*_core); }
-        Distortion & getCore() { return static_cast<Distortion &>(*_core); }
-
-        Ellipse * clone() const { return new Ellipse(*this); }
-
-        Ellipse & operator=(Super const & other) {
-            return static_cast<Ellipse &>(Super::operator=(other));
-        }
-
-        void setComplex(std::complex<double> const & e) { getCore().setComplex(e); }
-        std::complex<double> getComplex() const { return getCore().getComplex(); }
-
-        void setE(double e) { getCore().setE(e); }
-        double getE() const { return getCore().getE(); }
-    
-        explicit Ellipse(
-                Coordinate const & center = Coordinate(0,0)
-        ) : Super(center) {}
-
-        template <typename Derived>
-        explicit Ellipse(
-            Eigen::MatrixBase<Derived> const & vector
-        ) : Super(vector.segment<2>(0)) {
-            _core.reset(new Distortion(vector.segment<3>(2)));
-        }
-
-        explicit Ellipse(
-                Distortion const & core, 
-                Coordinate const & center = Coordinate(0,0)
-        ) : Super(core,center) {}
-
-        Ellipse(Super const & other)
-            : Super(new Distortion(other.getCore()), other.getCenter()) {}
-
-        Ellipse(Ellipse const & other)
-            : Super(new Distortion(other.getCore()), other.getCenter()) {}
-    };
-    
     virtual std::string const getName() const { return "Distortion"; }
 
     virtual void scale(double ratio) { _vector[R] *= ratio; }

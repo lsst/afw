@@ -12,58 +12,46 @@ namespace ellipses {
 
 typedef Eigen::Matrix2d QuadrupoleMatrix;
 
+class Quadrupole;
+
+class QuadrupoleEllipse : public Ellipse {
+public: 
+    typedef boost::shared_ptr<QuadrupoleEllipse> Ptr;
+    typedef boost::shared_ptr<const QuadrupoleEllipse> ConstPtr;
+     
+    enum Parameters {X=0, Y,IXX, IYY, IXY};
+
+    Quadrupole const & getCore() const;
+    Quadrupole & getCore();
+
+    QuadrupoleEllipse * clone() const { return new QuadrupoleEllipse(*this); }
+
+    QuadrupoleEllipse & operator=(Ellipse const & other) {
+        return static_cast<QuadrupoleEllipse &>(Ellipse::operator=(other));
+    }
+
+    explicit QuadrupoleEllipse(Coordinate const & center);
+
+    template <typename Derived>
+    explicit QuadrupoleEllipse(Eigen::MatrixBase<Derived> const & vector); 
+    
+    explicit QuadrupoleEllipse(
+        Quadrupole const & core, 
+        lsst::afw::math::Coordinate const & center = Coordinate(0,0)
+    );
+
+    QuadrupoleEllipse(Ellipse const & other);
+
+    QuadrupoleEllipse(QuadrupoleEllipse const & other) ;
+};
 
 class Quadrupole : public Core {
 public:
     typedef boost::shared_ptr<Quadrupole> Ptr;
     typedef boost::shared_ptr<const Quadrupole> ConstPtr;
+    typedef QuadrupoleEllipse Ellipse;
 
     enum Parameters { IXX=0, IYY=1, IXY=2 };
-
-    class Ellipse : public lsst::afw::math::ellipses::Ellipse {
-        typedef lsst::afw::math::ellipses::Ellipse Super;
-    public: 
-        typedef boost::shared_ptr<Ellipse> Ptr;
-        typedef boost::shared_ptr<const Ellipse> ConstPtr;
-    
-        enum Parameters { 
-            X=Super::X, Y=Super::Y, 
-            IXX=Quadrupole::IXX+2, 
-            IYY=Quadrupole::IYY+2, 
-            IXY=Quadrupole::IXY+2
-        };
-
-        Quadrupole const & getCore() const { return static_cast<Quadrupole const &>(*_core); }
-        Quadrupole & getCore() { return static_cast<Quadrupole &>(*_core); }
-
-        Ellipse * clone() const { return new Ellipse(*this); }
-
-        Ellipse & operator=(Super const & other) {
-            return static_cast<Ellipse &>(Super::operator=(other));
-        }
-
-        explicit Ellipse(
-            Coordinate const & center = Coordinate(0,0)
-        ) : Super(center) {}
-
-        template <typename Derived>
-        explicit Ellipse(
-            Eigen::MatrixBase<Derived> const & vector
-        ) : Super(vector.segment<2>(0)) {
-            _core.reset(new Quadrupole(vector.segment<3>(2)));
-        }
-    
-        explicit Ellipse(
-            Quadrupole const & core, 
-            Coordinate const & center = Coordinate(0,0)
-        ) : Super(core,center) {}
-
-        Ellipse(Super const & other) 
-            : Super(new Quadrupole(other.getCore()), other.getCenter()) {}
-
-        Ellipse(Ellipse const & other) 
-            : Super(new Quadrupole(other.getCore()), other.getCenter()) {}
-    };
 
     virtual std::string const getName() const { return "Quadrupole"; }
 

@@ -5,6 +5,42 @@
 
 namespace ellipses = lsst::afw::math::ellipses;
 
+ellipses::Quadrupole const & ellipses::QuadrupoleEllipse::getCore() const {
+    return static_cast<Quadrupole const&>(*_core);
+}
+
+ellipses::Quadrupole & ellipses::QuadrupoleEllipse::getCore() {
+    return static_cast<Quadrupole &>(*_core);
+}
+
+ellipses::QuadrupoleEllipse::QuadrupoleEllipse(
+        lsst::afw::math::Coordinate const & center = Coordinate(0,0)
+) : Ellipse(new Quadrupole(), center) {}
+
+template <typename Derived>
+ellipses::QuadrupoleEllipse::QuadrupoleEllipse(
+        Eigen::MatrixBase<Derived> const & vector
+) : Ellipse(vector.segment<2>(0)) {
+    _core.reset(new Quadrupole(vector.segment<3>(2)));
+}
+  
+ellipses::QuadrupoleEllipse::QuadrupoleEllipse(
+    ellipses::Quadrupole const & core, 
+    lsst::afw::math::Coordinate const & center
+) : Ellipse(core,center) {}
+
+ellipses::QuadrupoleEllipse::QuadrupoleEllipse(
+    ellipses::Ellipse const & other
+) : Ellipse(new Quadrupole(other.getCore()), other.getCenter()) {}
+
+ellipses::QuadrupoleEllipse::QuadrupoleEllipse(
+    ellipses::QuadrupoleEllipse const & other
+) : Ellipse(new Quadrupole(other.getCore()), other.getCenter()) {}
+
+
+
+
+
 void ellipses::Quadrupole::transform(
     lsst::afw::math::AffineTransform const & transform
 ) {

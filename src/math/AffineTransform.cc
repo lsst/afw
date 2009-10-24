@@ -55,4 +55,24 @@ Eigen::Matrix<double,2,6> math::AffineTransform::d(
     return r;
 }
 
+math::AffineTransform const & math::AffineTransform::operator =(
+    Eigen::Vector6d const & vector
+) {
+    _matrix.matrix().block<2, 3>(0,0) << 
+            vector[0], vector[2], vector[4], 
+            vector[1], vector[3], vector[5];
+    return *this; 
+}
+math::AffineTransform const & math::AffineTransform::operator =(
+    math::AffineTransform::TransformMatrix const & matrix
+) {
+    _matrix = matrix;
+    return *this;
+}
 
+math::AffineTransform const & math::AffineTransform::operator =(
+    math::AffineTransform const & transform
+) {
+    _matrix = transform.matrix();
+    return *this;
+}

@@ -6,6 +6,41 @@
 
 namespace ellipses = lsst::afw::math::ellipses;
 
+ellipses::Axes const & ellipses::AxesEllipse::getCore() const {
+    return static_cast<Axes const &>(*_core);
+}
+
+ellipses::Axes & ellipses::AxesEllipse::getCore() { 
+    return static_cast<Axes &>(*_core); 
+}
+   
+ellipses::AxesEllipse::AxesEllipse(
+        lsst::afw::math::Coordinate const & center 
+) : Ellipse(new Axes(), center) {}
+
+template <typename Derived>
+ellipses::AxesEllipse::AxesEllipse(
+        Eigen::MatrixBase<Derived> const & vector
+) : Ellipse(vector.segment<2>(0)) {
+    _core.reset(new Axes(vector.segment<3>(2))); 
+}
+
+ellipses::AxesEllipse::AxesEllipse (
+        ellipses::Axes const & core, 
+        lsst::afw::math::Coordinate const & center
+) : Ellipse(core, center) {}
+
+ellipses::AxesEllipse::AxesEllipse(
+    ellipses::Ellipse const & other
+) : Ellipse(new Axes(other.getCore()), other.getCenter()) {}
+
+ellipses::AxesEllipse::AxesEllipse (
+    ellipses::AxesEllipse const & other
+) : Ellipse(new Axes(other.getCore()), other.getCenter()) {}
+
+
+
+
 lsst::afw::math::AffineTransform ellipses::Axes::getGenerator() const {
     return AffineTransform(
         AffineTransform::TransformMatrix(
@@ -60,8 +95,17 @@ void ellipses::Axes::assignTo(ellipses::Distortion & other) const {
     double a = self[A];
     double b = self[B];
     other[Distortion::R] = std::sqrt(a*b);
+    
+    //test for divide by 0
+    if(a == 0 && b == 0) {
+        other[Distortion::E1] = 0;
+        other[Distortion::E1] = 0;
+        return;
+    }
+
     a *= a;
     b *= b;
+
     double e = (a-b)/(a+b);
     other[Distortion::E1] = e * std::cos(2*self[THETA]);
     other[Distortion::E2] = e * std::sin(2*self[THETA]);
@@ -71,7 +115,18 @@ void ellipses::Axes::assignTo(ellipses::LogShear & other) const {
     Axes self(*this);
     self.normalize();
     other[LogShear::KAPPA] = 0.5*std::log(self[A]*self[B]);
-    double gamma = 0.5*std::log(self[A]/self[B]);
+    double a = self[A];
+    double b = self[B];
+    //check for divide by 0
+    if(a == 0 && b ==0) {
+        other[LogShear::GAMMA1] = 0;
+        other[LogShear::GAMMA2] = 0;
+        return;
+    }
+    
+    double logA = std::log(a);
+    double logB = std::log(b);
+    double gamma = 0.5*(logA - logB);
     other[LogShear::GAMMA1] = gamma*std::cos(2.0*self[THETA]);
     other[LogShear::GAMMA2] = gamma*std::sin(2.0*self[THETA]);
 }

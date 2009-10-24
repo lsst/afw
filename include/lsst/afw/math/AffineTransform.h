@@ -21,9 +21,11 @@ public:
     typedef boost::shared_ptr<const AffineTransform> ConstPtr;
 
     enum Parameters {XX=0,YX=1,XY=2,YY=3,X=4,Y=5};
-
     /** \brief Construct an empty (identity) AffineTransform. */
     AffineTransform() : _matrix(Eigen::Matrix3d::Identity()) {}
+
+    /** \brief Copy Constructor */
+    AffineTransform(const AffineTransform & other) :_matrix(other.matrix()) {}
 
     /** \brief Construct an AffineTransform from an TransformType. */
     explicit AffineTransform(TransformMatrix const & m) : _matrix(m) {}
@@ -49,6 +51,7 @@ public:
     /** \brief Whether the transform is a no-op. */
     bool isIdentity() const { return _matrix.matrix().isIdentity(); }
 
+
     /** \brief Transform a Coordinate object. */
     Coordinate operator()(const Coordinate& p) const { return _matrix * p; }
 
@@ -60,12 +63,10 @@ public:
     double & operator[](int i) { return _matrix(i % 2, i / 2); }
     double const operator[](int i) const { return _matrix(i % 2, i / 2); }
 
-    friend AffineTransform operator*(
-            AffineTransform const & a, 
-            AffineTransform const & b
-    ) {
-        return AffineTransform(a._matrix * b._matrix);
+    AffineTransform operator*(AffineTransform const & other) const {
+        return AffineTransform(_matrix * other._matrix);
     }
+
 
     AffineTransform const & operator =(Eigen::Vector6d const & vector);
     AffineTransform const & operator =(TransformMatrix const & matrix);
@@ -82,6 +83,7 @@ public:
     Eigen::Matrix<double,2,6> d(Coordinate const & input) const;
 
 private:
+
     TransformMatrix _matrix;
 };
 

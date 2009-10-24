@@ -8,6 +8,19 @@ Python interface to lsst::afw::math classes
 %feature("autodoc", "1");
 %module(package="lsst.afw.math",docstring=mathLib_DOCSTRING) mathLib
 
+#if 0
+%{
+#define SWIG_FILE_WITH_INIT
+#include "numpy/arrayobject.h"
+#include "numpy/ufuncobject.h"
+%}
+
+%init %{
+    import_array();
+    import_umath();
+%}
+#endif
+
 %{
 #   include "lsst/daf/base.h"
 #   include "lsst/pex/policy.h"
@@ -15,9 +28,8 @@ Python interface to lsst::afw::math classes
 #   include "lsst/afw/math.h"
 %}
 
+
 %include "lsst/p_lsstSwig.i"
-
-
 
 %pythoncode %{
 import lsst.utils
@@ -55,6 +67,7 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 
 %lsst_exceptions();
 
+%include "affine_transform.i"
 %include "function.i"
 %include "kernel.i"
 %include "minimize.i"
@@ -64,4 +77,4 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 %include "warpExposure.i"
 %include "spatialCell.i"
 %include "random.i"
-
+%include "ellipse.i"

@@ -6,6 +6,50 @@
 
 namespace ellipses = lsst::afw::math::ellipses;
 
+ellipses::Distortion const & ellipses::DistortionEllipse::getCore() const {
+    return static_cast<Distortion const &>(*_core); 
+}
+
+ellipses::Distortion & ellipses::DistortionEllipse::getCore() { 
+    return static_cast<Distortion &>(*_core); 
+}
+
+void ellipses::DistortionEllipse::setComplex(std::complex<double> const & e) { 
+    getCore().setComplex(e); 
+}
+
+std::complex<double> ellipses::DistortionEllipse::getComplex() const { 
+    return getCore().getComplex(); 
+}
+
+void ellipses::DistortionEllipse::setE(double e) { getCore().setE(e); }
+double ellipses::DistortionEllipse::getE() const { return getCore().getE(); }
+   
+ellipses::DistortionEllipse::DistortionEllipse(
+        lsst::afw::math::Coordinate const & center
+) : Ellipse(new Distortion(), center) {}
+
+template <typename Derived>
+ellipses::DistortionEllipse::DistortionEllipse(
+        Eigen::MatrixBase<Derived> const & vector
+) : Ellipse(vector.segment<2>(0)) {
+    _core.reset(new Distortion(vector.segment<3>(2)));
+}
+
+ellipses::DistortionEllipse::DistortionEllipse(
+        ellipses::Distortion const & core, 
+        lsst::afw::math::Coordinate const & center
+) : Ellipse(core,center) {}
+
+ellipses::DistortionEllipse::DistortionEllipse(
+        ellipses::Ellipse const & other
+) : Ellipse(new Distortion(other.getCore()), other.getCenter()) {}
+
+ellipses::DistortionEllipse::DistortionEllipse(
+    ellipses::DistortionEllipse const & other
+) : Ellipse(new Distortion(other.getCore()), other.getCenter()) {}
+
+
 ellipses::Distortion::Ellipse * ellipses::Distortion::makeEllipse(
     lsst::afw::math::Coordinate const & center
 ) const {

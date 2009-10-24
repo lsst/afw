@@ -20,7 +20,7 @@ namespace ellipses {
 
 class Ellipse {
 public:
-
+#if !defined SWIG
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
     class TransformDerivative {
@@ -48,11 +48,11 @@ public:
 
     typedef boost::shared_ptr<Ellipse> Ptr;
     typedef boost::shared_ptr<const Ellipse> ConstPtr;
-
+#endif
     enum Parameters { X=0, Y=1 };
 
     Coordinate const & getCenter() const { return _center; }
-    Coordinate & getCenter() { return _center; }
+    void setCenter(Coordinate const & center) {_center = center; }
 
     Core const & getCore() const { return *_core; }
     Core & getCore() { return *_core; }
@@ -65,9 +65,10 @@ public:
 
     void transform(AffineTransform const & transform);
 
-    AffineTransform getGenerator() const;
+    lsst::afw::math::AffineTransform getGenerator() const;
 
     //Rectangle getEnvelope() const;
+
 
     double & operator[](int i) { return (i<2) ? _center[i] : (*_core)[i-2]; }
     double const operator[](int i) const { 
@@ -80,6 +81,8 @@ public:
         return *this;
     }
 
+
+#if !defined SWIG
     Eigen::Vector5d const getVector() const {
         Eigen::Vector5d r;
         r << _center[X], _center[Y], (*_core)[0], (*_core)[1], (*_core)[2];
@@ -91,9 +94,8 @@ public:
         _center = vector.template segment<2>(0);
         _core->setVector(vector.template segment<3>(2));
     }
-
-protected:
-
+#endif
+protected:    
     explicit Ellipse(Coordinate const & center) 
         : _center(center), _core() {}
 
@@ -110,14 +112,10 @@ protected:
 
 /** 
  * @brief Functor that returns points on the boundary of the ellipse as a 
- *   function of a parameter that runs between 0 and 2\pi (but is not angle).
+ *   function of a parameter that runs between 0 and 2/pi (but is not angle).
  */
 class Parametric {
-    Coordinate _center;
-    Coordinate _u;
-    Coordinate _v;
 public:
-
     typedef boost::shared_ptr<Parametric> Ptr;
     typedef boost::shared_ptr<const Parametric> ConstPtr;
 
@@ -125,10 +123,13 @@ public:
 
     Parametric(Ellipse const & ellipse);
 
-    Coordinate operator()(double t) const {
+    lsst::afw::math::Coordinate operator()(double t) const {
         return _center + _u*std::cos(t) + _v*std::sin(t); 
     }
-
+private:
+    Coordinate _center;
+    Coordinate _u;
+    Coordinate _v;
 };
 
 }}}} //end namespace lsst::afw::math::ellipses

@@ -9,74 +9,52 @@ namespace afw {
 namespace math{ 
 namespace ellipses {
 
+class LogShear;
+
+class LogShearEllipse : public Ellipse {
+public:
+    typedef boost::shared_ptr<LogShearEllipse> Ptr;
+    typedef boost::shared_ptr<const LogShearEllipse> ConstPtr;
+
+    enum Parameters {X=0, Y,GAMMA1, GAMMA2, KAPPA};
+
+    LogShear const & getCore() const;
+    LogShear & getCore();
+    
+    LogShearEllipse * clone() const { return new LogShearEllipse(*this); }
+
+    void setComplex(std::complex<double> const & gamma);
+    std::complex<double> getComplex() const;
+    void setGamma(double gamma);
+    double getGamma() const;
+
+    LogShearEllipse & operator=(Ellipse const & other) {
+        return static_cast<LogShearEllipse &>(Ellipse::operator=(other));
+    }
+
+    explicit LogShearEllipse(Coordinate const & center = Coordinate(0,0));
+
+    template <typename Derived>
+    explicit LogShearEllipse(Eigen::MatrixBase<Derived> const & vector);
+
+    explicit LogShearEllipse(
+        LogShear const & core, 
+        lsst::afw::math::Coordinate const & center = Coordinate(0,0)
+    );
+
+    LogShearEllipse(Ellipse const & other);
+
+    LogShearEllipse(LogShearEllipse const & other);
+};
+
 
 class LogShear : public Core {
 public:
     typedef boost::shared_ptr<LogShear> Ptr;
     typedef boost::shared_ptr<const LogShear> ConstPtr;
+    typedef LogShearEllipse Ellipse;
 
     enum Parameters { GAMMA1=0, GAMMA2=1, KAPPA=2 };
-
-    class Ellipse : public lsst::afw::math::ellipses::Ellipse {
-        typedef lsst::afw::math::ellipses::Ellipse Super;
-    public:
-        typedef boost::shared_ptr<Ellipse> Ptr;
-        typedef boost::shared_ptr<const Ellipse> ConstPtr;
-
-        enum Parameters { 
-            X=Super::X, Y=Super::Y, 
-            GAMMA1=LogShear::GAMMA1+2, 
-            GAMMA2=LogShear::GAMMA2+2, 
-            KAPPA=LogShear::KAPPA+2
-        };
-
-        LogShear const & getCore() const { 
-            return static_cast<LogShear const &>(*_core); 
-        }
-        LogShear & getCore() { 
-            return static_cast<LogShear &>(*_core); 
-        }   
-    
-        Ellipse * clone() const { return new Ellipse(*this); }
-
-        void setComplex(std::complex<double> const & gamma) { 
-            getCore().setComplex(gamma); 
-        }
-        std::complex<double> getComplex() const { 
-            return getCore().getComplex(); 
-        }
-        void setGamma(double gamma) { getCore().setGamma(gamma); }
-        double getGamma() const { return getCore().getGamma(); }
-
-        Ellipse & operator=(Super const & other) {
-            return static_cast<Ellipse &>(Super::operator=(other));
-        }
-
-        explicit Ellipse(
-            Coordinate const & center = Coordinate(0,0)
-        ) : Super(center) {}
-
-        template <typename Derived>
-        explicit Ellipse(
-            Eigen::MatrixBase<Derived> const & vector
-        ) : Super(vector.segment<2>(0)) {
-            _core.reset(new LogShear(vector.segment<3>(2)));
-        }
-
-        explicit Ellipse(
-            LogShear const & core, 
-            Coordinate const & center = Coordinate(0,0)
-        ) : Super(core,center) {}
-
-        Ellipse(
-            Super const & other
-        ) : Super(new LogShear(other.getCore()), other.getCenter()) {}
-
-        Ellipse(
-            Ellipse const & other
-        ) : Super(new LogShear(other.getCore()), other.getCenter()) {}
-    };
-
     
     virtual std::string const getName() const { return "LogShear"; }
 
