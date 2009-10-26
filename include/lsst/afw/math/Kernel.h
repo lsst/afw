@@ -118,15 +118,27 @@ using boost::serialization::make_nvp;
         
         // Traits values for this class of Kernel
         typedef generic_kernel_tag kernel_fill_factor;
+        
+        explicit Kernel();
 
-        explicit Kernel(int width=0, int height=0, unsigned int nKernelParams=0,
+        explicit Kernel(int width, int height, unsigned int nKernelParams,
                         SpatialFunction const &spatialFunction=NullSpatialFunction());
         explicit Kernel(int width, int height, const std::vector<SpatialFunctionPtr> spatialFunctionList);
 
         virtual ~Kernel() {};
         
-        const std::pair<int, int> getDimensions() const {
-            return std::pair<int, int>(getWidth(), getHeight()); }
+        /**
+         * @brief Return a pointer to a deep copy of this kernel
+         *
+         * This kernel exists instead of a copy constructor
+         * so one can obtain a copy of an actual kernel
+         * instead of a useless copy of the base class.
+         *
+         * Every kernel subclass must override this method.
+         *
+         * @return a pointer to a deep copy of the kernel
+         */
+        virtual Kernel::Ptr clone() const = 0;
 
         /**
          * @brief Compute an image (pixellized representation of the kernel) in place
@@ -152,6 +164,12 @@ using boost::serialization::make_nvp;
         virtual FourierConvolutionVisitor::Ptr computeFourierConvolutionVisitor(
            lsst::afw::image::PointD const & location
         ) const;
+        
+        /**
+        * @brief Return the Kernel's dimensions (width, height)
+        */
+        std::pair<int, int> const getDimensions() const {
+            return std::pair<int, int>(_width, _height); }
 
         /**
          * @brief Return the Kernel's width
@@ -201,10 +219,16 @@ using boost::serialization::make_nvp;
 
         virtual std::vector<double> getKernelParameters() const;
         
+        /**
+        * @brief Set the center index, x axis
+        */
         inline void setCtrX(int ctrX) {
             _ctrX = ctrX;
         };
         
+        /**
+        * @brief Set the center index, y axis
+        */
         inline void setCtrY(int ctrY) {
             _ctrY = ctrY;
         };
@@ -273,6 +297,8 @@ using boost::serialization::make_nvp;
         virtual void setKernelParameter(unsigned int ind, double value) const;
 
         void setKernelParametersFromSpatialModel(double x, double y) const;
+
+        std::vector<SpatialFunctionPtr> _spatialFunctionList;
            
     private:
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::KernelFormatter);
@@ -282,7 +308,6 @@ using boost::serialization::make_nvp;
         int _ctrX;
         int _ctrY;
         unsigned int _nKernelParams;
-        std::vector<SpatialFunctionPtr> _spatialFunctionList;
     };
 
     typedef std::vector<Kernel::Ptr> KernelList;
@@ -306,6 +331,8 @@ using boost::serialization::make_nvp;
         );
         
         virtual ~FixedKernel() {};
+
+        virtual Kernel::Ptr clone() const;
     
         virtual double computeImage(
             lsst::afw::image::Image<Pixel> &image,
@@ -350,7 +377,6 @@ using boost::serialization::make_nvp;
         typedef boost::shared_ptr<AnalyticKernel> Ptr;
         typedef boost::shared_ptr<const AnalyticKernel> ConstPtr;
         typedef lsst::afw::math::Function2<Pixel> KernelFunction;
-        typedef lsst::afw::math::NullFunction2<Pixel> NullKernelFunction;
         typedef boost::shared_ptr<lsst::afw::math::Function2<Pixel> > KernelFunctionPtr;
         
         explicit AnalyticKernel();
@@ -358,14 +384,8 @@ using boost::serialization::make_nvp;
         explicit AnalyticKernel(
             int width,
             int height,
-            KernelFunction const &kernelFunction
-        );
-        
-        explicit AnalyticKernel(
-            int width,
-            int height,
             KernelFunction const &kernelFunction,
-            Kernel::SpatialFunction const &spatialFunction
+            Kernel::SpatialFunction const &spatialFunction=NullSpatialFunction()
         );
         
         explicit AnalyticKernel(
@@ -376,6 +396,8 @@ using boost::serialization::make_nvp;
         );
         
         virtual ~AnalyticKernel() {};
+
+        virtual Kernel::Ptr clone() const;
     
         virtual double computeImage(
             lsst::afw::image::Image<Pixel> &image,
@@ -424,8 +446,12 @@ using boost::serialization::make_nvp;
         explicit DeltaFunctionKernel(
             int width,
             int height,
-            lsst::afw::image::PointI point
+            lsst::afw::image::PointI const &point
         );
+
+        virtual ~DeltaFunctionKernel() {};
+
+        virtual Kernel::Ptr clone() const;
 
         virtual double computeImage(
             lsst::afw::image::Image<Pixel> &image,
@@ -434,12 +460,12 @@ using boost::serialization::make_nvp;
             double y = 0.0
         ) const;
 
-        std::pair<int, int> getPixel() const { return _pixel; }
+        lsst::afw::image::PointI getPixel() const { return _pixel; }
 
         virtual std::string toString(std::string prefix = "") const;
 
     private:
-        std::pair<int, int> _pixel;
+        lsst::afw::image::PointI _pixel;
 
     private:
         friend class boost::serialization::access;
@@ -490,6 +516,8 @@ using boost::serialization::make_nvp;
         );
         
         virtual ~LinearCombinationKernel() {};
+
+        virtual Kernel::Ptr clone() const;
     
         virtual double computeImage(
             lsst::afw::image::Image<Pixel> &image,
@@ -553,13 +581,14 @@ using boost::serialization::make_nvp;
         typedef boost::shared_ptr<SeparableKernel> Ptr;
         typedef boost::shared_ptr<const SeparableKernel> ConstPtr;
         typedef lsst::afw::math::Function1<Pixel> KernelFunction;
-        typedef lsst::afw::math::NullFunction1<Pixel> NullKernelFunction;
         typedef boost::shared_ptr<KernelFunction> KernelFunctionPtr;
+
+        explicit SeparableKernel();
         
         explicit SeparableKernel(
-            int width=0, int height=0,
-            KernelFunction const& kernelColFunction=NullKernelFunction(),
-            KernelFunction const& kernelRowFunction=NullKernelFunction(),
+            int width, int height,
+            KernelFunction const& kernelColFunction,
+            KernelFunction const& kernelRowFunction,
             Kernel::SpatialFunction const& spatialFunction=NullSpatialFunction()
         );
         
@@ -568,6 +597,8 @@ using boost::serialization::make_nvp;
                                  KernelFunction const& kernelRowFunction,
                                  std::vector<Kernel::SpatialFunctionPtr> const& spatialFunctionList);
         virtual ~SeparableKernel() {};
+
+        virtual Kernel::Ptr clone() const;
     
         virtual double computeImage(
             lsst::afw::image::Image<Pixel> &image,
@@ -631,8 +662,8 @@ inline void save_construct_data(
     unsigned int const file_version) {
     int width = k->getWidth();
     int height = k->getHeight();
-    int x = k->getPixel().first;
-    int y = k->getPixel().second;
+    int x = k->getPixel().getX();
+    int y = k->getPixel().getY();
     ar << make_nvp("width", width);
     ar << make_nvp("height", height);
     ar << make_nvp("pixX", x);

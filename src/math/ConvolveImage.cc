@@ -339,8 +339,8 @@ void afwMath::basicConvolve(
     int const cnvHeight = mImageHeight + 1 - kernel.getHeight();
     int const cnvStartX = kernel.getCtrX();
     int const cnvStartY = kernel.getCtrY();
-    int const inStartX = kernel.getPixel().first;
-    int const inStartY = kernel.getPixel().second;
+    int const inStartX = kernel.getPixel().getX();
+    int const inStartY = kernel.getPixel().getY();
 
     pexLog::TTrace<3>("lsst.afw.kernel.convolve", "DeltaFunctionKernel basicConvolve");
 

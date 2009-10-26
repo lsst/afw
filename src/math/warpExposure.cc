@@ -29,16 +29,20 @@ namespace pexLog = lsst::pex::logging;
 namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
 
-namespace {
-    template <typename A, typename B>
-    bool isSameObject(A const& a, B const& b) {
-        return false;
-    }
-    
-    template <typename A>
-    bool isSameObject(A const& a, A const& b) {
-        return &a == &b;
-    }
+afwMath::Kernel::Ptr afwMath::LanczosWarpingKernel::clone() const {
+    return afwMath::Kernel::Ptr(new afwMath::LanczosWarpingKernel(this->getOrder()));
+}
+
+/**
+* @brief get the order of the kernel
+*/
+int afwMath::LanczosWarpingKernel::getOrder() const {
+    return this->getWidth() / 2;
+};
+
+
+afwMath::Kernel::Ptr afwMath::BilinearWarpingKernel::clone() const {
+    return afwMath::Kernel::Ptr(new afwMath::BilinearWarpingKernel());
 }
 
 /**
@@ -58,7 +62,7 @@ afwMath::Kernel::Pixel afwMath::BilinearWarpingKernel::BilinearFunction1::operat
         errStream << "x = " << x << "; must be 0 or 1";
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, errStream.str());
     }
-}            
+}
 
 /**
  * \brief Return string representation.
@@ -176,7 +180,7 @@ int afwMath::warpImage(
     SeparableKernel &warpingKernel  ///< warping kernel; determines warping algorithm
     )
 {
-    if (isSameObject(destImage, srcImage)) {
+    if (afwMath::details::isSameObject(destImage, srcImage)) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterException,
             "destImage is srcImage; cannot warp in place");
     }

@@ -49,7 +49,7 @@ using boost::serialization::make_nvp;
         
         virtual ~IntegerDeltaFunction1() {};
         
-        virtual Function1Ptr copy() const {
+        virtual Function1Ptr clone() const {
             return Function1Ptr(new IntegerDeltaFunction1(_xo));
         }
         
@@ -112,7 +112,7 @@ using boost::serialization::make_nvp;
         
         virtual ~IntegerDeltaFunction2() {};
         
-        virtual Function2Ptr copy() const {
+        virtual Function2Ptr clone() const {
             return Function2Ptr(new IntegerDeltaFunction2(_xo, _yo));
         }
         
@@ -173,7 +173,7 @@ using boost::serialization::make_nvp;
         }
         virtual ~GaussianFunction1() {};
         
-        virtual Function1Ptr copy() const {
+        virtual Function1Ptr clone() const {
             return Function1Ptr(new GaussianFunction1(this->_params[0]));
         }
         
@@ -237,7 +237,7 @@ using boost::serialization::make_nvp;
         
         virtual ~GaussianFunction2() {};
         
-        virtual Function2Ptr copy() const {
+        virtual Function2Ptr clone() const {
             return Function2Ptr(new GaussianFunction2(this->_params[0], this->_params[1]));
         }
         
@@ -305,7 +305,7 @@ using boost::serialization::make_nvp;
         
         virtual ~DoubleGaussianFunction2() {};
         
-        virtual Function2Ptr copy() const {
+        virtual Function2Ptr clone() const {
             return Function2Ptr(
                 new DoubleGaussianFunction2(this->_params[0], this->_params[1], this->_params[2]));
         }
@@ -387,7 +387,7 @@ using boost::serialization::make_nvp;
         
         virtual ~PolynomialFunction1() {};
        
-        virtual Function1Ptr copy() const {
+        virtual Function1Ptr clone() const {
             return Function1Ptr(new PolynomialFunction1(this->_params));
         }
         
@@ -483,7 +483,7 @@ using boost::serialization::make_nvp;
         
         virtual ~PolynomialFunction2() {};
        
-        virtual Function2Ptr copy() const {
+        virtual Function2Ptr clone() const {
             return Function2Ptr(new PolynomialFunction2(this->_params));
         }
         
@@ -604,7 +604,7 @@ using boost::serialization::make_nvp;
         
         virtual ~Chebyshev1Function1() {};
        
-        virtual Function1Ptr copy() const {
+        virtual Function1Ptr clone() const {
             return Function1Ptr(new Chebyshev1Function1(this->_params, _minX, _maxX));
         }
         
@@ -708,7 +708,7 @@ using boost::serialization::make_nvp;
 
         virtual ~LanczosFunction1() {};
        
-        virtual Function1Ptr copy() const {
+        virtual Function1Ptr clone() const {
             unsigned int n = static_cast<unsigned int>(0.5 + (1.0 / _invN));
             return Function1Ptr(new LanczosFunction1(n, this->_params[0]));
         }
@@ -783,7 +783,7 @@ using boost::serialization::make_nvp;
 
         virtual ~LanczosFunction2() {};
        
-        virtual Function2Ptr copy() const {
+        virtual Function2Ptr clone() const {
             unsigned int n = static_cast<unsigned int>(0.5 + (1.0 / _invN));
             return Function2Ptr(new LanczosFunction2(n, this->_params[0], this->_params[1]));
         }

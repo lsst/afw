@@ -19,20 +19,34 @@ namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
 
 /**
- * @brief Construct a spatially varying SeparableKernel,
- *  copying one spatial function once per kernel function parameter
+ * @brief Construct an empty spatially invariant SeparableKernel of size 0x0
+ */
+afwMath::SeparableKernel::SeparableKernel()
+:
+    Kernel(),
+    _kernelColFunctionPtr(),
+    _kernelRowFunctionPtr(),
+    _localColList(0),
+    _localRowList(0)
+{}
+
+/**
+ * @brief Construct a spatially invariant SeparableKernel, or a spatially varying SeparableKernel
+ * that uses the same functional form to model each function parameter.
  */
 afwMath::SeparableKernel::SeparableKernel(
-    int width,
-    int height,
-    KernelFunction const& kernelColFunction,
-    KernelFunction const& kernelRowFunction,
-    Kernel::SpatialFunction const& spatialFunction)
-:
+    int width,  ///< width of kernel
+    int height, ///< height of kernel
+    KernelFunction const& kernelColFunction,    ///< kernel column function
+    KernelFunction const& kernelRowFunction,    ///< kernel row function
+    Kernel::SpatialFunction const& spatialFunction  ///< spatial function;
+        ///< one deep copy is made for each kernel column and row function parameter;
+        ///< if omitted or set to Kernel::NullSpatialFunction then kernel is spatially invariant
+) :
     Kernel(width, height, kernelColFunction.getNParameters() + kernelRowFunction.getNParameters(),
         spatialFunction),
-    _kernelColFunctionPtr(kernelColFunction.copy()),
-    _kernelRowFunctionPtr(kernelRowFunction.copy()),
+    _kernelColFunctionPtr(kernelColFunction.clone()),
+    _kernelRowFunctionPtr(kernelRowFunction.clone()),
     _localColList(width),
     _localRowList(height)
 {}
@@ -44,15 +58,16 @@ afwMath::SeparableKernel::SeparableKernel(
  *  if the length of spatialFunctionList != # kernel function parameters.
  */
 afwMath::SeparableKernel::SeparableKernel(
-    int width,
-    int height,
-    KernelFunction const& kernelColFunction,
-    KernelFunction const& kernelRowFunction,
-    std::vector<Kernel::SpatialFunctionPtr> const& spatialFunctionList)
-:
+    int width,  ///< width of kernel
+    int height, ///< height of kernel
+    KernelFunction const& kernelColFunction,    ///< kernel column function
+    KernelFunction const& kernelRowFunction,    ///< kernel row function
+    std::vector<Kernel::SpatialFunctionPtr> const& spatialFunctionList  ///< list of spatial functions,
+        ///< one per kernel column and row function parameter; a deep copy is made of each function
+) :
     Kernel(width, height, spatialFunctionList),
-    _kernelColFunctionPtr(kernelColFunction.copy()),
-    _kernelRowFunctionPtr(kernelRowFunction.copy()),
+    _kernelColFunctionPtr(kernelColFunction.clone()),
+    _kernelRowFunctionPtr(kernelRowFunction.clone()),
     _localColList(width),
     _localRowList(height)
 {
@@ -61,6 +76,20 @@ afwMath::SeparableKernel::SeparableKernel(
         throw LSST_EXCEPT(pexExcept::InvalidParameterException,
             "Length of spatialFunctionList does not match # of kernel function params");
     }
+}
+
+afwMath::Kernel::Ptr afwMath::SeparableKernel::clone() const {
+    afwMath::Kernel::Ptr retPtr;
+    if (this->isSpatiallyVarying()) {
+        retPtr.reset(new afwMath::SeparableKernel(this->getWidth(), this->getHeight(),
+            *(this->_kernelColFunctionPtr), *(this->_kernelRowFunctionPtr)));
+    } else {
+        retPtr.reset(new afwMath::SeparableKernel(this->getWidth(), this->getHeight(),
+            *(this->_kernelColFunctionPtr), *(this->_kernelRowFunctionPtr), this->_spatialFunctionList));
+    }
+    retPtr->setCtrX(this->getCtrX());
+    retPtr->setCtrY(this->getCtrY());
+    return retPtr;
 }
 
 double afwMath::SeparableKernel::computeImage(
@@ -121,7 +150,7 @@ double afwMath::SeparableKernel::computeVectors(
  */
 afwMath::SeparableKernel::KernelFunctionPtr afwMath::SeparableKernel::getKernelColFunction(
 ) const {
-    return _kernelColFunctionPtr->copy();
+    return _kernelColFunctionPtr->clone();
 }
 
 /**
@@ -129,7 +158,7 @@ afwMath::SeparableKernel::KernelFunctionPtr afwMath::SeparableKernel::getKernelC
  */
 afwMath::SeparableKernel::KernelFunctionPtr afwMath::SeparableKernel::getKernelRowFunction(
 ) const {
-    return _kernelRowFunctionPtr->copy();
+    return _kernelRowFunctionPtr->clone();
 }
 
 std::string afwMath::SeparableKernel::toString(std::string prefix) const {

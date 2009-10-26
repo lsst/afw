@@ -91,6 +91,18 @@ afwMath::LinearCombinationKernel::LinearCombinationKernel(
     _computeKernelImageList();
 }
 
+afwMath::Kernel::Ptr afwMath::LinearCombinationKernel::clone() const {
+    afwMath::Kernel::Ptr retPtr;
+    if (this->isSpatiallyVarying()) {
+        retPtr.reset(new afwMath::LinearCombinationKernel(this->_kernelList, this->_kernelParams));
+    } else {
+        retPtr.reset(new afwMath::LinearCombinationKernel(this->_kernelList, this->_spatialFunctionList));
+    }
+    retPtr->setCtrX(this->getCtrX());
+    retPtr->setCtrY(this->getCtrY());
+    return retPtr;
+}
+
 /**
  * @brief Check that all kernels have the same size and center and that none are spatially varying
  *

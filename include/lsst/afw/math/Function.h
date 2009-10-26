@@ -211,7 +211,7 @@ using boost::serialization::make_nvp;
          *
          * @return a pointer to a deep copy of the function
          */
-        virtual Ptr copy() const = 0; 
+        virtual Ptr clone() const = 0; 
     
         virtual ReturnT operator() (double x) const = 0;
 
@@ -278,7 +278,7 @@ using boost::serialization::make_nvp;
          *
          * @return a pointer to a deep copy of the function
          */
-        virtual Ptr copy() const = 0; 
+        virtual Ptr clone() const = 0; 
     
         virtual ReturnT operator() (double x, double y) const = 0;
 
@@ -307,7 +307,7 @@ using boost::serialization::make_nvp;
     class NullFunction1 : public Function1<ReturnT> {
     public:
         explicit NullFunction1() : Function1<ReturnT>(0) {}
-        typename Function1<ReturnT>::Ptr copy() const {
+        typename Function1<ReturnT>::Ptr clone() const {
             return typename Function1<ReturnT>::Ptr(new NullFunction1()); }
 
     private:
@@ -330,7 +330,7 @@ using boost::serialization::make_nvp;
     class NullFunction2 : public Function2<ReturnT> {
     public:
         explicit NullFunction2() : Function2<ReturnT>(0) {}
-        typename Function2<ReturnT>::Ptr copy() const {
+        typename Function2<ReturnT>::Ptr clone() const {
             return typename Function2<ReturnT>::Ptr(new NullFunction2()); }
 
     private:
