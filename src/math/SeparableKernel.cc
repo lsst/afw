@@ -41,7 +41,7 @@ afwMath::SeparableKernel::SeparableKernel(
     KernelFunction const& kernelRowFunction,    ///< kernel row function
     Kernel::SpatialFunction const& spatialFunction  ///< spatial function;
         ///< one deep copy is made for each kernel column and row function parameter;
-        ///< if omitted or set to Kernel::NullSpatialFunction then kernel is spatially invariant
+        ///< if omitted or set to Kernel::NullSpatialFunction then the kernel is spatially invariant
 ) :
     Kernel(width, height, kernelColFunction.getNParameters() + kernelRowFunction.getNParameters(),
         spatialFunction),
@@ -82,10 +82,10 @@ afwMath::Kernel::Ptr afwMath::SeparableKernel::clone() const {
     afwMath::Kernel::Ptr retPtr;
     if (this->isSpatiallyVarying()) {
         retPtr.reset(new afwMath::SeparableKernel(this->getWidth(), this->getHeight(),
-            *(this->_kernelColFunctionPtr), *(this->_kernelRowFunctionPtr)));
+            *(this->_kernelColFunctionPtr), *(this->_kernelRowFunctionPtr), this->_spatialFunctionList));
     } else {
         retPtr.reset(new afwMath::SeparableKernel(this->getWidth(), this->getHeight(),
-            *(this->_kernelColFunctionPtr), *(this->_kernelRowFunctionPtr), this->_spatialFunctionList));
+            *(this->_kernelColFunctionPtr), *(this->_kernelRowFunctionPtr)));
     }
     retPtr->setCtrX(this->getCtrX());
     retPtr->setCtrY(this->getCtrY());

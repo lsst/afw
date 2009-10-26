@@ -53,6 +53,10 @@ class KernelTestCase(unittest.TestCase):
             self.fail("%s = %s != %s (normalized)" % \
                 (kernel.__class__.__name__, normInArr, normOutArr))
 
+        errStr = self.compareKernels(kernel, kernel.clone())
+        if errStr:
+            self.fail(errStr)
+
     def testAnalyticKernel(self):
         """Test AnalyticKernel using a Gaussian function
         """
@@ -82,6 +86,17 @@ class KernelTestCase(unittest.TestCase):
                 if not numpy.allclose(fArr, kArr):
                     self.fail("%s = %s != %s for xsigma=%s, ysigma=%s" % \
                         (kernel.__class__.__name__, kArr, fArr, xsigma, ysigma))
+
+        kernel.setKernelParameters((0.5, 1.1))
+        kernelClone = kernel.clone()
+        errStr = self.compareKernels(kernel, kernelClone)
+        if errStr:
+            self.fail(errStr)
+        
+        kernel.setKernelParameters((1.5, 0.2))
+        errStr = self.compareKernels(kernel, kernelClone)
+        if not errStr:
+            self.fail("Clone was modified by changing original's kernel parameters")
     
     def testDeltaFunctionKernel(self):
         """Test DeltaFunctionKernel
@@ -99,6 +114,11 @@ class KernelTestCase(unittest.TestCase):
                         self.assertEqual(kArr[activeCol, activeRow], 1.0)
                         kArr[activeCol, activeRow] = 0.0
                         self.assertEqual(kArr.sum(), 0.0)
+
+                        errStr = self.compareKernels(kernel, kernel.clone())
+                        if errStr:
+                            self.fail(errStr)
+
                 utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
                     afwMath.DeltaFunctionKernel, 0, kHeight, afwImage.PointI(kWidth, kHeight))
                 utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
@@ -138,6 +158,15 @@ class KernelTestCase(unittest.TestCase):
                 if not numpy.allclose(fArr, kArr):
                     self.fail("%s = %s != %s for xsigma=%s, ysigma=%s" % \
                         (kernel.__class__.__name__, kArr, fArr, xsigma, ysigma))
+        kernelClone = kernel.clone()
+        errStr = self.compareKernels(kernel, kernelClone)
+        if errStr:
+            self.fail(errStr)
+        
+        kernel.setKernelParameters((1.2, 0.6))
+        errStr = self.compareKernels(kernel, kernelClone)
+        if not errStr:
+            self.fail("Clone was modified by changing original's kernel parameters")
     
     def testLinearCombinationKernel(self):
         """Test LinearCombinationKernel using a set of delta basis functions
@@ -169,6 +198,42 @@ class KernelTestCase(unittest.TestCase):
             if not numpy.allclose(kImArr, basisImArrList[ii]):
                 self.fail("%s = %s != %s for the %s'th basis kernel" % \
                     (kernel.__class__.__name__, kImArr, basisImArrList[ii], ii))
+
+    def testSVAnalyticKernel(self):
+        """Test spatially varying AnalyticKernel using a Gaussian function
+        
+        Just tests cloning.
+        """
+        kWidth = 5
+        kHeight = 8
+
+        # spatial model
+        spFunc = afwMath.PolynomialFunction2D(1)
+        
+        # spatial parameters are a list of entries, one per kernel parameter;
+        # each entry is a list of spatial parameters
+        sParams = (
+            (1.0, 1.0, 0.0),
+            (1.0, 0.0, 1.0),
+        )
+
+        gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0)
+        kernel = afwMath.AnalyticKernel(kWidth, kHeight, gaussFunc, spFunc)
+        kernel.setSpatialParameters(sParams)
+        
+        kernelClone = kernel.clone()
+        errStr = self.compareKernels(kernel, kernelClone)
+        if errStr:
+            self.fail(errStr)
+
+        newSParams = (
+            (0.1, 0.2, 0.5),
+            (0.1, 0.5, 0.2),
+        )
+        kernel.setSpatialParameters(newSParams)
+        errStr = self.compareKernels(kernel, kernelClone)
+        if not errStr:
+            self.fail("Clone was modified by changing original's spatial parameters")
 
     def testSVLinearCombinationKernel(self):
         """Test a spatially varying LinearCombinationKernel
@@ -221,6 +286,61 @@ class KernelTestCase(unittest.TestCase):
             if not numpy.allclose(kImArr, refKImArr):
                 self.fail("%s = %s != %s at colPos=%s, rowPos=%s" % \
                     (kernel.__class__.__name__, kImArr, refKImArr, colPos, rowPos))
+
+        sParams = (
+            (0.1, 1.0, 0.0),
+            (0.1, 0.0, 1.0),
+        )
+        kernel.setSpatialParameters(sParams)
+        kernelClone = kernel.clone()
+        errStr = self.compareKernels(kernel, kernelClone)
+        if errStr:
+            self.fail(errStr)
+
+        newSParams = (
+            (0.1, 0.2, 0.5),
+            (0.1, 0.5, 0.2),
+        )
+        kernel.setSpatialParameters(newSParams)
+        errStr = self.compareKernels(kernel, kernelClone)
+        if not errStr:
+            self.fail("Clone was modified by changing original's spatial parameters")
+
+    def testSVSeparableKernel(self):
+        """Test spatially varying SeparableKernel using a Gaussian function
+        
+        Just tests cloning.
+        """
+        kWidth = 5
+        kHeight = 8
+
+        # spatial model
+        spFunc = afwMath.PolynomialFunction2D(1)
+        
+        # spatial parameters are a list of entries, one per kernel parameter;
+        # each entry is a list of spatial parameters
+        sParams = (
+            (1.0, 1.0, 0.0),
+            (1.0, 0.0, 1.0),
+        )
+
+        gaussFunc = afwMath.GaussianFunction1D(1.0)
+        kernel = afwMath.SeparableKernel(kWidth, kHeight, gaussFunc, gaussFunc, spFunc)
+        kernel.setSpatialParameters(sParams)
+        
+        kernelClone = kernel.clone()
+        errStr = self.compareKernels(kernel, kernelClone)
+        if errStr:
+            self.fail(errStr)
+
+        newSParams = (
+            (0.1, 0.2, 0.5),
+            (0.1, 0.5, 0.2),
+        )
+        kernel.setSpatialParameters(newSParams)
+        errStr = self.compareKernels(kernel, kernelClone)
+        if not errStr:
+            self.fail("Clone was modified by changing original's spatial parameters")
     
     def testSetCtr(self):
         """Test setCtrCol/Row"""
@@ -262,6 +382,62 @@ class KernelTestCase(unittest.TestCase):
                 else:
                     utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
                         kernel.setSpatialParameters, spatialParams)
+
+    def compareKernels(self, kernel1, kernel2, newCtr1=(0,0)):
+        """Compare two kernels; return None if they match, else return a string describing a difference.
+        
+        kernel1: one kernel to test
+        kernel2: the other kernel to test
+        newCtr: if not None then set the center of kernel1 and see if it changes the center of kernel2
+        """
+        retStrs = []
+        if kernel1.getDimensions() != kernel2.getDimensions():
+            retStrs.append("dimensions differ: %s != %s" % (kernel1.getDimensions(), kernel2.getDimensions()))
+        ctr1 = kernel1.getCtrX(), kernel1.getCtrY()
+        ctr2 = kernel2.getCtrX(), kernel2.getCtrY()
+        if ctr1 != ctr2:
+            retStrs.append("centers differ: %s != %s" % (ctr1, ctr2))
+        if kernel1.getSpatialParameters() != kernel2.getSpatialParameters():
+            retStrs.append("spatial parameters differs: %s != %s" % \
+                (kernel1.getSpatialParameters(), kernel2.getSpatialParameters()))
+        if kernel1.isSpatiallyVarying() != kernel2.isSpatiallyVarying():
+            retStrs.append("isSpatiallyVarying differs: %s != %s" % \
+                (kernel1.isSpatiallyVarying(), kernel2.isSpatiallyVarying()))
+        if kernel1.getNSpatialParameters() != kernel2.getNSpatialParameters():
+            retStrs.append("# spatial parameters differs: %s != %s" % \
+                (kernel1.getNSpatialParameters(), kernel2.getNSpatialParameters()))
+        if not kernel1.isSpatiallyVarying() and hasattr(kernel1, "getKernelParameters"):
+            if kernel1.getKernelParameters() != kernel2.getKernelParameters():
+                retStrs.append("kernel parameters differs: %s != %s" % \
+                    (kernel1.getKernelParameters(), kernel2.getKernelParameters()))
+        if retStrs:
+            return "; ".join(retStrs)
+        
+        im1 = afwImage.ImageD(kernel1.getDimensions())
+        im2 = afwImage.ImageD(kernel2.getDimensions())
+        if kernel1.isSpatiallyVarying():
+            posList = [(0, 0), (200, 0), (0, 200), (200, 200)]
+        else:
+            posList = [(0, 0)]
+
+        for doNormalize in (False, True):
+            for pos in posList:
+                kernel1.computeImage(im1, pos[0], pos[1], doNormalize)
+                kernel2.computeImage(im2, pos[0], pos[1], doNormalize)
+                im1Arr = imTestUtils.arrayFromImage(im1)
+                im2Arr = imTestUtils.arrayFromImage(im2)
+                if not numpy.allclose(im1Arr, im2Arr):
+                    print "im1Arr =", im1Arr
+                    print "im2Arr =", im2Arr
+                    return "kernel images do not match at %s with doNormalize=%s" % (pos, doNormalize)
+
+        if newCtr1 != None:
+            kernel1.setCtrX(newCtr1[0])
+            kernel1.setCtrY(newCtr1[1])
+            newCtr2 = kernel2.getCtrX(), kernel2.getCtrY()
+            if ctr2 != newCtr2:
+                return "changing center of kernel1 to %s changed the center of kernel2 from %s to %s" % \
+                    (newCtr1, ctr2, newCtr2)
         
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

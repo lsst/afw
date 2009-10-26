@@ -36,7 +36,7 @@ afwMath::LinearCombinationKernel::LinearCombinationKernel()
  * @brief Construct a spatially invariant LinearCombinationKernel
  */
 afwMath::LinearCombinationKernel::LinearCombinationKernel(
-    KernelList const &kernelList,    ///< list of (shared pointers to const) kernels
+    KernelList const &kernelList,    ///< list of (shared pointers to const) basis kernels
     std::vector<double> const &kernelParameters) ///< kernel coefficients
 :
     Kernel(kernelList[0]->getWidth(), kernelList[0]->getHeight(), kernelList.size()),
@@ -50,11 +50,13 @@ afwMath::LinearCombinationKernel::LinearCombinationKernel(
 }
 
 /**
- * @brief Construct a spatially varying LinearCombinationKernel with spatial parameters initialized to 0
+ * @brief Construct a spatially varying LinearCombinationKernel, where the spatial model
+ * is described by one function (that is cloned to give one per basis kernel).
  */
 afwMath::LinearCombinationKernel::LinearCombinationKernel(
-    KernelList const &kernelList,    ///< list of (shared pointers to const) kernels
-    Kernel::SpatialFunction const &spatialFunction)  ///< spatial function
+    KernelList const &kernelList,    ///< list of (shared pointers to const) basis kernels
+    Kernel::SpatialFunction const &spatialFunction)  ///< spatial function;
+        ///< one deep copy is made for each basis kernel
 :
     Kernel(kernelList[0]->getWidth(), kernelList[0]->getHeight(), kernelList.size(), spatialFunction),
     _kernelList(kernelList),
@@ -67,15 +69,15 @@ afwMath::LinearCombinationKernel::LinearCombinationKernel(
 }
 
 /**
- * @brief Construct a spatially varying LinearCombinationKernel
- *  with the spatially varying parameters specified
+ * @brief Construct a spatially varying LinearCombinationKernel, where the spatial model
+ * is described by a list of functions (one per basis kernel).
  *
  * @throw lsst::pex::exceptions::InvalidParameterException  if the length of spatialFunctionList != # kernels
  */
 afwMath::LinearCombinationKernel::LinearCombinationKernel(
     KernelList const &kernelList,    ///< list of (shared pointers to const) kernels
     std::vector<Kernel::SpatialFunctionPtr> const &spatialFunctionList)
-        ///< list of spatial functions, one per kernel
+        ///< list of spatial functions, one per basis kernel
 :
     Kernel(kernelList[0]->getWidth(), kernelList[0]->getHeight(), spatialFunctionList),
     _kernelList(kernelList),
@@ -94,9 +96,9 @@ afwMath::LinearCombinationKernel::LinearCombinationKernel(
 afwMath::Kernel::Ptr afwMath::LinearCombinationKernel::clone() const {
     afwMath::Kernel::Ptr retPtr;
     if (this->isSpatiallyVarying()) {
-        retPtr.reset(new afwMath::LinearCombinationKernel(this->_kernelList, this->_kernelParams));
-    } else {
         retPtr.reset(new afwMath::LinearCombinationKernel(this->_kernelList, this->_spatialFunctionList));
+    } else {
+        retPtr.reset(new afwMath::LinearCombinationKernel(this->_kernelList, this->_kernelParams));
     }
     retPtr->setCtrX(this->getCtrX());
     retPtr->setCtrY(this->getCtrY());

@@ -25,8 +25,9 @@ afwMath::AnalyticKernel::AnalyticKernel()
 {}
 
 /**
- * @brief Construct a spatially invariant AnalyticKernel, or a spatially varying AnalyticKernel
- * that uses the same functional form to model each function parameter.
+ * @brief Construct a spatially invariant AnalyticKernel,
+ * or a spatially varying AnalyticKernel where the spatial model
+ * is described by one function (that is cloned to give one per analytic function parameter).
  */
 afwMath::AnalyticKernel::AnalyticKernel(
     int width,  ///< width of kernel
@@ -34,14 +35,15 @@ afwMath::AnalyticKernel::AnalyticKernel(
     KernelFunction const &kernelFunction,   ///< kernel function; a deep copy is made
     Kernel::SpatialFunction const &spatialFunction  ///< spatial function;
         ///< one deep copy is made for each kernel function parameter;
-        ///< if omitted or set to Kernel::NullSpatialFunction then kernel is spatially invariant
+        ///< if omitted or set to Kernel::NullSpatialFunction then the kernel is spatially invariant
 ) :
     Kernel(width, height, kernelFunction.getNParameters(), spatialFunction),
     _kernelFunctionPtr(kernelFunction.clone())
 {}
 
 /**
- * @brief Construct a spatially varying AnalyticKernel
+ * @brief Construct a spatially varying AnalyticKernel, where the spatial model
+ * is described by a list of functions (one per analytic function parameter).
  *
  * @throw lsst::pex::exceptions::InvalidParameterException
  *        if the length of spatialFunctionList != # kernel function parameters.
@@ -66,10 +68,10 @@ afwMath::Kernel::Ptr afwMath::AnalyticKernel::clone() const {
     afwMath::Kernel::Ptr retPtr;
     if (this->isSpatiallyVarying()) {
         retPtr.reset(new afwMath::AnalyticKernel(this->getWidth(), this->getHeight(),
-            *(this->_kernelFunctionPtr)));
+            *(this->_kernelFunctionPtr), this->_spatialFunctionList));
     } else {
         retPtr.reset(new afwMath::AnalyticKernel(this->getWidth(), this->getHeight(),
-            *(this->_kernelFunctionPtr), this->_spatialFunctionList));
+            *(this->_kernelFunctionPtr)));
     }
     retPtr->setCtrX(this->getCtrX());
     retPtr->setCtrY(this->getCtrY());
