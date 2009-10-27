@@ -176,20 +176,20 @@ class KernelTestCase(unittest.TestCase):
         
         # create list of kernels
         basisImArrList = []
-        kVec = afwMath.KernelList()
+        basisKernelList = afwMath.KernelList()
         for row in range(kHeight):
             for col in range(kWidth):
-                kernel = afwMath.DeltaFunctionKernel(kWidth, kHeight, afwImage.PointI(col, row))
-                basisImage = afwImage.ImageD(kernel.getDimensions())
-                kernel.computeImage(basisImage, True)
+                basisKernel = afwMath.DeltaFunctionKernel(kWidth, kHeight, afwImage.PointI(col, row))
+                basisImage = afwImage.ImageD(basisKernel.getDimensions())
+                basisKernel.computeImage(basisImage, True)
                 basisImArrList.append(imTestUtils.arrayFromImage(basisImage))
-                kVec.append(kernel)
+                basisKernelList.append(basisKernel)
 
-        kParams = [0.0]*len(kVec)
-        kernel = afwMath.LinearCombinationKernel(kVec, kParams)
+        kParams = [0.0]*len(basisKernelList)
+        kernel = afwMath.LinearCombinationKernel(basisKernelList, kParams)
         self.basicTests(kernel, len(kParams))
-        for ii in range(len(kVec)):
-            kParams = [0.0]*len(kVec)
+        for ii in range(len(basisKernelList)):
+            kParams = [0.0]*len(basisKernelList)
             kParams[ii] = 1.0
             kernel.setKernelParameters(kParams)
             kIm = afwImage.ImageD(kernel.getDimensions())
@@ -198,6 +198,60 @@ class KernelTestCase(unittest.TestCase):
             if not numpy.allclose(kImArr, basisImArrList[ii]):
                 self.fail("%s = %s != %s for the %s'th basis kernel" % \
                     (kernel.__class__.__name__, kImArr, basisImArrList[ii], ii))
+        
+        kernelClone = kernel.clone()
+        errStr = self.compareKernels(kernel, kernelClone)
+        if errStr:
+            self.fail(errStr)
+
+    def testLinearCombinationKernelAnalytic(self):
+        """Test LinearCombinationKernel using a set of analytic basis functions
+        """
+        kWidth = 5
+        kHeight = 8
+        
+        # create list of kernels
+        basisImArrList = []
+        basisKernelList = afwMath.KernelList()
+        for basisKernelParams in [(0.2, 1.0), (1.0, 0.2)]:
+            basisKernelFunction = afwMath.GaussianFunction2D(*basisKernelParams)
+            basisKernel = afwMath.AnalyticKernel(kWidth, kHeight, basisKernelFunction)
+            basisImage = afwImage.ImageD(basisKernel.getDimensions())
+            basisKernel.computeImage(basisImage, True)
+            basisImArrList.append(imTestUtils.arrayFromImage(basisImage))
+            basisKernelList.append(basisKernel)
+
+        kParams = [0.0]*len(basisKernelList)
+        kernel = afwMath.LinearCombinationKernel(basisKernelList, kParams)
+        self.basicTests(kernel, len(kParams))
+        
+        # make sure the linear combination kernel has private copies of its basis kernels
+        # by altering the local basis kernels and making sure the new images do NOT match
+        modBasisImArrList = []
+        for basisKernel in basisKernelList:
+            basisKernel.setKernelParameters((0.5, 0.5))
+            modBasisImage = afwImage.ImageD(basisKernel.getDimensions())
+            basisKernel.computeImage(modBasisImage, True)
+            modBasisImArrList.append(imTestUtils.arrayFromImage(modBasisImage))
+        
+        for ii in range(len(basisKernelList)):
+            kParams = [0.0]*len(basisKernelList)
+            kParams[ii] = 1.0
+            kernel.setKernelParameters(kParams)
+            kIm = afwImage.ImageD(kernel.getDimensions())
+            kernel.computeImage(kIm, True)
+            kImArr = imTestUtils.arrayFromImage(kIm)
+            if not numpy.allclose(kImArr, basisImArrList[ii]):
+                self.fail("%s = %s != %s for the %s'th basis kernel" % \
+                    (kernel.__class__.__name__, kImArr, basisImArrList[ii], ii))
+            if numpy.allclose(kImArr, modBasisImArrList[ii]):
+                self.fail("%s = %s == %s for *modified* %s'th basis kernel" % \
+                    (kernel.__class__.__name__, kImArr, modBasisImArrList[ii], ii))
+        
+        kernelClone = kernel.clone()
+        errStr = self.compareKernels(kernel, kernelClone)
+        if errStr:
+            self.fail(errStr)
 
     def testSVAnalyticKernel(self):
         """Test spatially varying AnalyticKernel using a Gaussian function
@@ -253,11 +307,11 @@ class KernelTestCase(unittest.TestCase):
         basisImArrList.append(imArr)
         
         # create a list of basis kernels from the images
-        kVec = afwMath.KernelList()
+        basisKernelList = afwMath.KernelList()
         for basisImArr in basisImArrList:
             basisImage = imTestUtils.imageFromArray(basisImArr, retType=afwImage.ImageD)
             kernel = afwMath.FixedKernel(basisImage)
-            kVec.append(kernel)
+            basisKernelList.append(kernel)
 
         # create spatially varying linear combination kernel
         spFunc = afwMath.PolynomialFunction2D(1)
@@ -269,7 +323,7 @@ class KernelTestCase(unittest.TestCase):
             (0.0, 0.0, 1.0),
         )
         
-        kernel = afwMath.LinearCombinationKernel(kVec, spFunc)
+        kernel = afwMath.LinearCombinationKernel(basisKernelList, spFunc)
         self.basicTests(kernel, 2, 3)
         kernel.setSpatialParameters(sParams)
         kImage = afwImage.ImageD(kWidth, kHeight)

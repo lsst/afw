@@ -40,13 +40,13 @@ afwMath::LinearCombinationKernel::LinearCombinationKernel(
     std::vector<double> const &kernelParameters) ///< kernel coefficients
 :
     Kernel(kernelList[0]->getWidth(), kernelList[0]->getHeight(), kernelList.size()),
-    _kernelList(kernelList),
+    _kernelList(),
     _kernelImagePtrList(),
     _kernelSumList(),
     _kernelParams(kernelParameters)
 {
     checkKernelList(kernelList);
-    _computeKernelImageList();
+    _setKernelList(kernelList);
 }
 
 /**
@@ -59,20 +59,20 @@ afwMath::LinearCombinationKernel::LinearCombinationKernel(
         ///< one deep copy is made for each basis kernel
 :
     Kernel(kernelList[0]->getWidth(), kernelList[0]->getHeight(), kernelList.size(), spatialFunction),
-    _kernelList(kernelList),
+    _kernelList(),
     _kernelImagePtrList(),
     _kernelSumList(),
     _kernelParams(std::vector<double>(kernelList.size()))
 {
     checkKernelList(kernelList);
-    _computeKernelImageList();
+    _setKernelList(kernelList);
 }
 
 /**
  * @brief Construct a spatially varying LinearCombinationKernel, where the spatial model
  * is described by a list of functions (one per basis kernel).
  *
- * @throw lsst::pex::exceptions::InvalidParameterException  if the length of spatialFunctionList != # kernels
+ * @throw lsst::pex::exceptions::InvalidParameterException if the length of spatialFunctionList != # kernels
  */
 afwMath::LinearCombinationKernel::LinearCombinationKernel(
     KernelList const &kernelList,    ///< list of (shared pointers to const) kernels
@@ -80,7 +80,7 @@ afwMath::LinearCombinationKernel::LinearCombinationKernel(
         ///< list of spatial functions, one per basis kernel
 :
     Kernel(kernelList[0]->getWidth(), kernelList[0]->getHeight(), spatialFunctionList),
-    _kernelList(kernelList),
+    _kernelList(),
     _kernelImagePtrList(),
     _kernelSumList(),
     _kernelParams(std::vector<double>(kernelList.size()))
@@ -90,7 +90,7 @@ afwMath::LinearCombinationKernel::LinearCombinationKernel(
             "Length of spatialFunctionList does not match length of kernelList");
     }
     checkKernelList(kernelList);
-    _computeKernelImageList();
+    _setKernelList(kernelList);
 }
 
 afwMath::Kernel::Ptr afwMath::LinearCombinationKernel::clone() const {
@@ -114,17 +114,17 @@ void afwMath::LinearCombinationKernel::checkKernelList(const KernelList &kernelL
     if (kernelList.size() < 1) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, "kernelList has no elements");
     }
-    
+
     int ctrX = kernelList[0]->getCtrX();
     int ctrY = kernelList[0]->getCtrY();
-    
+
     for (unsigned int ii = 0; ii < kernelList.size(); ++ii) {
         if (kernelList[ii]->getDimensions() != kernelList[0]->getDimensions()) {
             throw LSST_EXCEPT(pexExcept::InvalidParameterException,
                 (boost::format("kernel %d has different size than kernel 0") % ii).str());
         }
         if ((ctrX != kernelList[ii]->getCtrX()) || (ctrY != kernelList[ii]->getCtrY())) {
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException, 
+            throw LSST_EXCEPT(pexExcept::InvalidParameterException,
                 (boost::format("kernel %d has different center than kernel 0") % ii).str());
         }
         if (kernelList[ii]->isSpatiallyVarying()) {
@@ -183,7 +183,7 @@ std::vector<double> afwMath::LinearCombinationKernel::getKernelSumList() const {
 std::vector<double> afwMath::LinearCombinationKernel::getKernelParameters() const {
     return _kernelParams;
 }
- 
+
 std::string afwMath::LinearCombinationKernel::toString(std::string prefix) const {
     std::ostringstream os;
     os << prefix << "LinearCombinationKernel:" << std::endl;
@@ -212,41 +212,44 @@ void afwMath::LinearCombinationKernel::setKernelParameter(unsigned int ind, doub
 // Private Member Functions
 //
 /**
- * Compute _kernelImagePtrList, the internal archive of kernel images,
- *  and _kernelSumList, the sum of each kernel image.
+ * @brief Set _kernelList by cloning each input kernel and update the kernel image cache.
  */
-void afwMath::LinearCombinationKernel::_computeKernelImageList() {
-    for (KernelList::const_iterator kIter = _kernelList.begin(), kEnd = _kernelList.end();
+void afwMath::LinearCombinationKernel::_setKernelList(KernelList const &kernelList) {
+    _kernelSumList.clear();
+    _kernelImagePtrList.clear();
+    _kernelList.clear();
+    for (KernelList::const_iterator kIter = kernelList.begin(), kEnd = kernelList.end();
         kIter != kEnd; ++kIter) {
+        Kernel::Ptr basisKernelPtr = (*kIter)->clone();
+        _kernelList.push_back(basisKernelPtr);
         afwImage::Image<Pixel>::Ptr kernelImagePtr(new afwImage::Image<Pixel>(this->getDimensions()));
-        _kernelSumList.push_back((*kIter)->computeImage(*kernelImagePtr, false));
+        _kernelSumList.push_back(basisKernelPtr->computeImage(*kernelImagePtr, false));
         _kernelImagePtrList.push_back(kernelImagePtr);
     }
 }
 
 /**
- *  Return a ConvolutionVisitor that matches the type requested,at the given 
- *  location.
+ *  Return a ConvolutionVisitor that matches the type requested, at the given location.
  *
- *  The default implementation would support the creation of IMAGE and FOURIER 
- *  visitors without derivatives. LinearCombinationKernel (and possibly 
- *  AnalyticKernel) can override to provide versions with derivatives.  
+ *  The default implementation would support the creation of IMAGE and FOURIER
+ *  visitors without derivatives. LinearCombinationKernel (and possibly
+ *  AnalyticKernel) can override to provide versions with derivatives.
  */
-lsst::afw::math::ImageConvolutionVisitor::Ptr 
+lsst::afw::math::ImageConvolutionVisitor::Ptr
 lsst::afw::math::LinearCombinationKernel::computeImageConvolutionVisitor(
-        lsst::afw::image::PointD const & location
+    lsst::afw::image::PointD const & location
 ) const{
     std::pair<int, int> center = std::make_pair(getCtrX(), getCtrY());
-    lsst::afw::image::Image<Pixel>::Ptr imagePtr = 
-            boost::make_shared<lsst::afw::image::Image<Pixel> >(getWidth(), getHeight());
+    lsst::afw::image::Image<Pixel>::Ptr imagePtr =
+        boost::make_shared<lsst::afw::image::Image<Pixel> >(getWidth(), getHeight());
     computeImage(*imagePtr, false, location.getX(), location.getY());
     std::vector<double> kernelParameters(getNKernelParameters());
     computeKernelParametersFromSpatialModel(kernelParameters, location.getX(), location.getY());
     return boost::make_shared<ImageConvolutionVisitor>(
-            center, 
-            kernelParameters, 
-            imagePtr, 
-            _kernelImagePtrList
+        center,
+        kernelParameters,
+        imagePtr,
+        _kernelImagePtrList
     );
 }
 
