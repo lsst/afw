@@ -41,7 +41,7 @@ lsst::afw::math::MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1(
     double errorDef)
 :
     lsst::daf::data::LsstBase(typeid(this)),
-    _functionPtr(function.copy()),
+    _functionPtr(function.clone()),
     _measurementList(measurementList),
     _varianceList(varianceList),
     _xPositionList(xPositionList),
@@ -70,7 +70,7 @@ lsst::afw::math::MinimizerFunctionBase2<ReturnT>::MinimizerFunctionBase2(
     double errorDef)
 :
     lsst::daf::data::LsstBase(typeid(this)),
-    _functionPtr(function.copy()),
+    _functionPtr(function.clone()),
     _measurementList(measurementList),
     _varianceList(varianceList),
     _xPositionList(xPositionList),
