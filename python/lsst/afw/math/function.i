@@ -88,6 +88,10 @@ SWIG_SHARED_PTR_DERIVED(NAME##N##TYPE, lsst::afw::math::Function##N<CTYPE>, lsst
 %defineTemplates(D, double)
 %defineTemplates(F, float)
 
+// This causes a warning about a constructor for LinearCombinationKernel being shadowed
+// probably because it can be specified as an ordinary python list of functions due to std_vector.i
+// and there's already a construtor that accepts a list of floats
+// One solution is to disable std_vector.i...but how?
 %template(Function1FList) std::vector<boost::shared_ptr<lsst::afw::math::Function1<float> > >;
 %template(Function1DList) std::vector<boost::shared_ptr<lsst::afw::math::Function1<double> > >;
 %template(Function2FList) std::vector<boost::shared_ptr<lsst::afw::math::Function2<float> > >;
