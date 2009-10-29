@@ -1,5 +1,9 @@
 // -*- lsst-c++ -*-
 %{
+#include <vector>
+
+#include "boost/shared_ptr.hpp"
+
 #include "lsst/afw/math/Function.h"
 #include "lsst/afw/math/FunctionLibrary.h"
 %}
@@ -7,7 +11,7 @@
 // I'm not sure newobject is needed (the memory leak test works without it)
 %newobject lsst::afw::math::Function::getParameters;
 
-// Must come before %include
+// Must be used before %include
 %define %baseFunctionPtr(TYPE, CTYPE)
 SWIG_SHARED_PTR_DERIVED(Function##TYPE, lsst::daf::data::LsstBase, lsst::afw::math::Function<CTYPE>);
 %enddef
@@ -20,7 +24,7 @@ SWIG_SHARED_PTR_DERIVED(Function##N##TYPE, lsst::afw::math::Function<CTYPE>, lss
 SWIG_SHARED_PTR_DERIVED(NAME##N##TYPE, lsst::afw::math::Function##N<CTYPE>, lsst::afw::math::NAME##N<CTYPE>);
 %enddef
 
-// Must come after %include
+// Must be used after %include
 %define %baseFunction(TYPE, CTYPE)
 %template(Function##TYPE) lsst::afw::math::Function<CTYPE>;
 %enddef
@@ -83,3 +87,8 @@ SWIG_SHARED_PTR_DERIVED(NAME##N##TYPE, lsst::afw::math::Function##N<CTYPE>, lsst
 
 %defineTemplates(D, double)
 %defineTemplates(F, float)
+
+%template(Function1FList) std::vector<boost::shared_ptr<lsst::afw::math::Function1<float> > >;
+%template(Function1DList) std::vector<boost::shared_ptr<lsst::afw::math::Function1<double> > >;
+%template(Function2FList) std::vector<boost::shared_ptr<lsst::afw::math::Function2<float> > >;
+%template(Function2DList) std::vector<boost::shared_ptr<lsst::afw::math::Function2<double> > >;

@@ -69,7 +69,10 @@ double afwMath::FixedKernel::computeImage(
     double y
 ) const {
     if (image.getDimensions() != this->getDimensions()) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "image is the wrong size");
+        std::ostringstream os;
+        os << "image dimensions = ( " << image.getWidth() << ", " << image.getHeight()
+            << ") != (" << this->getWidth() << ", " << this->getHeight() << ") = kernel dimensions";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
 
     double multFactor = 1.0;

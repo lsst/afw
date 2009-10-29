@@ -10,6 +10,7 @@
  */
 #include <algorithm>
 #include <iterator>
+#include <sstream>
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
@@ -73,8 +74,11 @@ afwMath::SeparableKernel::SeparableKernel(
 {
     if (kernelColFunction.getNParameters() + kernelRowFunction.getNParameters()
         != spatialFunctionList.size()) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
-            "Length of spatialFunctionList does not match # of kernel function params");
+        std::ostringstream os;
+        os << "kernelColFunction.getNParameters() + kernelRowFunction.getNParameters() = "
+            << kernelColFunction.getNParameters() << " + " << kernelRowFunction.getNParameters()
+            << " != " << spatialFunctionList.size() << " = " << "spatialFunctionList.size()";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
 }
 
@@ -99,7 +103,10 @@ double afwMath::SeparableKernel::computeImage(
     double y
 ) const {
     if (image.getDimensions() != this->getDimensions()) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "image is the wrong size");
+        std::ostringstream os;
+        os << "image dimensions = ( " << image.getWidth() << ", " << image.getHeight()
+            << ") != (" << this->getWidth() << ", " << this->getHeight() << ") = kernel dimensions";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
     if (this->isSpatiallyVarying()) {
         this->setKernelParametersFromSpatialModel(x, y);
@@ -136,7 +143,12 @@ double afwMath::SeparableKernel::computeVectors(
 ) const {
     if (static_cast<int>(colList.size()) != this->getWidth()
         || static_cast<int>(rowList.size()) != this->getHeight()) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "colList and/or rowList are the wrong size");
+        std::ostringstream os;
+        os << "colList.size(), rowList.size() = ("
+            << colList.size() << ", " << rowList.size()
+            << ") != ("<< this->getWidth() << ", " << this->getHeight()
+            << ") = " << "kernel dimensions";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
     if (this->isSpatiallyVarying()) {
         this->setKernelParametersFromSpatialModel(x, y);
