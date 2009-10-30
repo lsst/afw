@@ -94,6 +94,8 @@ public:
     template<typename PixelT>
     typename lsst::afw::image::Image<PixelT>::Ptr getImage() const;
     
+    BackgroundControl getBackgroundControl() const { return _bctrl; }
+    
 private:
     int _n;                             // number of pixels in the image
     double _meanclip;                   // n-sigma clipped mean

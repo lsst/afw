@@ -215,7 +215,40 @@ class BackgroundTestCase(unittest.TestCase):
             
     def testUndersample(self):
         """Test how the program handles nx,ny being too small for requested interp style."""
+
+        # make a ramping image (spline should be exact for linear increasing image
+        nx = 64
+        ny = 64
+        img = afwImage.ImageD(nx, ny)
         
+        # make a background control object
+        bctrl = afwMath.BackgroundControl()
+        bctrl.setInterpStyle(afwMath.CUBIC_SPLINE_INTERP)
+        bctrl.setNxSample(2)
+        bctrl.setNySample(2)
+
+        # see if it adjusts the nx,ny values up to 3x3
+        bctrl.setUndersampleStyle(afwMath.INCREASE_NXNYSAMPLE)
+        backobj = afwMath.makeBackground(img, bctrl)
+        self.assertEqual(backobj.getBackgroundControl().getNxSample(), 3)
+        self.assertEqual(backobj.getBackgroundControl().getNySample(), 3)
+
+        # put nx,ny back to 2 and see if it adjusts the interp style down to linear
+        bctrl.setNxSample(2)
+        bctrl.setNySample(2)
+        bctrl.setUndersampleStyle(afwMath.REDUCE_INTERP_ORDER)
+        backobj = afwMath.makeBackground(img, bctrl)
+        self.assertEqual(backobj.getBackgroundControl().getInterpStyle(), afwMath.LINEAR_INTERP)
+
+        # put interp style back up to cspline and see if it throws an exception
+        bctrl.setUndersampleStyle(afwMath.THROW_EXCEPTION)
+        bctrl.setInterpStyle(afwMath.CUBIC_SPLINE_INTERP)
+        def tst(im, bc):
+            backobj = afwMath.makeBackground(im, bc)
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException,
+                                       tst, img, bctrl)
+
+
             
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

@@ -45,6 +45,8 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
         throw LSST_EXCEPT(ex::InvalidParameterException, "Image contains no pixels");
     }
 
+    _checkSampling();
+
     _nxSample = _bctrl.getNxSample();
     _nySample = _bctrl.getNySample();
     _xcen.resize(_nxSample);
@@ -54,7 +56,6 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
     _grid.resize(_nxSample);
     _gridcolumns.resize(_nxSample);
 
-    _checkSampling();
 
     // Check that an int's large enough to hold the number of pixels
     assert(_imgWidth*static_cast<double>(_imgHeight) < std::numeric_limits<int>::max());
@@ -207,8 +208,8 @@ void math::Background::_checkSampling() {
     minPoints[math::AKIMA_SPLINE_INTERP]           = 5;
     minPoints[math::AKIMA_SPLINE_PERIODIC_INTERP]  = 5;
     
-    bool isXundersampled = (_nxSample < minPoints[_bctrl.getInterpStyle()]);
-    bool isYundersampled = (_nxSample < minPoints[_bctrl.getInterpStyle()]);
+    bool isXundersampled = (_bctrl.getNxSample() < minPoints[_bctrl.getInterpStyle()]);
+    bool isYundersampled = (_bctrl.getNySample() < minPoints[_bctrl.getInterpStyle()]);
 
     if (_bctrl.getUndersampleStyle() == THROW_EXCEPTION) {
         if (isXundersampled && isYundersampled) {
@@ -224,18 +225,18 @@ void math::Background::_checkSampling() {
         
     } else if (_bctrl.getUndersampleStyle() == REDUCE_INTERP_ORDER) {
         if (isXundersampled || isYundersampled) {
-            math::InterpStyle const xStyle = _lookupMaxStyleForNpoints(_nxSample);
-            math::InterpStyle const yStyle = _lookupMaxStyleForNpoints(_nySample);
-            math::InterpStyle const style = (_nxSample < _nySample) ? xStyle : yStyle;
+            math::InterpStyle const xStyle = _lookupMaxStyleForNpoints(_bctrl.getNxSample());
+            math::InterpStyle const yStyle = _lookupMaxStyleForNpoints(_bctrl.getNySample());
+            math::InterpStyle const style = (_bctrl.getNxSample() < _bctrl.getNySample()) ? xStyle : yStyle;
             _bctrl.setInterpStyle(style);
         }
         
     } else if (_bctrl.getUndersampleStyle() == INCREASE_NXNYSAMPLE) {
-        if (_nxSample < minPoints[_bctrl.getInterpStyle()]) {
-            _nxSample = minPoints[_bctrl.getInterpStyle()];
+        if (isXundersampled) {
+            _bctrl.setNxSample(minPoints[_bctrl.getInterpStyle()]);
         }
-        if (_nySample < minPoints[_bctrl.getInterpStyle()]) {
-            _nySample = minPoints[_bctrl.getInterpStyle()];
+        if (isYundersampled) {
+            _bctrl.setNySample(minPoints[_bctrl.getInterpStyle()]);
         }
         
     } else {
