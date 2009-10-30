@@ -54,7 +54,7 @@ class BackgroundTestCase(unittest.TestCase):
 
 
         xcen, ycen = 50, 100
-        bgCtrl = afwMath.BackgroundControl(afwMath.AKIMA_SPLINE)
+        bgCtrl = afwMath.BackgroundControl(afwMath.AKIMA_SPLINE_INTERP)
         bgCtrl.setNxSample(5)
         bgCtrl.setNySample(5)
         bgCtrl.sctrl.setNumIter(3)
@@ -99,7 +99,7 @@ class BackgroundTestCase(unittest.TestCase):
             naxis2 = img.getHeight()
             
             # create a background control object
-            bctrl = afwMath.BackgroundControl(afwMath.AKIMA_SPLINE);
+            bctrl = afwMath.BackgroundControl(afwMath.AKIMA_SPLINE_INTERP);
             bctrl.setNxSample(5);
             bctrl.setNySample(5);
             
@@ -134,7 +134,7 @@ class BackgroundTestCase(unittest.TestCase):
         
         # check corner, edge, and center pixels
         bctrl = afwMath.BackgroundControl();
-        bctrl.setStyle(afwMath.CUBIC_SPLINE);
+        bctrl.setInterpStyle(afwMath.CUBIC_SPLINE_INTERP);
         bctrl.setNxSample(6);
         bctrl.setNySample(6);
         bctrl.sctrl.setNumSigmaClip(20.0)  # something large enough to avoid clipping entirely
@@ -162,7 +162,7 @@ class BackgroundTestCase(unittest.TestCase):
                 parabimg.set(x, y, d2zdx2*x*x + d2zdy2*y*y + dzdx*x + dzdy*y + z0)
         
         # check corner, edge, and center pixels
-        bctrl = afwMath.BackgroundControl(afwMath.CUBIC_SPLINE);
+        bctrl = afwMath.BackgroundControl(afwMath.CUBIC_SPLINE_INTERP);
         bctrl.setNxSample(24);
         bctrl.setNySample(24);
         bctrl.sctrl.setNumSigmaClip(10.0)  
@@ -197,7 +197,7 @@ class BackgroundTestCase(unittest.TestCase):
         mi = mi.Factory(mi, afwImage.BBox(afwImage.PointI(32, 2), afwImage.PointI(2079, 4609)))
         mi.setXY0(afwImage.PointI(0, 0))
         
-        bctrl = afwMath.BackgroundControl(afwMath.AKIMA_SPLINE);
+        bctrl = afwMath.BackgroundControl(afwMath.AKIMA_SPLINE_INTERP);
         bctrl.setNxSample(16);
         bctrl.setNySample(16);
         bctrl.sctrl.setNumSigmaClip(3.0)  
@@ -212,6 +212,11 @@ class BackgroundTestCase(unittest.TestCase):
         if display:
             ds9.mtv(mi, frame=1)
 
+            
+    def testUndersample(self):
+        """Test how the program handles nx,ny being too small for requested interp style."""
+        
+            
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():

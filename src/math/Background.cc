@@ -37,8 +37,7 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
     _imgWidth(img.getWidth()), _imgHeight(img.getHeight()),
     _bctrl(bgCtrl) { 
 
-    //assert(_bctrl.ictrl.getStyle() == math::NATURAL_SPLINE); // hard-coded for the time-being
-
+    //assert(_bctrl.ictrl.getInterpStyle() == math::NATURAL_SPLINE); // hard-coded for the time-being
 
     _n = _imgWidth*_imgHeight;
     
@@ -54,6 +53,8 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
     _yorig.resize(_nySample);
     _grid.resize(_nxSample);
     _gridcolumns.resize(_nxSample);
+
+    _checkSampling();
 
     // Check that an int's large enough to hold the number of pixels
     assert(_imgWidth*static_cast<double>(_imgHeight) < std::numeric_limits<int>::max());
@@ -98,7 +99,7 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
             _grid[i_x][i_y] = stats.getValue(math::MEANCLIP);
         }
         
-        typename math::Interpolate intobj(_ycen, _grid[i_x], _bctrl.getStyle());
+        typename math::Interpolate intobj(_ycen, _grid[i_x], _bctrl.getInterpStyle());
         _gridcolumns[i_x].resize(_imgHeight);
         for (int i_y = 0; i_y < _imgHeight; ++i_y) {
             _gridcolumns[i_x][i_y] = intobj.interpolate(ypix[i_y]);
@@ -107,6 +108,7 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
     }
 
 }
+
 
 /**
  * @brief Method to retrieve the background level at a pixel coord.
@@ -124,7 +126,7 @@ double math::Background::getPixel(int const x, int const y) const {
     // build an interpobj along the row y and get the x'th value
     vector<double> bg_x(_nxSample);
     for(int i = 0; i < _nxSample; i++) { bg_x[i] = _gridcolumns[i][y];  }
-    math::Interpolate intobj(_xcen, bg_x, _bctrl.getStyle());
+    math::Interpolate intobj(_xcen, bg_x, _bctrl.getInterpStyle());
     return static_cast<double>(intobj.interpolate(x));
     
 }
@@ -154,7 +156,7 @@ typename image::Image<PixelT>::Ptr math::Background::getImage() const {
         // build an interp object for this row
         vector<double> bg_x(_nxSample);
         for(int i_x = 0; i_x < _nxSample; i_x++) { bg_x[i_x] = static_cast<double>(_gridcolumns[i_x][i_y]); }
-        math::Interpolate intobj(_xcen, bg_x, _bctrl.getStyle());
+        math::Interpolate intobj(_xcen, bg_x, _bctrl.getInterpStyle());
 
         // fill the image with interpolated objects.
         int i_x = 0;
@@ -166,6 +168,84 @@ typename image::Image<PixelT>::Ptr math::Background::getImage() const {
     
     return bg;
 }
+
+
+
+/**
+ * @brief Method to see if the requested nx,ny are sufficient for the requested interpolation style.
+ *
+ */
+math::InterpStyle math::Background::_lookupMaxStyleForNpoints(int const n) const {
+    if (n < 1) {
+        throw LSST_EXCEPT(ex::InvalidParameterException, "nx,ny must be greater than 0");
+    } else if (n == 1) {
+        return math::CONSTANT_INTERP;
+    } else if (n == 2) {
+        return math::LINEAR_INTERP;
+    } else if (n == 3) {
+        return math::NATURAL_SPLINE_INTERP;
+    } else if (n == 4) {
+        return math::NATURAL_SPLINE_INTERP;
+    } else {
+        return math::AKIMA_SPLINE_INTERP;
+    }
+}
+
+/**
+ * @brief Method to see if the requested nx,ny are sufficient for the requested interpolation style.
+ *
+ */
+void math::Background::_checkSampling() {
+
+    // store the minimum number of points as a vector<int>
+    std::vector<int> minPoints(7);
+    minPoints[math::CONSTANT_INTERP]               = 1;
+    minPoints[math::LINEAR_INTERP]                 = 2;
+    minPoints[math::NATURAL_SPLINE_INTERP]         = 3;
+    minPoints[math::CUBIC_SPLINE_INTERP]           = 3;
+    minPoints[math::CUBIC_SPLINE_PERIODIC_INTERP]  = 3;
+    minPoints[math::AKIMA_SPLINE_INTERP]           = 5;
+    minPoints[math::AKIMA_SPLINE_PERIODIC_INTERP]  = 5;
+    
+    bool isXundersampled = (_nxSample < minPoints[_bctrl.getInterpStyle()]);
+    bool isYundersampled = (_nxSample < minPoints[_bctrl.getInterpStyle()]);
+
+    if (_bctrl.getUndersampleStyle() == THROW_EXCEPTION) {
+        if (isXundersampled && isYundersampled) {
+            throw LSST_EXCEPT(ex::InvalidParameterException,
+                              "nxSample and nySample have too few points for requested interpolation style.");
+        } else if (isXundersampled) {
+            throw LSST_EXCEPT(ex::InvalidParameterException,
+                              "nxSample has too few points for requested interpolation style.");
+        } else if (isYundersampled) {
+            throw LSST_EXCEPT(ex::InvalidParameterException,
+                              "nySample has too few points for requested interpolation style.");
+        }
+        
+    } else if (_bctrl.getUndersampleStyle() == REDUCE_INTERP_ORDER) {
+        if (isXundersampled || isYundersampled) {
+            math::InterpStyle const xStyle = _lookupMaxStyleForNpoints(_nxSample);
+            math::InterpStyle const yStyle = _lookupMaxStyleForNpoints(_nySample);
+            math::InterpStyle const style = (_nxSample < _nySample) ? xStyle : yStyle;
+            _bctrl.setInterpStyle(style);
+        }
+        
+    } else if (_bctrl.getUndersampleStyle() == INCREASE_NXNYSAMPLE) {
+        if (_nxSample < minPoints[_bctrl.getInterpStyle()]) {
+            _nxSample = minPoints[_bctrl.getInterpStyle()];
+        }
+        if (_nySample < minPoints[_bctrl.getInterpStyle()]) {
+            _nySample = minPoints[_bctrl.getInterpStyle()];
+        }
+        
+    } else {
+        throw LSST_EXCEPT(ex::InvalidParameterException,
+                          "The selected BackgroundControl UndersampleStyle is not defined.");
+    }
+    
+}
+
+
 
 
 

@@ -10,33 +10,37 @@
 #include <limits>
 #include "gsl/gsl_interp.h"
 #include "gsl/gsl_spline.h"
-
 #include "boost/shared_ptr.hpp"
+
+#include "lsst/pex/exceptions.h"
 
 namespace lsst { namespace afw { namespace math {
 
-enum Style {
-    LINEAR = 0,
-    NATURAL_SPLINE = 1,
-    CUBIC_SPLINE = 2,
-    CUBIC_SPLINE_PERIODIC = 3,
-    AKIMA_SPLINE = 4,
-    AKIMA_SPLINE_PERIODIC = 5
-    
- };
+enum InterpStyle {
+    CONSTANT_INTERP = 0,
+    LINEAR_INTERP = 1,
+    NATURAL_SPLINE_INTERP = 2,
+    CUBIC_SPLINE_INTERP = 3,
+    CUBIC_SPLINE_PERIODIC_INTERP = 4,
+    AKIMA_SPLINE_INTERP = 5,
+    AKIMA_SPLINE_PERIODIC_INTERP = 6
+};
 
 namespace {
-    ::gsl_interp_type const *gslInterpTypeList[6] = {::gsl_interp_linear,
-                                                     ::gsl_interp_cspline,
-                                                     ::gsl_interp_cspline,
-                                                     ::gsl_interp_cspline_periodic,
-                                                     ::gsl_interp_akima,
-                                                     ::gsl_interp_akima_periodic };
+    ::gsl_interp_type const *gslInterpTypeList[7] = {
+        ::gsl_interp_linear,
+        ::gsl_interp_linear,
+        ::gsl_interp_cspline,
+        ::gsl_interp_cspline,
+        ::gsl_interp_cspline_periodic,
+        ::gsl_interp_akima,
+        ::gsl_interp_akima_periodic
+    };
 }
             
 class Interpolate {
 public:
-    
+
     Interpolate(std::vector<double> const &x, std::vector<double> const &y,
                    ::gsl_interp_type const *gslInterpType = ::gsl_interp_akima) :
         _x(x), _y(y) {
@@ -44,8 +48,12 @@ public:
     }
 
     Interpolate(std::vector<double> const &x, std::vector<double> const &y,
-                Style const style) :
+                InterpStyle const style) :
         _x(x), _y(y) {
+        if (style == CONSTANT_INTERP) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                              "CONSTANT interpolation not supported.");
+        }
         InterpolateInit(_x, _y, gslInterpTypeList[style]);
     }
 
