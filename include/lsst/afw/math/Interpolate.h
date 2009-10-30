@@ -14,7 +14,9 @@
 
 #include "lsst/pex/exceptions.h"
 
-namespace lsst { namespace afw { namespace math {
+namespace lsst {
+namespace afw {
+namespace math {
 
 enum InterpStyle {
     CONSTANT_INTERP = 0,
@@ -44,7 +46,7 @@ public:
     Interpolate(std::vector<double> const &x, std::vector<double> const &y,
                    ::gsl_interp_type const *gslInterpType = ::gsl_interp_akima) :
         _x(x), _y(y) {
-        InterpolateInit(_x, _y, gslInterpType);
+        initialize(_x, _y, gslInterpType);
     }
 
     Interpolate(std::vector<double> const &x, std::vector<double> const &y,
@@ -54,17 +56,17 @@ public:
             throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
                               "CONSTANT interpolation not supported.");
         }
-        InterpolateInit(_x, _y, gslInterpTypeList[style]);
+        initialize(_x, _y, gslInterpTypeList[style]);
     }
 
-    void InterpolateInit(std::vector<double> const &x, std::vector<double> const &y,
-                         ::gsl_interp_type const *gslInterpType) {
+    void initialize(std::vector<double> const &x, std::vector<double> const &y,
+                    ::gsl_interp_type const *gslInterpType) {
         _acc    = ::gsl_interp_accel_alloc();
         _interp = ::gsl_interp_alloc(gslInterpType, y.size());
         ::gsl_interp_init(_interp, &x[0], &y[0], y.size());
     }
     
-    ~Interpolate() {
+    virtual ~Interpolate() {
         ::gsl_interp_free(_interp);
         ::gsl_interp_accel_free(_acc);
     }

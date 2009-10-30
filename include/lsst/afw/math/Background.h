@@ -13,7 +13,9 @@
 #include "lsst/afw/math/Interpolate.h"
 
 
-namespace lsst { namespace afw { namespace math {
+namespace lsst {
+namespace afw {
+namespace math {
 
 
 enum UndersampleStyle {
@@ -28,9 +30,9 @@ enum UndersampleStyle {
  */
 class BackgroundControl {
 public:
-    BackgroundControl(InterpStyle const style=math::AKIMA_SPLINE_INTERP, ///< Style of the interpolation
-                      int const nxSample=10,                   ///< Num. grid samples in x
-                      int const nySample=10,                   ///< Num. grid samples in y
+    BackgroundControl(InterpStyle const style = math::AKIMA_SPLINE_INTERP, ///< Style of the interpolation
+                      int const nxSample = 10,                   ///< Num. grid samples in x
+                      int const nySample = 10,                   ///< Num. grid samples in y
                       UndersampleStyle const undersampleStyle = THROW_EXCEPTION
                      )
         : _style(style), _nxSample(nxSample), _nySample(nySample),
@@ -39,7 +41,7 @@ public:
         assert(nySample > 0);
         sctrl = StatisticsControl();
     }
-    ~BackgroundControl() {}
+    virtual ~BackgroundControl() {}
     void setNxSample (int nxSample) { assert(nxSample > 0); _nxSample = nxSample; }
     void setNySample (int nySample) { assert(nySample > 0); _nySample = nySample; }
     void setInterpStyle (InterpStyle const style) { _style = style; }
@@ -85,9 +87,9 @@ public:
     
     template<typename ImageT>
     explicit Background(ImageT const& img, ///< Image (or MaskedImage) whose background we want
-                        BackgroundControl const& bgCtrl=BackgroundControl()); ///< Control Parameters
+                        BackgroundControl const& bgCtrl = BackgroundControl()); ///< Control Parameters
     
-    ~Background() {}
+    virtual ~Background() {}
     
     double getPixel(int const x, int const y) const;
 
@@ -124,7 +126,7 @@ private:
  * cf. std::make_pair()
  */
 template<typename ImageT>
-Background makeBackground(ImageT const& img, BackgroundControl const& bgCtrl=BackgroundControl()) {
+Background makeBackground(ImageT const& img, BackgroundControl const& bgCtrl = BackgroundControl()) {
     return Background(img, bgCtrl);
 };
     

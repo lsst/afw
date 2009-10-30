@@ -1,4 +1,4 @@
-// -*- lsst-c++ -*-
+// -*- LSST-C++ -*-
 #if !defined(LSST_AFW_MATH_INTEGRATE_H)
 #define LSST_AFW_MATH_INTEGRATE_H 1
 /**
@@ -147,9 +147,11 @@ namespace ex = lsst::pex::exceptions;
 //
 //
 
-namespace lsst { namespace afw { namespace math {
+namespace lsst {
+namespace afw {
+namespace math {
 
-const double MOCK_INF = 1.e10;
+double const MOCK_INF = 1.e10;
 
 #ifdef NDEBUG
 #define integ_dbg1 if (false) (*_dbgout)
@@ -165,12 +167,12 @@ const double MOCK_INF = 1.e10;
 // If defined, then count the number of function evaluations
             
 namespace details {            
-  template <class T> inline T norm(const T& x) { return x*x; }
-  using std::norm;
-  template <class T> inline T real(const T& x) { return x; }
-  using std::real;
+template <class T> inline T norm(const T& x) { return x*x; }
+using std::norm;
+template <class T> inline T real(const T& x) { return x; }
+using std::real;
 #ifdef COUNTFEVAL
-  int nfeval = 0;
+    int nfeval = 0;
 #endif
 }
             
@@ -179,47 +181,50 @@ template <class T>
 struct IntRegion {
 
 public:
-    IntRegion(const T a, const T b, std::ostream* dbgout=0) :
-	_a(a), _b(b), _error(0.), _area(0), _dbgout(dbgout) {}
+    IntRegion(T const a, T const b, std::ostream* dbgout = 0) :
+        _a(a), _b(b), _error(0.0), _area(0), _dbgout(dbgout) {}
     
-    bool operator<(const IntRegion<T>& r2) const {return _error < r2._error;}
-    bool operator>(const IntRegion<T>& r2) const {return _error > r2._error;}
+    bool operator<(IntRegion<T> const &r2) const { return _error < r2._error; }
+    bool operator>(IntRegion<T> const &r2) const { return _error > r2._error; }
     
     void SubDivide(std::vector<IntRegion<T> >* children) {
-	assert(children->size() == 0);
-	if (_splitpoints.size() == 0) { Bisect(); }
-	if (_splitpoints.size() > 1) {
+        assert(children->size() == 0);
+        if (_splitpoints.size() == 0) { Bisect(); }
+        if (_splitpoints.size() > 1) {
             std::sort(_splitpoints.begin(), _splitpoints.end());
         }
-	
+        
 #if 0
-	if (_a > _splitpoints[0] || _b < _splitpoints.back()) {
+        if (_a > _splitpoints[0] || _b < _splitpoints.back()) {
             std::cerr << "a, b = " << _a << ', ' << _b << std::endl;
             std::cerr << "_splitpoints = ";
-            for(size_t i=0;i<_splitpoints.size();i++)  {
+            for(size_t i = 0; i<_splitpoints.size(); i++)  {
                 std::cerr << _splitpoints[i] << "  ";
             }
             std::cerr << std::endl;
-	}
+        }
 #endif
-	assert(_splitpoints[0] >= _a);
-	assert(_splitpoints.back() <= _b);
-	children->push_back(IntRegion<T>(_a, _splitpoints[0], _dbgout));
-	for(size_t i=1;i<_splitpoints.size();i++) {
+        assert(_splitpoints[0] >= _a);
+        assert(_splitpoints.back() <= _b);
+        children->push_back(IntRegion<T>(_a, _splitpoints[0], _dbgout));
+        for (size_t i = 1; i<_splitpoints.size(); i++) {
             children->push_back(IntRegion<T>(_splitpoints[i-1], _splitpoints[i], _dbgout));
-	}
-	children->push_back(IntRegion<T>(_splitpoints.back(), _b, _dbgout));
+        }
+        children->push_back(IntRegion<T>(_splitpoints.back(), _b, _dbgout));
     }
     
-    void Bisect() {_splitpoints.push_back((_a + _b)/2.);}
-    void AddSplit(const T x) {_splitpoints.push_back(x);}
-    size_t NSplit() const {return _splitpoints.size();}
+    void Bisect() { _splitpoints.push_back((_a + _b)/2.0); }
+    void AddSplit(const T x) { _splitpoints.push_back(x); }
+    size_t NSplit() const { return _splitpoints.size(); }
     
-    const T& Left() const {return _a;}
-    const T& Right() const {return _b;}
-    const T& Err() const {return _error;}
-    const T& Area() const {return _area;}
-    void SetArea(const T& a, const T& e) {_area = a; _error = e;}
+    T const &Left() const { return _a; }
+    T const &Right() const  {return _b; }
+    T const &Err() const { return _error; }
+    T const &Area() const { return _area; }
+    void SetArea(const T& a, const T& e) {
+        _area = a;
+        _error = e;
+    }
 
     std::ostream* getDbgout() { return _dbgout; }
 
@@ -231,8 +236,8 @@ private:
 };
             
             
-const double DEFABSERR = 1.e-15;
-const double DEFRELERR = 1.e-6;
+double const DEFABSERR = 1.e-15;
+double const DEFRELERR = 1.e-6;
  
 namespace details {            
             
@@ -251,17 +256,21 @@ inline T MinRep()  { return std::numeric_limits<T>::min(); }
 
     
 template <class T>
-inline T rescale_error (T err, const T& resabs, const T& resasc) {
+inline T rescale_error (T err, T const &resabs, T const &resasc) {
     if (resasc != 0. && err != 0.) {
-        const T scale = (200. * err / resasc);
-        if (scale < 1.) err = resasc * scale * sqrt(scale) ;
-        else err = resasc ;
+        T const scale = (200.0 * err / resasc);
+        if (scale < 1.0) {
+            err = resasc * scale * sqrt(scale);
+        }
+        else {
+            err = resasc;
+        }
     }
-    if (resabs > MinRep<T>() / (50. * Epsilon<T>())) {
-        const T min_err = 50. * Epsilon<T>() * resabs;
-        if (min_err > err) err = min_err;
+    if (resabs > MinRep<T>() / (50.0 * Epsilon<T>())) {
+        T const min_err = 50.0 * Epsilon<T>() * resabs;
+        if (min_err > err) { err = min_err; }
     }
-    return err ;
+    return err;
 }
 
 /**
@@ -282,19 +291,19 @@ inline T rescale_error (T err, const T& resabs, const T& resasc) {
     
 template <class UF>
 inline bool IntGKPNA(
-                     const UF& func, IntRegion<typename UF::result_type>& reg,
-                     const typename UF::result_type epsabs, 
-                     const typename UF::result_type epsrel,
-                     std::map<typename UF::result_type, typename UF::result_type>* fxmap=0) {
+                     UF const &func, IntRegion<typename UF::result_type>& reg,
+                     typename UF::result_type const epsabs, 
+                     typename UF::result_type const epsrel,
+                     std::map<typename UF::result_type, typename UF::result_type>* fxmap = 0) {
     
     typedef typename UF::result_type UfResult;
-    const UfResult a = reg.Left();
-    const UfResult b = reg.Right();
-    
-    const UfResult half_length =  0.5 * (b - a);
-    const UfResult abs_half_length = fabs (half_length);
-    const UfResult center = 0.5 * (b + a);
-    const UfResult f_center = func(center);
+    UfResult const a = reg.Left();
+    UfResult const b = reg.Right();
+                   
+    UfResult const half_length =  0.5 * (b - a);
+    UfResult const abs_half_length = fabs (half_length);
+    UfResult const center = 0.5 * (b + a);
+    UfResult const f_center = func(center);
 #ifdef COUNTFEVAL
     nfeval++;
 #endif
@@ -322,25 +331,25 @@ inline bool IntGKPNA(
     
     integ_dbg2 << "level 0 rule: area = " << area1 << std::endl;
     
-    UfResult err=0; 
+    UfResult err = 0; 
     bool calcabsasc = true;
-    UfResult resabs=0., resasc=0.;
-    for (int level=1; level<NGKPLEVELS; level++) {
+    UfResult resabs = 0.0, resasc = 0.0;
+    for (int level = 1; level < NGKPLEVELS; level++) {
         assert(gkp_wa<UfResult>(level).size() == fv1.size());
         assert(gkp_wa<UfResult>(level).size() == fv2.size());
         assert(gkp_wb<UfResult>(level).size() == gkp_x<UfResult>(level).size() + 1);
         UfResult area2 = gkp_wb<UfResult>(level).back() * f_center;
         // resabs = approximation to integral of abs(f)
-        if (calcabsasc) resabs = fabs(area2);
-        for (size_t k=0; k<fv1.size(); k++) {
+        if (calcabsasc) { resabs = fabs(area2); }
+        for (size_t k = 0; k < fv1.size(); k++) {
             area2 += gkp_wa<UfResult>(level)[k] * (fv1[k] + fv2[k]);
             if (calcabsasc) { resabs += gkp_wa<UfResult>(level)[k] * (fabs(fv1[k]) + fabs(fv2[k])); }
         }
-        for (size_t k=0; k<gkp_x<UfResult>(level).size(); k++) {
-            const UfResult abscissa = half_length * gkp_x<UfResult>(level)[k];
-            const UfResult fval1 = func(center - abscissa);
-            const UfResult fval2 = func(center + abscissa);
-            const UfResult fval = fval1 + fval2;
+        for (size_t k = 0; k < gkp_x<UfResult>(level).size(); k++) {
+            UfResult const abscissa = half_length * gkp_x<UfResult>(level)[k];
+            UfResult const fval1 = func(center - abscissa);
+            UfResult const fval2 = func(center + abscissa);
+            UfResult const fval = fval1 + fval2;
             area2 += gkp_wb<UfResult>(level)[k] * fval;
             if (calcabsasc) { resabs += gkp_wb<UfResult>(level)[k] * (fabs(fval1) + fabs(fval2)); }
             fv1.push_back(fval1);
@@ -354,13 +363,13 @@ inline bool IntGKPNA(
         nfeval += gkp_x<UfResult>(level).size()*2;
 #endif
         if (calcabsasc) {
-            const UfResult mean = area1*UfResult(0.5);
+            UfResult const mean = area1*UfResult(0.5);
             // resasc = approximation to the integral of abs(f-mean) 
             resasc = gkp_wb<UfResult>(level).back() * fabs(f_center - mean);
-            for (size_t k=0; k<gkp_wa<UfResult>(level).size(); k++) {
+            for (size_t k = 0; k<gkp_wa<UfResult>(level).size(); k++) {
                 resasc += gkp_wa<UfResult>(level)[k] * (fabs(fv1[k] - mean) + fabs(fv2[k] - mean));
             }
-            for (size_t k=0; k<gkp_x<UfResult>(level).size(); k++) {
+            for (size_t k = 0; k<gkp_x<UfResult>(level).size(); k++) {
                 resasc += gkp_wb<UfResult>(level)[k] * (fabs(fv1[k] - mean) + fabs(fv2[k] - mean));
             }
             resasc *= abs_half_length ;
@@ -411,7 +420,7 @@ inline void IntGKP (
                     const UF& func, IntRegion<typename UF::result_type>& reg,
                     const typename UF::result_type epsabs,
                     const typename UF::result_type epsrel,
-                    std::map<typename UF::result_type, typename UF::result_type>* fxmap=0) {
+                    std::map<typename UF::result_type, typename UF::result_type>* fxmap = 0) {
 
     typedef typename UF::result_type UfResult;
     integ_dbg2 << "Start IntGKP\n";
@@ -461,7 +470,7 @@ inline void IntGKP (
         
         UfResult newarea = UfResult(0.0);
         UfResult newerror = 0.0;
-        for(size_t i=0;i<children.size();i++) {
+        for(size_t i = 0; i<children.size(); i++) {
             IntRegion<UfResult>& child = children[i];
             integ_dbg2 << "Integrating child " << child.Left();
             integ_dbg2 << ".." << child.Right() << std::endl;
@@ -512,12 +521,12 @@ inline void IntGKP (
                 integ_dbg2 << "GKP: Probable singularity\n";
             }
         }
-        for(size_t i=0;i<children.size();i++) { allregions.push(children[i]); }
+        for(size_t i = 0; i<children.size(); i++) { allregions.push(children[i]); }
         iteration++;
     } 
     
     // Recalculate finalarea in case there are any slight rounding errors
-    finalarea=0.; finalerr=0.;
+    finalarea = 0.; finalerr = 0.;
     while (!allregions.empty()) {
         const IntRegion<UfResult>& r=allregions.top();
         finalarea += r.Area();
@@ -745,7 +754,7 @@ inline typename UF::result_type int1d(
         integ_dbg2 << "Subdivided into " << children.size() << " children\n";
         UfResult answer=UfResult();
         UfResult err = 0; 
-        for(size_t i=0;i<children.size();i++) {
+        for(size_t i = 0; i<children.size(); i++) {
             IntRegion<UfResult>& child = children[i];
             integ_dbg2 << "i = " << i;
             integ_dbg2 << ": bounds = " << child.Left() << ", " << child.Right() << std::endl;

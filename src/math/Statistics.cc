@@ -73,7 +73,7 @@ math::Statistics::Statistics(Image const &img, ///< Image whose properties we wa
         boost::shared_ptr<std::vector<typename Image::Pixel> >
             imgcp(new std::vector<typename Image::Pixel>(0));
         
-        if (_sctrl.useNanSafe()) {
+        if (_sctrl.getNanSafe()) {
             for (int i_y = 0; i_y < img.getHeight(); ++i_y) {
                 typename Mask::x_iterator mptr = msk.row_begin(i_y);
                 for (typename Image::x_iterator ptr = img.row_begin(i_y); ptr != img.row_end(i_y); ++ptr) {
@@ -143,7 +143,7 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
     // Get a crude estimate of the mean
     int n = 0;
     double sum = 0;
-    if ( _sctrl.useNanSafe()) {
+    if ( _sctrl.getNanSafe()) {
 
         for (int y=0; y<img.getHeight(); y += 10) {
             typename Mask::x_iterator mptr = msk.row_begin(y);
@@ -210,7 +210,7 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
     } else {
         min = max = NaN;
 
-        if (_sctrl.useNanSafe()) {
+        if (_sctrl.getNanSafe()) {
             for (int y = 0; y < img.getHeight(); ++y) {
                 typename Mask::x_iterator mptr = msk.row_begin(y);
                 for (typename Image::x_iterator ptr = img.row_begin(y), end = ptr + img.getWidth();
