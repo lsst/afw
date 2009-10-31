@@ -73,7 +73,7 @@ math::Statistics::Statistics(Image const &img, ///< Image whose properties we wa
         boost::shared_ptr<std::vector<typename Image::Pixel> >
             imgcp(new std::vector<typename Image::Pixel>(0));
         
-        if (_sctrl.useNanSafe()) {
+        if (_sctrl.getNanSafe()) {
             for (int i_y = 0; i_y < img.getHeight(); ++i_y) {
                 typename Mask::x_iterator mptr = msk.row_begin(i_y);
                 for (typename Image::x_iterator ptr = img.row_begin(i_y); ptr != img.row_end(i_y); ++ptr) {
@@ -105,7 +105,7 @@ math::Statistics::Statistics(Image const &img, ///< Image whose properties we wa
         }
         
         if (flags & (MEANCLIP | STDEVCLIP | VARIANCECLIP)) {            
-            for(int i_i = 0; i_i < _sctrl.getNumIter(); ++i_i) {
+            for (int i_i = 0; i_i < _sctrl.getNumIter(); ++i_i) {
                 
                 double const center = (i_i > 0) ? _meanclip : _median;
                 double const hwidth = (i_i > 0) ?
@@ -143,9 +143,9 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
     // Get a crude estimate of the mean
     int n = 0;
     double sum = 0;
-    if ( _sctrl.useNanSafe()) {
+    if ( _sctrl.getNanSafe()) {
 
-        for (int y=0; y<img.getHeight(); y += 10) {
+        for (int y = 0; y<img.getHeight(); y += 10) {
             typename Mask::x_iterator mptr = msk.row_begin(y);
             for (typename Image::x_iterator ptr = img.row_begin(y), end = ptr + img.getWidth();
                  ptr != end; ++ptr, ++mptr) {
@@ -157,7 +157,7 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
         }
     } else {
         
-        for (int y=0; y<img.getHeight(); y += 10) {
+        for (int y = 0; y<img.getHeight(); y += 10) {
             typename Mask::x_iterator mptr = msk.row_begin(y);
             for (typename Image::x_iterator ptr = img.row_begin(y), end = ptr + img.getWidth();
                  ptr != end; ++ptr, ++mptr) {
@@ -170,17 +170,17 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
     }
 
     // a crude estimate of the mean, used for numerical stability of variance
-    double crude_mean = 0.0;
-    if ( n > 0 ) { crude_mean = sum/n; }
+    double crudeMean = 0.0;
+    if ( n > 0 ) { crudeMean = sum/n; }
 
     // =======================================================
     // Estimate the full precision variance using that crude mean
     // - get the min and max as well
     sum = 0;
     n = 0;
-    double sumx2 = 0;                   // sum of (data - crude_mean)^2
-    double min = (n) ? crude_mean : MAX_DOUBLE;
-    double max = (n) ? crude_mean : -MAX_DOUBLE;
+    double sumx2 = 0;                   // sum of (data - crudeMean)^2
+    double min = (n) ? crudeMean : MAX_DOUBLE;
+    double max = (n) ? crudeMean : -MAX_DOUBLE;
     
     // If we want max or min (you get both)
     if (flags & (MIN | MAX)){
@@ -192,7 +192,7 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
 
                 if ( (! isnan(*ptr)) &&
                      (! (*mptr & _sctrl.getAndMask())) ) {
-                    double const delta = *ptr - crude_mean;
+                    double const delta = *ptr - crudeMean;
                     sum   += delta;
                     sumx2 += delta*delta;
                     if ( *ptr < min ) { min = *ptr; }
@@ -210,7 +210,7 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
     } else {
         min = max = NaN;
 
-        if (_sctrl.useNanSafe()) {
+        if (_sctrl.getNanSafe()) {
             for (int y = 0; y < img.getHeight(); ++y) {
                 typename Mask::x_iterator mptr = msk.row_begin(y);
                 for (typename Image::x_iterator ptr = img.row_begin(y), end = ptr + img.getWidth();
@@ -218,7 +218,7 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
                     
                     if ( (! isnan(*ptr)) &&
                          (! (*mptr & _sctrl.getAndMask())) ){
-                        double const delta = *ptr - crude_mean;
+                        double const delta = *ptr - crudeMean;
                         sum   += delta;
                         sumx2 += delta*delta;
                         n++;
@@ -232,7 +232,7 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
                      ptr != end; ++ptr, ++mptr) {
                     
                     if ( ! (*mptr & _sctrl.getAndMask()) ){
-                        double const delta = *ptr - crude_mean;
+                        double const delta = *ptr - crudeMean;
                         sum   += delta;
                         sumx2 += delta*delta;
                         n++;
@@ -247,7 +247,7 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
         throw LSST_EXCEPT(ex::InvalidParameterException,
                           "Image has no valid pixels; mean is undefined.");
     }
-    double mean = crude_mean + sum/n;
+    double mean = crudeMean + sum/n;
     
     if (n == 1) {
         throw LSST_EXCEPT(ex::InvalidParameterException,
@@ -259,7 +259,7 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
 
     _n = n;
     
-    return boost::make_tuple(mean, variance, min, max, sum + n*crude_mean);
+    return boost::make_tuple(mean, variance, min, max, sum + n*crudeMean);
 }
 
 
@@ -283,15 +283,15 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
     double const cliplimit = clipinfo.second;
     assert(! isnan(center) && ! isnan(cliplimit) );
     
-    double const crude_mean = center;    // a crude estimate of the mean for numerical stability of variance
+    double const crudeMean = center;    // a crude estimate of the mean for numerical stability of variance
 
     // =======================================================
     // Estimate the full precision variance using that crude mean
     double sum = 0;
     int n = 0;
-    double sumx2 = 0;                   // sum of (data - crude_mean)^2
-    double min = crude_mean;
-    double max = crude_mean;
+    double sumx2 = 0;                   // sum of (data - crudeMean)^2
+    double min = crudeMean;
+    double max = crudeMean;
 
     // If we want max or min (you get both)
     if (flags & (MIN | MAX)){
@@ -301,9 +301,9 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
                  ptr != end; ++ptr, ++mptr) {
                 
                 if ( ! (*mptr & _sctrl.getAndMask()) ){                
-                    if ( !isnan(*ptr) &&
-                         (fabs(*ptr - center) <= cliplimit) ) { // clip
-                        double const delta = *ptr - crude_mean;
+                    if (!isnan(*ptr) &&
+                        (fabs(*ptr - center) <= cliplimit) ) { // clip
+                        double const delta = *ptr - crudeMean;
                         sum += delta;
                         sumx2 += delta*delta;
                         if ( *ptr < min ) { min = *ptr; }
@@ -322,9 +322,9 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
                  ptr != end; ++ptr, ++mptr) {
                 
                 if ( ! (*mptr & _sctrl.getAndMask()) ){
-                    if ( !isnan(*ptr) &&
-                         (fabs(*ptr - center) <= cliplimit) ) { // clip
-                        double const delta = *ptr - crude_mean;
+                    if (!isnan(*ptr) &&
+                        (fabs(*ptr - center) <= cliplimit) ) { // clip
+                        double const delta = *ptr - crudeMean;
                         sum += delta;
                         sumx2 += delta*delta;
                         n++;
@@ -339,7 +339,7 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
         throw LSST_EXCEPT(ex::InvalidParameterException,
                           "Image has no valid pixels; mean is undefined.");
     }
-    double mean = crude_mean + sum/n;
+    double mean = crudeMean + sum/n;
     
     if (n == 1) {
         throw LSST_EXCEPT(ex::InvalidParameterException,
@@ -351,7 +351,7 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
 
     _n = n;
     
-    return boost::make_tuple(mean, variance, min, max, sum + crude_mean*n);
+    return boost::make_tuple(mean, variance, min, max, sum + crudeMean*n);
 }
 
 
@@ -403,74 +403,74 @@ std::pair<double, double> math::Statistics::getResult(math::Property const iProp
     
     Value ret(NaN, NaN);
     switch (prop) {
-
+        
       case ( NPOINT ):
-          ret.first = static_cast<double>(_n);
-          if (_flags & ERRORS) { ret.second = 0; }
-          break;
-
+        ret.first = static_cast<double>(_n);
+        if (_flags & ERRORS) { ret.second = 0; }
+        break;
+        
       case SUM:
-          ret.first = static_cast<double>(_sum);
-          if (_flags & ERRORS) { ret.second = 0; }
-          break;
-
-          // == means ==
+        ret.first = static_cast<double>(_sum);
+        if (_flags & ERRORS) { ret.second = 0; }
+        break;
+        
+        // == means ==
       case ( MEAN ):
-          ret.first = _mean;
-          if (_flags & ERRORS) { ret.second = sqrt(_variance/_n); }
-          break;
+        ret.first = _mean;
+        if (_flags & ERRORS) { ret.second = sqrt(_variance/_n); }
+        break;
       case ( MEANCLIP ):
-          ret.first = _meanclip;
-          if ( _flags & ERRORS ) { ret.second = sqrt(_varianceclip/_n); }  // this is a bug ... _nClip != _n
-          break;
-
-          // == stdevs & variances ==
+        ret.first = _meanclip;
+        if ( _flags & ERRORS ) { ret.second = sqrt(_varianceclip/_n); }  // this is a bug ... _nClip != _n
+        break;
+        
+        // == stdevs & variances ==
       case ( VARIANCE ):
-          ret.first = _variance;
-          if (_flags & ERRORS) { ret.second = _varianceError(ret.first, _n); }
-          break;
+        ret.first = _variance;
+        if (_flags & ERRORS) { ret.second = _varianceError(ret.first, _n); }
+        break;
       case ( STDEV ):
-          ret.first = sqrt(_variance);
-          if (_flags & ERRORS) { ret.second = 0.5*_varianceError(_variance, _n)/ret.first; }
-          break;
+        ret.first = sqrt(_variance);
+        if (_flags & ERRORS) { ret.second = 0.5*_varianceError(_variance, _n)/ret.first; }
+        break;
       case ( VARIANCECLIP ):
-          ret.first = _varianceclip;
-          if (_flags & ERRORS) { ret.second = _varianceError(ret.first, _n); }
-          break;
+        ret.first = _varianceclip;
+        if (_flags & ERRORS) { ret.second = _varianceError(ret.first, _n); }
+        break;
       case ( STDEVCLIP ):
-          ret.first = sqrt(_varianceclip);  // bug: nClip != _n
-          if (_flags & ERRORS) { ret.second = 0.5*_varianceError(_varianceclip, _n)/ret.first; }
-          break;
-
-          // == other stats ==
+        ret.first = sqrt(_varianceclip);  // bug: nClip != _n
+        if (_flags & ERRORS) { ret.second = 0.5*_varianceError(_varianceclip, _n)/ret.first; }
+        break;
+        
+        // == other stats ==
       case ( MIN ):
-          ret.first = _min;
-          if ( _flags & ERRORS ) { ret.second = 0; }
-          break;
+        ret.first = _min;
+        if ( _flags & ERRORS ) { ret.second = 0; }
+        break;
       case ( MAX ):
-          ret.first = _max;
-          if ( _flags & ERRORS ) { ret.second = 0; }
-          break;
+        ret.first = _max;
+        if ( _flags & ERRORS ) { ret.second = 0; }
+        break;
       case ( MEDIAN ):
-          ret.first = _median;
-          if ( _flags & ERRORS ) { ret.second = 0; }
-          break;
+        ret.first = _median;
+        if ( _flags & ERRORS ) { ret.second = 0; }
+        break;
       case ( IQRANGE ):
-          ret.first = _iqrange;
-          if ( _flags & ERRORS ) { ret.second = 0; }
-          break;
-
-          // no-op to satisfy the compiler
+        ret.first = _iqrange;
+        if ( _flags & ERRORS ) { ret.second = 0; }
+        break;
+        
+        // no-op to satisfy the compiler
       case ( ERRORS ):
-          break;
-          // default: redundant as 'ret' is initialized to NaN, NaN
+        break;
+        // default: redundant as 'ret' is initialized to NaN, NaN
       default:                          // we must have set prop to _flags
         assert (iProp == 0);
         throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
                           "getValue() may only be called without a parameter"
                           " if you asked for only one statistic");
     }
-     return ret;
+    return ret;
 }
 
 /* @brief Return the value of the desired property (if specified in the constructor)
@@ -495,7 +495,10 @@ double math::Statistics::getError(math::Property const prop ///< Desired propert
  * Specialisation for Masks; just calculate the "Sum" as the bitwise OR of all pixels
  */
 
-namespace lsst { namespace afw { namespace math {
+namespace lsst {
+namespace afw {
+namespace math {
+    
 template<>
 Statistics::Statistics(
     image::Mask<image::MaskPixel> const& msk,  ///< Mask whose properties we want

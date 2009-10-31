@@ -13,34 +13,51 @@
 #include "lsst/afw/math/Interpolate.h"
 
 
-namespace lsst { namespace afw { namespace math {
+namespace lsst {
+namespace afw {
+namespace math {
 
+
+enum UndersampleStyle {
+    THROW_EXCEPTION,
+    REDUCE_INTERP_ORDER,
+    INCREASE_NXNYSAMPLE,
+};
+            
 /**
  * @class BackgroundControl
  * @brief Pass parameters to a Background object
  */
 class BackgroundControl {
 public:
-    BackgroundControl(Style const style=math::AKIMA_SPLINE, ///< Style of the interpolation
-                      int const nxSample=10,                   ///< Num. grid samples in x
-                      int const nySample=10)                   ///< Num. grid samples in y
-        : _style(style), _nxSample(nxSample), _nySample(nySample) {
+    BackgroundControl(InterpStyle const style = math::AKIMA_SPLINE_INTERP, ///< Style of the interpolation
+                      int const nxSample = 10,                   ///< Num. grid samples in x
+                      int const nySample = 10,                   ///< Num. grid samples in y
+                      UndersampleStyle const undersampleStyle = THROW_EXCEPTION
+                     )
+        : _style(style), _nxSample(nxSample), _nySample(nySample),
+          _undersampleStyle(undersampleStyle) {
         assert(nxSample > 0);
         assert(nySample > 0);
         sctrl = StatisticsControl();
     }
-    ~BackgroundControl() {}
+    virtual ~BackgroundControl() {}
     void setNxSample (int nxSample) { assert(nxSample > 0); _nxSample = nxSample; }
     void setNySample (int nySample) { assert(nySample > 0); _nySample = nySample; }
-    void setStyle (Style const style) { _style = style; }
+    void setInterpStyle (InterpStyle const style) { _style = style; }
+    void setUndersampleStyle (UndersampleStyle const undersampleStyle) {
+        _undersampleStyle = undersampleStyle;
+    }
     int getNxSample() const { return _nxSample; }
     int getNySample() const { return _nySample; }
-    Style getStyle() const { return _style; }
+    InterpStyle getInterpStyle() const { return _style; }
+    UndersampleStyle getUndersampleStyle() const { return _undersampleStyle; }
     StatisticsControl sctrl;
 private:
-    Style _style;                       // style of interpolation to use
+    InterpStyle _style;                       // style of interpolation to use
     int _nxSample;                      // number of grid squares to divide image into to sample in x
     int _nySample;                      // number of grid squares to divide image into to sample in y
+    UndersampleStyle _undersampleStyle; // what to do when nx,ny are too small for the requested interp style
 };
     
 /**
@@ -70,14 +87,16 @@ public:
     
     template<typename ImageT>
     explicit Background(ImageT const& img, ///< Image (or MaskedImage) whose background we want
-                        BackgroundControl const& bgCtrl=BackgroundControl()); ///< Control Parameters
+                        BackgroundControl const& bgCtrl = BackgroundControl()); ///< Control Parameters
     
-    ~Background() {}
+    virtual ~Background() {}
     
     double getPixel(int const x, int const y) const;
 
     template<typename PixelT>
     typename lsst::afw::image::Image<PixelT>::Ptr getImage() const;
+    
+    BackgroundControl getBackgroundControl() const { return _bctrl; }
     
 private:
     int _n;                             // number of pixels in the image
@@ -96,6 +115,9 @@ private:
 
     std::vector<std::vector<double> > _gridcolumns; // interpolated columns for the bicubic spline
     BackgroundControl _bctrl;           // control info set by user.
+
+    void _checkSampling();
+    math::InterpStyle _lookupMaxStyleForNpoints(int const n) const;
 };
 
 /**
@@ -104,7 +126,7 @@ private:
  * cf. std::make_pair()
  */
 template<typename ImageT>
-Background makeBackground(ImageT const& img, BackgroundControl const& bgCtrl=BackgroundControl()) {
+Background makeBackground(ImageT const& img, BackgroundControl const& bgCtrl = BackgroundControl()) {
     return Background(img, bgCtrl);
 };
     

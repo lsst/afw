@@ -1,4 +1,4 @@
-// -*- lsst-c++ -*-
+// -*- LSST-C++ -*-
 #include <iostream>
 #include <cmath>
 #include "lsst/afw/image/Image.h"
@@ -15,42 +15,42 @@ typedef math::Background Back;
 int main() {
 
     // set the parameters for a fake image.
-    int const WID = 256;                // pixels
-    int const XCEN = WID/2;             // pixels
-    int const YCEN = WID/2;             // pixels
-    int const XSIG = 2;                 // pixels
-    int const YSIG = XSIG;              // pixels
-    float const SKY = 100.0;                 // photo-e
+    int const wid = 256;                // pixels
+    int const xcen = wid/2;             // pixels
+    int const ycen = wid/2;             // pixels
+    int const xsig = 2;                 // pixels
+    int const ysig = xsig;              // pixels
+    float const sky = 100.0;                 // photo-e
     float const A = 100.0;                   // peak star brightness in photo-e
-    int const NUMSTAR = 100;
+    int const nStar = 100;
     
     // declare an image.
-    ImageF img(WID, WID);
-    img = SKY;
+    ImageF img(wid, wid);
+    img = sky;
     
     // put sky and some fake stars in the image, and add uniform noise
-    for (int i_s = 0; i_s < NUMSTAR; ++i_s) {
-        int const xStar = static_cast<int>(WID * static_cast<float>(rand())/RAND_MAX);
-        int const yStar = static_cast<int>(WID * static_cast<float>(rand())/RAND_MAX);
+    for (int iS = 0; iS < nStar; ++iS) {
+        int const xStar = static_cast<int>(wid * static_cast<float>(rand())/RAND_MAX);
+        int const yStar = static_cast<int>(wid * static_cast<float>(rand())/RAND_MAX);
         for (int i_y = 0; i_y != img.getHeight(); ++i_y) {
-            int i_x = 0;
+            int iX = 0;
             for (ImageF::x_iterator ip = img.row_begin(i_y); ip != img.row_end(i_y); ++ip) {
 
                 // use a bivariate gaussian as a stellar PSF
-                *ip += A*exp( -((i_x - xStar)*(i_x - xStar) + (i_y - yStar)*(i_y - yStar))/(2.0*XSIG*YSIG) );
+                *ip += A*exp( -((iX - xStar)*(iX - xStar) + (i_y - yStar)*(i_y - yStar))/(2.0*xsig*ysig) );
 
                 // add the noise on the last pass
-                if (i_s == NUMSTAR - 1) {
+                if (iS == nStar - 1) {
                     /// \todo Change to a Poisson variate
                     *ip += sqrt(*ip)*2.0*(static_cast<float>(rand())/RAND_MAX - 0.5); 
                 }
-                ++i_x;
+                ++iX;
             }
         }
     }
 
     // declare a background control object for a natural spline
-    math::BackgroundControl bgCtrl(math::NATURAL_SPLINE);
+    math::BackgroundControl bgCtrl(math::NATURAL_SPLINE_INTERP);
 
     // we can control the background estimate
     bgCtrl.setNxSample(5);
@@ -64,7 +64,7 @@ int main() {
     Back back = math::makeBackground(img, bgCtrl);
     
     // can get an individual pixel or a whole frame.
-    float const MID = back.getPixel(XCEN, YCEN);
+    float const MID = back.getPixel(xcen, ycen);
     ImageF::Ptr bg = back.getImage<ImageF::Pixel>();
     
     // create a background-subtracted image
@@ -73,7 +73,7 @@ int main() {
     sub -= *bg;
     
     // output what we've made
-    cout << XCEN << " " << YCEN << " center pixel: " << MID << endl;
+    cout << xcen << " " << ycen << " center pixel: " << MID << endl;
     img.writeFits("example_Background_fak.fits");
     bg->writeFits("example_Background_bac.fits");
     sub.writeFits("example_Background_sub.fits");
