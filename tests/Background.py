@@ -205,12 +205,12 @@ class BackgroundTestCase(unittest.TestCase):
         backobj = afwMath.makeBackground(mi.getImage(), bctrl)
 
         if display:
-            ds9.mtv(mi, frame=0)
+            ds9.mtv(mi, frame = 0)
 
         im = mi.getImage(); im -= backobj.getImageF()
 
         if display:
-            ds9.mtv(mi, frame=1)
+            ds9.mtv(mi, frame = 1)
 
             
     def testUndersample(self):
@@ -292,7 +292,7 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(exit=False):
+def run(exit = False):
     """Run the tests"""
     utilsTests.run(suite(), exit)
 
