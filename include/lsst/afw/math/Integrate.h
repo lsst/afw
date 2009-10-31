@@ -198,7 +198,7 @@ public:
         if (_a > _splitpoints[0] || _b < _splitpoints.back()) {
             std::cerr << "a, b = " << _a << ', ' << _b << std::endl;
             std::cerr << "_splitpoints = ";
-            for(size_t i = 0; i<_splitpoints.size(); i++)  {
+            for (size_t i = 0; i<_splitpoints.size(); i++)  {
                 std::cerr << _splitpoints[i] << "  ";
             }
             std::cerr << std::endl;
@@ -248,16 +248,16 @@ inline T MinRep()  { return std::numeric_limits<T>::min(); }
 
 
 #ifdef EXTRA_PREC_H
-  template <>
-  inline Quad Epsilon<Quad>() { return 3.08148791094e-33; }
-  template <>
-  inline Quad MinRep<Quad>()  { return 2.2250738585072014e-308; }
+template <>
+inline Quad Epsilon<Quad>() { return 3.08148791094e-33; }
+template <>
+inline Quad MinRep<Quad>()  { return 2.2250738585072014e-308; }
 #endif
 
     
 template <class T>
 inline T rescale_error (T err, T const &resabs, T const &resasc) {
-    if (resasc != 0. && err != 0.) {
+    if (resasc != 0.0 && err != 0.0) {
         T const scale = (200.0 * err / resasc);
         if (scale < 1.0) {
             err = resasc * scale * sqrt(scale);
@@ -268,7 +268,9 @@ inline T rescale_error (T err, T const &resabs, T const &resasc) {
     }
     if (resabs > MinRep<T>() / (50.0 * Epsilon<T>())) {
         T const min_err = 50.0 * Epsilon<T>() * resabs;
-        if (min_err > err) { err = min_err; }
+        if (min_err > err) {
+            err = min_err;
+        }
     }
     return err;
 }
@@ -290,7 +292,7 @@ inline T rescale_error (T err, T const &resabs, T const &resasc) {
  */
     
 template <class UF>
-inline bool IntGKPNA(
+inline bool intGKPNA(
                      UF const &func, IntRegion<typename UF::result_type>& reg,
                      typename UF::result_type const epsabs, 
                      typename UF::result_type const epsrel,
@@ -300,23 +302,23 @@ inline bool IntGKPNA(
     UfResult const a = reg.Left();
     UfResult const b = reg.Right();
                    
-    UfResult const half_length =  0.5 * (b - a);
-    UfResult const abs_half_length = fabs (half_length);
+    UfResult const halfLength =  0.5 * (b - a);
+    UfResult const absHalfLength = fabs (halfLength);
     UfResult const center = 0.5 * (b + a);
-    UfResult const f_center = func(center);
+    UfResult const fCenter = func(center);
 #ifdef COUNTFEVAL
     nfeval++;
 #endif
     
     assert(gkp_wb<UfResult>(0).size() == gkp_x<UfResult>(0).size() + 1);
-    UfResult area1 = gkp_wb<UfResult>(0).back() * f_center;
+    UfResult area1 = gkp_wb<UfResult>(0).back() * fCenter;
     std::vector<UfResult> fv1, fv2;
     fv1.reserve(2*gkp_x<UfResult>(0).size() + 1);
     fv2.reserve(2*gkp_x<UfResult>(0).size() + 1);
-    for (size_t k=0; k<gkp_x<UfResult>(0).size(); k++) {
-        const UfResult abscissa = half_length * gkp_x<UfResult>(0)[k];
-        const UfResult fval1 = func(center - abscissa);
-        const UfResult fval2 = func(center + abscissa);
+    for (size_t k = 0; k<gkp_x<UfResult>(0).size(); k++) {
+        UfResult const abscissa = halfLength * gkp_x<UfResult>(0)[k];
+        UfResult const fval1 = func(center - abscissa);
+        UfResult const fval2 = func(center + abscissa);
         area1 += gkp_wb<UfResult>(0)[k] * (fval1 + fval2);
         fv1.push_back(fval1);
         fv2.push_back(fval2);
@@ -338,20 +340,26 @@ inline bool IntGKPNA(
         assert(gkp_wa<UfResult>(level).size() == fv1.size());
         assert(gkp_wa<UfResult>(level).size() == fv2.size());
         assert(gkp_wb<UfResult>(level).size() == gkp_x<UfResult>(level).size() + 1);
-        UfResult area2 = gkp_wb<UfResult>(level).back() * f_center;
+        UfResult area2 = gkp_wb<UfResult>(level).back() * fCenter;
         // resabs = approximation to integral of abs(f)
-        if (calcabsasc) { resabs = fabs(area2); }
+        if (calcabsasc) {
+            resabs = fabs(area2);
+        }
         for (size_t k = 0; k < fv1.size(); k++) {
             area2 += gkp_wa<UfResult>(level)[k] * (fv1[k] + fv2[k]);
-            if (calcabsasc) { resabs += gkp_wa<UfResult>(level)[k] * (fabs(fv1[k]) + fabs(fv2[k])); }
+            if (calcabsasc) {
+                resabs += gkp_wa<UfResult>(level)[k] * (fabs(fv1[k]) + fabs(fv2[k]));
+            }
         }
         for (size_t k = 0; k < gkp_x<UfResult>(level).size(); k++) {
-            UfResult const abscissa = half_length * gkp_x<UfResult>(level)[k];
+            UfResult const abscissa = halfLength * gkp_x<UfResult>(level)[k];
             UfResult const fval1 = func(center - abscissa);
             UfResult const fval2 = func(center + abscissa);
             UfResult const fval = fval1 + fval2;
             area2 += gkp_wb<UfResult>(level)[k] * fval;
-            if (calcabsasc) { resabs += gkp_wb<UfResult>(level)[k] * (fabs(fval1) + fabs(fval2)); }
+            if (calcabsasc) {
+                resabs += gkp_wb<UfResult>(level)[k] * (fabs(fval1) + fabs(fval2));
+            }
             fv1.push_back(fval1);
             fv2.push_back(fval2);
             if (fxmap) {
@@ -365,19 +373,21 @@ inline bool IntGKPNA(
         if (calcabsasc) {
             UfResult const mean = area1*UfResult(0.5);
             // resasc = approximation to the integral of abs(f-mean) 
-            resasc = gkp_wb<UfResult>(level).back() * fabs(f_center - mean);
+            resasc = gkp_wb<UfResult>(level).back() * fabs(fCenter - mean);
             for (size_t k = 0; k<gkp_wa<UfResult>(level).size(); k++) {
                 resasc += gkp_wa<UfResult>(level)[k] * (fabs(fv1[k] - mean) + fabs(fv2[k] - mean));
             }
             for (size_t k = 0; k<gkp_x<UfResult>(level).size(); k++) {
                 resasc += gkp_wb<UfResult>(level)[k] * (fabs(fv1[k] - mean) + fabs(fv2[k] - mean));
             }
-            resasc *= abs_half_length ;
-            resabs *= abs_half_length;
+            resasc *= absHalfLength;
+            resabs *= absHalfLength;
         }
-        area2 *= half_length;
+        area2 *= halfLength;
         err = rescale_error (fabs(area2 - area1), resabs, resasc) ;
-        if (err < resasc) { calcabsasc = false; }
+        if (err < resasc) {
+            calcabsasc = false;
+        }
         
         integ_dbg2 << "at level " << level << " area2 = " << area2;
         integ_dbg2 << " +- " << err << std::endl;
@@ -416,37 +426,37 @@ inline bool IntGKPNA(
  */
     
 template <class UF>
-inline void IntGKP (
-                    const UF& func, IntRegion<typename UF::result_type>& reg,
-                    const typename UF::result_type epsabs,
-                    const typename UF::result_type epsrel,
+inline void intGKP (
+                    UF const &func, IntRegion<typename UF::result_type> &reg,
+                    typename UF::result_type const epsabs,
+                    typename UF::result_type const epsrel,
                     std::map<typename UF::result_type, typename UF::result_type>* fxmap = 0) {
 
     typedef typename UF::result_type UfResult;
-    integ_dbg2 << "Start IntGKP\n";
+    integ_dbg2 << "Start intGKP\n";
     
-    assert(epsabs >= 0.);
-    assert(epsrel > 0.);
+    assert(epsabs >= 0.0);
+    assert(epsrel > 0.0);
     
     // perform the first integration 
-    bool done = IntGKPNA(func, reg, epsabs, epsrel, fxmap);
+    bool done = intGKPNA(func, reg, epsabs, epsrel, fxmap);
     if (done) return;
     
     integ_dbg2 << "In adaptive GKP, failed first pass... subdividing\n";
     integ_dbg2 << "Intial range = " << reg.Left() << ".." << reg.Right() << std::endl;
     
-    int roundoff_type1 = 0, error_type = 0;
-    UfResult roundoff_type2 = 0.;
+    int roundoffType1 = 0, errorType = 0;
+    UfResult roundoffType2 = 0;
     size_t iteration = 1;
     
     std::priority_queue<IntRegion<UfResult>, std::vector<IntRegion<UfResult> > > allregions;
     allregions.push(reg);
     UfResult finalarea = reg.Area();
     UfResult finalerr = reg.Err();
-    UfResult tolerance= std::max(epsabs, epsrel * fabs(finalarea));
+    UfResult tolerance = std::max(epsabs, epsrel * fabs(finalarea));
     assert(finalerr > tolerance);
     
-    while(!error_type && finalerr > tolerance) {
+    while (!errorType && finalerr > tolerance) {
         // Bisect the subinterval with the largest error estimate 
         integ_dbg2 << "Current answer = " << finalarea << " +- " << finalerr;
         integ_dbg2 << "  (tol = " << tolerance << ")\n";
@@ -470,15 +480,18 @@ inline void IntGKP (
         
         UfResult newarea = UfResult(0.0);
         UfResult newerror = 0.0;
-        for(size_t i = 0; i<children.size(); i++) {
+        for (size_t i = 0; i<children.size(); i++) {
             IntRegion<UfResult>& child = children[i];
             integ_dbg2 << "Integrating child " << child.Left();
             integ_dbg2 << ".." << child.Right() << std::endl;
-            bool converged;
-            converged = IntGKPNA(func, child, newepsabs, newepsrel);
+            bool hasConverged;
+            hasConverged = intGKPNA(func, child, newepsabs, newepsrel);
             integ_dbg2 << "child (" << i + 1 << '/' << children.size() << ") ";
-            if (converged) {integ_dbg2 << " converged.";}
-            else {integ_dbg2 << " failed.";}
+            if (hasConverged) {
+                integ_dbg2 << " converged.";
+            } else {
+                integ_dbg2 << " failed.";
+            }
             integ_dbg2 << "  Area = " << child.Area() << " +- " << child.Err() << std::endl;
             
             newarea += child.Area();
@@ -496,65 +509,66 @@ inline void IntGKP (
             integ_dbg2 << "roundoff type 1: delta/newarea = ";
             integ_dbg2 << fabs(delta)/fabs(newarea);
             integ_dbg2 << ", newerror/error = " << newerror/parent.Err() << std::endl;
-            roundoff_type1++;
+            roundoffType1++;
         }
         if (iteration >= 10 && newerror > parent.Err() && 
             fabs(delta) <= newerror - parent.Err()) {
             integ_dbg2 << "roundoff type 2: newerror/error = ";
             integ_dbg2 << newerror/parent.Err() << std::endl;
-            roundoff_type2 += std::min(newerror/parent.Err() - 1.0, UfResult(1.0));
+            roundoffType2 += std::min(newerror/parent.Err() - 1.0, UfResult(1.0));
         }
         
         tolerance = std::max(epsabs, epsrel * fabs(finalarea));
         if (finalerr > tolerance) {
-            if (roundoff_type1 >= 200) {
-                error_type = 1;	// round off error 
+            if (roundoffType1 >= 200) {
+                errorType = 1; // round off error 
                 integ_dbg2 << "GKP: Round off error 1\n";
             }
-            if (roundoff_type2 >= 200.) {
-                error_type = 2;	// round off error 
+            if (roundoffType2 >= 200.0) {
+                errorType = 2; // round off error 
                 integ_dbg2 << "GKP: Round off error 2\n";
             }
             if (fabs((parent.Right() - parent.Left())/(reg.Right() - reg.Left())) 
                 < Epsilon<double>()) {
-                error_type = 3; // found singularity
+                errorType = 3; // found singularity
                 integ_dbg2 << "GKP: Probable singularity\n";
             }
         }
-        for(size_t i = 0; i<children.size(); i++) { allregions.push(children[i]); }
+        for (size_t i = 0; i<children.size(); i++) {
+            allregions.push(children[i]);
+        }
         iteration++;
     } 
     
     // Recalculate finalarea in case there are any slight rounding errors
-    finalarea = 0.; finalerr = 0.;
+    finalarea = 0.0;
+    finalerr = 0.0;
     while (!allregions.empty()) {
-        const IntRegion<UfResult>& r=allregions.top();
+        IntRegion<UfResult> const &r = allregions.top();
         finalarea += r.Area();
         finalerr += r.Err();
         allregions.pop();
     }
     reg.SetArea(finalarea, finalerr);
     
-    if (error_type == 1) {
+    if (errorType == 1) {
         std::ostringstream s;
-        s << "Type 1 roundoff's = " << roundoff_type1;
-        s << ", Type 2 = " << roundoff_type2 << std::endl;
+        s << "Type 1 roundoff's = " << roundoffType1;
+        s << ", Type 2 = " << roundoffType2 << std::endl;
         s << "Roundoff error 1 prevents tolerance from being achieved ";
-        s << "in IntGKP\n";
+        s << "in intGKP\n";
         throw LSST_EXCEPT(ex::RuntimeErrorException, s.str());
-    }
-    else if (error_type == 2) {
+    } else if (errorType == 2) {
         std::ostringstream s;
-        s << "Type 1 roundoff's = " << roundoff_type1;
-        s << ", Type 2 = " << roundoff_type2 << std::endl;
+        s << "Type 1 roundoff's = " << roundoffType1;
+        s << ", Type 2 = " << roundoffType2 << std::endl;
         s << "Roundoff error 2 prevents tolerance from being achieved ";
-        s << "in IntGKP\n";
+        s << "in intGKP\n";
         throw LSST_EXCEPT(ex::RuntimeErrorException, s.str());
-    }
-    else if (error_type == 3) {
+    } else if (errorType == 3) {
         std::ostringstream s;
         s << "Bad integrand behavior found in the integration interval ";
-        s << "in IntGKP\n";
+        s << "in intGKP\n";
         throw LSST_EXCEPT(ex::RuntimeErrorException, s.str());
     }
 }
@@ -569,9 +583,11 @@ struct AuxFunc1 : // f(1/x-1) for int(a..infinity)
         public std::unary_function<typename UF::argument_type, typename UF::result_type> {
 public:
     AuxFunc1(const UF& f) : _f(f) {}
-    typename UF::result_type operator()(typename UF::argument_type x) const { return _f(1.0/x - 1.0)/(x*x); }
+    typename UF::result_type operator()(typename UF::argument_type x) const {
+        return _f(1.0/x - 1.0)/(x*x);
+    }
 private:
-    const UF& _f;
+    UF const &_f;
 };
 
     
@@ -586,10 +602,12 @@ AuxFunc1<UF> inline Aux1(UF uf) { return AuxFunc1<UF>(uf); }
 template <class UF> struct AuxFunc2 : // f(1/x+1) for int(-infinity..b)
         public std::unary_function<typename UF::argument_type, typename UF::result_type> {
 public:
-    AuxFunc2(const UF& f) : _f(f) {}
-    typename UF::result_type operator()(typename UF::argument_type x) const { return _f(1.0/x + 1.0)/(x*x); }
+    AuxFunc2(UF const &f) : _f(f) {}
+    typename UF::result_type operator()(typename UF::argument_type x) const {
+        return _f(1.0/x + 1.0)/(x*x);
+    }
 private:
-    const UF& _f;
+    UF const &_f;
 };
 
 
@@ -609,16 +627,16 @@ AuxFunc2<UF> inline Aux2(UF uf) { return AuxFunc2<UF>(uf); }
 template <class T>
 struct ConstantReg1 : public std::unary_function<T, IntRegion<T> > {
     ConstantReg1(T a, T b) : ir(a, b) {}
-    ConstantReg1(const IntRegion<T>& r) : ir(r) {}
-    IntRegion<T> operator()(T x) const {return ir;}
+    ConstantReg1(IntRegion<T> const &r) : ir(r) {}
+    IntRegion<T> operator()(T x) const { return ir; }
     IntRegion<T> ir;
 };
     
 template <class T>
 struct ConstantReg2 : public std::binary_function<T, T, IntRegion<T> > {
     ConstantReg2(T a, T b) : ir(a, b) {}
-    ConstantReg2(const IntRegion<T>& r) : ir(r) {}
-    IntRegion<T> operator()(T x, T y) const {return ir;}
+    ConstantReg2(IntRegion<T> const &r) : ir(r) {}
+    IntRegion<T> operator()(T x, T y) const { return ir; }
     IntRegion<T> ir;
 };
 
@@ -628,9 +646,6 @@ template <class BF>
 class binder2_1 
     : public std::unary_function<typename BF::second_argument_type,
                                  typename BF::result_type> {
-protected:
-    BF _oper;
-    typename BF::first_argument_type _value;
 public:
     binder2_1(const BF& oper,
               typename BF::first_argument_type val)
@@ -639,6 +654,9 @@ public:
     operator()(const typename BF::second_argument_type& x) const {
         return _oper(_value, x); 
     }
+protected:
+    BF _oper;
+    typename BF::first_argument_type _value;
 };
     
 template <class BF, class Tp>
@@ -651,26 +669,26 @@ inline binder2_1<BF> bind21(const BF& oper, const Tp& x) {
 template <class BF, class YREG>
 class Int2DAuxType : public std::unary_function<typename BF::first_argument_type, typename BF::result_type> {
 public:
-    Int2DAuxType(const BF& func, const YREG& yreg,
-                 const typename BF::result_type& abserr,
-                 const typename BF::result_type& relerr) :
-	_func(func), _yreg(yreg), _abserr(abserr), _relerr(relerr) {}
+    Int2DAuxType(BF const &func, YREG const &yreg,
+                 typename BF::result_type  const &abserr,
+                 typename BF::result_type  const &relerr) :
+        _func(func), _yreg(yreg), _abserr(abserr), _relerr(relerr) {}
     
     typename BF::result_type operator()(typename BF::first_argument_type x) const  {
         typename YREG::result_type tempreg = _yreg(x);
-	typename BF::result_type result = 
+        typename BF::result_type result = 
             int1d(bind21(_func, x), tempreg, _abserr, _relerr);
-	integ_dbg3 << "Evaluated int2dAux at x = " << x;
-	integ_dbg3 << ": f = " << result << " +- " << tempreg.Err() << std::endl;
-	return result;
-    } 
+        integ_dbg3 << "Evaluated int2dAux at x = " << x;
+        integ_dbg3 << ": f = " << result << " +- " << tempreg.Err() << std::endl;
+        return result;
+    }
     
 private:
-    const BF& _func;
-    const YREG& _yreg;
+    BF   const &_func;
+    YREG const &_yreg;
     typename BF::result_type _abserr, _relerr;
 };
-
+    
     
 // pulled from MoreFunctional.h.  Needed in class Int3DAuxtype    
 template <class TF>
@@ -678,18 +696,18 @@ class binder3_1
     : public std::binary_function<typename TF::secondof3_argument_type,
                                   typename TF::thirdof3_argument_type,
                                   typename TF::result_type> {
-protected:
-    TF _oper;
-    typename TF::firstof3_argument_type _value;
 public:
     binder3_1(const TF& oper,
               typename TF::firstof3_argument_type val)
         : _oper(oper), _value(val) {}
     typename TF::result_type 
-    operator()(const typename TF::secondof3_argument_type& x1, 
-               const typename TF::thirdof3_argument_type& x2) const {
+    operator()(typename TF::secondof3_argument_type const &x1, 
+               typename TF::thirdof3_argument_type const &x2) const {
         return _oper(_value, x1, x2); 
     }
+protected:
+    TF _oper;
+    typename TF::firstof3_argument_type _value;
 };
 
 template <class TF, class Tp>
@@ -707,15 +725,15 @@ public:
     Int3DAuxType(const TF& func, const YREG& yreg, const ZREG& zreg, 
                  const typename TF::result_type& abserr,
                  const typename TF::result_type& relerr) :
-	_func(func), _yreg(yreg), _zreg(zreg), _abserr(abserr), _relerr(relerr) {}
+        _func(func), _yreg(yreg), _zreg(zreg), _abserr(abserr), _relerr(relerr) {}
     
     typename TF::result_type operator()(typename TF::firstof3_argument_type x) const {
         typename YREG::result_type tempreg = _yreg(x);
         typename TF::result_type result = 
             int2d(bind31(_func, x), tempreg, bind21(_zreg, x), _abserr, _relerr);
-	integ_dbg3 << "Evaluated int3dAux at x = " << x;
-	integ_dbg3 << ": f = " << result << " +- " << tempreg.Err() << std::endl;
-	return result;
+        integ_dbg3 << "Evaluated int3dAux at x = " << x;
+        integ_dbg3 << ": f = " << result << " +- " << tempreg.Err() << std::endl;
+        return result;
     }
     
 private:
@@ -734,17 +752,17 @@ private:
  */
 template <class UF>
 inline typename UF::result_type int1d(
-                                      const UF& func, 
+                                      UF const &func, 
                                       IntRegion<typename UF::result_type>& reg,
-                                      const typename UF::result_type& abserr=DEFABSERR,
-                                      const typename UF::result_type& relerr=DEFRELERR) {
+                                      typename UF::result_type const &abserr = DEFABSERR,
+                                      typename UF::result_type const &relerr = DEFRELERR) {
     
     typedef typename UF::result_type UfResult;
     using namespace details;
-
+    
     integ_dbg2 << "start int1d: " << reg.Left() << ".." << reg.Right() << std::endl;
     
-    if ((reg.Left() <= -MOCK_INF && reg.Right() > 0) ||	(reg.Right() >= MOCK_INF && reg.Left() < 0)) { 
+    if ((reg.Left() <= -MOCK_INF && reg.Right() > 0) || (reg.Right() >= MOCK_INF && reg.Left() < 0)) { 
         reg.AddSplit(0);
     }
 
@@ -752,9 +770,9 @@ inline typename UF::result_type int1d(
         std::vector<IntRegion<UfResult> > children;
         reg.SubDivide(&children);
         integ_dbg2 << "Subdivided into " << children.size() << " children\n";
-        UfResult answer=UfResult();
+        UfResult answer = UfResult();
         UfResult err = 0; 
-        for(size_t i = 0; i<children.size(); i++) {
+        for (size_t i = 0; i<children.size(); i++) {
             IntRegion<UfResult>& child = children[i];
             integ_dbg2 << "i = " << i;
             integ_dbg2 << ": bounds = " << child.Left() << ", " << child.Right() << std::endl;
@@ -768,20 +786,20 @@ inline typename UF::result_type int1d(
     }  else {
         if (reg.Left() <= -MOCK_INF) {
             integ_dbg2 << "left = -infinity, right = " << reg.Right() << std::endl;
-            assert(reg.Right() <= 0.);
+            assert(reg.Right() <= 0.0);
             IntRegion<UfResult> modreg(1.0/(reg.Right() - 1.0), 0.0, reg.getDbgout());
-            IntGKP(Aux2<UF>(func), modreg, abserr, relerr);
-	reg.SetArea(modreg.Area(), modreg.Err());
+            intGKP(Aux2<UF>(func), modreg, abserr, relerr);
+            reg.SetArea(modreg.Area(), modreg.Err());
         } else if (reg.Right() >= MOCK_INF) {
             integ_dbg2 << "left = " << reg.Left() << ", right = infinity\n";
-            assert(reg.Left() >= 0.);
-            IntRegion<UfResult> modreg(0., 1.0/(reg.Left() + 1.0), reg.getDbgout());
-            IntGKP(Aux1<UF>(func), modreg, abserr, relerr);
+            assert(reg.Left() >= 0.0);
+            IntRegion<UfResult> modreg(0.0, 1.0/(reg.Left() + 1.0), reg.getDbgout());
+            intGKP(Aux1<UF>(func), modreg, abserr, relerr);
             reg.SetArea(modreg.Area(), modreg.Err());
         } else {
             integ_dbg2 << "left = " << reg.Left();
             integ_dbg2 << ", right = " << reg.Right() << std::endl;
-            IntGKP(func, reg, abserr, relerr);
+            intGKP(func, reg, abserr, relerr);
         }
         integ_dbg2 << "done int1d  answer = " << reg.Area();
         integ_dbg2 << " +- " << reg.Err() << std::endl;
@@ -795,16 +813,16 @@ inline typename UF::result_type int1d(
  */
 template <class BF, class YREG>
 inline typename BF::result_type int2d(
-                                      const BF& func,
-                                      IntRegion<typename BF::result_type>& reg,
-                                      const YREG& yreg,
-                                      const typename BF::result_type& abserr=DEFABSERR,
-                                      const typename BF::result_type& relerr=DEFRELERR) {
+                                      BF const &func,
+                                      IntRegion<typename BF::result_type> &reg,
+                                      YREG const &yreg,
+                                      typename BF::result_type const &abserr = DEFABSERR,
+                                      typename BF::result_type const &relerr = DEFRELERR) {
     
     using namespace details;
     integ_dbg2 << "Starting int2d: range = ";
     integ_dbg2 << reg.Left() << ".." << reg.Right() << std::endl;
-    Int2DAuxType<BF, YREG> faux(func, yreg, abserr*1.e-3, relerr*1.e-3);
+    Int2DAuxType<BF, YREG> faux(func, yreg, abserr*1.0e-3, relerr*1.0e-3);
     typename BF::result_type answer = int1d(faux, reg, abserr, relerr);
     integ_dbg2 << "done int2d  answer = " << answer << " +- " << reg.Err() << std::endl;
     return answer;
@@ -815,12 +833,12 @@ inline typename BF::result_type int2d(
  */            
 template <class TF, class YREG, class ZREG> 
 inline typename TF::result_type int3d(
-                                      const TF& func,
+                                      TF const &func,
                                       IntRegion<typename TF::result_type>& reg,
-                                      const YREG& yreg,
-                                      const ZREG& zreg,
-                                      const typename TF::result_type& abserr=DEFABSERR,
-                                      const typename TF::result_type& relerr=DEFRELERR) {
+                                      YREG const &yreg,
+                                      ZREG const &zreg,
+                                      typename TF::result_type const &abserr = DEFABSERR,
+                                      typename TF::result_type const &relerr = DEFRELERR) {
     
     using namespace details;
     integ_dbg2 << "Starting int3d: range = ";
@@ -836,11 +854,11 @@ inline typename TF::result_type int3d(
  */            
 template <class BF>
 inline typename BF::result_type int2d(
-                                      const BF& func,
-                                      IntRegion<typename BF::result_type>& reg,
-                                      IntRegion<typename BF::result_type>& yreg,
-                                      const typename BF::result_type& abserr=DEFABSERR,
-                                      const typename BF::result_type& relerr=DEFRELERR) {
+                                      BF const &func,
+                                      IntRegion<typename BF::result_type> &reg,
+                                      IntRegion<typename BF::result_type> &yreg,
+                                      typename BF::result_type const &abserr = DEFABSERR,
+                                      typename BF::result_type const &relerr = DEFRELERR) {
     using namespace details;
     return int2d(func, reg, ConstantReg1<typename BF::result_type>(yreg), abserr, relerr); 
 }
@@ -850,12 +868,12 @@ inline typename BF::result_type int2d(
  */            
 template <class TF>
 inline typename TF::result_type int3d(
-                                      const TF& func,
-                                      IntRegion<typename TF::result_type>& reg,
-                                      IntRegion<typename TF::result_type>& yreg,
-                                      IntRegion<typename TF::result_type>& zreg,
-                                      const typename TF::result_type& abserr=DEFABSERR,
-                                      const typename TF::result_type& relerr=DEFRELERR) {
+                                      TF const &func,
+                                      IntRegion<typename TF::result_type> &reg,
+                                      IntRegion<typename TF::result_type> &yreg,
+                                      IntRegion<typename TF::result_type> &zreg,
+                                      typename TF::result_type const &abserr = DEFABSERR,
+                                      typename TF::result_type const &relerr = DEFRELERR) {
     using namespace details;
     return int3d(func, reg, ConstantReg1<typename TF::result_type>(yreg), 
                  ConstantReg2<typename TF::result_type>(zreg), abserr, relerr);
@@ -877,7 +895,7 @@ template<typename UnaryFunctionT>
 typename UnaryFunctionT::result_type integrate(UnaryFunctionT func,
                                                typename UnaryFunctionT::argument_type const a,
                                                typename UnaryFunctionT::argument_type const b,
-                                               double eps=1.0e-6)  {
+                                               double eps = 1.0e-6)  {
     
     typedef typename UnaryFunctionT::argument_type Arg;
     IntRegion<Arg> region(a, b);
@@ -910,7 +928,7 @@ public:
     FunctionWrapper(BinaryFunctionT func,
                     typename BinaryFunctionT::first_argument_type const x1,
                     typename BinaryFunctionT::first_argument_type const x2,
-                    double const eps=1.0e-6) :
+                    double const eps = 1.0e-6) :
         _func(func), _x1(x1), _x2(x2), _eps(eps) {}
     typename BinaryFunctionT::result_type operator()(typename
                                                      BinaryFunctionT::second_argument_type const y) const {
@@ -935,11 +953,11 @@ private:
 
 template<typename BinaryFunctionT>
 typename BinaryFunctionT::result_type integrate2d(BinaryFunctionT func,
-                                       typename BinaryFunctionT::first_argument_type const x1,
-                                       typename BinaryFunctionT::first_argument_type const x2,
-                                       typename BinaryFunctionT::second_argument_type const y1,
-                                       typename BinaryFunctionT::second_argument_type const y2,
-                                       double eps=1.0e-6) {
+                                                  typename BinaryFunctionT::first_argument_type const x1,
+                                                  typename BinaryFunctionT::first_argument_type const x2,
+                                                  typename BinaryFunctionT::second_argument_type const y1,
+                                                  typename BinaryFunctionT::second_argument_type const y2,
+                                                  double eps = 1.0e-6) {
     using namespace details;
     // note the more stringent eps requirement to ensure the requested limit
     // can be reached.

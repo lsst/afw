@@ -1,3 +1,4 @@
+// -*- LSST-C++ -*-
 #include <iostream>
 #include <cmath>
 #include <vector>
@@ -21,15 +22,15 @@ typedef image::DecoratedImage<float> DecoratedImage;
 
 BOOST_AUTO_TEST_CASE(BackgroundBasic) {
 
-    int NX = 40;
-    int NY = 40;
-    Image img(NX, NY);
-    Image::Pixel const PIXVAL = 10000;
-    img = PIXVAL;
+    int nX = 40;
+    int nY = 40;
+    Image img(nX, nY);
+    Image::Pixel const pixVal = 10000;
+    img = pixVal;
 
     {
-        int xcen = NX/2;
-        int ycen = NY/2;
+        int xcen = nX/2;
+        int ycen = nY/2;
         math::BackgroundControl bgCtrl(math::AKIMA_SPLINE_INTERP);
         // test methods native BackgroundControl
         bgCtrl.setNxSample(5);
@@ -43,7 +44,7 @@ BOOST_AUTO_TEST_CASE(BackgroundBasic) {
         image::Image<float>::Ptr bImage = back.getImage<float>();
         Image::Pixel const testFromImage = *(bImage->xy_at(xcen, ycen));
         
-        BOOST_CHECK_EQUAL(TESTVAL, PIXVAL);
+        BOOST_CHECK_EQUAL(TESTVAL, pixVal);
         BOOST_CHECK_EQUAL(TESTVAL, testFromImage);
 
     }
@@ -74,29 +75,29 @@ BOOST_AUTO_TEST_CASE(BackgroundTestImages) {
             lsst::daf::base::PropertySet::Ptr fitsHdr = dimg.getMetadata(); // the FITS header
 
             // get the true values of the mean and stdev
-            float req_mean = static_cast<float>(fitsHdr->getAsDouble("MEANREQ"));
-            float req_stdev = static_cast<float>(fitsHdr->getAsDouble("SIGREQ"));
+            float reqMean = static_cast<float>(fitsHdr->getAsDouble("MEANREQ"));
+            float reqStdev = static_cast<float>(fitsHdr->getAsDouble("SIGREQ"));
 
-            int const NAXIS1 = img->getWidth();
-            int const NAXIS2 = img->getHeight();
+            int const width = img->getWidth();
+            int const height = img->getHeight();
             
             // create a background control object
             math::BackgroundControl bctrl(math::AKIMA_SPLINE_INTERP);
             bctrl.setNxSample(5);
             bctrl.setNySample(5);
-            float stdev_subimg = req_stdev / sqrt(NAXIS1*NAXIS2/(bctrl.getNxSample()*bctrl.getNySample()));
+            float stdevSubimg = reqStdev / sqrt(width*height/(bctrl.getNxSample()*bctrl.getNySample()));
 
             // run the background constructor and call the getPixel() and getImage() functions.
             math::Background backobj = math::makeBackground(*img, bctrl);
 
             // test getPixel()
-            float testval = static_cast<float>(backobj.getPixel(NAXIS1/2, NAXIS2/2));
-            BOOST_REQUIRE( fabs(testval - req_mean) < 2.0*stdev_subimg );
+            float testval = static_cast<float>(backobj.getPixel(width/2, height/2));
+            BOOST_REQUIRE( fabs(testval - reqMean) < 2.0*stdevSubimg );
 
             // test getImage() by checking the center pixel
             image::Image<float>::Ptr bimg = backobj.getImage<float>();
-            float testImgval = static_cast<float>(*(bimg->xy_at(NAXIS1/2, NAXIS2/2)));
-            BOOST_REQUIRE( fabs(testImgval - req_mean) < 2.0*stdev_subimg );
+            float testImgval = static_cast<float>(*(bimg->xy_at(width/2, height/2)));
+            BOOST_REQUIRE( fabs(testImgval - reqMean) < 2.0*stdevSubimg );
             
         }
     }
@@ -110,16 +111,16 @@ BOOST_AUTO_TEST_CASE(BackgroundRamp) {
     {
         
         // make a ramping image (spline should be exact for linear increasing image
-        int const NX = 512;
-        int const NY = 512;
-        image::Image<double> rampimg = image::Image<double>(NX, NY);
+        int const nX = 512;
+        int const nY = 512;
+        image::Image<double> rampimg = image::Image<double>(nX, nY);
         double dzdx = 0.1;
         double dzdy = 0.2;
         double z0 = 10000.0;
 
-        for (int i = 0; i < NX; ++i) {
+        for (int i = 0; i < nX; ++i) {
             double x = static_cast<double>(i);
-            for ( int j = 0; j < NY; ++j) {
+            for ( int j = 0; j < nY; ++j) {
                 double y = static_cast<double>(j);
                 *rampimg.xy_at(i, j) = dzdx*x + dzdy*y + z0;
             }
@@ -136,9 +137,9 @@ BOOST_AUTO_TEST_CASE(BackgroundRamp) {
         // test the values at the corners and in the middle
         int ntest = 3;
         for (int i = 0; i < ntest; ++i) {
-            int xpix = i*(NX - 1)/(ntest - 1);
-            for(int j = 0; j < ntest; ++j) {
-                int ypix = j*(NY - 1)/(ntest - 1);
+            int xpix = i*(nX - 1)/(ntest - 1);
+            for (int j = 0; j < ntest; ++j) {
+                int ypix = j*(nY - 1)/(ntest - 1);
                 double testval = backobj.getPixel(xpix, ypix);
                 double realval = *rampimg.xy_at(xpix, ypix);
                 BOOST_CHECK_CLOSE( testval, realval, 1.0e-10 );
@@ -153,17 +154,17 @@ BOOST_AUTO_TEST_CASE(BackgroundParabola) {
     {
         
         // make an image which varies parabolicly (spline should be exact for 2rd order polynomial)
-        int const NX = 512;
-        int const NY = 512;
-        image::Image<double> parabimg = image::Image<double>(NX, NY);
+        int const nX = 512;
+        int const nY = 512;
+        image::Image<double> parabimg = image::Image<double>(nX, nY);
         double d2zdx2 = -1.0e-4;
         double d2zdy2 = -1.0e-4;
         double dzdx   = 0.1;
         double dzdy   = 0.2;
         double z0 = 10000.0;  // no cross-terms
 
-        for ( int i = 0; i < NX; ++i ) {
-            for ( int j = 0; j < NY; ++j ) {
+        for ( int i = 0; i < nX; ++i ) {
+            for ( int j = 0; j < nY; ++j ) {
                 *parabimg.xy_at(i, j) = d2zdx2*i*i + d2zdy2*j*j + dzdx*i + dzdy*j + z0;
             }
         }
@@ -186,9 +187,9 @@ BOOST_AUTO_TEST_CASE(BackgroundParabola) {
         // check the values at the corners and int he middle
         int const ntest = 3;
         for (int i = 0; i < ntest; ++i) {
-            int xpix = i*(NX - 1)/(ntest - 1);
-            for(int j = 0; j < ntest; ++j) {
-                int ypix = j*(NY - 1)/(ntest - 1);
+            int xpix = i*(nX - 1)/(ntest - 1);
+            for (int j = 0; j < ntest; ++j) {
+                int ypix = j*(nY - 1)/(ntest - 1);
                 double testval = backobj.getPixel(xpix, ypix);
                 double realval = *parabimg.xy_at(xpix, ypix);
                 //print xpix, ypix, testval, realval

@@ -1,4 +1,4 @@
-// -*- lsst-c++ -*-
+// -*- LSST-C++ -*-
 //
 // Here are some concrete examples of the use of int1d and int2d.
 // 
@@ -21,25 +21,25 @@ namespace math = lsst::afw::math;
 
 // A simple Gaussian, parametrized by its center (mu) and size (sigma).
 class Gauss : public std::unary_function<double, double> {
-public :
+public:
     
     explicit Gauss(double mu, double sig) : _mu(mu), _sig(sig), _sigsq(sig*sig) {}
     
     double operator()(double x) const { 
-        const double SQRTTWOPI = 2.50662827463;
+        double const SQRTTWOPI = 2.50662827463;
         return exp( -pow(x - _mu, 2)/2.0/_sigsq)/SQRTTWOPI/_sig; 
     }
     
-private :
+private:
     double _mu, _sig, _sigsq;
 };
 
 // In the file Int.h, I present this as a class Integrand.
 // Here I do it as a function to show how that can work just as well.
 double foo(double x, double y) {
-  // A simple function:
-  // f(x,y) = x*(3*x+y) + y
-  return x * (3.*x + y) + y;
+    // A simple function:
+    // f(x,y) = x*(3*x+y) + y
+    return x * (3.0*x + y) + y;
 }
 
 
@@ -48,30 +48,30 @@ double foo(double x, double y) {
 // The simplest integration calculation is the w(z) function, so that's 
 // all that is replicated here.
 struct Cosmology {
-    Cosmology(double _om_m, double _om_v, double _w, double _wa) :
-        om_m(_om_m), om_v(_om_v), w(_w), wa(_wa) {}
+    Cosmology(double omMxx, double omVxx, double wxx, double waxx) :
+        omM(omMxx), omV(omVxx), w(wxx), wa(waxx) {}
     
-    double calc_w(double z);
+    double calcW(double z);
     // calculate coordinate distance (in units of c/Ho) as a function of z.
     
-    double om_m, om_v, w, wa;
+    double omM, omV, w, wa;
 };
 
 struct W_Integrator : public std::unary_function<double, double> {
     
-    W_Integrator(const Cosmology& c) : _c(c) {}
+    W_Integrator(Cosmology const &c) : _c(c) {}
     double operator()(double a) const {
-
+        
         
         // First calculate H^2 according to:
         //
-        // H^2 = H0^2 * [ Om_m a^-3 + Om_k a^-2 + 
+        // H^2 = H0^2 * [ Om_M a^-3 + Om_k a^-2 + 
         //                Om_DE exp (-3 [ (1+w+wa)*lna + wa*(1-a) ] ) ]
         // Ignore the H0^2 scaling
         double lna = log(a);
-        double om_k = 1.0 - _c.om_m - _c.om_v;
-        double hsq = _c.om_m*std::exp(-3.0*lna) + om_k*std::exp(-2.0*lna) +
-            _c.om_v*std::exp(-3.0*( (1.0 + _c.w + _c.wa)*lna + _c.wa*(1.0 - a) ) );
+        double omK = 1.0 - _c.omM - _c.omV;
+        double hsq = _c.omM*std::exp(-3.0*lna) + omK*std::exp(-2.0*lna) +
+            _c.omV*std::exp(-3.0*( (1.0 + _c.w + _c.wa)*lna + _c.wa*(1.0 - a) ) );
 
         if (hsq <= 0.0) {
             // This can happen for very strange w, wa values with non-flat 
@@ -84,10 +84,11 @@ struct W_Integrator : public std::unary_function<double, double> {
         // So we return the integrand.
         return 1.0/(std::sqrt(hsq)*(a*a));
     }
-    const Cosmology& _c;
+private:
+    Cosmology const &_c;
 };
 
-double Cosmology::calc_w(double z) {
+double Cosmology::calcW(double z) {
     // w = int( 1/sqrt(H(z)) dz ) = int( 1/sqrt(H(a)) 1/a^2 da )
     // H(a) = H0 sqrt( Om_m a^-3 + Om_k a^-2 +
     //                 Om_de exp(3 int(1+w(a') dln(a'), a'=a..1) ) )
@@ -120,7 +121,7 @@ int main()  {
     std::cout << "int(Gauss(0.0, 1.0) , 0..inf) = " << int1d(g01, reg3) << std::endl;
     std::cout << "int(Gauss(0.0, 2.0) , 0..inf) = " << int1d(g02, reg3) << std::endl;
     
-    math::IntRegion<double> reg4(0., 1.);
+    math::IntRegion<double> reg4(0.0, 1.0);
     std::cout << "\nint(x*(3*x+y)+y, 0..1, 0..1) = " << 
         int2d(std::ptr_fun(foo), reg4, reg4) << std::endl;
     
@@ -132,7 +133,7 @@ int main()  {
     std::cout << "\nThe w(z) relation is:\n\n";
     std::cout << "z\tw\n\n";
     Cosmology c(0.3, 0.65, -0.9, 0.2);
-    for(double z = 0.; z < 5.01; z += 0.2) {
-        std::cout << z << "\t" << c.calc_w(z) << std::endl;
+    for (double z = 0.0; z < 5.01; z += 0.2) {
+        std::cout << z << "\t" << c.calcW(z) << std::endl;
     }
 }

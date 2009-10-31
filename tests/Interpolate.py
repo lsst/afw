@@ -90,7 +90,7 @@ def suite():
     suites += unittest.makeSuite(InterpolateTestCase)
     return unittest.TestSuite(suites)
 
-def run(exit=False):
+def run(exit = False):
     """Run the tests"""
     utilsTests.run(suite(), exit)
 

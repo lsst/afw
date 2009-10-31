@@ -1,4 +1,4 @@
-// -*- lsst-c++ -*-
+// -*- LSST-C++ -*-
 #include <iostream>
 #include <limits>
 #include <cmath>
@@ -72,9 +72,9 @@ void printStats(Image &img, math::StatisticsControl const &sctrl) {
 int main() {
 
     // declare an image and a masked image
-    int const WID = 1024;
-    ImageF img(WID, WID);
-    MaskedImageF mimg(WID, WID);
+    int const wid = 1024;
+    ImageF img(wid, wid);
+    MaskedImageF mimg(wid, wid);
     std::vector<double> v(0);
     
     // fill it with some noise (Cauchy noise in this case)
@@ -83,19 +83,19 @@ int main() {
         int k = 0;
         MaskedImageF::x_iterator mip = mimg.row_begin(j);
         for (ImageF::x_iterator ip = img.row_begin(j); ip != img.row_end(j); ++ip) {
-            double const x_uniform = M_PI*static_cast<ImageF::Pixel>(std::rand())/RAND_MAX;
-            double x_lorentz = x_uniform; //tan(x_uniform - M_PI/2.0);
+            double const xUniform = M_PI*static_cast<ImageF::Pixel>(std::rand())/RAND_MAX;
+            double xLorentz = xUniform; //tan(xUniform - M_PI/2.0);
 
             // throw in the occassional nan ... 1% of the time
-            if ( static_cast<double>(std::rand())/RAND_MAX < 0.01 ) { x_lorentz = NAN; }
+            if ( static_cast<double>(std::rand())/RAND_MAX < 0.01 ) { xLorentz = NAN; }
             
-            *ip = x_lorentz;
+            *ip = xLorentz;
             
             // mask the odd rows
             // variance actually diverges for Cauchy noise ... but stats doesn't access this.
-            *mip = MaskedImageF::Pixel(x_lorentz, (k%2) ? 0x1 : 0x0, 10.0);
+            *mip = MaskedImageF::Pixel(xLorentz, (k%2) ? 0x1 : 0x0, 10.0);
 
-            v.push_back(x_lorentz);
+            v.push_back(xLorentz);
             ++k;
             ++mip;
         }
