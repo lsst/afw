@@ -99,11 +99,24 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
             
             _grid[iX][iY] = stats.getValue(math::MEANCLIP);
         }
-        
-        typename math::Interpolate intobj(_ycen, _grid[iX], _bctrl.getInterpStyle());
+
         _gridcolumns[iX].resize(_imgHeight);
-        for (int iY = 0; iY < _imgHeight; ++iY) {
-            _gridcolumns[iX][iY] = intobj.interpolate(ypix[iY]);
+
+        // there isn't actually any way to interpolate as a constant ... do that manually here
+        if (_bctrl.getInterpStyle() != CONSTANT_INTERP) {
+            // this is the real interpolation
+            typename math::Interpolate intobj(_ycen, _grid[iX], _bctrl.getInterpStyle());
+            for (int iY = 0; iY < _imgHeight; ++iY) {
+                _gridcolumns[iX][iY] = intobj.interpolate(ypix[iY]);
+            }
+        } else {
+            // this is the constant interpolation
+            // it should only be used sanely when nx,nySample are both 1,
+            //  but this should still work for other grid sizes.
+            for (int iY = 0; iY < _imgHeight; ++iY) {
+                int const iGridY = (iY/_subimgHeight < _nySample) ? iY/_subimgHeight : _nySample;
+                _gridcolumns[iX][iY] = _grid[iX][iGridY];
+            }
         }
 
     }
@@ -126,9 +139,17 @@ double math::Background::getPixel(int const x, int const y) const {
 
     // build an interpobj along the row y and get the x'th value
     vector<double> bg_x(_nxSample);
-    for (int i = 0; i < _nxSample; i++) { bg_x[i] = _gridcolumns[i][y];  }
-    math::Interpolate intobj(_xcen, bg_x, _bctrl.getInterpStyle());
-    return static_cast<double>(intobj.interpolate(x));
+    for (int iX = 0; iX < _nxSample; iX++) {
+        bg_x[iX] = _gridcolumns[iX][y];
+    }
+
+    if (_bctrl.getInterpStyle() != CONSTANT_INTERP) {
+        math::Interpolate intobj(_xcen, bg_x, _bctrl.getInterpStyle());
+        return static_cast<double>(intobj.interpolate(x));
+    } else {
+        int const iGridX = (x/_subimgWidth < _nxSample) ? x/_subimgHeight : _nxSample;
+        return static_cast<double>(_gridcolumns[iGridX][y]);
+    }
     
 }
 
@@ -156,15 +177,28 @@ typename image::Image<PixelT>::Ptr math::Background::getImage() const {
 
         // build an interp object for this row
         vector<double> bg_x(_nxSample);
-        for (int iX = 0; iX < _nxSample; iX++) { bg_x[iX] = static_cast<double>(_gridcolumns[iX][iY]); }
-        math::Interpolate intobj(_xcen, bg_x, _bctrl.getInterpStyle());
-
-        // fill the image with interpolated objects.
-        int iX = 0;
-        for (typename image::Image<PixelT>::x_iterator ptr = bg->row_begin(iY), end = ptr + bg->getWidth();
-             ptr != end; ++ptr, ++iX) {
-            *ptr = static_cast<PixelT>(intobj.interpolate(xpix[iX]));
+        for (int iX = 0; iX < _nxSample; iX++) {
+            bg_x[iX] = static_cast<double>(_gridcolumns[iX][iY]);
         }
+        
+        if (_bctrl.getInterpStyle() != CONSTANT_INTERP) {
+            math::Interpolate intobj(_xcen, bg_x, _bctrl.getInterpStyle());
+            // fill the image with interpolated objects.
+            int iX = 0;
+            for (typename image::Image<PixelT>::x_iterator ptr = bg->row_begin(iY),
+                     end = ptr + bg->getWidth(); ptr != end; ++ptr, ++iX) {
+                *ptr = static_cast<PixelT>(intobj.interpolate(xpix[iX]));
+            }
+        } else {
+            // fill the image with interpolated objects.
+            int iX = 0;
+            for (typename image::Image<PixelT>::x_iterator ptr = bg->row_begin(iY),
+                     end = ptr + bg->getWidth(); ptr != end; ++ptr, ++iX) {
+                int const iGridX = (iX/_subimgWidth < _nxSample) ? iX/_subimgHeight : _nxSample;
+                *ptr = static_cast<PixelT>(_gridcolumns[iGridX][iY]);
+            }
+        }
+
     }
     
     return bg;

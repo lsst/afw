@@ -216,7 +216,7 @@ class BackgroundTestCase(unittest.TestCase):
     def testUndersample(self):
         """Test how the program handles nx,ny being too small for requested interp style."""
 
-        # make a ramping image (spline should be exact for linear increasing image
+        # make an image
         nx = 64
         ny = 64
         img = afwImage.ImageD(nx, ny)
@@ -248,7 +248,37 @@ class BackgroundTestCase(unittest.TestCase):
         utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException,
                                        tst, img, bctrl)
 
+        
+    def testOnlyOneGridCell(self):
+        """Test how the program handles nxSample,nySample being 1x1."""
+        
+        # try a ramping image ... has an easy analytic solution
+        nx = 64
+        ny = 64
+        img = afwImage.ImageD(nx, ny, 10)
+        
+        dzdx, dzdy, z0 = 0.1, 0.2, 10000.0
+        mean = z0 + dzdx*(nx - 1)/2 + dzdy*(ny - 1)/2  # the analytic solution
+        for x in range(nx):
+            for y in range(ny):
+                img.set(x, y, dzdx*x + dzdy*y + z0)
+        
+        # make a background control object
+        bctrl = afwMath.BackgroundControl()
+        bctrl.setInterpStyle(afwMath.CONSTANT_INTERP)
+        bctrl.setNxSample(1)
+        bctrl.setNySample(1)
+        bctrl.setUndersampleStyle(afwMath.THROW_EXCEPTION)
+        backobj = afwMath.makeBackground(img, bctrl)
+        
+        xpixels = [0, nx/2, nx - 1]
+        ypixels = [0, ny/2, ny - 1]
+        for xpix in xpixels:
+            for ypix in ypixels:
+                testval = backobj.getPixel(xpix, ypix)
+                self.assertAlmostEqual(testval, mean, 10)
 
+        
             
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
