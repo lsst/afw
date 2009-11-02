@@ -88,8 +88,6 @@ double afwMath::AnalyticKernel::computeImage(
     double x,
     double y
 ) const {
-    typedef afwImage::Image<Pixel>::x_iterator x_iterator;
-    
     if (image.getDimensions() != this->getDimensions()) {
         std::ostringstream os;
         os << "image dimensions = ( " << image.getWidth() << ", " << image.getHeight()

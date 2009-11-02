@@ -8,10 +8,10 @@
 using namespace std;
 
 int main() {
-    typedef double funcType;
+    typedef double FuncReturn;
     const unsigned int order = 2;
     vector<double> params(order+1);
-    lsst::afw::math::PolynomialFunction1<funcType> polyFunc(order);
+    lsst::afw::math::PolynomialFunction1<FuncReturn> polyFunc(order);
 
     for (unsigned int ii = 0; ii < params.size(); ++ii) {
         params[ii] = static_cast<double>(1 + order - ii);

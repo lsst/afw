@@ -16,14 +16,16 @@
 
 #include <cassert>
 #include <limits>
-#include <boost/iterator/iterator_adaptor.hpp>
+#include "boost/iterator/iterator_adaptor.hpp"
 #include "boost/tuple/tuple.hpp"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
 
 namespace image = lsst::afw::image;
 
-namespace lsst { namespace afw { namespace math {
+namespace lsst {
+namespace afw {
+namespace math {
             
 /* @brief control what is calculated
  */
@@ -56,32 +58,32 @@ public:
     StatisticsControl(double numSigmaClip = 3.0, ///< number of standard deviations to clip at
                       int numIter = 3,     ///< Number of iterations
                       image::MaskPixel andMask = ~0x0, ///< and-Mask to specify planes to use
-                      bool nanSafe = true  ///< flag NaNs
+                      bool isNanSafe = true  ///< flag NaNs
                      ) :
         _numSigmaClip(numSigmaClip),
         _numIter(numIter),
         _andMask(andMask),
-        _nanSafe(nanSafe)
-        {
-            assert(_numSigmaClip > 0);
-            assert(_numIter > 0);
-        }
+        _isNanSafe(isNanSafe) {
+        
+        assert(_numSigmaClip > 0);
+        assert(_numIter > 0);
+    }
 
     double getNumSigmaClip() const { return _numSigmaClip; }
     int getNumIter() const { return _numIter; }
     image::MaskPixel getAndMask() const { return _andMask; }
-    bool useNanSafe() const { return _nanSafe; }
+    bool getNanSafe() const { return _isNanSafe; }
     
     void setNumSigmaClip(double numSigmaClip) { assert(numSigmaClip > 0); _numSigmaClip = numSigmaClip; }
     void setNumIter(int numIter) { assert(numIter > 0); _numIter = numIter; }
     void setAndMask(image::MaskPixel andMask) { _andMask = andMask; }
-    void setNanSafe(bool nanSafe) { _nanSafe = nanSafe; }
+    void setNanSafe(bool isNanSafe) { _isNanSafe = isNanSafe; }
 
 private:
     double _numSigmaClip;                 // Number of standard deviations to clip at
     int _numIter;                         // Number of iterations
     image::MaskPixel _andMask;            // and-Mask to specify which mask planes to pay attention to
-    bool _nanSafe;                         // Check for NaNs before running (slower)
+    bool _isNanSafe;                         // Check for NaNs before running (slower)
 };
 
             
@@ -129,12 +131,12 @@ public:
     explicit Statistics(Image const &img,
                         Mask const &msk,
                         int const flags,
-                        StatisticsControl const& sctrl=StatisticsControl());
+                        StatisticsControl const& sctrl = StatisticsControl());
 
-    Value getResult(Property const prop=NOTHING) const;
+    Value getResult(Property const prop = NOTHING) const;
     
-    double getError(Property const prop=NOTHING) const;
-    double getValue(Property const prop=NOTHING) const;
+    double getError(Property const prop = NOTHING) const;
+    double getValue(Property const prop = NOTHING) const;
     
 private:
     
@@ -182,7 +184,7 @@ private:
 template<typename Pixel>
 Statistics makeStatistics(image::MaskedImage<Pixel, image::MaskPixel, image::VariancePixel> const &mimg, 
                           int const flags,  
-                          StatisticsControl const& sctrl=StatisticsControl() 
+                          StatisticsControl const& sctrl = StatisticsControl() 
                          ) {
     return Statistics(*mimg.getImage(), *mimg.getMask(), flags, sctrl);
 }
@@ -194,7 +196,7 @@ Statistics makeStatistics(image::MaskedImage<Pixel, image::MaskPixel, image::Var
  */            
 Statistics makeStatistics(image::Mask<image::MaskPixel> const &msk, 
                           int const flags,  
-                          StatisticsControl const& sctrl=StatisticsControl());
+                          StatisticsControl const& sctrl = StatisticsControl());
             
 
 /*
@@ -226,11 +228,12 @@ private:
  */
 template<typename ValueT>
 class MaskImposter {
-    ValueT _val[1];
 public:
     typedef infinite_iterator<ValueT> x_iterator;
     MaskImposter(ValueT val = 0) { _val[0] = val; }
-    x_iterator row_begin(int) const { return x_iterator(_val); }
+    x_iterator row_begin(int dummyCol) const { return x_iterator(_val); }
+private:
+    ValueT _val[1];
 };
             
             
@@ -240,7 +243,7 @@ public:
 template<typename Pixel>
 Statistics makeStatistics(image::Image<Pixel> const &img, ///< Image (or Image) whose properties we want
                           int const flags,   ///< Describe what we want to calculate
-                          StatisticsControl const& sctrl=StatisticsControl() ///< Control calculation
+                          StatisticsControl const& sctrl = StatisticsControl() ///< Control calculation
                          ) {
     // make a phony mask that will be compiled out
     MaskImposter<image::MaskPixel> msk;
@@ -265,12 +268,12 @@ public:
 
     // constructors for std::vector<>, and copy constructor
     // These are both shallow! ... no actual copying of values
-    ImageImposter(std::vector<ValueT> const &v) : _v(v) { }
-    ImageImposter(ImageImposter<ValueT> const &img) : _v(img._getVector()) {}
+    explicit ImageImposter(std::vector<ValueT> const &v) : _v(v) { }
+    explicit ImageImposter(ImageImposter<ValueT> const &img) : _v(img._getVector()) {}
 
     // The methods we'll use in Statistics
-    x_iterator row_begin(int) const { return _v.begin(); }
-    x_iterator row_end(int) const { return _v.end(); }
+    x_iterator row_begin(int dummyCol) const { return _v.begin(); }
+    x_iterator row_end(int dummyCol) const { return _v.end(); }
     int getWidth() const { return _v.size(); }
     int getHeight() const { return 1; }
     
@@ -283,9 +286,9 @@ private:
  * @brief The makeStatistics() overload to handle std::vector<> 
  */
 template<typename EntryT>
-Statistics makeStatistics(std::vector<EntryT> &v, ///< Image (or MaskedImage) whose properties we want
+Statistics makeStatistics(std::vector<EntryT> const &v, ///< Image (or MaskedImage) whose properties we want
                           int const flags,   ///< Describe what we want to calculate
-                          StatisticsControl const& sctrl=StatisticsControl() ///< Control calculation
+                          StatisticsControl const& sctrl = StatisticsControl() ///< Control calculation
                          ) {
     
     ImageImposter<EntryT> img(v);           // wrap the vector in a fake image

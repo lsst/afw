@@ -42,10 +42,10 @@ afwMath::FixedKernel::FixedKernel(
     _image(image, true),
     _sum(0) {
 
-    typedef afwImage::Image<Pixel>::x_iterator x_iterator;
+    typedef afwImage::Image<Pixel>::x_iterator XIter;
     double imSum = 0.0;
     for (int y = 0; y != image.getHeight(); ++y) {
-        for (x_iterator imPtr = image.row_begin(y), imEnd = image.row_end(y); imPtr != imEnd; ++imPtr) {
+        for (XIter imPtr = image.row_begin(y), imEnd = image.row_end(y); imPtr != imEnd; ++imPtr) {
             imSum += *imPtr;
         }
     }
@@ -83,11 +83,11 @@ double afwMath::FixedKernel::computeImage(
         imSum = this->_sum;
     }
 
-    typedef afwImage::Image<Pixel>::x_iterator x_iterator;
+    typedef afwImage::Image<Pixel>::x_iterator XIter;
 
     for (int y = 0; y != this->getHeight(); ++y) {
-        x_iterator kPtr = this->_image.row_begin(y);
-        for (x_iterator imPtr = image.row_begin(y), imEnd = image.row_end(y);
+        XIter kPtr = this->_image.row_begin(y);
+        for (XIter imPtr = image.row_begin(y), imEnd = image.row_end(y);
             imPtr != imEnd; ++imPtr, ++kPtr) {
             imPtr[0] = multFactor*kPtr[0];
         }

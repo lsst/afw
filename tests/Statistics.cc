@@ -1,3 +1,4 @@
+// -*- LSST-C++ -*-
 #include <iostream>
 #include <limits>
 #include <cmath>
@@ -56,14 +57,17 @@ BOOST_AUTO_TEST_CASE(StatisticsBasic) {
         math::Statistics stats = math::makeStatistics(img, math::MEDIAN);
         BOOST_CHECK_EQUAL(pixval, stats.getValue(math::MEDIAN));
     }
+    
     {
         math::Statistics stats = math::makeStatistics(img, math::IQRANGE);
         BOOST_CHECK_EQUAL(0.0, stats.getValue(math::IQRANGE));
     }
+    
     {
         math::Statistics stats = math::makeStatistics(img, math::MEANCLIP);
         BOOST_CHECK_EQUAL(pixval, stats.getValue(math::MEANCLIP));
     }
+    
     {
         math::Statistics stats = math::makeStatistics(img, math::VARIANCECLIP);
         BOOST_CHECK_EQUAL(0.0, stats.getValue(math::VARIANCECLIP));
@@ -109,9 +113,9 @@ BOOST_AUTO_TEST_CASE(StatisticsRamp) {
     double dzdx = 1.0;
     double mean = z0 + (nx/2)*dzdx;
     double stdev = 0.0;
-    for (int i_y=0; i_y < ny; ++i_y) {
+    for (int iY = 0; iY < ny; ++iY) {
         double x = 0;
-        for (Image::x_iterator ptr=img.row_begin(i_y); ptr != img.row_end(i_y); ++ptr) {
+        for (Image::x_iterator ptr = img.row_begin(iY); ptr != img.row_end(iY); ++ptr) {
             *ptr = z0 + dzdx*x;
             x += 1.0;
             stdev += (*ptr - mean)*(*ptr - mean);
@@ -144,10 +148,12 @@ BOOST_AUTO_TEST_CASE(StatisticsRamp) {
         math::Statistics stats = math::makeStatistics(img, math::MEDIAN);
         BOOST_CHECK_EQUAL(z0 + dzdx*(nx - 1)/2.0, stats.getValue(math::MEDIAN));
     }
+    
     {
         math::Statistics stats = math::makeStatistics(img, math::IQRANGE);
         BOOST_CHECK_EQUAL(dzdx*(nx - 1)/2.0, stats.getValue(math::IQRANGE));
     }
+    
     {
         math::Statistics stats = math::makeStatistics(img, math::MEANCLIP);
         BOOST_CHECK_EQUAL(z0 + dzdx*(nx - 1)/2.0, stats.getValue(math::MEANCLIP));
@@ -236,8 +242,8 @@ BOOST_AUTO_TEST_CASE(StatisticsTestImages) {
             lsst::daf::base::PropertySet::Ptr fitsHdr = dimg.getMetadata(); // the FITS header
 
             // get the true values of the mean and stdev
-            double const true_mean = fitsHdr->getAsDouble("MEANCOMP");
-            double const true_stdev = fitsHdr->getAsDouble("SIGCOMP");
+            double const trueMean = fitsHdr->getAsDouble("MEANCOMP");
+            double const trueStdev = fitsHdr->getAsDouble("SIGCOMP");
 
             // measure the mean and stdev with the Statistics class
             Image::Ptr img = dimg.getImage();
@@ -248,8 +254,8 @@ BOOST_AUTO_TEST_CASE(StatisticsTestImages) {
             double const stdev = statobj.getValue(math::STDEV);
             
 
-            BOOST_CHECK_CLOSE(mean, true_mean, 1e-8);
-            BOOST_CHECK_CLOSE(stdev, true_stdev, 1e-8);
+            BOOST_CHECK_CLOSE(mean, trueMean, 1e-8);
+            BOOST_CHECK_CLOSE(stdev, trueStdev, 1e-8);
         }
     }
 }

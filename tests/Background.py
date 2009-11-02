@@ -54,7 +54,7 @@ class BackgroundTestCase(unittest.TestCase):
 
 
         xcen, ycen = 50, 100
-        bgCtrl = afwMath.BackgroundControl(afwMath.AKIMA_SPLINE)
+        bgCtrl = afwMath.BackgroundControl(afwMath.AKIMA_SPLINE_INTERP)
         bgCtrl.setNxSample(5)
         bgCtrl.setNySample(5)
         bgCtrl.sctrl.setNumIter(3)
@@ -99,7 +99,7 @@ class BackgroundTestCase(unittest.TestCase):
             naxis2 = img.getHeight()
             
             # create a background control object
-            bctrl = afwMath.BackgroundControl(afwMath.AKIMA_SPLINE);
+            bctrl = afwMath.BackgroundControl(afwMath.AKIMA_SPLINE_INTERP);
             bctrl.setNxSample(5);
             bctrl.setNySample(5);
             
@@ -134,7 +134,7 @@ class BackgroundTestCase(unittest.TestCase):
         
         # check corner, edge, and center pixels
         bctrl = afwMath.BackgroundControl();
-        bctrl.setStyle(afwMath.CUBIC_SPLINE);
+        bctrl.setInterpStyle(afwMath.CUBIC_SPLINE_INTERP);
         bctrl.setNxSample(6);
         bctrl.setNySample(6);
         bctrl.sctrl.setNumSigmaClip(20.0)  # something large enough to avoid clipping entirely
@@ -162,7 +162,7 @@ class BackgroundTestCase(unittest.TestCase):
                 parabimg.set(x, y, d2zdx2*x*x + d2zdy2*y*y + dzdx*x + dzdy*y + z0)
         
         # check corner, edge, and center pixels
-        bctrl = afwMath.BackgroundControl(afwMath.CUBIC_SPLINE);
+        bctrl = afwMath.BackgroundControl(afwMath.CUBIC_SPLINE_INTERP);
         bctrl.setNxSample(24);
         bctrl.setNySample(24);
         bctrl.sctrl.setNumSigmaClip(10.0)  
@@ -197,7 +197,7 @@ class BackgroundTestCase(unittest.TestCase):
         mi = mi.Factory(mi, afwImage.BBox(afwImage.PointI(32, 2), afwImage.PointI(2079, 4609)))
         mi.setXY0(afwImage.PointI(0, 0))
         
-        bctrl = afwMath.BackgroundControl(afwMath.AKIMA_SPLINE);
+        bctrl = afwMath.BackgroundControl(afwMath.AKIMA_SPLINE_INTERP);
         bctrl.setNxSample(16);
         bctrl.setNySample(16);
         bctrl.sctrl.setNumSigmaClip(3.0)  
@@ -205,13 +205,81 @@ class BackgroundTestCase(unittest.TestCase):
         backobj = afwMath.makeBackground(mi.getImage(), bctrl)
 
         if display:
-            ds9.mtv(mi, frame=0)
+            ds9.mtv(mi, frame = 0)
 
         im = mi.getImage(); im -= backobj.getImageF()
 
         if display:
-            ds9.mtv(mi, frame=1)
+            ds9.mtv(mi, frame = 1)
 
+            
+    def testUndersample(self):
+        """Test how the program handles nx,ny being too small for requested interp style."""
+
+        # make an image
+        nx = 64
+        ny = 64
+        img = afwImage.ImageD(nx, ny)
+        
+        # make a background control object
+        bctrl = afwMath.BackgroundControl()
+        bctrl.setInterpStyle(afwMath.CUBIC_SPLINE_INTERP)
+        bctrl.setNxSample(2)
+        bctrl.setNySample(2)
+
+        # see if it adjusts the nx,ny values up to 3x3
+        bctrl.setUndersampleStyle(afwMath.INCREASE_NXNYSAMPLE)
+        backobj = afwMath.makeBackground(img, bctrl)
+        self.assertEqual(backobj.getBackgroundControl().getNxSample(), 3)
+        self.assertEqual(backobj.getBackgroundControl().getNySample(), 3)
+
+        # put nx,ny back to 2 and see if it adjusts the interp style down to linear
+        bctrl.setNxSample(2)
+        bctrl.setNySample(2)
+        bctrl.setUndersampleStyle(afwMath.REDUCE_INTERP_ORDER)
+        backobj = afwMath.makeBackground(img, bctrl)
+        self.assertEqual(backobj.getBackgroundControl().getInterpStyle(), afwMath.LINEAR_INTERP)
+
+        # put interp style back up to cspline and see if it throws an exception
+        bctrl.setUndersampleStyle(afwMath.THROW_EXCEPTION)
+        bctrl.setInterpStyle(afwMath.CUBIC_SPLINE_INTERP)
+        def tst(im, bc):
+            backobj = afwMath.makeBackground(im, bc)
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException,
+                                       tst, img, bctrl)
+
+        
+    def testOnlyOneGridCell(self):
+        """Test how the program handles nxSample,nySample being 1x1."""
+        
+        # try a ramping image ... has an easy analytic solution
+        nx = 64
+        ny = 64
+        img = afwImage.ImageD(nx, ny, 10)
+        
+        dzdx, dzdy, z0 = 0.1, 0.2, 10000.0
+        mean = z0 + dzdx*(nx - 1)/2 + dzdy*(ny - 1)/2  # the analytic solution
+        for x in range(nx):
+            for y in range(ny):
+                img.set(x, y, dzdx*x + dzdy*y + z0)
+        
+        # make a background control object
+        bctrl = afwMath.BackgroundControl()
+        bctrl.setInterpStyle(afwMath.CONSTANT_INTERP)
+        bctrl.setNxSample(1)
+        bctrl.setNySample(1)
+        bctrl.setUndersampleStyle(afwMath.THROW_EXCEPTION)
+        backobj = afwMath.makeBackground(img, bctrl)
+        
+        xpixels = [0, nx/2, nx - 1]
+        ypixels = [0, ny/2, ny - 1]
+        for xpix in xpixels:
+            for ypix in ypixels:
+                testval = backobj.getPixel(xpix, ypix)
+                self.assertAlmostEqual(testval, mean, 10)
+
+        
+            
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
@@ -224,7 +292,7 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(exit=False):
+def run(exit = False):
     """Run the tests"""
     utilsTests.run(suite(), exit)
 

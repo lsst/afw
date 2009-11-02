@@ -95,8 +95,8 @@ class StatisticsTestCase(unittest.TestCase):
             sim += 1
 
         if display:
-            ds9.mtv(self.image, frame=0)
-            ds9.mtv(image2, frame=1)
+            ds9.mtv(self.image, frame = 0)
+            ds9.mtv(image2, frame = 1)
 
         stats = afwMath.makeStatistics(image2,
                                        afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN | afwMath.ERRORS)
@@ -128,23 +128,23 @@ class StatisticsTestCase(unittest.TestCase):
         self.assertEqual(stats.getValue(afwMath.MEDIAN), self.val)
 
     def testIqrange(self):
-	"""Test the inter-quartile range"""
-	stats = afwMath.makeStatistics(self.image, afwMath.IQRANGE)
+        """Test the inter-quartile range"""
+        stats = afwMath.makeStatistics(self.image, afwMath.IQRANGE)
         self.assertEqual(stats.getValue(afwMath.IQRANGE), 0)
 
     def testMeanClip(self):
-	"""Test the 3-sigma clipped mean"""
-	stats = afwMath.makeStatistics(self.image, afwMath.MEANCLIP)
+        """Test the 3-sigma clipped mean"""
+        stats = afwMath.makeStatistics(self.image, afwMath.MEANCLIP)
         self.assertEqual(stats.getValue(afwMath.MEANCLIP), self.val)
 
     def testVarianceClip(self):
-	"""Test the 3-sigma clipped variance"""
-	stats = afwMath.makeStatistics(self.image, afwMath.STDEVCLIP)
+        """Test the 3-sigma clipped variance"""
+        stats = afwMath.makeStatistics(self.image, afwMath.STDEVCLIP)
         self.assertEqual(stats.getValue(afwMath.STDEVCLIP), 0)
 
     def testVarianceClip(self):
-	"""Test the 3-sigma clipped variance"""
-	stats = afwMath.makeStatistics(self.image, afwMath.VARIANCECLIP)
+        """Test the 3-sigma clipped variance"""
+        stats = afwMath.makeStatistics(self.image, afwMath.VARIANCECLIP)
         self.assertEqual(stats.getValue(afwMath.VARIANCECLIP), 0)
 
     def testSampleImageStats(self):
@@ -190,44 +190,44 @@ class StatisticsTestCase(unittest.TestCase):
         ny = 64
         img = afwImage.ImageF(nx, ny)
     
-	z0 = 10.0
-	dzdx = 1.0
-	mean = z0 + (nx/2)*dzdx
-	stdev = 0.0
-	for y in range(ny):
-	    for x in range(nx):
-		z = z0 + dzdx*x
-		img.set(x, y, z)
-		stdev += (z - mean)*(z - mean)
-		
-	stdev = math.sqrt(stdev/(nx*ny - 1))
-	    
-	stats = afwMath.makeStatistics(img, afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN)
-	testmean = stats.getValue(afwMath.MEAN)
-	teststdev = stats.getValue(afwMath.STDEV)
-	
-	self.assertEqual(stats.getValue(afwMath.NPOINT), nx*ny)
-	self.assertEqual(testmean, mean)
-	self.assertEqual(teststdev, stdev )
-	    
-	stats = afwMath.makeStatistics(img, afwMath.STDEV | afwMath.MEAN | afwMath.ERRORS)
-	mean, mean_err = stats.getResult(afwMath.MEAN)
-	sd = stats.getValue(afwMath.STDEV)
-	
-	self.assertEqual(mean, img.get(nx/2, ny/2))
-	self.assertEqual(mean_err, sd/math.sqrt(img.getWidth()*img.getHeight()))
-	
-	# ===============================================================================
-	# sjb code for percentiles and clipped stats
+        z0 = 10.0
+        dzdx = 1.0
+        mean = z0 + (nx/2)*dzdx
+        stdev = 0.0
+        for y in range(ny):
+            for x in range(nx):
+                z = z0 + dzdx*x
+                img.set(x, y, z)
+                stdev += (z - mean)*(z - mean)
 
-	stats = afwMath.makeStatistics(img, afwMath.MEDIAN)
-	self.assertEqual(z0 + dzdx*(nx - 1)/2.0, stats.getValue(afwMath.MEDIAN))
-
-	stats = afwMath.makeStatistics(img, afwMath.IQRANGE)
-	self.assertEqual(dzdx*(nx - 1)/2.0, stats.getValue(afwMath.IQRANGE))
-
-	stats = afwMath.makeStatistics(img, afwMath.MEANCLIP)
-	self.assertEqual(z0 + dzdx*(nx - 1)/2.0, stats.getValue(afwMath.MEANCLIP))
+        stdev = math.sqrt(stdev/(nx*ny - 1))
+        
+        stats = afwMath.makeStatistics(img, afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN)
+        testmean = stats.getValue(afwMath.MEAN)
+        teststdev = stats.getValue(afwMath.STDEV)
+        
+        self.assertEqual(stats.getValue(afwMath.NPOINT), nx*ny)
+        self.assertEqual(testmean, mean)
+        self.assertEqual(teststdev, stdev )
+        
+        stats = afwMath.makeStatistics(img, afwMath.STDEV | afwMath.MEAN | afwMath.ERRORS)
+        mean, mean_err = stats.getResult(afwMath.MEAN)
+        sd = stats.getValue(afwMath.STDEV)
+        
+        self.assertEqual(mean, img.get(nx/2, ny/2))
+        self.assertEqual(mean_err, sd/math.sqrt(img.getWidth()*img.getHeight()))
+        
+        # ===============================================================================
+        # sjb code for percentiles and clipped stats
+        
+        stats = afwMath.makeStatistics(img, afwMath.MEDIAN)
+        self.assertEqual(z0 + dzdx*(nx - 1)/2.0, stats.getValue(afwMath.MEDIAN))
+        
+        stats = afwMath.makeStatistics(img, afwMath.IQRANGE)
+        self.assertEqual(dzdx*(nx - 1)/2.0, stats.getValue(afwMath.IQRANGE))
+        
+        stats = afwMath.makeStatistics(img, afwMath.MEANCLIP)
+        self.assertEqual(z0 + dzdx*(nx - 1)/2.0, stats.getValue(afwMath.MEANCLIP))
 
         
     def testMask(self):
@@ -258,7 +258,7 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(exit=False):
+def run(exit = False):
     """Run the tests"""
     utilsTests.run(suite(), exit)
 

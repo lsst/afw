@@ -128,7 +128,7 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(exit=False):
+def run(exit = False):
     """Run the tests"""
     utilsTests.run(suite(), exit)
 
