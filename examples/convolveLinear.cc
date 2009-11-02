@@ -17,11 +17,11 @@ int main(int argc, char **argv) {
     lsst::pex::logging::Trace::setDestination(std::cout);
     lsst::pex::logging::Trace::setVerbosity("lsst.afw.kernel", 5);
 
-    typedef float imagePixelType;
-    unsigned int KernelCols = 5;
-    unsigned int KernelRows = 8;
-    double MinSigma = 1.5;
-    double MaxSigma = 2.5;
+    typedef float ImagePixel;
+    unsigned int const KernelCols = 5;
+    unsigned int const KernelRows = 8;
+    double const MinSigma = 1.5;
+    double const MaxSigma = 2.5;
     
     if (argc < 2) {
         std::cerr << "Usage: linearConvolve fitsFile [doBothWays]" << std::endl;
@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
         }
         
         // read in fits file
-        afwImage::MaskedImage<imagePixelType> mImage(argv[1]);
+        afwImage::MaskedImage<ImagePixel> mImage(argv[1]);
         
         // construct basis kernels
         afwMath::KernelList kernelList;
@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
         lcSpVarKernel.setSpatialParameters(polyParams);
     
         // convolve
-        afwImage::MaskedImage<imagePixelType> resMaskedImage(mImage.getDimensions());
+        afwImage::MaskedImage<ImagePixel> resMaskedImage(mImage.getDimensions());
         afwMath::convolve(resMaskedImage, mImage, lcSpVarKernel, false);
         
         // write results
@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
         std::cout << "Wrote " << outFile << "_img.fits, etc." << std::endl;
 
         if (doBothWays) {
-            afwImage::MaskedImage<imagePixelType> altResMaskedImage(mImage.getDimensions());
+            afwImage::MaskedImage<ImagePixel> altResMaskedImage(mImage.getDimensions());
             afwMath::convolve(altResMaskedImage, mImage, lcSpVarKernel, false);
             altResMaskedImage.writeFits(altOutFile);
             std::cout << "Wrote " << altOutFile << "_img.fits, etc. (using afwMath::convolve)" << std::endl;

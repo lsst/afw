@@ -278,7 +278,8 @@ int afwMath::warpImage(
                     - (dSrcA.getY() * dSrcB.getX())) / kSum;
                 *destXIter *= multFac;
 //                destXIter.image() *= static_cast<typename DestImageT::Image::SinglePixel>(multFac);
-//                destXIter.variance() *= static_cast<typename DestImageT::Variance::SinglePixel>(multFac * multFac);
+//                destXIter.variance() *=
+//                    static_cast<typename DestImageT::Variance::SinglePixel>(multFac * multFac);
             }
 
             // Copy srcPosXY to prevRowSrcPosXY to use for computing area scaling for pixels in the next row

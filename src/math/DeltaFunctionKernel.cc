@@ -6,6 +6,7 @@
  *
  * @ingroup fw
  */
+#include <sstream>
 #include <vector>
 
 #include "lsst/pex/exceptions.h"
@@ -29,7 +30,10 @@ afwMath::DeltaFunctionKernel::DeltaFunctionKernel(
     _pixel(point)
 {
     if (point.getX() < 0 || point.getX() >= width || point.getY() < 0 || point.getY() >= height) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "Active pixel lies outside image");
+        std::ostringstream os;
+        os << "point (" << point.getX() << ", " << point.getY() << ") lies outside "
+            << width << "x" << height << " sized kernel";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
 }
 
@@ -48,7 +52,10 @@ double afwMath::DeltaFunctionKernel::computeImage(
     double y
 ) const {
     if (image.getDimensions() != this->getDimensions()) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "image is the wrong size");
+        std::ostringstream os;
+        os << "image dimensions = ( " << image.getWidth() << ", " << image.getHeight()
+            << ") != (" << this->getWidth() << ", " << this->getHeight() << ") = kernel dimensions";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
 
     const int pixelX = getPixel().getX(); // active pixel in Kernel

@@ -14,29 +14,33 @@ void timePixelAccess(ImageT const &image, typename ImageT::SinglePixel const pix
     clock_t startTime = clock();
     for (int iter = 0; iter < nIter; ++iter) {
         for (int y = 0; y < image.getHeight(); ++y) {
-            for (typename ImageT::x_iterator ptr = image.row_begin(y), end = image.row_end(y); ptr != end; ++ptr) {
+            for (typename ImageT::x_iterator ptr = image.row_begin(y), end = image.row_end(y);
+                ptr != end; ++ptr) {
                 *ptr += pix;
             }
         }
     }
     double secPerIter = (clock() - startTime) / static_cast<double> (nIter * CLOCKS_PER_SEC);
     double const megaPix = static_cast<double>(nCols * nRows) / 1.0e6;
-    printf("Pixel Iterator\t%d\t%d\t%g\t%-8g\t%-8.1f\n", nCols, nRows, megaPix, secPerIter, megaPix/secPerIter);
+    printf("Pixel Iterator\t%d\t%d\t%g\t%-8g\t%-8.1f\n",
+        nCols, nRows, megaPix, secPerIter, megaPix/secPerIter);
 
     startTime = clock();
     for (int iter = 0; iter < nIter; ++iter) {
         for (int y = 0; y < image.getHeight(); ++y) {
-            for (typename ImageT::xy_locator ptr = image.xy_at(0, y), end = image.xy_at(nCols, y); ptr != end; ++ptr.x()) {
+            for (typename ImageT::xy_locator ptr = image.xy_at(0, y), end = image.xy_at(nCols, y);
+                ptr != end; ++ptr.x()) {
                 *ptr += pix;
             }
         }
     }
     secPerIter = (clock() - startTime) / static_cast<double> (nIter * CLOCKS_PER_SEC);
-    printf("Pixel Locator\t%d\t%d\t%g\t%-8g\t%-8.1f\n", nCols, nRows, megaPix, secPerIter, megaPix/secPerIter);
+    printf("Pixel Locator\t%d\t%d\t%g\t%-8g\t%-8.1f\n",
+        nCols, nRows, megaPix, secPerIter, megaPix/secPerIter);
 }
 
 int main(int argc, char **argv) {
-    typedef float imageType;
+    typedef float ImagePixel;
 
     int const DefNIter = 100;
     int const DefNCols = 1024;
@@ -66,15 +70,15 @@ int main(int argc, char **argv) {
 
     std::cout << "Image(" << nCols << ", " << nRows << ")" << std::endl;
     {
-        afwImage::Image<imageType> image(nCols, nRows);
-        afwImage::Image<imageType>::SinglePixel pix(1.0);
+        afwImage::Image<ImagePixel> image(nCols, nRows);
+        afwImage::Image<ImagePixel>::SinglePixel pix(1.0);
         timePixelAccess(image, pix, nIter);
     }
     
     std::cout << "MaskedImage(" << nCols << ", " << nRows << ")" << std::endl;
     {
-        afwImage::MaskedImage<imageType> maskedImage(nCols, nRows);
-        afwImage::MaskedImage<imageType>::SinglePixel pix(1.0, 0x10, 100);
+        afwImage::MaskedImage<ImagePixel> maskedImage(nCols, nRows);
+        afwImage::MaskedImage<ImagePixel>::SinglePixel pix(1.0, 0x10, 100);
         timePixelAccess(maskedImage, pix, nIter);
     }
 }

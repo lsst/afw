@@ -8,6 +8,8 @@
  *
  * @ingroup afw
  */
+#include <sstream>
+
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
 
@@ -59,8 +61,10 @@ afwMath::AnalyticKernel::AnalyticKernel(
     _kernelFunctionPtr(kernelFunction.clone())
 {
     if (kernelFunction.getNParameters() != spatialFunctionList.size()) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
-            "Length of spatialFunctionList does not match # of kernel function params");
+        std::ostringstream os;
+        os << "kernelFunction.getNParameters() = " << kernelFunction.getNParameters()
+            << " != " << spatialFunctionList.size() << " = " << "spatialFunctionList.size()";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
 }
 
@@ -84,10 +88,11 @@ double afwMath::AnalyticKernel::computeImage(
     double x,
     double y
 ) const {
-    typedef afwImage::Image<Pixel>::x_iterator x_iterator;
-    
     if (image.getDimensions() != this->getDimensions()) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "image is the wrong size");
+        std::ostringstream os;
+        os << "image dimensions = ( " << image.getWidth() << ", " << image.getHeight()
+            << ") != (" << this->getWidth() << ", " << this->getHeight() << ") = kernel dimensions";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
     if (this->isSpatiallyVarying()) {
         this->setKernelParametersFromSpatialModel(x, y);

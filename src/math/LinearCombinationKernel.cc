@@ -8,8 +8,9 @@
  *
  * @ingroup afw
  */
-#include <stdexcept>
 #include <numeric>
+#include <sstream>
+#include <stdexcept>
 
 #include "boost/format.hpp"
 
@@ -45,6 +46,12 @@ afwMath::LinearCombinationKernel::LinearCombinationKernel(
     _kernelSumList(),
     _kernelParams(kernelParameters)
 {
+    if (kernelList.size() != kernelParameters.size()) {
+        std::ostringstream os;
+        os << "kernelList.size() = " << kernelList.size()
+            << " != " << kernelParameters.size() << " = " << "kernelParameters.size()";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+    }
     checkKernelList(kernelList);
     _setKernelList(kernelList);
 }
@@ -86,8 +93,10 @@ afwMath::LinearCombinationKernel::LinearCombinationKernel(
     _kernelParams(std::vector<double>(kernelList.size()))
 {
     if (kernelList.size() != spatialFunctionList.size()) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
-            "Length of spatialFunctionList does not match length of kernelList");
+        std::ostringstream os;
+        os << "kernelList.size() = " << kernelList.size()
+            << " != " << spatialFunctionList.size() << " = " << "spatialFunctionList.size()";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
     checkKernelList(kernelList);
     _setKernelList(kernelList);
@@ -141,7 +150,10 @@ double afwMath::LinearCombinationKernel::computeImage(
     double y
 ) const {
     if (image.getDimensions() != this->getDimensions()) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException,"image is the wrong size");
+        std::ostringstream os;
+        os << "image dimensions = ( " << image.getWidth() << ", " << image.getHeight()
+            << ") != (" << this->getWidth() << ", " << this->getHeight() << ") = kernel dimensions";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
     if (this->isSpatiallyVarying()) {
         this->computeKernelParametersFromSpatialModel(this->_kernelParams, x, y);

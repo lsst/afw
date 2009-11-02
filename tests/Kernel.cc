@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(ConvolutionVisitorTest) {
     }
 
     FixedKernel fixedKernel(img);
-    LinearCombinationKernel linearCombinationKernel(basisList, std::vector<double>());
+    LinearCombinationKernel linearCombinationKernel(basisList, std::vector<double>(basisList.size()));
 
     FourierConvolutionVisitor::Ptr fourierVisitor;
     ImageConvolutionVisitor::Ptr imgVisitor;
