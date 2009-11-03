@@ -9,8 +9,9 @@ import lsst.afw.math as afwMath
 import lsst.utils.tests as utilsTests
 import lsst.pex.logging as pexLog
 
-Verbosity = 0 # increase to see trace
-pexLog.Debug("lsst.afwMath", Verbosity)
+VERBOSITY = 0 # increase to see trace
+
+pexLog.Debug("lsst.afwMath", VERBOSITY)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -90,14 +91,14 @@ class FunctionTestCase(unittest.TestCase):
         for xsigma in (0.1, 1.0, 3.0):
             f.setParameters((xsigma,))
             xdelta = xsigma / 10.0
-            sum = 0.0
+            fSum = 0.0
             for x in numpy.arange(-xsigma * 20, xsigma * 20.01, xdelta):
                 predVal = basicGaussian(x, xsigma)
-                sum += predVal
+                fSum += predVal
                 if not numpy.allclose(predVal, f(x)):
                     self.fail("%s = %s != %s for x=%s, xsigma=%s" % \
                         (f.__class__.__name__, f(x), predVal, x, xsigma))
-            approxArea = sum * xdelta
+            approxArea = fSum * xdelta
             if not numpy.allclose(approxArea, 1.0):
                 self.fail("%s area = %s != 1.0 for xsigma=%s" % \
                     (f.__class__.__name__, approxArea, xsigma))
@@ -114,17 +115,17 @@ class FunctionTestCase(unittest.TestCase):
                 f.setParameters((xsigma, ysigma))
                 fx.setParameters((xsigma,))
                 fy.setParameters((ysigma,))
-                sum = 0.0
+                fSum = 0.0
                 xdelta = xsigma / 5.0
                 ydelta = ysigma / 5.0
                 for y in numpy.arange(-ysigma * 5, ysigma * 5.01, ydelta):
                     for x in numpy.arange(-xsigma * 5.0, xsigma * 5.01, xdelta):
                         predVal = fx(x) * fy(y)
-                        sum += predVal
-                        if not numpy.allclose(predVal, f(x,y)):
+                        fSum += predVal
+                        if not numpy.allclose(predVal, f(x, y)):
                             self.fail("%s = %s != %s for x=%s, y=%s, xsigma=%s, ysigma=%s" % \
-                                (f.__class__.__name__, f(x,y), predVal, x, y, xsigma, ysigma))
-                approxArea = sum * xdelta * ydelta
+                                (f.__class__.__name__, f(x, y), predVal, x, y, xsigma, ysigma))
+                approxArea = fSum * xdelta * ydelta
                 if not numpy.allclose(approxArea, 1.0):
                     self.fail("%s area = %s != 1.0 for xsigma=%s, ysigma=%s" % \
                         (f.__class__.__name__, approxArea, xsigma, ysigma))
@@ -146,18 +147,18 @@ class FunctionTestCase(unittest.TestCase):
                     sigma2Sq = sigma2**2
                     f1Mult = b * sigma2Sq / sigma1Sq
                     allMult = sigma1Sq / (sigma1Sq + (b * sigma2Sq))
-                    sum = 0.0
+                    fSum = 0.0
                     maxsigma = max(sigma1, sigma2)
                     minsigma = min(sigma1, sigma2)
                     delta = minsigma / 5.0
                     for y in numpy.arange(-maxsigma * 5, maxsigma * 5.01, delta):
                         for x in numpy.arange(-maxsigma * 5.0, maxsigma * 5.01, delta):
                             predVal = (f1(x, y) + (f1Mult * f2(x, y))) * allMult
-                            sum += predVal
-                            if not numpy.allclose(predVal, f(x,y)):
+                            fSum += predVal
+                            if not numpy.allclose(predVal, f(x, y)):
                                 self.fail("%s = %s != %s for x=%s, y=%s, sigma1=%s, sigma2=%s, b=%s" % \
-                                    (f.__class__.__name__, f(x,y), predVal, x, y, sigma1, sigma2, b))
-                    approxArea = sum * delta**2
+                                    (f.__class__.__name__, f(x, y), predVal, x, y, sigma1, sigma2, b))
+                    approxArea = fSum * delta**2
                     if not numpy.allclose(approxArea, 1.0):
                         self.fail("%s area = %s != 1.0 for sigma1=%s, sigma2=%s" % \
                             (f.__class__.__name__, approxArea, sigma1, sigma2))
@@ -173,9 +174,9 @@ class FunctionTestCase(unittest.TestCase):
                 for x in numpy.arange(-5.0, 5.0, 1.0):
                     for y in numpy.arange(-5.0, 5.0, 1.0):
                         predVal = basicDelta(x, xo) * basicDelta(y, yo)
-                        if predVal != f(x,y):
+                        if predVal != f(x, y):
                             self.fail("%s = %s != %s for x=%s, y=%s, xo=%s, yo=%s" % \
-                                (f.__class__.__name__, f(x,y), predVal, x, y, xo, yo))
+                                (f.__class__.__name__, f(x, y), predVal, x, y, xo, yo))
     
     def testLanczosFunction1D(self):
         """A test for LanczosFunction1D"""
@@ -210,7 +211,7 @@ class FunctionTestCase(unittest.TestCase):
                             predVal = basicLanczos1(xAdj, n) * basicLanczos1(yAdj, n)
                             if not numpy.allclose(predVal, f(x, y)):
                                 self.fail("%s = %s != %s for n=%s, x=%s, xOffset=%s, yOffset=%s, xAdj=%s, yAdj=%s" % \
-                                    (f.__class__.__name__, f(x,y), predVal, n, x, xOffset, yOffset, xAdj, yAdj))
+                                    (f.__class__.__name__, f(x, y), predVal, n, x, xOffset, yOffset, xAdj, yAdj))
        
     def testPolynomialFunction1D(self):
         """A test for PolynomialFunction1D
@@ -268,9 +269,9 @@ class FunctionTestCase(unittest.TestCase):
             for x in numpy.arange(-10.0, 10.1, 2.5):
                 for y in numpy.arange(-10.0, 10.1, 2.5):
                     predVal = basic2DPoly(x, y, coeffs)
-                    if not numpy.allclose(predVal, f(x,y)):
+                    if not numpy.allclose(predVal, f(x, y)):
                         self.fail("%s = %s != %s for x=%s, y=%s, coeffs=%s" % \
-                            (f.__class__.__name__, f(x,y), predVal, x, y, coeffs))
+                            (f.__class__.__name__, f(x, y), predVal, x, y, coeffs))
         
         # test that the number of parameters is correct for the given order
         def numParamsFromOrder(order):
@@ -304,5 +305,9 @@ def suite():
 
     return unittest.TestSuite(suites)
 
+def run(doExit=False):
+    """Run the tests"""
+    utilsTests.run(suite(), doExit)
+
 if __name__ == "__main__":
-    utilsTests.run(suite())
+    run(True)

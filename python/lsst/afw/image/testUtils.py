@@ -240,7 +240,7 @@ def maskedImagesDiffer(maskedImageArrSet1, maskedImageArrSet2,
                 retStrs.append(errStr)
         else:
             errStr = imagesDiffer(maskedImageArrSet1[ind], maskedImageArrSet2[ind],
-                skipMaskArr=skipMaskArr, rtol=1.0e-05, atol=1e-08)
+                skipMaskArr=skipMaskArr, rtol=rtol, atol=atol)
             if errStr:
                 retStrs.append("%s planes differ: %s" % (planeName, errStr))
     return " | ".join(retStrs)

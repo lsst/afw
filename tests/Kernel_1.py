@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-import os
-import math
 import pdb                          # we may want to say pdb.set_trace()
 import unittest
 
@@ -13,8 +11,9 @@ import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.image.testUtils as imTestUtils
 
-Verbosity = 0 # increase to see trace
-pexLog.Debug("lsst.afw", Verbosity)
+VERBOSITY = 0 # increase to see trace
+
+pexLog.Debug("lsst.afw", VERBOSITY)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -89,7 +88,7 @@ class KernelTestCase(unittest.TestCase):
                 utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
                     afwMath.DeltaFunctionKernel, kWidth, 0, afwImage.PointI(kWidth, kHeight))
                             
-        kernel = afwMath.DeltaFunctionKernel(kWidth, kHeight, afwImage.PointI(1, 1))
+        kernel = afwMath.DeltaFunctionKernel(5, 6, afwImage.PointI(1, 1))
         self.basicTests(kernel, 0)
 
         self.checkComputeImage(kernel)
@@ -108,7 +107,7 @@ class KernelTestCase(unittest.TestCase):
             for col in range(inImage.getWidth()):
                 inImage.set(col, row, inArr[col, row])
         
-        kernel = afwMath.FixedKernel(inImage);
+        kernel = afwMath.FixedKernel(inImage)
         self.basicTests(kernel, 0)
         outImage = afwImage.ImageD(kernel.getDimensions())
         kernel.computeImage(outImage, False)
@@ -232,7 +231,6 @@ class KernelTestCase(unittest.TestCase):
         kernel = afwMath.SeparableKernel(kWidth, kHeight, gaussFunc1, gaussFunc1)
         self.basicTests(kernel, 2)
         fArr = numpy.zeros(shape=[kernel.getWidth(), kernel.getHeight()], dtype=float)
-        gArr = numpy.zeros(shape=[kernel.getWidth(), kernel.getHeight()], dtype=float)
         gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0)
         for xsigma in (0.1, 1.0, 3.0):
             gaussFunc1.setParameters((xsigma,))
@@ -285,23 +283,23 @@ class KernelTestCase(unittest.TestCase):
             try:
                 afwMath.AnalyticKernel(kWidth, kHeight, gaussFunc2, spFuncList)
                 self.fail("Should have failed with wrong # of spatial functions")
-            except pexExcept.LsstCppException, e:
+            except pexExcept.LsstCppException:
                 pass
             try:
                 afwMath.LinearCombinationKernel(kernelList, spFuncList)
                 self.fail("Should have failed with wrong # of spatial functions")
-            except pexExcept.LsstCppException, e:
+            except pexExcept.LsstCppException:
                 pass
             kParamList = [0.2]*numKernelParams
             try:
                 afwMath.LinearCombinationKernel(kernelList, kParamList)
                 self.fail("Should have failed with wrong # of kernel parameters")
-            except pexExcept.LsstCppException, e:
+            except pexExcept.LsstCppException:
                 pass
             try:
                 afwMath.SeparableKernel(kWidth, kHeight, gaussFunc1, gaussFunc1, spFuncList)
                 self.fail("Should have failed with wrong # of spatial functions")
-            except pexExcept.LsstCppException, e:
+            except pexExcept.LsstCppException:
                 pass
 
         for pointX in range(-1, kWidth+2):
@@ -518,7 +516,7 @@ class KernelTestCase(unittest.TestCase):
                     except pexExcept.LsstCppException:
                         pass
 
-    def compareKernels(self, kernel1, kernel2, newCtr1=(0,0)):
+    def compareKernels(self, kernel1, kernel2, newCtr1=(0, 0)):
         """Compare two kernels; return None if they match, else return a string describing a difference.
         
         kernel1: one kernel to test
@@ -586,9 +584,9 @@ def suite():
 
     return unittest.TestSuite(suites)
 
-def run(exit=False):
+def run(doExit=False):
     """Run the tests"""
-    utilsTests.run(suite(), exit)
+    utilsTests.run(suite(), doExit)
 
 if __name__ == "__main__":
     run(True)

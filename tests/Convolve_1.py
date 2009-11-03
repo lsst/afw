@@ -3,29 +3,31 @@
 
 Tests convolution of various kernels with Images and MaskedImages.
 """
-import math
 import os
-import re
 import pdb                          # we may want to say pdb.set_trace()
-import sys
 import unittest
 
 import numpy
 
 import eups
-import lsst.utils.tests as utilsTest
+import lsst.utils.tests as utilsTests
 import lsst.pex.logging as pexLog
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.image.testUtils as imTestUtils
 
-Verbosity = 0   # increase to see trace; 3 will show the convolutions specializations being used
-pexLog.Debug("lsst.afw", Verbosity)
+VERBOSITY = 0   # increase to see trace; 3 will show the convolutions specializations being used
+TESTTICKET873 = False
+
+if not TESTTICKET873:
+    print "warning: not testing ticket 873"
+
+pexLog.Debug("lsst.afw", VERBOSITY)
 
 try:
     display
 except NameError:
-    display=False
+    display = False
 
 import lsst.afw.display.ds9 as ds9
 import lsst.afw.display.utils as displayUtils
@@ -65,7 +67,7 @@ def refConvolve(imMaskVar, kernel, doNormalize, copyEdge):
     image, mask, variance = imMaskVar
     
     if copyEdge:
-        # copy input arrays to output arrays and set EDGE bit of mask; non-edge pixels will be overwritten below
+        # copy input arrays to output arrays and set EDGE bit of mask; non-edge pixels are overwritten below
         retImage = imMaskVar[0].copy()
         retMask = imMaskVar[1].copy()
         retMask += EdgeMaskPixel
@@ -133,7 +135,7 @@ def makeGaussianKernelVec(kCols, kRows):
     ]
     kVec = afwMath.KernelList()
     for xSigma, ySigma in xySigmaList:
-        kFunc = afwMath.GaussianFunction2D(1.5, 2.5)
+        kFunc = afwMath.GaussianFunction2D(xSigma, ySigma)
         kVec.append(afwMath.AnalyticKernel(kCols, kRows, kFunc))
     return kVec
 
@@ -205,7 +207,7 @@ class ConvolveTestCase(unittest.TestCase):
         The relative difference (rtol * abs(b)) and the absolute difference "atol" are added together
         to compare against the absolute difference between "a" and "b".
         """
-        if Verbosity > 0:
+        if VERBOSITY > 0:
             print "Test convolution with", kernelDescr
         if refKernel == None:
             refKernel = kernel
@@ -223,17 +225,19 @@ class ConvolveTestCase(unittest.TestCase):
     
                 if display and False:
                     refMaskedImage = imTestUtils.maskedImageFromArrays(refCnvImMaskVarArr)
-                    ds9.mtv(displayUtils.makeMosaic(self.maskedImage, refMaskedImage, self.cnvMaskedImage), frame=0)
+                    ds9.mtv(displayUtils.makeMosaic(self.maskedImage, refMaskedImage, self.cnvMaskedImage),
+                        frame=0)
                     if False:
                         for (x, y) in ((0, 0), (1, 0), (0, 1), (50, 50)):
-                            print "Mask(%d,%d) 0x%x 0x%x" % \
-                                  (x, y, refMaskedImage.getMask().get(x, y), self.cnvMaskedImage.getMask().get(x, y))
+                            print "Mask(%d,%d) 0x%x 0x%x" % (x, y, refMaskedImage.getMask().get(x, y),
+                            self.cnvMaskedImage.getMask().get(x, y))
     
                 errStr = imTestUtils.imagesDiffer(cnvImArr, refCnvImMaskVarArr[0], rtol=rtol, atol=atol)
                 if errStr:
                     self.fail("convolve(Image, kernel=%s, doNormalize=%s, copyEdge=%s) failed:\n%s" % \
                         (kernelDescr, doNormalize, copyEdge, errStr))
-                errStr = imTestUtils.maskedImagesDiffer(cnvImMaskVarArr, refCnvImMaskVarArr, rtol=rtol, atol=atol)
+                errStr = imTestUtils.maskedImagesDiffer(cnvImMaskVarArr, refCnvImMaskVarArr,
+                    doVariance = TESTTICKET873, rtol=rtol, atol=atol)
                 if errStr:
                     self.fail("convolve(MaskedImage, kernel=%s, doNormalize=%s, copyEdge=%s) failed:\n%s" % \
                         (kernelDescr, doNormalize, copyEdge, errStr))
@@ -368,7 +372,8 @@ class ConvolveTestCase(unittest.TestCase):
             for kRows in range(1, 4):
                 for activeCol in range(kCols):
                     for activeRow in range(kRows):
-                        kernel = afwMath.DeltaFunctionKernel(kCols, kRows, afwImage.PointI(activeCol, activeRow))
+                        kernel = afwMath.DeltaFunctionKernel(kCols, kRows,
+                            afwImage.PointI(activeCol, activeRow))
 
                         self.runStdTest(kernel, kernelDescr="Delta Function Kernel")
 
@@ -421,13 +426,12 @@ class ConvolveTestCase(unittest.TestCase):
         self.runStdTest(kernel,
             kernelDescr="Spatially varying LinearCombinationKernel of delta function basis kernels")
 
-    def DISABLEDtestTicket873(self):
+    def testTicket873(self):
         """Demonstrate ticket 873: convolution of a MaskedImage with a spatially varying
         LinearCombinationKernel of basis kernels with low covariance gives incorrect variance.
         """
-        kCols = 5
-        kRows = 5
-
+        if not TESTTICKET873:
+            return
         # create spatial model
         sFunc = afwMath.PolynomialFunction2D(1)
         
@@ -459,10 +463,8 @@ class ConvolveTestCase(unittest.TestCase):
         kImage = imTestUtils.imageFromArray(kImArr, afwImage.ImageD)
         kVec.append(afwMath.FixedKernel(kImage))
 
-        lcKernel = afwMath.LinearCombinationKernel(kVec, sFunc)
-        lcKernel.setSpatialParameters(sParams)
-
-        imMaskVar = imTestUtils.arraysFromMaskedImage(self.maskedImage)
+        kernel = afwMath.LinearCombinationKernel(kVec, sFunc)
+        kernel.setSpatialParameters(sParams)
 
         self.runStdTest(kernel,
             kernelDescr="Spatially varying LinearCombinationKernel of basis kernels with low covariance")
@@ -471,17 +473,17 @@ class ConvolveTestCase(unittest.TestCase):
 
 def suite():
     """Returns a suite containing all the test cases in this module."""
-    utilsTest.init()
+    utilsTests.init()
 
     suites = []
     suites += unittest.makeSuite(ConvolveTestCase)
-    suites += unittest.makeSuite(utilsTest.MemoryTestCase)
+    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)
 
-def run(exit=False):
+def run(doExit=False):
     """Run the tests"""
-    utilsTest.run(suite(), exit)
+    utilsTests.run(suite(), doExit)
 
 if __name__ == "__main__":
     run(True)
