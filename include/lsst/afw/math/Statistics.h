@@ -142,6 +142,7 @@ private:
     
     // return type for _getStandard
     typedef boost::tuple<double, double, double, double, double> StandardReturn; 
+    typedef boost::tuple<int, double, double, double, double> SumReturn; 
 
     long _flags;                        // The desired calculation
 
@@ -157,7 +158,11 @@ private:
     double _iqrange;                    // the image's interquartile range
 
     StatisticsControl _sctrl;           // the control structure
-    
+
+    template<typename Image, typename Mask>
+    SumReturn _sumImage(Image const &img, Mask const &msk, int const flags,
+                        int const nCrude, double const meanCrude = 0);
+
     template<typename Image, typename Mask>
     StandardReturn _getStandard(Image const &img, Mask const &msk, int const flags);
     template<typename Image, typename Mask>

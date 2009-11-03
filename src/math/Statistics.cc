@@ -124,6 +124,43 @@ math::Statistics::Statistics(Image const &img, ///< Image whose properties we wa
 }
 
 
+template<typename Image, typename Mask>
+math::Statistics::SumReturn math::Statistics::_sumImage(Image const &img,
+                                                        Mask const &msk,
+                                                        int const flags,
+                                                        int const nCrude,
+                                                        double const meanCrude
+                                                       ) {
+    int n = 0;
+    double sum = 0, sumx2 = 0;
+    double min = (nCrude) ? meanCrude : MAX_DOUBLE;
+    double max = (nCrude) ? meanCrude : -MAX_DOUBLE;
+
+    for (int iY = 0; iY < img.getHeight(); ++iY) {
+        
+        typename Mask::x_iterator mptr = msk.row_begin(iY);
+        for (typename Image::x_iterator ptr = img.row_begin(iY), end = ptr + img.getWidth();
+             ptr != end; ++ptr, ++mptr) {
+            
+            if ( (! isnan(*ptr)) &&
+                 (! (*mptr & _sctrl.getAndMask())) ) {
+                double const delta = *ptr - meanCrude;
+                sum   += delta;
+                sumx2 += delta*delta;
+                if ( *ptr < min ) { min = *ptr; }
+                if ( *ptr > max ) { max = *ptr; }
+                n++;
+            }
+        }
+    }
+    if (n == 0) {
+        min = NaN;
+        max = NaN;
+    }
+
+    return boost::make_tuple(n, sum, sumx2, min, max);
+}
+
 /* =========================================================================
  * _getStandard(img, flags)
  * @brief Compute the standard stats: mean, variance, min, max
@@ -141,8 +178,8 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
     
     // =====================================================
     // Get a crude estimate of the mean
-    int n = 0;
-    double sum = 0;
+    int nCrude = 0;
+    double sumCrude = 0;
     if ( _sctrl.getNanSafe()) {
 
         for (int y = 0; y<img.getHeight(); y += 10) {
@@ -150,8 +187,8 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
             for (typename Image::x_iterator ptr = img.row_begin(y), end = ptr + img.getWidth();
                  ptr != end; ++ptr, ++mptr) {
                 if ( !isnan(*ptr) && !(*mptr & _sctrl.getAndMask()) ) {
-                    sum += *ptr;
-                    ++n;
+                    sumCrude += *ptr;
+                    ++nCrude;
                 }
             }
         }
@@ -162,50 +199,37 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
             for (typename Image::x_iterator ptr = img.row_begin(y), end = ptr + img.getWidth();
                  ptr != end; ++ptr, ++mptr) {
                 if ( ! (*mptr & _sctrl.getAndMask()) ) {
-                    sum += *ptr;
-                    ++n;
+                    sumCrude += *ptr;
+                    ++nCrude;
                 }
             }
         }
     }
 
     // a crude estimate of the mean, used for numerical stability of variance
-    double crudeMean = 0.0;
-    if ( n > 0 ) { crudeMean = sum/n; }
+    double meanCrude = 0.0;
+    if ( nCrude > 0 ) { meanCrude = sumCrude/nCrude; }
 
     // =======================================================
     // Estimate the full precision variance using that crude mean
     // - get the min and max as well
-    sum = 0;
-    n = 0;
-    double sumx2 = 0;                   // sum of (data - crudeMean)^2
-    double min = (n) ? crudeMean : MAX_DOUBLE;
-    double max = (n) ? crudeMean : -MAX_DOUBLE;
+    double sum = 0;
+    int n = 0;
+    double sumx2 = 0;                   // sum of (data - meanCrude)^2
+    double min = (nCrude) ? meanCrude : MAX_DOUBLE;
+    double max = (nCrude) ? meanCrude : -MAX_DOUBLE;
     
     // If we want max or min (you get both)
     if (flags & (MIN | MAX)){
-        for (int y = 0; y < img.getHeight(); ++y) {
-            
-            typename Mask::x_iterator mptr = msk.row_begin(y);
-            for (typename Image::x_iterator ptr = img.row_begin(y), end = ptr + img.getWidth();
-                 ptr != end; ++ptr, ++mptr) {
 
-                if ( (! isnan(*ptr)) &&
-                     (! (*mptr & _sctrl.getAndMask())) ) {
-                    double const delta = *ptr - crudeMean;
-                    sum   += delta;
-                    sumx2 += delta*delta;
-                    if ( *ptr < min ) { min = *ptr; }
-                    if ( *ptr > max ) { max = *ptr; }
-                    n++;
-                }
-                
-            }
-        }
-        if (n == 0) {
-            min = NaN;
-            max = NaN;
-        }
+        SumReturn sumTmp = _sumImage(img, msk, flags, nCrude, meanCrude);
+        n = sumTmp.get<0>();
+        sum = sumTmp.get<1>();
+        sumx2 = sumTmp.get<2>();
+        min = sumTmp.get<3>();
+        max = sumTmp.get<4>();
+
+        
     // fast loop ... just the mean & variance
     } else {
         min = max = NaN;
@@ -218,7 +242,7 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
                     
                     if ( (! isnan(*ptr)) &&
                          (! (*mptr & _sctrl.getAndMask())) ){
-                        double const delta = *ptr - crudeMean;
+                        double const delta = *ptr - meanCrude;
                         sum   += delta;
                         sumx2 += delta*delta;
                         n++;
@@ -232,7 +256,7 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
                      ptr != end; ++ptr, ++mptr) {
                     
                     if ( ! (*mptr & _sctrl.getAndMask()) ){
-                        double const delta = *ptr - crudeMean;
+                        double const delta = *ptr - meanCrude;
                         sum   += delta;
                         sumx2 += delta*delta;
                         n++;
@@ -247,7 +271,7 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
         throw LSST_EXCEPT(ex::InvalidParameterException,
                           "Image has no valid pixels; mean is undefined.");
     }
-    double mean = crudeMean + sum/n;
+    double mean = meanCrude + sum/n;
     
     if (n == 1) {
         throw LSST_EXCEPT(ex::InvalidParameterException,
@@ -259,7 +283,7 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
 
     _n = n;
     
-    return boost::make_tuple(mean, variance, min, max, sum + n*crudeMean);
+    return boost::make_tuple(mean, variance, min, max, sum + n*meanCrude);
 }
 
 
@@ -283,15 +307,15 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
     double const cliplimit = clipinfo.second;
     assert(! isnan(center) && ! isnan(cliplimit) );
     
-    double const crudeMean = center;    // a crude estimate of the mean for numerical stability of variance
+    double const meanCrude = center;    // a crude estimate of the mean for numerical stability of variance
 
     // =======================================================
     // Estimate the full precision variance using that crude mean
     double sum = 0;
     int n = 0;
-    double sumx2 = 0;                   // sum of (data - crudeMean)^2
-    double min = crudeMean;
-    double max = crudeMean;
+    double sumx2 = 0;                   // sum of (data - meanCrude)^2
+    double min = meanCrude;
+    double max = meanCrude;
 
     // If we want max or min (you get both)
     if (flags & (MIN | MAX)){
@@ -303,7 +327,7 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
                 if ( ! (*mptr & _sctrl.getAndMask()) ){                
                     if (!isnan(*ptr) &&
                         (fabs(*ptr - center) <= cliplimit) ) { // clip
-                        double const delta = *ptr - crudeMean;
+                        double const delta = *ptr - meanCrude;
                         sum += delta;
                         sumx2 += delta*delta;
                         if ( *ptr < min ) { min = *ptr; }
@@ -324,7 +348,7 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
                 if ( ! (*mptr & _sctrl.getAndMask()) ){
                     if (!isnan(*ptr) &&
                         (fabs(*ptr - center) <= cliplimit) ) { // clip
-                        double const delta = *ptr - crudeMean;
+                        double const delta = *ptr - meanCrude;
                         sum += delta;
                         sumx2 += delta*delta;
                         n++;
@@ -339,7 +363,7 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
         throw LSST_EXCEPT(ex::InvalidParameterException,
                           "Image has no valid pixels; mean is undefined.");
     }
-    double mean = crudeMean + sum/n;
+    double mean = meanCrude + sum/n;
     
     if (n == 1) {
         throw LSST_EXCEPT(ex::InvalidParameterException,
@@ -351,7 +375,7 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
 
     _n = n;
     
-    return boost::make_tuple(mean, variance, min, max, sum + crudeMean*n);
+    return boost::make_tuple(mean, variance, min, max, sum + meanCrude*n);
 }
 
 
