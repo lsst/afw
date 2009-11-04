@@ -27,7 +27,11 @@ double const NaN = std::numeric_limits<double>::quiet_NaN();
 double const MAX_DOUBLE = std::numeric_limits<double>::max();
 double const IQ_TO_STDEV = 0.741301109252802;   // 1 sigma in units of iqrange (assume Gaussian)
 
-    
+
+
+/**
+ * @brief A boolean functor which always returns true (for templated conditionals)
+ */
 class AlwaysTrue {
 public:
     template<typename T>
@@ -44,6 +48,9 @@ public:
     }
 };
 
+/**
+ * @brief A boolean functor which always returns false (for templated conditionals)
+ */
 class AlwaysFalse {
 public:
     template<typename T>
@@ -59,7 +66,10 @@ public:
         return false;
     }
 };
-    
+
+/**
+ * @brief A boolean functor to check for NaN (for templated conditionals)
+ */    
 class CheckFinite {
 public:
     template<typename T>
@@ -68,6 +78,9 @@ public:
     }
 };
 
+/**
+ * @brief A boolean functor to test val < min (for templated conditionals)
+ */    
 class CheckValueLtMin {
 public:
     template<typename Tval, typename Tmin>
@@ -76,6 +89,9 @@ public:
     }
 };
 
+/**
+ * @brief A boolean functor to test val > max (for templated conditionals)
+ */    
 class CheckValueGtMax {
 public:
     template<typename Tval, typename Tmax>
@@ -84,6 +100,9 @@ public:
     }
 };
 
+/**
+ * @brief A boolean functor to test |val| < cliplimit  (for templated conditionals)
+ */    
 class CheckClipRange {
 public:
     template<typename Tval, typename Tcen, typename Tmax>
@@ -104,9 +123,13 @@ typedef AlwaysFalse     AlwaysF;
 }
 
 
-
-
-
+/**
+ * @brief A private function to copy an image into a vector
+ *
+ * This is used for percentile and iq_range as these must reorder the values.
+ * Because it loops over the pixels, it's been templated over the NaN test to avoid
+ * code repetition of the loops.
+ */
 template<typename IsFinite, typename Image, typename Mask>
 boost::shared_ptr<std::vector<typename Image::Pixel> > math::Statistics::_makeVectorCopy(Image const &img,
                                                                                          Mask const &msk,
@@ -202,7 +225,20 @@ math::Statistics::Statistics(Image const &img, ///< Image whose properties we wa
 }
 
 
-template<typename IsFinite, typename HasValueLtMin, typename HasValueGtMax, typename InClipRange,
+/**
+ * @brief This function handles the inner summation loop, with tests templated
+ *
+ * The idea here is to allow different conditionals in the inner loop, but avoid repeating code.
+ * Each test is actually a functor which is handled through a template.  If the
+ * user requests a test (eg check for NaNs), the function is instantiated with the appropriate functor.
+ * Otherwise, an 'AlwaysTrue' or 'AlwaysFalse' object is passed in.  The compiler then compiles-out
+ * a test which is always false, or removes the conditional for a test which is always true.
+ */
+
+template<typename IsFinite,
+         typename HasValueLtMin,
+         typename HasValueGtMax,
+         typename InClipRange,
          typename Image, typename Mask>
 math::Statistics::SumReturn math::Statistics::_sumImage(Image const &img,
                                                         Mask const &msk,
@@ -216,7 +252,7 @@ math::Statistics::SumReturn math::Statistics::_sumImage(Image const &img,
     double sum = 0, sumx2 = 0;
     double min = (nCrude) ? meanCrude : MAX_DOUBLE;
     double max = (nCrude) ? meanCrude : -MAX_DOUBLE;
-    
+
     for (int iY = 0; iY < img.getHeight(); iY += stride) {
         
         typename Mask::x_iterator mptr = msk.row_begin(iY);
@@ -226,10 +262,11 @@ math::Statistics::SumReturn math::Statistics::_sumImage(Image const &img,
             if ( IsFinite()(*ptr) &&
                  !(*mptr & _sctrl.getAndMask()) &&
                  InClipRange()(*ptr, meanCrude, cliplimit) ) { // clip
-                
+
                 double const delta = *ptr - meanCrude;
                 sum   += delta;
                 sumx2 += delta*delta;
+
                 if ( HasValueLtMin()(*ptr, min) ) { min = *ptr; }
                 if ( HasValueGtMax()(*ptr, max) ) { max = *ptr; }
                 n++;
@@ -262,9 +299,10 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
     // =====================================================
     // a crude estimate of the mean, used for numerical stability of variance
     SumReturn loopValues;
-    int nCrude = 0;
-    int const strideCrude = 10;
+    
+    int nCrude       = 0;
     double meanCrude = 0.0;
+    int const strideCrude = 10;
     if (_sctrl.getNanSafe()) {
         loopValues = _sumImage<ChkFin, AlwaysF, AlwaysF, AlwaysT>(img, msk, flags,
                                                                   nCrude, strideCrude, meanCrude);
@@ -273,27 +311,22 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
                                                                    nCrude, strideCrude, meanCrude);
     }
     nCrude = loopValues.get<0>();
-    int sumCrude = loopValues.get<1>();
+
+    double sumCrude = loopValues.get<1>();
     meanCrude = 0.0;
     if ( nCrude > 0 ) {
         meanCrude = sumCrude/nCrude;
     }
-    
+
     // =======================================================
     // Estimate the full precision variance using that crude mean
     // - get the min and max as well
-    double sum = 0;
-    int n      = 0;
-    double sumx2 = 0;                   // sum of (data - meanCrude)^2
-    double min = (nCrude) ? meanCrude : MAX_DOUBLE;
-    double max = (nCrude) ? meanCrude : -MAX_DOUBLE;
     
     // If we want max or min (you get both)
     if (flags & (MIN | MAX)){
         loopValues = _sumImage<ChkFin, ChkMin, ChkMax, AlwaysT>(img, msk, flags, nCrude, 1, meanCrude);
     // fast loop ... just the mean & variance
     } else {
-        min = max = NaN;
         if (_sctrl.getNanSafe()) {
             loopValues = _sumImage<ChkFin, AlwaysF, AlwaysF, AlwaysT>(img, msk, flags, nCrude, 1, meanCrude);
         } else {
@@ -301,11 +334,11 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
         }
     }
 
-    n     = loopValues.get<0>();
-    sum   = loopValues.get<1>();
-    sumx2 = loopValues.get<2>();
-    min   = loopValues.get<3>();
-    max   = loopValues.get<4>();
+    int n        = loopValues.get<0>();
+    double sum   = loopValues.get<1>();
+    double sumx2 = loopValues.get<2>();
+    double min   = loopValues.get<3>();
+    double max   = loopValues.get<4>();
     
     if (n == 0) {
         throw LSST_EXCEPT(ex::InvalidParameterException,
@@ -344,16 +377,10 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
     double const cliplimit = clipinfo.second;
     assert(! isnan(center) && ! isnan(cliplimit) );
     
-    double const meanCrude = center;    // a crude estimate of the mean for numerical stability of variance
-
     // =======================================================
     // Estimate the full precision variance using that crude mean
     SumReturn loopValues;
-    double sum = 0;
-    int n = 0;
-    double sumx2 = 0;                   // sum of (data - meanCrude)^2
-    double min = meanCrude;
-    double max = meanCrude;
+
     double const stride = 1;
     int nCrude = 0;
     
@@ -361,9 +388,8 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
     if (flags & (MIN | MAX)){
         loopValues = _sumImage<ChkFin, ChkMin, ChkMax, ChkClip>(img, msk, flags, nCrude, stride,
                                                                 center, cliplimit);
-        // fast loop ... just the mean & variance
+    // fast loop ... just the mean & variance
     } else {
-        min = max = NaN;
         if (_sctrl.getNanSafe()) {
             loopValues = _sumImage<ChkFin, AlwaysF, AlwaysF, ChkClip>(img, msk, flags, nCrude, stride,
                                                                       center, cliplimit);
@@ -372,11 +398,12 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
                                                                        center, cliplimit);
         }
     }
-    n     = loopValues.get<0>();
-    sum   = loopValues.get<1>();
-    sumx2 = loopValues.get<2>();
-    min   = loopValues.get<3>();
-    max   = loopValues.get<4>();
+    
+    int n        = loopValues.get<0>();
+    double sum   = loopValues.get<1>();
+    double sumx2 = loopValues.get<2>();
+    double min   = loopValues.get<3>();
+    double max   = loopValues.get<4>();
     
     if (n == 0) {
         throw LSST_EXCEPT(ex::InvalidParameterException,
@@ -388,12 +415,11 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
     }
     
     // estimate of population variance
-    double mean = meanCrude + sum/n;
+    double mean = center + sum/n;
     double variance = sumx2/(n - 1) - sum*sum/(static_cast<double>(n - 1)*n);
-
     _n = n;
     
-    return boost::make_tuple(mean, variance, min, max, sum + meanCrude*n);
+    return boost::make_tuple(mean, variance, min, max, sum + center*n);
 }
 
 

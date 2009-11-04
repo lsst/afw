@@ -160,9 +160,14 @@ private:
     StatisticsControl _sctrl;           // the control structure
 
     template<typename IsFinite, typename Image, typename Mask>
-    boost::shared_ptr<std::vector<typename Image::Pixel> >  _makeVectorCopy(Image const &img, Mask const &msk, int const flags);
+    boost::shared_ptr<std::vector<typename Image::Pixel> >  _makeVectorCopy(Image const &img,
+                                                                            Mask const &msk,
+                                                                            int const flags);
         
-    template<typename IsFinite, typename HasValueLtMin, typename HasValueGtMax, typename InClipRange,
+    template<typename IsFinite,
+             typename HasValueLtMin,
+             typename HasValueGtMax,
+             typename InClipRange,
              typename Image, typename Mask>
     SumReturn _sumImage(Image const &img, Mask const &msk, int const flags,
                         int const nCrude, int const stride = 1, double const meanCrude = 0,
