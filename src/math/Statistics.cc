@@ -22,9 +22,107 @@ namespace math = lsst::afw::math;
 namespace ex = lsst::pex::exceptions;
 
 namespace {
-    double const NaN = std::numeric_limits<double>::quiet_NaN();
-    double const MAX_DOUBLE = std::numeric_limits<double>::max();
-    double const IQ_TO_STDEV = 0.741301109252802;   // 1 sigma in units of iqrange (assume Gaussian)
+    
+double const NaN = std::numeric_limits<double>::quiet_NaN();
+double const MAX_DOUBLE = std::numeric_limits<double>::max();
+double const IQ_TO_STDEV = 0.741301109252802;   // 1 sigma in units of iqrange (assume Gaussian)
+
+    
+class AlwaysTrue {
+public:
+    template<typename T>
+    bool operator()(T val) {
+        return true;
+    }
+    template<typename Ta, typename Tb>
+    bool operator()(Ta a, Tb b) {
+        return true;
+    }
+    template<typename Ta, typename Tb, typename Tc>
+    bool operator()(Ta a, Tb b, Tc c) {
+        return true;
+    }
+};
+
+class AlwaysFalse {
+public:
+    template<typename T>
+    bool operator()(T val) {
+        return false;
+    }
+    template<typename Ta, typename Tb>
+    bool operator()(Ta a, Tb b) {
+        return false;
+    }
+    template<typename Ta, typename Tb, typename Tc>
+    bool operator()(Ta a, Tb b, Tc c) {
+        return false;
+    }
+};
+    
+class CheckFinite {
+public:
+    template<typename T>
+    bool operator()(T val) {
+        return !std::isnan(static_cast<float>(val));
+    }
+};
+
+class CheckValueLtMin {
+public:
+    template<typename Tval, typename Tmin>
+    bool operator()(Tval val, Tmin min) {
+        return (static_cast<Tmin>(val) < min);
+    }
+};
+
+class CheckValueGtMax {
+public:
+    template<typename Tval, typename Tmax>
+    bool operator()(Tval val, Tmax max) {
+        return (static_cast<Tmax>(val) > max);
+    }
+};
+
+class CheckClipRange {
+public:
+    template<typename Tval, typename Tcen, typename Tmax>
+    bool operator()(Tval val, Tcen center, Tmax cliplimit) {
+        Tmax tmp = fabs(val - center);
+        return (tmp <= cliplimit);
+    }
+};
+    
+// define some abbreviated typenames for the test templates
+typedef CheckFinite     ChkFin;
+typedef CheckValueLtMin ChkMin;
+typedef CheckValueGtMax ChkMax;
+typedef CheckClipRange  ChkClip;    
+typedef AlwaysTrue      AlwaysT;
+typedef AlwaysFalse     AlwaysF;
+    
+}
+
+
+
+
+
+template<typename IsFinite, typename Image, typename Mask>
+boost::shared_ptr<std::vector<typename Image::Pixel> > math::Statistics::_makeVectorCopy(Image const &img,
+                                                                                         Mask const &msk,
+                                                                                         int const flags) {
+
+    boost::shared_ptr<std::vector<typename Image::Pixel> > imgcp(new std::vector<typename Image::Pixel>(0));
+    for (int i_y = 0; i_y < img.getHeight(); ++i_y) {
+        typename Mask::x_iterator mptr = msk.row_begin(i_y);
+        for (typename Image::x_iterator ptr = img.row_begin(i_y); ptr != img.row_end(i_y); ++ptr) {
+            if ( IsFinite()(*ptr) && !(*mptr & _sctrl.getAndMask()) ) {
+                imgcp->push_back(*ptr);
+            }
+            ++mptr;
+        }
+    }
+    return imgcp;
 }
 
 
@@ -70,33 +168,13 @@ math::Statistics::Statistics(Image const &img, ///< Image whose properties we wa
     if (flags & (MEDIAN | IQRANGE | MEANCLIP | STDEVCLIP | VARIANCECLIP)) {
 
         // make a vector copy of the image to get the median and quartiles (will move values)
-        boost::shared_ptr<std::vector<typename Image::Pixel> >
-            imgcp(new std::vector<typename Image::Pixel>(0));
-        
+        boost::shared_ptr<std::vector<typename Image::Pixel> > imgcp;
         if (_sctrl.getNanSafe()) {
-            for (int i_y = 0; i_y < img.getHeight(); ++i_y) {
-                typename Mask::x_iterator mptr = msk.row_begin(i_y);
-                for (typename Image::x_iterator ptr = img.row_begin(i_y); ptr != img.row_end(i_y); ++ptr) {
-                    if ( !isnan(*ptr) && !(*mptr & _sctrl.getAndMask()) ) {
-                        imgcp->push_back(*ptr);
-                    }
-                    ++mptr;
-                }
-            }
+            imgcp = _makeVectorCopy<ChkFin>(img, msk, flags);
         } else {
-            for (int i_y = 0; i_y < img.getHeight(); ++i_y) {
-                typename Mask::x_iterator mptr = msk.row_begin(i_y);
-                for (typename Image::x_iterator ptr = img.row_begin(i_y); ptr != img.row_end(i_y); ++ptr) {
-                    if ( ! (*mptr & _sctrl.getAndMask()) ) {
-                        imgcp->push_back(*ptr);
-                    }
-                    ++mptr;
-                }
-            }
+            imgcp = _makeVectorCopy<AlwaysT>(img, msk, flags);
         }
 
-        //typename Image::Ptr imgcp = typename Image::Ptr(new Image(img, true));  // deep copy
-        
         if (flags & (MEDIAN | MEANCLIP | STDEVCLIP | VARIANCECLIP)) {
             _median = _percentile(*imgcp, 0.5);
         }
@@ -124,31 +202,36 @@ math::Statistics::Statistics(Image const &img, ///< Image whose properties we wa
 }
 
 
-template<typename Image, typename Mask>
+template<typename IsFinite, typename HasValueLtMin, typename HasValueGtMax, typename InClipRange,
+         typename Image, typename Mask>
 math::Statistics::SumReturn math::Statistics::_sumImage(Image const &img,
                                                         Mask const &msk,
                                                         int const flags,
                                                         int const nCrude,
-                                                        double const meanCrude
-                                                       ) {
+                                                        int const stride,
+                                                        double const meanCrude,
+                                                        double const cliplimit) {
+    
     int n = 0;
     double sum = 0, sumx2 = 0;
     double min = (nCrude) ? meanCrude : MAX_DOUBLE;
     double max = (nCrude) ? meanCrude : -MAX_DOUBLE;
-
-    for (int iY = 0; iY < img.getHeight(); ++iY) {
+    
+    for (int iY = 0; iY < img.getHeight(); iY += stride) {
         
         typename Mask::x_iterator mptr = msk.row_begin(iY);
         for (typename Image::x_iterator ptr = img.row_begin(iY), end = ptr + img.getWidth();
              ptr != end; ++ptr, ++mptr) {
             
-            if ( (! isnan(*ptr)) &&
-                 (! (*mptr & _sctrl.getAndMask())) ) {
+            if ( IsFinite()(*ptr) &&
+                 !(*mptr & _sctrl.getAndMask()) &&
+                 InClipRange()(*ptr, meanCrude, cliplimit) ) { // clip
+                
                 double const delta = *ptr - meanCrude;
                 sum   += delta;
                 sumx2 += delta*delta;
-                if ( *ptr < min ) { min = *ptr; }
-                if ( *ptr > max ) { max = *ptr; }
+                if ( HasValueLtMin()(*ptr, min) ) { min = *ptr; }
+                if ( HasValueGtMax()(*ptr, max) ) { max = *ptr; }
                 n++;
             }
         }
@@ -175,114 +258,68 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
                                                                  Mask const &msk,   
                                                                  int const flags) {
 
-    
+
     // =====================================================
-    // Get a crude estimate of the mean
-    int nCrude = 0;
-    double sumCrude = 0;
-    if ( _sctrl.getNanSafe()) {
-
-        for (int y = 0; y<img.getHeight(); y += 10) {
-            typename Mask::x_iterator mptr = msk.row_begin(y);
-            for (typename Image::x_iterator ptr = img.row_begin(y), end = ptr + img.getWidth();
-                 ptr != end; ++ptr, ++mptr) {
-                if ( !isnan(*ptr) && !(*mptr & _sctrl.getAndMask()) ) {
-                    sumCrude += *ptr;
-                    ++nCrude;
-                }
-            }
-        }
-    } else {
-        
-        for (int y = 0; y<img.getHeight(); y += 10) {
-            typename Mask::x_iterator mptr = msk.row_begin(y);
-            for (typename Image::x_iterator ptr = img.row_begin(y), end = ptr + img.getWidth();
-                 ptr != end; ++ptr, ++mptr) {
-                if ( ! (*mptr & _sctrl.getAndMask()) ) {
-                    sumCrude += *ptr;
-                    ++nCrude;
-                }
-            }
-        }
-    }
-
     // a crude estimate of the mean, used for numerical stability of variance
+    SumReturn loopValues;
+    int nCrude = 0;
+    int const strideCrude = 10;
     double meanCrude = 0.0;
-    if ( nCrude > 0 ) { meanCrude = sumCrude/nCrude; }
-
+    if (_sctrl.getNanSafe()) {
+        loopValues = _sumImage<ChkFin, AlwaysF, AlwaysF, AlwaysT>(img, msk, flags,
+                                                                  nCrude, strideCrude, meanCrude);
+    } else {
+        loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, AlwaysT>(img, msk, flags,
+                                                                   nCrude, strideCrude, meanCrude);
+    }
+    nCrude = loopValues.get<0>();
+    int sumCrude = loopValues.get<1>();
+    meanCrude = 0.0;
+    if ( nCrude > 0 ) {
+        meanCrude = sumCrude/nCrude;
+    }
+    
     // =======================================================
     // Estimate the full precision variance using that crude mean
     // - get the min and max as well
     double sum = 0;
-    int n = 0;
+    int n      = 0;
     double sumx2 = 0;                   // sum of (data - meanCrude)^2
     double min = (nCrude) ? meanCrude : MAX_DOUBLE;
     double max = (nCrude) ? meanCrude : -MAX_DOUBLE;
     
     // If we want max or min (you get both)
     if (flags & (MIN | MAX)){
-
-        SumReturn sumTmp = _sumImage(img, msk, flags, nCrude, meanCrude);
-        n = sumTmp.get<0>();
-        sum = sumTmp.get<1>();
-        sumx2 = sumTmp.get<2>();
-        min = sumTmp.get<3>();
-        max = sumTmp.get<4>();
-
-        
+        loopValues = _sumImage<ChkFin, ChkMin, ChkMax, AlwaysT>(img, msk, flags, nCrude, 1, meanCrude);
     // fast loop ... just the mean & variance
     } else {
         min = max = NaN;
-
         if (_sctrl.getNanSafe()) {
-            for (int y = 0; y < img.getHeight(); ++y) {
-                typename Mask::x_iterator mptr = msk.row_begin(y);
-                for (typename Image::x_iterator ptr = img.row_begin(y), end = ptr + img.getWidth();
-                     ptr != end; ++ptr, ++mptr) {
-                    
-                    if ( (! isnan(*ptr)) &&
-                         (! (*mptr & _sctrl.getAndMask())) ){
-                        double const delta = *ptr - meanCrude;
-                        sum   += delta;
-                        sumx2 += delta*delta;
-                        n++;
-                    }
-                }
-            }
+            loopValues = _sumImage<ChkFin, AlwaysF, AlwaysF, AlwaysT>(img, msk, flags, nCrude, 1, meanCrude);
         } else {
-            for (int y = 0; y < img.getHeight(); ++y) {
-                typename Mask::x_iterator mptr = msk.row_begin(y);
-                for (typename Image::x_iterator ptr = img.row_begin(y), end = ptr + img.getWidth();
-                     ptr != end; ++ptr, ++mptr) {
-                    
-                    if ( ! (*mptr & _sctrl.getAndMask()) ){
-                        double const delta = *ptr - meanCrude;
-                        sum   += delta;
-                        sumx2 += delta*delta;
-                        n++;
-                    }
-                }
-            }
+            loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, AlwaysT>(img, msk, flags, nCrude, 1, meanCrude);
         }
-
     }
 
+    n     = loopValues.get<0>();
+    sum   = loopValues.get<1>();
+    sumx2 = loopValues.get<2>();
+    min   = loopValues.get<3>();
+    max   = loopValues.get<4>();
+    
     if (n == 0) {
         throw LSST_EXCEPT(ex::InvalidParameterException,
                           "Image has no valid pixels; mean is undefined.");
     }
-    double mean = meanCrude + sum/n;
-    
     if (n == 1) {
         throw LSST_EXCEPT(ex::InvalidParameterException,
                           "Image contains only one pixel; population st. dev. is undefined");
     }
     
-    // estimate of population variance
+    // estimate of population mean and variance
+    double mean = meanCrude + sum/n;
     double variance = sumx2/(n - 1) - sum*sum/(static_cast<double>(n - 1)*n); 
-
     _n = n;
-    
     return boost::make_tuple(mean, variance, min, max, sum + n*meanCrude);
 }
 
@@ -311,66 +348,47 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
 
     // =======================================================
     // Estimate the full precision variance using that crude mean
+    SumReturn loopValues;
     double sum = 0;
     int n = 0;
     double sumx2 = 0;                   // sum of (data - meanCrude)^2
     double min = meanCrude;
     double max = meanCrude;
-
+    double const stride = 1;
+    int nCrude = 0;
+    
     // If we want max or min (you get both)
     if (flags & (MIN | MAX)){
-        for (int y = 0; y < img.getHeight(); ++y) {
-            typename Mask::x_iterator mptr = msk.row_begin(y);
-            for (typename Image::x_iterator ptr = img.row_begin(y), end = ptr + img.getWidth();
-                 ptr != end; ++ptr, ++mptr) {
-                
-                if ( ! (*mptr & _sctrl.getAndMask()) ){                
-                    if (!isnan(*ptr) &&
-                        (fabs(*ptr - center) <= cliplimit) ) { // clip
-                        double const delta = *ptr - meanCrude;
-                        sum += delta;
-                        sumx2 += delta*delta;
-                        if ( *ptr < min ) { min = *ptr; }
-                        if ( *ptr > max ) { max = *ptr; }
-                        
-                        n++;
-                    }
-                }
-            }
-        }
-    // fast loop ... just the mean & variance, no if() for max/min
+        loopValues = _sumImage<ChkFin, ChkMin, ChkMax, ChkClip>(img, msk, flags, nCrude, stride,
+                                                                center, cliplimit);
+        // fast loop ... just the mean & variance
     } else {
-        for (int y = 0; y < img.getHeight(); ++y) {
-            typename Mask::x_iterator mptr = msk.row_begin(y);
-            for (typename Image::x_iterator ptr = img.row_begin(y), end = ptr + img.getWidth();
-                 ptr != end; ++ptr, ++mptr) {
-                
-                if ( ! (*mptr & _sctrl.getAndMask()) ){
-                    if (!isnan(*ptr) &&
-                        (fabs(*ptr - center) <= cliplimit) ) { // clip
-                        double const delta = *ptr - meanCrude;
-                        sum += delta;
-                        sumx2 += delta*delta;
-                        n++;
-                    }
-                }
-            }
+        min = max = NaN;
+        if (_sctrl.getNanSafe()) {
+            loopValues = _sumImage<ChkFin, AlwaysF, AlwaysF, ChkClip>(img, msk, flags, nCrude, stride,
+                                                                      center, cliplimit);
+        } else {
+            loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, ChkClip>(img, msk, flags, nCrude, stride,
+                                                                       center, cliplimit);
         }
-
     }
+    n     = loopValues.get<0>();
+    sum   = loopValues.get<1>();
+    sumx2 = loopValues.get<2>();
+    min   = loopValues.get<3>();
+    max   = loopValues.get<4>();
     
     if (n == 0) {
         throw LSST_EXCEPT(ex::InvalidParameterException,
                           "Image has no valid pixels; mean is undefined.");
     }
-    double mean = meanCrude + sum/n;
-    
     if (n == 1) {
         throw LSST_EXCEPT(ex::InvalidParameterException,
                           "Image contains only one pixel; population st. dev. is undefined");
     }
     
     // estimate of population variance
+    double mean = meanCrude + sum/n;
     double variance = sumx2/(n - 1) - sum*sum/(static_cast<double>(n - 1)*n);
 
     _n = n;

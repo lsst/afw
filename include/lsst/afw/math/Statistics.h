@@ -139,7 +139,7 @@ public:
     double getValue(Property const prop = NOTHING) const;
     
 private:
-    
+
     // return type for _getStandard
     typedef boost::tuple<double, double, double, double, double> StandardReturn; 
     typedef boost::tuple<int, double, double, double, double> SumReturn; 
@@ -159,10 +159,15 @@ private:
 
     StatisticsControl _sctrl;           // the control structure
 
-    template<typename Image, typename Mask>
+    template<typename IsFinite, typename Image, typename Mask>
+    boost::shared_ptr<std::vector<typename Image::Pixel> >  _makeVectorCopy(Image const &img, Mask const &msk, int const flags);
+        
+    template<typename IsFinite, typename HasValueLtMin, typename HasValueGtMax, typename InClipRange,
+             typename Image, typename Mask>
     SumReturn _sumImage(Image const &img, Mask const &msk, int const flags,
-                        int const nCrude, double const meanCrude = 0);
-
+                        int const nCrude, int const stride = 1, double const meanCrude = 0,
+                        double const cliplimit = std::numeric_limits<double>::quiet_NaN());
+    
     template<typename Image, typename Mask>
     StandardReturn _getStandard(Image const &img, Mask const &msk, int const flags);
     template<typename Image, typename Mask>
