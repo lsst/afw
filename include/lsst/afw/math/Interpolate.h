@@ -18,16 +18,18 @@ namespace lsst {
 namespace afw {
 namespace math {
 
-enum InterpStyle {
-    CONSTANT_INTERP = 0,
-    LINEAR_INTERP = 1,
-    NATURAL_SPLINE_INTERP = 2,
-    CUBIC_SPLINE_INTERP = 3,
-    CUBIC_SPLINE_PERIODIC_INTERP = 4,
-    AKIMA_SPLINE_INTERP = 5,
-    AKIMA_SPLINE_PERIODIC_INTERP = 6
+namespace Interp {    
+enum Style {
+    CONSTANT = 0,
+    LINEAR = 1,
+    NATURAL_SPLINE = 2,
+    CUBIC_SPLINE = 3,
+    CUBIC_SPLINE_PERIODIC = 4,
+    AKIMA_SPLINE = 5,
+    AKIMA_SPLINE_PERIODIC = 6
 };
-
+}
+    
 namespace {
     ::gsl_interp_type const *gslInterpTypeList[7] = {
         ::gsl_interp_linear,
@@ -50,9 +52,9 @@ public:
     }
 
     Interpolate(std::vector<double> const &x, std::vector<double> const &y,
-                InterpStyle const style) :
+                Interp::Style const style) :
         _x(x), _y(y) {
-        if (style == CONSTANT_INTERP) {
+        if (style == Interp::CONSTANT) {
             throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
                               "CONSTANT interpolation not supported.");
         }

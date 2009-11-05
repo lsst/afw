@@ -73,7 +73,7 @@ class InterpolateTestCase(unittest.TestCase):
     def testNaturalSplineParabola(self):
         
         # === test the Spline interpolator =======================
-        yinterpS = afwMath.Interpolate(self.x, self.y2, afwMath.AKIMA_SPLINE_INTERP)
+        yinterpS = afwMath.Interpolate(self.x, self.y2, afwMath.Interp_AKIMA_SPLINE)
         youtS = yinterpS.interpolate(self.xtest)
         
         self.assertEqual(youtS, self.y2test)
@@ -88,6 +88,7 @@ def suite():
 
     suites = []
     suites += unittest.makeSuite(InterpolateTestCase)
+    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
 def run(exit = False):
