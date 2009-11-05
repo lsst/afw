@@ -68,7 +68,8 @@ BOOST_AUTO_TEST_CASE(StatisticsNanSafeSlower) {
         img *= 3;
         sctrl.setNanSafe(true);
         timer.restart();
-        math::Statistics statsMinMax = math::makeStatistics(img, math::NPOINT | math::MEAN | math::MIN, sctrl);
+        math::Statistics statsMinMax =
+            math::makeStatistics(img, math::NPOINT | math::MEAN | math::MIN, sctrl);
         double tMinMax = timer.elapsed();
 
         bool simpleIsFaster = (tSimple < tNanSafe && tSimple < tMinMax);
