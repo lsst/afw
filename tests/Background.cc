@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(BackgroundBasic) {
     {
         int xcen = nX/2;
         int ycen = nY/2;
-        math::BackgroundControl bgCtrl(math::Interp::AKIMA_SPLINE);
+        math::BackgroundControl bgCtrl(math::Interpolate::AKIMA_SPLINE);
         // test methods native BackgroundControl
         bgCtrl.setNxSample(5);
         bgCtrl.setNySample(5);
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(BackgroundTestImages) {
             int const height = img->getHeight();
             
             // create a background control object
-            math::BackgroundControl bctrl(math::Interp::AKIMA_SPLINE);
+            math::BackgroundControl bctrl(math::Interpolate::AKIMA_SPLINE);
             bctrl.setNxSample(5);
             bctrl.setNySample(5);
             float stdevSubimg = reqStdev / sqrt(width*height/(bctrl.getNxSample()*bctrl.getNySample()));
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(BackgroundRamp) {
         }
         
         // check corner, edge, and center pixels
-        math::BackgroundControl bctrl = math::BackgroundControl(math::Interp::AKIMA_SPLINE);
+        math::BackgroundControl bctrl = math::BackgroundControl(math::Interpolate::AKIMA_SPLINE);
         bctrl.setNxSample(6);
         bctrl.setNySample(6);
         bctrl.sctrl.setNumSigmaClip(20.0);  // something large enough to avoid clipping entirely
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(BackgroundParabola) {
         }
         
         // check corner, edge, and center pixels
-        math::BackgroundControl bctrl = math::BackgroundControl(math::Interp::CUBIC_SPLINE);
+        math::BackgroundControl bctrl = math::BackgroundControl(math::Interpolate::CUBIC_SPLINE);
         bctrl.setNxSample(24);
         bctrl.setNySample(24);
         bctrl.sctrl.setNumSigmaClip(10.0);

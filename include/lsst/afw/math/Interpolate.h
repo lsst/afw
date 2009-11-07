@@ -8,6 +8,7 @@
  * @author Steve Bickerton
  */
 #include <limits>
+#include <map>
 #include "gsl/gsl_interp.h"
 #include "gsl/gsl_spline.h"
 #include "boost/shared_ptr.hpp"
@@ -18,32 +19,23 @@ namespace lsst {
 namespace afw {
 namespace math {
 
-namespace Interp {    
-enum Style {
-    CONSTANT = 0,
-    LINEAR = 1,
-    NATURAL_SPLINE = 2,
-    CUBIC_SPLINE = 3,
-    CUBIC_SPLINE_PERIODIC = 4,
-    AKIMA_SPLINE = 5,
-    AKIMA_SPLINE_PERIODIC = 6
-};
+namespace {
 }
     
-namespace {
-    ::gsl_interp_type const *gslInterpTypeList[7] = {
-        ::gsl_interp_linear,
-        ::gsl_interp_linear,
-        ::gsl_interp_cspline,
-        ::gsl_interp_cspline,
-        ::gsl_interp_cspline_periodic,
-        ::gsl_interp_akima,
-        ::gsl_interp_akima_periodic
-    };
-}
-            
+    
 class Interpolate {
 public:
+
+    enum Style {
+        CONSTANT = 0,
+        LINEAR = 1,
+        NATURAL_SPLINE = 2,
+        CUBIC_SPLINE = 3,
+        CUBIC_SPLINE_PERIODIC = 4,
+        AKIMA_SPLINE = 5,
+        AKIMA_SPLINE_PERIODIC = 6,
+        NUM_STYLES
+    };
 
     Interpolate(std::vector<double> const &x, std::vector<double> const &y,
                    ::gsl_interp_type const *gslInterpType = ::gsl_interp_akima) :
@@ -52,15 +44,28 @@ public:
     }
 
     Interpolate(std::vector<double> const &x, std::vector<double> const &y,
-                Interp::Style const style) :
+                Style const style) :
         _x(x), _y(y) {
-        if (style == Interp::CONSTANT) {
+        if (style == CONSTANT) {
             throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
                               "CONSTANT interpolation not supported.");
         }
-        initialize(_x, _y, gslInterpTypeList[style]);
+        _initGslInterpTypeStyles();
+        initialize(_x, _y, _gslInterpTypeStyles[style]);
     }
 
+    Interpolate(std::vector<double> const &x, std::vector<double> const &y,
+                std::string style) :
+        _x(x), _y(y) {
+        if (style == "CONSTANT") {
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                              "CONSTANT interpolation not supported.");
+        }
+        _initGslInterpTypeStrings();
+        initialize(_x, _y, _gslInterpTypeStrings[style]);
+    }
+
+    
     void initialize(std::vector<double> const &x, std::vector<double> const &y,
                     ::gsl_interp_type const *gslInterpType) {
         _acc    = ::gsl_interp_accel_alloc();
@@ -82,6 +87,29 @@ private:
     std::vector<double> const &_y;
     ::gsl_interp_accel *_acc;
     ::gsl_interp *_interp;
+    ::gsl_interp_type const* _gslInterpTypeStyles[7];
+    std::map<std::string, const ::gsl_interp_type*> _gslInterpTypeStrings;
+    
+    void _initGslInterpTypeStyles() {
+        _gslInterpTypeStyles[CONSTANT]                = ::gsl_interp_linear;           
+        _gslInterpTypeStyles[LINEAR]                  = ::gsl_interp_linear;           
+        _gslInterpTypeStyles[CUBIC_SPLINE]            = ::gsl_interp_cspline;          
+        _gslInterpTypeStyles[NATURAL_SPLINE]          = ::gsl_interp_cspline;          
+        _gslInterpTypeStyles[CUBIC_SPLINE_PERIODIC]   = ::gsl_interp_cspline_periodic; 
+        _gslInterpTypeStyles[AKIMA_SPLINE]            = ::gsl_interp_akima;            
+        _gslInterpTypeStyles[AKIMA_SPLINE_PERIODIC]   = ::gsl_interp_akima_periodic;   
+    }
+    
+    void _initGslInterpTypeStrings() {
+        _gslInterpTypeStrings["CONSTANT"]              = ::gsl_interp_linear;           
+        _gslInterpTypeStrings["LINEAR"]                = ::gsl_interp_linear;           
+        _gslInterpTypeStrings["CUBIC_SPLINE"]          = ::gsl_interp_cspline;          
+        _gslInterpTypeStrings["NATURAL_SPLINE"]        = ::gsl_interp_cspline;          
+        _gslInterpTypeStrings["CUBIC_SPLINE_PERIODIC"] = ::gsl_interp_cspline_periodic; 
+        _gslInterpTypeStrings["AKIMA_SPLINE"]          = ::gsl_interp_akima;            
+        _gslInterpTypeStrings["AKIMA_SPLINE_PERIODIC"] = ::gsl_interp_akima_periodic;
+    }
+    
 };
 
         
