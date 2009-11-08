@@ -19,13 +19,7 @@ namespace lsst {
 namespace afw {
 namespace math {
 
-namespace {
-}
-    
-    
-class Interpolate {
-public:
-
+namespace Interp {
     enum Style {
         CONSTANT = 0,
         LINEAR = 1,
@@ -36,6 +30,14 @@ public:
         AKIMA_SPLINE_PERIODIC = 6,
         NUM_STYLES
     };
+}
+    
+::gsl_interp_type const *styleToGslInterpType(Interp::Style const style);
+::gsl_interp_type const *stringToGslInterpType(std::string const style);
+Interp::Style stringToInterpStyle(std::string const style);
+    
+class Interpolate {
+public:
 
     Interpolate(std::vector<double> const &x, std::vector<double> const &y,
                    ::gsl_interp_type const *gslInterpType = ::gsl_interp_akima) :
@@ -44,14 +46,13 @@ public:
     }
 
     Interpolate(std::vector<double> const &x, std::vector<double> const &y,
-                Style const style) :
+                Interp::Style const style) :
         _x(x), _y(y) {
-        if (style == CONSTANT) {
+        if (style == Interp::CONSTANT) {
             throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
                               "CONSTANT interpolation not supported.");
         }
-        _initGslInterpTypeStyles();
-        initialize(_x, _y, _gslInterpTypeStyles[style]);
+        initialize(_x, _y, math::styleToGslInterpType(style));
     }
 
     Interpolate(std::vector<double> const &x, std::vector<double> const &y,
@@ -61,10 +62,8 @@ public:
             throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
                               "CONSTANT interpolation not supported.");
         }
-        _initGslInterpTypeStrings();
-        initialize(_x, _y, _gslInterpTypeStrings[style]);
+        initialize(_x, _y, math::stringToGslInterpType(style));
     }
-
     
     void initialize(std::vector<double> const &x, std::vector<double> const &y,
                     ::gsl_interp_type const *gslInterpType) {
@@ -87,31 +86,98 @@ private:
     std::vector<double> const &_y;
     ::gsl_interp_accel *_acc;
     ::gsl_interp *_interp;
-    ::gsl_interp_type const* _gslInterpTypeStyles[7];
-    std::map<std::string, const ::gsl_interp_type*> _gslInterpTypeStrings;
-    
-    void _initGslInterpTypeStyles() {
-        _gslInterpTypeStyles[CONSTANT]                = ::gsl_interp_linear;           
-        _gslInterpTypeStyles[LINEAR]                  = ::gsl_interp_linear;           
-        _gslInterpTypeStyles[CUBIC_SPLINE]            = ::gsl_interp_cspline;          
-        _gslInterpTypeStyles[NATURAL_SPLINE]          = ::gsl_interp_cspline;          
-        _gslInterpTypeStyles[CUBIC_SPLINE_PERIODIC]   = ::gsl_interp_cspline_periodic; 
-        _gslInterpTypeStyles[AKIMA_SPLINE]            = ::gsl_interp_akima;            
-        _gslInterpTypeStyles[AKIMA_SPLINE_PERIODIC]   = ::gsl_interp_akima_periodic;   
-    }
-    
-    void _initGslInterpTypeStrings() {
-        _gslInterpTypeStrings["CONSTANT"]              = ::gsl_interp_linear;           
-        _gslInterpTypeStrings["LINEAR"]                = ::gsl_interp_linear;           
-        _gslInterpTypeStrings["CUBIC_SPLINE"]          = ::gsl_interp_cspline;          
-        _gslInterpTypeStrings["NATURAL_SPLINE"]        = ::gsl_interp_cspline;          
-        _gslInterpTypeStrings["CUBIC_SPLINE_PERIODIC"] = ::gsl_interp_cspline_periodic; 
-        _gslInterpTypeStrings["AKIMA_SPLINE"]          = ::gsl_interp_akima;            
-        _gslInterpTypeStrings["AKIMA_SPLINE_PERIODIC"] = ::gsl_interp_akima_periodic;
-    }
-    
 };
 
+
+    
+/**
+ * @brief Conversion function to switch an Interp::Style to a gsl_interp_type.
+ *
+ */
+::gsl_interp_type const *styleToGslInterpType(Interp::Style const style) {
+    ::gsl_interp_type const* gslInterpTypeStyles[7];
+    gslInterpTypeStyles[Interp::CONSTANT]                 = ::gsl_interp_linear;           
+    gslInterpTypeStyles[Interp::LINEAR]                   = ::gsl_interp_linear;           
+    gslInterpTypeStyles[Interp::CUBIC_SPLINE]             = ::gsl_interp_cspline;          
+    gslInterpTypeStyles[Interp::NATURAL_SPLINE]           = ::gsl_interp_cspline;          
+    gslInterpTypeStyles[Interp::CUBIC_SPLINE_PERIODIC]    = ::gsl_interp_cspline_periodic; 
+    gslInterpTypeStyles[Interp::AKIMA_SPLINE]             = ::gsl_interp_akima;            
+    gslInterpTypeStyles[Interp::AKIMA_SPLINE_PERIODIC]    = ::gsl_interp_akima_periodic;
+    return gslInterpTypeStyles[style];
+}
+    
+/**
+ * @brief Conversion function to switch a string to an Interp::Style.
+ *
+ */
+Interp::Style stringToInterpStyle(std::string const style) {
+    std::map<std::string, Interp::Style> gslInterpTypeStrings;
+    gslInterpTypeStrings["CONSTANT"]              = Interp::CONSTANT;
+    gslInterpTypeStrings["LINEAR"]                = Interp::LINEAR;               
+    gslInterpTypeStrings["CUBIC_SPLINE"]          = Interp::CUBIC_SPLINE;         
+    gslInterpTypeStrings["NATURAL_SPLINE"]        = Interp::NATURAL_SPLINE;      
+    gslInterpTypeStrings["CUBIC_SPLINE_PERIODIC"] = Interp::CUBIC_SPLINE_PERIODIC;
+    gslInterpTypeStrings["AKIMA_SPLINE"]          = Interp::AKIMA_SPLINE;  
+    gslInterpTypeStrings["AKIMA_SPLINE_PERIODIC"] = Interp::AKIMA_SPLINE_PERIODIC;
+    return gslInterpTypeStrings[style];
+}
+
+/**
+ * @brief Conversion function to switch a string to a gsl_interp_type.
+ *
+ */
+::gsl_interp_type const *stringToGslInterpType(std::string const style) {
+    return styleToGslInterpType(stringToInterpStyle(style));
+}
+    
+    
+/**
+ * @brief Get the highest order Interpolation::Style available for 'n' points.
+ *
+ */
+Interp::Style lookupMaxInterpStyle(int const n) {
+    if (n < 1) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "nx,ny must be greater than 0");
+    }
+    if (n > 4) {
+        return Interp::AKIMA_SPLINE;
+    }
+
+    std::vector<Interp::Style> styles(4);
+    styles[0] = Interp::CONSTANT;
+    styles[1] = Interp::LINEAR;
+    styles[2] = Interp::CUBIC_SPLINE;
+    styles[3] = Interp::CUBIC_SPLINE;
+    return styles[n - 1];
+}
+
+    
+/**
+ * @brief Get the minimum number of points needed to use the requested interpolation style
+ *
+ */
+int lookupMinInterpPoints(Interp::Style const style) {
+    std::vector<int> minPoints(Interp::NUM_STYLES);
+    minPoints[Interp::CONSTANT]               = 1;
+    minPoints[Interp::LINEAR]                 = 2;
+    minPoints[Interp::NATURAL_SPLINE]         = 3;
+    minPoints[Interp::CUBIC_SPLINE]           = 3;
+    minPoints[Interp::CUBIC_SPLINE_PERIODIC]  = 3;
+    minPoints[Interp::AKIMA_SPLINE]           = 5;
+    minPoints[Interp::AKIMA_SPLINE_PERIODIC]  = 5;
+    return minPoints[style];
+}
+
+/**
+ * @brief Get the minimum number of points needed to use the requested interpolation style
+ *
+ * Overload of lookupMinInterpPoints() which takes a string
+ *
+ */
+int lookupMinInterpPoints(std::string const style) {
+    return lookupMinInterpPoints(stringToInterpStyle(style));
+}
+    
         
 }}}
                      

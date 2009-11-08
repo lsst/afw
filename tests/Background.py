@@ -54,7 +54,7 @@ class BackgroundTestCase(unittest.TestCase):
 
 
         xcen, ycen = 50, 100
-        bgCtrl = afwMath.BackgroundControl(afwMath.Interpolate.AKIMA_SPLINE)
+        bgCtrl = afwMath.BackgroundControl(afwMath.Interp_AKIMA_SPLINE)
         bgCtrl.setNxSample(5)
         bgCtrl.setNySample(5)
         bgCtrl.sctrl.setNumIter(3)
@@ -99,7 +99,7 @@ class BackgroundTestCase(unittest.TestCase):
             naxis2 = img.getHeight()
             
             # create a background control object
-            bctrl = afwMath.BackgroundControl(afwMath.Interpolate.AKIMA_SPLINE);
+            bctrl = afwMath.BackgroundControl(afwMath.Interp_AKIMA_SPLINE);
             bctrl.setNxSample(5);
             bctrl.setNySample(5);
             
@@ -134,7 +134,7 @@ class BackgroundTestCase(unittest.TestCase):
         
         # check corner, edge, and center pixels
         bctrl = afwMath.BackgroundControl();
-        bctrl.setInterpStyle(afwMath.Interpolate.CUBIC_SPLINE);
+        bctrl.setInterpStyle(afwMath.Interp_CUBIC_SPLINE);
         bctrl.setNxSample(6);
         bctrl.setNySample(6);
         bctrl.sctrl.setNumSigmaClip(20.0)  # something large enough to avoid clipping entirely
@@ -162,7 +162,7 @@ class BackgroundTestCase(unittest.TestCase):
                 parabimg.set(x, y, d2zdx2*x*x + d2zdy2*y*y + dzdx*x + dzdy*y + z0)
         
         # check corner, edge, and center pixels
-        bctrl = afwMath.BackgroundControl(afwMath.Interpolate.CUBIC_SPLINE);
+        bctrl = afwMath.BackgroundControl(afwMath.Interp_CUBIC_SPLINE);
         bctrl.setNxSample(24);
         bctrl.setNySample(24);
         bctrl.sctrl.setNumSigmaClip(10.0)  
@@ -197,7 +197,7 @@ class BackgroundTestCase(unittest.TestCase):
         mi = mi.Factory(mi, afwImage.BBox(afwImage.PointI(32, 2), afwImage.PointI(2079, 4609)))
         mi.setXY0(afwImage.PointI(0, 0))
         
-        bctrl = afwMath.BackgroundControl(afwMath.Interpolate.AKIMA_SPLINE);
+        bctrl = afwMath.BackgroundControl(afwMath.Interp_AKIMA_SPLINE);
         bctrl.setNxSample(16);
         bctrl.setNySample(16);
         bctrl.sctrl.setNumSigmaClip(3.0)  
@@ -223,7 +223,7 @@ class BackgroundTestCase(unittest.TestCase):
         
         # make a background control object
         bctrl = afwMath.BackgroundControl()
-        bctrl.setInterpStyle(afwMath.Interpolate.CUBIC_SPLINE)
+        bctrl.setInterpStyle(afwMath.Interp_CUBIC_SPLINE)
         bctrl.setNxSample(2)
         bctrl.setNySample(2)
 
@@ -236,13 +236,13 @@ class BackgroundTestCase(unittest.TestCase):
         # put nx,ny back to 2 and see if it adjusts the interp style down to linear
         bctrl.setNxSample(2)
         bctrl.setNySample(2)
-        bctrl.setUndersampleStyle(afwMath.REDUCE_INTERP_ORDER)
+        bctrl.setUndersampleStyle("REDUCE_INTERP_ORDER")
         backobj = afwMath.makeBackground(img, bctrl)
-        self.assertEqual(backobj.getBackgroundControl().getInterpStyle(), afwMath.Interpolate.LINEAR)
+        self.assertEqual(backobj.getBackgroundControl().getInterpStyle(), afwMath.Interp_LINEAR)
 
         # put interp style back up to cspline and see if it throws an exception
-        bctrl.setUndersampleStyle(afwMath.THROW_EXCEPTION)
-        bctrl.setInterpStyle(afwMath.Interpolate.CUBIC_SPLINE)
+        bctrl.setUndersampleStyle("THROW_EXCEPTION")
+        bctrl.setInterpStyle("CUBIC_SPLINE")
         def tst(im, bc):
             backobj = afwMath.makeBackground(im, bc)
         utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException,
@@ -265,7 +265,7 @@ class BackgroundTestCase(unittest.TestCase):
         
         # make a background control object
         bctrl = afwMath.BackgroundControl()
-        bctrl.setInterpStyle(afwMath.Interpolate.CONSTANT)
+        bctrl.setInterpStyle(afwMath.Interp_CONSTANT)
         bctrl.setNxSample(1)
         bctrl.setNySample(1)
         bctrl.setUndersampleStyle(afwMath.THROW_EXCEPTION)

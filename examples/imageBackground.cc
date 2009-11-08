@@ -50,8 +50,11 @@ int main() {
     }
 
     // declare a background control object for a natural spline
-    math::BackgroundControl bgCtrl(math::Interpolate::NATURAL_SPLINE);
+    math::BackgroundControl bgCtrl(math::Interp::NATURAL_SPLINE);
 
+    // could also use a string! (commented-out, but will work)
+    //math::BackgroundControl bgCtrl("NATURAL_SPLINE");
+    
     // we can control the background estimate
     bgCtrl.setNxSample(5);
     bgCtrl.setNySample(5);

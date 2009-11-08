@@ -103,7 +103,7 @@ math::Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) who
         _gridcolumns[iX].resize(_imgHeight);
 
         // there isn't actually any way to interpolate as a constant ... do that manually here
-        if (_bctrl.getInterpStyle() != Interpolate::CONSTANT) {
+        if (_bctrl.getInterpStyle() != Interp::CONSTANT) {
             // this is the real interpolation
             typename math::Interpolate intobj(_ycen, _grid[iX], _bctrl.getInterpStyle());
             for (int iY = 0; iY < _imgHeight; ++iY) {
@@ -143,7 +143,7 @@ double math::Background::getPixel(int const x, int const y) const {
         bg_x[iX] = _gridcolumns[iX][y];
     }
 
-    if (_bctrl.getInterpStyle() != Interpolate::CONSTANT) {
+    if (_bctrl.getInterpStyle() != Interp::CONSTANT) {
         math::Interpolate intobj(_xcen, bg_x, _bctrl.getInterpStyle());
         return static_cast<double>(intobj.interpolate(x));
     } else {
@@ -181,7 +181,7 @@ typename image::Image<PixelT>::Ptr math::Background::getImage() const {
             bg_x[iX] = static_cast<double>(_gridcolumns[iX][iY]);
         }
         
-        if (_bctrl.getInterpStyle() != Interpolate::CONSTANT) {
+        if (_bctrl.getInterpStyle() != Interp::CONSTANT) {
             math::Interpolate intobj(_xcen, bg_x, _bctrl.getInterpStyle());
             // fill the image with interpolated objects.
             int iX = 0;
@@ -206,25 +206,6 @@ typename image::Image<PixelT>::Ptr math::Background::getImage() const {
 
 
 
-/**
- * @brief Method to see if the requested nx,ny are sufficient for the requested interpolation style.
- *
- */
-math::Interpolate::Style math::Background::_lookupMaxStyleForNpoints(int const n) const {
-    if (n < 1) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "nx,ny must be greater than 0");
-    } else if (n == 1) {
-        return math::Interpolate::CONSTANT;
-    } else if (n == 2) {
-        return math::Interpolate::LINEAR;
-    } else if (n == 3) {
-        return math::Interpolate::NATURAL_SPLINE;
-    } else if (n == 4) {
-        return math::Interpolate::NATURAL_SPLINE;
-    } else {
-        return math::Interpolate::AKIMA_SPLINE;
-    }
-}
 
 /**
  * @brief Method to see if the requested nx,ny are sufficient for the requested interpolation style.
@@ -232,18 +213,8 @@ math::Interpolate::Style math::Background::_lookupMaxStyleForNpoints(int const n
  */
 void math::Background::_checkSampling() {
 
-    // store the minimum number of points as a vector<int>
-    std::vector<int> minPoints(7);
-    minPoints[math::Interpolate::CONSTANT]               = 1;
-    minPoints[math::Interpolate::LINEAR]                 = 2;
-    minPoints[math::Interpolate::NATURAL_SPLINE]         = 3;
-    minPoints[math::Interpolate::CUBIC_SPLINE]           = 3;
-    minPoints[math::Interpolate::CUBIC_SPLINE_PERIODIC]  = 3;
-    minPoints[math::Interpolate::AKIMA_SPLINE]           = 5;
-    minPoints[math::Interpolate::AKIMA_SPLINE_PERIODIC]  = 5;
-    
-    bool isXundersampled = (_bctrl.getNxSample() < minPoints[_bctrl.getInterpStyle()]);
-    bool isYundersampled = (_bctrl.getNySample() < minPoints[_bctrl.getInterpStyle()]);
+    bool isXundersampled = (_bctrl.getNxSample() < lookupMinInterpPoints(_bctrl.getInterpStyle()));
+    bool isYundersampled = (_bctrl.getNySample() < lookupMinInterpPoints(_bctrl.getInterpStyle()));
 
     if (_bctrl.getUndersampleStyle() == THROW_EXCEPTION) {
         if (isXundersampled && isYundersampled) {
@@ -259,18 +230,19 @@ void math::Background::_checkSampling() {
         
     } else if (_bctrl.getUndersampleStyle() == REDUCE_INTERP_ORDER) {
         if (isXundersampled || isYundersampled) {
-            math::Interpolate::Style const xStyle = _lookupMaxStyleForNpoints(_bctrl.getNxSample());
-            math::Interpolate::Style const yStyle = _lookupMaxStyleForNpoints(_bctrl.getNySample());
-            math::Interpolate::Style const style = (_bctrl.getNxSample() < _bctrl.getNySample()) ? xStyle : yStyle;
+            math::Interp::Style const xStyle = lookupMaxInterpStyle(_bctrl.getNxSample());
+            math::Interp::Style const yStyle = lookupMaxInterpStyle(_bctrl.getNySample());
+            math::Interp::Style const style = (_bctrl.getNxSample() < _bctrl.getNySample()) ?
+                xStyle : yStyle;
             _bctrl.setInterpStyle(style);
         }
         
     } else if (_bctrl.getUndersampleStyle() == INCREASE_NXNYSAMPLE) {
         if (isXundersampled) {
-            _bctrl.setNxSample(minPoints[_bctrl.getInterpStyle()]);
+            _bctrl.setNxSample(lookupMinInterpPoints(_bctrl.getInterpStyle()));
         }
         if (isYundersampled) {
-            _bctrl.setNySample(minPoints[_bctrl.getInterpStyle()]);
+            _bctrl.setNySample(lookupMinInterpPoints(_bctrl.getInterpStyle()));
         }
         
     } else {

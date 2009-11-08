@@ -73,7 +73,7 @@ class InterpolateTestCase(unittest.TestCase):
     def testNaturalSplineParabola(self):
         
         # === test the Spline interpolator =======================
-        yinterpS = afwMath.Interpolate(self.x, self.y2, afwMath.Interpolate.AKIMA_SPLINE)
+        yinterpS = afwMath.Interpolate(self.x, self.y2, afwMath.Interp_AKIMA_SPLINE)
         youtS = yinterpS.interpolate(self.xtest)
         
         self.assertEqual(youtS, self.y2test)

@@ -3,17 +3,17 @@
 #include "lsst/afw/math/Interpolate.h"
 %}
 
-//%ignore lsst::afw::math::Interpolate::Style;
+%ignore lsst::afw::math::Interp::Style;
 %include "lsst/afw/math/Interpolate.h"
 
- //%inline %{
- //enum {
- //   Interpolate_CONSTANT              = Interpolate::CONSTANT,
- //   Interpolate_LINEAR                = Interpolate::LINEAR,
- //   Interpolate_NATURAL_SPLINE        = Interpolate::NATURAL_SPLINE,
- //   Interpolate_CUBIC_SPLINE          = Interpolate::CUBIC_SPLINE,
- //   Interpolate_CUBIC_SPLINE_PERIODIC = Interpolate::CUBIC_SPLINE_PERIODIC,
- //   Interpolate_AKIMA_SPLINE          = Interpolate::AKIMA_SPLINE,
- //   Interpolate_AKIMA_SPLINE_PERIODIC = Interpolate::AKIMA_SPLINE_PERIODIC,
- //};
- //%}
+%inline %{
+enum {
+    Interp_CONSTANT              = lsst::afw::math::Interp::CONSTANT,
+    Interp_LINEAR                = lsst::afw::math::Interp::LINEAR,
+    Interp_NATURAL_SPLINE        = lsst::afw::math::Interp::NATURAL_SPLINE,
+    Interp_CUBIC_SPLINE          = lsst::afw::math::Interp::CUBIC_SPLINE,
+    Interp_CUBIC_SPLINE_PERIODIC = lsst::afw::math::Interp::CUBIC_SPLINE_PERIODIC,
+    Interp_AKIMA_SPLINE          = lsst::afw::math::Interp::AKIMA_SPLINE,
+    Interp_AKIMA_SPLINE_PERIODIC = lsst::afw::math::Interp::AKIMA_SPLINE_PERIODIC,
+};
+%}

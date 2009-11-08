@@ -23,14 +23,29 @@ enum UndersampleStyle {
     REDUCE_INTERP_ORDER,
     INCREASE_NXNYSAMPLE,
 };
-            
+
+
+/**
+ * @brief Conversion function to switch a string to an UndersampleStyle
+ *
+ */
+UndersampleStyle stringToUndersampleStyle(std::string const style) {
+    std::map<std::string, UndersampleStyle> undersampleStrings;
+    undersampleStrings["THROW_EXCEPTION"]     = THROW_EXCEPTION;
+    undersampleStrings["REDUCE_INTERP_ORDER"] = REDUCE_INTERP_ORDER;
+    undersampleStrings["INCREASE_NXNYSAMPLE"] = INCREASE_NXNYSAMPLE;
+    return undersampleStrings[style];
+}
+
+    
 /**
  * @class BackgroundControl
  * @brief Pass parameters to a Background object
  */
 class BackgroundControl {
 public:
-    BackgroundControl(Interpolate::Style const style = Interpolate::AKIMA_SPLINE, ///< Style of the interpolation
+    
+    BackgroundControl(Interp::Style const style = Interp::AKIMA_SPLINE, ///< Style of the interpolation
                       int const nxSample = 10,                   ///< Num. grid samples in x
                       int const nySample = 10,                   ///< Num. grid samples in y
                       UndersampleStyle const undersampleStyle = THROW_EXCEPTION
@@ -41,20 +56,43 @@ public:
         assert(nySample > 0);
         sctrl = StatisticsControl();
     }
+    
+    // overload constructor to handle strings for both interp and undersample styles.
+    BackgroundControl(std::string const style,
+                      int const nxSample = 10, 
+                      int const nySample = 10, 
+                      std::string const undersampleStyle = "THROW_EXCEPTION" )
+        : _style(math::stringToInterpStyle(style)), _nxSample(nxSample), _nySample(nySample),
+          _undersampleStyle(math::stringToUndersampleStyle(undersampleStyle)) {
+        assert(nxSample > 0);
+        assert(nySample > 0);
+        sctrl = StatisticsControl();
+    }
+    
+
     virtual ~BackgroundControl() {}
     void setNxSample (int nxSample) { assert(nxSample > 0); _nxSample = nxSample; }
     void setNySample (int nySample) { assert(nySample > 0); _nySample = nySample; }
-    void setInterpStyle (Interpolate::Style const style) { _style = style; }
+
+    void setInterpStyle (Interp::Style const style) { _style = style; }
+    // overload to take a string
+    void setInterpStyle (std::string const style) { _style = math::stringToInterpStyle(style); }
+    
     void setUndersampleStyle (UndersampleStyle const undersampleStyle) {
         _undersampleStyle = undersampleStyle;
     }
+    // overload to take a string
+    void setUndersampleStyle (std::string const undersampleStyle) {
+        _undersampleStyle = math::stringToUndersampleStyle(undersampleStyle);
+    }
+    
     int getNxSample() const { return _nxSample; }
     int getNySample() const { return _nySample; }
-    Interpolate::Style getInterpStyle() const { return _style; }
+    Interp::Style getInterpStyle() const { return _style; }
     UndersampleStyle getUndersampleStyle() const { return _undersampleStyle; }
     StatisticsControl sctrl;
 private:
-    Interpolate::Style _style;                       // style of interpolation to use
+    Interp::Style _style;                       // style of interpolation to use
     int _nxSample;                      // number of grid squares to divide image into to sample in x
     int _nySample;                      // number of grid squares to divide image into to sample in y
     UndersampleStyle _undersampleStyle; // what to do when nx,ny are too small for the requested interp style
@@ -72,7 +110,7 @@ private:
  * BackgroundControl contains public StatisticsControl and InterpolateControl members to allow
  * user control of how the backgrounds are computed.
  * @code
-       math::BackgroundControl bctrl(math::Interpolate::NATURAL_SPLINE);
+       math::BackgroundControl bctrl(math::Interp::NATURAL_SPLINE);
        bctrl.setNxSample(7);            // number of sub-image squares in x-dimension
        bctrl.setNySample(7);            // number of sub-image squares in y-dimention
        bctrl.sctrl.getNumSigmaClip(5.0); // use 5-sigma clipping for the sub-image means
@@ -117,7 +155,6 @@ private:
     BackgroundControl _bctrl;           // control info set by user.
 
     void _checkSampling();
-    math::Interpolate::Style _lookupMaxStyleForNpoints(int const n) const;
 };
 
 /**
