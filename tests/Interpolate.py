@@ -56,6 +56,7 @@ class InterpolateTestCase(unittest.TestCase):
     def testLinearRamp(self):
 
         # === test the Linear Interpolator ============================
+        # default is akima spline
         yinterpL = afwMath.Interpolate(self.x, self.y1)
         youtL = yinterpL.interpolate(self.xtest)
 
@@ -65,15 +66,17 @@ class InterpolateTestCase(unittest.TestCase):
     def testNaturalSplineRamp(self):
         
         # === test the Spline interpolator =======================
-        yinterpS = afwMath.Interpolate(self.x, self.y1)
+        # specify interp type with the string interface
+        yinterpS = afwMath.Interpolate(self.x, self.y1, "NATURAL_SPLINE")
         youtS = yinterpS.interpolate(self.xtest)
         
         self.assertEqual(youtS, self.y1test)
 
-    def testNaturalSplineParabola(self):
+    def testAkimaSplineParabola(self):
         
         # === test the Spline interpolator =======================
-        yinterpS = afwMath.Interpolate(self.x, self.y2, afwMath.Interp_AKIMA_SPLINE)
+        # specify interp type with the enum style interface
+        yinterpS = afwMath.Interpolate(self.x, self.y2, afwMath.Interpolate.AKIMA_SPLINE)
         youtS = yinterpS.interpolate(self.xtest)
         
         self.assertEqual(youtS, self.y2test)
