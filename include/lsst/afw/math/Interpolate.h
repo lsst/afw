@@ -8,6 +8,7 @@
  * @author Steve Bickerton
  */
 #include <limits>
+#include <map>
 #include "gsl/gsl_interp.h"
 #include "gsl/gsl_spline.h"
 #include "boost/shared_ptr.hpp"
@@ -18,64 +19,32 @@ namespace lsst {
 namespace afw {
 namespace math {
 
-namespace Interp {    
-enum Style {
-    CONSTANT = 0,
-    LINEAR = 1,
-    NATURAL_SPLINE = 2,
-    CUBIC_SPLINE = 3,
-    CUBIC_SPLINE_PERIODIC = 4,
-    AKIMA_SPLINE = 5,
-    AKIMA_SPLINE_PERIODIC = 6
-};
-}
-    
-namespace {
-    ::gsl_interp_type const *gslInterpTypeList[7] = {
-        ::gsl_interp_linear,
-        ::gsl_interp_linear,
-        ::gsl_interp_cspline,
-        ::gsl_interp_cspline,
-        ::gsl_interp_cspline_periodic,
-        ::gsl_interp_akima,
-        ::gsl_interp_akima_periodic
-    };
-}
-            
 class Interpolate {
 public:
 
-    Interpolate(std::vector<double> const &x, std::vector<double> const &y,
-                   ::gsl_interp_type const *gslInterpType = ::gsl_interp_akima) :
-        _x(x), _y(y) {
-        initialize(_x, _y, gslInterpType);
-    }
-
-    Interpolate(std::vector<double> const &x, std::vector<double> const &y,
-                Interp::Style const style) :
-        _x(x), _y(y) {
-        if (style == Interp::CONSTANT) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
-                              "CONSTANT interpolation not supported.");
-        }
-        initialize(_x, _y, gslInterpTypeList[style]);
-    }
-
-    void initialize(std::vector<double> const &x, std::vector<double> const &y,
-                    ::gsl_interp_type const *gslInterpType) {
-        _acc    = ::gsl_interp_accel_alloc();
-        _interp = ::gsl_interp_alloc(gslInterpType, y.size());
-        ::gsl_interp_init(_interp, &x[0], &y[0], y.size());
-    }
+    enum Style {
+        CONSTANT = 0,
+        LINEAR = 1,
+        NATURAL_SPLINE = 2,
+        CUBIC_SPLINE = 3,
+        CUBIC_SPLINE_PERIODIC = 4,
+        AKIMA_SPLINE = 5,
+        AKIMA_SPLINE_PERIODIC = 6,
+        NUM_STYLES
+    };
     
-    virtual ~Interpolate() {
-        ::gsl_interp_free(_interp);
-        ::gsl_interp_accel_free(_acc);
-    }
+    Interpolate(std::vector<double> const &x, std::vector<double> const &y,
+                ::gsl_interp_type const *gslInterpType = ::gsl_interp_akima);
+    Interpolate(std::vector<double> const &x, std::vector<double> const &y,
+                Interpolate::Style const style);
+    Interpolate(std::vector<double> const &x, std::vector<double> const &y,
+                std::string style);
+    
+    void initialize(std::vector<double> const &x, std::vector<double> const &y,
+                    ::gsl_interp_type const *gslInterpType);
 
-    double interpolate(double const x) {
-        return ::gsl_interp_eval(_interp, &_x[0], &_y[0], x, _acc);
-    }
+    virtual ~Interpolate();
+    double interpolate(double const x);
     
 private:
     std::vector<double> const &_x;
@@ -84,6 +53,38 @@ private:
     ::gsl_interp *_interp;
 };
 
+
+    
+/**
+ * @brief Conversion function to switch an Interpolate::Style to a gsl_interp_type.
+ */
+::gsl_interp_type const *styleToGslInterpType(Interpolate::Style const style);
+    
+/**
+ * @brief Conversion function to switch a string to an Interpolate::Style.
+ */
+Interpolate::Style stringToInterpStyle(std::string const style);
+
+/**
+ * @brief Conversion function to switch a string to a gsl_interp_type.
+ */
+::gsl_interp_type const *stringToGslInterpType(std::string const style);
+    
+/**
+ * @brief Get the highest order Interpolation::Style available for 'n' points.
+ */
+    Interpolate::Style lookupMaxInterpStyle(int const n);
+    
+/**
+ * @brief Get the minimum number of points needed to use the requested interpolation style
+ */
+int lookupMinInterpPoints(Interpolate::Style const style);
+    
+/**
+ * @brief Get the minimum number of points needed to use the requested interpolation style
+ * Overload of lookupMinInterpPoints() which takes a string
+ */
+int lookupMinInterpPoints(std::string const style);
         
 }}}
                      
