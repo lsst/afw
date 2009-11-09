@@ -210,6 +210,9 @@ public:
     /// The FootprintSet's set of Footprint%s
     typedef std::vector<Footprint::Ptr> FootprintList;
 
+    FootprintSet(lsst::afw::image::Image<ImagePixelT> const& img,
+                 Threshold const& threshold,
+                 int const npixMin=1);
     FootprintSet(lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
                  Threshold const& threshold,
                  std::string const& planeName = "",
@@ -346,6 +349,15 @@ private:
 };
 
 /************************************************************************************************************/
+
+template<typename ImagePixelT, typename MaskPixelT>
+typename detection::FootprintSet<ImagePixelT>::Ptr makeFootprintSet(
+        image::Image<ImagePixelT> const& img,
+        Threshold const& threshold,
+        std::string const& planeName = "",
+        int const npixMin=1) {
+    return typename detection::FootprintSet<ImagePixelT, MaskPixelT>::Ptr(new FootprintSet<ImagePixelT, MaskPixelT>(img, threshold, npixMin));
+}
 
 template<typename ImagePixelT, typename MaskPixelT>
 typename detection::FootprintSet<ImagePixelT, MaskPixelT>::Ptr makeFootprintSet(
