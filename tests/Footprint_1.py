@@ -516,6 +516,16 @@ class FootprintSetTestCase(unittest.TestCase):
                 for x in range(sp.getX0(), sp.getX1() + 1):
                     self.assertEqual(idImage.get(x, sp.getY()), i + 1)
 
+    def testFootprintsImage(self):
+        """Check that we can search Images as well as MaskedImages"""
+        ds = afwDetection.FootprintSetF(self.ms.getImage(), afwDetection.Threshold(10))
+
+        objects = ds.getFootprints()
+
+        self.assertEqual(len(objects), len(self.objects))
+        for i in range(len(objects)):
+            self.assertEqual(objects[i], self.objects[i])
+            
     def testGrow2(self):
         """Grow some more interesting shaped Footprints.  Informative with display, but no numerical tests"""
         

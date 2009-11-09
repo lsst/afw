@@ -105,28 +105,16 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::~FootprintSet() {
     delete &_footprints;
 }
 
-/**
- * \brief Find a Detection Set given a MaskedImage and a threshold
- *
- * Go through an image, finding sets of connected pixels above threshold
- * and assembling them into Footprint%s;  the resulting set of objects
- * is returned as an \c array<Footprint::Ptr>
- *
- * If threshold.getPolarity() is true, pixels above the Threshold are
- * assembled into Footprints; if it's false, then pixels \e below Threshold
- * are processed (Threshold will probably have to be below the background level
- * for this to make sense, e.g. for difference imaging)
- */
+/************************************************************************************************************/
+
 template<typename ImagePixelT, typename MaskPixelT>
-detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
-        const image::MaskedImage<ImagePixelT, MaskPixelT> &maskedImg, //!< MaskedImage to search for objects
-        const Threshold& threshold,     //!< threshold to find objects
-        const std::string& planeName,   //!< mask plane to set (if != "")
-        const int npixMin)              //!< minimum number of pixels in an object
-    : lsst::daf::data::LsstBase(typeid(this)),
-      _footprints(*new FootprintList()),
-      _region(*new image::BBox(image::PointI(maskedImg.getX0(), maskedImg.getY0()),
-                               maskedImg.getWidth(), maskedImg.getHeight())) {
+static void findFootprints(
+        typename detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintList *_footprints, // Footprints
+        image::BBox const& _region,            // BBox of pixels that are being searched
+        const image::Image<ImagePixelT> &img,  // Image to search for objects
+        const detection::Threshold& threshold, // threshold to find objects
+        const int npixMin                      // minimum number of pixels in an object
+                          ) {
     int id;                             /* object ID */
     int in_span;                        /* object ID of current IdSpan */
     int nobj = 0;                       /* number of objects found */
@@ -134,20 +122,20 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
 
     typedef typename image::Image<ImagePixelT> ImageT;
     
-    const typename ImageT::Ptr img = maskedImg.getImage();
-    const int row0 = img->getY0();
-    const int col0 = img->getX0();
-    const int height = img->getHeight();
-    const int width = img->getWidth();
+    const int row0 = img.getY0();
+    const int col0 = img.getX0();
+    const int height = img.getHeight();
+    const int width = img.getWidth();
 
     float thresholdParam = -1;          // standard deviation of image (may be needed by Threshold)
-    if (threshold.getType() == Threshold::STDEV || threshold.getType() == Threshold::VARIANCE) {
-        math::Statistics stats = math::makeStatistics(*img, math::STDEVCLIP);
+    if (threshold.getType() == detection::Threshold::STDEV ||
+        threshold.getType() == detection::Threshold::VARIANCE) {
+        math::Statistics stats = math::makeStatistics(img, math::STDEVCLIP);
         double const sd = stats.getValue(math::STDEVCLIP);
 
         pexLogging::TTrace<3>("afw.detection", "St. Dev = %g", sd);
         
-        if (threshold.getType() == Threshold::VARIANCE) {
+        if (threshold.getType() == detection::Threshold::VARIANCE) {
             thresholdParam = sd*sd;
         } else {
             thresholdParam = sd;
@@ -191,7 +179,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         
         in_span = 0;                    /* not in a span */
 
-        x_iterator pixPtr = img->row_begin(y);
+        x_iterator pixPtr = img.row_begin(y);
         for (int x = 0; x < width; ++x, ++pixPtr) {
              ImagePixelT pixVal = (polarity ? *pixPtr : -(*pixPtr));
 
@@ -259,7 +247,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         i0 = 0;
         for (unsigned int i = 0; i <= spans.size(); i++) { // <= size to catch the last object
             if(i == spans.size() || spans[i]->id != id) {
-                Footprint *fp = new Footprint(i - i0, _region);
+                detection::Footprint *fp = new detection::Footprint(i - i0, _region);
             
                 for(; i0 < i; i0++) {
                     fp->addSpan(spans[i0]->y + row0, spans[i0]->x0 + col0, spans[i0]->x1 + col0);
@@ -268,8 +256,8 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
                 if (fp->getNpix() < npixMin) {
                     delete fp;
                 } else {
-                    Footprint::Ptr fpp(fp);
-                    _footprints.push_back(fpp);
+                    detection::Footprint::Ptr fpp(fp);
+                    _footprints->push_back(fpp);
                 }
             }
 
@@ -278,6 +266,52 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
             }
         }
     }
+}
+
+/************************************************************************************************************/
+/*
+ * Here's the working routine for the FootprintSet constructors; see documentation
+ * of the constructors themselves
+ */
+template<typename ImagePixelT, typename MaskPixelT>
+detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
+        const image::Image<ImagePixelT> &img, //!< Image to search for objects
+        const Threshold& threshold,     //!< threshold to find objects
+        const int npixMin)              //!< minimum number of pixels in an object
+    : lsst::daf::data::LsstBase(typeid(this)),
+      _footprints(*new FootprintList()),
+      _region(*new image::BBox(image::PointI(img.getX0(), img.getY0()),
+                               img.getWidth(), img.getHeight())) {
+    findFootprints<ImagePixelT, MaskPixelT>(&_footprints, _region, img, threshold, npixMin);
+}
+
+/**
+ * \brief Find a Detection Set given a MaskedImage and a threshold
+ *
+ * Go through an image, finding sets of connected pixels above threshold
+ * and assembling them into Footprint%s;  the resulting set of objects
+ * is returned as an \c array<Footprint::Ptr>
+ *
+ * If threshold.getPolarity() is true, pixels above the Threshold are
+ * assembled into Footprints; if it's false, then pixels \e below Threshold
+ * are processed (Threshold will probably have to be below the background level
+ * for this to make sense, e.g. for difference imaging)
+ */
+template<typename ImagePixelT, typename MaskPixelT>
+detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
+        const image::MaskedImage<ImagePixelT, MaskPixelT> &maskedImg, //!< MaskedImage to search for objects
+        const Threshold& threshold,     //!< threshold to find objects
+        const std::string& planeName,   //!< mask plane to set (if != "")
+        const int npixMin)              //!< minimum number of pixels in an object
+    : lsst::daf::data::LsstBase(typeid(this)),
+      _footprints(*new FootprintList()),
+      _region(*new image::BBox(image::PointI(maskedImg.getX0(), maskedImg.getY0()),
+                               maskedImg.getWidth(), maskedImg.getHeight())) {
+/*
+ * Find the Footprints
+ */
+    findFootprints<ImagePixelT, MaskPixelT>(&_footprints, _region,
+                                            *maskedImg.getImage(), threshold, npixMin);    
 /*
  * Set Mask if requested
  */
