@@ -32,14 +32,16 @@ public:
         return static_cast<LogShearEllipse &>(Ellipse::operator=(other));
     }
 
-    explicit LogShearEllipse(Coordinate const & center = Coordinate(0,0));
+    explicit LogShearEllipse(
+        lsst::afw::image::PointD const & center = lsst::afw::image::PointD(0,0)
+    );
 
     template <typename Derived>
     explicit LogShearEllipse(Eigen::MatrixBase<Derived> const & vector);
 
     explicit LogShearEllipse(
         LogShear const & core, 
-        lsst::afw::math::Coordinate const & center = Coordinate(0,0)
+        lsst::afw::image::PointD const & center = lsst::afw::image::PointD(0,0)
     );
 
     LogShearEllipse(Ellipse const & other);
@@ -69,7 +71,7 @@ public:
     virtual LogShear * clone() const { return new LogShear(*this); }
 
     virtual Ellipse * makeEllipse(
-        Coordinate const & center = Coordinate(0,0)
+        lsst::afw::image::PointD const & center = lsst::afw::image::PointD(0,0)
     ) const;
 
     void setComplex(std::complex<double> const & gamma) { 

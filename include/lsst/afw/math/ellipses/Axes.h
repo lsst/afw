@@ -28,15 +28,15 @@ public:
     }
 
     explicit AxesEllipse(
-        lsst::afw::math::Coordinate const & center = Coordinate(0,0)
+        lsst::afw::image::PointD const & center = lsst::afw::image::PointD(0,0)
     );
 
     template <typename Derived>
     explicit AxesEllipse(Eigen::MatrixBase<Derived> const & vector);
 
     explicit AxesEllipse(
-            Axes const & core, 
-            lsst::afw::math::Coordinate const & center = Coordinate(0,0)
+        Axes const & core, 
+        lsst::afw::image::PointD const & center = lsst::afw::image::PointD(0,0)
     );
 
     AxesEllipse(Ellipse const & other);
@@ -73,7 +73,7 @@ public:
     virtual Axes * clone() const { return new Axes(*this); }
 
     virtual Ellipse * makeEllipse(
-        Coordinate const & center = Coordinate(0,0)
+        lsst::afw::image::PointD const & center = lsst::afw::image::PointD(0,0)
     ) const;
 
     template <typename Derived>

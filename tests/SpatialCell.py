@@ -89,6 +89,17 @@ class SpatialCellTestCase(unittest.TestCase):
         self.assertEqual(self.cell.size(), self.nCandidate)
         self.assertEqual(self.cell.end() - self.cell.begin(), self.nCandidate)
 
+    def testGetCandidateById(self):
+        """Check that we can lookup candidates by ID"""
+        id = self.cell[1].getId()
+        self.assertEqual(self.cell.getCandidateById(id).getId(), id)
+
+        def tst():
+            self.cell.getCandidateById(-1) # non-existent ID
+
+        self.assertEqual(self.cell.getCandidateById(-1, True), None)
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.NotFoundException, tst)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class SpatialCellSetTestCase(unittest.TestCase):
@@ -170,6 +181,22 @@ class SpatialCellSetTestCase(unittest.TestCase):
         self.cellSet.visitCandidates(visitor, 1)
         self.assertEqual(visitor.getN(), 3)
     
+    def testGetCandidateById(self):
+        """Check that we can lookup candidates by ID"""
+
+        self.makeTestCandidateCellSet()
+        #
+        # OK, the SpatialCellList is populated
+        #
+        id = self.cellSet.getCellList()[0][1].getId()
+        self.assertEqual(self.cellSet.getCandidateById(id).getId(), id)
+
+        def tst():
+            self.cellSet.getCandidateById(-1) # non-existent ID
+            
+        self.assertEqual(self.cellSet.getCandidateById(-1, True), None)
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.NotFoundException, tst)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class TestImageCandidateCase(unittest.TestCase):

@@ -28,7 +28,7 @@ double ellipses::LogShearEllipse::getGamma() const {
 }
 
 ellipses::LogShearEllipse::LogShearEllipse(
-    lsst::afw::math::Coordinate const & center
+    lsst::afw::image::PointD const & center
 ) : Ellipse(new LogShear(), center) {} 
 
 template <typename Derived>
@@ -40,7 +40,7 @@ ellipses::LogShearEllipse::LogShearEllipse(
 
 ellipses::LogShearEllipse::LogShearEllipse(
         ellipses::LogShear const & core, 
-        lsst::afw::math::Coordinate const & center
+        lsst::afw::image::PointD const & center
 ) : Ellipse(core,center) {}
 
 ellipses::LogShearEllipse::LogShearEllipse(
@@ -56,7 +56,7 @@ ellipses::LogShearEllipse::LogShearEllipse(
 
 
 ellipses::LogShear::Ellipse * ellipses::LogShear::makeEllipse(
-    lsst::afw::math::Coordinate const & center
+    lsst::afw::image::PointD const & center
 ) const {
     return new Ellipse(*this,center);
 }

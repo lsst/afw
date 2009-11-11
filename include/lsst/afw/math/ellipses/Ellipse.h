@@ -24,7 +24,7 @@ public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
     class TransformDerivative {
-        Coordinate _center;
+        lsst::afw::image::PointD _center;
         Core::TransformDerivative _core_d;
     public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
@@ -51,8 +51,8 @@ public:
 #endif
     enum Parameters { X=0, Y=1 };
 
-    Coordinate const & getCenter() const { return _center; }
-    void setCenter(Coordinate const & center) {_center = center; }
+    lsst::afw::image::PointD const & getCenter() const { return _center; }
+    void setCenter(lsst::afw::image::PointD const & center) {_center = center; }
 
     Core const & getCore() const { return *_core; }
     Core & getCore() { return *_core; }
@@ -91,21 +91,21 @@ public:
 
     template <typename Derived>
     void setVector(Eigen::MatrixBase<Derived> const & vector) {
-        _center = vector.template segment<2>(0);
+        _center = lsst::afw::image::PointD(vector[0], vector[1]);
         _core->setVector(vector.template segment<3>(2));
     }
 #endif
 protected:    
-    explicit Ellipse(Coordinate const & center) 
+    explicit Ellipse(lsst::afw::image::PointD const & center) 
         : _center(center), _core() {}
 
-    explicit Ellipse(Core const & core, Coordinate const & center)
+    explicit Ellipse(Core const & core, lsst::afw::image::PointD const & center)
         : _center(center), _core(core.clone()) {}
 
-    explicit Ellipse(Core * core, Coordinate const & center)
+    explicit Ellipse(Core * core, lsst::afw::image::PointD const & center)
         : _center(center), _core(core) {}
 
-    Coordinate _center;
+    lsst::afw::image::PointD _center;
     boost::scoped_ptr<Core> _core;
 };
 
@@ -119,17 +119,20 @@ public:
     typedef boost::shared_ptr<Parametric> Ptr;
     typedef boost::shared_ptr<const Parametric> ConstPtr;
 
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-
     Parametric(Ellipse const & ellipse);
 
-    lsst::afw::math::Coordinate operator()(double t) const {
-        return _center + _u*std::cos(t) + _v*std::sin(t); 
+    lsst::afw::image::PointD operator()(double t) const {
+        double c = std::cos(t);
+        double s = std::sin(t);
+        return lsst::afw::image::PointD(
+            _center.getX() + _u.getX()*c + _v.getX()*s,
+            _center.getY() + _u.getY()*c + _v.getY()*s    
+        );
     }
 private:
-    Coordinate _center;
-    Coordinate _u;
-    Coordinate _v;
+    lsst::afw::image::PointD _center;
+    lsst::afw::image::PointD _u;
+    lsst::afw::image::PointD _v;
 };
 
 }}}} //end namespace lsst::afw::math::ellipses

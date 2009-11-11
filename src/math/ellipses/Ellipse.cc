@@ -25,13 +25,13 @@ Eigen::Matrix<double,5,6> ellipses::Ellipse::TransformDerivative::dTransform() c
 void ellipses::Ellipse::transform(
     lsst::afw::math::AffineTransform const & transform
 ) {
-    _center = transform.matrix() * _center;
+    _center = transform(_center);
     _core->transform(transform);
 }
 
 lsst::afw::math::AffineTransform ellipses::Ellipse::getGenerator() const {
     AffineTransform r = _core->getGenerator();
-    r.matrix().translation() = _center;
+    r.matrix().translation() << _center.getX(), _center.getY();
     return r;
 }
 
@@ -58,6 +58,6 @@ ellipses::Parametric::Parametric(
     Axes core(ellipse.getCore());
     double c = std::cos(core[Axes::THETA]);
     double s = std::sin(core[Axes::THETA]);
-    _u = Coordinate(core[Axes::A]*c,core[Axes::A]*s);
-    _v = Coordinate(-core[Axes::B]*s,core[Axes::B]*c);
+    _u = lsst::afw::image::PointD(core[Axes::A]*c,core[Axes::A]*s);
+    _v = lsst::afw::image::PointD(-core[Axes::B]*s,core[Axes::B]*c);
 }

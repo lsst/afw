@@ -33,7 +33,9 @@ public:
     void setE(double e);
     double getE() const;
     
-    explicit DistortionEllipse(Coordinate const & center = Coordinate(0,0));
+    explicit DistortionEllipse(
+        lsst::afw::image::PointD const & center = lsst::afw::image::PointD(0,0)
+    );
     
 
     template <typename Derived>
@@ -41,7 +43,8 @@ public:
 
     explicit DistortionEllipse(
             Distortion const & core, 
-            Coordinate const & center = Coordinate(0,0)
+            lsst::afw::image::PointD const & center = 
+                lsst::afw::image::PointD(0,0)
     );
 
     DistortionEllipse(Ellipse const & other);
@@ -74,12 +77,14 @@ public:
         return r;
     }
 
-    virtual bool normalize() { double e = getE(); return e >= 0.0 && e < 1.0 && _vector[R] >= 0; }
+    virtual bool normalize() { 
+        double e = getE(); return e >= 0.0 && e < 1.0 && _vector[R] >= 0; 
+    }
 
     virtual Distortion * clone() const { return new Distortion(*this); }
 
     virtual Ellipse * makeEllipse(
-            Coordinate const & center = Coordinate(0,0)
+        lsst::afw::image::PointD const & center = lsst::afw::image::PointD(0,0)
     ) const;
 
     void setComplex(std::complex<double> const & e) {
@@ -89,8 +94,12 @@ public:
         return std::complex<double>(_vector[E1],_vector[E2]); 
     }
 
-    void setE(double e) { double f = e/getE(); _vector[E1] *= f; _vector[E2] *= f; }
-    double getE() const { return std::sqrt(_vector[E1]*_vector[E1] + _vector[E2]*_vector[E2]); }
+    void setE(double e) { 
+        double f = e/getE(); _vector[E1] *= f; _vector[E2] *= f; 
+    }
+    double getE() const { 
+        return std::sqrt(_vector[E1]*_vector[E1] + _vector[E2]*_vector[E2]); 
+    }
 
     template <typename Derived>
     explicit Distortion(Eigen::MatrixBase<Derived> const & vector) 

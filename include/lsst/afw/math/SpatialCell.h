@@ -218,13 +218,18 @@ namespace math {
         SpatialCellCandidateIterator begin() {
             return SpatialCellCandidateIterator(_candidateList.begin(), _candidateList.end(), _ignoreBad);
         }
-        SpatialCellCandidateIterator begin(bool ignoreBad) {
+        SpatialCellCandidateIterator begin(bool ignoreBad ///< If true, ignore BAD candidates
+                                          ) {
             return SpatialCellCandidateIterator(_candidateList.begin(), _candidateList.end(), ignoreBad);
         }
+        /**
+         * Return an iterator to (one after) the end of the Candidates
+         */
         SpatialCellCandidateIterator end() {
             return SpatialCellCandidateIterator(_candidateList.begin(), _candidateList.end(), _ignoreBad, true);
         }
-        SpatialCellCandidateIterator end(bool ignoreBad) {
+        SpatialCellCandidateIterator end(bool ignoreBad ///< If true, ignore BAD candidates
+                                        ) {
             return SpatialCellCandidateIterator(_candidateList.begin(), _candidateList.end(), ignoreBad, true);
         }
         //
@@ -233,6 +238,8 @@ namespace math {
         void setIgnoreBad(bool ignoreBad) { _ignoreBad = ignoreBad; }
         /// Get whether we are omitting BAD candidates from candidate list when traversing
         bool getIgnoreBad() const { return _ignoreBad; }
+
+        SpatialCellCandidate::Ptr getCandidateById(int id, bool noThrow=false);
         /**
          * Get SpatialCell's label
          */
@@ -276,6 +283,9 @@ namespace math {
                              bool const ignoreExceptions=false);
         void visitCandidates(CandidateVisitor const * visitor, int const nMaxPerCell=-1,
                              bool const ignoreExceptions=false) const;
+
+        SpatialCellCandidate::Ptr getCandidateById(int id, bool noThrow=false);
+
     private:
         lsst::afw::image::BBox _region;   // Dimensions of overall image
         CellList _cellList;               // List of SpatialCells

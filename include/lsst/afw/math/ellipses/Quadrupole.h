@@ -30,14 +30,14 @@ public:
         return static_cast<QuadrupoleEllipse &>(Ellipse::operator=(other));
     }
 
-    explicit QuadrupoleEllipse(Coordinate const & center);
+    explicit QuadrupoleEllipse(lsst::afw::image::PointD const & center);
 
     template <typename Derived>
     explicit QuadrupoleEllipse(Eigen::MatrixBase<Derived> const & vector); 
     
     explicit QuadrupoleEllipse(
         Quadrupole const & core, 
-        lsst::afw::math::Coordinate const & center = Coordinate(0,0)
+        lsst::afw::image::PointD const & center = lsst::afw::image::PointD(0,0)
     );
 
     QuadrupoleEllipse(Ellipse const & other);
@@ -70,7 +70,7 @@ public:
     virtual Quadrupole * clone() const { return new Quadrupole(*this); }
 
     virtual Ellipse * makeEllipse(
-        Coordinate const & center = Coordinate(0,0)
+        lsst::afw::image::PointD const & center = lsst::afw::image::PointD(0,0)
     ) const;
 
     double getDeterminant() const { 

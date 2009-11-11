@@ -323,7 +323,21 @@ class ImageTestCase(unittest.TestCase):
             simage1 = afwImage.ImageF(self.image1, afwImage.BBox(afwImage.PointI(1, -1), 10, 5))
 
         utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst)
-        
+
+    def testImageInitialisation(self):
+        dims = self.image1.getDimensions()
+        factory = self.image1.Factory
+
+        self.image1.set(666)
+
+        del self.image1                 # tempt C++ to reuse the memory
+        self.image1 = factory(dims)
+        self.assertEqual(self.image1.get(10, 10), 0)
+
+        del self.image1
+        self.image1 = factory(20, 20)
+        self.assertEqual(self.image1.get(10, 10), 0)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class DecoratedImageTestCase(unittest.TestCase):

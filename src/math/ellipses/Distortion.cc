@@ -26,7 +26,7 @@ void ellipses::DistortionEllipse::setE(double e) { getCore().setE(e); }
 double ellipses::DistortionEllipse::getE() const { return getCore().getE(); }
    
 ellipses::DistortionEllipse::DistortionEllipse(
-        lsst::afw::math::Coordinate const & center
+        lsst::afw::image::PointD const & center
 ) : Ellipse(new Distortion(), center) {}
 
 template <typename Derived>
@@ -38,7 +38,7 @@ ellipses::DistortionEllipse::DistortionEllipse(
 
 ellipses::DistortionEllipse::DistortionEllipse(
         ellipses::Distortion const & core, 
-        lsst::afw::math::Coordinate const & center
+        lsst::afw::image::PointD const & center
 ) : Ellipse(core,center) {}
 
 ellipses::DistortionEllipse::DistortionEllipse(
@@ -51,7 +51,7 @@ ellipses::DistortionEllipse::DistortionEllipse(
 
 
 ellipses::Distortion::Ellipse * ellipses::Distortion::makeEllipse(
-    lsst::afw::math::Coordinate const & center
+    lsst::afw::image::PointD const & center
 ) const {
     return new Ellipse(*this,center);
 }

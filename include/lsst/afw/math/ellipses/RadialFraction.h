@@ -23,8 +23,7 @@ namespace ellipses {
  *  For an ellipse with non-zero center, simply use let p = p - ellipse.getCenter().
  */
 class RadialFraction {
-    QuadrupoleMatrix _inv_matrix;
-    Eigen::Matrix3d _jacobian;
+    typedef Eigen::Matrix<double, 2, 1, Eigen::RowMajor> EigenPoint;
 public:
     
     typedef boost::shared_ptr<RadialFraction> Ptr;
@@ -40,24 +39,33 @@ public:
     }
 	
     /** \brief Evaluate the RadialFraction z at the given point. */
-    double operator()(Coordinate const & p) const {
-        return p.dot(_inv_matrix * p);
+    double operator()(lsst::afw::image::PointD const & p) const {
+        EigenPoint e(p.getX(), p.getY());
+        return e.dot(_inv_matrix * e);
     }
 
-    /** \brief Evaluate the gradient of RadialFraction (derivative with respect to p).
+    /** \brief Evaluate the gradient of RadialFraction (derivative with 
+     * respect to p).
      *
-     *  The derivative with respect to the center of the ellipse is the negative gradient.
+     *  The derivative with respect to the center of the ellipse is the 
+     *  negative gradient.
      */
-    Eigen::RowVector2d differentiateCoordinate(Coordinate const & p) const {
-        return Eigen::RowVector2d(2.0*_inv_matrix*p);
+    Eigen::RowVector2d differentiateCoordinate(
+        lsst::afw::image::PointD const & p
+    ) const {
+        EigenPoint e(p.getX(), p.getY());
+        return Eigen::RowVector2d(2.0*_inv_matrix*e);
     }
 
     /** \brief Evaluate the derivative of RadialFraction with respect to the Core parameters.
      *  it was initialized with.
      */
-    Eigen::RowVector3d differentiateCore(Coordinate const & p) const {
+    Eigen::RowVector3d differentiateCore(
+        lsst::afw::image::PointD const & p
+    ) const {
         Eigen::RowVector3d vec;
-        Coordinate tmp1 = _inv_matrix * p;
+        EigenPoint e(p.getX(), p.getY());
+        EigenPoint tmp1 = _inv_matrix * e;
         QuadrupoleMatrix tmp2;
         tmp2.part<Eigen::SelfAdjoint>() = (tmp1 * tmp1.adjoint()).lazy();
         vec[0] = -tmp2(0,0);
@@ -65,7 +73,9 @@ public:
         vec[2] = -2.0*tmp2(1,0);
         return vec * _jacobian;
     }
-	
+private:
+    QuadrupoleMatrix _inv_matrix;
+    Eigen::Matrix3d _jacobian;
 };
 
 }}}} //end namespace lsst::afw::math::ellipses

@@ -105,7 +105,7 @@ public:
     virtual Core * clone() const = 0;
 
     virtual Ellipse * makeEllipse(
-        Coordinate const & center = Coordinate(0,0)
+        lsst::afw::image::PointD const & center = lsst::afw::image::PointD(0,0)
     ) const = 0;
 #endif
 

@@ -3,7 +3,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include <Eigen/Geometry>
-#include <lsst/afw/math/Coordinate.h>
+#include <lsst/afw/image/Utils.h>
 
 namespace Eigen {
 typedef Eigen::Matrix<double,6,1> Vector6d;
@@ -15,10 +15,13 @@ namespace math {
 
 /** \brief Transform defined as the composition of several other distinct Transforms. */
 class AffineTransform {
+    typedef Eigen::Matrix<double, 2, 1, Eigen::RowMajor> EigenPoint;
+
 public:
     typedef Eigen::Transform2d TransformMatrix; 
     typedef boost::shared_ptr<AffineTransform> Ptr;
     typedef boost::shared_ptr<const AffineTransform> ConstPtr;
+    typedef lsst::afw::image::PointD PointD;
 
     enum Parameters {XX=0,YX=1,XY=2,YY=3,X=4,Y=5};
     /** \brief Construct an empty (identity) AffineTransform. */
@@ -37,11 +40,16 @@ public:
     explicit AffineTransform(Eigen::Matrix2d const & m) : _matrix(m) {}
 
     /** \brief Construct an AffineTransform from a 2d matrix and offset. */
-    explicit AffineTransform(Eigen::Matrix2d const & m, Coordinate const & p) 
-        : _matrix(Eigen::Translation2d(p)*TransformMatrix(m)) {}
+    explicit AffineTransform(
+        Eigen::Matrix2d const & m, 
+        PointD const & p
+    ) : _matrix(Eigen::Translation2d(p.getX(), p.getY())*TransformMatrix(m)) 
+    {}
 
-    /** \brief Construct an AffineTransform with only an offset. */
-    AffineTransform(Coordinate const & p) : _matrix(Eigen::Translation2d(p)) {}
+
+    AffineTransform(PointD const & p) : 
+        _matrix(Eigen::Translation2d(p.getX(), p.getY()))
+    {}
 
     /** \brief Return a copy of the transform. */
     AffineTransform * clone() const { return new AffineTransform(*this); }
@@ -53,7 +61,10 @@ public:
 
 
     /** \brief Transform a Coordinate object. */
-    Coordinate operator()(const Coordinate& p) const { return _matrix * p; }
+    PointD operator()(PointD const &p) const {         
+         EigenPoint tp = _matrix * EigenPoint(p.getX(), p.getY());
+         return PointD(tp.x(), tp.y());
+    }
 
     TransformMatrix & matrix() {return _matrix;}
     TransformMatrix const & matrix() const {return _matrix;}
@@ -80,7 +91,7 @@ public:
         return AffineTransform(TransformMatrix(Eigen::Rotation2D<double>(t)));
     }
 
-    Eigen::Matrix<double,2,6> d(Coordinate const & input) const;
+    Eigen::Matrix<double,2,6> d(PointD const & input) const;
 
 private:
 

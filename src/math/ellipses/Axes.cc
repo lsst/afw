@@ -15,7 +15,7 @@ ellipses::Axes & ellipses::AxesEllipse::getCore() {
 }
    
 ellipses::AxesEllipse::AxesEllipse(
-        lsst::afw::math::Coordinate const & center 
+        lsst::afw::image::PointD const & center 
 ) : Ellipse(new Axes(), center) {}
 
 template <typename Derived>
@@ -27,7 +27,7 @@ ellipses::AxesEllipse::AxesEllipse(
 
 ellipses::AxesEllipse::AxesEllipse (
         ellipses::Axes const & core, 
-        lsst::afw::math::Coordinate const & center
+        lsst::afw::image::PointD const & center
 ) : Ellipse(core, center) {}
 
 ellipses::AxesEllipse::AxesEllipse(
@@ -37,9 +37,6 @@ ellipses::AxesEllipse::AxesEllipse(
 ellipses::AxesEllipse::AxesEllipse (
     ellipses::AxesEllipse const & other
 ) : Ellipse(new Axes(other.getCore()), other.getCenter()) {}
-
-
-
 
 lsst::afw::math::AffineTransform ellipses::Axes::getGenerator() const {
     return AffineTransform(
@@ -66,7 +63,7 @@ bool ellipses::Axes::normalize() {
 }
 
 ellipses::Axes::Ellipse * ellipses::Axes::makeEllipse(
-        lsst::afw::math::Coordinate const & center
+        lsst::afw::image::PointD const & center
 ) const {
     return new Ellipse(*this,center);
 }

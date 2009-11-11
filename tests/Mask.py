@@ -240,6 +240,20 @@ class MaskTestCase(unittest.TestCase):
         self.assertEqual(mask2.getX0(), x0)
         self.assertEqual(mask2.getY0(), y0)
 
+    def testMaskInitialisation(self):
+        dims = self.mask1.getDimensions()
+        factory = self.mask1.Factory
+
+        self.mask1.set(666)
+
+        del self.mask1                 # tempt C++ to reuse the memory
+        self.mask1 = factory(dims)
+        self.assertEqual(self.mask1.get(10, 10), 0)
+
+        del self.mask1
+        self.mask1 = factory(20, 20)
+        self.assertEqual(self.mask1.get(10, 10), 0)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class OldMaskTestCase(unittest.TestCase):

@@ -14,7 +14,7 @@ ellipses::Quadrupole & ellipses::QuadrupoleEllipse::getCore() {
 }
 
 ellipses::QuadrupoleEllipse::QuadrupoleEllipse(
-        lsst::afw::math::Coordinate const & center = Coordinate(0,0)
+        lsst::afw::image::PointD const & center = lsst::afw::image::PointD(0,0)
 ) : Ellipse(new Quadrupole(), center) {}
 
 template <typename Derived>
@@ -26,7 +26,7 @@ ellipses::QuadrupoleEllipse::QuadrupoleEllipse(
   
 ellipses::QuadrupoleEllipse::QuadrupoleEllipse(
     ellipses::Quadrupole const & core, 
-    lsst::afw::math::Coordinate const & center
+    lsst::afw::image::PointD const & center
 ) : Ellipse(core,center) {}
 
 ellipses::QuadrupoleEllipse::QuadrupoleEllipse(
@@ -52,7 +52,7 @@ void ellipses::Quadrupole::transform(
 }
 
 ellipses::Quadrupole::Ellipse * ellipses::Quadrupole::makeEllipse(
-    lsst::afw::math::Coordinate const & center
+    lsst::afw::image::PointD const & center
 ) const {
     return new Ellipse(*this,center);
 }

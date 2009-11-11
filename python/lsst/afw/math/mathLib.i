@@ -8,19 +8,6 @@ Python interface to lsst::afw::math classes
 %feature("autodoc", "1");
 %module(package="lsst.afw.math",docstring=mathLib_DOCSTRING) mathLib
 
-#if 0
-%{
-#define SWIG_FILE_WITH_INIT
-#include "numpy/arrayobject.h"
-#include "numpy/ufuncobject.h"
-%}
-
-%init %{
-    import_array();
-    import_umath();
-%}
-#endif
-
 %{
 #   include "lsst/daf/base.h"
 #   include "lsst/pex/policy.h"

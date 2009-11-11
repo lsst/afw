@@ -36,21 +36,22 @@ math::AffineTransform* math::AffineTransform::invert() const {
         );
     }
     Eigen::Matrix2d inv = lu.inverse();
-    return new AffineTransform(inv,-inv*_matrix.translation());
+    EigenPoint p = -inv*_matrix.translation();
+    return new AffineTransform(inv, lsst::afw::image::PointD(p.x(), p.y()));
 }
 
 /**
  * @brief Take the derivative of (*this)(input) w.r.t the transform elements
  */
 Eigen::Matrix<double,2,6> math::AffineTransform::d(
-        math::Coordinate const & input
+        PointD const & input
 ) const {
     Eigen::Matrix<double,2,6> r;
-    r(0,XX) = input.x();
-    r(0,XY) = input.y();
+    r(0,XX) = input.getX();
+    r(0,XY) = input.getY();
     r(0,X) = 1.0;
-    r(1,YX) = input.x();
-    r(1,YY) = input.y();
+    r(1,YX) = input.getX();
+    r(1,YY) = input.getY();
     r(1,Y) = 1.0;
     return r;
 }

@@ -13,6 +13,7 @@
 
 using namespace std;
 namespace math = lsst::afw::math;
+namespace image = lsst::afw::image;
 namespace ellipses = lsst::afw::math::ellipses;
 
 typedef ellipses::Quadrupole Quadrupole;
@@ -62,15 +63,21 @@ void testQuadrupole(Quadrupole const & core, bool test_rf=true) {
   RadialFraction rf(copy);
 
   if (test_rf) {
-      BOOST_CHECK(approx(rf(math::Coordinate(-6.75,2.375)),std::pow(5.5669008088329193,2),1E-8));
-      BOOST_CHECK(approx(rf(math::Coordinate(3.25,-4.375)),std::pow(3.4198702929369733,2),1E-8));
+      BOOST_CHECK(approx(rf(image::PointD(-6.75,2.375)),std::pow(5.5669008088329193,2),1E-8));
+      BOOST_CHECK(approx(rf(image::PointD(3.25,-4.375)),std::pow(3.4198702929369733,2),1E-8));
   }
 
-  math::Coordinate p(1.25,0.85);
+  image::PointD p(1.25,0.85);
   Eigen::RowVector2d grad_analytic = rf.differentiateCoordinate(p);
-  Eigen::RowVector2d grad_numeric;
-  grad_numeric << (rf(math::Coordinate(p.x()+eps,p.y()))-rf(math::Coordinate(p.x()-eps,p.y())))/(2*eps),
-      (rf(math::Coordinate(p.x(),p.y()+eps))-rf(math::Coordinate(p.x(),p.y()-eps)))/(2*eps);
+  Eigen::RowVector2d grad_numeric; 
+  double v0 = rf(image::PointD(p.getX()+eps,p.getY()));
+  v0 -= rf(image::PointD(p.getX()-eps, p.getY()));
+  v0 /= (2*eps);
+  double v1 = rf(image::PointD(p.getX(),p.getY()+eps));
+  v1 -= rf(image::PointD(p.getX(),p.getY()-eps));
+  v1 /= (2*eps);
+
+  grad_numeric << v0, v1;
   BOOST_CHECK(grad_analytic.isApprox(grad_numeric,1E-4));
 
   Eigen::RowVector3d jac_analytic = rf.differentiateCore(p);
@@ -189,8 +196,12 @@ BOOST_AUTO_TEST_CASE(LogShearTest) {
 
 BOOST_AUTO_TEST_CASE(ParametricTest) {
     Parametric p(QuadrupoleEllipse(Quadrupole(3,2,-0.65)));
-    BOOST_CHECK(p(1.45).isApprox(math::Coordinate(0.76537615289287353, 1.0573336496088439)));
-    BOOST_CHECK(p(-2.56).isApprox(math::Coordinate(-1.6804596457433354, 0.03378847788858419)));
+    lsst::afw::image::PointD tmp = p(1.45);
+    Eigen::Vector2d asEigen(tmp.getX(), tmp.getY());
+    BOOST_CHECK(asEigen.isApprox(Eigen::Vector2d(0.76537615289287353, 1.0573336496088439)));
+    tmp = p(-2.56);
+    asEigen= Eigen::Vector2d(tmp.getX(), tmp.getY());
+    BOOST_CHECK(asEigen.isApprox(Eigen::Vector2d(-1.6804596457433354, 0.03378847788858419)));
 }
 
 template <typename TCore1, typename TCore2>
@@ -253,8 +264,13 @@ BOOST_AUTO_TEST_CASE(EllipseJacobian) {
 
 template <typename TCore>
 void testEllipseTransformDerivative(TCore core) {
-    typename TCore::Ellipse input(core, math::Coordinate::Random());
-    math::AffineTransform transform(Eigen::Matrix2d::Random(),Eigen::Vector2d::Random());
+    Eigen::Vector2d r(Eigen::Vector2d::Random());
+    typename TCore::Ellipse input(core, image::PointD(r.x(), r.y()));
+    r = Eigen::Vector2d::Random();
+    math::AffineTransform transform(
+        Eigen::Matrix2d::Random(), 
+        image::PointD(r.x(), r.y())
+    );
     typename TCore::Ellipse output = input;
     output.transform(transform);
     ellipses::Ellipse::TransformDerivative td(input,transform);
