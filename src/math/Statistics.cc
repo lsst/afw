@@ -436,11 +436,27 @@ double math::Statistics::_percentile(std::vector<Pixel> &img,
                                      double const quartile) {
     
     int const n = img.size();
-    int const q = static_cast<int>(quartile*n);
-    
-    std::nth_element(img.begin(), img.begin() + q, img.begin() + n - 1);
-    return img[q];
-    
+    // if odd, get the central value
+    if (n % 2) {
+        
+        int const q = static_cast<int>(quartile*n + 0.5);
+        std::nth_element(img.begin(), img.begin() + q, img.end());
+        
+        return img[q - 1];
+
+        // if even, take the average of the two mid values.
+    } else {
+        
+        int const q1 = static_cast<int>(quartile*n);
+        std::nth_element(img.begin(), img.begin() + q1, img.end());
+        double val1 = static_cast<double>(img[q1 - 1]);
+
+        int const q2 = q1 + 1;
+        std::nth_element(img.begin(), img.begin() + q2, img.end());
+        double val2 = static_cast<double>(img[q2 - 1]);
+
+        return 0.5*(val1 + val2);
+    }
 }
 
 

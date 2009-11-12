@@ -246,6 +246,25 @@ class StatisticsTestCase(unittest.TestCase):
             stats = afwMath.makeStatistics(mask, afwMath.MEAN)
         utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException, tst)
 
+
+    def testTicket1025(self):
+
+        # Ticket #1025 reported that the Statistics median was getting '3' as the median of [1,2,3,2]
+        # it was caused by an off-by-one error in the implementation
+        
+        # check the exact example in the ticket
+        values = [1.0, 2.0, 3.0, 2.0]
+        self.assertEqual(afwMath.makeStatistics(values, afwMath.MEDIAN).getValue(), 2)
+        self.assertEqual(afwMath.makeStatistics(sorted(values), afwMath.MEDIAN).getValue(), 2)
+
+        # check some other possible ways it could show up
+        values = range(10)
+        self.assertEqual(afwMath.makeStatistics(values, afwMath.MEDIAN).getValue(), 4.5)
+        values = range(11)
+        self.assertEqual(afwMath.makeStatistics(values, afwMath.MEDIAN).getValue(), 5.0)
+        
+
+        
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
