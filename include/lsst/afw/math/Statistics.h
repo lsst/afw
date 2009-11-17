@@ -27,7 +27,8 @@ namespace lsst {
 namespace afw {
 namespace math {
             
-/* @brief control what is calculated
+/**
+ * @brief control what is calculated
  */
 enum Property {
     NOTHING = 0x0,                      ///< We don't want anything
@@ -47,7 +48,8 @@ enum Property {
 };
 
     
-/* @class Pass parameters to a Statistics object
+/**
+ * @brief Pass parameters to a Statistics object
  * @ingroup afw
  *
  * A class to pass parameters which control how the stats are calculated.
@@ -88,7 +90,6 @@ private:
 
             
 /**
- * @class Statistics
  * @ingroup afw
  *
  * A class to evaluate %image statistics
@@ -192,9 +193,9 @@ private:
             
 /*************************************  The factory functions **********************************/
 
-/*
+/**
  * @brief Handle MaskedImages, just pass the getImage() and getMask() values right on through.
- *
+ * @relates Statistics
  */
 template<typename Pixel>
 Statistics makeStatistics(image::MaskedImage<Pixel, image::MaskPixel, image::VariancePixel> const &mimg, 
@@ -204,18 +205,17 @@ Statistics makeStatistics(image::MaskedImage<Pixel, image::MaskPixel, image::Var
     return Statistics(*mimg.getImage(), *mimg.getMask(), flags, sctrl);
 }
 
-/*
+/**
  * @brief Front end for specialization to handle Masks
  * @note The definition (in Statistics.cc) simply calls the specialized constructor
- *
+ * @relates Statistics
  */            
 Statistics makeStatistics(image::Mask<image::MaskPixel> const &msk, 
                           int const flags,  
                           StatisticsControl const& sctrl = StatisticsControl());
             
 
-/*
- * @class infinite_iterator
+/**
  * @brief This iterator will never increment.  It is returned by row_begin() in the MaskImposter class
  *        (below) to allow phony mask pixels to be iterated over for non-mask images within Statistics.
  * @note As the iterator always returns 0x0, the comparisons in Statistics::_getStandard() should always
@@ -236,8 +236,7 @@ private:
 };
 
             
-/*
- * @class MaskImposter
+/**
  * @brief A Mask wrapper to provide an infinite_iterator for Mask::row_begin().  This allows a fake
  *        Mask to be passed in to Statistics with a regular (non-masked) Image.
  */
@@ -252,8 +251,9 @@ private:
 };
             
             
-/*
+/**
  * @brief The makeStatistics() overload to handle regular (non-masked) Images
+ * @relates Statistics
  */
 template<typename Pixel>
 Statistics makeStatistics(image::Image<Pixel> const &img, ///< Image (or Image) whose properties we want
@@ -266,9 +266,7 @@ Statistics makeStatistics(image::Image<Pixel> const &img, ///< Image (or Image) 
 }
 
 
-/*
- * @class ImageImposter
- *
+/**
  * @brief A vector wrapper to provide a vector with the necessary methods and typedefs to
  *        be processed by Statistics as though it were an Image.
  */
@@ -297,8 +295,9 @@ private:
     std::vector<ValueT> const &_getVector() const { return _v; } // get the ref for the copyCon
 };
 
-/*
- * @brief The makeStatistics() overload to handle std::vector<> 
+/**
+ * @brief The makeStatistics() overload to handle std::vector<>
+ * @relates Statistics
  */
 template<typename EntryT>
 Statistics makeStatistics(std::vector<EntryT> const &v, ///< Image (or MaskedImage) whose properties we want
