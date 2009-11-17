@@ -16,7 +16,8 @@ namespace lsst { namespace afw { namespace geom {
  *  other objects.
  *
  *  Dealing with boxes that may be empty is a really unpleasant business.  In this design, operations
- *  that individually get/set the minimum and/or maximum points will have undefined behavior on empty boxes.
+ *  that individually get/set the minimum and/or maximum points will have undefined behavior on empty
+ *  boxes.
  */
 template<typename T, int N>
 class Box {
@@ -25,7 +26,7 @@ public:
     /**
      *  \brief Construct a Box from a pair of points.
      */
-    explicit Box(
+    Box(
         Point<T,N> const & min, ///< Minimum point.
         Point<T,N> const & max, ///< Maximum point.
         bool ordered=true ///< If false, swap min and max as necessary to ensure the box is not empty.
@@ -34,10 +35,25 @@ public:
     /**
      *  \brief Construct a Box from the minimum point and the dimensions.
      */
-    explicit Box(
+    Box(
         Point<T,N> const & min, ///< Minimum point.
         Extent<T,N> const & dimensions, ///< Dimensions.  If negative, the box will be empty.
     );
+
+    /**
+     *  \brief Conversion constructor.
+     *
+     *  Converting from integer to floating-point creates a floating point box with minimum values
+     *  0.5 less than the integer minimum and maximum values 0.5 greater than the integer maximum.
+     *
+     *  Converting from floating-point to integer uses floor and ceil such that any pixel touched
+     *  by the floating-point box is included in the integer box.
+     *
+     *  Note that in both of these conversions, a bounding box can remain the same size or grow,
+     *  but will never shrink.
+     */
+    template <typename U>
+    explicit Box(Box<U,N> const & other);
 
     /**
      *  \brief Return the minimum point (formerly getLLC() for 'lower left corner').
@@ -149,6 +165,11 @@ public:
     void shift(Extent<T,N> const & offset);
 
 };
+
+typedef Box<int,2> Box2I;
+typedef Box<int,3> Box3I;
+typedef Box<double,2> Box2D;
+typedef Box<double,3> Box3D;
 
 }}}
 

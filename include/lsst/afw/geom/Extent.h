@@ -100,6 +100,11 @@ public:
 
 };
 
+typedef Extent<int,2> Extent2I;
+typedef Extent<int,3> Extent3I;
+typedef Extent<double,2> Extent2D;
+typedef Extent<double,3> Extent3D;
+
 }}}
 
 #endif
