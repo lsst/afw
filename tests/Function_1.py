@@ -116,7 +116,7 @@ class FunctionTestCase(unittest.TestCase):
                 for angle in (0.0, 0.4, 1.1):
                     sinNegAngle = math.sin(-angle)
                     cosNegAngle = math.cos(-angle)
-                    f.setParameters((sigma1, sigma2, 0.0))
+                    f.setParameters((sigma1, sigma2, angle))
                     f1.setParameters((sigma1,))
                     f2.setParameters((sigma2,))
                     fSum = 0.0
@@ -128,7 +128,7 @@ class FunctionTestCase(unittest.TestCase):
                             y = (-sinNegAngle * pos1) + (cosNegAngle * pos2)
                             predVal = f1(pos1) * f2(pos2)
                             fSum += predVal
-                            if not numpy.allclose(predVal, f(x, y), atol=0.1):
+                            if not numpy.allclose(predVal, f(x, y)):
                                 self.fail(
 "%s = %s != %s for pos1=%s, pos2=%s, x=%s, y=%s, sigma1=%s, sigma2=%s, angle=%s" % \
 (f.__class__.__name__, f(x, y), predVal, pos1, pos2, x, y, sigma1, sigma2, angle))
