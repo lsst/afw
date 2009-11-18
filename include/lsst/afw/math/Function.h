@@ -129,7 +129,7 @@ using boost::serialization::make_nvp;
          * @throw lsst::pex::exceptions::InvalidParameterException
          *        if the wrong number of parameters is supplied.
          */
-        void setParameters(
+        virtual void setParameters(
             std::vector<double> const &params)   ///< vector of function parameters
         {
             if (_params.size() != params.size()) {

@@ -44,9 +44,10 @@ int main(int argc, char **argv) {
         // construct basis kernels
         afwMath::KernelList kernelList;
         for (int ii = 0; ii < 3; ++ii) {
-            double xSigma = (ii == 1) ? MaxSigma : MinSigma;
-            double ySigma = (ii == 2) ? MinSigma : MaxSigma;
-            afwMath::GaussianFunction2<afwMath::Kernel::Pixel> gaussFunc(xSigma, ySigma);
+            double majorSigma = (ii == 1) ? MaxSigma : MinSigma;
+            double minorSigma = (ii == 2) ? MinSigma : MaxSigma;
+            double angle = 0.0;
+            afwMath::GaussianFunction2<afwMath::Kernel::Pixel> gaussFunc(majorSigma, minorSigma, angle);
             afwMath::Kernel::Ptr basisKernelPtr(
                 new afwMath::AnalyticKernel(KernelCols, KernelRows, gaussFunc)
             );

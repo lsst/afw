@@ -13,15 +13,16 @@ typedef lsst::afw::math::Kernel::Pixel Pixel;
 using namespace std;
 
 int main() {
-    double sigmaX = 2.0;
-    double sigmaY = 2.5;
+    double majorSigma = 2.5;
+    double minorSigma = 2.0;
+    double angle = 0.5;
     unsigned int kernelCols = 6;
     unsigned int kernelRows = 5;
 
-    lsst::afw::math::GaussianFunction2<Pixel> gaussFunc(sigmaX, sigmaY);
+    lsst::afw::math::GaussianFunction2<Pixel> gaussFunc(majorSigma, minorSigma, angle);
     lsst::afw::math::AnalyticKernel gaussKernel(kernelCols, kernelRows, gaussFunc);
     
-    cout << boost::format("Gaussian Kernel with sigmaX=%.1f, sigmaY=%.1f\n\n") % sigmaX % sigmaY;
+    cout << boost::format("Gaussian Kernel with majorSigma=%.1f, minorSigma=%.1f\n\n") % majorSigma % minorSigma;
     
     lsst::afw::math::printKernel(gaussKernel, true);
     

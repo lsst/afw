@@ -3,6 +3,7 @@
 
 Tests convolution of various kernels with Images and MaskedImages.
 """
+import math
 import os
 import pdb                          # we may want to say pdb.set_trace()
 import unittest
@@ -128,14 +129,14 @@ def makeGaussianKernelVec(kCols, kRows):
 
     This is useful for constructing a LinearCombinationKernel.
     """
-    xySigmaList = [
-        (1.5, 1.5),
-        (1.5, 2.5),
-        (2.5, 1.5),
+    gaussParamsList = [
+        (1.5, 1.5, 0.0),
+        (2.5, 1.5, 0.0),
+        (2.5, 1.5, math.pi / 2.0),
     ]
     kVec = afwMath.KernelList()
-    for xSigma, ySigma in xySigmaList:
-        kFunc = afwMath.GaussianFunction2D(xSigma, ySigma)
+    for majorSigma, minorSigma, angle in gaussParamsList:
+        kFunc = afwMath.GaussianFunction2D(majorSigma, minorSigma, angle)
         kVec.append(afwMath.AnalyticKernel(kCols, kRows, kFunc))
     return kVec
 
@@ -284,7 +285,7 @@ class ConvolveTestCase(unittest.TestCase):
         kCols = 6
         kRows = 7
 
-        kFunc =  afwMath.GaussianFunction2D(1.5, 2.5)
+        kFunc =  afwMath.GaussianFunction2D(2.5, 1.5, 0.5)
         analyticKernel = afwMath.AnalyticKernel(kCols, kRows, kFunc)
         kernelImage = afwImage.ImageD(kCols, kRows)
         analyticKernel.computeImage(kernelImage, False)
@@ -299,7 +300,7 @@ class ConvolveTestCase(unittest.TestCase):
         kRows = 6
 
         gaussFunc1 = afwMath.GaussianFunction1D(1.0)
-        gaussFunc2 = afwMath.GaussianFunction2D(1.0, 1.0)
+        gaussFunc2 = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         separableKernel = afwMath.SeparableKernel(kCols, kRows, gaussFunc1, gaussFunc1)
         analyticKernel = afwMath.AnalyticKernel(kCols, kRows, gaussFunc2)
         
@@ -312,7 +313,7 @@ class ConvolveTestCase(unittest.TestCase):
         kCols = 6
         kRows = 7
 
-        kFunc =  afwMath.GaussianFunction2D(1.5, 2.5)
+        kFunc =  afwMath.GaussianFunction2D(2.5, 1.5, 0.5)
         kernel = afwMath.AnalyticKernel(kCols, kRows, kFunc)
         
         self.runStdTest(kernel, kernelDescr="Gaussian Analytic Kernel")
@@ -333,7 +334,7 @@ class ConvolveTestCase(unittest.TestCase):
             (1.0, 0.0, 1.0/self.height),
         )
    
-        kFunc =  afwMath.GaussianFunction2D(1.0, 1.0)
+        kFunc =  afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         kernel = afwMath.AnalyticKernel(kCols, kRows, kFunc, sFunc)
         kernel.setSpatialParameters(sParams)
 

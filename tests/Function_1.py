@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import itertools
 import math
 import pdb                          # we may want to say pdb.set_trace()
@@ -105,44 +106,50 @@ class FunctionTestCase(unittest.TestCase):
 
     def testGaussianFunction2D(self):
         """A test for GaussianFunction2D
-        Assumes GaussianFunction1D is correct (test it elsewhere)
+        Assumes GaussianFunction1D is correct (tested elsewhere)
         """
-        f = afwMath.GaussianFunction2D(1.0, 1.0)
-        fx = afwMath.GaussianFunction1D(1.0)
-        fy = afwMath.GaussianFunction1D(1.0)
-        for xsigma in (0.1, 1.0, 3.0):
-            for ysigma in (0.1, 1.0, 3.0):
-                f.setParameters((xsigma, ysigma))
-                fx.setParameters((xsigma,))
-                fy.setParameters((ysigma,))
-                fSum = 0.0
-                xdelta = xsigma / 5.0
-                ydelta = ysigma / 5.0
-                for y in numpy.arange(-ysigma * 5, ysigma * 5.01, ydelta):
-                    for x in numpy.arange(-xsigma * 5.0, xsigma * 5.01, xdelta):
-                        predVal = fx(x) * fy(y)
-                        fSum += predVal
-                        if not numpy.allclose(predVal, f(x, y)):
-                            self.fail("%s = %s != %s for x=%s, y=%s, xsigma=%s, ysigma=%s" % \
-                                (f.__class__.__name__, f(x, y), predVal, x, y, xsigma, ysigma))
-                approxArea = fSum * xdelta * ydelta
-                if not numpy.allclose(approxArea, 1.0):
-                    self.fail("%s area = %s != 1.0 for xsigma=%s, ysigma=%s" % \
-                        (f.__class__.__name__, approxArea, xsigma, ysigma))
+        f = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
+        f1 = afwMath.GaussianFunction1D(1.0)
+        f2 = afwMath.GaussianFunction1D(1.0)
+        for sigma1 in (0.1, 1.0, 3.0):
+            for sigma2 in (0.1, 1.0, 3.0):
+                for angle in (0.0, 0.4, 1.1):
+                    sinNegAngle = math.sin(angle)
+                    cosNegAngle = math.cos(angle)
+                    f.setParameters((sigma1, sigma2, 0.0))
+                    f1.setParameters((sigma1,))
+                    f2.setParameters((sigma2,))
+                    fSum = 0.0
+                    delta1 = sigma1 / 5.0
+                    delta2 = sigma2 / 5.0
+                    for pos1 in numpy.arange(-sigma1 * 5, sigma1 * 5.01, delta1):
+                        for pos2 in numpy.arange(-sigma2 * 5.0, sigma2 * 5.01, delta2):
+                            x = ( cosNegAngle * pos1) + (sinNegAngle * pos2)
+                            y = (-sinNegAngle * pos1) + (cosNegAngle * pos2)
+                            predVal = f1(pos1) * f2(pos2)
+                            fSum += predVal
+                            if not numpy.allclose(predVal, f(x, y), atol=0.1):
+                                self.fail(
+"%s = %s != %s for pos1=%s, pos2=%s, x=%s, y=%s, sigma1=%s, sigma2=%s, angle=%s" % \
+(f.__class__.__name__, f(x, y), predVal, pos1, pos2, x, y, sigma1, sigma2, angle))
+                    approxArea = fSum * delta1 * delta2
+                    if not numpy.allclose(approxArea, 1.0):
+                        self.fail("%s area = %s != 1.0 for sigma1=%s, sigma2=%s" % \
+                            (f.__class__.__name__, approxArea, sigma1, sigma2))
     
     def testDoubleGaussianFunction2D(self):
         """A test for DoubleGaussianFunction2D
-        Assumes GaussianFunction2D is correct (test it elsewhere)
+        Assumes GaussianFunction2D is correct (tested elsewhere)
         """
         f = afwMath.DoubleGaussianFunction2D(1.0, 1.0)
-        f1 = afwMath.GaussianFunction2D(1.0, 1.0)
-        f2 = afwMath.GaussianFunction2D(1.0, 1.0)
+        f1 = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
+        f2 = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         for sigma1 in (1.0,):
             for sigma2 in (0.5, 2.0):
                 for b in (0.0, 0.2, 2.0):
                     f.setParameters((sigma1, sigma2, b))
-                    f1.setParameters((sigma1, sigma1))
-                    f2.setParameters((sigma2, sigma2))
+                    f1.setParameters((sigma1, sigma1, 0.0))
+                    f2.setParameters((sigma2, sigma2, 0.0))
                     sigma1Sq = sigma1**2
                     sigma2Sq = sigma2**2
                     f1Mult = b * sigma2Sq / sigma1Sq

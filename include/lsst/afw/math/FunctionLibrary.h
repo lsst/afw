@@ -150,8 +150,10 @@ using boost::serialization::make_nvp;
     /**
      * @brief 1-dimensional Gaussian
      *
-     * f(x) = (1 / (sqrt(2 pi) xSigma)) e^(-x^2 / sigma^2)
-     * with coefficient c0 = sigma
+     * f(x) = A e^(-x^2 / 2 sigma^2)
+     * where:
+     * * A = 1 / (sqrt(2 pi) xSigma)
+     * coefficient c0 = sigma
      *
      * @ingroup afw
      */
@@ -209,10 +211,14 @@ using boost::serialization::make_nvp;
     /**
      * @brief 2-dimensional Gaussian
      *
-     * f(x,y) = (1 / (2 pi xSigma ySigma)) e^(-x^2 / xSigma^2) e^(-y^2 / ySigma^2) /
-     * with coefficients c0 = xSigma and c1 = ySigma
+     * f(x,y) = A e^((-pos1^2 / 2 sigma1^2) - (pos2^2 / 2 sigma2^2))
+     * where:
+     * * A = 1 / (2 pi sigma1 sigma2)
+     * * pos1 =  cos(angle) x + sin(angle) y
+     * * pos2 = -sin(angle) x + cos(angle) y
+     * coefficients c0 = sigma1, c1 = sigma2, c2 = angle
      *
-     * @todo Allow setting angle of ellipticity.
+     * @note if sigma1 > sigma2 then angle is the angle of the major axis
      *
      * @ingroup afw
      */
@@ -222,41 +228,71 @@ using boost::serialization::make_nvp;
         typedef typename Function2<ReturnT>::Ptr Function2Ptr;
 
         /**
-         * @brief Construct a Gaussian function with specified x and y sigma
+         * @brief Construct a 2-dimensional Gaussian function
          */
         explicit GaussianFunction2(
-            double xSigma,  ///< sigma in x
-            double ySigma)  ///< sigma in y
+            double sigma1,      ///< sigma along the pos1 axis
+            double sigma2,      ///< sigma along the pos2 axis
+            double angle = 0.0) ///< angle of pos1 axis, in rad (along x=0, y=pi/2)
         : 
-            Function2<ReturnT>(2),
+            Function2<ReturnT>(3),
             _multFac(1.0 / (2.0 * M_PI))
         {
-            this->_params[0] = xSigma;
-            this->_params[1] = ySigma;
+            this->_params[0] = sigma1;
+            this->_params[1] = sigma2;
+            this->_params[2] = angle;
+            _updateCache(true);
         }
         
         virtual ~GaussianFunction2() {};
         
         virtual Function2Ptr clone() const {
-            return Function2Ptr(new GaussianFunction2(this->_params[0], this->_params[1]));
+            return Function2Ptr(new GaussianFunction2(this->_params[0], this->_params[1], this->_params[2]));
         }
         
         virtual ReturnT operator() (double x, double y) const {
+            double pos1 = ( _cosAngle * x) + (_sinAngle * y);
+            double pos2 = (-_sinAngle * x) + (_cosAngle * y);
             return static_cast<ReturnT> (
                 (_multFac / (this->_params[0] * this->_params[1])) *
-                std::exp(- ((x * x) / (2.0 * this->_params[0] * this->_params[0]))
-                         - ((y * y) / (2.0 * this->_params[1] * this->_params[1]))));
+                std::exp(- ((pos1 * pos1) / (2.0 * this->_params[0] * this->_params[0]))
+                         - ((pos2 * pos2) / (2.0 * this->_params[1] * this->_params[1]))));
         }
         
         virtual std::string toString(void) const {
             std::ostringstream os;
-            os << "GaussianFunction2 [" << _multFac << "]: ";
+            os << "GaussianFunction2: ";
             os << Function2<ReturnT>::toString();
             return os.str();
         };
-
+        
+        virtual void setParameter(
+            unsigned int ind,
+            double newValue)
+        {
+            Function2<ReturnT>::setParameter(ind, newValue);
+            _updateCache();
+        };
+        
+        virtual void setParameters(
+            std::vector<double> const &params)
+        {
+            Function2<ReturnT>::setParameters(params);
+            _updateCache();
+        }
+    
     private:
-        const double _multFac; ///< precomputed scale factor
+        void _updateCache(bool force=false) {
+            if (force || (_angle != this->_params[2])) {
+                _angle = this->_params[2];
+                _sinAngle = std::sin(_angle);
+                _cosAngle = std::cos(_angle);
+            }
+        }
+        const double _multFac;  ///< precomputed scale factor
+        double _angle;    ///< cached angle
+        double _sinAngle; ///< cached sin(angle)
+        double _cosAngle; ///< cached cos(angle)
 
     private:
         friend class boost::serialization::access;
@@ -277,8 +313,11 @@ using boost::serialization::make_nvp;
      * Intended for use as a PSF model: the main Gaussian represents the core
      * and the second Gaussian represents the wings.
      *
-     * f(x,y) = (1 / (2 pi (sigma1^2 + b sigma2^2))) (e^(-r^2 / sigma1^2) + b e^(-r^2 / sigma2^2))
-     * where r^2 = x^2 + y^2
+     * f(x,y) = A (e^(-r^2 / 2 sigma1^2) + ampl2 e^(-r^2 / 2 sigma2^2))
+     * where:
+     * * A = 1 / (2 pi (sigma1^2 + ampl2 sigma2^2))
+     * * r^2 = x^2 + y^2
+     * coefficients c[0] = sigma1, c[1] = sigma2, c[2] = ampl2
      *
      * @ingroup afw
      */
@@ -879,19 +918,22 @@ template <typename ReturnT, class Archive>
 inline void save_construct_data(Archive& ar,
                                 lsst::afw::math::GaussianFunction2<ReturnT> const* f,
                                 unsigned int const version) {
-    ar << make_nvp("xSigma", f->getParameters()[0]);
-    ar << make_nvp("ySigma", f->getParameters()[1]);
+    ar << make_nvp("sigma1", f->getParameters()[0]);
+    ar << make_nvp("sigma2", f->getParameters()[1]);
+    ar << make_nvp("angle",  f->getParameters()[2]);
 };
 
 template <typename ReturnT, class Archive>
 inline void load_construct_data(Archive& ar,
                                 lsst::afw::math::GaussianFunction2<ReturnT>* f,
                                 unsigned int const version) {
-    double xSigma;
-    double ySigma;
-    ar >> make_nvp("xSigma", xSigma);
-    ar >> make_nvp("ySigma", ySigma);
-    ::new(f) lsst::afw::math::GaussianFunction2<ReturnT>(xSigma, ySigma);
+    double sigma1;
+    double sigma2;
+    double angle;
+    ar >> make_nvp("sigma1", sigma1);
+    ar >> make_nvp("sigma2", sigma2);
+    ar >> make_nvp("angle",  angle);
+    ::new(f) lsst::afw::math::GaussianFunction2<ReturnT>(sigma1, sigma2, angle);
 };
 
 template <typename ReturnT, class Archive>

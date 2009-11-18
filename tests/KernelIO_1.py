@@ -97,12 +97,12 @@ class KernelIOTestCase(unittest.TestCase):
         loc = dafPersist.LogicalLocation("tests/data/kernel2.boost")
         persistence = dafPersist.Persistence.getPersistence(pol)
 
-        gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0)
+        gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         k = afwMath.AnalyticKernel(kWidth, kHeight, gaussFunc)
         fArr = numpy.zeros(shape=[k.getWidth(), k.getHeight()], dtype=float)
         for xsigma in (0.1, 1.0, 3.0):
             for ysigma in (0.1, 1.0, 3.0):
-                gaussFunc.setParameters((xsigma, ysigma))
+                gaussFunc.setParameters((xsigma, ysigma, 0.0))
                 # compute array of function values and normalize
                 for row in range(k.getHeight()):
                     y = row - k.getCtrY()
@@ -187,11 +187,11 @@ class KernelIOTestCase(unittest.TestCase):
         k = afwMath.SeparableKernel(kWidth, kHeight, gaussFunc1, gaussFunc1)
         fArr = numpy.zeros(shape=[k.getWidth(), k.getHeight()], dtype=float)
         gArr = numpy.zeros(shape=[k.getWidth(), k.getHeight()], dtype=float)
-        gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0)
+        gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         for xsigma in (0.1, 1.0, 3.0):
             gaussFunc1.setParameters((xsigma,))
             for ysigma in (0.1, 1.0, 3.0):
-                gaussFunc.setParameters((xsigma, ysigma))
+                gaussFunc.setParameters((xsigma, ysigma, 0.0))
                 # compute array of function values and normalize
                 for row in range(k.getHeight()):
                     y = row - k.getCtrY()
@@ -354,7 +354,7 @@ class KernelIOTestCase(unittest.TestCase):
         loc = dafPersist.LogicalLocation("tests/data/kernel7.boost")
         persistence = dafPersist.Persistence.getPersistence(pol)
 
-        gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0)
+        gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         k = afwMath.AnalyticKernel(kWidth, kHeight, gaussFunc)
         for xCtr in range(kWidth):
             k.setCtrX(xCtr)
