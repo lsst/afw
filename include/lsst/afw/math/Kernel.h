@@ -276,7 +276,8 @@ using boost::serialization::make_nvp;
         /**
          * @brief Set the kernel parameters of a 2-component spatially invariant kernel.
          *
-         * @note no checking of the kernel;  use the std::vector<double> form if you want that
+         * @warning This is a low-level method intended for maximum efficiency when using warping kernels.
+         * No error checking is performed. Use the std::vector<double> form if you want safety.
          */
         inline void setKernelParameters(std::pair<double, double> const& params) {
             this->setKernelParameter(0, params.first);
