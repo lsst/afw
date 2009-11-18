@@ -241,7 +241,7 @@ using boost::serialization::make_nvp;
             this->_params[0] = sigma1;
             this->_params[1] = sigma2;
             this->_params[2] = angle;
-            _updateCache(true);
+            _updateCache();
         }
         
         virtual ~GaussianFunction2() {};
@@ -251,6 +251,9 @@ using boost::serialization::make_nvp;
         }
         
         virtual ReturnT operator() (double x, double y) const {
+            if (_angle != this->_params[2]) {
+                _updateCache();
+            }
             double pos1 = ( _cosAngle * x) + (_sinAngle * y);
             double pos2 = (-_sinAngle * x) + (_cosAngle * y);
             return static_cast<ReturnT> (
@@ -265,34 +268,34 @@ using boost::serialization::make_nvp;
             os << Function2<ReturnT>::toString();
             return os.str();
         };
-        
-        virtual void setParameter(
-            unsigned int ind,
-            double newValue)
-        {
-            Function2<ReturnT>::setParameter(ind, newValue);
-            _updateCache();
-        };
-        
-        virtual void setParameters(
-            std::vector<double> const &params)
-        {
-            Function2<ReturnT>::setParameters(params);
-            _updateCache();
-        }
     
     private:
-        void _updateCache(bool force=false) {
-            if (force || (_angle != this->_params[2])) {
-                _angle = this->_params[2];
-                _sinAngle = std::sin(_angle);
-                _cosAngle = std::cos(_angle);
-            }
+        /**
+        * @brief Update cached values
+        *
+        * sin(angle) and cos(angle) are cached to speed computation
+        * and angle is cached so one can check if an update is required
+        *
+        * The current design is to have operator() update the cache if needed.
+        * An alternate design is to update the cache when the parameters are set,
+        * not test in operator().
+        * The main advantage to updating in operator() is safety and simplicity.
+        * The test is performed in one place, and it is the place where it matters the most.
+        * In contrast, there are multiple member functions to set parameters, and all must be overloaded
+        * to update the cache; miss one and the function silently misbehaves.
+        * There are trade-offs, of course. Testing the cache in operator() slows down operator() slightly.
+        * The overhead is small, but the function is typically evaulated more often
+        * than its parameters are changed.
+        */
+        void _updateCache() const {
+            _angle = this->_params[2];
+            _sinAngle = std::sin(_angle);
+            _cosAngle = std::cos(_angle);
         }
         const double _multFac;  ///< precomputed scale factor
-        double _angle;    ///< cached angle
-        double _sinAngle; ///< cached sin(angle)
-        double _cosAngle; ///< cached cos(angle)
+        mutable double _angle;    ///< cached angle
+        mutable double _sinAngle; ///< cached sin(angle)
+        mutable double _cosAngle; ///< cached cos(angle)
 
     private:
         friend class boost::serialization::access;

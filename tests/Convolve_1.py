@@ -332,6 +332,7 @@ class ConvolveTestCase(unittest.TestCase):
         sParams = (
             (1.0, 1.0/self.width, 0.0),
             (1.0, 0.0, 1.0/self.height),
+            (0.0, 1.56/self.width, -1.56/self.height),
         )
    
         kFunc =  afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
@@ -354,13 +355,14 @@ class ConvolveTestCase(unittest.TestCase):
         sParams = (
             (1.0, 1.0 / self.width, 0.0),
             (1.0, 0.0,  1.0 / self.height),
+            (0.0, 0.0, 0.0),
         )
 
         gaussFunc1 = afwMath.GaussianFunction1D(1.0)
-        gaussFunc2 = afwMath.GaussianFunction2D(1.0, 1.0)
+        gaussFunc2 = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         separableKernel = afwMath.SeparableKernel(kCols, kRows, gaussFunc1, gaussFunc1, sFunc)
         analyticKernel = afwMath.AnalyticKernel(kCols, kRows, gaussFunc2, sFunc)
-        separableKernel.setSpatialParameters(sParams)
+        separableKernel.setSpatialParameters(sParams[0:2])
         analyticKernel.setSpatialParameters(sParams)
 
         self.runStdTest(separableKernel, refKernel=analyticKernel,

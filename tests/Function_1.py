@@ -114,8 +114,8 @@ class FunctionTestCase(unittest.TestCase):
         for sigma1 in (0.1, 1.0, 3.0):
             for sigma2 in (0.1, 1.0, 3.0):
                 for angle in (0.0, 0.4, 1.1):
-                    sinNegAngle = math.sin(angle)
-                    cosNegAngle = math.cos(angle)
+                    sinNegAngle = math.sin(-angle)
+                    cosNegAngle = math.cos(-angle)
                     f.setParameters((sigma1, sigma2, 0.0))
                     f1.setParameters((sigma1,))
                     f2.setParameters((sigma2,))

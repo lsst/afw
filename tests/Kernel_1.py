@@ -27,7 +27,7 @@ class KernelTestCase(unittest.TestCase):
 
         gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         kernel = afwMath.AnalyticKernel(kWidth, kHeight, gaussFunc)
-        self.basicTests(kernel, 2)
+        self.basicTests(kernel, 3)
         fArr = numpy.zeros(shape=[kernel.getWidth(), kernel.getHeight()], dtype=float)
         for xsigma in (0.1, 1.0, 3.0):
             for ysigma in (0.1, 1.0, 3.0):
@@ -40,7 +40,7 @@ class KernelTestCase(unittest.TestCase):
                         fArr[col, row] = gaussFunc(x, y)
                 fArr /= fArr.sum()
                 
-                kernel.setKernelParameters((xsigma, ysigma))
+                kernel.setKernelParameters((xsigma, ysigma, 0.0))
                 kImage = afwImage.ImageD(kernel.getDimensions())
                 kernel.computeImage(kImage, True)
                 
@@ -49,13 +49,13 @@ class KernelTestCase(unittest.TestCase):
                     self.fail("%s = %s != %s for xsigma=%s, ysigma=%s" % \
                         (kernel.__class__.__name__, kArr, fArr, xsigma, ysigma))
 
-        kernel.setKernelParameters((0.5, 1.1))
+        kernel.setKernelParameters((0.5, 1.1, 0.3))
         kernelClone = kernel.clone()
         errStr = self.compareKernels(kernel, kernelClone)
         if errStr:
             self.fail(errStr)
         
-        kernel.setKernelParameters((1.5, 0.2))
+        kernel.setKernelParameters((1.5, 0.2, 0.7))
         errStr = self.compareKernels(kernel, kernelClone)
         if not errStr:
             self.fail("Clone was modified by changing original's kernel parameters")
@@ -275,8 +275,8 @@ class KernelTestCase(unittest.TestCase):
         kernelList = afwMath.KernelList()
         kernelList.append(afwMath.FixedKernel(afwImage.ImageD(kWidth, kHeight, 0.1)))
         kernelList.append(afwMath.FixedKernel(afwImage.ImageD(kWidth, kHeight, 0.2)))
-        
-        for numKernelParams in (1, 3):
+
+        for numKernelParams in (2, 4):
             spFuncList = afwMath.Function2DList()
             for ii in range(numKernelParams):
                 spFuncList.append(spFunc.clone())
@@ -285,6 +285,11 @@ class KernelTestCase(unittest.TestCase):
                 self.fail("Should have failed with wrong # of spatial functions")
             except pexExcept.LsstCppException:
                 pass
+        
+        for numKernelParams in (1, 3):
+            spFuncList = afwMath.Function2DList()
+            for ii in range(numKernelParams):
+                spFuncList.append(spFunc.clone())
             try:
                 afwMath.LinearCombinationKernel(kernelList, spFuncList)
                 self.fail("Should have failed with wrong # of spatial functions")
@@ -329,6 +334,7 @@ class KernelTestCase(unittest.TestCase):
         sParams = (
             (1.0, 1.0, 0.0),
             (1.0, 0.0, 1.0),
+            (0.5, 0.5, 0.5),
         )
 
         gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
@@ -343,6 +349,7 @@ class KernelTestCase(unittest.TestCase):
         newSParams = (
             (0.1, 0.2, 0.5),
             (0.1, 0.5, 0.2),
+            (0.2, 0.3, 0.3),
         )
         kernel.setSpatialParameters(newSParams)
         errStr = self.compareKernels(kernel, kernelClone)

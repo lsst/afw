@@ -102,37 +102,38 @@ class KernelIOTestCase(unittest.TestCase):
         fArr = numpy.zeros(shape=[k.getWidth(), k.getHeight()], dtype=float)
         for xsigma in (0.1, 1.0, 3.0):
             for ysigma in (0.1, 1.0, 3.0):
-                gaussFunc.setParameters((xsigma, ysigma, 0.0))
-                # compute array of function values and normalize
-                for row in range(k.getHeight()):
-                    y = row - k.getCtrY()
-                    for col in range(k.getWidth()):
-                        x = col - k.getCtrX()
-                        fArr[col, row] = gaussFunc(x, y)
-                fArr /= fArr.sum()
-                
-                k.setKernelParameters((xsigma, ysigma))
-
-                storageList = dafPersist.StorageList()
-                storage = persistence.getPersistStorage("XmlStorage", loc)
-                storageList.append(storage)
-                persistence.persist(k, storageList, additionalData)
-
-                storageList2 = dafPersist.StorageList()
-                storage2 = persistence.getRetrieveStorage("XmlStorage", loc)
-                storageList2.append(storage2)
-                x = persistence.unsafeRetrieve("AnalyticKernel",
-                        storageList2, additionalData)
-                k2 = afwMath.AnalyticKernel.swigConvert(x)
-
-                self.kernelCheck(k, k2)
-
-                kImage = afwImage.ImageD(k2.getDimensions())
-                k2.computeImage(kImage, True)
-                kArr = imTestUtils.arrayFromImage(kImage)
-                if not numpy.allclose(fArr, kArr):
-                    self.fail("%s = %s != %s for xsigma=%s, ysigma=%s" % \
-                            (k2.__class__.__name__, kArr, fArr, xsigma, ysigma))
+                for angle in (0.0, 0.4, 1.1):
+                    gaussFunc.setParameters((xsigma, ysigma, angle))
+                    # compute array of function values and normalize
+                    for row in range(k.getHeight()):
+                        y = row - k.getCtrY()
+                        for col in range(k.getWidth()):
+                            x = col - k.getCtrX()
+                            fArr[col, row] = gaussFunc(x, y)
+                    fArr /= fArr.sum()
+                    
+                    k.setKernelParameters((xsigma, ysigma, angle))
+    
+                    storageList = dafPersist.StorageList()
+                    storage = persistence.getPersistStorage("XmlStorage", loc)
+                    storageList.append(storage)
+                    persistence.persist(k, storageList, additionalData)
+    
+                    storageList2 = dafPersist.StorageList()
+                    storage2 = persistence.getRetrieveStorage("XmlStorage", loc)
+                    storageList2.append(storage2)
+                    x = persistence.unsafeRetrieve("AnalyticKernel",
+                            storageList2, additionalData)
+                    k2 = afwMath.AnalyticKernel.swigConvert(x)
+    
+                    self.kernelCheck(k, k2)
+    
+                    kImage = afwImage.ImageD(k2.getDimensions())
+                    k2.computeImage(kImage, True)
+                    kArr = imTestUtils.arrayFromImage(kImage)
+                    if not numpy.allclose(fArr, kArr):
+                        self.fail("%s = %s != %s for xsigma=%s, ysigma=%s" % \
+                                (k2.__class__.__name__, kArr, fArr, xsigma, ysigma))
 
     def testDeltaFunctionKernel(self):
         """Test DeltaFunctionKernel
