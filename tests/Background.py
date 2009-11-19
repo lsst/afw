@@ -12,7 +12,6 @@ or
 import math
 import os
 import pdb  # we may want to say pdb.set_trace()
-import sys
 import unittest
 
 import lsst.utils.tests as utilsTests
@@ -41,7 +40,8 @@ class BackgroundTestCase(unittest.TestCase):
     """A test case for Background"""
     def setUp(self):
         self.val = 10
-        self.image = afwImage.ImageF(100, 200); self.image.set(self.val)
+        self.image = afwImage.ImageF(100, 200)
+        self.image.set(self.val)
 
     def tearDown(self):
         del self.image
@@ -60,7 +60,6 @@ class BackgroundTestCase(unittest.TestCase):
         bgCtrl.sctrl.setNumIter(3)
         bgCtrl.sctrl.setNumSigmaClip(3)
         back = afwMath.makeBackground(self.image, bgCtrl)
-        mid = back.getPixel(xcen, ycen)
         
         self.assertEqual(back.getPixel(xcen, ycen), self.val)
 
@@ -80,44 +79,44 @@ class BackgroundTestCase(unittest.TestCase):
         #imgfiles.append("v2_i2_p_m9_f.fits")
         #imgfiles.append("v2_i2_p_m9_u16.fits")
         
-        afwdata_dir = eups.productDir("afwdata")
+        afwdataDir = eups.productDir("afwdata")
         for imginfo in imginfolist:
 
-            imgfile, center_value = imginfo
+            imgfile, centerValue = imginfo
 
-            img_path = afwdata_dir + "/Statistics/" + imgfile;
+            imgPath = afwdataDir + "/Statistics/" + imgfile
 
             # get the image and header
-            dimg = afwImage.DecoratedImageD(img_path)
+            dimg = afwImage.DecoratedImageD(imgPath)
             img = dimg.getImage()
-            fitsHdr = dimg.getMetadata(); # the FITS header
+            fitsHdr = dimg.getMetadata() # the FITS header
 
             # get the True values of the mean and stdev
-            req_mean  = fitsHdr.getAsDouble("MEANREQ")
-            req_stdev = fitsHdr.getAsDouble("SIGREQ")
+            reqMean  = fitsHdr.getAsDouble("MEANREQ")
+            reqStdev = fitsHdr.getAsDouble("SIGREQ")
             naxis1 = img.getWidth()
             naxis2 = img.getHeight()
             
             # create a background control object
-            bctrl = afwMath.BackgroundControl(afwMath.Interpolate.AKIMA_SPLINE);
-            bctrl.setNxSample(5);
-            bctrl.setNySample(5);
+            bctrl = afwMath.BackgroundControl(afwMath.Interpolate.AKIMA_SPLINE)
+            bctrl.setNxSample(5)
+            bctrl.setNySample(5)
             
             # run the background constructor and call the getPixel() and getImage() functions.
             backobj = afwMath.makeBackground(img, bctrl)
 
-            pix_per_subimage = img.getWidth()*img.getHeight()/(bctrl.getNxSample()*bctrl.getNySample())
-            stdev_interp = req_stdev/math.sqrt(pix_per_subimage)
+            pixPerSubimage = img.getWidth()*img.getHeight()/(bctrl.getNxSample()*bctrl.getNySample())
+            stdevInterp = reqStdev/math.sqrt(pixPerSubimage)
             
             # test getPixel()
             testval = backobj.getPixel(naxis1/2, naxis2/2)
-            self.assertEqual( testval, center_value )
-            self.assertTrue( abs(testval - req_mean) < 2*stdev_interp )
+            self.assertEqual( testval, centerValue )
+            self.assertTrue( abs(testval - reqMean) < 2*stdevInterp )
 
             # test getImage() by checking the center pixel
             bimg = backobj.getImageD()
             testImgval = bimg.get(naxis1/2, naxis2/2)
-            self.assertTrue( abs(testImgval - req_mean) < 2*stdev_interp )
+            self.assertTrue( abs(testImgval - reqMean) < 2*stdevInterp )
             
 
     def testRamp(self):
@@ -133,10 +132,10 @@ class BackgroundTestCase(unittest.TestCase):
                 rampimg.set(x, y, dzdx*x + dzdy*y + z0)
         
         # check corner, edge, and center pixels
-        bctrl = afwMath.BackgroundControl();
-        bctrl.setInterpStyle(afwMath.Interpolate.CUBIC_SPLINE);
-        bctrl.setNxSample(6);
-        bctrl.setNySample(6);
+        bctrl = afwMath.BackgroundControl()
+        bctrl.setInterpStyle(afwMath.Interpolate.CUBIC_SPLINE)
+        bctrl.setNxSample(6)
+        bctrl.setNySample(6)
         bctrl.sctrl.setNumSigmaClip(20.0)  # something large enough to avoid clipping entirely
         bctrl.sctrl.setNumIter(1)
         backobj = afwMath.makeBackground(rampimg, bctrl)
@@ -162,9 +161,9 @@ class BackgroundTestCase(unittest.TestCase):
                 parabimg.set(x, y, d2zdx2*x*x + d2zdy2*y*y + dzdx*x + dzdy*y + z0)
         
         # check corner, edge, and center pixels
-        bctrl = afwMath.BackgroundControl(afwMath.Interpolate.CUBIC_SPLINE);
-        bctrl.setNxSample(24);
-        bctrl.setNySample(24);
+        bctrl = afwMath.BackgroundControl(afwMath.Interpolate.CUBIC_SPLINE)
+        bctrl.setNxSample(24)
+        bctrl.setNySample(24)
         bctrl.sctrl.setNumSigmaClip(10.0)  
         bctrl.sctrl.setNumIter(1)
         backobj = afwMath.makeBackground(parabimg, bctrl)
@@ -197,9 +196,9 @@ class BackgroundTestCase(unittest.TestCase):
         mi = mi.Factory(mi, afwImage.BBox(afwImage.PointI(32, 2), afwImage.PointI(2079, 4609)))
         mi.setXY0(afwImage.PointI(0, 0))
         
-        bctrl = afwMath.BackgroundControl(afwMath.Interpolate.AKIMA_SPLINE);
-        bctrl.setNxSample(16);
-        bctrl.setNySample(16);
+        bctrl = afwMath.BackgroundControl(afwMath.Interpolate.AKIMA_SPLINE)
+        bctrl.setNxSample(16)
+        bctrl.setNySample(16)
         bctrl.sctrl.setNumSigmaClip(3.0)  
         bctrl.sctrl.setNumIter(2)
         backobj = afwMath.makeBackground(mi.getImage(), bctrl)
@@ -292,9 +291,9 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(exit = False):
+def run(shouldExit = False):
     """Run the tests"""
-    utilsTests.run(suite(), exit)
+    utilsTests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
     run(True)
