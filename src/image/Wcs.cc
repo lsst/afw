@@ -279,7 +279,6 @@ lsst::afw::image::Wcs::Wcs(
         PointD crval(fitsMetadata->getAsDouble("CRVAL1"), fitsMetadata->getAsDouble("CRVAL2") );
         PointD crpix(fitsMetadata->getAsDouble("CRPIX1"), fitsMetadata->getAsDouble("CRPIX2") ); 
 
-        //This should be updated to be Eigen::Matrix
         Eigen::Matrix2d CD;
         CD(0,0) = fitsMetadata->getAsDouble("CD1_1");
         CD(0,1) = fitsMetadata->getAsDouble("CD1_2");
@@ -287,13 +286,31 @@ lsst::afw::image::Wcs::Wcs(
         CD(1,1) = fitsMetadata->getAsDouble("CD2_2");
 
         
-        double  equinox = fitsMetadata->getAsDouble("EQUINOX");
+        double equinox = -1;
+        if(fitsMetadata->exists("EQUINOX")) {
+            equinox = fitsMetadata->getAsDouble("EQUINOX");
+        }
         
-        std::string raDecSys;
-        if( fitsMetadata->exists("RADESYS")) {
+        std::string raDecSys = "";
+        if(fitsMetadata->exists("RADESYS")) {
             raDecSys = fitsMetadata->getAsString("RADESYS");
-        } else {
-            raDecSys = fitsMetadata->getAsString("RADECSYS");   //Throws exception on fail
+        } else if(fitsMetadata->exists("RADECSYS")) {
+            raDecSys = fitsMetadata->getAsString("RADECSYS");
+        }
+        //
+        // Try to deal with missing equinox/radecsys
+        //
+        if (equinox == -1) {
+            if (raDecSys == "" || raDecSys == "FK5") {
+                equinox = 2000.0;
+                raDecSys = "FK5";
+            } else if (raDecSys == "FK4") {
+                equinox = 1950.0;
+            }
+        } else if(equinox == 1950.0 && raDecSys == "") {
+            raDecSys = "FK4";
+        } else if(equinox == 2000.0 && raDecSys == "") {
+            raDecSys = "FK5";
         }
         
         std::string ctype1 = fitsMetadata->getAsString("CTYPE1");
