@@ -127,6 +127,9 @@ class StatisticsTestCase(unittest.TestCase):
 
         self.assertEqual(stats.getValue(afwMath.MEDIAN), self.val)
 
+        values = [1.0, 2.0, 3.0, 2.0 ]
+        self.assertEqual(afwMath.makeStatistics(values, afwMath.MEDIAN).getValue(), 2.0)
+
     def testIqrange(self):
         """Test the inter-quartile range"""
         stats = afwMath.makeStatistics(self.image, afwMath.IQRANGE)
@@ -160,9 +163,13 @@ class StatisticsTestCase(unittest.TestCase):
         imgfiles.append("v2_i2_p_m9_u16.fits")
 
         afwdataDir = os.getenv("AFWDATA_DIR")
+        if not afwdata_dir:
+            print >> sys.stderr, "Skipping tests as afwdata is not setup"
+            return
+        
         for imgfile in imgfiles:
             
-            imgPath = afwdataDir + "/Statistics/" + imgfile
+            img_path = os.path.join(afwdataDir, "Statistics", imgfile)
 
             # get the image and header
             dimg = afwImage.DecoratedImageF(imgPath)

@@ -344,7 +344,7 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
         throw LSST_EXCEPT(ex::InvalidParameterException,
                           "Image has no valid pixels; mean is undefined.");
     }
-    if (n == 1) {
+    if (n == 1 && (flags & (STDEV|VARIANCE))) {
         throw LSST_EXCEPT(ex::InvalidParameterException,
                           "Image contains only one pixel; population st. dev. is undefined");
     }
