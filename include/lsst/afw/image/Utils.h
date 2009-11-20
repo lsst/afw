@@ -202,10 +202,16 @@ namespace lsst { namespace afw { namespace image {
         /// Create a BCircle given centre and radius
         BCircle(PointI center,               //!< Centre of circle
                 float r                      //!< Radius of circle
-               ) : std::pair<PointI, float>(center, r) {}
+               ) : std::pair<PointI, float>(center, fabs(r)) {}
 
         PointI const& getCenter() const { return first; } ///< Return the circle's centre
         float getRadius() const { return second; }        ///< Return the circle's radius
+        BBox getBBox() const {                           ///< Return the circle's bounding box
+            int const iradius = static_cast<int>(second + 0.5);
+            PointI llc(first[0] - iradius, first[1] - iradius);
+            PointI urc(first[0] + iradius, first[1] + iradius);
+            return BBox(llc, urc);
+        }
     };
 
 /************************************************************************************************************/

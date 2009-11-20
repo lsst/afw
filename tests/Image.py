@@ -252,6 +252,20 @@ class ImageTestCase(unittest.TestCase):
         self.assertEqual(bbox.getWidth(), width)
         self.assertEqual(bbox.getHeight(), height)
 
+    def testBCircle(self):
+        """Check BCircle"""
+
+        x0, y0, r = 10, 20, 3.5
+        bc = afwImage.BCircle(afwImage.PointI(x0, y0), r)
+        self.assertEqual(bc.getCenter().getX(), x0)
+        self.assertEqual(bc.getCenter().getY(), y0)
+        self.assertEqual(bc.getRadius(), r)
+
+        ir = int(r + 0.5)
+        self.assertEqual(bc.getBBox().getLLC(), afwImage.PointI(x0 - ir, y0 - ir))
+        self.assertEqual(bc.getBBox().getDimensions()[0], 2*ir + 1)
+        self.assertEqual(bc.getBBox().getDimensions()[1], 2*ir + 1)
+
     def checkImgPatch(self, img, x0=0, y0=0):
         """Check that a patch of an image is correct; origin of patch is at (x0, y0)"""
         
