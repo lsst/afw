@@ -212,6 +212,22 @@ namespace lsst { namespace afw { namespace image {
 
 lsst::daf::base::PropertySet::Ptr readMetadata(std::string const& fileName, const int hdu=0, bool strip=false);
 
+/************************************************************************************************************/
+/**
+ * Return a value indicating a bad pixel for the given Image type
+ *
+ * A quiet NaN is returned for types that support it otherwise @c bad
+ *
+ * @relates Image
+ */
+template<typename ImageT>
+typename ImageT::SinglePixel badPixel(typename ImageT::Pixel bad=0 ///< The bad value if NaN isn't supported
+                                     ) {
+    typedef typename ImageT::SinglePixel SinglePixelT;
+    return SinglePixelT(std::numeric_limits<SinglePixelT>::has_quiet_NaN ?
+                        std::numeric_limits<SinglePixelT>::quiet_NaN() : bad);
+}
+            
 }}}
 
 #endif
