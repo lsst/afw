@@ -133,6 +133,8 @@ double afwMath::SeparableKernel::computeImage(
  * @return the kernel sum (1.0 if doNormalize true)
  *
  * @throw lsst::pex::exceptions::InvalidParameterException if colList or rowList is the wrong size
+ * @throw lsst::pex::exceptions::OverflowErrorException if doNormalize is true and the kernel sum is
+ * exactly 0
  */
 double afwMath::SeparableKernel::computeVectors(
     std::vector<Pixel> &colList,   ///< column vector
@@ -213,7 +215,10 @@ void afwMath::SeparableKernel::setKernelParameter(unsigned int ind, double value
  *
  * @return the kernel sum (1.0 if doNormalize true)
  *
- * Warning: no range checking!
+ * Warning: the length of colList and rowList are not verified!
+ *
+ * @throw lsst::pex::exceptions::OverflowErrorException if doNormalize is true and the kernel sum is
+ * exactly 0
  */
 double afwMath::SeparableKernel::basicComputeVectors(
     std::vector<Pixel> &colList,   ///< column vector
@@ -240,6 +245,9 @@ double afwMath::SeparableKernel::basicComputeVectors(
 
     double imSum = colSum * rowSum;
     if (doNormalize) {
+        if ((colSum == 0) || (rowSum == 0)) {
+            throw LSST_EXCEPT(pexExcept::OverflowErrorException, "Cannot normalize; kernel sum is 0");
+        }
         for (std::vector<Pixel>::iterator colIter = colList.begin(); colIter != colList.end(); ++colIter) {
             *colIter /= colSum;
         }

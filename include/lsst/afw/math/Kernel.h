@@ -147,6 +147,8 @@ using boost::serialization::make_nvp;
          * @note computeNewImage has been retired; it doesn't need to be a member
          *
          * @throw lsst::pex::exceptions::InvalidParameterException if the image is the wrong size
+         * @throw lsst::pex::exceptions::OverflowErrorException if doNormalize is true and the kernel sum is
+         * exactly 0
          */
         virtual double computeImage(
             lsst::afw::image::Image<Pixel> &image,   ///< image whose pixels are to be set (output)
