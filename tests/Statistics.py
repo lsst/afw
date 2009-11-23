@@ -163,13 +163,13 @@ class StatisticsTestCase(unittest.TestCase):
         imgfiles.append("v2_i2_p_m9_u16.fits")
 
         afwdataDir = os.getenv("AFWDATA_DIR")
-        if not afwdata_dir:
+        if not afwdataDir:
             print >> sys.stderr, "Skipping tests as afwdata is not setup"
             return
         
         for imgfile in imgfiles:
             
-            img_path = os.path.join(afwdataDir, "Statistics", imgfile)
+            imgPath = os.path.join(afwdataDir, "Statistics", imgfile)
 
             # get the image and header
             dimg = afwImage.DecoratedImageF(imgPath)
