@@ -35,15 +35,15 @@ double const IQ_TO_STDEV = 0.741301109252802;   // 1 sigma in units of iqrange (
 class AlwaysTrue {
 public:
     template<typename T>
-    bool operator()(T val) {
+    bool operator()(T val) const {
         return true;
     }
     template<typename Ta, typename Tb>
-    bool operator()(Ta a, Tb b) {
+    bool operator()(Ta a, Tb b) const {
         return true;
     }
     template<typename Ta, typename Tb, typename Tc>
-    bool operator()(Ta a, Tb b, Tc c) {
+    bool operator()(Ta a, Tb b, Tc c) const {
         return true;
     }
 };
@@ -54,15 +54,15 @@ public:
 class AlwaysFalse {
 public:
     template<typename T>
-    bool operator()(T val) {
+    bool operator()(T val) const {
         return false;
     }
     template<typename Ta, typename Tb>
-    bool operator()(Ta a, Tb b) {
+    bool operator()(Ta a, Tb b) const {
         return false;
     }
     template<typename Ta, typename Tb, typename Tc>
-    bool operator()(Ta a, Tb b, Tc c) {
+    bool operator()(Ta a, Tb b, Tc c) const {
         return false;
     }
 };
@@ -73,7 +73,7 @@ public:
 class CheckFinite {
 public:
     template<typename T>
-    bool operator()(T val) {
+    bool operator()(T val) const {
         return !std::isnan(static_cast<float>(val));
     }
 };
@@ -84,7 +84,7 @@ public:
 class CheckValueLtMin {
 public:
     template<typename Tval, typename Tmin>
-    bool operator()(Tval val, Tmin min) {
+    bool operator()(Tval val, Tmin min) const {
         return (static_cast<Tmin>(val) < min);
     }
 };
@@ -95,7 +95,7 @@ public:
 class CheckValueGtMax {
 public:
     template<typename Tval, typename Tmax>
-    bool operator()(Tval val, Tmax max) {
+    bool operator()(Tval val, Tmax max) const {
         return (static_cast<Tmax>(val) > max);
     }
 };
@@ -106,7 +106,7 @@ public:
 class CheckClipRange {
 public:
     template<typename Tval, typename Tcen, typename Tmax>
-    bool operator()(Tval val, Tcen center, Tmax cliplimit) {
+    bool operator()(Tval val, Tcen center, Tmax cliplimit) const {
         Tmax tmp = fabs(val - center);
         return (tmp <= cliplimit);
     }
