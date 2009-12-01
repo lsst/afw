@@ -85,6 +85,17 @@ class ticket1045TestCase(unittest.TestCase):
             return median
         utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException, tst)
 
+        
+    def testUnexpectedNan1051(self):
+        
+        values = [7824.0, 7803.0, 7871.0, 7567.0, 7813.0, 7809.0, 8011.0, 7807.0]
+        npValues = num.array(values)
+        
+        meanClip = afwMath.makeStatistics(values, afwMath.MEANCLIP).getValue()
+        iKept = num.array([0, 1, 2, 4, 5, 7]) # note ... it will clip indices 3 and 6
+        knownMeanClip = num.mean(npValues[iKept])
+        self.assertEqual(meanClip, knownMeanClip)
+
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
