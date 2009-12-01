@@ -445,24 +445,34 @@ double math::Statistics::_percentile(std::vector<Pixel> &img,
                                      double const percentile) {
     
     int const n = img.size();
-    double const idx = percentile*(n - 1);
 
-    // interpolate linearly between the adjacent values
-    
-    int const q1 = static_cast<int>(idx);
-    typename std::vector<Pixel>::iterator midMinus1 = img.begin() + q1;
-    std::nth_element(img.begin(), midMinus1, img.end());
-    double val1 = static_cast<double>(*midMinus1);
-    
-    int const q2 = q1 + 1;
-    typename std::vector<Pixel>::iterator midPlus1 = img.begin() + q2;
-    std::nth_element(img.begin(), midPlus1, img.end());
-    double val2 = static_cast<double>(*midPlus1);
-
-    double w1 = (static_cast<double>(q2) - idx);
-    double w2 = (idx - static_cast<double>(q1));
-
-    return w1*val1 + w2*val2;
+    if (n > 1) {
+        double const idx = percentile*(n - 1);
+        
+        // interpolate linearly between the adjacent values
+        
+        int const q1 = static_cast<int>(idx);
+        typename std::vector<Pixel>::iterator midMinus1 = img.begin() + q1;
+        std::nth_element(img.begin(), midMinus1, img.end());
+        double val1 = static_cast<double>(*midMinus1);
+        
+        int const q2 = q1 + 1;
+        typename std::vector<Pixel>::iterator midPlus1 = img.begin() + q2;
+        std::nth_element(img.begin(), midPlus1, img.end());
+        double val2 = static_cast<double>(*midPlus1);
+        
+        double w1 = (static_cast<double>(q2) - idx);
+        double w2 = (idx - static_cast<double>(q1));
+        
+        return w1*val1 + w2*val2;
+        
+    } else if (n == 1) {
+        return img[0];
+    } else {
+        throw LSST_EXCEPT(ex::InvalidParameterException,
+                          "Image has no valid pixels, can't compute median.");
+    }
+            
 
 }
 

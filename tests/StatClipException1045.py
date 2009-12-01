@@ -10,6 +10,7 @@ import numpy as num
 import math
 import unittest
 import lsst.utils.tests as utilsTests
+import lsst.pex.exceptions as pexExcept
 
 # math.isnan() available in 2.6, but not 2.5.2
 try:
@@ -56,11 +57,35 @@ class ticket1045TestCase(unittest.TestCase):
         self.assertEqual(median, knownMedian)
 
         # check the median with an odd number of values
-        knownMedian = num.median(values[1:])
-        stat = afwMath.makeStatistics(values[1:], afwMath.MEDIAN)
+        vals = values[1:]
+        knownMedian = num.median(vals)
+        stat = afwMath.makeStatistics(vals, afwMath.MEDIAN)
         median = stat.getValue(afwMath.MEDIAN)
         self.assertEqual(median, knownMedian)
-        
+
+        # check the median with only two values
+        vals = values[0:2]
+        knownMedian = num.median(vals)
+        stat = afwMath.makeStatistics(vals, afwMath.MEDIAN)
+        median = stat.getValue(afwMath.MEDIAN)
+        self.assertEqual(median, knownMedian)
+
+        # check the median with only 1 value
+        vals = values[0:1]
+        knownMedian = num.median(vals)
+        stat = afwMath.makeStatistics(vals, afwMath.MEDIAN)
+        median = stat.getValue(afwMath.MEDIAN)
+        self.assertEqual(median, knownMedian)
+
+        # check the median with no values
+        vals = []
+        def tst():
+            stat = afwMath.makeStatistics(vals, afwMath.MEDIAN)
+            median = stat.getValue(afwMath.MEDIAN)
+            return median
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException, tst)
+
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
