@@ -181,7 +181,7 @@ private:
                                 int const flags, std::pair<double, double> clipinfo);
 
     template<typename Pixel>
-    double _percentile(std::vector<Pixel> &img, double const quartile);   
+    double _percentile(std::vector<Pixel> &img, double const percentile);   
     
     inline double _varianceError(double const variance, int const n) const {
         return 2*(n - 1)*variance*variance/(static_cast<double>(n)*n); // assumes a Gaussian
