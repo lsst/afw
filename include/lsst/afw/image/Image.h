@@ -12,6 +12,7 @@
 #include <map>
 #include <string>
 #include <utility>
+#include <functional>
 
 #include "boost/mpl/bool.hpp"
 #include "boost/shared_ptr.hpp"
@@ -371,6 +372,15 @@ namespace image {
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::ImageFormatter<PixelT>);
     };
     
+    template<typename LhsPixelT, typename RhsPixelT>
+    void operator+=(Image<LhsPixelT> &lhs, Image<RhsPixelT> const& rhs);
+    template<typename LhsPixelT, typename RhsPixelT>
+    void operator-=(Image<LhsPixelT> &lhs, Image<RhsPixelT> const& rhs);
+    template<typename LhsPixelT, typename RhsPixelT>
+    void operator*=(Image<LhsPixelT> &lhs, Image<RhsPixelT> const& rhs);
+    template<typename LhsPixelT, typename RhsPixelT>
+    void operator/=(Image<LhsPixelT> &lhs, Image<RhsPixelT> const& rhs);
+
     template<typename PixelT>
     void swap(Image<PixelT>& a, Image<PixelT>& b);
     
@@ -444,6 +454,7 @@ namespace image {
 
     template<typename PixelT>
     void swap(DecoratedImage<PixelT>& a, DecoratedImage<PixelT>& b);
+
 }}}  // lsst::afw::image
 
 #endif
