@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cmath>
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/ImageAlgorithm.h"
 
@@ -35,6 +36,18 @@ struct divide : afwImage::pixelOp2<T1, T2> {
     }
 };
 
+template<typename T>
+struct Gaussian : afwImage::pixelOp1XY<T> {
+    Gaussian(float a, float xc, float yc, float alpha) : _a(a), _xc(xc), _yc(yc), _alpha(alpha) {}
+    T operator()(int x, int y, T val) const {
+        float const dx = x - _xc;
+        float const dy = y - _yc;
+        return val + _a*::exp(-(dx*dx + dy*dy)/(2*_alpha*_alpha));
+    }
+private:
+    float _a, _xc, _yc, _alpha;
+};
+
 using namespace std;
 
 int main() {
@@ -61,4 +74,14 @@ int main() {
 
     lsst::afw::image::for_each_pixel(img1, img2, divide<float, int>());
     cout << img1(0,0) << " " << img2(0,0) << endl;
+
+    // Set img1 = 10 + Gaussian()
+    float const peak = 1000.0;          // peak value
+    float const xc = 5.0;               // center of
+    float const yc = 3.0;               //           Gaussian
+    float const alpha = 1.5;            // "sigma" for Gaussian
+    
+    lsst::afw::image::for_each_pixel(img1, setVal<float>(10));
+    lsst::afw::image::for_each_pixel(img1, Gaussian<float>(peak, xc, yc, alpha));
+    cout << img1(0,0) << " " << img1(xc, yc) << endl;
 }

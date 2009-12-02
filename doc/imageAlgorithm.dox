@@ -11,24 +11,30 @@ All of these algorithms require the inclusion of <TT>lsst/afw/image/ImageAlgorit
 
 @c afw supports @c for_each_pixel as a way to process each pixel in an Image, in a similar way to the STL's @c
 for_each.  The name doesn't follow the LSST C++ guidelines, but in this case I felt that conformity to the
-spirit of the STL was more important.  There are four variants of @c for_each_pixel corresponding to setting a
-pixel to a function, setting it to a function of its initial value or of another Image, and setting it to a
+spirit of the STL was more important.  There are variants of @c for_each_pixel corresponding to setting a
+pixel to a function, setting it to a function of an Image, and setting it to a
 function of its value and a second Image's pixel value.  The selection of which of these operations is desired
-is done by requiring the functor to inherit from one of @c pixelOp0, @c pixelOp1 or @c pixelOp2, each of which
+is done by requiring the functor to inherit from a class such as @c pixelOp0 or @c pixelOp1XY, each of which
 is a @c tr1::function with a virtual @c operator() added.
 
 <DL>
 <DT> <TT>for_each_pixel(Image<LhsT> &lhs, pixelOp0<LhsT> const& func)</TT>
-<DD> Set each pixel in @c lhs to the value of func.
+<DD> Set each %pixel in @c lhs to the value of func.
 
 <DT> <TT>for_each_pixel(Image<LhsT> &lhs, pixelOp1<LhsT> const& func)</TT>
-<DD> Set each pixel in @c lhs to the value of <TT>func(lhs)</TT>.
+<DD> Set each %pixel in @c lhs to the value of <TT>func(lhs)</TT>.
+
+<DT> <TT>for_each_pixel(Image<LhsT> &lhs, pixelOp1XY<LhsT> const& func)</TT>
+<DD> Set each %pixel in @c lhs to the value of <TT>func(x, y, lhs)</TT>.
 
 <DT> <TT>for_each_pixel(Image<LhsT> &lhs, Image<RhsT> const& rhs, pixelOp1<RhsT> const& func)</TT>
-<DD> Set each pixel in @c lhs to the value of <TT>func(lhs)</TT>.
+<DD> Set each %pixel in @c lhs to the value of <TT>func(lhs)</TT>.
 
 <DT> <TT>for_each_pixel(Image<LhsT> &lhs, Image<RhsT> const& rhs, pixelOp2<Lhs, RhsT> const& func)</TT>
-<DD> Set each pixel in @c lhs to the value of <TT>func(lhs, rhs)</TT>.
+<DD> Set each %pixel in @c lhs to the value of <TT>func(lhs, rhs)</TT>.
+
+<DT> <TT>for_each_pixel(Image<LhsT> &lhs, Image<RhsT> const& rhs, pixelOp2XY<Lhs, RhsT> const& func)</TT>
+<DD> Set each %pixel in @c lhs to the value of <TT>func(x, y, lhs, rhs)</TT>.
 
 </DL>
 
@@ -44,18 +50,21 @@ This code is in \link forEachPixel.cc\endlink.
 Include needed header file, and define a namespace alias
 
 \until };
-Here's the simplest possible functor, simply setting each pixel to 0.  Note that @c operator() is declared
+Here's the simplest possible functor, simply setting each %pixel to 0.  Note that @c operator() is declared
 const, as we pass these functors by (@c const) reference.  If this surprises you, take a look at Meyers,
 Effective STL, Item 38.
 
 \until };
-This one's a bit more interesting.  We save a value in the constructor, and use it to set each pixel.
+This one's a bit more interesting.  We save a value in the constructor, and use it to set each %pixel.
 It's analogous to @c std::fill, but if I called it @c fill then following a <TT>using namespace std;</TT> the compiler would complain about ambiguity;  it's simpler just to use a different name.
 
 \until };
 \until };
 
-Here's are examples of @c pixelOp1 and @c pixelOp2.
+Here are examples of @c pixelOp1 and @c pixelOp2.
+
+\until };
+A functor designed to add a Gaussian to an image
 
 \until img2
 Declare a couple of Images to play with
@@ -64,8 +73,11 @@ Declare a couple of Images to play with
 \until cout
 \until cout
 \until cout
-Apply @c erase to each pixel in @c img1, @c setVal to each pixel in @c img2, set <TT>img1 = img2 + 1</TT>,
+Apply @c erase to each %pixel in @c img1, @c setVal to each %pixel in @c img2, set <TT>img1 = img2 + 1</TT>,
 and finally <TT>img1 /= img1</TT>
+
+\until cout
+Add a Gaussian to the %image, centered at <TT>(xc, yc)</TT> and with central intensity 1000.
 
 \until }
 
