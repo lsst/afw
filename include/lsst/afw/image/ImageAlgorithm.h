@@ -71,6 +71,22 @@ namespace lsst { namespace afw { namespace image {
     }
 
     /**
+     * Set each pixel in an Image<LhsT> to func(lhs)
+     */
+    template<typename LhsT>
+    void for_each_pixel(Image<LhsT> &lhs,                ///< Image to set
+                        pixelOp1<LhsT> const& func       ///< functor to call
+                       )
+    {
+        for (int y = 0; y != lhs.getHeight(); ++y) {
+            for (typename Image<LhsT>::x_iterator lhsPtr = lhs.row_begin(y), lhsEnd = lhs.row_end(y);
+                 lhsPtr != lhsEnd; ++lhsPtr) {
+                *lhsPtr = func(*lhsPtr);
+            }
+        }
+    }
+
+    /**
      * Set each pixel in an Image<LhsT> to func(rhs), getting the rhs from an Image<RhsT>
      */
     template<typename LhsT, typename RhsT>
