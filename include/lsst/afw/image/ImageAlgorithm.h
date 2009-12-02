@@ -3,8 +3,8 @@
  * \file
  * \brief Support for functors over Image's pixels
  */
-#ifndef LSST_AFW_IMAGE_IMAGE_FUNCTIONAL_H
-#define LSST_AFW_IMAGE_IMAGE_FUNCTIONAL_H
+#ifndef LSST_AFW_IMAGE_IMAGE_ALGORITHM_H
+#define LSST_AFW_IMAGE_IMAGE_ALGORITHM_H
 
 #include <list>
 #include <map>

@@ -1,6 +1,6 @@
 #include <iostream>
 #include "lsst/afw/image/Image.h"
-#include "lsst/afw/image/ImageFunctional.h"
+#include "lsst/afw/image/ImageAlgorithm.h"
 
 namespace afwImage = lsst::afw::image;
 

@@ -6,7 +6,7 @@
  * @ingroup afw
  */
 #include "lsst/afw/image/Image.h"
-#include "lsst/afw/image/ImageFunctional.h"
+#include "lsst/afw/image/ImageAlgorithm.h"
 #include "lsst/afw/math/Random.h"
 
 namespace lsst {
@@ -149,6 +149,7 @@ void randomChisqImage(ImageT *image,    ///< The image to set
     template void randomGaussianImage(lsst::afw::image::Image<T> *image, Random &rand); \
     template void randomChisqImage(lsst::afw::image::Image<T> *image, Random &rand, double const nu);
     
+INSTANTIATE(double);
 INSTANTIATE(float);
 
 }}}
