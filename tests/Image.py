@@ -491,6 +491,21 @@ class DecoratedImageTestCase(unittest.TestCase):
         self.assertTrue("NAXIS1" in meta.names())
         self.assertEqual(im.getWidth(), meta.get("NAXIS1"))
         self.assertEqual(im.getHeight(), meta.get("NAXIS2"))
+
+    def testTicket1040(self):
+        """ How to repeat from #1040"""
+        image        = afwImage.ImageD(6, 6)
+        image.set(2, 2, 100)
+
+        bbox    = afwImage.BBox(afwImage.PointI(1, 1), 5, 5)
+        subImage = image.Factory(image, bbox)
+        subImageF = subImage.convertFloat()
+        
+        if display:
+            ds9.mtv(subImage, frame=0, title="subImage")
+            ds9.mtv(subImageF, frame=1, title="converted subImage")
+
+        self.assertEqual(subImage.get(1, 1), subImageF.get(1, 1))
         
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
