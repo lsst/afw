@@ -14,6 +14,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <utility>
 
 #include <boost/cstdint.hpp> 
 #include <boost/format.hpp> 
@@ -242,15 +243,15 @@ int afwMath::warpImage(
             // parts; the latter is used to compute the remapping kernel.
             // To convolve at source pixel (x, y) point source accessor to (x - kernelCtrX, y - kernelCtrY)
             // because the accessor must point to kernel pixel (0, 0), not the center of the kernel.
-            std::vector<double> srcFracInd(2);
-            int srcIndX = afwImage::positionToIndex(srcFracInd[0], srcPosXY[0]) - kernelCtrX;
-            int srcIndY = afwImage::positionToIndex(srcFracInd[1], srcPosXY[1]) - kernelCtrY;
-            if (srcFracInd[0] < 0) {
-                ++srcFracInd[0];
+            std::pair<double, double> srcFracInd;
+            int srcIndX = afwImage::positionToIndex(srcFracInd.first,  srcPosXY[0]) - kernelCtrX;
+            int srcIndY = afwImage::positionToIndex(srcFracInd.second, srcPosXY[1]) - kernelCtrY;
+            if (srcFracInd.first < 0) {
+                ++srcFracInd.first;
                 --srcIndX;
             }
-            if (srcFracInd[1] < 0) {
-                ++srcFracInd[1];
+            if (srcFracInd.second < 0) {
+                ++srcFracInd.second;
                 --srcIndY;
             }
           

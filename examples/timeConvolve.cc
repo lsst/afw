@@ -34,7 +34,7 @@ void timeConvolution(ImageClass &image, unsigned int nIter) {
     
     for (unsigned kSize = MinKernelSize; kSize <= MaxKernelSize; kSize += DeltaKernelSize) {
         // construct kernel
-        afwMath::GaussianFunction2<KernelType> gaussFunc(Sigma, Sigma);
+        afwMath::GaussianFunction2<KernelType> gaussFunc(Sigma, Sigma, 0);
         afwMath::AnalyticKernel analyticKernel(kSize, kSize, gaussFunc);
         
         clock_t startTime = clock();

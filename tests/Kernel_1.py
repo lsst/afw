@@ -25,13 +25,13 @@ class KernelTestCase(unittest.TestCase):
         kWidth = 5
         kHeight = 8
 
-        gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0)
+        gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         kernel = afwMath.AnalyticKernel(kWidth, kHeight, gaussFunc)
-        self.basicTests(kernel, 2)
+        self.basicTests(kernel, 3)
         fArr = numpy.zeros(shape=[kernel.getWidth(), kernel.getHeight()], dtype=float)
         for xsigma in (0.1, 1.0, 3.0):
             for ysigma in (0.1, 1.0, 3.0):
-                gaussFunc.setParameters((xsigma, ysigma))
+                gaussFunc.setParameters((xsigma, ysigma, 0.0))
                 # compute array of function values and normalize
                 for row in range(kernel.getHeight()):
                     y = row - kernel.getCtrY()
@@ -40,7 +40,7 @@ class KernelTestCase(unittest.TestCase):
                         fArr[col, row] = gaussFunc(x, y)
                 fArr /= fArr.sum()
                 
-                kernel.setKernelParameters((xsigma, ysigma))
+                kernel.setKernelParameters((xsigma, ysigma, 0.0))
                 kImage = afwImage.ImageD(kernel.getDimensions())
                 kernel.computeImage(kImage, True)
                 
@@ -49,13 +49,13 @@ class KernelTestCase(unittest.TestCase):
                     self.fail("%s = %s != %s for xsigma=%s, ysigma=%s" % \
                         (kernel.__class__.__name__, kArr, fArr, xsigma, ysigma))
 
-        kernel.setKernelParameters((0.5, 1.1))
+        kernel.setKernelParameters((0.5, 1.1, 0.3))
         kernelClone = kernel.clone()
         errStr = self.compareKernels(kernel, kernelClone)
         if errStr:
             self.fail(errStr)
         
-        kernel.setKernelParameters((1.5, 0.2))
+        kernel.setKernelParameters((1.5, 0.2, 0.7))
         errStr = self.compareKernels(kernel, kernelClone)
         if not errStr:
             self.fail("Clone was modified by changing original's kernel parameters")
@@ -213,7 +213,7 @@ class KernelTestCase(unittest.TestCase):
         # create list of kernels
         basisImArrList = []
         basisKernelList = afwMath.KernelList()
-        for basisKernelParams in [(0.2, 1.0), (1.0, 0.2)]:
+        for basisKernelParams in [(1.2, 0.3, 1.570796), (1.0, 0.2, 0.0)]:
             basisKernelFunction = afwMath.GaussianFunction2D(*basisKernelParams)
             basisKernel = afwMath.AnalyticKernel(kWidth, kHeight, basisKernelFunction)
             basisImage = afwImage.ImageD(basisKernel.getDimensions())
@@ -229,7 +229,7 @@ class KernelTestCase(unittest.TestCase):
         # by altering the local basis kernels and making sure the new images do NOT match
         modBasisImArrList = []
         for basisKernel in basisKernelList:
-            basisKernel.setKernelParameters((0.5, 0.5))
+            basisKernel.setKernelParameters((0.4, 0.5, 0.6))
             modBasisImage = afwImage.ImageD(basisKernel.getDimensions())
             basisKernel.computeImage(modBasisImage, True)
             modBasisImArrList.append(imTestUtils.arrayFromImage(modBasisImage))
@@ -263,11 +263,11 @@ class KernelTestCase(unittest.TestCase):
         kernel = afwMath.SeparableKernel(kWidth, kHeight, gaussFunc1, gaussFunc1)
         self.basicTests(kernel, 2)
         fArr = numpy.zeros(shape=[kernel.getWidth(), kernel.getHeight()], dtype=float)
-        gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0)
+        gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         for xsigma in (0.1, 1.0, 3.0):
             gaussFunc1.setParameters((xsigma,))
             for ysigma in (0.1, 1.0, 3.0):
-                gaussFunc.setParameters((xsigma, ysigma))
+                gaussFunc.setParameters((xsigma, ysigma, 0.0))
                 # compute array of function values and normalize
                 for row in range(kernel.getHeight()):
                     y = row - kernel.getCtrY()
@@ -302,13 +302,13 @@ class KernelTestCase(unittest.TestCase):
         kHeight = 3
         
         gaussFunc1 = afwMath.GaussianFunction1D(1.0)
-        gaussFunc2 = afwMath.GaussianFunction2D(1.0, 1.0)
+        gaussFunc2 = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         spFunc = afwMath.PolynomialFunction2D(1)
         kernelList = afwMath.KernelList()
         kernelList.append(afwMath.FixedKernel(afwImage.ImageD(kWidth, kHeight, 0.1)))
         kernelList.append(afwMath.FixedKernel(afwImage.ImageD(kWidth, kHeight, 0.2)))
-        
-        for numKernelParams in (1, 3):
+
+        for numKernelParams in (2, 4):
             spFuncList = afwMath.Function2DList()
             for ii in range(numKernelParams):
                 spFuncList.append(spFunc.clone())
@@ -317,6 +317,11 @@ class KernelTestCase(unittest.TestCase):
                 self.fail("Should have failed with wrong # of spatial functions")
             except pexExcept.LsstCppException:
                 pass
+        
+        for numKernelParams in (1, 3):
+            spFuncList = afwMath.Function2DList()
+            for ii in range(numKernelParams):
+                spFuncList.append(spFunc.clone())
             try:
                 afwMath.LinearCombinationKernel(kernelList, spFuncList)
                 self.fail("Should have failed with wrong # of spatial functions")
@@ -361,9 +366,10 @@ class KernelTestCase(unittest.TestCase):
         sParams = (
             (1.0, 1.0, 0.0),
             (1.0, 0.0, 1.0),
+            (0.5, 0.5, 0.5),
         )
 
-        gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0)
+        gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         kernel = afwMath.AnalyticKernel(kWidth, kHeight, gaussFunc, spFunc)
         kernel.setSpatialParameters(sParams)
         
@@ -375,6 +381,7 @@ class KernelTestCase(unittest.TestCase):
         newSParams = (
             (0.1, 0.2, 0.5),
             (0.1, 0.5, 0.2),
+            (0.2, 0.3, 0.3),
         )
         kernel.setSpatialParameters(newSParams)
         errStr = self.compareKernels(kernel, kernelClone)
@@ -493,7 +500,7 @@ class KernelTestCase(unittest.TestCase):
         kWidth = 3
         kHeight = 4
 
-        gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0)
+        gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         kernel = afwMath.AnalyticKernel(kWidth, kHeight, gaussFunc)
         for xCtr in range(kWidth):
             kernel.setCtrX(xCtr)

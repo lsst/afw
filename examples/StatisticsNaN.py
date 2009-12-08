@@ -11,7 +11,7 @@ disp = False
 
 def main():
     
-    gaussFunction = afwMath.GaussianFunction2D(2, 3)
+    gaussFunction = afwMath.GaussianFunction2D(3, 2, 0.5)
     gaussKernel   = afwMath.AnalyticKernel(10, 10, gaussFunction)
     inImage       = afwImage.ImageF(100, 100)
     inImage.set(1)

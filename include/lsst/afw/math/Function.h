@@ -14,6 +14,7 @@
 #include <sstream>
 #include <vector>
 
+#include "boost/format.hpp"
 #include "boost/serialization/nvp.hpp"
 #include "boost/serialization/vector.hpp"
 #include "boost/serialization/void_cast.hpp"
@@ -116,7 +117,7 @@ using boost::serialization::make_nvp;
         /**
          * @brief Set one function parameter without range checking
          */
-        virtual void setParameter(
+        void setParameter(
             unsigned int ind,   ///< index of parameter
             double newValue)    ///< new value for parameter
         {
@@ -133,8 +134,9 @@ using boost::serialization::make_nvp;
             std::vector<double> const &params)   ///< vector of function parameters
         {
             if (_params.size() != params.size()) {
-                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
-                                  "Wrong number of parameters");
+                throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+                    (boost::format("params has %d entries instead of %d") % \
+                    params.size() % _params.size()).str());
             }
             _params = params;
         }

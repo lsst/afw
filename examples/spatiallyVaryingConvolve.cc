@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
     afwImage::MaskedImage<Pixel> mImage(argv[1]);
     
     // construct kernel
-    afwMath::GaussianFunction2<Pixel> gaussFunc(1, 1);
+    afwMath::GaussianFunction2<Pixel> gaussFunc(1, 1, 0);
     unsigned int polyOrder = 1;
     afwMath::PolynomialFunction2<double> polyFunc(polyOrder);
     afwMath::AnalyticKernel gaussSpVarKernel(kernelCols, kernelRows, gaussFunc, polyFunc);
