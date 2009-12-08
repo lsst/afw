@@ -12,7 +12,6 @@ or
 import math
 import os
 import pdb  # we may want to say pdb.set_trace()
-import sys
 import unittest
 
 import lsst.utils.tests as utilsTests
@@ -32,7 +31,8 @@ class StatisticsTestCase(unittest.TestCase):
     """A test case for Statistics"""
     def setUp(self):
         self.val = 10
-        self.image = afwImage.ImageF(100, 200); self.image.set(self.val)
+        self.image = afwImage.ImageF(100, 200)
+        self.image.set(self.val)
 
     def tearDown(self):
         del self.image
@@ -127,6 +127,9 @@ class StatisticsTestCase(unittest.TestCase):
 
         self.assertEqual(stats.getValue(afwMath.MEDIAN), self.val)
 
+        values = [1.0, 2.0, 3.0, 2.0 ]
+        self.assertEqual(afwMath.makeStatistics(values, afwMath.MEDIAN).getValue(), 2.0)
+
     def testIqrange(self):
         """Test the inter-quartile range"""
         stats = afwMath.makeStatistics(self.image, afwMath.IQRANGE)
@@ -137,8 +140,8 @@ class StatisticsTestCase(unittest.TestCase):
         stats = afwMath.makeStatistics(self.image, afwMath.MEANCLIP)
         self.assertEqual(stats.getValue(afwMath.MEANCLIP), self.val)
 
-    def testVarianceClip(self):
-        """Test the 3-sigma clipped variance"""
+    def testStdevClip(self):
+        """Test the 3-sigma clipped standard deviation"""
         stats = afwMath.makeStatistics(self.image, afwMath.STDEVCLIP)
         self.assertEqual(stats.getValue(afwMath.STDEVCLIP), 0)
 
@@ -159,18 +162,22 @@ class StatisticsTestCase(unittest.TestCase):
         imgfiles.append("v2_i2_p_m9_f.fits")
         imgfiles.append("v2_i2_p_m9_u16.fits")
 
-        afwdata_dir = os.getenv("AFWDATA_DIR")
+        afwdataDir = os.getenv("AFWDATA_DIR")
+        if not afwdataDir:
+            print >> sys.stderr, "Skipping tests as afwdata is not setup"
+            return
+        
         for imgfile in imgfiles:
             
-            img_path = afwdata_dir + "/Statistics/" + imgfile
+            imgPath = os.path.join(afwdataDir, "Statistics", imgfile)
 
             # get the image and header
-            dimg = afwImage.DecoratedImageF(img_path)
+            dimg = afwImage.DecoratedImageF(imgPath)
             fitsHdr = dimg.getMetadata()
 
             # get the true values of the mean and stdev
-            true_mean = fitsHdr.getAsDouble("MEANCOMP")
-            true_stdev = fitsHdr.getAsDouble("SIGCOMP")
+            trueMean = fitsHdr.getAsDouble("MEANCOMP")
+            trueStdev = fitsHdr.getAsDouble("SIGCOMP")
 
             # measure the mean and stdev with the Statistics class
             img = dimg.getImage()
@@ -178,9 +185,9 @@ class StatisticsTestCase(unittest.TestCase):
             mean = statobj.getValue(afwMath.MEAN)
             stdev = statobj.getValue(afwMath.STDEV)
 
-            # print true_mean, mean, true_stdev, stdev
-            self.assertAlmostEqual(mean, true_mean, 8)
-            self.assertAlmostEqual(stdev, true_stdev, 8)
+            # print trueMean, mean, trueStdev, stdev
+            self.assertAlmostEqual(mean, trueMean, 8)
+            self.assertAlmostEqual(stdev, trueStdev, 8)
 
 
     # Now do tests on a 'ramp' (image with constant gradient)
@@ -211,11 +218,11 @@ class StatisticsTestCase(unittest.TestCase):
         self.assertEqual(teststdev, stdev )
         
         stats = afwMath.makeStatistics(img, afwMath.STDEV | afwMath.MEAN | afwMath.ERRORS)
-        mean, mean_err = stats.getResult(afwMath.MEAN)
+        mean, meanErr = stats.getResult(afwMath.MEAN)
         sd = stats.getValue(afwMath.STDEV)
         
         self.assertEqual(mean, img.get(nx/2, ny/2))
-        self.assertEqual(mean_err, sd/math.sqrt(img.getWidth()*img.getHeight()))
+        self.assertEqual(meanErr, sd/math.sqrt(img.getWidth()*img.getHeight()))
         
         # ===============================================================================
         # sjb code for percentiles and clipped stats
@@ -231,7 +238,8 @@ class StatisticsTestCase(unittest.TestCase):
 
         
     def testMask(self):
-        mask = afwImage.MaskU(10, 10); mask.set(0x0)
+        mask = afwImage.MaskU(10, 10)
+        mask.set(0x0)
 
         mask.set(1, 1, 0x10)
         mask.set(3, 1, 0x08)
@@ -277,9 +285,9 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(exit = False):
+def run(shouldExit = False):
     """Run the tests"""
-    utilsTests.run(suite(), exit)
+    utilsTests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
     run(True)

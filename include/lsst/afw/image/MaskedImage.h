@@ -661,15 +661,34 @@ namespace image {
 
         void operator+=(ImagePixelT const rhs);
         void operator+=(MaskedImage const& rhs);
+        void operator+=(lsst::afw::image::Image<ImagePixelT> const& rhs) {
+            *_image += rhs;
+        }
         void scaledPlus(double const c, MaskedImage const& rhs);
+
         void operator-=(ImagePixelT const rhs);
         void operator-=(MaskedImage const& rhs);
+        void operator-=(lsst::afw::image::Image<ImagePixelT> const& rhs) {
+            *_image -= rhs;
+        }
         void scaledMinus(double const c, MaskedImage const& rhs);
+
         void operator*=(ImagePixelT const rhs);
         void operator*=(MaskedImage const& rhs);
+        void operator*=(lsst::afw::image::Image<ImagePixelT> const& rhs) {
+            *_image *= rhs;
+            *_variance *= rhs;           // yes, multiply twice
+            *_variance *= rhs;
+        }
         void scaledMultiplies(double const c, MaskedImage const& rhs);
+        
         void operator/=(ImagePixelT const rhs);
         void operator/=(MaskedImage const& rhs);
+        void operator/=(lsst::afw::image::Image<ImagePixelT> const& rhs) {
+            *_image /= rhs;
+            *_variance /= rhs; // yes, divide twice
+            *_variance /= rhs;
+        }
         void scaledDivides(double const c, MaskedImage const& rhs);
         
         // IO functions

@@ -202,16 +202,38 @@ namespace lsst { namespace afw { namespace image {
         /// Create a BCircle given centre and radius
         BCircle(PointI center,               //!< Centre of circle
                 float r                      //!< Radius of circle
-               ) : std::pair<PointI, float>(center, r) {}
+               ) : std::pair<PointI, float>(center, fabs(r)) {}
 
         PointI const& getCenter() const { return first; } ///< Return the circle's centre
         float getRadius() const { return second; }        ///< Return the circle's radius
+        BBox getBBox() const {                           ///< Return the circle's bounding box
+            int const iradius = static_cast<int>(second + 0.5);
+            PointI llc(first[0] - iradius, first[1] - iradius);
+            PointI urc(first[0] + iradius, first[1] + iradius);
+            return BBox(llc, urc);
+        }
     };
 
 /************************************************************************************************************/
 
 lsst::daf::base::PropertySet::Ptr readMetadata(std::string const& fileName, const int hdu=0, bool strip=false);
 
+/************************************************************************************************************/
+/**
+ * Return a value indicating a bad pixel for the given Image type
+ *
+ * A quiet NaN is returned for types that support it otherwise @c bad
+ *
+ * @relates Image
+ */
+template<typename ImageT>
+typename ImageT::SinglePixel badPixel(typename ImageT::Pixel bad=0 ///< The bad value if NaN isn't supported
+                                     ) {
+    typedef typename ImageT::SinglePixel SinglePixelT;
+    return SinglePixelT(std::numeric_limits<SinglePixelT>::has_quiet_NaN ?
+                        std::numeric_limits<SinglePixelT>::quiet_NaN() : bad);
+}
+            
 }}}
 
 #endif

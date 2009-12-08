@@ -252,6 +252,20 @@ class ImageTestCase(unittest.TestCase):
         self.assertEqual(bbox.getWidth(), width)
         self.assertEqual(bbox.getHeight(), height)
 
+    def testBCircle(self):
+        """Check BCircle"""
+
+        x0, y0, r = 10, 20, 3.5
+        bc = afwImage.BCircle(afwImage.PointI(x0, y0), r)
+        self.assertEqual(bc.getCenter().getX(), x0)
+        self.assertEqual(bc.getCenter().getY(), y0)
+        self.assertEqual(bc.getRadius(), r)
+
+        ir = int(r + 0.5)
+        self.assertEqual(bc.getBBox().getLLC(), afwImage.PointI(x0 - ir, y0 - ir))
+        self.assertEqual(bc.getBBox().getDimensions()[0], 2*ir + 1)
+        self.assertEqual(bc.getBBox().getDimensions()[1], 2*ir + 1)
+
     def checkImgPatch(self, img, x0=0, y0=0):
         """Check that a patch of an image is correct; origin of patch is at (x0, y0)"""
         
@@ -477,6 +491,21 @@ class DecoratedImageTestCase(unittest.TestCase):
         self.assertTrue("NAXIS1" in meta.names())
         self.assertEqual(im.getWidth(), meta.get("NAXIS1"))
         self.assertEqual(im.getHeight(), meta.get("NAXIS2"))
+
+    def testTicket1040(self):
+        """ How to repeat from #1040"""
+        image        = afwImage.ImageD(6, 6)
+        image.set(2, 2, 100)
+
+        bbox    = afwImage.BBox(afwImage.PointI(1, 1), 5, 5)
+        subImage = image.Factory(image, bbox)
+        subImageF = subImage.convertFloat()
+        
+        if display:
+            ds9.mtv(subImage, frame=0, title="subImage")
+            ds9.mtv(subImageF, frame=1, title="converted subImage")
+
+        self.assertEqual(subImage.get(1, 1), subImageF.get(1, 1))
         
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

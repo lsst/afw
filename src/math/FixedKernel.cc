@@ -76,18 +76,19 @@ double afwMath::FixedKernel::computeImage(
     }
 
     double multFactor = 1.0;
-    double imSum = 1.0;
+    double imSum = this->_sum;
     if (doNormalize) {
+        if (imSum == 0) {
+            throw LSST_EXCEPT(pexExcept::OverflowErrorException, "Cannot normalize; kernel sum is 0");
+        }
         multFactor = 1.0/static_cast<double>(this->_sum);
-    } else {
-        imSum = this->_sum;
+        imSum = 1.0;
     }
 
     typedef afwImage::Image<Pixel>::x_iterator XIter;
 
     for (int y = 0; y != this->getHeight(); ++y) {
-        XIter kPtr = this->_image.row_begin(y);
-        for (XIter imPtr = image.row_begin(y), imEnd = image.row_end(y);
+        for (XIter imPtr = image.row_begin(y), imEnd = image.row_end(y), kPtr = this->_image.row_begin(y);
             imPtr != imEnd; ++imPtr, ++kPtr) {
             imPtr[0] = multFactor*kPtr[0];
         }

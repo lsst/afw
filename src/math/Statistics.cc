@@ -35,15 +35,15 @@ double const IQ_TO_STDEV = 0.741301109252802;   // 1 sigma in units of iqrange (
 class AlwaysTrue {
 public:
     template<typename T>
-    bool operator()(T val) {
+    bool operator()(T val) const {
         return true;
     }
     template<typename Ta, typename Tb>
-    bool operator()(Ta a, Tb b) {
+    bool operator()(Ta a, Tb b) const {
         return true;
     }
     template<typename Ta, typename Tb, typename Tc>
-    bool operator()(Ta a, Tb b, Tc c) {
+    bool operator()(Ta a, Tb b, Tc c) const {
         return true;
     }
 };
@@ -54,15 +54,15 @@ public:
 class AlwaysFalse {
 public:
     template<typename T>
-    bool operator()(T val) {
+    bool operator()(T val) const {
         return false;
     }
     template<typename Ta, typename Tb>
-    bool operator()(Ta a, Tb b) {
+    bool operator()(Ta a, Tb b) const {
         return false;
     }
     template<typename Ta, typename Tb, typename Tc>
-    bool operator()(Ta a, Tb b, Tc c) {
+    bool operator()(Ta a, Tb b, Tc c) const {
         return false;
     }
 };
@@ -73,7 +73,7 @@ public:
 class CheckFinite {
 public:
     template<typename T>
-    bool operator()(T val) {
+    bool operator()(T val) const {
         return !std::isnan(static_cast<float>(val));
     }
 };
@@ -84,7 +84,7 @@ public:
 class CheckValueLtMin {
 public:
     template<typename Tval, typename Tmin>
-    bool operator()(Tval val, Tmin min) {
+    bool operator()(Tval val, Tmin min) const {
         return (static_cast<Tmin>(val) < min);
     }
 };
@@ -95,7 +95,7 @@ public:
 class CheckValueGtMax {
 public:
     template<typename Tval, typename Tmax>
-    bool operator()(Tval val, Tmax max) {
+    bool operator()(Tval val, Tmax max) const {
         return (static_cast<Tmax>(val) > max);
     }
 };
@@ -106,7 +106,7 @@ public:
 class CheckClipRange {
 public:
     template<typename Tval, typename Tcen, typename Tmax>
-    bool operator()(Tval val, Tcen center, Tmax cliplimit) {
+    bool operator()(Tval val, Tcen center, Tmax cliplimit) const {
         Tmax tmp = fabs(val - center);
         return (tmp <= cliplimit);
     }
@@ -262,7 +262,7 @@ math::Statistics::SumReturn math::Statistics::_sumImage(Image const &img,
             if ( IsFinite()(*ptr) &&
                  !(*mptr & _sctrl.getAndMask()) &&
                  InClipRange()(*ptr, meanCrude, cliplimit) ) { // clip
-
+                
                 double const delta = *ptr - meanCrude;
                 sum   += delta;
                 sumx2 += delta*delta;
@@ -270,6 +270,7 @@ math::Statistics::SumReturn math::Statistics::_sumImage(Image const &img,
                 if ( HasValueLtMin()(*ptr, min) ) { min = *ptr; }
                 if ( HasValueGtMax()(*ptr, max) ) { max = *ptr; }
                 n++;
+                
             }
         }
     }
@@ -302,7 +303,15 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
     
     int nCrude       = 0;
     double meanCrude = 0.0;
-    int const strideCrude = 10;
+
+    // for small numbers of values, use a small stride
+    int const nPix = img.getWidth()*img.getHeight();
+    int strideCrude;
+    if (nPix < 100) {
+        strideCrude = 2;
+    } else {
+        strideCrude = 10;
+    }
     if (_sctrl.getNanSafe()) {
         loopValues = _sumImage<ChkFin, AlwaysF, AlwaysF, AlwaysT>(img, msk, flags,
                                                                   nCrude, strideCrude, meanCrude);
@@ -344,7 +353,7 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
         throw LSST_EXCEPT(ex::InvalidParameterException,
                           "Image has no valid pixels; mean is undefined.");
     }
-    if (n == 1) {
+    if (n == 1 && (flags & (STDEV|VARIANCE))) {
         throw LSST_EXCEPT(ex::InvalidParameterException,
                           "Image contains only one pixel; population st. dev. is undefined");
     }
@@ -433,30 +442,38 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
  */
 template<typename Pixel>
 double math::Statistics::_percentile(std::vector<Pixel> &img,
-                                     double const quartile) {
+                                     double const percentile) {
     
     int const n = img.size();
-    // if odd, get the central value
-    if (n % 2) {
-        
-        int const q = static_cast<int>(quartile*n + 0.5);
-        std::nth_element(img.begin(), img.begin() + q, img.end());
-        
-        return img[q - 1];
 
-        // if even, take the average of the two mid values.
-    } else {
+    if (n > 1) {
+        double const idx = percentile*(n - 1);
         
-        int const q1 = static_cast<int>(quartile*n);
-        std::nth_element(img.begin(), img.begin() + q1, img.end());
-        double val1 = static_cast<double>(img[q1 - 1]);
-
+        // interpolate linearly between the adjacent values
+        
+        int const q1 = static_cast<int>(idx);
+        typename std::vector<Pixel>::iterator midMinus1 = img.begin() + q1;
+        std::nth_element(img.begin(), midMinus1, img.end());
+        double val1 = static_cast<double>(*midMinus1);
+        
         int const q2 = q1 + 1;
-        std::nth_element(img.begin(), img.begin() + q2, img.end());
-        double val2 = static_cast<double>(img[q2 - 1]);
-
-        return 0.5*(val1 + val2);
+        typename std::vector<Pixel>::iterator midPlus1 = img.begin() + q2;
+        std::nth_element(img.begin(), midPlus1, img.end());
+        double val2 = static_cast<double>(*midPlus1);
+        
+        double w1 = (static_cast<double>(q2) - idx);
+        double w2 = (idx - static_cast<double>(q1));
+        
+        return w1*val1 + w2*val2;
+        
+    } else if (n == 1) {
+        return img[0];
+    } else {
+        throw LSST_EXCEPT(ex::InvalidParameterException,
+                          "Image has no valid pixels, can't compute median.");
     }
+            
+
 }
 
 
@@ -656,7 +673,7 @@ Statistics makeStatistics(
     template STAT::StandardReturn STAT::_getStandard(image::Image<TYPE> const &img, \
                                                      image::Mask<image::MaskPixel> const &msk, \
                                                      int const flags, std::pair<double, double> clipinfo); \
-    template double STAT::_percentile(std::vector<TYPE> &img, double const quartile);
+    template double STAT::_percentile(std::vector<TYPE> &img, double const percentile);
 
 //
 #define INSTANTIATE_REGULARIMAGE_STATISTICS(TYPE)                      \

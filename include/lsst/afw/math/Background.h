@@ -45,10 +45,11 @@ UndersampleStyle stringToUndersampleStyle(std::string const style) {
 class BackgroundControl {
 public:
     
-    BackgroundControl(Interpolate::Style const style = Interpolate::AKIMA_SPLINE, ///< Style of the interpolation
-                      int const nxSample = 10,                   ///< Num. grid samples in x
-                      int const nySample = 10,                   ///< Num. grid samples in y
-                      UndersampleStyle const undersampleStyle = THROW_EXCEPTION
+    BackgroundControl(
+        Interpolate::Style const style = Interpolate::AKIMA_SPLINE, ///< Style of the interpolation
+        int const nxSample = 10,        ///< Num. grid samples in x
+        int const nySample = 10,        ///< Num. grid samples in y
+        UndersampleStyle const undersampleStyle = THROW_EXCEPTION ///< Behaviour if there are too few points
                      )
         : _style(style), _nxSample(nxSample), _nySample(nySample),
           _undersampleStyle(undersampleStyle) {

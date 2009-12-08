@@ -171,6 +171,9 @@ double afwMath::LinearCombinationKernel::computeImage(
     }
 
     if (doNormalize) {
+        if (imSum == 0) {
+            throw LSST_EXCEPT(pexExcept::OverflowErrorException, "Cannot normalize; kernel sum is 0");
+        }
         image /= imSum;
         imSum = 1;
     }

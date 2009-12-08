@@ -168,6 +168,38 @@ class KernelTestCase(unittest.TestCase):
             self.fail(errStr)
 
         self.checkComputeImage(kernel)
+    
+    def testComputeImageRaise(self):
+        """Test Kernel.computeImage raises OverflowException iff doNormalize True and kernel sum exactly 0
+        """
+        kWidth = 4
+        kHeight = 3
+        
+        polyFunc1 = afwMath.PolynomialFunction1D(0)
+        polyFunc2 = afwMath.PolynomialFunction2D(0)
+        analKernel = afwMath.AnalyticKernel(kWidth, kHeight, polyFunc2)
+        kImage = afwImage.ImageD(analKernel.getDimensions())
+        for coeff in (-1, -1e-99, 0, 1e99, 1):
+            analKernel.setKernelParameters([coeff])
+
+            analKernel.computeImage(kImage, False)
+            fixedKernel = afwMath.FixedKernel(kImage)
+
+            sepKernel = afwMath.SeparableKernel(kWidth, kHeight, polyFunc1, polyFunc1)
+            sepKernel.setKernelParameters([coeff, coeff])
+
+            kernelList = afwMath.KernelList()
+            kernelList.append(analKernel)
+            lcKernel = afwMath.LinearCombinationKernel(kernelList, [1])
+
+            doRaise = (coeff == 0)
+            self.basicTestComputeImageRaise(analKernel,  doRaise, "AnalyticKernel")
+            self.basicTestComputeImageRaise(fixedKernel, doRaise, "FixedKernel")
+            self.basicTestComputeImageRaise(sepKernel,   doRaise, "SeparableKernel")
+            self.basicTestComputeImageRaise(lcKernel,    doRaise, "LinearCombinationKernel")
+        
+        lcKernel.setKernelParameters([0])
+        self.basicTestComputeImageRaise(lcKernel, True, "LinearCombinationKernel")
 
     def testLinearCombinationKernelAnalytic(self):
         """Test LinearCombinationKernel using analytic basis kernels.
@@ -504,6 +536,18 @@ class KernelTestCase(unittest.TestCase):
                     utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
                         kernel.setSpatialParameters, spatialParams)
 
+    def basicTestComputeImageRaise(self, kernel, doRaise, kernelDescr=""):
+        """Test that computeImage either does or does not raise an exception, as appropriate
+        """
+        kImage = afwImage.ImageD(kernel.getDimensions())
+        try:
+            kernel.computeImage(kImage, True)
+            if doRaise:
+                self.fail(kernelDescr + ".computeImage should have raised an exception")
+        except pexExcept.LsstCppException, e:
+            if not doRaise:
+                self.fail(kernelDescr + ".computeImage should not have raised an exception")
+
     def checkComputeImage(self, kernel):
         """Verify that one cannot compute a kernel image of the wrong size
         """
@@ -524,7 +568,7 @@ class KernelTestCase(unittest.TestCase):
                         pass
 
     def compareKernels(self, kernel1, kernel2, newCtr1=(0, 0)):
-        """Compare two kernels; return None if they match, else return a string describing a difference.
+        """Compare two kernels; return None if they match, else return a string kernelDescribing a difference.
         
         kernel1: one kernel to test
         kernel2: the other kernel to test

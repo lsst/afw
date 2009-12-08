@@ -12,6 +12,7 @@
 #include <map>
 #include <string>
 #include <utility>
+#include <functional>
 
 #include "boost/mpl/bool.hpp"
 #include "boost/shared_ptr.hpp"
@@ -132,8 +133,10 @@ namespace image {
         explicit ImageBase(const std::pair<int, int> dimensions);
         ImageBase(const ImageBase& src, const bool deep=false);
         explicit ImageBase(const ImageBase& src, const BBox& bbox, const bool deep=false);
-        /// generalised copy constructor; defined here in the header so that the compiler can instantiate
-        /// N(N-1)/2 conversions between N ImageBase types.
+        /// generalised copy constructor
+        ///
+        /// defined here in the header so that the compiler can instantiate N(N-1) conversions between N
+        /// ImageBase types.
         template<typename OtherPixelT>
         ImageBase(const ImageBase<OtherPixelT>& rhs, const bool deep) :
             lsst::daf::data::LsstBase(typeid(this)) {
@@ -144,8 +147,8 @@ namespace image {
 
             ImageBase<PixelT> tmp(rhs.getDimensions());
             copy_and_convert_pixels(rhs._gilView, tmp._gilView); // from boost::gil
-            tmp._ix0 = rhs._ix0;
-            tmp._iy0 = rhs._iy0;
+            tmp._ix0 = 0;                                        // we made a deep copy, so _i[xy]0 == 0
+            tmp._iy0 = 0;
             tmp._x0 = rhs._x0;
             tmp._y0 = rhs._y0;
 
@@ -371,6 +374,15 @@ namespace image {
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::ImageFormatter<PixelT>);
     };
     
+    template<typename LhsPixelT, typename RhsPixelT>
+    void operator+=(Image<LhsPixelT> &lhs, Image<RhsPixelT> const& rhs);
+    template<typename LhsPixelT, typename RhsPixelT>
+    void operator-=(Image<LhsPixelT> &lhs, Image<RhsPixelT> const& rhs);
+    template<typename LhsPixelT, typename RhsPixelT>
+    void operator*=(Image<LhsPixelT> &lhs, Image<RhsPixelT> const& rhs);
+    template<typename LhsPixelT, typename RhsPixelT>
+    void operator/=(Image<LhsPixelT> &lhs, Image<RhsPixelT> const& rhs);
+
     template<typename PixelT>
     void swap(Image<PixelT>& a, Image<PixelT>& b);
     
@@ -444,6 +456,7 @@ namespace image {
 
     template<typename PixelT>
     void swap(DecoratedImage<PixelT>& a, DecoratedImage<PixelT>& b);
+
 }}}  // lsst::afw::image
 
 #endif

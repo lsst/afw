@@ -72,14 +72,14 @@ BOOST_AUTO_TEST_CASE(StatisticsNanSafeSlower) {
             math::makeStatistics(img, math::NPOINT | math::MEAN | math::MIN, sctrl);
         double tMinMax = timer.elapsed();
 
-        bool simpleIsFaster = (tSimple < tNanSafe && tSimple < tMinMax);
-        bool minMaxIsSlower = (tMinMax > tNanSafe && tMinMax > tSimple);
+        bool isFasterWithSimple = (tSimple < tNanSafe && tSimple < tMinMax);
+        bool isSlowerWithMinMax = (tMinMax > tNanSafe && tMinMax > tSimple);
         
         BOOST_CHECK_EQUAL(statsSimple.getValue(math::MEAN), mean);
         BOOST_CHECK_EQUAL(statsNanSafe.getValue(math::MEAN), 2*mean);
         BOOST_CHECK_EQUAL(statsMinMax.getValue(math::MIN), 3*2*z0);
-        BOOST_CHECK(simpleIsFaster);
-        BOOST_CHECK(minMaxIsSlower);
+        BOOST_CHECK(isFasterWithSimple);
+        BOOST_CHECK(isSlowerWithMinMax);
     }
 
 }

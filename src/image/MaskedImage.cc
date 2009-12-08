@@ -17,10 +17,10 @@
 namespace bl = boost::lambda;
 namespace image = lsst::afw::image;
         
-// Constructors
-//
-// \brief Construct from a supplied dimensions. The Image, Mask, and Variance will be set to zero
-//
+/** Constructors
+ * 
+ * \brief Construct from a supplied dimensions. The Image, Mask, and Variance will be set to zero
+ */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
         int width,                      //!< Number of columns in image

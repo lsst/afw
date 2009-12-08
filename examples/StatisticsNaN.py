@@ -15,19 +15,22 @@ def main():
     gaussKernel   = afwMath.AnalyticKernel(10, 10, gaussFunction)
     inImage       = afwImage.ImageF(100, 100)
     inImage.set(1)
-    if disp: ds9.mtv(inImage, frame = 0)
+    if disp:
+        ds9.mtv(inImage, frame = 0)
     
     # works
     outImage      = afwImage.ImageF(100, 100)
     afwMath.convolve(outImage, inImage, gaussKernel, False, True)
-    if disp: ds9.mtv(outImage, frame = 1)
+    if disp:
+        ds9.mtv(outImage, frame = 1)
     print "Should be a number: ", afwMath.makeStatistics(outImage, afwMath.MEAN).getValue()
     print "Should be a number: ", afwMath.makeStatistics(outImage, afwMath.STDEV).getValue()
     
     # not works ... now does work
     outImage      = afwImage.ImageF(100, 100)
     afwMath.convolve(outImage, inImage, gaussKernel, False, False)
-    if disp: ds9.mtv(outImage, frame = 2)
+    if disp:
+        ds9.mtv(outImage, frame = 2)
     print "Should be a number: ", afwMath.makeStatistics(outImage, afwMath.MEAN).getValue()
     print "Should be a number: ", afwMath.makeStatistics(outImage, afwMath.STDEV).getValue()
 
