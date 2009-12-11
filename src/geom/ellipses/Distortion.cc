@@ -1,66 +1,16 @@
-#include <lsst/afw/math/ellipses/Ellipse.h>
-#include <lsst/afw/math/ellipses/Quadrupole.h>
-#include <lsst/afw/math/ellipses/Axes.h>
-#include <lsst/afw/math/ellipses/Distortion.h>
-#include <lsst/afw/math/ellipses/LogShear.h>
+// -*- lsst-c++ -*-
+#include "lsst/afw/geom/ellipses/Quadrupole.h"
+#include "lsst/afw/geom/ellipses/Axes.h"
+#include "lsst/afw/geom/ellipses/Distortion.h"
+#include "lsst/afw/geom/ellipses/LogShear.h"
 
-namespace ellipses = lsst::afw::math::ellipses;
+namespace ellipses = lsst::afw::geom::ellipses;
 
-ellipses::Distortion const & ellipses::DistortionEllipse::getCore() const {
-    return static_cast<Distortion const &>(*_core); 
-}
-
-ellipses::Distortion & ellipses::DistortionEllipse::getCore() { 
-    return static_cast<Distortion &>(*_core); 
-}
-
-void ellipses::DistortionEllipse::setComplex(std::complex<double> const & e) { 
-    getCore().setComplex(e); 
-}
-
-std::complex<double> ellipses::DistortionEllipse::getComplex() const { 
-    return getCore().getComplex(); 
-}
-
-void ellipses::DistortionEllipse::setE(double e) { getCore().setE(e); }
-double ellipses::DistortionEllipse::getE() const { return getCore().getE(); }
-   
-ellipses::DistortionEllipse::DistortionEllipse(
-        lsst::afw::image::PointD const & center
-) : Ellipse(new Distortion(), center) {}
-
-template <typename Derived>
-ellipses::DistortionEllipse::DistortionEllipse(
-        Eigen::MatrixBase<Derived> const & vector
-) : Ellipse(vector.segment<2>(0)) {
-    _core.reset(new Distortion(vector.segment<3>(2)));
-}
-
-ellipses::DistortionEllipse::DistortionEllipse(
-        ellipses::Distortion const & core, 
-        lsst::afw::image::PointD const & center
-) : Ellipse(core,center) {}
-
-ellipses::DistortionEllipse::DistortionEllipse(
-        ellipses::Ellipse const & other
-) : Ellipse(new Distortion(other.getCore()), other.getCenter()) {}
-
-ellipses::DistortionEllipse::DistortionEllipse(
-    ellipses::DistortionEllipse const & other
-) : Ellipse(new Distortion(other.getCore()), other.getCenter()) {}
-
-
-ellipses::Distortion::Ellipse * ellipses::Distortion::makeEllipse(
-    lsst::afw::image::PointD const & center
-) const {
-    return new Ellipse(*this,center);
-}
-
-void ellipses::Distortion::assignTo(ellipses::Distortion & other) const {
+void ellipses::Distortion::_assignTo(Distortion & other) const {
     other._vector = this->_vector;
 }
 
-void ellipses::Distortion::assignTo(ellipses::Quadrupole & other) const {
+void ellipses::Distortion::_assignTo(Quadrupole & other) const {
     double e = getE();
     e *= e;
     double v = _vector[R] * _vector[R] / std::sqrt(1.0-e);
@@ -69,7 +19,7 @@ void ellipses::Distortion::assignTo(ellipses::Quadrupole & other) const {
     other[Quadrupole::IXY] = v*_vector[E2];
 }
 
-void ellipses::Distortion::assignTo(ellipses::Axes & other) const {
+void ellipses::Distortion::_assignTo(Axes & other) const {
     double e = getE();
     double q = std::pow((1.0-e)/(1.0+e),0.25);
     other[Axes::A] = _vector[R]/q;
@@ -77,7 +27,7 @@ void ellipses::Distortion::assignTo(ellipses::Axes & other) const {
     other[Axes::THETA] = 0.5*std::atan2(_vector[E2],_vector[E1]);
 }
 
-void ellipses::Distortion::assignTo(ellipses::LogShear & other) const {
+void ellipses::Distortion::_assignTo(LogShear & other) const {
     double e = getE();
     double gamma = 0.25*std::log((1.0+e)/(1.0-e));
     if (e < 1E-12) {
@@ -90,17 +40,13 @@ void ellipses::Distortion::assignTo(ellipses::LogShear & other) const {
     other[LogShear::KAPPA] = std::log(_vector[R]);
 }
 
-Eigen::Matrix3d ellipses::Distortion::differentialAssignTo(
-    ellipses::Distortion & other
-) const {
+ellipses::BaseCore::Jacobian ellipses::Distortion::_dAssignTo(Distortion & other) const {
     other._vector = this->_vector;
-    return Eigen::Matrix3d::Identity();
+    return BaseCore::Jacobian::Identity();
 }
 
-Eigen::Matrix3d ellipses::Distortion::differentialAssignTo(
-    ellipses::Quadrupole & other
-) const {
-    Eigen::Matrix3d m;
+ellipses::BaseCore::Jacobian ellipses::Distortion::_dAssignTo(Quadrupole & other) const {
+    BaseCore::Jacobian m;
     double e = getE(); e *= e;
     double e1p = 1.0 + _vector[E1];
     double e1m = 1.0 - _vector[E1];
@@ -128,10 +74,8 @@ Eigen::Matrix3d ellipses::Distortion::differentialAssignTo(
     return m;
 }
 
-Eigen::Matrix3d ellipses::Distortion::differentialAssignTo(
-    ellipses::Axes & other
-) const {
-    Eigen::Matrix3d m;
+ellipses::BaseCore::Jacobian ellipses::Distortion::_dAssignTo(Axes & other) const {
+    BaseCore::Jacobian m;
     double e = getE();
     double dp = std::pow(1.0 + e,0.25);
     double dm = std::pow(1.0 - e,0.25);
@@ -144,9 +88,7 @@ Eigen::Matrix3d ellipses::Distortion::differentialAssignTo(
     m(2,2) = 0.0;
     m(0,2) = dp/dm;
     m(1,2) = dm/dp;
-    m.corner<2,2>(Eigen::TopLeft).setConstant(
-        _vector[R] / (2 * e * std::pow(dp*dm,3))
-    );
+    m.corner<2,2>(Eigen::TopLeft).setConstant(_vector[R] / (2 * e * std::pow(dp*dm,3)));
     dm *= dm;
     dp *= dp;
     m(0,0) *= _vector[E1] / dm;
@@ -156,10 +98,8 @@ Eigen::Matrix3d ellipses::Distortion::differentialAssignTo(
     return m;
 }
 
-Eigen::Matrix3d ellipses::Distortion::differentialAssignTo(
-    ellipses::LogShear & other
-) const {
-    Eigen::Matrix3d m;
+ellipses::BaseCore::Jacobian ellipses::Distortion::_dAssignTo(LogShear & other) const {
+    BaseCore::Jacobian m;
     double e = getE();
     double dp = 1.0 + e;
     double dm = 1.0 - e;

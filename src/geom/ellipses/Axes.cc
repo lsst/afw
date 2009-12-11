@@ -1,55 +1,13 @@
-#include <lsst/afw/math/ellipses/Ellipse.h>
-#include <lsst/afw/math/ellipses/Quadrupole.h>
-#include <lsst/afw/math/ellipses/Axes.h>
-#include <lsst/afw/math/ellipses/Distortion.h>
-#include <lsst/afw/math/ellipses/LogShear.h>
+// -*- lsst-c++ -*-
+#include "lsst/afw/geom/ellipses/Quadrupole.h"
+#include "lsst/afw/geom/ellipses/Axes.h"
+#include "lsst/afw/geom/ellipses/Distortion.h"
+#include "lsst/afw/geom/ellipses/LogShear.h"
 
-namespace ellipses = lsst::afw::math::ellipses;
-
-ellipses::Axes const & ellipses::AxesEllipse::getCore() const {
-    return static_cast<Axes const &>(*_core);
-}
-
-ellipses::Axes & ellipses::AxesEllipse::getCore() { 
-    return static_cast<Axes &>(*_core); 
-}
-   
-ellipses::AxesEllipse::AxesEllipse(
-        lsst::afw::image::PointD const & center 
-) : Ellipse(new Axes(), center) {}
-
-template <typename Derived>
-ellipses::AxesEllipse::AxesEllipse(
-        Eigen::MatrixBase<Derived> const & vector
-) : Ellipse(vector.segment<2>(0)) {
-    _core.reset(new Axes(vector.segment<3>(2))); 
-}
-
-ellipses::AxesEllipse::AxesEllipse (
-        ellipses::Axes const & core, 
-        lsst::afw::image::PointD const & center
-) : Ellipse(core, center) {}
-
-ellipses::AxesEllipse::AxesEllipse(
-    ellipses::Ellipse const & other
-) : Ellipse(new Axes(other.getCore()), other.getCenter()) {}
-
-ellipses::AxesEllipse::AxesEllipse (
-    ellipses::AxesEllipse const & other
-) : Ellipse(new Axes(other.getCore()), other.getCenter()) {}
-
-lsst::afw::math::AffineTransform ellipses::Axes::getGenerator() const {
-    return AffineTransform(
-        AffineTransform::TransformMatrix(
-            Eigen::Rotation2D<double>(_vector[THETA])
-            * Eigen::Scaling<double,2>(_vector[A],_vector[B])
-        )
-    );
-}
+namespace ellipses = lsst::afw::geom::ellipses;
 
 bool ellipses::Axes::normalize() {
-    if (_vector[A] < 0 || _vector[B] < 0) 
-        return false;
+    if (_vector[A] < 0 || _vector[B] < 0) return false;
     if (_vector[A] < _vector[B]) {
         std::swap(_vector[A],_vector[B]);
         _vector[THETA] += M_PI_2;
@@ -62,17 +20,20 @@ bool ellipses::Axes::normalize() {
     return true;
 }
 
-ellipses::Axes::Ellipse * ellipses::Axes::makeEllipse(
-        lsst::afw::image::PointD const & center
-) const {
-    return new Ellipse(*this,center);
+lsst::afw::geom::AffineTransform ellipses::Axes::getGenerator() const {
+    return AffineTransform(
+        Eigen::Transform2d(
+            Eigen::Rotation2D<double>(_vector[THETA])
+            * Eigen::Scaling<double,2>(_vector[A],_vector[B])
+        )
+    );
 }
 
-void ellipses::Axes::assignTo(ellipses::Axes & other) const {
+void ellipses::Axes::_assignTo(Axes & other) const {
     other._vector = this->_vector;
 }
 
-void ellipses::Axes::assignTo(ellipses::Quadrupole & other) const {
+void ellipses::Axes::_assignTo(Quadrupole & other) const {
     double a = _vector[A];
     a *= a;
     double b = _vector[B];
@@ -86,59 +47,36 @@ void ellipses::Axes::assignTo(ellipses::Quadrupole & other) const {
     other[Quadrupole::IYY] = s*a + c*b;
 }
 
-void ellipses::Axes::assignTo(ellipses::Distortion & other) const {
+void ellipses::Axes::_assignTo(Distortion & other) const {
     Axes self(*this);
     self.normalize();
     double a = self[A];
     double b = self[B];
     other[Distortion::R] = std::sqrt(a*b);
-    
-    //test for divide by 0
-    if(a == 0 && b == 0) {
-        other[Distortion::E1] = 0;
-        other[Distortion::E1] = 0;
-        return;
-    }
-
     a *= a;
     b *= b;
-
     double e = (a-b)/(a+b);
+    if (a+b == 0.0) e = 0.0;
     other[Distortion::E1] = e * std::cos(2*self[THETA]);
     other[Distortion::E2] = e * std::sin(2*self[THETA]);
 }
 
-void ellipses::Axes::assignTo(ellipses::LogShear & other) const {
+void ellipses::Axes::_assignTo(LogShear & other) const {
     Axes self(*this);
     self.normalize();
     other[LogShear::KAPPA] = 0.5*std::log(self[A]*self[B]);
-    double a = self[A];
-    double b = self[B];
-    //check for divide by 0
-    if(a == 0 && b ==0) {
-        other[LogShear::GAMMA1] = 0;
-        other[LogShear::GAMMA2] = 0;
-        return;
-    }
-    
-    double logA = std::log(a);
-    double logB = std::log(b);
-    double gamma = 0.5*(logA - logB);
+    double gamma = 0.5*(std::log(self[A]) - std::log(self[B]));
     other[LogShear::GAMMA1] = gamma*std::cos(2.0*self[THETA]);
     other[LogShear::GAMMA2] = gamma*std::sin(2.0*self[THETA]);
 }
 
-Eigen::Matrix3d ellipses::Axes::differentialAssignTo(
-    ellipses::Axes & other
-) const {
+ellipses::BaseCore::Jacobian ellipses::Axes::_dAssignTo(Axes & other) const {
     other._vector = this->_vector;
-    return Eigen::Matrix3d::Identity();
+    return BaseCore::Jacobian::Identity();
 }
 
-Eigen::Matrix3d ellipses::Axes::differentialAssignTo(
-    ellipses::Quadrupole & other
-) const {
-    Eigen::Matrix3d m;
+ellipses::BaseCore::Jacobian ellipses::Axes::_dAssignTo(Quadrupole & other) const {
+    BaseCore::Jacobian m;
     double a = _vector[A];
     double b = _vector[B];
     m.col(0).setConstant(2*a);
@@ -160,10 +98,8 @@ Eigen::Matrix3d ellipses::Axes::differentialAssignTo(
     return m;
 }
 
-Eigen::Matrix3d ellipses::Axes::differentialAssignTo(
-    ellipses::Distortion & other
-) const {
-    Eigen::Matrix3d m;
+ellipses::BaseCore::Jacobian ellipses::Axes::_dAssignTo(Distortion & other) const {
+    BaseCore::Jacobian m;
     Axes self(*this);
     self.normalize();
     double a = self[A];
@@ -192,9 +128,7 @@ Eigen::Matrix3d ellipses::Axes::differentialAssignTo(
     return m;
 }
 
-Eigen::Matrix3d ellipses::Axes::differentialAssignTo(
-    ellipses::LogShear & other
-) const {
+ellipses::BaseCore::Jacobian ellipses::Axes::_dAssignTo(LogShear & other) const {
     Axes self(*this);
     self.normalize();
     double a = self[A];
@@ -205,7 +139,7 @@ Eigen::Matrix3d ellipses::Axes::differentialAssignTo(
     other[LogShear::KAPPA] = 0.5*std::log(a*b);
     other[LogShear::GAMMA1] = gamma*c;
     other[LogShear::GAMMA2] = gamma*s;
-    Eigen::Matrix3d m;
+    BaseCore::Jacobian m;
     a *= 2.0;
     b *= 2.0;
     m(0,0) = c/a;

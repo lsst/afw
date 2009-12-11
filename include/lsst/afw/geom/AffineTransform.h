@@ -3,15 +3,12 @@
 
 #include <boost/shared_ptr.hpp>
 #include <Eigen/Geometry>
-#include <lsst/afw/image/Utils.h>
-
-namespace Eigen {
-typedef Eigen::Matrix<double,6,1> Vector6d;
-}
+#include "lsst/afw/geom/Point.h"
+#include "lsst/afw/geom/Extent.h"
 
 namespace lsst {
 namespace afw {
-namespace math {
+namespace geom {
 
 /** \brief Transform defined as the composition of several other distinct Transforms. */
 class AffineTransform {
@@ -20,8 +17,12 @@ class AffineTransform {
 public:
     typedef Eigen::Transform2d TransformMatrix; 
     typedef boost::shared_ptr<AffineTransform> Ptr;
-    typedef boost::shared_ptr<const AffineTransform> ConstPtr;
-    typedef lsst::afw::image::PointD PointD;
+    typedef boost::shared_ptr<AffineTransform const> ConstPtr;
+    typedef lsst::afw::geom::PointD PointD;
+    typedef lsst::afw::geom::ExtentD ExtentD;
+
+    typedef Eigen::Matrix<double,6,1> ParameterVector;
+    typedef Eigen::Matrix<double,2,6> TransformDerivativeMatrix;
 
     enum Parameters {XX=0,YX=1,XY=2,YY=3,X=4,Y=5};
     /** \brief Construct an empty (identity) AffineTransform. */
@@ -42,34 +43,37 @@ public:
     /** \brief Construct an AffineTransform from a 2d matrix and offset. */
     explicit AffineTransform(
         Eigen::Matrix2d const & m, 
-        PointD const & p
+        ExtentD const & p
     ) : _matrix(Eigen::Translation2d(p.getX(), p.getY())*TransformMatrix(m)) 
     {}
 
 
-    AffineTransform(PointD const & p) : 
+    AffineTransform(ExtentD const & p) : 
         _matrix(Eigen::Translation2d(p.getX(), p.getY()))
     {}
 
-    /** \brief Return a copy of the transform. */
-    AffineTransform * clone() const { return new AffineTransform(*this); }
-
-    AffineTransform * invert() const;
+    AffineTransform invert() const;
 
     /** \brief Whether the transform is a no-op. */
     bool isIdentity() const { return _matrix.matrix().isIdentity(); }
 
 
-    /** \brief Transform a Coordinate object. */
+    /** \brief Transform a Point object. */
     PointD operator()(PointD const &p) const {         
-         EigenPoint tp = _matrix * EigenPoint(p.getX(), p.getY());
-         return PointD(tp.x(), tp.y());
+        EigenPoint tp = _matrix * EigenPoint(p.getX(), p.getY());
+        return PointD(tp.x(), tp.y());
+    }
+
+    /** \brief Transform an Extent object. */
+    ExtentD operator()(ExtentD const &p) const {         
+        EigenPoint tp = _matrix.linear() * EigenPoint(p.getX(), p.getY());
+        return ExtentD(tp.x(), tp.y());
     }
 
     TransformMatrix & matrix() {return _matrix;}
     TransformMatrix const & matrix() const {return _matrix;}
     
-    Eigen::Vector6d getVector() const;
+    ParameterVector getVector() const;
 
     double & operator[](int i) { return _matrix(i % 2, i / 2); }
     double const operator[](int i) const { return _matrix(i % 2, i / 2); }
@@ -79,7 +83,7 @@ public:
     }
 
 
-    AffineTransform const & operator =(Eigen::Vector6d const & vector);
+    AffineTransform const & operator =(ParameterVector const & vector);
     AffineTransform const & operator =(TransformMatrix const & matrix);
     AffineTransform const & operator =(AffineTransform const & transform);
 
@@ -91,7 +95,8 @@ public:
         return AffineTransform(TransformMatrix(Eigen::Rotation2D<double>(t)));
     }
 
-    Eigen::Matrix<double,2,6> d(PointD const & input) const;
+    TransformDerivativeMatrix dTransform(PointD const & input) const;
+    TransformDerivativeMatrix dTransform(ExtentD const & input) const;
 
 private:
 
