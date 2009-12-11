@@ -19,13 +19,13 @@ ellipses::BaseCore::Transformer::computeConversionJacobian() const {
     Quadrupole inputQuadrupole;
     BaseCore::Jacobian jacobian = inputQuadrupole.dAssign(_input);
     Quadrupole outputQuadrupole = transformQuadrupole(inputQuadrupole);
-    std::auto_ptr<BaseCore> tmp(_input.clone());
+    boost::shared_ptr<BaseCore> tmp(_input.clone());
     BaseCore::Jacobian jacobian_inv = tmp->dAssign(outputQuadrupole);
     return boost::make_tuple(inputQuadrupole,outputQuadrupole,jacobian,jacobian_inv);
 }
 
-std::auto_ptr<ellipses::BaseCore> ellipses::BaseCore::Transformer::copy() const {
-    std::auto_ptr<BaseCore> r(_input.clone());
+boost::shared_ptr<ellipses::BaseCore> ellipses::BaseCore::Transformer::copy() const {
+    boost::shared_ptr<BaseCore> r(_input.clone());
     *r = transformQuadrupole(_input);
     return r;
 }
@@ -78,8 +78,8 @@ ellipses::BaseCore::Transformer::dTransform() const {
     return  j_inv * r;
 }
 
-std::auto_ptr<ellipses::BaseEllipse> ellipses::BaseEllipse::Transformer::copy() const {
-    std::auto_ptr<BaseEllipse> r(_input.clone());
+boost::shared_ptr<ellipses::BaseEllipse> ellipses::BaseEllipse::Transformer::copy() const {
+    boost::shared_ptr<BaseEllipse> r(_input.clone());
     r->setCenter(_transform(r->getCenter()));
     r->getCore().transform(_transform).inPlace();
     return r;

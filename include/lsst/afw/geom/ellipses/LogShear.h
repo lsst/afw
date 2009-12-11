@@ -140,7 +140,7 @@ public:
         Super(core,center) {}
 
     /// \brief Construct from a pointer to a LogShear core.
-    explicit LogShearEllipse(std::auto_ptr<LogShear> core, PointD const & center = PointD()) : 
+    explicit LogShearEllipse(boost::shared_ptr<LogShear> core, PointD const & center = PointD()) : 
         Super(core.release(),center) {}
 
     /// \brief Construct from a 5-element parameter vector.

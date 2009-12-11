@@ -130,7 +130,7 @@ public:
         Super(core,center) {}
 
     /// \brief Construct from a pointer to a Distortion core.
-    explicit DistortionEllipse(std::auto_ptr<Distortion> core, PointD const & center = PointD()) : 
+    explicit DistortionEllipse(boost::shared_ptr<Distortion> core, PointD const & center = PointD()) : 
         Super(core.release(),center) {}
 
     /// \brief Construct from a 5-element parameter vector.

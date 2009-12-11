@@ -78,7 +78,7 @@ public:
     enum Parameters { X=0, Y=1 }; ///< Definitions for elements of an ellipse vector.
 
     /// \brief Deep copy the BaseEllipse.
-    std::auto_ptr<BaseEllipse> clone() const { return std::auto_ptr<BaseEllipse>(_clone()); }
+    boost::shared_ptr<BaseEllipse> clone() const { return boost::shared_ptr<BaseEllipse>(_clone()); }
 
     PointD const & getCenter() const { return _center; } ///< \brief Return the center point.
     PointD & getCenter() { return _center; }             ///< \brief Return the center point.
@@ -169,11 +169,11 @@ public:
     virtual char const * getName() const = 0;
 
     /// \brief Deep-copy the Core.
-    std::auto_ptr<BaseCore> clone() const { return std::auto_ptr<BaseCore>(_clone()); }
+    boost::shared_ptr<BaseCore> clone() const { return boost::shared_ptr<BaseCore>(_clone()); }
 
     /// \brief Construct an ellipse of the appropriate subclass from this and the given center.
-    std::auto_ptr<BaseEllipse> makeEllipse(PointD const & center = PointD()) const {
-        return std::auto_ptr<BaseEllipse>(_makeEllipse(center));
+    boost::shared_ptr<BaseEllipse> makeEllipse(PointD const & center = PointD()) const {
+        return boost::shared_ptr<BaseEllipse>(_makeEllipse(center));
     }
 
     double & operator[](int n) { return _vector[n]; } ///< \brief Access the nth core parameter.

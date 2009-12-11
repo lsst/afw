@@ -37,8 +37,8 @@ public:
     typedef DerivedCore Core;
 
     /// \brief Deep-copy the ellipse.
-    std::auto_ptr<DerivedEllipse> clone() const {
-        return std::auto_ptr<DerivedEllipse>(static_cast<DerivedEllipse*>(_clone())); 
+    boost::shared_ptr<DerivedEllipse> clone() const {
+        return boost::shared_ptr<DerivedEllipse>(static_cast<DerivedEllipse*>(_clone())); 
     }
 
     /// \brief Return the Core object.
@@ -103,13 +103,13 @@ public:
     typedef DerivedCore Core;
 
     /// \brief Deep copy the ellipse core.
-    std::auto_ptr<DerivedCore> clone() const {
-        return std::auto_ptr<DerivedCore>(static_cast<DerivedCore*>(_clone())); 
+    boost::shared_ptr<DerivedCore> clone() const {
+        return boost::shared_ptr<DerivedCore>(static_cast<DerivedCore*>(_clone())); 
     }
 
     /// \brief Construct an Ellipse of the appropriate subclass from this and the given center.
-    std::auto_ptr<DerivedEllipse> makeEllipse(PointD const & center = PointD()) const {
-        return std::auto_ptr<DerivedEllipse>(static_cast<DerivedEllipse*>(_makeEllipse(center).release()));
+    boost::shared_ptr<DerivedEllipse> makeEllipse(PointD const & center = PointD()) const {
+        return boost::shared_ptr<DerivedEllipse>(static_cast<DerivedEllipse*>(_makeEllipse(center).release()));
     }
 
     /// \brief Transform the ellipse core by the given AffineTransform.

@@ -14,7 +14,6 @@
 %copyctor lsst::afw::math::AffineTransform;
 %newobject lsst::afw::math::AffineTransform::makeRotation;
 %newobject lsst::afw::math::AffineTransform::makeScaling;
-%newobject lsst::afw::math::AffineTransform::clone;
 %newobject lsst::afw::math::AffineTransform::invert;
 
 %include "lsst/afw/math/AffineTransform.h"

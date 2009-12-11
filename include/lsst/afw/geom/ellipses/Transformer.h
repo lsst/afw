@@ -62,7 +62,7 @@ public:
         _input(input), _transform(transform) {}
 
     /// \brief Return a new transformed ellipse core.
-    std::auto_ptr<BaseCore> copy() const;
+    boost::shared_ptr<BaseCore> copy() const;
 
     /// \brief %Transform the ellipse core in-place.
     void inPlace() { _input = transformQuadrupole(_input); }
@@ -102,7 +102,7 @@ public:
         _input(input), _transform(transform) {}
 
     /// \brief Return a new transformed ellipse.
-    std::auto_ptr<BaseEllipse> copy() const;
+    boost::shared_ptr<BaseEllipse> copy() const;
 
     /// \brief %Transform the ellipse in-place.
     void inPlace();
@@ -130,8 +130,8 @@ public:
     Transformer(DerivedCore & input, AffineTransform const & transform) : Super(input,transform) {}
 
     /// \brief Return a new transformed ellipse core.
-    std::auto_ptr<DerivedCore> copy() const {
-        return std::auto_ptr<DerivedCore>(static_cast<DerivedCore*>(Super::copy().release()));
+    boost::shared_ptr<DerivedCore> copy() const {
+        return boost::shared_ptr<DerivedCore>(static_cast<DerivedCore*>(Super::copy().release()));
     }
 
     /// \brief Return a new transformed ellipse core.
@@ -155,14 +155,14 @@ public:
     Transformer(DerivedEllipse & input, AffineTransform const & transform) : Super(input,transform) {}
 
     /// \brief Return a new transformed ellipse.
-    std::auto_ptr<DerivedEllipse> copy() const {
-        return std::auto_ptr<DerivedEllipse>(static_cast<DerivedEllipse*>(Super::copy().release()));
+    boost::shared_ptr<DerivedEllipse> copy() const {
+        return boost::shared_ptr<DerivedEllipse>(static_cast<DerivedEllipse*>(Super::copy().release()));
     }
     
     /// \brief Return a new transformed ellipse.
     operator DerivedEllipse() const {
         DerivedEllipse const & derivedInput = static_cast<DerivedEllipse const &>(_input);
-        std::auto_ptr<DerivedCore> core(derivedInput.getCore().transform(_transform).copy());
+        boost::shared_ptr<DerivedCore> core(derivedInput.getCore().transform(_transform).copy());
         return DerivedEllipse(core,_transform(_input.getCenter()));
     }
 
