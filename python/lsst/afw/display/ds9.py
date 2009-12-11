@@ -4,8 +4,10 @@
 
 import os, re, math, sys, time
 
-try: import xpa
-except: print "Cannot import xpa"
+try:
+    import xpa
+except ImportError, e:
+    print >> sys.stderr, "Cannot import xpa: %s" % e
 
 import displayLib
 import lsst.afw.image as afwImage
