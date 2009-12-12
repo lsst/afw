@@ -194,6 +194,20 @@ private:
 /*************************************  The factory functions **********************************/
 
 /**
+ * @brief Handle a straigh front-end to the constructor
+ * @relates Statistics
+ */
+template<typename Pixel>
+Statistics makeStatistics(image::Image<Pixel> const &img,
+                          image::Mask<image::MaskPixel> const &msk, 
+                          int const flags,  
+                          StatisticsControl const& sctrl = StatisticsControl() 
+                         ) {
+    return Statistics(img, msk, flags, sctrl);
+}
+
+    
+/**
  * @brief Handle MaskedImages, just pass the getImage() and getMask() values right on through.
  * @relates Statistics
  */
