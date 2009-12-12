@@ -139,10 +139,6 @@ public:
     explicit LogShearEllipse(LogShear const & core, PointD const & center = PointD()) : 
         Super(core,center) {}
 
-    /// \brief Construct from a pointer to a LogShear core.
-    explicit LogShearEllipse(boost::shared_ptr<LogShear> core, PointD const & center = PointD()) : 
-        Super(core.release(),center) {}
-
     /// \brief Construct from a 5-element parameter vector.
     explicit LogShearEllipse(BaseEllipse::ParameterVector const & vector) : Super(vector) {}
 

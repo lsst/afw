@@ -109,7 +109,7 @@ public:
 
     /// \brief Construct an Ellipse of the appropriate subclass from this and the given center.
     boost::shared_ptr<DerivedEllipse> makeEllipse(PointD const & center = PointD()) const {
-        return boost::shared_ptr<DerivedEllipse>(static_cast<DerivedEllipse*>(_makeEllipse(center).release()));
+        return boost::shared_ptr<DerivedEllipse>(static_cast<DerivedEllipse*>(_makeEllipse(center)));
     }
 
     /// \brief Transform the ellipse core by the given AffineTransform.

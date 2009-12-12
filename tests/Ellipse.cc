@@ -39,71 +39,29 @@ inline bool approx(Core const & a, Core const & b, double tol=1E-8) {
 }
 
 void testQuadrupole(Quadrupole const & core, bool test_rf=true) {
-  Quadrupole copy(core);
-  BOOST_CHECK(approx(core,copy,0));
-  
-  Axes axes(core);
-  copy = axes;
-  BOOST_CHECK(approx(core,copy,1E-12));
-  copy.differentialAssign(axes);
-  BOOST_CHECK(approx(core,copy,1E-12));
+    Quadrupole copy(core);
+    BOOST_CHECK(approx(core,copy,0));
 
-  Distortion distortion(core);
-  copy = distortion;
-  BOOST_CHECK(approx(core,copy,1E-12));
-  copy.differentialAssign(distortion);
-  BOOST_CHECK(approx(core,copy,1E-12));
+    Axes axes(core);
+    copy = axes;
+    BOOST_CHECK(approx(core,copy,1E-12));
+    copy.dAssign(axes);
+    BOOST_CHECK(approx(core,copy,1E-12));
 
-  LogShear log_shear(core);
-  copy = log_shear;
-  BOOST_CHECK(approx(core,copy,1E-12));
-  copy.differentialAssign(log_shear);
-  BOOST_CHECK(approx(core,copy,1E-12));
+    Distortion distortion(core);
+    copy = distortion;
+    BOOST_CHECK(approx(core,copy,1E-12));
+    copy.dAssign(distortion);
+    BOOST_CHECK(approx(core,copy,1E-12));
 
-  RadialFraction rf(copy);
-
-  if (test_rf) {
-      BOOST_CHECK(approx(rf(image::PointD(-6.75,2.375)),std::pow(5.5669008088329193,2),1E-8));
-      BOOST_CHECK(approx(rf(image::PointD(3.25,-4.375)),std::pow(3.4198702929369733,2),1E-8));
-  }
-
-  image::PointD p(1.25,0.85);
-  Eigen::RowVector2d grad_analytic = rf.differentiateCoordinate(p);
-  Eigen::RowVector2d grad_numeric; 
-  double v0 = rf(image::PointD(p.getX()+eps,p.getY()));
-  v0 -= rf(image::PointD(p.getX()-eps, p.getY()));
-  v0 /= (2*eps);
-  double v1 = rf(image::PointD(p.getX(),p.getY()+eps));
-  v1 -= rf(image::PointD(p.getX(),p.getY()-eps));
-  v1 /= (2*eps);
-
-  grad_numeric << v0, v1;
-  BOOST_CHECK(grad_analytic.isApprox(grad_numeric,1E-4));
-
-  Eigen::RowVector3d jac_analytic = rf.differentiateCore(p);
-  Eigen::RowVector3d jac_numeric;
-  copy[Quadrupole::IXX] += eps; rf = RadialFraction(copy);
-  jac_numeric[0] = rf(p);
-  copy[Quadrupole::IXX] -= 2*eps; rf = RadialFraction(copy);
-  jac_numeric[0] -= rf(p);
-  copy[Quadrupole::IXX] += eps; rf = RadialFraction(copy);
-  jac_numeric[0] /= (2*eps);
-  copy[Quadrupole::IYY] += eps; rf = RadialFraction(copy);
-  jac_numeric[1] = rf(p);
-  copy[Quadrupole::IYY] -= 2*eps; rf = RadialFraction(copy);
-  jac_numeric[1] -= rf(p);
-  copy[Quadrupole::IYY] += eps; rf = RadialFraction(copy);
-  jac_numeric[1] /= (2*eps);
-  copy[Quadrupole::IXY] += eps; rf = RadialFraction(copy);
-  jac_numeric[2] = rf(p);
-  copy[Quadrupole::IXY] -= 2*eps; rf = RadialFraction(copy);
-  jac_numeric[2] -= rf(p);
-  copy[Quadrupole::IXY] += eps; rf = RadialFraction(copy);
-  jac_numeric[2] /= (2*eps);
-  BOOST_CHECK(jac_analytic.isApprox(jac_numeric,1E-4));
+    LogShear log_shear(core);
+    copy = log_shear;
+    BOOST_CHECK(approx(core,copy,1E-12));
+    copy.dAssign(log_shear);
+    BOOST_CHECK(approx(core,copy,1E-12));
 }
 
-BOOST_AUTO_TEST_CASE(run_test_Quadrupole) {
+BOOST_AUTO_TEST_CASE(QuadrupoleTest) {
     testQuadrupole(Quadrupole(1.5,2.0,-0.75));
     testQuadrupole(Quadrupole(200.0,200.0,0.0),false);
 }
@@ -115,19 +73,19 @@ void testAxes(Axes const & core) {
     Quadrupole quadrupole(core);
     copy = quadrupole;
     BOOST_CHECK(approx(core,copy,1E-12));
-    copy.differentialAssign(quadrupole);
+    copy.dAssign(quadrupole);
     BOOST_CHECK(approx(core,copy,1E-12));
   
     Distortion distortion(core);
     copy = distortion;
     BOOST_CHECK(approx(core,copy,1E-12));
-    copy.differentialAssign(distortion);
+    copy.dAssign(distortion);
     BOOST_CHECK(approx(core,copy,1E-12));
 
     LogShear log_shear(core);
     copy = log_shear;
     BOOST_CHECK(approx(core,copy,1E-12));
-    copy.differentialAssign(log_shear);
+    copy.dAssign(log_shear);
     BOOST_CHECK(approx(core,copy,1E-12));
 
 }
@@ -145,19 +103,19 @@ void testDistortion(Distortion const & core) {
     Quadrupole quadrupole(core);
     copy = quadrupole;
     BOOST_CHECK(approx(core,copy,1E-12));
-    copy.differentialAssign(quadrupole);
+    copy.dAssign(quadrupole);
     BOOST_CHECK(approx(core,copy,1E-12));
 
     Axes axes(core);
     copy = axes;
     BOOST_CHECK(approx(core,copy,1E-12));
-    copy.differentialAssign(axes);
+    copy.dAssign(axes);
     BOOST_CHECK(approx(core,copy,1E-12));
 
     LogShear log_shear(core);
     copy = log_shear;
     BOOST_CHECK(approx(core,copy,1E-12));
-    copy.differentialAssign(log_shear);
+    copy.dAssign(log_shear);
     BOOST_CHECK(approx(core,copy,1E-12));
 }
 
@@ -173,19 +131,19 @@ void testLogShear(LogShear const & core) {
     Quadrupole quadrupole(core);
     copy = quadrupole;
     BOOST_CHECK(approx(core,copy,1E-12));
-    copy.differentialAssign(quadrupole);
+    copy.dAssign(quadrupole);
     BOOST_CHECK(approx(core,copy,1E-12));
 
     Axes axes(core);
     copy = axes;
     BOOST_CHECK(approx(core,copy,1E-12));
-    copy.differentialAssign(axes);
+    copy.dAssign(axes);
     BOOST_CHECK(approx(core,copy,1E-12));
 
     Distortion distortion(core);
     copy = distortion;
     BOOST_CHECK(approx(core,copy,1E-12));
-    copy.differentialAssign(distortion);
+    copy.dAssign(distortion);
     BOOST_CHECK(approx(core,copy,1E-12));
 }
 
@@ -194,25 +152,17 @@ BOOST_AUTO_TEST_CASE(LogShearTest) {
     testLogShear(LogShear(0.0,0.0,1.0));
 }
 
-BOOST_AUTO_TEST_CASE(ParametricTest) {
-    Parametric p(QuadrupoleEllipse(Quadrupole(3,2,-0.65)));
-    lsst::afw::image::PointD tmp = p(1.45);
-    Eigen::Vector2d asEigen(tmp.getX(), tmp.getY());
-    BOOST_CHECK(asEigen.isApprox(Eigen::Vector2d(0.76537615289287353, 1.0573336496088439)));
-    tmp = p(-2.56);
-    asEigen= Eigen::Vector2d(tmp.getX(), tmp.getY());
-    BOOST_CHECK(asEigen.isApprox(Eigen::Vector2d(-1.6804596457433354, 0.03378847788858419)));
-}
-
 template <typename TCore1, typename TCore2>
 void testEllipseJacobian(TCore2 core2) {
   TCore1 core1;
-  Eigen::Matrix3d jac_analytic = core1.differentialAssign(core2);
-  Eigen::Matrix3d jac_analytic_inv = core2.differentialAssign(core1);
+  Eigen::Matrix3d jac_analytic = core1.dAssign(core2);
+  Eigen::Matrix3d jac_analytic_inv = core2.dAssign(core1);
   Eigen::Matrix3d jac_numeric_inv = jac_analytic.inverse();
   BOOST_CHECK_MESSAGE(
       jac_analytic_inv.isApprox(jac_numeric_inv,1E-4),
-      (boost::format("Jacobian inversion failure for %s -> %s") % core2.getName() % core1.getName()).str()
+      boost::str(
+          boost::format("Jacobian inversion failure for %s -> %s") % core2.getName() % core1.getName()
+      )
   );
   Eigen::Matrix3d jac_numeric;
   for (int i=0; i<3; ++i) {
@@ -263,29 +213,20 @@ BOOST_AUTO_TEST_CASE(EllipseJacobian) {
 }
 
 template <typename TCore>
-void testEllipseTransformDerivative(TCore core) {
-    Eigen::Vector2d r(Eigen::Vector2d::Random());
-    typename TCore::Ellipse input(core, image::PointD(r.x(), r.y()));
-    r = Eigen::Vector2d::Random();
-    math::AffineTransform transform(
-        Eigen::Matrix2d::Random(), 
-        image::PointD(r.x(), r.y())
-    );
-    typename TCore::Ellipse output = input;
-    output.transform(transform);
-    ellipses::Ellipse::TransformDerivative td(input,transform);
-    Eigen::Matrix<double,5,5> e_d_analytic = td.dInput();
+void testEllipseTransformer(TCore core) {
+    typename TCore::Ellipse input(core,PointD(Eigen::Vector2d::Random()));
+    AffineTransform transform(Eigen::Matrix2d::Random(),Eigen::Vector2d::Random());
+    typename TCore::Ellipse output = input.transform(transform);
+    Eigen::Matrix<double,5,5> e_d_analytic = input.transform(transform).d();
     Eigen::Matrix<double,5,5> e_d_numeric = Eigen::Matrix<double,5,5>::Zero();
     
     for (int i=0; i<5; ++i) {
         input[i] += eps;
-        output = input;
-        output.transform(transform);
+        output = input.transform(transform);
         for (int j=0; j<5; ++j)
             e_d_numeric(j,i) = output[j];
         input[i] -= 2*eps;
-        output = input;
-        output.transform(transform);
+        output = input.transform(transform);
         for (int j=0; j<5; ++j)
             e_d_numeric(j,i) -= output[j];
         input[i] += eps;
@@ -294,22 +235,20 @@ void testEllipseTransformDerivative(TCore core) {
     BOOST_CHECK_MESSAGE(
         e_d_analytic.isApprox(e_d_numeric,1E-4),
         boost::str(
-            boost::format("TransformDerivative::dInput failed for %s:\nAnalytic:\n%s\nNumeric:\n%s\n")
+            boost::format("Transformer::d failed for %s:\nAnalytic:\n%s\nNumeric:\n%s\n")
             % core.getName() % e_d_analytic % e_d_numeric
         )
     );
 
-    Eigen::Matrix<double,5,6> t_d_analytic = td.dTransform();
+    Eigen::Matrix<double,5,6> t_d_analytic = input.transform(transform).dTransform();
     Eigen::Matrix<double,5,6> t_d_numeric = Eigen::Matrix<double,5,6>::Zero();
     for (int i=0; i<6; ++i) {
         transform[i] += eps;
-        output = input;
-        output.transform(transform);
+        output = input.transform(transform);
         for (int j=0; j<5; ++j)
             t_d_numeric(j,i) = output[j];
         transform[i] -= 2*eps;
-        output = input;
-        output.transform(transform);
+        output = input.transform(transform);
         for (int j=0; j<5; ++j)
             t_d_numeric(j,i) -= output[j];
         transform[i] += eps;
@@ -319,16 +258,50 @@ void testEllipseTransformDerivative(TCore core) {
     BOOST_CHECK_MESSAGE(
         t_d_analytic.isApprox(t_d_numeric,1E-4),
         boost::str(
-            boost::format("TransformDerivative::dTransform failed for %s:\nAnalytic:\n%s\nNumeric:\n%s\n")
+            boost::format("Transformer::dTransform failed for %s:\nAnalytic:\n%s\nNumeric:\n%s\n")
             % core.getName() % t_d_analytic % t_d_numeric
         )
     );
 }
 
 BOOST_AUTO_TEST_CASE(EllipseTransformDerivative) {
-    testEllipseTransformDerivative<Quadrupole>(Quadrupole(3.0,2.0,0.89));
-    testEllipseTransformDerivative<Axes>(Axes(3.0,2.0,1.234));
-    testEllipseTransformDerivative<Distortion>(Distortion(std::complex<double>(0.5,0.65),2.5));
-    testEllipseTransformDerivative<LogShear>(LogShear(3.0,2.0,1.234));
+    testEllipseTransformer<Quadrupole>(Quadrupole(3.0,2.0,0.89));
+    testEllipseTransformer<Axes>(Axes(3.0,2.0,1.234));
+    testEllipseTransformer<Distortion>(Distortion(std::complex<double>(0.5,0.65),2.5));
+    testEllipseTransformer<LogShear>(LogShear(3.0,2.0,1.234));
 }
 
+template <typename TCore>
+void testRadialFraction(TCore const & input) {
+    std::auto_ptr<TCore> ptr(input.clone());
+    TCore & core = *ptr;
+    Core::RadialFraction rf(core);
+    PointD p = PointD::makeXY(1.25,0.85);
+    ExtentD epsX = ExtentD::makeXY(eps,0.0);
+    ExtentD epsY = ExtentD::makeXY(0.0,eps);
+    Eigen::RowVector2d grad_analytic = rf.d(p);
+    Eigen::RowVector2d grad_numeric;
+    grad_numeric << (rf(p+epsX) - rf(p-epsX)) / (2*eps), (rf(p+epsY) - rf(p-epsY)) / (2*eps);
+    BOOST_CHECK(grad_analytic.isApprox(grad_numeric,1E-4));
+    Eigen::RowVector3d jac_analytic = rf.dCore(p);
+    Eigen::RowVector3d jac_numeric;
+    for (int i = 0; i<3; ++i) {
+        core[i] += eps; rf = Core::RadialFraction(core);
+        jac_numeric[i] = rf(p);
+        core[i] -= 2*eps; rf = Core::RadialFraction(core);
+        jac_numeric[i] -= rf(p);
+        core[i] += eps; rf = Core::RadialFraction(core);
+        jac_numeric[i] /= (2*eps);
+    }
+    BOOST_CHECK(jac_analytic.isApprox(jac_numeric,1E-4));
+}
+
+BOOST_AUTO_TEST_CASE(RadialFractionTest) {
+    Core::RadialFraction rf(Quadrupole(1.5,2.0,-0.75));
+    BOOST_CHECK(approx(rf(PointD::makeXY(-6.75,2.375)),5.5669008088329193,1E-8));
+    BOOST_CHECK(approx(rf(PointD::makeXY(3.25,-4.375)),3.4198702929369733,1E-8));
+    test_RadialFraction(Quadrupole(3.0,2.0,0.89));
+    test_RadialFraction(Axes(3.0,2.0,1.234));
+    test_RadialFraction(Distortion(0.5,0.65,2.5));
+    test_RadialFraction(LogShear(3.0,2.0,1.234));
+}

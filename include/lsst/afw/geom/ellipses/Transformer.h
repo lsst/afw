@@ -131,7 +131,7 @@ public:
 
     /// \brief Return a new transformed ellipse core.
     boost::shared_ptr<DerivedCore> copy() const {
-        return boost::shared_ptr<DerivedCore>(static_cast<DerivedCore*>(Super::copy().release()));
+        return boost::static_pointer_cast<DerivedCore>(Super::copy());
     }
 
     /// \brief Return a new transformed ellipse core.
@@ -156,14 +156,14 @@ public:
 
     /// \brief Return a new transformed ellipse.
     boost::shared_ptr<DerivedEllipse> copy() const {
-        return boost::shared_ptr<DerivedEllipse>(static_cast<DerivedEllipse*>(Super::copy().release()));
+        return boost::static_pointer_cast<DerivedEllipse>(Super::copy());
     }
     
     /// \brief Return a new transformed ellipse.
     operator DerivedEllipse() const {
         DerivedEllipse const & derivedInput = static_cast<DerivedEllipse const &>(_input);
         boost::shared_ptr<DerivedCore> core(derivedInput.getCore().transform(_transform).copy());
-        return DerivedEllipse(core,_transform(_input.getCenter()));
+        return DerivedEllipse(*core,_transform(_input.getCenter()));
     }
 
 };

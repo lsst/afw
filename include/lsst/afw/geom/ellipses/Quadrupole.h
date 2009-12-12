@@ -113,10 +113,6 @@ public:
     explicit QuadrupoleEllipse(Quadrupole const & core, PointD const & center = PointD()) : 
         Super(core,center) {}
 
-    /// \brief Construct from a pointer to a Quadrupole core.
-    explicit QuadrupoleEllipse(boost::shared_ptr<Quadrupole> core, PointD const & center = PointD()) : 
-        Super(core.release(),center) {}
-
     /// \brief Construct from a 5-element parameter vector.
     explicit QuadrupoleEllipse(BaseEllipse::ParameterVector const & vector) : Super(vector) {}
 
