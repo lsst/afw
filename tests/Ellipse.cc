@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
+#include <Eigen/LU>
 
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE Ellipse 
@@ -9,20 +10,20 @@
 #include "boost/test/floating_point_comparison.hpp"
 #include "boost/format.hpp"
 
-#include "lsst/afw/math/ellipses.h"
+#include "lsst/afw/geom/ellipses.h"
 
 using namespace std;
-namespace math = lsst::afw::math;
-namespace image = lsst::afw::image;
-namespace ellipses = lsst::afw::math::ellipses;
+namespace geom = lsst::afw::geom;
+namespace ellipses = lsst::afw::geom::ellipses;
 
+typedef geom::PointD PointD;
+typedef geom::ExtentD ExtentD;
+typedef geom::AffineTransform AffineTransform;
 typedef ellipses::Quadrupole Quadrupole;
 typedef ellipses::LogShear LogShear;
 typedef ellipses::Axes Axes;
 typedef ellipses::Distortion Distortion;
-typedef ellipses::RadialFraction RadialFraction;
-typedef ellipses::Core Core;
-typedef ellipses::Parametric Parametric;
+typedef ellipses::BaseCore BaseCore;
 typedef ellipses::Quadrupole::Ellipse QuadrupoleEllipse;
 typedef ellipses::LogShear::Ellipse LogShearEllipse;
 typedef ellipses::Axes::Ellipse AxesEllipse;
@@ -34,7 +35,7 @@ inline bool approx(double a, double b, double tol=1E-8) {
     return std::fabs(a-b) <= tol;
 }
 
-inline bool approx(Core const & a, Core const & b, double tol=1E-8) {
+inline bool approx(BaseCore const & a, BaseCore const & b, double tol=1E-8) {
     return approx(a[0],b[0],tol) && approx(a[1],b[1],tol) && approx(a[2],b[2],tol);
 }
 
@@ -215,7 +216,10 @@ BOOST_AUTO_TEST_CASE(EllipseJacobian) {
 template <typename TCore>
 void testEllipseTransformer(TCore core) {
     typename TCore::Ellipse input(core,PointD(Eigen::Vector2d::Random()));
-    AffineTransform transform(Eigen::Matrix2d::Random(),Eigen::Vector2d::Random());
+    Eigen::Transform2d matrix(Eigen::Matrix3d::Random());
+    matrix(2,0) = matrix(2,1) = 0.0;
+    matrix(2,2) = 1.0;
+    AffineTransform transform(matrix);
     typename TCore::Ellipse output = input.transform(transform);
     Eigen::Matrix<double,5,5> e_d_analytic = input.transform(transform).d();
     Eigen::Matrix<double,5,5> e_d_numeric = Eigen::Matrix<double,5,5>::Zero();
@@ -273,9 +277,9 @@ BOOST_AUTO_TEST_CASE(EllipseTransformDerivative) {
 
 template <typename TCore>
 void testRadialFraction(TCore const & input) {
-    std::auto_ptr<TCore> ptr(input.clone());
+    typename TCore::Ptr ptr(input.clone());
     TCore & core = *ptr;
-    Core::RadialFraction rf(core);
+    BaseCore::RadialFraction rf(core);
     PointD p = PointD::makeXY(1.25,0.85);
     ExtentD epsX = ExtentD::makeXY(eps,0.0);
     ExtentD epsY = ExtentD::makeXY(0.0,eps);
@@ -286,22 +290,22 @@ void testRadialFraction(TCore const & input) {
     Eigen::RowVector3d jac_analytic = rf.dCore(p);
     Eigen::RowVector3d jac_numeric;
     for (int i = 0; i<3; ++i) {
-        core[i] += eps; rf = Core::RadialFraction(core);
+        core[i] += eps; rf = BaseCore::RadialFraction(core);
         jac_numeric[i] = rf(p);
-        core[i] -= 2*eps; rf = Core::RadialFraction(core);
+        core[i] -= 2*eps; rf = BaseCore::RadialFraction(core);
         jac_numeric[i] -= rf(p);
-        core[i] += eps; rf = Core::RadialFraction(core);
+        core[i] += eps; rf = BaseCore::RadialFraction(core);
         jac_numeric[i] /= (2*eps);
     }
     BOOST_CHECK(jac_analytic.isApprox(jac_numeric,1E-4));
 }
 
 BOOST_AUTO_TEST_CASE(RadialFractionTest) {
-    Core::RadialFraction rf(Quadrupole(1.5,2.0,-0.75));
+    BaseCore::RadialFraction rf(Quadrupole(1.5,2.0,-0.75));
     BOOST_CHECK(approx(rf(PointD::makeXY(-6.75,2.375)),5.5669008088329193,1E-8));
     BOOST_CHECK(approx(rf(PointD::makeXY(3.25,-4.375)),3.4198702929369733,1E-8));
-    test_RadialFraction(Quadrupole(3.0,2.0,0.89));
-    test_RadialFraction(Axes(3.0,2.0,1.234));
-    test_RadialFraction(Distortion(0.5,0.65,2.5));
-    test_RadialFraction(LogShear(3.0,2.0,1.234));
+    testRadialFraction(Quadrupole(3.0,2.0,0.89));
+    testRadialFraction(Axes(3.0,2.0,1.234));
+    testRadialFraction(Distortion(0.5,0.65,2.5));
+    testRadialFraction(LogShear(3.0,2.0,1.234));
 }

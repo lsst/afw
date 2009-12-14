@@ -8,8 +8,8 @@ namespace ellipses = lsst::afw::geom::ellipses;
 
 ellipses::Quadrupole
 ellipses::BaseCore::Transformer::transformQuadrupole(Quadrupole const & quadrupole) const {
-    Quadrupole::Matrix matrix = _transform.matrix.linear() * quadrupole.getMatrix() 
-        * _transform.matrix.linear().transpose();
+    Quadrupole::Matrix matrix = _transform.matrix().linear() * quadrupole.getMatrix() 
+        * _transform.matrix().linear().transpose();
     return Quadrupole(matrix(0,0), matrix(1,1), matrix(0,1));
 }
 
@@ -93,7 +93,7 @@ void ellipses::BaseEllipse::Transformer::inPlace() {
 ellipses::BaseEllipse::Transformer::DerivativeMatrix 
 ellipses::BaseEllipse::Transformer::d() const {
     DerivativeMatrix r = DerivativeMatrix::Zero();
-    r.block<2,2>(0,0) = _transform.matrix.linear();
+    r.block<2,2>(0,0) = _transform.matrix().linear();
     r.block<3,3>(2,2) = _input.getCore().transform(_transform).d();
     return r;
 }

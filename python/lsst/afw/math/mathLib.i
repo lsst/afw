@@ -54,7 +54,6 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 
 %lsst_exceptions();
 
-%include "affine_transform.i"
 %include "function.i"
 %include "kernel.i"
 %include "minimize.i"
@@ -64,4 +63,4 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 %include "warpExposure.i"
 %include "spatialCell.i"
 %include "random.i"
-%include "ellipse.i"
+

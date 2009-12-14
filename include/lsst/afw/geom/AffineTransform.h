@@ -1,3 +1,4 @@
+// -*- lsst-c++ -*-
 #ifndef LSST_AFW_MATH_AFFINE_TRANSFORM_H
 #define LSST_AFW_MATH_AFFINE_TRANSFORM_H
 
@@ -61,13 +62,13 @@ public:
     /** \brief Transform a Point object. */
     PointD operator()(PointD const &p) const {         
         EigenPoint tp = _matrix * EigenPoint(p.getX(), p.getY());
-        return PointD(tp.x(), tp.y());
+        return PointD(tp);
     }
 
     /** \brief Transform an Extent object. */
     ExtentD operator()(ExtentD const &p) const {         
         EigenPoint tp = _matrix.linear() * EigenPoint(p.getX(), p.getY());
-        return ExtentD(tp.x(), tp.y());
+        return ExtentD(tp);
     }
 
     TransformMatrix & matrix() {return _matrix;}

@@ -10,8 +10,6 @@
 
 namespace lsst { namespace afw { namespace geom {
 
-template <typename T, int N> class Point;
-
 /**
  *  \brief A coordinate class intended to represent offsets and dimensions.
  *
@@ -26,6 +24,7 @@ template <typename T, int N> class Point;
  */
 template<typename T, int N>
 class Extent : public CoordinateBase<Extent<T,N>,T,N> {
+    typedef CoordinateBase<Extent<T,N>,T,N> Super;
 public:
 
     /**
@@ -34,25 +33,20 @@ public:
      *  See the CoordinateBase constructors for more discussion.
      */
     //@{
-    explicit Extent(T val=static_cast<T>(0));
+    explicit Extent(T val=static_cast<T>(0)) : Super(val) {}
 
     template <typename Vector>
-    explicit Extent(Eigen::MatrixBase<Vector> const & vector);
+    explicit Extent(Eigen::MatrixBase<Vector> const & vector) : Super(vector) {}
     //@}
 
     /// \brief Explicit constructor from Point.
     explicit Extent(Point<T,N> const & other);
 
-    /**
-     *  \brief Return an Extent with each element the absolute value of the correspond element of this.
-     */
-    Extent makePositive() const;
-
     /// \brief Return the squared L2 norm of the Extent (x^2 + y^2 + ...)
-    T computeSquaredNorm() const;
+    T computeSquaredNorm() const { return this->asVector().squaredNorm(); }
 
     /// \brief Return the L2 norm of the Extent.
-    T computeNorm() const { return std::sqrt(computeSquaredNorm()); }
+    T computeNorm() const { return this->asVector().norm(); }
     
     /**
      *  @name General comparison operators
@@ -64,10 +58,10 @@ public:
      *  Note that these return CoordinateExpr, not bool.
      */
     //@{
-    CoordinateExpr operator<(Extent const & other) const;
-    CoordinateExpr operator<=(Extent const & other) const;
-    CoordinateExpr operator>(Extent const & other) const;
-    CoordinateExpr operator>=(Extent const & other) const;
+    CoordinateExpr<N> operator<(Extent const & other) const;
+    CoordinateExpr<N> operator<=(Extent const & other) const;
+    CoordinateExpr<N> operator>(Extent const & other) const;
+    CoordinateExpr<N> operator>=(Extent const & other) const;
     //@}
 
     /**
@@ -78,13 +72,13 @@ public:
      *  implies.
      */
     //@{
-    Point<T,N> operator+(Point<T,N> const & other) const; ///< Debatable whether this should exist.
-    Extent operator+(Extent const & other) const;
-    Extent operator-(Extent const & other) const;
-    Extent & operator+=(Extent const & other);
-    Extent & operator-=(Extent const & other);
-    Extent operator+() const;
-    Extent operator-() const;
+    Point<T,N> operator+(Point<T,N> const & other) const;
+    Extent operator+(Extent const & other) const { return Extent(this->_vector + other._vector); }
+    Extent operator-(Extent const & other) const { return Extent(this->_vector - other._vector); }
+    Extent & operator+=(Extent const & other) { this->_vector += other._vector; return *this; }
+    Extent & operator-=(Extent const & other) { this->_vector -= other._vector; return *this; }
+    Extent operator+() const { return *this; }
+    Extent operator-() const { return Extent(-this->_vector); }
     //@}
 
     /**
@@ -94,14 +88,21 @@ public:
      *  multiplication should be all that's really necessary for convenient scaling.
      */
     //@{
-    Extent operator*(T scalar) const;
-    Extent & operator*=(T scalar);
+    Extent operator*(T scalar) const { return Extent(this->_vector * scalar); }
+    Extent & operator*=(T scalar) { this->_vector *= scalar; return *this; }
     //@}
 
 };
 
+template <typename T, int N>
+inline Extent<T,N> abs(Extent<T,N> const & extent) {
+    return Extent<T,N>(extent.asVector().cwise().abs());
+}
+
+typedef Extent<int,2> ExtentI;
 typedef Extent<int,2> Extent2I;
 typedef Extent<int,3> Extent3I;
+typedef Extent<double,2> ExtentD;
 typedef Extent<double,2> Extent2D;
 typedef Extent<double,3> Extent3D;
 

@@ -3,7 +3,7 @@
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/pex/exceptions/Runtime.h"
 
-namespace math = lsst::afw::geom;
+namespace geom = lsst::afw::geom;
 
 /** 
  * @brief construct a vector from non-zero elements of the transform
@@ -12,7 +12,6 @@ namespace math = lsst::afw::geom;
  */
 geom::AffineTransform::ParameterVector geom::AffineTransform::getVector() const {
     ParameterVector r;
-
     r << _matrix(0,0),
          _matrix(1,0), 
          _matrix(0,1), 
@@ -37,7 +36,7 @@ geom::AffineTransform geom::AffineTransform::invert() const {
     }
     Eigen::Matrix2d inv = lu.inverse();
     EigenPoint p = -inv*_matrix.translation();
-    return AffineTransform(inv, lsst::afw::image::PointD(p.x(), p.y()));
+    return AffineTransform(inv, lsst::afw::geom::ExtentD(p));
 }
 
 /**
@@ -46,7 +45,7 @@ geom::AffineTransform geom::AffineTransform::invert() const {
 geom::AffineTransform::TransformDerivativeMatrix geom::AffineTransform::dTransform(
     PointD const & input
 ) const {
-    TransformDerivativeMatrix r = transformDerivativeMatrix::Zero();
+    TransformDerivativeMatrix r = TransformDerivativeMatrix::Zero();
     r(0,XX) = input.getX();
     r(0,XY) = input.getY();
     r(0,X) = 1.0;
@@ -62,7 +61,7 @@ geom::AffineTransform::TransformDerivativeMatrix geom::AffineTransform::dTransfo
 geom::AffineTransform::TransformDerivativeMatrix geom::AffineTransform::dTransform(
     ExtentD const & input
 ) const {
-    TransformDerivativeMatrix r = transformDerivativeMatrix::Zero();
+    TransformDerivativeMatrix r = TransformDerivativeMatrix::Zero();
     r(0,XX) = input.getX();
     r(0,XY) = input.getY();
     r(1,YX) = input.getX();

@@ -5,8 +5,6 @@
 #ifndef LSST_AFW_MATH_H
 #define LSST_AFW_MATH_H
 
-#include "lsst/afw/math/Coordinate.h"
-#include "lsst/afw/math/AffineTransform.h"
 #include "lsst/afw/math/Function.h"
 #include "lsst/afw/math/FunctionLibrary.h"
 #include "lsst/afw/math/Kernel.h"

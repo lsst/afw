@@ -13,20 +13,20 @@ ellipses::BaseCore::RadialFraction::RadialFraction(BaseCore const & core)
 
 ellipses::BaseCore::RadialFraction::DerivativeVector
 ellipses::BaseCore::RadialFraction::d(PointD const & p) const {
-    DerivativeVector v(_inv_matrix*p.getXY());
-    return v /= sqrt(p.getXY().dot(v));
+    DerivativeVector v(_inv_matrix*p.asVector());
+    return v /= sqrt(p.asVector().dot(v));
 }
 
 ellipses::BaseCore::RadialFraction::CoreDerivativeVector
 ellipses::BaseCore::RadialFraction::dCore(PointD const & p) const {
     CoreDerivativeVector vec;
-    Eigen::Vector2d tmp1 = _inv_matrix * p.getXY();
+    Eigen::Vector2d tmp1 = _inv_matrix * p.asVector();
     Quadrupole::Matrix tmp2;
     tmp2.part<Eigen::SelfAdjoint>() = (tmp1 * tmp1.adjoint()).lazy();
     vec[0] = -0.5*tmp2(0,0);
     vec[1] = -0.5*tmp2(1,1);
     vec[2] = -tmp2(1,0);
-    vec /= std::sqrt(p.getXY().dot(tmp1));
+    vec /= std::sqrt(p.asVector().dot(tmp1));
     return vec * _jacobian;
 }
 

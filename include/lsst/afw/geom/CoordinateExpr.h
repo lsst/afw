@@ -29,6 +29,7 @@ namespace lsst { namespace afw { namespace geom {
  */
 template<int N>
 class CoordinateExpr : public CoordinateBase<CoordinateExpr<N>,bool,N> {
+    typedef CoordinateBase<CoordinateExpr<N>,bool,N> Super;
 public:
 
     /**
@@ -37,21 +38,10 @@ public:
      *  See the CoordinateBase constructors for more discussion.
      */
     //@{
-    explicit CoordinateExpr(bool val=false);
+    explicit CoordinateExpr(bool val=false) : Super(val) {}
 
     template <typename Vector>
-    explicit CoordinateExpr(Eigen::MatrixBase<Vector> const & vector);
-    //@}
-
-    /**
-     *  @name Equality comparison
-     *
-     *  Unlike other boolean operators, I propose returning a scalar here; testing for equality
-     *  generally implies testing for complete equality, not element-wise equality.
-     */
-    //@{
-    bool operator==(const CoordinateExpr& rhs) const;
-    bool operator!=(const CoordinateExpr& rhs) const;
+    explicit CoordinateExpr(Eigen::MatrixBase<Vector> const & vector) : Super(vector) {}
     //@}
 
     /**
@@ -67,17 +57,21 @@ public:
     CoordinateExpr operator!() const;
     //@}
 
-    /**
-     *  @name Reductions
-     *
-     *  I propose these as free functions rather than member functions both to match the numpy interface
-     *  and because I find the syntax 'all(a > b)' much nicer than '(a > b).all()'.  Either one works,
-     *  of course.
-     */
-    friend inline bool all(CoordinateExpr const & expr);
-    friend inline bool any(CoordinateExpr const & expr);
-
 };
+
+/// \brief Return true if all elements are true.
+template <int N>
+inline bool all(CoordinateExpr<N> const & expr) {
+    for (register int n=0; n<N; ++n) if (expr[n]) return false;
+    return true;
+}
+
+/// \brief Return true if any elements are true.
+template <int N>
+inline bool any(CoordinateExpr<N> const & expr) {
+    for (register int n=0; n<N; ++n) if (expr[n]) return true;
+    return false;
+}
 
 }}}
 

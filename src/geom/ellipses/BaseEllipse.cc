@@ -17,13 +17,13 @@ ellipses::BaseEllipse::ParameterVector const ellipses::BaseEllipse::getVector() 
 }
 
 void ellipses::BaseEllipse::setVector(BaseEllipse::ParameterVector const & vector) {
-    _center.getXY() = vector.segment<2>(0);
+    _center = PointD(vector.segment<2>(0));
     _core->setVector(vector.segment<3>(2));
 }
 
 lsst::afw::geom::AffineTransform ellipses::BaseEllipse::getGenerator() const {
     AffineTransform r(_core->getGenerator());
-    r.matrix.translation() = _center.getXY();
+    r.matrix().translation() = _center.asVector();
     return r;
 }
 

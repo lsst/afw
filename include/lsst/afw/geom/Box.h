@@ -37,7 +37,7 @@ public:
      */
     Box(
         Point<T,N> const & min, ///< Minimum point.
-        Extent<T,N> const & dimensions, ///< Dimensions.  If negative, the box will be empty.
+        Extent<T,N> const & dimensions ///< Dimensions.  If negative, the box will be empty.
     );
 
     /**
@@ -164,10 +164,15 @@ public:
     /// \brief Shift the box by the given offset.
     void shift(Extent<T,N> const & offset);
 
+private:
+    Point<T,N> _minimum;
+    Extent<T,N> _dimensions;
 };
 
+typedef Box<int,2> BoxI;
 typedef Box<int,2> Box2I;
 typedef Box<int,3> Box3I;
+typedef Box<double,2> BoxD;
 typedef Box<double,2> Box2D;
 typedef Box<double,3> Box3D;
 

@@ -5,6 +5,7 @@ using namespace boost::gil;
 #include <iostream>
 #include <sstream>
 #include <ctime>
+#include <cstdio>
 
 template<class ImageT>
 void timePixelAccess(ImageT const &image, float const pix, int nIter) {

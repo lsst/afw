@@ -13,7 +13,6 @@
 #include <boost/scoped_ptr.hpp>
 #include <memory>
 
-#include "lsst/afw/geom/config.h"
 #include "lsst/afw/geom/Box.h"
 #include "lsst/afw/geom/AffineTransform.h"
 
@@ -221,6 +220,7 @@ public:
 
 protected:
 
+    friend class BaseEllipse;
     template <typename DerivedCore, typename DerivedEllipse> friend class detail::CoreImpl;
 
     virtual BaseCore * _clone() const = 0;
@@ -260,7 +260,7 @@ inline double & BaseEllipse::operator[](int i) { return (i<2) ? _center[i] : (*_
 inline double const BaseEllipse::operator[](int i) const { return (i<2) ? _center[i] : (*_core)[i-2]; }
 
 inline BaseEllipse::BaseEllipse(Core const & core, PointD const & center) : 
-    _center(center), _core(core.clone().release()) {}
+    _center(center), _core(core._clone()) {}
 
 inline BaseEllipse::BaseEllipse(Core * core, PointD const & center) :
     _center(center), _core(core) {}
