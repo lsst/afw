@@ -20,8 +20,10 @@
 #include "boost/tuple/tuple.hpp"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
+#include "lsst/afw/math/MaskedVector.h"
 
 namespace image = lsst::afw::image;
+namespace math = lsst::afw::math;
 
 namespace lsst {
 namespace afw {
@@ -323,7 +325,22 @@ Statistics makeStatistics(std::vector<EntryT> const &v, ///< Image (or MaskedIma
     MaskImposter<image::MaskPixel> msk;     // instantiate a fake mask that will be compiled out. 
     return Statistics(img, msk, flags, sctrl);
 }
-            
+
+
+/**
+ * @brief The makeStatistics() overload to handle math::MaskedVector<>
+ * @relates Statistics
+ */
+template<typename EntryT>
+Statistics makeStatistics(math::MaskedVector<EntryT> const &mv, ///< MaskedVector
+                          int const flags,   ///< Describe what we want to calculate
+                          StatisticsControl const& sctrl = StatisticsControl() ///< Control calculation
+                         ) {
+    return Statistics(*mv.getImage(), *mv.getMask(), flags, sctrl);
+}
+
+
+    
 }}}
 
 #endif

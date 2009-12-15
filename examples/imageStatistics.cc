@@ -6,12 +6,17 @@
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Statistics.h"
 
+#include "lsst/afw/math/MaskedVector.h"
+
+#include "boost/shared_ptr.hpp"
+
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
 
 typedef image::Image<float> ImageF;
 typedef image::MaskedImage<float> MaskedImageF;
 typedef math::Statistics ImgStat;
+typedef math::MaskedVector<float> MaskedVectorF;
 
 
 /**
@@ -29,9 +34,9 @@ void printStats(Image &img, math::StatisticsControl const &sctrl) {
     
     // initialize a Statistics object with any stats we might want
     ImgStat stats = math::makeStatistics(img, math::NPOINT | math::STDEV | math::MEAN | math::VARIANCE |
-                                           math::ERRORS | math::MIN | math::MAX | math::VARIANCECLIP |
-                                           math::MEANCLIP | math::MEDIAN | math::IQRANGE | math::STDEVCLIP,
-                                           sctrl);
+                                         math::ERRORS | math::MIN | math::MAX | math::VARIANCECLIP |
+                                         math::MEANCLIP | math::MEDIAN | math::IQRANGE | math::STDEVCLIP,
+                                         sctrl);
     
     // get various stats with getValue() and their errors with getError()
     double const npoint    = stats.getValue(math::NPOINT);
@@ -76,6 +81,7 @@ int main() {
     ImageF img(wid, wid);
     MaskedImageF mimg(wid, wid);
     std::vector<double> v(0);
+    MaskedVectorF mv(wid*wid);
     
     // fill it with some noise (Cauchy noise in this case)
     for (int j = 0; j != img.getHeight(); ++j) {
@@ -101,6 +107,14 @@ int main() {
         }
     }
 
+    int j = 0;
+    for (MaskedVectorF::iterator mvp = mv.begin(); mvp != mv.end(); ++mvp) {
+        *mvp = MaskedVectorF::Pixel(v[j], (j%2) ? 0x1 : 0x0, 10.0);
+        ++j;
+    }
+
+    boost::shared_ptr<std::vector<float> > vF = mv.getVector();
+    
     // make a statistics control object and override some of the default properties
     math::StatisticsControl sctrl;
     sctrl.setNumIter(3);
@@ -117,7 +131,11 @@ int main() {
     printStats(mimg, sctrl);
     std::cout << "std::vector" << std::endl;
     printStats(v, sctrl);
-
+    std::cout << "image::MaskedVector" << std::endl;
+    printStats(mv, sctrl);
+    std::cout << "image::MaskedVector::getVector()" << std::endl;
+    printStats(*vF, sctrl);
+    
     // Now try the specialization to get NPOINT and SUM (bitwise OR) for an image::Mask
     math::Statistics mskstat = makeStatistics(*mimg.getMask(), (math::NPOINT | math::SUM), sctrl);
     std::cout << "image::Mask" << std::endl;

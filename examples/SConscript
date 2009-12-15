@@ -48,6 +48,8 @@ env.Program("integrate_cartesian", ["integrate_cartesian.cc"], LIBS=env.getlibs(
 env.Program("integrate_polar", ["integrate_polar.cc"], LIBS=env.getlibs("afw"))
 env.Program("integrate_example", ["integrate_example.cc"], LIBS=env.getlibs("afw"))
 
+env.Program("simpleStacker", ["simpleStacker.cc"], LIBS=env.getlibs("afw"))
+
 #
 # Build all ticket test files
 #
