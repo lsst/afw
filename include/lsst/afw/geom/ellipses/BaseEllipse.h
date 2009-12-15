@@ -13,7 +13,6 @@
 #include <boost/scoped_ptr.hpp>
 #include <memory>
 
-#include "lsst/afw/geom/Box.h"
 #include "lsst/afw/geom/AffineTransform.h"
 
 namespace lsst {
@@ -66,7 +65,7 @@ public:
     typedef boost::shared_ptr<BaseEllipse> Ptr;
     typedef boost::shared_ptr<BaseEllipse const> ConstPtr;
 
-    typedef BoxD Envelope; ///< Bounding box type.
+    typedef std::pair<PointD,ExtentD> Envelope; ///< Bounding box type.
     typedef Eigen::Matrix<double,5,1> ParameterVector; ///< Parameter vector type.
 
     typedef BaseEllipse Ellipse;

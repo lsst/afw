@@ -7,7 +7,6 @@
 #define BOOST_TEST_MODULE Ellipse 
 
 #include "boost/test/unit_test.hpp"
-#include "boost/test/floating_point_comparison.hpp"
 #include "boost/format.hpp"
 
 #include "lsst/afw/geom/ellipses.h"

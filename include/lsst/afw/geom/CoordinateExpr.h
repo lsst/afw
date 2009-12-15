@@ -22,8 +22,8 @@ namespace lsst { namespace afw { namespace geom {
  *  \endcode
  *  
  *  CoordinateExpr is not a true lazy-evaluation expression template, as that seems unnecessary when
- *  the object is only two bools large (smaller than the raw pointers necessary to implement a lazy
- *  solution).  The consequence is that there's no short-circuiting of logical operators, but I don't
+ *  the object is typically  only two bools large (smaller than the raw pointers necessary to implement
+ *  a lazy solution).  The consequence is that there's no short-circuiting of logical operators, but I don't
  *  think that will even remotely matter for most use cases.  The any() and all() functions do support
  *  short-circuiting.
  */
@@ -47,9 +47,7 @@ public:
     /**
      *  @name Logical operators
      *
-     *  Interopability with scalars for these operators, if desired, should probably be provided by a
-     *  non-explicit constructor from scalar, since that's really what operator interopability
-     *  implies.
+     *  These operators do not provide interoperability with scalars.
      */
     //@{
     CoordinateExpr operator&&(CoordinateExpr const & rhs) const;

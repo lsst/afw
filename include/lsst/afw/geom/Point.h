@@ -35,7 +35,7 @@ public:
     //@}
 
     /// \brief Explicit constructor from Extent.
-    explicit Point(Extent<T,N> const & other) : Super(other.asVector()) {}
+    explicit Point(Extent<T,N> const & other) : Super(other.asVector()) {}          
 
     /**
      *  \brief Explicit converting constructor.
@@ -45,30 +45,45 @@ public:
      *  it lies on (assuming the floating point origin is the center of the first pixel).
      */
     template <typename U>
-    explicit Point(Point<U,N> const & other) : Super(other.asVector().template cast<T>()) {}
+    explicit Point(Point<U,N> const & other);
 
     /**
-     *  @name General comparison operators
-     *
-     *  Interopability with scalars for these operators, if desired, should probably be provided by a
-     *  non-explicit constructor from scalar, since that's really what operator interopability
-     *  implies.
+     *  @name Comparison operators
      *
      *  Note that these return CoordinateExpr, not bool.
+     *
+     *  Unlike most arithmetic and assignment operators, scalar interoperability is provided
+     *  for comparison operators; expressions like 
+     *  \code
+     *    if (all(extent >= 0)) ...
+     *  \endcode
+     *  are both ubiquitous and easy to interpret.
      */
     //@{
+    CoordinateExpr<N> operator==(Point const & other) const;
+    CoordinateExpr<N> operator!=(Point const & other) const;
     CoordinateExpr<N> operator<(Point const & other) const;
     CoordinateExpr<N> operator<=(Point const & other) const;
     CoordinateExpr<N> operator>(Point const & other) const;
     CoordinateExpr<N> operator>=(Point const & other) const;
+    CoordinateExpr<N> operator==(T scalar) const { return *this == Point(scalar); }
+    CoordinateExpr<N> operator!=(T scalar) const { return *this != Point(scalar); }
+    CoordinateExpr<N> operator<(T scalar) const { return *this < Point(scalar); }
+    CoordinateExpr<N> operator<=(T scalar) const { return *this <= Point(scalar); }
+    CoordinateExpr<N> operator>(T scalar) const { return *this > Point(scalar); }
+    CoordinateExpr<N> operator>=(T scalar) const { return *this >= Point(scalar); }
+    friend CoordinateExpr<N> operator==(T scalar, Point const & other) { Point(scalar) == other; }
+    friend CoordinateExpr<N> operator!=(T scalar, Point const & other) { Point(scalar) != other; }
+    friend CoordinateExpr<N> operator<(T scalar, Point const & other) { Point(scalar) < other; }
+    friend CoordinateExpr<N> operator<=(T scalar, Point const & other) { Point(scalar) <= other; }
+    friend CoordinateExpr<N> operator>(T scalar, Point const & other) { Point(scalar) > other; }
+    friend CoordinateExpr<N> operator>=(T scalar, Point const & other) { Point(scalar) >= other; }
     //@}
 
     /**
      *  @name Arithmetic operators
      *
-     *  Interopability with scalars for these operators, if desired, should probably be provided by a
-     *  non-explicit constructor from scalar, since that's really what operator interopability
-     *  implies.
+     *  No scalar interoperability is provided for Point arithmetic operations.
      */
     //@{
     Extent<T,N> operator-(Point const & other) const { return Extent<T,N>(this->_vector - other._vector); }

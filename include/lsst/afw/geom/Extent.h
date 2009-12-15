@@ -17,7 +17,7 @@ namespace lsst { namespace afw { namespace geom {
  *
  *  Unlike Point, Extent does not have a type-converting constructor, because the rounding semantics
  *  are not as clear.  In most cases, conversions between integer and floating point dimensions are
- *  best handled by Box objects, where the rounding semantics are more clear.
+ *  best handled by Box objects, where the rounding semantics make more sense.
  *
  *  Extent does not have specialized [get/set]Width() and [get/set]Height() accessors, as this would
  *  require lots of partial specialization and break the symmetry with the other coordinate classes.
@@ -42,34 +42,49 @@ public:
     /// \brief Explicit constructor from Point.
     explicit Extent(Point<T,N> const & other);
 
-    /// \brief Return the squared L2 norm of the Extent (x^2 + y^2 + ...)
+    /// \brief Return the squared L2 norm of the Extent (x^2 + y^2 + ...).
     T computeSquaredNorm() const { return this->asVector().squaredNorm(); }
 
-    /// \brief Return the L2 norm of the Extent.
+    /// \brief Return the L2 norm of the Extent (sqrt(x^2 + y^2 + ...)).
     T computeNorm() const { return this->asVector().norm(); }
-    
+
     /**
-     *  @name General comparison operators
-     *
-     *  Interopability with scalars for these operators, if desired, should probably be provided by a
-     *  non-explicit constructor from scalar, since that's really what operator interopability
-     *  implies.
+     *  @name Comparison operators
      *
      *  Note that these return CoordinateExpr, not bool.
+     *
+     *  Unlike most arithmetic and assignment operators, scalar interoperability is provided
+     *  for comparison operators; expressions like 
+     *  \code
+     *    if (all(extent >= 0)) ...
+     *  \endcode
+     *  are both ubiquitous and easy to interpret.
      */
     //@{
+    CoordinateExpr<N> operator==(Extent const & other) const;
+    CoordinateExpr<N> operator!=(Extent const & other) const;
     CoordinateExpr<N> operator<(Extent const & other) const;
     CoordinateExpr<N> operator<=(Extent const & other) const;
     CoordinateExpr<N> operator>(Extent const & other) const;
     CoordinateExpr<N> operator>=(Extent const & other) const;
+    CoordinateExpr<N> operator==(T scalar) const { return *this == Extent(scalar); }
+    CoordinateExpr<N> operator!=(T scalar) const { return *this != Extent(scalar); }
+    CoordinateExpr<N> operator<(T scalar) const { return *this < Extent(scalar); }
+    CoordinateExpr<N> operator<=(T scalar) const { return *this <= Extent(scalar); }
+    CoordinateExpr<N> operator>(T scalar) const { return *this > Extent(scalar); }
+    CoordinateExpr<N> operator>=(T scalar) const { return *this >= Extent(scalar); }
+    friend CoordinateExpr<N> operator==(T scalar, Extent const & other) { Extent(scalar) == other; }
+    friend CoordinateExpr<N> operator!=(T scalar, Extent const & other) { Extent(scalar) != other; }
+    friend CoordinateExpr<N> operator<(T scalar, Extent const & other) { Extent(scalar) < other; }
+    friend CoordinateExpr<N> operator<=(T scalar, Extent const & other) { Extent(scalar) <= other; }
+    friend CoordinateExpr<N> operator>(T scalar, Extent const & other) { Extent(scalar) > other; }
+    friend CoordinateExpr<N> operator>=(T scalar, Extent const & other) { Extent(scalar) >= other; }
     //@}
 
     /**
-     *  @name Arithmetic operators
+     *  @name Additive arithmetic operators
      *
-     *  Interopability with scalars for these operators, if desired, should probably be provided by a
-     *  non-explicit constructor from scalar, since that's really what operator interopability
-     *  implies.
+     *  No scalar interoperability is provided for Extent additive arithmetic operations.
      */
     //@{
     Point<T,N> operator+(Point<T,N> const & other) const;
@@ -82,22 +97,18 @@ public:
     //@}
 
     /**
-     *  @name Multiplicative operators
+     *  @name Multiplicative arithmetic operators
      *
-     *  I've currently left out the division operators; integer division bothers me in this context, and
-     *  multiplication should be all that's really necessary for convenient scaling.
+     *  As usual with matrices and vectors, Extent can be multiplied or divided by a scalar.
      */
     //@{
     Extent operator*(T scalar) const { return Extent(this->_vector * scalar); }
     Extent & operator*=(T scalar) { this->_vector *= scalar; return *this; }
+    Extent operator/(T scalar) const { return Extent(this->_vector / scalar); }
+    Extent & operator/=(T scalar) { this->_vector /= scalar; return *this; }
     //@}
 
 };
-
-template <typename T, int N>
-inline Extent<T,N> abs(Extent<T,N> const & extent) {
-    return Extent<T,N>(extent.asVector().cwise().abs());
-}
 
 typedef Extent<int,2> ExtentI;
 typedef Extent<int,2> Extent2I;
