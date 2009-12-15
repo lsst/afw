@@ -130,9 +130,10 @@ public:
     /// The type used to report (value, error) for desired statistics
     typedef std::pair<double, double> Value;
     
-    template<typename Image, typename Mask>
-    explicit Statistics(Image const &img,
-                        Mask const &msk,
+    template<typename ImageT, typename MaskT, typename VarianceT>
+    explicit Statistics(ImageT const &img,
+                        MaskT const &msk,
+                        VarianceT const &var,
                         int const flags,
                         StatisticsControl const& sctrl = StatisticsControl());
 
@@ -162,24 +163,25 @@ private:
 
     StatisticsControl _sctrl;           // the control structure
 
-    template<typename IsFinite, typename Image, typename Mask>
-    boost::shared_ptr<std::vector<typename Image::Pixel> >  _makeVectorCopy(Image const &img,
-                                                                            Mask const &msk,
-                                                                            int const flags);
+    template<typename IsFinite, typename ImageT, typename MaskT, typename VarianceT>
+    boost::shared_ptr<std::vector<typename ImageT::Pixel> >  _makeVectorCopy(ImageT const &img,
+                                                                             MaskT const &msk,
+                                                                             VarianceT const &var,
+                                                                             int const flags);
         
     template<typename IsFinite,
              typename HasValueLtMin,
              typename HasValueGtMax,
              typename InClipRange,
-             typename Image, typename Mask>
-    SumReturn _sumImage(Image const &img, Mask const &msk, int const flags,
+             typename ImageT, typename MaskT, typename VarianceT>
+    SumReturn _sumImage(ImageT const &img, MaskT const &msk, VarianceT const &var, int const flags,
                         int const nCrude, int const stride = 1, double const meanCrude = 0,
                         double const cliplimit = std::numeric_limits<double>::quiet_NaN());
     
-    template<typename Image, typename Mask>
-    StandardReturn _getStandard(Image const &img, Mask const &msk, int const flags);
-    template<typename Image, typename Mask>
-    StandardReturn _getStandard(Image const &img, Mask const &msk,
+    template<typename ImageT, typename MaskT, typename VarianceT>
+    StandardReturn _getStandard(ImageT const &img, MaskT const &msk, VarianceT const &var, int const flags);
+    template<typename ImageT, typename MaskT, typename VarianceT>
+    StandardReturn _getStandard(ImageT const &img, MaskT const &msk, VarianceT const &var,
                                 int const flags, std::pair<double, double> clipinfo);
 
     template<typename Pixel>
@@ -194,43 +196,6 @@ private:
 
             
 /*************************************  The factory functions **********************************/
-
-/**
- * @brief Handle a straigh front-end to the constructor
- * @relates Statistics
- */
-template<typename Pixel>
-Statistics makeStatistics(image::Image<Pixel> const &img,
-                          image::Mask<image::MaskPixel> const &msk, 
-                          int const flags,  
-                          StatisticsControl const& sctrl = StatisticsControl() 
-                         ) {
-    return Statistics(img, msk, flags, sctrl);
-}
-
-    
-/**
- * @brief Handle MaskedImages, just pass the getImage() and getMask() values right on through.
- * @relates Statistics
- */
-template<typename Pixel>
-Statistics makeStatistics(image::MaskedImage<Pixel, image::MaskPixel, image::VariancePixel> const &mimg, 
-                          int const flags,  
-                          StatisticsControl const& sctrl = StatisticsControl() 
-                         ) {
-    return Statistics(*mimg.getImage(), *mimg.getMask(), flags, sctrl);
-}
-
-/**
- * @brief Front end for specialization to handle Masks
- * @note The definition (in Statistics.cc) simply calls the specialized constructor
- * @relates Statistics
- */            
-Statistics makeStatistics(image::Mask<image::MaskPixel> const &msk, 
-                          int const flags,  
-                          StatisticsControl const& sctrl = StatisticsControl());
-            
-
 /**
  * @brief This iterator will never increment.  It is returned by row_begin() in the MaskImposter class
  *        (below) to allow phony mask pixels to be iterated over for non-mask images within Statistics.
@@ -250,8 +215,6 @@ private:
     friend class boost::iterator_core_access;
     void increment() { ; }              // never actually advance the iterator
 };
-
-            
 /**
  * @brief A Mask wrapper to provide an infinite_iterator for Mask::row_begin().  This allows a fake
  *        Mask to be passed in to Statistics with a regular (non-masked) Image.
@@ -265,7 +228,46 @@ public:
 private:
     ValueT _val[1];
 };
+
+    
+/**
+ * @brief Handle a straigh front-end to the constructor
+ * @relates Statistics
+ */
+template<typename Pixel>
+Statistics makeStatistics(image::Image<Pixel> const &img,
+                          image::Mask<image::MaskPixel> const &msk, 
+                          int const flags,  
+                          StatisticsControl const& sctrl = StatisticsControl() 
+                         ) {
+    MaskImposter<image::VariancePixel> var;
+    return Statistics(img, msk, var, flags, sctrl);
+}
+
+    
+/**
+ * @brief Handle MaskedImages, just pass the getImage() and getMask() values right on through.
+ * @relates Statistics
+ */
+template<typename Pixel>
+Statistics makeStatistics(image::MaskedImage<Pixel, image::MaskPixel, image::VariancePixel> const &mimg, 
+                          int const flags,  
+                          StatisticsControl const& sctrl = StatisticsControl() 
+                         ) {
+    MaskImposter<image::VariancePixel> var;
+    return Statistics(*mimg.getImage(), *mimg.getMask(), var, flags, sctrl);
+}
+
+/**
+ * @brief Front end for specialization to handle Masks
+ * @note The definition (in Statistics.cc) simply calls the specialized constructor
+ * @relates Statistics
+ */            
+Statistics makeStatistics(image::Mask<image::MaskPixel> const &msk, 
+                          int const flags,  
+                          StatisticsControl const& sctrl = StatisticsControl());
             
+                        
             
 /**
  * @brief The makeStatistics() overload to handle regular (non-masked) Images
@@ -278,7 +280,8 @@ Statistics makeStatistics(image::Image<Pixel> const &img, ///< Image (or Image) 
                          ) {
     // make a phony mask that will be compiled out
     MaskImposter<image::MaskPixel> msk;
-    return Statistics(img, msk, flags, sctrl);
+    MaskImposter<image::VariancePixel> var;
+    return Statistics(img, msk, var, flags, sctrl);
 }
 
 
@@ -322,8 +325,9 @@ Statistics makeStatistics(std::vector<EntryT> const &v, ///< Image (or MaskedIma
                          ) {
     
     ImageImposter<EntryT> img(v);           // wrap the vector in a fake image
-    MaskImposter<image::MaskPixel> msk;     // instantiate a fake mask that will be compiled out. 
-    return Statistics(img, msk, flags, sctrl);
+    MaskImposter<image::MaskPixel> msk;     // instantiate a fake mask that will be compiled out.
+    MaskImposter<image::VariancePixel> var;
+    return Statistics(img, msk, var, flags, sctrl);
 }
 
 
@@ -336,7 +340,8 @@ Statistics makeStatistics(math::MaskedVector<EntryT> const &mv, ///< MaskedVecto
                           int const flags,   ///< Describe what we want to calculate
                           StatisticsControl const& sctrl = StatisticsControl() ///< Control calculation
                          ) {
-    return Statistics(*mv.getImage(), *mv.getMask(), flags, sctrl);
+    MaskImposter<image::VariancePixel> var;
+    return Statistics(*mv.getImage(), *mv.getMask(), var, flags, sctrl);
 }
 
 

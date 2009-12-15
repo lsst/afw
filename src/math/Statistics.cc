@@ -130,15 +130,16 @@ typedef AlwaysFalse     AlwaysF;
  * Because it loops over the pixels, it's been templated over the NaN test to avoid
  * code repetition of the loops.
  */
-template<typename IsFinite, typename Image, typename Mask>
-boost::shared_ptr<std::vector<typename Image::Pixel> > math::Statistics::_makeVectorCopy(Image const &img,
-                                                                                         Mask const &msk,
+template<typename IsFinite, typename ImageT, typename MaskT, typename VarianceT>
+boost::shared_ptr<std::vector<typename ImageT::Pixel> > math::Statistics::_makeVectorCopy(ImageT const &img,
+                                                                                         MaskT const &msk,
+                                                                                         VarianceT const &var,
                                                                                          int const flags) {
 
-    boost::shared_ptr<std::vector<typename Image::Pixel> > imgcp(new std::vector<typename Image::Pixel>(0));
+    boost::shared_ptr<std::vector<typename ImageT::Pixel> > imgcp(new std::vector<typename ImageT::Pixel>(0));
     for (int i_y = 0; i_y < img.getHeight(); ++i_y) {
-        typename Mask::x_iterator mptr = msk.row_begin(i_y);
-        for (typename Image::x_iterator ptr = img.row_begin(i_y); ptr != img.row_end(i_y); ++ptr) {
+        typename MaskT::x_iterator mptr = msk.row_begin(i_y);
+        for (typename ImageT::x_iterator ptr = img.row_begin(i_y); ptr != img.row_end(i_y); ++ptr) {
             if ( IsFinite()(*ptr) && !(*mptr & _sctrl.getAndMask()) ) {
                 imgcp->push_back(*ptr);
             }
@@ -156,9 +157,10 @@ boost::shared_ptr<std::vector<typename Image::Pixel> > math::Statistics::_makeVe
  * are retrieved using \c getValue etc.
  *
  */
-template<typename Image, typename Mask>
-math::Statistics::Statistics(Image const &img, ///< Image whose properties we want
-                             Mask const &msk,   ///< Mask to control which pixels are included
+template<typename ImageT, typename MaskT, typename VarianceT>
+math::Statistics::Statistics(ImageT const &img, ///< Image whose properties we want
+                             MaskT const &msk,   ///< Mask to control which pixels are included
+                             VarianceT const &var, ///< Variances corresponding to values in Image
                              int const flags, ///< Describe what we want to calculate
                              StatisticsControl const& sctrl ///< Control how things are calculated
                             ) :
@@ -176,7 +178,7 @@ math::Statistics::Statistics(Image const &img, ///< Image whose properties we wa
     assert(img.getWidth()*static_cast<double>(img.getHeight()) < std::numeric_limits<int>::max());
 
     // get the standard statistics
-    StandardReturn standard = _getStandard(img, msk, flags);
+    StandardReturn standard = _getStandard(img, msk, var, flags);
 
     _mean = standard.get<0>();
     _variance = standard.get<1>();
@@ -191,11 +193,11 @@ math::Statistics::Statistics(Image const &img, ///< Image whose properties we wa
     if (flags & (MEDIAN | IQRANGE | MEANCLIP | STDEVCLIP | VARIANCECLIP)) {
 
         // make a vector copy of the image to get the median and quartiles (will move values)
-        boost::shared_ptr<std::vector<typename Image::Pixel> > imgcp;
+        boost::shared_ptr<std::vector<typename ImageT::Pixel> > imgcp;
         if (_sctrl.getNanSafe()) {
-            imgcp = _makeVectorCopy<ChkFin>(img, msk, flags);
+            imgcp = _makeVectorCopy<ChkFin>(img, msk, var, flags);
         } else {
-            imgcp = _makeVectorCopy<AlwaysT>(img, msk, flags);
+            imgcp = _makeVectorCopy<AlwaysT>(img, msk, var, flags);
         }
 
         if (flags & (MEDIAN | MEANCLIP | STDEVCLIP | VARIANCECLIP)) {
@@ -215,7 +217,7 @@ math::Statistics::Statistics(Image const &img, ///< Image whose properties we wa
                 std::pair<double, double> const clipinfo(center, hwidth);
                 
                 // returns a tuple but we'll ignore clipped min, max, and sum;
-                StandardReturn clipped = _getStandard(img, msk, flags, clipinfo);
+                StandardReturn clipped = _getStandard(img, msk, var, flags, clipinfo);
                 
                 _meanclip = clipped.get<0>();
                 _varianceclip = clipped.get<1>();
@@ -239,9 +241,10 @@ template<typename IsFinite,
          typename HasValueLtMin,
          typename HasValueGtMax,
          typename InClipRange,
-         typename Image, typename Mask>
-math::Statistics::SumReturn math::Statistics::_sumImage(Image const &img,
-                                                        Mask const &msk,
+         typename ImageT, typename MaskT, typename VarianceT>
+math::Statistics::SumReturn math::Statistics::_sumImage(ImageT const &img,
+                                                        MaskT const &msk,
+                                                        VarianceT const &var,
                                                         int const flags,
                                                         int const nCrude,
                                                         int const stride,
@@ -255,8 +258,8 @@ math::Statistics::SumReturn math::Statistics::_sumImage(Image const &img,
 
     for (int iY = 0; iY < img.getHeight(); iY += stride) {
         
-        typename Mask::x_iterator mptr = msk.row_begin(iY);
-        for (typename Image::x_iterator ptr = img.row_begin(iY), end = ptr + img.getWidth();
+        typename MaskT::x_iterator mptr = msk.row_begin(iY);
+        for (typename ImageT::x_iterator ptr = img.row_begin(iY), end = ptr + img.getWidth();
              ptr != end; ++ptr, ++mptr) {
             
             if ( IsFinite()(*ptr) &&
@@ -291,10 +294,11 @@ math::Statistics::SumReturn math::Statistics::_sumImage(Image const &img,
  *
  * @note An overloaded version below is used to get clipped versions
  */
-template<typename Image, typename Mask>
-math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img,
-                                                                 Mask const &msk,   
-                                                                 int const flags) {
+template<typename ImageT, typename MaskT, typename VarianceT>
+math::Statistics::StandardReturn math::Statistics::_getStandard(ImageT const &img,
+                                                                MaskT const &msk,
+                                                                VarianceT const &var,
+                                                                int const flags) {
 
 
     // =====================================================
@@ -313,10 +317,10 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
         strideCrude = 10;
     }
     if (_sctrl.getNanSafe()) {
-        loopValues = _sumImage<ChkFin, AlwaysF, AlwaysF, AlwaysT>(img, msk, flags,
+        loopValues = _sumImage<ChkFin, AlwaysF, AlwaysF, AlwaysT>(img, msk, var, flags,
                                                                   nCrude, strideCrude, meanCrude);
     } else {
-        loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, AlwaysT>(img, msk, flags,
+        loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, AlwaysT>(img, msk, var, flags,
                                                                    nCrude, strideCrude, meanCrude);
     }
     nCrude = loopValues.get<0>();
@@ -333,13 +337,13 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
     
     // If we want max or min (you get both)
     if (flags & (MIN | MAX)){
-        loopValues = _sumImage<ChkFin, ChkMin, ChkMax, AlwaysT>(img, msk, flags, nCrude, 1, meanCrude);
+        loopValues = _sumImage<ChkFin, ChkMin, ChkMax, AlwaysT>(img, msk, var, flags, nCrude, 1, meanCrude);
     // fast loop ... just the mean & variance
     } else {
         if (_sctrl.getNanSafe()) {
-            loopValues = _sumImage<ChkFin, AlwaysF, AlwaysF, AlwaysT>(img, msk, flags, nCrude, 1, meanCrude);
+            loopValues = _sumImage<ChkFin, AlwaysF, AlwaysF, AlwaysT>(img, msk, var, flags, nCrude, 1, meanCrude);
         } else {
-            loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, AlwaysT>(img, msk, flags, nCrude, 1, meanCrude);
+            loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, AlwaysT>(img, msk, var, flags, nCrude, 1, meanCrude);
         }
     }
 
@@ -376,11 +380,12 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
  * @brief A routine to get standard stats: mean, variance, min, max with
  *   clipping on std::pair<double,double> = center, cliplimit
  */
-template<typename Image, typename Mask>
-math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img,
-                                                                 Mask const &msk,   
-                                                                 int const flags,
-                                                                 std::pair<double, double> const clipinfo) {
+template<typename ImageT, typename MaskT, typename VarianceT>
+math::Statistics::StandardReturn math::Statistics::_getStandard(ImageT const &img,
+                                                                MaskT const &msk,
+                                                                VarianceT const &var,
+                                                                int const flags,
+                                                                std::pair<double, double> const clipinfo) {
     
     double const center = clipinfo.first;
     double const cliplimit = clipinfo.second;
@@ -395,15 +400,15 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img
     
     // If we want max or min (you get both)
     if (flags & (MIN | MAX)){
-        loopValues = _sumImage<ChkFin, ChkMin, ChkMax, ChkClip>(img, msk, flags, nCrude, stride,
+        loopValues = _sumImage<ChkFin, ChkMin, ChkMax, ChkClip>(img, msk, var, flags, nCrude, stride,
                                                                 center, cliplimit);
     // fast loop ... just the mean & variance
     } else {
         if (_sctrl.getNanSafe()) {
-            loopValues = _sumImage<ChkFin, AlwaysF, AlwaysF, ChkClip>(img, msk, flags, nCrude, stride,
+            loopValues = _sumImage<ChkFin, AlwaysF, AlwaysF, ChkClip>(img, msk, var, flags, nCrude, stride,
                                                                       center, cliplimit);
         } else {
-            loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, ChkClip>(img, msk, flags, nCrude, stride,
+            loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, ChkClip>(img, msk, var, flags, nCrude, stride,
                                                                        center, cliplimit);
         }
     }
@@ -492,7 +497,7 @@ double math::Statistics::_percentile(std::vector<Pixel> &img,
  *
  */
 std::pair<double, double> math::Statistics::getResult(math::Property const iProp ///< Desired property
-                                                         ) const {
+                                                     ) const {
     // if iProp == NOTHING try to return their heart's delight, as specified in the constructor
     math::Property const prop = (iProp == NOTHING) ? static_cast<math::Property>(_flags & ~ERRORS) : iProp;
     
@@ -604,6 +609,7 @@ template<>
 Statistics::Statistics(
     image::Mask<image::MaskPixel> const& msk,  ///< Mask whose properties we want
     image::Mask<image::MaskPixel> const& dmsk, ///< A mask (currently dummy) to control which pixels
+    image::Mask<image::MaskPixel> const& dvar, ///< A variance (currently dummy)
     int const flags,                           ///< Describe what we want to calculate
     StatisticsControl const& sctrl             ///< Control how things are calculated
                       ) :
@@ -647,7 +653,7 @@ Statistics makeStatistics(
     int const flags,                          ///< Describe what we want to calculate
     StatisticsControl const& sctrl            ///< Control how things are calculated
                          ) {
-    return Statistics(msk, msk, flags, sctrl);
+    return Statistics(msk, msk, msk, flags, sctrl);
 }
 
 }}}
@@ -663,45 +669,73 @@ Statistics makeStatistics(
 //
 #define STAT math::Statistics
 
-#define INSTANTIATE_MASKEDIMAGE_STATISTICS(TYPE)                       \
+typedef lsst::afw::image::VariancePixel VPixel;
+
+#define INSTANTIATE_MASKEDIMAGE_STATISTICS_WITH_VAR(TYPE)                       \
     template STAT::Statistics(image::Image<TYPE> const &img,            \
                               image::Mask<image::MaskPixel> const &msk, \
+                              image::Image<VPixel> const &var,               \
                               int const flags, StatisticsControl const& sctrl); \
     template STAT::StandardReturn STAT::_getStandard(image::Image<TYPE> const &img, \
                                                      image::Mask<image::MaskPixel> const &msk, \
+                                                     image::Image<VPixel> const &var, \
                                                      int const flags);  \
     template STAT::StandardReturn STAT::_getStandard(image::Image<TYPE> const &img, \
                                                      image::Mask<image::MaskPixel> const &msk, \
+                                                     image::Image<VPixel> const &var, \
                                                      int const flags, std::pair<double, double> clipinfo); \
     template double STAT::_percentile(std::vector<TYPE> &img, double const percentile);
+
+
+#define INSTANTIATE_MASKEDIMAGE_STATISTICS(TYPE)                       \
+    template STAT::Statistics(image::Image<TYPE> const &img,            \
+                              image::Mask<image::MaskPixel> const &msk, \
+                              math::MaskImposter<VPixel> const &var,          \
+                              int const flags, StatisticsControl const& sctrl); \
+    template STAT::StandardReturn STAT::_getStandard(image::Image<TYPE> const &img, \
+                                                     image::Mask<image::MaskPixel> const &msk, \
+                                                     math::MaskImposter<VPixel> const &var, \
+                                                     int const flags);  \
+    template STAT::StandardReturn STAT::_getStandard(image::Image<TYPE> const &img, \
+                                                     image::Mask<image::MaskPixel> const &msk, \
+                                                     math::MaskImposter<VPixel> const &var, \
+                                                     int const flags, std::pair<double, double> clipinfo);
+
 
 //
 #define INSTANTIATE_REGULARIMAGE_STATISTICS(TYPE)                      \
     template STAT::Statistics(image::Image<TYPE> const &img,            \
                               math::MaskImposter<image::MaskPixel> const &msk, \
+                              math::MaskImposter<VPixel> const &var, \
                               int const flags, StatisticsControl const& sctrl); \
     template STAT::StandardReturn STAT::_getStandard(image::Image<TYPE> const &img, \
                                                      math::MaskImposter<image::MaskPixel> const &msk, \
+                                                     math::MaskImposter<VPixel> const &var, \
                                                      int const flags);  \
     template STAT::StandardReturn STAT::_getStandard(image::Image<TYPE> const &img, \
                                                      math::MaskImposter<image::MaskPixel> const &msk, \
+                                                     math::MaskImposter<VPixel> const &var, \
                                                      int const flags, std::pair<double, double> clipinfo);
 
 //
 #define INSTANTIATE_VECTOR_STATISTICS(TYPE)                         \
     template STAT::Statistics(math::ImageImposter<TYPE> const &img,     \
                               math::MaskImposter<image::MaskPixel> const &msk, \
+                              math::MaskImposter<VPixel> const &var,      \
                               int const flags, StatisticsControl const& sctrl); \
     template STAT::StandardReturn STAT::_getStandard(math::ImageImposter<TYPE> const &img, \
                                                      math::MaskImposter<image::MaskPixel> const &msk, \
+                                                     math::MaskImposter<VPixel> const &var, \
                                                      int const flags);  \
     template STAT::StandardReturn STAT::_getStandard(math::ImageImposter<TYPE> const &img, \
                                                      math::MaskImposter<image::MaskPixel> const &msk, \
+                                                     math::MaskImposter<VPixel> const &var, \
                                                      int const flags, std::pair<double, double> clipinfo);
 
 
 #define INSTANTIATE_IMAGE_STATISTICS(T) \
     INSTANTIATE_MASKEDIMAGE_STATISTICS(T); \
+    INSTANTIATE_MASKEDIMAGE_STATISTICS_WITH_VAR(T); \
     INSTANTIATE_REGULARIMAGE_STATISTICS(T); \
     INSTANTIATE_VECTOR_STATISTICS(T);
 

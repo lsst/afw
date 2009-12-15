@@ -40,15 +40,29 @@ public:
     }
 
     // if we're asked for a single value return the image pixel
-    EntryT &operator[](int const i) { return (*image::MaskedImage<EntryT>::getImage())(i, 0); }
-
+    //EntryT &operator[](int const i) { return (*image::MaskedImage<EntryT>::getImage())(i, 0); }
+    Pixel &operator[](int const i) {
+        return Pixel(image::MaskedImage<EntryT>::getImage()(i, 0),
+                     image::MaskedImage<EntryT>::getMask()(i, 0),
+                     image::MaskedImage<EntryT>::getVariance()(i, 0)
+                    );
+    }
+    
     typename image::MaskedImage<EntryT>::ImagePtr getImage() const {
         return image::MaskedImage<EntryT>::getImage();
     }
     typename image::MaskedImage<EntryT>::MaskPtr getMask() const {
         return image::MaskedImage<EntryT>::getMask();
     }
-    
+    typename image::MaskedImage<EntryT>::VariancePtr getVariance() const {
+        return image::MaskedImage<EntryT>::getVariance();
+    }
+
+    iterator at(int const i) const { return image::MaskedImage<EntryT>::at(i, 0); }
+
+    //MaskedVector& operator=(Pixel const& rhs) { return image::MaskedImage<EntryT>::operator=(rhs); }
+    //MaskedVector& operator=(SinglePixel const& rhs) { return this->operator=(rhs); }
+
     // Make some std::vector methods
     int size() { return this->getWidth(0); }
     bool empty() { return this->getWidth(0) > 0; }

@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(MeanStack) {
         imgList.push_back(img);
     }
 
-    ImageF::Ptr imgStack = math::statisticsStack<ImageF>(imgList, math::MEAN);
+    ImageF::Ptr imgStack = math::statisticsStack<float>(imgList, math::MEAN);
     knownMean /= nImg;
 
     BOOST_CHECK_EQUAL((*imgStack)(nX/2, nY/2), knownMean);
