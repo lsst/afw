@@ -245,7 +245,7 @@ Statistics makeStatistics(image::Image<Pixel> const &img,
                           int const flags,  
                           StatisticsControl const& sctrl = StatisticsControl() 
                          ) {
-    MaskImposter<image::VariancePixel> var(1);
+    MaskImposter<image::VariancePixel> var;
     return Statistics(img, msk, var, flags, sctrl);
 }
 
@@ -262,7 +262,7 @@ Statistics makeStatistics(image::MaskedImage<Pixel, image::MaskPixel, image::Var
     if (sctrl.getWeighted()) {
         return Statistics(*mimg.getImage(), *mimg.getMask(), *mimg.getVariance(), flags, sctrl);
     } else {
-        MaskImposter<image::VariancePixel> var(1);
+        MaskImposter<image::VariancePixel> var;
         return Statistics(*mimg.getImage(), *mimg.getMask(), var, flags, sctrl);
     }
 }
@@ -289,7 +289,7 @@ Statistics makeStatistics(image::Image<Pixel> const &img, ///< Image (or Image) 
                          ) {
     // make a phony mask that will be compiled out
     MaskImposter<image::MaskPixel> msk;
-    MaskImposter<image::VariancePixel> var(1);
+    MaskImposter<image::VariancePixel> var;
     return Statistics(img, msk, var, flags, sctrl);
 }
 
@@ -334,7 +334,7 @@ Statistics makeStatistics(std::vector<EntryT> const &v, ///< Image (or MaskedIma
                          ) {
     ImageImposter<EntryT> img(v);           // wrap the vector in a fake image
     MaskImposter<image::MaskPixel> msk;     // instantiate a fake mask that will be compiled out.
-    MaskImposter<image::VariancePixel> var(1);
+    MaskImposter<image::VariancePixel> var;
     return Statistics(img, msk, var, flags, sctrl);
 }
 
@@ -351,7 +351,7 @@ Statistics makeStatistics(math::MaskedVector<EntryT> const &mv, ///< MaskedVecto
     if (sctrl.getWeighted()) {
         return Statistics(*mv.getImage(), *mv.getMask(), *mv.getVariance(), flags, sctrl);
     } else {
-        MaskImposter<image::VariancePixel> var(1);
+        MaskImposter<image::VariancePixel> var;
         return Statistics(*mv.getImage(), *mv.getMask(), var, flags, sctrl);
     }
 }

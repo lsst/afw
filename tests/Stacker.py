@@ -31,9 +31,10 @@ class StackTestCase(unittest.TestCase):
     def setUp(self):
         self.nImg = 10
         self.nX, self.nY = 64, 64
+        self.values = [1.0, 2.0, 2.0, 3.0, 8.0 ]
         
     def testMean(self):
-        """ Test the meanStack() function """
+        """ Test the statisticsStack() function for a MEAN"""
 
         knownMean = 0.0
         imgList = afwImage.vectorImageF()
@@ -45,35 +46,36 @@ class StackTestCase(unittest.TestCase):
         
         self.assertEqual(imgStack.get(self.nX/2, self.nY/2), knownMean)
 
+        
     def testStatistics(self):
         """ Test the statisticsStack() function """
-
-        values = [1.0, 2.0, 2.0, 3.0, 8.0 ]
         
         imgList = afwImage.vectorImageF()
-        for val in values:
+        for val in self.values:
             imgList.push_back(afwImage.ImageF(self.nX, self.nY, val))
             
         imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN)
-        mean = reduce(lambda x, y: x+y, values)/float(len(values))
+        mean = reduce(lambda x, y: x+y, self.values)/float(len(self.values))
         self.assertAlmostEqual(imgStack.get(self.nX/2, self.nY/2), mean)
 
         imgStack = afwMath.statisticsStack(imgList, afwMath.MEDIAN)
-        median = sorted(values)[len(values)//2]
+        median = sorted(self.values)[len(self.values)//2]
         self.assertEqual(imgStack.get(self.nX/2, self.nY/2), median)
 
-        # make sure weighting by the variance plane works
+    def testWeightedStack(self):
+        """ Test statisticsStack() function when weighting by a variance plane"""
+        
         sctrl = afwMath.StatisticsControl()
         sctrl.setWeighted(True)
         mimgList = afwImage.vectorMaskedImageF()
-        for val in values:
+        for val in self.values:
             mimg = afwImage.MaskedImageF(self.nX, self.nY)
             mimg.set(val, 0x0, val)
             mimgList.push_back(mimg)
         mimgStack = afwMath.statisticsStack(mimgList, afwMath.MEAN, sctrl)
 
-        wvalues = map(lambda q: 1.0/q, values)
-        wmean = float(len(values)) / reduce(lambda x, y: x + y, wvalues)
+        wvalues = map(lambda q: 1.0/q, self.values)
+        wmean = float(len(self.values)) / reduce(lambda x, y: x + y, wvalues)
         self.assertAlmostEqual(mimgStack.getImage().get(self.nX/2, self.nY/2), wmean)
 
         

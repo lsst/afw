@@ -32,17 +32,29 @@ BOOST_AUTO_TEST_CASE(StatisticsNanSafeSlower) {
     // make a ramp image 
     int const nx = 8192;
     int const ny = nx;
-    Image img(nx, ny);
+    Image imgSimple(nx, ny);
+    Image imgNanSafe(nx, ny);
+    Image imgMinMax(nx, ny);
     double z0 = 10.0;
     double dzdx = 1.0;
     double mean = z0 + ((nx - 1.0)/2.0)*dzdx;
     double stdev = 0.0;
     for (int iY = 0; iY < ny; ++iY) {
         double x = 0;
-        for (Image::x_iterator ptr = img.row_begin(iY); ptr != img.row_end(iY); ++ptr) {
+        for (Image::x_iterator ptr = imgSimple.row_begin(iY); ptr != imgSimple.row_end(iY); ++ptr) {
             *ptr = z0 + dzdx*x;
             x += 1.0;
             stdev += (*ptr - mean)*(*ptr - mean);
+        }
+        x = 0;
+        for (Image::x_iterator ptr = imgNanSafe.row_begin(iY); ptr != imgNanSafe.row_end(iY); ++ptr) {
+            *ptr = 2.0*(z0 + dzdx*x);
+            x += 1.0;
+        }
+        x = 0;
+        for (Image::x_iterator ptr = imgMinMax.row_begin(iY); ptr != imgMinMax.row_end(iY); ++ptr) {
+            *ptr = 3.0*(z0 + dzdx*x);
+            x += 1.0;
         }
     }
     stdev = sqrt(stdev/(nx*ny - 1));
@@ -54,30 +66,31 @@ BOOST_AUTO_TEST_CASE(StatisticsNanSafeSlower) {
         math::StatisticsControl sctrl = math::StatisticsControl();
         sctrl.setNanSafe(false);
         timer.restart();
-        math::Statistics statsSimple = math::makeStatistics(img, math::NPOINT | math::MEAN, sctrl);
+        math::Statistics statsSimple = math::makeStatistics(imgSimple, math::NPOINT | math::MEAN, sctrl);
+        BOOST_CHECK_EQUAL(statsSimple.getValue(math::MEAN), mean);
         double tSimple = timer.elapsed();
 
         // turn on NanSafe
-        img *= 2;
         sctrl.setNanSafe(true);
         timer.restart();
-        math::Statistics statsNanSafe = math::makeStatistics(img, math::NPOINT | math::MEAN, sctrl);
+        math::Statistics statsNanSafe = math::makeStatistics(imgNanSafe, math::NPOINT | math::MEAN, sctrl);
+        BOOST_CHECK_EQUAL(statsNanSafe.getValue(math::MEAN), 2*mean);
         double tNanSafe = timer.elapsed();
 
         // turn on max/min  - should be slowest
-        img *= 3;
         sctrl.setNanSafe(true);
         timer.restart();
         math::Statistics statsMinMax =
-            math::makeStatistics(img, math::NPOINT | math::MEAN | math::MIN, sctrl);
+            math::makeStatistics(imgMinMax, math::NPOINT | math::MEAN | math::MIN, sctrl);
+        BOOST_CHECK_EQUAL(statsMinMax.getValue(math::MIN), 3*z0);
         double tMinMax = timer.elapsed();
 
+        
         bool isFasterWithSimple = (tSimple < tNanSafe && tSimple < tMinMax);
         bool isSlowerWithMinMax = (tMinMax > tNanSafe && tMinMax > tSimple);
+
+        std::cout << tSimple << " " << tNanSafe << " " << tMinMax << std::endl;
         
-        BOOST_CHECK_EQUAL(statsSimple.getValue(math::MEAN), mean);
-        BOOST_CHECK_EQUAL(statsNanSafe.getValue(math::MEAN), 2*mean);
-        BOOST_CHECK_EQUAL(statsMinMax.getValue(math::MIN), 3*2*z0);
         BOOST_CHECK(isFasterWithSimple);
         BOOST_CHECK(isSlowerWithMinMax);
     }

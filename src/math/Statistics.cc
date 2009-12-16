@@ -270,13 +270,19 @@ math::Statistics::SumReturn math::Statistics::_sumImage(ImageT const &img,
                  InClipRange()(*ptr, meanCrude, cliplimit) ) { // clip
                 
                 double const delta = (*ptr - meanCrude);
-                sum   += delta/(*vptr);
-                sumx2 += delta*delta/(*vptr);
+
+                if ( *vptr > 0 ) {
+                    sum   += delta/(*vptr);
+                    sumx2 += delta*delta/(*vptr);
+                    wsum += 1.0/(*vptr);
+                } else {
+                    sum += delta;
+                    sumx2 += delta*delta;
+                }
 
                 if ( HasValueLtMin()(*ptr, min) ) { min = *ptr; }
                 if ( HasValueGtMax()(*ptr, max) ) { max = *ptr; }
                 n++;
-                wsum += 1.0/(*vptr);
                 
             }
         }
