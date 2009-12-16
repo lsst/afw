@@ -62,9 +62,7 @@ typename image::MaskedImage<PixelT>::Ptr math::statisticsStack(
     typedef image::MaskedImage<PixelT> ImageT;
     typename ImageT::Ptr imgStack(new ImageT(images[0]->getDimensions()));
 
-    //std::vector<typename ImageT::Pixel> pixelSet(images.size()); // values from a given pixel of each image
-    
-    // get the desired statistic
+     // get the desired statistic
     for (int y = 0; y != imgStack->getHeight(); ++y) {
         for (int x = 0; x != imgStack->getWidth(); ++x) {
             image::MaskPixel msk = 0x0;
@@ -98,22 +96,62 @@ template<typename PixelT>
 typename boost::shared_ptr<std::vector<PixelT> > math::statisticsStack(
         std::vector<boost::shared_ptr<std::vector<PixelT> > > &vectors,  
         math::Property flags,               
-        math::StatisticsControl const& sctrl ) {
+        math::StatisticsControl const& sctrl,
+        std::vector<PixelT> const &wvector
+                                                                      ) {
 
     // create the image to be returned
     typedef std::vector<PixelT> VectT;
     typename boost::shared_ptr<VectT> vecStack(new VectT(vectors[0]->size(), 0.0));
 
-    std::vector<PixelT> pixelSet(vectors.size()); // values from a given pixel of each image
+    // Use constant weights for each layer
+    if ( wvector.size() == vectors.size() ) {
 
-    // get the desired statistic
-    for (unsigned int x = 0; x < vectors[0]->size(); ++x) {
-        for (unsigned int i = 0; i != vectors.size(); ++i) {
-            pixelSet[i] = (*vectors[i])[x];
+        math::MaskedVector<PixelT> pixelSet(vectors.size()); // values from a given pixel of each image
+
+        // set the mask to be an infinite iterator
+        MaskImposter<image::MaskPixel> msk;
+        // copy the weights in to the variance vector
+        unsigned int j = 0;
+        for (typename std::vector<PixelT>::const_iterator pVec = wvector.begin();
+             pVec != wvector.end(); ++pVec) {
+            if (*pVec == 0) {
+                (*pixelSet.getVariance())(j, 0) = static_cast<image::VariancePixel>(1.0e99);
+            } else {
+                (*pixelSet.getVariance())(j, 0) = static_cast<image::VariancePixel>(1.0/(*pVec));
+            }
+            ++j;
         }
-        (*vecStack)[x] = math::makeStatistics(pixelSet, flags, sctrl).getValue(flags);
-    }
 
+        // collect elements from the stack into the MaskedVector to do stats
+        for (unsigned int x = 0; x < vectors[0]->size(); ++x) {
+            for (unsigned int i = 0; i < vectors.size(); ++i) {
+                (*pixelSet.getImage())(i, 0)     = (*vectors[i])[x];
+            }
+            math::Statistics stat = math::makeStatistics(*pixelSet.getImage(),
+                                                         msk,
+                                                         *pixelSet.getVariance(),
+                                                         flags, sctrl);
+            (*vecStack)[x] = stat.getValue(flags);
+        }
+
+    // Use no weights.
+    } else if ( wvector.size() == 0 ) {
+        std::vector<PixelT> pixelSet(vectors.size()); // values from a given pixel of each image
+        // get the desired statistic
+        for (unsigned int x = 0; x < vectors[0]->size(); ++x) {
+            for (unsigned int i = 0; i != vectors.size(); ++i) {
+                pixelSet[i] = (*vectors[i])[x];
+            }
+            (*vecStack)[x] = math::makeStatistics(pixelSet, flags, sctrl).getValue(flags);
+        }
+
+    // Fail if the number weights isn't the same as the number of vectors to be weighted.
+    } else {
+        throw LSST_EXCEPT(ex::InvalidParameterException,
+                          "Weight vector must have same length as number of vectors to be stacked.");
+    }
+    
     return vecStack;
 }
 
@@ -136,7 +174,8 @@ typename boost::shared_ptr<std::vector<PixelT> > math::statisticsStack(
     template boost::shared_ptr<std::vector<TYPE> > math::statisticsStack<TYPE>( \
             std::vector<boost::shared_ptr<std::vector<TYPE> > > &vectors, \
             lsst::afw::math::Property flags, \
-            lsst::afw::math::StatisticsControl const& sctrl);
+            lsst::afw::math::StatisticsControl const& sctrl,    \
+            std::vector<TYPE> const &wvector);
 
 INSTANTIATE_STACKS(double);
 INSTANTIATE_STACKS(float);

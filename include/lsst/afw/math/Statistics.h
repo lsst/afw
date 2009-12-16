@@ -236,7 +236,7 @@ private:
 
     
 /**
- * @brief Handle a straigh front-end to the constructor
+ * @brief Handle a watered-down front-end to the constructor (no variance)
  * @relates Statistics
  */
 template<typename Pixel>
@@ -246,6 +246,21 @@ Statistics makeStatistics(image::Image<Pixel> const &img,
                           StatisticsControl const& sctrl = StatisticsControl() 
                          ) {
     MaskImposter<image::VariancePixel> var;
+    return Statistics(img, msk, var, flags, sctrl);
+}
+
+
+/**
+ * @brief Handle a straigh front-end to the constructor
+ * @relates Statistics
+ */
+template<typename ImageT, typename MaskT, typename VarianceT>
+Statistics makeStatistics(ImageT const &img,
+                          MaskT const &msk,
+                          VarianceT const &var,
+                          int const flags,  
+                          StatisticsControl const& sctrl = StatisticsControl() 
+                         ) {
     return Statistics(img, msk, var, flags, sctrl);
 }
 

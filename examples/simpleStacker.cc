@@ -48,14 +48,20 @@ int main (int argc, char **argv) {
     
 
 
-    // std::vector
+    // std::vector, and also with a constant weight vector
     std::vector<VecFPtr> vecList;
+    std::vector<float> wvec(nImg, 1.0);
     for (int iImg = 0; iImg < nImg; ++iImg) {
         VecFPtr v = VecFPtr(new VecF(nX*nY, iImg));
         vecList.push_back(v);
+        if (iImg < nImg/2) {
+            wvec[iImg] = 0.0;
+        }
     }
     VecFPtr vecStacker = math::statisticsStack<float>(vecList, math::MEAN);
     std::cout << (*vecStacker)[nX*nY/2] << std::endl;
 
+    VecFPtr wvecStacker = math::statisticsStack<float>(vecList, math::MEAN, math::StatisticsControl(), wvec);
+    std::cout << (*wvecStacker)[nX*nY/2] << std::endl;
     
 }

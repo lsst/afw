@@ -41,9 +41,10 @@ typename lsst::afw::image::MaskedImage<PixelT>::Ptr statisticsStack(
  */
 template<typename PixelT>
 typename boost::shared_ptr<std::vector<PixelT> > statisticsStack(
-        std::vector<boost::shared_ptr<std::vector<PixelT> > > &vectors,      ///< Images to process
+        std::vector<boost::shared_ptr<std::vector<PixelT> > > &vectors,      ///< Vectors to process
         Property flags,              ///< statistics requested
-        StatisticsControl const& sctrl=StatisticsControl()  ///< control structure
+        StatisticsControl const& sctrl=StatisticsControl(),  ///< control structure
+        std::vector<PixelT> const& wvector=std::vector<PixelT>(0) ///< vector containing weights
                                                                 );
     
 

@@ -700,7 +700,7 @@ Statistics makeStatistics(
 
 typedef lsst::afw::image::VariancePixel VPixel;
 
-#define INSTANTIATE_MASKEDIMAGE_STATISTICS_WITH_VAR(TYPE)                       \
+#define INSTANTIATE_MASKEDIMAGE_STATISTICS(TYPE)                       \
     template STAT::Statistics(image::Image<TYPE> const &img,            \
                               image::Mask<image::MaskPixel> const &msk, \
                               image::Image<VPixel> const &var,               \
@@ -716,7 +716,22 @@ typedef lsst::afw::image::VariancePixel VPixel;
     template double STAT::_percentile(std::vector<TYPE> &img, double const percentile);
 
 
-#define INSTANTIATE_MASKEDIMAGE_STATISTICS(TYPE)                       \
+#define INSTANTIATE_MASKEDIMAGE_STATISTICS_NO_MASK(TYPE)                       \
+    template STAT::Statistics(image::Image<TYPE> const &img,            \
+                              math::MaskImposter<image::MaskPixel> const &msk, \
+                              image::Image<VPixel> const &var,               \
+                              int const flags, StatisticsControl const& sctrl); \
+    template STAT::StandardReturn STAT::_getStandard(image::Image<TYPE> const &img, \
+                                                     math::MaskImposter<image::MaskPixel> const &msk, \
+                                                     image::Image<VPixel> const &var, \
+                                                     int const flags);  \
+    template STAT::StandardReturn STAT::_getStandard(image::Image<TYPE> const &img, \
+                                                     math::MaskImposter<image::MaskPixel> const &msk, \
+                                                     image::Image<VPixel> const &var, \
+                                                     int const flags, std::pair<double, double> clipinfo);
+
+
+#define INSTANTIATE_MASKEDIMAGE_STATISTICS_NO_VAR(TYPE)                       \
     template STAT::Statistics(image::Image<TYPE> const &img,            \
                               image::Mask<image::MaskPixel> const &msk, \
                               math::MaskImposter<VPixel> const &var,          \
@@ -764,7 +779,8 @@ typedef lsst::afw::image::VariancePixel VPixel;
 
 #define INSTANTIATE_IMAGE_STATISTICS(T) \
     INSTANTIATE_MASKEDIMAGE_STATISTICS(T); \
-    INSTANTIATE_MASKEDIMAGE_STATISTICS_WITH_VAR(T); \
+    INSTANTIATE_MASKEDIMAGE_STATISTICS_NO_VAR(T); \
+    INSTANTIATE_MASKEDIMAGE_STATISTICS_NO_MASK(T); \
     INSTANTIATE_REGULARIMAGE_STATISTICS(T); \
     INSTANTIATE_VECTOR_STATISTICS(T);
 
