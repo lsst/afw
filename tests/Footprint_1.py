@@ -204,6 +204,19 @@ class FootprintTestCase(unittest.TestCase):
         if False:
             ds9.mtv(idImage, frame=2)
 
+    def testGetBBox(self):
+        """Check that Footprint.getBBox() returns a copy"""
+        
+        x0, y0, w, h = 9, 10, 7, 4
+        foot = afwDetection.Footprint(afwImage.BBox(afwImage.PointI(x0, y0), w, h))
+        bbox = foot.getBBox()
+
+        dx, dy = 10, 20
+        bbox.shift(dx, dy)
+
+        self.assertEqual(bbox.getX0(), x0 + dx)
+        self.assertEqual(foot.getBBox().getX0(), x0)
+
     def testBCircle2i(self):
         """Test the BCircle2i constructors"""
         

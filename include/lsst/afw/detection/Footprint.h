@@ -146,7 +146,7 @@ public:
 
     void shift(int dx, int dy);
 
-    const image::BBox& getBBox() const { return _bbox; } //!< Return the Footprint's bounding box
+    image::BBox getBBox() const { return _bbox; } //!< Return the Footprint's bounding box
     /// Return the corners of the MaskedImage the footprints live in
     image::BBox const& getRegion() const { return _region; }
     /// Set the corners of the MaskedImage wherein the footprints dwell
@@ -306,7 +306,7 @@ public:
             return;
         }
 
-        image::BBox const& bbox = foot.getBBox();
+        image::BBox const bbox = foot.getBBox();
         image::BBox region = foot.getRegion();
         if (region &&
             (!region.contains(bbox.getLLC()) || !region.contains(bbox.getURC()))) {
