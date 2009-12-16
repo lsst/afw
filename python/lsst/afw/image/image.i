@@ -100,6 +100,11 @@ SWIG_SHARED_PTR(Decorated##NAME##TYPE, lsst::afw::image::DecoratedImage<PIXEL_TY
 }
 %enddef
 
+
+%define %mimage(NAME, TYPE, PIXEL_TYPE...)
+%template(vector##NAME##TYPE) std::vector<boost::shared_ptr<lsst::afw::image::MaskedImage<PIXEL_TYPE> > >;
+%enddef
+
 /************************************************************************************************************/
 
 %ignore lsst::afw::image::ImageBase::swap;
@@ -130,6 +135,11 @@ SWIG_SHARED_PTR_DERIVED(Wcs, lsst::daf::data::LsstBase, lsst::afw::image::Wcs);
 %image(Image, I, int);
 %image(Image, F, float);
 %image(Image, D, double);
+
+%mimage(MaskedImage, U, boost::uint16_t);
+%mimage(MaskedImage, I, int);
+%mimage(MaskedImage, F, float);
+%mimage(MaskedImage, D, double);
 
 %template(vectorBBox) std::vector<lsst::afw::image::BBox>;         
 

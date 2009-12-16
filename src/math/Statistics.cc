@@ -252,6 +252,7 @@ math::Statistics::SumReturn math::Statistics::_sumImage(ImageT const &img,
                                                         double const cliplimit) {
     
     int n = 0;
+    double wsum = 0.0;
     double sum = 0, sumx2 = 0;
     double min = (nCrude) ? meanCrude : MAX_DOUBLE;
     double max = (nCrude) ? meanCrude : -MAX_DOUBLE;
@@ -259,20 +260,23 @@ math::Statistics::SumReturn math::Statistics::_sumImage(ImageT const &img,
     for (int iY = 0; iY < img.getHeight(); iY += stride) {
         
         typename MaskT::x_iterator mptr = msk.row_begin(iY);
+        typename VarianceT::x_iterator vptr = var.row_begin(iY);
+        
         for (typename ImageT::x_iterator ptr = img.row_begin(iY), end = ptr + img.getWidth();
-             ptr != end; ++ptr, ++mptr) {
+             ptr != end; ++ptr, ++mptr, ++vptr) {
             
             if ( IsFinite()(*ptr) &&
                  !(*mptr & _sctrl.getAndMask()) &&
                  InClipRange()(*ptr, meanCrude, cliplimit) ) { // clip
                 
-                double const delta = *ptr - meanCrude;
-                sum   += delta;
-                sumx2 += delta*delta;
+                double const delta = (*ptr - meanCrude);
+                sum   += delta/(*vptr);
+                sumx2 += delta*delta/(*vptr);
 
                 if ( HasValueLtMin()(*ptr, min) ) { min = *ptr; }
                 if ( HasValueGtMax()(*ptr, max) ) { max = *ptr; }
                 n++;
+                wsum += 1.0/(*vptr);
                 
             }
         }
@@ -282,7 +286,7 @@ math::Statistics::SumReturn math::Statistics::_sumImage(ImageT const &img,
         max = NaN;
     }
 
-    return boost::make_tuple(n, sum, sumx2, min, max);
+    return boost::make_tuple(n, sum, sumx2, min, max, wsum);
 }
 
 /* =========================================================================
@@ -352,6 +356,7 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(ImageT const &im
     double sumx2 = loopValues.get<2>();
     double min   = loopValues.get<3>();
     double max   = loopValues.get<4>();
+    double wsum  = loopValues.get<5>();
     
     if (n == 0) {
         throw LSST_EXCEPT(ex::InvalidParameterException,
@@ -363,9 +368,20 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(ImageT const &im
     }
     
     // estimate of population mean and variance
-    double mean = meanCrude + sum/n;
-    double variance = sumx2/(n - 1) - sum*sum/(static_cast<double>(n - 1)*n); 
+    double mean, variance;
+    if (_sctrl.getWeighted()) {
+        if (wsum == 0) {
+            throw LSST_EXCEPT(ex::InvalidParameterException,
+                              "Sum of weights is zero; can't compute weighted stats.");
+        }
+        mean = meanCrude + sum/wsum;
+        variance = sumx2/(wsum - wsum/n) - sum*sum/(static_cast<double>(wsum - wsum/n)*wsum); 
+    } else {
+        mean = meanCrude + sum/n;
+        variance = sumx2/(n - 1) - sum*sum/(static_cast<double>(n - 1)*n); 
+    }
     _n = n;
+    
     return boost::make_tuple(mean, variance, min, max, sum + n*meanCrude);
 }
 
@@ -418,6 +434,7 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(ImageT const &im
     double sumx2 = loopValues.get<2>();
     double min   = loopValues.get<3>();
     double max   = loopValues.get<4>();
+    double wsum  = loopValues.get<5>();
     
     if (n == 0) {
         throw LSST_EXCEPT(ex::InvalidParameterException,
@@ -429,8 +446,14 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(ImageT const &im
     }
     
     // estimate of population variance
-    double mean = center + sum/n;
-    double variance = sumx2/(n - 1) - sum*sum/(static_cast<double>(n - 1)*n);
+    double mean, variance;
+    if (_sctrl.getWeighted()) {
+        mean = center + sum/wsum;
+        variance = sumx2/(wsum - wsum/n) - sum*sum/(static_cast<double>(wsum - wsum/n)*n);
+    } else {
+        mean = center + sum/n;
+        variance = sumx2/(n - 1) - sum*sum/(static_cast<double>(n - 1)*n);
+    }
     _n = n;
     
     return boost::make_tuple(mean, variance, min, max, sum + center*n);
@@ -505,7 +528,7 @@ std::pair<double, double> math::Statistics::getResult(math::Property const iProp
         throw LSST_EXCEPT(ex::InvalidParameterException,
                           (boost::format("You didn't ask me to calculate %d") % prop).str());
     }
-    
+
     
     Value ret(NaN, NaN);
     switch (prop) {

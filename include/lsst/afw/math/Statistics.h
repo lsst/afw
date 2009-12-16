@@ -62,12 +62,14 @@ public:
     StatisticsControl(double numSigmaClip = 3.0, ///< number of standard deviations to clip at
                       int numIter = 3,     ///< Number of iterations
                       image::MaskPixel andMask = ~0x0, ///< and-Mask to specify planes to use
-                      bool isNanSafe = true  ///< flag NaNs
+                      bool isNanSafe = true,  ///< flag NaNs
+                      bool isWeighted = false ///< use inverse Variance plane for weights
                      ) :
         _numSigmaClip(numSigmaClip),
         _numIter(numIter),
         _andMask(andMask),
-        _isNanSafe(isNanSafe) {
+        _isNanSafe(isNanSafe),
+        _isWeighted(isWeighted) {
         
         assert(_numSigmaClip > 0);
         assert(_numIter > 0);
@@ -77,17 +79,20 @@ public:
     int getNumIter() const { return _numIter; }
     image::MaskPixel getAndMask() const { return _andMask; }
     bool getNanSafe() const { return _isNanSafe; }
+    bool getWeighted() const { return _isWeighted; }
     
     void setNumSigmaClip(double numSigmaClip) { assert(numSigmaClip > 0); _numSigmaClip = numSigmaClip; }
     void setNumIter(int numIter) { assert(numIter > 0); _numIter = numIter; }
     void setAndMask(image::MaskPixel andMask) { _andMask = andMask; }
     void setNanSafe(bool isNanSafe) { _isNanSafe = isNanSafe; }
+    void setWeighted(bool isWeighted) { _isWeighted = isWeighted; }
 
 private:
     double _numSigmaClip;                 // Number of standard deviations to clip at
     int _numIter;                         // Number of iterations
     image::MaskPixel _andMask;            // and-Mask to specify which mask planes to pay attention to
     bool _isNanSafe;                         // Check for NaNs before running (slower)
+    bool _isWeighted;                     // Use inverse variance to weight statistics.
 };
 
             
@@ -146,7 +151,7 @@ private:
 
     // return type for _getStandard
     typedef boost::tuple<double, double, double, double, double> StandardReturn; 
-    typedef boost::tuple<int, double, double, double, double> SumReturn; 
+    typedef boost::tuple<int, double, double, double, double, double> SumReturn; 
 
     long _flags;                        // The desired calculation
 
@@ -240,7 +245,7 @@ Statistics makeStatistics(image::Image<Pixel> const &img,
                           int const flags,  
                           StatisticsControl const& sctrl = StatisticsControl() 
                          ) {
-    MaskImposter<image::VariancePixel> var;
+    MaskImposter<image::VariancePixel> var(1);
     return Statistics(img, msk, var, flags, sctrl);
 }
 
@@ -254,8 +259,12 @@ Statistics makeStatistics(image::MaskedImage<Pixel, image::MaskPixel, image::Var
                           int const flags,  
                           StatisticsControl const& sctrl = StatisticsControl() 
                          ) {
-    MaskImposter<image::VariancePixel> var;
-    return Statistics(*mimg.getImage(), *mimg.getMask(), var, flags, sctrl);
+    if (sctrl.getWeighted()) {
+        return Statistics(*mimg.getImage(), *mimg.getMask(), *mimg.getVariance(), flags, sctrl);
+    } else {
+        MaskImposter<image::VariancePixel> var(1);
+        return Statistics(*mimg.getImage(), *mimg.getMask(), var, flags, sctrl);
+    }
 }
 
 /**
@@ -280,7 +289,7 @@ Statistics makeStatistics(image::Image<Pixel> const &img, ///< Image (or Image) 
                          ) {
     // make a phony mask that will be compiled out
     MaskImposter<image::MaskPixel> msk;
-    MaskImposter<image::VariancePixel> var;
+    MaskImposter<image::VariancePixel> var(1);
     return Statistics(img, msk, var, flags, sctrl);
 }
 
@@ -323,10 +332,9 @@ Statistics makeStatistics(std::vector<EntryT> const &v, ///< Image (or MaskedIma
                           int const flags,   ///< Describe what we want to calculate
                           StatisticsControl const& sctrl = StatisticsControl() ///< Control calculation
                          ) {
-    
     ImageImposter<EntryT> img(v);           // wrap the vector in a fake image
     MaskImposter<image::MaskPixel> msk;     // instantiate a fake mask that will be compiled out.
-    MaskImposter<image::VariancePixel> var;
+    MaskImposter<image::VariancePixel> var(1);
     return Statistics(img, msk, var, flags, sctrl);
 }
 
@@ -340,8 +348,12 @@ Statistics makeStatistics(math::MaskedVector<EntryT> const &mv, ///< MaskedVecto
                           int const flags,   ///< Describe what we want to calculate
                           StatisticsControl const& sctrl = StatisticsControl() ///< Control calculation
                          ) {
-    MaskImposter<image::VariancePixel> var;
-    return Statistics(*mv.getImage(), *mv.getMask(), var, flags, sctrl);
+    if (sctrl.getWeighted()) {
+        return Statistics(*mv.getImage(), *mv.getMask(), *mv.getVariance(), flags, sctrl);
+    } else {
+        MaskImposter<image::VariancePixel> var(1);
+        return Statistics(*mv.getImage(), *mv.getMask(), var, flags, sctrl);
+    }
 }
 
 

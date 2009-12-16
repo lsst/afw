@@ -41,7 +41,7 @@ typename image::Image<PixelT>::Ptr math::statisticsStack(
             for (unsigned int i = 0; i != images.size(); ++i) {
                 pixelSet[i] = (*images[i])(x, y);
             }
-            (*imgStack)(x, y) = math::makeStatistics(pixelSet, flags, sctrl).getValue();
+            (*imgStack)(x, y) = math::makeStatistics(pixelSet, flags, sctrl).getValue(flags);
         }
     }
 
@@ -63,13 +63,14 @@ typename image::MaskedImage<PixelT>::Ptr math::statisticsStack(
     typename ImageT::Ptr imgStack(new ImageT(images[0]->getDimensions()));
 
     //std::vector<typename ImageT::Pixel> pixelSet(images.size()); // values from a given pixel of each image
-    math::MaskedVector<PixelT> pixelSet(images.size());
     
     // get the desired statistic
     for (int y = 0; y != imgStack->getHeight(); ++y) {
         for (int x = 0; x != imgStack->getWidth(); ++x) {
             image::MaskPixel msk = 0x0;
-            for (unsigned int i = 0; i != images.size(); ++i) {
+            
+            math::MaskedVector<PixelT> pixelSet(images.size());
+            for (unsigned int i = 0; i < images.size(); ++i) {
                 image::MaskPixel mskTmp = (*images[i]->getMask())(x, y);
                 (*pixelSet.getImage())(i, 0)     = (*images[i]->getImage())(x, y);
                 (*pixelSet.getMask())(i, 0)      = mskTmp;
@@ -77,9 +78,9 @@ typename image::MaskedImage<PixelT>::Ptr math::statisticsStack(
                 msk |= mskTmp;
             }
             math::Statistics stat = math::makeStatistics(pixelSet, flags, sctrl);
-            (*imgStack->getImage())(x, y)    = stat.getValue();
+            (*imgStack->getImage())(x, y)    = stat.getValue(flags);
             (*imgStack->getMask())(x, y)     = msk;
-            (*imgStack->getVariance())(x, y) = stat.getError();
+            (*imgStack->getVariance())(x, y) = stat.getError(flags);
         }
     }
 
@@ -110,7 +111,7 @@ typename boost::shared_ptr<std::vector<PixelT> > math::statisticsStack(
         for (unsigned int i = 0; i != vectors.size(); ++i) {
             pixelSet[i] = (*vectors[i])[x];
         }
-        (*vecStack)[x] = math::makeStatistics(pixelSet, flags, sctrl).getValue();
+        (*vecStack)[x] = math::makeStatistics(pixelSet, flags, sctrl).getValue(flags);
     }
 
     return vecStack;

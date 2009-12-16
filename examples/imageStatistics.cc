@@ -99,7 +99,7 @@ int main() {
             
             // mask the odd rows
             // variance actually diverges for Cauchy noise ... but stats doesn't access this.
-            *mip = MaskedImageF::Pixel(xLorentz, (k%2) ? 0x1 : 0x0, 10.0);
+            *mip = MaskedImageF::Pixel(xLorentz, (k%2) ? 0x1 : 0x0, (k%2) ? 1.0e99 : 1.0);
 
             v.push_back(xLorentz);
             ++k;
@@ -135,6 +135,13 @@ int main() {
     printStats(mv, sctrl);
     std::cout << "image::MaskedVector::getVector()" << std::endl;
     printStats(*vF, sctrl);
+
+
+    // Now try the weighted statistics
+    sctrl.setWeighted(true);
+    sctrl.setAndMask(0x0);
+    std::cout << "image::MaskedImage (weighted)" << std::endl;
+    printStats(mimg, sctrl);
     
     // Now try the specialization to get NPOINT and SUM (bitwise OR) for an image::Mask
     math::Statistics mskstat = makeStatistics(*mimg.getMask(), (math::NPOINT | math::SUM), sctrl);

@@ -112,6 +112,44 @@ class StatisticsTestCase(unittest.TestCase):
         self.assertEqual(statsNaN.getValue(afwMath.MEAN), mean)
         self.assertEqual(statsNaN.getValue(afwMath.STDEV), stdev)
 
+
+
+    # Verify that pixels are being weighted according to the variance plane (1/var)
+    # We'll set the L and R sides of an image to two different values and verify mean
+    # ... then set R-side Variance to equal the Image value, and set 'weighted' and try again ...
+    def testWeighted(self):
+
+        self.mimgR.set(self.valR, 0x0, self.valR)
+        sctrl = afwMath.StatisticsControl()
+        sctrl.setWeighted(True)
+        stats = afwMath.makeStatistics(self.mimg, afwMath.NPOINT | afwMath.MEAN | afwMath.STDEV, sctrl)
+        nL, nR = self.mimgL.getWidth()*self.mimgL.getHeight(), self.mimgR.getWidth()*self.mimgR.getHeight()
+        
+        mean = 1.0*(nL + nR)/(nL/self.valL + nR/self.valR)
+
+        # get the stats for the image with two values
+        self.assertEqual(stats.getValue(afwMath.NPOINT), self.n)
+        self.assertAlmostEqual(stats.getValue(afwMath.MEAN), mean, 10)
+
+    def testWeightedSimple(self):
+        mimg = afwImage.MaskedImageF(1, 2)
+        mimg.set(0, 0, (self.valR, 0x0, self.valR))
+        mimg.set(0, 1, (self.valL, 0x0, self.valL))
+
+        sctrl = afwMath.StatisticsControl()
+        sctrl.setWeighted(True)
+        stats = afwMath.makeStatistics(mimg, afwMath.NPOINT | afwMath.MEAN | afwMath.STDEV, sctrl)
+        vsum = 2.0
+        vsum2 = self.valR + self.valL
+        wsum = 1.0/self.valR + 1.0/self.valL
+        mean = 1.0*(vsum)/wsum
+        n = 2
+        stddev = (1.0*(vsum2)/(wsum*(1.0-1.0/n)) - (vsum**2)/(wsum**2*(1.0-1.0/n)))**0.5
+        
+        # get the stats for the image with two values
+        self.assertAlmostEqual(stats.getValue(afwMath.MEAN), mean, 10)
+        self.assertAlmostEqual(stats.getValue(afwMath.STDEV), stddev, 10)
+        
         
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
