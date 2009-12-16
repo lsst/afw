@@ -36,9 +36,7 @@ namespace boost {
 %include "lsst/p_lsstSwig.i"
 %include "lsst/daf/base/persistenceMacros.i"
 
-#define NO_IMPORT_FUNCTION
 %import "lsst/afw/image/imageLib.i"
-#undef NO_IMPORT_FUNCTION
 
 %lsst_exceptions()
 
