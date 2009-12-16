@@ -17,7 +17,8 @@ import unittest
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions
 import lsst.daf.base
-import lsst.afw.image.imageLib as afwImage
+import lsst.afw.image as afwImage
+import lsst.afw.math as afwMath
 import eups
 import lsst.afw.display.ds9 as ds9
 
@@ -54,7 +55,11 @@ class MaskedImageTestCase(unittest.TestCase):
         self.mimage2 = afwImage.MaskedImageF(self.mimage.getDimensions())
         self.mimage2.getImage().set(self.imgVal2)
         self.mimage2.getVariance().set(self.varVal2)
-
+        #
+        # a Function2
+        #
+        self.function = afwMath.PolynomialFunction2D(2)
+        self.function.setParameters(range(self.function.getNParameters()))
     def tearDown(self):
         del self.mimage
         del self.mimage2
@@ -143,6 +148,13 @@ class MaskedImageTestCase(unittest.TestCase):
 
         self.assertEqual(self.mimage.getMask().get(1,1), self.EDGE)
         self.assertEqual(self.mimage.getMask().get(2,2), 0x0)
+
+        # add a function
+        self.mimage.set(self.imgVal1, 0x0, 0.0)
+        self.mimage += self.function
+
+        for i, j in [(2, 3)]:
+            self.assertEqual(self.mimage.getImage().get(i, j), self.imgVal1 + self.function(i,j))
     
     def testAddScaledImages(self):
         "Test addition by a scaled MaskedImage"

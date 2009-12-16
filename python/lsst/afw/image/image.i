@@ -122,6 +122,13 @@ SWIG_SHARED_PTR_DERIVED(Wcs, lsst::daf::data::LsstBase, lsst::afw::image::Wcs);
 %imagePtr(Image, F, float);
 %imagePtr(Image, D, double);
 
+#if !defined(NO_IMPORT_FUNCTION)
+%{
+#include "lsst/afw/math.h"
+%}
+%import "python/lsst/afw/math/function.i"
+#endif
+
 %include "lsst/afw/image/Utils.h"
 %include "lsst/afw/image/Image.h"
 %include "lsst/afw/image/ImagePca.h"

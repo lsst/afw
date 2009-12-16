@@ -17,7 +17,8 @@ import unittest
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions
 import lsst.daf.base
-import lsst.afw.image.imageLib as afwImage
+import lsst.afw.image as afwImage
+import lsst.afw.math as afwMath
 import eups
 import lsst.afw.display.ds9 as ds9
 
@@ -34,6 +35,8 @@ class ImageTestCase(unittest.TestCase):
         self.val1, self.val2 = 10, 100
         self.image1 = afwImage.ImageF(100, 200); self.image1.set(self.val1)
         self.image2 = afwImage.ImageF(self.image1.getDimensions()); self.image2.set(self.val2)
+        self.function = afwMath.PolynomialFunction2D(2)
+        self.function.setParameters(range(self.function.getNParameters()))
 
     def tearDown(self):
         del self.image1
@@ -57,6 +60,13 @@ class ImageTestCase(unittest.TestCase):
         
         self.assertEqual(self.image1.get(0,0), 2*self.val1)
         self.assertEqual(self.image2.get(0,0), self.val1 + self.val2)
+
+        self.image1.set(self.val1)
+        self.image1 += self.function
+
+        for j in range(self.image1.getHeight()):
+            for i in range(self.image1.getWidth()):
+                self.assertEqual(self.image1.get(i,j), self.val1 + self.function(i,j))
     
     def testAddScaledImages(self):
         c = 10.0
@@ -70,6 +80,13 @@ class ImageTestCase(unittest.TestCase):
         
         self.assertEqual(self.image1.get(0,0), 0)
         self.assertEqual(self.image2.get(0,0), self.val2 - self.val1)
+
+        self.image1.set(self.val1)
+        self.image1 -= self.function
+
+        for j in range(self.image1.getHeight()):
+            for i in range(self.image1.getWidth()):
+                self.assertEqual(self.image1.get(i,j), self.val1 - self.function(i,j))
     
     def testArithmeticImagesMismatch(self):
         "Test arithmetic operations on Images of different sizes"

@@ -20,6 +20,7 @@
 #include "lsst/afw/image/lsstGil.h"
 #include "lsst/afw/image/Utils.h"
 #include "lsst/afw/image/ImageUtils.h"
+#include "lsst/afw/math/Function.h"
 #include "lsst/daf/base.h"
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/pex/exceptions.h"
@@ -358,9 +359,11 @@ namespace image {
         //
         void operator+=(PixelT const rhs);
         void operator+=(Image<PixelT>const & rhs);
+        void operator+=(lsst::afw::math::Function2<double> const& function);
         void scaledPlus(double const c, Image<PixelT>const & rhs);
         void operator-=(PixelT const rhs);
         void operator-=(Image<PixelT> const& rhs);
+        void operator-=(lsst::afw::math::Function2<double> const& function);
         void scaledMinus(double const c, Image<PixelT>const & rhs);
         void operator*=(PixelT const rhs);
         void operator*=(Image<PixelT> const& rhs);
@@ -385,7 +388,7 @@ namespace image {
 
     template<typename PixelT>
     void swap(Image<PixelT>& a, Image<PixelT>& b);
-    
+
     /************************************************************************************************************/
     /**
      * \brief A container for an Image and its associated metadata

@@ -52,7 +52,9 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 %template(vectorVectorD) std::vector<std::vector<double> >;
 %template(vectorVectorI) std::vector<std::vector<int> >;
 
+#define NO_IMPORT_FUNCTION
 %import "lsst/afw/image/imageLib.i"
+#undef NO_IMPORT_FUNCTION
 
 %lsst_exceptions();
 

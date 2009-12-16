@@ -8,9 +8,6 @@
 #include "lsst/afw/math/FunctionLibrary.h"
 %}
 
-// I'm not sure newobject is needed (the memory leak test works without it)
-%newobject lsst::afw::math::Function::getParameters;
-
 // Must be used before %include
 %define %baseFunctionPtr(TYPE, CTYPE)
 SWIG_SHARED_PTR_DERIVED(Function##TYPE, lsst::daf::data::LsstBase, lsst::afw::math::Function<CTYPE>);
