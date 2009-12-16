@@ -80,7 +80,7 @@ typename image::MaskedImage<PixelT>::Ptr math::statisticsStack(
             math::Statistics stat = math::makeStatistics(pixelSet, flags, sctrl);
             (*imgStack->getImage())(x, y)    = stat.getValue(flags);
             (*imgStack->getMask())(x, y)     = msk;
-            (*imgStack->getVariance())(x, y) = stat.getError(flags);
+            (*imgStack->getVariance())(x, y) = stat.getError(flags)*stat.getError(flags);
         }
     }
 
