@@ -495,8 +495,8 @@ void image::Image<PixelT>::operator+=(
         lsst::afw::math::Function2<double> const& function ///< function to add
                                      ) {
     for (int y = 0; y != this->getHeight(); ++y) {
-        double const yPos = positionToIndex(y + this->getY0());
-        double xPos = positionToIndex(this->getX0());
+        double const yPos = image::positionToIndex(y + this->getY0());
+        double xPos = image::positionToIndex(this->getX0());
         for (typename Image<PixelT>::x_iterator ptr = this->row_begin(y), end = this->row_end(y);
              ptr != end; ++ptr, ++xPos) {            
             *ptr += function(xPos, yPos);
@@ -551,8 +551,8 @@ void image::Image<PixelT>::operator-=(
         lsst::afw::math::Function2<double> const& function ///< function to add
                                      ) {
     for (int y = 0; y != this->getHeight(); ++y) {
-        double const yPos = positionToIndex(y + this->getY0());
-        double xPos = positionToIndex(this->getX0());
+        double const yPos = image::positionToIndex(y + this->getY0());
+        double xPos = image::positionToIndex(this->getX0());
         for (typename Image<PixelT>::x_iterator ptr = this->row_begin(y), end = this->row_end(y);
              ptr != end; ++ptr, ++xPos) {            
             *ptr -= function(xPos, yPos);
