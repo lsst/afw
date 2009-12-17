@@ -13,6 +13,8 @@
 #include <boost/scoped_ptr.hpp>
 #include <memory>
 
+#include "lsst/afw/geom/Point.h"
+#include "lsst/afw/geom/Extent.h"
 #include "lsst/afw/geom/AffineTransform.h"
 
 namespace lsst {

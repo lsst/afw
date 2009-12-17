@@ -71,6 +71,9 @@ inline bool any(CoordinateExpr<N> const & expr) {
     return false;
 }
 
+typedef CoordinateExpr<2> CoordinateExpr2;
+typedef CoordinateExpr<3> CoordinateExpr3;
+
 }}}
 
 #endif

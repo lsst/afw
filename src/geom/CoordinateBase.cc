@@ -4,6 +4,13 @@
 
 namespace geom = lsst::afw::geom;
 
+/**
+ *  \brief Floating-point comparison with tolerance.
+ *  
+ *  Interface, naming, and default tolerances matches Numpy.
+ *
+ *  \relatesalso CoordinateBase
+ */
 template <typename Derived, typename T, int N>
 bool geom::allclose(
     CoordinateBase<Derived,T,N> const & a,
@@ -17,23 +24,23 @@ bool geom::allclose(
     return (diff.cwise() <= rhs).all();
 }
 
-template bool geom::allclose(
-    CoordinateBase<Point2D,double,2> const &,
-    CoordinateBase<Point2D,double,2> const &,
+template bool geom::allclose<geom::Point2D,double,2>(
+    CoordinateBase<geom::Point2D,double,2> const &,
+    CoordinateBase<geom::Point2D,double,2> const &,
     double, double
 );
-template bool geom::allclose(
-    CoordinateBase<Point3D,double,3> const &,
-    CoordinateBase<Point3D,double,3> const &,
+template bool geom::allclose<geom::Point3D,double,3>(
+    CoordinateBase<geom::Point3D,double,3> const &,
+    CoordinateBase<geom::Point3D,double,3> const &,
     double, double
 );
-template bool geom::allclose(
-    CoordinateBase<Extent2D,double,2> const &,
-    CoordinateBase<Extent2D,double,2> const &,
+template bool geom::allclose<geom::Extent2D,double,2>(
+    CoordinateBase<geom::Extent2D,double,2> const &,
+    CoordinateBase<geom::Extent2D,double,2> const &,
     double, double
 );
-template bool geom::allclose(
-    CoordinateBase<Extent3D,double,3> const &,
-    CoordinateBase<Extent3D,double,3> const &,
+template bool geom::allclose<geom::Extent3D,double,3>(
+    CoordinateBase<geom::Extent3D,double,3> const &,
+    CoordinateBase<geom::Extent3D,double,3> const &,
     double, double
 );

@@ -9,5 +9,7 @@
 #include "lsst/afw/geom/CoordinateExpr.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"
+#include "lsst/afw/geom/AffineTransform.h"
+#include "lsst/afw/geom/ellipses.h"
 
 #endif // LSST_GEOM_H

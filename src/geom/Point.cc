@@ -77,6 +77,7 @@ geom::CoordinateExpr<N> geom::Point<T,N>::operator>=(Point const & other) const 
     return r;
 }
 
+#ifndef DOXYGEN
 template class geom::Point<int,2>;
 template class geom::Point<int,3>;
 template class geom::Point<double,2>;
@@ -85,3 +86,4 @@ template geom::Point<int,2>::Point(geom::Point<double,2> const &);
 template geom::Point<int,3>::Point(geom::Point<double,3> const &);
 template geom::Point<double,2>::Point(geom::Point<int,2> const &);
 template geom::Point<double,3>::Point(geom::Point<int,3> const &);
+#endif

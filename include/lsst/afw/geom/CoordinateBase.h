@@ -26,11 +26,13 @@ template <typename Derived, typename T, int N>
 class CoordinateBase {
 public:
     typedef T Element;
-    const static int dimensions = N;
+    static int const dimensions = N;
     typedef Eigen::Matrix<T,N,1,Eigen::DontAlign> EigenVector;
 
+#ifndef SWIG
     T & operator[](int n) { return _vector[n]; }
     T const & operator[](int n) const { return const_cast<EigenVector&>(_vector)[n]; }
+#endif
 
     /**
      *  \brief Return a fixed-size Eigen representation of the coordinate object.
@@ -60,13 +62,6 @@ protected:
     EigenVector _vector;
 };
 
-/**
- *  \brief Floating-point comparison with tolerance.
- *  
- *  Interface, naming, and default tolerances matches Numpy.
- *
- *  \relatesalso CoordinateBase
- */
 template <typename Derived, typename T, int N>
 bool allclose(
     CoordinateBase<Derived,T,N> const & a, CoordinateBase<Derived,T,N> const & b, 
@@ -81,12 +76,14 @@ template <typename Derived, typename T>
 class CoordinateBase<Derived,T,2> {
 public:
     typedef T Element;
-    const static int dimensions = 2;
+    static int const dimensions = 2;
     typedef Eigen::Matrix<T,2,1,Eigen::DontAlign> EigenVector;
 
+#ifndef SWIG
     T & operator[](int n) { return _vector[n]; }
     T const & operator[](int n) const { return const_cast<EigenVector&>(_vector)[n]; }
-    
+#endif
+
     T getX() const { return _vector.x(); }
     T getY() const { return _vector.y(); }
     void setX(T x) { _vector.x() = x; }
@@ -142,12 +139,14 @@ template <typename Derived, typename T>
 class CoordinateBase<Derived,T,3> {
 public:
     typedef T Element;
-    const static int dimensions = 3;
+    static int const dimensions = 3;
     typedef Eigen::Matrix<T,3,1,Eigen::DontAlign> EigenVector;
 
+#ifndef SWIG
     T & operator[](int n) { return _vector[n]; }
     T const & operator[](int n) const { return const_cast<EigenVector&>(_vector)[n]; }
-    
+#endif
+
     T getX() const { return _vector.x(); }
     T getY() const { return _vector.y(); }
     T getZ() const { return _vector.z(); }
