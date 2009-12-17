@@ -54,7 +54,7 @@ public:
     virtual Axes & operator=(BaseCore const & other) { other._assignTo(*this); return *this; }
 
     /// \brief Construct from a parameter vector.
-    explicit Axes(ParameterVector const & data, bool doNormalize=true) : 
+    explicit Axes(BaseCore::ParameterVector const & data, bool doNormalize=true) : 
         Super(data) { if (doNormalize) normalize(); }
 
     /// \brief Construct from parameter values.

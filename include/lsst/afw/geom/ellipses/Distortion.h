@@ -71,7 +71,7 @@ public:
     virtual Distortion & operator=(BaseCore const & other) { other._assignTo(*this); return *this; }
 
     /// \brief Construct from a parameter vector.
-    explicit Distortion(ParameterVector const & vector) : Super(vector) {}
+    explicit Distortion(BaseCore::ParameterVector const & vector) : Super(vector) {}
 
     /// \brief Construct from parameter values.
     explicit Distortion(double e1=0, double e2=0, double radius=0) : Super(e1,e2,radius) {}

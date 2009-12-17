@@ -59,7 +59,7 @@ public:
     virtual Quadrupole & operator=(BaseCore const & other) { other._assignTo(*this); return *this; }
 
     /// \brief Construct from a parameter vector.
-    explicit Quadrupole(ParameterVector const & vector) : Super(vector) {}
+    explicit Quadrupole(BaseCore::ParameterVector const & vector) : Super(vector) {}
 
     /// \brief Construct from parameter values.
     explicit Quadrupole(double xx=0, double yy=0, double xy=0) : Super(xx,yy,xy) {}

@@ -78,7 +78,7 @@ public:
     virtual LogShear & operator=(BaseCore const & other) { other._assignTo(*this); return *this; }
 
     /// \brief Construct from a parameter vector.
-    explicit LogShear(ParameterVector const & vector) : Super(vector) {}
+    explicit LogShear(BaseCore::ParameterVector const & vector) : Super(vector) {}
 
     /// \brief Construct from parameter values.
     explicit LogShear(double gamma1=0, double gamma2=0,

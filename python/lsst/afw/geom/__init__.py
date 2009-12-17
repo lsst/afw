@@ -20,3 +20,5 @@ PointD = Point2D
 
 ExtentI = Extent2I
 ExtentD = Extent2D
+
+import ellipses
