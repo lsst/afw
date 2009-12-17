@@ -271,7 +271,7 @@ math::Statistics::SumReturn math::Statistics::_sumImage(ImageT const &img,
                 
                 double const delta = (*ptr - meanCrude);
 
-                if ( *vptr > 0 ) {
+                if ( *vptr > 0 && _sctrl.getWeighted() ) {
                     sum   += delta/(*vptr);
                     sumx2 += delta*delta/(*vptr);
                     wsum += 1.0/(*vptr);

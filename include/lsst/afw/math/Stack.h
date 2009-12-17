@@ -21,7 +21,8 @@ template<typename PixelT>
 typename lsst::afw::image::Image<PixelT>::Ptr statisticsStack(
         std::vector<typename lsst::afw::image::Image<PixelT>::Ptr > &images,      ///< Images to process
         Property flags, ///< statistics requested
-        StatisticsControl const& sctrl=StatisticsControl()   ///< Control structure
+        StatisticsControl const& sctrl=StatisticsControl(),   ///< Control structure
+        std::vector<PixelT> const& wvector=std::vector<PixelT>(0) ///< vector containing weights
                                                              );
 
 
@@ -32,7 +33,8 @@ template<typename PixelT>
 typename lsst::afw::image::MaskedImage<PixelT>::Ptr statisticsStack(
         std::vector<typename lsst::afw::image::MaskedImage<PixelT>::Ptr > &images,///< MaskedImages to process
         Property flags, ///< statistics requested
-        StatisticsControl const& sctrl=StatisticsControl() ///< control structure
+        StatisticsControl const& sctrl=StatisticsControl(), ///< control structure
+        std::vector<PixelT> const& wvector=std::vector<PixelT>(0) ///< vector containing weights
                                                                    );
 
 
