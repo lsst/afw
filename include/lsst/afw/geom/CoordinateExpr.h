@@ -32,17 +32,12 @@ class CoordinateExpr : public CoordinateBase<CoordinateExpr<N>,bool,N> {
     typedef CoordinateBase<CoordinateExpr<N>,bool,N> Super;
 public:
 
-    /**
-     *  \brief Constructors
-     *
-     *  See the CoordinateBase constructors for more discussion.
-     */
-    //@{
+    /// \brief Construct a CoordinateExpr with all elements set to the same scalar value.
     explicit CoordinateExpr(bool val=false) : Super(val) {}
 
+    /// \brief Construct a CoordinateExpr from an Eigen vector.
     template <typename Vector>
     explicit CoordinateExpr(Eigen::MatrixBase<Vector> const & vector) : Super(vector) {}
-    //@}
 
     /**
      *  @name Logical operators

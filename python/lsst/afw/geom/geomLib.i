@@ -8,6 +8,11 @@ Python interface to lsst::afw::geom classes
 %feature("autodoc", "1");
 %module(package="lsst.afw.geom",docstring=geomLib_DOCSTRING) geomLib
 
+#pragma SWIG nowarn=381                 // operator&&  ignored
+#pragma SWIG nowarn=382                 // operator||  ignored
+#pragma SWIG nowarn=361                 // operator!  ignored
+#pragma SWIG nowarn=503                 // comparison operators ignored
+
 %{
 #include "lsst/afw/geom.h"
 %}

@@ -22,17 +22,12 @@ class Point : public CoordinateBase<Point<T,N>,T,N> {
     typedef CoordinateBase<Point<T,N>,T,N> Super;
 public:
 
-    /**
-     *  \brief Standard coordinate constructors
-     *
-     *  See the CoordinateBase constructors for more discussion.
-     */
-    //@{
+    /// \brief Construct a Point with all elements set to the same scalar value.
     explicit Point(T val=static_cast<T>(0)) : Super(val) {}
 
+    /// \brief Construct a Point from an Eigen vector.
     template <typename Vector>
     explicit Point(Eigen::MatrixBase<Vector> const & vector) : Super(vector) {}
-    //@}
 
     /// \brief Explicit constructor from Extent.
     explicit Point(Extent<T,N> const & other) : Super(other.asVector()) {}          

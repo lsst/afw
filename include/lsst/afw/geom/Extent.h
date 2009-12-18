@@ -27,17 +27,12 @@ class Extent : public CoordinateBase<Extent<T,N>,T,N> {
     typedef CoordinateBase<Extent<T,N>,T,N> Super;
 public:
 
-    /**
-     *  \brief Standard coordinate constructors
-     *
-     *  See the CoordinateBase constructors for more discussion.
-     */
-    //@{
+    /// \brief Construct an Extent with all elements set to the same scalar value.
     explicit Extent(T val=static_cast<T>(0)) : Super(val) {}
 
+    /// \brief Construct an Extent from an Eigen vector.
     template <typename Vector>
     explicit Extent(Eigen::MatrixBase<Vector> const & vector) : Super(vector) {}
-    //@}
 
     /// \brief Explicit constructor from Point.
     explicit Extent(Point<T,N> const & other);
