@@ -6,6 +6,12 @@
 
 namespace ellipses = lsst::afw::geom::ellipses;
 
+ellipses::LogShearEllipse::LogShearEllipse(ParameterVector const & vector, bool doNormalize) :
+    BaseEllipse(new LogShear(vector.segment<3>(0)), PointD(vector.segment<2>(2))) 
+{ 
+    if (doNormalize) normalize(); 
+}
+
 void ellipses::LogShear::_assignTo(LogShear & other) const {
     other._vector = this->_vector;
 }

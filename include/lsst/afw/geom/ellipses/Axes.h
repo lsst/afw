@@ -9,25 +9,98 @@
  *  \note Do not include directly; use the main ellipse header file.
  */
 
-#include "lsst/afw/geom/ellipses/EllipseImpl.h"
+#include "lsst/afw/geom/ellipses/BaseEllipse.h"
 
 namespace lsst {
 namespace afw {
 namespace geom {
 namespace ellipses {
 
-class AxesEllipse;
+/**
+ *  \brief An ellipse with an Axes core.
+ *
+ *  \ingroup EllipseGroup
+ */
+class AxesEllipse : public BaseEllipse {
+public:
+
+    typedef boost::shared_ptr<AxesEllipse> Ptr;
+    typedef boost::shared_ptr<AxesEllipse const> ConstPtr;
+
+    typedef AxesEllipse Ellipse;
+    typedef Axes Core;
+
+    /// Definitions for elements of an ellipse vector.
+    enum Parameters { X=0, Y=1, A=2, B=3, THETA=4 };
+
+    /// \brief Deep-copy the ellipse.
+    Ptr clone() const { return Ptr(static_cast<AxesEllipse*>(_clone()));  }
+
+    /// \brief Return the Core object.
+    Axes const & getCore() const;
+
+    /// \brief Return the Core object.
+    Axes & getCore();
+
+    /**
+     *  \brief Set the parameters of this ellipse from another.
+     *
+     *  This does not change the parametrization of the ellipse.
+     */
+    AxesEllipse & operator=(BaseEllipse const & other) {
+        return static_cast<AxesEllipse &>(BaseEllipse::operator=(other));
+    }
+    AxesEllipse & operator=(AxesEllipse const & other) {
+        return static_cast<AxesEllipse &>(BaseEllipse::operator=(other));
+    }
+
+    /// \brief Construct from a PointD and zero-size Core.
+    explicit AxesEllipse(PointD const & center = PointD());
+
+    /// \brief Construct from a copy of an Axes core.
+    explicit AxesEllipse(Axes const & core, PointD const & center = PointD());
+
+    /// \brief Construct from a 5-element parameter vector.
+    explicit AxesEllipse(BaseEllipse::ParameterVector const & vector, bool doNormalize=true);
+
+    /// \brief Converting copy constructor.
+    AxesEllipse(BaseEllipse const & other);
+
+    /// \brief Copy constructor.
+    AxesEllipse(AxesEllipse const & other);
+
+protected:
+    virtual AxesEllipse * _clone() const { return new AxesEllipse(*this); }
+};
 
 /**
  *  \brief An ellipse core for the semimajor/semiminor axis and position angle parametrization (a,b,theta).
  *
  *  \ingroup EllipseGroup
  */
-class Axes : public detail::CoreImpl<Axes,AxesEllipse> {
-    typedef detail::CoreImpl<Axes,AxesEllipse> Super;
+class Axes : public BaseCore {
 public:
 
+    typedef boost::shared_ptr<Axes> Ptr;
+    typedef boost::shared_ptr<Axes const> ConstPtr;
+
+    typedef AxesEllipse Ellipse;
+    typedef Axes Core;
+
     enum Parameters { A=0, B=1, THETA=2 }; ///< Definitions for elements of a core vector.
+
+    /// \brief Deep copy the ellipse core.
+    Ptr clone() const { return Ptr(_clone()); }
+
+    /// \brief Construct an Ellipse of the appropriate subclass from this and the given center.
+    AxesEllipse::Ptr makeEllipse(PointD const & center = PointD()) const {
+        return AxesEllipse::Ptr(_makeEllipse(center));
+    }
+
+    /// \brief Assign other to this and return the derivative of the conversion, d(this)/d(other).
+    virtual BaseCore::Jacobian dAssign(BaseCore const & other) {
+        return other._dAssignTo(static_cast<Core &>(*this)); 
+    }
 
     /// Return a string that identifies this parametrization.
     virtual char const * getName() const { return "Axes"; }
@@ -55,19 +128,25 @@ public:
 
     /// \brief Construct from a parameter vector.
     explicit Axes(BaseCore::ParameterVector const & data, bool doNormalize=true) : 
-        Super(data) { if (doNormalize) normalize(); }
+        BaseCore(data) { if (doNormalize) normalize(); }
 
     /// \brief Construct from parameter values.
     explicit Axes(double a=0, double b=0, double theta=0, bool doNormalize=true) : 
-        Super(a,b,theta) { if (doNormalize) normalize(); }
+        BaseCore(a,b,theta) { if (doNormalize) normalize(); }
 
     /// \brief Converting copy constructor.
     Axes(BaseCore const & other) { *this = other; }
 
     /// \brief Copy constructor.
-    Axes(Axes const & other) : Super(other.getVector()) {}
+    Axes(Axes const & other) : BaseCore(other.getVector()) {}
 
 protected:
+
+    virtual Axes * _clone() const { return new Axes(*this); }
+    
+    virtual AxesEllipse * _makeEllipse(PointD const & center) const {
+        return new AxesEllipse(*this, center);
+    }
 
     virtual void _assignTo(Quadrupole & other) const;
     virtual void _assignTo(Axes & other) const;
@@ -81,45 +160,17 @@ protected:
 
 };
 
-/**
- *  \brief An ellipse with an Axes core.
- *
- *  \ingroup EllipseGroup
- */
-class AxesEllipse : public detail::EllipseImpl<Axes,AxesEllipse> {
-    typedef detail::EllipseImpl<Axes,AxesEllipse> Super;
-public:
+inline Axes const & AxesEllipse::getCore() const { return static_cast<Axes const &>(*_core); }
+inline Axes & AxesEllipse::getCore() { return static_cast<Axes &>(*_core); }
 
-    /// Definitions for elements of an ellipse vector.
-    enum Parameters { X=0, Y=1, A=2, B=3, THETA=4 };
-
-    /**
-     *  \brief Set the parameters of this ellipse from another.
-     *
-     *  This does not change the parametrization of the ellipse.
-     */
-    AxesEllipse & operator=(BaseEllipse const & other) { return Super::operator=(other); }
-
-    /// \brief Set the parameters of this ellipse from another.
-    AxesEllipse & operator=(AxesEllipse const & other) { return Super::operator=(other); }
-
-    /// \brief Construct from a PointD and zero-size Core.
-    explicit AxesEllipse(PointD const & center = PointD()) : Super(new Axes(),center) {}
-
-    /// \brief Construct from a copy of an Axes core.
-    explicit AxesEllipse(Axes const & core, PointD const & center = PointD()) : Super(core,center) {}
-
-    /// \brief Construct from a 5-element parameter vector.
-    explicit AxesEllipse(BaseEllipse::ParameterVector const & vector, bool doNormalize=true) :
-        Super(vector) { if (doNormalize) normalize(); }
-
-    /// \brief Converting copy constructor.
-    AxesEllipse(BaseEllipse const & other) : Super(other.getCore(),other.getCenter()) {}
-
-    /// \brief Copy constructor.
-    AxesEllipse(AxesEllipse const & other) : Super(other.getCore(),other.getCenter()) {}
-
-};
+inline AxesEllipse::AxesEllipse(PointD const & center) :
+    BaseEllipse(new Axes(),center) {}
+inline AxesEllipse::AxesEllipse(Axes const & core, PointD const & center) : 
+    BaseEllipse(core,center) {}
+inline AxesEllipse::AxesEllipse(BaseEllipse const & other) : 
+    BaseEllipse(other.getCore(),other.getCenter()) {}
+inline AxesEllipse::AxesEllipse(AxesEllipse const & other) : 
+    BaseEllipse(other.getCore(),other.getCenter()) {}
 
 } // namespace lsst::afw::geom::ellipses
 }}} // namespace lsst::afw::geom

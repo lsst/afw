@@ -10,7 +10,6 @@
 /// \defgroup EllipseGroup Ellipses
 
 #include "lsst/afw/geom/ellipses/BaseEllipse.h"
-#include "lsst/afw/geom/ellipses/EllipseImpl.h"
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
 #include "lsst/afw/geom/ellipses/Axes.h"
 #include "lsst/afw/geom/ellipses/Distortion.h"

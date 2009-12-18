@@ -6,6 +6,12 @@
 
 namespace ellipses = lsst::afw::geom::ellipses;
 
+ellipses::QuadrupoleEllipse::QuadrupoleEllipse(ParameterVector const & vector, bool doNormalize) :
+    BaseEllipse(new Quadrupole(vector.segment<3>(0)), PointD(vector.segment<2>(2))) 
+{ 
+    if (doNormalize) normalize(); 
+}
+
 void ellipses::Quadrupole::_assignTo(Quadrupole & other) const {
     other._vector = this->_vector;
 }

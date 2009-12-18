@@ -9,14 +9,69 @@
  *  \note Do not include directly; use the main ellipse header file.
  */
 
-#include "lsst/afw/geom/ellipses/EllipseImpl.h"
+#include "lsst/afw/geom/ellipses/BaseEllipse.h"
 
 namespace lsst {
 namespace afw {
 namespace geom {
 namespace ellipses {
 
-class LogShearEllipse;
+/**
+ *  \brief An ellipse with a LogShear core.
+ *
+ *  \ingroup EllipseGroup
+ */
+class LogShearEllipse : public BaseEllipse {
+public:
+
+    typedef boost::shared_ptr<LogShearEllipse> Ptr;
+    typedef boost::shared_ptr<LogShearEllipse const> ConstPtr;
+
+    typedef LogShearEllipse Ellipse;
+    typedef LogShear Core;
+
+    /// Definitions for elements of an ellipse vector.
+    enum Parameters { X=0, Y=1, GAMMA1=2, GAMMA2=3, KAPPA=4 };
+
+    /// \brief Deep-copy the ellipse.
+    Ptr clone() const { return Ptr(static_cast<LogShearEllipse*>(_clone()));  }
+
+    /// \brief Return the Core object.
+    LogShear const & getCore() const;
+
+    /// \brief Return the Core object.
+    LogShear & getCore();
+
+    /**
+     *  \brief Set the parameters of this ellipse from another.
+     *
+     *  This does not change the parametrization of the ellipse.
+     */
+    LogShearEllipse & operator=(BaseEllipse const & other) {
+        return static_cast<LogShearEllipse &>(BaseEllipse::operator=(other)); 
+    }
+    LogShearEllipse & operator=(LogShearEllipse const & other) {
+        return static_cast<LogShearEllipse &>(BaseEllipse::operator=(other)); 
+    }
+
+    /// \brief Construct from a PointD and zero-size Core.
+    explicit LogShearEllipse(PointD const & center = PointD());
+
+    /// \brief Construct from a copy of an LogShear core.
+    explicit LogShearEllipse(LogShear const & core, PointD const & center = PointD());
+
+    /// \brief Construct from a 5-element parameter vector.
+    explicit LogShearEllipse(BaseEllipse::ParameterVector const & vector, bool doNormalize=true);
+
+    /// \brief Converting copy constructor.
+    LogShearEllipse(BaseEllipse const & other);
+
+    /// \brief Copy constructor.
+    LogShearEllipse(LogShearEllipse const & other);
+
+protected:
+    virtual LogShearEllipse * _clone() const { return new LogShearEllipse(*this); }
+};
 
 /**
  *  \brief An ellipse core with logarithmic ellipticity and radius parameters.
@@ -32,12 +87,30 @@ class LogShearEllipse;
  *
  *  \ingroup EllipseGroup
  */
-class LogShear : public detail::CoreImpl<LogShear,LogShearEllipse> {
-    typedef detail::CoreImpl<LogShear,LogShearEllipse> Super;
+class LogShear : public BaseCore {
 public:
         
+    typedef boost::shared_ptr<LogShear> Ptr;
+    typedef boost::shared_ptr<LogShear const> ConstPtr;
+
+    typedef LogShearEllipse Ellipse;
+    typedef LogShear Core;
+
     ///\brief Definitions for elements of a core vector.
     enum Parameters { GAMMA1=0, GAMMA2=1, KAPPA=2 };
+
+    /// \brief Deep copy the ellipse core.
+    Ptr clone() const { return Ptr(_clone()); }
+
+    /// \brief Construct an Ellipse of the appropriate subclass from this and the given center.
+    LogShearEllipse::Ptr makeEllipse(PointD const & center = PointD()) const {
+        return LogShearEllipse::Ptr(_makeEllipse(center));
+    }
+
+    /// \brief Assign other to this and return the derivative of the conversion, d(this)/d(other).
+    virtual BaseCore::Jacobian dAssign(BaseCore const & other) {
+        return other._dAssignTo(static_cast<Core &>(*this)); 
+    }
 
     /// Return a string that identifies this parametrization.
     virtual char const * getName() const { return "LogShear"; }
@@ -78,26 +151,32 @@ public:
     virtual LogShear & operator=(BaseCore const & other) { other._assignTo(*this); return *this; }
 
     /// \brief Construct from a parameter vector.
-    explicit LogShear(BaseCore::ParameterVector const & vector) : Super(vector) {}
+    explicit LogShear(BaseCore::ParameterVector const & vector) : BaseCore(vector) {}
 
     /// \brief Construct from parameter values.
     explicit LogShear(double gamma1=0, double gamma2=0,
                       double kappa=-std::numeric_limits<double>::infinity()) : 
-        Super(gamma1,gamma2,kappa) {}
+        BaseCore(gamma1,gamma2,kappa) {}
 
     /// \brief Construct from complex logarithmic shear and convergence.
     explicit LogShear(std::complex<double> const & gamma,
                       double kappa=-std::numeric_limits<double>::infinity()) : 
-        Super(gamma.real(),gamma.imag(),kappa) {}
+        BaseCore(gamma.real(),gamma.imag(),kappa) {}
 
     /// \brief Converting copy constructor.
     LogShear(BaseCore const & other) { *this = other; }
 
     /// \brief Copy constructor.
-    LogShear(LogShear const & other) : Super(other.getVector()) {}
+    LogShear(LogShear const & other) : BaseCore(other.getVector()) {}
 
 protected:
     
+    virtual LogShear * _clone() const { return new LogShear(*this); }
+    
+    virtual LogShearEllipse * _makeEllipse(PointD const & center) const {
+        return new LogShearEllipse(*this, center);
+    }
+
     virtual void _assignTo(Quadrupole & other) const;
     virtual void _assignTo(Axes & other) const;
     virtual void _assignTo(Distortion & other) const;
@@ -110,45 +189,17 @@ protected:
 
 };
 
-/**
- *  \brief An ellipse with a LogShear core.
- *
- *  \ingroup EllipseGroup
- */
-class LogShearEllipse : public detail::EllipseImpl<LogShear,LogShearEllipse> {
-    typedef detail::EllipseImpl<LogShear,LogShearEllipse> Super;
-public:
+inline LogShear const & LogShearEllipse::getCore() const { return static_cast<LogShear const &>(*_core); }
+inline LogShear & LogShearEllipse::getCore() { return static_cast<LogShear &>(*_core); }
 
-    /// Definitions for elements of an ellipse vector.
-    enum Parameters { X=0, Y=1, GAMMA1=2, GAMMA2=3, KAPPA=4 };
-
-    /**
-     *  \brief Set the parameters of this ellipse from another.
-     *
-     *  This does not change the parametrization of the ellipse.
-     */
-    LogShearEllipse & operator=(BaseEllipse const & other) { return Super::operator=(other); }
-
-    /// \brief Set the parameters of this ellipse from another.
-    LogShearEllipse & operator=(LogShearEllipse const & other) { return Super::operator=(other); }
-
-    /// \brief Construct from a PointD and zero-size Core.
-    explicit LogShearEllipse(PointD const & center = PointD()) : Super(new LogShear(),center) {}
-
-    /// \brief Construct from a copy of a LogShear core.
-    explicit LogShearEllipse(LogShear const & core, PointD const & center = PointD()) : 
-        Super(core,center) {}
-
-    /// \brief Construct from a 5-element parameter vector.
-    explicit LogShearEllipse(BaseEllipse::ParameterVector const & vector) : Super(vector) {}
-
-    /// \brief Converting copy constructor.
-    LogShearEllipse(BaseEllipse const & other) : Super(other.getCore(),other.getCenter()) {}
-
-    /// \brief Copy constructor.
-    LogShearEllipse(LogShearEllipse const & other) : Super(other.getCore(),other.getCenter()) {}
-
-};
+inline LogShearEllipse::LogShearEllipse(PointD const & center) :
+    BaseEllipse(new LogShear(),center) {}
+inline LogShearEllipse::LogShearEllipse(LogShear const & core, PointD const & center) : 
+    BaseEllipse(core,center) {}
+inline LogShearEllipse::LogShearEllipse(BaseEllipse const & other) : 
+    BaseEllipse(other.getCore(),other.getCenter()) {}
+inline LogShearEllipse::LogShearEllipse(LogShearEllipse const & other) : 
+    BaseEllipse(other.getCore(),other.getCenter()) {}
 
 } // namespace lsst::afw::geom::ellipses
 }}} // namespace lsst::afw::geom

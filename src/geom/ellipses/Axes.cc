@@ -6,6 +6,12 @@
 
 namespace ellipses = lsst::afw::geom::ellipses;
 
+ellipses::AxesEllipse::AxesEllipse(ParameterVector const & vector, bool doNormalize) :
+    BaseEllipse(new Axes(vector.segment<3>(0)), PointD(vector.segment<2>(2))) 
+{ 
+    if (doNormalize) normalize(); 
+}
+
 bool ellipses::Axes::normalize() {
     if (_vector[A] < 0 || _vector[B] < 0) return false;
     if (_vector[A] < _vector[B]) {

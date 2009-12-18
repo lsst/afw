@@ -16,11 +16,12 @@
 %rename(__sub__) lsst::afw::geom::Extent<T,N>::operator-;
 %rename(__iadd__) lsst::afw::geom::Extent<T,N>::operator+=;
 %rename(__isub__) lsst::afw::geom::Extent<T,N>::operator-=;
-%rename(__pos__) lsst::afw::geom::Extent<T,N>::operator+();
-%rename(__neg__) lsst::afw::geom::Extent<T,N>::operator-();
-%rename(__mul__) lsst::afw::geom::Extent<T,N>::operator+();
-%rename(__imul__) lsst::afw::geom::Extent<T,N>::operator+=();
-%rename(__idiv__) lsst::afw::geom::Extent<T,N>::operator-=();
+%rename(__pos__) lsst::afw::geom::Extent<T,N>::operator+() const;
+%rename(__neg__) lsst::afw::geom::Extent<T,N>::operator-() const;
+%rename(__mul__) lsst::afw::geom::Extent<T,N>::operator*;
+%rename(__imul__) lsst::afw::geom::Extent<T,N>::operator*=;
+%rename(__div__) lsst::afw::geom::Extent<T,N>::operator/;
+%rename(__idiv__) lsst::afw::geom::Extent<T,N>::operator/=;
 %enddef
 
 %CoordinateBase_PREINCLUDE_2(int, lsst::afw::geom::Extent<int,2>);

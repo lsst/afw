@@ -219,17 +219,17 @@ void testEllipseTransformer(TCore core) {
     matrix(2,0) = matrix(2,1) = 0.0;
     matrix(2,2) = 1.0;
     AffineTransform transform(matrix);
-    typename TCore::Ellipse output = input.transform(transform);
+    typename TCore::Ellipse output(*input.transform(transform).copy());
     Eigen::Matrix<double,5,5> e_d_analytic = input.transform(transform).d();
     Eigen::Matrix<double,5,5> e_d_numeric = Eigen::Matrix<double,5,5>::Zero();
     
     for (int i=0; i<5; ++i) {
         input[i] += eps;
-        output = input.transform(transform);
+        output = *input.transform(transform).copy();
         for (int j=0; j<5; ++j)
             e_d_numeric(j,i) = output[j];
         input[i] -= 2*eps;
-        output = input.transform(transform);
+        output = *input.transform(transform).copy();
         for (int j=0; j<5; ++j)
             e_d_numeric(j,i) -= output[j];
         input[i] += eps;
@@ -247,11 +247,11 @@ void testEllipseTransformer(TCore core) {
     Eigen::Matrix<double,5,6> t_d_numeric = Eigen::Matrix<double,5,6>::Zero();
     for (int i=0; i<6; ++i) {
         transform[i] += eps;
-        output = input.transform(transform);
+        output = *input.transform(transform).copy();
         for (int j=0; j<5; ++j)
             t_d_numeric(j,i) = output[j];
         transform[i] -= 2*eps;
-        output = input.transform(transform);
+        output = *input.transform(transform).copy();
         for (int j=0; j<5; ++j)
             t_d_numeric(j,i) -= output[j];
         transform[i] += eps;

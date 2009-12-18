@@ -22,17 +22,13 @@ namespace afw {
 namespace geom {
 namespace ellipses {
 
-namespace detail {
-template <typename DerivedCore, typename DerivedEllipse> class CoreImpl;
-template <typename DerivedCore, typename DerivedEllipse> class EllipseImpl;
-} // namespace lsst::afw::geom::ellipses::detail
-
-class BaseEllipse;
-class BaseCore;
 class Quadrupole;
 class Axes;
 class Distortion;
 class LogShear;
+
+class BaseEllipse;
+class BaseCore;
 
 /**
  *  This typedef is expected to be used more often than the true class name, 
@@ -222,7 +218,6 @@ public:
 protected:
 
     friend class BaseEllipse;
-    template <typename DerivedCore, typename DerivedEllipse> friend class detail::CoreImpl;
 
     virtual BaseCore * _clone() const = 0;
     virtual BaseEllipse * _makeEllipse(PointD const & center) const = 0;

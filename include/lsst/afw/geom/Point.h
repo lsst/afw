@@ -105,7 +105,6 @@ typedef Point<double,2> PointD;
 typedef Point<double,2> Point2D;
 typedef Point<double,3> Point3D;
 
-
 }}}
 
 #endif

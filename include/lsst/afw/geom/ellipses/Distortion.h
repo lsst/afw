@@ -9,14 +9,69 @@
  *  \note Do not include directly; use the main ellipse header file.
  */
 
-#include "lsst/afw/geom/ellipses/EllipseImpl.h"
+#include "lsst/afw/geom/ellipses/BaseEllipse.h"
 
 namespace lsst {
 namespace afw {
 namespace geom {
 namespace ellipses {
 
-class DistortionEllipse;
+/**
+ *  \brief An ellipse with a Distortion core.
+ *
+ *  \ingroup EllipseGroup
+ */
+class DistortionEllipse : public BaseEllipse {
+public:
+
+    typedef boost::shared_ptr<DistortionEllipse> Ptr;
+    typedef boost::shared_ptr<DistortionEllipse const> ConstPtr;
+
+    typedef DistortionEllipse Ellipse;
+    typedef Distortion Core;
+
+    /// Definitions for elements of an ellipse vector.
+    enum Parameters { X=0, Y=1, E1=2, E2=3, R=4 };
+
+    /// \brief Deep-copy the ellipse.
+    Ptr clone() const { return Ptr(static_cast<DistortionEllipse*>(_clone()));  }
+
+    /// \brief Return the Core object.
+    Distortion const & getCore() const;
+
+    /// \brief Return the Core object.
+    Distortion & getCore();
+
+    /**
+     *  \brief Set the parameters of this ellipse from another.
+     *
+     *  This does not change the parametrization of the ellipse.
+     */
+    DistortionEllipse & operator=(BaseEllipse const & other) {
+        return static_cast<DistortionEllipse &>(BaseEllipse::operator=(other));
+    }
+    DistortionEllipse & operator=(DistortionEllipse const & other) {
+        return static_cast<DistortionEllipse &>(BaseEllipse::operator=(other));
+    }
+
+    /// \brief Construct from a PointD and zero-size Core.
+    explicit DistortionEllipse(PointD const & center = PointD());
+
+    /// \brief Construct from a copy of an Distortion core.
+    explicit DistortionEllipse(Distortion const & core, PointD const & center = PointD());
+
+    /// \brief Construct from a 5-element parameter vector.
+    explicit DistortionEllipse(BaseEllipse::ParameterVector const & vector, bool doNormalize=true);
+
+    /// \brief Converting copy constructor.
+    DistortionEllipse(BaseEllipse const & other);
+
+    /// \brief Copy constructor.
+    DistortionEllipse(DistortionEllipse const & other);
+
+protected:
+    virtual DistortionEllipse * _clone() const { return new DistortionEllipse(*this); }
+};
 
 /**
  *  \brief An ellipse core for complex ellipticity and geometric mean radius.
@@ -34,11 +89,29 @@ class DistortionEllipse;
  *
  *  \ingroup EllipseGroup
  */
-class Distortion : public detail::CoreImpl<Distortion,DistortionEllipse> {
-    typedef detail::CoreImpl<Distortion,DistortionEllipse> Super;
+class Distortion : public BaseCore {
 public:
 
+    typedef boost::shared_ptr<Distortion> Ptr;
+    typedef boost::shared_ptr<Distortion const> ConstPtr;
+
+    typedef DistortionEllipse Ellipse;
+    typedef Distortion Core;
+
     enum Parameters { E1=0, E2=1, R=2 }; ///< Definitions for elements of a core vector.
+
+    /// \brief Deep copy the ellipse core.
+    Ptr clone() const { return Ptr(_clone()); }
+
+    /// \brief Construct an Ellipse of the appropriate subclass from this and the given center.
+    DistortionEllipse::Ptr makeEllipse(PointD const & center = PointD()) const {
+        return DistortionEllipse::Ptr(_makeEllipse(center));
+    }
+
+    /// \brief Assign other to this and return the derivative of the conversion, d(this)/d(other).
+    virtual BaseCore::Jacobian dAssign(BaseCore const & other) {
+        return other._dAssignTo(static_cast<Core &>(*this)); 
+    }
 
     /// Return a string that identifies this parametrization.
     virtual char const * getName() const { return "Distortion"; }
@@ -71,23 +144,29 @@ public:
     virtual Distortion & operator=(BaseCore const & other) { other._assignTo(*this); return *this; }
 
     /// \brief Construct from a parameter vector.
-    explicit Distortion(BaseCore::ParameterVector const & vector) : Super(vector) {}
+    explicit Distortion(BaseCore::ParameterVector const & vector) : BaseCore(vector) {}
 
     /// \brief Construct from parameter values.
-    explicit Distortion(double e1=0, double e2=0, double radius=0) : Super(e1,e2,radius) {}
+    explicit Distortion(double e1=0, double e2=0, double radius=0) : BaseCore(e1,e2,radius) {}
     
     /// \brief Construct from complex ellipticity and radius.
     explicit Distortion(std::complex<double> const & e, double radius=0) 
-        : Super(e.real(),e.imag(),radius) {}
+        : BaseCore(e.real(),e.imag(),radius) {}
 
     /// \brief Converting copy constructor.
     Distortion(BaseCore const & other) { *this = other; }
 
     /// \brief Copy constructor.
-    Distortion(Distortion const & other) : Super(other.getVector()) {}
+    Distortion(Distortion const & other) : BaseCore(other.getVector()) {}
 
 protected:
     
+    virtual Distortion * _clone() const { return new Distortion(*this); }
+    
+    virtual DistortionEllipse * _makeEllipse(PointD const & center) const {
+        return new DistortionEllipse(*this, center);
+    }
+
     virtual void _assignTo(Quadrupole & other) const;
     virtual void _assignTo(Axes & other) const;
     virtual void _assignTo(Distortion & other) const;
@@ -100,45 +179,20 @@ protected:
 
 };
 
-/**
- *  \brief An ellipse with a Distortion core.
- *
- *  \ingroup EllipseGroup
- */
-class DistortionEllipse : public detail::EllipseImpl<Distortion,DistortionEllipse> {
-    typedef detail::EllipseImpl<Distortion,DistortionEllipse> Super;
-public:
+inline Distortion const & 
+DistortionEllipse::getCore() const { return static_cast<Distortion const &>(*_core); }
 
-    /// Definitions for elements of an ellipse vector.
-    enum Parameters { X=0, Y=1, E1=2, E2=3, R=4 };
+inline Distortion & DistortionEllipse::getCore() { return static_cast<Distortion &>(*_core); }
 
-    /**
-     *  \brief Set the parameters of this ellipse from another.
-     *
-     *  This does not change the parametrization of the ellipse.
-     */
-    DistortionEllipse & operator=(BaseEllipse const & other) { return Super::operator=(other); }
+inline DistortionEllipse::DistortionEllipse(PointD const & center) :
+    BaseEllipse(new Distortion(),center) {}
+inline DistortionEllipse::DistortionEllipse(Distortion const & core, PointD const & center) : 
+    BaseEllipse(core,center) {}
+inline DistortionEllipse::DistortionEllipse(BaseEllipse const & other) : 
+    BaseEllipse(other.getCore(),other.getCenter()) {}
+inline DistortionEllipse::DistortionEllipse(DistortionEllipse const & other) : 
+    BaseEllipse(other.getCore(),other.getCenter()) {}
 
-    /// \brief Set the parameters of this ellipse from another.
-    DistortionEllipse & operator=(DistortionEllipse const & other) { return Super::operator=(other); }
-
-    /// \brief Construct from a PointD and zero-size Core.
-    explicit DistortionEllipse(PointD const & center = PointD()) : Super(new Distortion(),center) {}
-
-    /// \brief Construct from a copy of a Distortion core.
-    explicit DistortionEllipse(Distortion const & core, PointD const & center = PointD()) : 
-        Super(core,center) {}
-
-    /// \brief Construct from a 5-element parameter vector.
-    explicit DistortionEllipse(BaseEllipse::ParameterVector const & vector) : Super(vector) {}
-
-    /// \brief Converting copy constructor.
-    DistortionEllipse(BaseEllipse const & other) : Super(other.getCore(),other.getCenter()) {}
-
-    /// \brief Copy constructor.
-    DistortionEllipse(DistortionEllipse const & other) : Super(other.getCore(),other.getCenter()) {}
-
-};
 
 } // namespace lsst::afw::geom::ellipses
 }}} // namespace lsst::afw::geom

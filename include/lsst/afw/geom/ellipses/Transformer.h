@@ -12,7 +12,10 @@
 #include <boost/tuple/tuple.hpp>
 
 #include "lsst/afw/geom/ellipses/BaseEllipse.h"
-#include "lsst/afw/geom/ellipses/EllipseImpl.h"
+#include "lsst/afw/geom/ellipses/Quadrupole.h"
+#include "lsst/afw/geom/ellipses/Axes.h"
+#include "lsst/afw/geom/ellipses/Distortion.h"
+#include "lsst/afw/geom/ellipses/LogShear.h"
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
 
 namespace lsst {
@@ -62,7 +65,7 @@ public:
         _input(input), _transform(transform) {}
 
     /// \brief Return a new transformed ellipse core.
-    boost::shared_ptr<BaseCore> copy() const;
+    BaseCore::Ptr copy() const;
 
     /// \brief %Transform the ellipse core in-place.
     void inPlace() { _input = transformQuadrupole(_input); }
@@ -102,7 +105,7 @@ public:
         _input(input), _transform(transform) {}
 
     /// \brief Return a new transformed ellipse.
-    boost::shared_ptr<BaseEllipse> copy() const;
+    BaseEllipse::Ptr copy() const;
 
     /// \brief %Transform the ellipse in-place.
     void inPlace();
@@ -112,60 +115,6 @@ public:
     
     /// \brief Return the derivative of transform output ellipse with respect to transform parameters.
     TransformDerivativeMatrix dTransform() const;
-};
-
-/**
- *  \brief A temporary-only expression object for ellipse core transformations.
- *
- *  Transformer simply provides a clean syntax for transform-related operations, including 
- *  in-place and new-object transformations, derivatives of the transformations,
- *  and implicit conversion to a new transformed core, either as an object or an auto_ptr.
- */
-template <typename DerivedCore, typename DerivedEllipse>
-class detail::CoreImpl<DerivedCore,DerivedEllipse>::Transformer : public BaseCore::Transformer {
-    typedef BaseCore::Transformer Super;
-public:
-    
-    /// \brief Standard constructor.
-    Transformer(DerivedCore & input, AffineTransform const & transform) : Super(input,transform) {}
-
-    /// \brief Return a new transformed ellipse core.
-    boost::shared_ptr<DerivedCore> copy() const {
-        return boost::static_pointer_cast<DerivedCore>(Super::copy());
-    }
-
-    /// \brief Return a new transformed ellipse core.
-    operator DerivedCore() const { return DerivedCore(transformQuadrupole(_input)); }
-
-};
-
-/**
- *  \brief A temporary-only expression object for ellipse transformations.
- *
- *  Transformer simply provides a clean syntax for transform-related operations, including 
- *  in-place and new-object transformations, derivatives of the transformations,
- *  and implicit conversion to a new transformed ellipse, either as an object or an auto_ptr.
- */
-template <typename DerivedCore, typename DerivedEllipse>
-class detail::EllipseImpl<DerivedCore,DerivedEllipse>::Transformer : public BaseEllipse::Transformer {
-    typedef BaseEllipse::Transformer Super;
-public:
-
-    /// \brief Standard constructor.
-    Transformer(DerivedEllipse & input, AffineTransform const & transform) : Super(input,transform) {}
-
-    /// \brief Return a new transformed ellipse.
-    boost::shared_ptr<DerivedEllipse> copy() const {
-        return boost::static_pointer_cast<DerivedEllipse>(Super::copy());
-    }
-    
-    /// \brief Return a new transformed ellipse.
-    operator DerivedEllipse() const {
-        DerivedEllipse const & derivedInput = static_cast<DerivedEllipse const &>(_input);
-        boost::shared_ptr<DerivedCore> core(derivedInput.getCore().transform(_transform).copy());
-        return DerivedEllipse(*core,_transform(_input.getCenter()));
-    }
-
 };
 
 inline BaseCore::Transformer BaseCore::transform(AffineTransform const & transform) {
@@ -182,42 +131,6 @@ inline BaseEllipse::Transformer BaseEllipse::transform(AffineTransform const & t
 
 inline BaseEllipse::Transformer const BaseEllipse::transform(AffineTransform const & transform) const {
     return BaseEllipse::Transformer(const_cast<BaseEllipse &>(*this),transform);
-}
-
-template <typename DerivedCore, typename DerivedEllipse>
-inline typename detail::CoreImpl<DerivedCore,DerivedEllipse>::Transformer
-detail::CoreImpl<DerivedCore,DerivedEllipse>::transform(AffineTransform const & transform) {
-    return typename detail::CoreImpl<DerivedCore,DerivedEllipse>::Transformer(
-        static_cast<DerivedCore &>(*this),
-        transform
-    );
-}
-
-template <typename DerivedCore, typename DerivedEllipse>
-inline typename detail::CoreImpl<DerivedCore,DerivedEllipse>::Transformer const
-detail::CoreImpl<DerivedCore,DerivedEllipse>::transform(AffineTransform const & transform) const {
-    return typename detail::CoreImpl<DerivedCore,DerivedEllipse>::Transformer(
-        const_cast<DerivedCore &>(static_cast<DerivedCore const &>(*this)),
-        transform
-    );
-}
-
-template <typename DerivedCore, typename DerivedEllipse>
-inline typename detail::EllipseImpl<DerivedCore,DerivedEllipse>::Transformer
-detail::EllipseImpl<DerivedCore,DerivedEllipse>::transform(AffineTransform const & transform) {
-    return typename detail::EllipseImpl<DerivedCore,DerivedEllipse>::Transformer(
-        static_cast<DerivedEllipse &>(*this),
-        transform
-    );
-}
-
-template <typename DerivedCore, typename DerivedEllipse>
-inline typename detail::EllipseImpl<DerivedCore,DerivedEllipse>::Transformer const
-detail::EllipseImpl<DerivedCore,DerivedEllipse>::transform(AffineTransform const & transform) const {
-    return typename detail::EllipseImpl<DerivedCore,DerivedEllipse>::Transformer(
-        const_cast<DerivedEllipse &>(static_cast<DerivedEllipse const &>(*this)),
-        transform
-    );
 }
 
 } // namespace lsst::afw::geom::ellipses
