@@ -11,6 +11,7 @@ setupRequired(gsl >= 1.8)
 setupRequired(fftw >= 3.1.2+1)
 
 setupOptional(afwdata >= svn8736)
+setupOptional(gcc)
 
 envPrepend(LD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
 envPrepend(DYLD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
