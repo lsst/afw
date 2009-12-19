@@ -28,7 +28,8 @@ lsst::afw::geom::AffineTransform ellipses::BaseEllipse::getGenerator() const {
 }
 
 ellipses::BaseEllipse::Envelope ellipses::BaseEllipse::computeEnvelope() const {
-    return Envelope(_center,getCore().computeDimensions());
+    ExtentD size(getCore().computeDimensions());
+    return Envelope(_center - size * 0.5, size);
 }
 
 lsst::afw::geom::ExtentD ellipses::BaseCore::computeDimensions() const {
