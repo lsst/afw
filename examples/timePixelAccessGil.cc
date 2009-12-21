@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <ctime>
+#include <cstdio>
 
 using namespace boost::gil;
 
