@@ -84,7 +84,7 @@ typename ImageT::Ptr offsetImage(ImageT const& inImage,            ///< The %ima
     template afwImage::Image<TYPE>::Ptr offsetImage(afwImage::Image<TYPE> const&, float, float, \
                                                     std::string const&); \
     template afwImage::MaskedImage<TYPE>::Ptr offsetImage(afwImage::MaskedImage<TYPE> const&, float, float, \
-                                                    std::string const&);
+                                                          std::string const&);
 
 INSTANTIATE(double)
 INSTANTIATE(float)

@@ -1,3 +1,4 @@
+// -*- LSST-C++ -*-
 #include <iostream>
 #include <cmath>
 

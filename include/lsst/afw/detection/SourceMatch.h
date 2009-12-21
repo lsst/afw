@@ -15,7 +15,16 @@
 
 namespace lsst { namespace afw { namespace detection {
 
-typedef boost::tuple<Source::Ptr, Source::Ptr, double> SourceMatch;
+struct SourceMatch {
+    Source::Ptr first;
+    Source::Ptr second;
+    double distance;
+
+    SourceMatch() : first(), second(), distance(0.0) {}
+    SourceMatch(Source::Ptr const & s1, Source::Ptr const & s2, double dist)
+        : first(s1), second(s2), distance(dist) {}
+    ~SourceMatch() {}
+};
 
 std::vector<SourceMatch> matchRaDec(SourceSet const &set1, SourceSet const &set2, double radius);
 std::vector<SourceMatch> matchRaDec(SourceSet const &set, double radius, bool symmetric = true);

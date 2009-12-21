@@ -27,12 +27,30 @@ afwMath::deltafunction_kernel_tag afwMath::deltafunction_kernel_tag_;
 // Constructors
 //
 /**
- * @brief Construct a spatially varying Kernel with one spatial function copied as needed
+ * @brief Construct a null Kernel of size 0,0.
  *
- * @throw lsst::pex::exceptions::InvalidParameterException  if the kernel has no parameters.
+ * A null constructor is primarily intended for persistence.
  */
 namespace {
 }
+afwMath::Kernel::Kernel()
+:
+    LsstBase(typeid(this)),
+    _spatialFunctionList(),
+    _width(0),
+    _height(0),
+    _ctrX(0),
+    _ctrY(0),
+    _nKernelParams(0)
+{}
+
+/**
+ * @brief Construct a spatially invariant Kernel or a spatially varying Kernel with one spatial function
+ * that is duplicated as needed.
+ *
+ * @throw lsst::pex::exceptions::InvalidParameterException if a spatial function is specified
+ * and the kernel has no parameters.
+ */
 afwMath::Kernel::Kernel(
     int width,                          ///< number of columns
     int height,                         ///< number of height
@@ -40,12 +58,12 @@ afwMath::Kernel::Kernel(
     SpatialFunction const &spatialFunction) ///< spatial function (or NullSpatialFunction if none specified)
 :
     LsstBase(typeid(this)),
+    _spatialFunctionList(),
     _width(width),
     _height(height),
     _ctrX((width-1)/2),
     _ctrY((height-1)/2),
-    _nKernelParams(nKernelParams),
-    _spatialFunctionList()
+    _nKernelParams(nKernelParams)
 {
     if (dynamic_cast<const NullSpatialFunction*>(&spatialFunction)) {
         // spatialFunction is not really present
@@ -54,7 +72,7 @@ afwMath::Kernel::Kernel(
             throw LSST_EXCEPT(pexExcept::InvalidParameterException, "Kernel function has no parameters");
         }
         for (unsigned int ii = 0; ii < nKernelParams; ++ii) {
-            SpatialFunctionPtr spatialFunctionCopy = spatialFunction.copy();
+            SpatialFunctionPtr spatialFunctionCopy = spatialFunction.clone();
             this->_spatialFunctionList.push_back(spatialFunctionCopy);
         }
     }
@@ -79,7 +97,7 @@ afwMath::Kernel::Kernel(
    _nKernelParams(spatialFunctionList.size())
 {
     for (unsigned int ii = 0; ii < spatialFunctionList.size(); ++ii) {
-        SpatialFunctionPtr spatialFunctionCopy = spatialFunctionList[ii]->copy();
+        SpatialFunctionPtr spatialFunctionCopy = spatialFunctionList[ii]->clone();
         this->_spatialFunctionList.push_back(spatialFunctionCopy);
     }
 }
@@ -134,9 +152,9 @@ void afwMath::Kernel::computeKernelParametersFromSpatialModel(
 }
 
 /**
- * @brief Return a copy of the specified spatial function (one component of the spatial model)
+ * @brief Return a clone of the specified spatial function (one component of the spatial model)
  *
- * @return a pointer to a spatial function. The function is a copy, so setting its parameters
+ * @return a shared pointer to a spatial function. The function is a deep copy, so setting its parameters
  * has no effect on the kernel.
  *
  * @throw lsst::pex::exceptions::InvalidParameterException if kernel not spatially varying
@@ -155,21 +173,21 @@ afwMath::Kernel::SpatialFunctionPtr afwMath::Kernel::getSpatialFunction(
             throw LSST_EXCEPT(pexExcept::InvalidParameterException, errStream.str());
         }
     }
-    return _spatialFunctionList[index]->copy();
+    return _spatialFunctionList[index]->clone();
 }
 
 /**
- * @brief Return a list of copies of the spatial functions.
+ * @brief Return a list of clones of the spatial functions.
  *
- * @return a list of pointers to spatial functions. The functions are copies, so setting their parameters
- * has no effect on the kernel.
+ * @return a list of shared pointers to spatial functions. The functions are deep copies,
+ * so setting their parameters has no effect on the kernel.
  */
 std::vector<afwMath::Kernel::SpatialFunctionPtr> afwMath::Kernel::getSpatialFunctionList(
 ) const {
     std::vector<SpatialFunctionPtr> spFuncCopyList;
     for (std::vector<SpatialFunctionPtr>::const_iterator spFuncIter = _spatialFunctionList.begin();
         spFuncIter != _spatialFunctionList.end(); ++spFuncIter) {
-        spFuncCopyList.push_back((**spFuncIter).copy());
+        spFuncCopyList.push_back((**spFuncIter).clone());
     }
     return spFuncCopyList;
 }

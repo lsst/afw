@@ -1,3 +1,4 @@
+// -*- LSST-C++ -*-
 #include <iostream>
 #include <cmath>
 #include <vector>
@@ -18,7 +19,7 @@ BOOST_AUTO_TEST_CASE(LinearInterpolateRamp) {
     int n = 10;
     vector<double> x(n);
     vector<double> y(n);
-    for(int i = 0; i < n; ++i) {
+    for (int i = 0; i < n; ++i) {
         x[i] = static_cast<double>(i);
         y[i] = static_cast<double>(i);
     }
@@ -40,7 +41,7 @@ BOOST_AUTO_TEST_CASE(SplineInterpolateRamp) {
     vector<double> x(n);
     vector<double> y(n);
     //double const NaN = std::numeric_limits<double>::quiet_NaN();
-    for(int i = 0; i < n; ++i) {
+    for (int i = 0; i < n; ++i) {
         x[i] = static_cast<double>(i);
         y[i] = static_cast<double>(i);
     }
@@ -59,15 +60,15 @@ BOOST_AUTO_TEST_CASE(SplineInterpolateRamp) {
 
 BOOST_AUTO_TEST_CASE(SplineInterpolateParabola) {
 
-    int const N = 20;
-    vector<double> x(N);
-    vector<double> y(N);
+    int const n = 20;
+    vector<double> x(n);
+    vector<double> y(n);
     double dydx = 1.0;
     double d2ydx2 = 0.5;
     double y0 = 10.0;
     
     //double const NaN = std::numeric_limits<double>::quiet_NaN();
-    for(int i = 0; i < N; ++i) {
+    for (int i = 0; i < n; ++i) {
         x[i] = static_cast<double>(i);
         y[i] = d2ydx2*x[i]*x[i] + dydx*x[i] + y0;
     }

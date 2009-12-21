@@ -204,6 +204,19 @@ class FootprintTestCase(unittest.TestCase):
         if False:
             ds9.mtv(idImage, frame=2)
 
+    def testGetBBox(self):
+        """Check that Footprint.getBBox() returns a copy"""
+        
+        x0, y0, w, h = 9, 10, 7, 4
+        foot = afwDetection.Footprint(afwImage.BBox(afwImage.PointI(x0, y0), w, h))
+        bbox = foot.getBBox()
+
+        dx, dy = 10, 20
+        bbox.shift(dx, dy)
+
+        self.assertEqual(bbox.getX0(), x0 + dx)
+        self.assertEqual(foot.getBBox().getX0(), x0)
+
     def testBCircle2i(self):
         """Test the BCircle2i constructors"""
         
@@ -516,6 +529,16 @@ class FootprintSetTestCase(unittest.TestCase):
                 for x in range(sp.getX0(), sp.getX1() + 1):
                     self.assertEqual(idImage.get(x, sp.getY()), i + 1)
 
+    def testFootprintsImage(self):
+        """Check that we can search Images as well as MaskedImages"""
+        ds = afwDetection.FootprintSetF(self.ms.getImage(), afwDetection.Threshold(10))
+
+        objects = ds.getFootprints()
+
+        self.assertEqual(len(objects), len(self.objects))
+        for i in range(len(objects)):
+            self.assertEqual(objects[i], self.objects[i])
+            
     def testGrow2(self):
         """Grow some more interesting shaped Footprints.  Informative with display, but no numerical tests"""
         

@@ -9,17 +9,14 @@ or
    >>> import Statistics; Statistics.run()
 """
 
-import math
-import os
 import pdb  # we may want to say pdb.set_trace()
-import sys
 import unittest
 
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions
 import lsst.afw.image.imageLib as afwImage
 import lsst.afw.math as afwMath
-import lsst.afw.display.ds9 as ds9
+#import lsst.afw.display.ds9 as ds9
 
 try:
     type(display)
@@ -37,10 +34,10 @@ class StatisticsTestCase(unittest.TestCase):
         self.sctrl = afwMath.StatisticsControl()
 
         # Integers
-        self.mimgI = afwImage.MaskedImageI(self.nRow, self.nCol);
+        self.mimgI = afwImage.MaskedImageI(self.nRow, self.nCol)
         self.mimgI.set(self.val, 0x0, self.val)
-        self.imgI = afwImage.ImageI(self.nRow, self.nCol, self.val);
-        self.vecI = afwMath.vectorI(self.nRow*self.nCol, self.val);
+        self.imgI = afwImage.ImageI(self.nRow, self.nCol, self.val)
+        self.vecI = afwMath.vectorI(self.nRow*self.nCol, self.val)
 
         # floats
         self.mimgF = afwImage.MaskedImageF(self.nRow, self.nCol)
@@ -119,7 +116,8 @@ class StatisticsTestCase(unittest.TestCase):
             
     # Test the Mask specialization
     def testMask(self):
-        mask = afwImage.MaskU(10, 10); mask.set(0x0)
+        mask = afwImage.MaskU(10, 10);
+        mask.set(0x0)
 
         mask.set(1, 1, 0x10)
         mask.set(3, 1, 0x08)
@@ -146,9 +144,9 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(exit=False):
+def run(shouldExit = False):
     """Run the tests"""
-    utilsTests.run(suite(), exit)
+    utilsTests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
     run(True)

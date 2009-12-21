@@ -253,10 +253,10 @@ SpatialCellSet::SpatialCellSet(image::BBox const& region, ///< Bounding box for 
     //
     int y0 = region.getY0();
     for (int y = 0; y < ny; ++y) {
-        int const y1 = (y == ny - 1) ? region.getY1() : (y + 1)*ySize - 1; // ny may not be a factor of height
+        int const y1 = (y == ny - 1) ? region.getY1() : y0 + ySize - 1; // ny may not be a factor of height
         int x0 = region.getX0();
         for (int x = 0; x < nx; ++x) {
-            int const x1 = (x == nx - 1) ? region.getX1() : (x + 1)*xSize - 1; // nx may not be a factor of width
+            int const x1 = (x == nx - 1) ? region.getX1() : x0 + xSize - 1; // nx may not be a factor of width
             image::BBox bbox(image::PointI(x0, y0), image::PointI(x1, y1));
             std::string label = (boost::format("Cell %dx%d") % x % y).str();
 

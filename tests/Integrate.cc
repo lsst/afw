@@ -37,6 +37,7 @@ namespace math = lsst::afw::math;
 template<typename IntegrandT>
 class Parab1D : public std::unary_function<IntegrandT, IntegrandT> {
 public:
+    
     Parab1D(double k, double kx) : _k(k), _kx(kx) {}
     
     // for this example we have an analytic answer to check

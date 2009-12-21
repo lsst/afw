@@ -9,10 +9,7 @@ or
    >>> import Statistics; Statistics.run()
 """
 
-import math
-import os
 import pdb  # we may want to say pdb.set_trace()
-import sys
 import unittest
 import numpy
 
@@ -35,7 +32,7 @@ class StatisticsTestCase(unittest.TestCase):
     def setUp(self):
         self.valL, self.valR = 10, 20
         self.nRow, self.nCol = 100, 200
-        self.N = self.nRow*self.nCol
+        self.n = self.nRow*self.nCol
 
         self.bboxL = afwImage.BBox(afwImage.PointI(0, 0),
                                    afwImage.PointI(self.nRow/2 - 1, self.nCol - 1))
@@ -67,7 +64,7 @@ class StatisticsTestCase(unittest.TestCase):
         nL, nR = self.mimgL.getWidth()*self.mimgL.getHeight(), self.mimgR.getWidth()*self.mimgR.getHeight()
         stdev = ((nL*(self.valL - mean)**2 + nR*(self.valR - mean)**2)/(nL + nR - 1))**0.5
 
-        self.assertEqual(stats.getValue(afwMath.NPOINT), self.N)
+        self.assertEqual(stats.getValue(afwMath.NPOINT), self.n)
         self.assertEqual(stats.getValue(afwMath.MEAN), mean)
         self.assertEqual(stats.getValue(afwMath.STDEV), stdev)
 
@@ -95,7 +92,7 @@ class StatisticsTestCase(unittest.TestCase):
         nL, nR = self.mimgL.getWidth()*self.mimgL.getHeight(), self.mimgR.getWidth()*self.mimgR.getHeight()
         stdev = ((nL*(self.valL - mean)**2 + nR*(self.valR - mean)**2)/(nL + nR - 1))**0.5
 
-        self.assertEqual(stats.getValue(afwMath.NPOINT), self.N)
+        self.assertEqual(stats.getValue(afwMath.NPOINT), self.n)
         self.assertEqual(stats.getValue(afwMath.MEAN), mean)
         self.assertEqual(stats.getValue(afwMath.STDEV), stdev)
 
@@ -128,9 +125,9 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(exit=False):
+def run(shouldExit = False):
     """Run the tests"""
-    utilsTests.run(suite(), exit)
+    utilsTests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
     run(True)

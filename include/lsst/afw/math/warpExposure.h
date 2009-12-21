@@ -46,6 +46,10 @@ namespace math {
         {};
         
         virtual ~LanczosWarpingKernel() {};
+        
+        virtual Kernel::Ptr clone() const;
+        
+        int getOrder() const;
     };
 
 
@@ -65,6 +69,8 @@ namespace math {
         {};
 
         virtual ~BilinearWarpingKernel() {};
+        
+        virtual Kernel::Ptr clone() const;
 
         /**
          * \brief 1-dimensional bilinear interpolation function.
@@ -89,7 +95,7 @@ namespace math {
             }
             virtual ~BilinearFunction1() {};
             
-            virtual Function1Ptr copy() const {
+            virtual Function1Ptr clone() const {
                 return Function1Ptr(new BilinearFunction1(this->_params[0]));
             }
             
@@ -114,6 +120,14 @@ namespace math {
         SrcImageT const &srcImage,
         lsst::afw::image::Wcs const &srcWcs,
         SeparableKernel &warpingKernel);
+
+    namespace details {
+        template <typename A, typename B>
+        bool isSameObject(A const& a, B const& b) { return false; };
+        
+        template <typename A>
+        bool isSameObject(A const& a, A const& b) { return &a == &b; };
+    }
        
 }}} // lsst::afw::math
 

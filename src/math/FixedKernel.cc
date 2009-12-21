@@ -42,10 +42,10 @@ afwMath::FixedKernel::FixedKernel(
     _image(image, true),
     _sum(0) {
 
-    typedef afwImage::Image<Pixel>::x_iterator x_iterator;
+    typedef afwImage::Image<Pixel>::x_iterator XIter;
     double imSum = 0.0;
     for (int y = 0; y != image.getHeight(); ++y) {
-        for (x_iterator imPtr = image.row_begin(y), imEnd = image.row_end(y); imPtr != imEnd; ++imPtr) {
+        for (XIter imPtr = image.row_begin(y), imEnd = image.row_end(y); imPtr != imEnd; ++imPtr) {
             imSum += *imPtr;
         }
     }
@@ -55,6 +55,13 @@ afwMath::FixedKernel::FixedKernel(
 //
 // Member Functions
 //
+afwMath::Kernel::Ptr afwMath::FixedKernel::clone() const {
+    afwMath::Kernel::Ptr retPtr(new afwMath::FixedKernel(_image));
+    retPtr->setCtrX(this->getCtrX());
+    retPtr->setCtrY(this->getCtrY());
+    return retPtr;
+}
+
 double afwMath::FixedKernel::computeImage(
     afwImage::Image<Pixel> &image,
     bool doNormalize,
@@ -62,22 +69,26 @@ double afwMath::FixedKernel::computeImage(
     double y
 ) const {
     if (image.getDimensions() != this->getDimensions()) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "image is the wrong size");
+        std::ostringstream os;
+        os << "image dimensions = ( " << image.getWidth() << ", " << image.getHeight()
+            << ") != (" << this->getWidth() << ", " << this->getHeight() << ") = kernel dimensions";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
 
     double multFactor = 1.0;
-    double imSum = 1.0;
+    double imSum = this->_sum;
     if (doNormalize) {
+        if (imSum == 0) {
+            throw LSST_EXCEPT(pexExcept::OverflowErrorException, "Cannot normalize; kernel sum is 0");
+        }
         multFactor = 1.0/static_cast<double>(this->_sum);
-    } else {
-        imSum = this->_sum;
+        imSum = 1.0;
     }
 
-    typedef afwImage::Image<Pixel>::x_iterator x_iterator;
+    typedef afwImage::Image<Pixel>::x_iterator XIter;
 
     for (int y = 0; y != this->getHeight(); ++y) {
-        x_iterator kPtr = this->_image.row_begin(y);
-        for (x_iterator imPtr = image.row_begin(y), imEnd = image.row_end(y);
+        for (XIter imPtr = image.row_begin(y), imEnd = image.row_end(y), kPtr = this->_image.row_begin(y);
             imPtr != imEnd; ++imPtr, ++kPtr) {
             imPtr[0] = multFactor*kPtr[0];
         }

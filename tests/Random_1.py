@@ -16,6 +16,7 @@ import unittest
 import lsst.pex.exceptions as pexExcept
 import lsst.pex.policy as pexPolicy
 import lsst.utils.tests as utilsTests
+import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -68,7 +69,24 @@ class RandomTestCase(unittest.TestCase):
         r2 = afwMath.Random(pol)
         checkRngEquivalence(r1, r2)
 
+class RandomImageTestCase(unittest.TestCase):
+    """A test case for lsst.afw.math.Random applied to Images"""
 
+    def setUp(self):
+        self.rand = afwMath.Random()
+        self.image = afwImage.ImageF(1000, 1000)
+
+    def tearDown(self):
+        pass
+
+    def testRandomUniformImage(self):
+        afwMath.randomUniformImage(self.image, self.rand)
+        #stats = afwMath.makeStatistics(self.image, afwMath.MEAN | afwMath.STDEV)
+
+    def testRandomGaussianImage(self):
+        afwMath.randomGaussianImage(self.image, self.rand)
+        #stats = afwMath.makeStatistics(self.image, afwMath.MEAN | afwMath.STDEV)
+        
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
@@ -78,6 +96,7 @@ def suite():
 
     suites = []
     suites += unittest.makeSuite(RandomTestCase)
+    suites += unittest.makeSuite(RandomImageTestCase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 

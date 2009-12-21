@@ -69,8 +69,6 @@ SWIG_SHARED_PTR_DERIVED(Kernel, lsst::daf::data::LsstBase, lsst::afw::math::Kern
 
 %include "lsst/afw/math/Kernel.h"
 
-%template(KernelList) std::vector<boost::shared_ptr<lsst::afw::math::Kernel> >;
-
 %include "lsst/afw/math/KernelFunctions.h"
 
 %include "lsst/afw/math/ConvolveImage.h"

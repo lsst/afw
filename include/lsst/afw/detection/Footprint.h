@@ -146,7 +146,7 @@ public:
 
     void shift(int dx, int dy);
 
-    const image::BBox& getBBox() const { return _bbox; } //!< Return the Footprint's bounding box
+    image::BBox getBBox() const { return _bbox; } //!< Return the Footprint's bounding box
     /// Return the corners of the MaskedImage the footprints live in
     image::BBox const& getRegion() const { return _region; }
     /// Set the corners of the MaskedImage wherein the footprints dwell
@@ -210,6 +210,9 @@ public:
     /// The FootprintSet's set of Footprint%s
     typedef std::vector<Footprint::Ptr> FootprintList;
 
+    FootprintSet(lsst::afw::image::Image<ImagePixelT> const& img,
+                 Threshold const& threshold,
+                 int const npixMin=1);
     FootprintSet(lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
                  Threshold const& threshold,
                  std::string const& planeName = "",
@@ -303,7 +306,7 @@ public:
             return;
         }
 
-        image::BBox const& bbox = foot.getBBox();
+        image::BBox const bbox = foot.getBBox();
         image::BBox region = foot.getRegion();
         if (region &&
             (!region.contains(bbox.getLLC()) || !region.contains(bbox.getURC()))) {
@@ -346,6 +349,15 @@ private:
 };
 
 /************************************************************************************************************/
+
+template<typename ImagePixelT, typename MaskPixelT>
+typename detection::FootprintSet<ImagePixelT>::Ptr makeFootprintSet(
+        image::Image<ImagePixelT> const& img,
+        Threshold const& threshold,
+        std::string const& planeName = "",
+        int const npixMin=1) {
+    return typename detection::FootprintSet<ImagePixelT, MaskPixelT>::Ptr(new FootprintSet<ImagePixelT, MaskPixelT>(img, threshold, npixMin));
+}
 
 template<typename ImagePixelT, typename MaskPixelT>
 typename detection::FootprintSet<ImagePixelT, MaskPixelT>::Ptr makeFootprintSet(

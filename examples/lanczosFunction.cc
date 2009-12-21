@@ -6,10 +6,10 @@
 using namespace std;
 
 int main() {
-    typedef double funcType;
+    typedef double FuncReturn;
     
     unsigned int order = 2;
-    lsst::afw::math::LanczosFunction2<funcType> lancFunc(order);
+    lsst::afw::math::LanczosFunction2<FuncReturn> lancFunc(order);
 
     double deltaX = order * 2 / 12.0;
     
@@ -17,7 +17,7 @@ int main() {
     
     cout << fixed << setprecision(3);
     
-    vector<funcType> offVec(2);
+    vector<FuncReturn> offVec(2);
     for (offVec[0] = 0.0; offVec[0] < deltaX * 1.01; offVec[0] += deltaOff) {
         cout << "LanczosFunction2(" << order << ") with offset " << offVec[0] << ", " << offVec[1]
             << endl << endl;
