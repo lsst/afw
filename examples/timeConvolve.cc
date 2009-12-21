@@ -34,7 +34,7 @@ void timeConvolution(ImageClass &image, unsigned int nIter) {
     
     for (unsigned kSize = MinKernelSize; kSize <= MaxKernelSize; kSize += DeltaKernelSize) {
         // construct kernel
-        afwMath::GaussianFunction2<KernelType> gaussFunc(Sigma, Sigma);
+        afwMath::GaussianFunction2<KernelType> gaussFunc(Sigma, Sigma, 0);
         afwMath::AnalyticKernel analyticKernel(kSize, kSize, gaussFunc);
         
         clock_t startTime = clock();
@@ -44,7 +44,8 @@ void timeConvolution(ImageClass &image, unsigned int nIter) {
         }
         double secPerIter = (clock() - startTime) / static_cast<double> (nIter * CLOCKS_PER_SEC);
         
-        double mOps = static_cast<double>((imHeight + 1 - kSize) * (imWidth + 1 - kSize) * kSize * kSize) / 1.0e6;
+        double mOps = static_cast<double>(
+            (imHeight + 1 - kSize) * (imWidth + 1 - kSize) * kSize * kSize) / 1.0e6;
         double mOpsPerSec = mOps / secPerIter;
         std::cout << imWidth << "\t" << imHeight << "\t" << kSize << "\t" << kSize << "\t" << mOps
             << "\t" << secPerIter << "\t" << mOpsPerSec << std::endl;
@@ -65,7 +66,8 @@ void timeConvolution(ImageClass &image, unsigned int nIter) {
         }
         double secPerIter = (clock() - startTime) / static_cast<double> (nIter * CLOCKS_PER_SEC);
         
-        double mOps = static_cast<double>((imHeight + 1 - kSize) * (imWidth + 1 - kSize) * kSize * kSize) / 1.0e6;
+        double mOps = static_cast<double>((
+            imHeight + 1 - kSize) * (imWidth + 1 - kSize) * kSize * kSize) / 1.0e6;
         double mOpsPerSec = mOps / secPerIter;
         std::cout << imWidth << "\t" << imHeight << "\t" << kSize << "\t" << kSize << "\t" << mOps
             << "\t" << secPerIter << "\t" << mOpsPerSec << std::endl;
@@ -78,7 +80,8 @@ int main(int argc, char **argv) {
         std::cout << "Time convolution with a spatially invariant kernel" << std::endl << std::endl;
         std::cout << "Usage: timeConvolve fitsFile [nIter]" << std::endl;
         std::cout << "fitsFile excludes the \"_img.fits\" suffix" << std::endl;
-        std::cout << "nIter (default " << DefNIter << ") is the number of iterations per kernel size" << std::endl;
+        std::cout << "nIter (default " << DefNIter
+            << ") is the number of iterations per kernel size" << std::endl;
         std::cout << "Kernel size ranges from " << MinKernelSize << " to " << MaxKernelSize
             << " in steps of " << DeltaKernelSize << " pixels on a side" << std::endl;
         return 1;

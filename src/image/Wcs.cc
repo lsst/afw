@@ -145,10 +145,9 @@ void lsst::afw::image::Wcs::initWcslib(
  */
 lsst::afw::image::Wcs::Wcs(PointD crval, ///< ra/dec of centre of image
                            PointD crpix, ///< pixel coordinates of centre of image
-                           Eigen::Matrix2d CD, ///< Conversion matrix with elements as defined
-                                                    ///< in wcs.h
-                           double equinox,         /// Equinox used to define coord sys, e.g J2000
-                           std::string raDecSys   ///  Astrometry System, e.g FK5 or ICRS
+                           Eigen::Matrix2d CD, ///< Conversion matrix with elements as defined in wcs.h
+                           double equinox,         ///< Equinox used to define coord sys, e.g J2000
+                           std::string raDecSys   ///<  Astrometry System, e.g FK5 or ICRS
                           ) : LsstBase(typeid(this)),
                               _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0),
                               _sipA(1,1), _sipB(1,1), _sipAp(1,1), _sipBp(1,1) {
@@ -164,8 +163,8 @@ lsst::afw::image::Wcs::Wcs(
     Eigen::MatrixXd sipB, ///< Forward distortion Matrix B
     Eigen::MatrixXd sipAp, ///<Reverse distortion Matrix Ap
     Eigen::MatrixXd sipBp,  ///<Reverse distortion Matrix Bp
-    double equinox,               /// Equinox of coord system, e.g J2000
-    std::string raDecSys          ///Celestial reference frame used, e.g FK5 or ICRS
+    double equinox,               ///< Equinox of coord system, e.g J2000
+    std::string raDecSys          ///< Celestial reference frame used, e.g FK5 or ICRS
                           ): LsstBase(typeid(this)),
                              _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0),
                              _sipA(sipA), _sipB(sipB), _sipAp(sipAp), _sipBp(sipBp) {
@@ -280,7 +279,6 @@ lsst::afw::image::Wcs::Wcs(
         PointD crval(fitsMetadata->getAsDouble("CRVAL1"), fitsMetadata->getAsDouble("CRVAL2") );
         PointD crpix(fitsMetadata->getAsDouble("CRPIX1"), fitsMetadata->getAsDouble("CRPIX2") ); 
 
-        //This should be updated to be Eigen::Matrix
         Eigen::Matrix2d CD;
         CD(0,0) = fitsMetadata->getAsDouble("CD1_1");
         CD(0,1) = fitsMetadata->getAsDouble("CD1_2");
@@ -288,13 +286,31 @@ lsst::afw::image::Wcs::Wcs(
         CD(1,1) = fitsMetadata->getAsDouble("CD2_2");
 
         
-        double  equinox = fitsMetadata->getAsDouble("EQUINOX");
+        double equinox = -1;
+        if(fitsMetadata->exists("EQUINOX")) {
+            equinox = fitsMetadata->getAsDouble("EQUINOX");
+        }
         
-        std::string raDecSys;
-        if( fitsMetadata->exists("RADESYS")) {
+        std::string raDecSys = "";
+        if(fitsMetadata->exists("RADESYS")) {
             raDecSys = fitsMetadata->getAsString("RADESYS");
-        } else {
-            raDecSys = fitsMetadata->getAsString("RADECSYS");   //Throws exception on fail
+        } else if(fitsMetadata->exists("RADECSYS")) {
+            raDecSys = fitsMetadata->getAsString("RADECSYS");
+        }
+        //
+        // Try to deal with missing equinox/radecsys
+        //
+        if (equinox == -1) {
+            if (raDecSys == "" || raDecSys == "FK5") {
+                equinox = 2000.0;
+                raDecSys = "FK5";
+            } else if (raDecSys == "FK4") {
+                equinox = 1950.0;
+            }
+        } else if(equinox == 1950.0 && raDecSys == "") {
+            raDecSys = "FK4";
+        } else if(equinox == 2000.0 && raDecSys == "") {
+            raDecSys = "FK5";
         }
         
         std::string ctype1 = fitsMetadata->getAsString("CTYPE1");
@@ -312,19 +328,19 @@ lsst::afw::image::Wcs::Wcs(
 
     //Run wcsfix on _wcsInfo to try and fix any problems it knows about.
     const int *naxes = NULL;            // should be {NAXIS1, NAXIS2, ...} to check cylindrical projections
-    int stats[NWCSFIX];			// status returns from wcsfix
+    int stats[NWCSFIX];                 // status returns from wcsfix
     int fixStatus = wcsfix(_wcsfixCtrl, naxes, _wcsInfo, stats);
     if (fixStatus != 0) {
         std::stringstream errStream;
         errStream << "Could not parse FITS WCS: wcsfix failed " << std::endl;
         for (int ii = 0; ii < NWCSFIX; ++ii) {
-	  if (stats[ii] >= 0) {
-	    errStream << "\t" << ii << ": " << stats[ii] << " " << wcsfix_errmsg[stats[ii]] << std::endl;
-	  } else {
-	    errStream << "\t" << ii << ": " << stats[ii] << std::endl;
-	  }
-	}
-#if 0	  
+            if (stats[ii] >= 0) {
+                errStream << "\t" << ii << ": " << stats[ii] << " " << wcsfix_errmsg[stats[ii]] << std::endl;
+            } else {
+                errStream << "\t" << ii << ": " << stats[ii] << std::endl;
+            }
+        }
+#if 0     
          throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, errStream.str());
 #endif
     }

@@ -14,6 +14,7 @@
 #include <sstream>
 #include <vector>
 
+#include "boost/format.hpp"
 #include "boost/serialization/nvp.hpp"
 #include "boost/serialization/vector.hpp"
 #include "boost/serialization/void_cast.hpp"
@@ -116,7 +117,7 @@ using boost::serialization::make_nvp;
         /**
          * @brief Set one function parameter without range checking
          */
-        virtual void setParameter(
+        void setParameter(
             unsigned int ind,   ///< index of parameter
             double newValue)    ///< new value for parameter
         {
@@ -133,8 +134,9 @@ using boost::serialization::make_nvp;
             std::vector<double> const &params)   ///< vector of function parameters
         {
             if (_params.size() != params.size()) {
-                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
-                                  "Wrong number of parameters");
+                throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+                    (boost::format("params has %d entries instead of %d") % \
+                    params.size() % _params.size()).str());
             }
             _params = params;
         }
@@ -211,7 +213,7 @@ using boost::serialization::make_nvp;
          *
          * @return a pointer to a deep copy of the function
          */
-        virtual Ptr copy() const = 0; 
+        virtual Ptr clone() const = 0; 
     
         virtual ReturnT operator() (double x) const = 0;
 
@@ -278,7 +280,7 @@ using boost::serialization::make_nvp;
          *
          * @return a pointer to a deep copy of the function
          */
-        virtual Ptr copy() const = 0; 
+        virtual Ptr clone() const = 0; 
     
         virtual ReturnT operator() (double x, double y) const = 0;
 
@@ -307,7 +309,8 @@ using boost::serialization::make_nvp;
     class NullFunction1 : public Function1<ReturnT> {
     public:
         explicit NullFunction1() : Function1<ReturnT>(0) {}
-        typename Function1<ReturnT>::Ptr copy() const { return typename Function1<ReturnT>::Ptr(new NullFunction1()); }
+        typename Function1<ReturnT>::Ptr clone() const {
+            return typename Function1<ReturnT>::Ptr(new NullFunction1()); }
 
     private:
         ReturnT operator() (double x) const { return static_cast<ReturnT>(0); }
@@ -329,7 +332,8 @@ using boost::serialization::make_nvp;
     class NullFunction2 : public Function2<ReturnT> {
     public:
         explicit NullFunction2() : Function2<ReturnT>(0) {}
-        typename Function2<ReturnT>::Ptr copy() const { return typename Function2<ReturnT>::Ptr(new NullFunction2()); }
+        typename Function2<ReturnT>::Ptr clone() const {
+            return typename Function2<ReturnT>::Ptr(new NullFunction2()); }
 
     private:
         ReturnT operator() (double x, double y) const { return static_cast<ReturnT>(0); }

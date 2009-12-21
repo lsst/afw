@@ -33,7 +33,7 @@ namespace image = lsst::afw::image;
 using lsst::daf::base::PropertySet;
 
 int main(int argc, char **argv) {
-    typedef double pixelType;
+    typedef double Pixel;
 
     const std::string inFilename(argv[1]);
     
@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
 
     PropertySet::Ptr miMetadata(new PropertySet);
     int const hdu = 0;
-    image::MaskedImage<pixelType> mskdImage(inFilename, hdu, miMetadata);
+    image::MaskedImage<Pixel> mskdImage(inFilename, hdu, miMetadata);
     image::Wcs wcs(miMetadata);
     
     // Testing input col, row values 

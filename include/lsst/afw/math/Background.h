@@ -13,33 +13,90 @@
 #include "lsst/afw/math/Interpolate.h"
 
 
-namespace lsst { namespace afw { namespace math {
+namespace lsst {
+namespace afw {
+namespace math {
 
+
+enum UndersampleStyle {
+    THROW_EXCEPTION,
+    REDUCE_INTERP_ORDER,
+    INCREASE_NXNYSAMPLE,
+};
+
+
+/**
+ * @brief Conversion function to switch a string to an UndersampleStyle
+ *
+ */
+UndersampleStyle stringToUndersampleStyle(std::string const style) {
+    std::map<std::string, UndersampleStyle> undersampleStrings;
+    undersampleStrings["THROW_EXCEPTION"]     = THROW_EXCEPTION;
+    undersampleStrings["REDUCE_INTERP_ORDER"] = REDUCE_INTERP_ORDER;
+    undersampleStrings["INCREASE_NXNYSAMPLE"] = INCREASE_NXNYSAMPLE;
+    return undersampleStrings[style];
+}
+
+    
 /**
  * @class BackgroundControl
  * @brief Pass parameters to a Background object
  */
 class BackgroundControl {
 public:
-    BackgroundControl(Style const style=math::NATURAL_SPLINE,  ///< Style of the interpolation (not yet implemented)
-                      int const nxSample=10,                   ///< Num. grid samples in x
-                      int const nySample=10)                   ///< Num. grid samples in y
-        : _nxSample(nxSample), _nySample(nySample) {
+    
+    BackgroundControl(
+        Interpolate::Style const style = Interpolate::AKIMA_SPLINE, ///< Style of the interpolation
+        int const nxSample = 10,        ///< Num. grid samples in x
+        int const nySample = 10,        ///< Num. grid samples in y
+        UndersampleStyle const undersampleStyle = THROW_EXCEPTION ///< Behaviour if there are too few points
+                     )
+        : _style(style), _nxSample(nxSample), _nySample(nySample),
+          _undersampleStyle(undersampleStyle) {
         assert(nxSample > 0);
         assert(nySample > 0);
         sctrl = StatisticsControl();
-        ictrl = math::InterpControl(style);
     }
-    ~BackgroundControl() {}
+    
+    // overload constructor to handle strings for both interp and undersample styles.
+    BackgroundControl(std::string const style,
+                      int const nxSample = 10, 
+                      int const nySample = 10, 
+                      std::string const undersampleStyle = "THROW_EXCEPTION" )
+        : _style(math::stringToInterpStyle(style)), _nxSample(nxSample), _nySample(nySample),
+          _undersampleStyle(math::stringToUndersampleStyle(undersampleStyle)) {
+        assert(nxSample > 0);
+        assert(nySample > 0);
+        sctrl = StatisticsControl();
+    }
+    
+
+    virtual ~BackgroundControl() {}
     void setNxSample (int nxSample) { assert(nxSample > 0); _nxSample = nxSample; }
     void setNySample (int nySample) { assert(nySample > 0); _nySample = nySample; }
+
+    void setInterpStyle (Interpolate::Style const style) { _style = style; }
+    // overload to take a string
+    void setInterpStyle (std::string const style) { _style = math::stringToInterpStyle(style); }
+    
+    void setUndersampleStyle (UndersampleStyle const undersampleStyle) {
+        _undersampleStyle = undersampleStyle;
+    }
+    // overload to take a string
+    void setUndersampleStyle (std::string const undersampleStyle) {
+        _undersampleStyle = math::stringToUndersampleStyle(undersampleStyle);
+    }
+    
     int getNxSample() const { return _nxSample; }
     int getNySample() const { return _nySample; }
+    Interpolate::Style getInterpStyle() const { return _style; }
+    UndersampleStyle getUndersampleStyle() const { return _undersampleStyle; }
     StatisticsControl sctrl;
-    math::InterpControl ictrl;
 private:
+    Interpolate::Style _style;                       // style of interpolation to use
     int _nxSample;                      // number of grid squares to divide image into to sample in x
     int _nySample;                      // number of grid squares to divide image into to sample in y
+    UndersampleStyle _undersampleStyle; // what to do when nx,ny are too small for the requested interp style
 };
     
 /**
@@ -54,13 +111,13 @@ private:
  * BackgroundControl contains public StatisticsControl and InterpolateControl members to allow
  * user control of how the backgrounds are computed.
  * @code
-       math::BackgroundControl bctrl(math::NATURAL_SPLINE);
+       math::BackgroundControl bctrl(math::Interpolate::NATURAL_SPLINE);
        bctrl.setNxSample(7);            // number of sub-image squares in x-dimension
        bctrl.setNySample(7);            // number of sub-image squares in y-dimention
        bctrl.sctrl.getNumSigmaClip(5.0); // use 5-sigma clipping for the sub-image means
        math::Background backobj = math::makeBackground(img, bctrl);
        double somepoint = backobj.getPixel(i_x,i_y); // get the background at a pixel at i_x,i_y
-       ImageT back = backobj.getFrame();             // get a whole background image
+       ImageT back = backobj.getImage();             // get a whole background image
  * @endcode
  *
  */
@@ -69,14 +126,16 @@ public:
     
     template<typename ImageT>
     explicit Background(ImageT const& img, ///< Image (or MaskedImage) whose background we want
-                        BackgroundControl const& bgCtrl=BackgroundControl()); ///< Parameters to control Statistics and Interpolation
+                        BackgroundControl const& bgCtrl = BackgroundControl()); ///< Control Parameters
     
-    ~Background() {}
+    virtual ~Background() {}
     
     double getPixel(int const x, int const y) const;
 
     template<typename PixelT>
     typename lsst::afw::image::Image<PixelT>::Ptr getImage() const;
+    
+    BackgroundControl getBackgroundControl() const { return _bctrl; }
     
 private:
     int _n;                             // number of pixels in the image
@@ -87,14 +146,16 @@ private:
     int _nySample;                      // number of sub-image squares in y-dimension
     int _subimgWidth;                   // width in pixels of a subimage
     int _subimgHeight;                  // height in pixels of a subimage
-    std::vector<int> _xcen;             // x center pix coords of sub images
-    std::vector<int> _ycen;             // y center ...
+    std::vector<double> _xcen;             // x center pix coords of sub images
+    std::vector<double> _ycen;          // y center ...
     std::vector<int> _xorig;            // x origin pix coords of sub images
     std::vector<int> _yorig;            // y origin ...
     std::vector<std::vector<double> > _grid; // 3-sig clipped means for the grid of sub images.
 
     std::vector<std::vector<double> > _gridcolumns; // interpolated columns for the bicubic spline
     BackgroundControl _bctrl;           // control info set by user.
+
+    void _checkSampling();
 };
 
 /**
@@ -103,7 +164,7 @@ private:
  * cf. std::make_pair()
  */
 template<typename ImageT>
-Background makeBackground(ImageT const& img, BackgroundControl const& bgCtrl=BackgroundControl()) {
+Background makeBackground(ImageT const& img, BackgroundControl const& bgCtrl = BackgroundControl()) {
     return Background(img, bgCtrl);
 };
     

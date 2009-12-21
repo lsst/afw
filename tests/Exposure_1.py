@@ -21,8 +21,9 @@ import lsst.pex.logging as pexLog
 import lsst.pex.exceptions as pexExcept
 import lsst.afw.display.ds9 as ds9
 
-Verbosity = 0 # increase to see trace
-pexLog.Debug("lsst.afw.image", Verbosity)
+VERBOSITY = 0 # increase to see trace
+
+pexLog.Debug("lsst.afw.image", VERBOSITY)
 
 dataDir = eups.productDir("afwdata")
 if not dataDir:
@@ -83,7 +84,7 @@ class ExposureTestCase(unittest.TestCase):
         blankWidth = maskedImageBlank.getWidth()
         blankHeight = maskedImageBlank.getHeight()
         if blankWidth != blankHeight != 0:
-            self.fail("%s = %s != 0" (blankWidth, blankHeight))           
+            self.fail("%s = %s != 0" % (blankWidth, blankHeight))           
         
         maskedImageMiOnly = self.exposureMiOnly.getMaskedImage()
         miOnlyWidth = maskedImageMiOnly.getWidth()
@@ -105,13 +106,13 @@ class ExposureTestCase(unittest.TestCase):
         crWcsWidth = maskedImageCrWcs.getWidth()
         crWcsHeight = maskedImageCrWcs.getHeight()
         if crWcsWidth != crWcsHeight != 0:
-            self.fail("%s != %s != 0" (crWcsWidth, crWcsHeight))   
+            self.fail("%s != %s != 0" % (crWcsWidth, crWcsHeight))   
         
         maskedImageCrOnly = self.exposureCrOnly.getMaskedImage()
         crOnlyWidth = maskedImageCrOnly.getWidth()
         crOnlyHeight = maskedImageCrOnly.getHeight()
         if crOnlyWidth != crOnlyHeight != 0:
-            self.fail("%s != %s != 0" (crOnlyWidth, crOnlyRows)) 
+            self.fail("%s != %s != 0" % (crOnlyWidth, crOnlyHeight)) 
 
         # Check Exposure.getWidth() returns the MaskedImage's width
         self.assertEqual(crOnlyWidth, self.exposureCrOnly.getWidth())
@@ -135,8 +136,8 @@ class ExposureTestCase(unittest.TestCase):
         self.assertTrue(not self.exposureMiOnly.getWcs())
 
         # These two should pass
-        wcsMiWcs = self.exposureMiWcs.getWcs()
-        wcsCrWcs = self.exposureCrWcs.getWcs()
+        self.exposureMiWcs.getWcs()
+        self.exposureCrWcs.getWcs()
        
         self.assertTrue(not self.exposureCrOnly.getWcs())
             
@@ -151,7 +152,7 @@ class ExposureTestCase(unittest.TestCase):
         exposure.setWcs(self.wcs)
         
         try:
-            theWcs = exposure.getWcs();
+            exposure.getWcs();
         except pexExcept.LsstCppException, e:
             print "caught expected exception (getWcs): %s" % e   
             pass
@@ -184,7 +185,6 @@ class ExposureTestCase(unittest.TestCase):
         #
         # This subExposure is valid
         #
-        parentExposure = self.exposureCrWcs
         subBBox = afwImage.BBox(afwImage.PointI(40, 50), 10, 10)
         subExposure = self.exposureCrWcs.Factory(self.exposureCrWcs, subBBox)
         
@@ -194,20 +194,20 @@ class ExposureTestCase(unittest.TestCase):
         # from the MaskedImage class and should trigger an exception
         # from the WCS class for the MaskedImage 871034p_1_MI.
         
-        def getSubRegion():
-            subExposure = self.exposureCrWcs.Factory(self.exposureCrWcs, subRegion3)
-
         subRegion3 = afwImage.BBox(afwImage.PointI(100, 100), 10, 10)
+        def getSubRegion():
+            self.exposureCrWcs.Factory(self.exposureCrWcs, subRegion3)
+
         utilsTests.assertRaisesLsstCpp(self, pexExcept.LengthErrorException, getSubRegion)
 
         # this subRegion is not valid and should trigger an exception
         # from the MaskedImage class only for the MaskedImage small_MI.
         # small_MI (cols, rows) = (256, 256) 
 
-        def getSubRegion():
-            subExposure = self.exposureCrWcs.Factory(self.exposureCrWcs, subRegion3)
-
         subRegion4 = afwImage.BBox(afwImage.PointI(250, 250), 10, 10)        
+        def getSubRegion():
+            self.exposureCrWcs.Factory(self.exposureCrWcs, subRegion4)
+
         utilsTests.assertRaisesLsstCpp(self, pexExcept.LengthErrorException, getSubRegion)
 
     def testReadWriteFits(self):
@@ -227,7 +227,7 @@ class ExposureTestCase(unittest.TestCase):
         
         # This should throw an exception
         def getExposure():
-            exposure = afwImage.ExposureF(inFilePathSmallImage)
+            afwImage.ExposureF(inFilePathSmallImage)
         
         utilsTests.assertRaisesLsstCpp(self, pexExcept.NotFoundException, getExposure)
         
@@ -241,7 +241,6 @@ class ExposureTestCase(unittest.TestCase):
     def checkWcs(self, parentExposure, subExposure):
         """Compare WCS at corner points of a sub-exposure and its parent exposure
         """
-        parentMI = parentExposure.getMaskedImage()
         subMI = subExposure.getMaskedImage()
         subDim = subMI.getDimensions()
         subXY0 = subMI.getXY0()

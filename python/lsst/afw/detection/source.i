@@ -1,11 +1,11 @@
 // -*- lsst-c++ -*-
 
 %{
+#include <sstream>
 #include "lsst/afw/formatters/Utils.h"
 #include "lsst/afw/detection/BaseSourceAttributes.h"
 #include "lsst/afw/detection/Source.h"
 #include "lsst/afw/detection/DiaSource.h"
-#include <sstream>
 %}
 
 //shared_ptr declarations

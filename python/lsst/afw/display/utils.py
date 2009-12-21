@@ -13,10 +13,10 @@ class Mosaic(object):
     m = Mosaic()
     m.setGutter(5)
     m.setBackground(10)
-    m.setMode("square")                   # the default
+    m.setMode("square")                     # the default
 
-    mosaic = m.makeMosaic(im1, im2, im3)   # build the mosaic
-    ds9.mtv(mosaic)			   # display it
+    mosaic = m.makeMosaic(im1, im2, im3)    # build the mosaic
+    ds9.mtv(mosaic)                         # display it
     m.drawLabels(["Label 1", "Label 2", "Label 3"]) # label the panels
 
     # alternative way to build a mosaic
@@ -57,7 +57,7 @@ class Mosaic(object):
         self.images.append(image)
         self.labels.append(label)
 
-    def makeMosaic(self, images=None, frame=None, mode=None):
+    def makeMosaic(self, images=None, frame=None, mode=None, title=""):
         """Return a mosaic of all the images provided; if none are specified,
         use the list accumulated with Mosaic.append()
         
@@ -119,7 +119,7 @@ class Mosaic(object):
             smosaic <<= im
 
         if frame is not None:
-            ds9.mtv(mosaic, frame=frame)
+            ds9.mtv(mosaic, frame=frame, title=title)
 
             if images == self.images:
                 self.drawLabels(frame=frame)
@@ -155,9 +155,12 @@ class Mosaic(object):
         return afwImage.BBox(afwImage.PointI(ix*(self.xsize + self.gutter), iy*(self.ysize + self.gutter)),
                              self.xsize, self.ysize)
 
-    def drawLabels(self, labels=None, frame=0):
+    def drawLabels(self, labels=None, frame=None):
         """Draw the list labels at the corners of each panel.  If labels is None, use the ones
         specified by Mosaic.append()"""
+
+        if frame is None:
+            return
 
         if not labels:
             labels = self.labels

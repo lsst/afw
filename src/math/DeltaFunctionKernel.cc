@@ -6,42 +6,60 @@
  *
  * @ingroup fw
  */
+#include <sstream>
 #include <vector>
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
 
-namespace ex = lsst::pex::exceptions;
+namespace pexExcept = lsst::pex::exceptions;
+namespace afwMath = lsst::afw::math;
+namespace afwImage = lsst::afw::image;
 
 /**
  * @brief Construct a spatially invariant DeltaFunctionKernel
+ *
+ * @throw pexExcept::InvalidParameterException if active pixel is off the kernel
  */
-lsst::afw::math::DeltaFunctionKernel::DeltaFunctionKernel(
-    int width,                          ///< kernel size (columns)
-    int height,                         ///< kernel size (rows)
-    lsst::afw::image::PointI point      ///< Active pixel
-                                                         )
-:
+afwMath::DeltaFunctionKernel::DeltaFunctionKernel(
+    int width,              ///< kernel size (columns)
+    int height,             ///< kernel size (rows)
+    afwImage::PointI const &point   ///< index of active pixel (where 0,0 is the lower left corner)
+) :
     Kernel(width, height, 0),
-    _pixel(point.getX(), point.getY())
+    _pixel(point)
 {
     if (point.getX() < 0 || point.getX() >= width || point.getY() < 0 || point.getY() >= height) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "Active pixel lies outside image");
+        std::ostringstream os;
+        os << "point (" << point.getX() << ", " << point.getY() << ") lies outside "
+            << width << "x" << height << " sized kernel";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
 }
 
-double lsst::afw::math::DeltaFunctionKernel::computeImage(
-    lsst::afw::image::Image<PixelT> &image,
+afwMath::Kernel::Ptr afwMath::DeltaFunctionKernel::clone() const {
+    afwMath::Kernel::Ptr retPtr(new afwMath::DeltaFunctionKernel(this->getWidth(), this->getHeight(),
+        this->_pixel));
+    retPtr->setCtrX(this->getCtrX());
+    retPtr->setCtrY(this->getCtrY());
+    return retPtr;
+}
+
+double afwMath::DeltaFunctionKernel::computeImage(
+    afwImage::Image<Pixel> &image,
     bool doNormalize,
     double x,
     double y
 ) const {
     if (image.getDimensions() != this->getDimensions()) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "image is the wrong size");
+        std::ostringstream os;
+        os << "image dimensions = ( " << image.getWidth() << ", " << image.getHeight()
+            << ") != (" << this->getWidth() << ", " << this->getHeight() << ") = kernel dimensions";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
 
-    const int pixelX = getPixel().first; // active pixel in Kernel
-    const int pixelY = getPixel().second;
+    const int pixelX = getPixel().getX(); // active pixel in Kernel
+    const int pixelY = getPixel().getY();
 
     image = 0;
     *image.xy_at(pixelX, pixelY) = 1;
@@ -49,9 +67,9 @@ double lsst::afw::math::DeltaFunctionKernel::computeImage(
     return 1;
 }
 
-std::string lsst::afw::math::DeltaFunctionKernel::toString(std::string prefix) const {
-    const int pixelX = getPixel().first; // active pixel in Kernel
-    const int pixelY = getPixel().second;
+std::string afwMath::DeltaFunctionKernel::toString(std::string prefix) const {
+    const int pixelX = getPixel().getX(); // active pixel in Kernel
+    const int pixelY = getPixel().getY();
 
     std::ostringstream os;            
     os << prefix << "DeltaFunctionKernel:" << std::endl;

@@ -42,10 +42,14 @@ namespace math {
         )
         :
             SeparableKernel(2 * order, 2 * order,
-                LanczosFunction1<Kernel::PixelT>(order), LanczosFunction1<Kernel::PixelT>(order))
+                LanczosFunction1<Kernel::Pixel>(order), LanczosFunction1<Kernel::Pixel>(order))
         {};
         
         virtual ~LanczosWarpingKernel() {};
+        
+        virtual Kernel::Ptr clone() const;
+        
+        int getOrder() const;
     };
 
 
@@ -65,6 +69,8 @@ namespace math {
         {};
 
         virtual ~BilinearWarpingKernel() {};
+        
+        virtual Kernel::Ptr clone() const;
 
         /**
          * \brief 1-dimensional bilinear interpolation function.
@@ -73,9 +79,9 @@ namespace math {
          * (which is why it defined in the BilinearWarpingKernel class instead of
          * being made available as a standalone function).
          */
-        class BilinearFunction1: public Function1<Kernel::PixelT> {
+        class BilinearFunction1: public Function1<Kernel::Pixel> {
         public:
-            typedef Function1<Kernel::PixelT>::Ptr Function1Ptr;
+            typedef Function1<Kernel::Pixel>::Ptr Function1Ptr;
     
             /**
              * \brief Construct a Bilinear interpolation function
@@ -83,17 +89,17 @@ namespace math {
             explicit BilinearFunction1(
                 double fracPos)    ///< fractional position; must be >= 0 and < 1
             :
-                Function1<Kernel::PixelT>(1)
+                Function1<Kernel::Pixel>(1)
             {
                 this->_params[0] = fracPos;
             }
             virtual ~BilinearFunction1() {};
             
-            virtual Function1Ptr copy() const {
+            virtual Function1Ptr clone() const {
                 return Function1Ptr(new BilinearFunction1(this->_params[0]));
             }
             
-            virtual Kernel::PixelT operator() (double x) const;
+            virtual Kernel::Pixel operator() (double x) const;
             
             virtual std::string toString(void) const;
         };
@@ -114,6 +120,14 @@ namespace math {
         SrcImageT const &srcImage,
         lsst::afw::image::Wcs const &srcWcs,
         SeparableKernel &warpingKernel);
+
+    namespace details {
+        template <typename A, typename B>
+        bool isSameObject(A const& a, B const& b) { return false; };
+        
+        template <typename A>
+        bool isSameObject(A const& a, A const& b) { return &a == &b; };
+    }
        
 }}} // lsst::afw::math
 

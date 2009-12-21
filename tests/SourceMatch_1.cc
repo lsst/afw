@@ -44,10 +44,10 @@ void makeSources(det::SourceSet &set, int n) {
 
 struct CmpSourceMatch {
     bool operator()(det::SourceMatch const &m1, det::SourceMatch const &m2) {
-        if (m1.get<0>()->getSourceId() == m2.get<0>()->getSourceId()) {
-            return m1.get<1>()->getSourceId() < m2.get<1>()->getSourceId();
+        if (m1.first->getSourceId() == m2.first->getSourceId()) {
+            return m1.second->getSourceId() < m2.second->getSourceId();
         }
-        return m1.get<0>()->getSourceId() < m2.get<0>()->getSourceId(); 
+        return m1.first->getSourceId() < m2.first->getSourceId(); 
     }
 };
 
@@ -131,21 +131,21 @@ void compareMatches(std::vector<det::SourceMatch> &matches,
 
     while (i < iend && j < jend) {
         if (lessThan(*i, *j)) {
-            BOOST_CHECK_CLOSE(i->get<2>(), radius, tolerance);
+            BOOST_CHECK_CLOSE(i->distance, radius, tolerance);
             ++i;
         } else if (lessThan(*j, *i)) {
-            BOOST_CHECK_CLOSE(j->get<2>(), radius, tolerance);
+            BOOST_CHECK_CLOSE(j->distance, radius, tolerance);
             ++j;
         } else {
-            BOOST_CHECK_CLOSE(i->get<2>(), j->get<2>(), tolerance);
+            BOOST_CHECK_CLOSE(i->distance, j->distance, tolerance);
             ++i; ++j;
         }
     }
     for (; i < iend; ++i) {
-        BOOST_CHECK_CLOSE(i->get<2>(), radius, tolerance);
+        BOOST_CHECK_CLOSE(i->distance, radius, tolerance);
     }
     for (; j < jend; ++j) {
-        BOOST_CHECK_CLOSE(j->get<2>(), radius, tolerance);
+        BOOST_CHECK_CLOSE(j->distance, radius, tolerance);
     }
 }
 

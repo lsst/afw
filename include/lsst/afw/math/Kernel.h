@@ -14,6 +14,7 @@
 
 #include "boost/mpl/or.hpp"
 #include "boost/shared_ptr.hpp"
+#include "boost/make_shared.hpp"
 #include "boost/static_assert.hpp"
 #include "boost/type_traits/is_same.hpp"
 #include "boost/type_traits/is_base_and_derived.hpp"
@@ -25,8 +26,10 @@
 #include "lsst/daf/base/Persistable.h"
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/Utils.h"
 #include "lsst/afw/math/Function.h"
 #include "lsst/afw/math/traits.h"
+#include "lsst/afw/math/ConvolutionVisitor.h"
 
 namespace lsst {
 namespace afw {
@@ -40,7 +43,6 @@ namespace math {
 #ifndef SWIG
 using boost::serialization::make_nvp;
 #endif
-
 
     /**
      * @brief Kernels are used for convolution with MaskedImages and (eventually) Images
@@ -67,18 +69,8 @@ using boost::serialization::make_nvp;
      * The one spatial function is used to compute the kernel parameters at a given spatial position
      * by computing each kernel parameter using its associated vector of spatial function parameters.
      *
-     * One may only specify a single spatial function to describe the variation of all kernel parameters
-     * (though the spatial parameters can, and usually will, be different for each kernel parameter).
-     * The only use cases we had used the same spatial model for all parameters, and I felt it
-     * would be a burden to the user to have to create one function per kernel parameter.
-     * (I would gladly change this design if wanted, since it would simplify the internal code.)
-     * You still can assign a different spatial model to each kernel parameter by defining
-     * one function that is the sum of all the desired spatial models. Then for each kernel parameter,
-     * then zero all but the few spatial parameters that control the spatial model for that kernel parameter.
-     *
-     * When determining the parameters for a spatial function or a kernel function,
-     * please keep the LSST convention for pixel position vs. pixel index in mind.
-     * See lsst/afw/image/ImageUtils.h for the convention.
+     * The convolve function computes the spatial function at the pixel position (not index) of the image.
+     * See the convolve function for details.
      *
      * Note that if a kernel is spatially varying then you may not set the kernel parameters directly;
      * that is the job of the spatial function! However, you may change the spatial parameters at any time.
@@ -86,10 +78,10 @@ using boost::serialization::make_nvp;
      * <b>Design Notes</b>
      *
      * The basic design is to use the same kernel class for both spatially varying and spatially invariant
-     * kernels. The user either does or does not supply a function describing the spatial variation 
+     * kernels. The user either does or does not supply a function describing the spatial variation
      * at creation time. In addition, analytic kernels are described by a user-supplied function
      * of the same basic type as the spatial variation function.
-     * 
+     *
      * Several other designs were considered, including:
      * A) Use different classes for spatially varying and spatially invariant versions of each kernel.
      * Thus instead of three basic kernel classes (FixedKernel, AnalyticKernel and LinearCombinationKernel)
@@ -114,25 +106,38 @@ using boost::serialization::make_nvp;
      * @ingroup afw
      */
     class Kernel : public lsst::daf::data::LsstBase, public lsst::daf::base::Persistable {
-    
+
     public:
-        typedef double PixelT;
-        typedef lsst::afw::image::Image<PixelT>::Pixel Pixel;
-        typedef boost::shared_ptr<Kernel> PtrT;
+        typedef double Pixel;
+        typedef boost::shared_ptr<Kernel> Ptr;
+        typedef boost::shared_ptr<const Kernel> ConstPtr;
         typedef boost::shared_ptr<lsst::afw::math::Function2<double> > SpatialFunctionPtr;
         typedef lsst::afw::math::Function2<double> SpatialFunction;
         typedef lsst::afw::math::NullFunction2<double> NullSpatialFunction;
-        
+
         // Traits values for this class of Kernel
         typedef generic_kernel_tag kernel_fill_factor;
 
-        explicit Kernel(int width=0, int height=0, unsigned int nKernelParams=0,
+        explicit Kernel();
+
+        explicit Kernel(int width, int height, unsigned int nKernelParams,
                         SpatialFunction const &spatialFunction=NullSpatialFunction());
         explicit Kernel(int width, int height, const std::vector<SpatialFunctionPtr> spatialFunctionList);
 
         virtual ~Kernel() {};
-        
-        const std::pair<int, int> getDimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
+
+        /**
+         * @brief Return a pointer to a deep copy of this kernel
+         *
+         * This kernel exists instead of a copy constructor
+         * so one can obtain a copy of an actual kernel
+         * instead of a useless copy of the base class.
+         *
+         * Every kernel subclass must override this method.
+         *
+         * @return a pointer to a deep copy of the kernel
+         */
+        virtual Kernel::Ptr clone() const = 0;
 
         /**
          * @brief Compute an image (pixellized representation of the kernel) in place
@@ -142,28 +147,45 @@ using boost::serialization::make_nvp;
          * @note computeNewImage has been retired; it doesn't need to be a member
          *
          * @throw lsst::pex::exceptions::InvalidParameterException if the image is the wrong size
+         * @throw lsst::pex::exceptions::OverflowErrorException if doNormalize is true and the kernel sum is
+         * exactly 0
          */
         virtual double computeImage(
-            lsst::afw::image::Image<PixelT> &image,   ///< image whose pixels are to be set (output)
+            lsst::afw::image::Image<Pixel> &image,   ///< image whose pixels are to be set (output)
             bool doNormalize,   ///< normalize the image (so sum is 1)?
             double x = 0.0, ///< x (column position) at which to compute spatial function
             double y = 0.0  ///< y (row position) at which to compute spatial function
         ) const = 0;
-    
+
+        virtual ImageConvolutionVisitor::Ptr computeImageConvolutionVisitor(
+            lsst::afw::image::PointD const & location
+        ) const;
+
+
+        virtual FourierConvolutionVisitor::Ptr computeFourierConvolutionVisitor(
+           lsst::afw::image::PointD const & location
+        ) const;
+
+        /**
+        * @brief Return the Kernel's dimensions (width, height)
+        */
+        std::pair<int, int> const getDimensions() const {
+            return std::pair<int, int>(_width, _height); }
+
         /**
          * @brief Return the Kernel's width
          */
         inline int getWidth() const {
             return _width;
         };
-        
+
         /**
          * @brief Return the Kernel's height
          */
         inline int getHeight() const {
             return _height;
         };
-        
+
         /**
          * @brief Return index of the center column
          */
@@ -177,33 +199,41 @@ using boost::serialization::make_nvp;
         inline int getCtrY() const {
             return _ctrY;
         };
-        
+
         /**
          * @brief Return the number of kernel parameters (0 if none)
          */
         inline unsigned int getNKernelParameters() const {
             return _nKernelParams;
         };
-    
+
         /**
          * @brief Return the number of spatial parameters (0 if not spatially varying)
          */
         inline int getNSpatialParameters() const {
             return this->isSpatiallyVarying() ? _spatialFunctionList[0]->getNParameters() : 0;
         };
-        
+
         SpatialFunctionPtr getSpatialFunction(unsigned int index) const;
 
+        std::vector<SpatialFunctionPtr> getSpatialFunctionList() const;
+
         virtual std::vector<double> getKernelParameters() const;
-        
+
+        /**
+        * @brief Set the center index, x axis
+        */
         inline void setCtrX(int ctrX) {
             _ctrX = ctrX;
         };
-        
+
+        /**
+        * @brief Set the center index, y axis
+        */
         inline void setCtrY(int ctrY) {
             _ctrY = ctrY;
         };
-    
+
         /**
          * @brief Return the spatial parameters parameters (an empty vector if not spatially varying)
          */
@@ -215,14 +245,14 @@ using boost::serialization::make_nvp;
             }
             return spatialParams;
         };
-            
+
         /**
          * @brief Return true iff the kernel is spatially varying (has a spatial function)
          */
         inline bool isSpatiallyVarying() const {
             return _spatialFunctionList.size() != 0;
         };
-    
+
         /**
          * @brief Set the kernel parameters of a spatially invariant kernel.
          *
@@ -231,33 +261,36 @@ using boost::serialization::make_nvp;
          */
         inline void setKernelParameters(std::vector<double> const &params) {
             if (this->isSpatiallyVarying()) {
-                throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Kernel is spatially varying");
+                throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                    "Kernel is spatially varying");
             }
             const unsigned int nParams = this->getNKernelParameters();
             if (nParams != params.size()) {
                 throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
                                   (boost::format("Number of parameters is wrong, saw %d expected %d") %
-                                   nParams % params.size()).str());                                   
+                                   nParams % params.size()).str());
             }
             for (unsigned int ii = 0; ii < nParams; ++ii) {
                 this->setKernelParameter(ii, params[ii]);
             }
         };
-        
+
         /**
          * @brief Set the kernel parameters of a 2-component spatially invariant kernel.
          *
-         * @note no checking of the kernel;  use the std::vector<double> form if you want that
+         * @warning This is a low-level method intended for maximum efficiency when using warping kernels.
+         * No error checking is performed. Use the std::vector<double> form if you want safety.
          */
         inline void setKernelParameters(std::pair<double, double> const& params) {
             this->setKernelParameter(0, params.first);
             this->setKernelParameter(1, params.second);
         };
-        
+
         void setSpatialParameters(const std::vector<std::vector<double> > params);
 
-        void computeKernelParametersFromSpatialModel(std::vector<double> &kernelParams, double x, double y) const;
-    
+        void computeKernelParametersFromSpatialModel(
+            std::vector<double> &kernelParams, double x, double y) const;
+
         virtual std::string toString(std::string prefix = "") const;
 
         virtual void toFile(std::string fileName) const;
@@ -266,7 +299,9 @@ using boost::serialization::make_nvp;
         virtual void setKernelParameter(unsigned int ind, double value) const;
 
         void setKernelParametersFromSpatialModel(double x, double y) const;
-           
+
+        std::vector<SpatialFunctionPtr> _spatialFunctionList;
+
     private:
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::KernelFormatter);
 
@@ -275,51 +310,9 @@ using boost::serialization::make_nvp;
         int _ctrX;
         int _ctrY;
         unsigned int _nKernelParams;
-        std::vector<SpatialFunctionPtr> _spatialFunctionList;
     };
 
-    /**
-     * @brief A list of Kernels
-     *
-     * This is basically a wrapper for an stl container, but defines
-     * a conversion from KernelList<K1> to KernelList<K2> providing
-     * that K1 is derived from K2 (or that K1 == K2)
-     *
-     * @ingroup afw
-     */
-    template<typename _KernelT=Kernel>
-    class KernelList : public std::vector<typename _KernelT::PtrT> {
-    public:
-        typedef _KernelT KernelT;
-
-        KernelList() { }
-        
-        template<typename Kernel2T>
-        KernelList(const KernelList<Kernel2T>& k2l) :
-            std::vector<typename KernelT::PtrT>(k2l.size())
-            {
-#if !defined(SWIG)
-                BOOST_STATIC_ASSERT((
-                                     boost::mpl::or_<
-                                     boost::is_same<KernelT, Kernel2T>,
-                                     boost::is_base_and_derived<KernelT, Kernel2T>
-                                     >::value
-                                    ));
-#endif
-                copy(k2l.begin(), k2l.end(), this->begin());
-            }
-
-    private:
-        friend class boost::serialization::access;
-        template <class Archive>
-        void serialize(Archive& ar, unsigned int const version) {
-            ar & make_nvp("list",
-                          boost::serialization::base_object<
-                              std::vector<typename _KernelT::PtrT>
-                          >(*this));
-        };
-
-    };
+    typedef std::vector<Kernel::Ptr> KernelList;
 
     /**
      * @brief A kernel created from an Image
@@ -330,30 +323,32 @@ using boost::serialization::make_nvp;
      */
     class FixedKernel : public Kernel {
     public:
-        typedef boost::shared_ptr<FixedKernel> PtrT;
+        typedef boost::shared_ptr<FixedKernel> Ptr;
+        typedef boost::shared_ptr<const FixedKernel> ConstPtr;
 
         explicit FixedKernel();
 
         explicit FixedKernel(
-            lsst::afw::image::Image<PixelT> const &image
+            lsst::afw::image::Image<Pixel> const &image
         );
-        
+
         virtual ~FixedKernel() {};
-    
+
+        virtual Kernel::Ptr clone() const;
+
         virtual double computeImage(
-            lsst::afw::image::Image<PixelT> &image,
+            lsst::afw::image::Image<Pixel> &image,
             bool doNormalize,
             double x = 0.0,
             double y = 0.0
         ) const;
-            
+
         virtual std::string toString(std::string prefix = "") const;
 
     private:
-        lsst::afw::image::Image<PixelT> _image;
-        PixelT _sum;
+        lsst::afw::image::Image<Pixel> _image;
+        Pixel _sum;
 
-    private:
         friend class boost::serialization::access;
         template <class Archive>
             void serialize(Archive& ar, unsigned int const version) {
@@ -363,8 +358,8 @@ using boost::serialization::make_nvp;
                 ar & make_nvp("sum", _sum);
             };
     };
-    
-    
+
+
     /**
      * @brief A kernel described by a function.
      *
@@ -380,55 +375,49 @@ using boost::serialization::make_nvp;
      */
     class AnalyticKernel : public Kernel {
     public:
-        typedef boost::shared_ptr<AnalyticKernel> PtrT;
-        typedef lsst::afw::math::Function2<PixelT> KernelFunction;
-        typedef lsst::afw::math::NullFunction2<PixelT> NullKernelFunction;
-        typedef boost::shared_ptr<lsst::afw::math::Function2<PixelT> > KernelFunctionPtr;
-        
+        typedef boost::shared_ptr<AnalyticKernel> Ptr;
+        typedef boost::shared_ptr<const AnalyticKernel> ConstPtr;
+        typedef lsst::afw::math::Function2<Pixel> KernelFunction;
+        typedef boost::shared_ptr<lsst::afw::math::Function2<Pixel> > KernelFunctionPtr;
+
         explicit AnalyticKernel();
 
         explicit AnalyticKernel(
             int width,
             int height,
-            KernelFunction const &kernelFunction
-        );
-        
-        explicit AnalyticKernel(
-            int width,
-            int height,
             KernelFunction const &kernelFunction,
-            Kernel::SpatialFunction const &spatialFunction
+            Kernel::SpatialFunction const &spatialFunction=NullSpatialFunction()
         );
-        
+
         explicit AnalyticKernel(
             int width,
             int height,
             KernelFunction const &kernelFunction,
             std::vector<Kernel::SpatialFunctionPtr> const &spatialFunctionList
         );
-        
+
         virtual ~AnalyticKernel() {};
-    
+
+        virtual Kernel::Ptr clone() const;
+
         virtual double computeImage(
-            lsst::afw::image::Image<PixelT> &image,
+            lsst::afw::image::Image<Pixel> &image,
             bool doNormalize,
             double x = 0.0,
             double y = 0.0
         ) const;
 
         virtual std::vector<double> getKernelParameters() const;
-    
+
         virtual KernelFunctionPtr getKernelFunction() const;
-            
+
         virtual std::string toString(std::string prefix = "") const;
 
     protected:
         virtual void setKernelParameter(unsigned int ind, double value) const;
-    
-    private:
+
         KernelFunctionPtr _kernelFunctionPtr;
 
-    private:
         friend class boost::serialization::access;
         template <class Archive>
             void serialize(Archive& ar, unsigned int const version) {
@@ -437,40 +426,46 @@ using boost::serialization::make_nvp;
                 ar & make_nvp("fn", _kernelFunctionPtr);
             };
     };
-    
-    
+
+
     /**
-     * @brief A kernel that has only one non-zero pixel
+     * @brief A kernel that has only one non-zero pixel (of value 1)
+     *
+     * It has no adjustable parameters and so cannot be spatially varying.
      *
      * @ingroup afw
      */
     class DeltaFunctionKernel : public Kernel {
     public:
-        typedef boost::shared_ptr<DeltaFunctionKernel> PtrT;
+        typedef boost::shared_ptr<DeltaFunctionKernel> Ptr;
+        typedef boost::shared_ptr<const DeltaFunctionKernel> ConstPtr;
         // Traits values for this class of Kernel
         typedef deltafunction_kernel_tag kernel_fill_factor;
 
         explicit DeltaFunctionKernel(
             int width,
             int height,
-            lsst::afw::image::PointI point
+            lsst::afw::image::PointI const &point
         );
 
+        virtual ~DeltaFunctionKernel() {};
+
+        virtual Kernel::Ptr clone() const;
+
         virtual double computeImage(
-            lsst::afw::image::Image<PixelT> &image,
+            lsst::afw::image::Image<Pixel> &image,
             bool doNormalize,
             double x = 0.0,
             double y = 0.0
         ) const;
 
-        std::pair<int, int> getPixel() const { return _pixel; }
+        lsst::afw::image::PointI getPixel() const { return _pixel; }
 
         virtual std::string toString(std::string prefix = "") const;
 
     private:
-        std::pair<int, int> _pixel;
+        lsst::afw::image::PointI _pixel;
 
-    private:
         friend class boost::serialization::access;
         template <class Archive>
         void serialize(Archive& ar, unsigned int const version) {
@@ -484,22 +479,22 @@ using boost::serialization::make_nvp;
 
     /**
      * @brief A kernel that is a linear combination of fixed basis kernels.
-     * 
+     *
      * Convolution may be performed by first convolving the image
      * with each fixed kernel, then adding the resulting images using the (possibly
      * spatially varying) kernel coefficients.
      *
+     * The basis kernels are cloned (deep copied) so you may safely modify your own copies.
+     *
      * Warnings:
      * - This class does not normalize the individual basis kernels; they are used "as is".
-     * - The kernels are assumed to be invariant; do not try to modify the basis kernels
-     *   while using LinearCombinationKernel.
      *
      * @ingroup afw
      */
     class LinearCombinationKernel : public Kernel {
     public:
-        typedef boost::shared_ptr<LinearCombinationKernel> PtrT;
-        typedef lsst::afw::math::KernelList<Kernel> KernelList;
+        typedef boost::shared_ptr<LinearCombinationKernel> Ptr;
+        typedef boost::shared_ptr<const LinearCombinationKernel> ConstPtr;
 
         explicit LinearCombinationKernel();
 
@@ -507,56 +502,65 @@ using boost::serialization::make_nvp;
             KernelList const &kernelList,
             std::vector<double> const &kernelParameters
         );
-        
+
         explicit LinearCombinationKernel(
             KernelList const &kernelList,
             Kernel::SpatialFunction const &spatialFunction
         );
-        
+
         explicit LinearCombinationKernel(
             KernelList const &kernelList,
             std::vector<Kernel::SpatialFunctionPtr> const &spatialFunctionList
         );
-        
+
         virtual ~LinearCombinationKernel() {};
-    
+
+        virtual Kernel::Ptr clone() const;
+
         virtual double computeImage(
-            lsst::afw::image::Image<PixelT> &image,
+            lsst::afw::image::Image<Pixel> &image,
             bool doNormalize,
             double x = 0.0,
             double y = 0.0
         ) const;
 
+        virtual ImageConvolutionVisitor::Ptr computeImageConvolutionVisitor(
+            lsst::afw::image::PointD const & location
+        ) const;
+
         virtual std::vector<double> getKernelParameters() const;
-                
+
         virtual KernelList const &getKernelList() const;
-        
+
+        std::vector<double> getKernelSumList() const;
+
         void checkKernelList(const KernelList &kernelList) const;
-        
+
         virtual std::string toString(std::string prefix = "") const;
 
     protected:
         virtual void setKernelParameter(unsigned int ind, double value) const;
-    
-    private:
-        void _computeKernelImageList();
-        KernelList _kernelList;
-        std::vector<boost::shared_ptr<lsst::afw::image::Image<PixelT> > > _kernelImagePtrList;
-        mutable std::vector<double> _kernelParams;
 
     private:
+        void _setKernelList(KernelList const &kernelList);
+        
+        KernelList _kernelList; ///< basis kernels
+        std::vector<boost::shared_ptr<lsst::afw::image::Image<Pixel> > > _kernelImagePtrList;
+            ///< image of each basis kernel (a cache)
+        std::vector<double> _kernelSumList; ///< sum of each basis kernel (a cache)
+        mutable std::vector<double> _kernelParams;
+
         friend class boost::serialization::access;
         template <class Archive>
             void serialize(Archive& ar, unsigned int const version) {
-                ar & make_nvp("k",
-                        boost::serialization::base_object<Kernel>(*this));
+                ar & make_nvp("k", boost::serialization::base_object<Kernel>(*this));
                 ar & make_nvp("klist", _kernelList);
                 ar & make_nvp("kimglist", _kernelImagePtrList);
+                ar & make_nvp("ksumlist", _kernelSumList);
                 ar & make_nvp("params", _kernelParams);
             };
     };
 
-    
     /**
      * @brief A kernel described by a pair of functions: func(x, y) = colFunc(x) * rowFunc(y)
      *
@@ -573,41 +577,44 @@ using boost::serialization::make_nvp;
     class SeparableKernel : public Kernel {
     public:
         typedef boost::shared_ptr<SeparableKernel> Ptr;
-        typedef boost::shared_ptr<SeparableKernel> PtrT;
-        typedef lsst::afw::math::Function1<PixelT> KernelFunction;
-        typedef lsst::afw::math::NullFunction1<PixelT> NullKernelFunction;
+        typedef boost::shared_ptr<const SeparableKernel> ConstPtr;
+        typedef lsst::afw::math::Function1<Pixel> KernelFunction;
         typedef boost::shared_ptr<KernelFunction> KernelFunctionPtr;
-        
+
+        explicit SeparableKernel();
+
         explicit SeparableKernel(
-            int width=0, int height=0,
-            KernelFunction const& kernelColFunction=NullKernelFunction(),
-            KernelFunction const& kernelRowFunction=NullKernelFunction(),
+            int width, int height,
+            KernelFunction const& kernelColFunction,
+            KernelFunction const& kernelRowFunction,
             Kernel::SpatialFunction const& spatialFunction=NullSpatialFunction()
         );
-        
+
         explicit SeparableKernel(int width, int height,
                                  KernelFunction const& kernelColFunction,
                                  KernelFunction const& kernelRowFunction,
                                  std::vector<Kernel::SpatialFunctionPtr> const& spatialFunctionList);
         virtual ~SeparableKernel() {};
-    
+
+        virtual Kernel::Ptr clone() const;
+
         virtual double computeImage(
-            lsst::afw::image::Image<PixelT> &image,
+            lsst::afw::image::Image<Pixel> &image,
             bool doNormalize,
             double x = 0.0,
             double y = 0.0
         ) const;
 
         double computeVectors(
-            std::vector<PixelT> &colList,
-            std::vector<PixelT> &rowList,
+            std::vector<Pixel> &colList,
+            std::vector<Pixel> &rowList,
             bool doNormalize,
             double x = 0.0,
             double y = 0.0
         ) const;
-        
+
         virtual std::vector<double> getKernelParameters() const;
-    
+
         KernelFunctionPtr getKernelColFunction() const;
 
         KernelFunctionPtr getKernelRowFunction() const;
@@ -616,20 +623,19 @@ using boost::serialization::make_nvp;
 
     protected:
         virtual void setKernelParameter(unsigned int ind, double value) const;
-    
+
     private:
         double basicComputeVectors(
-            std::vector<PixelT> &colList,
-            std::vector<PixelT> &rowList,
+            std::vector<Pixel> &colList,
+            std::vector<Pixel> &rowList,
             bool doNormalize
         ) const;
 
         KernelFunctionPtr _kernelColFunctionPtr;
         KernelFunctionPtr _kernelRowFunctionPtr;
-        mutable std::vector<PixelT> _localColList;  // used by computeImage
-        mutable std::vector<PixelT> _localRowList;
+        mutable std::vector<Pixel> _localColList;  // used by computeImage
+        mutable std::vector<Pixel> _localRowList;
 
-    private:
         friend class boost::serialization::access;
         template <class Archive>
             void serialize(Archive& ar, unsigned int const version) {
@@ -641,7 +647,7 @@ using boost::serialization::make_nvp;
                 ar & make_nvp("rows", _localRowList);
             };
     };
-    
+
 }}}   // lsst:afw::math
 
 namespace boost {
@@ -653,8 +659,8 @@ inline void save_construct_data(
     unsigned int const file_version) {
     int width = k->getWidth();
     int height = k->getHeight();
-    int x = k->getPixel().first;
-    int y = k->getPixel().second;
+    int x = k->getPixel().getX();
+    int y = k->getPixel().getY();
     ar << make_nvp("width", width);
     ar << make_nvp("height", height);
     ar << make_nvp("pixX", x);

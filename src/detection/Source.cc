@@ -107,7 +107,7 @@ bool det::Source::operator==(Source const & d) const {
                 FLAG_FOR_DETECTION) &&
         areEqual(_flagForWcs, d._flagForWcs,  FLAG_FOR_WCS)) 
     {
-    	//check NULLABLE field state equality
+        //check NULLABLE field state equality
         for (int i = 0; i < NUM_SOURCE_NULLABLE_FIELDS; ++i) {
             if (isNull(i) != d.isNull(i)) {
                 return false;

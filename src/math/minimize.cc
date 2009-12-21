@@ -21,6 +21,8 @@
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/math/minimize.h"
 
+namespace afwMath = lsst::afw::math;
+
 namespace {
     /**
      * @brief Minuit wrapper for a function(x)
@@ -30,7 +32,7 @@ namespace {
     public:
         explicit MinimizerFunctionBase1();
         explicit MinimizerFunctionBase1(
-            lsst::afw::math::Function1<ReturnT> const &function,
+            afwMath::Function1<ReturnT> const &function,
             std::vector<double> const &measurementList,
             std::vector<double> const &varianceList,
             std::vector<double> const &xPositionList,
@@ -48,7 +50,7 @@ namespace {
         inline std::vector<double> getPositions() const {return _xPositionList;}
         inline void setErrorDef(double def) {_errorDef=def;}
     private:
-        boost::shared_ptr<lsst::afw::math::Function1<ReturnT> > _functionPtr;
+        boost::shared_ptr<afwMath::Function1<ReturnT> > _functionPtr;
         std::vector<double> _measurementList;
         std::vector<double> _varianceList;
         std::vector<double> _xPositionList;
@@ -63,7 +65,7 @@ namespace {
     public:
         explicit MinimizerFunctionBase2();
         explicit MinimizerFunctionBase2(
-            lsst::afw::math::Function2<ReturnT> const &function,
+            afwMath::Function2<ReturnT> const &function,
             std::vector<double> const &measurementList,
             std::vector<double> const &varianceList,
             std::vector<double> const &xPositionList,
@@ -83,7 +85,7 @@ namespace {
         inline std::vector<double> getPosition2() const {return _yPositionList;}
         inline void setErrorDef(double def) {_errorDef=def;}
     private:
-        boost::shared_ptr<lsst::afw::math::Function2<ReturnT> > _functionPtr;
+        boost::shared_ptr<afwMath::Function2<ReturnT> > _functionPtr;
         std::vector<double> _measurementList;
         std::vector<double> _varianceList;
         std::vector<double> _xPositionList;
@@ -106,14 +108,14 @@ MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1()
 
 template<typename ReturnT>
 MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1(
-    lsst::afw::math::Function1<ReturnT> const &function,
+    afwMath::Function1<ReturnT> const &function,
     std::vector<double> const &measurementList,
     std::vector<double> const &varianceList,
     std::vector<double> const &xPositionList, 
     double errorDef)
 :
     lsst::daf::data::LsstBase(typeid(this)),
-    _functionPtr(function.copy()),
+    _functionPtr(function.clone()),
     _measurementList(measurementList),
     _varianceList(varianceList),
     _xPositionList(xPositionList),
@@ -134,7 +136,7 @@ MinimizerFunctionBase2<ReturnT>::MinimizerFunctionBase2()
 
 template<typename ReturnT>
 MinimizerFunctionBase2<ReturnT>::MinimizerFunctionBase2(
-    lsst::afw::math::Function2<ReturnT> const &function,
+    afwMath::Function2<ReturnT> const &function,
     std::vector<double> const &measurementList,
     std::vector<double> const &varianceList,
     std::vector<double> const &xPositionList,
@@ -142,7 +144,7 @@ MinimizerFunctionBase2<ReturnT>::MinimizerFunctionBase2(
     double errorDef)
 :
     lsst::daf::data::LsstBase(typeid(this)),
-    _functionPtr(function.copy()),
+    _functionPtr(function.clone()),
     _measurementList(measurementList),
     _varianceList(varianceList),
     _xPositionList(xPositionList),
@@ -198,8 +200,8 @@ double MinimizerFunctionBase2<ReturnT>::operator() (const std::vector<double>& p
  * - Compute stepSize automatically? (if so, find a different way to fix parameters)
  */
 template<typename ReturnT>
-lsst::afw::math::FitResults lsst::afw::math::minimize(
-    lsst::afw::math::Function1<ReturnT> const &function, ///< function(x) to be minimized
+afwMath::FitResults afwMath::minimize(
+    afwMath::Function1<ReturnT> const &function, ///< function(x) to be minimized
     std::vector<double> const &initialParameterList,    ///< initial guess for parameters
     std::vector<double> const &stepSizeList, ///< step size for each parameter; use 0.0 to fix a parameter
     std::vector<double> const &measurementList, ///< measured values
@@ -282,8 +284,8 @@ lsst::afw::math::FitResults lsst::afw::math::minimize(
  * - Compute stepSize automatically? (if so, find a different way to fix parameters)
  */
 template<typename ReturnT>
-lsst::afw::math::FitResults lsst::afw::math::minimize(
-    lsst::afw::math::Function2<ReturnT> const &function,  ///< function(x,y) to be minimized
+afwMath::FitResults afwMath::minimize(
+    afwMath::Function2<ReturnT> const &function,  ///< function(x,y) to be minimized
     std::vector<double> const &initialParameterList,    ///< initial guess for parameters
     std::vector<double> const &stepSizeList,        ///< step size for each parameter; use 0.0 to fix a parameter
     std::vector<double> const &measurementList, ///< measured values
@@ -336,6 +338,7 @@ lsst::afw::math::FitResults lsst::afw::math::minimize(
     if (!fitResults.isValid) {
         lsst::pex::logging::Trace("lsst::afw::math::minimize", 1, "WARNING : Fit failed to converge");
     }
+
     for (unsigned int i = 0; i < nParameters; ++i) {
         fitResults.parameterList.push_back(min.UserState().Value(paramNames[i].c_str()));
         if (fitResults.isValid) {
@@ -352,24 +355,24 @@ lsst::afw::math::FitResults lsst::afw::math::minimize(
 // Explicit instantiation
 #define NL /* */
 #define minimizeFuncs(ReturnT) \
-    template lsst::afw::math::FitResults lsst::afw::math::minimize( \
-        lsst::afw::math::Function1<ReturnT> const &, \
+    template afwMath::FitResults afwMath::minimize( \
+        afwMath::Function1<ReturnT> const &, \
         std::vector<double> const &, \
         std::vector<double> const &, \
         std::vector<double> const &, \
         std::vector<double> const &, \
         std::vector<double> const &, \
-        double errorDef \
+        double \
     ); NL \
-    template lsst::afw::math::FitResults lsst::afw::math::minimize( \
-        lsst::afw::math::Function2<ReturnT> const &, \
+    template afwMath::FitResults afwMath::minimize( \
+        afwMath::Function2<ReturnT> const &, \
         std::vector<double> const &, \
         std::vector<double> const &, \
         std::vector<double> const &, \
         std::vector<double> const &, \
         std::vector<double> const &, \
         std::vector<double> const &, \
-        double errorDef \
+        double \
     );
 
 minimizeFuncs(float)

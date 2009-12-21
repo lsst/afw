@@ -10,13 +10,13 @@
 using namespace std;
 
 int main() {
-    typedef lsst::afw::math::Kernel::PixelT pixelType;
+    typedef lsst::afw::math::Kernel::Pixel Pixel;
 
     unsigned int kernelCols = 6;
     unsigned int kernelRows = 5;
     unsigned int order = (min(kernelCols, kernelRows) - 1) / 2;
 
-    lsst::afw::math::LanczosFunction2<pixelType> lanczosFunc(order);
+    lsst::afw::math::LanczosFunction2<Pixel> lanczosFunc(order);
     lsst::afw::math::AnalyticKernel kernel(kernelCols, kernelRows, lanczosFunc);
 
     cout << boost::format("Lanczos Kernel is %d x %d; Lanczos function has order %d\n")

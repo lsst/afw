@@ -4,12 +4,6 @@
 #
 import glob, os.path, sys, traceback
 import lsst.SConsUtils as scons
-import platform
-
-if platform.system().lower() == "darwin":
-    minuitLibs = "Minuit2:C++"
-else:
-    minuitLibs = "gomp Minuit2:C++"
 
 env = scons.makeEnv(
     "afw",
@@ -25,7 +19,7 @@ env = scons.makeEnv(
         ["cfitsio", "fitsio.h", "m cfitsio", "ffopen"],
         ["wcslib", "wcslib/wcs.h", "m wcs"], # remove m once SConsUtils bug fixed
         ["xpa", "xpa.h", "xpa", "XPAPuts"],
-        ["minuit2", "Minuit2/FCNBase.h", minuitLibs],
+        ["minuit2", "Minuit2/FCNBase.h", "Minuit2:C++"],
         ["gsl", "gsl/gsl_rng.h", "gslcblas gsl"],
         ["pex_exceptions", "lsst/pex/exceptions.h", "pex_exceptions:C++"],
         ["utils", "lsst/utils/Utils.h", "utils:C++"],
@@ -36,6 +30,7 @@ env = scons.makeEnv(
         ["daf_persistence", "lsst/daf/persistence.h", "daf_persistence:C++"],
         ["daf_data", "lsst/daf/data.h", "daf_data:C++"],
         ["eigen", "Eigen/Core.h"],
+        ["fftw", "fftw3.h", "fftw3"],
     ],
 )
 #
@@ -70,9 +65,10 @@ env['IgnoreFiles'] = r"(~$|\.pyc$|^\.svn$|\.o$)"
 Alias("install", [
     env.Install(env['prefix'], "python"),
     env.Install(env['prefix'], "include"),
+    env.Install(env['prefix'], "examples"),
     env.Install(env['prefix'], "lib"),
     env.InstallAs(os.path.join(env['prefix'], "doc", "doxygen"), os.path.join("doc", "htmlDir")),
-    env.InstallEups(os.path.join(env['prefix'], "ups"), glob.glob(os.path.join("ups", "*.table")))
+    env.InstallEups(env['prefix'] + "/ups"),
 ])
 
 scons.CleanTree(r"*~ core *.so *.os *.o")

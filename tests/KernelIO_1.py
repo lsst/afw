@@ -97,42 +97,43 @@ class KernelIOTestCase(unittest.TestCase):
         loc = dafPersist.LogicalLocation("tests/data/kernel2.boost")
         persistence = dafPersist.Persistence.getPersistence(pol)
 
-        gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0)
+        gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         k = afwMath.AnalyticKernel(kWidth, kHeight, gaussFunc)
         fArr = numpy.zeros(shape=[k.getWidth(), k.getHeight()], dtype=float)
         for xsigma in (0.1, 1.0, 3.0):
             for ysigma in (0.1, 1.0, 3.0):
-                gaussFunc.setParameters((xsigma, ysigma))
-                # compute array of function values and normalize
-                for row in range(k.getHeight()):
-                    y = row - k.getCtrY()
-                    for col in range(k.getWidth()):
-                        x = col - k.getCtrX()
-                        fArr[col, row] = gaussFunc(x, y)
-                fArr /= fArr.sum()
-                
-                k.setKernelParameters((xsigma, ysigma))
-
-                storageList = dafPersist.StorageList()
-                storage = persistence.getPersistStorage("XmlStorage", loc)
-                storageList.append(storage)
-                persistence.persist(k, storageList, additionalData)
-
-                storageList2 = dafPersist.StorageList()
-                storage2 = persistence.getRetrieveStorage("XmlStorage", loc)
-                storageList2.append(storage2)
-                x = persistence.unsafeRetrieve("AnalyticKernel",
-                        storageList2, additionalData)
-                k2 = afwMath.AnalyticKernel.swigConvert(x)
-
-                self.kernelCheck(k, k2)
-
-                kImage = afwImage.ImageD(k2.getDimensions())
-                k2.computeImage(kImage, True)
-                kArr = imTestUtils.arrayFromImage(kImage)
-                if not numpy.allclose(fArr, kArr):
-                    self.fail("%s = %s != %s for xsigma=%s, ysigma=%s" % \
-                            (k2.__class__.__name__, kArr, fArr, xsigma, ysigma))
+                for angle in (0.0, 0.4, 1.1):
+                    gaussFunc.setParameters((xsigma, ysigma, angle))
+                    # compute array of function values and normalize
+                    for row in range(k.getHeight()):
+                        y = row - k.getCtrY()
+                        for col in range(k.getWidth()):
+                            x = col - k.getCtrX()
+                            fArr[col, row] = gaussFunc(x, y)
+                    fArr /= fArr.sum()
+                    
+                    k.setKernelParameters((xsigma, ysigma, angle))
+    
+                    storageList = dafPersist.StorageList()
+                    storage = persistence.getPersistStorage("XmlStorage", loc)
+                    storageList.append(storage)
+                    persistence.persist(k, storageList, additionalData)
+    
+                    storageList2 = dafPersist.StorageList()
+                    storage2 = persistence.getRetrieveStorage("XmlStorage", loc)
+                    storageList2.append(storage2)
+                    x = persistence.unsafeRetrieve("AnalyticKernel",
+                            storageList2, additionalData)
+                    k2 = afwMath.AnalyticKernel.swigConvert(x)
+    
+                    self.kernelCheck(k, k2)
+    
+                    kImage = afwImage.ImageD(k2.getDimensions())
+                    k2.computeImage(kImage, True)
+                    kArr = imTestUtils.arrayFromImage(kImage)
+                    if not numpy.allclose(fArr, kArr):
+                        self.fail("%s = %s != %s for xsigma=%s, ysigma=%s" % \
+                                (k2.__class__.__name__, kArr, fArr, xsigma, ysigma))
 
     def testDeltaFunctionKernel(self):
         """Test DeltaFunctionKernel
@@ -187,11 +188,11 @@ class KernelIOTestCase(unittest.TestCase):
         k = afwMath.SeparableKernel(kWidth, kHeight, gaussFunc1, gaussFunc1)
         fArr = numpy.zeros(shape=[k.getWidth(), k.getHeight()], dtype=float)
         gArr = numpy.zeros(shape=[k.getWidth(), k.getHeight()], dtype=float)
-        gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0)
+        gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         for xsigma in (0.1, 1.0, 3.0):
             gaussFunc1.setParameters((xsigma,))
             for ysigma in (0.1, 1.0, 3.0):
-                gaussFunc.setParameters((xsigma, ysigma))
+                gaussFunc.setParameters((xsigma, ysigma, 0.0))
                 # compute array of function values and normalize
                 for row in range(k.getHeight()):
                     y = row - k.getCtrY()
@@ -236,7 +237,7 @@ class KernelIOTestCase(unittest.TestCase):
 
         # create list of kernels
         basisImArrList = []
-        kVec = afwMath.KernelListD()
+        kVec = afwMath.KernelList()
         for row in range(kHeight):
             for col in range(kWidth):
                 kernel = afwMath.DeltaFunctionKernel(kWidth, kHeight, afwImage.PointI(col, row))
@@ -296,7 +297,7 @@ class KernelIOTestCase(unittest.TestCase):
         basisImArrList.append(imArr)
         
         # create a list of basis kernels from the images
-        kVec = afwMath.KernelListD()
+        kVec = afwMath.KernelList()
         for basisImArr in basisImArrList:
             basisImage = imTestUtils.imageFromArray(basisImArr, retType=afwImage.ImageD)
             kernel = afwMath.FixedKernel(basisImage)
@@ -354,7 +355,7 @@ class KernelIOTestCase(unittest.TestCase):
         loc = dafPersist.LogicalLocation("tests/data/kernel7.boost")
         persistence = dafPersist.Persistence.getPersistence(pol)
 
-        gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0)
+        gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         k = afwMath.AnalyticKernel(kWidth, kHeight, gaussFunc)
         for xCtr in range(kWidth):
             k.setCtrX(xCtr)

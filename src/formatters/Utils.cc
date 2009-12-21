@@ -193,7 +193,7 @@ std::string const getTableName(
  * @c "${itemName}.numSlices" (a positive integer of type @c int) output tables exist and
  * are to be read in.
  *
- * @return 	a list of table names
+ * @return a list of table names
  * @sa getTableName()
  */
 std::vector<std::string> getAllSliceTableNames(

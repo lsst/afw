@@ -9,10 +9,7 @@ or
    >>> import Interpolate; Interpolate.run()
 """
 
-import math
-import os
 import pdb  # we may want to say pdb.set_trace()
-import sys
 import unittest
 
 import lsst.utils.tests as utilsTests
@@ -31,54 +28,54 @@ class InterpolateTestCase(unittest.TestCase):
     
     """A test case for Interpolate Lienar"""
     def setUp(self):
-	self.n = 10
-	self.x = afwMath.vectorF(self.n)
-	self.y1 = afwMath.vectorF(self.n)
-	self.y2 = afwMath.vectorF(self.n)
-	self.y0 = 1.0
-	self.dydx = 1.0
-	self.d2ydx2 = 0.5
+        self.n = 10
+        self.x = afwMath.vectorD(self.n)
+        self.y1 = afwMath.vectorD(self.n)
+        self.y2 = afwMath.vectorD(self.n)
+        self.y0 = 1.0
+        self.dydx = 1.0
+        self.d2ydx2 = 0.5
 
-	for i in range(0, self.n, 1):
-	    self.x[i] = i
-	    self.y1[i] = self.dydx*self.x[i] + self.y0
-	    self.y2[i] = self.d2ydx2*self.x[i]*self.x[i] + self.dydx*self.x[i] + self.y0
-	    
-	self.xtest = 4.5
-	self.y1test = self.dydx*self.xtest + self.y0
-	self.y2test = self.d2ydx2*self.xtest*self.xtest + self.dydx*self.xtest + self.y0
+        for i in range(0, self.n, 1):
+            self.x[i] = i
+            self.y1[i] = self.dydx*self.x[i] + self.y0
+            self.y2[i] = self.d2ydx2*self.x[i]*self.x[i] + self.dydx*self.x[i] + self.y0
+            
+        self.xtest = 4.5
+        self.y1test = self.dydx*self.xtest + self.y0
+        self.y2test = self.d2ydx2*self.xtest*self.xtest + self.dydx*self.xtest + self.y0
 
     def tearDown(self):
         del self.x
-	del self.y1
-	del self.y2
+        del self.y1
+        del self.y2
 
     def testLinearRamp(self):
 
-	# === test the Linear Interpolator ============================
-        yinterpL = afwMath.LinearInterpolateFF(self.x, self.y1)
+        # === test the Linear Interpolator ============================
+        # default is akima spline
+        yinterpL = afwMath.Interpolate(self.x, self.y1)
         youtL = yinterpL.interpolate(self.xtest)
 
-	self.assertEqual(youtL, self.y1test)
+        self.assertEqual(youtL, self.y1test)
 
 
     def testNaturalSplineRamp(self):
-	
+        
         # === test the Spline interpolator =======================
-        yinterpS = afwMath.SplineInterpolateFF(self.x, self.y1)
+        # specify interp type with the string interface
+        yinterpS = afwMath.Interpolate(self.x, self.y1, "NATURAL_SPLINE")
         youtS = yinterpS.interpolate(self.xtest)
-	
+        
         self.assertEqual(youtS, self.y1test)
 
-    def testNaturalSplineParabola(self):
-	
+    def testAkimaSplineParabola(self):
+        
         # === test the Spline interpolator =======================
-	ictrl = afwMath.InterpControl()
-	ictrl.setDydx0(2.0*self.d2ydx2*self.x[0] + self.dydx)
-	ictrl.setDydxN(2.0*self.d2ydx2*self.x[self.n - 1] + self.dydx)
-        yinterpS = afwMath.SplineInterpolateFF(self.x, self.y2, ictrl)
+        # specify interp type with the enum style interface
+        yinterpS = afwMath.Interpolate(self.x, self.y2, afwMath.Interpolate.AKIMA_SPLINE)
         youtS = yinterpS.interpolate(self.xtest)
-	
+        
         self.assertEqual(youtS, self.y2test)
 
 
@@ -91,11 +88,12 @@ def suite():
 
     suites = []
     suites += unittest.makeSuite(InterpolateTestCase)
+    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(exit=False):
+def run(shouldExit = False):
     """Run the tests"""
-    utilsTests.run(suite(), exit)
+    utilsTests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
     run(True)

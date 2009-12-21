@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
     
     for (unsigned int kSize = MinKernelSize; kSize <= MaxKernelSize; kSize += DeltaKernelSize) {
         // construct kernel
-        afwMath::GaussianFunction2<kernelType> gaussFunc(1, 1);
+        afwMath::GaussianFunction2<kernelType> gaussFunc(1, 1, 0);
         unsigned int polyOrder = 1;
         afwMath::PolynomialFunction2<double> polyFunc(polyOrder);
         afwMath::AnalyticKernel gaussSpVarKernel(kSize, kSize, gaussFunc, polyFunc);

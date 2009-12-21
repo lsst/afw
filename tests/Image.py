@@ -17,7 +17,8 @@ import unittest
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions
 import lsst.daf.base
-import lsst.afw.image.imageLib as afwImage
+import lsst.afw.image as afwImage
+import lsst.afw.math as afwMath
 import eups
 import lsst.afw.display.ds9 as ds9
 
@@ -34,6 +35,8 @@ class ImageTestCase(unittest.TestCase):
         self.val1, self.val2 = 10, 100
         self.image1 = afwImage.ImageF(100, 200); self.image1.set(self.val1)
         self.image2 = afwImage.ImageF(self.image1.getDimensions()); self.image2.set(self.val2)
+        self.function = afwMath.PolynomialFunction2D(2)
+        self.function.setParameters(range(self.function.getNParameters()))
 
     def tearDown(self):
         del self.image1
@@ -57,6 +60,13 @@ class ImageTestCase(unittest.TestCase):
         
         self.assertEqual(self.image1.get(0,0), 2*self.val1)
         self.assertEqual(self.image2.get(0,0), self.val1 + self.val2)
+
+        self.image1.set(self.val1)
+        self.image1 += self.function
+
+        for j in range(self.image1.getHeight()):
+            for i in range(self.image1.getWidth()):
+                self.assertEqual(self.image1.get(i,j), self.val1 + self.function(i,j))
     
     def testAddScaledImages(self):
         c = 10.0
@@ -70,6 +80,13 @@ class ImageTestCase(unittest.TestCase):
         
         self.assertEqual(self.image1.get(0,0), 0)
         self.assertEqual(self.image2.get(0,0), self.val2 - self.val1)
+
+        self.image1.set(self.val1)
+        self.image1 -= self.function
+
+        for j in range(self.image1.getHeight()):
+            for i in range(self.image1.getWidth()):
+                self.assertEqual(self.image1.get(i,j), self.val1 - self.function(i,j))
     
     def testArithmeticImagesMismatch(self):
         "Test arithmetic operations on Images of different sizes"
@@ -252,6 +269,20 @@ class ImageTestCase(unittest.TestCase):
         self.assertEqual(bbox.getWidth(), width)
         self.assertEqual(bbox.getHeight(), height)
 
+    def testBCircle(self):
+        """Check BCircle"""
+
+        x0, y0, r = 10, 20, 3.5
+        bc = afwImage.BCircle(afwImage.PointI(x0, y0), r)
+        self.assertEqual(bc.getCenter().getX(), x0)
+        self.assertEqual(bc.getCenter().getY(), y0)
+        self.assertEqual(bc.getRadius(), r)
+
+        ir = int(r + 0.5)
+        self.assertEqual(bc.getBBox().getLLC(), afwImage.PointI(x0 - ir, y0 - ir))
+        self.assertEqual(bc.getBBox().getDimensions()[0], 2*ir + 1)
+        self.assertEqual(bc.getBBox().getDimensions()[1], 2*ir + 1)
+
     def checkImgPatch(self, img, x0=0, y0=0):
         """Check that a patch of an image is correct; origin of patch is at (x0, y0)"""
         
@@ -323,7 +354,21 @@ class ImageTestCase(unittest.TestCase):
             simage1 = afwImage.ImageF(self.image1, afwImage.BBox(afwImage.PointI(1, -1), 10, 5))
 
         utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst)
-        
+
+    def testImageInitialisation(self):
+        dims = self.image1.getDimensions()
+        factory = self.image1.Factory
+
+        self.image1.set(666)
+
+        del self.image1                 # tempt C++ to reuse the memory
+        self.image1 = factory(dims)
+        self.assertEqual(self.image1.get(10, 10), 0)
+
+        del self.image1
+        self.image1 = factory(20, 20)
+        self.assertEqual(self.image1.get(10, 10), 0)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class DecoratedImageTestCase(unittest.TestCase):
@@ -463,6 +508,21 @@ class DecoratedImageTestCase(unittest.TestCase):
         self.assertTrue("NAXIS1" in meta.names())
         self.assertEqual(im.getWidth(), meta.get("NAXIS1"))
         self.assertEqual(im.getHeight(), meta.get("NAXIS2"))
+
+    def testTicket1040(self):
+        """ How to repeat from #1040"""
+        image        = afwImage.ImageD(6, 6)
+        image.set(2, 2, 100)
+
+        bbox    = afwImage.BBox(afwImage.PointI(1, 1), 5, 5)
+        subImage = image.Factory(image, bbox)
+        subImageF = subImage.convertFloat()
+        
+        if display:
+            ds9.mtv(subImage, frame=0, title="subImage")
+            ds9.mtv(subImageF, frame=1, title="converted subImage")
+
+        self.assertEqual(subImage.get(1, 1), subImageF.get(1, 1))
         
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

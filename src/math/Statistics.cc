@@ -11,8 +11,9 @@
 #include <limits>
 #include <cmath>
 #include "boost/tuple/tuple.hpp"
+#include "boost/shared_ptr.hpp"
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/image/MaskedImage.h"
+#include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/Statistics.h"
 
 using namespace std;
@@ -21,9 +22,132 @@ namespace math = lsst::afw::math;
 namespace ex = lsst::pex::exceptions;
 
 namespace {
-    double const NaN = std::numeric_limits<double>::quiet_NaN();
-    double const iqToStdev = 0.741301109252802;   // 1 sigma in units of iqrange (assume Gaussian)
+    
+double const NaN = std::numeric_limits<double>::quiet_NaN();
+double const MAX_DOUBLE = std::numeric_limits<double>::max();
+double const IQ_TO_STDEV = 0.741301109252802;   // 1 sigma in units of iqrange (assume Gaussian)
+
+
+
+/**
+ * @brief A boolean functor which always returns true (for templated conditionals)
+ */
+class AlwaysTrue {
+public:
+    template<typename T>
+    bool operator()(T val) const {
+        return true;
+    }
+    template<typename Ta, typename Tb>
+    bool operator()(Ta a, Tb b) const {
+        return true;
+    }
+    template<typename Ta, typename Tb, typename Tc>
+    bool operator()(Ta a, Tb b, Tc c) const {
+        return true;
+    }
+};
+
+/**
+ * @brief A boolean functor which always returns false (for templated conditionals)
+ */
+class AlwaysFalse {
+public:
+    template<typename T>
+    bool operator()(T val) const {
+        return false;
+    }
+    template<typename Ta, typename Tb>
+    bool operator()(Ta a, Tb b) const {
+        return false;
+    }
+    template<typename Ta, typename Tb, typename Tc>
+    bool operator()(Ta a, Tb b, Tc c) const {
+        return false;
+    }
+};
+
+/**
+ * @brief A boolean functor to check for NaN (for templated conditionals)
+ */    
+class CheckFinite {
+public:
+    template<typename T>
+    bool operator()(T val) const {
+        return !std::isnan(static_cast<float>(val));
+    }
+};
+
+/**
+ * @brief A boolean functor to test val < min (for templated conditionals)
+ */    
+class CheckValueLtMin {
+public:
+    template<typename Tval, typename Tmin>
+    bool operator()(Tval val, Tmin min) const {
+        return (static_cast<Tmin>(val) < min);
+    }
+};
+
+/**
+ * @brief A boolean functor to test val > max (for templated conditionals)
+ */    
+class CheckValueGtMax {
+public:
+    template<typename Tval, typename Tmax>
+    bool operator()(Tval val, Tmax max) const {
+        return (static_cast<Tmax>(val) > max);
+    }
+};
+
+/**
+ * @brief A boolean functor to test |val| < cliplimit  (for templated conditionals)
+ */    
+class CheckClipRange {
+public:
+    template<typename Tval, typename Tcen, typename Tmax>
+    bool operator()(Tval val, Tcen center, Tmax cliplimit) const {
+        Tmax tmp = fabs(val - center);
+        return (tmp <= cliplimit);
+    }
+};
+    
+// define some abbreviated typenames for the test templates
+typedef CheckFinite     ChkFin;
+typedef CheckValueLtMin ChkMin;
+typedef CheckValueGtMax ChkMax;
+typedef CheckClipRange  ChkClip;    
+typedef AlwaysTrue      AlwaysT;
+typedef AlwaysFalse     AlwaysF;
+    
 }
+
+
+/**
+ * @brief A private function to copy an image into a vector
+ *
+ * This is used for percentile and iq_range as these must reorder the values.
+ * Because it loops over the pixels, it's been templated over the NaN test to avoid
+ * code repetition of the loops.
+ */
+template<typename IsFinite, typename Image, typename Mask>
+boost::shared_ptr<std::vector<typename Image::Pixel> > math::Statistics::_makeVectorCopy(Image const &img,
+                                                                                         Mask const &msk,
+                                                                                         int const flags) {
+
+    boost::shared_ptr<std::vector<typename Image::Pixel> > imgcp(new std::vector<typename Image::Pixel>(0));
+    for (int i_y = 0; i_y < img.getHeight(); ++i_y) {
+        typename Mask::x_iterator mptr = msk.row_begin(i_y);
+        for (typename Image::x_iterator ptr = img.row_begin(i_y); ptr != img.row_end(i_y); ++ptr) {
+            if ( IsFinite()(*ptr) && !(*mptr & _sctrl.getAndMask()) ) {
+                imgcp->push_back(*ptr);
+            }
+            ++mptr;
+        }
+    }
+    return imgcp;
+}
+
 
 /**
  * @brief Constructor for Statistics object
@@ -32,13 +156,16 @@ namespace {
  * are retrieved using \c getValue etc.
  *
  */
-template<typename Image>
-math::Statistics::Statistics(Image const& img, ///< Image (or MaskedImage) whose properties we want
+template<typename Image, typename Mask>
+math::Statistics::Statistics(Image const &img, ///< Image whose properties we want
+                             Mask const &msk,   ///< Mask to control which pixels are included
                              int const flags, ///< Describe what we want to calculate
                              StatisticsControl const& sctrl ///< Control how things are calculated
-                            ) : _flags(flags),
-                                _mean(NaN), _variance(NaN), _min(NaN), _max(NaN), _sum(NaN),
-                                _meanclip(NaN), _varianceclip(NaN), _median(NaN), _iqrange(NaN) {
+                            ) :
+    _flags(flags),
+    _mean(NaN), _variance(NaN), _min(NaN), _max(NaN), _sum(NaN),
+    _meanclip(NaN), _varianceclip(NaN), _median(NaN), _iqrange(NaN),
+    _sctrl(sctrl) {
     
     _n = img.getWidth()*img.getHeight();
     if (_n == 0) {
@@ -49,7 +176,7 @@ math::Statistics::Statistics(Image const& img, ///< Image (or MaskedImage) whose
     assert(img.getWidth()*static_cast<double>(img.getHeight()) < std::numeric_limits<int>::max());
 
     // get the standard statistics
-    StandardReturnT standard = _getStandard(img, flags);
+    StandardReturn standard = _getStandard(img, msk, flags);
 
     _mean = standard.get<0>();
     _variance = standard.get<1>();
@@ -62,26 +189,33 @@ math::Statistics::Statistics(Image const& img, ///< Image (or MaskedImage) whose
 
     // copy the image for any routines that will use median or quantiles
     if (flags & (MEDIAN | IQRANGE | MEANCLIP | STDEVCLIP | VARIANCECLIP)) {
-        
-        typename Image::Ptr imgcp = typename Image::Ptr(new Image(img, true));  // deep copy
-        
+
+        // make a vector copy of the image to get the median and quartiles (will move values)
+        boost::shared_ptr<std::vector<typename Image::Pixel> > imgcp;
+        if (_sctrl.getNanSafe()) {
+            imgcp = _makeVectorCopy<ChkFin>(img, msk, flags);
+        } else {
+            imgcp = _makeVectorCopy<AlwaysT>(img, msk, flags);
+        }
+
         if (flags & (MEDIAN | MEANCLIP | STDEVCLIP | VARIANCECLIP)) {
-            _median = _quickSelect(*imgcp, 0.5);
+            _median = _percentile(*imgcp, 0.5);
         }
         if (flags & (IQRANGE | MEANCLIP | STDEVCLIP | VARIANCECLIP)) {
-            _iqrange = std::fabs(_quickSelect(*imgcp, 0.75) - _quickSelect(*imgcp, 0.25));
+            _iqrange = std::fabs(_percentile(*imgcp, 0.75) - _percentile(*imgcp, 0.25));
         }
         
         if (flags & (MEANCLIP | STDEVCLIP | VARIANCECLIP)) {            
-            for(int i_i = 0; i_i < sctrl.getNumIter(); ++i_i) {
+            for (int i_i = 0; i_i < _sctrl.getNumIter(); ++i_i) {
                 
                 double const center = (i_i > 0) ? _meanclip : _median;
                 double const hwidth = (i_i > 0) ?
-                    sctrl.getNumSigmaClip()*std::sqrt(_varianceclip) : sctrl.getNumSigmaClip()*iqToStdev*_iqrange;
-                std::pair<double,double> const clipinfo(center, hwidth);
+                    _sctrl.getNumSigmaClip()*std::sqrt(_varianceclip) :
+                    _sctrl.getNumSigmaClip()*IQ_TO_STDEV*_iqrange;
+                std::pair<double, double> const clipinfo(center, hwidth);
                 
                 // returns a tuple but we'll ignore clipped min, max, and sum;
-                StandardReturnT clipped = _getStandard(img, flags, clipinfo);
+                StandardReturn clipped = _getStandard(img, msk, flags, clipinfo);
                 
                 _meanclip = clipped.get<0>();
                 _varianceclip = clipped.get<1>();
@@ -91,225 +225,263 @@ math::Statistics::Statistics(Image const& img, ///< Image (or MaskedImage) whose
 }
 
 
-/* =========================================================================
- * _getStandard(img, flags)
- * *brief Compute the standard stats: mean, variance, min, max
+/**
+ * @brief This function handles the inner summation loop, with tests templated
  *
- * *param img    an afw::Image to compute the stats over
- * *param flags  an integer (bit field indicating which statistics are to be computed
- *
- * *note An overloaded version below is used to get clipped versions
+ * The idea here is to allow different conditionals in the inner loop, but avoid repeating code.
+ * Each test is actually a functor which is handled through a template.  If the
+ * user requests a test (eg check for NaNs), the function is instantiated with the appropriate functor.
+ * Otherwise, an 'AlwaysTrue' or 'AlwaysFalse' object is passed in.  The compiler then compiles-out
+ * a test which is always false, or removes the conditional for a test which is always true.
  */
-template<typename Image>
-math::Statistics::StandardReturnT math::Statistics::_getStandard(Image const &img, int const flags) {
+
+template<typename IsFinite,
+         typename HasValueLtMin,
+         typename HasValueGtMax,
+         typename InClipRange,
+         typename Image, typename Mask>
+math::Statistics::SumReturn math::Statistics::_sumImage(Image const &img,
+                                                        Mask const &msk,
+                                                        int const flags,
+                                                        int const nCrude,
+                                                        int const stride,
+                                                        double const meanCrude,
+                                                        double const cliplimit) {
     
-    // =====================================================
-    // Get a crude estimate of the mean
     int n = 0;
-    double sum = 0;
-    for (int y=0; y<img.getHeight(); y+=10) {
-        for (typename Image::x_iterator ptr = img.row_begin(y), end = ptr + img.getWidth(); ptr != end; ++ptr) {
-            sum += *ptr;
-            ++n;
+    double sum = 0, sumx2 = 0;
+    double min = (nCrude) ? meanCrude : MAX_DOUBLE;
+    double max = (nCrude) ? meanCrude : -MAX_DOUBLE;
+
+    for (int iY = 0; iY < img.getHeight(); iY += stride) {
+        
+        typename Mask::x_iterator mptr = msk.row_begin(iY);
+        for (typename Image::x_iterator ptr = img.row_begin(iY), end = ptr + img.getWidth();
+             ptr != end; ++ptr, ++mptr) {
+            
+            if ( IsFinite()(*ptr) &&
+                 !(*mptr & _sctrl.getAndMask()) &&
+                 InClipRange()(*ptr, meanCrude, cliplimit) ) { // clip
+                
+                double const delta = *ptr - meanCrude;
+                sum   += delta;
+                sumx2 += delta*delta;
+
+                if ( HasValueLtMin()(*ptr, min) ) { min = *ptr; }
+                if ( HasValueGtMax()(*ptr, max) ) { max = *ptr; }
+                n++;
+                
+            }
         }
     }
-    double const crude_mean = sum/n;    // a crude estimate of the mean, used for numerical stability of variance
+    if (n == 0) {
+        min = NaN;
+        max = NaN;
+    }
+
+    return boost::make_tuple(n, sum, sumx2, min, max);
+}
+
+/* =========================================================================
+ * _getStandard(img, flags)
+ * @brief Compute the standard stats: mean, variance, min, max
+ *
+ * @param img    an afw::Image to compute the stats over
+ * @param flags  an integer (bit field indicating which statistics are to be computed
+ *
+ * @note An overloaded version below is used to get clipped versions
+ */
+template<typename Image, typename Mask>
+math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img,
+                                                                 Mask const &msk,   
+                                                                 int const flags) {
+
+
+    // =====================================================
+    // a crude estimate of the mean, used for numerical stability of variance
+    SumReturn loopValues;
     
+    int nCrude       = 0;
+    double meanCrude = 0.0;
+
+    // for small numbers of values, use a small stride
+    int const nPix = img.getWidth()*img.getHeight();
+    int strideCrude;
+    if (nPix < 100) {
+        strideCrude = 2;
+    } else {
+        strideCrude = 10;
+    }
+    if (_sctrl.getNanSafe()) {
+        loopValues = _sumImage<ChkFin, AlwaysF, AlwaysF, AlwaysT>(img, msk, flags,
+                                                                  nCrude, strideCrude, meanCrude);
+    } else {
+        loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, AlwaysT>(img, msk, flags,
+                                                                   nCrude, strideCrude, meanCrude);
+    }
+    nCrude = loopValues.get<0>();
+
+    double sumCrude = loopValues.get<1>();
+    meanCrude = 0.0;
+    if ( nCrude > 0 ) {
+        meanCrude = sumCrude/nCrude;
+    }
+
     // =======================================================
     // Estimate the full precision variance using that crude mean
     // - get the min and max as well
-    sum = 0;
-    n = 0;
-    double sumx2 = 0;                   // sum of (data - crude_mean)^2
-    double min = crude_mean;
-    double max = crude_mean;
     
     // If we want max or min (you get both)
     if (flags & (MIN | MAX)){
-        for (int y = 0; y < img.getHeight(); ++y) {
-            for (typename Image::x_iterator ptr = img.row_begin(y), end = ptr + img.getWidth(); ptr != end; ++ptr) {
-                double const delta = *ptr - crude_mean;
-                sum   += delta;
-                sumx2 += delta*delta;
-                if ( *ptr < min ) { min = *ptr; }
-                if ( *ptr > max ) { max = *ptr; }
-                n++;
-            }
-        }
+        loopValues = _sumImage<ChkFin, ChkMin, ChkMax, AlwaysT>(img, msk, flags, nCrude, 1, meanCrude);
     // fast loop ... just the mean & variance
     } else {
-        min = max = NaN;
-        for (int y = 0; y < img.getHeight(); ++y) {
-            for (typename Image::x_iterator ptr = img.row_begin(y), end = ptr + img.getWidth(); ptr != end; ++ptr) {
-                double const delta = *ptr - crude_mean;
-                sum   += delta;
-                sumx2 += delta*delta;
-                n++;
-            }
+        if (_sctrl.getNanSafe()) {
+            loopValues = _sumImage<ChkFin, AlwaysF, AlwaysF, AlwaysT>(img, msk, flags, nCrude, 1, meanCrude);
+        } else {
+            loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, AlwaysT>(img, msk, flags, nCrude, 1, meanCrude);
         }
-
     }
 
-    if (n == 0) {
-        throw LSST_EXCEPT(ex::InvalidParameterException,"Image has no valid pixels; mean is undefined.");
-    }
-    double mean = crude_mean + sum/n;
+    int n        = loopValues.get<0>();
+    double sum   = loopValues.get<1>();
+    double sumx2 = loopValues.get<2>();
+    double min   = loopValues.get<3>();
+    double max   = loopValues.get<4>();
     
-    if (n == 1) {
+    if (n == 0) {
+        throw LSST_EXCEPT(ex::InvalidParameterException,
+                          "Image has no valid pixels; mean is undefined.");
+    }
+    if (n == 1 && (flags & (STDEV|VARIANCE))) {
         throw LSST_EXCEPT(ex::InvalidParameterException,
                           "Image contains only one pixel; population st. dev. is undefined");
     }
-    double variance = sumx2/(n - 1) - sum*sum/(static_cast<double>(n - 1)*n); // estimate of population variance
     
-    return boost::make_tuple(mean, variance, min, max, sum + n*crude_mean);
+    // estimate of population mean and variance
+    double mean = meanCrude + sum/n;
+    double variance = sumx2/(n - 1) - sum*sum/(static_cast<double>(n - 1)*n); 
+    _n = n;
+    return boost::make_tuple(mean, variance, min, max, sum + n*meanCrude);
 }
 
 
 /* ==========================================================
  * *overload _getStandard(img, flags, clipinfo)
  *
- * *param img      an afw::Image to compute stats for
- * *param flags    an int (bit field indicating which stats to compute
- * *param clipinfo the center and cliplimit for the first clip iteration
+ * @param img      an afw::Image to compute stats for
+ * @param flags    an int (bit field indicating which stats to compute
+ * @param clipinfo the center and cliplimit for the first clip iteration
  *
- * *brief A routine to get standard stats: mean, variance, min, max with
+ * @brief A routine to get standard stats: mean, variance, min, max with
  *   clipping on std::pair<double,double> = center, cliplimit
  */
-template<typename Image>
-math::Statistics::StandardReturnT math::Statistics::_getStandard(Image const &img, int const flags,
-                                               std::pair<double,double> const clipinfo) {
+template<typename Image, typename Mask>
+math::Statistics::StandardReturn math::Statistics::_getStandard(Image const &img,
+                                                                 Mask const &msk,   
+                                                                 int const flags,
+                                                                 std::pair<double, double> const clipinfo) {
     
     double const center = clipinfo.first;
     double const cliplimit = clipinfo.second;
     assert(! isnan(center) && ! isnan(cliplimit) );
     
-    double const crude_mean = center;    // a crude estimate of the mean for numerical stability of variance
-
     // =======================================================
     // Estimate the full precision variance using that crude mean
-    double sum = 0;
-    int n = 0;
-    double sumx2 = 0;                   // sum of (data - crude_mean)^2
-    double min = crude_mean;
-    double max = crude_mean;
+    SumReturn loopValues;
 
+    int const stride = 1;
+    int nCrude = 0;
+    
     // If we want max or min (you get both)
     if (flags & (MIN | MAX)){
-        for (int y = 0; y < img.getHeight(); ++y) {
-            for (typename Image::x_iterator ptr = img.row_begin(y), end = ptr + img.getWidth(); ptr != end; ++ptr) {
-                
-                if ( fabs(*ptr - center) > cliplimit ) { continue; }  // clip
-                double const delta = *ptr - crude_mean;
-                sum += delta;
-                sumx2 += delta*delta;
-                if ( *ptr < min ) { min = *ptr; }
-                if ( *ptr > max ) { max = *ptr; }
-                n++;
-            }
-        }
-    // fast loop ... just the mean & variance, no if() for max/min
+        loopValues = _sumImage<ChkFin, ChkMin, ChkMax, ChkClip>(img, msk, flags, nCrude, stride,
+                                                                center, cliplimit);
+    // fast loop ... just the mean & variance
     } else {
-        for (int y = 0; y < img.getHeight(); ++y) {
-            for (typename Image::x_iterator ptr = img.row_begin(y), end = ptr + img.getWidth(); ptr != end; ++ptr) {
-                if ( fabs(*ptr - center) > cliplimit ) { continue; }  // clip
-                double const delta = *ptr - crude_mean;
-                sum += delta;
-                sumx2 += delta*delta;
-                n++;
-            }
+        if (_sctrl.getNanSafe()) {
+            loopValues = _sumImage<ChkFin, AlwaysF, AlwaysF, ChkClip>(img, msk, flags, nCrude, stride,
+                                                                      center, cliplimit);
+        } else {
+            loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, ChkClip>(img, msk, flags, nCrude, stride,
+                                                                       center, cliplimit);
         }
-
     }
+    
+    int n        = loopValues.get<0>();
+    double sum   = loopValues.get<1>();
+    double sumx2 = loopValues.get<2>();
+    double min   = loopValues.get<3>();
+    double max   = loopValues.get<4>();
     
     if (n == 0) {
-        throw LSST_EXCEPT(ex::InvalidParameterException,"Image has no valid pixels; mean is undefined.");
+        throw LSST_EXCEPT(ex::InvalidParameterException,
+                          "Image has no valid pixels; mean is undefined.");
     }
-    double mean = crude_mean + sum/n;
-    
     if (n == 1) {
         throw LSST_EXCEPT(ex::InvalidParameterException,
                           "Image contains only one pixel; population st. dev. is undefined");
     }
-    double variance = sumx2/(n - 1) - sum*sum/(static_cast<double>(n - 1)*n); // estimate of population variance
-
-    return boost::make_tuple(mean, variance, min, max, sum + crude_mean*n);
+    
+    // estimate of population variance
+    double mean = center + sum/n;
+    double variance = sumx2/(n - 1) - sum*sum/(static_cast<double>(n - 1)*n);
+    _n = n;
+    
+    return boost::make_tuple(mean, variance, min, max, sum + center*n);
 }
 
 
-/* _quickSelect()
+/* _percentile()
  *
- * *brief A fast algorithm for computing percentiles for an image
+ * @brief A wrapper using the nth_element() built-in to compute percentiles for an image
  *
- * *param img       an afw::Image
- * *param quartile  the desired percentile.
+ * @param img       an afw::Image
+ * @param quartile  the desired percentile.
  *
- * *note Uses the Floyd & Rivest _quickSelect algorithm for fast computation of a median
- * *note Implementation adapted from Numerical recipes (3rd ed.) Press et al. 2007.
  */
-template<typename Image>
-double math::Statistics::_quickSelect(Image const &img, double const quartile) {
+template<typename Pixel>
+double math::Statistics::_percentile(std::vector<Pixel> &img,
+                                     double const percentile) {
     
-    int const n = img.getWidth() * img.getHeight();
-    int const q = static_cast<int>(quartile * n);
+    int const n = img.size();
 
-    // this routine should only be called with a (contiguous) copy of the image
-    // so this declaration should be fine to treat like a vector
-    typename Image::fast_iterator arr = img.begin(true);
-    
-    // apply the algorithm
-    int i_mid;
-    int i_left = 0;                     // left-most index
-    int i_right = n - 1;                // right-most index
-
-    for (;;) {
-
-        // if there are only 1 or 2 elements remaining
-        if ( i_right <= i_left + 1 ) {
-
-            // if exactly 2 elements ... switch order as necessary
-            if ( ( i_right == i_left + 1 ) && ( arr[i_right] < arr[i_left] ) ) {
-                std::swap(arr[i_left], arr[i_right]);
-            }
-            return arr[q];
-
-        } else {                        // array has > 2 elements
-
-            // use midpoint value for starting partition element
-            i_mid = ( i_left + i_right ) >> 1;       // shift to get midpoint betw L and R
-            std::swap(arr[i_mid], arr[i_left + 1]);  
-
-            // make sure arr[i_left] <= arr[i_left+1] <= arr[i_right]
-            if ( arr[i_left]     > arr[i_right] )    { std::swap( arr[i_left], arr[i_right] ); }
-            if ( arr[i_left + 1] > arr[i_right] )    { std::swap( arr[i_left+1], arr[i_right] ); }
-            if ( arr[i_left]     > arr[i_left + 1] ) { std::swap( arr[i_left], arr[i_left+1] ); }
-
-            int j_left  = i_left + 1;   // inner loop left-index
-            int j_right = i_right;      // inner loop right-index
-
-            typename Image::Pixel const a = arr[i_left + 1]; // the value of the partition element
-            
-            // partition this sub-array
-            for (;;) {
-                do { j_left++; } while ( arr[j_left] < a ); // scan up to find elem > a
-                do { j_right--; } while ( arr[j_right] > a ); // scan down to find elem < a
-                if ( j_right < j_left ) { break; } // break if indices meet
-                std::swap( arr[j_left], arr[j_right] ); // switch the two that are out of order.
-            }
-            arr[i_left + 1] = arr[j_right]; // value in j_right is < 'a', so stash it in i_left+1
-            arr[j_right] = a;               // put the partition element in its position
-
-            // keep partition containing q, slide appropriate end of curr partition in to midpoint
-            if ( j_right >= q ) { i_right = j_right - 1; }
-            if ( j_right <= q ) { i_left = j_left; }
-        }
+    if (n > 1) {
+        double const idx = percentile*(n - 1);
+        
+        // interpolate linearly between the adjacent values
+        
+        int const q1 = static_cast<int>(idx);
+        typename std::vector<Pixel>::iterator midMinus1 = img.begin() + q1;
+        std::nth_element(img.begin(), midMinus1, img.end());
+        double val1 = static_cast<double>(*midMinus1);
+        
+        int const q2 = q1 + 1;
+        typename std::vector<Pixel>::iterator midPlus1 = img.begin() + q2;
+        std::nth_element(img.begin(), midPlus1, img.end());
+        double val2 = static_cast<double>(*midPlus1);
+        
+        double w1 = (static_cast<double>(q2) - idx);
+        double w2 = (idx - static_cast<double>(q1));
+        
+        return w1*val1 + w2*val2;
+        
+    } else if (n == 1) {
+        return img[0];
+    } else {
+        throw LSST_EXCEPT(ex::InvalidParameterException,
+                          "Image has no valid pixels, can't compute median.");
     }
-    
+            
+
 }
+
 
 
 /* @brief Return the value and error in the specified statistic (e.g. MEAN)
  *
- * @param prop the property (see Statistics.h header) to retrieve. If NOTHING (default) and you only asked for one
+ * @param prop the property (see Statistics.h header) to retrieve.
+ * If NOTHING (default) and you only asked for one
  * property (and maybe its error), that property is returned
  *
  * @note Only quantities requested in the constructor may be retrieved
@@ -320,91 +492,93 @@ double math::Statistics::_quickSelect(Image const &img, double const quartile) {
  *
  */
 std::pair<double, double> math::Statistics::getResult(math::Property const iProp ///< Desired property
-                                                     ) const {
+                                                         ) const {
     // if iProp == NOTHING try to return their heart's delight, as specified in the constructor
     math::Property const prop = (iProp == NOTHING) ? static_cast<math::Property>(_flags & ~ERRORS) : iProp;
-
+    
     if (!(prop & _flags)) {             // we didn't calculate it
-        throw LSST_EXCEPT(ex::InvalidParameterException, (boost::format("You didn't ask me to calculate %d") % prop).str());
+        throw LSST_EXCEPT(ex::InvalidParameterException,
+                          (boost::format("You didn't ask me to calculate %d") % prop).str());
     }
     
     
-    value_type ret(NaN, NaN);
+    Value ret(NaN, NaN);
     switch (prop) {
-
+        
       case ( NPOINT ):
-          ret.first = static_cast<double>(_n);
-          if (_flags & ERRORS) { ret.second = 0; }
-          break;
-
+        ret.first = static_cast<double>(_n);
+        if (_flags & ERRORS) { ret.second = 0; }
+        break;
+        
       case SUM:
-          ret.first = static_cast<double>(_sum);
-          if (_flags & ERRORS) { ret.second = 0; }
-          break;
-
-          // == means ==
+        ret.first = static_cast<double>(_sum);
+        if (_flags & ERRORS) { ret.second = 0; }
+        break;
+        
+        // == means ==
       case ( MEAN ):
-          ret.first = _mean;
-          if (_flags & ERRORS) { ret.second = sqrt(_variance/_n); }
-          break;
+        ret.first = _mean;
+        if (_flags & ERRORS) { ret.second = sqrt(_variance/_n); }
+        break;
       case ( MEANCLIP ):
-          ret.first = _meanclip;
-          if ( _flags & ERRORS ) { ret.second = sqrt(_varianceclip/_n); }  // this is a bug ... _nClip != _n
-          break;
-
-          // == stdevs & variances ==
+        ret.first = _meanclip;
+        if ( _flags & ERRORS ) { ret.second = sqrt(_varianceclip/_n); }  // this is a bug ... _nClip != _n
+        break;
+        
+        // == stdevs & variances ==
       case ( VARIANCE ):
-          ret.first = _variance;
-          if (_flags & ERRORS) { ret.second = _varianceError(ret.first, _n); }
-          break;
+        ret.first = _variance;
+        if (_flags & ERRORS) { ret.second = _varianceError(ret.first, _n); }
+        break;
       case ( STDEV ):
-          ret.first = sqrt(_variance);
-          if (_flags & ERRORS) { ret.second = 0.5*_varianceError(_variance, _n)/ret.first; }
-          break;
+        ret.first = sqrt(_variance);
+        if (_flags & ERRORS) { ret.second = 0.5*_varianceError(_variance, _n)/ret.first; }
+        break;
       case ( VARIANCECLIP ):
-          ret.first = _varianceclip;
-          if (_flags & ERRORS) { ret.second = _varianceError(ret.first, _n); }
-          break;
+        ret.first = _varianceclip;
+        if (_flags & ERRORS) { ret.second = _varianceError(ret.first, _n); }
+        break;
       case ( STDEVCLIP ):
-          ret.first = sqrt(_varianceclip);  // bug: nClip != _n
-          if (_flags & ERRORS) { ret.second = 0.5*_varianceError(_varianceclip, _n)/ret.first; }
-          break;
-
-          // == other stats ==
+        ret.first = sqrt(_varianceclip);  // bug: nClip != _n
+        if (_flags & ERRORS) { ret.second = 0.5*_varianceError(_varianceclip, _n)/ret.first; }
+        break;
+        
+        // == other stats ==
       case ( MIN ):
-          ret.first = _min;
-          if ( _flags & ERRORS ) { ret.second = 0; }
-          break;
+        ret.first = _min;
+        if ( _flags & ERRORS ) { ret.second = 0; }
+        break;
       case ( MAX ):
-          ret.first = _max;
-          if ( _flags & ERRORS ) { ret.second = 0; }
-          break;
+        ret.first = _max;
+        if ( _flags & ERRORS ) { ret.second = 0; }
+        break;
       case ( MEDIAN ):
-          ret.first = _median;
-          if ( _flags & ERRORS ) { ret.second = 0; }
-          break;
+        ret.first = _median;
+        if ( _flags & ERRORS ) { ret.second = 0; }
+        break;
       case ( IQRANGE ):
-          ret.first = _iqrange;
-          if ( _flags & ERRORS ) { ret.second = 0; }
-          break;
-
-          // no-op to satisfy the compiler
+        ret.first = _iqrange;
+        if ( _flags & ERRORS ) { ret.second = 0; }
+        break;
+        
+        // no-op to satisfy the compiler
       case ( ERRORS ):
-          break;
-          // default: redundant as 'ret' is initialized to NaN, NaN
+        break;
+        // default: redundant as 'ret' is initialized to NaN, NaN
       default:                          // we must have set prop to _flags
         assert (iProp == 0);
         throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
-                          "You may only call getValue without a parameter if you asked for only one statistic");
+                          "getValue() may only be called without a parameter"
+                          " if you asked for only one statistic");
     }
-     return ret;
+    return ret;
 }
 
 /* @brief Return the value of the desired property (if specified in the constructor)
  * @param prop - the property (see Statistics.h) to retrieve
  */
 double math::Statistics::getValue(math::Property const prop ///< Desired property
-                                 ) const {
+                                     ) const {
     return getResult(prop).first;
 }
 
@@ -413,32 +587,36 @@ double math::Statistics::getValue(math::Property const prop ///< Desired propert
  * @param prop - the property (see Statistics.h) to retrieve
  */
 double math::Statistics::getError(math::Property const prop ///< Desired property
-                                 ) const {
+                                     ) const {
     return getResult(prop).second;
 }
 
-/************************************************************************************************************/
+/************************************************************************************************/
 /**
  * Specialisation for Masks; just calculate the "Sum" as the bitwise OR of all pixels
  */
+
 namespace lsst {
 namespace afw {
 namespace math {
+    
 template<>
 Statistics::Statistics(
-        image::Mask<image::MaskPixel> const& msk, ///< Mask whose properties we want
-        int const flags,                          ///< Describe what we want to calculate
-        StatisticsControl const& sctrl            ///< Control how things are calculated
-                            ) :
+    image::Mask<image::MaskPixel> const& msk,  ///< Mask whose properties we want
+    image::Mask<image::MaskPixel> const& dmsk, ///< A mask (currently dummy) to control which pixels
+    int const flags,                           ///< Describe what we want to calculate
+    StatisticsControl const& sctrl             ///< Control how things are calculated
+                      ) :
     _flags(flags),
     _mean(NaN), _variance(NaN), _min(NaN), _max(NaN),
-    _meanclip(NaN), _varianceclip(NaN), _median(NaN), _iqrange(NaN) {
-
+    _meanclip(NaN), _varianceclip(NaN), _median(NaN), _iqrange(NaN),
+    _sctrl(sctrl) {
+    
     if ((flags & ~(NPOINT | SUM)) != 0x0) {
         throw LSST_EXCEPT(ex::InvalidParameterException, "Statistics<Mask> only supports NPOINT and SUM");
     }
-
-    typedef image::Mask<image::MaskPixel> MaskT;
+    
+    typedef image::Mask<image::MaskPixel> Mask;
     
     _n = msk.getWidth()*msk.getHeight();
     if (_n == 0) {
@@ -447,32 +625,91 @@ Statistics::Statistics(
     
     // Check that an int's large enough to hold the number of pixels
     assert(msk.getWidth()*static_cast<double>(msk.getHeight()) < std::numeric_limits<int>::max());
-
+    
     image::MaskPixel sum = 0x0;
     for (int y = 0; y != msk.getHeight(); ++y) {
-        for (MaskT::x_iterator ptr = msk.row_begin(y), end = msk.row_end(y); ptr != end; ++ptr) {
+        for (Mask::x_iterator ptr = msk.row_begin(y), end = msk.row_end(y); ptr != end; ++ptr) {
             sum |= (*ptr)[0];
         }
     }
     _sum = sum;
 }
+
+/*
+ * @brief Specialization to handle Masks
+ * @note Although short, the definition can't be in the header as it must
+ *       follow the specialization definition
+ *       (g++ complained when this was in the header.)
+ *
+ */            
+Statistics makeStatistics(
+    image::Mask<image::MaskPixel> const &msk, ///< Image (or MaskedImage) whose properties we want
+    int const flags,                          ///< Describe what we want to calculate
+    StatisticsControl const& sctrl            ///< Control how things are calculated
+                         ) {
+    return Statistics(msk, msk, flags, sctrl);
+}
+
 }}}
 
-/************************************************************************************************************/
-/**
- * @brief Explicit instantiations
+/****************************************************************************************************/
+/*
+ * Explicit instantiations
  *
- * explicit Statistics(Image const& img, int const flags,
+ * explicit Statistics(MaskedImage const& img, int const flags,
  *                        StatisticsControl const& sctrl=StatisticsControl());
  */
-#define INSTANTIATE_STATISTICS(TYPE) \
-    template math::Statistics::Statistics(image::Image<TYPE> const& img, int const flags, StatisticsControl const& sctrl);\
-    template math::Statistics::StandardReturnT math::Statistics::_getStandard(image::Image<TYPE> const& img, int const flags); \
-    template math::Statistics::StandardReturnT math::Statistics::_getStandard(image::Image<TYPE> const& img, int const flags, std::pair<double,double> clipinfo);\
-    template double math::Statistics::_quickSelect(image::Image<TYPE> const& img, double const quartile);
 
-INSTANTIATE_STATISTICS(double);
-INSTANTIATE_STATISTICS(float);
-INSTANTIATE_STATISTICS(int);
-INSTANTIATE_STATISTICS(unsigned short);
+//
+#define STAT math::Statistics
+
+#define INSTANTIATE_MASKEDIMAGE_STATISTICS(TYPE)                       \
+    template STAT::Statistics(image::Image<TYPE> const &img,            \
+                              image::Mask<image::MaskPixel> const &msk, \
+                              int const flags, StatisticsControl const& sctrl); \
+    template STAT::StandardReturn STAT::_getStandard(image::Image<TYPE> const &img, \
+                                                     image::Mask<image::MaskPixel> const &msk, \
+                                                     int const flags);  \
+    template STAT::StandardReturn STAT::_getStandard(image::Image<TYPE> const &img, \
+                                                     image::Mask<image::MaskPixel> const &msk, \
+                                                     int const flags, std::pair<double, double> clipinfo); \
+    template double STAT::_percentile(std::vector<TYPE> &img, double const percentile);
+
+//
+#define INSTANTIATE_REGULARIMAGE_STATISTICS(TYPE)                      \
+    template STAT::Statistics(image::Image<TYPE> const &img,            \
+                              math::MaskImposter<image::MaskPixel> const &msk, \
+                              int const flags, StatisticsControl const& sctrl); \
+    template STAT::StandardReturn STAT::_getStandard(image::Image<TYPE> const &img, \
+                                                     math::MaskImposter<image::MaskPixel> const &msk, \
+                                                     int const flags);  \
+    template STAT::StandardReturn STAT::_getStandard(image::Image<TYPE> const &img, \
+                                                     math::MaskImposter<image::MaskPixel> const &msk, \
+                                                     int const flags, std::pair<double, double> clipinfo);
+
+//
+#define INSTANTIATE_VECTOR_STATISTICS(TYPE)                         \
+    template STAT::Statistics(math::ImageImposter<TYPE> const &img,     \
+                              math::MaskImposter<image::MaskPixel> const &msk, \
+                              int const flags, StatisticsControl const& sctrl); \
+    template STAT::StandardReturn STAT::_getStandard(math::ImageImposter<TYPE> const &img, \
+                                                     math::MaskImposter<image::MaskPixel> const &msk, \
+                                                     int const flags);  \
+    template STAT::StandardReturn STAT::_getStandard(math::ImageImposter<TYPE> const &img, \
+                                                     math::MaskImposter<image::MaskPixel> const &msk, \
+                                                     int const flags, std::pair<double, double> clipinfo);
+
+
+#define INSTANTIATE_IMAGE_STATISTICS(T) \
+    INSTANTIATE_MASKEDIMAGE_STATISTICS(T); \
+    INSTANTIATE_REGULARIMAGE_STATISTICS(T); \
+    INSTANTIATE_VECTOR_STATISTICS(T);
+
+
+INSTANTIATE_IMAGE_STATISTICS(double);
+INSTANTIATE_IMAGE_STATISTICS(float);
+INSTANTIATE_IMAGE_STATISTICS(int);
+INSTANTIATE_IMAGE_STATISTICS(unsigned short);
+
+
 
