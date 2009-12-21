@@ -108,6 +108,9 @@ public:
     void include(BoxI const & other);
     void clip(BoxI const & other);
 
+    bool operator==(BoxI const & other) const;
+    bool operator!=(BoxI const & other) const;
+
 private:
     PointI _minimum;
     ExtentI _dimensions;
@@ -216,6 +219,9 @@ public:
     void include(PointD const & point);
     void include(BoxD const & other);
     void clip(BoxD const & other);
+
+    bool operator==(BoxD const & other) const;
+    bool operator!=(BoxD const & other) const;
 
 private:
     PointD _minimum;

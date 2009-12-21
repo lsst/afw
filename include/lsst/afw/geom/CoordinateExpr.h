@@ -55,7 +55,7 @@ public:
 /// \brief Return true if all elements are true.
 template <int N>
 inline bool all(CoordinateExpr<N> const & expr) {
-    for (register int n=0; n<N; ++n) if (expr[n]) return false;
+    for (register int n=0; n<N; ++n) if (!expr[n]) return false;
     return true;
 }
 

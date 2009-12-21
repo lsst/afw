@@ -13,6 +13,8 @@ from .geomLib import (
     Point3I,
     Point2D,
     Point3D,
+    BoxI,
+    BoxD,
 )
 
 PointI = Point2I
