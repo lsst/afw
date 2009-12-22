@@ -2,6 +2,8 @@
 #include <sstream>
 #include <ctime>
 
+#include "boost/format.hpp"
+
 #include "lsst/afw/image.h"
 
 namespace afwImage = lsst::afw::image;
@@ -22,8 +24,8 @@ void timePixelAccess(ImageT const &image, typename ImageT::SinglePixel const pix
     }
     double secPerIter = (clock() - startTime) / static_cast<double> (nIter * CLOCKS_PER_SEC);
     double const megaPix = static_cast<double>(nCols * nRows) / 1.0e6;
-    printf("Pixel Iterator\t%d\t%d\t%g\t%-8g\t%-8.1f\n",
-        nCols, nRows, megaPix, secPerIter, megaPix/secPerIter);
+    std::cout << boost::format("Pixel Iterator\t%d\t%d\t%g\t%-8g\t%-8.1f") %
+        nCols % nRows % megaPix % secPerIter % (megaPix/secPerIter) << std::endl;
 
     startTime = clock();
     for (int iter = 0; iter < nIter; ++iter) {
@@ -35,8 +37,8 @@ void timePixelAccess(ImageT const &image, typename ImageT::SinglePixel const pix
         }
     }
     secPerIter = (clock() - startTime) / static_cast<double> (nIter * CLOCKS_PER_SEC);
-    printf("Pixel Locator\t%d\t%d\t%g\t%-8g\t%-8.1f\n",
-        nCols, nRows, megaPix, secPerIter, megaPix/secPerIter);
+    std::cout << boost::format("Pixel Locator\t%d\t%d\t%g\t%-8g\t%-8.1f") %
+        nCols % nRows % megaPix % secPerIter % (megaPix/secPerIter) << std::endl;
 }
 
 int main(int argc, char **argv) {

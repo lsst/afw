@@ -1,6 +1,6 @@
 setupRequired(daf_base >= 3.2.6)
-setupRequired(daf_persistence >= 3.3.4)
-setupRequired(daf_data >= 3.2.3)
+setupRequired(daf_persistence >= 3.3.7+1)
+setupRequired(daf_data >= 3.2.3+1)
 setupRequired(cfitsio >= 3006.2)
 setupRequired(wcslib >= 4.2+3)
 setupRequired(xpa >= 2.1.7b2)

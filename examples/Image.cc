@@ -1,12 +1,14 @@
 #include <cstdio>
 #include <string>
 #include <algorithm>
+
 #include "lsst/afw/image/Image.h"
 
-using namespace lsst::afw::image;
+namespace afwImage = lsst::afw::image;
 
 template <typename PixelT>
-void print(Image<PixelT>& src, const std::string& title = "") {
+void print(afwImage::Image<PixelT>& src, const std::string& title = "") {
+    typedef typename afwImage::Image<PixelT>::x_iterator XIter;
     if (title.size() > 0) {
         printf("%s:\n", title.c_str());
     }
@@ -19,7 +21,7 @@ void print(Image<PixelT>& src, const std::string& title = "") {
 
     for (int y = src.getHeight() - 1; y >= 0; --y) {
         printf("%3d ", y);
-        for (typename Image<PixelT>::x_iterator src_it = src.row_begin(y); src_it != src.row_end(y); ++src_it) {
+        for (XIter src_it = src.row_begin(y), src_end = src.row_end(y); src_it != src_end; ++src_it) {
             printf("%4g ", static_cast<float>((*src_it)[0]));
         }
         printf("\n");
@@ -27,7 +29,7 @@ void print(Image<PixelT>& src, const std::string& title = "") {
 }
 
 template <typename PixelT>
-void printT(Image<PixelT>& src, const std::string& _title = "") {
+void printT(afwImage::Image<PixelT>& src, const std::string& _title = "") {
     std::string title =_title;
     if (title.size() > 0) {
         title += " ";
@@ -44,13 +46,14 @@ void printT(Image<PixelT>& src, const std::string& _title = "") {
     for (int c = 0; c != src.getWidth(); ++c) {
         printf("%3d ", c);
 
-#if 1                                   // print the column from the top (there's no reverse iterator)
-        typename Image<PixelT>::y_iterator src_it = src.col_begin(c);
+#if 1   // print the column from the top (there's no reverse iterator)
+        typename afwImage::Image<PixelT>::y_iterator src_it = src.col_begin(c);
         for (int r = src.getHeight() - 1; r >= 0; --r) {
             printf("%4g ", static_cast<float>(src_it[r][0]));
         }
 #else  // print the column from the bottom (i.e. upside down)
-        for (typename Image<PixelT>::y_iterator src_it = src.col_begin(c); src_it != src.col_end(c); ++src_it) {
+        for (typename afwImage::Image<PixelT>::y_iterator src_it = src.col_begin(c); src_it != src.col_end(c);
+            ++src_it) {
             printf("%4g ", static_cast<float>((*src_it)[0]));
         }
 #endif
@@ -62,10 +65,10 @@ void printT(Image<PixelT>& src, const std::string& _title = "") {
 /************************************************************************************************************/
 
 template <typename PixelT>
-void y_gradient(const Image<PixelT>& src, const Image<PixelT>& dst) {
+void y_gradient(const afwImage::Image<PixelT>& src, const afwImage::Image<PixelT>& dst) {
     assert(src.getDimensions() == dst.getDimensions());
 
-    typedef typename Image<PixelT>::const_xy_locator xy_loc;
+    typedef typename afwImage::Image<PixelT>::const_xy_locator xy_loc;
     xy_loc src_loc = src.xy_at(0, 1);
 
 #define USE_CACHE_LOCATION 1
@@ -75,7 +78,7 @@ void y_gradient(const Image<PixelT>& src, const Image<PixelT>& dst) {
 #endif
 
     for (int r = 1; r < src.getHeight() - 1; ++r) {
-        for (typename Image<PixelT>::x_iterator dst_it = dst.row_begin(r);
+        for (typename afwImage::Image<PixelT>::x_iterator dst_it = dst.row_begin(r);
             dst_it != dst.row_end(r); ++dst_it, ++src_loc.x()) {            
 #if USE_CACHE_LOCATION                  // this version is faster
             *dst_it = (src_loc[above] - src_loc[below])/2;
@@ -84,28 +87,28 @@ void y_gradient(const Image<PixelT>& src, const Image<PixelT>& dst) {
 #endif
         }
         
-        src_loc += detail::difference_type(-src.getWidth(), 1);
+        src_loc += afwImage::detail::difference_type(-src.getWidth(), 1);
     }
 }
 
 /************************************************************************************************************/
 
 int main() {
-    Image<float> img(10, 6);
+    afwImage::Image<float> img(10, 6);
     // This is equivalent to img = 100:
-    for (Image<float>::iterator ptr = img.begin(); ptr != img.end(); ++ptr) {
+    for (afwImage::Image<float>::iterator ptr = img.begin(); ptr != img.end(); ++ptr) {
         (*ptr)[0] = 100;
     }
     // so is this, but fills backwards
-    for (Image<float>::reverse_iterator ptr = img.rbegin(); ptr != img.rend(); ++ptr) {
+    for (afwImage::Image<float>::reverse_iterator ptr = img.rbegin(); ptr != img.rend(); ++ptr) {
         (*ptr)[0] = 100;
     }
     // so is this, but tests a different way of choosing begin()
-    for (Image<float>::iterator ptr = img.at(0, 0); ptr != img.end(); ++ptr) {
+    for (afwImage::Image<float>::iterator ptr = img.at(0, 0); ptr != img.end(); ++ptr) {
         (*ptr)[0] = 100;
     }
 
-    Image<float> jmg = img;
+    afwImage::Image<float> jmg = img;
 
     printf("%dx%d\n", img.getWidth(), img.getHeight());
 
@@ -118,7 +121,7 @@ int main() {
 #if 1
     print(jmg, "jmg");
 
-    Image<float> kmg = jmg;
+    afwImage::Image<float> kmg = jmg;
     kmg(0,0) = 111;
     kmg += 222;
     kmg -= 222;
@@ -126,7 +129,7 @@ int main() {
     kmg *= 10;
 #if 1
     {
-        Image<float> tmp(kmg.getDimensions());
+        afwImage::Image<float> tmp(kmg.getDimensions());
         tmp = 10;
         print(tmp, "tmp");
         kmg /= tmp;
@@ -134,28 +137,31 @@ int main() {
 #endif
     print(kmg, "kmg");
 
-    Image<float> lmg(img);
+    afwImage::Image<float> lmg(img);
     print(lmg, "lmg");
 
-    Image<float> mmg(img, true);
+    afwImage::Image<float> mmg(img, true);
     mmg = -1;                           // shouldn't modify img
 #endif
     
     printf("sub images\n");
 #if 0
-    Image<float> simg = Image<float>(img, BBox(PointI(1, 1), 5, 2)); // img will be modified
+    // img will be modified
+    afwImage::Image<float> simg(img, afwImage::BBox(afwImage::PointI(1, 1), 5, 2));
 #elif 0
-    Image<float> simg = Image<float>(img, BBox(PointI(1, 1), 5, 2), true); // img won't be modified
+    // img will not be modified
+    afwImage::Image<float> simg(img, afwImage::BBox(afwImage::PointI(1, 1), 5, 2), true);
 #else
-    Image<float> simg1 = Image<float>(img, BBox(PointI(1, 1), 7, 3)); // img will be modified
-    Image<float> simg = Image<float>(simg1, BBox(PointI(0, 0), 5, 2));
+    // img will be modified
+    afwImage::Image<float> simg1(img, afwImage::BBox(afwImage::PointI(1, 1), 7, 3));
+    afwImage::Image<float> simg(simg1, afwImage::BBox(afwImage::PointI(0, 0), 5, 2));
 #endif
 
 #if 0
     simg = 0;
 #elif 1
     {
-        Image<float> nimg = Image<float>(5, 2);
+        afwImage::Image<float> nimg(5, 2);
         nimg = 1;
         simg <<= nimg;
     }
@@ -170,18 +176,18 @@ int main() {
     }
     print(img, "ramp img");
     
-    Image<float> grad_y(img.getDimensions());
+    afwImage::Image<float> grad_y(img.getDimensions());
     grad_y = 0;
     y_gradient(img, grad_y);
 
     print(grad_y, "grad_y");
     
-    Image<unsigned short> u16(img.getDimensions()); u16 = 100;
-    Image<float> fl32(u16, true); // must be true as all type conversions are deep
+    afwImage::Image<unsigned short> u16(img.getDimensions()); u16 = 100;
+    afwImage::Image<float> fl32(u16, true); // must be true as all type conversions are deep
     print(fl32, "Float from U16");
 
     try {
-        Image<float> fl32(u16, false);  // will throw
+        afwImage::Image<float> fl32(u16, false);  // will throw
     } catch(lsst::pex::exceptions::InvalidParameterException &e) {
         printf("Correctly threw exception: %s\n", e.what());
     }
