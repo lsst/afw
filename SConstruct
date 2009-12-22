@@ -48,6 +48,7 @@ for d in (
     "python/lsst/afw/detection",
     "python/lsst/afw/display",
     "python/lsst/afw/image",
+    "python/lsst/afw/geom", 
     "python/lsst/afw/math", 
     "tests",
 ):

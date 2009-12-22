@@ -15,6 +15,7 @@ Python interface to lsst::afw::math classes
 #   include "lsst/afw/math.h"
 %}
 
+
 %include "lsst/p_lsstSwig.i"
 
 
