@@ -135,19 +135,37 @@ typename image::MaskedImage<PixelT>::Ptr math::statisticsStack(
 
         // collect elements from the stack into the MaskedVector to do stats
         // get the desired statistic
+        typedef typename image::MaskedImage<PixelT>::x_iterator x_iterator;
+
+        std::vector<x_iterator> rows;
+        rows.reserve(images.size());
+
         for (int y = 0; y != imgStack->getHeight(); ++y) {
-            for (int x = 0; x != imgStack->getWidth(); ++x) {
+            for (unsigned int i = 0; i < images.size(); ++i) {
+                x_iterator ptr = images[i]->row_begin(y);
+                if (y == 0) {
+                    rows.push_back(ptr);
+                } else {
+                    rows[i] = ptr;
+                }
+            }
+            
+            for (x_iterator ptr = imgStack->row_begin(y), end = imgStack->row_end(y); ptr != end; ++ptr) {
+                typename math::MaskedVector<PixelT>::iterator psPtr = pixelSet.begin();
                 image::MaskPixel msk(0x0);
-                for (unsigned int i = 0; i < images.size(); ++i) {
-                    image::MaskPixel mskTmp = (*images[i]->getMask())(x, y);
-                    (*pixelSet.getImage())(i, 0)     = (*images[i]->getImage())(x, y);
-                    (*pixelSet.getMask())(i, 0)      = mskTmp;
+                for (unsigned int i = 0; i < images.size(); ++i, ++psPtr) {
+                    image::MaskPixel mskTmp = rows[i].mask();
+                    psPtr.value() = rows[i].image();
+                    psPtr.mask()  = mskTmp;
                     msk |= mskTmp;
+
+                    ++rows[i];
                 }
                 math::Statistics stat = math::makeStatistics(pixelSet, flags, sctrl);
-                (*imgStack->getImage())(x, y)    = stat.getValue(flags);
-                (*imgStack->getMask())(x, y)     = msk;
-                (*imgStack->getVariance())(x, y) = stat.getError(flags)*stat.getError(flags);
+                
+                *ptr = typename image::MaskedImage<PixelT>::Pixel(stat.getValue(),
+                                                                  msk,
+                                                                  stat.getError()*stat.getError());
             }
         }
         

@@ -16,7 +16,6 @@ template<typename EntryT>
 class MaskedVector : private image::MaskedImage<EntryT> {    
 public:
     //typedef typename image::Mask<typename image::MaskPixel>::MaskPlaneDict MaskPlaneDict;
-    typedef typename image::MaskedImage<EntryT>::x_iterator iterator;
     typedef typename image::MaskedImage<EntryT>::Pixel Pixel;
     
     explicit MaskedVector(int width=0) : //, MaskPlaneDict const& planeDict=MaskPlaneDict()) :
@@ -47,6 +46,18 @@ public:
                      image::MaskedImage<EntryT>::getVariance()(i, 0)
                     );
     }
+
+    
+    typename image::MaskedImage<EntryT>::Image::Pixel &value(int const i) {
+        return (*image::MaskedImage<EntryT>::getImage())(i, 0);
+    }
+    typename image::MaskedImage<EntryT>::Mask::Pixel &mask(int const i) {
+        return (*image::MaskedImage<EntryT>::getMask())(i, 0);
+    }
+    typename image::MaskedImage<EntryT>::Variance::Pixel &variance(int const i) {
+        return (*image::MaskedImage<EntryT>::getVariance())(i, 0);
+    }
+
     
     typename image::MaskedImage<EntryT>::ImagePtr getImage() const {
         return image::MaskedImage<EntryT>::getImage();
@@ -58,8 +69,6 @@ public:
         return image::MaskedImage<EntryT>::getVariance();
     }
 
-    iterator at(int const i) const { return image::MaskedImage<EntryT>::at(i, 0); }
-
     //MaskedVector& operator=(Pixel const& rhs) { return image::MaskedImage<EntryT>::operator=(rhs); }
     //MaskedVector& operator=(SinglePixel const& rhs) { return this->operator=(rhs); }
 
@@ -67,9 +76,23 @@ public:
     int size() { return this->getWidth(0); }
     bool empty() { return this->getWidth(0) > 0; }
     
+    class iterator : public image::MaskedImage<EntryT>::x_iterator {
+    public:
+        using typename image::MaskedImage<EntryT>::x_iterator::mask;
+        using typename image::MaskedImage<EntryT>::x_iterator::variance;
+
+        iterator(typename image::MaskedImage<EntryT>::Image::x_iterator im,
+                 typename image::MaskedImage<EntryT>::Mask::x_iterator msk,
+                 typename image::MaskedImage<EntryT>::Variance::x_iterator var) :
+            image::MaskedImage<EntryT>::x_iterator(im, msk, var) {}
+        iterator(typename image::MaskedImage<EntryT>::x_iterator ptr) :
+            image::MaskedImage<EntryT>::x_iterator(ptr) {}
+
+        typename image::MaskedImage<EntryT>::Image::Pixel &value() { return this->image(); }
+    };
+
     iterator begin() { return this->row_begin(0); }
     iterator end()   { return this->row_end(0); }
-    
 private:
     
 };
