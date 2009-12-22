@@ -36,7 +36,7 @@ env = scons.makeEnv(
 #
 # Libraries needed to link libraries/executables
 #
-env.libs["afw"] += env.getlibs("boost wcslib cfitsio minuit2 gsl utils daf_base daf_data daf_persistence pex_exceptions pex_logging pex_policy security")
+env.libs["afw"] += env.getlibs("boost wcslib cfitsio minuit2 gsl utils daf_base daf_data daf_persistence pex_exceptions pex_logging pex_policy security fftw3")
 #
 # Build/install things
 #

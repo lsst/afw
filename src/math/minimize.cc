@@ -43,8 +43,6 @@ namespace {
         virtual double Up() const { return _errorDef; }
         virtual double operator() (const std::vector<double>&) const;
 
-        //void minimizee(std::vector<double> &parameters,
-        //std::vector<std::pair<double,double> > &errors);
         inline std::vector<double> getMeasurements() const {return _measurementList;}
         inline std::vector<double> getVariances() const {return _varianceList;}
         inline std::vector<double> getPositions() const {return _xPositionList;}
@@ -75,10 +73,8 @@ namespace {
         virtual ~MinimizerFunctionBase2() {};
         // Required by ROOT::Minuit2::FCNBase
         virtual double Up() const { return _errorDef; }
-        virtual double operator() (const std::vector<double>&) const;
+        virtual double operator() (const std::vector<double>& par) const;
         
-        //void minimizee(std::vector<double> &parameters,
-        //std::vector<std::pair<double,double> > &errors);
         inline std::vector<double> getMeasurements() const {return _measurementList;}
         inline std::vector<double> getVariances() const {return _varianceList;}
         inline std::vector<double> getPosition1() const {return _xPositionList;}
