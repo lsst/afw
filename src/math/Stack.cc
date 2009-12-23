@@ -36,6 +36,79 @@ void loadVariance(std::vector<PixelT> const &wvector, math::MaskedVector<PixelT>
 }
 
 
+/**
+ * ==========================================================================================
+ */
+template<typename PixelT, bool UseVariance>
+typename image::MaskedImage<PixelT>::Ptr computeStatistics(
+                             std::vector<typename image::MaskedImage<PixelT>::Ptr > const &images,
+                             math::Property flags,               
+                             math::StatisticsControl const& sctrl,
+                             std::vector<PixelT> const &wvector
+                                                          ) {
+
+    // create the image to be returned
+    typedef image::MaskedImage<PixelT> ImageT;
+    typename ImageT::Ptr imgStack(new ImageT(images[0]->getDimensions()));
+
+    
+    // get a list of row_begin iterators
+    typedef typename image::MaskedImage<PixelT>::x_iterator x_iterator;
+    std::vector<x_iterator> rows;
+    rows.reserve(images.size());
+    for (int y = 0; y != imgStack->getHeight(); ++y) {
+        for (unsigned int i = 0; i < images.size(); ++i) {
+            x_iterator ptr = images[i]->row_begin(y);
+            if (y == 0) {
+                rows.push_back(ptr);
+            } else {
+                rows[i] = ptr;
+            }
+        }
+    }
+
+    // get a list to contain a pixel from x,y for each image
+    math::MaskedVector<PixelT> pixelSet(images.size());
+    math::StatisticsControl sctrlTmp(sctrl);
+
+    // if we're forcing the user variances ...
+    if (UseVariance == true) {
+        sctrlTmp.setWeighted(true);  
+        details::loadVariance(wvector, pixelSet); // put them in the variance vector
+    }
+
+    // loop over x,y ... the loop over the stack to fill pixelSet
+    // - get the stats on pixelSet and put the value in the output image at x,y
+    for (int y = 0; y != imgStack->getHeight(); ++y) {
+        for (x_iterator ptr = imgStack->row_begin(y), end = imgStack->row_end(y); ptr != end; ++ptr) {
+            typename math::MaskedVector<PixelT>::iterator psPtr = pixelSet.begin();
+            image::MaskPixel msk(0x0);
+            for (unsigned int i = 0; i < images.size(); ++i, ++psPtr) {
+                image::MaskPixel mskTmp = rows[i].mask();
+                psPtr.value() = rows[i].image();
+                psPtr.mask()  = mskTmp;
+
+                // if we're not using the wvector weights, use the variance plane.
+                if (UseVariance == false) {
+                    psPtr.variance() = rows[i].variance();
+                }
+
+                msk |= mskTmp;
+                
+                ++rows[i];
+            }
+            math::Statistics stat = math::makeStatistics(pixelSet, flags, sctrlTmp);
+            
+            PixelT variance = stat.getError()*stat.getError();
+            *ptr = typename image::MaskedImage<PixelT>::Pixel(stat.getValue(), msk, variance);
+        }
+    }
+
+    return imgStack;
+
+}
+    
+    
 
 }
 
@@ -61,6 +134,9 @@ typename image::Image<PixelT>::Ptr math::statisticsStack(
     // if we're going to use contant weights
     if ( wvector.size() == images.size() ) {
 
+        math::StatisticsControl sctrlTmp(sctrl);
+        sctrlTmp.setWeighted(true);
+        
         // set the mask to be an infinite iterator
         MaskImposter<image::MaskPixel> msk;
         // copy the weights in to the variance vector
@@ -76,7 +152,7 @@ typename image::Image<PixelT>::Ptr math::statisticsStack(
                 math::Statistics stat = math::makeStatistics(*pixelSet.getImage(),
                                                              msk,
                                                              *pixelSet.getVariance(),
-                                                             flags, sctrl);
+                                                             flags, sctrlTmp);
                 (*imgStack)(x, y) = stat.getValue(flags);
             }
         }
@@ -108,6 +184,10 @@ typename image::Image<PixelT>::Ptr math::statisticsStack(
     return imgStack;
 }
 
+
+
+
+
 /**
  * A function to compute some statistics of a stack of Masked Images
  * @relates Statistics
@@ -118,90 +198,24 @@ typename image::MaskedImage<PixelT>::Ptr math::statisticsStack(
         math::Property flags,               
         math::StatisticsControl const& sctrl,
         std::vector<PixelT> const &wvector
-                                                              ) {
-
-    // create the image to be returned
-    typedef image::MaskedImage<PixelT> ImageT;
-    typename ImageT::Ptr imgStack(new ImageT(images[0]->getDimensions()));
-
-
+                                                              ) {    
     // if we're going to use constant weights 
     if ( wvector.size() == images.size() ) {
-        
-        math::MaskedVector<PixelT> pixelSet(images.size());
-        
-        // copy the weights in to the variance vector
-        details::loadVariance(wvector, pixelSet);
-
-        // collect elements from the stack into the MaskedVector to do stats
-        // get the desired statistic
-        typedef typename image::MaskedImage<PixelT>::x_iterator x_iterator;
-
-        std::vector<x_iterator> rows;
-        rows.reserve(images.size());
-
-        for (int y = 0; y != imgStack->getHeight(); ++y) {
-            for (unsigned int i = 0; i < images.size(); ++i) {
-                x_iterator ptr = images[i]->row_begin(y);
-                if (y == 0) {
-                    rows.push_back(ptr);
-                } else {
-                    rows[i] = ptr;
-                }
-            }
-            
-            for (x_iterator ptr = imgStack->row_begin(y), end = imgStack->row_end(y); ptr != end; ++ptr) {
-                typename math::MaskedVector<PixelT>::iterator psPtr = pixelSet.begin();
-                image::MaskPixel msk(0x0);
-                for (unsigned int i = 0; i < images.size(); ++i, ++psPtr) {
-                    image::MaskPixel mskTmp = rows[i].mask();
-                    psPtr.value() = rows[i].image();
-                    psPtr.mask()  = mskTmp;
-                    msk |= mskTmp;
-
-                    ++rows[i];
-                }
-                math::Statistics stat = math::makeStatistics(pixelSet, flags, sctrl);
-                
-                *ptr = typename image::MaskedImage<PixelT>::Pixel(stat.getValue(),
-                                                                  msk,
-                                                                  stat.getError()*stat.getError());
-            }
-        }
-        
+        return details::computeStatistics<PixelT,true>(images, flags, sctrl, wvector);
         
     // if we're weighting by the pixel variance        
     } else if ( wvector.size() == 0 ) {
+        return details::computeStatistics<PixelT,false>(images, flags, sctrl, wvector);
         
-        // get the desired statistic
-        for (int y = 0; y != imgStack->getHeight(); ++y) {
-            for (int x = 0; x != imgStack->getWidth(); ++x) {
-                image::MaskPixel msk = 0x0;
-            
-                math::MaskedVector<PixelT> pixelSet(images.size());
-                for (unsigned int i = 0; i < images.size(); ++i) {
-                    image::MaskPixel mskTmp = (*images[i]->getMask())(x, y);
-                    (*pixelSet.getImage())(i, 0)     = (*images[i]->getImage())(x, y);
-                    (*pixelSet.getMask())(i, 0)      = mskTmp;
-                    (*pixelSet.getVariance())(i, 0)  = (*images[i]->getVariance())(x, y);
-                    msk |= mskTmp;
-                }
-                math::Statistics stat = math::makeStatistics(pixelSet, flags, sctrl);
-                (*imgStack->getImage())(x, y)    = stat.getValue(flags);
-                (*imgStack->getMask())(x, y)     = msk;
-                (*imgStack->getVariance())(x, y) = stat.getError(flags)*stat.getError(flags);
-            }
-        }
-
     // Fail if the number weights isn't the same as the number of images to be weighted.
     } else {
         throw LSST_EXCEPT(ex::InvalidParameterException,
                           "Weight vector must have same length as number of MaskedImages to be stacked.");
     }
-
-    
-    return imgStack;
 }
+
+
+
 
 
 
@@ -222,11 +236,14 @@ typename boost::shared_ptr<std::vector<PixelT> > math::statisticsStack(
     typedef std::vector<PixelT> VectT;
     typename boost::shared_ptr<VectT> vecStack(new VectT(vectors[0]->size(), 0.0));
 
+    math::MaskedVector<PixelT> pixelSet(vectors.size()); // values from a given pixel of each image
+    
     // Use constant weights for each layer
     if ( wvector.size() == vectors.size() ) {
 
-        math::MaskedVector<PixelT> pixelSet(vectors.size()); // values from a given pixel of each image
-
+        math::StatisticsControl sctrlTmp(sctrl);
+        sctrlTmp.setWeighted(true);
+        
         // set the mask to be an infinite iterator
         MaskImposter<image::MaskPixel> msk;
         // copy the weights in to the variance vector
@@ -234,23 +251,24 @@ typename boost::shared_ptr<std::vector<PixelT> > math::statisticsStack(
         
         // collect elements from the stack into the MaskedVector to do stats
         for (unsigned int x = 0; x < vectors[0]->size(); ++x) {
-            for (unsigned int i = 0; i < vectors.size(); ++i) {
-                (*pixelSet.getImage())(i, 0)     = (*vectors[i])[x];
+            typename math::MaskedVector<PixelT>::iterator psPtr = pixelSet.begin();
+            for (unsigned int i = 0; i < vectors.size(); ++i, ++psPtr) {
+                psPtr.value() = (*vectors[i])[x];
             }
             math::Statistics stat = math::makeStatistics(*pixelSet.getImage(),
                                                          msk,
                                                          *pixelSet.getVariance(),
-                                                         flags, sctrl);
+                                                         flags, sctrlTmp);
             (*vecStack)[x] = stat.getValue(flags);
         }
 
     // Use no weights.
     } else if ( wvector.size() == 0 ) {
-        std::vector<PixelT> pixelSet(vectors.size()); // values from a given pixel of each image
         // get the desired statistic
         for (unsigned int x = 0; x < vectors[0]->size(); ++x) {
-            for (unsigned int i = 0; i != vectors.size(); ++i) {
-                pixelSet[i] = (*vectors[i])[x];
+            typename math::MaskedVector<PixelT>::iterator psPtr = pixelSet.begin();
+            for (unsigned int i = 0; i != vectors.size(); ++i, ++psPtr) {
+                psPtr.value() = (*vectors[i])[x];
             }
             (*vecStack)[x] = math::makeStatistics(pixelSet, flags, sctrl).getValue(flags);
         }
