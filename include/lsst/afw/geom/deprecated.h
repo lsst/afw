@@ -15,7 +15,7 @@ namespace lsst { namespace afw { namespace geom {
 
 template <typename T>
 inline geom::Point<T,2> convertToGeom(image::Point<T> const & other) {
-    return geom::Point<T,2>::makeXY(other.getX(),other.getY())
+    return geom::Point<T,2>::makeXY(other.getX(),other.getY());
 }
 
 template <typename T>
