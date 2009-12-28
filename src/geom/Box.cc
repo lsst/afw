@@ -218,7 +218,7 @@ bool geom::BoxI::operator!=(BoxI const & other) const {
     return any(other._minimum != this->_minimum) || any(other._dimensions != this->_dimensions);
 }
 
-double const geom::BoxD::ONE_PLUS_EPSILON = std::numeric_limits<double>::epsilon() + 1.0;
+double const geom::BoxD::EPSILON = std::numeric_limits<double>::epsilon()*2;
 
 double const geom::BoxD::INVALID = std::numeric_limits<double>::quiet_NaN();
 
@@ -347,20 +347,23 @@ void geom::BoxD::shift(ExtentD const & offset) {
  *  \brief Expand this to ensure that this->contains(point).
  *
  *  If the point sets a new maximum value for the box, the maximum coordinate will
- *  be multiplied by (1.0 + EPSILON) to ensure the point is actually contained
+ *  be adjusted to ensure the point is actually contained
  *  by the box instead of sitting on its exclusive upper edge.
  */
 void geom::BoxD::include(PointD const & point) {
     if (isEmpty()) {
         _minimum = point;
-        _maximum = PointD(point.asVector() * ONE_PLUS_EPSILON);
+        _maximum = point;
+        _tweakMax(0);
+        _tweakMax(1);
         return;
     }
     for (int n=0; n<2; ++n) {
         if (point[n] < _minimum[n]) {
             _minimum[n] = point[n];
         } else if (point[n] >= _maximum[n]) {
-            _maximum[n] = point[n] * ONE_PLUS_EPSILON;
+            _maximum[n] = point[n];
+            _tweakMax(n);
         }
     }
 }

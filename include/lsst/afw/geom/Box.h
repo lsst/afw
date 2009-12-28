@@ -142,7 +142,7 @@ public:
      *  Value the maximum coordinate is multiplied by to increase it by the smallest
      *  possible amount.
      */
-    static double const ONE_PLUS_EPSILON;
+    static double const EPSILON;
 
     /// Value used to specify undefined coordinate values.
     static double const INVALID;
@@ -224,6 +224,15 @@ public:
     bool operator!=(BoxD const & other) const;
 
 private:
+    void _tweakMax(int n) {
+        if (_maximum[n] < 0.0) {
+            _maximum[n] *= (1.0 - EPSILON);
+        } else if (_maximum[n] > 0.0) {
+            _maximum[n] *= (1.0 + EPSILON);
+        } else {
+            _maximum[n] = EPSILON;
+        }
+    }
     PointD _minimum;
     PointD _maximum;
 };
