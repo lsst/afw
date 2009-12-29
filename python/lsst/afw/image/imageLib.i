@@ -13,15 +13,16 @@ Basic routines to talk to lsst::afw::image classes
 #pragma SWIG nowarn=362                 // operator=  ignored
 
 %{
-#include <lsst/daf/base.h>
-#include <lsst/daf/data.h>
-#include <lsst/daf/persistence.h>
-#include <lsst/pex/exceptions.h>
-#include <lsst/pex/logging/Trace.h>
-#include <lsst/pex/policy.h>
-#include <lsst/afw/image.h>
+#include "lsst/daf/base.h"
+#include "lsst/daf/data.h"
+#include "lsst/daf/persistence.h"
+#include "lsst/pex/exceptions.h"
+#include "lsst/pex/logging/Trace.h"
+#include "lsst/pex/policy.h"
+#include "lsst/afw/image.h"
+#include "lsst/afw/geom.h"
 
-#include <boost/cstdint.hpp>
+#include "boost/cstdint.hpp"
 %}
 
 
@@ -68,6 +69,7 @@ def version(HeadURL = r"$HeadURL$"):
 %import "lsst/pex/policy/policyLib.i"
 %import "lsst/daf/persistence/persistenceLib.i"
 %import "lsst/daf/data/dataLib.i"
+%import "lsst/afw/geom/geomLib.i"
 
 %lsst_exceptions();
 

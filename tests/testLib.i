@@ -17,6 +17,7 @@ Various swigged-up C++ classes for testing
 
 %{
 #include "lsst/pex/policy.h"
+#include "lsst/afw/geom.h"
 #include "lsst/afw/math.h"
 %}
 

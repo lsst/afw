@@ -12,6 +12,7 @@ Python interface to lsst::afw::math classes
 #   include "lsst/daf/base.h"
 #   include "lsst/pex/policy.h"
 #   include "lsst/afw/image.h"
+#   include "lsst/afw/geom.h"
 #   include "lsst/afw/math.h"
 %}
 
