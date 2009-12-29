@@ -781,19 +781,19 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::xyToRaDec(
 double lsst::afw::image::Wcs::pixArea(lsst::afw::image::PointD pix00) const
 {
     //
-    // Figure out the (0, 0), (0, 1), and (1, 0) pixel coordinates of the corners of a square drawn in ra/dec
-    // It'd be better to centre the square at pix00, but that would involve another conversion from sky to
+    // Figure out the (0, 0), (0, 1), and (1, 0) ra/dec coordinates of the corners of a square drawn in pixel
+    // It'd be better to centre the square at sky00, but that would involve another conversion between sky and
     // pixel coordinates so I didn't bother
     //
-    const double side = 1e-3;           // length of the square's sides in degrees
+    const double side = 10;             // length of the square's sides in pixels
 
     lsst::afw::image::PointD const sky00 = xyToRaDec(pix00);
-    double const cosDec = cos((sky00.getY() + side/2)*M_PI/180.0);
     
-    lsst::afw::image::PointD const dpix01 = raDecToXY(sky00 + lsst::afw::image::PointD(0,           side)) - pix00;
-    lsst::afw::image::PointD const dpix10 = raDecToXY(sky00 + lsst::afw::image::PointD(side/cosDec, 0))    - pix00;
+    lsst::afw::image::PointD const dsky10 = xyToRaDec(pix00 + lsst::afw::image::PointD(side, 0)) - sky00;
+    lsst::afw::image::PointD const dsky01 = xyToRaDec(pix00 + lsst::afw::image::PointD(0, side)) - sky00;
 
-    return (side*side)/fabs(dpix01.getX()*dpix10.getY() - dpix01.getY()*dpix10.getX());
+    double const cosDec = cos(sky00.getY()*M_PI/180.0);
+    return cosDec*fabs(dsky01.getX()*dsky10.getY() - dsky01.getY()*dsky10.getX())/(side*side);
 }
 
 /************************************************************************************************************/
