@@ -16,6 +16,7 @@ env = scons.makeEnv(
         ["boost", "boost/serialization/base_object.hpp", "boost_serialization:C++"],
         ["boost", "boost/test/unit_test.hpp", "boost_unit_test_framework:C++"],
         ["python", "Python.h"],
+        #["numpy", "Python.h numpy/arrayobject.h"],
         ["cfitsio", "fitsio.h", "m cfitsio", "ffopen"],
         ["wcslib", "wcslib/wcs.h", "m wcs"], # remove m once SConsUtils bug fixed
         ["xpa", "xpa.h", "xpa", "XPAPuts"],
@@ -37,6 +38,12 @@ env = scons.makeEnv(
 # Libraries needed to link libraries/executables
 #
 env.libs["afw"] += env.getlibs("boost wcslib cfitsio minuit2 gsl utils daf_base daf_data daf_persistence pex_exceptions pex_logging pex_policy security fftw3")
+if True:
+    #
+    # Workaround SConsUtils failure to find numpy .h files. Fixed in sconsUtils >= 3.3.2
+    #
+    import numpy
+    env.Append(CCFLAGS = ["-I", numpy.get_include()])
 #
 # Build/install things
 #
@@ -47,6 +54,7 @@ for d in (
     "lib",
     "python/lsst/afw/detection",
     "python/lsst/afw/display",
+    "python/lsst/afw/eigen",
     "python/lsst/afw/image",
     "python/lsst/afw/geom", 
     "python/lsst/afw/math", 

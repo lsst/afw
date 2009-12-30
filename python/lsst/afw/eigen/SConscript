@@ -1,0 +1,6 @@
+# -*- python -*-
+Import("env")
+
+env.CheckSwig("python", ilang="c++")
+
+env.LoadableModuleIncomplete("_eigenLib.so", ["eigenLib.i"])

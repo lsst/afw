@@ -124,6 +124,9 @@ class WCSTestCaseSDSS(unittest.TestCase):
 
         self.assertRaises(lsst.pex.exceptions.exceptionsLib.LsstCppException, self.wcs.raDecToXY, raDec)
 
+    def testCD(self):
+        print self.wcs.getLinearTransformMatrix()
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class WCSTestCaseCFHT(unittest.TestCase):
