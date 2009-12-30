@@ -14,7 +14,7 @@ import lsst.pex.exceptions as pexExcept
 
 # math.isnan() available in 2.6, but not 2.5.2
 try:
-    math.isnan()
+    math.isnan(1)
 except AttributeError:
     math.isnan = lambda x: x != x
 
