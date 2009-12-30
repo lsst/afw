@@ -69,6 +69,8 @@ def version(HeadURL = r"$HeadURL$"):
 %import "lsst/daf/persistence/persistenceLib.i"
 %import "lsst/daf/data/dataLib.i"
 
+%include "lsst/afw/eigen/eigenLib.i"
+
 %lsst_exceptions();
 
 /******************************************************************************/
