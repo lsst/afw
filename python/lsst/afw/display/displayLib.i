@@ -14,6 +14,7 @@ Basic routines to talk to ds9
 #   include "lsst/daf/persistence.h"
 #   include "lsst/pex/policy.h"
 #   include "lsst/pex/logging/Log.h"
+#   include "lsst/afw/geom.h"
 #   include "lsst/afw/image.h"
 
 #   include "simpleFits.h"

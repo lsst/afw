@@ -201,6 +201,17 @@ class WCSTestCaseCFHT(unittest.TestCase):
         nsky00 = new.xyToRaDec(afwImage.PointD(0, 0))
         self.assertEqual((sky00.getX(), sky00.getY()), (nsky00.getX(), nsky00.getY()))
 
+    def testAffineTransform(self):
+        a = self.wcs.getAffineTransform()
+        #print a[a.X], a[a.Y], print a[a.XX], a[a.XY], a[a.YX], a[a.YY]
+
+        p00 = afwImage.PointD(10, 10)
+        a = self.wcs.getAffineTransform(p00)
+
+        self.assertAlmostEqual(a[a.X], p00.getX())
+        self.assertAlmostEqual(a[a.Y], p00.getY())
+        self.assertAlmostEqual(self.wcs.pixArea(p00), abs(a[a.XX]* a[a.YY] - a[a.XY]*a[a.YX]))
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
