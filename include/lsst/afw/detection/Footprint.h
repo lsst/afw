@@ -378,6 +378,17 @@ typename detection::FootprintSet<ImagePixelT, MaskPixelT>::Ptr makeFootprintSet(
     return typename detection::FootprintSet<ImagePixelT, MaskPixelT>::Ptr(new FootprintSet<ImagePixelT, MaskPixelT>(img, threshold, x, y, peaks));
 }
 
+template<typename ImagePixelT, typename MaskPixelT>
+typename detection::FootprintSet<ImagePixelT>::Ptr makeFootprintSet(
+        detection::FootprintSet<ImagePixelT, MaskPixelT> const &rhs, //!< the input FootprintSet
+        int r,                          //!< Grow Footprints by r pixels
+        bool isotropic                  //!< Grow isotropically (as opposed to a Manhattan metric)
+                                        //!< @note Isotropic grows are significantly slower
+                                                                   )
+{
+    return typename detection::FootprintSet<ImagePixelT, MaskPixelT>::Ptr(new FootprintSet<ImagePixelT, MaskPixelT>(rhs, r, isotropic));
+}
+
 /************************************************************************************************************/
 ///
 /// Although FootprintFunctor is pure virtual, this is needed by subclasses
