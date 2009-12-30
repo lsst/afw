@@ -77,73 +77,8 @@ def readImage(filename=None):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def SpatialCellTestCase(nCandidate=5):
-    """A test case for SpatialCell"""
-    candidateList = afwMath.SpatialCellCandidateList()
-    
-    def getFlux(x):
-        return 1000 - 10*x
-    
-    for i in (0, 1, 4, 3, 2):       # must be all numbers in range(nCandidate)
-        x, y = i, 5*i
-        candidateList.append(testSpatialCellLib.TestCandidate(x, y, getFlux(x)))
-        
-    cell = afwMath.SpatialCell("Test", afwImage.BBox(), candidateList)
-
-    # Check that we can retrieve candidates, and that they are sorted by ranking
-    assert(cell[0].getXCenter(), 0)
-    assert(cell[1].getXCenter(), 1)
-    assert(cell[1].getYCenter(), 5)
-    
-    # Build a candidate list by inserting candidates
-
-    cell = afwMath.SpatialCell("Test", afwImage.BBox())
-
-    for x, y in ([5, 0], [1, 1], [2, 2], [0, 0], [4, 4], [3, 4]):
-        cell.insertCandidate(testSpatialCellLib.TestCandidate(x, y, getFlux(x)))
-
-    assert(cell[0].getXCenter(), 0)
-    #
-    # Exercise the SpatialCell iterators
-    #
-    # Count the candidates
-    #
-    assert(cell.size(), nCandidate)
-    assert(cell.end() - cell.begin(), nCandidate)
-
-    ptr = cell.begin(); ptr.__incr__()
-    assert(cell.end() - ptr, nCandidate - 1)
-
-    assert(ptr - cell.begin(), 1)
-    #
-    # Now label one candidate as bad
-    #
-    ptr = cell[2].setStatus(afwMath.SpatialCellCandidate.BAD)
-
-    assert(cell.size(), nCandidate - 1)
-    assert(cell.end() - cell.begin(), nCandidate - 1)
-
-    cell.setIgnoreBad(False)
-    assert(cell.size(), nCandidate)
-    assert(cell.end() - cell.begin(), nCandidate)
-
-    # Check that we can lookup candidates by ID
-    id = cell[1].getId()
-    assert(cell.getCandidateById(id).getId(), id)
-
-
-    assert(cell.getCandidateById(-1, True), None)
-    try:
-        cell.getCandidateById(-1)           # non-existent ID; should throw an exception
-    except Exception, e:
-        pass
-    else:
-        print >> sys.stderr, "Expected an exception looking up a non-existant ID"
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-def SpatialCellSetTestCase(filename=None):
-    """A test case for SpatialCellSet"""
+def SpatialCellSetDemo(filename=None):
+    """A demonstration of the use of a SpatialCellSet"""
 
     im, fs = readImage(filename)
 
@@ -177,7 +112,7 @@ def SpatialCellSetTestCase(filename=None):
         cellSet.insertCandidate(testSpatialCellLib.TestCandidate(xc, yc, 
                                                                  im.get(int(xc + 0.5), int(yc + 0.5))[0]))
     #
-    # OK, the SpatialCellList is populated
+    # OK, the SpatialCellList is populated.  Let's do something with it
     #
     visitor = testSpatialCellLib.TestCandidateVisitor()
 
@@ -189,19 +124,28 @@ def SpatialCellSetTestCase(filename=None):
         cell = cellSet.getCellList()[i]
         cell.visitCandidates(visitor)
 
-        print "%s nobj=%d N=%d" % (cell.getLabel(), cell.size(), visitor.getN())
         j = 1
         for cand in cell:
-            ds9.dot(str(j), cand.getXCenter(), cand.getYCenter(), size=4, ctype=ctypes[i%len(ctypes)])
+            ds9.dot("%s:%d" % (cand.getId(), j),
+                    cand.getXCenter(), cand.getYCenter(), size=4, ctype=ctypes[i%len(ctypes)])
             j += 1
 
         #print [afwMath.cast_SpatialCellImageCandidateMF(cand) for cand in cell]
+    #
+    # Now label the first candidate in each cell as bad
+    #
+    for i in range(len(cellSet.getCellList())):
+        cell = cellSet.getCellList()[i]
+
+        cell[0].setStatus(afwMath.SpatialCellCandidate.BAD)
+        cell.visitCandidates(visitor)
+
+        cell.setIgnoreBad(False)        # include BAD in cell.size()
+        print "%s nobj=%d Ngood=%d" % (cell.getLabel(), cell.size(), visitor.getN())
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def TestImageCandidateCase():
-    """A test case for TestImageCandidate"""
-
+def TestImageCandidate():
     cellSet = afwMath.SpatialCellSet(afwImage.BBox(afwImage.PointI(0, 0), 501, 501), 2, 3)
 
     # Test that we can use SpatialCellImageCandidate
@@ -235,9 +179,9 @@ def TestImageCandidateCase():
 
 def run(exit=False):
     """Run the tests"""
-    SpatialCellTestCase()
-    SpatialCellSetTestCase()
-    TestImageCandidateCase()
+
+    SpatialCellSetDemo()
+    TestImageCandidate()
 
 if __name__ == "__main__":
     run(True)
