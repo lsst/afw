@@ -21,7 +21,7 @@ namespace lsst { namespace afw { namespace math {
 
 /**
  * A class that can be used to generate sequences of random numbers according to a number
- * of different algorithms. Support for generating random variates from the uniform, gaussian,
+ * of different algorithms. Support for generating random variates from the uniform,  Gaussian, Poisson,
  * and chi-squared distributions is provided.
  *
  * This class is a thin wrapper for the random number generation facilities of
@@ -94,6 +94,7 @@ public:
     double flat(double const a, double const b);
     double gaussian();
     double chisq(double const nu);
+    double poisson(double const nu);
 
 private:
     boost::shared_ptr< ::gsl_rng> _rng;
@@ -130,6 +131,9 @@ void randomGaussianImage(ImageT *image, Random &rand);
 
 template<typename ImageT>
 void randomChisqImage(ImageT *image, Random &rand, double const nu);
+
+template<typename ImageT>
+void randomPoissonImage(ImageT *image, Random &rand, double const mu);
 
             
 }}} // end of namespace lsst::afw::math

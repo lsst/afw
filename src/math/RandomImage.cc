@@ -70,6 +70,15 @@ namespace {
     private:
         double const _nu;
     };
+
+    template<typename T>
+    struct do_poisson : public do_random<T> {
+        do_poisson(Random &rand, double mu) : do_random<T>(rand), _mu(mu) {}
+
+        virtual T operator()() const { return do_random<T>::_rand.poisson(_mu); }
+    private:
+        double const _mu;
+    };
 }
 
 /************************************************************************************************************/
@@ -137,6 +146,18 @@ void randomChisqImage(ImageT *image,    ///< The image to set
     lsst::afw::image::for_each_pixel(*image, do_chisq<typename ImageT::Pixel>(rand, nu));
 }
 
+
+/**
+ * Set image to random numbers with a gaussian N(0, 1) distribution
+ */
+template<typename ImageT>
+void randomPoissonImage(ImageT *image,    ///< The image to set
+                      Random &rand,     ///< definition of random number algorithm, seed, etc.
+                      double const mu   ///< mean of distribution
+                     ) {
+    lsst::afw::image::for_each_pixel(*image, do_poisson<typename ImageT::Pixel>(rand, mu));
+}
+
 /************************************************************************************************************/
 //
 // Explicit instantiations
@@ -147,7 +168,8 @@ void randomChisqImage(ImageT *image,    ///< The image to set
     template void randomUniformIntImage(lsst::afw::image::Image<T> *image, Random &rand, unsigned long n); \
     template void randomFlatImage(lsst::afw::image::Image<T> *image, Random &rand, double const a, double const b); \
     template void randomGaussianImage(lsst::afw::image::Image<T> *image, Random &rand); \
-    template void randomChisqImage(lsst::afw::image::Image<T> *image, Random &rand, double const nu);
+    template void randomChisqImage(lsst::afw::image::Image<T> *image, Random &rand, double const nu); \
+    template void randomPoissonImage(lsst::afw::image::Image<T> *image, Random &rand, double const mu);
     
 INSTANTIATE(double);
 INSTANTIATE(float);
