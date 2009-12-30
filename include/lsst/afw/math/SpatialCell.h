@@ -248,6 +248,14 @@ namespace math {
          * Get SpatialCell's BBox
          */
         lsst::afw::image::BBox const& getBBox() const { return _bbox; }
+        /*
+         * Visit our candidates
+         */
+        void visitCandidates(CandidateVisitor * visitor, int const nMaxPerCell=-1,
+                             bool const ignoreExceptions=false, bool const reset=true);
+        void visitCandidates(CandidateVisitor * visitor, int const nMaxPerCell=-1,
+                             bool const ignoreExceptions=false, bool const reset=true) const;
+
     private:
         std::string _label;             // Name of cell for logging/trace
         lsst::afw::image::BBox _bbox;   // Bounding box of cell in overall image
@@ -281,7 +289,7 @@ namespace math {
 
         void visitCandidates(CandidateVisitor * visitor, int const nMaxPerCell=-1,
                              bool const ignoreExceptions=false);
-        void visitCandidates(CandidateVisitor const * visitor, int const nMaxPerCell=-1,
+        void visitCandidates(CandidateVisitor * visitor, int const nMaxPerCell=-1,
                              bool const ignoreExceptions=false) const;
 
         SpatialCellCandidate::Ptr getCandidateById(int id, bool noThrow=false);

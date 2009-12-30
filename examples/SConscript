@@ -53,3 +53,12 @@ env.Program("integrate_example", ["integrate_example.cc"], LIBS=env.getlibs("afw
 #
 for cfile in glob.glob("ticket*.cc"):
     env.Program(cfile, LIBS=env.getlibs("afw"))
+
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+#
+# Build the swig extension used to illustrate SpatialCells
+#
+env.CheckSwig("python", ilang="c++",
+              includedProducts="afw utils daf_base pex_exceptions pex_logging pex_policy daf_persistence daf_data security")
+testSpatialCellLib = env.LoadableModuleIncomplete("_testSpatialCellLib", ["testSpatialCellLib.i"],
+                                                  LIBS=env.getlibs("afw"))

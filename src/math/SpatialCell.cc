@@ -132,6 +132,84 @@ SpatialCellCandidate::Ptr SpatialCell::getCandidateById(int id, ///< The desired
                           (boost::format("Unable to find object with ID == %d") % id).str());
     }
 }
+
+/**
+ * Call the visitor's processCandidate method for each Candidate in the SpatialCell
+ *
+ * @note This is obviously similar to the Design Patterns (Go4) Visitor pattern, but we've simplified the
+ * double dispatch (i.e. we don't call a virtual method on SpatialCellCandidate that in turn calls
+ * processCandidate(*this), but can be re-defined)
+ */
+void SpatialCell::visitCandidates(CandidateVisitor *visitor, ///< Pass this object to every Candidate
+                                  int const nMaxPerCell,     ///< Visit no more than this many Candidates (<= 0: all)
+                                  bool const ignoreExceptions, ///< Ignore any exceptions thrown by the processing
+                                  bool const reset             ///< Reset visitor before passing it around
+                                 ) {
+    if (reset) {
+        visitor->reset();
+    }
+    
+    int i = 0;
+    for (SpatialCell::iterator candidate = begin(), candidateEnd = end();
+         candidate != candidateEnd; ++candidate, ++i) {
+        if (nMaxPerCell > 0 && i == nMaxPerCell) { // we've processed all the candidates we want
+            return;
+        }
+        
+        try {
+            visitor->processCandidate((*candidate).get());
+        } catch(lsst::pex::exceptions::LengthErrorException &e) {
+            if (ignoreExceptions) {
+                ;
+            } else {
+                LSST_EXCEPT_ADD(e, "Visiting candidate");
+                throw e;
+            }
+        }
+    }
+}
+    
+/**
+ * Call the visitor's processCandidate method for each Candidate in the SpatialCell (const version)
+ *
+ * This is the const version of SpatialCellSet::visitCandidates
+ *
+ * @todo This is currently implemented via a const_cast (arghhh). The problem is that
+ * SpatialCell::begin() const isn't yet implemented
+ */
+void SpatialCell::visitCandidates(
+        CandidateVisitor * visitor, ///< Pass this object to every Candidate
+        int const nMaxPerCell,           ///< Visit no more than this many Candidates (-ve: all)
+        bool const ignoreExceptions,     ///< Ignore any exceptions thrown by the processing
+        bool const reset                 ///< Reset visitor before passing it around
+                                 ) const {
+#if 1
+    //
+    // This const_cast must go!
+    //
+    SpatialCell *mthis = const_cast<SpatialCell *>(this);
+    mthis->visitCandidates(visitor, nMaxPerCell, ignoreExceptions, reset);
+#else
+    int i = 0;
+    for (SpatialCell::const_iterator candidate = (*cell)->begin(), candidateEnd = (*cell)->end();
+         candidate != candidateEnd; ++candidate, ++i) {
+        if (i == nMaxPerCell) {   // we've processed all the candidates we want
+            return;
+        }
+        
+        try {
+            visitor->processCandidate((*candidate).get());
+        } catch(lsst::pex::exceptions::LengthErrorException &e) {
+            if (ignoreExceptions) {
+                ;
+            } else {
+                LSST_EXCEPT_ADD(e, "Visiting candidate");
+                throw e;
+            }
+        }
+    }
+#endif
+}
     
 /************************************************************************************************************/
 /// ctor; designed to be used to pass begin to SpatialCellCandidateIterator
@@ -301,83 +379,40 @@ void SpatialCellSet::insertCandidate(SpatialCellCandidate::Ptr candidate) {
 
 /************************************************************************************************************/
 /**
- * Call the visitor's processCandidate method for each Candidate in the SpatialSetCell
+ * Call the visitor's processCandidate method for each Candidate in the SpatialCellSet
  *
  * @note This is obviously similar to the Design Patterns (Go4) Visitor pattern, but we've simplified the
  * double dispatch (i.e. we don't call a virtual method on SpatialCellCandidate that in turn calls
  * processCandidate(*this), but can be re-defined)
  */
-void SpatialCellSet::visitCandidates(CandidateVisitor *visitor, ///< Pass this object to every Candidate
-                                     int const nMaxPerCell,     ///< Visit no more than this many Candidates (<= 0: all)
-                                     bool const ignoreExceptions ///< Ignore any exceptions thrown by the processing
+void SpatialCellSet::visitCandidates(
+        CandidateVisitor *visitor,      ///< Pass this object to every Candidate
+        int const nMaxPerCell,          ///< Visit no more than this many Candidates (<= 0: all)
+        bool const ignoreExceptions     ///< Ignore any exceptions thrown by the processing
                                     ) {
     visitor->reset();
     
     for (CellList::iterator cell = _cellList.begin(), end = _cellList.end(); cell != end; ++cell) {
-        int i = 0;
-        for (SpatialCell::iterator candidate = (*cell)->begin(), candidateEnd = (*cell)->end();
-             candidate != candidateEnd; ++candidate, ++i) {
-            if (nMaxPerCell > 0 && i == nMaxPerCell) { // we've processed all the candidates we want
-                break;
-            }
-            
-            try {
-                visitor->processCandidate((*candidate).get());
-            } catch(lsst::pex::exceptions::LengthErrorException &e) {
-                if (ignoreExceptions) {
-                    ;
-                } else {
-                    LSST_EXCEPT_ADD(e, "Visiting candidate");
-                    throw e;
-                }
-            }
-        }
+        (*cell)->visitCandidates(visitor, nMaxPerCell, ignoreExceptions, false);
     }
 }
     
 /**
- * Call the visitor's processCandidate method for each Candidate in the SpatialSetCell (const version)
+ * Call the visitor's processCandidate method for each Candidate in the SpatialCellSet (const version)
  *
  * This is the const version of SpatialCellSet::visitCandidates
- *
- * @todo This is currently implemented via a const_cast (arghhh). The problem is that
- * SpatialCell::begin() const isn't yet implemented
  */
-void SpatialCellSet::visitCandidates(CandidateVisitor const* visitor, ///< Pass this object to every Candidate
-                                     int const nMaxPerCell,      ///< Visit no more than this many Candidates (-ve: all)
-                                     bool const ignoreExceptions ///< Ignore any exceptions thrown by the processing
+void SpatialCellSet::visitCandidates(
+        CandidateVisitor *visitor, ///< Pass this object to every Candidate
+        int const nMaxPerCell,          ///< Visit no more than this many Candidates (-ve: all)
+        bool const ignoreExceptions ///< Ignore any exceptions thrown by the processing
                                     ) const {
-#if 1
-    //
-    // These const_cast must go!
-    //
-    SpatialCellSet *mthis = const_cast<SpatialCellSet *>(this);
-    CandidateVisitor *mvisitor = const_cast<CandidateVisitor *>(visitor);
-    mthis->visitCandidates(mvisitor, nMaxPerCell);
-#else
     visitor->reset();
 
     for (CellList::const_iterator cell = _cellList.begin(), end = _cellList.end(); cell != end; ++cell) {
-        int i = 0;
-        for (SpatialCell::const_iterator candidate = (*cell)->begin(), candidateEnd = (*cell)->end();
-             candidate != candidateEnd; ++candidate, ++i) {
-            if (i == nMaxPerCell) {   // we've processed all the candidates we want
-                break;
-            }
-            
-            try {
-                visitor->processCandidate((*candidate).get());
-            } catch(lsst::pex::exceptions::LengthErrorException &e) {
-                if (ignoreExceptions) {
-                    ;
-                } else {
-                    LSST_EXCEPT_ADD(e, "Visiting candidate");
-                    throw e;
-                }
-            }
-        }
+        SpatialCell const *ccell = cell->get(); // the SpatialCellSet's SpatialCells should be const too
+        ccell->visitCandidates(visitor, nMaxPerCell, ignoreExceptions, false);
     }
-#endif
 }
 
 /************************************************************************************************************/
