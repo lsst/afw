@@ -69,7 +69,8 @@ public:
         _numIter(numIter),
         _andMask(andMask),
         _isNanSafe(isNanSafe),
-        _isWeighted(isWeighted) {
+        _isWeighted(isWeighted),
+        _multiplyWeights(false) {
         
         assert(_numSigmaClip > 0);
         assert(_numIter > 0);
@@ -80,12 +81,16 @@ public:
     image::MaskPixel getAndMask() const { return _andMask; }
     bool getNanSafe() const { return _isNanSafe; }
     bool getWeighted() const { return _isWeighted; }
+    bool getMultiplyWeights() const { return _multiplyWeights; }
+    
     
     void setNumSigmaClip(double numSigmaClip) { assert(numSigmaClip > 0); _numSigmaClip = numSigmaClip; }
     void setNumIter(int numIter) { assert(numIter > 0); _numIter = numIter; }
     void setAndMask(image::MaskPixel andMask) { _andMask = andMask; }
     void setNanSafe(bool isNanSafe) { _isNanSafe = isNanSafe; }
     void setWeighted(bool isWeighted) { _isWeighted = isWeighted; }
+    void setMultiplyWeights(bool multiplyWeights) { _multiplyWeights = multiplyWeights; }
+    
 
 private:
     double _numSigmaClip;                 // Number of standard deviations to clip at
@@ -93,6 +98,7 @@ private:
     image::MaskPixel _andMask;            // and-Mask to specify which mask planes to pay attention to
     bool _isNanSafe;                         // Check for NaNs before running (slower)
     bool _isWeighted;                     // Use inverse variance to weight statistics.
+    bool _multiplyWeights;                // Treat variance plane as weights and multiply instead of dividing
 };
 
             
@@ -178,6 +184,7 @@ private:
              typename HasValueLtMin,
              typename HasValueGtMax,
              typename InClipRange,
+             bool MultiplyWeight,
              typename ImageT, typename MaskT, typename VarianceT>
     SumReturn _sumImage(ImageT const &img, MaskT const &msk, VarianceT const &var, int const flags,
                         int const nCrude, int const stride = 1, double const meanCrude = 0,
@@ -303,8 +310,8 @@ Statistics makeStatistics(image::Image<Pixel> const &img, ///< Image (or Image) 
                           StatisticsControl const& sctrl = StatisticsControl() ///< Control calculation
                          ) {
     // make a phony mask that will be compiled out
-    MaskImposter<image::MaskPixel> msk;
-    MaskImposter<image::VariancePixel> var;
+    MaskImposter<image::MaskPixel> const msk;
+    MaskImposter<image::VariancePixel> const var;
     return Statistics(img, msk, var, flags, sctrl);
 }
 

@@ -78,6 +78,26 @@ class StackTestCase(unittest.TestCase):
         wmean = float(len(self.values)) / reduce(lambda x, y: x + y, wvalues)
         self.assertAlmostEqual(mimgStack.getImage().get(self.nX/2, self.nY/2), wmean)
 
+
+    def testConstantWeightedStack(self):
+        """ Test statisticsStack() function when weighting by a vector of weights"""
+        
+        sctrl = afwMath.StatisticsControl()
+        imgList = afwImage.vectorImageF()
+        weights = afwMath.vectorF()
+        for val in self.values:
+            img = afwImage.ImageF(self.nX, self.nY, val)
+            imgList.push_back(img)
+            weights.push_back(val)
+        imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN, sctrl, weights)
+
+        wsum = reduce(lambda x, y: x + y, self.values)
+        wvalues = map(lambda x: x*x, self.values)
+        wmean = reduce(lambda x, y: x + y, wvalues)/float(wsum)
+        self.assertAlmostEqual(imgStack.get(self.nX/2, self.nY/2), wmean)
+
+
+        
         
 #################################################################
 # Test suite boiler plate

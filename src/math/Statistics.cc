@@ -241,6 +241,7 @@ template<typename IsFinite,
          typename HasValueLtMin,
          typename HasValueGtMax,
          typename InClipRange,
+         bool IsWeighted,
          typename ImageT, typename MaskT, typename VarianceT>
 math::Statistics::SumReturn math::Statistics::_sumImage(ImageT const &img,
                                                         MaskT const &msk,
@@ -271,10 +272,19 @@ math::Statistics::SumReturn math::Statistics::_sumImage(ImageT const &img,
                 
                 double const delta = (*ptr - meanCrude);
 
-                if ( *vptr > 0 && _sctrl.getWeighted() ) {
-                    sum   += delta/(*vptr);
-                    sumx2 += delta*delta/(*vptr);
-                    wsum += 1.0/(*vptr);
+                if (IsWeighted) {
+                    if ( _sctrl.getMultiplyWeights()) {
+                        sum   += (*vptr)*delta;
+                        sumx2 += (*vptr)*delta*delta;
+                        wsum  += (*vptr);
+                    } else {
+                        if (*vptr > 0) {
+                            sum   += delta/(*vptr);
+                            sumx2 += delta*delta/(*vptr);
+                            wsum  += 1.0/(*vptr);
+                        }
+                    }
+                    
                 } else {
                     sum += delta;
                     sumx2 += delta*delta;
@@ -327,11 +337,21 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(ImageT const &im
         strideCrude = 10;
     }
     if (_sctrl.getNanSafe()) {
-        loopValues = _sumImage<ChkFin, AlwaysF, AlwaysF, AlwaysT>(img, msk, var, flags,
-                                                                  nCrude, strideCrude, meanCrude);
+        if (_sctrl.getWeighted()){
+            loopValues = _sumImage<ChkFin, AlwaysF, AlwaysF, AlwaysT, true>(img, msk, var, flags,
+                                                                            nCrude, strideCrude, meanCrude);
+        } else {
+            loopValues = _sumImage<ChkFin, AlwaysF, AlwaysF, AlwaysT, false>(img, msk, var, flags,
+                                                                             nCrude, strideCrude, meanCrude);
+        }
     } else {
-        loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, AlwaysT>(img, msk, var, flags,
-                                                                   nCrude, strideCrude, meanCrude);
+        if (_sctrl.getWeighted()) {
+            loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, AlwaysT, true>(img, msk, var, flags,
+                                                                             nCrude, strideCrude, meanCrude);
+        } else {
+            loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, AlwaysT, false>(img, msk, var, flags,
+                                                                              nCrude, strideCrude, meanCrude);
+        }
     }
     nCrude = loopValues.get<0>();
 
@@ -347,13 +367,31 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(ImageT const &im
     
     // If we want max or min (you get both)
     if (flags & (MIN | MAX)){
-        loopValues = _sumImage<ChkFin, ChkMin, ChkMax, AlwaysT>(img, msk, var, flags, nCrude, 1, meanCrude);
-    // fast loop ... just the mean & variance
-    } else {
-        if (_sctrl.getNanSafe()) {
-            loopValues = _sumImage<ChkFin, AlwaysF, AlwaysF, AlwaysT>(img, msk, var, flags, nCrude, 1, meanCrude);
+        
+        if (_sctrl.getWeighted()) {
+            loopValues = _sumImage<ChkFin, ChkMin, ChkMax, AlwaysT,true>(img, msk, var,
+                                                                         flags, nCrude, 1, meanCrude);
+            // fast loop ... just the mean & variance
         } else {
-            loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, AlwaysT>(img, msk, var, flags, nCrude, 1, meanCrude);
+            loopValues = _sumImage<ChkFin, ChkMin, ChkMax, AlwaysT,false>(img, msk, var,
+                                                                          flags, nCrude, 1, meanCrude);
+        }
+    } else {
+        
+        if (_sctrl.getNanSafe()) {
+            if ( _sctrl.getWeighted()) {
+                loopValues = _sumImage<ChkFin, AlwaysF, AlwaysF, AlwaysT,true>(img, msk, var,
+                                                                               flags, nCrude, 1, meanCrude);
+            } else {
+                loopValues = _sumImage<ChkFin, AlwaysF, AlwaysF, AlwaysT,false>(img, msk, var,
+                                                                                flags, nCrude, 1, meanCrude);
+            }
+        } else {
+            if ( _sctrl.getWeighted()) {
+                loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, AlwaysT,true>(img, msk, var, flags, nCrude, 1, meanCrude);
+            } else {
+                loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, AlwaysT,false>(img, msk, var, flags, nCrude, 1, meanCrude);
+            }
         }
     }
 
@@ -422,16 +460,39 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(ImageT const &im
     
     // If we want max or min (you get both)
     if (flags & (MIN | MAX)){
-        loopValues = _sumImage<ChkFin, ChkMin, ChkMax, ChkClip>(img, msk, var, flags, nCrude, stride,
-                                                                center, cliplimit);
+        if ( _sctrl.getWeighted()) {
+            loopValues = _sumImage<ChkFin, ChkMin, ChkMax, ChkClip, true>(img, msk, var,
+                                                                          flags, nCrude, stride,
+                                                                          center, cliplimit);
+        } else {
+            loopValues = _sumImage<ChkFin, ChkMin, ChkMax, ChkClip, false>(img, msk, var,
+                                                                           flags, nCrude, stride,
+                                                                           center, cliplimit);
+        }
     // fast loop ... just the mean & variance
     } else {
-        if (_sctrl.getNanSafe()) {
-            loopValues = _sumImage<ChkFin, AlwaysF, AlwaysF, ChkClip>(img, msk, var, flags, nCrude, stride,
-                                                                      center, cliplimit);
+        if ( _sctrl.getWeighted()) {
+            
+            if (_sctrl.getNanSafe()) {
+                loopValues = _sumImage<ChkFin, AlwaysF, AlwaysF, ChkClip, true>(img, msk, var,
+                                                                                flags, nCrude, stride,
+                                                                                center, cliplimit);
+            } else {
+                loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, ChkClip, true>(img, msk, var,
+                                                                                 flags, nCrude, stride,
+                                                                                 center, cliplimit);
+            }
         } else {
-            loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, ChkClip>(img, msk, var, flags, nCrude, stride,
-                                                                       center, cliplimit);
+            
+            if (_sctrl.getNanSafe()) {
+                loopValues = _sumImage<ChkFin, AlwaysF, AlwaysF, ChkClip, false>(img, msk, var,
+                                                                                 flags, nCrude, stride,
+                                                                                 center, cliplimit);
+            } else {
+                loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, ChkClip, false>(img, msk, var,
+                                                                                  flags, nCrude, stride,
+                                                                                  center, cliplimit);
+            }
         }
     }
     
