@@ -9,7 +9,6 @@
  */
 
 #include "boost/shared_ptr.hpp"
-#include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Statistics.h"
 #include "lsst/afw/math/Interpolate.h"
 
@@ -25,7 +24,19 @@ enum UndersampleStyle {
     INCREASE_NXNYSAMPLE,
 };
 
-UndersampleStyle stringToUndersampleStyle(std::string const style);
+
+/**
+ * @brief Conversion function to switch a string to an UndersampleStyle
+ *
+ */
+UndersampleStyle stringToUndersampleStyle(std::string const style) {
+    std::map<std::string, UndersampleStyle> undersampleStrings;
+    undersampleStrings["THROW_EXCEPTION"]     = THROW_EXCEPTION;
+    undersampleStrings["REDUCE_INTERP_ORDER"] = REDUCE_INTERP_ORDER;
+    undersampleStrings["INCREASE_NXNYSAMPLE"] = INCREASE_NXNYSAMPLE;
+    return undersampleStrings[style];
+}
+
     
 /**
  * @class BackgroundControl
