@@ -1,0 +1,58 @@
+namespace lsst { namespace afw { namespace math {
+/**
+ \page SpatialCellSetExample Example of SpatialCellSet
+
+ \dontinclude SpatialCellExample.cc
+
+Demonstrate the use of FootprintFunctor%s to work with Footprint%s; the
+code's in \link SpatialCellExample.cc\endlink.
+
+Start by including needed headers and declaring namespace aliases
+\until PixelT
+
+We then define a function that reads an FITS file and finds a set of object in it
+\skipline std::pair
+\until readImage
+
+First read a part of the FITS file. We use <TT>eups::productDir</TT> to find the directory, and only read a
+part of the %image (that's the \c BBox).  The use of a \c boost::shared_ptr<MaskedImage> (written as \c ::Ptr)
+is because I want to call the actual constructor in the scope of the try block, but I want to use the %image at
+function scope.
+
+\until exit
+\until }
+
+Subtract the background;  the \c try block is in case the %image is too small for a spline fit.
+
+\until makeBackground
+\until makeBackground
+\until }
+
+Run an object detector
+\until DETECTED
+\until DETECTED
+
+And return the desired data
+\until }
+
+OK, now to actually use the \c SpatialCell code.
+
+We start by calling \c readImage, and use \c boost::tie to unpack the \c std::pair
+
+\skipline SpatialCellSetDemo
+\until tie
+
+Running the example should print
+<PRE>
+There are 22 candidates
+Cell 0x0 nobj=2 N_good=2 NPix_good=1858
+Cell 1x0 nobj=2 N_good=1 NPix_good=210
+Cell 0x1 nobj=4 N_good=4 NPix_good=1305
+Cell 1x1 nobj=4 N_good=1 NPix_good=360
+Cell 0x2 nobj=3 N_good=1 NPix_good=99
+Cell 1x2 nobj=7 N_good=2 NPix_good=288
+</PRE>
+
+\example SpatialCellExample.cc
+ */
+}}}
