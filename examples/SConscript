@@ -59,6 +59,9 @@ for cfile in glob.glob("ticket*.cc"):
 # Build the swig extension used to illustrate SpatialCells
 #
 env.CheckSwig("python", ilang="c++",
-              includedProducts="afw utils daf_base pex_exceptions pex_logging pex_policy daf_persistence daf_data security")
-testSpatialCellLib = env.LoadableModuleIncomplete("_testSpatialCellLib", ["testSpatialCellLib.i"],
+              includedProducts=["afw", "utils", "daf_base", "daf_persistence", "daf_data",
+                                "pex_exceptions", "pex_logging", "pex_policy", "security"])
+
+testSpatialCellLib = env.LoadableModuleIncomplete("_testSpatialCellLib",
+                                                  ["testSpatialCellLib.i", "SpatialCell.cc"],
                                                   LIBS=env.getlibs("afw"))
