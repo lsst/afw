@@ -204,8 +204,20 @@ typename image::Image<PixelT>::Ptr math::Background::getImage() const {
     return bg;
 }
 
-
-
+/************************************************************************************************************/
+/**
+ * @brief Conversion function to switch a string to an UndersampleStyle
+ */
+math::UndersampleStyle math::stringToUndersampleStyle(std::string const style) {
+    static std::map<std::string, UndersampleStyle> undersampleStrings;
+    if (undersampleStrings.size() == 0) {
+        undersampleStrings["THROW_EXCEPTION"]     = THROW_EXCEPTION;
+        undersampleStrings["REDUCE_INTERP_ORDER"] = REDUCE_INTERP_ORDER;
+        undersampleStrings["INCREASE_NXNYSAMPLE"] = INCREASE_NXNYSAMPLE;
+    }
+    
+    return undersampleStrings[style];
+}
 
 /**
  * @brief Method to see if the requested nx,ny are sufficient for the requested interpolation style.

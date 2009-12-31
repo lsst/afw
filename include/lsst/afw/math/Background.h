@@ -9,6 +9,7 @@
  */
 
 #include "boost/shared_ptr.hpp"
+#include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Statistics.h"
 #include "lsst/afw/math/Interpolate.h"
 
@@ -17,26 +18,17 @@ namespace lsst {
 namespace afw {
 namespace math {
 
-
+//
+// Remember to update stringToUndersampleStyle if you change this.
+// If this happens often, we can play CPP games to put the definition in exactly one place, although swig
+// may not be happy (so we could think m4 thoughts instead)
+//
 enum UndersampleStyle {
     THROW_EXCEPTION,
     REDUCE_INTERP_ORDER,
     INCREASE_NXNYSAMPLE,
 };
-
-
-/**
- * @brief Conversion function to switch a string to an UndersampleStyle
- *
- */
-UndersampleStyle stringToUndersampleStyle(std::string const style) {
-    std::map<std::string, UndersampleStyle> undersampleStrings;
-    undersampleStrings["THROW_EXCEPTION"]     = THROW_EXCEPTION;
-    undersampleStrings["REDUCE_INTERP_ORDER"] = REDUCE_INTERP_ORDER;
-    undersampleStrings["INCREASE_NXNYSAMPLE"] = INCREASE_NXNYSAMPLE;
-    return undersampleStrings[style];
-}
-
+UndersampleStyle stringToUndersampleStyle(std::string const style);
     
 /**
  * @class BackgroundControl
