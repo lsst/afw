@@ -19,7 +19,7 @@ Various swigged-up C++ classes for testing
 #include "lsst/pex/policy.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/math.h"
-#include "SpatialCell.h"
+#include "testSpatialCell.h"
 %}
 
 %import "lsst/afw/image/imageLib.i"
@@ -30,4 +30,4 @@ SWIG_SHARED_PTR_DERIVED(TestImageCandidate,
                         lsst::afw::math::SpatialCellImageCandidate<lsst::afw::image::Image<float> >,
                         TestImageCandidate);
 
-%include "SpatialCell.h"
+%include "testSpatialCell.h"

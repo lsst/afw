@@ -63,6 +63,6 @@ env.CheckSwig("python", ilang="c++",
                                 "pex_exceptions", "pex_logging", "pex_policy", "security"])
 
 testSpatialCellLib = env.LoadableModuleIncomplete("_testSpatialCellLib",
-                                                  ["testSpatialCellLib.i", "SpatialCell.cc"],
+                                                  ["testSpatialCellLib.i", "testSpatialCell.cc"],
                                                   LIBS=env.getlibs("afw"))
-env.Program(["testSpatialCell.cc", "SpatialCell.cc"], LIBS=env.getlibs("afw"))
+env.Program(["SpatialCellExample.cc", "testSpatialCell.cc"], LIBS=env.getlibs("afw"))

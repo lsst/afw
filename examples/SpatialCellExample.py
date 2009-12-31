@@ -3,10 +3,10 @@
 An example using SpatialCells
 
 Run with:
-   python testSpatialCell.py
+   python SpatialCellExample.py
 or
    python
-   >>> import testSpatialCell; testSpatialCell.run()
+   >>> import SpatialCellExample; SpatialCellExample.run()
 """
 
 import os
