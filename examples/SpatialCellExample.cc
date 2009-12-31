@@ -66,7 +66,7 @@ readImage() {
     int const grow = 1;
     bool const isotropic = false;
     afwDetection::FootprintSet<PixelT>::Ptr grownFs = afwDetection::makeFootprintSet(*fs, grow, isotropic);
-    grownFs->setMask(mi->getMask().get(), "DETECTED");
+    grownFs->setMask(mi->getMask(), "DETECTED");
 
     return std::make_pair(mi, grownFs);
 }

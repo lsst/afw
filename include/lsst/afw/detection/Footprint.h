@@ -256,6 +256,12 @@ public:
         detection::setMaskFromFootprintList(mask, getFootprints(),
                                             image::Mask<MaskPixelT>::getPlaneBitMask(planeName));        
     }
+
+    void setMask(typename lsst::afw::image::Mask<MaskPixelT>::Ptr mask, ///< Set bits in the mask
+                 std::string const& planeName   ///< Here's the name of the mask plane to fit
+                ) {
+        setMask(mask.get(), planeName);
+    }
 private:
     FootprintList & _footprints;        //!< the Footprints of detected objects
     image::BBox _region;                //!< The corners of the MaskedImage that the detections live in
