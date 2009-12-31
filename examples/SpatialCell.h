@@ -1,5 +1,6 @@
 #if !defined(SPATIALCELL_H)
 #define SPATIALCELL_H
+#include "boost/shared_ptr.hpp"
 #include "lsst/pex/policy.h"
 #include "lsst/afw/math.h"
 
@@ -8,6 +9,7 @@
  */
 class TestCandidate : public lsst::afw::math::SpatialCellCandidate {
 public:
+    typedef boost::shared_ptr<TestCandidate> Ptr;
     TestCandidate(float const xCenter, float const yCenter, float const flux);
     double getCandidateRating() const;
 private:
@@ -38,6 +40,7 @@ private:
  */
 class TestImageCandidate : public lsst::afw::math::SpatialCellImageCandidate<lsst::afw::image::Image<float> > {
 public:
+    typedef boost::shared_ptr<TestImageCandidate> Ptr;
     typedef lsst::afw::image::Image<float> ImageT;
 
     TestImageCandidate(float const xCenter, float const yCenter, float const flux);
