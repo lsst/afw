@@ -1,3 +1,7 @@
+/*
+ * This C++ example does the same thing as SpatialCellExample.py.  The latter of the python version
+ * is that you can set display == True and see what's going on
+ */
 #include <string>
 #include "lsst/utils/Utils.h"
 #include "lsst/pex/exceptions.h"
@@ -59,7 +63,7 @@ readImage() {
     int npixMin = 5;                    // we didn't smooth
     afwDetection::FootprintSet<PixelT>::Ptr fs =
         afwDetection::makeFootprintSet(*mi, threshold, "DETECTED", npixMin);
-    int const grow = 2;
+    int const grow = 1;
     bool const isotropic = false;
     afwDetection::FootprintSet<PixelT>::Ptr grownFs = afwDetection::makeFootprintSet(*fs, grow, isotropic);
     grownFs->setMask(mi->getMask().get(), "DETECTED");
@@ -81,77 +85,64 @@ void SpatialCellSetDemo() {
     afwMath::SpatialCellSet cellSet(afwImage::BBox(afwImage::PointI(0, 0), im->getWidth(), im->getHeight()),
                                     260, 200);
     /*
-     * Populate cellSet
+     * Populate the cellSet using the detected object in the FootprintSet
      */
     for (afwDetection::FootprintSet<PixelT>::FootprintList::iterator ptr = fs->getFootprints().begin(),
              end = fs->getFootprints().end(); ptr != end; ++ptr) {
         afwImage::BBox const bbox = (*ptr)->getBBox();
         float const xc = (bbox.getX0() + bbox.getX1())/2.0;
         float const yc = (bbox.getY0() + bbox.getY1())/2.0;
-        TestCandidate::Ptr tc(new TestCandidate(xc, yc, (*im->getImage())(int(xc + 0.5), int(yc + 0.5))));
+        ExampleCandidate::Ptr tc(new ExampleCandidate(xc, yc, im->getImage(), bbox));
         cellSet.insertCandidate(tc);
     }
     /*
      * OK, the SpatialCellList is populated.  Let's do something with it
      */
-    TestCandidateVisitor visitor;
+    ExampleCandidateVisitor visitor;
 
     cellSet.visitCandidates(&visitor);
     std::cout << boost::format("There are %d candidates\n") % visitor.getN();
     /*
-     * Now label the first candidate in each cell as bad
+     * Now label too-small object as BAD
      */
     for (unsigned int i = 0; i != cellSet.getCellList().size(); ++i) {
         afwMath::SpatialCell::Ptr cell = cellSet.getCellList()[i];
 
-        (*cell->begin())->setStatus(afwMath::SpatialCellCandidate::BAD);
+        int j = 0;
+        for (afwMath::SpatialCell::iterator candidate = cell->begin(), candidateEnd = cell->end();
+             candidate != candidateEnd; ++candidate, ++j) {
+            int w, h;
+            boost::tie(w, h) =
+                dynamic_cast<ExampleCandidate *>((*candidate).get())->getBBox().getDimensions();
+            
+#if 0
+            std::cout << boost::format("%d %5.2f %5.2f %d\n")
+                % i % (*candidate)->getXCenter() % (*candidate)->getYCenter() % (w*h);
+#endif
+            if (w*h < 75) {
+                (*candidate)->setStatus(afwMath::SpatialCellCandidate::BAD);
+            }
+        }
+    }
+    /*
+     * Now count the good and bad candidates
+     */        
+    for (unsigned int i = 0; i != cellSet.getCellList().size(); ++i) {
+        afwMath::SpatialCell::Ptr cell = cellSet.getCellList()[i];
         cell->visitCandidates(&visitor);
 
         cell->setIgnoreBad(false);       // include BAD in cell.size()
-        std::cout << boost::format("%s nobj=%d Ngood=%d\n") % cell->getLabel() % cell->size() % visitor.getN();
+        std::cout << boost::format("%s nobj=%d N_good=%d NPix_good=%d\n") %
+            cell->getLabel() % cell->size() % visitor.getN() % visitor.getNPix();
     }
 }
 
-/*
--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-def TestImageCandidate():
-    cellSet = afwMath.SpatialCellSet(afwImage.BBox(afwImage.PointI(0, 0), 501, 501), 2, 3)
-
-    # Test that we can use SpatialCellImageCandidate
-
-    flux = 10
-    cellSet.insertCandidate(testSpatialCellLib.TestImageCandidate(0, 0, flux))
-
-    cand = cellSet.getCellList()[0][0]
-    #
-    # Swig doesn't know that we're a SpatialCellImageCandidate;  all it knows is that we have
-    # a SpatialCellCandidate, and SpatialCellCandidates don't know about getImage;  so cast the
-    # pointer to SpatialCellImageCandidate<Image<PixelT> > and all will be well;
-    #
-    # First check that we _can't_ cast to SpatialCellImageCandidate<MaskedImage<PixelT> >
-    #
-    assert(afwMath.cast_SpatialCellImageCandidateMF(cand), None)
-
-    cand = afwMath.cast_SpatialCellImageCandidateF(cand)
-
-    width, height = 15, 21
-    cand.setWidth(width); cand.setHeight(height);
-
-    im = cand.getImage()
-    if False and display:
-        ds9.mtv(im, title="Candidate", frame=1)
-    assert(im.get(0,0), flux) # This is how TestImageCandidate sets its pixels
-    assert(im.getWidth(), width)
-    assert(im.getHeight(), height)
-        
-*/
-
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 /*
- * Run the tests
+ * Run the example
  */
 int main() {
     std::pair<afwImage::MaskedImage<PixelT>::Ptr, afwDetection::FootprintSet<PixelT>::Ptr> data = readImage();
+
     SpatialCellSetDemo();
 }

@@ -69,7 +69,7 @@ def readImage(filename=None):
     threshold = afwDetection.Threshold(5, afwDetection.Threshold.STDEV)
     npixMin = 5                         # we didn't smooth
     fs = afwDetection.makeFootprintSet(mi, threshold, "DETECTED", npixMin)
-    grow, isotropic = 2, False
+    grow, isotropic = 1, False
     fs = afwDetection.makeFootprintSet(fs, grow, isotropic)
     fs.setMask(mi.getMask(), "DETECTED")
 
@@ -109,79 +109,62 @@ def SpatialCellSetDemo(filename=None):
         bbox = foot.getBBox()
         xc = (bbox.getX0() + bbox.getX1())/2.0
         yc = (bbox.getY0() + bbox.getY1())/2.0
-        cellSet.insertCandidate(testSpatialCellLib.TestCandidate(xc, yc, 
-                                                                 im.get(int(xc + 0.5), int(yc + 0.5))[0]))
+
+        cellSet.insertCandidate(testSpatialCellLib.ExampleCandidate(xc, yc, im.getImage(), bbox))
     #
     # OK, the SpatialCellList is populated.  Let's do something with it
     #
-    visitor = testSpatialCellLib.TestCandidateVisitor()
+    visitor = testSpatialCellLib.ExampleCandidateVisitor()
 
     cellSet.visitCandidates(visitor)
     print "There are %d candidates" % (visitor.getN())
     
     ctypes = ["red", "yellow", "cyan",]
-    for i in range(len(cellSet.getCellList())):
+    for i in range(cellSet.getCellList().size()):
         cell = cellSet.getCellList()[i]
         cell.visitCandidates(visitor)
 
-        j = 1
+        j = 0
         for cand in cell:
-            ds9.dot("%s:%d" % (cand.getId(), j),
-                    cand.getXCenter(), cand.getYCenter(), size=4, ctype=ctypes[i%len(ctypes)])
+            #
+            # Swig doesn't know that we're a SpatialCellImageCandidate;  all it knows is that we have
+            # a SpatialCellCandidate so we need an explicit (dynamic) cast
+            #
+            cand = testSpatialCellLib.cast_ExampleCandidate(cand)
+
+            w, h = cand.getBBox().getDimensions()
+            if w*h < 75:
+                #print "%d %5.2f %5.2f %d" % (i, cand.getXCenter(), cand.getYCenter(), w*h)
+                cand.setStatus(afwMath.SpatialCellCandidate.BAD)
+
+                if display:
+                    ds9.dot("o", cand.getXCenter(), cand.getYCenter(), size=4, ctype=ctypes[i%len(ctypes)])
+            else:
+                if display:
+                    ds9.dot("%s:%d" % (cand.getId(), j),
+                            cand.getXCenter(), cand.getYCenter(), size=4, ctype=ctypes[i%len(ctypes)])
             j += 1
 
-        #print [afwMath.cast_SpatialCellImageCandidateMF(cand) for cand in cell]
+            im = cand.getImage()
+            if 0 and display:
+                ds9.mtv(im, title="Candidate", frame=1)
     #
-    # Now label the first candidate in each cell as bad
+    # Now count the good and bad candidates
     #
     for i in range(len(cellSet.getCellList())):
         cell = cellSet.getCellList()[i]
-
-        cell[0].setStatus(afwMath.SpatialCellCandidate.BAD)
         cell.visitCandidates(visitor)
 
         cell.setIgnoreBad(False)        # include BAD in cell.size()
-        print "%s nobj=%d Ngood=%d" % (cell.getLabel(), cell.size(), visitor.getN())
+        print "%s nobj=%d N_good=%d NPix_good=%d" % \
+              (cell.getLabel(), cell.size(), visitor.getN(), visitor.getNPix())
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def TestImageCandidate():
-    cellSet = afwMath.SpatialCellSet(afwImage.BBox(afwImage.PointI(0, 0), 501, 501), 2, 3)
-
-    # Test that we can use SpatialCellImageCandidate
-
-    flux = 10
-    cellSet.insertCandidate(testSpatialCellLib.TestImageCandidate(0, 0, flux))
-
-    cand = cellSet.getCellList()[0][0]
-    #
-    # Swig doesn't know that we're a SpatialCellImageCandidate;  all it knows is that we have
-    # a SpatialCellCandidate, and SpatialCellCandidates don't know about getImage;  so cast the
-    # pointer to SpatialCellImageCandidate<Image<float> > and all will be well;
-    #
-    # First check that we _can't_ cast to SpatialCellImageCandidate<MaskedImage<float> >
-    #
-    assert(afwMath.cast_SpatialCellImageCandidateMF(cand), None)
-
-    cand = afwMath.cast_SpatialCellImageCandidateF(cand)
-
-    width, height = 15, 21
-    cand.setWidth(width); cand.setHeight(height);
-
-    im = cand.getImage()
-    if False and display:
-        ds9.mtv(im, title="Candidate", frame=1)
-    assert(im.get(0,0), flux) # This is how TestImageCandidate sets its pixels
-    assert(im.getWidth(), width)
-    assert(im.getHeight(), height)
-        
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-def run(exit=False):
+def run():
     """Run the tests"""
 
     SpatialCellSetDemo()
-    TestImageCandidate()
 
 if __name__ == "__main__":
-    run(True)
+    run()
