@@ -1,0 +1,104 @@
+// -*- lsst-c++ -*-
+/**
+ * @file simpleStacker.cc
+ * @author Steve Bickerton
+ * @brief An example executible which calls the example 'stack' code 
+ *
+ */
+#include <iostream>
+
+#define BOOST_TEST_DYN_LINK
+#define BOOST_TEST_MODULE Stacker
+
+#include "boost/test/unit_test.hpp"
+#include "boost/test/floating_point_comparison.hpp"
+
+#include "lsst/afw/image/Image.h"
+#include "lsst/afw/math/Stack.h"
+
+namespace image = lsst::afw::image;
+namespace math = lsst::afw::math;
+
+typedef image::Image<float> ImageF;
+typedef image::MaskedImage<float> MImageF;
+typedef std::vector<float> VecF;
+typedef boost::shared_ptr<VecF> VecFPtr;
+
+BOOST_AUTO_TEST_CASE(MeanStack) {
+    
+    int const nImg = 10;
+    int const nX = 64;
+    int const nY = 64;
+
+    // ===========================================================================
+    // Plan: build lists (std::vectors) of Image, MaskedImage, and std::vector
+    //       and set the pixels in each image to it's number in the list.
+    // Crudely test the weighting by setting the weights to zero for the first half of the list
+
+    
+    // load a vector with weights to demonstrate weighting each image/vector by a constant weight.
+    std::vector<float> wvec(nImg, 1.0);
+    for (int iImg = 0; iImg < nImg; ++iImg) {
+        if (iImg < nImg/2) {
+            wvec[iImg] = 0.0;
+        }
+    }
+    // we'll need a StatisticsControl object with weighted stats specified.
+    math::StatisticsControl sctrl;
+    sctrl.setWeighted(true);
+
+    // get the known values
+    float knownMean = 0.0;
+    float knownWMean = 0.0;
+    float wsum = 0.0;
+    for (int iImg = 0; iImg < nImg; ++iImg) {
+        knownMean += iImg;
+        knownWMean += wvec[iImg]*iImg;
+        wsum += wvec[iImg];
+    }
+    knownMean /= nImg;
+    knownWMean /= wsum;
+
+    
+    // ====================================================
+    // regular image
+    std::vector<ImageF::Ptr> imgList;
+    for (int iImg = 0; iImg < nImg; ++iImg) {
+        ImageF::Ptr img = ImageF::Ptr (new ImageF(nX, nY, iImg));
+        imgList.push_back(img);
+    }
+    ImageF::Ptr imgStack = math::statisticsStack<float>(imgList, math::MEAN);
+    ImageF::Ptr wimgStack = math::statisticsStack<float>(imgList, math::MEAN, sctrl, wvec);
+    BOOST_CHECK_EQUAL((*imgStack)(nX/2, nY/2), knownMean);
+    BOOST_CHECK_EQUAL((*wimgStack)(nX/2, nY/2), knownWMean);
+
+
+    // ====================================================
+    // masked image
+    std::vector<MImageF::Ptr> mimgList;
+    for (int iImg = 0; iImg < nImg; ++iImg) {
+        MImageF::Ptr mimg = MImageF::Ptr(new MImageF(nX,nY));
+        *mimg->getImage()    = iImg;
+        *mimg->getMask()     = 0x0;
+        *mimg->getVariance() = iImg;
+        mimgList.push_back(mimg);
+    }
+    MImageF::Ptr mimgStack = math::statisticsStack<float>(mimgList, math::MEAN);
+    MImageF::Ptr wmimgStack = math::statisticsStack<float>(mimgList, math::MEAN, sctrl, wvec);
+    BOOST_CHECK_EQUAL((*(mimgStack->getImage()))(nX/2, nY/2), knownMean);
+    BOOST_CHECK_EQUAL((*(wmimgStack->getImage()))(nX/2, nY/2), knownWMean);
+    
+
+    // ====================================================
+    // std::vector, and also with a constant weight vector
+    std::vector<VecFPtr> vecList;
+    for (int iImg = 0; iImg < nImg; ++iImg) {
+        VecFPtr v = VecFPtr(new VecF(nX*nY, iImg));
+        vecList.push_back(v);
+    }
+    VecFPtr vecStack = math::statisticsStack<float>(vecList, math::MEAN);
+    VecFPtr wvecStack = math::statisticsStack<float>(vecList, math::MEAN, sctrl, wvec);
+    BOOST_CHECK_EQUAL((*vecStack)[nX*nY/2], knownMean);
+    BOOST_CHECK_EQUAL((*wvecStack)[nX*nY/2], knownWMean);
+
+}
