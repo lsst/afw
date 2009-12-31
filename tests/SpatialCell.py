@@ -80,7 +80,7 @@ class SpatialCellTestCase(unittest.TestCase):
         #
         # Now label one candidate as bad
         #
-        ptr = self.cell[2].setStatus(afwMath.SpatialCellCandidate.BAD)
+        self.cell[2].setStatus(afwMath.SpatialCellCandidate.BAD)
 
         self.assertEqual(self.cell.size(), self.nCandidate - 1)
         self.assertEqual(self.cell.end() - self.cell.begin(), self.nCandidate - 1)
@@ -100,6 +100,16 @@ class SpatialCellTestCase(unittest.TestCase):
         self.assertEqual(self.cell.getCandidateById(-1, True), None)
         utilsTests.assertRaisesLsstCpp(self, pexExcept.NotFoundException, tst)
 
+    def testSetIteratorBad(self):
+        """Setting a candidate BAD shouldn't stop us seeing the rest of the candidates"""
+        i = 0
+        for cand in self.cell:
+            if i == 1:
+                cand.setStatus(afwMath.SpatialCellCandidate.BAD)
+            i += 1
+
+        self.assertEqual(i, self.nCandidate)
+        
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class SpatialCellSetTestCase(unittest.TestCase):
