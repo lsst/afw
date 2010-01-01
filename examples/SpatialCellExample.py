@@ -160,7 +160,7 @@ def SpatialCellSetDemo(filename=None):
               (cell.getLabel(), cell.size(), visitor.getN(), visitor.getNPix())
 
 
-    cellSet.setIgnoreBad(True)           # don't include BAD in cell.size()
+    cellSet.setIgnoreBad(True)           # don't visit BAD candidates
     cellSet.visitCandidates(visitor)
     print "There are %d good candidates" % (visitor.getN())
 

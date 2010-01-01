@@ -84,7 +84,7 @@ void SpatialCellSetDemo() {
             cell->getLabel() % cell->size() % visitor.getN() % visitor.getNPix();
     }
 
-    cellSet.setIgnoreBad(true);           // don't include BAD in cell.size()
+    cellSet.setIgnoreBad(true);           // don't visit BAD candidates
     cellSet.visitCandidates(&visitor);
     std::cout << boost::format("There are %d good candidates\n") % visitor.getN();
 }
