@@ -4,8 +4,6 @@
  *
  * @brief Class to ensure constraints for spatial modeling
  *
- * @author Andrew Becker, University of Washington
- *
  * @ingroup afw
  */
 
@@ -23,7 +21,7 @@ namespace lsst {
 namespace afw {
 namespace math {
 
-    /************************************************************************************************************/
+    /********************************************************************************************************/
     /// A class to pass around to all our Candidates
     class SpatialCellCandidate;
 
@@ -185,11 +183,13 @@ namespace math {
     /** 
      * @brief Class to ensure constraints for spatial modeling
      * 
-     * A given %image is be divided up into cells, with each cell represented by an instance of this class.
+     * A given %image is divided up into cells, with each cell represented by an instance of this class.
      * Each cell itself contains a list of instances of classes derived from SpatialCellCandidate.  One class
      * member from each cell will be chosen to fit to a spatial model.  In case of a poor fit, the next class
      * instance in the list will be fit for.  If all instances in a list are rejected from the spatial model,
      * the best one will be used.
+     *
+     * \sa \link SpatialCellSetExample\endlink
      */
     class SpatialCell {
     public:

@@ -4,14 +4,14 @@ namespace lsst { namespace afw { namespace math {
 
  \dontinclude SpatialCellExample.cc
 
-Demonstrate the use of FootprintFunctor%s to work with Footprint%s; the
-code's in \link SpatialCellExample.cc\endlink.
+Demonstrate the use of SpatialCellSet%s; the code's in \link SpatialCellExample.cc\endlink.
 
 Start by including needed headers, and declaring namespace aliases and a routine \c readImage
 \until std::pair
 
-We start by calling \c readImage, and use \c boost::tie to unpack the \c std::pair.  The \c tie call
-does what you think, unpacking a \c pair into a couple of variables (it works for \c boost::tuple too, and is in TR1's \c \<tuple\> header).
+We start by calling \c readImage, and use \c boost::tie to unpack the \c std::pair.  The \c tie call does what
+you think, unpacking a \c pair into a couple of variables (it works for \c boost::tuple too, and is in TR1's
+\c \<tuple\> header).
 
 \skipline SpatialCellSetDemo
 \until tie
