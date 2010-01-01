@@ -294,6 +294,8 @@ namespace math {
 
         SpatialCellCandidate::Ptr getCandidateById(int id, bool noThrow=false);
 
+        void setIgnoreBad(bool ignoreBad);
+
     private:
         lsst::afw::image::BBox _region;   // Dimensions of overall image
         CellList _cellList;               // List of SpatialCells

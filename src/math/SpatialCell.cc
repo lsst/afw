@@ -441,4 +441,11 @@ SpatialCellCandidate::Ptr SpatialCellSet::getCandidateById(int id, ///< The desi
     }
 }
 
+/// Set whether we should omit BAD candidates from candidate list when traversing
+void SpatialCellSet::setIgnoreBad(bool ignoreBad) {
+    for (CellList::iterator cell = _cellList.begin(), end = _cellList.end(); cell != end; ++cell) {
+        (*cell)->setIgnoreBad(ignoreBad);
+    }
+}
+    
 }}}

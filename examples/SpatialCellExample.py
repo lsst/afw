@@ -159,6 +159,11 @@ def SpatialCellSetDemo(filename=None):
         print "%s nobj=%d N_good=%d NPix_good=%d" % \
               (cell.getLabel(), cell.size(), visitor.getN(), visitor.getNPix())
 
+
+    cellSet.setIgnoreBad(True)           # don't include BAD in cell.size()
+    cellSet.visitCandidates(visitor)
+    print "There are %d good candidates" % (visitor.getN())
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def run():
