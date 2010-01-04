@@ -82,6 +82,9 @@ SWIG_SHARED_PTR(SpatialCell, lsst::afw::math::SpatialCell);
     %pythoncode {
         def __getitem__(self, ind):
             return [c for c in self.begin()][ind]
+
+        def __iter__(self):
+            return self.begin().__iter__()
     }
 }
 

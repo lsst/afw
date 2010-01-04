@@ -42,6 +42,8 @@ See also \ref secPixelAccessReference. LSST %image access is modelled after the 
 and
    http://www.boost.org/doc/libs/1_36_0/libs/gil/doc/html/gildesignguide.html
 - \ref secImageIO
+
+There are also some algorithms analogous to the STL's @c \<algorithm\>; see \ref secImageAlgorithm.
 */
 
 /**
@@ -276,6 +278,8 @@ Annotated examples are available for \link StatisticsExample Statistics\endlink.
  - Interpolate
  - Convolution of images is handled by convolve()
  - Warping Images is handled by warpImage()
+ - Manipulating spatially-distributed sets of objects (e.g. PSF candidates);
+ an annotated example is available as \link SpatialCellSetExample\endlink
 
 */
 }}}

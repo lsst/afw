@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
         afwImage::MaskedImage<Pixel> mImage(argv[1]);
         
         // construct kernel
-        afwMath::GaussianFunction2<Pixel> gaussFunc(sigma, sigma);
+        afwMath::GaussianFunction2<Pixel> gaussFunc(sigma, sigma, 0);
         afwMath::AnalyticKernel kernel(kernelCols, kernelRows, gaussFunc);
     
         // convolve

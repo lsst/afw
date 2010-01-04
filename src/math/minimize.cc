@@ -11,18 +11,88 @@
  * @ingroup afw
  */
 
-#include <string> // for upar.add
+#include <string>
 
-#include "Minuit/FunctionMinimum.h"
-#include "Minuit/MnMigrad.h"
-#include "Minuit/MnMinos.h"
-#include "Minuit/MnPrint.h"
+#include "Minuit2/FunctionMinimum.h"
+#include "Minuit2/MnMigrad.h"
+#include "Minuit2/MnMinos.h"
+#include "Minuit2/MnPrint.h"
 
 #include "lsst/pex/logging/Trace.h"
+#include "lsst/afw/math/minimize.h"
+
+namespace afwMath = lsst::afw::math;
+
+namespace {
+    /**
+     * @brief Minuit wrapper for a function(x)
+     */
+    template<typename ReturnT>
+    class MinimizerFunctionBase1 : public ROOT::Minuit2::FCNBase, public lsst::daf::data::LsstBase {
+    public:
+        explicit MinimizerFunctionBase1();
+        explicit MinimizerFunctionBase1(
+            afwMath::Function1<ReturnT> const &function,
+            std::vector<double> const &measurementList,
+            std::vector<double> const &varianceList,
+            std::vector<double> const &xPositionList,
+            double errorDef
+        );
+        virtual ~MinimizerFunctionBase1() {};
+        // Required by ROOT::Minuit2::FCNBase
+        virtual double Up() const { return _errorDef; }
+        virtual double operator() (const std::vector<double>&) const;
+
+        inline std::vector<double> getMeasurements() const {return _measurementList;}
+        inline std::vector<double> getVariances() const {return _varianceList;}
+        inline std::vector<double> getPositions() const {return _xPositionList;}
+        inline void setErrorDef(double def) {_errorDef=def;}
+    private:
+        boost::shared_ptr<afwMath::Function1<ReturnT> > _functionPtr;
+        std::vector<double> _measurementList;
+        std::vector<double> _varianceList;
+        std::vector<double> _xPositionList;
+        double _errorDef;
+    };
+        
+    /**
+     * @brief Minuit wrapper for a function(x, y)
+     */
+    template<typename ReturnT>
+    class MinimizerFunctionBase2 : public ROOT::Minuit2::FCNBase, public lsst::daf::data::LsstBase {
+    public:
+        explicit MinimizerFunctionBase2();
+        explicit MinimizerFunctionBase2(
+            afwMath::Function2<ReturnT> const &function,
+            std::vector<double> const &measurementList,
+            std::vector<double> const &varianceList,
+            std::vector<double> const &xPositionList,
+            std::vector<double> const &yPositionList,
+            double errorDef
+        );
+        virtual ~MinimizerFunctionBase2() {};
+        // Required by ROOT::Minuit2::FCNBase
+        virtual double Up() const { return _errorDef; }
+        virtual double operator() (const std::vector<double>& par) const;
+        
+        inline std::vector<double> getMeasurements() const {return _measurementList;}
+        inline std::vector<double> getVariances() const {return _varianceList;}
+        inline std::vector<double> getPosition1() const {return _xPositionList;}
+        inline std::vector<double> getPosition2() const {return _yPositionList;}
+        inline void setErrorDef(double def) {_errorDef=def;}
+    private:
+        boost::shared_ptr<afwMath::Function2<ReturnT> > _functionPtr;
+        std::vector<double> _measurementList;
+        std::vector<double> _varianceList;
+        std::vector<double> _xPositionList;
+        std::vector<double> _yPositionList;
+        double _errorDef;
+    };
+}
 
 // Constructors
 template<typename ReturnT>
-lsst::afw::math::MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1()
+MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1()
 :
     lsst::daf::data::LsstBase(typeid(this)),
     _functionPtr(),
@@ -33,15 +103,15 @@ lsst::afw::math::MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1()
 {}
 
 template<typename ReturnT>
-lsst::afw::math::MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1(
-    lsst::afw::math::Function1<ReturnT> const &function,
+MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1(
+    afwMath::Function1<ReturnT> const &function,
     std::vector<double> const &measurementList,
     std::vector<double> const &varianceList,
     std::vector<double> const &xPositionList, 
     double errorDef)
 :
     lsst::daf::data::LsstBase(typeid(this)),
-    _functionPtr(function.copy()),
+    _functionPtr(function.clone()),
     _measurementList(measurementList),
     _varianceList(varianceList),
     _xPositionList(xPositionList),
@@ -49,7 +119,7 @@ lsst::afw::math::MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1(
 {}
 
 template<typename ReturnT>
-lsst::afw::math::MinimizerFunctionBase2<ReturnT>::MinimizerFunctionBase2()
+MinimizerFunctionBase2<ReturnT>::MinimizerFunctionBase2()
 :
     lsst::daf::data::LsstBase(typeid(this)),
     _functionPtr(),
@@ -61,8 +131,8 @@ lsst::afw::math::MinimizerFunctionBase2<ReturnT>::MinimizerFunctionBase2()
 {}
 
 template<typename ReturnT>
-lsst::afw::math::MinimizerFunctionBase2<ReturnT>::MinimizerFunctionBase2(
-    lsst::afw::math::Function2<ReturnT> const &function,
+MinimizerFunctionBase2<ReturnT>::MinimizerFunctionBase2(
+    afwMath::Function2<ReturnT> const &function,
     std::vector<double> const &measurementList,
     std::vector<double> const &varianceList,
     std::vector<double> const &xPositionList,
@@ -70,7 +140,7 @@ lsst::afw::math::MinimizerFunctionBase2<ReturnT>::MinimizerFunctionBase2(
     double errorDef)
 :
     lsst::daf::data::LsstBase(typeid(this)),
-    _functionPtr(function.copy()),
+    _functionPtr(function.clone()),
     _measurementList(measurementList),
     _varianceList(varianceList),
     _xPositionList(xPositionList),
@@ -82,7 +152,7 @@ lsst::afw::math::MinimizerFunctionBase2<ReturnT>::MinimizerFunctionBase2(
 
 // Only method we need to set up; basically this is a chi^2 routine
 template<typename ReturnT>
-double lsst::afw::math::MinimizerFunctionBase1<ReturnT>::operator() (const std::vector<double>& par) const {
+double MinimizerFunctionBase1<ReturnT>::operator() (const std::vector<double>& par) const {
     // Initialize the function with the fit parameters
     this->_functionPtr->setParameters(par);
     
@@ -97,7 +167,7 @@ double lsst::afw::math::MinimizerFunctionBase1<ReturnT>::operator() (const std::
 
 
 template<typename ReturnT>
-double lsst::afw::math::MinimizerFunctionBase2<ReturnT>::operator() (const std::vector<double>& par) const {
+double MinimizerFunctionBase2<ReturnT>::operator() (const std::vector<double>& par) const {
     // Initialize the function with the fit parameters
     this->_functionPtr->setParameters(par);
     
@@ -116,7 +186,7 @@ double lsst::afw::math::MinimizerFunctionBase2<ReturnT>::operator() (const std::
  * @return true if minimum is valid, false otherwise
  *
  * Uses the Minuit fitting package with a standard definition of chiSq
- * (see lsst::afw::math::MinimizerFunctionBase1).
+ * (see MinimizerFunctionBase1).
  *
  * @throw lsst::pex::exceptions::InvalidParameterException if any input vector is the wrong length 
  *
@@ -126,8 +196,8 @@ double lsst::afw::math::MinimizerFunctionBase2<ReturnT>::operator() (const std::
  * - Compute stepSize automatically? (if so, find a different way to fix parameters)
  */
 template<typename ReturnT>
-lsst::afw::math::FitResults lsst::afw::math::minimize(
-    lsst::afw::math::Function1<ReturnT> const &function, ///< function(x) to be minimized
+afwMath::FitResults afwMath::minimize(
+    afwMath::Function1<ReturnT> const &function, ///< function(x) to be minimized
     std::vector<double> const &initialParameterList,    ///< initial guess for parameters
     std::vector<double> const &stepSizeList, ///< step size for each parameter; use 0.0 to fix a parameter
     std::vector<double> const &measurementList, ///< measured values
@@ -162,30 +232,30 @@ lsst::afw::math::FitResults lsst::afw::math::minimize(
         errorDef
     );
 
-    MnUserParameters fitPar;
+    ROOT::Minuit2::MnUserParameters fitPar;
     std::vector<std::string> paramNames;
     for (unsigned int i = 0; i < nParameters; ++i) {
         paramNames.push_back((boost::format("p%d") % i).str());
-        fitPar.add(paramNames[i].c_str(), initialParameterList[i], stepSizeList[i]);
+        fitPar.Add(paramNames[i].c_str(), initialParameterList[i], stepSizeList[i]);
     }
 
-    MnMigrad migrad(minimizerFunc, fitPar);
-    FunctionMinimum min = migrad();
-    MnMinos minos(minimizerFunc, min);
+    ROOT::Minuit2::MnMigrad migrad(minimizerFunc, fitPar);
+    ROOT::Minuit2::FunctionMinimum min = migrad();
+    ROOT::Minuit2::MnMinos minos(minimizerFunc, min);
     
     FitResults fitResults;
-    fitResults.chiSq = min.fval();
-    fitResults.isValid = min.isValid() && std::isfinite(fitResults.chiSq);
+    fitResults.chiSq = min.Fval();
+    fitResults.isValid = min.IsValid() && std::isfinite(fitResults.chiSq);
     if (!fitResults.isValid) {
         lsst::pex::logging::Trace("lsst::afw::math::minimize", 1, "WARNING : Fit failed to converge");
     }
     
     for (unsigned int i = 0; i < nParameters; ++i) {
-        fitResults.parameterList.push_back(min.userState().value(paramNames[i].c_str()));
+        fitResults.parameterList.push_back(min.UserState().Value(paramNames[i].c_str()));
         if (fitResults.isValid) {
             fitResults.parameterErrorList.push_back(minos(i));
         } else {
-            double e = min.userState().error(paramNames[i].c_str());
+            double e = min.UserState().Error(paramNames[i].c_str());
             std::pair<double,double> ep(-1 * e, e);
             fitResults.parameterErrorList.push_back(ep);
         }
@@ -198,7 +268,7 @@ lsst::afw::math::FitResults lsst::afw::math::minimize(
  * @brief Find the minimum of a function(x, y)
  *
  * Uses the Minuit fitting package with a standard definition of chiSq.
- * (see lsst::afw::math::MinimizerFunctionBase2).
+ * (see MinimizerFunctionBase2).
  *
  * @return true if minimum is valid, false otherwise
  *
@@ -210,8 +280,8 @@ lsst::afw::math::FitResults lsst::afw::math::minimize(
  * - Compute stepSize automatically? (if so, find a different way to fix parameters)
  */
 template<typename ReturnT>
-lsst::afw::math::FitResults lsst::afw::math::minimize(
-    lsst::afw::math::Function2<ReturnT> const &function,  ///< function(x,y) to be minimized
+afwMath::FitResults afwMath::minimize(
+    afwMath::Function2<ReturnT> const &function,  ///< function(x,y) to be minimized
     std::vector<double> const &initialParameterList,    ///< initial guess for parameters
     std::vector<double> const &stepSizeList,        ///< step size for each parameter; use 0.0 to fix a parameter
     std::vector<double> const &measurementList, ///< measured values
@@ -247,32 +317,59 @@ lsst::afw::math::FitResults lsst::afw::math::minimize(
         errorDef
     );
 
-    MnUserParameters fitPar;
+    ROOT::Minuit2::MnUserParameters fitPar;
     std::vector<std::string> paramNames;
     for (unsigned int i = 0; i < nParameters; ++i) {
         paramNames.push_back((boost::format("p%d") % i).str());
-        fitPar.add(paramNames[i].c_str(), initialParameterList[i], stepSizeList[i]);
+        fitPar.Add(paramNames[i].c_str(), initialParameterList[i], stepSizeList[i]);
     }
 
-    MnMigrad migrad(minimizerFunc, fitPar);
-    FunctionMinimum min = migrad();
-    MnMinos minos(minimizerFunc, min);
+    ROOT::Minuit2::MnMigrad migrad(minimizerFunc, fitPar);
+    ROOT::Minuit2::FunctionMinimum min = migrad();
+    ROOT::Minuit2::MnMinos minos(minimizerFunc, min);
     
     FitResults fitResults;
-    fitResults.chiSq = min.fval();
-    fitResults.isValid = min.isValid() && std::isfinite(fitResults.chiSq);
+    fitResults.chiSq = min.Fval();
+    fitResults.isValid = min.IsValid() && std::isfinite(fitResults.chiSq);
     if (!fitResults.isValid) {
         lsst::pex::logging::Trace("lsst::afw::math::minimize", 1, "WARNING : Fit failed to converge");
     }
+
     for (unsigned int i = 0; i < nParameters; ++i) {
-        fitResults.parameterList.push_back(min.userState().value(paramNames[i].c_str()));
+        fitResults.parameterList.push_back(min.UserState().Value(paramNames[i].c_str()));
         if (fitResults.isValid) {
             fitResults.parameterErrorList.push_back(minos(i));
         } else {
-            double e = min.userState().error(paramNames[i].c_str());
+            double e = min.UserState().Error(paramNames[i].c_str());
             std::pair<double,double> ep(-1 * e, e);
             fitResults.parameterErrorList.push_back(ep);
         }
     }
     return fitResults;
 }
+
+// Explicit instantiation
+#define NL /* */
+#define minimizeFuncs(ReturnT) \
+    template afwMath::FitResults afwMath::minimize( \
+        afwMath::Function1<ReturnT> const &, \
+        std::vector<double> const &, \
+        std::vector<double> const &, \
+        std::vector<double> const &, \
+        std::vector<double> const &, \
+        std::vector<double> const &, \
+        double \
+    ); NL \
+    template afwMath::FitResults afwMath::minimize( \
+        afwMath::Function2<ReturnT> const &, \
+        std::vector<double> const &, \
+        std::vector<double> const &, \
+        std::vector<double> const &, \
+        std::vector<double> const &, \
+        std::vector<double> const &, \
+        std::vector<double> const &, \
+        double \
+    );
+
+minimizeFuncs(float)
+minimizeFuncs(double)

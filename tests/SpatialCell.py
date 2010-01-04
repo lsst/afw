@@ -80,7 +80,7 @@ class SpatialCellTestCase(unittest.TestCase):
         #
         # Now label one candidate as bad
         #
-        ptr = self.cell[2].setStatus(afwMath.SpatialCellCandidate.BAD)
+        self.cell[2].setStatus(afwMath.SpatialCellCandidate.BAD)
 
         self.assertEqual(self.cell.size(), self.nCandidate - 1)
         self.assertEqual(self.cell.end() - self.cell.begin(), self.nCandidate - 1)
@@ -100,6 +100,16 @@ class SpatialCellTestCase(unittest.TestCase):
         self.assertEqual(self.cell.getCandidateById(-1, True), None)
         utilsTests.assertRaisesLsstCpp(self, pexExcept.NotFoundException, tst)
 
+    def testSetIteratorBad(self):
+        """Setting a candidate BAD shouldn't stop us seeing the rest of the candidates"""
+        i = 0
+        for cand in self.cell:
+            if i == 1:
+                cand.setStatus(afwMath.SpatialCellCandidate.BAD)
+            i += 1
+
+        self.assertEqual(i, self.nCandidate)
+        
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class SpatialCellSetTestCase(unittest.TestCase):
@@ -116,7 +126,8 @@ class SpatialCellSetTestCase(unittest.TestCase):
             for i in range(len(self.cellSet.getCellList())):
                 cell = self.cellSet.getCellList()[i]
                 print i, "%3d,%3d -- %3d,%3d" % (cell.getBBox().getX0(), cell.getBBox().getY0(),
-                                                 cell.getBBox().getX1(), cell.getBBox().getY1()), cell
+                                                 cell.getBBox().getX1(), cell.getBBox().getY1()), \
+                                                 cell.getLabel()
         self.assertEqual(len(self.cellSet.getCellList()), 6)
 
         self.NTestCandidates = 0                                      # number of candidates
@@ -196,6 +207,26 @@ class SpatialCellSetTestCase(unittest.TestCase):
             
         self.assertEqual(self.cellSet.getCandidateById(-1, True), None)
         utilsTests.assertRaisesLsstCpp(self, pexExcept.NotFoundException, tst)
+
+    def testSpatialCell(self):
+        dx, dy, sx, sy = 100, 100, 50, 50
+        for x0, y0 in [(0,  0), (100, 100)]:
+            # only works for tests where dx,dx is some multiple of sx,sy
+            assert(dx//sx == float(dx)/float(sx))
+            assert(dy//sy == float(dy)/float(sy))
+            
+            bbox = afwImage.BBox(afwImage.PointI(x0,y0), dx, dy)
+            cset = afwMath.SpatialCellSet(bbox, sx, sy)
+            for cell in cset.getCellList():
+                label  = cell.getLabel()
+                nx, ny = [int(z) for z in label.split()[1].split('x')]
+                
+                cbbox  = cell.getBBox()
+
+                self.assertEqual(cbbox.getX0(), nx*sx + x0)
+                self.assertEqual(cbbox.getY0(), ny*sy + y0)
+                self.assertEqual(cbbox.getX1(), (nx+1)*sx + x0 - 1)
+                self.assertEqual(cbbox.getY1(), (ny+1)*sy + y0 - 1)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

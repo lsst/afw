@@ -16,6 +16,7 @@ import unittest
 import lsst.pex.exceptions as pexExcept
 import lsst.pex.policy as pexPolicy
 import lsst.utils.tests as utilsTests
+import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -68,7 +69,44 @@ class RandomTestCase(unittest.TestCase):
         r2 = afwMath.Random(pol)
         checkRngEquivalence(r1, r2)
 
+class RandomImageTestCase(unittest.TestCase):
+    """A test case for lsst.afw.math.Random applied to Images"""
 
+    def setUp(self):
+        self.rand = afwMath.Random()
+        self.image = afwImage.ImageF(1000, 1000)
+
+    def tearDown(self):
+        pass
+
+    def testRandomUniformImage(self):
+        afwMath.randomUniformImage(self.image, self.rand)
+        #stats = afwMath.makeStatistics(self.image, afwMath.MEAN | afwMath.STDEV)
+
+    def testRandomGaussianImage(self):
+        afwMath.randomGaussianImage(self.image, self.rand)
+        #stats = afwMath.makeStatistics(self.image, afwMath.MEAN | afwMath.STDEV)
+        
+    def testRandomChisqImage(self):
+        nu = 10
+        afwMath.randomChisqImage(self.image, self.rand, nu)
+        stats = afwMath.makeStatistics(self.image, afwMath.MEAN | afwMath.VARIANCE)
+        if False:
+            print "nu = %g.  mean = %g, variance = %g" % \
+                  (nu, stats.getValue(afwMath.MEAN), stats.getValue(afwMath.VARIANCE))
+        self.assertAlmostEqual(stats.getValue(afwMath.MEAN), nu, 1)
+        self.assertAlmostEqual(stats.getValue(afwMath.VARIANCE), 2*nu, 1)
+        
+    def testRandomPoissonImage(self):
+        mu = 10
+        afwMath.randomPoissonImage(self.image, self.rand, mu)
+        stats = afwMath.makeStatistics(self.image, afwMath.MEAN | afwMath.VARIANCE)
+        if False:
+            print "mu = %g.  mean = %g, variance = %g" % \
+                  (mu, stats.getValue(afwMath.MEAN), stats.getValue(afwMath.VARIANCE))
+        self.assertAlmostEqual(stats.getValue(afwMath.MEAN), mu, 1)
+        self.assertAlmostEqual(stats.getValue(afwMath.VARIANCE), mu, 1)
+        
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
@@ -78,6 +116,7 @@ def suite():
 
     suites = []
     suites += unittest.makeSuite(RandomTestCase)
+    suites += unittest.makeSuite(RandomImageTestCase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 

@@ -4,8 +4,6 @@
  *
  * @brief Class to ensure constraints for spatial modeling
  *
- * @author Andrew Becker, University of Washington
- *
  * @ingroup afw
  */
 
@@ -23,7 +21,7 @@ namespace lsst {
 namespace afw {
 namespace math {
 
-    /************************************************************************************************************/
+    /********************************************************************************************************/
     /// A class to pass around to all our Candidates
     class SpatialCellCandidate;
 
@@ -185,11 +183,13 @@ namespace math {
     /** 
      * @brief Class to ensure constraints for spatial modeling
      * 
-     * A given %image is be divided up into cells, with each cell represented by an instance of this class.
+     * A given %image is divided up into cells, with each cell represented by an instance of this class.
      * Each cell itself contains a list of instances of classes derived from SpatialCellCandidate.  One class
      * member from each cell will be chosen to fit to a spatial model.  In case of a poor fit, the next class
      * instance in the list will be fit for.  If all instances in a list are rejected from the spatial model,
      * the best one will be used.
+     *
+     * \sa \link SpatialCellSetExample\endlink
      */
     class SpatialCell {
     public:
@@ -248,6 +248,14 @@ namespace math {
          * Get SpatialCell's BBox
          */
         lsst::afw::image::BBox const& getBBox() const { return _bbox; }
+        /*
+         * Visit our candidates
+         */
+        void visitCandidates(CandidateVisitor * visitor, int const nMaxPerCell=-1,
+                             bool const ignoreExceptions=false, bool const reset=true);
+        void visitCandidates(CandidateVisitor * visitor, int const nMaxPerCell=-1,
+                             bool const ignoreExceptions=false, bool const reset=true) const;
+
     private:
         std::string _label;             // Name of cell for logging/trace
         lsst::afw::image::BBox _bbox;   // Bounding box of cell in overall image
@@ -281,10 +289,12 @@ namespace math {
 
         void visitCandidates(CandidateVisitor * visitor, int const nMaxPerCell=-1,
                              bool const ignoreExceptions=false);
-        void visitCandidates(CandidateVisitor const * visitor, int const nMaxPerCell=-1,
+        void visitCandidates(CandidateVisitor * visitor, int const nMaxPerCell=-1,
                              bool const ignoreExceptions=false) const;
 
         SpatialCellCandidate::Ptr getCandidateById(int id, bool noThrow=false);
+
+        void setIgnoreBad(bool ignoreBad);
 
     private:
         lsst::afw::image::BBox _region;   // Dimensions of overall image

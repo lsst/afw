@@ -11,6 +11,7 @@
 %template(randomFlatImage)       lsst::afw::math::randomFlatImage<lsst::afw::image::Image<TYPE> >;
 %template(randomGaussianImage)   lsst::afw::math::randomGaussianImage<lsst::afw::image::Image<TYPE> >;
 %template(randomChisqImage)      lsst::afw::math::randomChisqImage<lsst::afw::image::Image<TYPE> >;
+%template(randomPoissonImage)    lsst::afw::math::randomPoissonImage<lsst::afw::image::Image<TYPE> >;
 %enddef
 
 %randomImage(double)

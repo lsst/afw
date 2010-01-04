@@ -1,4 +1,4 @@
-// -*- lsst-c++ -*-
+// -*- LSST-C++ -*-
 #include <iostream>
 #include <limits>
 #include <cmath>
@@ -6,12 +6,17 @@
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Statistics.h"
 
+#include "lsst/afw/math/MaskedVector.h"
+
+#include "boost/shared_ptr.hpp"
+
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
 
 typedef image::Image<float> ImageF;
 typedef image::MaskedImage<float> MaskedImageF;
 typedef math::Statistics ImgStat;
+typedef math::MaskedVector<float> MaskedVectorF;
 
 
 /**
@@ -29,9 +34,9 @@ void printStats(Image &img, math::StatisticsControl const &sctrl) {
     
     // initialize a Statistics object with any stats we might want
     ImgStat stats = math::makeStatistics(img, math::NPOINT | math::STDEV | math::MEAN | math::VARIANCE |
-                                           math::ERRORS | math::MIN | math::MAX | math::VARIANCECLIP |
-                                           math::MEANCLIP | math::MEDIAN | math::IQRANGE | math::STDEVCLIP,
-                                           sctrl);
+                                         math::ERRORS | math::MIN | math::MAX | math::VARIANCECLIP |
+                                         math::MEANCLIP | math::MEDIAN | math::IQRANGE | math::STDEVCLIP,
+                                         sctrl);
     
     // get various stats with getValue() and their errors with getError()
     double const npoint    = stats.getValue(math::NPOINT);
@@ -72,10 +77,11 @@ void printStats(Image &img, math::StatisticsControl const &sctrl) {
 int main() {
 
     // declare an image and a masked image
-    int const WID = 1024;
-    ImageF img(WID, WID);
-    MaskedImageF mimg(WID, WID);
+    int const wid = 1024;
+    ImageF img(wid, wid);
+    MaskedImageF mimg(wid, wid);
     std::vector<double> v(0);
+    MaskedVectorF mv(wid*wid);
     
     // fill it with some noise (Cauchy noise in this case)
     for (int j = 0; j != img.getHeight(); ++j) {
@@ -83,24 +89,32 @@ int main() {
         int k = 0;
         MaskedImageF::x_iterator mip = mimg.row_begin(j);
         for (ImageF::x_iterator ip = img.row_begin(j); ip != img.row_end(j); ++ip) {
-            double const x_uniform = M_PI*static_cast<ImageF::Pixel>(std::rand())/RAND_MAX;
-            double x_lorentz = x_uniform; //tan(x_uniform - M_PI/2.0);
+            double const xUniform = M_PI*static_cast<ImageF::Pixel>(std::rand())/RAND_MAX;
+            double xLorentz = xUniform; //tan(xUniform - M_PI/2.0);
 
             // throw in the occassional nan ... 1% of the time
-            if ( static_cast<double>(std::rand())/RAND_MAX < 0.01 ) { x_lorentz = NAN; }
+            if ( static_cast<double>(std::rand())/RAND_MAX < 0.01 ) { xLorentz = NAN; }
             
-            *ip = x_lorentz;
+            *ip = xLorentz;
             
             // mask the odd rows
             // variance actually diverges for Cauchy noise ... but stats doesn't access this.
-            *mip = MaskedImageF::Pixel(x_lorentz, (k%2) ? 0x1 : 0x0, 10.0);
+            *mip = MaskedImageF::Pixel(xLorentz, (k%2) ? 0x1 : 0x0, (k%2) ? 1.0e99 : 1.0);
 
-            v.push_back(x_lorentz);
+            v.push_back(xLorentz);
             ++k;
             ++mip;
         }
     }
 
+    int j = 0;
+    for (MaskedVectorF::iterator mvp = mv.begin(); mvp != mv.end(); ++mvp) {
+        *mvp = MaskedVectorF::Pixel(v[j], (j%2) ? 0x1 : 0x0, 10.0);
+        ++j;
+    }
+
+    boost::shared_ptr<std::vector<float> > vF = mv.getVector();
+    
     // make a statistics control object and override some of the default properties
     math::StatisticsControl sctrl;
     sctrl.setNumIter(3);
@@ -117,7 +131,18 @@ int main() {
     printStats(mimg, sctrl);
     std::cout << "std::vector" << std::endl;
     printStats(v, sctrl);
+    std::cout << "image::MaskedVector" << std::endl;
+    printStats(mv, sctrl);
+    std::cout << "image::MaskedVector::getVector()" << std::endl;
+    printStats(*vF, sctrl);
 
+
+    // Now try the weighted statistics
+    sctrl.setWeighted(true);
+    sctrl.setAndMask(0x0);
+    std::cout << "image::MaskedImage (weighted)" << std::endl;
+    printStats(mimg, sctrl);
+    
     // Now try the specialization to get NPOINT and SUM (bitwise OR) for an image::Mask
     math::Statistics mskstat = makeStatistics(*mimg.getMask(), (math::NPOINT | math::SUM), sctrl);
     std::cout << "image::Mask" << std::endl;

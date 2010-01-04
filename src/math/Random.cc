@@ -339,3 +339,14 @@ double math::Random::chisq(double nu) {
     return ::gsl_ran_chisq(_rng.get(), nu);
 }
 
+
+/**
+ * Returns a random variate from the poisson distribution with @a mean mu.
+ *
+ * @return          a random variate from the Poission distribution
+ */
+double math::Random::poisson(double mu    ///< desired mean (and variance)
+                            ) {
+    return ::gsl_ran_poisson(_rng.get(), mu);
+}
+

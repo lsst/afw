@@ -12,6 +12,7 @@
 #include "lsst/daf/base.h"
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/afw/image/Image.h"
+#include "lsst/afw/geom/AffineTransform.h"
 
 struct wcsprm;                          // defined in wcs.h
 
@@ -67,6 +68,8 @@ namespace image {
             return raDecToXY(radec[0], radec[1]);
         }
         Eigen::Matrix<double, 2, 2> getLinearTransformMatrix() const;
+        lsst::afw::geom::AffineTransform getAffineTransform() const;
+        lsst::afw::geom::AffineTransform getAffineTransform(lsst::afw::image::PointD sky) const;
 
         PointD xyToRaDec(PointD pix) const;
         PointD xyToRaDec(double const x, double const y) const;

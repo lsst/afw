@@ -14,6 +14,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <utility>
 
 #include <boost/cstdint.hpp> 
 #include <boost/format.hpp> 
@@ -29,16 +30,20 @@ namespace pexLog = lsst::pex::logging;
 namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
 
-namespace {
-    template <typename A, typename B>
-    bool isSameObject(A const& a, B const& b) {
-        return false;
-    }
-    
-    template <typename A>
-    bool isSameObject(A const& a, A const& b) {
-        return &a == &b;
-    }
+afwMath::Kernel::Ptr afwMath::LanczosWarpingKernel::clone() const {
+    return afwMath::Kernel::Ptr(new afwMath::LanczosWarpingKernel(this->getOrder()));
+}
+
+/**
+* @brief get the order of the kernel
+*/
+int afwMath::LanczosWarpingKernel::getOrder() const {
+    return this->getWidth() / 2;
+};
+
+
+afwMath::Kernel::Ptr afwMath::BilinearWarpingKernel::clone() const {
+    return afwMath::Kernel::Ptr(new afwMath::BilinearWarpingKernel());
 }
 
 /**
@@ -58,7 +63,7 @@ afwMath::Kernel::Pixel afwMath::BilinearWarpingKernel::BilinearFunction1::operat
         errStream << "x = " << x << "; must be 0 or 1";
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, errStream.str());
     }
-}            
+}
 
 /**
  * \brief Return string representation.
@@ -176,7 +181,7 @@ int afwMath::warpImage(
     SeparableKernel &warpingKernel  ///< warping kernel; determines warping algorithm
     )
 {
-    if (isSameObject(destImage, srcImage)) {
+    if (afwMath::details::isSameObject(destImage, srcImage)) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterException,
             "destImage is srcImage; cannot warp in place");
     }
@@ -238,15 +243,15 @@ int afwMath::warpImage(
             // parts; the latter is used to compute the remapping kernel.
             // To convolve at source pixel (x, y) point source accessor to (x - kernelCtrX, y - kernelCtrY)
             // because the accessor must point to kernel pixel (0, 0), not the center of the kernel.
-            std::vector<double> srcFracInd(2);
-            int srcIndX = afwImage::positionToIndex(srcFracInd[0], srcPosXY[0]) - kernelCtrX;
-            int srcIndY = afwImage::positionToIndex(srcFracInd[1], srcPosXY[1]) - kernelCtrY;
-            if (srcFracInd[0] < 0) {
-                ++srcFracInd[0];
+            std::pair<double, double> srcFracInd;
+            int srcIndX = afwImage::positionToIndex(srcFracInd.first,  srcPosXY[0]) - kernelCtrX;
+            int srcIndY = afwImage::positionToIndex(srcFracInd.second, srcPosXY[1]) - kernelCtrY;
+            if (srcFracInd.first < 0) {
+                ++srcFracInd.first;
                 --srcIndX;
             }
-            if (srcFracInd[1] < 0) {
-                ++srcFracInd[1];
+            if (srcFracInd.second < 0) {
+                ++srcFracInd.second;
                 --srcIndY;
             }
           
@@ -274,7 +279,8 @@ int afwMath::warpImage(
                     - (dSrcA.getY() * dSrcB.getX())) / kSum;
                 *destXIter *= multFac;
 //                destXIter.image() *= static_cast<typename DestImageT::Image::SinglePixel>(multFac);
-//                destXIter.variance() *= static_cast<typename DestImageT::Variance::SinglePixel>(multFac * multFac);
+//                destXIter.variance() *=
+//                    static_cast<typename DestImageT::Variance::SinglePixel>(multFac * multFac);
             }
 
             // Copy srcPosXY to prevRowSrcPosXY to use for computing area scaling for pixels in the next row

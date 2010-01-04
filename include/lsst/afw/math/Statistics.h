@@ -16,16 +16,21 @@
 
 #include <cassert>
 #include <limits>
-#include <boost/iterator/iterator_adaptor.hpp>
+#include "boost/iterator/iterator_adaptor.hpp"
 #include "boost/tuple/tuple.hpp"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
+#include "lsst/afw/math/MaskedVector.h"
 
 namespace image = lsst::afw::image;
+namespace math = lsst::afw::math;
 
-namespace lsst { namespace afw { namespace math {
+namespace lsst {
+namespace afw {
+namespace math {
             
-/* @brief control what is calculated
+/**
+ * @brief control what is calculated
  */
 enum Property {
     NOTHING = 0x0,                      ///< We don't want anything
@@ -45,7 +50,8 @@ enum Property {
 };
 
     
-/* @class Pass parameters to a Statistics object
+/**
+ * @brief Pass parameters to a Statistics object
  * @ingroup afw
  *
  * A class to pass parameters which control how the stats are calculated.
@@ -56,37 +62,47 @@ public:
     StatisticsControl(double numSigmaClip = 3.0, ///< number of standard deviations to clip at
                       int numIter = 3,     ///< Number of iterations
                       image::MaskPixel andMask = ~0x0, ///< and-Mask to specify planes to use
-                      bool nanSafe = true  ///< flag NaNs
+                      bool isNanSafe = true,  ///< flag NaNs
+                      bool isWeighted = false ///< use inverse Variance plane for weights
                      ) :
         _numSigmaClip(numSigmaClip),
         _numIter(numIter),
         _andMask(andMask),
-        _nanSafe(nanSafe)
-        {
-            assert(_numSigmaClip > 0);
-            assert(_numIter > 0);
-        }
+        _isNanSafe(isNanSafe),
+        _isWeighted(isWeighted),
+        _multiplyWeights(false) {
+        
+        assert(_numSigmaClip > 0);
+        assert(_numIter > 0);
+    }
 
     double getNumSigmaClip() const { return _numSigmaClip; }
     int getNumIter() const { return _numIter; }
     image::MaskPixel getAndMask() const { return _andMask; }
-    bool useNanSafe() const { return _nanSafe; }
+    bool getNanSafe() const { return _isNanSafe; }
+    bool getWeighted() const { return _isWeighted; }
+    bool getMultiplyWeights() const { return _multiplyWeights; }
+    
     
     void setNumSigmaClip(double numSigmaClip) { assert(numSigmaClip > 0); _numSigmaClip = numSigmaClip; }
     void setNumIter(int numIter) { assert(numIter > 0); _numIter = numIter; }
     void setAndMask(image::MaskPixel andMask) { _andMask = andMask; }
-    void setNanSafe(bool nanSafe) { _nanSafe = nanSafe; }
+    void setNanSafe(bool isNanSafe) { _isNanSafe = isNanSafe; }
+    void setWeighted(bool isWeighted) { _isWeighted = isWeighted; }
+    void setMultiplyWeights(bool multiplyWeights) { _multiplyWeights = multiplyWeights; }
+    
 
 private:
     double _numSigmaClip;                 // Number of standard deviations to clip at
     int _numIter;                         // Number of iterations
     image::MaskPixel _andMask;            // and-Mask to specify which mask planes to pay attention to
-    bool _nanSafe;                         // Check for NaNs before running (slower)
+    bool _isNanSafe;                         // Check for NaNs before running (slower)
+    bool _isWeighted;                     // Use inverse variance to weight statistics.
+    bool _multiplyWeights;                // Treat variance plane as weights and multiply instead of dividing
 };
 
             
 /**
- * @class Statistics
  * @ingroup afw
  *
  * A class to evaluate %image statistics
@@ -125,21 +141,23 @@ public:
     /// The type used to report (value, error) for desired statistics
     typedef std::pair<double, double> Value;
     
-    template<typename Image, typename Mask>
-    explicit Statistics(Image const &img,
-                        Mask const &msk,
+    template<typename ImageT, typename MaskT, typename VarianceT>
+    explicit Statistics(ImageT const &img,
+                        MaskT const &msk,
+                        VarianceT const &var,
                         int const flags,
-                        StatisticsControl const& sctrl=StatisticsControl());
+                        StatisticsControl const& sctrl = StatisticsControl());
 
-    Value getResult(Property const prop=NOTHING) const;
+    Value getResult(Property const prop = NOTHING) const;
     
-    double getError(Property const prop=NOTHING) const;
-    double getValue(Property const prop=NOTHING) const;
+    double getError(Property const prop = NOTHING) const;
+    double getValue(Property const prop = NOTHING) const;
     
 private:
-    
+
     // return type for _getStandard
     typedef boost::tuple<double, double, double, double, double> StandardReturn; 
+    typedef boost::tuple<int, double, double, double, double, double> SumReturn; 
 
     long _flags;                        // The desired calculation
 
@@ -155,15 +173,31 @@ private:
     double _iqrange;                    // the image's interquartile range
 
     StatisticsControl _sctrl;           // the control structure
+
+    template<typename IsFinite, typename ImageT, typename MaskT, typename VarianceT>
+    boost::shared_ptr<std::vector<typename ImageT::Pixel> >  _makeVectorCopy(ImageT const &img,
+                                                                             MaskT const &msk,
+                                                                             VarianceT const &var,
+                                                                             int const flags);
+        
+    template<typename IsFinite,
+             typename HasValueLtMin,
+             typename HasValueGtMax,
+             typename InClipRange,
+             bool MultiplyWeight,
+             typename ImageT, typename MaskT, typename VarianceT>
+    SumReturn _sumImage(ImageT const &img, MaskT const &msk, VarianceT const &var, int const flags,
+                        int const nCrude, int const stride = 1, double const meanCrude = 0,
+                        double const cliplimit = std::numeric_limits<double>::quiet_NaN());
     
-    template<typename Image, typename Mask>
-    StandardReturn _getStandard(Image const &img, Mask const &msk, int const flags);
-    template<typename Image, typename Mask>
-    StandardReturn _getStandard(Image const &img, Mask const &msk,
+    template<typename ImageT, typename MaskT, typename VarianceT>
+    StandardReturn _getStandard(ImageT const &img, MaskT const &msk, VarianceT const &var, int const flags);
+    template<typename ImageT, typename MaskT, typename VarianceT>
+    StandardReturn _getStandard(ImageT const &img, MaskT const &msk, VarianceT const &var,
                                 int const flags, std::pair<double, double> clipinfo);
 
     template<typename Pixel>
-    double _percentile(std::vector<Pixel> &img, double const quartile);   
+    double _percentile(std::vector<Pixel> &img, double const percentile);   
     
     inline double _varianceError(double const variance, int const n) const {
         return 2*(n - 1)*variance*variance/(static_cast<double>(n)*n); // assumes a Gaussian
@@ -174,31 +208,7 @@ private:
 
             
 /*************************************  The factory functions **********************************/
-
-/*
- * @brief Handle MaskedImages, just pass the getImage() and getMask() values right on through.
- *
- */
-template<typename Pixel>
-Statistics makeStatistics(image::MaskedImage<Pixel, image::MaskPixel, image::VariancePixel> const &mimg, 
-                          int const flags,  
-                          StatisticsControl const& sctrl=StatisticsControl() 
-                         ) {
-    return Statistics(*mimg.getImage(), *mimg.getMask(), flags, sctrl);
-}
-
-/*
- * @brief Front end for specialization to handle Masks
- * @note The definition (in Statistics.cc) simply calls the specialized constructor
- *
- */            
-Statistics makeStatistics(image::Mask<image::MaskPixel> const &msk, 
-                          int const flags,  
-                          StatisticsControl const& sctrl=StatisticsControl());
-            
-
-/*
- * @class infinite_iterator
+/**
  * @brief This iterator will never increment.  It is returned by row_begin() in the MaskImposter class
  *        (below) to allow phony mask pixels to be iterated over for non-mask images within Statistics.
  * @note As the iterator always returns 0x0, the comparisons in Statistics::_getStandard() should always
@@ -217,40 +227,96 @@ private:
     friend class boost::iterator_core_access;
     void increment() { ; }              // never actually advance the iterator
 };
-
-            
-/*
- * @class MaskImposter
+/**
  * @brief A Mask wrapper to provide an infinite_iterator for Mask::row_begin().  This allows a fake
  *        Mask to be passed in to Statistics with a regular (non-masked) Image.
  */
 template<typename ValueT>
 class MaskImposter {
-    ValueT _val[1];
 public:
     typedef infinite_iterator<ValueT> x_iterator;
     MaskImposter(ValueT val = 0) { _val[0] = val; }
-    x_iterator row_begin(int) const { return x_iterator(_val); }
+    x_iterator row_begin(int dummyCol) const { return x_iterator(_val); }
+private:
+    ValueT _val[1];
 };
+
+    
+/**
+ * @brief Handle a watered-down front-end to the constructor (no variance)
+ * @relates Statistics
+ */
+template<typename Pixel>
+Statistics makeStatistics(image::Image<Pixel> const &img,
+                          image::Mask<image::MaskPixel> const &msk, 
+                          int const flags,  
+                          StatisticsControl const& sctrl = StatisticsControl() 
+                         ) {
+    MaskImposter<image::VariancePixel> var;
+    return Statistics(img, msk, var, flags, sctrl);
+}
+
+
+/**
+ * @brief Handle a straigh front-end to the constructor
+ * @relates Statistics
+ */
+template<typename ImageT, typename MaskT, typename VarianceT>
+Statistics makeStatistics(ImageT const &img,
+                          MaskT const &msk,
+                          VarianceT const &var,
+                          int const flags,  
+                          StatisticsControl const& sctrl = StatisticsControl() 
+                         ) {
+    return Statistics(img, msk, var, flags, sctrl);
+}
+
+    
+/**
+ * @brief Handle MaskedImages, just pass the getImage() and getMask() values right on through.
+ * @relates Statistics
+ */
+template<typename Pixel>
+Statistics makeStatistics(image::MaskedImage<Pixel, image::MaskPixel, image::VariancePixel> const &mimg, 
+                          int const flags,  
+                          StatisticsControl const& sctrl = StatisticsControl() 
+                         ) {
+    if (sctrl.getWeighted()) {
+        return Statistics(*mimg.getImage(), *mimg.getMask(), *mimg.getVariance(), flags, sctrl);
+    } else {
+        MaskImposter<image::VariancePixel> var;
+        return Statistics(*mimg.getImage(), *mimg.getMask(), var, flags, sctrl);
+    }
+}
+
+/**
+ * @brief Front end for specialization to handle Masks
+ * @note The definition (in Statistics.cc) simply calls the specialized constructor
+ * @relates Statistics
+ */            
+Statistics makeStatistics(image::Mask<image::MaskPixel> const &msk, 
+                          int const flags,  
+                          StatisticsControl const& sctrl = StatisticsControl());
             
+                        
             
-/*
+/**
  * @brief The makeStatistics() overload to handle regular (non-masked) Images
+ * @relates Statistics
  */
 template<typename Pixel>
 Statistics makeStatistics(image::Image<Pixel> const &img, ///< Image (or Image) whose properties we want
                           int const flags,   ///< Describe what we want to calculate
-                          StatisticsControl const& sctrl=StatisticsControl() ///< Control calculation
+                          StatisticsControl const& sctrl = StatisticsControl() ///< Control calculation
                          ) {
     // make a phony mask that will be compiled out
-    MaskImposter<image::MaskPixel> msk;
-    return Statistics(img, msk, flags, sctrl);
+    MaskImposter<image::MaskPixel> const msk;
+    MaskImposter<image::VariancePixel> const var;
+    return Statistics(img, msk, var, flags, sctrl);
 }
 
 
-/*
- * @class ImageImposter
- *
+/**
  * @brief A vector wrapper to provide a vector with the necessary methods and typedefs to
  *        be processed by Statistics as though it were an Image.
  */
@@ -265,12 +331,12 @@ public:
 
     // constructors for std::vector<>, and copy constructor
     // These are both shallow! ... no actual copying of values
-    ImageImposter(std::vector<ValueT> const &v) : _v(v) { }
-    ImageImposter(ImageImposter<ValueT> const &img) : _v(img._getVector()) {}
+    explicit ImageImposter(std::vector<ValueT> const &v) : _v(v) { }
+    explicit ImageImposter(ImageImposter<ValueT> const &img) : _v(img._getVector()) {}
 
     // The methods we'll use in Statistics
-    x_iterator row_begin(int) const { return _v.begin(); }
-    x_iterator row_end(int) const { return _v.end(); }
+    x_iterator row_begin(int dummyCol) const { return _v.begin(); }
+    x_iterator row_end(int dummyCol) const { return _v.end(); }
     int getWidth() const { return _v.size(); }
     int getHeight() const { return 1; }
     
@@ -279,20 +345,41 @@ private:
     std::vector<ValueT> const &_getVector() const { return _v; } // get the ref for the copyCon
 };
 
-/*
- * @brief The makeStatistics() overload to handle std::vector<> 
+/**
+ * @brief The makeStatistics() overload to handle std::vector<>
+ * @relates Statistics
  */
 template<typename EntryT>
-Statistics makeStatistics(std::vector<EntryT> &v, ///< Image (or MaskedImage) whose properties we want
+Statistics makeStatistics(std::vector<EntryT> const &v, ///< Image (or MaskedImage) whose properties we want
                           int const flags,   ///< Describe what we want to calculate
-                          StatisticsControl const& sctrl=StatisticsControl() ///< Control calculation
+                          StatisticsControl const& sctrl = StatisticsControl() ///< Control calculation
                          ) {
-    
     ImageImposter<EntryT> img(v);           // wrap the vector in a fake image
-    MaskImposter<image::MaskPixel> msk;     // instantiate a fake mask that will be compiled out. 
-    return Statistics(img, msk, flags, sctrl);
+    MaskImposter<image::MaskPixel> msk;     // instantiate a fake mask that will be compiled out.
+    MaskImposter<image::VariancePixel> var;
+    return Statistics(img, msk, var, flags, sctrl);
 }
-            
+
+
+/**
+ * @brief The makeStatistics() overload to handle math::MaskedVector<>
+ * @relates Statistics
+ */
+template<typename EntryT>
+Statistics makeStatistics(math::MaskedVector<EntryT> const &mv, ///< MaskedVector
+                          int const flags,   ///< Describe what we want to calculate
+                          StatisticsControl const& sctrl = StatisticsControl() ///< Control calculation
+                         ) {
+    if (sctrl.getWeighted()) {
+        return Statistics(*mv.getImage(), *mv.getMask(), *mv.getVariance(), flags, sctrl);
+    } else {
+        MaskImposter<image::VariancePixel> var;
+        return Statistics(*mv.getImage(), *mv.getMask(), var, flags, sctrl);
+    }
+}
+
+
+    
 }}}
 
 #endif

@@ -155,9 +155,12 @@ class Mosaic(object):
         return afwImage.BBox(afwImage.PointI(ix*(self.xsize + self.gutter), iy*(self.ysize + self.gutter)),
                              self.xsize, self.ysize)
 
-    def drawLabels(self, labels=None, frame=0):
+    def drawLabels(self, labels=None, frame=None):
         """Draw the list labels at the corners of each panel.  If labels is None, use the ones
         specified by Mosaic.append()"""
+
+        if frame is None:
+            return
 
         if not labels:
             labels = self.labels
@@ -171,3 +174,12 @@ class Mosaic(object):
         for i in range(len(labels)):
             if labels[i]:
                 ds9.dot(labels[i], self.getBBox(i).getX0(), self.getBBox(i).getY0(), frame=frame)
+
+def drawBBox(bbox, borderWidth=0.0, frame=None, ctype=None):
+    """Draw an afwImage::BBox on a ds9 frame with the specified ctype.  Include an extra borderWidth pixels"""
+    ds9.line([(bbox.getX0() - borderWidth, bbox.getY0() - borderWidth),
+              (bbox.getX0() - borderWidth, bbox.getY1() + borderWidth),
+              (bbox.getX1() + borderWidth, bbox.getY1() + borderWidth),
+              (bbox.getX1() + borderWidth, bbox.getY0() - borderWidth),
+              (bbox.getX0() - borderWidth, bbox.getY0() - borderWidth),
+              ], frame=frame, ctype=ctype)

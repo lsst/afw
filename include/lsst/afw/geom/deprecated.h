@@ -15,12 +15,20 @@ namespace lsst { namespace afw { namespace geom {
 
 template <typename T>
 inline geom::Point<T,2> convertToGeom(image::Point<T> const & other) {
-    return geom::Point<T,2>::makeXY(other.getX(),other.getY())
+    return geom::Point<T,2>::makeXY(other.getX(),other.getY());
 }
 
 template <typename T>
 inline image::Point<T> convertToImage(geom::Point<T,2> const & other) {
     return image::Point<T>(other.getX(),other.getY());
+}
+
+inline geom::BoxI convertToGeom(image::BBox const & other) {
+    return geom::BoxI(convertToGeom(other.getLLC()), convertToGeom(other.getURC()), false);
+}
+
+inline image::BBox convertToImage(geom::BoxI const & other) {
+    return image::BBox(convertToImage(other.getMin()), convertToImage(other.getMax()));
 }
 
 }}}

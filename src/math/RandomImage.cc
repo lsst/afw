@@ -6,74 +6,78 @@
  * @ingroup afw
  */
 #include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/ImageAlgorithm.h"
 #include "lsst/afw/math/Random.h"
 
 namespace lsst {
 namespace afw {
 namespace math {
 
-template<typename ImageT, typename FunctionT>
-FunctionT for_each_pixel(ImageT *image, FunctionT func) {
-    for (int y = 0; y != image->getHeight(); ++y) {
-        for (typename ImageT::x_iterator ptr = image->row_begin(y), end = image->row_end(y); ptr != end; ++ptr) {
-            *ptr = func();
-        }
-    }
-
-    return func;
-}
-
 namespace {
-    struct do_random {
-        do_random(Random &rand) : _rand(rand) {}
-        virtual ~do_random() {}
 
-        virtual double operator()() = 0;
+    template<typename T>
+    struct do_random : lsst::afw::image::pixelOp0<T>{
+        do_random(Random &rand) : _rand(rand) {}
     protected:
         Random &_rand;
     };
 
-    struct do_uniform  : public do_random {
-        do_uniform(Random &rand) : do_random(rand) {}
+    template<typename T>
+    struct do_uniform  : public do_random<T> {
+        do_uniform(Random &rand) : do_random<T>(rand) {}
 
-        virtual double operator()() { return _rand.uniform(); }
+        virtual T operator()() const { return do_random<T>::_rand.uniform(); }
     };
 
-    struct do_uniformPos  : public do_random {
-        do_uniformPos(Random &rand) : do_random(rand) {}
+    template<typename T>
+    struct do_uniformPos  : public do_random<T> {
+        do_uniformPos(Random &rand) : do_random<T>(rand) {}
 
-        virtual double operator()() { return _rand.uniformPos(); }
+        virtual T operator()() const { return do_random<T>::_rand.uniformPos(); }
     };
 
-    struct do_uniformInt  : public do_random {
-        do_uniformInt(Random &rand, unsigned long n) : do_random(rand), _n(n) {}
+    template<typename T>
+    struct do_uniformInt  : public do_random<T> {
+        do_uniformInt(Random &rand, unsigned long n) : do_random<T>(rand), _n(n) {}
 
-        virtual double operator()() { return _rand.uniformInt(_n); }
+        virtual T operator()() const { return do_random<T>::_rand.uniformInt(_n); }
     private:
         unsigned long _n;
     };
 
-    struct do_flat : public do_random {
-        do_flat(Random &rand, double const a, double const b) : do_random(rand), _a(a), _b(b) {}
+    template<typename T>
+    struct do_flat : public do_random<T> {
+        do_flat(Random &rand, double const a, double const b) : do_random<T>(rand), _a(a), _b(b) {}
 
-        virtual double operator()() { return _rand.flat(_a, _b); }
+        virtual T operator()() const { return do_random<T>::_rand.flat(_a, _b); }
     private:
         double const _a;
         double const _b;
     };
 
-    struct do_gaussian : public do_random {
-        do_gaussian(Random &rand) : do_random(rand) {}
+    template<typename T>
+    struct do_gaussian : public do_random<T> {
+        do_gaussian(Random &rand) : do_random<T>(rand) {}
 
-        virtual double operator()() { return _rand.gaussian(); }
+        virtual T operator()() const { return do_random<T>::_rand.gaussian(); }
     };
 
-    struct do_chisq : public do_random {
-        do_chisq(Random &rand, double nu) : do_random(rand), _nu(nu) {}
+    template<typename T>
+    struct do_chisq : public do_random<T> {
+        do_chisq(Random &rand, double nu) : do_random<T>(rand), _nu(nu) {}
 
-        virtual double operator()() { return _rand.chisq(_nu); }
+        virtual T operator()() const { return do_random<T>::_rand.chisq(_nu); }
     private:
         double const _nu;
+    };
+
+    template<typename T>
+    struct do_poisson : public do_random<T> {
+        do_poisson(Random &rand, double mu) : do_random<T>(rand), _mu(mu) {}
+
+        virtual T operator()() const { return do_random<T>::_rand.poisson(_mu); }
+    private:
+        double const _mu;
     };
 }
 
@@ -85,7 +89,7 @@ template<typename ImageT>
 void randomUniformImage(ImageT *image,  ///< The image to set
                         Random &rand    ///< definition of random number algorithm, seed, etc.
                        ) {
-    for_each_pixel(image, do_uniform(rand));
+    lsst::afw::image::for_each_pixel(*image, do_uniform<typename ImageT::Pixel>(rand));
 }
 
 /**
@@ -95,7 +99,7 @@ template<typename ImageT>
 void randomUniformPosImage(ImageT *image,  ///< The image to set
                            Random &rand    ///< definition of random number algorithm, seed, etc.
                           ) {
-    for_each_pixel(image, do_uniformPos(rand));
+    lsst::afw::image::for_each_pixel(*image, do_uniformPos<typename ImageT::Pixel>(rand));
 }
 
 /**
@@ -106,7 +110,7 @@ void randomUniformIntImage(ImageT *image,  ///< The image to set
                            Random &rand,   ///< definition of random number algorithm, seed, etc.
                            unsigned long n ///< (exclusive) upper limit for random variates
                           ) {
-    for_each_pixel(image, do_uniformInt(rand, n));
+    lsst::afw::image::for_each_pixel(*image, do_uniformInt<typename ImageT::Pixel>(rand, n));
 }
 
 /**
@@ -118,7 +122,7 @@ void randomFlatImage(ImageT *image,     ///< The image to set
                      double const a,    ///< (inclusive) lower limit for random variates
                      double const b     ///< (exclusive) upper limit for random variates
                     ) {
-    for_each_pixel(image, do_flat(rand, a, b));
+    lsst::afw::image::for_each_pixel(*image, do_flat<typename ImageT::Pixel>(rand, a, b));
 }
 
 /**
@@ -128,7 +132,7 @@ template<typename ImageT>
 void randomGaussianImage(ImageT *image,  ///< The image to set
                          Random &rand    ///< definition of random number algorithm, seed, etc.
                         ) {
-    for_each_pixel(image, do_gaussian(rand));
+    lsst::afw::image::for_each_pixel(*image, do_gaussian<typename ImageT::Pixel>(rand));
 }
 
 /**
@@ -139,7 +143,19 @@ void randomChisqImage(ImageT *image,    ///< The image to set
                       Random &rand,     ///< definition of random number algorithm, seed, etc.
                       double const nu   ///< number of degrees of freedom
                      ) {
-    for_each_pixel(image, do_chisq(rand, nu));
+    lsst::afw::image::for_each_pixel(*image, do_chisq<typename ImageT::Pixel>(rand, nu));
+}
+
+
+/**
+ * Set image to random numbers with a gaussian N(0, 1) distribution
+ */
+template<typename ImageT>
+void randomPoissonImage(ImageT *image,    ///< The image to set
+                      Random &rand,     ///< definition of random number algorithm, seed, etc.
+                      double const mu   ///< mean of distribution
+                     ) {
+    lsst::afw::image::for_each_pixel(*image, do_poisson<typename ImageT::Pixel>(rand, mu));
 }
 
 /************************************************************************************************************/
@@ -152,9 +168,10 @@ void randomChisqImage(ImageT *image,    ///< The image to set
     template void randomUniformIntImage(lsst::afw::image::Image<T> *image, Random &rand, unsigned long n); \
     template void randomFlatImage(lsst::afw::image::Image<T> *image, Random &rand, double const a, double const b); \
     template void randomGaussianImage(lsst::afw::image::Image<T> *image, Random &rand); \
-    template void randomChisqImage(lsst::afw::image::Image<T> *image, Random &rand, double const nu);
+    template void randomChisqImage(lsst::afw::image::Image<T> *image, Random &rand, double const nu); \
+    template void randomPoissonImage(lsst::afw::image::Image<T> *image, Random &rand, double const mu);
     
-INSTANTIATE(float);
 INSTANTIATE(double);
+INSTANTIATE(float);
 
 }}}

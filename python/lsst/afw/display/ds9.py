@@ -4,8 +4,10 @@
 
 import os, re, math, sys, time
 
-try: import xpa
-except: print "Cannot import xpa"
+try:
+    import xpa
+except ImportError, e:
+    print >> sys.stderr, "Cannot import xpa: %s" % e
 
 import displayLib
 import lsst.afw.image as afwImage
@@ -340,7 +342,7 @@ def erase(frame=-1):
 
    ds9Cmd("frame %d; regions delete all" % frame)
 
-def dot(symb, c, r, frame=-1, size=2, ctype=GREEN):
+def dot(symb, c, r, frame=-1, size=2, ctype=None):
    """Draw a symbol onto the specified DS9 frame at (col,row) = (c,r) [0-based coordinates]
 Possible values are:
         +                Draw a +
@@ -358,7 +360,7 @@ Any other value is interpreted as a string to be drawn
    if isinstance(symb, int):
        symb = "%d" % (symb)
 
-   if ctype == GREEN:
+   if ctype == None:
        color = ""                       # the default
    else:
        color = ' # color=%s' % ctype
@@ -399,7 +401,7 @@ Any other value is interpreted as a string to be drawn
 
    ds9Cmd(cmd)
 
-def line(points, frame=-1, symbs=False, ctype=GREEN):
+def line(points, frame=-1, symbs=False, ctype=None):
    """Draw a set of symbols or connect the points, a list of (col,row)
 If symbs is True, draw points at the specified points using the desired symbol,
 otherwise connect the dots.  Ctype is the name of a colour (e.g. 'red')"""
@@ -414,7 +416,7 @@ otherwise connect the dots.  Ctype is the name of a colour (e.g. 'red')"""
       for (c, r) in points:
          dot(symbs, r, c, frame = frame, size = 0.5, ctype=ctype)
    else:
-      if ctype == GREEN:                # default
+      if ctype == None:                # default
           color = ""
       else:
           color = "# color=%s" % ctype

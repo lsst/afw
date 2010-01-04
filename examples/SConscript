@@ -2,6 +2,7 @@
 import glob, sys
 Import('env')
 
+env.Program(["forEachPixel.cc"], LIBS=env.getlibs("afw"))
 env.Program(["Image.cc"], LIBS=env.getlibs("afw"))
 env.Program(["Image_1.cc"], LIBS=env.getlibs("afw"))
 env.Program(["Image_2.cc"], LIBS=env.getlibs("afw"))
@@ -21,7 +22,6 @@ env.Program(["timePixelAccessGil.cc"], LIBS=env.getlibs("afw"))
 
 env.Program("chebyshev1Function", ["chebyshev1Function.cc"], LIBS=env.getlibs("afw"))
 env.Program("gaussianFunction", ["gaussianFunction.cc"], LIBS=env.getlibs("afw"))
-env.Program("integerDeltaFunction", ["integerDeltaFunction.cc"], LIBS=env.getlibs("afw"))
 env.Program("lanczosFunction", ["lanczosFunction.cc"], LIBS=env.getlibs("afw"))
 env.Program("polynomialFunction", ["polynomialFunction.cc"], LIBS=env.getlibs("afw"))
 
@@ -48,8 +48,23 @@ env.Program("integrate_cartesian", ["integrate_cartesian.cc"], LIBS=env.getlibs(
 env.Program("integrate_polar", ["integrate_polar.cc"], LIBS=env.getlibs("afw"))
 env.Program("integrate_example", ["integrate_example.cc"], LIBS=env.getlibs("afw"))
 
+env.Program("simpleStacker", ["simpleStacker.cc"], LIBS=env.getlibs("afw"))
+
 #
 # Build all ticket test files
 #
 for cfile in glob.glob("ticket*.cc"):
     env.Program(cfile, LIBS=env.getlibs("afw"))
+
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+#
+# Build the swig extension used to illustrate SpatialCells
+#
+env.CheckSwig("python", ilang="c++",
+              includedProducts=["afw", "utils", "daf_base", "daf_persistence", "daf_data",
+                                "pex_exceptions", "pex_logging", "pex_policy", "security"])
+
+testSpatialCellLib = env.LoadableModuleIncomplete("_testSpatialCellLib",
+                                                  ["testSpatialCellLib.i", "testSpatialCell.cc"],
+                                                  LIBS=env.getlibs("afw"))
+env.Program(["SpatialCellExample.cc", "testSpatialCell.cc"], LIBS=env.getlibs("afw"))
