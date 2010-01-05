@@ -5,4 +5,10 @@ if False:
     print "TURN DOXY BACK ON"
 else:
     doxy = env.Doxygen("doxygen.conf")
+    moduleList = ("display","detection","image","geom","image","math")
+    for module in moduleList:
+        env.Ignore(doxy, "../python/lsst/afw/%s/%sLib_wrap.cc" % (module,module))
+        env.Ignore(doxy, "../python/lsst/afw/%s/%sLib.py" % (module,module))
+        env.Depends(doxy, "../include/lsst/afw/%s.py" % (module,))
     env.Depends(doxy, "../include/lsst/afw/image/ImageExceptions.h")
+    #env.AlwaysBuild(doxy)
