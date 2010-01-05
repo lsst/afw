@@ -9,6 +9,7 @@ or
    >>> import Statistics; Statistics.run()
 """
 
+import sys
 import math
 import os
 import pdb  # we may want to say pdb.set_trace()

@@ -13,21 +13,20 @@ import pdb                              # we may want to say pdb.set_trace()
 import unittest
 import lsst.utils.tests as tests
 import lsst.pex.logging as logging
-import lsst.afw.image.imageLib as afwImage
-import lsst.afw.detection.detectionLib as afwDetection
+import lsst.afw.detection.detectionLib as afwDetect
 
 try:
     type(verbose)
 except NameError:
     verbose = 0
-    logging.Debug("afwDetection.Footprint", verbose)
+    logging.Debug("afwDetect.Footprint", verbose)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class PeakTestCase(unittest.TestCase):
     """A test case for Peak"""
     def setUp(self):
-        self.peak = afwDetection.Peak()
+        self.peak = afwDetect.Peak()
 
     def tearDown(self):
         del self.peak
@@ -35,14 +34,14 @@ class PeakTestCase(unittest.TestCase):
     def testGC(self):
         """Check that Peaks are automatically garbage collected (when MemoryTestCase runs)"""
         
-        f = afwDetection.Peak()
+        f = afwDetect.Peak()
 
     def testToString(self):
         assert self.peak.toString() != None
         
     def testCentroidInt(self):
         x, y = 10, -10
-        peak = afwDetection.Peak(x, y)
+        peak = afwDetect.Peak(x, y)
         self.assertEqual(peak.getIx(), x)
         self.assertEqual(peak.getIy(), y)
 
@@ -51,7 +50,7 @@ class PeakTestCase(unittest.TestCase):
 
     def testCentroidFloat(self):
         for x, y in [(5, 6), (10.5, -10.5)]:
-            peak = afwDetection.Peak(x, y)
+            peak = afwDetect.Peak(x, y)
             self.assertEqual(peak.getFx(), x)
             self.assertEqual(peak.getFy(), y)
 
@@ -61,7 +60,7 @@ class PeakTestCase(unittest.TestCase):
     def testId(self):
         """Test uniqueness of IDs"""
         
-        self.assertNotEqual(self.peak.getId(), afwDetection.Peak().getId())
+        self.assertNotEqual(self.peak.getId(), afwDetect.Peak().getId())
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

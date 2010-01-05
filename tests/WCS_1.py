@@ -3,8 +3,6 @@ import os
 import math
 import pdb                          # we may want to say pdb.set_trace()
 import unittest
-import sys
-
 
 import eups
 import lsst.afw.image as afwImage
@@ -65,7 +63,7 @@ class WCSTestCaseSDSS(unittest.TestCase):
 
     def testXyToRaDecArguments(self):
         """Check that conversion of xy to ra dec (and back again) works"""
-        xy = afwImage.PointD(110,123)
+        xy = afwImage.PointD(110, 123)
         raDec = self.wcs.xyToRaDec(xy)
         xy2 = self.wcs.raDecToXY(raDec)
 
@@ -133,7 +131,7 @@ class WCSTestCaseCFHT(unittest.TestCase):
     """A test case for WCS"""
 
     def setUp(self):
-        path=InputImagePath+"_img.fits"
+        path = InputImagePath + "_img.fits"
         self.metadata = afwImage.readMetadata(path)
         self.wcs = afwImage.Wcs(self.metadata)
         if False:

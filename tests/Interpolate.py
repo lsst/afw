@@ -15,12 +15,6 @@ import unittest
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions
 import lsst.afw.math as afwMath
-import lsst.afw.display.ds9 as ds9
-
-try:
-    type(display)
-except NameError:
-    display = False
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

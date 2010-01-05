@@ -9,9 +9,7 @@ or
    >>> import Coordinates; Coordinates.run()
 """
 
-import os
 import pdb  # we may want to say pdb.set_trace()
-import sys
 import unittest
 import numpy
 
@@ -25,15 +23,15 @@ class EllipseTestCase(unittest.TestCase):
     
     def setUp(self):
         self.cores = (
-            geom.ellipses.Axes(4,3,1),
-            geom.ellipses.Distortion(0.5,-0.3,3.2),
-            geom.ellipses.LogShear(0.1,0.5,0.7),
-            geom.ellipses.Quadrupole(5,3,-1),
+            geom.ellipses.Axes(4, 3, 1),
+            geom.ellipses.Distortion(0.5, -0.3, 3.2),
+            geom.ellipses.LogShear(0.1, 0.5, 0.7),
+            geom.ellipses.Quadrupole(5, 3, -1),
             )
 
-    def assertClose(self,a,b):
-        if not numpy.allclose(a,b):
-            return self.assertEqual(a,b)
+    def assertClose(self, a, b):
+        if not numpy.allclose(a, b):
+            return self.assertEqual(a, b)
         else:
             return self.assert_(True)
 
@@ -47,7 +45,7 @@ class EllipseTestCase(unittest.TestCase):
                 v = core[n]
                 v += numpy.random.randn() * 1E-3
                 core[n] = v
-                self.assertEqual(core[n],v)
+                self.assertEqual(core[n], v)
             center = geom.Point2D.makeXY(*numpy.random.randn(2))
             ellipse = core.makeEllipse(center)
             for n in range(3):
@@ -69,12 +67,12 @@ class EllipseTestCase(unittest.TestCase):
     def testTransform(self):
         for core in self.cores:
             t1 = core.getGenerator()
-            unit_circle_core = core.__class__(geom.ellipses.Axes(1,1,0))
+            unit_circle_core = core.__class__(geom.ellipses.Axes(1, 1, 0))
             self.assertClose(tuple(unit_circle_core.transform(t1)), core)
             center = geom.Point2D.makeXY(*numpy.random.randn(2))
             ellipse = core.makeEllipse(center)
             t2 = ellipse.getGenerator()
-            unit_circle_ellipse = ellipse.__class__(unit_circle_core, geom.Point2D.makeXY(0,0))
+            unit_circle_ellipse = ellipse.__class__(unit_circle_core, geom.Point2D.makeXY(0, 0))
             self.assertClose(tuple(unit_circle_ellipse.transform(t2)), ellipse)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

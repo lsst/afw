@@ -27,12 +27,11 @@ class ticket1045TestCase(unittest.TestCase):
         pass
 
     def testTicket1045(self):
-        values = [1.08192,1.08792,1.08774,1.09953,1.1122,1.09408,0.879792,1.12235,1.10115,1.08999]
+        values = [1.08192, 1.08792, 1.08774, 1.09953, 1.1122, 1.09408, 0.879792, 1.12235, 1.10115, 1.08999]
         knownMean, knownStdev =  num.mean(values), 0.069903889977279199
 
         # this was reported to work
         dmean1 = afwMath.makeStatistics(values, afwMath.NPOINT | afwMath.MEAN | afwMath.STDEV)
-        n1 = dmean1.getValue(afwMath.NPOINT)
         mean1 = dmean1.getValue(afwMath.MEAN)
         stdev1 = dmean1.getValue(afwMath.STDEV)
         self.assertAlmostEqual(mean1, knownMean, 8)
@@ -44,7 +43,6 @@ class ticket1045TestCase(unittest.TestCase):
         knownStdevClip = 0.012984991763998597
         
         dmean2 = afwMath.makeStatistics(values, afwMath.NPOINT | afwMath.MEANCLIP | afwMath.STDEVCLIP)
-        n2 = dmean2.getValue(afwMath.NPOINT)
         mean2 = dmean2.getValue(afwMath.MEANCLIP)
         stdev2 = dmean2.getValue(afwMath.STDEVCLIP)
         self.assertEqual(mean2, knownMeanClip)

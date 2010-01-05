@@ -125,7 +125,7 @@ class SourceTestCase(unittest.TestCase):
             pers = dafPers.Persistence.getPersistence(pol)
             loc  = dafPers.LogicalLocation("mysql://lsst10.ncsa.uiuc.edu:3306/test_source")
             dp = dafBase.PropertySet()
-            dp.setInt("visitId", int(time.clock())*16384 + random.randint(0,16383))
+            dp.setInt("visitId", int(time.clock())*16384 + random.randint(0, 16383))
             dp.setInt("sliceId", 0)
             dp.setInt("numSlices", 1)
             dp.setLongLong("ampExposureId", 10)

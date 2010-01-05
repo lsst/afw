@@ -48,7 +48,7 @@ class MaskedImageTestCase(unittest.TestCase):
         if False:
             self.baseName = os.path.join(dataDir, "Small_MI")
         else:
-            self.baseName = os.path.join(dataDir,"CFHT", "D4", "cal-53535-i-797722_1")
+            self.baseName = os.path.join(dataDir, "CFHT", "D4", "cal-53535-i-797722_1")
         self.mi = afwImage.MaskedImageF(self.baseName)
 
     def tearDown(self):
@@ -63,8 +63,8 @@ class MaskedImageTestCase(unittest.TestCase):
         if display:
             ds9.mtv(self.mi)
 
-        self.assertEqual(image.get(32, 1), 3728);
-        self.assertEqual(mask.get(0,0), 2); # == BAD
+        self.assertEqual(image.get(32, 1), 3728)
+        self.assertEqual(mask.get(0, 0), 2) # == BAD
             
     def testFitsReadConform(self):
         """Check if we read MaskedImages and make them replace Mask's plane dictionary"""
@@ -75,8 +75,8 @@ class MaskedImageTestCase(unittest.TestCase):
         image = self.mi.getImage()
         mask = self.mi.getMask()
 
-        self.assertEqual(image.get(32, 1), 3728);
-        self.assertEqual(mask.get(0,0), 1); # i.e. not shifted 1 place to the right
+        self.assertEqual(image.get(32, 1), 3728)
+        self.assertEqual(mask.get(0, 0), 1) # i.e. not shifted 1 place to the right
 
         self.assertEqual(mask.getMaskPlane("CR"), 3, "Plane CR has value specified in FITS file")
 
@@ -92,7 +92,8 @@ class MaskedImageTestCase(unittest.TestCase):
         """Check that conforming a mask invalidates the plane dictionary"""
 
         hdu, metadata, bbox, conformMasks = 0, None, afwImage.BBox(), True
-        testMask = afwImage.MaskU(afwImage.MaskedImageF_maskFileName(self.baseName), hdu, metadata, bbox, conformMasks)
+        testMask = afwImage.MaskU(afwImage.MaskedImageF_maskFileName(self.baseName),
+                                  hdu, metadata, bbox, conformMasks)
 
         mask = self.mi.getMask()
         def tst(mask=mask):
@@ -102,7 +103,8 @@ class MaskedImageTestCase(unittest.TestCase):
 
     def testTicket617(self):
         """Test reading an F64 image and converting it to a MaskedImage"""
-        im = afwImage.ImageD(100, 100); im.set(666)
+        im = afwImage.ImageD(100, 100)
+        im.set(666)
         mi = afwImage.MaskedImageD(im)
 
     def testReadWriteMEF(self):

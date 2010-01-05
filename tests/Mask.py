@@ -45,8 +45,10 @@ class MaskTestCase(unittest.TestCase):
         self.val1 = self.BAD | self.CR
         self.val2 = self.val1 | self.EDGE
 
-        self.mask1 = afwImage.MaskU(100, 200); self.mask1.set(self.val1)
-        self.mask2 = afwImage.MaskU(self.mask1.getDimensions()); self.mask2.set(self.val2)
+        self.mask1 = afwImage.MaskU(100, 200)
+        self.mask1.set(self.val1)
+        self.mask2 = afwImage.MaskU(self.mask1.getDimensions())
+        self.mask2.set(self.val2)
 
         dataDir = eups.productDir("afwdata")
         if dataDir:
@@ -64,46 +66,48 @@ class MaskTestCase(unittest.TestCase):
     def testInitializeMasks(self):
         val = 0x1234
         msk = afwImage.MaskU(10, 10, val)
-        self.assertEqual(msk.get(0,0), val)
+        self.assertEqual(msk.get(0, 0), val)
 
         msk2 = afwImage.MaskU(afwImage.pairIntInt(10, 10), val)
-        self.assertEqual(msk2.get(0,0), val)
+        self.assertEqual(msk2.get(0, 0), val)
         
     def testSetGetMasks(self):
-        self.assertEqual(self.mask1.get(0,0), self.val1)
+        self.assertEqual(self.mask1.get(0, 0), self.val1)
     
     def testOrMasks(self):
         self.mask2 |= self.mask1
         self.mask1 |= self.val2
         
-        self.assertEqual(self.mask1.get(0,0), self.val1 | self.val2)
-        self.assertEqual(self.mask2.get(0,0), self.val1 | self.val2)
+        self.assertEqual(self.mask1.get(0, 0), self.val1 | self.val2)
+        self.assertEqual(self.mask2.get(0, 0), self.val1 | self.val2)
     
     def testAndMasks(self):
         self.mask2 &= self.mask1
         self.mask1 &= self.val2
         
-        self.assertEqual(self.mask1.get(0,0), self.val1 & self.val2)
-        self.assertEqual(self.mask1.get(0,0), self.BAD | self.CR)
-        self.assertEqual(self.mask2.get(0,0), self.val1 & self.val2)
+        self.assertEqual(self.mask1.get(0, 0), self.val1 & self.val2)
+        self.assertEqual(self.mask1.get(0, 0), self.BAD | self.CR)
+        self.assertEqual(self.mask2.get(0, 0), self.val1 & self.val2)
 
     def testXorMasks(self):
         self.mask2 ^= self.mask1
         self.mask1 ^= self.val2
         
-        self.assertEqual(self.mask1.get(0,0), self.val1 ^ self.val2)
-        self.assertEqual(self.mask2.get(0,0), self.val1 ^ self.val2)
+        self.assertEqual(self.mask1.get(0, 0), self.val1 ^ self.val2)
+        self.assertEqual(self.mask2.get(0, 0), self.val1 ^ self.val2)
 
     def testLogicalMasksMismatch(self):
         "Test logical operations on Masks of different sizes"
-        i1 = afwImage.MaskU(100,100); i1.set(100)
-        i2 = afwImage.MaskU(10,10);   i2.set(10)
+        i1 = afwImage.MaskU(100, 100)
+        i1.set(100)
+        i2 = afwImage.MaskU(10, 10)
+        i2.set(10)
         
         def tst(i1, i2): i1 |= i2
         utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i1, i2)
 
-        def tst(i1, i2): i1 &= i2
-        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i1, i2)
+        def tst2(i1, i2): i1 &= i2
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst2, i1, i2)
     
     def testMaskPlanes(self):
         planes = afwImage.MaskU_getMaskPlaneDict()
@@ -117,8 +121,8 @@ class MaskTestCase(unittest.TestCase):
         smask = afwImage.MaskU(self.mask1) # shallow copy
         
         self.mask1 |= 32767             # should only change dmask
-        self.assertEqual(dmask.get(0,0), self.val1)
-        self.assertEqual(smask.get(0,0), self.val1 | 32767)
+        self.assertEqual(dmask.get(0, 0), self.val1)
+        self.assertEqual(smask.get(0, 0), self.val1 | 32767)
 
     def testBBox(self):
         x0, y0, width, height = 1, 2, 10, 20
@@ -148,7 +152,8 @@ class MaskTestCase(unittest.TestCase):
         mask2.set(666)
         smask <<= mask2
         
-        del smask; del mask2
+        del smask
+        del mask2
         
         self.assertEqual(self.mask1.get(0, 0), self.val1)
         self.assertEqual(self.mask1.get(1, 1), 666)
@@ -163,21 +168,21 @@ class MaskTestCase(unittest.TestCase):
             return
 
         nMaskPlanes0 = afwImage.MaskU_getNumPlanesUsed()
-        mask = afwImage.MaskU(self.maskFile) # will take any unrecognised mask planes and shift them into unused slots
+        mask = afwImage.MaskU(self.maskFile) # will shift any unrecognised mask planes into unused slots
 
         if False:
             for (k, v) in afwImage.MaskU_getMaskPlaneDict().items():
                 print k, v
 
-        self.assertEqual(mask.get(32,1), 0)
-        self.assertEqual(mask.get(50,50), 0)
-        self.assertEqual(mask.get(0,0), (1<<nMaskPlanes0))
+        self.assertEqual(mask.get(32, 1), 0)
+        self.assertEqual(mask.get(50, 50), 0)
+        self.assertEqual(mask.get(0,  0), (1<<nMaskPlanes0))
 
     def testReadFitsConform(self):
         if not self.maskFile:
             print >> sys.stderr, "Warning: afwdata is not set up; not running the FITS I/O tests"
             return
-
+        
         hdu = 0
         mask = afwImage.MaskU(self.maskFile, hdu, None, afwImage.BBox(), True)
 
@@ -189,9 +194,9 @@ class MaskTestCase(unittest.TestCase):
             for (k, v) in afwImage.MaskU_getMaskPlaneDict().items():
                 print k, v
 
-        self.assertEqual(mask.get(32,1), 0)
-        self.assertEqual(mask.get(50,50), 0)
-        self.assertEqual(mask.get(0,0), 1)
+        self.assertEqual(mask.get(32, 1), 0)
+        self.assertEqual(mask.get(50, 50), 0)
+        self.assertEqual(mask.get(0, 0), 1)
 
     def testWriteFits(self):
         if not self.maskFile:
@@ -201,9 +206,9 @@ class MaskTestCase(unittest.TestCase):
         nMaskPlanes0 = afwImage.MaskU_getNumPlanesUsed()
         mask = afwImage.MaskU(self.maskFile)
 
-        self.assertEqual(mask.get(32,1), 0)
-        self.assertEqual(mask.get(50,50), 0)
-        self.assertEqual(mask.get(0,0), (1<<nMaskPlanes0)) # as header had none of the canonical planes
+        self.assertEqual(mask.get(32, 1), 0)
+        self.assertEqual(mask.get(50, 50), 0)
+        self.assertEqual(mask.get(0, 0), (1<<nMaskPlanes0)) # as header had none of the canonical planes
 
         tmpFile = "foo.fits"
         mask.writeFits(tmpFile)
@@ -212,8 +217,8 @@ class MaskTestCase(unittest.TestCase):
         #
         rmask = afwImage.MaskU(tmpFile)
         os.remove(tmpFile)
-
-        self.assertEqual(mask.get(0,0), rmask.get(0,0))
+        
+        self.assertEqual(mask.get(0, 0), rmask.get(0, 0))
         #
         # Check that we wrote (and read) the metadata successfully
         #
@@ -261,7 +266,7 @@ class OldMaskTestCase(unittest.TestCase):
     and modified to run with the new (DC3) APIs"""
 
     def setUp(self):
-        self.testMask = afwImage.MaskU(300,400,0)
+        self.testMask = afwImage.MaskU(300, 400, 0)
         #self.testMask.set(0)
 
         self.testMask.clearMaskPlaneDict() # reset so tests will be deterministic
@@ -291,12 +296,12 @@ class OldMaskTestCase(unittest.TestCase):
             self.assertEqual(self.testMask.addMaskPlane(p), nplane, "Assigning plane %s" % (p))
             nplane += 1
 
-        for p in range(0,8):
+        for p in range(0, 8):
             sp = "P%d" % p
             plane = self.testMask.addMaskPlane(sp)
             #print "Assigned %s to plane %d" % (sp, plane)
 
-        for p in range(0,8):
+        for p in range(0, 8):
             sp = "P%d" % p
             self.testMask.removeMaskPlane(sp)
 
@@ -423,31 +428,32 @@ class OldMaskTestCase(unittest.TestCase):
         testMask3.setMaskPlaneValues(p2, 0, 5, 1)
 
         if display:
-            im = afwImage.ImageF(self.testMask3.getDimensions()); im.set(0)
+            im = afwImage.ImageF(self.testMask3.getDimensions())
+            im.set(0)
             ds9.mtv(im)                 # bug in ds9's Mask display; needs an Image first
             ds9.mtv(testMask3)
 
-        self.assertEqual(testMask3.get(0,0), testMask3.getPlaneBitMask(name1))
-        self.assertEqual(testMask3.get(0,1), testMask3.getPlaneBitMask(name2))
+        self.assertEqual(testMask3.get(0, 0), testMask3.getPlaneBitMask(name1))
+        self.assertEqual(testMask3.get(0, 1), testMask3.getPlaneBitMask(name2))
 
         self.testMask.removeMaskPlane(name1)
         self.testMask.removeMaskPlane(name2)
         self.testMask.addMaskPlane(name2) # added in opposite order to testMask3
         self.testMask.addMaskPlane(name1)
 
-        self.assertEqual(self.testMask.get(0,0), 0)
+        self.assertEqual(self.testMask.get(0, 0), 0)
 
         if display:
             ds9.mtv(im, frame=1)
             ds9.mtv(testMask3, frame=1)
 
-        self.assertNotEqual(testMask3.get(0,0), testMask3.getPlaneBitMask(name1))
-        self.assertNotEqual(testMask3.get(0,1), testMask3.getPlaneBitMask(name2))
+        self.assertNotEqual(testMask3.get(0, 0), testMask3.getPlaneBitMask(name1))
+        self.assertNotEqual(testMask3.get(0, 1), testMask3.getPlaneBitMask(name2))
 
         testMask3.conformMaskPlanes(oldDict)
 
-        self.assertEqual(testMask3.get(0,0), testMask3.getPlaneBitMask(name1))
-        self.assertEqual(testMask3.get(0,1), testMask3.getPlaneBitMask(name2))
+        self.assertEqual(testMask3.get(0, 0), testMask3.getPlaneBitMask(name1))
+        self.assertEqual(testMask3.get(0, 1), testMask3.getPlaneBitMask(name2))
 
         if display:
             ds9.mtv(im, frame=2)

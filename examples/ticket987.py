@@ -26,7 +26,7 @@ def main():
     image   = mimg.getImage()
     backobj = afwMath.makeBackground(image, bctrl)
     image  -= backobj.getImageF()
-    del image;
+    del image
     del backobj
 
 #################################################

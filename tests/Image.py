@@ -33,8 +33,10 @@ class ImageTestCase(unittest.TestCase):
     """A test case for Image"""
     def setUp(self):
         self.val1, self.val2 = 10, 100
-        self.image1 = afwImage.ImageF(100, 200); self.image1.set(self.val1)
-        self.image2 = afwImage.ImageF(self.image1.getDimensions()); self.image2.set(self.val2)
+        self.image1 = afwImage.ImageF(100, 200)
+        self.image1.set(self.val1)
+        self.image2 = afwImage.ImageF(self.image1.getDimensions())
+        self.image2.set(self.val2)
         self.function = afwMath.PolynomialFunction2D(2)
         self.function.setParameters(range(self.function.getNParameters()))
 
@@ -46,137 +48,145 @@ class ImageTestCase(unittest.TestCase):
         val = 666
         for ctor in (afwImage.ImageU, afwImage.ImageI, afwImage.ImageF, afwImage.ImageD):
             im = ctor(10, 10, val)
-            self.assertEqual(im.get(0,0), val)
+            self.assertEqual(im.get(0, 0), val)
 
             im2 = ctor(afwImage.pairIntInt(10, 10), val)
-            self.assertEqual(im2.get(0,0), val)
+            self.assertEqual(im2.get(0, 0), val)
 
     def testSetGetImages(self):
-        self.assertEqual(self.image1.get(0,0), self.val1)
+        self.assertEqual(self.image1.get(0, 0), self.val1)
     
     def testAddImages(self):
         self.image2 += self.image1
         self.image1 += self.val1
         
-        self.assertEqual(self.image1.get(0,0), 2*self.val1)
-        self.assertEqual(self.image2.get(0,0), self.val1 + self.val2)
+        self.assertEqual(self.image1.get(0, 0), 2*self.val1)
+        self.assertEqual(self.image2.get(0, 0), self.val1 + self.val2)
 
         self.image1.set(self.val1)
         self.image1 += self.function
 
         for j in range(self.image1.getHeight()):
             for i in range(self.image1.getWidth()):
-                self.assertEqual(self.image1.get(i,j), self.val1 + self.function(i,j))
+                self.assertEqual(self.image1.get(i, j), self.val1 + self.function(i, j))
     
     def testAddScaledImages(self):
         c = 10.0
         self.image1.scaledPlus(c, self.image2)
         
-        self.assertEqual(self.image1.get(0,0), self.val1 + c*self.val2)
+        self.assertEqual(self.image1.get(0, 0), self.val1 + c*self.val2)
     
     def testSubtractImages(self):
         self.image2 -= self.image1
         self.image1 -= self.val1
         
-        self.assertEqual(self.image1.get(0,0), 0)
-        self.assertEqual(self.image2.get(0,0), self.val2 - self.val1)
+        self.assertEqual(self.image1.get(0, 0), 0)
+        self.assertEqual(self.image2.get(0, 0), self.val2 - self.val1)
 
         self.image1.set(self.val1)
         self.image1 -= self.function
 
         for j in range(self.image1.getHeight()):
             for i in range(self.image1.getWidth()):
-                self.assertEqual(self.image1.get(i,j), self.val1 - self.function(i,j))
+                self.assertEqual(self.image1.get(i, j), self.val1 - self.function(i, j))
     
     def testArithmeticImagesMismatch(self):
         "Test arithmetic operations on Images of different sizes"
-        i1 = afwImage.ImageF(100,100); i1.set(100)
-        i2 = afwImage.ImageF(10,10);   i2.set(10)
+        i1 = afwImage.ImageF(100, 100)
+        i1.set(100)
+        i2 = afwImage.ImageF(10, 10)
+        i2.set(10)
         
-        def tst(i1, i2): i1 -= i2
-        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i1, i2)
-        def tst(i1, i2): i1.scaledMinus(1.0, i2)
-        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i2, i1)
+        def tst1(i1, i2):
+            i1 -= i2
+        def tst2(i1, i2):
+            i1.scaledMinus(1.0, i2)
+        def tst3(i1, i2):
+            i1 += i2
+        def tst4(i1, i2):
+            i1.scaledPlus(1.0, i2)
+        def tst5(i1, i2):
+            i1 *= i2
+        def tst6(i1, i2):
+            i1.scaledMultiplies(1.0, i2)
+        def tst7(i1, i2):
+            i1 /= i2
+        def tst8(i1, i2):
+            i1.scaledDivides(1.0, i2)
 
-        def tst(i1, i2): i1 += i2
-        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i1, i2)
-        def tst(i1, i2): i1.scaledPlus(1.0, i2)
-        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i2, i1)
+        tsts12 = [tst1, tst3, tst5, tst7]
+        for tst in tsts12:
+            utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i1, i2)
 
-        def tst(i1, i2): i1 *= i2
-        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i1, i2)
-        def tst(i1, i2): i1.scaledMultiplies(1.0, i2)
-        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i2, i1)
+        tsts21 = [tst2, tst4, tst6, tst8]
+        for tst in tsts21:
+            utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i2, i1)
 
-        def tst(i1, i2): i1 /= i2
-        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i1, i2)
-        def tst(i1, i2): i1.scaledDivides(1.0, i2)
-        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i2, i1)
-
+        
     def testSubtractScaledImages(self):
         c = 10.0
         self.image1.scaledMinus(c, self.image2)
         
-        self.assertEqual(self.image1.get(0,0), self.val1 - c*self.val2)
+        self.assertEqual(self.image1.get(0, 0), self.val1 - c*self.val2)
     
     def testMultiplyImages(self):
         self.image2 *= self.image1
         self.image1 *= self.val1
         
-        self.assertEqual(self.image1.get(0,0), self.val1*self.val1)
-        self.assertEqual(self.image2.get(0,0), self.val2*self.val1)
+        self.assertEqual(self.image1.get(0, 0), self.val1*self.val1)
+        self.assertEqual(self.image2.get(0, 0), self.val2*self.val1)
     
     def testMultiplesScaledImages(self):
         c = 10.0
         self.image1.scaledMultiplies(c, self.image2)
         
-        self.assertEqual(self.image1.get(0,0), self.val1 * c*self.val2)
+        self.assertEqual(self.image1.get(0, 0), self.val1 * c*self.val2)
     
     def testDivideImages(self):
         self.image2 /= self.image1
         self.image1 /= self.val1
         
-        self.assertEqual(self.image1.get(0,0), 1)
-        self.assertEqual(self.image2.get(0,0), self.val2/self.val1)
+        self.assertEqual(self.image1.get(0, 0), 1)
+        self.assertEqual(self.image2.get(0, 0), self.val2/self.val1)
     
     def testDividesScaledImages(self):
         c = 10.0
         self.image1.scaledDivides(c, self.image2)
         
-        self.assertAlmostEqual(self.image1.get(0,0), self.val1/(c*self.val2))
+        self.assertAlmostEqual(self.image1.get(0, 0), self.val1/(c*self.val2))
     
     def testCopyConstructors(self):
         dimage = afwImage.ImageF(self.image1, True) # deep copy
         simage = afwImage.ImageF(self.image1) # shallow copy
         
         self.image1 += 2                # should only change dimage
-        self.assertEqual(dimage.get(0,0), self.val1)
-        self.assertEqual(simage.get(0,0), self.val1 + 2)
+        self.assertEqual(dimage.get(0, 0), self.val1)
+        self.assertEqual(simage.get(0, 0), self.val1 + 2)
 
     def testGeneralisedCopyConstructors(self):
         imageU = self.image1.convertU16() # these are generalised (templated) copy constructors in C++
         imageF = imageU.convertFloat()
 
-        self.assertEqual(imageU.get(0,0), self.val1)
-        self.assertEqual(imageF.get(0,0), self.val1)
+        self.assertEqual(imageU.get(0, 0), self.val1)
+        self.assertEqual(imageF.get(0, 0), self.val1)
             
     def testPoint(self):
         """Test PointD and PointI"""
         x, y = 10, 20
         for point in (afwImage.PointD, afwImage.PointI):
             p = point(x, y)
-
+            
             self.assertEqual(x, p.getX())
             self.assertEqual(x, p[0])
 
             self.assertEqual(y, p.getY())
             self.assertEqual(y, p[1])
 
-            def tst(): p[-1]
-            self.assertRaises(IndexError, tst)
+            def tst1(): p[-1]
+            self.assertRaises(IndexError, tst1)
 
-            def tst(): p[2]
-            self.assertRaises(IndexError, tst)
+            def tst2(): p[2]
+            self.assertRaises(IndexError, tst2)
         
     def testBBox(self):
         x0, y0, width, height = 1, 2, 10, 20
@@ -213,7 +223,7 @@ class ImageTestCase(unittest.TestCase):
         bbox = afwImage.BBox()
         point = afwImage.PointI(1, 1)
         
-        bbox.grow(point);
+        bbox.grow(point)
 
         self.assert_(bbox.contains(point))
         #
@@ -319,12 +329,14 @@ class ImageTestCase(unittest.TestCase):
         simage1 = afwImage.ImageF(self.image1, afwImage.BBox(afwImage.PointI(1, 1), 10, 5))
         
         simage = afwImage.ImageF(simage1, afwImage.BBox(afwImage.PointI(1, 1), 3, 2))
-        self.assertEqual(simage.getX0(), 2); self.assertEqual(simage.getY0(), 2) # i.e. wrt self.image1
+        self.assertEqual(simage.getX0(), 2)
+        self.assertEqual(simage.getY0(), 2) # i.e. wrt self.image1
 
         image2 = afwImage.ImageF(simage.getDimensions())
         image2.set(666)
         simage <<= image2
-        del simage; del image2
+        del simage
+        del image2
 
         self.checkImgPatch(self.image1, 2, 2)
         self.checkImgPatch(simage1, 1, 1)
@@ -339,12 +351,14 @@ class ImageTestCase(unittest.TestCase):
         simage1.setXY0(afwImage.PointI(0, 0)) # reset origin; doesn't affect pixel coordinate systems
 
         simage = afwImage.ImageF(simage1, afwImage.BBox(afwImage.PointI(1, 1), 3, 2))
-        self.assertEqual(simage.getX0(), 1); self.assertEqual(simage.getY0(), 1)
+        self.assertEqual(simage.getX0(), 1)
+        self.assertEqual(simage.getY0(), 1)
 
         image2 = afwImage.ImageF(simage.getDimensions())
         image2.set(666)
         simage <<= image2
-        del simage; del image2
+        del simage
+        del image2
         
         self.checkImgPatch(self.image1, 2, 2)
         self.checkImgPatch(simage1, 1, 1)
@@ -392,7 +406,7 @@ class DecoratedImageTestCase(unittest.TestCase):
     def testCreateDecoratedImage(self):
         self.assertEqual(self.dimage1.getWidth(), self.width)
         self.assertEqual(self.dimage1.getHeight(), self.height)
-        self.assertEqual(self.dimage1.getImage().get(0,0), self.val1)
+        self.assertEqual(self.dimage1.getImage().get(0, 0), self.val1)
 
     def testCreateDecoratedImageFromImage(self):
         image = afwImage.ImageF(self.width, self.height)
@@ -401,16 +415,16 @@ class DecoratedImageTestCase(unittest.TestCase):
         dimage = afwImage.DecoratedImageF(image)
         self.assertEqual(dimage.getWidth(), self.width)
         self.assertEqual(dimage.getHeight(), self.height)
-        self.assertEqual(dimage.getImage().get(0,0), self.val1)
+        self.assertEqual(dimage.getImage().get(0, 0), self.val1)
     
     def testCopyConstructors(self):
         dimage = afwImage.DecoratedImageF(self.dimage1, True) # deep copy
         self.dimage1.getImage().set(0, 0, 1 + 2*self.val1)
-        self.assertEqual(dimage.getImage().get(0,0), self.val1)
+        self.assertEqual(dimage.getImage().get(0, 0), self.val1)
 
         dimage = afwImage.DecoratedImageF(self.dimage1) # shallow copy
         self.dimage1.getImage().set(0, 0, 1 + 2*self.val1)
-        self.assertNotEqual(dimage.getImage().get(0,0), self.val1)
+        self.assertNotEqual(dimage.getImage().get(0, 0), self.val1)
 
     def testReadFits(self):
         """Test reading FITS files"""
@@ -430,7 +444,7 @@ class DecoratedImageTestCase(unittest.TestCase):
 
         self.assertEqual(imgU.getHeight(), 256)
         self.assertEqual(imgF.getImage().getWidth(), 256)
-        self.assertEqual(imgU.getImage().get(0,0), imgF.getImage().get(0,0))
+        self.assertEqual(imgU.getImage().get(0, 0), imgF.getImage().get(0, 0))
         #
         # Check the metadata
         #
@@ -446,7 +460,7 @@ class DecoratedImageTestCase(unittest.TestCase):
 
         self.assertEqual(varU.getHeight(), 256)
         self.assertEqual(varF.getImage().getWidth(), 256)
-        self.assertEqual(varU.getImage().get(0,0), varF.getImage().get(0,0))
+        self.assertEqual(varU.getImage().get(0, 0), varF.getImage().get(0, 0))
         #
         # Read a char image
         #
@@ -454,7 +468,7 @@ class DecoratedImageTestCase(unittest.TestCase):
 
         self.assertEqual(maskImg.getHeight(), 256)
         self.assertEqual(maskImg.getWidth(), 256)
-        self.assertEqual(maskImg.get(0,0), 1)
+        self.assertEqual(maskImg.get(0, 0), 1)
 
     def testWriteFits(self):
         """Test writing FITS files"""
@@ -474,7 +488,7 @@ class DecoratedImageTestCase(unittest.TestCase):
         rimage = afwImage.DecoratedImageF(tmpFile)
         os.remove(tmpFile)
 
-        self.assertEqual(self.dimage1.getImage().get(0,0), rimage.getImage().get(0,0))
+        self.assertEqual(self.dimage1.getImage().get(0, 0), rimage.getImage().get(0, 0))
         #
         # Check that we wrote (and read) the metadata successfully
         if self.fileForMetadata:

@@ -16,15 +16,15 @@ import lsst.utils.tests as tests
 import lsst.pex.logging as logging
 import lsst.afw.image.imageLib as afwImage
 import lsst.afw.math.mathLib as afwMath
-import lsst.afw.detection.detectionLib as afwDetection
-import lsst.afw.detection.utils as afwDetectionUtils
+import lsst.afw.detection.detectionLib as afwDetect
+import lsst.afw.detection.utils as afwDetectUtils
 import lsst.afw.display.ds9 as ds9
 
 try:
     type(verbose)
 except NameError:
     verbose = 0
-    logging.Debug("afwDetection.Footprint", verbose)
+    logging.Debug("afwDetect.Footprint", verbose)
 
 try:
     type(display)
@@ -72,34 +72,34 @@ class ThresholdTestCase(unittest.TestCase):
         -tests mal-formed parameters
         """
         try:
-            afwDetection.createThreshold(3.4)
+            afwDetect.createThreshold(3.4)
         except:
             self.fail("Failed to build Threshold with proper parameters")
         
         try:
-            afwDetection.createThreshold(3.4, "foo bar")
+            afwDetect.createThreshold(3.4, "foo bar")
         except:
             pass
         else:
             self.fail("Threhold parameters not properly validated")
 
         try:
-            afwDetection.createThreshold(3.4, "variance")
+            afwDetect.createThreshold(3.4, "variance")
         except:
             self.fail("Failed to build Threshold with proper parameters")
 
         try:
-            afwDetection.createThreshold(3.4, "stdev")
+            afwDetect.createThreshold(3.4, "stdev")
         except:
             self.fail("Failed to build Threshold with proper parameters")
 
         try:
-            afwDetection.createThreshold(3.4, "value")
+            afwDetect.createThreshold(3.4, "value")
         except:
             self.fail("Failed to build Threshold with proper parameters")
         
         try:
-            afwDetection.createThreshold(3.4, "value", False)
+            afwDetect.createThreshold(3.4, "value", False)
         except:
             self.fail("Failed to build Threshold with proper parameters")
         
@@ -107,17 +107,17 @@ class ThresholdTestCase(unittest.TestCase):
 class FootprintTestCase(unittest.TestCase):
     """A test case for Footprint"""
     def setUp(self):
-        self.foot = afwDetection.Footprint()
+        self.foot = afwDetect.Footprint()
 
     def tearDown(self):
         del self.foot
 
     def testToString(self):
         y, x0, x1 = 10, 100, 101
-        s = afwDetection.Span(y, x0, x1)
+        s = afwDetect.Span(y, x0, x1)
         self.assertEqual(s.toString(), toString(y, x0, x1))
 
-    def testBbox(self):
+    def testSetBbox(self):
         """Test setBBox"""
         
         self.assertEqual(self.foot.setBBox(), None)
@@ -125,12 +125,12 @@ class FootprintTestCase(unittest.TestCase):
     def testGC(self):
         """Check that Footprints are automatically garbage collected (when MemoryTestCase runs)"""
         
-        f = afwDetection.Footprint()
+        f = afwDetect.Footprint()
 
     def testId(self):
         """Test uniqueness of IDs"""
         
-        self.assertNotEqual(self.foot.getId(), afwDetection.Footprint().getId())
+        self.assertNotEqual(self.foot.getId(), afwDetect.Footprint().getId())
 
     def testAddSpans(self):
         """Add spans to a Footprint"""
@@ -143,7 +143,7 @@ class FootprintTestCase(unittest.TestCase):
 
     def testBbox(self):
         """Add Spans and check bounding box"""
-        foot = afwDetection.Footprint()
+        foot = afwDetect.Footprint()
         for y, x0, x1 in [(10, 100, 105),
                           (11, 99, 104)]:
             foot.addSpan(y, x0, x1)
@@ -159,8 +159,8 @@ class FootprintTestCase(unittest.TestCase):
     def testSpanShift(self):
         """Test our ability to shift spans"""
 
-        span = afwDetection.Span(10, 100, 105)
-        foot = afwDetection.Footprint()
+        span = afwDetect.Span(10, 100, 105)
+        foot = afwDetect.Footprint()
 
         foot.addSpan(span, 1, 2)
 
@@ -172,7 +172,7 @@ class FootprintTestCase(unittest.TestCase):
         #
         # Shift that span using Span.shift
         #
-        foot = afwDetection.Footprint()
+        foot = afwDetect.Footprint()
         span.shift(-1, -2)
         foot.addSpan(span)
 
@@ -185,7 +185,7 @@ class FootprintTestCase(unittest.TestCase):
     def testFootprintFromBBox1(self):
         """Create a rectangular Footprint"""
         x0, y0, w, h = 9, 10, 7, 4
-        foot = afwDetection.Footprint(afwImage.BBox(afwImage.PointI(x0, y0), w, h))
+        foot = afwDetect.Footprint(afwImage.BBox(afwImage.PointI(x0, y0), w, h))
 
         bbox = foot.getBBox()
 
@@ -208,7 +208,7 @@ class FootprintTestCase(unittest.TestCase):
         """Check that Footprint.getBBox() returns a copy"""
         
         x0, y0, w, h = 9, 10, 7, 4
-        foot = afwDetection.Footprint(afwImage.BBox(afwImage.PointI(x0, y0), w, h))
+        foot = afwDetect.Footprint(afwImage.BBox(afwImage.PointI(x0, y0), w, h))
         bbox = foot.getBBox()
 
         dx, dy = 10, 20
@@ -220,7 +220,9 @@ class FootprintTestCase(unittest.TestCase):
     def testBCircle2i(self):
         """Test the BCircle2i constructors"""
         
-        x = 100; y = 200; r = 1.5
+        x = 100
+        y = 200
+        r = 1.5
         
         bc = afwImage.BCircle(afwImage.PointI(x, y), r)
         for i in range(2):
@@ -234,7 +236,7 @@ class FootprintTestCase(unittest.TestCase):
     def testFootprintFromBCircle(self):
         """Create a circular Footprint"""
 
-        foot = afwDetection.Footprint(afwImage.BCircle(afwImage.PointI(9, 15), 6),
+        foot = afwDetect.Footprint(afwImage.BCircle(afwImage.PointI(9, 15), 6),
                                       afwImage.BBox(afwImage.PointI(0, 0), 20, 30))
 
         idImage = afwImage.ImageU(foot.getRegion().getWidth(), foot.getRegion().getHeight())
@@ -247,8 +249,9 @@ class FootprintTestCase(unittest.TestCase):
 
     def testGrow(self):
         """Test growing a footprint"""
-        x0, y0 = 20, 20;  width, height = 20, 30
-        foot1 = afwDetection.Footprint(afwImage.BBox(afwImage.PointI(x0, y0), width, height),
+        x0, y0 = 20, 20
+        width, height = 20, 30
+        foot1 = afwDetect.Footprint(afwImage.BBox(afwImage.PointI(x0, y0), width, height),
                                        afwImage.BBox(afwImage.PointI(0, 0), 100, 100))
         bbox1 = foot1.getBBox()
 
@@ -262,7 +265,7 @@ class FootprintTestCase(unittest.TestCase):
 
         ngrow = 5
         for isotropic in (True, False):
-            foot2 = afwDetection.growFootprint(foot1, ngrow, isotropic)
+            foot2 = afwDetect.growFootprint(foot1, ngrow, isotropic)
             bbox2 = foot2.getBBox()
 
             if False and display:
@@ -271,9 +274,11 @@ class FootprintTestCase(unittest.TestCase):
 
                 i = 1
                 for foot in [foot1, foot2]:
-                    foot.insertIntoImage(idImage, i); i += 1
+                    foot.insertIntoImage(idImage, i)
+                    i += 1
 
-                metricImage = afwImage.ImageF("foo.fits"); ds9.mtv(metricImage, frame=1)
+                metricImage = afwImage.ImageF("foo.fits")
+                ds9.mtv(metricImage, frame=1)
                 ds9.mtv(idImage)
 
             # check bbox1
@@ -297,7 +302,7 @@ class FootprintTestCase(unittest.TestCase):
 
     def testFootprintToBBoxList(self):
         """Test footprintToBBoxList"""
-        foot = afwDetection.Footprint(0, afwImage.BBox(afwImage.PointI(0, 0), 12, 10))
+        foot = afwDetect.Footprint(0, afwImage.BBox(afwImage.PointI(0, 0), 12, 10))
         for y, x0, x1 in [(3, 3, 5), (3, 7, 7),
                           (4, 2, 3), (4, 5, 7),
                           (5, 2, 3), (5, 5, 8),
@@ -312,8 +317,9 @@ class FootprintTestCase(unittest.TestCase):
         if display:
             ds9.mtv(idImage)
 
-        idImageFromBBox = idImage.Factory(idImage, True); idImageFromBBox.set(0)
-        bboxes = afwDetection.footprintToBBoxList(foot)
+        idImageFromBBox = idImage.Factory(idImage, True)
+        idImageFromBBox.set(0)
+        bboxes = afwDetect.footprintToBBoxList(foot)
         for bbox in bboxes:
             x0, y0, x1, y1 = bbox.getX0(), bbox.getY0(), bbox.getX1(), bbox.getY1()
 
@@ -322,8 +328,10 @@ class FootprintTestCase(unittest.TestCase):
                     idImageFromBBox.set(x, y, 1)
 
             if display:
-                x0 -= 0.5; y0 -= 0.5
-                x1 += 0.5; y1 += 0.5
+                x0 -= 0.5
+                y0 -= 0.5
+                x1 += 0.5
+                y1 += 0.5
 
                 ds9.line([(x0, y0), (x1, y0), (x1, y1), (x0, y1), (x0, y0)], ctype=ds9.RED)
 
@@ -335,7 +343,7 @@ class FootprintTestCase(unittest.TestCase):
     def testWriteDefect(self):
         """Write a Footprint as a set of Defects"""
 
-        foot = afwDetection.Footprint(0, afwImage.BBox(afwImage.PointI(0, 0), 12, 10))
+        foot = afwDetect.Footprint(0, afwImage.BBox(afwImage.PointI(0, 0), 12, 10))
         for y, x0, x1 in [(3, 3, 5), (3, 7, 7),
                           (4, 2, 3), (4, 5, 7),
                           (5, 2, 3), (5, 5, 8),
@@ -348,14 +356,15 @@ class FootprintTestCase(unittest.TestCase):
         else:
             fd = sys.stdout
             
-        afwDetectionUtils.writeFootprintAsDefects(fd, foot)
+        afwDetectUtils.writeFootprintAsDefects(fd, foot)
 
 
     def testNormalize(self):
         """Test Footprint.normalize"""
 
         w, h = 12, 10
-        im = afwImage.ImageU(w, h); im.set(0)
+        im = afwImage.ImageU(w, h)
+        im.set(0)
         #
         # Create a footprint;  note that these Spans overlap
         #
@@ -367,7 +376,7 @@ class FootprintTestCase(unittest.TestCase):
                        ],
                       ):
 
-            foot = afwDetection.Footprint(0, afwImage.BBox(afwImage.PointI(0, 0), w, h))
+            foot = afwDetect.Footprint(0, afwImage.BBox(afwImage.PointI(0, 0), w, h))
             for y, x0, x1 in spans:
                 foot.addSpan(y, x0, x1)
 
@@ -383,7 +392,7 @@ class FootprintTestCase(unittest.TestCase):
             #
             # Normalise the Footprint, removing overlapping spans
             #
-            foot.normalize();
+            foot.normalize()
 
             idImage.set(0)
             foot.insertIntoImage(idImage, 1)
@@ -414,16 +423,16 @@ class FootprintTestCase(unittest.TestCase):
         if False and display:
             ds9.mtv(mi, frame=0)
 
-        ds = afwDetection.makeFootprintSet(mi, afwDetection.Threshold(15))
+        ds = afwDetect.makeFootprintSet(mi, afwDetect.Threshold(15))
 
         objects = ds.getFootprints()
-        afwDetection.setMaskFromFootprintList(mi.getMask(), objects, 0x1)
+        afwDetect.setMaskFromFootprintList(mi.getMask(), objects, 0x1)
 
         self.assertEqual(mi.getMask().get(4, 2), 0x0)
         self.assertEqual(mi.getMask().get(3, 6), 0x1)
         
         self.assertEqual(mi.getImage().get(3, 6), 20)
-        afwDetection.setImageFromFootprintList(mi.getImage(), objects, 5.0)
+        afwDetect.setImageFromFootprintList(mi.getImage(), objects, 5.0)
         self.assertEqual(mi.getImage().get(4, 2), 10)
         self.assertEqual(mi.getImage().get(3, 6), 5)
         
@@ -459,11 +468,11 @@ class FootprintSetTestCase(unittest.TestCase):
     def testGC(self):
         """Check that FootprintSets are automatically garbage collected (when MemoryTestCase runs)"""
         
-        ds = afwDetection.FootprintSetF(afwImage.MaskedImageF(10, 20), afwDetection.Threshold(10))
+        ds = afwDetect.FootprintSetF(afwImage.MaskedImageF(10, 20), afwDetect.Threshold(10))
 
     def testFootprints(self):
         """Check that we found the correct number of objects and that they are correct"""
-        ds = afwDetection.FootprintSetF(self.ms, afwDetection.Threshold(10))
+        ds = afwDetect.FootprintSetF(self.ms, afwDetect.Threshold(10))
 
         objects = ds.getFootprints()
 
@@ -473,7 +482,7 @@ class FootprintSetTestCase(unittest.TestCase):
             
     def testFootprints2(self):
         """Check that we found the correct number of objects using makeFootprintSet"""
-        ds = afwDetection.makeFootprintSet(self.ms, afwDetection.Threshold(10))
+        ds = afwDetect.makeFootprintSet(self.ms, afwDetect.Threshold(10))
 
         objects = ds.getFootprints()
 
@@ -483,7 +492,7 @@ class FootprintSetTestCase(unittest.TestCase):
             
     def testFootprintsMasks(self):
         """Check that detectionSets have the proper mask bits set"""
-        ds = afwDetection.FootprintSetF(self.ms, afwDetection.Threshold(10), "OBJECT")
+        ds = afwDetect.FootprintSetF(self.ms, afwDetect.Threshold(10), "OBJECT")
         objects = ds.getFootprints()
 
         if display:
@@ -497,7 +506,7 @@ class FootprintSetTestCase(unittest.TestCase):
 
     def testFootprintsImageId(self):
         """Check that we can insert footprints into an Image"""
-        ds = afwDetection.FootprintSetF(self.ms, afwDetection.Threshold(10))
+        ds = afwDetect.FootprintSetF(self.ms, afwDetect.Threshold(10))
         objects = ds.getFootprints()
 
         idImage = afwImage.ImageU(self.ms.getDimensions())
@@ -517,7 +526,7 @@ class FootprintSetTestCase(unittest.TestCase):
 
     def testFootprintSetImageId(self):
         """Check that we can insert a FootprintSet into an Image, setting relative IDs"""
-        ds = afwDetection.FootprintSetF(self.ms, afwDetection.Threshold(10))
+        ds = afwDetect.FootprintSetF(self.ms, afwDetect.Threshold(10))
         objects = ds.getFootprints()
 
         idImage = ds.insertIntoImage(True)
@@ -531,7 +540,7 @@ class FootprintSetTestCase(unittest.TestCase):
 
     def testFootprintsImage(self):
         """Check that we can search Images as well as MaskedImages"""
-        ds = afwDetection.FootprintSetF(self.ms.getImage(), afwDetection.Threshold(10))
+        ds = afwDetect.FootprintSetF(self.ms.getImage(), afwDetect.Threshold(10))
 
         objects = ds.getFootprints()
 
@@ -542,15 +551,16 @@ class FootprintSetTestCase(unittest.TestCase):
     def testGrow2(self):
         """Grow some more interesting shaped Footprints.  Informative with display, but no numerical tests"""
         
-        ds = afwDetection.FootprintSetF(self.ms, afwDetection.Threshold(10), "OBJECT")
+        ds = afwDetect.FootprintSetF(self.ms, afwDetect.Threshold(10), "OBJECT")
 
         idImage = afwImage.ImageU(self.ms.getDimensions())
         idImage.set(0)
 
         i = 1
         for foot in ds.getFootprints()[0:1]:
-            gfoot = afwDetection.growFootprint(foot, 3, False)
-            gfoot.insertIntoImage(idImage, i); i += 1
+            gfoot = afwDetect.growFootprint(foot, 3, False)
+            gfoot.insertIntoImage(idImage, i)
+            i += 1
 
         if display:
             ds9.mtv(self.ms, frame=0)
@@ -592,7 +602,7 @@ class NaNFootprintSetTestCase(unittest.TestCase):
 
     def testFootprints(self):
         """Check that we found the correct number of objects using makeFootprintSet"""
-        ds = afwDetection.makeFootprintSet(self.ms, afwDetection.Threshold(10), "DETECTED")
+        ds = afwDetect.makeFootprintSet(self.ms, afwDetect.Threshold(10), "DETECTED")
 
         objects = ds.getFootprints()
 

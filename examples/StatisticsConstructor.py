@@ -8,8 +8,6 @@ import lsst.afw.image as afwImage
 
 def main():
     
-    gaussFunction = afwMath.GaussianFunction2D(3, 2, 0.5)
-    gaussKernel   = afwMath.AnalyticKernel(10, 10, gaussFunction)
     mimg          = afwImage.MaskedImageF(100, 100)
     mimValue      = (2, 0x0, 1)
     mimg.set(mimValue)
@@ -20,10 +18,15 @@ def main():
                  afwMath.makeStatistics(mimg, afwMath.MEAN).getValue()),
     
     # call the constructor directly ... once for image plane, then for variance
+    # - make sure we're not using weighted stats for this
+    sctrl = afwMath.StatisticsControl()
+    sctrl.setWeighted(False)
     print fmt % ("Using Statistics on getImage():", "(should be " + str(mimValue[0]) + ")",
-                 afwMath.StatisticsF(mimg.getImage(), mimg.getMask(), afwMath.MEAN).getValue()),
+                 afwMath.StatisticsF(mimg.getImage(), mimg.getMask(), mimg.getVariance(),
+                                     afwMath.MEAN, sctrl).getValue()),
     print fmt % ("Using Statistics on getVariance():", "(should be " + str(mimValue[2]) + ")",
-                 afwMath.StatisticsF(mimg.getVariance(), mimg.getMask(), afwMath.MEAN).getValue()),
+                 afwMath.StatisticsF(mimg.getVariance(), mimg.getMask(), mimg.getVariance(),
+                                     afwMath.MEAN, sctrl).getValue()),
 
     # call makeStatistics as a front-end for the constructor
     print fmt % ("Using makeStatistics on getImage():", "(should be " + str(mimValue[0]) + ")",

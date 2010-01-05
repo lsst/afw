@@ -206,7 +206,8 @@ class BackgroundTestCase(unittest.TestCase):
         if display:
             ds9.mtv(mi, frame = 0)
 
-        im = mi.getImage(); im -= backobj.getImageF()
+        im = mi.getImage()
+        im -= backobj.getImageF()
 
         if display:
             ds9.mtv(mi, frame = 1)

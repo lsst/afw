@@ -76,11 +76,11 @@ def refConvolve(imMaskVar, kernel, doNormalize, copyEdge):
     else:
         # initialize output arrays to all edge pixels; non-edge pixels will be overwritten below
         retImage = numpy.zeros(image.shape, dtype=image.dtype)
-        retImage[:,:] = numpy.nan
+        retImage[:, :] = numpy.nan
         retMask = numpy.zeros(mask.shape, dtype=mask.dtype)
-        retMask[:,:] = EdgeMaskPixel
+        retMask[:, :] = EdgeMaskPixel
         retVariance = numpy.zeros(variance.shape, dtype=image.dtype)
-        retVariance[:,:] = numpy.inf
+        retVariance[:, :] = numpy.inf
     
     kCols = kernel.getWidth()
     kRows = kernel.getHeight()
@@ -455,12 +455,12 @@ class ConvolveTestCase(unittest.TestCase):
         kImArr[2, 2] = 1.0
         kImage = imTestUtils.imageFromArray(kImArr, afwImage.ImageD)
         kVec.append(afwMath.FixedKernel(kImage))
-        kImArr[:,:] = 0.0
+        kImArr[:, :] = 0.0
         kImArr[0:2, 0:2] = 0.125
         kImArr[3:5, 3:5] = 0.125
         kImage = imTestUtils.imageFromArray(kImArr, afwImage.ImageD)
         kVec.append(afwMath.FixedKernel(kImage))
-        kImArr[:,:] = 0.0
+        kImArr[:, :] = 0.0
         kImArr[0:2, 3:5] = 0.125
         kImArr[3:5, 0:2] = 0.125
         kImage = imTestUtils.imageFromArray(kImArr, afwImage.ImageD)

@@ -9,18 +9,13 @@ or
    >>> import ConvolutionVisitor; ConvolutionVisitor.run()
 """
 
-import math
-import os
 import pdb  # we may want to say pdb.set_trace()
-import sys
 import unittest
-import numpy
 
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions
 import lsst.afw.image.imageLib as afwImage
 import lsst.afw.math as afwMath
-import eups
 
 class ConvolutionVisitorTestCase(unittest.TestCase):
     """A test case for ConvolutionVisitor"""

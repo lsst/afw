@@ -11,15 +11,10 @@ or
 import os, re, sys
 import pdb
 import unittest
-import random
-import time
 import eups
 
-import lsst.daf.base as dafBase
-import lsst.pex.policy as dafPolicy
-import lsst.daf.persistence as dafPers
 import lsst.utils.tests as utilsTests
-import lsst.afw.detection as afwDet
+import lsst.afw.detection as afwDetect
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -27,8 +22,8 @@ class SourceMatchTestCase(unittest.TestCase):
     """A test case for matching SourceSets"""
 
     def setUp(self):
-        self.ss1 = afwDet.SourceSet()
-        self.ss2 = afwDet.SourceSet()
+        self.ss1 = afwDetect.SourceSet()
+        self.ss2 = afwDetect.SourceSet()
 
     def tearDown(self):
         del self.ss1
@@ -37,21 +32,21 @@ class SourceMatchTestCase(unittest.TestCase):
     def testIdentity(self):
         nobj = 1000
         for i in range(nobj):
-            s = afwDet.Source()
+            s = afwDetect.Source()
             s.setId(i)
             s.setRa(10 + 0.001*i)
             s.setDec(10 + 0.001*i)
 
             self.ss1.append(s)
 
-            s = afwDet.Source()
+            s = afwDetect.Source()
             s.setId(2*nobj + i)
             s.setRa(10 + 0.001*i)
             s.setDec(10 + 0.001*i)
 
             self.ss2.append(s)
 
-        mat = afwDet.matchRaDec(self.ss1, self.ss2, 1.0)
+        mat = afwDetect.matchRaDec(self.ss1, self.ss2, 1.0)
 
         self.assertEqual(len(mat), nobj)
 
@@ -74,8 +69,8 @@ class SourceMatchTestCase(unittest.TestCase):
         #
         ifd = open(os.path.join(eups.productDir("afwdata"), "CFHT", "D2", "sdss.dat"), "r")
 
-        sdss = afwDet.SourceSet()
-        sdssSecondary = afwDet.SourceSet()
+        sdss = afwDetect.SourceSet()
+        sdssSecondary = afwDetect.SourceSet()
 
         PRIMARY, SECONDARY = 1, 2       # values of mode
 
@@ -91,8 +86,8 @@ class SourceMatchTestCase(unittest.TestCase):
             ra, dec = [float(f) for f in fields[3:5]]
             psfMags = [float(f) for f in fields[5:]]
 
-            s = afwDet.Source()
-            s.setId(objId);
+            s = afwDetect.Source()
+            s.setId(objId)
             s.setRa(ra)
             s.setDec(dec)
             s.setPsfFlux(psfMags[band])
@@ -111,7 +106,7 @@ class SourceMatchTestCase(unittest.TestCase):
         #
         ifd = open(os.path.join(eups.productDir("afwdata"), "CFHT", "D2", "template.dat"), "r")
 
-        template = afwDet.SourceSet()
+        template = afwDetect.SourceSet()
 
         id = 0
         for line in ifd.readlines():
@@ -126,8 +121,9 @@ class SourceMatchTestCase(unittest.TestCase):
             if flags & 0x1:             # EDGE
                 continue
 
-            s = afwDet.Source()
-            s.setId(id); id += 1
+            s = afwDetect.Source()
+            s.setId(id)
+            id += 1
             s.setRa(ra)
             s.setDec(dec)
             s.setPsfFlux(flux[0])
@@ -138,7 +134,7 @@ class SourceMatchTestCase(unittest.TestCase):
         #
         # Actually do the match
         #
-        matches = afwDet.matchRaDec(sdss, template, 1.0)
+        matches = afwDetect.matchRaDec(sdss, template, 1.0)
 
         self.assertEqual(len(matches), 901)
 
@@ -154,7 +150,7 @@ class SourceMatchTestCase(unittest.TestCase):
         for s in sdssSecondary:
             sdss.append(s)
 
-        matches = afwDet.matchRaDec(sdss, 1.0, False)
+        matches = afwDetect.matchRaDec(sdss, 1.0, False)
         nmiss = 1                                              # one object doesn't match
         self.assertEqual(len(matches), len(sdssSecondary) - nmiss)
         #
@@ -170,7 +166,7 @@ class SourceMatchTestCase(unittest.TestCase):
                 if s.getId() not in matchIds:
                     print "RHL", s.getId()
 
-        matches = afwDet.matchRaDec(sdss, 1.0, True)
+        matches = afwDetect.matchRaDec(sdss, 1.0, True)
         self.assertEqual(len(matches), 2*(len(sdssSecondary) - nmiss))
         
         if False:
@@ -178,8 +174,9 @@ class SourceMatchTestCase(unittest.TestCase):
                 s0 = mat[0]
                 s1 = mat[1]
                 d = mat[2]
-                print s0.getId(), s1.getId(), s0.getRa(), s0.getDec(), s1.getRa(), s1.getDec(), s0.getPsfFlux(), s1.getPsfFlux()
-
+                print s0.getId(), s1.getId(), s0.getRa(), s0.getDec(),
+                print s1.getRa(), s1.getDec(), s0.getPsfFlux(), s1.getPsfFlux()
+                
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

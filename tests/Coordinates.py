@@ -9,9 +9,7 @@ or
    >>> import Coordinates; Coordinates.run()
 """
 
-import os
 import pdb  # we may want to say pdb.set_trace()
-import sys
 import unittest
 import numpy
 
@@ -23,9 +21,9 @@ import lsst.afw.geom as geom
 
 class CoordinateTestCase(unittest.TestCase):
     
-    def assertClose(self,a,b):
-        if not numpy.allclose(a,b):
-            return self.assertEqual(a,b)
+    def assertClose(self, a, b):
+        if not numpy.allclose(a, b):
+            return self.assertEqual(a, b)
         else:
             return self.assert_(True)
 
@@ -81,14 +79,14 @@ class PointTestCase(CoordinateTestCase):
     def setUp(self):
         self.classes = [
             (float, geom.Point2D, lambda: numpy.random.randn(2), geom.Point2D.makeXY),
-            (int, geom.Point2I, lambda: numpy.random.randint(-5,5,2), geom.Point2I.makeXY),
+            (int, geom.Point2I, lambda: numpy.random.randint(-5, 5, 2), geom.Point2I.makeXY),
             (float, geom.Point3D, lambda: numpy.random.randn(3), geom.Point3D.makeXYZ),
-            (int, geom.Point3I, lambda: numpy.random.randint(-5,5,3), geom.Point3I.makeXYZ),
+            (int, geom.Point3I, lambda: numpy.random.randint(-5, 5, 3), geom.Point3I.makeXYZ),
             ]
 
     def testArithmetic(self):
         for dtype, cls, rnd, ctor in self.classes:
-            Extent = geom.Extent[dtype,cls.dimensions]
+            Extent = geom.Extent[dtype, cls.dimensions]
             vector1 = rnd()
             vector2 = rnd()
             p1 = ctor(*vector1)
@@ -115,14 +113,14 @@ class ExtentTestCase(CoordinateTestCase):
     def setUp(self):
         self.classes = [
             (float, geom.Extent2D, lambda: numpy.random.randn(2), geom.Extent2D.makeXY),
-            (int, geom.Extent2I, lambda: numpy.random.randint(-5,5,2), geom.Extent2I.makeXY),
+            (int, geom.Extent2I, lambda: numpy.random.randint(-5, 5, 2), geom.Extent2I.makeXY),
             (float, geom.Extent3D, lambda: numpy.random.randn(3), geom.Extent3D.makeXYZ),
-            (int, geom.Extent3I, lambda: numpy.random.randint(-5,5,3), geom.Extent3I.makeXYZ),
+            (int, geom.Extent3I, lambda: numpy.random.randint(-5, 5, 3), geom.Extent3I.makeXYZ),
             ]
 
     def testArithmetic(self):
         for dtype, cls, rnd, ctor in self.classes:
-            Point = geom.Point[dtype,cls.dimensions]
+            Point = geom.Point[dtype, cls.dimensions]
             vector1 = rnd()
             vector2 = rnd()
             p1 = ctor(*vector1)

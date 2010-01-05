@@ -120,11 +120,12 @@ class DiaSourceTestCase(unittest.TestCase):
         if dafPers.DbAuth.available("lsst10.ncsa.uiuc.edu", "3306"):
             pol  = dafPolicy.Policy()
             pol.set("Formatter.PersistableDiaSourceVector.DiaSource.templateTableName", "DIASource")
-            pol.set("Formatter.PersistableDiaSourceVector.DiaSource.tableNamePattern", "_tmp_v%(visitId)_DiaSource")
+            pol.set("Formatter.PersistableDiaSourceVector.DiaSource.tableNamePattern",
+                    "_tmp_v%(visitId)_DiaSource")
             pers = dafPers.Persistence.getPersistence(pol)
             loc  = dafPers.LogicalLocation("mysql://lsst10.ncsa.uiuc.edu:3306/test_diasource")
             dp = dafBase.PropertySet()
-            dp.setInt("visitId", int(time.clock())*16384 + random.randint(0,16383))
+            dp.setInt("visitId", int(time.clock())*16384 + random.randint(0, 16383))
             dp.setInt("sliceId", 0)
             dp.setInt("numSlices", 1)
             dp.setLongLong("ampExposureId", 10)

@@ -13,8 +13,7 @@ import os
 import sys
 
 import eups
-import lsst.pex.exceptions as pexExcept
-import lsst.afw.detection as afwDetection
+import lsst.afw.detection as afwDetect
 import lsst.afw.image.imageLib as afwImage
 import lsst.afw.math.mathLib as afwMath
 import lsst.afw.display.ds9 as ds9
@@ -47,9 +46,9 @@ def readImage(filename=None):
     # Subtract the background.  We'd use a canned procedure, but that's in meas/utils/sourceDetection.py. We
     # can't fix those pesky cosmic rays either, as that's in a dependent product (meas/algorithms) too
     #
-    bctrl = afwMath.BackgroundControl(afwMath.Interpolate.NATURAL_SPLINE);
-    bctrl.setNxSample(int(mi.getWidth()/256) + 1);
-    bctrl.setNySample(int(mi.getHeight()/256) + 1);
+    bctrl = afwMath.BackgroundControl(afwMath.Interpolate.NATURAL_SPLINE)
+    bctrl.setNxSample(int(mi.getWidth()/256) + 1)
+    bctrl.setNySample(int(mi.getHeight()/256) + 1)
     bctrl.sctrl.setNumSigmaClip(3.0)  
     bctrl.sctrl.setNumIter(2)
 
@@ -66,11 +65,11 @@ def readImage(filename=None):
     #
     # Find sources
     #
-    threshold = afwDetection.Threshold(5, afwDetection.Threshold.STDEV)
+    threshold = afwDetect.Threshold(5, afwDetect.Threshold.STDEV)
     npixMin = 5                         # we didn't smooth
-    fs = afwDetection.makeFootprintSet(mi, threshold, "DETECTED", npixMin)
+    fs = afwDetect.makeFootprintSet(mi, threshold, "DETECTED", npixMin)
     grow, isotropic = 1, False
-    fs = afwDetection.makeFootprintSet(fs, grow, isotropic)
+    fs = afwDetect.makeFootprintSet(fs, grow, isotropic)
     fs.setMask(mi.getMask(), "DETECTED")
 
     return mi, fs
@@ -119,7 +118,7 @@ def SpatialCellSetDemo(filename=None):
     cellSet.visitCandidates(visitor)
     print "There are %d candidates" % (visitor.getN())
     
-    ctypes = ["red", "yellow", "cyan",]
+    ctypes = ["red", "yellow", "cyan", ]
     for i in range(cellSet.getCellList().size()):
         cell = cellSet.getCellList()[i]
         cell.visitCandidates(visitor)

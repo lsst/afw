@@ -103,11 +103,14 @@ class StatisticsTestCase(unittest.TestCase):
     def testStatisticsConstructor(self):
         if False:
             statsI = afwMath.StatisticsI(self.mimgI.getImage(), self.mimgI.getMask(),
-                                        afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN | afwMath.SUM, self.sctrl)
+                                         afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN | afwMath.SUM,
+                                         self.sctrl)
             statsF = afwMath.StatisticsF(self.mimgF.getImage(), self.mimgF.getMask(),
-                                        afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN | afwMath.SUM, self.sctrl)
+                                        afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN | afwMath.SUM,
+                                         self.sctrl)
             statsD = afwMath.StatisticsD(self.mimgD.getImage(), self.mimgD.getMask(),
-                                        afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN | afwMath.SUM, self.sctrl)
+                                        afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN | afwMath.SUM,
+                                         self.sctrl)
 
             self.compareStatistics(statsI, self.mimgI.getWidth()*self.mimgI.getHeight())
             self.compareStatistics(statsF, self.mimgF.getWidth()*self.mimgF.getHeight())
@@ -117,7 +120,7 @@ class StatisticsTestCase(unittest.TestCase):
             
     # Test the Mask specialization
     def testMask(self):
-        mask = afwImage.MaskU(10, 10);
+        mask = afwImage.MaskU(10, 10)
         mask.set(0x0)
 
         mask.set(1, 1, 0x10)

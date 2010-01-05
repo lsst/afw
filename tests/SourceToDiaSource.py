@@ -10,12 +10,7 @@ or
 """
 import pdb
 import unittest
-import random
-import time
 
-import lsst.daf.base as dafBase
-import lsst.pex.policy as dafPolicy
-import lsst.daf.persistence as dafPers
 import lsst.utils.tests as utilsTests
 import lsst.afw.detection as afwDet
 

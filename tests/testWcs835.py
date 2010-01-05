@@ -1,9 +1,6 @@
 #!/usr/bin/env python
-import os
-
 import unittest
 import lsst.utils.tests as tests
-import eups
 import lsst.afw.image as afwImage
 import lsst.daf.base as dafBase
 
@@ -84,7 +81,8 @@ class TanSipTestCases(unittest.TestCase):
         y   = 200
         ra  = 215.51863778475067
         dec = +53.1780639
-
+        print "Skipping testTanSip2() with x=%d, y=%d, ra=%f, dec=%f" % (x, y, ra, dec)
+        #self.evalTanSip(ra, dec, x, y)
         
     def testTanSip3(self):
         x   = 427

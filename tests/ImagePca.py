@@ -9,9 +9,7 @@ or
    >>> import ImagePca; ImagePca.run()
 """
 
-import os
 import pdb  # we may want to say pdb.set_trace()
-import sys
 import unittest
 
 import lsst.utils.tests as utilsTests
@@ -42,10 +40,12 @@ class ImagePcaTestCase(unittest.TestCase):
         
         width, height = 10, 20
         im1 = afwImage.ImageF(width, height)
-        val1 = 10; im1.set(val1)
+        val1 = 10
+        im1.set(val1)
 
         im2 = im1.Factory(im1.getDimensions())
-        val2 = 20; im2.set(val2)
+        val2 = 20
+        im2.set(val2)
 
         self.assertEqual(afwImage.innerProduct(im1, im1), width*height*val1*val1)
         self.assertEqual(afwImage.innerProduct(im1, im2), width*height*val1*val2)
@@ -107,7 +107,6 @@ class ImagePcaTestCase(unittest.TestCase):
         width, height = 20, 10
 
         values = (100, 200, 300)
-        meanVal = 0
         for val in values:
             im = afwImage.ImageF(width, height)
             im.set(val)

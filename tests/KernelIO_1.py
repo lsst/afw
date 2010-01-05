@@ -1,13 +1,10 @@
 #!/usr/bin/env python
-import os
-import math
 import pdb                          # we may want to say pdb.set_trace()
 import unittest
 
 import numpy
 
 import lsst.utils.tests as utilsTests
-import lsst.pex.exceptions as pexExcept
 import lsst.pex.logging as pexLog
 import lsst.pex.policy as pexPolicy
 import lsst.daf.base as dafBase
@@ -51,7 +48,7 @@ class KernelIOTestCase(unittest.TestCase):
             for col in range(inImage.getWidth()):
                 inImage.set(col, row, inArr[col, row])
         
-        k = afwMath.FixedKernel(inImage);
+        k = afwMath.FixedKernel(inImage)
 
         pol = pexPolicy.Policy()
         additionalData = dafBase.PropertySet()

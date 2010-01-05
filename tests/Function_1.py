@@ -80,8 +80,9 @@ class FunctionTestCase(unittest.TestCase):
                     self.fail("%s = %s != %s for x=%s, xMin=%s, xMax=%s, xNorm=%s, coeffs=%s" % \
                         (f.__class__.__name__, f(x), predVal, x, xMin, xMax, xNorm, coeffs))
             if not numpy.allclose((minXNorm, maxXNorm), (-1.0, 1.0)):
-                raise RuntimeError("Invalid x normalization: xMin=%s, xMax=%s, min/max xNorm=(%s, %s) != (-1, 1)" %
-                    (xMin, xMax, minXNorm, maxXNorm))
+                raise RuntimeError("Invalid x normalization: xMin=%s, xMax=%s, " +
+                                   "min/max xNorm=(%s, %s) != (-1, 1)" %
+                                   (xMin, xMax, minXNorm, maxXNorm))
         
     def testGaussianFunction1D(self):
         """A test for GaussianFunction1D"""
@@ -217,8 +218,10 @@ class FunctionTestCase(unittest.TestCase):
                             yAdj = y - yOffset
                             predVal = basicLanczos1(xAdj, n) * basicLanczos1(yAdj, n)
                             if not numpy.allclose(predVal, f(x, y)):
-                                self.fail("%s = %s != %s for n=%s, x=%s, xOffset=%s, yOffset=%s, xAdj=%s, yAdj=%s" % \
-                                    (f.__class__.__name__, f(x, y), predVal, n, x, xOffset, yOffset, xAdj, yAdj))
+                                self.fail("%s = %s != %s for n=%s, x=%s, " +
+                                          "xOffset=%s, yOffset=%s, xAdj=%s, yAdj=%s" % 
+                                          (f.__class__.__name__, f(x, y), predVal, n, x,
+                                           xOffset, yOffset, xAdj, yAdj))
        
     def testPolynomialFunction1D(self):
         """A test for PolynomialFunction1D

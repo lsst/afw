@@ -9,23 +9,15 @@ or
    >>> import SpatialCell; SpatialCell.run()
 """
 
-import os
 import pdb  # we may want to say pdb.set_trace()
-import sys
 import unittest
 
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions as pexExcept
 import lsst.afw.image.imageLib as afwImage
 import lsst.afw.math.mathLib as afwMath
-import lsst.afw.display.ds9 as ds9
 
 import testLib
-
-try:
-    type(display)
-except NameError:
-    display = False
 
 def getFlux(x):
     return 1000 - 10*x
@@ -73,7 +65,8 @@ class SpatialCellTestCase(unittest.TestCase):
         self.assertEqual(self.cell.size(), self.nCandidate)
         self.assertEqual(self.cell.end() - self.cell.begin(), self.nCandidate)
 
-        ptr = self.cell.begin(); ptr.__incr__()
+        ptr = self.cell.begin()
+        ptr.__incr__()
         self.assertEqual(self.cell.end() - ptr, self.nCandidate - 1)
 
         self.assertEqual(ptr - self.cell.begin(), 1)
@@ -135,9 +128,9 @@ class SpatialCellSetTestCase(unittest.TestCase):
             self.cellSet.insertCandidate(testLib.TestCandidate(x, y, -x))
             self.NTestCandidates += 1
 
-        self.cellSet.insertCandidate(testLib.TestCandidate(305, 0, 100))        # in cell1
+        self.cellSet.insertCandidate(testLib.TestCandidate(305, 0, 100))   # in cell1
         self.NTestCandidates += 1
-        self.cellSet.insertCandidate(testLib.TestCandidate(500, 500, 100))      # the top right corner of cell5
+        self.cellSet.insertCandidate(testLib.TestCandidate(500, 500, 100)) # the top right corner of cell5
         self.NTestCandidates += 1
 
     def tearDown(self):
@@ -169,13 +162,13 @@ class SpatialCellSetTestCase(unittest.TestCase):
 
         self.assertTrue(self.cellSet.getCellList()[2].empty())
 
-        def tst():
+        def tst1():
             self.cellSet.getCellList()[2][0]
-        self.assertRaises(IndexError, tst)
+        self.assertRaises(IndexError, tst1)
 
-        def tst():
+        def tst2():
             self.cellSet.getCellList()[2].begin().__deref__()
-        utilsTests.assertRaisesLsstCpp(self, pexExcept.NotFoundException, tst)
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.NotFoundException, tst2)
 
         self.assertFalse(self.cellSet.getCellList()[5].empty())
 
@@ -215,7 +208,7 @@ class SpatialCellSetTestCase(unittest.TestCase):
             assert(dx//sx == float(dx)/float(sx))
             assert(dy//sy == float(dy)/float(sy))
             
-            bbox = afwImage.BBox(afwImage.PointI(x0,y0), dx, dy)
+            bbox = afwImage.BBox(afwImage.PointI(x0, y0), dx, dy)
             cset = afwMath.SpatialCellSet(bbox, sx, sy)
             for cell in cset.getCellList():
                 label  = cell.getLabel()
@@ -258,10 +251,11 @@ class TestImageCandidateCase(unittest.TestCase):
         cand = afwMath.cast_SpatialCellImageCandidateF(cand)
 
         width, height = 15, 21
-        cand.setWidth(width); cand.setHeight(height);
+        cand.setWidth(width)
+        cand.setHeight(height)
 
         im = cand.getImage()
-        self.assertEqual(im.get(0,0), flux) # This is how TestImageCandidate sets its pixels
+        self.assertEqual(im.get(0, 0), flux) # This is how TestImageCandidate sets its pixels
         self.assertEqual(im.getWidth(), width)
         self.assertEqual(im.getHeight(), height)
         

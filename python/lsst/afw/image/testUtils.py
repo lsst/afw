@@ -100,7 +100,8 @@ def setMaskFromArray(mask, arr):
             mask.set(col, row, int(arr[col, row]))
 
 def setMaskedImageFromArrays(maskedImage, imMaskVarArrays):
-    """Set an existing lsst.afwImage.MaskedImage (of any type) from a of a tuple of (image, mask, variance) numpy arrays.
+    """Set an existing lsst.afwImage.MaskedImage (of any type) from a tuple
+    of (image, mask, variance) numpy arrays.
     If image or variance arrays are None then that component is not set.
     The data is presently copied but do not rely on that.
     """
@@ -230,7 +231,9 @@ def maskedImagesDiffer(maskedImageArrSet1, maskedImageArrSet2,
     Return a string describing the error if the images differ significantly, an empty string otherwise
     """
     retStrs = []
-    for ind, (doPlane, planeName) in enumerate(((doImage, "image"), (doMask, "mask"), (doVariance, "variance"))):
+    for ind, (doPlane, planeName) in enumerate(((doImage, "image"),
+                                                (doMask, "mask"),
+                                                (doVariance, "variance"))):
         if not doPlane:
             continue
 
@@ -251,13 +254,13 @@ if __name__ == "__main__":
     bb = afwImage.BBox(afwImage.PointI(200, 100), 50, 50)
     siPtr = maskedImage.Factory(maskedImage, bb)
 
-    siArrays = arraysFromMaskedImage(si)
+    siArrays = arraysFromMaskedImage(siPtr)
     siCopy = maskedImage.Factory(maskedImage.getDimensions())
     siCopy = maskedImageFromArrays(siCopy, siArrays)
 
     maskedImage.writeFits("mi")
-    si.writeFits("si")
+    siPtr.writeFits("si")
     siCopy.writeFits("siCopy")
-    siCopy -= si
+    siCopy -= siPtr
     siCopy.writeFits("siNull")
 

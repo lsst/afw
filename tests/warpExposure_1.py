@@ -284,7 +284,8 @@ class WarpExposureTestCase(unittest.TestCase):
             imageDescr = "%s: %s plane" % (descr, planeName)
             image1 = getattr(maskedImage1, funcName)()
             image2 = getattr(maskedImage2, funcName)()
-            imageOK = self.compareImages(image1, image2, descr=imageDescr, skipMaskArr=skipMaskArr, rtol=rtol, atol=atol)
+            imageOK = self.compareImages(image1, image2, descr=imageDescr, skipMaskArr=skipMaskArr,
+                                         rtol=rtol, atol=atol)
             if not imageOK:
                 badPlanes.append(planeName)
         if not badPlanes:

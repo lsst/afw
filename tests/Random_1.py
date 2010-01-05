@@ -8,12 +8,10 @@ or
    python
    >>> import unittest; T=load("Random_1"); unittest.TextTestRunner(verbosity=1).run(T.suite())
 """
-import os
 import pdb
 import time
 import unittest
 
-import lsst.pex.exceptions as pexExcept
 import lsst.pex.policy as pexPolicy
 import lsst.utils.tests as utilsTests
 import lsst.afw.image as afwImage

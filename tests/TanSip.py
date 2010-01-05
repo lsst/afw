@@ -1,9 +1,6 @@
 #!/usr/bin/env python
-import os
-
 import unittest
 import lsst.utils.tests as tests
-import eups
 import lsst.afw.image as afwImage
 import lsst.daf.base as dafBase
 

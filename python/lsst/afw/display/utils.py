@@ -150,7 +150,7 @@ class Mosaic(object):
         """Get the BBox for the nth or (ix, iy)the panel"""
 
         if iy is None:
-            ix, iy = ix%self.nx, ix//self.nx
+            ix, iy = ix % self.nx, ix/self.nx
 
         return afwImage.BBox(afwImage.PointI(ix*(self.xsize + self.gutter), iy*(self.ysize + self.gutter)),
                              self.xsize, self.ysize)

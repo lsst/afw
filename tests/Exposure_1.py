@@ -8,18 +8,14 @@ Created on: Mon Sep 10, 2007
 """
 
 import os
-import math
 import pdb # we may want to say pdb.set_trace()
 import unittest
-
-import numpy
 
 import eups
 import lsst.afw.image as afwImage
 import lsst.utils.tests as utilsTests
 import lsst.pex.logging as pexLog
 import lsst.pex.exceptions as pexExcept
-import lsst.afw.display.ds9 as ds9
 
 VERBOSITY = 0 # increase to see trace
 
@@ -152,7 +148,7 @@ class ExposureTestCase(unittest.TestCase):
         exposure.setWcs(self.wcs)
         
         try:
-            exposure.getWcs();
+            exposure.getWcs()
         except pexExcept.LsstCppException, e:
             print "caught expected exception (getWcs): %s" % e   
             pass

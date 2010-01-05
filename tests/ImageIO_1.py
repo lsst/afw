@@ -67,7 +67,8 @@ class ReadFitsTestCase(unittest.TestCase):
         """Test writing then reading an F64 image"""
 
         imPath = os.path.join("tests", "data", "smallD.fits")
-        im = afwImage.ImageD(100, 100); im.set(666)
+        im = afwImage.ImageD(100, 100)
+        im.set(666)
         im.writeFits(imPath)
         newIm = afwImage.ImageD(imPath)
         os.remove(imPath)
@@ -83,7 +84,7 @@ class ReadFitsTestCase(unittest.TestCase):
         im2 = afwImage.ImageF(fileName, hdu, None, bbox)
 
         self.assertEqual(im2.getDimensions(), sim.getDimensions())
-        self.assertEqual(im2.get(1,1), sim.get(1, 1))
+        self.assertEqual(im2.get(1, 1), sim.get(1, 1))
 
         self.assertEqual(im2.getX0(), sim.getX0())
         self.assertEqual(im2.getY0(), sim.getY0())
