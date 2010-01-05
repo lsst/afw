@@ -52,6 +52,7 @@ for d in (
     "doc",
     "examples",
     "lib",
+    "python/lsst/afw/cameraGeom",
     "python/lsst/afw/detection",
     "python/lsst/afw/display",
     "python/lsst/afw/eigen",

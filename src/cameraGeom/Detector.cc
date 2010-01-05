@@ -1,0 +1,38 @@
+/**
+ * \file
+ */
+#include <algorithm>
+#include "lsst/afw/cameraGeom/Id.h"
+#include "lsst/afw/cameraGeom/Detector.h"
+
+namespace afwGeom = lsst::afw::geom;
+namespace afwImage = lsst::afw::image;
+namespace camGeom = lsst::afw::cameraGeom;
+
+/**
+ * Return the pixel position given an offset from the chip centre, in mm
+ *
+ * This base implementation assumes that all the pixels in the Detector are contiguous and of the same size
+ */
+afwGeom::Point2I camGeom::Detector::getIndexFromPosition(
+        afwGeom::Point2D pos            ///< Offset from chip centre, mm
+                                                        ) const
+{
+    Eigen::Vector2i pix;
+    pix << _centerPixel[0] + pos[0]/_pixelSize, _centerPixel[1] + pos[1]/_pixelSize;
+    return afwGeom::Point2I(pix);
+}
+
+/**
+ * Return the offset from the chip centre, in mm, given a pixel position
+ *
+ * This base implementation assumes that all the pixels in the Detector are contiguous and of the same size
+ */
+afwGeom::Point2D camGeom::Detector::getPositionFromIndex(
+        afwGeom::Point2I pix            ///< Pixel coordinates wrt bottom left of Detector
+                                                        ) const
+{
+    Eigen::Vector2d pos;
+    pos << (pix[0] - _centerPixel[0])*_pixelSize, (pix[1] - _centerPixel[1])*_pixelSize;
+    return afwGeom::Point2D(pos);
+}    

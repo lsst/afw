@@ -61,3 +61,5 @@ else:
         elif target.endswith("numpyTestEigen.py"):
             env.Depends(target, "_testEigenLib%s" % (env["LDMODULESUFFIX"]))
             env.Depends(target, "testEigenLib.py")
+        elif os.path.basename(target) == "cameraGeom.py":
+            env.Depends(target, "../python/lsst/afw/cameraGeom/_cameraGeomLib%s" % (env["LDMODULESUFFIX"]))
