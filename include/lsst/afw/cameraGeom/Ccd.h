@@ -44,8 +44,8 @@ public:
     // Find an Amp given an Id or pixel position
     //
     Amp getAmp(Id const id) const;
-    Amp getAmp(lsst::afw::image::PointI const& pixel) const;
-    Amp getAmp(lsst::afw::image::PointI const& pixel, bool const isTrimmed) const;
+    Amp getAmp(lsst::afw::geom::Point2I const& pixel) const;
+    Amp getAmp(lsst::afw::geom::Point2I const& pixel, bool const isTrimmed) const;
     //
     // Translate between physical positions in mm to pixels
     //

@@ -21,7 +21,7 @@ import lsst.afw.image as afwImage
 import lsst.afw.display.ds9 as ds9
 import lsst.afw.display.utils as displayUtils
 
-import lsst.ip.isr.cameraGeomLib as cameraGeom
+import lsst.afw.cameraGeom as cameraGeom
 
 try:
     type(display)
@@ -41,7 +41,7 @@ def showCcd(ccd, ccdImage, frame=None):
         # Label each Amp
         ap = a.getAllPixels()
         xc, yc = (ap.getX0() + ap.getX1())//2, (ap.getY0() + ap.getY1())//2
-        cen = afwImage.PointI(xc, yc)
+        cen = afwGeom.Point2I.makeXY(xc, yc)
         ds9.dot(str(ccd.getAmp(cen).getId().getSerial()), xc, yc, frame=frame)
 
     displayUtils.drawBBox(ccd.getAllPixels(), borderWidth=0.49, ctype=ds9.MAGENTA, frame=frame)
@@ -140,14 +140,14 @@ class CameraGeomTestCase(unittest.TestCase):
         id = cameraGeom.Id("ID%d" % self.ampIdMax)
         self.assertTrue(self.ccd.getAmp(id), id)
 
-        self.assertEqual(self.ccd.getAmp(afwImage.PointI(10, 10)).getId().getSerial(), self.ampIdMin)
+        self.assertEqual(self.ccd.getAmp(afwGeom.Point2I.makeXY(10, 10)).getId().getSerial(), self.ampIdMin)
 
         self.assertEqual(self.ccd.getAllPixels().getLLC(),
-                         self.ccd.getAmp(afwImage.PointI(10, 10)).getAllPixels().getLLC())
+                         self.ccd.getAmp(afwGeom.Point2I.makeXY(10, 10)).getAllPixels().getLLC())
 
         self.assertEqual(self.ccd.getAllPixels().getURC(),
-                         self.ccd.getAmp(afwImage.PointI(self.ccdWidth - 1,
-                                                         self.ccdHeight - 1)).getAllPixels().getURC())
+                         self.ccd.getAmp(afwGeom.Point2I.makeXY(self.ccdWidth - 1,
+                                                                self.ccdHeight - 1)).getAllPixels().getURC())
         #
         # Test mapping pixel <--> mm
         #
@@ -156,13 +156,13 @@ class CameraGeomTestCase(unittest.TestCase):
         #
         # Map pix into untrimmed coordinates
         #
-        #amp = self.ccd.getAmp(pix)
+        amp = self.ccd.getAmp(pix)
+        corr = amp.getDataSec(False).getLLC() - amp.getDataSec(True).getLLC()
+        pix += afwGeom.Extent2I(afwGeom.Point2I.makeXY(corr[0], corr[1]))
         
-        self.ccd.getPositionFromIndex
         self.assertEqual(self.ccd.getIndexFromPosition(pos), pix)
 
-        if False:
-            self.assertEqualPoint(self.ccd.getPositionFromIndex(pix), pos)
+        self.assertEqualPoint(self.ccd.getPositionFromIndex(pix), pos)
         #
         # Trim the CCD and try again
         #

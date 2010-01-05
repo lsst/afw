@@ -81,15 +81,11 @@ afwGeom::Point2D camGeom::Ccd::getPositionFromIndex(
     lsst::afw::geom::Point2I centerPixel = getCenterPixel();
     double pixelSize = getPixelSize();
 
-    std::cout << pix[0] << ", " << pix[1] << "     ";
-
-    camGeom::Amp amp = getAmp(afwImage::PointI(pix[0], pix[1]));
+    camGeom::Amp amp = getAmp(afwGeom::Point2I::makeXY(pix[0], pix[1]));
     {
         afwImage::PointI off = amp.getDataSec(true).getLLC() - amp.getDataSec(false).getLLC();
         pix += afwGeom::Extent2I(afwGeom::Point2I::makeXY(off[0], off[1]));
     }
-
-    std::cout << pix[0] << ", " << pix[1] << std::endl;
 
     Eigen::Vector2d pos;
     pos << (pix[0] - centerPixel[0])*pixelSize, (pix[1] - centerPixel[1])*pixelSize;
@@ -107,7 +103,14 @@ namespace {
     };
 
     struct findByPos {
-        findByPos(afwImage::PointI point, bool isTrimmed) : _point(point), _isTrimmed(isTrimmed) {}
+        findByPos(
+                  afwGeom::Point2I point,
+                  bool isTrimmed
+                 ) :
+            _point(afwImage::PointI(point[0], point[1])),
+            _isTrimmed(isTrimmed)
+        { }
+
         bool operator()(camGeom::Amp const& amp) const {
             return amp.getAllPixels(_isTrimmed).contains(_point);
         }
@@ -142,14 +145,14 @@ camGeom::Amp camGeom::Ccd::getAmp(camGeom::Id const id) const {
 /**
  * Find an Amp given a position
  */
-camGeom::Amp camGeom::Ccd::getAmp(afwImage::PointI const& pixel) const {
+camGeom::Amp camGeom::Ccd::getAmp(afwGeom::Point2I const& pixel) const {
     return getAmp(pixel, isTrimmed());
 }
 
 /**
  * Find an Amp given a position and a request for trimmed or untrimmed coordinates
  */
-camGeom::Amp camGeom::Ccd::getAmp(afwImage::PointI const& pixel,
+camGeom::Amp camGeom::Ccd::getAmp(afwGeom::Point2I const& pixel,
                                   bool const isTrimmed) const {
     AmpSet::const_iterator result = std::find_if(_amps.begin(), _amps.end(), findByPos(pixel, isTrimmed));
     if (result == _amps.end()) {

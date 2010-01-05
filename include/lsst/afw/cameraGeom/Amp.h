@@ -126,16 +126,16 @@ public:
     }
 
     /// Return the first pixel read
-    lsst::afw::image::PointI getFirstPixelRead() const {
+    lsst::afw::geom::Point2I getFirstPixelRead() const {
         switch (_readoutCorner) {
           case LLC:
-            return lsst::afw::image::PointI(0,                         0);
+            return lsst::afw::geom::PointI::makeXY(0,                         0);
           case LRC:
-            return lsst::afw::image::PointI(_allPixels.getWidth() - 1, 0);
+            return lsst::afw::geom::PointI::makeXY(_allPixels.getWidth() - 1, 0);
           case URC:
-            return lsst::afw::image::PointI(_allPixels.getWidth() - 1, _allPixels.getHeight() - 1);
+            return lsst::afw::geom::PointI::makeXY(_allPixels.getWidth() - 1, _allPixels.getHeight() - 1);
           case ULC:
-            return lsst::afw::image::PointI(0,                         _allPixels.getHeight() - 1);
+            return lsst::afw::geom::PointI::makeXY(0,                         _allPixels.getHeight() - 1);
         }
         abort();                        // NOTREACHED
     }
