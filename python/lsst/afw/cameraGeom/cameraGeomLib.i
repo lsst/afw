@@ -24,24 +24,30 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %std_nodefconst_type(lsst::afw::cameraGeom::Amp);
 %template(AmpSet) std::vector<lsst::afw::cameraGeom::Amp>;
 
+%std_nodefconst_type(lsst::afw::cameraGeom::Detector);
+%template(DetectorSet) std::vector<lsst::afw::cameraGeom::Detector>;
+
 %include "lsst/afw/cameraGeom/Id.h"
-%include "lsst/afw/cameraGeom/Detector.h"
 %include "lsst/afw/cameraGeom/Amp.h"
+%include "lsst/afw/cameraGeom/Detector.h"
 %include "lsst/afw/cameraGeom/Ccd.h"
+%include "lsst/afw/cameraGeom/Raft.h"
 
 %extend lsst::afw::cameraGeom::Ccd {
     %pythoncode {
-    #
-    # Deal with incorrect swig wrappers for C++ "void operator op=()"
-    #
-    def __iadd__(*args):
-        """
-        __iadd__(self, Amp) -> self
-        """
-        _cameraGeomLib.Ccd___iadd__(*args)
-        return args[0]
-    }
+        def __iter__(self):
+            ptr = self.begin()
+            end = self.end()
+            while True:
+                if ptr == end:
+                    raise StopIteration
 
+                yield ptr.value()
+                ptr.incr()
+    }
+}
+
+%extend lsst::afw::cameraGeom::Raft {
     %pythoncode {
         def __iter__(self):
             ptr = self.begin()

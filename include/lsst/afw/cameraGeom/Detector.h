@@ -77,6 +77,8 @@ public:
     //
     virtual lsst::afw::geom::Point2I getIndexFromPosition(lsst::afw::geom::Point2D pos) const;
     virtual lsst::afw::geom::Point2D getPositionFromIndex(lsst::afw::geom::Point2I pos) const;
+
+    virtual void shift(int dx, int dy);
 protected:
     lsst::afw::image::BBox& getAllTrimmedPixels() {
         return _trimmedAllPixels;

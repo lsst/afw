@@ -36,3 +36,14 @@ afwGeom::Point2D camGeom::Detector::getPositionFromIndex(
     pos << (pix[0] - _centerPixel[0])*_pixelSize, (pix[1] - _centerPixel[1])*_pixelSize;
     return afwGeom::Point2D(pos);
 }    
+
+/// Offset a Detector by the specified amount
+void camGeom::Detector::shift(int dx,        ///< How much to offset in x (pixels)
+                              int dy         ///< How much to offset in y (pixels)
+                             ) {
+    afwGeom::Extent2I offset(afwGeom::Point2I::makeXY(dx, dy));
+    _centerPixel.shift(offset);
+    
+    _allPixels.shift(dx, dy);
+    _trimmedAllPixels.shift(dx, dy);
+}

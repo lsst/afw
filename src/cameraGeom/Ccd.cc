@@ -134,7 +134,7 @@ void camGeom::Ccd::setTrimmed(bool isTrimmed ///< True iff the bias/overclock ha
  * Find an Amp given an Id
  */
 camGeom::Amp camGeom::Ccd::getAmp(camGeom::Id const id) const {
-    camGeom::Ccd::AmpSet::const_iterator result = std::find_if(_amps.begin(), _amps.end(), findById(id));
+    AmpSet::const_iterator result = std::find_if(_amps.begin(), _amps.end(), findById(id));
     if (result == _amps.end()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::OutOfRangeException,
                           (boost::format("Unable to find Amp with serial %||") % id).str());
@@ -161,4 +161,15 @@ camGeom::Amp camGeom::Ccd::getAmp(afwGeom::Point2I const& pixel,
                            pixel.getX() % pixel.getY()).str());
     }
     return *result;
+}
+
+#include "boost/bind.hpp"
+
+/// Offset a Ccd by the specified amount
+void camGeom::Ccd::shift(int dx,        ///< How much to offset in x (pixels)
+                         int dy         ///< How much to offset in y (pixels)
+                        ) {
+    Detector::shift(dx, dy);
+    
+    std::for_each(_amps.begin(), _amps.end(), boost::bind(&Amp::shift, _1, boost::ref(dx), boost::ref(dx)));
 }

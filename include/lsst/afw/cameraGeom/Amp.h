@@ -9,7 +9,7 @@
 /**
  * @file
  *
- * Describe the physical layout of pixels in the focal plane
+ * Describe an amplifier
  */
 namespace lsst {
 namespace afw {
