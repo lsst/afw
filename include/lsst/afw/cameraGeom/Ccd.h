@@ -21,9 +21,16 @@ namespace cameraGeom {
  */
 class Ccd : public Detector {
 public:
-    typedef std::vector<Amp> AmpSet;
-    typedef std::vector<Amp>::iterator iterator; // don't say "AmpSet::iterator" for swig's sake
-    typedef std::vector<Amp>::const_iterator const_iterator;
+    typedef boost::shared_ptr<Ccd> Ptr;
+    typedef boost::shared_ptr<const Ccd> ConstPtr;
+
+    typedef std::vector<Amp::Ptr> AmpSet;
+#if 0                                   // N.b. don't say "AmpSet::iterator" for swig's sake
+    typedef ampSet::iterator iterator;
+#else
+    typedef std::vector<boost::shared_ptr<Amp> >::iterator iterator;
+#endif
+    typedef std::vector<Amp::Ptr>::const_iterator const_iterator;
 
     Ccd(Id id, double pixelSize=0.0) : Detector(id, pixelSize) {}
     virtual ~Ccd() {}
@@ -43,9 +50,9 @@ public:
     //
     // Find an Amp given an Id or pixel position
     //
-    Amp getAmp(Id const id) const;
-    Amp getAmp(lsst::afw::geom::Point2I const& pixel) const;
-    Amp getAmp(lsst::afw::geom::Point2I const& pixel, bool const isTrimmed) const;
+    Amp::Ptr findAmp(Id const id) const;
+    Amp::Ptr findAmp(lsst::afw::geom::Point2I const& pixel) const;
+    Amp::Ptr findAmp(lsst::afw::geom::Point2I const& pixel, bool const isTrimmed) const;
     //
     // Translate between physical positions in mm to pixels
     //

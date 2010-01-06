@@ -20,6 +20,9 @@ namespace cameraGeom {
  */
 class Detector {
 public:
+    typedef boost::shared_ptr<Detector> Ptr;
+    typedef boost::shared_ptr<const Detector> ConstPtr;
+
     Detector(Id id, double pixelSize=0.0) : _id(id), _isTrimmed(false), _allPixels(), _pixelSize(pixelSize) {
         _trimmedAllPixels = _allPixels;
     }

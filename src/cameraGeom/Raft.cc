@@ -18,23 +18,25 @@ namespace camGeom = lsst::afw::cameraGeom;
 void camGeom::Raft::addDetector(
         int const iX,                   ///< x-index of this Detector
         int const iY,                   ///< y-index of this Detector
-        camGeom::Detector const& det_c  ///< The detector to add to the Raft's manifest
+        camGeom::Detector::Ptr det      ///< The detector to add to the Raft's manifest.
                                )
 {
-    camGeom::Detector det = det_c;           // the Detector with absolute coordinates
-    bool const isTrimmed = true;             // We always work in trimmed coordinates at the Raft level
+    bool const isTrimmed = true;        // We always work in trimmed coordinates at the Raft level
     //
     // Correct Detector's coordinate system to be absolute within Raft
     //
-    {
-        afwImage::BBox detPixels = det.getAllPixels(isTrimmed);
-        det.shift(iX*detPixels.getWidth(), iY*detPixels.getHeight());
-    }
+    afwImage::BBox detPixels = det->getAllPixels(isTrimmed);
+    detPixels.shift(iX*detPixels.getWidth(), iY*detPixels.getHeight());
 
-    getAllPixels().grow(det.getAllPixels(isTrimmed).getLLC());
-    getAllPixels().grow(det.getAllPixels(isTrimmed).getURC());
+    getAllPixels().grow(detPixels.getLLC());
+    getAllPixels().grow(detPixels.getURC());
     
-    _detectors.push_back(det);
+    camGeom::Orientation orient(0.0, 0.0, 0.0);
+    afwGeom::Point2D center;
+    afwGeom::Point2I origin = afwGeom::Point2I::makeXY(iX*detPixels.getWidth(), iY*detPixels.getHeight());
+    camGeom::DetectorLayout::Ptr detL(new camGeom::DetectorLayout(det, orient, center, origin));
+
+    _detectors.push_back(detL);
 }
 
 /************************************************************************************************************/
@@ -42,8 +44,8 @@ void camGeom::Raft::addDetector(
 namespace {
     struct findById {
         findById(camGeom::Id id) : _id(id) {}
-        bool operator()(camGeom::Detector const& det) const {
-            return _id == det.getId();
+        bool operator()(camGeom::DetectorLayout::Ptr det) const {
+            return _id == det->getDetector()->getId();
         }
     private:
         camGeom::Id _id;
@@ -56,8 +58,11 @@ namespace {
             _point(afwImage::PointI(point[0], point[1]))
         { }
 
-        bool operator()(camGeom::Detector const& det) const {
-            return det.getAllPixels().contains(_point);
+        bool operator()(camGeom::DetectorLayout::Ptr det) const {
+            afwImage::PointI relPoint = _point;
+            relPoint.shift(-det->getOrigin()[0], -det->getOrigin()[1]);
+
+            return det->getDetector()->getAllPixels().contains(relPoint);
         }
     private:
         afwImage::PointI _point;
@@ -67,7 +72,7 @@ namespace {
 /**
  * Find an Detector given an Id
  */
-camGeom::Detector camGeom::Raft::getDetector(camGeom::Id const id) const {
+camGeom::DetectorLayout::Ptr camGeom::Raft::findDetector(camGeom::Id const id) const {
     DetectorSet::const_iterator result = std::find_if(_detectors.begin(), _detectors.end(), findById(id));
     if (result == _detectors.end()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::OutOfRangeException,
@@ -79,8 +84,8 @@ camGeom::Detector camGeom::Raft::getDetector(camGeom::Id const id) const {
 /**
  * Find an Detector given a position
  */
-camGeom::Detector camGeom::Raft::getDetector(afwGeom::Point2I const& pixel // the desired pixel
-                                            ) const {
+camGeom::DetectorLayout::Ptr camGeom::Raft::findDetector(afwGeom::Point2I const& pixel // the desired pixel
+                                                        ) const {
     DetectorSet::const_iterator result = std::find_if(_detectors.begin(), _detectors.end(), findByPos(pixel));
     if (result == _detectors.end()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::OutOfRangeException,

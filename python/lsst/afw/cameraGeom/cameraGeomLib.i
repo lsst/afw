@@ -8,10 +8,6 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %feature("autodoc", "1");
 %module(package="lsst.afw", docstring=cameraGeomLib_DOCSTRING) cameraGeomLib
 
-// Suppress swig complaints; see afw/image/imageLib.i for more 
-//#pragma SWIG nowarn=314                 // print is a python keyword (--> _print)
-//#pragma SWIG nowarn=362                 // operator=  ignored 
-
 %{
 #include "lsst/afw/cameraGeom.h"
 %}
@@ -21,17 +17,28 @@ Python bindings for classes describing the the geometry of a mosaic camera
 
 %lsst_exceptions();
 
-%std_nodefconst_type(lsst::afw::cameraGeom::Amp);
-%template(AmpSet) std::vector<lsst::afw::cameraGeom::Amp>;
+SWIG_SHARED_PTR(AmpPtr, lsst::afw::cameraGeom::Amp);
+SWIG_SHARED_PTR(DetectorPtr, lsst::afw::cameraGeom::Detector);
+SWIG_SHARED_PTR(DetectorLayoutPtr, lsst::afw::cameraGeom::DetectorLayout);
+SWIG_SHARED_PTR_DERIVED(CcdPtr, lsst::afw::cameraGeom::Detector, lsst::afw::cameraGeom::Ccd);
+SWIG_SHARED_PTR(RaftPtr, lsst::afw::cameraGeom::Raft);
 
-%std_nodefconst_type(lsst::afw::cameraGeom::Detector);
-%template(DetectorSet) std::vector<lsst::afw::cameraGeom::Detector>;
+%template(AmpSet) std::vector<boost::shared_ptr<lsst::afw::cameraGeom::Amp> >;
+%template(DetectorSet) std::vector<boost::shared_ptr<lsst::afw::cameraGeom::DetectorLayout> >;
 
 %include "lsst/afw/cameraGeom/Id.h"
 %include "lsst/afw/cameraGeom/Amp.h"
 %include "lsst/afw/cameraGeom/Detector.h"
 %include "lsst/afw/cameraGeom/Ccd.h"
 %include "lsst/afw/cameraGeom/Raft.h"
+
+%inline %{
+    lsst::afw::cameraGeom::Ccd *
+    cast_Ccd(lsst::afw::cameraGeom::Detector *detector) {
+        return dynamic_cast<lsst::afw::cameraGeom::Ccd *>(detector);
+    }
+%}
+
 
 %extend lsst::afw::cameraGeom::Ccd {
     %pythoncode {

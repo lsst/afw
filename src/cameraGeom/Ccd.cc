@@ -20,17 +20,17 @@ void camGeom::Ccd::addAmp(int const iX, ///< x-index of this Amp
                           camGeom::Amp const& amp_c ///< The amplifier to add to the Ccd's manifest
                          )
 {
-    camGeom::Amp amp = amp_c;           // the Amp with absolute coordinates
+    camGeom::Amp::Ptr amp(new Amp(amp_c)); // the Amp with absolute coordinates
     //
     // Correct Amp's coordinate system to be absolute within CCD
     //
     {
-        afwImage::BBox ampPixels = amp.getAllPixels();
-        amp.shift(iX*ampPixels.getWidth(), iY*ampPixels.getHeight());
+        afwImage::BBox ampPixels = amp->getAllPixels();
+        amp->shift(iX*ampPixels.getWidth(), iY*ampPixels.getHeight());
     }
 
-    getAllPixels().grow(amp.getAllPixels().getLLC());
-    getAllPixels().grow(amp.getAllPixels().getURC());
+    getAllPixels().grow(amp->getAllPixels().getLLC());
+    getAllPixels().grow(amp->getAllPixels().getURC());
     //
     // Now deal with the geometry after we trim everything except the dataSec
     //
@@ -38,11 +38,11 @@ void camGeom::Ccd::addAmp(int const iX, ///< x-index of this Amp
         afwImage::BBox dataSec = amp_c.getDataSec();
         dataSec.shift(-dataSec.getX0(), -dataSec.getY0());
         dataSec.shift(iX*dataSec.getWidth(), iY*dataSec.getHeight());
-        amp.getDataSec(true) = dataSec;
-        amp.getAllPixels(true) = dataSec;
+        amp->getDataSec(true) = dataSec;
+        amp->getAllPixels(true) = dataSec;
     }
-    getAllTrimmedPixels().grow(amp.getDataSec(true).getLLC());
-    getAllTrimmedPixels().grow(amp.getDataSec(true).getURC());
+    getAllTrimmedPixels().grow(amp->getDataSec(true).getLLC());
+    getAllTrimmedPixels().grow(amp->getDataSec(true).getURC());
     
     _amps.push_back(amp);
 }
@@ -81,9 +81,9 @@ afwGeom::Point2D camGeom::Ccd::getPositionFromIndex(
     lsst::afw::geom::Point2I centerPixel = getCenterPixel();
     double pixelSize = getPixelSize();
 
-    camGeom::Amp amp = getAmp(afwGeom::Point2I::makeXY(pix[0], pix[1]));
+    camGeom::Amp::Ptr amp = findAmp(afwGeom::Point2I::makeXY(pix[0], pix[1]));
     {
-        afwImage::PointI off = amp.getDataSec(true).getLLC() - amp.getDataSec(false).getLLC();
+        afwImage::PointI off = amp->getDataSec(true).getLLC() - amp->getDataSec(false).getLLC();
         pix += afwGeom::Extent2I(afwGeom::Point2I::makeXY(off[0], off[1]));
     }
 
@@ -95,8 +95,8 @@ afwGeom::Point2D camGeom::Ccd::getPositionFromIndex(
 namespace {
     struct findById {
         findById(camGeom::Id id) : _id(id) {}
-        bool operator()(camGeom::Amp const& amp) const {
-            return _id == amp.getId();
+        bool operator()(camGeom::Amp::Ptr amp) const {
+            return _id == amp->getId();
         }
     private:
         camGeom::Id _id;
@@ -111,8 +111,8 @@ namespace {
             _isTrimmed(isTrimmed)
         { }
 
-        bool operator()(camGeom::Amp const& amp) const {
-            return amp.getAllPixels(_isTrimmed).contains(_point);
+        bool operator()(camGeom::Amp::Ptr amp) const {
+            return amp->getAllPixels(_isTrimmed).contains(_point);
         }
     private:
         afwImage::PointI _point;
@@ -126,14 +126,14 @@ void camGeom::Ccd::setTrimmed(bool isTrimmed ///< True iff the bias/overclock ha
     camGeom::Detector::setTrimmed(isTrimmed);
     // And the Amps too
     for (iterator ptr = begin(); ptr != end(); ++ptr) {
-        (*ptr).setTrimmed(isTrimmed);
+        (*ptr)->setTrimmed(isTrimmed);
     }
 }
 
 /**
  * Find an Amp given an Id
  */
-camGeom::Amp camGeom::Ccd::getAmp(camGeom::Id const id) const {
+camGeom::Amp::Ptr camGeom::Ccd::findAmp(camGeom::Id const id) const {
     AmpSet::const_iterator result = std::find_if(_amps.begin(), _amps.end(), findById(id));
     if (result == _amps.end()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::OutOfRangeException,
@@ -145,15 +145,15 @@ camGeom::Amp camGeom::Ccd::getAmp(camGeom::Id const id) const {
 /**
  * Find an Amp given a position
  */
-camGeom::Amp camGeom::Ccd::getAmp(afwGeom::Point2I const& pixel) const {
-    return getAmp(pixel, isTrimmed());
+camGeom::Amp::Ptr camGeom::Ccd::findAmp(afwGeom::Point2I const& pixel) const {
+    return findAmp(pixel, isTrimmed());
 }
 
 /**
  * Find an Amp given a position and a request for trimmed or untrimmed coordinates
  */
-camGeom::Amp camGeom::Ccd::getAmp(afwGeom::Point2I const& pixel,
-                                  bool const isTrimmed) const {
+camGeom::Amp::Ptr camGeom::Ccd::findAmp(afwGeom::Point2I const& pixel,
+                                        bool const isTrimmed) const {
     AmpSet::const_iterator result = std::find_if(_amps.begin(), _amps.end(), findByPos(pixel, isTrimmed));
     if (result == _amps.end()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::OutOfRangeException,

@@ -20,6 +20,9 @@ namespace cameraGeom {
  */
 class Amp {
 public:
+    typedef boost::shared_ptr<Amp> Ptr;
+    typedef boost::shared_ptr<const Amp> ConstPtr;
+
     /// location of first pixel read
     enum readoutCorner { LLC, ULC, URC, LRC };
 
