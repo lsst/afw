@@ -1,3 +1,4 @@
+// -*- lsst-c++ -*-
 /// \file
 /// \brief  Utilities that use cfitsio
 /// \author Robert Lupton (rhl@astro.princeton.edu)\n
@@ -80,7 +81,7 @@ void move_to_hdu(lsst::afw::image::cfitsio::fitsfile *fd, //!< cfitsio file desc
     if (relative) {
         if (fits_movrel_hdu(fd, hdu, NULL, &status) != 0) {
             throw LSST_EXCEPT(FitsException,
-                              err_msg(fd, status, boost::format("Attempted to select relative HDU %d") % hdu));
+                          err_msg(fd, status, boost::format("Attempted to select relative HDU %d") % hdu));
         }
     } else {
         if (hdu == 0) { // PDU; go there
@@ -88,7 +89,7 @@ void move_to_hdu(lsst::afw::image::cfitsio::fitsfile *fd, //!< cfitsio file desc
         } else {
             if (fits_movabs_hdu(fd, hdu, NULL, &status) != 0) {
                 throw LSST_EXCEPT(FitsException,
-                                  err_msg(fd, status, boost::format("Attempted to select absolute HDU %d") % hdu));
+                            err_msg(fd, status, boost::format("Attempted to select absolute HDU %d") % hdu));
             }
         }
     }
@@ -216,7 +217,7 @@ void addKV(lsst::daf::base::PropertySet::Ptr metadata, std::string key, std::str
  */
 lsst::daf::base::PropertySet::Ptr readMetadata(std::string const& fileName, ///< File to read
                                                const int hdu,               ///< HDU to read
-                                               bool strip                   ///< Should I strip e.g. NAXIS1 from header?
+                                               bool strip       ///< Should I strip e.g. NAXIS1 from header?
                                               ) {
     lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertySet);
 

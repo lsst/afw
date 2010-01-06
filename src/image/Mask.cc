@@ -179,7 +179,8 @@ image::Mask<MaskPixelT>::Mask(std::string const& fileName, //!< Name of file to 
     }
 
     if (!image::fits_read_image<fits_mask_types>(fileName, *_getRawImagePtr(), metadata, hdu, bbox)) {
-        throw LSST_EXCEPT(image::FitsException, (boost::format("Failed to read %s HDU %d") % fileName % hdu).str());
+        throw LSST_EXCEPT(image::FitsException,
+                          (boost::format("Failed to read %s HDU %d") % fileName % hdu).str());
     }
     _setRawView();
 
@@ -189,7 +190,8 @@ image::Mask<MaskPixelT>::Mask(std::string const& fileName, //!< Name of file to 
     /*
      * We will interpret one of the header WCSs as providing the (X0, Y0) values
      */
-    this->setXY0(this->getXY0() + image::detail::getImageXY0FromMetadata(image::detail::wcsNameForXY0, metadata.get()));
+    this->setXY0(this->getXY0() +
+                 image::detail::getImageXY0FromMetadata(image::detail::wcsNameForXY0, metadata.get()));
     //
     // OK, we've read it.  Now make sense of its mask planes
     //
@@ -215,9 +217,9 @@ image::Mask<MaskPixelT>::Mask(std::string const& fileName, //!< Name of file to 
  */
 template<typename MaskPixelT>
 void image::Mask<MaskPixelT>::writeFits(
-        std::string const& fileName, ///< File to write
-        boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, //!< metadata to write to header; or NULL
-        std::string const& mode    ///< "w" to write a new file; "a" to append
+   std::string const& fileName, ///< File to write
+   boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, //!< metadata to write to header or NULL
+   std::string const& mode    ///< "w" to write a new file; "a" to append
                                        ) const {
 
     lsst::daf::base::PropertySet::Ptr metadata;
@@ -231,7 +233,8 @@ void image::Mask<MaskPixelT>::writeFits(
     // Add WCS with (X0, Y0) information
     //
     PropertySet::Ptr wcsAMetadata = image::detail::createTrivialWcsAsPropertySet(image::detail::wcsNameForXY0,
-                                                                                 this->getX0(), this->getY0());
+                                                                                 this->getX0(),
+                                                                                 this->getY0());
     metadata->combine(wcsAMetadata);
 
     image::fits_write_view(fileName, _getRawView(), metadata, mode);
@@ -254,7 +257,8 @@ int image::Mask<MaskPixelT>::addMaskPlane(const std::string& name)
     } else {
         // Max number of planes already allocated
         throw LSST_EXCEPT(ex::RuntimeErrorException,
-                          (boost::format("Max number of planes (%1%) already used") % getNumPlanesMax()).str());
+                          (boost::format("Max number of planes (%1%) already used") %
+                           getNumPlanesMax()).str());
     }
 }
 
@@ -266,7 +270,8 @@ int image::Mask<MaskPixelT>::addMaskPlane(std::string name, int planeId)
 {
     if (planeId < 0 || planeId >= getNumPlanesMax()) {
         throw LSST_EXCEPT(ex::RangeErrorException,
-                          (boost::format("mask plane id must be between 0 and %1%") % (getNumPlanesMax() - 1)).str());
+                          (boost::format("mask plane id must be between 0 and %1%") %
+                           (getNumPlanesMax() - 1)).str());
     }
 
     _maskPlaneDict[name] = planeId;
@@ -320,7 +325,8 @@ int image::Mask<MaskPixelT>::getMaskPlane(const std::string& name) {
     const int plane = getMaskPlaneNoThrow(name);
     
     if (plane < 0) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, (boost::format("Invalid mask plane: %s") % name).str());
+        throw LSST_EXCEPT(ex::InvalidParameterException,
+                          (boost::format("Invalid mask plane: %s") % name).str());
     } else {
         return plane;
     }
@@ -409,7 +415,8 @@ void image::Mask<MaskPixelT>::conformMaskPlanes(
     // Now loop over all pixels in Mask
     if (numReMap > 0) {
         for (int r = 0; r != this->getHeight(); ++r) { // "this->": Meyers, Effective C++, Item 43
-            for (typename Mask::x_iterator ptr = this->row_begin(r), end = this->row_end(r); ptr != end; ++ptr) {
+            for (typename Mask::x_iterator ptr = this->row_begin(r), end = this->row_end(r);
+                 ptr != end; ++ptr) {
                 MaskPixelT const pixel = *ptr;
 
                 MaskPixelT newPixel = pixel & keepBitmask; // value of invariant mask bits
@@ -439,7 +446,8 @@ typename image::ImageBase<MaskPixelT>::PixelConstReference image::Mask<MaskPixel
 
 template<typename MaskPixelT>
 bool image::Mask<MaskPixelT>::operator()(int x, int y, int plane) const {
-    return !!(this->ImageBase<MaskPixelT>::operator()(x, y) & getBitMask(plane)); // ! ! converts an int to a bool
+    // ! ! converts an int to a bool
+    return !!(this->ImageBase<MaskPixelT>::operator()(x, y) & getBitMask(plane)); 
 }
 
 /************************************************************************************************************/
@@ -625,7 +633,8 @@ void image::Mask<MaskPixelT>::printMaskPlanes() {
  */
 template<typename MaskPixelT>
 static typename image::Mask<MaskPixelT>::MaskPlaneDict initMaskPlanes() {
-    typename image::Mask<MaskPixelT>::MaskPlaneDict planeDict = typename image::Mask<MaskPixelT>::MaskPlaneDict();
+    typename image::Mask<MaskPixelT>::MaskPlaneDict planeDict =
+        typename image::Mask<MaskPixelT>::MaskPlaneDict();
 
     int i = -1;
     planeDict["BAD"] = ++i;
@@ -646,7 +655,8 @@ template<typename MaskPixelT>
 std::string const image::Mask<MaskPixelT>::maskPlanePrefix("MP_");
 
 template<typename MaskPixelT>
-typename image::Mask<MaskPixelT>::MaskPlaneDict image::Mask<MaskPixelT>::_maskPlaneDict = initMaskPlanes<MaskPixelT>();
+typename image::Mask<MaskPixelT>::MaskPlaneDict image::Mask<MaskPixelT>::_maskPlaneDict =
+                                                          initMaskPlanes<MaskPixelT>();
 
 template<typename MaskPixelT>
 int image::Mask<MaskPixelT>::_maskDictVersion = 0;    // version number for bitplane dictionary

@@ -9,7 +9,8 @@ int main() {
 
     // Set data to a ramp
     for (int y = 0; y != in.getHeight(); ++y) {
-        for (ImageT::xy_locator ptr = in.xy_at(0, y), end = in.xy_at(in.getWidth(), y); ptr != end; ++ptr.x()) {
+        for (ImageT::xy_locator ptr = in.xy_at(0, y), end = in.xy_at(in.getWidth(), y);
+             ptr != end; ++ptr.x()) {
             *ptr = ImageT::Pixel(y, 0x1, 10);
         }
     }
@@ -35,7 +36,8 @@ int main() {
     typedef ImageT::const_xy_locator xy_loc;
 
     for (int y = 1; y != in.getHeight() - 1; ++y) {
-        xy_loc dot = in.xy_at(1, y), end = in.xy_at(in.getWidth() - 1, y); // "dot" means "cursor location" in emacs
+        // "dot" means "cursor location" in emacs
+        xy_loc dot = in.xy_at(1, y), end = in.xy_at(in.getWidth() - 1, y); 
 
         xy_loc::cached_location_t nw = dot.cache_location(-1,-1);
         xy_loc::cached_location_t n  = dot.cache_location( 0,-1);
@@ -69,7 +71,8 @@ int main() {
     xy_loc::cached_location_t se = pix11.cache_location( 1, 1);
 
     for (int y = 1; y != in.getHeight() - 1; ++y) {
-        xy_loc dot = in.xy_at(1, y), end = in.xy_at(in.getWidth() - 1, y); // "dot" means "cursor location" in emacs
+        // "dot" means "cursor location" in emacs
+        xy_loc dot = in.xy_at(1, y), end = in.xy_at(in.getWidth() - 1, y); 
 
         for (ImageT::x_iterator optr = out2->row_begin(y) + 1; dot != end; ++dot.x(), ++optr) {
             *optr = dot[nw] + 2*dot[n] +   dot[ne] +
@@ -81,14 +84,16 @@ int main() {
     // Normalise the kernel.  I.e. divide the smoothed parts of image2 by 16
     //
     {
-        ImageT center = ImageT(*out2, image::BBox(image::PointI(1, 1), in.getWidth() - 2, in.getHeight() - 2));
+        ImageT center = ImageT(*out2,
+                               image::BBox(image::PointI(1, 1), in.getWidth() - 2, in.getHeight() - 2));
         center /= 16;
     }
     //
     // Clear in using the x_iterator embedded in the locator
     //
     for (int y = 0; y != in.getHeight(); ++y) {
-        for (ImageT::xy_x_iterator ptr = in.xy_at(0, y).x(), end = in.xy_at(in.getWidth(), y).x(); ptr != end; ++ptr) {
+        for (ImageT::xy_x_iterator ptr = in.xy_at(0, y).x(), end = in.xy_at(in.getWidth(), y).x();
+             ptr != end; ++ptr) {
             *ptr = 0;
         }
     }

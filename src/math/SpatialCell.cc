@@ -141,8 +141,10 @@ SpatialCellCandidate::Ptr SpatialCell::getCandidateById(int id, ///< The desired
  * processCandidate(*this), but can be re-defined)
  */
 void SpatialCell::visitCandidates(CandidateVisitor *visitor, ///< Pass this object to every Candidate
-                                  int const nMaxPerCell,     ///< Visit no more than this many Candidates (<= 0: all)
-                                  bool const ignoreExceptions, ///< Ignore any exceptions thrown by the processing
+                                  int const nMaxPerCell, ///< Visit no more than
+                                                         ///<   this many Candidates (<= 0: all)
+                                  bool const ignoreExceptions, ///< Ignore any exceptions thrown by
+                                                               ///<  the processing
                                   bool const reset             ///< Reset visitor before passing it around
                                  ) {
     if (reset) {
@@ -303,8 +305,8 @@ SpatialCellCandidate::Ptr SpatialCellCandidateIterator::operator*() {
  * @throw lsst::pex::exceptions::LengthErrorException if nx or ny is non-positive
  */
 SpatialCellSet::SpatialCellSet(image::BBox const& region, ///< Bounding box for %image
-                               int xSize,                 ///< size of cells in the column direction
-                               int ySize                  ///< size of cells in the row direction (0: == xSize)
+                               int xSize,              ///< size of cells in the column direction
+                               int ySize               ///< size of cells in the row direction (0: == xSize)
                               ) :
     _region(region), _cellList(CellList()) {
     if (ySize == 0) {

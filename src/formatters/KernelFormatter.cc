@@ -15,7 +15,8 @@
 #ifndef __GNUC__
 #  define __attribute__(x) /*NOTHING*/
 #endif
-static char const* SVNid __attribute__((unused)) = "$Id$";
+static char const* SVNid __attribute__((unused)) =
+    "$Id$";
 
 #include "lsst/afw/formatters/KernelFormatter.h"
 

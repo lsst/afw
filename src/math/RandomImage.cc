@@ -166,7 +166,8 @@ void randomPoissonImage(ImageT *image,    ///< The image to set
     template void randomUniformImage(lsst::afw::image::Image<T> *image, Random &rand); \
     template void randomUniformPosImage(lsst::afw::image::Image<T> *image, Random &rand); \
     template void randomUniformIntImage(lsst::afw::image::Image<T> *image, Random &rand, unsigned long n); \
-    template void randomFlatImage(lsst::afw::image::Image<T> *image, Random &rand, double const a, double const b); \
+    template void randomFlatImage(lsst::afw::image::Image<T> *image, \
+                                  Random &rand, double const a, double const b); \
     template void randomGaussianImage(lsst::afw::image::Image<T> *image, Random &rand); \
     template void randomChisqImage(lsst::afw::image::Image<T> *image, Random &rand, double const nu); \
     template void randomPoissonImage(lsst::afw::image::Image<T> *image, Random &rand, double const mu);

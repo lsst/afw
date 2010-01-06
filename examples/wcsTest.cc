@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
     image::PointD pix3 = wcs.raDecToXY(raDecl1);
     image::PointD pix4 = wcs.raDecToXY(raDecl2);
 
-        std::cout << "col, row of " << inFilename << " at ("<< raDecl1[0] << " " << raDecl1[1]<<") = " << endl;
+    std::cout << "col, row of " << inFilename << " at ("<< raDecl1[0] << " " << raDecl1[1]<<") = " << endl;
     std::cout << "col: " << pix3[0] << " row: " << pix3[1] << endl << endl;
 
     std::cout << "col, row of " << inFilename << " at ("<< raDecl2[0] << " " << raDecl2[1]<<") = " << endl;

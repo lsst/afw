@@ -1,3 +1,4 @@
+// -*- lsst-c++ -*-
 #include <ctime>
 #include <iostream>
 #include <sstream>
@@ -32,7 +33,8 @@ int main(int argc, char **argv) {
     if (argc < 2) {
         std::cout << "Usage: timeSpatiallyVaryingConvolve fitsFile [nIter]" << std::endl;
         std::cout << "fitsFile excludes the \"_img.fits\" suffix" << std::endl;
-        std::cout << "nIter (default " << DefNIter << ") is the number of iterations per kernel size" << std::endl;
+        std::cout << "nIter (default " << DefNIter <<
+            ") is the number of iterations per kernel size" << std::endl;
         std::cout << "Kernel size ranges from " << MinKernelSize << " to " << MaxKernelSize
             << " in steps of " << DeltaKernelSize << " pixels on a side" << std::endl;
         return 1;
@@ -73,6 +75,7 @@ int main(int argc, char **argv) {
             afwMath::convolve(resMImage, mImage, gaussSpVarKernel, true);
         }
         double secPerIter = (clock() - startTime) / static_cast<double> (nIter * CLOCKS_PER_SEC);
-        std::cout << secPerIter << " sec/convolution for a " << kSize << " by " << kSize << " kernel" << std::endl;
+        std::cout << secPerIter << " sec/convolution for a " << kSize << " by " << kSize <<
+            " kernel" << std::endl;
     }
 }

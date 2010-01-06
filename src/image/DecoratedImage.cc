@@ -46,7 +46,8 @@ image::DecoratedImage<PixelT>::DecoratedImage(
  * Note that this ctor shares pixels with the rhs; it isn't a deep copy
  */
 template<typename PixelT>
-image::DecoratedImage<PixelT>::DecoratedImage(typename Image<PixelT>::Ptr rhs ///< Image to go into the DecoratedImage
+image::DecoratedImage<PixelT>::DecoratedImage(
+                                 typename Image<PixelT>::Ptr rhs ///< Image to go into DecoratedImage
                                              ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _image(rhs)

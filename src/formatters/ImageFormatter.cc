@@ -150,7 +150,8 @@ Persistable* ImageFormatter<ImagePixelT>::read(Storage::Ptr storage,
         }
         lsst::daf::base::PropertySet::Ptr metadata();
 
-        Image<ImagePixelT>* ip = new Image<ImagePixelT>(fits->getPath(), fits->getHdu(), lsst::daf::base::PropertySet::Ptr(), box);
+        Image<ImagePixelT>* ip = new Image<ImagePixelT>(fits->getPath(), fits->getHdu(),
+                                                        lsst::daf::base::PropertySet::Ptr(), box);
         // \note We're throwing away the metadata
         // \todo Do something with these fields?
         // int _X0;
@@ -198,7 +199,8 @@ void ImageFormatter<ImagePixelT>::delegateSerialize(
         typename Image<ImagePixelT>::_image_t img(width, height);
         boost::gil::copy_pixels(ip->_getRawView(), flipped_up_down_view(view(img)));
         ar & make_nvp("bytes",
-                      boost::serialization::make_binary_object(boost::gil::interleaved_view_get_raw_data(view(img)), nbytes));
+                      boost::serialization::make_binary_object(
+                                       boost::gil::interleaved_view_get_raw_data(view(img)), nbytes));
     }
 }
 

@@ -182,7 +182,8 @@ int main() {
 
     print(grad_y, "grad_y");
     
-    afwImage::Image<unsigned short> u16(img.getDimensions()); u16 = 100;
+    afwImage::Image<unsigned short> u16(img.getDimensions());
+    u16 = 100;
     afwImage::Image<float> fl32(u16, true); // must be true as all type conversions are deep
     print(fl32, "Float from U16");
 

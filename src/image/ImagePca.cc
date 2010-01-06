@@ -1,3 +1,4 @@
+// -*- lsst-c++ -*-
 /**
  * @file
  *
@@ -73,7 +74,8 @@ typename ImageT::Ptr ImagePca<ImageT>::getMean() const {
     typename ImageT::Ptr mean(new ImageT(getDimensions()));
     *mean = 0;
 
-    for (typename ImageList::const_iterator ptr = _imageList.begin(), end = _imageList.end(); ptr != end; ++ptr) {
+    for (typename ImageList::const_iterator ptr = _imageList.begin(), end = _imageList.end();
+         ptr != end; ++ptr) {
         *mean += **ptr;
     }
     *mean /= _imageList.size();
@@ -252,7 +254,7 @@ void ImagePca<ImageT>::analyze() {
     }
 }
 
-/************************************************************************************************************/    
+/*******************************************************************************************************/    
 /**
  * Calculate the inner product of two %images
  * @return The inner product

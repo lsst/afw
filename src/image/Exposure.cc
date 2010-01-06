@@ -99,8 +99,8 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
   */        
 template<typename ImageT, typename MaskT, typename VarianceT> 
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &src, ///< Parent Exposure
-                                                               BBox const& bbox,    ///< Desired region in Exposure 
-                                                               bool const deep      ///< Should we make copy of pixels?
+                                                       BBox const& bbox,    ///< Desired region in Exposure 
+                                                       bool const deep      ///< Should we copy the pixels?
                                                               ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _maskedImage(src.getMaskedImage(), bbox, deep),

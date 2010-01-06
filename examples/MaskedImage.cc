@@ -1,3 +1,4 @@
+// -*- lsst-c++ -*-
 #include <iostream>
 #include <string>
 #include <algorithm>
@@ -58,7 +59,8 @@ namespace {
         }
         
         for (int i = img.getHeight() - 1; i >= 0; --i) {
-            for (image::MaskedImage<ImagePixelT>::x_iterator ptr = img.row_begin(i), end = img.row_end(i); ptr != end; ++ptr) {
+            for (image::MaskedImage<ImagePixelT>::x_iterator ptr = img.row_begin(i), end = img.row_end(i);
+                 ptr != end; ++ptr) {
                 cout << ptr.image() << " ";
             }
             cout << endl;
@@ -71,7 +73,8 @@ namespace {
         }
         
         for (int i = img.getHeight() - 1; i >= 0; --i) {
-            for (image::MaskedImage<ImagePixelT>::x_iterator ptr = img.row_begin(i), end = img.row_end(i); ptr != end; ++ptr) {
+            for (image::MaskedImage<ImagePixelT>::x_iterator ptr = img.row_begin(i), end = img.row_end(i);
+                 ptr != end; ++ptr) {
                 cout << ptr.variance() << " ";
             }
             cout << endl;
@@ -94,39 +97,46 @@ int main() {
     }
 
     int i = 0;
-    for (image::MaskedImage<ImagePixelT>::iterator ptr = img.begin(), end = img.end(); ptr != end; ++ptr, ++i) {
+    for (image::MaskedImage<ImagePixelT>::iterator ptr = img.begin(), end = img.end();
+         ptr != end; ++ptr, ++i) {
         ptr.image() = i/img.getWidth() + 100*(i%img.getWidth());
         ptr.mask() |= 0x8;
         ptr.variance() *= 2;
     }
 
 #if 1
-    for (image::MaskedImage<ImagePixelT>::const_iterator ptr = img.at(0,2), end = img.end(); ptr != end; ++ptr) {
+    for (image::MaskedImage<ImagePixelT>::const_iterator ptr = img.at(0,2), end = img.end();
+         ptr != end; ++ptr) {
         cout << ptr.image() << " " << ptr.mask() << " " << ptr.variance() << endl;
     }
     cout << endl;
 
-    for (image::MaskedImage<ImagePixelT>::x_iterator ptr = img.row_begin(0), end = img.row_end(0); ptr != end; ++ptr) {
+    for (image::MaskedImage<ImagePixelT>::x_iterator ptr = img.row_begin(0), end = img.row_end(0);
+         ptr != end; ++ptr) {
         cout << ptr.image() << " " << ptr.mask() << " " << ptr.variance() << endl;
     }
     cout << endl;
 
-    for (image::MaskedImage<ImagePixelT>::reverse_iterator ptr = img.rbegin(), rend = img.rend(); ptr != rend; ++ptr) {
+    for (image::MaskedImage<ImagePixelT>::reverse_iterator ptr = img.rbegin(), rend = img.rend();
+         ptr != rend; ++ptr) {
         cout << ptr.image() << " " << ptr.mask() << " " << ptr.variance() << endl;
     }
 
-    for (image::MaskedImage<ImagePixelT>::y_iterator ptr = img.col_begin(1), end = img.col_end(1); ptr != end; ++ptr) {
+    for (image::MaskedImage<ImagePixelT>::y_iterator ptr = img.col_begin(1), end = img.col_end(1);
+         ptr != end; ++ptr) {
         cout << ptr.image() << " " << ptr.mask() << " " << ptr.variance() << endl;
     }
     cout << endl;
 
-    for (image::MaskedImage<ImagePixelT>::const_x_iterator ptr = img.x_at(1,1), end = img.x_at(5,1); ptr != end; ++ptr) {
+    for (image::MaskedImage<ImagePixelT>::const_x_iterator ptr = img.x_at(1,1), end = img.x_at(5,1);
+         ptr != end; ++ptr) {
         cout << ptr.image() << " " << ptr.mask() << " " << ptr.variance() << endl;
     }
     cout << endl;
 
 #endif
-    for (image::MaskedImage<ImagePixelT>::y_iterator ptr = img.y_at(1,0), end = img.y_at(1,2); ptr != end; ++ptr) {
+    for (image::MaskedImage<ImagePixelT>::y_iterator ptr = img.y_at(1,0), end = img.y_at(1,2);
+         ptr != end; ++ptr) {
         cout << ptr.image() << " " << ptr.mask() << " " << ptr.variance() << endl;
     }
     cout << endl;
@@ -136,10 +146,13 @@ int main() {
     *grad_y.getImage() = 0;
     y_gradient(img, grad_y);
 
-    printImage(img, "image"); cout << endl;
-    printVariance(img, "variance(image)"); cout << endl;
+    printImage(img, "image");
+    cout << endl;
+    printVariance(img, "variance(image)");
+    cout << endl;
     
-    printImage(grad_y, "gradient"); cout << endl;
+    printImage(grad_y, "gradient");
+    cout << endl;
     printVariance(grad_y, "variance(gradient)");
     cout << endl;
 #endif

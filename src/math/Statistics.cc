@@ -388,9 +388,11 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(ImageT const &im
             }
         } else {
             if ( _sctrl.getWeighted()) {
-                loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, AlwaysT,true>(img, msk, var, flags, nCrude, 1, meanCrude);
+                loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, AlwaysT,true>(img, msk, var, flags,
+                                                                                nCrude, 1, meanCrude);
             } else {
-                loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, AlwaysT,false>(img, msk, var, flags, nCrude, 1, meanCrude);
+                loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, AlwaysT,false>(img, msk, var, flags,
+                                                                                 nCrude, 1, meanCrude);
             }
         }
     }

@@ -18,7 +18,7 @@ typedef image::MaskedImage<float> MImageF;
 typedef std::vector<float> VecF;
 typedef boost::shared_ptr<VecF> VecFPtr;
 
-int main (int argc, char **argv) {
+int main(int argc, char **argv) {
 
     int const nImg = 10;
     int const nX = 64;

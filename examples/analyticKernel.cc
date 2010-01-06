@@ -1,3 +1,4 @@
+// -*- lsst-c++ -*-
 #include <iostream>
 
 #include "boost/format.hpp"
@@ -22,7 +23,8 @@ int main() {
     lsst::afw::math::GaussianFunction2<Pixel> gaussFunc(majorSigma, minorSigma, angle);
     lsst::afw::math::AnalyticKernel gaussKernel(kernelCols, kernelRows, gaussFunc);
     
-    cout << boost::format("Gaussian Kernel with majorSigma=%.1f, minorSigma=%.1f\n\n") % majorSigma % minorSigma;
+    cout << boost::format("Gaussian Kernel with majorSigma=%.1f, minorSigma=%.1f\n\n") %
+        majorSigma % minorSigma;
     
     lsst::afw::math::printKernel(gaussKernel, true);
     

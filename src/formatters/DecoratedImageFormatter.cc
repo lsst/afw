@@ -15,7 +15,8 @@
 #ifndef __GNUC__
 #  define __attribute__(x) /*NOTHING*/
 #endif
-static char const* SVNid __attribute__((unused)) = "$Id$";
+static char const* SVNid __attribute__((unused)) =
+    "$Id$";
 
 #include "boost/scoped_ptr.hpp"
 #include "boost/serialization/shared_ptr.hpp"
@@ -110,7 +111,8 @@ void DecoratedImageFormatter<ImagePixelT>::write(
         execTrace("DecoratedImageFormatter write end");
         return;
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unrecognized Storage for DecoratedImage");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                      "Unrecognized Storage for DecoratedImage");
 }
 
 template <typename ImagePixelT>
@@ -145,7 +147,8 @@ Persistable* DecoratedImageFormatter<ImagePixelT>::read(Storage::Ptr storage,
         execTrace("DecoratedImageFormatter read end");
         return ip;
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unrecognized Storage for DecoratedImage");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                      "Unrecognized Storage for DecoratedImage");
 }
 
 template <typename ImagePixelT>
@@ -153,7 +156,8 @@ void DecoratedImageFormatter<ImagePixelT>::update(
     Persistable* persistable,
     Storage::Ptr storage,
     lsst::daf::base::PropertySet::Ptr additionalData) {
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unexpected call to update for DecoratedImage");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                      "Unexpected call to update for DecoratedImage");
 }
 
 template <typename ImagePixelT> template <class Archive>
@@ -164,7 +168,8 @@ void DecoratedImageFormatter<ImagePixelT>::delegateSerialize(
     if (ip == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Serializing non-DecoratedImage");
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "DecoratedImage serialization not yet implemented");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                      "DecoratedImage serialization not yet implemented");
 }
 
 template <typename ImagePixelT>
