@@ -98,10 +98,10 @@ public:
     EigenVector const & asVector() const { return _vector; }
 
     /// \brief Return a std::pair representation of the coordinate object.
-    std::pair<T,T> asPairXY() const { return std::make_pair(_vector.x(),_vector.y()); }
+    std::pair<T,T> asPair() const { return std::make_pair(_vector.x(),_vector.y()); }
 
     /// \brief Return a boost::tuple representation of the coordinate object.
-    boost::tuple<T,T> asTupleXY() const { return boost::make_tuple(_vector.x(),_vector.y()); }
+    boost::tuple<T,T> asTuple() const { return boost::make_tuple(_vector.x(),_vector.y()); }
 
     /**
      *  @name Named constructors
@@ -114,10 +114,10 @@ public:
      *  that the arguments are (x,y) rather than (y,x).
      */
     //@{
-    static Derived makeXY(T x, T y) { return Derived(EigenVector(x, y)); }
-    static Derived makeXY(T const xy[2]) { return Derived(EigenVector(xy[0], xy[1])); }
-    static Derived makeXY(std::pair<T,T> const & xy) { return Derived(EigenVector(xy.first, xy.second)); }
-    static Derived makeXY(boost::tuple<T,T> const & xy) {
+    static Derived make(T x, T y) { return Derived(EigenVector(x, y)); }
+    static Derived make(T const xy[2]) { return Derived(EigenVector(xy[0], xy[1])); }
+    static Derived make(std::pair<T,T> const & xy) { return Derived(EigenVector(xy.first, xy.second)); }
+    static Derived make(boost::tuple<T,T> const & xy) {
         return Derived(EigenVector(xy.template get<0>(), xy.template get<1>()));
     }
     //@}
@@ -163,7 +163,7 @@ public:
     EigenVector const & asVector() const { return _vector; }
 
     /// \brief Return a boost::tuple representation of the coordinate object.
-    boost::tuple<T,T,T> asTupleXYZ() const {
+    boost::tuple<T,T,T> asTuple() const {
         return boost::make_tuple(_vector.x(), _vector.y(), _vector.z()); 
     }
 
@@ -178,9 +178,9 @@ public:
      *  that the arguments are (x,y,z) rather than (z,y,x).
      */
     //@{
-    static Derived makeXYZ(T x, T y, T z) { return Derived(EigenVector(x, y, z)); }
-    static Derived makeXYZ(T const xyz[3]) { return Derived(EigenVector(xyz[0], xyz[1], xyz[2])); }
-    static Derived makeXYZ(boost::tuple<T,T,T> const & xyz) {
+    static Derived make(T x, T y, T z) { return Derived(EigenVector(x, y, z)); }
+    static Derived make(T const xyz[3]) { return Derived(EigenVector(xyz[0], xyz[1], xyz[2])); }
+    static Derived make(boost::tuple<T,T,T> const & xyz) {
         return Derived(EigenVector(xyz.template get<0>(), xyz.template get<1>(), xyz.template get<2>()));
     }
     //@}

@@ -11,7 +11,43 @@ namespace lsst {
 namespace afw {
 namespace geom {
 
-/** \brief Transform defined as the composition of several other distinct Transforms. */
+/**
+ *  \brief An affine coordinate transformation consisting of a linear transformation and an offset.
+ *
+ *  The transform is represented by a matrix \f$ \mathbf{M} \f$ such that
+ *  \f[
+ *     \left[\begin{array}{ c }
+ *     x_f \\
+ *     y_f \\
+ *     1
+ *     \end{array}\right]
+ *     =
+ *     \mathbf{M}
+ *     \left[\begin{array}{ c }
+ *     x_i \\
+ *     y_i \\
+ *     1
+ *     \end{array}\right]
+ *  \f]
+ *  where \f$(x_i,y_i)\f$ are the input coordinates and \f$(x_f,y_f)\f$ are the output coordinates.
+ *
+ *  If \f$ x_f(x_i,y_i) \f$ and \f$ y_f(x_i,y_i) \f$ are continuous differentiable functions, then
+ *  \f[
+ *     \mathbf{M} = \left[\begin{array}{ c c c }
+ *     \displaystyle\frac{\partial x_f}{\partial x_i} &
+ *     \displaystyle\frac{\partial x_f}{\partial y_i} &
+ *     x_f \\
+ *     \displaystyle\frac{\partial y_f}{\partial x_i} &
+ *     \displaystyle\frac{\partial y_f}{\partial y_i} &
+ *     y_f \\
+ *     \displaystyle 0 & \displaystyle 0 & \displaystyle 1
+ *     \end{array}\right]
+ *  \f]
+ *  evaluated at \f$(x_i,y_i)\f$.
+ *
+ *  The 2x2 upper left corner of \f$ \mathbf{M} \f$ is the linear part of the transform is simply the
+ *  Jacobian of the mapping between \f$(x_i,y_i)\f$ and \f$(x_f,y_f)\f$.
+ */
 class AffineTransform {
     typedef Eigen::Matrix<double, 2, 1, Eigen::RowMajor> EigenPoint;
 
@@ -48,7 +84,7 @@ public:
     ) : _matrix(Eigen::Translation2d(p.getX(), p.getY())*TransformMatrix(m)) 
     {}
 
-
+    /** \brief Construct an AffineTransform from an offset and the identity matrix. */
     AffineTransform(ExtentD const & p) : 
         _matrix(Eigen::Translation2d(p.getX(), p.getY()))
     {}
@@ -88,10 +124,34 @@ public:
     AffineTransform const & operator =(TransformMatrix const & matrix);
     AffineTransform const & operator =(AffineTransform const & transform);
 
+    /**
+     *  \brief Construct a new AffineTransform that represents a uniform scaling.
+     *
+     *  \return An AffineTransform with matrix
+     *  \f$
+     *     \left[\begin{array}{ c c c }
+     *     s & 0 & 0 \\
+     *     0 & s & 0 \\
+     *     0 & 0 & 1 \\
+     *     \end{array}\right]
+     *  \f$
+     */
     static AffineTransform makeScaling(double s) { 
         return AffineTransform(TransformMatrix(Eigen::Scaling<double,2>(s)));
     }
 
+    /**
+     *  \brief Construct a new AffineTransform that represents a CCW rotation in radians.
+     *
+     *  \return An AffineTransform with matrix
+     *  \f$
+     *     \left[\begin{array}{ c c c }
+     *     \cos t & -\sin t & 0 \\
+     *     \sin t & \cos t & 0  \\
+     *     0 & 0 & 1 \\
+     *     \end{array}\right]
+     *  \f$
+     */
     static AffineTransform makeRotation(double t) { 
         return AffineTransform(TransformMatrix(Eigen::Rotation2D<double>(t)));
     }

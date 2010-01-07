@@ -11,5 +11,6 @@
 #include "lsst/afw/geom/Extent.h"
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/geom/ellipses.h"
+#include "lsst/afw/geom/Box.h"
 
 #endif // LSST_GEOM_H

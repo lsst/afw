@@ -594,8 +594,8 @@ lsst::afw::geom::AffineTransform lsst::afw::image::Wcs::getAffineTransform() con
     return lsst::afw::geom::AffineTransform(getLinearTransformMatrix());
 }
 
-/*
- * Return the local linear approximation to the Wcs at the point (ra, dec) = sky
+/**
+ * Return the local linear approximation to Wcs::raDecToXY at the point (ra, dec) = sky
  *
  * This is currently implemented as a numerical derivative, but we should specialise the Wcs class (or rather
  * its implementation) to handle "simple" cases such as TAN-SIP analytically

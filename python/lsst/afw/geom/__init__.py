@@ -9,10 +9,16 @@ from .geomLib import (
     Extent3I,
     Extent2D,
     Extent3D,
+    makeExtentI,
+    makeExtentD,
     Point2I,
     Point3I,
     Point2D,
     Point3D,
+    makePointI,
+    makePointD,
+    BoxI,
+    BoxD,
 )
 
 PointI = Point2I

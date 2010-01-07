@@ -44,36 +44,32 @@ public:
     T computeNorm() const { return this->asVector().norm(); }
 
     /**
-     *  @name Comparison operators
+     *  @name Named comparison functions
      *
      *  Note that these return CoordinateExpr, not bool.
      *
      *  Unlike most arithmetic and assignment operators, scalar interoperability is provided
-     *  for comparison operators; expressions like 
+     *  for comparisons; expressions like 
      *  \code
-     *    if (all(extent >= 0)) ...
+     *    if (all(extent.gt(0))) ...
      *  \endcode
      *  are both ubiquitous and easy to interpret.
      */
     //@{
-    CoordinateExpr<N> operator==(Extent const & other) const;
-    CoordinateExpr<N> operator!=(Extent const & other) const;
-    CoordinateExpr<N> operator<(Extent const & other) const;
-    CoordinateExpr<N> operator<=(Extent const & other) const;
-    CoordinateExpr<N> operator>(Extent const & other) const;
-    CoordinateExpr<N> operator>=(Extent const & other) const;
-    CoordinateExpr<N> operator==(T scalar) const { return *this == Extent(scalar); }
-    CoordinateExpr<N> operator!=(T scalar) const { return *this != Extent(scalar); }
-    CoordinateExpr<N> operator<(T scalar) const { return *this < Extent(scalar); }
-    CoordinateExpr<N> operator<=(T scalar) const { return *this <= Extent(scalar); }
-    CoordinateExpr<N> operator>(T scalar) const { return *this > Extent(scalar); }
-    CoordinateExpr<N> operator>=(T scalar) const { return *this >= Extent(scalar); }
-    friend CoordinateExpr<N> operator==(T scalar, Extent const & other) { Extent(scalar) == other; }
-    friend CoordinateExpr<N> operator!=(T scalar, Extent const & other) { Extent(scalar) != other; }
-    friend CoordinateExpr<N> operator<(T scalar, Extent const & other) { Extent(scalar) < other; }
-    friend CoordinateExpr<N> operator<=(T scalar, Extent const & other) { Extent(scalar) <= other; }
-    friend CoordinateExpr<N> operator>(T scalar, Extent const & other) { Extent(scalar) > other; }
-    friend CoordinateExpr<N> operator>=(T scalar, Extent const & other) { Extent(scalar) >= other; }
+    bool operator==(Extent const & other) const { return all(this->eq(other)); }
+    bool operator!=(Extent const & other) const { return any(this->ne(other)); }
+    CoordinateExpr<N> eq(Extent const & other) const;
+    CoordinateExpr<N> ne(Extent const & other) const;
+    CoordinateExpr<N> lt(Extent const & other) const;
+    CoordinateExpr<N> le(Extent const & other) const;
+    CoordinateExpr<N> gt(Extent const & other) const;
+    CoordinateExpr<N> ge(Extent const & other) const;
+    CoordinateExpr<N> eq(T scalar) const { return this->eq(Extent(scalar)); }
+    CoordinateExpr<N> ne(T scalar) const { return this->ne(Extent(scalar)); }
+    CoordinateExpr<N> lt(T scalar) const { return this->lt(Extent(scalar)); }
+    CoordinateExpr<N> le(T scalar) const { return this->le(Extent(scalar)); }
+    CoordinateExpr<N> gt(T scalar) const { return this->gt(Extent(scalar)); }
+    CoordinateExpr<N> ge(T scalar) const { return this->ge(Extent(scalar)); }
     //@}
 
     /**
@@ -111,6 +107,11 @@ typedef Extent<int,3> Extent3I;
 typedef Extent<double,2> ExtentD;
 typedef Extent<double,2> Extent2D;
 typedef Extent<double,3> Extent3D;
+
+inline Extent2I makeExtentI(int x, int y) { return Extent2I::make(x,y); }
+inline Extent3I makeExtentI(int x, int y, int z) { return Extent3I::make(x,y,z); }
+inline Extent2D makeExtentD(double x, double y) { return Extent2D::make(x,y); }
+inline Extent3D makeExtentD(double x, double y, double z) { return Extent3D::make(x,y,z); }
 
 }}}
 

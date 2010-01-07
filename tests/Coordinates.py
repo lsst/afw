@@ -49,41 +49,41 @@ class CoordinateTestCase(unittest.TestCase):
             vector2 = rnd()
             p1 = ctor(*vector1)
             p2 = ctor(*vector2)
-            self.assertEqual(tuple(p1 == p2), tuple(vector1 == vector2))
-            self.assertEqual(tuple(p1 != p2), tuple(vector1 != vector2))
-            self.assertEqual(tuple(p1 < p2), tuple(vector1 < vector2))
-            self.assertEqual(tuple(p1 <= p2), tuple(vector1 <= vector2))
-            self.assertEqual(tuple(p1 > p2), tuple(vector1 > vector2))
-            self.assertEqual(tuple(p1 >= p2), tuple(vector1 >= vector2))
-            self.assertEqual(type(p1 == p2), CoordinateExpr)
-            self.assertEqual(type(p1 != p2), CoordinateExpr)
-            self.assertEqual(type(p1 < p2), CoordinateExpr)
-            self.assertEqual(type(p1 <= p2), CoordinateExpr)
-            self.assertEqual(type(p1 > p2), CoordinateExpr)
-            self.assertEqual(type(p1 >= p2), CoordinateExpr)
+            self.assertEqual(tuple(p1.eq(p2)), tuple(vector1 == vector2))
+            self.assertEqual(tuple(p1.ne(p2)), tuple(vector1 != vector2))
+            self.assertEqual(tuple(p1.lt(p2)), tuple(vector1 < vector2))
+            self.assertEqual(tuple(p1.le(p2)), tuple(vector1 <= vector2))
+            self.assertEqual(tuple(p1.gt(p2)), tuple(vector1 > vector2))
+            self.assertEqual(tuple(p1.ge(p2)), tuple(vector1 >= vector2))
+            self.assertEqual(type(p1.eq(p2)), CoordinateExpr)
+            self.assertEqual(type(p1.ne(p2)), CoordinateExpr)
+            self.assertEqual(type(p1.lt(p2)), CoordinateExpr)
+            self.assertEqual(type(p1.le(p2)), CoordinateExpr)
+            self.assertEqual(type(p1.gt(p2)), CoordinateExpr)
+            self.assertEqual(type(p1.ge(p2)), CoordinateExpr)
             scalar = rnd()[0]
-            self.assertEqual(tuple(p1 == scalar), tuple(vector1 == scalar))
-            self.assertEqual(tuple(p1 != scalar), tuple(vector1 != scalar))
-            self.assertEqual(tuple(p1 < scalar), tuple(vector1 < scalar))
-            self.assertEqual(tuple(p1 <= scalar), tuple(vector1 <= scalar))
-            self.assertEqual(tuple(p1 > scalar), tuple(vector1 > scalar))
-            self.assertEqual(tuple(p1 >= scalar), tuple(vector1 >= scalar))
-            self.assertEqual(type(p1 == scalar), CoordinateExpr)
-            self.assertEqual(type(p1 != scalar), CoordinateExpr)
-            self.assertEqual(type(p1 < scalar), CoordinateExpr)
-            self.assertEqual(type(p1 <= scalar), CoordinateExpr)
-            self.assertEqual(type(p1 > scalar), CoordinateExpr)
-            self.assertEqual(type(p1 >= scalar), CoordinateExpr)
+            self.assertEqual(tuple(p1.eq(scalar)), tuple(vector1 == scalar))
+            self.assertEqual(tuple(p1.ne(scalar)), tuple(vector1 != scalar))
+            self.assertEqual(tuple(p1.lt(scalar)), tuple(vector1 < scalar))
+            self.assertEqual(tuple(p1.le(scalar)), tuple(vector1 <= scalar))
+            self.assertEqual(tuple(p1.gt(scalar)), tuple(vector1 > scalar))
+            self.assertEqual(tuple(p1.ge(scalar)), tuple(vector1 >= scalar))
+            self.assertEqual(type(p1.eq(scalar)), CoordinateExpr)
+            self.assertEqual(type(p1.ne(scalar)), CoordinateExpr)
+            self.assertEqual(type(p1.lt(scalar)), CoordinateExpr)
+            self.assertEqual(type(p1.le(scalar)), CoordinateExpr)
+            self.assertEqual(type(p1.gt(scalar)), CoordinateExpr)
+            self.assertEqual(type(p1.ge(scalar)), CoordinateExpr)
 
 class PointTestCase(CoordinateTestCase):
     """A test case for Point"""
 
     def setUp(self):
         self.classes = [
-            (float, geom.Point2D, lambda: numpy.random.randn(2), geom.Point2D.makeXY),
-            (int, geom.Point2I, lambda: numpy.random.randint(-5,5,2), geom.Point2I.makeXY),
-            (float, geom.Point3D, lambda: numpy.random.randn(3), geom.Point3D.makeXYZ),
-            (int, geom.Point3I, lambda: numpy.random.randint(-5,5,3), geom.Point3I.makeXYZ),
+            (float, geom.Point2D, lambda: numpy.random.randn(2), geom.Point2D.make),
+            (int, geom.Point2I, lambda: numpy.random.randint(-5,5,2), geom.Point2I.make),
+            (float, geom.Point3D, lambda: numpy.random.randn(3), geom.Point3D.make),
+            (int, geom.Point3I, lambda: numpy.random.randint(-5,5,3), geom.Point3I.make),
             ]
 
     def testArithmetic(self):
@@ -114,10 +114,10 @@ class ExtentTestCase(CoordinateTestCase):
 
     def setUp(self):
         self.classes = [
-            (float, geom.Extent2D, lambda: numpy.random.randn(2), geom.Extent2D.makeXY),
-            (int, geom.Extent2I, lambda: numpy.random.randint(-5,5,2), geom.Extent2I.makeXY),
-            (float, geom.Extent3D, lambda: numpy.random.randn(3), geom.Extent3D.makeXYZ),
-            (int, geom.Extent3I, lambda: numpy.random.randint(-5,5,3), geom.Extent3I.makeXYZ),
+            (float, geom.Extent2D, lambda: numpy.random.randn(2), geom.Extent2D.make),
+            (int, geom.Extent2I, lambda: numpy.random.randint(-5,5,2), geom.Extent2I.make),
+            (float, geom.Extent3D, lambda: numpy.random.randn(3), geom.Extent3D.make),
+            (int, geom.Extent3I, lambda: numpy.random.randint(-5,5,3), geom.Extent3I.make),
             ]
 
     def testArithmetic(self):

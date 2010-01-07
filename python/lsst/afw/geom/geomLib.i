@@ -72,4 +72,5 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 %CoordinateBase_POSTINCLUDE_3(double, Point3D, lsst::afw::geom::Point<double,3>);
 
 %include "AffineTransform.i"
+%include "Box.i"
 %include "ellipses.i"
