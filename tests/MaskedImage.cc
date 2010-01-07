@@ -1,3 +1,4 @@
+// -*- lsst-c++ -*-
 #include <iostream>
 #include <string>
 #include <algorithm>
@@ -106,14 +107,14 @@ ImageT make_image(int const width=5, int const height=6) {
     int i = 0;
     for (ImageT::iterator ptr = img.begin(), end = img.end(); ptr != end; ++ptr, ++i) {
         ptr.image() = i/img.getWidth() + 100*(i%img.getWidth());
-        ptr.mask() = i;;
+        ptr.mask() = i;
         ptr.variance() = 2*ptr.image();
     }
 
     return img;
 }
 
-BOOST_AUTO_TEST_CASE(setValues) {
+BOOST_AUTO_TEST_CASE(setValues) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     ImageT img = make_image();
 
 #if 0
@@ -142,10 +143,10 @@ BOOST_AUTO_TEST_CASE(setValues) {
     BOOST_CHECK_EQUAL(ptr.mask(),     img.getWidth() + 1);
     BOOST_CHECK_EQUAL(ptr.variance(), 202);
 
-    *ptr /= *ptr;                       // ignore covariance; there's no divides (with a covariance) by analogy to plus
+    *ptr /= *ptr;      // ignore covariance; there's no divides (with a covariance) by analogy to plus
     BOOST_CHECK_EQUAL(ptr.image(),    1);
     BOOST_CHECK_EQUAL(ptr.mask(),     img.getWidth() + 1);
-    BOOST_CHECK_CLOSE(ptr.variance(), 2*202/float(101*101), 1e-8); // 3rd argument is allowed percentage difference
+    BOOST_CHECK_CLOSE(ptr.variance(), 2*202/float(101*101), 1e-8); // 3rd arg is allowed percentage difference
 
     ptr++;
     BOOST_CHECK_EQUAL(ptr.image(),    201);
@@ -227,7 +228,7 @@ BOOST_AUTO_TEST_CASE(setValues) {
 
 /************************************************************************************************************/
 #if 0
-BOOST_AUTO_TEST_CASE(Pixels) {
+BOOST_AUTO_TEST_CASE(Pixels) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     typedef float ImagePixelT;
     typedef int MaskPixelT;
     typedef float VariancePixelT;
@@ -270,7 +271,7 @@ BOOST_AUTO_TEST_CASE(Pixels) {
 //
 // Iterators
 //
-BOOST_AUTO_TEST_CASE(iterators) {
+BOOST_AUTO_TEST_CASE(iterators) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     ImageT img = make_image();
     //
     // Count the pixels between begin() and end() (using a const_iterator)
@@ -371,7 +372,7 @@ BOOST_AUTO_TEST_CASE(iterators) {
 //
 // Locators
 //
-BOOST_AUTO_TEST_CASE(locators) {
+BOOST_AUTO_TEST_CASE(locators) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     ImageT img = make_image();
 
     {
@@ -390,8 +391,10 @@ BOOST_AUTO_TEST_CASE(locators) {
         BOOST_CHECK_EQUAL(loc.mask(), 2*img.getWidth());
         BOOST_CHECK_EQUAL(loc.variance(), 4);
 
-        loc.x() += 2; ++loc.x();        // loc == img.xy_at(3, 2);
-        loc.y() += 1; loc.y() += 1;     // loc == img.xy_at(3, 4);
+        loc.x() += 2;
+        ++loc.x();        // loc == img.xy_at(3, 2);
+        loc.y() += 1;
+        loc.y() += 1;     // loc == img.xy_at(3, 4);
         BOOST_REQUIRE(img.getWidth() >= 4);
         BOOST_REQUIRE(img.getHeight() >= 5);
         

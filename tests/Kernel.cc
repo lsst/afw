@@ -24,7 +24,7 @@ typedef lsst::afw::math::ConvolutionVisitor ConvolutionVisitor;
 typedef lsst::afw::math::ImageConvolutionVisitor ImageConvolutionVisitor;
 typedef lsst::afw::math::FourierConvolutionVisitor FourierConvolutionVisitor;
 
-BOOST_AUTO_TEST_CASE(ConvolutionVisitorTest) {
+BOOST_AUTO_TEST_CASE(ConvolutionVisitorTest) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     int width = 7, height = 7;
     Image img(width,height, 0);
     img(width/2 + 1, height/2 + 1) = 1;

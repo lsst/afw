@@ -20,7 +20,8 @@ namespace math = lsst::afw::math;
 typedef image::Image<float> Image;
 typedef image::DecoratedImage<float> DecoratedImage;
 
-BOOST_AUTO_TEST_CASE(BackgroundBasic) {
+BOOST_AUTO_TEST_CASE(BackgroundBasic) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
+
 
     int nX = 40;
     int nY = 40;
@@ -51,7 +52,7 @@ BOOST_AUTO_TEST_CASE(BackgroundBasic) {
 
 }
 
-BOOST_AUTO_TEST_CASE(BackgroundTestImages) {
+BOOST_AUTO_TEST_CASE(BackgroundTestImages) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
 
     {
         vector<string> imgfiles;
@@ -106,7 +107,7 @@ BOOST_AUTO_TEST_CASE(BackgroundTestImages) {
 
 
 
-BOOST_AUTO_TEST_CASE(BackgroundRamp) {
+BOOST_AUTO_TEST_CASE(BackgroundRamp) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
 
     {
         
@@ -149,7 +150,7 @@ BOOST_AUTO_TEST_CASE(BackgroundRamp) {
     }
 
 }
-BOOST_AUTO_TEST_CASE(BackgroundParabola) {
+BOOST_AUTO_TEST_CASE(BackgroundParabola) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
 
     {
         

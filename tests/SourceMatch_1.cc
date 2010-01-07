@@ -138,7 +138,8 @@ void compareMatches(std::vector<det::SourceMatch> &matches,
             ++j;
         } else {
             BOOST_CHECK_CLOSE(i->distance, j->distance, tolerance);
-            ++i; ++j;
+            ++i;
+            ++j;
         }
     }
     for (; i < iend; ++i) {
@@ -152,7 +153,7 @@ void compareMatches(std::vector<det::SourceMatch> &matches,
 } // namespace <anonymous>
 
 
-BOOST_AUTO_TEST_CASE(matchRaDec) {
+BOOST_AUTO_TEST_CASE(matchRaDec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     int const N = 500;    // # of points to generate
     double const M = 8.0; // avg. # of matches
     double const radius = std::acos(1.0 - 2.0*M/N)*(180.0/PI)*3600.0;
@@ -165,7 +166,7 @@ BOOST_AUTO_TEST_CASE(matchRaDec) {
     compareMatches(matches, refMatches, radius);
 }
 
-BOOST_AUTO_TEST_CASE(matchSelfRaDec) {
+BOOST_AUTO_TEST_CASE(matchSelfRaDec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     int const N = 500;    // # of points to generate
     double const M = 8.0; // avg. # of matches
     double const radius = std::acos(1.0 - 2.0*M/N)*(180.0/PI)*3600.0;
@@ -177,7 +178,7 @@ BOOST_AUTO_TEST_CASE(matchSelfRaDec) {
     compareMatches(matches, refMatches, radius);
 }
 
-BOOST_AUTO_TEST_CASE(matchXy) {
+BOOST_AUTO_TEST_CASE(matchXy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     int const N = 500;    // # of points to generate
     double const M = 8.0; // avg. # of matches
     double const radius = std::sqrt(M/(PI*static_cast<double>(N)));
@@ -190,7 +191,7 @@ BOOST_AUTO_TEST_CASE(matchXy) {
     compareMatches(matches, refMatches, radius);
 }
 
-BOOST_AUTO_TEST_CASE(matchSelfXy) {
+BOOST_AUTO_TEST_CASE(matchSelfXy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     int const N = 500;    // # of points to generate
     double const M = 8.0; // avg. # of matches
     double const radius = std::sqrt(M/(PI*static_cast<double>(N)));

@@ -26,7 +26,8 @@ void test(char *name) {
     image::BBox bbox;
     PropertySet::Ptr metadata;
     bool const conformMask = true;      // use mask definitions from the file
-    image::MaskedImage<ImagePixelType, MaskPixelType> testMasked(string(name), hdu, metadata, bbox, conformMask);
+    image::MaskedImage<ImagePixelType, MaskPixelType> testMasked(string(name), hdu,
+                                                                 metadata, bbox, conformMask);
 
     testMasked.writeFits("testout");
     ::unlink("testout_img.fits");

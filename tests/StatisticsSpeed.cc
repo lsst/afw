@@ -27,7 +27,7 @@ typedef image::Image<float> Image;
  * It uses boost::timer to measure stats on an 8k x 8k image (ramp pixel values).
  * - The time for NanSafe = true should be slower
  */
-BOOST_AUTO_TEST_CASE(StatisticsNanSafeSlower) {
+BOOST_AUTO_TEST_CASE(StatisticsNanSafeSlower) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
 
     // make a ramp image 
     int const nx = 8192;

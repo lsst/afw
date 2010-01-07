@@ -19,7 +19,7 @@ namespace math = lsst::afw::math;
 typedef math::FourierCutout FourierCutout;
 typedef math::FourierCutoutStack FourierCutoutStack;
 
-BOOST_AUTO_TEST_CASE(CutoutPixelAccess) {    
+BOOST_AUTO_TEST_CASE(CutoutPixelAccess) {     /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     int width = 38;
     int height = 24;
   
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(CutoutPixelAccess) {
     BOOST_CHECK_EQUAL(nPix, cutoutSize);    
 }
 
-BOOST_AUTO_TEST_CASE(CutoutOperatorTest) {
+BOOST_AUTO_TEST_CASE(CutoutOperatorTest) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     int width = 4, height = 4;
     FourierCutout a(width, height);
 
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(CutoutOperatorTest) {
     BOOST_CHECK_EQUAL(a.getFourierWidth(), c.getFourierWidth());
 }
 
-BOOST_AUTO_TEST_CASE(CutoutStackTest) {
+BOOST_AUTO_TEST_CASE(CutoutStackTest) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     int width = 8;
     int height = 7;
     int depth = 3;

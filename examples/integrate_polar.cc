@@ -42,8 +42,8 @@ public:
     IntegrandT getAnalyticVolume(IntegrandT const r1, IntegrandT const r2,
                                  IntegrandT const theta1, IntegrandT const theta2) {
         return ((theta2 - theta1) *
-                ( (0.5*_K*r2*r2 - (1.0/3.0)*_kr*r2*r2*r2) -
-                  (0.5*_K*r1*r1 - (1.0/3.0)*_kr*r1*r1*r1) ));
+                ((0.5*_K*r2*r2 - (1.0/3.0)*_kr*r2*r2*r2) -
+                 (0.5*_K*r1*r1 - (1.0/3.0)*_kr*r1*r1*r1) ));
     }
 
 private:

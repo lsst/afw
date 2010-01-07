@@ -14,7 +14,7 @@ namespace math = lsst::afw::math;
 
 typedef math::Interpolate Interp;
 
-BOOST_AUTO_TEST_CASE(LinearInterpolateRamp) {
+BOOST_AUTO_TEST_CASE(LinearInterpolateRamp) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
 
     int n = 10;
     vector<double> x(n);
@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(LinearInterpolateRamp) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(SplineInterpolateRamp) {
+BOOST_AUTO_TEST_CASE(SplineInterpolateRamp) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
 
     int n = 10;
     vector<double> x(n);
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(SplineInterpolateRamp) {
 }
 
 
-BOOST_AUTO_TEST_CASE(SplineInterpolateParabola) {
+BOOST_AUTO_TEST_CASE(SplineInterpolateParabola) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
 
     int const n = 20;
     vector<double> x(n);

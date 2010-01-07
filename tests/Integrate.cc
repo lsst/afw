@@ -85,7 +85,7 @@ private:
 };
 
 
-double parabola2d (double const x, double const y) {
+double parabola2d(double const x, double const y) {
     double const K = 100.0, KX = 1.0, KY = 1.0;
     return K - KX*x*x - KY*y*y;
 }
@@ -94,7 +94,7 @@ double parabola2d (double const x, double const y) {
  * @brief Test the 1D integrator on a Parabola
  * @note default precision is 1e-6 for integrate()
  */
-BOOST_AUTO_TEST_CASE(Parabola1D) {
+BOOST_AUTO_TEST_CASE(Parabola1D) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
 
     // set limits of integration
     double x1 = 0, x2 = 9;
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(Parabola1D) {
  * @brief Test the 2d integrator on a Paraboloid
  * @note default precision is 1e-6 from integrate2d()
  */
-BOOST_AUTO_TEST_CASE(Parabola2D) {
+BOOST_AUTO_TEST_CASE(Parabola2D) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
 
     // set limits of integration
     double x1 = 0, x2 = 9, y1 = 0, y2 = 9;

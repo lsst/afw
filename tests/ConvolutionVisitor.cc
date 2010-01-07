@@ -1,3 +1,4 @@
+// -*- lsst-c++ -*-
 #include <iostream>
 #include <cmath>
 #include <vector>
@@ -63,25 +64,37 @@ FourierCutout::Real IMG_STACK[] = {
 int const FOURIER_WIDTH = 3;
 Complex FOURIER_STACK[] = {
     //fourier img 0
-    Complex( 9.82498961, +0.00000000e+00), Complex(-1.35273888, -6.61296240e-01), Complex(-0.50745493, +1.02619760e+00),
-    Complex( 0.96287885, +9.62854493e-01), Complex( 0.55192916, +4.82965925e-01), Complex(-0.69396459, +2.26300637e-01),
-    Complex(-1.27624780, +0.00000000e+00), Complex( 0.37772021, -4.18411731e-01), Complex( 0.05255398, +1.71955753e+00),
-    Complex( 0.96287885, -9.62854493e-01), Complex(-0.33597078, +1.10894659e+00), Complex( 0.02199227, +4.50945815e-01),
+    Complex( 9.82498961, +0.00000000e+00), Complex(-1.35273888, -6.61296240e-01),
+    Complex(-0.50745493, +1.02619760e+00),
+    Complex( 0.96287885, +9.62854493e-01), Complex( 0.55192916, +4.82965925e-01),
+    Complex(-0.69396459, +2.26300637e-01),
+    Complex(-1.27624780, +0.00000000e+00), Complex( 0.37772021, -4.18411731e-01),
+    Complex( 0.05255398, +1.71955753e+00),
+    Complex( 0.96287885, -9.62854493e-01), Complex(-0.33597078, +1.10894659e+00),
+    Complex( 0.02199227, +4.50945815e-01),
 
     //fourier img 1
-    Complex( 7.54276503, +0.00000000e+00), Complex( 0.68584754, -6.70636606e-01), Complex(-0.48332566, +4.36250535e-01),
-    Complex(-1.63492878, +1.32271279e+00), Complex(-0.38247592, +1.31492361e+00), Complex(-0.52269309, -1.02141911e-01),
-    Complex(-2.08949558, +0.00000000e+00), Complex( 0.16935056, -6.15310334e-01), Complex(-0.61996373, -6.98251036e-01),
-    Complex(-1.63492878, -1.32271279e+00), Complex( 0.02940176, -4.24983611e-01), Complex( 0.99865262, +5.80839726e-01),
+    Complex( 7.54276503, +0.00000000e+00), Complex( 0.68584754, -6.70636606e-01),
+    Complex(-0.48332566, +4.36250535e-01),
+    Complex(-1.63492878, +1.32271279e+00), Complex(-0.38247592, +1.31492361e+00),
+    Complex(-0.52269309, -1.02141911e-01),
+    Complex(-2.08949558, +0.00000000e+00), Complex( 0.16935056, -6.15310334e-01),
+    Complex(-0.61996373, -6.98251036e-01),
+    Complex(-1.63492878, -1.32271279e+00), Complex( 0.02940176, -4.24983611e-01),
+    Complex( 0.99865262, +5.80839726e-01),
 
     //fourier img 2
-    Complex(10.27871806, +0.00000000e+00), Complex(-1.37366470, +6.20038488e-02), Complex(1.74985529, -6.42653287e-01),
-    Complex( 0.12733617, -1.63008966e+00), Complex(-0.86622337, -4.76770617e-01), Complex(0.43780577, +1.46617365e+00),
-    Complex(-0.21344458, +0.00000000e+00), Complex( 1.03304629, +1.25614065e-03), Complex(1.45658760, +3.76952530e-01),
-    Complex( 0.12733617, +1.63008966e+00), Complex(-0.12000849, -7.18772862e-02), Complex(0.02557684, +8.38272853e-01)
+    Complex(10.27871806, +0.00000000e+00), Complex(-1.37366470, +6.20038488e-02),
+    Complex(1.74985529, -6.42653287e-01),
+    Complex( 0.12733617, -1.63008966e+00), Complex(-0.86622337, -4.76770617e-01),
+    Complex(0.43780577, +1.46617365e+00),
+    Complex(-0.21344458, +0.00000000e+00), Complex( 1.03304629, +1.25614065e-03),
+    Complex(1.45658760, +3.76952530e-01),
+    Complex( 0.12733617, +1.63008966e+00), Complex(-0.12000849, -7.18772862e-02),
+    Complex(0.02557684, +8.38272853e-01)
 };
 
-BOOST_AUTO_TEST_CASE(ImageConvolutionTest) {
+BOOST_AUTO_TEST_CASE(ImageConvolutionTest) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     Image::Ptr imgA = boost::make_shared<Image>(19,19, 1.0); 
     Image::Ptr imgB = boost::make_shared<Image>(19,19, 0.0);
     std::pair<int, int> center(9, 9);
@@ -121,7 +134,7 @@ BOOST_AUTO_TEST_CASE(ImageConvolutionTest) {
 
 }
 
-BOOST_AUTO_TEST_CASE(FourierConvolutionTest) {
+BOOST_AUTO_TEST_CASE(FourierConvolutionTest) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     int width = IMG_WIDTH;
     int height = IMG_HEIGHT;
     int fourierWidth = FOURIER_WIDTH;
@@ -166,7 +179,8 @@ BOOST_AUTO_TEST_CASE(FourierConvolutionTest) {
 
     //check that getX() , before fft throws    
     BOOST_REQUIRE_THROW(fourierVisitor.getFourierImage(), lsst::pex::exceptions::RuntimeErrorException);
-    BOOST_REQUIRE_THROW(fourierVisitor.getFourierDerivativeImageList(), lsst::pex::exceptions::RuntimeErrorException);
+    BOOST_REQUIRE_THROW(fourierVisitor.getFourierDerivativeImageList(),
+                        lsst::pex::exceptions::RuntimeErrorException);
 
     //try to fft to too-small dimnesions
     BOOST_CHECK_THROW(fourierVisitor.fft(1,4), lsst::pex::exceptions::InvalidParameterException);

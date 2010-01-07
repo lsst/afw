@@ -344,7 +344,7 @@ static void testDb(std::string const & storageType) {
     afwFormatters::dropAllSliceTables(loc, nested, props);
 }
 
-BOOST_AUTO_TEST_CASE(DiaSourceEquality) {
+BOOST_AUTO_TEST_CASE(DiaSourceEquality) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     DiaSource::Ptr a(new DiaSource), b(new DiaSource);
     a->setId(3);
     BOOST_CHECK_MESSAGE(*a != *b && *b != *a, "field equality fails");
@@ -366,7 +366,7 @@ BOOST_AUTO_TEST_CASE(DiaSourceEquality) {
     BOOST_CHECK(apv.getSources()[0]->isNull(1) == a->isNull(1));
 }
 
-BOOST_AUTO_TEST_CASE(DiaSourceIO) {
+BOOST_AUTO_TEST_CASE(DiaSourceIO) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     try {
         testBoost();
         if (lsst::daf::persistence::DbAuth::available("lsst10.ncsa.uiuc.edu", "3306")) {

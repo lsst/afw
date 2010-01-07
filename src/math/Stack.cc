@@ -61,8 +61,8 @@ typename image::MaskedImage<PixelT>::Ptr computeMaskedImageStack(
                                                           ) {
 
     // create the image to be returned
-    typedef image::MaskedImage<PixelT> ImageT;
-    typename ImageT::Ptr imgStack(new ImageT(images[0]->getDimensions()));
+    typedef image::MaskedImage<PixelT> Image;
+    typename Image::Ptr imgStack(new Image(images[0]->getDimensions()));
 
     
     // get a list of row_begin iterators
@@ -142,11 +142,11 @@ typename image::MaskedImage<PixelT>::Ptr math::statisticsStack(
                                                               ) {    
     // if we're going to use constant weights 
     if ( wvector.size() == images.size() ) {
-        return details::computeMaskedImageStack<PixelT,true>(images, flags, sctrl, wvector);
+        return details::computeMaskedImageStack<PixelT, true>(images, flags, sctrl, wvector);
         
     // if we're weighting by the pixel variance        
     } else if ( wvector.size() == 0 ) {
-        return details::computeMaskedImageStack<PixelT,false>(images, flags, sctrl, wvector);
+        return details::computeMaskedImageStack<PixelT, false>(images, flags, sctrl, wvector);
         
     // Fail if the number weights isn't the same as the number of images to be weighted.
     } else {
@@ -186,11 +186,11 @@ typename image::Image<PixelT>::Ptr computeImageStack(
                                                         ) {
 
     // create the image to be returned
-    typedef image::Image<PixelT> ImageT;
-    typename ImageT::Ptr imgStack(new ImageT(images[0]->getDimensions(), 0.0));
+    typedef image::Image<PixelT> Image;
+    typename Image::Ptr imgStack(new Image(images[0]->getDimensions(), 0.0));
 
     math::StatisticsControl sctrlTmp(sctrl);
-    math::MaskedVector<typename ImageT::Pixel> pixelSet(images.size());
+    math::MaskedVector<typename Image::Pixel> pixelSet(images.size());
 
     // set the mask to be an infinite iterator
     math::MaskImposter<image::MaskPixel> msk;
@@ -279,8 +279,8 @@ typename boost::shared_ptr<std::vector<PixelT> > computeVectorStack(
                                                                       ) {
 
     // create the image to be returned
-    typedef std::vector<PixelT> VectT;
-    typename boost::shared_ptr<VectT> vecStack(new VectT(vectors[0]->size(), 0.0));
+    typedef std::vector<PixelT> Vect;
+    typename boost::shared_ptr<Vect> vecStack(new Vect(vectors[0]->size(), 0.0));
 
     math::MaskedVector<PixelT> pixelSet(vectors.size()); // values from a given pixel of each image
 

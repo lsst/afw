@@ -1,3 +1,4 @@
+//  -*- lsst-c++ -*-
 #include <iostream>
 #include <string>
 #include <algorithm>
@@ -82,9 +83,10 @@ ImageT make_image(int const width=5, int const height=6) {
 
 /************************************************************************************************************/
 
-BOOST_AUTO_TEST_CASE(setValues) {
+BOOST_AUTO_TEST_CASE(setValues) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     ImageT img = make_image();
-    MaskT mask(1, 1); mask = 0x8;
+    MaskT mask(1, 1);
+    mask = 0x8;
 
 #if 0
     printImage(img, "Image");
@@ -159,7 +161,7 @@ BOOST_AUTO_TEST_CASE(setValues) {
 //
 // Iterators
 //
-BOOST_AUTO_TEST_CASE(iterators) {
+BOOST_AUTO_TEST_CASE(iterators) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     ImageT img = make_image();
     //
     // Count the pixels between begin() and end() (using a fast iterator)
@@ -261,7 +263,7 @@ BOOST_AUTO_TEST_CASE(iterators) {
 //
 // Locators
 //
-BOOST_AUTO_TEST_CASE(locators) {
+BOOST_AUTO_TEST_CASE(locators) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     ImageT img = make_image();
 
     {
@@ -274,8 +276,10 @@ BOOST_AUTO_TEST_CASE(locators) {
         loc += image::pair2I(-1, 1);    // loc == img.xy_at(0, 2);
         BOOST_CHECK_EQUAL(*loc, 2);
 
-        loc.x() += 2; ++loc.x();        // loc == img.xy_at(3, 2);
-        loc.y() += 1; loc.y() += 1;     // loc == img.xy_at(3, 4);
+        loc.x() += 2;
+        ++loc.x();        // loc == img.xy_at(3, 2);
+        loc.y() += 1;
+        loc.y() += 1;     // loc == img.xy_at(3, 4);
         BOOST_REQUIRE(img.getWidth() >= 4);
         BOOST_REQUIRE(img.getHeight() >= 5);
         

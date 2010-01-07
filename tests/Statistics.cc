@@ -20,7 +20,7 @@ namespace math = lsst::afw::math;
 typedef image::Image<float> Image;
 typedef image::DecoratedImage<float> DecoratedImage;
 
-BOOST_AUTO_TEST_CASE(StatisticsBasic) {
+BOOST_AUTO_TEST_CASE(StatisticsBasic) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     Image img(10, 40);
     Image::Pixel const pixval = 10000;
     img = pixval;
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(StatisticsBasic) {
 
 
 
-BOOST_AUTO_TEST_CASE(StatisticsRamp) {
+BOOST_AUTO_TEST_CASE(StatisticsRamp) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
 
     int nx = 101;
     int ny = 64;
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(StatisticsRamp) {
 }
 
 
-BOOST_AUTO_TEST_CASE(StatisticsTestAllNanButOne) {
+BOOST_AUTO_TEST_CASE(StatisticsTestAllNanButOne) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
 
     /*
      * The mean/stddev/min/max are computed in a single pass, but there's a pre-pass
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(StatisticsTestAllNanButOne) {
 
 }
 
-BOOST_AUTO_TEST_CASE(StatisticsTestImages) {
+BOOST_AUTO_TEST_CASE(StatisticsTestImages) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     
     /* =============================================================================
      * Tests of mean and standard deviation for Russ Laher's noise images.

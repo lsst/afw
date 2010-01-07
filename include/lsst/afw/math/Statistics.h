@@ -70,7 +70,7 @@ public:
         _andMask(andMask),
         _isNanSafe(isNanSafe),
         _isWeighted(isWeighted),
-        _multiplyWeights(false) {
+        _isMultiplyingWeights(false) {
         
         assert(_numSigmaClip > 0);
         assert(_numIter > 0);
@@ -81,7 +81,7 @@ public:
     image::MaskPixel getAndMask() const { return _andMask; }
     bool getNanSafe() const { return _isNanSafe; }
     bool getWeighted() const { return _isWeighted; }
-    bool getMultiplyWeights() const { return _multiplyWeights; }
+    bool getMultiplyWeights() const { return _isMultiplyingWeights; }
     
     
     void setNumSigmaClip(double numSigmaClip) { assert(numSigmaClip > 0); _numSigmaClip = numSigmaClip; }
@@ -89,7 +89,7 @@ public:
     void setAndMask(image::MaskPixel andMask) { _andMask = andMask; }
     void setNanSafe(bool isNanSafe) { _isNanSafe = isNanSafe; }
     void setWeighted(bool isWeighted) { _isWeighted = isWeighted; }
-    void setMultiplyWeights(bool multiplyWeights) { _multiplyWeights = multiplyWeights; }
+    void setMultiplyWeights(bool isMultiplyingWeights) { _isMultiplyingWeights = isMultiplyingWeights; }
     
 
 private:
@@ -98,7 +98,7 @@ private:
     image::MaskPixel _andMask;            // and-Mask to specify which mask planes to pay attention to
     bool _isNanSafe;                         // Check for NaNs before running (slower)
     bool _isWeighted;                     // Use inverse variance to weight statistics.
-    bool _multiplyWeights;                // Treat variance plane as weights and multiply instead of dividing
+    bool _isMultiplyingWeights;           // Treat variance plane as weights and multiply instead of dividing
 };
 
             
@@ -235,7 +235,7 @@ template<typename ValueT>
 class MaskImposter {
 public:
     typedef infinite_iterator<ValueT> x_iterator;
-    MaskImposter(ValueT val = 0) { _val[0] = val; }
+    explicit MaskImposter(ValueT val = 0) { _val[0] = val; }
     x_iterator row_begin(int dummyCol) const { return x_iterator(_val); }
 private:
     ValueT _val[1];

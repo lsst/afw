@@ -273,9 +273,9 @@ def suite():
 
     return unittest.TestSuite(suites)
 
-def run(exit=False):
+def run(shouldExit=False):
     """Run the tests"""
-    utilsTests.run(suite(), exit)
+    utilsTests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
     run(True)

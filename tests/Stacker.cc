@@ -24,7 +24,7 @@ typedef image::MaskedImage<float> MImageF;
 typedef std::vector<float> VecF;
 typedef boost::shared_ptr<VecF> VecFPtr;
 
-BOOST_AUTO_TEST_CASE(MeanStack) {
+BOOST_AUTO_TEST_CASE(MeanStack) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     
     int const nImg = 10;
     int const nX = 64;
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(MeanStack) {
     // masked image
     std::vector<MImageF::Ptr> mimgList;
     for (int iImg = 0; iImg < nImg; ++iImg) {
-        MImageF::Ptr mimg = MImageF::Ptr(new MImageF(nX,nY));
+        MImageF::Ptr mimg = MImageF::Ptr(new MImageF(nX, nY));
         *mimg->getImage()    = iImg;
         *mimg->getMask()     = 0x0;
         *mimg->getVariance() = iImg;

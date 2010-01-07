@@ -1,3 +1,4 @@
+// -*- lsst-c++ -*-
 #include <iostream>
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE Footprint
@@ -13,7 +14,7 @@ namespace detection = lsst::afw::detection;
 
 typedef float ImagePixelT;
 
-BOOST_AUTO_TEST_CASE(FootprintSets) {
+BOOST_AUTO_TEST_CASE(FootprintSets) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     lsst::pex::logging::Trace::setVerbosity("afw.detection", 0);
 
     image::MaskedImage<ImagePixelT> img(10,20);
@@ -22,15 +23,16 @@ BOOST_AUTO_TEST_CASE(FootprintSets) {
     detection::FootprintSet<ImagePixelT> ds_by_value1(img, 0);
     BOOST_CHECK(ds_by_value1.getFootprints().size() == 1);
 
-    detection::FootprintSet<ImagePixelT> ds_by_value2(img, detection::Threshold(0, detection::Threshold::VALUE));
+    detection::FootprintSet<ImagePixelT> ds_by_value2(img,
+                                                  detection::Threshold(0, detection::Threshold::VALUE));
     BOOST_CHECK(ds_by_value2.getFootprints().size() == 1);
 
     BOOST_CHECK_THROW(detection::FootprintSet<ImagePixelT>(img,         \
-                                                           detection::Threshold(0, detection::Threshold::STDEV)), \
+                                                  detection::Threshold(0, detection::Threshold::STDEV)), \
                       lsst::pex::exceptions::Exception);
     
     BOOST_CHECK_THROW(detection::FootprintSet<ImagePixelT>(img, \
-                                                           detection::Threshold(0, detection::Threshold::VARIANCE)), \
+                                                  detection::Threshold(0, detection::Threshold::VARIANCE)), \
                       lsst::pex::exceptions::Exception);
 }
 
@@ -62,7 +64,7 @@ private:
     typename ImageT::Pixel _counts;     // the sum of all pixels in the Footprint
 };
 
-BOOST_AUTO_TEST_CASE(FootprintFunctor) {
+BOOST_AUTO_TEST_CASE(FootprintFunctor) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     image::MaskedImage<ImagePixelT> mimg(10,20);
     image::Image<ImagePixelT> img = *mimg.getImage();
 

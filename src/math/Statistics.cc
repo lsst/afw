@@ -604,58 +604,82 @@ std::pair<double, double> math::Statistics::getResult(math::Property const iProp
         
       case ( NPOINT ):
         ret.first = static_cast<double>(_n);
-        if (_flags & ERRORS) { ret.second = 0; }
+        if (_flags & ERRORS) {
+            ret.second = 0;
+        }
         break;
         
       case SUM:
         ret.first = static_cast<double>(_sum);
-        if (_flags & ERRORS) { ret.second = 0; }
+        if (_flags & ERRORS) {
+            ret.second = 0;
+        }
         break;
         
         // == means ==
       case ( MEAN ):
         ret.first = _mean;
-        if (_flags & ERRORS) { ret.second = sqrt(_variance/_n); }
+        if (_flags & ERRORS) {
+            ret.second = sqrt(_variance/_n);
+        }
         break;
       case ( MEANCLIP ):
         ret.first = _meanclip;
-        if ( _flags & ERRORS ) { ret.second = sqrt(_varianceclip/_n); }  // this is a bug ... _nClip != _n
+        if ( _flags & ERRORS ) {
+            ret.second = sqrt(_varianceclip/_n);  // this is a bug ... _nClip != _n
+        }
         break;
         
         // == stdevs & variances ==
       case ( VARIANCE ):
         ret.first = _variance;
-        if (_flags & ERRORS) { ret.second = _varianceError(ret.first, _n); }
+        if (_flags & ERRORS) {
+            ret.second = _varianceError(ret.first, _n);
+        }
         break;
       case ( STDEV ):
         ret.first = sqrt(_variance);
-        if (_flags & ERRORS) { ret.second = 0.5*_varianceError(_variance, _n)/ret.first; }
+        if (_flags & ERRORS) {
+            ret.second = 0.5*_varianceError(_variance, _n)/ret.first;
+        }
         break;
       case ( VARIANCECLIP ):
         ret.first = _varianceclip;
-        if (_flags & ERRORS) { ret.second = _varianceError(ret.first, _n); }
+        if (_flags & ERRORS) {
+            ret.second = _varianceError(ret.first, _n);
+        }
         break;
       case ( STDEVCLIP ):
         ret.first = sqrt(_varianceclip);  // bug: nClip != _n
-        if (_flags & ERRORS) { ret.second = 0.5*_varianceError(_varianceclip, _n)/ret.first; }
+        if (_flags & ERRORS) {
+            ret.second = 0.5*_varianceError(_varianceclip, _n)/ret.first;
+        }
         break;
         
         // == other stats ==
       case ( MIN ):
         ret.first = _min;
-        if ( _flags & ERRORS ) { ret.second = 0; }
+        if ( _flags & ERRORS ) {
+            ret.second = 0;
+        }
         break;
       case ( MAX ):
         ret.first = _max;
-        if ( _flags & ERRORS ) { ret.second = 0; }
+        if ( _flags & ERRORS ) {
+            ret.second = 0;
+        }
         break;
       case ( MEDIAN ):
         ret.first = _median;
-        if ( _flags & ERRORS ) { ret.second = 0; }
+        if ( _flags & ERRORS ) {
+            ret.second = 0;
+        }
         break;
       case ( IQRANGE ):
         ret.first = _iqrange;
-        if ( _flags & ERRORS ) { ret.second = 0; }
+        if ( _flags & ERRORS ) {
+            ret.second = 0;
+        }
         break;
         
         // no-op to satisfy the compiler
