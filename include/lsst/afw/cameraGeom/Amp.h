@@ -14,41 +14,17 @@
 namespace lsst {
 namespace afw {
 namespace cameraGeom {
-    
+
 /**
- * An amplifier; a set of pixels read out through a particular amplifier
+ * The electronic behaviour of an Amp
  */
-class Amp {
+class ElectronicParams {
 public:
-    typedef boost::shared_ptr<Amp> Ptr;
-    typedef boost::shared_ptr<const Amp> ConstPtr;
+    typedef boost::shared_ptr<ElectronicParams> Ptr;
+    typedef boost::shared_ptr<const ElectronicParams> ConstPtr;
 
-    /// location of first pixel read
-    enum readoutCorner { LLC, ULC, URC, LRC };
-
-    explicit Amp(Id id, lsst::afw::image::BBox const& allPixels,
-                 lsst::afw::image::BBox const& biasSec, lsst::afw::image::BBox const& dataSec,
-                 readoutCorner readoutCorner, float gain, float readNoise, float saturationLevel);
-
-    ~Amp() {}
-    /// Are two Amps identical?
-    bool operator==(Amp const& rhs      ///< Amp to compare too
-                   ) const {
-        return getId() == rhs.getId();
-    }
-
-    void shift(int dx, int dy);
-
-    /// Return the Detector's Id
-    Id getId() const { return _id; }
-
-    /// Has the bias/overclock been removed?
-    bool isTrimmed() const { return _isTrimmed; }
-
-    /// Set the trimmed status of this Ccd
-    virtual void setTrimmed(bool isTrimmed      ///< True iff the bias/overclock have been removed
-                           ) { _isTrimmed = isTrimmed; }
-
+    explicit ElectronicParams(float gain, float readNoise, float saturationLevel);
+    virtual ~ElectronicParams() {}
 #if 0
     /// Set the bad pixels in the provided Mask
     template<typename MaskPixelT>
@@ -85,6 +61,47 @@ public:
     float getSaturationLevel() const {
         return _saturationLevel;
     }
+private:
+    float _gain;                        // Amplifier's gain
+    float _readNoise;                   // Amplifier's read noise (units? ADU)
+    float _saturationLevel;             // Amplifier's saturation level. N.b. float in case we scale data
+};
+    
+/**
+ * An amplifier; a set of pixels read out through a particular amplifier
+ */
+class Amp {
+public:
+    typedef boost::shared_ptr<Amp> Ptr;
+    typedef boost::shared_ptr<const Amp> ConstPtr;
+
+    /// location of first pixel read
+    enum ReadoutCorner { LLC, ULC, URC, LRC };
+
+    explicit Amp(Id id, lsst::afw::image::BBox const& allPixels,
+                 lsst::afw::image::BBox const& biasSec, lsst::afw::image::BBox const& dataSec,
+                 ReadoutCorner readoutCorner, ElectronicParams::Ptr eparams);
+
+    ~Amp() {}
+    /// Are two Amps identical?
+    bool operator==(Amp const& rhs      ///< Amp to compare too
+                   ) const {
+        return getId() == rhs.getId();
+    }
+
+    void shift(int dx, int dy);
+
+    /// Return the Detector's Id
+    Id getId() const { return _id; }
+
+    /// Return Amp's electronic properties
+    ElectronicParams::Ptr getElectronicParams() const { return _eParams; }
+    /// Has the bias/overclock been removed?
+    bool isTrimmed() const { return _isTrimmed; }
+
+    /// Set the trimmed status of this Ccd
+    virtual void setTrimmed(bool isTrimmed      ///< True iff the bias/overclock have been removed
+                           ) { _isTrimmed = isTrimmed; }
 
     /// Return amplifier's total footprint
     lsst::afw::image::BBox getAllPixels() const {
@@ -148,11 +165,8 @@ private:
     lsst::afw::image::BBox _allPixels;  // Bounding box of all pixels read of the amplifier
     lsst::afw::image::BBox _biasSec;    // Bounding box of amplifier's bias section
     lsst::afw::image::BBox _dataSec;    // Bounding box of amplifier's data section
-    readoutCorner _readoutCorner;       // location of first pixel read
-
-    float _gain;                        // Amplifier's gain
-    float _readNoise;                   // Amplifier's read noise (units? ADU)
-    float _saturationLevel;             // Amplifier's saturation level. N.b. float in case we scale data
+    ReadoutCorner _readoutCorner;       // location of first pixel read
+    ElectronicParams::Ptr _eParams;     // electronic properties of Amp
     lsst::afw::image::BBox _trimmedAllPixels; // Bounding box of all pixels, post bias/overclock removal
     lsst::afw::image::BBox _trimmedDataSec; // Bounding box of all the Detector's pixels after bias trimming
 };

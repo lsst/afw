@@ -3,6 +3,76 @@
 target: CameraGeomPolicy
 
 definitions: {
+    Camera: {
+        type: Policy
+        dictionary: {
+            target: "Camera"
+            definitions: {
+                serial: {
+                    type: int
+                    description: "Camera's serial number"
+                    minOccurs: 0
+                    maxOccurs: 1
+                    default: -1
+                }
+                name: {
+                    type: string
+                    description: "Camera's name number"
+                    minOccurs: 0
+                    maxOccurs: 1
+                    default: "TestCam"
+                }
+                nCol: {
+                    type: int
+                    description: "Number of columns of Rafts"
+                    minOccurs: 1
+                    maxOccurs: 1
+                }
+                nRow: {
+                    type: int
+                    description: "Number of rows of Rafts"
+                    minOccurs: 1
+                    maxOccurs: 1
+                }
+                Raft: {
+                    type: policy
+                    dictionary: {
+                        target: Raft
+                        definitions: {
+                            serial: {
+                                type: int
+                                description: "Raft's serial number"
+                                minOccurs: 0
+                                maxOccurs: 1
+                                default: -1
+                            }
+                            name: {
+                                type: string
+                                minOccurs: 0
+                                maxOccurs: 1
+                                default: "None"
+                            }
+                            iCol: {
+                                type: int
+                                description: "X-location of Raft in Camera"
+                                default: -1
+                                minOccurs: 0
+                                maxOccurs: 1
+                            }
+                            iRow: {
+                                type: int
+                                description: "Y-location of Raft in Camera"
+                                default: -1
+                                minOccurs: 0
+                                maxOccurs: 1
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     Raft: {
         type: Policy
         dictionary: {
@@ -19,7 +89,7 @@ definitions: {
                     type: string
                     minOccurs: 0
                     maxOccurs: 1
-                    default: " "
+                    default: "None"
                 }
                 nCol: {
                     type: int
@@ -34,9 +104,9 @@ definitions: {
                     maxOccurs: 1
                 }
                 Ccd: {
-                    type: Policy
+                    type: policy
                     dictionary: {
-                        target: "Ccd"
+                        target: Ccd
                         definitions: {
                             serial: {
                                 type: int
@@ -49,153 +119,171 @@ definitions: {
                                 type: string
                                 minOccurs: 0
                                 maxOccurs: 1
-                                default: " "
+                                default: "None"
                             }
-                            nCol: {
+                            iCol: {
                                 type: int
-                                description: "Number of columns of amps; 2 == Left and Right"
-                                minOccurs: 1
+                                description: "X-location of CCD in Raft in range(nCol)"
+                                default: -1
+                                minOccurs: 0
                                 maxOccurs: 1
                             }
-                            nRow: {
+                            iRow: {
                                 type: int
-                                description: "Number of rows of amps"
-                                minOccurs: 1
+                                description: "Y-location of CCD in Raft in range(nRow)"
+                                default: -1
+                                minOccurs: 0
                                 maxOccurs: 1
                             }
-                            #
-                            # Now define an Amp within a Ccd
-                            #
-                            Amp: {
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Ccd: {
+        type: Policy
+        dictionary: {
+            target: "Ccd"
+            definitions: {
+                pixelSize: {
+                    type: double
+                    description: "Pixel size in microns"
+                    minOccurs: 
+                    maxOccurs: 1
+                }
+
+                nCol: {
+                    type: int
+                    description: "Number of columns of amps; 2 == Left and Right"
+                    minOccurs: 1
+                    maxOccurs: 1
+                }
+                nRow: {
+                    type: int
+                    description: "Number of rows of amps"
+                    minOccurs: 1
+                    maxOccurs: 1
+                }
+                Amp: {
+                    type: policy
+                    dictionary: {
+                        target: Amp
+                        definitions: {
+                            id: {
+                                type: string
+                                description: "ID for this Amp"
+                                default: "??"
+                            }
+                            iCol: {
+                                type: int
+                                description: "X-location of Amp in CCD in range(nCol)"
+                                default: -1
+                                minOccurs: 0
+                                maxOccurs: 1
+                            }
+                            iRow: {
+                                type: int
+                                description: "Y-location of Amp in CCD in range(nRow)"
+                                default: -1
+                                minOccurs: 0
+                                maxOccurs: 1
+                            }
+                            readoutCorner: {
+                                description: "location of first pixel read"
+                                allowed: {
+                                    value: "LLC"
+                                    description: "Lower left corner"
+                                }
+                                allowed: {
+                                    value: "ULC"
+                                    description: "Upper left corner"
+                                }
+                                allowed: {
+                                    value: "URC"
+                                    description: "Upper right corner"
+                                }
+                                allowed: {
+                                    value: "LRC"
+                                    description: "Lower right corner"
+                                }
+                                minOccurs: 0
+                                maxOccurs: 1
+                            }
+                            Electronic: {
                                 type: policy
                                 dictionary: {
-                                    target: Amp
+                                    target: Electronic
                                     definitions: {
-                                        id: {
-                                            type: string
-                                            description: "ID for this Amp"
+                                        gain: {
+                                            type: double
+                                            default: 1.0
                                         }
-                                        iCol: {
-                                            type: int
-                                            description: "X-location of Amp in CCD in range(nCol)"
-                                            minOccurs: 1
-                                            maxOccurs: 1
+                                        readNoise: {
+                                            type: double
+                                            default: 10.0
                                         }
-                                        iRow: {
-                                            type: int
-                                            description: "Y-location of Amp in CCD in range(nRow)"
-                                            minOccurs: 1
-                                            maxOccurs: 1
-                                        }
-                                        height: {
-                                            type: int
-                                            description: "Number of rows in physical device"
-                                            minOccurs: 0
-                                            maxOccurs: 1 # bug: can't be 0
-                                            default: 50
-                                        }
-                                        width: {
-                                            type: int
-                                            description: "Number of columns in physical device"
-                                            default: 100
-                                            minOccurs: 0
-                                            maxOccurs: 1
-                                        }
-                                        readoutCorner: {
-                                            description: "location of first pixel read"
-                                            allowed: {
-                                                value: "LLC"
-                                                description: "Lower left corner"
-                                            }
-                                            allowed: {
-                                                value: "ULC"
-                                                description: "Upper left corner"
-                                            }
-                                            allowed: {
-                                                value: "URC"
-                                                description: "Upper right corner"
-                                            }
-                                            allowed: {
-                                                value: "LRC"
-                                                description: "Lower right corner"
-                                            }
-                                            minOccurs: 0
-                                            maxOccurs: 1
-                                        }
-                                        extended: {
-                                            type: int
-                                            description: "length of extended register"
-                                            minOccurs: 0
-                                            maxOccurs: 1
-                                            default: 10
-                                        }
-                                        preRows: {
-                                            type: int
-                                            description: "extra rows before first real serial transfer"
-                                            minOccurs: 0
-                                            maxOccurs: 1
-                                            default: 2
-                                        }
-                                        overclockH: {
-                                            type: int
-                                            description: "number of serial overclock pixels"
-                                            minOccurs: 0
-                                            maxOccurs: 1
-                                            default: 15
-                                        }
-                                        overclockV: {
-                                            type: int
-                                            description: number of parallel overclock pixels
-                                            minOccurs: 0
-                                            maxOccurs: 1
-                                            default: 5
+                                        saturationLevel: {
+                                            type: double
+                                            default: 65535.0
                                         }
                                     }
                                 }
                             }
                         }
-        Amp: {
-            iCol: 0                     # X-location of Amp in CCD in range(nCol) 
-            iRow: 0                     # Y-location of Amp in CCD in range(nRow) 
-            readoutCorner: LLC          # location of first pixel read
-        }
-        Amp: {
-            iCol: 1                     # X-location of Amp in CCD in range(nCol) 
-            iRow: 0                     # Y-location of Amp in CCD in range(nRow) 
-            readoutCorner: LRC          # location of first pixel read
-        }
-        Amp: {
-            iCol: 0                     # X-location of Amp in CCD in range(nCol) 
-            iRow: 1                     # Y-location of Amp in CCD in range(nRow) 
-            readoutCorner: LLC          # location of first pixel read
-        }
-        Amp: {
-            iCol: 1                     # X-location of Amp in CCD in range(nCol) 
-            iRow: 1                     # Y-location of Amp in CCD in range(nRow) 
-            readoutCorner: LRC          # location of first pixel read
-        }
-        Amp: {
-            iCol: 0                     # X-location of Amp in CCD in range(nCol) 
-            iRow: 2                     # Y-location of Amp in CCD in range(nRow) 
-            readoutCorner: LLC          # location of first pixel read
-        }
-        Amp: {
-            iCol: 1                     # X-location of Amp in CCD in range(nCol) 
-            iRow: 2                     # Y-location of Amp in CCD in range(nRow) 
-            readoutCorner: LRC          # location of first pixel read
-        }
-        Amp: {
-            iCol: 0                     # X-location of Amp in CCD in range(nCol) 
-            iRow: 3                     # Y-location of Amp in CCD in range(nRow) 
-            readoutCorner: LLC          # location of first pixel read
-        }
-        Amp: {
-            iCol: 1                     # X-location of Amp in CCD in range(nCol) 
-            iRow: 3                     # Y-location of Amp in CCD in range(nRow) 
-            readoutCorner: LRC          # location of first pixel read
-        }
-                        
                     }
+                }
+            }
+        }
+    }
+    #
+    # Now define an Amp within a Ccd
+    #
+    Amp: {
+        type: policy
+        dictionary: {
+            target: Amp
+            definitions: {
+                height: {
+                    type: int
+                    description: "Number of rows in physical device"
+                    minOccurs: 1
+                    maxOccurs: 1
+                }
+                width: {
+                    type: int
+                    description: "Number of columns in physical device"
+                    minOccurs: 1
+                    maxOccurs: 1
+                }
+                extended: {
+                    type: int
+                    description: "length of extended register"
+                    minOccurs: 0
+                    maxOccurs: 1
+                    default: 0
+                }
+                preRows: {
+                    type: int
+                    description: "extra rows before first real serial transfer"
+                    minOccurs: 0
+                    maxOccurs: 1
+                    default: 0
+                }
+                overclockH: {
+                    type: int
+                    description: "number of serial overclock pixels"
+                    minOccurs: 0
+                    maxOccurs: 1
+                    default: 0
+                }
+                overclockV: {
+                    type: int
+                    description: number of parallel overclock pixels
+                    minOccurs: 0
+                    maxOccurs: 1
+                    default: 0
                 }
             }
         }

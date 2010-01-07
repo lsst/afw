@@ -18,6 +18,7 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %lsst_exceptions();
 
 SWIG_SHARED_PTR(AmpPtr, lsst::afw::cameraGeom::Amp);
+SWIG_SHARED_PTR(ElectronicParamsPtr, lsst::afw::cameraGeom::ElectronicParams);
 SWIG_SHARED_PTR(DetectorPtr, lsst::afw::cameraGeom::Detector);
 SWIG_SHARED_PTR(DetectorLayoutPtr, lsst::afw::cameraGeom::DetectorLayout);
 SWIG_SHARED_PTR_DERIVED(DetectorMosaicPtr, lsst::afw::cameraGeom::Detector,

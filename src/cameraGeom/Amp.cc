@@ -9,20 +9,28 @@ namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 namespace camGeom = lsst::afw::cameraGeom;
 
+
+camGeom::ElectronicParams::ElectronicParams(
+        float gain,                     ///< Amplifier's gain
+        float readNoise,                ///< Amplifier's read noise (DN)
+        float saturationLevel           ///< Amplifier's saturation level. N.b. float in case we scale data
+                                           )
+    : _gain(gain), _readNoise(readNoise), _saturationLevel(saturationLevel)
+{}
+
+/************************************************************************************************************/
+
 camGeom::Amp::Amp(
         camGeom::Id id,                            ///< The amplifier's ID
         afwImage::BBox const& allPixels,           ///< Bounding box of the pixels read off this amplifier
         afwImage::BBox const& biasSec,             ///< Bounding box of amplifier's bias section
         afwImage::BBox const& dataSec,             ///< Bounding box of amplifier's data section
-        camGeom::Amp::readoutCorner readoutCorner, ///< location of first pixel read
-        float gain,                                ///< Amplifier's gain
-        float readNoise,                           ///< Amplifier's read noise (DN)
-        float saturationLevel           ///< Amplifier's saturation level. N.b. float in case we scale data
-
-                 ) : _id(id), _isTrimmed(false), _allPixels(allPixels),
-                     _biasSec(biasSec), _dataSec(dataSec), _readoutCorner(readoutCorner),
-                     _gain(gain), _readNoise(readNoise), _saturationLevel(saturationLevel),
-                     _trimmedAllPixels()
+        camGeom::Amp::ReadoutCorner readoutCorner, ///< location of first pixel read
+        ElectronicParams::Ptr eParams              ///< electronic properties of Amp
+                 )
+        : _id(id), _isTrimmed(false), _allPixels(allPixels),
+        _biasSec(biasSec), _dataSec(dataSec), _readoutCorner(readoutCorner),
+        _eParams(eParams), _trimmedAllPixels()
 {
     ;
 }

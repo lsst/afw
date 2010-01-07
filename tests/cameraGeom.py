@@ -33,7 +33,10 @@ except NameError:
 
 def showCcd(ccd, ccdImage, ccdOrigin=None, frame=None):
     if ccdImage:
-        ds9.mtv(ccdImage, frame=frame, title=ccd.getId().getName())
+        title = ccd.getId().getName()
+        if ccd.isTrimmed():
+            title += "(trimmed)"
+        ds9.mtv(ccdImage, frame=frame, title=title)
 
     for a in ccd:
         if a.getBiasSec().getWidth():
@@ -60,13 +63,13 @@ def showRaft(raft, raftImage, raftOrigin=None, frame=None):
         ccd.setTrimmed(True)
         
         bbox = ccd.getAllPixels(True)
-        ds9.dot(ccd.getId().getName(),
-                dl.getOrigin()[0] + bbox.getWidth()/2, dl.getOrigin()[1] + bbox.getHeight()/2, frame=frame)
-
         origin = dl.getOrigin()
         if raftOrigin:
             origin += afwGeom.Extent2I(raftOrigin)
             
+        ds9.dot(ccd.getId().getName(),
+                origin[0] + bbox.getWidth()/2, origin[1] + bbox.getHeight()/2, frame=frame)
+
         showCcd(ccd, None, frame=frame, ccdOrigin=origin)
 
 def showCamera(camera, cameraImage, frame=None):
@@ -80,6 +83,8 @@ def showCamera(camera, cameraImage, frame=None):
                 dl.getOrigin()[0] + bbox.getWidth()/2, dl.getOrigin()[1] + bbox.getHeight()/2, frame=frame)
 
         showRaft(raft, None, frame=frame, raftOrigin=dl.getOrigin())
+
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def trimCcd(ccd, ccdImage):
     ccd.setTrimmed(True)
@@ -107,51 +112,79 @@ class CameraGeomTestCase(unittest.TestCase):
         if (lhs != rhs)[0] or (lhs != rhs)[1]:
             self.assertTrue(False, "%s != %s" % (lhs, rhs))
 
-    def makeCcd(self, ccdName, makeImage=False):
-        """Build a Ccd from a set of amplifiers"""
-        self.pixelSize = 10e-3          # 10 microns
+    def makeCcd(self, geomPolicy, ccdId=None, makeImage=False):
+        """Build a Ccd from a set of amplifiers given a suitable pex::Policy"""
+        ccdPol = geomPolicy.get("Ccd")
 
-        nCol = 2                        # number of columns of amps; 2 == Left and Right
-        nRow = 4                        # number of rows of amps
-        width, height = 100, 50         # size of physical device
-        extended = 10                   # length of extended register
-        preRows = 2                     # extra rows before first real serial transfer -- always 0?
-        overclockH = 15                 # number of serial overclock pixels
-        overclockV = 5                  # number of parallel overclock pixels
+        self.pixelSize = ccdPol.get("pixelSize")
 
-        eWidth = extended + width + overclockH
-        eHeight = preRows + height + overclockV
+        nCol = ccdPol.get("nCol")
+        nRow = ccdPol.get("nRow")
+        if not ccdId:
+            ccdId = cameraGeom.Id(ccdPol.get("serial"), ccdPol.get("name"))
 
-        ccdInfo = {}
-        ccdInfo["name"] = ccdName
-        ccdInfo["ampWidth"], ccdInfo["ampHeight"] = width, height
-        ccdInfo["width"], ccdInfo["height"] = nCol*eWidth, nRow*eHeight
-        ccdInfo["trimmedWidth"], ccdInfo["trimmedHeight"] = nCol*width, nRow*height
-        ccdInfo["ampIdMin"] = CameraGeomTestCase.ampSerial
+        ccd = cameraGeom.Ccd(ccdId, self.pixelSize)
 
-        ccd = cameraGeom.Ccd(cameraGeom.Id(CameraGeomTestCase.ccdSerial, ccdInfo["name"]), self.pixelSize)
-        CameraGeomTestCase.ccdSerial += 1
+        if nCol*nRow != len(ccdPol.getArray("Amp")):
+            raise RuntimeError, ("Expected location of %d amplifiers, got %d" % \
+                                 (nCol*nRow, len(ccdPol.getArray("Amp"))))
         
-        for Col in range(nCol):
+        ampSerial0 = CameraGeomTestCase.ampSerial # used for testing
+        for ampPol in ccdPol.getArray("Amp"):
+            Col = ampPol.get("iCol")
+            Row = ampPol.get("iRow")
+            c =  ampPol.get("readoutCorner")
+
+            if Col not in range(nCol) or Row not in range(nRow):
+                raise RuntimeError, ("Amp location %d, %d is not in 0..%d, 0..%d" % (Col, Row, nCol, nRow))
+
+            gain = ampPol.get("Electronic.gain")
+            readNoise = ampPol.get("Electronic.readNoise")
+            saturationLevel = ampPol.get("Electronic.saturationLevel")
+            #
+            # Now lookup properties common to all the CCD's amps
+            #
+            ampPol = self.geomPolicy.get("Amp")
+            width = ampPol.get("width")
+            height = ampPol.get("height")
+            
+            extended = ampPol.get("extended")
+            preRows = ampPol.get("preRows")
+            overclockH = ampPol.get("overclockH")
+            overclockV = ampPol.get("overclockV")
+
+            eWidth = extended + width + overclockH
+            eHeight = preRows + height + overclockV
+
             allPixels = afwImage.BBox(afwImage.PointI(0, 0), eWidth, eHeight)
 
-            if Col == 0:
+            if c == "LLC":
                 c = cameraGeom.Amp.LLC
                 biasSec = afwImage.BBox(afwImage.PointI(extended + width, preRows), overclockH, height)
                 dataSec = afwImage.BBox(afwImage.PointI(extended, preRows), width, height)
-            else:
+            elif c == "LRC":
                 c = cameraGeom.Amp.LRC
                 biasSec = afwImage.BBox(afwImage.PointI(0, preRows), overclockH, height)
                 dataSec = afwImage.BBox(afwImage.PointI(overclockH, preRows), width, height)
+            else:
+                raise RuntimeError, ("Unknown readoutCorner %s" % c)
 
-            for Row in range(nRow):
-                amp = cameraGeom.Amp(cameraGeom.Id(CameraGeomTestCase.ampSerial,
-                                                   "ID%d" % CameraGeomTestCase.ampSerial),
-                                     allPixels, biasSec, dataSec, c, 1.0, 10.0, 65535)
-                CameraGeomTestCase.ampSerial += 1
-
-                ccd.addAmp(Col, Row, amp)
-
+            ampSerial = CameraGeomTestCase.ampSerial
+            eParams = cameraGeom.ElectronicParams(gain, readNoise, saturationLevel)
+            amp = cameraGeom.Amp(cameraGeom.Id(ampSerial, "ID%d" % ampSerial),
+                                 allPixels, biasSec, dataSec, c, eParams)
+            CameraGeomTestCase.ampSerial += 1
+            
+            ccd.addAmp(Col, Row, amp)
+        #
+        # Information for the test code
+        #
+        ccdInfo = {}
+        ccdInfo["name"] = ccd.getId().getName()
+        ccdInfo["ampWidth"], ccdInfo["ampHeight"] = width, height
+        ccdInfo["width"], ccdInfo["height"] = nCol*eWidth, nRow*eHeight
+        ccdInfo["trimmedWidth"], ccdInfo["trimmedHeight"] = nCol*width, nRow*height
+        ccdInfo["ampIdMin"] = ampSerial0
         ccdInfo["ampIdMax"] = CameraGeomTestCase.ampSerial - 1
         #
         # Make an Image of that CCD?
@@ -160,30 +193,41 @@ class CameraGeomTestCase(unittest.TestCase):
             ccdImage = afwImage.ImageU(ccd.getAllPixels().getDimensions())
             for a in ccd:
                 im = ccdImage.Factory(ccdImage, a.getAllPixels())
-                im += 1 + (a.getId().getSerial() - ccdInfo["ampIdMin"])
+                im += int(a.getElectronicParams().getReadNoise())
                 im = ccdImage.Factory(ccdImage, a.getDataSec())
-                im += 20
+                im += int(1 + 100*a.getElectronicParams().getGain() + 0.5)
         else:
             ccdImage = None
 
         return ccd, ccdImage, ccdInfo
 
-    def makeRaft(self, raftName, makeImage=False):
-        """Build a Raft from a set of Ccd"""
-        nCol = 2                        # number of columns of CCDs
-        nRow = 3                        # number of rows of CCDs
+    def makeRaft(self, geomPolicy, raftId=None, makeImage=False):
+        """Build a Raft from a set of CCDs given a suitable pex::Policy"""
+        raftPol = geomPolicy.get("Raft")
+        nCol = raftPol.get("nCol")
+        nRow = raftPol.get("nRow")
+        if not raftId:
+            raftId = cameraGeom.Id(raftPol.get("serial"), raftPol.get("name"))
+
+        raft = cameraGeom.Raft(raftId)
+
+        if nCol*nRow != len(raftPol.getArray("Ccd")):
+            raise RuntimeError, ("Expected location of %d amplifiers, got %d" % \
+                                 (nCol*nRow, len(raftPol.getArray("Ccd"))))
+
+        for ccdPol in raftPol.getArray("Ccd"):
+            Col = ccdPol.get("iCol")
+            Row = ccdPol.get("iRow")
+
+            if Col not in range(nCol) or Row not in range(nRow):
+                raise RuntimeError, ("Amp location %d, %d is not in 0..%d, 0..%d" % (Col, Row, nCol, nRow))
+
+            ccdId = cameraGeom.Id(ccdPol.get("serial"), ccdPol.get("name"))
+            ccd = self.makeCcd(geomPolicy, ccdId)[0]
+            raft.addDetector(Col, Row, ccd)
 
         raftInfo = {}
-        raftInfo["name"] = raftName
-
-        raft = cameraGeom.Raft(cameraGeom.Id(CameraGeomTestCase.raftSerial, raftInfo["name"]))
-        CameraGeomTestCase.raftSerial += 1
-
-        for Col in range(nCol):
-            for Row in range(nRow):
-                ccd = self.makeCcd("R:%d,%d" % (Col, Row))[0]
-                raft.addDetector(Col, Row, ccd)
-
+        raftInfo["name"] = raft.getId().getName()
         raftInfo["width"] =  nCol*ccd.getAllPixels(True).getWidth()
         raftInfo["height"] = nRow*ccd.getAllPixels(True).getHeight()
         #
@@ -202,24 +246,29 @@ class CameraGeomTestCase(unittest.TestCase):
 
         return raft, raftImage, raftInfo
 
-    def makeCamera(self, cameraName, makeImage=False):
-        """Build a Camera from a set of Ccd"""
+    def makeCamera(self, geomPolicy, cameraId=None, makeImage=False):
+        """Build a Camera from a set of Rafts given a suitable pex::Policy"""
         cameraGeom.Camera = cameraGeom.DetectorMosaic
 
-        nCol = 2                        # number of columns of CCDs
-        nRow = 1                        # number of rows of CCDs
+        cameraPol = geomPolicy.get("Camera")
+        nCol = cameraPol.get("nCol")
+        nRow = cameraPol.get("nRow")
 
-        cameraInfo = {}
-        cameraInfo["name"] = cameraName
-
-        camera = cameraGeom.Camera(cameraGeom.Id(CameraGeomTestCase.cameraSerial, cameraInfo["name"]))
+        if not cameraId:
+            cameraId = cameraGeom.Id(cameraPol.get("serial"), cameraPol.get("name"))
+        camera = cameraGeom.Camera(cameraId)
         CameraGeomTestCase.cameraSerial += 1
 
-        for Col in range(nCol):
-            for Row in range(nRow):
-                raft = self.makeRaft("C:%d,%d" % (Col, Row))[0]
-                camera.addDetector(Col, Row, raft)
+        for ccdPol in cameraPol.getArray("Raft"):
+            Col = ccdPol.get("iCol")
+            Row = ccdPol.get("iRow")
 
+            raftId = cameraGeom.Id(0, "R:%d,%d" % (Col, Row))
+            raft = self.makeRaft(geomPolicy, raftId)[0]
+            camera.addDetector(Col, Row, raft)
+
+        cameraInfo = {}
+        cameraInfo["name"] = camera.getId().getName()
         cameraInfo["width"] =  nCol*raft.getAllPixels(True).getWidth()
         cameraInfo["height"] = nRow*raft.getAllPixels(True).getHeight()
         #
@@ -243,23 +292,27 @@ class CameraGeomTestCase(unittest.TestCase):
         CameraGeomTestCase.ccdSerial = 1000
         CameraGeomTestCase.raftSerial = 2000
         CameraGeomTestCase.cameraSerial = 666
+
+        policyFile = pexPolicy.DefaultPolicyFile("afw", "TestCameraGeomDictionary.paf", "tests")
+        defPolicy = pexPolicy.Policy.createPolicy(policyFile, policyFile.getRepositoryPath(), True)
+
+        polFile = pexPolicy.DefaultPolicyFile("afw", "TestCameraGeom.paf", "tests")
+        self.geomPolicy = pexPolicy.Policy.createPolicy(polFile)
+        self.geomPolicy.mergeDefaults(defPolicy.getDictionary())
     
     def tearDown(self):
         pass
 
     def testDictionary(self):
         """Test the camera geometry dictionary"""
-        policyFile = pexPolicy.DefaultPolicyFile("afw", "TestCameraGeomDictionary.paf", "tests")
-        defPolicy = pexPolicy.Policy.createPolicy(policyFile, policyFile.getRepositoryPath(), True)
 
-        polFile = pexPolicy.DefaultPolicyFile("afw", "TestCameraGeom.paf", "tests")
-        self.policy = pexPolicy.Policy.createPolicy(polFile)
-        self.policy.mergeDefaults(defPolicy.getDictionary())
-
-        for r in self.policy.getArray("Raft"):
-            for c in r.getArray("Ccd"):
-                for a in c.getArray("Amp"):
-                    print a
+        if False:
+            for r in self.geomPolicy.getArray("Raft"):
+                print "raft", r
+            for c in self.geomPolicy.getArray("Ccd"):
+                print "ccd", c
+            for a in self.geomPolicy.getArray("Amp"):
+                print "amp", a
 
     def testId(self):
         """Test cameraGeom.Id"""
@@ -285,7 +338,8 @@ class CameraGeomTestCase(unittest.TestCase):
 
         #print >> sys.stderr, "Skipping testCcd"; return
 
-        ccd, ccdImage, ccdInfo = self.makeCcd("The Beast", makeImage=display)
+        ccdId = cameraGeom.Id("CCD")
+        ccd, ccdImage, ccdInfo = self.makeCcd(self.geomPolicy, ccdId, makeImage=display)
         
         if display:
             showCcd(ccd, ccdImage, frame=0)
@@ -353,7 +407,8 @@ class CameraGeomTestCase(unittest.TestCase):
 
         #print >> sys.stderr, "Skipping testRaft"; return
 
-        raft, raftImage, raftInfo = self.makeRaft("Robinson", makeImage=True)
+        raftId = cameraGeom.Id("Raft")
+        raft, raftImage, raftInfo = self.makeRaft(self.geomPolicy, raftId, makeImage=True)
 
         if display:
             showRaft(raft, raftImage, frame=2)
@@ -370,7 +425,7 @@ class CameraGeomTestCase(unittest.TestCase):
         self.assertEqual(raft.getAllPixels().getWidth(), raftInfo["width"])
         self.assertEqual(raft.getAllPixels().getHeight(), raftInfo["height"])
 
-        for x, y, serial in [(0, 0, 7), (150, 250, 15), (250, 250, 39)]:
+        for x, y, serial in [(0, 0, 7), (150, 250, 23), (250, 250, 31)]:
             det = raft.findDetector(afwGeom.Point2I.makeXY(x, y)).getDetector()
             ccd = cameraGeom.cast_Ccd(det)
             if False:
@@ -378,7 +433,7 @@ class CameraGeomTestCase(unittest.TestCase):
                       ccd.findAmp(afwGeom.Point2I.makeXY(150, 152), True).getId().getSerial()
             self.assertEqual(ccd.findAmp(afwGeom.Point2I.makeXY(150, 152), True).getId().getSerial(), serial)
 
-        name = "R:0,2"
+        name = "C:0,2"
         self.assertEqual(raft.findDetector(cameraGeom.Id(name)).getDetector().getId().getName(), name)
         #
         # This test isn't really right as we don't allow for e.g. gaps between Detectors.  Well, the
@@ -392,7 +447,7 @@ class CameraGeomTestCase(unittest.TestCase):
 
         #print >> sys.stderr, "Skipping testCamera"; return
 
-        camera, cameraImage, cameraInfo = self.makeCamera("Crusoe", makeImage=True)
+        camera, cameraImage, cameraInfo = self.makeCamera(self.geomPolicy, makeImage=True)
 
         if display:
             showCamera(camera, cameraImage, frame=3)
@@ -409,8 +464,8 @@ class CameraGeomTestCase(unittest.TestCase):
         self.assertEqual(camera.getAllPixels().getWidth(), cameraInfo["width"])
         self.assertEqual(camera.getAllPixels().getHeight(), cameraInfo["height"])
 
-        for rx, ry, cx, cy, serial in [(0, 0,     0, 0, 7),  (0,   0,   150, 250, 15),
-                                       (600, 300, 0, 0, 55), (600, 300, 150, 250, 63)]:
+        for rx, ry, cx, cy, serial in [(0, 0,     0, 0, 7),  (0,   0,   150, 250, 23),
+                                       (600, 300, 0, 0, 55), (600, 300, 150, 250, 71)]:
             raft = cameraGeom.cast_Raft(camera.findDetector(afwGeom.Point2I.makeXY(rx, ry)).getDetector())
 
             ccd = cameraGeom.cast_Ccd(raft.findDetector(afwGeom.Point2I.makeXY(cx, cy)).getDetector())
@@ -419,7 +474,7 @@ class CameraGeomTestCase(unittest.TestCase):
                       ccd.findAmp(afwGeom.Point2I.makeXY(150, 152), True).getId().getSerial()
             self.assertEqual(ccd.findAmp(afwGeom.Point2I.makeXY(150, 152), True).getId().getSerial(), serial)
 
-        name = "C:1,0"
+        name = "R:1,0"
         self.assertEqual(camera.findDetector(cameraGeom.Id(name)).getDetector().getId().getName(), name)
         #
         # This test isn't really right as we don't allow for e.g. gaps between Rafts.  Well, the
