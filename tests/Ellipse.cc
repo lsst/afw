@@ -279,9 +279,9 @@ void testRadialFraction(TCore const & input) {
     typename TCore::Ptr ptr(input.clone());
     TCore & core = *ptr;
     BaseCore::RadialFraction rf(core);
-    PointD p = PointD::makeXY(1.25,0.85);
-    ExtentD epsX = ExtentD::makeXY(eps,0.0);
-    ExtentD epsY = ExtentD::makeXY(0.0,eps);
+    PointD p = PointD::make(1.25,0.85);
+    ExtentD epsX = ExtentD::make(eps,0.0);
+    ExtentD epsY = ExtentD::make(0.0,eps);
     Eigen::RowVector2d grad_analytic = rf.d(p);
     Eigen::RowVector2d grad_numeric;
     grad_numeric << (rf(p+epsX) - rf(p-epsX)) / (2*eps), (rf(p+epsY) - rf(p-epsY)) / (2*eps);
@@ -301,8 +301,8 @@ void testRadialFraction(TCore const & input) {
 
 BOOST_AUTO_TEST_CASE(RadialFractionTest) {
     BaseCore::RadialFraction rf(Quadrupole(1.5,2.0,-0.75));
-    BOOST_CHECK(approx(rf(PointD::makeXY(-6.75,2.375)),5.5669008088329193,1E-8));
-    BOOST_CHECK(approx(rf(PointD::makeXY(3.25,-4.375)),3.4198702929369733,1E-8));
+    BOOST_CHECK(approx(rf(PointD::make(-6.75,2.375)),5.5669008088329193,1E-8));
+    BOOST_CHECK(approx(rf(PointD::make(3.25,-4.375)),3.4198702929369733,1E-8));
     testRadialFraction(Quadrupole(3.0,2.0,0.89));
     testRadialFraction(Axes(3.0,2.0,1.234));
     testRadialFraction(Distortion(0.5,0.65,2.5));

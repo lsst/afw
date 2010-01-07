@@ -20,9 +20,9 @@ namespace lsst { namespace afw { namespace geom {
     between geometry objects defined in image and their counterparts in geom.
 
     In cases where std::pair was used in place of Extent in the past,
-    @link CoordinateBase<Derived,T,2>::asPairXY Extent::asPairXY @endlink 
+    @link CoordinateBase<Derived,T,2>::asPair Extent::asPair @endlink 
     and 
-    @link CoordinateBase<Derived,T,2>::makeXY Extent::makeXY @endlink 
+    @link CoordinateBase<Derived,T,2>::make Extent::make @endlink 
     may be useful.
 
     \section point image::Point to geom::Point
@@ -55,12 +55,12 @@ namespace lsst { namespace afw { namespace geom {
     <tr>
       <th rowspan=2>Construction</th> 
       <td>@code image::Point<T>(x,y) @endcode</td>
-      <td>@code geom::Point<T>::makeXY(x,y) @endcode</td> 
+      <td>@code geom::Point<T>::make(x,y) @endcode</td> 
       <td>&nbsp;</td>
     </tr>
     <tr>
       <td>@code image::Point<T>(v) @endcode</td>
-      <td>@code geom::Point<T>::makeXY(v) @endcode</td> 
+      <td>@code geom::Point<T>::make(v) @endcode</td> 
       <td>&nbsp;</td>
     </tr>
     <tr>
@@ -271,7 +271,7 @@ geom::BoxI::BoxI(geom::PointI min,
 /// \brief Convert an image::Point object to the equivalent geom::Point object.
 template <typename T>
 inline geom::Point<T,2> convertToGeom(image::Point<T> const & other) {
-    return geom::Point<T,2>::makeXY(other.getX(),other.getY());
+    return geom::Point<T,2>::make(other.getX(),other.getY());
 }
 
 /// \brief Convert a geom::Point object to the equivalent image::Point object.

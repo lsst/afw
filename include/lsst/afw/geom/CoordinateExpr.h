@@ -17,12 +17,12 @@ namespace lsst { namespace afw { namespace geom {
  *  \code
  *  Point2D a(3.5,1.2);
  *  Point2D b(-1.5,4.3);
- *  std::cout << all(a < b) << std::endl;  // false
- *  std::cout << any(a < b) << std::endl;  // true
+ *  std::cout << all(a.lt(b)) << std::endl;  // false
+ *  std::cout << any(a.lt(b)) << std::endl;  // true
  *  \endcode
  *  
  *  CoordinateExpr is not a true lazy-evaluation expression template, as that seems unnecessary when
- *  the object is typically  only two bools large (smaller than the raw pointers necessary to implement
+ *  the object is typically only two bools large (smaller than the raw pointers necessary to implement
  *  a lazy solution).  The consequence is that there's no short-circuiting of logical operators, but I don't
  *  think that will even remotely matter for most use cases.  The any() and all() functions do support
  *  short-circuiting.
@@ -45,9 +45,9 @@ public:
      *  These operators do not provide interoperability with scalars.
      */
     //@{
-    CoordinateExpr operator&&(CoordinateExpr const & rhs) const;
-    CoordinateExpr operator||(CoordinateExpr const & rhs) const;
-    CoordinateExpr operator!() const;
+    CoordinateExpr and_(CoordinateExpr const & rhs) const;
+    CoordinateExpr or_(CoordinateExpr const & rhs) const;
+    CoordinateExpr not_() const;
     //@}
 
 };

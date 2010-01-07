@@ -93,7 +93,7 @@ geom::BoxI::BoxI(BoxD const & other, EdgeHandlingEnum edgeHandling) : _minimum()
 
 /// \brief Return true if the box contains the point.
 bool geom::BoxI::contains(PointI const & point) const {
-    return all(point >= this->getMin()) && all(point <= this->getMax());
+    return all(point.ge(this->getMin())) && all(point.le(this->getMax()));
 }
 
 /**
@@ -103,7 +103,7 @@ bool geom::BoxI::contains(PointI const & point) const {
  */
 bool geom::BoxI::contains(BoxI const & other) const {
     return other.isEmpty() || 
-        (all(other.getMin() >= this->getMin()) && all(other.getMax() <= this->getMax()));
+        (all(other.getMin().ge(this->getMin())) && all(other.getMax().le(this->getMax())));
 }
 
 /**
@@ -114,8 +114,8 @@ bool geom::BoxI::contains(BoxI const & other) const {
 bool geom::BoxI::overlaps(BoxI const & other) const {
     return !(
         other.isEmpty() || this->isEmpty() 
-        || any(other.getMax() < this->getMin()) 
-        || any(other.getMin() > this->getMax())
+        || any(other.getMax().lt(this->getMin())) 
+        || any(other.getMin().gt(this->getMax()))
     );
 }
 
@@ -129,7 +129,7 @@ void geom::BoxI::grow(ExtentI const & buffer) {
     if (isEmpty()) return; // should we throw an exception here instead of a no-op?
     _minimum -= buffer;
     _dimensions += buffer * 2;
-    if (any(_dimensions <= 0)) *this = BoxI();
+    if (any(_dimensions.le(0))) *this = BoxI();
 }
 
 /// \brief Shift the position of the box by the given offset.
@@ -193,7 +193,7 @@ void geom::BoxI::clip(BoxI const & other) {
             maximum[n] = otherMax[n];
         }
     }
-    if (any(maximum < _minimum)) {
+    if (any(maximum.lt(_minimum))) {
         *this = BoxI();
         return;
     }                     
@@ -206,7 +206,7 @@ void geom::BoxI::clip(BoxI const & other) {
  *  All empty boxes are equal.
  */
 bool geom::BoxI::operator==(BoxI const & other) const {
-    return all(other._minimum == this->_minimum) && all(other._dimensions == this->_dimensions);
+    return other._minimum == this->_minimum && other._dimensions == this->_dimensions;
 }
 
 /**
@@ -215,7 +215,7 @@ bool geom::BoxI::operator==(BoxI const & other) const {
  *  All empty boxes are equal.
  */
 bool geom::BoxI::operator!=(BoxI const & other) const {
-    return any(other._minimum != this->_minimum) || any(other._dimensions != this->_dimensions);
+    return other._minimum != this->_minimum || other._dimensions != this->_dimensions;
 }
 
 double const geom::BoxD::EPSILON = std::numeric_limits<double>::epsilon()*2;
@@ -297,7 +297,7 @@ geom::BoxD::BoxD(BoxI const & other) :
 
 /// \brief Return true if the box contains the point.
 bool geom::BoxD::contains(PointD const & point) const {
-    return all(point >= this->getMin()) && all(point < this->getMax());
+    return all(point.ge(this->getMin())) && all(point.lt(this->getMax()));
 }
 
 /**
@@ -307,7 +307,7 @@ bool geom::BoxD::contains(PointD const & point) const {
  */
 bool geom::BoxD::contains(BoxD const & other) const {
     return other.isEmpty() || 
-        (all(other.getMin() >= this->getMin()) && all(other.getMax() <= this->getMax()));
+        (all(other.getMin().ge(this->getMin())) && all(other.getMax().le(this->getMax())));
 }
 
 /**
@@ -318,8 +318,8 @@ bool geom::BoxD::contains(BoxD const & other) const {
 bool geom::BoxD::overlaps(BoxD const & other) const {
     return !(
         other.isEmpty() || this->isEmpty() 
-        || any(other.getMax() <= this->getMin()) 
-        || any(other.getMin() >= this->getMax())
+        || any(other.getMax().le(this->getMin())) 
+        || any(other.getMin().ge(this->getMax()))
     );
 }
 
@@ -333,7 +333,7 @@ void geom::BoxD::grow(ExtentD const & buffer) {
     if (isEmpty()) return; // should we throw an exception here instead of a no-op?
     _minimum -= buffer;
     _maximum += buffer;
-    if (any(_minimum >= _maximum)) *this = BoxD();
+    if (any(_minimum.ge(_maximum))) *this = BoxD();
 }
 
 /// \brief Shift the position of the box by the given offset.
@@ -402,7 +402,7 @@ void geom::BoxD::clip(BoxD const & other) {
             _maximum[n] = otherMax[n];
         }
     }
-    if (any(_maximum <= _minimum)) {
+    if (any(_maximum.le(_minimum))) {
         *this = BoxD();
         return;
     }                     
@@ -415,7 +415,7 @@ void geom::BoxD::clip(BoxD const & other) {
  */
 bool geom::BoxD::operator==(BoxD const & other) const {
     return (other.isEmpty() && this->isEmpty()) || 
-        (all(other._minimum == this->_minimum) && all(other._maximum == this->_maximum));
+        (other._minimum == this->_minimum && other._maximum == this->_maximum);
 }
 
 /**
@@ -425,5 +425,5 @@ bool geom::BoxD::operator==(BoxD const & other) const {
  */
 bool geom::BoxD::operator!=(BoxD const & other) const {
     return !(other.isEmpty() && other.isEmpty()) &&
-        (any(other._minimum != this->_minimum) || any(other._maximum != this->_maximum));
+        (other._minimum != this->_minimum || other._maximum != this->_maximum);
 }

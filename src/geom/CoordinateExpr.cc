@@ -5,7 +5,7 @@
 namespace geom = lsst::afw::geom;
 
 template <int N>
-geom::CoordinateExpr<N> geom::CoordinateExpr<N>::operator&&(CoordinateExpr<N> const & other) const {
+geom::CoordinateExpr<N> geom::CoordinateExpr<N>::and_(CoordinateExpr<N> const & other) const {
     CoordinateExpr r(*this);
     for (register int n=0; n<N; ++n) {
         if (!other[n]) r[n] = false;
@@ -14,7 +14,7 @@ geom::CoordinateExpr<N> geom::CoordinateExpr<N>::operator&&(CoordinateExpr<N> co
 }
 
 template <int N>
-geom::CoordinateExpr<N> geom::CoordinateExpr<N>::operator||(CoordinateExpr<N> const & other) const {
+geom::CoordinateExpr<N> geom::CoordinateExpr<N>::or_(CoordinateExpr<N> const & other) const {
     CoordinateExpr r(*this);
     for (register int n=0; n<N; ++n) {
         if (other[n]) r[n] = true;
@@ -23,7 +23,7 @@ geom::CoordinateExpr<N> geom::CoordinateExpr<N>::operator||(CoordinateExpr<N> co
 }
 
 template <int N>
-geom::CoordinateExpr<N> geom::CoordinateExpr<N>::operator!() const {
+geom::CoordinateExpr<N> geom::CoordinateExpr<N>::not_() const {
     CoordinateExpr r;
     for (register int n=0; n<N; ++n) {
         if (!this->operator[](n)) r[n] = true;

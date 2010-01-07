@@ -8,10 +8,6 @@
 %define %Point_PREINCLUDE(T,N)
 %rename(__eq__) lsst::afw::geom::Point<T,N>::operator==;
 %rename(__ne__) lsst::afw::geom::Point<T,N>::operator!=;
-%rename(__lt__) lsst::afw::geom::Point<T,N>::operator<;
-%rename(__le__) lsst::afw::geom::Point<T,N>::operator<=;
-%rename(__gt__) lsst::afw::geom::Point<T,N>::operator>;
-%rename(__ge__) lsst::afw::geom::Point<T,N>::operator>=;
 %rename(__add__) lsst::afw::geom::Point<T,N>::operator+;
 %rename(__sub__) lsst::afw::geom::Point<T,N>::operator-;
 %rename(__iadd__) lsst::afw::geom::Point<T,N>::operator+=;
