@@ -20,6 +20,8 @@ Python bindings for classes describing the the geometry of a mosaic camera
 SWIG_SHARED_PTR(AmpPtr, lsst::afw::cameraGeom::Amp);
 SWIG_SHARED_PTR(DetectorPtr, lsst::afw::cameraGeom::Detector);
 SWIG_SHARED_PTR(DetectorLayoutPtr, lsst::afw::cameraGeom::DetectorLayout);
+SWIG_SHARED_PTR_DERIVED(DetectorMosaicPtr, lsst::afw::cameraGeom::Detector,
+                        lsst::afw::cameraGeom::DetectorMosaic);
 SWIG_SHARED_PTR_DERIVED(CcdPtr, lsst::afw::cameraGeom::Detector, lsst::afw::cameraGeom::Ccd);
 SWIG_SHARED_PTR_DERIVED(RaftPtr, lsst::afw::cameraGeom::Detector, lsst::afw::cameraGeom::Raft);
 
@@ -29,6 +31,7 @@ SWIG_SHARED_PTR_DERIVED(RaftPtr, lsst::afw::cameraGeom::Detector, lsst::afw::cam
 %include "lsst/afw/cameraGeom/Id.h"
 %include "lsst/afw/cameraGeom/Amp.h"
 %include "lsst/afw/cameraGeom/Detector.h"
+%include "lsst/afw/cameraGeom/DetectorMosaic.h"
 %include "lsst/afw/cameraGeom/Ccd.h"
 %include "lsst/afw/cameraGeom/Raft.h"
 
@@ -43,9 +46,14 @@ SWIG_SHARED_PTR_DERIVED(RaftPtr, lsst::afw::cameraGeom::Detector, lsst::afw::cam
         return dynamic_cast<lsst::afw::cameraGeom::Raft *>(detector);
     }
 %}
-
-
-%extend lsst::afw::cameraGeom::Ccd {
+//
+// We'd like to just say
+//  def __iter__(self):
+//      return next()
+// but this crashes, at least with swig 1.3.36
+//
+%define %definePythonIterator(TYPE...)
+%extend TYPE {
     %pythoncode {
         def __iter__(self):
             ptr = self.begin()
@@ -58,17 +66,7 @@ SWIG_SHARED_PTR_DERIVED(RaftPtr, lsst::afw::cameraGeom::Detector, lsst::afw::cam
                 ptr.incr()
     }
 }
+%enddef
 
-%extend lsst::afw::cameraGeom::Raft {
-    %pythoncode {
-        def __iter__(self):
-            ptr = self.begin()
-            end = self.end()
-            while True:
-                if ptr == end:
-                    raise StopIteration
-
-                yield ptr.value()
-                ptr.incr()
-    }
-}
+%definePythonIterator(lsst::afw::cameraGeom::Ccd);
+%definePythonIterator(lsst::afw::cameraGeom::DetectorMosaic);
