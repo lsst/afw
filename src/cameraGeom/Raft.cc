@@ -10,6 +10,22 @@ namespace camGeom = lsst::afw::cameraGeom;
 
 /************************************************************************************************************/
 /**
+ * Return a Raft's size in mm
+ */
+afwGeom::Extent2D camGeom::Raft::getSize() const {
+    double xsize = 0, ysize = 0;
+    if (begin() != end()) {         // no Detectors
+        afwGeom::Extent2D detectorSize = (*begin())->getDetector()->getSize();
+        xsize = detectorSize[0];
+        ysize = detectorSize[1];
+    }
+
+    Eigen::Vector2d size;
+    size << _nDetector.first*xsize, _nDetector.second*ysize;
+    return afwGeom::Extent2D(size);
+}
+
+/**
  * Add an Detector to the set known to be part of this Raft
  *
  *  The \c iX and \c iY values are the 0-indexed position of the Detector in the Raft; e.g. (0, 2)
@@ -37,6 +53,13 @@ void camGeom::Raft::addDetector(
     camGeom::DetectorLayout::Ptr detL(new camGeom::DetectorLayout(det, orient, center, origin));
 
     _detectors.push_back(detL);
+
+    if (iX >= _nDetector.first) {
+        _nDetector.first = iX + 1;
+    }
+    if (iY >= _nDetector.second) {
+        _nDetector.second = iY + 1;
+    }
 }
 
 /************************************************************************************************************/

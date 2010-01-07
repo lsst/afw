@@ -83,7 +83,7 @@ public:
 #endif
     typedef std::vector<DetectorLayout::Ptr>::const_iterator const_iterator;
 
-    Raft(Id id) : _id(id), _allPixels() {
+    Raft(Id id) : _id(id), _allPixels(), _nDetector(0, 0) {
         ;
     }
     virtual ~Raft() {}
@@ -105,17 +105,12 @@ public:
     lsst::afw::image::BBox const& getAllPixels() const {
         return _allPixels;
     }
-
-    /// Return size in mm of this Raft
-    lsst::afw::geom::Extent2D getSize() const {
-        Eigen::Vector2d size;
-        size << 0.0, 0.0;
-        return lsst::afw::geom::Extent2D(size);
-    }
     //
     // Geometry of Detector --- i.e. mm not pixels
     //
 
+    /// Return size in mm of this Raft
+    lsst::afw::geom::Extent2D getSize() const;
     //
     // Add a Detector to the Raft
     //
@@ -129,6 +124,7 @@ private:
     Id _id;
     lsst::afw::image::BBox _allPixels;  // Bounding box of all the Raft's pixels
     DetectorSet _detectors;             // The Detectors that make up this Raft
+    std::pair<int, int> _nDetector;     // the number of columns/rows of Detectors
 };
 
 }}}

@@ -46,11 +46,7 @@ public:
 
     /// Return size in mm of this Detector
     lsst::afw::geom::Extent2D getSize() const {
-        return getSize(_isTrimmed);
-    }
-    
-    lsst::afw::geom::Extent2D getSize(bool isTrimmed ///< True iff the bias/overclock have been removed
-                                     ) const {
+        bool const isTrimmed = true;
         Eigen::Vector2d size;
         size << getAllPixels(isTrimmed).getWidth()*_pixelSize, getAllPixels(isTrimmed).getHeight()*_pixelSize;
         return lsst::afw::geom::Extent2D(size);

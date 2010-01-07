@@ -175,11 +175,18 @@ class Mosaic(object):
             if labels[i]:
                 ds9.dot(labels[i], self.getBBox(i).getX0(), self.getBBox(i).getY0(), frame=frame)
 
-def drawBBox(bbox, borderWidth=0.0, frame=None, ctype=None):
+def drawBBox(bbox, borderWidth=0.0, origin=None, frame=None, ctype=None):
     """Draw an afwImage::BBox on a ds9 frame with the specified ctype.  Include an extra borderWidth pixels"""
-    ds9.line([(bbox.getX0() - borderWidth, bbox.getY0() - borderWidth),
-              (bbox.getX0() - borderWidth, bbox.getY1() + borderWidth),
-              (bbox.getX1() + borderWidth, bbox.getY1() + borderWidth),
-              (bbox.getX1() + borderWidth, bbox.getY0() - borderWidth),
-              (bbox.getX0() - borderWidth, bbox.getY0() - borderWidth),
+    x0, y0 = bbox.getX0(), bbox.getY0()
+    x1, y1 = bbox.getX1(), bbox.getY1()
+
+    if origin:
+        x0 += origin[0]; x1 += origin[0]
+        y0 += origin[1]; y1 += origin[1]
+
+    ds9.line([(x0 - borderWidth, y0 - borderWidth),
+              (x0 - borderWidth, y1 + borderWidth),
+              (x1 + borderWidth, y1 + borderWidth),
+              (x1 + borderWidth, y0 - borderWidth),
+              (x0 - borderWidth, y0 - borderWidth),
               ], frame=frame, ctype=ctype)
