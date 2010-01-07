@@ -32,7 +32,7 @@ public:
 #endif
     typedef std::vector<Amp::Ptr>::const_iterator const_iterator;
 
-    Ccd(Id id, double pixelSize=0.0) : Detector(id, pixelSize) {}
+    Ccd(Id id, double pixelSize=0.0) : Detector(id, true, pixelSize) {}
     virtual ~Ccd() {}
     //
     // Provide iterators for all the Ccd's Amps

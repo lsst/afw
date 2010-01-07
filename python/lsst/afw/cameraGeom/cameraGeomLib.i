@@ -37,6 +37,11 @@ SWIG_SHARED_PTR_DERIVED(RaftPtr, lsst::afw::cameraGeom::Detector, lsst::afw::cam
     cast_Ccd(lsst::afw::cameraGeom::Detector *detector) {
         return dynamic_cast<lsst::afw::cameraGeom::Ccd *>(detector);
     }
+
+    lsst::afw::cameraGeom::Raft *
+    cast_Raft(lsst::afw::cameraGeom::Detector *detector) {
+        return dynamic_cast<lsst::afw::cameraGeom::Raft *>(detector);
+    }
 %}
 
 

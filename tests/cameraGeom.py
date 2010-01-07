@@ -30,28 +30,29 @@ except NameError:
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def showCcd(ccd, ccdImage, origin=None, frame=None):
+def showCcd(ccd, ccdImage, ccdOrigin=None, frame=None):
     if ccdImage:
         ds9.mtv(ccdImage, frame=frame, title=ccd.getId().getName())
 
     for a in ccd:
         if a.getBiasSec().getWidth():
-            displayUtils.drawBBox(a.getBiasSec(), origin=origin, ctype=ds9.RED, frame=frame)
-        displayUtils.drawBBox(a.getDataSec(), origin=origin, ctype=ds9.BLUE, frame=frame)
-        displayUtils.drawBBox(a.getAllPixels(), origin=origin, borderWidth=0.25, frame=frame)
+            displayUtils.drawBBox(a.getBiasSec(), origin=ccdOrigin, ctype=ds9.RED, frame=frame)
+        displayUtils.drawBBox(a.getDataSec(), origin=ccdOrigin, ctype=ds9.BLUE, frame=frame)
+        displayUtils.drawBBox(a.getAllPixels(), origin=ccdOrigin, borderWidth=0.25, frame=frame)
         # Label each Amp
         ap = a.getAllPixels()
         xc, yc = (ap.getX0() + ap.getX1())//2, (ap.getY0() + ap.getY1())//2
         cen = afwGeom.Point2I.makeXY(xc, yc)
-        if origin:
-            xc += origin[0]
-            yc += origin[1]
+        if ccdOrigin:
+            xc += ccdOrigin[0]
+            yc += ccdOrigin[1]
         ds9.dot(str(ccd.findAmp(cen).getId().getSerial()), xc, yc, frame=frame)
 
     displayUtils.drawBBox(ccd.getAllPixels(), borderWidth=0.49, ctype=ds9.MAGENTA, frame=frame)
 
-def showRaft(raft, raftImage, frame=None):
-    ds9.mtv(raftImage, frame=frame, title=raft.getId().getName())
+def showRaft(raft, raftImage, raftOrigin=None, frame=None):
+    if raftImage:
+        ds9.mtv(raftImage, frame=frame, title=raft.getId().getName())
 
     for dl in raft:
         ccd = cameraGeom.cast_Ccd(dl.getDetector())
@@ -61,7 +62,23 @@ def showRaft(raft, raftImage, frame=None):
         ds9.dot(ccd.getId().getName(),
                 dl.getOrigin()[0] + bbox.getWidth()/2, dl.getOrigin()[1] + bbox.getHeight()/2, frame=frame)
 
-        showCcd(ccd, None, frame=frame, origin=dl.getOrigin())
+        origin = dl.getOrigin()
+        if raftOrigin:
+            origin += afwGeom.Extent2I(raftOrigin)
+            
+        showCcd(ccd, None, frame=frame, ccdOrigin=origin)
+
+def showCamera(camera, cameraImage, frame=None):
+    ds9.mtv(cameraImage, frame=frame, title=camera.getId().getName())
+
+    for dl in camera:
+        raft = cameraGeom.cast_Raft(dl.getDetector())
+        
+        bbox = raft.getAllPixels(True)
+        ds9.dot(raft.getId().getName(),
+                dl.getOrigin()[0] + bbox.getWidth()/2, dl.getOrigin()[1] + bbox.getHeight()/2, frame=frame)
+
+        showRaft(raft, None, frame=frame, raftOrigin=dl.getOrigin())
 
 def trimCcd(ccd, ccdImage):
     ccd.setTrimmed(True)
@@ -165,10 +182,11 @@ class CameraGeomTestCase(unittest.TestCase):
             for Row in range(nRow):
                 ccd = self.makeCcd("R:%d,%d" % (Col, Row))[0]
                 raft.addDetector(Col, Row, ccd)
+
         raftInfo["width"] =  nCol*ccd.getAllPixels(True).getWidth()
         raftInfo["height"] = nRow*ccd.getAllPixels(True).getHeight()
         #
-        # Make an Image of that CCD?
+        # Make an Image of that Raft?
         #
         if makeImage:
             raftImage = afwImage.ImageU(raft.getAllPixels().getDimensions())
@@ -183,10 +201,47 @@ class CameraGeomTestCase(unittest.TestCase):
 
         return raft, raftImage, raftInfo
 
+    def makeCamera(self, cameraName, makeImage=False):
+        """Build a Camera from a set of Ccd"""
+        cameraGeom.Camera = cameraGeom.Raft
+
+        nCol = 2                        # number of columns of CCDs
+        nRow = 1                        # number of rows of CCDs
+
+        cameraInfo = {}
+        cameraInfo["name"] = cameraName
+
+        camera = cameraGeom.Camera(cameraGeom.Id(CameraGeomTestCase.cameraSerial, cameraInfo["name"]))
+        CameraGeomTestCase.cameraSerial += 1
+
+        for Col in range(nCol):
+            for Row in range(nRow):
+                raft = self.makeRaft("C:%d,%d" % (Col, Row))[0]
+                camera.addDetector(Col, Row, raft)
+
+        cameraInfo["width"] =  nCol*raft.getAllPixels(True).getWidth()
+        cameraInfo["height"] = nRow*raft.getAllPixels(True).getHeight()
+        #
+        # Make an Image of that Camera?
+        #
+        if makeImage:
+            cameraImage = afwImage.ImageU(camera.getAllPixels().getDimensions())
+            for dl in camera:
+                det = dl.getDetector();
+                bbox = det.getAllPixels(True)
+                bbox.shift(dl.getOrigin()[0], dl.getOrigin()[1])
+                im = cameraImage.Factory(cameraImage, bbox)
+                im += 1 + (det.getId().getSerial())
+        else:
+            cameraImage = None
+
+        return camera, cameraImage, cameraInfo
+
     def setUp(self):
         CameraGeomTestCase.ampSerial = 0
         CameraGeomTestCase.ccdSerial = 1000
         CameraGeomTestCase.raftSerial = 2000
+        CameraGeomTestCase.cameraSerial = 666
     
     def tearDown(self):
         pass
@@ -213,7 +268,7 @@ class CameraGeomTestCase(unittest.TestCase):
     def testCcd(self):
         """Test if we can build a Ccd out of Amps"""
 
-        print >> sys.stderr, "Skipping testCcd"; return
+        #print >> sys.stderr, "Skipping testCcd"; return
 
         ccd, ccdImage, ccdInfo = self.makeCcd("The Beast", makeImage=display)
         
@@ -221,7 +276,7 @@ class CameraGeomTestCase(unittest.TestCase):
             showCcd(ccd, ccdImage, frame=0)
 
         for i in range(2):
-            self.assertEqual(ccd.getSize()[i], self.pixelSize*ccd.getAllPixels().getDimensions()[i])
+            self.assertEqual(ccd.getSize()[i], self.pixelSize*ccd.getAllPixels(True).getDimensions()[i])
 
         self.assertEqual(ccd.getId().getName(), ccdInfo["name"])
         self.assertEqual(ccd.getAllPixels().getWidth(), ccdInfo["width"])
@@ -317,6 +372,47 @@ class CameraGeomTestCase(unittest.TestCase):
         for i in range(2):
             self.assertEqual(raft.getSize()[i], self.pixelSize*raft.getAllPixels().getDimensions()[i])
         
+    def testCamera(self):
+        """Test if we can build a Ccd out of Amps"""
+
+        #print >> sys.stderr, "Skipping testCamera"; return
+
+        camera, cameraImage, cameraInfo = self.makeCamera("Crusoe", makeImage=True)
+
+        if display:
+            showCamera(camera, cameraImage, frame=3)
+
+        if False:
+            print "Camera Name \"%s\", serial %d,  BBox %s" % \
+                  (camera.getId().getName(), camera.getId().getSerial(), camera.getAllPixels())
+
+            for d in camera:
+                print d.getOrigin(), d.getDetector().getAllPixels()
+
+            print "Camera size =", camera.getSize()
+
+        self.assertEqual(camera.getAllPixels().getWidth(), cameraInfo["width"])
+        self.assertEqual(camera.getAllPixels().getHeight(), cameraInfo["height"])
+
+        for rx, ry, cx, cy, serial in [(0, 0,     0, 0, 7),  (0,   0,   150, 250, 15),
+                                       (600, 300, 0, 0, 55), (600, 300, 150, 250, 63)]:
+            raft = cameraGeom.cast_Raft(camera.findDetector(afwGeom.Point2I.makeXY(rx, ry)).getDetector())
+
+            ccd = cameraGeom.cast_Ccd(raft.findDetector(afwGeom.Point2I.makeXY(cx, cy)).getDetector())
+            if False:
+                print rx, ry, cx, cy, raft.getId().getName(), \
+                      ccd.findAmp(afwGeom.Point2I.makeXY(150, 152), True).getId().getSerial()
+            self.assertEqual(ccd.findAmp(afwGeom.Point2I.makeXY(150, 152), True).getId().getSerial(), serial)
+
+        name = "C:1,0"
+        self.assertEqual(camera.findDetector(cameraGeom.Id(name)).getDetector().getId().getName(), name)
+        #
+        # This test isn't really right as we don't allow for e.g. gaps between Rafts.  Well, the
+        # test is right but getSize() isn't
+        #
+        for i in range(2):
+            self.assertEqual(camera.getSize()[i], self.pixelSize*camera.getAllPixels().getDimensions()[i])
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():

@@ -9,6 +9,17 @@ namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 namespace camGeom = lsst::afw::cameraGeom;
 
+
+/**
+ * Return size in mm of this Detector
+ */
+afwGeom::Extent2D camGeom::Detector::getSize() const {
+    bool const isTrimmed = true;
+    Eigen::Vector2d size;
+    size << getAllPixels(isTrimmed).getWidth()*_pixelSize, getAllPixels(isTrimmed).getHeight()*_pixelSize;
+    return afwGeom::Extent2D(size);
+}
+
 /**
  * Return the pixel position given an offset from the chip centre, in mm
  *

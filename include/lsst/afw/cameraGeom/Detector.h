@@ -23,15 +23,24 @@ public:
     typedef boost::shared_ptr<Detector> Ptr;
     typedef boost::shared_ptr<const Detector> ConstPtr;
 
-    Detector(Id id, double pixelSize=0.0) : _id(id), _isTrimmed(false), _allPixels(), _pixelSize(pixelSize) {
-        _trimmedAllPixels = _allPixels;
+    explicit Detector(
+            Id id,                        //< Detector's Id
+            bool hasTrimmablePixels=false, ///< true iff Detector has pixels that can be trimmed (e.g. a CCD)
+            double pixelSize=0.0
+                     ) :
+        _id(id), _isTrimmed(false), _allPixels(),
+        _hasTrimmablePixels(hasTrimmablePixels), _pixelSize(pixelSize)
+    {
+        if (_hasTrimmablePixels) {
+            _trimmedAllPixels = _allPixels;
+        }
     }
     virtual ~Detector() {}
     /// Return the Detector's Id
     Id getId() const { return _id; }
 
     /// Has the bias/overclock been removed?
-    bool isTrimmed() const { return _isTrimmed; }
+    bool isTrimmed() const { return (_hasTrimmablePixels && _isTrimmed); }
     /// Set the trimmed status of this Detector
     virtual void setTrimmed(bool isTrimmed      ///< True iff the bias/overclock have been removed
                            ) {
@@ -44,24 +53,18 @@ public:
     /// Return the pixel size, mm/pixel
     double getPixelSize() const { return _pixelSize; }
 
-    /// Return size in mm of this Detector
-    virtual lsst::afw::geom::Extent2D getSize() const {
-        bool const isTrimmed = true;
-        Eigen::Vector2d size;
-        size << getAllPixels(isTrimmed).getWidth()*_pixelSize, getAllPixels(isTrimmed).getHeight()*_pixelSize;
-        return lsst::afw::geom::Extent2D(size);
-    }
+    virtual lsst::afw::geom::Extent2D getSize() const;
 
     /// Return Detector's total footprint
     lsst::afw::image::BBox& getAllPixels() {
-        return _isTrimmed ? _trimmedAllPixels : _allPixels;
+        return (_hasTrimmablePixels && _isTrimmed) ? _trimmedAllPixels : _allPixels;
     }
     lsst::afw::image::BBox getAllPixels() const {
         return getAllPixels(_isTrimmed);
     }
     lsst::afw::image::BBox getAllPixels(bool isTrimmed ///< True iff the bias/overclock have been removed
                                        ) const {
-        return isTrimmed ? _trimmedAllPixels : _allPixels;
+        return (_hasTrimmablePixels && isTrimmed) ? _trimmedAllPixels : _allPixels;
     }
     //
     // Geometry of Detector --- i.e. mm not pixels
@@ -80,12 +83,13 @@ public:
     virtual void shift(int dx, int dy);
 protected:
     lsst::afw::image::BBox& getAllTrimmedPixels() {
-        return _trimmedAllPixels;
+        return _hasTrimmablePixels ? _trimmedAllPixels : _allPixels;
     }
 private:
     Id _id;
     bool _isTrimmed;                    // Have all the bias/overclock regions been trimmed?
     lsst::afw::image::BBox _allPixels;  // Bounding box of all the Detector's pixels
+    bool _hasTrimmablePixels;           // true iff Detector has pixels that can be trimmed (e.g. a CCD)
     double _pixelSize;                  // Size of a pixel in mm
     lsst::afw::geom::Point2I _centerPixel; // the pixel defined to be the centre of the Detector
     lsst::afw::geom::Extent2D _size;    // Size in mm of this Detector

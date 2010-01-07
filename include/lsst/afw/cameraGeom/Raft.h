@@ -83,7 +83,7 @@ public:
 #endif
     typedef std::vector<DetectorLayout::Ptr>::const_iterator const_iterator;
 
-    Raft(Id id) : Detector(id), _nDetector(0, 0) {
+    Raft(Id id) : Detector(id, false), _nDetector(0, 0) {
         ;
     }
     virtual ~Raft() {}
