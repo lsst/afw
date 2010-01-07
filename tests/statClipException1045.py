@@ -18,7 +18,7 @@ try:
 except AttributeError:
     math.isnan = lambda x: x != x
 
-class ticket1045TestCase(unittest.TestCase):
+class Ticket1045TestCase(unittest.TestCase):
 
     def setUp(self):
         pass
@@ -102,7 +102,7 @@ def suite():
     utilsTests.init()
 
     suites = []
-    suites += unittest.makeSuite(ticket1045TestCase)
+    suites += unittest.makeSuite(Ticket1045TestCase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
