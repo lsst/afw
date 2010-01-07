@@ -70,7 +70,7 @@ private:
 /**
  * Describe a set of Detectors that are physically closely related (e.g. on the same invar support)
  */
-class Raft {
+class Raft : public Detector {
 public:
     typedef boost::shared_ptr<Raft> Ptr;
     typedef boost::shared_ptr<const Raft> ConstPtr;
@@ -83,7 +83,7 @@ public:
 #endif
     typedef std::vector<DetectorLayout::Ptr>::const_iterator const_iterator;
 
-    Raft(Id id) : _id(id), _allPixels(), _nDetector(0, 0) {
+    Raft(Id id) : Detector(id), _nDetector(0, 0) {
         ;
     }
     virtual ~Raft() {}
@@ -94,23 +94,12 @@ public:
     const_iterator begin() const { return _detectors.begin(); }
     iterator end() { return _detectors.end(); }
     const_iterator end() const { return _detectors.end(); }
-
-    /// Return the Detector's Id
-    Id getId() const { return _id; }
-
-    /// Return Raft's total footprint
-    lsst::afw::image::BBox& getAllPixels() {
-        return _allPixels;
-    }
-    lsst::afw::image::BBox const& getAllPixels() const {
-        return _allPixels;
-    }
     //
     // Geometry of Detector --- i.e. mm not pixels
     //
 
     /// Return size in mm of this Raft
-    lsst::afw::geom::Extent2D getSize() const;
+    virtual lsst::afw::geom::Extent2D getSize() const;
     //
     // Add a Detector to the Raft
     //
@@ -121,8 +110,6 @@ public:
     DetectorLayout::Ptr findDetector(Id const id) const;
     DetectorLayout::Ptr findDetector(lsst::afw::geom::Point2I const& pixel) const;
 private:
-    Id _id;
-    lsst::afw::image::BBox _allPixels;  // Bounding box of all the Raft's pixels
     DetectorSet _detectors;             // The Detectors that make up this Raft
     std::pair<int, int> _nDetector;     // the number of columns/rows of Detectors
 };

@@ -45,7 +45,7 @@ public:
     double getPixelSize() const { return _pixelSize; }
 
     /// Return size in mm of this Detector
-    lsst::afw::geom::Extent2D getSize() const {
+    virtual lsst::afw::geom::Extent2D getSize() const {
         bool const isTrimmed = true;
         Eigen::Vector2d size;
         size << getAllPixels(isTrimmed).getWidth()*_pixelSize, getAllPixels(isTrimmed).getHeight()*_pixelSize;
