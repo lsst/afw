@@ -62,7 +62,7 @@ def showRaft(raft, raftImage, raftOrigin=None, frame=None):
         ccd = cameraGeom.cast_Ccd(dl.getDetector())
         ccd.setTrimmed(True)
         
-        bbox = ccd.getAllPixels(True)
+        bbox = ccd.getAllPixels()
         origin = dl.getOrigin()
         if raftOrigin:
             origin += afwGeom.Extent2I(raftOrigin)
@@ -78,7 +78,7 @@ def showCamera(camera, cameraImage, frame=None):
     for dl in camera:
         raft = cameraGeom.cast_Raft(dl.getDetector())
         
-        bbox = raft.getAllPixels(True)
+        bbox = raft.getAllPixels()
         ds9.dot(raft.getId().getName(),
                 dl.getOrigin()[0] + bbox.getWidth()/2, dl.getOrigin()[1] + bbox.getHeight()/2, frame=frame)
 
@@ -104,8 +104,6 @@ def trimCcd(ccd, ccdImage):
 
 class CameraGeomTestCase(unittest.TestCase):
     """A test case for camera geometry"""
-
-    ampSerial = ccdSerial = raftSerial = 0
 
     def assertEqualPoint(self, lhs, rhs):
         """Workaround the Point2D logical operator returning a Point not a bool"""
@@ -233,11 +231,11 @@ class CameraGeomTestCase(unittest.TestCase):
         #
         # Make an Image of that Raft?
         #
-        if makeImage:
+        if 0 and makeImage:
             raftImage = afwImage.ImageU(raft.getAllPixels().getDimensions())
             for dl in raft:
                 det = dl.getDetector();
-                bbox = det.getAllPixels(True)
+                bbox = det.getAllPixels().clone()
                 bbox.shift(dl.getOrigin()[0], dl.getOrigin()[1])
                 im = raftImage.Factory(raftImage, bbox)
                 im += 1 + (det.getId().getSerial())
@@ -257,7 +255,6 @@ class CameraGeomTestCase(unittest.TestCase):
         if not cameraId:
             cameraId = cameraGeom.Id(cameraPol.get("serial"), cameraPol.get("name"))
         camera = cameraGeom.Camera(cameraId)
-        CameraGeomTestCase.cameraSerial += 1
 
         for ccdPol in cameraPol.getArray("Raft"):
             Col = ccdPol.get("iCol")
@@ -269,8 +266,8 @@ class CameraGeomTestCase(unittest.TestCase):
 
         cameraInfo = {}
         cameraInfo["name"] = camera.getId().getName()
-        cameraInfo["width"] =  nCol*raft.getAllPixels(True).getWidth()
-        cameraInfo["height"] = nRow*raft.getAllPixels(True).getHeight()
+        cameraInfo["width"] =  nCol*raft.getAllPixels().getWidth()
+        cameraInfo["height"] = nRow*raft.getAllPixels().getHeight()
         #
         # Make an Image of that Camera?
         #
@@ -278,7 +275,7 @@ class CameraGeomTestCase(unittest.TestCase):
             cameraImage = afwImage.ImageU(camera.getAllPixels().getDimensions())
             for dl in camera:
                 det = dl.getDetector();
-                bbox = det.getAllPixels(True)
+                bbox = det.getAllPixels().clone()
                 bbox.shift(dl.getOrigin()[0], dl.getOrigin()[1])
                 im = cameraImage.Factory(cameraImage, bbox)
                 im += 1 + (det.getId().getSerial())
@@ -289,9 +286,6 @@ class CameraGeomTestCase(unittest.TestCase):
 
     def setUp(self):
         CameraGeomTestCase.ampSerial = 0
-        CameraGeomTestCase.ccdSerial = 1000
-        CameraGeomTestCase.raftSerial = 2000
-        CameraGeomTestCase.cameraSerial = 666
 
         policyFile = pexPolicy.DefaultPolicyFile("afw", "TestCameraGeomDictionary.paf", "tests")
         defPolicy = pexPolicy.Policy.createPolicy(policyFile, policyFile.getRepositoryPath(), True)
