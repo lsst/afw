@@ -1,0 +1,100 @@
+#<?cfg paf policy ?>
+#
+Raft: {
+    nCol: 2                             # number of columns of CCDs
+    nRow: 4                             # number of rows of CCDs
+    #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    Ccd: {
+        serial: 1234                    # Ccd's serial number
+        nCol: 2                         # number of columns of amps; 2 == Left and Right
+        nRow: 4                         # number of rows of amps
+        Amp: {
+            iCol: 0                     # X-location of Amp in CCD in range(nCol) 
+            iRow: 0                     # Y-location of Amp in CCD in range(nRow) 
+            readoutCorner: LLC          # location of first pixel read
+            height: 50                  # number of physical rows
+            width: 100                  # number of physical columns
+            extended: 10                # length of extended register
+            preRows: 2                  # extra rows before first real serial transfer
+            overclockH: 15              # number of serial overclock pixels
+            overclockV: 5               # number of parallel overclock pixels
+        }
+        Amp: {
+            iCol: 1                     # X-location of Amp in CCD in range(nCol) 
+            iRow: 0                     # Y-location of Amp in CCD in range(nRow) 
+            readoutCorner: LRC          # location of first pixel read
+            height: 50                  # number of physical rows
+            width: 100                  # number of physical columns
+            extended: 10                # length of extended register
+            preRows: 2                  # extra rows before first real serial transfer
+            overclockH: 15              # number of serial overclock pixels
+            overclockV: 5               # number of parallel overclock pixels
+        }
+        Amp: {
+            iCol: 0                     # X-location of Amp in CCD in range(nCol) 
+            iRow: 1                     # Y-location of Amp in CCD in range(nRow) 
+            readoutCorner: LLC          # location of first pixel read
+            height: 50                  # number of physical rows
+            width: 100                  # number of physical columns
+            extended: 10                # length of extended register
+            preRows: 2                  # extra rows before first real serial transfer
+            overclockH: 15              # number of serial overclock pixels
+            overclockV: 5               # number of parallel overclock pixels
+        }
+        Amp: {
+            iCol: 1                     # X-location of Amp in CCD in range(nCol) 
+            iRow: 1                     # Y-location of Amp in CCD in range(nRow) 
+            readoutCorner: LRC          # location of first pixel read
+            height: 50                  # number of physical rows
+            width: 100                  # number of physical columns
+            extended: 10                # length of extended register
+            preRows: 2                  # extra rows before first real serial transfer
+            overclockH: 15              # number of serial overclock pixels
+            overclockV: 5               # number of parallel overclock pixels
+        }
+        Amp: {
+            iCol: 0                     # X-location of Amp in CCD in range(nCol) 
+            iRow: 2                     # Y-location of Amp in CCD in range(nRow) 
+            readoutCorner: LLC          # location of first pixel read
+            height: 50                  # number of physical rows
+            width: 100                  # number of physical columns
+            extended: 10                # length of extended register
+            preRows: 2                  # extra rows before first real serial transfer
+            overclockH: 15              # number of serial overclock pixels
+            overclockV: 5               # number of parallel overclock pixels
+        }
+        Amp: {
+            iCol: 1                     # X-location of Amp in CCD in range(nCol) 
+            iRow: 2                     # Y-location of Amp in CCD in range(nRow) 
+            readoutCorner: LRC          # location of first pixel read
+            height: 50                  # number of physical rows
+            width: 100                  # number of physical columns
+            extended: 10                # length of extended register
+            preRows: 2                  # extra rows before first real serial transfer
+            overclockH: 15              # number of serial overclock pixels
+            overclockV: 5               # number of parallel overclock pixels
+        }
+        Amp: {
+            iCol: 0                     # X-location of Amp in CCD in range(nCol) 
+            iRow: 3                     # Y-location of Amp in CCD in range(nRow) 
+            readoutCorner: LLC          # location of first pixel read
+            height: 50                  # number of physical rows
+            width: 100                  # number of physical columns
+            extended: 10                # length of extended register
+            preRows: 2                  # extra rows before first real serial transfer
+            overclockH: 15              # number of serial overclock pixels
+            overclockV: 5               # number of parallel overclock pixels
+        }
+        Amp: {
+            iCol: 1                     # X-location of Amp in CCD in range(nCol) 
+            iRow: 3                     # Y-location of Amp in CCD in range(nRow) 
+            readoutCorner: LRC          # location of first pixel read
+            height: 50                  # number of physical rows
+            width: 100                  # number of physical columns
+            extended: 10                # length of extended register
+            preRows: 2                  # extra rows before first real serial transfer
+            overclockH: 15              # number of serial overclock pixels
+            overclockV: 5               # number of parallel overclock pixels
+        }
+    }
+}

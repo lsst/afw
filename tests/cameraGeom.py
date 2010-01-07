@@ -15,6 +15,7 @@ import unittest
 
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions as pexExcept
+import lsst.pex.policy as pexPolicy
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 #import lsst.afw.math.mathLib as afwMath
@@ -203,7 +204,7 @@ class CameraGeomTestCase(unittest.TestCase):
 
     def makeCamera(self, cameraName, makeImage=False):
         """Build a Camera from a set of Ccd"""
-        cameraGeom.Camera = cameraGeom.Raft
+        cameraGeom.Camera = cameraGeom.DetectorMosaic
 
         nCol = 2                        # number of columns of CCDs
         nRow = 1                        # number of rows of CCDs
@@ -245,6 +246,20 @@ class CameraGeomTestCase(unittest.TestCase):
     
     def tearDown(self):
         pass
+
+    def testDictionary(self):
+        """Test the camera geometry dictionary"""
+        policyFile = pexPolicy.DefaultPolicyFile("afw", "TestCameraGeomDictionary.paf", "tests")
+        defPolicy = pexPolicy.Policy.createPolicy(policyFile, policyFile.getRepositoryPath(), True)
+
+        polFile = pexPolicy.DefaultPolicyFile("afw", "TestCameraGeom.paf", "tests")
+        self.policy = pexPolicy.Policy.createPolicy(polFile)
+        self.policy.mergeDefaults(defPolicy.getDictionary())
+
+        for r in self.policy.getArray("Raft"):
+            for c in r.getArray("Ccd"):
+                for a in c.getArray("Amp"):
+                    print a
 
     def testId(self):
         """Test cameraGeom.Id"""
