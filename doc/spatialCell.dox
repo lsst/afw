@@ -2,9 +2,9 @@ namespace lsst { namespace afw { namespace math {
 /**
  \page SpatialCellSetExample Example of SpatialCellSet
 
- \dontinclude SpatialCellExample.cc
+ \dontinclude spatialCellExample.cc
 
-Demonstrate the use of SpatialCellSet%s; the code's in \link SpatialCellExample.cc\endlink.
+Demonstrate the use of SpatialCellSet%s; the code's in \link spatialCellExample.cc\endlink.
 
 Start by including needed headers, and declaring namespace aliases and a routine \c readImage
 \until std::pair
@@ -116,8 +116,8 @@ Run an object detector
 And return the desired data
 \until }
 
-\example SpatialCellExample.cc
-\example SpatialCellExample.py
+\example spatialCellExample.cc
+\example spatialCellExample.py
 \example testSpatialCell.h
 \example testSpatialCell.cc
  */

@@ -4,15 +4,15 @@ namespace lsst { namespace afw { namespace image {
 
 (Return to \ref secImage)
 
-This code is in \link Image_1.cc\endlink.
+This code is in \link image1.cc\endlink.
 Note that \link maskedImageIterators MaskedImage iterators\endlink work almost identically,
 the main difference being how pixel values are set.
 
 If you need access to nearby pixels, see the \link imageLocators Image locator\endlink tutorial.
 
-\include Image_1.cc
+\include image1.cc
 
-\example Image_1.cc
+\example image1.cc
  */
 
 /**
@@ -20,15 +20,15 @@ If you need access to nearby pixels, see the \link imageLocators Image locator\e
 
 (Return to \ref secImage)
 
-This code is in \link MaskedImage_2.cc\endlink.
+This code is in \link maskedImage2.cc\endlink.
 Note that \link imageIterators Image iterators\endlink work almost identically,
 the main difference being how pixel values are set.
 
 If you need access to nearby pixels, see the \link maskedImageLocators MaskedImage locator\endlink tutorial.
 
-\include MaskedImage_1.cc
+\include maskedImage1.cc
 
-\example MaskedImage_1.cc
+\example maskedImage1.cc
  */
 }}}
 
@@ -48,8 +48,8 @@ Let's consider the problem of smoothing with a
 2 4 2
 1 2 1
 \endcode
-kernel (the code's in \link Image_2.cc\endlink):
-\dontinclude Image_2.cc
+kernel (the code's in \link image2.cc\endlink):
+\dontinclude image2.cc
 
 Start by including Image.h defining a namespace for clarity:
 \until main
@@ -100,7 +100,7 @@ we called the iterator \c xy_x_iterator, not \c x_iterator, for consistency with
 Finally write some output files and close out \c main():
 \until }
 
-\example Image_2.cc
+\example image2.cc
  */
 
 /**
@@ -122,8 +122,8 @@ Let's consider the problem of smoothing with a
 2 4 2
 1 2 1
 \endcode
-kernel (the code's in \link MaskedImage_2.cc\endlink):
-\dontinclude MaskedImage_2.cc
+kernel (the code's in \link maskedImage2.cc\endlink):
+\dontinclude maskedImage2.cc
 
 Start by including Image.h defining a namespace for clarity:
 \until main
@@ -176,6 +176,6 @@ move the underlying \c xy_locator.
 Finally write some output files and close out \c main():
 \until }
 
-\example MaskedImage_2.cc
+\example maskedImage2.cc
  */
 }}}

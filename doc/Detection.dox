@@ -6,10 +6,10 @@ namespace lsst { namespace afw { namespace detection {
 /**
  \page FootprintFunctorsExample FootprintFunctors
 
- \dontinclude FootprintFunctor.cc
+ \dontinclude footprintFunctor.cc
 
 Demonstrate the use of FootprintFunctor%s to work with Footprint%s; the
-code's in \link FootprintFunctor.cc\endlink.
+code's in \link footprintFunctor.cc\endlink.
 
 Start by including needed headers and declaring namespace aliases
 \until namespace image
@@ -49,6 +49,6 @@ Just to show you this in action, let's make a MaskedImage and check its bits
 \until }
 Running the example should print \c 0x7.
 
-\example FootprintFunctor.cc
+\example footprintFunctor.cc
  */
 }}}

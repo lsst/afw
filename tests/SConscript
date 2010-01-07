@@ -8,7 +8,7 @@ import lsst.daf.persistence
 import lsst.SConsUtils as scons # scons 1.17 supports "env.ProductDir", but for now use scons.ProductDir
 
 for fileName in glob.glob("*.cc"):
-    if fileName == "MaskIO_2.cc":       # This test appears to be invalid
+    if fileName == "maskIo2.cc":       # This test appears to be invalid
         continue
 
     if re.search(r"_wrap.cc", fileName): # not designed to be independently built!
@@ -39,10 +39,10 @@ else:
     # set up arguments for C++ tests
     inFile = os.path.join(dataDir, "871034p_1_MI")
     testArgs = dict(
-        MaskedImage_1 =   "%s %s file:MaskedImage_1_output_1 file:MaskedImage_1_output_2" % (inFile, inFile),
-        MaskedImageIO_1 = inFile,
-        MaskedImageIO_2 = inFile,
-        MaskIO_1 =         "%s_msk.fits" % inFile,
+        maskedImage1 =   "%s %s file:maskedImage1_output_1 file:maskedImage1_output_2" % (inFile, inFile),
+        maskedImageIo1 = inFile,
+        maskedImageIo2 = inFile,
+        maskIo1 =         "%s_msk.fits" % inFile,
     )
 
     ignoreList=["testLib.py", "testEigenLib.py"]
