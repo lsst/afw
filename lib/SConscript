@@ -1,0 +1,9 @@
+# -*- python -*-
+import glob
+
+Import('env')
+
+env.SharedLibrary(
+    'afw', glob.glob("../src/*/*.cc") + glob.glob("../src/*/*/*.cc"),
+    LIBS=filter(lambda x: x != "afw", env.getlibs("afw"))
+)
