@@ -30,11 +30,23 @@ void print(afwImage::Image<PixelT>& src, const std::string& title = "") {
 
 /************************************************************************************************************/
 
-int main() {
+int main(int argc, char *argv[]) {
     afwImage::DecoratedImage<float> dimg(10, 6);
     afwImage::Image<float> img(*dimg.getImage());
 
-    const char *file_u16 = "/u/rhl/LSST/gil/src/Fits/small.fits";
+    char *file_u16;
+    if (argc == 2) {
+        file_u16 = argv[1];
+    } else {
+        char *afwdata = getenv("AFWDATA_DIR");
+        if (afwdata == NULL) {
+            fprintf(stderr, "AFWDATA_DIR not set.  Provide fits file as argument or setup afwdata.\n");
+            exit(EXIT_FAILURE);
+        } else {
+            file_u16 = strcat(afwdata, "/small_img.fits");
+        }
+    }
+    printf("Running with: %s\n", file_u16);
     afwImage::DecoratedImage<float> dimg2(file_u16);
 
     return 0;
