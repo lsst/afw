@@ -30,14 +30,25 @@ int main(int argc, char **argv) {
     const unsigned int MaxKernelSize = 15;
     const unsigned int DeltaKernelSize = 5;
 
+    std::string mimg;
     if (argc < 2) {
-        std::cout << "Usage: timeSpatiallyVaryingConvolve fitsFile [nIter]" << std::endl;
-        std::cout << "fitsFile excludes the \"_img.fits\" suffix" << std::endl;
-        std::cout << "nIter (default " << DefNIter <<
+        std::string afwdata = getenv("AFWDATA_DIR");
+        if (afwdata.empty()) {
+            std::cout << "Usage: timeSpatiallyVaryingConvolve fitsFile [nIter]" << std::endl;
+            std::cout << "fitsFile excludes the \"_img.fits\" suffix" << std::endl;
+            std::cout << "nIter (default " << DefNIter <<
             ") is the number of iterations per kernel size" << std::endl;
-        std::cout << "Kernel size ranges from " << MinKernelSize << " to " << MaxKernelSize
+            std::cout << "Kernel size ranges from " << MinKernelSize << " to " << MaxKernelSize
             << " in steps of " << DeltaKernelSize << " pixels on a side" << std::endl;
-        return 1;
+            std::cerr << "I can take a default file from AFWDATA_DIR, but it's not defined." << std::endl;
+            std::cerr << "Is afwdata set up?\n" << std::endl;
+            exit(EXIT_FAILURE);
+        } else {
+            mimg = afwdata + "/small_MI";
+            std::cerr << "Using " << mimg << std::endl;
+        }
+    } else {
+        mimg = std::string(argv[1]);
     }
     
     unsigned int nIter = DefNIter;
@@ -46,7 +57,7 @@ int main(int argc, char **argv) {
     }
     
     // read in fits file
-    afwImage::MaskedImage<imageType> mImage(argv[1]);
+    afwImage::MaskedImage<imageType> mImage(mimg);
     
     std::cout << "Image is " << mImage.getWidth() << " by " << mImage.getHeight() << std::endl;
     

@@ -35,7 +35,22 @@ using lsst::daf::base::PropertySet;
 int main(int argc, char **argv) {
     typedef double Pixel;
 
-    const std::string inFilename(argv[1]);
+    std::string mimg;
+    if (argc < 2) {
+        std::string afwdata = getenv("AFWDATA_DIR");
+        if (afwdata.empty()) {
+            std::cerr << "I can take a default file from AFWDATA_DIR, but it's not defined." << std::endl;
+            std::cerr << "Is afwdata set up?\n" << std::endl;
+            exit(EXIT_FAILURE);
+        } else {
+            mimg = afwdata + "/small_MI";
+            std::cerr << "Using " << mimg << std::endl;
+        }
+    } else {
+        mimg = std::string(argv[1]);
+    }
+
+    const std::string inFilename(mimg);
     
     std::cout << "Opening file " << inFilename << std::endl;
 

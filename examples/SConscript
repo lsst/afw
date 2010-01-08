@@ -67,4 +67,5 @@ env.CheckSwig("python", ilang="c++",
 testSpatialCellLib = env.LoadableModuleIncomplete("_testSpatialCellLib",
                                                   ["testSpatialCellLib.i", "testSpatialCell.cc"],
                                                   LIBS=env.getlibs("afw"))
+
 env.Program(["spatialCellExample.cc", "testSpatialCell.cc"], LIBS=env.getlibs("afw"))

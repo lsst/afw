@@ -34,19 +34,20 @@ int main(int argc, char *argv[]) {
     afwImage::DecoratedImage<float> dimg(10, 6);
     afwImage::Image<float> img(*dimg.getImage());
 
-    char *file_u16;
+    std::string file_u16;
     if (argc == 2) {
-        file_u16 = argv[1];
+        file_u16 = std::string(argv[1]);
     } else {
-        char *afwdata = getenv("AFWDATA_DIR");
-        if (afwdata == NULL) {
-            fprintf(stderr, "AFWDATA_DIR not set.  Provide fits file as argument or setup afwdata.\n");
+        std::string afwdata = getenv("AFWDATA_DIR");
+        if (afwdata.empty()) {
+            std::cerr << "AFWDATA_DIR not set.  Provide fits file as argument or setup afwdata.\n"
+                      << std::endl;
             exit(EXIT_FAILURE);
         } else {
-            file_u16 = strcat(afwdata, "/small_img.fits");
+            file_u16 = afwdata + "/small_img.fits";
         }
     }
-    printf("Running with: %s\n", file_u16);
+    std::cout << "Running with: " <<  file_u16 << std::endl;
     afwImage::DecoratedImage<float> dimg2(file_u16);
 
     return 0;

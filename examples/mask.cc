@@ -59,10 +59,21 @@ int main() {
         std::fill(img.row_begin(r), img.row_end(r), 100*(1 + r));
     }
 
-    afwImage::Mask<afwImage::MaskPixel> msk("/u/rhl/LSST/DMS/afwdata/small_MI_msk.fits");
+    
+    std::string afwdata(getenv("AFWDATA_DIR"));
+    std::string smallMaskFile;
+    if (afwdata.empty()) {
+        std::cerr << "AFWDATA_DIR not set." << std::endl;
+        exit(EXIT_FAILURE);
+    } else {
+        smallMaskFile = afwdata + "/small_MI_msk.fits";
+    }
+
+    
+    afwImage::Mask<afwImage::MaskPixel> msk(smallMaskFile);
     printf("msk(0,0) = %d\n", msk(0,0));
     
-    afwImage::DecoratedImage<unsigned short> dimg("/u/rhl/LSST/DMS/afwdata/small_MI_msk.fits");
+    afwImage::DecoratedImage<unsigned short> dimg(smallMaskFile);
     //Image<unsigned short>::Ptr img = dimg.getImage();
     printf("dimg(0,0) = %d\n", (*(dimg.getImage()))(0,0));
 
