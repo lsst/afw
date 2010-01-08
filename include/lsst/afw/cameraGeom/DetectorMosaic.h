@@ -97,8 +97,6 @@ public:
     //
     // Geometry of Detector --- i.e. mm not pixels
     //
-
-    /// Return size in mm of this DetectorMosaic
     virtual lsst::afw::geom::Extent2D getSize() const;
     //
     // Add a Detector to the DetectorMosaic

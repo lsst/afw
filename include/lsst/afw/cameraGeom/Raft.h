@@ -26,6 +26,8 @@ public:
 
     Raft(Id id) : DetectorMosaic(id) {}
     virtual ~Raft() {}
+
+    double getPixelSize() const;
 };
 
 }}}
