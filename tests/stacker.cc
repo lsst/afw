@@ -49,15 +49,15 @@ BOOST_AUTO_TEST_CASE(MeanStack) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a 
 
     // get the known values
     float knownMean = 0.0;
-    float knownWMean = 0.0;
+    float knownWeightMean = 0.0;
     float wsum = 0.0;
     for (int iImg = 0; iImg < nImg; ++iImg) {
         knownMean += iImg;
-        knownWMean += wvec[iImg]*iImg;
+        knownWeightMean += wvec[iImg]*iImg;
         wsum += wvec[iImg];
     }
     knownMean /= nImg;
-    knownWMean /= wsum;
+    knownWeightMean /= wsum;
 
     
     // ====================================================
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(MeanStack) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a 
     ImageF::Ptr imgStack = math::statisticsStack<float>(imgList, math::MEAN);
     ImageF::Ptr wimgStack = math::statisticsStack<float>(imgList, math::MEAN, sctrl, wvec);
     BOOST_CHECK_EQUAL((*imgStack)(nX/2, nY/2), knownMean);
-    BOOST_CHECK_EQUAL((*wimgStack)(nX/2, nY/2), knownWMean);
+    BOOST_CHECK_EQUAL((*wimgStack)(nX/2, nY/2), knownWeightMean);
 
 
     // ====================================================
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(MeanStack) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a 
     MImageF::Ptr mimgStack = math::statisticsStack<float>(mimgList, math::MEAN);
     MImageF::Ptr wmimgStack = math::statisticsStack<float>(mimgList, math::MEAN, sctrl, wvec);
     BOOST_CHECK_EQUAL((*(mimgStack->getImage()))(nX/2, nY/2), knownMean);
-    BOOST_CHECK_EQUAL((*(wmimgStack->getImage()))(nX/2, nY/2), knownWMean);
+    BOOST_CHECK_EQUAL((*(wmimgStack->getImage()))(nX/2, nY/2), knownWeightMean);
     
 
     // ====================================================
@@ -99,6 +99,6 @@ BOOST_AUTO_TEST_CASE(MeanStack) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a 
     VecFPtr vecStack = math::statisticsStack<float>(vecList, math::MEAN);
     VecFPtr wvecStack = math::statisticsStack<float>(vecList, math::MEAN, sctrl, wvec);
     BOOST_CHECK_EQUAL((*vecStack)[nX*nY/2], knownMean);
-    BOOST_CHECK_EQUAL((*wvecStack)[nX*nY/2], knownWMean);
+    BOOST_CHECK_EQUAL((*wvecStack)[nX*nY/2], knownWeightMean);
 
 }

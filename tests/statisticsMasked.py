@@ -14,7 +14,6 @@ import unittest
 import numpy
 
 import lsst.utils.tests as utilsTests
-import lsst.pex.exceptions
 import lsst.afw.image.imageLib as afwImage
 import lsst.afw.math as afwMath
 

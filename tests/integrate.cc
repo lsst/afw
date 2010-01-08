@@ -86,8 +86,8 @@ private:
 
 
 double parabola2d(double const x, double const y) {
-    double const K = 100.0, KX = 1.0, KY = 1.0;
-    return K - KX*x*x - KY*y*y;
+    double const k = 100.0, kX = 1.0, kY = 1.0;
+    return k - kX*x*x - kY*y*y;
 }
 
 /**

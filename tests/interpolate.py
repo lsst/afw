@@ -13,7 +13,6 @@ import pdb  # we may want to say pdb.set_trace()
 import unittest
 
 import lsst.utils.tests as utilsTests
-import lsst.pex.exceptions
 import lsst.afw.math as afwMath
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

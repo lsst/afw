@@ -266,9 +266,9 @@ math::Statistics::SumReturn math::Statistics::_sumImage(ImageT const &img,
         for (typename ImageT::x_iterator ptr = img.row_begin(iY), end = ptr + img.getWidth();
              ptr != end; ++ptr, ++mptr, ++vptr) {
             
-            if ( IsFinite()(*ptr) &&
-                 !(*mptr & _sctrl.getAndMask()) &&
-                 InClipRange()(*ptr, meanCrude, cliplimit) ) { // clip
+            if (IsFinite()(*ptr) &&
+                !(*mptr & _sctrl.getAndMask()) &&
+                InClipRange()(*ptr, meanCrude, cliplimit) ) { // clip
                 
                 double const delta = (*ptr - meanCrude);
 

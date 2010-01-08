@@ -19,7 +19,7 @@ namespace math = lsst::afw::math;
 
 /** =========================================================================
  * define a simple 1D function as a functor to be integrated.
- * I've chosen a parabola here: f(x) = K + kx*x*x
+ * I've chosen a parabola here: f(x) = k + kx*x*x
  * as it's got an easy-to-check analytic answer.
  * 
  * @note We *have* to inherit from unary_function<>
@@ -29,28 +29,28 @@ class Parab1D : public std::unary_function<IntegrandT, IntegrandT>  {
 public:
     
     // declare coefficients at instantiation
-    Parab1D(double const K, double const kx) : _K(K), _kx(kx) {}
+    Parab1D(double const k, double const kx) : _k(k), _kx(kx) {}
     
     // operator() must be overloaded to return the evaluation of the function
     // ** This is the function to be integrated **
     IntegrandT operator()(IntegrandT const x) const {
-        return (_K - _kx*x*x);
+        return (_k - _kx*x*x);
     }
 
     // for this example we have an analytic answer to check
     IntegrandT getAnalyticArea(IntegrandT const x1, IntegrandT const x2) {
-        return _K*(x2 - x1) - _kx*(x2*x2*x2 - x1*x1*x1)/3.0;
+        return _k*(x2 - x1) - _kx*(x2*x2*x2 - x1*x1*x1)/3.0;
     }
     
 private:
-    double _K, _kx;
+    double _k, _kx;
 };
 
 
 
 /** =========================================================================
  * define a simple 2D function as a functor to be integrated.
- * I've chosen a 2D paraboloid: f(x) = K - kx*x*x - ky*y*y
+ * I've chosen a 2D paraboloid: f(x) = k - kx*x*x - ky*y*y
  * as it's got an easy-to-check analytic answer.
  *
  * @note we *have* to inherit from binary_function<>
@@ -59,13 +59,13 @@ template<typename IntegrandT>
 class Parab2D : public std::binary_function<IntegrandT, IntegrandT, IntegrandT> {
 public:
     // declare coefficients at instantiation.
-    Parab2D(IntegrandT const K, IntegrandT const kx, IntegrandT const ky) : _K(K), _kx(kx), _ky(ky) {}
+    Parab2D(IntegrandT const k, IntegrandT const kx, IntegrandT const ky) : _k(k), _kx(kx), _ky(ky) {}
     
     // operator() must be overloaded to return the evaluation of the function
     // ** This is the function to be integrated **
     // @note *need*  ... operator()() __const__ {
     IntegrandT operator()(IntegrandT const x, IntegrandT const y) const {
-        return (_K - _kx*x*x - _ky*y*y);
+        return (_k - _kx*x*x - _ky*y*y);
     }
 
     // for this example we have an analytic answer to check
@@ -73,11 +73,11 @@ public:
                                  IntegrandT const y1, IntegrandT const y2) {
         IntegrandT const xw = x2 - x1;
         IntegrandT const yw = y2 - y1;
-        return _K*xw*yw - _kx*(x2*x2*x2 - x1*x1*x1)*yw/3.0 - _ky*(y2*y2*y2 - y1*y1*y1)*xw/3.0;
+        return _k*xw*yw - _kx*(x2*x2*x2 - x1*x1*x1)*yw/3.0 - _ky*(y2*y2*y2 - y1*y1*y1)*xw/3.0;
     }
 
 private:
-    IntegrandT _K, _kx, _ky;
+    IntegrandT _k, _kx, _ky;
 };
 
 
@@ -89,13 +89,13 @@ private:
 
 // the 1D parabola
 double parabola(double const x) {
-    double const K = 100.0, kx = 1.0;
-    return K - kx*x*x;
+    double const k = 100.0, kx = 1.0;
+    return k - kx*x*x;
 }
 // the 2D paraboloid
 double parabola2d(double const x, double const y) {
-    double const K = 100.0, kx = 1.0, ky = 1.0;
-    return K - kx*x*x - ky*y*y;
+    double const k = 100.0, kx = 1.0, ky = 1.0;
+    return k - kx*x*x - ky*y*y;
 }
 
 
@@ -109,14 +109,14 @@ int main() {
     // set limits of integration
     double const x1 = 0, x2 = 9, y1 = 0, y2 = 9;
     // set the coefficients for the quadratic equation
-    // (parabola f(x) = K + kx*x*x + ky*y*y)
-    double const K = 100, kx = 1.0, ky = 1.0;
+    // (parabola f(x) = k + kx*x*x + ky*y*y)
+    double const k = 100, kx = 1.0, ky = 1.0;
 
     
     // ==========   1D integrator ==========
 
     // instantiate a Parab1D Functor
-    Parab1D<double> parab1d(K, kx);
+    Parab1D<double> parab1d(k, kx);
     
     // integrate the area under the curve, and then get the analytic result
     double const parab_area_integrate  = math::integrate(parab1d, x1, x2);
@@ -134,7 +134,7 @@ int main() {
     // ==========  2D integrator ==========
 
     // instantiate a Parab2D
-    Parab2D<double> parab2d(K, kx, ky);
+    Parab2D<double> parab2d(k, kx, ky);
 
     // integrate the volume under the function, and then get the analytic result
     double const parab_volume_integrate  = math::integrate2d(parab2d, x1, x2, y1, y2);
