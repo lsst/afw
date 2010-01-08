@@ -6,4 +6,4 @@
 
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
-namespace camGeom = lsst::afw::cameraGeom;
+namespace cameraGeom = lsst::afw::cameraGeom;

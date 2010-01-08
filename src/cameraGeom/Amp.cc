@@ -7,10 +7,10 @@
 
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
-namespace camGeom = lsst::afw::cameraGeom;
+namespace cameraGeom = lsst::afw::cameraGeom;
 
 
-camGeom::ElectronicParams::ElectronicParams(
+cameraGeom::ElectronicParams::ElectronicParams(
         float gain,                     ///< Amplifier's gain
         float readNoise,                ///< Amplifier's read noise (DN)
         float saturationLevel           ///< Amplifier's saturation level. N.b. float in case we scale data
@@ -20,12 +20,12 @@ camGeom::ElectronicParams::ElectronicParams(
 
 /************************************************************************************************************/
 
-camGeom::Amp::Amp(
-        camGeom::Id id,                            ///< The amplifier's ID
+cameraGeom::Amp::Amp(
+        cameraGeom::Id id,                            ///< The amplifier's ID
         afwImage::BBox const& allPixels,           ///< Bounding box of the pixels read off this amplifier
         afwImage::BBox const& biasSec,             ///< Bounding box of amplifier's bias section
         afwImage::BBox const& dataSec,             ///< Bounding box of amplifier's data section
-        camGeom::Amp::ReadoutCorner readoutCorner, ///< location of first pixel read
+        cameraGeom::Amp::ReadoutCorner readoutCorner, ///< location of first pixel read
         ElectronicParams::Ptr eParams              ///< electronic properties of Amp
                  )
         : _id(id), _isTrimmed(false), _allPixels(allPixels),
@@ -36,7 +36,7 @@ camGeom::Amp::Amp(
 }
 
 /// Offset an Amp by the specified amount
-void camGeom::Amp::shift(int dx,        ///< How much to offset in x (pixels)
+void cameraGeom::Amp::shift(int dx,        ///< How much to offset in x (pixels)
                          int dy         ///< How much to offset in y (pixels)
                         ) {
     _allPixels.shift(dx, dy);

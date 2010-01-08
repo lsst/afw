@@ -6,13 +6,13 @@
 
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
-namespace camGeom = lsst::afw::cameraGeom;
+namespace cameraGeom = lsst::afw::cameraGeom;
 
 /************************************************************************************************************/
 /**
  * Return a DetectorMosaic's size in mm
  */
-afwGeom::Extent2D camGeom::DetectorMosaic::getSize() const {
+afwGeom::Extent2D cameraGeom::DetectorMosaic::getSize() const {
     double xsize = 0, ysize = 0;
     if (begin() != end()) {         // no Detectors
         afwGeom::Extent2D detectorSize = (*begin())->getDetector()->getSize();
@@ -31,11 +31,11 @@ afwGeom::Extent2D camGeom::DetectorMosaic::getSize() const {
  *  The \c iX and \c iY values are the 0-indexed position of the Detector in the DetectorMosaic; e.g. (0, 2)
  * for the top left Detector in a 3x3 detectormosaic
  */
-void camGeom::DetectorMosaic::addDetector(
+void cameraGeom::DetectorMosaic::addDetector(
         int const iX,                   ///< x-index of this Detector
         int const iY,                   ///< y-index of this Detector
-        camGeom::Detector::Ptr det      ///< The detector to add to the DetectorMosaic's manifest.
-                               )
+        cameraGeom::Detector::Ptr det   ///< The detector to add to the DetectorMosaic's manifest.
+                                            )
 {
     bool const isTrimmed = true;        // We always work in trimmed coordinates at the DetectorMosaic level
     //
@@ -47,10 +47,10 @@ void camGeom::DetectorMosaic::addDetector(
     getAllPixels().grow(detPixels.getLLC());
     getAllPixels().grow(detPixels.getURC());
     
-    camGeom::Orientation orient(0.0, 0.0, 0.0);
+    cameraGeom::Orientation orient(0.0, 0.0, 0.0);
     afwGeom::Point2D center;
     afwGeom::Point2I origin = afwGeom::Point2I::makeXY(iX*detPixels.getWidth(), iY*detPixels.getHeight());
-    camGeom::DetectorLayout::Ptr detL(new camGeom::DetectorLayout(det, orient, center, origin));
+    cameraGeom::DetectorLayout::Ptr detL(new cameraGeom::DetectorLayout(det, orient, center, origin));
 
     _detectors.push_back(detL);
 
@@ -66,12 +66,12 @@ void camGeom::DetectorMosaic::addDetector(
 
 namespace {
     struct findById {
-        findById(camGeom::Id id) : _id(id) {}
-        bool operator()(camGeom::DetectorLayout::Ptr det) const {
+        findById(cameraGeom::Id id) : _id(id) {}
+        bool operator()(cameraGeom::DetectorLayout::Ptr det) const {
             return _id == det->getDetector()->getId();
         }
     private:
-        camGeom::Id _id;
+        cameraGeom::Id _id;
     };
 
     struct findByPos {
@@ -81,7 +81,7 @@ namespace {
             _point(afwImage::PointI(point[0], point[1]))
         { }
 
-        bool operator()(camGeom::DetectorLayout::Ptr det) const {
+        bool operator()(cameraGeom::DetectorLayout::Ptr det) const {
             afwImage::PointI relPoint = _point;
             relPoint.shift(-det->getOrigin()[0], -det->getOrigin()[1]);
 
@@ -95,7 +95,9 @@ namespace {
 /**
  * Find an Detector given an Id
  */
-camGeom::DetectorLayout::Ptr camGeom::DetectorMosaic::findDetector(camGeom::Id const id) const {
+cameraGeom::DetectorLayout::Ptr cameraGeom::DetectorMosaic::findDetector(
+        cameraGeom::Id const id         ///< The desired ID
+                                                                        ) const {
     DetectorSet::const_iterator result = std::find_if(_detectors.begin(), _detectors.end(), findById(id));
     if (result == _detectors.end()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::OutOfRangeException,
@@ -107,8 +109,9 @@ camGeom::DetectorLayout::Ptr camGeom::DetectorMosaic::findDetector(camGeom::Id c
 /**
  * Find an Detector given a position
  */
-camGeom::DetectorLayout::Ptr camGeom::DetectorMosaic::findDetector(afwGeom::Point2I const& pixel // the desired pixel
-                                                        ) const {
+cameraGeom::DetectorLayout::Ptr cameraGeom::DetectorMosaic::findDetector(
+        afwGeom::Point2I const& pixel   ///< the desired pixel
+                                                                        ) const {
     DetectorSet::const_iterator result = std::find_if(_detectors.begin(), _detectors.end(), findByPos(pixel));
     if (result == _detectors.end()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::OutOfRangeException,
