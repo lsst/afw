@@ -31,6 +31,7 @@ SWIG_SHARED_PTR_DERIVED(CameraPtr, lsst::afw::cameraGeom::Detector, lsst::afw::c
 %template(DetectorSet) std::vector<boost::shared_ptr<lsst::afw::cameraGeom::DetectorLayout> >;
 
 %include "lsst/afw/cameraGeom/Id.h"
+%include "lsst/afw/cameraGeom/Orientation.h"
 %include "lsst/afw/cameraGeom/Amp.h"
 %include "lsst/afw/cameraGeom/Detector.h"
 %include "lsst/afw/cameraGeom/DetectorMosaic.h"

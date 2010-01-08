@@ -283,6 +283,7 @@ of the detectors"""
         if ccdOrigin:
             xc += ccdOrigin[0]
             yc += ccdOrigin[1]
+
         ds9.dot(str(ccd.findAmp(cen).getId().getSerial()), xc, yc, frame=frame)
 
     displayUtils.drawBBox(ccd.getAllPixels(isTrimmed), origin=ccdOrigin,
@@ -318,8 +319,11 @@ properties of the detectors"""
         if raftOrigin:
             origin += afwGeom.Extent2I(raftOrigin)
             
-        ds9.dot(ccd.getId().getName(),
-                origin[0] + bbox.getWidth()/2, origin[1] + bbox.getHeight()/2, frame=frame)
+        if False:
+            name = ccd.getId().getName()
+        else:
+            name = str(ccd.getCenter())
+        ds9.dot(name, origin[0] + bbox.getWidth()/2, origin[1] + bbox.getHeight()/2, frame=frame)
 
         showCcd(ccd, None, isTrimmed=True, frame=frame, ccdOrigin=origin)
 
@@ -526,13 +530,18 @@ class CameraGeomTestCase(unittest.TestCase):
         self.assertEqual(raft.getAllPixels().getWidth(), raftInfo["width"])
         self.assertEqual(raft.getAllPixels().getHeight(), raftInfo["height"])
 
-        for x, y, serial in [(0, 0, 7), (150, 250, 23), (250, 250, 31)]:
+        for x, y, serial, cen in [(0, 0, 7, (-1.01, -2.02)),
+                             (150, 250, 23, (-1.01, 0.0)),
+                             (250, 250, 31, (1.01, 0.0)),
+                             (300, 500, 47, (1.01, 2.02))]:
             det = raft.findDetector(afwGeom.Point2I.makeXY(x, y)).getDetector()
             ccd = cameraGeom.cast_Ccd(det)
             if False:
                 print x, y, det.getId().getName(), \
                       ccd.findAmp(afwGeom.Point2I.makeXY(150, 152), True).getId().getSerial()
             self.assertEqual(ccd.findAmp(afwGeom.Point2I.makeXY(150, 152), True).getId().getSerial(), serial)
+            for i in range(2):
+                self.assertAlmostEqual(ccd.getCenter()[i], cen[i])
 
         name = "C:0,2"
         self.assertEqual(raft.findDetector(cameraGeom.Id(name)).getDetector().getId().getName(), name)
@@ -563,8 +572,11 @@ class CameraGeomTestCase(unittest.TestCase):
         self.assertEqual(camera.getAllPixels().getWidth(), cameraInfo["width"])
         self.assertEqual(camera.getAllPixels().getHeight(), cameraInfo["height"])
 
-        for rx, ry, cx, cy, serial in [(0, 0,     0, 0, 7),  (0,   0,   150, 250, 23),
-                                       (600, 300, 0, 0, 55), (600, 300, 150, 250, 71)]:
+        for rx, ry, cx, cy, serial, cen in [(0, 0,     0,   0,   7,  (-3.12, -2.02)),
+                                            (0,   0,   150, 250, 23, (-3.12,  0.00)),
+                                            (600, 300, 0,   0,   55, ( 1.1,  -2.02)),
+                                            (600, 300, 150, 250, 71, ( 1.1,  0.00)),
+                                            ]:
             raft = cameraGeom.cast_Raft(camera.findDetector(afwGeom.Point2I.makeXY(rx, ry)).getDetector())
 
             ccd = cameraGeom.cast_Ccd(raft.findDetector(afwGeom.Point2I.makeXY(cx, cy)).getDetector())
@@ -572,6 +584,8 @@ class CameraGeomTestCase(unittest.TestCase):
                 print rx, ry, cx, cy, raft.getId().getName(), \
                       ccd.findAmp(afwGeom.Point2I.makeXY(150, 152), True).getId().getSerial()
             self.assertEqual(ccd.findAmp(afwGeom.Point2I.makeXY(150, 152), True).getId().getSerial(), serial)
+            for i in range(2):
+                self.assertAlmostEqual(ccd.getCenter()[i], cen[i])
 
         name = "R:1,0"
         self.assertEqual(camera.findDetector(cameraGeom.Id(name)).getDetector().getId().getName(), name)

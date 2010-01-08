@@ -5,6 +5,7 @@
 #include "lsst/afw/geom.h"
 #include "lsst/afw/image/Utils.h"
 #include "lsst/afw/cameraGeom/Id.h"
+#include "lsst/afw/cameraGeom/Orientation.h"
 
 /**
  * @file
@@ -15,6 +16,9 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
+namespace afwGeom = lsst::afw::geom;
+namespace afwImage = lsst::afw::image;
+    
 /**
  * Describe a detector (e.g. a CCD)
  */
@@ -53,16 +57,16 @@ public:
     /// Return the pixel size, mm/pixel
     double getPixelSize() const { return _pixelSize; }
 
-    virtual lsst::afw::geom::Extent2D getSize() const;
+    virtual afwGeom::Extent2D getSize() const;
 
     /// Return Detector's total footprint
-    lsst::afw::image::BBox& getAllPixels() {
+    afwImage::BBox& getAllPixels() {
         return (_hasTrimmablePixels && _isTrimmed) ? _trimmedAllPixels : _allPixels;
     }
-    lsst::afw::image::BBox getAllPixels() const {
+    afwImage::BBox getAllPixels() const {
         return getAllPixels(_isTrimmed);
     }
-    lsst::afw::image::BBox getAllPixels(bool isTrimmed ///< True iff the bias/overclock have been removed
+    afwImage::BBox getAllPixels(bool isTrimmed ///< True iff the bias/overclock have been removed
                                        ) const {
         return (_hasTrimmablePixels && isTrimmed) ? _trimmedAllPixels : _allPixels;
     }
@@ -70,30 +74,42 @@ public:
     // Geometry of Detector --- i.e. mm not pixels
     //
     /// Set the central pixel
-    void setCenterPixel(lsst::afw::geom::Point2I center ///< the pixel \e defined to be the detector's centre
+    void setCenterPixel(afwGeom::Point2I center ///< the pixel \e defined to be the detector's centre
                        ) { _centerPixel = center; }
     /// Return the central pixel
-    lsst::afw::geom::Point2I getCenterPixel() const { return _centerPixel; }
+    afwGeom::Point2I getCenterPixel() const { return _centerPixel; }
+
+    /// Set the Detector's Orientation
+    void setOrientation(Orientation const& orientation) { _orientation = orientation;}
+    /// Return the Detector's Orientation
+    Orientation getOrientation() const { return _orientation;}
+
+    /// Set the Detector's center
+    virtual void setCenter(afwGeom::Point2D const& center) { _center = center; }
+    /// Return the Detector's center
+    afwGeom::Point2D getCenter() const { return _center; }
     //
     // Translate between physical positions in mm to pixels
     //
-    virtual lsst::afw::geom::Point2I getIndexFromPosition(lsst::afw::geom::Point2D pos) const;
-    virtual lsst::afw::geom::Point2D getPositionFromIndex(lsst::afw::geom::Point2I pos) const;
+    virtual afwGeom::Point2I getIndexFromPosition(afwGeom::Point2D pos) const;
+    virtual afwGeom::Point2D getPositionFromIndex(afwGeom::Point2I pos) const;
 
     virtual void shift(int dx, int dy);
 protected:
-    lsst::afw::image::BBox& getAllTrimmedPixels() {
+    afwImage::BBox& getAllTrimmedPixels() {
         return _hasTrimmablePixels ? _trimmedAllPixels : _allPixels;
     }
 private:
     Id _id;
     bool _isTrimmed;                    // Have all the bias/overclock regions been trimmed?
-    lsst::afw::image::BBox _allPixels;  // Bounding box of all the Detector's pixels
+    afwImage::BBox _allPixels;  // Bounding box of all the Detector's pixels
     bool _hasTrimmablePixels;           // true iff Detector has pixels that can be trimmed (e.g. a CCD)
     double _pixelSize;                  // Size of a pixel in mm
-    lsst::afw::geom::Point2I _centerPixel; // the pixel defined to be the centre of the Detector
-    lsst::afw::geom::Extent2D _size;    // Size in mm of this Detector
-    lsst::afw::image::BBox _trimmedAllPixels; // Bounding box of all the Detector's pixels after bias trimming
+    afwGeom::Point2I _centerPixel; // the pixel defined to be the centre of the Detector
+    Orientation _orientation;  // orientation of this Detector
+    afwGeom::Point2D _center;      // position of _centerPixel (mm)
+    afwGeom::Extent2D _size;    // Size in mm of this Detector
+    afwImage::BBox _trimmedAllPixels; // Bounding box of all the Detector's pixels after bias trimming
 };
 
 }}}

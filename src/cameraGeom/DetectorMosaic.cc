@@ -8,6 +8,18 @@ namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 namespace cameraGeom = lsst::afw::cameraGeom;
 
+/// Set the DetectorMosaic's center
+void cameraGeom::DetectorMosaic::setCenter(afwGeom::Point2D const& center) {
+    cameraGeom::Detector::setCenter(center);
+    //
+    // Update the centers for all children too
+    //
+    for (cameraGeom::DetectorMosaic::const_iterator detL = begin(), end = this->end(); detL != end; ++detL) {
+        cameraGeom::Detector::Ptr det = (*detL)->getDetector();
+        det->setCenter(afwGeom::Extent2D(det->getCenter()) + center);
+    }
+}
+
 /************************************************************************************************************/
 /**
  * Return a DetectorMosaic's size in mm
@@ -21,7 +33,7 @@ afwGeom::Extent2D cameraGeom::DetectorMosaic::getSize() const {
         cameraGeom::Detector::Ptr det = (*detL)->getDetector();
         afwGeom::Extent2D detectorSize = det->getSize();
 
-        double const yaw = (*detL)->getOrientation().getYaw();
+        double const yaw = det->getOrientation().getYaw();
         if (yaw != 0.0) {
             throw LSST_EXCEPT(lsst::pex::exceptions::RangeErrorException,
                               (boost::format("(yaw == %f) != 0 is not supported for Detector %||") %
@@ -29,11 +41,11 @@ afwGeom::Extent2D cameraGeom::DetectorMosaic::getSize() const {
         }
 
         if (detL == begin()) {           // first detector
-            LLC = (*detL)->getCenter() - detectorSize/2;
-            URC = (*detL)->getCenter() + detectorSize/2;
+            LLC = det->getCenter() - detectorSize/2;
+            URC = det->getCenter() + detectorSize/2;
         } else {
-            afwGeom::Point2D llc = (*detL)->getCenter() - detectorSize/2; // corners of this Detector
-            afwGeom::Point2D urc = (*detL)->getCenter() + detectorSize/2;
+            afwGeom::Point2D llc = det->getCenter() - detectorSize/2; // corners of this Detector
+            afwGeom::Point2D urc = det->getCenter() + detectorSize/2;
 
             if (llc[0] < LLC[0]) {      // X
                 LLC[0] = llc[0];

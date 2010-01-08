@@ -9,7 +9,6 @@ namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 namespace cameraGeom = lsst::afw::cameraGeom;
 
-
 /**
  * Return size in mm of this Detector
  */
