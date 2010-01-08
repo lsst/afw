@@ -2,6 +2,7 @@
 #
 Camera: {
     serial: 666
+    name: "testCamera"
     nCol: 2                             # number of columns of Rafts
     nRow: 1                             # number of rows of Rafts
     Raft: {

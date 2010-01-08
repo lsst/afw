@@ -17,10 +17,10 @@ definitions: {
                 }
                 name: {
                     type: string
-                    description: "Camera's name number"
+                    description: "Camera's name"
                     minOccurs: 0
                     maxOccurs: 1
-                    default: "TestCam"
+                    default: "Unknown"
                 }
                 nCol: {
                     type: int
@@ -48,6 +48,7 @@ definitions: {
                             }
                             name: {
                                 type: string
+                                description: "Name of this raft"
                                 minOccurs: 0
                                 maxOccurs: 1
                                 default: "None"
