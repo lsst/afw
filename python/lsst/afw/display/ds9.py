@@ -149,6 +149,10 @@ def getXpaAccessPoint():
             
     return "ds9"
 
+def ds9Version():
+    """Return the version of ds9 in use, as a string"""
+    return xpa.get(None, getXpaAccessPoint(), "about", "").splitlines()[1].split()[1]
+
 def ds9Cmd(cmd, trap=True):
    """Issue a ds9 command, raising errors as appropriate"""
    
@@ -168,6 +172,10 @@ def initDS9(execDs9=True):
       xpa.reset()
       ds9Cmd("iconify no; raise", False)
       ds9Cmd("wcs wcsa", False)         # include the pixel coordinates WCS (WCSA)
+
+      v0, v1, v2 = [int(v) for v in ds9Version().split('.')]
+      global needShow
+      needShow = (v0 == 5 and v1 <= 4)
    except Ds9Error, e:
       if execDs9:
          print "ds9 doesn't appear to be running (%s), I'll exec it for you" % e
@@ -394,7 +402,8 @@ Any other value is interpreted as a string to be drawn
        try:
            # We have to check for the frame's existance with show() as the text command crashed ds9 5.4
            # if it doesn't
-           show(frame)
+           if needShow:
+               show(frame)
            cmd += 'regions command {text %g %g \"%s\"%s}' % (c, r, symb, color)
        except:
            print >> sys.stderr, "Ds9 frame %d doesn't exist" % frame
