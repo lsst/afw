@@ -7,5 +7,6 @@
 #include "lsst/afw/cameraGeom/DetectorMosaic.h"
 #include "lsst/afw/cameraGeom/Ccd.h"
 #include "lsst/afw/cameraGeom/Raft.h"
+#include "lsst/afw/cameraGeom/Camera.h"
 
 #endif

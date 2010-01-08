@@ -170,8 +170,6 @@ def makeCamera(geomPolicy, cameraId=None, cameraInfo={}):
 If cameraInfo is provided it's set to various facts about the Camera which are used in unit tests.  Note in
 particular that it has an entry ampSerial which is a single-element list, the amplifier serial counter
 """
-    cameraGeom.Camera = cameraGeom.DetectorMosaic
-
     if cameraInfo is None:
         raftInfo = None
     else:
