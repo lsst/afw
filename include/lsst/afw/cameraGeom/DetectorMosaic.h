@@ -22,9 +22,9 @@ namespace afwGeom = lsst::afw::geom;
  */
 class Orientation {
 public:
-    explicit Orientation(double pitch=0.0, ///< pitch, UNITS
-                         double roll=0.0,  ///< roll, UNITS
-                         double yaw=0.0) : ///< yaw, UNITS
+    explicit Orientation(double pitch=0.0, ///< pitch (rotation in YZ), radians
+                         double roll=0.0,  ///< roll (rotation in XZ), radians
+                         double yaw=0.0) : ///< yaw (rotation in XY), radians
         _pitch(pitch), _roll(roll), _yaw(yaw) {}
     /// Return the pitch angle
     double getPitch() const { return _pitch; }

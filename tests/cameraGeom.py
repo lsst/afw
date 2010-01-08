@@ -146,6 +146,7 @@ particular that it has an entry ampSerial which is a single-element list, the am
     for ccdPol in raftPol.getArray("Ccd"):
         Col, Row = ccdPol.getArray("index")
         xc, yc = ccdPol.getArray("offset")
+
         pitch, roll, yaw = [float(math.radians(a)) for a in ccdPol.getArray("orientation")]
 
         if Col not in range(nCol) or Row not in range(nRow):
@@ -157,6 +158,21 @@ particular that it has an entry ampSerial which is a single-element list, the am
         raft.addDetector(afwGeom.Point2I.makeXY(Col, Row),
                          afwGeom.Point2D.makeXY(xc, yc), cameraGeom.Orientation(pitch, roll, yaw), ccd)
 
+        if raftInfo is not None:
+            # Guess the gutter between detectors
+            if (Col, Row) == (0, 0):
+                xGutter, yGutter = xc, yc
+            elif (Col, Row) == (nCol - 1, nRow - 1):
+                if nCol == 1:
+                    xGutter = 0.0
+                else:
+                    xGutter = (xc - xGutter)/float(nCol - 1) - ccd.getSize()[0]
+
+                if nRow == 1:
+                    yGutter = 0.0
+                else:
+                    yGutter = (yc - yGutter)/float(nRow - 1) - ccd.getSize()[1]
+
     if raftInfo is not None:
         raftInfo.clear()
         raftInfo["ampSerial"] = ccdInfo["ampSerial"]
@@ -164,10 +180,12 @@ particular that it has an entry ampSerial which is a single-element list, the am
         raftInfo["pixelSize"] = ccd.getPixelSize()
         raftInfo["width"] =  nCol*ccd.getAllPixels(True).getWidth()
         raftInfo["height"] = nRow*ccd.getAllPixels(True).getHeight()
+        raftInfo["widthMm"] =  nCol*ccd.getSize()[0] + (nCol - 1)*xGutter
+        raftInfo["heightMm"] = nRow*ccd.getSize()[1] + (nRow - 1)*yGutter
 
     return raft
 
-def makeCamera(geomPolicy, cameraId=None, cameraInfo={}):
+def makeCamera(geomPolicy, cameraId=None, cameraInfo=None):
     """Build a Camera from a set of Rafts given a suitable pex::Policy
     
 If cameraInfo is provided it's set to various facts about the Camera which are used in unit tests.  Note in
@@ -196,12 +214,30 @@ particular that it has an entry ampSerial which is a single-element list, the am
         camera.addDetector(afwGeom.Point2I.makeXY(Col, Row),
                            afwGeom.Point2D.makeXY(xc, yc), cameraGeom.Orientation(pitch, roll, yaw), raft)
 
-    cameraInfo.clear()
-    cameraInfo["ampSerial"] = raftInfo["ampSerial"]
-    cameraInfo["name"] = camera.getId().getName()
-    cameraInfo["width"] =  nCol*raft.getAllPixels().getWidth()
-    cameraInfo["height"] = nRow*raft.getAllPixels().getHeight()
-    cameraInfo["pixelSize"] = raft.getPixelSize()
+        if cameraInfo is not None:
+            # Guess the gutter between detectors
+            if (Col, Row) == (0, 0):
+                xGutter, yGutter = xc, yc
+            elif (Col, Row) == (nCol - 1, nRow - 1):
+                if nCol == 1:
+                    xGutter = 0.0
+                else:
+                    xGutter = (xc - xGutter)/float(nCol - 1) - raft.getSize()[0]
+                    
+                if nRow == 1:
+                    yGutter = 0.0
+                else:
+                    yGutter = (yc - yGutter)/float(nRow - 1) - raft.getSize()[1]
+
+    if cameraInfo is not None:
+        cameraInfo.clear()
+        cameraInfo["ampSerial"] = raftInfo["ampSerial"]
+        cameraInfo["name"] = camera.getId().getName()
+        cameraInfo["width"] =  nCol*raft.getAllPixels().getWidth()
+        cameraInfo["height"] = nRow*raft.getAllPixels().getHeight()
+        cameraInfo["pixelSize"] = raft.getPixelSize()
+        cameraInfo["widthMm"] =  nCol*raft.getSize()[0] + (nCol - 1)*xGutter
+        cameraInfo["heightMm"] = nRow*raft.getSize()[1] + (nRow - 1)*yGutter
 
     return camera
 
@@ -482,7 +518,8 @@ class CameraGeomTestCase(unittest.TestCase):
                   (raft.getId().getName(), raft.getId().getSerial(), raft.getAllPixels())
 
             for d in raft:
-                print d.getOrigin(), d.getDetector().getAllPixels(True)
+                print "Ccd:", d.getOrigin(), d.getDetector().getAllPixels(True), \
+                      d.getCenter(), d.getDetector().getSize()
 
             print "Size =", raft.getSize()
 
@@ -499,12 +536,9 @@ class CameraGeomTestCase(unittest.TestCase):
 
         name = "C:0,2"
         self.assertEqual(raft.findDetector(cameraGeom.Id(name)).getDetector().getId().getName(), name)
-        #
-        # This test isn't really right as we don't allow for e.g. gaps between Detectors.  Well, the
-        # test is right but getSize() isn't
-        #
-        for i in range(2):
-            self.assertEqual(raft.getSize()[i], raftInfo["pixelSize"]*raft.getAllPixels().getDimensions()[i])
+
+        self.assertEqual(raft.getSize()[0], raftInfo["widthMm"])
+        self.assertEqual(raft.getSize()[1], raftInfo["heightMm"])
         
     def testCamera(self):
         """Test if we can build a Camera out of Rafts"""
@@ -517,7 +551,7 @@ class CameraGeomTestCase(unittest.TestCase):
         if display:
             showCamera(camera, frame=3)
 
-        if not False:
+        if False:
             print "Camera Name \"%s\", serial %d,  BBox %s" % \
                   (camera.getId().getName(), camera.getId().getSerial(), camera.getAllPixels())
 
@@ -541,13 +575,9 @@ class CameraGeomTestCase(unittest.TestCase):
 
         name = "R:1,0"
         self.assertEqual(camera.findDetector(cameraGeom.Id(name)).getDetector().getId().getName(), name)
-        #
-        # This test isn't really right as we don't allow for e.g. gaps between Rafts.  Well, the
-        # test is right but getSize() isn't
-        #
-        for i in range(2):
-            self.assertEqual(camera.getSize()[i],
-                             cameraInfo["pixelSize"]*camera.getAllPixels().getDimensions()[i])
+
+        self.assertEqual(camera.getSize()[0], cameraInfo["widthMm"])
+        self.assertEqual(camera.getSize()[1], cameraInfo["heightMm"])
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

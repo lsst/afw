@@ -13,16 +13,45 @@ namespace cameraGeom = lsst::afw::cameraGeom;
  * Return a DetectorMosaic's size in mm
  */
 afwGeom::Extent2D cameraGeom::DetectorMosaic::getSize() const {
-    double xsize = 0, ysize = 0;
-    if (begin() != end()) {         // no Detectors
-        afwGeom::Extent2D detectorSize = (*begin())->getDetector()->getSize();
-        xsize = detectorSize[0];
-        ysize = detectorSize[1];
+    afwGeom::Extent2D size(0.0);        // the desired size
+    // This code can probably use afwGeom's bounding boxes when the are available
+    afwGeom::Point2D LLC, URC;          // corners of DetectorMosaic
+
+    for (cameraGeom::DetectorMosaic::const_iterator detL = begin(), end = this->end(); detL != end; ++detL) {
+        cameraGeom::Detector::Ptr det = (*detL)->getDetector();
+        afwGeom::Extent2D detectorSize = det->getSize();
+
+        double const yaw = (*detL)->getOrientation().getYaw();
+        if (yaw != 0.0) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::RangeErrorException,
+                              (boost::format("(yaw == %f) != 0 is not supported for Detector %||") %
+                               yaw % det->getId()).str());
+        }
+
+        if (detL == begin()) {           // first detector
+            LLC = (*detL)->getCenter() - detectorSize/2;
+            URC = (*detL)->getCenter() + detectorSize/2;
+        } else {
+            afwGeom::Point2D llc = (*detL)->getCenter() - detectorSize/2; // corners of this Detector
+            afwGeom::Point2D urc = (*detL)->getCenter() + detectorSize/2;
+
+            if (llc[0] < LLC[0]) {      // X
+                LLC[0] = llc[0];
+            }
+            if (llc[1] < LLC[1]) {      // Y
+                LLC[1] = llc[1];
+            }
+
+            if (urc[0] > URC[0]) {      // X
+                URC[0] = urc[0];
+            }
+            if (urc[1] > URC[1]) {      // Y
+                URC[1] = urc[1];
+            }
+        }
     }
 
-    Eigen::Vector2d size;
-    size << _nDetector.first*xsize, _nDetector.second*ysize;
-    return afwGeom::Extent2D(size);
+    return URC - LLC;
 }
 
 /**
