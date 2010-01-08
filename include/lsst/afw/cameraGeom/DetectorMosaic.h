@@ -15,6 +15,8 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
+namespace afwGeom = lsst::afw::geom;
+
 /**
  * Describe a detector's orientation
  */
@@ -101,7 +103,8 @@ public:
     //
     // Add a Detector to the DetectorMosaic
     //
-    void addDetector(int const iX, int const iY, Detector::Ptr det);
+    void addDetector(afwGeom::Point2I const& index, afwGeom::Point2D const& center,
+                     cameraGeom::Orientation const& orient, cameraGeom::Detector::Ptr det);
     //
     // Find a Detector given an Id or pixel position
     //

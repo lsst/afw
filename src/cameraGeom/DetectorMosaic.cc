@@ -28,16 +28,19 @@ afwGeom::Extent2D cameraGeom::DetectorMosaic::getSize() const {
 /**
  * Add an Detector to the set known to be part of this DetectorMosaic
  *
- *  The \c iX and \c iY values are the 0-indexed position of the Detector in the DetectorMosaic; e.g. (0, 2)
+ *  The \c index is the 0-indexed position of the Detector in the DetectorMosaic; e.g. (0, 2)
  * for the top left Detector in a 3x3 detectormosaic
  */
 void cameraGeom::DetectorMosaic::addDetector(
-        int const iX,                   ///< x-index of this Detector
-        int const iY,                   ///< y-index of this Detector
+        afwGeom::Point2I const& index, ///< index of this Detector in DetectorMosaic thought of as a grid
+        afwGeom::Point2D const& center, ///< center of this Detector wrt center of DetectorMosaic
+        cameraGeom::Orientation const& orient, ///< orientation of this Detector
         cameraGeom::Detector::Ptr det   ///< The detector to add to the DetectorMosaic's manifest.
                                             )
 {
     bool const isTrimmed = true;        // We always work in trimmed coordinates at the DetectorMosaic level
+    int const iX = index[0];
+    int const iY = index[1];
     //
     // Correct Detector's coordinate system to be absolute within DetectorMosaic
     //
@@ -47,8 +50,6 @@ void cameraGeom::DetectorMosaic::addDetector(
     getAllPixels().grow(detPixels.getLLC());
     getAllPixels().grow(detPixels.getURC());
     
-    cameraGeom::Orientation orient(0.0, 0.0, 0.0);
-    afwGeom::Point2D center;
     afwGeom::Point2I origin = afwGeom::Point2I::makeXY(iX*detPixels.getWidth(), iY*detPixels.getHeight());
     cameraGeom::DetectorLayout::Ptr detL(new cameraGeom::DetectorLayout(det, orient, center, origin));
 

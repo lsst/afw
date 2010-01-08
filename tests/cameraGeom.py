@@ -9,6 +9,7 @@ or
    >>> import SpatialCell; SpatialCell.run()
 """
 
+import math
 import os
 import sys
 import unittest
@@ -59,8 +60,7 @@ in particular that it has an entry ampSerial which is a single-element list, the
         ampSerial0 = ampSerial[0]           # used in testing
         
     for ampPol in ccdPol.getArray("Amp"):
-        Col = ampPol.get("iCol")
-        Row = ampPol.get("iRow")
+        Col, Row = ampPol.getArray("index")
         c =  ampPol.get("readoutCorner")
 
         if Col not in range(nCol) or Row not in range(nRow):
@@ -144,15 +144,18 @@ particular that it has an entry ampSerial which is a single-element list, the am
                              (nCol*nRow, len(raftPol.getArray("Ccd"))))
 
     for ccdPol in raftPol.getArray("Ccd"):
-        Col = ccdPol.get("iCol")
-        Row = ccdPol.get("iRow")
+        Col, Row = ccdPol.getArray("index")
+        xc, yc = ccdPol.getArray("offset")
+        pitch, roll, yaw = [float(math.radians(a)) for a in ccdPol.getArray("orientation")]
 
         if Col not in range(nCol) or Row not in range(nRow):
             raise RuntimeError, ("Amp location %d, %d is not in 0..%d, 0..%d" % (Col, Row, nCol, nRow))
 
         ccdId = cameraGeom.Id(ccdPol.get("serial"), ccdPol.get("name"))
         ccd = makeCcd(geomPolicy, ccdId, ccdInfo=ccdInfo)
-        raft.addDetector(Col, Row, ccd)
+
+        raft.addDetector(afwGeom.Point2I.makeXY(Col, Row),
+                         afwGeom.Point2D.makeXY(xc, yc), cameraGeom.Orientation(pitch, roll, yaw), ccd)
 
     if raftInfo is not None:
         raftInfo.clear()
@@ -184,12 +187,14 @@ particular that it has an entry ampSerial which is a single-element list, the am
     camera = cameraGeom.Camera(cameraId)
 
     for raftPol in cameraPol.getArray("Raft"):
-        Col = raftPol.get("iCol")
-        Row = raftPol.get("iRow")
+        Col, Row = raftPol.getArray("index")
+        xc, yc = raftPol.getArray("offset")
+        pitch, roll, yaw = [float(math.radians(a)) for a in raftPol.getArray("orientation")]
 
         raftId = cameraGeom.Id(raftPol.get("serial"), raftPol.get("name"))
         raft = makeRaft(geomPolicy, raftId, raftInfo)
-        camera.addDetector(Col, Row, raft)
+        camera.addDetector(afwGeom.Point2I.makeXY(Col, Row),
+                           afwGeom.Point2D.makeXY(xc, yc), cameraGeom.Orientation(pitch, roll, yaw), raft)
 
     cameraInfo.clear()
     cameraInfo["ampSerial"] = raftInfo["ampSerial"]
@@ -461,7 +466,7 @@ class CameraGeomTestCase(unittest.TestCase):
         self.assertEqualPoint(ccd.getPositionFromIndex(pix), pos)
 
     def testRaft(self):
-        """Test if we can build a Ccd out of Amps"""
+        """Test if we can build a Raft out of Ccds"""
 
         #print >> sys.stderr, "Skipping testRaft"; return
 
@@ -502,7 +507,7 @@ class CameraGeomTestCase(unittest.TestCase):
             self.assertEqual(raft.getSize()[i], raftInfo["pixelSize"]*raft.getAllPixels().getDimensions()[i])
         
     def testCamera(self):
-        """Test if we can build a Ccd out of Amps"""
+        """Test if we can build a Camera out of Rafts"""
 
         #print >> sys.stderr, "Skipping testCamera"; return
 
@@ -512,12 +517,12 @@ class CameraGeomTestCase(unittest.TestCase):
         if display:
             showCamera(camera, frame=3)
 
-        if False:
+        if not False:
             print "Camera Name \"%s\", serial %d,  BBox %s" % \
                   (camera.getId().getName(), camera.getId().getSerial(), camera.getAllPixels())
 
             for d in camera:
-                print d.getOrigin(), d.getDetector().getAllPixels()
+                print "Raft:", d.getOrigin(), d.getDetector().getAllPixels()
 
             print "Camera size =", camera.getSize()
 

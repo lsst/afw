@@ -53,19 +53,24 @@ definitions: {
                                 maxOccurs: 1
                                 default: "None"
                             }
-                            iCol: {
+                            index: {
                                 type: int
-                                description: "X-location of Raft in Camera"
-                                default: -1
-                                minOccurs: 0
-                                maxOccurs: 1
+                                description: "Location of Raft in Camera thought of as a grid of Rafts"
+                                minOccurs: 2
+                                maxOccurs: 2
                             }
-                            iRow: {
-                                type: int
-                                description: "Y-location of Raft in Camera"
-                                default: -1
-                                minOccurs: 0
-                                maxOccurs: 1
+                            offset: {
+                                type: double
+                                description: "offset of Raft center from boresight, (x, y); mm"
+                                minOccurs: 2
+                                maxOccurs: 2
+                            }
+                            orientation: {
+                                type: double
+                                description: "pitch, roll, yaw; degrees"
+                                minOccurs: 3
+                                maxOccurs: 3
+                                default: 0.0 0.0 0.0
                             }
                         }
                     }
@@ -122,19 +127,24 @@ definitions: {
                                 maxOccurs: 1
                                 default: "None"
                             }
-                            iCol: {
+                            index: {
                                 type: int
-                                description: "X-location of CCD in Raft in range(nCol)"
-                                default: -1
-                                minOccurs: 0
-                                maxOccurs: 1
+                                description: "Location of CCD in Raft thought of as a grid of CCDs"
+                                minOccurs: 2
+                                maxOccurs: 2
                             }
-                            iRow: {
-                                type: int
-                                description: "Y-location of CCD in Raft in range(nRow)"
-                                default: -1
-                                minOccurs: 0
-                                maxOccurs: 1
+                            offset: {
+                                type: double
+                                description: "offset of CCD center from raft center, (x, y); mm"
+                                minOccurs: 2
+                                maxOccurs: 2
+                            }
+                            orientation: {
+                                type: double
+                                description: "pitch, roll, yaw; degrees"
+                                minOccurs: 3
+                                maxOccurs: 3
+                                default: 0.0 0.0 0.0
                             }
                         }
                     }
@@ -177,19 +187,11 @@ definitions: {
                                 description: "ID for this Amp"
                                 default: "??"
                             }
-                            iCol: {
+                            index: {
                                 type: int
-                                description: "X-location of Amp in CCD in range(nCol)"
-                                default: -1
-                                minOccurs: 0
-                                maxOccurs: 1
-                            }
-                            iRow: {
-                                type: int
-                                description: "Y-location of Amp in CCD in range(nRow)"
-                                default: -1
-                                minOccurs: 0
-                                maxOccurs: 1
+                                description: "Location of Amp in CCD thought of as a grid of amplifiers"
+                                minOccurs: 2
+                                maxOccurs: 2
                             }
                             readoutCorner: {
                                 description: "location of first pixel read"
