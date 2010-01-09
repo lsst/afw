@@ -55,7 +55,7 @@ else:
         for pkgName in ("detection", "display", "image", "math", "geom"):
             env.Depends(target, os.path.join(
                 "#python", "lsst", "afw", pkgName, "_%sLib%s" % (pkgName, env["LDMODULESUFFIX"])))
-        if target.endswith("SpatialCell.py"):
+        if target.endswith("spatialCell.py"):
             env.Depends(target, "_testLib%s" % (env["LDMODULESUFFIX"]))
             env.Depends(target, "testLib.py")
         elif target.endswith("numpyTestEigen.py"):
