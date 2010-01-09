@@ -56,7 +56,7 @@ class BoxITestCase(unittest.TestCase):
             self.assertEqual(box.getMin(), pmin)
             self.assertEqual(box.getMax(), pmax)
             box = geom.BoxI(pmax,pmin,False)
-            self.assert_(box.isEmpty())
+            self.assert_(box.isEmpty() or pmax == pmin)
             # min/dim constructor
             dim = geom.ExtentI(1) + pmax - pmin
             if any(dim.eq(0)):
