@@ -88,6 +88,15 @@ public:
     //
     DetectorLayout::Ptr findDetector(Id const id) const;
     DetectorLayout::Ptr findDetector(afwGeom::Point2I const& pixel) const;
+    DetectorLayout::Ptr findDetector(afwGeom::Point2D const& posMm) const;
+    //
+    // Translate between physical positions in mm to pixels
+    //
+    virtual afwGeom::Point2I getIndexFromPosition(afwGeom::Point2D pos) const;
+    virtual afwGeom::Point2D getPositionFromIndex(afwGeom::Point2I pix) const;
+    virtual afwGeom::Point2D getPositionFromIndex(afwGeom::Point2I pix, bool const) const {
+        return getPositionFromIndex(pix);
+    }
 private:
     DetectorSet _detectors;             // The Detectors that make up this DetectorMosaic
     std::pair<int, int> _nDetector;     // the number of columns/rows of Detectors

@@ -14,9 +14,9 @@ namespace cameraGeom = lsst::afw::cameraGeom;
  */
 afwGeom::Extent2D cameraGeom::Detector::getSize() const {
     bool const isTrimmed = true;
-    Eigen::Vector2d size;
-    size << getAllPixels(isTrimmed).getWidth()*_pixelSize, getAllPixels(isTrimmed).getHeight()*_pixelSize;
-    return afwGeom::Extent2D(size);
+
+    return afwGeom::Extent2D::makeXY(getAllPixels(isTrimmed).getWidth()*_pixelSize,
+                                     getAllPixels(isTrimmed).getHeight()*_pixelSize);
 }
 
 /**
@@ -28,9 +28,17 @@ afwGeom::Point2I cameraGeom::Detector::getIndexFromPosition(
         afwGeom::Point2D pos            ///< Offset from chip centre, mm
                                                            ) const
 {
-    Eigen::Vector2i pix;
-    pix << _centerPixel[0] + pos[0]/_pixelSize, _centerPixel[1] + pos[1]/_pixelSize;
-    return afwGeom::Point2I(pix);
+    return afwGeom::Point2I::makeXY(_centerPixel[0] + pos[0]/_pixelSize, _centerPixel[1] + pos[1]/_pixelSize);
+}
+
+/**
+ * Return the offset from the chip centre, in mm, given a pixel position
+ */
+afwGeom::Point2D cameraGeom::Detector::getPositionFromIndex(
+        afwGeom::Point2I pix            ///< Pixel coordinates wrt bottom left of Ccd
+                                     ) const
+{
+    return getPositionFromIndex(pix, isTrimmed());
 }
 
 /**
@@ -39,12 +47,12 @@ afwGeom::Point2I cameraGeom::Detector::getIndexFromPosition(
  * This base implementation assumes that all the pixels in the Detector are contiguous and of the same size
  */
 afwGeom::Point2D cameraGeom::Detector::getPositionFromIndex(
-        afwGeom::Point2I pix            ///< Pixel coordinates wrt bottom left of Detector
+        afwGeom::Point2I pix,           ///< Pixel coordinates wrt bottom left of Detector
+        bool const                      ///< Unused
                                                            ) const
 {
-    Eigen::Vector2d pos;
-    pos << (pix[0] - _centerPixel[0])*_pixelSize, (pix[1] - _centerPixel[1])*_pixelSize;
-    return afwGeom::Point2D(pos);
+    return afwGeom::Point2D::makeXY(_center[0] + (pix[0] - _centerPixel[0])*_pixelSize,
+                                    _center[1] + (pix[1] - _centerPixel[1])*_pixelSize);
 }    
 
 /// Offset a Detector by the specified amount

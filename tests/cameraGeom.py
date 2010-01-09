@@ -319,7 +319,7 @@ properties of the detectors"""
         if raftOrigin:
             origin += afwGeom.Extent2I(raftOrigin)
             
-        if False:
+        if not True:
             name = ccd.getId().getName()
         else:
             name = str(ccd.getCenter())
@@ -470,8 +470,8 @@ class CameraGeomTestCase(unittest.TestCase):
         #
         # Test mapping pixel <--> mm
         #
-        pix = afwGeom.Point2I.makeXY(100, 200)
-        pos = afwGeom.Point2D.makeXY(1.0, 2.0)
+        pix = afwGeom.Point2I.makeXY(100, 200) # wrt bottom left
+        pos = afwGeom.Point2D.makeXY(0.0, 1.0) # wrt CCD center
         #
         # Map pix into untrimmed coordinates
         #
@@ -480,7 +480,6 @@ class CameraGeomTestCase(unittest.TestCase):
         pix += afwGeom.Extent2I(afwGeom.Point2I.makeXY(corr[0], corr[1]))
         
         self.assertEqual(ccd.getIndexFromPosition(pos), pix)
-
         self.assertEqualPoint(ccd.getPositionFromIndex(pix), pos)
         #
         # Trim the CCD and try again
@@ -499,8 +498,8 @@ class CameraGeomTestCase(unittest.TestCase):
         #
         # Test mapping pixel <--> mm
         #
-        pix = afwGeom.Point2I.makeXY(100, 200)
-        pos = afwGeom.Point2D.makeXY(1.0, 2.0)
+        pix = afwGeom.Point2I.makeXY(100, 200) # wrt LLC
+        pos = afwGeom.Point2D.makeXY(0.0, 1.0) # wrt chip centre
         
         self.assertEqualPoint(ccd.getIndexFromPosition(pos), pix)
         self.assertEqualPoint(ccd.getPositionFromIndex(pix), pos)
@@ -548,6 +547,14 @@ class CameraGeomTestCase(unittest.TestCase):
 
         self.assertEqual(raft.getSize()[0], raftInfo["widthMm"])
         self.assertEqual(raft.getSize()[1], raftInfo["heightMm"])
+        #
+        # Test mapping pixel <--> mm
+        #
+        pix = afwGeom.Point2I.makeXY(100, 500) # wrt raft LLC
+        pos = afwGeom.Point2D.makeXY(-1.01, 2.02) # wrt raft center
+
+        self.assertEqualPoint(raft.getIndexFromPosition(pos), pix)
+        self.assertEqualPoint(raft.getPositionFromIndex(pix), pos)
         
     def testCamera(self):
         """Test if we can build a Camera out of Rafts"""
@@ -592,6 +599,29 @@ class CameraGeomTestCase(unittest.TestCase):
 
         self.assertEqual(camera.getSize()[0], cameraInfo["widthMm"])
         self.assertEqual(camera.getSize()[1], cameraInfo["heightMm"])
+        #
+        # Test mapping pixel <--> mm
+        #
+        pix = afwGeom.Point2I.makeXY(100, 500) # wrt camera LLC
+        pos = afwGeom.Point2D.makeXY(-3.12, 2.02) # wrt raft center
+
+        if not True:
+            print "pos, pix, found pix", pos, pix, camera.getIndexFromPosition(pos)
+            detL = camera.findDetector(pos)
+            det = detL.getDetector()
+            print "Found", det.getId().getName(), "origin", detL.getOrigin(), det.getCenter()
+
+            det = cameraGeom.cast_Raft(det)
+            detL = det.findDetector(pos)
+            det = detL.getDetector()
+            print "Found", det.getId().getName(), "origin", detL.getOrigin(), det.getCenter()
+            
+
+            print "XX", det.getIndexFromPosition(pos - afwGeom.Extent2D(det.getCenter()))
+
+        if False:
+            self.assertEqualPoint(camera.getIndexFromPosition(pos), pix)
+        self.assertEqualPoint(camera.getPositionFromIndex(pix), pos)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

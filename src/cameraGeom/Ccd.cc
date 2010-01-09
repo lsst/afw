@@ -45,6 +45,8 @@ void cameraGeom::Ccd::addAmp(int const iX, ///< x-index of this Amp
     getAllTrimmedPixels().grow(amp->getDataSec(true).getURC());
     
     _amps.push_back(amp);
+
+    setCenterPixel(afwGeom::PointI::makeXY(getAllPixels(true).getWidth()/2, getAllPixels(true).getHeight()/2));
 }
 
 /************************************************************************************************************/
@@ -62,20 +64,19 @@ afwGeom::Point2I cameraGeom::Ccd::getIndexFromPosition(
     lsst::afw::geom::Point2I centerPixel = getCenterPixel();
     double pixelSize = getPixelSize();
 
-    Eigen::Vector2i pix;
-    pix << centerPixel[0] + pos[0]/pixelSize, centerPixel[1] + pos[1]/pixelSize;
-    return afwGeom::Point2I(pix);
+    return afwGeom::Point2I::makeXY(centerPixel[0] + pos[0]/pixelSize, centerPixel[1] + pos[1]/pixelSize);
 }
 
 /**
  * Return the offset from the chip centre, in mm, given a pixel position
  */
 afwGeom::Point2D cameraGeom::Ccd::getPositionFromIndex(
-        afwGeom::Point2I pix            ///< Pixel coordinates wrt bottom left of Ccd
+        afwGeom::Point2I pix,            ///< Pixel coordinates wrt bottom left of Ccd
+        bool const isTrimmed             ///< Is this detector trimmed?
                                                       ) const
 {
-    if (isTrimmed()) {
-        return cameraGeom::Detector::getPositionFromIndex(pix);
+    if (isTrimmed) {
+        return cameraGeom::Detector::getPositionFromIndex(pix, isTrimmed);
     }
 
     lsst::afw::geom::Point2I centerPixel = getCenterPixel();
@@ -87,9 +88,7 @@ afwGeom::Point2D cameraGeom::Ccd::getPositionFromIndex(
         pix += afwGeom::Extent2I(afwGeom::Point2I::makeXY(off[0], off[1]));
     }
 
-    Eigen::Vector2d pos;
-    pos << (pix[0] - centerPixel[0])*pixelSize, (pix[1] - centerPixel[1])*pixelSize;
-    return afwGeom::Point2D(pos);
+    return afwGeom::Point2D::makeXY((pix[0] - centerPixel[0])*pixelSize, (pix[1] - centerPixel[1])*pixelSize);
 }    
 
 namespace {
@@ -102,8 +101,8 @@ namespace {
         cameraGeom::Id _id;
     };
 
-    struct findByPos {
-        findByPos(
+    struct findByPixel {
+        findByPixel(
                   afwGeom::Point2I point,
                   bool isTrimmed
                  ) :
@@ -157,7 +156,7 @@ cameraGeom::Amp::Ptr cameraGeom::Ccd::findAmp(afwGeom::Point2I const& pixel ///<
 cameraGeom::Amp::Ptr cameraGeom::Ccd::findAmp(afwGeom::Point2I const& pixel, ///< The desired pixel 
                                         bool const isTrimmed                 ///< Is Ccd trimmed?
                                              ) const {
-    AmpSet::const_iterator result = std::find_if(_amps.begin(), _amps.end(), findByPos(pixel, isTrimmed));
+    AmpSet::const_iterator result = std::find_if(_amps.begin(), _amps.end(), findByPixel(pixel, isTrimmed));
     if (result == _amps.end()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::OutOfRangeException,
                           (boost::format("Unable to find Amp containing pixel (%d, %d)") %

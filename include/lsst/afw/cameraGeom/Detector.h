@@ -82,7 +82,7 @@ public:
     /// Set the Detector's Orientation
     void setOrientation(Orientation const& orientation) { _orientation = orientation;}
     /// Return the Detector's Orientation
-    Orientation getOrientation() const { return _orientation;}
+    Orientation const& getOrientation() const { return _orientation;}
 
     /// Set the Detector's center
     virtual void setCenter(afwGeom::Point2D const& center) { _center = center; }
@@ -92,8 +92,9 @@ public:
     // Translate between physical positions in mm to pixels
     //
     virtual afwGeom::Point2I getIndexFromPosition(afwGeom::Point2D pos) const;
-    virtual afwGeom::Point2D getPositionFromIndex(afwGeom::Point2I pos) const;
-
+    virtual afwGeom::Point2D getPositionFromIndex(afwGeom::Point2I pix) const;
+    virtual afwGeom::Point2D getPositionFromIndex(afwGeom::Point2I pix, bool const isTrimmed) const;
+    
     virtual void shift(int dx, int dy);
 protected:
     afwImage::BBox& getAllTrimmedPixels() {
@@ -102,14 +103,14 @@ protected:
 private:
     Id _id;
     bool _isTrimmed;                    // Have all the bias/overclock regions been trimmed?
-    afwImage::BBox _allPixels;  // Bounding box of all the Detector's pixels
+    afwImage::BBox _allPixels;          // Bounding box of all the Detector's pixels
     bool _hasTrimmablePixels;           // true iff Detector has pixels that can be trimmed (e.g. a CCD)
     double _pixelSize;                  // Size of a pixel in mm
-    afwGeom::Point2I _centerPixel; // the pixel defined to be the centre of the Detector
-    Orientation _orientation;  // orientation of this Detector
-    afwGeom::Point2D _center;      // position of _centerPixel (mm)
-    afwGeom::Extent2D _size;    // Size in mm of this Detector
-    afwImage::BBox _trimmedAllPixels; // Bounding box of all the Detector's pixels after bias trimming
+    afwGeom::Point2I _centerPixel;      // the pixel defined to be the centre of the Detector
+    Orientation _orientation;           // orientation of this Detector
+    afwGeom::Point2D _center;           // position of _centerPixel (mm)
+    afwGeom::Extent2D _size;            // Size in mm of this Detector
+    afwImage::BBox _trimmedAllPixels;   // Bounding box of all the Detector's pixels after bias trimming
 };
 
 }}}
