@@ -1,4 +1,3 @@
-
 // -*- lsst-c++ -*-
 //
 //##====----------------                                ----------------====##/
@@ -32,7 +31,7 @@ namespace image = lsst::afw::image;
 typedef Eigen::Matrix2d matrixD;
 
 
-BOOST_AUTO_TEST_CASE(constructors_test) {
+BOOST_AUTO_TEST_CASE(constructors_test) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     image::PointD crval(30.0, 80.9);
     image::PointD crpix(127,127);
     matrixD CD(2,2);
@@ -51,7 +50,7 @@ BOOST_AUTO_TEST_CASE(constructors_test) {
 }
 
 //A trivially easy example of the linear constructor
-BOOST_AUTO_TEST_CASE(linearConstructor) {
+BOOST_AUTO_TEST_CASE(linearConstructor) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     image::PointD crval(0.,0.);
     image::PointD crpix(8.,8.);
     
@@ -78,7 +77,7 @@ BOOST_AUTO_TEST_CASE(linearConstructor) {
 
 //A more complicated example. These numbers are taken from a visual inspection
 //of the field of the white dwarf GD66
-BOOST_AUTO_TEST_CASE(radec_to_xy) {
+BOOST_AUTO_TEST_CASE(radec_to_xy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     image::PointD crval(80.159679, 30.806568);
     image::PointD crpix(891.500000, 893.500000);
     matrixD CD(2,2);
@@ -115,7 +114,7 @@ BOOST_AUTO_TEST_CASE(radec_to_xy) {
 }
     
 
-BOOST_AUTO_TEST_CASE(xy_to_radec) {
+BOOST_AUTO_TEST_CASE(xy_to_radec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     image::PointD crval(80.159679, 30.806568);
     image::PointD crpix(891.500000, 893.500000);
     matrixD CD(2,2);
@@ -151,7 +150,7 @@ BOOST_AUTO_TEST_CASE(xy_to_radec) {
     std::printf("T'end\n");
 }
 
-BOOST_AUTO_TEST_CASE(test_closure) {
+BOOST_AUTO_TEST_CASE(test_closure) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     image::PointD crval(80.159679, 30.806568);
     image::PointD crpix(890.500000, 892.500000);
     matrixD CD(2,2);
@@ -172,7 +171,7 @@ BOOST_AUTO_TEST_CASE(test_closure) {
 }
 
 
-BOOST_AUTO_TEST_CASE(linearMatrix) {
+BOOST_AUTO_TEST_CASE(linearMatrix) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     
     image::PointD crval(80.159679, 30.806568);
     image::PointD crpix(891.500000, 893.500000);

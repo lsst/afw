@@ -22,14 +22,27 @@ int main(int argc, char **argv) {
     unsigned int const KernelRows = 8;
     double const MinSigma = 1.5;
     double const MaxSigma = 2.5;
-    
+
+    std::string mimg;
     if (argc < 2) {
-        std::cerr << "Usage: linearConvolve fitsFile [doBothWays]" << std::endl;
-        std::cerr << "fitsFile excludes the \"_img.fits\" suffix" << std::endl;
-        std::cerr << "doBothWays (default 0); if 1 then also compute using the normal convolve function"
-            << std::endl;
-        return 1;
+        std::string afwdata = getenv("AFWDATA_DIR");
+        if (afwdata.empty()) {
+            std::cerr << "Usage: linearConvolve fitsFile [doBothWays]" << std::endl;
+            std::cerr << "fitsFile excludes the \"_img.fits\" suffix" << std::endl;
+            std::cerr << "doBothWays (default 0); if 1 then also compute using the normal convolve function"
+                      << std::endl;
+            std::cerr << "I can take a default file from AFWDATA_DIR, but it's not defined." << std::endl;
+            std::cerr << "Is afwdata set up?\n" << std::endl;
+            exit(EXIT_FAILURE);
+        } else {
+            mimg = afwdata + "/small_MI";
+            std::cerr << "Using " << mimg << std::endl;
+        }
+        
+    } else {
+        mimg = std::string(argv[1]);
     }
+
     
     { // block in which to allocate and deallocate memory
     
@@ -39,7 +52,7 @@ int main(int argc, char **argv) {
         }
         
         // read in fits file
-        afwImage::MaskedImage<ImagePixel> mImage(argv[1]);
+        afwImage::MaskedImage<ImagePixel> mImage(mimg);
         
         // construct basis kernels
         afwMath::KernelList kernelList;

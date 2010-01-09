@@ -6,9 +6,9 @@ namespace lsst { namespace afw { namespace detection {
 /**
  \page StatisticsExample Statistics
 
- \dontinclude Statistics.cc
+ \dontinclude statistics.cc
 
-Demonstrate the use of Statistics; the code's in \link Statistics.cc\endlink.
+Demonstrate the use of Statistics; the code's in \link statistics.cc\endlink.
 
 Start by including needed headers and declaring namespace aliases
 \until namespace math
@@ -38,6 +38,6 @@ Don't ask for things that you didn't request.
 be tidy and return success (unnecessary; unlike C, C++ will return this 0 for you automatically)
 \until }
 
-\example Statistics.cc
+\example statistics.cc
  */
 }}}

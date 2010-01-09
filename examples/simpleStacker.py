@@ -5,10 +5,8 @@
 # Steve Bickerton
 # An example executible which calls the example 'stack' code 
 #
-import sys, os
 import lsst.afw.math as afwMath
 import lsst.afw.image as afwImage
-import lsst.afw.display.ds9 as ds9
 
 ######################################
 # main body of code

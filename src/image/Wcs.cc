@@ -149,8 +149,8 @@ lsst::afw::image::Wcs::Wcs(PointD crval, ///< ra/dec of centre of image
                            double equinox,         ///< Equinox used to define coord sys, e.g J2000
                            std::string raDecSys   ///<  Astrometry System, e.g FK5 or ICRS
                           ) : LsstBase(typeid(this)),
-                              _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0),
-                              _sipA(1,1), _sipB(1,1), _sipAp(1,1), _sipBp(1,1) {
+                              _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0),
+                              _nReject(0), _sipA(1,1), _sipB(1,1), _sipAp(1,1), _sipBp(1,1) {
 
     initWcslib(crval, crpix, CD, equinox, raDecSys, "RA---TAN", "DEC--TAN");
 }
@@ -166,8 +166,8 @@ lsst::afw::image::Wcs::Wcs(
     double equinox,               ///< Equinox of coord system, e.g J2000
     std::string raDecSys          ///< Celestial reference frame used, e.g FK5 or ICRS
                           ): LsstBase(typeid(this)),
-                             _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0),
-                             _sipA(sipA), _sipB(sipB), _sipAp(sipAp), _sipBp(sipBp) {
+                             _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0),
+                             _nReject(0), _sipA(sipA), _sipB(sipB), _sipAp(sipAp), _sipBp(sipBp) {
 
     if (sipA.rows() != sipA.cols() ){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
@@ -419,8 +419,9 @@ lsst::afw::image::Wcs::Wcs(Wcs const & rhs):
             if (status != 0) {
                 wcsvfree(&_nWcsInfo, &_wcsInfo);
                 throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
-                    (boost::format("Could not copy WCS: wcscopy status = %d for wcs index %d. %s") % status % ii % wcslibErrorMsg(status) ).str());
-
+                            (boost::format("Could not copy WCS: wcscopy status = %d for wcs index %d. %s") %
+                             status % ii % wcslibErrorMsg(status) ).str());
+                
             }
         }
     }
@@ -463,7 +464,8 @@ lsst::afw::image::Wcs & lsst::afw::image::Wcs::operator = (const lsst::afw::imag
                 if (status != 0) {
                     wcsvfree(&_nWcsInfo, &_wcsInfo);
                     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
-                        (boost::format("Failed to copy WCS info; wcscopy status = %d. %s") % status % wcslibErrorMsg(status)).str());
+                        (boost::format("Failed to copy WCS info; wcscopy status = %d. %s") %
+                         status % wcslibErrorMsg(status)).str());
                 }
             }
         }
@@ -519,8 +521,10 @@ bool lsst::afw::image::Wcs::isFlipped() {
 ///
 /// Move the pixel reference position by (dx, dy)
 ///
-void lsst::afw::image::Wcs::shiftReferencePixel(double const dx, ///< How many pixels to shift in the column direction
-                                                double const dy  ///< How many pixels to shift in the row direction
+void lsst::afw::image::Wcs::shiftReferencePixel(double const dx, ///< How many pixels to shift
+                                                                 ///<   in the column direction
+                                                double const dy  ///< How many pixels to shift
+                                                                 ///<   in the row direction
                                                ) {
     //If the _wcsInfo structure hasn't been initialised yet, then there's nothing to do
     if(_wcsInfo != NULL) {
@@ -561,7 +565,8 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::getOriginXY() const {
 /// [ ra ] = [ c11 c12 ]   [ col ]
 /// [dec ]   [ c21 c22 ]   [ row ] 
 ///
-/// where (col,row) = (0,0) = (ra, dec) is the centre of the WCS colution, and the matrix C is return by this function.
+/// where (col,row) = (0,0) = (ra, dec) is the centre of the WCS colution,
+///   and the matrix C is return by this function.
 Eigen::Matrix2d lsst::afw::image::Wcs::getLinearTransformMatrix() const {
 
     if(_wcsInfo == NULL) {
@@ -651,7 +656,8 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::raDecToXY(
     status = wcss2p(_wcsInfo, 1, 2, skyTmp, &phi, &theta, imgcrd, pixTmp, stat);
     if (status > 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
-                          (boost::format("Error: wcslib returned a status code of %d. %s") % status % wcslibErrorMsg(status)).str());
+                          (boost::format("Error: wcslib returned a status code of %d. %s") %
+                           status % wcslibErrorMsg(status)).str());
     }
 
     
@@ -688,9 +694,9 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::raDecToXY(
         pixTmp[1] = V + G + _wcsInfo->crpix[1];
     }
 
-
+    // wcslib assumes 1-indexed coords
     return lsst::afw::image::PointD(pixTmp[0] + lsst::afw::image::PixelZeroPos - 1,
-                                    pixTmp[1] + lsst::afw::image::PixelZeroPos - 1); // wcslib assumes 1-indexed coords
+                                    pixTmp[1] + lsst::afw::image::PixelZeroPos - 1); 
 }
 
 
@@ -714,8 +720,9 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::xyToRaDec(
         throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
     }
 
+    // wcslib assumes 1-indexed coordinates
     double pixTmp[2] = { x - lsst::afw::image::PixelZeroPos + 1,
-                               y - lsst::afw::image::PixelZeroPos + 1}; // wcslib assumes 1-indexed coordinates
+                               y - lsst::afw::image::PixelZeroPos + 1}; 
     double imgcrd[2];
     double phi, theta;
     double skyTmp[2];
@@ -758,7 +765,8 @@ lsst::afw::image::PointD lsst::afw::image::Wcs::xyToRaDec(
     if (status > 0) {
         wcsprt(_wcsInfo);
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
-                          (boost::format("Error: wcslib returned a status code of  %d. %s") % status % wcslibErrorMsg(status) ).str());
+                          (boost::format("Error: wcslib returned a status code of  %d. %s") %
+                           status % wcslibErrorMsg(status) ).str());
                           
     }
 
@@ -843,7 +851,9 @@ image::PointI getImageXY0FromMetadata(std::string const& wcsName,            ///
         //
         // Only use WCS if CRPIX[12] == 1 and CRVAL[12] is present
         //
-        if (metadata->getAsDouble("CRPIX1" + wcsName) == 1 && metadata->getAsDouble("CRPIX2" + wcsName) == 1) {
+        if (metadata->getAsDouble("CRPIX1" + wcsName) == 1 &&
+            metadata->getAsDouble("CRPIX2" + wcsName) == 1) {
+            
             x0 = metadata->getAsInt("CRVAL1" + wcsName);
             y0 = metadata->getAsInt("CRVAL2" + wcsName);
             //

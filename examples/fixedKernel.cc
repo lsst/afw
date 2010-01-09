@@ -1,3 +1,4 @@
+// -*- lsst-c++ -*-
 #include <iostream>
 
 #include "boost/shared_ptr.hpp"
@@ -25,7 +26,8 @@ int main() {
     
     lsst::afw::math::FixedKernel fixedKernel(analyticImage);
 
-    cout << boost::format("Gaussian kernel with majorSigma=%.1f, minorSigma=%.1f\n") % majorSigma % minorSigma;
+    cout << boost::format("Gaussian kernel with majorSigma=%.1f, minorSigma=%.1f\n") %
+        majorSigma % minorSigma;
 
     lsst::afw::math::printKernel(fixedKernel, true);
 }

@@ -10,7 +10,6 @@ except ImportError, e:
     print >> sys.stderr, "Cannot import xpa: %s" % e
 
 import displayLib
-import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 
 ## An error talking to ds9
@@ -86,7 +85,8 @@ def getMaskPlaneColor(name):
         return None
 
 def setMaskPlaneVisibility(name, show=True):
-    """Specify the visibility of a given mask plane; name may be a dictionary (in which case show will be ignored)"""
+    """Specify the visibility of a given mask plane;
+    name may be a dictionary (in which case show will be ignored)"""
 
     global _maskPlaneVisibility
     try:
@@ -150,45 +150,46 @@ def getXpaAccessPoint():
     return "ds9"
 
 def ds9Cmd(cmd, trap=True):
-   """Issue a ds9 command, raising errors as appropriate"""
+    """Issue a ds9 command, raising errors as appropriate"""
    
-   if getDefaultFrame() is None:
-       return
+    if getDefaultFrame() is None:
+        return
 
-   try:
-      xpa.set(None, getXpaAccessPoint(), cmd, "", "", 0)
-   except IOError, e:
-      if not trap:
-          raise Ds9Error, "XPA: %s, (%s)" % (e, cmd)
-      else:
-          print >> sys.stderr, "Caught ds9 exception processing command \"%s\": %s" % (cmd, e)
+    try:
+        xpa.set(None, getXpaAccessPoint(), cmd, "", "", 0)
+    except IOError, e:
+        if not trap:
+            raise Ds9Error, "XPA: %s, (%s)" % (e, cmd)
+        else:
+            print >> sys.stderr, "Caught ds9 exception processing command \"%s\": %s" % (cmd, e)
 
 def initDS9(execDs9=True):
-   try:
-      xpa.reset()
-      ds9Cmd("iconify no; raise", False)
-      ds9Cmd("wcs wcsa", False)         # include the pixel coordinates WCS (WCSA)
-   except Ds9Error, e:
-      if execDs9:
-         print "ds9 doesn't appear to be running (%s), I'll exec it for you" % e
-         if not re.search('xpa', os.environ['PATH']):
+    try:
+        xpa.reset()
+        ds9Cmd("iconify no; raise", False)
+        ds9Cmd("wcs wcsa", False)         # include the pixel coordinates WCS (WCSA)
+    except Ds9Error, e:
+        if execDs9:
+            print "ds9 doesn't appear to be running (%s), I'll exec it for you" % e
+        if not re.search('xpa', os.environ['PATH']):
             raise Ds9Error, 'You need the xpa binaries in your path to use ds9 with python'
 
-         os.system('ds9 &')
-         for i in range(10):
+        os.system('ds9 &')
+        for i in range(10):
             try:
-               ds9Cmd("frame 0", False)
-               break
+                ds9Cmd("frame 0", False)
+                break
             except Ds9Error:
-               print "waiting for ds9...\r",; sys.stdout.flush()
-               time.sleep(0.5)
+                print "waiting for ds9...\r",
+                sys.stdout.flush()
+                time.sleep(0.5)
             else:
-               print "                  \r",
-               break
+                print "                  \r",
+                break
 
-         sys.stdout.flush();
-
-      raise Ds9Error
+        sys.stdout.flush()
+        
+        raise Ds9Error
 
 def show(frame=-1):
     """Uniconify and Raise ds9.  N.b. throws an exception if frame doesn't exit"""
@@ -206,144 +207,148 @@ def setMaskColor(color=GREEN):
 
 
 def mtv(data, frame=-1, init=True, wcs=None, isMask=False, lowOrderBits=False, title=None, settings=None):
-   """Display an Image or Mask on a DS9 display
+    """Display an Image or Mask on a DS9 display
 
-   If lowOrderBits is True, give low-order-bits priority in display (i.e.
-overlay them last)
+    If lowOrderBits is True, give low-order-bits priority in display (i.e.
+    overlay them last)
 
-Historical note: the name "mtv" comes from Jim Gunn's forth imageprocessing
-system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
-   """
+    Historical note: the name "mtv" comes from Jim Gunn's forth imageprocessing
+    system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
+    """
 
-   if frame < 0:
+    if frame < 0:
         frame = getDefaultFrame()
 
-   if frame is None:
-       return
+    if frame is None:
+        return
    
-   if init:
-      for i in range(3):
-         try:
-            initDS9(i == 0)
-         except Ds9Error:
-            print "waiting for ds9...\r", ; sys.stdout.flush();
-            time.sleep(0.5)
-         else:
-            print "                                     \r", ; sys.stdout.flush();
-            break
+    if init:
+        for i in range(3):
+            try:
+                initDS9(i == 0)
+            except Ds9Error:
+                print "waiting for ds9...\r",
+                sys.stdout.flush()
+                time.sleep(0.5)
+            else:
+                print "                                     \r",
+                sys.stdout.flush()
+                break
          
-   ds9Cmd("frame %d" % frame)
+    ds9Cmd("frame %d" % frame)
 
-   if settings:
-       for setting in settings:
-           ds9Cmd("%s %s" % (setting, settings[setting]))
+    if settings:
+        for setting in settings:
+            ds9Cmd("%s %s" % (setting, settings[setting]))
 
-   if re.search("::DecoratedImage<", data.__repr__()): # it's a DecorateImage; display it
-       _mtv(data.getImage(), wcs, title, False)
-   elif re.search("::MaskedImage<", data.__repr__()): # it's a MaskedImage; display the Image and overlay the Mask
-       _mtv(data.getImage(), wcs, title, False)
-       mask = data.getMask(True)
-       if mask:
-           mtv(mask, frame, False, wcs, False, lowOrderBits=lowOrderBits, title=title, settings=settings)
-           if getMaskTransparency() is not None:
-               ds9Cmd("mask transparency %d" % getMaskTransparency())
+    if re.search("::DecoratedImage<", data.__repr__()): # it's a DecorateImage; display it
+        _mtv(data.getImage(), wcs, title, False)
+    elif re.search("::MaskedImage<", data.__repr__()): # it's a MaskedImage; display Image and overlay Mask
+        _mtv(data.getImage(), wcs, title, False)
+        mask = data.getMask(True)
+        if mask:
+            mtv(mask, frame, False, wcs, False, lowOrderBits=lowOrderBits, title=title, settings=settings)
+            if getMaskTransparency() is not None:
+                ds9Cmd("mask transparency %d" % getMaskTransparency())
 
-   elif re.search("::Exposure<", data.__repr__()): # it's an Exposure; display the MaskedImage with the WCS
-       if wcs:
-           raise RuntimeError, "You may not specify a wcs with an Exposure"
+    elif re.search("::Exposure<", data.__repr__()): # it's an Exposure; display the MaskedImage with the WCS
+        if wcs:
+            raise RuntimeError, "You may not specify a wcs with an Exposure"
 
-       mtv(data.getMaskedImage(), frame, False, data.getWcs(), False, lowOrderBits=lowOrderBits, title=title, settings=settings)
+        mtv(data.getMaskedImage(), frame, False, data.getWcs(),
+            False, lowOrderBits=lowOrderBits, title=title, settings=settings)
 
-   elif re.search("::Mask<", data.__repr__()): # it's a Mask; display it, bitplane by bitplane
-       nMaskPlanes = data.getNumPlanesUsed()
-       maskPlanes = data.getMaskPlaneDict()
+    elif re.search("::Mask<", data.__repr__()): # it's a Mask; display it, bitplane by bitplane
+        nMaskPlanes = data.getNumPlanesUsed()
+        maskPlanes = data.getMaskPlaneDict()
 
-       planes = {}                      # build inverse dictionary
-       for key in maskPlanes.keys():
-           planes[maskPlanes[key]] = key
+        planes = {}                      # build inverse dictionary
+        for key in maskPlanes.keys():
+            planes[maskPlanes[key]] = key
 
-       colorIndex = 0                   # index into maskColors
+        colorIndex = 0                   # index into maskColors
 
-       if lowOrderBits:
-           planeList = range(nMaskPlanes - 1, -1, -1)
-       else:
-           planeList = range(nMaskPlanes)
+        if lowOrderBits:
+            planeList = range(nMaskPlanes - 1, -1, -1)
+        else:
+            planeList = range(nMaskPlanes)
            
-       usedPlanes = long(afwMath.makeStatistics(data, afwMath.SUM).getValue())
-       mask = data.Factory(data.getDimensions())
+        usedPlanes = long(afwMath.makeStatistics(data, afwMath.SUM).getValue())
+        mask = data.Factory(data.getDimensions())
        
-       for p in planeList:
-           if planes[p] or True:
-               if not getMaskPlaneVisibility(planes[p]):
-                   continue
+        for p in planeList:
+            if planes[p] or True:
+                if not getMaskPlaneVisibility(planes[p]):
+                    continue
 
-               if not ((1 << p) & usedPlanes): # no pixels have this bitplane set
-                   continue
+                if not ((1 << p) & usedPlanes): # no pixels have this bitplane set
+                    continue
 
-               mask <<= data
-               mask &= (1 << p)
+                mask <<= data
+                mask &= (1 << p)
 
-               color = getMaskPlaneColor(planes[p])
+                color = getMaskPlaneColor(planes[p])
 
-               if not color:            # none was specified
-                   while True:
-                       color = _maskColors[colorIndex%len(_maskColors)]; colorIndex += 1
-                       if color != WHITE and color != BLACK:
-                           break
+                if not color:            # none was specified
+                    while True:
+                        color = _maskColors[colorIndex % len(_maskColors)]
+                        colorIndex += 1
+                        if color != WHITE and color != BLACK:
+                            break
 
-               setMaskColor(color)
-               _mtv(mask, wcs, title, True)
-       return
-   elif re.search("::Image<", data.__repr__()): # it's an Image; display it
-       _mtv(data, wcs, title, False)
-   else:
-       raise RuntimeError, "Unsupported type %s" % data.__repr__()
+                setMaskColor(color)
+                _mtv(mask, wcs, title, True)
+        return
+    elif re.search("::Image<", data.__repr__()): # it's an Image; display it
+        _mtv(data, wcs, title, False)
+    else:
+        raise RuntimeError, "Unsupported type %s" % data.__repr__()
 
 def _mtv(data, wcs, title, isMask):
-   """Internal routine to display an Image or Mask on a DS9 display"""
+    """Internal routine to display an Image or Mask on a DS9 display"""
 
-   if True:
-       if isMask:
-           xpa_cmd = "xpaset %s fits mask" % getXpaAccessPoint()
-           if re.search(r"unsigned short|boost::uint16_t", data.__str__()):
-               data |= 0x8000;          # Hack.  ds9 mis-handles BZERO/BSCALE in masks. This is a copy we're modifying
-       else:
-           xpa_cmd = "xpaset %s fits" % getXpaAccessPoint()
+    if True:
+        if isMask:
+            xpa_cmd = "xpaset %s fits mask" % getXpaAccessPoint()
+            if re.search(r"unsigned short|boost::uint16_t", data.__str__()):
+                data |= 0x8000  # Hack. ds9 mis-handles BZERO/BSCALE in masks. This is a copy we're modifying
+        else:
+            xpa_cmd = "xpaset %s fits" % getXpaAccessPoint()
            
-       pfd = os.popen(xpa_cmd, "w")
-   else:
-       pfd = file("foo.fits", "w")
+        pfd = os.popen(xpa_cmd, "w")
+    else:
+        pfd = file("foo.fits", "w")
 
-   try:
-       #import pdb; pdb.set_trace()
-       displayLib.writeFitsImage(pfd.fileno(), data, wcs, title)
-   except Exception, e:
-       try:
-           pfd.close()
-       except:
-           pass
+    try:
+        #import pdb; pdb.set_trace()
+        displayLib.writeFitsImage(pfd.fileno(), data, wcs, title)
+    except Exception, e:
+        try:
+            pfd.close()
+        except:
+            pass
        
-       raise e
+        raise e
 
-   try:
-       pfd.close()
-   except:
-       pass
+    try:
+        pfd.close()
+    except:
+        pass
 #
 # Graphics commands
 #
 def erase(frame=-1):
-   """Erase the specified DS9 frame"""
-   if frame < 0:
+    """Erase the specified DS9 frame"""
+    if frame < 0:
         frame = getDefaultFrame()
+        
+    if frame is None:
+        return
 
-   if frame is None:
-       return
-
-   ds9Cmd("frame %d; regions delete all" % frame)
+    ds9Cmd("frame %d; regions delete all" % frame)
 
 def dot(symb, c, r, frame=-1, size=2, ctype=None):
-   """Draw a symbol onto the specified DS9 frame at (col,row) = (c,r) [0-based coordinates]
+    """Draw a symbol onto the specified DS9 frame at (col,row) = (c,r) [0-based coordinates]
 Possible values are:
         +                Draw a +
         x                Draw an x
@@ -351,121 +356,124 @@ Possible values are:
         @:Mxx,Mxy,Myy    Draw an ellipse with moments (Mxx, Mxy, Myy) (size is ignored)
 Any other value is interpreted as a string to be drawn
 """
-   if frame < 0:
+    if frame < 0:
         frame = getDefaultFrame()
 
-   if frame is None:
-       return
+    if frame is None:
+        return
 
-   if isinstance(symb, int):
-       symb = "%d" % (symb)
+    if isinstance(symb, int):
+        symb = "%d" % (symb)
 
-   if ctype == None:
-       color = ""                       # the default
-   else:
-       color = ' # color=%s' % ctype
+    if ctype == None:
+        color = ""                       # the default
+    else:
+        color = ' # color=%s' % ctype
 
-   cmd = "frame %d; " % frame
-   r += 1; c += 1;                      # ds9 uses 1-based coordinates
-   if symb == '+':
-      cmd += 'regions command {line %g %g %g %g%s}; ' % (c, r+size, c, r-size, color)
-      cmd += 'regions command {line %g %g %g %g%s}; ' % (c-size, r, c+size, r, color)
-   elif symb == 'x':
-      size = size/math.sqrt(2)
-      cmd += 'regions command {line %g %g %g %g%s}; ' % (c+size, r+size, c-size, r-size, color)
-      cmd += 'regions command {line %g %g %g %g%s}; ' % (c-size, r+size, c+size, r-size, color)
-   elif symb == 'o':
-      cmd += 'regions command {circle %g %g %g%s}; ' % (c, r, size, color)
-   elif re.search(r"^@:", symb):
-       mat = re.search(r"^@:([^,]+),([^,]+),([^,]+)", symb)
-       mxx, mxy, myy = map(lambda x: float(x), mat.groups())
+    cmd = "frame %d; " % frame
+    r += 1
+    c += 1                      # ds9 uses 1-based coordinates
+    if symb == '+':
+        cmd += 'regions command {line %g %g %g %g%s}; ' % (c, r+size, c, r-size, color)
+        cmd += 'regions command {line %g %g %g %g%s}; ' % (c-size, r, c+size, r, color)
+    elif symb == 'x':
+        size = size/math.sqrt(2)
+        cmd += 'regions command {line %g %g %g %g%s}; ' % (c+size, r+size, c-size, r-size, color)
+        cmd += 'regions command {line %g %g %g %g%s}; ' % (c-size, r+size, c+size, r-size, color)
+    elif symb == 'o':
+        cmd += 'regions command {circle %g %g %g%s}; ' % (c, r, size, color)
+    elif re.search(r"^@:", symb):
+        mat = re.search(r"^@:([^,]+),([^,]+),([^,]+)", symb)
+        mxx, mxy, myy = map(lambda x: float(x), mat.groups())
 
-       theta = (0.5*math.atan2(2*mxy, mxx - myy))
-       ct, st = math.cos(theta), math.sin(theta)
-       theta *= 180/math.pi
-       A = math.sqrt(mxx*ct*ct + mxy*2*ct*st + myy*st*st)
-       B = math.sqrt(mxx*st*st - mxy*2*ct*st + myy*ct*ct)
-       if A < B:
-           A, B = B, A
-           theta += 90
+        theta = (0.5*math.atan2(2*mxy, mxx - myy))
+        ct, st = math.cos(theta), math.sin(theta)
+        theta *= 180/math.pi
+        A = math.sqrt(mxx*ct*ct + mxy*2*ct*st + myy*st*st)
+        B = math.sqrt(mxx*st*st - mxy*2*ct*st + myy*ct*ct)
+        if A < B:
+            A, B = B, A
+            theta += 90
        
-       cmd += 'regions command {ellipse %g %g %g %g %g%s}; ' % (c, r, A, B, theta, color)
-   else:
-       try:
-           # We have to check for the frame's existance with show() as the text command crashed ds9 5.4
-           # if it doesn't
-           show(frame)
-           cmd += 'regions command {text %g %g \"%s\"%s}' % (c, r, symb, color)
-       except:
-           print >> sys.stderr, "Ds9 frame %d doesn't exist" % frame
+        cmd += 'regions command {ellipse %g %g %g %g %g%s}; ' % (c, r, A, B, theta, color)
+    else:
+        try:
+            # We have to check for the frame's existance with show() as the text command crashed ds9 5.4
+            # if it doesn't
+            show(frame)
+            cmd += 'regions command {text %g %g \"%s\"%s}' % (c, r, symb, color)
+        except:
+            print >> sys.stderr, "Ds9 frame %d doesn't exist" % frame
 
-   ds9Cmd(cmd)
+    ds9Cmd(cmd)
 
 def line(points, frame=-1, symbs=False, ctype=None):
-   """Draw a set of symbols or connect the points, a list of (col,row)
+    """Draw a set of symbols or connect the points, a list of (col,row)
 If symbs is True, draw points at the specified points using the desired symbol,
 otherwise connect the dots.  Ctype is the name of a colour (e.g. 'red')"""
    
-   if frame < 0:
+    if frame < 0:
         frame = getDefaultFrame()
 
-   if frame is None:
-       return
+    if frame is None:
+        return
 
-   if symbs:
-      for (c, r) in points:
-         dot(symbs, r, c, frame = frame, size = 0.5, ctype=ctype)
-   else:
-      if ctype == None:                # default
-          color = ""
-      else:
-          color = "# color=%s" % ctype
+    if symbs:
+        for (c, r) in points:
+            dot(symbs, r, c, frame = frame, size = 0.5, ctype=ctype)
+    else:
+        if ctype == None:                # default
+            color = ""
+        else:
+            color = "# color=%s" % ctype
 
-      if len(points) > 0:
-          cmd = "frame %d; " % (frame)
+        if len(points) > 0:
+            cmd = "frame %d; " % (frame)
 
-          c0, r0 = points[0];
-          r0 += 1; c0 += 1;             # ds9 uses 1-based coordinates
-          for (c, r) in points[1:]:
-             r += 1; c += 1;            # ds9 uses 1-based coordinates
-             cmd += 'regions command { line %g %g %g %g %s};' % (c0, r0, c, r, color)
-             c0, r0 = c, r
+            c0, r0 = points[0]
+            r0 += 1
+            c0 += 1             # ds9 uses 1-based coordinates
+            for (c, r) in points[1:]:
+                r += 1
+                c += 1            # ds9 uses 1-based coordinates
+                cmd += 'regions command { line %g %g %g %g %s};' % (c0, r0, c, r, color)
+                c0, r0 = c, r
 
-          ds9Cmd(cmd)
+            ds9Cmd(cmd)
 #
 # Zoom and Pan
 #
 def zoom(zoomfac=None, colc=None, rowc=None, frame=-1):
-   """Zoom frame by specified amount, optionally panning also"""
+    """Zoom frame by specified amount, optionally panning also"""
+    
+    if frame < 0:
+        frame = getDefaultFrame()
+        
+    if frame is None:
+        return
 
-   if frame < 0:
-       frame = getDefaultFrame()
-
-   if frame is None:
-       return
-
-   if (rowc and colc is None) or (colc and rowc is None):
-      raise Ds9Error, "Please specify row and column center to pan about"
+    if (rowc and colc is None) or (colc and rowc is None):
+        raise Ds9Error, "Please specify row and column center to pan about"
    
-   if zoomfac == None and rowc == None:
-      zoomfac = 2
+    if zoomfac == None and rowc == None:
+        zoomfac = 2
 
-   cmd = "frame %d; " % frame
-   if zoomfac != None:
-      cmd += "zoom to %d; " % zoomfac
+    cmd = "frame %d; " % frame
+    if zoomfac != None:
+        cmd += "zoom to %d; " % zoomfac
 
-   if rowc != None:
-      cmd += "pan to %g %g physical; " % (colc + 1, rowc + 1) # ds9 is 1-indexed. Grrr
+    if rowc != None:
+        cmd += "pan to %g %g physical; " % (colc + 1, rowc + 1) # ds9 is 1-indexed. Grrr
 
-   ds9Cmd(cmd)
+    ds9Cmd(cmd)
 
 def pan(colc=None, rowc=None, frame=-1):
-   """Pan to (rowc, colc); see also zoom"""
+    """Pan to (rowc, colc); see also zoom"""
 
-   if frame < 0:
+    if frame < 0:
         frame = getDefaultFrame()
 
-   if frame is None:
-       return
+    if frame is None:
+        return
 
-   zoom(None, colc, rowc, frame)
+    zoom(None, colc, rowc, frame)

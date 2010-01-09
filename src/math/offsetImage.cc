@@ -1,3 +1,4 @@
+// -*- lsst-c++ -*-
 /**
  * @file
  *
@@ -25,9 +26,9 @@ namespace math {
  * @throw lsst::pex::exceptions::InvalidParameterException if the algorithm's invalid
  */
 template<typename ImageT>
-typename ImageT::Ptr offsetImage(ImageT const& inImage,            ///< The %image to offset
-                                 float dx,                         ///< move the %image this far in the column direction
-                                 float dy,                         ///< move the %image this far in the row direction
+typename ImageT::Ptr offsetImage(ImageT const& inImage,  ///< The %image to offset
+                                 float dx,               ///< move the %image this far in the column direction
+                                 float dy,               ///< move the %image this far in the row direction
                                  std::string const& algorithmName  ///< Type of resampling Kernel to use
                                 ) {
     SeparableKernel::Ptr offsetKernel = makeWarpingKernel(algorithmName);
@@ -41,10 +42,12 @@ typename ImageT::Ptr offsetImage(ImageT const& inImage,            ///< The %ima
     //
     if (dx > -1 && dx < 1 && dy > -1 && dy < 1) {
         if(deltaX.first != 0) {
-            deltaX.second += deltaX.first;  deltaX.first = 0;
+            deltaX.second += deltaX.first;
+            deltaX.first = 0;
         }
         if (deltaY.first != 0) {
-            deltaY.second += deltaY.first;  deltaY.first = 0;
+            deltaY.second += deltaY.first;
+            deltaY.first = 0;
         }
     }
     //
@@ -55,7 +58,8 @@ typename ImageT::Ptr offsetImage(ImageT const& inImage,            ///< The %ima
     // And now the fractional part.  N.b. the fraction parts
     //
     // We seem to have to pass -dx, -dy to setKernelParameters, for reasons RHL doesn't understand
-    dx = -deltaX.second; dy = -deltaY.second;
+    dx = -deltaX.second;
+    dy = -deltaY.second;
 
     //
     // If the shift is -ve, the generated shift kernel (e.g. Lanczos5) is quite asymmetric, with the

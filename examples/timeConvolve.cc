@@ -76,17 +76,29 @@ void timeConvolution(ImageClass &image, unsigned int nIter) {
 
 int main(int argc, char **argv) {
 
+
+    std::string mimg;
     if (argc < 2) {
-        std::cout << "Time convolution with a spatially invariant kernel" << std::endl << std::endl;
-        std::cout << "Usage: timeConvolve fitsFile [nIter]" << std::endl;
-        std::cout << "fitsFile excludes the \"_img.fits\" suffix" << std::endl;
-        std::cout << "nIter (default " << DefNIter
-            << ") is the number of iterations per kernel size" << std::endl;
-        std::cout << "Kernel size ranges from " << MinKernelSize << " to " << MaxKernelSize
-            << " in steps of " << DeltaKernelSize << " pixels on a side" << std::endl;
-        return 1;
+        std::string afwdata = getenv("AFWDATA_DIR");
+        if (afwdata.empty()) {
+            std::cout << "Time convolution with a spatially invariant kernel" << std::endl << std::endl;
+            std::cout << "Usage: timeConvolve fitsFile [nIter]" << std::endl;
+            std::cout << "fitsFile excludes the \"_img.fits\" suffix" << std::endl;
+            std::cout << "nIter (default " << DefNIter
+                      << ") is the number of iterations per kernel size" << std::endl;
+            std::cout << "Kernel size ranges from " << MinKernelSize << " to " << MaxKernelSize
+                      << " in steps of " << DeltaKernelSize << " pixels on a side" << std::endl;
+            std::cerr << "I can take a default file from AFWDATA_DIR, but it's not defined." << std::endl;
+            std::cerr << "Is afwdata set up?\n" << std::endl;
+            exit(EXIT_FAILURE);
+        } else {
+            mimg = afwdata + "/small_MI";
+            std::cerr << "Using " << mimg << std::endl;
+        }
+    } else {
+        mimg = std::string(argv[1]);
     }
-    
+
     unsigned int nIter = DefNIter;
     if (argc > 2) {
         std::istringstream(argv[2]) >> nIter;
@@ -101,7 +113,7 @@ int main(int argc, char **argv) {
     std::cout << "  * four pixel pointer increments (for image, variance, mask and kernel)" << std::endl;
     std::cout << "* CnvSec: time to perform one convolution (sec)" << std::endl;
 
-    std::string maskedImagePath(argv[1]);
+    std::string maskedImagePath(mimg);
     std::string imagePath = maskedImagePath + "_img.fits";
 
     std::cout << std::endl << "Image " << imagePath << std::endl;
@@ -109,6 +121,6 @@ int main(int argc, char **argv) {
     timeConvolution(image, nIter);
     
     std::cout << std::endl << "MaskedImage " << maskedImagePath << std::endl;
-    afwImage::MaskedImage<ImageType> mImage(argv[1]);
+    afwImage::MaskedImage<ImageType> mImage(mimg);
     timeConvolution(mImage, nIter);
 }

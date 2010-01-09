@@ -15,7 +15,6 @@ class MinimizeTestCase(unittest.TestCase):
         variances   = numpy.array([0.01, 0.01, 0.01, 0.01])
         xPositions   = numpy.array([0.0, 1.0, 0.0, 1.0])
         yPositions   = numpy.array([0.0, 0.0, 1.0, 1.0])
-        errorDef = 0.1
     
         polyOrder = 1
         polyFunc = afwMath.PolynomialFunction2D(polyOrder)
@@ -24,7 +23,7 @@ class MinimizeTestCase(unittest.TestCase):
         polyFunc.setParameters(modelParams)
         measurements = []
         for x, y in zip(xPositions, yPositions):
-            measurements.append(polyFunc(x,y))
+            measurements.append(polyFunc(x, y))
         print "measurements=", measurements
     
         # Set up initial guesses

@@ -173,7 +173,8 @@ double MinimizerFunctionBase2<ReturnT>::operator() (const std::vector<double>& p
     
     double chi2 = 0.0;
     for (unsigned int i = 0; i < this->_measurementList.size(); i++) {
-        double resid = (*(this->_functionPtr))(this->_xPositionList[i], this->_yPositionList[i]) - this->_measurementList[i];
+        double resid = (*(this->_functionPtr))(this->_xPositionList[i],
+                                               this->_yPositionList[i]) - this->_measurementList[i];
         chi2 += resid * resid / this->_varianceList[i];
     }
     
@@ -283,7 +284,7 @@ template<typename ReturnT>
 afwMath::FitResults afwMath::minimize(
     afwMath::Function2<ReturnT> const &function,  ///< function(x,y) to be minimized
     std::vector<double> const &initialParameterList,    ///< initial guess for parameters
-    std::vector<double> const &stepSizeList,        ///< step size for each parameter; use 0.0 to fix a parameter
+    std::vector<double> const &stepSizeList,    ///< step size for each parameter; use 0.0 to fix a parameter
     std::vector<double> const &measurementList, ///< measured values
     std::vector<double> const &varianceList,    ///< variance for each measurement
     std::vector<double> const &xPositionList,   ///< x position of each measurement
@@ -292,20 +293,25 @@ afwMath::FitResults afwMath::minimize(
 ) {
     unsigned int const nParameters = function.getNParameters();
     if (initialParameterList.size() != nParameters) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "initialParameterList is the wrong length");
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                          "initialParameterList is the wrong length");
     }
     if (stepSizeList.size() != nParameters) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "stepSizeList is the wrong length");
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                          "stepSizeList is the wrong length");
     }
     unsigned int const nMeasurements = measurementList.size();
     if (varianceList.size() != nMeasurements) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "varianceList is the wrong length");
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                          "varianceList is the wrong length");
     }
     if (xPositionList.size() != nMeasurements) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "xPositionList is the wrong length");
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                          "xPositionList is the wrong length");
     }
     if (yPositionList.size() != nMeasurements) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "yPositionList is the wrong length");
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                          "yPositionList is the wrong length");
     }
 
     MinimizerFunctionBase2<ReturnT> minimizerFunc(
@@ -353,7 +359,7 @@ afwMath::FitResults afwMath::minimize(
 #define minimizeFuncs(ReturnT) \
     template afwMath::FitResults afwMath::minimize( \
         afwMath::Function1<ReturnT> const &, \
-        std::vector<double> const &, \
+        std::vector<double> const &,         \
         std::vector<double> const &, \
         std::vector<double> const &, \
         std::vector<double> const &, \

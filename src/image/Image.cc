@@ -1,3 +1,4 @@
+// -*- lsst-c++ -*-
 /**
  * \file
  * \brief Implementation for ImageBase and Image
@@ -92,7 +93,8 @@ image::ImageBase<PixelT>::ImageBase(
     _ix0(rhs._ix0 + bbox.getX0()), _iy0(rhs._iy0 + bbox.getY0()),
     _x0(rhs._x0 + bbox.getX0()), _y0(rhs._y0 + bbox.getY0())
 {
-    if (_ix0 < 0 || _iy0 < 0 || _ix0 + getWidth() > _gilImage->width() || _iy0 + getHeight() > _gilImage->height()) {
+    if (_ix0 < 0 || _iy0 < 0 ||
+        _ix0 + getWidth() > _gilImage->width() || _iy0 + getHeight() > _gilImage->height()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
                           (boost::format("BBox (%d,%d) %dx%d doesn't fit in image") %
                               bbox.getX0() % bbox.getY0() % bbox.getWidth() % bbox.getHeight()).str());
@@ -208,10 +210,12 @@ typename image::ImageBase<PixelT>::fast_iterator image::ImageBase<PixelT>::begin
     bool contiguous         ///< Pixels are contiguous (must be true)
 ) const {
     if (!contiguous) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Only contiguous == true makes sense");
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                          "Only contiguous == true makes sense");
     }
     if (row_begin(getHeight() - 1) + getWidth()*getHeight() != row_end(0)) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Image's pixels are not contiguous");
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                          "Image's pixels are not contiguous");
     }
 
     return row_begin(getHeight() - 1);
@@ -227,7 +231,8 @@ typename image::ImageBase<PixelT>::fast_iterator image::ImageBase<PixelT>::end(
     bool contiguous         ///< Pixels are contiguous (must be true)
 ) const {
     if (!contiguous) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Only contiguous == true makes sense"); 
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                          "Only contiguous == true makes sense"); 
     }
     if (row_begin(getHeight() - 1) + getWidth()*getHeight() != row_end(0)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Image's pixels are not contiguous");
@@ -345,10 +350,10 @@ image::Image<PixelT>::Image(Image const& rhs, ///< Right-hand-side Image
  * this is probably what you want 
  */
 template<typename PixelT>
-image::Image<PixelT>::Image(Image const& rhs,             ///< Right-hand-side Image
-                            BBox const& bbox,             ///< Specify desired region
-                            bool const deep               ///< If false, new ImageBase shares storage with rhs; if true
-                                                          ///< make a new, standalone, ImageBase
+image::Image<PixelT>::Image(Image const& rhs,  ///< Right-hand-side Image
+                            BBox const& bbox,  ///< Specify desired region
+                            bool const deep    ///< If false, new ImageBase shares storage with rhs; if true
+                                                   ///< make a new, standalone, ImageBase
                            ) :
     image::ImageBase<PixelT>(rhs, bbox, deep) {}
 
@@ -408,7 +413,8 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
     }
 
     if (!image::fits_read_image<fits_img_types>(fileName, *this->_getRawImagePtr(), metadata, hdu, bbox)) {
-        throw LSST_EXCEPT(image::FitsException, (boost::format("Failed to read %s HDU %d") % fileName % hdu).str());
+        throw LSST_EXCEPT(image::FitsException,
+                          (boost::format("Failed to read %s HDU %d") % fileName % hdu).str());
     }
     this->_setRawView();
 
@@ -418,7 +424,8 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
     /*
      * We will interpret one of the header WCSs as providing the (X0, Y0) values
      */
-    this->setXY0(this->getXY0() + image::detail::getImageXY0FromMetadata(image::detail::wcsNameForXY0, metadata.get()));
+    this->setXY0(this->getXY0() +
+                 image::detail::getImageXY0FromMetadata(image::detail::wcsNameForXY0, metadata.get()));
 }
 
 /**
@@ -427,13 +434,14 @@ image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
 template<typename PixelT>
 void image::Image<PixelT>::writeFits(
     std::string const& fileName,                ///< File to write
-    boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, //!< metadata to write to header; or NULL
+    boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, //!< metadata to write to header or NULL
     std::string const& mode                     //!< "w" to write a new file; "a" to append
 ) const {
     using lsst::daf::base::PropertySet;
 
     PropertySet::Ptr wcsAMetadata = image::detail::createTrivialWcsAsPropertySet(image::detail::wcsNameForXY0,
-                                                                                 this->getX0(), this->getY0());
+                                                                                 this->getX0(),
+                                                                                 this->getY0());
 
     lsst::daf::base::PropertySet::Ptr metadata;
     if (metadata_i) {
@@ -512,7 +520,8 @@ void image::Image<PixelT>::scaledPlus(double const c, Image<PixelT> const& rhs) 
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
-    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), bl::ret<PixelT>(bl::_1 + bl::ret<PixelT>(c*bl::_2)));
+    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(),
+                     bl::ret<PixelT>(bl::_1 + bl::ret<PixelT>(c*bl::_2)));
 }
 
 /// Subtract scalar rhs from lhs
@@ -540,7 +549,8 @@ void image::Image<PixelT>::scaledMinus(double const c, Image<PixelT> const& rhs)
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
-    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), bl::ret<PixelT>(bl::_1 - bl::ret<PixelT>(c*bl::_2)));
+    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(),
+                     bl::ret<PixelT>(bl::_1 - bl::ret<PixelT>(c*bl::_2)));
 }
 
 /**
@@ -585,7 +595,8 @@ void image::Image<PixelT>::scaledMultiplies(double const c, Image<PixelT> const&
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
-    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), bl::ret<PixelT>(bl::_1 * bl::ret<PixelT>(c*bl::_2)));
+    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(),
+                     bl::ret<PixelT>(bl::_1 * bl::ret<PixelT>(c*bl::_2)));
 }
 
 /// Divide lhs by scalar rhs
@@ -631,7 +642,8 @@ void image::Image<PixelT>::scaledDivides(double const c, Image<PixelT> const& rh
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
-    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), bl::ret<PixelT>(bl::_1 / bl::ret<PixelT>(c*bl::_2)));
+    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(),
+                     bl::ret<PixelT>(bl::_1 / bl::ret<PixelT>(c*bl::_2)));
 }
 
 /************************************************************************************************************/

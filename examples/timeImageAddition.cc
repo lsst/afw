@@ -1,3 +1,4 @@
+// -*- lsst-c++ -*-
 #include <iostream>
 #include <sstream>
 #include <ctime>
@@ -44,5 +45,6 @@ int main(int argc, char **argv) {
     double secPerIter = (clock() - startTime) / static_cast<double> (nIter * CLOCKS_PER_SEC);
     double megaPix = static_cast<double>(nCols * nRows) / 1.0e6;
     double secPerMPixPerIter = secPerIter / static_cast<double>(megaPix);
-    std::cout << nCols << "\t" << nRows << "\t" << megaPix << "\t" << secPerIter << "\t\t" << secPerMPixPerIter << std::endl;
+    std::cout << nCols << "\t" << nRows << "\t" << megaPix << "\t" << secPerIter << "\t\t" <<
+        secPerMPixPerIter << std::endl;
 }

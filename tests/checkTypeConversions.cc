@@ -1,3 +1,4 @@
+// -*- lsst-c++ -*-
 #include <iostream>
 #include <string>
 #include <algorithm>
@@ -38,7 +39,8 @@ struct do_check_conversion1 {
             // The BOOST_CHECK message is uninformative, to print our own.
             cerr <<
                 lsst::utils::demangleType(typeid(SrcImageT).name()) << " ---- " <<
-                lsst::utils::demangleType(typeid(DstImageT).name()) << " " << dst(0,0) << " != " << src(0,0) << " ";
+                lsst::utils::demangleType(typeid(DstImageT).name()) << " " << dst(0,0) << " != " <<
+                src(0,0) << " ";
             BOOST_CHECK(src(0,0) == dst(0,0)); // this will fail
         }
     }
@@ -52,7 +54,7 @@ struct do_check_conversion {
     }
 };
 
-BOOST_AUTO_TEST_CASE(convertGilTypes) {
+BOOST_AUTO_TEST_CASE(convertGilTypes) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     // List of types; we'll check all N^2 conversions between them
     typedef boost::mpl::vector<
         gil::gray8_image_t,

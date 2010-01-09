@@ -266,9 +266,9 @@ math::Statistics::SumReturn math::Statistics::_sumImage(ImageT const &img,
         for (typename ImageT::x_iterator ptr = img.row_begin(iY), end = ptr + img.getWidth();
              ptr != end; ++ptr, ++mptr, ++vptr) {
             
-            if ( IsFinite()(*ptr) &&
-                 !(*mptr & _sctrl.getAndMask()) &&
-                 InClipRange()(*ptr, meanCrude, cliplimit) ) { // clip
+            if (IsFinite()(*ptr) &&
+                !(*mptr & _sctrl.getAndMask()) &&
+                InClipRange()(*ptr, meanCrude, cliplimit) ) { // clip
                 
                 double const delta = (*ptr - meanCrude);
 
@@ -388,9 +388,11 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(ImageT const &im
             }
         } else {
             if ( _sctrl.getWeighted()) {
-                loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, AlwaysT,true>(img, msk, var, flags, nCrude, 1, meanCrude);
+                loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, AlwaysT,true>(img, msk, var, flags,
+                                                                                nCrude, 1, meanCrude);
             } else {
-                loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, AlwaysT,false>(img, msk, var, flags, nCrude, 1, meanCrude);
+                loopValues = _sumImage<AlwaysT, AlwaysF, AlwaysF, AlwaysT,false>(img, msk, var, flags,
+                                                                                 nCrude, 1, meanCrude);
             }
         }
     }
@@ -602,58 +604,82 @@ std::pair<double, double> math::Statistics::getResult(math::Property const iProp
         
       case ( NPOINT ):
         ret.first = static_cast<double>(_n);
-        if (_flags & ERRORS) { ret.second = 0; }
+        if (_flags & ERRORS) {
+            ret.second = 0;
+        }
         break;
         
       case SUM:
         ret.first = static_cast<double>(_sum);
-        if (_flags & ERRORS) { ret.second = 0; }
+        if (_flags & ERRORS) {
+            ret.second = 0;
+        }
         break;
         
         // == means ==
       case ( MEAN ):
         ret.first = _mean;
-        if (_flags & ERRORS) { ret.second = sqrt(_variance/_n); }
+        if (_flags & ERRORS) {
+            ret.second = sqrt(_variance/_n);
+        }
         break;
       case ( MEANCLIP ):
         ret.first = _meanclip;
-        if ( _flags & ERRORS ) { ret.second = sqrt(_varianceclip/_n); }  // this is a bug ... _nClip != _n
+        if ( _flags & ERRORS ) {
+            ret.second = sqrt(_varianceclip/_n);  // this is a bug ... _nClip != _n
+        }
         break;
         
         // == stdevs & variances ==
       case ( VARIANCE ):
         ret.first = _variance;
-        if (_flags & ERRORS) { ret.second = _varianceError(ret.first, _n); }
+        if (_flags & ERRORS) {
+            ret.second = _varianceError(ret.first, _n);
+        }
         break;
       case ( STDEV ):
         ret.first = sqrt(_variance);
-        if (_flags & ERRORS) { ret.second = 0.5*_varianceError(_variance, _n)/ret.first; }
+        if (_flags & ERRORS) {
+            ret.second = 0.5*_varianceError(_variance, _n)/ret.first;
+        }
         break;
       case ( VARIANCECLIP ):
         ret.first = _varianceclip;
-        if (_flags & ERRORS) { ret.second = _varianceError(ret.first, _n); }
+        if (_flags & ERRORS) {
+            ret.second = _varianceError(ret.first, _n);
+        }
         break;
       case ( STDEVCLIP ):
         ret.first = sqrt(_varianceclip);  // bug: nClip != _n
-        if (_flags & ERRORS) { ret.second = 0.5*_varianceError(_varianceclip, _n)/ret.first; }
+        if (_flags & ERRORS) {
+            ret.second = 0.5*_varianceError(_varianceclip, _n)/ret.first;
+        }
         break;
         
         // == other stats ==
       case ( MIN ):
         ret.first = _min;
-        if ( _flags & ERRORS ) { ret.second = 0; }
+        if ( _flags & ERRORS ) {
+            ret.second = 0;
+        }
         break;
       case ( MAX ):
         ret.first = _max;
-        if ( _flags & ERRORS ) { ret.second = 0; }
+        if ( _flags & ERRORS ) {
+            ret.second = 0;
+        }
         break;
       case ( MEDIAN ):
         ret.first = _median;
-        if ( _flags & ERRORS ) { ret.second = 0; }
+        if ( _flags & ERRORS ) {
+            ret.second = 0;
+        }
         break;
       case ( IQRANGE ):
         ret.first = _iqrange;
-        if ( _flags & ERRORS ) { ret.second = 0; }
+        if ( _flags & ERRORS ) {
+            ret.second = 0;
+        }
         break;
         
         // no-op to satisfy the compiler

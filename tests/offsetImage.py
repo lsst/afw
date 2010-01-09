@@ -8,16 +8,12 @@ or
    python
    >>> import offsetImage; offsetImage.run()
 """
-
-import os
 import math
 import pdb  # we may want to say pdb.set_trace()
-import sys
 import unittest
 import numpy
 
 import lsst.utils.tests as utilsTests
-import lsst.pex.exceptions as pexExcept
 import lsst.daf.base
 import lsst.afw.image.imageLib as afwImage
 import lsst.afw.math.mathLib as afwMath
@@ -37,7 +33,7 @@ class offsetImageTestCase(unittest.TestCase):
     def setUp(self):
         self.inImage = afwImage.ImageF(200, 100)
         self.background = 200
-        self.inImage.set(self.background);
+        self.inImage.set(self.background)
         self.algorithm = "lanczos5"
 
     def tearDown(self):
@@ -58,12 +54,12 @@ class offsetImageTestCase(unittest.TestCase):
     def XXXtestSetIntegerOffset(self):
         """Test that we can offset by positive and negative amounts"""
         
-        self.inImage.set(50, 50, 400);
+        self.inImage.set(50, 50, 400)
 
         if False and display:
             frame = 0
             ds9.mtv(self.inImage, frame=frame)
-            ds9.pan(50, 50, frame=frame);
+            ds9.pan(50, 50, frame=frame)
             ds9.dot("+", 50, 50, frame=frame)
 
         for delta in [-0.49, 0.51]:
@@ -73,14 +69,15 @@ class offsetImageTestCase(unittest.TestCase):
                 if False and display:
                     frame += 1
                     ds9.mtv(outImage, frame=frame)
-                    ds9.pan(50, 50, frame=frame);
+                    ds9.pan(50, 50, frame=frame)
                     ds9.dot("+", 50 + dx + delta - outImage.getX0(), 50 + dy + delta - outImage.getY0(),
                             frame=frame)
 
     def calcGaussian(self, im, x, y, amp, sigma1):
         """Insert a Gaussian into the image centered at (x, y)"""
 
-        x = x - im.getX0(); y = y - im.getY0()
+        x = x - im.getX0()
+        y = y - im.getY0()
 
         for ix in range(im.getWidth()):
             for iy in range(im.getHeight()):
@@ -155,9 +152,9 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(exit=False):
+def run(shouldExit=False):
     """Run the tests"""
-    utilsTests.run(suite(), exit)
+    utilsTests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
     run(True)

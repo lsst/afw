@@ -33,14 +33,25 @@ int main(int argc, char **argv) {
     unsigned int kernelCols = 5;
     unsigned int kernelRows = 5;
 
+    std::string mimg;
     if (argc < 2) {
-        std::cerr << "Usage: simpleConvolve fitsFile" << std::endl;
-        std::cerr << "fitsFile excludes the \"_img.fits\" suffix" << std::endl;
-        return 1;
+        std::string afwdata = getenv("AFWDATA_DIR");
+        if (afwdata.empty()) {
+            std::cerr << "Usage: simpleConvolve fitsFile" << std::endl;
+            std::cerr << "fitsFile excludes the \"_img.fits\" suffix" << std::endl;
+            std::cerr << "I can take a default file from AFWDATA_DIR, but it's not defined." << std::endl;
+            std::cerr << "Is afwdata set up?\n" << std::endl;
+            exit(EXIT_FAILURE);
+        } else {
+            mimg = afwdata + "/small_MI";
+            std::cerr << "Using " << mimg << std::endl;
+        }
+    } else {
+        mimg = std::string(argv[1]);
     }
     
     // read in fits file
-    afwImage::MaskedImage<Pixel> mImage(argv[1]);
+    afwImage::MaskedImage<Pixel> mImage(mimg);
     
     // construct kernel
     afwMath::GaussianFunction2<Pixel> gaussFunc(1, 1, 0);

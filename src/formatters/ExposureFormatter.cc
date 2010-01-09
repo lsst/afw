@@ -15,7 +15,8 @@
 #ifndef __GNUC__
 #  define __attribute__(x) /*NOTHING*/
 #endif
-static char const* SVNid __attribute__((unused)) = "$Id$";
+static char const* SVNid __attribute__((unused)) =
+    "$Id$";
 
 #include "boost/serialization/shared_ptr.hpp"
 
@@ -49,14 +50,22 @@ public:
     static std::string name;
 };
 
-template<> std::string ExposureFormatterTraits<boost::uint16_t, afwImg::MaskPixel, afwImg::VariancePixel>::name("ExposureU");
-template<> std::string ExposureFormatterTraits<int, afwImg::MaskPixel, afwImg::VariancePixel>::name("ExposureI");
-template<> std::string ExposureFormatterTraits<float, afwImg::MaskPixel, afwImg::VariancePixel>::name("ExposureF");
-template<> std::string ExposureFormatterTraits<double, afwImg::MaskPixel, afwImg::VariancePixel>::name("ExposureD");
+template<>
+std::string ExposureFormatterTraits<boost::uint16_t,
+                                    afwImg::MaskPixel,
+                                    afwImg::VariancePixel>::name("ExposureU");
+template<>
+std::string ExposureFormatterTraits<int, afwImg::MaskPixel, afwImg::VariancePixel>::name("ExposureI");
+template<>
+std::string ExposureFormatterTraits<float, afwImg::MaskPixel, afwImg::VariancePixel>::name("ExposureF");
+template<>
+std::string ExposureFormatterTraits<double, afwImg::MaskPixel, afwImg::VariancePixel>::name("ExposureD");
 
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-lsst::daf::persistence::FormatterRegistration afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::registration(
+lsst::daf::persistence::FormatterRegistration afwForm::ExposureFormatter<ImagePixelT,
+                                                                         MaskPixelT,
+                                                                         VariancePixelT>::registration(
     ExposureFormatterTraits<ImagePixelT, MaskPixelT, VariancePixelT>::name,
     typeid(afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>),
     createInstance);
@@ -395,9 +404,12 @@ void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::delega
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-lsst::daf::persistence::Formatter::Ptr afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::createInstance(
+lsst::daf::persistence::Formatter::Ptr afwForm::ExposureFormatter<ImagePixelT,
+                                                                  MaskPixelT,
+                                                                  VariancePixelT>::createInstance(
     lsst::pex::policy::Policy::Ptr policy) {
-    return lsst::daf::persistence::Formatter::Ptr(new afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>(policy));
+    typedef typename lsst::daf::persistence::Formatter::Ptr FormPtr;
+    return FormPtr(new afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>(policy));
 }
 
 #define INSTANTIATE(I, M, V) \

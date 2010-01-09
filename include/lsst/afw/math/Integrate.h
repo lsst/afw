@@ -599,7 +599,8 @@ template <class UF>
 AuxFunc1<UF> inline Aux1(UF uf) { return AuxFunc1<UF>(uf); }
 
     
-template <class UF> struct AuxFunc2 : // f(1/x+1) for int(-infinity..b)
+template <class UF>
+struct AuxFunc2 : // f(1/x+1) for int(-infinity..b)
         public std::unary_function<typename UF::argument_type, typename UF::result_type> {
 public:
     AuxFunc2(UF const &f) : _f(f) {}

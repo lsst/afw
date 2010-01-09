@@ -1,12 +1,10 @@
-import detectionLib as afwDetection
+import detectionLib as afwDetect
 
 def writeFootprintAsDefects(fd, foot):
     """Write foot as a set of Defects to fd"""
 
-    bboxes = afwDetection.footprintToBBoxList(foot)
+    bboxes = afwDetect.footprintToBBoxList(foot)
     for bbox in bboxes:
-        x0, y0, x1, y1 = bbox.getX0(), bbox.getY0(), bbox.getX1(), bbox.getY1()
-
         print >> fd, """\
 Defects: {
     x0:     %4d                         # Starting column
@@ -16,7 +14,7 @@ Defects: {
 }""" % (bbox.getX0(), bbox.getWidth(), bbox.getY0(), bbox.getHeight())
 
 def makeDiaSourceFromSource(source):
-    diaSource = afwDetection.DiaSource()
+    diaSource = afwDetect.DiaSource()
     diaSource.setId(source.getId())
     diaSource.setAmpExposureId(source.getAmpExposureId())
     diaSource.setFilterId(source.getFilterId())
@@ -76,7 +74,7 @@ def makeDiaSourceFromSource(source):
     diaSource.setFlagForDetection(source.getFlagForDetection())
     diaSource.setFlagForWcs(source.getFlagForWcs())
 
-    for i in xrange(afwDetection.NUM_SHARED_NULLABLE_FIELDS):
+    for i in xrange(afwDetect.NUM_SHARED_NULLABLE_FIELDS):
         diaSource.setNull(i, source.isNull(i))
 
     return diaSource

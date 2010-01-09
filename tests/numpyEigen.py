@@ -10,10 +10,10 @@ or
 """
 
 import pdb                              # we may want to say pdb.set_trace()
-import sys
 import unittest
 import lsst.utils.tests as tests
-import testEigenLib; import numpy
+import testEigenLib
+import numpy
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -23,7 +23,7 @@ class NumpyEigenTestCase(unittest.TestCase):
         self.a = {}
         n = 2
         for t in [numpy.int32, numpy.float32, numpy.float64]:
-            self.a[t] = numpy.ones(n**2, dtype=t).reshape(n,n)
+            self.a[t] = numpy.ones(n**2, dtype=t).reshape(n, n)
 
         self.identity = numpy.zeros(n**2).reshape(n, n)
         self.identity[range(n), range(n)] = 1
@@ -65,9 +65,9 @@ def suite():
     return unittest.TestSuite(suites)
 
 
-def run(exit=False):
+def run(shouldExit=False):
     """Run the tests"""
-    tests.run(suite(), exit)
+    tests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
     run(True)
