@@ -9,7 +9,7 @@ or
    >>> import MaskedImageIO; MaskedImageIO.run()
 """
 
-import pdb                              # we may want to say pdb.set_trace()
+
 import os, re
 import unittest
 

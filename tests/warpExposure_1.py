@@ -2,7 +2,7 @@
 """Test warpExposure
 """
 import os
-import pdb # we may want to say pdb.set_trace()
+
 import unittest
 
 import numpy

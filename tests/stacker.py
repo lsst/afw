@@ -19,6 +19,7 @@ import unittest
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.utils.tests as utilsTests
+import lsst.pex.exceptions as pexEx
 
 ######################################
 # main body of code
@@ -71,7 +72,7 @@ class StackTestCase(unittest.TestCase):
             mimgList.push_back(mimg)
         mimgStack = afwMath.statisticsStack(mimgList, afwMath.MEAN, sctrl)
 
-        wvalues = map(lambda q: 1.0/q, self.values)
+        wvalues = [1.0/q for q in self.values]
         wmean = float(len(self.values)) / reduce(lambda x, y: x + y, wvalues)
         self.assertAlmostEqual(mimgStack.getImage().get(self.nX/2, self.nY/2), wmean)
 
@@ -89,12 +90,25 @@ class StackTestCase(unittest.TestCase):
         imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN, sctrl, weights)
 
         wsum = reduce(lambda x, y: x + y, self.values)
-        wvalues = map(lambda x: x*x, self.values)
+        wvalues = [x*x for x in self.values]
         wmean = reduce(lambda x, y: x + y, wvalues)/float(wsum)
         self.assertAlmostEqual(imgStack.get(self.nX/2, self.nY/2), wmean)
 
 
-        
+    def testRequestMoreThanOneStat(self):
+        """ Make sure we throw an exception if someone requests more than one type of statistics. """
+
+        sctrl = afwMath.StatisticsControl()
+        imgList = afwImage.vectorImageF()
+        for val in self.values:
+            img = afwImage.ImageF(self.nX, self.nY, val)
+            imgList.push_back(img)
+
+        def tst():
+            imgStackBad = afwMath.statisticsStack(imgList, afwMath.MEAN | afwMath.MEANCLIP, sctrl)
+            
+        utilsTests.assertRaisesLsstCpp(self, pexEx.InvalidParameterException, tst)
+
         
 #################################################################
 # Test suite boiler plate

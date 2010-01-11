@@ -9,7 +9,7 @@ or
    >>> import SourceMatch; SourceMatch.run()
 """
 import os, re, sys
-import pdb
+
 import unittest
 import eups
 

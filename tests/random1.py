@@ -8,7 +8,7 @@ or
    python
    >>> import unittest; T=load("Random_1"); unittest.TextTestRunner(verbosity=1).run(T.suite())
 """
-import pdb
+
 import time
 import unittest
 

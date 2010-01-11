@@ -8,7 +8,7 @@ Created on: Mon Sep 10, 2007
 """
 
 import os
-import pdb # we may want to say pdb.set_trace()
+
 import unittest
 
 import eups
