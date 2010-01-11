@@ -54,7 +54,7 @@ void cameraGeom::Ccd::addAmp(int const iX, ///< x-index of this Amp
  * Return the pixel position given an offset from the chip centre, in mm
  */
 afwGeom::Point2I cameraGeom::Ccd::getIndexFromPosition(
-        afwGeom::Point2D pos            ///< Offset from chip centre, mm
+        afwGeom::Point2D const& pos     ///< Offset from chip centre, mm
                                                       ) const
 {
     if (isTrimmed()) {
@@ -68,27 +68,27 @@ afwGeom::Point2I cameraGeom::Ccd::getIndexFromPosition(
 }
 
 /**
- * Return the offset from the chip centre, in mm, given a pixel position
+ * Return the offset from the chip centre, in mm, given a pixel position wrt the chip centre
+ * \sa getPositionFromPixel
  */
 afwGeom::Point2D cameraGeom::Ccd::getPositionFromIndex(
-        afwGeom::Point2I pix,            ///< Pixel coordinates wrt bottom left of Ccd
-        bool const isTrimmed             ///< Is this detector trimmed?
+        afwGeom::Point2I const& pix,    ///< Pixel coordinates wrt Ccd's centre
+        bool const isTrimmed            ///< Is this detector trimmed?
                                                       ) const
 {
     if (isTrimmed) {
         return cameraGeom::Detector::getPositionFromIndex(pix, isTrimmed);
     }
 
-    lsst::afw::geom::Point2I centerPixel = getCenterPixel();
     double pixelSize = getPixelSize();
 
-    cameraGeom::Amp::Ptr amp = findAmp(afwGeom::Point2I::makeXY(pix[0], pix[1]));
-    {
-        afwImage::PointI off = amp->getDataSec(true).getLLC() - amp->getDataSec(false).getLLC();
-        pix += afwGeom::Extent2I(afwGeom::Point2I::makeXY(off[0], off[1]));
-    }
+    afwGeom::Point2I const& centerPixel = getCenterPixel();
+    cameraGeom::Amp::ConstPtr amp = findAmp(afwGeom::Point2I::makeXY(pix[0] + centerPixel[0],
+                                                                pix[1] + centerPixel[1]));
+    afwImage::PointI const off = amp->getDataSec(false).getLLC() - amp->getDataSec(true).getLLC();
+    afwGeom::Point2I const offsetPix = pix - afwGeom::Extent2I(afwGeom::Point2I::makeXY(off[0], off[1]));
 
-    return afwGeom::Point2D::makeXY((pix[0] - centerPixel[0])*pixelSize, (pix[1] - centerPixel[1])*pixelSize);
+    return afwGeom::Point2D::makeXY(offsetPix[0]*pixelSize, offsetPix[1]*pixelSize);
 }    
 
 namespace {

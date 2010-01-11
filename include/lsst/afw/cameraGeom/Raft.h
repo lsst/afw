@@ -24,7 +24,11 @@ public:
     typedef boost::shared_ptr<Raft> Ptr;
     typedef boost::shared_ptr<const Raft> ConstPtr;
 
-    Raft(Id id) : DetectorMosaic(id) {}
+    Raft(Id id,               ///< ID for Mosaic
+         int const nCol,      ///< Number of columns of detectors
+         int const nRow       ///< Number of rows of detectors
+        )
+        : DetectorMosaic(id, nCol, nRow) {}
     virtual ~Raft() {}
 
     double getPixelSize() const;

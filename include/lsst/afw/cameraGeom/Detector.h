@@ -74,8 +74,9 @@ public:
     // Geometry of Detector --- i.e. mm not pixels
     //
     /// Set the central pixel
-    void setCenterPixel(afwGeom::Point2I center ///< the pixel \e defined to be the detector's centre
-                       ) { _centerPixel = center; }
+    virtual void setCenterPixel(
+            afwGeom::Point2I const& centerPixel ///< the pixel \e defined to be the detector's centre
+                               ) { _centerPixel = centerPixel; }
     /// Return the central pixel
     afwGeom::Point2I getCenterPixel() const { return _centerPixel; }
 
@@ -91,9 +92,12 @@ public:
     //
     // Translate between physical positions in mm to pixels
     //
-    virtual afwGeom::Point2I getIndexFromPosition(afwGeom::Point2D pos) const;
-    virtual afwGeom::Point2D getPositionFromIndex(afwGeom::Point2I pix) const;
-    virtual afwGeom::Point2D getPositionFromIndex(afwGeom::Point2I pix, bool const isTrimmed) const;
+    virtual afwGeom::Point2I getIndexFromPosition(afwGeom::Point2D const& pos) const;
+
+    afwGeom::Point2D getPositionFromPixel(afwGeom::Point2I const& pix) const;
+    afwGeom::Point2D getPositionFromPixel(afwGeom::Point2I const& pix, bool const isTrimmed) const;
+    virtual afwGeom::Point2D getPositionFromIndex(afwGeom::Point2I const& pix) const;
+    virtual afwGeom::Point2D getPositionFromIndex(afwGeom::Point2I const& pix, bool const isTrimmed) const;
     
     virtual void shift(int dx, int dy);
 protected:

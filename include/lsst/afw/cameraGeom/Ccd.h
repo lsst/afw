@@ -56,10 +56,10 @@ public:
     //
     // Translate between physical positions in mm to pixels
     //
-    virtual lsst::afw::geom::Point2I getIndexFromPosition(lsst::afw::geom::Point2D pos) const;
-    virtual lsst::afw::geom::Point2D getPositionFromIndex(lsst::afw::geom::Point2I pos,
+    virtual lsst::afw::geom::Point2I getIndexFromPosition(lsst::afw::geom::Point2D const& pos) const;
+    virtual lsst::afw::geom::Point2D getPositionFromIndex(lsst::afw::geom::Point2I const& pos,
                                                           bool const isTrimmed) const;
-    virtual lsst::afw::geom::Point2D getPositionFromIndex(lsst::afw::geom::Point2I pos) const {
+    virtual lsst::afw::geom::Point2D getPositionFromIndex(lsst::afw::geom::Point2I const& pos) const {
         return Detector::getPositionFromIndex(pos);
     }
 

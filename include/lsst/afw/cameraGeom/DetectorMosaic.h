@@ -29,21 +29,19 @@ public:
 
     explicit DetectorLayout(Detector::Ptr detector,         ///< The detector
                             Orientation const& orientation, ///< the detector's orientation
-                            afwGeom::Point2D center, ///< the detector's center
-                            afwGeom::Point2I origin  ///< The Detector's approximate pixel origin
+                            afwGeom::Point2D center,        ///< the detector's center
+                            afwGeom::Point2I centerPixel    ///< The pixel coordinate of the center in mosaic
                            )
-        : _detector(detector), _origin(origin) {
+        : _detector(detector) {
         detector->setOrientation(orientation);
         detector->setCenter(center);
+        detector->setCenterPixel(centerPixel);
     }
 
     /// Return the Detector
     Detector::Ptr getDetector() const { return _detector; }
-    /// Return the Detector's origin
-    afwGeom::Point2I getOrigin() const { return _origin; }
 private:
     Detector::Ptr _detector;
-    afwGeom::Point2I _origin;
 };
 
 /**
@@ -62,9 +60,10 @@ public:
 #endif
     typedef std::vector<DetectorLayout::Ptr>::const_iterator const_iterator;
 
-    DetectorMosaic(Id id) : Detector(id, false), _nDetector(0, 0) {
-        ;
-    }
+    DetectorMosaic(Id id,               ///< ID for Mosaic
+                   int const nCol,      ///< Number of columns of detectors
+                   int const nRow       ///< Number of rows of detectors
+                  ) : Detector(id, false), _nDetector(nCol, nRow) {}
     virtual ~DetectorMosaic() {}
     //
     // Provide iterators for all the Ccd's Detectors
@@ -77,6 +76,7 @@ public:
     // Geometry of Detector --- i.e. mm not pixels
     //
     virtual void setCenter(afwGeom::Point2D const& center);
+    virtual void setCenterPixel(afwGeom::Point2I const& centerPixel);
     virtual afwGeom::Extent2D getSize() const;
     //
     // Add a Detector to the DetectorMosaic
@@ -87,14 +87,14 @@ public:
     // Find a Detector given an Id or pixel position
     //
     DetectorLayout::Ptr findDetector(Id const id) const;
-    DetectorLayout::Ptr findDetector(afwGeom::Point2I const& pixel) const;
+    DetectorLayout::Ptr findDetector(afwGeom::Point2I const& pixel, bool const fromCenter=false) const;
     DetectorLayout::Ptr findDetector(afwGeom::Point2D const& posMm) const;
     //
     // Translate between physical positions in mm to pixels
     //
-    virtual afwGeom::Point2I getIndexFromPosition(afwGeom::Point2D pos) const;
-    virtual afwGeom::Point2D getPositionFromIndex(afwGeom::Point2I pix) const;
-    virtual afwGeom::Point2D getPositionFromIndex(afwGeom::Point2I pix, bool const) const {
+    virtual afwGeom::Point2I getIndexFromPosition(afwGeom::Point2D const& pos) const;
+    virtual afwGeom::Point2D getPositionFromIndex(afwGeom::Point2I const& pix) const;
+    virtual afwGeom::Point2D getPositionFromIndex(afwGeom::Point2I const& pix, bool const) const {
         return getPositionFromIndex(pix);
     }
 private:

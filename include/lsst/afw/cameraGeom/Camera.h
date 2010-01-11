@@ -24,7 +24,11 @@ public:
     typedef boost::shared_ptr<Camera> Ptr;
     typedef boost::shared_ptr<const Camera> ConstPtr;
 
-    Camera(Id id) : DetectorMosaic(id) {}
+    Camera(Id id,               ///< ID for Mosaic
+           int const nCol,      ///< Number of columns of detectors
+           int const nRow       ///< Number of rows of detectors
+          )
+        : DetectorMosaic(id, nCol, nRow) {}
     virtual ~Camera() {}
 };
 

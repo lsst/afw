@@ -20,39 +20,63 @@ afwGeom::Extent2D cameraGeom::Detector::getSize() const {
 }
 
 /**
+ * Return the offset from the mosaic centre, in mm, given a pixel position
+ * \sa getPositionFromIndex
+ */
+afwGeom::Point2D cameraGeom::Detector::getPositionFromPixel(
+        afwGeom::Point2I const& pix,    ///< Pixel coordinates wrt bottom left of Detector
+        bool const isTrimmed            ///< Is this detector trimmed?
+                                                           ) const
+{
+    return getPositionFromIndex(pix - afwGeom::Extent2I(getCenterPixel()), isTrimmed);
+}    
+
+/**
+ * Return the offset from the mosaic centre, in mm, given a pixel position
+ * \sa getPositionFromIndex
+ */
+afwGeom::Point2D cameraGeom::Detector::getPositionFromPixel(
+        afwGeom::Point2I const& pix     ///< Pixel coordinates wrt bottom left of Detector
+                                                           ) const
+{
+    return getPositionFromPixel(pix, isTrimmed());
+}    
+
+/**
  * Return the pixel position given an offset from the chip centre, in mm
  *
  * This base implementation assumes that all the pixels in the Detector are contiguous and of the same size
  */
 afwGeom::Point2I cameraGeom::Detector::getIndexFromPosition(
-        afwGeom::Point2D pos            ///< Offset from chip centre, mm
+        afwGeom::Point2D const& pos     ///< Offset from chip centre, mm
                                                            ) const
 {
     return afwGeom::Point2I::makeXY(_centerPixel[0] + pos[0]/_pixelSize, _centerPixel[1] + pos[1]/_pixelSize);
 }
 
 /**
- * Return the offset from the chip centre, in mm, given a pixel position
+ * Return the offset from the Detector centre, in mm, given a pixel position wrt Detector's centre
+ * \sa getPositionFromPixel
  */
 afwGeom::Point2D cameraGeom::Detector::getPositionFromIndex(
-        afwGeom::Point2I pix            ///< Pixel coordinates wrt bottom left of Ccd
+        afwGeom::Point2I const& pix     ///< Pixel coordinates wrt centre of Detector
                                      ) const
 {
     return getPositionFromIndex(pix, isTrimmed());
 }
 
 /**
- * Return the offset from the chip centre, in mm, given a pixel position
+ * Return the offset from the Detector centre, in mm, given a pixel position wrt Detector's centre
  *
  * This base implementation assumes that all the pixels in the Detector are contiguous and of the same size
+ * \sa getPositionFromPixel
  */
 afwGeom::Point2D cameraGeom::Detector::getPositionFromIndex(
-        afwGeom::Point2I pix,           ///< Pixel coordinates wrt bottom left of Detector
+        afwGeom::Point2I const& pix,    ///< Pixel coordinates wrt centre of Detector
         bool const                      ///< Unused
                                                            ) const
 {
-    return afwGeom::Point2D::makeXY(_center[0] + (pix[0] - _centerPixel[0])*_pixelSize,
-                                    _center[1] + (pix[1] - _centerPixel[1])*_pixelSize);
+    return afwGeom::Point2D::makeXY(_center[0] + pix[0]*_pixelSize, _center[1] + pix[1]*_pixelSize);
 }    
 
 /// Offset a Detector by the specified amount
