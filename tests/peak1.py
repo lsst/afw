@@ -9,7 +9,7 @@ or
    >>> import unittest; T=load("Peak_1"); unittest.TextTestRunner(verbosity=1).run(T.suite())
 """
 
-import pdb                              # we may want to say pdb.set_trace()
+
 import unittest
 import lsst.utils.tests as tests
 import lsst.pex.logging as logging

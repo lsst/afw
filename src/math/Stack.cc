@@ -33,6 +33,32 @@ void loadVariance(std::vector<PixelT> const &wvector, math::MaskedVector<PixelT>
     }
 }
 
+/*
+ * A bit counter (to make sure that only one type of statistics has been requested)
+ */
+int bitcount(unsigned int x)
+{
+    int b;
+    for (b = 0; x != 0; x >>= 1) {
+        if (x & 01) {
+            b++;
+        }
+    }
+    return b;
+}
+
+/*
+ * Check that only one type of statistics has been requested.
+ */
+void checkOnlyOneFlag(unsigned int flags) {
+    if (bitcount(flags) != 1) {
+        throw LSST_EXCEPT(ex::InvalidParameterException,
+                          "Requested more than one type of statistic to make the image stack.");
+                          
+    }
+    
+}
+    
 }
 
 
@@ -139,7 +165,10 @@ typename image::MaskedImage<PixelT>::Ptr math::statisticsStack(
         math::Property flags,               
         math::StatisticsControl const& sctrl,
         std::vector<PixelT> const &wvector
-                                                              ) {    
+                                                              ) {
+
+    details::checkOnlyOneFlag(flags);
+
     // if we're going to use constant weights 
     if ( wvector.size() == images.size() ) {
         return details::computeMaskedImageStack<PixelT, true>(images, flags, sctrl, wvector);
@@ -239,6 +268,8 @@ typename image::Image<PixelT>::Ptr math::statisticsStack(
         std::vector<PixelT> const &wvector
                                                         ) {
 
+    details::checkOnlyOneFlag(flags);
+
     // if we're going to use contant weights
     if ( wvector.size() == images.size() ) {
         return details::computeImageStack<PixelT, true>(images, flags, sctrl, wvector);
@@ -333,6 +364,9 @@ typename boost::shared_ptr<std::vector<PixelT> > math::statisticsStack(
         math::StatisticsControl const& sctrl,
         std::vector<PixelT> const &wvector
                                                                       ) {
+
+    details::checkOnlyOneFlag(flags);
+
     // Use constant weights for each layer
     if ( wvector.size() == vectors.size() ) {
         return details::computeVectorStack<PixelT, true>(vectors, flags, sctrl, wvector);

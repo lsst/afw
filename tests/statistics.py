@@ -12,7 +12,6 @@ or
 import sys
 import math
 import os
-import pdb  # we may want to say pdb.set_trace()
 import unittest
 
 import lsst.utils.tests as utilsTests
@@ -152,7 +151,8 @@ class StatisticsTestCase(unittest.TestCase):
         self.assertEqual(stats.getValue(afwMath.VARIANCECLIP), 0)
 
     def testSampleImageStats(self):
-
+        """ Compare our results to known values in test data """
+        
         imgfiles = []
         imgfiles.append("v1_i1_g_m400_s20_f.fits")
         imgfiles.append("v1_i1_g_m400_s20_u16.fits")
@@ -191,9 +191,10 @@ class StatisticsTestCase(unittest.TestCase):
             self.assertAlmostEqual(stdev, trueStdev, 8)
 
 
-    # Now do tests on a 'ramp' (image with constant gradient)
     def testStatisticsRamp(self):
+        """ Tests Statistics on a 'ramp' (image with constant gradient) """
 
+        
         nx = 101
         ny = 64
         img = afwImage.ImageF(nx, ny)
@@ -257,9 +258,10 @@ class StatisticsTestCase(unittest.TestCase):
 
 
     def testTicket1025(self):
-
-        # Ticket #1025 reported that the Statistics median was getting '3' as the median of [1,2,3,2]
-        # it was caused by an off-by-one error in the implementation
+        """
+        Ticket #1025 reported that the Statistics median was getting '3' as the median of [1,2,3,2]
+        it was caused by an off-by-one error in the implementation
+        """
         
         # check the exact example in the ticket
         values = [1.0, 2.0, 3.0, 2.0]
@@ -273,6 +275,38 @@ class StatisticsTestCase(unittest.TestCase):
         self.assertEqual(afwMath.makeStatistics(values, afwMath.MEDIAN).getValue(), 5.0)
         
 
+    def testTicket1123(self):
+        """
+        Ticket #1123 reported that the Statistics stack routine throws an exception
+        when all pixels in a stack are masked.  Returning a NaN pixel in the stack is preferred
+        """
+
+        mimg = afwImage.MaskedImageF(10, 10)
+        mimg.set([self.val, 0x1, self.val])
+
+        # test the case with no valid pixels ... both mean and stdev should be nan
+        stat  = afwMath.makeStatistics(mimg, afwMath.MEAN | afwMath.STDEV)
+        mean  = stat.getValue(afwMath.MEAN)
+        stdev = stat.getValue(afwMath.STDEV)
+        self.assertNotEqual(mean, mean)   # NaN does not equal itself
+        self.assertNotEqual(stdev, stdev) # NaN does not equal itself
+
+        # test the case with one valid pixel ... mean is ok, but stdev should still be nan
+        mimg.getMask().set(1, 1, 0x0)
+        stat  = afwMath.makeStatistics(mimg, afwMath.MEAN | afwMath.STDEV)
+        mean  = stat.getValue(afwMath.MEAN)
+        stdev = stat.getValue(afwMath.STDEV)
+        self.assertEqual(mean, self.val)
+        self.assertNotEqual(stdev, stdev) # NaN does not equal itself
+
+        # test the case with two valid pixels ... both mean and stdev are ok
+        mimg.getMask().set(1, 2, 0x0)
+        stat  = afwMath.makeStatistics(mimg, afwMath.MEAN | afwMath.STDEV)
+        mean  = stat.getValue(afwMath.MEAN)
+        stdev = stat.getValue(afwMath.STDEV)
+        self.assertEqual(mean, self.val)
+        self.assertEqual(stdev, 0.0)
+        
         
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

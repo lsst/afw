@@ -9,7 +9,7 @@ or
    >>> import Statistics; Statistics.run()
 """
 
-import pdb  # we may want to say pdb.set_trace()
+
 import unittest
 
 import lsst.utils.tests as utilsTests

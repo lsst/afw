@@ -33,20 +33,21 @@ namespace math {
  * @brief control what is calculated
  */
 enum Property {
-    NOTHING = 0x0,                      ///< We don't want anything
-    ERRORS = 0x1,                       ///< Include errors of requested quantities
-    NPOINT = 0x2,                       ///< number of sample points
-    MEAN = 0x4,                         ///< estimate sample mean
-    STDEV = 0x8,                        ///< estimate sample standard deviation
-    VARIANCE = 0x10,                    ///< estimate sample variance
-    MEDIAN = 0x20,                      ///< estimate sample median
-    IQRANGE = 0x40,                     ///< estimate sample inter-quartile range
-    MEANCLIP = 0x80,                    ///< estimate sample 3 sigma clipped mean
-    STDEVCLIP = 0x100,                  ///< estimate sample 3 sigma clipped stdev
-    VARIANCECLIP = 0x200,               ///< estimate sample 3 sigma clipped variance
-    MIN = 0x400,                        ///< estimate sample minimum
-    MAX = 0x800,                        ///< estimate sample maximum
-    SUM = 0x1000,                       ///< find sum of pixels in the image
+    NOTHING = 0x0,         ///< We don't want anything
+    ERRORS = 0x1,          ///< Include errors of requested quantities
+    NPOINT = 0x2,          ///< number of sample points
+    MEAN = 0x4,            ///< estimate sample mean
+    STDEV = 0x8,           ///< estimate sample standard deviation
+    VARIANCE = 0x10,       ///< estimate sample variance
+    MEDIAN = 0x20,         ///< estimate sample median
+    IQRANGE = 0x40,        ///< estimate sample inter-quartile range
+    MEANCLIP = 0x80,       ///< estimate sample N-sigma clipped mean (N set in StatisticsControl, default=3)
+    STDEVCLIP = 0x100,     ///< estimate sample N-sigma clipped stdev (N set in StatisticsControl, default=3)
+    VARIANCECLIP = 0x200,  ///< estimate sample N-sigma clipped variance
+                           ///<  (N set in StatisticsControl, default=3)
+    MIN = 0x400,           ///< estimate sample minimum
+    MAX = 0x800,           ///< estimate sample maximum
+    SUM = 0x1000,          ///< find sum of pixels in the image
 };
 
     
@@ -60,10 +61,10 @@ enum Property {
 class StatisticsControl {
 public:
     StatisticsControl(double numSigmaClip = 3.0, ///< number of standard deviations to clip at
-                      int numIter = 3,     ///< Number of iterations
+                      int numIter = 3,           ///< Number of iterations
                       image::MaskPixel andMask = ~0x0, ///< and-Mask to specify planes to use
-                      bool isNanSafe = true,  ///< flag NaNs
-                      bool isWeighted = false ///< use inverse Variance plane for weights
+                      bool isNanSafe = true,     ///< flag NaNs
+                      bool isWeighted = false    ///< use inverse Variance plane for weights
                      ) :
         _numSigmaClip(numSigmaClip),
         _numIter(numIter),
@@ -96,7 +97,7 @@ private:
     double _numSigmaClip;                 // Number of standard deviations to clip at
     int _numIter;                         // Number of iterations
     image::MaskPixel _andMask;            // and-Mask to specify which mask planes to pay attention to
-    bool _isNanSafe;                         // Check for NaNs before running (slower)
+    bool _isNanSafe;                      // Check for NaNs before running (slower)
     bool _isWeighted;                     // Use inverse variance to weight statistics.
     bool _isMultiplyingWeights;           // Treat variance plane as weights and multiply instead of dividing
 };
@@ -128,13 +129,19 @@ private:
         double const meanError = statobj.getError(math::MEAN);                // just the error
  * @endcode
  *
- * @note we used a helper function, \c makeStatistics, rather that the constructor directly so that
- *       the compiler could deduce the types -- cf. \c std::make_pair)
+ * @note Factory function: We used a helper function, \c makeStatistics, rather that the constructor
+ *       directly so that the compiler could deduce the types -- cf. \c std::make_pair)
  *
- * @note The class Statistics is templatized over Image and Mask, and makeStatistics() can take either:
+ * @note Inputs: The class Statistics is templatized, and makeStatistics() can take either:
  *       (1) an image, (2) a maskedImage, or (3) a std::vector<>
  *       Overloaded makeStatistics() functions then wrap what they were passed in Image/Mask-like classes
  *       and call the Statistics constructor.
+ * @note Clipping: The clipping is done iteratively with numSigmaClip and numIter specified in
+ *       the StatisticsControl object.  The first clip (ie. the first iteration) is performed at:
+ *       median +/- numSigmaClip*IQ_TO_STDEV*IQR, where IQ_TO_STDEV=~0.74 is the conversion factor
+ *       between the IQR and sigma for a Gaussian distribution.  All subsequent iterations perform
+ *       clips at mean +/- numSigmaClip*stdev.
+ *
  */
 class Statistics {
 public:
@@ -167,8 +174,8 @@ private:
     double _min;                        // the image's minimum
     double _max;                        // the image's maximum
     double _sum;                        // the sum of all the image's pixels
-    double _meanclip;                   // the image's 3-sigma clipped mean
-    double _varianceclip;               // the image's 3-sigma clipped variance
+    double _meanclip;                   // the image's N-sigma clipped mean
+    double _varianceclip;               // the image's N-sigma clipped variance
     double _median;                     // the image's median
     double _iqrange;                    // the image's interquartile range
 

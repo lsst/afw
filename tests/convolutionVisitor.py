@@ -9,7 +9,6 @@ or
    >>> import ConvolutionVisitor; ConvolutionVisitor.run()
 """
 
-import pdb  # we may want to say pdb.set_trace()
 import unittest
 
 import lsst.utils.tests as utilsTests

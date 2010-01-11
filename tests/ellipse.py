@@ -9,7 +9,6 @@ or
    >>> import Coordinates; Coordinates.run()
 """
 
-import pdb  # we may want to say pdb.set_trace()
 import unittest
 import numpy
 

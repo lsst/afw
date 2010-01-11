@@ -3,7 +3,7 @@
 Test cases to test image I/O
 """
 import os
-import pdb                          # we may want to say pdb.set_trace()
+
 import unittest
 
 import eups

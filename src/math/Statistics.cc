@@ -403,28 +403,15 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(ImageT const &im
     double min   = loopValues.get<3>();
     double max   = loopValues.get<4>();
     double wsum  = loopValues.get<5>();
-    
-    if (n == 0) {
-        throw LSST_EXCEPT(ex::InvalidParameterException,
-                          "Image has no valid pixels; mean is undefined.");
-    }
-    if (n == 1 && (flags & (STDEV|VARIANCE))) {
-        throw LSST_EXCEPT(ex::InvalidParameterException,
-                          "Image contains only one pixel; population st. dev. is undefined");
-    }
-    
+
     // estimate of population mean and variance
     double mean, variance;
     if (_sctrl.getWeighted()) {
-        if (wsum == 0) {
-            throw LSST_EXCEPT(ex::InvalidParameterException,
-                              "Sum of weights is zero; can't compute weighted stats.");
-        }
-        mean = meanCrude + sum/wsum;
-        variance = sumx2/(wsum - wsum/n) - sum*sum/(static_cast<double>(wsum - wsum/n)*wsum); 
+        mean = (wsum) ? meanCrude + sum/wsum : NaN;
+        variance = (n > 1) ? sumx2/(wsum - wsum/n) - sum*sum/(static_cast<double>(wsum - wsum/n)*wsum) : NaN; 
     } else {
-        mean = meanCrude + sum/n;
-        variance = sumx2/(n - 1) - sum*sum/(static_cast<double>(n - 1)*n); 
+        mean = (n) ? meanCrude + sum/n : NaN;
+        variance = (n > 1) ? sumx2/(n - 1) - sum*sum/(static_cast<double>(n - 1)*n) : NaN; 
     }
     _n = n;
     
@@ -505,23 +492,14 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(ImageT const &im
     double max   = loopValues.get<4>();
     double wsum  = loopValues.get<5>();
     
-    if (n == 0) {
-        throw LSST_EXCEPT(ex::InvalidParameterException,
-                          "Image has no valid pixels; mean is undefined.");
-    }
-    if (n == 1) {
-        throw LSST_EXCEPT(ex::InvalidParameterException,
-                          "Image contains only one pixel; population st. dev. is undefined");
-    }
-    
     // estimate of population variance
     double mean, variance;
     if (_sctrl.getWeighted()) {
-        mean = center + sum/wsum;
-        variance = sumx2/(wsum - wsum/n) - sum*sum/(static_cast<double>(wsum - wsum/n)*n);
+        mean = (wsum > 0) ? center + sum/wsum : NaN;
+        variance = (n > 1) ? sumx2/(wsum - wsum/n) - sum*sum/(static_cast<double>(wsum - wsum/n)*n) : NaN;
     } else {
-        mean = center + sum/n;
-        variance = sumx2/(n - 1) - sum*sum/(static_cast<double>(n - 1)*n);
+        mean = (n) ? center + sum/n : NaN;
+        variance = (n > 1) ? sumx2/(n - 1) - sum*sum/(static_cast<double>(n - 1)*n) : NaN;
     }
     _n = n;
     
@@ -566,8 +544,7 @@ double math::Statistics::_percentile(std::vector<Pixel> &img,
     } else if (n == 1) {
         return img[0];
     } else {
-        throw LSST_EXCEPT(ex::InvalidParameterException,
-                          "Image has no valid pixels, can't compute median.");
+        return NaN;
     }
             
 

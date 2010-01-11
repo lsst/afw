@@ -9,7 +9,7 @@ or
    >>> import Footprint_1; Footprint_1.run()
 """
 
-import pdb                              # we may want to say pdb.set_trace()
+
 import sys
 import unittest
 import lsst.utils.tests as tests
