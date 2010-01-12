@@ -290,7 +290,7 @@ class StatisticsTestCase(unittest.TestCase):
         stdev = stat.getValue(afwMath.STDEV)
         self.assertNotEqual(mean, mean)   # NaN does not equal itself
         self.assertNotEqual(stdev, stdev) # NaN does not equal itself
-
+        
         # test the case with one valid pixel ... mean is ok, but stdev should still be nan
         mimg.getMask().set(1, 1, 0x0)
         stat  = afwMath.makeStatistics(mimg, afwMath.MEAN | afwMath.STDEV)
@@ -306,8 +306,22 @@ class StatisticsTestCase(unittest.TestCase):
         stdev = stat.getValue(afwMath.STDEV)
         self.assertEqual(mean, self.val)
         self.assertEqual(stdev, 0.0)
-        
-        
+
+
+    def testTicket1125(self):
+        """Ticket 1125 reported that the clipped routines were aborting when called with no valid pixels. """
+        mimg = afwImage.MaskedImageF(10, 10)
+        mimg.set([self.val, 0x1, self.val])
+
+        # test the case with no valid pixels ... try MEANCLIP and STDEVCLIP
+        stat  = afwMath.makeStatistics(mimg, afwMath.MEANCLIP | afwMath.STDEVCLIP)
+        mean  = stat.getValue(afwMath.MEANCLIP)
+        stdev = stat.getValue(afwMath.STDEVCLIP)
+        self.assertNotEqual(mean, mean)   # NaN does not equal itself
+        self.assertNotEqual(stdev, stdev) # NaN does not equal itself
+
+
+            
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
