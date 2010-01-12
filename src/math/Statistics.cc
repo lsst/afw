@@ -10,15 +10,14 @@
 #include <iostream>
 #include <limits>
 #include <cmath>
-#include "boost/tuple/tuple.hpp"
 #include "boost/shared_ptr.hpp"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/Statistics.h"
 
 using namespace std;
-namespace image = lsst::afw::image;
-namespace math = lsst::afw::math;
+namespace afwImage = lsst::afw::image;
+namespace afwMath = lsst::afw::math;
 namespace ex = lsst::pex::exceptions;
 
 namespace {
@@ -131,10 +130,12 @@ typedef AlwaysFalse     AlwaysF;
  * code repetition of the loops.
  */
 template<typename IsFinite, typename ImageT, typename MaskT, typename VarianceT>
-boost::shared_ptr<std::vector<typename ImageT::Pixel> > math::Statistics::_makeVectorCopy(ImageT const &img,
-                                                                                         MaskT const &msk,
-                                                                                         VarianceT const &var,
-                                                                                         int const flags) {
+boost::shared_ptr<std::vector<typename ImageT::Pixel> > afwMath::Statistics::_makeVectorCopy(
+    ImageT const &img,
+    MaskT const &msk,
+    VarianceT const &var,
+    int const flags
+                                                                                         ) {
 
     boost::shared_ptr<std::vector<typename ImageT::Pixel> > imgcp(new std::vector<typename ImageT::Pixel>(0));
     for (int i_y = 0; i_y < img.getHeight(); ++i_y) {
@@ -158,12 +159,13 @@ boost::shared_ptr<std::vector<typename ImageT::Pixel> > math::Statistics::_makeV
  *
  */
 template<typename ImageT, typename MaskT, typename VarianceT>
-math::Statistics::Statistics(ImageT const &img, ///< Image whose properties we want
-                             MaskT const &msk,   ///< Mask to control which pixels are included
-                             VarianceT const &var, ///< Variances corresponding to values in Image
-                             int const flags, ///< Describe what we want to calculate
-                             StatisticsControl const& sctrl ///< Control how things are calculated
-                            ) :
+afwMath::Statistics::Statistics(
+    ImageT const &img,             ///< Image whose properties we want
+    MaskT const &msk,              ///< Mask to control which pixels are included
+    VarianceT const &var,          ///< Variances corresponding to values in Image
+    int const flags,               ///< Describe what we want to calculate
+    StatisticsControl const& sctrl ///< Control how things are calculated
+                               ) :
     _flags(flags),
     _mean(NaN), _variance(NaN), _min(NaN), _max(NaN), _sum(NaN),
     _meanclip(NaN), _varianceclip(NaN), _median(NaN), _iqrange(NaN),
@@ -243,14 +245,14 @@ template<typename IsFinite,
          typename InClipRange,
          bool IsWeighted,
          typename ImageT, typename MaskT, typename VarianceT>
-math::Statistics::SumReturn math::Statistics::_sumImage(ImageT const &img,
-                                                        MaskT const &msk,
-                                                        VarianceT const &var,
-                                                        int const flags,
-                                                        int const nCrude,
-                                                        int const stride,
-                                                        double const meanCrude,
-                                                        double const cliplimit) {
+afwMath::Statistics::SumReturn afwMath::Statistics::_sumImage(ImageT const &img,
+                                                              MaskT const &msk,
+                                                              VarianceT const &var,
+                                                              int const flags,
+                                                              int const nCrude,
+                                                              int const stride,
+                                                              double const meanCrude,
+                                                              double const cliplimit) {
     
     int n = 0;
     double wsum = 0.0;
@@ -302,7 +304,7 @@ math::Statistics::SumReturn math::Statistics::_sumImage(ImageT const &img,
         max = NaN;
     }
 
-    return boost::make_tuple(n, sum, sumx2, min, max, wsum);
+    return afwMath::Statistics::SumReturn(n, sum, sumx2, min, max, wsum);
 }
 
 /* =========================================================================
@@ -315,10 +317,10 @@ math::Statistics::SumReturn math::Statistics::_sumImage(ImageT const &img,
  * @note An overloaded version below is used to get clipped versions
  */
 template<typename ImageT, typename MaskT, typename VarianceT>
-math::Statistics::StandardReturn math::Statistics::_getStandard(ImageT const &img,
-                                                                MaskT const &msk,
-                                                                VarianceT const &var,
-                                                                int const flags) {
+afwMath::Statistics::StandardReturn afwMath::Statistics::_getStandard(ImageT const &img,
+                                                                      MaskT const &msk,
+                                                                      VarianceT const &var,
+                                                                      int const flags) {
 
 
     // =====================================================
@@ -415,7 +417,7 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(ImageT const &im
     }
     _n = n;
     
-    return boost::make_tuple(mean, variance, min, max, sum + n*meanCrude);
+    return afwMath::Statistics::StandardReturn(mean, variance, min, max, sum + n*meanCrude);
 }
 
 
@@ -430,15 +432,21 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(ImageT const &im
  *   clipping on std::pair<double,double> = center, cliplimit
  */
 template<typename ImageT, typename MaskT, typename VarianceT>
-math::Statistics::StandardReturn math::Statistics::_getStandard(ImageT const &img,
-                                                                MaskT const &msk,
-                                                                VarianceT const &var,
-                                                                int const flags,
-                                                                std::pair<double, double> const clipinfo) {
+afwMath::Statistics::StandardReturn afwMath::Statistics::_getStandard(
+    ImageT const &img,
+    MaskT const &msk,
+    VarianceT const &var,
+    int const flags,
+    std::pair<double, double> const clipinfo
+                                                                     ) {
     
     double const center = clipinfo.first;
     double const cliplimit = clipinfo.second;
-    assert(! isnan(center) && ! isnan(cliplimit) );
+
+    if (isnan(center) || isnan(cliplimit)) {
+        //return afwMath::Statistics::StandardReturn(mean, variance, min, max, sum + center*n);
+        return afwMath::Statistics::StandardReturn(NaN, NaN, NaN, NaN, NaN);
+    }
     
     // =======================================================
     // Estimate the full precision variance using that crude mean
@@ -503,7 +511,7 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(ImageT const &im
     }
     _n = n;
     
-    return boost::make_tuple(mean, variance, min, max, sum + center*n);
+    return afwMath::Statistics::StandardReturn(mean, variance, min, max, sum + center*n);
 }
 
 
@@ -516,8 +524,8 @@ math::Statistics::StandardReturn math::Statistics::_getStandard(ImageT const &im
  *
  */
 template<typename Pixel>
-double math::Statistics::_percentile(std::vector<Pixel> &img,
-                                     double const percentile) {
+double afwMath::Statistics::_percentile(std::vector<Pixel> &img,
+                                        double const percentile) {
     
     int const n = img.size();
 
@@ -565,10 +573,13 @@ double math::Statistics::_percentile(std::vector<Pixel> &img,
  * @todo uncertainties on MEANCLIP,STDEVCLIP are sketchy.  _n != _nClip
  *
  */
-std::pair<double, double> math::Statistics::getResult(math::Property const iProp ///< Desired property
-                                                     ) const {
+std::pair<double, double> afwMath::Statistics::getResult(
+        afwMath::Property const iProp ///< Desired property
+                                                        ) const {
+    
     // if iProp == NOTHING try to return their heart's delight, as specified in the constructor
-    math::Property const prop = (iProp == NOTHING) ? static_cast<math::Property>(_flags & ~ERRORS) : iProp;
+    afwMath::Property const prop =
+        (iProp == NOTHING) ? static_cast<afwMath::Property>(_flags & ~ERRORS) : iProp;
     
     if (!(prop & _flags)) {             // we didn't calculate it
         throw LSST_EXCEPT(ex::InvalidParameterException,
@@ -675,7 +686,7 @@ std::pair<double, double> math::Statistics::getResult(math::Property const iProp
 /* @brief Return the value of the desired property (if specified in the constructor)
  * @param prop - the property (see Statistics.h) to retrieve
  */
-double math::Statistics::getValue(math::Property const prop ///< Desired property
+double afwMath::Statistics::getValue(afwMath::Property const prop ///< Desired property
                                      ) const {
     return getResult(prop).first;
 }
@@ -684,7 +695,7 @@ double math::Statistics::getValue(math::Property const prop ///< Desired propert
 /* @brief Return the error in the desired property (if specified in the constructor)
  * @param prop - the property (see Statistics.h) to retrieve
  */
-double math::Statistics::getError(math::Property const prop ///< Desired property
+double afwMath::Statistics::getError(afwMath::Property const prop ///< Desired property
                                      ) const {
     return getResult(prop).second;
 }
@@ -700,9 +711,9 @@ namespace math {
     
 template<>
 Statistics::Statistics(
-    image::Mask<image::MaskPixel> const& msk,  ///< Mask whose properties we want
-    image::Mask<image::MaskPixel> const& dmsk, ///< A mask (currently dummy) to control which pixels
-    image::Mask<image::MaskPixel> const& dvar, ///< A variance (currently dummy)
+    afwImage::Mask<afwImage::MaskPixel> const& msk,  ///< Mask whose properties we want
+    afwImage::Mask<afwImage::MaskPixel> const& dmsk, ///< A mask (currently dummy) to control which pixels
+    afwImage::Mask<afwImage::MaskPixel> const& dvar, ///< A variance (currently dummy)
     int const flags,                           ///< Describe what we want to calculate
     StatisticsControl const& sctrl             ///< Control how things are calculated
                       ) :
@@ -715,7 +726,7 @@ Statistics::Statistics(
         throw LSST_EXCEPT(ex::InvalidParameterException, "Statistics<Mask> only supports NPOINT and SUM");
     }
     
-    typedef image::Mask<image::MaskPixel> Mask;
+    typedef afwImage::Mask<afwImage::MaskPixel> Mask;
     
     _n = msk.getWidth()*msk.getHeight();
     if (_n == 0) {
@@ -725,7 +736,7 @@ Statistics::Statistics(
     // Check that an int's large enough to hold the number of pixels
     assert(msk.getWidth()*static_cast<double>(msk.getHeight()) < std::numeric_limits<int>::max());
     
-    image::MaskPixel sum = 0x0;
+    afwImage::MaskPixel sum = 0x0;
     for (int y = 0; y != msk.getHeight(); ++y) {
         for (Mask::x_iterator ptr = msk.row_begin(y), end = msk.row_end(y); ptr != end; ++ptr) {
             sum |= (*ptr)[0];
@@ -742,7 +753,7 @@ Statistics::Statistics(
  *
  */            
 Statistics makeStatistics(
-    image::Mask<image::MaskPixel> const &msk, ///< Image (or MaskedImage) whose properties we want
+    afwImage::Mask<afwImage::MaskPixel> const &msk, ///< Image (or MaskedImage) whose properties we want
     int const flags,                          ///< Describe what we want to calculate
     StatisticsControl const& sctrl            ///< Control how things are calculated
                          ) {
@@ -760,84 +771,84 @@ Statistics makeStatistics(
  */
 
 //
-#define STAT math::Statistics
+#define STAT afwMath::Statistics
 
-typedef lsst::afw::image::VariancePixel VPixel;
+typedef afwImage::VariancePixel VPixel;
 
 #define INSTANTIATE_MASKEDIMAGE_STATISTICS(TYPE)                       \
-    template STAT::Statistics(image::Image<TYPE> const &img,            \
-                              image::Mask<image::MaskPixel> const &msk, \
-                              image::Image<VPixel> const &var,               \
+    template STAT::Statistics(afwImage::Image<TYPE> const &img,            \
+                              afwImage::Mask<afwImage::MaskPixel> const &msk, \
+                              afwImage::Image<VPixel> const &var,               \
                               int const flags, StatisticsControl const& sctrl); \
-    template STAT::StandardReturn STAT::_getStandard(image::Image<TYPE> const &img, \
-                                                     image::Mask<image::MaskPixel> const &msk, \
-                                                     image::Image<VPixel> const &var, \
+    template STAT::StandardReturn STAT::_getStandard(afwImage::Image<TYPE> const &img, \
+                                                     afwImage::Mask<afwImage::MaskPixel> const &msk, \
+                                                     afwImage::Image<VPixel> const &var, \
                                                      int const flags);  \
-    template STAT::StandardReturn STAT::_getStandard(image::Image<TYPE> const &img, \
-                                                     image::Mask<image::MaskPixel> const &msk, \
-                                                     image::Image<VPixel> const &var, \
+    template STAT::StandardReturn STAT::_getStandard(afwImage::Image<TYPE> const &img, \
+                                                     afwImage::Mask<afwImage::MaskPixel> const &msk, \
+                                                     afwImage::Image<VPixel> const &var, \
                                                      int const flags, std::pair<double, double> clipinfo); \
     template double STAT::_percentile(std::vector<TYPE> &img, double const percentile);
 
 
 #define INSTANTIATE_MASKEDIMAGE_STATISTICS_NO_MASK(TYPE)                       \
-    template STAT::Statistics(image::Image<TYPE> const &img,            \
-                              math::MaskImposter<image::MaskPixel> const &msk, \
-                              image::Image<VPixel> const &var,               \
+    template STAT::Statistics(afwImage::Image<TYPE> const &img,            \
+                              afwMath::MaskImposter<afwImage::MaskPixel> const &msk, \
+                              afwImage::Image<VPixel> const &var,               \
                               int const flags, StatisticsControl const& sctrl); \
-    template STAT::StandardReturn STAT::_getStandard(image::Image<TYPE> const &img, \
-                                                     math::MaskImposter<image::MaskPixel> const &msk, \
-                                                     image::Image<VPixel> const &var, \
+    template STAT::StandardReturn STAT::_getStandard(afwImage::Image<TYPE> const &img, \
+                                                     afwMath::MaskImposter<afwImage::MaskPixel> const &msk, \
+                                                     afwImage::Image<VPixel> const &var, \
                                                      int const flags);  \
-    template STAT::StandardReturn STAT::_getStandard(image::Image<TYPE> const &img, \
-                                                     math::MaskImposter<image::MaskPixel> const &msk, \
-                                                     image::Image<VPixel> const &var, \
+    template STAT::StandardReturn STAT::_getStandard(afwImage::Image<TYPE> const &img, \
+                                                     afwMath::MaskImposter<afwImage::MaskPixel> const &msk, \
+                                                     afwImage::Image<VPixel> const &var, \
                                                      int const flags, std::pair<double, double> clipinfo);
 
 
 #define INSTANTIATE_MASKEDIMAGE_STATISTICS_NO_VAR(TYPE)                       \
-    template STAT::Statistics(image::Image<TYPE> const &img,            \
-                              image::Mask<image::MaskPixel> const &msk, \
-                              math::MaskImposter<VPixel> const &var,          \
+    template STAT::Statistics(afwImage::Image<TYPE> const &img,            \
+                              afwImage::Mask<afwImage::MaskPixel> const &msk, \
+                              afwMath::MaskImposter<VPixel> const &var,          \
                               int const flags, StatisticsControl const& sctrl); \
-    template STAT::StandardReturn STAT::_getStandard(image::Image<TYPE> const &img, \
-                                                     image::Mask<image::MaskPixel> const &msk, \
-                                                     math::MaskImposter<VPixel> const &var, \
+    template STAT::StandardReturn STAT::_getStandard(afwImage::Image<TYPE> const &img, \
+                                                     afwImage::Mask<afwImage::MaskPixel> const &msk, \
+                                                     afwMath::MaskImposter<VPixel> const &var, \
                                                      int const flags);  \
-    template STAT::StandardReturn STAT::_getStandard(image::Image<TYPE> const &img, \
-                                                     image::Mask<image::MaskPixel> const &msk, \
-                                                     math::MaskImposter<VPixel> const &var, \
+    template STAT::StandardReturn STAT::_getStandard(afwImage::Image<TYPE> const &img, \
+                                                     afwImage::Mask<afwImage::MaskPixel> const &msk, \
+                                                     afwMath::MaskImposter<VPixel> const &var, \
                                                      int const flags, std::pair<double, double> clipinfo);
 
 
 //
 #define INSTANTIATE_REGULARIMAGE_STATISTICS(TYPE)                      \
-    template STAT::Statistics(image::Image<TYPE> const &img,            \
-                              math::MaskImposter<image::MaskPixel> const &msk, \
-                              math::MaskImposter<VPixel> const &var, \
+    template STAT::Statistics(afwImage::Image<TYPE> const &img,            \
+                              afwMath::MaskImposter<afwImage::MaskPixel> const &msk, \
+                              afwMath::MaskImposter<VPixel> const &var, \
                               int const flags, StatisticsControl const& sctrl); \
-    template STAT::StandardReturn STAT::_getStandard(image::Image<TYPE> const &img, \
-                                                     math::MaskImposter<image::MaskPixel> const &msk, \
-                                                     math::MaskImposter<VPixel> const &var, \
+    template STAT::StandardReturn STAT::_getStandard(afwImage::Image<TYPE> const &img, \
+                                                     afwMath::MaskImposter<afwImage::MaskPixel> const &msk, \
+                                                     afwMath::MaskImposter<VPixel> const &var, \
                                                      int const flags);  \
-    template STAT::StandardReturn STAT::_getStandard(image::Image<TYPE> const &img, \
-                                                     math::MaskImposter<image::MaskPixel> const &msk, \
-                                                     math::MaskImposter<VPixel> const &var, \
+    template STAT::StandardReturn STAT::_getStandard(afwImage::Image<TYPE> const &img, \
+                                                     afwMath::MaskImposter<afwImage::MaskPixel> const &msk, \
+                                                     afwMath::MaskImposter<VPixel> const &var, \
                                                      int const flags, std::pair<double, double> clipinfo);
 
 //
 #define INSTANTIATE_VECTOR_STATISTICS(TYPE)                         \
-    template STAT::Statistics(math::ImageImposter<TYPE> const &img,     \
-                              math::MaskImposter<image::MaskPixel> const &msk, \
-                              math::MaskImposter<VPixel> const &var,      \
+    template STAT::Statistics(afwMath::ImageImposter<TYPE> const &img,     \
+                              afwMath::MaskImposter<afwImage::MaskPixel> const &msk, \
+                              afwMath::MaskImposter<VPixel> const &var,      \
                               int const flags, StatisticsControl const& sctrl); \
-    template STAT::StandardReturn STAT::_getStandard(math::ImageImposter<TYPE> const &img, \
-                                                     math::MaskImposter<image::MaskPixel> const &msk, \
-                                                     math::MaskImposter<VPixel> const &var, \
+    template STAT::StandardReturn STAT::_getStandard(afwMath::ImageImposter<TYPE> const &img, \
+                                                     afwMath::MaskImposter<afwImage::MaskPixel> const &msk, \
+                                                     afwMath::MaskImposter<VPixel> const &var, \
                                                      int const flags);  \
-    template STAT::StandardReturn STAT::_getStandard(math::ImageImposter<TYPE> const &img, \
-                                                     math::MaskImposter<image::MaskPixel> const &msk, \
-                                                     math::MaskImposter<VPixel> const &var, \
+    template STAT::StandardReturn STAT::_getStandard(afwMath::ImageImposter<TYPE> const &img, \
+                                                     afwMath::MaskImposter<afwImage::MaskPixel> const &msk, \
+                                                     afwMath::MaskImposter<VPixel> const &var, \
                                                      int const flags, std::pair<double, double> clipinfo);
 
 
