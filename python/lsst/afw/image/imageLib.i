@@ -23,8 +23,13 @@ Basic routines to talk to lsst::afw::image classes
 #include "lsst/afw/geom.h"
 
 #include "boost/cstdint.hpp"
+#define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_IMAGE_NUMPY_ARRAY_API
+#include "numpy/arrayobject.h"
 %}
 
+%init %{
+    import_array();
+%}
 
 namespace boost {
     namespace mpl { }
@@ -71,7 +76,14 @@ def version(HeadURL = r"$HeadURL$"):
 %import "lsst/daf/data/dataLib.i"
 %import "lsst/afw/geom/geomLib.i"
 
-%include "lsst/afw/eigen/eigenLib.i"
+%include "lsst/afw/eigen.i"
+
+%declareEigenMatrix(Eigen::MatrixXd);
+%declareEigenMatrix(Eigen::VectorXd);
+%declareEigenMatrix(Eigen::Matrix2d);
+%declareEigenMatrix(Eigen::Vector2d);
+%declareEigenMatrix(Eigen::Matrix3d);
+%declareEigenMatrix(Eigen::Vector3d);
 
 %lsst_exceptions();
 
@@ -185,8 +197,8 @@ SWIG_SHARED_PTR(Wcs, lsst::afw::image::Wcs);
      * Create a WCS from crval, image, and the elements of CD
      */
     lsst::afw::image::Wcs::Ptr createWcs(lsst::afw::image::PointD crval,
-                                                                lsst::afw::image::PointD crpix,
-                                                                double CD11, double CD12, double CD21, double CD22) {
+                                         lsst::afw::image::PointD crpix,
+                                         double CD11, double CD12, double CD21, double CD22) {
 
     Eigen::Matrix2d CD;
     CD(0, 0) = CD11;
@@ -196,12 +208,6 @@ SWIG_SHARED_PTR(Wcs, lsst::afw::image::Wcs);
     
     return lsst::afw::image::Wcs::Ptr(new lsst::afw::image::Wcs(crval, crpix, CD));
 }
-}
-
-%extend lsst::afw::image::Wcs {
-    lsst::afw::image::Wcs::Ptr clone() {
-        return lsst::afw::image::Wcs::Ptr(new lsst::afw::image::Wcs::Wcs(*self));
-    }
 }
 
 /************************************************************************************************************/

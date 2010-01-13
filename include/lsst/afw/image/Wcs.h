@@ -34,13 +34,13 @@ namespace image {
         
         Wcs();
         Wcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
-        Wcs(PointD crval, PointD crpix, Eigen::Matrix2d CD, double equinox=2000.0,
+        Wcs(PointD crval, PointD crpix, Eigen::Matrix2d const & CD, double equinox=2000.0,
             std::string raDecSys="FK5");
-        Wcs(PointD crval, PointD crpix, Eigen::Matrix2d CD, 
-            Eigen::MatrixXd sipA, ///< Forward distortion Matrix A
-            Eigen::MatrixXd sipB, ///< Forward distortion Matrix B
-            Eigen::MatrixXd sipAp, ///<Reverse distortion Matrix Ap
-            Eigen::MatrixXd sipBp,  ///<Reverse distortion Matrix Bp
+        Wcs(PointD crval, PointD crpix, Eigen::Matrix2d const & CD, 
+            Eigen::MatrixXd const & sipA, ///< Forward distortion Matrix A
+            Eigen::MatrixXd const & sipB, ///< Forward distortion Matrix B
+            Eigen::MatrixXd const & sipAp, ///<Reverse distortion Matrix Ap
+            Eigen::MatrixXd const & sipBp,  ///<Reverse distortion Matrix Bp
             double equinox=2000.0,
             std::string raDecSys="FK5"
            );
@@ -69,7 +69,7 @@ namespace image {
         }
         Eigen::Matrix<double, 2, 2> getLinearTransformMatrix() const;
         lsst::afw::geom::AffineTransform getAffineTransform() const;
-        lsst::afw::geom::AffineTransform getAffineTransform(lsst::afw::image::PointD sky) const;
+        lsst::afw::geom::AffineTransform linearizeAt(lsst::afw::geom::PointD const & pix) const;
 
         PointD xyToRaDec(PointD pix) const;
         PointD xyToRaDec(double const x, double const y) const;
@@ -82,7 +82,7 @@ namespace image {
     private:
         void initWcslib(PointD crval,                   
                         PointD crpix,                   
-                        Eigen::Matrix2d CD,             
+                        Eigen::Matrix2d const & CD,             
                         double equinox,                 
                         std::string raDecSys,           
                         std::string ctype1="RA---TAN",  

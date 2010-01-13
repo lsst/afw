@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 import os
 import math
-
+import pdb                          # we may want to say pdb.set_trace()
 import unittest
 
 import eups
 import lsst.afw.image as afwImage
+import lsst.afw.geom as afwGeom
 import lsst.utils.tests as utilsTests
 import lsst.afw.display.ds9 as ds9
 import lsst.pex.exceptions.exceptionsLib as exceptions
@@ -203,12 +204,16 @@ class WCSTestCaseCFHT(unittest.TestCase):
         a = self.wcs.getAffineTransform()
         #print a[a.X], a[a.Y], print a[a.XX], a[a.XY], a[a.YX], a[a.YY]
 
-        p00 = afwImage.PointD(10, 10)
-        a = self.wcs.getAffineTransform(p00)
-
-        self.assertAlmostEqual(a[a.X], p00.getX())
-        self.assertAlmostEqual(a[a.Y], p00.getY())
-        self.assertAlmostEqual(self.wcs.pixArea(p00), abs(a[a.XX]* a[a.YY] - a[a.XY]*a[a.YX]))
+        sky00g = afwGeom.makePointD(10, 10)
+        sky00i = afwImage.PointD(sky00g.getX(), sky00g.getY())
+        a = self.wcs.linearizeAt(sky00g)
+        pix00i = self.wcs.raDecToXY(sky00i)
+        pix00g = afwGeom.makePointD(pix00i.getX(), pix00i.getY())
+        sky00gApprox = a(pix00g);
+        self.assertAlmostEqual(sky00g.getX(), sky00gApprox.getX())
+        self.assertAlmostEqual(sky00g.getY(), sky00gApprox.getY())
+        self.assertAlmostEqual(self.wcs.pixArea(sky00i), abs(a[a.XX]* a[a.YY] - a[a.XY]*a[a.YX]))
+        a.invert()
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

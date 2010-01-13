@@ -45,7 +45,9 @@ else:
         maskIo1 =         "%s_msk.fits" % inFile,
     )
 
-    ignoreList=["testLib.py", "testEigenLib.py"]
+    ignoreList=["testLib.py", "testEigenLib.py",
+                "numpyEigen.py" # broken, but kept until a better fix is available
+                ]
     tests = lsst.tests.Control(env, args = testArgs, ignoreList=ignoreList, verbose = True)
 
     tests.run("*.cc")

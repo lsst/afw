@@ -36,6 +36,8 @@
 #include "lsst/afw/image/ImageUtils.h"
 #include "lsst/afw/image/Wcs.h"
 
+#include "lsst/afw/geom/deprecated.h"
+
 using lsst::daf::base::PropertySet;
 using lsst::daf::data::LsstBase;
 using namespace std;
@@ -78,7 +80,7 @@ lsst::afw::image::Wcs::Wcs() :
 void lsst::afw::image::Wcs::initWcslib(
                 PointD crval,                   ///< Origin in sky coords
                 PointD crpix,                   ///< Origin in pixel coords
-                Eigen::Matrix2d CD,             ///< Transformation matrix
+                Eigen::Matrix2d const & CD,             ///< Transformation matrix
                 double equinox,                 ///< Equinox of coordinate system, eg 2000
                 std::string raDecSys,           ////< Definition of coordinate system, eg. FK5 or ICRS
                 std::string ctype1,  ///< Type of 1st coordinate axis
@@ -145,7 +147,7 @@ void lsst::afw::image::Wcs::initWcslib(
  */
 lsst::afw::image::Wcs::Wcs(PointD crval, ///< ra/dec of centre of image
                            PointD crpix, ///< pixel coordinates of centre of image
-                           Eigen::Matrix2d CD, ///< Conversion matrix with elements as defined in wcs.h
+                           Eigen::Matrix2d const & CD,///< Conversion matrix with elements as defined in wcs.h
                            double equinox,         ///< Equinox used to define coord sys, e.g J2000
                            std::string raDecSys   ///<  Astrometry System, e.g FK5 or ICRS
                           ) : LsstBase(typeid(this)),
@@ -158,11 +160,11 @@ lsst::afw::image::Wcs::Wcs(PointD crval, ///< ra/dec of centre of image
 lsst::afw::image::Wcs::Wcs(
     PointD crval, ///< (ra, dec)
     PointD crpix,  ///< (x,y) pixel coords corresponding to crval
-    Eigen::Matrix2d CD, ///< Linear mapping from crpix to crval
-    Eigen::MatrixXd sipA, ///< Forward distortion Matrix A
-    Eigen::MatrixXd sipB, ///< Forward distortion Matrix B
-    Eigen::MatrixXd sipAp, ///<Reverse distortion Matrix Ap
-    Eigen::MatrixXd sipBp,  ///<Reverse distortion Matrix Bp
+    Eigen::Matrix2d const & CD, ///< Linear mapping from crpix to crval
+    Eigen::MatrixXd const & sipA, ///< Forward distortion Matrix A
+    Eigen::MatrixXd const & sipB, ///< Forward distortion Matrix B
+    Eigen::MatrixXd const & sipAp, ///<Reverse distortion Matrix Ap
+    Eigen::MatrixXd const & sipBp,  ///<Reverse distortion Matrix Bp
     double equinox,               ///< Equinox of coord system, e.g J2000
     std::string raDecSys          ///< Celestial reference frame used, e.g FK5 or ICRS
                           ): LsstBase(typeid(this)),
@@ -600,14 +602,16 @@ lsst::afw::geom::AffineTransform lsst::afw::image::Wcs::getAffineTransform() con
 }
 
 /**
- * Return the local linear approximation to Wcs::raDecToXY at the point (ra, dec) = sky
+ * Return the local linear approximation to Wcs::xyToRaDec at the point (ra, y) = sky
  *
  * This is currently implemented as a numerical derivative, but we should specialise the Wcs class (or rather
  * its implementation) to handle "simple" cases such as TAN-SIP analytically
+ *
+ * @param(in) sky Position in sky coordinates where transform is desired
  */                           
-lsst::afw::geom::AffineTransform lsst::afw::image::Wcs::getAffineTransform(
-        lsst::afw::image::PointD sky00  ///< Position in sky coordinates where transform is desired
-                                                                          ) const
+lsst::afw::geom::AffineTransform lsst::afw::image::Wcs::linearizeAt(
+    lsst::afw::geom::PointD const & sky
+) const
 {
     //
     // Figure out the (0, 0), (0, 1), and (1, 0) ra/dec coordinates of the corners of a square drawn in pixel
@@ -615,7 +619,7 @@ lsst::afw::geom::AffineTransform lsst::afw::image::Wcs::getAffineTransform(
     // pixel coordinates so I didn't bother
     //
     const double side = 10;             // length of the square's sides in pixels
-
+    lsst::afw::image::PointD const sky00(geom::convertToImage(sky));
     lsst::afw::image::PointD const pix00 = raDecToXY(sky00);
     
     lsst::afw::image::PointD const dsky10 = xyToRaDec(pix00 + lsst::afw::image::PointD(side, 0)) - sky00;
@@ -627,11 +631,12 @@ lsst::afw::geom::AffineTransform lsst::afw::image::Wcs::getAffineTransform(
     m(1, 0) = dsky10.getY()/side;
     m(1, 1) = dsky01.getY()/side;
 
-    Eigen::Vector2d p00;
-    p00 << sky00.getX(), sky00.getY();
-    return lsst::afw::geom::AffineTransform(m, lsst::afw::geom::ExtentD(p00));
+    Eigen::Vector2d sky00v;
+    sky00v << sky00.getX(), sky00.getY();
+    Eigen::Vector2d pix00v;
+    pix00v << pix00.getX(), pix00.getY();
+    return lsst::afw::geom::AffineTransform(m, lsst::afw::geom::ExtentD(sky00v - m * pix00v));
 }
-
 
 /// Convert from (ra, dec) to (column, row) coordinates
 ///

@@ -3,6 +3,8 @@
 #include "lsst/afw/geom/AffineTransform.h"
 %}
 
+SWIG_SHARED_PTR(AffineTransformPtr, lsst::afw::geom::AffineTransform);
+
 %rename(__mul__) lsst::afw::geom::AffineTransform::operator*;
 %ignore lsst::afw::geom::AffineTransform::operator[];
 %ignore lsst::afw::geom::AffineTransform::dTransform;
