@@ -45,7 +45,10 @@ in particular that it has an entry ampSerial which is a single-element list, the
     nCol = ccdPol.get("nCol")
     nRow = ccdPol.get("nRow")
     if not ccdId:
-        ccdId = cameraGeom.Id(ccdPol.get("serial"), ccdPol.get("name"))
+        try:
+            ccdId = cameraGeom.Id(ccdPol.get("serial"), ccdPol.get("name"))
+        except Exception, e:
+            ccdId = cameraGeom.Id(0, "unknown")
 
     ccd = cameraGeom.Ccd(ccdId, pixelSize)
 
@@ -96,11 +99,11 @@ in particular that it has an entry ampSerial which is a single-element list, the
             raise RuntimeError, ("Unknown readoutCorner %s" % c)
         
         if c in (cameraGeom.Amp.LLC, cameraGeom.Amp.ULC):
-            biasSec = afwImage.BBox(afwImage.PointI(0, preRows), overclockH, height)
-            dataSec = afwImage.BBox(afwImage.PointI(overclockH, preRows), width, height)
-        elif c in (cameraGeom.Amp.LRC, cameraGeom.Amp.URC):
             biasSec = afwImage.BBox(afwImage.PointI(extended + width, preRows), overclockH, height)
             dataSec = afwImage.BBox(afwImage.PointI(extended, preRows), width, height)
+        elif c in (cameraGeom.Amp.LRC, cameraGeom.Amp.URC):
+            biasSec = afwImage.BBox(afwImage.PointI(0, preRows), overclockH, height)
+            dataSec = afwImage.BBox(afwImage.PointI(overclockH, preRows), width, height)
 
         eParams = cameraGeom.ElectronicParams(gain, readNoise, saturationLevel)
         amp = cameraGeom.Amp(cameraGeom.Id(ampSerial[0], "ID%d" % ampSerial[0]),
@@ -140,7 +143,10 @@ particular that it has an entry ampSerial which is a single-element list, the am
     nCol = raftPol.get("nCol")
     nRow = raftPol.get("nRow")
     if not raftId:
-        raftId = cameraGeom.Id(raftPol.get("serial"), raftPol.get("name"))
+        try:
+            raftId = cameraGeom.Id(raftPol.get("serial"), raftPol.get("name"))
+        except Exception, e:
+            raftId = cameraGeom.Id(0, "unknown")
 
     raft = cameraGeom.Raft(raftId, nCol, nRow)
 

@@ -130,9 +130,25 @@ image::DecoratedImage<PixelT>::DecoratedImage(const std::string& fileName, ///< 
 template<typename PixelT>
 void image::DecoratedImage<PixelT>::writeFits(
     const std::string& fileName,                        //!< the file to write
-    boost::shared_ptr<const lsst::daf::base::PropertySet> metadata, //!< metadata to write to header; or NULL
+    boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, //!< metadata to write to header; or NULL
     std::string const& mode                              ///< "w" to write a new file; "a" to append
 ) const {
+    lsst::daf::base::PropertySet::Ptr metadata;
+
+    if (metadata_i.get()) {
+        metadata = getMetadata()->deepCopy();
+#if 0
+        metadata->combine(metadata_i);  // combine takes a Ptr, not a ConstPtr
+#else
+        {
+            lsst::daf::base::PropertySet::Ptr tmpMetadata = metadata_i->deepCopy();
+            metadata->combine(tmpMetadata);
+        }
+#endif
+    } else {
+        metadata = getMetadata();
+    }
+
     image::fits_write_view(fileName, _image->_getRawView(), metadata, mode);
 }
 
