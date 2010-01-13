@@ -54,7 +54,7 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 
 %lsst_exceptions();
 
-%include "lsst/afw/eigen.i"
+%import "lsst/afw/eigen.i"
 
 %declareEigenMatrix(Eigen::Matrix<bool,2,1,Eigen::DontAlign>);
 %declareEigenMatrix(Eigen::Matrix<int,2,1,Eigen::DontAlign>);
