@@ -17,18 +17,25 @@ namespace cameraGeom {
 
 namespace afwGeom = lsst::afw::geom;
 
+    
 /**
- * Describe a detector's orientation
+ * Describe a detector's orientation with respect to the nominal position
  */
 class Orientation {
 public:
-    explicit Orientation(double pitch=0.0, ///< pitch (rotation in YZ), radians
+    explicit Orientation(int nQuarter = 0, ///< Nominal rotation of device in units of pi/2
+                         double pitch=0.0, ///< pitch (rotation in YZ), radians
                          double roll=0.0,  ///< roll (rotation in XZ), radians
                          double yaw=0.0) : ///< yaw (rotation in XY), radians
+        _nQuarter(nQuarter % 4),
         _pitch(pitch), _cosPitch(std::cos(pitch)),  _sinPitch(std::sin(pitch)),
         _roll(roll), _cosRoll(std::cos(roll)),  _sinRoll(std::sin(roll)),
         _yaw(yaw), _cosYaw(std::cos(yaw)),  _sinYaw(std::sin(yaw))
         {}
+
+    /// Return the number of quarter-turns applied to this detector
+    int getNQuarter() const { return _nQuarter; }
+
     /// Return the pitch angle
     double getPitch() const { return _pitch; }
     /// Return cos(pitch)
@@ -50,6 +57,8 @@ public:
     /// Return sin(yaw)
     double getSinYaw() const { return _sinYaw; }
 private:
+    int _nQuarter;                      // number of quarter-turns in +ve direction
+
     double _pitch;                      // pitch
     double _cosPitch;                   // cos(pitch)
     double _sinPitch;                   // sin(pitch)

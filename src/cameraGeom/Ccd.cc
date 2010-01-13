@@ -2,6 +2,7 @@
  * \file
  */
 #include <algorithm>
+#include "lsst/afw/math.h"
 #include "lsst/afw/cameraGeom/Ccd.h"
 
 namespace afwGeom = lsst::afw::geom;
@@ -34,37 +35,14 @@ void cameraGeom::Ccd::addAmp(int const iX, ///< x-index of this Amp
     //
     // Now deal with the geometry after we trim everything except the dataSec
     //
-    {
-        afwImage::BBox dataSec = amp_c.getDataSec();
-        dataSec.shift(-dataSec.getX0(), -dataSec.getY0());
-        dataSec.shift(iX*dataSec.getWidth(), iY*dataSec.getHeight());
-        amp->getDataSec(true) = dataSec;
-        amp->getAllPixels(true) = dataSec;
-    }
+    amp->setTrimmedGeom();
+
     getAllTrimmedPixels().grow(amp->getDataSec(true).getLLC());
     getAllTrimmedPixels().grow(amp->getDataSec(true).getURC());
     
     _amps.push_back(amp);
 
     setCenterPixel(afwGeom::PointI::makeXY(getAllPixels(true).getWidth()/2, getAllPixels(true).getHeight()/2));
-}
-
-/************************************************************************************************************/
-/**
- * Return the pixel position given an offset from the chip centre, in mm
- */
-afwGeom::Point2I cameraGeom::Ccd::getIndexFromPosition(
-        afwGeom::Point2D const& pos     ///< Offset from chip centre, mm
-                                                      ) const
-{
-    if (isTrimmed()) {
-        return cameraGeom::Detector::getIndexFromPosition(pos);
-    }
-
-    lsst::afw::geom::Point2I centerPixel = getCenterPixel();
-    double pixelSize = getPixelSize();
-
-    return afwGeom::Point2I::makeXY(centerPixel[0] + pos[0]/pixelSize, centerPixel[1] + pos[1]/pixelSize);
 }
 
 /**
@@ -174,4 +152,26 @@ void cameraGeom::Ccd::shift(int dx,     ///< How much to offset in x (pixels)
     Detector::shift(dx, dy);
     
     std::for_each(_amps.begin(), _amps.end(), boost::bind(&Amp::shift, _1, boost::ref(dx), boost::ref(dx)));
+}
+
+/************************************************************************************************************/
+///
+/// Set the Ccd's Orientation
+///
+/// We also have to fix the amps, of course
+///
+void cameraGeom::Ccd::setOrientation(
+        cameraGeom::Orientation const& orientation // the detector's new Orientation
+                                    )
+{
+    int const n90 = orientation.getNQuarter() - getOrientation().getNQuarter(); // before setting orientation
+
+    afwGeom::Extent2I const dimensions =
+        afwGeom::Extent2I::makeXY(getAllPixels(false).getWidth(), getAllPixels(false).getHeight());
+
+
+    cameraGeom::Detector::setOrientation(orientation);
+
+    std::for_each(_amps.begin(), _amps.end(),
+                  boost::bind(&Amp::rotateBy90, _1, boost::ref(dimensions), boost::ref(n90)));
 }

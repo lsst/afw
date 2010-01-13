@@ -60,13 +60,13 @@ public:
     virtual afwGeom::Extent2D getSize() const;
 
     /// Return Detector's total footprint
-    afwImage::BBox& getAllPixels() {
+    virtual afwImage::BBox& getAllPixels() {
         return (_hasTrimmablePixels && _isTrimmed) ? _trimmedAllPixels : _allPixels;
     }
-    afwImage::BBox getAllPixels() const {
+    virtual afwImage::BBox getAllPixels() const {
         return getAllPixels(_isTrimmed);
     }
-    afwImage::BBox getAllPixels(bool isTrimmed ///< True iff the bias/overclock have been removed
+    virtual afwImage::BBox getAllPixels(bool isTrimmed ///< True iff the bias/overclock have been removed
                                        ) const {
         return (_hasTrimmablePixels && isTrimmed) ? _trimmedAllPixels : _allPixels;
     }
@@ -74,14 +74,13 @@ public:
     // Geometry of Detector --- i.e. mm not pixels
     //
     /// Set the central pixel
-    virtual void setCenterPixel(
+    void setCenterPixel(
             afwGeom::Point2I const& centerPixel ///< the pixel \e defined to be the detector's centre
-                               ) { _centerPixel = centerPixel; }
+                       ) { _centerPixel = centerPixel; }
     /// Return the central pixel
     afwGeom::Point2I getCenterPixel() const { return _centerPixel; }
 
-    /// Set the Detector's Orientation
-    void setOrientation(Orientation const& orientation) { _orientation = orientation;}
+    virtual void setOrientation(Orientation const& orientation);
     /// Return the Detector's Orientation
     Orientation const& getOrientation() const { return _orientation;}
 
@@ -92,6 +91,7 @@ public:
     //
     // Translate between physical positions in mm to pixels
     //
+    virtual afwGeom::Point2I getPixelFromPosition(afwGeom::Point2D const& pos) const;
     virtual afwGeom::Point2I getIndexFromPosition(afwGeom::Point2D const& pos) const;
 
     afwGeom::Point2D getPositionFromPixel(afwGeom::Point2I const& pix) const;
@@ -117,6 +117,10 @@ private:
     afwImage::BBox _trimmedAllPixels;   // Bounding box of all the Detector's pixels after bias trimming
 };
 
+namespace detail {
+    afwImage::BBox rotateBBoxBy90(afwImage::BBox const& bbox, afwGeom::Extent2I const& dimensions, int n90);
+}
+    
 }}}
 
 #endif

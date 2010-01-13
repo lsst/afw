@@ -65,6 +65,13 @@ definitions: {
                                 minOccurs: 2
                                 maxOccurs: 2
                             }
+                            nQuarter: {
+                                type: int
+                                description: "Number of quarter-turns applied to Raft when put into camera"
+                                minOccurs: 0
+                                maxOccurs: 1
+                                default: 0
+                            }
                             orientation: {
                                 type: double
                                 description: "pitch, roll, yaw; degrees"
@@ -138,6 +145,13 @@ definitions: {
                                 description: "offset of CCD center from raft center, (x, y); mm"
                                 minOccurs: 2
                                 maxOccurs: 2
+                            }
+                            nQuarter: {
+                                type: int
+                                description: "Number of quarter-turns applied to CCD when put into Raft"
+                                minOccurs: 0
+                                maxOccurs: 1
+                                default: 0
                             }
                             orientation: {
                                 type: double

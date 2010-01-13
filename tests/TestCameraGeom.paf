@@ -10,6 +10,7 @@ Camera: {
         name: "R:0,0"                   # Raft's name
         index: 0 0                      # location of Raft in Camera; in (range(nCol), range(nRow))
         offset: -2.11 0.0               # offset of Raft center from boresight, (x, y); mm
+        nQuarter: 0                     # number of quarter turns applied to raft when put into camera
         orientation: 0.0 0.0 0.0        # pitch, roll, yaw; degrees
     }
     Raft: {
@@ -17,11 +18,12 @@ Camera: {
         name: "R:1,0"                   # Raft's name
         index: 1 0                      # location of Raft in Camera; in (range(nCol), range(nRow))
         offset: 2.11 0.0                # offset of Raft center from boresight, (x, y); mm
+        nQuarter: 0                     # number of quarter turns applied to raft when put into camera
         orientation: 0.0 0.0 0.0        # pitch, roll, yaw; degrees
     }
 }
 #
-# N.b. we need to specify orientation for each CCD due to pex_policy #1117
+# N.b. we need to specify nQuarter/orientation for each CCD due to pex_policy #1117
 #
 Raft: {
     nCol: 2                             # number of columns of CCDs
@@ -31,6 +33,7 @@ Raft: {
         name: "C:0,0"                   # CCD's name
         index: 0 0                      # Location of CCD in Raft thought of as a grid of CCDs
         offset: -1.01 -2.02             # offset of CCD center from raft center, (x, y); mm
+        nQuarter: 1                     # number of quarter turns applied to CCD when put into raft
         orientation: 0.0 0.0 0.0        # pitch, roll, yaw; degrees
     }
     Ccd: {
@@ -38,6 +41,7 @@ Raft: {
         name: "C:1,0"                   # CCD's name
         index: 1 0                      # Location of CCD in Raft thought of as a grid of CCDs
         offset: 1.01 -2.02              # offset of CCD center from raft center, (x, y); mm
+        nQuarter: 1                     # number of quarter turns applied to CCD when put into raft
         orientation: 0.0 0.0 0.0        # pitch, roll, yaw; degrees
     }
     Ccd: {
@@ -45,6 +49,7 @@ Raft: {
         name: "C:0,1"                   # CCD's name
         index: 0 1                      # Location of CCD in Raft thought of as a grid of CCDs
         offset: -1.01 0.0               # offset of CCD center from raft center, (x, y); mm
+        nQuarter: 1                     # number of quarter turns applied to CCD when put into raft
         orientation: 0.0 0.0 0.0        # pitch, roll, yaw; degrees
     }
     Ccd: {
@@ -52,6 +57,7 @@ Raft: {
         name: "C:1,1"                   # CCD's name
         index: 1 1                      # Location of CCD in Raft thought of as a grid of CCDs
         offset: 1.01 0.0                # offset of CCD center from raft center, (x, y); mm
+        nQuarter: 1                     # number of quarter turns applied to CCD when put into raft
         orientation: 0.0 0.0 0.0        # pitch, roll, yaw; degrees
     }
     Ccd: {
@@ -59,6 +65,7 @@ Raft: {
         name: "C:0,2"                   # CCD's name
         index: 0 2                      # Location of CCD in Raft thought of as a grid of CCDs
         offset: -1.01 2.02              # offset of CCD center from raft center, (x, y); mm
+        nQuarter: 3                     # number of quarter turns applied to CCD when put into raft
         orientation: 0.0 0.0 0.0        # pitch, roll, yaw; degrees
     }
     Ccd: {
@@ -66,6 +73,7 @@ Raft: {
         name: "C:1,2"                   # CCD's name
         index: 1 2                      # Location of CCD in Raft thought of as a grid of CCDs
         offset: 1.01 2.02               # offset of CCD center from raft center, (x, y); mm
+        nQuarter: 3                     # number of quarter turns applied to CCD when put into raft
         orientation: 0.0 0.0 0.0        # pitch, roll, yaw; degrees
     }
 }
@@ -73,7 +81,7 @@ Raft: {
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 Ccd: {
-    pixelSize: 10e-3                    # pixel size (mm)
+    pixelSize: 10.0e-3                    # pixel size (mm)
 
     nCol: 2                             # number of columns of amps; 2 == Left and Right
     nRow: 4                             # number of rows of amps
@@ -154,7 +162,7 @@ Ccd: {
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 Amp: {
-    height: 50                          # number of physical rows
+    height: 51                          # number of physical rows
     width: 100                          # number of physical columns
     extended: 10                        # length of extended register
     preRows: 2                          # extra rows before first real serial transfer

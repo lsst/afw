@@ -15,6 +15,7 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
+namespace afwGeom = lsst::afw::geom;
 /**
  * The electronic behaviour of an Amp
  */
@@ -76,7 +77,8 @@ public:
     typedef boost::shared_ptr<const Amp> ConstPtr;
 
     /// location of first pixel read
-    enum ReadoutCorner { LLC, ULC, URC, LRC };
+    // N.b. must be in the order that a rotation by 90 shift right by one;  LLC -> ULC 
+    enum ReadoutCorner { LLC, LRC, URC, ULC };
 
     explicit Amp(Id id, lsst::afw::image::BBox const& allPixels,
                  lsst::afw::image::BBox const& biasSec, lsst::afw::image::BBox const& dataSec,
@@ -90,6 +92,7 @@ public:
     }
 
     void shift(int dx, int dy);
+    void rotateBy90(afwGeom::Extent2I const& dimensions, int n90);
 
     /// Return the Detector's Id
     Id getId() const { return _id; }
@@ -109,13 +112,13 @@ public:
     }
 
     /// Return amplifier's total footprint
-    lsst::afw::image::BBox getAllPixels(bool isTrimmed // has the bias/overclock been removed?
+    virtual lsst::afw::image::BBox getAllPixels(bool isTrimmed // has the bias/overclock been removed?
                                        ) const {
         return isTrimmed ? _trimmedAllPixels : _allPixels;
     }
 
     /// Return amplifier's total footprint
-    lsst::afw::image::BBox& getAllPixels(bool isTrimmed // has the bias/overclock been removed?
+    virtual lsst::afw::image::BBox& getAllPixels(bool isTrimmed // has the bias/overclock been removed?
                                         ) {
         return isTrimmed ? _trimmedAllPixels : _allPixels;
     }
@@ -145,20 +148,25 @@ public:
         return getTrimmed ? _trimmedDataSec : _dataSec;
     }
 
+    /// Return the corner that's read first
+    ReadoutCorner getReadoutCorner() const { return _readoutCorner; }
+
     /// Return the first pixel read
-    lsst::afw::geom::Point2I getFirstPixelRead() const {
+    afwGeom::Point2I getFirstPixelRead() const {
         switch (_readoutCorner) {
           case LLC:
-            return lsst::afw::geom::PointI::makeXY(0,                         0);
+            return afwGeom::PointI::makeXY(0,                         0);
           case LRC:
-            return lsst::afw::geom::PointI::makeXY(_allPixels.getWidth() - 1, 0);
+            return afwGeom::PointI::makeXY(_allPixels.getWidth() - 1, 0);
           case URC:
-            return lsst::afw::geom::PointI::makeXY(_allPixels.getWidth() - 1, _allPixels.getHeight() - 1);
+            return afwGeom::PointI::makeXY(_allPixels.getWidth() - 1, _allPixels.getHeight() - 1);
           case ULC:
-            return lsst::afw::geom::PointI::makeXY(0,                         _allPixels.getHeight() - 1);
+            return afwGeom::PointI::makeXY(0,                         _allPixels.getHeight() - 1);
         }
         abort();                        // NOTREACHED
     }
+
+    void setTrimmedGeom();
 private:
     Id _id;                             // The amplifier's Id
     bool _isTrimmed;                    // Have all the bias/overclock regions been trimmed?

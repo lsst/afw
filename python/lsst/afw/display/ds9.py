@@ -29,6 +29,12 @@ except NameError:
         """Get the default frame for ds9"""
         return _defaultFrame
 
+    def incrDefaultFrame():
+        """Increment the default frame for ds9"""
+        global _defaultFrame
+        _defaultFrame += 1
+        return _defaultFrame
+
     setDefaultFrame(0)
 #
 # Symbolic names for mask/line colours.  N.b. ds9 5.3+ supports any X11 colour for masks
@@ -198,9 +204,9 @@ def initDS9(execDs9=True):
 
       raise Ds9Error
 
-def show(frame=-1):
+def show(frame=None):
     """Uniconify and Raise ds9.  N.b. throws an exception if frame doesn't exit"""
-    if frame < 0:
+    if frame is None:
         frame = getDefaultFrame()
 
     if frame is None:
@@ -213,7 +219,7 @@ def setMaskColor(color=GREEN):
     ds9Cmd("mask color %s" % color)
 
 
-def mtv(data, frame=-1, init=True, wcs=None, isMask=False, lowOrderBits=False, title=None, settings=None):
+def mtv(data, frame=None, init=True, wcs=None, isMask=False, lowOrderBits=False, title=None, settings=None):
    """Display an Image or Mask on a DS9 display
 
    If lowOrderBits is True, give low-order-bits priority in display (i.e.
@@ -223,7 +229,7 @@ Historical note: the name "mtv" comes from Jim Gunn's forth imageprocessing
 system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
    """
 
-   if frame < 0:
+   if frame is None:
         frame = getDefaultFrame()
 
    if frame is None:
@@ -340,9 +346,9 @@ def _mtv(data, wcs, title, isMask):
 #
 # Graphics commands
 #
-def erase(frame=-1):
+def erase(frame=None):
    """Erase the specified DS9 frame"""
-   if frame < 0:
+   if frame is None:
         frame = getDefaultFrame()
 
    if frame is None:
@@ -350,7 +356,7 @@ def erase(frame=-1):
 
    ds9Cmd("frame %d; regions delete all" % frame)
 
-def dot(symb, c, r, frame=-1, size=2, ctype=None):
+def dot(symb, c, r, frame=None, size=2, ctype=None):
    """Draw a symbol onto the specified DS9 frame at (col,row) = (c,r) [0-based coordinates]
 Possible values are:
         +                Draw a +
@@ -359,7 +365,7 @@ Possible values are:
         @:Mxx,Mxy,Myy    Draw an ellipse with moments (Mxx, Mxy, Myy) (size is ignored)
 Any other value is interpreted as a string to be drawn
 """
-   if frame < 0:
+   if frame is None:
         frame = getDefaultFrame()
 
    if frame is None:
@@ -410,12 +416,12 @@ Any other value is interpreted as a string to be drawn
 
    ds9Cmd(cmd)
 
-def line(points, frame=-1, symbs=False, ctype=None):
+def line(points, frame=None, symbs=False, ctype=None):
    """Draw a set of symbols or connect the points, a list of (col,row)
 If symbs is True, draw points at the specified points using the desired symbol,
 otherwise connect the dots.  Ctype is the name of a colour (e.g. 'red')"""
    
-   if frame < 0:
+   if frame is None:
         frame = getDefaultFrame()
 
    if frame is None:
@@ -444,10 +450,10 @@ otherwise connect the dots.  Ctype is the name of a colour (e.g. 'red')"""
 #
 # Zoom and Pan
 #
-def zoom(zoomfac=None, colc=None, rowc=None, frame=-1):
+def zoom(zoomfac=None, colc=None, rowc=None, frame=None):
    """Zoom frame by specified amount, optionally panning also"""
 
-   if frame < 0:
+   if frame is None:
        frame = getDefaultFrame()
 
    if frame is None:
@@ -468,10 +474,10 @@ def zoom(zoomfac=None, colc=None, rowc=None, frame=-1):
 
    ds9Cmd(cmd)
 
-def pan(colc=None, rowc=None, frame=-1):
+def pan(colc=None, rowc=None, frame=None):
    """Pan to (rowc, colc); see also zoom"""
 
-   if frame < 0:
+   if frame is None:
         frame = getDefaultFrame()
 
    if frame is None:

@@ -56,13 +56,10 @@ public:
     //
     // Translate between physical positions in mm to pixels
     //
-    virtual lsst::afw::geom::Point2I getIndexFromPosition(lsst::afw::geom::Point2D const& pos) const;
     virtual lsst::afw::geom::Point2D getPositionFromIndex(lsst::afw::geom::Point2I const& pos,
                                                           bool const isTrimmed) const;
-    virtual lsst::afw::geom::Point2D getPositionFromIndex(lsst::afw::geom::Point2I const& pos) const {
-        return Detector::getPositionFromIndex(pos);
-    }
 
+    virtual void setOrientation(Orientation const& orientation);
     virtual void shift(int dx, int dy);
 private:
     AmpSet _amps;                       // the Amps that make up this Ccd

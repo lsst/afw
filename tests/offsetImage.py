@@ -11,7 +11,6 @@ or
 
 import os
 import math
-import pdb  # we may want to say pdb.set_trace()
 import sys
 import unittest
 import numpy
@@ -143,6 +142,29 @@ class offsetImageTestCase(unittest.TestCase):
 #         self.assertTrue(abs(stats.getValue(afwMath.MIN)) < 1.2e-3*amp)
 #         self.assertTrue(abs(stats.getValue(afwMath.MAX)) < 1.2e-3*amp)
 
+class rotateImageTestCase(unittest.TestCase):
+    """A test case for rotating images"""
+
+    def setUp(self):
+        self.inImage = afwImage.ImageF(20, 10)
+        self.inImage.set(0, 0, 100)
+        self.inImage.set(10, 0, 50)
+
+    def tearDown(self):
+        del self.inImage
+
+    def testRotate(self):
+        """Test that we end up with the correct image after rotating by 90 degrees"""
+
+        for nQuarter, x, y in [(0, 0, 0),
+                               (1, 9, 0),
+                               (2, 19, 9),
+                               (3, 0, 19)]:
+            outImage = afwMath.rotateImageBy90(self.inImage, nQuarter)
+            if display:
+                ds9.mtv(outImage, frame=nQuarter, title="out %d" % nQuarter)
+            self.assertEqual(self.inImage.get(0, 0), outImage.get(x, y))
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
@@ -151,7 +173,8 @@ def suite():
     utilsTests.init()
 
     suites = []
-    suites += unittest.makeSuite(offsetImageTestCase)
+    #suites += unittest.makeSuite(offsetImageTestCase)
+    suites += unittest.makeSuite(rotateImageTestCase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 

@@ -19,7 +19,7 @@ import lsst.pex.exceptions as pexExcept
 import lsst.pex.policy as pexPolicy
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
-#import lsst.afw.math.mathLib as afwMath
+import lsst.afw.math.mathLib as afwMath
 import lsst.afw.display.ds9 as ds9
 import lsst.afw.display.utils as displayUtils
 
@@ -59,6 +59,10 @@ in particular that it has an entry ampSerial which is a single-element list, the
         ampSerial = ccdInfo.get("ampSerial", [0])
         ampSerial0 = ampSerial[0]           # used in testing
         
+    readoutCorners = dict(LLC = cameraGeom.Amp.LLC,
+                          LRC = cameraGeom.Amp.LRC,
+                          ULC = cameraGeom.Amp.ULC,
+                          URC = cameraGeom.Amp.URC)
     for ampPol in ccdPol.getArray("Amp"):
         Col, Row = ampPol.getArray("index")
         c =  ampPol.get("readoutCorner")
@@ -86,16 +90,17 @@ in particular that it has an entry ampSerial which is a single-element list, the
 
         allPixels = afwImage.BBox(afwImage.PointI(0, 0), eWidth, eHeight)
 
-        if c == "LLC":
-            c = cameraGeom.Amp.LLC
-            biasSec = afwImage.BBox(afwImage.PointI(extended + width, preRows), overclockH, height)
-            dataSec = afwImage.BBox(afwImage.PointI(extended, preRows), width, height)
-        elif c == "LRC":
-            c = cameraGeom.Amp.LRC
+        try:
+            c = readoutCorners[c]
+        except IndexError:
+            raise RuntimeError, ("Unknown readoutCorner %s" % c)
+        
+        if c in (cameraGeom.Amp.LLC, cameraGeom.Amp.ULC):
             biasSec = afwImage.BBox(afwImage.PointI(0, preRows), overclockH, height)
             dataSec = afwImage.BBox(afwImage.PointI(overclockH, preRows), width, height)
-        else:
-            raise RuntimeError, ("Unknown readoutCorner %s" % c)
+        elif c in (cameraGeom.Amp.LRC, cameraGeom.Amp.URC):
+            biasSec = afwImage.BBox(afwImage.PointI(extended + width, preRows), overclockH, height)
+            dataSec = afwImage.BBox(afwImage.PointI(extended, preRows), width, height)
 
         eParams = cameraGeom.ElectronicParams(gain, readNoise, saturationLevel)
         amp = cameraGeom.Amp(cameraGeom.Id(ampSerial[0], "ID%d" % ampSerial[0]),
@@ -147,6 +152,7 @@ particular that it has an entry ampSerial which is a single-element list, the am
         Col, Row = ccdPol.getArray("index")
         xc, yc = ccdPol.getArray("offset")
 
+        nQuarter = ccdPol.get("nQuarter")
         pitch, roll, yaw = [float(math.radians(a)) for a in ccdPol.getArray("orientation")]
 
         if Col not in range(nCol) or Row not in range(nRow):
@@ -156,7 +162,8 @@ particular that it has an entry ampSerial which is a single-element list, the am
         ccd = makeCcd(geomPolicy, ccdId, ccdInfo=ccdInfo)
 
         raft.addDetector(afwGeom.Point2I.makeXY(Col, Row),
-                         afwGeom.Point2D.makeXY(xc, yc), cameraGeom.Orientation(pitch, roll, yaw), ccd)
+                         afwGeom.Point2D.makeXY(xc, yc),
+                         cameraGeom.Orientation(nQuarter, pitch, roll, yaw), ccd)
 
         if raftInfo is not None:
             # Guess the gutter between detectors
@@ -207,12 +214,14 @@ particular that it has an entry ampSerial which is a single-element list, the am
     for raftPol in cameraPol.getArray("Raft"):
         Col, Row = raftPol.getArray("index")
         xc, yc = raftPol.getArray("offset")
+        nQuarter = raftPol.get("nQuarter")
         pitch, roll, yaw = [float(math.radians(a)) for a in raftPol.getArray("orientation")]
 
         raftId = cameraGeom.Id(raftPol.get("serial"), raftPol.get("name"))
         raft = makeRaft(geomPolicy, raftId, raftInfo)
         camera.addDetector(afwGeom.Point2I.makeXY(Col, Row),
-                           afwGeom.Point2D.makeXY(xc, yc), cameraGeom.Orientation(pitch, roll, yaw), raft)
+                           afwGeom.Point2D.makeXY(xc, yc),
+                           cameraGeom.Orientation(nQuarter, pitch, roll, yaw), raft)
 
         if cameraInfo is not None:
             # Guess the gutter between detectors
@@ -243,15 +252,32 @@ particular that it has an entry ampSerial which is a single-element list, the am
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def makeImageFromCcd(ccd):
+def makeImageFromCcd(ccd, isTrimmed=None):
     """Make an Image of a Ccd"""
 
-    ccdImage = afwImage.ImageU(ccd.getAllPixels().getDimensions())
+    if isTrimmed is None:
+        isTrimmed = ccd.isTrimmed()
+
+    ccdImage = afwImage.ImageU(ccd.getAllPixels(isTrimmed).getDimensions())
     for a in ccd:
-        im = ccdImage.Factory(ccdImage, a.getAllPixels())
+        im = ccdImage.Factory(ccdImage, a.getAllPixels(isTrimmed))
         im += int(a.getElectronicParams().getReadNoise())
-        im = ccdImage.Factory(ccdImage, a.getDataSec())
+        im = ccdImage.Factory(ccdImage, a.getDataSec(isTrimmed))
         im += int(1 + 100*a.getElectronicParams().getGain() + 0.5)
+        # Mark the amplifier
+        dataSec = a.getDataSec(isTrimmed)
+        if a.getReadoutCorner() == cameraGeom.Amp.LLC:
+            x, y = dataSec.getX0(),     dataSec.getY0()
+        elif a.getReadoutCorner() == cameraGeom.Amp.LRC:
+            x, y = dataSec.getX1() - 2, dataSec.getY0()
+        elif a.getReadoutCorner() == cameraGeom.Amp.ULC:
+            x, y = dataSec.getX0()    , dataSec.getY1() - 2
+        elif a.getReadoutCorner() == cameraGeom.Amp.URC:
+            x, y = dataSec.getX1() - 2, dataSec.getY1() - 2
+        else:
+            assert(not "Possible readoutCorner")
+
+        ccdImage.Factory(ccdImage, afwImage.BBox(afwImage.PointI(x, y), 3, 3)).set(0)
 
     return ccdImage
 
@@ -265,17 +291,19 @@ of the detectors"""
     if ccdImage == "":
         ccdImage = makeImageFromCcd(ccd)
 
-    if ccdImage is not None:
         title = ccd.getId().getName()
         if isTrimmed:
             title += "(trimmed)"
         ds9.mtv(ccdImage, frame=frame, title=title)
 
     for a in ccd:
-        displayUtils.drawBBox(a.getAllPixels(isTrimmed), origin=ccdOrigin, borderWidth=0, frame=frame)
+        displayUtils.drawBBox(a.getAllPixels(isTrimmed), origin=ccdOrigin, borderWidth=0.49, frame=frame)
+        
         if not isTrimmed:
-            displayUtils.drawBBox(a.getBiasSec(), origin=ccdOrigin, ctype=ds9.RED, frame=frame)
-            displayUtils.drawBBox(a.getDataSec(), origin=ccdOrigin, ctype=ds9.BLUE, frame=frame)
+            displayUtils.drawBBox(a.getBiasSec(), origin=ccdOrigin,
+                                  borderWidth=0.49, ctype=ds9.RED, frame=frame)
+            displayUtils.drawBBox(a.getDataSec(), origin=ccdOrigin,
+                                  borderWidth=0.49, ctype=ds9.BLUE, frame=frame)
         # Label each Amp
         ap = a.getAllPixels(isTrimmed)
         xc, yc = (ap.getX0() + ap.getX1())//2, (ap.getY0() + ap.getY1())//2
@@ -287,38 +315,47 @@ of the detectors"""
         ds9.dot(str(ccd.findAmp(cen).getId().getSerial()), xc, yc, frame=frame)
 
     displayUtils.drawBBox(ccd.getAllPixels(isTrimmed), origin=ccdOrigin,
-                          borderWidth=0.5, ctype=ds9.MAGENTA, frame=frame)
+                          borderWidth=0.49, ctype=ds9.MAGENTA, frame=frame)
 
-def makeImageFromRaft(raft):
+def makeImageFromRaft(raft, raftCenter=None):
     """Make an Image of a Raft"""
 
     raftImage = afwImage.ImageU(raft.getAllPixels().getDimensions())
-    for dl in raft:
-        det = dl.getDetector();
-        bbox = det.getAllPixels(True).clone()
-        origin = det.getCenterPixel() + afwGeom.Extent2I(raft.getCenterPixel()) - \
-                 afwGeom.Extent2I.makeXY(bbox.getWidth()/2, bbox.getHeight()/2) 
+
+    for det in raft:
+        ccd = cameraGeom.cast_Ccd(det)
+        
+        bbox = ccd.getAllPixels(True)
+        origin = ccd.getCenterPixel() - \
+                 afwGeom.Extent2I.makeXY(bbox.getWidth()/2, bbox.getHeight()/2)
+        if raftCenter:
+            origin = origin + afwGeom.Extent2I(raftCenter)
+
+        bbox = ccd.getAllPixels(True).clone()
         bbox.shift(origin[0], origin[1])
-        im = raftImage.Factory(raftImage, bbox)
-        im.set(det.getId().getSerial())
+        ccdImage = raftImage.Factory(raftImage, bbox)
+
+        ccdImage <<= makeImageFromCcd(ccd, isTrimmed=True)
+        ccdImage += ccd.getId().getSerial()
 
     return raftImage
 
 def showRaft(raft, raftImage="", raftOrigin=None, frame=None):
     """Show a Raft on ds9.  If cameraImage isn't "", an image will be created based on the
 properties of the detectors"""
-    if raftImage == "":
-        raftImage = makeImageFromRaft(raft)
-
-    if raftImage is not None:
-        ds9.mtv(raftImage, frame=frame, title=raft.getId().getName())
 
     raftCenter = afwGeom.Point2I.makeXY(raft.getAllPixels().getWidth()/2, raft.getAllPixels().getHeight()/2)
     if raftOrigin:
         raftCenter += afwGeom.Extent2I(raftOrigin)
 
-    for dl in raft:
-        ccd = cameraGeom.cast_Ccd(dl.getDetector())
+    if raftImage == "":
+        raftImage = makeImageFromRaft(raft, raftCenter)
+
+    if raftImage is not None:
+        ds9.mtv(raftImage, frame=frame, title=raft.getId().getName())
+
+    for det in raft:
+        ccd = cameraGeom.cast_Ccd(det)
         
         bbox = ccd.getAllPixels(True)
         origin = ccd.getCenterPixel() - \
@@ -330,20 +367,30 @@ properties of the detectors"""
             name = str(ccd.getCenter())
         ds9.dot(name, origin[0] + bbox.getWidth()/2, origin[1] + bbox.getHeight()/2, frame=frame)
 
-        showCcd(ccd, None, isTrimmed=True, frame=frame, ccdOrigin=origin)
+        if raftImage is None:
+            ccdImage = None
+        else:
+            bbox = ccd.getAllPixels(True).clone()
+            bbox.shift(origin[0], origin[1])
+            ccdImage = raftImage.Factory(raftImage, bbox)
+
+        showCcd(ccd, ccdImage, isTrimmed=True, frame=frame, ccdOrigin=origin)
 
 def makeImageFromCamera(camera):
     """Make an Image of a Camera"""
 
     cameraImage = afwImage.ImageU(camera.getAllPixels().getDimensions())
-    for dl in camera:
-        raft = dl.getDetector();
+    for det in camera:
+        raft = cameraGeom.cast_Raft(det);
         bbox = raft.getAllPixels().clone()
         origin = camera.getCenterPixel() + afwGeom.Extent2I(raft.getCenterPixel()) - \
                  afwGeom.Extent2I.makeXY(bbox.getWidth()/2, bbox.getHeight()/2) 
         bbox.shift(origin[0], origin[1])
         im = cameraImage.Factory(cameraImage, bbox)
-        im.set(raft.getId().getSerial())
+
+        im <<= makeImageFromRaft(raft,
+                                 afwGeom.Point2I.makeXY(bbox.getWidth()/2, bbox.getHeight()/2))
+        im += raft.getId().getSerial()
 
     return cameraImage
 
@@ -357,8 +404,8 @@ on the properties of the detectors"""
     if cameraImage is not None:
         ds9.mtv(cameraImage, frame=frame, title=camera.getId().getName())
 
-    for dl in camera:
-        raft = cameraGeom.cast_Raft(dl.getDetector())
+    for det in camera:
+        raft = cameraGeom.cast_Raft(det)
         
         bbox = raft.getAllPixels()
         center = camera.getCenterPixel() + afwGeom.Extent2I(raft.getCenterPixel())
@@ -408,8 +455,16 @@ class CameraGeomTestCase(unittest.TestCase):
 
         polFile = pexPolicy.DefaultPolicyFile("afw", "TestCameraGeom.paf", "tests")
         self.geomPolicy = pexPolicy.Policy.createPolicy(polFile)
-        self.geomPolicy.mergeDefaults(defPolicy.getDictionary())
-    
+        try:
+            self.geomPolicy.mergeDefaults(defPolicy.getDictionary())
+        except Exception, e:
+            global warnedAboutDict
+            try:
+                type(warnedAboutDict)
+            except:
+                print >> sys.stderr, "Not validating dict due to old pexPolicy:", e
+                warnedAboutDict = True
+
     def tearDown(self):
         pass
 
@@ -446,13 +501,14 @@ class CameraGeomTestCase(unittest.TestCase):
     def testCcd(self):
         """Test if we can build a Ccd out of Amps"""
 
-        print >> sys.stderr, "Skipping testCcd"; return
+        #print >> sys.stderr, "Skipping testCcd"; return
 
         ccdId = cameraGeom.Id("CCD")
         ccdInfo = {"ampSerial" : CameraGeomTestCase.ampSerial}
         ccd = makeCcd(self.geomPolicy, ccdId, ccdInfo=ccdInfo)
         if display:
-            showCcd(ccd, frame=0)
+            ds9.incrDefaultFrame()
+            showCcd(ccd)
         else:
             ccdImage = None
 
@@ -479,16 +535,17 @@ class CameraGeomTestCase(unittest.TestCase):
         #
         # Test mapping pixel <--> mm
         #
-        pix = afwGeom.Point2I.makeXY(100, 200) # wrt bottom left
-        pos = afwGeom.Point2D.makeXY(0.0, 1.0) # wrt CCD center
+        pix = afwGeom.Point2I.makeXY(100, 204) # wrt bottom left
+        pos = afwGeom.Point2D.makeXY(0.0, 1.02) # wrt CCD center
         #
         # Map pix into untrimmed coordinates
         #
         amp = ccd.findAmp(pix)
         corr = amp.getDataSec(False).getLLC() - amp.getDataSec(True).getLLC()
-        pix += afwGeom.Extent2I(afwGeom.Point2I.makeXY(corr[0], corr[1]))
+        corr = afwGeom.Extent2I(afwGeom.Point2I.makeXY(corr[0], corr[1]))
+        pix += corr
         
-        self.assertEqual(ccd.getIndexFromPosition(pos), pix)
+        self.assertEqualPoint(ccd.getPixelFromPosition(pos) + corr, pix)
         self.assertEqualPoint(ccd.getPositionFromPixel(pix), pos)
         #
         # Trim the CCD and try again
@@ -496,7 +553,9 @@ class CameraGeomTestCase(unittest.TestCase):
         trimmedImage = trimCcd(ccd)
 
         if display:
-            showCcd(ccd, trimmedImage, frame=1)
+            ds9.incrDefaultFrame()
+            ds9.mtv(trimmedImage, title='Trimmed')
+            showCcd(ccd, trimmedImage)
 
         a = ccd.findAmp(cameraGeom.Id("ID%d" % ccdInfo["ampIdMin"]))
         self.assertEqual(a.getDataSec(), afwImage.BBox(afwImage.PointI(0, 0),
@@ -507,42 +566,65 @@ class CameraGeomTestCase(unittest.TestCase):
         #
         # Test mapping pixel <--> mm
         #
-        pix = afwGeom.Point2I.makeXY(100, 200) # wrt LLC
-        pos = afwGeom.Point2D.makeXY(0.0, 1.0) # wrt chip centre
+        pix = afwGeom.Point2I.makeXY(100, 204) # wrt LLC
+        pos = afwGeom.Point2D.makeXY(0.0, 1.02) # wrt chip centre
         
-        self.assertEqualPoint(ccd.getIndexFromPosition(pos), pix)
+        self.assertEqualPoint(ccd.getPixelFromPosition(pos), pix)
         self.assertEqualPoint(ccd.getPositionFromPixel(pix), pos)
+
+    def testRotatedCcd(self):
+        """Test if we can build a Ccd out of Amps"""
+
+        #print >> sys.stderr, "Skipping testRotatedCcd"; return
+
+        ccdId = cameraGeom.Id("Rotated CCD")
+        ccdInfo = {"ampSerial" : CameraGeomTestCase.ampSerial}
+        ccd = makeCcd(self.geomPolicy, ccdId, ccdInfo=ccdInfo)
+        ccd.setOrientation(cameraGeom.Orientation(1, 0.0, 0.0, 0.0))
+        if display:
+            ds9.incrDefaultFrame()
+            showCcd(ccd)
+        else:
+            ccdImage = None
+        #
+        # Trim the CCD and try again
+        #
+        trimmedImage = trimCcd(ccd)
+
+        if display:
+            ds9.incrDefaultFrame()
+            ds9.mtv(trimmedImage, title='Rotated trimmed')
+            showCcd(ccd, trimmedImage)
 
     def testRaft(self):
         """Test if we can build a Raft out of Ccds"""
 
-        print >> sys.stderr, "Skipping testRaft"; return
+        #print >> sys.stderr, "Skipping testRaft"; return
         raftId = cameraGeom.Id("Raft")
         raftInfo = {"ampSerial" : CameraGeomTestCase.ampSerial}
         raft = makeRaft(self.geomPolicy, raftId, raftInfo=raftInfo)
 
         if display:
-            showRaft(raft, frame=2)
+            ds9.incrDefaultFrame()
+            showRaft(raft)
 
         if False:
-            print "Raft Name \"%s\", serial %d,  BBox %s" % \
-                  (raft.getId().getName(), raft.getId().getSerial(), raft.getAllPixels())
+            print "Raft \"%s\",  BBox %s" % (raft.getId(), raft.getAllPixels())
 
             for d in raft:
-                print "Ccd:", d.getDetector().getAllPixels(True), \
-                      d.getDetector().getCenterPixel(), \
-                      d.getDetector().getCenter(), d.getDetector().getSize()
+                print "Ccd:", d.getAllPixels(True), d.getCenterPixel(), d.getCenter(), d.getSize(), \
+                      d.getOrientation().getNQuarter()
 
             print "Size =", raft.getSize()
 
         self.assertEqual(raft.getAllPixels().getWidth(), raftInfo["width"])
         self.assertEqual(raft.getAllPixels().getHeight(), raftInfo["height"])
 
-        for x, y, serial, cen in [(0, 0, 7, (-1.01, -2.02)),
-                                  (150, 250, 23, (-1.01, 0.0)),
-                                  (250, 250, 31, (1.01, 0.0)),
-                                  (300, 500, 47, (1.01, 2.02))]:
-            det = raft.findDetector(afwGeom.Point2I.makeXY(x, y)).getDetector()
+        for x, y, serial, cen in [(  0,   0,  5, (-1.01, -2.02)),
+                                  (150, 250, 21, (-1.01,  0.0 )),
+                                  (250, 250, 29, ( 1.01,  0.0 )),
+                                  (300, 500, 42, ( 1.01,  2.02))]:
+            det = raft.findDetector(afwGeom.Point2I.makeXY(x, y))
             ccd = cameraGeom.cast_Ccd(det)
             if False:
                 print x, y, det.getId().getName(), \
@@ -552,18 +634,23 @@ class CameraGeomTestCase(unittest.TestCase):
                 self.assertAlmostEqual(ccd.getCenter()[i], cen[i])
 
         name = "C:0,2"
-        self.assertEqual(raft.findDetector(cameraGeom.Id(name)).getDetector().getId().getName(), name)
+        self.assertEqual(raft.findDetector(cameraGeom.Id(name)).getId().getName(), name)
 
         self.assertEqual(raft.getSize()[0], raftInfo["widthMm"])
         self.assertEqual(raft.getSize()[1], raftInfo["heightMm"])
         #
         # Test mapping pixel <--> mm
         #
-        pix = afwGeom.Point2I.makeXY(100, 500) # wrt raft LLC
-        pos = afwGeom.Point2D.makeXY(-1.01, 2.02) # wrt raft center
+        for ix, iy, x, y in [(102, 500, -1.01,  2.02),
+                             (306, 100,  1.01, -2.02),
+                             (306, 500,  1.01,  2.02),
+                             (356, 525,  1.51,  2.27),
+                             ]:
+            pix = afwGeom.Point2I.makeXY(ix, iy) # wrt raft LLC
+            pos = afwGeom.Point2D.makeXY(x, y) # wrt raft center
 
-        self.assertEqualPoint(raft.getIndexFromPosition(pos), pix)
-        self.assertEqualPoint(raft.getPositionFromPixel(pix), pos)
+            self.assertEqualPoint(raft.getPixelFromPosition(pos), pix)
+            self.assertEqualPoint(raft.getPositionFromPixel(pix), pos)
         
     def testCamera(self):
         """Test if we can build a Camera out of Rafts"""
@@ -574,75 +661,53 @@ class CameraGeomTestCase(unittest.TestCase):
         camera = makeCamera(self.geomPolicy, cameraInfo=cameraInfo)
 
         if display:
-            showCamera(camera, frame=3)
+            ds9.incrDefaultFrame()
+            showCamera(camera)
 
-        if not False:
-            print "Camera Name \"%s\", serial %d,  BBox %s,  Centre %s" % \
-                  (camera.getId().getName(), camera.getId().getSerial(), camera.getAllPixels(), \
-                  camera.getCenterPixel())
+        if False:
+            print "Camera \"%s\",  BBox %s,  Centre %s" % \
+                  (camera.getId(), camera.getAllPixels(), camera.getCenterPixel())
 
             for d in camera:
-                print "Raft:", d.getDetector().getCenterPixel(), d.getDetector().getAllPixels()
-                raft = cameraGeom.cast_Raft(d.getDetector())
+                print "Raft:", d.getCenterPixel(), d.getAllPixels()
+                raft = cameraGeom.cast_Raft(d)
                 for d in raft:
-                    print "   Ccd:", d.getDetector().getAllPixels(True), \
-                          d.getDetector().getCenterPixel(), \
-                          d.getDetector().getCenter(), d.getDetector().getSize()
+                    print "   Ccd:", d.getAllPixels(True), d.getCenterPixel(), d.getCenter(), d.getSize()
 
             print "Camera size =", camera.getSize()
 
         self.assertEqual(camera.getAllPixels().getWidth(), cameraInfo["width"])
         self.assertEqual(camera.getAllPixels().getHeight(), cameraInfo["height"])
 
-        for rx, ry, cx, cy, serial, cen in [(0, 0,     0,   0,   7,  (-3.12, -2.02)),
-                                            (0,   0,   150, 250, 23, (-3.12,  0.00)),
-                                            (600, 300, 0,   0,   55, ( 1.1,  -2.02)),
-                                            (600, 300, 150, 250, 71, ( 1.1,  0.00)),
+        for rx, ry, cx, cy, serial, cen in [(0, 0,     0,   0,   4,  (-3.12, -2.02)),
+                                            (0,   0,   150, 250, 20, (-3.12,  0.00)),
+                                            (600, 300, 0,   0,   52, ( 1.1,  -2.02)),
+                                            (600, 300, 150, 250, 68, ( 1.1,  0.00)),
                                             ]:
-            print "RHL finding raft"
-            raft = cameraGeom.cast_Raft(camera.findDetector(afwGeom.Point2I.makeXY(rx, ry)).getDetector())
+            raft = cameraGeom.cast_Raft(camera.findDetector(afwGeom.Point2I.makeXY(rx, ry)))
 
-            if not False:
-                print "RHL finding CCD", rx, ry, cx, cy
-                print "raft.getCenterPixel()", raft.getCenterPixel()
-                ccd = cameraGeom.cast_Ccd(raft.findDetector(afwGeom.Point2I.makeXY(rx + cx, ry + cy) -
-                                                            afwGeom.Extent2I(camera.getCenterPixel()), True).getDetector())
-                print "RHL CCD", ccd.getId().getName()
-            else:
-                ccd = cameraGeom.cast_Ccd(raft.findDetector(afwGeom.Point2I.makeXY(cx, cy)).getDetector())
-            if not False:
-                print rx, ry, cx, cy, raft.getId().getName(), ccd.getId().getName(), \
-                      ccd.findAmp(afwGeom.Point2I.makeXY(150, 152), True).getId().getSerial(), ccd.getCenterPixel()
-            self.assertEqual(ccd.findAmp(afwGeom.Point2I.makeXY(150, 152), True).getId().getSerial(), serial)
+            ccd = cameraGeom.cast_Ccd(raft.findDetector(afwGeom.Point2I.makeXY(cx, cy)))
+            self.assertEqual(ccd.findAmp(afwGeom.Point2I.makeXY(153, 152), True).getId().getSerial(), serial)
             for i in range(2):
                 self.assertAlmostEqual(ccd.getCenter()[i], cen[i])
 
         name = "R:1,0"
-        self.assertEqual(camera.findDetector(cameraGeom.Id(name)).getDetector().getId().getName(), name)
+        self.assertEqual(camera.findDetector(cameraGeom.Id(name)).getId().getName(), name)
 
         self.assertEqual(camera.getSize()[0], cameraInfo["widthMm"])
         self.assertEqual(camera.getSize()[1], cameraInfo["heightMm"])
         #
         # Test mapping pixel <--> mm
         #
-        pix = afwGeom.Point2I.makeXY(100, 500) # wrt camera LLC
-        pos = afwGeom.Point2D.makeXY(-3.12, 2.02) # wrt raft center
-
-        if True:
-            print "pos, pix, found pix", pos, pix, camera.getIndexFromPosition(pos)
-            detL = camera.findDetector(pos)
-            det = detL.getDetector()
-            print "Found", det.getId().getName(), "center", det.getPixelCenter(), det.getCenter()
-
-            det = cameraGeom.cast_Raft(det)
-            detL = det.findDetector(pos)
-            det = detL.getDetector()
-            print "Found", det.getId().getName(), "center", det.getPixelCenter(), det.getCenter()
-
-            print "XX", det.getIndexFromPosition(pos - afwGeom.Extent2D(det.getCenter()))
-
-        self.assertEqualPoint(camera.getIndexFromPosition(pos), pix)
-        self.assertEqualPoint(camera.getPositionFromPixel(pix), pos)
+        for ix, iy, x, y in [(102, 500, -3.12, 2.02),
+                             (152, 525, -2.62, 2.27),
+                             (714, 500,  3.12, 2.02),
+                             ]:
+            pix = afwGeom.Point2I.makeXY(ix, iy) # wrt raft LLC
+            pos = afwGeom.Point2D.makeXY(x, y) # wrt raft center
+            
+            self.assertEqualPoint(camera.getPixelFromPosition(pos), pix)
+            self.assertEqualPoint(camera.getPositionFromPixel(pix), pos)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -658,6 +723,8 @@ def suite():
 
 def run(exit=False):
     """Run the tests"""
+
+    ds9.setDefaultFrame(0)
     utilsTests.run(suite(), exit)
 
 if __name__ == "__main__":

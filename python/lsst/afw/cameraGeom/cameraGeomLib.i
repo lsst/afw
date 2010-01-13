@@ -20,7 +20,6 @@ Python bindings for classes describing the the geometry of a mosaic camera
 SWIG_SHARED_PTR(AmpPtr, lsst::afw::cameraGeom::Amp);
 SWIG_SHARED_PTR(ElectronicParamsPtr, lsst::afw::cameraGeom::ElectronicParams);
 SWIG_SHARED_PTR(DetectorPtr, lsst::afw::cameraGeom::Detector);
-SWIG_SHARED_PTR(DetectorLayoutPtr, lsst::afw::cameraGeom::DetectorLayout);
 SWIG_SHARED_PTR_DERIVED(DetectorMosaicPtr, lsst::afw::cameraGeom::Detector,
                         lsst::afw::cameraGeom::DetectorMosaic);
 SWIG_SHARED_PTR_DERIVED(CcdPtr, lsst::afw::cameraGeom::Detector, lsst::afw::cameraGeom::Ccd);
@@ -28,9 +27,17 @@ SWIG_SHARED_PTR_DERIVED(RaftPtr, lsst::afw::cameraGeom::Detector, lsst::afw::cam
 SWIG_SHARED_PTR_DERIVED(CameraPtr, lsst::afw::cameraGeom::Detector, lsst::afw::cameraGeom::Camera);
 
 %template(AmpSet) std::vector<boost::shared_ptr<lsst::afw::cameraGeom::Amp> >;
-%template(DetectorSet) std::vector<boost::shared_ptr<lsst::afw::cameraGeom::DetectorLayout> >;
+%template(DetectorSet) std::vector<boost::shared_ptr<lsst::afw::cameraGeom::Detector> >;
 
 %include "lsst/afw/cameraGeom/Id.h"
+
+%extend lsst::afw::cameraGeom::Id {
+    %pythoncode {
+        def __str__(self):
+            return "(%d, %s)" % (self.getSerial(), self.getName())
+    }
+}
+
 %include "lsst/afw/cameraGeom/Orientation.h"
 %include "lsst/afw/cameraGeom/Amp.h"
 %include "lsst/afw/cameraGeom/Detector.h"

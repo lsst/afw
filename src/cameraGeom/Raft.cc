@@ -15,6 +15,6 @@ double cameraGeom::Raft::getPixelSize() const {
                           (boost::format("DetectorMosaic with serial %|| has no Detectors") % getId()).str());
     }
 
-    return (*begin())->getDetector()->getPixelSize();
+    return (*begin())->getPixelSize();
 }
 
