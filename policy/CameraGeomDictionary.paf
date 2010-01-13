@@ -65,20 +65,6 @@ definitions: {
                                 minOccurs: 2
                                 maxOccurs: 2
                             }
-                            nQuarter: {
-                                type: int
-                                description: "Number of quarter-turns applied to Raft when put into camera"
-                                minOccurs: 0
-                                maxOccurs: 1
-                                default: 0
-                            }
-                            orientation: {
-                                type: double
-                                description: "pitch, roll, yaw; degrees"
-                                minOccurs: 3
-                                maxOccurs: 3
-                                default: 0.0 0.0 0.0
-                            }
                         }
                     }
                 }

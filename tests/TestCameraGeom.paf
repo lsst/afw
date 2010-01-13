@@ -10,16 +10,12 @@ Camera: {
         name: "R:0,0"                   # Raft's name
         index: 0 0                      # location of Raft in Camera; in (range(nCol), range(nRow))
         offset: -2.11 0.0               # offset of Raft center from boresight, (x, y); mm
-        nQuarter: 0                     # number of quarter turns applied to raft when put into camera
-        orientation: 0.0 0.0 0.0        # pitch, roll, yaw; degrees
     }
     Raft: {
         serial: 2223                    # Raft's serial number
         name: "R:1,0"                   # Raft's name
         index: 1 0                      # location of Raft in Camera; in (range(nCol), range(nRow))
         offset: 2.11 0.0                # offset of Raft center from boresight, (x, y); mm
-        nQuarter: 0                     # number of quarter turns applied to raft when put into camera
-        orientation: 0.0 0.0 0.0        # pitch, roll, yaw; degrees
     }
 }
 #

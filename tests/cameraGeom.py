@@ -214,14 +214,10 @@ particular that it has an entry ampSerial which is a single-element list, the am
     for raftPol in cameraPol.getArray("Raft"):
         Col, Row = raftPol.getArray("index")
         xc, yc = raftPol.getArray("offset")
-        nQuarter = raftPol.get("nQuarter")
-        pitch, roll, yaw = [float(math.radians(a)) for a in raftPol.getArray("orientation")]
-
         raftId = cameraGeom.Id(raftPol.get("serial"), raftPol.get("name"))
         raft = makeRaft(geomPolicy, raftId, raftInfo)
         camera.addDetector(afwGeom.Point2I.makeXY(Col, Row),
-                           afwGeom.Point2D.makeXY(xc, yc),
-                           cameraGeom.Orientation(nQuarter, pitch, roll, yaw), raft)
+                           afwGeom.Point2D.makeXY(xc, yc), cameraGeom.Orientation(), raft)
 
         if cameraInfo is not None:
             # Guess the gutter between detectors
