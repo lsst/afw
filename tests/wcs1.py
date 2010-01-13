@@ -200,8 +200,20 @@ class WCSTestCaseCFHT(unittest.TestCase):
         nsky00 = new.xyToRaDec(afwImage.PointD(0, 0))
         self.assertEqual((sky00.getX(), sky00.getY()), (nsky00.getX(), nsky00.getY()))
 
+    def testCD(self):
+        cd = self.wcs.getLinearTransformMatrix()
+        self.assertAlmostEqual(cd[0,0], self.metadata.getAsDouble("CD1_1"))
+        self.assertAlmostEqual(cd[0,1], self.metadata.getAsDouble("CD1_2"))
+        self.assertAlmostEqual(cd[1,0], self.metadata.getAsDouble("CD2_1"))
+        self.assertAlmostEqual(cd[1,1], self.metadata.getAsDouble("CD2_2"))
+
+    def testConstructor(self):
+        copy = afwImage.Wcs(self.wcs.getOriginRaDec(), self.wcs.getOriginXY(), 
+                            self.wcs.getLinearTransformMatrix(), 2000.0, "fk5")
+
     def testAffineTransform(self):
         a = self.wcs.getAffineTransform()
+        l = self.wcs.getLinearTransformMatrix()
         #print a[a.X], a[a.Y], print a[a.XX], a[a.XY], a[a.YX], a[a.YY]
 
         sky00g = afwGeom.makePointD(10, 10)

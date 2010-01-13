@@ -10,6 +10,7 @@
 
 #include <Eigen/Core>
 #include <Eigen/Array>
+#include <iostream>
 #include "boost/tuple/tuple.hpp"
 
 namespace lsst { namespace afw { namespace geom {
@@ -194,6 +195,13 @@ protected:
 
     EigenVector _vector;
 };
+
+template <typename Derived, typename T, int N>
+std::ostream & operator<<(std::ostream & os, CoordinateBase<Derived,T,N> const & coordinate) {
+    os << "(" << coordinate[0];
+    for (int n=1; n<N; ++n) os << ", " << coordinate[n];
+    return os << ")";
+}
 
 }}}
 

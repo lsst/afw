@@ -23,7 +23,8 @@ void ellipses::BaseEllipse::setVector(BaseEllipse::ParameterVector const & vecto
 
 lsst::afw::geom::AffineTransform ellipses::BaseEllipse::getGenerator() const {
     AffineTransform r(_core->getGenerator());
-    r.matrix().translation() = _center.asVector();
+    r[AffineTransform::X] = _center.getX();
+    r[AffineTransform::Y] = _center.getY();
     return r;
 }
 

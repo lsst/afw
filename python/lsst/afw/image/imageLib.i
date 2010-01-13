@@ -12,6 +12,7 @@ Basic routines to talk to lsst::afw::image classes
 #pragma SWIG nowarn=314                 // print is a python keyword (--> _print)
 #pragma SWIG nowarn=362                 // operator=  ignored
 
+
 %{
 #include "lsst/daf/base.h"
 #include "lsst/daf/data.h"
@@ -25,11 +26,13 @@ Basic routines to talk to lsst::afw::image classes
 #include "boost/cstdint.hpp"
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_IMAGE_NUMPY_ARRAY_API
 #include "numpy/arrayobject.h"
+#include "lsst/afw/numpyTypemaps.h"
 %}
 
 %init %{
     import_array();
 %}
+
 
 namespace boost {
     namespace mpl { }

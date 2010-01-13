@@ -4,7 +4,7 @@
 %}
 
 %define %CoordinateBase_PREINCLUDE(T, N, CLASS...)
-%ignore lsst::afw::geom::CoordinateBase<CLASS,T,N>::asVector() const;
+ //%ignore lsst::afw::geom::CoordinateBase<CLASS,T,N>::asVector() const;
 %enddef
 
 %define %CoordinateBase_PREINCLUDE_2(T, CLASS...)

@@ -1,5 +1,7 @@
 #include "Eigen/LU"
 
+#include <iomanip>
+
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/pex/exceptions/Runtime.h"
 
@@ -12,12 +14,12 @@ namespace geom = lsst::afw::geom;
  */
 geom::AffineTransform::ParameterVector geom::AffineTransform::getVector() const {
     ParameterVector r;
-    r << _matrix(0,0),
-         _matrix(1,0), 
-         _matrix(0,1), 
-         _matrix(1,1), 
-         _matrix(0,2), 
-         _matrix(1,2);
+    r << _eigenTransform(0,0),
+         _eigenTransform(1,0), 
+         _eigenTransform(0,1), 
+         _eigenTransform(1,1), 
+         _eigenTransform(0,2), 
+         _eigenTransform(1,2);
     return r;
 }
 
@@ -27,7 +29,7 @@ geom::AffineTransform::ParameterVector geom::AffineTransform::getVector() const 
  * @throw lsst::pex::exceptions::RuntimeException if this is not invertible
  */
 geom::AffineTransform geom::AffineTransform::invert() const {
-    Eigen::LU<Eigen::Matrix2d> lu(_matrix.linear());
+    Eigen::LU<Eigen::Matrix2d> lu(_eigenTransform.linear());
     if (!lu.isInvertible()) {
         throw LSST_EXCEPT(
                 lsst::pex::exceptions::RuntimeErrorException,
@@ -35,7 +37,7 @@ geom::AffineTransform geom::AffineTransform::invert() const {
         );
     }
     Eigen::Matrix2d inv = lu.inverse();
-    EigenPoint p = -inv*_matrix.translation();
+    EigenPoint p = -inv*_eigenTransform.translation();
     return AffineTransform(inv, lsst::afw::geom::ExtentD(p));
 }
 
@@ -72,21 +74,37 @@ geom::AffineTransform::TransformDerivativeMatrix geom::AffineTransform::dTransfo
 geom::AffineTransform const & geom::AffineTransform::operator =(
     ParameterVector const & vector
 ) {
-    _matrix.matrix().block<2, 3>(0,0) << 
-            vector[0], vector[2], vector[4], 
-            vector[1], vector[3], vector[5];
+    _eigenTransform.matrix().block<2, 3>(0,0) << 
+        vector[0], vector[2], vector[4], 
+        vector[1], vector[3], vector[5];
     return *this; 
 }
 geom::AffineTransform const & geom::AffineTransform::operator =(
-    geom::AffineTransform::TransformMatrix const & matrix
+    geom::AffineTransform::EigenTransform const & matrix
 ) {
-    _matrix = matrix;
+    _eigenTransform = matrix;
     return *this;
 }
 
 geom::AffineTransform const & geom::AffineTransform::operator =(
     geom::AffineTransform const & transform
 ) {
-    _matrix = transform.matrix();
+    _eigenTransform = transform.getEigenTransform();
     return *this;
+}
+
+std::ostream& geom::operator<<(std::ostream& os, geom::AffineTransform const & transform) {
+    std::ios::fmtflags flags = os.flags();
+    geom::AffineTransform::Matrix const & matrix = transform.getMatrix();
+    int prec = os.precision(7);
+    os.setf(std::ios::fixed);
+    os << "AffineTransform([(" << std::setw(10) << matrix(0,0) << "," << std::setw(10) << matrix(0,1) 
+       << "," << std::setw(10) << matrix(0,2) << "),\n";
+    os << "                 (" << std::setw(10) << matrix(1,0) << "," << std::setw(10) << matrix(1,1)
+       << "," << std::setw(10) << matrix(1,2) << "),\n";
+    os << "                 (" << std::setw(10) << matrix(2,0) << "," << std::setw(10) << matrix(2,1)
+       << "," << std::setw(10) << matrix(2,2) << ")])";
+    os.precision(prec);
+    os.flags(flags);
+    return os;
 }

@@ -15,10 +15,17 @@ Python interface to lsst::afw::geom classes
 
 %{
 #include "lsst/afw/geom.h"
+#define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_GEOM_NUMPY_ARRAY_API
+#include "numpy/arrayobject.h"
+#include "lsst/afw/numpyTypemaps.h"
+%}
+
+
+%init %{
+    import_array();
 %}
 
 %include "lsst/p_lsstSwig.i"
-
 
 %pythoncode %{
 import lsst.utils
@@ -46,6 +53,20 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 %}
 
 %lsst_exceptions();
+
+%include "lsst/afw/eigen.i"
+
+%declareEigenMatrix(Eigen::Matrix<bool,2,1,Eigen::DontAlign>);
+%declareEigenMatrix(Eigen::Matrix<int,2,1,Eigen::DontAlign>);
+%declareEigenMatrix(Eigen::Matrix<double,2,1,Eigen::DontAlign>);
+
+%declareEigenMatrix(Eigen::Matrix<bool,3,1,Eigen::DontAlign>);
+%declareEigenMatrix(Eigen::Matrix<int,3,1,Eigen::DontAlign>);
+%declareEigenMatrix(Eigen::Matrix<double,3,1,Eigen::DontAlign>);
+
+%declareEigenMatrix(Eigen::Matrix2d);
+%declareEigenMatrix(Eigen::Matrix3d);
+%declareEigenMatrix(lsst::afw::geom::AffineTransform::Matrix);
 
 %include "CoordinateBase.i"
 %include "CoordinateExpr.i"
