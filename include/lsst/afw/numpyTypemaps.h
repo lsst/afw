@@ -1,6 +1,50 @@
 #ifndef LSST_AFW_NUMPYTYPEMAPS_H
 #define LSST_AFW_NUMPYTYPEMAPS_H
 
+/**
+ *  @file
+ *  @brief template-based Eigen-Python conversions
+ */
+
+/**
+ *  \page eigenTypemaps Eigen/SWIG typemaps using numpy
+ *  The files python/lsst/afw/eigen.i and include/lsst/afw/numpyTypemaps.h provide
+ *  simple Eigen/SWIG typemaps that replace those in the python/lsst/afw/eigen folder,
+ *  which are currently broken.  To use them (check out imageLib.i for an example):
+ *
+ *  - define a unique symbol for the numpy array api and include the numpy header file
+ *    and the typemaps header file:
+ *  @code
+ *  %{
+ *  #define PY_ARRAY_UNIQUE_SYMBOL SOME_LIBRARY_NAME
+ *  #include "numpy/arrayobject.h"
+ *  #include "lsst/afw/numpyTypemaps.h"
+ *  %}
+ *  @endcode
+ *
+ *  - call the numpy initialization function in an %init section:
+ *  @code
+ *  %init %{ import_array(); %}
+ *  @endcode
+ *
+ *  - include lsst/afw/eigen.i:
+ *  @code
+ *  %include "lsst/afw/eigen.i"
+ *  @endcode
+ *
+ *  - declare any Eigen types you use
+ *  @code
+ *  %declareEigenMatrix(Eigen::Matrix2d);
+ *  %declareEigenMatrix(Eigen::VectorXd);
+ *  @endcode
+ *
+ *  @note At present, if you %import a library that uses the Eigen/SWIG typemaps (afw/imageLib, 
+ *        afw/geomLib), AND your code includes a function that contains Eigen arguments with
+ *        types declared by the import a library, you must follow the steps above or the swig-
+ *        generated code will not compile (%import partially propogates the typemaps, but doesn't 
+ *        propogate enough for the code to compile).
+ */
+
 #include "Eigen/Core"
 #include "boost/intrusive_ptr.hpp"
 
