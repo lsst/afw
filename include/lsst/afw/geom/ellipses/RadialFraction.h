@@ -45,7 +45,7 @@ public:
 
     /// \brief Standard constructor.
     explicit RadialFraction(BaseCore const & core);
-	
+
     /// \brief Evaluate the RadialFraction at the given point.
     double operator()(PointD const & p) const {
         return std::sqrt(p.asVector().dot(_inv_matrix * p.asVector()));
@@ -87,7 +87,7 @@ public:
     /// \brief Standard constructor.
     explicit RadialFraction(BaseEllipse const & ellipse) :
         _coreRF(ellipse.getCore()), _offset(PointD()-ellipse.getCenter()) {}
-	
+
     /// \brief Evaluate the RadialFraction at the given point.
     double operator()(PointD const & p) const { return _coreRF(p + _offset); }
 

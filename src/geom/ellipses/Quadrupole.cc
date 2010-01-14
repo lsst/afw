@@ -28,10 +28,10 @@ void ellipses::Quadrupole::_assignTo(Axes & other) const {
 void ellipses::Quadrupole::_assignTo(Distortion & other) const {
     double t = _vector[IXX] + _vector[IYY];
     if (t < 1E-12) {
-	other[Distortion::E1] = other[Distortion::E2] = other[Distortion::R] = 0.0;
+        other[Distortion::E1] = other[Distortion::E2] = other[Distortion::R] = 0.0;
     } else {
-	other[Distortion::E1] = (_vector[IXX]-_vector[IYY])/t;
-	other[Distortion::E2] = 2*_vector[IXY]/t;
+        other[Distortion::E1] = (_vector[IXX]-_vector[IYY])/t;
+        other[Distortion::E2] = 2*_vector[IXY]/t;
         other[Distortion::R] = std::pow(getDeterminant(),0.25);
     }
 }

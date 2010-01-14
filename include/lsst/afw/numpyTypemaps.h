@@ -67,12 +67,12 @@ template <typename T> struct NumpyTraits {
 
 template <> struct NumpyTraits<bool> {
     static int getCode() {
-	if (sizeof(bool)==sizeof(npy_bool)) return NPY_BOOL;
-	if (sizeof(bool)==1) return NPY_UBYTE;
-	if (sizeof(bool)==2 && sizeof(short)==2) return NPY_USHORT;
-	if (sizeof(bool)==4 && sizeof(int)==4) return NPY_UINT;
-	assert(false);
-	return 0;
+        if (sizeof(bool)==sizeof(npy_bool)) return NPY_BOOL;
+        if (sizeof(bool)==1) return NPY_UBYTE;
+        if (sizeof(bool)==2 && sizeof(short)==2) return NPY_USHORT;
+        if (sizeof(bool)==4 && sizeof(int)==4) return NPY_UINT;
+        assert(false);
+        return 0;
     }
 };
 
@@ -103,8 +103,8 @@ template <> struct NumpyTraits<std::complex<double> > {
 
 template <> struct NumpyTraits<std::complex<long double> > { 
     static int getCode() { 
-	assert(sizeof(std::complex<long double>)==sizeof(npy_clongdouble)); 
-	return NPY_CLONGDOUBLE; 
+        assert(sizeof(std::complex<long double>)==sizeof(npy_clongdouble)); 
+        return NPY_CLONGDOUBLE; 
     }
 };
 
