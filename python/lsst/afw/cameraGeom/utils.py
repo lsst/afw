@@ -34,14 +34,43 @@ class GetCcdImage(object):
     def __init__(self, imageFile):
         self.imageFile = imageFile
 
-    def getImage(self, id, bbox=None, imageFactory=afwImage.ImageU):
+    def getImage(self, ccd, amp, imageFactory=afwImage.ImageU):
         """Return the image of the chip with cameraGeom.Id == id; if provided only read the given BBox"""
 
         md = None
-        if not bbox:
-            bbox = afwImage.BBox()
+        return imageFactory(self.imageFile, ccd.getId().getSerial(), md, amp.getDataSec(False))
 
-        return imageFactory(self.imageFile, id.getSerial(), md, bbox)
+class SynthesizeCcdImage(GetCcdImage):
+    """A class to return an Image of a given Ccd based on it's cameraGeometry"""
+    
+    def __init__(self, ccdImage, isTrimmed):
+        self.ccdImage = ccdImage
+        self.isTrimmed = isTrimmed
+
+    def getImage(self, ccd, amp, imageFactory=afwImage.ImageU):
+        """Return an image of the specified amp in the specified ccd"""
+        
+        im = imageFactory(self.ccdImage, amp.getAllPixels(self.isTrimmed))
+
+        im += int(amp.getElectronicParams().getReadNoise())
+        sim = imageFactory(self.ccdImage, amp.getDataSec(self.isTrimmed))
+        sim += int(1 + 100*amp.getElectronicParams().getGain() + 0.5)
+        # Mark the amplifier
+        dataSec = amp.getDataSec(self.isTrimmed)
+        if amp.getReadoutCorner() == cameraGeom.Amp.LLC:
+            x, y = dataSec.getX0(),     dataSec.getY0()
+        elif amp.getReadoutCorner() == cameraGeom.Amp.LRC:
+            x, y = dataSec.getX1() - 2, dataSec.getY0()
+        elif amp.getReadoutCorner() == cameraGeom.Amp.ULC:
+            x, y = dataSec.getX0()    , dataSec.getY1() - 2
+        elif amp.getReadoutCorner() == cameraGeom.Amp.URC:
+            x, y = dataSec.getX1() - 2, dataSec.getY1() - 2
+        else:
+            assert(not "Possible readoutCorner")
+
+        imageFactory(self.ccdImage, afwImage.BBox(afwImage.PointI(x, y), 3, 3)).set(0)
+
+        return im
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -267,36 +296,20 @@ particular that it has an entry ampSerial which is a single-element list, the am
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def makeImageFromCcd(ccd, filename=None, isTrimmed=None):
+def makeImageFromCcd(ccd, imageSource=None, isTrimmed=None):
     """Make an Image of a Ccd"""
 
     if isTrimmed is None:
         isTrimmed = ccd.isTrimmed()
 
     ccdImage = afwImage.ImageU(ccd.getAllPixels(isTrimmed).getDimensions())
+
+    if not imageSource:
+        imageSource = SynthesizeCcdImage(ccdImage, isTrimmed)
+
     for a in ccd:
         im = ccdImage.Factory(ccdImage, a.getAllPixels(isTrimmed))
-        if filename:
-            im <<= filename.getImage(ccd.getId(), a.getDataSec(False))
-            continue
-
-        im += int(a.getElectronicParams().getReadNoise())
-        im = ccdImage.Factory(ccdImage, a.getDataSec(isTrimmed))
-        im += int(1 + 100*a.getElectronicParams().getGain() + 0.5)
-        # Mark the amplifier
-        dataSec = a.getDataSec(isTrimmed)
-        if a.getReadoutCorner() == cameraGeom.Amp.LLC:
-            x, y = dataSec.getX0(),     dataSec.getY0()
-        elif a.getReadoutCorner() == cameraGeom.Amp.LRC:
-            x, y = dataSec.getX1() - 2, dataSec.getY0()
-        elif a.getReadoutCorner() == cameraGeom.Amp.ULC:
-            x, y = dataSec.getX0()    , dataSec.getY1() - 2
-        elif a.getReadoutCorner() == cameraGeom.Amp.URC:
-            x, y = dataSec.getX1() - 2, dataSec.getY1() - 2
-        else:
-            assert(not "Possible readoutCorner")
-
-        ccdImage.Factory(ccdImage, afwImage.BBox(afwImage.PointI(x, y), 3, 3)).set(0)
+        im <<= imageSource.getImage(ccd, a)
 
     return ccdImage
 
@@ -339,7 +352,7 @@ of the detectors"""
     displayUtils.drawBBox(ccd.getAllPixels(isTrimmed), origin=ccdOrigin,
                           borderWidth=0.49, ctype=ds9.MAGENTA, frame=frame)
 
-def makeImageFromRaft(raft, filename="", raftCenter=None):
+def makeImageFromRaft(raft, imageSource=None, raftCenter=None):
     """Make an Image of a Raft"""
 
     raftImage = afwImage.ImageU(raft.getAllPixels().getDimensions())
@@ -357,22 +370,24 @@ def makeImageFromRaft(raft, filename="", raftCenter=None):
         bbox.shift(origin[0], origin[1])
         ccdImage = raftImage.Factory(raftImage, bbox)
 
-        ccdImage <<= makeImageFromCcd(ccd, filename, isTrimmed=True)
+        ccdImage <<= makeImageFromCcd(ccd, imageSource, isTrimmed=True)
 
     return raftImage
 
-def showRaft(raft, raftImage="", raftOrigin=None, frame=None, overlay=True):
-    """Show a Raft on ds9.  If cameraImage isn't "", an image will be created based on the
+def showRaft(raft, imageSource=None, raftOrigin=None, frame=None, overlay=True):
+    """Show a Raft on ds9.  If imageSource isn't None, an image will be created based on the
 properties of the detectors"""
 
     raftCenter = afwGeom.Point2I.makeXY(raft.getAllPixels().getWidth()/2, raft.getAllPixels().getHeight()/2)
     if raftOrigin:
         raftCenter += afwGeom.Extent2I(raftOrigin)
 
-    if isinstance(raftImage, str):
-        raftImage = makeImageFromRaft(raft, filename=raftImage, raftCenter=raftCenter)
+    if imageSource is None:
+        raftImage = None
+    else:
+        raftImage = makeImageFromRaft(raft, imageSource=imageSource, raftCenter=raftCenter)
 
-    if raftImage is not None:
+    if raftImage:
         ds9.mtv(raftImage, frame=frame, title=raft.getId().getName())
 
     for det in raft:
@@ -398,7 +413,7 @@ properties of the detectors"""
 
         showCcd(ccd, ccdImage, isTrimmed=True, frame=frame, ccdOrigin=origin, overlay=overlay)
 
-def makeImageFromCamera(camera, filename=""):
+def makeImageFromCamera(camera, imageSource=None):
     """Make an Image of a Camera"""
 
     cameraImage = afwImage.ImageU(camera.getAllPixels().getDimensions())
@@ -410,22 +425,25 @@ def makeImageFromCamera(camera, filename=""):
         bbox.shift(origin[0], origin[1])
         im = cameraImage.Factory(cameraImage, bbox)
 
-        im <<= makeImageFromRaft(raft, filename,
+        im <<= makeImageFromRaft(raft, imageSource,
                                  afwGeom.Point2I.makeXY(bbox.getWidth()/2, bbox.getHeight()/2))
         im += raft.getId().getSerial()
 
     return cameraImage
 
-def showCamera(camera, filename=None, frame=None, overlay=True):
-    """Show a Camera on ds9.  If filename is provided an image will be created by reading it (see
-makeImageFromCcd for details); if it is"", an image will be created based on the properties of the detectors"""
+def showCamera(camera, imageSource=None, frame=None, overlay=True):
+    """Show a Camera on ds9 (with the specified frame); if overlay show the IDs and amplifier boundaries
 
-    if filename is None:
+If imageSource is provided its getImage method will be called to return a CCD image (e.g. a
+cameraGeom.GetCcdImage object); if it is "", an image will be created based on the properties
+of the detectors"""
+
+    if imageSource is None:
         cameraImage = None
     else:
-        cameraImage = makeImageFromCamera(camera, filename)
+        cameraImage = makeImageFromCamera(camera, imageSource)
 
-    if cameraImage is not None:
+    if cameraImage:
         ds9.mtv(cameraImage, frame=frame, title=camera.getId().getName())
 
     for det in camera:
