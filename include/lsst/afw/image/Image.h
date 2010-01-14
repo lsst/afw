@@ -410,7 +410,7 @@ namespace image {
         explicit DecoratedImage(const std::pair<int, int> dimensions);
         explicit DecoratedImage(typename Image<PixelT>::Ptr rhs);
         DecoratedImage(DecoratedImage const& rhs, const bool deep=false);
-        explicit DecoratedImage(std::string const& fileName, const int hdu=0);
+        explicit DecoratedImage(std::string const& fileName, const int hdu=0, BBox const& bbox=BBox());
 
         DecoratedImage& operator=(const DecoratedImage& image);
 

@@ -115,12 +115,13 @@ void image::swap(DecoratedImage<PixelT>& a, DecoratedImage<PixelT>& b) {
  */
 template<typename PixelT>
 image::DecoratedImage<PixelT>::DecoratedImage(const std::string& fileName, ///< File to read
-                                              const int hdu                ///< The HDU to read
+                                              const int hdu,               ///< The HDU to read
+                                              BBox const& bbox             ///< Only read these pixels
                                              ) :
     lsst::daf::data::LsstBase(typeid(this))
 {             ///< HDU within the file
     init();
-    _image = typename Image<PixelT>::Ptr(new Image<PixelT>(fileName, hdu, getMetadata()));
+    _image = typename Image<PixelT>::Ptr(new Image<PixelT>(fileName, hdu, getMetadata(), bbox));
 }
 
 /************************************************************************************************************/
