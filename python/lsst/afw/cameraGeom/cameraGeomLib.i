@@ -34,7 +34,10 @@ SWIG_SHARED_PTR_DERIVED(CameraPtr, lsst::afw::cameraGeom::Detector, lsst::afw::c
 %extend lsst::afw::cameraGeom::Id {
     %pythoncode {
         def __str__(self):
-            return "(%d, %s)" % (self.getSerial(), self.getName())
+            return "%d, %s" % (self.getSerial(), self.getName())
+
+        def __repr__(self):
+            return "Id(%s)" % (str(self))
     }
 }
 
@@ -81,3 +84,13 @@ SWIG_SHARED_PTR_DERIVED(CameraPtr, lsst::afw::cameraGeom::Detector, lsst::afw::c
 
 %definePythonIterator(lsst::afw::cameraGeom::Ccd);
 %definePythonIterator(lsst::afw::cameraGeom::DetectorMosaic);
+
+%pythoncode {
+class ReadoutCorner(object):
+    """A python object corresponding to Amp::ReadoutCorner"""
+    def __init__(self, value):
+        self.value = value
+
+    def __repr__(self):
+        return ["LLC", "LRC", "URC", "ULC"][self.value]
+}
