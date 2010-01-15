@@ -17,9 +17,10 @@ Python bindings for classes describing the the geometry of a mosaic camera
 
 %lsst_exceptions();
 
-SWIG_SHARED_PTR(AmpPtr, lsst::afw::cameraGeom::Amp);
-SWIG_SHARED_PTR(ElectronicParamsPtr, lsst::afw::cameraGeom::ElectronicParams);
 SWIG_SHARED_PTR(DetectorPtr, lsst::afw::cameraGeom::Detector);
+
+SWIG_SHARED_PTR_DERIVED(AmpPtr, lsst::afw::cameraGeom::Detector, lsst::afw::cameraGeom::Amp);
+SWIG_SHARED_PTR(ElectronicParamsPtr, lsst::afw::cameraGeom::ElectronicParams);
 SWIG_SHARED_PTR_DERIVED(DetectorMosaicPtr, lsst::afw::cameraGeom::Detector,
                         lsst::afw::cameraGeom::DetectorMosaic);
 SWIG_SHARED_PTR_DERIVED(CcdPtr, lsst::afw::cameraGeom::Detector, lsst::afw::cameraGeom::Ccd);
@@ -42,8 +43,8 @@ SWIG_SHARED_PTR_DERIVED(CameraPtr, lsst::afw::cameraGeom::Detector, lsst::afw::c
 }
 
 %include "lsst/afw/cameraGeom/Orientation.h"
-%include "lsst/afw/cameraGeom/Amp.h"
 %include "lsst/afw/cameraGeom/Detector.h"
+%include "lsst/afw/cameraGeom/Amp.h"
 %include "lsst/afw/cameraGeom/DetectorMosaic.h"
 %include "lsst/afw/cameraGeom/Ccd.h"
 %include "lsst/afw/cameraGeom/Raft.h"

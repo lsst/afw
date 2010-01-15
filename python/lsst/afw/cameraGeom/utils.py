@@ -443,7 +443,7 @@ def makeImageFromCamera(camera, imageSource=None):
 
     return cameraImage
 
-def showCamera(camera, imageSource=None, frame=None, overlay=True):
+def showCamera(camera, imageSource=SynthesizeCcdImage(), frame=None, overlay=True):
     """Show a Camera on ds9 (with the specified frame); if overlay show the IDs and amplifier boundaries
 
 If imageSource is provided its getImage method will be called to return a CCD image (e.g. a
@@ -462,6 +462,7 @@ of the detectors"""
         raft = cameraGeom.cast_Raft(det)
         
         center = camera.getCenterPixel() + afwGeom.Extent2I(raft.getCenterPixel())
+
         if overlay:
             bbox = raft.getAllPixels()
             ds9.dot(raft.getId().getName(), center[0], center[1], frame=frame)

@@ -13,6 +13,8 @@ import displayLib
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 
+needShow = True;                        # Used to avoid a bug in ds9 5.4
+
 ## An error talking to ds9
 class Ds9Error(IOError):
     """Some problem talking to ds9"""
@@ -411,8 +413,8 @@ Any other value is interpreted as a string to be drawn
            if needShow:
                show(frame)
            cmd += 'regions command {text %g %g \"%s\"%s}' % (c, r, symb, color)
-       except:
-           print >> sys.stderr, "Ds9 frame %d doesn't exist" % frame
+       except Exception, e:
+           print >> sys.stderr, "Ds9 frame %d doesn't exist" % frame, e
 
    ds9Cmd(cmd)
 

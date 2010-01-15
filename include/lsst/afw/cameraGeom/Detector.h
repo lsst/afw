@@ -3,6 +3,7 @@
 
 #include <string>
 #include "lsst/afw/geom.h"
+#include "lsst/afw/image/Defect.h"
 #include "lsst/afw/image/Utils.h"
 #include "lsst/afw/cameraGeom/Id.h"
 #include "lsst/afw/cameraGeom/Orientation.h"
@@ -63,9 +64,11 @@ public:
     virtual afwImage::BBox& getAllPixels() {
         return (_hasTrimmablePixels && _isTrimmed) ? _trimmedAllPixels : _allPixels;
     }
+    /// Return Detector's total footprint
     virtual afwImage::BBox getAllPixels() const {
         return getAllPixels(_isTrimmed);
     }
+    /// Return Detector's total footprint
     virtual afwImage::BBox getAllPixels(bool isTrimmed ///< True iff the bias/overclock have been removed
                                        ) const {
         return (_hasTrimmablePixels && isTrimmed) ? _trimmedAllPixels : _allPixels;
@@ -100,6 +103,16 @@ public:
     virtual afwGeom::Point2D getPositionFromIndex(afwGeom::Point2I const& pix, bool const isTrimmed) const;
     
     virtual void shift(int dx, int dy);
+    //
+    // Defects within this Detector
+    //
+    /// Set the Detector's Defect list
+    void setDefects(std::vector<afwImage::Defect::Ptr> defects ///< Defects in this detector
+                   ) {
+        _defects = defects;
+    }
+    /// Get the Detector's Defect list
+    std::vector<afwImage::Defect::Ptr> const& getDefects() { return _defects; }
 protected:
     afwImage::BBox& getAllTrimmedPixels() {
         return _hasTrimmablePixels ? _trimmedAllPixels : _allPixels;
@@ -115,6 +128,8 @@ private:
     afwGeom::Point2D _center;           // position of _centerPixel (mm)
     afwGeom::Extent2D _size;            // Size in mm of this Detector
     afwImage::BBox _trimmedAllPixels;   // Bounding box of all the Detector's pixels after bias trimming
+
+    std::vector<afwImage::Defect::Ptr> _defects; // Defects in this detector
 };
 
 namespace detail {

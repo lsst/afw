@@ -28,10 +28,11 @@ cameraGeom::Amp::Amp(
         cameraGeom::Amp::ReadoutCorner readoutCorner, ///< location of first pixel read
         ElectronicParams::Ptr eParams              ///< electronic properties of Amp
                  )
-    :
-    _id(id), _isTrimmed(false), _allPixels(allPixels),
+    : Detector(id, true),
     _biasSec(biasSec), _dataSec(dataSec), _readoutCorner(readoutCorner), _eParams(eParams)
 {
+    getAllPixels() = allPixels;
+    
     setTrimmedGeom();
 }
 /**
@@ -43,24 +44,24 @@ void cameraGeom::Amp::setTrimmedGeom() {
     //
     // Figure out which Amp we are
     //
-    int const iX = _allPixels.getX0()/_allPixels.getWidth();
-    int const iY = _allPixels.getY0()/_allPixels.getHeight();
+    int const iX = getAllPixels().getX0()/getAllPixels().getWidth();
+    int const iY = getAllPixels().getY0()/getAllPixels().getHeight();
     
     int const dataHeight = _dataSec.getHeight();
     int const dataWidth = _dataSec.getWidth();
 
     _trimmedDataSec = afwImage::BBox(afwImage::PointI(iX*dataWidth, iY*dataHeight), dataWidth, dataHeight);
-    _trimmedAllPixels = _trimmedDataSec;
+    getAllTrimmedPixels() = _trimmedDataSec;
 }
 
 /// Offset an Amp by the specified amount
 void cameraGeom::Amp::shift(int dx,        ///< How much to offset in x (pixels)
                             int dy         ///< How much to offset in y (pixels)
                         ) {
-    _allPixels.shift(dx, dy);
+    getAllPixels().shift(dx, dy);
     _biasSec.shift(dx, dy);
     _dataSec.shift(dx, dy);
-    _trimmedAllPixels.shift(dx, dy);
+    getAllTrimmedPixels().shift(dx, dy);
     _trimmedDataSec.shift(dx, dy);
 }
 
@@ -80,7 +81,7 @@ void cameraGeom::Amp::rotateBy90(
     //
     // Rotate the amps to the right orientation
     //
-    _allPixels = cameraGeom::detail::rotateBBoxBy90(_allPixels, dimensions, n90);
+    getAllPixels() = cameraGeom::detail::rotateBBoxBy90(getAllPixels(), dimensions, n90);
     _biasSec = cameraGeom::detail::rotateBBoxBy90(_biasSec, dimensions, n90);
     _dataSec = cameraGeom::detail::rotateBBoxBy90(_dataSec, dimensions, n90);
 

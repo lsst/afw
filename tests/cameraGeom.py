@@ -117,8 +117,8 @@ class CameraGeomTestCase(unittest.TestCase):
         ccdInfo = {"ampSerial" : CameraGeomTestCase.ampSerial}
         ccd = cameraGeomUtils.makeCcd(self.geomPolicy, ccdId, ccdInfo=ccdInfo)
         if display:
-            ds9.incrDefaultFrame()
             cameraGeomUtils.showCcd(ccd)
+            ds9.incrDefaultFrame()
         else:
             ccdImage = None
 
@@ -163,9 +163,9 @@ class CameraGeomTestCase(unittest.TestCase):
         trimmedImage = trimCcd(ccd)
 
         if display:
-            ds9.incrDefaultFrame()
             ds9.mtv(trimmedImage, title='Trimmed')
             cameraGeomUtils.showCcd(ccd, trimmedImage)
+            ds9.incrDefaultFrame()
 
         a = ccd.findAmp(cameraGeom.Id("ID%d" % ccdInfo["ampIdMin"]))
         self.assertEqual(a.getDataSec(), afwImage.BBox(afwImage.PointI(0, 0),
@@ -192,8 +192,8 @@ class CameraGeomTestCase(unittest.TestCase):
         ccd = cameraGeomUtils.makeCcd(self.geomPolicy, ccdId, ccdInfo=ccdInfo)
         ccd.setOrientation(cameraGeom.Orientation(1, 0.0, 0.0, 0.0))
         if display:
-            ds9.incrDefaultFrame()
             cameraGeomUtils.showCcd(ccd)
+            ds9.incrDefaultFrame()
         else:
             ccdImage = None
         #
@@ -202,9 +202,9 @@ class CameraGeomTestCase(unittest.TestCase):
         trimmedImage = trimCcd(ccd)
 
         if display:
-            ds9.incrDefaultFrame()
             ds9.mtv(trimmedImage, title='Rotated trimmed')
             cameraGeomUtils.showCcd(ccd, trimmedImage)
+            ds9.incrDefaultFrame()
 
     def testRaft(self):
         """Test if we can build a Raft out of Ccds"""
@@ -215,8 +215,8 @@ class CameraGeomTestCase(unittest.TestCase):
         raft = cameraGeomUtils.makeRaft(self.geomPolicy, raftId, raftInfo=raftInfo)
 
         if display:
-            ds9.incrDefaultFrame()
             cameraGeomUtils.showRaft(raft)
+            ds9.incrDefaultFrame()
 
         if False:
             print cameraGeomUtils.describeRaft(raft)
@@ -265,8 +265,8 @@ class CameraGeomTestCase(unittest.TestCase):
         camera = cameraGeomUtils.makeCamera(self.geomPolicy, cameraInfo=cameraInfo)
 
         if display:
+            cameraGeomUtils.showCamera(camera, )
             ds9.incrDefaultFrame()
-            cameraGeomUtils.showCamera(camera)
 
         if False:
             print cameraGeomUtils.describeCamera(camera)
