@@ -14,6 +14,7 @@ import os
 import sys
 import unittest
 
+import lsst.pex.policy as pexPolicy
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.cameraGeom as cameraGeom
@@ -33,27 +34,43 @@ class GetCcdImage(object):
 
     def __init__(self, imageFile):
         self.imageFile = imageFile
+        self.isTrimmed = False
 
-    def getImage(self, ccd, amp, imageFactory=afwImage.ImageU):
+    def getImage(self, ccd, amp=None, imageFactory=afwImage.ImageU):
         """Return the image of the chip with cameraGeom.Id == id; if provided only read the given BBox"""
 
+        if amp:
+            if self.isTrimmed:
+                bbox = amp.getDataSec(False)
+            else:
+                bbox = amp.getAllPixels(False)
+        else:
+            bbox = ccd.getAllPixels()
+            
         md = None
-        return imageFactory(self.imageFile, ccd.getId().getSerial(), md, amp.getDataSec(False))
+        hdu = ccd.getId().getSerial()
+        return imageFactory(self.imageFile, hdu, md, bbox)
+
+    def setTrimmed(self, doTrim):
+        self.isTrimmed = doTrim
 
 class SynthesizeCcdImage(GetCcdImage):
-    """A class to return an Image of a given Ccd based on it's cameraGeometry"""
+    """A class to return an Image of a given Ccd based on its cameraGeometry"""
     
-    def __init__(self, ccdImage, isTrimmed):
-        self.ccdImage = ccdImage
+    def __init__(self, isTrimmed=True):
         self.isTrimmed = isTrimmed
 
     def getImage(self, ccd, amp, imageFactory=afwImage.ImageU):
         """Return an image of the specified amp in the specified ccd"""
         
-        im = imageFactory(self.ccdImage, amp.getAllPixels(self.isTrimmed))
+        bbox = amp.getAllPixels(self.isTrimmed)
+        im = imageFactory(bbox.getDimensions())
+        x0, y0 = bbox.getX0(), bbox.getY0()
 
         im += int(amp.getElectronicParams().getReadNoise())
-        sim = imageFactory(self.ccdImage, amp.getDataSec(self.isTrimmed))
+        bbox = amp.getDataSec(self.isTrimmed).clone()
+        bbox.shift(-x0, -y0)
+        sim = imageFactory(im, bbox)
         sim += int(1 + 100*amp.getElectronicParams().getGain() + 0.5)
         # Mark the amplifier
         dataSec = amp.getDataSec(self.isTrimmed)
@@ -68,7 +85,7 @@ class SynthesizeCcdImage(GetCcdImage):
         else:
             assert(not "Possible readoutCorner")
 
-        imageFactory(self.ccdImage, afwImage.BBox(afwImage.PointI(x, y), 3, 3)).set(0)
+        imageFactory(im, afwImage.BBox(afwImage.PointI(x - x0, y - y0), 3, 3)).set(0)
 
         return im
 
@@ -296,16 +313,14 @@ particular that it has an entry ampSerial which is a single-element list, the am
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def makeImageFromCcd(ccd, imageSource=None, isTrimmed=None):
+def makeImageFromCcd(ccd, imageSource=SynthesizeCcdImage(), isTrimmed=None):
     """Make an Image of a Ccd"""
 
     if isTrimmed is None:
         isTrimmed = ccd.isTrimmed()
+    imageSource.setTrimmed(isTrimmed)
 
     ccdImage = afwImage.ImageU(ccd.getAllPixels(isTrimmed).getDimensions())
-
-    if not imageSource:
-        imageSource = SynthesizeCcdImage(ccdImage, isTrimmed)
 
     for a in ccd:
         im = ccdImage.Factory(ccdImage, a.getAllPixels(isTrimmed))
@@ -314,7 +329,7 @@ def makeImageFromCcd(ccd, imageSource=None, isTrimmed=None):
     return ccdImage
 
 def showCcd(ccd, ccdImage="", ccdOrigin=None, isTrimmed=None, frame=None, overlay=True):
-    """Show a CCD on ds9.  If cameraImage isn't "", an image will be created based on the properties
+    """Show a CCD on ds9.  If cameraImage is "", an image will be created based on the properties
 of the detectors"""
     
     if isTrimmed is None:
@@ -323,6 +338,7 @@ of the detectors"""
     if ccdImage == "":
         ccdImage = makeImageFromCcd(ccd)
 
+    if ccdImage:
         title = ccd.getId().getName()
         if isTrimmed:
             title += "(trimmed)"
@@ -352,7 +368,7 @@ of the detectors"""
     displayUtils.drawBBox(ccd.getAllPixels(isTrimmed), origin=ccdOrigin,
                           borderWidth=0.49, ctype=ds9.MAGENTA, frame=frame)
 
-def makeImageFromRaft(raft, imageSource=None, raftCenter=None):
+def makeImageFromRaft(raft, imageSource=SynthesizeCcdImage(), raftCenter=None):
     """Make an Image of a Raft"""
 
     raftImage = afwImage.ImageU(raft.getAllPixels().getDimensions())
@@ -369,14 +385,15 @@ def makeImageFromRaft(raft, imageSource=None, raftCenter=None):
         bbox = ccd.getAllPixels(True).clone()
         bbox.shift(origin[0], origin[1])
         ccdImage = raftImage.Factory(raftImage, bbox)
-
+            
         ccdImage <<= makeImageFromCcd(ccd, imageSource, isTrimmed=True)
 
     return raftImage
 
-def showRaft(raft, imageSource=None, raftOrigin=None, frame=None, overlay=True):
-    """Show a Raft on ds9.  If imageSource isn't None, an image will be created based on the
-properties of the detectors"""
+def showRaft(raft, imageSource=SynthesizeCcdImage(), raftOrigin=None, frame=None, overlay=True):
+    """Show a Raft on ds9.
+
+If imageSource isn't None, an image using the images specified by imageSource"""
 
     raftCenter = afwGeom.Point2I.makeXY(raft.getAllPixels().getWidth()/2, raft.getAllPixels().getHeight()/2)
     if raftOrigin:
@@ -390,6 +407,9 @@ properties of the detectors"""
     if raftImage:
         ds9.mtv(raftImage, frame=frame, title=raft.getId().getName())
 
+    if not raftImage and not overlay:
+        return
+
     for det in raft:
         ccd = cameraGeom.cast_Ccd(det)
         
@@ -397,21 +417,13 @@ properties of the detectors"""
         origin = ccd.getCenterPixel() - \
                  afwGeom.Extent2I.makeXY(bbox.getWidth()/2, bbox.getHeight()/2) + afwGeom.Extent2I(raftCenter)
             
-        if overlay:
-            if True:
-                name = ccd.getId().getName()
-            else:
-                name = str(ccd.getCenter())
-            ds9.dot(name, origin[0] + bbox.getWidth()/2, origin[1] + bbox.getHeight()/2, frame=frame)
-
-        if raftImage is None:
-            ccdImage = None
+        if True:
+            name = ccd.getId().getName()
         else:
-            bbox = ccd.getAllPixels(True).clone()
-            bbox.shift(origin[0], origin[1])
-            ccdImage = raftImage.Factory(raftImage, bbox)
+            name = str(ccd.getCenter())
+        ds9.dot(name, origin[0] + bbox.getWidth()/2, origin[1] + bbox.getHeight()/2, frame=frame)
 
-        showCcd(ccd, ccdImage, isTrimmed=True, frame=frame, ccdOrigin=origin, overlay=overlay)
+        showCcd(ccd, None, isTrimmed=True, frame=frame, ccdOrigin=origin, overlay=overlay)
 
 def makeImageFromCamera(camera, imageSource=None):
     """Make an Image of a Camera"""
@@ -460,6 +472,80 @@ of the detectors"""
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+def showMosaic(dirName, fileName, cameraGeomPolicyFile,
+               display=True, what=cameraGeom.Camera, id=None, overlay=False, describe=True,
+               doTrim=False):
+    """Show a mosaic built from the MEF imageFile containing an exposure
+
+The camera geometry is defined by cameraGeomPolicyFile;  raft IDs etc. are drawn on ds9 if overlay is True;
+The camera (or raft) is described if describe is True
+
+You may set what to a type (e.g. cameraGeom.Ccd) to display that type; if provided id will be obeyed
+
+If relevant (for e.g. a Ccd) doTrim is applied to the Detector
+    """
+
+    policyFile = pexPolicy.DefaultPolicyFile("afw", "CameraGeomDictionary.paf", "policy")
+    defPolicy = pexPolicy.Policy.createPolicy(policyFile, policyFile.getRepositoryPath(), True)
+    
+    if os.path.exists(cameraGeomPolicyFile):
+        geomPolicy = pexPolicy.Policy(cameraGeomPolicyFile)
+    else:
+        policyFile = pexPolicy.DefaultPolicyFile("afw", cameraGeomPolicyFile, "examples")
+        geomPolicy = pexPolicy.Policy.createPolicy(policyFile, policyFile.getRepositoryPath(), True)
+
+    try:
+        geomPolicy.mergeDefaults(defPolicy.getDictionary())
+    except Exception, e:
+        global warnedAboutDict
+        try:
+            type(warnedAboutDict)
+        except:
+            print >> sys.stderr, "Not validating dict due to old pexPolicy:", e
+            warnedAboutDict = True
+
+    if fileName:
+        fileName = os.path.join(dirName, fileName)
+        imageSource = GetCcdImage(fileName) # object that understands the CCD <--> HDU mapping
+        imageSource.setTrimmed(doTrim)
+    else:
+        imageSource = None
+    
+    camera = makeCamera(geomPolicy, cameraId=id)
+
+    if what == cameraGeom.Ccd:
+        ccd = findCcd(camera, id)
+        if not ccd:
+            raise RuntimeError, "Failed to find Ccd %s" % id
+
+        ccd.setTrimmed(doTrim)
+        if imageSource:
+            imageSource.setTrimmed(doTrim)
+
+        if display:
+            ccdImage = makeImageFromCcd(ccd, imageSource)
+            showCcd(ccd, ccdImage, overlay=overlay)
+    elif what == cameraGeom.Raft:
+        raft = findRaft(camera, id)
+        if not raft:
+            raise RuntimeError, "Failed to find Raft %s" % id
+
+        #raft = makeRaft(geomPolicy, raftId=id)
+
+        if display:
+            showRaft(raft, imageSource, overlay=overlay)
+
+        if describe:
+            print describeRaft(raft)
+    else:
+        if display:
+            showCamera(camera, imageSource, overlay=overlay)
+
+        if describe:
+            print describeCamera(camera)
+
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 def describeRaft(raft, indent=""):
     """Describe an entire Raft"""
     descrip = []
@@ -491,3 +577,39 @@ def describeCamera(camera):
         descrip.append(describeRaft(raft, "    "))
 
     return "\n".join(descrip)
+
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+def findCcd(parent, id):
+    """Find the Ccd with the specified Id within the composite"""
+
+    if isinstance(parent, cameraGeom.Camera):
+        for d in parent:
+            ccd = findCcd(cameraGeom.cast_Raft(d), id)
+            if ccd:
+                return ccd
+
+    elif isinstance(parent, cameraGeom.Raft):
+        for d in parent:
+            ccd = findCcd(cameraGeom.cast_Ccd(d), id)
+            if ccd:
+                return ccd
+    else:
+        if parent.getId() == id:
+            return cameraGeom.cast_Ccd(parent)
+        
+    return None
+
+def findRaft(parent, id):
+    """Find the Raft with the specified Id within the composite"""
+
+    if isinstance(parent, cameraGeom.Camera):
+        for d in parent:
+            raft = findRaft(cameraGeom.cast_Raft(d), id)
+            if raft:
+                return raft
+    else:
+        if parent.getId() == id:
+            return raft
+
+    return None

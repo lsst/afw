@@ -97,12 +97,6 @@ class CameraGeomTestCase(unittest.TestCase):
 
     def testId(self):
         """Test cameraGeom.Id"""
-        try:
-            cameraGeom.Id(-1)
-        except pexExcept.LsstCppException:
-            pass
-        else:
-            self.assertFalse("Should raise an exception on -ve serials")
 
         self.assertTrue(cameraGeom.Id(1) == cameraGeom.Id(1))
         self.assertFalse(cameraGeom.Id(1) == cameraGeom.Id(100))
@@ -272,7 +266,7 @@ class CameraGeomTestCase(unittest.TestCase):
 
         if display:
             ds9.incrDefaultFrame()
-            cameraGeomUtils.showCamera(camera, "")
+            cameraGeomUtils.showCamera(camera)
 
         if False:
             print cameraGeomUtils.describeCamera(camera)

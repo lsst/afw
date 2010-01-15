@@ -20,7 +20,7 @@ class Ds9Error(IOError):
 try:
     type(_defaultFrame)
 except NameError:
-    def setDefaultFrame(frame):
+    def setDefaultFrame(frame=0):
         """Set the default frame for ds9"""
         global _defaultFrame
         _defaultFrame = frame

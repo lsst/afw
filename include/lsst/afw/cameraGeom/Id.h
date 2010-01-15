@@ -21,13 +21,7 @@ namespace cameraGeom {
  */
 class Id {
 public:
-    Id(long serial, std::string name="") : _serial(serial), _name(name) {
-        if (serial < 0) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
-                              (boost::format("Saw invalid serial %d; must be >= 0") % serial).str());
-        }
-        
-    }
+    Id(long serial=-1, std::string name="") : _serial(serial), _name(name) {}
     Id(std::string name) : _serial(-1), _name(name) {}
     
     long getSerial() const { return _serial; }
