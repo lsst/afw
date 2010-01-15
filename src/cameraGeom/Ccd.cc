@@ -175,3 +175,38 @@ void cameraGeom::Ccd::setOrientation(
     std::for_each(_amps.begin(), _amps.end(),
                   boost::bind(&Amp::rotateBy90, _1, boost::ref(dimensions), boost::ref(n90)));
 }
+
+/************************************************************************************************************/
+
+static void clipDefectsToAmplifier(
+        cameraGeom::Amp::Ptr amp,                             // the Amp in question
+        std::vector<afwImage::Defect::Ptr> const& defects // Defects in this detector
+                                  )
+{
+    amp->getDefects().clear();
+
+    for (std::vector<afwImage::Defect::Ptr>::const_iterator ptr = defects.begin(), end = defects.end();
+         ptr != end; ++ptr) {
+        afwImage::Defect::Ptr defect = *ptr;
+
+        afwImage::BBox bbox = defect->getBBox();
+        bbox.clip(amp->getAllPixels(false));
+
+        if (bbox) {
+            afwImage::Defect::Ptr ndet(new afwImage::Defect(bbox));
+            amp->getDefects().push_back(ndet);
+        }
+    }
+}
+
+/// Set the Detector's Defect list
+void cameraGeom::Ccd::setDefects(
+        std::vector<afwImage::Defect::Ptr> const& defects ///< Defects in this detector
+                                ) {
+    cameraGeom::Detector::setDefects(defects);
+    // And the Amps too
+    for (iterator ptr = begin(); ptr != end(); ++ptr) {
+        clipDefectsToAmplifier(*ptr, defects);
+    }
+}
+

@@ -107,12 +107,14 @@ public:
     // Defects within this Detector
     //
     /// Set the Detector's Defect list
-    void setDefects(std::vector<afwImage::Defect::Ptr> defects ///< Defects in this detector
-                   ) {
+    virtual void setDefects(
+            std::vector<boost::shared_ptr<afwImage::Defect> > const& defects ///< Defects in this detector
+                           ) {
         _defects = defects;
     }
     /// Get the Detector's Defect list
-    std::vector<afwImage::Defect::Ptr> const& getDefects() { return _defects; }
+    std::vector<boost::shared_ptr<afwImage::Defect> > const& getDefects() const { return _defects; }
+    std::vector<boost::shared_ptr<afwImage::Defect> >& getDefects() { return _defects; }
 protected:
     afwImage::BBox& getAllTrimmedPixels() {
         return _hasTrimmablePixels ? _trimmedAllPixels : _allPixels;

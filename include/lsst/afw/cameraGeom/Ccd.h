@@ -61,6 +61,8 @@ public:
 
     virtual void setOrientation(Orientation const& orientation);
     virtual void shift(int dx, int dy);
+
+    virtual void setDefects(std::vector<boost::shared_ptr<afwImage::Defect> > const& defects);
 private:
     AmpSet _amps;                       // the Amps that make up this Ccd
 };

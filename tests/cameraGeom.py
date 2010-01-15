@@ -119,8 +119,6 @@ class CameraGeomTestCase(unittest.TestCase):
         if display:
             cameraGeomUtils.showCcd(ccd)
             ds9.incrDefaultFrame()
-        else:
-            ccdImage = None
 
         for i in range(2):
             self.assertEqual(ccd.getSize()[i], ccdInfo["pixelSize"]*ccd.getAllPixels(True).getDimensions()[i])
@@ -194,8 +192,6 @@ class CameraGeomTestCase(unittest.TestCase):
         if display:
             cameraGeomUtils.showCcd(ccd)
             ds9.incrDefaultFrame()
-        else:
-            ccdImage = None
         #
         # Trim the CCD and try again
         #
@@ -303,6 +299,61 @@ class CameraGeomTestCase(unittest.TestCase):
             
             self.assertEqualPoint(camera.getPixelFromPosition(pos), pix)
             self.assertEqualPoint(camera.getPositionFromPixel(pix), pos)
+
+    def testDefect(self):
+        """Test Defects"""
+
+        #print >> sys.stderr, "Skipping testDefect"; return
+
+        ccd = cameraGeomUtils.makeCcd(self.geomPolicy, cameraGeom.Id("Defects"))
+
+        ccdImage = cameraGeomUtils.makeImageFromCcd(ccd)
+        #
+        # Insert some defects into the Ccd
+        #
+        defects = afwImage.DefectSet()
+        for x0, y0, x1, y1 in [
+            (34,  0,   35,  80 ),
+            (34,  81,  34,  100),
+            (180, 100, 182, 130),
+            ]:
+            bbox = afwImage.BBox(afwImage.PointI(x0, y0), afwImage.PointI(x1, y1))
+            bad = ccdImage.Factory(ccdImage, bbox)
+            bad.set(100)
+
+            defects.push_back(afwImage.Defect(bbox))
+
+        if display:
+            ds9.mtv(ccdImage, title="Defects")
+            cameraGeomUtils.showCcd(ccd, None)
+            ds9.incrDefaultFrame()
+
+        ccd.setDefects(defects)
+
+        if False:
+            print [str(d.getBBox()) for d in ccd.getDefects()]
+            
+            for a in ccd:
+                print "    ", a.getId(), [str(d.getBBox()) for d in a.getDefects()]
+
+
+        for id, i, x0, y0, x1, y1 in [
+            (0, 0, 34,  0,   35,  57 ),
+            (1, 0, 34,  58,  35,  80 ),
+            (1, 1, 34,  81,  34,  100),
+            (2, -1, 0, 0, 0, 0),
+            (3, -1, 0, 0, 0, 0),
+            (4, -1, 0, 0, 0, 0),
+            (5, 0, 180, 100, 182, 115),
+            (6, 0, 180, 116, 182, 130),
+            (7, -1, 0, 0, 0, 0),
+            ]:
+            defects = ccd.findAmp(cameraGeom.Id(id)).getDefects()
+            if i < 0:
+                self.assertEqual(len(defects), 0)
+            else:
+                bbox = defects[i].getBBox()
+                self.assertEqual(bbox, afwImage.BBox(afwImage.PointI(x0, y0), afwImage.PointI(x1, y1)))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

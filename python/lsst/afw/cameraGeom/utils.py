@@ -512,10 +512,14 @@ If relevant (for e.g. a Ccd) doTrim is applied to the Detector
     else:
         imageSource = None
     
-    camera = makeCamera(geomPolicy, cameraId=id)
+    camera = makeCamera(geomPolicy)
 
     if what == cameraGeom.Ccd:
-        ccd = findCcd(camera, id)
+        if id:
+            ccd = findCcd(camera, id)
+        else:
+            ccd = makeCcd(geomPolicy)
+
         if not ccd:
             raise RuntimeError, "Failed to find Ccd %s" % id
 
@@ -527,7 +531,10 @@ If relevant (for e.g. a Ccd) doTrim is applied to the Detector
             ccdImage = makeImageFromCcd(ccd, imageSource)
             showCcd(ccd, ccdImage, overlay=overlay)
     elif what == cameraGeom.Raft:
-        raft = findRaft(camera, id)
+        if id:
+            raft = findRaft(camera, id)
+        else:
+            raft = makeRaft(geomPolicy)
         if not raft:
             raise RuntimeError, "Failed to find Raft %s" % id
 
