@@ -60,6 +60,8 @@ void y_gradient(ImageT & src, ImageT & dst) {
 /************************************************************************************************************/
 
 namespace {
+#define PRINT 0
+#if PRINT
     void printImage(ImageT const& img, string const& title="") {
         if (title != "") {
             cout << title << endl;
@@ -98,6 +100,7 @@ namespace {
             cout << endl;
         }
     }
+#endif
 }
 
 ImageT make_image(int const width=5, int const height=6) {
@@ -116,7 +119,7 @@ ImageT make_image(int const width=5, int const height=6) {
 BOOST_AUTO_TEST_CASE(setValues) {
     ImageT img = make_image();
 
-#if 0
+#if PRINT
     printImage(img, "Image");
     printMask(img, "Mask");
     printVariance(img, "Variance");

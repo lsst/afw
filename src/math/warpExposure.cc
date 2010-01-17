@@ -68,10 +68,10 @@ afwMath::Kernel::Pixel afwMath::BilinearWarpingKernel::BilinearFunction1::operat
 /**
  * \brief Return string representation.
  */
-std::string afwMath::BilinearWarpingKernel::BilinearFunction1::toString(void) const {
+std::string afwMath::BilinearWarpingKernel::BilinearFunction1::toString(std::string const& prefix) const {
     std::ostringstream os;
     os << "_BilinearFunction1: ";
-    os << Function1<Kernel::Pixel>::toString();
+    os << Function1<Kernel::Pixel>::toString(prefix);
     return os.str();
 }
 

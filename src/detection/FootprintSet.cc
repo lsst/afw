@@ -335,7 +335,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         MaskFootprint(MaskT const& mimage,
                       MaskPixelT bit) : detection::FootprintFunctor<MaskT>(mimage), _bit(bit) {}
 
-        void operator()(typename MaskT::xy_locator loc, int x, int y) {
+        void operator()(typename MaskT::xy_locator loc, int, int) {
             *loc |= _bit;
         }
     private:
@@ -358,11 +358,12 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
  */
 template<typename ImagePixelT, typename MaskPixelT>
 detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
-        const image::MaskedImage<ImagePixelT, MaskPixelT> &img, //!< Image to search for objects
-        const Threshold& threshold,          //!< threshold to find objects
-        int x,                               //!< Footprint should include this pixel (column)
-        int y,                               //!< Footprint should include this pixel (row) 
-        const std::vector<Peak> *peaks)      //!< Footprint should include at most one of these peaks
+        const image::MaskedImage<ImagePixelT, MaskPixelT> &, //!< Image to search for objects
+        const Threshold& ,                                   //!< threshold to find objects
+        int ,                                                //!< Footprint should include this pixel (column)
+        int ,                                                //!< Footprint should include this pixel (row) 
+        const std::vector<Peak> *       //!< Footprint should include at most one of these peaks
+                                                              )
     : lsst::daf::data::LsstBase(typeid(this)),
       _footprints(*new FootprintList())
     {
@@ -853,8 +854,10 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
  */
 template<typename ImagePixelT, typename MaskPixelT>
 detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
-        FootprintSet const& footprints1, FootprintSet const& footprints2,
-        bool const includePeaks)
+        FootprintSet const& ,
+        FootprintSet const& ,
+        bool const 
+                                                              )
     : lsst::daf::data::LsstBase(typeid(this)),
       _footprints(*new FootprintList())
     {

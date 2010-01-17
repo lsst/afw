@@ -35,15 +35,15 @@ double const IQ_TO_STDEV = 0.741301109252802;   // 1 sigma in units of iqrange (
 class AlwaysTrue {
 public:
     template<typename T>
-    bool operator()(T val) const {
+    bool operator()(T) const {
         return true;
     }
     template<typename Ta, typename Tb>
-    bool operator()(Ta a, Tb b) const {
+    bool operator()(Ta, Tb) const {
         return true;
     }
     template<typename Ta, typename Tb, typename Tc>
-    bool operator()(Ta a, Tb b, Tc c) const {
+    bool operator()(Ta, Tb, Tc) const {
         return true;
     }
 };
@@ -54,15 +54,15 @@ public:
 class AlwaysFalse {
 public:
     template<typename T>
-    bool operator()(T val) const {
+    bool operator()(T) const {
         return false;
     }
     template<typename Ta, typename Tb>
-    bool operator()(Ta a, Tb b) const {
+    bool operator()(Ta, Tb) const {
         return false;
     }
     template<typename Ta, typename Tb, typename Tc>
-    bool operator()(Ta a, Tb b, Tc c) const {
+    bool operator()(Ta, Tb, Tc) const {
         return false;
     }
 };
@@ -133,8 +133,8 @@ typedef AlwaysFalse     AlwaysF;
 template<typename IsFinite, typename ImageT, typename MaskT, typename VarianceT>
 boost::shared_ptr<std::vector<typename ImageT::Pixel> > math::Statistics::_makeVectorCopy(ImageT const &img,
                                                                                          MaskT const &msk,
-                                                                                         VarianceT const &var,
-                                                                                         int const flags) {
+                                                                                         VarianceT const &,
+                                                                                         int const) {
 
     boost::shared_ptr<std::vector<typename ImageT::Pixel> > imgcp(new std::vector<typename ImageT::Pixel>(0));
     for (int i_y = 0; i_y < img.getHeight(); ++i_y) {
@@ -246,7 +246,7 @@ template<typename IsFinite,
 math::Statistics::SumReturn math::Statistics::_sumImage(ImageT const &img,
                                                         MaskT const &msk,
                                                         VarianceT const &var,
-                                                        int const flags,
+                                                        int const ,
                                                         int const nCrude,
                                                         int const stride,
                                                         double const meanCrude,
@@ -698,8 +698,8 @@ namespace math {
 template<>
 Statistics::Statistics(
     image::Mask<image::MaskPixel> const& msk,  ///< Mask whose properties we want
-    image::Mask<image::MaskPixel> const& dmsk, ///< A mask (currently dummy) to control which pixels
-    image::Mask<image::MaskPixel> const& dvar, ///< A variance (currently dummy)
+    image::Mask<image::MaskPixel> const& , ///< A mask (currently dummy) to control which pixels
+    image::Mask<image::MaskPixel> const& , ///< A variance (currently dummy)
     int const flags,                           ///< Describe what we want to calculate
     StatisticsControl const& sctrl             ///< Control how things are calculated
                       ) :

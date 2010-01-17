@@ -289,11 +289,11 @@ void afwDetect::Footprint::setBBox() {
     int y1 = sp->_y;
 
     for (; spi != _spans.end(); spi++) {
-        const afwDetect::Span::Ptr sp = *spi;
-        if (sp->_x0 < x0) x0 = sp->_x0;
-        if (sp->_x1 > x1) x1 = sp->_x1;
-        if (sp->_y < y0) y0 = sp->_y;
-        if (sp->_y > y1) y1 = sp->_y;
+        afwDetect::Span::ConstPtr span = *spi;
+        if (span->_x0 < x0) x0 = span->_x0;
+        if (span->_x1 > x1) x1 = span->_x1;
+        if (span->_y < y0) y0 = span->_y;
+        if (span->_y > y1) y1 = span->_y;
     }
 
     _bbox = afwImage::BBox(afwImage::PointI(x0, y0), afwImage::PointI(x1, y1));
@@ -365,10 +365,11 @@ void afwDetect::Footprint::insertIntoImage(afwImage::Image<boost::uint16_t>& idI
  */
 template<typename MaskT>
 afwDetect::Footprint::Ptr afwDetect::footprintAndMask(
-        Footprint::Ptr const& foot,          ///< The initial Footprint
-        typename lsst::afw::image::Mask<MaskT>::Ptr const& mask,   ///< The mask to & with foot
-        MaskT bitMask                   ///< Only consider these bits
-                                                     ) {
+        Footprint::Ptr const&,                                   ///< The initial Footprint
+        typename lsst::afw::image::Mask<MaskT>::Ptr const&,      ///< The mask to & with foot
+        MaskT                                                    ///< Only consider these bits
+                                                     )
+{
     Footprint::Ptr out(new afwDetect::Footprint());
 
     return out;
@@ -439,7 +440,7 @@ namespace {
         SetFootprint(ImageT const& image,
                      typename ImageT::Pixel value) : afwDetect::FootprintFunctor<ImageT>(image), _value(value) {} 
 
-        void operator()(typename ImageT::xy_locator loc, int x, int y) {
+        void operator()(typename ImageT::xy_locator loc, int, int) {
             *loc = _value;
         }
     private:
@@ -525,9 +526,9 @@ set_footprint_array_ids(typename afwImage::Image<IDPixelT>::Ptr idImage, // the 
     }
 }
 
-template static void set_footprint_array_ids<int>(afwImage::Image<int>::Ptr idImage,
-                                                  const std::vector<afwDetect::Footprint::Ptr>& footprints,
-                                                  const bool relativeIDs);
+template void set_footprint_array_ids<int>(afwImage::Image<int>::Ptr idImage,
+                                           const std::vector<afwDetect::Footprint::Ptr>& footprints,
+                                           const bool relativeIDs);
 
 /************************************************************************************************************/
 /*
@@ -1161,6 +1162,9 @@ template
 afwImage::MaskPixel afwDetect::setMaskFromFootprintList(afwImage::Mask<afwImage::MaskPixel> *mask,
                                                      std::vector<afwDetect::Footprint::Ptr> const& footprints,
                                                      afwImage::MaskPixel const bitmask);
+template
+afwImage::MaskPixel afwDetect::setMaskFromFootprint(afwImage::Mask<afwImage::MaskPixel> *mask,
+                                                    Footprint const& foot, afwImage::MaskPixel const bitmask);
 
 #define INSTANTIATE(TYPE) \
 template \

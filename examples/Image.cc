@@ -187,7 +187,7 @@ int main() {
     print(fl32, "Float from U16");
 
     try {
-        afwImage::Image<float> fl32(u16, false);  // will throw
+        afwImage::Image<float> fl32_2(u16, false);  // will throw
     } catch(lsst::pex::exceptions::InvalidParameterException &e) {
         printf("Correctly threw exception: %s\n", e.what());
     }

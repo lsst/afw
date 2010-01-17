@@ -320,7 +320,7 @@ void afwMath::basicConvolve(
     OutImageT& convolvedImage,      ///< convolved %image
     InImageT const& inImage,        ///< %image to convolve
     afwMath::DeltaFunctionKernel const &kernel,    ///< convolution kernel
-    bool doNormalize    ///< if True, normalize the kernel, else use "as is"
+    bool                                           ///< unused
 ) {
     assert (!kernel.isSpatiallyVarying());
 
@@ -434,7 +434,6 @@ void afwMath::basicConvolve(
     
     // iterate over basis kernels
     KernelList const basisKernelList = kernel.getKernelList();
-    std::vector<double> kernelSumList;
     int i = 0;
     for (typename KernelList::const_iterator basisKernelIter = basisKernelList.begin();
         basisKernelIter != basisKernelList.end(); ++basisKernelIter, ++i) {
