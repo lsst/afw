@@ -245,8 +245,8 @@ SWIG_SHARED_PTR_DERIVED(Exposure##TYPE, lsst::daf::data::LsstBase, lsst::afw::im
 
 /************************************************************************************************************/
 
-SWIG_SHARED_PTR(DefectPtr, lsst::afw::image::Defect);
+SWIG_SHARED_PTR(DefectPtr, lsst::afw::image::DefectBase);
 
 %include "lsst/afw/image/Defect.h"
 
-%template(DefectSet) std::vector<boost::shared_ptr<lsst::afw::image::Defect> >;
+%template(DefectSet) std::vector<boost::shared_ptr<lsst::afw::image::DefectBase> >;

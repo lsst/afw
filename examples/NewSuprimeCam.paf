@@ -103,7 +103,8 @@ Raft: {
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 Ccd: {
-    pixelSize: 10.0e-3                  # pixel size (mm)
+    #pixelSize: 10.0e-3                 # pixel size (mm)
+    pixelSize: 1.0                      # pixel size (we're using pixels, not mm)
 
     nCol: 4                             # number of columns of amps; 2 == Left and Right
     nRow: 1                             # number of rows of amps

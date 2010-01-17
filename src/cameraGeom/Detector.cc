@@ -134,7 +134,8 @@ afwImage::BBox cameraGeom::detail::rotateBBoxBy90(
         s = -1; c = 0;
         break;
       default:
-        assert(n90 >= 0 && n90 <= 3); // we said "%= 4"
+        c = s = 0;                      // make compiler happy
+        assert(n90 >= 0 && n90 <= 3);   // we said "%= 4"
     }
     //
     // To work

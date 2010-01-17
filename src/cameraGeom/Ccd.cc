@@ -46,6 +46,17 @@ void cameraGeom::Ccd::addAmp(int const iX, ///< x-index of this Amp
 }
 
 /**
+ * Return the offset from the Detector centre, in mm, given a pixel position wrt Detector's centre
+ * \sa getPositionFromPixel
+ */
+afwGeom::Point2D cameraGeom::Ccd::getPositionFromIndex(
+        afwGeom::Point2I const& pix     ///< Pixel coordinates wrt centre of Ccd
+                                     ) const
+{
+    return getPositionFromIndex(pix, isTrimmed());
+}
+
+/**
  * Return the offset from the chip centre, in mm, given a pixel position wrt the chip centre
  * \sa getPositionFromPixel
  */
@@ -180,20 +191,20 @@ void cameraGeom::Ccd::setOrientation(
 
 static void clipDefectsToAmplifier(
         cameraGeom::Amp::Ptr amp,                             // the Amp in question
-        std::vector<afwImage::Defect::Ptr> const& defects // Defects in this detector
+        std::vector<afwImage::DefectBase::Ptr> const& defects // Defects in this detector
                                   )
 {
     amp->getDefects().clear();
 
-    for (std::vector<afwImage::Defect::Ptr>::const_iterator ptr = defects.begin(), end = defects.end();
+    for (std::vector<afwImage::DefectBase::Ptr>::const_iterator ptr = defects.begin(), end = defects.end();
          ptr != end; ++ptr) {
-        afwImage::Defect::Ptr defect = *ptr;
+        afwImage::DefectBase::Ptr defect = *ptr;
 
         afwImage::BBox bbox = defect->getBBox();
         bbox.clip(amp->getAllPixels(false));
 
         if (bbox) {
-            afwImage::Defect::Ptr ndet(new afwImage::Defect(bbox));
+            afwImage::DefectBase::Ptr ndet(new afwImage::DefectBase(bbox));
             amp->getDefects().push_back(ndet);
         }
     }
@@ -201,7 +212,7 @@ static void clipDefectsToAmplifier(
 
 /// Set the Detector's Defect list
 void cameraGeom::Ccd::setDefects(
-        std::vector<afwImage::Defect::Ptr> const& defects ///< Defects in this detector
+        std::vector<afwImage::DefectBase::Ptr> const& defects ///< Defects in this detector
                                 ) {
     cameraGeom::Detector::setDefects(defects);
     // And the Amps too

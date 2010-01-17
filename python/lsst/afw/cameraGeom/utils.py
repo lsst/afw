@@ -91,6 +91,24 @@ class SynthesizeCcdImage(GetCcdImage):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+def getGeomPolicy(cameraGeomPolicyFile):
+    """Return a Policy describing a Camera's geometry"""
+    
+    if os.path.exists(cameraGeomPolicyFile):
+        return pexPolicy.Policy(cameraGeomPolicyFile)
+
+    policyFile = pexPolicy.DefaultPolicyFile("afw", "CameraGeomDictionary.paf", "policy")
+    defPolicy = pexPolicy.Policy.createPolicy(policyFile, policyFile.getRepositoryPath(), True)
+
+    policyFile = pexPolicy.DefaultPolicyFile("afw", cameraGeomPolicyFile, "examples")
+    geomPolicy = pexPolicy.Policy.createPolicy(policyFile, policyFile.getRepositoryPath(), True)
+
+    geomPolicy.mergeDefaults(defPolicy.getDictionary())
+
+    return geomPolicy
+
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 def makeCcd(geomPolicy, ccdId=None, ccdInfo=None):
     """Build a Ccd from a set of amplifiers given a suitable pex::Policy
 
@@ -313,18 +331,18 @@ particular that it has an entry ampSerial which is a single-element list, the am
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def makeImageFromCcd(ccd, imageSource=SynthesizeCcdImage(), isTrimmed=None):
+def makeImageFromCcd(ccd, imageSource=SynthesizeCcdImage(), isTrimmed=None, imageFactory=afwImage.ImageU):
     """Make an Image of a Ccd"""
 
     if isTrimmed is None:
         isTrimmed = ccd.isTrimmed()
     imageSource.setTrimmed(isTrimmed)
 
-    ccdImage = afwImage.ImageU(ccd.getAllPixels(isTrimmed).getDimensions())
+    ccdImage = imageFactory(ccd.getAllPixels(isTrimmed).getDimensions())
 
     for a in ccd:
         im = ccdImage.Factory(ccdImage, a.getAllPixels(isTrimmed))
-        im <<= imageSource.getImage(ccd, a)
+        im <<= imageSource.getImage(ccd, a, imageFactory=imageFactory)
 
     return ccdImage
 
@@ -368,10 +386,10 @@ of the detectors"""
     displayUtils.drawBBox(ccd.getAllPixels(isTrimmed), origin=ccdOrigin,
                           borderWidth=0.49, ctype=ds9.MAGENTA, frame=frame)
 
-def makeImageFromRaft(raft, imageSource=SynthesizeCcdImage(), raftCenter=None):
+def makeImageFromRaft(raft, imageSource=SynthesizeCcdImage(), raftCenter=None, imageFactory=afwImage.ImageU):
     """Make an Image of a Raft"""
 
-    raftImage = afwImage.ImageU(raft.getAllPixels().getDimensions())
+    raftImage = imageFactory(raft.getAllPixels().getDimensions())
 
     for det in raft:
         ccd = cameraGeom.cast_Ccd(det)
@@ -425,10 +443,10 @@ If imageSource isn't None, an image using the images specified by imageSource"""
 
         showCcd(ccd, None, isTrimmed=True, frame=frame, ccdOrigin=origin, overlay=overlay)
 
-def makeImageFromCamera(camera, imageSource=None):
+def makeImageFromCamera(camera, imageSource=None, imageFactory=afwImage.ImageU):
     """Make an Image of a Camera"""
 
-    cameraImage = afwImage.ImageU(camera.getAllPixels().getDimensions())
+    cameraImage = imageFactory(camera.getAllPixels().getDimensions())
     for det in camera:
         raft = cameraGeom.cast_Raft(det);
         bbox = raft.getAllPixels().clone()
@@ -473,9 +491,8 @@ of the detectors"""
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def showMosaic(dirName, fileName, cameraGeomPolicyFile,
-               display=True, what=cameraGeom.Camera, id=None, overlay=False, describe=True,
-               doTrim=False):
+def showMosaic(fileName, cameraGeomPolicyFile,
+               display=True, what=cameraGeom.Camera, id=None, overlay=False, describe=True, doTrim=False):
     """Show a mosaic built from the MEF imageFile containing an exposure
 
 The camera geometry is defined by cameraGeomPolicyFile;  raft IDs etc. are drawn on ds9 if overlay is True;
@@ -483,30 +500,12 @@ The camera (or raft) is described if describe is True
 
 You may set what to a type (e.g. cameraGeom.Ccd) to display that type; if provided id will be obeyed
 
-If relevant (for e.g. a Ccd) doTrim is applied to the Detector
+If relevant (for e.g. a Ccd) doTrim is applied to the Detector.
     """
 
-    policyFile = pexPolicy.DefaultPolicyFile("afw", "CameraGeomDictionary.paf", "policy")
-    defPolicy = pexPolicy.Policy.createPolicy(policyFile, policyFile.getRepositoryPath(), True)
-    
-    if os.path.exists(cameraGeomPolicyFile):
-        geomPolicy = pexPolicy.Policy(cameraGeomPolicyFile)
-    else:
-        policyFile = pexPolicy.DefaultPolicyFile("afw", cameraGeomPolicyFile, "examples")
-        geomPolicy = pexPolicy.Policy.createPolicy(policyFile, policyFile.getRepositoryPath(), True)
-
-    try:
-        geomPolicy.mergeDefaults(defPolicy.getDictionary())
-    except Exception, e:
-        global warnedAboutDict
-        try:
-            type(warnedAboutDict)
-        except:
-            print >> sys.stderr, "Not validating dict due to old pexPolicy:", e
-            warnedAboutDict = True
+    geomPolicy = getGeomPolicy(cameraGeomPolicyFile)
 
     if fileName:
-        fileName = os.path.join(dirName, fileName)
         imageSource = GetCcdImage(fileName) # object that understands the CCD <--> HDU mapping
         imageSource.setTrimmed(doTrim)
     else:
@@ -621,3 +620,62 @@ def findRaft(parent, id):
             return raft
 
     return None
+
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+def makeDefects(geomPolicy):
+    """Create a dictionary of DefectSets from a pexPolicy::Policy
+
+The dictionay is indexed by an Id object --- remember to compare by str(id) not object identity
+    """
+
+    defectsDict = {}
+    for defectPol in geomPolicy.getArray("DefectList"):
+        defects = afwImage.DefectSet()
+        ccdId = cameraGeom.Id(defectPol.get("serial"), defectPol.get("name"))
+        defectsDict[ccdId] = defects
+
+        for defect in defectPol.getArray("Defect"):
+            x0 = defect.get("x0")
+            y0 = defect.get("y0")
+
+            x1 = y1 = width = height = None
+            if defect.exists("x1"):
+                x1 = defect.get("x1")
+            if defect.exists("y1"):
+                y1 = defect.get("y1")
+            if defect.exists("width"):
+                width = defect.get("width")
+            if defect.exists("height"):
+                height = defect.get("height")
+
+            if x1 is None:
+                if width:
+                    x1 = x0 + width - 1
+                else:
+                    raise RuntimeError, ("Defect at (%d,%d) for CCD (%s) has no x1/width" % (x0, y0, ccdId))
+            else:
+                if width:
+                    if x1 != x0 + width - 1:
+                        raise RuntimeError, \
+                              ("Defect at (%d,%d) for CCD (%s) has inconsistent x1/width = %d,%d" % \
+                               (x0, y0, ccdId, x1, width))
+
+            if y1 is None:
+                if height:
+                    y1 = y0 + height - 1
+                else:
+                    raise RuntimeError, ("Defect at (%d,%d) for CCD (%s) has no y1/height" % (x0, y0, ccdId))
+            else:
+                if height:
+                    if y1 != y0 + height - 1:
+                        raise RuntimeError, \
+                              ("Defect at (%d,%d) for CCD (%s) has inconsistent y1/height = %d,%d" % \
+                               (x0, y0, ccdId, y1, height))
+            
+            bbox = afwImage.BBox(afwImage.PointI(x0, y0), afwImage.PointI(x1, y1))
+            defects.push_back(afwImage.DefectBase(bbox))
+
+    return defectsDict
+        
+    

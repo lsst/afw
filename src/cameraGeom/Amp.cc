@@ -67,7 +67,7 @@ void cameraGeom::Amp::shift(int dx,        ///< How much to offset in x (pixels)
 
 /// Rotate an Amp by some number of 90degree anticlockwise turns about centerPixel
 void cameraGeom::Amp::rotateBy90(
-        afwGeom::Extent2I const& dimensions, // Size of CCD
+        afwGeom::Extent2I const& dimensions, ///< Size of CCD
         int n90                              ///< How many 90-degree anti-clockwise turns should I apply?
                                 ) {
     while (n90 < 0) {

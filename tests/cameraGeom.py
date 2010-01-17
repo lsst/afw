@@ -20,6 +20,7 @@ import lsst.pex.policy as pexPolicy
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.display.ds9 as ds9
+import lsst.afw.display.utils as displayUtils
 
 import lsst.afw.cameraGeom as cameraGeom
 import lsst.afw.cameraGeom.utils as cameraGeomUtils
@@ -71,15 +72,7 @@ class CameraGeomTestCase(unittest.TestCase):
 
         polFile = pexPolicy.DefaultPolicyFile("afw", "TestCameraGeom.paf", "tests")
         self.geomPolicy = pexPolicy.Policy.createPolicy(polFile)
-        try:
-            self.geomPolicy.mergeDefaults(defPolicy.getDictionary())
-        except Exception, e:
-            global warnedAboutDict
-            try:
-                type(warnedAboutDict)
-            except:
-                print >> sys.stderr, "Not validating dict due to old pexPolicy:", e
-                warnedAboutDict = True
+        self.geomPolicy.mergeDefaults(defPolicy.getDictionary())
 
     def tearDown(self):
         pass
@@ -300,60 +293,61 @@ class CameraGeomTestCase(unittest.TestCase):
             self.assertEqualPoint(camera.getPixelFromPosition(pos), pix)
             self.assertEqualPoint(camera.getPositionFromPixel(pix), pos)
 
-    def testDefect(self):
-        """Test Defects"""
+    def testDefectBase(self):
+        """Test DefectBases"""
 
-        #print >> sys.stderr, "Skipping testDefect"; return
+        #print >> sys.stderr, "Skipping testDefectBase"; return
 
-        ccd = cameraGeomUtils.makeCcd(self.geomPolicy, cameraGeom.Id("Defects"))
-
-        ccdImage = cameraGeomUtils.makeImageFromCcd(ccd)
-        #
-        # Insert some defects into the Ccd
-        #
-        defects = afwImage.DefectSet()
-        for x0, y0, x1, y1 in [
-            (34,  0,   35,  80 ),
-            (34,  81,  34,  100),
-            (180, 100, 182, 130),
-            ]:
-            bbox = afwImage.BBox(afwImage.PointI(x0, y0), afwImage.PointI(x1, y1))
-            bad = ccdImage.Factory(ccdImage, bbox)
-            bad.set(100)
-
-            defects.push_back(afwImage.Defect(bbox))
-
-        if display:
-            ds9.mtv(ccdImage, title="Defects")
-            cameraGeomUtils.showCcd(ccd, None)
-            ds9.incrDefaultFrame()
-
-        ccd.setDefects(defects)
-
-        if False:
-            print [str(d.getBBox()) for d in ccd.getDefects()]
-            
-            for a in ccd:
-                print "    ", a.getId(), [str(d.getBBox()) for d in a.getDefects()]
+        defectsDict = cameraGeomUtils.makeDefects(self.geomPolicy)
 
 
-        for id, i, x0, y0, x1, y1 in [
-            (0, 0, 34,  0,   35,  57 ),
-            (1, 0, 34,  58,  35,  80 ),
-            (1, 1, 34,  81,  34,  100),
-            (2, -1, 0, 0, 0, 0),
-            (3, -1, 0, 0, 0, 0),
-            (4, -1, 0, 0, 0, 0),
-            (5, 0, 180, 100, 182, 115),
-            (6, 0, 180, 116, 182, 130),
-            (7, -1, 0, 0, 0, 0),
-            ]:
-            defects = ccd.findAmp(cameraGeom.Id(id)).getDefects()
-            if i < 0:
-                self.assertEqual(len(defects), 0)
+        for ccdName in ("Defective", "Defective II"):
+            ccd = cameraGeomUtils.makeCcd(self.geomPolicy, cameraGeom.Id(ccdName))
+
+            ccdImage = cameraGeomUtils.makeImageFromCcd(ccd)
+
+            if ccdName == "Defective":
+                #
+                # Insert some defects into the Ccd
+                #
+                for x0, y0, x1, y1 in [
+                    (34,  0,   35,  80 ),
+                    (34,  81,  34,  100),
+                    (180, 100, 182, 130),
+                    ]:
+                    bbox = afwImage.BBox(afwImage.PointI(x0, y0), afwImage.PointI(x1, y1))
+                    bad = ccdImage.Factory(ccdImage, bbox)
+                    bad.set(100)
+
+                if display:
+                    ds9.mtv(ccdImage, title="Defects")
+                    cameraGeomUtils.showCcd(ccd, None)
+
+            defects = [v for (k, v) in defectsDict.items() if k == ccd.getId()]
+            if len(defects) == 0:
+                contine
+            elif len(defects) == 1:
+                defects = defects[0]
             else:
-                bbox = defects[i].getBBox()
-                self.assertEqual(bbox, afwImage.BBox(afwImage.PointI(x0, y0), afwImage.PointI(x1, y1)))
+                raise RuntimeError, ("Found more than one defect set for CCD %s" % ccd.getId())
+
+            ccd.setDefects(defects)
+
+            if False:
+                print "CCD (%s)" % ccd.getId()
+
+                for a in ccd:
+                    print "    ", a.getId(), [str(d.getBBox()) for d in a.getDefects()]
+
+            if ccdName == "Defective" and display:
+                for d in ccd.getDefects():
+                    displayUtils.drawBBox(d.getBBox(), ctype=ds9.CYAN, borderWidth=1.5)
+
+                for a in ccd:
+                    for d in a.getDefects():
+                        displayUtils.drawBBox(d.getBBox(), ctype=ds9.YELLOW, borderWidth=1.0)
+
+                ds9.incrDefaultFrame()
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
