@@ -26,7 +26,9 @@ public:
     explicit Orientation(int nQuarter = 0, ///< Nominal rotation of device in units of pi/2
                          double pitch=0.0, ///< pitch (rotation in YZ), radians
                          double roll=0.0,  ///< roll (rotation in XZ), radians
-                         double yaw=0.0) : ///< yaw (rotation in XY), radians
+                         double yaw=0.0 ///< yaw (rotation in XY), radians
+                        )
+        :
         _nQuarter(nQuarter % 4),
         _pitch(pitch), _cosPitch(std::cos(pitch)),  _sinPitch(std::sin(pitch)),
         _roll(roll), _cosRoll(std::cos(roll)),  _sinRoll(std::sin(roll)),

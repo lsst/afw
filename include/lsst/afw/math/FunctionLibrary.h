@@ -57,10 +57,10 @@ using boost::serialization::make_nvp;
             return static_cast<ReturnT>(x == _xo);
         }
 
-        virtual std::string toString(void) const {
+        virtual std::string toString(std::string const& prefix="") const {
             std::ostringstream os;
             os << "IntegerDeltaFunction1 [" << _xo << "]: ";
-            os << Function1<ReturnT>::toString();
+            os << Function1<ReturnT>::toString(prefix);
             return os.str();
         };
 
@@ -70,7 +70,7 @@ using boost::serialization::make_nvp;
     private:
         friend class boost::serialization::access;
         template <class Archive>
-        void serialize(Archive& ar, unsigned int const version) {
+        void serialize(Archive&, unsigned int const) {
 #ifndef SWIG
             boost::serialization::void_cast_register<
                 IntegerDeltaFunction1<ReturnT>, Function1<ReturnT> >(
@@ -80,7 +80,7 @@ using boost::serialization::make_nvp;
         };
         template <typename R, class Archive>
         friend void boost::serialization::save_construct_data(
-            Archive& ar, IntegerDeltaFunction1<R> const* f, unsigned int const version);
+            Archive& ar, IntegerDeltaFunction1<R> const* f, unsigned int const);
     };
 
     /**
@@ -120,10 +120,10 @@ using boost::serialization::make_nvp;
             return static_cast<ReturnT>((x == _xo) && (y == _yo));
         }
 
-        virtual std::string toString(void) const {
+        virtual std::string toString(std::string const& prefix) const {
             std::ostringstream os;
             os << "IntegerDeltaFunction2 [" << _xo << ", " << _yo << "]: ";
-            os << Function2<ReturnT>::toString();
+            os << Function2<ReturnT>::toString(prefix);
             return os.str();
         };
 
@@ -134,7 +134,7 @@ using boost::serialization::make_nvp;
     private:
         friend class boost::serialization::access;
         template <class Archive>
-        void serialize(Archive& ar, unsigned int const version) {
+        void serialize(Archive&, unsigned int const) {
 #ifndef SWIG
             boost::serialization::void_cast_register<
                 IntegerDeltaFunction2<ReturnT>, Function2<ReturnT> >(
@@ -144,7 +144,7 @@ using boost::serialization::make_nvp;
         };
         template <typename R, class Archive>
         friend void boost::serialization::save_construct_data(
-            Archive& ar, IntegerDeltaFunction2<R> const* f, unsigned int const version);
+            Archive& ar, IntegerDeltaFunction2<R> const* f, unsigned int const);
     };
 
     /**
@@ -185,10 +185,10 @@ using boost::serialization::make_nvp;
                 std::exp(- (x * x) / (2.0 * this->_params[0] * this->_params[0])));
         }
         
-        virtual std::string toString(void) const {
+        virtual std::string toString(std::string const& prefix) const {
             std::ostringstream os;
             os << "GaussianFunction1 [" << _multFac << "]: ";
-            os << Function1<ReturnT>::toString();
+            os << Function1<ReturnT>::toString(prefix);
             return os.str();
         };
 
@@ -198,7 +198,7 @@ using boost::serialization::make_nvp;
     private:
         friend class boost::serialization::access;
         template <class Archive>
-        void serialize(Archive& ar, unsigned int const version) {
+        void serialize(Archive&, unsigned int const) {
 #ifndef SWIG
             boost::serialization::void_cast_register<
                 GaussianFunction1<ReturnT>, Function1<ReturnT> >(
@@ -262,10 +262,10 @@ using boost::serialization::make_nvp;
                          - ((pos2 * pos2) / (2.0 * this->_params[1] * this->_params[1]))));
         }
         
-        virtual std::string toString(void) const {
+        virtual std::string toString(std::string const& prefix) const {
             std::ostringstream os;
             os << "GaussianFunction2: ";
-            os << Function2<ReturnT>::toString();
+            os << Function2<ReturnT>::toString(prefix);
             return os.str();
         };
     
@@ -300,7 +300,7 @@ using boost::serialization::make_nvp;
     private:
         friend class boost::serialization::access;
         template <class Archive>
-        void serialize(Archive& ar, unsigned int const version) {
+        void serialize(Archive&, unsigned int const) {
 #ifndef SWIG
             boost::serialization::void_cast_register<
                 GaussianFunction2<ReturnT>, Function2<ReturnT> >(
@@ -363,10 +363,10 @@ using boost::serialization::make_nvp;
                 + (b * std::exp(-radSq / (2.0 * sigma2Sq)))));
         }
         
-        virtual std::string toString(void) const {
+        virtual std::string toString(std::string const& prefix) const {
             std::ostringstream os;
             os << "DoubleGaussianFunction2 [" << _multFac << "]: ";
-            os << Function2<ReturnT>::toString();
+            os << Function2<ReturnT>::toString(prefix);
             return os.str();
         };
 
@@ -376,7 +376,7 @@ using boost::serialization::make_nvp;
     private:
         friend class boost::serialization::access;
         template <class Archive>
-        void serialize(Archive& ar, unsigned int const version) {
+        void serialize(Archive&, unsigned int const) {
 #ifndef SWIG
             boost::serialization::void_cast_register<
                 DoubleGaussianFunction2<ReturnT>, Function2<ReturnT> >(
@@ -442,10 +442,10 @@ using boost::serialization::make_nvp;
             return static_cast<ReturnT>(retVal);
         }
 
-        virtual std::string toString(void) const {
+        virtual std::string toString(std::string const& prefix) const {
             std::ostringstream os;
             os << "PolynomialFunction1 []: ";
-            os << Function1<ReturnT>::toString();
+            os << Function1<ReturnT>::toString(prefix);
             return os.str();
         };
 
@@ -453,7 +453,7 @@ using boost::serialization::make_nvp;
     private:
         friend class boost::serialization::access;
         template <class Archive>
-        void serialize(Archive& ar, unsigned int const version) {
+        void serialize(Archive&, unsigned int const) {
 #ifndef SWIG
             boost::serialization::void_cast_register<
                 PolynomialFunction1<ReturnT>, Function1<ReturnT> >(
@@ -566,10 +566,10 @@ using boost::serialization::make_nvp;
             return static_cast<ReturnT>(retVal);
         }
 
-        virtual std::string toString(void) const {
+        virtual std::string toString(std::string const& prefix) const {
             std::ostringstream os;
             os << "PolynomialFunction2 [" << _order << "]: ";
-            os << Function2<ReturnT>::toString();
+            os << Function2<ReturnT>::toString(prefix);
             return os.str();
         };
 
@@ -579,7 +579,7 @@ using boost::serialization::make_nvp;
     private:
         friend class boost::serialization::access;
         template <class Archive>
-        void serialize(Archive& ar, unsigned int const version) {
+        void serialize(Archive& ar, unsigned int const) {
             ar & make_nvp("fn2",
                           boost::serialization::base_object<
                           Function2<ReturnT> >(*this));
@@ -655,13 +655,13 @@ using boost::serialization::make_nvp;
             return static_cast<ReturnT>(_clenshaw(xPrime, 0));
         }
 
-        virtual std::string toString(void) const {
+        virtual std::string toString(std::string const& prefix) const {
             std::ostringstream os;
             os << "Chebyshev1Function1 [";
             os << _minX << ", " << _maxX << ", ";
             os << _scale << ", " << _offset << ", ";
             os << _maxInd << "]: ";
-            os << Function1<ReturnT>::toString();
+            os << Function1<ReturnT>::toString(prefix);
             return os.str();
         };
 
@@ -704,7 +704,7 @@ using boost::serialization::make_nvp;
     private:
         friend class boost::serialization::access;
         template <class Archive>
-        void serialize(Archive& ar, unsigned int const version) {
+        void serialize(Archive&, unsigned int const) {
 #ifndef SWIG
             boost::serialization::void_cast_register<
                 Chebyshev1Function1<ReturnT>, Function1<ReturnT> >(
@@ -714,7 +714,7 @@ using boost::serialization::make_nvp;
         };
         template <typename R, class Archive>
         friend void boost::serialization::save_construct_data(
-            Archive& ar, Chebyshev1Function1<R> const* f, unsigned int const version);
+            Archive& ar, Chebyshev1Function1<R> const* f, unsigned int const);
     };
 
 
@@ -765,10 +765,10 @@ using boost::serialization::make_nvp;
             }
         }
 
-        virtual std::string toString(void) const {
+        virtual std::string toString(std::string const& prefix) const {
             std::ostringstream os;
             os << "LanczosFunction1 [" << _invN << "]: ";;
-            os << Function1<ReturnT>::toString();
+            os << Function1<ReturnT>::toString(prefix);
             return os.str();
         };
 
@@ -778,7 +778,7 @@ using boost::serialization::make_nvp;
     private:
         friend class boost::serialization::access;
         template <class Archive>
-        void serialize(Archive& ar, unsigned int const version) {
+        void serialize(Archive&, unsigned int const) {
 #ifndef SWIG
             boost::serialization::void_cast_register<
                 LanczosFunction1<ReturnT>, Function1<ReturnT> >(
@@ -788,7 +788,7 @@ using boost::serialization::make_nvp;
         };
         template <typename R, class Archive>
         friend void boost::serialization::save_construct_data(
-            Archive& ar, LanczosFunction1<R> const* f, unsigned int const version);
+            Archive& ar, LanczosFunction1<R> const* f, unsigned int const);
     };
 
     /**
@@ -846,10 +846,10 @@ using boost::serialization::make_nvp;
             return static_cast<ReturnT>(xFunc * yFunc);
         }
 
-        virtual std::string toString(void) const {
+        virtual std::string toString(std::string const& prefix) const {
             std::ostringstream os;
             os << "LanczosFunction2 [" << _invN << "]: ";;
-            os << Function2<ReturnT>::toString();
+            os << Function2<ReturnT>::toString(prefix);
             return os.str();
         };
 
@@ -859,7 +859,7 @@ using boost::serialization::make_nvp;
     private:
         friend class boost::serialization::access;
         template <class Archive>
-        void serialize(Archive& ar, unsigned int const version) {
+        void serialize(Archive&, unsigned int const) {
 #ifndef SWIG
             boost::serialization::void_cast_register<
                 LanczosFunction2<ReturnT>, Function2<ReturnT> >(
@@ -869,7 +869,7 @@ using boost::serialization::make_nvp;
         };
         template <typename R, class Archive>
         friend void boost::serialization::save_construct_data(
-            Archive& ar, LanczosFunction2<R> const* f, unsigned int const version);
+            Archive& ar, LanczosFunction2<R> const* f, unsigned int const);
     };
 
 }}}   // lsst::afw::math
@@ -880,21 +880,21 @@ namespace serialization {
 template <typename ReturnT, class Archive>
 inline void save_construct_data(Archive& ar,
                                 lsst::afw::math::IntegerDeltaFunction1<ReturnT> const* f,
-                                unsigned int const version) {
+                                unsigned int const) {
     ar << make_nvp("xo", f->_xo);
 };
 
 template <typename ReturnT, class Archive>
 inline void save_construct_data(Archive& ar,
                                 lsst::afw::math::IntegerDeltaFunction2<ReturnT> const* f,
-                                unsigned int const version) {
+                                unsigned int const) {
     ar << make_nvp("xo", f->_xo) << make_nvp("yo", f->_yo);
 };
 
 template <typename ReturnT, class Archive>
 inline void load_construct_data(Archive& ar,
                                 lsst::afw::math::IntegerDeltaFunction2<ReturnT>* f,
-                                unsigned int const version) {
+                                unsigned int const) {
     double xo;
     double yo;
     ar >> make_nvp("xo", xo) >> make_nvp("yo", yo);
@@ -904,14 +904,14 @@ inline void load_construct_data(Archive& ar,
 template <typename ReturnT, class Archive>
 inline void save_construct_data(Archive& ar,
                                 lsst::afw::math::GaussianFunction1<ReturnT> const* f,
-                                unsigned int const version) {
+                                unsigned int const) {
     ar << make_nvp("sigma", f->getParameters()[0]);
 };
 
 template <typename ReturnT, class Archive>
 inline void load_construct_data(Archive& ar,
                                 lsst::afw::math::GaussianFunction1<ReturnT>* f,
-                                unsigned int const version) {
+                                unsigned int const) {
     double sigma;
     ar >> make_nvp("sigma", sigma);
     ::new(f) lsst::afw::math::GaussianFunction1<ReturnT>(sigma);
@@ -920,7 +920,7 @@ inline void load_construct_data(Archive& ar,
 template <typename ReturnT, class Archive>
 inline void save_construct_data(Archive& ar,
                                 lsst::afw::math::GaussianFunction2<ReturnT> const* f,
-                                unsigned int const version) {
+                                unsigned int const) {
     ar << make_nvp("sigma1", f->getParameters()[0]);
     ar << make_nvp("sigma2", f->getParameters()[1]);
     ar << make_nvp("angle",  f->getParameters()[2]);
@@ -929,7 +929,7 @@ inline void save_construct_data(Archive& ar,
 template <typename ReturnT, class Archive>
 inline void load_construct_data(Archive& ar,
                                 lsst::afw::math::GaussianFunction2<ReturnT>* f,
-                                unsigned int const version) {
+                                unsigned int const) {
     double sigma1;
     double sigma2;
     double angle;
@@ -942,7 +942,7 @@ inline void load_construct_data(Archive& ar,
 template <typename ReturnT, class Archive>
 inline void save_construct_data(Archive& ar,
                                 lsst::afw::math::DoubleGaussianFunction2<ReturnT> const* f,
-                                unsigned int const version) {
+                                unsigned int const) {
     ar << make_nvp("sigma1", f->getParameters()[0]);
     ar << make_nvp("sigma2", f->getParameters()[1]);
     ar << make_nvp("ampl2", f->getParameters()[2]);
@@ -951,7 +951,7 @@ inline void save_construct_data(Archive& ar,
 template <typename ReturnT, class Archive>
 inline void load_construct_data(Archive& ar,
                                 lsst::afw::math::DoubleGaussianFunction2<ReturnT>* f,
-                                unsigned int const version) {
+                                unsigned int const) {
     double sigma1;
     double sigma2;
     double ampl2;
@@ -964,14 +964,14 @@ inline void load_construct_data(Archive& ar,
 template <typename ReturnT, class Archive>
 inline void save_construct_data(Archive& ar,
                                 lsst::afw::math::PolynomialFunction1<ReturnT> const* f,
-                                unsigned int const version) {
+                                unsigned int const) {
     ar << make_nvp("params", f->getParameters());
 };
 
 template <typename ReturnT, class Archive>
 inline void load_construct_data(Archive& ar,
                                 lsst::afw::math::PolynomialFunction1<ReturnT>* f,
-                                unsigned int const version) {
+                                unsigned int const) {
     std::vector<double> params;
     ar >> make_nvp("params", params);
     ::new(f) lsst::afw::math::PolynomialFunction1<ReturnT>(params);
@@ -980,14 +980,14 @@ inline void load_construct_data(Archive& ar,
 template <typename ReturnT, class Archive>
 inline void save_construct_data(Archive& ar,
                                 lsst::afw::math::PolynomialFunction2<ReturnT> const* f,
-                                unsigned int const version) {
+                                unsigned int const) {
     ar << make_nvp("params", f->getParameters());
 };
 
 template <typename ReturnT, class Archive>
 inline void load_construct_data(Archive& ar,
                                 lsst::afw::math::PolynomialFunction2<ReturnT>* f,
-                                unsigned int const version) {
+                                unsigned int const) {
     std::vector<double> params;
     ar >> make_nvp("params", params);
     ::new(f) lsst::afw::math::PolynomialFunction2<ReturnT>(params);
@@ -996,7 +996,7 @@ inline void load_construct_data(Archive& ar,
 template <typename ReturnT, class Archive>
 inline void save_construct_data(Archive& ar,
                                 lsst::afw::math::Chebyshev1Function1<ReturnT> const* f,
-                                unsigned int const version) {
+                                unsigned int const) {
     ar << make_nvp("params", f->getParameters());
     ar << make_nvp("minX", f->_minX);
     ar << make_nvp("maxX", f->_maxX);
@@ -1005,7 +1005,7 @@ inline void save_construct_data(Archive& ar,
 template <typename ReturnT, class Archive>
 inline void load_construct_data(Archive& ar,
                                 lsst::afw::math::Chebyshev1Function1<ReturnT>* f,
-                                unsigned int const version) {
+                                unsigned int const) {
     std::vector<double> params;
     double minX;
     double maxX;
@@ -1018,7 +1018,7 @@ inline void load_construct_data(Archive& ar,
 template <typename ReturnT, class Archive>
 inline void save_construct_data(Archive& ar,
                                 lsst::afw::math::LanczosFunction1<ReturnT> const* f,
-                                unsigned int const version) {
+                                unsigned int const) {
     unsigned int n = static_cast<unsigned int>(0.5 + (1.0 / f->_invN));
     ar << make_nvp("n", n);
     ar << make_nvp("xOffset", f->getParameters()[0]);
@@ -1027,7 +1027,7 @@ inline void save_construct_data(Archive& ar,
 template <typename ReturnT, class Archive>
 inline void load_construct_data(Archive& ar,
                                 lsst::afw::math::LanczosFunction1<ReturnT>* f,
-                                unsigned int const version) {
+                                unsigned int const) {
     unsigned int n;
     double xOffset;
     ar >> make_nvp("n", n);
@@ -1038,7 +1038,7 @@ inline void load_construct_data(Archive& ar,
 template <typename ReturnT, class Archive>
 inline void save_construct_data(Archive& ar,
                                 lsst::afw::math::LanczosFunction2<ReturnT> const* f,
-                                unsigned int const version) {
+                                unsigned int const) {
     unsigned int n = static_cast<unsigned int>(0.5 + (1.0 / f->_invN));
     ar << make_nvp("n", n);
     ar << make_nvp("xOffset", f->getParameters()[0]);
@@ -1048,7 +1048,7 @@ inline void save_construct_data(Archive& ar,
 template <typename ReturnT, class Archive>
 inline void load_construct_data(Archive& ar,
                                 lsst::afw::math::LanczosFunction2<ReturnT>* f,
-                                unsigned int const version) {
+                                unsigned int const) {
     unsigned int n;
     double xOffset;
     double yOffset;

@@ -99,8 +99,8 @@ afwMath::Kernel::Ptr afwMath::SeparableKernel::clone() const {
 double afwMath::SeparableKernel::computeImage(
     afwImage::Image<Pixel> &image,
     bool doNormalize,
-    double x,
-    double y
+    double xPos,
+    double yPos
 ) const {
     if (image.getDimensions() != this->getDimensions()) {
         std::ostringstream os;
@@ -109,7 +109,7 @@ double afwMath::SeparableKernel::computeImage(
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
     if (this->isSpatiallyVarying()) {
-        this->setKernelParametersFromSpatialModel(x, y);
+        this->setKernelParametersFromSpatialModel(xPos, yPos);
     }
     
     double imSum = basicComputeVectors(_localColList, _localRowList, doNormalize);
@@ -175,7 +175,7 @@ afwMath::SeparableKernel::KernelFunctionPtr afwMath::SeparableKernel::getKernelR
     return _kernelRowFunctionPtr->clone();
 }
 
-std::string afwMath::SeparableKernel::toString(std::string prefix) const {
+std::string afwMath::SeparableKernel::toString(std::string const& prefix) const {
     std::ostringstream os;
     os << prefix << "SeparableKernel:" << std::endl;
     os << prefix << "..x (width) function: "

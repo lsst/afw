@@ -132,7 +132,7 @@ afwForm::KernelFormatter::~KernelFormatter(void) {
 void afwForm::KernelFormatter::write(
     dafBase::Persistable const* persistable,
     dafPersist::Storage::Ptr storage,
-    dafBase::PropertySet::Ptr additionalData) {
+    dafBase::PropertySet::Ptr) {
     execTrace("KernelFormatter write start");
     afwMath::Kernel const* kp =
         dynamic_cast<afwMath::Kernel const*>(persistable);
@@ -159,7 +159,7 @@ void afwForm::KernelFormatter::write(
 }
 
 dafBase::Persistable* afwForm::KernelFormatter::read(
-    dafPersist::Storage::Ptr storage, dafBase::PropertySet::Ptr additionalData) {
+    dafPersist::Storage::Ptr storage, dafBase::PropertySet::Ptr) {
     execTrace("KernelFormatter read start");
     afwMath::Kernel* kp;
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
@@ -181,9 +181,9 @@ dafBase::Persistable* afwForm::KernelFormatter::read(
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unrecognized Storage for Kernel");
 }
 
-void afwForm::KernelFormatter::update(dafBase::Persistable* persistable,
-                                   dafPersist::Storage::Ptr storage,
-                                   dafBase::PropertySet::Ptr additionalData) {
+void afwForm::KernelFormatter::update(dafBase::Persistable*,
+                                   dafPersist::Storage::Ptr,
+                                   dafBase::PropertySet::Ptr) {
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unexpected call to update for Kernel");
 }
 
@@ -195,7 +195,7 @@ void afwForm::KernelFormatter::update(dafBase::Persistable* persistable,
  */
 template <class Archive>
 void afwForm::KernelFormatter::delegateSerialize(
-    Archive& ar, unsigned int const version, dafBase::Persistable* persistable) {
+    Archive& ar, unsigned int const, dafBase::Persistable* persistable) {
     execTrace("KernelFormatter delegateSerialize start");
     afwMath::Kernel* kp =
         dynamic_cast<afwMath::Kernel*>(persistable);

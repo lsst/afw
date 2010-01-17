@@ -397,7 +397,7 @@ void form::DiaSourceVectorFormatter::setupFetch(DbStorage & db, DiaSource & d) {
 template <class Archive>
 void form::DiaSourceVectorFormatter::delegateSerialize(
     Archive &          archive,
-    unsigned int const version,
+    unsigned int const,
     Persistable *      persistable
 ) {
     PersistableDiaSourceVector * p = dynamic_cast<PersistableDiaSourceVector *>(persistable);

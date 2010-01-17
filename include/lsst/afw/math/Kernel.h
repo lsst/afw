@@ -291,7 +291,7 @@ using boost::serialization::make_nvp;
         void computeKernelParametersFromSpatialModel(
             std::vector<double> &kernelParams, double x, double y) const;
 
-        virtual std::string toString(std::string prefix = "") const;
+        virtual std::string toString(std::string const& prefix="") const;
 
         virtual void toFile(std::string fileName) const;
 
@@ -343,7 +343,7 @@ using boost::serialization::make_nvp;
             double y = 0.0
         ) const;
 
-        virtual std::string toString(std::string prefix = "") const;
+        virtual std::string toString(std::string const& prefix = "") const;
 
     private:
         lsst::afw::image::Image<Pixel> _image;
@@ -411,7 +411,7 @@ using boost::serialization::make_nvp;
 
         virtual KernelFunctionPtr getKernelFunction() const;
 
-        virtual std::string toString(std::string prefix = "") const;
+        virtual std::string toString(std::string const& prefix="") const;
 
     protected:
         virtual void setKernelParameter(unsigned int ind, double value) const;
@@ -461,7 +461,7 @@ using boost::serialization::make_nvp;
 
         lsst::afw::image::PointI getPixel() const { return _pixel; }
 
-        virtual std::string toString(std::string prefix = "") const;
+        virtual std::string toString(std::string const& prefix="") const;
 
     private:
         lsst::afw::image::PointI _pixel;
@@ -536,7 +536,7 @@ using boost::serialization::make_nvp;
 
         void checkKernelList(const KernelList &kernelList) const;
 
-        virtual std::string toString(std::string prefix = "") const;
+        virtual std::string toString(std::string const& prefix="") const;
 
     protected:
         virtual void setKernelParameter(unsigned int ind, double value) const;
@@ -619,7 +619,7 @@ using boost::serialization::make_nvp;
 
         KernelFunctionPtr getKernelRowFunction() const;
 
-        virtual std::string toString(std::string prefix = "") const;
+        virtual std::string toString(std::string const& prefix="") const;
 
     protected:
         virtual void setKernelParameter(unsigned int ind, double value) const;

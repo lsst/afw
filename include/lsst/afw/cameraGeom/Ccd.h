@@ -58,11 +58,12 @@ public:
     //
     virtual lsst::afw::geom::Point2D getPositionFromIndex(lsst::afw::geom::Point2I const& pos,
                                                           bool const isTrimmed) const;
+    virtual afwGeom::Point2D getPositionFromIndex(afwGeom::Point2I const& pix) const;
 
     virtual void setOrientation(Orientation const& orientation);
     virtual void shift(int dx, int dy);
 
-    virtual void setDefects(std::vector<boost::shared_ptr<afwImage::Defect> > const& defects);
+    virtual void setDefects(std::vector<boost::shared_ptr<afwImage::DefectBase> > const& defects);
 private:
     AmpSet _amps;                       // the Amps that make up this Ccd
 };

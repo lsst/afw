@@ -373,9 +373,11 @@ dafBase::Persistable* afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, Varian
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::update(
-    dafBase::Persistable* persistable,
-    dafPersist::Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr additionalData) {
+        dafBase::Persistable*,
+        dafPersist::Storage::Ptr,
+        lsst::daf::base::PropertySet::Ptr
+                                                                                )
+{
     //! \todo Implement update from FitsStorage, keeping DB-provided headers.
     // - KTL - 2007-11-29
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unexpected call to update for Exposure");
@@ -383,7 +385,9 @@ void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::update
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT> template <class Archive>
 void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::delegateSerialize(
-    Archive& ar, unsigned int const version, dafBase::Persistable* persistable) {
+    Archive& ar, unsigned int const, dafBase::Persistable* persistable
+                                                                                           )
+{
     execTrace("ExposureFormatter delegateSerialize start");
     afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>* ip =
         dynamic_cast<afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>*>(persistable);

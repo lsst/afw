@@ -101,7 +101,7 @@ namespace math {
             
             virtual Kernel::Pixel operator() (double x) const;
             
-            virtual std::string toString(void) const;
+            virtual std::string toString(std::string const& ="") const;
         };
     };
     
@@ -123,7 +123,7 @@ namespace math {
 
     namespace details {
         template <typename A, typename B>
-        bool isSameObject(A const& a, B const& b) { return false; };
+        bool isSameObject(A const&, B const&) { return false; };
         
         template <typename A>
         bool isSameObject(A const& a, A const& b) { return &a == &b; };

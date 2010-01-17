@@ -199,7 +199,7 @@ std::vector<double> afwMath::LinearCombinationKernel::getKernelParameters() cons
     return _kernelParams;
 }
 
-std::string afwMath::LinearCombinationKernel::toString(std::string prefix) const {
+std::string afwMath::LinearCombinationKernel::toString(std::string const& prefix) const {
     std::ostringstream os;
     os << prefix << "LinearCombinationKernel:" << std::endl;
     os << prefix << "..Kernels:" << std::endl;

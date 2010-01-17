@@ -85,8 +85,8 @@ afwMath::Kernel::Ptr afwMath::AnalyticKernel::clone() const {
 double afwMath::AnalyticKernel::computeImage(
     afwImage::Image<Pixel> &image,
     bool doNormalize,
-    double x,
-    double y
+    double xPos,
+    double yPos
 ) const {
     if (image.getDimensions() != this->getDimensions()) {
         std::ostringstream os;
@@ -95,7 +95,7 @@ double afwMath::AnalyticKernel::computeImage(
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
     if (this->isSpatiallyVarying()) {
-        this->setKernelParametersFromSpatialModel(x, y);
+        this->setKernelParametersFromSpatialModel(xPos, yPos);
     }
 
     double xOffset = -this->getCtrX();
@@ -131,7 +131,7 @@ afwMath::AnalyticKernel::KernelFunctionPtr afwMath::AnalyticKernel::getKernelFun
     return _kernelFunctionPtr->clone();
 }
 
-std::string afwMath::AnalyticKernel::toString(std::string prefix) const {
+std::string afwMath::AnalyticKernel::toString(std::string const& prefix) const {
     std::ostringstream os;
     os << prefix << "AnalyticKernel:" << std::endl;
     os << prefix << "..function: " << (_kernelFunctionPtr ? _kernelFunctionPtr->toString() : "None")

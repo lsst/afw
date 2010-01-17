@@ -146,7 +146,7 @@ using boost::serialization::make_nvp;
          *
          * @return a string representation of the function
          */
-        virtual std::string toString(void) const {
+        virtual std::string toString(std::string const&) const {
             std::stringstream os;
             os << "parameters: [ ";
             for (std::vector<double>::const_iterator i = _params.begin(); i != _params.end(); ++i) {
@@ -217,8 +217,8 @@ using boost::serialization::make_nvp;
     
         virtual ReturnT operator() (double x) const = 0;
 
-        virtual std::string toString(void) const {
-            return std::string("Function1: ") + Function<ReturnT>::toString();
+        virtual std::string toString(std::string const& prefix="") const {
+            return std::string("Function1: ") + Function<ReturnT>::toString(prefix);
         };
 
     private:
@@ -284,8 +284,8 @@ using boost::serialization::make_nvp;
     
         virtual ReturnT operator() (double x, double y) const = 0;
 
-        virtual std::string toString(void) const {
-            return std::string("Function2: ") + Function<ReturnT>::toString();
+        virtual std::string toString(std::string const& prefix="") const {
+            return std::string("Function2: ") + Function<ReturnT>::toString(prefix);
         };
 
     private:
@@ -313,7 +313,7 @@ using boost::serialization::make_nvp;
             return typename Function1<ReturnT>::Ptr(new NullFunction1()); }
 
     private:
-        ReturnT operator() (double x) const { return static_cast<ReturnT>(0); }
+        ReturnT operator() (double) const { return static_cast<ReturnT>(0); }
 
     private:
         friend class boost::serialization::access;
@@ -336,7 +336,7 @@ using boost::serialization::make_nvp;
             return typename Function2<ReturnT>::Ptr(new NullFunction2()); }
 
     private:
-        ReturnT operator() (double x, double y) const { return static_cast<ReturnT>(0); }
+        ReturnT operator() (double, double) const { return static_cast<ReturnT>(0); }
 
     private:
         friend class boost::serialization::access;

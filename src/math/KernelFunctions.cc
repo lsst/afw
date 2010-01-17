@@ -23,14 +23,14 @@ void
 lsst::afw::math::printKernel(
     lsst::afw::math::Kernel const &kernel,     ///< the kernel
     bool doNormalize,                   ///< if true, normalize kernel
-    double x,                           ///< x at which to evaluate kernel
-    double y,                           ///< y at which to evaluate kernel
+    double xPos,                        ///< x at which to evaluate kernel
+    double yPos,                        ///< y at which to evaluate kernel
     std::string pixelFmt                ///< format for pixel values
 ) {
     typedef lsst::afw::math::Kernel::Pixel Pixel;
 
     lsst::afw::image::Image<Pixel> kImage(kernel.getDimensions());
-    double kSum = kernel.computeImage(kImage, doNormalize, x, y);
+    double kSum = kernel.computeImage(kImage, doNormalize, xPos, yPos);
 
     for (int y = kImage.getHeight() - 1; y >= 0; --y) {
         for (lsst::afw::image::Image<Pixel>::const_x_iterator ptr = kImage.row_begin(y);

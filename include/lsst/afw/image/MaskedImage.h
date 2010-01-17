@@ -27,7 +27,7 @@ namespace afw {
 namespace image {
     namespace detail {
         /// A traits class for MaskedImage
-        struct MaskedImage_tag : basic_tag { };
+        struct MaskedImage_tag : public basic_tag { };
         /// A class used to identify classes that represent MaskedImage pixels
         struct MaskedImagePixel_tag { };
 
@@ -346,7 +346,7 @@ namespace image {
             /// A saved relative position, providing efficient access to neighbouring pixels
             class cached_location_t {
             public:
-                template<typename, typename, typename, template<typename> class> friend class MaskedImageLocatorBase;
+                //template<typename, typename, typename, template<typename> class> friend class MaskedImageLocatorBase;
                 template<typename, typename, typename> friend class const_MaskedImageLocator;
 
                 /// Create a cached_location_t that can be used to access pixels <tt>(x, y)</tt> away from \c loc
@@ -356,7 +356,7 @@ namespace image {
                          loc.template get<2>().cache_location(x, y)) {
                     ;
                 }
-            protected:
+                //protected:
                 IMVCachedLocation _imv;
             };
             /// Construct a MaskedImageLocator from %image/mask/variance locators

@@ -29,9 +29,9 @@ public:
     typedef boost::shared_ptr<const Detector> ConstPtr;
 
     explicit Detector(
-            Id id,                        //< Detector's Id
+            Id id,                        ///< Detector's Id
             bool hasTrimmablePixels=false, ///< true iff Detector has pixels that can be trimmed (e.g. a CCD)
-            double pixelSize=0.0
+            double pixelSize=0.0           ///< Size of pixels, mm
                      ) :
         _id(id), _isTrimmed(false), _allPixels(),
         _hasTrimmablePixels(hasTrimmablePixels), _pixelSize(pixelSize)
@@ -108,13 +108,13 @@ public:
     //
     /// Set the Detector's Defect list
     virtual void setDefects(
-            std::vector<boost::shared_ptr<afwImage::Defect> > const& defects ///< Defects in this detector
+            std::vector<boost::shared_ptr<afwImage::DefectBase> > const& defects ///< Defects in this detector
                            ) {
         _defects = defects;
     }
     /// Get the Detector's Defect list
-    std::vector<boost::shared_ptr<afwImage::Defect> > const& getDefects() const { return _defects; }
-    std::vector<boost::shared_ptr<afwImage::Defect> >& getDefects() { return _defects; }
+    std::vector<boost::shared_ptr<afwImage::DefectBase> > const& getDefects() const { return _defects; }
+    std::vector<boost::shared_ptr<afwImage::DefectBase> >& getDefects() { return _defects; }
 protected:
     afwImage::BBox& getAllTrimmedPixels() {
         return _hasTrimmablePixels ? _trimmedAllPixels : _allPixels;
@@ -131,11 +131,15 @@ private:
     afwGeom::Extent2D _size;            // Size in mm of this Detector
     afwImage::BBox _trimmedAllPixels;   // Bounding box of all the Detector's pixels after bias trimming
 
-    std::vector<afwImage::Defect::Ptr> _defects; // Defects in this detector
+    std::vector<afwImage::DefectBase::Ptr> _defects; // Defects in this detector
 };
 
 namespace detail {
-    afwImage::BBox rotateBBoxBy90(afwImage::BBox const& bbox, afwGeom::Extent2I const& dimensions, int n90);
+    afwImage::BBox rotateBBoxBy90(
+            afwImage::BBox const& bbox, ///< the BBox to rotate
+            afwGeom::Extent2I const& dimensions, ///< The size of the region wherein bbox dwells
+            int n90                              ///< number of 90-degree anti-clockwise turns to make
+                                 );
 }
     
 }}}

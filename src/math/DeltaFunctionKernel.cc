@@ -47,9 +47,9 @@ afwMath::Kernel::Ptr afwMath::DeltaFunctionKernel::clone() const {
 
 double afwMath::DeltaFunctionKernel::computeImage(
     afwImage::Image<Pixel> &image,
-    bool doNormalize,
-    double x,
-    double y
+    bool,
+    double,
+    double
 ) const {
     if (image.getDimensions() != this->getDimensions()) {
         std::ostringstream os;
@@ -67,7 +67,7 @@ double afwMath::DeltaFunctionKernel::computeImage(
     return 1;
 }
 
-std::string afwMath::DeltaFunctionKernel::toString(std::string prefix) const {
+std::string afwMath::DeltaFunctionKernel::toString(std::string const& prefix) const {
     const int pixelX = getPixel().getX(); // active pixel in Kernel
     const int pixelY = getPixel().getY();
 

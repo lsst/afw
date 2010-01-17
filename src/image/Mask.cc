@@ -590,11 +590,11 @@ typename image::Mask<MaskPixelT>::MaskPlaneDict image::Mask<MaskPixelT>::parseMa
             if (plane != newDict.end() && planeId != plane->second) {
                throw LSST_EXCEPT(ex::RuntimeErrorException, "File specifies plane " + planeName + " twice"); 
             }
-            for (MaskPlaneDict::const_iterator i = newDict.begin(); i != newDict.end(); ++i) {
-                if (planeId == i->second) {
+            for (MaskPlaneDict::const_iterator j = newDict.begin(); j != newDict.end(); ++j) {
+                if (planeId == j->second) {
                     throw LSST_EXCEPT(ex::RuntimeErrorException,
                                       (boost::format("File specifies plane %s has same value (%d) as %s") %
-                                          planeName % planeId % i->first).str());
+                                          planeName % planeId % j->first).str());
                 }
             }
             // build new entry

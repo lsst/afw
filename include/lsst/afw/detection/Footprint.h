@@ -298,7 +298,7 @@ public:
      * calculates a per-footprint quantity
      */
     virtual void reset() {}
-    virtual void reset(Footprint const& foot) {}
+    virtual void reset(Footprint const&) {}
 
     /**
      * \brief Apply operator() to each pixel in the Footprint
@@ -360,7 +360,7 @@ template<typename ImagePixelT, typename MaskPixelT>
 typename detection::FootprintSet<ImagePixelT>::Ptr makeFootprintSet(
         image::Image<ImagePixelT> const& img,
         Threshold const& threshold,
-        std::string const& planeName = "",
+        std::string const& = "",
         int const npixMin=1) {
     return typename detection::FootprintSet<ImagePixelT, MaskPixelT>::Ptr(new FootprintSet<ImagePixelT, MaskPixelT>(img, threshold, npixMin));
 }

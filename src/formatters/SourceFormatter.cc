@@ -152,7 +152,7 @@ void form::SourceVectorFormatter::insertRow(T & db, Source const & d) {
     else db.setColumnToNull("raPeak");
         
     if (!d.isNull(det::DEC_PEAK))    
-        db. template setColumn("declPeak", d._decPeak);
+        db. template setColumn<double>("declPeak", d._decPeak);
     else db.setColumnToNull("declPeak");
     
     if (!d.isNull(det::X_ASTROM))
@@ -359,7 +359,7 @@ void form::SourceVectorFormatter::setupFetch(DbStorage & db, Source & d) {
 template <class Archive>
 void form::SourceVectorFormatter::delegateSerialize(
     Archive & archive,
-    unsigned int const version,
+    unsigned int const,
     Persistable * persistable
 ) {  
     PersistableSourceVector * p = dynamic_cast<PersistableSourceVector*>(persistable);

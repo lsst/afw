@@ -62,7 +62,7 @@ lsst::daf::persistence::FormatterRegistration MaskFormatter<MaskPixelT>::registr
 
 template <typename MaskPixelT>
 MaskFormatter<MaskPixelT>::MaskFormatter(
-    lsst::pex::policy::Policy::Ptr policy) :
+    lsst::pex::policy::Policy::Ptr) :
     lsst::daf::persistence::Formatter(typeid(*this)) {
 }
 
@@ -74,7 +74,7 @@ template <typename MaskPixelT>
 void MaskFormatter<MaskPixelT>::write(
     Persistable const* persistable,
     Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr additionalData) {
+    lsst::daf::base::PropertySet::Ptr) {
     execTrace("MaskFormatter write start");
     Mask<MaskPixelT> const* ip =
         dynamic_cast<Mask<MaskPixelT> const*>(persistable);
@@ -103,7 +103,7 @@ void MaskFormatter<MaskPixelT>::write(
 template <typename MaskPixelT>
 Persistable* MaskFormatter<MaskPixelT>::read(
     Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr additionalData) {
+    lsst::daf::base::PropertySet::Ptr) {
     execTrace("MaskFormatter read start");
     if (typeid(*storage) == typeid(BoostStorage)) {
         execTrace("MaskFormatter read BoostStorage");
@@ -125,9 +125,9 @@ Persistable* MaskFormatter<MaskPixelT>::read(
 
 template <typename MaskPixelT>
 void MaskFormatter<MaskPixelT>::update(
-    Persistable* persistable,
-    Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr additionalData) {
+    Persistable*,
+    Storage::Ptr,
+    lsst::daf::base::PropertySet::Ptr) {
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unexpected call to update for Mask");
 }
 

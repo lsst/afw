@@ -65,8 +65,8 @@ afwMath::Kernel::Ptr afwMath::FixedKernel::clone() const {
 double afwMath::FixedKernel::computeImage(
     afwImage::Image<Pixel> &image,
     bool doNormalize,
-    double x,
-    double y
+    double,
+    double
 ) const {
     if (image.getDimensions() != this->getDimensions()) {
         std::ostringstream os;
@@ -97,7 +97,7 @@ double afwMath::FixedKernel::computeImage(
     return imSum;
 }
 
-std::string afwMath::FixedKernel::toString(std::string prefix) const {
+std::string afwMath::FixedKernel::toString(std::string const& prefix) const {
     std::ostringstream os;
     os << prefix << "FixedKernel:" << std::endl;
     os << prefix << "..sum: " << _sum << std::endl;

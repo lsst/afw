@@ -403,7 +403,7 @@ protected:
      * \internal Serialize field values, and null statuses          
      */    
     template <class Archive> 
-    void serialize(Archive & ar, unsigned int const version) {
+    void serialize(Archive & ar, unsigned int const) {
         ar & _id;
         ar & _ampExposureId;
         ar & _filterId;

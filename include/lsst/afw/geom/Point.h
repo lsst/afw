@@ -67,12 +67,12 @@ public:
     CoordinateExpr<N> operator<=(T scalar) const { return *this <= Point(scalar); }
     CoordinateExpr<N> operator>(T scalar) const { return *this > Point(scalar); }
     CoordinateExpr<N> operator>=(T scalar) const { return *this >= Point(scalar); }
-    friend CoordinateExpr<N> operator==(T scalar, Point const & other) { Point(scalar) == other; }
-    friend CoordinateExpr<N> operator!=(T scalar, Point const & other) { Point(scalar) != other; }
-    friend CoordinateExpr<N> operator<(T scalar, Point const & other) { Point(scalar) < other; }
-    friend CoordinateExpr<N> operator<=(T scalar, Point const & other) { Point(scalar) <= other; }
-    friend CoordinateExpr<N> operator>(T scalar, Point const & other) { Point(scalar) > other; }
-    friend CoordinateExpr<N> operator>=(T scalar, Point const & other) { Point(scalar) >= other; }
+    friend CoordinateExpr<N> operator==(T scalar, Point const & other) { return Point(scalar) == other; }
+    friend CoordinateExpr<N> operator!=(T scalar, Point const & other) { return Point(scalar) != other; }
+    friend CoordinateExpr<N> operator<(T scalar, Point const & other) { return Point(scalar) < other; }
+    friend CoordinateExpr<N> operator<=(T scalar, Point const & other) { return Point(scalar) <= other; }
+    friend CoordinateExpr<N> operator>(T scalar, Point const & other) { return Point(scalar) > other; }
+    friend CoordinateExpr<N> operator>=(T scalar, Point const & other) { return Point(scalar) >= other; }
     //@}
 
     /**

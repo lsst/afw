@@ -68,12 +68,16 @@ lsst::daf::persistence::FormatterRegistration ImageFormatter<ImagePixelT>::regis
 
 template <typename ImagePixelT>
 ImageFormatter<ImagePixelT>::ImageFormatter(
-    lsst::pex::policy::Policy::Ptr policy) :
-    lsst::daf::persistence::Formatter(typeid(*this)) {
+        lsst::pex::policy::Policy::Ptr
+                                           )
+    :
+    lsst::daf::persistence::Formatter(typeid(*this))
+{
 }
 
 template <typename ImagePixelT>
-ImageFormatter<ImagePixelT>::~ImageFormatter(void) {
+ImageFormatter<ImagePixelT>::~ImageFormatter(void)
+{
 }
 
 namespace {
@@ -91,7 +95,7 @@ template <typename ImagePixelT>
 void ImageFormatter<ImagePixelT>::write(
     Persistable const* persistable,
     Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr additionalData) {
+    lsst::daf::base::PropertySet::Ptr) {
     checkCast(persistable);
 
     execTrace("ImageFormatter write start");
@@ -161,7 +165,7 @@ Persistable* ImageFormatter<ImagePixelT>::read(Storage::Ptr storage,
             int height = additionalData->get<int>("height");
             box = afwImg::BBox(afwImg::PointI(llcX, llcY), width, height);
         }
-        lsst::daf::base::PropertySet::Ptr metadata();
+        lsst::daf::base::PropertySet::Ptr metadata;
 
         Image<ImagePixelT>* ip = new Image<ImagePixelT>(fits->getPath(), fits->getHdu(), lsst::daf::base::PropertySet::Ptr(), box);
         // \note We're throwing away the metadata
@@ -176,15 +180,15 @@ Persistable* ImageFormatter<ImagePixelT>::read(Storage::Ptr storage,
 
 template <typename ImagePixelT>
 void ImageFormatter<ImagePixelT>::update(
-    Persistable* persistable,
-    Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr additionalData) {
+    Persistable*,
+    Storage::Ptr,
+    lsst::daf::base::PropertySet::Ptr) {
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unexpected call to update for Image");
 }
 
 template <typename ImagePixelT> template <class Archive>
 void ImageFormatter<ImagePixelT>::delegateSerialize(
-    Archive& ar, int const version, Persistable* persistable) {
+    Archive& ar, int const, Persistable* persistable) {
     execTrace("ImageFormatter delegateSerialize start");
     Image<ImagePixelT>* ip = dynamic_cast<Image<ImagePixelT>*>(persistable);
     if (ip == 0) {
