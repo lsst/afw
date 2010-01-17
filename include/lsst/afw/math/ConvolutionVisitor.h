@@ -68,7 +68,7 @@ public:
      */
     enum TypeFlag { 
         IMAGE=0x1, 
-        FOURIER=0x2, 
+        FOURIER=0x2
         //MULTIGAUSSIAN=0x4, 
         //SHAPELET=0x8 
     };

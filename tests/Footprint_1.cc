@@ -48,7 +48,7 @@ public:
 
     // method called for each pixel by apply()
     void operator()(typename ImageT::xy_locator loc, // locator pointing at the pixel
-                    int x, int y
+                    int, int
                    ) {
         _counts += *loc;
     }

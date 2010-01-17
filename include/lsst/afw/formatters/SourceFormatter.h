@@ -125,7 +125,7 @@ private:
         SKY_ERR,
         FLAG_FOR_ASSOCIATION,
         FLAG_FOR_DETECTION,
-        FLAG_FOR_WCS,   
+        FLAG_FOR_WCS
     };
 
 

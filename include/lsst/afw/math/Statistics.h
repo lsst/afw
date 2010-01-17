@@ -46,7 +46,7 @@ enum Property {
     VARIANCECLIP = 0x200,               ///< estimate sample 3 sigma clipped variance
     MIN = 0x400,                        ///< estimate sample minimum
     MAX = 0x800,                        ///< estimate sample maximum
-    SUM = 0x1000,                       ///< find sum of pixels in the image
+    SUM = 0x1000                        ///< find sum of pixels in the image
 };
 
     
@@ -236,7 +236,7 @@ class MaskImposter {
 public:
     typedef infinite_iterator<ValueT> x_iterator;
     MaskImposter(ValueT val = 0) { _val[0] = val; }
-    x_iterator row_begin(int dummyCol) const { return x_iterator(_val); }
+    x_iterator row_begin(int) const { return x_iterator(_val); }
 private:
     ValueT _val[1];
 };
@@ -335,8 +335,8 @@ public:
     explicit ImageImposter(ImageImposter<ValueT> const &img) : _v(img._getVector()) {}
 
     // The methods we'll use in Statistics
-    x_iterator row_begin(int dummyCol) const { return _v.begin(); }
-    x_iterator row_end(int dummyCol) const { return _v.end(); }
+    x_iterator row_begin(int) const { return _v.begin(); }
+    x_iterator row_end(int) const { return _v.end(); }
     int getWidth() const { return _v.size(); }
     int getHeight() const { return 1; }
     

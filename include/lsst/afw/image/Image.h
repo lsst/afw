@@ -40,7 +40,7 @@ namespace image {
         /// Base %image tag
         struct basic_tag { };
         /// tag for an Image
-        struct Image_tag : basic_tag { };
+        struct Image_tag : public basic_tag { };
         /// traits class for image categories
         template<typename ImageT>
         struct image_traits {

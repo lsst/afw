@@ -410,7 +410,7 @@ public:
          */
         const int ttype = cfitsio::ttypeFromBitpix(BITPIX);
         for (int y = 0; y != view.height(); ++y) {
-            int status = 0;                     // cfitsio function return status
+            status = 0;                 // cfitsio function return status
             if (fits_write_img(_fd.get(), ttype, 1 + y*view.width(), view.width(), view.row_begin(y), &status) != 0) {
                 throw LSST_EXCEPT(FitsException,
                                   cfitsio::err_msg(_fd.get(), status, boost::format("Writing row %d") % y));
