@@ -95,16 +95,6 @@ typename image::MaskedImage<PixelT>::Ptr computeMaskedImageStack(
     typedef typename image::MaskedImage<PixelT>::x_iterator x_iterator;
     std::vector<x_iterator> rows;
     rows.reserve(images.size());
-    for (int y = 0; y != imgStack->getHeight(); ++y) {
-        for (unsigned int i = 0; i < images.size(); ++i) {
-            x_iterator ptr = images[i]->row_begin(y);
-            if (y == 0) {
-                rows.push_back(ptr);
-            } else {
-                rows[i] = ptr;
-            }
-        }
-    }
 
     // get a list to contain a pixel from x,y for each image
     math::MaskedVector<PixelT> pixelSet(images.size());
@@ -120,6 +110,16 @@ typename image::MaskedImage<PixelT>::Ptr computeMaskedImageStack(
     // loop over x,y ... the loop over the stack to fill pixelSet
     // - get the stats on pixelSet and put the value in the output image at x,y
     for (int y = 0; y != imgStack->getHeight(); ++y) {
+
+        for (unsigned int i = 0; i < images.size(); ++i) {
+            x_iterator ptr = images[i]->row_begin(y);
+            if (y == 0) {
+                rows.push_back(ptr);
+            } else {
+                rows[i] = ptr;
+            }
+        }
+
         for (x_iterator ptr = imgStack->row_begin(y), end = imgStack->row_end(y); ptr != end; ++ptr) {
             typename math::MaskedVector<PixelT>::iterator psPtr = pixelSet.begin();
             image::MaskPixel msk(0x0);
