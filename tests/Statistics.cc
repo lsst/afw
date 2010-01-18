@@ -48,15 +48,7 @@ BOOST_AUTO_TEST_CASE(StatisticsBasic) {
 
     {
         math::Statistics stats = math::makeStatistics(img, math::NPOINT);
-        try {
-            stats.getValue(math::MEAN);
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
-                              "Image has no valid pixels; mean is undefined.");
-        } catch (lsst::pex::exceptions::InvalidParameterException &e) {
-            std::cout << "CCCC " << typeid(e).name() << std::endl;
-        }
-        std::cout << "aaaaaaaa\n";
-        //BOOST_CHECK_THROW(stats.getValue(math::MEAN), lsst::pex::exceptions::InvalidParameterException);
+        BOOST_CHECK_THROW(stats.getValue(math::MEAN), lsst::pex::exceptions::InvalidParameterException);
     }
 
     // ===============================================================================

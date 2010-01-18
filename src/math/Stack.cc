@@ -60,20 +60,24 @@ typename image::MaskedImage<PixelT>::Ptr computeMaskedImageStack(
                              std::vector<PixelT> const &wvector
                                                           ) {
 
-    if (images.empty()) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "Please provide at least one image");
-    }
-
     // create the image to be returned
     typedef image::MaskedImage<PixelT> ImageT;
     typename ImageT::Ptr imgStack(new ImageT(images[0]->getDimensions()));
+
     
     // get a list of row_begin iterators
     typedef typename image::MaskedImage<PixelT>::x_iterator x_iterator;
     std::vector<x_iterator> rows;
     rows.reserve(images.size());
-    for (unsigned int i = 0; i < images.size(); ++i) {
-        rows.push_back(images[i]->row_begin(0));
+    for (int y = 0; y != imgStack->getHeight(); ++y) {
+        for (unsigned int i = 0; i < images.size(); ++i) {
+            x_iterator ptr = images[i]->row_begin(y);
+            if (y == 0) {
+                rows.push_back(ptr);
+            } else {
+                rows[i] = ptr;
+            }
+        }
     }
 
     // get a list to contain a pixel from x,y for each image
@@ -90,15 +94,9 @@ typename image::MaskedImage<PixelT>::Ptr computeMaskedImageStack(
     // loop over x,y ... the loop over the stack to fill pixelSet
     // - get the stats on pixelSet and put the value in the output image at x,y
     for (int y = 0; y != imgStack->getHeight(); ++y) {
-        for (unsigned int i = 0; i < images.size(); ++i) {
-            rows[i] = images[i]->row_begin(y);
-        }
-
-        int x = 0;                      // RHL
         for (x_iterator ptr = imgStack->row_begin(y), end = imgStack->row_end(y); ptr != end; ++ptr) {
             typename math::MaskedVector<PixelT>::iterator psPtr = pixelSet.begin();
             image::MaskPixel msk(0x0);
-
             for (unsigned int i = 0; i < images.size(); ++i, ++psPtr) {
                 image::MaskPixel mskTmp = rows[i].mask();
                 psPtr.value() = rows[i].image();
@@ -108,11 +106,6 @@ typename image::MaskedImage<PixelT>::Ptr computeMaskedImageStack(
                 if (! UseVariance) {
                     psPtr.variance() = rows[i].variance();
                 }
-
-                if (x == 130 && y == 3900) {
-                    printf("(%d, %d) %g 0x%x\n", x, y, psPtr.value(), mskTmp);
-                }
-                ++x;
 
                 msk |= mskTmp;
                 
@@ -172,7 +165,7 @@ typename image::MaskedImage<PixelT>::Ptr math::statisticsStack(
  *
  * stack Images
  *
- * All the work is done in the function computeImageStack.
+ * All the work is done in the function comuteImageStack.
  * A boolean template variable has been used to allow the compiler to generate the different instantiations
  *   to handle cases when we are, or are not, dealing with the variance plane.
  *
@@ -191,10 +184,6 @@ typename image::Image<PixelT>::Ptr computeImageStack(
         math::StatisticsControl const& sctrl,
         std::vector<PixelT> const &wvector
                                                         ) {
-
-    if (images.empty()) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "Please provide at least one image");
-    }
 
     // create the image to be returned
     typedef image::Image<PixelT> ImageT;
