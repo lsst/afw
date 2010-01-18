@@ -59,11 +59,6 @@ def trimCcd(ccd, ccdImage=""):
 class CameraGeomTestCase(unittest.TestCase):
     """A test case for camera geometry"""
 
-    def assertEqualPoint(self, lhs, rhs):
-        """Workaround the Point2D logical operator returning a Point not a bool"""
-        if (lhs != rhs)[0] or (lhs != rhs)[1]:
-            self.assertTrue(False, "%s != %s" % (lhs, rhs))
-
     def setUp(self):
         CameraGeomTestCase.ampSerial = [0] # an array so we pass the value by reference
 
@@ -146,8 +141,8 @@ class CameraGeomTestCase(unittest.TestCase):
         corr = afwGeom.Extent2I(afwGeom.makePointI(corr[0], corr[1]))
         pix += corr
         
-        self.assertEqualPoint(ccd.getPixelFromPosition(pos) + corr, pix)
-        self.assertEqualPoint(ccd.getPositionFromPixel(pix), pos)
+        self.assertEqual(ccd.getPixelFromPosition(pos) + corr, pix)
+        self.assertEqual(ccd.getPositionFromPixel(pix), pos)
         #
         # Trim the CCD and try again
         #
@@ -170,8 +165,8 @@ class CameraGeomTestCase(unittest.TestCase):
         pix = afwGeom.makePointI(100, 204) # wrt LLC
         pos = afwGeom.makePointD(0.0, 1.02) # wrt chip centre
         
-        self.assertEqualPoint(ccd.getPixelFromPosition(pos), pix)
-        self.assertEqualPoint(ccd.getPositionFromPixel(pix), pos)
+        self.assertEqual(ccd.getPixelFromPosition(pos), pix)
+        self.assertEqual(ccd.getPositionFromPixel(pix), pos)
 
     def testRotatedCcd(self):
         """Test if we can build a Ccd out of Amps"""
@@ -242,8 +237,8 @@ class CameraGeomTestCase(unittest.TestCase):
             pix = afwGeom.makePointI(ix, iy) # wrt raft LLC
             pos = afwGeom.makePointD(x, y) # wrt raft center
 
-            self.assertEqualPoint(raft.getPixelFromPosition(pos), pix)
-            self.assertEqualPoint(raft.getPositionFromPixel(pix), pos)
+            self.assertEqual(raft.getPixelFromPosition(pos), pix)
+            self.assertEqual(raft.getPositionFromPixel(pix), pos)
         
     def testCamera(self):
         """Test if we can build a Camera out of Rafts"""
@@ -290,8 +285,8 @@ class CameraGeomTestCase(unittest.TestCase):
             pix = afwGeom.makePointI(ix, iy) # wrt raft LLC
             pos = afwGeom.makePointD(x, y) # wrt raft center
             
-            self.assertEqualPoint(camera.getPixelFromPosition(pos), pix)
-            self.assertEqualPoint(camera.getPositionFromPixel(pix), pos)
+            self.assertEqual(camera.getPixelFromPosition(pos), pix)
+            self.assertEqual(camera.getPositionFromPixel(pix), pos)
 
     def testDefectBase(self):
         """Test DefectBases"""
