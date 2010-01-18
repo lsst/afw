@@ -34,15 +34,15 @@ double const IQ_TO_STDEV = 0.741301109252802;   // 1 sigma in units of iqrange (
 class AlwaysTrue {
 public:
     template<typename T>
-    bool operator()(T val) const {
+    bool operator()(T) const {
         return true;
     }
     template<typename Ta, typename Tb>
-    bool operator()(Ta a, Tb b) const {
+    bool operator()(Ta, Tb) const {
         return true;
     }
     template<typename Ta, typename Tb, typename Tc>
-    bool operator()(Ta a, Tb b, Tc c) const {
+    bool operator()(Ta, Tb, Tc) const {
         return true;
     }
 };
@@ -53,15 +53,15 @@ public:
 class AlwaysFalse {
 public:
     template<typename T>
-    bool operator()(T val) const {
+    bool operator()(T) const {
         return false;
     }
     template<typename Ta, typename Tb>
-    bool operator()(Ta a, Tb b) const {
+    bool operator()(Ta, Tb) const {
         return false;
     }
     template<typename Ta, typename Tb, typename Tc>
-    bool operator()(Ta a, Tb b, Tc c) const {
+    bool operator()(Ta, Tb, Tc) const {
         return false;
     }
 };
@@ -131,11 +131,12 @@ typedef AlwaysFalse     AlwaysF;
  */
 template<typename IsFinite, typename ImageT, typename MaskT, typename VarianceT>
 boost::shared_ptr<std::vector<typename ImageT::Pixel> > afwMath::Statistics::_makeVectorCopy(
-    ImageT const &img,
-    MaskT const &msk,
-    VarianceT const &var,
-    int const flags
-                                                                                         ) {
+        ImageT const &img,
+        MaskT const &msk,
+        VarianceT const &,
+        int const
+                                                                                         )
+{
 
     boost::shared_ptr<std::vector<typename ImageT::Pixel> > imgcp(new std::vector<typename ImageT::Pixel>(0));
     for (int i_y = 0; i_y < img.getHeight(); ++i_y) {
@@ -248,12 +249,11 @@ template<typename IsFinite,
 afwMath::Statistics::SumReturn afwMath::Statistics::_sumImage(ImageT const &img,
                                                               MaskT const &msk,
                                                               VarianceT const &var,
-                                                              int const flags,
+                                                              int const,
                                                               int const nCrude,
                                                               int const stride,
                                                               double const meanCrude,
                                                               double const cliplimit) {
-    
     int n = 0;
     double wsum = 0.0;
     double sum = 0, sumx2 = 0;
@@ -711,11 +711,11 @@ namespace math {
     
 template<>
 Statistics::Statistics(
-    afwImage::Mask<afwImage::MaskPixel> const& msk,  ///< Mask whose properties we want
-    afwImage::Mask<afwImage::MaskPixel> const& dmsk, ///< A mask (currently dummy) to control which pixels
-    afwImage::Mask<afwImage::MaskPixel> const& dvar, ///< A variance (currently dummy)
-    int const flags,                           ///< Describe what we want to calculate
-    StatisticsControl const& sctrl             ///< Control how things are calculated
+    afwImage::Mask<afwImage::MaskPixel> const& msk, ///< Mask whose properties we want
+    afwImage::Mask<afwImage::MaskPixel> const&,     ///< A mask to control which pixels
+    afwImage::Mask<afwImage::MaskPixel> const&,     ///< A variance
+    int const flags,                                ///< Describe what we want to calculate
+    StatisticsControl const& sctrl                  ///< Control how things are calculated
                       ) :
     _flags(flags),
     _mean(NaN), _variance(NaN), _min(NaN), _max(NaN),

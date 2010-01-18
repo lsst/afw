@@ -40,7 +40,7 @@ namespace image {
         /// Base %image tag
         struct basic_tag { };
         /// tag for an Image
-        struct Image_tag : basic_tag { };
+        struct Image_tag : public basic_tag { };
         /// traits class for image categories
         template<typename ImageT>
         struct image_traits {
@@ -410,7 +410,7 @@ namespace image {
         explicit DecoratedImage(const std::pair<int, int> dimensions);
         explicit DecoratedImage(typename Image<PixelT>::Ptr rhs);
         DecoratedImage(DecoratedImage const& rhs, const bool deep=false);
-        explicit DecoratedImage(std::string const& fileName, const int hdu=0);
+        explicit DecoratedImage(std::string const& fileName, const int hdu=0, BBox const& bbox=BBox());
 
         DecoratedImage& operator=(const DecoratedImage& image);
 

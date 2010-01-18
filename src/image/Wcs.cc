@@ -252,7 +252,6 @@ lsst::afw::image::Wcs::Wcs(
     _wcsfixCtrl = 2;
     _wcshdrCtrl = 2;
 
-    std::string metadataStr = lsst::afw::formatters::formatFitsProperties(fitsMetadata);
     int nCards = lsst::afw::formatters::countFitsHeaderCards(fitsMetadata);
     if (nCards <= 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
@@ -263,6 +262,7 @@ lsst::afw::image::Wcs::Wcs(
 #if OLD
     // wcspih takes a non-const char* (because some versions of ctrl modify the string)
     // but we cannot afford to allow that to happen, so make a copy...
+    std::string metadataStr = lsst::afw::formatters::formatFitsProperties(fitsMetadata);
     int len = metadataStr.size();
     boost::shared_ptr<char> hdrString = boost::shared_ptr<char>(new char[len + 1]);
     std::strcpy(hdrString.get(), metadataStr.c_str());
@@ -873,7 +873,7 @@ image::PointI getImageXY0FromMetadata(std::string const& wcsName,            ///
             metadata->remove("CUNIT1" + wcsName);
             metadata->remove("CUNIT2" + wcsName);
         }
-    } catch(lsst::pex::exceptions::NotFoundException &e) {
+    } catch(lsst::pex::exceptions::NotFoundException &) {
         ;                               // OK, not present
     }
 

@@ -26,7 +26,7 @@ namespace math {
 enum UndersampleStyle {
     THROW_EXCEPTION,
     REDUCE_INTERP_ORDER,
-    INCREASE_NXNYSAMPLE,
+    INCREASE_NXNYSAMPLE
 };
 UndersampleStyle stringToUndersampleStyle(std::string const style);
     

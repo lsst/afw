@@ -170,16 +170,14 @@ inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
 ) {
     typedef typename std::vector<lsst::afw::math::Kernel::Pixel>::const_iterator k_iter;
 
-    std::vector<lsst::afw::math::Kernel::Pixel>::const_iterator kernelYIter = kernelYList.begin();
-
     typedef typename OutImageT::SinglePixel OutT;
     OutT outValue = 0;
-    for (k_iter kernelYIter = kernelYList.begin(), end = kernelYList.end();
-         kernelYIter != end; ++kernelYIter) {
+    for (k_iter kernelYIter = kernelYList.begin(), yEnd = kernelYList.end();
+         kernelYIter != yEnd; ++kernelYIter) {
 
         OutT outValueY = 0;
-        for (k_iter kernelXIter = kernelXList.begin(), end = kernelXList.end();
-             kernelXIter != end; ++kernelXIter, ++imageLocator.x()) {
+        for (k_iter kernelXIter = kernelXList.begin(), xEnd = kernelXList.end();
+             kernelXIter != xEnd; ++kernelXIter, ++imageLocator.x()) {
             typename lsst::afw::math::Kernel::Pixel const kValX = *kernelXIter;
             if (kValX != 0) {
                 outValueY += *imageLocator*kValX;

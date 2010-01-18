@@ -51,7 +51,7 @@ dafPersist::FormatterRegistration afwForm::WcsFormatter::registration(
     "Wcs", typeid(afwImg::Wcs), createInstance);
 
 afwForm::WcsFormatter::WcsFormatter(
-    pexPolicy::Policy::Ptr policy) :
+    pexPolicy::Policy::Ptr) :
     dafPersist::Formatter(typeid(*this)) {
 }
 
@@ -61,7 +61,7 @@ afwForm::WcsFormatter::~WcsFormatter(void) {
 void afwForm::WcsFormatter::write(
     dafBase::Persistable const* persistable,
     dafPersist::Storage::Ptr storage,
-    dafBase::PropertySet::Ptr additionalData) {
+    dafBase::PropertySet::Ptr) {
     execTrace("WcsFormatter write start");
     afwImg::Wcs const* ip =
         dynamic_cast<afwImg::Wcs const*>(persistable);
@@ -104,9 +104,9 @@ dafBase::Persistable* afwForm::WcsFormatter::read(
 }
 
 void afwForm::WcsFormatter::update(
-    dafBase::Persistable* persistable,
-    dafPersist::Storage::Ptr storage,
-    dafBase::PropertySet::Ptr additionalData) {
+    dafBase::Persistable*,
+    dafPersist::Storage::Ptr,
+    dafBase::PropertySet::Ptr) {
     throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Unexpected call to update for Wcs");
 }
 
@@ -203,7 +203,7 @@ afwForm::WcsFormatter::generatePropertySet(afwImg::Wcs const& wcs) {
 
 template <class Archive>
 void afwForm::WcsFormatter::delegateSerialize(
-    Archive& ar, int const version, dafBase::Persistable* persistable) {
+    Archive& ar, int const, dafBase::Persistable* persistable) {
     execTrace("WcsFormatter delegateSerialize start");
     afwImg::Wcs* ip = dynamic_cast<afwImg::Wcs*>(persistable);
     if (ip == 0) {

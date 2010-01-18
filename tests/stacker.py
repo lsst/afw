@@ -20,6 +20,12 @@ import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions as pexEx
+import lsst.afw.display.ds9 as ds9
+
+try:
+    type(display)
+except:
+    display = False
 
 ######################################
 # main body of code
@@ -109,7 +115,27 @@ class StackTestCase(unittest.TestCase):
             
         utilsTests.assertRaisesLsstCpp(self, pexEx.InvalidParameterException, tst)
 
+
+    def testReturnInputs(self):
+        """ Make sure that a single file put into the stacker is returned unscathed"""
+
+        imgList = afwImage.vectorMaskedImageF()
         
+        img = afwImage.MaskedImageF(10, 20)
+        for y in range(img.getHeight()):
+            simg = img.Factory(img, afwImage.BBox(afwImage.PointI(0, y), img.getWidth(), 1))
+            simg.set(y)
+
+        imgList.push_back(img)
+
+        imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN)
+
+        if display:
+            ds9.mtv(img, frame=1, title="input")
+            ds9.mtv(imgStack, frame=2, title="stack")
+
+        self.assertEqual(img.get(0, 0)[0], imgStack.get(0, 0)[0])
+
 #################################################################
 # Test suite boiler plate
 #################################################################

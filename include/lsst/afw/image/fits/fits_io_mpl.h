@@ -31,7 +31,7 @@ public:
                         lsst::afw::image::BBox const& bbox
                        ) : _file(file), _img(img), _metadata(metadata), _hdu(hdu), _bbox(bbox) { }
 
-    void operator()(ImageT x) {         // read directly into the desired type if the file's the same type
+    void operator()(ImageT) {           // read directly into the desired type if the file's the same type
         try {
             lsst::afw::image::fits_read_image(_file, _img, _metadata, _hdu, _bbox);
             throw ExceptionT();         // signal that we've succeeded
@@ -40,7 +40,7 @@ public:
         }
     }
 
-    template<typename U> void operator()(U x) { // read and convert into the desired type
+    template<typename U> void operator()(U) { // read and convert into the desired type
         try {
             U img;
             lsst::afw::image::fits_read_image(_file, img, _metadata, _hdu, _bbox);
@@ -72,7 +72,7 @@ bool fits_read_image(std::string const& file, ImageT& img,
                     ) {
     try {
         boost::mpl::for_each<fits_img_types>(try_fits_read_image<ImageT, found_type>(file, img, metadata, hdu, bbox));
-    } catch (found_type &e) {
+    } catch (found_type &) {
         return true;                    // success
     }
 

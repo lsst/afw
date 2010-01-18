@@ -22,6 +22,7 @@ Basic routines to talk to lsst::afw::image classes
 #include "lsst/pex/policy.h"
 #include "lsst/afw/image.h"
 #include "lsst/afw/geom.h"
+#include "lsst/afw/image/Defect.h"
 
 #include "boost/cstdint.hpp"
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_IMAGE_NUMPY_ARRAY_API
@@ -251,3 +252,10 @@ SWIG_SHARED_PTR_DERIVED(Exposure##TYPE, lsst::daf::data::LsstBase, lsst::afw::im
 %exposure(F, float);
 %exposure(D, double);
 
+/************************************************************************************************************/
+
+SWIG_SHARED_PTR(DefectPtr, lsst::afw::image::DefectBase);
+
+%include "lsst/afw/image/Defect.h"
+
+%template(DefectSet) std::vector<boost::shared_ptr<lsst::afw::image::DefectBase> >;

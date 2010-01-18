@@ -145,7 +145,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
             metadata->set("CRPIX1", metadata->getAsDouble("CRPIX1") - bbox.getX0());
             metadata->set("CRPIX2", metadata->getAsDouble("CRPIX2") - bbox.getY0());
         }
-        catch (lsst::pex::exceptions::NotFoundException &e) {
+        catch (lsst::pex::exceptions::NotFoundException &) {
             ; // OK, no WCS is present in header
         }
     }

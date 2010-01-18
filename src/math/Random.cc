@@ -180,7 +180,7 @@ math::Random::Random(lsst::pex::policy::Policy::Ptr const policy)
     std::string const seed(policy->getString("rngSeed"));
     try {
         _seed = boost::lexical_cast<unsigned long>(seed);
-    } catch(boost::bad_lexical_cast & b) {
+    } catch(boost::bad_lexical_cast &) {
         throw LSST_EXCEPT(ex::RuntimeErrorException,
         (boost::format("Invalid \"rngSeed\" policy value: \"%1%\"") % seed).str());
     }

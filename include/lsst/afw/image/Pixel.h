@@ -38,7 +38,7 @@ template <typename> struct variance_plus;
 
 /// A single %pixel of the same type as a MaskedImage
 template<typename _ImagePixelT, typename _MaskPixelT, typename _VariancePixelT=double>
-class SinglePixel : detail::MaskedImagePixel_tag {
+class SinglePixel : public detail::MaskedImagePixel_tag {
 public:
     template<typename, typename, typename> friend class Pixel;
 
@@ -74,7 +74,7 @@ SinglePixel<ImagePixelT, MaskPixelT, VariancePixelT> makeSinglePixel(ImagePixelT
 
 /// A %pixel of a MaskedImage
 template<typename _ImagePixelT, typename _MaskPixelT, typename _VariancePixelT=double>
-class Pixel : detail::MaskedImagePixel_tag {
+class Pixel : public detail::MaskedImagePixel_tag {
 public:
     typedef _ImagePixelT ImagePixelT;
     typedef _MaskPixelT MaskPixelT;
@@ -296,7 +296,7 @@ struct variance_multiplies {
 ///
 template <typename T1>
 struct variance_plus {
-    T1 operator()(T1 const& x, T1 const& y, T1 const& vx, T1 const& vy) const {
+    T1 operator()(T1 const&, T1 const&, T1 const& vx, T1 const& vy) const {
         return vx + vy;
     }
 };
@@ -309,7 +309,7 @@ template <typename T1>
 struct variance_plus_covar {
     variance_plus_covar(double alpha=0) : _alpha(alpha) {}    
 
-    T1 operator()(T1 const& x, T1 const& y, T1 const& vx, T1 const& vy) const {
+    T1 operator()(T1 const&, T1 const&, T1 const& vx, T1 const& vy) const {
         return vx + vy + 2*_alpha*sqrt(vx*vy);
     }
 private:
@@ -364,7 +364,7 @@ public:
 
     /// A binary operation, with three functors to represent the %image/mask/variance operations and an extra double argument
     BinaryExpr(ExprT1 e1, ExprT2 e2, double const alpha,
-               ImageBinOp imageOp=ImageBinOp(), MaskBinOp maskOp=MaskBinOp(), VarianceBinOp varOp=VarianceBinOp()) :
+               ImageBinOp imageOp=ImageBinOp(), MaskBinOp maskOp=MaskBinOp(), VarianceBinOp =VarianceBinOp()) :
         _expr1(e1), _expr2(e2), _imageOp(imageOp), _maskOp(maskOp), _varOp(VarianceBinOp(alpha)) {}
     /// evaluate the %image part of the expression
     ImagePixelT image() const {

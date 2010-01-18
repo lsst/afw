@@ -12,6 +12,8 @@ except ImportError, e:
 import displayLib
 import lsst.afw.math as afwMath
 
+needShow = True;                        # Used to avoid a bug in ds9 5.4
+
 ## An error talking to ds9
 class Ds9Error(IOError):
     """Some problem talking to ds9"""
@@ -19,13 +21,19 @@ class Ds9Error(IOError):
 try:
     type(_defaultFrame)
 except NameError:
-    def setDefaultFrame(frame):
+    def setDefaultFrame(frame=0):
         """Set the default frame for ds9"""
         global _defaultFrame
         _defaultFrame = frame
 
     def getDefaultFrame():
         """Get the default frame for ds9"""
+        return _defaultFrame
+
+    def incrDefaultFrame():
+        """Increment the default frame for ds9"""
+        global _defaultFrame
+        _defaultFrame += 1
         return _defaultFrame
 
     setDefaultFrame(0)
@@ -143,11 +151,15 @@ def getXpaAccessPoint():
         if mat:
             port1, port2 = mat.groups()
 
-            return "localhost:%s" % (port1)
+            return "127.0.0.1:%s" % (port1)
         else:
             print >> sys.stderr, "Failed to parse XPA_PORT=%s" % xpa_port
             
     return "ds9"
+
+def ds9Version():
+    """Return the version of ds9 in use, as a string"""
+    return xpa.get(None, getXpaAccessPoint(), "about", "").splitlines()[1].split()[1]
 
 def ds9Cmd(cmd, trap=True):
     """Issue a ds9 command, raising errors as appropriate"""
@@ -168,6 +180,10 @@ def initDS9(execDs9=True):
         xpa.reset()
         ds9Cmd("iconify no; raise", False)
         ds9Cmd("wcs wcsa", False)         # include the pixel coordinates WCS (WCSA)
+        
+        v0, v1, v2 = [int(v) for v in ds9Version().split('.')]
+        global needShow
+        needShow = (v0 == 5 and v1 <= 4)
     except Ds9Error, e:
         if execDs9:
             print "ds9 doesn't appear to be running (%s), I'll exec it for you" % e
@@ -191,9 +207,9 @@ def initDS9(execDs9=True):
         
         raise Ds9Error
 
-def show(frame=-1):
+def show(frame=None):
     """Uniconify and Raise ds9.  N.b. throws an exception if frame doesn't exit"""
-    if frame < 0:
+    if frame is None:
         frame = getDefaultFrame()
 
     if frame is None:
@@ -206,7 +222,7 @@ def setMaskColor(color=GREEN):
     ds9Cmd("mask color %s" % color)
 
 
-def mtv(data, frame=-1, init=True, wcs=None, isMask=False, lowOrderBits=False, title=None, settings=None):
+def mtv(data, frame=None, init=True, wcs=None, isMask=False, lowOrderBits=False, title=None, settings=None):
     """Display an Image or Mask on a DS9 display
 
     If lowOrderBits is True, give low-order-bits priority in display (i.e.
@@ -216,7 +232,7 @@ def mtv(data, frame=-1, init=True, wcs=None, isMask=False, lowOrderBits=False, t
     system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
     """
 
-    if frame < 0:
+    if frame is None:
         frame = getDefaultFrame()
 
     if frame is None:
@@ -337,9 +353,9 @@ def _mtv(data, wcs, title, isMask):
 #
 # Graphics commands
 #
-def erase(frame=-1):
+def erase(frame=None):
     """Erase the specified DS9 frame"""
-    if frame < 0:
+    if frame is None:
         frame = getDefaultFrame()
         
     if frame is None:
@@ -347,7 +363,7 @@ def erase(frame=-1):
 
     ds9Cmd("frame %d; regions delete all" % frame)
 
-def dot(symb, c, r, frame=-1, size=2, ctype=None):
+def dot(symb, c, r, frame=None, size=2, ctype=None):
     """Draw a symbol onto the specified DS9 frame at (col,row) = (c,r) [0-based coordinates]
 Possible values are:
         +                Draw a +
@@ -356,7 +372,7 @@ Possible values are:
         @:Mxx,Mxy,Myy    Draw an ellipse with moments (Mxx, Mxy, Myy) (size is ignored)
 Any other value is interpreted as a string to be drawn
 """
-    if frame < 0:
+    if frame is None:
         frame = getDefaultFrame()
 
     if frame is None:
@@ -400,19 +416,20 @@ Any other value is interpreted as a string to be drawn
         try:
             # We have to check for the frame's existance with show() as the text command crashed ds9 5.4
             # if it doesn't
-            show(frame)
+            if needShow:
+                show(frame)
             cmd += 'regions command {text %g %g \"%s\"%s}' % (c, r, symb, color)
-        except:
-            print >> sys.stderr, "Ds9 frame %d doesn't exist" % frame
+        except Exception, e:
+            print >> sys.stderr, "Ds9 frame %d doesn't exist" % frame, e
 
     ds9Cmd(cmd)
 
-def line(points, frame=-1, symbs=False, ctype=None):
+def line(points, frame=None, symbs=False, ctype=None):
     """Draw a set of symbols or connect the points, a list of (col,row)
 If symbs is True, draw points at the specified points using the desired symbol,
 otherwise connect the dots.  Ctype is the name of a colour (e.g. 'red')"""
    
-    if frame < 0:
+    if frame is None:
         frame = getDefaultFrame()
 
     if frame is None:
@@ -443,12 +460,18 @@ otherwise connect the dots.  Ctype is the name of a colour (e.g. 'red')"""
 #
 # Zoom and Pan
 #
-def zoom(zoomfac=None, colc=None, rowc=None, frame=-1):
+def zoom(zoomfac=None, colc=None, rowc=None, frame=None):
     """Zoom frame by specified amount, optionally panning also"""
     
     if frame < 0:
         frame = getDefaultFrame()
         
+    if frame is None:
+        return
+
+    if frame is None:
+        frame = getDefaultFrame()
+
     if frame is None:
         return
 
@@ -467,10 +490,10 @@ def zoom(zoomfac=None, colc=None, rowc=None, frame=-1):
 
     ds9Cmd(cmd)
 
-def pan(colc=None, rowc=None, frame=-1):
+def pan(colc=None, rowc=None, frame=None):
     """Pan to (rowc, colc); see also zoom"""
 
-    if frame < 0:
+    if frame is None:
         frame = getDefaultFrame()
 
     if frame is None:

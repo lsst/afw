@@ -67,8 +67,10 @@ lsst::daf::persistence::FormatterRegistration DecoratedImageFormatter<ImagePixel
 
 template <typename ImagePixelT>
 DecoratedImageFormatter<ImagePixelT>::DecoratedImageFormatter(
-    lsst::pex::policy::Policy::Ptr policy) :
-    lsst::daf::persistence::Formatter(typeid(*this)) {
+        lsst::pex::policy::Policy::Ptr
+                                                             )
+    : lsst::daf::persistence::Formatter(typeid(*this))
+{
 }
 
 template <typename ImagePixelT>
@@ -77,9 +79,11 @@ DecoratedImageFormatter<ImagePixelT>::~DecoratedImageFormatter(void) {
 
 template <typename ImagePixelT>
 void DecoratedImageFormatter<ImagePixelT>::write(
-    Persistable const* persistable,
-    Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr additionalData) {
+        Persistable const* persistable,
+        Storage::Ptr storage,
+        lsst::daf::base::PropertySet::Ptr
+                                                )
+{
     execTrace("DecoratedImageFormatter write start");
     DecoratedImage<ImagePixelT> const* ip = dynamic_cast<DecoratedImage<ImagePixelT> const*>(persistable);
     if (ip == 0) {
@@ -91,15 +95,13 @@ void DecoratedImageFormatter<ImagePixelT>::write(
         boost->getOArchive() & *ip;
         execTrace("DecoratedImageFormatter write end");
         return;
-    }
-    else if (typeid(*storage) == typeid(XmlStorage)) {
+    } else if (typeid(*storage) == typeid(XmlStorage)) {
         execTrace("DecoratedImageFormatter write XmlStorage");
         XmlStorage* boost = dynamic_cast<XmlStorage*>(storage.get());
         boost->getOArchive() & make_nvp("img", *ip);
         execTrace("DecoratedImageFormatter write end");
         return;
-    }
-    else if (typeid(*storage) == typeid(FitsStorage)) {
+    } else if (typeid(*storage) == typeid(FitsStorage)) {
         execTrace("DecoratedImageFormatter write FitsStorage");
         FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
         typedef DecoratedImage<ImagePixelT> DecoratedImage;
@@ -116,8 +118,11 @@ void DecoratedImageFormatter<ImagePixelT>::write(
 }
 
 template <typename ImagePixelT>
-Persistable* DecoratedImageFormatter<ImagePixelT>::read(Storage::Ptr storage,
-                                               lsst::daf::base::PropertySet::Ptr additionalData) {
+Persistable* DecoratedImageFormatter<ImagePixelT>::read(
+        Storage::Ptr storage,
+        lsst::daf::base::PropertySet::Ptr
+                                                       )
+{
     execTrace("DecoratedImageFormatter read start");
     if (typeid(*storage) == typeid(BoostStorage)) {
         execTrace("DecoratedImageFormatter read BoostStorage");
@@ -126,16 +131,14 @@ Persistable* DecoratedImageFormatter<ImagePixelT>::read(Storage::Ptr storage,
         boost->getIArchive() & *ip;
         execTrace("DecoratedImageFormatter read end");
         return ip;
-    }
-    else if (typeid(*storage) == typeid(XmlStorage)) {
+    } else if (typeid(*storage) == typeid(XmlStorage)) {
         execTrace("DecoratedImageFormatter read XmlStorage");
         XmlStorage* boost = dynamic_cast<XmlStorage*>(storage.get());
         DecoratedImage<ImagePixelT>* ip = new DecoratedImage<ImagePixelT>;
         boost->getIArchive() & make_nvp("img", *ip);
         execTrace("DecoratedImageFormatter read end");
         return ip;
-    }
-    else if(typeid(*storage) == typeid(FitsStorage)) {
+    } else if(typeid(*storage) == typeid(FitsStorage)) {
 
         execTrace("DecoratedImageFormatter read FitsStorage");
         FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
@@ -153,16 +156,22 @@ Persistable* DecoratedImageFormatter<ImagePixelT>::read(Storage::Ptr storage,
 
 template <typename ImagePixelT>
 void DecoratedImageFormatter<ImagePixelT>::update(
-    Persistable* persistable,
-    Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr additionalData) {
+        lsst::daf::base::Persistable*,
+        lsst::daf::persistence::Storage::Ptr,
+        lsst::daf::base::PropertySet::Ptr
+                                                 )
+{
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                       "Unexpected call to update for DecoratedImage");
 }
 
 template <typename ImagePixelT> template <class Archive>
 void DecoratedImageFormatter<ImagePixelT>::delegateSerialize(
-    Archive& ar, int const version, Persistable* persistable) {
+        Archive&,
+        int const,
+        Persistable* persistable
+                                                            )
+{
     execTrace("DecoratedImageFormatter delegateSerialize start");
     DecoratedImage<ImagePixelT>* ip = dynamic_cast<DecoratedImage<ImagePixelT>*>(persistable);
     if (ip == 0) {
@@ -174,7 +183,9 @@ void DecoratedImageFormatter<ImagePixelT>::delegateSerialize(
 
 template <typename ImagePixelT>
 lsst::daf::persistence::Formatter::Ptr DecoratedImageFormatter<ImagePixelT>::createInstance(
-    lsst::pex::policy::Policy::Ptr policy) {
+        lsst::pex::policy::Policy::Ptr policy
+                                                                                           )
+{
     return lsst::daf::persistence::Formatter::Ptr(new DecoratedImageFormatter<ImagePixelT>(policy));
 }
 

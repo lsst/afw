@@ -67,7 +67,9 @@ lsst::daf::persistence::FormatterRegistration MaskedImageFormatter<ImagePixelT,
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImageFormatter(
-    lsst::pex::policy::Policy::Ptr policy) :
+    lsst::pex::policy::Policy::Ptr
+                                                                                   )
+    :
     lsst::daf::persistence::Formatter(typeid(*this)) {
 }
 
@@ -79,7 +81,7 @@ template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
     Persistable const* persistable,
     Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr additionalData) {
+    lsst::daf::base::PropertySet::Ptr) {
     execTrace("MaskedImageFormatter write start");
     MaskedImage<ImagePixelT, MaskPixelT> const* ip =
         dynamic_cast<MaskedImage<ImagePixelT, MaskPixelT> const*>(persistable);
@@ -105,8 +107,10 @@ void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 Persistable* MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::read(
-    Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr additionalData) {
+        Storage::Ptr storage,
+        lsst::daf::base::PropertySet::Ptr
+                                                                                )
+{
     execTrace("MaskedImageFormatter read start");
     if (typeid(*storage) == typeid(BoostStorage)) {
         execTrace("MaskedImageFormatter read BoostStorage");
@@ -128,9 +132,11 @@ Persistable* MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::read
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::update(
-    Persistable* persistable,
-    Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr additionalData) {
+    Persistable*,
+    Storage::Ptr,
+    lsst::daf::base::PropertySet::Ptr
+                                                                          )
+{
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                       "Unexpected call to update for MaskedImage");
 }

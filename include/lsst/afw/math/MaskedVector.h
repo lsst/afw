@@ -78,8 +78,10 @@ public:
     
     class iterator : public image::MaskedImage<EntryT>::x_iterator {
     public:
+#if 0
         using typename image::MaskedImage<EntryT>::x_iterator::mask;
         using typename image::MaskedImage<EntryT>::x_iterator::variance;
+#endif
 
         iterator(typename image::MaskedImage<EntryT>::Image::x_iterator im,
                  typename image::MaskedImage<EntryT>::Mask::x_iterator msk,

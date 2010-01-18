@@ -206,7 +206,7 @@ std::vector<double> afwMath::Kernel::getKernelParameters() const {
 /**
  * @brief Return a string representation of the kernel
  */
-std::string afwMath::Kernel::toString(std::string prefix) const {
+std::string afwMath::Kernel::toString(std::string const& prefix) const {
     std::ostringstream os;
     os << prefix << "Kernel:" << std::endl;
     os << prefix << "..height, width: " << _height << ", " << _width << std::endl;
@@ -227,7 +227,9 @@ std::string afwMath::Kernel::toString(std::string prefix) const {
 void afwMath::Kernel::toFile(std::string fileName) const {
     std::ofstream os(fileName.c_str());
     boost::archive::text_oarchive oa(os);
+#if 0                               //  This fails to compile with icc
     oa << this;
+#endif
 }
 
 //
@@ -244,7 +246,7 @@ void afwMath::Kernel::toFile(std::string fileName) const {
  *
  * @throw lsst::pex::exceptions::InvalidParameterException always (unless subclassed)
  */
-void afwMath::Kernel::setKernelParameter(unsigned int ind, double value) const {
+void afwMath::Kernel::setKernelParameter(unsigned int, double) const {
     throw LSST_EXCEPT(pexExcept::InvalidParameterException, "Kernel has no kernel parameters");
 }
 

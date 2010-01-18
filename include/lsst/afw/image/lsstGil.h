@@ -25,7 +25,7 @@ namespace lsst { namespace afw { namespace image {
 // To make this possible, at least one of its arguments must be in lsst::afw::image, so we define
 // this type to make the argument lookup ("Koenig Lookup") work smoothly
 //
-struct pair2I : std::pair<int, int> {
+struct pair2I : public std::pair<int, int> {
     explicit pair2I(int first, int second) : std::pair<int, int>(first, second) {}
     pair2I(std::pair<int, int> pair) : std::pair<int, int>(pair) {}
 };

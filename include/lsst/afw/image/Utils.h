@@ -165,6 +165,12 @@ namespace lsst { namespace afw { namespace image {
         PointI getURC() const { return PointI(getX1(), getY1()); } ///< Return upper-right corner
         int getWidth() const { return second.first; } ///< Return width of BBox (== <tt>X1 - X0 + 1</tt>)
         int getHeight() const { return second.second; } ///< Return height of BBox (== <tt>Y1 - Y0 + 1</tt>)
+        /// Set BBox's width
+        void setWidth(int width         ///< Desired width
+                     ) { second.first = width; } 
+        /// Set BBox's height
+        void setHeight(int height       ///< Desired height
+                     ) { second.second = height; } 
         const std::pair<int, int> getDimensions() const { return std::pair<int, int>(getWidth(), getHeight()); }
 
         /// Clip this with rhs
@@ -174,6 +180,11 @@ namespace lsst { namespace afw { namespace image {
 
             if (rhs.getX0() > getX0()) { setX0(rhs.getX0()); }
             if (rhs.getY0() > getY0()) { setY0(rhs.getY0()); }
+
+            if (getWidth() < 0 || getHeight() < 0) {
+                setWidth(0);
+                setHeight(0);
+            }
         }
 
         operator bool() const {

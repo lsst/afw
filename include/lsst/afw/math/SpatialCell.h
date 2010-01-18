@@ -31,7 +31,7 @@ namespace math {
         virtual ~CandidateVisitor() {}
 
         virtual void reset() {}
-        virtual void processCandidate(SpatialCellCandidate *candidate) {}
+        virtual void processCandidate(SpatialCellCandidate *) {}
     };
 
     /************************************************************************************************************/

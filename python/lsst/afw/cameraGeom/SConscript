@@ -1,0 +1,9 @@
+# -*- python -*-
+Import("env")
+
+pkg = env["eups_product"]
+# includedProducts lists the names of all packages on which you depend that have their own SWIG wrappers
+# (which should generally be all of them), separated by spaces.
+env.CheckSwig("python", ilang="c++", includedProducts="utils daf_base pex_exceptions pex_logging pex_policy daf_persistence daf_data security afw")
+
+env.LoadableModuleIncomplete("_cameraGeomLib", "cameraGeomLib.i", LIBS=env.getlibs("afw"))

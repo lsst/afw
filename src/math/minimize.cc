@@ -30,7 +30,6 @@ namespace {
     template<typename ReturnT>
     class MinimizerFunctionBase1 : public ROOT::Minuit2::FCNBase, public lsst::daf::data::LsstBase {
     public:
-        explicit MinimizerFunctionBase1();
         explicit MinimizerFunctionBase1(
             afwMath::Function1<ReturnT> const &function,
             std::vector<double> const &measurementList,
@@ -43,10 +42,12 @@ namespace {
         virtual double Up() const { return _errorDef; }
         virtual double operator() (const std::vector<double>&) const;
 
+#if 0                                   // not used
         inline std::vector<double> getMeasurements() const {return _measurementList;}
         inline std::vector<double> getVariances() const {return _varianceList;}
         inline std::vector<double> getPositions() const {return _xPositionList;}
         inline void setErrorDef(double def) {_errorDef=def;}
+#endif
     private:
         boost::shared_ptr<afwMath::Function1<ReturnT> > _functionPtr;
         std::vector<double> _measurementList;
@@ -61,7 +62,6 @@ namespace {
     template<typename ReturnT>
     class MinimizerFunctionBase2 : public ROOT::Minuit2::FCNBase, public lsst::daf::data::LsstBase {
     public:
-        explicit MinimizerFunctionBase2();
         explicit MinimizerFunctionBase2(
             afwMath::Function2<ReturnT> const &function,
             std::vector<double> const &measurementList,
@@ -75,11 +75,13 @@ namespace {
         virtual double Up() const { return _errorDef; }
         virtual double operator() (const std::vector<double>& par) const;
         
+#if 0                                   // not used
         inline std::vector<double> getMeasurements() const {return _measurementList;}
         inline std::vector<double> getVariances() const {return _varianceList;}
         inline std::vector<double> getPosition1() const {return _xPositionList;}
         inline std::vector<double> getPosition2() const {return _yPositionList;}
         inline void setErrorDef(double def) {_errorDef=def;}
+#endif
     private:
         boost::shared_ptr<afwMath::Function2<ReturnT> > _functionPtr;
         std::vector<double> _measurementList;
@@ -89,18 +91,6 @@ namespace {
         double _errorDef;
     };
 }
-
-// Constructors
-template<typename ReturnT>
-MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1()
-:
-    lsst::daf::data::LsstBase(typeid(this)),
-    _functionPtr(),
-    _measurementList(),
-    _varianceList(),
-    _xPositionList(),
-    _errorDef(1.0)
-{}
 
 template<typename ReturnT>
 MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1(
@@ -116,18 +106,6 @@ MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1(
     _varianceList(varianceList),
     _xPositionList(xPositionList),
     _errorDef(errorDef)
-{}
-
-template<typename ReturnT>
-MinimizerFunctionBase2<ReturnT>::MinimizerFunctionBase2()
-:
-    lsst::daf::data::LsstBase(typeid(this)),
-    _functionPtr(),
-    _measurementList(),
-    _varianceList(),
-    _xPositionList(),
-    _yPositionList(),
-    _errorDef(1.0)
 {}
 
 template<typename ReturnT>

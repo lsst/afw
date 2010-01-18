@@ -1,0 +1,363 @@
+#<?cfg paf dictionary ?>
+#
+target: CameraGeomPolicy
+
+definitions: {
+    Camera: {
+        type: Policy
+        dictionary: {
+            target: "Camera"
+            definitions: {
+                serial: {
+                    type: int
+                    description: "Camera's serial number"
+                    minOccurs: 0
+                    maxOccurs: 1
+                    default: -1
+                }
+                name: {
+                    type: string
+                    description: "Camera's name"
+                    minOccurs: 0
+                    maxOccurs: 1
+                    default: "Unknown"
+                }
+                nCol: {
+                    type: int
+                    description: "Number of columns of Rafts"
+                    minOccurs: 1
+                    maxOccurs: 1
+                }
+                nRow: {
+                    type: int
+                    description: "Number of rows of Rafts"
+                    minOccurs: 1
+                    maxOccurs: 1
+                }
+                Raft: {
+                    type: policy
+                    dictionary: {
+                        target: Raft
+                        definitions: {
+                            serial: {
+                                type: int
+                                description: "Raft's serial number"
+                                minOccurs: 0
+                                maxOccurs: 1
+                                default: -1
+                            }
+                            name: {
+                                type: string
+                                description: "Name of this raft"
+                                minOccurs: 0
+                                maxOccurs: 1
+                                default: "None"
+                            }
+                            index: {
+                                type: int
+                                description: "Location of Raft in Camera thought of as a grid of Rafts"
+                                minOccurs: 2
+                                maxOccurs: 2
+                            }
+                            offset: {
+                                type: double
+                                description: "offset of Raft center from boresight, (x, y); mm"
+                                minOccurs: 2
+                                maxOccurs: 2
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Raft: {
+        type: Policy
+        dictionary: {
+            target: "Raft"
+            definitions: {
+                serial: {
+                    type: int
+                    description: "Raft's serial number"
+                    minOccurs: 0
+                    maxOccurs: 1
+                    default: -1
+                }
+                name: {
+                    type: string
+                    minOccurs: 0
+                    maxOccurs: 1
+                    default: "None"
+                }
+                nCol: {
+                    type: int
+                    description: "Number of columns of CCDs"
+                    minOccurs: 1
+                    maxOccurs: 1
+                }
+                nRow: {
+                    type: int
+                    description: "Number of rows of CCDs"
+                    minOccurs: 1
+                    maxOccurs: 1
+                }
+                Ccd: {
+                    type: policy
+                    dictionary: {
+                        target: Ccd
+                        definitions: {
+                            serial: {
+                                type: int
+                                description: "CCD's serial number"
+                                minOccurs: 0
+                                maxOccurs: 1
+                                default: -1
+                            }
+                            name: {
+                                type: string
+                                minOccurs: 0
+                                maxOccurs: 1
+                                default: "None"
+                            }
+                            index: {
+                                type: int
+                                description: "Location of CCD in Raft thought of as a grid of CCDs"
+                                minOccurs: 2
+                                maxOccurs: 2
+                            }
+                            offset: {
+                                type: double
+                                description: "offset of CCD center from raft center, (x, y); mm"
+                                minOccurs: 2
+                                maxOccurs: 2
+                            }
+                            nQuarter: {
+                                type: int
+                                description: "Number of quarter-turns applied to CCD when put into Raft"
+                                minOccurs: 0
+                                maxOccurs: 1
+                                default: 0
+                            }
+                            orientation: {
+                                type: double
+                                description: "pitch, roll, yaw; degrees"
+                                minOccurs: 3
+                                maxOccurs: 3
+                                default: 0.0 0.0 0.0
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Ccd: {
+        type: Policy
+        dictionary: {
+            target: "Ccd"
+            definitions: {
+                pixelSize: {
+                    type: double
+                    description: "Pixel size in microns"
+                    minOccurs: 
+                    maxOccurs: 1
+                }
+
+                nCol: {
+                    type: int
+                    description: "Number of columns of amps; 2 == Left and Right"
+                    minOccurs: 1
+                    maxOccurs: 1
+                }
+                nRow: {
+                    type: int
+                    description: "Number of rows of amps"
+                    minOccurs: 1
+                    maxOccurs: 1
+                }
+                Amp: {
+                    type: policy
+                    dictionary: {
+                        target: Amp
+                        definitions: {
+                            id: {
+                                type: string
+                                description: "ID for this Amp"
+                                default: "??"
+                            }
+                            index: {
+                                type: int
+                                description: "Location of Amp in CCD thought of as a grid of amplifiers"
+                                minOccurs: 2
+                                maxOccurs: 2
+                            }
+                            readoutCorner: {
+                                description: "location of first pixel read"
+                                allowed: {
+                                    value: "LLC"
+                                    description: "Lower left corner"
+                                }
+                                allowed: {
+                                    value: "ULC"
+                                    description: "Upper left corner"
+                                }
+                                allowed: {
+                                    value: "URC"
+                                    description: "Upper right corner"
+                                }
+                                allowed: {
+                                    value: "LRC"
+                                    description: "Lower right corner"
+                                }
+                                minOccurs: 0
+                                maxOccurs: 1
+                            }
+                            Electronic: {
+                                type: policy
+                                dictionary: {
+                                    target: Electronic
+                                    definitions: {
+                                        gain: {
+                                            type: double
+                                            default: 1.0
+                                        }
+                                        readNoise: {
+                                            type: double
+                                            default: 10.0
+                                        }
+                                        saturationLevel: {
+                                            type: double
+                                            default: 65535.0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    #
+    # Now define an Amp within a Ccd
+    #
+    Amp: {
+        type: policy
+        dictionary: {
+            target: Amp
+            definitions: {
+                height: {
+                    type: int
+                    description: "Number of rows in physical device"
+                    minOccurs: 1
+                    maxOccurs: 1
+                }
+                width: {
+                    type: int
+                    description: "Number of columns in physical device"
+                    minOccurs: 1
+                    maxOccurs: 1
+                }
+                extended: {
+                    type: int
+                    description: "length of extended register"
+                    minOccurs: 0
+                    maxOccurs: 1
+                    default: 0
+                }
+                preRows: {
+                    type: int
+                    description: "extra rows before first real serial transfer"
+                    minOccurs: 0
+                    maxOccurs: 1
+                    default: 0
+                }
+                overclockH: {
+                    type: int
+                    description: "number of serial overclock pixels"
+                    minOccurs: 0
+                    maxOccurs: 1
+                    default: 0
+                }
+                overclockV: {
+                    type: int
+                    description: number of parallel overclock pixels
+                    minOccurs: 0
+                    maxOccurs: 1
+                    default: 0
+                }
+            }
+        }
+    }
+    #
+    # Defects in a Detector
+    #
+    DefectList: {
+        type: Policy
+        dictionary: {
+            target: "DefectList"
+            definitions: {
+                serial: {
+                    type: int
+                    description: "Detector's serial number"
+                    minOccurs: 0
+                    maxOccurs: 1
+                    default: -1
+                }
+                name: {
+                    type: string
+                    description: "Detector's name"
+                    minOccurs: 0
+                    maxOccurs: 1
+                    default: "Unknown"
+                }
+                Defect: {
+                    type: Policy
+                    dictionary: {
+                        target: "Defect"
+                        definitions: {
+                            x0: {
+                                type: int
+                                description: "Starting column"
+                                minOccurs: 1
+                                maxOccurs: 1
+                            }
+                            y0: {
+                                type: int
+                                description: "Starting row"
+                                minOccurs: 1
+                                maxOccurs: 1
+                            }
+                            x1: {
+                                type: int
+                                description: "Ending column; optional if width is specified"
+                                minOccurs: 0
+                                maxOccurs: 1
+                            }
+                            y1: {
+                                type: int
+                                description: "Ending row; optional if height is specified"
+                                minOccurs: 0
+                                maxOccurs: 1
+                            }
+                            width: {
+                                type: int
+                                description: "number of columns; optional if x1 is specified"
+                                minOccurs: 0
+                                maxOccurs: 1
+                            }
+                            height: {
+                                type: int
+                                description: "number of rows; optional if y1 is specified"
+                                minOccurs: 0
+                                maxOccurs: 1
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

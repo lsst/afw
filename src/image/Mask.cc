@@ -673,11 +673,11 @@ typename afwImage::Mask<MaskPixelT>::MaskPlaneDict afwImage::Mask<MaskPixelT>::p
                throw LSST_EXCEPT(pexExcept::RuntimeErrorException,
                                  "File specifies plane " + planeName + " twice"); 
             }
-            for (MaskPlaneDict::const_iterator i = newDict.begin(); i != newDict.end(); ++i) {
-                if (planeId == i->second) {
+            for (MaskPlaneDict::const_iterator j = newDict.begin(); j != newDict.end(); ++j) {
+                if (planeId == j->second) {
                     throw LSST_EXCEPT(pexExcept::RuntimeErrorException,
                                       (boost::format("File specifies plane %s has same value (%d) as %s") %
-                                       planeName % planeId % i->first).str());
+                                       planeName % planeId % j->first).str());
                 }
             }
             // build new entry
