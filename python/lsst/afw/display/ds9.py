@@ -151,7 +151,7 @@ def getXpaAccessPoint():
         if mat:
             port1, port2 = mat.groups()
 
-            return "localhost:%s" % (port1)
+            return "127.0.0.1:%s" % (port1)
         else:
             print >> sys.stderr, "Failed to parse XPA_PORT=%s" % xpa_port
             
