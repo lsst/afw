@@ -19,7 +19,7 @@ Raft: {
     nCol: 5                             # number of columns of CCDs
     nRow: 2                             # number of rows of CCDs
     Ccd: {
-        serial: 1                       # CCD's serial number
+        serial: 8                       # CCD's serial number
         name: "Ponyo"                   # CCD's name
         index: 0 0                      # Location of CCD in Raft thought of as a grid of CCDs
         offset: -4246.0 -2126.7         # offset of CCD center from raft center, (x, y); mm (pixels??)
@@ -27,7 +27,7 @@ Raft: {
         orientation: 0.0 0.0 0.0        # pitch, roll, yaw; degrees
     }
     Ccd: {
-        serial: 2                       # CCD's serial number
+        serial: 6                       # CCD's serial number
         name: "Chihiro"                 # CCD's name
         index: 0 1                      # Location of CCD in Raft thought of as a grid of CCDs
         offset: -4246.0 2126.7          # offset of CCD center from raft center, (x, y); mm
@@ -35,7 +35,7 @@ Raft: {
         orientation: 0.0 0.0 0.0        # pitch, roll, yaw; degrees
     }
     Ccd: {
-        serial: 3                       # CCD's serial number
+        serial: 9                       # CCD's serial number
         name: "San"                     # CCD's name
         index: 1 0                      # Location of CCD in Raft thought of as a grid of CCDs
         offset: -2123.0 -2126.7         # offset of CCD center from raft center, (x, y); mm
@@ -43,7 +43,7 @@ Raft: {
         orientation: 0.0 0.0 0.0        # pitch, roll, yaw; degrees
     }
     Ccd: {
-        serial: 4                       # CCD's serial number
+        serial: 7                       # CCD's serial number
         name: "Clarisse"                # CCD's name
         index: 1 1                      # Location of CCD in Raft thought of as a grid of CCDs
         offset: -2123.0 2126.7          # offset of CCD center from raft center, (x, y); mm
@@ -59,7 +59,7 @@ Raft: {
         orientation: 0.0 0.0 0.0        # pitch, roll, yaw; degrees
     }
     Ccd: {
-        serial: 6                       # CCD's serial number
+        serial: 2                       # CCD's serial number
         name: "Fio"                     # CCD's name
         index: 2 1                      # Location of CCD in Raft thought of as a grid of CCDs
         offset: 0.0 2126.7              # offset of CCD center from raft center, (x, y); mm
@@ -67,7 +67,7 @@ Raft: {
         orientation: 0.0 0.0 0.0        # pitch, roll, yaw; degrees
     }
     Ccd: {
-        serial: 7                       # CCD's serial number
+        serial: 4                       # CCD's serial number
         name: "Sheeta"                  # CCD's name
         index: 3 0                      # Location of CCD in Raft thought of as a grid of CCDs
         offset: 2123.0 -2126.7          # offset of CCD center from raft center, (x, y); mm
@@ -75,7 +75,7 @@ Raft: {
         orientation: 0.0 0.0 0.0        # pitch, roll, yaw; degrees
     }
     Ccd: {
-        serial: 8                       # CCD's serial number
+        serial: 1                       # CCD's serial number
         name: "Kiki"                    # CCD's name
         index: 3 1                      # Location of CCD in Raft thought of as a grid of CCDs
         offset: 2123.0 2126.7           # offset of CCD center from raft center, (x, y); mm
@@ -83,7 +83,7 @@ Raft: {
         orientation: 0.0 0.0 0.0        # pitch, roll, yaw; degrees
     }
     Ccd: {
-        serial: 9                       # CCD's serial number
+        serial: 3                       # CCD's serial number
         name: "Sophie"                  # CCD's name
         index: 4 0                      # Location of CCD in Raft thought of as a grid of CCDs
         offset: -4246.0 -2126.7         # offset of CCD center from raft center, (x, y); mm (pixels??)
@@ -91,7 +91,7 @@ Raft: {
         orientation: 0.0 0.0 0.0        # pitch, roll, yaw; degrees
     }
     Ccd: {
-        serial: 10                      # CCD's serial number
+        serial: 0                       # CCD's serial number
         name: "Nausicaa"                # CCD's name
         index: 4 1                      # Location of CCD in Raft thought of as a grid of CCDs
         offset: 4246.0 2126.7           # offset of CCD center from raft center, (x, y); mm
@@ -149,7 +149,7 @@ Ccd: {
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 Amp: {
-    height: 4224                        # number of physical rows
+    height: 4225                        # number of physical rows
     width: 512                          # number of physical columns
     extended: 8                         # length of extended register
     preRows: 1                          # extra rows before first real serial transfer
