@@ -51,14 +51,14 @@ SWIG_SHARED_PTR_DERIVED(CameraPtr, lsst::afw::cameraGeom::Detector, lsst::afw::c
 %include "lsst/afw/cameraGeom/Camera.h"
 
 %inline %{
-    lsst::afw::cameraGeom::Ccd *
-    cast_Ccd(lsst::afw::cameraGeom::Detector *detector) {
-        return dynamic_cast<lsst::afw::cameraGeom::Ccd *>(detector);
+    lsst::afw::cameraGeom::Ccd::Ptr
+    cast_Ccd(lsst::afw::cameraGeom::Detector::Ptr detector) {
+        return boost::shared_dynamic_cast<lsst::afw::cameraGeom::Ccd>(detector);
     }
 
-    lsst::afw::cameraGeom::Raft *
-    cast_Raft(lsst::afw::cameraGeom::Detector *detector) {
-        return dynamic_cast<lsst::afw::cameraGeom::Raft *>(detector);
+    lsst::afw::cameraGeom::Raft::Ptr
+    cast_Raft(lsst::afw::cameraGeom::Detector::Ptr detector) {
+        return boost::shared_dynamic_cast<lsst::afw::cameraGeom::Raft>(detector);
     }
 %}
 //
@@ -79,6 +79,9 @@ SWIG_SHARED_PTR_DERIVED(CameraPtr, lsst::afw::cameraGeom::Detector, lsst::afw::c
 
                 yield ptr.value()
                 ptr.incr()
+
+        def __getitem__(self, i):
+            return [e for e in self][i]
     }
 }
 %enddef
