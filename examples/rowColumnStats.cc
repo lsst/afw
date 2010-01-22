@@ -9,11 +9,13 @@
 
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/Stack.h"
+#include "lsst/afw/image/Slice.h"
 
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
 
 typedef image::Image<float> ImageF;
+typedef image::Slice<float> SliceF;
 typedef image::MaskedImage<float> MImageF;
 typedef std::vector<float> VecF;
 typedef boost::shared_ptr<VecF> VecFPtr;
@@ -37,16 +39,20 @@ int main(int argc, char **argv) {
     MImageF::Ptr imgProjectCol = math::statisticsStack(*img, math::MEAN, 'x');
     MImageF::Ptr imgProjectRow = math::statisticsStack(*img, math::MEAN, 'y');
 
-    ImageF::Ptr opColPlus  = math::sliceOperate(*img, *(imgProjectCol->getImage()), "column", '+');
-    ImageF::Ptr opColMinus = math::sliceOperate(*img, *(imgProjectCol->getImage()), "column", '-');
-    ImageF::Ptr opColMult  = math::sliceOperate(*img, *(imgProjectCol->getImage()), "column", '*');
-    ImageF::Ptr opColDiv   = math::sliceOperate(*img, *(imgProjectCol->getImage()), "column", '/');
+    //ImageF::Ptr opColPlus(new ImageF(*img, true));
+    SliceF slice(*(imgProjectCol->getImage()));
+    ImageF::Ptr opColPlus = slice + *img;
+    //ImageF::Ptr opColPlus = *img + slice;
+    //image::sliceOperate(*img, *(imgProjectCol->getImage()), "column", '+');
+    ImageF::Ptr opColMinus = image::sliceOperate(*img, *(imgProjectCol->getImage()), "column", '-');
+    ImageF::Ptr opColMult  = image::sliceOperate(*img, *(imgProjectCol->getImage()), "column", '*');
+    ImageF::Ptr opColDiv   = image::sliceOperate(*img, *(imgProjectCol->getImage()), "column", '/');
 
     std::vector<ImageF::Ptr> rows;
-    rows.push_back(math::sliceOperate(*img, *(imgProjectRow->getImage()), "row", '+'));
-    rows.push_back(math::sliceOperate(*img, *(imgProjectRow->getImage()), "row", '-'));
-    rows.push_back(math::sliceOperate(*img, *(imgProjectRow->getImage()), "row", '*'));
-    rows.push_back(math::sliceOperate(*img, *(imgProjectRow->getImage()), "row", '/'));
+    rows.push_back(image::sliceOperate(*img, *(imgProjectRow->getImage()), "row", '+'));
+    rows.push_back(image::sliceOperate(*img, *(imgProjectRow->getImage()), "row", '-'));
+    rows.push_back(image::sliceOperate(*img, *(imgProjectRow->getImage()), "row", '*'));
+    rows.push_back(image::sliceOperate(*img, *(imgProjectRow->getImage()), "row", '/'));
 
 
     // output the pixel values and show the statistics projections
@@ -55,7 +61,7 @@ int main(int argc, char **argv) {
 	ImageF::x_iterator end = rows[i]->row_end(0);
 	printf("%26s", " ");
 	for (ImageF::x_iterator ptr = rows[i]->row_begin(0); ptr != end; ++ptr) {
-	    printf("%4.1f ", static_cast<float>(*ptr));
+	    printf("%5.2f ", static_cast<float>(*ptr));
 	}
 	std::cout << std::endl;
     }
@@ -67,16 +73,16 @@ int main(int argc, char **argv) {
 	printf("%5.1f %5.1f %5.1f %5.2f : ", 
 	       (*opColPlus)(0, y), (*opColMinus)(0, y), (*opColMult)(0, y), (*opColDiv)(0, y));
 	for (ImageF::x_iterator ptr=img->row_begin(y), end=img->row_end(y); ptr != end; ++ptr) {
-	    printf("%4.1f ", static_cast<float>(*ptr));
+	    printf("%5.2f ", static_cast<float>(*ptr));
 	}
-	std::cout << " ==> " << pCol.image() << " +/- " << sqrt(pCol.variance()) << std::endl;
+	printf(" ==> %5.2f +/- %5.3f\n", pCol.image(), sqrt(pCol.variance()));
     }
     std::cout << std::endl;
 
     MImageF::x_iterator rowEnd = imgProjectRow->row_end(0);
     printf("%26s", " ");
     for (MImageF::x_iterator ptr = imgProjectRow->row_begin(0); ptr != rowEnd; ++ptr) {
-	printf("%4.1f ", static_cast<float>(ptr.image()));
+	printf("%5.2f ", static_cast<float>(ptr.image()));
     }
 
     std::cout << std::endl;

@@ -8,7 +8,6 @@
 
 %define %declareStacks(PIXTYPE)
 %template(statisticsStack) lsst::afw::math::statisticsStack<PIXTYPE>;
-%template(sliceOperate) lsst::afw::math::sliceOperate<PIXTYPE>;
 %enddef
 
 %declareStacks(float)

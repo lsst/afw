@@ -499,84 +499,6 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
 
 
 
-/**************************************************************************
- *
- * column operators
- *
- **************************************************************************/
-
-/**
- *
- *
- */
-template<typename PixelT>
-typename afwImage::Image<PixelT>::Ptr afwMath::sliceOperate(
-        afwImage::Image<PixelT> const &image,
-	afwImage::Image<PixelT> const &slice,
-	std::string sliceType,
-	char op
-							    ) {
-
-    // make sure slice has the right dimensions
-    int n, dx = 1, dy = 1;
-    int i = 0, *x, *y, zero = 0;
-    if (sliceType == "column")  {
-	if ( slice.getWidth() != 1) {
-	    throw LSST_EXCEPT(ex::InvalidParameterException, "column slice must have width 1");
-	}
-	if ( slice.getHeight() != image.getHeight() ) {
-	    throw LSST_EXCEPT(ex::InvalidParameterException, 
-			      "image and column slice must have the same height.");
-	}
-	n = image.getWidth();
-	dy = image.getHeight();
-	x = &i;
-	y = &zero;
-    } else if (sliceType == "row") {
-	if ( slice.getHeight() != 1) {
-	    throw LSST_EXCEPT(ex::InvalidParameterException, "row slice must have height 1");
-	}
-	if ( slice.getWidth() != image.getWidth() ) {
-	    throw LSST_EXCEPT(ex::InvalidParameterException, 
-			      "image and row slice must have the same width.");
-	}
-	n = image.getHeight();
-	dx = image.getWidth();
-	x = &zero;
-	y = &i;
-    } else {
-	throw LSST_EXCEPT(ex::InvalidParameterException, "Only column and row slice types are available.");
-    }
-
-    typename afwImage::Image<PixelT>::Ptr outImage(new afwImage::Image<PixelT>(image, true));
-
-    for (i = 0; i < n; ++i) {
-	
-	// make a bbox slice and operate 
-	afwImage::BBox bbox(afwImage::PointI(*x, *y), dx, dy);
-	
-	afwImage::Image<PixelT> imgBox(image, bbox);
-	afwImage::Image<PixelT> outBox(*outImage, bbox);
-	if (op == '+') {
-	    outBox += slice;
-	} else if (op == '-') {
-	    outBox -= slice;
-	} else if (op == '*') {
-	    outBox *= slice;
-	} else if (op == '/') {
-	    outBox /= slice;
-	} else {
-	    throw LSST_EXCEPT(ex::InvalidParameterException, "Invalid operator.  use +-*/.");
-	}
-    }
-
-    return outImage;
-}
-
-
-
-
-
 /*
  * Explicit Instantiations
  *
@@ -606,15 +528,7 @@ typename afwImage::Image<PixelT>::Ptr afwMath::sliceOperate(
             afwImage::MaskedImage<TYPE> const &image, \
             afwMath::Property flags,			\
 	    char dimension,					\
-            afwMath::StatisticsControl const& sctrl);			\
-    template afwImage::Image<TYPE>::Ptr afwMath::sliceOperate(		\
-            afwImage::Image<TYPE> const &image, \
-	    afwImage::Image<TYPE> const &slice,	\
-	    std::string sliceType,		\
-	    char op);
-
-
-    
+            afwMath::StatisticsControl const& sctrl);
 
 INSTANTIATE_STACKS(double);
 INSTANTIATE_STACKS(float);

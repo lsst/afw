@@ -85,19 +85,6 @@ typename lsst::afw::image::MaskedImage<PixelT>::Ptr statisticsStack(
 
 
 
-/********************************************************************
- *
- * row, column Operators
- *
- *********************************************************************/
-
-template<typename PixelT>
-typename lsst::afw::image::Image<PixelT>::Ptr sliceOperate(
-        lsst::afw::image::Image<PixelT> const &image,
-	lsst::afw::image::Image<PixelT> const &slice,
-	std::string sliceType,
-	char op
-							    );
 
 }}}
 
