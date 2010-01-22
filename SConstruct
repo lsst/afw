@@ -79,6 +79,7 @@ Alias("install", [
     env.Install(env['prefix'], "examples"),
     env.Install(env['prefix'], "include"),
     env.Install(env['prefix'], "lib"),
+    env.Install(env['prefix'], "policy"),
     env.Install(env['prefix'], "python"),
     env.InstallEups(env['prefix'] + "/ups"),
 ])
