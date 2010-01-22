@@ -163,6 +163,7 @@ void getKey(fitsfile* fd,
 }
 
 void addKV(lsst::daf::base::PropertySet::Ptr metadata, std::string key, std::string value) {
+    boost::regex const boolRegex("[tTfF]");
     boost::regex const intRegex("(\\Q+\\E|\\Q-\\E){0,1}[0-9]+");
     boost::regex const doubleRegex("(\\Q+\\E|\\Q-\\E){0,1}([0-9]*\\.[0-9]+|[0-9]+\\.[0-9]*)((e|E)(\\Q+\\E|\\Q-\\E){0,1}[0-9]+){0,1}");
     boost::regex const fitsStringRegex("'(.*)'");
@@ -170,7 +171,16 @@ void addKV(lsst::daf::base::PropertySet::Ptr metadata, std::string key, std::str
     boost::smatch matchStrings;
     std::istringstream converter(value);
 
-    if (boost::regex_match(value, intRegex)) {
+    if (boost::regex_match(value, boolRegex)) {
+        // convert the string to an bool
+#if 0
+        bool val;
+        converter >> val;               // converter doesn't handle bool; T/F always return 255
+#else
+        bool val = (value == "T" || value == "t");
+#endif
+        metadata->set(key, val);
+    } else if (boost::regex_match(value, intRegex)) {
         // convert the string to an int
         int val;
         converter >> val;
