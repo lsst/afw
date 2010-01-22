@@ -6,7 +6,7 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %enddef
 
 %feature("autodoc", "1");
-%module(package="lsst.afw", docstring=cameraGeomLib_DOCSTRING) cameraGeomLib
+%module(package="lsst.afw.cameraGeom", docstring=cameraGeomLib_DOCSTRING) cameraGeomLib
 
 %{
 #include "lsst/afw/cameraGeom.h"
