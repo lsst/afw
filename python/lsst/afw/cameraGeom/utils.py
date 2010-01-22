@@ -525,7 +525,7 @@ of the detectors"""
 
 def showMosaic(fileName, geomPolicy=None, camera=None,
                display=True, what=cameraGeom.Camera, id=None, overlay=False, describe=True, doTrim=False,
-               imageFactory=afwImage.ImageU):
+               imageFactory=afwImage.ImageU, frame=None):
     """Show a mosaic built from the MEF imageFile containing an exposure
 
 The camera geometry is defined by cameraGeomPolicyFile;  raft IDs etc. are drawn on ds9 if overlay is True;
@@ -563,7 +563,7 @@ If relevant (for e.g. a Ccd) doTrim is applied to the Detector.
 
         if display:
             ampImage = makeImageFromCcd(ccd, imageSource, amp=amp, imageFactory=imageFactory)
-            showCcd(ccd, ampImage, amp=amp, overlay=overlay)
+            showCcd(ccd, ampImage, amp=amp, overlay=overlay, frame=frame)
     elif what == cameraGeom.Ccd:
         if id is None:
             ccd = makeCcd(geomPolicy)
@@ -577,7 +577,7 @@ If relevant (for e.g. a Ccd) doTrim is applied to the Detector.
 
         if display:
             ccdImage = makeImageFromCcd(ccd, imageSource, imageFactory=imageFactory)
-            showCcd(ccd, ccdImage, overlay=overlay)
+            showCcd(ccd, ccdImage, overlay=overlay, frame=frame)
     elif what == cameraGeom.Raft:
         if id:
             raft = findRaft(camera, id)
@@ -589,13 +589,13 @@ If relevant (for e.g. a Ccd) doTrim is applied to the Detector.
         #raft = makeRaft(geomPolicy, raftId=id)
 
         if display:
-            showRaft(raft, imageSource, overlay=overlay)
+            showRaft(raft, imageSource, overlay=overlay, frame=frame)
 
         if describe:
             print describeRaft(raft)
     elif what == cameraGeom.Camera:
         if display:
-            showCamera(camera, imageSource, overlay=overlay)
+            showCamera(camera, imageSource, overlay=overlay, frame=frame)
 
         if describe:
             print describeCamera(camera)
