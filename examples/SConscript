@@ -50,6 +50,7 @@ env.Program("integrateExample", ["integrateExample.cc"], LIBS=env.getlibs("afw")
 
 env.Program("simpleStacker", ["simpleStacker.cc"], LIBS=env.getlibs("afw"))
 
+env.Program(["ccd.cc"], LIBS=env.getlibs("afw"))
 #
 # Build all ticket test files
 #
