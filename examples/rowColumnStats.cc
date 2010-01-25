@@ -39,12 +39,10 @@ int main(int argc, char **argv) {
     MImageF::Ptr imgProjectCol = math::statisticsStack(*img, math::MEAN, 'x');
     MImageF::Ptr imgProjectRow = math::statisticsStack(*img, math::MEAN, 'y');
 
-    //ImageF::Ptr opColPlus(new ImageF(*img, true));
-    SliceF slice(*(imgProjectCol->getImage()));
-    ImageF::Ptr opColPlus = slice + *img;
-    //ImageF::Ptr opColPlus = *img + slice;
-    //image::sliceOperate(*img, *(imgProjectCol->getImage()), "column", '+');
-    ImageF::Ptr opColMinus = image::sliceOperate(*img, *(imgProjectCol->getImage()), "column", '-');
+    SliceF slc = SliceF(*(imgProjectCol->getImage()));
+    ImageF::Ptr opColPlus = *img + slc;
+    ImageF::Ptr opColMinus = SliceF(*(imgProjectCol->getImage())) - *img;
+
     ImageF::Ptr opColMult  = image::sliceOperate(*img, *(imgProjectCol->getImage()), "column", '*');
     ImageF::Ptr opColDiv   = image::sliceOperate(*img, *(imgProjectCol->getImage()), "column", '/');
 
