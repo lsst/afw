@@ -40,12 +40,15 @@ int main(int argc, char **argv) {
     MImageF::Ptr imgProjectRow = math::statisticsStack(*img, math::MEAN, 'y');
 
     SliceF slc = SliceF(*(imgProjectCol->getImage()));
-    ImageF::Ptr opColPlus  = *img + slc;
+
+    ImageF::Ptr opColPlus(new ImageF(*img, true));
+    *opColPlus += slc;
     ImageF::Ptr opColMinus = *img - slc;
 
     ImageF::Ptr opColMult  = *img * slc;
     ImageF::Ptr opColDiv   = *img / slc;
 
+    
     SliceF rowSlice = SliceF(*(imgProjectRow->getImage()));
     std::vector<ImageF::Ptr> rows;
     rows.push_back(*img + rowSlice);

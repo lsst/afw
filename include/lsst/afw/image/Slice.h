@@ -91,6 +91,12 @@ public:
         details::operate<details::Plus<PixelT> >(*retImg, slc, slc.getSliceType());
 	return retImg;
     }
+    friend void operator+=(Image<PixelT> &img, Slice<PixelT> &slc) {
+        details::operate<details::Plus<PixelT> >(img, slc, slc.getSliceType());
+    }
+    friend void operator+=(Slice<PixelT> &slc, Image<PixelT> &img) {
+        details::operate<details::Plus<PixelT> >(img, slc, slc.getSliceType());
+    }
 
     // -----------------------------------------------------------------
     // overload -
@@ -103,6 +109,12 @@ public:
 	typename Image<PixelT>::Ptr retImg(new Image<PixelT>(img, true));
         details::operate<details::MinusInv<PixelT> >(*retImg, slc, slc.getSliceType());
 	return retImg;
+    }
+    friend void operator-=(Image<PixelT> &img, Slice<PixelT> &slc) {
+        details::operate<details::Minus<PixelT> >(img, slc, slc.getSliceType());
+    }
+    friend void operator-=(Slice<PixelT> &slc, Image<PixelT> &img) {
+        details::operate<details::MinusInv<PixelT> >(img, slc, slc.getSliceType());
     }
 
     // ******************************************************************
@@ -117,6 +129,12 @@ public:
         details::operate<details::Mult<PixelT> >(*retImg, slc, slc.getSliceType());
 	return retImg;
     }
+    friend void operator*=(Image<PixelT> &img, Slice<PixelT> &slc) {
+        details::operate<details::Mult<PixelT> >(img, slc, slc.getSliceType());
+    }
+    friend void operator*=(Slice<PixelT> &slc, Image<PixelT> &img) {
+        details::operate<details::Mult<PixelT> >(img, slc, slc.getSliceType());
+    }
 
     // ///////////////////////////////////////////////////////////////////
     // overload /
@@ -129,6 +147,12 @@ public:
 	typename Image<PixelT>::Ptr retImg(new Image<PixelT>(img, true));
         details::operate<details::DivInv<PixelT> >(*retImg, slc, slc.getSliceType());
 	return retImg;
+    }
+    friend void operator/=(Image<PixelT> &img, Slice<PixelT> &slc) {
+        details::operate<details::Div<PixelT> >(img, slc, slc.getSliceType());
+    }
+    friend void operator/=(Slice<PixelT> &slc, Image<PixelT> &img) {
+        details::operate<details::DivInv<PixelT> >(img, slc, slc.getSliceType());
     }
 
     details::SliceType getSliceType() { return _sliceType; }
