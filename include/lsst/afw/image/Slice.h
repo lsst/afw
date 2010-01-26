@@ -17,30 +17,34 @@ namespace lsst {
 namespace afw {
 namespace image {
 
+template<typename PixelT>
+class Slice;
 
-    //namespace {
+namespace details {
 
-    template<typename PixelT>
-    class Slice;
 
 enum SliceType {ROW, COLUMN};
 
 template<typename PixelT>
-struct Plus  { PixelT operator()(PixelT imgPix, PixelT slcPix) { return imgPix + slcPix; } };
+struct Plus     { PixelT operator()(PixelT imgPix, PixelT slcPix) { return imgPix + slcPix; } };
 template<typename PixelT>
-struct Minus { PixelT operator()(PixelT imgPix, PixelT slcPix) { return imgPix - slcPix; } };
+struct Minus    { PixelT operator()(PixelT imgPix, PixelT slcPix) { return imgPix - slcPix; } };
 template<typename PixelT>
-struct Mult  { PixelT operator()(PixelT imgPix, PixelT slcPix) { return imgPix * slcPix; } };
+struct MinusInv { PixelT operator()(PixelT imgPix, PixelT slcPix) { return slcPix - imgPix; } };
 template<typename PixelT>
-struct Div   { PixelT operator()(PixelT imgPix, PixelT slcPix) { return imgPix / slcPix; } };
+struct Mult     { PixelT operator()(PixelT imgPix, PixelT slcPix) { return imgPix * slcPix; } };
+template<typename PixelT>
+struct Div      { PixelT operator()(PixelT imgPix, PixelT slcPix) { return imgPix / slcPix; } };
+template<typename PixelT>
+struct DivInv   { PixelT operator()(PixelT imgPix, PixelT slcPix) { return slcPix / imgPix; } };
+
 
 template<typename OperatorT, typename PixelT>
-void operate(Image<PixelT> &img, Slice<PixelT> const &slc, 
-	     SliceType sliceType) {
+void operate(Image<PixelT> &img, Slice<PixelT> const &slc, details::SliceType sliceType) {
     
     OperatorT op;
     
-    if (sliceType == ROW) {
+    if (sliceType == details::ROW) {
 	for (int y = 0; y < img.getHeight(); ++y) {
 	    typename Slice<PixelT>::x_iterator pSlc = slc.row_begin(0);
 	    for (typename Image<PixelT>::x_iterator pImg = img.row_begin(y), end = img.row_end(y);
@@ -48,7 +52,7 @@ void operate(Image<PixelT> &img, Slice<PixelT> const &slc,
 		*pImg = op(*pImg, *pSlc);
 	    }
 	}
-    } else if (sliceType == COLUMN) {
+    } else if (sliceType == details::COLUMN) {
 
 	typename Slice<PixelT>::y_iterator pSlc = slc.col_begin(0);
 	for (int y = 0; y < img.getHeight(); ++y, ++pSlc) {
@@ -60,10 +64,9 @@ void operate(Image<PixelT> &img, Slice<PixelT> const &slc,
     }
     
 }
+}
 
-
-
-            
+    
 /**
  * @brief A class to specify a slice of an image
  * @ingroup afw
@@ -75,52 +78,64 @@ public:
 
     explicit Slice(Image<PixelT> &img);
     ~Slice() {}
-    void operator+=(Image<PixelT> &img);
-    void operator-=(Image<PixelT> &img);
-    void operator*=(Image<PixelT> &img);
-    void operator/=(Image<PixelT> &img);
-    //    typename Image<PixelT>::Ptr operator+(Image<PixelT> &img);
-    typename Image<PixelT>::Ptr operator-(Image<PixelT> &img);
-    typename Image<PixelT>::Ptr operator*(Image<PixelT> &img);
-    typename Image<PixelT>::Ptr operator/(Image<PixelT> &img);
 
-    
+    // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    // overload +
     friend typename Image<PixelT>::Ptr operator+(Image<PixelT> &img, Slice<PixelT> &slc) {
 	typename Image<PixelT>::Ptr retImg(new Image<PixelT>(img, true));
-	operate<Plus<PixelT> >(*retImg, slc, slc.getSliceType());
+        details::operate<details::Plus<PixelT> >(*retImg, slc, slc.getSliceType());
 	return retImg;
     }
     friend typename Image<PixelT>::Ptr operator+(Slice<PixelT> &slc, Image<PixelT> &img) {
 	typename Image<PixelT>::Ptr retImg(new Image<PixelT>(img, true));
-	operate<Plus<PixelT> >(*retImg, slc, slc.getSliceType());
+        details::operate<details::Plus<PixelT> >(*retImg, slc, slc.getSliceType());
 	return retImg;
     }
 
-    
-    SliceType getSliceType() { return _sliceType; }
-private:
-    SliceType _sliceType;
+    // -----------------------------------------------------------------
+    // overload -
+    friend typename Image<PixelT>::Ptr operator-(Image<PixelT> &img, Slice<PixelT> &slc) {
+	typename Image<PixelT>::Ptr retImg(new Image<PixelT>(img, true));
+        details::operate<details::Minus<PixelT> >(*retImg, slc, slc.getSliceType());
+	return retImg;
+    }
+    friend typename Image<PixelT>::Ptr operator-(Slice<PixelT> &slc, Image<PixelT> &img) {
+	typename Image<PixelT>::Ptr retImg(new Image<PixelT>(img, true));
+        details::operate<details::MinusInv<PixelT> >(*retImg, slc, slc.getSliceType());
+	return retImg;
+    }
 
+    // ******************************************************************
+    // overload *
+    friend typename Image<PixelT>::Ptr operator*(Image<PixelT> &img, Slice<PixelT> &slc) {
+	typename Image<PixelT>::Ptr retImg(new Image<PixelT>(img, true));
+        details::operate<details::Mult<PixelT> >(*retImg, slc, slc.getSliceType());
+	return retImg;
+    }
+    friend typename Image<PixelT>::Ptr operator*(Slice<PixelT> &slc, Image<PixelT> &img) {
+	typename Image<PixelT>::Ptr retImg(new Image<PixelT>(img, true));
+        details::operate<details::Mult<PixelT> >(*retImg, slc, slc.getSliceType());
+	return retImg;
+    }
+
+    // ///////////////////////////////////////////////////////////////////
+    // overload /
+    friend typename Image<PixelT>::Ptr operator/(Image<PixelT> &img, Slice<PixelT> &slc) {
+	typename Image<PixelT>::Ptr retImg(new Image<PixelT>(img, true));
+        details::operate<details::Div<PixelT> >(*retImg, slc, slc.getSliceType());
+	return retImg;
+    }
+    friend typename Image<PixelT>::Ptr operator/(Slice<PixelT> &slc, Image<PixelT> &img) {
+	typename Image<PixelT>::Ptr retImg(new Image<PixelT>(img, true));
+        details::operate<details::DivInv<PixelT> >(*retImg, slc, slc.getSliceType());
+	return retImg;
+    }
+
+    details::SliceType getSliceType() { return _sliceType; }
+private:
+    details::SliceType _sliceType;
 };
 
-#if 0
-template<typename PixelT>
-typename Image<PixelT>::Ptr operator+(Image<PixelT> &img, Slice<PixelT> &slc);
-template<typename PixelT>
-typename Image<PixelT>::Ptr operator+(Slice<PixelT> &slc, Image<PixelT> &img);
-#endif
-
-/********************************************************************
- *
- * row, column Operators
- *
- *********************************************************************/
-
-template<typename ImageT>
-typename ImageT::Ptr sliceOperate(ImageT &image, ImageT &slice,
-				  std::string sliceType, char op, bool deep=true);
-
-    
 }}}
 
 #endif

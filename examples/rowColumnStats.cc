@@ -40,17 +40,18 @@ int main(int argc, char **argv) {
     MImageF::Ptr imgProjectRow = math::statisticsStack(*img, math::MEAN, 'y');
 
     SliceF slc = SliceF(*(imgProjectCol->getImage()));
-    ImageF::Ptr opColPlus = *img + slc;
-    ImageF::Ptr opColMinus = SliceF(*(imgProjectCol->getImage())) - *img;
+    ImageF::Ptr opColPlus  = *img + slc;
+    ImageF::Ptr opColMinus = *img - slc;
 
-    ImageF::Ptr opColMult  = image::sliceOperate(*img, *(imgProjectCol->getImage()), "column", '*');
-    ImageF::Ptr opColDiv   = image::sliceOperate(*img, *(imgProjectCol->getImage()), "column", '/');
+    ImageF::Ptr opColMult  = *img * slc;
+    ImageF::Ptr opColDiv   = *img / slc;
 
+    SliceF rowSlice = SliceF(*(imgProjectRow->getImage()));
     std::vector<ImageF::Ptr> rows;
-    rows.push_back(image::sliceOperate(*img, *(imgProjectRow->getImage()), "row", '+'));
-    rows.push_back(image::sliceOperate(*img, *(imgProjectRow->getImage()), "row", '-'));
-    rows.push_back(image::sliceOperate(*img, *(imgProjectRow->getImage()), "row", '*'));
-    rows.push_back(image::sliceOperate(*img, *(imgProjectRow->getImage()), "row", '/'));
+    rows.push_back(*img + rowSlice);
+    rows.push_back(*img - rowSlice);
+    rows.push_back(*img * rowSlice);
+    rows.push_back(*img / rowSlice);
 
 
     // output the pixel values and show the statistics projections
