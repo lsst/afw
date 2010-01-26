@@ -83,12 +83,12 @@ public:
     // overload +
     friend typename Image<PixelT>::Ptr operator+(Image<PixelT> &img, Slice<PixelT> &slc) {
 	typename Image<PixelT>::Ptr retImg(new Image<PixelT>(img, true));
-        details::operate<details::Plus<PixelT> >(*retImg, slc, slc.getSliceType());
+        *retImg += slc;
 	return retImg;
     }
     friend typename Image<PixelT>::Ptr operator+(Slice<PixelT> &slc, Image<PixelT> &img) {
 	typename Image<PixelT>::Ptr retImg(new Image<PixelT>(img, true));
-        details::operate<details::Plus<PixelT> >(*retImg, slc, slc.getSliceType());
+        slc += *retImg;
 	return retImg;
     }
     friend void operator+=(Image<PixelT> &img, Slice<PixelT> &slc) {
@@ -102,12 +102,12 @@ public:
     // overload -
     friend typename Image<PixelT>::Ptr operator-(Image<PixelT> &img, Slice<PixelT> &slc) {
 	typename Image<PixelT>::Ptr retImg(new Image<PixelT>(img, true));
-        details::operate<details::Minus<PixelT> >(*retImg, slc, slc.getSliceType());
+        *retImg -= slc;
 	return retImg;
     }
     friend typename Image<PixelT>::Ptr operator-(Slice<PixelT> &slc, Image<PixelT> &img) {
 	typename Image<PixelT>::Ptr retImg(new Image<PixelT>(img, true));
-        details::operate<details::MinusInv<PixelT> >(*retImg, slc, slc.getSliceType());
+        slc -= *retImg;
 	return retImg;
     }
     friend void operator-=(Image<PixelT> &img, Slice<PixelT> &slc) {
@@ -121,12 +121,12 @@ public:
     // overload *
     friend typename Image<PixelT>::Ptr operator*(Image<PixelT> &img, Slice<PixelT> &slc) {
 	typename Image<PixelT>::Ptr retImg(new Image<PixelT>(img, true));
-        details::operate<details::Mult<PixelT> >(*retImg, slc, slc.getSliceType());
+        *retImg *= slc;
 	return retImg;
     }
     friend typename Image<PixelT>::Ptr operator*(Slice<PixelT> &slc, Image<PixelT> &img) {
 	typename Image<PixelT>::Ptr retImg(new Image<PixelT>(img, true));
-        details::operate<details::Mult<PixelT> >(*retImg, slc, slc.getSliceType());
+        slc *= *retImg;
 	return retImg;
     }
     friend void operator*=(Image<PixelT> &img, Slice<PixelT> &slc) {
@@ -140,12 +140,12 @@ public:
     // overload /
     friend typename Image<PixelT>::Ptr operator/(Image<PixelT> &img, Slice<PixelT> &slc) {
 	typename Image<PixelT>::Ptr retImg(new Image<PixelT>(img, true));
-        details::operate<details::Div<PixelT> >(*retImg, slc, slc.getSliceType());
+        *retImg /= slc;
 	return retImg;
     }
     friend typename Image<PixelT>::Ptr operator/(Slice<PixelT> &slc, Image<PixelT> &img) {
 	typename Image<PixelT>::Ptr retImg(new Image<PixelT>(img, true));
-        details::operate<details::DivInv<PixelT> >(*retImg, slc, slc.getSliceType());
+        slc /= *retImg;
 	return retImg;
     }
     friend void operator/=(Image<PixelT> &img, Slice<PixelT> &slc) {
