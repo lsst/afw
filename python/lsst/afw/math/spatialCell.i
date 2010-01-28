@@ -37,9 +37,9 @@ SWIG_SHARED_PTR_DERIVED(SpatialCellImageCandidate##NAME,
 // We therefore provide a cast to SpatialCellImageCandidate<> and swig can go from there
 //
 %inline %{
-    lsst::afw::math::SpatialCellImageCandidate<TYPE> *
-        cast_SpatialCellImageCandidate##NAME(lsst::afw::math::SpatialCellCandidate* candidate) {
-        return dynamic_cast<lsst::afw::math::SpatialCellImageCandidate<TYPE> *>(candidate);
+    lsst::afw::math::SpatialCellImageCandidate<TYPE>::Ptr
+    cast_SpatialCellImageCandidate##NAME(lsst::afw::math::SpatialCellCandidate::Ptr candidate) {
+        return boost::shared_dynamic_cast<lsst::afw::math::SpatialCellImageCandidate<TYPE> >(candidate);
     }
 %}
 %enddef
