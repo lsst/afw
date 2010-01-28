@@ -262,26 +262,43 @@ struct noop : public std::unary_function<T1, T1> {
 ///
 /// \brief bitwise_or doesn't seem to be in std::
 ///
+/// \note We provide a single-operand version for when the right-hand-side of an expression is a scalar, not a
+/// masked pixel,
+///
 template <typename T1>
 struct bitwise_or : public std::binary_function<T1, T1, T1> {
     T1 operator()(const T1& x, const T1& y) const {
         return (x | y);
+    }
+    T1 operator()(const T1& x) const {
+        return x;
     }
 };
     
 ///
 /// \brief Calculate the variance when we divide two Pixels
 ///
+/// \note We provide a single-operand version for when the right-hand-side of an expression is a scalar, not a
+/// masked pixel,
+///
 template <typename T1>
 struct variance_divides {
     T1 operator()(T1 const& x, T1 const& y, T1 const& vx, T1 const& vy) const {
         T1 const x2 = x*x;
         T1 const y2 = y*y;
-        return (x2*vy + y2*vx)/(y2*y2);
+        T1 const iy2 = 1.0/y2;
+        return x2*vy*iy2*iy2 + vx*iy2;
+    }
+
+    T1 operator()(T1 const& x, T1 const& y, T1 const& vx) const {
+        return vx/(y*y);
     }
 };
 ///
 /// \brief Calculate the variance when we multiply two Pixels
+///
+/// \note We provide a single-operand version for when the right-hand-side of an expression is a scalar, not a
+/// masked pixel,
 ///
 template <typename T1>
 struct variance_multiplies {
@@ -290,14 +307,25 @@ struct variance_multiplies {
         T1 const y2 = y*y;
         return x2*vy + y2*vx;
     }
+    
+    T1 operator()(T1 const& x, T1 const& y, T1 const& vx) const {
+        return vx*y*y;
+    }
 };
 ///
 /// \brief Calculate the variance when we add (or subtract) two Pixels
+///
+/// \note We provide a single-operand version for when the right-hand-side of an expression is a scalar, not a
+/// masked pixel,
 ///
 template <typename T1>
 struct variance_plus {
     T1 operator()(T1 const&, T1 const&, T1 const& vx, T1 const& vy) const {
         return vx + vy;
+    }
+
+    T1 operator()(T1 const&, T1 const&, T1 const& vx) const {
+        return vx;
     }
 };
 ///
@@ -305,12 +333,18 @@ struct variance_plus {
 ///
 /// The covariance is modelled as alpha*sqrt(var_x*var_y)
 ///
+/// \note We provide a single-operand version for when the right-hand-side of an expression is a scalar, not a
+/// masked pixel,
+///
 template <typename T1>
 struct variance_plus_covar {
     variance_plus_covar(double alpha=0) : _alpha(alpha) {}    
 
     T1 operator()(T1 const&, T1 const&, T1 const& vx, T1 const& vy) const {
         return vx + vy + 2*_alpha*sqrt(vx*vy);
+    }
+    T1 operator()(T1 const&, T1 const&, T1 const& vx) const {
+        return vx;
     }
 private:
     double _alpha;
@@ -388,6 +422,46 @@ private:
     VarianceBinOp _varOp;
 };
 
+/// Partial specialization of BinaryExpr when ExprT2 is a double (i.e no mask/variance part)
+///
+/// \todo Could use a traits class to handle all scalar types
+template <typename ExprT1, typename ImageBinOp, typename MaskBinOp, typename VarianceBinOp>
+class BinaryExpr<ExprT1, double, ImageBinOp, MaskBinOp, VarianceBinOp> {
+public:
+    typedef typename exprTraits<ExprT1>::ImagePixelT ImagePixelT;
+    typedef typename exprTraits<ExprT1>::MaskPixelT MaskPixelT;
+    typedef typename exprTraits<ExprT1>::VariancePixelT VariancePixelT;
+    /// A binary operation, with three functors to represent the %image/mask/variance operations
+    BinaryExpr(ExprT1 e1, double e2,
+               ImageBinOp imageOp=ImageBinOp(), MaskBinOp maskOp=MaskBinOp(), VarianceBinOp varOp=VarianceBinOp()) :
+        _expr1(e1), _expr2(e2), _imageOp(imageOp), _maskOp(maskOp), _varOp(varOp) {}
+
+    /// A binary operation, with three functors to represent the %image/mask/variance operations and an extra double argument
+    BinaryExpr(ExprT1 e1, double e2, double const alpha,
+               ImageBinOp imageOp=ImageBinOp(), MaskBinOp maskOp=MaskBinOp(), VarianceBinOp=VarianceBinOp()) :
+        _expr1(e1), _expr2(e2), _imageOp(imageOp), _maskOp(maskOp), _varOp(VarianceBinOp(alpha)) {}
+    /// evaluate the %image part of the expression
+    ImagePixelT image() const {
+        return _imageOp(_expr1.image(), _expr2);
+    }
+
+    /// evaluate the mask part of the expression
+    MaskPixelT mask() const {
+        return _maskOp(_expr1.mask());
+    }
+
+    /// evaluate the variance part of the expression
+    VariancePixelT variance() const {
+        return _varOp(_expr1.image(), _expr2, _expr1.variance());
+    }
+private:
+    typename exprTraits<ExprT1>::expr_type _expr1;
+    double _expr2;
+    ImageBinOp _imageOp;
+    MaskBinOp _maskOp;
+    VarianceBinOp _varOp;
+};
+                
 /************************************************************************************************************/
 /// Template for -e1
 template <typename ExprT1>
