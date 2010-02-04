@@ -182,6 +182,12 @@ definitions: {
                     dictionary: {
                         target: Amp
                         definitions: {
+                            serial: {
+                                type: int
+                                description: "Serial number for this Amp"
+                                minOccurs: 0
+                                maxOccurs: 1
+                            }
                             id: {
                                 type: string
                                 description: "ID for this Amp"
@@ -213,26 +219,6 @@ definitions: {
                                 }
                                 minOccurs: 0
                                 maxOccurs: 1
-                            }
-                            Electronic: {
-                                type: policy
-                                dictionary: {
-                                    target: Electronic
-                                    definitions: {
-                                        gain: {
-                                            type: double
-                                            default: 1.0
-                                        }
-                                        readNoise: {
-                                            type: double
-                                            default: 10.0
-                                        }
-                                        saturationLevel: {
-                                            type: double
-                                            default: 65535.0
-                                        }
-                                    }
-                                }
                             }
                         }
                     }
@@ -287,6 +273,88 @@ definitions: {
                     minOccurs: 0
                     maxOccurs: 1
                     default: 0
+                }
+            }
+        }
+    }
+    #
+    # Electronic properties of the detectors
+    #
+    Electronic: {
+        type: policy
+        dictionary: {
+            target: Electronic
+            definitions: {
+                Raft: {
+                    type: policy
+                    dictionary: {
+                        target: Raft
+                        definitions: {
+                            serial: {
+                                type: int
+                                description: "Raft's serial number"
+                                minOccurs: 0
+                                maxOccurs: 1
+                                default: -1
+                            }
+                            name: {
+                                type: string
+                                description: "Name of this raft"
+                                minOccurs: 0
+                                maxOccurs: 1
+                                default: "None"
+                            }
+                            Ccd: {
+                                type: policy
+                                dictionary: {
+                                    target: Ccd
+                                    definitions: {
+                                        serial: {
+                                            type: int
+                                            description: "Raft's serial number"
+                                            minOccurs: 0
+                                            maxOccurs: 1
+                                            default: -1
+                                        }
+                                        name: {
+                                            type: string
+                                            description: "Name of this raft"
+                                            minOccurs: 0
+                                            maxOccurs: 1
+                                            default: "None"
+                                        }
+                                        Amp: {
+                                            type: policy
+                                            dictionary: {
+                                                target: Amp
+                                                definitions: {
+                                                    serial: {
+                                                        type: int
+                                                        description: "Raft's serial number"
+                                                        minOccurs: 0
+                                                        maxOccurs: 1
+                                                        default: -1
+                                                    }
+                                                    gain: {
+                                                        type: double
+                                                        default: 1.0
+                                                    }
+                                                    readNoise: {
+                                                        type: double
+                                                        default: 10.0
+                                                    }
+                                                    saturationLevel: {
+                                                        type: double
+                                                        default: 65535.0
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

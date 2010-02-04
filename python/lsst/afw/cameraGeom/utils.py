@@ -130,7 +130,23 @@ in particular that it has an entry ampSerial which is a single-element list, the
             ccdId = cameraGeom.Id(ccdPol.get("serial"), ccdPol.get("name"))
         except Exception, e:
             ccdId = cameraGeom.Id(0, "unknown")
-
+    #
+    # Find the proper electronic parameters.  The Ccd name may be specified as "*" to match all detectors,
+    # a feature that's probably mostly useful for testing
+    #
+    electronicPol = geomPolicy.get("Electronic")
+    electronics = {}
+    for pol in electronicPol.getArray("Raft"):
+        for pol in pol.getArray("Ccd"):
+            electronicCcdName = pol.get("name")
+            if electronicCcdName in ("*", ccdId.getName()):
+                electronics["ccdName"] = electronicCcdName
+                for p in pol.getArray("Amp"):
+                    electronics[p.get("serial")] = p
+                break
+    #
+    # Actually build the Ccd
+    #
     ccd = cameraGeom.Ccd(ccdId, pixelSize)
 
     if nCol*nRow != len(ccdPol.getArray("Amp")):
@@ -141,22 +157,39 @@ in particular that it has an entry ampSerial which is a single-element list, the
         ampSerial = [0]
     else:
         ampSerial = ccdInfo.get("ampSerial", [0])
-        ampSerial0 = ampSerial[0]           # used in testing
+    ampSerial0 = None                   # used in testing
         
     readoutCorners = dict(LLC = cameraGeom.Amp.LLC,
                           LRC = cameraGeom.Amp.LRC,
                           ULC = cameraGeom.Amp.ULC,
                           URC = cameraGeom.Amp.URC)
     for ampPol in ccdPol.getArray("Amp"):
+        if ampPol.exists("serial"):
+            serial = ampPol.get("serial")
+            ampSerial[0] = serial
+        else:
+            serial = ampSerial[0]
+        ampSerial[0] += 1
+
+        if ampSerial0 is None:
+            ampSerial0 = serial
+
         Col, Row = ampPol.getArray("index")
         c =  ampPol.get("readoutCorner")
 
         if Col not in range(nCol) or Row not in range(nRow):
             raise RuntimeError, ("Amp location %d, %d is not in 0..%d, 0..%d" % (Col, Row, nCol, nRow))
 
-        gain = ampPol.get("Electronic.gain")
-        readNoise = ampPol.get("Electronic.readNoise")
-        saturationLevel = ampPol.get("Electronic.saturationLevel")
+        try:
+            ePol = electronics[serial]
+            gain = ePol.get("gain")
+            readNoise = ePol.get("readNoise")
+            saturationLevel = ePol.get("saturationLevel")
+        except KeyError:
+            if electronics.get("ccdName") != "*":
+                raise RuntimeError, ("Unable to find electronic info for Ccd \"%s\", Amp %s" %
+                                     (ccd.getId(), serial))
+            gain, readNoise, saturationLevel = 0, 0, 0
         #
         # Now lookup properties common to all the CCD's amps
         #
@@ -187,9 +220,8 @@ in particular that it has an entry ampSerial which is a single-element list, the
             dataSec = afwImage.BBox(afwImage.PointI(overclockH, preRows), width, height)
 
         eParams = cameraGeom.ElectronicParams(gain, readNoise, saturationLevel)
-        amp = cameraGeom.Amp(cameraGeom.Id(ampSerial[0], "ID%d" % ampSerial[0]),
+        amp = cameraGeom.Amp(cameraGeom.Id(serial, "ID%d" % serial),
                              allPixels, biasSec, dataSec, c, eParams)
-        ampSerial[0] += 1
 
         ccd.addAmp(Col, Row, amp)
     #
