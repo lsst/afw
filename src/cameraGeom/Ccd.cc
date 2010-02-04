@@ -13,13 +13,12 @@ namespace cameraGeom = lsst::afw::cameraGeom;
 /**
  * Add an Amp to the set known to be part of this Ccd
  *
- *  The \c iX and \c iY values are the 0-indexed position of the Amp on the CCD; e.g. (4, 1)
+ *  The \c pos value is the 0-indexed position of the Amp on the CCD; e.g. (4, 1)
  * for the top right Amp on a CCD with serials across the top and bottom, and each serial split 5 ways
  */
-void cameraGeom::Ccd::addAmp(int const iX, ///< x-index of this Amp
-                             int const iY, ///< y-index of this Amp
+void cameraGeom::Ccd::addAmp(afwGeom::Point2I pos,        // position of Amp in the Ccd
                              cameraGeom::Amp const& amp_c ///< The amplifier to add to the Ccd's manifest
-                         )
+                            )
 {
     cameraGeom::Amp::Ptr amp(new Amp(amp_c)); // the Amp with absolute coordinates
     //
@@ -27,7 +26,7 @@ void cameraGeom::Ccd::addAmp(int const iX, ///< x-index of this Amp
     //
     {
         afwImage::BBox ampPixels = amp->getAllPixels();
-        amp->shift(iX*ampPixels.getWidth(), iY*ampPixels.getHeight());
+        amp->shift(pos[0]*ampPixels.getWidth(), pos[1]*ampPixels.getHeight());
     }
 
     getAllPixels().grow(amp->getAllPixels().getLLC());

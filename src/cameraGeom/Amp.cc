@@ -31,6 +31,16 @@ cameraGeom::Amp::Amp(
     : Detector(id, true),
     _biasSec(biasSec), _dataSec(dataSec), _readoutCorner(readoutCorner), _eParams(eParams)
 {
+    if (!allPixels.contains(biasSec.getLLC()) || !allPixels.contains(biasSec.getURC())) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::OutOfRangeException,
+                          (boost::format("%||'s bias section doesn't fit in allPixels") % id).str());
+    }
+    if (!allPixels.contains(dataSec.getLLC()) || !allPixels.contains(dataSec.getURC())) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::OutOfRangeException,
+                          (boost::format("%||'s data section doesn't fit in allPixels") % id).str());
+        
+    }
+
     getAllPixels() = allPixels;
     
     setTrimmedGeom();
