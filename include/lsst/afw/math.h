@@ -17,5 +17,6 @@
 #include "lsst/afw/math/Statistics.h"
 #include "lsst/afw/math/Integrate.h"
 #include "lsst/afw/math/Interpolate.h"
+#include "lsst/afw/math/Random.h"
 
 #endif // LSST_AFW_MATH_H
