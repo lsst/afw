@@ -16,6 +16,7 @@
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
+#include "lsst/afw/math/LocalKernel.h"
 
 namespace pexExcept = lsst::pex::exceptions;
 namespace afwMath = lsst::afw::math;
@@ -244,23 +245,29 @@ void afwMath::LinearCombinationKernel::_setKernelList(KernelList const &kernelLi
 }
 
 /**
- *  Return a ConvolutionVisitor that matches the type requested, at the given location.
+ *  Return a LocalKernel that matches the type requested, at the given location.
  *
  *  The default implementation would support the creation of IMAGE and FOURIER
  *  visitors without derivatives. LinearCombinationKernel (and possibly
  *  AnalyticKernel) can override to provide versions with derivatives.
  */
-lsst::afw::math::ImageConvolutionVisitor::Ptr
-lsst::afw::math::LinearCombinationKernel::computeImageConvolutionVisitor(
-    lsst::afw::image::PointD const & location
+afwMath::ImageLocalKernel::Ptr afwMath::LinearCombinationKernel::computeImageLocalKernel(
+    lsst::afw::geom::Point2D const & location
 ) const{
-    std::pair<int, int> center = std::make_pair(getCtrX(), getCtrY());
-    lsst::afw::image::Image<Pixel>::Ptr imagePtr =
-        boost::make_shared<lsst::afw::image::Image<Pixel> >(getWidth(), getHeight());
+    ImageLocalKernel::Image::Ptr imagePtr( 
+        new ImageLocalKernel::Image(getWidth(), getHeight())
+    );
+    lsst::afw::geom::Point2I center = lsst::afw::geom::makePointI(
+        getCtrX(), getCtrY()
+    );
     computeImage(*imagePtr, false, location.getX(), location.getY());
     std::vector<double> kernelParameters(getNKernelParameters());
-    computeKernelParametersFromSpatialModel(kernelParameters, location.getX(), location.getY());
-    return boost::make_shared<ImageConvolutionVisitor>(
+    computeKernelParametersFromSpatialModel(
+        kernelParameters, 
+        location.getX(), location.getY()
+    );
+
+    return boost::make_shared<ImageLocalKernel>(
         center,
         kernelParameters,
         imagePtr,

@@ -12,7 +12,7 @@
 
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/Kernel.h"
-#include "lsst/afw/math/ConvolutionVisitor.h"
+#include "lsst/afw/math/LocalKernel.h"
 
 
 typedef lsst::afw::math::Kernel Kernel;
@@ -20,11 +20,11 @@ typedef lsst::afw::math::FixedKernel FixedKernel;
 typedef lsst::afw::math::LinearCombinationKernel LinearCombinationKernel;
 typedef lsst::afw::math::KernelList KernelList;
 typedef lsst::afw::image::Image<Kernel::Pixel> Image;
-typedef lsst::afw::math::ConvolutionVisitor ConvolutionVisitor;
-typedef lsst::afw::math::ImageConvolutionVisitor ImageConvolutionVisitor;
-typedef lsst::afw::math::FourierConvolutionVisitor FourierConvolutionVisitor;
+typedef lsst::afw::math::LocalKernel LocalKernel;
+typedef lsst::afw::math::ImageLocalKernel ImageLocalKernel;
+typedef lsst::afw::math::FourierLocalKernel FourierLocalKernel;
 
-BOOST_AUTO_TEST_CASE(ConvolutionVisitorTest) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
+BOOST_AUTO_TEST_CASE(LocalKernelTest) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     int width = 7, height = 7;
     Image img(width,height, 0);
     img(width/2 + 1, height/2 + 1) = 1;
@@ -42,27 +42,26 @@ BOOST_AUTO_TEST_CASE(ConvolutionVisitorTest) { /* parasoft-suppress  LsstDm-3-2a
     FixedKernel fixedKernel(img);
     LinearCombinationKernel linearCombinationKernel(basisList, std::vector<double>(basisList.size()));
 
-    FourierConvolutionVisitor::Ptr fourierVisitor;
-    ImageConvolutionVisitor::Ptr imgVisitor;
-    ConvolutionVisitor::Ptr visitorPtr;
+    FourierLocalKernel::Ptr fourierKernel;
+    ImageLocalKernel::Ptr imgKernel;
 
-    BOOST_CHECK_NO_THROW(imgVisitor = fixedKernel.computeImageConvolutionVisitor(
-            lsst::afw::image::PointD(3.4, 0.8886))
+    BOOST_CHECK_NO_THROW(imgKernel = fixedKernel.computeImageLocalKernel(
+            lsst::afw::geom::makePointD(3.4, 0.8886))
     );
-    BOOST_CHECK(imgVisitor.get() != 0);
-    BOOST_CHECK_NO_THROW(fourierVisitor = fixedKernel.computeFourierConvolutionVisitor(
-            lsst::afw::image::PointD(0, 1))
+    BOOST_CHECK(imgKernel.get() != 0);
+    BOOST_CHECK_NO_THROW(fourierKernel = fixedKernel.computeFourierLocalKernel(
+            lsst::afw::geom::makePointD(0, 1))
     );
-    BOOST_CHECK(fourierVisitor.get() != 0);
+    BOOST_CHECK(fourierKernel.get() != 0);
 
-    Image::Ptr imgFromVisitor = imgVisitor->getImage();
+    Image::Ptr imgFromLocalKernel = imgKernel->getImage();
 
-    BOOST_CHECK_EQUAL(imgFromVisitor->getHeight(), height);
-    BOOST_CHECK_EQUAL(imgFromVisitor->getWidth(), width);
+    BOOST_CHECK_EQUAL(imgFromLocalKernel->getHeight(), height);
+    BOOST_CHECK_EQUAL(imgFromLocalKernel->getWidth(), width);
     
     for(int y = 0; y < height; ++y) {
-        Image::x_iterator vIter = imgFromVisitor->row_begin(y);
-        Image::x_iterator vEnd = imgFromVisitor->row_end(y);
+        Image::x_iterator vIter = imgFromLocalKernel->row_begin(y);
+        Image::x_iterator vEnd = imgFromLocalKernel->row_end(y);
         Image::x_iterator iIter = img.row_begin(y);
         for(; vIter != vEnd; ++vIter, ++iIter) {
             BOOST_CHECK_CLOSE(static_cast<double>(*vIter), static_cast<double>(*iIter), 0.00001);
@@ -70,21 +69,21 @@ BOOST_AUTO_TEST_CASE(ConvolutionVisitorTest) { /* parasoft-suppress  LsstDm-3-2a
     }
 
 
-    BOOST_CHECK_NO_THROW(imgVisitor = linearCombinationKernel.computeImageConvolutionVisitor(
-            lsst::afw::image::PointD(3.4, 0.8886))
+    BOOST_CHECK_NO_THROW(imgKernel = linearCombinationKernel.computeImageLocalKernel(
+            lsst::afw::geom::makePointD(3.4, 0.8886))
     );
 
-    BOOST_CHECK(imgVisitor.get() != 0);
-    imgFromVisitor = imgVisitor->getImage();
+    BOOST_CHECK(imgKernel.get() != 0);
+    imgFromLocalKernel = imgKernel->getImage();
 
-    BOOST_CHECK_EQUAL(imgFromVisitor->getHeight(), height);
-    BOOST_CHECK_EQUAL(imgFromVisitor->getWidth(), width);
-    BOOST_CHECK_EQUAL(imgVisitor->getNParameters(), width*height);
+    BOOST_CHECK_EQUAL(imgFromLocalKernel->getHeight(), height);
+    BOOST_CHECK_EQUAL(imgFromLocalKernel->getWidth(), width);
+    BOOST_CHECK_EQUAL(imgKernel->getNParameters(), width*height);
 
-    BOOST_CHECK_NO_THROW(fourierVisitor = linearCombinationKernel.computeFourierConvolutionVisitor(
-            lsst::afw::image::PointD(4.0, 33.2))
+    BOOST_CHECK_NO_THROW(fourierKernel = linearCombinationKernel.computeFourierLocalKernel(
+            lsst::afw::geom::makePointD(4.0, 33.2))
     );
-    BOOST_CHECK(fourierVisitor.get() !=0);
-    BOOST_CHECK_EQUAL(fourierVisitor->getNParameters(), width*height);
+    BOOST_CHECK(fourierKernel.get() !=0);
+    BOOST_CHECK_EQUAL(fourierKernel->getNParameters(), width*height);
 
 }
