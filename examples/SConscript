@@ -19,6 +19,7 @@ env.Program("timeImageIterators.cc", LIBS=env.getlibs("afw"))
 env.Program("timeImageAddition", ["timeImageAddition.cc"], LIBS=env.getlibs("afw"))
 env.Program("timePixelAccess", ["timePixelAccess.cc"], LIBS=env.getlibs("afw"))
 env.Program(["timePixelAccessGil.cc"], LIBS=env.getlibs("afw"))
+env.Program(["skyMap.cc"], LIBS=env.getlibs("afw"))
 
 env.Program("chebyshev1Function", ["chebyshev1Function.cc"], LIBS=env.getlibs("afw"))
 env.Program("gaussianFunction", ["gaussianFunction.cc"], LIBS=env.getlibs("afw"))

@@ -10,7 +10,7 @@
  *
  * \ingroup afw
  */
-#include <lsst/pex/exceptions.h>
+#include "lsst/pex/exceptions.h"
 
 namespace afwMath = lsst::afw::math;
 namespace afwImage = lsst::afw::image;

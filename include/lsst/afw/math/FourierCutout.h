@@ -6,12 +6,12 @@
 #include <complex>
 #include <algorithm>
 #include <vector>
-#include <boost/format.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/shared_array.hpp>
-#include <boost/make_shared.hpp>
+#include "boost/format.hpp"
+#include "boost/shared_ptr.hpp"
+#include "boost/shared_array.hpp"
+#include "boost/make_shared.hpp"
 
-#include <lsst/pex/exceptions/Runtime.h>
+#include "lsst/pex/exceptions/Runtime.h"
 
 namespace lsst {
 namespace afw {

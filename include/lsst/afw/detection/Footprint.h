@@ -11,6 +11,7 @@
 #include <cmath>
 #include <boost/cstdint.hpp>
 #include <boost/shared_ptr.hpp>
+#include "lsst/pex/exceptions.h"
 #include "lsst/pex/policy/Policy.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/detection/Peak.h"

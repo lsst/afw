@@ -3,8 +3,9 @@
 
 #include <boost/shared_ptr.hpp>
 #include <Eigen/Core>
-#include <lsst/afw/math/FourierCutout.h>
-#include <lsst/afw/image/Image.h>
+#include "lsst/pex/exceptions.h"
+#include "lsst/afw/math/FourierCutout.h"
+#include "lsst/afw/image/Image.h"
 
 namespace lsst {
 namespace afw {

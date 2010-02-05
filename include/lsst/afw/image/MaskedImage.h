@@ -16,6 +16,7 @@
 #include "boost/mpl/at.hpp"
 #include "boost/iterator/zip_iterator.hpp"
 
+#include "lsst/pex/exceptions.h"
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/daf/base/Persistable.h"
 #include "lsst/afw/formatters/MaskedImageFormatter.h"

@@ -33,13 +33,14 @@ env = scons.makeEnv(
         ["daf_data", "lsst/daf/data.h", "daf_data:C++"],
         ["eigen", "Eigen/Core.h"],
         ["fftw", "fftw3.h", "fftw3"],
+        ["healpix", "healpix_base.h", "healpix_cxx:C++"],
     ],
 )
 #
 # Libraries needed to link libraries/executables
 #
 env.libs["afw"] += env.getlibs("boost wcslib cfitsio minuit2 gsl utils daf_base daf_data daf_persistence " +
-    "pex_exceptions pex_logging pex_policy security fftw3")
+    "pex_exceptions pex_logging pex_policy security fftw3 healpix")
 if True:
     #
     # Workaround SConsUtils failure to find numpy .h files. Fixed in sconsUtils >= 3.3.2
