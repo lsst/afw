@@ -17,13 +17,11 @@
 * * Add operator== and operator!= to scheme; any sort of comparing or combining SkyMapIdLists
 *   and/or SkyMapDataLists requires that the schemes be the same.
 *   To implement this first test that the scheme classes are the same,
-*   then that the parameters are the same (which mahy require a separate implementation in each subclass).
+*   then that the parameters are the same (which may require a separate implementation in each subclass).
 * * Add operator== and operator!= to SkyMapIdList and perhaps SkyMapPixelList.
-* * move implementation and healpix includes to src file;
-*   the latter pollute the namespace with names such as "pointing" -- yikes!
-*   But is it possible to move the healpix include to src?
-*   The HealPixMapScheme must list it as a member variable
-*   and "pointing" is used as a private method return type.
+* * move implementation to src file
+* * Try to figure out how to avoid having healpix names pollute the namespace;
+*   I'm not sure this is practical since HealPixMapScheme lists it as a member variable
 * * Add clone methods to SkyMapIdList and SkyMapPixelList (once the current discussion calms down)
 * * Handle invalid nside without letting healpix abort (sigh).
 *
