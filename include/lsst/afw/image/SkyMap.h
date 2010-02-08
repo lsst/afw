@@ -22,6 +22,7 @@
 * * move implementation to src file
 * * Try to figure out how to avoid having healpix names pollute the namespace;
 *   I'm not sure this is practical since HealPixMapScheme lists it as a member variable
+*   but perhaps a forward declaration will suffice.
 * * Add clone methods to SkyMapIdList and SkyMapImage (once the current discussion calms down)
 * * Handle invalid nside without letting healpix abort (sigh).
 *
@@ -197,7 +198,7 @@ namespace image {
         explicit HealPixMapScheme(
                 boost::int64_t nSides ///< number of sides for HEALPix map
         ) :
-            _healPixBase(nSides, RING)
+            _healPixBase(nSides, RING, SET_NSIDE)
         { }
 
         virtual ~HealPixMapScheme() {};
