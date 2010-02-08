@@ -5,24 +5,24 @@
 * @brief Declaration of the sky pixelization classes.
 *
 * Basic concepts:
-* * SkyMapScheme: describes a sky pixelization scheme, such as Healpix
-* * Pixel Id: the unique ID of a pixel. The type of the ID is a template parameter and depends on
+* * SkyMapScheme: describes a sky pixelization scheme, such as Healpix.
+* * Pixel Id: the unique ID of a pixel. The ID type is a template parameter and depends on
 *   the pixelization scheme.
-* * Pixel Data: the data for (value of) a pixel; type type of the data is a template parameter
-* * Pixel: a pair <Pixel ID, Pixel Data> describing the location and value of a pixel in the sky map
-* * SkyMapIdList: a collection of pixel IDs
-* * SkyMapPixelList: a collection of Pixels (Pixel ID, Pixel Data pairs)
+* * Pixel Data: the data for (value of) a pixel. The data type is a template parameter.
+* * Pixel: a pair <Pixel ID, Pixel Data> describing the location and value of a pixel in the sky map.
+* * SkyMapIdList: a collection of pixel IDs.
+* * SkyMapImage: a collection of Pixels (Pixel ID, Pixel Data pairs).
 *
 * \todo 
 * * Add operator== and operator!= to scheme; any sort of comparing or combining SkyMapIdLists
 *   and/or SkyMapDataLists requires that the schemes be the same.
 *   To implement this first test that the scheme classes are the same,
 *   then that the parameters are the same (which may require a separate implementation in each subclass).
-* * Add operator== and operator!= to SkyMapIdList and perhaps SkyMapPixelList.
+* * Add operator== and operator!= to SkyMapIdList and perhaps SkyMapImage.
 * * move implementation to src file
 * * Try to figure out how to avoid having healpix names pollute the namespace;
 *   I'm not sure this is practical since HealPixMapScheme lists it as a member variable
-* * Add clone methods to SkyMapIdList and SkyMapPixelList (once the current discussion calms down)
+* * Add clone methods to SkyMapIdList and SkyMapImage (once the current discussion calms down)
 * * Handle invalid nside without letting healpix abort (sigh).
 *
 * @ingroup afw
@@ -268,25 +268,25 @@ namespace image {
     * \brief A collection of sky map pixels (pixel ID/data pairs)
     */
     template <typename SkyMapSchemeT, typename PixelDataT>
-    class SkyMapPixelList {
+    class SkyMapImage {
     public:
         typedef typename SkyMapSchemeT::PixelId PixelId;
         typedef PixelDataT PixelData;
-        typedef std::pair<PixelId, PixelDataT> PixelIdData;
+        typedef std::pair<PixelId, PixelDataT> Pixel;
         typedef SkyMapIdList<SkyMapSchemeT> IdList;
         typedef typename std::map<PixelId, PixelDataT>::const_iterator const_iterator;
         typedef typename std::map<PixelId, PixelDataT>::iterator iterator;
         
-        explicit SkyMapPixelList(
+        explicit SkyMapImage(
                 SkyMapSchemeT const &scheme ///< sky map scheme
         ) : _schemePtr(scheme.clone()), _pixelList() {}
 
-        explicit SkyMapPixelList(
+        explicit SkyMapImage(
                 SkyMapSchemeT const &scheme, ///< sky map scheme
-                SkyMapPixelList<SkyMapSchemeT, PixelDataT> const &dataList ///< sky map data list
-        ) : _schemePtr(scheme.clone()), _pixelList(dataList) {}
+                SkyMapImage<SkyMapSchemeT, PixelDataT> const &pixelPtr ///< sky map pixel list
+        ) : _schemePtr(scheme.clone()), _pixelList(pixelPtr) {}
 
-        virtual ~SkyMapPixelList() {};
+        virtual ~SkyMapImage() {};
 
         typename SkyMapSchemeT::Ptr getScheme() { return _schemePtr; };
         
@@ -295,8 +295,8 @@ namespace image {
         */
         SkyMapIdList<SkyMapSchemeT> getIdList() const {
             IdList retIdList;
-            for (const_iterator dataPtr = begin(); dataPtr != end(); ++dataPtr) {
-                retIdList.add(dataPtr->first);
+            for (const_iterator pixelPtr = begin(); pixelPtr != end(); ++pixelPtr) {
+                retIdList.add(pixelPtr->first);
             }
             return retIdList;
         }
@@ -304,12 +304,12 @@ namespace image {
         /**
         * \brief Add the specified pixel; ignored if a already present
         */
-        inline void add(PixelIdData const &pixelIdData) { _pixelList.insert(pixelIdData); }
+        inline void add(Pixel const &pixel) { _pixelList.insert(pixel); }
 
         /**
         * \brief Add the specified list of pixels; pixels that are already present are ignored
         */
-        void add(SkyMapPixelList const &dataList) { _pixelList.insert(dataList.begin(), dataList.end()); }
+        void add(SkyMapImage const &pixelPtr) { _pixelList.insert(pixelPtr.begin(), pixelPtr.end()); }
 
         /**
         * \brief Is the pixel present?
@@ -336,11 +336,11 @@ namespace image {
         * \raise lsst::pex::exceptions::NotFoundException if pixel is not present
         */
         PixelDataT get(PixelId const &pixelId) const {
-            PixelIdData *dataPtr = _pixelList.find(pixelId);
-            if (dataPtr == end()) {
+            Pixel *pixelPtr = _pixelList.find(pixelId);
+            if (pixelPtr == end()) {
                 throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException, "Not found");
             }
-            return dataPtr->second;
+            return pixelPtr->second;
         };
         
         /**
@@ -348,12 +348,12 @@ namespace image {
         *
         * \raise lsst::pex::exceptions::NotFoundException if pixel is not present
         */
-        void set(PixelIdData const &pixelIdData) {
-            PixelIdData *dataPtr = _pixelList.find(pixelIdData->first);
-            if (dataPtr == end()) {
+        void set(Pixel const &pixel) {
+            Pixel *pixelPtr = _pixelList.find(pixel->first);
+            if (pixelPtr == end()) {
                 throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException, "Not found");
             }
-            dataPtr->second = pixelIdData->second;
+            pixelPtr->second = pixel->second;
         }
 
         const_iterator begin() const { return _pixelList.begin(); };
@@ -367,8 +367,8 @@ namespace image {
         /**
         * \brief Make a sky map pixel
         */
-        PixelIdData static makePixel(PixelId const &pixelId, PixelDataT const &pixelData) {
-            return PixelIdData(pixelId, pixelData);
+        Pixel static makePixel(PixelId const &pixelId, PixelDataT const &pixelData) {
+            return Pixel(pixelId, pixelData);
         }
         
     private:
