@@ -311,14 +311,14 @@ definitions: {
                                     definitions: {
                                         serial: {
                                             type: int
-                                            description: "Raft's serial number"
+                                            description: "Ccd's serial number"
                                             minOccurs: 0
                                             maxOccurs: 1
                                             default: -1
                                         }
                                         name: {
                                             type: string
-                                            description: "Name of this raft"
+                                            description: "Name of this Ccd"
                                             minOccurs: 0
                                             maxOccurs: 1
                                             default: "None"
@@ -362,65 +362,95 @@ definitions: {
     #
     # Defects in a Detector
     #
-    DefectList: {
+    Defects: {
         type: Policy
         dictionary: {
             target: "DefectList"
             definitions: {
-                serial: {
-                    type: int
-                    description: "Detector's serial number"
-                    minOccurs: 0
-                    maxOccurs: 1
-                    default: -1
-                }
-                name: {
-                    type: string
-                    description: "Detector's name"
-                    minOccurs: 0
-                    maxOccurs: 1
-                    default: "Unknown"
-                }
-                Defect: {
-                    type: Policy
+                Raft: {
+                    type: policy
                     dictionary: {
-                        target: "Defect"
+                        target: Raft
                         definitions: {
-                            x0: {
+                            serial: {
                                 type: int
-                                description: "Starting column"
-                                minOccurs: 1
-                                maxOccurs: 1
-                            }
-                            y0: {
-                                type: int
-                                description: "Starting row"
-                                minOccurs: 1
-                                maxOccurs: 1
-                            }
-                            x1: {
-                                type: int
-                                description: "Ending column; optional if width is specified"
+                                description: "Raft's serial number"
                                 minOccurs: 0
                                 maxOccurs: 1
+                                default: -1
                             }
-                            y1: {
-                                type: int
-                                description: "Ending row; optional if height is specified"
+                            name: {
+                                type: string
+                                description: "Name of this raft"
                                 minOccurs: 0
                                 maxOccurs: 1
+                                default: "None"
                             }
-                            width: {
-                                type: int
-                                description: "number of columns; optional if x1 is specified"
-                                minOccurs: 0
-                                maxOccurs: 1
-                            }
-                            height: {
-                                type: int
-                                description: "number of rows; optional if y1 is specified"
-                                minOccurs: 0
-                                maxOccurs: 1
+                            Ccd: {
+                                type: policy
+                                dictionary: {
+                                    target: Ccd
+                                    definitions: {
+                                        serial: {
+                                            type: int
+                                            description: "Detector's serial number"
+                                            minOccurs: 0
+                                            maxOccurs: 1
+                                            default: -1
+                                        }
+                                        name: {
+                                            type: string
+                                            description: "Detector's name"
+                                            minOccurs: 0
+                                            maxOccurs: 1
+                                            default: "Unknown"
+                                        }
+                                        Defect: {
+                                            type: Policy
+                                            dictionary: {
+                                                target: "Defect"
+                                                definitions: {
+                                                    x0: {
+                                                        type: int
+                                                        description: "Starting column"
+                                                        minOccurs: 1
+                                                        maxOccurs: 1
+                                                    }
+                                                    y0: {
+                                                        type: int
+                                                        description: "Starting row"
+                                                        minOccurs: 1
+                                                        maxOccurs: 1
+                                                    }
+                                                    x1: {
+                                                        type: int
+                                                        description: "Ending column; optional if width is specified"
+                                                        minOccurs: 0
+                                                        maxOccurs: 1
+                                                    }
+                                                    y1: {
+                                                        type: int
+                                                        description: "Ending row; optional if height is specified"
+                                                        minOccurs: 0
+                                                        maxOccurs: 1
+                                                    }
+                                                    width: {
+                                                        type: int
+                                                        description: "number of columns; optional if x1 is specified"
+                                                        minOccurs: 0
+                                                        maxOccurs: 1
+                                                    }
+                                                    height: {
+                                                        type: int
+                                                        description: "number of rows; optional if y1 is specified"
+                                                        minOccurs: 0
+                                                        maxOccurs: 1
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }

@@ -295,7 +295,6 @@ class CameraGeomTestCase(unittest.TestCase):
 
         defectsDict = cameraGeomUtils.makeDefects(self.geomPolicy)
 
-
         for ccdName in ("Defective", "Defective II"):
             ccd = cameraGeomUtils.makeCcd(self.geomPolicy, cameraGeom.Id(ccdName))
 

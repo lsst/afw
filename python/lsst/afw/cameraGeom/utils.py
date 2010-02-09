@@ -710,52 +710,53 @@ The dictionay is indexed by an Id object --- remember to compare by str(id) not 
     """
 
     defectsDict = {}
-    for defectPol in geomPolicy.getArray("DefectList"):
-        defects = afwImage.DefectSet()
-        ccdId = cameraGeom.Id(defectPol.get("serial"), defectPol.get("name"))
-        defectsDict[ccdId] = defects
+    defectListPol = geomPolicy.get("Defects")
+    for raftPol in defectListPol.getArray("Raft"):
+        for defectPol in raftPol.getArray("Ccd"):
+            defects = afwImage.DefectSet()
+            ccdId = cameraGeom.Id(defectPol.get("serial"), defectPol.get("name"))
+            defectsDict[ccdId] = defects
 
-        for defect in defectPol.getArray("Defect"):
-            x0 = defect.get("x0")
-            y0 = defect.get("y0")
+            for defect in defectPol.getArray("Defect"):
+                x0 = defect.get("x0")
+                y0 = defect.get("y0")
 
-            x1 = y1 = width = height = None
-            if defect.exists("x1"):
-                x1 = defect.get("x1")
-            if defect.exists("y1"):
-                y1 = defect.get("y1")
-            if defect.exists("width"):
-                width = defect.get("width")
-            if defect.exists("height"):
-                height = defect.get("height")
+                x1 = y1 = width = height = None
+                if defect.exists("x1"):
+                    x1 = defect.get("x1")
+                if defect.exists("y1"):
+                    y1 = defect.get("y1")
+                if defect.exists("width"):
+                    width = defect.get("width")
+                if defect.exists("height"):
+                    height = defect.get("height")
 
-            if x1 is None:
-                if width:
-                    x1 = x0 + width - 1
+                if x1 is None:
+                    if width:
+                        x1 = x0 + width - 1
+                    else:
+                        raise RuntimeError, ("Defect at (%d,%d) for CCD (%s) has no x1/width" % (x0, y0, ccdId))
                 else:
-                    raise RuntimeError, ("Defect at (%d,%d) for CCD (%s) has no x1/width" % (x0, y0, ccdId))
-            else:
-                if width:
-                    if x1 != x0 + width - 1:
-                        raise RuntimeError, \
-                              ("Defect at (%d,%d) for CCD (%s) has inconsistent x1/width = %d,%d" % \
-                               (x0, y0, ccdId, x1, width))
+                    if width:
+                        if x1 != x0 + width - 1:
+                            raise RuntimeError, \
+                                  ("Defect at (%d,%d) for CCD (%s) has inconsistent x1/width = %d,%d" % \
+                                   (x0, y0, ccdId, x1, width))
 
-            if y1 is None:
-                if height:
-                    y1 = y0 + height - 1
+                if y1 is None:
+                    if height:
+                        y1 = y0 + height - 1
+                    else:
+                        raise RuntimeError, ("Defect at (%d,%d) for CCD (%s) has no y1/height" % (x0, y0, ccdId))
                 else:
-                    raise RuntimeError, ("Defect at (%d,%d) for CCD (%s) has no y1/height" % (x0, y0, ccdId))
-            else:
-                if height:
-                    if y1 != y0 + height - 1:
-                        raise RuntimeError, \
-                              ("Defect at (%d,%d) for CCD (%s) has inconsistent y1/height = %d,%d" % \
-                               (x0, y0, ccdId, y1, height))
-            
-            bbox = afwImage.BBox(afwImage.PointI(x0, y0), afwImage.PointI(x1, y1))
-            defects.push_back(afwImage.DefectBase(bbox))
+                    if height:
+                        if y1 != y0 + height - 1:
+                            raise RuntimeError, \
+                                  ("Defect at (%d,%d) for CCD (%s) has inconsistent y1/height = %d,%d" % \
+                                   (x0, y0, ccdId, y1, height))
 
-    return defectsDict
-        
-    
+                bbox = afwImage.BBox(afwImage.PointI(x0, y0), afwImage.PointI(x1, y1))
+                defects.push_back(afwImage.DefectBase(bbox))
+
+        return defectsDict
+

@@ -132,7 +132,7 @@ Amp: {
 #
 Electronic: {
     Raft: {
-        name: "R:0,0"
+        name: "*"
         Ccd: {
             name:  "*"
             Amp: {
@@ -191,37 +191,43 @@ Electronic: {
 #
 # N.b. we need to specify serial for each CCD due to pex_policy #1117
 #
-DefectList: {
-    serial: -1
-    name: "Defective"                   # CCD's name
-    Defect: {
-        x0: 34
-        y0: 0
-        x1: 35
-        y1: 80
-    }
-    Defect: {
-        x0: 34
-        y0: 81
-        width: 1
-        y1: 100
-    }
-    Defect: {
-        x0: 180
-        y0: 100
-        width: 3
-        height: 31
-        x1: 182
-        y1: 130
-    }
-}
-DefectList: {
-    serial: -1
-    name: "Defective II"                # CCD's name
-    Defect: {
-        x0: 10
-        y0: 0
-        x1: 12
-        y1: 10
+Defects: {
+    Raft: {
+        name: "XXX"                     # An empty string makes the Policy parser unhappy
+        Ccd: {
+            serial: -1
+            name: "Defective"           # CCD's name
+            Defect: {
+                x0: 34
+                y0: 0
+                x1: 35
+                y1: 80
+            }
+            Defect: {
+                x0: 34
+                y0: 81
+                width: 1
+                y1: 100
+            }
+            Defect: {
+                x0: 180
+                y0: 100
+                width: 3
+                height: 31
+                x1: 182
+                y1: 130
+            }
+        }
+
+        Ccd: {
+            serial: -1
+            name: "Defective II"        # CCD's name
+            Defect: {
+                x0: 10
+                y0: 0
+                x1: 12
+                y1: 10
+            }
+        }
     }
 }
