@@ -28,10 +28,23 @@ class RowColumnStatisticsTestCase(unittest.TestCase):
 
         # fill an image with a gradient
         self.n      = 8
-        self.column = [0.0 for i in range(self.n)]
-        self.row    = [0.0 for i in range(self.n)]
         self.img    = afwImage.ImageF(self.n, self.n, 0)
 
+        # these are the known answers for comparison
+        def nVector(n, v):
+            return [0.0 for i in range(n)]
+        self.column = nVector(self.n, 0.0)
+        self.row    = nVector(self.n, 0.0)
+        self.colPlus  = nVector(self.n, 0.0)
+        self.colMinus = nVector(self.n, 0.0)
+        self.colMult  = nVector(self.n, 0.0)
+        self.colDiv   = nVector(self.n, 0.0)
+        self.rowPlus  = nVector(self.n, 0.0)
+        self.rowMinus = nVector(self.n, 0.0)
+        self.rowMult  = nVector(self.n, 0.0)
+        self.rowDiv   = nVector(self.n, 0.0)
+
+        # set the values in the image, and keep track of the stats to verify things
         for y in range(self.n):
             for x in range(self.n):
                 val = 1.0*x + 2.0*y
@@ -42,27 +55,36 @@ class RowColumnStatisticsTestCase(unittest.TestCase):
         for i in range(self.n):
             self.row[i]    /= self.n
             self.column[i] /= self.n
+            self.colPlus[i] = self.img.get(0, i) + self.column[i]
+            
+        # get stats on the columns and rows
+        self.imgProjectCol = afwMath.statisticsStack(self.img, afwMath.MEAN, 'x')
+        self.imgProjectRow = afwMath.statisticsStack(self.img, afwMath.MEAN, 'y')
 
+        
     def tearDown(self):
         del self.img
 
     def testColumnStats(self):
         """Test the column statistics """
-        imgProjectCol = afwMath.statisticsStack(self.img, afwMath.MEAN, 'x')
         for i in range(self.n):
-            self.assertEqual(imgProjectCol.get(0, i)[0], self.column[i])
+            self.assertEqual(self.imgProjectCol.get(0, i)[0], self.column[i])
 
     def testRowStats(self):
         """Test the row statistics """
-        imgProjectRow = afwMath.statisticsStack(self.img, afwMath.MEAN, 'y')
         for i in range(self.n):
-            self.assertEqual(imgProjectRow.get(i, 0)[0], self.row[i])
+            self.assertEqual(self.imgProjectRow.get(i, 0)[0], self.row[i])
 
-    def testColumnPlus(self):
-        """ Test sliceOperate on column addition """
-        imgCol = afwImage.ImageF(1, self.n, 1)
-        imPlus = afwMath.sliceOperate(self.img, imgCol, "column", '+')
-        print self.img.get(self.n/2, self.n/2), imPlus.get(self.n/2, self.n/2)
+            
+    def testColumnOperators(self):
+        """ Test operator overloading on columns """
+
+        columnSlice = afwImage.SliceF(self.imgProjectCol)
+        imgPlus = self.img + columnSlice
+        for i in range(self.n):
+            self.assertEqual(self.img.get(0, i), self.colPlus[i])
+
+    
 
 #################################################################
 # Test suite boiler plate

@@ -114,6 +114,7 @@ def version(HeadURL = r"$HeadURL$"):
 %include "image.i"
 %include "mask.i"
 %include "maskedImage.i"
+%include "slice.i"
 
 %define %POINT(NAME, TYPE)
 %template(Point##NAME) lsst::afw::image::Point<TYPE>;
