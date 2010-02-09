@@ -281,7 +281,7 @@ void afwMath::basicConvolve(
 
                 KernelPixel kSum = kernel.computeImage(kernelImage, false, colPos, rowPos);
                 KernelXYLocator kernelLoc = kernelImage.xy_at(0,0);
-                *cnvXIter = afwMath::convolveAtAPoint<OutImageT, InImageT>(
+                *cnvXIter = afwMath::convolveAtAPoint<typename OutImageT::BasicPixel, InImageT>(
                     inImLoc, kernelLoc, kWidth, kHeight);
                 if (doNormalize) {
                     *cnvXIter = *cnvXIter/kSum;
@@ -555,7 +555,8 @@ void afwMath::basicConvolve(
                 KernelPixel kSum = kernel.computeVectors(kXVec, kYVec, doNormalize, colPos, rowPos);
 
                 // why does this trigger warnings? It did not in the past.
-                *cnvXIter = afwMath::convolveAtAPoint<OutImageT, InImageT>(inImLoc, kXVec, kYVec);
+                *cnvXIter = afwMath::convolveAtAPoint<typename OutImageT::BasicPixel, InImageT>(
+                    inImLoc, kXVec, kYVec);
                 if (doNormalize) {
                     *cnvXIter = *cnvXIter/kSum;
                 }

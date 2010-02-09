@@ -254,7 +254,7 @@ namespace image {
         * \brief convert an RA/Dec to a HEALPix pointing object
         */
         inline static pointing _pointingFromRaDec(lsst::afw::geom::Point2D const &raDec) {
-            return pointing((M_PI / 2.0) - raDec[1], raDec[2]);
+            return pointing((M_PI / 2.0) - raDec[1], raDec[0]);
         }
 
         /**
@@ -271,10 +271,11 @@ namespace image {
     template <typename SkyMapSchemeT, typename PixelDataT>
     class SkyMapImage {
     public:
+        typedef typename SkyMapSchemeT::Ptr SchemePtr;
         typedef typename SkyMapSchemeT::PixelId PixelId;
+        typedef typename SkyMapSchemeT::IdList IdList;
         typedef PixelDataT PixelData;
         typedef std::pair<PixelId, PixelDataT> Pixel;
-        typedef SkyMapIdList<SkyMapSchemeT> IdList;
         typedef typename std::map<PixelId, PixelDataT>::const_iterator const_iterator;
         typedef typename std::map<PixelId, PixelDataT>::iterator iterator;
         
@@ -373,7 +374,7 @@ namespace image {
         }
         
     private:
-        SkyMapSchemeT _schemePtr;
+        typename SkyMapSchemeT::Ptr _schemePtr;
         std::map<PixelId, PixelDataT> _pixelList;
     };
 

@@ -24,11 +24,13 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image.h"
 #include "lsst/afw/math.h"
+#include "lsst/afw/geom.h"
 
 namespace pexExcept = lsst::pex::exceptions;
 namespace pexLog = lsst::pex::logging;
 namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
+namespace afwGeom = lsst::afw::geom;
 
 afwMath::Kernel::Ptr afwMath::LanczosWarpingKernel::clone() const {
     return afwMath::Kernel::Ptr(new afwMath::LanczosWarpingKernel(this->getOrder()));
@@ -187,7 +189,7 @@ int afwMath::warpImage(
     }
     int numGoodPixels = 0;
 
-    typedef afwImage::Image<afwMath::Kernel::Pixel> KernelImageT;
+    typedef afwImage::Image<afwMath::Kernel::Pixel> KernelImage;
     
     // Compute borders; use to prevent applying kernel outside of srcImage
     const int kernelWidth = warpingKernel.getWidth();
@@ -212,7 +214,7 @@ int afwMath::warpImage(
     std::vector<double> kernelXList(kernelWidth);
     std::vector<double> kernelYList(kernelHeight);
 
-    // Set each pixel of destExposure's MaskedImage
+    // Set each pixel of destImage
     pexLog::TTrace<4>("lsst.afw.math.warp", "Remapping masked image");
     
     // compute source position X,Y corresponding to row -1 of the destination image;
@@ -268,7 +270,7 @@ int afwMath::warpImage(
                 double kSum = warpingKernel.computeVectors(kernelXList, kernelYList, false);
 
                 typename SrcImageT::const_xy_locator srcLoc = srcImage.xy_at(srcIndX, srcIndY);
-                *destXIter = afwMath::convolveAtAPoint<DestImageT, SrcImageT>(
+                *destXIter = afwMath::convolveAtAPoint<typename DestImageT::SinglePixel, SrcImageT>(
                     srcLoc, kernelXList, kernelYList);
     
                 // Correct intensity due to relative pixel spatial scale and kernel sum.
@@ -278,9 +280,6 @@ int afwMath::warpImage(
                 double multFac = std::abs((dSrcA.getX() * dSrcB.getY())
                     - (dSrcA.getY() * dSrcB.getX())) / kSum;
                 *destXIter *= multFac;
-//                destXIter.image() *= static_cast<typename DestImageT::Image::SinglePixel>(multFac);
-//                destXIter.variance() *=
-//                    static_cast<typename DestImageT::Variance::SinglePixel>(multFac * multFac);
             }
 
             // Copy srcPosXY to prevRowSrcPosXY to use for computing area scaling for pixels in the next row
@@ -292,7 +291,104 @@ int afwMath::warpImage(
         } // dest x pixels
     } // dest y pixels
     return numGoodPixels;
-} // warpExposure
+}
+
+/**
+ * \brief Remap an Image or MaskedImage to a sky map image.
+ *
+ * Works the same as the image -> image version of warpImage, which see for details.
+ * However, pixel areas are computed without caching (and thus probably more slowly).
+ */
+template<typename DestSkyMapImageT, typename SrcImageT>
+int afwMath::warpImage(
+        DestSkyMapImageT &destSkyMapImage,  ///< remapped sky map image
+        SrcImageT const &srcImage,      ///< source %image
+        afwImage::Wcs const &srcWcs,    ///< WCS of source %image
+        SeparableKernel &warpingKernel  ///< warping kernel; determines warping algorithm
+) {
+    int numGoodPixels = 0;
+
+    typedef afwImage::Image<afwMath::Kernel::Pixel> KernelImage;    
+    
+    // Compute borders; use to prevent applying kernel outside of srcImage
+    const int kernelWidth = warpingKernel.getWidth();
+    const int kernelHeight = warpingKernel.getHeight();
+    const int kernelCtrX = warpingKernel.getCtrX();
+    const int kernelCtrY = warpingKernel.getCtrY();
+
+    // Get the source MaskedImage and a pixel accessor to it.
+    const int srcWidth = srcImage.getWidth();
+    const int srcHeight = srcImage.getHeight();
+
+    pexLog::TTrace<3>("lsst.afw.math.warp", "source image width=%d; height=%d", srcWidth, srcHeight);
+
+    std::vector<double> kernelXList(kernelWidth);
+    std::vector<double> kernelYList(kernelHeight);
+    
+    // Identify sky pixels that overlap input image
+    typename DestSkyMapImageT::SchemePtr skyMapSchemePtr = destSkyMapImage.getScheme();
+    std::vector<afwGeom::Point2D> skyCornerList;
+    for (int xInd = 0; xInd < srcWidth; xInd += (srcWidth - 1)) {
+        for (int yInd = 0; yInd < srcWidth; yInd += (srcHeight - 1)) {
+            afwImage::PointD srcPosRADec = srcWcs.xyToRaDec(
+                afwImage::indexToPosition(xInd),
+                afwImage::indexToPosition(yInd));
+            skyCornerList.push_back(afwGeom::makePointD(srcPosRADec[0], srcPosRADec[1]));
+        }
+    }
+    typename DestSkyMapImageT::IdList destIdList = skyMapSchemePtr->findIndicesInPolygon(skyCornerList);
+    
+    // Iterate over dest pixels
+    pexLog::TTrace<4>("lsst.afw.math.warp", "Remapping masked image");
+    
+    for (typename DestSkyMapImageT::IdList::const_iterator destIdIter = destIdList.begin();
+        destIdIter != destIdList.end(); ++destIdIter) {
+
+        afwGeom::Point2D skyPos = skyMapSchemePtr->getPixelPosition(*destIdIter);
+        afwImage::PointD srcPosXY = srcWcs.raDecToXY(skyPos[0], skyPos[1]);
+
+        // Compute associated source pixel index and break it into integer and fractional
+        // parts; the latter is used to compute the remapping kernel.
+        // To convolve at source pixel (x, y) point source accessor to (x - kernelCtrX, y - kernelCtrY)
+        // because the accessor must point to kernel pixel (0, 0), not the center of the kernel.
+        std::vector<double> srcFracInd(2);
+        int srcIndX = afwImage::positionToIndex(srcFracInd[0], srcPosXY[0]) - kernelCtrX;
+        int srcIndY = afwImage::positionToIndex(srcFracInd[1], srcPosXY[1]) - kernelCtrY;
+        if (srcFracInd[0] < 0) {
+            ++srcFracInd[0];
+            --srcIndX;
+        }
+        if (srcFracInd[1] < 0) {
+            ++srcFracInd[1];
+            --srcIndY;
+        }
+      
+        // If location is too near the edge of the source, or off the source, skip the pixel
+        if ((srcIndX < 0) || (srcIndX + kernelWidth > srcWidth) 
+            || (srcIndY < 0) || (srcIndY + kernelHeight > srcHeight)) {
+            continue;
+        }
+        ++numGoodPixels;
+            
+        // Compute warped pixel
+        warpingKernel.setKernelParameters(srcFracInd);
+        double kSum = warpingKernel.computeVectors(kernelXList, kernelYList, false);
+
+        typename SrcImageT::const_xy_locator srcLoc = srcImage.xy_at(srcIndX, srcIndY);
+        typename DestSkyMapImageT::PixelData destPixelData = 
+            afwMath::convolveAtAPoint<typename DestSkyMapImageT::PixelData, SrcImageT>(
+                srcLoc, kernelXList, kernelYList);
+
+        // Correct intensity due to relative pixel spatial scale and kernel sum.
+        double srcPixelArea = srcWcs.pixArea(afwImage::PointD(double(srcIndX), double(srcIndY)));
+        double destPixelArea = skyMapSchemePtr->getPixelArea(*destIdIter);
+        double multFac = destPixelArea / (srcPixelArea * kSum);
+        destPixelData *= multFac;
+        
+        destSkyMapImage.add(destSkyMapImage.makePixel(*destIdIter, destPixelData));
+    } // dest pixels
+    return numGoodPixels;
+}
 
 
 //
@@ -320,7 +416,18 @@ int afwMath::warpImage(
     template int afwMath::warpExposure( \
         EXPOSURE(DESTIMAGEPIXELT) &destExposure, \
         EXPOSURE(SRCIMAGEPIXELT) const &srcExposure, \
-        SeparableKernel &warpingKernel);
+        SeparableKernel &warpingKernel); \
+    template int afwMath::warpImage( \
+        afwImage::SkyMapImage<afwImage::HealPixMapScheme, IMAGE(DESTIMAGEPIXELT)> &destSkyMapImage, \
+        IMAGE(SRCIMAGEPIXELT) const &srcImage, \
+        afwImage::Wcs const &srcWcs, \
+        SeparableKernel &warpingKernel); NL \
+    template int afwMath::warpImage( \
+        afwImage::SkyMapImage<afwImage::HealPixMapScheme, MASKEDIMAGE(DESTIMAGEPIXELT)> &destSkyMapImage, \
+        IMAGE(SRCIMAGEPIXELT) const &srcImage, \
+        afwImage::Wcs const &srcWcs, \
+        SeparableKernel &warpingKernel); NL
+
 
 WarpFunctionsByType(float, boost::uint16_t)
 WarpFunctionsByType(double, boost::uint16_t)

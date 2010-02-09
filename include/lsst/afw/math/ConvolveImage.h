@@ -23,14 +23,14 @@ namespace lsst {
 namespace afw {
 namespace math {
 
-    template <typename OutImageT, typename InImageT>
-    inline typename OutImageT::SinglePixel convolveAtAPoint(
+    template <typename OutPixelT, typename InImageT>
+    inline OutPixelT convolveAtAPoint(
         typename InImageT::const_xy_locator& inLocator,
         typename lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel>::const_xy_locator& kernelLocator,
         int kWidth, int kHeight);
     
-    template <typename OutImageT, typename InImageT>
-    inline typename OutImageT::SinglePixel convolveAtAPoint(
+    template <typename OutPixelT, typename InImageT>
+    inline OutPixelT convolveAtAPoint(
         typename InImageT::const_xy_locator& inImage,
         std::vector<lsst::afw::math::Kernel::Pixel> const& kernelColList,
         std::vector<lsst::afw::math::Kernel::Pixel> const& kernelRowList
@@ -124,8 +124,8 @@ namespace math {
  *
  * @ingroup afw
  */
-template <typename OutImageT, typename InImageT>
-inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
+template <typename OutPixelT, typename InImageT>
+inline OutPixelT lsst::afw::math::convolveAtAPoint(
     typename InImageT::const_xy_locator& imageLocator, ///< locator for %image pixel that overlaps
         ///< pixel (0,0) of kernel (the origin of the kernel, not its center)
     lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel>::const_xy_locator &kernelLocator,
@@ -133,7 +133,7 @@ inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
     int kWidth,     ///< number of columns in kernel
     int kHeight     ///< number of rows in kernel
                                   ) {
-    typename OutImageT::SinglePixel outValue = 0;
+    OutPixelT outValue = 0;
     for (int y = 0; y != kHeight; ++y) {
         for (int x = 0; x != kWidth; ++x, ++imageLocator.x(), ++kernelLocator.x()) {
             typename lsst::afw::math::Kernel::Pixel const kVal = kernelLocator[0];
@@ -161,8 +161,8 @@ inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
  *
  * @ingroup afw
  */
-template <typename OutImageT, typename InImageT>
-inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
+template <typename OutPixelT, typename InImageT>
+inline OutPixelT lsst::afw::math::convolveAtAPoint(
     typename InImageT::const_xy_locator& imageLocator,
                                         ///< locator for %image pixel that overlaps (0,0) pixel of kernel(!)
     std::vector<lsst::afw::math::Kernel::Pixel> const &kernelXList,  ///< kernel column vector
@@ -170,23 +170,23 @@ inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
 ) {
     typedef typename std::vector<lsst::afw::math::Kernel::Pixel>::const_iterator k_iter;
 
-    typedef typename OutImageT::SinglePixel OutT;
-    OutT outValue = 0;
+    OutPixelT outValue(0);
     for (k_iter kernelYIter = kernelYList.begin(), yEnd = kernelYList.end();
          kernelYIter != yEnd; ++kernelYIter) {
 
-        OutT outValueY = 0;
+        OutPixelT outValueY(0);
         for (k_iter kernelXIter = kernelXList.begin(), xEnd = kernelXList.end();
              kernelXIter != xEnd; ++kernelXIter, ++imageLocator.x()) {
             typename lsst::afw::math::Kernel::Pixel const kValX = *kernelXIter;
             if (kValX != 0) {
-                outValueY += *imageLocator*kValX;
+                outValueY += (*imageLocator) * kValX;
             }
         }
         
         double const kValY = *kernelYIter;
         if (kValY != 0) {
-            outValue += outValueY*kValY;
+            outValueY *= kValY;
+            outValue += outValueY;
         }
         
         imageLocator += lsst::afw::image::detail::difference_type(-kernelXList.size(), 1);

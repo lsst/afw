@@ -121,6 +121,13 @@ namespace math {
         lsst::afw::image::Wcs const &srcWcs,
         SeparableKernel &warpingKernel);
 
+    template<typename DestSkyMapImageT, typename SrcImageT>
+    int warpImage(
+        DestSkyMapImageT &destSkyMapImage,
+        SrcImageT const &srcImage,
+        lsst::afw::image::Wcs const &srcWcs,
+        SeparableKernel &warpingKernel);
+
     namespace details {
         template <typename A, typename B>
         bool isSameObject(A const&, B const&) { return false; };
