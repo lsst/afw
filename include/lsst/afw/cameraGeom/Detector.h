@@ -44,6 +44,18 @@ public:
     /// Return the Detector's Id
     Id getId() const { return _id; }
 
+    /// Are two Detectors identical, in the sense that they have the same name
+    bool operator==(Detector const& rhs ///< Detector to compare too
+                   ) const {
+        return getId() == rhs.getId();
+    }
+
+    /// Is this less than rhs, based on comparing names
+    bool operator<(Detector const& rhs  ///< Detector to compare too
+                  ) const {
+        return _id < rhs._id;
+    }
+
     /// Has the bias/overclock been removed?
     bool isTrimmed() const { return (_hasTrimmablePixels && _isTrimmed); }
     /// Set the trimmed status of this Detector
@@ -135,6 +147,14 @@ private:
 };
 
 namespace detail {
+    template<typename T>
+    struct sortPtr :
+        std::binary_function<typename T::Ptr &, typename T::Ptr const&, bool> {
+        bool operator()(typename T::Ptr &lhs, typename T::Ptr const& rhs) const {
+            return *lhs < *rhs;
+        }
+    };
+
     afwImage::BBox rotateBBoxBy90(
             afwImage::BBox const& bbox, ///< the BBox to rotate
             afwGeom::Extent2I const& dimensions, ///< The size of the region wherein bbox dwells

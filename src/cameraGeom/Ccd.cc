@@ -38,8 +38,8 @@ void cameraGeom::Ccd::addAmp(afwGeom::Point2I pos,        // position of Amp in 
 
     getAllTrimmedPixels().grow(amp->getDataSec(true).getLLC());
     getAllTrimmedPixels().grow(amp->getDataSec(true).getURC());
-    
-    _amps.push_back(amp);
+    // insert new Amp, keeping the Amps sorted
+    _amps.insert(std::lower_bound(_amps.begin(), _amps.end(), amp, cameraGeom::detail::sortPtr<Amp>()), amp);
 
     setCenterPixel(afwGeom::makePointI(getAllPixels(true).getWidth()/2, getAllPixels(true).getHeight()/2));
 }

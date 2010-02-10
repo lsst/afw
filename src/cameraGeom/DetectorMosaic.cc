@@ -133,7 +133,9 @@ void cameraGeom::DetectorMosaic::addDetector(
     det->setCenter(center);
     det->setCenterPixel(centerPixel);
 
-    _detectors.push_back(det);
+    // insert new Detector, keeping the Detectors sorted
+    _detectors.insert(std::lower_bound(_detectors.begin(), _detectors.end(), det,
+                                       cameraGeom::detail::sortPtr<Detector>()), det);
 }
 
 /************************************************************************************************************/

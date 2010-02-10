@@ -86,6 +86,8 @@ class CameraGeomTestCase(unittest.TestCase):
     def testId(self):
         """Test cameraGeom.Id"""
 
+        #print >> sys.stderr, "Skipping testId"; return
+        
         self.assertTrue(cameraGeom.Id(1) == cameraGeom.Id(1))
         self.assertFalse(cameraGeom.Id(1) == cameraGeom.Id(100))
         
@@ -95,6 +97,41 @@ class CameraGeomTestCase(unittest.TestCase):
         self.assertTrue(cameraGeom.Id(1, "AA") == cameraGeom.Id(1, "AA"))
         self.assertFalse(cameraGeom.Id(1, "AA") == cameraGeom.Id(2, "AA"))
         self.assertFalse(cameraGeom.Id(1, "AA") == cameraGeom.Id(1, "BB"))
+        #
+        self.assertTrue(cameraGeom.Id(1) < cameraGeom.Id(2))
+        self.assertFalse(cameraGeom.Id(100) < cameraGeom.Id(1))
+        
+        self.assertTrue(cameraGeom.Id("AA") < cameraGeom.Id("BB"))
+        
+        self.assertTrue(cameraGeom.Id(1, "AA") < cameraGeom.Id(2, "AA"))
+        self.assertTrue(cameraGeom.Id(1, "AA") < cameraGeom.Id(1, "BB"))
+
+    def testSortedAmps(self):
+        """Test if the Amps are sorted by ID after insertion into a Ccd"""
+
+        ccd = cameraGeom.Ccd(cameraGeom.Id())
+        Col = 0
+        for serial in [0, 1, 2, 3, 4, 5, 6, 7]:
+            gain, readNoise, saturationLevel = 0, 0, 0
+            width, height = 10, 10
+
+            allPixels = afwImage.BBox(afwImage.PointI(0, 0), width, height)
+            biasSec = afwImage.BBox(afwImage.PointI(0, 0), 0, height)
+            dataSec = afwImage.BBox(afwImage.PointI(0, 0), width, height)
+
+            eParams = cameraGeom.ElectronicParams(gain, readNoise, saturationLevel)
+            amp = cameraGeom.Amp(cameraGeom.Id(serial), allPixels, biasSec, dataSec,
+                                 cameraGeom.Amp.LLC, eParams)
+
+            ccd.addAmp(afwGeom.makePointI(Col, 0), amp); Col += 1
+        #
+        # Check that Amps are sorted by Id
+        #
+        serials = []
+        for a in ccd:
+            serials.append(a.getId().getSerial())
+
+        self.assertEqual(serials, sorted(serials))
 
     def testCcd(self):
         """Test if we can build a Ccd out of Amps"""
@@ -189,6 +226,25 @@ class CameraGeomTestCase(unittest.TestCase):
             ds9.mtv(trimmedImage, title='Rotated trimmed')
             cameraGeomUtils.showCcd(ccd, trimmedImage)
             ds9.incrDefaultFrame()
+
+    def testSortedCcds(self):
+        """Test if the Ccds are sorted by ID after insertion into a Raft"""
+
+        raft = cameraGeom.Raft(cameraGeom.Id(), 8, 1)
+        Col = 0
+        for serial in [7, 0, 1, 3, 2, 6, 5, 4]:
+            ccd = cameraGeom.Ccd(cameraGeom.Id(serial))
+            raft.addDetector(afwGeom.makePointI(Col, 0), afwGeom.makePointD(0, 0),
+                             cameraGeom.Orientation(0), ccd)
+            Col += 1
+        #
+        # Check that CCDs are sorted by Id
+        #
+        serials = []
+        for ccd in raft:
+            serials.append(ccd.getId().getSerial())
+
+        self.assertEqual(serials, sorted(serials))
 
     def testRaft(self):
         """Test if we can build a Raft out of Ccds"""

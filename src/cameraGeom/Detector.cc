@@ -9,6 +9,38 @@ namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 namespace cameraGeom = lsst::afw::cameraGeom;
 
+/************************************************************************************************************/
+/// Test for equality of two Ids; ignore serial if < 0 and name if == ""
+bool cameraGeom::Id::operator==(Id const& rhs) const {
+    if (_serial >= 0 && rhs._serial >= 0) {
+        bool const serialEq = (_serial == rhs._serial);
+        if (serialEq) {
+            if (_name != "" && rhs._name != "") {
+                return _name == rhs._name;
+            }
+        }
+        
+        return serialEq;
+    } else {
+        return _name == rhs._name;
+    }
+}
+
+/// Test for ordering of two Ids; ignore serial if < 0 and name if == ""
+bool cameraGeom::Id::operator<(Id const& rhs) const {
+    if (_serial >= 0 && rhs._serial >= 0) {
+        if (_serial == rhs._serial) {
+            if (_name != "" && rhs._name != "") {
+                return _name < rhs._name;
+            }
+        }
+        return _serial < rhs._serial;
+    } else {
+        return _name < rhs._name;
+    }
+}
+
+/************************************************************************************************************/
 /**
  * Return size in mm of this Detector
  */

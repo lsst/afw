@@ -87,11 +87,6 @@ public:
                  ReadoutCorner readoutCorner, ElectronicParams::Ptr eparams);
 
     ~Amp() {}
-    /// Are two Amps identical?
-    bool operator==(Amp const& rhs      ///< Amp to compare too
-                   ) const {
-        return getId() == rhs.getId();
-    }
 
     void shift(int dx, int dy);
     void rotateBy90(afwGeom::Extent2I const& dimensions, int n90);

@@ -26,21 +26,8 @@ public:
     
     long getSerial() const { return _serial; }
     std::string getName() const { return _name; }
-    /// Test for equality of two Ids; ignore serial if < 0 and name if == ""
-    bool operator==(Id const& rhs) const {
-        if (_serial >= 0 && rhs._serial >= 0) {
-            bool serialEq = (_serial == rhs._serial);
-            if (serialEq) {
-                if (_name != "" && rhs._name != "") {
-                    return _name == rhs._name;
-                }
-            }
-
-            return serialEq;
-        } else {
-            return _name == rhs._name;
-        }
-    }
+    bool operator==(Id const& rhs) const;
+    bool operator<(Id const& rhs) const;
 private:
     long _serial;
     std::string _name;

@@ -31,11 +31,13 @@ cameraGeom::Amp::Amp(
     : Detector(id, true),
     _biasSec(biasSec), _dataSec(dataSec), _readoutCorner(readoutCorner), _eParams(eParams)
 {
-    if (!allPixels.contains(biasSec.getLLC()) || !allPixels.contains(biasSec.getURC())) {
+    if (biasSec.getWidth() > 0 && biasSec.getHeight() > 0 &&
+        (!allPixels.contains(biasSec.getLLC()) || !allPixels.contains(biasSec.getURC()))) {
         throw LSST_EXCEPT(lsst::pex::exceptions::OutOfRangeException,
                           (boost::format("%||'s bias section doesn't fit in allPixels") % id).str());
     }
-    if (!allPixels.contains(dataSec.getLLC()) || !allPixels.contains(dataSec.getURC())) {
+    if (dataSec.getWidth() > 0 && dataSec.getHeight() > 0 &&
+        (!allPixels.contains(dataSec.getLLC()) || !allPixels.contains(dataSec.getURC()))) {
         throw LSST_EXCEPT(lsst::pex::exceptions::OutOfRangeException,
                           (boost::format("%||'s data section doesn't fit in allPixels") % id).str());
         
