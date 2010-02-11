@@ -71,7 +71,7 @@ ImageFormatter<ImagePixelT>::ImageFormatter(
         lsst::pex::policy::Policy::Ptr
                                            )
     :
-    lsst::daf::persistence::Formatter(typeid(*this))
+    lsst::daf::persistence::Formatter(typeid(this))
 {
 }
 

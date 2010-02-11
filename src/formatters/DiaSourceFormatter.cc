@@ -36,7 +36,7 @@ namespace form = lsst::afw::formatters;
 // -- DiaSourceVectorFormatter ----------------
 
 form::DiaSourceVectorFormatter::DiaSourceVectorFormatter(Policy::Ptr const & policy) 
-    : lsst::daf::persistence::Formatter(typeid(*this)), _policy(policy) {}
+    : lsst::daf::persistence::Formatter(typeid(this)), _policy(policy) {}
     
 form::DiaSourceVectorFormatter::~DiaSourceVectorFormatter() {}
 
