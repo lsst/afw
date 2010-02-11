@@ -326,7 +326,7 @@ int afwMath::warpImage(
     std::vector<double> kernelYList(kernelHeight);
     
     // Identify sky pixels that overlap input image
-    typename DestSkyMapImageT::SchemePtr skyMapSchemePtr = destSkyMapImage.getScheme();
+    typename DestSkyMapImageT::Scheme::Ptr skyMapSchemePtr = destSkyMapImage.getScheme();
     std::vector<afwGeom::Point2D> skyCornerList;
     for (int xInd = 0; xInd < srcWidth; xInd += (srcWidth - 1)) {
         for (int yInd = 0; yInd < srcWidth; yInd += (srcHeight - 1)) {
@@ -336,13 +336,13 @@ int afwMath::warpImage(
             skyCornerList.push_back(afwGeom::makePointD(srcPosRADec[0], srcPosRADec[1]));
         }
     }
-    typename DestSkyMapImageT::IdList destIdList = skyMapSchemePtr->findIndicesInPolygon(skyCornerList);
+    typename DestSkyMapImageT::IdSet destIdSet = skyMapSchemePtr->findIndicesInPolygon(skyCornerList);
     
     // Iterate over dest pixels
     pexLog::TTrace<4>("lsst.afw.math.warp", "Remapping masked image");
     
-    for (typename DestSkyMapImageT::IdList::const_iterator destIdIter = destIdList.begin();
-        destIdIter != destIdList.end(); ++destIdIter) {
+    for (typename DestSkyMapImageT::IdSet::const_iterator destIdIter = destIdSet.begin();
+        destIdIter != destIdSet.end(); ++destIdIter) {
 
         afwGeom::Point2D skyPos = skyMapSchemePtr->getPixelPosition(*destIdIter);
         afwImage::PointD srcPosXY = srcWcs.raDecToXY(skyPos[0], skyPos[1]);
@@ -385,7 +385,7 @@ int afwMath::warpImage(
         double multFac = destPixelArea / (srcPixelArea * kSum);
         destPixelData *= multFac;
         
-        destSkyMapImage.add(destSkyMapImage.makePixel(*destIdIter, destPixelData));
+        destSkyMapImage += destSkyMapImage.makePixel(*destIdIter, destPixelData);
     } // dest pixels
     return numGoodPixels;
 }
@@ -430,9 +430,9 @@ int afwMath::warpImage(
 
 
 WarpFunctionsByType(float, boost::uint16_t)
-WarpFunctionsByType(double, boost::uint16_t)
-WarpFunctionsByType(float, int)
-WarpFunctionsByType(double, int)
-WarpFunctionsByType(float, float)
-WarpFunctionsByType(double, float)
-WarpFunctionsByType(double, double)
+// WarpFunctionsByType(double, boost::uint16_t)
+// WarpFunctionsByType(float, int)
+// WarpFunctionsByType(double, int)
+// WarpFunctionsByType(float, float)
+// WarpFunctionsByType(double, float)
+// WarpFunctionsByType(double, double)
