@@ -122,7 +122,7 @@ namespace math {
         SeparableKernel &warpingKernel);
 
     template<typename DestSkyMapImageT, typename SrcImageT>
-    int warpImage(
+    int warpImageToSkyMap(
         DestSkyMapImageT &destSkyMapImage,
         SrcImageT const &srcImage,
         lsst::afw::image::Wcs const &srcWcs,

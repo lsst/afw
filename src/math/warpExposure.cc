@@ -300,7 +300,7 @@ int afwMath::warpImage(
  * However, pixel areas are computed without caching (and thus probably more slowly).
  */
 template<typename DestSkyMapImageT, typename SrcImageT>
-int afwMath::warpImage(
+int afwMath::warpImageToSkyMap(
         DestSkyMapImageT &destSkyMapImage,  ///< remapped sky map image
         SrcImageT const &srcImage,      ///< source %image
         afwImage::Wcs const &srcWcs,    ///< WCS of source %image
@@ -418,12 +418,12 @@ int afwMath::warpImage(
         EXPOSURE(DESTPIXELT) &destExposure, \
         EXPOSURE(SRCPIXELT) const &srcExposure, \
         SeparableKernel &warpingKernel); \
-    template int afwMath::warpImage( \
+    template int afwMath::warpImageToSkyMap( \
         afwImage::SkyMapImage<afwImage::HealPixId, IMAGE(DESTPIXELT)::SinglePixel> &destSkyMapImage, \
         IMAGE(SRCPIXELT) const &srcImage, \
         afwImage::Wcs const &srcWcs, \
         SeparableKernel &warpingKernel); NL \
-    template int afwMath::warpImage( \
+    template int afwMath::warpImageToSkyMap( \
         afwImage::SkyMapImage<afwImage::HealPixId, MASKEDIMAGE(DESTPIXELT)::SinglePixel> &destSkyMapImage, \
         MASKEDIMAGE(SRCPIXELT) const &srcImage, \
         afwImage::Wcs const &srcWcs, \

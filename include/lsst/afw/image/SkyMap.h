@@ -236,13 +236,15 @@ namespace image {
                 double radius   ///< radius (radians)
         ) const {
             std::vector<PixelId> pixelList;
-            this->_healPixBase.query_disc(_pointingFromRaDec(raDec), radius, pixelList);
-            IdSet retIdSet(*this);
-            for (std::vector<PixelId>::const_iterator pixPtr = pixelList.begin();
-                pixPtr != pixelList.end(); ++pixPtr) {
-                retIdSet += *pixPtr;
-            }
-            return retIdSet;
+            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Not yet implemented");
+            // the following code should work, but query_disc is missing from the healpix library
+//             this->_healPixBase.query_disc(_pointingFromRaDec(raDec), radius, pixelList);
+//             IdSet retIdSet(*this);
+//             for (std::vector<PixelId>::const_iterator pixPtr = pixelList.begin();
+//                 pixPtr != pixelList.end(); ++pixPtr) {
+//                 retIdSet += *pixPtr;
+//             }
+//             return retIdSet;
         }
 
         virtual double getPixelArea(HealPixId const & /* pixelId */) const {
