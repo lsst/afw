@@ -71,7 +71,7 @@ namespace image {
         void setWcs(Wcs const& wcs);
         
         // Has Member (inline)
-        bool hasWcs() const { return static_cast<bool>(*_wcs); };
+        bool hasWcs() const { return static_cast<bool>(_wcs); };
         
         // FITS
         void writeFits(std::string const &expOutFile) const;
