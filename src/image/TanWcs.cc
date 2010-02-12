@@ -166,6 +166,17 @@ TanWcs::TanWcs(afwImg::PointD crval, afwImg::PointD crpix, Eigen::Matrix2d CD,
 }
 
 
+TanWcs::TanWcs(lsst::afw::image::TanWcs const & rhs) :
+    Wcs(rhs),
+    _hasDistortion(rhs._hasDistortion),
+    _sipA(rhs._sipA), 
+    _sipB(rhs._sipB),
+    _sipAp(rhs._sipAp), 
+    _sipBp(rhs._sipBp) {
+    
+}
+
+
 //
 // Accessors
 //

@@ -33,6 +33,7 @@ namespace image {
                 const std::string cunits1="deg", const std::string cunits2="deg"
            );
 
+        Wcs(lsst::afw::image::Wcs const & rhs);
         virtual ~Wcs();
 
         //Accessors

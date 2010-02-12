@@ -40,6 +40,15 @@ const int STRLEN = 72;
 // Constructors
 //
 
+/**
+ * @brief Construct an invalid Wcs given no arguments
+ */
+lsst::afw::image::Wcs::Wcs() :
+    LsstBase(typeid(this)),
+    _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0) {
+    
+}
+
 
 ///Create a Wcs from a fits header
 Wcs::Wcs(PropertySet::Ptr fitsMetadata):
@@ -203,6 +212,33 @@ void Wcs::initWcsLib(afwImg::PointD crval, afwImg::PointD crpix, Eigen::Matrix2d
 }
 
 
+Wcs::Wcs(afwImg::Wcs const & rhs) : 
+    LsstBase(typeid(this)),
+    _wcsInfo(NULL), 
+    _nWcsInfo(1), 
+    _relax(rhs._relax), 
+    _wcsfixCtrl(rhs._wcsfixCtrl), 
+    _wcshdrCtrl(rhs._wcshdrCtrl),
+    _nReject(rhs._nReject) {
+    
+    _wcsInfo = static_cast<struct wcsprm *>(malloc(sizeof(struct wcsprm)));
+    if (_wcsInfo == NULL) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException, "Cannot allocate WCS info");
+    }
+    
+    _wcsInfo->flag = -1;
+    int alloc=1;    //Unconditionally allocate memory when calling
+    int status = wcscopy(alloc, rhs._wcsInfo, _wcsInfo);
+    if(status != 0) {
+        wcsvfree(&_nWcsInfo, &_wcsInfo);
+        throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException,
+            (boost::format("Could not copy WCS: wcscopy status = %d : %s") %
+             status % wcs_errmsg[status]).str());
+    }
+}
+       
+    
+    
 
 Wcs::~Wcs() {
     if (_wcsInfo != NULL) {

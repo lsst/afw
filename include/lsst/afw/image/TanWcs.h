@@ -65,6 +65,9 @@ namespace image {
                 const std::string cunits1="deg", const std::string cunits2="deg"
               );
 
+        TanWcs(lsst::afw::image::TanWcs const & rhs);
+        inline ~TanWcs() {};
+        
         //Accessors
         PointD skyToPixel(const lsst::afw::image::PointD sky) const;
         PointD pixelToSky(const lsst::afw::image::PointD pixel) const;
