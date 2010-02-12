@@ -111,6 +111,8 @@ namespace image {
         boost::int64_t getSize() const {
             return _idList.size();
         };
+        
+        void clear() { _idList.clear(); };
 
         const_iterator begin() const { return _idList.begin(); };
 
@@ -119,12 +121,6 @@ namespace image {
         iterator begin() { return _idList.begin(); };
 
         iterator end() { return _idList.end(); };
-
-//         SkyMapIdSet union(SkyMapIdSet)
-//         SkyMapIdSet intersection(SkyMapIdSet)
-//         SkyMapIdSet difference(SkyMapIdSet) # elements not in dest, not in src
-//         SkyMapIdSet isSubSet(SkyMapIdSet)
-//         SkyMapIdSet isSuperSet(SkyMapIdSet)
 
     private:
         typename SkyMapSchemeT::Ptr _schemePtr;
@@ -410,6 +406,8 @@ namespace image {
         boost::int64_t getSize() const {
             return _pixelMap.size();
         };
+        
+        void clear() { _pixelMap.clear(); };
 
         const_iterator begin() const { return _pixelMap.begin(); };
 

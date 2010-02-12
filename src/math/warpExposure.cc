@@ -307,6 +307,7 @@ int afwMath::warpImage(
         SeparableKernel &warpingKernel  ///< warping kernel; determines warping algorithm
 ) {
     int numGoodPixels = 0;
+    destSkyMapImage.clear();
 
     typedef afwImage::Image<afwMath::Kernel::Pixel> KernelImage;    
     
@@ -400,31 +401,31 @@ int afwMath::warpImage(
 #define IMAGE(PIXTYPE) afwImage::Image<PIXTYPE>
 #define NL /* */
 
-#define WarpFunctionsByType(DESTIMAGEPIXELT, SRCIMAGEPIXELT) \
+#define WarpFunctionsByType(DESTPIXELT, SRCPIXELT) \
     template int afwMath::warpImage( \
-        IMAGE(DESTIMAGEPIXELT) &destImage, \
+        IMAGE(DESTPIXELT) &destImage, \
         afwImage::Wcs const &destWcs, \
-        IMAGE(SRCIMAGEPIXELT) const &srcImage, \
+        IMAGE(SRCPIXELT) const &srcImage, \
         afwImage::Wcs const &srcWcs, \
         SeparableKernel &warpingKernel); NL \
     template int afwMath::warpImage( \
-        MASKEDIMAGE(DESTIMAGEPIXELT) &destImage, \
+        MASKEDIMAGE(DESTPIXELT) &destImage, \
         afwImage::Wcs const &destWcs, \
-        MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage, \
+        MASKEDIMAGE(SRCPIXELT) const &srcImage, \
         afwImage::Wcs const &srcWcs, \
         SeparableKernel &warpingKernel); NL \
     template int afwMath::warpExposure( \
-        EXPOSURE(DESTIMAGEPIXELT) &destExposure, \
-        EXPOSURE(SRCIMAGEPIXELT) const &srcExposure, \
+        EXPOSURE(DESTPIXELT) &destExposure, \
+        EXPOSURE(SRCPIXELT) const &srcExposure, \
         SeparableKernel &warpingKernel); \
     template int afwMath::warpImage( \
-        afwImage::SkyMapImage<afwImage::HealPixMapScheme, IMAGE(DESTIMAGEPIXELT)> &destSkyMapImage, \
-        IMAGE(SRCIMAGEPIXELT) const &srcImage, \
+        afwImage::SkyMapImage<afwImage::HealPixMapScheme, IMAGE(DESTPIXELT)::SinglePixel> &destSkyMapImage, \
+        IMAGE(SRCPIXELT) const &srcImage, \
         afwImage::Wcs const &srcWcs, \
         SeparableKernel &warpingKernel); NL \
     template int afwMath::warpImage( \
-        afwImage::SkyMapImage<afwImage::HealPixMapScheme, MASKEDIMAGE(DESTIMAGEPIXELT)> &destSkyMapImage, \
-        IMAGE(SRCIMAGEPIXELT) const &srcImage, \
+        afwImage::SkyMapImage<afwImage::HealPixMapScheme, MASKEDIMAGE(DESTPIXELT)::SinglePixel> &destSkyMapImage, \
+        MASKEDIMAGE(SRCPIXELT) const &srcImage, \
         afwImage::Wcs const &srcWcs, \
         SeparableKernel &warpingKernel); NL
 
