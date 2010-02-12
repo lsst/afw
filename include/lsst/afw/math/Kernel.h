@@ -25,11 +25,11 @@
 
 #include "lsst/daf/base/Persistable.h"
 #include "lsst/daf/data/LsstBase.h"
+#include "lsst/afw/geom/Point.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/Utils.h"
 #include "lsst/afw/math/Function.h"
 #include "lsst/afw/math/traits.h"
-#include "lsst/afw/math/ConvolutionVisitor.h"
 
 namespace lsst {
 namespace afw {
@@ -43,6 +43,10 @@ namespace math {
 #ifndef SWIG
 using boost::serialization::make_nvp;
 #endif
+
+//forward declaration of LocalKernel Classes
+class ImageLocalKernel;
+class FourierLocalKernel;
 
     /**
      * @brief Kernels are used for convolution with MaskedImages and (eventually) Images
@@ -157,13 +161,12 @@ using boost::serialization::make_nvp;
             double y = 0.0  ///< y (row position) at which to compute spatial function
         ) const = 0;
 
-        virtual ImageConvolutionVisitor::Ptr computeImageConvolutionVisitor(
-            lsst::afw::image::PointD const & location
+        virtual boost::shared_ptr<ImageLocalKernel> computeImageLocalKernel(
+            lsst::afw::geom::Point2D const & location
         ) const;
 
-
-        virtual FourierConvolutionVisitor::Ptr computeFourierConvolutionVisitor(
-           lsst::afw::image::PointD const & location
+        virtual boost::shared_ptr<FourierLocalKernel> computeFourierLocalKernel(
+           lsst::afw::geom::Point2D const & location
         ) const;
 
         /**
@@ -524,8 +527,8 @@ using boost::serialization::make_nvp;
             double y = 0.0
         ) const;
 
-        virtual ImageConvolutionVisitor::Ptr computeImageConvolutionVisitor(
-            lsst::afw::image::PointD const & location
+        virtual boost::shared_ptr<ImageLocalKernel> computeImageLocalKernel(
+            lsst::afw::geom::Point2D const & location
         ) const;
 
         virtual std::vector<double> getKernelParameters() const;

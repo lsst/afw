@@ -1,28 +1,19 @@
-#include <lsst/afw/math/ConvolutionVisitor.h>
+#include <lsst/afw/math/LocalKernel.h>
 #include <fftw3.h>
 #include <cassert>
 
 namespace afwMath = lsst::afw::math;
 
-/**
- * @brief Create a FourierCutout of the kernel.
- * @throws lsst::pex::exceptions::RuntimeErrorException Must previously call fft
- */
-afwMath::FourierCutout::Ptr afwMath::FourierConvolutionVisitor::getFourierImage() const {        
+afwMath::FourierCutout::Ptr afwMath::FftLocalKernel::getFourierImage() const {        
     if(_fourierStack.getStackDepth() > 0)
         return _fourierStack.getCutout(0);
    
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
-            "Must previously call FourierConvolutionVisitor::fft");
+            "Must previously call FourierLocalKernel::setDimensions");
 }
 
-/**
- * @brief Create FourierCutout of each derivative of the kernel
- * If no derivative information is known, returns a zero-length list
- * @throws lsst::pex::exceptions::RuntimeErrorException Must previously call fft
- */
 std::vector<afwMath::FourierCutout::Ptr> 
-afwMath::FourierConvolutionVisitor::getFourierDerivativeImageList() const {
+afwMath::FftLocalKernel::getFourierDerivatives() const {
     if(_fourierStack.getStackDepth() > 1) {
         //has already been transformed. return output of latest transform
         return _fourierStack.getCutoutVector(1);
@@ -33,11 +24,11 @@ afwMath::FourierConvolutionVisitor::getFourierDerivativeImageList() const {
     }
 
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
-            "Must previously call FourierConvolutionVisitor::fft");
+            "Must previously call FourierLocalKernel::setDimensions");
 }
 
 
-void afwMath::FourierConvolutionVisitor::copyImage(
+void afwMath::FftLocalKernel::copyImage(
         Pixel * dest, 
         Image::Ptr image, 
         int const &destWidth
@@ -56,32 +47,37 @@ void afwMath::FourierConvolutionVisitor::copyImage(
     }
 }
 
-void afwMath::FourierConvolutionVisitor::fillImageStack(
+void afwMath::FftLocalKernel::fillImageStack(
         Pixel * imageStack, 
         int const & imageSize,
         int const & imageWidth
 ) {
     Pixel * rowPtr = imageStack;
     assert(rowPtr != 0);
-    copyImage(rowPtr, _imageVisitor.getImage(), imageWidth);
+    copyImage(rowPtr, _imageKernel.getImage(), imageWidth);
 
     rowPtr += imageSize;    
-    ImagePtrList derivative = _imageVisitor.getDerivativeImageList();
-    ImagePtrList::const_iterator i(derivative.begin());
-    ImagePtrList::const_iterator const end(derivative.end());
+    ImagePtrList derivatives = _imageKernel.getDerivatives();
+    ImagePtrList::const_iterator i(derivatives.begin());
+    ImagePtrList::const_iterator const end(derivatives.end());
     for( ; i != end ; ++i, rowPtr += imageSize) {
         copyImage(rowPtr, *i, imageWidth);   
     }
 }
 
 
-void afwMath::FourierConvolutionVisitor::fft(int const & width, int const &height, bool normalizeFft) {
-    int kernelWidth = getWidth();
-    int kernelHeight = getHeight();
+void afwMath::FftLocalKernel::setDimensions(
+    int const & width, int const &height, bool normalize
+) {
+    int kernelWidth = _imageKernel.getWidth();
+    int kernelHeight = _imageKernel.getHeight();
     if(kernelWidth > width || kernelHeight > height) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, (boost::format(
-                "Requested dimensions (%1%, %2%) must be at least as large as input dimensions (%3%, %4%)")
-                %  width % height % kernelWidth % kernelHeight).str()
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::InvalidParameterException, 
+            (boost::format(
+                "Requested dimensions (%1%, %2%) must be at least as large"
+                " as input dimensions (%3%, %4%)"
+            ) %  width % height % kernelWidth % kernelHeight).str()
         );
     }
 
@@ -123,17 +119,16 @@ void afwMath::FourierConvolutionVisitor::fft(int const & width, int const &heigh
     _fourierStack.swap(temp);
     
     //shift and if necessary, normalize each fft
-    std::pair<int,int> center = getCenter();
-    int dx = -center.first;
-    int dy = - center.second;    
+    lsst::afw::geom::Point2I const & center = _imageKernel.getCenter();
+    int dx = -center.getX();
+    int dy = - center.getY();    
     double fftScale = 1.0/cutoutSize;
     
     FourierCutout::Ptr cutoutPtr;
     for(int i = 0; i < stackDepth; ++i) {
         cutoutPtr = _fourierStack.getCutout(i);
         cutoutPtr->shift(dx, dy);
-        if(normalizeFft) 
+        if(normalize) 
             (*cutoutPtr) *= fftScale;
     }
-
 }
