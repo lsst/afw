@@ -431,9 +431,9 @@ int afwMath::warpImage(
 
 
 WarpFunctionsByType(float, boost::uint16_t)
-// WarpFunctionsByType(double, boost::uint16_t)
-// WarpFunctionsByType(float, int)
-// WarpFunctionsByType(double, int)
-// WarpFunctionsByType(float, float)
-// WarpFunctionsByType(double, float)
-// WarpFunctionsByType(double, double)
+WarpFunctionsByType(double, boost::uint16_t)
+WarpFunctionsByType(float, int)
+WarpFunctionsByType(double, int)
+WarpFunctionsByType(float, float)
+WarpFunctionsByType(double, float)
+WarpFunctionsByType(double, double)
