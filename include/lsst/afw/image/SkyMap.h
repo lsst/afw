@@ -57,16 +57,16 @@ namespace image {
     *
     * @note uses the default copy constructor
     */
-    template<typename SkyMapSchemeT>
+    template<typename PixelIdT>
     class SkyMapIdSet {
     public:
-        typedef SkyMapSchemeT Scheme;
-        typedef typename SkyMapSchemeT::PixelId PixelId;
-        typedef typename std::set<PixelId>::const_iterator const_iterator;
-        typedef typename std::set<PixelId>::iterator iterator;
+        typedef SkyMapScheme<PixelIdT> Scheme;
+        typedef PixelIdT PixelId;
+        typedef typename std::set<PixelIdT>::const_iterator const_iterator;
+        typedef typename std::set<PixelIdT>::iterator iterator;
 
         explicit SkyMapIdSet(
-            SkyMapSchemeT const &scheme ///< sky pixelization scheme
+            SkyMapScheme<PixelIdT> const &scheme ///< sky pixelization scheme
         ) :
             _schemePtr(scheme.clone()),
             _idList()
@@ -74,7 +74,7 @@ namespace image {
         
         virtual ~SkyMapIdSet() {};
 
-        typename SkyMapSchemeT::Ptr getScheme() { return _schemePtr; };
+        typename SkyMapScheme<PixelIdT>::Ptr getScheme() { return _schemePtr; };
 
         /**
         * @brief Add the specified pixel; ignored if a already present
@@ -123,7 +123,7 @@ namespace image {
         iterator end() { return _idList.end(); };
 
     private:
-        typename SkyMapSchemeT::Ptr _schemePtr;
+        typename Scheme::Ptr _schemePtr;
         std::set<PixelId> _idList;
     };
 
@@ -142,7 +142,7 @@ namespace image {
 
         typedef typename boost::shared_ptr<SkyMapScheme<PixelIdT> > Ptr;
         typedef PixelIdT PixelId;
-        typedef SkyMapIdSet<SkyMapScheme> IdSet;
+        typedef SkyMapIdSet<PixelIdT> IdSet;
         
         /**
         * @brief return a shared pointer to a copy
@@ -154,14 +154,14 @@ namespace image {
         /**
         * @brief find all indices whose centers lie within the specified polygon
         */
-        virtual SkyMapIdSet<SkyMapScheme> findIndicesInPolygon(
+        virtual SkyMapIdSet<PixelIdT> findIndicesInPolygon(
             std::vector<lsst::afw::geom::Point2D> const &vertexList ///< list of RA/Dec vertices (radians)
         ) const = 0;
 
         /**
         * @brief find the indices of all pixels whose centers lie with a given radius of a point on the sky
         */
-        virtual SkyMapIdSet<SkyMapScheme> findIndicesInDisc(
+        virtual SkyMapIdSet<PixelIdT> findIndicesInDisc(
             lsst::afw::geom::Point2D raDec, ///< RA/Dec center point (radians)
             double radius ///< radius (radians)
         ) const = 0;
@@ -224,14 +224,14 @@ namespace image {
             return SkyMapScheme<HealPixId>::Ptr(new HealPixMapScheme(getNSides()));
         }
 
-        virtual SkyMapIdSet<SkyMapScheme<HealPixId> > findIndicesInPolygon(
+        virtual SkyMapIdSet<HealPixId> findIndicesInPolygon(
                 std::vector<lsst::afw::geom::Point2D> const &vertexList
         ) const {
             // adapt the HEALPix FORTRAN code since query_polygon is not available in C++
             throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Not yet implemented");
         }
 
-        virtual SkyMapIdSet<SkyMapScheme<HealPixId> > findIndicesInDisc(
+        virtual SkyMapIdSet<HealPixId> findIndicesInDisc(
                 lsst::afw::geom::Point2D raDec, ///< RA/Dec center point (radians)
                 double radius   ///< radius (radians)
         ) const {
@@ -300,19 +300,19 @@ namespace image {
     *
     * @note uses the default copy constructor
     */
-    template <typename SkyMapSchemeT, typename PixelDataT>
+    template <typename PixelIdT, typename PixelDataT>
     class SkyMapImage {
     public:
-        typedef SkyMapSchemeT Scheme;
-        typedef typename SkyMapSchemeT::PixelId PixelId;
-        typedef typename SkyMapSchemeT::IdSet IdSet;
+        typedef SkyMapScheme<PixelIdT> Scheme;
+        typedef SkyMapIdSet<PixelIdT> IdSet;
+        typedef PixelIdT PixelId;
         typedef PixelDataT PixelData;
-        typedef std::pair<PixelId, PixelDataT> Pixel;
-        typedef typename std::map<PixelId, PixelDataT>::const_iterator const_iterator;
-        typedef typename std::map<PixelId, PixelDataT>::iterator iterator;
+        typedef std::pair<PixelIdT, PixelDataT> Pixel;
+        typedef typename std::map<PixelIdT, PixelDataT>::const_iterator const_iterator;
+        typedef typename std::map<PixelIdT, PixelDataT>::iterator iterator;
         
         explicit SkyMapImage(
-                SkyMapSchemeT const &scheme ///< sky map scheme
+                SkyMapScheme<PixelIdT> const &scheme ///< sky map scheme
         ) :
             _schemePtr(scheme.clone()),
             _pixelMap()
@@ -320,12 +320,12 @@ namespace image {
 
         virtual ~SkyMapImage() {};
 
-        typename SkyMapSchemeT::Ptr getScheme() { return _schemePtr; };
+        typename SkyMapScheme<PixelIdT>::Ptr getScheme() { return _schemePtr; };
         
         /**
         * @brief Return a the IDs of the contained pixels
         */
-        SkyMapIdSet<SkyMapSchemeT> getIdSet() const {
+        SkyMapIdSet<PixelIdT> getIdSet() const {
             IdSet retIdSet;
             for (const_iterator pixelPtr = begin(); pixelPtr != end(); ++pixelPtr) {
                 retIdSet += pixelPtr->first;
@@ -360,7 +360,7 @@ namespace image {
         *
         * @throw lsst::pex::exceptions::InvalidParameterException if the schemes do not match
         */
-        void operator-=(SkyMapIdSet<SkyMapSchemeT> const &idList) {
+        void operator-=(SkyMapIdSet<PixelIdT> const &idList) {
             if (idList.getScheme() != this->getScheme()) {
                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "Schemes do not match");
             }
@@ -425,7 +425,7 @@ namespace image {
         }
         
     private:
-        typename SkyMapSchemeT::Ptr _schemePtr;
+        typename Scheme::Ptr _schemePtr;
         std::map<PixelId, PixelDataT> _pixelMap;
     };
 

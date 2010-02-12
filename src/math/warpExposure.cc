@@ -419,12 +419,12 @@ int afwMath::warpImage(
         EXPOSURE(SRCPIXELT) const &srcExposure, \
         SeparableKernel &warpingKernel); \
     template int afwMath::warpImage( \
-        afwImage::SkyMapImage<afwImage::HealPixMapScheme, IMAGE(DESTPIXELT)::SinglePixel> &destSkyMapImage, \
+        afwImage::SkyMapImage<afwImage::HealPixId, IMAGE(DESTPIXELT)::SinglePixel> &destSkyMapImage, \
         IMAGE(SRCPIXELT) const &srcImage, \
         afwImage::Wcs const &srcWcs, \
         SeparableKernel &warpingKernel); NL \
     template int afwMath::warpImage( \
-        afwImage::SkyMapImage<afwImage::HealPixMapScheme, MASKEDIMAGE(DESTPIXELT)::SinglePixel> &destSkyMapImage, \
+        afwImage::SkyMapImage<afwImage::HealPixId, MASKEDIMAGE(DESTPIXELT)::SinglePixel> &destSkyMapImage, \
         MASKEDIMAGE(SRCPIXELT) const &srcImage, \
         afwImage::Wcs const &srcWcs, \
         SeparableKernel &warpingKernel); NL

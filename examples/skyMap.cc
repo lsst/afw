@@ -8,5 +8,6 @@ namespace afwImage = lsst::afw::image;
 
 int main() {
     afwImage::HealPixMapScheme hpScheme(2097152);
-//    hpScheme::IdList hpIdList(hpScheme);
+    afwImage::HealPixMapScheme::IdSet hpIdSet(hpScheme);
+    afwImage::SkyMapImage<afwImage::HealPixId, double> hpPixelImage(hpScheme);
 }
