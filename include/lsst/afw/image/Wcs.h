@@ -1,18 +1,13 @@
-// -*- lsst-c++ -*-
-/**
- * \file
- * \brief Support for Astrometry
- *
- */
+// -*- LSST-C++ -*-
 
 #ifndef LSST_AFW_IMAGE_WCS_H
 #define LSST_AFW_IMAGE_WCS_H
+
 
 #include "Eigen/Core.h"
 #include "lsst/daf/base.h"
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/afw/image/Image.h"
-#include "lsst/afw/geom/AffineTransform.h"
 
 struct wcsprm;                          // defined in wcs.h
 
@@ -22,75 +17,55 @@ namespace afw {
         class WcsFormatter;
     }
 namespace image {
-    /// \brief Wcs supports coordinate system transformations between pixel and world coordinates
-    ///
-    /// All Wcs (in the FITS sense) coordinate conventions are supported via
-    /// Mark Calabretta's wcslib package (http://www.atnf.csiro.au/people/mcalabre)
-    ///
+
+
     class Wcs : public lsst::daf::base::Persistable,
-                public lsst::daf::data::LsstBase {
+                    public lsst::daf::data::LsstBase {
     public:
         typedef boost::shared_ptr<lsst::afw::image::Wcs> Ptr;
+        typedef boost::shared_ptr<lsst::afw::image::Wcs const> ConstPtr;
         
-        Wcs();
+        //Constructors
         Wcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
-        Wcs(PointD crval, PointD crpix, Eigen::Matrix2d const & CD, double equinox=2000.0,
-            std::string raDecSys="FK5");
-        Wcs(PointD crval, PointD crpix, Eigen::Matrix2d const & CD, 
-            Eigen::MatrixXd const & sipA, ///< Forward distortion Matrix A
-            Eigen::MatrixXd const & sipB, ///< Forward distortion Matrix B
-            Eigen::MatrixXd const & sipAp, ///<Reverse distortion Matrix Ap
-            Eigen::MatrixXd const & sipBp,  ///<Reverse distortion Matrix Bp
-            double equinox=2000.0,
-            std::string raDecSys="FK5"
+        Wcs(lsst::afw::image::PointD crval, lsst::afw::image::PointD crpix, Eigen::Matrix2d CD, 
+                const std::string ctype1="RA--TAN", const std::string ctype2="DEC-TAN",
+                double equinox=2000, std::string raDecSys="FK5",
+                const std::string cunits1="deg", const std::string cunits2="deg"
            );
 
-        Wcs(Wcs const &);
-        Wcs & operator = (const Wcs &);
+        virtual ~Wcs();
 
-        ~Wcs();
-
+        //Accessors
+        PointD getSkyOrigin() const;      //Return crval
+        PointD getPixelOrigin() const;    //Return crpix
+        Eigen::Matrix2d getCDMatrix() const;       //Return CD matrix
+        
         lsst::daf::base::PropertySet::Ptr getFitsMetadata() const;
+        bool isFlipped() const; //Does the Wcs follow the convention of North=Up, East=Left or not
+        double pixArea(PointD pix00) const;
 
-        /// Return true iff Wcs is valid
-        operator bool() const { return _wcsInfo != NULL; }
+        //Convert from raDec to pixel space. Formerly called raDecToXY() and
+        //xyToRaDec(), but the name now reflects their increased generality. They may be
+        //used, e.g. to convert xy to Galactic coordinates
+        virtual PointD skyToPixel(const PointD sky) const;
+        virtual PointD pixelToSky(const PointD pixel) const;
 
-        bool isFlipped();
+        virtual PointD skyToPixel(double sky1, double sky2) const;
+        virtual PointD pixelToSky(double pixel1, double pixel2) const;
 
-        void shiftReferencePixel(double const dx, double const dy);
-
-        lsst::afw::image::PointD getOriginRaDec() const;
-        lsst::afw::image::PointD getOriginXY() const;
-            
-        PointD raDecToXY(PointD sky) const;
-        PointD raDecToXY(double const ra, double const dec) const;
-        PointD raDecToXY(double const radec[2]) const {
-            return raDecToXY(radec[0], radec[1]);
-        }
-        Eigen::Matrix2d getLinearTransformMatrix() const;
-        lsst::afw::geom::AffineTransform getAffineTransform() const;
-        lsst::afw::geom::AffineTransform linearizeAt(lsst::afw::geom::PointD const & pix) const;
-
-        PointD xyToRaDec(PointD pix) const;
-        PointD xyToRaDec(double const x, double const y) const;
-        PointD xyToRaDec(double const xy[2]) const {
-            return xyToRaDec(xy[0], xy[1]);
-        }
-
-        double pixArea(lsst::afw::image::PointD pix) const;
+        //Mutators
+        void shiftReferencePixel(double dx, double dy); 
 
     private:
-        void initWcslib(PointD crval,                   
-                        PointD crpix,                   
-                        Eigen::Matrix2d const & CD,             
-                        double equinox,                 
-                        std::string raDecSys,           
-                        std::string ctype1="RA---TAN",  
-                        std::string ctype2="DEC--TAN"   
-                        );
+        void initWcsLib(lsst::afw::image::PointD crval, lsst::afw::image::PointD crpix, Eigen::Matrix2d CD, 
+                        const std::string ctype1, const std::string ctype2,
+                        double equinox, std::string raDecSys,
+                        const std::string cunits1, const std::string cunits2
+                       );
 
-        
-        LSST_PERSIST_FORMATTER(lsst::afw::formatters::WcsFormatter);
+        void initWcsLibFromFits(lsst::daf::base::PropertySet::Ptr const fitsMetadata);
+    
+    protected:
 
         struct wcsprm* _wcsInfo;
         int _nWcsInfo;
@@ -99,19 +74,7 @@ namespace image {
         int _wcshdrCtrl; ///< Controls messages to stderr from wcshdr (0 for none); see wcshdr.h for details
         int _nReject;
 
-        //SIP keywords
-        Eigen::MatrixXd _sipA, _sipB; ///< Forward transformation
-        Eigen::MatrixXd _sipAp, _sipBp;   ///<Reverse transformation
-        
     };
-  
-    namespace detail {
-        lsst::daf::base::PropertySet::Ptr
-        createTrivialWcsAsPropertySet(std::string const& wcsName, int const x0=0, int const y0=0);
-
-        image::PointI getImageXY0FromMetadata(std::string const& wcsName, lsst::daf::base::PropertySet *metadata);
-    }
-
 }}} // lsst::afw::image
 
 #endif // LSST_AFW_IMAGE_WCS_H
