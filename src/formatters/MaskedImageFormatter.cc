@@ -70,7 +70,7 @@ MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImageFormat
     lsst::pex::policy::Policy::Ptr
                                                                                    )
     :
-    lsst::daf::persistence::Formatter(typeid(*this)) {
+    lsst::daf::persistence::Formatter(typeid(this)) {
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>

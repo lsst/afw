@@ -52,7 +52,7 @@ dafPersist::FormatterRegistration afwForm::WcsFormatter::registration(
 
 afwForm::WcsFormatter::WcsFormatter(
     pexPolicy::Policy::Ptr) :
-    dafPersist::Formatter(typeid(*this)) {
+    dafPersist::Formatter(typeid(this)) {
 }
 
 afwForm::WcsFormatter::~WcsFormatter(void) {

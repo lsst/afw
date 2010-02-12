@@ -73,7 +73,7 @@ lsst::daf::persistence::FormatterRegistration afwForm::ExposureFormatter<ImagePi
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::ExposureFormatter(
     lsst::pex::policy::Policy::Ptr policy) :
-    lsst::daf::persistence::Formatter(typeid(*this)), _policy(policy) {
+    lsst::daf::persistence::Formatter(typeid(this)), _policy(policy) {
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>

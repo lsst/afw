@@ -63,7 +63,7 @@ lsst::daf::persistence::FormatterRegistration MaskFormatter<MaskPixelT>::registr
 template <typename MaskPixelT>
 MaskFormatter<MaskPixelT>::MaskFormatter(
     lsst::pex::policy::Policy::Ptr) :
-    lsst::daf::persistence::Formatter(typeid(*this)) {
+    lsst::daf::persistence::Formatter(typeid(this)) {
 }
 
 template <typename MaskPixelT>

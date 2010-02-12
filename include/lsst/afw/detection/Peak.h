@@ -18,13 +18,13 @@ public:
     /// A peak at the pixel <tt>(ix, iy)</tt>
     explicit Peak(int ix,               //!< column pixel
                   int iy)               //!< row pixel
-        : lsst::daf::base::Citizen(typeid(*this)),
+        : lsst::daf::base::Citizen(typeid(this)),
           _id(++id),
           _ix(ix), _iy(iy), _fx(ix), _fy(iy) {};
     /// A peak at the floating-point position <tt>(fx, fy)</tt>
     explicit Peak(float fx=NAN,       //!< column centre
                   float fy=NAN)       //!< row centre
-        : lsst::daf::base::Citizen(typeid(*this)),
+        : lsst::daf::base::Citizen(typeid(this)),
           _id(++id),
           _ix(fx > 0 ? static_cast<int>(fx) : -static_cast<int>(-fx) - 1),
           _iy(fy > 0 ? static_cast<int>(fy) : -static_cast<int>(-fy) - 1),

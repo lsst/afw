@@ -130,7 +130,23 @@ in particular that it has an entry ampSerial which is a single-element list, the
             ccdId = cameraGeom.Id(ccdPol.get("serial"), ccdPol.get("name"))
         except Exception, e:
             ccdId = cameraGeom.Id(0, "unknown")
-
+    #
+    # Find the proper electronic parameters.  The Ccd name may be specified as "*" to match all detectors,
+    # a feature that's probably mostly useful for testing
+    #
+    electronicPol = geomPolicy.get("Electronic")
+    electronics = {}
+    for pol in electronicPol.getArray("Raft"):
+        for pol in pol.getArray("Ccd"):
+            electronicCcdName = pol.get("name")
+            if electronicCcdName in ("*", ccdId.getName()):
+                electronics["ccdName"] = electronicCcdName
+                for p in pol.getArray("Amp"):
+                    electronics[p.get("serial")] = p
+                break
+    #
+    # Actually build the Ccd
+    #
     ccd = cameraGeom.Ccd(ccdId, pixelSize)
 
     if nCol*nRow != len(ccdPol.getArray("Amp")):
@@ -141,22 +157,39 @@ in particular that it has an entry ampSerial which is a single-element list, the
         ampSerial = [0]
     else:
         ampSerial = ccdInfo.get("ampSerial", [0])
-        ampSerial0 = ampSerial[0]           # used in testing
+    ampSerial0 = None                   # used in testing
         
     readoutCorners = dict(LLC = cameraGeom.Amp.LLC,
                           LRC = cameraGeom.Amp.LRC,
                           ULC = cameraGeom.Amp.ULC,
                           URC = cameraGeom.Amp.URC)
     for ampPol in ccdPol.getArray("Amp"):
+        if ampPol.exists("serial"):
+            serial = ampPol.get("serial")
+            ampSerial[0] = serial
+        else:
+            serial = ampSerial[0]
+        ampSerial[0] += 1
+
+        if ampSerial0 is None:
+            ampSerial0 = serial
+
         Col, Row = ampPol.getArray("index")
         c =  ampPol.get("readoutCorner")
 
         if Col not in range(nCol) or Row not in range(nRow):
             raise RuntimeError, ("Amp location %d, %d is not in 0..%d, 0..%d" % (Col, Row, nCol, nRow))
 
-        gain = ampPol.get("Electronic.gain")
-        readNoise = ampPol.get("Electronic.readNoise")
-        saturationLevel = ampPol.get("Electronic.saturationLevel")
+        try:
+            ePol = electronics[serial]
+            gain = ePol.get("gain")
+            readNoise = ePol.get("readNoise")
+            saturationLevel = ePol.get("saturationLevel")
+        except KeyError:
+            if electronics.get("ccdName") != "*":
+                raise RuntimeError, ("Unable to find electronic info for Ccd \"%s\", Amp %s" %
+                                     (ccd.getId(), serial))
+            gain, readNoise, saturationLevel = 0, 0, 0
         #
         # Now lookup properties common to all the CCD's amps
         #
@@ -187,9 +220,8 @@ in particular that it has an entry ampSerial which is a single-element list, the
             dataSec = afwImage.BBox(afwImage.PointI(overclockH, preRows), width, height)
 
         eParams = cameraGeom.ElectronicParams(gain, readNoise, saturationLevel)
-        amp = cameraGeom.Amp(cameraGeom.Id(ampSerial[0], "ID%d" % ampSerial[0]),
+        amp = cameraGeom.Amp(cameraGeom.Id(serial, "ID%d" % serial),
                              allPixels, biasSec, dataSec, c, eParams)
-        ampSerial[0] += 1
 
         ccd.addAmp(Col, Row, amp)
     #
@@ -678,52 +710,53 @@ The dictionay is indexed by an Id object --- remember to compare by str(id) not 
     """
 
     defectsDict = {}
-    for defectPol in geomPolicy.getArray("DefectList"):
-        defects = afwImage.DefectSet()
-        ccdId = cameraGeom.Id(defectPol.get("serial"), defectPol.get("name"))
-        defectsDict[ccdId] = defects
+    defectListPol = geomPolicy.get("Defects")
+    for raftPol in defectListPol.getArray("Raft"):
+        for defectPol in raftPol.getArray("Ccd"):
+            defects = afwImage.DefectSet()
+            ccdId = cameraGeom.Id(defectPol.get("serial"), defectPol.get("name"))
+            defectsDict[ccdId] = defects
 
-        for defect in defectPol.getArray("Defect"):
-            x0 = defect.get("x0")
-            y0 = defect.get("y0")
+            for defect in defectPol.getArray("Defect"):
+                x0 = defect.get("x0")
+                y0 = defect.get("y0")
 
-            x1 = y1 = width = height = None
-            if defect.exists("x1"):
-                x1 = defect.get("x1")
-            if defect.exists("y1"):
-                y1 = defect.get("y1")
-            if defect.exists("width"):
-                width = defect.get("width")
-            if defect.exists("height"):
-                height = defect.get("height")
+                x1 = y1 = width = height = None
+                if defect.exists("x1"):
+                    x1 = defect.get("x1")
+                if defect.exists("y1"):
+                    y1 = defect.get("y1")
+                if defect.exists("width"):
+                    width = defect.get("width")
+                if defect.exists("height"):
+                    height = defect.get("height")
 
-            if x1 is None:
-                if width:
-                    x1 = x0 + width - 1
+                if x1 is None:
+                    if width:
+                        x1 = x0 + width - 1
+                    else:
+                        raise RuntimeError, ("Defect at (%d,%d) for CCD (%s) has no x1/width" % (x0, y0, ccdId))
                 else:
-                    raise RuntimeError, ("Defect at (%d,%d) for CCD (%s) has no x1/width" % (x0, y0, ccdId))
-            else:
-                if width:
-                    if x1 != x0 + width - 1:
-                        raise RuntimeError, \
-                              ("Defect at (%d,%d) for CCD (%s) has inconsistent x1/width = %d,%d" % \
-                               (x0, y0, ccdId, x1, width))
+                    if width:
+                        if x1 != x0 + width - 1:
+                            raise RuntimeError, \
+                                  ("Defect at (%d,%d) for CCD (%s) has inconsistent x1/width = %d,%d" % \
+                                   (x0, y0, ccdId, x1, width))
 
-            if y1 is None:
-                if height:
-                    y1 = y0 + height - 1
+                if y1 is None:
+                    if height:
+                        y1 = y0 + height - 1
+                    else:
+                        raise RuntimeError, ("Defect at (%d,%d) for CCD (%s) has no y1/height" % (x0, y0, ccdId))
                 else:
-                    raise RuntimeError, ("Defect at (%d,%d) for CCD (%s) has no y1/height" % (x0, y0, ccdId))
-            else:
-                if height:
-                    if y1 != y0 + height - 1:
-                        raise RuntimeError, \
-                              ("Defect at (%d,%d) for CCD (%s) has inconsistent y1/height = %d,%d" % \
-                               (x0, y0, ccdId, y1, height))
-            
-            bbox = afwImage.BBox(afwImage.PointI(x0, y0), afwImage.PointI(x1, y1))
-            defects.push_back(afwImage.DefectBase(bbox))
+                    if height:
+                        if y1 != y0 + height - 1:
+                            raise RuntimeError, \
+                                  ("Defect at (%d,%d) for CCD (%s) has inconsistent y1/height = %d,%d" % \
+                                   (x0, y0, ccdId, y1, height))
 
-    return defectsDict
-        
-    
+                bbox = afwImage.BBox(afwImage.PointI(x0, y0), afwImage.PointI(x1, y1))
+                defects.push_back(afwImage.DefectBase(bbox))
+
+        return defectsDict
+

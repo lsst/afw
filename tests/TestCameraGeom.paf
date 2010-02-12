@@ -84,74 +84,34 @@ Ccd: {
     Amp: {
         index: 0 0                      # Location of Amp in CCD thought of as a grid of amplifiers
         readoutCorner: LLC              # location of first pixel read
-        Electronic: {
-            gain: 0.0
-            readNoise: 10.0
-            saturationLevel: 65535.0
-        }
     }
     Amp: {
         index: 0 1                      # Location of Amp in CCD thought of as a grid of amplifiers
         readoutCorner: LLC              # location of first pixel read
-        Electronic: {
-            gain: 0.01
-            readNoise: 10.0
-            saturationLevel: 65535.0
-        }
     }
     Amp: {
         index: 0 2                      # Location of Amp in CCD thought of as a grid of amplifiers
         readoutCorner: LLC              # location of first pixel read
-        Electronic: {
-            gain: 0.02
-            readNoise: 10.0
-            saturationLevel: 65535.0
-        }
     }
     Amp: {
         index: 0 3                      # Location of Amp in CCD thought of as a grid of amplifiers
         readoutCorner: LLC              # location of first pixel read
-        Electronic: {
-            gain: 0.03
-            readNoise: 10.0
-            saturationLevel: 65535.0
-        }
     }
     Amp: {
         index: 1 0                      # Location of Amp in CCD thought of as a grid of amplifiers
         readoutCorner: LRC              # location of first pixel read
-        Electronic: {
-            gain: 0.10
-            readNoise: 10.0
-            saturationLevel: 65535.0
-        }
     }
     Amp: {
         index: 1 1                      # Location of Amp in CCD thought of as a grid of amplifiers
         readoutCorner: LRC              # location of first pixel read
-        Electronic: {
-            gain: 0.11
-            readNoise: 10.0
-            saturationLevel: 65535.0
-        }
     }
     Amp: {
         index: 1 2                      # Location of Amp in CCD thought of as a grid of amplifiers
         readoutCorner: LRC              # location of first pixel read
-        Electronic: {
-            gain: 0.12
-            readNoise: 10.0
-            saturationLevel: 65535.0
-        }
     }
     Amp: {
         index: 1 3                      # Location of Amp in CCD thought of as a grid of amplifiers
         readoutCorner: LRC              # location of first pixel read
-        Electronic: {
-            gain: 0.13
-            readNoise: 10.0
-            saturationLevel: 65535.0
-        }
     }
 }
 
@@ -168,39 +128,106 @@ Amp: {
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
-# N.b. we need to specify serial for each CCD due to pex_policy #1117
+# Electronic properties of our CCDs
 #
-DefectList: {
-    serial: -1
-    name: "Defective"                   # CCD's name
-    Defect: {
-        x0: 34
-        y0: 0
-        x1: 35
-        y1: 80
-    }
-    Defect: {
-        x0: 34
-        y0: 81
-        width: 1
-        y1: 100
-    }
-    Defect: {
-        x0: 180
-        y0: 100
-        width: 3
-        height: 31
-        x1: 182
-        y1: 130
+Electronic: {
+    Raft: {
+        name: "*"
+        Ccd: {
+            name:  "*"
+            Amp: {
+                serial: 0
+                gain: 0.0
+                readNoise: 10.0
+                saturationLevel: 65535.0
+            }
+            Amp: {
+                serial: 1
+                gain: 0.01
+                readNoise: 10.0
+                saturationLevel: 65535.0
+            }
+            Amp: {
+                serial: 2
+                gain: 0.02
+                readNoise: 10.0
+                saturationLevel: 65535.0
+            }
+            Amp: {
+                serial: 3
+                gain: 0.03
+                readNoise: 10.0
+                saturationLevel: 65535.0
+            }
+            Amp: {
+                serial: 4
+                gain: 0.10
+                readNoise: 10.0
+                saturationLevel: 65535.0
+            }
+            Amp: {
+                serial: 5
+                gain: 0.11
+                readNoise: 10.0
+                saturationLevel: 65535.0
+            }
+            Amp: {
+                serial: 6
+                gain: 0.12
+                readNoise: 10.0
+                saturationLevel: 65535.0
+            }
+            Amp: {
+                serial: 7
+                gain: 0.13
+                readNoise: 10.0
+                saturationLevel: 65535.0
+            }
+        }
     }
 }
-DefectList: {
-    serial: -1
-    name: "Defective II"                # CCD's name
-    Defect: {
-        x0: 10
-        y0: 0
-        x1: 12
-        y1: 10
+
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+#
+# N.b. we need to specify serial for each CCD due to pex_policy #1117
+#
+Defects: {
+    Raft: {
+        name: "XXX"                     # An empty string makes the Policy parser unhappy
+        Ccd: {
+            serial: -1
+            name: "Defective"           # CCD's name
+            Defect: {
+                x0: 34
+                y0: 0
+                x1: 35
+                y1: 80
+            }
+            Defect: {
+                x0: 34
+                y0: 81
+                width: 1
+                y1: 100
+            }
+            Defect: {
+                x0: 180
+                y0: 100
+                width: 3
+                height: 31
+                x1: 182
+                y1: 130
+            }
+        }
+
+        Ccd: {
+            serial: -1
+            name: "Defective II"        # CCD's name
+            Defect: {
+                x0: 10
+                y0: 0
+                x1: 12
+                y1: 10
+            }
+        }
     }
 }

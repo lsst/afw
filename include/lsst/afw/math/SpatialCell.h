@@ -107,6 +107,7 @@ namespace math {
                                      _image(typename ImageT::Ptr()),
                                      _chi2(std::numeric_limits<double>::max()) {
         }
+        virtual ~SpatialCellImageCandidate() {}
 
         /// Return the Candidate's Image
         virtual typename ImageT::ConstPtr getImage() const = 0;
