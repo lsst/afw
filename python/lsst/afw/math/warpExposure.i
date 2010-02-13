@@ -13,16 +13,28 @@ SWIG_SHARED_PTR_DERIVED(BilinearWarpingKernel, lsst::afw::math::SeparableKernel,
 
 %include "lsst/afw/math/warpExposure.h"
 
+namespace afwImage = lsst::afw::image;
+
 %define %WarpFuncsByType(DESTIMAGEPIXELT, SRCIMAGEPIXELT)
 %template(warpExposure) lsst::afw::math::warpExposure<
-    lsst::afw::image::Exposure<DESTIMAGEPIXELT, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>,
-    lsst::afw::image::Exposure<SRCIMAGEPIXELT, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> >;
+    afwImage::Exposure<DESTIMAGEPIXELT, afwImage::MaskPixel, afwImage::VariancePixel>,
+    afwImage::Exposure<SRCIMAGEPIXELT, afwImage::MaskPixel, afwImage::VariancePixel> >;
 %template(warpImage) lsst::afw::math::warpImage<
-    lsst::afw::image::MaskedImage<DESTIMAGEPIXELT, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>,
-    lsst::afw::image::MaskedImage<SRCIMAGEPIXELT, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> >;
+    afwImage::MaskedImage<DESTIMAGEPIXELT, afwImage::MaskPixel, afwImage::VariancePixel>,
+    afwImage::MaskedImage<SRCIMAGEPIXELT, afwImage::MaskPixel, afwImage::VariancePixel> >;
 %template(warpImage) lsst::afw::math::warpImage<
-    lsst::afw::image::Image<DESTIMAGEPIXELT>,
-    lsst::afw::image::Image<SRCIMAGEPIXELT> >;
+    afwImage::Image<DESTIMAGEPIXELT>,
+    afwImage::Image<SRCIMAGEPIXELT> >;
+%template(warpImageToSkyMap) lsst::afw::math::warpImageToSkyMap<
+    afwImage::SkyMapImage<
+        afwImage::HealPixId,
+        afwImage::MaskedImage<DESTIMAGEPIXELT, afwImage::MaskPixel, afwImage::VariancePixel>::SinglePixel
+    >,
+    afwImage::MaskedImage<SRCIMAGEPIXELT, afwImage::MaskPixel, afwImage::VariancePixel>
+>;
+%template(warpImageToSkyMap) lsst::afw::math::warpImageToSkyMap<
+    afwImage::SkyMapImage<afwImage::HealPixId, afwImage::Image<DESTIMAGEPIXELT>::SinglePixel >,
+    afwImage::Image<SRCIMAGEPIXELT> >;
 %enddef
 
 %WarpFuncsByType(float, boost::uint16_t);
@@ -41,14 +53,14 @@ SWIG_SHARED_PTR_DERIVED(BilinearWarpingKernel, lsst::afw::math::SeparableKernel,
 
 %include "lsst/afw/math/offsetImage.h"
 
-%template(offsetImage) lsst::afw::math::offsetImage<lsst::afw::image::Image<double> >;
-%template(offsetImage) lsst::afw::math::offsetImage<lsst::afw::image::Image<float> >;
+%template(offsetImage) lsst::afw::math::offsetImage<afwImage::Image<double> >;
+%template(offsetImage) lsst::afw::math::offsetImage<afwImage::Image<float> >;
 
 %define rotateImageBy90(PIXELT)
-%template(rotateImageBy90) lsst::afw::math::rotateImageBy90<lsst::afw::image::Image<PIXELT> >;
+%template(rotateImageBy90) lsst::afw::math::rotateImageBy90<afwImage::Image<PIXELT> >;
 #if 0
 %template(rotateImageBy90) lsst::afw::math::rotateImageBy90<
-    lsst::afw::image::MaskedImage<PIXELT, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> >;
+    afwImage::MaskedImage<PIXELT, afwImage::MaskPixel, afwImage::VariancePixel> >;
 #endif
 %enddef
 

@@ -74,7 +74,7 @@ namespace image {
         
         virtual ~SkyMapIdSet() {};
 
-        typename SkyMapScheme<PixelIdT>::Ptr getScheme() { return _schemePtr; };
+        typename SkyMapScheme<PixelIdT>::Ptr const getScheme() const { return _schemePtr; };
 
         /**
         * @brief Add the specified pixel; ignored if a already present
@@ -123,7 +123,7 @@ namespace image {
         iterator end() { return _idList.end(); };
 
     private:
-        typename Scheme::Ptr _schemePtr;
+        typename Scheme::Ptr const _schemePtr;
         std::set<PixelId> _idList;
     };
 
@@ -322,7 +322,7 @@ namespace image {
 
         virtual ~SkyMapImage() {};
 
-        typename SkyMapScheme<PixelIdT>::Ptr getScheme() { return _schemePtr; };
+        typename SkyMapScheme<PixelIdT>::Ptr const getScheme() const { return _schemePtr; };
         
         /**
         * @brief Return a the IDs of the contained pixels
@@ -427,7 +427,7 @@ namespace image {
         }
         
     private:
-        typename Scheme::Ptr _schemePtr;
+        typename Scheme::Ptr const _schemePtr;
         std::map<PixelId, PixelDataT> _pixelMap;
     };
 
