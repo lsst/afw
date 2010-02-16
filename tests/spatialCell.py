@@ -103,6 +103,23 @@ class SpatialCellTestCase(unittest.TestCase):
 
         self.assertEqual(i, self.nCandidate)
         
+    def testSortCandidates(self):
+        """Check that we can update ratings and maintain order"""
+        ratings0 = [cand.getCandidateRating() for cand in self.cell]
+        #
+        # Change a rating
+        #
+        i, flux = 1, 9999
+        self.cell[i].setCandidateRating(flux)
+        ratings0[i] = flux
+
+        self.assertEqual(ratings0, [cand.getCandidateRating() for cand in self.cell])
+
+        self.cell.sortCandidates()
+        self.assertNotEqual(ratings0, [cand.getCandidateRating() for cand in self.cell])
+        self.assertEqual(sorted(ratings0, lambda a, b: int(b - a)),
+                         [cand.getCandidateRating() for cand in self.cell])
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class SpatialCellSetTestCase(unittest.TestCase):
@@ -220,6 +237,29 @@ class SpatialCellSetTestCase(unittest.TestCase):
                 self.assertEqual(cbbox.getY0(), ny*sy + y0)
                 self.assertEqual(cbbox.getX1(), (nx+1)*sx + x0 - 1)
                 self.assertEqual(cbbox.getY1(), (ny+1)*sy + y0 - 1)
+
+    def testSortCandidates(self):
+        """Check that we can update ratings and maintain order"""
+
+        self.makeTestCandidateCellSet()
+
+        cell1 = self.cellSet.getCellList()[0]
+        self.assertFalse(cell1.empty())
+
+        ratings0 = [cand.getCandidateRating() for cand in cell1]
+        #
+        # Change a rating
+        #
+        i, flux = 1, 9999
+        cell1[i].setCandidateRating(flux)
+        ratings0[i] = flux
+
+        self.assertEqual(ratings0, [cand.getCandidateRating() for cand in cell1])
+
+        self.cellSet.sortCandidates()
+        self.assertNotEqual(ratings0, [cand.getCandidateRating() for cand in cell1])
+        self.assertEqual(sorted(ratings0, lambda a, b: int(b - a)),
+                         [cand.getCandidateRating() for cand in cell1])
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
