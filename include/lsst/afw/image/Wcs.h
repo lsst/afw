@@ -26,6 +26,7 @@ namespace image {
         typedef boost::shared_ptr<lsst::afw::image::Wcs const> ConstPtr;
         
         //Constructors
+        Wcs();
         Wcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
         Wcs(lsst::afw::image::PointD crval, lsst::afw::image::PointD crpix, Eigen::Matrix2d CD, 
                 const std::string ctype1="RA--TAN", const std::string ctype2="DEC-TAN",
@@ -76,6 +77,17 @@ namespace image {
         int _nReject;
 
     };
+
+    //@TODO: Image.cc doesn't compile without this, although I'm not sure what they do, or if they're
+    //necessary
+    namespace detail {
+        lsst::daf::base::PropertySet::Ptr
+        createTrivialWcsAsPropertySet(std::string const& wcsName, int const x0=0, int const y0=0);
+
+        image::PointI getImageXY0FromMetadata(std::string const& wcsName, lsst::daf::base::PropertySet *metadata);
+    }
+
+
 }}} // lsst::afw::image
 
 #endif // LSST_AFW_IMAGE_WCS_H

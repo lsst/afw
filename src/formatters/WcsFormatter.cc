@@ -155,7 +155,8 @@ dafBase::PropertySet::Ptr
 afwForm::WcsFormatter::generatePropertySet(afwImg::Wcs const& wcs) {
     // Only generates properties for the first wcsInfo.
     dafBase::PropertySet::Ptr wcsProps(new dafBase::PropertySet());
-    if (!wcs) {                         // nothing to add
+
+    if (wcs._wcsInfo == NULL) {                  // nothing to add
         return wcsProps;
     }
 
@@ -264,3 +265,4 @@ dafPersist::Formatter::Ptr afwForm::WcsFormatter::createInstance(
     pexPolicy::Policy::Ptr policy) {
     return dafPersist::Formatter::Ptr(new afwForm::WcsFormatter(policy));
 }
+

@@ -40,9 +40,8 @@ const int STRLEN = 72;
 // Constructors
 //
 
-/**
- * @brief Construct an invalid Wcs given no arguments
- */
+
+///@brief Construct an invalid Wcs given no arguments
 lsst::afw::image::Wcs::Wcs() :
     LsstBase(typeid(this)),
     _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0) {
