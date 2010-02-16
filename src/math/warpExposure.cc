@@ -222,14 +222,14 @@ int afwMath::warpImage(
         afwImage::PointD destPosXY(
             afwImage::indexToPosition(destIndX),
             afwImage::indexToPosition(-1));
-        afwImage::PointD srcPosXY = srcWcs.raDecToXY(destWcs.xyToRaDec(destPosXY));
+        afwImage::PointD srcPosXY = srcWcs.skyToPixel(destWcs.pixelToSky(destPosXY));
         prevRowSrcPosXY[destIndX] = srcPosXY;
     }
     for (int destIndY = 0; destIndY < destHeight; ++destIndY) {
         afwImage::PointD destPosXY(
             afwImage::indexToPosition(-1),
             afwImage::indexToPosition(destIndY));
-        afwImage::PointD prevSrcPosXY = srcWcs.raDecToXY(destWcs.xyToRaDec(destPosXY));
+        afwImage::PointD prevSrcPosXY = srcWcs.skyToPixel(destWcs.pixelToSky(destPosXY));
         afwImage::PointD srcPosXY;
         typename DestImageT::x_iterator destXIter = destImage.row_begin(destIndY);
         for (int destIndX = 0; destIndX < destWidth; ++destIndX, ++destXIter) {
@@ -237,7 +237,7 @@ int afwMath::warpImage(
             destPosXY[0] = afwImage::indexToPosition(destIndX);
 
             // Compute associated pixel position on source MaskedImage
-            srcPosXY = srcWcs.raDecToXY(destWcs.xyToRaDec(destPosXY));
+            srcPosXY = srcWcs.skyToPixel(destWcs.pixelToSky(destPosXY));
 
             // Compute associated source pixel index and break it into integer and fractional
             // parts; the latter is used to compute the remapping kernel.

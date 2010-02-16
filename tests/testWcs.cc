@@ -65,11 +65,11 @@ BOOST_AUTO_TEST_CASE(linearConstructor) { /* parasoft-suppress  LsstDm-3-2a Lsst
     //That said, I'm disturbed about how high my tolerance has to be
     //for what should be a simple computation
     double expect=2.0;
-    image::PointD ad = wcs.xyToRaDec(9,9);
+    image::PointD ad = wcs.pixelToSky(9,9);
     BOOST_CHECK_CLOSE(ad.getX(), expect, .05);
     BOOST_CHECK_CLOSE(ad.getY(), 2., .11);    
     
-    image::PointD xy = wcs.raDecToXY(2,2);
+    image::PointD xy = wcs.skyToPixel(2,2);
     BOOST_CHECK_CLOSE(xy.getX(), 9., .05);
     BOOST_CHECK_CLOSE(xy.getY(), 9., .05);    
 }
@@ -90,23 +90,23 @@ BOOST_AUTO_TEST_CASE(radec_to_xy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4
     image::Wcs wcs(crval, crpix, CD);
 
     //check the trivial case
-    image::PointD xy = wcs.raDecToXY(80.159679, 30.80656);
+    image::PointD xy = wcs.skyToPixel(80.159679, 30.80656);
     BOOST_CHECK_CLOSE(xy.getX(), 890.5, .1);
     BOOST_CHECK_CLOSE(xy.getY(), 892.5, .1);  
         
-    xy = wcs.raDecToXY(80.258354, +30.810147);
+    xy = wcs.skyToPixel(80.258354, +30.810147);
     BOOST_CHECK_CLOSE(xy.getX(), 588., .1);
     BOOST_CHECK_CLOSE(xy.getY(), 903., .1);
 
-    xy = wcs.raDecToXY(80.382829, +31.0287389);
+    xy = wcs.skyToPixel(80.382829, +31.0287389);
     BOOST_CHECK_CLOSE(xy.getX(), 202., .1);
     BOOST_CHECK_CLOSE(xy.getY(), 1682., .1);
 
-    xy = wcs.raDecToXY(79.900717, +31.0046556);
+    xy = wcs.skyToPixel(79.900717, +31.0046556);
     BOOST_CHECK_CLOSE(xy.getX(), 1677., .1);
     BOOST_CHECK_CLOSE(xy.getY(), 1608., .1);
 
-    xy = wcs.raDecToXY(79.987550, +30.6272333);
+    xy = wcs.skyToPixel(79.987550, +30.6272333);
     BOOST_CHECK_CLOSE(xy.getX(), 1424., .1);
     BOOST_CHECK_CLOSE(xy.getY(), 256., .1);
 
@@ -127,23 +127,23 @@ BOOST_AUTO_TEST_CASE(xy_to_radec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4
     image::Wcs wcs(crval, crpix, CD);
 
     //check the trivial case
-    image::PointD ad = wcs.xyToRaDec(890.5, 892.5);
+    image::PointD ad = wcs.pixelToSky(890.5, 892.5);
     BOOST_CHECK_CLOSE(ad.getX(), 80.15967 , 3e-5);  //2e-5 is <0.01 arcsec in ra
     BOOST_CHECK_CLOSE(ad.getY(), 30.80656 ,3e-5);  // 2e-5 is <0.1 arcsec in dec
 
-    ad = wcs.xyToRaDec(140., 116.);
+    ad = wcs.pixelToSky(140., 116.);
     BOOST_CHECK_CLOSE(ad.getX(), 80.405963 , 3e-5);
     BOOST_CHECK_CLOSE(ad.getY(),  +30.5908500 , 3e-5);  
 
-    ad = wcs.xyToRaDec(396., 1481.);
+    ad = wcs.pixelToSky(396., 1481.);
     BOOST_CHECK_CLOSE(ad.getX(), 80.319804 , 3e-5);
     BOOST_CHECK_CLOSE(ad.getY(), +30.9721778 , 3e-5 );  
 
-    ad = wcs.xyToRaDec(1487., 1754.);
+    ad = wcs.pixelToSky(1487., 1754.);
     BOOST_CHECK_CLOSE(ad.getX(), 79.962379 , 3e-5);
     BOOST_CHECK_CLOSE(ad.getY(), +31.0460250 , 3e-5);  
 
-    ad = wcs.xyToRaDec(1714., 186.);
+    ad = wcs.pixelToSky(1714., 186.);
     BOOST_CHECK_CLOSE(ad.getX(), 79.893342 , 3e-5);
     BOOST_CHECK_CLOSE(ad.getY(), +30.6068444 , 3e-5);  
 
@@ -165,9 +165,9 @@ BOOST_AUTO_TEST_CASE(test_closure) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-
     double x = 251;
     double y = 910;
     image::PointD xy(251., 910.);
-    image::PointD ad = wcs.xyToRaDec(xy);
-    BOOST_CHECK_CLOSE(wcs.raDecToXY(ad).getX(), x, 1e-6);
-    BOOST_CHECK_CLOSE(wcs.raDecToXY(ad).getY(), y, 1e-6);
+    image::PointD ad = wcs.pixelToSky(xy);
+    BOOST_CHECK_CLOSE(wcs.skyToPixel(ad).getX(), x, 1e-6);
+    BOOST_CHECK_CLOSE(wcs.skyToPixel(ad).getY(), y, 1e-6);
 }
 
 
