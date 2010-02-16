@@ -216,10 +216,8 @@ BOOST_AUTO_TEST_CASE(EllipseJacobian) { /* parasoft-suppress  LsstDm-3-2a LsstDm
 template <typename TCore>
 void testEllipseTransformer(TCore core) {
     typename TCore::Ellipse input(core, PointD(Eigen::Vector2d::Random()));
-    Eigen::Transform2d matrix(Eigen::Matrix3d::Random());
-    matrix(2, 0) = matrix(2, 1) = 0.0;
-    matrix(2, 2) = 1.0;
-    AffineTransform transform(matrix);
+    Eigen::Matrix2d linear(Eigen::Matrix2d::Random());
+    AffineTransform transform(linear);
     typename TCore::Ellipse output(*input.transform(transform).copy());
     Eigen::Matrix<double, 5, 5> e_d_analytic = input.transform(transform).d();
     Eigen::Matrix<double, 5, 5> e_d_numeric = Eigen::Matrix<double, 5, 5>::Zero();

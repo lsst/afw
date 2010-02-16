@@ -100,27 +100,15 @@ public:
     /// \brief Move the ellipse center by the given offset.
     void shift(ExtentD const & offset);
 
-    /// \brief Transform the ellipse by the given AffineTransform.
     Transformer transform(AffineTransform const & transform);
-    Transformer const transform(AffineTransform const & transform) const; ///< \copybrief transform
+    Transformer const transform(AffineTransform const & transform) const; 
 
-    /// \brief Return the AffineTransform that transforms the unit circle at the origin into this.
     AffineTransform getGenerator() const;
-
-    /// \brief Return the bounding box of the ellipse.
     Envelope computeEnvelope() const;
 
-    /**
-     *  \brief Set the parameters of this ellipse from another.
-     *
-     *  This does not change the parametrization of the ellipse.
-     */
+
     BaseEllipse & operator=(BaseEllipse const & other);
-
-     /// \brief Return the ellipse parameters as a vector.
     ParameterVector const getVector() const;
-
-    /// \brief Set the ellipse parameters from a vector.
     void setVector(ParameterVector const & vector);
 
     virtual ~BaseEllipse() {}
@@ -188,12 +176,13 @@ public:
     /// \brief Scale the size of the ellipse core by the given factor.
     virtual void scale(double factor) = 0;
 
-    /// \brief Transform the ellipse core by the given AffineTransform.
-    Transformer transform(AffineTransform const & transform);
-    Transformer const transform(AffineTransform const & transform) const; ///< \copybrief transform
+    Transformer transform(AffineTransform const & transform); 
+    Transformer const transform(AffineTransform const & transform) const; 
+    Transformer transform(LinearTransform const & Ltransform);
+    Transformer const transform(LinearTransform const & transform) const;
 
-    /// \brief Return the AffineTransform that transforms the unit circle into this.
-    virtual AffineTransform getGenerator() const;
+    /// \brief Return the LinearTransform that transforms the unit circle into this.
+    virtual LinearTransform getGenerator() const;
 
     /// \brief Return the size of the bounding box for the ellipse core.
     ExtentD computeDimensions() const;

@@ -37,7 +37,7 @@ class LocalKernelTestCase(unittest.TestCase):
 
     def testBasic(self):
         imageKernel = afwMath.ImageLocalKernel(
-                center,
+                self.center,
                 self.paramList,
                 self.image,
                 self.imageList)

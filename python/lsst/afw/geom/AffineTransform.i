@@ -7,7 +7,7 @@ SWIG_SHARED_PTR(AffineTransformPtr, lsst::afw::geom::AffineTransform);
 
 %rename(__mul__) lsst::afw::geom::AffineTransform::operator*;
 %ignore lsst::afw::geom::AffineTransform::operator[];
-%ignore lsst::afw::geom::AffineTransform::getEigenTransform;
+%ignore lsst::afw::geom::AffineTransform::getMatrix;
 %ignore lsst::afw::geom::AffineTransform::dTransform;
 %ignore lsst::afw::geom::AffineTransform::getVector;
 %ignore lsst::afw::geom::AffineTransform::setVector;
