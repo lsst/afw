@@ -42,8 +42,11 @@ SWIG_SHARED_PTR_DERIVED(TestImageCandidate,
         }
 
         /// Return candidates rating
-        double getCandidateRating() const {
+        virtual double getCandidateRating() const {
             return _flux;
+        }
+        virtual void setCandidateRating(double flux) {
+            _flux = flux;
         }
     private:
         double _flux;
