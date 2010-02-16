@@ -66,9 +66,15 @@ SpatialCell::SpatialCell(std::string const& label, ///< string representing "nam
     lsst::pex::logging::TTrace<3>("lsst.afw.math.SpatialCell", 
                                   "Cell %s : created with %d candidates",
                                   this->_label.c_str(), this->_candidateList.size());
-    //
-    // Sort the list to have the Larger things at the beginning.
-    //
+    sortCandidates();
+}
+
+/************************************************************************************************************/
+///
+/// Rearrange the candidates to reflect their current ratings
+///
+void SpatialCell::sortCandidates()
+{
     sort(_candidateList.begin(), _candidateList.end(), CandidatePtrMore());
 }
 
@@ -377,6 +383,18 @@ void SpatialCellSet::insertCandidate(SpatialCellCandidate::Ptr candidate) {
     }
 
     (*pos)->insertCandidate(candidate);
+}
+
+
+/************************************************************************************************************/
+///
+/// Rearrange the Candidates in all SpatialCells to reflect their current ratings
+///
+void SpatialCellSet::sortCandidates()
+{
+    for (CellList::iterator cell = _cellList.begin(), end = _cellList.end(); cell != end; ++cell) {
+        (*cell)->sortCandidates();
+    }
 }
 
 /************************************************************************************************************/
