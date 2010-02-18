@@ -111,46 +111,6 @@ void afwForm::WcsFormatter::update(
 }
 
 
-/// Provide a function to serialise an Eigen::Matrix so we can persist the SIP matrices
-template <class Archive>
-void serializeEigenArray(Archive& ar, Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>& m) {
-    int rows = m.rows();
-    int cols = m.cols();
-    ar & rows & cols;
-    if (Archive::is_loading::value) {
-        m = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>(rows, cols);
-    }
-    for (int j = 0; j < m.cols(); ++j) {
-        for (int i = 0; i < m.rows(); ++i) {
-            ar & m(i,j);
-        }
-    }
-}
-
-
-static void encodeSipHeader(lsst::daf::base::PropertySet::Ptr wcsProps,
-                            std::string const& which,   ///< Either A,B, Ap or Bp
-                            Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> const& m) {
-    int order = m.rows();
-    if (m.cols() != order) {
-        throw LSST_EXCEPT(pexExcept::DomainErrorException,
-            "sip" + which + " matrix is not square");
-    }
-    if (order > 0) {
-        order -= 1; // match SIP convention
-        wcsProps->add(which + "_ORDER", static_cast<int>(order));
-        for (int i = 0; i <= order; ++i) {
-            for (int j = 0; j <= order; ++j) {
-                double val = m(i, j);
-                if (val != 0.0) {
-                    wcsProps->add((boost::format("%1%_%2%_%3%")
-                                   % which % i % j).str(), val);
-                }
-            }
-        }
-    }
-}
-
 dafBase::PropertySet::Ptr
 afwForm::WcsFormatter::generatePropertySet(afwImg::Wcs const& wcs) {
     // Only generates properties for the first wcsInfo.
@@ -173,29 +133,9 @@ afwForm::WcsFormatter::generatePropertySet(afwImg::Wcs const& wcs) {
     wcsProps->add("CRVAL2", wcs._wcsInfo[0].crval[1]);
     wcsProps->add("CUNIT1", std::string(wcs._wcsInfo[0].cunit[0]));
     wcsProps->add("CUNIT2", std::string(wcs._wcsInfo[0].cunit[1]));
-    
-    //Hack. Because wcslib4.3 gets confused when it's passed RA---TAN-SIP, 
-    //we set the value of ctypes to just RA---TAN, regardless of whether
-    //the SIP types are present. But when we persist to a file, we need to 
-    //check whether the SIP polynomials were actually there and correct 
-    //ctypes if necessary. Bad things will happen if someone tries to 
-    //use a system other than RA---TAN and DEC--TAN
+
     std::string ctype1(wcs._wcsInfo[0].ctype[0]);
     std::string ctype2(wcs._wcsInfo[0].ctype[1]);
-    if (wcs._sipA.rows() > 1 || wcs._sipB.rows() > 1 ||
-        wcs._sipAp.rows() > 1 || wcs._sipBp.rows() > 1) {
-
-        if (ctype1.rfind("-SIP") == std::string::npos) {
-            ctype1 += "-SIP";
-        }
-        if (ctype2.rfind("-SIP") == std::string::npos) {
-            ctype2 += "-SIP";
-        }
-        encodeSipHeader(wcsProps, "A", wcs._sipA);
-        encodeSipHeader(wcsProps, "B", wcs._sipB);
-        encodeSipHeader(wcsProps, "AP", wcs._sipAp);
-        encodeSipHeader(wcsProps, "BP", wcs._sipBp);
-    }
     wcsProps->add("CTYPE1", ctype1);
     wcsProps->add("CTYPE2", ctype2);
 
@@ -215,10 +155,6 @@ void afwForm::WcsFormatter::delegateSerialize(
     ar & ip->_nWcsInfo & ip->_relax;
     ar & ip->_wcsfixCtrl & ip->_wcshdrCtrl & ip->_nReject;
     
-    serializeEigenArray(ar, ip->_sipA);
-    serializeEigenArray(ar, ip->_sipAp);
-    serializeEigenArray(ar, ip->_sipB);
-    serializeEigenArray(ar, ip->_sipBp);
     
     // If we are loading, create the array of Wcs parameter structs
     if (Archive::is_loading::value) {
@@ -226,37 +162,36 @@ void afwForm::WcsFormatter::delegateSerialize(
             reinterpret_cast<wcsprm*>(malloc(ip->_nWcsInfo * sizeof(wcsprm)));
     }
 
-    // Serialize each Wcs parameter struct
-    for (int i = 0; i < ip->_nWcsInfo; ++i) {
 
-        // If we are loading, initialize the struct first
-        if (Archive::is_loading::value) {
-            ip->_wcsInfo[i].flag = -1;
-            wcsini(1, 2, &(ip->_wcsInfo[i]));
-        }
+    // If we are loading, initialize the struct first
+    if (Archive::is_loading::value) {
+        ip->_wcsInfo[0].flag = -1;
+        wcsini(1, 2, &(ip->_wcsInfo[0]));
+    }
 
-        // Serialize only critical Wcs parameters
-        ar & ip->_wcsInfo[i].naxis;
-        ar & ip->_wcsInfo[i].equinox;
-        ar & ip->_wcsInfo[i].radesys;
-        ar & ip->_wcsInfo[i].crpix[0];
-        ar & ip->_wcsInfo[i].crpix[1];
-        ar & ip->_wcsInfo[i].cd[0];
-        ar & ip->_wcsInfo[i].cd[1];
-        ar & ip->_wcsInfo[i].cd[2];
-        ar & ip->_wcsInfo[i].cd[3];
-        ar & ip->_wcsInfo[i].crval[0];
-        ar & ip->_wcsInfo[i].crval[1];
-        ar & ip->_wcsInfo[i].cunit[0];
-        ar & ip->_wcsInfo[i].cunit[1];
-        ar & ip->_wcsInfo[i].ctype[0];
-        ar & ip->_wcsInfo[i].ctype[1];
+    // Serialize only critical Wcs parameters
+    //wcslib provides support for arrays of wcs', but we only
+    //implement support for one.
+    ar & ip->_wcsInfo[0].naxis;
+    ar & ip->_wcsInfo[0].equinox;
+    ar & ip->_wcsInfo[0].radesys;
+    ar & ip->_wcsInfo[0].crpix[0];
+    ar & ip->_wcsInfo[0].crpix[1];
+    ar & ip->_wcsInfo[0].cd[0];
+    ar & ip->_wcsInfo[0].cd[1];
+    ar & ip->_wcsInfo[0].cd[2];
+    ar & ip->_wcsInfo[0].cd[3];
+    ar & ip->_wcsInfo[0].crval[0];
+    ar & ip->_wcsInfo[0].crval[1];
+    ar & ip->_wcsInfo[0].cunit[0];
+    ar & ip->_wcsInfo[0].cunit[1];
+    ar & ip->_wcsInfo[0].ctype[0];
+    ar & ip->_wcsInfo[0].ctype[1];
 
-        // If we are loading, compute intermediate values given those above
-        if (Archive::is_loading::value) {
-            ip->_wcsInfo[i].flag = 0;
-            wcsset(&(ip->_wcsInfo[i]));
-        }
+    // If we are loading, compute intermediate values given those above
+    if (Archive::is_loading::value) {
+        ip->_wcsInfo[0].flag = 0;
+        wcsset(&(ip->_wcsInfo[0]));
     }
     execTrace("WcsFormatter delegateSerialize end");
 }
