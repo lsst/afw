@@ -3,7 +3,7 @@
 /** @file
  * @brief Implementation of WcsFormatter class
  *
- * @author $Author: ktlim $
+ * @author $Author$
  * @version $Revision$
  * @date $Date$
  *
