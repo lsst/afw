@@ -81,6 +81,6 @@ BOOST_AUTO_TEST_CASE(FootprintFunctor) { /* parasoft-suppress  LsstDm-3-2a LsstD
     for (detection::FootprintSet<ImagePixelT>::FootprintList::iterator ptr = ds.getFootprints().begin(),
              end = ds.getFootprints().end(); ptr != end; ++ptr) {
         countDN.apply(**ptr);
-        BOOST_CHECK_CLOSE(countDN.getCounts(), 100, 1e-10);
+        BOOST_CHECK_CLOSE(countDN.getCounts(), 100.0, 1e-10);
     }
 }
