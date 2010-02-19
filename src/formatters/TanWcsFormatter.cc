@@ -1,7 +1,7 @@
 // -*- lsst-c++ -*-
 
 /** @file
- * @brief Implementation of WcsFormatter class
+ * @brief Implementation of TanWcsFormatter class
  *
  * @author $Author$
  * @version $Revision$
@@ -17,8 +17,6 @@
 #endif
 static char const* SVNid __attribute__((unused)) = "$Id$";
 
-// not used? #include <stdlib.h>
-
 //#include "boost/serialization/shared_ptr.hpp"
 #include "wcslib/wcs.h"
 
@@ -27,15 +25,14 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 #include "lsst/daf/persistence/PropertySetFormatter.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h"
-#include "lsst/afw/formatters/WcsFormatter.h"
 #include "lsst/afw/formatters/ImageFormatter.h"
 #include "lsst/afw/formatters/MaskedImageFormatter.h"
-#include "lsst/afw/formatters/WcsFormatter.h"
-#include "lsst/afw/image/Wcs.h"
+#include "lsst/afw/formatters/TanWcsFormatter.h"
+#include "lsst/afw/image/TanWcs.h"
 
 #define EXEC_TRACE  20
 static void execTrace(std::string s, int level = EXEC_TRACE) {
-    lsst::pex::logging::Trace("afw.WcsFormatter", level, s);
+    lsst::pex::logging::Trace("afw.TanWcsFormatter", level, s);
 }
 
 
@@ -47,67 +44,66 @@ namespace pexPolicy = lsst::pex::policy;
 namespace pexExcept = lsst::pex::exceptions;
 
 
-dafPersist::FormatterRegistration afwForm::WcsFormatter::registration(
-    "Wcs", typeid(afwImg::Wcs), createInstance);
+dafPersist::FormatterRegistration afwForm::TanWcsFormatter::registration(
+    "TanWcs", typeid(afwImg::TanWcs), createInstance);
 
-afwForm::WcsFormatter::WcsFormatter(
+afwForm::TanWcsFormatter::TanWcsFormatter(
     pexPolicy::Policy::Ptr) :
     dafPersist::Formatter(typeid(this)) {
 }
 
-afwForm::WcsFormatter::~WcsFormatter(void) {
+afwForm::TanWcsFormatter::~TanWcsFormatter(void) {
 }
 
-void afwForm::WcsFormatter::write(
+void afwForm::TanWcsFormatter::write(
     dafBase::Persistable const* persistable,
     dafPersist::Storage::Ptr storage,
     dafBase::PropertySet::Ptr) {
-    execTrace("WcsFormatter write start");
-    afwImg::Wcs const* ip =
-        dynamic_cast<afwImg::Wcs const*>(persistable);
+    execTrace("TamWcsFormatter write start");
+    afwImg::TanWcs const* ip = dynamic_cast<afwImg::TanWcs const*>(persistable);
     if (ip == 0) {
-        throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Persisting non-Wcs");
+        throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Persisting non-TanWcs");
     }
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
-        execTrace("WcsFormatter write BoostStorage");
+        execTrace("TanWcsFormatter write BoostStorage");
         dafPersist::BoostStorage* boost = dynamic_cast<dafPersist::BoostStorage*>(storage.get());
         boost->getOArchive() & *ip;
-        execTrace("WcsFormatter write end");
+        execTrace("TanWcsFormatter write end");
         return;
     }
-    throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Unrecognized Storage for Wcs");
+    throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Unrecognized Storage for TanWcs");
 }
 
-dafBase::Persistable* afwForm::WcsFormatter::read(
+dafBase::Persistable* afwForm::TanWcsFormatter::read(
     dafPersist::Storage::Ptr storage,
     dafBase::PropertySet::Ptr additionalData) {
-    execTrace("WcsFormatter read start");
+    execTrace("TanWcsFormatter read start");
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
-        afwImg::Wcs* ip = new afwImg::Wcs;
-        execTrace("WcsFormatter read BoostStorage");
+        afwImg::TanWcs* ip = new afwImg::TanWcs;
+        execTrace("TanWcsFormatter read BoostStorage");
         dafPersist::BoostStorage* boost = dynamic_cast<dafPersist::BoostStorage*>(storage.get());
         boost->getIArchive() & *ip;
-        execTrace("WcsFormatter read end");
+        execTrace("TanWcsFormatter read end");
         return ip;
     }
     else if (typeid(*storage) == typeid(dafPersist::FitsStorage)) {
-        execTrace("WcsFormatter read FitsStorage");
+        execTrace("TanWcsFormatter read FitsStorage");
         dafPersist::FitsStorage* fits = dynamic_cast<dafPersist::FitsStorage*>(storage.get());
         int hdu = additionalData->get<int>("hdu", 0);
         dafBase::PropertySet::Ptr md =
             afwImg::readMetadata(fits->getPath(), hdu);
-        afwImg::Wcs* ip = new afwImg::Wcs(md);
-        execTrace("WcsFormatter read end");
+        afwImg::TanWcs* ip = new afwImg::TanWcs(md);
+        execTrace("TanWcsFormatter read end");
         return ip;
     }
-    throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Unrecognized Storage for Wcs");
+    throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Unrecognized Storage for TanWcs");
 }
 
-void afwForm::WcsFormatter::update(
+void afwForm::TanWcsFormatter::update(
     dafBase::Persistable*,
     dafPersist::Storage::Ptr,
     dafBase::PropertySet::Ptr) {
-    throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Unexpected call to update for Wcs");
+    throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Unexpected call to update for TanWcs");
 }
 
 
@@ -152,7 +148,7 @@ static void encodeSipHeader(lsst::daf::base::PropertySet::Ptr wcsProps,
 }
 
 dafBase::PropertySet::Ptr
-afwForm::WcsFormatter::generatePropertySet(afwImg::Wcs const& wcs) {
+afwForm::TanWcsFormatter::generatePropertySet(afwImg::TanWcs const& wcs) {
     // Only generates properties for the first wcsInfo.
     dafBase::PropertySet::Ptr wcsProps(new dafBase::PropertySet());
 
@@ -182,9 +178,8 @@ afwForm::WcsFormatter::generatePropertySet(afwImg::Wcs const& wcs) {
     //use a system other than RA---TAN and DEC--TAN
     std::string ctype1(wcs._wcsInfo[0].ctype[0]);
     std::string ctype2(wcs._wcsInfo[0].ctype[1]);
-    if (wcs._sipA.rows() > 1 || wcs._sipB.rows() > 1 ||
-        wcs._sipAp.rows() > 1 || wcs._sipBp.rows() > 1) {
-
+    
+    if (wcs._hasDistortion) {
         if (ctype1.rfind("-SIP") == std::string::npos) {
             ctype1 += "-SIP";
         }
@@ -203,66 +198,66 @@ afwForm::WcsFormatter::generatePropertySet(afwImg::Wcs const& wcs) {
 }
 
 template <class Archive>
-void afwForm::WcsFormatter::delegateSerialize(
+void afwForm::TanWcsFormatter::delegateSerialize(
     Archive& ar, int const, dafBase::Persistable* persistable) {
-    execTrace("WcsFormatter delegateSerialize start");
-    afwImg::Wcs* ip = dynamic_cast<afwImg::Wcs*>(persistable);
+    execTrace("TanWcsFormatter delegateSerialize start");
+    afwImg::TanWcs* ip = dynamic_cast<afwImg::TanWcs*>(persistable);
     if (ip == 0) {
-        throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Serializing non-Wcs");
+        throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Serializing non-TanWcs");
     }
 
     // Serialize most fields normally
     ar & ip->_nWcsInfo & ip->_relax;
     ar & ip->_wcsfixCtrl & ip->_wcshdrCtrl & ip->_nReject;
     
-    serializeEigenArray(ar, ip->_sipA);
-    serializeEigenArray(ar, ip->_sipAp);
-    serializeEigenArray(ar, ip->_sipB);
-    serializeEigenArray(ar, ip->_sipBp);
+    ar & ip->_hasDistortion;
     
+    if(ip->_hasDistortion) {
+        serializeEigenArray(ar, ip->_sipA);
+        serializeEigenArray(ar, ip->_sipAp);
+        serializeEigenArray(ar, ip->_sipB);
+        serializeEigenArray(ar, ip->_sipBp);
+    }
+        
     // If we are loading, create the array of Wcs parameter structs
     if (Archive::is_loading::value) {
         ip->_wcsInfo =
-            reinterpret_cast<wcsprm*>(malloc(ip->_nWcsInfo * sizeof(wcsprm)));
+            reinterpret_cast<wcsprm*>(malloc(sizeof(wcsprm)));
     }
 
-    // Serialize each Wcs parameter struct
-    for (int i = 0; i < ip->_nWcsInfo; ++i) {
-
-        // If we are loading, initialize the struct first
-        if (Archive::is_loading::value) {
-            ip->_wcsInfo[i].flag = -1;
-            wcsini(1, 2, &(ip->_wcsInfo[i]));
-        }
-
-        // Serialize only critical Wcs parameters
-        ar & ip->_wcsInfo[i].naxis;
-        ar & ip->_wcsInfo[i].equinox;
-        ar & ip->_wcsInfo[i].radesys;
-        ar & ip->_wcsInfo[i].crpix[0];
-        ar & ip->_wcsInfo[i].crpix[1];
-        ar & ip->_wcsInfo[i].cd[0];
-        ar & ip->_wcsInfo[i].cd[1];
-        ar & ip->_wcsInfo[i].cd[2];
-        ar & ip->_wcsInfo[i].cd[3];
-        ar & ip->_wcsInfo[i].crval[0];
-        ar & ip->_wcsInfo[i].crval[1];
-        ar & ip->_wcsInfo[i].cunit[0];
-        ar & ip->_wcsInfo[i].cunit[1];
-        ar & ip->_wcsInfo[i].ctype[0];
-        ar & ip->_wcsInfo[i].ctype[1];
-
-        // If we are loading, compute intermediate values given those above
-        if (Archive::is_loading::value) {
-            ip->_wcsInfo[i].flag = 0;
-            wcsset(&(ip->_wcsInfo[i]));
-        }
+    // If we are loading, initialize the struct first
+    if (Archive::is_loading::value) {
+        ip->_wcsInfo[0].flag = -1;
+        wcsini(1, 2, &(ip->_wcsInfo[0]));
     }
-    execTrace("WcsFormatter delegateSerialize end");
+
+    // Serialize only critical Wcs parameters
+    ar & ip->_wcsInfo[0].naxis;
+    ar & ip->_wcsInfo[0].equinox;
+    ar & ip->_wcsInfo[0].radesys;
+    ar & ip->_wcsInfo[0].crpix[0];
+    ar & ip->_wcsInfo[0].crpix[1];
+    ar & ip->_wcsInfo[0].cd[0];
+    ar & ip->_wcsInfo[0].cd[1];
+    ar & ip->_wcsInfo[0].cd[2];
+    ar & ip->_wcsInfo[0].cd[3];
+    ar & ip->_wcsInfo[0].crval[0];
+    ar & ip->_wcsInfo[0].crval[1];
+    ar & ip->_wcsInfo[0].cunit[0];
+    ar & ip->_wcsInfo[0].cunit[1];
+    ar & ip->_wcsInfo[0].ctype[0];
+    ar & ip->_wcsInfo[0].ctype[1];
+
+    // If we are loading, compute intermediate values given those above
+    if (Archive::is_loading::value) {
+        ip->_wcsInfo[0].flag = 0;
+        wcsset(&(ip->_wcsInfo[0]));
+    }
+    execTrace("TanWcsFormatter delegateSerialize end");
 }
 
-dafPersist::Formatter::Ptr afwForm::WcsFormatter::createInstance(
+dafPersist::Formatter::Ptr afwForm::TanWcsFormatter::createInstance(
     pexPolicy::Policy::Ptr policy) {
-    return dafPersist::Formatter::Ptr(new afwForm::WcsFormatter(policy));
+    return dafPersist::Formatter::Ptr(new afwForm::TanWcsFormatter(policy));
 }
 

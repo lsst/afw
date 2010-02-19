@@ -27,7 +27,6 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 #include "lsst/daf/persistence/PropertySetFormatter.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h"
-#include "lsst/afw/formatters/WcsFormatter.h"
 #include "lsst/afw/formatters/ImageFormatter.h"
 #include "lsst/afw/formatters/MaskedImageFormatter.h"
 #include "lsst/afw/formatters/WcsFormatter.h"
@@ -116,7 +115,7 @@ afwForm::WcsFormatter::generatePropertySet(afwImg::Wcs const& wcs) {
     // Only generates properties for the first wcsInfo.
     dafBase::PropertySet::Ptr wcsProps(new dafBase::PropertySet());
 
-    if (wcs._wcsInfo == NULL) {                  // nothing to add
+    if (!wcs) {                  // if wcs hasn't been initialised
         return wcsProps;
     }
 
@@ -159,7 +158,7 @@ void afwForm::WcsFormatter::delegateSerialize(
     // If we are loading, create the array of Wcs parameter structs
     if (Archive::is_loading::value) {
         ip->_wcsInfo =
-            reinterpret_cast<wcsprm*>(malloc(ip->_nWcsInfo * sizeof(wcsprm)));
+            reinterpret_cast<wcsprm*>(malloc(sizeof(wcsprm)));
     }
 
 
