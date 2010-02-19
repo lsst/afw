@@ -90,7 +90,7 @@ namespace math {
         return SinglePixelT(
             std::numeric_limits<SinglePixelT>::has_quiet_NaN ?
                 std::numeric_limits<SinglePixelT>::quiet_NaN() : 0);
-    };
+    }
     
     /**
      * \brief Return an edge pixel appropriate for a given MaskedImage type
@@ -112,7 +112,7 @@ namespace math {
                 std::numeric_limits<ImagePixelT>::quiet_NaN() : 0,
             MaskedImageT::Mask::getPlaneBitMask("EDGE"),
             std::numeric_limits<VariancePixelT>::infinity());
-    };
+    }
 }}}   // lsst::afw::math
 
 /**

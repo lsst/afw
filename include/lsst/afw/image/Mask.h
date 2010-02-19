@@ -31,7 +31,7 @@ namespace image {
     // all masks will initially be instantiated with the same pixel type
     namespace detail {
         /// tag for a Mask
-        struct Mask_tag : detail::basic_tag { };
+        struct Mask_tag : public detail::basic_tag { };
     }
     /// Represent a 2-dimensional array of bitmask pixels
     template<typename MaskPixelT=lsst::afw::image::MaskPixel>
@@ -124,7 +124,7 @@ namespace image {
         // Getters
         
 private:
-        //LSST_PERSIST_FORMATTER(lsst::afw::formatters::MaskFormatter);
+        //LSST_PERSIST_FORMATTER(lsst::afw::formatters::MaskFormatter)
         int _myMaskDictVersion;         // version number for bitplane dictionary for this Mask
 
         static MaskPlaneDict _maskPlaneDict;

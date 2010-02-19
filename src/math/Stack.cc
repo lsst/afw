@@ -406,5 +406,5 @@ typename boost::shared_ptr<std::vector<PixelT> > math::statisticsStack(
             lsst::afw::math::StatisticsControl const& sctrl,    \
             std::vector<TYPE> const &wvector);
 
-INSTANTIATE_STACKS(double);
-INSTANTIATE_STACKS(float);
+INSTANTIATE_STACKS(double)
+INSTANTIATE_STACKS(float)

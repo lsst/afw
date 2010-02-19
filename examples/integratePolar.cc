@@ -34,7 +34,7 @@ public:
     // ** This is the function to be integrated **
     //
     // NOTE: extra 'r' term due to polar coords (ie. the 'r' in r*dr*dtheta)
-    IntegrandT operator()(IntegrandT const r, IntegrandT const theta) const {
+    IntegrandT operator()(IntegrandT const r, IntegrandT const) const {
         return (_k - _kr*r*r)*r;
     }
 
@@ -56,7 +56,7 @@ private:
  * Define a normal function that does the same thing as the above functor
  *
  */
-double parabola2d(double const r, double const theta) {
+double parabola2d(double const r, double const) {
     double const k = 1.0, kr = 0.0;
     return (k - kr*r*r)*r;
 }

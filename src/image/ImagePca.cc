@@ -302,10 +302,10 @@ double innerProduct(ImageT const& lhs, ///< first image
     template class ImagePca<Image<T> >; \
     template double innerProduct(Image<T> const&, Image<T> const&);
 
-INSTANTIATE(boost::uint16_t);
-INSTANTIATE(int);
-INSTANTIATE(float);
-INSTANTIATE(double);
+INSTANTIATE(boost::uint16_t)
+INSTANTIATE(int)
+INSTANTIATE(float)
+INSTANTIATE(double)
 
     
 }}}

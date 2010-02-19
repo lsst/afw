@@ -277,7 +277,7 @@ void math::Background::_checkSampling() {
                                           math::BackgroundControl const& bgCtrl); \
     template image::Image<TYPE>::Ptr math::Background::getImage<TYPE>() const;
 
-INSTANTIATE_BACKGROUND(double);
-INSTANTIATE_BACKGROUND(float);
-INSTANTIATE_BACKGROUND(int);
+INSTANTIATE_BACKGROUND(double)
+INSTANTIATE_BACKGROUND(float)
+INSTANTIATE_BACKGROUND(int)
 

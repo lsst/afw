@@ -90,7 +90,7 @@ namespace image {
                         );
 
         
-        LSST_PERSIST_FORMATTER(lsst::afw::formatters::WcsFormatter);
+        LSST_PERSIST_FORMATTER(lsst::afw::formatters::WcsFormatter)
 
         struct wcsprm* _wcsInfo;
         int _nWcsInfo;

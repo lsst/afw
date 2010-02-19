@@ -842,7 +842,7 @@ namespace image {
         }
     private:
 
-        LSST_PERSIST_FORMATTER(lsst::afw::formatters::MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>);
+        LSST_PERSIST_FORMATTER(lsst::afw::formatters::MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>)
         void conformSizes();
         
         ImagePtr _image;

@@ -9,7 +9,7 @@ void printVector(std::vector<T> v) {
         std::cout << "  " << v[ii];
     }
     std::cout << std::endl;
-};
+}
 
 int main(int argc, char** argv) {
     typedef double FuncReturn;

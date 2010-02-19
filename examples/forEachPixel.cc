@@ -6,14 +6,14 @@
 namespace afwImage = lsst::afw::image;
 
 template<typename T>
-struct erase : afwImage::pixelOp0<T> {
+struct erase : public afwImage::pixelOp0<T> {
     T operator()() const {
         return 0;
     }
 };
 
 template<typename T>
-struct setVal : afwImage::pixelOp0<T> { // don't call it fill as people like to say using namespace std
+struct setVal : public afwImage::pixelOp0<T> { // don't call it fill as people like to say using namespace std
     setVal(T val) : _val(val) {}
     T operator()() const {
         return _val;
@@ -23,21 +23,21 @@ private:
 };
 
 template<typename T>
-struct addOne : afwImage::pixelOp1<T> {
+struct addOne : public afwImage::pixelOp1<T> {
     T operator()(T val) const {
         return val + 1;
     }
 };
 
 template<typename T1, typename T2>
-struct divide : afwImage::pixelOp2<T1, T2> {
+struct divide : public afwImage::pixelOp2<T1, T2> {
     T1 operator()(T1 lhs, T2 rhs) const {
         return lhs/rhs;
     }
 };
 
 template<typename T>
-struct Gaussian : afwImage::pixelOp1XY<T> {
+struct Gaussian : public afwImage::pixelOp1XY<T> {
     Gaussian(float a, float xc, float yc, float alpha) : _a(a), _xc(xc), _yc(yc), _alpha(alpha) {}
     T operator()(int x, int y, T val) const {
         float const dx = x - _xc;

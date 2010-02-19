@@ -45,40 +45,40 @@ static char const* SVNid __attribute__((unused)) =
 #include <lsst/pex/policy/Policy.h>
 
 
-BOOST_CLASS_EXPORT(lsst::afw::math::Kernel);
-BOOST_CLASS_EXPORT(lsst::afw::math::FixedKernel);
-BOOST_CLASS_EXPORT(lsst::afw::math::AnalyticKernel);
-BOOST_CLASS_EXPORT(lsst::afw::math::DeltaFunctionKernel);
-BOOST_CLASS_EXPORT(lsst::afw::math::LinearCombinationKernel);
-BOOST_CLASS_EXPORT(lsst::afw::math::SeparableKernel);
+BOOST_CLASS_EXPORT(lsst::afw::math::Kernel)
+BOOST_CLASS_EXPORT(lsst::afw::math::FixedKernel)
+BOOST_CLASS_EXPORT(lsst::afw::math::AnalyticKernel)
+BOOST_CLASS_EXPORT(lsst::afw::math::DeltaFunctionKernel)
+BOOST_CLASS_EXPORT(lsst::afw::math::LinearCombinationKernel)
+BOOST_CLASS_EXPORT(lsst::afw::math::SeparableKernel)
 
-BOOST_CLASS_EXPORT(lsst::afw::math::Function<float>);
-BOOST_CLASS_EXPORT(lsst::afw::math::NullFunction1<float>);
-BOOST_CLASS_EXPORT(lsst::afw::math::NullFunction2<float>);
+BOOST_CLASS_EXPORT(lsst::afw::math::Function<float>)
+BOOST_CLASS_EXPORT(lsst::afw::math::NullFunction1<float>)
+BOOST_CLASS_EXPORT(lsst::afw::math::NullFunction2<float>)
 
-BOOST_CLASS_EXPORT(lsst::afw::math::Function<double>);
-BOOST_CLASS_EXPORT(lsst::afw::math::NullFunction1<double>);
-BOOST_CLASS_EXPORT(lsst::afw::math::NullFunction2<double>);
+BOOST_CLASS_EXPORT(lsst::afw::math::Function<double>)
+BOOST_CLASS_EXPORT(lsst::afw::math::NullFunction1<double>)
+BOOST_CLASS_EXPORT(lsst::afw::math::NullFunction2<double>)
 
-BOOST_CLASS_EXPORT(lsst::afw::math::IntegerDeltaFunction2<float>);
-BOOST_CLASS_EXPORT(lsst::afw::math::GaussianFunction1<float>);
-BOOST_CLASS_EXPORT(lsst::afw::math::GaussianFunction2<float>);
-BOOST_CLASS_EXPORT(lsst::afw::math::DoubleGaussianFunction2<float>);
-BOOST_CLASS_EXPORT(lsst::afw::math::PolynomialFunction1<float>);
-BOOST_CLASS_EXPORT(lsst::afw::math::PolynomialFunction2<float>);
-BOOST_CLASS_EXPORT(lsst::afw::math::Chebyshev1Function1<float>);
-BOOST_CLASS_EXPORT(lsst::afw::math::LanczosFunction1<float>);
-BOOST_CLASS_EXPORT(lsst::afw::math::LanczosFunction2<float>);
+BOOST_CLASS_EXPORT(lsst::afw::math::IntegerDeltaFunction2<float>)
+BOOST_CLASS_EXPORT(lsst::afw::math::GaussianFunction1<float>)
+BOOST_CLASS_EXPORT(lsst::afw::math::GaussianFunction2<float>)
+BOOST_CLASS_EXPORT(lsst::afw::math::DoubleGaussianFunction2<float>)
+BOOST_CLASS_EXPORT(lsst::afw::math::PolynomialFunction1<float>)
+BOOST_CLASS_EXPORT(lsst::afw::math::PolynomialFunction2<float>)
+BOOST_CLASS_EXPORT(lsst::afw::math::Chebyshev1Function1<float>)
+BOOST_CLASS_EXPORT(lsst::afw::math::LanczosFunction1<float>)
+BOOST_CLASS_EXPORT(lsst::afw::math::LanczosFunction2<float>)
 
-BOOST_CLASS_EXPORT(lsst::afw::math::IntegerDeltaFunction2<double>);
-BOOST_CLASS_EXPORT(lsst::afw::math::GaussianFunction1<double>);
-BOOST_CLASS_EXPORT(lsst::afw::math::GaussianFunction2<double>);
-BOOST_CLASS_EXPORT(lsst::afw::math::DoubleGaussianFunction2<double>);
-BOOST_CLASS_EXPORT(lsst::afw::math::PolynomialFunction1<double>);
-BOOST_CLASS_EXPORT(lsst::afw::math::PolynomialFunction2<double>);
-BOOST_CLASS_EXPORT(lsst::afw::math::Chebyshev1Function1<double>);
-BOOST_CLASS_EXPORT(lsst::afw::math::LanczosFunction1<double>);
-BOOST_CLASS_EXPORT(lsst::afw::math::LanczosFunction2<double>);
+BOOST_CLASS_EXPORT(lsst::afw::math::IntegerDeltaFunction2<double>)
+BOOST_CLASS_EXPORT(lsst::afw::math::GaussianFunction1<double>)
+BOOST_CLASS_EXPORT(lsst::afw::math::GaussianFunction2<double>)
+BOOST_CLASS_EXPORT(lsst::afw::math::DoubleGaussianFunction2<double>)
+BOOST_CLASS_EXPORT(lsst::afw::math::PolynomialFunction1<double>)
+BOOST_CLASS_EXPORT(lsst::afw::math::PolynomialFunction2<double>)
+BOOST_CLASS_EXPORT(lsst::afw::math::Chebyshev1Function1<double>)
+BOOST_CLASS_EXPORT(lsst::afw::math::LanczosFunction1<double>)
+BOOST_CLASS_EXPORT(lsst::afw::math::LanczosFunction2<double>)
 
 #define EXEC_TRACE  20
 static void execTrace(std::string s, int level = EXEC_TRACE) {

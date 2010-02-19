@@ -15,8 +15,8 @@ namespace {
 
         // method called for each pixel by apply()
         void operator()(typename MaskT::xy_locator loc,        // locator pointing at the pixel
-                        int x,                                 // column-position of pixel
-                        int y                                  // row-position of pixel
+                        int,                                   // column-position of pixel
+                        int                                    // row-position of pixel
                        ) {
             _bits |= *loc;
         }
@@ -25,6 +25,7 @@ namespace {
         typename MaskT::Pixel getBits() const { return _bits; }
         // Clear the accumulator
         void reset() { _bits = 0; }
+        void reset(afwDetect::Footprint const&) { ; }
     private:
         typename MaskT::Pixel _bits;
     };

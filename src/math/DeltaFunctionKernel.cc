@@ -76,4 +76,4 @@ std::string afwMath::DeltaFunctionKernel::toString(std::string const& prefix) co
     os << prefix << "Pixel (c,r) " << pixelX << "," << pixelY << ")" << std::endl;
     os << Kernel::toString(prefix + "\t");
     return os.str();
-};
+}

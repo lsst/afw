@@ -37,10 +37,10 @@ public:
     Ptr clone() const { return Ptr(static_cast<QuadrupoleEllipse*>(_clone()));  }
 
     /// \brief Return the Core object.
-    Quadrupole const & getCore() const;
+    inline Quadrupole const & getCore() const;
 
     /// \brief Return the Core object.
-    Quadrupole & getCore();
+    inline Quadrupole & getCore();
 
     /**
      *  \brief Set the parameters of this ellipse from another.
@@ -55,19 +55,19 @@ public:
     }
 
     /// \brief Construct from a PointD and zero-size Core.
-    explicit QuadrupoleEllipse(PointD const & center = PointD());
+    explicit inline QuadrupoleEllipse(PointD const & center = PointD());
 
     /// \brief Construct from a copy of an Quadrupole core.
-    explicit QuadrupoleEllipse(Quadrupole const & core, PointD const & center = PointD());
+    explicit inline QuadrupoleEllipse(Quadrupole const & core, PointD const & center = PointD());
 
     /// \brief Construct from a 5-element parameter vector.
     explicit QuadrupoleEllipse(BaseEllipse::ParameterVector const & vector, bool doNormalize=true);
 
     /// \brief Converting copy constructor.
-    QuadrupoleEllipse(BaseEllipse const & other);
+    inline QuadrupoleEllipse(BaseEllipse const & other);
 
     /// \brief Copy constructor.
-    QuadrupoleEllipse(QuadrupoleEllipse const & other);
+    inline QuadrupoleEllipse(QuadrupoleEllipse const & other);
 
 protected:
     virtual QuadrupoleEllipse * _clone() const { return new QuadrupoleEllipse(*this); }

@@ -37,10 +37,10 @@ public:
     Ptr clone() const { return Ptr(static_cast<AxesEllipse*>(_clone()));  }
 
     /// \brief Return the Core object.
-    Axes const & getCore() const;
+    inline Axes const & getCore() const;
 
     /// \brief Return the Core object.
-    Axes & getCore();
+    inline Axes & getCore();
 
     /**
      *  \brief Set the parameters of this ellipse from another.
@@ -55,19 +55,19 @@ public:
     }
 
     /// \brief Construct from a PointD and zero-size Core.
-    explicit AxesEllipse(PointD const & center = PointD());
+    explicit inline AxesEllipse(PointD const & center = PointD());
 
     /// \brief Construct from a copy of an Axes core.
-    explicit AxesEllipse(Axes const & core, PointD const & center = PointD());
+    explicit inline AxesEllipse(Axes const & core, PointD const & center = PointD());
 
     /// \brief Construct from a 5-element parameter vector.
     explicit AxesEllipse(BaseEllipse::ParameterVector const & vector, bool doNormalize=true);
 
     /// \brief Converting copy constructor.
-    AxesEllipse(BaseEllipse const & other);
+    inline AxesEllipse(BaseEllipse const & other);
 
     /// \brief Copy constructor.
-    AxesEllipse(AxesEllipse const & other);
+    inline AxesEllipse(AxesEllipse const & other);
 
 protected:
     virtual AxesEllipse * _clone() const { return new AxesEllipse(*this); }

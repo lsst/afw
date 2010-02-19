@@ -43,9 +43,9 @@ namespace math {
         :
             SeparableKernel(2 * order, 2 * order,
                 LanczosFunction1<Kernel::Pixel>(order), LanczosFunction1<Kernel::Pixel>(order))
-        {};
+        {}
         
-        virtual ~LanczosWarpingKernel() {};
+        virtual ~LanczosWarpingKernel() {}
         
         virtual Kernel::Ptr clone() const;
         
@@ -66,9 +66,9 @@ namespace math {
         explicit BilinearWarpingKernel()
         :
             SeparableKernel(2, 2, BilinearFunction1(0.0), BilinearFunction1(0.0))
-        {};
+        {}
 
-        virtual ~BilinearWarpingKernel() {};
+        virtual ~BilinearWarpingKernel() {}
         
         virtual Kernel::Ptr clone() const;
 
@@ -93,7 +93,7 @@ namespace math {
             {
                 this->_params[0] = fracPos;
             }
-            virtual ~BilinearFunction1() {};
+            virtual ~BilinearFunction1() {}
             
             virtual Function1Ptr clone() const {
                 return Function1Ptr(new BilinearFunction1(this->_params[0]));
@@ -123,10 +123,10 @@ namespace math {
 
     namespace details {
         template <typename A, typename B>
-        bool isSameObject(A const&, B const&) { return false; };
+        bool isSameObject(A const&, B const&) { return false; }
         
         template <typename A>
-        bool isSameObject(A const& a, A const& b) { return &a == &b; };
+        bool isSameObject(A const& a, A const& b) { return &a == &b; }
     }
        
 }}} // lsst::afw::math

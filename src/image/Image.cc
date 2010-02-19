@@ -653,28 +653,28 @@ namespace {
  * Worker routine for manipulating images;
  */
 template<typename LhsPixelT, typename RhsPixelT>
-struct plusEq : lsst::afw::image::pixelOp2<LhsPixelT, RhsPixelT> {
+struct plusEq : public lsst::afw::image::pixelOp2<LhsPixelT, RhsPixelT> {
     LhsPixelT operator()(LhsPixelT lhs, RhsPixelT rhs) const {
         return static_cast<LhsPixelT>(lhs + rhs);
     }
 };
 
 template<typename LhsPixelT, typename RhsPixelT>
-struct minusEq : lsst::afw::image::pixelOp2<LhsPixelT, RhsPixelT> {
+struct minusEq : public lsst::afw::image::pixelOp2<LhsPixelT, RhsPixelT> {
     LhsPixelT operator()(LhsPixelT lhs, RhsPixelT rhs) const {
         return static_cast<LhsPixelT>(lhs - rhs);
     }
 };
 
 template<typename LhsPixelT, typename RhsPixelT>
-struct timesEq : lsst::afw::image::pixelOp2<LhsPixelT, RhsPixelT> {
+struct timesEq : public lsst::afw::image::pixelOp2<LhsPixelT, RhsPixelT> {
     LhsPixelT operator()(LhsPixelT lhs, RhsPixelT rhs) const {
         return static_cast<LhsPixelT>(lhs*rhs);
     }
 };
 
 template<typename LhsPixelT, typename RhsPixelT>
-struct divideEq : lsst::afw::image::pixelOp2<LhsPixelT, RhsPixelT> {
+struct divideEq : public lsst::afw::image::pixelOp2<LhsPixelT, RhsPixelT> {
     LhsPixelT operator()(LhsPixelT lhs, RhsPixelT rhs) const {
         return static_cast<LhsPixelT>(lhs/rhs);
     }
@@ -717,7 +717,7 @@ void image::operator/=(image::Image<LhsPixelT> &lhs, image::Image<RhsPixelT> con
    template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<boost::uint16_t> const& rhs); \
    template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<int> const& rhs); \
    template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<float> const& rhs); \
-   template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<double> const& rhs);
+   template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<double> const& rhs)
 
 #define INSTANTIATE(T) \
    template class image::ImageBase<T>; \
@@ -725,7 +725,7 @@ void image::operator/=(image::Image<LhsPixelT> &lhs, image::Image<RhsPixelT> con
    INSTANTIATE_OPERATOR(+=, T); \
    INSTANTIATE_OPERATOR(-=, T); \
    INSTANTIATE_OPERATOR(*=, T); \
-   INSTANTIATE_OPERATOR(/=, T);
+   INSTANTIATE_OPERATOR(/=, T)
 
 INSTANTIATE(boost::uint16_t);
 INSTANTIATE(int);
