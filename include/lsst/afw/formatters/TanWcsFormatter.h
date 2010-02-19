@@ -1,20 +1,20 @@
 // -*- lsst-c++ -*-
-#ifndef LSST_AFW_FORMATTERS_WCSFORMATTER_H
-#define LSST_AFW_FORMATTERS_WCSFORMATTER_H
+#ifndef LSST_AFW_FORMATTERS_TANWCSFORMATTER_H
+#define LSST_AFW_FORMATTERS_TANWCSFORMATTER_H
 
 /** @file
- * @brief Interface for WcsFormatter class
+ * @brief Interface for TanWcsFormatter class
  *
- * @author $Author: ktlim $
- * @version $Revision: 2377 $
+ * @author $Author$
+ * @version $Revision$
  * @date $Date$
  *
  * Contact: Kian-Tat Lim (ktl@slac.stanford.edu)
  * @ingroup afw
  */
 
-/** @class lsst::afw::formatters::WcsFormatter
- * @brief Class implementing persistence and retrieval for Wcs objects.
+/** @class lsst::afw::formatters::TanWcsFormatter
+ * @brief Class implementing persistence and retrieval for TanWcs objects.
  *
  * @ingroup afw
  */
@@ -22,16 +22,18 @@
 #include "lsst/daf/base.h"
 #include "lsst/daf/persistence.h"
 
+#include "Eigen/Core.h"
+
 namespace lsst {
 namespace afw {
     namespace image {
-        class Wcs;
+        class TanWcs;
     }
 namespace formatters {
 
-class WcsFormatter : public lsst::daf::persistence::Formatter {
+class TanWcsFormatter : public lsst::daf::persistence::Formatter {
 public:       
-    virtual ~WcsFormatter(void);
+    virtual ~TanWcsFormatter(void);
 
     virtual void write(
         lsst::daf::base::Persistable const* persistable,
@@ -49,7 +51,7 @@ public:
     );
 
     static lsst::daf::base::PropertySet::Ptr generatePropertySet(
-        lsst::afw::image::Wcs const& wcs
+        lsst::afw::image::TanWcs const& wcs
     );
     static lsst::daf::persistence::Formatter::Ptr createInstance(
         lsst::pex::policy::Policy::Ptr policy
@@ -63,7 +65,7 @@ public:
     );
 
 private:
-    explicit WcsFormatter(lsst::pex::policy::Policy::Ptr policy);
+    explicit TanWcsFormatter(lsst::pex::policy::Policy::Ptr policy);
 
     static lsst::daf::persistence::FormatterRegistration registration;
 };
