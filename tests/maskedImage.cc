@@ -232,6 +232,9 @@ BOOST_AUTO_TEST_CASE(setValues) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a 
 /************************************************************************************************************/
 
 BOOST_AUTO_TEST_CASE(Pixels) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
+    using image::pixel::makeSinglePixel;
+    using image::pixel::plus;           // otherwise we get std::plus even with Koenig lookup
+
     typedef float ImagePixelT;
     typedef int MaskPixelT;
     typedef float VariancePixelT;
@@ -240,18 +243,18 @@ BOOST_AUTO_TEST_CASE(Pixels) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a Lss
     MaskPixelT m = 0x2;
     VariancePixelT var = 10;
 
-    Pixel<ImagePixelT, MaskPixelT, VariancePixelT> v(x, m, var);
+    image::pixel::Pixel<ImagePixelT, MaskPixelT, VariancePixelT> v(x, m, var);
 
     cout << "v = " << v << " expr = " << ((v + 2)*3) << endl;
 
     ImagePixelT x2 = v.image();
     MaskPixelT m2 = 0x4;
     VariancePixelT v2 = 0;
-    Pixel<ImagePixelT, MaskPixelT, VariancePixelT> u(x2, m2, v2);
+    image::pixel::Pixel<ImagePixelT, MaskPixelT, VariancePixelT> u(x2, m2, v2);
     u = (v + makeSinglePixel(3, 0x1, 1))*10;
     cout << u << endl;
 
-    SinglePixel<ImagePixelT, MaskPixelT, VariancePixelT> w = 10*(u + 3);
+    image::pixel::SinglePixel<ImagePixelT, MaskPixelT, VariancePixelT> w = 10*(u + 3);
     w += makeSinglePixel(10, 0x4, 0);
     cout << w << endl;
 
@@ -262,11 +265,15 @@ BOOST_AUTO_TEST_CASE(Pixels) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a Lss
     w /= 2;
     cout << w << endl;
 
-    Pixel<ImagePixelT, MaskPixelT, VariancePixelT> ww = w;
+    image::pixel::Pixel<ImagePixelT, MaskPixelT, VariancePixelT> ww = w;
     cout << "Logical: " << (ww == ww) <<  " " << (ww == v) << endl;
 
     ww = makeSinglePixel(10, 0x0, 1);
-    cout << "ww: " << ww << " 2 ww: " << add(ww, ww, 1.0) << endl;
+    cout << "ww: " << ww << "   ww + ww (ignoring covariance): " << (ww + ww) << 
+#if 0
+        "   ww + ww: " << plus(ww, ww, 1) <<
+#endif
+        endl;
 }
 
 /************************************************************************************************************/
