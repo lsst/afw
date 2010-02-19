@@ -118,8 +118,8 @@ BOOST_AUTO_TEST_CASE(ImageConvolutionTest) { /* parasoft-suppress  LsstDm-3-2a L
     BOOST_CHECK_EQUAL_COLLECTIONS(listFromA.begin(), listFromA.end(), derivativeA.begin(), derivativeA.end());
     BOOST_CHECK_EQUAL_COLLECTIONS(listFromB.begin(), listFromB.end(), derivativeB.begin(), derivativeB.end());
 
-    BOOST_CHECK_EQUAL(a.getNParameters(), derivativeA.size());
-    BOOST_CHECK_EQUAL(b.getNParameters(), derivativeB.size());
+    BOOST_CHECK_EQUAL(a.getNParameters(), (int) derivativeA.size());
+    BOOST_CHECK_EQUAL(b.getNParameters(), (int) derivativeB.size());
     
     BOOST_CHECK(a.getCovariance().get() == 0);
     BOOST_CHECK(b.getCovariance().get() == 0);
@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(FourierConvolutionTest) { /* parasoft-suppress  LsstDm-3-2a
     
     ImagePtrList derivative(2);
     unsigned int nDerivatives = derivative.size();
-    for(int i = 0; i < nDerivatives; ++i) {    
+    for(unsigned int i = 0; i < nDerivatives; ++i) {    
         derivative[i] = boost::make_shared<Image>(width, height);
         
         for(int y = 0; y < height; ++y) {
@@ -169,8 +169,8 @@ BOOST_AUTO_TEST_CASE(FourierConvolutionTest) { /* parasoft-suppress  LsstDm-3-2a
     ImageConvolutionVisitor imgVisitor(center, parameterList, img, derivative);
     FourierConvolutionVisitor fourierVisitor(imgVisitor);
  
-    BOOST_CHECK_EQUAL(imgVisitor.getNParameters(), nDerivatives);
-    BOOST_CHECK_EQUAL(fourierVisitor.getNParameters(), nDerivatives);
+    BOOST_CHECK_EQUAL(imgVisitor.getNParameters(), (int) nDerivatives);
+    BOOST_CHECK_EQUAL(fourierVisitor.getNParameters(), (int) nDerivatives);
     std::vector<double> paramsFromVisitor = fourierVisitor.getParameterList();
     BOOST_CHECK_EQUAL_COLLECTIONS(
             parameterList.begin(), parameterList.end(),
