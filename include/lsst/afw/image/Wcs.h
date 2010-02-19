@@ -17,8 +17,7 @@ namespace afw {
         class WcsFormatter;
     }
 namespace image {
-
-
+    
     class Wcs : public lsst::daf::base::Persistable,
                     public lsst::daf::data::LsstBase {
     public:
@@ -27,7 +26,8 @@ namespace image {
         
         //Constructors
         Wcs();
-        Wcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
+        //Create a Wcs of the correct class using a fits header.
+        friend Ptr lsst::afw::image::makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
         Wcs(lsst::afw::image::PointD crval, lsst::afw::image::PointD crpix, Eigen::Matrix2d CD, 
                 const std::string ctype1="RA--TAN", const std::string ctype2="DEC-TAN",
                 double equinox=2000, std::string raDecSys="FK5",
@@ -43,6 +43,10 @@ namespace image {
         Eigen::Matrix2d getCDMatrix() const;       //Return CD matrix
         
         lsst::daf::base::PropertySet::Ptr getFitsMetadata() const;
+
+        /// Return true iff Wcs is valid
+        operator bool() const { return _wcsInfo != NULL; }
+
         bool isFlipped() const; //Does the Wcs follow the convention of North=Up, East=Left or not
         double pixArea(PointD pix00) const;
 
@@ -58,7 +62,11 @@ namespace image {
         //Mutators
         void shiftReferencePixel(double dx, double dy); 
 
+        
     private:
+        //Allow the formatter to access private goo
+        LSST_PERSIST_FORMATTER(lsst::afw::formatters::WcsFormatter);
+        
         void initWcsLib(lsst::afw::image::PointD crval, lsst::afw::image::PointD crpix, Eigen::Matrix2d CD, 
                         const std::string ctype1, const std::string ctype2,
                         double equinox, std::string raDecSys,
@@ -68,6 +76,8 @@ namespace image {
         void initWcsLibFromFits(lsst::daf::base::PropertySet::Ptr const fitsMetadata);
     
     protected:
+        ///If you want to create a Wcs from a fits header, use makeWcs()
+        Wcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
 
         struct wcsprm* _wcsInfo;
         int _nWcsInfo;

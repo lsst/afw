@@ -6,17 +6,23 @@
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/geom/AffineTransform.h"
-#include "lsst/afw/image/Wcs.h" //@FIXME: only works in prototype code
+#include "lsst/afw/image/Wcs.h" 
+
+//#include "lsst/afw/image/makeWcs.h"
 
 struct wcsprm;                          // defined in wcs.h
 
 namespace lsst {
 namespace afw {
     namespace formatters {
-        class WcsFormatter;
+        class TanWcsFormatter;
     }
 namespace image {
 
+    //Forward declaration
+    Wcs::Ptr makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
+    
+    
 /// 
 /// @brief Special case implementation of the WCS standard for the simplest projection.
 /// 
@@ -47,14 +53,18 @@ namespace image {
     public:
         typedef boost::shared_ptr<lsst::afw::image::TanWcs> Ptr;    
         typedef boost::shared_ptr<lsst::afw::image::TanWcs const> ConstPtr;    
+
+        ///Create a Wcs of the correct type using fits header information
+        //friend lsst::afw::image::Wcs::Ptr lsst::afw::image::makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
         
         //Constructors
-        TanWcs(lsst::daf::base::PropertySet::Ptr const fitsMetadata);
-    
+        TanWcs();
         TanWcs(lsst::afw::image::PointD crval, lsst::afw::image::PointD crpix, Eigen::Matrix2d CD, 
                 double equinox=2000, std::string raDecSys="FK5",
                 const std::string cunits1="deg", const std::string cunits2="deg"
                );
+        ///If you want to create a TanWcs object from a fits header, use makeWcs()
+        TanWcs(lsst::daf::base::PropertySet::Ptr const fitsMetadata);
 
         TanWcs(lsst::afw::image::PointD crval, lsst::afw::image::PointD crpix, Eigen::Matrix2d CD, 
                 Eigen::MatrixXd const & sipA, ///< Forward distortion Matrix A
@@ -90,6 +100,10 @@ namespace image {
                                  );
 
     private:
+
+        //Allow the formatter to access private goo
+        LSST_PERSIST_FORMATTER(lsst::afw::formatters::TanWcsFormatter);
+
         bool _hasDistortion;
         Eigen::MatrixXd _sipA, _sipB, _sipAp, _sipBp;
     
