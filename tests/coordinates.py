@@ -48,25 +48,26 @@ class CoordinateTestCase(unittest.TestCase):
             vector2 = rnd()
             p1 = ctor(*vector1)
             p2 = ctor(*vector2)
-            self.assertEqual(tuple(p1.eq(p2)), tuple(vector1 == vector2))
-            self.assertEqual(tuple(p1.ne(p2)), tuple(vector1 != vector2))
-            self.assertEqual(tuple(p1.lt(p2)), tuple(vector1 < vector2))
-            self.assertEqual(tuple(p1.le(p2)), tuple(vector1 <= vector2))
-            self.assertEqual(tuple(p1.gt(p2)), tuple(vector1 > vector2))
-            self.assertEqual(tuple(p1.ge(p2)), tuple(vector1 >= vector2))
+
+            self.assertEqual(tuple(p1.eq(p2)), tuple([v1 == v2 for v1, v2 in zip(vector1, vector2)]))
+            self.assertEqual(tuple(p1.ne(p2)), tuple([v1 != v2 for v1, v2 in zip(vector1, vector2)]))
+            self.assertEqual(tuple(p1.lt(p2)), tuple([v1 <  v2 for v1, v2 in zip(vector1, vector2)]))
+            self.assertEqual(tuple(p1.le(p2)), tuple([v1 <= v2 for v1, v2 in zip(vector1, vector2)]))
+            self.assertEqual(tuple(p1.gt(p2)), tuple([v1 >  v2 for v1, v2 in zip(vector1, vector2)]))
+            self.assertEqual(tuple(p1.ge(p2)), tuple([v1 >= v2 for v1, v2 in zip(vector1, vector2)]))
             self.assertEqual(type(p1.eq(p2)), CoordinateExpr)
             self.assertEqual(type(p1.ne(p2)), CoordinateExpr)
             self.assertEqual(type(p1.lt(p2)), CoordinateExpr)
             self.assertEqual(type(p1.le(p2)), CoordinateExpr)
             self.assertEqual(type(p1.gt(p2)), CoordinateExpr)
             self.assertEqual(type(p1.ge(p2)), CoordinateExpr)
-            scalar = rnd()[0]
-            self.assertEqual(tuple(p1.eq(scalar)), tuple(vector1 == scalar))
-            self.assertEqual(tuple(p1.ne(scalar)), tuple(vector1 != scalar))
-            self.assertEqual(tuple(p1.lt(scalar)), tuple(vector1 < scalar))
-            self.assertEqual(tuple(p1.le(scalar)), tuple(vector1 <= scalar))
-            self.assertEqual(tuple(p1.gt(scalar)), tuple(vector1 > scalar))
-            self.assertEqual(tuple(p1.ge(scalar)), tuple(vector1 >= scalar))
+            scalar = dtype(rnd()[0])
+            self.assertEqual(tuple(p1.eq(scalar)), tuple([v1 == scalar for v1 in vector1]))
+            self.assertEqual(tuple(p1.ne(scalar)), tuple([v1 != scalar for v1 in vector1]))
+            self.assertEqual(tuple(p1.lt(scalar)), tuple([v1 <  scalar for v1 in vector1]))
+            self.assertEqual(tuple(p1.le(scalar)), tuple([v1 <= scalar for v1 in vector1]))
+            self.assertEqual(tuple(p1.gt(scalar)), tuple([v1 >  scalar for v1 in vector1]))
+            self.assertEqual(tuple(p1.ge(scalar)), tuple([v1 >= scalar for v1 in vector1]))
             self.assertEqual(type(p1.eq(scalar)), CoordinateExpr)
             self.assertEqual(type(p1.ne(scalar)), CoordinateExpr)
             self.assertEqual(type(p1.lt(scalar)), CoordinateExpr)
@@ -79,10 +80,10 @@ class PointTestCase(CoordinateTestCase):
 
     def setUp(self):
         self.classes = [
-            (float, geom.Point2D, lambda: numpy.random.randn(2), geom.Point2D.make),
-            (int, geom.Point2I, lambda: numpy.random.randint(-5, 5, 2), geom.Point2I.make),
-            (float, geom.Point3D, lambda: numpy.random.randn(3), geom.Point3D.make),
-            (int, geom.Point3I, lambda: numpy.random.randint(-5, 5, 3), geom.Point3I.make),
+            (float, geom.Point2D, lambda: [float(x) for x in numpy.random.randn(2)], geom.Point2D.make),
+            (int, geom.Point2I, lambda: [int(x) for x in numpy.random.randint(-5, 5, 2)], geom.Point2I.make),
+            (float, geom.Point3D, lambda: [float(x) for x in numpy.random.randn(3)], geom.Point3D.make),
+            (int, geom.Point3I, lambda: [int(x) for x in numpy.random.randint(-5, 5, 3)], geom.Point3I.make),
             ]
 
     def testArithmetic(self):
@@ -92,20 +93,20 @@ class PointTestCase(CoordinateTestCase):
             vector2 = rnd()
             p1 = ctor(*vector1)
             p2 = ctor(*vector2)
-            self.assertClose(tuple(p1-p2), tuple(vector1-vector2))
+            self.assertClose(tuple(p1-p2), tuple([v1 - v2 for v1, v2 in zip(vector1, vector2)]))
             self.assertEqual(type(p1-p2), Extent)
-            self.assertClose(tuple(p1+Extent(p2)), tuple(vector1+vector2))
+            self.assertClose(tuple(p1+Extent(p2)), tuple([v1 + v2 for v1, v2 in zip(vector1, vector2)]))
             self.assertEqual(type(p1+Extent(p2)), cls)
-            self.assertClose(tuple(p1-Extent(p2)), tuple(vector1-vector2))
+            self.assertClose(tuple(p1-Extent(p2)), tuple([v1 - v2 for v1, v2 in zip(vector1, vector2)]))
             self.assertEqual(type(p1-Extent(p2)), cls)
             p1 += Extent(p2)
-            vector1 += vector2
+            vector1 = [v1 + v2 for v1, v2 in zip(vector1, vector2)]
             self.assertEqual(tuple(p1), tuple(vector1))
             p1 -= Extent(p2)
-            vector1 -= vector2
+            vector1 = [v1 - v2 for v1, v2 in zip(vector1, vector2)]
             self.assertClose(tuple(p1), tuple(vector1))
             p1.shift(Extent(p2))
-            vector1 += vector2
+            vector1 = [v1 + v2 for v1, v2 in zip(vector1, vector2)]
             self.assertClose(tuple(p1), tuple(vector1))
 
 class ExtentTestCase(CoordinateTestCase):
@@ -113,10 +114,10 @@ class ExtentTestCase(CoordinateTestCase):
 
     def setUp(self):
         self.classes = [
-            (float, geom.Extent2D, lambda: numpy.random.randn(2), geom.Extent2D.make),
-            (int, geom.Extent2I, lambda: numpy.random.randint(-5, 5, 2), geom.Extent2I.make),
-            (float, geom.Extent3D, lambda: numpy.random.randn(3), geom.Extent3D.make),
-            (int, geom.Extent3I, lambda: numpy.random.randint(-5, 5, 3), geom.Extent3I.make),
+            (float, geom.Extent2D, lambda: [float(x) for x in numpy.random.randn(2)], geom.Extent2D.make),
+            (int, geom.Extent2I, lambda: [int(x) for x in numpy.random.randint(-5, 5, 2)], geom.Extent2I.make),
+            (float, geom.Extent3D, lambda: [float(x) for x in numpy.random.randn(3)], geom.Extent3D.make),
+            (int, geom.Extent3I, lambda: [int(x) for x in numpy.random.randint(-5, 5, 3)], geom.Extent3I.make),
             ]
 
     def testArithmetic(self):
@@ -126,35 +127,35 @@ class ExtentTestCase(CoordinateTestCase):
             vector2 = rnd()
             p1 = ctor(*vector1)
             p2 = ctor(*vector2)
-            self.assertClose(tuple(p1+Point(p2)), tuple(vector1+vector2))
+            self.assertClose(tuple(p1+Point(p2)), tuple([v1 + v2 for v1, v2 in zip(vector1, vector2)]))
             self.assertEqual(type(p1+Point(p2)), Point)
-            self.assertClose(tuple(p1+p2), tuple(vector1+vector2))
+            self.assertClose(tuple(p1+p2), tuple([v1 + v2 for v1, v2 in zip(vector1, vector2)]))
             self.assertEqual(type(p1+p2), cls)
-            self.assertClose(tuple(p1-p2), tuple(vector1-vector2))
+            self.assertClose(tuple(p1-p2), tuple([v1 - v2 for v1, v2 in zip(vector1, vector2)]))
             self.assertEqual(type(p1-p2), cls)
-            self.assertClose(tuple(+p1), tuple(+vector1))
+            self.assertClose(tuple(+p1), tuple(vector1))
             self.assertEqual(type(+p1), cls)
-            self.assertClose(tuple(-p1), tuple(-vector1))
+            self.assertClose(tuple(-p1), tuple([-v1 for v1 in vector1]))
             self.assertEqual(type(-p1), cls)
             p1 += p2
-            vector1 += vector2
+            vector1 = [v1 + v2 for v1, v2 in zip(vector1, vector2)]
             self.assertClose(tuple(p1), tuple(vector1))
             p1 -= p2
-            vector1 -= vector2
+            vector1 = [v1 - v2 for v1, v2 in zip(vector1, vector2)]
             self.assertClose(tuple(p1), tuple(vector1))
             scalar = 2
             # Python handles integer division differently from C++ for negative numbers
-            vector1 = numpy.abs(vector1) 
+            vector1 = [abs(x) for x in vector1]
             p1 = ctor(*vector1)
-            self.assertClose(tuple(p1*scalar), tuple(vector1*scalar))
+            self.assertClose(tuple(p1*scalar), tuple([v1*scalar for v1 in vector1]))
             self.assertEqual(type(p1*scalar), cls)
-            self.assertClose(tuple(p1/scalar), tuple(vector1/scalar))
+            self.assertClose(tuple(p1/scalar), tuple([v1/scalar for v1 in vector1]))
             self.assertEqual(type(p1/scalar), cls)
             p1 *= scalar
-            vector1 *= scalar
+            vector1 = [v1*scalar for v1 in vector1]
             self.assertClose(tuple(p1), tuple(vector1))
             p1 /= scalar
-            vector1 /= scalar
+            vector1 = [v1/scalar for v1 in vector1]
             self.assertClose(tuple(p1), tuple(vector1))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
