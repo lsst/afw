@@ -32,6 +32,13 @@ static void decodeSipHeader(lsst::daf::base::PropertySet::Ptr fitsMetadata,
                             Eigen::MatrixXd *m);
 
 
+TanWcs::TanWcs() : 
+    Wcs(),
+    _hasDistortion(false),
+    _sipA(1,1), _sipB(1,1), _sipAp(1,1), _sipBp(1,1) {
+}
+
+    
 TanWcs::TanWcs(PropertySet::Ptr const fitsMetadata) : 
     Wcs(fitsMetadata),
     _hasDistortion(false),
