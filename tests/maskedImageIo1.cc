@@ -6,6 +6,7 @@
 #include "lsst/afw/image.h"
 #include "lsst/afw/math.h"
 #include "lsst/afw/formatters/Utils.h"
+#include "lsst/afw/image/makeWcs.h"
 
 using namespace std;
 
@@ -36,7 +37,7 @@ void test(char *name) {
         boost::format("FITS metadata string: %s") 
             % lsst::afw::formatters::formatFitsProperties(metadata));
 
-    lsst::afw::image::Wcs testWcs(metadata);
+    lsst::afw::image::Wcs::Ptr testWcs = lsst::afw::image::makeWcs(metadata);
 
     lsst::afw::image::PointD pix, sky;
 
@@ -45,7 +46,7 @@ void test(char *name) {
     pix[0] = 200;
     pix[1] = 180;
 
-    sky = testWcs.pixelToSky(pix);
+    sky = testWcs->pixelToSky(pix);
 
     Trace("MaskedImageIO_1", 1,
           boost::format("pix: %lf %lf") % pix[0] % pix[1]);
@@ -53,7 +54,7 @@ void test(char *name) {
     Trace("MaskedImageIO_1", 1,
           boost::format("sky: %lf %lf") % sky[0] % sky[1]);
 
-    sky = testWcs.skyToPixel(pix);
+    sky = testWcs->skyToPixel(pix);
 
     Trace("MaskedImageIO_1", 1,
           boost::format("pix: %lf %lf") % pix[0] % pix[1]);
