@@ -1,4 +1,5 @@
 # -*- python -*-
+import re
 Import("env")
 
 env.CheckSwig("python", ilang="c++", includedProducts="utils daf_base pex_exceptions pex_logging pex_policy daf_persistence daf_data security afw")
