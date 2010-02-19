@@ -28,6 +28,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/Exposure.h"
 #include "lsst/afw/formatters/WcsFormatter.h"
+#include "lsst/afw/image/makeWcs.h"
 
 namespace afwImage = lsst::afw::image;
 
@@ -150,7 +151,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
         }
     }
 
-    _wcs = afwImage::Wcs::Ptr(new afwImage::Wcs(metadata));
+    _wcs = afwImage::Wcs::Ptr(afwImage::makeWcs(metadata));
     setMetadata(metadata);
 }
 
