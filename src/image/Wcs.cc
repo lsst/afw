@@ -64,7 +64,6 @@ Wcs::Wcs(PropertySet::Ptr fitsMetadata):
     _wcsfixCtrl = 2;
     _wcshdrCtrl = 2;
 
-    //@TODO Check that this WCS isn't in TAN format?
     
     initWcsLibFromFits(fitsMetadata);
 }
@@ -107,10 +106,12 @@ void Wcs::initWcsLibFromFits(PropertySet::Ptr const fitsMetadata){
     //Pass the header into wcslib's formatter to extract setup the Wcs. First need
     //to convert to a C style string, so the compile doesn't complain about constness
     int len = metadataStr.size();
-    boost::shared_ptr<char> hdrString = boost::shared_ptr<char>(new char[len + 1]);
-    std::strcpy(hdrString.get(), metadataStr.c_str());
+    char *hdrString = (char *) malloc((len + 1)*sizeof(char));
+    strncpy(hdrString, metadataStr.c_str(), len + 1);
+    
 
-    int pihStatus = wcspih(hdrString.get(), nCards, _relax, _wcshdrCtrl, &_nReject, &_nWcsInfo, &_wcsInfo);
+    int pihStatus = wcspih(hdrString, nCards, _relax, _wcshdrCtrl, &_nReject, &_nWcsInfo, &_wcsInfo);
+    free(hdrString);
     
     //@TODO This will almost certainly fail sometimes, but I don't know how to deal with it yet
     assert(_nWcsInfo == 1);
@@ -214,6 +215,7 @@ void Wcs::initWcsLib(afwImg::PointD crval, afwImg::PointD crpix, Eigen::Matrix2d
 }
 
 
+///Copy constructor
 Wcs::Wcs(afwImg::Wcs const & rhs) : 
     LsstBase(typeid(this)),
     _wcsInfo(NULL), 
@@ -239,8 +241,43 @@ Wcs::Wcs(afwImg::Wcs const & rhs) :
     }
 }
        
+
+///Assignment operator    
+Wcs::Wcs & Wcs::operator = (const Wcs & rhs){
+    if (this != &rhs) {
+        if (_nWcsInfo > 0) {
+            wcsvfree(&_nWcsInfo, &_wcsInfo);
+        }
+        _nWcsInfo = 0;
+        _wcsInfo = NULL;
+        _relax = rhs._relax;
+        _wcsfixCtrl = rhs._wcsfixCtrl;
+        _wcshdrCtrl = rhs._wcshdrCtrl;
+        _nReject = rhs._nReject;
+
+        if (rhs._nWcsInfo > 0) {
+            // allocate wcs structs
+            _wcsInfo = static_cast<struct wcsprm *>(calloc(1, sizeof(struct wcsprm)));
+            if (_wcsInfo == NULL) {
+                throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException, "Cannot allocate WCS info");
+            }
+            _wcsInfo->flag = -1;
+            _nWcsInfo = 1;
+
+            _wcsInfo[0].flag = -1;
+            int status = wcscopy(1, rhs._wcsInfo, _wcsInfo);
+            if (status != 0) {
+                wcsvfree(&_nWcsInfo, &_wcsInfo);
+                throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException,
+                    (boost::format("Failed to copy WCS info; wcscopy status = %d. %s") %
+                     status % wcs_errmsg[status]).str());
+            }
+        }
+    }
     
-    
+    return *this;
+}
+
 
 Wcs::~Wcs() {
     if (_wcsInfo != NULL) {

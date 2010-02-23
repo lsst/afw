@@ -35,6 +35,7 @@ namespace image {
            );
 
         Wcs(lsst::afw::image::Wcs const & rhs);
+        Wcs & operator = (const Wcs &);        
         virtual ~Wcs();
 
         //Accessors
