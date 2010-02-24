@@ -24,6 +24,7 @@
 
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/Wcs.h"
+#include "lsst/afw/image/TanWcs.h"
 #include "lsst/afw/math/Interpolate.h"
 #include "lsst/afw/math/Background.h"
 
@@ -46,7 +47,7 @@ BOOST_AUTO_TEST_CASE(constructors_test) { /* parasoft-suppress  LsstDm-3-2a Lsst
     image::Wcs wcs2(crval, crpix, CD);
 
     //Create a Wcs with sip polynomials.
-    image::Wcs wcs3(crval, crpix, CD, CD, CD, CD, CD);
+    image::TanWcs wcs3(crval, crpix, CD, CD, CD, CD, CD);
 }
 
 //A trivially easy example of the linear constructor
@@ -184,7 +185,7 @@ BOOST_AUTO_TEST_CASE(linearMatrix) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-
 
     image::Wcs wcs(crval, crpix, CD);
     
-    matrixD M = wcs.getLinearTransformMatrix();
+    matrixD M = wcs.getCDMatrix();
     BOOST_CHECK_CLOSE(CD(0,0), M(0,0), 1e-6);
     BOOST_CHECK_CLOSE(CD(0,1), M(0,1), 1e-6);
     BOOST_CHECK_CLOSE(CD(1,0), M(1,0), 1e-6);
