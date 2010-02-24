@@ -48,7 +48,7 @@ class ExposureTestCase(unittest.TestCase):
         self.smallExposure = afwImage.ExposureF(inFilePathSmall)
         self.width =  maskedImage.getWidth()
         self.height = maskedImage.getHeight()
-        self.wcs = afwImage.Wcs(self.smallExposure.getMetadata())
+        self.wcs = afwImage.makeWcs(self.smallExposure.getMetadata())
 
         self.exposureBlank = afwImage.ExposureF()
         self.exposureMiOnly = afwImage.makeExposure(maskedImage)
@@ -163,6 +163,7 @@ class ExposureTestCase(unittest.TestCase):
         Test if an Exposure has a WCS or not.
         """
         self.assertFalse(self.exposureBlank.hasWcs())       
+
         self.assertFalse(self.exposureMiOnly.hasWcs())        
         self.assertTrue(self.exposureMiWcs.hasWcs())        
         self.assertTrue(self.exposureCrWcs.hasWcs())       
@@ -247,11 +248,11 @@ class ExposureTestCase(unittest.TestCase):
 
         for xSubInd in (0, subDim[0]-1):
             for ySubInd in (0, subDim[1]-1):
-                p0 = mainWcs.xyToRaDec(
+                p0 = mainWcs.pixelToSky(
                     afwImage.indexToPosition(xSubInd + subXY0[0]),
                     afwImage.indexToPosition(ySubInd + subXY0[1]),
                 )
-                p1 = subWcs.xyToRaDec(
+                p1 = subWcs.pixelToSky(
                     afwImage.indexToPosition(xSubInd),
                     afwImage.indexToPosition(ySubInd),
                 )
