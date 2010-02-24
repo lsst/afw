@@ -40,7 +40,7 @@ class TanSipTestCases(unittest.TestCase):
 
 
 
-        self.wcs = afwImage.Wcs(metadata)
+        self.wcs = afwImage.makeWcs(metadata)
 
     def tearDown(self):
         del self.wcs
@@ -49,12 +49,12 @@ class TanSipTestCases(unittest.TestCase):
 
         # xy to sky; this is known ahead of time for this unit test
         # 1 pixel offset seems to be necessary to match the known answer
-        sky = self.wcs.xyToRaDec(x - 1, y - 1)
+        sky = self.wcs.pixelToSky(x - 1, y - 1)
         self.assertAlmostEqual(sky[0], ra,  5) # 5th digit in degrees ~ 0.035 arcsec ~ 1/10 pixel
         self.assertAlmostEqual(sky[1], dec, 5) # 
 
         # round trip it
-        xy  = self.wcs.raDecToXY(sky)
+        xy  = self.wcs.skyToPixel(sky)
         self.assertAlmostEqual(xy[0], x - 1, 5)
         self.assertAlmostEqual(xy[1], y - 1, 5)
 
