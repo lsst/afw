@@ -108,10 +108,9 @@ void Wcs::initWcsLibFromFits(PropertySet::Ptr const fitsMetadata){
     int len = metadataStr.size();
     char *hdrString = (char *) malloc((len + 1)*sizeof(char));
     strncpy(hdrString, metadataStr.c_str(), len + 1);
-    
-
     int pihStatus = wcspih(hdrString, nCards, _relax, _wcshdrCtrl, &_nReject, &_nWcsInfo, &_wcsInfo);
     free(hdrString);
+
     
     //@TODO This will almost certainly fail sometimes, but I don't know how to deal with it yet
     assert(_nWcsInfo == 1);
@@ -219,25 +218,27 @@ void Wcs::initWcsLib(afwImg::PointD crval, afwImg::PointD crpix, Eigen::Matrix2d
 Wcs::Wcs(afwImg::Wcs const & rhs) : 
     LsstBase(typeid(this)),
     _wcsInfo(NULL), 
-    _nWcsInfo(1), 
+    _nWcsInfo(rhs._nWcsInfo), 
     _relax(rhs._relax), 
     _wcsfixCtrl(rhs._wcsfixCtrl), 
     _wcshdrCtrl(rhs._wcshdrCtrl),
     _nReject(rhs._nReject) {
     
-    _wcsInfo = static_cast<struct wcsprm *>(malloc(sizeof(struct wcsprm)));
-    if (_wcsInfo == NULL) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException, "Cannot allocate WCS info");
-    }
-    
-    _wcsInfo->flag = -1;
-    int alloc=1;    //Unconditionally allocate memory when calling
-    int status = wcscopy(alloc, rhs._wcsInfo, _wcsInfo);
-    if(status != 0) {
-        wcsvfree(&_nWcsInfo, &_wcsInfo);
-        throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException,
-            (boost::format("Could not copy WCS: wcscopy status = %d : %s") %
-             status % wcs_errmsg[status]).str());
+    if( rhs._nWcsInfo > 0) {
+        _wcsInfo = static_cast<struct wcsprm *>(malloc(sizeof(struct wcsprm)));
+        if (_wcsInfo == NULL) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException, "Cannot allocate WCS info");
+        }
+
+        _wcsInfo->flag = -1;
+        int alloc=1;    //Unconditionally allocate memory when calling
+        int status = wcscopy(alloc, rhs._wcsInfo, _wcsInfo);
+        if(status != 0) {
+            wcsvfree(&_nWcsInfo, &_wcsInfo);
+            throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException,
+                (boost::format("Could not copy WCS: wcscopy status = %d : %s") %
+                 status % wcs_errmsg[status]).str());
+        }
     }
 }
        
@@ -335,17 +336,12 @@ Eigen::Matrix2d Wcs::getCDMatrix() const {
 }
 
 
-#if 0
-//@FIXME. Can't implement this until I sync the Wcs class and the WcsFormatter
-
-
 ///Return the Wcs as a fits header
-PropertySet::Ptr Wcs::getFitsMetadata() {
+PropertySet::Ptr Wcs::getFitsMetadata() const {
     return lsst::afw::formatters::WcsFormatter::generatePropertySet(*this);
 }
 
 
-#endif
 
 ///
 /// Returns the orientation of the Wcs
