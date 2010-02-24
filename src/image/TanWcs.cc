@@ -12,7 +12,7 @@
 #include "lsst/daf/base.h"
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/afw/formatters/Utils.h"
-#include "lsst/afw/formatters/WcsFormatter.h"
+#include "lsst/afw/formatters/TanWcsFormatter.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/image/TanWcs.h"    
@@ -173,6 +173,7 @@ TanWcs::TanWcs(afwImg::PointD crval, afwImg::PointD crpix, Eigen::Matrix2d CD,
 }
 
 
+///Copy constructor
 TanWcs::TanWcs(lsst::afw::image::TanWcs const & rhs) :
     Wcs(rhs),
     _hasDistortion(rhs._hasDistortion),
@@ -181,6 +182,51 @@ TanWcs::TanWcs(lsst::afw::image::TanWcs const & rhs) :
     _sipAp(rhs._sipAp), 
     _sipBp(rhs._sipBp) {
     
+}
+
+
+///Assignment operator    
+TanWcs::TanWcs & TanWcs::operator = (const TanWcs & rhs){
+    if (this != &rhs) {
+        
+        if (_nWcsInfo > 0) {
+            wcsvfree(&_nWcsInfo, &_wcsInfo);
+        }
+        _nWcsInfo = 0;
+        _wcsInfo = NULL;
+        _relax = rhs._relax;
+        _wcsfixCtrl = rhs._wcsfixCtrl;
+        _wcshdrCtrl = rhs._wcshdrCtrl;
+        _nReject = rhs._nReject;
+
+        if (rhs._nWcsInfo > 0) {
+            // allocate wcs structs
+            _wcsInfo = static_cast<struct wcsprm *>(calloc(1, sizeof(struct wcsprm)));
+            if (_wcsInfo == NULL) {
+                throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException, "Cannot allocate WCS info");
+            }
+            _wcsInfo->flag = -1;
+            _nWcsInfo = 1;
+
+            _wcsInfo[0].flag = -1;
+            int status = wcscopy(1, rhs._wcsInfo, _wcsInfo);
+            if (status != 0) {
+                wcsvfree(&_nWcsInfo, &_wcsInfo);
+                throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException,
+                    (boost::format("Failed to copy WCS info; wcscopy status = %d. %s") %
+                     status % wcs_errmsg[status]).str());
+            }
+        }
+        
+        if (_hasDistortion) {
+            _sipA = rhs._sipA;
+            _sipB = rhs._sipB;
+            _sipAp = rhs._sipAp;
+            _sipBp = rhs._sipBp;
+        }
+    }
+    
+    return *this;
 }
 
 
@@ -315,6 +361,10 @@ PointD TanWcs::pixelToSky(double pixel1, double pixel2) const {
     return lsst::afw::image::PointD(skyTmp);
 }
 
+
+lsst::daf::base::PropertySet::Ptr TanWcs::getFitsMetadata() const {
+    return lsst::afw::formatters::TanWcsFormatter::generatePropertySet(*this);       
+}
 
 /**
  * Return the linear part of the Wcs, the CD matrix in FITS speak
