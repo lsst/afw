@@ -29,6 +29,7 @@
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/image/Wcs.h"
+#include "lsst/afw/image/TanWcs.h"
 
 namespace lsst {
 namespace afw {
@@ -71,7 +72,8 @@ namespace image {
         void setWcs(Wcs const& wcs);
         
         // Has Member (inline)
-        bool hasWcs() const { return static_cast<bool>(_wcs); };
+        bool hasWcs() const { return (*_wcs ? true : false); 
+        }
         
         // FITS
         void writeFits(std::string const &expOutFile) const;
