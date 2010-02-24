@@ -257,7 +257,7 @@ int afwMath::warpImage(
                 --srcIndY;
             }
           
-            // If location is too near the edge of the source, or off the source, mark the dest as edge
+            // If warping kernel is not completely on the source image, destination pixel is an edge
             if ((srcIndX < 0) || (srcIndX + kernelWidth > srcWidth) 
                 || (srcIndY < 0) || (srcIndY + kernelHeight > srcHeight)) {
                 // skip this pixel
@@ -307,45 +307,37 @@ int afwMath::warpImageToSkyMap(
         SeparableKernel &warpingKernel  ///< warping kernel; determines warping algorithm
 ) {
     int numGoodPixels = 0;
-    destSkyMapImage.clear();
 
+    typedef typename DestSkyMapImageT::PixelData DestPixelData;
     typedef afwImage::Image<afwMath::Kernel::Pixel> KernelImage;    
     
-    // Compute borders; use to prevent applying kernel outside of srcImage
     const int kernelWidth = warpingKernel.getWidth();
     const int kernelHeight = warpingKernel.getHeight();
     const int kernelCtrX = warpingKernel.getCtrX();
     const int kernelCtrY = warpingKernel.getCtrY();
-
-    // Get the source MaskedImage and a pixel accessor to it.
     const int srcWidth = srcImage.getWidth();
     const int srcHeight = srcImage.getHeight();
 
     pexLog::TTrace<3>("lsst.afw.math.warp", "source image width=%d; height=%d", srcWidth, srcHeight);
 
+    pexLog::TTrace<3>("lsst.afw.math.warp", "dest sky map image size=%d", destSkyMapImage.getSize());
+
+    const DestPixelData edgePixel = afwMath::edgePixel<DestPixelData>(
+        typename afwImage::detail::image_traits<DestPixelData>::image_category()
+    );
+    
+    typename DestSkyMapImageT::SchemeConstPtr destSchemePtr = destSkyMapImage.getScheme();
+
     std::vector<double> kernelXList(kernelWidth);
     std::vector<double> kernelYList(kernelHeight);
-    
-    // Identify sky pixels that overlap input image
-    typename DestSkyMapImageT::Scheme::Ptr skyMapSchemePtr = destSkyMapImage.getScheme();
-    std::vector<afwGeom::Point2D> skyCornerList;
-    for (int xInd = 0; xInd < srcWidth; xInd += (srcWidth - 1)) {
-        for (int yInd = 0; yInd < srcWidth; yInd += (srcHeight - 1)) {
-            afwImage::PointD srcPosRADec = srcWcs.xyToRaDec(
-                afwImage::indexToPosition(xInd),
-                afwImage::indexToPosition(yInd));
-            skyCornerList.push_back(afwGeom::makePointD(srcPosRADec[0], srcPosRADec[1]));
-        }
-    }
-    typename DestSkyMapImageT::IdSet destIdSet = skyMapSchemePtr->findIndicesInPolygon(skyCornerList);
     
     // Iterate over dest pixels
     pexLog::TTrace<4>("lsst.afw.math.warp", "Remapping masked image");
     
-    for (typename DestSkyMapImageT::IdSet::const_iterator destIdIter = destIdSet.begin();
-        destIdIter != destIdSet.end(); ++destIdIter) {
+    for (typename DestSkyMapImageT::Iterator destPixelIter = destSkyMapImage.begin();
+        destPixelIter != destSkyMapImage.end(); ++destPixelIter) {
 
-        afwGeom::Point2D skyPos = skyMapSchemePtr->getPixelPosition(*destIdIter);
+        afwGeom::Point2D skyPos = destSchemePtr->getSkyPosition(destPixelIter->getId());
         afwImage::PointD srcPosXY = srcWcs.raDecToXY(skyPos[0], skyPos[1]);
 
         // Compute associated source pixel index and break it into integer and fractional
@@ -364,9 +356,10 @@ int afwMath::warpImageToSkyMap(
             --srcIndY;
         }
       
-        // If location is too near the edge of the source, or off the source, skip the pixel
+        // If warping kernel is not completely on the source image, destination pixel is an edge
         if ((srcIndX < 0) || (srcIndX + kernelWidth > srcWidth) 
             || (srcIndY < 0) || (srcIndY + kernelHeight > srcHeight)) {
+            destPixelIter->setData(edgePixel);
             continue;
         }
         ++numGoodPixels;
@@ -382,11 +375,11 @@ int afwMath::warpImageToSkyMap(
 
         // Correct intensity due to relative pixel spatial scale and kernel sum.
         double srcPixelArea = srcWcs.pixArea(afwImage::PointD(double(srcIndX), double(srcIndY)));
-        double destPixelArea = skyMapSchemePtr->getPixelArea(*destIdIter);
+        double destPixelArea = destSchemePtr->getPixelArea(destPixelIter->getId());
         double multFac = destPixelArea / (srcPixelArea * kSum);
         destPixelData *= multFac;
         
-        destSkyMapImage += destSkyMapImage.makePixel(*destIdIter, destPixelData);
+        destPixelIter->setData(destPixelData);
     } // dest pixels
     return numGoodPixels;
 }

@@ -6,21 +6,18 @@
 *
 * Basic concepts:
 * * SkyMapScheme: describes a sky pixelization scheme, such as Healpix.
-* * Pixel Id: the unique ID of a pixel. The ID type is a template parameter and depends on
-*   the pixelization scheme.
-* * Pixel Data: the data for (value of) a pixel. The data type is a template parameter.
-* * Pixel: a pair <Pixel ID, Pixel Data> describing the location and value of a pixel in the sky map.
+* * PixelId: the unique ID of a pixel. The ID type is a template parameter and depends on
+*   the pixelization scheme. PixelId must support <, > and == operators.
+* * PixelData: the data for (value of) a sky map pixel. The data type is a template parameter.
+* * SkyMapPixel: a pair <Pixel ID, Pixel Data> describing the location and value of a pixel in the sky map.
 * * SkyMapIdSet: a collection of pixel IDs.
 * * SkyMapImage: a collection of Pixels (Pixel ID, Pixel Data pairs).
 *
 * @todo 
-* * Add operator== and operator!= to SkyMapIdSet and perhaps SkyMapImage.
 * * move implementation to src file
 * * Refactor to avoid having healpix names pollute the namespace; one solution is use
 *   pointer-to-implementation for the HealPixMapScheme class.
 * * Add clone methods to SkyMapIdSet and SkyMapImage.
-* * Figure out why invalid nside causes an abort, not just an ordinary exception,
-*   and do what you can to work around the problem and make the healpix interface more robust.
 *
 * @ingroup afw
 */
@@ -28,8 +25,8 @@
 #ifndef LSST_AFW_IMAGE_SKYMAP_H
 #define LSST_AFW_IMAGE_SKYMAP_H
 
-#include <map>
-#include <set>
+#include <algorithm>
+#include <utility>
 #include <vector>
 #include <cmath>
 
@@ -48,9 +45,55 @@ namespace formatters {
 
 namespace image {
 
-    // forward declaration
+    // forward declarations
     template <typename PixelIdT>
     class SkyMapScheme;
+    template <typename PixelIdT, typename PixelDataT>
+    class SkyMapImage;
+    
+    /**
+    * @brief A sky map pixel, consisting of a const pixel Id and mutable pixel data.
+    */
+    template<typename PixelIdT, typename PixelDataT>
+    class SkyMapPixel {
+    public:
+        typedef PixelIdT PixelId;
+        typedef PixelDataT PixelData;
+        
+        SkyMapPixel(
+                PixelIdT const &pixelId     ///< pixel ID
+        ) :
+            _id(pixelId),
+            _data()
+        { }
+
+        SkyMapPixel(
+                PixelIdT const &pixelId,    ///< pixel ID
+                PixelDataT const &pixelData ///< pixel data
+        ) :
+            _id(pixelId),
+            _data(pixelData)
+        { }
+        
+        /**
+        * @brief Get the pixel ID
+        */
+        PixelIdT getId() const { return _id; };
+        
+        /**
+        * @brief Get the pixel data
+        */
+        PixelDataT getData() const { return _data; };
+
+        /**
+        * @brief Set the pixel data
+        */
+        void setData(PixelDataT const &pixelData) { _data = pixelData; };
+
+    private:
+        PixelIdT const _id;
+        PixelDataT _data;
+    };
 
     /**
     * @brief A collection of sky map pixels IDs
@@ -60,71 +103,81 @@ namespace image {
     template<typename PixelIdT>
     class SkyMapIdSet {
     public:
-        typedef SkyMapScheme<PixelIdT> Scheme;
+        typedef typename SkyMapScheme<PixelIdT>::ConstPtr SchemeConstPtr;
         typedef PixelIdT PixelId;
-        typedef typename std::set<PixelIdT>::const_iterator const_iterator;
-        typedef typename std::set<PixelIdT>::iterator iterator;
+        typedef boost::shared_ptr<SkyMapIdSet> Ptr;
+        typedef boost::shared_ptr<SkyMapIdSet const> ConstPtr;
+        typedef typename std::vector<PixelIdT>::const_iterator ConstIterator;
 
+        /**
+        * @brief Construct a SkyMapIdSet from a scheme and list of pixel IDs
+        */
         explicit SkyMapIdSet(
-            SkyMapScheme<PixelIdT> const &scheme ///< sky pixelization scheme
+                SkyMapScheme<PixelIdT> const &scheme, ///< sky pixelization scheme
+                std::vector<PixelIdT> const &idList ///< list of sky map pixel IDs
         ) :
             _schemePtr(scheme.clone()),
-            _idList()
-        { }
+            _idList(idList)
+        {
+            _normalize();
+        }
         
         virtual ~SkyMapIdSet() {};
-
-        typename SkyMapScheme<PixelIdT>::Ptr const getScheme() const { return _schemePtr; };
-
-        /**
-        * @brief Add the specified pixel; ignored if a already present
-        */
-        inline void operator+=(PixelId const &pixelId) { _idList.insert(pixelId); }
-
-        /**
-        * @brief Add the specified list of pixels; pixels that are already present are ignored
-        */
-        void operator+=(SkyMapIdSet const &idList) { _idList.insert(idList.begin(), idList.end()); }
-
-        /**
-        * @brief Remove the specified pixel; a no-op if the pixel is absent.
-        */
-        inline void operator-=(PixelId const &pixelId) { _idList.erase(pixelId); }
-
-        /**
-        * @brief Remove the specified list of pixels; pixels that are absent are ignored.
-        */
-        void operator-=(SkyMapIdSet const &idList) {
-            for (const_iterator inPtr = idList.begin(); inPtr != idList.end(); ++inPtr) {
-                _idList.erase(*inPtr);
-            }
-        }
 
         /**
         * @brief Is the pixel present?
         */
-        inline bool contains(PixelId const &pixelId) const { return _idList.count(pixelId) > 0; }
-        
+        inline bool contains(
+                PixelId const &pixelId ///< pixel ID
+        ) const {
+            return find(pixelId) != end();
+        }
+
+        /**
+        * @brief Find the specified pixel ID; return end() if not found.
+        */
+        // Use binary search since data is sorted          
+        ConstIterator find(PixelId const &pixelId) {
+            ConstIterator firstIter = begin();
+            ConstIterator lastIter = end() - 1;
+            while (firstIter <= lastIter) {
+                ConstIterator ctrIter = firstIter + ((lastIter - firstIter) / 2);
+                if (pixelId > *ctrIter) {
+                    firstIter = ctrIter + 1;
+                } else if (pixelId < *ctrIter) {
+                    lastIter = ctrIter - 1;
+                } else {
+                    return ctrIter;
+                }
+            }
+            return end();
+        }
+
+        SchemeConstPtr getScheme() const { return _schemePtr; };
+
         /**
         * @brief Return the number of elements
         */
         boost::int64_t getSize() const {
             return _idList.size();
         };
+
+        ConstIterator begin() const { return _idList.begin(); };
+
+        ConstIterator end() const { return _idList.end(); };
         
-        void clear() { _idList.clear(); };
-
-        const_iterator begin() const { return _idList.begin(); };
-
-        const_iterator end() const { return _idList.end(); };
-
-        iterator begin() { return _idList.begin(); };
-
-        iterator end() { return _idList.end(); };
+        template <typename A, typename B> friend class SkyMapImage;
 
     private:
-        typename Scheme::Ptr const _schemePtr;
-        std::set<PixelId> _idList;
+        /**
+        * @brief Sort the data and remove duplicates
+        */
+        void _normalize() {
+            std::sort(_idList.begin(), _idList.end());
+            std::unique(_idList.begin(), _idList.end());
+        }
+        SchemeConstPtr _schemePtr;
+        std::vector<PixelId> _idList;
     };
 
 
@@ -140,7 +193,7 @@ namespace image {
     public:
         virtual ~SkyMapScheme() {};
 
-        typedef typename boost::shared_ptr<SkyMapScheme<PixelIdT> > Ptr;
+        typedef typename boost::shared_ptr<SkyMapScheme const> ConstPtr;
         typedef PixelIdT PixelId;
         typedef SkyMapIdSet<PixelIdT> IdSet;
         
@@ -149,7 +202,7 @@ namespace image {
         *
         * Using a shared pointer prevents type slicing.
         */
-        virtual typename SkyMapScheme<PixelIdT>::Ptr clone() const = 0;
+        virtual ConstPtr clone() const = 0;
 
         /**
         * @brief find all indices whose centers lie within the specified polygon
@@ -171,7 +224,9 @@ namespace image {
         *
         * For sky pixelization schemes with equal-area pixels the argument is ignored.
         */
-        virtual double getPixelArea(PixelIdT const &pixelId) const = 0;
+        virtual double getPixelArea(
+                PixelIdT const &pixelId ///< pixel ID
+        ) const = 0;
         
         /**
         * @brief return the total number of pixels in an all-sky map
@@ -181,7 +236,9 @@ namespace image {
         /**
         * @brief return on-sky position of center of pixel
         */
-        virtual lsst::afw::geom::Point2D getPixelPosition(PixelIdT const &pixelId) const = 0;
+        virtual lsst::afw::geom::Point2D getSkyPosition(
+                PixelIdT const &pixelId ///< pixel ID
+        ) const = 0;
 
         /**
         * @brief get on-sky position of pixel corners
@@ -196,14 +253,18 @@ namespace image {
         * Schemes are considered equal if and only if they are the same type and have the same parameters.
         * (It is not sufficient for one to be a subclass of the other because == must commute).
         */
-        virtual bool operator==(SkyMapScheme const &rhs) const = 0;
+        virtual bool operator==(
+                SkyMapScheme const &rhs ///< right-hand-side sky map scheme
+        ) const = 0;
 
         /**
         * @brief Are the schemes not equal?
         *
         * See operator== for the definition of equal.
         */
-        virtual bool operator!=(SkyMapScheme const &rhs) const { return !(*this == rhs); };
+        virtual bool operator!=(
+                SkyMapScheme const &rhs ///< right-hand-side sky map scheme
+        ) const { return !(*this == rhs); };
     };
 
 
@@ -220,8 +281,8 @@ namespace image {
 
         virtual ~HealPixMapScheme() {};
 
-        virtual SkyMapScheme<HealPixId>::Ptr clone() const {
-            return SkyMapScheme<HealPixId>::Ptr(new HealPixMapScheme(getNSides()));
+        virtual SkyMapScheme<HealPixId>::ConstPtr clone() const {
+            return SkyMapScheme<HealPixId>::ConstPtr(new HealPixMapScheme(getNSides()));
         }
 
         virtual SkyMapIdSet<HealPixId> findIndicesInPolygon(
@@ -253,7 +314,7 @@ namespace image {
 
         virtual boost::int64_t getTotalPixels() const { return _healPixBase.Npix(); };
 
-        virtual lsst::afw::geom::Point2D getPixelPosition(HealPixId const &pixelId) const {
+        virtual lsst::afw::geom::Point2D getSkyPosition(HealPixId const &pixelId) const {
             return _raDecFromPointing(_healPixBase.pix2ang(pixelId));
         }
 
@@ -305,130 +366,119 @@ namespace image {
     template <typename PixelIdT, typename PixelDataT>
     class SkyMapImage {
     public:
-        typedef SkyMapScheme<PixelIdT> Scheme;
+        typedef typename SkyMapScheme<PixelIdT>::ConstPtr SchemeConstPtr;
         typedef SkyMapIdSet<PixelIdT> IdSet;
         typedef PixelIdT PixelId;
         typedef PixelDataT PixelData;
-        typedef std::pair<PixelIdT, PixelDataT> Pixel;
-        typedef typename std::map<PixelIdT, PixelDataT>::const_iterator const_iterator;
-        typedef typename std::map<PixelIdT, PixelDataT>::iterator iterator;
+        typedef SkyMapPixel<PixelIdT, PixelDataT> Pixel;
+        typedef boost::shared_ptr<SkyMapImage> Ptr;
+        typedef boost::shared_ptr<SkyMapImage const> ConstPtr;
+        typedef typename std::vector<Pixel>::const_iterator ConstIterator;
+        typedef typename std::vector<Pixel>::iterator Iterator;
         
         explicit SkyMapImage(
-                SkyMapScheme<PixelIdT> const &scheme ///< sky map scheme
+                SkyMapIdSet<PixelIdT> const &idSet ///< sky map ID set
         ) :
-            _schemePtr(scheme.clone()),
-            _pixelMap()
-        { }
+            _schemePtr(idSet.getScheme())
+        {
+            PixelData const NullPixel(0);
+            for (typename IdSet::ConstIterator idIter = idSet.begin(); idIter != idSet.end(); ++idIter) {
+                _pixelSet.push_back(Pixel(*idIter, NullPixel));
+            }
+        }
 
         virtual ~SkyMapImage() {};
 
-        typename SkyMapScheme<PixelIdT>::Ptr const getScheme() const { return _schemePtr; };
-        
-        /**
-        * @brief Return a the IDs of the contained pixels
-        */
-        SkyMapIdSet<PixelIdT> getIdSet() const {
-            IdSet retIdSet;
-            for (const_iterator pixelPtr = begin(); pixelPtr != end(); ++pixelPtr) {
-                retIdSet += pixelPtr->first;
-            }
-            return retIdSet;
-        }
-
-        /**
-        * @brief Add the specified pixel; ignored if a already present
-        */
-        inline void operator+=(Pixel const &pixel) { _pixelMap.insert(pixel); }
-
-        /**
-        * @brief Add the specified list of pixels; pixels that are already present are ignored
-        *
-        * @throw lsst::pex::exceptions::InvalidParameterException if the schemes do not match
-        */
-        void operator+=(SkyMapImage const &skyMapImage) {
-            if (skyMapImage.getScheme() != this->getScheme()) {
-               throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "Schemes do not match");
-            }
-            _pixelMap.insert(skyMapImage.begin(), skyMapImage.end());
-        }
-
-        /**
-        * @brief Remove the specified pixel; a no-op if the pixel is absent.
-        */
-        inline void operator-=(PixelId const &pixelId) { _pixelMap.erase(pixelId); }
-
-        /**
-        * @brief Remove the specified list of pixels; pixels that are absent are ignored.
-        *
-        * @throw lsst::pex::exceptions::InvalidParameterException if the schemes do not match
-        */
-        void operator-=(SkyMapIdSet<PixelIdT> const &idList) {
-            if (idList.getScheme() != this->getScheme()) {
-               throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "Schemes do not match");
-            }
-            for (typename IdSet::const_iterator inPtr = idList.begin(); inPtr != idList.end(); ++inPtr) {
-                _pixelMap.erase(*inPtr);
-            }
-        }
+        SchemeConstPtr getScheme() const { return _schemePtr; };
 
         /**
         * @brief Is the pixel present?
         */
-        inline bool contains(PixelId const &pixelId) const { return _pixelMap.count(pixelId) > 0; }
+        inline bool contains(
+                PixelId const &pixelId ///< pixel ID
+        ) const {
+            return find(pixelId) != end();
+        }
+
+        /**
+        * @brief Find specified pixel by pixelId; return end() if not found.
+        */
+        Iterator find(
+                PixelId const &pixelId ///< pixel ID
+        ) {
+            Iterator firstIter = _pixelSet.begin();
+            Iterator lastIter = _pixelSet.end() - 1;
+            while (firstIter <= lastIter) {
+                Iterator ctrIter = firstIter + ((lastIter - firstIter) / 2);
+                if (pixelId > ctrIter->getId()) {
+                    firstIter = ctrIter + 1;
+                } else if (pixelId > ctrIter->getId()) {
+                    lastIter = ctrIter - 1;
+                } else {
+                    return ctrIter;
+                }
+            }
+            return end();
+        }
         
         /**
         * @brief Return the value of the specified pixel
         *
         * @raise lsst::pex::exceptions::NotFoundException if pixel is not present
         */
-        PixelDataT get(PixelId const &pixelId) const {
-            Pixel *pixelPtr = _pixelMap.find(pixelId);
-            if (pixelPtr == end()) {
+        PixelDataT get(
+                PixelId const &pixelId ///< pixel ID
+        ) const {
+            // Use binary search because pixel indices are sorted
+            ConstIterator pixelIter = find(pixelId);
+            if (pixelIter == end()) {
                 throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException, "Not found");
             }
-            return pixelPtr->second;
-        };
+            return pixelIter->getData();
+        }
         
         /**
         * @brief Set the value of a specified pixel
         *
         * @raise lsst::pex::exceptions::NotFoundException if pixel is not present
         */
-        void set(PixelId const &pixelId, PixelData const &pixelData) {
-            Pixel *pixelIter = _pixelMap.find(pixelId);
+        void set(
+                PixelId const &pixelId, ///< pixel ID
+                PixelData const &pixelData ///< pixel value
+        ) {
+            Iterator pixelIter = find(pixelId);
             if (pixelIter == end()) {
                 throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException, "Not found");
             }
-            pixelIter->second = pixelData;
+            pixelIter->setData(pixelData);
+        }
+
+        /**
+        * @brief Return the IDSet for the pixels
+        */
+        IdSet getIdSet() const {
+            // no need to normalize the result since SkyMapImage is already normalized
+            IdSet retIdSet(_schemePtr);
+            for (ConstIterator pixelPtr = begin(); pixelPtr != end(); ++pixelPtr) {
+                retIdSet._idList.push_back(pixelPtr->getId());
+            }
+            return retIdSet;
         }
         
         /**
         * @brief Return the number of elements
         */
         boost::int64_t getSize() const {
-            return _pixelMap.size();
+            return _pixelSet.size();
         };
-        
-        void clear() { _pixelMap.clear(); };
 
-        const_iterator begin() const { return _pixelMap.begin(); };
+        Iterator begin() const { return _pixelSet.begin(); };
 
-        const_iterator end() const { return _pixelMap.end(); };
-
-        iterator begin() { return _pixelMap.begin(); };
-
-        iterator end() { return _pixelMap.end(); };
-        
-        /**
-        * @brief Make a sky map pixel
-        */
-        Pixel static makePixel(PixelId const &pixelId, PixelDataT const &pixelData) {
-            return Pixel(pixelId, pixelData);
-        }
+        Iterator end() const { return _pixelSet.end(); };
         
     private:
-        typename Scheme::Ptr const _schemePtr;
-        std::map<PixelId, PixelDataT> _pixelMap;
+        SchemeConstPtr _schemePtr;
+        std::vector<Pixel> _pixelSet;
     };
 
 }}} // namespace lsst::afw::image
