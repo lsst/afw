@@ -181,19 +181,32 @@ def version(HeadURL = r"$HeadURL$"):
 
 %{
 #include "lsst/afw/image/Wcs.h"
+#include "lsst/afw/image/TanWcs.h"
+#include "lsst/afw/image/makeWcs.h"
 %}
 
 SWIG_SHARED_PTR(Wcs, lsst::afw::image::Wcs);
 
 %include "lsst/afw/image/Wcs.h"
+%include "lsst/afw/image/TanWcs.h"
+%include "lsst/afw/image/makeWcs.h"
 
 %lsst_persistable(lsst::afw::image::Wcs);
+%lsst_persistable(lsst::afw::image::TanWcs);
 
 %extend lsst::afw::image::Wcs {
     lsst::afw::image::Wcs::Ptr clone() {
         return lsst::afw::image::Wcs::Ptr(new lsst::afw::image::Wcs::Wcs(*self));
     }
 }
+
+
+%extend lsst::afw::image::TanWcs {
+    lsst::afw::image::TanWcs::Ptr clone() {
+        return lsst::afw::image::TanWcs::Ptr(new lsst::afw::image::TanWcs::TanWcs(*self));
+    }
+}
+
 
 
 %inline {
