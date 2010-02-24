@@ -8,7 +8,6 @@
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/image/Wcs.h" 
 
-//#include "lsst/afw/image/makeWcs.h"
 
 struct wcsprm;                          // defined in wcs.h
 
@@ -19,9 +18,6 @@ namespace afw {
     }
 namespace image {
 
-    //Forward declaration
-    Wcs::Ptr makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
-    
     
 /// 
 /// @brief Special case implementation of the WCS standard for the simplest projection.
@@ -54,17 +50,14 @@ namespace image {
         typedef boost::shared_ptr<lsst::afw::image::TanWcs> Ptr;    
         typedef boost::shared_ptr<lsst::afw::image::TanWcs const> ConstPtr;    
 
-        ///Create a Wcs of the correct type using fits header information
-        //friend lsst::afw::image::Wcs::Ptr lsst::afw::image::makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
-        
         //Constructors
         TanWcs();
+        friend lsst::afw::image::Wcs::Ptr lsst::afw::image::makeWcs(lsst::daf::base::PropertySet::Ptr \
+            fitsMetadata);
         TanWcs(lsst::afw::image::PointD crval, lsst::afw::image::PointD crpix, Eigen::Matrix2d CD, 
                 double equinox=2000, std::string raDecSys="FK5",
                 const std::string cunits1="deg", const std::string cunits2="deg"
                );
-        ///If you want to create a TanWcs object from a fits header, use makeWcs()
-        TanWcs(lsst::daf::base::PropertySet::Ptr const fitsMetadata);
 
         TanWcs(lsst::afw::image::PointD crval, lsst::afw::image::PointD crpix, Eigen::Matrix2d CD, 
                 Eigen::MatrixXd const & sipA, ///< Forward distortion Matrix A
@@ -76,6 +69,7 @@ namespace image {
               );
 
         TanWcs(lsst::afw::image::TanWcs const & rhs);
+        TanWcs & operator = (const TanWcs &);        
         inline ~TanWcs() {};
         
         //Accessors
@@ -84,6 +78,8 @@ namespace image {
 
         PointD skyToPixel(double sky1, double sky2) const;
         PointD pixelToSky(double pixel1, double pixel2) const;
+        
+        lsst::daf::base::PropertySet::Ptr getFitsMetadata() const;        
         
         lsst::afw::geom::AffineTransform getAffineTransform() const;
         lsst::afw::geom::AffineTransform linearizeAt(lsst::afw::geom::PointD const & pix) const;
@@ -100,7 +96,9 @@ namespace image {
                                  );
 
     private:
-
+        ///If you want to create a TanWcs object from a fits header, use makeWcs()
+        TanWcs(lsst::daf::base::PropertySet::Ptr const fitsMetadata);
+        
         //Allow the formatter to access private goo
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::TanWcsFormatter);
 

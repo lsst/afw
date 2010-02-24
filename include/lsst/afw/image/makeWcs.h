@@ -7,8 +7,13 @@
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/image/TanWcs.h"
 
+namespace lsst {
+namespace afw {
+namespace image {
 
-lsst::afw::image::Wcs::Ptr lsst::afw::image::makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
+//lsst::afw::image::Wcs::Ptr lsst::afw::image::makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
+Wcs::Ptr makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
 
+}}}
 
 #endif

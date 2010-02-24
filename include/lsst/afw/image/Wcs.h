@@ -43,10 +43,10 @@ namespace image {
         PointD getPixelOrigin() const;    //Return crpix
         Eigen::Matrix2d getCDMatrix() const;       //Return CD matrix
         
-        lsst::daf::base::PropertySet::Ptr getFitsMetadata() const;
+        virtual lsst::daf::base::PropertySet::Ptr getFitsMetadata() const;
 
         /// Return true iff Wcs is valid
-        operator bool() const { return _wcsInfo != NULL; }
+        operator bool() const { return _nWcsInfo != 0; }
 
         bool isFlipped() const; //Does the Wcs follow the convention of North=Up, East=Left or not
         double pixArea(PointD pix00) const;
@@ -75,9 +75,11 @@ namespace image {
                        );
 
         void initWcsLibFromFits(lsst::daf::base::PropertySet::Ptr const fitsMetadata);
-    
+
     protected:
-        ///If you want to create a Wcs from a fits header, use makeWcs()
+
+        ///If you want to create a Wcs from a fits header, use makeWcs(). 
+        //This is protected because the derived classes need to be able to see it.
         Wcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
 
         struct wcsprm* _wcsInfo;
