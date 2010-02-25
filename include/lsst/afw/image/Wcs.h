@@ -29,7 +29,7 @@ namespace image {
         //Create a Wcs of the correct class using a fits header.
         friend Ptr lsst::afw::image::makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
         Wcs(lsst::afw::image::PointD crval, lsst::afw::image::PointD crpix, Eigen::Matrix2d CD, 
-                const std::string ctype1="RA--TAN", const std::string ctype2="DEC-TAN",
+                const std::string ctype1="RA---TAN", const std::string ctype2="DEC--TAN",
                 double equinox=2000, std::string raDecSys="FK5",
                 const std::string cunits1="deg", const std::string cunits2="deg"
            );
