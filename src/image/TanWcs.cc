@@ -56,21 +56,6 @@ TanWcs::TanWcs(PropertySet::Ptr const fitsMetadata) :
         throw LSST_EXCEPT(except::InvalidParameterException, msg);
     }
     
-    
-    //Check that only one WCS is in the header. I may want to generalise to multiple wcs'es
-    //at a  later date, but that's more work
-    if( fitsMetadata->exists("WCSAXES") && fitsMetadata->getAsInt("WCSAXES") != 1) {
-        string msg = "Can't treat more than one WCSAXIS yet";
-        throw LSST_EXCEPT(except::InvalidParameterException, msg);
-    }
-    
-    
-    //Check we're dealing with a 2d image
-    if( !fitsMetadata->exists("NAXIS") && fitsMetadata->getAsInt("NAXIS") != 2) {
-        string msg = "NAXIS keyword not found or not equal to 2";
-        throw LSST_EXCEPT(except::InvalidParameterException, msg);
-    }
-    
     //Check for tangent plane projection
     string ctype1 = fitsMetadata->getAsString("CTYPE1");
     string ctype2 = fitsMetadata->getAsString("CTYPE1");
@@ -175,10 +160,10 @@ TanWcs::TanWcs(const afwImg::PointD crval, const afwImg::PointD crpix, const Eig
 ///\param cunits1 Units of sky position. One of deg, arcmin or arcsec
 ///\param cunits2 Units of sky position. One of deg, arcmin or arcsec
 TanWcs::TanWcs(const afwImg::PointD crval, const afwImg::PointD crpix, const Eigen::Matrix2d &CD, 
-            Eigen::MatrixXd const & sipA, ///< Forward distortion Matrix A
-            Eigen::MatrixXd const & sipB, ///< Forward distortion Matrix B
-            Eigen::MatrixXd const & sipAp, ///<Reverse distortion Matrix Ap
-            Eigen::MatrixXd const & sipBp,  ///<Reverse distortion Matrix Bp
+            Eigen::MatrixXd const & sipA, 
+            Eigen::MatrixXd const & sipB, 
+            Eigen::MatrixXd const & sipAp, 
+            Eigen::MatrixXd const & sipBp,  
             double equinox, std::string raDecSys,
             const std::string cunits1, const std::string cunits2
            ) :

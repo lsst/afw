@@ -110,6 +110,19 @@ void Wcs::initWcsLibFromFits(PropertySet::Ptr const fitsMetadata){
         throw LSST_EXCEPT(except::InvalidParameterException, msg);
     }
 
+    //Check that only one WCS is in the header. I may want to generalise to multiple wcs'es
+    //at a  later date, but that's more work
+    if( fitsMetadata->exists("WCSAXES") && fitsMetadata->getAsInt("WCSAXES") != 1) {
+        string msg = "Can't treat more than one WCSAXIS yet";
+        throw LSST_EXCEPT(except::InvalidParameterException, msg);
+    }
+    
+    //Check we're dealing with a 2d image
+    if( !fitsMetadata->exists("NAXIS") && fitsMetadata->getAsInt("NAXIS") != 2) {
+        string msg = "NAXIS keyword not found or not equal to 2";
+        throw LSST_EXCEPT(except::InvalidParameterException, msg);
+    }
+
     //Pass the header into wcslib's formatter to extract setup the Wcs. First need
     //to convert to a C style string, so the compile doesn't complain about constness
     int len = metadataStr.size();
