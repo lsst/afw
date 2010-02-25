@@ -125,7 +125,7 @@ void Wcs::initWcsLibFromFits(PropertySet::Ptr const fitsMetadata){
 
 
 ///Manually initialise a wcs struct using values passed by the constructor    
-void Wcs::initWcsLib(afwImg::PointD crval, afwImg::PointD crpix, Eigen::Matrix2d CD, 
+void Wcs::initWcsLib(afwImg::PointD const crval, afwImg::PointD const crpix, Eigen::Matrix2d const CD, 
                  const std::string ctype1, const std::string ctype2,
                  double equinox, std::string raDecSys,
                  const std::string cunits1, const std::string cunits2) {
@@ -180,6 +180,7 @@ void Wcs::initWcsLib(afwImg::PointD crval, afwImg::PointD crpix, Eigen::Matrix2d
     _wcsInfo->crpix[0] = crpix.getX();
     _wcsInfo->crpix[1] = crpix.getY();
 
+    //Set the CD matrix
     for (int i=0; i<2; ++i) {
         for (int j=0; j<2; ++j) {
             _wcsInfo->cd[(2*i) + j] = CD(i,j);
@@ -200,6 +201,10 @@ void Wcs::initWcsLib(afwImg::PointD crval, afwImg::PointD crpix, Eigen::Matrix2d
     strncpy(_wcsInfo->ctype[1], ctype2.c_str(), STRLEN);
     strncpy(_wcsInfo->radesys, raDecSys.c_str(), STRLEN);
     _wcsInfo->equinox = equinox;
+    
+    //Set the units
+    strncpy(_wcsInfo->cunit[0], cunits1.c_str(), STRLEN);
+    strncpy(_wcsInfo->cunit[1], cunits2.c_str(), STRLEN);
     
     _nWcsInfo = 1;   //Specify that we have only one coordinate representation
 
@@ -424,6 +429,7 @@ PointD Wcs::skyToPixel(double sky1, double sky2) const {
     //Estimate pixel coordinates
     int stat[1];
     int status = 0;
+    wcsprt(_wcsInfo);
     status = wcss2p(_wcsInfo, 1, 2, skyTmp, &phi, &theta, imgcrd, pixTmp, stat);
     if (status > 0) {
         throw LSST_EXCEPT(except::RuntimeErrorException,
@@ -457,7 +463,6 @@ PointD Wcs::pixelToSky(double pixel1, double pixel2) const {
     int status = 0;
     status = wcsp2s(_wcsInfo, 1, 2, pixTmp, imgcrd, &phi, &theta, skyTmp, stat);
     if (status > 0) {
-        wcsprt(_wcsInfo);
         throw LSST_EXCEPT(except::RuntimeErrorException,
                           (boost::format("Error: wcslib returned a status code of %d. %s") %
                            status % wcs_errmsg[status]).str());
