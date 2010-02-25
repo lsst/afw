@@ -446,7 +446,6 @@ PointD Wcs::skyToPixel(double sky1, double sky2) const {
     //Estimate pixel coordinates
     int stat[1];
     int status = 0;
-    wcsprt(_wcsInfo);
     status = wcss2p(_wcsInfo, 1, 2, skyTmp, &phi, &theta, imgcrd, pixTmp, stat);
     if (status > 0) {
         throw LSST_EXCEPT(except::RuntimeErrorException,
