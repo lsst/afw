@@ -143,7 +143,7 @@ TanWcs::TanWcs(afwImg::PointD crval, afwImg::PointD crpix, Eigen::Matrix2d CD,
         double equinox, string raDecSys,
         const string cunits1, const string cunits2
        ) :
-       Wcs(crval, crpix, CD, "RA--TAN", "DEC-TAN", equinox, raDecSys, cunits1, cunits2),
+       Wcs(crval, crpix, CD, "RA---TAN", "DEC--TAN", equinox, raDecSys, cunits1, cunits2),
        _hasDistortion(false),
        _sipA(1,1), _sipB(1,1), _sipAp(1,1), _sipBp(1,1) {
        
@@ -160,7 +160,7 @@ TanWcs::TanWcs(afwImg::PointD crval, afwImg::PointD crpix, Eigen::Matrix2d CD,
             double equinox, std::string raDecSys,
             const std::string cunits1, const std::string cunits2
            ) :
-           Wcs(crval, crpix, CD, "RA--TAN", "DEC-TAN", equinox, raDecSys, cunits1, cunits2),
+           Wcs(crval, crpix, CD, "RA---TAN", "DEC--TAN", equinox, raDecSys, cunits1, cunits2),
            _hasDistortion(true),
            //Sip's set by a dedicated method that does error checking
            _sipA(1,1), _sipB(1,1), _sipAp(1,1), _sipBp(1,1) {
@@ -352,7 +352,6 @@ PointD TanWcs::pixelToSky(double pixel1, double pixel2) const {
     int status = 0;
     status = wcsp2s(_wcsInfo, 1, 2, pixTmp, imgcrd, &phi, &theta, skyTmp, stat);
     if (status > 0) {
-        wcsprt(_wcsInfo);
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                           (boost::format("Error: wcslib returned a status code of  %d. %s") %
                            status % wcs_errmsg[status]).str());
