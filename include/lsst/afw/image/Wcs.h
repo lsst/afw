@@ -18,6 +18,41 @@ namespace afw {
     }
 namespace image {
     
+/// 
+/// @brief Implementation of the WCS standard for a any projection
+/// 
+/// Implements a single representation of the World Coordinate
+/// System of a two dimensional image  The standard is defined in two papers
+///  * Greisen & Calabretta, 2002 A&A 395:1061
+///  * Calabretta & Greisen, 2002, A&A 395, 1077
+///  
+/// In it's simplest sense, Wcs is used to convert from position in the sky (in right ascension 
+/// and declination) to pixel position on an image (and back again). It is, however, much more general 
+/// than that and can understand a myriad of different coordinate systems.
+/// 
+/// \code
+/// import lsst.afw.image as afwImg
+/// fitsHeader = afwImg.readMetadata(filename)
+/// 
+/// if 0:
+///     #This doesn't work. See below
+///     wcs = afwImg.Wcs(fitsHeader)
+///     
+/// wcs = afwImg.makeWcs(fitsHeader)
+/// 
+/// pixelPosition = wcs.skyToPixel(ra, dec)
+/// skyPosition = wcs.skyToPixel(xPosition, yPosition)
+/// \endcode
+/// 
+/// A wcs can be constructed from a reference position (crval, crpix) and a translation matrix. Alternatively,
+/// if you have the header from a fits file, you can create a Wcs object with the makeWcs() function. This
+/// function determines whether your Wcs is one the subset of projection systems that is dealt with specially
+/// by Lsst, and creates an object of the correct class.
+/// 
+/// 
+/// This class is implemented in by calls to the wcslib library
+/// by Mark Calabretta http://www.atnf.csiro.au/people/mcalabre/WCS/
+/// 
     class Wcs : public lsst::daf::base::Persistable,
                     public lsst::daf::data::LsstBase {
     public:
@@ -28,7 +63,7 @@ namespace image {
         Wcs();
         //Create a Wcs of the correct class using a fits header.
         friend Ptr lsst::afw::image::makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
-        Wcs(lsst::afw::image::PointD crval, lsst::afw::image::PointD crpix, Eigen::Matrix2d CD, 
+        Wcs(const lsst::afw::image::PointD crval, const lsst::afw::image::PointD crpix, const Eigen::Matrix2d &CD, 
                 const std::string ctype1="RA---TAN", const std::string ctype2="DEC--TAN",
                 double equinox=2000, std::string raDecSys="FK5",
                 const std::string cunits1="deg", const std::string cunits2="deg"
@@ -60,6 +95,9 @@ namespace image {
         virtual PointD skyToPixel(double sky1, double sky2) const;
         virtual PointD pixelToSky(double pixel1, double pixel2) const;
 
+        PointD skyRadiansToPixel(double sky1Radians, double sky2Radians) const;
+        PointD pixelToSkyRadians(double pixel1, double pixel2) const;
+
         //Mutators
         void shiftReferencePixel(double dx, double dy); 
 
@@ -68,7 +106,7 @@ namespace image {
         //Allow the formatter to access private goo
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::WcsFormatter);
         
-        void initWcsLib(lsst::afw::image::PointD crval, lsst::afw::image::PointD crpix, Eigen::Matrix2d CD, 
+        void initWcsLib(const lsst::afw::image::PointD crval, const lsst::afw::image::PointD crpix, const  Eigen::Matrix2d CD, 
                         const std::string ctype1, const std::string ctype2,
                         double equinox, std::string raDecSys,
                         const std::string cunits1, const std::string cunits2
@@ -78,7 +116,7 @@ namespace image {
 
     protected:
 
-        ///If you want to create a Wcs from a fits header, use makeWcs(). 
+        //If you want to create a Wcs from a fits header, use makeWcs(). 
         //This is protected because the derived classes need to be able to see it.
         Wcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
 

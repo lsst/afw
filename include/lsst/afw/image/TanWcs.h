@@ -18,21 +18,11 @@ namespace afw {
     }
 namespace image {
 
-    
 /// 
-/// @brief Special case implementation of the WCS standard for the simplest projection.
+/// @brief Implementation of the WCS standard for the special case of the Gnomic (tangent plane) projection.
 /// 
-/// Implements a special case of the FITS standard. A single representation of the World Coordinate
-/// System of a two dimensional image using a tangent plane projection onto a sphere mapped by 
-/// right ascension and declination. The standard is defined in two papers
-///  * Greisen & Calabretta, 2002 A&A 395:1061
-///  * Calabretta & Greisen, 2002, A&A 395, 1077
-///  
-/// This class is implemented in by calls to the wcslib library
-/// by Mark Calabretta http://www.atnf.csiro.au/people/mcalabre/WCS/
-/// 
-/// The class also extends the standard by providing for a description of image plane distortion.
-/// Image distortion is treated using the Simple Imaging Polynomial (SIP) convention.
+/// This class treats the special case of tangent plane projection. It extends the Wcs standard by 
+/// optionally accounting for distortion in the image plane using the Simple Imaging Polynomial (SIP) convention.
 /// This convention is described in Shupe et al. (2005) (Astronomical Data Analysis Software and Systems
 /// XIV, Asp Conf. Series Vol XXX, Ed: Shopbell et al.), and descibed in some more detail in
 /// http://web.ipac.caltech.edu/staff/fmasci/home/wise/codeVdist.html
@@ -44,7 +34,6 @@ namespace image {
 /// For the reverse, radec -> pixels, convert the radec to undistorted coords, and then use the _sipAp and
 /// _sipBp matrices to add in the distortion terms.
 /// 
-
     class TanWcs : public lsst::afw::image::Wcs {
     public:
         typedef boost::shared_ptr<lsst::afw::image::TanWcs> Ptr;    
@@ -54,16 +43,16 @@ namespace image {
         TanWcs();
         friend lsst::afw::image::Wcs::Ptr lsst::afw::image::makeWcs(lsst::daf::base::PropertySet::Ptr \
             fitsMetadata);
-        TanWcs(lsst::afw::image::PointD crval, lsst::afw::image::PointD crpix, Eigen::Matrix2d CD, 
+        TanWcs(const lsst::afw::image::PointD crval, const lsst::afw::image::PointD crpix, const Eigen::Matrix2d &CD, 
                 double equinox=2000, std::string raDecSys="FK5",
                 const std::string cunits1="deg", const std::string cunits2="deg"
                );
 
-        TanWcs(lsst::afw::image::PointD crval, lsst::afw::image::PointD crpix, Eigen::Matrix2d CD, 
-                Eigen::MatrixXd const & sipA, ///< Forward distortion Matrix A
-                Eigen::MatrixXd const & sipB, ///< Forward distortion Matrix B
-                Eigen::MatrixXd const & sipAp, ///<Reverse distortion Matrix Ap
-                Eigen::MatrixXd const & sipBp,  ///<Reverse distortion Matrix Bp
+        TanWcs(const lsst::afw::image::PointD crval, const lsst::afw::image::PointD crpix, const Eigen::Matrix2d &CD, 
+                Eigen::MatrixXd const & sipA, 
+                Eigen::MatrixXd const & sipB, 
+                Eigen::MatrixXd const & sipAp,
+                Eigen::MatrixXd const & sipBp,  
                 double equinox=2000, std::string raDecSys="FK5",
                 const std::string cunits1="deg", const std::string cunits2="deg"
               );
@@ -96,7 +85,7 @@ namespace image {
                                  );
 
     private:
-        ///If you want to create a TanWcs object from a fits header, use makeWcs()
+        //If you want to create a TanWcs object from a fits header, use makeWcs()
         TanWcs(lsst::daf::base::PropertySet::Ptr const fitsMetadata);
         
         //Allow the formatter to access private goo

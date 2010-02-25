@@ -49,8 +49,9 @@ lsst::afw::image::Wcs::Wcs() :
 }
 
 
-///Create a Wcs from a fits header
-Wcs::Wcs(PropertySet::Ptr fitsMetadata):
+///Create a Wcs from a fits header. Don't call this directly. Use makeWcs() instead, which will figure
+///out which (if any) sub-class of Wcs is appropriate
+Wcs::Wcs(PropertySet::Ptr const fitsMetadata):
                 LsstBase(typeid(this)),
                 _wcsInfo(NULL), 
                 _nWcsInfo(0), 
@@ -64,12 +65,21 @@ Wcs::Wcs(PropertySet::Ptr fitsMetadata):
     _wcsfixCtrl = 2;
     _wcshdrCtrl = 2;
 
-    
     initWcsLibFromFits(fitsMetadata);
 }
 
 
-Wcs::Wcs(afwImg::PointD crval, afwImg::PointD crpix, Eigen::Matrix2d CD, 
+///Create a Wcs object with some known information.
+///\param crval The sky position of the reference point
+///\param crpix The pixel position corresponding to crval
+///\param CD    Matrix describing transformations from pixel to sky positions
+///\param ctype1 Projection system used (see description of Wcs)
+///\param ctype2 Projection system used (see description of Wcs)
+///\param equinox Equinox of coordinate system, eg 2000 (Julian) or 1950 (Besselian)
+///\param raDecSys System used to describe right ascension or declination, e.g FK4, FK5 or ICRS
+///\param cunits1 Units of sky position. One of deg, arcmin or arcsec
+///\param cunits2 Units of sky position. One of deg, arcmin or arcsec
+Wcs::Wcs(const afwImg::PointD crval, const afwImg::PointD crpix, const Eigen::Matrix2d &CD, 
                  const std::string ctype1, const std::string ctype2,
                  double equinox, std::string raDecSys,
                  const std::string cunits1, const std::string cunits2
@@ -89,6 +99,7 @@ Wcs::Wcs(afwImg::PointD crval, afwImg::PointD crpix, Eigen::Matrix2d CD,
 }
                
     
+///Parse a fits header, extract the relevant metadata and create a Wcs object
 void Wcs::initWcsLibFromFits(PropertySet::Ptr const fitsMetadata){
 
     //Check header isn't empty
@@ -98,10 +109,6 @@ void Wcs::initWcsLibFromFits(PropertySet::Ptr const fitsMetadata){
         string msg = "Could not parse FITS WCS: no header cards found";
         throw LSST_EXCEPT(except::InvalidParameterException, msg);
     }
-
-    //@TODO check for equinox and raDecSys. Are these always necessary?
-
-    //@TODO, what do I do with  _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0),_nReject(0), 
 
     //Pass the header into wcslib's formatter to extract setup the Wcs. First need
     //to convert to a C style string, so the compile doesn't complain about constness
@@ -125,6 +132,15 @@ void Wcs::initWcsLibFromFits(PropertySet::Ptr const fitsMetadata){
 
 
 ///Manually initialise a wcs struct using values passed by the constructor    
+///\param crval The sky position of the reference point
+///\param crpix The pixel position corresponding to crval
+///\param CD    Matrix describing transformations from pixel to sky positions
+///\param ctype1 Projection system used (see description of Wcs)
+///\param ctype2 Projection system used (see description of Wcs)
+///\param equinox Equinox of coordinate system, eg 2000 (Julian) or 1950 (Besselian)
+///\param raDecSys System used to describe right ascension or declination, e.g FK4, FK5 or ICRS
+///\param cunits1 Units of sky position. One of deg, arcmin or arcsec
+///\param cunits2 Units of sky position. One of deg, arcmin or arcsec
 void Wcs::initWcsLib(afwImg::PointD const crval, afwImg::PointD const crpix, Eigen::Matrix2d const CD, 
                  const std::string ctype1, const std::string ctype2,
                  double equinox, std::string raDecSys,
@@ -307,7 +323,7 @@ PointD Wcs::getSkyOrigin() const {
     }
 }
 
-//Return crpix. Note that this need not be the centre of the image
+///Return crpix. Note that this need not be the centre of the image
 PointD Wcs::getPixelOrigin() const {
 
     if(_wcsInfo != NULL) {
@@ -318,7 +334,7 @@ PointD Wcs::getPixelOrigin() const {
 }
 
 
-//Return the CD matrix
+///Return the CD matrix
 Eigen::Matrix2d Wcs::getCDMatrix() const {
     if(_wcsInfo == NULL) {
         throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
@@ -379,6 +395,7 @@ bool Wcs::isFlipped()  const{
 }
 
 
+///Sky area covered by a pixel at position \param pix00. In units of cunits.
 double Wcs::pixArea(PointD pix00) const {
     //
     // Figure out the (0, 0), (0, 1), and (1, 0) ra/dec coordinates of the corners of a square drawn in pixel
@@ -399,14 +416,14 @@ double Wcs::pixArea(PointD pix00) const {
 
 
 ///Convert a sky position (e.g ra/dec) to a pixel position. The exact meaning of sky1, sky2 
-///and the return value depend on the properties of the wcs (i.e the values of CTYPE1 and
+///depend on the properties of the wcs (i.e the values of CTYPE1 and
 ///CTYPE2), but the inputs are usually ra/dec, and the outputs are x and y pixel position.
 PointD Wcs::skyToPixel(const PointD sky) const {
     return skyToPixel(sky.getX(), sky.getY());
 }
 
 ///Convert a pixel position (e.g x,y) to a celestial coordinate (e.g ra/dec). The output coordinate
-//system depends on the values of CTYPE used to construct the object. For ra/dec, the CTYPES should
+///system depends on the values of CTYPE used to construct the object. For ra/dec, the CTYPES should
 ///be RA--TAN and DEC-TAN. 
 PointD Wcs::pixelToSky(const PointD pixel) const {
     return pixelToSky(pixel.getX(), pixel.getY());
@@ -444,7 +461,7 @@ PointD Wcs::skyToPixel(double sky1, double sky2) const {
 
 
 ///Convert a pixel position (e.g x,y) to a celestial coordinate (e.g ra/dec). The output coordinate
-//system depends on the values of CTYPE used to construct the object. For ra/dec, the CTYPES should
+///system depends on the values of CTYPE used to construct the object. For ra/dec, the CTYPES should
 ///be RA--TAN and DEC-TAN. 
 PointD Wcs::pixelToSky(double pixel1, double pixel2) const {
     if(_wcsInfo == NULL) {
@@ -471,6 +488,26 @@ PointD Wcs::pixelToSky(double pixel1, double pixel2) const {
     return lsst::afw::image::PointD(skyTmp);
 }
 
+///Stop-gap functions. Convert sky positions in radians to pixels.
+///Once the Coord class is implemented this should go away
+PointD Wcs::skyRadiansToPixel(double sky1Radians, double sky2Radians) const {
+    double sky1Deg = sky1Radians*180./M_PI;
+    double sky2Deg = sky2Radians*180./M_PI;
+    
+    return skyToPixel(sky1Deg, sky2Deg);
+}
+
+///Stop-gap functions. Convert pixel positions to sky positions in radians (not degrees as normal)
+///Once the Coord class is implemented this should go away
+PointD Wcs::pixelToSkyRadians(double pixel1, double pixel2) const {
+    //In degrees
+    PointD sky = pixelToSky(pixel1, pixel2);
+    
+    //convert to radians
+    sky[0] *= M_PI/180.0;
+    sky[1] *= M_PI/180.0;
+    return sky;
+}
 
 
 //

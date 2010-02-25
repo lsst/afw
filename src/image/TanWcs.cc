@@ -38,7 +38,8 @@ TanWcs::TanWcs() :
     _sipA(1,1), _sipB(1,1), _sipAp(1,1), _sipBp(1,1) {
 }
 
-    
+///Create a Wcs from a fits header. Don't call this directly. Use makeWcs() instead, which will figure
+///out which (if any) sub-class of Wcs is appropriate
 TanWcs::TanWcs(PropertySet::Ptr const fitsMetadata) : 
     Wcs(fitsMetadata),
     _hasDistortion(false),
@@ -78,7 +79,6 @@ TanWcs::TanWcs(PropertySet::Ptr const fitsMetadata) :
         string msg = "One or more axis isn't in TAN projection";
         throw LSST_EXCEPT(except::InvalidParameterException, msg);
     }
-
 
     //Check for distorton terms. With two ctypes, there are 4 alternatives, only
     //two of which are valid.. Both have distortion terms or both don't. 
@@ -139,7 +139,18 @@ static void decodeSipHeader(lsst::daf::base::PropertySet::Ptr fitsMetadata,
 
 
 ///\brief Construct a tangent plane wcs without distortion terms    
-TanWcs::TanWcs(afwImg::PointD crval, afwImg::PointD crpix, Eigen::Matrix2d CD, 
+///\param crval The sky position of the reference point
+///\param crpix The pixel position corresponding to crval
+///\param CD    Matrix describing transformations from pixel to sky positions
+///\param sipA Forward distortion matrix for axis 1
+///\param sipB Forward distortion matrix for axis 2
+///\param sipAp Reverse distortion matrix for axis 1
+///\param sipBp Reverse distortion matrix for axis 2
+///\param equinox Equinox of coordinate system, eg 2000 (Julian) or 1950 (Besselian)
+///\param raDecSys System used to describe right ascension or declination, e.g FK4, FK5 or ICRS
+///\param cunits1 Units of sky position. One of deg, arcmin or arcsec
+///\param cunits2 Units of sky position. One of deg, arcmin or arcsec
+TanWcs::TanWcs(const afwImg::PointD crval, const afwImg::PointD crpix, const Eigen::Matrix2d &CD, 
         double equinox, string raDecSys,
         const string cunits1, const string cunits2
        ) :
@@ -152,7 +163,18 @@ TanWcs::TanWcs(afwImg::PointD crval, afwImg::PointD crpix, Eigen::Matrix2d CD,
 
 
 ///\brief Construct a tangent plane wcs with distortion terms    
-TanWcs::TanWcs(afwImg::PointD crval, afwImg::PointD crpix, Eigen::Matrix2d CD, 
+///\param crval The sky position of the reference point
+///\param crpix The pixel position corresponding to crval
+///\param CD    Matrix describing transformations from pixel to sky positions
+///\param sipA Forward distortion matrix for axis 1
+///\param sipB Forward distortion matrix for axis 2
+///\param sipAp Reverse distortion matrix for axis 1
+///\param sipBp Reverse distortion matrix for axis 2
+///\param equinox Equinox of coordinate system, eg 2000 (Julian) or 1950 (Besselian)
+///\param raDecSys System used to describe right ascension or declination, e.g FK4, FK5 or ICRS
+///\param cunits1 Units of sky position. One of deg, arcmin or arcsec
+///\param cunits2 Units of sky position. One of deg, arcmin or arcsec
+TanWcs::TanWcs(const afwImg::PointD crval, const afwImg::PointD crpix, const Eigen::Matrix2d &CD, 
             Eigen::MatrixXd const & sipA, ///< Forward distortion Matrix A
             Eigen::MatrixXd const & sipB, ///< Forward distortion Matrix B
             Eigen::MatrixXd const & sipAp, ///<Reverse distortion Matrix Ap
@@ -382,7 +404,7 @@ lsst::afw::geom::AffineTransform TanWcs::getAffineTransform() const
  * This was taken from the old Wcs class, and should do the job, but the old comments say this should
  * handle the TAN-SIP case analytically
  *
- * @param(in) sky Position in sky coordinates where transform is desired
+ * \param sky Position in sky coordinates where transform is desired
  */                           
 lsst::afw::geom::AffineTransform TanWcs::linearizeAt(
     lsst::afw::geom::PointD const & sky
