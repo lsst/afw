@@ -57,7 +57,7 @@ Wcs::Wcs(PropertySet::Ptr const fitsMetadata):
                 _nWcsInfo(0), 
                 _relax(0), 
                 _wcsfixCtrl(0), 
-                _wcshdrCtrl(0),
+                _wcshdrCtrl(2),
                 _nReject(0) {
 
     //Internal params for wcslib. These should be set via policy - but for the moment...
@@ -87,9 +87,9 @@ Wcs::Wcs(const afwImg::PointD crval, const afwImg::PointD crpix, const Eigen::Ma
                  LsstBase(typeid(this)),
                  _wcsInfo(NULL), 
                  _nWcsInfo(0), 
-                 _relax(0), 
-                 _wcsfixCtrl(0), 
-                 _wcshdrCtrl(0),
+                 _relax(1), 
+                 _wcsfixCtrl(2), 
+                 _wcshdrCtrl(2),
                  _nReject(0) {
     
     initWcsLib(crval, crpix, CD, 
@@ -117,11 +117,28 @@ void Wcs::initWcsLibFromFits(PropertySet::Ptr const fitsMetadata){
         throw LSST_EXCEPT(except::InvalidParameterException, msg);
     }
     
-    //Check we're dealing with a 2d image
-    if( !fitsMetadata->exists("NAXIS") && fitsMetadata->getAsInt("NAXIS") != 2) {
-        string msg = "NAXIS keyword not found or not equal to 2";
+    //Check for CRPIX
+    if( !fitsMetadata->exists("CRPIX1") && !fitsMetadata->exists("CRPIX1a")) {
+        string msg = "Neither CRPIX1 not CRPIX1a found";
         throw LSST_EXCEPT(except::InvalidParameterException, msg);
     }
+
+    if( !fitsMetadata->exists("CRPIX2") && !fitsMetadata->exists("CRPIX2a")) {
+        string msg = "Neither CRPIX2 not CRPIX2a found";
+        throw LSST_EXCEPT(except::InvalidParameterException, msg);
+    }
+
+    //And the same for CRVAL
+    if( !fitsMetadata->exists("CRVAL1") && !fitsMetadata->exists("CRVAL1a")) {
+        string msg = "Neither CRVAL1 not CRVAL1a found";
+        throw LSST_EXCEPT(except::InvalidParameterException, msg);
+    }
+
+    if( !fitsMetadata->exists("CRVAL2") && !fitsMetadata->exists("CRVAL2a")) {
+        string msg = "Neither CRVAL2 not CRVAL2a found";
+        throw LSST_EXCEPT(except::InvalidParameterException, msg);
+    }
+
 
     //Pass the header into wcslib's formatter to extract setup the Wcs. First need
     //to convert to a C style string, so the compile doesn't complain about constness
@@ -129,17 +146,29 @@ void Wcs::initWcsLibFromFits(PropertySet::Ptr const fitsMetadata){
     char *hdrString = (char *) malloc((len + 1)*sizeof(char));
     strncpy(hdrString, metadataStr.c_str(), len + 1);
     int pihStatus = wcspih(hdrString, nCards, _relax, _wcshdrCtrl, &_nReject, &_nWcsInfo, &_wcsInfo);
-    free(hdrString);
 
-    
-    //@TODO This will almost certainly fail sometimes, but I don't know how to deal with it yet
-    assert(_nWcsInfo == 1);
-    
     if (pihStatus != 0) {
         throw LSST_EXCEPT(except::RuntimeErrorException,
                           (boost::format("Could not parse FITS WCS: wcspih status = %d (%s)") %
                            pihStatus % wcs_errmsg[pihStatus]).str());
     }    
+
+    //Run wcsfix on _wcsInfo to try and fix any problems it knows about.
+    const int *naxes = NULL;            // should be {NAXIS1, NAXIS2, ...} to check cylindrical projections
+    int stats[NWCSFIX];                 // status returns from wcsfix
+    int fixStatus = wcsfix(_wcsfixCtrl, naxes, _wcsInfo, stats);
+    if (fixStatus != 0) {
+        std::stringstream errStream;
+        errStream << "Could not parse FITS WCS: wcsfix failed " << std::endl;
+        for (int ii = 0; ii < NWCSFIX; ++ii) {
+            if (stats[ii] >= 0) {
+                errStream << "\t" << ii << ": " << stats[ii] << " " << wcsfix_errmsg[stats[ii]] << std::endl;
+            } else {
+                errStream << "\t" << ii << ": " << stats[ii] << std::endl;
+            }
+        }
+    }
+
 }
 
 
@@ -519,6 +548,57 @@ PointD Wcs::pixelToSkyRadians(double pixel1, double pixel2) const {
     sky[0] *= M_PI/180.0;
     sky[1] *= M_PI/180.0;
     return sky;
+}
+
+
+
+/**
+ * Return the linear part of the Wcs, the CD matrix in FITS speak, as an AffineTransform
+ *
+ * \sa 
+ */
+lsst::afw::geom::AffineTransform lsst::afw::image::Wcs::getAffineTransform() const
+{
+    return lsst::afw::geom::AffineTransform(getCDMatrix());
+}
+
+
+/**
+ * Return the local linear approximation to Wcs::xyToRaDec at the point (ra, y) = sky
+ *
+ * This is currently implemented as a numerical derivative, but we should specialise the Wcs class (or rather
+ * its implementation) to handle "simple" cases such as TAN-SIP analytically
+ *
+ * @param(in) sky Position in sky coordinates where transform is desired
+ */
+lsst::afw::geom::AffineTransform lsst::afw::image::Wcs::linearizeAt(
+    lsst::afw::image::PointD const & sky
+) const
+{
+    //
+    // Figure out the (0, 0), (0, 1), and (1, 0) ra/dec coordinates of the corners of a square drawn in pixel
+    // It'd be better to centre the square at sky00, but that would involve another conversion between sky and
+    // pixel coordinates so I didn't bother
+    //
+    const double side = 10;             // length of the square's sides in pixels
+    //lsst::afw::image::PointD const sky00(geom::convertToImage(sky));
+    lsst::afw::image::PointD const sky00 = sky;
+    lsst::afw::image::PointD const pix00 = skyToPixel(sky00);
+
+    lsst::afw::image::PointD const dsky10 = pixelToSky(pix00 + lsst::afw::image::PointD(side, 0)) - sky00;
+    lsst::afw::image::PointD const dsky01 = pixelToSky(pix00 + lsst::afw::image::PointD(0, side)) - sky00;
+
+    Eigen::Matrix2d m;
+    m(0, 0) = dsky10.getX()/side;
+    m(0, 1) = dsky01.getX()/side;
+    m(1, 0) = dsky10.getY()/side;
+    m(1, 1) = dsky01.getY()/side;
+
+    Eigen::Vector2d sky00v;
+    sky00v << sky00.getX(), sky00.getY();
+    Eigen::Vector2d pix00v;
+    pix00v << pix00.getX(), pix00.getY();
+    return lsst::afw::geom::AffineTransform(m, lsst::afw::geom::ExtentD(sky00v - m * pix00v));
 }
 
 

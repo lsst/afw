@@ -213,12 +213,12 @@ class WCSTestCaseCFHT(unittest.TestCase):
 
     def testAffineTransform(self):
         a = self.wcs.getAffineTransform()
-        l = self.wcs.getLinearTransformMatrix()
+        l = self.wcs.getCDMatrix()
         #print a[a.X], a[a.Y], print a[a.XX], a[a.XY], a[a.YX], a[a.YY]
 
         sky00g = afwGeom.makePointD(10, 10)
         sky00i = afwImage.PointD(sky00g.getX(), sky00g.getY())
-        a = self.wcs.linearizeAt(sky00g)
+        a = self.wcs.linearizeAt(sky00i)
         pix00i = self.wcs.skyToPixel(sky00i)
         pix00g = afwGeom.makePointD(pix00i.getX(), pix00i.getY())
         sky00gApprox = a(pix00g);
