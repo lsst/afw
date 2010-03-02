@@ -19,12 +19,13 @@
 
 namespace except = lsst::pex::exceptions; 
 namespace afwImg = lsst::afw::image;
+namespace geom = lsst::afw::geom;
 using namespace std;
 
 
 typedef lsst::daf::base::PropertySet PropertySet;
 typedef lsst::afw::image::TanWcs TanWcs;
-typedef lsst::afw::image::PointD PointD;
+typedef lsst::afw::geom::PointD GeomPoint;
 
 
 static void decodeSipHeader(lsst::daf::base::PropertySet::Ptr fitsMetadata,
@@ -135,7 +136,7 @@ static void decodeSipHeader(lsst::daf::base::PropertySet::Ptr fitsMetadata,
 ///\param raDecSys System used to describe right ascension or declination, e.g FK4, FK5 or ICRS
 ///\param cunits1 Units of sky position. One of deg, arcmin or arcsec
 ///\param cunits2 Units of sky position. One of deg, arcmin or arcsec
-TanWcs::TanWcs(const afwImg::PointD crval, const afwImg::PointD crpix, const Eigen::Matrix2d &CD, 
+TanWcs::TanWcs(const GeomPoint crval, const GeomPoint crpix, const Eigen::Matrix2d &CD, 
         double equinox, string raDecSys,
         const string cunits1, const string cunits2
        ) :
@@ -159,7 +160,7 @@ TanWcs::TanWcs(const afwImg::PointD crval, const afwImg::PointD crpix, const Eig
 ///\param raDecSys System used to describe right ascension or declination, e.g FK4, FK5 or ICRS
 ///\param cunits1 Units of sky position. One of deg, arcmin or arcsec
 ///\param cunits2 Units of sky position. One of deg, arcmin or arcsec
-TanWcs::TanWcs(const afwImg::PointD crval, const afwImg::PointD crpix, const Eigen::Matrix2d &CD, 
+TanWcs::TanWcs(const GeomPoint crval, const GeomPoint crpix, const Eigen::Matrix2d &CD, 
             Eigen::MatrixXd const & sipA, 
             Eigen::MatrixXd const & sipB, 
             Eigen::MatrixXd const & sipAp, 
@@ -240,17 +241,17 @@ TanWcs::TanWcs & TanWcs::operator = (const TanWcs & rhs){
 //
 // Accessors
 //
-PointD TanWcs::skyToPixel(const lsst::afw::image::PointD sky) const {
+GeomPoint TanWcs::skyToPixel(const GeomPoint sky) const {
     return skyToPixel(sky[0], sky[1]);
 }
 
 
-PointD TanWcs::pixelToSky(const lsst::afw::image::PointD pixel) const {
+GeomPoint TanWcs::pixelToSky(const GeomPoint pixel) const {
     return pixelToSky(pixel[0], pixel[1]);
 }
 
 
-PointD TanWcs::skyToPixel(double sky1, double sky2) const {
+GeomPoint TanWcs::skyToPixel(double sky1, double sky2) const {
     if(_wcsInfo == NULL) {
         throw(LSST_EXCEPT(except::RuntimeErrorException, "Wcs structure not initialised"));
     }
@@ -305,13 +306,13 @@ PointD TanWcs::skyToPixel(double sky1, double sky2) const {
     }
 
     // wcslib assumes 1-indexed coords
-    return lsst::afw::image::PointD(pixTmp[0] + lsst::afw::image::PixelZeroPos - 1,
+    return geom::makePointD(pixTmp[0] + lsst::afw::image::PixelZeroPos - 1,
                                     pixTmp[1] + lsst::afw::image::PixelZeroPos - 1); 
 
 }
 
 
-PointD TanWcs::pixelToSky(double pixel1, double pixel2) const {
+GeomPoint TanWcs::pixelToSky(double pixel1, double pixel2) const {
     if(_wcsInfo == NULL) {
         throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
     }
@@ -364,7 +365,7 @@ PointD TanWcs::pixelToSky(double pixel1, double pixel2) const {
                            status % wcs_errmsg[status]).str());
     }
 
-    return lsst::afw::image::PointD(skyTmp);
+    return geom::makePointD(skyTmp[0], skyTmp[1]);
 }
 
 
@@ -372,8 +373,9 @@ lsst::daf::base::PropertySet::Ptr TanWcs::getFitsMetadata() const {
     return lsst::afw::formatters::TanWcsFormatter::generatePropertySet(*this);       
 }
 
+
 /**
- * Return the linear part of the Wcs, the CD matrix in FITS speak
+ * Return the linear part of the Wcs, the CD matrix in FITS speak, as an AffineTransform
  *
  * \sa 
  */
@@ -386,14 +388,12 @@ lsst::afw::geom::AffineTransform TanWcs::getAffineTransform() const
 /**
  * Return the local linear approximation to Wcs::xyToRaDec at the point (ra, y) = sky
  *
- * This was taken from the old Wcs class, and should do the job, but the old comments say this should
- * handle the TAN-SIP case analytically
+ * This is currently implemented as a numerical derivative, but we should specialise the Wcs class (or rather
+ * its implementation) to handle "simple" cases such as TAN-SIP analytically
  *
- * \param sky Position in sky coordinates where transform is desired
- */                           
-lsst::afw::geom::AffineTransform TanWcs::linearizeAt(
-    lsst::afw::geom::PointD const & sky
-) const
+ * @param(in) sky Position in sky coordinates where transform is desired
+ */
+lsst::afw::geom::AffineTransform TanWcs::linearizeAt(GeomPoint const & sky) const
 {
     //
     // Figure out the (0, 0), (0, 1), and (1, 0) ra/dec coordinates of the corners of a square drawn in pixel
@@ -401,11 +401,19 @@ lsst::afw::geom::AffineTransform TanWcs::linearizeAt(
     // pixel coordinates so I didn't bother
     //
     const double side = 10;             // length of the square's sides in pixels
-    lsst::afw::image::PointD const sky00(sky[0], sky[1]);
-    lsst::afw::image::PointD const pix00 = skyToPixel(sky00);
+    GeomPoint const sky00 = sky;
+    GeomPoint const pix00 = skyToPixel(sky00);
 
-    lsst::afw::image::PointD const dsky10 = pixelToSky(pix00 + lsst::afw::image::PointD(side, 0)) - sky00;
-    lsst::afw::image::PointD const dsky01 = pixelToSky(pix00 + lsst::afw::image::PointD(0, side)) - sky00;
+    //can't perform arithmathic on GeomPoint directly
+    GeomPoint pix10 = geom::makePointD(pix00[0] + side, pix00[1]);
+    GeomPoint dsky10 = pixelToSky(pix10) ;
+    dsky10[0] -= sky00[0];
+    dsky10[1] -= sky00[1];
+    
+    GeomPoint pix01 = geom::makePointD(pix00[0], pix00[1]+ side);
+    GeomPoint dsky01 = pixelToSky(pix01) ;
+    dsky01[0] -= sky00[0];
+    dsky01[1] -= sky00[1];
 
     Eigen::Matrix2d m;
     m(0, 0) = dsky10.getX()/side;
@@ -463,3 +471,5 @@ void TanWcs::setDistortionMatrices(Eigen::MatrixXd const & sipA,
     _sipAp = sipAp;
     _sipBp = sipBp;
 }
+
+

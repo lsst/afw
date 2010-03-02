@@ -66,7 +66,7 @@ namespace image {
         Wcs();
         //Create a Wcs of the correct class using a fits header.
         friend Ptr lsst::afw::image::makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
-        Wcs(const lsst::afw::image::PointD crval, const lsst::afw::image::PointD crpix, const Eigen::Matrix2d &CD, 
+        Wcs(const lsst::afw::geom::PointD crval, const lsst::afw::geom::PointD crpix, const Eigen::Matrix2d &CD, 
                 const std::string ctype1="RA---TAN", const std::string ctype2="DEC--TAN",
                 double equinox=2000, std::string raDecSys="FK5",
                 const std::string cunits1="deg", const std::string cunits2="deg"
@@ -77,8 +77,8 @@ namespace image {
         virtual ~Wcs();
 
         //Accessors
-        PointD getSkyOrigin() const;      //Return crval
-        PointD getPixelOrigin() const;    //Return crpix
+        lsst::afw::geom::PointD getSkyOrigin() const;      //Return crval
+        lsst::afw::geom::PointD getPixelOrigin() const;    //Return crpix
         Eigen::Matrix2d getCDMatrix() const;       //Return CD matrix
         
         virtual lsst::daf::base::PropertySet::Ptr getFitsMetadata() const;
@@ -87,22 +87,22 @@ namespace image {
         operator bool() const { return _nWcsInfo != 0; }
 
         bool isFlipped() const; //Does the Wcs follow the convention of North=Up, East=Left or not
-        double pixArea(PointD pix00) const;
+        double pixArea(lsst::afw::geom::PointD pix00) const;
 
         //Convert from raDec to pixel space. Formerly called raDecToXY() and
         //xyToRaDec(), but the name now reflects their increased generality. They may be
         //used, e.g. to convert xy to Galactic coordinates
-        virtual PointD skyToPixel(const PointD sky) const;
-        virtual PointD pixelToSky(const PointD pixel) const;
+        virtual lsst::afw::geom::PointD skyToPixel(const lsst::afw::geom::PointD sky) const;
+        virtual lsst::afw::geom::PointD pixelToSky(const lsst::afw::geom::PointD pixel) const;
 
-        virtual PointD skyToPixel(double sky1, double sky2) const;
-        virtual PointD pixelToSky(double pixel1, double pixel2) const;
+        virtual lsst::afw::geom::PointD skyToPixel(double sky1, double sky2) const;
+        virtual lsst::afw::geom::PointD pixelToSky(double pixel1, double pixel2) const;
 
-        PointD skyRadiansToPixel(double sky1Radians, double sky2Radians) const;
-        PointD pixelToSkyRadians(double pixel1, double pixel2) const;
+        lsst::afw::geom::PointD skyRadiansToPixel(double sky1Radians, double sky2Radians) const;
+        lsst::afw::geom::PointD pixelToSkyRadians(double pixel1, double pixel2) const;
 
         lsst::afw::geom::AffineTransform getAffineTransform() const;
-        lsst::afw::geom::AffineTransform linearizeAt(lsst::afw::image::PointD const & sky) const;
+        lsst::afw::geom::AffineTransform linearizeAt(lsst::afw::geom::PointD const & sky) const;
 
         //Mutators
         void shiftReferencePixel(double dx, double dy); 
@@ -112,7 +112,7 @@ namespace image {
         //Allow the formatter to access private goo
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::WcsFormatter);
         
-        void initWcsLib(const lsst::afw::image::PointD crval, const lsst::afw::image::PointD crpix, const  Eigen::Matrix2d CD, 
+        void initWcsLib(const lsst::afw::geom::PointD crval, const lsst::afw::geom::PointD crpix, const  Eigen::Matrix2d CD, 
                         const std::string ctype1, const std::string ctype2,
                         double equinox, std::string raDecSys,
                         const std::string cunits1, const std::string cunits2

@@ -43,18 +43,20 @@ namespace image {
         TanWcs();
         friend lsst::afw::image::Wcs::Ptr lsst::afw::image::makeWcs(lsst::daf::base::PropertySet::Ptr \
             fitsMetadata);
-        TanWcs(const lsst::afw::image::PointD crval, const lsst::afw::image::PointD crpix, const Eigen::Matrix2d &CD, 
-                double equinox=2000, std::string raDecSys="FK5",
-                const std::string cunits1="deg", const std::string cunits2="deg"
+        TanWcs(const lsst::afw::geom::PointD crval, const lsst::afw::geom::PointD crpix, 
+               const Eigen::Matrix2d &CD, 
+               double equinox=2000, std::string raDecSys="FK5",
+               const std::string cunits1="deg", const std::string cunits2="deg"
                );
 
-        TanWcs(const lsst::afw::image::PointD crval, const lsst::afw::image::PointD crpix, const Eigen::Matrix2d &CD, 
-                Eigen::MatrixXd const & sipA, 
-                Eigen::MatrixXd const & sipB, 
-                Eigen::MatrixXd const & sipAp,
-                Eigen::MatrixXd const & sipBp,  
-                double equinox=2000, std::string raDecSys="FK5",
-                const std::string cunits1="deg", const std::string cunits2="deg"
+        TanWcs(const lsst::afw::geom::PointD crval, const lsst::afw::geom::PointD crpix, 
+               const Eigen::Matrix2d &CD, 
+               Eigen::MatrixXd const & sipA, 
+               Eigen::MatrixXd const & sipB, 
+               Eigen::MatrixXd const & sipAp,
+               Eigen::MatrixXd const & sipBp,  
+               double equinox=2000, std::string raDecSys="FK5",
+               const std::string cunits1="deg", const std::string cunits2="deg"
               );
 
         TanWcs(lsst::afw::image::TanWcs const & rhs);
@@ -62,11 +64,11 @@ namespace image {
         inline ~TanWcs() {};
         
         //Accessors
-        PointD skyToPixel(const lsst::afw::image::PointD sky) const;
-        PointD pixelToSky(const lsst::afw::image::PointD pixel) const;
+        lsst::afw::geom::PointD skyToPixel(const lsst::afw::geom::PointD sky) const;
+        lsst::afw::geom::PointD pixelToSky(const lsst::afw::geom::PointD pixel) const;
 
-        PointD skyToPixel(double sky1, double sky2) const;
-        PointD pixelToSky(double pixel1, double pixel2) const;
+        lsst::afw::geom::PointD skyToPixel(double sky1, double sky2) const;
+        lsst::afw::geom::PointD pixelToSky(double pixel1, double pixel2) const;
         
         lsst::daf::base::PropertySet::Ptr getFitsMetadata() const;        
         

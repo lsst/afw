@@ -24,13 +24,14 @@
 
 namespace except = lsst::pex::exceptions; 
 namespace afwImg = lsst::afw::image;
-//namespace Wcs = lsst::afw::image::Wcs;
+namespace geom = lsst::afw::geom;
+
 
 using namespace std;
 
 typedef lsst::daf::base::PropertySet PropertySet;
 typedef lsst::afw::image::Wcs Wcs;
-typedef lsst::afw::image::PointD PointD;
+typedef lsst::afw::geom::PointD GeomPoint;
 
 
 //The amount of space allocated to strings in wcslib
@@ -79,7 +80,7 @@ Wcs::Wcs(PropertySet::Ptr const fitsMetadata):
 ///\param raDecSys System used to describe right ascension or declination, e.g FK4, FK5 or ICRS
 ///\param cunits1 Units of sky position. One of deg, arcmin or arcsec
 ///\param cunits2 Units of sky position. One of deg, arcmin or arcsec
-Wcs::Wcs(const afwImg::PointD crval, const afwImg::PointD crpix, const Eigen::Matrix2d &CD, 
+Wcs::Wcs(const GeomPoint crval, const GeomPoint crpix, const Eigen::Matrix2d &CD, 
                  const std::string ctype1, const std::string ctype2,
                  double equinox, std::string raDecSys,
                  const std::string cunits1, const std::string cunits2
@@ -183,7 +184,7 @@ void Wcs::initWcsLibFromFits(PropertySet::Ptr const fitsMetadata){
 ///\param raDecSys System used to describe right ascension or declination, e.g FK4, FK5 or ICRS
 ///\param cunits1 Units of sky position. One of deg, arcmin or arcsec
 ///\param cunits2 Units of sky position. One of deg, arcmin or arcsec
-void Wcs::initWcsLib(afwImg::PointD const crval, afwImg::PointD const crpix, Eigen::Matrix2d const CD, 
+void Wcs::initWcsLib(GeomPoint const crval, GeomPoint const crpix, Eigen::Matrix2d const CD, 
                  const std::string ctype1, const std::string ctype2,
                  double equinox, std::string raDecSys,
                  const std::string cunits1, const std::string cunits2) {
@@ -356,20 +357,20 @@ Wcs::~Wcs() {
 //
 
 ///Return crval. Note that this need not be the centre of the image
-PointD Wcs::getSkyOrigin() const {
+GeomPoint Wcs::getSkyOrigin() const {
 
     if(_wcsInfo != NULL) {
-        return PointD(_wcsInfo->crval);
+        return geom::makePointD(_wcsInfo->crval[0], _wcsInfo->crval[1]);
     } else {
         throw(LSST_EXCEPT(except::RuntimeErrorException, "Wcs structure is not initialised"));
     }
 }
 
 ///Return crpix. Note that this need not be the centre of the image
-PointD Wcs::getPixelOrigin() const {
+GeomPoint Wcs::getPixelOrigin() const {
 
     if(_wcsInfo != NULL) {
-        return PointD(_wcsInfo->crpix);
+        return geom::makePointD(_wcsInfo->crpix[0], _wcsInfo->crpix[1]);
     } else {
         throw(LSST_EXCEPT(except::RuntimeErrorException, "Wcs structure not initialised"));
     }
@@ -438,7 +439,7 @@ bool Wcs::isFlipped()  const{
 
 
 ///Sky area covered by a pixel at position \param pix00. In units of cunits.
-double Wcs::pixArea(PointD pix00) const {
+double Wcs::pixArea(GeomPoint pix00) const {
     //
     // Figure out the (0, 0), (0, 1), and (1, 0) ra/dec coordinates of the corners of a square drawn in pixel
     // It'd be better to centre the square at sky00, but that would involve another conversion between sky and
@@ -446,10 +447,18 @@ double Wcs::pixArea(PointD pix00) const {
     //
     const double side = 10;             // length of the square's sides in pixels
 
-    PointD const sky00 = pixelToSky(pix00);
+    GeomPoint const sky00 = pixelToSky(pix00);
     
-    PointD const dsky10 = pixelToSky(pix00 + lsst::afw::image::PointD(side, 0)) - sky00;
-    PointD const dsky01 = pixelToSky(pix00 + lsst::afw::image::PointD(0, side)) - sky00;
+    //GeomPoint has no way of adding or subtracting GeomPoints from each other
+    GeomPoint const pix10  = geom::makePointD(pix00.getX() + side, pix00.getY());
+    GeomPoint dsky10 = pixelToSky(pix10);
+    dsky10.setX( dsky10.getX() - sky00.getX());
+    dsky10.setY( dsky10.getY() - sky00.getY());
+
+    GeomPoint const pix01  = geom::makePointD(pix00.getX(), pix00.getY() + side);
+    GeomPoint dsky01 = pixelToSky(pix01);
+    dsky01.setX( dsky01.getX() - sky00.getX());
+    dsky01.setY( dsky01.getY() - sky00.getY());
 
     double const cosDec = cos(sky00.getY()*M_PI/180.0);
     return cosDec*fabs(dsky01.getX()*dsky10.getY() - dsky01.getY()*dsky10.getX())/(side*side);
@@ -460,14 +469,14 @@ double Wcs::pixArea(PointD pix00) const {
 ///Convert a sky position (e.g ra/dec) to a pixel position. The exact meaning of sky1, sky2 
 ///depend on the properties of the wcs (i.e the values of CTYPE1 and
 ///CTYPE2), but the inputs are usually ra/dec, and the outputs are x and y pixel position.
-PointD Wcs::skyToPixel(const PointD sky) const {
+GeomPoint Wcs::skyToPixel(const GeomPoint sky) const {
     return skyToPixel(sky.getX(), sky.getY());
 }
 
 ///Convert a pixel position (e.g x,y) to a celestial coordinate (e.g ra/dec). The output coordinate
 ///system depends on the values of CTYPE used to construct the object. For ra/dec, the CTYPES should
 ///be RA--TAN and DEC-TAN. 
-PointD Wcs::pixelToSky(const PointD pixel) const {
+GeomPoint Wcs::pixelToSky(const GeomPoint pixel) const {
     return pixelToSky(pixel.getX(), pixel.getY());
 }
 
@@ -475,7 +484,7 @@ PointD Wcs::pixelToSky(const PointD pixel) const {
 ///Convert a sky position (e.g ra/dec) to a pixel position. The exact meaning of sky1, sky2 
 ///and the return value depend on the properties of the wcs (i.e the values of CTYPE1 and
 ///CTYPE2), but the inputs are usually ra/dec, and the outputs are x and y pixel position.
-PointD Wcs::skyToPixel(double sky1, double sky2) const {
+GeomPoint Wcs::skyToPixel(double sky1, double sky2) const {
     if(_wcsInfo == NULL) {
         throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
     }
@@ -496,7 +505,7 @@ PointD Wcs::skyToPixel(double sky1, double sky2) const {
     }
 
     // wcslib assumes 1-indexed coords
-    return lsst::afw::image::PointD(pixTmp[0] + lsst::afw::image::PixelZeroPos - 1,
+    return geom::makePointD(pixTmp[0] + lsst::afw::image::PixelZeroPos - 1,
                                     pixTmp[1] + lsst::afw::image::PixelZeroPos - 1); 
 }
 
@@ -504,7 +513,7 @@ PointD Wcs::skyToPixel(double sky1, double sky2) const {
 ///Convert a pixel position (e.g x,y) to a celestial coordinate (e.g ra/dec). The output coordinate
 ///system depends on the values of CTYPE used to construct the object. For ra/dec, the CTYPES should
 ///be RA--TAN and DEC-TAN. 
-PointD Wcs::pixelToSky(double pixel1, double pixel2) const {
+GeomPoint Wcs::pixelToSky(double pixel1, double pixel2) const {
     if(_wcsInfo == NULL) {
         throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
     }
@@ -526,12 +535,13 @@ PointD Wcs::pixelToSky(double pixel1, double pixel2) const {
                            status % wcs_errmsg[status]).str());
     }
 
-    return lsst::afw::image::PointD(skyTmp);
+    return geom::makePointD(skyTmp[0], skyTmp[1]);
 }
+
 
 ///Stop-gap functions. Convert sky positions in radians to pixels.
 ///Once the Coord class is implemented this should go away
-PointD Wcs::skyRadiansToPixel(double sky1Radians, double sky2Radians) const {
+GeomPoint Wcs::skyRadiansToPixel(double sky1Radians, double sky2Radians) const {
     double sky1Deg = sky1Radians*180./M_PI;
     double sky2Deg = sky2Radians*180./M_PI;
     
@@ -540,65 +550,14 @@ PointD Wcs::skyRadiansToPixel(double sky1Radians, double sky2Radians) const {
 
 ///Stop-gap functions. Convert pixel positions to sky positions in radians (not degrees as normal)
 ///Once the Coord class is implemented this should go away
-PointD Wcs::pixelToSkyRadians(double pixel1, double pixel2) const {
+GeomPoint Wcs::pixelToSkyRadians(double pixel1, double pixel2) const {
     //In degrees
-    PointD sky = pixelToSky(pixel1, pixel2);
+    GeomPoint sky = pixelToSky(pixel1, pixel2);
     
     //convert to radians
     sky[0] *= M_PI/180.0;
     sky[1] *= M_PI/180.0;
     return sky;
-}
-
-
-
-/**
- * Return the linear part of the Wcs, the CD matrix in FITS speak, as an AffineTransform
- *
- * \sa 
- */
-lsst::afw::geom::AffineTransform lsst::afw::image::Wcs::getAffineTransform() const
-{
-    return lsst::afw::geom::AffineTransform(getCDMatrix());
-}
-
-
-/**
- * Return the local linear approximation to Wcs::xyToRaDec at the point (ra, y) = sky
- *
- * This is currently implemented as a numerical derivative, but we should specialise the Wcs class (or rather
- * its implementation) to handle "simple" cases such as TAN-SIP analytically
- *
- * @param(in) sky Position in sky coordinates where transform is desired
- */
-lsst::afw::geom::AffineTransform lsst::afw::image::Wcs::linearizeAt(
-    lsst::afw::image::PointD const & sky
-) const
-{
-    //
-    // Figure out the (0, 0), (0, 1), and (1, 0) ra/dec coordinates of the corners of a square drawn in pixel
-    // It'd be better to centre the square at sky00, but that would involve another conversion between sky and
-    // pixel coordinates so I didn't bother
-    //
-    const double side = 10;             // length of the square's sides in pixels
-    //lsst::afw::image::PointD const sky00(geom::convertToImage(sky));
-    lsst::afw::image::PointD const sky00 = sky;
-    lsst::afw::image::PointD const pix00 = skyToPixel(sky00);
-
-    lsst::afw::image::PointD const dsky10 = pixelToSky(pix00 + lsst::afw::image::PointD(side, 0)) - sky00;
-    lsst::afw::image::PointD const dsky01 = pixelToSky(pix00 + lsst::afw::image::PointD(0, side)) - sky00;
-
-    Eigen::Matrix2d m;
-    m(0, 0) = dsky10.getX()/side;
-    m(0, 1) = dsky01.getX()/side;
-    m(1, 0) = dsky10.getY()/side;
-    m(1, 1) = dsky01.getY()/side;
-
-    Eigen::Vector2d sky00v;
-    sky00v << sky00.getX(), sky00.getY();
-    Eigen::Vector2d pix00v;
-    pix00v << pix00.getX(), pix00.getY();
-    return lsst::afw::geom::AffineTransform(m, lsst::afw::geom::ExtentD(sky00v - m * pix00v));
 }
 
 
@@ -616,7 +575,6 @@ void Wcs::shiftReferencePixel(double dx, double dy) {
         _wcsInfo->crpix[1] += dy;
     }
 }
-
 
 
 /************************************************************************************************************/
@@ -689,5 +647,5 @@ image::PointI getImageXY0FromMetadata(std::string const& wcsName,            ///
 
     return image::PointI(x0, y0);
 }
-    
+
 }}}}
