@@ -20,7 +20,7 @@
 #include "fits_io.h"
 
 namespace {
-struct found_type : std::exception { }; // type to throw when we've read our data
+struct found_type : public std::exception { }; // type to throw when we've read our data
 
 template<typename ImageT, typename ExceptionT>
 class try_fits_read_image {

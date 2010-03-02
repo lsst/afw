@@ -5,7 +5,7 @@
 #include <exception>
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE ConvolutionVisitor
+#define BOOST_TEST_MODULE LocalKernel
 
 #include "boost/make_shared.hpp"
 #include "boost/test/unit_test.hpp"
@@ -13,7 +13,7 @@
 
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/FourierCutout.h"
-#include "lsst/afw/math/ConvolutionVisitor.h"
+#include "lsst/afw/math/LocalKernel.h"
 
 #include "lsst/pex/exceptions/Runtime.h"
 
@@ -21,11 +21,11 @@ namespace math = lsst::afw::math;
 
 typedef math::FourierCutout FourierCutout;
 typedef math::FourierCutoutStack FourierCutoutStack;
-typedef math::ConvolutionVisitor ConvolutionVisitor;
-typedef math::ImageConvolutionVisitor ImageConvolutionVisitor;
-typedef ImageConvolutionVisitor::Image Image;
-typedef ImageConvolutionVisitor::ImagePtrList ImagePtrList;
-typedef math::FourierConvolutionVisitor FourierConvolutionVisitor;
+typedef math::LocalKernel LocalKernel;
+typedef math::ImageLocalKernel ImageLocalKernel;
+typedef ImageLocalKernel::Image Image;
+typedef ImageLocalKernel::ImagePtrList ImagePtrList;
+typedef math::FftLocalKernel FftLocalKernel;
 typedef std::vector<FourierCutout::Ptr> FourierCutoutVector;
 typedef FourierCutout::Complex Complex;
 
@@ -35,7 +35,6 @@ typedef FourierCutout::Complex Complex;
 //the following test arrays where constructed using numpy
 //the fft was computed using numpy.fft.rfft2
 
-int const STACK_DEPTH = 3;
 //stack of 3 image, each with width = 5, height = 4
 int const IMG_HEIGHT = 4;
 int const IMG_WIDTH = 5;
@@ -97,34 +96,33 @@ Complex FOURIER_STACK[] = {
 BOOST_AUTO_TEST_CASE(ImageConvolutionTest) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     Image::Ptr imgA = boost::make_shared<Image>(19,19, 1.0); 
     Image::Ptr imgB = boost::make_shared<Image>(19,19, 0.0);
-    std::pair<int, int> center(9, 9);
-
+    lsst::afw::geom::Point2I center = lsst::afw::geom::makePointI(9,9);
     ImagePtrList derivativeA;       
     ImagePtrList derivativeB(3);
     for(int i = 0; i < 3; ++i) {    
         derivativeB[i] = boost::make_shared<Image>(19, 19, i);
     }
 
-    ImageConvolutionVisitor a(center, std::vector<double>(), imgA);
-    ImageConvolutionVisitor b(center, std::vector<double>(3, 0), imgB, derivativeB);
+    ImageLocalKernel a(center, std::vector<double>(), imgA);
+    ImageLocalKernel b(center, std::vector<double>(3, 0), imgB, derivativeB);
     
     Image::Ptr imgFromA = a.getImage(), imgFromB = b.getImage();
 
     BOOST_CHECK_EQUAL(imgFromA, imgA);
     BOOST_CHECK_EQUAL(imgFromB, imgB);
 
-    ImagePtrList listFromA = a.getDerivativeImageList(), listFromB = b.getDerivativeImageList();
+    ImagePtrList listFromA = a.getDerivatives(), listFromB = b.getDerivatives();
 
     BOOST_CHECK_EQUAL_COLLECTIONS(listFromA.begin(), listFromA.end(), derivativeA.begin(), derivativeA.end());
     BOOST_CHECK_EQUAL_COLLECTIONS(listFromB.begin(), listFromB.end(), derivativeB.begin(), derivativeB.end());
 
-    BOOST_CHECK_EQUAL(a.getNParameters(), (int) derivativeA.size());
-    BOOST_CHECK_EQUAL(b.getNParameters(), (int) derivativeB.size());
+    BOOST_CHECK_EQUAL(a.getNParameters(), derivativeA.size());
+    BOOST_CHECK_EQUAL(b.getNParameters(), derivativeB.size());
     
     BOOST_CHECK(a.getCovariance().get() == 0);
     BOOST_CHECK(b.getCovariance().get() == 0);
 
-    ConvolutionVisitor::CovariancePtr covarB =
+    LocalKernel::CovariancePtr covarB =
         boost::make_shared<Eigen::MatrixXd>(b.getNParameters(), b.getNParameters() - 1);
 
     BOOST_CHECK_THROW(a.setCovariance(covarB), lsst::pex::exceptions::InvalidParameterException);
@@ -139,7 +137,7 @@ BOOST_AUTO_TEST_CASE(FourierConvolutionTest) { /* parasoft-suppress  LsstDm-3-2a
     int height = IMG_HEIGHT;
     int fourierWidth = FOURIER_WIDTH;
 
-    std::pair<int, int> center(IMG_WIDTH/2, IMG_HEIGHT/2);
+    lsst::afw::geom::Point2I center = lsst::afw::geom::makePointI(IMG_WIDTH/2, IMG_HEIGHT/2);
 
     FourierCutout::Real * testRealItr = IMG_STACK;
     Image::Ptr img = boost::make_shared<Image>(width, height); 
@@ -165,39 +163,40 @@ BOOST_AUTO_TEST_CASE(FourierConvolutionTest) { /* parasoft-suppress  LsstDm-3-2a
             }
         }
     }
-    std::vector<double> parameterList(nDerivatives, 1);
-    ImageConvolutionVisitor imgVisitor(center, parameterList, img, derivative);
-    FourierConvolutionVisitor fourierVisitor(imgVisitor);
+    std::vector<double> parameters(nDerivatives, 1);
+    ImageLocalKernel imgKernel(center, parameters, img, derivative);
+    FftLocalKernel fourierKernel(imgKernel);
  
-    BOOST_CHECK_EQUAL(imgVisitor.getNParameters(), (int) nDerivatives);
-    BOOST_CHECK_EQUAL(fourierVisitor.getNParameters(), (int) nDerivatives);
-    std::vector<double> paramsFromVisitor = fourierVisitor.getParameterList();
+    BOOST_CHECK_EQUAL(imgKernel.getNParameters(), nDerivatives);
+    BOOST_CHECK_EQUAL(fourierKernel.getNParameters(), nDerivatives);
+    std::vector<double> paramsFromLocalKernel = fourierKernel.getParameters();
     BOOST_CHECK_EQUAL_COLLECTIONS(
-            parameterList.begin(), parameterList.end(),
-            paramsFromVisitor.begin(), paramsFromVisitor.end()
+            parameters.begin(), parameters.end(),
+            paramsFromLocalKernel.begin(), paramsFromLocalKernel.end()
     );
 
     //check that getX() , before fft throws    
-    BOOST_REQUIRE_THROW(fourierVisitor.getFourierImage(), lsst::pex::exceptions::RuntimeErrorException);
-    BOOST_REQUIRE_THROW(fourierVisitor.getFourierDerivativeImageList(),
+    BOOST_REQUIRE_THROW(fourierKernel.getFourierImage(), lsst::pex::exceptions::RuntimeErrorException);
+    BOOST_REQUIRE_THROW(fourierKernel.getFourierDerivatives(),
                         lsst::pex::exceptions::RuntimeErrorException);
 
     //try to fft to too-small dimnesions
-    BOOST_CHECK_THROW(fourierVisitor.fft(1,4), lsst::pex::exceptions::InvalidParameterException);
+    BOOST_CHECK_THROW(fourierKernel.setDimensions(1,4), lsst::pex::exceptions::InvalidParameterException);
 
-    BOOST_CHECK_NO_THROW(fourierVisitor.fft(width, height));
+    BOOST_CHECK_NO_THROW(fourierKernel.setDimensions(width, height));
 
     FourierCutout::Ptr cutoutPtr;
     FourierCutoutVector cutoutVector;
     
-    BOOST_CHECK_NO_THROW(cutoutPtr = fourierVisitor.getFourierImage());
-    BOOST_CHECK_NO_THROW(cutoutVector = fourierVisitor.getFourierDerivativeImageList());
+    BOOST_CHECK_NO_THROW(cutoutPtr = fourierKernel.getFourierImage());
+    BOOST_CHECK_NO_THROW(cutoutVector = fourierKernel.getFourierDerivatives());
+
 
     BOOST_REQUIRE(cutoutPtr);
     BOOST_CHECK_EQUAL(cutoutPtr->getFourierWidth(), fourierWidth);
     BOOST_CHECK_EQUAL(cutoutPtr->getFourierHeight(), height);
     //shift the cutout, for comparison down below
-    cutoutPtr->shift(center.first, center.second);
+    cutoutPtr->shift(center.getX(), center.getY());
 
     BOOST_CHECK_EQUAL(cutoutVector.size(), nDerivatives);
     FourierCutoutVector::iterator i = cutoutVector.begin();
@@ -209,10 +208,10 @@ BOOST_AUTO_TEST_CASE(FourierConvolutionTest) { /* parasoft-suppress  LsstDm-3-2a
         BOOST_CHECK_EQUAL(cutoutPtr->getFourierHeight(), height);            
         
         //shift the cutout, for comparison down below
-        cutoutPtr->shift(center.first, center.second);    
+        cutoutPtr->shift(center.getX(), center.getY());    
     }
 
-    BOOST_CHECK_NO_THROW(cutoutPtr = fourierVisitor.getFourierImage());
+    BOOST_CHECK_NO_THROW(cutoutPtr = fourierKernel.getFourierImage());
 
     BOOST_REQUIRE(cutoutPtr);
     BOOST_CHECK_EQUAL(cutoutPtr->getFourierWidth(), fourierWidth);
@@ -244,10 +243,10 @@ BOOST_AUTO_TEST_CASE(FourierConvolutionTest) { /* parasoft-suppress  LsstDm-3-2a
     width = 16;
     fourierWidth = width/2 +1;
     
-    fourierVisitor.fft(width, height);
+    fourierKernel.setDimensions(width, height);
 
-    BOOST_CHECK_NO_THROW(cutoutPtr = fourierVisitor.getFourierImage());
-    BOOST_CHECK_NO_THROW(cutoutVector = fourierVisitor.getFourierDerivativeImageList());
+    BOOST_CHECK_NO_THROW(cutoutPtr = fourierKernel.getFourierImage());
+    BOOST_CHECK_NO_THROW(cutoutVector = fourierKernel.getFourierDerivatives());
 
     BOOST_REQUIRE(cutoutPtr);
     BOOST_CHECK_EQUAL(cutoutPtr->getFourierWidth(), fourierWidth);
@@ -264,7 +263,4 @@ BOOST_AUTO_TEST_CASE(FourierConvolutionTest) { /* parasoft-suppress  LsstDm-3-2a
     }
     cutoutVector.clear();
     cutoutPtr.reset();
-
-
-
 }

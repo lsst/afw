@@ -290,7 +290,7 @@ struct variance_divides {
         return x2*vy*iy2*iy2 + vx*iy2;
     }
 
-    T1 operator()(T1 const& x, T1 const& y, T1 const& vx) const {
+    T1 operator()(T1 const&, T1 const& y, T1 const& vx) const {
         return vx/(y*y);
     }
 };
@@ -308,7 +308,7 @@ struct variance_multiplies {
         return x2*vy + y2*vx;
     }
     
-    T1 operator()(T1 const& x, T1 const& y, T1 const& vx) const {
+    T1 operator()(T1 const&, T1 const& y, T1 const& vx) const {
         return vx*y*y;
     }
 };

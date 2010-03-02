@@ -229,7 +229,7 @@ protected:
 
         _fd = boost::shared_ptr<FD>(_fd_s, close_cfitsio());
     }
-    
+    virtual ~fits_file_mgr() {}
 public:
     FD* get() { return _fd.get(); }
 };

@@ -184,7 +184,7 @@ std::string afwMath::SeparableKernel::toString(std::string const& prefix) const 
         << (_kernelRowFunctionPtr ? _kernelRowFunctionPtr->toString() : "None") << std::endl;
     os << Kernel::toString(prefix + "\t");
     return os.str();
-};
+}
 
 std::vector<double> afwMath::SeparableKernel::getKernelParameters() const {
     std::vector<double> allParams = _kernelColFunctionPtr->getParameters();

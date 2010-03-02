@@ -114,7 +114,7 @@ public:
     ParameterVector getVector() const;
 
     double & operator[](int i) { return _eigenTransform(i % 2, i / 2); }
-    double const operator[](int i) const { return _eigenTransform(i % 2, i / 2); }
+    double operator[](int i) const { return _eigenTransform(i % 2, i / 2); }
 
     AffineTransform operator*(AffineTransform const & other) const {
         return AffineTransform(_eigenTransform * other._eigenTransform);

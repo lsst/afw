@@ -149,7 +149,7 @@ private:
 namespace detail {
     template<typename T>
     struct sortPtr :
-        std::binary_function<typename T::Ptr &, typename T::Ptr const&, bool> {
+        public std::binary_function<typename T::Ptr &, typename T::Ptr const&, bool> {
         bool operator()(typename T::Ptr &lhs, typename T::Ptr const& rhs) const {
             return *lhs < *rhs;
         }

@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 """
-Tests for ConvolutionVisitor
+Tests for LocalKernel
 
 Run with:
-   ./ConvolutionVisitor.py
+   ./LocalKernel.py
 or
    python
-   >>> import ConvolutionVisitor; ConvolutionVisitor.run()
+   >>> import LocalKernel; LocalKernel.run()
 """
 
 import unittest
@@ -15,14 +15,15 @@ import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions
 import lsst.afw.image.imageLib as afwImage
 import lsst.afw.math as afwMath
+import lsst.afw.geom as afwGeom
 
-class ConvolutionVisitorTestCase(unittest.TestCase):
-    """A test case for ConvolutionVisitor"""
+class LocalKernelTestCase(unittest.TestCase):
+    """A test case for LocalKernel"""
     def setUp(self):
         self.width = 19
         self.height = 19
         self.fourierWidth = self.width/2 + 1
-        self.center = (9, 9)
+        self.center = afwGeom.makePointI(9, 9)
         self.image = afwImage.ImageD(self.width, self.height, 3)
         self.imageList = []
         self.imageList.append(afwImage.ImageD(self.width, self.height, 1))
@@ -35,16 +36,16 @@ class ConvolutionVisitorTestCase(unittest.TestCase):
         del self.imageList
 
     def testBasic(self):
-        imageVisitor = afwMath.ImageConvolutionVisitor(
-                self.center, 
+        imageKernel = afwMath.ImageLocalKernel(
+                self.center,
                 self.paramList,
                 self.image,
                 self.imageList)
-        fourierVisitor = afwMath.FourierConvolutionVisitor(imageVisitor)
-        fourierVisitor.fft(self.width, self.height)
+        fourierKernel = afwMath.FftLocalKernel(imageKernel)
+        fourierKernel.setDimensions(self.width, self.height)
 
-        cutout = fourierVisitor.getFourierImage()
-        cutout.shift(self.center[0], self.center[1])
+        cutout = fourierKernel.getFourierImage()
+        cutout.shift(self.center.getX(), self.center.getY())
         cutout.differentiateX()
         cutout.differentiateY()
 
@@ -57,7 +58,7 @@ def suite():
     utilsTests.init()
 
     suites = []
-    suites += unittest.makeSuite(ConvolutionVisitorTestCase)
+    suites += unittest.makeSuite(LocalKernelTestCase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 

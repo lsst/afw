@@ -77,7 +77,7 @@ using boost::serialization::make_nvp;
                     static_cast<IntegerDeltaFunction1<ReturnT>*>(0),
                     static_cast<Function1<ReturnT>*>(0));
 #endif
-        };
+        }
         template <typename R, class Archive>
         friend void boost::serialization::save_construct_data(
             Archive& ar, IntegerDeltaFunction1<R> const* f, unsigned int const);
@@ -110,7 +110,7 @@ using boost::serialization::make_nvp;
             _yo(yo)
         {}
         
-        virtual ~IntegerDeltaFunction2() {};
+        virtual ~IntegerDeltaFunction2() {}
         
         virtual Function2Ptr clone() const {
             return Function2Ptr(new IntegerDeltaFunction2(_xo, _yo));
@@ -125,7 +125,7 @@ using boost::serialization::make_nvp;
             os << "IntegerDeltaFunction2 [" << _xo << ", " << _yo << "]: ";
             os << Function2<ReturnT>::toString(prefix);
             return os.str();
-        };
+        }
 
     private:
         double _xo;
@@ -141,7 +141,7 @@ using boost::serialization::make_nvp;
                     static_cast<IntegerDeltaFunction2<ReturnT>*>(0),
                     static_cast<Function2<ReturnT>*>(0));
 #endif
-        };
+        }
         template <typename R, class Archive>
         friend void boost::serialization::save_construct_data(
             Archive& ar, IntegerDeltaFunction2<R> const* f, unsigned int const);
@@ -173,7 +173,7 @@ using boost::serialization::make_nvp;
         {
             this->_params[0] = sigma;
         }
-        virtual ~GaussianFunction1() {};
+        virtual ~GaussianFunction1() {}
         
         virtual Function1Ptr clone() const {
             return Function1Ptr(new GaussianFunction1(this->_params[0]));
@@ -190,7 +190,7 @@ using boost::serialization::make_nvp;
             os << "GaussianFunction1 [" << _multFac << "]: ";
             os << Function1<ReturnT>::toString(prefix);
             return os.str();
-        };
+        }
 
     private:
         const double _multFac; ///< precomputed scale factor
@@ -205,7 +205,7 @@ using boost::serialization::make_nvp;
                     static_cast<GaussianFunction1<ReturnT>*>(0),
                     static_cast<Function1<ReturnT>*>(0));
 #endif
-        };
+        }
     };
     
     /**
@@ -244,7 +244,7 @@ using boost::serialization::make_nvp;
             _updateCache();
         }
         
-        virtual ~GaussianFunction2() {};
+        virtual ~GaussianFunction2() {}
         
         virtual Function2Ptr clone() const {
             return Function2Ptr(new GaussianFunction2(this->_params[0], this->_params[1], this->_params[2]));
@@ -267,7 +267,7 @@ using boost::serialization::make_nvp;
             os << "GaussianFunction2: ";
             os << Function2<ReturnT>::toString(prefix);
             return os.str();
-        };
+        }
     
     private:
         /**
@@ -307,7 +307,7 @@ using boost::serialization::make_nvp;
                     static_cast<GaussianFunction2<ReturnT>*>(0),
                     static_cast<Function2<ReturnT>*>(0));
 #endif
-        };
+        }
     };
     
     /**
@@ -345,7 +345,7 @@ using boost::serialization::make_nvp;
             this->_params[2] = ampl2;
         }
         
-        virtual ~DoubleGaussianFunction2() {};
+        virtual ~DoubleGaussianFunction2() {}
         
         virtual Function2Ptr clone() const {
             return Function2Ptr(
@@ -368,7 +368,7 @@ using boost::serialization::make_nvp;
             os << "DoubleGaussianFunction2 [" << _multFac << "]: ";
             os << Function2<ReturnT>::toString(prefix);
             return os.str();
-        };
+        }
 
     private:
         const double _multFac; ///< precomputed scale factor
@@ -383,7 +383,7 @@ using boost::serialization::make_nvp;
                     static_cast<DoubleGaussianFunction2<ReturnT>*>(0),
                     static_cast<Function2<ReturnT>*>(0));
 #endif
-        };
+        }
     };
     
     /**
@@ -427,7 +427,7 @@ using boost::serialization::make_nvp;
             }
         }
         
-        virtual ~PolynomialFunction1() {};
+        virtual ~PolynomialFunction1() {}
        
         virtual Function1Ptr clone() const {
             return Function1Ptr(new PolynomialFunction1(this->_params));
@@ -447,7 +447,7 @@ using boost::serialization::make_nvp;
             os << "PolynomialFunction1 []: ";
             os << Function1<ReturnT>::toString(prefix);
             return os.str();
-        };
+        }
 
 
     private:
@@ -460,7 +460,7 @@ using boost::serialization::make_nvp;
                     static_cast<PolynomialFunction1<ReturnT>*>(0),
                     static_cast<Function1<ReturnT>*>(0));
 #endif
-        };
+        }
     };
 
     /**
@@ -523,7 +523,7 @@ using boost::serialization::make_nvp;
             }
         }
         
-        virtual ~PolynomialFunction2() {};
+        virtual ~PolynomialFunction2() {}
        
         virtual Function2Ptr clone() const {
             return Function2Ptr(new PolynomialFunction2(this->_params));
@@ -571,7 +571,7 @@ using boost::serialization::make_nvp;
             os << "PolynomialFunction2 [" << _order << "]: ";
             os << Function2<ReturnT>::toString(prefix);
             return os.str();
-        };
+        }
 
     private:
         unsigned int _order; ///< order of polynomial
@@ -584,7 +584,7 @@ using boost::serialization::make_nvp;
                           boost::serialization::base_object<
                           Function2<ReturnT> >(*this));
             ar & make_nvp("order", _order);
-        };
+        }
     };
     
     /**
@@ -644,7 +644,7 @@ using boost::serialization::make_nvp;
             _initialize(xMin, xMax);
         }
         
-        virtual ~Chebyshev1Function1() {};
+        virtual ~Chebyshev1Function1() {}
        
         virtual Function1Ptr clone() const {
             return Function1Ptr(new Chebyshev1Function1(this->_params, _minX, _maxX));
@@ -663,7 +663,7 @@ using boost::serialization::make_nvp;
             os << _maxInd << "]: ";
             os << Function1<ReturnT>::toString(prefix);
             return os.str();
-        };
+        }
 
     private:
         double _minX;    ///< minimum allowed x
@@ -711,7 +711,7 @@ using boost::serialization::make_nvp;
                     static_cast<Chebyshev1Function1<ReturnT>*>(0),
                     static_cast<Function1<ReturnT>*>(0));
 #endif
-        };
+        }
         template <typename R, class Archive>
         friend void boost::serialization::save_construct_data(
             Archive& ar, Chebyshev1Function1<R> const* f, unsigned int const);
@@ -748,7 +748,7 @@ using boost::serialization::make_nvp;
             this->_params[0] = xOffset;
         }
 
-        virtual ~LanczosFunction1() {};
+        virtual ~LanczosFunction1() {}
        
         virtual Function1Ptr clone() const {
             unsigned int n = static_cast<unsigned int>(0.5 + (1.0 / _invN));
@@ -770,7 +770,7 @@ using boost::serialization::make_nvp;
             os << "LanczosFunction1 [" << _invN << "]: ";;
             os << Function1<ReturnT>::toString(prefix);
             return os.str();
-        };
+        }
 
     private:
         double _invN;   ///< 1/n
@@ -785,7 +785,7 @@ using boost::serialization::make_nvp;
                     static_cast<LanczosFunction1<ReturnT>*>(0),
                     static_cast<Function1<ReturnT>*>(0));
 #endif
-        };
+        }
         template <typename R, class Archive>
         friend void boost::serialization::save_construct_data(
             Archive& ar, LanczosFunction1<R> const* f, unsigned int const);
@@ -823,7 +823,7 @@ using boost::serialization::make_nvp;
             this->_params[1] = yOffset;
         }
 
-        virtual ~LanczosFunction2() {};
+        virtual ~LanczosFunction2() {}
        
         virtual Function2Ptr clone() const {
             unsigned int n = static_cast<unsigned int>(0.5 + (1.0 / _invN));
@@ -851,7 +851,7 @@ using boost::serialization::make_nvp;
             os << "LanczosFunction2 [" << _invN << "]: ";;
             os << Function2<ReturnT>::toString(prefix);
             return os.str();
-        };
+        }
 
     private:
         double _invN;   ///< 1/n
@@ -866,7 +866,7 @@ using boost::serialization::make_nvp;
                     static_cast<LanczosFunction2<ReturnT>*>(0),
                     static_cast<Function2<ReturnT>*>(0));
 #endif
-        };
+        }
         template <typename R, class Archive>
         friend void boost::serialization::save_construct_data(
             Archive& ar, LanczosFunction2<R> const* f, unsigned int const);
@@ -882,14 +882,14 @@ inline void save_construct_data(Archive& ar,
                                 lsst::afw::math::IntegerDeltaFunction1<ReturnT> const* f,
                                 unsigned int const) {
     ar << make_nvp("xo", f->_xo);
-};
+}
 
 template <typename ReturnT, class Archive>
 inline void save_construct_data(Archive& ar,
                                 lsst::afw::math::IntegerDeltaFunction2<ReturnT> const* f,
                                 unsigned int const) {
     ar << make_nvp("xo", f->_xo) << make_nvp("yo", f->_yo);
-};
+}
 
 template <typename ReturnT, class Archive>
 inline void load_construct_data(Archive& ar,
@@ -899,14 +899,14 @@ inline void load_construct_data(Archive& ar,
     double yo;
     ar >> make_nvp("xo", xo) >> make_nvp("yo", yo);
     ::new(f) lsst::afw::math::IntegerDeltaFunction2<ReturnT>(xo, yo);
-};
+}
 
 template <typename ReturnT, class Archive>
 inline void save_construct_data(Archive& ar,
                                 lsst::afw::math::GaussianFunction1<ReturnT> const* f,
                                 unsigned int const) {
     ar << make_nvp("sigma", f->getParameters()[0]);
-};
+}
 
 template <typename ReturnT, class Archive>
 inline void load_construct_data(Archive& ar,
@@ -915,7 +915,7 @@ inline void load_construct_data(Archive& ar,
     double sigma;
     ar >> make_nvp("sigma", sigma);
     ::new(f) lsst::afw::math::GaussianFunction1<ReturnT>(sigma);
-};
+}
     
 template <typename ReturnT, class Archive>
 inline void save_construct_data(Archive& ar,
@@ -924,7 +924,7 @@ inline void save_construct_data(Archive& ar,
     ar << make_nvp("sigma1", f->getParameters()[0]);
     ar << make_nvp("sigma2", f->getParameters()[1]);
     ar << make_nvp("angle",  f->getParameters()[2]);
-};
+}
 
 template <typename ReturnT, class Archive>
 inline void load_construct_data(Archive& ar,
@@ -937,7 +937,7 @@ inline void load_construct_data(Archive& ar,
     ar >> make_nvp("sigma2", sigma2);
     ar >> make_nvp("angle",  angle);
     ::new(f) lsst::afw::math::GaussianFunction2<ReturnT>(sigma1, sigma2, angle);
-};
+}
 
 template <typename ReturnT, class Archive>
 inline void save_construct_data(Archive& ar,
@@ -946,7 +946,7 @@ inline void save_construct_data(Archive& ar,
     ar << make_nvp("sigma1", f->getParameters()[0]);
     ar << make_nvp("sigma2", f->getParameters()[1]);
     ar << make_nvp("ampl2", f->getParameters()[2]);
-};
+}
 
 template <typename ReturnT, class Archive>
 inline void load_construct_data(Archive& ar,
@@ -959,14 +959,14 @@ inline void load_construct_data(Archive& ar,
     ar >> make_nvp("sigma2", sigma2);
     ar >> make_nvp("ampl2", ampl2);
     ::new(f) lsst::afw::math::DoubleGaussianFunction2<ReturnT>(sigma1, sigma2, ampl2);
-};
+}
     
 template <typename ReturnT, class Archive>
 inline void save_construct_data(Archive& ar,
                                 lsst::afw::math::PolynomialFunction1<ReturnT> const* f,
                                 unsigned int const) {
     ar << make_nvp("params", f->getParameters());
-};
+}
 
 template <typename ReturnT, class Archive>
 inline void load_construct_data(Archive& ar,
@@ -975,14 +975,14 @@ inline void load_construct_data(Archive& ar,
     std::vector<double> params;
     ar >> make_nvp("params", params);
     ::new(f) lsst::afw::math::PolynomialFunction1<ReturnT>(params);
-};
+}
 
 template <typename ReturnT, class Archive>
 inline void save_construct_data(Archive& ar,
                                 lsst::afw::math::PolynomialFunction2<ReturnT> const* f,
                                 unsigned int const) {
     ar << make_nvp("params", f->getParameters());
-};
+}
 
 template <typename ReturnT, class Archive>
 inline void load_construct_data(Archive& ar,
@@ -991,7 +991,7 @@ inline void load_construct_data(Archive& ar,
     std::vector<double> params;
     ar >> make_nvp("params", params);
     ::new(f) lsst::afw::math::PolynomialFunction2<ReturnT>(params);
-};
+}
     
 template <typename ReturnT, class Archive>
 inline void save_construct_data(Archive& ar,
@@ -1000,7 +1000,7 @@ inline void save_construct_data(Archive& ar,
     ar << make_nvp("params", f->getParameters());
     ar << make_nvp("minX", f->_minX);
     ar << make_nvp("maxX", f->_maxX);
-};
+}
 
 template <typename ReturnT, class Archive>
 inline void load_construct_data(Archive& ar,
@@ -1013,7 +1013,7 @@ inline void load_construct_data(Archive& ar,
     ar >> make_nvp("minX", minX);
     ar >> make_nvp("maxX", maxX);
     ::new(f) lsst::afw::math::Chebyshev1Function1<ReturnT>(params, minX, maxX);
-};
+}
 
 template <typename ReturnT, class Archive>
 inline void save_construct_data(Archive& ar,
@@ -1022,7 +1022,7 @@ inline void save_construct_data(Archive& ar,
     unsigned int n = static_cast<unsigned int>(0.5 + (1.0 / f->_invN));
     ar << make_nvp("n", n);
     ar << make_nvp("xOffset", f->getParameters()[0]);
-};
+}
 
 template <typename ReturnT, class Archive>
 inline void load_construct_data(Archive& ar,
@@ -1033,7 +1033,7 @@ inline void load_construct_data(Archive& ar,
     ar >> make_nvp("n", n);
     ar >> make_nvp("xOffset", xOffset);
     ::new(f) lsst::afw::math::LanczosFunction1<ReturnT>(n, xOffset);
-};
+}
     
 template <typename ReturnT, class Archive>
 inline void save_construct_data(Archive& ar,
@@ -1043,7 +1043,7 @@ inline void save_construct_data(Archive& ar,
     ar << make_nvp("n", n);
     ar << make_nvp("xOffset", f->getParameters()[0]);
     ar << make_nvp("yOffset", f->getParameters()[1]);
-};
+}
 
 template <typename ReturnT, class Archive>
 inline void load_construct_data(Archive& ar,
@@ -1056,7 +1056,7 @@ inline void load_construct_data(Archive& ar,
     ar >> make_nvp("xOffset", xOffset);
     ar >> make_nvp("yOffset", yOffset);
     ::new(f) lsst::afw::math::LanczosFunction2<ReturnT>(n, xOffset, yOffset);
-};
+}
 
 }}
 

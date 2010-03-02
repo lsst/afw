@@ -39,7 +39,7 @@ afwMath::Kernel::Ptr afwMath::LanczosWarpingKernel::clone() const {
 */
 int afwMath::LanczosWarpingKernel::getOrder() const {
     return this->getWidth() / 2;
-};
+}
 
 
 afwMath::Kernel::Ptr afwMath::BilinearWarpingKernel::clone() const {

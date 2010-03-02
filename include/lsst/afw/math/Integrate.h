@@ -629,7 +629,7 @@ template <class T>
 struct ConstantReg1 : public std::unary_function<T, IntRegion<T> > {
     ConstantReg1(T a, T b) : ir(a, b) {}
     ConstantReg1(IntRegion<T> const &r) : ir(r) {}
-    IntRegion<T> operator()(T x) const { return ir; }
+    IntRegion<T> operator()(T) const { return ir; }
     IntRegion<T> ir;
 };
     

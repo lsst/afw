@@ -143,7 +143,7 @@ void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::update(
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT> template <class Archive>
 void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::delegateSerialize(
-    Archive& ar, unsigned int const version, Persistable* persistable) {
+    Archive& ar, unsigned int const, Persistable* persistable) {
     execTrace("MaskedImageFormatter delegateSerialize start");
     MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>* ip =
         dynamic_cast<MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>*>(persistable);

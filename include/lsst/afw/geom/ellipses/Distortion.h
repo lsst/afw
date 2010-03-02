@@ -37,10 +37,10 @@ public:
     Ptr clone() const { return Ptr(static_cast<DistortionEllipse*>(_clone()));  }
 
     /// \brief Return the Core object.
-    Distortion const & getCore() const;
+    inline Distortion const & getCore() const;
 
     /// \brief Return the Core object.
-    Distortion & getCore();
+    inline Distortion & getCore();
 
     /**
      *  \brief Set the parameters of this ellipse from another.
@@ -55,19 +55,19 @@ public:
     }
 
     /// \brief Construct from a PointD and zero-size Core.
-    explicit DistortionEllipse(PointD const & center = PointD());
+    explicit inline DistortionEllipse(PointD const & center = PointD());
 
     /// \brief Construct from a copy of an Distortion core.
-    explicit DistortionEllipse(Distortion const & core, PointD const & center = PointD());
+    explicit inline DistortionEllipse(Distortion const & core, PointD const & center = PointD());
 
     /// \brief Construct from a 5-element parameter vector.
     explicit DistortionEllipse(BaseEllipse::ParameterVector const & vector, bool doNormalize=true);
 
     /// \brief Converting copy constructor.
-    DistortionEllipse(BaseEllipse const & other);
+    inline DistortionEllipse(BaseEllipse const & other);
 
     /// \brief Copy constructor.
-    DistortionEllipse(DistortionEllipse const & other);
+    inline DistortionEllipse(DistortionEllipse const & other);
 
 protected:
     virtual DistortionEllipse * _clone() const { return new DistortionEllipse(*this); }

@@ -143,7 +143,6 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
     // exception handling for this in the Wcs class.
        
     try {
-        int const hdu = 0;          // the HDU to read
         dafBase::PropertySet::Ptr mCorData(new dafBase::PropertySet);
         afwImage::MaskedImage<ImagePixel> mCorruptImage("tests/data/small_MI_corrupt", hdu,
                                                     mCorData); // CFHT MI with corrupt header

@@ -6,7 +6,7 @@ Run with:
    ./Box.py
 or
    python
-   >>> import Box; Box.run()
+   >>> import box; box.run()
 """
 
 import os
@@ -39,7 +39,7 @@ class BoxITestCase(unittest.TestCase):
 
     def testConstruction(self):
         for n in range(10):
-            xmin, xmax, ymin, ymax = numpy.random.randint(low=-5, high=5, size=4)
+            xmin, xmax, ymin, ymax = [int(i) for i in numpy.random.randint(low=-5, high=5, size=4)]
             if xmin > xmax: xmin, xmax = xmax, xmin
             if ymin > ymax: ymin, ymax = ymax, ymin
             pmin = geom.makePointI(xmin,ymin)
@@ -97,7 +97,7 @@ class BoxITestCase(unittest.TestCase):
             self.assertEqual(geom.BoxI(fpBoxSmall, geom.BoxI.SHRINK), intBoxSmall)
 
     def testAccessors(self):
-        xmin, xmax, ymin, ymax = numpy.random.randint(low=-5, high=5, size=4)
+        xmin, xmax, ymin, ymax = [int(i) for i in numpy.random.randint(low=-5, high=5, size=4)]
         if xmin > xmax: xmin, xmax = xmax, xmin
         if ymin > ymax: ymin, ymax = ymax, ymin
         pmin = geom.makePointI(xmin,ymin)

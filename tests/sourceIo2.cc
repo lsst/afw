@@ -170,11 +170,13 @@ static void initTestData(DiaSourceSet & v, int sliceId = 0) {
         if (i < NUM_FIELDS) {
             data.setNull(DiaSourceFieldsToTest[i]);
         } else if ((i & 1) == 0) {
-            for(int j =0; j < NUM_FIELDS; j++)
-                data.setNotNull(DiaSourceFieldsToTest[j]);
+            for (int k = 0; k < NUM_FIELDS; ++k) {
+                data.setNotNull(DiaSourceFieldsToTest[k]);
+            }
         } else {
-            for(int j =0; j < NUM_FIELDS; j++)
-                data.setNull(DiaSourceFieldsToTest[j]);
+            for (int k = 0; k < NUM_FIELDS; ++k) {
+                data.setNull(DiaSourceFieldsToTest[k]);
+            }
         }
         
         DiaSource::Ptr sourcePtr(new DiaSource(data));

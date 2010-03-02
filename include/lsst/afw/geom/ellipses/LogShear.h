@@ -37,10 +37,10 @@ public:
     Ptr clone() const { return Ptr(static_cast<LogShearEllipse*>(_clone()));  }
 
     /// \brief Return the Core object.
-    LogShear const & getCore() const;
+    inline LogShear const & getCore() const;
 
     /// \brief Return the Core object.
-    LogShear & getCore();
+    inline LogShear & getCore();
 
     /**
      *  \brief Set the parameters of this ellipse from another.
@@ -55,19 +55,19 @@ public:
     }
 
     /// \brief Construct from a PointD and zero-size Core.
-    explicit LogShearEllipse(PointD const & center = PointD());
+    explicit inline LogShearEllipse(PointD const & center = PointD());
 
     /// \brief Construct from a copy of an LogShear core.
-    explicit LogShearEllipse(LogShear const & core, PointD const & center = PointD());
+    explicit inline LogShearEllipse(LogShear const & core, PointD const & center = PointD());
 
     /// \brief Construct from a 5-element parameter vector.
     explicit LogShearEllipse(BaseEllipse::ParameterVector const & vector, bool doNormalize=true);
 
     /// \brief Converting copy constructor.
-    LogShearEllipse(BaseEllipse const & other);
+    inline LogShearEllipse(BaseEllipse const & other);
 
     /// \brief Copy constructor.
-    LogShearEllipse(LogShearEllipse const & other);
+    inline LogShearEllipse(LogShearEllipse const & other);
 
 protected:
     virtual LogShearEllipse * _clone() const { return new LogShearEllipse(*this); }

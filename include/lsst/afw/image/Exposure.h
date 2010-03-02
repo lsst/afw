@@ -79,7 +79,7 @@ namespace image {
         void writeFits(std::string const &expOutFile) const;
         
     private:
-        LSST_PERSIST_FORMATTER(lsst::afw::formatters::ExposureFormatter<ImageT, MaskT, VarianceT>);
+        LSST_PERSIST_FORMATTER(lsst::afw::formatters::ExposureFormatter<ImageT, MaskT, VarianceT>)
 
         MaskedImageT _maskedImage;             
         Wcs::Ptr _wcs;

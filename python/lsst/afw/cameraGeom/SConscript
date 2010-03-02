@@ -1,4 +1,5 @@
 # -*- python -*-
+import re
 Import("env")
 
 pkg = env["eups_product"]
@@ -6,4 +7,6 @@ pkg = env["eups_product"]
 # (which should generally be all of them), separated by spaces.
 env.CheckSwig("python", ilang="c++", includedProducts="utils daf_base pex_exceptions pex_logging pex_policy daf_persistence daf_data security afw")
 
-env.LoadableModuleIncomplete("_cameraGeomLib", "cameraGeomLib.i", LIBS=env.getlibs("afw"))
+env.LoadableModuleIncomplete("_cameraGeomLib", "cameraGeomLib.i",
+                             CCFLAGS=re.sub("-Wall", "", " ".join(env['CCFLAGS'])),
+                             LIBS=env.getlibs("afw"))

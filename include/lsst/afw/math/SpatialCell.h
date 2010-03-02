@@ -67,8 +67,10 @@ namespace math {
         /// Do anything needed to make this candidate usable
         virtual bool instantiate() { return true; }
 
-        /// Return candidates rating
+        /// Return candidate's rating
         virtual double getCandidateRating() const = 0;
+        /// Set the candidate's rating
+        virtual void setCandidateRating(double) {}
 
         /// Return the candidate's unique ID
         int getId() const { return _id; }
@@ -213,6 +215,7 @@ namespace math {
         bool empty() const;
         size_t size() const;
 
+        void sortCandidates();
         /**
          * Return an iterator to the beginning of the Candidates
          */
@@ -287,6 +290,8 @@ namespace math {
         CellList& getCellList() { return _cellList; }
 
         void insertCandidate(SpatialCellCandidate::Ptr candidate);
+
+        void sortCandidates();
 
         void visitCandidates(CandidateVisitor * visitor, int const nMaxPerCell=-1,
                              bool const ignoreExceptions=false);

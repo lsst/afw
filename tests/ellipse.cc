@@ -29,7 +29,7 @@ typedef ellipses::LogShear::Ellipse LogShearEllipse;
 typedef ellipses::Axes::Ellipse AxesEllipse;
 typedef ellipses::Distortion::Ellipse DistortionEllipse;
 
-const static double eps = std::pow(std::numeric_limits<double>::epsilon(), 0.25);
+static const double eps = std::pow(std::numeric_limits<double>::epsilon(), 0.25);
 
 inline bool approx(double a, double b, double tol=1E-8) {
     return std::fabs(a-b) <= tol;
@@ -39,7 +39,7 @@ inline bool approx(BaseCore const & a, BaseCore const & b, double tol=1E-8) {
     return approx(a[0], b[0], tol) && approx(a[1], b[1], tol) && approx(a[2], b[2], tol);
 }
 
-void testQuadrupole(Quadrupole const & core, bool test_rf=true) {
+void testQuadrupole(Quadrupole const & core, bool =true) {
     Quadrupole copy(core);
     BOOST_CHECK(approx(core, copy, 0));
 

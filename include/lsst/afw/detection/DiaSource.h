@@ -229,7 +229,7 @@ public:
     }
 
 private:
-    LSST_PERSIST_FORMATTER(lsst::afw::formatters::DiaSourceVectorFormatter);
+    LSST_PERSIST_FORMATTER(lsst::afw::formatters::DiaSourceVectorFormatter)
     DiaSourceSet _sources;
 }; 
 

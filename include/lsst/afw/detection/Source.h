@@ -157,7 +157,7 @@ public:
     }
 private:
 
-    LSST_PERSIST_FORMATTER(lsst::afw::formatters::SourceVectorFormatter);
+    LSST_PERSIST_FORMATTER(lsst::afw::formatters::SourceVectorFormatter)
     SourceSet _sources;
 }; 
 

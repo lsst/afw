@@ -1,7 +1,7 @@
 // -*- lsst-c++ -*-
 %{
 #include "lsst/afw/math/FourierCutout.h"
-#include "lsst/afw/math/ConvolutionVisitor.h"
+#include "lsst/afw/math/LocalKernel.h"
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/math/KernelFunctions.h"
 %}
@@ -29,20 +29,9 @@
 SWIG_SHARED_PTR(FourierCutoutPtr, lsst::afw::math::FourierCutout);
 SWIG_SHARED_PTR(FourierCutoutStackPtr, lsst::afw::math::FourierCutoutStack);
 
-SWIG_SHARED_PTR_DERIVED(
-    ImageConvolutionVisitor, 
-    lsst::afw::math::ConvolutionVisitor, 
-    lsst::afw::math::ImageConvolutionVisitor
-)
-
-SWIG_SHARED_PTR_DERIVED(
-    FourierConvolutionVisitor, 
-    lsst::afw::math::ConvolutionVisitor, 
-    lsst::afw::math::FourierConvolutionVisitor
-)
 
 %include "lsst/afw/math/FourierCutout.h"
-%include "lsst/afw/math/ConvolutionVisitor.h"
+
 
 // I doubt newobject is needed; the code seems to work just as well without it.
 %newobject lsst::afw::math::convolve;
@@ -137,3 +126,22 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
 %dynamic_cast(FixedKernel);
 %dynamic_cast(LinearCombinationKernel);
 %dynamic_cast(SeparableKernel);
+
+SWIG_SHARED_PTR_DERIVED(
+    ImageLocalKernel, 
+    lsst::afw::math::LocalKernel, 
+    lsst::afw::math::ImageLocalKernel
+)
+
+SWIG_SHARED_PTR_DERIVED(
+    FourierLocalKernel, 
+    lsst::afw::math::LocalKernel, 
+    lsst::afw::math::FourierLocalKernel
+)
+SWIG_SHARED_PTR_DERIVED(
+    FftLocalKernel,
+    lsst::afw::math::FourierLocalKernel,
+    lsst::afw::math::FftLocalKernel
+)
+
+%include "lsst/afw/math/LocalKernel.h"

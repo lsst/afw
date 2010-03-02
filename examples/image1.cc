@@ -81,9 +81,9 @@ int main() {
     }
     for (; x != img.getWidth(); x += 4) {
         for (ImageT::y_iterator ptr0 = img.col_begin(x+0), end0 = img.col_end(x+0),
-                                ptr1 = img.col_begin(x+1), end1 = img.col_end(x+1),
-                                ptr2 = img.col_begin(x+2), end2 = img.col_end(x+2),
-                                ptr3 = img.col_begin(x+3), end3 = img.col_end(x+3);
+                                ptr1 = img.col_begin(x+1),
+                                ptr2 = img.col_begin(x+2),
+                                ptr3 = img.col_begin(x+3);
              ptr0 != end0; ++ptr0, ++ptr1, ++ptr2, ++ptr3) {
             *ptr0 = *ptr1 = *ptr2 = *ptr3 = 100;
         }

@@ -55,6 +55,8 @@ void y_gradient(ImageT & src, ImageT & dst) {
 
 /************************************************************************************************************/
 
+#define PRINT_IMAGE 0
+#if PRINT_IMAGE
 namespace {
     void printImage(ImageT const& img, string const& title="") {
         if (title != "") {
@@ -69,6 +71,7 @@ namespace {
         }
     }
 }
+#endif
 
 ImageT make_image(int const width=5, int const height=6) {
     ImageT img(width, height);
@@ -88,7 +91,7 @@ BOOST_AUTO_TEST_CASE(setValues) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a 
     MaskT mask(1, 1);
     mask = 0x8;
 
-#if 0
+#if PRINT_IMAGE
     printImage(img, "Image");
 #endif
 

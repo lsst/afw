@@ -15,6 +15,7 @@
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
+#include "lsst/afw/math/LocalKernel.h"
 
 namespace pexExcept = lsst::pex::exceptions;
 namespace afwMath = lsst::afw::math;
@@ -221,13 +222,15 @@ std::string afwMath::Kernel::toString(std::string const& prefix) const {
         }
     }
     return os.str();
-};
+}
 
 
 void afwMath::Kernel::toFile(std::string fileName) const {
     std::ofstream os(fileName.c_str());
     boost::archive::text_oarchive oa(os);
+#if 1                                   //  This fails to compile with icc
     oa << this;
+#endif
 }
 
 //
@@ -264,36 +267,50 @@ void afwMath::Kernel::setKernelParametersFromSpatialModel(double x, double y) co
 }
 
 /**
- *  @brief Construct an ImageConvolutionVisitor
+ *  @brief Construct an ImageLocalKernel
  *
  *  This default implementation does not include derivatives 
  *  Subclasses should override to provide versions with derivatives.
  */
-lsst::afw::math::ImageConvolutionVisitor::Ptr lsst::afw::math::Kernel::computeImageConvolutionVisitor(
-        lsst::afw::image::PointD const & location
+afwMath::ImageLocalKernel::Ptr afwMath::Kernel::computeImageLocalKernel(
+    lsst::afw::geom::Point2D const & location
 ) const{
-    std::pair<int, int> center = std::make_pair(getCtrX(), getCtrY());
-    lsst::afw::image::Image<Pixel>::Ptr imagePtr = 
-            boost::make_shared<lsst::afw::image::Image<Pixel> >(getWidth(), getHeight());
+    lsst::afw::geom::Point2I center = lsst::afw::geom::makePointI(
+        getCtrX(), getCtrY()
+    );
+    ImageLocalKernel::Image::Ptr imagePtr(
+        new ImageLocalKernel::Image(getWidth(), getHeight())
+    );
+
     computeImage(*imagePtr, false, location.getX(), location.getY());
     std::vector<double> kernelParameters(getNKernelParameters());
-    computeKernelParametersFromSpatialModel(kernelParameters, location.getX(), location.getY());
-    return boost::make_shared<ImageConvolutionVisitor>(center, kernelParameters, imagePtr);
+    computeKernelParametersFromSpatialModel(
+        kernelParameters, 
+        location.getX(), location.getY()
+    );
+    return boost::make_shared<ImageLocalKernel>(
+        center,
+        kernelParameters, 
+        imagePtr
+    );
 }
 
 /**
- *  @brief Construct a FourierConvolutionVisitor
+ *  @brief Construct a FourierLocalKernel
  *
- *  This default implementation does not include derivatives. 
+ *  This default implementation does not include derivatives. And returns an
+ *  FftLocalKernel, which is a concrete subclass of FourierLocalKernel which is 
+ *  computed by taking the fourier transform of the kernel image.
  *  Subclasses should override to provide versions with derivatives.
  *
- *  @note Because a FourierConvolutionVisitor can be constructed from an 
- *  ImageConvolutionVisitor, overriding computeLinearConvolutionVisitor
- *  will modify the output of computeFourierConvolutionVisitor as well.
+ *  @note Because a FourierLocalKernel can be constructed from an 
+ *  ImageLocalKernel, overriding computeImageLocalKernel
+ *  will modify the output of computeFourierLocalKernel as well.
  */
-lsst::afw::math::FourierConvolutionVisitor::Ptr lsst::afw::math::Kernel::computeFourierConvolutionVisitor(
-        lsst::afw::image::PointD const & location
+afwMath::FourierLocalKernel::Ptr afwMath::Kernel::computeFourierLocalKernel(
+        lsst::afw::geom::Point2D const & location
 ) const{
-    ImageConvolutionVisitor::Ptr imageVisitor = computeImageConvolutionVisitor(location);
-    return boost::make_shared<FourierConvolutionVisitor>(*imageVisitor);
+    return boost::make_shared<FftLocalKernel>(
+        *computeImageLocalKernel(location)
+    );
 }

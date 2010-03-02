@@ -30,7 +30,7 @@ int main() {
 
     *img.y_at(7, 2) = 999;
     *img.x_at(0, 0) = 0;
-    img(img.getWidth() - 1, img.getHeight() - 1) = -100;
+    img(img.getWidth() - 1, img.getHeight() - 1) = 100;
 
     printf("sub Mask<afwImage::MaskPixel>s\n");
 #if 0

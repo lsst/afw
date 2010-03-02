@@ -374,7 +374,7 @@ namespace image {
     protected:
         using ImageBase<PixelT>::_getRawView;
     private:
-        LSST_PERSIST_FORMATTER(lsst::afw::formatters::ImageFormatter<PixelT>);
+        LSST_PERSIST_FORMATTER(lsst::afw::formatters::ImageFormatter<PixelT>)
     };
     
     template<typename LhsPixelT, typename RhsPixelT>
@@ -450,7 +450,7 @@ namespace image {
         /// Set the DecoratedImage's gain
         void setGain(double gain) { _gain = gain; }
     private:
-        LSST_PERSIST_FORMATTER(lsst::afw::formatters::DecoratedImageFormatter<PixelT>);
+        LSST_PERSIST_FORMATTER(lsst::afw::formatters::DecoratedImageFormatter<PixelT>)
         typename Image<PixelT>::Ptr _image;
         double _gain;
 

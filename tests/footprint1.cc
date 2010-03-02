@@ -50,7 +50,7 @@ public:
 
     // method called for each pixel by apply()
     void operator()(typename ImageT::xy_locator loc, // locator pointing at the pixel
-                    int x, int y
+                    int, int
                    ) {
         _counts += *loc;
     }
@@ -58,6 +58,7 @@ public:
     void reset() {
         _counts = 0.0;
     }
+    virtual void reset(detection::Footprint const&) {}
 
     double getCounts() const { return _counts; }
 private:
@@ -80,6 +81,6 @@ BOOST_AUTO_TEST_CASE(FootprintFunctor) { /* parasoft-suppress  LsstDm-3-2a LsstD
     for (detection::FootprintSet<ImagePixelT>::FootprintList::iterator ptr = ds.getFootprints().begin(),
              end = ds.getFootprints().end(); ptr != end; ++ptr) {
         countDN.apply(**ptr);
-        BOOST_CHECK(countDN.getCounts() == 100);
+        BOOST_CHECK_CLOSE(countDN.getCounts(), 100.0, 1e-10);
     }
 }

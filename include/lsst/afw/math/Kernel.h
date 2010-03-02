@@ -25,11 +25,11 @@
 
 #include "lsst/daf/base/Persistable.h"
 #include "lsst/daf/data/LsstBase.h"
+#include "lsst/afw/geom/Point.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/Utils.h"
 #include "lsst/afw/math/Function.h"
 #include "lsst/afw/math/traits.h"
-#include "lsst/afw/math/ConvolutionVisitor.h"
 
 namespace lsst {
 namespace afw {
@@ -43,6 +43,10 @@ namespace math {
 #ifndef SWIG
 using boost::serialization::make_nvp;
 #endif
+
+//forward declaration of LocalKernel Classes
+class ImageLocalKernel;
+class FourierLocalKernel;
 
     /**
      * @brief Kernels are used for convolution with MaskedImages and (eventually) Images
@@ -124,7 +128,7 @@ using boost::serialization::make_nvp;
                         SpatialFunction const &spatialFunction=NullSpatialFunction());
         explicit Kernel(int width, int height, const std::vector<SpatialFunctionPtr> spatialFunctionList);
 
-        virtual ~Kernel() {};
+        virtual ~Kernel() {}
 
         /**
          * @brief Return a pointer to a deep copy of this kernel
@@ -157,13 +161,12 @@ using boost::serialization::make_nvp;
             double y = 0.0  ///< y (row position) at which to compute spatial function
         ) const = 0;
 
-        virtual ImageConvolutionVisitor::Ptr computeImageConvolutionVisitor(
-            lsst::afw::image::PointD const & location
+        virtual boost::shared_ptr<ImageLocalKernel> computeImageLocalKernel(
+            lsst::afw::geom::Point2D const & location
         ) const;
 
-
-        virtual FourierConvolutionVisitor::Ptr computeFourierConvolutionVisitor(
-           lsst::afw::image::PointD const & location
+        virtual boost::shared_ptr<FourierLocalKernel> computeFourierLocalKernel(
+           lsst::afw::geom::Point2D const & location
         ) const;
 
         /**
@@ -177,42 +180,42 @@ using boost::serialization::make_nvp;
          */
         inline int getWidth() const {
             return _width;
-        };
+        }
 
         /**
          * @brief Return the Kernel's height
          */
         inline int getHeight() const {
             return _height;
-        };
+        }
 
         /**
          * @brief Return index of the center column
          */
         inline int getCtrX() const {
             return _ctrX;
-        };
+        }
 
         /**
          * @brief Return index of the center row
          */
         inline int getCtrY() const {
             return _ctrY;
-        };
+        }
 
         /**
          * @brief Return the number of kernel parameters (0 if none)
          */
         inline unsigned int getNKernelParameters() const {
             return _nKernelParams;
-        };
+        }
 
         /**
          * @brief Return the number of spatial parameters (0 if not spatially varying)
          */
         inline int getNSpatialParameters() const {
             return this->isSpatiallyVarying() ? _spatialFunctionList[0]->getNParameters() : 0;
-        };
+        }
 
         SpatialFunctionPtr getSpatialFunction(unsigned int index) const;
 
@@ -225,14 +228,14 @@ using boost::serialization::make_nvp;
         */
         inline void setCtrX(int ctrX) {
             _ctrX = ctrX;
-        };
+        }
 
         /**
         * @brief Set the center index, y axis
         */
         inline void setCtrY(int ctrY) {
             _ctrY = ctrY;
-        };
+        }
 
         /**
          * @brief Return the spatial parameters parameters (an empty vector if not spatially varying)
@@ -244,14 +247,14 @@ using boost::serialization::make_nvp;
                 spatialParams.push_back((*spFuncIter)->getParameters());
             }
             return spatialParams;
-        };
+        }
 
         /**
          * @brief Return true iff the kernel is spatially varying (has a spatial function)
          */
         inline bool isSpatiallyVarying() const {
             return _spatialFunctionList.size() != 0;
-        };
+        }
 
         /**
          * @brief Set the kernel parameters of a spatially invariant kernel.
@@ -273,7 +276,7 @@ using boost::serialization::make_nvp;
             for (unsigned int ii = 0; ii < nParams; ++ii) {
                 this->setKernelParameter(ii, params[ii]);
             }
-        };
+        }
 
         /**
          * @brief Set the kernel parameters of a 2-component spatially invariant kernel.
@@ -284,7 +287,7 @@ using boost::serialization::make_nvp;
         inline void setKernelParameters(std::pair<double, double> const& params) {
             this->setKernelParameter(0, params.first);
             this->setKernelParameter(1, params.second);
-        };
+        }
 
         void setSpatialParameters(const std::vector<std::vector<double> > params);
 
@@ -303,7 +306,7 @@ using boost::serialization::make_nvp;
         std::vector<SpatialFunctionPtr> _spatialFunctionList;
 
     private:
-        LSST_PERSIST_FORMATTER(lsst::afw::formatters::KernelFormatter);
+        LSST_PERSIST_FORMATTER(lsst::afw::formatters::KernelFormatter)
 
         int _width;
         int _height;
@@ -332,7 +335,7 @@ using boost::serialization::make_nvp;
             lsst::afw::image::Image<Pixel> const &image
         );
 
-        virtual ~FixedKernel() {};
+        virtual ~FixedKernel() {}
 
         virtual Kernel::Ptr clone() const;
 
@@ -356,7 +359,7 @@ using boost::serialization::make_nvp;
                         boost::serialization::base_object<Kernel>(*this));
                 ar & make_nvp("img", _image);
                 ar & make_nvp("sum", _sum);
-            };
+            }
     };
 
 
@@ -396,7 +399,7 @@ using boost::serialization::make_nvp;
             std::vector<Kernel::SpatialFunctionPtr> const &spatialFunctionList
         );
 
-        virtual ~AnalyticKernel() {};
+        virtual ~AnalyticKernel() {}
 
         virtual Kernel::Ptr clone() const;
 
@@ -424,7 +427,7 @@ using boost::serialization::make_nvp;
                 ar & make_nvp("k",
                         boost::serialization::base_object<Kernel>(*this));
                 ar & make_nvp("fn", _kernelFunctionPtr);
-            };
+            }
     };
 
 
@@ -448,7 +451,7 @@ using boost::serialization::make_nvp;
             lsst::afw::image::PointI const &point
         );
 
-        virtual ~DeltaFunctionKernel() {};
+        virtual ~DeltaFunctionKernel() {}
 
         virtual Kernel::Ptr clone() const;
 
@@ -473,7 +476,7 @@ using boost::serialization::make_nvp;
                 DeltaFunctionKernel, Kernel>(
                     static_cast<DeltaFunctionKernel*>(0),
                     static_cast<Kernel*>(0));
-        };
+        }
     };
 
 
@@ -513,7 +516,7 @@ using boost::serialization::make_nvp;
             std::vector<Kernel::SpatialFunctionPtr> const &spatialFunctionList
         );
 
-        virtual ~LinearCombinationKernel() {};
+        virtual ~LinearCombinationKernel() {}
 
         virtual Kernel::Ptr clone() const;
 
@@ -524,8 +527,8 @@ using boost::serialization::make_nvp;
             double y = 0.0
         ) const;
 
-        virtual ImageConvolutionVisitor::Ptr computeImageConvolutionVisitor(
-            lsst::afw::image::PointD const & location
+        virtual boost::shared_ptr<ImageLocalKernel> computeImageLocalKernel(
+            lsst::afw::geom::Point2D const & location
         ) const;
 
         virtual std::vector<double> getKernelParameters() const;
@@ -558,7 +561,7 @@ using boost::serialization::make_nvp;
                 ar & make_nvp("kimglist", _kernelImagePtrList);
                 ar & make_nvp("ksumlist", _kernelSumList);
                 ar & make_nvp("params", _kernelParams);
-            };
+            }
     };
 
     /**
@@ -594,7 +597,7 @@ using boost::serialization::make_nvp;
                                  KernelFunction const& kernelColFunction,
                                  KernelFunction const& kernelRowFunction,
                                  std::vector<Kernel::SpatialFunctionPtr> const& spatialFunctionList);
-        virtual ~SeparableKernel() {};
+        virtual ~SeparableKernel() {}
 
         virtual Kernel::Ptr clone() const;
 
@@ -645,7 +648,7 @@ using boost::serialization::make_nvp;
                 ar & make_nvp("rowfn", _kernelRowFunctionPtr);
                 ar & make_nvp("cols", _localColList);
                 ar & make_nvp("rows", _localRowList);
-            };
+            }
     };
 
 }}}   // lsst:afw::math
@@ -665,7 +668,7 @@ inline void save_construct_data(
     ar << make_nvp("height", height);
     ar << make_nvp("pixX", x);
     ar << make_nvp("pixY", y);
-};
+}
 
 template <class Archive>
 inline void load_construct_data(
@@ -681,7 +684,7 @@ inline void load_construct_data(
     ar >> make_nvp("pixY", y);
     ::new(k) lsst::afw::math::DeltaFunctionKernel(
         width, height, lsst::afw::image::PointI(x, y));
-};
+}
 
 }}
 

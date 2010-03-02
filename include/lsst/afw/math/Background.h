@@ -158,7 +158,7 @@ private:
 template<typename ImageT>
 Background makeBackground(ImageT const& img, BackgroundControl const& bgCtrl = BackgroundControl()) {
     return Background(img, bgCtrl);
-};
+}
     
 }}}
 

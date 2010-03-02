@@ -1,6 +1,9 @@
 # -*- python -*-
+import re
 Import("env")
 
 env.CheckSwig("python", ilang="c++", includedProducts="afw utils daf_base pex_exceptions pex_logging pex_policy daf_persistence daf_data security")
-env['SWIGFLAGS'] += " -DIMPORT_FUNCTION_I"
-env.LoadableModuleIncomplete("_imageLib", Split("imageLib.i"), LIBS=env.getlibs("afw"))
+env.LoadableModuleIncomplete("_imageLib", Split("imageLib.i"),
+                             SWIGFLAGS=env['SWIGFLAGS'] + " -DIMPORT_FUNCTION_I",
+                             CCFLAGS=re.sub("-Wall", "", " ".join(env['CCFLAGS'])),
+                             LIBS=env.getlibs("afw"))
