@@ -39,7 +39,7 @@ void test(char *name) {
 
     lsst::afw::image::Wcs::Ptr testWcs = lsst::afw::image::makeWcs(metadata);
 
-    lsst::afw::image::PointD pix, sky;
+    lsst::afw::geom::PointD pix, sky;
 
 //     pix[0] = testMasked.getCols() / 2.0;
 //     pix[1] = testMasked.getRows() / 2.0;
