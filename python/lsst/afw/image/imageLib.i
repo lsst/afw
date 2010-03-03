@@ -213,8 +213,8 @@ SWIG_SHARED_PTR(Wcs, lsst::afw::image::Wcs);
     /**
      * Create a WCS from crval, image, and the elements of CD
      */
-    lsst::afw::image::Wcs::Ptr createWcs(lsst::afw::image::PointD crval,
-                                         lsst::afw::image::PointD crpix,
+    lsst::afw::image::Wcs::Ptr createWcs(lsst::afw::geom::PointD crval,
+                                         lsst::afw::geom::PointD crpix,
                                          double CD11, double CD12, double CD21, double CD22) {
 
     Eigen::Matrix2d CD;
