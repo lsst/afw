@@ -10,6 +10,7 @@
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/geom/Point.h"
+#include "lsst/afw/geom/Extent.h"
 #include "lsst/afw/geom/deprecated.h"
 
 struct wcsprm;                          // defined in wcs.h
@@ -100,9 +101,6 @@ namespace image {
 
         lsst::afw::geom::PointD skyRadiansToPixel(double sky1Radians, double sky2Radians) const;
         lsst::afw::geom::PointD pixelToSkyRadians(double pixel1, double pixel2) const;
-
-        lsst::afw::geom::AffineTransform getAffineTransform() const;
-        lsst::afw::geom::AffineTransform linearizeAt(lsst::afw::geom::PointD const & sky) const;
 
         //Mutators
         void shiftReferencePixel(double dx, double dy); 
