@@ -29,12 +29,13 @@
 #include "lsst/afw/math/Background.h"
 
 namespace image = lsst::afw::image;
+namespace geom = lsst::afw::geom;
 typedef Eigen::Matrix2d matrixD;
 
 
 BOOST_AUTO_TEST_CASE(constructors_test) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
-    image::PointD crval(30.0, 80.9);
-    image::PointD crpix(127,127);
+    geom::PointD crval = geom::makePointD(30.0, 80.9);
+    geom::PointD crpix = geom::makePointD(127,127);
     matrixD CD(2,2);
 
     //An identity matrix
@@ -52,8 +53,8 @@ BOOST_AUTO_TEST_CASE(constructors_test) { /* parasoft-suppress  LsstDm-3-2a Lsst
 
 //A trivially easy example of the linear constructor
 BOOST_AUTO_TEST_CASE(linearConstructor) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
-    image::PointD crval(0.,0.);
-    image::PointD crpix(8.,8.);
+    geom::PointD crval = geom::makePointD(0.,0.);
+    geom::PointD crpix = geom::makePointD(8.,8.);
     
     matrixD CD;
     CD  << 1,0,0,1; //Identity matrix
@@ -66,11 +67,11 @@ BOOST_AUTO_TEST_CASE(linearConstructor) { /* parasoft-suppress  LsstDm-3-2a Lsst
     //That said, I'm disturbed about how high my tolerance has to be
     //for what should be a simple computation
     double expect=2.0;
-    image::PointD ad = wcs.pixelToSky(9,9);
+    geom::PointD ad = wcs.pixelToSky(9,9);
     BOOST_CHECK_CLOSE(ad.getX(), expect, .05);
     BOOST_CHECK_CLOSE(ad.getY(), 2., .11);    
     
-    image::PointD xy = wcs.skyToPixel(2,2);
+    geom::PointD xy = wcs.skyToPixel(2,2);
     BOOST_CHECK_CLOSE(xy.getX(), 9., .05);
     BOOST_CHECK_CLOSE(xy.getY(), 9., .05);    
 }
@@ -79,8 +80,8 @@ BOOST_AUTO_TEST_CASE(linearConstructor) { /* parasoft-suppress  LsstDm-3-2a Lsst
 //A more complicated example. These numbers are taken from a visual inspection
 //of the field of the white dwarf GD66
 BOOST_AUTO_TEST_CASE(radec_to_xy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
-    image::PointD crval(80.159679, 30.806568);
-    image::PointD crpix(891.500000, 893.500000);
+    geom::PointD crval = geom::makePointD(80.159679, 30.806568);
+    geom::PointD crpix = geom::makePointD(891.500000, 893.500000);
     matrixD CD(2,2);
 
     CD(0,0) = -0.0002802350;
@@ -91,7 +92,7 @@ BOOST_AUTO_TEST_CASE(radec_to_xy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4
     image::Wcs wcs(crval, crpix, CD);
 
     //check the trivial case
-    image::PointD xy = wcs.skyToPixel(80.159679, 30.80656);
+    geom::PointD xy = wcs.skyToPixel(80.159679, 30.80656);
     BOOST_CHECK_CLOSE(xy.getX(), 890.5, .1);
     BOOST_CHECK_CLOSE(xy.getY(), 892.5, .1);  
         
@@ -116,8 +117,8 @@ BOOST_AUTO_TEST_CASE(radec_to_xy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4
     
 
 BOOST_AUTO_TEST_CASE(xy_to_radec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
-    image::PointD crval(80.159679, 30.806568);
-    image::PointD crpix(891.500000, 893.500000);
+    geom::PointD crval = geom::makePointD(80.159679, 30.806568);
+    geom::PointD crpix = geom::makePointD(891.500000, 893.500000);
     matrixD CD(2,2);
 
     CD(0,0) = -0.0002802350;
@@ -128,7 +129,7 @@ BOOST_AUTO_TEST_CASE(xy_to_radec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4
     image::Wcs wcs(crval, crpix, CD);
 
     //check the trivial case
-    image::PointD ad = wcs.pixelToSky(890.5, 892.5);
+    geom::PointD ad = wcs.pixelToSky(890.5, 892.5);
     BOOST_CHECK_CLOSE(ad.getX(), 80.15967 , 3e-5);  //2e-5 is <0.01 arcsec in ra
     BOOST_CHECK_CLOSE(ad.getY(), 30.80656 ,3e-5);  // 2e-5 is <0.1 arcsec in dec
 
@@ -152,8 +153,8 @@ BOOST_AUTO_TEST_CASE(xy_to_radec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4
 }
 
 BOOST_AUTO_TEST_CASE(test_closure) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
-    image::PointD crval(80.159679, 30.806568);
-    image::PointD crpix(890.500000, 892.500000);
+    geom::PointD crval = geom::makePointD(80.159679, 30.806568);
+    geom::PointD crpix = geom::makePointD(890.500000, 892.500000);
     matrixD CD(2,2);
 
     CD(0,0) = -0.0002802350;
@@ -165,8 +166,8 @@ BOOST_AUTO_TEST_CASE(test_closure) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-
 
     double x = 251;
     double y = 910;
-    image::PointD xy(251., 910.);
-    image::PointD ad = wcs.pixelToSky(xy);
+    geom::PointD xy = geom::makePointD(251., 910.);
+    geom::PointD ad = wcs.pixelToSky(xy);
     BOOST_CHECK_CLOSE(wcs.skyToPixel(ad).getX(), x, 1e-6);
     BOOST_CHECK_CLOSE(wcs.skyToPixel(ad).getY(), y, 1e-6);
 }
@@ -174,8 +175,8 @@ BOOST_AUTO_TEST_CASE(test_closure) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-
 
 BOOST_AUTO_TEST_CASE(linearMatrix) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     
-    image::PointD crval(80.159679, 30.806568);
-    image::PointD crpix(891.500000, 893.500000);
+    geom::PointD crval = geom::makePointD(80.159679, 30.806568);
+    geom::PointD crpix = geom::makePointD(891.500000, 893.500000);
     matrixD CD(2,2);
 
     CD(0,0) = -0.0002802350;
