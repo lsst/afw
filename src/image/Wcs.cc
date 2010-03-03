@@ -449,16 +449,12 @@ double Wcs::pixArea(GeomPoint pix00) const {
 
     GeomPoint const sky00 = pixelToSky(pix00);
     
-    //GeomPoint has no way of adding or subtracting GeomPoints from each other
-    GeomPoint const pix10  = geom::makePointD(pix00.getX() + side, pix00.getY());
-    GeomPoint dsky10 = pixelToSky(pix10);
-    dsky10.setX( dsky10.getX() - sky00.getX());
-    dsky10.setY( dsky10.getY() - sky00.getY());
-
-    GeomPoint const pix01  = geom::makePointD(pix00.getX(), pix00.getY() + side);
-    GeomPoint dsky01 = pixelToSky(pix01);
-    dsky01.setX( dsky01.getX() - sky00.getX());
-    dsky01.setY( dsky01.getY() - sky00.getY());
+    //This doesn't necessarily make sense if you're not familiar with Points and Extents. In the 
+    //context of afw::geom, a Point is a position on the sky, and it doesn't make sense to add or subtract
+    //them. Instead you can add a vector (or an "Extent") to a point. Extents can be constructed from 
+    //points, or from a pair of numbers using the makeExtent syntax
+    GeomPoint const dsky10 = pixelToSky(pix00 + geom::makeExtentD(side, 0)) - geom::Extent<double>(sky00);
+    GeomPoint const dsky01 = pixelToSky(pix00 + geom::makeExtentD(0, side)) - geom::Extent<double>(sky00);
 
     double const cosDec = cos(sky00.getY()*M_PI/180.0);
     return cosDec*fabs(dsky01.getX()*dsky10.getY() - dsky01.getY()*dsky10.getX())/(side*side);
