@@ -404,17 +404,10 @@ lsst::afw::geom::AffineTransform TanWcs::linearizeAt(GeomPoint const & sky) cons
     GeomPoint const sky00 = sky;
     GeomPoint const pix00 = skyToPixel(sky00);
 
-    //can't perform arithmathic on GeomPoint directly
-    GeomPoint pix10 = geom::makePointD(pix00[0] + side, pix00[1]);
-    GeomPoint dsky10 = pixelToSky(pix10) ;
-    dsky10[0] -= sky00[0];
-    dsky10[1] -= sky00[1];
+    //Adding vectors to points is tricky. See note in Wcs::pixArea()
+    GeomPoint const dsky10 = pixelToSky(pix00 + geom::makeExtentD(side, 0)) - geom::Extent<double>(sky00);
+    GeomPoint const dsky01 = pixelToSky(pix00 + geom::makeExtentD(0, side)) - geom::Extent<double>(sky00);
     
-    GeomPoint pix01 = geom::makePointD(pix00[0], pix00[1]+ side);
-    GeomPoint dsky01 = pixelToSky(pix01) ;
-    dsky01[0] -= sky00[0];
-    dsky01[1] -= sky00[1];
-
     Eigen::Matrix2d m;
     m(0, 0) = dsky10.getX()/side;
     m(0, 1) = dsky01.getX()/side;
