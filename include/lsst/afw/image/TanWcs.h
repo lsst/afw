@@ -7,6 +7,8 @@
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/image/Wcs.h" 
+#include "lsst/afw/geom/Point.h"
+#include "lsst/afw/geom/Extent.h"
 
 
 struct wcsprm;                          // defined in wcs.h
