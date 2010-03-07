@@ -26,14 +26,14 @@ namespace ex           = lsst::pex::exceptions;
 coord::Observatory::Observatory(std::string const latitude,
                                 std::string const longitude,
                                 double const elevation) : 
-    _latitude(coord::toDecimal(latitude)),
-    _longitude(coord::toDecimal(longitude)),
+    _latitude(coord::dmsStringToDegrees(latitude)),
+    _longitude(coord::dmsStringToDegrees(longitude)),
     _elevation(elevation) {
 }
 
 std::string coord::Observatory::getLatitudeStr()  {
-    return coord::toDmsStr(_latitude);
+    return coord::degreesToDmsString(_latitude);
 }
 std::string coord::Observatory::getLongitudeStr() {
-    return coord::toDmsStr(_longitude);
+    return coord::degreesToDmsString(_longitude);
 }

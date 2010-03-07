@@ -23,15 +23,15 @@ BOOST_AUTO_TEST_CASE(dmsToDecimal) {
     
     std::string ra = "10:00:00.00";
     std::string dec = "-02:30:00.00";
-    double raDeg = coord::toDecimal(ra);
-    double decDeg = coord::toDecimal(dec);
+    double raDeg = coord::dmsStringToDegrees(ra);
+    double decDeg = coord::dmsStringToDegrees(dec);
     
     BOOST_CHECK_EQUAL(raDeg, 10.0);
     BOOST_CHECK_EQUAL(decDeg, -2.5);
     
     // make sure the rounding issue works (ie. 59.998 rounds to 00, not 60 sec)
     raDeg -= 0.000001;
-    std::string raStr = coord::toDmsStr(raDeg);
+    std::string raStr = coord::Coord(raDeg, 0.0).getRaStr();
     BOOST_CHECK_EQUAL(raStr, ra);
 
     coord::Fk5Coord cel(raDeg, decDeg, 2000.0);
@@ -49,7 +49,9 @@ BOOST_AUTO_TEST_CASE(eclipticConversion) {
     //double alpha = 28.026183;
     coord::Fk5Coord polluxEqu(alpha, delta);
     coord::EclipticCoord polluxEcl = polluxEqu.toEcliptic();
+    coord::Fk5Coord fk5 = polluxEcl.toFk5();
     std::cout << "Pollux (ecl): " << polluxEcl.getLambdaDeg() << " " <<  polluxEcl.getBetaDeg() << std::endl;
     std::cout << "Pollux (equ): " << polluxEqu.getRaDeg() << " " <<  polluxEqu.getDecDeg() << std::endl;
+    std::cout << "Pollux (fk5): " << fk5.getRaDeg() << " " <<  fk5.getDecDeg() << std::endl;
 
 }

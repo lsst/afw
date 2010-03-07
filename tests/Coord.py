@@ -4,16 +4,12 @@
 Tests for Coord
 
 Run with:
-   ./sex2dec.py
+   python Coord.py
 or
    python
-   >>> import afw
+   >>> import Coord
+   >>> Coord.run()
 """
-
-##########################
-# sex2dec.py
-# Steve Bickerton
-# An example executible which calls the example 'stack' code 
 
 import sys, os
 import unittest
@@ -44,15 +40,14 @@ class CoordTestCase(unittest.TestCase):
 
         
     def testEcliptic(self):
-        """Verify Ecliptic Coordinate Transforms"""
-        
+        """Verify Ecliptic Coordinate Transforms""" 
+       
         # Pollux
         alpha, delta = "07:45:18.946", "28:01:34.26"
         # known ecliptic coords (example from Meeus, Astro algorithms, pg 95)
         lamb, beta = 113.215629, 6.684170
         
         polluxEqu = coord.Fk5Coord(alpha, delta)
-#        import pdb; pdb.set_trace()
         polluxEcl = polluxEqu.toEcliptic()
         print "Ecliptic (Pollux): ", polluxEcl.getLambdaDeg(), polluxEcl.getBetaDeg(), lamb, beta
 
@@ -61,9 +56,8 @@ class CoordTestCase(unittest.TestCase):
         self.assertAlmostEqual(polluxEcl.getBetaDeg(), beta, 6)
 
         # make sure it transforms back (machine precision)
-        self.assertAlmostEqual(polluxEcl.toFk5().getRaDeg(), polluxEqu.getRaDeg(), 14)
-        self.assertAlmostEqual(polluxEcl.toFk5().getDecDeg(), polluxEqu.getDecDeg(), 14)
-
+        self.assertAlmostEqual(polluxEcl.toFk5().getRaDeg(), polluxEqu.getRaDeg(), 13)
+        self.assertAlmostEqual(polluxEcl.toFk5().getDecDeg(), polluxEqu.getDecDeg(), 13)
 
 
     def testGalactic(self):
@@ -89,7 +83,7 @@ class CoordTestCase(unittest.TestCase):
         self.assertAlmostEqual(sagAGal.toFk5().getDecDeg(), sagAKnownEqu.getDecDeg(), 14)
         
         
-    def xtestAltAz(self):
+    def testAltAz(self):
         """Verify Altitude/Azimuth coordinate transforms"""
         
         # sedna (from jpl) for 2010-03-03 00:00 UT
@@ -106,7 +100,7 @@ class CoordTestCase(unittest.TestCase):
         self.assertAlmostEqual(altaz.getAzimuthDeg(), az, 1)
 
 
-    def xtestPrecess(self):
+    def testPrecess(self):
         """Test precession calculations in different coordinate systems"""
         
         ### Fk5 ###
@@ -168,7 +162,7 @@ class CoordTestCase(unittest.TestCase):
         self.assertAlmostEqual(venusNew.getLambdaDeg(), lambNew, 3)
         self.assertAlmostEqual(venusNew.getBetaDeg(), betaNew, 3)
 
-    def xtestAngularSeparation(self):
+    def testAngularSeparation(self):
         """Test measure of angular separation between two coords"""
 
         # test from Meeus, pg 110
@@ -190,6 +184,8 @@ class CoordTestCase(unittest.TestCase):
         print "Separation (Spica+epsilon): %.8f  (known) %.8f" % (deg, epsilonDeg)
         # machine precision
         self.assertAlmostEqual(deg, epsilonDeg)
+
+
         
         
 #################################################################
