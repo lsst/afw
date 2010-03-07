@@ -11,6 +11,7 @@
  * @todo Finish doxygen docs
  * @todo Finish python docs
  * @todo Start tex doc
+ * @todo add *many* const
  */ 
 
 #include "lsst/afw/coord/Observatory.h"
@@ -26,9 +27,18 @@ double const radToDeg = 180.0/M_PI;
     
 class GalacticCoord;
 class Fk5Coord;
+class IcrsCoord;
 class EclipticCoord;
 class AltAzCoord;
- 
+
+/**
+ * @class Coord
+ *
+ * This is the base class for spherical coordinates.
+ * Derived classes include:
+ *     Fk5Coord, IcrsCoord, GalacticCoord, EclipticCoord, AltAzCoord
+ *
+ */
 class Coord {
 public:
     
@@ -74,9 +84,10 @@ public:
     
     Coord transform(Coord const poleFrom, Coord const poleTo);
     double angularSeparation(Coord &c);
-    Coord precess(double epochTo) { return _precess(getEpoch(), epochTo); }
+    Coord precess(double epochTo);
 
     virtual Fk5Coord toFk5();
+    virtual IcrsCoord toIcrs();
     virtual GalacticCoord toGalactic();
     virtual EclipticCoord toEcliptic();
     virtual AltAzCoord toAltAz(coord::Observatory obs, coord::Date obsDate);
@@ -86,12 +97,15 @@ private:
     double _latitudeRad;
     double _epoch;
 
-    Coord _precess(double epochFrom, double epochTo);
     void _verifyValues();
 };
  
 
 
+/**
+ * @class Fk5Coord
+ * @brief A class to handle Fk5 coordinates (inherits from Coord)
+ */
 class Fk5Coord : public Coord {
 public:    
     Fk5Coord(double const ra, double const dec, double const epoch = 2000.0) : 
@@ -100,15 +114,34 @@ public:
         Coord(ra, dec, epoch) {}
     Fk5Coord() : Coord() {}
 
-    // can't just let Coord do this ... need to return the correct type
-    Fk5Coord precess(double epochTo) {
-        return Coord::precess(epochTo).toFk5();
-    }
+    Fk5Coord precess(double epochTo);
     
+private:
+};
+
+
+/**
+ * @class IcrsCoord
+ * @brief A class to handle Icrs coordinates (inherits from Coord)
+ */
+class IcrsCoord : public Coord {
+public:    
+    IcrsCoord(double const ra, double const dec, double const epoch = 2000.0) : 
+        Coord(ra, dec, epoch) {}
+    IcrsCoord(std::string const ra, std::string const dec, double const epoch = 2000.0) : 
+        Coord(ra, dec, epoch) {}
+    IcrsCoord() : Coord() {}
+
+    IcrsCoord precess(double epochTo);
+
 private:
 };
     
 
+/**
+ * @class GalacticCoord
+ * @brief A class to handle Galactic coordinates (inherits from Coord)
+ */
 class GalacticCoord : public Coord {
 public:
     
@@ -119,21 +152,22 @@ public:
     GalacticCoord() : Coord() {}
 
     Fk5Coord toFk5();
+    IcrsCoord toIcrs();
     GalacticCoord toGalactic();
     EclipticCoord toEcliptic();
     AltAzCoord toAltAz(coord::Observatory const &obs, coord::Date const &date);
-    
-    // Nothing to do here, just create a new GalacticCoord with the epoch
-    GalacticCoord precess(double epochTo) {
-        return GalacticCoord(getLongitudeDeg(), getLatitudeDeg(), epochTo);
-    }
 
+    GalacticCoord precess(double epochTo);
     
 private:
 };
 
 
 
+/**
+ * @class EclipticCoord
+ * @brief A class to handle Ecliptic coordinates (inherits from Coord)
+ */
 class EclipticCoord : public Coord {
 public:
     
@@ -144,13 +178,12 @@ public:
     EclipticCoord() : Coord() {}
 
     Fk5Coord toFk5();
+    IcrsCoord toIcrs();
     GalacticCoord toGalactic();
     EclipticCoord toEcliptic();
     AltAzCoord toAltAz(coord::Observatory const &obs, coord::Date const &date);
 
-    EclipticCoord precess(double epochTo) {
-        return (this->toFk5()).precess(epochTo).toEcliptic();
-    }
+    EclipticCoord precess(double epochTo);
     
 private:
 
@@ -177,6 +210,7 @@ public:
 
     
     Fk5Coord toFk5();
+    IcrsCoord toIcrs();
     GalacticCoord toGalactic();
     EclipticCoord toEcliptic();
     AltAzCoord toAltAz(coord::Observatory const &obs, coord::Date const &date);

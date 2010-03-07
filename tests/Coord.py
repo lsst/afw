@@ -17,6 +17,9 @@ import lsst.afw.coord.coordLib as coord
 import lsst.utils.tests as utilsTests
 import eups
 
+# todo: see if we can give an Fk5 and an ecliptic at a different epoch and get the right answer
+# todo: make sure ICrs stuff works
+
 ######################################
 # main body of code
 ######################################
@@ -162,6 +165,7 @@ class CoordTestCase(unittest.TestCase):
         self.assertAlmostEqual(venusNew.getLambdaDeg(), lambNew, 3)
         self.assertAlmostEqual(venusNew.getBetaDeg(), betaNew, 3)
 
+
     def testAngularSeparation(self):
         """Test measure of angular separation between two coords"""
 
@@ -185,8 +189,6 @@ class CoordTestCase(unittest.TestCase):
         # machine precision
         self.assertAlmostEqual(deg, epsilonDeg)
 
-
-        
         
 #################################################################
 # Test suite boiler plate
