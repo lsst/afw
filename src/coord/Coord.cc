@@ -108,28 +108,90 @@ std::string coord::toDmsStr(double const val) {
 
 
 
+coord::Coord::Coord(double const ra, double const dec, double const epoch) :
+    _longitudeRad(degToRad*ra), _latitudeRad(degToRad*dec), _epoch(epoch) {
+    _verifyValues();
+}
+
+coord::Coord::Coord(std::string const ra, std::string const dec, double const epoch) :
+    _longitudeRad(degToRad*15.0*coord::toDecimal(ra)),
+    _latitudeRad(degToRad*coord::toDecimal(dec)),
+    _epoch(epoch) {
+    _verifyValues();
+}
+
+coord::Coord::Coord() : _longitudeRad(0.0), _latitudeRad(0.0), _epoch(2000.0) {
+    _verifyValues();
+}
+
+void coord::Coord::_verifyValues() {
+    if (_longitudeRad < 0.0 || _longitudeRad >= 2.0*M_PI) {
+        throw LSST_EXCEPT(ex::InvalidParameterException,
+                          (boost::format("Azimuthal coord must be: 0 < long < 2PI (%f).") %
+                           _longitudeRad).str());
+    }
+    if (_latitudeRad < -M_PI/2.0 || _latitudeRad > M_PI/2.0) {
+        throw LSST_EXCEPT(ex::InvalidParameterException,
+                          (boost::format("Latitude coord must be: -PI/2 <= lat <= PI/2 (%f).") %
+                           _latitudeRad).str());
+    }
+}
+
 void coord::Coord::reset(double const longitudeDeg, double const latitudeDeg, double const epoch) {
-    if (longitudeDeg < 0.0 || longitudeDeg >= 360.0) {
-        throw LSST_EXCEPT(ex::InvalidParameterException,
-                          (boost::format("Longitude (RA, L, Lambda, or Az) must be "
-                                         "between 0 and 360 degrees (%f).") % longitudeDeg).str());
-    }
     _longitudeRad = degToRad*longitudeDeg;
-    if (latitudeDeg < -90.0 || latitudeDeg > 90.0) {
-        throw LSST_EXCEPT(ex::InvalidParameterException,
-                          (boost::format("Latitude (Dec, B, Beta, or Alt) must be "
-                                         "between -90 and 90 degrees (%f).") % latitudeDeg).str());
-    }
-    _latitudeRad = degToRad*latitudeDeg;
+    _latitudeRad  = degToRad*latitudeDeg;
     _epoch = epoch;
+    _verifyValues();
 }
 
 
-
+double coord::Coord::getLongitudeDeg()  { return radToDeg*_longitudeRad; }
+double coord::Coord::getLongitudeHrs()  { return radToDeg*_longitudeRad/15.0; }
+double coord::Coord::getLongitudeRad()  { return _longitudeRad; }
+double coord::Coord::getLatitudeDeg()   { return radToDeg*_latitudeRad; }
+double coord::Coord::getLatitudeRad()   { return _latitudeRad; }
 std::string coord::Coord::getLongitudeStr() { 
     return toDmsStr(radToDeg*_longitudeRad/15.0);
 }
 std::string coord::Coord::getLatitudeStr() {
+    return toDmsStr(radToDeg*_latitudeRad);
+}
+
+double coord::Coord::getRaDeg()          { return this->toFk5().getLongitudeDeg(); }
+double coord::Coord::getDecDeg()         { return this->toFk5().getLatitudeDeg(); }
+double coord::Coord::getRaHrs()          { return this->toFk5().getLongitudeHrs(); }
+double coord::Coord::getRaRad()          { return this->toFk5().getLongitudeRad(); }
+double coord::Coord::getDecRad()         { return this->toFk5().getLatitudeRad(); }
+std::string coord::Coord::getRaStr()     { return this->toFk5().getLongitudeStr(); }
+std::string coord::Coord::getDecStr()    { return this->toFk5().getLatitudeStr(); }
+
+double coord::Coord::getLDeg()           { return this->toGalactic().getLongitudeDeg(); }
+double coord::Coord::getBDeg()           { return this->toGalactic().getLatitudeDeg(); }
+double coord::Coord::getLHrs()           { return this->toGalactic().getLongitudeHrs(); }    
+double coord::Coord::getLRad()           { return this->toGalactic().getLongitudeRad(); }
+double coord::Coord::getBRad()           { return this->toGalactic().getLatitudeRad(); }
+std::string coord::Coord::getLStr()      { return this->toGalactic().getLongitudeStr(); }
+std::string coord::Coord::getBStr()      { return this->toGalactic().getLatitudeStr(); }
+
+
+double coord::Coord::getLambdaDeg()      { return this->toEcliptic().getLongitudeDeg(); }
+double coord::Coord::getBetaDeg()        { return this->toEcliptic().getLatitudeDeg(); }
+double coord::Coord::getLambdaHrs()      { return this->toEcliptic().getLongitudeHrs(); }
+double coord::Coord::getLambdaRad()      { return this->toEcliptic().getLongitudeRad(); }
+double coord::Coord::getBetaRad()        { return this->toEcliptic().getLatitudeRad(); }
+std::string coord::Coord::getLambdaStr() { return this->toEcliptic().getLongitudeStr(); }
+std::string coord::Coord::getBetaStr()   { return this->toEcliptic().getLatitudeStr(); }
+
+
+double coord::EclipticCoord::getLongitudeDeg()  { return radToDeg*_longitudeRad; }
+double coord::EclipticCoord::getLongitudeHrs()  { return radToDeg*_longitudeRad/15.0; }
+double coord::EclipticCoord::getLongitudeRad()  { return _longitudeRad; }
+double coord::EclipticCoord::getLatitudeDeg()   { return radToDeg*_latitudeRad; }
+double coord::EclipticCoord::getLatitudeRad()   { return _latitudeRad; }
+std::string coord::EclipticCoord::getLongitudeStr() { 
+    return toDmsStr(radToDeg*_longitudeRad/15.0);
+}
+std::string coord::EclipticCoord::getLatitudeStr() {
     return toDmsStr(radToDeg*_latitudeRad);
 }
 
@@ -169,11 +231,11 @@ coord::Coord coord::Coord::transform(Coord poleTo, Coord poleFrom) {
 
 
 
-double coord::Coord::angularSeparation(Coord &coo) {
+double coord::Coord::angularSeparation(coord::Coord &c) {
     double alpha1 = getLongitudeRad();
     double delta1 = getLatitudeRad();
-    double alpha2 = coo.getLongitudeRad();
-    double delta2 = coo.getLatitudeRad();
+    double alpha2 = c.getLongitudeRad();
+    double delta2 = c.getLatitudeRad();
     
 #if 0
     // this formula breaks down near 0 and 180
@@ -192,10 +254,10 @@ double coord::Coord::angularSeparation(Coord &coo) {
     
     return distDeg;
 }
-double coord::Fk5Coord::angularSeparation(Fk5Coord &coo) {
-    coord::Coord cb = coo.getCoord();
-    return _coord.angularSeparation(cb);
-}
+
+
+
+#if 0
 double coord::GalacticCoord::angularSeparation(GalacticCoord &coo) {
     coord::Coord cb = coo.getCoord();
     return _coord.angularSeparation(cb);
@@ -208,9 +270,9 @@ double coord::AltAzCoord::angularSeparation(AltAzCoord &coo) {
     coord::Coord cb = coo.getCoord();
     return _coord.angularSeparation(cb);
 }
+#endif
 
-
-coord::Fk5Coord coord::Fk5Coord::_precess(double epochFrom, double epochTo) {
+coord::Coord coord::Coord::_precess(double epochFrom, double epochTo) {
 
     coord::Date dateFrom(epochFrom, coord::Date::EPOCH);
     coord::Date dateTo(epochTo, coord::Date::EPOCH);
@@ -228,8 +290,8 @@ coord::Fk5Coord coord::Fk5Coord::_precess(double epochFrom, double epochTo) {
     z /= asPerRad;
     theta /= asPerRad;
 
-    double alpha0 = _coord.getLongitudeRad();
-    double delta0 = _coord.getLatitudeRad();
+    double alpha0 = getLongitudeRad();
+    double delta0 = getLatitudeRad();
     
     double A = cos(delta0) * sin(alpha0 + xi);
     double B = cos(theta)*cos(delta0)*cos(alpha0 + xi) - sin(theta)*sin(delta0);
@@ -238,7 +300,7 @@ coord::Fk5Coord coord::Fk5Coord::_precess(double epochFrom, double epochTo) {
     double alpha = reduceAngle(radToDeg * ( atan2(A,B) + z));
     double delta = radToDeg * asin(C);
     
-    return coord::Fk5Coord(alpha, delta, epochTo);
+    return coord::Coord(alpha, delta, epochTo);
 }
 
 
@@ -246,28 +308,30 @@ coord::Fk5Coord coord::Fk5Coord::_precess(double epochFrom, double epochTo) {
 /**
  * Fk5Coord
  */
-coord::Fk5Coord coord::Fk5Coord::toFk5() { 
-    return Fk5Coord(_coord.getLongitudeDeg(), _coord.getLatitudeDeg(), _coord.getEpoch()); 
+coord::Fk5Coord coord::Coord::toFk5() { 
+    return Fk5Coord(getLongitudeDeg(), getLatitudeDeg(), getEpoch()); 
 }
-coord::GalacticCoord coord::Fk5Coord::toGalactic() {
+coord::GalacticCoord coord::Coord::toGalactic() {
 
     // if we're epoch==2000, we can transform, otherwise we need to precess first
-    if ( (_coord.getEpoch() - 2000.0) < epochTolerance ) {
-        Coord cb = _coord.transform(Fk5PoleInGalactic, GalacticPoleInFk5);
-        return GalacticCoord(cb.getLongitudeDeg(), cb.getLatitudeDeg(), _coord.getEpoch());
+    if ( (getEpoch() - 2000.0) < epochTolerance ) {
+        Coord c = transform(Fk5PoleInGalactic, GalacticPoleInFk5);
+        return GalacticCoord(c.getLongitudeDeg(), c.getLatitudeDeg(), getEpoch());
     } else {
         // precess to 2000.0 and call ourselves recursively ... then we'll land in the above 'if' block
         return precess(2000.0).toGalactic();
     }
     
 }
-coord::EclipticCoord coord::Fk5Coord::toEcliptic() {
-    double eclPoleIncl = eclipticPoleInclination(_coord.getEpoch());
-    Coord eclPoleInEquatorial = Coord(270.0, 90.0 - eclPoleIncl);
-    Coord equPoleInEcliptic = Coord(90.0, 90.0 - eclPoleIncl);
-    Coord cb = _coord.transform(equPoleInEcliptic, eclPoleInEquatorial); 
-    return EclipticCoord(cb.getLongitudeDeg(), cb.getLatitudeDeg(), _coord.getEpoch());
+coord::EclipticCoord coord::Coord::toEcliptic() {
+    double eclPoleIncl = eclipticPoleInclination(getEpoch());
+    Coord eclPoleInEquatorial(270.0, 90.0 - eclPoleIncl, getEpoch());
+    Coord equPoleInEcliptic(90.0, 90.0 - eclPoleIncl, getEpoch());
+    Coord c = transform(equPoleInEcliptic, eclPoleInEquatorial); 
+    return EclipticCoord(c.getLongitudeDeg(), c.getLatitudeDeg(), getEpoch());
 }
+
+#if 0
 coord::AltAzCoord coord::Fk5Coord::toAltAz(coord::Observatory obs, coord::Date obsDate) {
 
     // precess to the epoch
@@ -301,50 +365,52 @@ coord::AltAzCoord coord::Fk5Coord::toAltAz(coord::Observatory obs, coord::Date o
     
     return AltAzCoord(A, h, obsDate.getEpoch(), obs);
 }
-
+#endif
 
 
 /**
  * GalacticCoord
  */
-coord::GalacticCoord coord::GalacticCoord::toGalactic() { 
-    return GalacticCoord(_coord.getLongitudeDeg(), _coord.getLatitudeDeg(), _coord.getEpoch());
-}
 coord::Fk5Coord coord::GalacticCoord::toFk5() {
     // transform to equatorial
     // galactic coords are ~constant, and the poles used are for epoch=2000, so we get J2000
-    Coord cb = _coord.transform(GalacticPoleInFk5, Fk5PoleInGalactic);
+    Coord c = transform(GalacticPoleInFk5, Fk5PoleInGalactic);
     // put the new values in an Fk5Coord and force epoch=2000
-    Fk5Coord equ(cb.getLongitudeDeg(), cb.getLatitudeDeg(), 2000.0);
+    Fk5Coord equ(c.getLongitudeDeg(), c.getLatitudeDeg(), 2000.0);
     // now precess the J2000 to the epoch for the original galactic
-    if ( fabs(_coord.getEpoch() - 2000.0) > epochTolerance ) {
-        equ.precess(_coord.getEpoch());
+    if ( fabs(getEpoch() - 2000.0) > epochTolerance ) {
+        equ.precess(getEpoch());
     }
     return equ;
+}
+coord::GalacticCoord coord::GalacticCoord::toGalactic() { 
+    return GalacticCoord(getLongitudeDeg(), getLatitudeDeg(), getEpoch());
 }
 coord::EclipticCoord coord::GalacticCoord::toEcliptic() {
     return (this->toFk5()).toEcliptic();
 }
+#if 0
 coord::AltAzCoord coord::GalacticCoord::toAltAz(coord::Observatory const &obs, coord::Date const &date) {
     return (this->toFk5()).toAltAz(obs, date);
 }
-
+#endif
 /**
  * EclipticCoord
  */
 coord::EclipticCoord coord::EclipticCoord::toEcliptic() {
-    return coord::EclipticCoord(_coord.getLongitudeDeg(), _coord.getLatitudeDeg(), _coord.getEpoch());
+    return coord::EclipticCoord(getLongitudeDeg(), getLatitudeDeg(), getEpoch());
 }
 coord::Fk5Coord coord::EclipticCoord::toFk5() {
-    double eclPoleIncl = eclipticPoleInclination(_coord.getEpoch());
-    Coord eclipticPoleInFk5 = Coord(270.0, 90.0 - eclPoleIncl);
-    Coord fk5PoleInEcliptic = Coord(90.0, 90.0 - eclPoleIncl);
-    Coord cb = _coord.transform(eclipticPoleInFk5, fk5PoleInEcliptic); 
-    return Fk5Coord(cb.getLongitudeDeg(), cb.getLatitudeDeg(), _coord.getEpoch());
+    double eclPoleIncl = eclipticPoleInclination(getEpoch());
+    Coord eclipticPoleInFk5(270.0, 90.0 - eclPoleIncl, getEpoch());
+    Coord fk5PoleInEcliptic(90.0, 90.0 - eclPoleIncl, getEpoch());
+    Coord c = transform(eclipticPoleInFk5, fk5PoleInEcliptic); 
+    return Fk5Coord(c.getLongitudeDeg(), c.getLatitudeDeg(), getEpoch());
 }
 coord::GalacticCoord coord::EclipticCoord::toGalactic() {
     return (this->toFk5()).toGalactic(); 
 }
+#if 0
 coord::AltAzCoord coord::EclipticCoord::toAltAz(coord::Observatory const &obs, coord::Date const &date) {
     return (this->toFk5()).toAltAz(obs, date);
 }
@@ -384,3 +450,4 @@ coord::AltAzCoord coord::AltAzCoord::toAltAz(coord::Observatory const &obs, coor
 coord::AltAzCoord coord::AltAzCoord::toAltAz() {
     return coord::AltAzCoord(_coord.getLongitudeDeg(), _coord.getLatitudeDeg(), _coord.getEpoch(), _obs);
 }
+#endif

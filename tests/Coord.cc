@@ -49,5 +49,7 @@ BOOST_AUTO_TEST_CASE(eclipticConversion) {
     //double alpha = 28.026183;
     coord::Fk5Coord polluxEqu(alpha, delta);
     coord::EclipticCoord polluxEcl = polluxEqu.toEcliptic();
-    std::cout << "Pollux: " << polluxEcl.getLambdaDeg() << " " <<  polluxEcl.getBetaDeg() << std::endl;
+    std::cout << "Pollux (ecl): " << polluxEcl.getLambdaDeg() << " " <<  polluxEcl.getBetaDeg() << std::endl;
+    std::cout << "Pollux (equ): " << polluxEqu.getRaDeg() << " " <<  polluxEqu.getDecDeg() << std::endl;
+
 }

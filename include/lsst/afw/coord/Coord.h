@@ -48,6 +48,7 @@ double toDecimal(std::string const dms);
 Dms toDms(double const val);
 std::string toDmsStr(double const val);
 
+#if 0    
 class Coord {
 public:
     
@@ -83,129 +84,147 @@ private:
     double _latitudeRad;
     double _epoch;
 };
-
+#endif
 
 class GalacticCoord;
 class Fk5Coord;
 class EclipticCoord;
 class AltAzCoord;
  
-class Fk5Coord {
+class Coord {
 public:
     
-    Fk5Coord(double const ra, double const dec, double const epoch = 2000.0) : 
-        _coord(Coord(ra, dec, epoch)) {}
-    Fk5Coord(std::string const ra, std::string const dec, double const epoch = 2000.0) : 
-        _coord(Coord(ra, dec, epoch)) {}
-    Fk5Coord() : _coord(Coord()) {}
+    Coord(double const ra, double const dec, double const epoch = 2000.0);
+    Coord(std::string const ra, std::string const dec, double const epoch = 2000.0);
+    Coord();
 
-    void reset(double const longitude, double const latitude, double const epoch = 2000.0) {
-        _coord.reset(longitude, latitude, epoch);
-    }
+    void reset(double const longitude, double const latitude, double const epoch = 2000.0);
+
+    double getEpoch()         { return _epoch; }
     
-    double getRaDeg() { return _coord.getLongitudeDeg(); }
-    double getDecDeg() { return _coord.getLatitudeDeg(); }
-    double getRaHrs() { return _coord.getLongitudeHrs(); }
-    double getRaRad() { return _coord.getLongitudeRad(); }
-    double getDecRad() { return _coord.getLatitudeRad(); }
-    std::string getRaStr() { return _coord.getLongitudeStr(); }
-    std::string getDecStr() { return _coord.getLatitudeStr(); }
-    double getEpoch() { return _coord.getEpoch(); }
-    Coord getCoord() { return _coord; }
+    double getLongitudeDeg();
+    double getLongitudeHrs();
+    double getLongitudeRad();
+    double getLatitudeDeg();
+    double getLatitudeRad();
+    std::string getLongitudeStr();
+    std::string getLatitudeStr();
     
-    GalacticCoord toGalactic();
+    double getRaDeg();
+    double getDecDeg();
+    double getRaHrs();
+    double getRaRad();
+    double getDecRad();
+    std::string getRaStr();
+    std::string getDecStr();
+
+    double getLDeg();
+    double getBDeg();
+    double getLHrs();
+    double getLRad();
+    double getBRad();
+    std::string getLStr();
+    std::string getBStr();
+
+    double getLambdaDeg();
+    double getBetaDeg();
+    double getLambdaHrs();
+    double getLambdaRad();
+    double getBetaRad();
+    std::string getLambdaStr();
+    std::string getBetaStr();
+    
+    
+    //Coord getCoord() { return _coord; }
+    
+    Coord transform(Coord const poleFrom, Coord const poleTo);
+    double angularSeparation(Coord &c);
+    Coord precess(double epochTo) { return _precess(getEpoch(), epochTo); }
+
     Fk5Coord toFk5();
+    GalacticCoord toGalactic();
     EclipticCoord toEcliptic();
+#if 0    
     AltAzCoord toAltAz(coord::Observatory obs, coord::Date obsDate);
+#endif
     
-    Fk5Coord precess(double epochTo) { return _precess(_coord.getEpoch(), epochTo); }
-    double angularSeparation(Fk5Coord &coo);
 
 private:
-    Coord _coord;
-    Fk5Coord _precess(double epochFrom, double epochTo);
+    double _longitudeRad;
+    double _latitudeRad;
+    double _epoch;
+
+    Coord _precess(double epochFrom, double epochTo);
+    void _verifyValues();
 };
  
 
+
+class Fk5Coord : public Coord {
+public:    
+    Fk5Coord(double const ra, double const dec, double const epoch = 2000.0) : 
+        Coord(ra, dec, epoch) {}
+    Fk5Coord(std::string const ra, std::string const dec, double const epoch = 2000.0) : 
+        Coord(ra, dec, epoch) {}
+    Fk5Coord() : Coord() {}
+private:
+};
     
-class GalacticCoord {
+
+class GalacticCoord : public Coord {
 public:
     
     GalacticCoord(double const l, double const b, double const epoch = 2000.0) : 
-        _coord(Coord(l, b, epoch)) {}
+        Coord(l, b, epoch) {}
     GalacticCoord(std::string const l, std::string const b, double const epoch = 2000.0) : 
-        _coord(Coord(l, b, epoch)) {}
-    GalacticCoord() : _coord(Coord()) {}
+        Coord(l, b, epoch) {}
+    GalacticCoord() : Coord() {}
 
-    void reset(double const longitude, double const latitude, double const epoch = 2000.0) {
-        _coord.reset(longitude, latitude, epoch);
-    }
-
-    double getLDeg() { return _coord.getLongitudeDeg(); }
-    double getBDeg() { return _coord.getLatitudeDeg(); }
-    double getLHrs() { return _coord.getLongitudeHrs(); }    
-    double getLRad() { return _coord.getLongitudeRad(); }
-    double getBRad() { return _coord.getLatitudeRad(); }
-    std::string getLStr() { return _coord.getLongitudeStr(); }
-    std::string getBStr() { return _coord.getLatitudeStr(); }
-    double getEpoch() { return _coord.getEpoch(); }
-    Coord getCoord() { return _coord; }
-    
     Fk5Coord toFk5();
     GalacticCoord toGalactic();
     EclipticCoord toEcliptic();
+#if 0
     AltAzCoord toAltAz(coord::Observatory const &obs, coord::Date const &date);
-
+#endif
+    
     // Nothing to do here, just create a new GalacticCoord with the epoch
     GalacticCoord precess(double epochTo) {
-        return GalacticCoord(_coord.getLongitudeDeg(), _coord.getLatitudeDeg(), epochTo);
+        return GalacticCoord(getLongitudeDeg(), getLatitudeDeg(), epochTo);
     }
-    double angularSeparation(GalacticCoord &coo);
+    //double angularSeparation(GalacticCoord &c);
     
- private:
-    Coord _coord;
+private:
 };
 
 
-class EclipticCoord {
+
+class EclipticCoord : public Coord {
 public:
     
     EclipticCoord(double const lambda, double const beta, double const epoch = 2000.0) : 
-        _coord(Coord(lambda, beta, epoch)) {}
+        Coord(lambda, beta, epoch) {}
     EclipticCoord(std::string const lambda, std::string const beta, double const epoch = 2000.0) : 
-        _coord(Coord(lambda, beta, epoch)) {}
-    EclipticCoord() : _coord(Coord()) {}
-
-    void reset(double const longitude, double const latitude, double const epoch = 2000.0) {
-        _coord.reset(longitude, latitude, epoch);
-    }
-    
-    double getLambdaDeg() { return _coord.getLongitudeDeg(); }
-    double getBetaDeg()   { return _coord.getLatitudeDeg(); }
-    double getLambdaHrs() { return _coord.getLongitudeHrs(); }
-    double getLambdaRad() { return _coord.getLongitudeRad(); }
-    double getBetaRad()   { return _coord.getLatitudeRad(); }
-    std::string getLambdaStr() { return _coord.getLongitudeStr(); }
-    std::string getBetaStr() { return _coord.getLatitudeStr(); }
-    double getEpoch() { return _coord.getEpoch(); }
-    Coord getCoord() { return _coord; }
+        Coord(lambda, beta, epoch) {}
+    EclipticCoord() : Coord() {}
     
     Fk5Coord toFk5();
     GalacticCoord toGalactic();
     EclipticCoord toEcliptic();
+#if 0
     AltAzCoord toAltAz(coord::Observatory const &obs, coord::Date const &date);
     
     EclipticCoord precess(double epochTo) {
         return (this->toFk5()).precess(epochTo).toEcliptic();
     }
-    double angularSeparation(EclipticCoord &coo);
+#endif
+    //double angularSeparation(EclipticCoord &c);
     
- private:
-    Coord _coord;
+private:
+
 };
 
 
-
+#if 0    
 class AltAzCoord {
 public:
     
@@ -238,7 +257,7 @@ private:
     Coord _coord;
     coord::Observatory _obs;
 };
-    
+#endif    
 
 double eclipticPoleInclination(double const epoch);
 
