@@ -25,8 +25,11 @@
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/image/TanWcs.h"
+#include "lsst/afw/image/makeWcs.h"
 #include "lsst/afw/math/Interpolate.h"
 #include "lsst/afw/math/Background.h"
+
+#include "lsst/daf/base/PropertySet.h"
 
 namespace image = lsst::afw::image;
 namespace geom = lsst::afw::geom;
@@ -192,3 +195,5 @@ BOOST_AUTO_TEST_CASE(linearMatrix) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-
     BOOST_CHECK_CLOSE(CD(1,0), M(1,0), 1e-6);
     BOOST_CHECK_CLOSE(CD(1,1), M(1,1), 1e-6);
 }
+
+
