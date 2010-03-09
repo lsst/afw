@@ -13,6 +13,7 @@ import unittest
 
 import eups
 import lsst.afw.image as afwImage
+import lsst.afw.geom as afwGeom
 import lsst.utils.tests as utilsTests
 import lsst.pex.logging as pexLog
 import lsst.pex.exceptions as pexExcept
@@ -207,6 +208,18 @@ class ExposureTestCase(unittest.TestCase):
 
         utilsTests.assertRaisesLsstCpp(self, pexExcept.LengthErrorException, getSubRegion)
 
+        #check the sub- and parent- exposures are using the same Wcs transformation
+        subBBox = afwImage.BBox(afwImage.PointI(40, 50), 10, 10)
+        subExposure = self.exposureCrWcs.Factory(self.exposureCrWcs, subBBox)
+        parentPos = self.exposureCrWcs.getWcs().pixelToSky(0,0)
+        subExpPos = subExposure.getWcs().pixelToSky(0,0)
+        
+        for i in range(2):
+            self.assertAlmostEqual(parentPos[i], subExpPos[i], 9, "Wcs in sub image has changed")
+            
+
+        
+
     def testReadWriteFits(self):
         """Test readFits and writeFits.
         """
@@ -237,6 +250,9 @@ class ExposureTestCase(unittest.TestCase):
 
     def checkWcs(self, parentExposure, subExposure):
         """Compare WCS at corner points of a sub-exposure and its parent exposure
+           By using the function indexToPosition, we should be able to convert the indices
+           (of the four corners (of the sub-exposure)) to positions and use the wcs
+           to get the same sky coordinates for each.
         """
         subMI = subExposure.getMaskedImage()
         subDim = subMI.getDimensions()
@@ -249,8 +265,8 @@ class ExposureTestCase(unittest.TestCase):
         for xSubInd in (0, subDim[0]-1):
             for ySubInd in (0, subDim[1]-1):
                 p0 = mainWcs.pixelToSky(
-                    afwImage.indexToPosition(xSubInd + subXY0[0]),
-                    afwImage.indexToPosition(ySubInd + subXY0[1]),
+                    afwImage.indexToPosition(xSubInd),
+                    afwImage.indexToPosition(ySubInd),
                 )
                 p1 = subWcs.pixelToSky(
                     afwImage.indexToPosition(xSubInd),
