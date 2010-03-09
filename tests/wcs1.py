@@ -64,7 +64,7 @@ class WCSTestCaseSDSS(unittest.TestCase):
 
     def testXyToRaDecArguments(self):
         """Check that conversion of xy to ra dec (and back again) works"""
-        xy = afwImage.PointD(110, 123)
+        xy = afwGeom.makePointD(110, 123)
         raDec = self.wcs.pixelToSky(xy)
         xy2 = self.wcs.skyToPixel(raDec)
 
@@ -88,9 +88,9 @@ class WCSTestCaseSDSS(unittest.TestCase):
             #away with it
 
             #This line causes an exception to be raised
-            raDec = afwImage.PointD(245.167400, +19.1976583)
+            raDec = afwGeom.makePointD(245.167400, +19.1976583)
             #This doesn't
-            #raDec = afwImage.PointD(+19.1976583, 245.167400)
+            #raDec = afwGeom.makePointD(+19.1976583, 245.167400)
 
             xy = self.wcs.skyToPixel(raDec)
             print xy
@@ -102,14 +102,14 @@ class WCSTestCaseSDSS(unittest.TestCase):
     def test_RaTan_DecTan(self):
         """Check the RA---TAN, DEC--TAN WCS conversion"""
         raDec = self.wcs.pixelToSky(0.0, 0.0)
-        raDec0 = afwImage.PointD(19.1960467992, 245.1598413385) # values from wcstools' xy2sky, transposed
+        raDec0 = afwGeom.makePointD(19.1960467992, 245.1598413385) # values from wcstools' xy2sky, transposed
 
         self.assertAlmostEqual(raDec.getX(), raDec0.getX(), 5)
         self.assertAlmostEqual(raDec.getY(), raDec0.getY(), 5) # dec from ds9
 
     def testIdentity(self):
         """Convert from ra, dec to col, row and back again"""
-        raDec = afwImage.PointD(20, 150)
+        raDec = afwGeom.makePointD(20, 150)
         rowCol = self.wcs.skyToPixel(raDec)
         raDec2 = self.wcs.pixelToSky(rowCol)
 
@@ -119,7 +119,7 @@ class WCSTestCaseSDSS(unittest.TestCase):
     def testInvalidRaDec(self):
         """Test a conversion for an invalid position.  Well, "test" isn't
         quite right as the result is invalid, but make sure that it still is"""
-        raDec = afwImage.PointD(1, 2)
+        raDec = afwGeom.makePointD(1, 2)
 
         self.assertRaises(lsst.pex.exceptions.exceptionsLib.LsstCppException, self.wcs.skyToPixel, raDec)
 
@@ -152,15 +152,15 @@ class WCSTestCaseCFHT(unittest.TestCase):
     def testPlateScale(self):
         """Test that we can measure the area of a pixel"""
 
-        p00 = afwImage.PointD(10, 10)
-        p00 = afwImage.PointD(self.metadata.getAsDouble("CRPIX1"), self.metadata.getAsDouble("CRPIX2"))
+        p00 = afwGeom.makePointD(10, 10)
+        p00 = afwGeom.makePointD(self.metadata.getAsDouble("CRPIX1"), self.metadata.getAsDouble("CRPIX2"))
 
         sky00 = self.wcs.pixelToSky(p00)
         cosdec = math.cos(math.pi/180*sky00.getY())
 
         side = 1e-3
-        p10 = self.wcs.skyToPixel(sky00 + afwImage.PointD(side/cosdec, 0))    - p00
-        p01 = self.wcs.skyToPixel(sky00 + afwImage.PointD(0,           side)) - p00
+        p10 = self.wcs.skyToPixel(sky00 + afwGeom.makeExtentD(side/cosdec, 0)) - p00
+        p01 = self.wcs.skyToPixel(sky00 + afwGeom.makeExtentD(0,        side)) - p00
 
         area = side*side/abs(p10.getX()*p01.getY() - p01.getX()*p10.getY())
 
@@ -184,20 +184,20 @@ class WCSTestCaseCFHT(unittest.TestCase):
 
     def testShiftWcs(self):
         """Test shifting the reference pixel"""
-        sky10_10 = self.wcs.pixelToSky(afwImage.PointD(10, 10))
+        sky10_10 = self.wcs.pixelToSky(afwGeom.makePointD(10, 10))
 
         self.wcs.shiftReferencePixel(-10, -10)
-        sky00 = self.wcs.pixelToSky(afwImage.PointD(0, 0))
+        sky00 = self.wcs.pixelToSky(afwGeom.makePointD(0, 0))
         self.assertEqual((sky00.getX(), sky00.getY()), (sky10_10.getX(), sky10_10.getY()))
 
     def testCloneWcs(self):
         """Test Cloning a Wcs"""
-        sky00 = self.wcs.pixelToSky(afwImage.PointD(0, 0))
+        sky00 = self.wcs.pixelToSky(afwGeom.makePointD(0, 0))
 
         new = self.wcs.clone()
-        self.wcs.pixelToSky(afwImage.PointD(10, 10)) # shouldn't affect new
+        self.wcs.pixelToSky(afwGeom.makePointD(10, 10)) # shouldn't affect new
 
-        nsky00 = new.pixelToSky(afwImage.PointD(0, 0))
+        nsky00 = new.pixelToSky(afwGeom.makePointD(0, 0))
         self.assertEqual((sky00.getX(), sky00.getY()), (nsky00.getX(), nsky00.getY()))
 
     def testCD(self):
@@ -212,12 +212,13 @@ class WCSTestCaseCFHT(unittest.TestCase):
                             self.wcs.getCDMatrix())
 
     def testAffineTransform(self):
+        print type(self.wcs)
         a = self.wcs.getAffineTransform()
         l = self.wcs.getCDMatrix()
         #print a[a.X], a[a.Y], print a[a.XX], a[a.XY], a[a.YX], a[a.YY]
 
         sky00g = afwGeom.makePointD(10, 10)
-        sky00i = afwImage.PointD(sky00g.getX(), sky00g.getY())
+        sky00i = afwGeom.makePointD(sky00g.getX(), sky00g.getY())
         a = self.wcs.linearizeAt(sky00i)
         pix00i = self.wcs.skyToPixel(sky00i)
         pix00g = afwGeom.makePointD(pix00i.getX(), pix00i.getY())
