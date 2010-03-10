@@ -768,9 +768,10 @@ namespace image {
          *
          * @return image position
          */
-        inline double indexToPosition(int ind, ///< image index
-                                      lsst::afw::image::xOrY const xy ///< Is this a column or row coordinate?
-                                     ) {
+        inline double indexToPosition(
+                int ind, ///< image index
+                lsst::afw::image::xOrY const xy ///< Is this a column or row coordinate?
+        ) const {
             return getImage()->indexToPosition(ind, xy);
         }
         
@@ -779,9 +780,10 @@ namespace image {
          *
          * @return std::pair(nearest integer index, fractional part)
          */
-        std::pair<int, double> positionToIndex(double const pos, ///< image position
-                                               lsst::afw::image::xOrY const xy ///< Is this a column or row coordinate?
-                                              ) {
+        std::pair<int, double> positionToIndex(
+                double const pos, ///< image position
+                lsst::afw::image::xOrY const xy ///< Is this a column or row coordinate?
+        ) const {
             return getImage()->positionToIndex(pos, xy);
         }
 
