@@ -73,9 +73,10 @@ namespace image {
         lsst::afw::geom::PointD pixelToSky(double pixel1, double pixel2) const;
         
         lsst::daf::base::PropertySet::Ptr getFitsMetadata() const;        
-        
-        lsst::afw::geom::AffineTransform getAffineTransform() const;
+
+        #if 0        
         lsst::afw::geom::AffineTransform linearizeAt(lsst::afw::geom::PointD const & pix) const;
+        #endif
         
 
         //Mutators

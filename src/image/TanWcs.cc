@@ -374,53 +374,12 @@ lsst::daf::base::PropertySet::Ptr TanWcs::getFitsMetadata() const {
 }
 
 
-/**
- * Return the linear part of the Wcs, the CD matrix in FITS speak, as an AffineTransform
- *
- * \sa 
- */
-lsst::afw::geom::AffineTransform TanWcs::getAffineTransform() const
-{
-    return lsst::afw::geom::AffineTransform(getCDMatrix());
+#if 0
+//@TODO This function needs to be written
+lsst::afw::geom::AffineTransform TanWcs::linearizeAt(GeomPoint const & sky) const {
+    //Should do something different to the base class derivation, but I don't know what yet
 }
-
-
-/**
- * Return the local linear approximation to Wcs::xyToRaDec at the point (ra, y) = sky
- *
- * This is currently implemented as a numerical derivative, but we should specialise the Wcs class (or rather
- * its implementation) to handle "simple" cases such as TAN-SIP analytically
- *
- * @param(in) sky Position in sky coordinates where transform is desired
- */
-lsst::afw::geom::AffineTransform TanWcs::linearizeAt(GeomPoint const & sky) const
-{
-    //
-    // Figure out the (0, 0), (0, 1), and (1, 0) ra/dec coordinates of the corners of a square drawn in pixel
-    // It'd be better to centre the square at sky00, but that would involve another conversion between sky and
-    // pixel coordinates so I didn't bother
-    //
-    const double side = 10;             // length of the square's sides in pixels
-    GeomPoint const sky00 = sky;
-    GeomPoint const pix00 = skyToPixel(sky00);
-
-    //Adding vectors to points is tricky. See note in Wcs::pixArea()
-    GeomPoint const dsky10 = pixelToSky(pix00 + geom::makeExtentD(side, 0)) - geom::Extent<double>(sky00);
-    GeomPoint const dsky01 = pixelToSky(pix00 + geom::makeExtentD(0, side)) - geom::Extent<double>(sky00);
-    
-    Eigen::Matrix2d m;
-    m(0, 0) = dsky10.getX()/side;
-    m(0, 1) = dsky01.getX()/side;
-    m(1, 0) = dsky10.getY()/side;
-    m(1, 1) = dsky01.getY()/side;
-
-    Eigen::Vector2d sky00v;
-    sky00v << sky00.getX(), sky00.getY();
-    Eigen::Vector2d pix00v;
-    pix00v << pix00.getX(), pix00.getY();
-    return lsst::afw::geom::AffineTransform(m, lsst::afw::geom::ExtentD(sky00v - m * pix00v));
-}
-
+#endif
 
 //
 // Mutators
