@@ -52,13 +52,14 @@ IgnoreKernelZeroPixels = True
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def refConvolve(imMaskVar, kernel, doNormalize, copyEdge):
+def refConvolve(imMaskVar, xy0, kernel, doNormalize, copyEdge):
     """Reference code to convolve a kernel with a masked image.
 
     Warning: slow (especially for spatially varying kernels).
     
     Inputs:
     - imMaskVar: (image, mask, variance) numpy arrays
+    - xy0: xy offset of imMaskVar relative to parent image
     - kernel: lsst::afw::Core.Kernel object
     - doNormalize: normalize the kernel
     - copyEdge: if True: copy edge pixels from input image to convolved image;
@@ -101,10 +102,10 @@ def refConvolve(imMaskVar, kernel, doNormalize, copyEdge):
         inRowEnd = inRowBeg + kRows
         retCol = kernel.getCtrX()
         if isSpatiallyVarying:
-            rowPos = afwImage.indexToPosition(retRow)
+            rowPos = afwImage.indexToPosition(retRow) + xy0[1]
         for inColBeg in colRange:
             if isSpatiallyVarying:
-                colPos = afwImage.indexToPosition(retCol)
+                colPos = afwImage.indexToPosition(retCol) + xy0[0]
                 kernel.computeImage(kImage, doNormalize, colPos, rowPos)
                 kImArr = imTestUtils.arrayFromImage(kImage)
             inColEnd = inColBeg + kCols
@@ -176,6 +177,8 @@ class ConvolveTestCase(unittest.TestCase):
         del tmp
 
         self.maskedImage = afwImage.MaskedImageF(FullMaskedImage, InputBBox, True)
+        # use a huge XY0 to make emphasize any errors related to not handling xy0 correctly.
+        self.maskedImage.setXY0(300, 200)
 
         # provide destinations for the convolved MaskedImage and Image that contain junk
         # to verify that convolve overwrites all pixels;
@@ -213,9 +216,10 @@ class ConvolveTestCase(unittest.TestCase):
             refKernel = kernel
 
         imMaskVar = imTestUtils.arraysFromMaskedImage(self.maskedImage)
+        xy0 = self.maskedImage.getXY0()
         for doNormalize in (False, True):
             for copyEdge in (False, True):
-                refCnvImMaskVarArr = refConvolve(imMaskVar, refKernel, doNormalize, copyEdge)
+                refCnvImMaskVarArr = refConvolve(imMaskVar, xy0, refKernel, doNormalize, copyEdge)
 
                 afwMath.convolve(self.cnvImage, self.maskedImage.getImage(), kernel, doNormalize, copyEdge)
                 cnvImArr = imTestUtils.arrayFromImage(self.cnvImage)
