@@ -7,11 +7,10 @@
  * @ingroup afw
  * @author Steve Bickerton
  *
- * @todo Verify same epoch for angular separation.
- * @todo Finish doxygen docs
  * @todo Finish python docs
  * @todo Start tex doc
  * @todo add *many* const
+ * @todo for epoch=2000 for fk5 and icrs
  */ 
 
 #include "lsst/afw/coord/Observatory.h"
@@ -24,10 +23,10 @@ namespace coord {
 double const degToRad = M_PI/180.0;
 double const radToDeg = 180.0/M_PI;
     
-    
-class GalacticCoord;
-class Fk5Coord;
 class IcrsCoord;
+class Fk5Coord;
+class EquatorialCoord;    
+class GalacticCoord;
 class EclipticCoord;
 class AltAzCoord;
 
@@ -86,6 +85,7 @@ public:
     double angularSeparation(Coord &c);
     Coord precess(double epochTo);
 
+    virtual EquatorialCoord toEquatorial();
     virtual Fk5Coord toFk5();
     virtual IcrsCoord toIcrs();
     virtual GalacticCoord toGalactic();
@@ -101,6 +101,25 @@ private:
 };
  
 
+/**
+ * @class EquatorialCoord
+ * @brief A class to handle Fk5 coordinates (inherits from Coord)
+ */
+class EquatorialCoord : public Coord {
+public:    
+    EquatorialCoord(double const ra, double const dec, double const epoch=2000.0) : 
+        Coord(ra, dec, epoch) {}
+    EquatorialCoord(std::string const ra, std::string const dec, double const epoch=2000.0) :
+        Coord(ra, dec, epoch) {}
+    EquatorialCoord() : Coord() {}
+
+    EquatorialCoord precess(double epochTo);
+    
+private:
+};
+
+
+    
 
 /**
  * @class Fk5Coord
@@ -108,13 +127,13 @@ private:
  */
 class Fk5Coord : public Coord {
 public:    
-    Fk5Coord(double const ra, double const dec, double const epoch = 2000.0) : 
-        Coord(ra, dec, epoch) {}
-    Fk5Coord(std::string const ra, std::string const dec, double const epoch = 2000.0) : 
-        Coord(ra, dec, epoch) {}
+    Fk5Coord(double const ra, double const dec) : 
+        Coord(ra, dec, 2000.0) {}
+    Fk5Coord(std::string const ra, std::string const dec) :
+        Coord(ra, dec, 2000.0) {}
     Fk5Coord() : Coord() {}
 
-    Fk5Coord precess(double epochTo);
+    EquatorialCoord precess(double epochTo);
     
 private:
 };
@@ -126,13 +145,13 @@ private:
  */
 class IcrsCoord : public Coord {
 public:    
-    IcrsCoord(double const ra, double const dec, double const epoch = 2000.0) : 
-        Coord(ra, dec, epoch) {}
-    IcrsCoord(std::string const ra, std::string const dec, double const epoch = 2000.0) : 
-        Coord(ra, dec, epoch) {}
+    IcrsCoord(double const ra, double const dec) : 
+        Coord(ra, dec, 2000.0) {}
+    IcrsCoord(std::string const ra, std::string const dec) : 
+        Coord(ra, dec, 2000.0) {}
     IcrsCoord() : Coord() {}
 
-    IcrsCoord precess(double epochTo);
+    EquatorialCoord precess(double epochTo);
 
 private:
 };
@@ -151,6 +170,7 @@ public:
         Coord(l, b, epoch) {}
     GalacticCoord() : Coord() {}
 
+    EquatorialCoord toEquatorial();
     Fk5Coord toFk5();
     IcrsCoord toIcrs();
     GalacticCoord toGalactic();
@@ -177,6 +197,7 @@ public:
         Coord(lambda, beta, epoch) {}
     EclipticCoord() : Coord() {}
 
+    EquatorialCoord toEquatorial();
     Fk5Coord toFk5();
     IcrsCoord toIcrs();
     GalacticCoord toGalactic();
@@ -208,7 +229,8 @@ public:
     std::string getAzimuthStr();
     std::string getAltitudeStr();
 
-    
+
+    EquatorialCoord toEquatorial();
     Fk5Coord toFk5();
     IcrsCoord toIcrs();
     GalacticCoord toGalactic();

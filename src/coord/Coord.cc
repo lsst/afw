@@ -269,13 +269,13 @@ double coord::Coord::getLatitudeRad()           { return _latitudeRad; }
 std::string coord::Coord::getLongitudeStr()     { return degreesToDmsString(radToDeg*_longitudeRad/15.0); }
 std::string coord::Coord::getLatitudeStr()      { return degreesToDmsString(radToDeg*_latitudeRad); }
                                                 
-double coord::Coord::getRaDeg()                 { return this->toFk5().getLongitudeDeg(); }
-double coord::Coord::getDecDeg()                { return this->toFk5().getLatitudeDeg(); }
-double coord::Coord::getRaHrs()                 { return this->toFk5().getLongitudeHrs(); }
-double coord::Coord::getRaRad()                 { return this->toFk5().getLongitudeRad(); }
-double coord::Coord::getDecRad()                { return this->toFk5().getLatitudeRad(); }
-std::string coord::Coord::getRaStr()            { return this->toFk5().getLongitudeStr(); }
-std::string coord::Coord::getDecStr()           { return this->toFk5().getLatitudeStr(); }
+double coord::Coord::getRaDeg()                 { return this->toEquatorial().getLongitudeDeg(); }
+double coord::Coord::getDecDeg()                { return this->toEquatorial().getLatitudeDeg(); }
+double coord::Coord::getRaHrs()                 { return this->toEquatorial().getLongitudeHrs(); }
+double coord::Coord::getRaRad()                 { return this->toEquatorial().getLongitudeRad(); }
+double coord::Coord::getDecRad()                { return this->toEquatorial().getLatitudeRad(); }
+std::string coord::Coord::getRaStr()            { return this->toEquatorial().getLongitudeStr(); }
+std::string coord::Coord::getDecStr()           { return this->toEquatorial().getLatitudeStr(); }
                                                 
 double coord::Coord::getLDeg()                  { return this->toGalactic().getLongitudeDeg(); }
 double coord::Coord::getBDeg()                  { return this->toGalactic().getLatitudeDeg(); }
@@ -409,10 +409,19 @@ coord::Coord coord::Coord::precess(
 
 
 /**
+ * @brief Convert ourself to Equatorial: RA, Dec
+ */
+coord::EquatorialCoord coord::Coord::toEquatorial() {
+    return coord::EquatorialCoord(getLongitudeDeg(), getLatitudeDeg(), getEpoch());
+}
+
+
+/**
  * @brief Convert ourself to Fk5: RA, Dec (basically J2000)
  */
-coord::Fk5Coord coord::Coord::toFk5() { 
-    return Fk5Coord(getLongitudeDeg(), getLatitudeDeg(), getEpoch()); 
+coord::Fk5Coord coord::Coord::toFk5() {
+    coord::Coord c = precess(2000.0);
+    return Fk5Coord(c.getLongitudeDeg(), c.getLatitudeDeg());
 }
 
 /**
@@ -421,7 +430,8 @@ coord::Fk5Coord coord::Coord::toFk5() {
  * @note This currently just calls the FK5 routine.
  */
 coord::IcrsCoord coord::Coord::toIcrs() {
-    return IcrsCoord(getLongitudeDeg(), getLatitudeDeg(), getEpoch());
+    coord::Coord c = precess(2000.0);
+    return IcrsCoord(c.getLongitudeDeg(), c.getLatitudeDeg());
 }
 
 /**
@@ -483,6 +493,24 @@ coord::AltAzCoord coord::Coord::toAltAz(
 
 
 
+/* ============================================================
+ *
+ * class EquatorialCoord
+ *
+ * ============================================================*/
+
+
+/**
+ * @brief precess ourselfs to a new epoch
+ */
+coord::EquatorialCoord coord::EquatorialCoord::precess(
+                                                       double const epochTo ///< epoch to precess to
+                                                      ) {
+    coord::Coord c = coord::Coord::precess(epochTo);
+    return EquatorialCoord(c.getLongitudeDeg(), c.getLatitudeDeg(), c.getEpoch());
+}
+
+
 
 
 /* ============================================================
@@ -491,16 +519,18 @@ coord::AltAzCoord coord::Coord::toAltAz(
  *
  * ============================================================*/
 
+
 /**
  * @brief precess ourselfs to a new epoch
  *
- * Can't just let the base class Coord do this ... we need to return the correct type
+ * We can't precess Fk5, or it won't be Fk5 anymore.  We'll return an Equatorial
  */
-coord::Fk5Coord coord::Fk5Coord::precess(
-                                         double const epochTo ///< epoch to precess to
-                                        ) {
-    return coord::Coord::precess(epochTo).toFk5();
+coord::EquatorialCoord coord::Fk5Coord::precess(
+                                                double const epochTo ///< epoch to precess to
+                                               ) {
+    return coord::EquatorialCoord(getLongitudeDeg(), getLatitudeDeg(), 2000.0).precess(epochTo);
 }
+
 
 
 /* ============================================================
@@ -514,10 +544,10 @@ coord::Fk5Coord coord::Fk5Coord::precess(
  *
  * Can't just let the base class Coord do this ... we need to return the correct type
  */
-coord::IcrsCoord coord::IcrsCoord::precess(
-                                         double const epochTo ///< epoch to precess to
-                                        ) {
-    return coord::Coord::precess(epochTo).toIcrs();
+coord::EquatorialCoord coord::IcrsCoord::precess(
+                                                 double const epochTo ///< epoch to precess to
+                                                ) {
+    return coord::EquatorialCoord(getLongitudeDeg(), getLatitudeDeg(), 2000.0).precess(epochTo);
 }
 
 
@@ -531,21 +561,32 @@ coord::IcrsCoord coord::IcrsCoord::precess(
 /**
  * @brief Convert ourself from galactic to Fk5
  */
+coord::EquatorialCoord coord::GalacticCoord::toEquatorial() {
+    
+    // transform to equatorial
+    // galactic coords are ~constant, and the poles used are for epoch=2000, so we get J2000
+    Coord c = transform(GalacticPoleInFk5, Fk5PoleInGalactic);
+    
+    //
+    if ( fabs(getEpoch() - 2000.0) < epochTolerance ) {
+        return coord::EquatorialCoord(c.getLongitudeDeg(), c.getLatitudeDeg(), 2000.0);
+    } else {
+        return coord::EquatorialCoord(c.getLongitudeDeg(), c.getLatitudeDeg(), 2000.0).precess(getEpoch());
+    }
+}
+
+
+/**
+ * @brief Convert ourself from galactic to Fk5
+ */
 coord::Fk5Coord coord::GalacticCoord::toFk5() {
     
     // transform to equatorial
     // galactic coords are ~constant, and the poles used are for epoch=2000, so we get J2000
     Coord c = transform(GalacticPoleInFk5, Fk5PoleInGalactic);
     
-    // put the new values in an Fk5Coord and force epoch=2000
-    Fk5Coord equ(c.getLongitudeDeg(), c.getLatitudeDeg(), 2000.0);
-    
-    // precess the J2000 to the epoch for the original galactic
-    if ( fabs(getEpoch() - 2000.0) > epochTolerance ) {
-        return equ.precess(getEpoch());
-    } else {
-        return equ;
-    }
+    // put the new values in an Fk5Coord
+    return coord::Fk5Coord(c.getLongitudeDeg(), c.getLatitudeDeg());
 }
 
 /**
@@ -610,6 +651,19 @@ coord::EclipticCoord coord::EclipticCoord::toEcliptic() {
     return coord::EclipticCoord(getLongitudeDeg(), getLatitudeDeg(), getEpoch());
 }
 
+
+/**
+ * @brief Convert ourself from Ecliptic to Equatorial
+ */
+coord::EquatorialCoord coord::EclipticCoord::toEquatorial() {
+    double const eclPoleIncl = eclipticPoleInclination(getEpoch());
+    Coord const eclipticPoleInFk5(270.0, 90.0 - eclPoleIncl, getEpoch());
+    Coord const fk5PoleInEcliptic(90.0, 90.0 - eclPoleIncl, getEpoch());
+    Coord c = transform(eclipticPoleInFk5, fk5PoleInEcliptic);
+    return coord::EquatorialCoord(c.getLongitudeDeg(), c.getLatitudeDeg(), getEpoch());
+}
+
+
 /**
  * @brief Convert ourself from Ecliptic to Fk5
  */
@@ -617,8 +671,9 @@ coord::Fk5Coord coord::EclipticCoord::toFk5() {
     double const eclPoleIncl = eclipticPoleInclination(getEpoch());
     Coord const eclipticPoleInFk5(270.0, 90.0 - eclPoleIncl, getEpoch());
     Coord const fk5PoleInEcliptic(90.0, 90.0 - eclPoleIncl, getEpoch());
-    Coord c = transform(eclipticPoleInFk5, fk5PoleInEcliptic); 
-    return Fk5Coord(c.getLongitudeDeg(), c.getLatitudeDeg(), getEpoch());
+    Coord c = transform(eclipticPoleInFk5, fk5PoleInEcliptic);
+    Coord cp = c.precess(2000.0);
+    return Fk5Coord(cp.getLongitudeDeg(), cp.getLatitudeDeg());
 }
 
 /**
@@ -689,6 +744,9 @@ coord::GalacticCoord coord::AltAzCoord::toGalactic() {
     return (this->toFk5()).toGalactic(); 
 }
 
+
+
+
 /**
  * @brief Convert ourself from AltAz to Fk5
  */
@@ -705,8 +763,10 @@ coord::Fk5Coord coord::AltAzCoord::toFk5() {
     double const alpha    = radToDeg*(theta0 - L - atan(tanH));
     double const sinDelta = sin(phi)*sin(h) - cos(phi)*cos(h)*cos(A);
     double const delta    = radToDeg*asin(sinDelta);
-    
-    return Fk5Coord(alpha, delta, getEpoch());
+
+    coord::Coord c(alpha, delta, getEpoch());
+    coord::Coord cp = c.precess(2000.0);
+    return Fk5Coord(cp.getLatitudeDeg(), cp.getLongitudeDeg());
 }
 
 /**
@@ -716,6 +776,13 @@ coord::Fk5Coord coord::AltAzCoord::toFk5() {
  */
 coord::IcrsCoord coord::AltAzCoord::toIcrs() {
     return (this->toFk5()).toIcrs();
+}
+
+/**
+ * @brief Convert ourself from AltAz to Fk5
+ */
+coord::EquatorialCoord coord::AltAzCoord::toEquatorial() {
+    return (this->toFk5()).precess(getEpoch());
 }
 
 

@@ -94,7 +94,7 @@ class CoordTestCase(unittest.TestCase):
         az, alt = 231.5947, 44.3375
         obs = coord.Observatory(40.384, 74.659, 100.0) # peyton
         obsDate = coord.Date(2010, 3, 3, 0, 0, 0)
-        sedna = coord.Fk5Coord(ra, dec, obsDate.getEpoch())
+        sedna = coord.EquatorialCoord(ra, dec, obsDate.getEpoch())
         altaz = sedna.toAltAz(obs, obsDate)
         print "AltAz (Sedna): ", altaz.getAltitudeDeg(), altaz.getAzimuthDeg(), alt, az
 

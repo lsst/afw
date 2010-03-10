@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(dmsToDecimal) {
     std::string raStr = coord::Coord(raDeg, 0.0).getRaStr();
     BOOST_CHECK_EQUAL(raStr, ra);
 
-    coord::Fk5Coord cel(raDeg, decDeg, 2000.0);
+    coord::Fk5Coord cel(raDeg, decDeg);
     cel.precess(2010.0);
     
 }
