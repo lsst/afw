@@ -13,7 +13,6 @@ SWIG_SHARED_PTR(Coord, lsst::afw::coord::Coord);
 SWIG_SHARED_PTR_DERIVED(COORDTYPE##Coord, lsst::afw::coord::Coord, lsst::afw::coord::COORDTYPE##Coord);
 %enddef
 
-%declareDerived(Equatorial);
 %declareDerived(Fk5);
 %declareDerived(Icrs);
 %declareDerived(Galactic);

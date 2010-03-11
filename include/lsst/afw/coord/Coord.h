@@ -10,7 +10,7 @@
  * @todo Finish python docs
  * @todo Start tex doc
  * @todo add *many* const
- * @todo for epoch=2000 for fk5 and icrs
+ * @todo in factory ... if ICRS epoch != 2000 ... precess or throw?
  */ 
 
 #include "boost/shared_ptr.hpp"
@@ -19,6 +19,8 @@
 #include "lsst/afw/coord/Observatory.h"
 #include "lsst/afw/coord/Date.h"
 
+namespace geom = lsst::afw::geom;
+
 namespace lsst {
 namespace afw {    
 namespace coord {
@@ -26,12 +28,11 @@ namespace coord {
 double const degToRad = M_PI/180.0;
 double const radToDeg = 180.0/M_PI;
 
-enum CoordUnit { DEG, RAD, HRS };
-enum CoordSystem { EQU, FK5, ICRS, GAL, ECL, ALTAZ };  // currently unused.
+enum CoordUnit { DEGREES, RADIANS, HOURS };
+enum CoordSystem { FK5, ICRS, GALACTIC, ECLIPTIC, ALTAZ };  // currently unused.
     
 class IcrsCoord;
 class Fk5Coord;
-class EquatorialCoord;    
 class GalacticCoord;
 class EclipticCoord;
 class AltAzCoord;
@@ -47,7 +48,7 @@ class AltAzCoord;
 class Coord {
 public:
 
-    Coord(lsst::afw::geom::Point2D const p2d, CoordUnit unit = DEG, double const epoch = 2000.0);
+    Coord(geom::Point2D const p2d, CoordUnit unit = DEGREES, double const epoch = 2000.0);
     Coord(double const ra, double const dec, double const epoch = 2000.0);
     Coord(std::string const ra, std::string const dec, double const epoch = 2000.0);
     Coord();
@@ -58,7 +59,7 @@ public:
 
     double getEpoch()         { return _epoch; }
 
-    lsst::afw::geom::Point2D getPoint2D(CoordUnit unit = DEG);
+    geom::Point2D getPoint2D(CoordUnit unit = DEGREES);
     std::pair<std::string, std::string> getCoordNames();
     //std::vector<double, double, double> getPositionVector();
     
@@ -98,12 +99,11 @@ public:
     double angularSeparation(Coord &c);
     Coord precess(double epochTo);
 
-    virtual EquatorialCoord toEquatorial();
     virtual Fk5Coord toFk5();
     virtual IcrsCoord toIcrs();
     virtual GalacticCoord toGalactic();
     virtual EclipticCoord toEcliptic();
-    virtual AltAzCoord toAltAz(coord::Observatory obs, coord::Date obsDate);
+    virtual AltAzCoord toAltAz(Observatory obs, coord::Date obsDate);
 
 private:
     double _longitudeRad;
@@ -111,48 +111,6 @@ private:
     double _epoch;
 
     void _verifyValues();
-};
- 
-
-/**
- * @class EquatorialCoord
- * @brief A class to handle Fk5 coordinates (inherits from Coord)
- */
-class EquatorialCoord : public Coord {
-public:    
-    EquatorialCoord(lsst::afw::geom::Point2D const p2d, CoordUnit unit = DEG, double const epoch = 2000.0) :
-        Coord(p2d, unit, epoch) {}
-    EquatorialCoord(double const ra, double const dec, double const epoch=2000.0) : 
-        Coord(ra, dec, epoch) {}
-    EquatorialCoord(std::string const ra, std::string const dec, double const epoch=2000.0) :
-        Coord(ra, dec, epoch) {}
-    EquatorialCoord() : Coord() {}
-
-    EquatorialCoord precess(double epochTo);
-    
-private:
-};
-
-
-    
-
-/**
- * @class Fk5Coord
- * @brief A class to handle Fk5 coordinates (inherits from Coord)
- */
-class Fk5Coord : public Coord {
-public:    
-    Fk5Coord(lsst::afw::geom::Point2D const p2d, CoordUnit unit = DEG) :
-        Coord(p2d, unit, 2000.0) {}
-    Fk5Coord(double const ra, double const dec) : 
-        Coord(ra, dec, 2000.0) {}
-    Fk5Coord(std::string const ra, std::string const dec) :
-        Coord(ra, dec, 2000.0) {}
-    Fk5Coord() : Coord() {}
-
-    EquatorialCoord precess(double epochTo);
-    
-private:
 };
 
 
@@ -162,7 +120,7 @@ private:
  */
 class IcrsCoord : public Coord {
 public:    
-    IcrsCoord(lsst::afw::geom::Point2D const p2d, CoordUnit unit = DEG) :
+    IcrsCoord(geom::Point2D const p2d, CoordUnit unit = DEGREES) :
         Coord(p2d, unit, 2000.0) {}
     IcrsCoord(double const ra, double const dec) : 
         Coord(ra, dec, 2000.0) {}
@@ -170,11 +128,43 @@ public:
         Coord(ra, dec, 2000.0) {}
     IcrsCoord() : Coord() {}
 
-    EquatorialCoord precess(double epochTo);
+    // don't need specify converters (toGalactic(), etc), base class methods are fine for Fk5
+    
+    
+    Fk5Coord precess(double epochTo);
 
 private:
 };
     
+
+/**
+ * @class Fk5Coord
+ * @brief A class to handle Fk5 coordinates (inherits from Coord)
+ */
+class Fk5Coord : public Coord {
+public:    
+    Fk5Coord(geom::Point2D const p2d, CoordUnit unit = DEGREES, double const epoch = 2000.0) :
+        Coord(p2d, unit, epoch) {}
+    Fk5Coord(double const ra, double const dec, double const epoch = 2000.0) : 
+        Coord(ra, dec, epoch) {}
+    Fk5Coord(std::string const ra, std::string const dec, double const epoch = 2000.0) :
+        Coord(ra, dec, epoch) {}
+    Fk5Coord() : Coord() {}
+
+    // don't need specify converters (toGalactic(), etc), base class methods are fine for Fk5
+#if 0    
+    Fk5Coord toFk5();
+    IcrsCoord toIcrs();
+    GalacticCoord toGalactic();
+    EclipticCoord toEcliptic();
+    AltAzCoord toAltAz(Observatory const &obs, coord::Date const &date);
+#endif
+    
+    Fk5Coord precess(double epochTo);
+    
+private:
+};
+
 
 /**
  * @class GalacticCoord
@@ -183,7 +173,7 @@ private:
 class GalacticCoord : public Coord {
 public:
     
-    GalacticCoord(lsst::afw::geom::Point2D const p2d, CoordUnit unit = DEG, double const epoch = 2000.0) :
+    GalacticCoord(geom::Point2D const p2d, CoordUnit unit = DEGREES, double const epoch = 2000.0) :
         Coord(p2d, unit, epoch) {}
     GalacticCoord(double const l, double const b, double const epoch = 2000.0) : 
         Coord(l, b, epoch) {}
@@ -193,12 +183,11 @@ public:
 
     std::pair<std::string, std::string> getCoordNames();
 
-    EquatorialCoord toEquatorial();
     Fk5Coord toFk5();
     IcrsCoord toIcrs();
     GalacticCoord toGalactic();
     EclipticCoord toEcliptic();
-    AltAzCoord toAltAz(coord::Observatory const &obs, coord::Date const &date);
+    AltAzCoord toAltAz(Observatory const &obs, coord::Date const &date);
 
     GalacticCoord precess(double epochTo);
     
@@ -214,7 +203,7 @@ private:
 class EclipticCoord : public Coord {
 public:
     
-    EclipticCoord(lsst::afw::geom::Point2D const p2d, CoordUnit unit = DEG, double const epoch = 2000.0) :
+    EclipticCoord(geom::Point2D const p2d, CoordUnit unit = DEGREES, double const epoch = 2000.0) :
         Coord(p2d, unit, epoch) {}
     EclipticCoord(double const lambda, double const beta, double const epoch = 2000.0) : 
         Coord(lambda, beta, epoch) {}
@@ -224,12 +213,11 @@ public:
 
     std::pair<std::string, std::string> getCoordNames();
 
-    EquatorialCoord toEquatorial();
     Fk5Coord toFk5();
     IcrsCoord toIcrs();
     GalacticCoord toGalactic();
     EclipticCoord toEcliptic();
-    AltAzCoord toAltAz(coord::Observatory const &obs, coord::Date const &date);
+    AltAzCoord toAltAz(Observatory const &obs, coord::Date const &date);
 
     EclipticCoord precess(double epochTo);
     
@@ -241,16 +229,13 @@ private:
 class AltAzCoord : public Coord {
 public:
     
-    AltAzCoord(lsst::afw::geom::Point2D const p2d, CoordUnit unit, double const epoch,
-               coord::Observatory const &obs) :
+    AltAzCoord(geom::Point2D const p2d, CoordUnit unit, double const epoch, Observatory const &obs) :
         Coord(p2d, unit, epoch), _obs(obs) {}
-    AltAzCoord(double const az, double const alt, double const epoch,
-               coord::Observatory const &obs) : 
+    AltAzCoord(double const az, double const alt, double const epoch, Observatory const &obs) : 
         Coord(az, alt, epoch), _obs(obs) {}
-    AltAzCoord(std::string const az, std::string const alt, double const epoch,
-               coord::Observatory const &obs) : 
+    AltAzCoord(std::string const az, std::string const alt, double const epoch, Observatory const &obs) : 
         Coord(az, alt, epoch), _obs(obs) {}
-
+    
     std::pair<std::string, std::string> getCoordNames();
     
     double getAzimuthDeg();
@@ -262,24 +247,23 @@ public:
     std::string getAltitudeStr();
 
 
-    EquatorialCoord toEquatorial();
     Fk5Coord toFk5();
     IcrsCoord toIcrs();
     GalacticCoord toGalactic();
     EclipticCoord toEcliptic();
-    AltAzCoord toAltAz(coord::Observatory const &obs, coord::Date const &date);
+    AltAzCoord toAltAz(Observatory const &obs, coord::Date const &date);
     AltAzCoord toAltAz();
     
 private:
-    coord::Observatory _obs;
+    Observatory _obs;
 };
 
 double eclipticPoleInclination(double const epoch);
     
 double dmsStringToDegrees(std::string const dms);
-//double hmsStringToDecimalDegrees(std::string const hms);
+double hmsStringToDegrees(std::string const hms);
 std::string degreesToDmsString(double const deg);
-//std::string degreesToHmsString(double const deg);    
+std::string degreesToHmsString(double const deg);    
 
 Coord::Ptr makeCoord(CoordSystem const system,
                      double const ra, double const dec, double const epoch=2000.0);

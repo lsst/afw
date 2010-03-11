@@ -142,6 +142,14 @@ std::string coord::degreesToDmsString(
     return dmsStr;
 }
 
+/**
+ * @brief a function to convert decimal degrees to a string with form hh:mm:ss.s
+ */
+std::string coord::degreesToHmsString(
+                                      double const deg ///< coord in decimal degrees
+                                     ) {
+    return degreesToDmsString(deg/15.0);
+}
 
 /**
  * @brief Convert a dd:mm:ss string to decimal degrees
@@ -161,6 +169,17 @@ double coord::dmsStringToDegrees(
         degrees *= -1.0;
     }
     return degrees;
+}
+
+
+/**
+ * @brief a function to convert hh:mm:ss.s string to decimal degrees
+ *
+ */
+double coord::hmsStringToDegrees(
+                                 std::string const hms ///< coord as a string in hh:mm:ss.s format
+                                ) {
+    return 15.0*dmsStringToDegrees(hms);
 }
 
 
@@ -191,22 +210,22 @@ double coord::eclipticPoleInclination(
  */
 coord::Coord::Coord(
                     geom::Point2D p2d,     ///< Point2D
-                    coord::CoordUnit unit, ///< Rads, Degs, or Hrs
+                    CoordUnit unit,        ///< Rads, Degs, or Hrs
                     double const epoch     ///< epoch of coordinate
                    ) :
     _longitudeRad(NaN), _latitudeRad(NaN), _epoch(epoch) {
 
-    if (unit == coord::DEG) {
+    if (unit == DEGREES) {
         _longitudeRad = degToRad*p2d.getX();
         _latitudeRad = degToRad*p2d.getY();
-    } else if (unit == coord::RAD) {
+    } else if (unit == RADIANS) {
         _longitudeRad = p2d.getX();
         _latitudeRad = p2d.getY();
-    } else if (unit == coord::HRS) {
+    } else if (unit == HOURS) {
         _longitudeRad = degToRad*15.0*p2d.getX();
         _latitudeRad = degToRad*p2d.getY();
     } else {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "CoordUnit must be DEG, RAD, or HRS");
+        throw LSST_EXCEPT(ex::InvalidParameterException, "CoordUnit must be DEGREES, RADIANS, or HOURS");
     }
     
     _verifyValues();
@@ -235,8 +254,8 @@ coord::Coord::Coord(
                     std::string const dec, ///< Declination, dd:mm:ss.s format
                     double const epoch     ///< epoch of coordinate
                    ) :
-    _longitudeRad(degToRad*15.0*coord::dmsStringToDegrees(ra)),
-    _latitudeRad(degToRad*coord::dmsStringToDegrees(dec)),
+    _longitudeRad(degToRad*15.0*dmsStringToDegrees(ra)),
+    _latitudeRad(degToRad*dmsStringToDegrees(dec)),
     _epoch(epoch) {
     _verifyValues();
 }
@@ -290,16 +309,16 @@ void coord::Coord::reset(
  * @brief Return our contents in a Point2D object
  *
  */
-geom::Point2D coord::Coord::getPoint2D(coord::CoordUnit unit) {
-    if (unit == coord::DEG) {
+geom::Point2D coord::Coord::getPoint2D(CoordUnit unit) {
+    if (unit == DEGREES) {
         return geom::makePointD(getLongitudeDeg(), getLatitudeDeg());
-    } else if (unit == coord::RAD) {
+    } else if (unit == RADIANS) {
         return geom::makePointD(getLongitudeRad(), getLatitudeRad());
-    } else if (unit == coord::HRS) {
+    } else if (unit == HOURS) {
         return geom::makePointD(getLongitudeHrs(), getLatitudeDeg());
     } else {
         throw LSST_EXCEPT(ex::InvalidParameterException,
-                          "Undefined CoordUnit type.  Only DEG, RAD, HRS allowed.");
+                          "Undefined CoordUnit type.  Only DEGREES, RADIANS, HOURS allowed.");
     }
 }
 
@@ -329,13 +348,13 @@ double coord::Coord::getLatitudeRad()           { return _latitudeRad; }
 std::string coord::Coord::getLongitudeStr()     { return degreesToDmsString(radToDeg*_longitudeRad/15.0); }
 std::string coord::Coord::getLatitudeStr()      { return degreesToDmsString(radToDeg*_latitudeRad); }
                                                 
-double coord::Coord::getRaDeg()                 { return this->toEquatorial().getLongitudeDeg(); }
-double coord::Coord::getDecDeg()                { return this->toEquatorial().getLatitudeDeg(); }
-double coord::Coord::getRaHrs()                 { return this->toEquatorial().getLongitudeHrs(); }
-double coord::Coord::getRaRad()                 { return this->toEquatorial().getLongitudeRad(); }
-double coord::Coord::getDecRad()                { return this->toEquatorial().getLatitudeRad(); }
-std::string coord::Coord::getRaStr()            { return this->toEquatorial().getLongitudeStr(); }
-std::string coord::Coord::getDecStr()           { return this->toEquatorial().getLatitudeStr(); }
+double coord::Coord::getRaDeg()                 { return this->toFk5().getLongitudeDeg(); }
+double coord::Coord::getDecDeg()                { return this->toFk5().getLatitudeDeg(); }
+double coord::Coord::getRaHrs()                 { return this->toFk5().getLongitudeHrs(); }
+double coord::Coord::getRaRad()                 { return this->toFk5().getLongitudeRad(); }
+double coord::Coord::getDecRad()                { return this->toFk5().getLatitudeRad(); }
+std::string coord::Coord::getRaStr()            { return this->toFk5().getLongitudeStr(); }
+std::string coord::Coord::getDecStr()           { return this->toFk5().getLatitudeStr(); }
                                                 
 double coord::Coord::getLDeg()                  { return this->toGalactic().getLongitudeDeg(); }
 double coord::Coord::getBDeg()                  { return this->toGalactic().getLatitudeDeg(); }
@@ -383,7 +402,7 @@ coord::Coord coord::Coord::transform(
                                            tan(delta)*cos(deltaGP) - cos(alpha - alphaGP)*sin(deltaGP)));
     double const b = radToDeg*asin( (sin(deltaGP)*sin(delta) + cos(deltaGP)*cos(delta)*cos(alpha - alphaGP)));
 
-    return coord::Coord(reduceAngle(l), b);
+    return Coord(reduceAngle(l), b);
 }
 
 
@@ -392,11 +411,11 @@ coord::Coord coord::Coord::transform(
  *
  */
 double coord::Coord::angularSeparation(
-                                       coord::Coord &c ///< coordinate to compute our separation from
+                                       Coord &c ///< coordinate to compute our separation from
                                       ) {
 
     // make sure they have the same epoch
-    coord::Coord cPrecess;
+    Coord cPrecess;
     if ( fabs(getEpoch() - c.getEpoch()) > epochTolerance ) {
         cPrecess = c.precess(getEpoch());
     } else {
@@ -464,15 +483,7 @@ coord::Coord coord::Coord::precess(
     double const alpha = reduceAngle(radToDeg*(atan2(A,B) + z));
     double const delta = radToDeg*asin(C);
     
-    return coord::Coord(alpha, delta, epochTo);
-}
-
-
-/**
- * @brief Convert ourself to Equatorial: RA, Dec
- */
-coord::EquatorialCoord coord::Coord::toEquatorial() {
-    return coord::EquatorialCoord(getLongitudeDeg(), getLatitudeDeg(), getEpoch());
+    return Coord(alpha, delta, epochTo);
 }
 
 
@@ -480,8 +491,7 @@ coord::EquatorialCoord coord::Coord::toEquatorial() {
  * @brief Convert ourself to Fk5: RA, Dec (basically J2000)
  */
 coord::Fk5Coord coord::Coord::toFk5() {
-    coord::Coord c = precess(2000.0);
-    return Fk5Coord(c.getLongitudeDeg(), c.getLatitudeDeg());
+    return Fk5Coord(getLongitudeDeg(), getLatitudeDeg(), getEpoch());
 }
 
 /**
@@ -525,12 +535,12 @@ coord::EclipticCoord coord::Coord::toEcliptic() {
  * @brief Convert ourself to Altitude/Azimuth: alt, az
  */
 coord::AltAzCoord coord::Coord::toAltAz(
-                                        coord::Observatory obs, ///< observatory of observation
+                                        Observatory obs, ///< observatory of observation
                                         coord::Date obsDate     ///< date of observation
                                        ) {
 
     // precess to the epoch
-    coord::Coord coord = precess(obsDate.getEpoch());
+    Coord coord = precess(obsDate.getEpoch());
 
     // greenwich sidereal time
     double const theta0 = degToRad*reduceAngle(meanSiderealTimeGreenwich(obsDate.getJd()));
@@ -555,26 +565,6 @@ coord::AltAzCoord coord::Coord::toAltAz(
 
 /* ============================================================
  *
- * class EquatorialCoord
- *
- * ============================================================*/
-
-
-/**
- * @brief precess ourselfs to a new epoch
- */
-coord::EquatorialCoord coord::EquatorialCoord::precess(
-                                                       double const epochTo ///< epoch to precess to
-                                                      ) {
-    coord::Coord c = coord::Coord::precess(epochTo);
-    return EquatorialCoord(c.getLongitudeDeg(), c.getLatitudeDeg(), c.getEpoch());
-}
-
-
-
-
-/* ============================================================
- *
  * class Fk5Coord
  *
  * ============================================================*/
@@ -583,13 +573,16 @@ coord::EquatorialCoord coord::EquatorialCoord::precess(
 /**
  * @brief precess ourselfs to a new epoch
  *
- * We can't precess Fk5, or it won't be Fk5 anymore.  We'll return an Equatorial
+ * Can't just let the base class Coord do this ... we need to return the correct type
  */
-coord::EquatorialCoord coord::Fk5Coord::precess(
-                                                double const epochTo ///< epoch to precess to
-                                               ) {
-    return coord::EquatorialCoord(getLongitudeDeg(), getLatitudeDeg(), 2000.0).precess(epochTo);
+coord::Fk5Coord coord::Fk5Coord::precess(
+                                         double const epochTo ///< epoch to precess to
+                                        ) {
+    Coord c = Coord(getLongitudeDeg(), getLatitudeDeg(), getEpoch()).precess(epochTo);
+    return Fk5Coord(c.getLongitudeDeg(), c.getLatitudeDeg(), epochTo);
 }
+
+
 
 
 
@@ -604,10 +597,10 @@ coord::EquatorialCoord coord::Fk5Coord::precess(
  *
  * Can't just let the base class Coord do this ... we need to return the correct type
  */
-coord::EquatorialCoord coord::IcrsCoord::precess(
-                                                 double const epochTo ///< epoch to precess to
-                                                ) {
-    return coord::EquatorialCoord(getLongitudeDeg(), getLatitudeDeg(), 2000.0).precess(epochTo);
+coord::Fk5Coord coord::IcrsCoord::precess(
+                                          double const epochTo ///< epoch to precess to
+                                         ) {
+    return Fk5Coord(getLongitudeDeg(), getLatitudeDeg(), 2000.0).precess(epochTo);
 }
 
 
@@ -621,7 +614,7 @@ coord::EquatorialCoord coord::IcrsCoord::precess(
 /**
  * @brief Convert ourself from galactic to Fk5
  */
-coord::EquatorialCoord coord::GalacticCoord::toEquatorial() {
+coord::Fk5Coord coord::GalacticCoord::toFk5() {
     
     // transform to equatorial
     // galactic coords are ~constant, and the poles used are for epoch=2000, so we get J2000
@@ -629,9 +622,9 @@ coord::EquatorialCoord coord::GalacticCoord::toEquatorial() {
     
     //
     if ( fabs(getEpoch() - 2000.0) < epochTolerance ) {
-        return coord::EquatorialCoord(c.getLongitudeDeg(), c.getLatitudeDeg(), 2000.0);
+        return Fk5Coord(c.getLongitudeDeg(), c.getLatitudeDeg(), 2000.0);
     } else {
-        return coord::EquatorialCoord(c.getLongitudeDeg(), c.getLatitudeDeg(), 2000.0).precess(getEpoch());
+        return Fk5Coord(c.getLongitudeDeg(), c.getLatitudeDeg(), 2000.0).precess(getEpoch());
     }
 }
 
@@ -639,25 +632,15 @@ coord::EquatorialCoord coord::GalacticCoord::toEquatorial() {
 /**
  * @brief Convert ourself from galactic to Fk5
  */
-coord::Fk5Coord coord::GalacticCoord::toFk5() {
+coord::IcrsCoord coord::GalacticCoord::toIcrs() {
     
     // transform to equatorial
     // galactic coords are ~constant, and the poles used are for epoch=2000, so we get J2000
     Coord c = transform(GalacticPoleInFk5, Fk5PoleInGalactic);
     
-    // put the new values in an Fk5Coord
-    return coord::Fk5Coord(c.getLongitudeDeg(), c.getLatitudeDeg());
+    // put the new values in an IcrsCoord
+    return IcrsCoord(c.getLongitudeDeg(), c.getLatitudeDeg());
 }
-
-/**
- * @brief Convert ourself from galactic to Icrs
- *
- * @note This currently calls the Fk5 routines and is not strictly ICRS.
- */
-coord::IcrsCoord coord::GalacticCoord::toIcrs() {
-    return (this->toFk5()).toIcrs();
-}
-
 
 /**
  * @brief Convert ourself from Galactic to Galactic ... a no-op
@@ -681,7 +664,7 @@ coord::EclipticCoord coord::GalacticCoord::toEcliptic() {
  * To do this, we'll go to fk5 first, then to alt/az
  */
 coord::AltAzCoord coord::GalacticCoord::toAltAz(
-                                                coord::Observatory const &obs, ///< observatory of observation
+                                                Observatory const &obs, ///< observatory of observation
                                                 coord::Date const &date       ///< date of observation
                                                ) {
     return (this->toFk5()).toAltAz(obs, date);
@@ -692,8 +675,10 @@ coord::AltAzCoord coord::GalacticCoord::toAltAz(
  *
  * Actually nothing to do here, just create a new GalacticCoord with the epoch
  */
-coord::GalacticCoord coord::GalacticCoord::precess(double epochTo) {
-    return coord::GalacticCoord(getLongitudeDeg(), getLatitudeDeg(), epochTo);
+coord::GalacticCoord coord::GalacticCoord::precess(
+                                                   double epochTo ///< epoch to precess to
+                                                  ) {
+    return GalacticCoord(getLongitudeDeg(), getLatitudeDeg(), epochTo);
 }
 
 
@@ -708,43 +693,28 @@ coord::GalacticCoord coord::GalacticCoord::precess(double epochTo) {
  * @brief Convert ourself from Ecliptic to Ecliptic ... a no-op
  */
 coord::EclipticCoord coord::EclipticCoord::toEcliptic() {
-    return coord::EclipticCoord(getLongitudeDeg(), getLatitudeDeg(), getEpoch());
+    return EclipticCoord(getLongitudeDeg(), getLatitudeDeg(), getEpoch());
 }
 
 
 /**
  * @brief Convert ourself from Ecliptic to Equatorial
  */
-coord::EquatorialCoord coord::EclipticCoord::toEquatorial() {
+coord::Fk5Coord coord::EclipticCoord::toFk5() {
     double const eclPoleIncl = eclipticPoleInclination(getEpoch());
     Coord const eclipticPoleInFk5(270.0, 90.0 - eclPoleIncl, getEpoch());
     Coord const fk5PoleInEcliptic(90.0, 90.0 - eclPoleIncl, getEpoch());
     Coord c = transform(eclipticPoleInFk5, fk5PoleInEcliptic);
-    return coord::EquatorialCoord(c.getLongitudeDeg(), c.getLatitudeDeg(), getEpoch());
+    return Fk5Coord(c.getLongitudeDeg(), c.getLatitudeDeg(), getEpoch());
 }
 
 
 /**
  * @brief Convert ourself from Ecliptic to Fk5
  */
-coord::Fk5Coord coord::EclipticCoord::toFk5() {
-    double const eclPoleIncl = eclipticPoleInclination(getEpoch());
-    Coord const eclipticPoleInFk5(270.0, 90.0 - eclPoleIncl, getEpoch());
-    Coord const fk5PoleInEcliptic(90.0, 90.0 - eclPoleIncl, getEpoch());
-    Coord c = transform(eclipticPoleInFk5, fk5PoleInEcliptic);
-    Coord cp = c.precess(2000.0);
-    return Fk5Coord(cp.getLongitudeDeg(), cp.getLatitudeDeg());
-}
-
-/**
- * @brief Convert ourself from galactic to Icrs
- *
- * @note This currently calls the Fk5 routines and is not strictly ICRS.
- */
 coord::IcrsCoord coord::EclipticCoord::toIcrs() {
     return (this->toFk5()).toIcrs();
 }
-
 
 /**
  * @brief Convert ourself from Ecliptic to Galactic
@@ -762,7 +732,7 @@ coord::GalacticCoord coord::EclipticCoord::toGalactic() {
  * To do This, we'll go to fk5 first, then to alt/az.
  */
 coord::AltAzCoord coord::EclipticCoord::toAltAz(
-                                                coord::Observatory const &obs, ///< observatory of observation
+                                                Observatory const &obs, ///< observatory of observation
                                                 coord::Date const &date        ///< date of observation
                                                ) {
     return (this->toFk5()).toAltAz(obs, date);
@@ -824,9 +794,7 @@ coord::Fk5Coord coord::AltAzCoord::toFk5() {
     double const sinDelta = sin(phi)*sin(h) - cos(phi)*cos(h)*cos(A);
     double const delta    = radToDeg*asin(sinDelta);
 
-    coord::Coord c(alpha, delta, getEpoch());
-    coord::Coord cp = c.precess(2000.0);
-    return Fk5Coord(cp.getLatitudeDeg(), cp.getLongitudeDeg());
+    return Fk5Coord(alpha, delta, getEpoch());
 }
 
 /**
@@ -838,22 +806,15 @@ coord::IcrsCoord coord::AltAzCoord::toIcrs() {
     return (this->toFk5()).toIcrs();
 }
 
-/**
- * @brief Convert ourself from AltAz to Fk5
- */
-coord::EquatorialCoord coord::AltAzCoord::toEquatorial() {
-    return (this->toFk5()).precess(getEpoch());
-}
-
 
 /**
  * @brief Convert ourself from AltAz to AltAz ... a no-op
  */
 coord::AltAzCoord coord::AltAzCoord::toAltAz(
-                                             coord::Observatory const &obs, ///< observatory of observation
+                                             Observatory const &obs, ///< observatory of observation
                                              coord::Date const &date        ///< date of observation
                                             ) {
-    return coord::AltAzCoord(getLongitudeDeg(), getLatitudeDeg(), getEpoch(), _obs);
+    return AltAzCoord(getLongitudeDeg(), getLatitudeDeg(), getEpoch(), _obs);
 }
 
 /**
@@ -862,40 +823,44 @@ coord::AltAzCoord coord::AltAzCoord::toAltAz(
  * As this is essentially a copy-constructor, the extra info can be obtained internally.
  */
 coord::AltAzCoord coord::AltAzCoord::toAltAz() {
-    return coord::AltAzCoord(getLongitudeDeg(), getLatitudeDeg(), getEpoch(), _obs);
+    return AltAzCoord(getLongitudeDeg(), getLatitudeDeg(), getEpoch(), _obs);
 }
 
 
 
-//Coord(lsst::afw::geom::Point2D const p2d, CoordUnit unit = DEG, double const epoch = 2000.0);
-//Coord(double const ra, double const dec, double const epoch = 2000.0);
-//Coord(std::string const ra, std::string const dec, double const epoch = 2000.0);
-
+/**
+ * @brief Factory function to create a Coord of arbitrary type with decimal RA,Dec
+ *
+ */
 coord::Coord::Ptr coord::makeCoord(
-                                   coord::CoordSystem const system,   ///< the system (equ, fk5, galactic ..)
-                                   double const ra,                   ///< right ascension
-                                   double const dec,                  ///< declination
-                                   double const epoch                 ///< epoch of coordinate
+                                   CoordSystem const system,     ///< the system (equ, fk5, galactic ..)
+                                   double const ra,              ///< right ascension
+                                   double const dec,             ///< declination
+                                   double const epoch            ///< epoch of coordinate
                                   ) {
 
     switch (system) {
 
-      case coord::EQU:
-        return boost::shared_ptr<coord::EquatorialCoord>(new coord::EquatorialCoord(ra, dec, epoch));
+      case FK5:
+        return boost::shared_ptr<Fk5Coord>(new Fk5Coord(ra, dec, epoch));
         break;
-      case coord::FK5:
-        return boost::shared_ptr<coord::Fk5Coord>(new coord::Fk5Coord(ra, dec));
+      case ICRS:
+        // if the epoch isn't 2000.0, should we precess or throw an exception?
+        if ( fabs(epoch - 2000.0) < epochTolerance ) {
+            return boost::shared_ptr<IcrsCoord>(new IcrsCoord(ra, dec));
+        } else {
+            IcrsCoord c = Fk5Coord(ra, dec, epoch).toIcrs();
+            return boost::shared_ptr<IcrsCoord>(new IcrsCoord(c.getLongitudeDeg(),
+                                                              c.getLatitudeDeg()));
+        }
         break;
-      case coord::ICRS:
-        return boost::shared_ptr<coord::IcrsCoord>(new coord::IcrsCoord(ra, dec));
+      case GALACTIC:
+        return boost::shared_ptr<GalacticCoord>(new GalacticCoord(ra, dec, epoch));
         break;
-      case coord::GAL:
-        return boost::shared_ptr<coord::GalacticCoord>(new coord::GalacticCoord(ra, dec, epoch));
+      case ECLIPTIC:
+        return boost::shared_ptr<EclipticCoord>(new EclipticCoord(ra, dec, epoch));
         break;
-      case coord::ECL:
-        return boost::shared_ptr<coord::EclipticCoord>(new coord::EclipticCoord(ra, dec, epoch));
-        break;
-      case coord::ALTAZ:
+      case ALTAZ:
         throw LSST_EXCEPT(ex::InvalidParameterException,
                           "Cannot make AltAz with makeCoord() (must also specify Observatory).\n"
                           "Instantiate AltAzCoord() directly.");
@@ -909,36 +874,44 @@ coord::Coord::Ptr coord::makeCoord(
 
 }
 
+
+/**
+ * @brief Factory function to create a Coord of arbitrary type with Point2D
+ *
+ */
 coord::Coord::Ptr coord::makeCoord(
-                                   coord::CoordSystem const system,   ///< the system (equ, fk5, galactic ..)
-                                   geom::Point2D p2d,                 ///< the (eg) ra,dec in a Point2D
-                                   coord::CoordUnit unit,             ///< the units (eg. DEG, RAD)
-                                   double const epoch                 ///< epoch of coordinate
+                                   CoordSystem const system,     ///< the system (equ, fk5, galactic ..)
+                                   geom::Point2D p2d,            ///< the (eg) ra,dec in a Point2D
+                                   CoordUnit unit,               ///< the units (eg. DEGREES, RADIANS)
+                                   double const epoch            ///< epoch of coordinate
                                   ) {
     switch (unit) {
-      case coord::DEG:
-        return coord::makeCoord(system, p2d.getX(), p2d.getY(), epoch);
+      case DEGREES:
+        return makeCoord(system, p2d.getX(), p2d.getY(), epoch);
         break;
-      case coord::RAD:
-        return coord::makeCoord(system, radToDeg*p2d.getX(), radToDeg*p2d.getY(), epoch);
+      case RADIANS:
+        return makeCoord(system, radToDeg*p2d.getX(), radToDeg*p2d.getY(), epoch);
         break;
-      case coord::HRS:
-        return coord::makeCoord(system, 15.0*radToDeg*p2d.getX(), radToDeg*p2d.getY(), epoch);
+      case HOURS:
+        return makeCoord(system, 15.0*radToDeg*p2d.getX(), radToDeg*p2d.getY(), epoch);
         break;
       default:
         throw LSST_EXCEPT(ex::InvalidParameterException,
-                          "Point2D values for Coord must be DEG, RAD, or HRS.");
+                          "Point2D values for Coord must be DEGREES, RADIANS, or HOURS.");
         break;
     }
 }
 
 
-
+/**
+ * @brief Factory function to create a Coord of arbitrary type with string RA, Dec
+ *
+ */
 coord::Coord::Ptr coord::makeCoord(
-                                   coord::CoordSystem const system,   ///< the system (equ, fk5, galactic ..)
-                                   std::string const ra,              ///< right ascension
-                                   std::string const dec,             ///< declination
-                                   double const epoch                 ///< epoch of coordinate
+                                   CoordSystem const system,   ///< the system (equ, fk5, galactic ..)
+                                   std::string const ra,       ///< right ascension
+                                   std::string const dec,      ///< declination
+                                   double const epoch          ///< epoch of coordinate
                                   ) {
-    return makeCoord(system, 15.0*coord::dmsStringToDegrees(ra), coord::dmsStringToDegrees(dec), epoch);
+    return makeCoord(system, 15.0*dmsStringToDegrees(ra), dmsStringToDegrees(dec), epoch);
 }

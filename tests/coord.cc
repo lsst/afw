@@ -19,13 +19,13 @@
 
 using namespace std;
 namespace coord = lsst::afw::coord;
-namespace geom = lsst::afw::geom;
+namespace geom  = lsst::afw::geom;
 
 BOOST_AUTO_TEST_CASE(dmsToDecimal) {
     
     std::string ra = "10:00:00.00";
     std::string dec = "-02:30:00.00";
-    double raDeg = coord::dmsStringToDegrees(ra);
+    double raDeg = coord::hmsStringToDegrees(ra);
     double decDeg = coord::dmsStringToDegrees(dec);
     
     BOOST_CHECK_EQUAL(raDeg, 10.0);
@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(dmsToDecimal) {
     
     // make sure the rounding issue works (ie. 59.998 rounds to 00, not 60 sec)
     raDeg -= 0.000001;
-    std::string raStr = coord::degreesToDmsString(raDeg);
+    std::string raStr = coord::degreesToHmsString(raDeg);
     BOOST_CHECK_EQUAL(raStr, ra);
 
     coord::Fk5Coord cel(raDeg, decDeg);

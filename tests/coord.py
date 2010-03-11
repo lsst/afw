@@ -51,11 +51,10 @@ class CoordTestCase(unittest.TestCase):
         # They should only agree if they both converted from the same type, thus we got it right.
         
         coordList = [
-            [coord.EquatorialCoord, coord.EQU],
             [coord.Fk5Coord, coord.FK5],
             [coord.IcrsCoord, coord.ICRS],
-            [coord.GalacticCoord, coord.GAL],
-            [coord.EclipticCoord, coord.ECL],
+            [coord.GalacticCoord, coord.GALACTIC],
+            [coord.EclipticCoord, coord.ECLIPTIC],
             # we can't factory an AltAz ... Observatory must be specified.
             # [coord.AltAzCoord, coord.ALTAZ]  
             ]
@@ -64,7 +63,7 @@ class CoordTestCase(unittest.TestCase):
             con = constructor(self.l, self.b)
             factories = []
             factories.append(coord.makeCoord(enum, self.l, self.b))
-            factories.append(coord.makeCoord(enum, geom.makePointD(self.l, self.b), coord.DEG))
+            factories.append(coord.makeCoord(enum, geom.makePointD(self.l, self.b), coord.DEGREES))
             factories.append(coord.makeCoord(enum, con.getLongitudeStr(), con.getLatitudeStr()))
 
             print "Factory: "
@@ -76,29 +75,29 @@ class CoordTestCase(unittest.TestCase):
                 
     def testPointD(self):
         """Test the getPoint2D() method"""
-        equ = coord.EquatorialCoord(self.ra, self.dec)
+        equ = coord.Fk5Coord(self.ra, self.dec)
 
         # make sure we get what we asked for
-        pDeg = equ.getPoint2D(coord.DEG)
+        pDeg = equ.getPoint2D(coord.DEGREES)
         self.assertAlmostEqual(equ.getRaDeg(), pDeg.getX())
         self.assertAlmostEqual(equ.getDecDeg(), pDeg.getY())
 
-        pRad = equ.getPoint2D(coord.RAD)
+        pRad = equ.getPoint2D(coord.RADIANS)
         self.assertAlmostEqual(equ.getRaRad(), pRad.getX())
         self.assertAlmostEqual(equ.getDecRad(), pRad.getY())
 
-        pHrs = equ.getPoint2D(coord.HRS)
+        pHrs = equ.getPoint2D(coord.HOURS)
         self.assertAlmostEqual(equ.getRaHrs(), pHrs.getX())
         self.assertAlmostEqual(equ.getDecDeg(), pHrs.getY())
 
         # make sure we construct with the type we ask for
-        equ1 = coord.EquatorialCoord(pDeg, coord.DEG)
+        equ1 = coord.Fk5Coord(pDeg, coord.DEGREES)
         self.assertAlmostEqual(equ1.getRaRad(), equ.getRaRad())
 
-        equ2 = coord.EquatorialCoord(pRad, coord.RAD)
+        equ2 = coord.Fk5Coord(pRad, coord.RADIANS)
         self.assertAlmostEqual(equ2.getRaRad(), equ.getRaRad())
 
-        equ3 = coord.EquatorialCoord(pHrs, coord.HRS)
+        equ3 = coord.Fk5Coord(pHrs, coord.HOURS)
         self.assertAlmostEqual(equ1.getRaRad(), equ.getRaRad())
 
         
@@ -106,7 +105,6 @@ class CoordTestCase(unittest.TestCase):
         """Test the names of the Coords (Useful with Point2D form)"""
         
         radec1, known1 = coord.Coord(self.ra, self.dec).getCoordNames(), ["RA", "Dec"]
-        radec2, known2 = coord.EquatorialCoord(self.ra, self.dec).getCoordNames(), ["RA", "Dec"]
         radec3, known3 = coord.Fk5Coord(self.ra, self.dec).getCoordNames(), ["RA", "Dec"]
         radec4, known4 = coord.IcrsCoord(self.ra, self.dec).getCoordNames(), ["RA", "Dec"]
         lb, known5     = coord.GalacticCoord(self.ra, self.dec).getCoordNames(), ["L", "B"]
@@ -115,8 +113,6 @@ class CoordTestCase(unittest.TestCase):
                                           coord.Observatory(0,0,0)).getCoordNames(), ["Az", "Alt"]
 
         pairs = [ [radec1, known1],
-                  [radec1, known1],
-                  [radec2, known2],
                   [radec3, known3],
                   [radec4, known4],
                   [lb,     known5],
@@ -180,7 +176,7 @@ class CoordTestCase(unittest.TestCase):
         az, alt = 231.5947, 44.3375
         obs = coord.Observatory(40.384, 74.659, 100.0) # peyton
         obsDate = coord.Date(2010, 3, 3, 0, 0, 0)
-        sedna = coord.EquatorialCoord(ra, dec, obsDate.getEpoch())
+        sedna = coord.Fk5Coord(ra, dec, obsDate.getEpoch())
         altaz = sedna.toAltAz(obs, obsDate)
         print "AltAz (Sedna): ", altaz.getAltitudeDeg(), altaz.getAzimuthDeg(), alt, az
 
