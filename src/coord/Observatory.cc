@@ -26,14 +26,78 @@ namespace ex           = lsst::pex::exceptions;
 coord::Observatory::Observatory(std::string const latitude,
                                 std::string const longitude,
                                 double const elevation) : 
-    _latitude(coord::dmsStringToDegrees(latitude)),
-    _longitude(coord::dmsStringToDegrees(longitude)),
+    _latitudeRad(degToRad*dmsStringToDegrees(latitude)),
+    _longitudeRad(degToRad*dmsStringToDegrees(longitude)),
     _elevation(elevation) {
 }
 
-std::string coord::Observatory::getLatitudeStr()  {
-    return coord::degreesToDmsString(_latitude);
+
+
+
+/**
+ * @brief The main access method for the longitudinal coordinate
+ *
+ */
+double coord::Observatory::getLongitude(CoordUnit unit) {
+    switch (unit) {
+      case DEGREES:
+        return radToDeg*_longitudeRad;
+        break;
+      case RADIANS:
+        return _longitudeRad;
+        break;
+      case HOURS:
+        return radToDeg*_longitudeRad/15.0;
+        break;
+      default:
+        throw LSST_EXCEPT(ex::InvalidParameterException, "Units must be DEGREES, RADIANS, or HOURS.");
+        break;
+    }
 }
-std::string coord::Observatory::getLongitudeStr() {
-    return coord::degreesToDmsString(_longitude);
+
+/**
+ * @brief The main access method for the longitudinal coordinate
+ *
+ * @note There's no reason to want a latitude in hours, so that unit will cause
+ *       an exception to be thrown
+ *
+ */
+double coord::Observatory::getLatitude(CoordUnit unit) {
+    switch (unit) {
+      case DEGREES:
+        return radToDeg*_latitudeRad;
+        break;
+      case RADIANS:
+        return _latitudeRad;
+        break;
+      default:
+        throw LSST_EXCEPT(ex::InvalidParameterException, "Units must be DEGREES, or RADIANS.");
+        break;
+    }
 }
+
+/**
+ * @brief Allow quick access to the longitudinal coordinate as a string
+ *
+ * @note There's no reason to want a longitude string in radians, so that unit will cause
+ *       an exception to be thrown
+ *
+ */
+std::string coord::Observatory::getLongitudeStr(coord::CoordUnit unit) {
+    if (unit == HOURS || unit == DEGREES) {
+        return degreesToDmsString(getLongitude(unit));
+    } else {
+        throw LSST_EXCEPT(ex::InvalidParameterException, "Units must be DEGREES or HOURS");
+    }
+}
+/**
+ * @brief Allow quick access to the longitude coordinate as a string
+ *
+ * @note There's no reason to want a latitude string in radians or hours, so
+ *       the units can not be explicitly requested.
+ *
+ */
+std::string coord::Observatory::getLatitudeStr() {
+    return degreesToDmsString(getLatitude(DEGREES));
+}
+

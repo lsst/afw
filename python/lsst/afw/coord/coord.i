@@ -2,7 +2,8 @@
 
 %{
 #include "lsst/afw/image.h"    
-#include "lsst/afw/geom.h"    
+#include "lsst/afw/geom.h"
+#include "lsst/afw/coord/Utils.h"
 #include "lsst/afw/coord/Coord.h"
 %}
 
@@ -19,5 +20,6 @@ SWIG_SHARED_PTR_DERIVED(COORDTYPE##Coord, lsst::afw::coord::Coord, lsst::afw::co
 %declareDerived(Ecliptic);
 %declareDerived(AltAz);
 
+%include "lsst/afw/coord/Utils.h"
 %include "lsst/afw/coord/Coord.h"
 

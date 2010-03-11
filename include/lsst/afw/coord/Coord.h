@@ -16,6 +16,7 @@
 #include "boost/shared_ptr.hpp"
 
 #include "lsst/afw/geom/Point.h"
+#include "lsst/afw/coord/Utils.h"
 #include "lsst/afw/coord/Observatory.h"
 #include "lsst/afw/coord/Date.h"
 
@@ -25,11 +26,6 @@ namespace lsst {
 namespace afw {    
 namespace coord {
 
-double const degToRad = M_PI/180.0;
-double const radToDeg = 180.0/M_PI;
-
-enum CoordUnit { DEGREES, RADIANS, HOURS };
-enum CoordSystem { FK5, ICRS, GALACTIC, ECLIPTIC, ALTAZ };  // currently unused.
     
 class IcrsCoord;
 class Fk5Coord;
@@ -49,6 +45,7 @@ class Coord {
 public:
 
     Coord(geom::Point2D const p2d, CoordUnit unit = DEGREES, double const epoch = 2000.0);
+    Coord(geom::Point3D const p3d, double const epoch);
     Coord(double const ra, double const dec, double const epoch = 2000.0);
     Coord(std::string const ra, std::string const dec, double const epoch = 2000.0);
     Coord();
@@ -61,38 +58,26 @@ public:
 
     geom::Point2D getPoint2D(CoordUnit unit = DEGREES);
     std::pair<std::string, std::string> getCoordNames();
-    //std::vector<double, double, double> getPositionVector();
+    geom::Point3D getPoint3D();
     
-    double getLongitudeDeg();
-    double getLongitudeHrs();
-    double getLongitudeRad();
-    double getLatitudeDeg();
-    double getLatitudeRad();
-    std::string getLongitudeStr();
+    double getLongitude(CoordUnit unit);
+    double getLatitude(CoordUnit unit);
+    std::string getLongitudeStr(CoordUnit unit);
     std::string getLatitudeStr();
     
-    double getRaDeg();
-    double getDecDeg();
-    double getRaHrs();
-    double getRaRad();
-    double getDecRad();
-    std::string getRaStr();
+    double getRa(CoordUnit unit);
+    double getDec(CoordUnit unit);
+    std::string getRaStr(CoordUnit unit);
     std::string getDecStr();
 
-    double getLDeg();
-    double getBDeg();
-    double getLHrs();
-    double getLRad();
-    double getBRad();
-    std::string getLStr();
+    double getL(CoordUnit unit);
+    double getB(CoordUnit unit);
+    std::string getLStr(CoordUnit unit);
     std::string getBStr();
 
-    double getLambdaDeg();
-    double getBetaDeg();
-    double getLambdaHrs();
-    double getLambdaRad();
-    double getBetaRad();
-    std::string getLambdaStr();
+    double getLambda(CoordUnit unit);
+    double getBeta(CoordUnit unit);
+    std::string getLambdaStr(CoordUnit unit);
     std::string getBetaStr();
     
     Coord transform(Coord const poleFrom, Coord const poleTo);
@@ -120,12 +105,10 @@ private:
  */
 class IcrsCoord : public Coord {
 public:    
-    IcrsCoord(geom::Point2D const p2d, CoordUnit unit = DEGREES) :
-        Coord(p2d, unit, 2000.0) {}
-    IcrsCoord(double const ra, double const dec) : 
-        Coord(ra, dec, 2000.0) {}
-    IcrsCoord(std::string const ra, std::string const dec) : 
-        Coord(ra, dec, 2000.0) {}
+    IcrsCoord(geom::Point2D const p2d, CoordUnit unit = DEGREES) : Coord(p2d, unit, 2000.0) {}
+    IcrsCoord(geom::Point3D const p3d) : Coord(p3d, 2000.0) {}
+    IcrsCoord(double const ra, double const dec) : Coord(ra, dec, 2000.0) {}
+    IcrsCoord(std::string const ra, std::string const dec) : Coord(ra, dec, 2000.0) {}
     IcrsCoord() : Coord() {}
 
     // don't need specify converters (toGalactic(), etc), base class methods are fine for Fk5
@@ -145,6 +128,8 @@ class Fk5Coord : public Coord {
 public:    
     Fk5Coord(geom::Point2D const p2d, CoordUnit unit = DEGREES, double const epoch = 2000.0) :
         Coord(p2d, unit, epoch) {}
+    Fk5Coord(geom::Point3D const p3d, double const epoch = 2000.0) :
+        Coord(p3d, epoch) {}
     Fk5Coord(double const ra, double const dec, double const epoch = 2000.0) : 
         Coord(ra, dec, epoch) {}
     Fk5Coord(std::string const ra, std::string const dec, double const epoch = 2000.0) :
@@ -175,8 +160,8 @@ public:
     
     GalacticCoord(geom::Point2D const p2d, CoordUnit unit = DEGREES, double const epoch = 2000.0) :
         Coord(p2d, unit, epoch) {}
-    GalacticCoord(double const l, double const b, double const epoch = 2000.0) : 
-        Coord(l, b, epoch) {}
+    GalacticCoord(geom::Point3D const p3d, double const epoch = 2000.0) : Coord(p3d, epoch) {}
+    GalacticCoord(double const l, double const b, double const epoch = 2000.0) : Coord(l, b, epoch) {}
     GalacticCoord(std::string const l, std::string const b, double const epoch = 2000.0) : 
         Coord(l, b, epoch) {}
     GalacticCoord() : Coord() {}
@@ -205,6 +190,7 @@ public:
     
     EclipticCoord(geom::Point2D const p2d, CoordUnit unit = DEGREES, double const epoch = 2000.0) :
         Coord(p2d, unit, epoch) {}
+    EclipticCoord(geom::Point3D const p3d, double const epoch = 2000.0) : Coord(p3d, epoch) {}
     EclipticCoord(double const lambda, double const beta, double const epoch = 2000.0) : 
         Coord(lambda, beta, epoch) {}
     EclipticCoord(std::string const lambda, std::string const beta, double const epoch = 2000.0) : 
@@ -231,6 +217,8 @@ public:
     
     AltAzCoord(geom::Point2D const p2d, CoordUnit unit, double const epoch, Observatory const &obs) :
         Coord(p2d, unit, epoch), _obs(obs) {}
+    AltAzCoord(geom::Point3D const p3d, double const epoch, Observatory const &obs) :
+        Coord(p3d, epoch), _obs(obs) {}
     AltAzCoord(double const az, double const alt, double const epoch, Observatory const &obs) : 
         Coord(az, alt, epoch), _obs(obs) {}
     AltAzCoord(std::string const az, std::string const alt, double const epoch, Observatory const &obs) : 
@@ -238,12 +226,9 @@ public:
     
     std::pair<std::string, std::string> getCoordNames();
     
-    double getAzimuthDeg();
-    double getAltitudeDeg();
-    double getAzimuthHrs();
-    double getAzimuthRad();
-    double getAltitudeRad();
-    std::string getAzimuthStr();
+    double getAzimuth(CoordUnit unit);
+    double getAltitude(CoordUnit unit);
+    std::string getAzimuthStr(CoordUnit unit);
     std::string getAltitudeStr();
 
 
@@ -271,6 +256,8 @@ Coord::Ptr makeCoord(CoordSystem const system,
                      std::string const ra, std::string const dec, double const epoch=2000.0);
 Coord::Ptr makeCoord(CoordSystem const system,
                      geom::Point2D p2d, CoordUnit unit, double const epoch=2000.0);
+Coord::Ptr makeCoord(CoordSystem const system,
+                     geom::Point3D p3d, double const epoch=2000.0);
     
 
 }}}

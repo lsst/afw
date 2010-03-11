@@ -36,11 +36,11 @@ class CoordTestCase(unittest.TestCase):
     def testFormat(self):
         """Test formatting"""
         equ = coord.Fk5Coord(self.ra, self.dec)
-        self.assertAlmostEqual(equ.getRaHrs(), self.raKnown)
-        self.assertAlmostEqual(equ.getDecDeg(), self.decKnown)
+        self.assertAlmostEqual(equ.getRa(coord.HOURS), self.raKnown)
+        self.assertAlmostEqual(equ.getDec(coord.DEGREES), self.decKnown)
 
-        print "Format: %s  %s" % (equ.getRaStr(), self.ra)
-        self.assertEqual(equ.getRaStr(), self.ra)
+        print "Format: %s  %s" % (equ.getRaStr(coord.HOURS), self.ra)
+        self.assertEqual(equ.getRaStr(coord.HOURS), self.ra)
 
 
     def testFactory(self):
@@ -64,42 +64,69 @@ class CoordTestCase(unittest.TestCase):
             factories = []
             factories.append(coord.makeCoord(enum, self.l, self.b))
             factories.append(coord.makeCoord(enum, geom.makePointD(self.l, self.b), coord.DEGREES))
-            factories.append(coord.makeCoord(enum, con.getLongitudeStr(), con.getLatitudeStr()))
+            factories.append(coord.makeCoord(enum, con.getLongitudeStr(coord.HOURS), con.getLatitudeStr()))
 
             print "Factory: "
             for fac in factories:
-                self.assertAlmostEqual(con.getRaDeg(), fac.getRaDeg())
-                self.assertAlmostEqual(con.getDecDeg(), fac.getDecDeg())
-                print " tried ", fac.getRaDeg(), "(expected ", con.getRaDeg(), ")"
+                self.assertAlmostEqual(con.getRa(coord.DEGREES), fac.getRa(coord.DEGREES))
+                self.assertAlmostEqual(con.getDec(coord.DEGREES), fac.getDec(coord.DEGREES))
+                print " tried ", fac.getRa(coord.DEGREES), "(expected ", con.getRa(coord.DEGREES), ")"
                 
                 
-    def testPointD(self):
+    def testPoint2D(self):
         """Test the getPoint2D() method"""
         equ = coord.Fk5Coord(self.ra, self.dec)
 
         # make sure we get what we asked for
         pDeg = equ.getPoint2D(coord.DEGREES)
-        self.assertAlmostEqual(equ.getRaDeg(), pDeg.getX())
-        self.assertAlmostEqual(equ.getDecDeg(), pDeg.getY())
+        self.assertAlmostEqual(equ.getRa(coord.DEGREES), pDeg.getX())
+        self.assertAlmostEqual(equ.getDec(coord.DEGREES), pDeg.getY())
 
         pRad = equ.getPoint2D(coord.RADIANS)
-        self.assertAlmostEqual(equ.getRaRad(), pRad.getX())
-        self.assertAlmostEqual(equ.getDecRad(), pRad.getY())
+        self.assertAlmostEqual(equ.getRa(coord.RADIANS), pRad.getX())
+        self.assertAlmostEqual(equ.getDec(coord.RADIANS), pRad.getY())
 
         pHrs = equ.getPoint2D(coord.HOURS)
-        self.assertAlmostEqual(equ.getRaHrs(), pHrs.getX())
-        self.assertAlmostEqual(equ.getDecDeg(), pHrs.getY())
+        self.assertAlmostEqual(equ.getRa(coord.HOURS), pHrs.getX())
+        self.assertAlmostEqual(equ.getDec(coord.DEGREES), pHrs.getY())
 
         # make sure we construct with the type we ask for
         equ1 = coord.Fk5Coord(pDeg, coord.DEGREES)
-        self.assertAlmostEqual(equ1.getRaRad(), equ.getRaRad())
+        self.assertAlmostEqual(equ1.getRa(coord.RADIANS), equ.getRa(coord.RADIANS))
 
         equ2 = coord.Fk5Coord(pRad, coord.RADIANS)
-        self.assertAlmostEqual(equ2.getRaRad(), equ.getRaRad())
+        self.assertAlmostEqual(equ2.getRa(coord.RADIANS), equ.getRa(coord.RADIANS))
 
         equ3 = coord.Fk5Coord(pHrs, coord.HOURS)
-        self.assertAlmostEqual(equ1.getRaRad(), equ.getRaRad())
+        self.assertAlmostEqual(equ1.getRa(coord.RADIANS), equ.getRa(coord.RADIANS))
 
+
+    def testPoint3D(self):
+        """Test the getPoint3D() method, and make sure the constructors take Point3D"""
+
+        # try the axes: vernal equinox should equal 1, 0, 0
+        
+        coordList = []
+        coordList.append([(0.0, 0.0), (1.0, 0.0, 0.0)])
+        coordList.append([(90.0, 0.0), (0.0, 1.0, 0.0)])
+        coordList.append([(0.0, 90.0), (0.0, 0.0, 1.0)])
+        
+        for equ, p3dknown in coordList:
+            
+            # convert to p3d
+            p3d = coord.Fk5Coord(equ[0], equ[1]).getPoint3D()
+            print "Point3d: ", p3d, p3dknown
+            for i in range(3):
+                self.assertAlmostEqual(p3d[i], p3dknown[i])
+                
+            # convert back
+            equBack = coord.Fk5Coord(p3d)
+            s = ("Point3D (back): ", equBack.getRa(coord.DEGREES), equ[0],
+                 equBack.getDec(coord.DEGREES), equ[1])
+            print s
+            self.assertAlmostEqual(equBack.getRa(coord.DEGREES), equ[0])
+            self.assertAlmostEqual(equBack.getDec(coord.DEGREES), equ[1])
+            
         
     def testNames(self):
         """Test the names of the Coords (Useful with Point2D form)"""
@@ -134,15 +161,17 @@ class CoordTestCase(unittest.TestCase):
         
         polluxEqu = coord.Fk5Coord(alpha, delta)
         polluxEcl = polluxEqu.toEcliptic()
-        print "Ecliptic (Pollux): ", polluxEcl.getLambdaDeg(), polluxEcl.getBetaDeg(), lamb, beta
+        s = ("Ecliptic (Pollux): ",
+             polluxEcl.getLambda(coord.DEGREES), polluxEcl.getBeta(coord.DEGREES), lamb, beta)
+        print s
 
         # verify to precision of known values
-        self.assertAlmostEqual(polluxEcl.getLambdaDeg(), lamb, 6)
-        self.assertAlmostEqual(polluxEcl.getBetaDeg(), beta, 6)
+        self.assertAlmostEqual(polluxEcl.getLambda(coord.DEGREES), lamb, 6)
+        self.assertAlmostEqual(polluxEcl.getBeta(coord.DEGREES), beta, 6)
 
         # make sure it transforms back (machine precision)
-        self.assertAlmostEqual(polluxEcl.toFk5().getRaDeg(), polluxEqu.getRaDeg(), 13)
-        self.assertAlmostEqual(polluxEcl.toFk5().getDecDeg(), polluxEqu.getDecDeg(), 13)
+        self.assertAlmostEqual(polluxEcl.toFk5().getRa(coord.DEGREES), polluxEqu.getRa(coord.DEGREES), 13)
+        self.assertAlmostEqual(polluxEcl.toFk5().getDec(coord.DEGREES), polluxEqu.getDec(coord.DEGREES), 13)
 
 
     def testGalactic(self):
@@ -154,18 +183,18 @@ class CoordTestCase(unittest.TestCase):
         sagAKnownGal = coord.GalacticCoord(359.94432, -0.04619)
         
         sagAGal = sagAKnownEqu.toGalactic()
-        print "Galactic (Sag-A):  (transformed) %.5f %.5f   (known) %.5f %.5f\n" % (sagAGal.getLDeg(),
-                                                                                    sagAGal.getBDeg(),
-                                                                                    sagAKnownGal.getLDeg(),
-                                                                                    sagAKnownGal.getBDeg())
+        print "Galactic (Sag-A):  (transformed) %.5f %.5f   (known) %.5f %.5f\n" % (sagAGal.getL(coord.DEGREES),
+                                                                                    sagAGal.getB(coord.DEGREES),
+                                                                                    sagAKnownGal.getL(coord.DEGREES),
+                                                                                    sagAKnownGal.getB(coord.DEGREES))
         
         # verify ... to 4 places, the accuracy of the galactic pole in Fk5
-        self.assertAlmostEqual(sagAGal.getLDeg(), sagAKnownGal.getLDeg(), 4)
-        self.assertAlmostEqual(sagAGal.getBDeg(), sagAKnownGal.getBDeg(), 4)
+        self.assertAlmostEqual(sagAGal.getL(coord.DEGREES), sagAKnownGal.getL(coord.DEGREES), 4)
+        self.assertAlmostEqual(sagAGal.getB(coord.DEGREES), sagAKnownGal.getB(coord.DEGREES), 4)
 
         # make sure it transforms back ... to machine precision
-        self.assertAlmostEqual(sagAGal.toFk5().getRaDeg(), sagAKnownEqu.getRaDeg(), 14)
-        self.assertAlmostEqual(sagAGal.toFk5().getDecDeg(), sagAKnownEqu.getDecDeg(), 14)
+        self.assertAlmostEqual(sagAGal.toFk5().getRa(coord.DEGREES), sagAKnownEqu.getRa(coord.DEGREES), 14)
+        self.assertAlmostEqual(sagAGal.toFk5().getDec(coord.DEGREES), sagAKnownEqu.getDec(coord.DEGREES), 14)
         
         
     def testAltAz(self):
@@ -178,11 +207,11 @@ class CoordTestCase(unittest.TestCase):
         obsDate = coord.Date(2010, 3, 3, 0, 0, 0)
         sedna = coord.Fk5Coord(ra, dec, obsDate.getEpoch())
         altaz = sedna.toAltAz(obs, obsDate)
-        print "AltAz (Sedna): ", altaz.getAltitudeDeg(), altaz.getAzimuthDeg(), alt, az
+        print "AltAz (Sedna): ", altaz.getAltitude(coord.DEGREES), altaz.getAzimuth(coord.DEGREES), alt, az
 
         # precision is low as we don't account for as much as jpl (abberation, nutation, etc)
-        self.assertAlmostEqual(altaz.getAltitudeDeg(), alt, 1)
-        self.assertAlmostEqual(altaz.getAzimuthDeg(), az, 1)
+        self.assertAlmostEqual(altaz.getAltitude(coord.DEGREES), alt, 1)
+        self.assertAlmostEqual(altaz.getAzimuth(coord.DEGREES), az, 1)
 
 
     def testPrecess(self):
@@ -204,17 +233,17 @@ class CoordTestCase(unittest.TestCase):
         alphaKnown, deltaKnown = 41.547236, 49.348488
 
         alphaPer0 = coord.Fk5Coord(alpha0, delta0)
-        alphaDeg = alphaPer0.getRaDeg() + dAlphaDeg*(epoch - 2000.0)
-        deltaDeg = alphaPer0.getDecDeg() + dDeltaDeg*(epoch - 2000.0)
+        alphaDeg = alphaPer0.getRa(coord.DEGREES) + dAlphaDeg*(epoch - 2000.0)
+        deltaDeg = alphaPer0.getDec(coord.DEGREES) + dDeltaDeg*(epoch - 2000.0)
 
         alphaPer = coord.Fk5Coord(alphaDeg, deltaDeg).precess(epoch)
 
-        print "Precession (Alpha-Per): %.6f %.6f   (known) %.6f %.6f" % (alphaPer.getRaDeg(),
-                                                                         alphaPer.getDecDeg(),
+        print "Precession (Alpha-Per): %.6f %.6f   (known) %.6f %.6f" % (alphaPer.getRa(coord.DEGREES),
+                                                                         alphaPer.getDec(coord.DEGREES),
                                                                          alphaKnown, deltaKnown)
         # precision 6 (with 1 digit fudged in the 'known' answers)
-        self.assertAlmostEqual(alphaPer.getRaDeg(), alphaKnown, 6)
-        self.assertAlmostEqual(alphaPer.getDecDeg(), deltaKnown, 6)
+        self.assertAlmostEqual(alphaPer.getRa(coord.DEGREES), alphaKnown, 6)
+        self.assertAlmostEqual(alphaPer.getDec(coord.DEGREES), deltaKnown, 6)
         
         ### Galactic ###
         
@@ -223,11 +252,11 @@ class CoordTestCase(unittest.TestCase):
         epochNew = 2010.0
         galNew = gal.precess(epochNew)
         print "Precession (Galactic, 2000): %.6f %.6f   (%.1f) %.6f %.6f" % (self.l, self.b, epochNew,
-                                                                             galNew.getLDeg(),
-                                                                             galNew.getBDeg())
+                                                                             galNew.getL(coord.DEGREES),
+                                                                             galNew.getB(coord.DEGREES))
         # machine precision
-        self.assertAlmostEqual(self.l, galNew.getLDeg())
-        self.assertAlmostEqual(self.b, galNew.getBDeg())
+        self.assertAlmostEqual(self.l, galNew.getL(coord.DEGREES))
+        self.assertAlmostEqual(self.b, galNew.getB(coord.DEGREES))
 
         ### Ecliptic ###
         
@@ -240,12 +269,13 @@ class CoordTestCase(unittest.TestCase):
         lambNew, betaNew = 118.704, 1.606 
         venusFk5 = coord.EclipticCoord(lambFk5, betaFk5, 2000.0)
         venusNew = venusFk5.precess(coord.Date(-214, 6, 30, 0, 0, 0).getEpoch())
-        print "Precession (Ecliptic, Venus): %.4f %.4f  (known) %.4f %.4f" % (venusNew.getLambdaDeg(),
-                                                                              venusNew.getBetaDeg(),
-                                                                              lambNew, betaNew)
+        s = ("Precession (Ecliptic, Venus): %.4f %.4f  (known) %.4f %.4f" %
+             (venusNew.getLambda(coord.DEGREES), venusNew.getBeta(coord.DEGREES), lambNew, betaNew))
+        print s
+        
         # 3 places precision (accuracy of our controls)
-        self.assertAlmostEqual(venusNew.getLambdaDeg(), lambNew, 3)
-        self.assertAlmostEqual(venusNew.getBetaDeg(), betaNew, 3)
+        self.assertAlmostEqual(venusNew.getLambda(coord.DEGREES), lambNew, 3)
+        self.assertAlmostEqual(venusNew.getBeta(coord.DEGREES), betaNew, 3)
 
 
     def testAngularSeparation(self):
@@ -264,7 +294,7 @@ class CoordTestCase(unittest.TestCase):
         
         # verify small angles ... along a constant ra, add an arcsec to spica dec
         epsilonDeg = 1.0/3600.0
-        spicaPlus = coord.Fk5Coord(spica.getRaDeg(), spica.getDecDeg() + epsilonDeg)
+        spicaPlus = coord.Fk5Coord(spica.getRa(coord.DEGREES), spica.getDec(coord.DEGREES) + epsilonDeg)
         deg = spicaPlus.angularSeparation(spica)
 
         print "Separation (Spica+epsilon): %.8f  (known) %.8f" % (deg, epsilonDeg)

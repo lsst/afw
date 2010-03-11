@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(dmsToDecimal) {
     double raDeg = coord::hmsStringToDegrees(ra);
     double decDeg = coord::dmsStringToDegrees(dec);
     
-    BOOST_CHECK_EQUAL(raDeg, 10.0);
+    BOOST_CHECK_EQUAL(raDeg, 150.0);
     BOOST_CHECK_EQUAL(decDeg, -2.5);
     
     // make sure the rounding issue works (ie. 59.998 rounds to 00, not 60 sec)
@@ -52,9 +52,12 @@ BOOST_AUTO_TEST_CASE(eclipticConversion) {
     coord::Fk5Coord polluxEqu(alpha, delta);
     coord::EclipticCoord polluxEcl = polluxEqu.toEcliptic();
     coord::Fk5Coord fk5 = polluxEcl.toFk5();
-    std::cout << "Pollux (ecl): " << polluxEcl.getLambdaDeg() << " " <<  polluxEcl.getBetaDeg() << std::endl;
-    std::cout << "Pollux (equ): " << polluxEqu.getRaDeg() << " " <<  polluxEqu.getDecDeg() << std::endl;
-    std::cout << "Pollux (fk5): " << fk5.getRaDeg() << " " <<  fk5.getDecDeg() << std::endl;
+    std::cout << "Pollux (ecl): " <<
+        polluxEcl.getLambda(coord::DEGREES) << " " <<  polluxEcl.getBeta(coord::DEGREES) << std::endl;
+    std::cout << "Pollux (equ): " <<
+        polluxEqu.getRa(coord::DEGREES) << " " <<  polluxEqu.getDec(coord::DEGREES) << std::endl;
+    std::cout << "Pollux (fk5): " <<
+        fk5.getRa(coord::DEGREES) << " " <<  fk5.getDec(coord::DEGREES) << std::endl;
 
     geom::PointD p = polluxEqu.getPoint2D();
     std::cout << "PointD: " << p.getX() << " " << p.getY() << std::endl;
