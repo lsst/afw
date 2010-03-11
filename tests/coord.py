@@ -13,8 +13,9 @@ or
 
 import sys, os
 import unittest
-import lsst.afw.coord.coordLib as coord
-import lsst.utils.tests as utilsTests
+import lsst.afw.geom             as geom
+import lsst.afw.coord.coordLib   as coord
+import lsst.utils.tests          as utilsTests
 import eups
 
 # todo: see if we can give an Fk5 and an ecliptic at a different epoch and get the right answer
@@ -42,6 +43,37 @@ class CoordTestCase(unittest.TestCase):
         self.assertEqual(equ.getRaStr(), self.ra)
 
 
+    def testFactory(self):
+        """Test the Factory function makeCoord()"""
+
+        # make a (eg galactic) coord with the constructor, and with the factory
+        # ... require an internal coordinate conversion to equatorial and see if they agree.
+        # They should only agree if they both converted from the same type, thus we got it right.
+        
+        coordList = [
+            [coord.EquatorialCoord, coord.EQU],
+            [coord.Fk5Coord, coord.FK5],
+            [coord.IcrsCoord, coord.ICRS],
+            [coord.GalacticCoord, coord.GAL],
+            [coord.EclipticCoord, coord.ECL],
+            # we can't factory an AltAz ... Observatory must be specified.
+            # [coord.AltAzCoord, coord.ALTAZ]  
+            ]
+        
+        for constructor, enum in coordList:
+            con = constructor(self.l, self.b)
+            factories = []
+            factories.append(coord.makeCoord(enum, self.l, self.b))
+            factories.append(coord.makeCoord(enum, geom.makePointD(self.l, self.b), coord.DEG))
+            factories.append(coord.makeCoord(enum, con.getLongitudeStr(), con.getLatitudeStr()))
+
+            print "Factory: "
+            for fac in factories:
+                self.assertAlmostEqual(con.getRaDeg(), fac.getRaDeg())
+                self.assertAlmostEqual(con.getDecDeg(), fac.getDecDeg())
+                print " tried ", fac.getRaDeg(), "(expected ", con.getRaDeg(), ")"
+                
+                
     def testPointD(self):
         """Test the getPoint2D() method"""
         equ = coord.EquatorialCoord(self.ra, self.dec)
@@ -59,7 +91,7 @@ class CoordTestCase(unittest.TestCase):
         self.assertAlmostEqual(equ.getRaHrs(), pHrs.getX())
         self.assertAlmostEqual(equ.getDecDeg(), pHrs.getY())
 
-        # make sure we construct what we intend to construct
+        # make sure we construct with the type we ask for
         equ1 = coord.EquatorialCoord(pDeg, coord.DEG)
         self.assertAlmostEqual(equ1.getRaRad(), equ.getRaRad())
 
@@ -68,9 +100,11 @@ class CoordTestCase(unittest.TestCase):
 
         equ3 = coord.EquatorialCoord(pHrs, coord.HRS)
         self.assertAlmostEqual(equ1.getRaRad(), equ.getRaRad())
+
         
     def testNames(self):
-
+        """Test the names of the Coords (Useful with Point2D form)"""
+        
         radec1, known1 = coord.Coord(self.ra, self.dec).getCoordNames(), ["RA", "Dec"]
         radec2, known2 = coord.EquatorialCoord(self.ra, self.dec).getCoordNames(), ["RA", "Dec"]
         radec3, known3 = coord.Fk5Coord(self.ra, self.dec).getCoordNames(), ["RA", "Dec"]

@@ -864,3 +864,81 @@ coord::AltAzCoord coord::AltAzCoord::toAltAz(
 coord::AltAzCoord coord::AltAzCoord::toAltAz() {
     return coord::AltAzCoord(getLongitudeDeg(), getLatitudeDeg(), getEpoch(), _obs);
 }
+
+
+
+//Coord(lsst::afw::geom::Point2D const p2d, CoordUnit unit = DEG, double const epoch = 2000.0);
+//Coord(double const ra, double const dec, double const epoch = 2000.0);
+//Coord(std::string const ra, std::string const dec, double const epoch = 2000.0);
+
+coord::Coord::Ptr coord::makeCoord(
+                                   coord::CoordSystem const system,   ///< the system (equ, fk5, galactic ..)
+                                   double const ra,                   ///< right ascension
+                                   double const dec,                  ///< declination
+                                   double const epoch                 ///< epoch of coordinate
+                                  ) {
+
+    switch (system) {
+
+      case coord::EQU:
+        return boost::shared_ptr<coord::EquatorialCoord>(new coord::EquatorialCoord(ra, dec, epoch));
+        break;
+      case coord::FK5:
+        return boost::shared_ptr<coord::Fk5Coord>(new coord::Fk5Coord(ra, dec));
+        break;
+      case coord::ICRS:
+        return boost::shared_ptr<coord::IcrsCoord>(new coord::IcrsCoord(ra, dec));
+        break;
+      case coord::GAL:
+        return boost::shared_ptr<coord::GalacticCoord>(new coord::GalacticCoord(ra, dec, epoch));
+        break;
+      case coord::ECL:
+        return boost::shared_ptr<coord::EclipticCoord>(new coord::EclipticCoord(ra, dec, epoch));
+        break;
+      case coord::ALTAZ:
+        throw LSST_EXCEPT(ex::InvalidParameterException,
+                          "Cannot make AltAz with makeCoord() (must also specify Observatory).\n"
+                          "Instantiate AltAzCoord() directly.");
+        break;
+      default:
+        throw LSST_EXCEPT(ex::InvalidParameterException,
+                          "Undefined CoordSystem: only EQU, FK5, ICRS, GAL, ECL, and ALTAZ are allowed.");
+        break;
+        
+    }
+
+}
+
+coord::Coord::Ptr coord::makeCoord(
+                                   coord::CoordSystem const system,   ///< the system (equ, fk5, galactic ..)
+                                   geom::Point2D p2d,                 ///< the (eg) ra,dec in a Point2D
+                                   coord::CoordUnit unit,             ///< the units (eg. DEG, RAD)
+                                   double const epoch                 ///< epoch of coordinate
+                                  ) {
+    switch (unit) {
+      case coord::DEG:
+        return coord::makeCoord(system, p2d.getX(), p2d.getY(), epoch);
+        break;
+      case coord::RAD:
+        return coord::makeCoord(system, radToDeg*p2d.getX(), radToDeg*p2d.getY(), epoch);
+        break;
+      case coord::HRS:
+        return coord::makeCoord(system, 15.0*radToDeg*p2d.getX(), radToDeg*p2d.getY(), epoch);
+        break;
+      default:
+        throw LSST_EXCEPT(ex::InvalidParameterException,
+                          "Point2D values for Coord must be DEG, RAD, or HRS.");
+        break;
+    }
+}
+
+
+
+coord::Coord::Ptr coord::makeCoord(
+                                   coord::CoordSystem const system,   ///< the system (equ, fk5, galactic ..)
+                                   std::string const ra,              ///< right ascension
+                                   std::string const dec,             ///< declination
+                                   double const epoch                 ///< epoch of coordinate
+                                  ) {
+    return makeCoord(system, 15.0*coord::dmsStringToDegrees(ra), coord::dmsStringToDegrees(dec), epoch);
+}

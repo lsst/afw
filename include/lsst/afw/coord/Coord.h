@@ -13,6 +13,8 @@
  * @todo for epoch=2000 for fk5 and icrs
  */ 
 
+#include "boost/shared_ptr.hpp"
+
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/coord/Observatory.h"
 #include "lsst/afw/coord/Date.h"
@@ -50,13 +52,15 @@ public:
     Coord(std::string const ra, std::string const dec, double const epoch = 2000.0);
     Coord();
 
+    typedef boost::shared_ptr<Coord> Ptr;
+    
     void reset(double const longitude, double const latitude, double const epoch = 2000.0);
 
     double getEpoch()         { return _epoch; }
 
     lsst::afw::geom::Point2D getPoint2D(CoordUnit unit = DEG);
     std::pair<std::string, std::string> getCoordNames();
-    std::vector<double, double, double> getPositionVector();
+    //std::vector<double, double, double> getPositionVector();
     
     double getLongitudeDeg();
     double getLongitudeHrs();
@@ -277,6 +281,13 @@ double dmsStringToDegrees(std::string const dms);
 std::string degreesToDmsString(double const deg);
 //std::string degreesToHmsString(double const deg);    
 
+Coord::Ptr makeCoord(CoordSystem const system,
+                     double const ra, double const dec, double const epoch=2000.0);
+Coord::Ptr makeCoord(CoordSystem const system,
+                     std::string const ra, std::string const dec, double const epoch=2000.0);
+Coord::Ptr makeCoord(CoordSystem const system,
+                     geom::Point2D p2d, CoordUnit unit, double const epoch=2000.0);
+    
 
 }}}
 
