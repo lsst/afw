@@ -24,7 +24,7 @@
 
 namespace coord = lsst::afw::coord;
 namespace ex    = lsst::pex::exceptions;
-
+namespace geom  = lsst::afw::geom;
 
 namespace {
 
@@ -190,6 +190,34 @@ double coord::eclipticPoleInclination(
  *
  */
 coord::Coord::Coord(
+                    geom::Point2D p2d,     ///< Point2D
+                    coord::CoordUnit unit, ///< Rads, Degs, or Hrs
+                    double const epoch     ///< epoch of coordinate
+                   ) :
+    _longitudeRad(NaN), _latitudeRad(NaN), _epoch(epoch) {
+
+    if (unit == coord::DEG) {
+        _longitudeRad = degToRad*p2d.getX();
+        _latitudeRad = degToRad*p2d.getY();
+    } else if (unit == coord::RAD) {
+        _longitudeRad = p2d.getX();
+        _latitudeRad = p2d.getY();
+    } else if (unit == coord::HRS) {
+        _longitudeRad = degToRad*15.0*p2d.getX();
+        _latitudeRad = degToRad*p2d.getY();
+    } else {
+        throw LSST_EXCEPT(ex::InvalidParameterException, "CoordUnit must be DEG, RAD, or HRS");
+    }
+    
+    _verifyValues();
+}
+
+
+/**
+ * @brief Constructor for the Coord base class
+ *
+ */
+coord::Coord::Coord(
                     double const ra,   ///< Right ascension, decimal degrees
                     double const dec,  ///< Declination, decimal degrees
                     double const epoch ///< epoch of coordinate
@@ -254,6 +282,38 @@ void coord::Coord::reset(
     _latitudeRad  = degToRad*latitudeDeg;
     _epoch = epoch;
     _verifyValues();
+}
+
+
+
+/**
+ * @brief Return our contents in a Point2D object
+ *
+ */
+geom::Point2D coord::Coord::getPoint2D(coord::CoordUnit unit) {
+    if (unit == coord::DEG) {
+        return geom::makePointD(getLongitudeDeg(), getLatitudeDeg());
+    } else if (unit == coord::RAD) {
+        return geom::makePointD(getLongitudeRad(), getLatitudeRad());
+    } else if (unit == coord::HRS) {
+        return geom::makePointD(getLongitudeHrs(), getLatitudeDeg());
+    } else {
+        throw LSST_EXCEPT(ex::InvalidParameterException,
+                          "Undefined CoordUnit type.  Only DEG, RAD, HRS allowed.");
+    }
+}
+
+std::pair<std::string, std::string> coord::Coord::getCoordNames() {
+    return std::pair<std::string, std::string>("RA", "Dec");
+}
+std::pair<std::string, std::string> coord::GalacticCoord::getCoordNames() {
+    return std::pair<std::string, std::string>("L", "B");
+}
+std::pair<std::string, std::string> coord::EclipticCoord::getCoordNames() {
+    return std::pair<std::string, std::string>("Lambda", "Beta");
+}
+std::pair<std::string, std::string> coord::AltAzCoord::getCoordNames() {
+    return std::pair<std::string, std::string>("Az", "Alt");
 }
 
 

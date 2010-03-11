@@ -41,6 +41,58 @@ class CoordTestCase(unittest.TestCase):
         print "Format: %s  %s" % (equ.getRaStr(), self.ra)
         self.assertEqual(equ.getRaStr(), self.ra)
 
+
+    def testPointD(self):
+        """Test the getPoint2D() method"""
+        equ = coord.EquatorialCoord(self.ra, self.dec)
+
+        # make sure we get what we asked for
+        pDeg = equ.getPoint2D(coord.DEG)
+        self.assertAlmostEqual(equ.getRaDeg(), pDeg.getX())
+        self.assertAlmostEqual(equ.getDecDeg(), pDeg.getY())
+
+        pRad = equ.getPoint2D(coord.RAD)
+        self.assertAlmostEqual(equ.getRaRad(), pRad.getX())
+        self.assertAlmostEqual(equ.getDecRad(), pRad.getY())
+
+        pHrs = equ.getPoint2D(coord.HRS)
+        self.assertAlmostEqual(equ.getRaHrs(), pHrs.getX())
+        self.assertAlmostEqual(equ.getDecDeg(), pHrs.getY())
+
+        # make sure we construct what we intend to construct
+        equ1 = coord.EquatorialCoord(pDeg, coord.DEG)
+        self.assertAlmostEqual(equ1.getRaRad(), equ.getRaRad())
+
+        equ2 = coord.EquatorialCoord(pRad, coord.RAD)
+        self.assertAlmostEqual(equ2.getRaRad(), equ.getRaRad())
+
+        equ3 = coord.EquatorialCoord(pHrs, coord.HRS)
+        self.assertAlmostEqual(equ1.getRaRad(), equ.getRaRad())
+        
+    def testNames(self):
+
+        radec1, known1 = coord.Coord(self.ra, self.dec).getCoordNames(), ["RA", "Dec"]
+        radec2, known2 = coord.EquatorialCoord(self.ra, self.dec).getCoordNames(), ["RA", "Dec"]
+        radec3, known3 = coord.Fk5Coord(self.ra, self.dec).getCoordNames(), ["RA", "Dec"]
+        radec4, known4 = coord.IcrsCoord(self.ra, self.dec).getCoordNames(), ["RA", "Dec"]
+        lb, known5     = coord.GalacticCoord(self.ra, self.dec).getCoordNames(), ["L", "B"]
+        lambet, known6 = coord.EclipticCoord(self.ra, self.dec).getCoordNames(), ["Lambda", "Beta"]
+        altaz, known7  = coord.AltAzCoord(self.ra, self.dec, 2000.0,
+                                          coord.Observatory(0,0,0)).getCoordNames(), ["Az", "Alt"]
+
+        pairs = [ [radec1, known1],
+                  [radec1, known1],
+                  [radec2, known2],
+                  [radec3, known3],
+                  [radec4, known4],
+                  [lb,     known5],
+                  [lambet, known6],
+                  [altaz,  known7], ]
+                  
+        for pair, known in (pairs):
+            self.assertEqual(pair[0], known[0])
+            self.assertEqual(pair[1], known[1])
+            
         
     def testEcliptic(self):
         """Verify Ecliptic Coordinate Transforms""" 

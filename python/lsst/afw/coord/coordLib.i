@@ -8,6 +8,7 @@ Python interface to lsst::afw::coord
 %feature("autodoc", "1");
 %module(package="lsst.afw.coord", docstring=coordLib_DOCSTRING) coordLib
 
+
 %include "lsst/p_lsstSwig.i"
 
 %pythoncode %{
@@ -34,6 +35,10 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 
 %lsst_exceptions();
 
+%include "std_pair.i"
+%template(pairSS) std::pair<std::string, std::string>;
+
+%import "lsst/afw/geom/geomLib.i"
 %include "observatory.i"
 %include "date.i"
 %include "coord.i"

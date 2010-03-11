@@ -15,9 +15,11 @@
 #include "boost/test/floating_point_comparison.hpp"
 
 #include "lsst/afw/coord/Coord.h"
+#include "lsst/afw/geom/Point.h"
 
 using namespace std;
 namespace coord = lsst::afw::coord;
+namespace geom = lsst::afw::geom;
 
 BOOST_AUTO_TEST_CASE(dmsToDecimal) {
     
@@ -31,7 +33,7 @@ BOOST_AUTO_TEST_CASE(dmsToDecimal) {
     
     // make sure the rounding issue works (ie. 59.998 rounds to 00, not 60 sec)
     raDeg -= 0.000001;
-    std::string raStr = coord::Coord(raDeg, 0.0).getRaStr();
+    std::string raStr = coord::degreesToDmsString(raDeg);
     BOOST_CHECK_EQUAL(raStr, ra);
 
     coord::Fk5Coord cel(raDeg, decDeg);
@@ -54,4 +56,6 @@ BOOST_AUTO_TEST_CASE(eclipticConversion) {
     std::cout << "Pollux (equ): " << polluxEqu.getRaDeg() << " " <<  polluxEqu.getDecDeg() << std::endl;
     std::cout << "Pollux (fk5): " << fk5.getRaDeg() << " " <<  fk5.getDecDeg() << std::endl;
 
+    geom::PointD p = polluxEqu.getPoint2D();
+    std::cout << "PointD: " << p.getX() << " " << p.getY() << std::endl;
 }
