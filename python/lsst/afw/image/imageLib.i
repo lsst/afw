@@ -186,6 +186,10 @@ def version(HeadURL = r"$HeadURL$"):
 %}
 
 SWIG_SHARED_PTR(Wcs, lsst::afw::image::Wcs);
+ 
+SWIG_SHARED_PTR_DERIVED(TanWcs, lsst::afw::image::Wcs, lsst::afw::image::TanWcs) 
+SWIG_SHARED_PTR(TanWcs, lsst::afw::image::TanWcs);
+
 
 %include "lsst/afw/image/Wcs.h"
 %include "lsst/afw/image/TanWcs.h"
@@ -200,13 +204,25 @@ SWIG_SHARED_PTR(Wcs, lsst::afw::image::Wcs);
     }
 }
 
-
-%extend lsst::afw::image::TanWcs {
+%extend lsst::afw::image::TanWcs::Ptr {
     lsst::afw::image::TanWcs::Ptr clone() {
         return lsst::afw::image::TanWcs::Ptr(new lsst::afw::image::TanWcs::TanWcs(*self));
     }
 }
 
+
+
+%inline %{
+    lsst::afw::image::TanWcs::Ptr
+    cast_TanWcs(lsst::afw::image::Wcs::Ptr wcs) {
+        lsst::afw::image::TanWcs::Ptr tanWcs = boost::shared_dynamic_cast<lsst::afw::image::TanWcs>(wcs);
+        
+        if(tanWcs.get() == NULL) {
+            throw(LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "Up cast failed"));
+        }
+        return tanWcs;
+    }
+%}
 
 
 %inline {
