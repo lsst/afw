@@ -21,10 +21,12 @@ namespace afw {
 namespace image {
 
 /// 
-/// @brief Implementation of the WCS standard for the special case of the Gnomic (tangent plane) projection.
+/// @brief Implementation of the WCS standard for the special case of the Gnomonic 
+/// (tangent plane) projection.
 /// 
 /// This class treats the special case of tangent plane projection. It extends the Wcs standard by 
-/// optionally accounting for distortion in the image plane using the Simple Imaging Polynomial (SIP) convention.
+/// optionally accounting for distortion in the image plane using the Simple Imaging Polynomial (SIP)
+/// convention.
 /// This convention is described in Shupe et al. (2005) (Astronomical Data Analysis Software and Systems
 /// XIV, Asp Conf. Series Vol XXX, Ed: Shopbell et al.), and descibed in some more detail in
 /// http://web.ipac.caltech.edu/staff/fmasci/home/wise/codeVdist.html
@@ -74,9 +76,7 @@ namespace image {
         
         lsst::daf::base::PropertySet::Ptr getFitsMetadata() const;        
 
-        #if 0        
         lsst::afw::geom::AffineTransform linearizeAt(lsst::afw::geom::PointD const & pix) const;
-        #endif
         
 
         //Mutators

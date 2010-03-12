@@ -27,19 +27,25 @@ namespace image {
 /// 
 /// Implements a single representation of the World Coordinate
 /// System of a two dimensional image  The standard is defined in two papers
-///  * Greisen & Calabretta, 2002 A&A 395:1061
-///  * Calabretta & Greisen, 2002, A&A 395, 1077
+/// - Greisen & Calabretta, 2002 A&A 395, 1061
+/// - Calabretta & Greisen, 2002, A&A 395, 1077
 ///  
 /// In it's simplest sense, Wcs is used to convert from position in the sky (in right ascension 
 /// and declination) to pixel position on an image (and back again). It is, however, much more general 
 /// than that and can understand a myriad of different coordinate systems.
 /// 
+/// A wcs can be constructed from a reference position (crval, crpix) and a translation matrix. Alternatively,
+/// if you have the header from a fits file, you can create a Wcs object with the makeWcs() function. This
+/// function determines whether your Wcs is one the subset of projection systems that is dealt with specially
+/// by Lsst, and creates an object of the correct class. Otherwise, a pointer to a Wcs object is returned.
+/// Most astronomical images use tangent plane projection, so makeWcs() returns a TanWcs object pointer
+///
 /// \code
 /// import lsst.afw.image as afwImg
 /// fitsHeader = afwImg.readMetadata(filename)
 /// 
 /// if 0:
-///     #This doesn't work. See below
+///     #This doesn't work
 ///     wcs = afwImg.Wcs(fitsHeader)
 ///     
 /// wcs = afwImg.makeWcs(fitsHeader)
@@ -48,10 +54,6 @@ namespace image {
 /// skyPosition = wcs.skyToPixel(xPosition, yPosition)
 /// \endcode
 /// 
-/// A wcs can be constructed from a reference position (crval, crpix) and a translation matrix. Alternatively,
-/// if you have the header from a fits file, you can create a Wcs object with the makeWcs() function. This
-/// function determines whether your Wcs is one the subset of projection systems that is dealt with specially
-/// by Lsst, and creates an object of the correct class.
 /// 
 /// 
 /// This class is implemented in by calls to the wcslib library
@@ -125,7 +127,7 @@ namespace image {
 
         //If you want to create a Wcs from a fits header, use makeWcs(). 
         //This is protected because the derived classes need to be able to see it.
-        Wcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
+        Wcs(lsst::daf::base::PropertySet::Ptr const fitsMetadata);
 
         struct wcsprm* _wcsInfo;
         int _nWcsInfo;
@@ -136,8 +138,6 @@ namespace image {
 
     };
 
-    //@TODO: Image.cc doesn't compile without this, although I'm not sure what they do, or if they're
-    //necessary
     namespace detail {
         lsst::daf::base::PropertySet::Ptr
         createTrivialWcsAsPropertySet(std::string const& wcsName, int const x0=0, int const y0=0);

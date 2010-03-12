@@ -70,7 +70,8 @@ Wcs::Wcs(PropertySet::Ptr const fitsMetadata):
 }
 
 
-///Create a Wcs object with some known information.
+///\brief Create a Wcs object with some known information.
+///
 ///\param crval The sky position of the reference point
 ///\param crpix The pixel position corresponding to crval
 ///\param CD    Matrix describing transformations from pixel to sky positions
@@ -111,13 +112,8 @@ void Wcs::initWcsLibFromFits(PropertySet::Ptr const fitsMetadata){
         throw LSST_EXCEPT(except::InvalidParameterException, msg);
     }
 
-    //Check that only one WCS is in the header. I may want to generalise to multiple wcs'es
-    //at a  later date, but that's more work
-    if( fitsMetadata->exists("WCSAXES") && fitsMetadata->getAsInt("WCSAXES") != 1) {
-        string msg = "Can't treat more than one WCSAXIS yet";
-        throw LSST_EXCEPT(except::InvalidParameterException, msg);
-    }
-    
+    //While the standard does not insist on CRVAL and CRPIX being present, it 
+    //is almost certain their abscence indicates a problem.   
     //Check for CRPIX
     if( !fitsMetadata->exists("CRPIX1") && !fitsMetadata->exists("CRPIX1a")) {
         string msg = "Neither CRPIX1 not CRPIX1a found";
@@ -174,7 +170,7 @@ void Wcs::initWcsLibFromFits(PropertySet::Ptr const fitsMetadata){
 
 
 
-///Manually initialise a wcs struct using values passed by the constructor    
+///\brief Manually initialise a wcs struct using values passed by the constructor    
 ///\param crval The sky position of the reference point
 ///\param crpix The pixel position corresponding to crval
 ///\param CD    Matrix describing transformations from pixel to sky positions
@@ -461,7 +457,8 @@ double Wcs::pixArea(GeomPoint pix00) const {
 }
 
 
-
+///\brief Convert from sky coordinates (e.g ra/dec) to pixel positions.
+///
 ///Convert a sky position (e.g ra/dec) to a pixel position. The exact meaning of sky1, sky2 
 ///depend on the properties of the wcs (i.e the values of CTYPE1 and
 ///CTYPE2), but the inputs are usually ra/dec, and the outputs are x and y pixel position.
@@ -469,6 +466,8 @@ GeomPoint Wcs::skyToPixel(const GeomPoint sky) const {
     return skyToPixel(sky.getX(), sky.getY());
 }
 
+///\brief Convert from pixel position to sky coordinates (e.g ra/dec)
+///
 ///Convert a pixel position (e.g x,y) to a celestial coordinate (e.g ra/dec). The output coordinate
 ///system depends on the values of CTYPE used to construct the object. For ra/dec, the CTYPES should
 ///be RA--TAN and DEC-TAN. 
@@ -476,7 +475,8 @@ GeomPoint Wcs::pixelToSky(const GeomPoint pixel) const {
     return pixelToSky(pixel.getX(), pixel.getY());
 }
 
-
+///\brief Convert from sky coordinates (e.g ra/dec) to pixel positions.
+///
 ///Convert a sky position (e.g ra/dec) to a pixel position. The exact meaning of sky1, sky2 
 ///and the return value depend on the properties of the wcs (i.e the values of CTYPE1 and
 ///CTYPE2), but the inputs are usually ra/dec, and the outputs are x and y pixel position.
@@ -506,6 +506,8 @@ GeomPoint Wcs::skyToPixel(double sky1, double sky2) const {
 }
 
 
+///\brief Convert from pixel position to sky coordinates (e.g ra/dec)
+///
 ///Convert a pixel position (e.g x,y) to a celestial coordinate (e.g ra/dec). The output coordinate
 ///system depends on the values of CTYPE used to construct the object. For ra/dec, the CTYPES should
 ///be RA--TAN and DEC-TAN. 
@@ -587,7 +589,6 @@ lsst::afw::geom::AffineTransform Wcs::linearizeAt(GeomPoint const & sky) const
     GeomPoint const sky00 = sky;
     GeomPoint const pix00 = skyToPixel(sky00);
 
-    //Adding vectors to points is tricky. See note in Wcs::pixArea()
     GeomPoint const dsky10 = pixelToSky(pix00 + geom::makeExtentD(side, 0)) - geom::Extent<double>(sky00);
     GeomPoint const dsky01 = pixelToSky(pix00 + geom::makeExtentD(0, side)) - geom::Extent<double>(sky00);
     
@@ -597,6 +598,8 @@ lsst::afw::geom::AffineTransform Wcs::linearizeAt(GeomPoint const & sky) const
     m(1, 0) = dsky10.getY()/side;
     m(1, 1) = dsky01.getY()/side;
 
+    cout << dsky10 << endl << dsky01 << endl;
+    cout << "Wcs" << endl << m << endl;
     Eigen::Vector2d sky00v;
     sky00v << sky00.getX(), sky00.getY();
     Eigen::Vector2d pix00v;
@@ -610,8 +613,11 @@ lsst::afw::geom::AffineTransform Wcs::linearizeAt(GeomPoint const & sky) const
 //
 
 
-///Used when creating sub images
-/// Move the pixel reference position by (dx, dy)
+/// \brief Move the pixel reference position by (dx, dy)
+///Used when persisting and retrieving sub-images. The lsst convention is that Wcs returns pixel position
+///(which is based on position in the parent image), but the fits convention is to return pixel index
+///(which is bases on position in the sub-image). In order that the fits files we create make sense
+///to other fits viewers, we change to the fits convention when writing out images.
 void Wcs::shiftReferencePixel(double dx, double dy) {
     //If the _wcsInfo structure hasn't been initialised yet, then there's nothing to do
     if(_wcsInfo != NULL) {
