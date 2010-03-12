@@ -33,7 +33,7 @@ afwImg::Wcs::Ptr afwImg::makeWcs(PropertySet::Ptr fitsMetadata){
         throw LSST_EXCEPT(except::RuntimeErrorException, "No CTYPE1 keyword found. Can't determine coordinate system");
     }
     
-    if( ctype1.substr(4, 3) == "TAN") {
+    if( ctype1.substr(5, 3) == "TAN") {
         return afwImg::Wcs::Ptr(new afwImg::TanWcs(fitsMetadata));
     }
     
