@@ -35,7 +35,8 @@ class SavingSubImagesTest(unittest.TestCase):
     """
     
     def setUp(self):
-        self.parentFile = os.path.join("data", "parent.fits")
+        path = eups.productDir("afw")
+        self.parentFile = os.path.join(path, "tests", "data", "parent.fits")
         
         self.parent = afwImg.ExposureF(self.parentFile)
         self.llcParent = self.parent.getMaskedImage().getXY0()
