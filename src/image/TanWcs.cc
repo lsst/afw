@@ -61,7 +61,7 @@ TanWcs::TanWcs(PropertySet::Ptr const fitsMetadata) :
     string ctype1 = fitsMetadata->getAsString("CTYPE1");
     string ctype2 = fitsMetadata->getAsString("CTYPE1");
 
-    if((ctype1.substr(4, 3) != "TAN") || (ctype1.substr(4, 3) != "TAN") ) {
+    if((ctype1.substr(5, 3) != "TAN") || (ctype1.substr(5, 3) != "TAN") ) {
         string msg = "One or more axis isn't in TAN projection";
         throw LSST_EXCEPT(except::InvalidParameterException, msg);
     }
