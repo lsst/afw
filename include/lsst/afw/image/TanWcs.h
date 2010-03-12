@@ -74,6 +74,7 @@ namespace image {
         lsst::afw::geom::PointD skyToPixel(double sky1, double sky2) const;
         lsst::afw::geom::PointD pixelToSky(double pixel1, double pixel2) const;
         
+        bool hasDistortion() const {    return _hasDistortion;};
         lsst::daf::base::PropertySet::Ptr getFitsMetadata() const;        
 
         lsst::afw::geom::AffineTransform linearizeAt(lsst::afw::geom::PointD const & pix) const;
