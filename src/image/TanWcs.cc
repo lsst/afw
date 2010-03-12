@@ -228,7 +228,7 @@ TanWcs::TanWcs & TanWcs::operator = (const TanWcs & rhs){
 
         _hasDistortion = false;        
         if (rhs._hasDistortion) {
-            _hasDistorton = true;
+            _hasDistortion = true;
             _sipA = rhs._sipA;
             _sipB = rhs._sipB;
             _sipAp = rhs._sipAp;
