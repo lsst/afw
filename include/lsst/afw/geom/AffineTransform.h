@@ -133,17 +133,12 @@ public:
     ParameterVector const getVector() const;
     void setVector(ParameterVector const & vector);
 
-<<<<<<< .working
     double & operator[](int i) { 
         return (i < 4) ? _linear[i] : _translation[i - 4]; 
     }
     double const operator[](int i) const { 
         return (i < 4) ? _linear[i] : _translation[i - 4]; 
     }
-=======
-    double & operator[](int i) { return _eigenTransform(i % 2, i / 2); }
-    double operator[](int i) const { return _eigenTransform(i % 2, i / 2); }
->>>>>>> .merge-right.r13353
 
     AffineTransform operator*(AffineTransform const & other) const {
         return AffineTransform(
