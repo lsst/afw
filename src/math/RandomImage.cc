@@ -16,7 +16,7 @@ namespace math {
 namespace {
 
     template<typename T>
-    struct do_random : lsst::afw::image::pixelOp0<T>{
+    struct do_random : public lsst::afw::image::pixelOp0<T>{
         do_random(Random &rand) : _rand(rand) {}
     protected:
         Random &_rand;
@@ -172,7 +172,7 @@ void randomPoissonImage(ImageT *image,    ///< The image to set
     template void randomChisqImage(lsst::afw::image::Image<T> *image, Random &rand, double const nu); \
     template void randomPoissonImage(lsst::afw::image::Image<T> *image, Random &rand, double const mu);
     
-INSTANTIATE(double);
-INSTANTIATE(float);
+INSTANTIATE(double)
+INSTANTIATE(float)
 
 }}}

@@ -83,7 +83,7 @@ using boost::serialization::make_nvp;
             _params(params)   ///< function parameters
         {}
         
-        virtual ~Function() {};
+        virtual ~Function() {}
     
         /**
          * @brief Return the number of function parameters
@@ -122,7 +122,7 @@ using boost::serialization::make_nvp;
             double newValue)    ///< new value for parameter
         {
             _params[ind] = newValue;
-        };
+        }
         
         /**
          * @brief Set all function parameters
@@ -155,7 +155,7 @@ using boost::serialization::make_nvp;
             }
             os << " ]";
             return os.str();
-        };
+        }
 
     protected:
         std::vector<double> _params;
@@ -164,8 +164,8 @@ using boost::serialization::make_nvp;
         friend class boost::serialization::access;
         template <class Archive>
         void serialize(Archive& ar, unsigned int const version) {
-        };
-    };   
+        }
+    };
 
     
     /**
@@ -200,7 +200,7 @@ using boost::serialization::make_nvp;
             Function<ReturnT>(params)
         {}
         
-        virtual ~Function1() {};
+        virtual ~Function1() {}
         
         /**
          * @brief Return a pointer to a deep copy of this function
@@ -219,7 +219,7 @@ using boost::serialization::make_nvp;
 
         virtual std::string toString(std::string const& prefix="") const {
             return std::string("Function1: ") + Function<ReturnT>::toString(prefix);
-        };
+        }
 
     private:
         friend class boost::serialization::access;
@@ -229,7 +229,7 @@ using boost::serialization::make_nvp;
                 Function1<ReturnT>, Function<ReturnT> >(
                     static_cast< Function1<ReturnT>* >(0),
                     static_cast< Function<ReturnT>* >(0));
-        };
+        }
     };    
 
     
@@ -267,7 +267,7 @@ using boost::serialization::make_nvp;
             Function<ReturnT>(params)
         {}
         
-        virtual ~Function2() {};
+        virtual ~Function2() {}
         
         /**
          * @brief Return a pointer to a deep copy of this function
@@ -286,7 +286,7 @@ using boost::serialization::make_nvp;
 
         virtual std::string toString(std::string const& prefix="") const {
             return std::string("Function2: ") + Function<ReturnT>::toString(prefix);
-        };
+        }
 
     private:
         friend class boost::serialization::access;
@@ -297,7 +297,7 @@ using boost::serialization::make_nvp;
                 Function2<ReturnT>, Function<ReturnT> >(
                     static_cast< Function2<ReturnT>* >(0),
                     static_cast< Function<ReturnT>* >(0));
-        };
+        }
 #endif
     };
 
@@ -322,7 +322,7 @@ using boost::serialization::make_nvp;
             ar & make_nvp("fn",
                           boost::serialization::base_object<
                           Function<ReturnT> >(*this));
-        };
+        }
     };
 
     /**
@@ -345,7 +345,7 @@ using boost::serialization::make_nvp;
             ar & make_nvp("fn",
                           boost::serialization::base_object<
                           Function<ReturnT> >(*this));
-        };
+        }
     };
 
 }}}   // lsst::afw::math
@@ -358,7 +358,7 @@ inline void save_construct_data(Archive& ar,
                                 lsst::afw::math::Function<ReturnT> const* f,
                                 unsigned int const version) {
     ar << make_nvp("params", f->getParameters());
-};
+}
 
 template <class Archive, typename ReturnT>
 inline void load_construct_data(Archive& ar,
@@ -367,7 +367,7 @@ inline void load_construct_data(Archive& ar,
     std::vector<double> params;
     ar >> make_nvp("params", params);
     ::new(f) lsst::afw::math::Function<ReturnT>(params);
-};
+}
 
 }}
 

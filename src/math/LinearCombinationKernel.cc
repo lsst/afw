@@ -215,7 +215,7 @@ std::string afwMath::LinearCombinationKernel::toString(std::string const& prefix
     os << " ]" << std::endl;
     os << Kernel::toString(prefix + "\t");
     return os.str();
-};
+}
 
 //
 // Protected Member Functions

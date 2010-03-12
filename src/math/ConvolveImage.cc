@@ -40,7 +40,10 @@ namespace {
      *
      * The pixel computed belongs at position imageIter + kernel center.
      *
-     * @todo get rid of KernelPixelT parameter if possible. At present compilation fails with this sort of message:
+     * @todo get rid of KernelPixelT parameter if possible by not computing local variable kVal,
+     * or by using iterator traits:
+     *     typedef typename std::iterator_traits<KernelIterT>::value_type KernelPixel;
+     * Unfortunately, in either case compilation fails with this sort of message:
 \verbatim
 include/lsst/afw/image/Pixel.h: In instantiation of Ôlsst::afw::image::pixel::exprTraits<boost::gil::pixel<double, boost::gil::layout<boost::mpl::vector1<boost::gil::gray_color_t>, boost::mpl::range_c<int, 0, 1> > > >Õ:
 include/lsst/afw/image/Pixel.h:385:   instantiated from Ôlsst::afw::image::pixel::BinaryExpr<lsst::afw::image::pixel::Pixel<int, short unsigned int, float>, boost::gil::pixel<double, boost::gil::layout<boost::mpl::vector1<boost::gil::gray_color_t>, boost::mpl::range_c<int, 0, 1> > >, std::multiplies<int>, lsst::afw::image::pixel::bitwise_or<short unsigned int>, lsst::afw::image::pixel::variance_multiplies<float> >Õ
@@ -51,12 +54,7 @@ src/math/ConvolveImage.cc:587:   instantiated from here
 include/lsst/afw/image/Pixel.h:210: error: no type named ÔImagePixelTÕ in Ôstruct boost::gil::pixel<double, boost::gil::layout<boost::mpl::vector1<boost::gil::gray_color_t>, boost::mpl::range_c<int, 0, 1> > >Õ
 include/lsst/afw/image/Pixel.h:211: error: no type named ÔMaskPixelTÕ in Ôstruct boost::gil::pixel<double, boost::gil::layout<boost::mpl::vector1<boost::gil::gray_color_t>, boost::mpl::range_c<int, 0, 1> > >Õ
 include/lsst/afw/image/Pixel.h:212: error: no type named ÔVariancePixelTÕ in Ôstruct boost::gil::pixel<double, boost::gil::layout<boost::mpl::vector1<boost::gil::gray_color_t>, boost::mpl::range_c<int, 0, 1> > >Õ
-include/lsst/afw/image/Pixel.h: In member function Ôtypename lsst::afw::image::pixel::exprTraits<ExprT1>::ImagePixelT lsst::afw::image::pixel::BinaryExpr< <template-parameter-1-1>, <template-parameter-1-2>, <template-parameter-1-3>, <template-parameter-1-4>, <template-parameter-1-5> >::image() const [with ExprT1 = lsst::afw::image::pixel::Pixel<int, short unsigned int, float>, ExprT2 = boost::gil::pixel<double, boost::gil::layout<boost::mpl::vector1<boost::gil::gray_color_t>, boost::mpl::range_c<int, 0, 1> > >, ImageBinOp = std::multiplies<int>, MaskBinOp = lsst::afw::image::pixel::bitwise_or<short unsigned int>, VarianceBinOp = lsst::afw::image::pixel::variance_multiplies<float>]Õ:
-include/lsst/afw/image/Pixel.h:371:   instantiated from Ôtypename lsst::afw::image::pixel::exprTraits<ExprT1>::ImagePixelT lsst::afw::image::pixel::BinaryExpr< <template-parameter-1-1>, <template-parameter-1-2>, <template-parameter-1-3>, <template-parameter-1-4>, <template-parameter-1-5> >::image() const [with ExprT1 = lsst::afw::image::pixel::SinglePixel<int, short unsigned int, float>, ExprT2 = lsst::afw::image::pixel::BinaryExpr<lsst::afw::image::pixel::Pixel<int, short unsigned int, float>, boost::gil::pixel<double, boost::gil::layout<boost::mpl::vector1<boost::gil::gray_color_t>, boost::mpl::range_c<int, 0, 1> > >, std::multiplies<int>, lsst::afw::image::pixel::bitwise_or<short unsigned int>, lsst::afw::image::pixel::variance_multiplies<float> >, ImageBinOp = std::plus<int>, MaskBinOp = lsst::afw::image::pixel::bitwise_or<short unsigned int>, VarianceBinOp = lsst::afw::image::pixel::variance_plus<float>]Õ
-include/lsst/afw/image/Pixel.h:55:   instantiated from Ôlsst::afw::image::pixel::SinglePixel<_ImagePixelT, _MaskPixelT, _VariancePixelT>::SinglePixel(const rhsExpr&) [with rhsExpr = lsst::afw::image::pixel::BinaryExpr<lsst::afw::image::pixel::SinglePixel<int, short unsigned int, float>, lsst::afw::image::pixel::BinaryExpr<lsst::afw::image::pixel::Pixel<int, short unsigned int, float>, boost::gil::pixel<double, boost::gil::layout<boost::mpl::vector1<boost::gil::gray_color_t>, boost::mpl::range_c<int, 0, 1> > >, std::multiplies<int>, lsst::afw::image::pixel::bitwise_or<short unsigned int>, lsst::afw::image::pixel::variance_multiplies<float> >, std::plus<int>, lsst::afw::image::pixel::bitwise_or<short unsigned int>, lsst::afw::image::pixel::variance_plus<float> >, _ImagePixelT = int, _MaskPixelT = short unsigned int, _VariancePixelT = float]Õ
-include/lsst/afw/image/Pixel.h:420:   instantiated from ÔExprT1 lsst::afw::image::pixel::operator+=(ExprT1&, ExprT2) [with ExprT1 = lsst::afw::image::pixel::SinglePixel<int, short unsigned int, float>, ExprT2 = lsst::afw::image::pixel::BinaryExpr<lsst::afw::image::pixel::Pixel<int, short unsigned int, float>, boost::gil::pixel<double, boost::gil::layout<boost::mpl::vector1<boost::gil::gray_color_t>, boost::mpl::range_c<int, 0, 1> > >, std::multiplies<int>, lsst::afw::image::pixel::bitwise_or<short unsigned int>, lsst::afw::image::pixel::variance_multiplies<float> >]Õ
 \endverbatim
-     * also is it safe to test *kernelIter == 0 for kernel Image and MaskedImage x iterators?
      */
     template <typename OutPixelT, typename ImageIterT, typename KernelIterT, typename KernelPixelT>
     inline OutPixelT kernelDotProduct(
@@ -272,12 +270,12 @@ void afwMath::basicConvolve(
         pexLog::TTrace<3>("lsst.afw.kernel.convolve", "generic basicConvolve: kernel is spatially varying");
 
         for (int cnvY = cnvStartY; cnvY != cnvEndY; ++cnvY) {
-            double const rowPos = afwImage::indexToPosition(cnvY);
+            double const rowPos = inImage.indexToPosition(cnvY, afwImage::Y);
             
             InXYLocator  inImLoc =  inImage.xy_at(0, cnvY - cnvStartY);
             OutXIterator cnvXIter = convolvedImage.x_at(cnvStartX, cnvY);
             for (int cnvX = cnvStartX; cnvX != cnvEndX; ++cnvX, ++inImLoc.x(), ++cnvXIter) {
-                double const colPos = afwImage::indexToPosition(cnvX);
+                double const colPos = inImage.indexToPosition(cnvX, afwImage::X);
 
                 KernelPixel kSum = kernel.computeImage(kernelImage, false, colPos, rowPos);
                 KernelXYLocator kernelLoc = kernelImage.xy_at(0,0);
@@ -448,12 +446,12 @@ void afwMath::basicConvolve(
         std::vector<double> kernelCoeffList(kernel.getNKernelParameters());
             // weights of basis images at this point
         for (int cnvY = cnvStartY; cnvY < cnvEndY; ++cnvY) {
-            double const rowPos = afwImage::indexToPosition(cnvY);
+            double const rowPos = inImage.indexToPosition(cnvY, afwImage::Y);
         
             OutXIterator cnvXIter = convolvedImage.row_begin(cnvY) + cnvStartX;
             BasisXIterator basisXIter = basisImage.row_begin(cnvY) + cnvStartX;
             for (int cnvX = cnvStartX; cnvX != cnvEndX; ++cnvX, ++cnvXIter, ++basisXIter) {
-                double const colPos = afwImage::indexToPosition(cnvX);
+                double const colPos = inImage.indexToPosition(cnvX, afwImage::X);
                 double basisCoeff = (*spatialFunctionPtr)(colPos, rowPos);
                 
                 typename OutImageT::SinglePixel cnvPixel(*cnvXIter);
@@ -477,11 +475,11 @@ void afwMath::basicConvolve(
         std::vector<double> const kernelSumList = kernel.getKernelSumList();
         std::vector<Kernel::SpatialFunctionPtr> spatialFunctionList = kernel.getSpatialFunctionList();
         for (int cnvY = cnvStartY; cnvY < cnvEndY; ++cnvY) {
-            double const rowPos = afwImage::indexToPosition(cnvY);
+            double const rowPos = inImage.indexToPosition(cnvY, afwImage::Y);
         
             OutXIterator cnvXIter = convolvedImage.row_begin(cnvY) + cnvStartX;
             for (int cnvX = cnvStartX; cnvX != cnvEndX; ++cnvX, ++cnvXIter) {
-                double const colPos = afwImage::indexToPosition(cnvX);
+                double const colPos = inImage.indexToPosition(cnvX, afwImage::X);
 
                 std::vector<double>::const_iterator kSumIter = kernelSumList.begin();
                 std::vector<Kernel::SpatialFunctionPtr>::const_iterator spFuncIter =
@@ -545,12 +543,12 @@ void afwMath::basicConvolve(
             "SeparableKernel basicConvolve: kernel is spatially varying");
 
         for (int cnvY = cnvStartY; cnvY != cnvEndY; ++cnvY) {
-            double const rowPos = afwImage::indexToPosition(cnvY);
+            double const rowPos = inImage.indexToPosition(cnvY, afwImage::Y);
             
             InXYLocator  inImLoc =  inImage.xy_at(0, cnvY - cnvStartY);
             OutXIterator cnvXIter = convolvedImage.row_begin(cnvY) + cnvStartX;
             for (int cnvX = cnvStartX; cnvX != cnvEndX; ++cnvX, ++inImLoc.x(), ++cnvXIter) {
-                double const colPos = afwImage::indexToPosition(cnvX);
+                double const colPos = inImage.indexToPosition(cnvX, afwImage::X);
 
                 KernelPixel kSum = kernel.computeVectors(kXVec, kYVec, doNormalize, colPos, rowPos);
 

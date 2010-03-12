@@ -362,7 +362,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
 template<typename ImagePixelT, typename MaskPixelT>
 detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         const image::MaskedImage<ImagePixelT, MaskPixelT> &, //!< Image to search for objects
-        Threshold const &threshold,                          //!< threshold to find objects
+        Threshold const &,                                   //!< threshold to find objects
         int,                                                 //!< Footprint should include this pixel (column)
         int,                                                 //!< Footprint should include this pixel (row) 
         std::vector<Peak> const *       //!< Footprint should include at most one of these peaks

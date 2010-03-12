@@ -27,7 +27,7 @@ Simple interface to the xpa routines used to communicate with ds9
 #include "lsst/pex/exceptions/Runtime.h"
 
 namespace {
-    class myXPA : boost::noncopyable {
+    class myXPA : private boost::noncopyable {
     public:
         static XPA get(bool reset=false) {
             static myXPA *singleton = NULL;

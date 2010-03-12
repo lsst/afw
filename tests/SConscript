@@ -19,9 +19,12 @@ for fileName in glob.glob("*.cc"):
 env.CheckSwig("python", ilang="c++",
               includedProducts="afw utils daf_base pex_exceptions pex_logging pex_policy daf_persistence daf_data security")
 
-testEigenLib = env.LoadableModuleIncomplete("_testEigenLib", ["testEigenLib.i"], LIBS=env.getlibs("afw"))
-testLib = env.LoadableModuleIncomplete("_testLib", ["testLib.i"], LIBS=env.getlibs("afw"))
-
+testEigenLib = env.LoadableModuleIncomplete("_testEigenLib", ["testEigenLib.i"],
+                                            CCFLAGS=re.sub("-Wall", "", " ".join(env['CCFLAGS'])),
+                                            LIBS=env.getlibs("afw"))
+testLib = env.LoadableModuleIncomplete("_testLib", ["testLib.i"],
+                                       CCFLAGS=re.sub("-Wall", "", " ".join(env['CCFLAGS'])),
+                                       LIBS=env.getlibs("afw"))
 #
 # Tests
 #

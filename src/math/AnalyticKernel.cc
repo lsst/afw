@@ -138,7 +138,7 @@ std::string afwMath::AnalyticKernel::toString(std::string const& prefix) const {
         << std::endl;
     os << Kernel::toString(prefix + "\t");
     return os.str();
-};
+}
 
 std::vector<double> afwMath::AnalyticKernel::getKernelParameters() const {
     return _kernelFunctionPtr->getParameters();

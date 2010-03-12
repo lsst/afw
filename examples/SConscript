@@ -1,5 +1,5 @@
 # -*- python -*-
-import glob, sys
+import glob, re, sys
 Import('env')
 
 env.Program(["forEachPixel.cc"], LIBS=env.getlibs("afw"))
@@ -67,6 +67,7 @@ env.CheckSwig("python", ilang="c++",
 
 testSpatialCellLib = env.LoadableModuleIncomplete("_testSpatialCellLib",
                                                   ["testSpatialCellLib.i", "testSpatialCell.cc"],
+                                                  CCFLAGS=re.sub("-Wall", "", " ".join(env['CCFLAGS'])),
                                                   LIBS=env.getlibs("afw"))
 
 env.Program(["spatialCellExample.cc", "testSpatialCell.cc"], LIBS=env.getlibs("afw"))

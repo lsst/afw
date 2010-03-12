@@ -123,7 +123,7 @@ readImage() {
     afwImage::Image<PixelT>::Ptr im = mi->getImage();
     try {
         *mi->getImage() -= *afwMath::makeBackground(*im, bctrl).getImage<PixelT>();
-    } catch(std::exception &e) {
+    } catch(std::exception &) {
         bctrl.setInterpStyle(afwMath::Interpolate::CONSTANT);
         *mi->getImage() -= *afwMath::makeBackground(*im, bctrl).getImage<PixelT>();
     }
@@ -148,6 +148,7 @@ readImage() {
  */
 int main() {
     std::pair<afwImage::MaskedImage<PixelT>::Ptr, afwDetect::FootprintSet<PixelT>::Ptr> data = readImage();
+    assert (data.first != NULL);        // stop compiler complaining about data being unused
 
     SpatialCellSetDemo();
 }

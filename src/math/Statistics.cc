@@ -409,7 +409,7 @@ afwMath::Statistics::StandardReturn afwMath::Statistics::_getStandard(ImageT con
     // estimate of population mean and variance
     double mean, variance;
     if (_sctrl.getWeighted()) {
-        mean = (wsum) ? meanCrude + sum/wsum : NaN;
+        mean = (wsum > 0) ? meanCrude + sum/wsum : NaN;
         variance = (n > 1) ? sumx2/(wsum - wsum/n) - sum*sum/(static_cast<double>(wsum - wsum/n)*wsum) : NaN; 
     } else {
         mean = (n) ? meanCrude + sum/n : NaN;
@@ -788,7 +788,7 @@ typedef afwImage::VariancePixel VPixel;
                                                      afwImage::Mask<afwImage::MaskPixel> const &msk, \
                                                      afwImage::Image<VPixel> const &var, \
                                                      int const flags, std::pair<double, double> clipinfo); \
-    template double STAT::_percentile(std::vector<TYPE> &img, double const percentile);
+    template double STAT::_percentile(std::vector<TYPE> &img, double const percentile)
 
 
 #define INSTANTIATE_MASKEDIMAGE_STATISTICS_NO_MASK(TYPE)                       \
@@ -803,7 +803,7 @@ typedef afwImage::VariancePixel VPixel;
     template STAT::StandardReturn STAT::_getStandard(afwImage::Image<TYPE> const &img, \
                                                      afwMath::MaskImposter<afwImage::MaskPixel> const &msk, \
                                                      afwImage::Image<VPixel> const &var, \
-                                                     int const flags, std::pair<double, double> clipinfo);
+                                                     int const flags, std::pair<double, double> clipinfo)
 
 
 #define INSTANTIATE_MASKEDIMAGE_STATISTICS_NO_VAR(TYPE)                       \
@@ -818,7 +818,7 @@ typedef afwImage::VariancePixel VPixel;
     template STAT::StandardReturn STAT::_getStandard(afwImage::Image<TYPE> const &img, \
                                                      afwImage::Mask<afwImage::MaskPixel> const &msk, \
                                                      afwMath::MaskImposter<VPixel> const &var, \
-                                                     int const flags, std::pair<double, double> clipinfo);
+                                                     int const flags, std::pair<double, double> clipinfo)
 
 
 //
@@ -834,7 +834,7 @@ typedef afwImage::VariancePixel VPixel;
     template STAT::StandardReturn STAT::_getStandard(afwImage::Image<TYPE> const &img, \
                                                      afwMath::MaskImposter<afwImage::MaskPixel> const &msk, \
                                                      afwMath::MaskImposter<VPixel> const &var, \
-                                                     int const flags, std::pair<double, double> clipinfo);
+                                                     int const flags, std::pair<double, double> clipinfo)
 
 //
 #define INSTANTIATE_VECTOR_STATISTICS(TYPE)                         \
@@ -849,7 +849,7 @@ typedef afwImage::VariancePixel VPixel;
     template STAT::StandardReturn STAT::_getStandard(afwMath::ImageImposter<TYPE> const &img, \
                                                      afwMath::MaskImposter<afwImage::MaskPixel> const &msk, \
                                                      afwMath::MaskImposter<VPixel> const &var, \
-                                                     int const flags, std::pair<double, double> clipinfo);
+                                                     int const flags, std::pair<double, double> clipinfo)
 
 
 #define INSTANTIATE_IMAGE_STATISTICS(T) \
@@ -857,13 +857,10 @@ typedef afwImage::VariancePixel VPixel;
     INSTANTIATE_MASKEDIMAGE_STATISTICS_NO_VAR(T); \
     INSTANTIATE_MASKEDIMAGE_STATISTICS_NO_MASK(T); \
     INSTANTIATE_REGULARIMAGE_STATISTICS(T); \
-    INSTANTIATE_VECTOR_STATISTICS(T);
+    INSTANTIATE_VECTOR_STATISTICS(T)
 
 
 INSTANTIATE_IMAGE_STATISTICS(double);
 INSTANTIATE_IMAGE_STATISTICS(float);
 INSTANTIATE_IMAGE_STATISTICS(int);
 INSTANTIATE_IMAGE_STATISTICS(unsigned short);
-
-
-

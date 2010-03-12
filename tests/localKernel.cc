@@ -35,7 +35,6 @@ typedef FourierCutout::Complex Complex;
 //the following test arrays where constructed using numpy
 //the fft was computed using numpy.fft.rfft2
 
-int const STACK_DEPTH = 3;
 //stack of 3 image, each with width = 5, height = 4
 int const IMG_HEIGHT = 4;
 int const IMG_WIDTH = 5;

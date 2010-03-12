@@ -103,4 +103,4 @@ std::string afwMath::FixedKernel::toString(std::string const& prefix) const {
     os << prefix << "..sum: " << _sum << std::endl;
     os << Kernel::toString(prefix + "\t");
     return os.str();
-};
+}

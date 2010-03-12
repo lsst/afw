@@ -86,7 +86,7 @@ public:
     void setCore(Core const & core); ///< \brief Set the core object.
 
     double & operator[](int n); ///< \brief Access the nth ellipse parameter.
-    double const operator[](int n) const; ///< \brief Access the nth ellipse parameter.
+    double operator[](int n) const; ///< \brief Access the nth ellipse parameter.
 
     /// \brief Put the parameters in a standard form, and return false if they are invalid.
     bool normalize();
@@ -162,7 +162,7 @@ public:
     }
 
     double & operator[](int n) { return _vector[n]; } ///< \brief Access the nth core parameter.
-    double const operator[](int n) const { return _vector[n]; } ///< \brief Access the nth core parameter.
+    double operator[](int n) const { return _vector[n]; } ///< \brief Access the nth core parameter.
 
     /**
      *  \brief Put the parameters into a "standard form", if possible, and return
@@ -243,7 +243,7 @@ inline void BaseEllipse::scale(double factor) { getCore().scale(factor); }
 inline void BaseEllipse::shift(ExtentD const & offset) { _center += offset; }
 
 inline double & BaseEllipse::operator[](int i) { return (i<2) ? _center[i] : (*_core)[i-2]; }
-inline double const BaseEllipse::operator[](int i) const { return (i<2) ? _center[i] : (*_core)[i-2]; }
+inline double BaseEllipse::operator[](int i) const { return (i<2) ? _center[i] : (*_core)[i-2]; }
 
 inline BaseEllipse::BaseEllipse(Core const & core, PointD const & center) : 
     _center(center), _core(core._clone()) {}
