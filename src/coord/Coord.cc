@@ -526,18 +526,10 @@ coord::Coord coord::Coord::precess(
                                    double const epochTo ///< epoch to precess to
                                   ) {
 
-//#if 0   
     dafBase::DateTime dateFrom(getEpoch(), dafBase::DateTime::EPOCH, dafBase::DateTime::TAI);
     dafBase::DateTime dateTo(epochTo, dafBase::DateTime::EPOCH, dafBase::DateTime::TAI);
-    double const jd0 = dateFrom.getDate(dafBase::DateTime::JD);
-    double const jd  = dateTo.getDate(dafBase::DateTime::JD);
-//#endif
-#if 0
-    coord::Date dateFrom(getEpoch(), coord::Date::EPOCH);
-    coord::Date dateTo(epochTo, coord::Date::EPOCH);
-    double const jd0 = dateFrom.getJd();
-    double const jd = dateTo.getJd();
-#endif
+    double const jd0 = dateFrom.get(dafBase::DateTime::JD);
+    double const jd  = dateTo.get(dafBase::DateTime::JD);
 
     double const T   = (jd0 - JD2000)/36525.0;
     double const t   = (jd - jd0)/36525.0;
@@ -575,7 +567,6 @@ coord::Fk5Coord coord::Coord::toFk5() {
 /**
  * @brief Convert ourself to ICRS: RA, Dec (basically J2000)
  *
- * @note This currently just calls the FK5 routine.
  */
 coord::IcrsCoord coord::Coord::toIcrs() {
     coord::Coord c = precess(2000.0);
@@ -618,11 +609,11 @@ coord::AltAzCoord coord::Coord::toAltAz(
                                        ) {
 
     // precess to the epoch
-    Coord coord = precess(obsDate.getDate(dafBase::DateTime::EPOCH));
+    Coord coord = precess(obsDate.get(dafBase::DateTime::EPOCH));
 
     // greenwich sidereal time
     double const theta0 = degToRad*reduceAngle(
-                              meanSiderealTimeGreenwich(obsDate.getDate(dafBase::DateTime::JD)));
+                              meanSiderealTimeGreenwich(obsDate.get(dafBase::DateTime::JD)));
     double const phi    = obs.getLatitude(RADIANS);  // observatory latitude
     double const L      = obs.getLongitude(RADIANS); // observatory longitude
 
@@ -636,7 +627,7 @@ coord::AltAzCoord coord::Coord::toAltAz(
     double const h         = radToDeg*asin(sinh);
     double const A         = reduceAngle(-90.0 - radToDeg*atan2(tanAdenom, tanAnum));
     
-    return AltAzCoord(A, h, obsDate.getDate(dafBase::DateTime::EPOCH), obs);
+    return AltAzCoord(A, h, obsDate.get(dafBase::DateTime::EPOCH), obs);
 }
 
 
@@ -657,9 +648,8 @@ coord::AltAzCoord coord::Coord::toAltAz(
 coord::Fk5Coord coord::Fk5Coord::precess(
                                          double const epochTo ///< epoch to precess to
                                         ) {
-    Coord c = Coord(getLongitude(DEGREES), getLatitude(DEGREES), getEpoch());
-    Coord cp = c.precess(epochTo);
-    return Fk5Coord(cp.getLongitude(DEGREES), cp.getLatitude(DEGREES), cp.getEpoch());
+    Coord c = Coord(getLongitude(DEGREES), getLatitude(DEGREES), getEpoch()).precess(epochTo);
+    return Fk5Coord(c.getLongitude(DEGREES), c.getLatitude(DEGREES), c.getEpoch());
 }
 
 
@@ -675,7 +665,7 @@ coord::Fk5Coord coord::Fk5Coord::precess(
 /**
  * @brief precess ourselfs to a new epoch
  *
- * Can't just let the base class Coord do this ... we need to return the correct type
+ * @note An ICRS coord has no epoch, so we'll return an Fk5Coord
  */
 coord::Fk5Coord coord::IcrsCoord::precess(
                                           double const epochTo ///< epoch to precess to
@@ -735,7 +725,7 @@ coord::GalacticCoord coord::GalacticCoord::toGalactic() {
  * To do this, we'll go to fk5 first, then to ecliptic
  */
 coord::EclipticCoord coord::GalacticCoord::toEcliptic() {
-    return (this->toFk5()).toEcliptic();
+    return this->toFk5().toEcliptic();
 }
 
 /**
@@ -747,7 +737,7 @@ coord::AltAzCoord coord::GalacticCoord::toAltAz(
                                                 Observatory const &obs,        ///< observatory of observation
                                                 dafBase::DateTime const &date  ///< date of observation
                                                ) {
-    return (this->toFk5()).toAltAz(obs, date);
+    return this->toFk5().toAltAz(obs, date);
 }
 
 /**
@@ -793,7 +783,7 @@ coord::Fk5Coord coord::EclipticCoord::toFk5() {
  * @brief Convert ourself from Ecliptic to Fk5
  */
 coord::IcrsCoord coord::EclipticCoord::toIcrs() {
-    return (this->toFk5()).toIcrs();
+    return this->toFk5().toIcrs();
 }
 
 /**
@@ -802,7 +792,7 @@ coord::IcrsCoord coord::EclipticCoord::toIcrs() {
  * To do this, we'll go to fk5 first, then to galactic
  */
 coord::GalacticCoord coord::EclipticCoord::toGalactic() {
-    return (this->toFk5()).toGalactic(); 
+    return this->toFk5().toGalactic(); 
 }
 
 
@@ -815,7 +805,7 @@ coord::AltAzCoord coord::EclipticCoord::toAltAz(
                                                 Observatory const &obs,   ///< observatory of observation
                                                 dafBase::DateTime const &date   ///< date of observation
                                                ) {
-    return (this->toFk5()).toAltAz(obs, date);
+    return this->toFk5().toAltAz(obs, date);
 }
 
 /**
@@ -826,10 +816,7 @@ coord::AltAzCoord coord::EclipticCoord::toAltAz(
 coord::EclipticCoord coord::EclipticCoord::precess(
                                                    double epochTo ///< epoch to precess to.
                                                   ) {
-    Fk5Coord c = this->toFk5();
-    Fk5Coord c2 = c.precess(epochTo);
-    EclipticCoord ce = c2.toEcliptic();
-    return ce;
+    return this->toFk5().precess(epochTo).toEcliptic();
 }
 
 
@@ -845,7 +832,7 @@ coord::EclipticCoord coord::EclipticCoord::precess(
  * Do this by going through fk5.
  */
 coord::EclipticCoord coord::AltAzCoord::toEcliptic() {
-    return (this->toFk5()).toEcliptic();
+    return this->toFk5().toEcliptic();
 }
 
 /**
@@ -854,7 +841,7 @@ coord::EclipticCoord coord::AltAzCoord::toEcliptic() {
  * Do this by going through fk5
  */
 coord::GalacticCoord coord::AltAzCoord::toGalactic() {
-    return (this->toFk5()).toGalactic(); 
+    return this->toFk5().toGalactic(); 
 }
 
 
@@ -871,7 +858,7 @@ coord::Fk5Coord coord::AltAzCoord::toFk5() {
 
     double const jd       = dafBase::DateTime(getEpoch(),
                                               dafBase::DateTime::EPOCH,
-                                              dafBase::DateTime::TAI).getDate(dafBase::DateTime::JD);
+                                              dafBase::DateTime::TAI).get(dafBase::DateTime::JD);
     double const theta0   = degToRad*meanSiderealTimeGreenwich(jd);
 
     double const tanH     = sin(A) / (cos(A)*sin(phi) + tan(h)*cos(phi));
@@ -888,7 +875,7 @@ coord::Fk5Coord coord::AltAzCoord::toFk5() {
  * @note This currently calls the Fk5 routines and is not strictly ICRS.
  */
 coord::IcrsCoord coord::AltAzCoord::toIcrs() {
-    return (this->toFk5()).toIcrs();
+    return this->toFk5().toIcrs();
 }
 
 

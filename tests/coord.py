@@ -184,10 +184,10 @@ class CoordTestCase(unittest.TestCase):
         sagAKnownGal = coord.GalacticCoord(359.94432, -0.04619)
         
         sagAGal = sagAKnownEqu.toGalactic()
-        print "Galactic (Sag-A):  (transformed) %.5f %.5f   (known) %.5f %.5f\n" % (sagAGal.getL(coord.DEGREES),
-                                                                                    sagAGal.getB(coord.DEGREES),
-                                                                                    sagAKnownGal.getL(coord.DEGREES),
-                                                                                    sagAKnownGal.getB(coord.DEGREES))
+        s = ("Galactic (Sag-A):  (transformed) %.5f %.5f   (known) %.5f %.5f\n" %
+             (sagAGal.getL(coord.DEGREES), sagAGal.getB(coord.DEGREES),
+              sagAKnownGal.getL(coord.DEGREES), sagAKnownGal.getB(coord.DEGREES)))
+        print s
         
         # verify ... to 4 places, the accuracy of the galactic pole in Fk5
         self.assertAlmostEqual(sagAGal.getL(coord.DEGREES), sagAKnownGal.getL(coord.DEGREES), 4)
@@ -206,7 +206,7 @@ class CoordTestCase(unittest.TestCase):
         az, alt = 231.5947, 44.3375
         obs = coord.Observatory(40.384, 74.659, 100.0) # peyton
         obsDate = dafBase.DateTime(2010, 3, 3, 0, 0, 0, dafBase.DateTime.TAI)
-        sedna = coord.Fk5Coord(ra, dec, obsDate.getDate(dafBase.DateTime.EPOCH))
+        sedna = coord.Fk5Coord(ra, dec, obsDate.get(dafBase.DateTime.EPOCH))
         altaz = sedna.toAltAz(obs, obsDate)
         print "AltAz (Sedna): ", altaz.getAltitude(coord.DEGREES), altaz.getAzimuth(coord.DEGREES), alt, az
 
@@ -228,7 +228,7 @@ class CoordTestCase(unittest.TestCase):
 
         # get for 2028, Nov 13.19
         epoch = dafBase.DateTime(2028, 11, 13, 4, 33, 36,
-                                 dafBase.DateTime.TAI).getDate(dafBase.DateTime.EPOCH)
+                                 dafBase.DateTime.TAI).get(dafBase.DateTime.EPOCH)
 
         # the known final answer
         # - actually 41.547214, 49.348483 (suspect precision error in Meeus)
@@ -244,8 +244,8 @@ class CoordTestCase(unittest.TestCase):
                                                                          alphaPer.getDec(coord.DEGREES),
                                                                          alphaKnown, deltaKnown)
         # precision 6 (with 1 digit fudged in the 'known' answers)
-        #self.assertAlmostEqual(alphaPer.getRa(coord.DEGREES), alphaKnown, 6)
-        #self.assertAlmostEqual(alphaPer.getDec(coord.DEGREES), deltaKnown, 6)
+        self.assertAlmostEqual(alphaPer.getRa(coord.DEGREES), alphaKnown, 6)
+        self.assertAlmostEqual(alphaPer.getDec(coord.DEGREES), deltaKnown, 6)
         
         ### Galactic ###
         
@@ -271,7 +271,7 @@ class CoordTestCase(unittest.TestCase):
         lamb214bc, beta214bc = 118.704, 1.606 
         venus2000  = coord.EclipticCoord(lamb2000, beta2000, 2000.0)
         ep = dafBase.DateTime(-214, 6, 30, 0, 0, 0,
-                               dafBase.DateTime.TAI).getDate(dafBase.DateTime.EPOCH)
+                               dafBase.DateTime.TAI).get(dafBase.DateTime.EPOCH)
         ep = coord.Date(-214, 6, 30, 0, 0, 0).getEpoch()
         print ep
         venus214bc = venus2000.precess(ep)
