@@ -58,9 +58,11 @@ public:
 
     double getEpoch()         { return _epoch; }
 
-    geom::Point2D getPoint2D(CoordUnit unit = DEGREES);
+    geom::Point2D getPosition(CoordUnit unit = DEGREES);
+    geom::Point3D getPositionVector();
     std::pair<std::string, std::string> getCoordNames();
-    geom::Point3D getPoint3D();
+
+    
     
     double getLongitude(CoordUnit unit);
     double getLatitude(CoordUnit unit);

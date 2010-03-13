@@ -322,7 +322,7 @@ void coord::Coord::reset(
  * @brief Return our contents in a Point2D object
  *
  */
-geom::Point2D coord::Coord::getPoint2D(CoordUnit unit) {
+geom::Point2D coord::Coord::getPosition(CoordUnit unit) {
     // treat HOURS specially, they must mean hours for RA, degrees for Dec
     if (unit == HOURS) {
         return geom::makePointD(getLongitude(unit), getLatitude(DEGREES));
@@ -345,7 +345,7 @@ std::pair<std::string, std::string> coord::AltAzCoord::getCoordNames() {
 }
 
 
-geom::Point3D coord::Coord::getPoint3D() {
+geom::Point3D coord::Coord::getPositionVector() {
     double const x = cos(getLongitude(RADIANS))*cos(getLatitude(RADIANS));
     double const y = sin(getLongitude(RADIANS))*cos(getLatitude(RADIANS));
     double const z = sin(getLatitude(RADIANS));
@@ -665,7 +665,7 @@ coord::Fk5Coord coord::Fk5Coord::precess(
 /**
  * @brief precess ourselfs to a new epoch
  *
- * @note An ICRS coord has no epoch, so we'll return an Fk5Coord
+ * @note An ICRS coord has no epoch, so precess, but return an Fk5
  */
 coord::Fk5Coord coord::IcrsCoord::precess(
                                           double const epochTo ///< epoch to precess to

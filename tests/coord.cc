@@ -37,9 +37,6 @@ BOOST_AUTO_TEST_CASE(dmsToDecimal) {
     std::string raStr = coord::degreesToHmsString(raDeg);
     BOOST_CHECK_EQUAL(raStr, ra);
 
-    coord::Fk5Coord cel(raDeg, decDeg);
-    cel.precess(2010.0);
-    
 }
 
 
@@ -48,38 +45,15 @@ BOOST_AUTO_TEST_CASE(eclipticConversion) {
     // Pollux
     std::string alpha = "07:45:18.946";
     std::string delta = "28:01:34.26";
-    //double alpha = 116.328942;
-    //double alpha = 28.026183;
+    double lamb0 = 113.215629;
+    double beta0 = 6.684170;
+    
     coord::Fk5Coord polluxEqu(alpha, delta);
     coord::EclipticCoord polluxEcl = polluxEqu.toEcliptic();
     coord::Fk5Coord fk5 = polluxEcl.toFk5();
-    std::cout << "Pollux (ecl): " <<
-        polluxEcl.getLambda(coord::DEGREES) << " " <<  polluxEcl.getBeta(coord::DEGREES) << std::endl;
-    std::cout << "Pollux (equ): " <<
-        polluxEqu.getRa(coord::DEGREES) << " " <<  polluxEqu.getDec(coord::DEGREES) << std::endl;
-    std::cout << "Pollux (fk5): " <<
-        fk5.getRa(coord::DEGREES) << " " <<  fk5.getDec(coord::DEGREES) << std::endl;
-
-    geom::PointD p = polluxEqu.getPoint2D();
-    std::cout << "PointD: " << p.getX() << " " << p.getY() << std::endl;
-
-    coord::Fk5Coord f = polluxEqu.precess(2028.0);
-    std::cout << f.getRa(coord::DEGREES) << " " << std::endl;
-
-    double lambFk5 = 149.48194;
-    double betaFk5 = 1.76549;
-        
-    // known values for -214, June 30.0
-    // they're actually 118.704, 1.615, but I suspect discrepancy is a rounding error in Meeus
-    //  -- we use double precision, he carries 7 places only.
-    double lambNew = 118.704;
-    double betaNew = 1.606 ;
-    coord::EclipticCoord venusFk5(lambFk5, betaFk5, 2000.0);
-    //double ep = dafBase::DateTime(-214, 6, 30, 0, 0, 0,
-    //                            dafBase::DateTime::TAI).getDate(dafBase::DateTime::EPOCH);
-    double ep = coord::Date(-214, 6, 30, 0, 0, 0).getEpoch();
-    coord::EclipticCoord venusNew = venusFk5.precess( ep );
-    //coord::EclipticCoord venusNew(venusFk5.precess(coord::Date(-214, 6, 30, 0, 0, 0).getEpoch()));
-
-    std::cout << venusNew.getLambda(coord::DEGREES) << " " << lambNew <<  " " << venusNew.getEpoch() << std::endl;
+    geom::Point2D p = polluxEcl.getPosition(coord::DEGREES);
+    double lamb = p.getX(), beta = p.getY();
+    BOOST_CHECK_CLOSE(lamb, lamb0, 1.0e-6);
+    BOOST_CHECK_CLOSE(beta, beta0, 1.0e-6);
+    
 }

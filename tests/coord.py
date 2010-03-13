@@ -74,20 +74,20 @@ class CoordTestCase(unittest.TestCase):
                 print " tried ", fac.getRa(coord.DEGREES), "(expected ", con.getRa(coord.DEGREES), ")"
                 
                 
-    def testPoint2D(self):
-        """Test the getPoint2D() method"""
+    def testPosition(self):
+        """Test the getPosition() method"""
         equ = coord.Fk5Coord(self.ra, self.dec)
 
         # make sure we get what we asked for
-        pDeg = equ.getPoint2D(coord.DEGREES)
+        pDeg = equ.getPosition(coord.DEGREES)
         self.assertAlmostEqual(equ.getRa(coord.DEGREES), pDeg.getX())
         self.assertAlmostEqual(equ.getDec(coord.DEGREES), pDeg.getY())
 
-        pRad = equ.getPoint2D(coord.RADIANS)
+        pRad = equ.getPosition(coord.RADIANS)
         self.assertAlmostEqual(equ.getRa(coord.RADIANS), pRad.getX())
         self.assertAlmostEqual(equ.getDec(coord.RADIANS), pRad.getY())
 
-        pHrs = equ.getPoint2D(coord.HOURS)
+        pHrs = equ.getPosition(coord.HOURS)
         self.assertAlmostEqual(equ.getRa(coord.HOURS), pHrs.getX())
         self.assertAlmostEqual(equ.getDec(coord.DEGREES), pHrs.getY())
 
@@ -102,8 +102,8 @@ class CoordTestCase(unittest.TestCase):
         self.assertAlmostEqual(equ1.getRa(coord.RADIANS), equ.getRa(coord.RADIANS))
 
 
-    def testPoint3D(self):
-        """Test the getPoint3D() method, and make sure the constructors take Point3D"""
+    def testPositionVector(self):
+        """Test the getPositionVector() method, and make sure the constructors take Point3D"""
 
         # try the axes: vernal equinox should equal 1, 0, 0
         
@@ -115,14 +115,14 @@ class CoordTestCase(unittest.TestCase):
         for equ, p3dknown in coordList:
             
             # convert to p3d
-            p3d = coord.Fk5Coord(equ[0], equ[1]).getPoint3D()
+            p3d = coord.Fk5Coord(equ[0], equ[1]).getPositionVector()
             print "Point3d: ", p3d, p3dknown
             for i in range(3):
                 self.assertAlmostEqual(p3d[i], p3dknown[i])
                 
             # convert back
             equBack = coord.Fk5Coord(p3d)
-            s = ("Point3D (back): ", equBack.getRa(coord.DEGREES), equ[0],
+            s = ("PositionVector (back): ", equBack.getRa(coord.DEGREES), equ[0],
                  equBack.getDec(coord.DEGREES), equ[1])
             print s
             self.assertAlmostEqual(equBack.getRa(coord.DEGREES), equ[0])
