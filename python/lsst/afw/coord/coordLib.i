@@ -38,6 +38,7 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 %include "std_pair.i"
 %template(pairSS) std::pair<std::string, std::string>;
 
+%import "lsst/daf/base/baseLib.i"
 %import "lsst/afw/geom/geomLib.i"
 %include "observatory.i"
 %include "date.i"

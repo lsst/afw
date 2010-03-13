@@ -21,16 +21,18 @@
 #include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/coord/Observatory.h"
 #include "lsst/afw/coord/Date.h"
+#include "lsst/daf/base/DateTime.h"
 
 namespace coord = lsst::afw::coord;
 namespace ex    = lsst::pex::exceptions;
 namespace geom  = lsst::afw::geom;
+namespace dafBase  = lsst::daf::base;
 
 namespace {
 
 double const NaN          = std::numeric_limits<double>::quiet_NaN();    
 double const arcsecToRad  = M_PI/(3600.0*180.0); // arcsec per radian  = 2.062648e5;
-    
+double const JD2000       = 2451544.50;    
 /*
  * A local class to handle dd:mm:ss coordinates
  *
@@ -524,12 +526,20 @@ coord::Coord coord::Coord::precess(
                                    double const epochTo ///< epoch to precess to
                                   ) {
 
+//#if 0   
+    dafBase::DateTime dateFrom(getEpoch(), dafBase::DateTime::EPOCH, dafBase::DateTime::TAI);
+    dafBase::DateTime dateTo(epochTo, dafBase::DateTime::EPOCH, dafBase::DateTime::TAI);
+    double const jd0 = dateFrom.getDate(dafBase::DateTime::JD);
+    double const jd  = dateTo.getDate(dafBase::DateTime::JD);
+//#endif
+#if 0
     coord::Date dateFrom(getEpoch(), coord::Date::EPOCH);
     coord::Date dateTo(epochTo, coord::Date::EPOCH);
     double const jd0 = dateFrom.getJd();
-    double const jd  = dateTo.getJd();
+    double const jd = dateTo.getJd();
+#endif
 
-    double const T   = (jd0 - coord::JD2000)/36525.0;
+    double const T   = (jd0 - JD2000)/36525.0;
     double const t   = (jd - jd0)/36525.0;
     double const tt  = t*t;
     double const ttt = tt*t;
@@ -603,15 +613,16 @@ coord::EclipticCoord coord::Coord::toEcliptic() {
  * @brief Convert ourself to Altitude/Azimuth: alt, az
  */
 coord::AltAzCoord coord::Coord::toAltAz(
-                                        Observatory obs, ///< observatory of observation
-                                        coord::Date obsDate     ///< date of observation
+                                        Observatory obs,            ///< observatory of observation
+                                        dafBase::DateTime obsDate   ///< date of observation
                                        ) {
 
     // precess to the epoch
-    Coord coord = precess(obsDate.getEpoch());
+    Coord coord = precess(obsDate.getDate(dafBase::DateTime::EPOCH));
 
     // greenwich sidereal time
-    double const theta0 = degToRad*reduceAngle(meanSiderealTimeGreenwich(obsDate.getJd()));
+    double const theta0 = degToRad*reduceAngle(
+                              meanSiderealTimeGreenwich(obsDate.getDate(dafBase::DateTime::JD)));
     double const phi    = obs.getLatitude(RADIANS);  // observatory latitude
     double const L      = obs.getLongitude(RADIANS); // observatory longitude
 
@@ -625,7 +636,7 @@ coord::AltAzCoord coord::Coord::toAltAz(
     double const h         = radToDeg*asin(sinh);
     double const A         = reduceAngle(-90.0 - radToDeg*atan2(tanAdenom, tanAnum));
     
-    return AltAzCoord(A, h, obsDate.getEpoch(), obs);
+    return AltAzCoord(A, h, obsDate.getDate(dafBase::DateTime::EPOCH), obs);
 }
 
 
@@ -646,8 +657,9 @@ coord::AltAzCoord coord::Coord::toAltAz(
 coord::Fk5Coord coord::Fk5Coord::precess(
                                          double const epochTo ///< epoch to precess to
                                         ) {
-    Coord c = Coord(getLongitude(DEGREES), getLatitude(DEGREES), getEpoch()).precess(epochTo);
-    return Fk5Coord(c.getLongitude(DEGREES), c.getLatitude(DEGREES), epochTo);
+    Coord c = Coord(getLongitude(DEGREES), getLatitude(DEGREES), getEpoch());
+    Coord cp = c.precess(epochTo);
+    return Fk5Coord(cp.getLongitude(DEGREES), cp.getLatitude(DEGREES), cp.getEpoch());
 }
 
 
@@ -732,8 +744,8 @@ coord::EclipticCoord coord::GalacticCoord::toEcliptic() {
  * To do this, we'll go to fk5 first, then to alt/az
  */
 coord::AltAzCoord coord::GalacticCoord::toAltAz(
-                                                Observatory const &obs, ///< observatory of observation
-                                                coord::Date const &date       ///< date of observation
+                                                Observatory const &obs,        ///< observatory of observation
+                                                dafBase::DateTime const &date  ///< date of observation
                                                ) {
     return (this->toFk5()).toAltAz(obs, date);
 }
@@ -800,8 +812,8 @@ coord::GalacticCoord coord::EclipticCoord::toGalactic() {
  * To do This, we'll go to fk5 first, then to alt/az.
  */
 coord::AltAzCoord coord::EclipticCoord::toAltAz(
-                                                Observatory const &obs, ///< observatory of observation
-                                                coord::Date const &date        ///< date of observation
+                                                Observatory const &obs,   ///< observatory of observation
+                                                dafBase::DateTime const &date   ///< date of observation
                                                ) {
     return (this->toFk5()).toAltAz(obs, date);
 }
@@ -814,7 +826,10 @@ coord::AltAzCoord coord::EclipticCoord::toAltAz(
 coord::EclipticCoord coord::EclipticCoord::precess(
                                                    double epochTo ///< epoch to precess to.
                                                   ) {
-    return (this->toFk5()).precess(epochTo).toEcliptic();
+    Fk5Coord c = this->toFk5();
+    Fk5Coord c2 = c.precess(epochTo);
+    EclipticCoord ce = c2.toEcliptic();
+    return ce;
 }
 
 
@@ -854,7 +869,9 @@ coord::Fk5Coord coord::AltAzCoord::toFk5() {
     double const phi      = _obs.getLatitude(RADIANS);
     double const L        = _obs.getLongitude(RADIANS);
 
-    double const jd       = coord::Date(getEpoch(), coord::Date::EPOCH).getJd();
+    double const jd       = dafBase::DateTime(getEpoch(),
+                                              dafBase::DateTime::EPOCH,
+                                              dafBase::DateTime::TAI).getDate(dafBase::DateTime::JD);
     double const theta0   = degToRad*meanSiderealTimeGreenwich(jd);
 
     double const tanH     = sin(A) / (cos(A)*sin(phi) + tan(h)*cos(phi));
@@ -880,7 +897,7 @@ coord::IcrsCoord coord::AltAzCoord::toIcrs() {
  */
 coord::AltAzCoord coord::AltAzCoord::toAltAz(
                                              Observatory const &obs, ///< observatory of observation
-                                             coord::Date const &date        ///< date of observation
+                                             dafBase::DateTime const &date        ///< date of observation
                                             ) {
     return AltAzCoord(getLongitude(DEGREES), getLatitude(DEGREES), getEpoch(), _obs);
 }

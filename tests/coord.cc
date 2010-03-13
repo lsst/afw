@@ -15,6 +15,7 @@
 #include "boost/test/floating_point_comparison.hpp"
 
 #include "lsst/afw/coord/Coord.h"
+#include "lsst/afw/coord/Date.h"
 #include "lsst/afw/geom/Point.h"
 
 using namespace std;
@@ -61,4 +62,24 @@ BOOST_AUTO_TEST_CASE(eclipticConversion) {
 
     geom::PointD p = polluxEqu.getPoint2D();
     std::cout << "PointD: " << p.getX() << " " << p.getY() << std::endl;
+
+    coord::Fk5Coord f = polluxEqu.precess(2028.0);
+    std::cout << f.getRa(coord::DEGREES) << " " << std::endl;
+
+    double lambFk5 = 149.48194;
+    double betaFk5 = 1.76549;
+        
+    // known values for -214, June 30.0
+    // they're actually 118.704, 1.615, but I suspect discrepancy is a rounding error in Meeus
+    //  -- we use double precision, he carries 7 places only.
+    double lambNew = 118.704;
+    double betaNew = 1.606 ;
+    coord::EclipticCoord venusFk5(lambFk5, betaFk5, 2000.0);
+    //double ep = dafBase::DateTime(-214, 6, 30, 0, 0, 0,
+    //                            dafBase::DateTime::TAI).getDate(dafBase::DateTime::EPOCH);
+    double ep = coord::Date(-214, 6, 30, 0, 0, 0).getEpoch();
+    coord::EclipticCoord venusNew = venusFk5.precess( ep );
+    //coord::EclipticCoord venusNew(venusFk5.precess(coord::Date(-214, 6, 30, 0, 0, 0).getEpoch()));
+
+    std::cout << venusNew.getLambda(coord::DEGREES) << " " << lambNew <<  " " << venusNew.getEpoch() << std::endl;
 }

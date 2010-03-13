@@ -3,6 +3,7 @@
 %{
 #include "lsst/afw/image.h"    
 #include "lsst/afw/geom.h"
+#include "lsst/daf/base.h"    
 #include "lsst/afw/coord/Utils.h"
 #include "lsst/afw/coord/Coord.h"
 %}

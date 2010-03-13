@@ -18,9 +18,11 @@
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/coord/Utils.h"
 #include "lsst/afw/coord/Observatory.h"
-#include "lsst/afw/coord/Date.h"
+//#include "lsst/afw/coord/Date.h"
+#include "lsst/daf/base.h"
 
-namespace geom = lsst::afw::geom;
+namespace geom    = lsst::afw::geom;
+namespace dafBase = lsst::daf::base;
 
 namespace lsst {
 namespace afw {    
@@ -88,7 +90,7 @@ public:
     virtual IcrsCoord toIcrs();
     virtual GalacticCoord toGalactic();
     virtual EclipticCoord toEcliptic();
-    virtual AltAzCoord toAltAz(Observatory obs, coord::Date obsDate);
+    virtual AltAzCoord toAltAz(Observatory obs, dafBase::DateTime obsDate);
 
 private:
     double _longitudeRad;
@@ -142,7 +144,7 @@ public:
     IcrsCoord toIcrs();
     GalacticCoord toGalactic();
     EclipticCoord toEcliptic();
-    AltAzCoord toAltAz(Observatory const &obs, coord::Date const &date);
+    AltAzCoord toAltAz(Observatory const &obs, dafBase::DateTime const &date);
 #endif
     
     Fk5Coord precess(double epochTo);
@@ -172,7 +174,7 @@ public:
     IcrsCoord toIcrs();
     GalacticCoord toGalactic();
     EclipticCoord toEcliptic();
-    AltAzCoord toAltAz(Observatory const &obs, coord::Date const &date);
+    AltAzCoord toAltAz(Observatory const &obs, dafBase::DateTime const &date);
 
     GalacticCoord precess(double epochTo);
     
@@ -203,7 +205,7 @@ public:
     IcrsCoord toIcrs();
     GalacticCoord toGalactic();
     EclipticCoord toEcliptic();
-    AltAzCoord toAltAz(Observatory const &obs, coord::Date const &date);
+    AltAzCoord toAltAz(Observatory const &obs, dafBase::DateTime const &date);
 
     EclipticCoord precess(double epochTo);
     
@@ -236,7 +238,7 @@ public:
     IcrsCoord toIcrs();
     GalacticCoord toGalactic();
     EclipticCoord toEcliptic();
-    AltAzCoord toAltAz(Observatory const &obs, coord::Date const &date);
+    AltAzCoord toAltAz(Observatory const &obs, dafBase::DateTime const &date);
     AltAzCoord toAltAz();
     
 private:
