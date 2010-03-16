@@ -201,6 +201,22 @@ public:
         return AffineTransform(LinearTransform::makeRotation(t));
     }
 
+    /**
+     *  \brief Construct a new AffineTransform that represents a pure translation.
+     *
+     *  \return An AffineTransform with matrix
+     *  \f$
+     *     \left[\begin{array}{ c c c }
+     *     0 & 0 & translation.getX() \\
+     *     0 & 0 & translation.getY() \\
+     *     0 & 0 & 1 \\
+     *     \end{array}\right]
+     *  \f$
+     */
+    static AffineTransform makeTranslation(Extent2D translation) { 
+        return AffineTransform(translation);
+    }
+
     TransformDerivativeMatrix dTransform(PointD const & input) const;
     TransformDerivativeMatrix dTransform(ExtentD const & input) const;
 

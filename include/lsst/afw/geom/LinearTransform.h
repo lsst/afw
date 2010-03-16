@@ -109,14 +109,16 @@ public:
     /**
      *  \brief Transform a PointD object. 
      *
-     *  This operation is not differentiable, but is faster than apply().
+     *  This operation is equivalent to applying the LinearTransform to an
+     *  lsst::afw::geom::Extent
      */
     PointD operator()(PointD const & p) const { return PointD(getMatrix() * p.asVector()); }
 
     /**
      *  \brief Transform a ExtentD object. 
      *
-     *  This operation is not differentiable, but is faster than apply().
+     *  This operation is equivalent to applying the LinearTransform to an
+     *  lsst::afw::geom::Point
      */
     ExtentD operator()(ExtentD const & p) const { return ExtentD(getMatrix() * p.asVector()); }
 
