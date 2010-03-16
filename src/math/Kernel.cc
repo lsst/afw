@@ -11,7 +11,14 @@
 #include <fstream>
 
 #include "boost/format.hpp"
+#if defined(__ICC)
+#pragma warning (push)
+#pragma warning (disable: 444)
+#endif
 #include "boost/archive/text_oarchive.hpp"
+#if defined(__ICC)
+#pragma warning (pop)
+#endif
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
@@ -224,14 +231,13 @@ std::string afwMath::Kernel::toString(std::string const& prefix) const {
     return os.str();
 }
 
-
+#if 0                                   //  This fails to compile with icc
 void afwMath::Kernel::toFile(std::string fileName) const {
     std::ofstream os(fileName.c_str());
     boost::archive::text_oarchive oa(os);
-#if 1                                   //  This fails to compile with icc
     oa << this;
-#endif
 }
+#endif
 
 //
 // Protected Member Functions
