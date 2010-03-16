@@ -52,7 +52,6 @@ namespace math {
         int getOrder() const;
     };
 
-
     /**
     * \brief Bilinear warping: fast; good for undersampled data.
     *
@@ -97,6 +96,58 @@ namespace math {
             
             virtual Function1Ptr clone() const {
                 return Function1Ptr(new BilinearFunction1(this->_params[0]));
+            }
+            
+            virtual Kernel::Pixel operator() (double x) const;
+            
+            virtual std::string toString(std::string const& ="") const;
+        };
+    };
+
+    /**
+    * \brief Nearest neighbor warping: fast; good for undersampled data.
+    *
+    * The kernel size is 2 x 2.
+    */
+#if defined(SWIG)
+    #pragma SWIG nowarn=SWIGWARN_PARSE_NESTED_CLASS
+#endif
+    class NearestWarpingKernel : public SeparableKernel {
+    public:
+        explicit NearestWarpingKernel()
+        :
+            SeparableKernel(2, 2, NearestFunction1(0.0), NearestFunction1(0.0))
+        {}
+
+        virtual ~NearestWarpingKernel() {}
+        
+        virtual Kernel::Ptr clone() const;
+
+        /**
+         * \brief 1-dimensional nearest neighbor interpolation function.
+         *
+         * Optimized for nearest neighbor warping so only accepts two values: 0 and 1
+         * (which is why it defined in the NearestWarpingKernel class instead of
+         * being made available as a standalone function).
+         */
+        class NearestFunction1: public Function1<Kernel::Pixel> {
+        public:
+            typedef Function1<Kernel::Pixel>::Ptr Function1Ptr;
+    
+            /**
+             * \brief Construct a Nearest interpolation function
+             */
+            explicit NearestFunction1(
+                double fracPos)    ///< fractional position; must be >= 0 and < 1
+            :
+                Function1<Kernel::Pixel>(1)
+            {
+                this->_params[0] = fracPos;
+            }
+            virtual ~NearestFunction1() {}
+            
+            virtual Function1Ptr clone() const {
+                return Function1Ptr(new NearestFunction1(this->_params[0]));
             }
             
             virtual Kernel::Pixel operator() (double x) const;

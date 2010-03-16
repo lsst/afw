@@ -8,21 +8,25 @@
 //
 // These definitions must go before you %include the .h file; the %templates must go after
 //
-SWIG_SHARED_PTR_DERIVED(LanczosWarpingKernel, lsst::afw::math::SeparableKernel, lsst::afw::math::LanczosWarpingKernel);
-SWIG_SHARED_PTR_DERIVED(BilinearWarpingKernel, lsst::afw::math::SeparableKernel, lsst::afw::math::BilinearWarpingKernel);
+SWIG_SHARED_PTR_DERIVED(BilinearWarpingKernel, lsst::afw::math::SeparableKernel,
+    lsst::afw::math::BilinearWarpingKernel);
+SWIG_SHARED_PTR_DERIVED(LanczosWarpingKernel, lsst::afw::math::SeparableKernel,
+    lsst::afw::math::LanczosWarpingKernel);
+SWIG_SHARED_PTR_DERIVED(NearestWarpingKernel, lsst::afw::math::SeparableKernel,
+    lsst::afw::math::NearestWarpingKernel);
 
 %include "lsst/afw/math/warpExposure.h"
 
-%define %WarpFuncsByType(DESTIMAGEPIXELT, SRCIMAGEPIXELT)
+%define %WarpFuncsByType(DESTIMAGEPIXEL, SRCIMAGEPIXEL)
 %template(warpExposure) lsst::afw::math::warpExposure<
-    lsst::afw::image::Exposure<DESTIMAGEPIXELT, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>,
-    lsst::afw::image::Exposure<SRCIMAGEPIXELT, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> >;
+    lsst::afw::image::Exposure<DESTIMAGEPIXEL, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>,
+    lsst::afw::image::Exposure<SRCIMAGEPIXEL, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> >;
 %template(warpImage) lsst::afw::math::warpImage<
-    lsst::afw::image::MaskedImage<DESTIMAGEPIXELT, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>,
-    lsst::afw::image::MaskedImage<SRCIMAGEPIXELT, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> >;
+    lsst::afw::image::MaskedImage<DESTIMAGEPIXEL, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>,
+    lsst::afw::image::MaskedImage<SRCIMAGEPIXEL, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> >;
 %template(warpImage) lsst::afw::math::warpImage<
-    lsst::afw::image::Image<DESTIMAGEPIXELT>,
-    lsst::afw::image::Image<SRCIMAGEPIXELT> >;
+    lsst::afw::image::Image<DESTIMAGEPIXEL>,
+    lsst::afw::image::Image<SRCIMAGEPIXEL> >;
 %enddef
 
 %WarpFuncsByType(float, boost::uint16_t);
