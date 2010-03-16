@@ -16,6 +16,9 @@
 #include "lsst/afw/geom/LinearTransform.h"
 #include "lsst/afw/geom/AffineTransform.h"
 
+#include "lsst/afw/image/Wcs.h"
+#include "lsst/afw/image/Utils.h"
+
 using namespace std;
 namespace afwGeom = lsst::afw::geom;
 
@@ -106,11 +109,35 @@ void affineTransformExample() {
     //with respect to the transform parameters
     cout << "point transformation derivative: " << c.dTransform(point) << endl;
     cout << "extent transformation derivative: " << c.dTransform(extent) << endl;
+
+
+
+
 }
 
+void wcsExample() {
+    //initialize a trivial WCS for examples
+    lsst::afw::image::Wcs wcs(
+        lsst::afw::image::PointD(35, 45), 
+        lsst::afw::image::PointD(0.0,0.0),
+        Eigen::Matrix2d::Identity()
+    );
+    afwGeom::PointD point = afwGeom::makePointD(35, 45);
+
+    //We can obtain the linear approximation of a WCS at a point as an
+    //AffineTransform
+    afwGeom::AffineTransform approx = wcs.linearizeAt(point);
+    cout << "Linear Approximation of Wcs object at point "<<point<< ": " << approx << endl;    
+    
+    //alternatively we can obtain the CD matrix of the wcs as a LinearTransform
+    cout << "CD matrix of Wcs object: " << wcs.getLinearTransform() << endl;
+    
+
+}
 int main() {
     linearTransformExample();
     affineTransformExample();
+    wcsExample();
 
     return 0;
 }

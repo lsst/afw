@@ -102,6 +102,8 @@ public:
 
 
     LinearTransform const invert() const;
+    
+    double const computeDeterminant() const;
 
     /** \brief Whether the transform is a no-op. */
     bool isIdentity() const { return getMatrix().isIdentity(); }

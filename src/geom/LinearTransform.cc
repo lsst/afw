@@ -48,6 +48,14 @@ afwGeom::LinearTransform const afwGeom::LinearTransform::invert() const {
 }
 
 /**
+ * Return the determinant of the 2x2 matrix
+ */
+double const afwGeom::LinearTransform::computeDeterminant() const {
+    Eigen::MatrixXd const & m = getMatrix();
+    return m(0, 0)*m(1,1) - m(0,1)*m(1,0);
+}
+
+/**
  * Derivative of (*this)(input) with respect to the transform elements (for Point).
  */
 afwGeom::LinearTransform::TransformDerivativeMatrix afwGeom::LinearTransform::dTransform(
