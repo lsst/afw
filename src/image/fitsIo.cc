@@ -114,17 +114,42 @@ void appendKey(lsst::afw::image::cfitsio::fitsfile* fd, std::string const &keyWo
     int status = 0;
     std::type_info const & valueType = metadata->typeOf(keyWord); 
     if (valueType == typeid(int)) {
-        int tmp = metadata->get<int>(keyWord);
-        fits_write_key(fd, TINT, keyWordChars, &tmp, keyCommentChars, &status);
+        if (metadata->isArray(keyWord)) {
+            std::vector<int> tmp = metadata->getArray<int>(keyWord);
+            for (int i = 0; i != tmp.size(); ++i) {
+                fits_write_key(fd, TINT, keyWordChars, &tmp[i], keyCommentChars, &status);
+            }
+        } else {
+            int tmp = metadata->get<int>(keyWord);
+
+            fits_write_key(fd, TINT, keyWordChars, &tmp, keyCommentChars, &status);
+        }
 
     } else if (valueType == typeid(double)) {
-        double tmp = metadata->get<double>(keyWord);
-        fits_write_key(fd, TDOUBLE, keyWordChars, &tmp, keyCommentChars, &status);
-
+        if (metadata->isArray(keyWord)) {
+            std::vector<double> tmp = metadata->getArray<double>(keyWord);
+            for (int i = 0; i != tmp.size(); ++i) {
+                fits_write_key(fd, TDOUBLE, keyWordChars, &tmp[i], keyCommentChars, &status);
+            }
+        } else {
+            double tmp = metadata->get<double>(keyWord);
+            fits_write_key(fd, TDOUBLE, keyWordChars, &tmp, keyCommentChars, &status);
+        }
     } else if (valueType == typeid(std::string)) {
-        std::string tmp = metadata->get<std::string>(keyWord);
-        strncpy(keyValueChars, tmp.c_str(), 80);
-        fits_write_key(fd, TSTRING, keyWordChars, keyValueChars, keyCommentChars, &status);
+        if (metadata->isArray(keyWord)) {
+            std::vector<std::string> tmp = metadata->getArray<std::string>(keyWord);
+
+            for (int i = 0; i != tmp.size(); ++i) {
+                strncpy(keyValueChars, tmp[i].c_str(), 80);
+                fits_write_key(fd, TSTRING, keyWordChars, keyValueChars, keyCommentChars, &status);
+            }
+        } else {
+            std::string tmp = metadata->get<std::string>(keyWord);
+            strncpy(keyValueChars, tmp.c_str(), 80);
+            fits_write_key(fd, TSTRING, keyWordChars, keyValueChars, keyCommentChars, &status);
+        }
+    } else {
+        std::cerr << "In " << BOOST_CURRENT_FUNCTION << " Unknown type: " << valueType.name() << std::endl;
     }
 
     if (status) {
@@ -179,20 +204,20 @@ void addKV(lsst::daf::base::PropertySet::Ptr metadata, std::string key, std::str
 #else
         bool val = (value == "T" || value == "t");
 #endif
-        metadata->set(key, val);
+        metadata->add(key, val);
     } else if (boost::regex_match(value, intRegex)) {
         // convert the string to an int
         int val;
         converter >> val;
-        metadata->set(key, val);
+        metadata->add(key, val);
     } else if (boost::regex_match(value, doubleRegex)) {
         // convert the string to a double
         double val;
         converter >> val;
-        metadata->set(key, val);
+        metadata->add(key, val);
     } else if (boost::regex_match(value, matchStrings, fitsStringRegex)) {
         // strip off the enclosing single quotes and return the string
-        metadata->set(key, matchStrings[1].str());
+        metadata->add(key, matchStrings[1].str());
     }
 }
 
