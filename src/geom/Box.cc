@@ -169,8 +169,7 @@ void geom::BoxI::include(BoxI const & other) {
     for (int n=0; n<2; ++n) {
         if (otherMin[n] < _minimum[n]) {
             _minimum[n] = otherMin[n];
-        } 
-        if (otherMax[n] > maximum[n]) {
+        } else if (otherMax[n] > maximum[n]) {
             maximum[n] = otherMax[n];
         }
     }
@@ -190,8 +189,7 @@ void geom::BoxI::clip(BoxI const & other) {
     for (int n=0; n<2; ++n) {
         if (otherMin[n] > _minimum[n]) {
             _minimum[n] = otherMin[n];
-        } 
-        if (otherMax[n] < maximum[n]) {
+        } else if (otherMax[n] < maximum[n]) {
             maximum[n] = otherMax[n];
         }
     }
@@ -382,8 +380,7 @@ void geom::BoxD::include(BoxD const & other) {
     for (int n=0; n<2; ++n) {
         if (otherMin[n] < _minimum[n]) {
             _minimum[n] = otherMin[n];
-        } 
-        if (otherMax[n] > _maximum[n]) {
+        } else if (otherMax[n] > _maximum[n]) {
             _maximum[n] = otherMax[n];
         }
     }
@@ -401,8 +398,7 @@ void geom::BoxD::clip(BoxD const & other) {
     for (int n=0; n<2; ++n) {
         if (otherMin[n] > _minimum[n]) {
             _minimum[n] = otherMin[n];
-        }
-        if (otherMax[n] < _maximum[n]) {
+        } else if (otherMax[n] < _maximum[n]) {
             _maximum[n] = otherMax[n];
         }
     }

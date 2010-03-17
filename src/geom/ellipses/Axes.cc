@@ -26,10 +26,13 @@ bool ellipses::Axes::normalize() {
     return true;
 }
 
-lsst::afw::geom::LinearTransform ellipses::Axes::getGenerator() const {
-    return LinearTransform::makeRotation(_vector[THETA]) * 
-        LinearTransform::makeScaling(_vector[A], _vector[B]);
-    
+lsst::afw::geom::AffineTransform ellipses::Axes::getGenerator() const {
+    return AffineTransform(
+        Eigen::Transform2d(
+            Eigen::Rotation2D<double>(_vector[THETA])
+            * Eigen::Scaling<double,2>(_vector[A],_vector[B])
+        )
+    );
 }
 
 void ellipses::Axes::_assignTo(Axes & other) const {

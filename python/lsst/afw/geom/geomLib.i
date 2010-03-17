@@ -67,7 +67,6 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 %declareEigenMatrix(Eigen::Matrix2d);
 %declareEigenMatrix(Eigen::Matrix3d);
 %declareEigenMatrix(lsst::afw::geom::AffineTransform::Matrix);
-%declareEigenMatrix(lsst::afw::geom::LinearTransform::Matrix);
 
 %include "CoordinateBase.i"
 %include "CoordinateExpr.i"
@@ -94,7 +93,6 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 %CoordinateBase_POSTINCLUDE_2(double, Point2D, lsst::afw::geom::Point<double,2>);
 %CoordinateBase_POSTINCLUDE_3(double, Point3D, lsst::afw::geom::Point<double,3>);
 
-%include "LinearTransform.i"
 %include "AffineTransform.i"
 %include "Box.i"
 %include "ellipses.i"

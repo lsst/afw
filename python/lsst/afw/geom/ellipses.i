@@ -75,9 +75,6 @@ SWIG_SHARED_PTR_DERIVED(
 
 %define %Ellipse_POSTINCLUDE(NAME)
 %extend lsst::afw::geom::ellipses::NAME {
-	lsst::afw::geom::ellipses::NAME::Ptr _transform(LinearTransform const & t) {
-        return boost::static_pointer_cast<lsst::afw::geom::ellipses::NAME>(self->transform(t).copy());
-    }
     lsst::afw::geom::ellipses::NAME::Ptr _transform(AffineTransform const & t) {
         return boost::static_pointer_cast<lsst::afw::geom::ellipses::NAME>(self->transform(t).copy());
     }

@@ -212,7 +212,7 @@ class WCSTestCaseCFHT(unittest.TestCase):
                             self.wcs.getLinearTransformMatrix(), 2000.0, "fk5")
 
     def testAffineTransform(self):
-        a = self.wcs.getLinearTransform()
+        a = self.wcs.getAffineTransform()
         l = self.wcs.getLinearTransformMatrix()
         #print a[a.X], a[a.Y], print a[a.XX], a[a.XY], a[a.YX], a[a.YY]
 

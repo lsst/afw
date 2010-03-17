@@ -596,9 +596,9 @@ Eigen::Matrix2d lsst::afw::image::Wcs::getLinearTransformMatrix() const {
  *
  * \sa 
  */
-lsst::afw::geom::LinearTransform lsst::afw::image::Wcs::getLinearTransform() const
+lsst::afw::geom::AffineTransform lsst::afw::image::Wcs::getAffineTransform() const
 {
-    return lsst::afw::geom::LinearTransform(getLinearTransformMatrix());
+    return lsst::afw::geom::AffineTransform(getLinearTransformMatrix());
 }
 
 /**
@@ -607,7 +607,7 @@ lsst::afw::geom::LinearTransform lsst::afw::image::Wcs::getLinearTransform() con
  * This is currently implemented as a numerical derivative, but we should specialise the Wcs class (or rather
  * its implementation) to handle "simple" cases such as TAN-SIP analytically
  *
- * @param[in] sky Position in sky coordinates where transform is desired
+ * @param(in) sky Position in sky coordinates where transform is desired
  */                           
 lsst::afw::geom::AffineTransform lsst::afw::image::Wcs::linearizeAt(
     lsst::afw::geom::PointD const & sky
@@ -635,7 +635,7 @@ lsst::afw::geom::AffineTransform lsst::afw::image::Wcs::linearizeAt(
     sky00v << sky00.getX(), sky00.getY();
     Eigen::Vector2d pix00v;
     pix00v << pix00.getX(), pix00.getY();
-    return lsst::afw::geom::AffineTransform(m, sky00v - m * pix00v);
+    return lsst::afw::geom::AffineTransform(m, lsst::afw::geom::ExtentD(sky00v - m * pix00v));
 }
 
 /// Convert from (ra, dec) to (column, row) coordinates

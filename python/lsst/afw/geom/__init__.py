@@ -2,7 +2,6 @@
 """
 from .geomLib import (
     version,
-    LinearTransform,
     AffineTransform,
     CoordinateExpr2,
     CoordinateExpr3,

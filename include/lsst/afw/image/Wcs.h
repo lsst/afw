@@ -68,7 +68,7 @@ namespace image {
             return raDecToXY(radec[0], radec[1]);
         }
         Eigen::Matrix2d getLinearTransformMatrix() const;
-        lsst::afw::geom::LinearTransform getLinearTransform() const;
+        lsst::afw::geom::AffineTransform getAffineTransform() const;
         lsst::afw::geom::AffineTransform linearizeAt(lsst::afw::geom::PointD const & pix) const;
 
         PointD xyToRaDec(PointD pix) const;

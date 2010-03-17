@@ -118,7 +118,7 @@ public:
     virtual void scale(double factor) { _vector[A] *= factor; _vector[B] *= factor; }
 
     /// \brief Return the AffineTransform that transforms the unit circle into this.
-    virtual LinearTransform getGenerator() const;
+    virtual AffineTransform getGenerator() const;
 
     /// \brief Standard assignment.
     Axes & operator=(Axes const & other) { _vector = other._vector; return *this; }
