@@ -10,6 +10,7 @@
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"
 #include "lsst/afw/geom/AffineTransform.h"
+#include "lsst/afw/geom/LinearTransform.h"
 #include "lsst/afw/geom/ellipses.h"
 #include "lsst/afw/geom/Box.h"
 

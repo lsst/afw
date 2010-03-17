@@ -113,7 +113,19 @@ void appendKey(lsst::afw::image::cfitsio::fitsfile* fd, std::string const &keyWo
     
     int status = 0;
     std::type_info const & valueType = metadata->typeOf(keyWord); 
-    if (valueType == typeid(int)) {
+    if (valueType == typeid(bool)) {
+        if (metadata->isArray(keyWord)) {
+            std::vector<bool> tmp = metadata->getArray<bool>(keyWord);
+            for (int i = 0; i != tmp.size(); ++i) {
+                bool tmp_i = tmp[i];    // avoid icc warning; is vector<bool> special as it only needs 1 bit?
+                fits_write_key(fd, TLOGICAL, keyWordChars, &tmp_i, keyCommentChars, &status);
+            }
+        } else {
+            bool tmp = metadata->get<bool>(keyWord);
+
+            fits_write_key(fd, TLOGICAL, keyWordChars, &tmp, keyCommentChars, &status);
+        }
+    } else if (valueType == typeid(int)) {
         if (metadata->isArray(keyWord)) {
             std::vector<int> tmp = metadata->getArray<int>(keyWord);
             for (int i = 0; i != tmp.size(); ++i) {
@@ -149,7 +161,8 @@ void appendKey(lsst::afw::image::cfitsio::fitsfile* fd, std::string const &keyWo
             fits_write_key(fd, TSTRING, keyWordChars, keyValueChars, keyCommentChars, &status);
         }
     } else {
-        std::cerr << "In " << BOOST_CURRENT_FUNCTION << " Unknown type: " << valueType.name() << std::endl;
+        std::cerr << "In " << BOOST_CURRENT_FUNCTION << " Unknown type: " << valueType.name() <<
+            " for keyword " << keyWord << std::endl;
     }
 
     if (status) {
