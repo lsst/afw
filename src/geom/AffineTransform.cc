@@ -7,38 +7,49 @@
 
 namespace geom = lsst::afw::geom;
 
-/** 
- * @brief construct a vector from non-zero elements of the transform
+/**
+ * Return the transform matrix elements as a parameter vector
  *
- * The other of the vector is [XX, YX, XY, YY, X, Y]
+ * The elements will be ordered XX, YX, XY, YY, X, Y
  */
-geom::AffineTransform::ParameterVector geom::AffineTransform::getVector() const {
+geom::AffineTransform::ParameterVector const geom::AffineTransform::getVector() const {
     ParameterVector r;
-    r << _eigenTransform(0,0),
-         _eigenTransform(1,0), 
-         _eigenTransform(0,1), 
-         _eigenTransform(1,1), 
-         _eigenTransform(0,2), 
-         _eigenTransform(1,2);
+    r << (*this)[XX], (*this)[YX], (*this)[XY], (*this)[YY], (*this)[X], (*this)[Y];
+    return r;
+}
+
+/**
+ * Set the transform matrix elements from a parameter vector
+ *
+ * The parameter vector is ordered XX, YX, XY, YY, X, Y
+ */
+void geom::AffineTransform::setVector(
+    AffineTransform::ParameterVector const & vector
+) {
+    (*this)[XX] = vector[XX];  (*this)[XY] = vector[XY];  (*this)[X] = vector[X];
+    (*this)[YX] = vector[YX];  (*this)[YY] = vector[YY];  (*this)[Y] = vector[Y];
+}
+
+/**
+ * Return the transform as a full 3x3 matrix
+ */
+geom::AffineTransform::Matrix const geom::AffineTransform::getMatrix() const {
+    Matrix r;
+    r << 
+        (*this)[XX], (*this)[XY], (*this)[X],
+        (*this)[YX], (*this)[YY], (*this)[Y],
+        0.0,         0.0,         1.0;
     return r;
 }
 
 /**
  * @brief Return the inverse transform
  *
- * @throw lsst::pex::exceptions::RuntimeException if this is not invertible
+ * @throw lsst::pex::exceptions::SingularTransformException is not invertible
  */
-geom::AffineTransform geom::AffineTransform::invert() const {
-    Eigen::LU<Eigen::Matrix2d> lu(_eigenTransform.linear());
-    if (!lu.isInvertible()) {
-        throw LSST_EXCEPT(
-                lsst::pex::exceptions::RuntimeErrorException,
-                "Matrix cannot be inverted"
-        );
-    }
-    Eigen::Matrix2d inv = lu.inverse();
-    EigenPoint p = -inv*_eigenTransform.translation();
-    return AffineTransform(inv, lsst::afw::geom::ExtentD(p));
+geom::AffineTransform const geom::AffineTransform::invert() const {
+    LinearTransform inv(getLinear().invert());
+    return AffineTransform(inv, -inv(getTranslation()));
 }
 
 /**
@@ -48,11 +59,8 @@ geom::AffineTransform::TransformDerivativeMatrix geom::AffineTransform::dTransfo
     PointD const & input
 ) const {
     TransformDerivativeMatrix r = TransformDerivativeMatrix::Zero();
-    r(0,XX) = input.getX();
-    r(0,XY) = input.getY();
+    r.block<2,4>(0,0) = getLinear().dTransform(input);
     r(0,X) = 1.0;
-    r(1,YX) = input.getX();
-    r(1,YY) = input.getY();
     r(1,Y) = 1.0;
     return r;
 }
@@ -64,33 +72,8 @@ geom::AffineTransform::TransformDerivativeMatrix geom::AffineTransform::dTransfo
     ExtentD const & input
 ) const {
     TransformDerivativeMatrix r = TransformDerivativeMatrix::Zero();
-    r(0,XX) = input.getX();
-    r(0,XY) = input.getY();
-    r(1,YX) = input.getX();
-    r(1,YY) = input.getY();
+    r.block<2,4>(0,0) = getLinear().dTransform(input);
     return r;
-}
-
-geom::AffineTransform const & geom::AffineTransform::operator =(
-    ParameterVector const & vector
-) {
-    _eigenTransform.matrix().block<2, 3>(0,0) << 
-        vector[0], vector[2], vector[4], 
-        vector[1], vector[3], vector[5];
-    return *this; 
-}
-geom::AffineTransform const & geom::AffineTransform::operator =(
-    geom::AffineTransform::EigenTransform const & matrix
-) {
-    _eigenTransform = matrix;
-    return *this;
-}
-
-geom::AffineTransform const & geom::AffineTransform::operator =(
-    geom::AffineTransform const & transform
-) {
-    _eigenTransform = transform.getEigenTransform();
-    return *this;
 }
 
 std::ostream& geom::operator<<(std::ostream& os, geom::AffineTransform const & transform) {
