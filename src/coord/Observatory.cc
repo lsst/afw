@@ -19,13 +19,32 @@
 namespace coord        = lsst::afw::coord;
 namespace ex           = lsst::pex::exceptions;
 
+
+
+/**
+ * @brief Constructor for the observatory with lat/long as doubles
+ */
+coord::Observatory::Observatory(
+                                double const latitude,  ///< observatory latitude 
+                                double const longitude, ///< observatory longitude
+                                double const elevation  ///< observatory elevation
+                               ) :
+    _latitudeRad(degToRad*latitude),
+    _longitudeRad(degToRad*longitude),
+    _elevation(elevation) {
+}
+
+
+
 /*
- * @brief 
+ * @brief Constructor for the observatory with lat/long as strings
  *
  */
-coord::Observatory::Observatory(std::string const latitude,
-                                std::string const longitude,
-                                double const elevation) : 
+coord::Observatory::Observatory(
+                                std::string const latitude,  ///< observatory latitude 
+                                std::string const longitude, ///< observatory longitude
+                                double const elevation       ///< observatory elevation
+                               ) : 
     _latitudeRad(degToRad*dmsStringToDegrees(latitude)),
     _longitudeRad(degToRad*dmsStringToDegrees(longitude)),
     _elevation(elevation) {
@@ -38,7 +57,9 @@ coord::Observatory::Observatory(std::string const latitude,
  * @brief The main access method for the longitudinal coordinate
  *
  */
-double coord::Observatory::getLongitude(CoordUnit unit) {
+double coord::Observatory::getLongitude(
+                                        CoordUnit unit  ///< units to return (DEGREES, RADIANS, HOURS)
+                                       ) {
     switch (unit) {
       case DEGREES:
         return radToDeg*_longitudeRad;
@@ -62,7 +83,9 @@ double coord::Observatory::getLongitude(CoordUnit unit) {
  *       an exception to be thrown
  *
  */
-double coord::Observatory::getLatitude(CoordUnit unit) {
+double coord::Observatory::getLatitude(
+                                       CoordUnit unit ///< units to return (DEGREES, RADIANS)
+                                      ) {
     switch (unit) {
       case DEGREES:
         return radToDeg*_latitudeRad;
@@ -76,6 +99,37 @@ double coord::Observatory::getLatitude(CoordUnit unit) {
     }
 }
 
+
+/**
+ * @brief Set the latitude
+ */
+void coord::Observatory::setLatitude(
+                 double const latitude ///< the latitude
+                )   {
+    _latitudeRad = degToRad*latitude;
+}
+
+/**
+ * @brief Set the longitude
+ */
+void coord::Observatory::setLongitude(
+                                      double const longitude ///< the longitude
+                                     ) {
+    _longitudeRad = degToRad*longitude;
+}
+
+
+/**
+ * @brief Set the Elevation
+ */
+void coord::Observatory::setElevation(
+                                      double const elevation ///< the elevation
+                                     ) {
+    _elevation = elevation;
+}
+
+
+
 /**
  * @brief Allow quick access to the longitudinal coordinate as a string
  *
@@ -83,12 +137,8 @@ double coord::Observatory::getLatitude(CoordUnit unit) {
  *       an exception to be thrown
  *
  */
-std::string coord::Observatory::getLongitudeStr(coord::CoordUnit unit) {
-    if (unit == HOURS || unit == DEGREES) {
-        return degreesToDmsString(getLongitude(unit));
-    } else {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "Units must be DEGREES or HOURS");
-    }
+std::string coord::Observatory::getLongitudeStr() {
+    return degreesToDmsString(radToDeg*_longitudeRad);
 }
 /**
  * @brief Allow quick access to the longitude coordinate as a string
@@ -98,6 +148,6 @@ std::string coord::Observatory::getLongitudeStr(coord::CoordUnit unit) {
  *
  */
 std::string coord::Observatory::getLatitudeStr() {
-    return degreesToDmsString(getLatitude(DEGREES));
+    return degreesToDmsString(radToDeg*_latitudeRad);
 }
 

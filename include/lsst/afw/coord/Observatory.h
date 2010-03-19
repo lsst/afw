@@ -10,12 +10,12 @@
  *
  */ 
 
-#include <cmath>
 #include "lsst/afw/coord/Utils.h"
 
 namespace lsst {
 namespace afw {    
 namespace coord {
+
 
 /**
  * @class Observatory
@@ -24,21 +24,19 @@ namespace coord {
 class Observatory {
 public:
     
-    Observatory(double const latitude, double const longitude, double const elevation) :
-        _latitudeRad(degToRad*latitude), _longitudeRad(degToRad*longitude), _elevation(elevation) {}
-    
+    Observatory(double const latitude, double const longitude, double const elevation);
     Observatory(std::string const latitude, std::string const longitude, double const elevation);
     
-    void setLatitude(double const latitude)   { _latitudeRad = degToRad*latitude; }
-    void setLongitude(double const longitude) { _longitudeRad = degToRad*longitude; }
-    void setElevation(double const elevation) { _elevation = elevation; }
+    void setLatitude(double const latitude);
+    void setLongitude(double const longitude);
+    void setElevation(double const elevation);
     
     double getLatitude(CoordUnit unit);
     double getLongitude(CoordUnit unit);
     double getElevation() { return _elevation; }
     
     std::string getLatitudeStr();
-    std::string getLongitudeStr(CoordUnit unit=DEGREES);
+    std::string getLongitudeStr();
 
  private:
     double _latitudeRad;

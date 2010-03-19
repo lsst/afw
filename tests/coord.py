@@ -65,13 +65,14 @@ class CoordTestCase(unittest.TestCase):
             factories = []
             factories.append(coord.makeCoord(enum, self.l, self.b))
             factories.append(coord.makeCoord(enum, geom.makePointD(self.l, self.b), coord.DEGREES))
-            factories.append(coord.makeCoord(enum, con.getLongitudeStr(coord.HOURS), con.getLatitudeStr()))
 
             print "Factory: "
             for fac in factories:
-                self.assertAlmostEqual(con.getRa(coord.DEGREES), fac.getRa(coord.DEGREES))
-                self.assertAlmostEqual(con.getDec(coord.DEGREES), fac.getDec(coord.DEGREES))
-                print " tried ", fac.getRa(coord.DEGREES), "(expected ", con.getRa(coord.DEGREES), ")"
+                self.assertAlmostEqual(con.toFk5().getRa(coord.DEGREES), fac.toFk5().getRa(coord.DEGREES))
+                self.assertAlmostEqual(con.toFk5().getDec(coord.DEGREES), fac.toFk5().getDec(coord.DEGREES))
+                s = (" tried ", fac.toFk5().getRa(coord.DEGREES),
+                     "(expected ", con.toFk5().getRa(coord.DEGREES), ")")
+                print s
                 
                 
     def testPosition(self):
@@ -102,8 +103,8 @@ class CoordTestCase(unittest.TestCase):
         self.assertAlmostEqual(equ1.getRa(coord.RADIANS), equ.getRa(coord.RADIANS))
 
 
-    def testPositionVector(self):
-        """Test the getPositionVector() method, and make sure the constructors take Point3D"""
+    def testVector(self):
+        """Test the getVector() method, and make sure the constructors take Point3D"""
 
         # try the axes: vernal equinox should equal 1, 0, 0
         
@@ -115,14 +116,14 @@ class CoordTestCase(unittest.TestCase):
         for equ, p3dknown in coordList:
             
             # convert to p3d
-            p3d = coord.Fk5Coord(equ[0], equ[1]).getPositionVector()
+            p3d = coord.Fk5Coord(equ[0], equ[1]).getVector()
             print "Point3d: ", p3d, p3dknown
             for i in range(3):
                 self.assertAlmostEqual(p3d[i], p3dknown[i])
                 
             # convert back
             equBack = coord.Fk5Coord(p3d)
-            s = ("PositionVector (back): ", equBack.getRa(coord.DEGREES), equ[0],
+            s = ("Vector (back): ", equBack.getRa(coord.DEGREES), equ[0],
                  equBack.getDec(coord.DEGREES), equ[1])
             print s
             self.assertAlmostEqual(equBack.getRa(coord.DEGREES), equ[0])
@@ -249,17 +250,12 @@ class CoordTestCase(unittest.TestCase):
         
         ### Galactic ###
         
-        # make sure Galactic doesn't change
+        # make sure Galactic throws an exception. As there's no epoch, there's no precess() method.
         gal = coord.GalacticCoord(self.l, self.b, 2000.0)
         epochNew = 2010.0
-        galNew = gal.precess(epochNew)
-        print "Precession (Galactic, 2000): %.6f %.6f   (%.1f) %.6f %.6f" % (self.l, self.b, epochNew,
-                                                                             galNew.getL(coord.DEGREES),
-                                                                             galNew.getB(coord.DEGREES))
-        # machine precision
-        self.assertAlmostEqual(self.l, galNew.getL(coord.DEGREES))
-        self.assertAlmostEqual(self.b, galNew.getB(coord.DEGREES))
+        self.assertRaises(AttributeError, lambda: gal.precess(epochNew))
 
+        
         ### Ecliptic ###
         
         # test for ecliptic with venus (example from meeus, pg 137)
@@ -292,7 +288,7 @@ class CoordTestCase(unittest.TestCase):
         arcturus = coord.Fk5Coord(213.9154, 19.1825)
         knownDeg = 32.7930
         
-        deg = spica.angularSeparation(arcturus)
+        deg = spica.angularSeparation(arcturus, coord.DEGREES)
 
         print "Separation (Spica/Arcturus): %.6f (known) %.6f" % (deg, knownDeg)
         # verify to precision of known
@@ -301,7 +297,7 @@ class CoordTestCase(unittest.TestCase):
         # verify small angles ... along a constant ra, add an arcsec to spica dec
         epsilonDeg = 1.0/3600.0
         spicaPlus = coord.Fk5Coord(spica.getRa(coord.DEGREES), spica.getDec(coord.DEGREES) + epsilonDeg)
-        deg = spicaPlus.angularSeparation(spica)
+        deg = spicaPlus.angularSeparation(spica, coord.DEGREES)
 
         print "Separation (Spica+epsilon): %.8f  (known) %.8f" % (deg, epsilonDeg)
         # machine precision

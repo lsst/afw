@@ -16,9 +16,8 @@
 #include "boost/shared_ptr.hpp"
 
 #include "lsst/afw/geom/Point.h"
-#include "lsst/afw/coord/Utils.h"
+#include "lsst/afw/coord/Utils.h"     // this contains the enums CoordSystem CoordType and radToDec
 #include "lsst/afw/coord/Observatory.h"
-//#include "lsst/afw/coord/Date.h"
 #include "lsst/daf/base.h"
 
 namespace geom    = lsst::afw::geom;
@@ -28,7 +27,7 @@ namespace lsst {
 namespace afw {    
 namespace coord {
 
-    
+
 class IcrsCoord;
 class Fk5Coord;
 class GalacticCoord;
@@ -59,34 +58,18 @@ public:
     double getEpoch()         { return _epoch; }
 
     geom::Point2D getPosition(CoordUnit unit = DEGREES);
-    geom::Point3D getPositionVector();
+    geom::Point3D getVector();
     std::pair<std::string, std::string> getCoordNames();
 
-    
-    
     double getLongitude(CoordUnit unit);
     double getLatitude(CoordUnit unit);
     std::string getLongitudeStr(CoordUnit unit);
     std::string getLatitudeStr();
-    
-    double getRa(CoordUnit unit);
-    double getDec(CoordUnit unit);
-    std::string getRaStr(CoordUnit unit);
-    std::string getDecStr();
 
-    double getL(CoordUnit unit);
-    double getB(CoordUnit unit);
-    std::string getLStr(CoordUnit unit);
-    std::string getBStr();
-
-    double getLambda(CoordUnit unit);
-    double getBeta(CoordUnit unit);
-    std::string getLambdaStr(CoordUnit unit);
-    std::string getBetaStr();
+    double operator[](int index);
     
     Coord transform(Coord const poleFrom, Coord const poleTo);
-    double angularSeparation(Coord &c);
-    Coord precess(double epochTo);
+    double angularSeparation(Coord &c, CoordUnit unit);
 
     virtual Fk5Coord toFk5();
     virtual IcrsCoord toIcrs();
@@ -117,9 +100,14 @@ public:
 
     // don't need specify converters (toGalactic(), etc), base class methods are fine for Fk5
     
-    
-    Fk5Coord precess(double epochTo);
+    double getRa(CoordUnit unit);
+    double getDec(CoordUnit unit);
+    std::string getRaStr(CoordUnit unit);
+    std::string getDecStr();
 
+    Fk5Coord toFk5();
+    IcrsCoord toIcrs();
+    
 private:
 };
     
@@ -140,16 +128,19 @@ public:
         Coord(ra, dec, epoch) {}
     Fk5Coord() : Coord() {}
 
-    // don't need specify converters (toGalactic(), etc), base class methods are fine for Fk5
-#if 0    
+    Fk5Coord precess(double epochTo);
+    
+    double getRa(CoordUnit unit);
+    double getDec(CoordUnit unit);
+    std::string getRaStr(CoordUnit unit);
+    std::string getDecStr();
+
     Fk5Coord toFk5();
     IcrsCoord toIcrs();
     GalacticCoord toGalactic();
     EclipticCoord toEcliptic();
-    AltAzCoord toAltAz(Observatory const &obs, dafBase::DateTime const &date);
-#endif
-    
-    Fk5Coord precess(double epochTo);
+    AltAzCoord toAltAz(Observatory obs, dafBase::DateTime obsDate);
+
     
 private:
 };
@@ -172,14 +163,14 @@ public:
 
     std::pair<std::string, std::string> getCoordNames();
 
-    Fk5Coord toFk5();
-    IcrsCoord toIcrs();
-    GalacticCoord toGalactic();
-    EclipticCoord toEcliptic();
-    AltAzCoord toAltAz(Observatory const &obs, dafBase::DateTime const &date);
-
-    GalacticCoord precess(double epochTo);
+    double getL(CoordUnit unit);
+    double getB(CoordUnit unit);
+    std::string getLStr(CoordUnit unit);
+    std::string getBStr();
     
+    Fk5Coord toFk5();
+    GalacticCoord toGalactic();
+
 private:
 };
 
@@ -203,11 +194,14 @@ public:
 
     std::pair<std::string, std::string> getCoordNames();
 
+    double getLambda(CoordUnit unit);
+    double getBeta(CoordUnit unit);
+    std::string getLambdaStr(CoordUnit unit);
+    std::string getBetaStr();
+    
+    
     Fk5Coord toFk5();
-    IcrsCoord toIcrs();
-    GalacticCoord toGalactic();
     EclipticCoord toEcliptic();
-    AltAzCoord toAltAz(Observatory const &obs, dafBase::DateTime const &date);
 
     EclipticCoord precess(double epochTo);
     
@@ -237,9 +231,6 @@ public:
 
 
     Fk5Coord toFk5();
-    IcrsCoord toIcrs();
-    GalacticCoord toGalactic();
-    EclipticCoord toEcliptic();
     AltAzCoord toAltAz(Observatory const &obs, dafBase::DateTime const &date);
     AltAzCoord toAltAz();
     
