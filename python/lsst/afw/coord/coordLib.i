@@ -41,5 +41,4 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 %import "lsst/daf/base/baseLib.i"
 %import "lsst/afw/geom/geomLib.i"
 %include "observatory.i"
-%include "date.i"
 %include "coord.i"
