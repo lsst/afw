@@ -24,8 +24,8 @@ namespace coord {
 class Observatory {
 public:
     
-    Observatory(double const latitude, double const longitude, double const elevation);
-    Observatory(std::string const latitude, std::string const longitude, double const elevation);
+    Observatory(double const longitude, double const latitude, double const elevation);
+    Observatory(std::string const longitude, std::string const latitude, double const elevation);
     
     void setLatitude(double const latitude);
     void setLongitude(double const longitude);

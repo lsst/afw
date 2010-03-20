@@ -25,8 +25,8 @@ namespace ex           = lsst::pex::exceptions;
  * @brief Constructor for the observatory with lat/long as doubles
  */
 coord::Observatory::Observatory(
-                                double const latitude,  ///< observatory latitude 
                                 double const longitude, ///< observatory longitude
+                                double const latitude,  ///< observatory latitude 
                                 double const elevation  ///< observatory elevation
                                ) :
     _latitudeRad(degToRad*latitude),
@@ -41,8 +41,8 @@ coord::Observatory::Observatory(
  *
  */
 coord::Observatory::Observatory(
-                                std::string const latitude,  ///< observatory latitude 
                                 std::string const longitude, ///< observatory longitude
+                                std::string const latitude,  ///< observatory latitude 
                                 double const elevation       ///< observatory elevation
                                ) : 
     _latitudeRad(degToRad*dmsStringToDegrees(latitude)),

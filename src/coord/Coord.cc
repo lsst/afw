@@ -19,7 +19,6 @@
 #include "boost/format.hpp"
 
 #include "lsst/afw/coord/Coord.h"
-//#include "lsst/afw/coord/Date.h"
 #include "lsst/daf/base/DateTime.h"
 
 namespace coord = lsst::afw::coord;
@@ -31,7 +30,8 @@ namespace {
 
 double const NaN          = std::numeric_limits<double>::quiet_NaN();    
 double const arcsecToRad  = M_PI/(3600.0*180.0); // arcsec per radian  = 2.062648e5;
-double const JD2000       = 2451544.50;    
+double const JD2000       = 2451544.50;
+    
 /*
  * A local class to handle dd:mm:ss coordinates
  *
@@ -449,6 +449,11 @@ double coord::IcrsCoord::getDec(CoordUnit unit)        { return getLatitude(unit
 std::string coord::IcrsCoord::getRaStr(CoordUnit unit) { return getLongitudeStr(unit); }
 std::string coord::IcrsCoord::getDecStr()              { return getLatitudeStr(); }
 
+double coord::EquatorialCoord::getRa(CoordUnit unit)         { return getLongitude(unit); }
+double coord::EquatorialCoord::getDec(CoordUnit unit)        { return getLatitude(unit); }
+std::string coord::EquatorialCoord::getRaStr(CoordUnit unit) { return getLongitudeStr(unit); }
+std::string coord::EquatorialCoord::getDecStr()              { return getLatitudeStr(); }
+
 double coord::GalacticCoord::getL(CoordUnit unit)          { return getLongitude(unit); }
 double coord::GalacticCoord::getB(CoordUnit unit)          { return getLatitude(unit); }
 std::string coord::GalacticCoord::getLStr(CoordUnit unit)  { return getLongitudeStr(unit); }
@@ -543,7 +548,7 @@ double coord::Coord::angularSeparation(
 
 
 /**
- * @brief Convert ourself to Fk5: RA, Dec (basically J2000)
+ * @brief Convert ourself to Fk5: RA, Dec
  */
 coord::Fk5Coord coord::Coord::toFk5() {
     return Fk5Coord(getLongitude(DEGREES), getLatitude(DEGREES), getEpoch());
@@ -556,6 +561,15 @@ coord::Fk5Coord coord::Coord::toFk5() {
 coord::IcrsCoord coord::Coord::toIcrs() {
     return this->toFk5().toIcrs();
 }
+
+/**
+ * @brief Convert ourself to Equatorial: RA, Dec (basically J2000)
+ *
+ */
+coord::EquatorialCoord coord::Coord::toEquatorial() {
+    return this->toFk5().toEquatorial();
+}
+
 
 /**
  * @brief Convert ourself to Galactic: l, b
@@ -592,7 +606,7 @@ coord::AltAzCoord coord::Coord::toAltAz(
 
 
 /**
- * @brief Convert ourself to Fk5: RA, Dec (basically J2000)
+ * @brief Convert ourself to Fk5 (ie. a no-op): RA, Dec
  */
 coord::Fk5Coord coord::Fk5Coord::toFk5() {
     return Fk5Coord(getLongitude(DEGREES), getLatitude(DEGREES), getEpoch());
@@ -610,6 +624,25 @@ coord::IcrsCoord coord::Fk5Coord::toIcrs() {
         return IcrsCoord(c.getLongitude(DEGREES), c.getLatitude(DEGREES));
     } else {
         return IcrsCoord(getLongitude(DEGREES), getLatitude(DEGREES));
+    }
+}
+
+
+/**
+ * @brief Convert ourself to Equatorial: RA, Dec (basically J2000)
+ *
+ * @note Equatorial is a generic Equatorial.  It is a typedef to an
+ *       LSST system (currently set to ICRS (see the header for this file).
+ *
+ */
+coord::EquatorialCoord coord::Fk5Coord::toEquatorial() {
+
+    // only do the precession to 2000 if we're not already there.
+    if ( fabs(getEpoch() - 2000.0) > epochTolerance ) {
+        coord::Fk5Coord c = precess(2000.0);
+        return coord::EquatorialCoord(c.getLongitude(DEGREES), c.getLatitude(DEGREES));
+    } else {
+        return coord::EquatorialCoord(getLongitude(DEGREES), getLatitude(DEGREES));
     }
 }
 
@@ -726,17 +759,41 @@ coord::Fk5Coord coord::Fk5Coord::precess(
  * ============================================================*/
 
 /**
- * @brief 
- *
- * @note
+ * @brief Fk5 converter for IcrsCoord.
  */
 coord::Fk5Coord coord::IcrsCoord::toFk5() {
     return Fk5Coord(getLongitude(DEGREES), getLatitude(DEGREES), 2000.0);
 }
 
+/**
+ * @brief Icrs converter for IcrsCoord. (ie. a no-op)
+ */
 coord::IcrsCoord coord::IcrsCoord::toIcrs() {
     return IcrsCoord(getLongitude(DEGREES), getLatitude(DEGREES));
 }
+
+
+
+/* ============================================================
+ *
+ * class EquatorialCoord
+ *
+ * ============================================================*/
+
+/**
+ * @brief Fk5 converter for equatorial coord.
+ */
+coord::Fk5Coord coord::EquatorialCoord::toFk5() {
+    return Fk5Coord(getLongitude(DEGREES), getLatitude(DEGREES), 2000.0);
+}
+
+/**
+ * @brief equatorial converter for equatorial coord (ie. no-op).
+ */
+coord::EquatorialCoord coord::EquatorialCoord::toEquatorial() {
+    return EquatorialCoord(getLongitude(DEGREES), getLatitude(DEGREES));
+}
+
 
 
 /* ============================================================
@@ -863,6 +920,12 @@ coord::AltAzCoord coord::AltAzCoord::toAltAz() {
 /**
  * @brief Factory function to create a Coord of arbitrary type with decimal RA,Dec
  *
+ * @note All the thinking happens in this factory, the others just call it indirectly.
+ *
+ * The internal storage is long/lat, so this is the most efficient option.
+ * The others (for Point2D, Point3D) look less efficient as they convert to the ra/dec form,
+ *     but that would have to happen internally anyway.
+ *
  */
 coord::Coord::Ptr coord::makeCoord(
                                    CoordSystem const system,     ///< the system (equ, fk5, galactic ..)
@@ -871,6 +934,9 @@ coord::Coord::Ptr coord::makeCoord(
                                    double const epoch            ///< epoch of coordinate
                                   ) {
 
+    // Many of these systems have no epoch, but epoch=2000 is a convenient default.
+    // It's set such that epoch=2000 is the default, and is accepted.  Other values throw.
+    // What to do?
     switch (system) {
 
       case FK5:
@@ -881,13 +947,22 @@ coord::Coord::Ptr coord::makeCoord(
         if ( fabs(epoch - 2000.0) < epochTolerance ) {
             return boost::shared_ptr<IcrsCoord>(new IcrsCoord(ra, dec));
         } else {
-            IcrsCoord c = Fk5Coord(ra, dec, epoch).toIcrs();
-            return boost::shared_ptr<IcrsCoord>(new IcrsCoord(c.getLongitude(DEGREES),
-                                                              c.getLatitude(DEGREES)));
+            throw LSST_EXCEPT(ex::InvalidParameterException, "ICRS has no epoch (only \"2000\" accepted).");
+        }
+        break;
+      case EQUATORIAL:
+        if ( fabs(epoch - 2000.0) < epochTolerance ) {
+            return boost::shared_ptr<EquatorialCoord>(new EquatorialCoord(ra, dec));
+        } else {
+            throw LSST_EXCEPT(ex::InvalidParameterException, "Equatorial is ICRS and has no epoch");
         }
         break;
       case GALACTIC:
-        return boost::shared_ptr<GalacticCoord>(new GalacticCoord(ra, dec, epoch));
+        if ( fabs(epoch - 2000.0) < epochTolerance ) {
+            return boost::shared_ptr<GalacticCoord>(new GalacticCoord(ra, dec));
+        } else {
+            throw LSST_EXCEPT(ex::InvalidParameterException, "Galactic has no epoch");
+        }
         break;
       case ECLIPTIC:
         return boost::shared_ptr<EclipticCoord>(new EclipticCoord(ra, dec, epoch));
@@ -899,7 +974,7 @@ coord::Coord::Ptr coord::makeCoord(
         break;
       default:
         throw LSST_EXCEPT(ex::InvalidParameterException,
-                          "Undefined CoordSystem: only FK5, ICRS, GALACTIC, ECLIPTIC, and ALTAZ allowed.");
+            "Undefined CoordSystem: only FK5, ICRS, EQUATORIAL, ""GALACTIC, ECLIPTIC, and ALTAZ allowed.");
         break;
         
     }
@@ -916,40 +991,8 @@ coord::Coord::Ptr coord::makeCoord(
                                    geom::Point3D const p3d,      ///< the coord in Point3D format
                                    double const epoch            ///< epoch of coordinate
                                   ) {
-
-    switch (system) {
-
-      case FK5:
-        return boost::shared_ptr<Fk5Coord>(new Fk5Coord(p3d, epoch));
-        break;
-      case ICRS:
-        // if the epoch isn't 2000.0, should we precess or throw an exception?
-        if ( fabs(epoch - 2000.0) < epochTolerance ) {
-            return boost::shared_ptr<IcrsCoord>(new IcrsCoord(p3d));
-        } else {
-            IcrsCoord c = Fk5Coord(p3d, epoch).toIcrs();
-            return boost::shared_ptr<IcrsCoord>(new IcrsCoord(c.getLongitude(DEGREES),
-                                                              c.getLatitude(DEGREES)));
-        }
-        break;
-      case GALACTIC:
-        return boost::shared_ptr<GalacticCoord>(new GalacticCoord(p3d, epoch));
-        break;
-      case ECLIPTIC:
-        return boost::shared_ptr<EclipticCoord>(new EclipticCoord(p3d, epoch));
-        break;
-      case ALTAZ:
-        throw LSST_EXCEPT(ex::InvalidParameterException,
-                          "Cannot make AltAz with makeCoord() (must also specify Observatory).\n"
-                          "Instantiate AltAzCoord() directly.");
-        break;
-      default:
-        throw LSST_EXCEPT(ex::InvalidParameterException,
-                          "Undefined CoordSystem: only FK5, ICRS, GALACTIC, ECLIPTIC, and ALTAZ allowed.");
-        break;
-        
-    }
-
+    Coord c(p3d, 2000.0);
+    return makeCoord(system, c.getLongitude(DEGREES), c.getLatitude(DEGREES), epoch);
 }
 
 
@@ -992,4 +1035,41 @@ coord::Coord::Ptr coord::makeCoord(
                                    double const epoch          ///< epoch of coordinate
                                   ) {
     return makeCoord(system, 15.0*dmsStringToDegrees(ra), dmsStringToDegrees(dec), epoch);
+}
+
+
+/**
+ * @brief Lightweight factory to make an empty coord.
+ */
+coord::Coord::Ptr coord::makeCoord(
+                                   CoordSystem const system ///< the system (FK5, ICRS, etc)
+                                  ) {
+    switch (system) {
+      case FK5:
+        return boost::shared_ptr<Fk5Coord>(new Fk5Coord());
+        break;
+      case ICRS:
+        return boost::shared_ptr<IcrsCoord>(new IcrsCoord());
+        break;
+      case EQUATORIAL:
+        return boost::shared_ptr<EquatorialCoord>(new EquatorialCoord());
+        break;
+      case GALACTIC:
+        return boost::shared_ptr<GalacticCoord>(new GalacticCoord());
+        break;
+      case ECLIPTIC:
+        return boost::shared_ptr<EclipticCoord>(new EclipticCoord());
+        break;
+      case ALTAZ:
+        throw LSST_EXCEPT(ex::InvalidParameterException,
+                          "Cannot make AltAz with makeCoord() (must also specify Observatory).\n"
+                          "Instantiate AltAzCoord() directly.");
+        break;
+      default:
+        throw LSST_EXCEPT(ex::InvalidParameterException,
+                          "Undefined CoordSystem: only FK5, ICRS, EQUATORIAL, "
+                          "GALACTIC, ECLIPTIC, and ALTAZ allowed.");
+        break;
+        
+    }
 }

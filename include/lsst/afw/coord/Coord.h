@@ -12,6 +12,7 @@
  * @todo add *many* const
  * @todo in factory ... if ICRS epoch != 2000 ... precess or throw?
  */ 
+#include <limits>
 
 #include "boost/shared_ptr.hpp"
 
@@ -23,6 +24,7 @@
 namespace geom    = lsst::afw::geom;
 namespace dafBase = lsst::daf::base;
 
+
 namespace lsst {
 namespace afw {    
 namespace coord {
@@ -30,10 +32,12 @@ namespace coord {
 
 class IcrsCoord;
 class Fk5Coord;
+class EquatorialCoord;    
 class GalacticCoord;
 class EclipticCoord;
 class AltAzCoord;
 
+    
 /**
  * @class Coord
  *
@@ -73,6 +77,7 @@ public:
 
     virtual Fk5Coord toFk5();
     virtual IcrsCoord toIcrs();
+    virtual EquatorialCoord toEquatorial();
     virtual GalacticCoord toGalactic();
     virtual EclipticCoord toEcliptic();
     virtual AltAzCoord toAltAz(Observatory obs, dafBase::DateTime obsDate);
@@ -98,8 +103,8 @@ public:
     IcrsCoord(std::string const ra, std::string const dec) : Coord(ra, dec, 2000.0) {}
     IcrsCoord() : Coord() {}
 
-    // don't need specify converters (toGalactic(), etc), base class methods are fine for Fk5
-    
+    typedef boost::shared_ptr<IcrsCoord> Ptr;
+
     double getRa(CoordUnit unit);
     double getDec(CoordUnit unit);
     std::string getRaStr(CoordUnit unit);
@@ -110,8 +115,36 @@ public:
     
 private:
 };
-    
 
+
+/**
+ * @class EquatorialCoord
+ * @brief A class to handle Equatorial coordinates (inherits from Coord)
+ *
+ * @note This is identical to Icrs
+ */
+class EquatorialCoord : public Coord {
+public:    
+    EquatorialCoord(geom::Point2D const p2d, CoordUnit unit = DEGREES) : Coord(p2d, unit, 2000.0) {}
+    EquatorialCoord(geom::Point3D const p3d) : Coord(p3d, 2000.0) {}
+    EquatorialCoord(double const ra, double const dec) : Coord(ra, dec, 2000.0) {}
+    EquatorialCoord(std::string const ra, std::string const dec) : Coord(ra, dec, 2000.0) {}
+    EquatorialCoord() : Coord() {}
+
+    typedef boost::shared_ptr<EquatorialCoord> Ptr;
+    
+    double getRa(CoordUnit unit);
+    double getDec(CoordUnit unit);
+    std::string getRaStr(CoordUnit unit);
+    std::string getDecStr();
+
+    Fk5Coord toFk5();
+    EquatorialCoord toEquatorial();
+    
+private:
+};
+    
+    
 /**
  * @class Fk5Coord
  * @brief A class to handle Fk5 coordinates (inherits from Coord)
@@ -128,6 +161,8 @@ public:
         Coord(ra, dec, epoch) {}
     Fk5Coord() : Coord() {}
 
+    typedef boost::shared_ptr<Fk5Coord> Ptr;
+    
     Fk5Coord precess(double epochTo);
     
     double getRa(CoordUnit unit);
@@ -137,6 +172,7 @@ public:
 
     Fk5Coord toFk5();
     IcrsCoord toIcrs();
+    EquatorialCoord toEquatorial();
     GalacticCoord toGalactic();
     EclipticCoord toEcliptic();
     AltAzCoord toAltAz(Observatory obs, dafBase::DateTime obsDate);
@@ -161,6 +197,8 @@ public:
         Coord(l, b, epoch) {}
     GalacticCoord() : Coord() {}
 
+    typedef boost::shared_ptr<GalacticCoord> Ptr;
+    
     std::pair<std::string, std::string> getCoordNames();
 
     double getL(CoordUnit unit);
@@ -192,6 +230,8 @@ public:
         Coord(lambda, beta, epoch) {}
     EclipticCoord() : Coord() {}
 
+    typedef boost::shared_ptr<EclipticCoord> Ptr;
+
     std::pair<std::string, std::string> getCoordNames();
 
     double getLambda(CoordUnit unit);
@@ -221,6 +261,8 @@ public:
         Coord(az, alt, epoch), _obs(obs) {}
     AltAzCoord(std::string const az, std::string const alt, double const epoch, Observatory const &obs) : 
         Coord(az, alt, epoch), _obs(obs) {}
+
+    typedef boost::shared_ptr<AltAzCoord> Ptr;
     
     std::pair<std::string, std::string> getCoordNames();
     
@@ -253,7 +295,7 @@ Coord::Ptr makeCoord(CoordSystem const system,
                      geom::Point2D p2d, CoordUnit unit, double const epoch=2000.0);
 Coord::Ptr makeCoord(CoordSystem const system,
                      geom::Point3D p3d, double const epoch=2000.0);
-    
+Coord::Ptr makeCoord(CoordSystem const system);
 
 }}}
 
