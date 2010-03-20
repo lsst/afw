@@ -21,20 +21,16 @@ namespace afwImage = lsst::afw::image;
 
 /******************************************************************************/
 /**
- * \brief Factory method for creating Threshold objects
- * \param value value of threshold
- * \param typeStr string representation of a ThresholdType. This parameter is 
- *        optional. Allowed values are:
- *        "variance", "value", "stdev"
- * \param polarity If true detect positive objects, false for negative
- * \return Threshold object
+ * \Factory method for creating Threshold objects
+ *
+ * \return desired Threshold
  */
 afwDetect::Threshold afwDetect::createThreshold(
-    float const value,
-    std::string const typeStr,
-    bool const polarity
+    float const value,                  ///< value of threshold
+    std::string const typeStr,          ///<  string representation of a ThresholdType. This parameter is 
+                                        ///< optional. Allowed values are: "variance", "value", "stdev"
+    bool const polarity                 ///< If true detect positive objects, false for negative
 ) {
-
     Threshold::ThresholdType thresholdType;
     if (typeStr.compare("value") == 0) {
         thresholdType = Threshold::VALUE;           
