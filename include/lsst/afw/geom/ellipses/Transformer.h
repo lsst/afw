@@ -53,7 +53,7 @@ public:
     DerivativeMatrix d() const;
     
     /// Return the derivative of transformed core with respect to transform parameters.
-    TransformDerivativeMatrix dTransform() const;;
+    TransformDerivativeMatrix dTransform() const;
 
 protected:
     BaseCore & _input; ///< \internal input core to be transformed

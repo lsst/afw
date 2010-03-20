@@ -136,7 +136,7 @@ public:
     double & operator[](int i) { 
         return (i < 4) ? _linear[i] : _translation[i - 4]; 
     }
-    double const operator[](int i) const { 
+    double operator[](int i) const { 
         return (i < 4) ? _linear[i] : _translation[i - 4]; 
     }
 
