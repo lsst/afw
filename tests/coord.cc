@@ -15,7 +15,6 @@
 #include "boost/test/floating_point_comparison.hpp"
 
 #include "lsst/afw/coord/Coord.h"
-#include "lsst/afw/coord/Date.h"
 #include "lsst/afw/geom/Point.h"
 
 using namespace std;
