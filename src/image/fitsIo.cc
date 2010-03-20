@@ -116,7 +116,7 @@ void appendKey(lsst::afw::image::cfitsio::fitsfile* fd, std::string const &keyWo
     if (valueType == typeid(bool)) {
         if (metadata->isArray(keyWord)) {
             std::vector<bool> tmp = metadata->getArray<bool>(keyWord);
-            for (int i = 0; i != tmp.size(); ++i) {
+            for (unsigned int i = 0; i != tmp.size(); ++i) {
                 bool tmp_i = tmp[i];    // avoid icc warning; is vector<bool> special as it only needs 1 bit?
                 fits_write_key(fd, TLOGICAL, keyWordChars, &tmp_i, keyCommentChars, &status);
             }
@@ -128,7 +128,7 @@ void appendKey(lsst::afw::image::cfitsio::fitsfile* fd, std::string const &keyWo
     } else if (valueType == typeid(int)) {
         if (metadata->isArray(keyWord)) {
             std::vector<int> tmp = metadata->getArray<int>(keyWord);
-            for (int i = 0; i != tmp.size(); ++i) {
+            for (unsigned int i = 0; i != tmp.size(); ++i) {
                 fits_write_key(fd, TINT, keyWordChars, &tmp[i], keyCommentChars, &status);
             }
         } else {
@@ -140,7 +140,7 @@ void appendKey(lsst::afw::image::cfitsio::fitsfile* fd, std::string const &keyWo
     } else if (valueType == typeid(double)) {
         if (metadata->isArray(keyWord)) {
             std::vector<double> tmp = metadata->getArray<double>(keyWord);
-            for (int i = 0; i != tmp.size(); ++i) {
+            for (unsigned int i = 0; i != tmp.size(); ++i) {
                 fits_write_key(fd, TDOUBLE, keyWordChars, &tmp[i], keyCommentChars, &status);
             }
         } else {
@@ -151,7 +151,7 @@ void appendKey(lsst::afw::image::cfitsio::fitsfile* fd, std::string const &keyWo
         if (metadata->isArray(keyWord)) {
             std::vector<std::string> tmp = metadata->getArray<std::string>(keyWord);
 
-            for (int i = 0; i != tmp.size(); ++i) {
+            for (unsigned int i = 0; i != tmp.size(); ++i) {
                 strncpy(keyValueChars, tmp[i].c_str(), 80);
                 fits_write_key(fd, TSTRING, keyWordChars, keyValueChars, keyCommentChars, &status);
             }
