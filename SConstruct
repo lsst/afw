@@ -5,35 +5,16 @@
 import glob, os.path, sys, traceback
 import lsst.SConsUtils as scons
 
+try:
+    scons.ConfigureDependentProducts
+except AttributeError:
+    import lsst.afw.SconsUtils
+    scons.ConfigureDependentProducts = lsst.afw.SconsUtils.ConfigureDependentProducts
+
 env = scons.makeEnv(
     "afw",
     r"$HeadURL$",
-    [
-        ["boost", "boost/version.hpp", "boost_system:C++"],
-        ["boost", "boost/version.hpp", "boost_filesystem:C++"],
-        ["boost", "boost/regex.hpp", "boost_regex:C++"],
-        ["boost", "boost/filesystem.hpp", "boost_system:C++"],
-        ["boost", "boost/serialization/base_object.hpp", "boost_serialization:C++"],
-        ["boost", "boost/test/unit_test.hpp", "boost_unit_test_framework:C++"],
-        ["python", "Python.h"],
-        #["numpy", "Python.h numpy/arrayobject.h"], # see numpy workaround below
-        ["m", "math.h", "m", "sqrt"],
-        ["cfitsio", "fitsio.h", "cfitsio", "ffopen"],
-        ["wcslib", "wcslib/wcs.h", "wcs"],
-        ["xpa", "xpa.h", "xpa", "XPAPuts"],
-        ["minuit2", "Minuit2/FCNBase.h", "Minuit2:C++"],
-        ["gsl", "gsl/gsl_rng.h", "gslcblas gsl"],
-        ["pex_exceptions", "lsst/pex/exceptions.h", "pex_exceptions:C++"],
-        ["utils", "lsst/utils/Utils.h", "utils:C++"],
-        ["daf_base", "lsst/daf/base.h", "daf_base:C++"],
-        ["pex_logging", "lsst/pex/logging/Trace.h", "pex_logging:C++"],
-        ["security", "lsst/security/Security.h", "security:C++"],
-        ["pex_policy", "lsst/pex/policy/Policy.h", "pex_policy:C++"],
-        ["daf_persistence", "lsst/daf/persistence.h", "daf_persistence:C++"],
-        ["daf_data", "lsst/daf/data.h", "daf_data:C++"],
-        ["eigen", "Eigen/Core.h"],
-        ["fftw", "fftw3.h", "fftw3"],
-    ],
+    scons.ConfigureDependentProducts("afw"),
 )
 #
 # Libraries needed to link libraries/executables
@@ -75,13 +56,16 @@ for d in (
 env['IgnoreFiles'] = r"(~$|\.pyc$|^\.svn$|\.o$)"
 
 Alias("install", [
-    env.InstallAs(os.path.join(env['prefix'], "doc", "doxygen"), os.path.join("doc", "htmlDir")),
+    env.Install(env['prefix'], "doc"),
+    env.Install(env['prefix'], "etc"),
     env.Install(env['prefix'], "examples"),
     env.Install(env['prefix'], "include"),
     env.Install(env['prefix'], "lib"),
     env.Install(env['prefix'], "policy"),
     env.Install(env['prefix'], "python"),
-    env.InstallEups(env['prefix'] + "/ups"),
+    env.Install(env['prefix'], "src"),
+    env.Install(env['prefix'], "tests"),
+    env.InstallEups(os.path.join(env['prefix'], "ups")),
 ])
 
 scons.CleanTree(r"*~ core *.so *.os *.o")
