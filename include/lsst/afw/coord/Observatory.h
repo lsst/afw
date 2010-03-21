@@ -38,7 +38,7 @@ public:
     std::string getLatitudeStr();
     std::string getLongitudeStr();
 
- private:
+private:
     double _latitudeRad;
     double _longitudeRad;
     double _elevation;

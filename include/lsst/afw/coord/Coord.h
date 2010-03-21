@@ -10,7 +10,6 @@
  * @todo Finish python docs
  * @todo Start tex doc
  * @todo add *many* const
- * @todo in factory ... if ICRS epoch != 2000 ... precess or throw?
  */ 
 #include <limits>
 
@@ -49,8 +48,8 @@ class AltAzCoord;
 class Coord {
 public:
 
-    Coord(geom::Point2D const p2d, CoordUnit unit = DEGREES, double const epoch = 2000.0);
-    Coord(geom::Point3D const p3d, double const epoch);
+    Coord(geom::Point2D const &p2d, CoordUnit unit = DEGREES, double const epoch = 2000.0);
+    Coord(geom::Point3D const &p3d, double const epoch = 2000.0);
     Coord(double const ra, double const dec, double const epoch = 2000.0);
     Coord(std::string const ra, std::string const dec, double const epoch = 2000.0);
     Coord();
@@ -75,11 +74,13 @@ public:
     Coord transform(Coord const poleFrom, Coord const poleTo);
     double angularSeparation(Coord &c, CoordUnit unit);
 
-    virtual Fk5Coord toFk5();
+    Coord::Ptr convert(CoordSystem system);
+
+    virtual Fk5Coord toFk5(double epoch = std::numeric_limits<double>::quiet_NaN());
     virtual IcrsCoord toIcrs();
     virtual EquatorialCoord toEquatorial();
     virtual GalacticCoord toGalactic();
-    virtual EclipticCoord toEcliptic();
+    virtual EclipticCoord toEcliptic(double epoch = std::numeric_limits<double>::quiet_NaN());
     virtual AltAzCoord toAltAz(Observatory obs, dafBase::DateTime obsDate);
 
 private:
@@ -97,8 +98,8 @@ private:
  */
 class IcrsCoord : public Coord {
 public:    
-    IcrsCoord(geom::Point2D const p2d, CoordUnit unit = DEGREES) : Coord(p2d, unit, 2000.0) {}
-    IcrsCoord(geom::Point3D const p3d) : Coord(p3d, 2000.0) {}
+    IcrsCoord(geom::Point2D const &p2d, CoordUnit unit = DEGREES) : Coord(p2d, unit, 2000.0) {}
+    IcrsCoord(geom::Point3D const &p3d) : Coord(p3d, 2000.0) {}
     IcrsCoord(double const ra, double const dec) : Coord(ra, dec, 2000.0) {}
     IcrsCoord(std::string const ra, std::string const dec) : Coord(ra, dec, 2000.0) {}
     IcrsCoord() : Coord() {}
@@ -110,7 +111,7 @@ public:
     std::string getRaStr(CoordUnit unit);
     std::string getDecStr();
 
-    Fk5Coord toFk5();
+    Fk5Coord toFk5(double epoch = std::numeric_limits<double>::quiet_NaN());
     IcrsCoord toIcrs();
     
 private:
@@ -125,8 +126,8 @@ private:
  */
 class EquatorialCoord : public Coord {
 public:    
-    EquatorialCoord(geom::Point2D const p2d, CoordUnit unit = DEGREES) : Coord(p2d, unit, 2000.0) {}
-    EquatorialCoord(geom::Point3D const p3d) : Coord(p3d, 2000.0) {}
+    EquatorialCoord(geom::Point2D const &p2d, CoordUnit unit = DEGREES) : Coord(p2d, unit, 2000.0) {}
+    EquatorialCoord(geom::Point3D const &p3d) : Coord(p3d, 2000.0) {}
     EquatorialCoord(double const ra, double const dec) : Coord(ra, dec, 2000.0) {}
     EquatorialCoord(std::string const ra, std::string const dec) : Coord(ra, dec, 2000.0) {}
     EquatorialCoord() : Coord() {}
@@ -138,7 +139,7 @@ public:
     std::string getRaStr(CoordUnit unit);
     std::string getDecStr();
 
-    Fk5Coord toFk5();
+    Fk5Coord toFk5(double epoch = std::numeric_limits<double>::quiet_NaN());
     EquatorialCoord toEquatorial();
     
 private:
@@ -151,9 +152,9 @@ private:
  */
 class Fk5Coord : public Coord {
 public:    
-    Fk5Coord(geom::Point2D const p2d, CoordUnit unit = DEGREES, double const epoch = 2000.0) :
+    Fk5Coord(geom::Point2D const &p2d, CoordUnit unit = DEGREES, double const epoch = 2000.0) :
         Coord(p2d, unit, epoch) {}
-    Fk5Coord(geom::Point3D const p3d, double const epoch = 2000.0) :
+    Fk5Coord(geom::Point3D const &p3d, double const epoch = 2000.0) :
         Coord(p3d, epoch) {}
     Fk5Coord(double const ra, double const dec, double const epoch = 2000.0) : 
         Coord(ra, dec, epoch) {}
@@ -170,11 +171,11 @@ public:
     std::string getRaStr(CoordUnit unit);
     std::string getDecStr();
 
-    Fk5Coord toFk5();
+    Fk5Coord toFk5(double epoch = std::numeric_limits<double>::quiet_NaN());
     IcrsCoord toIcrs();
     EquatorialCoord toEquatorial();
     GalacticCoord toGalactic();
-    EclipticCoord toEcliptic();
+    EclipticCoord toEcliptic(double epoch = std::numeric_limits<double>::quiet_NaN());
     AltAzCoord toAltAz(Observatory obs, dafBase::DateTime obsDate);
 
     
@@ -189,12 +190,10 @@ private:
 class GalacticCoord : public Coord {
 public:
     
-    GalacticCoord(geom::Point2D const p2d, CoordUnit unit = DEGREES, double const epoch = 2000.0) :
-        Coord(p2d, unit, epoch) {}
-    GalacticCoord(geom::Point3D const p3d, double const epoch = 2000.0) : Coord(p3d, epoch) {}
-    GalacticCoord(double const l, double const b, double const epoch = 2000.0) : Coord(l, b, epoch) {}
-    GalacticCoord(std::string const l, std::string const b, double const epoch = 2000.0) : 
-        Coord(l, b, epoch) {}
+    GalacticCoord(geom::Point2D const &p2d, CoordUnit unit = DEGREES) : Coord(p2d, unit) {}
+    GalacticCoord(geom::Point3D const &p3d) : Coord(p3d) {}
+    GalacticCoord(double const l, double const b) : Coord(l, b) {}
+    GalacticCoord(std::string const l, std::string const b) : Coord(l, b) {}
     GalacticCoord() : Coord() {}
 
     typedef boost::shared_ptr<GalacticCoord> Ptr;
@@ -206,7 +205,7 @@ public:
     std::string getLStr(CoordUnit unit);
     std::string getBStr();
     
-    Fk5Coord toFk5();
+    Fk5Coord toFk5(double epoch = std::numeric_limits<double>::quiet_NaN());
     GalacticCoord toGalactic();
 
 private:
@@ -221,9 +220,9 @@ private:
 class EclipticCoord : public Coord {
 public:
     
-    EclipticCoord(geom::Point2D const p2d, CoordUnit unit = DEGREES, double const epoch = 2000.0) :
+    EclipticCoord(geom::Point2D const &p2d, CoordUnit unit = DEGREES, double const epoch = 2000.0) :
         Coord(p2d, unit, epoch) {}
-    EclipticCoord(geom::Point3D const p3d, double const epoch = 2000.0) : Coord(p3d, epoch) {}
+    EclipticCoord(geom::Point3D const &p3d, double const epoch = 2000.0) : Coord(p3d, epoch) {}
     EclipticCoord(double const lambda, double const beta, double const epoch = 2000.0) : 
         Coord(lambda, beta, epoch) {}
     EclipticCoord(std::string const lambda, std::string const beta, double const epoch = 2000.0) : 
@@ -240,8 +239,8 @@ public:
     std::string getBetaStr();
     
     
-    Fk5Coord toFk5();
-    EclipticCoord toEcliptic();
+    Fk5Coord toFk5(double epoch = std::numeric_limits<double>::quiet_NaN());
+    EclipticCoord toEcliptic(double epoch = std::numeric_limits<double>::quiet_NaN());
 
     EclipticCoord precess(double epochTo);
     
@@ -253,9 +252,9 @@ private:
 class AltAzCoord : public Coord {
 public:
     
-    AltAzCoord(geom::Point2D const p2d, CoordUnit unit, double const epoch, Observatory const &obs) :
+    AltAzCoord(geom::Point2D const &p2d, CoordUnit unit, double const epoch, Observatory const &obs) :
         Coord(p2d, unit, epoch), _obs(obs) {}
-    AltAzCoord(geom::Point3D const p3d, double const epoch, Observatory const &obs) :
+    AltAzCoord(geom::Point3D const &p3d, double const epoch, Observatory const &obs) :
         Coord(p3d, epoch), _obs(obs) {}
     AltAzCoord(double const az, double const alt, double const epoch, Observatory const &obs) : 
         Coord(az, alt, epoch), _obs(obs) {}
@@ -272,7 +271,7 @@ public:
     std::string getAltitudeStr();
 
 
-    Fk5Coord toFk5();
+    Fk5Coord toFk5(double epoch = std::numeric_limits<double>::quiet_NaN());
     AltAzCoord toAltAz(Observatory const &obs, dafBase::DateTime const &date);
     AltAzCoord toAltAz();
     
@@ -288,13 +287,17 @@ std::string degreesToDmsString(double const deg);
 std::string degreesToHmsString(double const deg);    
 
 Coord::Ptr makeCoord(CoordSystem const system,
-                     double const ra, double const dec, double const epoch=2000.0);
+                     double const ra, double const dec,
+                     double const epoch = std::numeric_limits<double>::quiet_NaN());
 Coord::Ptr makeCoord(CoordSystem const system,
-                     std::string const ra, std::string const dec, double const epoch=2000.0);
+                     std::string const ra, std::string const dec,
+                     double const epoch = std::numeric_limits<double>::quiet_NaN());
 Coord::Ptr makeCoord(CoordSystem const system,
-                     geom::Point2D p2d, CoordUnit unit, double const epoch=2000.0);
+                     geom::Point2D const &p2d, CoordUnit unit,
+                     double const epoch = std::numeric_limits<double>::quiet_NaN());
 Coord::Ptr makeCoord(CoordSystem const system,
-                     geom::Point3D p3d, double const epoch=2000.0);
+                     geom::Point3D const &p3d,
+                     double const epoch = std::numeric_limits<double>::quiet_NaN());
 Coord::Ptr makeCoord(CoordSystem const system);
 
 }}}

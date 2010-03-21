@@ -44,16 +44,16 @@ double const JD2000       = 2451544.50;
  * --> double deg = dmsStringToDegrees(std::string dms);
  */
 class Dms {
- public:
+public:
     Dms() {};
-
+    
     // note that isSouth is needed to specify coords between dec = 0, and dec = -1
     // otherwise, d = -0 gets carried as d = 0 ... need a way to specify it explicitly
     Dms(int const d, int const m, double const s, bool const isSouth=false) {
-	sign = (d < 0 || isSouth) ? -1 : 1;
-	deg  = std::abs(d);
-	min  = m;
-	sec  = s;
+        sign = (d < 0 || isSouth) ? -1 : 1;
+        deg  = std::abs(d);
+        min  = m;
+        sec  = s;
     };
     Dms(double const deg0) {
         double const absVal = std::fabs(deg0);
@@ -127,15 +127,15 @@ std::string coord::degreesToDmsString(
     
     // make sure rounding won't give 60.00 for sec or min
     if ( (60.00 - dms.sec) < 0.005 ) {
-	dms.sec = 0.0;
-	dms.min += 1;
-	if (dms.min == 60) {
-	    dms.min = 0;
-	    dms.deg += 1;
-	    if (dms.deg == 360) {
-		dms.deg = 0;
-	    }
-	}
+        dms.sec = 0.0;
+        dms.min += 1;
+        if (dms.min == 60) {
+            dms.min = 0;
+            dms.deg += 1;
+            if (dms.deg == 360) {
+                dms.deg = 0;
+            }
+        }
     }
     char s[12];
     sprintf(s, "%02d:%02d:%05.2f", dms.sign*dms.deg, dms.min, dms.sec);
@@ -210,7 +210,7 @@ double coord::eclipticPoleInclination(
  *
  */
 coord::Coord::Coord(
-                    geom::Point2D p2d,     ///< Point2D
+                    geom::Point2D const &p2d,     ///< Point2D
                     CoordUnit unit,        ///< Rads, Degs, or Hrs
                     double const epoch     ///< epoch of coordinate
                    ) :
@@ -236,7 +236,7 @@ coord::Coord::Coord(
  * @brief Constructor for the Coord base class
  */
 coord::Coord::Coord(
-                    geom::Point3D const p3d,   ///< Point3D
+                    geom::Point3D const &p3d,   ///< Point3D
                     double const epoch   ///< epoch of coordinate
                    ) :
     _longitudeRad( atan2(p3d.getY(), p3d.getX()) ),
@@ -496,6 +496,65 @@ coord::Coord coord::Coord::transform(
 
 
 /**
+ * @brief Convert to a specified Coord type.
+ */
+coord::Coord::Ptr coord::Coord::convert(CoordSystem system) {
+
+    switch (system) {
+      case FK5:
+        {
+            Fk5Coord c1 = this->toFk5();
+            return boost::shared_ptr<Fk5Coord>(new Fk5Coord(c1.getLongitude(DEGREES),
+                                                            c1.getLatitude(DEGREES),
+                                                            c1.getEpoch()));
+        }
+        break;
+      case ICRS:
+        {
+            IcrsCoord c2 = this->toIcrs();
+            return boost::shared_ptr<IcrsCoord>(new IcrsCoord(c2.getLongitude(DEGREES),
+                                                              c2.getLatitude(DEGREES)));
+        }
+        break;
+      case EQUATORIAL:
+        {
+            EquatorialCoord c3 = this->toEquatorial();
+            return boost::shared_ptr<EquatorialCoord>(new EquatorialCoord(c3.getLongitude(DEGREES),
+                                                                          c3.getLatitude(DEGREES)));
+        }
+        break;
+      case GALACTIC:
+        {
+            GalacticCoord c4 = this->toGalactic();
+            return boost::shared_ptr<GalacticCoord>(new GalacticCoord(c4.getLongitude(DEGREES),
+                                                                      c4.getLatitude(DEGREES)));
+        }
+        break;
+      case ECLIPTIC:
+        {
+            EclipticCoord c5 = this->toEcliptic();
+            return boost::shared_ptr<EclipticCoord>(new EclipticCoord(c5.getLongitude(DEGREES),
+                                                                      c5.getLatitude(DEGREES),
+                                                                      c5.getEpoch()));
+        }
+        break;
+      case ALTAZ:
+        throw LSST_EXCEPT(ex::InvalidParameterException,
+                          "Cannot make AltAz with convert() (must also specify Observatory).\n"
+                          "Instantiate AltAzCoord() directly.");
+        break;
+      default:
+        throw LSST_EXCEPT(ex::InvalidParameterException,
+                          "Undefined CoordSystem: only FK5, ICRS, EQUATORIAL, "
+                          "GALACTIC, ECLIPTIC allowed.");
+        break;
+        
+    }
+    
+}
+
+
+/**
  * @brief compute the angular separation between two Coords
  *
  */
@@ -550,8 +609,9 @@ double coord::Coord::angularSeparation(
 /**
  * @brief Convert ourself to Fk5: RA, Dec
  */
-coord::Fk5Coord coord::Coord::toFk5() {
-    return Fk5Coord(getLongitude(DEGREES), getLatitude(DEGREES), getEpoch());
+coord::Fk5Coord coord::Coord::toFk5(double epoch) {
+    Fk5Coord c(getLongitude(DEGREES), getLatitude(DEGREES), getEpoch());
+    return isnan(epoch) ? c : c.precess(epoch);
 }
 
 /**
@@ -581,8 +641,8 @@ coord::GalacticCoord coord::Coord::toGalactic() {
 /**
  * @brief Convert ourself to Ecliptic: lambda, beta
  */
-coord::EclipticCoord coord::Coord::toEcliptic() {
-    return this->toFk5().toEcliptic();
+coord::EclipticCoord coord::Coord::toEcliptic(double epoch) {
+        return this->toFk5(epoch).toEcliptic();
 }
 
 /**
@@ -608,8 +668,9 @@ coord::AltAzCoord coord::Coord::toAltAz(
 /**
  * @brief Convert ourself to Fk5 (ie. a no-op): RA, Dec
  */
-coord::Fk5Coord coord::Fk5Coord::toFk5() {
-    return Fk5Coord(getLongitude(DEGREES), getLatitude(DEGREES), getEpoch());
+coord::Fk5Coord coord::Fk5Coord::toFk5(double epoch) {
+    Fk5Coord c(getLongitude(DEGREES), getLatitude(DEGREES), getEpoch());
+    return isnan(epoch) ? c : c.precess(epoch);
 }
 
 /**
@@ -667,12 +728,13 @@ coord::GalacticCoord coord::Fk5Coord::toGalactic() {
 /**
  * @brief Convert ourself to Ecliptic: lambda, beta
  */
-coord::EclipticCoord coord::Fk5Coord::toEcliptic() {
-    double const eclPoleIncl = eclipticPoleInclination(getEpoch());
-    Coord const eclPoleInEquatorial(270.0, 90.0 - eclPoleIncl, getEpoch());
-    Coord const equPoleInEcliptic(90.0, 90.0 - eclPoleIncl, getEpoch());
+coord::EclipticCoord coord::Fk5Coord::toEcliptic(double epoch) {
+    double ep = isnan(epoch) ? getEpoch() : epoch;
+    double const eclPoleIncl = eclipticPoleInclination(ep);
+    Coord const eclPoleInEquatorial(270.0, 90.0 - eclPoleIncl, ep);
+    Coord const equPoleInEcliptic(90.0, 90.0 - eclPoleIncl, ep);
     Coord c = transform(equPoleInEcliptic, eclPoleInEquatorial); 
-    return EclipticCoord(c.getLongitude(DEGREES), c.getLatitude(DEGREES), getEpoch());
+    return EclipticCoord(c.getLongitude(DEGREES), c.getLatitude(DEGREES), ep);
 }
 
 /**
@@ -741,12 +803,12 @@ coord::Fk5Coord coord::Fk5Coord::precess(
     double const alpha0 = fk5.getRa(RADIANS);
     double const delta0 = fk5.getDec(RADIANS);
     
-    double const A = cos(delta0)*sin(alpha0 + xi);
-    double const B = cos(theta)*cos(delta0)*cos(alpha0 + xi) - sin(theta)*sin(delta0);
-    double const C = sin(theta)*cos(delta0)*cos(alpha0 + xi) + cos(theta)*sin(delta0);
+    double const a = cos(delta0)*sin(alpha0 + xi);
+    double const b = cos(theta)*cos(delta0)*cos(alpha0 + xi) - sin(theta)*sin(delta0);
+    double const c = sin(theta)*cos(delta0)*cos(alpha0 + xi) + cos(theta)*sin(delta0);
 
-    double const alpha = reduceAngle(radToDeg*(atan2(A,B) + z));
-    double const delta = radToDeg*asin(C);
+    double const alpha = reduceAngle(radToDeg*(atan2(a,b) + z));
+    double const delta = radToDeg*asin(c);
     
     return Fk5Coord(alpha, delta, epochTo);
 }
@@ -761,8 +823,9 @@ coord::Fk5Coord coord::Fk5Coord::precess(
 /**
  * @brief Fk5 converter for IcrsCoord.
  */
-coord::Fk5Coord coord::IcrsCoord::toFk5() {
-    return Fk5Coord(getLongitude(DEGREES), getLatitude(DEGREES), 2000.0);
+coord::Fk5Coord coord::IcrsCoord::toFk5(double epoch) {
+    Fk5Coord c(getLongitude(DEGREES), getLatitude(DEGREES), 2000.0);
+    return isnan(epoch) ? c : c.precess(epoch);
 }
 
 /**
@@ -783,8 +846,9 @@ coord::IcrsCoord coord::IcrsCoord::toIcrs() {
 /**
  * @brief Fk5 converter for equatorial coord.
  */
-coord::Fk5Coord coord::EquatorialCoord::toFk5() {
-    return Fk5Coord(getLongitude(DEGREES), getLatitude(DEGREES), 2000.0);
+coord::Fk5Coord coord::EquatorialCoord::toFk5(double epoch) {
+    Fk5Coord c(getLongitude(DEGREES), getLatitude(DEGREES), 2000.0);
+    return isnan(epoch) ? c : c.precess(epoch);
 }
 
 /**
@@ -805,25 +869,20 @@ coord::EquatorialCoord coord::EquatorialCoord::toEquatorial() {
 /**
  * @brief Convert ourself from galactic to Fk5
  */
-coord::Fk5Coord coord::GalacticCoord::toFk5() {
+coord::Fk5Coord coord::GalacticCoord::toFk5(double epoch) {
     
     // transform to equatorial
     // galactic coords are ~constant, and the poles used are for epoch=2000, so we get J2000
     Coord c = transform(GalacticPoleInFk5, Fk5PoleInGalactic);
-    
-    //
-    if ( fabs(getEpoch() - 2000.0) < epochTolerance ) {
-        return Fk5Coord(c.getLongitude(DEGREES), c.getLatitude(DEGREES), 2000.0);
-    } else {
-        return Fk5Coord(c.getLongitude(DEGREES), c.getLatitude(DEGREES), 2000.0).precess(getEpoch());
-    }
+    Fk5Coord fk5(c.getLongitude(DEGREES), c.getLatitude(DEGREES), 2000.0);
+    return isnan(epoch) ? fk5 : fk5.precess(epoch);
 }
 
 /**
  * @brief Convert ourself from Galactic to Galactic ... a no-op
  */
 coord::GalacticCoord coord::GalacticCoord::toGalactic() { 
-    return GalacticCoord(getLongitude(DEGREES), getLatitude(DEGREES), getEpoch());
+    return GalacticCoord(getLongitude(DEGREES), getLatitude(DEGREES));
 }
 
 
@@ -838,20 +897,26 @@ coord::GalacticCoord coord::GalacticCoord::toGalactic() {
 /**
  * @brief Convert ourself from Ecliptic to Ecliptic ... a no-op
  */
-coord::EclipticCoord coord::EclipticCoord::toEcliptic() {
-    return EclipticCoord(getLongitude(DEGREES), getLatitude(DEGREES), getEpoch());
+coord::EclipticCoord coord::EclipticCoord::toEcliptic(double epoch) {
+    EclipticCoord c(getLongitude(DEGREES), getLatitude(DEGREES), getEpoch());
+    if (isnan(epoch)) {
+        return EclipticCoord(getLongitude(DEGREES), getLatitude(DEGREES), getEpoch());
+    } else {
+        return precess(epoch);
+    }
 }
 
 
 /**
  * @brief Convert ourself from Ecliptic to Equatorial
  */
-coord::Fk5Coord coord::EclipticCoord::toFk5() {
-    double const eclPoleIncl = eclipticPoleInclination(getEpoch());
-    Coord const eclipticPoleInFk5(270.0, 90.0 - eclPoleIncl, getEpoch());
-    Coord const fk5PoleInEcliptic(90.0, 90.0 - eclPoleIncl, getEpoch());
+coord::Fk5Coord coord::EclipticCoord::toFk5(double epoch) {
+    double ep = isnan(epoch) ? getEpoch() : epoch;
+    double const eclPoleIncl = eclipticPoleInclination(ep);
+    Coord const eclipticPoleInFk5(270.0, 90.0 - eclPoleIncl, ep);
+    Coord const fk5PoleInEcliptic(90.0, 90.0 - eclPoleIncl, ep);
     Coord c = transform(eclipticPoleInFk5, fk5PoleInEcliptic);
-    return Fk5Coord(c.getLongitude(DEGREES), c.getLatitude(DEGREES), getEpoch());
+    return Fk5Coord(c.getLongitude(DEGREES), c.getLatitude(DEGREES), ep);
 }
 
 
@@ -877,13 +942,15 @@ coord::EclipticCoord coord::EclipticCoord::precess(
 /**
  * @brief Convert ourself from AltAz to Fk5
  */
-coord::Fk5Coord coord::AltAzCoord::toFk5() {
+coord::Fk5Coord coord::AltAzCoord::toFk5(double epoch) {
+    double ep = isnan(epoch) ? getEpoch() : epoch;
+    
     double const A        = getAzimuth(RADIANS);
     double const h        = getAltitude(RADIANS);
     double const phi      = _obs.getLatitude(RADIANS);
     double const L        = _obs.getLongitude(RADIANS);
 
-    double const jd       = dafBase::DateTime(getEpoch(),
+    double const jd       = dafBase::DateTime(ep,
                                               dafBase::DateTime::EPOCH,
                                               dafBase::DateTime::TAI).get(dafBase::DateTime::JD);
     double const theta0   = degToRad*meanSiderealTimeGreenwich(jd);
@@ -893,7 +960,7 @@ coord::Fk5Coord coord::AltAzCoord::toFk5() {
     double const sinDelta = sin(phi)*sin(h) - cos(phi)*cos(h)*cos(A);
     double const delta    = radToDeg*asin(sinDelta);
 
-    return Fk5Coord(alpha, delta, getEpoch());
+    return Fk5Coord(alpha, delta, ep);
 }
 
 /**
@@ -935,37 +1002,40 @@ coord::Coord::Ptr coord::makeCoord(
                                   ) {
 
     // Many of these systems have no epoch, but epoch=2000 is a convenient default.
-    // It's set such that epoch=2000 is the default, and is accepted.  Other values throw.
-    // What to do?
+    // so, set the default epoch=NaN
+    // if we need an epoch (Fk5, ecliptic)
+    //     - use epoch if defined, otherwise use 2000
+    // if we can't have an epoch (ICRS, Equatorial, galactic)
+    //     - make a coord only if epoch==NaN, if the user tried to set it ... throw!
     switch (system) {
 
       case FK5:
-        return boost::shared_ptr<Fk5Coord>(new Fk5Coord(ra, dec, epoch));
+        return boost::shared_ptr<Fk5Coord>(new Fk5Coord(ra, dec, isnan(epoch) ? 2000.0 : epoch));
         break;
       case ICRS:
         // if the epoch isn't 2000.0, should we precess or throw an exception?
-        if ( fabs(epoch - 2000.0) < epochTolerance ) {
+        if ( isnan(epoch) ) {
             return boost::shared_ptr<IcrsCoord>(new IcrsCoord(ra, dec));
         } else {
             throw LSST_EXCEPT(ex::InvalidParameterException, "ICRS has no epoch (only \"2000\" accepted).");
         }
         break;
       case EQUATORIAL:
-        if ( fabs(epoch - 2000.0) < epochTolerance ) {
+        if ( isnan(epoch) ) {
             return boost::shared_ptr<EquatorialCoord>(new EquatorialCoord(ra, dec));
         } else {
             throw LSST_EXCEPT(ex::InvalidParameterException, "Equatorial is ICRS and has no epoch");
         }
         break;
       case GALACTIC:
-        if ( fabs(epoch - 2000.0) < epochTolerance ) {
+        if ( isnan(epoch) ) {
             return boost::shared_ptr<GalacticCoord>(new GalacticCoord(ra, dec));
         } else {
             throw LSST_EXCEPT(ex::InvalidParameterException, "Galactic has no epoch");
         }
         break;
       case ECLIPTIC:
-        return boost::shared_ptr<EclipticCoord>(new EclipticCoord(ra, dec, epoch));
+        return boost::shared_ptr<EclipticCoord>(new EclipticCoord(ra, dec, isnan(epoch) ? 2000.0 : epoch));
         break;
       case ALTAZ:
         throw LSST_EXCEPT(ex::InvalidParameterException,
@@ -988,7 +1058,7 @@ coord::Coord::Ptr coord::makeCoord(
  */
 coord::Coord::Ptr coord::makeCoord(
                                    CoordSystem const system,     ///< the system (equ, fk5, galactic ..)
-                                   geom::Point3D const p3d,      ///< the coord in Point3D format
+                                   geom::Point3D const &p3d,     ///< the coord in Point3D format
                                    double const epoch            ///< epoch of coordinate
                                   ) {
     Coord c(p3d, 2000.0);
@@ -1002,7 +1072,7 @@ coord::Coord::Ptr coord::makeCoord(
  */
 coord::Coord::Ptr coord::makeCoord(
                                    CoordSystem const system,     ///< the system (equ, fk5, galactic ..)
-                                   geom::Point2D p2d,            ///< the (eg) ra,dec in a Point2D
+                                   geom::Point2D const &p2d,     ///< the (eg) ra,dec in a Point2D
                                    CoordUnit unit,               ///< the units (eg. DEGREES, RADIANS)
                                    double const epoch            ///< epoch of coordinate
                                   ) {
@@ -1068,7 +1138,7 @@ coord::Coord::Ptr coord::makeCoord(
       default:
         throw LSST_EXCEPT(ex::InvalidParameterException,
                           "Undefined CoordSystem: only FK5, ICRS, EQUATORIAL, "
-                          "GALACTIC, ECLIPTIC, and ALTAZ allowed.");
+                          "GALACTIC, ECLIPTIC, allowed.");
         break;
         
     }

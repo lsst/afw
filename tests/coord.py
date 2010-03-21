@@ -11,13 +11,11 @@ or
    >>> Coord.run()
 """
 
-import sys, os
 import unittest
 import lsst.afw.geom             as geom
 import lsst.afw.coord.coordLib   as coord
 import lsst.utils.tests          as utilsTests
 import lsst.daf.base             as dafBase
-import eups
 
 # todo: see if we can give an Fk5 and an ecliptic at a different epoch and get the right answer
 # todo: make sure ICrs stuff works
@@ -33,9 +31,23 @@ class CoordTestCase(unittest.TestCase):
         self.dec, self.decKnown = "-02:30:00.00", -2.5
         self.l = 100.0
         self.b = 30.0
+
+        # a handy list of coords we want to test
+        self.coordList = [
+            [coord.Fk5Coord,      coord.FK5,      coord.cast_Fk5],
+            [coord.IcrsCoord,     coord.ICRS,     coord.cast_Icrs],
+            [coord.GalacticCoord, coord.GALACTIC, coord.cast_Galactic],
+            [coord.EclipticCoord, coord.ECLIPTIC, coord.cast_Ecliptic],
+            # we can't factory an AltAz ... Observatory must be specified.
+            # [coord.AltAzCoord, coord.ALTAZ]  
+            ]
+
         
     def testFormat(self):
         """Test formatting"""
+
+        # make an arbitrary coord with the string constructor.
+        # check that calling the getFooStr() accessors gets back what we started with.
         equ = coord.Fk5Coord(self.ra, self.dec)
         self.assertAlmostEqual(equ.getRa(coord.HOURS), self.raKnown)
         self.assertAlmostEqual(equ.getDec(coord.DEGREES), self.decKnown)
@@ -48,19 +60,8 @@ class CoordTestCase(unittest.TestCase):
         """Test the Factory function makeCoord()"""
 
         # make a (eg galactic) coord with the constructor, and with the factory
-        # ... require an internal coordinate conversion to equatorial and see if they agree.
-        # They should only agree if they both converted from the same type, thus we got it right.
-        
-        coordList = [
-            [coord.Fk5Coord, coord.FK5, coord.cast_Fk5],
-            [coord.IcrsCoord, coord.ICRS, coord.cast_Icrs],
-            [coord.GalacticCoord, coord.GALACTIC, coord.cast_Galactic],
-            [coord.EclipticCoord, coord.ECLIPTIC, coord.cast_Ecliptic],
-            # we can't factory an AltAz ... Observatory must be specified.
-            # [coord.AltAzCoord, coord.ALTAZ]  
-            ]
-        
-        for constructor, enum, cast in coordList:
+        # and see if they agree.
+        for constructor, enum, cast in self.coordList:
             con = constructor(self.l, self.b)
             factories = []
             factories.append(coord.makeCoord(enum, self.l, self.b))
@@ -68,14 +69,14 @@ class CoordTestCase(unittest.TestCase):
 
             print "Factory: "
             for fac in factories:
-                self.assertAlmostEqual(con.toFk5().getRa(coord.DEGREES), fac.toFk5().getRa(coord.DEGREES))
-                self.assertAlmostEqual(con.toFk5().getDec(coord.DEGREES), fac.toFk5().getDec(coord.DEGREES))
-                s = (" tried ", fac.toFk5().getRa(coord.DEGREES),
-                     "(expected ", con.toFk5().getRa(coord.DEGREES), ")")
+                self.assertAlmostEqual(con[0], fac[0])
+                self.assertAlmostEqual(con[1], fac[1])
+                s = (" tried ", fac[0], fac[1],
+                     "(expected ", con[0], con[1], ")")
                 print s
 
                 
-            # can we create an empty coord?
+            # can we create an empty coord, and use reset() to fill it?
             c = coord.makeCoord(enum)
             c.reset(1.0, 1.0, 2000.0)
             myCoord = cast(c)
@@ -85,6 +86,8 @@ class CoordTestCase(unittest.TestCase):
         
     def testPosition(self):
         """Test the getPosition() method"""
+
+        # make a coord and verify that the DEGREES, RADIANS, and HOURS enums get the right things
         equ = coord.Fk5Coord(self.ra, self.dec)
 
         # make sure we get what we asked for
@@ -108,13 +111,13 @@ class CoordTestCase(unittest.TestCase):
         self.assertAlmostEqual(equ2.getRa(coord.RADIANS), equ.getRa(coord.RADIANS))
 
         equ3 = coord.Fk5Coord(pHrs, coord.HOURS)
-        self.assertAlmostEqual(equ1.getRa(coord.RADIANS), equ.getRa(coord.RADIANS))
+        self.assertAlmostEqual(equ3.getRa(coord.RADIANS), equ.getRa(coord.RADIANS))
 
 
     def testVector(self):
         """Test the getVector() method, and make sure the constructors take Point3D"""
 
-        # try the axes: vernal equinox should equal 1, 0, 0
+        # try the axes: vernal equinox should equal 1, 0, 0; ... north pole is 0, 0, 1; etc
         
         coordList = []
         coordList.append([(0.0, 0.0), (1.0, 0.0, 0.0)])
@@ -140,7 +143,8 @@ class CoordTestCase(unittest.TestCase):
         
     def testNames(self):
         """Test the names of the Coords (Useful with Point2D form)"""
-        
+
+        # verify that each coordinate type can tell you what its components are called.
         radec1, known1 = coord.Coord(self.ra, self.dec).getCoordNames(), ["RA", "Dec"]
         radec3, known3 = coord.Fk5Coord(self.ra, self.dec).getCoordNames(), ["RA", "Dec"]
         radec4, known4 = coord.IcrsCoord(self.ra, self.dec).getCoordNames(), ["RA", "Dec"]
@@ -166,15 +170,42 @@ class CoordTestCase(unittest.TestCase):
         
         # Pollux
         alpha, delta = "07:45:18.946", "28:01:34.26"
-
         icrs = coord.IcrsCoord(alpha, delta)
-        equ = coord.EquatorialCoord(alpha, delta)
+        equ  = coord.EquatorialCoord(alpha, delta)
 
         s =  ("Equatorial (Pollux): ", equ.getRa(coord.DEGREES), equ.getDec(coord.DEGREES),
               icrs.getRa(coord.DEGREES), icrs.getDec(coord.DEGREES))
         print s
-        self.assertEqual(equ.getRa(coord.DEGREES), icrs.getRa(coord.DEGREES))
+        self.assertEqual(equ.getRa(coord.DEGREES),  icrs.getRa(coord.DEGREES))
         self.assertEqual(equ.getDec(coord.DEGREES), icrs.getDec(coord.DEGREES))
+
+        
+    def testConvert(self):
+        """Verify that the generic convert() method works"""
+        
+        # Pollux
+        alpha, delta = "07:45:18.946", "28:01:34.26"
+        pollux = coord.Fk5Coord(alpha, delta)
+
+        # bundle up a list of coords created with the specific and generic converters
+        coordList = [
+            [pollux.toFk5(),        pollux.convert(coord.FK5)],
+            [pollux.toIcrs(),       pollux.convert(coord.ICRS)],
+            [pollux.toEquatorial(), pollux.convert(coord.EQUATORIAL)],
+            [pollux.toGalactic(),   pollux.convert(coord.GALACTIC)],
+            [pollux.toEcliptic(),   pollux.convert(coord.ECLIPTIC)],
+          ]
+
+        # go through the list and see if specific and generic produce the same result ... they should!
+        print "Convert: "
+        for specific, generic in coordList:
+            # note that operator[]/__getitem__ is overloaded. It gets the internal (radian) values
+            # ... the same as getPosition(coord.RADIANS)
+            long1, lat1 = specific[0], specific[1]  
+            long2, lat2 = generic.getPosition(coord.RADIANS) 
+            print "(specific) %.8f %.8f   (generic) %.8f %.8f" % (long1, lat1, long2, lat2)
+            self.assertEqual(long1, long2)
+            self.assertEqual(lat1, lat2)
 
         
     def testEcliptic(self):
@@ -184,7 +215,8 @@ class CoordTestCase(unittest.TestCase):
         alpha, delta = "07:45:18.946", "28:01:34.26"
         # known ecliptic coords (example from Meeus, Astro algorithms, pg 95)
         lamb, beta = 113.215629, 6.684170
-        
+
+        # Try converting pollux Ra,Dec to ecliptic and check that we get the right answer
         polluxEqu = coord.Fk5Coord(alpha, delta)
         polluxEcl = polluxEqu.toEcliptic()
         s = ("Ecliptic (Pollux): ",
@@ -203,8 +235,8 @@ class CoordTestCase(unittest.TestCase):
     def testGalactic(self):
         """Verify Galactic coordinate transforms"""
 
+        # Try converting Sag-A to galactic and make sure we get the right answer
         # Sagittarius A (very nearly the galactic center)
-
         sagAKnownEqu = coord.Fk5Coord("17:45:40.04","-29:00:28.1")
         sagAKnownGal = coord.GalacticCoord(359.94432, -0.04619)
         
@@ -225,6 +257,8 @@ class CoordTestCase(unittest.TestCase):
         
     def testAltAz(self):
         """Verify Altitude/Azimuth coordinate transforms"""
+
+        # try converting the RA,Dec of Sedna (on the specified date) to Alt/Az
         
         # sedna (from jpl) for 2010-03-03 00:00 UT
         ra, dec = "03:26:42.61",  "+06:32:07.1"
@@ -242,6 +276,8 @@ class CoordTestCase(unittest.TestCase):
 
     def testPrecess(self):
         """Test precession calculations in different coordinate systems"""
+
+        # Try precessing in the various coordinate systems, and check the results.
         
         ### Fk5 ###
         
@@ -271,14 +307,36 @@ class CoordTestCase(unittest.TestCase):
         # precision 6 (with 1 digit fudged in the 'known' answers)
         self.assertAlmostEqual(alphaPer.getRa(coord.DEGREES), alphaKnown, 6)
         self.assertAlmostEqual(alphaPer.getDec(coord.DEGREES), deltaKnown, 6)
+
+        # verify that toFk5(epoch) also works as precess
+        alphaPer2 = coord.Fk5Coord(alphaDeg, deltaDeg).toFk5(epoch)
+        self.assertEqual(alphaPer[0], alphaPer2[0])
+        self.assertEqual(alphaPer[1], alphaPer2[1])
+
         
         ### Galactic ###
         
         # make sure Galactic throws an exception. As there's no epoch, there's no precess() method.
-        gal = coord.GalacticCoord(self.l, self.b, 2000.0)
+        gal = coord.GalacticCoord(self.l, self.b)
         epochNew = 2010.0
         self.assertRaises(AttributeError, lambda: gal.precess(epochNew))
 
+        
+        ### Icrs ###
+
+        # make sure Icrs throws an exception. As there's no epoch, there's no precess() method.
+        icrs = coord.IcrsCoord(self.l, self.b)
+        epochNew = 2010.0
+        self.assertRaises(AttributeError, lambda: icrs.precess(epochNew))
+
+        
+        ### Equatorial ###
+        
+        # make sure Equatorial throws an exception. It's ICRS (no epoch), there's no precess() method.
+        equ = coord.EquatorialCoord(self.l, self.b)
+        epochNew = 2010.0
+        self.assertRaises(AttributeError, lambda: equ.precess(epochNew))
+        
         
         ### Ecliptic ###
         
@@ -310,7 +368,12 @@ class CoordTestCase(unittest.TestCase):
         self.assertAlmostEqual(venus214bc.getLambda(coord.DEGREES), lamb214bc, 3)
         self.assertAlmostEqual(venus214bc.getBeta(coord.DEGREES), beta214bc, 3)
 
-
+        # verify that toEcliptic(ep) does the same as precess(ep)
+        venus214bc2 = venus2000.toEcliptic(ep)
+        self.assertEqual(venus214bc[0], venus214bc2[0])
+        self.assertEqual(venus214bc[1], venus214bc2[1])
+        
+        
     def testAngularSeparation(self):
         """Test measure of angular separation between two coords"""
 

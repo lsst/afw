@@ -23,6 +23,8 @@ SWIG_SHARED_PTR_DERIVED(COORDTYPE##Coord, lsst::afw::coord::Coord, lsst::afw::co
 %declareDerived(AltAz);
 
 
+%rename(__getitem__) lsst::afw::coord::Coord::operator[];
+
 // make dynamic casts available for each Coord type.
 // If the makeCoord factory returns a pointer to the base class,
 // ... and access to the derived members is required, these can be used to cast.
