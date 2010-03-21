@@ -104,6 +104,8 @@ public:
     IcrsCoord(std::string const ra, std::string const dec) : Coord(ra, dec, 2000.0) {}
     IcrsCoord() : Coord() {}
 
+    void reset(double const longitude, double const latitude);
+    
     typedef boost::shared_ptr<IcrsCoord> Ptr;
 
     double getRa(CoordUnit unit);
@@ -132,6 +134,8 @@ public:
     EquatorialCoord(std::string const ra, std::string const dec) : Coord(ra, dec, 2000.0) {}
     EquatorialCoord() : Coord() {}
 
+    void reset(double const longitude, double const latitude);
+    
     typedef boost::shared_ptr<EquatorialCoord> Ptr;
     
     double getRa(CoordUnit unit);
@@ -161,7 +165,7 @@ public:
     Fk5Coord(std::string const ra, std::string const dec, double const epoch = 2000.0) :
         Coord(ra, dec, epoch) {}
     Fk5Coord() : Coord() {}
-
+    
     typedef boost::shared_ptr<Fk5Coord> Ptr;
     
     Fk5Coord precess(double epochTo);
@@ -196,6 +200,8 @@ public:
     GalacticCoord(std::string const l, std::string const b) : Coord(l, b) {}
     GalacticCoord() : Coord() {}
 
+    void reset(double const longitude, double const latitude);
+    
     typedef boost::shared_ptr<GalacticCoord> Ptr;
     
     std::pair<std::string, std::string> getCoordNames();
@@ -228,7 +234,7 @@ public:
     EclipticCoord(std::string const lambda, std::string const beta, double const epoch = 2000.0) : 
         Coord(lambda, beta, epoch) {}
     EclipticCoord() : Coord() {}
-
+    
     typedef boost::shared_ptr<EclipticCoord> Ptr;
 
     std::pair<std::string, std::string> getCoordNames();

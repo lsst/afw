@@ -354,12 +354,16 @@ geom::Point3D coord::Coord::getVector() {
 
 double coord::Coord::operator[](int index) {
 
-    if (index == 0) {
+    switch (index) {
+      case 0:
         return _longitudeRad;
-    } else if (index == 1) {
+        break;
+      case 1:
         return _latitudeRad;
-    } else {
+        break;
+      default:
         throw LSST_EXCEPT(ex::InvalidParameterException, "Index must be 0 or 1.");
+        break;
     }
 }
 
@@ -821,6 +825,13 @@ coord::Fk5Coord coord::Fk5Coord::precess(
  * ============================================================*/
 
 /**
+ * @brief special reset() overload to make sure no epoch can be set
+ */
+void coord::IcrsCoord::reset(double const longitudeDeg, double const latitudeDeg) {
+    Coord::reset(longitudeDeg, latitudeDeg, 2000.0);
+}
+
+/**
  * @brief Fk5 converter for IcrsCoord.
  */
 coord::Fk5Coord coord::IcrsCoord::toFk5(double epoch) {
@@ -844,6 +855,13 @@ coord::IcrsCoord coord::IcrsCoord::toIcrs() {
  * ============================================================*/
 
 /**
+ * @brief special reset() overload to make sure no epoch can be set
+ */
+void coord::EquatorialCoord::reset(double const longitudeDeg, double const latitudeDeg) {
+    Coord::reset(longitudeDeg, latitudeDeg, 2000.0);
+}
+
+/**
  * @brief Fk5 converter for equatorial coord.
  */
 coord::Fk5Coord coord::EquatorialCoord::toFk5(double epoch) {
@@ -865,6 +883,13 @@ coord::EquatorialCoord coord::EquatorialCoord::toEquatorial() {
  * class GalacticCoord
  *
  * ============================================================*/
+
+/**
+ * @brief special reset() overload to make sure no epoch can be set
+ */
+void coord::GalacticCoord::reset(double const longitudeDeg, double const latitudeDeg) {
+    Coord::reset(longitudeDeg, latitudeDeg, 2000.0);
+}
 
 /**
  * @brief Convert ourself from galactic to Fk5
