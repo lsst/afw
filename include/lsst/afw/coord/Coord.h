@@ -10,8 +10,10 @@
  * @todo Finish python docs
  * @todo Start tex doc
  * @todo add *many* const
+ * @todo add FK4 ... as needed
  */ 
 #include <limits>
+#include <map>
 
 #include "boost/shared_ptr.hpp"
 
@@ -19,6 +21,8 @@
 #include "lsst/afw/coord/Utils.h"     // this contains the enums CoordSystem CoordType and radToDec
 #include "lsst/afw/coord/Observatory.h"
 #include "lsst/daf/base.h"
+
+//#include "boost/unordered_map.hpp"
 
 namespace geom    = lsst::afw::geom;
 namespace dafBase = lsst::daf::base;
@@ -28,7 +32,28 @@ namespace lsst {
 namespace afw {    
 namespace coord {
 
+enum CoordSystem { FK5, ICRS, GALACTIC, ECLIPTIC, ALTAZ, EQUATORIAL };
 
+namespace {    
+typedef std::map<std::string, CoordSystem> CoordSystemMap;
+CoordSystemMap const getCoordSystemMap() {
+    CoordSystemMap idMap;
+    idMap["FK5"]        = FK5;
+    idMap["EQUATORIAL"] = EQUATORIAL;
+    idMap["ICRS"]       = ICRS;
+    idMap["ECLIPTIC"]   = ECLIPTIC;
+    idMap["GALACTIC"]   = GALACTIC;
+    idMap["ELON"]       = ECLIPTIC;
+    idMap["GLON"]       = GALACTIC;
+    return idMap;
+}
+}
+inline CoordSystem const stringToId(std::string system) {
+    static CoordSystemMap idmap = getCoordSystemMap();
+    return idmap[system];
+}
+
+    
 class IcrsCoord;
 class Fk5Coord;
 class EquatorialCoord;    
@@ -291,7 +316,7 @@ double dmsStringToDegrees(std::string const dms);
 double hmsStringToDegrees(std::string const hms);
 std::string degreesToDmsString(double const deg);
 std::string degreesToHmsString(double const deg);    
-
+    
 Coord::Ptr makeCoord(CoordSystem const system,
                      double const ra, double const dec,
                      double const epoch = std::numeric_limits<double>::quiet_NaN());

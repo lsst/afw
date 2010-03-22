@@ -17,7 +17,6 @@ namespace coord {
 double const degToRad = M_PI/180.0;
 double const radToDeg = 180.0/M_PI;
 
-enum CoordSystem { FK5, ICRS, GALACTIC, ECLIPTIC, ALTAZ, EQUATORIAL };
 enum CoordUnit   { DEGREES, RADIANS, HOURS };
     
 

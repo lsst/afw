@@ -112,8 +112,7 @@ double const epochTolerance = 1.0e-12;  ///< Precession to new epoch performed i
 
 
 /******************* Public functions ********************/
-
-
+    
 /**
  * @brief a Function to convert a coordinate in decimal degrees to a string with form dd:mm:ss
  *

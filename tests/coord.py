@@ -34,10 +34,10 @@ class CoordTestCase(unittest.TestCase):
 
         # a handy list of coords we want to test
         self.coordList = [
-            [coord.Fk5Coord,      coord.FK5,      coord.cast_Fk5],
-            [coord.IcrsCoord,     coord.ICRS,     coord.cast_Icrs],
-            [coord.GalacticCoord, coord.GALACTIC, coord.cast_Galactic],
-            [coord.EclipticCoord, coord.ECLIPTIC, coord.cast_Ecliptic],
+            [coord.Fk5Coord,      coord.FK5,      coord.cast_Fk5,      "FK5"],
+            [coord.IcrsCoord,     coord.ICRS,     coord.cast_Icrs,     "ICRS"],
+            [coord.GalacticCoord, coord.GALACTIC, coord.cast_Galactic, "GALACTIC"],
+            [coord.EclipticCoord, coord.ECLIPTIC, coord.cast_Ecliptic, "ECLIPTIC"],
             # we can't factory an AltAz ... Observatory must be specified.
             # [coord.AltAzCoord, coord.ALTAZ]  
             ]
@@ -61,10 +61,11 @@ class CoordTestCase(unittest.TestCase):
 
         # make a (eg galactic) coord with the constructor, and with the factory
         # and see if they agree.
-        for constructor, enum, cast in self.coordList:
+        for constructor, enum, cast, stringName in self.coordList:
             con = constructor(self.l, self.b)
             factories = []
             factories.append(coord.makeCoord(enum, self.l, self.b))
+            factories.append(coord.makeCoord(coord.stringToId(stringName), self.l, self.b))
             factories.append(coord.makeCoord(enum, geom.makePointD(self.l, self.b), coord.DEGREES))
 
             print "Factory: "
