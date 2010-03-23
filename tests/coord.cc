@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(eclipticConversion) {
     BOOST_CHECK_CLOSE(lamb, lamb0, 1.0e-6);
     BOOST_CHECK_CLOSE(beta, beta0, 1.0e-6);
 
-    coord::Coord::Ptr test = coord::makeCoord(coord::stringToId("FK5"), lamb0, beta0);
+    coord::Coord::Ptr test = coord::makeCoord(coord::makeCoordEnum("FK5"), lamb0, beta0);
 
     BOOST_CHECK_EQUAL(test->getLongitude(coord::DEGREES), lamb0);
 }

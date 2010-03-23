@@ -65,7 +65,7 @@ class CoordTestCase(unittest.TestCase):
             con = constructor(self.l, self.b)
             factories = []
             factories.append(coord.makeCoord(enum, self.l, self.b))
-            factories.append(coord.makeCoord(coord.stringToId(stringName), self.l, self.b))
+            factories.append(coord.makeCoord(coord.makeCoordEnum(stringName), self.l, self.b))
             factories.append(coord.makeCoord(enum, geom.makePointD(self.l, self.b), coord.DEGREES))
 
             print "Factory: "

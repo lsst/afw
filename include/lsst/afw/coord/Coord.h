@@ -48,7 +48,7 @@ CoordSystemMap const getCoordSystemMap() {
     return idMap;
 }
 }
-inline CoordSystem const stringToId(std::string system) {
+inline CoordSystem const makeCoordEnum(std::string system) {
     static CoordSystemMap idmap = getCoordSystemMap();
     return idmap[system];
 }
