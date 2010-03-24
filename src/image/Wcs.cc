@@ -430,6 +430,7 @@ PropertySet::Ptr Wcs::getFitsMetadata() const {
 
 
 
+
 ///
 /// Returns the orientation of the Wcs
 ///
@@ -462,6 +463,7 @@ bool Wcs::isFlipped()  const{
 
 
 ///Sky area covered by a pixel at position \param pix00. In units of cunits.
+///Sky area covered by a pixel at position \param pix00. In units of cunits.
 double Wcs::pixArea(GeomPoint pix00) const {
     //
     // Figure out the (0, 0), (0, 1), and (1, 0) ra/dec coordinates of the corners of a square drawn in pixel
@@ -484,6 +486,8 @@ double Wcs::pixArea(GeomPoint pix00) const {
     double const cosDec = cos(sky00.getY()*M_PI/180.0);
     return cosDec*fabs(dsky01.getX()*dsky10.getY() - dsky01.getY()*dsky10.getX())/(side*side);
 }
+
+
 
 ///\brief Convert from sky coordinates (e.g ra/dec) to pixel positions.
 ///
@@ -710,18 +714,6 @@ CoordPtr Wcs::makeCorrectCoord(double sky0, double sky1) const {
 
 
 /**
- * Return the linear part of the Wcs, the CD matrix in FITS speak, as an AffineTransform
- *
- * \sa 
- */
-lsst::afw::geom::AffineTransform Wcs::getAffineTransform() const
-{
-    return lsst::afw::geom::AffineTransform(getCDMatrix());
-}
-
-
-
-/**
  * Return the local linear approximation to Wcs::xyToRaDec at the point (ra, y) = sky
  *
  * This is currently implemented as a numerical derivative, but we should specialise the Wcs class (or rather
@@ -752,15 +744,27 @@ lsst::afw::geom::AffineTransform Wcs::linearizeAt(GeomPoint const & sky) const
     m(1, 0) = dsky10.getY()/side;
     m(1, 1) = dsky01.getY()/side;
 
-    cout << dsky10 << endl << dsky01 << endl;
-    cout << "Wcs" << endl << m << endl;
-    cout << m << endl;
     Eigen::Vector2d sky00v;
     sky00v << sky00.getX(), sky00.getY();
     Eigen::Vector2d pix00v;
     pix00v << pix00.getX(), pix00.getY();
-    return lsst::afw::geom::AffineTransform(m, lsst::afw::geom::ExtentD(sky00v - m * pix00v));
+    //return lsst::afw::geom::AffineTransform(m, lsst::afw::geom::ExtentD(sky00v - m * pix00v));
+    return lsst::afw::geom::AffineTransform(m, (sky00v - m * pix00v));
 }
+
+
+/**
+ * Return the linear part of the Wcs, the CD matrix in FITS speak, as an AffineTransform
+ *
+ * \sa 
+ */
+lsst::afw::geom::LinearTransform Wcs::getLinearTransform() const
+{
+    return lsst::afw::geom::LinearTransform(getCDMatrix());
+}
+
+
+
 
 
 //
