@@ -733,20 +733,27 @@ afwCoord::TopocentricCoord afwCoord::Fk5Coord::toTopocentric(
     Fk5Coord fk5 = precess(obsDate.get(dafBase::DateTime::EPOCH));
 
     // greenwich sidereal time
-    double const theta0    = degToRad*reduceAngle(
-                                 meanSiderealTimeGreenwich(obsDate.get(dafBase::DateTime::JD)));
-    double const phi       = obs.getLatitude(RADIANS);  // observatory latitude
-    double const L         = obs.getLongitude(RADIANS); // observatory longitude
+    double const meanSidereal    = meanSiderealTimeGreenwich(obsDate.get(dafBase::DateTime::JD));
+    double const theta0          = degToRad*reduceAngle(meanSidereal);
 
-    double const alpha     = fk5.getRa(RADIANS);
-    double const delta     = fk5.getDec(RADIANS);
+    // lat/long of the observatory
+    double const phi             = obs.getLatitude(RADIANS);
+    double const L               = obs.getLongitude(RADIANS);
 
-    double const H         = theta0 - L - alpha;
-    double const sinh      = sin(phi)*sin(delta) + cos(phi)*cos(delta)*cos(H);
-    double const tanAnum   = sin(H);
-    double const tanAdenom = (cos(H)*sin(phi) - tan(delta)*cos(phi));
-    double const h         = radToDeg*asin(sinh);
-    double const A         = reduceAngle(-90.0 - radToDeg*atan2(tanAdenom, tanAnum));
+    // ra/dec of the target
+    double const alpha           = fk5.getRa(RADIANS);
+    double const delta           = fk5.getDec(RADIANS);
+                               
+    double const H               = theta0 - L - alpha;
+
+    // compute the altitude, h
+    double const sinh            = sin(phi)*sin(delta) + cos(phi)*cos(delta)*cos(H);
+    double const h               = radToDeg*asin(sinh);
+
+    // compute the azimuth, A
+    double const tanAnumerator   = sin(H);
+    double const tanAdenominator = (cos(H)*sin(phi) - tan(delta)*cos(phi));
+    double const A               = reduceAngle(-90.0 - radToDeg*atan2(tanAdenominator, tanAnumerator));
     
     return TopocentricCoord(A, h, obsDate.get(dafBase::DateTime::EPOCH), obs);
 }

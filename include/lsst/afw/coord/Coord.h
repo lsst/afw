@@ -135,9 +135,9 @@ public:
     std::string getRaStr(CoordUnit unit);
     std::string getDecStr();
 
-    Fk5Coord toFk5(double epoch);
-    Fk5Coord toFk5();
-    IcrsCoord toIcrs();
+    virtual Fk5Coord toFk5(double epoch);
+    virtual Fk5Coord toFk5();
+    virtual IcrsCoord toIcrs();
     
 private:
 };
@@ -168,13 +168,13 @@ public:
     std::string getRaStr(CoordUnit unit);
     std::string getDecStr();
 
-    Fk5Coord toFk5(double epoch);
-    Fk5Coord toFk5();
-    IcrsCoord toIcrs();
-    GalacticCoord toGalactic();
-    EclipticCoord toEcliptic(double epoch);
-    EclipticCoord toEcliptic();
-    TopocentricCoord toTopocentric(Observatory obs, dafBase::DateTime obsDate);
+    virtual Fk5Coord toFk5(double epoch);
+    virtual Fk5Coord toFk5();
+    virtual IcrsCoord toIcrs();
+    virtual GalacticCoord toGalactic();
+    virtual EclipticCoord toEcliptic(double epoch);
+    virtual EclipticCoord toEcliptic();
+    virtual TopocentricCoord toTopocentric(Observatory obs, dafBase::DateTime obsDate);
 
     
 private:
@@ -205,9 +205,9 @@ public:
     std::string getLStr(CoordUnit unit);
     std::string getBStr();
     
-    Fk5Coord toFk5(double epoch);
-    Fk5Coord toFk5();
-    GalacticCoord toGalactic();
+    virtual Fk5Coord toFk5(double epoch);
+    virtual Fk5Coord toFk5();
+    virtual GalacticCoord toGalactic();
 
 private:
 };
@@ -240,10 +240,10 @@ public:
     std::string getBetaStr();
     
     
-    Fk5Coord toFk5(double epoch);
-    Fk5Coord toFk5();
-    EclipticCoord toEcliptic(double epoch);
-    EclipticCoord toEcliptic();
+    virtual Fk5Coord toFk5(double epoch);
+    virtual Fk5Coord toFk5();
+    virtual EclipticCoord toEcliptic(double epoch);
+    virtual EclipticCoord toEcliptic();
 
     EclipticCoord precess(double epochTo);
     
@@ -274,10 +274,10 @@ public:
     std::string getAltitudeStr();
 
 
-    Fk5Coord toFk5(double epoch);
-    Fk5Coord toFk5();
-    TopocentricCoord toTopocentric(Observatory const &obs, dafBase::DateTime const &date);
-    TopocentricCoord toTopocentric();
+    virtual Fk5Coord toFk5(double epoch);
+    virtual Fk5Coord toFk5();
+    virtual TopocentricCoord toTopocentric(Observatory const &obs, dafBase::DateTime const &date);
+    virtual TopocentricCoord toTopocentric();
     
 private:
     Observatory _obs;
