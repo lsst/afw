@@ -32,14 +32,13 @@ namespace lsst {
 namespace afw {    
 namespace coord {
 
-enum CoordSystem { FK5, ICRS, GALACTIC, ECLIPTIC, TOPOCENTRIC, EQUATORIAL };
+enum CoordSystem { FK5, ICRS, GALACTIC, ECLIPTIC, TOPOCENTRIC };
 
 namespace {    
 typedef std::map<std::string, CoordSystem> CoordSystemMap;
 CoordSystemMap const getCoordSystemMap() {
     CoordSystemMap idMap;
     idMap["FK5"]         = FK5;
-    idMap["EQUATORIAL"]  = EQUATORIAL;
     idMap["ICRS"]        = ICRS;
     idMap["ECLIPTIC"]    = ECLIPTIC;
     idMap["GALACTIC"]    = GALACTIC;
@@ -57,7 +56,6 @@ inline CoordSystem const makeCoordEnum(std::string system) {
     
 class IcrsCoord;
 class Fk5Coord;
-class EquatorialCoord;    
 class GalacticCoord;
 class EclipticCoord;
 class TopocentricCoord;
@@ -67,9 +65,6 @@ class TopocentricCoord;
  * @class Coord
  *
  * This is the base class for spherical coordinates.
- * Derived classes include:
- *     Fk5Coord, IcrsCoord, GalacticCoord, EclipticCoord, TopocentricCoord
- *
  */
 class Coord {
 public:
@@ -102,11 +97,12 @@ public:
 
     Coord::Ptr convert(CoordSystem system);
 
-    virtual Fk5Coord toFk5(double epoch = std::numeric_limits<double>::quiet_NaN());
+    virtual Fk5Coord toFk5(double epoch);
+    virtual Fk5Coord toFk5();
     virtual IcrsCoord toIcrs();
-    virtual EquatorialCoord toEquatorial();
     virtual GalacticCoord toGalactic();
-    virtual EclipticCoord toEcliptic(double epoch = std::numeric_limits<double>::quiet_NaN());
+    virtual EclipticCoord toEcliptic(double epoch);
+    virtual EclipticCoord toEcliptic();
     virtual TopocentricCoord toTopocentric(Observatory obs, dafBase::DateTime obsDate);
 
 private:
@@ -139,43 +135,14 @@ public:
     std::string getRaStr(CoordUnit unit);
     std::string getDecStr();
 
-    Fk5Coord toFk5(double epoch = std::numeric_limits<double>::quiet_NaN());
+    Fk5Coord toFk5(double epoch);
+    Fk5Coord toFk5();
     IcrsCoord toIcrs();
     
 private:
 };
 
 
-/**
- * @class EquatorialCoord
- * @brief A class to handle Equatorial coordinates (inherits from Coord)
- *
- * @note This is identical to Icrs
- */
-class EquatorialCoord : public Coord {
-public:    
-    EquatorialCoord(afwGeom::Point2D const &p2d, CoordUnit unit = DEGREES) : Coord(p2d, unit, 2000.0) {}
-    EquatorialCoord(afwGeom::Point3D const &p3d) : Coord(p3d, 2000.0) {}
-    EquatorialCoord(double const ra, double const dec) : Coord(ra, dec, 2000.0) {}
-    EquatorialCoord(std::string const ra, std::string const dec) : Coord(ra, dec, 2000.0) {}
-    EquatorialCoord() : Coord() {}
-
-    void reset(double const longitude, double const latitude);
-    
-    typedef boost::shared_ptr<EquatorialCoord> Ptr;
-    
-    double getRa(CoordUnit unit);
-    double getDec(CoordUnit unit);
-    std::string getRaStr(CoordUnit unit);
-    std::string getDecStr();
-
-    Fk5Coord toFk5(double epoch = std::numeric_limits<double>::quiet_NaN());
-    EquatorialCoord toEquatorial();
-    
-private:
-};
-    
-    
 /**
  * @class Fk5Coord
  * @brief A class to handle Fk5 coordinates (inherits from Coord)
@@ -201,11 +168,12 @@ public:
     std::string getRaStr(CoordUnit unit);
     std::string getDecStr();
 
-    Fk5Coord toFk5(double epoch = std::numeric_limits<double>::quiet_NaN());
+    Fk5Coord toFk5(double epoch);
+    Fk5Coord toFk5();
     IcrsCoord toIcrs();
-    EquatorialCoord toEquatorial();
     GalacticCoord toGalactic();
-    EclipticCoord toEcliptic(double epoch = std::numeric_limits<double>::quiet_NaN());
+    EclipticCoord toEcliptic(double epoch);
+    EclipticCoord toEcliptic();
     TopocentricCoord toTopocentric(Observatory obs, dafBase::DateTime obsDate);
 
     
@@ -237,7 +205,8 @@ public:
     std::string getLStr(CoordUnit unit);
     std::string getBStr();
     
-    Fk5Coord toFk5(double epoch = std::numeric_limits<double>::quiet_NaN());
+    Fk5Coord toFk5(double epoch);
+    Fk5Coord toFk5();
     GalacticCoord toGalactic();
 
 private:
@@ -271,8 +240,10 @@ public:
     std::string getBetaStr();
     
     
-    Fk5Coord toFk5(double epoch = std::numeric_limits<double>::quiet_NaN());
-    EclipticCoord toEcliptic(double epoch = std::numeric_limits<double>::quiet_NaN());
+    Fk5Coord toFk5(double epoch);
+    Fk5Coord toFk5();
+    EclipticCoord toEcliptic(double epoch);
+    EclipticCoord toEcliptic();
 
     EclipticCoord precess(double epochTo);
     
@@ -303,7 +274,8 @@ public:
     std::string getAltitudeStr();
 
 
-    Fk5Coord toFk5(double epoch = std::numeric_limits<double>::quiet_NaN());
+    Fk5Coord toFk5(double epoch);
+    Fk5Coord toFk5();
     TopocentricCoord toTopocentric(Observatory const &obs, dafBase::DateTime const &date);
     TopocentricCoord toTopocentric();
     
@@ -318,20 +290,20 @@ double hmsStringToDegrees(std::string const hms);
 std::string degreesToDmsString(double const deg);
 std::string degreesToHmsString(double const deg);    
     
-Coord::Ptr makeCoord(CoordSystem const system,
-                     double const ra, double const dec,
-                     double const epoch = std::numeric_limits<double>::quiet_NaN());
-Coord::Ptr makeCoord(CoordSystem const system,
-                     std::string const ra, std::string const dec,
-                     double const epoch = std::numeric_limits<double>::quiet_NaN());
-Coord::Ptr makeCoord(CoordSystem const system,
-                     afwGeom::Point2D const &p2d, CoordUnit unit,
-                     double const epoch = std::numeric_limits<double>::quiet_NaN());
-Coord::Ptr makeCoord(CoordSystem const system,
-                     afwGeom::Point3D const &p3d,
-                     double const epoch = std::numeric_limits<double>::quiet_NaN());
+Coord::Ptr makeCoord(CoordSystem const system, double const ra, double const dec, double const epoch);
+Coord::Ptr makeCoord(CoordSystem const system, std::string const ra, std::string const dec,
+                     double const epoch);
+Coord::Ptr makeCoord(CoordSystem const system, afwGeom::Point2D const &p2d, CoordUnit unit,
+                     double const epoch);
+Coord::Ptr makeCoord(CoordSystem const system, afwGeom::Point3D const &p3d, double const epoch);
 Coord::Ptr makeCoord(CoordSystem const system);
 
+
+Coord::Ptr makeCoord(CoordSystem const system, double const ra, double const dec);
+Coord::Ptr makeCoord(CoordSystem const system, std::string const ra, std::string const dec);
+Coord::Ptr makeCoord(CoordSystem const system, afwGeom::Point2D const &p2d, CoordUnit unit);
+Coord::Ptr makeCoord(CoordSystem const system, afwGeom::Point3D const &p3d);
+    
 }}}
 
 #endif

@@ -16,6 +16,7 @@ import lsst.afw.geom             as afwGeom
 import lsst.afw.coord            as afwCoord
 import lsst.utils.tests          as utilsTests
 import lsst.daf.base             as dafBase
+import lsst.pex.exceptions       as pexEx
 
 # todo: see if we can give an Fk5 and an ecliptic at a different epoch and get the right answer
 # todo: make sure ICrs stuff works
@@ -84,6 +85,12 @@ class CoordTestCase(unittest.TestCase):
             self.assertEqual(myCoord.getLongitude(afwCoord.DEGREES), 1.0)
             self.assertEqual(myCoord.getLatitude(afwCoord.DEGREES), 1.0)
 
+
+        # verify that makeCoord throws when given an epoch for an epochless system
+        self.assertRaises(pexEx.LsstCppException,
+                          lambda: afwCoord.makeCoord(afwCoord.GALACTIC, self.l, self.b, 2000.0))
+        self.assertRaises(pexEx.LsstCppException,
+                          lambda: afwCoord.makeCoord(afwCoord.ICRS, self.l, self.b, 2000.0))
         
     def testPosition(self):
         """Test the getPosition() method"""
@@ -166,21 +173,6 @@ class CoordTestCase(unittest.TestCase):
             self.assertEqual(pair[1], known[1])
             
 
-    def testEquatorial(self):
-        """Verify that EquatorialCoord is an IcrsCoord"""
-        
-        # Pollux
-        alpha, delta = "07:45:18.946", "28:01:34.26"
-        icrs = afwCoord.IcrsCoord(alpha, delta)
-        equ  = afwCoord.EquatorialCoord(alpha, delta)
-
-        s =  ("Equatorial (Pollux): ", equ.getRa(afwCoord.DEGREES), equ.getDec(afwCoord.DEGREES),
-              icrs.getRa(afwCoord.DEGREES), icrs.getDec(afwCoord.DEGREES))
-        print s
-        self.assertEqual(equ.getRa(afwCoord.DEGREES),  icrs.getRa(afwCoord.DEGREES))
-        self.assertEqual(equ.getDec(afwCoord.DEGREES), icrs.getDec(afwCoord.DEGREES))
-
-        
     def testConvert(self):
         """Verify that the generic convert() method works"""
         
@@ -192,7 +184,6 @@ class CoordTestCase(unittest.TestCase):
         coordList = [
             [pollux.toFk5(),        pollux.convert(afwCoord.FK5)],
             [pollux.toIcrs(),       pollux.convert(afwCoord.ICRS)],
-            [pollux.toEquatorial(), pollux.convert(afwCoord.EQUATORIAL)],
             [pollux.toGalactic(),   pollux.convert(afwCoord.GALACTIC)],
             [pollux.toEcliptic(),   pollux.convert(afwCoord.ECLIPTIC)],
           ]
@@ -336,14 +327,6 @@ class CoordTestCase(unittest.TestCase):
         epochNew = 2010.0
         self.assertRaises(AttributeError, lambda: icrs.precess(epochNew))
 
-        
-        ### Equatorial ###
-        
-        # make sure Equatorial throws an exception. It's ICRS (no epoch), there's no precess() method.
-        equ = afwCoord.EquatorialCoord(self.l, self.b)
-        epochNew = 2010.0
-        self.assertRaises(AttributeError, lambda: equ.precess(epochNew))
-        
         
         ### Ecliptic ###
         

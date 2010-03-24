@@ -17,7 +17,6 @@ SWIG_SHARED_PTR_DERIVED(COORDTYPE##Coord, lsst::afw::coord::Coord, lsst::afw::co
 
 %declareDerived(Fk5);
 %declareDerived(Icrs);
-%declareDerived(Equatorial);
 %declareDerived(Galactic);
 %declareDerived(Ecliptic);
 %declareDerived(Topocentric);
@@ -34,9 +33,6 @@ SWIG_SHARED_PTR_DERIVED(COORDTYPE##Coord, lsst::afw::coord::Coord, lsst::afw::co
     }
     lsst::afw::coord::IcrsCoord::Ptr cast_Icrs(lsst::afw::coord::Coord::Ptr c) {
         return boost::shared_dynamic_cast<lsst::afw::coord::IcrsCoord>(c);
-    }
-    lsst::afw::coord::EquatorialCoord::Ptr cast_Equatorial(lsst::afw::coord::Coord::Ptr c) {
-        return boost::shared_dynamic_cast<lsst::afw::coord::EquatorialCoord>(c);
     }
     lsst::afw::coord::GalacticCoord::Ptr cast_Galactic(lsst::afw::coord::Coord::Ptr c) {
         return boost::shared_dynamic_cast<lsst::afw::coord::GalacticCoord>(c);
