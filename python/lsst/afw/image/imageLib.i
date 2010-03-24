@@ -22,6 +22,7 @@ Basic routines to talk to lsst::afw::image classes
 #include "lsst/pex/policy.h"
 #include "lsst/afw/image.h"
 #include "lsst/afw/geom.h"
+#include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/image/Defect.h"
 
 #include "boost/cstdint.hpp"
@@ -79,6 +80,7 @@ def version(HeadURL = r"$HeadURL$"):
 %import "lsst/daf/persistence/persistenceLib.i"
 %import "lsst/daf/data/dataLib.i"
 %import "lsst/afw/geom/geomLib.i"
+%import "lsst/afw/coord/coordLib.i"
 
 %include "lsst/afw/eigen.i"
 
