@@ -68,16 +68,19 @@ namespace image {
         inline ~TanWcs() {};
         
         //Accessors
-        lsst::afw::geom::PointD skyToPixel(const lsst::afw::geom::PointD sky) const;
-        lsst::afw::geom::PointD pixelToSky(const lsst::afw::geom::PointD pixel) const;
+        virtual lsst::afw::coord::Coord::Ptr pixelToSky(double pix1, double pix2) const;
+        virtual lsst::afw::coord::Coord::Ptr pixelToSky(const lsst::afw::geom::PointD pixel) const;
+        
+        virtual lsst::afw::geom::PointD skyToPixel(double sky1, double sky2) const;
+        virtual lsst::afw::geom::PointD skyToPixel(const lsst::afw::coord::Coord::Ptr coord) const;
 
-        lsst::afw::geom::PointD skyToPixel(double sky1, double sky2) const;
-        lsst::afw::geom::PointD pixelToSky(double pixel1, double pixel2) const;
         
         bool hasDistortion() const {    return _hasDistortion;};
         lsst::daf::base::PropertySet::Ptr getFitsMetadata() const;        
-
+#if 0
+        //Rely on base class implementation for now.
         lsst::afw::geom::AffineTransform linearizeAt(lsst::afw::geom::PointD const & pix) const;
+#endif        
         
 
         //Mutators

@@ -8,6 +8,7 @@
 #include "lsst/daf/base.h"
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/afw/image/Image.h"
+#include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"
@@ -59,6 +60,12 @@ namespace image {
 /// This class is implemented in by calls to the wcslib library
 /// by Mark Calabretta http://www.atnf.csiro.au/people/mcalabre/WCS/
 /// 
+/// Note that we violate the Wcs standard in one minor way. The standard states that none
+/// of the CRPIX or CRVAL keywords are required, for the header to be valid, and the appropriate values
+/// should be set to 0.0 if the keywords are absent. This is a recipie for painful bugs in analysis, so
+/// we violate the standard by insisting that the keywords CRPIX[1,2] and CRVAL[1,2] are present when
+/// reading a header (keywords CRPIX1a etc are also accepted)
+
     class Wcs : public lsst::daf::base::Persistable,
                     public lsst::daf::data::LsstBase {
     public:
@@ -71,7 +78,7 @@ namespace image {
         friend Ptr lsst::afw::image::makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
         Wcs(const lsst::afw::geom::PointD crval, const lsst::afw::geom::PointD crpix, const Eigen::Matrix2d &CD, 
                 const std::string ctype1="RA---TAN", const std::string ctype2="DEC--TAN",
-                double equinox=2000, std::string raDecSys="FK5",
+                double equinox=2000, std::string raDecSys="ICRS",
                 const std::string cunits1="deg", const std::string cunits2="deg"
            );
 
@@ -95,14 +102,11 @@ namespace image {
         //Convert from raDec to pixel space. Formerly called raDecToXY() and
         //xyToRaDec(), but the name now reflects their increased generality. They may be
         //used, e.g. to convert xy to Galactic coordinates
-        virtual lsst::afw::geom::PointD skyToPixel(const lsst::afw::geom::PointD sky) const;
-        virtual lsst::afw::geom::PointD pixelToSky(const lsst::afw::geom::PointD pixel) const;
-
+        virtual lsst::afw::coord::Coord::Ptr pixelToSky(double pix1, double pix2) const;
+        virtual lsst::afw::coord::Coord::Ptr pixelToSky(const lsst::afw::geom::PointD pixel) const;
+        
         virtual lsst::afw::geom::PointD skyToPixel(double sky1, double sky2) const;
-        virtual lsst::afw::geom::PointD pixelToSky(double pixel1, double pixel2) const;
-
-        lsst::afw::geom::PointD skyRadiansToPixel(double sky1Radians, double sky2Radians) const;
-        lsst::afw::geom::PointD pixelToSkyRadians(double pixel1, double pixel2) const;
+        virtual lsst::afw::geom::PointD skyToPixel(const lsst::afw::coord::Coord::Ptr coord) const;
 
         lsst::afw::geom::AffineTransform getAffineTransform() const;
         virtual lsst::afw::geom::AffineTransform linearizeAt(lsst::afw::geom::PointD const & pix) const;
@@ -129,6 +133,9 @@ namespace image {
         //This is protected because the derived classes need to be able to see it.
         Wcs(lsst::daf::base::PropertySet::Ptr const fitsMetadata);
 
+        lsst::afw::coord::Coord::Ptr makeCorrectCoord(double sky0, double sky1) const;
+        lsst::afw::geom::PointD convertCoordToSky(lsst::afw::coord::Coord::Ptr const coord) const;
+        
         struct wcsprm* _wcsInfo;
         int _nWcsInfo;
         int _relax; ///< Degree of permissiveness for wcspih (0 for strict); see wcshdr.h for details.

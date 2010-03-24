@@ -24,6 +24,7 @@
 
 namespace except = lsst::pex::exceptions; 
 namespace afwImg = lsst::afw::image;
+namespace afwCoord = lsst::afw::coord;
 namespace geom = lsst::afw::geom;
 
 
@@ -32,7 +33,7 @@ using namespace std;
 typedef lsst::daf::base::PropertySet PropertySet;
 typedef lsst::afw::image::Wcs Wcs;
 typedef lsst::afw::geom::PointD GeomPoint;
-
+typedef lsst::afw::coord::Coord::Ptr CoordPtr;
 
 //The amount of space allocated to strings in wcslib
 const int STRLEN = 72;
@@ -165,7 +166,33 @@ void Wcs::initWcsLibFromFits(PropertySet::Ptr const fitsMetadata){
             }
         }
     }
+    
+    //The Wcs standard requires a default value for RADESYS if the keyword
+    //doesn't exist in header, but wcslib doesn't set it. So we do so here. This code 
+    //conforms to Calbretta & Greisen 2002 \S 3.1
+    if( ! (fitsMetadata->exists("RADESYS") || fitsMetadata->exists("RADESYSa")) ) {
 
+        //If equinox exist and < 1984, use FK5. If >= 1984, use FK5
+        if( (fitsMetadata->exists("EQUINOX") || fitsMetadata->exists("EQUINOXa")) ) {
+            double equinox;
+            try {
+                equinox = fitsMetadata->getAsDouble("EQUINOX");
+            } catch(...) {
+                equinox = fitsMetadata->getAsDouble("EQUINOXa");
+            }
+            
+            if(equinox < 1984) {
+                snprintf(_wcsInfo->radesys, STRLEN, "FK4");
+            } else {
+                snprintf(_wcsInfo->radesys, STRLEN, "FK5");
+            }
+        } else {
+            //If Equinox doesn't exist, default to ICRS
+            snprintf(_wcsInfo->radesys, STRLEN, "ICRS");
+        }
+    }
+                
+        
 }
 
 
@@ -443,43 +470,109 @@ double Wcs::pixArea(GeomPoint pix00) const {
     //
     const double side = 10;             // length of the square's sides in pixels
 
-    GeomPoint const sky00 = pixelToSky(pix00);
+    CoordPtr coord = pixelToSky(pix00);
+    GeomPoint const sky00 = coord->getPosition(afwCoord::DEGREES);
     
-    //This doesn't necessarily make sense if you're not familiar with Points and Extents. In the 
-    //context of afw::geom, a Point is a position on the sky, and it doesn't make sense to add or subtract
-    //them. Instead you can add a vector (or an "Extent") to a point. Extents can be constructed from 
-    //points, or from a pair of numbers using the makeExtent syntax
-    GeomPoint const dsky10 = pixelToSky(pix00 + geom::makeExtentD(side, 0)) - geom::Extent<double>(sky00);
-    GeomPoint const dsky01 = pixelToSky(pix00 + geom::makeExtentD(0, side)) - geom::Extent<double>(sky00);
+    //This is a little complicated. Take pix00, and move it with an extent. Convert that to a sky 
+    //Coord object, and convert that back to a GeomPoint. Then subtract off the position of sky00 
+    //(as an extent)
+    GeomPoint const dsky10 = pixelToSky(pix00 + geom::makeExtentD(side, 0))->getPosition(afwCoord::DEGREES) - 
+        geom::Extent<double>(sky00);
+    GeomPoint const dsky01 = pixelToSky(pix00 + geom::makeExtentD(0, side))->getPosition(afwCoord::DEGREES) -
+        geom::Extent<double>(sky00);
 
     double const cosDec = cos(sky00.getY()*M_PI/180.0);
     return cosDec*fabs(dsky01.getX()*dsky10.getY() - dsky01.getY()*dsky10.getX())/(side*side);
 }
 
-
 ///\brief Convert from sky coordinates (e.g ra/dec) to pixel positions.
 ///
-///Convert a sky position (e.g ra/dec) to a pixel position. The exact meaning of sky1, sky2 
-///depend on the properties of the wcs (i.e the values of CTYPE1 and
-///CTYPE2), but the inputs are usually ra/dec, and the outputs are x and y pixel position.
-GeomPoint Wcs::skyToPixel(const GeomPoint sky) const {
-    return skyToPixel(sky.getX(), sky.getY());
+GeomPoint Wcs::skyToPixel(const CoordPtr coord) const {
+
+    GeomPoint const sky = convertCoordToSky(coord);
+    return skyToPixel(sky[0], sky[1]);
 }
 
-///\brief Convert from pixel position to sky coordinates (e.g ra/dec)
-///
-///Convert a pixel position (e.g x,y) to a celestial coordinate (e.g ra/dec). The output coordinate
-///system depends on the values of CTYPE used to construct the object. For ra/dec, the CTYPES should
-///be RA--TAN and DEC-TAN. 
-GeomPoint Wcs::pixelToSky(const GeomPoint pixel) const {
-    return pixelToSky(pixel.getX(), pixel.getY());
+
+///Given a Coord (as a shared pointer), return the sky position in the correct coordinate system
+///for this Wcs. The first element of the pair is the coordinate value corresponding to ctype1
+///and the second element corresponds to ctype2.
+GeomPoint Wcs::convertCoordToSky(lsst::afw::coord::Coord::Ptr coord) const {
+    //Construct a coord object of the correct type
+    std::string type(_wcsInfo->ctype[0], 4);
+    std::string radesys(_wcsInfo->radesys);
+    CoordPtr convertedCoord;
+
+    bool reversed=false;
+    if(type == "RA--") {
+        if(radesys == "ICRS") {
+            convertedCoord = coord->convert(afwCoord::ICRS);
+        }
+        if(radesys == "FK5") {
+            convertedCoord = coord->convert(afwCoord::FK5);
+        }
+    }
+    else if(type == "GLON")
+    {  convertedCoord = coord->convert(afwCoord::GALACTIC);
+    }
+    else if(type == "ELON")
+    {   convertedCoord = coord->convert(afwCoord::ECLIPTIC);
+    }
+    //Check for strange images where the ctypes as swapped.
+    else if(type == "DEC-") {
+        reversed=true;
+        if(radesys == "ICRS") {
+            convertedCoord = coord->convert(afwCoord::ICRS);
+        }
+        if(radesys == "FK5") {
+            convertedCoord = coord->convert(afwCoord::FK5);
+        }
+        else {   
+            throw LSST_EXCEPT(except::RuntimeErrorException,
+                              (boost::format("Can't create Coord object: Unrecognised radesys %s") %
+                               radesys).str());
+        }
+        
+    }
+    else if(type == "GLON") {  
+        reversed=true;
+        convertedCoord = coord->convert(afwCoord::GALACTIC);
+    }
+    else if(type == "ELON") {   
+        reversed=true;
+        convertedCoord = coord->convert(afwCoord::ECLIPTIC);
+    }
+
+    else if(type == "GLAT") {
+        reversed=true;
+        convertedCoord = coord->convert(afwCoord::GALACTIC);
+    }
+    else if(type == "ELAT") {
+        reversed=true;
+        convertedCoord = coord->convert(afwCoord::ECLIPTIC);
+    }
+    else
+    {   
+        throw LSST_EXCEPT(except::RuntimeErrorException,
+                          (boost::format("Coord object doesn't support type %s") % type).str());
+    }
+
+
+    if (reversed) {
+        return geom::makePointD(convertedCoord->getLatitude(afwCoord::DEGREES),
+                                convertedCoord->getLongitude(afwCoord::DEGREES));
+    } else {    
+        return geom::makePointD(convertedCoord->getLongitude(afwCoord::DEGREES),
+                                convertedCoord->getLatitude(afwCoord::DEGREES));
+    }
+
 }
 
 ///\brief Convert from sky coordinates (e.g ra/dec) to pixel positions.
 ///
 ///Convert a sky position (e.g ra/dec) to a pixel position. The exact meaning of sky1, sky2 
 ///and the return value depend on the properties of the wcs (i.e the values of CTYPE1 and
-///CTYPE2), but the inputs are usually ra/dec, and the outputs are x and y pixel position.
+///CTYPE2), but the inputs are usually ra/dec. The outputs are x and y pixel position.
 GeomPoint Wcs::skyToPixel(double sky1, double sky2) const {
     if(_wcsInfo == NULL) {
         throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
@@ -506,12 +599,22 @@ GeomPoint Wcs::skyToPixel(double sky1, double sky2) const {
 }
 
 
+
 ///\brief Convert from pixel position to sky coordinates (e.g ra/dec)
 ///
 ///Convert a pixel position (e.g x,y) to a celestial coordinate (e.g ra/dec). The output coordinate
 ///system depends on the values of CTYPE used to construct the object. For ra/dec, the CTYPES should
 ///be RA--TAN and DEC-TAN. 
-GeomPoint Wcs::pixelToSky(double pixel1, double pixel2) const {
+CoordPtr Wcs::pixelToSky(const GeomPoint pixel) const {
+    return pixelToSky(pixel.getX(), pixel.getY());
+}
+
+///\brief Convert from pixel position to sky coordinates (e.g ra/dec)
+///
+///Convert a pixel position (e.g x,y) to a celestial coordinate (e.g ra/dec). The output coordinate
+///system depends on the values of CTYPE used to construct the object. For ra/dec, the CTYPES should
+///be RA--TAN and DEC-TAN. 
+CoordPtr Wcs::pixelToSky(double pixel1, double pixel2) const {
     if(_wcsInfo == NULL) {
         throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
     }
@@ -533,30 +636,77 @@ GeomPoint Wcs::pixelToSky(double pixel1, double pixel2) const {
                            status % wcs_errmsg[status]).str());
     }
 
-    return geom::makePointD(skyTmp[0], skyTmp[1]);
+    return makeCorrectCoord(skyTmp[0], skyTmp[1]);    
 }
 
 
-///Stop-gap functions. Convert sky positions in radians to pixels.
-///Once the Coord class is implemented this should go away
-GeomPoint Wcs::skyRadiansToPixel(double sky1Radians, double sky2Radians) const {
-    double sky1Deg = sky1Radians*180./M_PI;
-    double sky2Deg = sky2Radians*180./M_PI;
+
+///\brief Given a sky position, use the values stored in ctype and radesys to return the correct
+///sub-class of Coord
+CoordPtr Wcs::makeCorrectCoord(double sky0, double sky1) const {
+
+    //Construct a coord object of the correct type
+    std::string type(_wcsInfo->ctype[0], 4);
+    std::string radesys(_wcsInfo->radesys);
+    double equinox = _wcsInfo->equinox;
+
+    if(type == "RA--") {
+        //Our default
+        if(radesys == "ICRS") {
+            return afwCoord::makeCoord(afwCoord::ICRS, sky0, sky1);
+        }
+        if(radesys == "FK5") {
+            return afwCoord::makeCoord(afwCoord::FK5, sky0, sky1, equinox);
+        }
+        else
+        {   
+            throw LSST_EXCEPT(except::RuntimeErrorException,
+                              (boost::format("Can't create Coord object: Unrecognised radesys %s") %
+                               radesys).str());
+        }
+
+    }
+    else if(type == "GLON")
+    {   return afwCoord::makeCoord(afwCoord::GALACTIC, sky0, sky1);   
+    }
+    else if(type == "ELON")
+    {   return afwCoord::makeCoord(afwCoord::ECLIPTIC, sky0, sky1, equinox);
+    }
+    //check for the case where the ctypes are swapped. Note how sky0 and sky1 are swapped as well
+    else if(type == "DEC-") {
+        //Our default
+        if(radesys == "ICRS") {
+            return afwCoord::makeCoord(afwCoord::ICRS, sky1, sky0);
+        }
+        if(radesys == "FK5") {
+            return afwCoord::makeCoord(afwCoord::FK5, sky1, sky0, equinox);
+        }
+        else
+        {   
+            throw LSST_EXCEPT(except::RuntimeErrorException,
+                              (boost::format("Can't create Coord object: Unrecognised radesys %s") %
+                               radesys).str());
+        }
+
+    }
+    else if(type == "GLAT")
+    {   return afwCoord::makeCoord(afwCoord::GALACTIC, sky1, sky0);   
+    }
+    else if(type == "ELAT")
+    {   return afwCoord::makeCoord(afwCoord::ECLIPTIC, sky1, sky0, equinox);
+    }
+    //Give up in disgust
+    else
+    {   
+        throw LSST_EXCEPT(except::RuntimeErrorException,
+                          (boost::format("Can't create Coord object: Unrecognised sys %s") %
+                           type).str());
+    }
     
-    return skyToPixel(sky1Deg, sky2Deg);
+    //Can't get here
+    assert(0);
 }
 
-///Stop-gap functions. Convert pixel positions to sky positions in radians (not degrees as normal)
-///Once the Coord class is implemented this should go away
-GeomPoint Wcs::pixelToSkyRadians(double pixel1, double pixel2) const {
-    //In degrees
-    GeomPoint sky = pixelToSky(pixel1, pixel2);
-    
-    //convert to radians
-    sky[0] *= M_PI/180.0;
-    sky[1] *= M_PI/180.0;
-    return sky;
-}
 
 
 /**
@@ -570,6 +720,7 @@ lsst::afw::geom::AffineTransform Wcs::getAffineTransform() const
 }
 
 
+
 /**
  * Return the local linear approximation to Wcs::xyToRaDec at the point (ra, y) = sky
  *
@@ -578,6 +729,7 @@ lsst::afw::geom::AffineTransform Wcs::getAffineTransform() const
  *
  * @param(in) sky Position in sky coordinates where transform is desired
  */
+
 lsst::afw::geom::AffineTransform Wcs::linearizeAt(GeomPoint const & sky) const
 {
     //
@@ -587,10 +739,12 @@ lsst::afw::geom::AffineTransform Wcs::linearizeAt(GeomPoint const & sky) const
     //
     const double side = 10;             // length of the square's sides in pixels
     GeomPoint const sky00 = sky;
-    GeomPoint const pix00 = skyToPixel(sky00);
+    GeomPoint const pix00 = skyToPixel(sky00[0], sky00[1]);
 
-    GeomPoint const dsky10 = pixelToSky(pix00 + geom::makeExtentD(side, 0)) - geom::Extent<double>(sky00);
-    GeomPoint const dsky01 = pixelToSky(pix00 + geom::makeExtentD(0, side)) - geom::Extent<double>(sky00);
+    GeomPoint const dsky10 = pixelToSky(pix00 + geom::makeExtentD(side, 0))->getPosition() -
+        geom::Extent<double>(sky00);
+    GeomPoint const dsky01 = pixelToSky(pix00 + geom::makeExtentD(0, side))->getPosition() -
+        geom::Extent<double>(sky00);
     
     Eigen::Matrix2d m;
     m(0, 0) = dsky10.getX()/side;
@@ -600,6 +754,7 @@ lsst::afw::geom::AffineTransform Wcs::linearizeAt(GeomPoint const & sky) const
 
     cout << dsky10 << endl << dsky01 << endl;
     cout << "Wcs" << endl << m << endl;
+    cout << m << endl;
     Eigen::Vector2d sky00v;
     sky00v << sky00.getX(), sky00.getY();
     Eigen::Vector2d pix00v;

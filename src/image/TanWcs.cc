@@ -26,7 +26,7 @@ using namespace std;
 typedef lsst::daf::base::PropertySet PropertySet;
 typedef lsst::afw::image::TanWcs TanWcs;
 typedef lsst::afw::geom::PointD GeomPoint;
-
+typedef lsst::afw::coord::Coord::Ptr CoordPtr;
 
 static void decodeSipHeader(lsst::daf::base::PropertySet::Ptr fitsMetadata,
                             std::string const& which,
@@ -247,19 +247,13 @@ TanWcs::TanWcs & TanWcs::operator = (const TanWcs & rhs){
 ///\brief Convert from sky coordinates (e.g ra/dec) to (possibly) distorted pixel positions.
 ///
 ///Convert a sky position (e.g ra/dec) to a pixel position. 
-GeomPoint TanWcs::skyToPixel(const GeomPoint sky) const {
+GeomPoint TanWcs::skyToPixel(const CoordPtr coord) const {
+
+    GeomPoint sky = convertCoordToSky(coord);
+    
     return skyToPixel(sky[0], sky[1]);
 }
 
-
-///\brief Convert from (possibly) distorted pixel position to sky coordinates (e.g ra/dec)
-///
-///Convert a pixel position (e.g x,y) to a celestial coordinate (e.g ra/dec). The output coordinate
-///system will be
-///be RA--TAN and DEC-TAN. 
-GeomPoint TanWcs::pixelToSky(const GeomPoint pixel) const {
-    return pixelToSky(pixel[0], pixel[1]);
-}
 
 
 ///\brief Convert from sky coordinates (e.g ra/dec) to (possibly) distorted pixel positions.
@@ -327,11 +321,21 @@ GeomPoint TanWcs::skyToPixel(double sky1, double sky2) const {
 }
 
 
+
+///\brief Convert from (possibly) distorted pixel position to sky coordinates (e.g ra/dec)
+///
+///Convert a pixel position (e.g x,y) to a celestial coordinate (e.g ra/dec). The output coordinate
+///system will be
+///be RA--TAN and DEC-TAN. 
+CoordPtr TanWcs::pixelToSky(const GeomPoint pixel) const {
+    return pixelToSky(pixel[0], pixel[1]);
+}
+
 ///\brief Convert from (possibly) distorted pixel position to sky coordinates (e.g ra/dec)
 ///
 ///Convert a pixel position (e.g x,y) to a celestial coordinate (e.g ra/dec). The output coordinate
 ///system will be RA--TAN and DEC-TAN. 
-GeomPoint TanWcs::pixelToSky(double pixel1, double pixel2) const {
+CoordPtr TanWcs::pixelToSky(double pixel1, double pixel2) const {
     if(_wcsInfo == NULL) {
         throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
     }
@@ -384,7 +388,7 @@ GeomPoint TanWcs::pixelToSky(double pixel1, double pixel2) const {
                            status % wcs_errmsg[status]).str());
     }
 
-    return geom::makePointD(skyTmp[0], skyTmp[1]);
+    return makeCorrectCoord(skyTmp[0], skyTmp[1]);
 }
 
 
@@ -393,6 +397,8 @@ lsst::daf::base::PropertySet::Ptr TanWcs::getFitsMetadata() const {
 }
 
 
+#if 0
+//Rely on base class implementation for now, because this implementation isn't working
 lsst::afw::geom::AffineTransform TanWcs::linearizeAt(GeomPoint const & sky) const {
     
     Eigen::Matrix2d CD(2,2);
@@ -422,6 +428,7 @@ lsst::afw::geom::AffineTransform TanWcs::linearizeAt(GeomPoint const & sky) cons
     pix00v << pix00.getX(), pix00.getY();
     return lsst::afw::geom::AffineTransform(m, lsst::afw::geom::ExtentD(sky00v - m * pix00v));
 }
+#endif
 
 //
 // Mutators
