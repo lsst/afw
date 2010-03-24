@@ -224,10 +224,9 @@ class WCSTestCaseCFHT(unittest.TestCase):
                             self.wcs.getCDMatrix())
 
     def testAffineTransform(self):
-        print type(self.wcs)
-        a = self.wcs.getAffineTransform()
+        a = self.wcs.getLinearTransform()
         l = self.wcs.getCDMatrix()
-        #print a[a.X], a[a.Y], print a[a.XX], a[a.XY], a[a.YX], a[a.YY]
+        #print print a[a.XX], a[a.XY], a[a.YX], a[a.YY]
 
         sky00g = afwGeom.makePointD(10, 10)
         sky00i = afwGeom.makePointD(sky00g.getX(), sky00g.getY())
