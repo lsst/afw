@@ -10,6 +10,8 @@
  *
  */ 
 
+#include <cmath>
+
 namespace lsst {
 namespace afw {    
 namespace coord {

@@ -24,7 +24,7 @@
 
 //#include "boost/unordered_map.hpp"
 
-namespace geom    = lsst::afw::geom;
+namespace afwGeom    = lsst::afw::geom;
 namespace dafBase = lsst::daf::base;
 
 
@@ -32,19 +32,20 @@ namespace lsst {
 namespace afw {    
 namespace coord {
 
-enum CoordSystem { FK5, ICRS, GALACTIC, ECLIPTIC, ALTAZ, EQUATORIAL };
+enum CoordSystem { FK5, ICRS, GALACTIC, ECLIPTIC, TOPOCENTRIC, EQUATORIAL };
 
 namespace {    
 typedef std::map<std::string, CoordSystem> CoordSystemMap;
 CoordSystemMap const getCoordSystemMap() {
     CoordSystemMap idMap;
-    idMap["FK5"]        = FK5;
-    idMap["EQUATORIAL"] = EQUATORIAL;
-    idMap["ICRS"]       = ICRS;
-    idMap["ECLIPTIC"]   = ECLIPTIC;
-    idMap["GALACTIC"]   = GALACTIC;
-    idMap["ELON"]       = ECLIPTIC;
-    idMap["GLON"]       = GALACTIC;
+    idMap["FK5"]         = FK5;
+    idMap["EQUATORIAL"]  = EQUATORIAL;
+    idMap["ICRS"]        = ICRS;
+    idMap["ECLIPTIC"]    = ECLIPTIC;
+    idMap["GALACTIC"]    = GALACTIC;
+    idMap["ELON"]        = ECLIPTIC;
+    idMap["GLON"]        = GALACTIC;
+    idMap["TOPOCENTRIC"] = TOPOCENTRIC;
     return idMap;
 }
 }
@@ -59,7 +60,7 @@ class Fk5Coord;
 class EquatorialCoord;    
 class GalacticCoord;
 class EclipticCoord;
-class AltAzCoord;
+class TopocentricCoord;
 
     
 /**
@@ -67,14 +68,14 @@ class AltAzCoord;
  *
  * This is the base class for spherical coordinates.
  * Derived classes include:
- *     Fk5Coord, IcrsCoord, GalacticCoord, EclipticCoord, AltAzCoord
+ *     Fk5Coord, IcrsCoord, GalacticCoord, EclipticCoord, TopocentricCoord
  *
  */
 class Coord {
 public:
 
-    Coord(geom::Point2D const &p2d, CoordUnit unit = DEGREES, double const epoch = 2000.0);
-    Coord(geom::Point3D const &p3d, double const epoch = 2000.0);
+    Coord(afwGeom::Point2D const &p2d, CoordUnit unit = DEGREES, double const epoch = 2000.0);
+    Coord(afwGeom::Point3D const &p3d, double const epoch = 2000.0);
     Coord(double const ra, double const dec, double const epoch = 2000.0);
     Coord(std::string const ra, std::string const dec, double const epoch = 2000.0);
     Coord();
@@ -85,8 +86,8 @@ public:
 
     double getEpoch()         { return _epoch; }
 
-    geom::Point2D getPosition(CoordUnit unit = DEGREES);
-    geom::Point3D getVector();
+    afwGeom::Point2D getPosition(CoordUnit unit = DEGREES);
+    afwGeom::Point3D getVector();
     std::pair<std::string, std::string> getCoordNames();
 
     double getLongitude(CoordUnit unit);
@@ -106,7 +107,7 @@ public:
     virtual EquatorialCoord toEquatorial();
     virtual GalacticCoord toGalactic();
     virtual EclipticCoord toEcliptic(double epoch = std::numeric_limits<double>::quiet_NaN());
-    virtual AltAzCoord toAltAz(Observatory obs, dafBase::DateTime obsDate);
+    virtual TopocentricCoord toTopocentric(Observatory obs, dafBase::DateTime obsDate);
 
 private:
     double _longitudeRad;
@@ -123,8 +124,8 @@ private:
  */
 class IcrsCoord : public Coord {
 public:    
-    IcrsCoord(geom::Point2D const &p2d, CoordUnit unit = DEGREES) : Coord(p2d, unit, 2000.0) {}
-    IcrsCoord(geom::Point3D const &p3d) : Coord(p3d, 2000.0) {}
+    IcrsCoord(afwGeom::Point2D const &p2d, CoordUnit unit = DEGREES) : Coord(p2d, unit, 2000.0) {}
+    IcrsCoord(afwGeom::Point3D const &p3d) : Coord(p3d, 2000.0) {}
     IcrsCoord(double const ra, double const dec) : Coord(ra, dec, 2000.0) {}
     IcrsCoord(std::string const ra, std::string const dec) : Coord(ra, dec, 2000.0) {}
     IcrsCoord() : Coord() {}
@@ -153,8 +154,8 @@ private:
  */
 class EquatorialCoord : public Coord {
 public:    
-    EquatorialCoord(geom::Point2D const &p2d, CoordUnit unit = DEGREES) : Coord(p2d, unit, 2000.0) {}
-    EquatorialCoord(geom::Point3D const &p3d) : Coord(p3d, 2000.0) {}
+    EquatorialCoord(afwGeom::Point2D const &p2d, CoordUnit unit = DEGREES) : Coord(p2d, unit, 2000.0) {}
+    EquatorialCoord(afwGeom::Point3D const &p3d) : Coord(p3d, 2000.0) {}
     EquatorialCoord(double const ra, double const dec) : Coord(ra, dec, 2000.0) {}
     EquatorialCoord(std::string const ra, std::string const dec) : Coord(ra, dec, 2000.0) {}
     EquatorialCoord() : Coord() {}
@@ -181,9 +182,9 @@ private:
  */
 class Fk5Coord : public Coord {
 public:    
-    Fk5Coord(geom::Point2D const &p2d, CoordUnit unit = DEGREES, double const epoch = 2000.0) :
+    Fk5Coord(afwGeom::Point2D const &p2d, CoordUnit unit = DEGREES, double const epoch = 2000.0) :
         Coord(p2d, unit, epoch) {}
-    Fk5Coord(geom::Point3D const &p3d, double const epoch = 2000.0) :
+    Fk5Coord(afwGeom::Point3D const &p3d, double const epoch = 2000.0) :
         Coord(p3d, epoch) {}
     Fk5Coord(double const ra, double const dec, double const epoch = 2000.0) : 
         Coord(ra, dec, epoch) {}
@@ -205,7 +206,7 @@ public:
     EquatorialCoord toEquatorial();
     GalacticCoord toGalactic();
     EclipticCoord toEcliptic(double epoch = std::numeric_limits<double>::quiet_NaN());
-    AltAzCoord toAltAz(Observatory obs, dafBase::DateTime obsDate);
+    TopocentricCoord toTopocentric(Observatory obs, dafBase::DateTime obsDate);
 
     
 private:
@@ -219,8 +220,8 @@ private:
 class GalacticCoord : public Coord {
 public:
     
-    GalacticCoord(geom::Point2D const &p2d, CoordUnit unit = DEGREES) : Coord(p2d, unit) {}
-    GalacticCoord(geom::Point3D const &p3d) : Coord(p3d) {}
+    GalacticCoord(afwGeom::Point2D const &p2d, CoordUnit unit = DEGREES) : Coord(p2d, unit) {}
+    GalacticCoord(afwGeom::Point3D const &p3d) : Coord(p3d) {}
     GalacticCoord(double const l, double const b) : Coord(l, b) {}
     GalacticCoord(std::string const l, std::string const b) : Coord(l, b) {}
     GalacticCoord() : Coord() {}
@@ -251,9 +252,9 @@ private:
 class EclipticCoord : public Coord {
 public:
     
-    EclipticCoord(geom::Point2D const &p2d, CoordUnit unit = DEGREES, double const epoch = 2000.0) :
+    EclipticCoord(afwGeom::Point2D const &p2d, CoordUnit unit = DEGREES, double const epoch = 2000.0) :
         Coord(p2d, unit, epoch) {}
-    EclipticCoord(geom::Point3D const &p3d, double const epoch = 2000.0) : Coord(p3d, epoch) {}
+    EclipticCoord(afwGeom::Point3D const &p3d, double const epoch = 2000.0) : Coord(p3d, epoch) {}
     EclipticCoord(double const lambda, double const beta, double const epoch = 2000.0) : 
         Coord(lambda, beta, epoch) {}
     EclipticCoord(std::string const lambda, std::string const beta, double const epoch = 2000.0) : 
@@ -280,19 +281,19 @@ private:
 };
 
 
-class AltAzCoord : public Coord {
+class TopocentricCoord : public Coord {
 public:
     
-    AltAzCoord(geom::Point2D const &p2d, CoordUnit unit, double const epoch, Observatory const &obs) :
-        Coord(p2d, unit, epoch), _obs(obs) {}
-    AltAzCoord(geom::Point3D const &p3d, double const epoch, Observatory const &obs) :
-        Coord(p3d, epoch), _obs(obs) {}
-    AltAzCoord(double const az, double const alt, double const epoch, Observatory const &obs) : 
-        Coord(az, alt, epoch), _obs(obs) {}
-    AltAzCoord(std::string const az, std::string const alt, double const epoch, Observatory const &obs) : 
-        Coord(az, alt, epoch), _obs(obs) {}
+    TopocentricCoord(afwGeom::Point2D const &p2d, CoordUnit unit, double const epoch,
+                     Observatory const &obs) : Coord(p2d, unit, epoch), _obs(obs) {}
+    TopocentricCoord(afwGeom::Point3D const &p3d, double const epoch,
+                     Observatory const &obs) : Coord(p3d, epoch), _obs(obs) {}
+    TopocentricCoord(double const az, double const alt, double const epoch,
+                     Observatory const &obs) : Coord(az, alt, epoch), _obs(obs) {}
+    TopocentricCoord(std::string const az, std::string const alt, double const epoch,
+                     Observatory const &obs) : Coord(az, alt, epoch), _obs(obs) {}
 
-    typedef boost::shared_ptr<AltAzCoord> Ptr;
+    typedef boost::shared_ptr<TopocentricCoord> Ptr;
     
     std::pair<std::string, std::string> getCoordNames();
     
@@ -303,8 +304,8 @@ public:
 
 
     Fk5Coord toFk5(double epoch = std::numeric_limits<double>::quiet_NaN());
-    AltAzCoord toAltAz(Observatory const &obs, dafBase::DateTime const &date);
-    AltAzCoord toAltAz();
+    TopocentricCoord toTopocentric(Observatory const &obs, dafBase::DateTime const &date);
+    TopocentricCoord toTopocentric();
     
 private:
     Observatory _obs;
@@ -324,10 +325,10 @@ Coord::Ptr makeCoord(CoordSystem const system,
                      std::string const ra, std::string const dec,
                      double const epoch = std::numeric_limits<double>::quiet_NaN());
 Coord::Ptr makeCoord(CoordSystem const system,
-                     geom::Point2D const &p2d, CoordUnit unit,
+                     afwGeom::Point2D const &p2d, CoordUnit unit,
                      double const epoch = std::numeric_limits<double>::quiet_NaN());
 Coord::Ptr makeCoord(CoordSystem const system,
-                     geom::Point3D const &p3d,
+                     afwGeom::Point3D const &p3d,
                      double const epoch = std::numeric_limits<double>::quiet_NaN());
 Coord::Ptr makeCoord(CoordSystem const system);
 

@@ -14,26 +14,26 @@
 #include "boost/test/unit_test.hpp"
 #include "boost/test/floating_point_comparison.hpp"
 
-#include "lsst/afw/coord/Coord.h"
+#include "lsst/afw/coord.h"
 #include "lsst/afw/geom/Point.h"
 
 using namespace std;
-namespace coord = lsst::afw::coord;
-namespace geom  = lsst::afw::geom;
+namespace afwCoord = lsst::afw::coord;
+namespace afwGeom  = lsst::afw::geom;
 
 BOOST_AUTO_TEST_CASE(dmsToDecimal) {
     
     std::string ra = "10:00:00.00";
     std::string dec = "-02:30:00.00";
-    double raDeg = coord::hmsStringToDegrees(ra);
-    double decDeg = coord::dmsStringToDegrees(dec);
+    double raDeg = afwCoord::hmsStringToDegrees(ra);
+    double decDeg = afwCoord::dmsStringToDegrees(dec);
     
     BOOST_CHECK_EQUAL(raDeg, 150.0);
     BOOST_CHECK_EQUAL(decDeg, -2.5);
     
     // make sure the rounding issue works (ie. 59.998 rounds to 00, not 60 sec)
     raDeg -= 0.000001;
-    std::string raStr = coord::degreesToHmsString(raDeg);
+    std::string raStr = afwCoord::degreesToHmsString(raDeg);
     BOOST_CHECK_EQUAL(raStr, ra);
 
 }
@@ -47,15 +47,15 @@ BOOST_AUTO_TEST_CASE(eclipticConversion) {
     double lamb0 = 113.215629;
     double beta0 = 6.684170;
     
-    coord::Fk5Coord polluxEqu(alpha, delta);
-    coord::EclipticCoord polluxEcl = polluxEqu.toEcliptic();
-    coord::Fk5Coord fk5 = polluxEcl.toFk5();
-    geom::Point2D p = polluxEcl.getPosition(coord::DEGREES);
+    afwCoord::Fk5Coord polluxEqu(alpha, delta);
+    afwCoord::EclipticCoord polluxEcl = polluxEqu.toEcliptic();
+    afwCoord::Fk5Coord fk5 = polluxEcl.toFk5();
+    afwGeom::Point2D p = polluxEcl.getPosition(afwCoord::DEGREES);
     double lamb = p.getX(), beta = p.getY();
     BOOST_CHECK_CLOSE(lamb, lamb0, 1.0e-6);
     BOOST_CHECK_CLOSE(beta, beta0, 1.0e-6);
 
-    coord::Coord::Ptr test = coord::makeCoord(coord::makeCoordEnum("FK5"), lamb0, beta0);
+    afwCoord::Coord::Ptr test = afwCoord::makeCoord(afwCoord::makeCoordEnum("FK5"), lamb0, beta0);
 
-    BOOST_CHECK_EQUAL(test->getLongitude(coord::DEGREES), lamb0);
+    BOOST_CHECK_EQUAL(test->getLongitude(afwCoord::DEGREES), lamb0);
 }

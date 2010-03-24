@@ -20,7 +20,7 @@ SWIG_SHARED_PTR_DERIVED(COORDTYPE##Coord, lsst::afw::coord::Coord, lsst::afw::co
 %declareDerived(Equatorial);
 %declareDerived(Galactic);
 %declareDerived(Ecliptic);
-%declareDerived(AltAz);
+%declareDerived(Topocentric);
 
 
 %rename(__getitem__) lsst::afw::coord::Coord::operator[];
