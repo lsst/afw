@@ -171,6 +171,11 @@ class WarpExposureTestCase(unittest.TestCase):
         """
         self.compareSwarpedExposure("lanczos4")
 
+    def testMatchSwarpNearestExposure(self):
+        """Test that warpExposure matches swarp using a nearest neighbor warping kernel
+        """
+        self.compareSwarpedExposure("nearest", atol=60)
+
     def compareSwarpedImage(self, kernelName, rtol=1.0e-05, atol=1e-08):
         """Compare remapExposure to swarp for given warping kernel.
         

@@ -296,7 +296,9 @@ class FourierLocalKernel;
 
         virtual std::string toString(std::string const& prefix="") const;
 
+#if 0                                   // fails to compile with icc; is it actually used?
         virtual void toFile(std::string fileName) const;
+#endif
 
     protected:
         virtual void setKernelParameter(unsigned int ind, double value) const;

@@ -134,7 +134,7 @@ protected:
 };
 
 /**
- *  \brief Specialization of CoordinateBase for 2 dimensions.
+ *  \brief Specialization of CoordinateBase for 3 dimensions.
  */
 template <typename Derived, typename T>
 class CoordinateBase<Derived,T,3> {

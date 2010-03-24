@@ -108,7 +108,7 @@ namespace image {
         virtual lsst::afw::geom::PointD skyToPixel(double sky1, double sky2) const;
         virtual lsst::afw::geom::PointD skyToPixel(const lsst::afw::coord::Coord::Ptr coord) const;
 
-        lsst::afw::geom::AffineTransform getAffineTransform() const;
+        lsst::afw::geom::LinearTransform getLinearTransform() const;
         virtual lsst::afw::geom::AffineTransform linearizeAt(lsst::afw::geom::PointD const & pix) const;
 
         //Mutators

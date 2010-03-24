@@ -16,7 +16,7 @@ namespace cameraGeom = lsst::afw::cameraGeom;
  *  The \c pos value is the 0-indexed position of the Amp on the CCD; e.g. (4, 1)
  * for the top right Amp on a CCD with serials across the top and bottom, and each serial split 5 ways
  */
-void cameraGeom::Ccd::addAmp(afwGeom::Point2I pos,        // position of Amp in the Ccd
+void cameraGeom::Ccd::addAmp(afwGeom::Point2I pos,        ///< position of Amp in the Ccd
                              cameraGeom::Amp const& amp_c ///< The amplifier to add to the Ccd's manifest
                             )
 {

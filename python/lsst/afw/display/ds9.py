@@ -159,7 +159,11 @@ def getXpaAccessPoint():
 
 def ds9Version():
     """Return the version of ds9 in use, as a string"""
-    return xpa.get(None, getXpaAccessPoint(), "about", "").splitlines()[1].split()[1]
+    try:
+        return xpa.get(None, getXpaAccessPoint(), "about", "").splitlines()[1].split()[1]
+    except Exception, e:
+        print >> sys.stderr, "Error reading version: %s" % e
+        return "0.0.0"
 
 def ds9Cmd(cmd, trap=True):
     """Issue a ds9 command, raising errors as appropriate"""
@@ -181,9 +185,14 @@ def initDS9(execDs9=True):
         ds9Cmd("iconify no; raise", False)
         ds9Cmd("wcs wcsa", False)         # include the pixel coordinates WCS (WCSA)
         
-        v0, v1 = [int(v) for v in ds9Version().split('.')][0:2]
+        v0, v1 = ds9Version().split('.')[0:2]
         global needShow
-        needShow = (v0 == 5 and v1 <= 4)
+        needShow = False
+        try:
+            if int(v0) == 5:
+                needShow = (int(v1) <= 4)
+        except:
+            pass
     except Ds9Error, e:
         if execDs9:
             print "ds9 doesn't appear to be running (%s), I'll exec it for you" % e

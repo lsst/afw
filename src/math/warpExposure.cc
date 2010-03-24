@@ -43,7 +43,6 @@ int afwMath::LanczosWarpingKernel::getOrder() const {
     return this->getWidth() / 2;
 }
 
-
 afwMath::Kernel::Ptr afwMath::BilinearWarpingKernel::clone() const {
     return afwMath::Kernel::Ptr(new afwMath::BilinearWarpingKernel());
 }
@@ -77,6 +76,39 @@ std::string afwMath::BilinearWarpingKernel::BilinearFunction1::toString(std::str
     return os.str();
 }
 
+afwMath::Kernel::Ptr afwMath::NearestWarpingKernel::clone() const {
+    return afwMath::Kernel::Ptr(new afwMath::NearestWarpingKernel());
+}
+
+/**
+* \brief Solve nearest neighbor equation; the only permitted arguments are 0 or 1
+*
+* \throw lsst::pex::exceptions::InvalidParameterException if argument is not 0 or 1
+*/
+afwMath::Kernel::Pixel afwMath::NearestWarpingKernel::NearestFunction1::operator() (
+    double x
+) const {
+    if (x == 0.0) {
+        return this->_params[0] < 0.5 ? 1.0 : 0.0;
+    } else if (x == 1.0) {
+        return this->_params[0] < 0.5 ? 0.0 : 1.0;
+    } else {
+        std::ostringstream errStream;
+        errStream << "x = " << x << "; must be 0 or 1";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, errStream.str());
+    }
+}
+
+/**
+ * \brief Return string representation.
+ */
+std::string afwMath::NearestWarpingKernel::NearestFunction1::toString(std::string const& prefix) const {
+    std::ostringstream os;
+    os << "_NearestFunction1: ";
+    os << Function1<Kernel::Pixel>::toString(prefix);
+    return os.str();
+}
+
 /**
  * \brief Return a warping kernel given its name.
  *
@@ -85,6 +117,7 @@ std::string afwMath::BilinearWarpingKernel::BilinearFunction1::toString(std::str
  * Allowed names are:
  * - bilinear: return a BilinearWarpingKernel
  * - lanczos#: return a LanczosWarpingKernel of order #, e.g. lanczos4
+ * - nearest: return a NearestWarpingKernel
  */
 boost::shared_ptr<afwMath::SeparableKernel> afwMath::makeWarpingKernel(std::string name) {
     typedef boost::shared_ptr<afwMath::SeparableKernel> KernelPtr;
@@ -97,6 +130,8 @@ boost::shared_ptr<afwMath::SeparableKernel> afwMath::makeWarpingKernel(std::stri
         int order;
         std::istringstream(orderStr) >> order;
         return KernelPtr(new LanczosWarpingKernel(order));
+    } else if (name == "nearest") {
+        return KernelPtr(new NearestWarpingKernel());
     } else {
         throw LSST_EXCEPT(pexExcept::InvalidParameterException,
             "unknown warping kernel name: \"" + name + "\"");
@@ -138,6 +173,7 @@ int afwMath::warpExposure(
  * Available options include:
  * - BilinearWarpingKernel
  * - LanczosWarpingKernel
+ * - NearestWarpingKernel (nearest neighbor)
  *
  * makeWarpingKernel() is a handy factory function for constructing a warping kernel given its name.
  *

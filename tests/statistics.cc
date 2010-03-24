@@ -135,11 +135,11 @@ BOOST_AUTO_TEST_CASE(StatisticsRamp) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
 
     {
         math::Statistics stats = math::makeStatistics(img, math::STDEV | math::MEAN | math::ERRORS);
-        std::pair<double, double> const mean = stats.getResult(math::MEAN);
+        std::pair<double, double> const mean_meanErr = stats.getResult(math::MEAN);
         double const sd = stats.getValue(math::STDEV);
         
-        BOOST_CHECK_EQUAL(mean.first,  img(nx/2, ny/2));
-        BOOST_CHECK_EQUAL(mean.second, sd/sqrt(img.getWidth()*img.getHeight()));
+        BOOST_CHECK_EQUAL(mean_meanErr.first,  img(nx/2, ny/2));
+        BOOST_CHECK_EQUAL(mean_meanErr.second, sd/sqrt(img.getWidth()*img.getHeight()));
     }
 
     // ===============================================================================
