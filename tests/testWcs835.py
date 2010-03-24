@@ -2,6 +2,7 @@
 import unittest
 import lsst.utils.tests as tests
 import lsst.afw.image as afwImage
+import lsst.afw.coord as afwCoord
 import lsst.daf.base as dafBase
 
 class TanSipTestCases(unittest.TestCase):
@@ -47,11 +48,10 @@ class TanSipTestCases(unittest.TestCase):
 
     def evalTanSip(self, ra, dec, x, y):
 
-        # xy to sky; this is known ahead of time for this unit test
-        # 1 pixel offset seems to be necessary to match the known answer
+        # 5th digit in degrees ~ 0.035 arcsec ~ 1/10 pixel
         sky = self.wcs.pixelToSky(x - 1, y - 1)
-        self.assertAlmostEqual(sky[0], ra,  5) # 5th digit in degrees ~ 0.035 arcsec ~ 1/10 pixel
-        self.assertAlmostEqual(sky[1], dec, 5) # 
+        self.assertAlmostEqual(sky.getLongitude(afwCoord.DEGREES), ra,  5) 
+        self.assertAlmostEqual(sky.getLatitude(afwCoord.DEGREES), dec, 5) # 
 
         # round trip it
         xy  = self.wcs.skyToPixel(sky)

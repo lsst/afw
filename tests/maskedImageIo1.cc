@@ -7,6 +7,8 @@
 #include "lsst/afw/math.h"
 #include "lsst/afw/formatters/Utils.h"
 #include "lsst/afw/image/makeWcs.h"
+#include "lsst/afw/coord/Coord.h"
+
 
 using namespace std;
 
@@ -15,6 +17,10 @@ using lsst::daf::base::PropertySet;
 
 
 namespace pexEx = lsst::pex::exceptions;
+namespace afwCoord = lsst::afw::coord;
+
+typedef lsst::afw::coord::Coord::Ptr CoordPtr;
+
 
 /*
  * Make this a subroutine so that locals go out of scope as part of test
@@ -46,7 +52,7 @@ void test(char *name) {
     pix[0] = 200;
     pix[1] = 180;
 
-    sky = testWcs->pixelToSky(pix);
+    sky = testWcs->pixelToSky(pix)->getPosition();
 
     Trace("MaskedImageIO_1", 1,
           boost::format("pix: %lf %lf") % pix[0] % pix[1]);
@@ -54,7 +60,8 @@ void test(char *name) {
     Trace("MaskedImageIO_1", 1,
           boost::format("sky: %lf %lf") % sky[0] % sky[1]);
 
-    sky = testWcs->skyToPixel(pix);
+    CoordPtr coord = afwCoord::makeCoord(afwCoord::ICRS, sky, afwCoord::DEGREES);
+    pix = testWcs->skyToPixel(coord);
 
     Trace("MaskedImageIO_1", 1,
           boost::format("pix: %lf %lf") % pix[0] % pix[1]);

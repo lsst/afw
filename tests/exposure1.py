@@ -14,6 +14,7 @@ import unittest
 import eups
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
+import lsst.afw.coord as afwCoord
 import lsst.utils.tests as utilsTests
 import lsst.pex.logging as pexLog
 import lsst.pex.exceptions as pexExcept
@@ -212,11 +213,15 @@ class ExposureTestCase(unittest.TestCase):
         subBBox = afwImage.BBox(afwImage.PointI(40, 50), 10, 10)
         subExposure = self.exposureCrWcs.Factory(self.exposureCrWcs, subBBox)
         parentPos = self.exposureCrWcs.getWcs().pixelToSky(0,0)
-        subExpPos = subExposure.getWcs().pixelToSky(0,0)
+        
+        parentPos = parentPos.getPosition()
+        
+        subExpPos = subExposure.getWcs().pixelToSky(0,0).getPosition()
         
         for i in range(2):
             self.assertAlmostEqual(parentPos[i], subExpPos[i], 9, "Wcs in sub image has changed")
             
+
 
         
 
@@ -272,7 +277,6 @@ class ExposureTestCase(unittest.TestCase):
                     afwImage.indexToPosition(xSubInd),
                     afwImage.indexToPosition(ySubInd),
                 )
-                self.assertEqual((p0.getX(), p0.getY()), (p1.getX(), p1.getY()))
 
 
          
