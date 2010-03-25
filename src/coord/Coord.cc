@@ -26,12 +26,39 @@ namespace ex       = lsst::pex::exceptions;
 namespace afwGeom  = lsst::afw::geom;
 namespace dafBase  = lsst::daf::base;
 
+
+namespace {    
+typedef std::map<std::string, afwCoord::CoordSystem> CoordSystemMap;
+CoordSystemMap const getCoordSystemMap() {
+    CoordSystemMap idMap;
+    idMap["FK5"]         = afwCoord::FK5;
+    idMap["ICRS"]        = afwCoord::ICRS;
+    idMap["ECLIPTIC"]    = afwCoord::ECLIPTIC;
+    idMap["GALACTIC"]    = afwCoord::GALACTIC;
+    idMap["ELON"]        = afwCoord::ECLIPTIC;
+    idMap["GLON"]        = afwCoord::GALACTIC;
+    idMap["TOPOCENTRIC"] = afwCoord::TOPOCENTRIC;
+    return idMap;
+}
+} // end anonymous namespace
+
+
+/**
+ * @brief A utility function to get the enum value of a coordinate system from a string name.
+ */
+afwCoord::CoordSystem const afwCoord::makeCoordEnum(std::string const system) {
+    static CoordSystemMap idmap = getCoordSystemMap();
+    return idmap[system];
+}
+
+
 namespace {
 
 double const NaN          = std::numeric_limits<double>::quiet_NaN();    
 double const arcsecToRad  = M_PI/(3600.0*180.0); // arcsec per radian  = 2.062648e5;
 double const JD2000       = 2451544.50;
-    
+
+
 /*
  * A local class to handle dd:mm:ss coordinates
  *
@@ -285,7 +312,7 @@ afwCoord::Coord::Coord() : _longitudeRad(NaN), _latitudeRad(NaN), _epoch(NaN) {}
 /**
  * @brief Make sure the values we've got are in the range 0 < x < 2PI
  */
-void afwCoord::Coord::_verifyValues() {
+void afwCoord::Coord::_verifyValues() const {
     if (_longitudeRad < 0.0 || _longitudeRad >= 2.0*M_PI) {
         throw LSST_EXCEPT(ex::InvalidParameterException,
                           (boost::format("Azimuthal coord must be: 0 < long < 2PI (%f).") %
@@ -320,7 +347,7 @@ void afwCoord::Coord::reset(
  * @brief Return our contents in a Point2D object
  *
  */
-afwGeom::Point2D afwCoord::Coord::getPosition(CoordUnit unit) {
+afwGeom::Point2D afwCoord::Coord::getPosition(CoordUnit unit) const {
     // treat HOURS specially, they must mean hours for RA, degrees for Dec
     if (unit == HOURS) {
         return afwGeom::makePointD(getLongitude(unit), getLatitude(DEGREES));
@@ -329,21 +356,12 @@ afwGeom::Point2D afwCoord::Coord::getPosition(CoordUnit unit) {
     }
 }
 
-std::pair<std::string, std::string> afwCoord::Coord::getCoordNames() {
-    return std::pair<std::string, std::string>("RA", "Dec");
-}
-std::pair<std::string, std::string> afwCoord::GalacticCoord::getCoordNames() {
-    return std::pair<std::string, std::string>("L", "B");
-}
-std::pair<std::string, std::string> afwCoord::EclipticCoord::getCoordNames() {
-    return std::pair<std::string, std::string>("Lambda", "Beta");
-}
-std::pair<std::string, std::string> afwCoord::TopocentricCoord::getCoordNames() {
-    return std::pair<std::string, std::string>("Az", "Alt");
-}
 
-
-afwGeom::Point3D afwCoord::Coord::getVector() {
+/**
+ * @brief Return our contents in a position vector.
+ *
+ */
+afwGeom::Point3D afwCoord::Coord::getVector() const {
     double const x = cos(getLongitude(RADIANS))*cos(getLatitude(RADIANS));
     double const y = sin(getLongitude(RADIANS))*cos(getLatitude(RADIANS));
     double const z = sin(getLatitude(RADIANS));
@@ -351,7 +369,12 @@ afwGeom::Point3D afwCoord::Coord::getVector() {
 }
 
 
-double afwCoord::Coord::operator[](int index) {
+/**
+ * @brief Provide access to our contents via an index
+ *
+ * @note This only gets you the internal format ... RADIANS.
+ */
+double afwCoord::Coord::operator[](int const index) const {
 
     switch (index) {
       case 0:
@@ -373,7 +396,7 @@ double afwCoord::Coord::operator[](int index) {
  * be it RA, l, lambda, or azimuth.  This is how they're accessed.
  *
  */
-double afwCoord::Coord::getLongitude(CoordUnit unit) {
+double afwCoord::Coord::getLongitude(CoordUnit unit) const {
     switch (unit) {
       case DEGREES:
         return radToDeg*_longitudeRad;
@@ -400,7 +423,7 @@ double afwCoord::Coord::getLongitude(CoordUnit unit) {
  *       an exception to be thrown
  *
  */
-double afwCoord::Coord::getLatitude(CoordUnit unit) {
+double afwCoord::Coord::getLatitude(CoordUnit unit) const {
     switch (unit) {
       case DEGREES:
         return radToDeg*_latitudeRad;
@@ -423,7 +446,7 @@ double afwCoord::Coord::getLatitude(CoordUnit unit) {
  *       explicitly provided.
  *
  */
-std::string afwCoord::Coord::getLongitudeStr(CoordUnit unit) {
+std::string afwCoord::Coord::getLongitudeStr(CoordUnit unit) const {
     if (unit == HOURS || unit == DEGREES) {
         return degreesToDmsString(getLongitude(unit));
     } else {
@@ -437,35 +460,9 @@ std::string afwCoord::Coord::getLongitudeStr(CoordUnit unit) {
  *       the units can not be explicitly requested.
  *
  */
-std::string afwCoord::Coord::getLatitudeStr() {
+std::string afwCoord::Coord::getLatitudeStr() const {
     return degreesToDmsString(getLatitude(DEGREES));
 }
-
-
-double afwCoord::Fk5Coord::getRa(CoordUnit unit)         { return getLongitude(unit); }
-double afwCoord::Fk5Coord::getDec(CoordUnit unit)        { return getLatitude(unit); }
-std::string afwCoord::Fk5Coord::getRaStr(CoordUnit unit) { return getLongitudeStr(unit); }
-std::string afwCoord::Fk5Coord::getDecStr()              { return getLatitudeStr(); }
-
-double afwCoord::IcrsCoord::getRa(CoordUnit unit)         { return getLongitude(unit); }
-double afwCoord::IcrsCoord::getDec(CoordUnit unit)        { return getLatitude(unit); }
-std::string afwCoord::IcrsCoord::getRaStr(CoordUnit unit) { return getLongitudeStr(unit); }
-std::string afwCoord::IcrsCoord::getDecStr()              { return getLatitudeStr(); }
-
-double afwCoord::GalacticCoord::getL(CoordUnit unit)          { return getLongitude(unit); }
-double afwCoord::GalacticCoord::getB(CoordUnit unit)          { return getLatitude(unit); }
-std::string afwCoord::GalacticCoord::getLStr(CoordUnit unit)  { return getLongitudeStr(unit); }
-std::string afwCoord::GalacticCoord::getBStr()                { return getLatitudeStr(); }
-
-double afwCoord::EclipticCoord::getLambda(CoordUnit unit)         { return getLongitude(unit); }
-double afwCoord::EclipticCoord::getBeta(CoordUnit unit)           { return getLatitude(unit); }
-std::string afwCoord::EclipticCoord::getLambdaStr(CoordUnit unit) { return getLongitudeStr(unit); }
-std::string afwCoord::EclipticCoord::getBetaStr()                 { return getLatitudeStr(); }
-
-double afwCoord::TopocentricCoord::getAzimuth(CoordUnit unit)         { return getLongitude(unit); }
-double afwCoord::TopocentricCoord::getAltitude(CoordUnit unit)        { return getLatitude(unit); }
-std::string afwCoord::TopocentricCoord::getAzimuthStr(CoordUnit unit) { return getLongitudeStr(unit); }
-std::string afwCoord::TopocentricCoord::getAltitudeStr()              { return getLatitudeStr(); }
 
 
 /**
@@ -475,9 +472,9 @@ std::string afwCoord::TopocentricCoord::getAltitudeStr()              { return g
  *  for any spherical polar system when the appropriate poles are supplied.
  */
 afwCoord::Coord afwCoord::Coord::transform(
-                                     Coord poleTo,   ///< Pole of the destination system in the current coords
-                                     Coord poleFrom  ///< Pole of the current system in the destination coords
-                                    ) {
+    Coord const &poleTo,   ///< Pole of the destination system in the current coords
+    Coord const &poleFrom  ///< Pole of the current system in the destination coords
+                                          ) const {
     double const alphaGP  = poleFrom[0];
     double const deltaGP  = poleFrom[1];
     double const lCP      = poleTo[0];
@@ -496,7 +493,7 @@ afwCoord::Coord afwCoord::Coord::transform(
 /**
  * @brief Convert to a specified Coord type.
  */
-afwCoord::Coord::Ptr afwCoord::Coord::convert(CoordSystem system) {
+afwCoord::Coord::Ptr afwCoord::Coord::convert(CoordSystem system) const {
 
     switch (system) {
       case FK5:
@@ -549,9 +546,9 @@ afwCoord::Coord::Ptr afwCoord::Coord::convert(CoordSystem system) {
  *
  */
 double afwCoord::Coord::angularSeparation(
-                                       Coord &c, ///< coordinate to compute our separation from
-                                       CoordUnit unit
-                                      ) {
+                                          Coord const &c, ///< coordinate to compute our separation from
+                                          CoordUnit unit
+                                         ) const {
 
     // make sure they're fk5
     Fk5Coord fk51 = this->toFk5();
@@ -599,13 +596,13 @@ double afwCoord::Coord::angularSeparation(
 /**
  * @brief Convert ourself to Fk5: RA, Dec (precess to new epoch)
  */
-afwCoord::Fk5Coord afwCoord::Coord::toFk5(double epoch) {
+afwCoord::Fk5Coord afwCoord::Coord::toFk5(double const epoch) const {
     return Fk5Coord(getLongitude(DEGREES), getLatitude(DEGREES), getEpoch()).precess(epoch);
 }
 /**
  * @brief Convert ourself to Fk5: RA, Dec (use current epoch)
  */
-afwCoord::Fk5Coord afwCoord::Coord::toFk5() {
+afwCoord::Fk5Coord afwCoord::Coord::toFk5() const {
     return Fk5Coord(getLongitude(DEGREES), getLatitude(DEGREES), getEpoch());
 }
 
@@ -613,27 +610,27 @@ afwCoord::Fk5Coord afwCoord::Coord::toFk5() {
  * @brief Convert ourself to ICRS: RA, Dec (basically J2000)
  *
  */
-afwCoord::IcrsCoord afwCoord::Coord::toIcrs() {
+afwCoord::IcrsCoord afwCoord::Coord::toIcrs() const {
     return this->toFk5().toIcrs();
 }
 
 /**
  * @brief Convert ourself to Galactic: l, b
  */
-afwCoord::GalacticCoord afwCoord::Coord::toGalactic() {
+afwCoord::GalacticCoord afwCoord::Coord::toGalactic() const {
     return this->toFk5().toGalactic();
 }
 
 /**
  * @brief Convert ourself to Ecliptic: lambda, beta (precess to new epoch)
  */
-afwCoord::EclipticCoord afwCoord::Coord::toEcliptic(double epoch) {
+afwCoord::EclipticCoord afwCoord::Coord::toEcliptic(double const epoch) const {
         return this->toFk5(epoch).toEcliptic();
 }
 /**
  * @brief Convert ourself to Ecliptic: lambda, beta (use existing epoch)
  */
-afwCoord::EclipticCoord afwCoord::Coord::toEcliptic() {
+afwCoord::EclipticCoord afwCoord::Coord::toEcliptic() const {
         return this->toFk5().toEcliptic();
 }
 
@@ -641,9 +638,9 @@ afwCoord::EclipticCoord afwCoord::Coord::toEcliptic() {
  * @brief Convert ourself to Altitude/Azimuth: alt, az
  */
 afwCoord::TopocentricCoord afwCoord::Coord::toTopocentric(
-                                        Observatory obs,            ///< observatory of observation
-                                        dafBase::DateTime obsDate   ///< date of observation
-                                       ) {
+                                        Observatory const &obs,            ///< observatory of observation
+                                        dafBase::DateTime const &obsDate   ///< date of observation
+                                                         ) const {
     return this->toFk5().toTopocentric(obs, obsDate);
 }
 
@@ -660,13 +657,13 @@ afwCoord::TopocentricCoord afwCoord::Coord::toTopocentric(
 /**
  * @brief Convert ourself to Fk5 (ie. a no-op): RA, Dec  (precess to new epoch)
  */
-afwCoord::Fk5Coord afwCoord::Fk5Coord::toFk5(double epoch) {
+afwCoord::Fk5Coord afwCoord::Fk5Coord::toFk5(double const epoch) const {
     return Fk5Coord(getLongitude(DEGREES), getLatitude(DEGREES), getEpoch()).precess(epoch);
 }
 /**
  * @brief Convert ourself to Fk5 (ie. a no-op): RA, Dec (keep current epoch)
  */
-afwCoord::Fk5Coord afwCoord::Fk5Coord::toFk5() {
+afwCoord::Fk5Coord afwCoord::Fk5Coord::toFk5() const {
     return Fk5Coord(getLongitude(DEGREES), getLatitude(DEGREES), getEpoch());
 }
 
@@ -674,7 +671,7 @@ afwCoord::Fk5Coord afwCoord::Fk5Coord::toFk5() {
  * @brief Convert ourself to ICRS: RA, Dec (basically J2000)
  *
  */
-afwCoord::IcrsCoord afwCoord::Fk5Coord::toIcrs() {
+afwCoord::IcrsCoord afwCoord::Fk5Coord::toIcrs() const {
 
     // only do the precession to 2000 if we're not already there.
     if ( fabs(getEpoch() - 2000.0) > epochTolerance ) {
@@ -689,7 +686,7 @@ afwCoord::IcrsCoord afwCoord::Fk5Coord::toIcrs() {
 /**
  * @brief Convert ourself to Galactic: l, b
  */
-afwCoord::GalacticCoord afwCoord::Fk5Coord::toGalactic() {
+afwCoord::GalacticCoord afwCoord::Fk5Coord::toGalactic() const {
 
     // if we're epoch==2000, we can transform, otherwise we need to precess first
     Fk5Coord c;
@@ -707,7 +704,7 @@ afwCoord::GalacticCoord afwCoord::Fk5Coord::toGalactic() {
 /**
  * @brief Convert ourself to Ecliptic: lambda, beta (precess to new epoch)
  */
-afwCoord::EclipticCoord afwCoord::Fk5Coord::toEcliptic(double epoch) {
+afwCoord::EclipticCoord afwCoord::Fk5Coord::toEcliptic(double const epoch) const {
     double const eclPoleIncl = eclipticPoleInclination(epoch);
     Coord const eclPoleInEquatorial(270.0, 90.0 - eclPoleIncl, epoch);
     Coord const equPoleInEcliptic(90.0, 90.0 - eclPoleIncl, epoch);
@@ -717,7 +714,7 @@ afwCoord::EclipticCoord afwCoord::Fk5Coord::toEcliptic(double epoch) {
 /**
  * @brief Convert ourself to Ecliptic: lambda, beta (use current epoch)
  */
-afwCoord::EclipticCoord afwCoord::Fk5Coord::toEcliptic() {
+afwCoord::EclipticCoord afwCoord::Fk5Coord::toEcliptic() const {
     return this->toEcliptic(getEpoch());
 }
 
@@ -725,9 +722,9 @@ afwCoord::EclipticCoord afwCoord::Fk5Coord::toEcliptic() {
  * @brief Convert ourself to Altitude/Azimuth: alt, az
  */
 afwCoord::TopocentricCoord afwCoord::Fk5Coord::toTopocentric(
-                                                             Observatory obs, ///< observatory
-                                                             dafBase::DateTime obsDate ///< date of obs.
-                                                            ) {
+    Observatory const &obs,           ///< observatory
+    dafBase::DateTime const &obsDate  ///< date of obs.
+                                                            ) const {
 
     // make sure we precess to the epoch
     Fk5Coord fk5 = precess(obsDate.get(dafBase::DateTime::EPOCH));
@@ -766,15 +763,15 @@ afwCoord::TopocentricCoord afwCoord::Fk5Coord::toTopocentric(
  */
 afwCoord::Fk5Coord afwCoord::Fk5Coord::precess(
                                                double const epochTo ///< epoch to precess to
-                                              ) {
+                                              ) const {
 
     // return a copy if the epochs are the same
     if ( fabs(getEpoch() - epochTo) < epochTolerance) {
         return Fk5Coord(getLongitude(DEGREES), getLatitude(DEGREES), getEpoch());
     }
     
-    dafBase::DateTime dateFrom(getEpoch(), dafBase::DateTime::EPOCH, dafBase::DateTime::TAI);
-    dafBase::DateTime dateTo(epochTo, dafBase::DateTime::EPOCH, dafBase::DateTime::TAI);
+    dafBase::DateTime const dateFrom(getEpoch(), dafBase::DateTime::EPOCH, dafBase::DateTime::TAI);
+    dafBase::DateTime const dateTo(epochTo, dafBase::DateTime::EPOCH, dafBase::DateTime::TAI);
     double const jd0 = dateFrom.get(dafBase::DateTime::JD);
     double const jd  = dateTo.get(dafBase::DateTime::JD);
 
@@ -821,20 +818,20 @@ void afwCoord::IcrsCoord::reset(double const longitudeDeg, double const latitude
 /**
  * @brief Fk5 converter for IcrsCoord. (specify epoch)
  */
-afwCoord::Fk5Coord afwCoord::IcrsCoord::toFk5(double epoch) {
+afwCoord::Fk5Coord afwCoord::IcrsCoord::toFk5(double const epoch) const {
     return Fk5Coord(getLongitude(DEGREES), getLatitude(DEGREES), 2000.0).precess(epoch);
 }
 /**
  * @brief Fk5 converter for IcrsCoord. (no epoch specified)
  */
-afwCoord::Fk5Coord afwCoord::IcrsCoord::toFk5() {
+afwCoord::Fk5Coord afwCoord::IcrsCoord::toFk5() const {
     return Fk5Coord(getLongitude(DEGREES), getLatitude(DEGREES), 2000.0);
 }
 
 /**
  * @brief Icrs converter for IcrsCoord. (ie. a no-op)
  */
-afwCoord::IcrsCoord afwCoord::IcrsCoord::toIcrs() {
+afwCoord::IcrsCoord afwCoord::IcrsCoord::toIcrs() const {
     return IcrsCoord(getLongitude(DEGREES), getLatitude(DEGREES));
 }
 
@@ -857,7 +854,7 @@ void afwCoord::GalacticCoord::reset(double const longitudeDeg, double const lati
 /**
  * @brief Convert ourself from galactic to Fk5 (specify epoch)
  */
-afwCoord::Fk5Coord afwCoord::GalacticCoord::toFk5(double epoch) {
+afwCoord::Fk5Coord afwCoord::GalacticCoord::toFk5(double const epoch) const {
     // transform to fk5
     // galactic coords are ~constant, and the poles used are for epoch=2000, so we get J2000
     Coord c = transform(GalacticPoleInFk5, Fk5PoleInGalactic);
@@ -866,14 +863,14 @@ afwCoord::Fk5Coord afwCoord::GalacticCoord::toFk5(double epoch) {
 /**
  * @brief Convert ourself from galactic to Fk5 (no epoch specified)
  */
-afwCoord::Fk5Coord afwCoord::GalacticCoord::toFk5() {
+afwCoord::Fk5Coord afwCoord::GalacticCoord::toFk5() const {
     return this->toFk5(2000.0);
 }
 
 /**
  * @brief Convert ourself from Galactic to Galactic ... a no-op
  */
-afwCoord::GalacticCoord afwCoord::GalacticCoord::toGalactic() { 
+afwCoord::GalacticCoord afwCoord::GalacticCoord::toGalactic() const { 
     return GalacticCoord(getLongitude(DEGREES), getLatitude(DEGREES));
 }
 
@@ -889,13 +886,13 @@ afwCoord::GalacticCoord afwCoord::GalacticCoord::toGalactic() {
 /**
  * @brief Convert ourself from Ecliptic to Ecliptic ... a no-op (but precess to new epoch)
  */
-afwCoord::EclipticCoord afwCoord::EclipticCoord::toEcliptic(double epoch) {
+afwCoord::EclipticCoord afwCoord::EclipticCoord::toEcliptic(double const epoch) const {
     return EclipticCoord(getLongitude(DEGREES), getLatitude(DEGREES), getEpoch()).precess(epoch);
 }
 /**
  * @brief Convert ourself from Ecliptic to Ecliptic ... a no-op (use the current epoch)
  */
-afwCoord::EclipticCoord afwCoord::EclipticCoord::toEcliptic() {
+afwCoord::EclipticCoord afwCoord::EclipticCoord::toEcliptic() const {
     return EclipticCoord(getLongitude(DEGREES), getLatitude(DEGREES), getEpoch());
 }
 
@@ -903,7 +900,7 @@ afwCoord::EclipticCoord afwCoord::EclipticCoord::toEcliptic() {
 /**
  * @brief Convert ourself from Ecliptic to Fk5 (precess to new epoch)
  */
-afwCoord::Fk5Coord afwCoord::EclipticCoord::toFk5(double epoch) {
+afwCoord::Fk5Coord afwCoord::EclipticCoord::toFk5(double const epoch) const {
     double const eclPoleIncl = eclipticPoleInclination(epoch);
     Coord const eclipticPoleInFk5(270.0, 90.0 - eclPoleIncl, epoch);
     Coord const fk5PoleInEcliptic(90.0, 90.0 - eclPoleIncl, epoch);
@@ -913,7 +910,7 @@ afwCoord::Fk5Coord afwCoord::EclipticCoord::toFk5(double epoch) {
 /**
  * @brief Convert ourself from Ecliptic to Fk5 (use current epoch)
  */
-afwCoord::Fk5Coord afwCoord::EclipticCoord::toFk5() {
+afwCoord::Fk5Coord afwCoord::EclipticCoord::toFk5() const {
     return this->toFk5(getEpoch());
 }
 
@@ -924,8 +921,8 @@ afwCoord::Fk5Coord afwCoord::EclipticCoord::toFk5() {
  * Do this by going through fk5
  */
 afwCoord::EclipticCoord afwCoord::EclipticCoord::precess(
-                                                         double epochTo ///< epoch to precess to.
-                                                        ) {
+                                                         double const epochTo ///< epoch to precess to.
+                                                        ) const {
     return this->toFk5().precess(epochTo).toEcliptic();
 }
 
@@ -940,7 +937,7 @@ afwCoord::EclipticCoord afwCoord::EclipticCoord::precess(
 /**
  * @brief Convert ourself from Topocentric to Fk5
  */
-afwCoord::Fk5Coord afwCoord::TopocentricCoord::toFk5(double epoch) {
+afwCoord::Fk5Coord afwCoord::TopocentricCoord::toFk5(double const epoch) const {
      
     double const A        = getAzimuth(RADIANS);
     double const h        = getAltitude(RADIANS);
@@ -962,7 +959,7 @@ afwCoord::Fk5Coord afwCoord::TopocentricCoord::toFk5(double epoch) {
 /**
  * @brief Convert outself from Topocentric to Fk5 (use current epoch)
  */
-afwCoord::Fk5Coord afwCoord::TopocentricCoord::toFk5() {
+afwCoord::Fk5Coord afwCoord::TopocentricCoord::toFk5() const {
     return this->toFk5(getEpoch());
 }
 
@@ -973,7 +970,7 @@ afwCoord::Fk5Coord afwCoord::TopocentricCoord::toFk5() {
 afwCoord::TopocentricCoord afwCoord::TopocentricCoord::toTopocentric(
     Observatory const &obs, ///< observatory of observation
     dafBase::DateTime const &date        ///< date of observation
-                                                                    ) {
+                                                                    ) const {
     return TopocentricCoord(getLongitude(DEGREES), getLatitude(DEGREES), getEpoch(), _obs);
 }
 
@@ -982,7 +979,7 @@ afwCoord::TopocentricCoord afwCoord::TopocentricCoord::toTopocentric(
  *
  * As this is essentially a copy-constructor, the extra info can be obtained internally.
  */
-afwCoord::TopocentricCoord afwCoord::TopocentricCoord::toTopocentric() {
+afwCoord::TopocentricCoord afwCoord::TopocentricCoord::toTopocentric() const {
     return TopocentricCoord(getLongitude(DEGREES), getLatitude(DEGREES), getEpoch(), _obs);
 }
 

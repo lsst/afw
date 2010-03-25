@@ -31,12 +31,12 @@ public:
     void setLongitude(double const longitude);
     void setElevation(double const elevation);
     
-    double getLatitude(CoordUnit unit);
-    double getLongitude(CoordUnit unit);
-    double getElevation() { return _elevation; }
+    double getLatitude(CoordUnit unit) const;
+    double getLongitude(CoordUnit unit) const;
+    double getElevation() const { return _elevation; }
     
-    std::string getLatitudeStr();
-    std::string getLongitudeStr();
+    std::string getLatitudeStr() const;
+    std::string getLongitudeStr() const;
 
 private:
     double _latitudeRad;

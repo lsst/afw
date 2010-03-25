@@ -7,9 +7,6 @@
  * @ingroup afw
  * @author Steve Bickerton
  *
- * @todo Finish python docs
- * @todo Start tex doc
- * @todo add *many* const
  * @todo add FK4 ... as needed
  */ 
 #include <limits>
@@ -22,8 +19,6 @@
 #include "lsst/afw/coord/Observatory.h"
 #include "lsst/daf/base.h"
 
-//#include "boost/unordered_map.hpp"
-
 namespace afwGeom    = lsst::afw::geom;
 namespace dafBase = lsst::daf::base;
 
@@ -32,26 +27,12 @@ namespace lsst {
 namespace afw {    
 namespace coord {
 
+    
+/*
+ * Information about the coordinate system we support
+ */
 enum CoordSystem { FK5, ICRS, GALACTIC, ECLIPTIC, TOPOCENTRIC };
-
-namespace {    
-typedef std::map<std::string, CoordSystem> CoordSystemMap;
-CoordSystemMap const getCoordSystemMap() {
-    CoordSystemMap idMap;
-    idMap["FK5"]         = FK5;
-    idMap["ICRS"]        = ICRS;
-    idMap["ECLIPTIC"]    = ECLIPTIC;
-    idMap["GALACTIC"]    = GALACTIC;
-    idMap["ELON"]        = ECLIPTIC;
-    idMap["GLON"]        = GALACTIC;
-    idMap["TOPOCENTRIC"] = TOPOCENTRIC;
-    return idMap;
-}
-}
-inline CoordSystem const makeCoordEnum(std::string system) {
-    static CoordSystemMap idmap = getCoordSystemMap();
-    return idmap[system];
-}
+CoordSystem const makeCoordEnum(std::string const system);
 
     
 class IcrsCoord;
@@ -79,38 +60,40 @@ public:
     
     void reset(double const longitude, double const latitude, double const epoch = 2000.0);
 
-    double getEpoch()         { return _epoch; }
+    inline double getEpoch() const { return _epoch; }
 
-    afwGeom::Point2D getPosition(CoordUnit unit = DEGREES);
-    afwGeom::Point3D getVector();
-    std::pair<std::string, std::string> getCoordNames();
+    afwGeom::Point2D getPosition(CoordUnit unit = DEGREES) const;
+    afwGeom::Point3D getVector() const;
+    inline std::pair<std::string, std::string> getCoordNames() const {
+        return std::pair<std::string, std::string>("RA", "Dec");
+    }
 
-    double getLongitude(CoordUnit unit);
-    double getLatitude(CoordUnit unit);
-    std::string getLongitudeStr(CoordUnit unit);
-    std::string getLatitudeStr();
+    double getLongitude(CoordUnit unit) const;
+    double getLatitude(CoordUnit unit) const;
+    std::string getLongitudeStr(CoordUnit unit) const;
+    std::string getLatitudeStr() const;
 
-    double operator[](int index);
+    double operator[](int const index) const;
     
-    Coord transform(Coord const poleFrom, Coord const poleTo);
-    double angularSeparation(Coord &c, CoordUnit unit);
+    Coord transform(Coord const &poleFrom, Coord const &poleTo) const;
+    double angularSeparation(Coord const &c, CoordUnit unit) const;
 
-    Coord::Ptr convert(CoordSystem system);
+    Coord::Ptr convert(CoordSystem system) const;
 
-    virtual Fk5Coord toFk5(double epoch);
-    virtual Fk5Coord toFk5();
-    virtual IcrsCoord toIcrs();
-    virtual GalacticCoord toGalactic();
-    virtual EclipticCoord toEcliptic(double epoch);
-    virtual EclipticCoord toEcliptic();
-    virtual TopocentricCoord toTopocentric(Observatory obs, dafBase::DateTime obsDate);
+    virtual Fk5Coord toFk5(double const epoch) const;
+    virtual Fk5Coord toFk5() const;
+    virtual IcrsCoord toIcrs() const;
+    virtual GalacticCoord toGalactic() const;
+    virtual EclipticCoord toEcliptic(double const epoch) const;
+    virtual EclipticCoord toEcliptic() const;
+    virtual TopocentricCoord toTopocentric(Observatory const &obs, dafBase::DateTime const &obsDate) const;
 
 private:
     double _longitudeRad;
     double _latitudeRad;
     double _epoch;
 
-    void _verifyValues();
+    void _verifyValues() const;
 };
 
 
@@ -130,14 +113,14 @@ public:
     
     typedef boost::shared_ptr<IcrsCoord> Ptr;
 
-    double getRa(CoordUnit unit);
-    double getDec(CoordUnit unit);
-    std::string getRaStr(CoordUnit unit);
-    std::string getDecStr();
+    inline double getRa(CoordUnit unit) const         { return getLongitude(unit); }   
+    inline double getDec(CoordUnit unit) const        { return getLatitude(unit); }    
+    inline std::string getRaStr(CoordUnit unit) const { return getLongitudeStr(unit); }
+    inline std::string getDecStr() const              { return getLatitudeStr(); }     
 
-    virtual Fk5Coord toFk5(double epoch);
-    virtual Fk5Coord toFk5();
-    virtual IcrsCoord toIcrs();
+    virtual Fk5Coord toFk5(double const epoch) const;
+    virtual Fk5Coord toFk5() const;
+    virtual IcrsCoord toIcrs() const;
     
 private:
 };
@@ -161,20 +144,20 @@ public:
     
     typedef boost::shared_ptr<Fk5Coord> Ptr;
     
-    Fk5Coord precess(double epochTo);
+    Fk5Coord precess(double const epochTo) const;
     
-    double getRa(CoordUnit unit);
-    double getDec(CoordUnit unit);
-    std::string getRaStr(CoordUnit unit);
-    std::string getDecStr();
+    inline double getRa(CoordUnit unit) const         { return getLongitude(unit); }   
+    inline double getDec(CoordUnit unit) const        { return getLatitude(unit); }    
+    inline std::string getRaStr(CoordUnit unit) const { return getLongitudeStr(unit); }
+    inline std::string getDecStr() const              { return getLatitudeStr(); }     
 
-    virtual Fk5Coord toFk5(double epoch);
-    virtual Fk5Coord toFk5();
-    virtual IcrsCoord toIcrs();
-    virtual GalacticCoord toGalactic();
-    virtual EclipticCoord toEcliptic(double epoch);
-    virtual EclipticCoord toEcliptic();
-    virtual TopocentricCoord toTopocentric(Observatory obs, dafBase::DateTime obsDate);
+    virtual Fk5Coord toFk5(double const epoch) const;
+    virtual Fk5Coord toFk5() const;
+    virtual IcrsCoord toIcrs() const;
+    virtual GalacticCoord toGalactic() const;
+    virtual EclipticCoord toEcliptic(double const epoch) const;
+    virtual EclipticCoord toEcliptic() const;
+    virtual TopocentricCoord toTopocentric(Observatory const &obs, dafBase::DateTime const &obsDate) const;
 
     
 private:
@@ -198,16 +181,18 @@ public:
     
     typedef boost::shared_ptr<GalacticCoord> Ptr;
     
-    std::pair<std::string, std::string> getCoordNames();
-
-    double getL(CoordUnit unit);
-    double getB(CoordUnit unit);
-    std::string getLStr(CoordUnit unit);
-    std::string getBStr();
+    inline std::pair<std::string, std::string> getCoordNames() const {
+        return std::pair<std::string, std::string>("L", "B");
+    }
     
-    virtual Fk5Coord toFk5(double epoch);
-    virtual Fk5Coord toFk5();
-    virtual GalacticCoord toGalactic();
+    inline double getL(CoordUnit unit) const         { return getLongitude(unit); }   
+    inline double getB(CoordUnit unit) const         { return getLatitude(unit); }    
+    inline std::string getLStr(CoordUnit unit) const { return getLongitudeStr(unit); }
+    inline std::string getBStr() const               { return getLatitudeStr(); }     
+    
+    virtual Fk5Coord toFk5(double const epoch) const;
+    virtual Fk5Coord toFk5() const ;
+    virtual GalacticCoord toGalactic() const;
 
 private:
 };
@@ -232,26 +217,31 @@ public:
     
     typedef boost::shared_ptr<EclipticCoord> Ptr;
 
-    std::pair<std::string, std::string> getCoordNames();
-
-    double getLambda(CoordUnit unit);
-    double getBeta(CoordUnit unit);
-    std::string getLambdaStr(CoordUnit unit);
-    std::string getBetaStr();
+    inline std::pair<std::string, std::string> getCoordNames() const {
+        return std::pair<std::string, std::string>("Lambda", "Beta");
+    }
+    inline double getLambda(CoordUnit unit) const         { return getLongitude(unit); }   
+    inline double getBeta(CoordUnit unit) const           { return getLatitude(unit); }    
+    inline std::string getLambdaStr(CoordUnit unit) const { return getLongitudeStr(unit); }
+    inline std::string getBetaStr() const                 { return getLatitudeStr(); }     
     
     
-    virtual Fk5Coord toFk5(double epoch);
-    virtual Fk5Coord toFk5();
-    virtual EclipticCoord toEcliptic(double epoch);
-    virtual EclipticCoord toEcliptic();
+    virtual Fk5Coord toFk5(double const epoch) const; 
+    virtual Fk5Coord toFk5() const;
+    virtual EclipticCoord toEcliptic(double const epoch) const;
+    virtual EclipticCoord toEcliptic() const;
 
-    EclipticCoord precess(double epochTo);
+    EclipticCoord precess(double const epochTo) const;
     
 private:
 
 };
 
 
+/**
+ * @class TopocentricCoord
+ * @brief A class to handle topocentric (AltAz) coordinates (inherits from Coord)
+ */
 class TopocentricCoord : public Coord {
 public:
     
@@ -266,30 +256,28 @@ public:
 
     typedef boost::shared_ptr<TopocentricCoord> Ptr;
     
-    std::pair<std::string, std::string> getCoordNames();
-    
-    double getAzimuth(CoordUnit unit);
-    double getAltitude(CoordUnit unit);
-    std::string getAzimuthStr(CoordUnit unit);
-    std::string getAltitudeStr();
+    inline std::pair<std::string, std::string> getCoordNames() const {
+        return std::pair<std::string, std::string>("Az", "Alt");
+    }
+    inline double getAzimuth(CoordUnit unit) const         { return getLongitude(unit); }   
+    inline double getAltitude(CoordUnit unit) const        { return getLatitude(unit); }    
+    inline std::string getAzimuthStr(CoordUnit unit) const { return getLongitudeStr(unit); }
+    inline std::string getAltitudeStr() const              { return getLatitudeStr(); }     
 
-
-    virtual Fk5Coord toFk5(double epoch);
-    virtual Fk5Coord toFk5();
-    virtual TopocentricCoord toTopocentric(Observatory const &obs, dafBase::DateTime const &date);
-    virtual TopocentricCoord toTopocentric();
+    virtual Fk5Coord toFk5(double const epoch) const;
+    virtual Fk5Coord toFk5() const;
+    virtual TopocentricCoord toTopocentric(Observatory const &obs, dafBase::DateTime const &date) const;
+    virtual TopocentricCoord toTopocentric() const;
     
 private:
     Observatory _obs;
 };
 
-double eclipticPoleInclination(double const epoch);
-    
-double dmsStringToDegrees(std::string const dms);
-double hmsStringToDegrees(std::string const hms);
-std::string degreesToDmsString(double const deg);
-std::string degreesToHmsString(double const deg);    
-    
+
+/*
+ * Factory Functions
+ *
+ */
 Coord::Ptr makeCoord(CoordSystem const system, double const ra, double const dec, double const epoch);
 Coord::Ptr makeCoord(CoordSystem const system, std::string const ra, std::string const dec,
                      double const epoch);
@@ -303,6 +291,20 @@ Coord::Ptr makeCoord(CoordSystem const system, double const ra, double const dec
 Coord::Ptr makeCoord(CoordSystem const system, std::string const ra, std::string const dec);
 Coord::Ptr makeCoord(CoordSystem const system, afwGeom::Point2D const &p2d, CoordUnit unit);
 Coord::Ptr makeCoord(CoordSystem const system, afwGeom::Point3D const &p3d);
+
+
+/*
+ * Utility functions
+ *
+ */
+double eclipticPoleInclination(double const epoch);
+    
+double dmsStringToDegrees(std::string const dms);
+double hmsStringToDegrees(std::string const hms);
+std::string degreesToDmsString(double const deg);
+std::string degreesToHmsString(double const deg);    
+    
+
     
 }}}
 

@@ -59,7 +59,7 @@ coord::Observatory::Observatory(
  */
 double coord::Observatory::getLongitude(
                                         CoordUnit unit  ///< units to return (DEGREES, RADIANS, HOURS)
-                                       ) {
+                                       ) const {
     switch (unit) {
       case DEGREES:
         return radToDeg*_longitudeRad;
@@ -85,7 +85,7 @@ double coord::Observatory::getLongitude(
  */
 double coord::Observatory::getLatitude(
                                        CoordUnit unit ///< units to return (DEGREES, RADIANS)
-                                      ) {
+                                      ) const {
     switch (unit) {
       case DEGREES:
         return radToDeg*_latitudeRad;
@@ -137,7 +137,7 @@ void coord::Observatory::setElevation(
  *       an exception to be thrown
  *
  */
-std::string coord::Observatory::getLongitudeStr() {
+std::string coord::Observatory::getLongitudeStr() const {
     return degreesToDmsString(radToDeg*_longitudeRad);
 }
 /**
@@ -147,7 +147,7 @@ std::string coord::Observatory::getLongitudeStr() {
  *       the units can not be explicitly requested.
  *
  */
-std::string coord::Observatory::getLatitudeStr() {
+std::string coord::Observatory::getLatitudeStr() const {
     return degreesToDmsString(radToDeg*_latitudeRad);
 }
 
