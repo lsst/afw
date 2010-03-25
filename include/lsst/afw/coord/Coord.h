@@ -50,17 +50,17 @@ class TopocentricCoord;
 class Coord {
 public:
 
+    typedef boost::shared_ptr<Coord> Ptr;
+
     Coord(afwGeom::Point2D const &p2d, CoordUnit unit = DEGREES, double const epoch = 2000.0);
     Coord(afwGeom::Point3D const &p3d, double const epoch = 2000.0);
     Coord(double const ra, double const dec, double const epoch = 2000.0);
     Coord(std::string const ra, std::string const dec, double const epoch = 2000.0);
     Coord();
-
-    typedef boost::shared_ptr<Coord> Ptr;
     
     void reset(double const longitude, double const latitude, double const epoch = 2000.0);
 
-    inline double getEpoch() const { return _epoch; }
+    double getEpoch() const { return _epoch; }
 
     afwGeom::Point2D getPosition(CoordUnit unit = DEGREES) const;
     afwGeom::Point3D getVector() const;
@@ -68,12 +68,13 @@ public:
         return std::pair<std::string, std::string>("RA", "Dec");
     }
 
+    // These are inline functions and are defined at the end of this header file
+    double operator[](int const index) const;
     double getLongitude(CoordUnit unit) const;
     double getLatitude(CoordUnit unit) const;
     std::string getLongitudeStr(CoordUnit unit) const;
     std::string getLatitudeStr() const;
 
-    double operator[](int const index) const;
     
     Coord transform(Coord const &poleFrom, Coord const &poleTo) const;
     double angularSeparation(Coord const &c, CoordUnit unit) const;
@@ -102,7 +103,10 @@ private:
  * @brief A class to handle Icrs coordinates (inherits from Coord)
  */
 class IcrsCoord : public Coord {
-public:    
+public:
+    
+    typedef boost::shared_ptr<IcrsCoord> Ptr;
+
     IcrsCoord(afwGeom::Point2D const &p2d, CoordUnit unit = DEGREES) : Coord(p2d, unit, 2000.0) {}
     IcrsCoord(afwGeom::Point3D const &p3d) : Coord(p3d, 2000.0) {}
     IcrsCoord(double const ra, double const dec) : Coord(ra, dec, 2000.0) {}
@@ -111,12 +115,10 @@ public:
 
     void reset(double const longitude, double const latitude);
     
-    typedef boost::shared_ptr<IcrsCoord> Ptr;
-
-    inline double getRa(CoordUnit unit) const         { return getLongitude(unit); }   
-    inline double getDec(CoordUnit unit) const        { return getLatitude(unit); }    
-    inline std::string getRaStr(CoordUnit unit) const { return getLongitudeStr(unit); }
-    inline std::string getDecStr() const              { return getLatitudeStr(); }     
+    double getRa(CoordUnit unit) const         { return getLongitude(unit); }   
+    double getDec(CoordUnit unit) const        { return getLatitude(unit); }    
+    std::string getRaStr(CoordUnit unit) const { return getLongitudeStr(unit); }
+    std::string getDecStr() const              { return getLatitudeStr(); }     
 
     virtual Fk5Coord toFk5(double const epoch) const;
     virtual Fk5Coord toFk5() const;
@@ -132,6 +134,9 @@ private:
  */
 class Fk5Coord : public Coord {
 public:    
+
+    typedef boost::shared_ptr<Fk5Coord> Ptr;
+    
     Fk5Coord(afwGeom::Point2D const &p2d, CoordUnit unit = DEGREES, double const epoch = 2000.0) :
         Coord(p2d, unit, epoch) {}
     Fk5Coord(afwGeom::Point3D const &p3d, double const epoch = 2000.0) :
@@ -142,14 +147,12 @@ public:
         Coord(ra, dec, epoch) {}
     Fk5Coord() : Coord() {}
     
-    typedef boost::shared_ptr<Fk5Coord> Ptr;
-    
     Fk5Coord precess(double const epochTo) const;
     
-    inline double getRa(CoordUnit unit) const         { return getLongitude(unit); }   
-    inline double getDec(CoordUnit unit) const        { return getLatitude(unit); }    
-    inline std::string getRaStr(CoordUnit unit) const { return getLongitudeStr(unit); }
-    inline std::string getDecStr() const              { return getLatitudeStr(); }     
+    double getRa(CoordUnit unit) const         { return getLongitude(unit); }   
+    double getDec(CoordUnit unit) const        { return getLatitude(unit); }    
+    std::string getRaStr(CoordUnit unit) const { return getLongitudeStr(unit); }
+    std::string getDecStr() const              { return getLatitudeStr(); }     
 
     virtual Fk5Coord toFk5(double const epoch) const;
     virtual Fk5Coord toFk5() const;
@@ -171,6 +174,8 @@ private:
 class GalacticCoord : public Coord {
 public:
     
+    typedef boost::shared_ptr<GalacticCoord> Ptr;
+    
     GalacticCoord(afwGeom::Point2D const &p2d, CoordUnit unit = DEGREES) : Coord(p2d, unit) {}
     GalacticCoord(afwGeom::Point3D const &p3d) : Coord(p3d) {}
     GalacticCoord(double const l, double const b) : Coord(l, b) {}
@@ -179,16 +184,14 @@ public:
 
     void reset(double const longitude, double const latitude);
     
-    typedef boost::shared_ptr<GalacticCoord> Ptr;
-    
     inline std::pair<std::string, std::string> getCoordNames() const {
         return std::pair<std::string, std::string>("L", "B");
     }
     
-    inline double getL(CoordUnit unit) const         { return getLongitude(unit); }   
-    inline double getB(CoordUnit unit) const         { return getLatitude(unit); }    
-    inline std::string getLStr(CoordUnit unit) const { return getLongitudeStr(unit); }
-    inline std::string getBStr() const               { return getLatitudeStr(); }     
+    double getL(CoordUnit unit) const         { return getLongitude(unit); }   
+    double getB(CoordUnit unit) const         { return getLatitude(unit); }    
+    std::string getLStr(CoordUnit unit) const { return getLongitudeStr(unit); }
+    std::string getBStr() const               { return getLatitudeStr(); }     
     
     virtual Fk5Coord toFk5(double const epoch) const;
     virtual Fk5Coord toFk5() const ;
@@ -206,6 +209,8 @@ private:
 class EclipticCoord : public Coord {
 public:
     
+    typedef boost::shared_ptr<EclipticCoord> Ptr;
+
     EclipticCoord(afwGeom::Point2D const &p2d, CoordUnit unit = DEGREES, double const epoch = 2000.0) :
         Coord(p2d, unit, epoch) {}
     EclipticCoord(afwGeom::Point3D const &p3d, double const epoch = 2000.0) : Coord(p3d, epoch) {}
@@ -215,15 +220,13 @@ public:
         Coord(lambda, beta, epoch) {}
     EclipticCoord() : Coord() {}
     
-    typedef boost::shared_ptr<EclipticCoord> Ptr;
-
-    inline std::pair<std::string, std::string> getCoordNames() const {
+    std::pair<std::string, std::string> getCoordNames() const {
         return std::pair<std::string, std::string>("Lambda", "Beta");
     }
-    inline double getLambda(CoordUnit unit) const         { return getLongitude(unit); }   
-    inline double getBeta(CoordUnit unit) const           { return getLatitude(unit); }    
-    inline std::string getLambdaStr(CoordUnit unit) const { return getLongitudeStr(unit); }
-    inline std::string getBetaStr() const                 { return getLatitudeStr(); }     
+    double getLambda(CoordUnit unit) const         { return getLongitude(unit); }   
+    double getBeta(CoordUnit unit) const           { return getLatitude(unit); }    
+    std::string getLambdaStr(CoordUnit unit) const { return getLongitudeStr(unit); }
+    std::string getBetaStr() const                 { return getLatitudeStr(); }     
     
     
     virtual Fk5Coord toFk5(double const epoch) const; 
@@ -245,6 +248,8 @@ private:
 class TopocentricCoord : public Coord {
 public:
     
+    typedef boost::shared_ptr<TopocentricCoord> Ptr;
+    
     TopocentricCoord(afwGeom::Point2D const &p2d, CoordUnit unit, double const epoch,
                      Observatory const &obs) : Coord(p2d, unit, epoch), _obs(obs) {}
     TopocentricCoord(afwGeom::Point3D const &p3d, double const epoch,
@@ -254,15 +259,13 @@ public:
     TopocentricCoord(std::string const az, std::string const alt, double const epoch,
                      Observatory const &obs) : Coord(az, alt, epoch), _obs(obs) {}
 
-    typedef boost::shared_ptr<TopocentricCoord> Ptr;
-    
-    inline std::pair<std::string, std::string> getCoordNames() const {
+    std::pair<std::string, std::string> getCoordNames() const {
         return std::pair<std::string, std::string>("Az", "Alt");
     }
-    inline double getAzimuth(CoordUnit unit) const         { return getLongitude(unit); }   
-    inline double getAltitude(CoordUnit unit) const        { return getLatitude(unit); }    
-    inline std::string getAzimuthStr(CoordUnit unit) const { return getLongitudeStr(unit); }
-    inline std::string getAltitudeStr() const              { return getLatitudeStr(); }     
+    double getAzimuth(CoordUnit unit) const         { return getLongitude(unit); }   
+    double getAltitude(CoordUnit unit) const        { return getLatitude(unit); }    
+    std::string getAzimuthStr(CoordUnit unit) const { return getLongitudeStr(unit); }
+    std::string getAltitudeStr() const              { return getLatitudeStr(); }     
 
     virtual Fk5Coord toFk5(double const epoch) const;
     virtual Fk5Coord toFk5() const;
@@ -307,5 +310,114 @@ std::string degreesToHmsString(double const deg);
 
     
 }}}
+
+
+/* ============================================================== 
+ *
+ * Definitions of inline functions
+ *
+ * ============================================================== */
+
+
+/**
+ * @brief Provide access to our contents via an index
+ *
+ * @note This only gets you the internal format ... RADIANS.
+ */
+inline double lsst::afw::coord::Coord::operator[](int const index) const {
+
+    switch (index) {
+      case 0:
+        return _longitudeRad;
+        break;
+      case 1:
+        return _latitudeRad;
+        break;
+      default:
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                          "Index must be 0 or 1.");
+        break;
+    }
+}
+
+/**
+ * @brief The main access method for the longitudinal coordinate
+ *
+ * All systems store their longitudinal coordinate in _longitude,
+ * be it RA, l, lambda, or azimuth.  This is how they're accessed.
+ *
+ */
+inline double lsst::afw::coord::Coord::getLongitude(CoordUnit unit) const {
+    switch (unit) {
+      case DEGREES:
+        return radToDeg*_longitudeRad;
+        break;
+      case RADIANS:
+        return _longitudeRad;
+        break;
+      case HOURS:
+        return radToDeg*_longitudeRad/15.0;
+        break;
+      default:
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                          "Units must be DEGREES, RADIANS, or HOURS.");
+        break;
+    }
+}
+
+/**
+ * @brief The main access method for the longitudinal coordinate
+ *
+ * All systems store their latitudinal coordinate in _latitude,
+ * be it Dec, b, beta, or altitude.  This is how they're accessed.
+ *
+ * @note There's no reason to want a latitude in hours, so that unit will cause
+ *       an exception to be thrown
+ *
+ */
+inline double lsst::afw::coord::Coord::getLatitude(CoordUnit unit) const {
+    switch (unit) {
+      case DEGREES:
+        return radToDeg*_latitudeRad;
+        break;
+      case RADIANS:
+        return _latitudeRad;
+        break;
+      default:
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                          "Units must be DEGREES, or RADIANS.");
+        break;
+    }
+}
+
+/**
+ * @brief Allow quick access to the longitudinal coordinate as a string
+ *
+ * @note There's no reason to want a longitude in radians, so that unit will cause
+ *       an exception to be thrown
+ * @note There's no clear winner for a default, so the unit must always be
+ *       explicitly provided.
+ *
+ */
+inline std::string lsst::afw::coord::Coord::getLongitudeStr(CoordUnit unit) const {
+    if (unit == HOURS || unit == DEGREES) {
+        return degreesToDmsString(getLongitude(unit));
+    } else {
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                          "Units must be DEGREES or HOURS");
+    }
+}
+/**
+ * @brief Allow quick access to the longitude coordinate as a string
+ *
+ * @note There's no reason to want a latitude in radians or hours, so
+ *       the units can not be explicitly requested.
+ *
+ */
+inline std::string lsst::afw::coord::Coord::getLatitudeStr() const {
+    return degreesToDmsString(getLatitude(DEGREES));
+}
+
+
 
 #endif

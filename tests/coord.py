@@ -91,6 +91,12 @@ class CoordTestCase(unittest.TestCase):
                           lambda: afwCoord.makeCoord(afwCoord.GALACTIC, self.l, self.b, 2000.0))
         self.assertRaises(pexEx.LsstCppException,
                           lambda: afwCoord.makeCoord(afwCoord.ICRS, self.l, self.b, 2000.0))
+
+
+    def testCoordEnum(self):
+        """Verify that makeCoordEnum throws an exception for non-existant systems."""
+        self.assertRaises(pexEx.LsstCppException, lambda: afwCoord.makeCoordEnum("FOO"))
+        
         
     def testPosition(self):
         """Test the getPosition() method"""

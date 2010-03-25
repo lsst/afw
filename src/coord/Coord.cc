@@ -8,8 +8,6 @@
  * Most (nearly all) algorithms adapted from Astronomical Algorithms, 2nd ed. (J. Meeus)
  *
  */
-#include <sstream>
-#include <iostream>
 #include <cmath>
 #include <limits>
 
@@ -27,8 +25,10 @@ namespace afwGeom  = lsst::afw::geom;
 namespace dafBase  = lsst::daf::base;
 
 
-namespace {    
+namespace {
+    
 typedef std::map<std::string, afwCoord::CoordSystem> CoordSystemMap;
+    
 CoordSystemMap const getCoordSystemMap() {
     CoordSystemMap idMap;
     idMap["FK5"]         = afwCoord::FK5;
@@ -40,6 +40,7 @@ CoordSystemMap const getCoordSystemMap() {
     idMap["TOPOCENTRIC"] = afwCoord::TOPOCENTRIC;
     return idMap;
 }
+    
 } // end anonymous namespace
 
 
@@ -48,7 +49,11 @@ CoordSystemMap const getCoordSystemMap() {
  */
 afwCoord::CoordSystem const afwCoord::makeCoordEnum(std::string const system) {
     static CoordSystemMap idmap = getCoordSystemMap();
-    return idmap[system];
+    if (idmap.find(system) != idmap.end()) {
+        return idmap[system];
+    } else {
+        throw LSST_EXCEPT(ex::InvalidParameterException, "System " + system + " not defined.");
+    }
 }
 
 
@@ -115,8 +120,8 @@ double reduceAngle(double theta) {
  * Store the Fk5 coordinates of the Galactic pole (and vice-versa) for coordinate transforms.
  *
  */
-afwCoord::Coord GalacticPoleInFk5 = afwCoord::Coord(192.85950, 27.12825, 2000.0); // C&O
-afwCoord::Coord Fk5PoleInGalactic = afwCoord::Coord(122.93200, 27.12825, 2000.0); // C&O
+afwCoord::Coord const GalacticPoleInFk5 = afwCoord::Coord(192.85950, 27.12825, 2000.0); // C&O
+afwCoord::Coord const Fk5PoleInGalactic = afwCoord::Coord(122.93200, 27.12825, 2000.0); // C&O
 
 
 /**
@@ -146,8 +151,8 @@ double const epochTolerance = 1.0e-12;  ///< Precession to new epoch performed i
  * @todo allow a user specified format
  */
 std::string afwCoord::degreesToDmsString(
-                                      double const deg ///< Coord in decimal degrees
-                                     ) {
+                                         double const deg ///< Coord in decimal degrees
+                                        ) {
     
     Dms dms(deg);
     
@@ -173,8 +178,8 @@ std::string afwCoord::degreesToDmsString(
  * @brief a function to convert decimal degrees to a string with form hh:mm:ss.s
  */
 std::string afwCoord::degreesToHmsString(
-                                      double const deg ///< coord in decimal degrees
-                                     ) {
+                                         double const deg ///< coord in decimal degrees
+                                        ) {
     return degreesToDmsString(deg/15.0);
 }
 
@@ -182,8 +187,8 @@ std::string afwCoord::degreesToHmsString(
  * @brief Convert a dd:mm:ss string to decimal degrees
  */
 double afwCoord::dmsStringToDegrees(
-                                 std::string const dms ///< Coord as a string in dd:mm:ss format
-                                ) {
+                                    std::string const dms ///< Coord as a string in dd:mm:ss format
+                                   ) {
     
     std::vector<std::string> elements;
     boost::split(elements, dms, boost::is_any_of(":"));
@@ -204,8 +209,8 @@ double afwCoord::dmsStringToDegrees(
  *
  */
 double afwCoord::hmsStringToDegrees(
-                                 std::string const hms ///< coord as a string in hh:mm:ss.s format
-                                ) {
+                                    std::string const hms ///< coord as a string in hh:mm:ss.s format
+                                   ) {
     return 15.0*dmsStringToDegrees(hms);
 }
 
@@ -215,8 +220,8 @@ double afwCoord::hmsStringToDegrees(
  *
  */
 double afwCoord::eclipticPoleInclination(
-                                      double const epoch ///< desired epoch for inclination
-                                     ) {
+                                         double const epoch ///< desired epoch for inclination
+                                        ) {
     double const T = (epoch - 2000.0)/100.0;
     return 23.0 + 26.0/60.0 + (21.448 - 46.82*T - 0.0006*T*T - 0.0018*T*T*T)/3600.0;
 }
@@ -236,10 +241,10 @@ double afwCoord::eclipticPoleInclination(
  *
  */
 afwCoord::Coord::Coord(
-                    afwGeom::Point2D const &p2d,     ///< Point2D
-                    CoordUnit unit,        ///< Rads, Degs, or Hrs
-                    double const epoch     ///< epoch of coordinate
-                   ) :
+                       afwGeom::Point2D const &p2d,     ///< Point2D
+                       CoordUnit unit,                  ///< Rads, Degs, or Hrs
+                       double const epoch               ///< epoch of coordinate
+                      ) :
     _longitudeRad(NaN), _latitudeRad(NaN), _epoch(epoch) {
 
     if (unit == DEGREES) {
@@ -262,9 +267,9 @@ afwCoord::Coord::Coord(
  * @brief Constructor for the Coord base class
  */
 afwCoord::Coord::Coord(
-                    afwGeom::Point3D const &p3d,   ///< Point3D
-                    double const epoch   ///< epoch of coordinate
-                   ) :
+                       afwGeom::Point3D const &p3d,   ///< Point3D
+                       double const epoch             ///< epoch of coordinate
+                      ) :
     _longitudeRad( atan2(p3d.getY(), p3d.getX()) ),
     _latitudeRad(asin(p3d.getZ())),
     _epoch(epoch) {}
@@ -275,10 +280,10 @@ afwCoord::Coord::Coord(
  *
  */
 afwCoord::Coord::Coord(
-                    double const ra,   ///< Right ascension, decimal degrees
-                    double const dec,  ///< Declination, decimal degrees
-                    double const epoch ///< epoch of coordinate
-                   ) :
+                       double const ra,   ///< Right ascension, decimal degrees
+                       double const dec,  ///< Declination, decimal degrees
+                       double const epoch ///< epoch of coordinate
+                      ) :
     _longitudeRad(degToRad*ra), _latitudeRad(degToRad*dec), _epoch(epoch) {
     _verifyValues();
 }
@@ -288,10 +293,10 @@ afwCoord::Coord::Coord(
  *
  */
 afwCoord::Coord::Coord(
-                    std::string const ra,  ///< Right ascension, hh:mm:ss.s format
-                    std::string const dec, ///< Declination, dd:mm:ss.s format
-                    double const epoch     ///< epoch of coordinate
-                   ) :
+                       std::string const ra,  ///< Right ascension, hh:mm:ss.s format
+                       std::string const dec, ///< Declination, dd:mm:ss.s format
+                       double const epoch     ///< epoch of coordinate
+                      ) :
     _longitudeRad(degToRad*15.0*dmsStringToDegrees(ra)),
     _latitudeRad(degToRad*dmsStringToDegrees(dec)),
     _epoch(epoch) {
@@ -331,10 +336,10 @@ void afwCoord::Coord::_verifyValues() const {
  * This allows the user to instantiate Coords without values, and fill them later.
  */
 void afwCoord::Coord::reset(
-                         double const longitudeDeg, ///< Longitude coord (eg. R.A. for Fk5)
-                         double const latitudeDeg,  ///< Latitude coord (eg. Declination for Fk5)
-                         double const epoch         ///< epoch of coordinate
-                        ) {
+                            double const longitudeDeg, ///< Longitude coord (eg. R.A. for Fk5)
+                            double const latitudeDeg,  ///< Latitude coord (eg. Declination for Fk5)
+                            double const epoch         ///< epoch of coordinate
+                           ) {
     _longitudeRad = degToRad*longitudeDeg;
     _latitudeRad  = degToRad*latitudeDeg;
     _epoch = epoch;
@@ -368,101 +373,6 @@ afwGeom::Point3D afwCoord::Coord::getVector() const {
     return afwGeom::makePointD(x, y, z);
 }
 
-
-/**
- * @brief Provide access to our contents via an index
- *
- * @note This only gets you the internal format ... RADIANS.
- */
-double afwCoord::Coord::operator[](int const index) const {
-
-    switch (index) {
-      case 0:
-        return _longitudeRad;
-        break;
-      case 1:
-        return _latitudeRad;
-        break;
-      default:
-        throw LSST_EXCEPT(ex::InvalidParameterException, "Index must be 0 or 1.");
-        break;
-    }
-}
-
-/**
- * @brief The main access method for the longitudinal coordinate
- *
- * All systems store their longitudinal coordinate in _longitude,
- * be it RA, l, lambda, or azimuth.  This is how they're accessed.
- *
- */
-double afwCoord::Coord::getLongitude(CoordUnit unit) const {
-    switch (unit) {
-      case DEGREES:
-        return radToDeg*_longitudeRad;
-        break;
-      case RADIANS:
-        return _longitudeRad;
-        break;
-      case HOURS:
-        return radToDeg*_longitudeRad/15.0;
-        break;
-      default:
-        throw LSST_EXCEPT(ex::InvalidParameterException, "Units must be DEGREES, RADIANS, or HOURS.");
-        break;
-    }
-}
-
-/**
- * @brief The main access method for the longitudinal coordinate
- *
- * All systems store their latitudinal coordinate in _latitude,
- * be it Dec, b, beta, or altitude.  This is how they're accessed.
- *
- * @note There's no reason to want a latitude in hours, so that unit will cause
- *       an exception to be thrown
- *
- */
-double afwCoord::Coord::getLatitude(CoordUnit unit) const {
-    switch (unit) {
-      case DEGREES:
-        return radToDeg*_latitudeRad;
-        break;
-      case RADIANS:
-        return _latitudeRad;
-        break;
-      default:
-        throw LSST_EXCEPT(ex::InvalidParameterException, "Units must be DEGREES, or RADIANS.");
-        break;
-    }
-}
-
-/**
- * @brief Allow quick access to the longitudinal coordinate as a string
- *
- * @note There's no reason to want a longitude in radians, so that unit will cause
- *       an exception to be thrown
- * @note There's no clear winner for a default, so the unit must always be
- *       explicitly provided.
- *
- */
-std::string afwCoord::Coord::getLongitudeStr(CoordUnit unit) const {
-    if (unit == HOURS || unit == DEGREES) {
-        return degreesToDmsString(getLongitude(unit));
-    } else {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "Units must be DEGREES or HOURS");
-    }
-}
-/**
- * @brief Allow quick access to the longitude coordinate as a string
- *
- * @note There's no reason to want a latitude in radians or hours, so
- *       the units can not be explicitly requested.
- *
- */
-std::string afwCoord::Coord::getLatitudeStr() const {
-    return degreesToDmsString(getLatitude(DEGREES));
-}
 
 
 /**
