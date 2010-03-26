@@ -2,7 +2,7 @@
 #if !defined(LSST_AFW_COORD_COORD_H)
 #define LSST_AFW_COORD_COORD_H
 /**
- * @file Coord.h
+ * @file
  * @brief Functions to handle coordinates
  * @ingroup afw
  * @author Steve Bickerton
@@ -57,6 +57,7 @@ public:
     Coord(double const ra, double const dec, double const epoch = 2000.0);
     Coord(std::string const ra, std::string const dec, double const epoch = 2000.0);
     Coord();
+    virtual ~Coord() {}
     
     void reset(double const longitude, double const latitude, double const epoch = 2000.0);
 
@@ -112,6 +113,7 @@ public:
     IcrsCoord(double const ra, double const dec) : Coord(ra, dec, 2000.0) {}
     IcrsCoord(std::string const ra, std::string const dec) : Coord(ra, dec, 2000.0) {}
     IcrsCoord() : Coord() {}
+    virtual ~IcrsCoord() {}
 
     void reset(double const longitude, double const latitude);
     
@@ -146,6 +148,7 @@ public:
     Fk5Coord(std::string const ra, std::string const dec, double const epoch = 2000.0) :
         Coord(ra, dec, epoch) {}
     Fk5Coord() : Coord() {}
+    virtual ~Fk5Coord() {}
     
     Fk5Coord precess(double const epochTo) const;
     
@@ -181,6 +184,7 @@ public:
     GalacticCoord(double const l, double const b) : Coord(l, b) {}
     GalacticCoord(std::string const l, std::string const b) : Coord(l, b) {}
     GalacticCoord() : Coord() {}
+    virtual ~GalacticCoord() {}
 
     void reset(double const longitude, double const latitude);
     
@@ -219,6 +223,7 @@ public:
     EclipticCoord(std::string const lambda, std::string const beta, double const epoch = 2000.0) : 
         Coord(lambda, beta, epoch) {}
     EclipticCoord() : Coord() {}
+    virtual ~EclipticCoord() {}
     
     std::pair<std::string, std::string> getCoordNames() const {
         return std::pair<std::string, std::string>("Lambda", "Beta");
@@ -258,6 +263,7 @@ public:
                      Observatory const &obs) : Coord(az, alt, epoch), _obs(obs) {}
     TopocentricCoord(std::string const az, std::string const alt, double const epoch,
                      Observatory const &obs) : Coord(az, alt, epoch), _obs(obs) {}
+    virtual ~TopocentricCoord() {}
 
     std::pair<std::string, std::string> getCoordNames() const {
         return std::pair<std::string, std::string>("Az", "Alt");
@@ -417,7 +423,6 @@ inline std::string lsst::afw::coord::Coord::getLongitudeStr(CoordUnit unit) cons
 inline std::string lsst::afw::coord::Coord::getLatitudeStr() const {
     return degreesToDmsString(getLatitude(DEGREES));
 }
-
 
 
 #endif

@@ -1,6 +1,6 @@
 // -*- lsst-c++ -*-
 /**
- * @file Date.cc
+ * @file
  * @brief Provide functions to handle dates
  * @ingroup afw
  * @author Steve Bickerton

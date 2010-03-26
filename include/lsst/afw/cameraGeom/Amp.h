@@ -16,8 +16,6 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
-namespace afwGeom = lsst::afw::geom;
-namespace afwImage = lsst::afw::image;
 /**
  * The electronic behaviour of an Amp
  */
@@ -31,8 +29,9 @@ public:
 #if 0
     /// Set the bad pixels in the provided Mask
     template<typename MaskPixelT>
-    lsst::afw::image::Mask::Ptr setBadPixelMask(typename lsst::afw::image::Mask<MaskPixelT>::Ptr mask ///< Mask to set
-                                       ) const;
+    lsst::afw::image::Mask::Ptr setBadPixelMask(
+            typename lsst::afw::image::Mask<MaskPixelT>::Ptr mask ///< Mask to set
+    ) const;
 #endif
 
     /// Set amplifier's gain
@@ -89,7 +88,7 @@ public:
     ~Amp() {}
 
     void shift(int dx, int dy);
-    void rotateBy90(afwGeom::Extent2I const& dimensions, int n90);
+    void rotateBy90(lsst::afw::geom::Extent2I const& dimensions, int n90);
 
     /// Return Amp's electronic properties
     ElectronicParams::Ptr getElectronicParams() const { return _eParams; }
@@ -123,16 +122,16 @@ public:
     ReadoutCorner getReadoutCorner() const { return _readoutCorner; }
 
     /// Return the first pixel read
-    afwGeom::Point2I getFirstPixelRead() const {
+    lsst::afw::geom::Point2I getFirstPixelRead() const {
         switch (_readoutCorner) {
           case LLC:
-            return afwGeom::makePointI(0,                             0);
+            return lsst::afw::geom::makePointI(0,                             0);
           case LRC:
-            return afwGeom::makePointI(getAllPixels().getWidth() - 1, 0);
+            return lsst::afw::geom::makePointI(getAllPixels().getWidth() - 1, 0);
           case URC:
-            return afwGeom::makePointI(getAllPixels().getWidth() - 1, getAllPixels().getHeight() - 1);
+            return lsst::afw::geom::makePointI(getAllPixels().getWidth() - 1, getAllPixels().getHeight() - 1);
           case ULC:
-            return afwGeom::makePointI(0,                             getAllPixels().getHeight() - 1);
+            return lsst::afw::geom::makePointI(0,                             getAllPixels().getHeight() - 1);
         }
         abort();                        // NOTREACHED
     }

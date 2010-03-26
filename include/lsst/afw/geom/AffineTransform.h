@@ -85,7 +85,7 @@ public:
     ) : _linear(linear), _translation(translation) {}
     
     /** Construct an AffineTransform from a LinearTransform. */
-    explicit AffineTransform(LinearTransform const & linear) 
+    explicit AffineTransform(lsst::afw::geom::LinearTransform const & linear) 
       : _linear(linear), _translation() {}
 
     /** Construct a translation-only AffineTransform from an ExtentD. */
@@ -94,7 +94,7 @@ public:
 
     /** Construct an AffineTransform from a LinearTransform and ExtentD. */
     explicit AffineTransform(
-        LinearTransform const & linear, ExtentD const & translation
+        lsst::afw::geom::LinearTransform const & linear, ExtentD const & translation
     ) : _linear(linear), _translation(translation) {}
 
 
@@ -220,7 +220,7 @@ public:
     TransformDerivativeMatrix dTransform(PointD const & input) const;
     TransformDerivativeMatrix dTransform(ExtentD const & input) const;
 
-    friend std::ostream & operator<<(std::ostream & os, AffineTransform const & transform);
+    friend std::ostream & operator<<(std::ostream & os, lsst::afw::geom::AffineTransform const & transform);
 
 private:
 

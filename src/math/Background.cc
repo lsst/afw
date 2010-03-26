@@ -268,8 +268,8 @@ void math::Background::_checkSampling() {
 
 
 
-/**
- * @brief Explicit instantiations
+/*
+ * Explicit instantiations
  *
  */
 #define INSTANTIATE_BACKGROUND(TYPE)                                    \

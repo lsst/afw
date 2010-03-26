@@ -71,7 +71,7 @@ afwGeom::LinearTransform::TransformDerivativeMatrix afwGeom::LinearTransform::dT
 
 std::ostream& afwGeom::operator<<(
     std::ostream& os, 
-    afwGeom::LinearTransform const & t
+    lsst::afw::geom::LinearTransform const & t
 ) {
     std::ios::fmtflags flags = os.flags();
     int prec = os.precision(7);

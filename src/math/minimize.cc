@@ -28,7 +28,10 @@ namespace {
      * @brief Minuit wrapper for a function(x)
      */
     template<typename ReturnT>
-    class MinimizerFunctionBase1 : public ROOT::Minuit2::FCNBase, public lsst::daf::data::LsstBase {
+    class MinimizerFunctionBase1 :
+        public ROOT::Minuit2::FCNBase,
+        public lsst::daf::data::LsstBase
+    {
     public:
         explicit MinimizerFunctionBase1(
             afwMath::Function1<ReturnT> const &function,
@@ -60,7 +63,10 @@ namespace {
      * @brief Minuit wrapper for a function(x, y)
      */
     template<typename ReturnT>
-    class MinimizerFunctionBase2 : public ROOT::Minuit2::FCNBase, public lsst::daf::data::LsstBase {
+    class MinimizerFunctionBase2 :
+        public ROOT::Minuit2::FCNBase,
+        public lsst::daf::data::LsstBase
+    {
     public:
         explicit MinimizerFunctionBase2(
             afwMath::Function2<ReturnT> const &function,
@@ -90,74 +96,73 @@ namespace {
         std::vector<double> _yPositionList;
         double _errorDef;
     };
-}
 
-template<typename ReturnT>
-MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1(
-    afwMath::Function1<ReturnT> const &function,
-    std::vector<double> const &measurementList,
-    std::vector<double> const &varianceList,
-    std::vector<double> const &xPositionList, 
-    double errorDef)
-:
-    lsst::daf::data::LsstBase(typeid(this)),
-    _functionPtr(function.clone()),
-    _measurementList(measurementList),
-    _varianceList(varianceList),
-    _xPositionList(xPositionList),
-    _errorDef(errorDef)
-{}
-
-template<typename ReturnT>
-MinimizerFunctionBase2<ReturnT>::MinimizerFunctionBase2(
-    afwMath::Function2<ReturnT> const &function,
-    std::vector<double> const &measurementList,
-    std::vector<double> const &varianceList,
-    std::vector<double> const &xPositionList,
-    std::vector<double> const &yPositionList,
-    double errorDef)
-:
-    lsst::daf::data::LsstBase(typeid(this)),
-    _functionPtr(function.clone()),
-    _measurementList(measurementList),
-    _varianceList(varianceList),
-    _xPositionList(xPositionList),
-    _yPositionList(yPositionList),
-    _errorDef(errorDef)
-{}
-
-
-
-// Only method we need to set up; basically this is a chi^2 routine
-template<typename ReturnT>
-double MinimizerFunctionBase1<ReturnT>::operator() (const std::vector<double>& par) const {
-    // Initialize the function with the fit parameters
-    this->_functionPtr->setParameters(par);
+    template<typename ReturnT>
+    MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1(
+        afwMath::Function1<ReturnT> const &function,
+        std::vector<double> const &measurementList,
+        std::vector<double> const &varianceList,
+        std::vector<double> const &xPositionList, 
+        double errorDef)
+    :
+        lsst::daf::data::LsstBase(typeid(this)),
+        _functionPtr(function.clone()),
+        _measurementList(measurementList),
+        _varianceList(varianceList),
+        _xPositionList(xPositionList),
+        _errorDef(errorDef)
+    {}
     
-    double chi2 = 0.0;
-    for (unsigned int i = 0; i < this->_measurementList.size(); i++) {
-        double resid = (*(this->_functionPtr))(this->_xPositionList[i]) - this->_measurementList[i];
-        chi2 += resid * resid / this->_varianceList[i];
+    template<typename ReturnT>
+    MinimizerFunctionBase2<ReturnT>::MinimizerFunctionBase2(
+        afwMath::Function2<ReturnT> const &function,
+        std::vector<double> const &measurementList,
+        std::vector<double> const &varianceList,
+        std::vector<double> const &xPositionList,
+        std::vector<double> const &yPositionList,
+        double errorDef)
+    :
+        lsst::daf::data::LsstBase(typeid(this)),
+        _functionPtr(function.clone()),
+        _measurementList(measurementList),
+        _varianceList(varianceList),
+        _xPositionList(xPositionList),
+        _yPositionList(yPositionList),
+        _errorDef(errorDef)
+    {}
+
+    // Only method we need to set up; basically this is a chi^2 routine
+    template<typename ReturnT>
+    double MinimizerFunctionBase1<ReturnT>::operator() (const std::vector<double>& par) const {
+        // Initialize the function with the fit parameters
+        this->_functionPtr->setParameters(par);
+        
+        double chi2 = 0.0;
+        for (unsigned int i = 0; i < this->_measurementList.size(); i++) {
+            double resid = (*(this->_functionPtr))(this->_xPositionList[i]) - this->_measurementList[i];
+            chi2 += resid * resid / this->_varianceList[i];
+        }
+        
+        return chi2;
     }
     
-    return chi2;
-}
-
-
-template<typename ReturnT>
-double MinimizerFunctionBase2<ReturnT>::operator() (const std::vector<double>& par) const {
-    // Initialize the function with the fit parameters
-    this->_functionPtr->setParameters(par);
     
-    double chi2 = 0.0;
-    for (unsigned int i = 0; i < this->_measurementList.size(); i++) {
-        double resid = (*(this->_functionPtr))(this->_xPositionList[i],
-                                               this->_yPositionList[i]) - this->_measurementList[i];
-        chi2 += resid * resid / this->_varianceList[i];
+    template<typename ReturnT>
+    double MinimizerFunctionBase2<ReturnT>::operator() (const std::vector<double>& par) const {
+        // Initialize the function with the fit parameters
+        this->_functionPtr->setParameters(par);
+        
+        double chi2 = 0.0;
+        for (unsigned int i = 0; i < this->_measurementList.size(); i++) {
+            double resid = (*(this->_functionPtr))(this->_xPositionList[i],
+                                                   this->_yPositionList[i]) - this->_measurementList[i];
+            chi2 += resid * resid / this->_varianceList[i];
+        }
+        
+        return chi2;
     }
-    
-    return chi2;
-}
+
+} // anonymous namespace
 
 /**
  * @brief Find the minimum of a function(x)

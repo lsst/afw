@@ -14,20 +14,20 @@ cameraGeom::ElectronicParams::ElectronicParams(
         float gain,                     ///< Amplifier's gain
         float readNoise,                ///< Amplifier's read noise (DN)
         float saturationLevel           ///< Amplifier's saturation level. N.b. float in case we scale data
-                                           )
+                                             )
     : _gain(gain), _readNoise(readNoise), _saturationLevel(saturationLevel)
 {}
 
 /************************************************************************************************************/
 
 cameraGeom::Amp::Amp(
-        cameraGeom::Id id,                            ///< The amplifier's ID
-        afwImage::BBox const& allPixels,           ///< Bounding box of the pixels read off this amplifier
-        afwImage::BBox const& biasSec,             ///< Bounding box of amplifier's bias section
-        afwImage::BBox const& dataSec,             ///< Bounding box of amplifier's data section
-        cameraGeom::Amp::ReadoutCorner readoutCorner, ///< location of first pixel read
-        ElectronicParams::Ptr eParams              ///< electronic properties of Amp
-                 )
+        lsst::afw::cameraGeom::Id id,               ///< The amplifier's ID
+        lsst::afw::image::BBox const& allPixels,    ///< Bounding box of the pixels read off this amplifier
+        lsst::afw::image::BBox const& biasSec,      ///< Bounding box of amplifier's bias section
+        lsst::afw::image::BBox const& dataSec,      ///< Bounding box of amplifier's data section
+        lsst::afw::cameraGeom::Amp::ReadoutCorner readoutCorner, ///< location of first pixel read
+        ElectronicParams::Ptr eParams               ///< electronic properties of Amp
+                    )
     : Detector(id, true),
     _biasSec(biasSec), _dataSec(dataSec), _readoutCorner(readoutCorner), _eParams(eParams)
 {
@@ -69,7 +69,8 @@ void cameraGeom::Amp::setTrimmedGeom() {
 /// Offset an Amp by the specified amount
 void cameraGeom::Amp::shift(int dx,        ///< How much to offset in x (pixels)
                             int dy         ///< How much to offset in y (pixels)
-                        ) {
+                           )
+{
     getAllPixels().shift(dx, dy);
     _biasSec.shift(dx, dy);
     _dataSec.shift(dx, dy);
@@ -79,9 +80,10 @@ void cameraGeom::Amp::shift(int dx,        ///< How much to offset in x (pixels)
 
 /// Rotate an Amp by some number of 90degree anticlockwise turns about centerPixel
 void cameraGeom::Amp::rotateBy90(
-        afwGeom::Extent2I const& dimensions, ///< Size of CCD
+        lsst::afw::geom::Extent2I const& dimensions, ///< Size of CCD
         int n90                              ///< How many 90-degree anti-clockwise turns should I apply?
-                                ) {
+                                )
+{
     while (n90 < 0) {
         n90 += 4;
     }

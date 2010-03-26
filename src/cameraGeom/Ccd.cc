@@ -16,8 +16,9 @@ namespace cameraGeom = lsst::afw::cameraGeom;
  *  The \c pos value is the 0-indexed position of the Amp on the CCD; e.g. (4, 1)
  * for the top right Amp on a CCD with serials across the top and bottom, and each serial split 5 ways
  */
-void cameraGeom::Ccd::addAmp(afwGeom::Point2I pos,        ///< position of Amp in the Ccd
-                             cameraGeom::Amp const& amp_c ///< The amplifier to add to the Ccd's manifest
+void cameraGeom::Ccd::addAmp(
+        lsst::afw::geom::Point2I pos,        ///< position of Amp in the Ccd
+        lsst::afw::cameraGeom::Amp const& amp_c ///< The amplifier to add to the Ccd's manifest
                             )
 {
     cameraGeom::Amp::Ptr amp(new Amp(amp_c)); // the Amp with absolute coordinates
@@ -49,8 +50,8 @@ void cameraGeom::Ccd::addAmp(afwGeom::Point2I pos,        ///< position of Amp i
  * \sa getPositionFromPixel
  */
 afwGeom::Point2D cameraGeom::Ccd::getPositionFromIndex(
-        afwGeom::Point2I const& pix     ///< Pixel coordinates wrt centre of Ccd
-                                     ) const
+        lsst::afw::geom::Point2I const& pix     ///< Pixel coordinates wrt centre of Ccd
+                                                      ) const
 {
     return getPositionFromIndex(pix, isTrimmed());
 }
@@ -60,8 +61,8 @@ afwGeom::Point2D cameraGeom::Ccd::getPositionFromIndex(
  * \sa getPositionFromPixel
  */
 afwGeom::Point2D cameraGeom::Ccd::getPositionFromIndex(
-        afwGeom::Point2I const& pix,    ///< Pixel coordinates wrt Ccd's centre
-        bool const isTrimmed            ///< Is this detector trimmed?
+        lsst::afw::geom::Point2I const& pix,    ///< Pixel coordinates wrt Ccd's centre
+        bool const isTrimmed                    ///< Is this detector trimmed?
                                                       ) const
 {
     if (isTrimmed) {
@@ -71,7 +72,7 @@ afwGeom::Point2D cameraGeom::Ccd::getPositionFromIndex(
     double pixelSize = getPixelSize();
 
     afwGeom::Point2I const& centerPixel = getCenterPixel();
-    cameraGeom::Amp::ConstPtr amp = findAmp(afwGeom::makePointI(pix[0] + centerPixel[0],
+    cameraGeom::Amp::ConstPtr amp = findAmp(lsst::afw::geom::makePointI(pix[0] + centerPixel[0],
                                                                 pix[1] + centerPixel[1]));
     afwImage::PointI const off = amp->getDataSec(false).getLLC() - amp->getDataSec(true).getLLC();
     afwGeom::Point2I const offsetPix = pix - afwGeom::Extent2I(afwGeom::makePointI(off[0], off[1]));
@@ -133,7 +134,7 @@ cameraGeom::Amp::Ptr cameraGeom::Ccd::findAmp(cameraGeom::Id const id ///< The d
 /**
  * Find an Amp given a position
  */
-cameraGeom::Amp::Ptr cameraGeom::Ccd::findAmp(afwGeom::Point2I const& pixel ///< The desired pixel
+cameraGeom::Amp::Ptr cameraGeom::Ccd::findAmp(lsst::afw::geom::Point2I const& pixel ///< The desired pixel
                                              ) const {
     return findAmp(pixel, isTrimmed());
 }
@@ -141,9 +142,11 @@ cameraGeom::Amp::Ptr cameraGeom::Ccd::findAmp(afwGeom::Point2I const& pixel ///<
 /**
  * Find an Amp given a position and a request for trimmed or untrimmed coordinates
  */
-cameraGeom::Amp::Ptr cameraGeom::Ccd::findAmp(afwGeom::Point2I const& pixel, ///< The desired pixel 
-                                        bool const isTrimmed                 ///< Is Ccd trimmed?
-                                             ) const {
+cameraGeom::Amp::Ptr cameraGeom::Ccd::findAmp(
+        lsst::afw::geom::Point2I const& pixel,  ///< The desired pixel 
+        bool const isTrimmed                    ///< Is Ccd trimmed?
+                                             ) const
+{
     AmpSet::const_iterator result = std::find_if(_amps.begin(), _amps.end(), findByPixel(pixel, isTrimmed));
     if (result == _amps.end()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::OutOfRangeException,
@@ -158,7 +161,7 @@ cameraGeom::Amp::Ptr cameraGeom::Ccd::findAmp(afwGeom::Point2I const& pixel, ///
 /// Offset a Ccd by the specified amount
 void cameraGeom::Ccd::shift(int dx,     ///< How much to offset in x (pixels)
                             int dy      ///< How much to offset in y (pixels)
-                        ) {
+                           ) {
     Detector::shift(dx, dy);
     
     std::for_each(_amps.begin(), _amps.end(), boost::bind(&Amp::shift, _1, boost::ref(dx), boost::ref(dx)));
@@ -171,7 +174,7 @@ void cameraGeom::Ccd::shift(int dx,     ///< How much to offset in x (pixels)
 /// We also have to fix the amps, of course
 ///
 void cameraGeom::Ccd::setOrientation(
-        cameraGeom::Orientation const& orientation // the detector's new Orientation
+        lsst::afw::cameraGeom::Orientation const& orientation // the detector's new Orientation
                                     )
 {
     int const n90 = orientation.getNQuarter() - getOrientation().getNQuarter(); // before setting orientation
@@ -189,8 +192,8 @@ void cameraGeom::Ccd::setOrientation(
 /************************************************************************************************************/
 
 static void clipDefectsToAmplifier(
-        cameraGeom::Amp::Ptr amp,                             // the Amp in question
-        std::vector<afwImage::DefectBase::Ptr> const& defects // Defects in this detector
+        lsst::afw::cameraGeom::Amp::Ptr amp,                             // the Amp in question
+        std::vector<lsst::afw::image::DefectBase::Ptr> const& defects // Defects in this detector
                                   )
 {
     amp->getDefects().clear();
@@ -211,7 +214,7 @@ static void clipDefectsToAmplifier(
 
 /// Set the Detector's Defect list
 void cameraGeom::Ccd::setDefects(
-        std::vector<afwImage::DefectBase::Ptr> const& defects ///< Defects in this detector
+        std::vector<lsst::afw::image::DefectBase::Ptr> const& defects ///< Defects in this detector
                                 ) {
     cameraGeom::Detector::setDefects(defects);
     // And the Amps too

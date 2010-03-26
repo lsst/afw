@@ -108,6 +108,8 @@ template <> struct NumpyTraits<std::complex<long double> > {
     }
 };
 
+/// \endcond SPECIALIZATIONS
+
 /**
  *  \brief A reference-counting smart pointer for PyObject.
  */

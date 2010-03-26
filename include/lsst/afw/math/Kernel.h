@@ -318,6 +318,7 @@ class FourierLocalKernel;
     };
 
     typedef std::vector<Kernel::Ptr> KernelList;
+    typedef boost::shared_ptr<KernelList> KernelListPtr;
 
     /**
      * @brief A kernel created from an Image

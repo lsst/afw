@@ -1,7 +1,7 @@
 /*****************************************************************************/
-/** \file
- *
- * \brief Footprint and associated classes
+/**
+ * @file
+ * @brief Footprint and associated classes
  */
 #include <cassert>
 #include <string>
@@ -21,9 +21,9 @@ namespace afwImage = lsst::afw::image;
 
 /******************************************************************************/
 /**
- * \Factory method for creating Threshold objects
+ * @brief Factory method for creating Threshold objects
  *
- * \return desired Threshold
+ * @return desired Threshold
  */
 afwDetect::Threshold afwDetect::createThreshold(
     float const value,                  ///< value of threshold
@@ -49,18 +49,18 @@ afwDetect::Threshold afwDetect::createThreshold(
 
 /******************************************************************************/
 /**
- * Return a string-representation of a Span
+ * @brief Return a string-representation of a Span
  */
 std::string afwDetect::Span::toString() const {
     return (boost::format("%d: %d..%d") % _y % _x0 % _x1).str();
 }
 
 namespace {
-/*
- * Compare two Span%s by y, then x0, then x1
- *
- * A utility functor passed to sort
- */
+    /**
+     * @brief Compare two Span%s by y, then x0, then x1
+     *
+     * A utility functor passed to sort
+     */
     struct compareSpanByYX : public std::binary_function<afwDetect::Span::ConstPtr,
                                                          afwDetect::Span::ConstPtr, bool> {
         int operator()(afwDetect::Span::ConstPtr a, afwDetect::Span::ConstPtr b) {
@@ -84,9 +84,9 @@ namespace {
 /// Counter for Footprint IDs
 int afwDetect::Footprint::id = 0;
 /**
- * Create a Footprint
+ * @brief Create a Footprint
  *
- * \throws lsst::pex::exceptions::InvalidParameterException in nspan is < 0
+ * @throws lsst::pex::exceptions::InvalidParameterException in nspan is < 0
  */
 afwDetect::Footprint::Footprint(int nspan,         //!< initial number of Span%s in this Footprint
                                 afwImage::BBox const region) //!< Bounding box of MaskedImage footprint
@@ -106,7 +106,7 @@ afwDetect::Footprint::Footprint(int nspan,         //!< initial number of Span%s
 }
 
 /**
- * Create a rectangular Footprint
+ * @brief Create a rectangular Footprint
  */
 afwDetect::Footprint::Footprint(afwImage::BBox const &bbox, //!< The bounding box defining the rectangle
                                 afwImage::BBox const region) //!< Bounding box of MaskedImage footprint
@@ -129,7 +129,7 @@ afwDetect::Footprint::Footprint(afwImage::BBox const &bbox, //!< The bounding bo
 }
 
 /**
- * Create a circular Footprint
+ * @brief Create a circular Footprint
  */
 afwDetect::Footprint::Footprint(afwImage::BCircle const& circle, //!< The center and radius of the circle
                                 afwImage::BBox const region)  //!< Bounding box of MaskedImage footprint
@@ -153,7 +153,7 @@ afwDetect::Footprint::Footprint(afwImage::BCircle const& circle, //!< The center
 }
 
 /**
- * Destroy a Footprint
+ * @brief Destroy a Footprint
  */
 afwDetect::Footprint::~Footprint() {
     delete &_spans;
@@ -161,7 +161,7 @@ afwDetect::Footprint::~Footprint() {
 }
 
 /**
- * Normalise a Footprint, soring spans and setting the BBox
+ * @brief Normalise a Footprint, soring spans and setting the BBox
  */
 void afwDetect::Footprint::normalize() {
     if (!_normalized) {
@@ -207,7 +207,7 @@ void afwDetect::Footprint::normalize() {
 }
 
 /**
- * Add a Span to a footprint, returning a reference to the new Span.
+ * @brief Add a Span to a footprint, returning a reference to the new Span.
  */
 afwDetect::Span const& afwDetect::Footprint::addSpan(int const y, //!< row value
                                                      int const x0, //!< starting column
@@ -228,7 +228,7 @@ afwDetect::Span const& afwDetect::Footprint::addSpan(int const y, //!< row value
     return *sp.get();
 }
 /**
- * Add a Span to a Footprint returning a reference to the new Span
+ * @brief Add a Span to a Footprint returning a reference to the new Span
  */
 const afwDetect::Span& afwDetect::Footprint::addSpan(afwDetect::Span const& span ///< new Span being added
                               ) {
@@ -245,7 +245,7 @@ const afwDetect::Span& afwDetect::Footprint::addSpan(afwDetect::Span const& span
 }
 
 /**
- * Add a Span to a Footprint returning a reference to the new Span
+ * @brief Add a Span to a Footprint returning a reference to the new Span
  */
 const afwDetect::Span& afwDetect::Footprint::addSpan(afwDetect::Span const& span, ///< new Span being added
                                                      int dx,              ///< Add dx to span's x coords
@@ -254,7 +254,7 @@ const afwDetect::Span& afwDetect::Footprint::addSpan(afwDetect::Span const& span
     return addSpan(span._y + dy, span._x0 + dx, span._x1 + dx);
 }
 /**
- * Shift a Footprint by <tt>(dx, dy)</tt>
+ * @brief Shift a Footprint by <tt>(dx, dy)</tt>
  */
 void afwDetect::Footprint::shift(int dx, //!< How much to move footprint in column direction
                                  int dy  //!< How much to move in row direction
@@ -271,7 +271,7 @@ void afwDetect::Footprint::shift(int dx, //!< How much to move footprint in colu
 }
 
 /**
- * Tell \c this to calculate its bounding box
+ * @brief Tell \c this to calculate its bounding box
  */
 void afwDetect::Footprint::setBBox() {
     if (_spans.size() == 0) {
@@ -298,7 +298,7 @@ void afwDetect::Footprint::setBBox() {
 }
 
 /**
- * Tell \c this to count its pixels
+ * @brief Tell \c this to count its pixels
  */
 int afwDetect::Footprint::setNpix() {
     _npix = 0;
@@ -311,7 +311,7 @@ int afwDetect::Footprint::setNpix() {
 }
 
 /**
- * Set the pixels in idImage which are in Footprint by adding the specified value to the Image
+ * @brief Set the pixels in idImage which are in Footprint by adding the specified value to the Image
  */
 void afwDetect::Footprint::insertIntoImage(
                   afwImage::Image<boost::uint16_t>& idImage, //!< Image to contain the footprint
@@ -354,14 +354,14 @@ void afwDetect::Footprint::insertIntoImage(
 
 /************************************************************************************************************/
 /**
- * \brief Return a Footprint that's the intersection of a Footprint with a Mask
+ * @brief Return a Footprint that's the intersection of a Footprint with a Mask
  *
  * The resulting Footprint contains only pixels for which (mask & bitMask) != 0;
  * it may have disjoint pieces
  *
- * \note This isn't a member of Footprint as Footprint isn't templated over MaskT
+ * @note This isn't a member of Footprint as Footprint isn't templated over MaskT
  *
- * \returns Returns the new Footprint
+ * @returns Returns the new Footprint
  */
 template<typename MaskT>
 afwDetect::Footprint::Ptr afwDetect::footprintAndMask(
@@ -377,9 +377,9 @@ afwDetect::Footprint::Ptr afwDetect::footprintAndMask(
 
 /************************************************************************************************************/
 /**
- * \brief OR bitmask into all the Mask's pixels which are in the Footprint
+ * @brief OR bitmask into all the Mask's pixels which are in the Footprint
  *
- * \return bitmask
+ * @return bitmask
  */
 template<typename MaskT>
 MaskT afwDetect::setMaskFromFootprint(afwImage::Mask<MaskT> *mask,              ///< Mask to set
@@ -414,9 +414,9 @@ MaskT afwDetect::setMaskFromFootprint(afwImage::Mask<MaskT> *mask,              
 
 /************************************************************************************************************/
 /**
- * \brief OR bitmask into all the Mask's pixels which are in the set of Footprint%s
+ * @brief OR bitmask into all the Mask's pixels which are in the set of Footprint%s
  *
- * \return bitmask
+ * @return bitmask
  */
 template<typename MaskT>
 MaskT afwDetect::setMaskFromFootprintList(
@@ -451,9 +451,9 @@ private:
 }
 
 /**
- * \brief Set all image pixels in a Footprint to a given value
+ * @brief Set all image pixels in a Footprint to a given value
  *
- * \return value
+ * @return value
  */
 template<typename ImageT>
 typename ImageT::Pixel afwDetect::setImageFromFootprint(
@@ -468,9 +468,9 @@ typename ImageT::Pixel afwDetect::setImageFromFootprint(
 }
 
 /**
- * \brief Set all image pixels in a set of Footprint%s to a given value
+ * @brief Set all image pixels in a set of Footprint%s to a given value
  *
- * \return value
+ * @return value
  */
 template<typename ImageT>
 typename ImageT::Pixel afwDetect::setImageFromFootprintList(
@@ -488,8 +488,8 @@ typename ImageT::Pixel afwDetect::setImageFromFootprintList(
 }
 
 /************************************************************************************************************/
-/*
- * Worker routine for the pmSetFootprintArrayIDs/pmSetFootprintID (and pmMergeFootprintArrays)
+/**
+ * @brief Worker routine for the pmSetFootprintArrayIDs/pmSetFootprintID (and pmMergeFootprintArrays)
  */
 template <typename IDPixelT>
 static void set_footprint_id(typename afwImage::Image<IDPixelT>::Ptr idImage,   // the image to set
@@ -534,8 +534,8 @@ template void set_footprint_array_ids<int>(afwImage::Image<int>::Ptr idImage,
                                            bool const relativeIDs);
 
 /************************************************************************************************************/
-/*
- * Create an image from a Footprint's bounding box
+/**
+ * @brief Create an image from a Footprint's bounding box
  */
 template <typename IDImageT>
 static typename afwImage::Image<IDImageT>::Ptr makeImageFromBBox(afwImage::BBox const bbox) {
@@ -546,8 +546,8 @@ static typename afwImage::Image<IDImageT>::Ptr makeImageFromBBox(afwImage::BBox 
 }
 
 /************************************************************************************************************/
-/*
- * Set an image to the value of footprint's ID wherever they may fall
+/**
+ * @brief Set an image to the value of footprint's ID wherever they may fall
  */
 template <typename IDImageT>
 typename boost::shared_ptr<afwImage::Image<IDImageT> > setFootprintArrayIDs(
@@ -574,8 +574,8 @@ typename boost::shared_ptr<afwImage::Image<IDImageT> > setFootprintArrayIDs(
 template afwImage::Image<int>::Ptr setFootprintArrayIDs(
                                         std::vector<afwDetect::Footprint::Ptr> const& footprints,
                                         bool const relativeIDs);
-/*
- * Set an image to the value of Footprint's ID wherever it may fall
+/**
+ * @brief Set an image to the value of Footprint's ID wherever it may fall
  */
 template <typename IDImageT>
 typename boost::shared_ptr<afwImage::Image<IDImageT> > setFootprintID(
@@ -595,10 +595,10 @@ typename boost::shared_ptr<afwImage::Image<IDImageT> > setFootprintID(
 template afwImage::Image<int>::Ptr setFootprintID(afwDetect::Footprint::Ptr const& foot, int const id);
 
 /************************************************************************************************************/
-/*
- * Grow a Footprint isotropically by r pixels, returning a new Footprint
+/**
+ * @brief Grow a Footprint isotropically by r pixels, returning a new Footprint
  *
- * N.b. this is slow, as it uses a convolution with a disk
+ * @note this is slow, as it uses a convolution with a disk
  */
 namespace {
 afwDetect::Footprint::Ptr growFootprintSlow(
@@ -654,7 +654,7 @@ afwDetect::Footprint::Ptr growFootprintSlow(
 
 /************************************************************************************************************/
 /**
- * Grow a Footprint by r pixels, returning a new Footprint
+ * @brief Grow a Footprint by r pixels, returning a new Footprint
  */
 afwDetect::Footprint::Ptr afwDetect::growFootprint(
         afwDetect::Footprint const &foot,      //!< The Footprint to grow
@@ -751,7 +751,7 @@ afwDetect::Footprint::Ptr afwDetect::growFootprint(Footprint::Ptr const &foot, i
 
 /************************************************************************************************************/
 /**
- * Return a list of BBox%s, whose union contains exactly the pixels in foot, neither more nor less
+ * @brief Return a list of BBox%s, whose union contains exactly the pixels in foot, neither more nor less
  *
  * Useful in generating sets of meas::algorithms::Defects for the ISR
  */
@@ -821,8 +821,9 @@ std::vector<afwImage::BBox> afwDetect::footprintToBBoxList(afwDetect::Footprint 
 #if 0
 
 /************************************************************************************************************/
-/*
- * Grow a psArray of pmFootprints isotropically by r pixels, returning a new psArray of new pmFootprints
+/**
+ * @brief Grow a psArray of pmFootprints isotropically by r pixels,
+ * returning a new psArray of new pmFootprints
  */
 psArray *pmGrowFootprintArray(psArray const *footprints, // footprints to grow
                               int r) {  // how much to grow each footprint
@@ -871,8 +872,8 @@ psArray *pmGrowFootprintArray(psArray const *footprints, // footprints to grow
 }
 
 /************************************************************************************************************/
-/*
- * Merge together two psArrays of pmFootprints neither of which is damaged.
+/**
+ * @brief Merge together two psArrays of pmFootprints neither of which is damaged.
  *
  * The returned psArray may contain elements of the inital psArrays (with
  * their reference counters suitable incremented)
@@ -939,10 +940,9 @@ psArray *pmMergeFootprintArrays(psArray const *footprints1, // one set of footpr
 }
 
 /************************************************************************************************************/
-/*
- * Given a psArray of pmFootprints and another of pmPeaks, assign the peaks to the
- * footprints in which that fall; if they _don't_ fall in a footprint, add a suitable
- * one to the list.
+/**
+ * @brief Given a psArray of pmFootprints and another of pmPeaks, assign the peaks to the footprints
+ * in which they fall; if they _don't_ fall in a footprint, add a suitable one to the list.
  */
 psErrorCode
 pmPeaksAssignToFootprints(psArray *footprints,  // the pmFootprints
@@ -1011,9 +1011,11 @@ pmPeaksAssignToFootprints(psArray *footprints,  // the pmFootprints
 }
 
 /************************************************************************************************************/
- /*
-  * Examine the peaks in a pmFootprint, and throw away the ones that are not sufficiently
-  * isolated.  More precisely, for each peak find the highest coll that you'd have to traverse
+ /**
+  * @brief Examine the peaks in a pmFootprint, and throw away the ones that are not sufficiently
+  * isolated.
+  *
+  * More precisely, for each peak find the highest coll that you'd have to traverse
   * to reach a still higher peak --- and if that coll's more than nsigma DN below your
   * starting point, discard the peak.
   */
@@ -1117,8 +1119,8 @@ psErrorCode pmFootprintCullPeaks(psImage const *img, // the image wherein lives 
     return PS_ERR_NONE;
 }
 
-/*
- * Cull an entire psArray of pmFootprints
+/**
+ * @brief Cull an entire psArray of pmFootprints
  */
 psErrorCode
 pmFootprintArrayCullPeaks(psImage const *img, // the image wherein lives the footprint
@@ -1138,8 +1140,8 @@ pmFootprintArrayCullPeaks(psImage const *img, // the image wherein lives the foo
 }
 
 /************************************************************************************************************/
-/*
- * Extract the peaks in a psArray of pmFootprints, returning a psArray of pmPeaks
+/**
+ * @brief Extract the peaks in a psArray of pmFootprints, returning a psArray of pmPeaks
  */
 psArray *pmFootprintArrayToPeaks(psArray const *footprints) {
     assert(footprints != NULL);

@@ -29,9 +29,7 @@
 SWIG_SHARED_PTR(FourierCutoutPtr, lsst::afw::math::FourierCutout);
 SWIG_SHARED_PTR(FourierCutoutStackPtr, lsst::afw::math::FourierCutoutStack);
 
-
 %include "lsst/afw/math/FourierCutout.h"
-
 
 // I doubt newobject is needed; the code seems to work just as well without it.
 %newobject lsst::afw::math::convolve;
@@ -42,6 +40,10 @@ SWIG_SHARED_PTR(FourierCutoutStackPtr, lsst::afw::math::FourierCutoutStack);
 //
 // These definitions must go Before you include Kernel.h; the %templates must go After
 //
+
+// this breaks things as if KernelList is redefined to be a pointer to KernelList. Sigh.
+//SWIG_SHARED_PTR(KernelListPtr, lsst::afw::math::KernelList);
+
 %define %kernelPtr(TYPE...)
 SWIG_SHARED_PTR_DERIVED(TYPE, lsst::afw::math::Kernel, lsst::afw::math::TYPE);
 %lsst_persistable(lsst::afw::math::TYPE)
@@ -57,9 +59,7 @@ SWIG_SHARED_PTR_DERIVED(Kernel, lsst::daf::data::LsstBase, lsst::afw::math::Kern
 %kernelPtr(SeparableKernel);
 
 %include "lsst/afw/math/Kernel.h"
-
 %include "lsst/afw/math/KernelFunctions.h"
-
 %include "lsst/afw/math/ConvolveImage.h"
 //
 // Functions to convolve a MaskedImage or Image with a Kernel.

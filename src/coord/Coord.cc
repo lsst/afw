@@ -1,6 +1,6 @@
 // -*- lsst-c++ -*-
 /**
- * @file Coord.cc
+ * @file
  * @brief Provide functions to handle coordinates
  * @ingroup afw
  * @author Steve Bickerton
@@ -457,7 +457,7 @@ afwCoord::Coord::Ptr afwCoord::Coord::convert(CoordSystem system) const {
  */
 double afwCoord::Coord::angularSeparation(
                                           Coord const &c, ///< coordinate to compute our separation from
-                                          CoordUnit unit
+                                          CoordUnit unit ///< units of c
                                          ) const {
 
     // make sure they're fk5

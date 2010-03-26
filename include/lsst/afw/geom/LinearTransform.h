@@ -131,7 +131,7 @@ public:
         return dTransform(PointD(input));
     }
 
-    friend std::ostream & operator<<(std::ostream & os, LinearTransform const & t);
+    friend std::ostream & operator<<(std::ostream & os, lsst::afw::geom::LinearTransform const & t);
 
 private:
     Matrix _matrix;
