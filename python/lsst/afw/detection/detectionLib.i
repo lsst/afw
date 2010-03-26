@@ -36,6 +36,7 @@ namespace boost {
 %include "std_string.i"
 
 %include "lsst/p_lsstSwig.i"
+%import  "lsst/afw/utils.i" 
 %include "lsst/daf/base/persistenceMacros.i"
 
 %import "lsst/afw/image/imageLib.i"

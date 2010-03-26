@@ -1,4 +1,4 @@
-// -*- lsst-c++ -*-
+// -*- lsst-++ -*-
 %define cameraGeomLib_DOCSTRING
 "
 Python bindings for classes describing the the geometry of a mosaic camera
@@ -13,6 +13,7 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %}
 
 %include "lsst/p_lsstSwig.i"
+%include  "lsst/afw/utils.i" 
 %import  "lsst/afw/image/imageLib.i" 
 
 %lsst_exceptions();
@@ -61,30 +62,6 @@ SWIG_SHARED_PTR_DERIVED(CameraPtr, lsst::afw::cameraGeom::Detector, lsst::afw::c
         return boost::shared_dynamic_cast<lsst::afw::cameraGeom::Raft>(detector);
     }
 %}
-//
-// We'd like to just say
-//  def __iter__(self):
-//      return next()
-// but this crashes, at least with swig 1.3.36
-//
-%define %definePythonIterator(TYPE...)
-%extend TYPE {
-    %pythoncode {
-        def __iter__(self):
-            ptr = self.begin()
-            end = self.end()
-            while True:
-                if ptr == end:
-                    raise StopIteration
-
-                yield ptr.value()
-                ptr.incr()
-
-        def __getitem__(self, i):
-            return [e for e in self][i]
-    }
-}
-%enddef
 
 %definePythonIterator(lsst::afw::cameraGeom::Ccd);
 %definePythonIterator(lsst::afw::cameraGeom::DetectorMosaic);

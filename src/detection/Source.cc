@@ -20,7 +20,9 @@ det::Source::Source()
     : _petroFlux(0.0),
       _petroFluxErr(0.0),
       _sky(0.0),
-      _skyErr(0.0)
+      _skyErr(0.0),
+      _photom(new Photometry),
+      _astrom(new Astrometry)
 {}
 
 /**

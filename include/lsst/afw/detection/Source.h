@@ -20,6 +20,9 @@
 #include "lsst/daf/base/Persistable.h"
 #include "lsst/afw/detection/BaseSourceAttributes.h"
 
+#include "lsst/afw/detection/Astrometry.h"
+#include "lsst/afw/detection/Photometry.h"
+
 namespace boost {
 namespace serialization {
     class access;
@@ -98,6 +101,18 @@ public :
     void setYAstrom(double const yAstrom) { 
         set(_yAstrom, yAstrom, Y_ASTROM);            
     }
+    void setAstrometry(lsst::afw::detection::Measurement<lsst::afw::detection::Astrometry>::Ptr astrom) {
+        _astrom = astrom;
+    }
+    lsst::afw::detection::Measurement<lsst::afw::detection::Astrometry>::Ptr getAstrometry() const {
+        return _astrom;
+    }
+    void setPhotometry(lsst::afw::detection::Measurement<lsst::afw::detection::Photometry>::Ptr photom) {
+        _photom = photom;
+    }
+    lsst::afw::detection::Measurement<lsst::afw::detection::Photometry>::Ptr getPhotometry() const {
+        return _photom;
+    }
     
     bool operator==(Source const & d) const;
 
@@ -119,6 +134,9 @@ private :
 
     friend class boost::serialization::access;
     friend class formatters::SourceVectorFormatter;   
+
+    Measurement<Photometry>::Ptr _photom;
+    Measurement<Astrometry>::Ptr _astrom;
 };
 
 inline bool operator!=(Source const & lhs, Source const & rhs) {
