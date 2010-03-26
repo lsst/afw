@@ -7,7 +7,7 @@
  *
  * Contact: Kian-Tat Lim (ktl@slac.stanford.edu)
  *
- * \ingroup meas_algorithms
+ * \ingroup afw
  */
 #include <stdexcept>
 #include <string>
@@ -15,11 +15,8 @@
 
 #include "boost/serialization/nvp.hpp"
 
-#include "lsst/meas/algorithms/PsfFormatter.h"
-
-#include "lsst/meas/algorithms/PSF.h"
-#include "lsst/meas/algorithms/detail/dgPsf.h"
-#include "lsst/meas/algorithms/detail/pcaPsf.h"
+#include "lsst/afw/detection/PsfFormatter.h"
+#include "lsst/afw/detection/Psf.h"
 #include "lsst/daf/persistence/FormatterImpl.h"
 #include "lsst/daf/persistence/LogicalLocation.h"
 #include "lsst/daf/persistence/BoostStorage.h"
@@ -28,17 +25,14 @@
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/pex/policy/Policy.h"
 
-BOOST_CLASS_EXPORT(lsst::meas::algorithms::PSF)
-BOOST_CLASS_EXPORT(lsst::meas::algorithms::dgPsf)
-BOOST_CLASS_EXPORT(lsst::meas::algorithms::pcaPsf)
-
+BOOST_CLASS_EXPORT(lsst::afw::detection::Psf)
 
 #define EXEC_TRACE  20
 static void execTrace(std::string s, int level = EXEC_TRACE) {
-    lsst::pex::logging::Trace("meas.algorithms.PsfFormatter", level, s);
+    lsst::pex::logging::Trace("afw.detection.PsfFormatter", level, s);
 }
 
-namespace measAlgo = lsst::meas::algorithms;
+namespace afwDetect = lsst::afw::detection;
 namespace afwMath = lsst::afw::math;
 namespace dafBase = lsst::daf::base;
 namespace dafPersist = lsst::daf::persistence;
@@ -50,34 +44,27 @@ using boost::serialization::make_nvp;
  * FormatterRegistration.
  */
 dafPersist::FormatterRegistration
-measAlgo::PsfFormatter::registration(
-    "PSF", typeid(measAlgo::PSF), createInstance);
-dafPersist::FormatterRegistration
-measAlgo::PsfFormatter::dgPsfRegistration(
-    "dgPsf", typeid(measAlgo::dgPsf), createInstance);
-dafPersist::FormatterRegistration
-measAlgo::PsfFormatter::pcaPsfRegistration(
-    "pcaPsf", typeid(measAlgo::pcaPsf), createInstance);
+afwDetect::PsfFormatter::registration("Psf", typeid(afwDetect::Psf), createInstance);
 
 /** Constructor.
  * \param[in] policy Policy for configuring this Formatter
  */
-measAlgo::PsfFormatter::PsfFormatter(
+afwDetect::PsfFormatter::PsfFormatter(
     pexPolicy::Policy::Ptr policy) :
     dafPersist::Formatter(typeid(this)), _policy(policy) {}
 
 /** Minimal destructor.
  */
-measAlgo::PsfFormatter::~PsfFormatter(void) {}
+afwDetect::PsfFormatter::~PsfFormatter(void) {}
 
-void measAlgo::PsfFormatter::write(
+void afwDetect::PsfFormatter::write(
     dafBase::Persistable const* persistable,
     dafPersist::Storage::Ptr storage,
     dafBase::PropertySet::Ptr) {
     execTrace("PsfFormatter write start");
-    measAlgo::PSF const* ps = dynamic_cast<measAlgo::PSF const*>(persistable);
+    afwDetect::Psf const* ps = dynamic_cast<afwDetect::Psf const*>(persistable);
     if (ps == 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Persisting non-PSF");
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Persisting non-Psf");
     }
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
         execTrace("PsfFormatter write BoostStorage");
@@ -95,13 +82,13 @@ void measAlgo::PsfFormatter::write(
         execTrace("PsfFormatter write end");
         return;
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unrecognized Storage for PSF");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unrecognized Storage for Psf");
 }
 
-dafBase::Persistable* measAlgo::PsfFormatter::read(
+dafBase::Persistable* afwDetect::PsfFormatter::read(
     dafPersist::Storage::Ptr storage, dafBase::PropertySet::Ptr) {
     execTrace("PsfFormatter read start");
-    measAlgo::PSF* ps;
+    afwDetect::Psf* ps;
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
         execTrace("PsfFormatter read BoostStorage");
         dafPersist::BoostStorage* boost =
@@ -118,13 +105,13 @@ dafBase::Persistable* measAlgo::PsfFormatter::read(
         execTrace("PsfFormatter read end");
         return ps;
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unrecognized Storage for PSF");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unrecognized Storage for Psf");
 }
 
-void measAlgo::PsfFormatter::update(dafBase::Persistable* ,
+void afwDetect::PsfFormatter::update(dafBase::Persistable* ,
                                    dafPersist::Storage::Ptr,
                                    dafBase::PropertySet::Ptr) {
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unexpected call to update for PSF");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unexpected call to update for Psf");
 }
 
 /** Serialize a Psf to a Boost archive.  Handles text or XML
@@ -134,12 +121,12 @@ void measAlgo::PsfFormatter::update(dafBase::Persistable* ,
  * \param[in,out] persistable Pointer to the Psf as a Persistable
  */
 template <class Archive>
-void measAlgo::PsfFormatter::delegateSerialize(
+void afwDetect::PsfFormatter::delegateSerialize(
     Archive& ar, unsigned int const version, dafBase::Persistable* persistable) {
     execTrace("PsfFormatter delegateSerialize start");
-    measAlgo::PSF* ps = dynamic_cast<measAlgo::PSF*>(persistable);
+    afwDetect::Psf* ps = dynamic_cast<afwDetect::Psf*>(persistable);
     if (ps == 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Serializing non-PSF");
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Serializing non-Psf");
     }
     ar & make_nvp("width", ps->_width) & make_nvp("height", ps->_height);
     ar & make_nvp("k", ps->_kernel);
@@ -151,7 +138,7 @@ void measAlgo::PsfFormatter::delegateSerialize(
  * \param[in] policy Policy for configuring the PsfFormatter
  * \return Shared pointer to a new instance
  */
-dafPersist::Formatter::Ptr measAlgo::PsfFormatter::createInstance(
+dafPersist::Formatter::Ptr afwDetect::PsfFormatter::createInstance(
     pexPolicy::Policy::Ptr policy) {
-    return dafPersist::Formatter::Ptr(new measAlgo::PsfFormatter(policy));
+    return dafPersist::Formatter::Ptr(new afwDetect::PsfFormatter(policy));
 }

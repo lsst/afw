@@ -1,6 +1,6 @@
 // -*- LSST-C++ -*-
-#if !defined(LSST_DETECTION_PSF_H)
-#define LSST_DETECTION_PSF_H
+#if !defined(LSST_AFW_DETECTION_PSF_H)
+#define LSST_AFW_DETECTION_PSF_H
 //!
 // Describe an image's PSF
 //
@@ -12,41 +12,41 @@
 #include "lsst/afw/math.h"
 
 namespace lsst {
-namespace meas {
-namespace algorithms {
+namespace afw {
+namespace detection {
 
 class PsfFormatter;
 class PsfFactoryBase;
 /**
  * Create a particular sort of Psf.
  *
- * PsfT: the PSF class that we're going to instantiate
- * PsfFactorySignatureT: The signature of the PSF constructor
+ * PsfT: the Psf class that we're going to instantiate
+ * PsfFactorySignatureT: The signature of the Psf constructor
  *
  * \note We do NOT define the unspecialised type, as only a specific set of signatures are supported.  To add
  * another, you'll have to instantiate PsfFactory with the correct signature, add a suitable virtual member to
- * PsfFactoryBase, and add a matching createPSF function.
+ * PsfFactoryBase, and add a matching createPsf function.
  */
 template<typename PsfT, typename PsfFactorySignatureT> class PsfFactory;
 
 /*!
- * \brief Represent an image's PSF
+ * \brief Represent an image's Point Spread Function
  *
  * \note A polymorphic base class for Psf%s
  */
-class PSF : public lsst::daf::data::LsstBase, public lsst::daf::base::Persistable {
+class Psf : public lsst::daf::data::LsstBase, public lsst::daf::base::Persistable {
 public:
-    typedef boost::shared_ptr<PSF> Ptr; ///< shared_ptr to a PSF
-    typedef boost::shared_ptr<const PSF> ConstPtr; ///< shared_ptr to a const PSF
+    typedef boost::shared_ptr<Psf> Ptr; ///< shared_ptr to a Psf
+    typedef boost::shared_ptr<const Psf> ConstPtr; ///< shared_ptr to a const Psf
 
     typedef lsst::afw::math::Kernel::Pixel Pixel; ///< Pixel type of Image returned by getImage
     typedef lsst::afw::image::Image<Pixel> Image; ///< Image type returned by getImage
 
-    explicit PSF(int const width = 0, int const height = 0);
-    explicit PSF(lsst::afw::math::Kernel::Ptr kernel);
-    virtual ~PSF() = 0;
+    explicit Psf(int const width = 0, int const height = 0);
+    explicit Psf(lsst::afw::math::Kernel::Ptr kernel);
+    virtual ~Psf() {}
     /**
-     * Register a factory that builds a type of PSF
+     * Register a factory that builds a type of Psf
      *
      * \note This function returns bool so that it can be used in an initialisation
      * at file scope to do the actual registration
@@ -59,7 +59,7 @@ public:
             PsfFactory<PsfT, PsfFactorySignatureT> *factory = new PsfFactory<PsfT, PsfFactorySignatureT>();
             factory->markPersistent();
             
-            PSF::declare(name, factory);
+            Psf::declare(name, factory);
             _registered = true;
         }
 
@@ -78,18 +78,18 @@ public:
                  ) const {
         if (!getKernel() || getKernel()->getWidth() <= 0 || getKernel()->getHeight() <= 0) {
             throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
-                              "PSF does not have a realisation that can be used for convolution");            
+                              "Psf does not have a realisation that can be used for convolution");            
         }
         lsst::afw::math::convolve(convolvedImage, inImage, *getKernel(), doNormalize, edgeBit);        
     }
 
-    ///< Evaluate the PSF at (dx, dy)
+    ///< Evaluate the Psf at (dx, dy)
     ///
     /// This routine merely calls doGetValue, but here we can provide default values
     /// for the virtual functions that do the real work
     ///
-    double getValue(double const dx,            ///< Desired column (relative to centre of PSF)
-                    double const dy,            ///< Desired row (relative to centre of PSF)
+    double getValue(double const dx,            ///< Desired column (relative to centre of Psf)
+                    double const dy,            ///< Desired row (relative to centre of Psf)
                     int xPositionInImage = 0,     ///< Desired column position in image (think "CCD")
                     int yPositionInImage = 0      ///< Desired row position in image (think "CCD")
                    ) const {
@@ -102,24 +102,24 @@ public:
     lsst::afw::math::Kernel::Ptr getKernel();
     boost::shared_ptr<const lsst::afw::math::Kernel> getKernel() const;
 
-    /// Set the number of columns that will be used for %image representations of the PSF
+    /// Set the number of columns that will be used for %image representations of the Psf
     void setWidth(int const width) const { _width = width; }
-    /// Return the number of columns that will be used for %image representations of the PSF
+    /// Return the number of columns that will be used for %image representations of the Psf
     int getWidth() const { return _width; }
-    /// Set the number of rows that will be used for %image representations of the PSF
+    /// Set the number of rows that will be used for %image representations of the Psf
     void setHeight(int const height) const { _height = height; }
-    /// Return the number of rows that will be used for %image representations of the PSF
+    /// Return the number of rows that will be used for %image representations of the Psf
     int getHeight() const { return _height; }
-    /// Return the PSF's (width, height)
+    /// Return the Psf's (width, height)
     std::pair<int, int> getDimensions() const { return std::make_pair(_width, _height); }
 protected:
     /*
      * Support for Psf factories
      */
 #if !defined(SWIG)
-    friend PSF::Ptr createPSF(std::string const& name,
+    friend Psf::Ptr createPsf(std::string const& name,
                               int const width, int const height, double p0, double p1, double p2);
-    friend PSF::Ptr createPSF(std::string const& name,
+    friend Psf::Ptr createPsf(std::string const& name,
                               lsst::afw::math::Kernel::Ptr kernel);
 #endif
 
@@ -132,10 +132,10 @@ private:
     virtual double doGetValue(double const dx, double const dy,
                               int xPositionInImage, int yPositionInImage) const = 0;
 
-    lsst::afw::math::Kernel::Ptr _kernel; // Kernel that corresponds to the PSF
+    lsst::afw::math::Kernel::Ptr _kernel; // Kernel that corresponds to the Psf
     //
-    // These are mutable as they are concerned with the realisation of getImage's image, not the PSF itself
-    mutable int _width, _height;           // size of Image realisations of the PSF
+    // These are mutable as they are concerned with the realisation of getImage's image, not the Psf itself
+    mutable int _width, _height;           // size of Image realisations of the Psf
 };
 
 /**
@@ -145,13 +145,13 @@ class PsfFactoryBase : public lsst::daf::base::Citizen {
 public:
     PsfFactoryBase() : lsst::daf::base::Citizen(typeid(this)) {}
     virtual ~PsfFactoryBase() {}
-    virtual PSF::Ptr create(int = 0, int = 0, double = 0, double = 0, double = 0) {
+    virtual Psf::Ptr create(int = 0, int = 0, double = 0, double = 0, double = 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException,
-                          "This PSF type doesn't have an (int, int, double, double, double) constructor");
+                          "This Psf type doesn't have an (int, int, double, double, double) constructor");
     };
-    virtual PSF::Ptr create(lsst::afw::math::Kernel::Ptr) {
+    virtual Psf::Ptr create(lsst::afw::math::Kernel::Ptr) {
         throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException,
-                          "This PSF type doesn't have a (lsst::afw::math::Kernel::Ptr) constructor");
+                          "This Psf type doesn't have a (lsst::afw::math::Kernel::Ptr) constructor");
     };
 };
  
@@ -164,13 +164,13 @@ public:
     /**
      * Return a (shared_ptr to a) new PsfT
      */
-    virtual PSF::Ptr create(int width = 0, int height = 0, double p0 = 0, double p1 = 0, double p2 = 0) {
+    virtual Psf::Ptr create(int width = 0, int height = 0, double p0 = 0, double p1 = 0, double p2 = 0) {
         return typename PsfT::Ptr(new PsfT(width, height, p0, p1, p2));
     }
     /*
      * Call the other (non-implemented) create method to make icc happy
      */
-    virtual PSF::Ptr create(lsst::afw::math::Kernel::Ptr ptr) {
+    virtual Psf::Ptr create(lsst::afw::math::Kernel::Ptr ptr) {
         return PsfFactoryBase::create(ptr);
     };
 
@@ -185,30 +185,30 @@ public:
     /*
      * Call the other (non-implemented) create method to make icc happy
      */
-    virtual PSF::Ptr create(int width = 0, int height = 0, double p0 = 0, double p1 = 0, double p2 = 0) {
+    virtual Psf::Ptr create(int width = 0, int height = 0, double p0 = 0, double p1 = 0, double p2 = 0) {
         return PsfFactoryBase::create(width, height, p0, p1, p2);
     }
     /**
      * Return a (shared_ptr to a) new PsfT
      */
-    virtual PSF::Ptr create(lsst::afw::math::Kernel::Ptr kernel) {
+    virtual Psf::Ptr create(lsst::afw::math::Kernel::Ptr kernel) {
         return typename PsfT::Ptr(new PsfT(kernel));
     }
 };
 
 /************************************************************************************************************/
 /**
- * Factory functions to return a PSF
+ * Factory functions to return a Psf
  */
 /**
  * Create a named sort of Psf with signature (int, int, double, double, double)
  */
-PSF::Ptr createPSF(std::string const& type, int width = 0, int height = 0,
+Psf::Ptr createPsf(std::string const& type, int width = 0, int height = 0,
                    double = 0, double = 0, double = 0);
 
 /**
  * Create a named sort of Psf with signature (lsst::afw::math::Kernel::Ptr)
  */
-PSF::Ptr createPSF(std::string const& type, lsst::afw::math::Kernel::Ptr kernel);
+Psf::Ptr createPsf(std::string const& type, lsst::afw::math::Kernel::Ptr kernel);
 }}}
 #endif

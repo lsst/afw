@@ -22,9 +22,9 @@ import lsst.afw.detection as afwDetection
 import lsst.afw.math as afwMath
 import lsst.afw.display.ds9 as ds9
 import lsst.afw.display.utils as displayUtils
-import lsst.meas.algorithms as algorithms
-import lsst.meas.algorithms.defects as defects
-import lsst.meas.algorithms.measureSourceUtils as measureSourceUtils
+#import lsst.meas.algorithms as algorithms
+#import lsst.meas.algorithms.defects as defects
+#import lsst.meas.algorithms.measureSourceUtils as measureSourceUtils
 
 try:
     type(verbose)
@@ -42,8 +42,8 @@ class dgPsfTestCase(unittest.TestCase):
     def setUp(self):
         self.FWHM = 5
         self.ksize = 25                      # size of desired kernel
-        self.psf = algorithms.createPSF("DoubleGaussian", self.ksize, self.ksize,
-                                        self.FWHM/(2*sqrt(2*log(2))), 1, 0.1)
+        self.psf = afwDetect.createPSF("DoubleGaussian", self.ksize, self.ksize,
+                                       self.FWHM/(2*sqrt(2*log(2))), 1, 0.1)
 
     def tearDown(self):
         del self.psf
@@ -85,7 +85,7 @@ class dgPsfTestCase(unittest.TestCase):
         # Check that a PSF with a zero-sized kernel can't be used to convolve
         #
         def badKernelSize():
-            psf = algorithms.createPSF("DoubleGaussian", 0, 0, 1)
+            psf = afwDetect.createPSF("DoubleGaussian", 0, 0, 1)
             psf.convolve(cim, im)
 
         utilsTests.assertRaisesLsstCpp(self, pexExceptions.RuntimeErrorException, badKernelSize)
@@ -93,17 +93,17 @@ class dgPsfTestCase(unittest.TestCase):
     def testInvalidDgPSF(self):
         """Test parameters of dgPSFs, both valid and not"""
         sigma1, sigma2, b = 1, 0, 0                     # sigma2 may be 0 iff b == 0
-        algorithms.createPSF("DoubleGaussian", self.ksize, self.ksize, sigma1, sigma2, b)
+        afwDetect.createPSF("DoubleGaussian", self.ksize, self.ksize, sigma1, sigma2, b)
 
         def badSigma1():
             sigma1 = 0
-            algorithms.createPSF("DoubleGaussian", self.ksize, self.ksize, sigma1, sigma2, b)
+            afwDetect.createPSF("DoubleGaussian", self.ksize, self.ksize, sigma1, sigma2, b)
 
         utilsTests.assertRaisesLsstCpp(self, pexExceptions.DomainErrorException, badSigma1)
 
         def badSigma2():
             sigma2, b = 0, 1
-            algorithms.createPSF("DoubleGaussian", self.ksize, self.ksize, sigma1, sigma2, b)
+            afwDetect.createPSF("DoubleGaussian", self.ksize, self.ksize, sigma1, sigma2, b)
 
         utilsTests.assertRaisesLsstCpp(self, pexExceptions.DomainErrorException, badSigma2)
 
@@ -114,7 +114,7 @@ class dgPsfTestCase(unittest.TestCase):
         xcen = self.psf.getWidth()//2
         ycen = self.psf.getHeight()//2
 
-        centroider = algorithms.createMeasureCentroid("SDSS")
+        centroider = afwDetect.createMeasureCentroid("SDSS")
 
         stamps = []
         trueCenters = []
@@ -171,7 +171,7 @@ class SpatialModelPsfTestCase(unittest.TestCase):
 
         self.FWHM = 5
         self.ksize = 25                      # size of desired kernel
-        #self.psf = algorithms.createPSF("DoubleGaussian", self.ksize, self.ksize,
+        #self.psf = afwDetect.createPSF("DoubleGaussian", self.ksize, self.ksize,
         #                                self.FWHM/(2*sqrt(2*log(2))), 1, 0.1)
 
         rand = afwMath.Random()               # make these tests repeatable by setting seed
@@ -190,7 +190,7 @@ class SpatialModelPsfTestCase(unittest.TestCase):
             flux = 10000 - 0*x - 10*y
 
             sigma = 3 + 0.005*(y - self.mi.getHeight()/2)
-            psf = algorithms.createPSF("DoubleGaussian", self.ksize, self.ksize, sigma, 1, 0.1)
+            psf = afwDetect.createPSF("DoubleGaussian", self.ksize, self.ksize, sigma, 1, 0.1)
             im = psf.getImage(0, 0).convertFloat()
             im *= flux
             smi = self.mi.getImage().Factory(self.mi.getImage(),
@@ -205,7 +205,7 @@ class SpatialModelPsfTestCase(unittest.TestCase):
             smi += im
             del psf; del im; del smi
 
-        psf = algorithms.createPSF("DoubleGaussian", self.ksize, self.ksize,
+        psf = afwDetect.createPSF("DoubleGaussian", self.ksize, self.ksize,
                                    self.FWHM/(2*sqrt(2*log(2))), 1, 0.1)
 
         self.cellSet = afwMath.SpatialCellSet(afwImage.BBox(afwImage.PointI(0, 0), width, height), 100)
@@ -223,7 +223,7 @@ class SpatialModelPsfTestCase(unittest.TestCase):
         moPolicy.add("photometryAlgorithm", "NAIVE")
         moPolicy.add("apRadius", 3.0)
 
-        measureSources = algorithms.makeMeasureSources(afwImage.makeExposure(self.mi), moPolicy, psf)
+        measureSources = afwDetect.makeMeasureSources(afwImage.makeExposure(self.mi), moPolicy, psf)
 
         sourceList = afwDetection.SourceSet()
         for i in range(len(objects)):
@@ -231,11 +231,11 @@ class SpatialModelPsfTestCase(unittest.TestCase):
             sourceList.append(source)
 
             source.setId(i)
-            source.setFlagForDetection(source.getFlagForDetection() | algorithms.Flags.BINNED1);
+            source.setFlagForDetection(source.getFlagForDetection() | afwDetect.Flags.BINNED1);
 
             measureSources.apply(source, objects[i])
 
-            self.cellSet.insertCandidate(algorithms.makePsfCandidate(source, self.mi))
+            self.cellSet.insertCandidate(afwDetect.makePsfCandidate(source, self.mi))
 
     def tearDown(self):
         del self.cellSet
@@ -254,7 +254,7 @@ class SpatialModelPsfTestCase(unittest.TestCase):
         nIterForPsf =      5
 
         width, height = kernelSize, kernelSize
-        algorithms.PsfCandidateF.setWidth(width); algorithms.PsfCandidateF.setHeight(height);
+        afwDetect.PsfCandidateF.setWidth(width); afwDetect.PsfCandidateF.setHeight(height);
         nu = width*height - 1           # number of degrees of freedom/star for chi^2
 
         reply = ""
@@ -269,7 +269,7 @@ class SpatialModelPsfTestCase(unittest.TestCase):
                     i = 0
                     for cand in cell.begin(False): # don't skip BAD stars
                         i += 1
-                        source = algorithms.cast_PsfCandidateF(cand).getSource()
+                        source = afwDetect.cast_PsfCandidateF(cand).getSource()
 
                         xc, yc = source.getXAstrom() - self.mi.getX0(), source.getYAstrom() - self.mi.getY0()
                         if cand.isBad():
@@ -279,19 +279,19 @@ class SpatialModelPsfTestCase(unittest.TestCase):
                         else:
                             ds9.dot("o", xc, yc, ctype = ds9.YELLOW)
 
-            pair = algorithms.createKernelFromPsfCandidates(self.cellSet, nEigenComponents, spatialOrder,
+            pair = afwDetect.createKernelFromPsfCandidates(self.cellSet, nEigenComponents, spatialOrder,
                                                             kernelSize, nStarPerCell)
 
             kernel, eigenValues = pair[0], pair[1]; del pair
 
             print "lambda", " ".join(["%g" % l for l in eigenValues])
 
-            pair = algorithms.fitSpatialKernelFromPsfCandidates(kernel, self.cellSet,
+            pair = afwDetect.fitSpatialKernelFromPsfCandidates(kernel, self.cellSet,
                                                                 nStarPerCellSpatialFit, tolerance)
             status, chi2 = pair[0], pair[1]; del pair
             print "Spatial fit: %s chi^2 = %.2g" % (status, chi2)
 
-            psf = algorithms.createPSF("PCA", kernel) # Hurrah!
+            psf = afwDetect.createPSF("PCA", kernel) # Hurrah!
             #
             # Label PSF candidate stars with bad chi^2 as BAD
             #
@@ -299,7 +299,7 @@ class SpatialModelPsfTestCase(unittest.TestCase):
             for cell in self.cellSet.getCellList():
                 worstId, worstChi2 = -1, -1
                 for cand in cell.begin(True): # only not BAD candidates
-                    cand = algorithms.cast_PsfCandidateF(cand)
+                    cand = afwDetect.cast_PsfCandidateF(cand)
 
                     rchi2 = cand.getChi2()/nu
 
@@ -311,7 +311,7 @@ class SpatialModelPsfTestCase(unittest.TestCase):
                         worstId, worstChi2 = cand.getId(), rchi2
                         
                 for cand in cell.begin(True): # only not BAD candidates
-                    cand = algorithms.cast_PsfCandidateF(cand)
+                    cand = afwDetect.cast_PsfCandidateF(cand)
                     if cand.getId() == worstId:
                         cand.setStatus(afwMath.SpatialCellCandidate.BAD)
 
@@ -347,7 +347,7 @@ class SpatialModelPsfTestCase(unittest.TestCase):
                     # it knows is that we have a SpatialCellCandidate, and SpatialCellCandidates
                     # don't know about getImage;  so cast the pointer to PsfCandidate
                     #
-                    cand = algorithms.cast_PsfCandidateF(cand)
+                    cand = afwDetect.cast_PsfCandidateF(cand)
                     s = cand.getSource()
 
                     im = cand.getImage()
@@ -385,7 +385,7 @@ class SpatialModelPsfTestCase(unittest.TestCase):
 
             for cell in self.cellSet.getCellList():
                 for cand in cell.begin(False): # include bad candidates
-                    cand = algorithms.cast_PsfCandidateF(cand)
+                    cand = afwDetect.cast_PsfCandidateF(cand)
 
                     infoStr = "%d X^2=%.1f" % (cand.getSource().getId(), cand.getChi2()/nu)
 
@@ -415,10 +415,10 @@ class SpatialModelPsfTestCase(unittest.TestCase):
                     # it knows is that we have a SpatialCellCandidate, and SpatialCellCandidates
                     # don't know about getImage;  so cast the pointer to PsfCandidate
                     #
-                    cand = algorithms.cast_PsfCandidateF(cand)
+                    cand = afwDetect.cast_PsfCandidateF(cand)
                     s = cand.getSource()
 
-                    algorithms.subtractPsf(psf, residuals, s.getXAstrom(), s.getYAstrom())
+                    afwDetect.subtractPsf(psf, residuals, s.getXAstrom(), s.getYAstrom())
 
             ds9.mtv(residuals, frame = 4)
 
@@ -526,7 +526,7 @@ class RHLTestCase(unittest.TestCase):
             del im; del smi
 
         self.FWHM = 5
-        psf = algorithms.createPSF("DoubleGaussian", self.ksize, self.ksize,
+        psf = afwDetect.createPSF("DoubleGaussian", self.ksize, self.ksize,
                                    self.FWHM/(2*sqrt(2*log(2))), 1, 0.1)
 
         self.cellSet = afwMath.SpatialCellSet(afwImage.BBox(afwImage.PointI(0, 0), width, height), 100)
@@ -541,7 +541,7 @@ class RHLTestCase(unittest.TestCase):
         moPolicy.add("photometryAlgorithm", "NAIVE")
         moPolicy.add("apRadius", 3.0)
  
-        measureSources = algorithms.makeMeasureSources(afwImage.makeExposure(self.mi), moPolicy, psf)
+        measureSources = afwDetect.makeMeasureSources(afwImage.makeExposure(self.mi), moPolicy, psf)
 
         sourceList = afwDetection.SourceSet()
         for i in range(len(objects)):
@@ -551,7 +551,7 @@ class RHLTestCase(unittest.TestCase):
             source.setId(i)
 
             measureSources.apply(source, objects[i])
-            source.setFlagForDetection(source.getFlagForDetection() | algorithms.Flags.BINNED1);
+            source.setFlagForDetection(source.getFlagForDetection() | afwDetect.Flags.BINNED1);
 
             source.setXAstrom(1e-2*int(100*source.getXAstrom() + 0.5)) # get exact centroids
             source.setYAstrom(1e-2*int(100*source.getYAstrom() + 0.5))
@@ -560,7 +560,7 @@ class RHLTestCase(unittest.TestCase):
                 print source.getXAstrom(), source.getYAstrom(), source.getPsfFlux(), \
                       measureSourceUtils.explainDetectionFlags(source.getFlagForDetection())
 
-            self.cellSet.insertCandidate(algorithms.makePsfCandidate(source, self.mi))
+            self.cellSet.insertCandidate(afwDetect.makePsfCandidate(source, self.mi))
             
         frame = 1
         ds9.mtv(self.mi, frame = frame); ds9.dot("Double Gaussian", 140, 100, frame = frame)
@@ -578,7 +578,7 @@ class RHLTestCase(unittest.TestCase):
         nStarPerCell =     2
 
         width, height = 45, 45
-        algorithms.PsfCandidateF.setWidth(width); algorithms.PsfCandidateF.setHeight(height);
+        afwDetect.PsfCandidateF.setWidth(width); afwDetect.PsfCandidateF.setHeight(height);
         #
         # Show candidates
         #
@@ -586,7 +586,7 @@ class RHLTestCase(unittest.TestCase):
             stamps = []
             for cell in self.cellSet.getCellList():
                 for cand in cell:
-                    cand = algorithms.cast_PsfCandidateF(cand)
+                    cand = afwDetect.cast_PsfCandidateF(cand)
                     s = cand.getSource()
 
                     im = cand.getImage()
@@ -604,12 +604,12 @@ class RHLTestCase(unittest.TestCase):
                 
                 ds9.mtv(im, frame = frame)
 
-        pair = algorithms.createKernelFromPsfCandidates(self.cellSet, nEigenComponents, spatialOrder,
+        pair = afwDetect.createKernelFromPsfCandidates(self.cellSet, nEigenComponents, spatialOrder,
                                                         kernelSize, nStarPerCell)
 
         kernel, eigenValues = pair[0], pair[1]; del pair
         
-        psf = algorithms.createPSF("PCA", kernel) # Hurrah!
+        psf = afwDetect.createPSF("PCA", kernel) # Hurrah!
 
         if display:
             xy = []
@@ -618,11 +618,11 @@ class RHLTestCase(unittest.TestCase):
                 oim = self.mi.Factory(self.mi, True)
             for cell in self.cellSet.getCellList():
                 for cand in cell:
-                    source = algorithms.cast_PsfCandidateF(cand).getSource()
+                    source = afwDetect.cast_PsfCandidateF(cand).getSource()
 
                     delta = -0.5
                     delta =  0.0
-                    algorithms.subtractPsf(psf, self.mi,
+                    afwDetect.subtractPsf(psf, self.mi,
                                            source.getXAstrom() + delta, source.getYAstrom() + delta)
 
                     xy.append([source.getXAstrom(), source.getYAstrom()])

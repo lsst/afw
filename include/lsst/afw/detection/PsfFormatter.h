@@ -1,6 +1,6 @@
 // -*- LSST-C++ -*-
-#if !defined(LSST_MEAS_ALGORITHMS_PSFFORMATTER_H)
-#define LSST_MEAS_ALGORITHMS_PSFFORMATTER_H
+#if !defined(LSST_AFW_DETECTION_PSFFORMATTER_H)
+#define LSST_AFW_DETECTION_PSFFORMATTER_H
 
 /** @file
  * @brief Interface for PsfFormatter class
@@ -9,13 +9,13 @@
  * @date $Date$
  *
  * Contact: Kian-Tat Lim (ktl@slac.stanford.edu)
- * @ingroup meas_algorithms
+ * @ingroup afw
  */
 
-/** @class lsst::meas::algorithms::PsfFormatter
- * @brief Formatter for persistence of PSF instances.
+/** @class lsst::afw::detection::PsfFormatter
+ * @brief Formatter for persistence of Psf instances.
  *
- * @ingroup meas_algorithms
+ * @ingroup afw
  */
 
 #include "lsst/daf/base/Persistable.h"
@@ -24,8 +24,8 @@
 #include "lsst/pex/policy/Policy.h"
 
 namespace lsst {
-namespace meas {
-namespace algorithms {
+namespace afw {
+namespace detection {
 
 namespace dafBase = lsst::daf::base;
 namespace pexPolicy = lsst::pex::policy;
@@ -63,6 +63,6 @@ private:
     static dafPersist::FormatterRegistration pcaPsfRegistration;
 };
 
-}}} // namespace lsst::meas::algorithms
+}}}
 
 #endif
