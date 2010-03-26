@@ -188,8 +188,6 @@ def version(HeadURL = r"$HeadURL$"):
 %}
 
 SWIG_SHARED_PTR(Wcs, lsst::afw::image::Wcs);
- 
-SWIG_SHARED_PTR_DERIVED(TanWcs, lsst::afw::image::Wcs, lsst::afw::image::TanWcs) 
 SWIG_SHARED_PTR(TanWcs, lsst::afw::image::TanWcs);
 
 
@@ -206,7 +204,7 @@ SWIG_SHARED_PTR(TanWcs, lsst::afw::image::TanWcs);
     }
 }
 
-%extend lsst::afw::image::TanWcs::Ptr {
+%extend lsst::afw::image::TanWcs {
     lsst::afw::image::TanWcs::Ptr clone() {
         return lsst::afw::image::TanWcs::Ptr(new lsst::afw::image::TanWcs::TanWcs(*self));
     }

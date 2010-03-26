@@ -122,7 +122,7 @@ SWIG_SHARED_PTR(Decorated##NAME##TYPE, lsst::afw::image::DecoratedImage<PIXEL_TY
 %ignore lsst::afw::image::ImageBase::xy_at;
 
 SWIG_SHARED_PTR_DERIVED(Wcs, lsst::daf::data::LsstBase, lsst::afw::image::Wcs);
-SWIG_SHARED_PTR_DERIVED(Wcs, lsst::daf::data::LsstBase, lsst::afw::image::TanWcs);
+SWIG_SHARED_PTR_DERIVED(TanWcs, lsst::daf::data::LsstBase, lsst::afw::image::TanWcs);
 %imagePtr(Image, U, boost::uint16_t);
 %imagePtr(Image, I, int);
 %imagePtr(Image, F, float);
