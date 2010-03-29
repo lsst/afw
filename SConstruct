@@ -16,6 +16,7 @@ env = scons.makeEnv(
     r"$HeadURL$",
     scons.ConfigureDependentProducts("afw"),
 )
+
 #
 # Libraries needed to link libraries/executables
 #
