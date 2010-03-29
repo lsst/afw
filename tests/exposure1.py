@@ -13,6 +13,8 @@ import unittest
 
 import eups
 import lsst.afw.image as afwImage
+import lsst.afw.geom as afwGeom
+import lsst.afw.coord as afwCoord
 import lsst.utils.tests as utilsTests
 import lsst.pex.logging as pexLog
 import lsst.pex.exceptions as pexExcept
@@ -48,7 +50,7 @@ class ExposureTestCase(unittest.TestCase):
         self.smallExposure = afwImage.ExposureF(inFilePathSmall)
         self.width =  maskedImage.getWidth()
         self.height = maskedImage.getHeight()
-        self.wcs = afwImage.Wcs(self.smallExposure.getMetadata())
+        self.wcs = afwImage.makeWcs(self.smallExposure.getMetadata())
 
         self.exposureBlank = afwImage.ExposureF()
         self.exposureMiOnly = afwImage.makeExposure(maskedImage)
@@ -163,6 +165,7 @@ class ExposureTestCase(unittest.TestCase):
         Test if an Exposure has a WCS or not.
         """
         self.assertFalse(self.exposureBlank.hasWcs())       
+
         self.assertFalse(self.exposureMiOnly.hasWcs())        
         self.assertTrue(self.exposureMiWcs.hasWcs())        
         self.assertTrue(self.exposureCrWcs.hasWcs())       
@@ -206,6 +209,22 @@ class ExposureTestCase(unittest.TestCase):
 
         utilsTests.assertRaisesLsstCpp(self, pexExcept.LengthErrorException, getSubRegion)
 
+        #check the sub- and parent- exposures are using the same Wcs transformation
+        subBBox = afwImage.BBox(afwImage.PointI(40, 50), 10, 10)
+        subExposure = self.exposureCrWcs.Factory(self.exposureCrWcs, subBBox)
+        parentPos = self.exposureCrWcs.getWcs().pixelToSky(0,0)
+        
+        parentPos = parentPos.getPosition()
+        
+        subExpPos = subExposure.getWcs().pixelToSky(0,0).getPosition()
+        
+        for i in range(2):
+            self.assertAlmostEqual(parentPos[i], subExpPos[i], 9, "Wcs in sub image has changed")
+            
+
+
+        
+
     def testReadWriteFits(self):
         """Test readFits and writeFits.
         """
@@ -236,6 +255,9 @@ class ExposureTestCase(unittest.TestCase):
 
     def checkWcs(self, parentExposure, subExposure):
         """Compare WCS at corner points of a sub-exposure and its parent exposure
+           By using the function indexToPosition, we should be able to convert the indices
+           (of the four corners (of the sub-exposure)) to positions and use the wcs
+           to get the same sky coordinates for each.
         """
         subMI = subExposure.getMaskedImage()
         subDim = subMI.getDimensions()
@@ -247,15 +269,14 @@ class ExposureTestCase(unittest.TestCase):
 
         for xSubInd in (0, subDim[0]-1):
             for ySubInd in (0, subDim[1]-1):
-                p0 = mainWcs.xyToRaDec(
-                    afwImage.indexToPosition(xSubInd + subXY0[0]),
-                    afwImage.indexToPosition(ySubInd + subXY0[1]),
-                )
-                p1 = subWcs.xyToRaDec(
+                p0 = mainWcs.pixelToSky(
                     afwImage.indexToPosition(xSubInd),
                     afwImage.indexToPosition(ySubInd),
                 )
-                self.assertEqual((p0.getX(), p0.getY()), (p1.getX(), p1.getY()))
+                p1 = subWcs.pixelToSky(
+                    afwImage.indexToPosition(xSubInd),
+                    afwImage.indexToPosition(ySubInd),
+                )
 
 
          
