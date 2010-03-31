@@ -119,7 +119,19 @@ def makeCcd(geomPolicy, ccdId=None, ccdInfo=None):
 If ccdInfo is provided it's set to various facts about the CCDs which are used in unit tests.  Note
 in particular that it has an entry ampSerial which is a single-element list, the amplifier serial counter
     """
-    ccdPol = geomPolicy.get("Ccd")
+    ccdPolArr = geomPolicy.getArray("Ccd")
+    ccdPol = None
+    if ccdId is None or len(ccdPolArr) == 1:
+        ccdPol = ccdPolArr[0]
+    else:
+        for c in ccdPolArr:
+            if ccdId.getSerial() == c.get("serial"):
+                ccdPol = c
+            else:
+                continue
+
+    if ccdPol is None:
+        raise Exception("ccdId did not match a ccd in the policy")
 
     pixelSize = ccdPol.get("pixelSize")
 
@@ -137,11 +149,11 @@ in particular that it has an entry ampSerial which is a single-element list, the
     electronicPol = geomPolicy.get("Electronic")
     electronics = {}
     for pol in electronicPol.getArray("Raft"):
-        for pol in pol.getArray("Ccd"):
-            electronicCcdName = pol.get("name")
+        for pol2 in pol.getArray("Ccd"):
+            electronicCcdName = pol2.get("name")
             if electronicCcdName in ("*", ccdId.getName()):
                 electronics["ccdName"] = electronicCcdName
-                for p in pol.getArray("Amp"):
+                for p in pol2.getArray("Amp"):
                     electronics[p.get("serial")] = p
                 break
     #
@@ -187,7 +199,7 @@ in particular that it has an entry ampSerial which is a single-element list, the
             saturationLevel = ePol.get("saturationLevel")
         except KeyError:
             if electronics.get("ccdName") != "*":
-                raise RuntimeError, ("Unable to find electronic info for Ccd \"%s\", Amp %s" %
+                raise RuntimeError, ("My Unable to find electronic info for Ccd \"%s\", Amp %s" %
                                      (ccd.getId(), serial))
             gain, readNoise, saturationLevel = 0, 0, 0
         #
@@ -252,7 +264,20 @@ particular that it has an entry ampSerial which is a single-element list, the am
     else:
         ccdInfo = {"ampSerial" : raftInfo.get("ampSerial", [0])}
 
-    raftPol = geomPolicy.get("Raft")
+    raftPolArr = geomPolicy.getArray("Raft")
+    raftPol = None
+    if raftId is None or len(raftPolArr) == 1:
+        raftPol = raftPolArr[0]
+    else:
+        for c in raftPolArr:
+            if raftId.getSerial() == c.get("serial"):
+                raftPol = c
+            else:
+                continue
+
+    if raftPol is None:
+        raise Exception("raftId did not match a raft in the policy")
+
     nCol = raftPol.get("nCol")
     nRow = raftPol.get("nRow")
     if not raftId:
@@ -326,6 +351,8 @@ particular that it has an entry ampSerial which is a single-element list, the am
     nCol = cameraPol.get("nCol")
     nRow = cameraPol.get("nRow")
 
+    xGutter = 0
+    yGutter = 0
     if not cameraId:
         cameraId = cameraGeom.Id(cameraPol.get("serial"), cameraPol.get("name"))
     camera = cameraGeom.Camera(cameraId, nCol, nRow)
@@ -337,21 +364,23 @@ particular that it has an entry ampSerial which is a single-element list, the am
         raft = makeRaft(geomPolicy, raftId, raftInfo)
         camera.addDetector(afwGeom.makePointI(Col, Row),
                            afwGeom.makePointD(xc, yc), cameraGeom.Orientation(), raft)
-
+        #Since the ImSim focal plane does not have imaging sensors at the
+        #corners, we need to use the center of the focal plane to guess at the
+        #gap between rafts.
         if cameraInfo is not None:
             # Guess the gutter between detectors
-            if (Col, Row) == (0, 0):
+            if (Col, Row) == (1,1):
                 xGutter, yGutter = xc, yc
-            elif (Col, Row) == (nCol - 1, nRow - 1):
+            elif (Col, Row) == (nCol - 2, nRow - 2):
                 if nCol == 1:
                     xGutter = 0.0
                 else:
-                    xGutter = (xc - xGutter)/float(nCol - 1) - raft.getSize()[0]
+                    xGutter = (xc - xGutter)/float(nCol - 3) - raft.getSize()[0]
                     
                 if nRow == 1:
                     yGutter = 0.0
                 else:
-                    yGutter = (yc - yGutter)/float(nRow - 1) - raft.getSize()[1]
+                    yGutter = (yc - yGutter)/float(nRow - 3) - raft.getSize()[1]
 
     if cameraInfo is not None:
         cameraInfo.clear()
@@ -545,9 +574,10 @@ of the detectors"""
         
         center = camera.getCenterPixel() + afwGeom.Extent2I(raft.getCenterPixel())
 
-        if overlay:
-            bbox = raft.getAllPixels()
-            ds9.dot(raft.getId().getName(), center[0], center[1], frame=frame)
+#        if overlay:
+#            print "in overlayx"
+#            bbox = raft.getAllPixels()
+#            ds9.dot(raft.getId().getName(), center[0], center[1], frame=frame)
 
         showRaft(raft, None, frame=frame, overlay=overlay,
                  raftOrigin=center - afwGeom.makeExtentI(raft.getAllPixels().getWidth()/2,

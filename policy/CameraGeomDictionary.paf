@@ -158,6 +158,19 @@ definitions: {
         dictionary: {
             target: "Ccd"
             definitions: {
+                serial: {
+                    type: int
+                    description: "CCD's serial number"
+                    minOccurs: 0
+                    maxOccurs: 1
+                    default: -1
+                }
+                name: {
+                    type: string
+                    minOccurs: 0
+                    maxOccurs: 1
+                    default: "None"
+                }
                 pixelSize: {
                     type: double
                     description: "Pixel size in microns"
