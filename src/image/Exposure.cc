@@ -107,8 +107,6 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &src, ///<
     _maskedImage(src.getMaskedImage(), bbox, deep),
     _wcs(new afwImage::Wcs(*src._wcs))
 {
-
-    afwImage::PointI xy0 = src.getMaskedImage().getXY0();
     setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet()));
 }
 

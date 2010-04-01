@@ -32,7 +32,7 @@ namespace coord {
  * Information about the coordinate system we support
  */
 enum CoordSystem { FK5, ICRS, GALACTIC, ECLIPTIC, TOPOCENTRIC };
-CoordSystem const makeCoordEnum(std::string const system);
+CoordSystem makeCoordEnum(std::string const system);
 
     
 class IcrsCoord;
@@ -70,10 +70,10 @@ public:
 
     // These are inline functions and are defined at the end of this header file
     double operator[](int const index) const;
-    double getLongitude(CoordUnit unit) const;
-    double getLatitude(CoordUnit unit) const;
-    std::string getLongitudeStr(CoordUnit unit) const;
-    std::string getLatitudeStr() const;
+    inline double getLongitude(CoordUnit unit) const;
+    inline double getLatitude(CoordUnit unit) const;
+    inline std::string getLongitudeStr(CoordUnit unit) const;
+    inline std::string getLatitudeStr() const;
 
     
     Coord transform(Coord const &poleFrom, Coord const &poleTo) const;

@@ -45,8 +45,7 @@ namespace image {
 
         //Constructors
         TanWcs();
-        friend lsst::afw::image::Wcs::Ptr lsst::afw::image::makeWcs(lsst::daf::base::PropertySet::Ptr \
-            fitsMetadata);
+        friend Wcs::Ptr makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
         TanWcs(const lsst::afw::geom::PointD crval, const lsst::afw::geom::PointD crpix, 
                const Eigen::Matrix2d &CD, 
                double equinox=2000, std::string raDecSys="FK5",
@@ -98,7 +97,7 @@ namespace image {
         TanWcs(lsst::daf::base::PropertySet::Ptr const fitsMetadata);
         
         //Allow the formatter to access private goo
-        LSST_PERSIST_FORMATTER(lsst::afw::formatters::TanWcsFormatter);
+        LSST_PERSIST_FORMATTER(lsst::afw::formatters::TanWcsFormatter)
 
         bool _hasDistortion;
         Eigen::MatrixXd _sipA, _sipB, _sipAp, _sipBp;
