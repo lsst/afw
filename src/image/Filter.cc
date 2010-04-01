@@ -7,123 +7,169 @@
 //
 //##====----------------                                ----------------====##/
 
-#include "lsst/daf/persistence/Persistence.h"
-#include "lsst/daf/persistence/Storage.h"
-#include "lsst/pex/policy/Policy.h"
+#include "boost/format.hpp"
 #include "lsst/pex/exceptions.h"
 
 #include "lsst/afw/image/Filter.h"
 
-namespace image = lsst::afw::image;
-namespace ex = lsst::pex::exceptions;
+namespace pexEx = lsst::pex::exceptions;
 
-// using is permitted for classes, but not namespaces?
-using lsst::daf::persistence::Persistence;
-using lsst::daf::persistence::Storage;
-using lsst::daf::persistence::DbStorage;
-using lsst::pex::policy::Policy;
+namespace lsst { namespace afw { namespace image {
+
+FilterProperty::NameMap *FilterProperty::_nameMap = NULL;
+
+FilterProperty::FilterProperty(std::string const& name, ///< name of filter
+                               double lambdaEff, ///< Effective wavelength (nm)
+                               bool force        ///< Allow this name to replace a previous one
+                              ) : _name(name), _lambdaEff(lambdaEff)
+{
+    if (!_nameMap) {
+        _initRegistry();
+    }
+
+    NameMap::iterator keyVal = _nameMap->find(name);
+
+    if (keyVal != _nameMap->end()) {
+        if (!force) {
+            throw LSST_EXCEPT(pexEx::RuntimeErrorException, "Filter " + name + " is already defined");
+        }
+        _nameMap->erase(keyVal);
+    }
+    
+    _nameMap->insert(std::make_pair(name, *this));
+}
+            
+/**
+ * Initialise the Filter registry
+ */
+void FilterProperty::_initRegistry()
+{
+    if (_nameMap) {
+        delete _nameMap;
+    }
+
+    _nameMap = new NameMap;
+}
 
 /**
- * Creates a Filter with the given name, using the @c Filter table in the database given by
- * @a location to map the filter name to an integer identifier.
+ * Lookup the properties of a filter "name"
  */
-image::Filter::Filter(lsst::daf::persistence::LogicalLocation const & location, std::string const & name) {
-    Policy::Ptr      noPolicy;
-    Persistence::Ptr persistence = Persistence::getPersistence(noPolicy);
-    Storage::Ptr     storage     = persistence->getRetrieveStorage("DbStorage", location);
-    DbStorage       *db          = dynamic_cast<DbStorage *>(storage.get());
-    if (db == 0) {
-        throw LSST_EXCEPT(ex::RuntimeErrorException, "Didn't get DbStorage");
+FilterProperty const& FilterProperty::lookup(std::string const& name ///< name of desired filter
+                                            )
+{
+    if (!_nameMap) {
+        _initRegistry();
     }
-    db->startTransaction();
-    try {
-        _id = nameToId(*db, name);
-    } catch(...) {
-        db->endTransaction();
-        throw;
+
+    NameMap::iterator keyVal = _nameMap->find(name);
+
+    if (keyVal == _nameMap->end()) {
+        throw LSST_EXCEPT(pexEx::NotFoundException, "Unable to find filter " + name);
     }
-    db->endTransaction();
+    
+    return keyVal->second;
+}
+            
+/************************************************************************************************************/
+/**
+ * Initialise the Filter registry
+ */
+void Filter::_initRegistry()
+{
+    _id0 = UNKNOWN;
+    delete _nameMap;
+    delete _idMap;
+
+    _nameMap = new NameMap;
+    _idMap = new IdMap;
+    
+    define(FilterProperty("_unknown_", -1));
 }
 
+/************************************************************************************************************/
+
+int Filter::_id0 = Filter::UNKNOWN;
+
+Filter::NameMap *Filter::_nameMap = NULL; // dynamically allocated as that avoids an intel bug with static
+                                        // variables in dynamic libraries
+Filter::IdMap *Filter::_idMap = NULL; // dynamically allocated as that avoids an intel bug with static
+                                        // variables in dynamic libraries
 
 /**
- * Returns the name of the filter, using the @c Filter table in the database given by
- * @a location to map the filter identifier to a name.
+ * Define a filter name to have the specified id
+ *
+ * If id == Filter::AUTO a value will be chosen for you.
+ *
+ * It is an error to attempt to change a name's id (unless you specify force)
  */
-std::string const image::Filter::toString(lsst::daf::persistence::LogicalLocation const & location) {
-    Policy::Ptr      noPolicy;
-    Persistence::Ptr persistence = Persistence::getPersistence(noPolicy);
-    Storage::Ptr     storage     = persistence->getRetrieveStorage("DbStorage", location);
-    DbStorage       *db          = dynamic_cast<DbStorage *>(storage.get());
-    if (db == 0) {
-        throw LSST_EXCEPT(ex::RuntimeErrorException, "Didn't get DbStorage");
+int Filter::define(FilterProperty const& fp, int id, bool force)
+{
+    if (!_nameMap) {
+        _initRegistry();
     }
-    db->startTransaction();
-    std::string result;
-    try {
-        result = toString(*db);
-    } catch(...) {
-        db->endTransaction();
-        throw;
-    }
-    db->endTransaction();
-    return result;
-}
 
+    std::string const& name = fp.getName();
+    NameMap::iterator keyVal = _nameMap->find(name);
+
+    if (id == AUTO) {
+        id = _id0;
+        ++_id0;
+    }
+    
+    if (keyVal != _nameMap->end()) {
+        int oid = keyVal->second;
+
+        if (oid == id) {
+            return id;                  // OK, same value as before
+        }
+
+        if (!force) {
+            throw LSST_EXCEPT(pexEx::RuntimeErrorException, "Filter " + name + " is already defined");
+        }
+        _nameMap->erase(keyVal);
+        _idMap->erase(oid);
+    }
+    
+    _nameMap->insert(std::make_pair(name, id));
+    _idMap->insert(std::make_pair(id, name));
+
+    return id;
+}
 
 /**
- * Returns the name of the filter, using the \b Filter table in the database currently
- * set on the given DbStorage to map the filter identifier to a name.
+ * Lookup the ID associated with a name
  */
-std::string const image::Filter::toString(lsst::daf::persistence::DbStorage & db) {
-    db.setTableForQuery("prv_Filter");
-    db.outColumn("name");
-    // CORAL always maps MYSQL_TYPE_LONG (MySQL internal type specifier for INTEGER columns) to long
-    db.condParam<long>("id", static_cast<long>(_id));
-    db.setQueryWhere("filterId = :id");
-    db.query();
-    // ScopeGuard g(boost::bind(&lsst::daf::persistence::DbStorage::finishQuery, &db));
-    std::string filterName;
-    try {
-        if (!db.next() || db.columnIsNull(0)) {
-            throw LSST_EXCEPT(ex::RuntimeErrorException, "Failed to get name for filter " + _id);
-        }
-        filterName = db.getColumnByPos<std::string>(0);
-        if (db.next()) {
-            throw LSST_EXCEPT(ex::RuntimeErrorException, "Multiple names for filter " + _id);
-        }
-    } catch(...) {
-        db.finishQuery();
-        throw;
+int Filter::_lookup(std::string const& name)
+{
+    if (!_nameMap) {
+        _initRegistry();
     }
-    db.finishQuery();
-    return filterName;
+
+    NameMap::iterator keyVal = _nameMap->find(name);
+
+    if (keyVal == _nameMap->end()) {
+        throw LSST_EXCEPT(pexEx::NotFoundException, "Unable to find filter " + name);
+    }
+    
+    return keyVal->second;
 }
 
-
-int image::Filter::nameToId(lsst::daf::persistence::DbStorage & db, std::string const & name) {
-    db.setTableForQuery("prv_Filter");
-    db.outColumn("filterId");
-    db.condParam<std::string>("name", name);
-    db.setQueryWhere("name = :name");
-    db.query();
-    int filterId;
-    try {
-        if (!db.next() || db.columnIsNull(0)) {
-            throw LSST_EXCEPT(ex::RuntimeErrorException, "Failed to get id for filter named " + name);
-        }
-        filterId = static_cast<int>(db.getColumnByPos<long>(0));
-        if (db.next()) {
-            throw LSST_EXCEPT(ex::RuntimeErrorException, "Multiple ids for filter named " + name);
-        }
-        if (filterId < U || filterId >= NUM_FILTERS) {
-            throw LSST_EXCEPT(ex::RangeErrorException, "Invalid filter id for filter named " + name);
-        }
-    } catch (...) {
-        db.finishQuery();
-        throw;
+/**
+ * Lookup the name associated with an ID
+ */
+std::string const& Filter::_lookup(int id)
+{
+    if (!_idMap) {
+        _initRegistry();
     }
-    db.finishQuery();
-    return filterId;
-}
 
+    IdMap::iterator keyVal = _idMap->find(id);
+
+    if (keyVal == _idMap->end()) {
+        throw LSST_EXCEPT(pexEx::NotFoundException, (boost::format("Unable to find filter %d") % id).str());
+    }
+    
+    return keyVal->second;
+}
+            
+}}}
