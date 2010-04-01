@@ -27,6 +27,8 @@
  * 
  */
 
+namespace afwCoord = lsst::afw::coord;
+namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 
 using lsst::daf::base::PropertySet;
@@ -60,11 +62,11 @@ int main(int argc, char **argv) {
     
     // Testing input col, row values 
 
-    afwImage::PointD minCoord(1.0,1.0);
-    afwImage::PointD xy(mskdImage.getWidth(), mskdImage.getHeight());
+    afwGeom::PointD minCoord = afwGeom::makePointD(1.0, 1.0);
+    afwGeom::PointD xy = afwGeom::makePointD(mskdImage.getWidth(), mskdImage.getHeight());
 
-    afwImage::PointD sky1 = wcsPtr->pixelToSky(minCoord);
-    afwImage::PointD sky2 = wcsPtr->pixelToSky(xy);
+    afwCoord::Coord sky1 = *wcsPtr->pixelToSky(minCoord); // n.b. we're slicing to the base class here
+    afwCoord::Coord sky2 = *wcsPtr->pixelToSky(xy);
 
     std::cout << "ra, decl of " << inFilename << " at ("<< minCoord[0] << " " << minCoord[1] <<") = "
         << "ra: " << sky1[0] << " decl: " << sky1[1] << std::endl << std::endl;
@@ -84,8 +86,8 @@ int main(int argc, char **argv) {
     double miRa2 = sky2[0];
     double miDecl2 = sky2[1];
 
-    afwImage::PointD pix1 = wcsPtr->skyToPixel(miRa1, miDecl1);
-    afwImage::PointD pix2 = wcsPtr->skyToPixel(miRa2, miDecl2);
+    afwGeom::Point2D pix1 = wcsPtr->skyToPixel(miRa1, miDecl1);
+    afwGeom::Point2D pix2 = wcsPtr->skyToPixel(miRa2, miDecl2);
 
     std::cout << "col, row of " << inFilename << " at ("<< miRa1 << " " << miDecl1<<") = "
         << "col: " << pix1[0] << " row: " << pix1[1] << std::endl << std::endl;
@@ -93,15 +95,15 @@ int main(int argc, char **argv) {
     std::cout << "col, row of " << inFilename << " at ("<< miRa2 << " " << miDecl2<<") = "
         << "col: " << pix2[0] << " row: " << pix2[1] << std::endl << std::endl;
 
-    double raDecl1[] = {sky1[0], sky1[1]};
-    double raDecl2[] = {sky2[0], sky2[1]};
+    afwCoord::Coord::Ptr raDecl1 = makeCoord(afwCoord::FK5, sky1[0], sky1[1]);
+    afwCoord::Coord::Ptr raDecl2 = makeCoord(afwCoord::FK5, sky2[0], sky2[1]);
 
-    afwImage::PointD pix3 = wcsPtr->skyToPixel(raDecl1);
-    afwImage::PointD pix4 = wcsPtr->skyToPixel(raDecl2);
+    afwGeom::Point2D pix3 = wcsPtr->skyToPixel(raDecl1);
+    afwGeom::Point2D pix4 = wcsPtr->skyToPixel(raDecl2);
 
-    std::cout << "col, row of " << inFilename << " at ("<< raDecl1[0] << " " << raDecl1[1] << ") = "
+    std::cout << "col, row of " << inFilename << " at ("<< (*raDecl1)[0] << " " << (*raDecl1)[1] << ") = "
         << "col: " << pix3[0] << " row: " << pix3[1] << std::endl << std::endl;
 
-    std::cout << "col, row of " << inFilename << " at ("<< raDecl2[0] << " " << raDecl2[1] << ") = "
-        << "col: " << pix4[0] << " row: " << pix4[1] << std::endl << std::endl;    
+    std::cout << "col, row of " << inFilename << " at ("<< (*raDecl2)[0] << " " << (*raDecl2)[1] << ") = "
+              << "col: " << pix4[0] << " row: " << pix4[1] << std::endl << std::endl;    
 }
