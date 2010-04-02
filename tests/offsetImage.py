@@ -140,7 +140,7 @@ class offsetImageTestCase(unittest.TestCase):
 #         self.assertTrue(abs(stats.getValue(afwMath.MIN)) < 1.2e-3*amp)
 #         self.assertTrue(abs(stats.getValue(afwMath.MAX)) < 1.2e-3*amp)
 
-class rotateImageTestCase(unittest.TestCase):
+class transformImageTestCase(unittest.TestCase):
     """A test case for rotating images"""
 
     def setUp(self):
@@ -163,6 +163,20 @@ class rotateImageTestCase(unittest.TestCase):
                 ds9.mtv(outImage, frame=nQuarter, title="out %d" % nQuarter)
             self.assertEqual(self.inImage.get(0, 0), outImage.get(x, y))
 
+    def testFlip(self):
+        """Test that we end up with the correct image after flipping it"""
+
+        frame = 2
+        for flipLR, flipTB, x, y in [(True, False, 19, 0),
+                                     (True, True,  19, 9),
+                                     (False, True, 0,  9),
+                                     (False, False, 0, 0)]:
+            outImage = afwMath.flipImage(self.inImage, flipLR, flipTB)
+            if display:
+                ds9.mtv(outImage, frame=frame, title="%s %s" % (flipLR, flipTB))
+                frame += 1
+            self.assertEqual(self.inImage.get(0, 0), outImage.get(x, y))
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
@@ -172,7 +186,7 @@ def suite():
 
     suites = []
     #suites += unittest.makeSuite(offsetImageTestCase)
-    suites += unittest.makeSuite(rotateImageTestCase)
+    suites += unittest.makeSuite(transformImageTestCase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
