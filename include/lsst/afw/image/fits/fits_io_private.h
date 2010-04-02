@@ -333,6 +333,13 @@ public:
         int x0 = 0, y0 = 0;             // Origin of part of image to read
         if (_bbox) {
             x0 = _bbox.getX0(); y0 = _bbox.getY0();
+
+            if (x0 + view.width() > _naxis1 || y0 + view.height() > _naxis2) {
+                throw LSST_EXCEPT(pexExcept::LengthErrorException,
+                                  (boost::format("BBox (%d,%d) -- (%d,%d) doesn't fit in image of size %dx%d")
+                                   % x0 % y0 % _bbox.getX1() % _bbox.getY1() % _naxis1 % _naxis2).str());
+                
+            }
         }
         for (int y = 0; y != view.height(); ++y) {
             long fpixel[2];                     // tell cfitsio which pixels to read
