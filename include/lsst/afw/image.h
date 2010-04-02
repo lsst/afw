@@ -12,5 +12,6 @@
 #include "lsst/afw/image/ImageAlgorithm.h"
 #include "lsst/afw/image/ImagePca.h"
 #include "lsst/afw/image/ImageUtils.h"
+#include "lsst/afw/image/Slice.h"
 
 #endif // LSST_IMAGE_H

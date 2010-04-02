@@ -79,12 +79,23 @@ class RowColumnStatisticsTestCase(unittest.TestCase):
     def testColumnOperators(self):
         """ Test operator overloading on columns """
 
-        columnSlice = afwImage.SliceF(self.imgProjectCol)
-        imgPlus = self.img + columnSlice
-        for i in range(self.n):
-            self.assertEqual(self.img.get(0, i), self.colPlus[i])
+        columnSlice = afwImage.SliceF(self.imgProjectCol.getImage())
+        
+        imgAdd = self.img + columnSlice
+        imgAdd2 = columnSlice + self.img
+        imgSub = self.img - columnSlice
+        imgMul = self.img * columnSlice
+        imgMul2 = columnSlice * self.img
+        imgDiv = self.img / columnSlice
 
-    
+        for i in range(self.n):
+            self.assertAlmostEqual(imgAdd.get(0, i),  self.img.get(0, i) + columnSlice.get(0, i))
+            self.assertAlmostEqual(imgAdd2.get(0, i),  imgAdd.get(0, i))
+            self.assertAlmostEqual(imgSub.get(0, i),  self.img.get(0, i) - columnSlice.get(0, i))
+            self.assertAlmostEqual(imgMul.get(0, i),  self.img.get(0, i) * columnSlice.get(0, i))
+            self.assertAlmostEqual(imgMul2.get(0, i),  imgMul.get(0, i))
+            self.assertAlmostEqual(imgDiv.get(0, i),  self.img.get(0, i) / columnSlice.get(0, i))
+
 
 #################################################################
 # Test suite boiler plate
