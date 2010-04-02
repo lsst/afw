@@ -17,6 +17,7 @@ import unittest
 import lsst.pex.policy as pexPolicy
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
+import lsst.afw.math as afwMath
 import lsst.afw.cameraGeom as cameraGeom
 
 import lsst.afw.display.ds9 as ds9
@@ -41,7 +42,8 @@ class GetCcdImage(object):
 
         return self.getImageFromFilename(self.imageFile, ccd, amp, imageFactory=imageFactory)
 
-    def getImageFromFilename(self, fileName, ccd, amp=None, hdu=0, imageFactory=afwImage.ImageU):
+    def getImageFromFilename(self, fileName, ccd, amp=None, hdu=0, imageFactory=afwImage.ImageU,
+                             oneAmpPerFile=False):
         """Return the image of the chip with cameraGeom.Id == id; if provided only read the given BBox"""
 
         if amp:
@@ -49,9 +51,14 @@ class GetCcdImage(object):
                 bbox = amp.getDataSec(False)
             else:
                 bbox = amp.getAllPixels(False)
+
+            if oneAmpPerFile:           # each amp comes in its own file, not embedded in an Image
+                bbox = bbox.clone()
+                all = amp.getAllPixels(False)
+                bbox.shift(-all.getX0(), -all.getY0()) # so reset the BBox's origin to (0,0)
         else:
             bbox = ccd.getAllPixels()
-            
+
         md = None
         return imageFactory(fileName, hdu, md, bbox)
 
