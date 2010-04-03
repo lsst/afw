@@ -10,7 +10,8 @@ or
 """
 
 
-import sys
+import os, sys
+import eups
 import unittest
 import lsst.utils.tests as tests
 import lsst.pex.logging as logging
@@ -75,11 +76,12 @@ class FilterTestCase(unittest.TestCase):
         policyFile = pexPolicy.DefaultPolicyFile("afw", "FilterDictionary.paf", "policy")
         defPolicy = pexPolicy.Policy.createPolicy(policyFile, policyFile.getRepositoryPath(), True)
 
-        filterPolicy = pexPolicy.Policy.createPolicy("SdssFilters.paf", True)
+        filterPolicy = pexPolicy.Policy.createPolicy(
+            os.path.join(eups.productDir("afw"), "tests", "SdssFilters.paf"), True)
         filterPolicy.mergeDefaults(defPolicy.getDictionary())
 
         for p in filterPolicy.getArray("Filter"):
-            afwImage.Filter.define(afwImage.FilterProperty(p.get("name"), p.get("lambdaEff")))
+            afwImage.Filter.define(afwImage.FilterProperty(p.get("name"), p))
 
         self.g_lambdaEff = [p.get("lambdaEff") for p in filterPolicy.getArray("Filter")
                             if p.get("name") == "g"][0] # used for tests
@@ -116,12 +118,18 @@ class FilterTestCase(unittest.TestCase):
         #
         # First FilterProperty
         #
+        def defineFilterProperty(name, lambdaEff, force=False):
+            filterPolicy = pexPolicy.Policy()
+            filterPolicy.add("lambdaEff", lambdaEff)
+
+            return afwImage.FilterProperty(name, filterPolicy, force);
+
         def tst():
-            gprime = afwImage.FilterProperty("g", self.g_lambdaEff + 10);
+            gprime = defineFilterProperty("g", self.g_lambdaEff + 10)
 
         tests.assertRaisesLsstCpp(self, pexExcept.RuntimeErrorException, tst)
-        gprime = afwImage.FilterProperty("g", self.g_lambdaEff + 10, True) # should not raise
-        gprime = afwImage.FilterProperty("g", self.g_lambdaEff, True)
+        gprime = defineFilterProperty("g", self.g_lambdaEff + 10, True) # should not raise
+        gprime = defineFilterProperty("g", self.g_lambdaEff, True)
         #
         # Now Filter
         #

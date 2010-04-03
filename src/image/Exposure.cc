@@ -167,8 +167,8 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
         std::string filterName = metadata->getAsString("FILTER");
         try {
             _filter = Filter(filterName);
-        } catch(lsst::pex::exceptions::NotFoundException &e) {
-            lsst::pex::logging::TTrace<3>("afw.image.exposure", "Unknown filter %s", filterName);
+        } catch(lsst::pex::exceptions::NotFoundException &) {
+            lsst::pex::logging::TTrace<3>("afw.image.exposure", "Unknown filter %s", filterName.c_str());
         }
     }
 

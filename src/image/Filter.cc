@@ -17,14 +17,20 @@ namespace pexEx = lsst::pex::exceptions;
 namespace lsst { namespace afw { namespace image {
 
 FilterProperty::PropertyMap *FilterProperty::_propertyMap = NULL;
-
+/**
+ * Create a new FilterProperty, setting values from a Policy
+ */
 FilterProperty::FilterProperty(std::string const& name, ///< name of filter
-                               double lambdaEff, ///< Effective wavelength (nm)
+                               lsst::pex::policy::Policy const& pol, ///< values describing the Filter
                                bool force        ///< Allow this name to replace a previous one
-                              ) : _name(name), _lambdaEff(lambdaEff)
+                              ) : _name(name), _lambdaEff(-1)
 {
     if (!_propertyMap) {
         _initRegistry();
+    }
+
+    if (pol.exists("lambdaEff")) {
+        _lambdaEff = pol.getDouble("lambdaEff");
     }
 
     PropertyMap::iterator keyVal = _propertyMap->find(name);
@@ -85,7 +91,7 @@ void Filter::_initRegistry()
     _nameMap = new NameMap;
     _idMap = new IdMap;
     
-    define(FilterProperty("_unknown_", -1, true));
+    define(FilterProperty("_unknown_", lsst::pex::policy::Policy(), true));
 }
 
 /************************************************************************************************************/

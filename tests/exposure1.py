@@ -16,8 +16,9 @@ import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.afw.coord as afwCoord
 import lsst.utils.tests as utilsTests
-import lsst.pex.logging as pexLog
 import lsst.pex.exceptions as pexExcept
+import lsst.pex.logging as pexLog
+import lsst.pex.policy as pexPolicy
 
 VERBOSITY = 0 # increase to see trace
 
@@ -60,7 +61,10 @@ class ExposureTestCase(unittest.TestCase):
 
         afwImage.Filter.reset()
         afwImage.FilterProperty.reset()
-        afwImage.Filter.define(afwImage.FilterProperty("g", 470))
+
+        filterPolicy = pexPolicy.Policy()
+        filterPolicy.add("lambdaEff", 470.0)
+        afwImage.Filter.define(afwImage.FilterProperty("g", filterPolicy))
             
     def tearDown(self):
         del self.smallExposure

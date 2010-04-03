@@ -13,6 +13,7 @@
 #include <string>
 #include "boost/shared_ptr.hpp"
 #include "lsst/tr1/unordered_map.h"
+#include "lsst/pex/policy/Policy.h"
 
 namespace lsst {
 namespace afw {
@@ -26,7 +27,8 @@ public:
     boost::shared_ptr<FilterProperty> Ptr;
     boost::shared_ptr<FilterProperty const> ConstPtr;
     
-    FilterProperty(std::string const& name, double lambdaEff=-1, bool force=false);
+    FilterProperty(std::string const& name, lsst::pex::policy::Policy const& pol=lsst::pex::policy::Policy(),
+                   bool force=false);
     /**
      * Return a filter's name
      */
