@@ -75,7 +75,7 @@ namespace image {
         //Constructors
         Wcs();
         //Create a Wcs of the correct class using a fits header.
-        friend Ptr lsst::afw::image::makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
+        friend Ptr makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
         Wcs(const lsst::afw::geom::PointD crval, const lsst::afw::geom::PointD crpix, const Eigen::Matrix2d &CD, 
                 const std::string ctype1="RA---TAN", const std::string ctype2="DEC--TAN",
                 double equinox=2000, std::string raDecSys="ICRS",
@@ -117,7 +117,7 @@ namespace image {
         
     private:
         //Allow the formatter to access private goo
-        LSST_PERSIST_FORMATTER(lsst::afw::formatters::WcsFormatter);
+        LSST_PERSIST_FORMATTER(lsst::afw::formatters::WcsFormatter)
         
         void initWcsLib(const lsst::afw::geom::PointD crval, const lsst::afw::geom::PointD crpix, const  Eigen::Matrix2d CD, 
                         const std::string ctype1, const std::string ctype2,

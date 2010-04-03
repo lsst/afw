@@ -26,6 +26,7 @@
 
 #include "lsst/daf/base/PropertySet.h"
 #include "lsst/pex/exceptions.h"
+#include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/image/Exposure.h"
 #include "lsst/afw/formatters/WcsFormatter.h"
 #include "lsst/afw/image/makeWcs.h"
@@ -74,7 +75,8 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(int cols, ///< number of 
                                                               ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _maskedImage(cols, rows),
-    _wcs(new afwImage::Wcs(wcs))
+    _wcs(new afwImage::Wcs(wcs)),
+    _filter()
 {
     setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet()));
 }
@@ -88,7 +90,8 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
                                                               ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _maskedImage(maskedImage),
-    _wcs(new afwImage::Wcs(wcs))
+    _wcs(new afwImage::Wcs(wcs)),
+    _filter()
 {
     setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet()));
 }
@@ -105,10 +108,9 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &src, ///<
                                                               ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _maskedImage(src.getMaskedImage(), bbox, deep),
-    _wcs(new afwImage::Wcs(*src._wcs))
+    _wcs(new afwImage::Wcs(*src._wcs)),
+    _filter()    
 {
-
-    afwImage::PointI xy0 = src.getMaskedImage().getXY0();
     setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet()));
 }
 
@@ -159,6 +161,15 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     }
     if( metadata->exists("LTV2") ) {
         _wcs->shiftReferencePixel(0, -1*metadata->getAsDouble("LTV2"));
+    }
+
+    if( metadata->exists("FILTER") ) {
+        std::string filterName = metadata->getAsString("FILTER");
+        try {
+            _filter = Filter(filterName);
+        } catch(lsst::pex::exceptions::NotFoundException &) {
+            lsst::pex::logging::TTrace<3>("afw.image.exposure", "Unknown filter %s", filterName.c_str());
+        }
     }
 
     setMetadata(metadata);
@@ -268,6 +279,8 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(
   
     outputMetadata->set("LTV1", -1*mi.getX0());
     outputMetadata->set("LTV2", -1*mi.getY0());
+
+    outputMetadata->set("FILTER", _filter.getName());
         
     _maskedImage.writeFits(expOutFile, outputMetadata);
 }

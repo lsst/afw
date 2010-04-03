@@ -47,7 +47,7 @@ CoordSystemMap const getCoordSystemMap() {
 /**
  * @brief A utility function to get the enum value of a coordinate system from a string name.
  */
-afwCoord::CoordSystem const afwCoord::makeCoordEnum(std::string const system) {
+afwCoord::CoordSystem afwCoord::makeCoordEnum(std::string const system) {
     static CoordSystemMap idmap = getCoordSystemMap();
     if (idmap.find(system) != idmap.end()) {
         return idmap[system];

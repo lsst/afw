@@ -16,8 +16,9 @@ import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.afw.coord as afwCoord
 import lsst.utils.tests as utilsTests
-import lsst.pex.logging as pexLog
 import lsst.pex.exceptions as pexExcept
+import lsst.pex.logging as pexLog
+import lsst.pex.policy as pexPolicy
 
 VERBOSITY = 0 # increase to see trace
 
@@ -57,6 +58,13 @@ class ExposureTestCase(unittest.TestCase):
         self.exposureMiWcs = afwImage.makeExposure(maskedImage, self.wcs)
         self.exposureCrWcs = afwImage.ExposureF(100, 100, self.wcs)
         self.exposureCrOnly = afwImage.ExposureF(100, 100)
+
+        afwImage.Filter.reset()
+        afwImage.FilterProperty.reset()
+
+        filterPolicy = pexPolicy.Policy()
+        filterPolicy.add("lambdaEff", 470.0)
+        afwImage.Filter.define(afwImage.FilterProperty("g", filterPolicy))
             
     def tearDown(self):
         del self.smallExposure
@@ -148,6 +156,9 @@ class ExposureTestCase(unittest.TestCase):
         maskedImage = afwImage.MaskedImageF(inFilePathSmall)
         exposure.setMaskedImage(maskedImage)
         exposure.setWcs(self.wcs)
+        exposure.setFilter(afwImage.Filter("g"))
+
+        self.assertEquals(exposure.getFilter().getName(), "g")
         
         try:
             exposure.getWcs()
