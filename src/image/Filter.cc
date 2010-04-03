@@ -16,27 +16,27 @@ namespace pexEx = lsst::pex::exceptions;
 
 namespace lsst { namespace afw { namespace image {
 
-FilterProperty::NameMap *FilterProperty::_nameMap = NULL;
+FilterProperty::PropertyMap *FilterProperty::_propertyMap = NULL;
 
 FilterProperty::FilterProperty(std::string const& name, ///< name of filter
                                double lambdaEff, ///< Effective wavelength (nm)
                                bool force        ///< Allow this name to replace a previous one
                               ) : _name(name), _lambdaEff(lambdaEff)
 {
-    if (!_nameMap) {
+    if (!_propertyMap) {
         _initRegistry();
     }
 
-    NameMap::iterator keyVal = _nameMap->find(name);
+    PropertyMap::iterator keyVal = _propertyMap->find(name);
 
-    if (keyVal != _nameMap->end()) {
+    if (keyVal != _propertyMap->end()) {
         if (!force) {
             throw LSST_EXCEPT(pexEx::RuntimeErrorException, "Filter " + name + " is already defined");
         }
-        _nameMap->erase(keyVal);
+        _propertyMap->erase(keyVal);
     }
     
-    _nameMap->insert(std::make_pair(name, *this));
+    _propertyMap->insert(std::make_pair(name, *this));
 }
             
 /**
@@ -44,11 +44,11 @@ FilterProperty::FilterProperty(std::string const& name, ///< name of filter
  */
 void FilterProperty::_initRegistry()
 {
-    if (_nameMap) {
-        delete _nameMap;
+    if (_propertyMap) {
+        delete _propertyMap;
     }
 
-    _nameMap = new NameMap;
+    _propertyMap = new PropertyMap;
 }
 
 /**
@@ -57,13 +57,13 @@ void FilterProperty::_initRegistry()
 FilterProperty const& FilterProperty::lookup(std::string const& name ///< name of desired filter
                                             )
 {
-    if (!_nameMap) {
+    if (!_propertyMap) {
         _initRegistry();
     }
 
-    NameMap::iterator keyVal = _nameMap->find(name);
+    PropertyMap::iterator keyVal = _propertyMap->find(name);
 
-    if (keyVal == _nameMap->end()) {
+    if (keyVal == _propertyMap->end()) {
         throw LSST_EXCEPT(pexEx::NotFoundException, "Unable to find filter " + name);
     }
     
@@ -77,19 +77,23 @@ FilterProperty const& FilterProperty::lookup(std::string const& name ///< name o
 void Filter::_initRegistry()
 {
     _id0 = UNKNOWN;
+    delete _aliasMap;
     delete _nameMap;
     delete _idMap;
 
+    _aliasMap = new AliasMap;
     _nameMap = new NameMap;
     _idMap = new IdMap;
     
-    define(FilterProperty("_unknown_", -1));
+    define(FilterProperty("_unknown_", -1, true));
 }
 
 /************************************************************************************************************/
 
 int Filter::_id0 = Filter::UNKNOWN;
 
+Filter::AliasMap *Filter::_aliasMap = NULL; // dynamically allocated as that avoids an intel bug with static
+                                        // variables in dynamic libraries
 Filter::NameMap *Filter::_nameMap = NULL; // dynamically allocated as that avoids an intel bug with static
                                         // variables in dynamic libraries
 Filter::IdMap *Filter::_idMap = NULL; // dynamically allocated as that avoids an intel bug with static
@@ -137,6 +141,43 @@ int Filter::define(FilterProperty const& fp, int id, bool force)
 }
 
 /**
+ * Define an alias for a filter
+ */
+int Filter::defineAlias(std::string const& oldName, ///< old name for Filter
+                        std::string const& newName, ///< new name for Filter
+                        bool force                  ///< force an alias even if newName is already in use
+                       )
+{
+    if (!_nameMap) {
+        _initRegistry();
+    }
+
+    // Lookup oldName
+    NameMap::iterator keyVal = _nameMap->find(oldName);
+    if (keyVal == _nameMap->end()) {
+        throw std::exception();
+    }
+    int const id = keyVal->second;
+
+    // Lookup oldName in aliasMap
+    AliasMap::iterator aliasKeyVal = _aliasMap->find(newName);
+    if (aliasKeyVal != _aliasMap->end()) {
+        if (aliasKeyVal->second == oldName) {
+            return id;                  // OK, same value as before
+        }
+
+        if (!force) {
+            throw std::exception(); // std::cerr << "Filter " << name << " is already defined" << std::endl;
+        }
+        _aliasMap->erase(aliasKeyVal);
+    }
+    
+    _aliasMap->insert(std::make_pair(newName, oldName));
+
+    return id;
+}
+
+/**
  * Lookup the ID associated with a name
  */
 int Filter::_lookup(std::string const& name)
@@ -148,6 +189,11 @@ int Filter::_lookup(std::string const& name)
     NameMap::iterator keyVal = _nameMap->find(name);
 
     if (keyVal == _nameMap->end()) {
+        AliasMap::iterator aliasKeyVal = _aliasMap->find(name);
+        if (aliasKeyVal != _aliasMap->end()) {
+            return _lookup(aliasKeyVal->second);
+        }
+        
         throw LSST_EXCEPT(pexEx::NotFoundException, "Unable to find filter " + name);
     }
     

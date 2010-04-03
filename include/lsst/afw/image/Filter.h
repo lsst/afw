@@ -45,14 +45,14 @@ public:
     static FilterProperty const& lookup(std::string const& name);
     
 private:
-    typedef std::tr1::unordered_map<std::string const, FilterProperty> NameMap;
+    typedef std::tr1::unordered_map<std::string const, FilterProperty> PropertyMap;
 
     static void _initRegistry();
 
     std::string _name;                  // name of filter
     double _lambdaEff;                  // effective wavelength (nm)
 
-    static NameMap *_nameMap;           // mapping from name -> FilterProperty
+    static PropertyMap *_propertyMap;   // mapping from name -> FilterProperty
 };
 
 /************************************************************************************************************/
@@ -68,7 +68,7 @@ public :
      */
     explicit Filter(std::string const& name ///< Name of filter
                    ) : _id(_lookup(name)), _name(name) {}
-    /*!
+    /**
      * Creates a Filter with the given identifier
      */
     explicit Filter(int id=UNKNOWN      ///< Id number of desired filter
@@ -81,9 +81,7 @@ public :
      * Return a Filter's name
      */
     std::string const& getName() const { return _name; }
-    /**
-     * Return filter's properties
-     */
+    
     FilterProperty const& getFilterProperty() const {
         return FilterProperty::lookup(_name);
     }
@@ -92,11 +90,16 @@ public :
      * Clear all definitions
      */
     static void reset() { _initRegistry(); }
-    /**
+    /*
      * Define a filter
      */
     static int define(FilterProperty const& filterProperty, int id=AUTO, bool force=false);
+    /*
+     * Define an alias for a filter
+     */
+    static int defineAlias(std::string const& oldName, std::string const& newName, bool force=false);
 private :
+    typedef std::tr1::unordered_map<std::string const, std::string const> AliasMap;
     typedef std::tr1::unordered_map<std::string const, unsigned int const> NameMap;
     typedef std::tr1::unordered_map<unsigned int const, std::string const> IdMap;
 
@@ -108,8 +111,9 @@ private :
     std::string _name;
 
     static int _id0;                    // next Id to use
-    static NameMap *_nameMap;           // mapping from name -> id
+    static AliasMap *_aliasMap;         // mapping from alias -> name
     static IdMap *_idMap;               // mapping from id -> name
+    static NameMap *_nameMap;           // mapping from name -> id
 };
 
 }}}  // lsst::afw::image

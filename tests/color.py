@@ -15,6 +15,7 @@ import unittest
 import lsst.utils.tests as tests
 import lsst.pex.logging as logging
 import lsst.pex.exceptions as pexExcept
+import lsst.pex.policy as pexPolicy
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.detection as afwDetect
@@ -63,25 +64,30 @@ class FilterTestCase(unittest.TestCase):
 
     def setUp(self):
         # Initialise our filters
-
+        #
+        # Start by forgetting that we may already have defined filters
+        #
         afwImage.Filter.reset()
         afwImage.FilterProperty.reset()
+        #
+        # Read the policy file and define the filters
+        #
+        policyFile = pexPolicy.DefaultPolicyFile("afw", "FilterDictionary.paf", "policy")
+        defPolicy = pexPolicy.Policy.createPolicy(policyFile, policyFile.getRepositoryPath(), True)
 
-        for name, lambda_eff in (
-            ("u", 350),
-            ("g", 500),
-            ("r", 650),
-            ("i", 800),
-            ("z", 900),
-            ("y", 1000),
-            ):
-            afwImage.Filter.define(afwImage.FilterProperty(name, lambda_eff))
+        filterPolicy = pexPolicy.Policy.createPolicy("SdssFilters.paf", True)
+        filterPolicy.mergeDefaults(defPolicy.getDictionary())
+
+        for p in filterPolicy.getArray("Filter"):
+            afwImage.Filter.define(afwImage.FilterProperty(p.get("name"), p.get("lambdaEff")))
+
+        self.g_lambdaEff = [p.get("lambdaEff") for p in filterPolicy.getArray("Filter")
+                            if p.get("name") == "g"][0] # used for tests
 
     def testCtor(self):
         """Test that we can construct a Filter"""
         # A filter of type 
         f = afwImage.Filter("g")
-
 
     def testFilterProperty(self):
         # a "g" filter
@@ -95,9 +101,13 @@ class FilterTestCase(unittest.TestCase):
 
         self.assertEqual(f.getName(), "g")
         self.assertEqual(f.getId(), 1)
-        self.assertEqual(f.getFilterProperty().getLambdaEff(), 500)
+        self.assertEqual(f.getFilterProperty().getLambdaEff(), self.g_lambdaEff)
 
-        self.assertEqual(g.getLambdaEff(), 500)
+        self.assertEqual(g.getLambdaEff(), self.g_lambdaEff)
+
+    def testFilterAliases(self):
+        """Test that we can provide an alias for a Filter"""
+        pass
 
     def testReset(self):
         """Test that we can reset filter IDs and properties if needs be"""
@@ -107,11 +117,11 @@ class FilterTestCase(unittest.TestCase):
         # First FilterProperty
         #
         def tst():
-            gprime = afwImage.FilterProperty("g", 510);
+            gprime = afwImage.FilterProperty("g", self.g_lambdaEff + 10);
 
         tests.assertRaisesLsstCpp(self, pexExcept.RuntimeErrorException, tst)
-        gprime = afwImage.FilterProperty("g", 510, True) # should not raise
-        gprime = afwImage.FilterProperty("g", 500, True)
+        gprime = afwImage.FilterProperty("g", self.g_lambdaEff + 10, True) # should not raise
+        gprime = afwImage.FilterProperty("g", self.g_lambdaEff, True)
         #
         # Now Filter
         #

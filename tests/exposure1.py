@@ -57,6 +57,10 @@ class ExposureTestCase(unittest.TestCase):
         self.exposureMiWcs = afwImage.makeExposure(maskedImage, self.wcs)
         self.exposureCrWcs = afwImage.ExposureF(100, 100, self.wcs)
         self.exposureCrOnly = afwImage.ExposureF(100, 100)
+
+        afwImage.Filter.reset()
+        afwImage.FilterProperty.reset()
+        afwImage.Filter.define(afwImage.FilterProperty("g", 470))
             
     def tearDown(self):
         del self.smallExposure
@@ -148,6 +152,9 @@ class ExposureTestCase(unittest.TestCase):
         maskedImage = afwImage.MaskedImageF(inFilePathSmall)
         exposure.setMaskedImage(maskedImage)
         exposure.setWcs(self.wcs)
+        exposure.setFilter(afwImage.Filter("g"))
+
+        self.assertEquals(exposure.getFilter().getName(), "g")
         
         try:
             exposure.getWcs()
