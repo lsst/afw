@@ -137,15 +137,18 @@ void cameraGeom::Detector::shift(int dx, ///< How much to offset in x (pixels)
 /**
  * We're rotating an Image through an integral number of quarter turns,
  * modify this BBox accordingly
+ *
+ * If dimensions is provided interpret it as the size of an image, and the initial bbox as a bbox in
+ * that image.  Then rotate about the center of the image
+ *
+ * If dimensions is 0, rotate the bbox about its LLC
  */
 afwImage::BBox cameraGeom::detail::rotateBBoxBy90(
         afwImage::BBox const& bbox,          ///< The BBox to rotate
-        afwGeom::Extent2I const& dimensions, ///< The size of the parent 
-        int n90                              ///< number of anti-clockwise 90degree turns
+        int n90,                             ///< number of anti-clockwise 90degree turns
+        afwGeom::Extent2I const& dimensions  ///< The size of the parent 
                                              )
 {
-    afwGeom::Point2I const centerPixel = afwGeom::makePointI(dimensions[0]/2, dimensions[1]/2);
-
     while (n90 < 0) {
         n90 += 4;
     }
@@ -172,6 +175,8 @@ afwImage::BBox cameraGeom::detail::rotateBBoxBy90(
     //
     // To work
     //
+    afwGeom::Point2I const centerPixel = afwGeom::makePointI(dimensions[0]/2, dimensions[1]/2);
+
     int x0, y0;                                          // minimum x/y
     int x1, y1;                                          // maximum x/y
     int xCorner[4], yCorner[4];                          // corners of Detector, wrt centerPixel
@@ -236,17 +241,17 @@ afwImage::BBox cameraGeom::detail::rotateBBoxBy90(
             y0--; y1--;
         }
     }
-
+        
     afwImage::PointI LLC(centerPixel[0] + x0, centerPixel[1] + y0);
     afwImage::PointI URC(centerPixel[0] + x1, centerPixel[1] + y1);
-
+        
     afwImage::BBox newBbox(LLC, URC);
-
+        
     int const dxy0 = (dimensions[1] - dimensions[0])/2; // how far the origin moved
     if (n90%2 == 1 && dxy0 != 0) {
         newBbox.shift(dxy0, -dxy0);
     }
-
+        
     return newBbox;
 }
 
@@ -263,13 +268,13 @@ void cameraGeom::Detector::setOrientation(
     // Now update the private members
     //
     _allPixels =
-        cameraGeom::detail::rotateBBoxBy90(_allPixels,
+        cameraGeom::detail::rotateBBoxBy90(_allPixels, n90,
                                            afwGeom::makeExtentI(getAllPixels(false).getWidth(),
-                                                                     getAllPixels(false).getHeight()), n90);
+                                                                getAllPixels(false).getHeight()));
     _trimmedAllPixels =
-        cameraGeom::detail::rotateBBoxBy90(_trimmedAllPixels,
+        cameraGeom::detail::rotateBBoxBy90(_trimmedAllPixels, n90,
                                            afwGeom::makeExtentI(getAllPixels(true).getWidth(),
-                                                                     getAllPixels(true).getHeight()), n90);
+                                                                getAllPixels(true).getHeight()));
         
     if (n90 == 1 || n90 == 3) {
         _size = afwGeom::makeExtentD(_size[1], _size[0]);

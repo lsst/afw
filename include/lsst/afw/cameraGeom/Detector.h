@@ -77,12 +77,12 @@ public:
         return (_hasTrimmablePixels && _isTrimmed) ? _trimmedAllPixels : _allPixels;
     }
     /// Return Detector's total footprint
-    virtual afwImage::BBox getAllPixels() const {
+    virtual afwImage::BBox const& getAllPixels() const {
         return getAllPixels(_isTrimmed);
     }
     /// Return Detector's total footprint
-    virtual afwImage::BBox getAllPixels(bool isTrimmed ///< True iff the bias/overclock have been removed
-                                       ) const {
+    virtual afwImage::BBox const& getAllPixels(bool isTrimmed ///< Has the bias/overclock have been removed?
+                                              ) const {
         return (_hasTrimmablePixels && isTrimmed) ? _trimmedAllPixels : _allPixels;
     }
     //
@@ -156,9 +156,9 @@ namespace detail {
     };
 
     afwImage::BBox rotateBBoxBy90(
-            afwImage::BBox const& bbox, ///< the BBox to rotate
-            afwGeom::Extent2I const& dimensions, ///< The size of the region wherein bbox dwells
-            int n90                              ///< number of 90-degree anti-clockwise turns to make
+            afwImage::BBox const& bbox,         ///< the BBox to rotate
+            int n90,                            ///< number of 90-degree anti-clockwise turns to make
+            afwGeom::Extent2I const& dimensions //< The size of the region wherein bbox dwells
                                  );
 }
     

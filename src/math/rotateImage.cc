@@ -20,6 +20,10 @@ typename ImageT::Ptr rotateImageBy90(ImageT const& inImage, ///< The %image to r
                                     ) {
     typename ImageT::Ptr outImage;      // output image
 
+    while (nQuarter < 0) {
+        nQuarter += 4;
+    }
+
     switch (nQuarter%4) {
       case 0:
         outImage.reset(new ImageT(inImage, true)); // a deep copy of inImage
