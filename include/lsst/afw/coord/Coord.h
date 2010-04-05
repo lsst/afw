@@ -51,12 +51,14 @@ class Coord {
 public:
 
     typedef boost::shared_ptr<Coord> Ptr;
+    typedef boost::shared_ptr<Coord const> ConstPtr;
 
     Coord(afwGeom::Point2D const &p2d, CoordUnit unit = DEGREES, double const epoch = 2000.0);
     Coord(afwGeom::Point3D const &p3d, double const epoch = 2000.0);
     Coord(double const ra, double const dec, double const epoch = 2000.0);
     Coord(std::string const ra, std::string const dec, double const epoch = 2000.0);
     Coord();
+    virtual ~Coord() {}
     
     void reset(double const longitude, double const latitude, double const epoch = 2000.0);
 
