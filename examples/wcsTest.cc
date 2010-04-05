@@ -27,8 +27,9 @@
  * 
  */
 
-using namespace std;
-namespace image = lsst::afw::image;
+namespace afwCoord = lsst::afw::coord;
+namespace afwGeom = lsst::afw::geom;
+namespace afwImage = lsst::afw::image;
 
 using lsst::daf::base::PropertySet;
 
@@ -56,25 +57,25 @@ int main(int argc, char **argv) {
 
     PropertySet::Ptr miMetadata(new PropertySet);
     int const hdu = 0;
-    image::MaskedImage<Pixel> mskdImage(inFilename, hdu, miMetadata);
-    image::Wcs wcs(miMetadata);
+    afwImage::MaskedImage<Pixel> mskdImage(inFilename, hdu, miMetadata);
+    afwImage::Wcs::Ptr wcsPtr = afwImage::makeWcs(miMetadata);
     
     // Testing input col, row values 
 
-    image::PointD minCoord(1.0,1.0);
-    image::PointD xy(mskdImage.getWidth(), mskdImage.getHeight());
+    afwGeom::PointD minCoord = afwGeom::makePointD(1.0, 1.0);
+    afwGeom::PointD xy = afwGeom::makePointD(mskdImage.getWidth(), mskdImage.getHeight());
 
-    image::PointD sky1 = wcs.xyToRaDec(minCoord);
-    image::PointD sky2 = wcs.xyToRaDec(xy);
+    afwCoord::Coord sky1 = *wcsPtr->pixelToSky(minCoord); // n.b. we're slicing to the base class here
+    afwCoord::Coord sky2 = *wcsPtr->pixelToSky(xy);
 
-    std::cout << "ra, decl of " << inFilename << " at ("<< minCoord[0] << " " << minCoord[1] <<") = " << endl;
-    std::cout << "ra: " << sky1[0] << " decl: " << sky1[1] << endl << endl;
+    std::cout << "ra, decl of " << inFilename << " at ("<< minCoord[0] << " " << minCoord[1] <<") = "
+        << "ra: " << sky1[0] << " decl: " << sky1[1] << std::endl << std::endl;
  
-    std::cout << "ra, decl of " << inFilename << " at ("<< xy[0] << " " << xy[1]<<") = " << endl;
-    std::cout << "ra: " << sky2[0] << " decl: " << sky2[1] << endl << endl;
+    std::cout << "ra, decl of " << inFilename << " at ("<< xy[0] << " " << xy[1]<<") = "
+        << "ra: " << sky2[0] << " decl: " << sky2[1] << std::endl << std::endl;
 
-    double pixArea0 = wcs.pixArea(minCoord);
-    double pixArea1 = wcs.pixArea(xy);
+    double pixArea0 = wcsPtr->pixArea(minCoord);
+    double pixArea1 = wcsPtr->pixArea(xy);
 
     std::cout << "pixel areas: " << pixArea0 << " " << pixArea1 << std::endl;
 
@@ -85,24 +86,24 @@ int main(int argc, char **argv) {
     double miRa2 = sky2[0];
     double miDecl2 = sky2[1];
 
-    image::PointD pix1 = wcs.raDecToXY(miRa1, miDecl1);
-    image::PointD pix2 = wcs.raDecToXY(miRa2, miDecl2);
+    afwGeom::Point2D pix1 = wcsPtr->skyToPixel(miRa1, miDecl1);
+    afwGeom::Point2D pix2 = wcsPtr->skyToPixel(miRa2, miDecl2);
 
-    std::cout << "col, row of " << inFilename << " at ("<< miRa1 << " " << miDecl1<<") = " << endl;
-    std::cout << "col: " << pix1[0] << " row: " << pix1[1] << endl << endl;
+    std::cout << "col, row of " << inFilename << " at ("<< miRa1 << " " << miDecl1<<") = "
+        << "col: " << pix1[0] << " row: " << pix1[1] << std::endl << std::endl;
 
-    std::cout << "col, row of " << inFilename << " at ("<< miRa2 << " " << miDecl2<<") = " << endl;
-    std::cout << "col: " << pix2[0] << " row: " << pix2[1] << endl << endl;
+    std::cout << "col, row of " << inFilename << " at ("<< miRa2 << " " << miDecl2<<") = "
+        << "col: " << pix2[0] << " row: " << pix2[1] << std::endl << std::endl;
 
-    double raDecl1[] = {sky1[0], sky1[1]};
-    double raDecl2[] = {sky2[0], sky2[1]};
+    afwCoord::Coord::Ptr raDecl1 = makeCoord(afwCoord::FK5, sky1[0], sky1[1]);
+    afwCoord::Coord::Ptr raDecl2 = makeCoord(afwCoord::FK5, sky2[0], sky2[1]);
 
-    image::PointD pix3 = wcs.raDecToXY(raDecl1);
-    image::PointD pix4 = wcs.raDecToXY(raDecl2);
+    afwGeom::Point2D pix3 = wcsPtr->skyToPixel(raDecl1);
+    afwGeom::Point2D pix4 = wcsPtr->skyToPixel(raDecl2);
 
-    std::cout << "col, row of " << inFilename << " at ("<< raDecl1[0] << " " << raDecl1[1]<<") = " << endl;
-    std::cout << "col: " << pix3[0] << " row: " << pix3[1] << endl << endl;
+    std::cout << "col, row of " << inFilename << " at ("<< (*raDecl1)[0] << " " << (*raDecl1)[1] << ") = "
+        << "col: " << pix3[0] << " row: " << pix3[1] << std::endl << std::endl;
 
-    std::cout << "col, row of " << inFilename << " at ("<< raDecl2[0] << " " << raDecl2[1]<<") = " << endl;
-    std::cout << "col: " << pix4[0] << " row: " << pix4[1] << endl << endl;    
+    std::cout << "col, row of " << inFilename << " at ("<< (*raDecl2)[0] << " " << (*raDecl2)[1] << ") = "
+              << "col: " << pix4[0] << " row: " << pix4[1] << std::endl << std::endl;    
 }

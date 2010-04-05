@@ -161,7 +161,7 @@ definitions: {
                 pixelSize: {
                     type: double
                     description: "Pixel size in microns"
-                    minOccurs: 
+                    minOccurs: 1
                     maxOccurs: 1
                 }
 
@@ -273,6 +273,60 @@ definitions: {
                     minOccurs: 0
                     maxOccurs: 1
                     default: 0
+                }
+            }
+        }
+    }
+    #
+    # How the amps within a CCD are laid out in disk files
+    #
+    CcdDiskLayout: {
+        type: Policy
+        dictionary: {
+            target: "CcdDiskLayout"
+            definitions: {
+                HduPerAmp: {
+                    type: bool
+                    description: "Amps are each stored in their own HDU (maybe their own file)"
+                    minOccurs: 0
+                    maxOccurs: 1
+                    default: false
+                }
+
+                Amp: {
+                    type: policy
+                    dictionary: {
+                        target: Amp
+                        definitions: {
+                            serial: {
+                                type: int
+                                description: "Serial number for this Amp"
+                                minOccurs: 0 # Really 1, but then the validator complains
+                                maxOccurs: 1
+                            }
+                            flipLR: {
+                                type: bool
+                                description: "Does then data need to be flipped left <--> right?"
+                                minOccurs: 0
+                                maxOccurs: 1
+                                default: false
+                            }
+                            flipTB: {
+                                type: bool
+                                description: "Does then data need to be flipped top <--> bottom?"
+                                minOccurs: 0
+                                maxOccurs: 1
+                                default: false
+                            }
+                            hdu: {
+                                type: int
+                                description: "HDU the data's found in"
+                                minOccurs: 0
+                                maxOccurs: 1
+                                default: 0
+                            }
+                        }
+                    }
                 }
             }
         }

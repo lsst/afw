@@ -23,11 +23,13 @@
 #include "lsst/pex/logging/Trace.h" 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image.h"
+#include "lsst/afw/geom.h"
 #include "lsst/afw/math.h"
 
 namespace pexExcept = lsst::pex::exceptions;
 namespace pexLog = lsst::pex::logging;
 namespace afwImage = lsst::afw::image;
+namespace afwGeom = lsst::afw::geom;
 namespace afwMath = lsst::afw::math;
 
 afwMath::Kernel::Ptr afwMath::LanczosWarpingKernel::clone() const {
@@ -253,27 +255,25 @@ int afwMath::warpImage(
     
     // compute source position X,Y corresponding to row -1 of the destination image;
     // this is used for computing relative pixel scale
-    std::vector<afwImage::PointD> prevRowSrcPosXY(destWidth+1);
+    std::vector<afwGeom::PointD> prevRowSrcPosXY(destWidth+1);
     for (int destIndX = 0; destIndX < destWidth; ++destIndX) {
-        afwImage::PointD destPosXY(
-            afwImage::indexToPosition(destIndX),
-            afwImage::indexToPosition(-1));
-        afwImage::PointD srcPosXY = srcWcs.raDecToXY(destWcs.xyToRaDec(destPosXY));
+        afwGeom::PointD destPosXY = afwGeom::makePointD(afwImage::indexToPosition(destIndX),
+                                                        afwImage::indexToPosition(-1));
+        afw::geom::PointD srcPosXY = srcWcs.skyToPixel(destWcs.pixelToSky(destPosXY));
         prevRowSrcPosXY[destIndX] = srcPosXY;
     }
     for (int destIndY = 0; destIndY < destHeight; ++destIndY) {
-        afwImage::PointD destPosXY(
-            afwImage::indexToPosition(-1),
-            afwImage::indexToPosition(destIndY));
-        afwImage::PointD prevSrcPosXY = srcWcs.raDecToXY(destWcs.xyToRaDec(destPosXY));
-        afwImage::PointD srcPosXY;
+        afwGeom::PointD destPosXY = afwGeom::makePointD(afwImage::indexToPosition(-1),
+                                                        afwImage::indexToPosition(destIndY));
+        afw::geom::PointD prevSrcPosXY = srcWcs.skyToPixel(destWcs.pixelToSky(destPosXY));
+        afw::geom::PointD srcPosXY;
         typename DestImageT::x_iterator destXIter = destImage.row_begin(destIndY);
         for (int destIndX = 0; destIndX < destWidth; ++destIndX, ++destXIter) {
             // compute sky position associated with this pixel of remapped MaskedImage
             destPosXY[0] = afwImage::indexToPosition(destIndX);
 
             // Compute associated pixel position on source MaskedImage
-            srcPosXY = srcWcs.raDecToXY(destWcs.xyToRaDec(destPosXY));
+            srcPosXY = srcWcs.skyToPixel(destWcs.pixelToSky(destPosXY));
 
             // Compute associated source pixel index and break it into integer and fractional
             // parts; the latter is used to compute the remapping kernel.
@@ -309,8 +309,8 @@ int afwMath::warpImage(
     
                 // Correct intensity due to relative pixel spatial scale and kernel sum.
                 // The area computation is for a parallellogram.
-                afwImage::PointD dSrcA = srcPosXY - prevSrcPosXY;
-                afwImage::PointD dSrcB = srcPosXY - prevRowSrcPosXY[destIndX];
+                afwGeom::PointD dSrcA = srcPosXY - afwGeom::Extent<double>(prevSrcPosXY);
+                afwGeom::PointD dSrcB = srcPosXY - afwGeom::Extent<double>(prevRowSrcPosXY[destIndX]);
                 double multFac = std::abs((dSrcA.getX() * dSrcB.getY())
                     - (dSrcA.getY() * dSrcB.getX())) / kSum;
                 *destXIter *= multFac;

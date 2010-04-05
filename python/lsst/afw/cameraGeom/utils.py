@@ -17,6 +17,7 @@ import unittest
 import lsst.pex.policy as pexPolicy
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
+import lsst.afw.math as afwMath
 import lsst.afw.cameraGeom as cameraGeom
 
 import lsst.afw.display.ds9 as ds9
@@ -41,17 +42,18 @@ class GetCcdImage(object):
 
         return self.getImageFromFilename(self.imageFile, ccd, amp, imageFactory=imageFactory)
 
-    def getImageFromFilename(self, fileName, ccd, amp=None, hdu=0, imageFactory=afwImage.ImageU):
+    def getImageFromFilename(self, fileName, ccd, amp=None, hdu=0, imageFactory=afwImage.ImageU,
+                             oneAmpPerFile=False):
         """Return the image of the chip with cameraGeom.Id == id; if provided only read the given BBox"""
 
         if amp:
             if self.isTrimmed:
-                bbox = amp.getDataSec(False)
+                bbox = amp.getDiskDataSec()
             else:
-                bbox = amp.getAllPixels(False)
+                bbox = amp.getDiskAllPixels()
         else:
             bbox = ccd.getAllPixels()
-            
+
         md = None
         return imageFactory(fileName, hdu, md, bbox)
 
@@ -222,7 +224,9 @@ in particular that it has an entry ampSerial which is a single-element list, the
         eParams = cameraGeom.ElectronicParams(gain, readNoise, saturationLevel)
         amp = cameraGeom.Amp(cameraGeom.Id(serial, "ID%d" % serial),
                              allPixels, biasSec, dataSec, c, eParams)
-
+        #
+        # Actually add amp to the Ccd
+        #
         ccd.addAmp(Col, Row, amp)
     #
     # Information for the test code
@@ -260,7 +264,19 @@ particular that it has an entry ampSerial which is a single-element list, the am
             raftId = cameraGeom.Id(raftPol.get("serial"), raftPol.get("name"))
         except Exception, e:
             raftId = cameraGeom.Id(0, "unknown")
-
+    #
+    # Discover how the per-amp data is laid out on disk; it's common for the data acquisition system to
+    # put together a single image for an entire CCD, but it isn't mandatory
+    #
+    diskFormatPol = geomPolicy.get("CcdDiskLayout")
+    hduPerAmp = diskFormatPol.get("HduPerAmp")
+    ampDiskLayout = {}
+    if hduPerAmp:
+        for p in diskFormatPol.getArray("Amp"):
+            ampDiskLayout[p.get("serial")] = (p.get("hdu"), p.get("flipLR"), p.get("flipTB"))
+    #
+    # Build the Raft
+    #
     raft = cameraGeom.Raft(raftId, nCol, nRow)
 
     if nCol*nRow != len(raftPol.getArray("Ccd")):
@@ -283,6 +299,15 @@ particular that it has an entry ampSerial which is a single-element list, the am
         raft.addDetector(afwGeom.makePointI(Col, Row),
                          afwGeom.makePointD(xc, yc),
                          cameraGeom.Orientation(nQuarter, pitch, roll, yaw), ccd)
+
+        #
+        # Set the on-disk layout parameters now that we've possibly rotated the Ccd to fit the raft
+        #
+        if hduPerAmp:
+            for amp in ccd:
+                hdu, flipLR, flipTB = ampDiskLayout[amp.getId().getSerial()]
+                amp.setDiskLayout(afwGeom.makePointI(amp.getAllPixels().getX0(), amp.getAllPixels().getY0()),
+                                  nQuarter, flipLR, flipTB)
 
         if raftInfo is not None:
             # Guess the gutter between detectors
@@ -390,7 +415,7 @@ def makeImageFromCcd(ccd, imageSource=SynthesizeCcdImage(), amp=None,
         
     for a in ccd:
         im = ccdImage.Factory(ccdImage, a.getAllPixels(isTrimmed))
-        im <<= imageSource.getImage(ccd, a, imageFactory=imageFactory)
+        im <<= a.prepareAmpData(imageSource.getImage(ccd, a, imageFactory=imageFactory))
 
     return ccdImage
 

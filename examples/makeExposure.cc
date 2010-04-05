@@ -97,26 +97,23 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
     dafBase::PropertySet::Ptr mData = miMetadata;
 
     // make sure it can be copied.
-    afwImage::Wcs myWcs(mData);  
+    afwImage::Wcs::Ptr myWcsPtr = afwImage::makeWcs(mData); 
 
     afwImage::Wcs wcs2;
-    wcs2 = myWcs;
+    wcs2 = *myWcsPtr;
         
     // Now use Exposure class to create an Exposure from a MaskedImage and a
     // Wcs.
        
-    afwImage::Exposure<ImagePixel> miWcsExpImage(mImage, myWcs);
+    afwImage::Exposure<ImagePixel> miWcsExpImage(mImage, *myWcsPtr);
              
-    afwImage::Wcs wcsCopy(myWcs); 
-      
-    //afwImage::Wcs wcsAssigned();
-    //wcsAssigned = myWcs; 
+    afwImage::Wcs wcsCopy(*myWcsPtr); 
 
     // (4) Construct an Exposure from a given region (col, row) and a Wcs.
 
     int miWidth = 5;
     int miHeight = 5;
-    afwImage::Exposure<ImagePixel> regWcsExpImage(miWidth, miHeight, myWcs);
+    afwImage::Exposure<ImagePixel> regWcsExpImage(miWidth, miHeight, *myWcsPtr);
        
     // (5) Construct an Exposure from a given region (col, row) with no Wcs.
 
@@ -149,9 +146,9 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
         dafBase::PropertySet::Ptr mCorData(new dafBase::PropertySet);
         afwImage::MaskedImage<ImagePixel> mCorruptImage("tests/data/small_MI_corrupt", hdu,
                                                     mCorData); // CFHT MI with corrupt header
-        afwImage::Wcs wcs = afwImage::Wcs(mCorData);
+        afwImage::Wcs::Ptr wcsPtr = afwImage::makeWcs(mCorData);
             
-        afwImage::Exposure<ImagePixel> newCorExposure(mCorruptImage, wcs);
+        afwImage::Exposure<ImagePixel> newCorExposure(mCorruptImage, *wcsPtr);
        
     } catch (lsst::pex::exceptions::Exception &e) {
         pexLog::Trace("lsst.afw.Exposure", 1,

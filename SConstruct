@@ -16,6 +16,7 @@ env = scons.makeEnv(
     r"$HeadURL$",
     scons.ConfigureDependentProducts("afw"),
 )
+
 #
 # Libraries needed to link libraries/executables
 #
@@ -42,7 +43,7 @@ for d in (
     "python/lsst/afw/image",
     "python/lsst/afw/geom", 
     "python/lsst/afw/math",
-    "python/lsst/afw/coord",
+    "python/lsst/afw/coord", 
     "tests",
 ):
     if d != ".":

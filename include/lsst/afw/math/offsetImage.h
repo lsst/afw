@@ -12,6 +12,12 @@ template<typename ImageT>
 typename ImageT::Ptr offsetImage(ImageT const& image, float dx, float dy, std::string const& algorithmName="lanczos5");
 template<typename ImageT>
 typename ImageT::Ptr rotateImageBy90(ImageT const& image, int nQuarter);
+
+template<typename ImageT>
+typename ImageT::Ptr flipImage(ImageT const& inImage, ///< The %image to flip
+                               bool flipLR,           ///< Flip left <--> right?
+                               bool flipTB            ///< Flip top <--> bottom?
+                              );
     
 }}}
 #endif

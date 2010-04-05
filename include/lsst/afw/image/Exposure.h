@@ -29,6 +29,8 @@
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/image/Wcs.h"
+#include "lsst/afw/image/TanWcs.h"
+#include "lsst/afw/image/Filter.h"
 
 namespace lsst {
 namespace afw {
@@ -60,6 +62,8 @@ namespace image {
         /// Return the MaskedImage
         MaskedImageT const& getMaskedImage() const { return _maskedImage; };
         Wcs::Ptr getWcs() const;
+        /// Return the Exposure's filter
+        Filter getFilter() const { return _filter; }
 
         /// Return the Exposure's width
         int getWidth() const { return _maskedImage.getWidth(); }
@@ -69,9 +73,12 @@ namespace image {
         // Set Members
         void setMaskedImage(MaskedImageT &maskedImage);
         void setWcs(Wcs const& wcs);
+        /// Set the Exposure's filter
+        void setFilter(Filter const& filter) { _filter = filter; }
         
         // Has Member (inline)
-        bool hasWcs() const { return static_cast<bool>(*_wcs); };
+        bool hasWcs() const { return (*_wcs ? true : false); 
+        }
         
         // FITS
         void writeFits(std::string const &expOutFile) const;
@@ -81,6 +88,7 @@ namespace image {
 
         MaskedImageT _maskedImage;             
         Wcs::Ptr _wcs;
+        Filter _filter;
     };
 
 /**

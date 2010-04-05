@@ -22,6 +22,7 @@ Basic routines to talk to lsst::afw::image classes
 #include "lsst/pex/policy.h"
 #include "lsst/afw/image.h"
 #include "lsst/afw/geom.h"
+#include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/image/Defect.h"
 
 #include "boost/cstdint.hpp"
@@ -79,6 +80,7 @@ def version(HeadURL = r"$HeadURL$"):
 %import "lsst/daf/persistence/persistenceLib.i"
 %import "lsst/daf/data/dataLib.i"
 %import "lsst/afw/geom/geomLib.i"
+%import "lsst/afw/coord/coordLib.i"
 
 %include "lsst/afw/eigen.i"
 
@@ -181,13 +183,20 @@ def version(HeadURL = r"$HeadURL$"):
 
 %{
 #include "lsst/afw/image/Wcs.h"
+#include "lsst/afw/image/TanWcs.h"
+#include "lsst/afw/image/makeWcs.h"
 %}
 
 SWIG_SHARED_PTR(Wcs, lsst::afw::image::Wcs);
+SWIG_SHARED_PTR(TanWcs, lsst::afw::image::TanWcs);
+
 
 %include "lsst/afw/image/Wcs.h"
+%include "lsst/afw/image/TanWcs.h"
+%include "lsst/afw/image/makeWcs.h"
 
 %lsst_persistable(lsst::afw::image::Wcs);
+%lsst_persistable(lsst::afw::image::TanWcs);
 
 %extend lsst::afw::image::Wcs {
     lsst::afw::image::Wcs::Ptr clone() {
@@ -195,13 +204,33 @@ SWIG_SHARED_PTR(Wcs, lsst::afw::image::Wcs);
     }
 }
 
+%extend lsst::afw::image::TanWcs {
+    lsst::afw::image::TanWcs::Ptr clone() {
+        return lsst::afw::image::TanWcs::Ptr(new lsst::afw::image::TanWcs::TanWcs(*self));
+    }
+}
+
+
+
+%inline %{
+    lsst::afw::image::TanWcs::Ptr
+    cast_TanWcs(lsst::afw::image::Wcs::Ptr wcs) {
+        lsst::afw::image::TanWcs::Ptr tanWcs = boost::shared_dynamic_cast<lsst::afw::image::TanWcs>(wcs);
+        
+        if(tanWcs.get() == NULL) {
+            throw(LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "Up cast failed"));
+        }
+        return tanWcs;
+    }
+%}
+
 
 %inline {
     /**
      * Create a WCS from crval, image, and the elements of CD
      */
-    lsst::afw::image::Wcs::Ptr createWcs(lsst::afw::image::PointD crval,
-                                         lsst::afw::image::PointD crpix,
+    lsst::afw::image::Wcs::Ptr createWcs(lsst::afw::geom::PointD crval,
+                                         lsst::afw::geom::PointD crpix,
                                          double CD11, double CD12, double CD21, double CD22) {
 
     Eigen::Matrix2d CD;

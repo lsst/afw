@@ -48,15 +48,18 @@ SWIG_SHARED_PTR_DERIVED(NearestWarpingKernel, lsst::afw::math::SeparableKernel,
 %template(offsetImage) lsst::afw::math::offsetImage<lsst::afw::image::Image<double> >;
 %template(offsetImage) lsst::afw::math::offsetImage<lsst::afw::image::Image<float> >;
 
-%define rotateImageBy90(PIXELT)
+%define imageTransforms(PIXELT)
 %template(rotateImageBy90) lsst::afw::math::rotateImageBy90<lsst::afw::image::Image<PIXELT> >;
+%template(flipImage) lsst::afw::math::flipImage<lsst::afw::image::Image<PIXELT> >;
 #if 0
 %template(rotateImageBy90) lsst::afw::math::rotateImageBy90<
+    lsst::afw::image::MaskedImage<PIXELT, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> >;
+%template(flipImage) lsst::afw::math::flipImage<
     lsst::afw::image::MaskedImage<PIXELT, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> >;
 #endif
 %enddef
 
-rotateImageBy90(boost::uint16_t);
-rotateImageBy90(int);
-rotateImageBy90(float);
-rotateImageBy90(double);
+imageTransforms(boost::uint16_t);
+imageTransforms(int);
+imageTransforms(float);
+imageTransforms(double);

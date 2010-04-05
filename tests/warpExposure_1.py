@@ -195,7 +195,7 @@ class WarpExposureTestCase(unittest.TestCase):
         swarpedDecoratedImage = afwImage.DecoratedImageF(swarpedImagePath)
         swarpedImage = swarpedDecoratedImage.getImage()
         swarpedMetadata = swarpedDecoratedImage.getMetadata()
-        warpedWcs = afwImage.Wcs(swarpedMetadata)
+        warpedWcs = afwImage.makeWcs(swarpedMetadata)
         destWidth = swarpedImage.getWidth()
         destHeight = swarpedImage.getHeight()
 
@@ -235,7 +235,7 @@ class WarpExposureTestCase(unittest.TestCase):
         swarpedDecoratedImage = afwImage.DecoratedImageF(swarpedImagePath)
         swarpedImage = swarpedDecoratedImage.getImage()
         swarpedMetadata = swarpedDecoratedImage.getMetadata()
-        warpedWcs = afwImage.Wcs(swarpedMetadata)
+        warpedWcs = afwImage.makeWcs(swarpedMetadata)
         destWidth = swarpedImage.getWidth()
         destHeight = swarpedImage.getHeight()
 

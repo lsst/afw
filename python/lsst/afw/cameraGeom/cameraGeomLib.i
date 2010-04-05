@@ -9,6 +9,7 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %module(package="lsst.afw.cameraGeom", docstring=cameraGeomLib_DOCSTRING) cameraGeomLib
 
 %{
+#include "lsst/afw/image/Image.h"
 #include "lsst/afw/cameraGeom.h"
 %}
 
@@ -61,6 +62,15 @@ SWIG_SHARED_PTR_DERIVED(CameraPtr, lsst::afw::cameraGeom::Detector, lsst::afw::c
         return boost::shared_dynamic_cast<lsst::afw::cameraGeom::Raft>(detector);
     }
 %}
+
+%define Instantiate(PIXEL_TYPE...)
+%template(prepareAmpData)
+    lsst::afw::cameraGeom::Amp::prepareAmpData<lsst::afw::image::Image<PIXEL_TYPE> >;
+%enddef
+
+Instantiate(boost::uint16_t);
+Instantiate(float);
+
 //
 // We'd like to just say
 //  def __iter__(self):

@@ -2,12 +2,14 @@
  * \file
  */
 #include <algorithm>
-#include "lsst/afw/cameraGeom/Id.h"
+#include "lsst/afw/image/Image.h"
+#include "lsst/afw/math/offsetImage.h"
 #include "lsst/afw/cameraGeom/Amp.h"
 #include "lsst/afw/cameraGeom/Detector.h"
 
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
+namespace afwMath = lsst::afw::math;
 namespace cameraGeom = lsst::afw::cameraGeom;
 
 cameraGeom::ElectronicParams::ElectronicParams(
@@ -44,6 +46,10 @@ cameraGeom::Amp::Amp(
     }
 
     getAllPixels() = allPixels;
+
+    _originOnDisk = afwGeom::makePointI(0, 0);
+    _nQuarter = 0;
+    _flipLR = _flipTB = false;
     
     setTrimmedGeom();
 }
@@ -95,9 +101,9 @@ void cameraGeom::Amp::rotateBy90(
     //
     // Rotate the amps to the right orientation
     //
-    getAllPixels() = cameraGeom::detail::rotateBBoxBy90(getAllPixels(), dimensions, n90);
-    _biasSec = cameraGeom::detail::rotateBBoxBy90(_biasSec, dimensions, n90);
-    _dataSec = cameraGeom::detail::rotateBBoxBy90(_dataSec, dimensions, n90);
+    getAllPixels() = cameraGeom::detail::rotateBBoxBy90(getAllPixels(), n90, dimensions);
+    _biasSec = cameraGeom::detail::rotateBBoxBy90(_biasSec, n90, dimensions);
+    _dataSec = cameraGeom::detail::rotateBBoxBy90(_dataSec, n90, dimensions);
 
     setTrimmedGeom();
     //
@@ -105,3 +111,47 @@ void cameraGeom::Amp::rotateBy90(
     //
     _readoutCorner = static_cast<ReadoutCorner>((_readoutCorner + n90)%4);
 }
+
+/**
+ * Convert a Amp's BBox assuming it's been assembled into an entire-CCD image to its value
+ * as read from disk.
+ *
+ * This is intended to be used when each amp is in its separate file (or HDU) on disk
+ */
+lsst::afw::image::BBox cameraGeom::Amp::_mapToDisk(lsst::afw::image::BBox bbox) const {
+    // Reset the BBox's origin within the Detector to reflect the on-disk value
+    int const x0 = _originOnDisk.getX();
+    int const y0 = _originOnDisk.getY();
+    bbox.shift(-x0, -y0);
+    // Rotate the BBox to reflect the on-disk orientation
+    afwGeom::Extent2I dimensions = afwGeom::makeExtentI(getAllPixels(false).getWidth(),
+                                                        getAllPixels(false).getHeight());
+    return cameraGeom::detail::rotateBBoxBy90(bbox, -_nQuarter, dimensions);
+}
+
+/**
+ * Prepare an Amp that's just been read from disk to be copied into the image of the complete Detector
+ *
+ * This is only important if the Amps are stored in separate files, rather than being assembled into
+ * complete Detectors by the data acquisition system
+ */
+template<typename ImageT>
+typename ImageT::Ptr cameraGeom::Amp::prepareAmpData(ImageT const& inImage)
+{
+    typename ImageT::Ptr flippedImage = afwMath::flipImage(inImage, _flipLR, _flipTB);
+
+    return afwMath::rotateImageBy90(*flippedImage, _nQuarter);
+}
+
+/************************************************************************************************************/
+
+//
+// Explicit instantiations
+// \cond
+//
+#define INSTANTIATE(TYPE) \
+    template afwImage::Image<TYPE>::Ptr cameraGeom::Amp::prepareAmpData(afwImage::Image<TYPE> const&);
+
+INSTANTIATE(boost::uint16_t)
+INSTANTIATE(float)
+// \endcond
