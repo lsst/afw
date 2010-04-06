@@ -222,7 +222,7 @@ in particular that it has an entry ampSerial which is a single-element list, the
             dataSec = afwImage.BBox(afwImage.PointI(overclockH, preRows), width, height)
 
         eParams = cameraGeom.ElectronicParams(gain, readNoise, saturationLevel)
-        amp = cameraGeom.Amp(cameraGeom.Id(serial, "ID%d" % serial),
+        amp = cameraGeom.Amp(cameraGeom.Id(serial, "ID%d" % serial, Col, Row),
                              allPixels, biasSec, dataSec, c, eParams)
         #
         # Actually add amp to the Ccd

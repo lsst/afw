@@ -2,6 +2,8 @@
 #define LSST_AFW_CAMERAGEOM_DETECTOR_H
 
 #include <string>
+#include "boost/weak_ptr.hpp"
+#include <boost/enable_shared_from_this.hpp>
 #include "lsst/afw/geom.h"
 #include "lsst/afw/image/Defect.h"
 #include "lsst/afw/image/Utils.h"
@@ -23,7 +25,7 @@ namespace afwImage = lsst::afw::image;
 /**
  * Describe a detector (e.g. a CCD)
  */
-class Detector {
+    class Detector : public boost::enable_shared_from_this<Detector> {
 public:
     typedef boost::shared_ptr<Detector> Ptr;
     typedef boost::shared_ptr<const Detector> ConstPtr;
@@ -36,6 +38,8 @@ public:
         _id(id), _isTrimmed(false), _allPixels(),
         _hasTrimmablePixels(hasTrimmablePixels), _pixelSize(pixelSize)
     {
+        _parent = boost::weak_ptr<Detector>();
+        
         if (_hasTrimmablePixels) {
             _trimmedAllPixels = _allPixels;
         }
@@ -43,6 +47,20 @@ public:
     virtual ~Detector() {}
     /// Return the Detector's Id
     Id getId() const { return _id; }
+
+    /// Return the detector's parent in the hierarchy
+    ///
+    /// If the parent is unknown or has been deleted, and empty Ptr is returned
+    void setParent(Ptr parent) {
+        _parent = boost::weak_ptr<Detector>(parent);
+    }
+
+    /// Return the detector's parent in the hierarchy
+    ///
+    /// If the parent is unknown or has been deleted, and empty Ptr is returned
+    Ptr getParent() const {
+        return Ptr(_parent.lock());
+    }
 
     /// Are two Detectors identical, in the sense that they have the same name
     bool operator==(Detector const& rhs ///< Detector to compare too
@@ -128,6 +146,11 @@ public:
     std::vector<boost::shared_ptr<afwImage::DefectBase> > const& getDefects() const { return _defects; }
     std::vector<boost::shared_ptr<afwImage::DefectBase> >& getDefects() { return _defects; }
 protected:
+    /// Return a shared pointer to this
+    Ptr getThisPtr() {
+        return shared_from_this();
+    }
+
     afwImage::BBox& getAllTrimmedPixels() {
         return _hasTrimmablePixels ? _trimmedAllPixels : _allPixels;
     }
@@ -142,6 +165,7 @@ private:
     afwGeom::Point2D _center;           // position of _centerPixel (mm)
     afwGeom::Extent2D _size;            // Size in mm of this Detector
     afwImage::BBox _trimmedAllPixels;   // Bounding box of all the Detector's pixels after bias trimming
+    boost::weak_ptr<Detector> _parent;  // Parent Detector in the hierarchy
 
     std::vector<afwImage::DefectBase::Ptr> _defects; // Defects in this detector
 };

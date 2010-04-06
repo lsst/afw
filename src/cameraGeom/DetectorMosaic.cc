@@ -136,6 +136,7 @@ void cameraGeom::DetectorMosaic::addDetector(
     // insert new Detector, keeping the Detectors sorted
     _detectors.insert(std::lower_bound(_detectors.begin(), _detectors.end(), det,
                                        cameraGeom::detail::sortPtr<Detector>()), det);
+    det->setParent(getThisPtr());
 }
 
 /************************************************************************************************************/

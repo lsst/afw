@@ -88,6 +88,10 @@ class CameraGeomTestCase(unittest.TestCase):
 
         #print >> sys.stderr, "Skipping testId"; return
         
+        ix, iy = 2, 1
+        id = cameraGeom.Id(666, "Beasty", ix, iy)
+        self.assertTrue(id.getIndex(), (ix, iy))
+
         self.assertTrue(cameraGeom.Id(1) == cameraGeom.Id(1))
         self.assertFalse(cameraGeom.Id(1) == cameraGeom.Id(100))
         
@@ -120,7 +124,7 @@ class CameraGeomTestCase(unittest.TestCase):
             dataSec = afwImage.BBox(afwImage.PointI(0, 0), width, height)
 
             eParams = cameraGeom.ElectronicParams(gain, readNoise, saturationLevel)
-            amp = cameraGeom.Amp(cameraGeom.Id(serial), allPixels, biasSec, dataSec,
+            amp = cameraGeom.Amp(cameraGeom.Id(serial, "", Col, 0), allPixels, biasSec, dataSec,
                                  cameraGeom.Amp.LLC, eParams)
 
             ccd.addAmp(afwGeom.makePointI(Col, 0), amp); Col += 1
@@ -398,6 +402,26 @@ class CameraGeomTestCase(unittest.TestCase):
                         displayUtils.drawBBox(d.getBBox(), ctype=ds9.YELLOW, borderWidth=1.0)
 
                 ds9.incrDefaultFrame()
+
+    def testParent(self):
+        """Test that we can find our parent"""
+
+        cameraInfo = {"ampSerial" : CameraGeomTestCase.ampSerial}
+        camera = cameraGeomUtils.makeCamera(self.geomPolicy, cameraInfo=cameraInfo)
+
+        for rx, ry, cx, cy, serial in [(0, 0,     0,   0,   4),
+                                       (0,   0,   150, 250, 20),
+                                       (600, 300, 0,   0,   52),
+                                       (600, 300, 150, 250, 68),
+                                       ]:
+            raft = cameraGeom.cast_Raft(camera.findDetector(afwGeom.makePointI(rx, ry)))
+            ccd = cameraGeom.cast_Ccd(raft.findDetector(afwGeom.makePointI(cx, cy)))
+
+            amp = ccd[0]
+            self.assertEqual(ccd.getId(),    amp.getParent().getId())
+            self.assertEqual(raft.getId(),   ccd.getParent().getId())
+            self.assertEqual(camera.getId(), ccd.getParent().getParent().getId())
+            self.assertEqual(None,           ccd.getParent().getParent().getParent())        
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
