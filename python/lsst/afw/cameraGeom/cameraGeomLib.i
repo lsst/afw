@@ -14,7 +14,9 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %}
 
 %include "lsst/p_lsstSwig.i"
-%import  "lsst/afw/image/imageLib.i" 
+#if IMPORT_IMAGE_I
+%import "lsst/afw/image/imageLib.i" 
+#endif
 
 %lsst_exceptions();
 

@@ -185,7 +185,6 @@ def version(HeadURL = r"$HeadURL$"):
 %{
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/image/TanWcs.h"
-#include "lsst/afw/image/makeWcs.h"
 %}
 
 SWIG_SHARED_PTR(Wcs, lsst::afw::image::Wcs);
@@ -194,7 +193,6 @@ SWIG_SHARED_PTR(TanWcs, lsst::afw::image::TanWcs);
 
 %include "lsst/afw/image/Wcs.h"
 %include "lsst/afw/image/TanWcs.h"
-%include "lsst/afw/image/makeWcs.h"
 
 %lsst_persistable(lsst::afw::image::Wcs);
 %lsst_persistable(lsst::afw::image::TanWcs);
@@ -293,3 +291,4 @@ SWIG_SHARED_PTR(DefectPtr, lsst::afw::image::DefectBase);
 /************************************************************************************************************/
 
 %import "lsst/afw/cameraGeom/cameraGeomLib.i"
+

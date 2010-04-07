@@ -8,5 +8,6 @@ pkg = env["eups_product"]
 env.CheckSwig("python", ilang="c++", includedProducts="utils daf_base pex_exceptions pex_logging pex_policy daf_persistence daf_data security afw")
 
 env.LoadableModuleIncomplete("_cameraGeomLib", "cameraGeomLib.i",
+                             SWIGFLAGS=env['SWIGFLAGS'] + " -DIMPORT_IMAGE_I",
                              CCFLAGS=re.sub("-Wall", "", " ".join(env['CCFLAGS'])),
                              LIBS=env.getlibs("afw"))
