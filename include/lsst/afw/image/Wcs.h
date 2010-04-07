@@ -152,6 +152,7 @@ namespace image {
         image::PointI getImageXY0FromMetadata(std::string const& wcsName, lsst::daf::base::PropertySet *metadata);
     }
 
+    Wcs::Ptr makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
 
 }}} // lsst::afw::image
 

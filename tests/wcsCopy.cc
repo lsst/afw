@@ -9,10 +9,8 @@
 
 #include "lsst/daf/base.h"
 #include "lsst/afw/image.h"
-#include "lsst/afw/image/makeWcs.h"
 
 using lsst::daf::base::PropertySet;
-
 
 void doTest(lsst::afw::image::Wcs::Ptr wcsPtr);
 

@@ -6,9 +6,7 @@
 #include "lsst/afw/image.h"
 #include "lsst/afw/math.h"
 #include "lsst/afw/formatters/Utils.h"
-#include "lsst/afw/image/makeWcs.h"
 #include "lsst/afw/coord/Coord.h"
-
 
 using namespace std;
 

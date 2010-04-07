@@ -7,9 +7,6 @@
 //
 //##====----------------                                ----------------====##/
 
-
-
-
 #include <iostream>
 #include <cmath>
 #include <vector>
@@ -25,7 +22,6 @@
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/image/TanWcs.h"
-#include "lsst/afw/image/makeWcs.h"
 #include "lsst/afw/math/Interpolate.h"
 #include "lsst/afw/math/Background.h"
 

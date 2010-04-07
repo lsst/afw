@@ -29,7 +29,6 @@
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/image/Exposure.h"
 #include "lsst/afw/formatters/WcsFormatter.h"
-#include "lsst/afw/image/makeWcs.h"
 
 namespace afwImage = lsst::afw::image;
 

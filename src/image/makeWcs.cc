@@ -1,9 +1,6 @@
 // -*- lsst-c++ -*-
-
-
-
-
-#include "lsst/afw/image/makeWcs.h"
+#include "lsst/afw/image/Wcs.h"
+#include "lsst/afw/image/TanWcs.h"
 
 namespace except = lsst::pex::exceptions; 
 namespace afwImg = lsst::afw::image;
