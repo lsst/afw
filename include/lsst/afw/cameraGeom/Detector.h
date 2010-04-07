@@ -19,13 +19,20 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
+#include "lsst/afw/image/Utils.h"
+#include "lsst/afw/image/Defect.h"
+
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
     
 /**
  * Describe a detector (e.g. a CCD)
  */
-    class Detector : public boost::enable_shared_from_this<Detector> {
+    class Detector
+#if !defined(SWIG)
+        : public boost::enable_shared_from_this<Detector>
+#endif
+    {
 public:
     typedef boost::shared_ptr<Detector> Ptr;
     typedef boost::shared_ptr<const Detector> ConstPtr;

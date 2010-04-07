@@ -30,6 +30,7 @@
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/image/TanWcs.h"
+#include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/image/Filter.h"
 
 namespace lsst {
@@ -62,6 +63,8 @@ namespace image {
         /// Return the MaskedImage
         MaskedImageT const& getMaskedImage() const { return _maskedImage; };
         Wcs::Ptr getWcs() const;
+        /// Return the Exposure's Detector information
+        lsst::afw::cameraGeom::Detector::Ptr getDetector() const { return _detector; }
         /// Return the Exposure's filter
         Filter getFilter() const { return _filter; }
 
@@ -73,6 +76,8 @@ namespace image {
         // Set Members
         void setMaskedImage(MaskedImageT &maskedImage);
         void setWcs(Wcs const& wcs);
+        /// Set the Exposure's Detector information
+        void setDetector(lsst::afw::cameraGeom::Detector::Ptr detector) { _detector = detector; }
         /// Set the Exposure's filter
         void setFilter(Filter const& filter) { _filter = filter; }
         
@@ -88,6 +93,7 @@ namespace image {
 
         MaskedImageT _maskedImage;             
         Wcs::Ptr _wcs;
+        cameraGeom::Detector::Ptr _detector;
         Filter _filter;
     };
 

@@ -20,6 +20,7 @@ Basic routines to talk to lsst::afw::image classes
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/pex/policy.h"
+#include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/image.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/coord/Coord.h"
@@ -288,3 +289,7 @@ SWIG_SHARED_PTR(DefectPtr, lsst::afw::image::DefectBase);
 %include "lsst/afw/image/Defect.h"
 
 %template(DefectSet) std::vector<boost::shared_ptr<lsst::afw::image::DefectBase> >;
+
+/************************************************************************************************************/
+
+%import "lsst/afw/cameraGeom/cameraGeomLib.i"

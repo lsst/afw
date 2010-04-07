@@ -15,6 +15,7 @@ import eups
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.afw.coord as afwCoord
+import lsst.afw.cameraGeom as cameraGeom
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions as pexExcept
 import lsst.pex.logging as pexLog
@@ -156,8 +157,10 @@ class ExposureTestCase(unittest.TestCase):
         maskedImage = afwImage.MaskedImageF(inFilePathSmall)
         exposure.setMaskedImage(maskedImage)
         exposure.setWcs(self.wcs)
+        exposure.setDetector(cameraGeom.Detector(cameraGeom.Id(666)))
         exposure.setFilter(afwImage.Filter("g"))
 
+        self.assertEquals(exposure.getDetector().getId().getSerial(), 666)
         self.assertEquals(exposure.getFilter().getName(), "g")
         
         try:
