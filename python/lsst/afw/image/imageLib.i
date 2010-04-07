@@ -290,5 +290,7 @@ SWIG_SHARED_PTR(DefectPtr, lsst::afw::image::DefectBase);
 
 /************************************************************************************************************/
 
+#if !defined(CAMERA_GEOM_LIB_I)
 %import "lsst/afw/cameraGeom/cameraGeomLib.i"
+#endif
 

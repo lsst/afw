@@ -1,4 +1,6 @@
 // -*- lsst-c++ -*-
+#define CAMERA_GEOM_LIB_I
+
 %define cameraGeomLib_DOCSTRING
 "
 Python bindings for classes describing the the geometry of a mosaic camera
@@ -14,7 +16,7 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %}
 
 %include "lsst/p_lsstSwig.i"
-#if IMPORT_IMAGE_I
+#if defined(IMPORT_IMAGE_I)
 %import "lsst/afw/image/imageLib.i" 
 #endif
 
