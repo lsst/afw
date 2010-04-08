@@ -48,11 +48,12 @@ class ExposureTestCase(unittest.TestCase):
 
     def setUp(self):
         maskedImage = afwImage.MaskedImageF(inFilePathSmall)
+        maskedImageMD = afwImage.readMetadata(inFilePathSmall + "_img.fits")
 
         self.smallExposure = afwImage.ExposureF(inFilePathSmall)
         self.width =  maskedImage.getWidth()
         self.height = maskedImage.getHeight()
-        self.wcs = afwImage.makeWcs(self.smallExposure.getMetadata())
+        self.wcs = afwImage.makeWcs(maskedImageMD)
 
         self.exposureBlank = afwImage.ExposureF()
         self.exposureMiOnly = afwImage.makeExposure(maskedImage)
@@ -292,8 +293,6 @@ class ExposureTestCase(unittest.TestCase):
                     afwImage.indexToPosition(ySubInd),
                 )
 
-
-         
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
