@@ -113,7 +113,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &src, ///<
     _detector(),
     _filter()    
 {
-    setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet()));
+    setMetadata(deep ? src.getMetadata()->deepCopy() : src.getMetadata());
 }
 
 /** @brief Construct an Image from FITS files.
