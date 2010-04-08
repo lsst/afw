@@ -89,7 +89,9 @@ image::ImageBase<PixelT>::ImageBase(
     lsst::daf::data::LsstBase(typeid(this)),
     _gilImage(rhs._gilImage), // boost::shared_ptr, so don't copy the pixels
     _gilView(subimage_view(rhs._gilView,
-                           bbox.getX0(), bbox.getY0(), bbox.getWidth(), bbox.getHeight())),
+                           bbox.getX0(), bbox.getY0(),
+                           bbox.getWidth()  ? bbox.getWidth()  : (rhs.getWidth()  - bbox.getX0()),
+                           bbox.getHeight() ? bbox.getHeight() : (rhs.getHeight() - bbox.getY0()))),
     _ix0(rhs._ix0 + bbox.getX0()), _iy0(rhs._iy0 + bbox.getY0()),
     _x0(rhs._x0 + bbox.getX0()), _y0(rhs._y0 + bbox.getY0())
 {
