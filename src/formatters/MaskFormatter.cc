@@ -74,7 +74,8 @@ template <typename MaskPixelT>
 void MaskFormatter<MaskPixelT>::write(
     Persistable const* persistable,
     Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr) {
+    lsst::daf::base::PropertySet::Ptr,
+    int /* iter */, int /* len */) {
     execTrace("MaskFormatter write start");
     Mask<MaskPixelT> const* ip =
         dynamic_cast<Mask<MaskPixelT> const*>(persistable);
@@ -103,7 +104,8 @@ void MaskFormatter<MaskPixelT>::write(
 template <typename MaskPixelT>
 Persistable* MaskFormatter<MaskPixelT>::read(
     Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr) {
+    lsst::daf::base::PropertySet::Ptr,
+    bool /* first */, bool* /* done */) {
     execTrace("MaskFormatter read start");
     if (typeid(*storage) == typeid(BoostStorage)) {
         execTrace("MaskFormatter read BoostStorage");

@@ -58,8 +58,9 @@ afwForm::TanWcsFormatter::~TanWcsFormatter(void) {
 void afwForm::TanWcsFormatter::write(
     dafBase::Persistable const* persistable,
     dafPersist::Storage::Ptr storage,
-    dafBase::PropertySet::Ptr) {
-    execTrace("TamWcsFormatter write start");
+    dafBase::PropertySet::Ptr,
+    int /* iter */, int /* len */) {
+    execTrace("TanWcsFormatter write start");
     afwImg::TanWcs const* ip = dynamic_cast<afwImg::TanWcs const*>(persistable);
     if (ip == 0) {
         throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Persisting non-TanWcs");
@@ -76,7 +77,8 @@ void afwForm::TanWcsFormatter::write(
 
 dafBase::Persistable* afwForm::TanWcsFormatter::read(
     dafPersist::Storage::Ptr storage,
-    dafBase::PropertySet::Ptr additionalData) {
+    dafBase::PropertySet::Ptr additionalData,
+    bool /* first */, bool* /* done */) {
     execTrace("TanWcsFormatter read start");
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
         afwImg::TanWcs* ip = new afwImg::TanWcs;

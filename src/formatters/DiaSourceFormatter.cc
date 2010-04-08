@@ -439,7 +439,8 @@ template void form::DiaSourceVectorFormatter::delegateSerialize<boost::archive::
  */
 void form::DiaSourceVectorFormatter::write( Persistable const * persistable,
     Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr additionalData
+    lsst::daf::base::PropertySet::Ptr additionalData,
+    int /* iter */, int /* len */
 ) {                       
     if (persistable == 0) {
         throw LSST_EXCEPT(ex::InvalidParameterException, "No Persistable provided");
@@ -529,7 +530,8 @@ void form::DiaSourceVectorFormatter::write( Persistable const * persistable,
  */
 Persistable* form::DiaSourceVectorFormatter::read(
     Storage::Ptr          storage,
-    lsst::daf::base::PropertySet::Ptr additionalData
+    lsst::daf::base::PropertySet::Ptr additionalData,
+    bool /* first */, bool* /* done */
 ) {
     std::auto_ptr<PersistableDiaSourceVector> p(new PersistableDiaSourceVector());
 

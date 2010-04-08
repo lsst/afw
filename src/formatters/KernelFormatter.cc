@@ -133,7 +133,8 @@ afwForm::KernelFormatter::~KernelFormatter(void) {
 void afwForm::KernelFormatter::write(
     dafBase::Persistable const* persistable,
     dafPersist::Storage::Ptr storage,
-    dafBase::PropertySet::Ptr) {
+    dafBase::PropertySet::Ptr,
+    int /* iter */, int /* len */) {
     execTrace("KernelFormatter write start");
     afwMath::Kernel const* kp =
         dynamic_cast<afwMath::Kernel const*>(persistable);
@@ -160,7 +161,8 @@ void afwForm::KernelFormatter::write(
 }
 
 dafBase::Persistable* afwForm::KernelFormatter::read(
-    dafPersist::Storage::Ptr storage, dafBase::PropertySet::Ptr) {
+    dafPersist::Storage::Ptr storage, dafBase::PropertySet::Ptr,
+    bool /* first */, bool* /* done */) {
     execTrace("KernelFormatter read start");
     afwMath::Kernel* kp;
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {

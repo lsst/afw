@@ -81,7 +81,8 @@ template <typename ImagePixelT>
 void DecoratedImageFormatter<ImagePixelT>::write(
         Persistable const* persistable,
         Storage::Ptr storage,
-        lsst::daf::base::PropertySet::Ptr
+        lsst::daf::base::PropertySet::Ptr,
+        int /* iter */, int len
                                                 )
 {
     execTrace("DecoratedImageFormatter write start");
@@ -106,7 +107,8 @@ void DecoratedImageFormatter<ImagePixelT>::write(
         FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
         typedef DecoratedImage<ImagePixelT> DecoratedImage;
 
-        ip->writeFits(fits->getPath());
+        ip->writeFits(fits->getPath(), lsst::daf::base::PropertySet::Ptr(),
+                      (len > 1) ? "a" : "w");
         // \todo Do something with these fields?
         // int _X0;
         // int _Y0;
@@ -120,7 +122,8 @@ void DecoratedImageFormatter<ImagePixelT>::write(
 template <typename ImagePixelT>
 Persistable* DecoratedImageFormatter<ImagePixelT>::read(
         Storage::Ptr storage,
-        lsst::daf::base::PropertySet::Ptr
+        lsst::daf::base::PropertySet::Ptr,
+        bool /* first */, bool* done
                                                        )
 {
     execTrace("DecoratedImageFormatter read start");
@@ -148,6 +151,7 @@ Persistable* DecoratedImageFormatter<ImagePixelT>::read(
         // int _X0;
         // int _Y0;
         execTrace("DecoratedImageFormatter read end");
+        *done = true;
         return ip;
     }
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,

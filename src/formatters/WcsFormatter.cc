@@ -60,7 +60,8 @@ afwForm::WcsFormatter::~WcsFormatter(void) {
 void afwForm::WcsFormatter::write(
     dafBase::Persistable const* persistable,
     dafPersist::Storage::Ptr storage,
-    dafBase::PropertySet::Ptr) {
+    dafBase::PropertySet::Ptr,
+    int /* iter */, int /* len */) {
     execTrace("WcsFormatter write start");
     afwImg::Wcs const* ip =
         dynamic_cast<afwImg::Wcs const*>(persistable);
@@ -79,7 +80,8 @@ void afwForm::WcsFormatter::write(
 
 dafBase::Persistable* afwForm::WcsFormatter::read(
     dafPersist::Storage::Ptr storage,
-    dafBase::PropertySet::Ptr additionalData) {
+    dafBase::PropertySet::Ptr additionalData,
+    bool /* first */, bool* /* done */) {
     execTrace("WcsFormatter read start");
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
         afwImg::Wcs* ip = new afwImg::Wcs;

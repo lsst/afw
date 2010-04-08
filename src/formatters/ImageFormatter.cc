@@ -95,7 +95,8 @@ template <typename ImagePixelT>
 void ImageFormatter<ImagePixelT>::write(
     Persistable const* persistable,
     Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr) {
+    lsst::daf::base::PropertySet::Ptr,
+    int /* iter */, int /* len */) {
     checkCast(persistable);
 
     execTrace("ImageFormatter write start");
@@ -133,8 +134,9 @@ void ImageFormatter<ImagePixelT>::write(
 }
 
 template <typename ImagePixelT>
-Persistable* ImageFormatter<ImagePixelT>::read(Storage::Ptr storage,
-                                               lsst::daf::base::PropertySet::Ptr additionalData) {
+Persistable* ImageFormatter<ImagePixelT>::read(
+    Storage::Ptr storage, lsst::daf::base::PropertySet::Ptr additionalData,
+    bool /* first */, bool* /* done */) {
     execTrace("ImageFormatter read start");
     if (typeid(*storage) == typeid(BoostStorage)) {
         execTrace("ImageFormatter read BoostStorage");

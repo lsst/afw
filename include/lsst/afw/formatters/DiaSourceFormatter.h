@@ -39,11 +39,13 @@ public:
     virtual void write(
         lsst::daf::base::Persistable const *,
         lsst::daf::persistence::Storage::Ptr,
-        lsst::daf::base::PropertySet::Ptr
+        lsst::daf::base::PropertySet::Ptr,
+        int iter, int len
     );
     virtual lsst::daf::base::Persistable* read(
         lsst::daf::persistence::Storage::Ptr,
-        lsst::daf::base::PropertySet::Ptr
+        lsst::daf::base::PropertySet::Ptr,
+        bool first, bool* done
     );
     virtual void update(
         lsst::daf::base::Persistable*,

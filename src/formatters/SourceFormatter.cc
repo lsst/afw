@@ -403,7 +403,8 @@ template void form::SourceVectorFormatter::delegateSerialize<boost::archive::tex
 void form::SourceVectorFormatter::write(
     Persistable const * persistable,
     Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr additionalData
+    lsst::daf::base::PropertySet::Ptr additionalData,
+    int /* iter */, int /* len */
 ) {
     if (persistable == 0) {
         throw LSST_EXCEPT(ex::InvalidParameterException, "No Persistable provided");
@@ -504,7 +505,8 @@ void form::SourceVectorFormatter::write(
  */
 Persistable* form::SourceVectorFormatter::read(
     Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr additionalData
+    lsst::daf::base::PropertySet::Ptr additionalData,
+    bool /* first */, bool* /* done */
 ) {   
     std::auto_ptr<PersistableSourceVector> p(new PersistableSourceVector);
     

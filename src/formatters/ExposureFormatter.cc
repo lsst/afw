@@ -145,7 +145,8 @@ template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
     dafBase::Persistable const* persistable,
     dafPersist::Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr additionalData) {
+    lsst::daf::base::PropertySet::Ptr additionalData,
+    int /* iter */, int /* len */) {
     execTrace("ExposureFormatter write start");
     afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT> const* ip =
         dynamic_cast<afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT> const*>(persistable);
@@ -266,7 +267,8 @@ void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 dafBase::Persistable* afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::read(
     dafPersist::Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr additionalData) {
+    lsst::daf::base::PropertySet::Ptr additionalData,
+    bool /* first */, bool* done) {
     execTrace("ExposureFormatter read start");
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
         execTrace("ExposureFormatter read BoostStorage");
@@ -292,6 +294,7 @@ dafBase::Persistable* afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, Varian
             new afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>(
                 fits->getPath(), hdu, box);
         execTrace("ExposureFormatter read end");
+        *done = true;
         return ip;
     } else if (typeid(*storage) == typeid(dafPersist::DbStorage)) {
         execTrace("ExposureFormatter read DbStorage");

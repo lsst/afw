@@ -81,7 +81,8 @@ template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
     Persistable const* persistable,
     Storage::Ptr storage,
-    lsst::daf::base::PropertySet::Ptr) {
+    lsst::daf::base::PropertySet::Ptr,
+    int /* iter */, int /* len */) {
     execTrace("MaskedImageFormatter write start");
     MaskedImage<ImagePixelT, MaskPixelT> const* ip =
         dynamic_cast<MaskedImage<ImagePixelT, MaskPixelT> const*>(persistable);
@@ -108,7 +109,8 @@ void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 Persistable* MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::read(
         Storage::Ptr storage,
-        lsst::daf::base::PropertySet::Ptr
+        lsst::daf::base::PropertySet::Ptr,
+        bool /* first */, bool* /* done */
                                                                                 )
 {
     execTrace("MaskedImageFormatter read start");
