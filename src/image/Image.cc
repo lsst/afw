@@ -110,7 +110,7 @@ image::ImageBase<PixelT>::ImageBase(
 /// Assignment operator.
 ///
 /// \note that this has the effect of making the lhs share pixels with the rhs which may
-/// not be what you intended;  to copy the pixels, use operator<<
+/// not be what you intended;  to copy the pixels, use operator<<=()
 ///
 /// \note this behaviour is required to make the swig interface work, otherwise I'd
 /// declare this function private
@@ -368,7 +368,7 @@ image::Image<PixelT>& image::Image<PixelT>::operator=(PixelT const rhs) {
 /// Assignment operator.
 ///
 /// \note that this has the effect of making the lhs share pixels with the rhs which may
-/// not be what you intended;  to copy the pixels, use operator<<=
+/// not be what you intended;  to copy the pixels, use operator<<=()
 ///
 /// \note this behaviour is required to make the swig interface work, otherwise I'd
 /// declare this function private
