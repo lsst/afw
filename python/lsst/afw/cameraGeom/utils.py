@@ -144,7 +144,7 @@ in particular that it has an entry ampSerial which is a single-element list, the
             if electronicCcdName in ("*", ccdId.getName()):
                 electronics["ccdName"] = electronicCcdName
                 for p in pol.getArray("Amp"):
-                    electronics[p.get("serial")] = p
+                    electronics[tuple(p.getArray("index"))] = p
                 break
     #
     # Actually build the Ccd
@@ -176,14 +176,14 @@ in particular that it has an entry ampSerial which is a single-element list, the
         if ampSerial0 is None:
             ampSerial0 = serial
 
-        Col, Row = ampPol.getArray("index")
+        Col, Row = index = tuple(ampPol.getArray("index"))
         c =  ampPol.get("readoutCorner")
 
         if Col not in range(nCol) or Row not in range(nRow):
             raise RuntimeError, ("Amp location %d, %d is not in 0..%d, 0..%d" % (Col, Row, nCol, nRow))
 
         try:
-            ePol = electronics[serial]
+            ePol = electronics[index]
             gain = ePol.get("gain")
             readNoise = ePol.get("readNoise")
             saturationLevel = ePol.get("saturationLevel")

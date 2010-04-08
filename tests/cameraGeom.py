@@ -318,7 +318,7 @@ class CameraGeomTestCase(unittest.TestCase):
         self.assertEqual(camera.getAllPixels().getWidth(), cameraInfo["width"])
         self.assertEqual(camera.getAllPixels().getHeight(), cameraInfo["height"])
 
-        for rx, ry, cx, cy, serial, cen in [(0, 0,     0,   0,   4,  (-3.12, -2.02)),
+        for rx, ry, cx, cy, serial, cen in [(0, 0,     0,   0,    4, (-3.12, -2.02)),
                                             (0,   0,   150, 250, 20, (-3.12,  0.00)),
                                             (600, 300, 0,   0,   52, ( 1.1,  -2.02)),
                                             (600, 300, 150, 250, 68, ( 1.1,  0.00)),

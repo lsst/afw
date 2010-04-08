@@ -382,12 +382,11 @@ definitions: {
                                             dictionary: {
                                                 target: Amp
                                                 definitions: {
-                                                    serial: {
+                                                    index: {
                                                         type: int
-                                                        description: "Raft's serial number"
-                                                        minOccurs: 0
-                                                        maxOccurs: 1
-                                                        default: -1
+                                                        description: "Location of Amp in CCD thought of as a grid of amplifiers"
+                                                        minOccurs: 2
+                                                        maxOccurs: 2
                                                     }
                                                     gain: {
                                                         type: double
