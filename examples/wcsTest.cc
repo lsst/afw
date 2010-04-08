@@ -65,8 +65,8 @@ int main(int argc, char **argv) {
     afwGeom::PointD minCoord = afwGeom::makePointD(1.0, 1.0);
     afwGeom::PointD xy = afwGeom::makePointD(mskdImage.getWidth(), mskdImage.getHeight());
 
-    afwCoord::Coord sky1 = *wcsPtr->pixelToSky(minCoord); // n.b. we're slicing to the base class here
-    afwCoord::Coord sky2 = *wcsPtr->pixelToSky(xy);
+    afwCoord::Coord const& sky1 = *wcsPtr->pixelToSky(minCoord);
+    afwCoord::Coord const& sky2 = *wcsPtr->pixelToSky(xy);
 
     std::cout << "ra, decl of " << inFilename << " at ("<< minCoord[0] << " " << minCoord[1] <<") = "
         << "ra: " << sky1[0] << " decl: " << sky1[1] << std::endl << std::endl;
