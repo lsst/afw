@@ -20,9 +20,8 @@ afwImg::Wcs::Ptr afwImg::makeWcs(PropertySet::Ptr fitsMetadata){
     std::string ctype1;
     if( fitsMetadata->exists("CTYPE1")) {
         ctype1 = fitsMetadata->getAsString("CTYPE1");
-    }
-    else {
-        throw LSST_EXCEPT(except::RuntimeErrorException, "No CTYPE1 keyword found. Can't determine coordinate system");
+    } else {
+        return afwImg::Wcs::Ptr(new afwImg::Wcs());
     }
     
     if( ctype1.substr(5, 3) == "TAN") {
