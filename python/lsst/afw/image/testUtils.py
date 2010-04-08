@@ -116,7 +116,7 @@ def setMaskedImageFromArrays(maskedImage, imMaskVarArrays):
         for col in range(maskedImage.getWidth()):
             im.set(col, row, imArr[col, row])
             if mask:
-                mask.set(col, row, maskArr[col, row])
+                mask.set(col, row, int(maskArr[col, row]))
             if var:
                 var.set(col, row, varArr[col, row])
 

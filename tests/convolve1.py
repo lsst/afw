@@ -229,7 +229,7 @@ class ConvolveTestCase(unittest.TestCase):
     
                 if display and False:
                     refMaskedImage = imTestUtils.maskedImageFromArrays(refCnvImMaskVarArr)
-                    ds9.mtv(displayUtils.makeMosaic(self.maskedImage, refMaskedImage, self.cnvMaskedImage),
+                    ds9.mtv(displayUtils.Mosaic().makeMosaic([self.maskedImage, refMaskedImage, self.cnvMaskedImage]),
                         frame=0)
                     if False:
                         for (x, y) in ((0, 0), (1, 0), (0, 1), (50, 50)):
@@ -380,6 +380,9 @@ class ConvolveTestCase(unittest.TestCase):
                     for activeRow in range(kRows):
                         kernel = afwMath.DeltaFunctionKernel(kCols, kRows,
                             afwImage.PointI(activeCol, activeRow))
+                        if display and False:
+                            kim = afwImage.ImageD(kCols, kRows); kernel.computeImage(kim, False)
+                            ds9.mtv(kim, frame=1)
 
                         self.runStdTest(kernel, kernelDescr="Delta Function Kernel")
 
