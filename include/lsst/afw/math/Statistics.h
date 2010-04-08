@@ -47,7 +47,8 @@ enum Property {
                            ///<  (N set in StatisticsControl, default=3)
     MIN = 0x400,           ///< estimate sample minimum
     MAX = 0x800,           ///< estimate sample maximum
-    SUM = 0x1000           ///< find sum of pixels in the image
+    SUM = 0x1000,          ///< find sum of pixels in the image
+    MEANSQUARE = 0x2000    ///< find mean value of square of pixel values
 };
 
     
