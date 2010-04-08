@@ -79,7 +79,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     lsst::daf::data::LsstBase(typeid(this)),
     _image(), _mask(), _variance() {
 
-    // looks like an MEF file
+    // Does it looks like an MEF file?
     bool isMef = boost::regex_search(baseName, boost::regex(image::detail::fitsFileRE)); 
     //
     // If foo.fits doesn't exist, revert to old behaviour and read foo.fits_{img,msk,var}.fits;
@@ -528,6 +528,16 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
     if (writeMef ||
         // write an MEF if they call it *.fits"
         boost::regex_search(baseName, boost::regex(image::detail::fitsFileRE))) { 
+
+        bool const isCompressed =
+            boost::regex_search(baseName, boost::regex(image::detail::compressedFileRE));
+        
+        if (isCompressed) {
+            // cfitsio refuses to write the 2nd HDU of the compressed MEF
+            throw LSST_EXCEPT(lsst::pex::exceptions::IoErrorException,
+                              "I don't know how to write a compressed MEF: " + baseName);
+        }
+
         _image->writeFits(baseName, metadata, mode);
 
         metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet());

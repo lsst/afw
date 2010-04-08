@@ -31,7 +31,9 @@ namespace image {
         /// A class used to identify classes that represent MaskedImage pixels
         struct MaskedImagePixel_tag { };
 
-        std::string const fitsFileRE = "\\.fits$"; /// regexp to identify when MaskedImages should be written as MEF
+        std::string const fitsFileRE = "\\.fits(\\.gz)?$"; /// regexp to identify when MaskedImages should
+                                                           /// be written as MEFs
+        std::string const compressedFileRE = "(\\.gz)$";   /// regexp to identify compressed files
     }
 }}}
 
