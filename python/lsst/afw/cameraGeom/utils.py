@@ -256,7 +256,28 @@ particular that it has an entry ampSerial which is a single-element list, the am
     else:
         ccdInfo = {"ampSerial" : raftInfo.get("ampSerial", [0])}
 
-    raftPol = geomPolicy.get("Raft")
+    if raftId:
+        raftPol = None
+        for p in geomPolicy.getArray("Raft"):
+            if p.exists("name"):        # Build an Id from available information
+                if p.exists("serial"):
+                    rid = cameraGeom.Id(p.get("serial"), p.get("name"))
+                else:
+                    rid = cameraGeom.Id(p.get("name"))
+            elif p.exists("serial"):
+                rid = cameraGeom.Id(p.get("serial"))
+            else:
+                raise RuntimeError, "Please provide a raft name, a raft serial, or both"
+                    
+            if rid == raftId:
+                raftPol = p
+                break
+
+        if not raftPol:
+            raise RuntimeError, ("I can't find Raft %s" % raftId)            
+    else:
+        raftPol = geomPolicy.get("Raft")
+        
     nCol = raftPol.get("nCol")
     nRow = raftPol.get("nRow")
     if not raftId:
@@ -714,9 +735,10 @@ def findCcd(parent, id):
             if ccd:
                 return ccd
     elif isinstance(parent, cameraGeom.Raft):
-        d = parent.findDetector(id)
-        if d:
-            return cameraGeom.cast_Ccd(d)
+        try:
+            return cameraGeom.cast_Ccd(parent.findDetector(id))
+        except:
+            pass
     else:
         if parent.getId() == id:
             return cameraGeom.cast_Ccd(parent)
