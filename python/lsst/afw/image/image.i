@@ -145,22 +145,40 @@ SWIG_SHARED_PTR_DERIVED(TanWcs, lsst::daf::data::LsstBase, lsst::afw::image::Tan
 %template(vectorBBox) std::vector<lsst::afw::image::BBox>;         
 
 %extend lsst::afw::image::Image<boost::uint16_t> {
-    %newobject convertFloat;
-    lsst::afw::image::Image<float> convertFloat() {
+    %newobject convertF;
+    lsst::afw::image::Image<float> convertF() {
        return lsst::afw::image::Image<float>(*self, true);
+    }
+    %pythoncode {
+    def convertFloat(self, *args):
+        """Alias for convertF"""
+
+        return self.convertF(*args)
     }
 }
 
 %extend lsst::afw::image::Image<double> {
-    %newobject convertFloat;
-    lsst::afw::image::Image<float> convertFloat() {
+    %newobject convertF;
+    lsst::afw::image::Image<float> convertF() {
        return lsst::afw::image::Image<float>(*self, true);
+    }
+    %pythoncode {
+    def convertFloat(self, *args):
+        """Alias for convertF"""
+
+        return self.convertF(*args)
     }
 }
 
 %extend lsst::afw::image::Image<float> {
-   %newobject convertU16;
-   lsst::afw::image::Image<boost::uint16_t> convertU16() {
-       return lsst::afw::image::Image<boost::uint16_t>(*self, true);
-   }
+    %newobject convertU;
+    lsst::afw::image::Image<boost::uint16_t> convertU() {
+        return lsst::afw::image::Image<boost::uint16_t>(*self, true);
+    }
+    %pythoncode {
+    def convertU16(self, *args):
+        """Alias for convertU"""
+
+        return self.convertU(*args)
+    }
 }

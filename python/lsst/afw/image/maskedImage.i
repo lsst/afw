@@ -144,10 +144,31 @@ SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::daf::data::LsstBase, lsst::afw::image:
 %maskedImage(MaskedImage, U, boost::uint16_t,  lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
 
 %extend lsst::afw::image::MaskedImage<float, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> {
-    %newobject convertDouble;
+    %newobject convertD;
      lsst::afw::image::MaskedImage<double,
-                                   lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> convertDouble() {
+                                   lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> convertD() {
          return lsst::afw::image::MaskedImage<double,
                                             lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>(*self, true);
+    }
+    %pythoncode {
+    def convertDouble(self, *args):
+        """Alias for convertD"""
+
+        return self.convertD(*args)
+    }
+}
+
+%extend lsst::afw::image::MaskedImage<boost::uint16_t, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> {
+    %newobject convertF;
+     lsst::afw::image::MaskedImage<float,
+                                   lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> convertF() {
+         return lsst::afw::image::MaskedImage<float,
+                                            lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>(*self, true);
+    }
+    %pythoncode {
+    def convertFloat(self, *args):
+        """Alias for convertF"""
+
+        return self.convertF(*args)
     }
 }

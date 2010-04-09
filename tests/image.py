@@ -164,8 +164,8 @@ class ImageTestCase(unittest.TestCase):
         self.assertEqual(simage.get(0, 0), self.val1 + 2)
 
     def testGeneralisedCopyConstructors(self):
-        imageU = self.image1.convertU16() # these are generalised (templated) copy constructors in C++
-        imageF = imageU.convertFloat()
+        imageU = self.image1.convertU() # these are generalised (templated) copy constructors in C++
+        imageF = imageU.convertF()
 
         self.assertEqual(imageU.get(0, 0), self.val1)
         self.assertEqual(imageF.get(0, 0), self.val1)
