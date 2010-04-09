@@ -55,6 +55,23 @@ namespace image {
 
         Exposure(Exposure const &src, BBox const& bbox, bool const deep=false);
 
+        /// generalised copy constructor; defined here in the header so that the compiler can instantiate
+        /// N(N-1)/2 conversions between N ImageBase types.
+        ///
+        /// We only support converting the Image part
+        template<typename OtherPixelT>
+        Exposure(Exposure<OtherPixelT, MaskT, VarianceT> const& rhs, //!< Input Exposure
+                 const bool deep        //!< Must be true; needed to disambiguate
+                ) :
+            lsst::daf::data::LsstBase(typeid(this)),
+            _maskedImage(rhs.getMaskedImage(), deep),
+            _wcs(new lsst::afw::image::Wcs(*rhs.getWcs())),
+            _detector(rhs.getDetector()),
+            _filter(rhs.getFilter())
+        {
+            setMetadata(rhs.getMetadata()->deepCopy());
+        }
+        
         virtual ~Exposure(); 
 
         // Get Members

@@ -285,6 +285,17 @@ SWIG_SHARED_PTR_DERIVED(Exposure##TYPE, lsst::daf::data::LsstBase, lsst::afw::im
 %exposure(F, float);
 %exposure(D, double);
 
+
+%extend lsst::afw::image::Exposure<boost::uint16_t, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> {
+    %newobject convertF;
+    lsst::afw::image::Exposure<float,
+         lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> convertF()
+    {
+        return lsst::afw::image::Exposure<float,
+            lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>(*self, true);
+    }
+}
+
 /************************************************************************************************************/
 
 SWIG_SHARED_PTR(DefectPtr, lsst::afw::image::DefectBase);

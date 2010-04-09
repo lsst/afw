@@ -113,6 +113,10 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &src, ///<
     _detector(src._detector),
     _filter(src._filter)    
 {
+/*
+  * N.b. You'll need to update the generalised copy constructor in Exposure.h when you add new data members
+  * --- this note is here as you'll be making the same changes here!
+  */
     setMetadata(deep ? src.getMetadata()->deepCopy() : src.getMetadata());
 }
 

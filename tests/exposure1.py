@@ -291,6 +291,21 @@ class ExposureTestCase(unittest.TestCase):
                     afwImage.indexToPosition(ySubInd),
                 )
 
+    def testCopyExposure(self):
+        """Convert an Exposure from one type to another"""
+
+        exposureU = afwImage.ExposureU(inFilePathSmall)
+        exposureU.setWcs(self.wcs)
+        exposureU.setDetector(cameraGeom.Detector(cameraGeom.Id(666)))
+        exposureU.setFilter(afwImage.Filter("g"))
+
+        exposureF = exposureU.convertF()
+
+        self.assertEqual(exposureU.getDetector(), exposureF.getDetector())
+        self.assertEqual(exposureU.getFilter().getName(), exposureF.getFilter().getName())
+        xy = afwGeom.makePointD(0, 0)
+        self.assertEqual(exposureU.getWcs().pixelToSky(xy)[0], exposureF.getWcs().pixelToSky(xy)[0])
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
