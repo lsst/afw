@@ -32,13 +32,14 @@ if not dataDir:
 InputMaskedImageName = "871034p_1_MI"
 InputMaskedImageNameSmall = "small_MI"
 InputImageNameSmall = "small"
-OutputMaskedImageName = "871034p_1_MInew"
+OutputMaskedImageName = "871034p_1_MInew.fits"
 
 currDir = os.path.abspath(os.path.dirname(__file__))
 inFilePath = os.path.join(dataDir, InputMaskedImageName)
 inFilePathSmall = os.path.join(dataDir, InputMaskedImageNameSmall)
 inFilePathSmallImage = os.path.join(dataDir, InputImageNameSmall)
-outFilePath = OutputMaskedImageName
+outFile = OutputMaskedImageName
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class ExposureTestCase(unittest.TestCase):
@@ -235,20 +236,19 @@ class ExposureTestCase(unittest.TestCase):
         
         for i in range(2):
             self.assertAlmostEqual(parentPos[i], subExpPos[i], 9, "Wcs in sub image has changed")
-            
-
-
-        
 
     def testReadWriteFits(self):
         """Test readFits and writeFits.
         """
         # This should pass without an exception
         mainExposure = afwImage.ExposureF(inFilePathSmall)
+        mainExposure.setDetector(cameraGeom.Detector(cameraGeom.Id(666)))
         
         subBBox = afwImage.BBox(afwImage.PointI(10, 10), 40, 50)
         subExposure = mainExposure.Factory(mainExposure, subBBox)
         self.checkWcs(mainExposure, subExposure)
+        det = subExposure.getDetector()
+        self.assertTrue(det)
         
         hdu = 0
         subExposure = afwImage.ExposureF(inFilePathSmall, hdu, subBBox)
@@ -262,11 +262,9 @@ class ExposureTestCase(unittest.TestCase):
         utilsTests.assertRaisesLsstCpp(self, pexExcept.NotFoundException, getExposure)
         
         # Make sure we can write without an exception
-        mainExposure.writeFits(outFilePath)
+        mainExposure.writeFits(outFile)
 
-        os.remove(afwImage.MaskedImageF.imageFileName(outFilePath))
-        os.remove(afwImage.MaskedImageF.maskFileName(outFilePath))
-        os.remove(afwImage.MaskedImageF.varianceFileName(outFilePath))
+        os.remove(outFile)
 
     def checkWcs(self, parentExposure, subExposure):
         """Compare WCS at corner points of a sub-exposure and its parent exposure
