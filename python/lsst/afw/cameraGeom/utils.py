@@ -256,7 +256,7 @@ particular that it has an entry ampSerial which is a single-element list, the am
     else:
         ccdInfo = {"ampSerial" : raftInfo.get("ampSerial", [0])}
 
-    if raftId:
+    if raftId and geomPolicy.isArray("Raft"):
         raftPol = None
         for p in geomPolicy.getArray("Raft"):
             if p.exists("name"):        # Build an Id from available information
