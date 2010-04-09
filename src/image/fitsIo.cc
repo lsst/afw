@@ -136,7 +136,17 @@ void appendKey(lsst::afw::image::cfitsio::fitsfile* fd, std::string const &keyWo
 
             fits_write_key(fd, TINT, keyWordChars, &tmp, keyCommentChars, &status);
         }
+    } else if (valueType == typeid(long)) {
+        if (metadata->isArray(keyWord)) {
+            std::vector<long> tmp = metadata->getArray<long>(keyWord);
+            for (unsigned long i = 0; i != tmp.size(); ++i) {
+                fits_write_key(fd, TLONG, keyWordChars, &tmp[i], keyCommentChars, &status);
+            }
+        } else {
+            long tmp = metadata->get<long>(keyWord);
 
+            fits_write_key(fd, TLONG, keyWordChars, &tmp, keyCommentChars, &status);
+        }
     } else if (valueType == typeid(double)) {
         if (metadata->isArray(keyWord)) {
             std::vector<double> tmp = metadata->getArray<double>(keyWord);
