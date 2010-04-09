@@ -244,6 +244,11 @@ SWIG_SHARED_PTR(TanWcs, lsst::afw::image::TanWcs);
 
 /************************************************************************************************************/
 
+#if !defined(CAMERA_GEOM_LIB_I)
+%import "lsst/afw/cameraGeom/cameraGeomLib.i"
+#endif
+
+/************************************************************************************************************/
 %{
 #include "lsst/afw/image/Exposure.h"
 %}
@@ -289,8 +294,4 @@ SWIG_SHARED_PTR(DefectPtr, lsst::afw::image::DefectBase);
 %template(DefectSet) std::vector<boost::shared_ptr<lsst::afw::image::DefectBase> >;
 
 /************************************************************************************************************/
-
-#if !defined(CAMERA_GEOM_LIB_I)
-%import "lsst/afw/cameraGeom/cameraGeomLib.i"
-#endif
 
