@@ -60,9 +60,11 @@ class MaskedImageTestCase(unittest.TestCase):
         #
         self.function = afwMath.PolynomialFunction2D(2)
         self.function.setParameters(range(self.function.getNParameters()))
+
     def tearDown(self):
         del self.mimage
         del self.mimage2
+        del self.function
 
     def testSetGetValues(self):
         self.assertEqual(self.mimage.get(0, 0), (self.imgVal1, self.EDGE, self.varVal1))

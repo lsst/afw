@@ -70,7 +70,7 @@ class CameraGeomTestCase(unittest.TestCase):
         self.geomPolicy.mergeDefaults(defPolicy.getDictionary())
 
     def tearDown(self):
-        pass
+        del self.geomPolicy
 
     def testDictionary(self):
         """Test the camera geometry dictionary"""

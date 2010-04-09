@@ -43,6 +43,7 @@ class ImageTestCase(unittest.TestCase):
     def tearDown(self):
         del self.image1
         del self.image2
+        del self.function
 
     def testInitializeImages(self):
         val = 666

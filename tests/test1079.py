@@ -51,6 +51,10 @@ class SavingSubImagesTest(unittest.TestCase):
         self.testPositions.append(afwGeom.makePointD(80, 80))        
         self.testPositions.append(afwGeom.makePointD(256,256))        
 
+    def tearDown(self):
+        del self.parent
+        del self.oParent
+        del self.testPositions
 
     def testInvarianceOfCrpix1(self):
         """Test that crpix is the same for parent and sub-image. Also tests that llc of sub-image
@@ -213,11 +217,6 @@ class SavingSubImagesTest(unittest.TestCase):
         self.assertAlmostEqual(fitsCrpix[0] - hdr.get("LTV1"), parentCrpix[0], 6, "CRPIX1 saved wrong")
         self.assertAlmostEqual(fitsCrpix[1] - hdr.get("LTV2"), parentCrpix[1], 6, "CRPIX2 saved wrong")
         
-        
-    def tearDown(self):
-        pass
-        
-
 #####
 
 def suite():
