@@ -18,6 +18,7 @@ import lsst.pex.logging as logging
 import lsst.pex.exceptions as pexExcept
 import lsst.pex.policy as pexPolicy
 import lsst.afw.image as afwImage
+import lsst.afw.image.utils as imageUtils
 import lsst.afw.math as afwMath
 import lsst.afw.detection as afwDetect
 import lsst.afw.detection.utils as afwDetectUtils
@@ -68,20 +69,10 @@ class FilterTestCase(unittest.TestCase):
         #
         # Start by forgetting that we may already have defined filters
         #
-        afwImage.Filter.reset()
-        afwImage.FilterProperty.reset()
-        #
-        # Read the policy file and define the filters
-        #
-        policyFile = pexPolicy.DefaultPolicyFile("afw", "FilterDictionary.paf", "policy")
-        defPolicy = pexPolicy.Policy.createPolicy(policyFile, policyFile.getRepositoryPath(), True)
-
         filterPolicy = pexPolicy.Policy.createPolicy(
             os.path.join(eups.productDir("afw"), "tests", "SdssFilters.paf"), True)
-        filterPolicy.mergeDefaults(defPolicy.getDictionary())
 
-        for p in filterPolicy.getArray("Filter"):
-            afwImage.Filter.define(afwImage.FilterProperty(p.get("name"), p))
+        imageUtils.defineFiltersFromPolicy(filterPolicy, reset=True)
 
         self.g_lambdaEff = [p.get("lambdaEff") for p in filterPolicy.getArray("Filter")
                             if p.get("name") == "g"][0] # used for tests
