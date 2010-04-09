@@ -56,6 +56,11 @@ SWIG_SHARED_PTR_DERIVED(CameraPtr, lsst::afw::cameraGeom::Detector, lsst::afw::c
 %include "lsst/afw/cameraGeom/Camera.h"
 
 %inline %{
+    lsst::afw::cameraGeom::Amp::Ptr
+    cast_Amp(lsst::afw::cameraGeom::Detector::Ptr detector) {
+        return boost::shared_dynamic_cast<lsst::afw::cameraGeom::Amp>(detector);
+    }
+
     lsst::afw::cameraGeom::Ccd::Ptr
     cast_Ccd(lsst::afw::cameraGeom::Detector::Ptr detector) {
         return boost::shared_dynamic_cast<lsst::afw::cameraGeom::Ccd>(detector);
