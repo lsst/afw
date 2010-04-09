@@ -347,6 +347,11 @@ class CameraGeomTestCase(unittest.TestCase):
             
             self.assertEqual(camera.getPixelFromPosition(pos), pix)
             self.assertEqual(camera.getPositionFromPixel(pix), pos)
+        # Check that we can find an Amp in the bowels of the camera
+        ccdName = "C:0,0"
+        amp = cameraGeomUtils.findAmp(camera, cameraGeom.Id(ccdName), 1, 2)
+        self.assertEqual(amp.getId().getName(), "ID6")
+        self.assertEqual(amp.getParent().getId().getName(), ccdName)
 
     def testDefectBase(self):
         """Test DefectBases"""

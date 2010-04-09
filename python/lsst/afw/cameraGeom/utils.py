@@ -695,6 +695,16 @@ def describeCamera(camera):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+def findAmp(parent, ccdId, ix, iy):
+    """Find the Amp with the specified Id within the composite"""
+
+    ccd = findCcd(parent, ccdId)
+    for amp in ccd:
+        if amp.getId().getIndex() == (ix, iy):
+            return amp
+
+    return None
+
 def findCcd(parent, id):
     """Find the Ccd with the specified Id within the composite"""
 
