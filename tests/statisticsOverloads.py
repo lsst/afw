@@ -51,19 +51,18 @@ class StatisticsTestCase(unittest.TestCase):
         self.imgD = afwImage.ImageD(self.nRow, self.nCol, self.val)
         self.vecD = afwMath.vectorD(self.nRow*self.nCol, self.val)
 
-
         self.imgList  = [self.imgI,  self.imgF,  self.imgD]
         self.mimgList = [self.mimgI, self.mimgF, self.mimgD]
         self.vecList  = [self.vecI,  self.vecF,  self.vecD]
         
     def tearDown(self):
-        for img in self.imgList:
-            del img
-        for mimg in self.mimgList:
-            del mimg
-        for vec in self.vecList:
-            del vec
+        del self.mimgI; del self.mimgF; del self.mimgD
+        del self.imgI; del self.imgF; del self.imgD
+        del self.vecI; del self.vecF; del self.vecD
 
+        del self.mimgList
+        del self.imgList
+        del self.vecList
 
     # The guts of the testing: grab a mean, stddev, and sum for whatever you're called with
     def compareMakeStatistics(self, image, n):
