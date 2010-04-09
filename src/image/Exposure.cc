@@ -110,8 +110,8 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &src, ///<
     lsst::daf::data::LsstBase(typeid(this)),
     _maskedImage(src.getMaskedImage(), bbox, deep),
     _wcs(new afwImage::Wcs(*src._wcs)),
-    _detector(),
-    _filter()    
+    _detector(src._detector),
+    _filter(src._filter)    
 {
     setMetadata(deep ? src.getMetadata()->deepCopy() : src.getMetadata());
 }
@@ -292,6 +292,10 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(
     outputMetadata->set("LTV2", -1*mi.getY0());
 
     outputMetadata->set("FILTER", _filter.getName());
+    if (_detector) {
+        outputMetadata->set("DETNAME", _detector->getId().getName());
+        outputMetadata->set("DETSER", _detector->getId().getSerial());
+    }
         
     _maskedImage.writeFits(expOutFile, outputMetadata);
 }
