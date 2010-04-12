@@ -72,33 +72,13 @@ class WCSTestCaseSDSS(unittest.TestCase):
         self.assertAlmostEqual(xy.getX(), xy2.getX())
         self.assertAlmostEqual(xy.getY(), xy2.getY())
 
-        if False:
-            #This part of the test causes an exception. The input SDSS image
-            #image treats DEC as its first coordinate and RA as its second
-            #coordinate (CRVAL1, 2; the opposition of how things are usually
-            #done. As a result, if you pass ra/dec into wcs.skyToPixel()
-            #wcslib returns an error because it tries to solve for dec ra
-            #which isn't legal.
-            #
-            #As I'm not sure whether we should be treating this header
-            #as legally or illegally formatted, I'm commenting it out
-            #for the moment.
-            #
-            #The same problem affects the test at the start of the function
-            #but as we don't check the intermediate raDec value we get
-            #away with it
-
-            #This line causes an exception to be raised
-            raDec = afwGeom.makePointD(245.167400, +19.1976583)
-            #This doesn't
-            #raDec = afwGeom.makePointD(+19.1976583, 245.167400)
-
-            xy = self.wcs.skyToPixel(raDec)
-            print xy
-            raDec2 = self.wcs.pixelToSky(xy)
-
-            self.assertAlmostEqual(raDec.getX(), raDec2.getX())
-            self.assertAlmostEqual(raDec.getY(), raDec2.getY())
+        raDec = afwCoord.makeCoord(afwCoord.ICRS, 245.167400, +19.1976583)
+        
+        xy = self.wcs.skyToPixel(raDec)
+        raDec2 = self.wcs.pixelToSky(xy)
+        
+        self.assertAlmostEqual(raDec[0], raDec2[0])
+        self.assertAlmostEqual(raDec[1], raDec2[1])
 
     def test_RaTan_DecTan(self):
         """Check the RA---TAN, DEC--TAN WCS conversion"""
