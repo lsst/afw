@@ -65,14 +65,19 @@ int main(int argc, char **argv) {
     afwGeom::PointD minCoord = afwGeom::makePointD(1.0, 1.0);
     afwGeom::PointD xy = afwGeom::makePointD(mskdImage.getWidth(), mskdImage.getHeight());
 
-    afwCoord::Coord const& sky1 = *wcsPtr->pixelToSky(minCoord);
-    afwCoord::Coord const& sky2 = *wcsPtr->pixelToSky(xy);
+    afwCoord::Coord::ConstPtr sky1 = wcsPtr->pixelToSky(minCoord);
+    afwCoord::Coord::ConstPtr sky2 = wcsPtr->pixelToSky(xy);
+
+    double miRa1 = sky1->getLongitude(afwCoord::DEGREES);
+    double miDecl1 = sky1->getLatitude(afwCoord::DEGREES);
+    double miRa2 = sky2->getLongitude(afwCoord::DEGREES);
+    double miDecl2 = sky2->getLatitude(afwCoord::DEGREES);
 
     std::cout << "ra, decl of " << inFilename << " at ("<< minCoord[0] << " " << minCoord[1] <<") = "
-        << "ra: " << sky1[0] << " decl: " << sky1[1] << std::endl << std::endl;
+              << "ra: " << miRa1 << " decl: " << miDecl1 << std::endl << std::endl;
  
     std::cout << "ra, decl of " << inFilename << " at ("<< xy[0] << " " << xy[1]<<") = "
-        << "ra: " << sky2[0] << " decl: " << sky2[1] << std::endl << std::endl;
+        << "ra: " << miRa2 << " decl: " << miDecl2 << std::endl << std::endl;
 
     double pixArea0 = wcsPtr->pixArea(minCoord);
     double pixArea1 = wcsPtr->pixArea(xy);
@@ -80,11 +85,6 @@ int main(int argc, char **argv) {
     std::cout << "pixel areas: " << pixArea0 << " " << pixArea1 << std::endl;
 
     // Testing input ra, dec values using output from above for now
-
-    double miRa1 = sky1[0];
-    double miDecl1 = sky1[1];
-    double miRa2 = sky2[0];
-    double miDecl2 = sky2[1];
 
     afwGeom::Point2D pix1 = wcsPtr->skyToPixel(miRa1, miDecl1);
     afwGeom::Point2D pix2 = wcsPtr->skyToPixel(miRa2, miDecl2);
@@ -95,8 +95,8 @@ int main(int argc, char **argv) {
     std::cout << "col, row of " << inFilename << " at ("<< miRa2 << " " << miDecl2<<") = "
         << "col: " << pix2[0] << " row: " << pix2[1] << std::endl << std::endl;
 
-    afwCoord::Coord::Ptr raDecl1 = makeCoord(afwCoord::FK5, sky1[0], sky1[1]);
-    afwCoord::Coord::Ptr raDecl2 = makeCoord(afwCoord::FK5, sky2[0], sky2[1]);
+    afwCoord::Coord::ConstPtr raDecl1 = makeCoord(afwCoord::FK5, miRa1, miDecl1);
+    afwCoord::Coord::ConstPtr raDecl2 = makeCoord(afwCoord::FK5, miRa2, miDecl2);
 
     afwGeom::Point2D pix3 = wcsPtr->skyToPixel(raDecl1);
     afwGeom::Point2D pix4 = wcsPtr->skyToPixel(raDecl2);
