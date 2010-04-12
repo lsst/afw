@@ -491,7 +491,7 @@ double Wcs::pixArea(GeomPoint pix00) const {
 
 ///\brief Convert from sky coordinates (e.g ra/dec) to pixel positions.
 ///
-GeomPoint Wcs::skyToPixel(const CoordPtr coord) const {
+GeomPoint Wcs::skyToPixel(afwCoord::Coord::ConstPtr coord) const {
 
     GeomPoint const sky = convertCoordToSky(coord);
     return skyToPixel(sky[0], sky[1]);
@@ -501,7 +501,7 @@ GeomPoint Wcs::skyToPixel(const CoordPtr coord) const {
 ///Given a Coord (as a shared pointer), return the sky position in the correct coordinate system
 ///for this Wcs. The first element of the pair is the coordinate value corresponding to ctype1
 ///and the second element corresponds to ctype2.
-GeomPoint Wcs::convertCoordToSky(lsst::afw::coord::Coord::Ptr coord) const {
+GeomPoint Wcs::convertCoordToSky(lsst::afw::coord::Coord::ConstPtr coord) const {
     //Construct a coord object of the correct type
     std::string type(_wcsInfo->ctype[0], 4);
     std::string radesys(_wcsInfo->radesys);

@@ -106,7 +106,7 @@ namespace image {
         virtual lsst::afw::coord::Coord::Ptr pixelToSky(const lsst::afw::geom::PointD pixel) const;
         
         virtual lsst::afw::geom::PointD skyToPixel(double sky1, double sky2) const;
-        virtual lsst::afw::geom::PointD skyToPixel(const lsst::afw::coord::Coord::Ptr coord) const;
+        virtual lsst::afw::geom::PointD skyToPixel(lsst::afw::coord::Coord::ConstPtr coord) const;
 
         lsst::afw::geom::LinearTransform getLinearTransform() const;
         virtual lsst::afw::geom::AffineTransform linearizeAt(lsst::afw::geom::PointD const & pix) const;
@@ -134,7 +134,7 @@ namespace image {
         Wcs(lsst::daf::base::PropertySet::Ptr const fitsMetadata);
 
         lsst::afw::coord::Coord::Ptr makeCorrectCoord(double sky0, double sky1) const;
-        lsst::afw::geom::PointD convertCoordToSky(lsst::afw::coord::Coord::Ptr const coord) const;
+        lsst::afw::geom::PointD convertCoordToSky(lsst::afw::coord::Coord::ConstPtr coord) const;
         
         struct wcsprm* _wcsInfo;
         int _nWcsInfo;
