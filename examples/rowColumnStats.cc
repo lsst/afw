@@ -9,13 +9,13 @@
 
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/Stack.h"
-#include "lsst/afw/image/Slice.h"
+#include "lsst/afw/image/ImageSlice.h"
 
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
 
 typedef image::Image<float> ImageF;
-typedef image::Slice<float> SliceF;
+typedef image::ImageSlice<float> ImageSliceF;
 typedef image::MaskedImage<float> MImageF;
 typedef std::vector<float> VecF;
 typedef boost::shared_ptr<VecF> VecFPtr;
@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
     MImageF::Ptr imgProjectCol = math::statisticsStack(*img, math::MEAN, 'x');
     MImageF::Ptr imgProjectRow = math::statisticsStack(*img, math::MEAN, 'y');
 
-    SliceF slc = SliceF(*(imgProjectCol->getImage()));
+    ImageSliceF slc = ImageSliceF(*(imgProjectCol->getImage()));
 
     ImageF::Ptr opColPlus(new ImageF(*img, true));
     *opColPlus += slc;
@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
     ImageF::Ptr opColDiv   = *img / slc;
 
     
-    SliceF rowSlice = SliceF(*(imgProjectRow->getImage()));
+    ImageSliceF rowSlice = ImageSliceF(*(imgProjectRow->getImage()));
     std::vector<ImageF::Ptr> rows;
     rows.push_back(*img + rowSlice);
     rows.push_back(*img - rowSlice);

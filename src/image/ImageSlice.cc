@@ -10,7 +10,7 @@
 #include "boost/shared_ptr.hpp"
 
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/image/Slice.h"
+#include "lsst/afw/image/ImageSlice.h"
 
 namespace afwImage      = lsst::afw::image;
 namespace afwMath       = lsst::afw::math;
@@ -18,7 +18,7 @@ namespace ex            = lsst::pex::exceptions;
 
 
 template<typename PixelT>
-afwImage::Slice<PixelT>::Slice(
+afwImage::ImageSlice<PixelT>::ImageSlice(
                                image::Image<PixelT> &img
                               ) : 
     afwImage::Image<PixelT>(img),
@@ -54,62 +54,62 @@ afwImage::Slice<PixelT>::Slice(
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // overload +
 template<typename PixelT>    
-typename afwImage::Image<PixelT>::Ptr afwImage::operator+(afwImage::Image<PixelT> &img, afwImage::Slice<PixelT> &slc) {
+typename afwImage::Image<PixelT>::Ptr afwImage::operator+(afwImage::Image<PixelT> &img, afwImage::ImageSlice<PixelT> &slc) {
     typename afwImage::Image<PixelT>::Ptr retImg(new afwImage::Image<PixelT>(img, true));
     *retImg += slc;
     return retImg;
 }
 template<typename PixelT>    
-typename afwImage::Image<PixelT>::Ptr afwImage::operator+(afwImage::Slice<PixelT> &slc, afwImage::Image<PixelT> &img) {
+typename afwImage::Image<PixelT>::Ptr afwImage::operator+(afwImage::ImageSlice<PixelT> &slc, afwImage::Image<PixelT> &img) {
     return afwImage::operator+(img, slc);
 }
 template<typename PixelT>    
-void afwImage::operator+=(afwImage::Image<PixelT> &img, afwImage::Slice<PixelT> &slc) {
-    afwImage::details::operate<afwImage::details::Plus<PixelT> >(img, slc, slc.getSliceType());
+void afwImage::operator+=(afwImage::Image<PixelT> &img, afwImage::ImageSlice<PixelT> &slc) {
+    afwImage::details::operate<afwImage::details::Plus<PixelT> >(img, slc, slc.getImageSliceType());
 }
 
 // -----------------------------------------------------------------
 // overload -
 template<typename PixelT>    
-typename afwImage::Image<PixelT>::Ptr afwImage::operator-(afwImage::Image<PixelT> &img, afwImage::Slice<PixelT> &slc) {
+typename afwImage::Image<PixelT>::Ptr afwImage::operator-(afwImage::Image<PixelT> &img, afwImage::ImageSlice<PixelT> &slc) {
     typename afwImage::Image<PixelT>::Ptr retImg(new afwImage::Image<PixelT>(img, true));
     *retImg -= slc;
     return retImg;
 }
 template<typename PixelT>    
-void afwImage::operator-=(afwImage::Image<PixelT> &img, afwImage::Slice<PixelT> &slc) {
-    details::operate<details::Minus<PixelT> >(img, slc, slc.getSliceType());
+void afwImage::operator-=(afwImage::Image<PixelT> &img, afwImage::ImageSlice<PixelT> &slc) {
+    details::operate<details::Minus<PixelT> >(img, slc, slc.getImageSliceType());
 }
 
 
 // ******************************************************************
 // overload *
 template<typename PixelT>    
-typename afwImage::Image<PixelT>::Ptr afwImage::operator*(afwImage::Image<PixelT> &img, afwImage::Slice<PixelT> &slc) {
+typename afwImage::Image<PixelT>::Ptr afwImage::operator*(afwImage::Image<PixelT> &img, afwImage::ImageSlice<PixelT> &slc) {
     typename afwImage::Image<PixelT>::Ptr retImg(new afwImage::Image<PixelT>(img, true));
     *retImg *= slc;
     return retImg;
 }
 template<typename PixelT>    
-typename afwImage::Image<PixelT>::Ptr afwImage::operator*(afwImage::Slice<PixelT> &slc, afwImage::Image<PixelT> &img) {
+typename afwImage::Image<PixelT>::Ptr afwImage::operator*(afwImage::ImageSlice<PixelT> &slc, afwImage::Image<PixelT> &img) {
     return afwImage::operator*(img, slc);
 }
 template<typename PixelT>    
-void afwImage::operator*=(afwImage::Image<PixelT> &img, afwImage::Slice<PixelT> &slc) {
-    details::operate<details::Mult<PixelT> >(img, slc, slc.getSliceType());
+void afwImage::operator*=(afwImage::Image<PixelT> &img, afwImage::ImageSlice<PixelT> &slc) {
+    details::operate<details::Mult<PixelT> >(img, slc, slc.getImageSliceType());
 }
 
 // ///////////////////////////////////////////////////////////////////
 // overload /
 template<typename PixelT>    
-typename afwImage::Image<PixelT>::Ptr afwImage::operator/(afwImage::Image<PixelT> &img, afwImage::Slice<PixelT> &slc) {
+typename afwImage::Image<PixelT>::Ptr afwImage::operator/(afwImage::Image<PixelT> &img, afwImage::ImageSlice<PixelT> &slc) {
     typename afwImage::Image<PixelT>::Ptr retImg(new afwImage::Image<PixelT>(img, true));
     *retImg /= slc;
     return retImg;
 }
 template<typename PixelT>    
-void afwImage::operator/=(afwImage::Image<PixelT> &img, afwImage::Slice<PixelT> &slc) {
-    details::operate<details::Div<PixelT> >(img, slc, slc.getSliceType());
+void afwImage::operator/=(afwImage::Image<PixelT> &img, afwImage::ImageSlice<PixelT> &slc) {
+    details::operate<details::Div<PixelT> >(img, slc, slc.getImageSliceType());
 }
 
 
@@ -121,21 +121,21 @@ void afwImage::operator/=(afwImage::Image<PixelT> &img, afwImage::Slice<PixelT> 
  */
 
 #define INSTANTIATE_SLICE_OP_SYM(TYPE, OP) \
-    template afwImage::Image<TYPE>::Ptr afwImage::operator OP(afwImage::Image<TYPE> &img, afwImage::Slice<TYPE> &slc); \
-    template afwImage::Image<TYPE>::Ptr afwImage::operator OP(afwImage::Slice<TYPE> &slc, afwImage::Image<TYPE> &img)
+    template afwImage::Image<TYPE>::Ptr afwImage::operator OP(afwImage::Image<TYPE> &img, afwImage::ImageSlice<TYPE> &slc); \
+    template afwImage::Image<TYPE>::Ptr afwImage::operator OP(afwImage::ImageSlice<TYPE> &slc, afwImage::Image<TYPE> &img)
 
 
 #define INSTANTIATE_SLICE_OP_ASYM(TYPE, OP) \
-    template afwImage::Image<TYPE>::Ptr afwImage::operator OP(afwImage::Image<TYPE> &img, afwImage::Slice<TYPE> &slc)
+    template afwImage::Image<TYPE>::Ptr afwImage::operator OP(afwImage::Image<TYPE> &img, afwImage::ImageSlice<TYPE> &slc)
     
 
 #define INSTANTIATE_SLICE_OPEQ(TYPE, OP) \
-    template void afwImage::operator OP(afwImage::Image<TYPE> &img, afwImage::Slice<TYPE> &slc);
+    template void afwImage::operator OP(afwImage::Image<TYPE> &img, afwImage::ImageSlice<TYPE> &slc);
 
 
 
 #define INSTANTIATE_SLICES(TYPE) \
-    template afwImage::Slice<TYPE>::Slice(afwImage::Image<TYPE> &image); \
+    template afwImage::ImageSlice<TYPE>::ImageSlice(afwImage::Image<TYPE> &image); \
     INSTANTIATE_SLICE_OP_SYM(TYPE, +);                                  \
     INSTANTIATE_SLICE_OP_ASYM(TYPE, -);                                 \
     INSTANTIATE_SLICE_OP_SYM(TYPE, *);                                  \

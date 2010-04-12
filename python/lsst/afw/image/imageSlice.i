@@ -2,21 +2,21 @@
 //
 
 %{
-#include "lsst/afw/image/Slice.h"
+#include "lsst/afw/image/ImageSlice.h"
 %}
 
-%include "lsst/afw/image/Slice.h"
+%include "lsst/afw/image/ImageSlice.h"
 
 %define %slice(NAME, TYPE, PIXEL_TYPE...)
 
-SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::afw::image::Image<PIXEL_TYPE>, lsst::afw::image::Slice<PIXEL_TYPE>);
-%template(NAME##TYPE) lsst::afw::image::Slice<PIXEL_TYPE>;
+SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::afw::image::Image<PIXEL_TYPE>, lsst::afw::image::ImageSlice<PIXEL_TYPE>);
+%template(NAME##TYPE) lsst::afw::image::ImageSlice<PIXEL_TYPE>;
 %template(NAME##TYPE##___add__) lsst::afw::image::operator+<PIXEL_TYPE>;
 %template(NAME##TYPE##___sub__) lsst::afw::image::operator-<PIXEL_TYPE>;
 %template(NAME##TYPE##___mul__) lsst::afw::image::operator*<PIXEL_TYPE>;
 %template(NAME##TYPE##___div__) lsst::afw::image::operator/<PIXEL_TYPE>;
 
-%extend lsst::afw::image::Slice<PIXEL_TYPE> {
+%extend lsst::afw::image::ImageSlice<PIXEL_TYPE> {
 
 
     %pythoncode {
@@ -99,7 +99,7 @@ SWIG_SHARED_PTR_DERIVED(NAME##TYPE, lsst::afw::image::Image<PIXEL_TYPE>, lsst::a
 %enddef
 
 
- //%slice(Slice, U, boost::uint16_t);
- //%slice(Slice, I, int);
-%slice(Slice, F, float);
-%slice(Slice, D, double);
+ //%slice(ImageSlice, U, boost::uint16_t);
+ //%slice(ImageSlice, I, int);
+%slice(ImageSlice, F, float);
+%slice(ImageSlice, D, double);

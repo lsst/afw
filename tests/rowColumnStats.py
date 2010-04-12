@@ -79,7 +79,7 @@ class RowColumnStatisticsTestCase(unittest.TestCase):
     def testColumnOperators(self):
         """ Test operator overloading on columns """
 
-        columnSlice = afwImage.SliceF(self.imgProjectCol.getImage())
+        columnSlice = afwImage.ImageSliceF(self.imgProjectCol.getImage())
         
         imgAdd = self.img + columnSlice
         imgAdd2 = columnSlice + self.img
