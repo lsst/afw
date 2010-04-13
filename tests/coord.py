@@ -30,8 +30,8 @@ class CoordTestCase(unittest.TestCase):
         # define some arbitrary values
         self.ra, self.raKnown  = "10:00:00.00", 10.0
         self.dec, self.decKnown = "-02:30:00.00", -2.5
-        self.l = 100.0
-        self.b = 30.0
+        self.l = afwCoord.degToRad*100.0
+        self.b = afwCoord.degToRad*30.0
 
         # a handy list of coords we want to test
         self.coordList = [
@@ -67,7 +67,7 @@ class CoordTestCase(unittest.TestCase):
             factories = []
             factories.append(afwCoord.makeCoord(enum, self.l, self.b))
             factories.append(afwCoord.makeCoord(afwCoord.makeCoordEnum(stringName), self.l, self.b))
-            factories.append(afwCoord.makeCoord(enum, afwGeom.makePointD(self.l, self.b), afwCoord.DEGREES))
+            factories.append(afwCoord.makeCoord(enum, afwGeom.makePointD(self.l, self.b)))
 
             print "Factory: "
             for fac in factories:
@@ -82,8 +82,8 @@ class CoordTestCase(unittest.TestCase):
             c = afwCoord.makeCoord(enum)
             c.reset(1.0, 1.0, 2000.0)
             myCoord = cast(c)
-            self.assertEqual(myCoord.getLongitude(afwCoord.DEGREES), 1.0)
-            self.assertEqual(myCoord.getLatitude(afwCoord.DEGREES), 1.0)
+            self.assertEqual(myCoord.getLongitude(afwCoord.RADIANS), 1.0)
+            self.assertEqual(myCoord.getLatitude(afwCoord.RADIANS), 1.0)
 
 
         # verify that makeCoord throws when given an epoch for an epochless system
@@ -141,7 +141,7 @@ class CoordTestCase(unittest.TestCase):
         for equ, p3dknown in coordList:
             
             # convert to p3d
-            p3d = afwCoord.Fk5Coord(equ[0], equ[1]).getVector()
+            p3d = afwCoord.Fk5Coord(equ[0], equ[1], 2000.0, afwCoord.DEGREES).getVector()
             print "Point3d: ", p3d, p3dknown
             for i in range(3):
                 self.assertAlmostEqual(p3d[i], p3dknown[i])
@@ -238,7 +238,7 @@ class CoordTestCase(unittest.TestCase):
         # Try converting Sag-A to galactic and make sure we get the right answer
         # Sagittarius A (very nearly the galactic center)
         sagAKnownEqu = afwCoord.Fk5Coord("17:45:40.04","-29:00:28.1")
-        sagAKnownGal = afwCoord.GalacticCoord(359.94432, -0.04619)
+        sagAKnownGal = afwCoord.GalacticCoord(359.94432, -0.04619, afwCoord.DEGREES)
         
         sagAGal = sagAKnownEqu.toGalactic()
         s = ("Galactic (Sag-A):  (transformed) %.5f %.5f   (known) %.5f %.5f\n" %
@@ -252,9 +252,9 @@ class CoordTestCase(unittest.TestCase):
 
         # make sure it transforms back ... to machine precision
         self.assertAlmostEqual(sagAGal.toFk5().getRa(afwCoord.DEGREES),
-                               sagAKnownEqu.getRa(afwCoord.DEGREES), 14)
+                               sagAKnownEqu.getRa(afwCoord.DEGREES), 12)
         self.assertAlmostEqual(sagAGal.toFk5().getDec(afwCoord.DEGREES),
-                               sagAKnownEqu.getDec(afwCoord.DEGREES), 14)
+                               sagAKnownEqu.getDec(afwCoord.DEGREES), 12)
         
         
     def testTopocentric(self):
@@ -265,13 +265,23 @@ class CoordTestCase(unittest.TestCase):
         # sedna (from jpl) for 2010-03-03 00:00 UT
         ra, dec = "03:26:42.61",  "+06:32:07.1"
         az, alt = 231.5947, 44.3375
+
+        # the obervatory and time of observation
         obs = afwCoord.Observatory(74.659, 40.384, 100.0) # peyton
         obsDate = dafBase.DateTime(2010, 3, 3, 0, 0, 0, dafBase.DateTime.TAI)
+        obsDate1SecLater = dafBase.DateTime(2010, 3, 3, 0, 0, 1, dafBase.DateTime.TAI)
+
         sedna = afwCoord.Fk5Coord(ra, dec, obsDate.get(dafBase.DateTime.EPOCH))
         altaz = sedna.toTopocentric(obs, obsDate)
+        altaz1SecLater = altaz.toTopocentric(obs, obsDate1SecLater)
+        
         s = ("Topocentric (Sedna): ", altaz.getAltitude(afwCoord.DEGREES),
              altaz.getAzimuth(afwCoord.DEGREES), alt, az)
+        s1 = ("Topocentric (Sedna): ", altaz1SecLater.getAltitude(afwCoord.DEGREES),
+              altaz1SecLater.getAzimuth(afwCoord.DEGREES), alt, az)
+        
         print s
+        print s1
 
         # precision is low as we don't account for as much as jpl (abberation, nutation, etc)
         self.assertAlmostEqual(altaz.getAltitude(afwCoord.DEGREES), alt, 1)
@@ -303,7 +313,7 @@ class CoordTestCase(unittest.TestCase):
         alphaDeg = alphaPer0.getRa(afwCoord.DEGREES) + dAlphaDeg*(epoch - 2000.0)
         deltaDeg = alphaPer0.getDec(afwCoord.DEGREES) + dDeltaDeg*(epoch - 2000.0)
 
-        alphaPer = afwCoord.Fk5Coord(alphaDeg, deltaDeg).precess(epoch)
+        alphaPer = afwCoord.Fk5Coord(alphaDeg, deltaDeg, 2000, afwCoord.DEGREES).precess(epoch)
 
         print "Precession (Alpha-Per): %.6f %.6f   (known) %.6f %.6f" % (alphaPer.getRa(afwCoord.DEGREES),
                                                                          alphaPer.getDec(afwCoord.DEGREES),
@@ -313,7 +323,7 @@ class CoordTestCase(unittest.TestCase):
         self.assertAlmostEqual(alphaPer.getDec(afwCoord.DEGREES), deltaKnown, 6)
 
         # verify that toFk5(epoch) also works as precess
-        alphaPer2 = afwCoord.Fk5Coord(alphaDeg, deltaDeg).toFk5(epoch)
+        alphaPer2 = afwCoord.Fk5Coord(alphaDeg, deltaDeg, 2000.0, afwCoord.DEGREES).toFk5(epoch)
         self.assertEqual(alphaPer[0], alphaPer2[0])
         self.assertEqual(alphaPer[1], alphaPer2[1])
 
@@ -352,7 +362,7 @@ class CoordTestCase(unittest.TestCase):
         year = 1920
         lamb214bc, beta214bc = 148.37119237032144, 1.7610036104147864
         
-        venus2000  = afwCoord.EclipticCoord(lamb2000, beta2000, 2000.0)
+        venus2000  = afwCoord.EclipticCoord(lamb2000, beta2000, 2000.0, afwCoord.DEGREES)
         ep = dafBase.DateTime(year, 6, 30, 0, 0, 0,
                                dafBase.DateTime.TAI).get(dafBase.DateTime.EPOCH)
         venus214bc = venus2000.precess(ep)
@@ -375,8 +385,8 @@ class CoordTestCase(unittest.TestCase):
         """Test measure of angular separation between two coords"""
 
         # test from Meeus, pg 110
-        spica = afwCoord.Fk5Coord(201.2983, -11.1614)
-        arcturus = afwCoord.Fk5Coord(213.9154, 19.1825)
+        spica = afwCoord.Fk5Coord(201.2983, -11.1614, 2000, afwCoord.DEGREES)
+        arcturus = afwCoord.Fk5Coord(213.9154, 19.1825, 2000, afwCoord.DEGREES)
         knownDeg = 32.7930
         
         deg = spica.angularSeparation(arcturus, afwCoord.DEGREES)
@@ -388,7 +398,7 @@ class CoordTestCase(unittest.TestCase):
         # verify small angles ... along a constant ra, add an arcsec to spica dec
         epsilonDeg = 1.0/3600.0
         spicaPlus = afwCoord.Fk5Coord(spica.getRa(afwCoord.DEGREES),
-                                      spica.getDec(afwCoord.DEGREES) + epsilonDeg)
+                                      spica.getDec(afwCoord.DEGREES) + epsilonDeg, 2000.0, afwCoord.DEGREES)
         deg = spicaPlus.angularSeparation(spica, afwCoord.DEGREES)
 
         print "Separation (Spica+epsilon): %.8f  (known) %.8f" % (deg, epsilonDeg)

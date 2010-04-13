@@ -19,7 +19,7 @@
 #include "lsst/afw/coord/Observatory.h"
 #include "lsst/daf/base.h"
 
-namespace afwGeom    = lsst::afw::geom;
+namespace afwGeom = lsst::afw::geom;
 namespace dafBase = lsst::daf::base;
 
 
@@ -53,18 +53,19 @@ public:
     typedef boost::shared_ptr<Coord> Ptr;
     typedef boost::shared_ptr<Coord const> ConstPtr;
 
-    Coord(afwGeom::Point2D const &p2d, CoordUnit unit = DEGREES, double const epoch = 2000.0);
-    Coord(afwGeom::Point3D const &p3d, double const epoch = 2000.0);
-    Coord(double const ra, double const dec, double const epoch = 2000.0);
-    Coord(std::string const ra, std::string const dec, double const epoch = 2000.0);
+    Coord(afwGeom::Point2D const &p2d, CoordUnit unit=RADIANS, double const epoch=2000.0);
+    Coord(afwGeom::Point3D const &p3d, double const epoch=2000.0);
+    Coord(double const ra, double const dec, double const epoch=2000.0, CoordUnit unit=RADIANS);
+    Coord(std::string const ra, std::string const dec, double const epoch=2000.0);
     Coord();
     virtual ~Coord() {}
     
-    void reset(double const longitude, double const latitude, double const epoch = 2000.0);
+    void reset(double const longitude, double const latitude,
+               double const epoch=2000.0, CoordUnit unit=RADIANS);
 
     double getEpoch() const { return _epoch; }
 
-    afwGeom::Point2D getPosition(CoordUnit unit = DEGREES) const;
+    afwGeom::Point2D getPosition(CoordUnit unit=RADIANS) const;
     afwGeom::Point3D getVector() const;
     inline std::pair<std::string, std::string> getCoordNames() const {
         return std::pair<std::string, std::string>("RA", "Dec");
@@ -109,13 +110,14 @@ public:
     
     typedef boost::shared_ptr<IcrsCoord> Ptr;
 
-    IcrsCoord(afwGeom::Point2D const &p2d, CoordUnit unit = DEGREES) : Coord(p2d, unit, 2000.0) {}
+    IcrsCoord(afwGeom::Point2D const &p2d, CoordUnit unit=RADIANS) : Coord(p2d, unit, 2000.0) {}
     IcrsCoord(afwGeom::Point3D const &p3d) : Coord(p3d, 2000.0) {}
-    IcrsCoord(double const ra, double const dec) : Coord(ra, dec, 2000.0) {}
+    IcrsCoord(double const ra, double const dec, CoordUnit unit=RADIANS) :
+        Coord(ra, dec, 2000.0, unit) {}
     IcrsCoord(std::string const ra, std::string const dec) : Coord(ra, dec, 2000.0) {}
     IcrsCoord() : Coord() {}
 
-    void reset(double const longitude, double const latitude);
+    void reset(double const longitude, double const latitude, CoordUnit unit=RADIANS);
     
     double getRa(CoordUnit unit) const         { return getLongitude(unit); }   
     double getDec(CoordUnit unit) const        { return getLatitude(unit); }    
@@ -139,13 +141,13 @@ public:
 
     typedef boost::shared_ptr<Fk5Coord> Ptr;
     
-    Fk5Coord(afwGeom::Point2D const &p2d, CoordUnit unit = DEGREES, double const epoch = 2000.0) :
+    Fk5Coord(afwGeom::Point2D const &p2d, CoordUnit unit=RADIANS, double const epoch=2000.0) :
         Coord(p2d, unit, epoch) {}
-    Fk5Coord(afwGeom::Point3D const &p3d, double const epoch = 2000.0) :
+    Fk5Coord(afwGeom::Point3D const &p3d, double const epoch=2000.0) :
         Coord(p3d, epoch) {}
-    Fk5Coord(double const ra, double const dec, double const epoch = 2000.0) : 
-        Coord(ra, dec, epoch) {}
-    Fk5Coord(std::string const ra, std::string const dec, double const epoch = 2000.0) :
+    Fk5Coord(double const ra, double const dec, double const epoch=2000.0, CoordUnit unit=RADIANS) : 
+        Coord(ra, dec, epoch, unit) {}
+    Fk5Coord(std::string const ra, std::string const dec, double const epoch=2000.0) :
         Coord(ra, dec, epoch) {}
     Fk5Coord() : Coord() {}
     
@@ -178,13 +180,13 @@ public:
     
     typedef boost::shared_ptr<GalacticCoord> Ptr;
     
-    GalacticCoord(afwGeom::Point2D const &p2d, CoordUnit unit = DEGREES) : Coord(p2d, unit) {}
+    GalacticCoord(afwGeom::Point2D const &p2d, CoordUnit unit=RADIANS) : Coord(p2d, unit) {}
     GalacticCoord(afwGeom::Point3D const &p3d) : Coord(p3d) {}
-    GalacticCoord(double const l, double const b) : Coord(l, b) {}
+    GalacticCoord(double const l, double const b, CoordUnit unit=RADIANS) : Coord(l, b, 2000.0, unit) {}
     GalacticCoord(std::string const l, std::string const b) : Coord(l, b) {}
     GalacticCoord() : Coord() {}
 
-    void reset(double const longitude, double const latitude);
+    void reset(double const longitude, double const latitude, CoordUnit unit=RADIANS);
     
     inline std::pair<std::string, std::string> getCoordNames() const {
         return std::pair<std::string, std::string>("L", "B");
@@ -213,12 +215,13 @@ public:
     
     typedef boost::shared_ptr<EclipticCoord> Ptr;
 
-    EclipticCoord(afwGeom::Point2D const &p2d, CoordUnit unit = DEGREES, double const epoch = 2000.0) :
+    EclipticCoord(afwGeom::Point2D const &p2d, CoordUnit unit=RADIANS, double const epoch=2000.0) :
         Coord(p2d, unit, epoch) {}
-    EclipticCoord(afwGeom::Point3D const &p3d, double const epoch = 2000.0) : Coord(p3d, epoch) {}
-    EclipticCoord(double const lambda, double const beta, double const epoch = 2000.0) : 
-        Coord(lambda, beta, epoch) {}
-    EclipticCoord(std::string const lambda, std::string const beta, double const epoch = 2000.0) : 
+    EclipticCoord(afwGeom::Point3D const &p3d, double const epoch=2000.0) : Coord(p3d, epoch) {}
+    EclipticCoord(double const lambda, double const beta,
+                  double const epoch=2000.0, CoordUnit unit=RADIANS) : 
+        Coord(lambda, beta, epoch, unit) {}
+    EclipticCoord(std::string const lambda, std::string const beta, double const epoch=2000.0) : 
         Coord(lambda, beta, epoch) {}
     EclipticCoord() : Coord() {}
     
@@ -257,7 +260,8 @@ public:
     TopocentricCoord(afwGeom::Point3D const &p3d, double const epoch,
                      Observatory const &obs) : Coord(p3d, epoch), _obs(obs) {}
     TopocentricCoord(double const az, double const alt, double const epoch,
-                     Observatory const &obs) : Coord(az, alt, epoch), _obs(obs) {}
+                     Observatory const &obs, CoordUnit unit=RADIANS) :
+        Coord(az, alt, epoch, unit), _obs(obs) {}
     TopocentricCoord(std::string const az, std::string const alt, double const epoch,
                      Observatory const &obs) : Coord(az, alt, epoch), _obs(obs) {}
 
@@ -282,8 +286,14 @@ private:
 /*
  * Factory Functions
  *
+ * There are two sets defined here: (1) with epoch specified, and (2) without epoch (default used)
+ * Why? Some coordinate systems accept no epoch (ICRS, Galactic ...) and this allows a consistent API
+ * with type safety and fewer if/then/else blocks.
+ * If you just want to use the default epoch, leaving it unspecified gets you what you want,
+ *    but if you ask for an ICRS with an epoch, you'll get an exception.
  */
-Coord::Ptr makeCoord(CoordSystem const system, double const ra, double const dec, double const epoch);
+Coord::Ptr makeCoord(CoordSystem const system, double const ra, double const dec,
+                     double const epoch, CoordUnit unit=RADIANS);
 Coord::Ptr makeCoord(CoordSystem const system, std::string const ra, std::string const dec,
                      double const epoch);
 Coord::Ptr makeCoord(CoordSystem const system, afwGeom::Point2D const &p2d, CoordUnit unit,
@@ -292,9 +302,9 @@ Coord::Ptr makeCoord(CoordSystem const system, afwGeom::Point3D const &p3d, doub
 Coord::Ptr makeCoord(CoordSystem const system);
 
 
-Coord::Ptr makeCoord(CoordSystem const system, double const ra, double const dec);
+Coord::Ptr makeCoord(CoordSystem const system, double const ra, double const dec, CoordUnit unit=RADIANS);
 Coord::Ptr makeCoord(CoordSystem const system, std::string const ra, std::string const dec);
-Coord::Ptr makeCoord(CoordSystem const system, afwGeom::Point2D const &p2d, CoordUnit unit);
+Coord::Ptr makeCoord(CoordSystem const system, afwGeom::Point2D const &p2d, CoordUnit unit=RADIANS);
 Coord::Ptr makeCoord(CoordSystem const system, afwGeom::Point3D const &p3d);
 
 
