@@ -20,6 +20,7 @@
 #include "Eigen/Core.h"
 
 #include "lsst/afw/image/Image.h"
+#include "lsst/afw/coord.h"
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/image/TanWcs.h"
 #include "lsst/afw/math/Interpolate.h"
@@ -29,6 +30,8 @@
 
 namespace image = lsst::afw::image;
 namespace geom = lsst::afw::geom;
+namespace afwCoord = lsst::afw::coord;
+
 typedef Eigen::Matrix2d matrixD;
 
 
@@ -67,8 +70,8 @@ BOOST_AUTO_TEST_CASE(linearConstructor) { /* parasoft-suppress  LsstDm-3-2a Lsst
     //for what should be a simple computation
     double expect=2.0;
     geom::PointD ad = wcs.pixelToSky(9,9)->getPosition();
-    BOOST_CHECK_CLOSE(ad.getX(), expect, .05);
-    BOOST_CHECK_CLOSE(ad.getY(), 2., .11);    
+    BOOST_CHECK_CLOSE(afwCoord::radToDeg*ad.getX(), expect, .05);
+    BOOST_CHECK_CLOSE(afwCoord::radToDeg*ad.getY(), 2., .11);    
     
     geom::PointD xy = wcs.skyToPixel(2,2);
     BOOST_CHECK_CLOSE(xy.getX(), 9., .05);
@@ -129,24 +132,24 @@ BOOST_AUTO_TEST_CASE(xy_to_radec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4
 
     //check the trivial case
     geom::PointD ad = wcs.pixelToSky(890.5, 892.5)->getPosition();
-    BOOST_CHECK_CLOSE(ad.getX(), 80.15967 , 3e-5);  //2e-5 is <0.01 arcsec in ra
-    BOOST_CHECK_CLOSE(ad.getY(), 30.80656 ,3e-5);  // 2e-5 is <0.1 arcsec in dec
+    BOOST_CHECK_CLOSE(afwCoord::radToDeg*ad.getX(), 80.15967 , 3e-5);  //2e-5 is <0.01 arcsec in ra
+    BOOST_CHECK_CLOSE(afwCoord::radToDeg*ad.getY(), 30.80656 ,3e-5);  // 2e-5 is <0.1 arcsec in dec
 
     ad = wcs.pixelToSky(140., 116.)->getPosition();
-    BOOST_CHECK_CLOSE(ad.getX(), 80.405963 , 3e-5);
-    BOOST_CHECK_CLOSE(ad.getY(),  +30.5908500 , 3e-5);  
+    BOOST_CHECK_CLOSE(afwCoord::radToDeg*ad.getX(), 80.405963 , 3e-5);
+    BOOST_CHECK_CLOSE(afwCoord::radToDeg*ad.getY(),  +30.5908500 , 3e-5);  
 
     ad = wcs.pixelToSky(396., 1481.)->getPosition();
-    BOOST_CHECK_CLOSE(ad.getX(), 80.319804 , 3e-5);
-    BOOST_CHECK_CLOSE(ad.getY(), +30.9721778 , 3e-5 );  
+    BOOST_CHECK_CLOSE(afwCoord::radToDeg*ad.getX(), 80.319804 , 3e-5);
+    BOOST_CHECK_CLOSE(afwCoord::radToDeg*ad.getY(), +30.9721778 , 3e-5 );  
 
     ad = wcs.pixelToSky(1487., 1754.)->getPosition();
-    BOOST_CHECK_CLOSE(ad.getX(), 79.962379 , 3e-5);
-    BOOST_CHECK_CLOSE(ad.getY(), +31.0460250 , 3e-5);  
+    BOOST_CHECK_CLOSE(afwCoord::radToDeg*ad.getX(), 79.962379 , 3e-5);
+    BOOST_CHECK_CLOSE(afwCoord::radToDeg*ad.getY(), +31.0460250 , 3e-5);  
 
     ad = wcs.pixelToSky(1714., 186.)->getPosition();
-    BOOST_CHECK_CLOSE(ad.getX(), 79.893342 , 3e-5);
-    BOOST_CHECK_CLOSE(ad.getY(), +30.6068444 , 3e-5);  
+    BOOST_CHECK_CLOSE(afwCoord::radToDeg*ad.getX(), 79.893342 , 3e-5);
+    BOOST_CHECK_CLOSE(afwCoord::radToDeg*ad.getY(), +30.6068444 , 3e-5);  
 
     std::printf("T'end\n");
 }
@@ -166,7 +169,7 @@ BOOST_AUTO_TEST_CASE(test_closure) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-
     double x = 251;
     double y = 910;
     geom::PointD xy = geom::makePointD(251., 910.);
-    geom::PointD ad = wcs.pixelToSky(xy)->getPosition();
+    geom::PointD ad = wcs.pixelToSky(xy)->getPosition(afwCoord::DEGREES);
     BOOST_CHECK_CLOSE(wcs.skyToPixel(ad[0], ad[1]).getX(), x, 1e-6);
     BOOST_CHECK_CLOSE(wcs.skyToPixel(ad[0], ad[1]).getY(), y, 1e-6);
 }

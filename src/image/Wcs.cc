@@ -654,6 +654,9 @@ CoordPtr Wcs::makeCorrectCoord(double sky0, double sky1) const {
     std::string radesys(_wcsInfo->radesys);
     double equinox = _wcsInfo->equinox;
 
+    sky0 *= afwCoord::degToRad;
+    sky1 *= afwCoord::degToRad;
+    
     if(type == "RA--") {
         //Our default
         if(radesys == "ICRS") {

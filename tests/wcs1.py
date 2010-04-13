@@ -72,7 +72,7 @@ class WCSTestCaseSDSS(unittest.TestCase):
         self.assertAlmostEqual(xy.getX(), xy2.getX())
         self.assertAlmostEqual(xy.getY(), xy2.getY())
 
-        raDec = afwCoord.makeCoord(afwCoord.ICRS, 245.167400, +19.1976583)
+        raDec = afwCoord.makeCoord(afwCoord.ICRS, 245.167400, +19.1976583, afwCoord.DEGREES)
         
         xy = self.wcs.skyToPixel(raDec)
         raDec2 = self.wcs.pixelToSky(xy)
@@ -82,7 +82,7 @@ class WCSTestCaseSDSS(unittest.TestCase):
 
     def test_RaTan_DecTan(self):
         """Check the RA---TAN, DEC--TAN WCS conversion"""
-        raDec = self.wcs.pixelToSky(0.0, 0.0).getPosition()
+        raDec = self.wcs.pixelToSky(0.0, 0.0).getPosition(afwCoord.DEGREES)
         raDec0 = afwGeom.makePointD(245.1598413385, 19.1960467992) # values from wcstools' xy2sky
 
         print "A riotous assembly"
@@ -93,7 +93,7 @@ class WCSTestCaseSDSS(unittest.TestCase):
 
     def testIdentity(self):
         """Convert from ra, dec to col, row and back again"""
-        raDec = afwCoord.makeCoord(afwCoord.ICRS, 244, 20)
+        raDec = afwCoord.makeCoord(afwCoord.ICRS, 244, 20, afwCoord.DEGREES)
         rowCol = self.wcs.skyToPixel(raDec)
         raDec2 = self.wcs.pixelToSky(rowCol)
 
@@ -105,7 +105,7 @@ class WCSTestCaseSDSS(unittest.TestCase):
     def testInvalidRaDec(self):
         """Test a conversion for an invalid position.  Well, "test" isn't
         quite right as the result is invalid, but make sure that it still is"""
-        raDec = afwCoord.makeCoord(afwCoord.ICRS, 1, 2)
+        raDec = afwCoord.makeCoord(afwCoord.ICRS, 1, 2, afwCoord.DEGREES)
 
         self.assertRaises(lsst.pex.exceptions.exceptionsLib.LsstCppException, self.wcs.skyToPixel, raDec)
 

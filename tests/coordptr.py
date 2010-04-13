@@ -28,10 +28,11 @@ class CoordPtrTestCase(unittest.TestCase):
         
     def testMakeCoord(self):
         
-        c = coord.Coord(1,2)
+        c = coord.Coord(1,2,2000, coord.DEGREES)
         print type(c)
-        c = coord.makeCoord(coord.FK5, 1, 2)
+        c = coord.makeCoord(coord.FK5, 1, 2, coord.DEGREES)
         print type(c)
+        
     def testMakeWcs(self):
         path= eups.productDir("afw")
         path = os.path.join(path, "tests", "data", "parent.fits")
