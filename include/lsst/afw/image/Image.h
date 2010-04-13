@@ -360,7 +360,7 @@ namespace image {
         // Operators etc.
         //
         void operator+=(PixelT const rhs);
-        void operator+=(Image<PixelT>const & rhs);
+        virtual void operator+=(Image<PixelT>const & rhs);
         void operator+=(lsst::afw::math::Function2<double> const& function);
         void scaledPlus(double const c, Image<PixelT>const & rhs);
         void operator-=(PixelT const rhs);

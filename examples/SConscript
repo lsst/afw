@@ -49,6 +49,7 @@ env.Program("integratePolar", ["integratePolar.cc"], LIBS=env.getlibs("afw"))
 env.Program("integrateExample", ["integrateExample.cc"], LIBS=env.getlibs("afw"))
 
 env.Program("simpleStacker", ["simpleStacker.cc"], LIBS=env.getlibs("afw"))
+env.Program("rowColumnStats", ["rowColumnStats.cc"], LIBS=env.getlibs("afw"))
 
 env.Program(["ccd.cc"], LIBS=env.getlibs("afw"))
 #
