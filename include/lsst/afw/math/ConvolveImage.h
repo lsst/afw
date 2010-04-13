@@ -15,6 +15,9 @@
  */
 #include <limits>
 
+#include <boost/assign/list_of.hpp>
+
+#include "lsst/afw/geom.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Kernel.h"
@@ -22,6 +25,82 @@
 namespace lsst {
 namespace afw {
 namespace math {
+namespace detail {
+
+    /**
+     * A collection of Kernel images for special locations on a rectangular region of an image
+     *
+     * See the Location enum for a list of those special locations.
+     *
+     * This is a low-level helper class for recursive convolving with interpolation. Many of these objects
+     * may be created during a convolution, and many will share kernel images. It uses shared pointers
+     * to kernels and kernel images for increased speed and decreased memory usage (at the expense of safety).
+     * Note that null pointers are NOT acceptable for the constructors!
+     *
+     * Also note that it uses lazy evaluation: images are computed when they are wanted.
+     *
+     * @todo: figure out how to initialize const std::map<Location, std::pair<double> > or similar
+     * so I can have one fractional position map instead of separate maps for x and y.
+     * When I try the obvious (commented out in ConvolveImage.cc) I get errors.
+     */
+    class KernelImagesForRegion : public lsst::daf::data::LsstBase, public lsst::daf::base::Persistable {
+    public:
+        typedef lsst::afw::math::Kernel::ConstPtr KernelConstPtr;
+        typedef lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel> KernelImage;
+        typedef KernelImage::ConstPtr ImageConstPtr;
+
+        /**
+         * locations of various points in the region
+         *
+         * The corners posiitions are: BOTTOM_LEFT, BOTTOM_RIGHT, TOP_LEFT, TOP_RIGHT
+         * The "middle" positions are the middle of each side, plus the center of the region:
+         *    BOTTOM, TOP, LEFT, RIGHT, CENTER
+         *
+         * These positions always refer to an exact pixel. If the region has an even size along an axis
+         * then the middle is shifted towards the BOTTOM_LEFT by 1/2 pixel for that axis.
+         */
+        enum Location {
+            BOTTOM_LEFT, BOTTOM_RIGHT, TOP_LEFT, TOP_RIGHT,
+            BOTTOM, TOP, LEFT, RIGHT, CENTER
+        };
+    
+        KernelImagesForRegion(
+                KernelConstPtr kernelPtr,
+                lsst::afw::image::BBox const &bbox,
+                bool doNormalize);
+
+        KernelImagesForRegion(
+                KernelConstPtr kernelPtr,
+                lsst::afw::image::BBox const &bbox,
+                bool doNormalize,
+                ImageConstPtr bottomLeftImagePtr,
+                ImageConstPtr bottomRightImagePtr,
+                ImageConstPtr topLeftImagePtr,
+                ImageConstPtr topRightImagePtr);
+
+        ImageConstPtr getImage(Location location) const;
+
+        KernelConstPtr getKernel() const { return _kernelPtr; };
+
+        lsst::afw::image::BBox getBBox() const { return _bbox; };
+
+        std::vector<KernelImagesForRegion> getSubRegions() const;
+    private:
+        typedef std::map<Location, ImageConstPtr> ImageMap;
+        typedef std::map<Location, double> FracMap;
+
+        lsst::afw::image::PointI _pixelIndexFromLocation(Location) const;
+        inline void _insertImage(Location location, ImageConstPtr &imagePtr) const;
+
+        KernelConstPtr _kernelPtr;
+        lsst::afw::image::BBox _bbox;
+        bool _doNormalize;
+        mutable ImageMap _imageMap; // mutable because simply a cache; const methods can alter it.
+        
+        static const FracMap _fracMapX;
+        static const FracMap _fracMapY;
+    };
+}
 
     template <typename OutImageT, typename InImageT>
     inline typename OutImageT::SinglePixel convolveAtAPoint(
