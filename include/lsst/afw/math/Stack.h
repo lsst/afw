@@ -69,9 +69,9 @@ template<typename PixelT>
 typename lsst::afw::image::MaskedImage<PixelT>::Ptr statisticsStack(
         lsst::afw::image::Image<PixelT> const &image,  
         Property flags,               
-	char dimension,
+        char dimension,
         StatisticsControl const& sctrl=StatisticsControl()
-								    );
+                                                                   );
 /**
  * @brief A function to compute statistics on the rows or columns of an image
  */
@@ -79,7 +79,7 @@ template<typename PixelT>
 typename lsst::afw::image::MaskedImage<PixelT>::Ptr statisticsStack(
         lsst::afw::image::MaskedImage<PixelT> const &image,  
         Property flags,               
-	char dimension,
+        char dimension,
         StatisticsControl const& sctrl=StatisticsControl()
 								    );
 

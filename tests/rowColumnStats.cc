@@ -32,17 +32,17 @@ BOOST_AUTO_TEST_CASE(RowColumnStats) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
     std::vector<float> column(n, 0.0);
     std::vector<float> row(n, 0.0);
     ImageF::Ptr img = ImageF::Ptr (new ImageF(n, n, 0));
-    for (int y=0; y < img->getHeight(); ++y) {
-	int x = 0;
-	for (ImageF::x_iterator ptr=img->row_begin(y), end=img->row_end(y); ptr != end; ++ptr, ++x) {
-	    *ptr = 1.0*x + 2.0*y;
-	    column[y] += *ptr;
-	    row[x] += *ptr;
-	    if (y == n - 1) {
-		row[x] /= n;
-	    }
-	}
-	column[y] /= n;
+    for (int y = 0; y < img->getHeight(); ++y) {
+        int x = 0;
+        for (ImageF::x_iterator ptr = img->row_begin(y), end = img->row_end(y); ptr != end; ++ptr, ++x) {
+            *ptr = 1.0*x + 2.0*y;
+            column[y] += *ptr;
+            row[x] += *ptr;
+            if (y == n - 1) {
+                row[x] /= n;
+            }
+        }
+        column[y] /= n;
     }
 
     // collapse with a MEAN over 'x' (ie. avg all columns to one), then 'y' (avg all rows to one)
@@ -51,8 +51,8 @@ BOOST_AUTO_TEST_CASE(RowColumnStats) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
     
     MImageF::x_iterator rPtr = imgProjectRow->row_begin(0);
     MImageF::y_iterator cPtr = imgProjectCol->col_begin(0);
-    for(int i = 0; i < n; ++i, ++rPtr, ++cPtr) {
-	BOOST_CHECK_EQUAL(cPtr.image(), column[i]);
-	BOOST_CHECK_EQUAL(rPtr.image(), row[i]);
+    for (int i = 0; i < n; ++i, ++rPtr, ++cPtr) {
+        BOOST_CHECK_EQUAL(cPtr.image(), column[i]);
+        BOOST_CHECK_EQUAL(rPtr.image(), row[i]);
     }
 }

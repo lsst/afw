@@ -332,8 +332,9 @@ typename boost::shared_ptr<std::vector<PixelT> > computeVectorStack(
             psPtr.value() = (*vectors[i])[x];
         }
         if (UseVariance) {
-            afwMath::Statistics stat = afwMath::makeStatistics(*pixelSet.getImage(), msk, *pixelSet.getVariance(),
-                                                         flags, sctrlTmp);
+            afwMath::Statistics stat = afwMath::makeStatistics(*pixelSet.getImage(), msk,
+                                                               *pixelSet.getVariance(),
+                                                               flags, sctrlTmp);
             (*vecStack)[x] = stat.getValue(flags);
         } else {
             afwMath::Statistics stat = afwMath::makeStatistics(pixelSet, flags, sctrlTmp);
@@ -398,9 +399,9 @@ template<typename PixelT>
 typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
         afwImage::Image<PixelT> const &image,  
         afwMath::Property flags,               
-	char dimension,
+        char dimension,
         afwMath::StatisticsControl const& sctrl
-								 ) {
+                                                                 ) {
 
 
     int x0 = image.getX0();
@@ -411,28 +412,28 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
     // do each row or column, one at a time
     // - create a subimage with a bounding box, and get the stats and assign the value to the output image
     if (dimension == 'x') {
-	imgOut = typename MImage::Ptr(new MImage(1, image.getHeight()));
-	int y = 0;
-	typename MImage::y_iterator oEnd = imgOut->col_end(0);
-	for (typename MImage::y_iterator oPtr = imgOut->col_begin(0); oPtr != oEnd; ++oPtr, ++y) {
-	    afwImage::BBox bbox = afwImage::BBox(afwImage::PointI(x0, y), image.getWidth(), 1);
-	    afwImage::Image<PixelT> subImage(image, bbox);
-	    afwMath::Statistics stat = makeStatistics(subImage, flags | afwMath::ERRORS, sctrl);
-	    *oPtr = typename afwImage::MaskedImage<PixelT>::Pixel(stat.getValue(), 0x0, 
-								  stat.getError()*stat.getError());
-	}
+        imgOut = typename MImage::Ptr(new MImage(1, image.getHeight()));
+        int y = 0;
+        typename MImage::y_iterator oEnd = imgOut->col_end(0);
+        for (typename MImage::y_iterator oPtr = imgOut->col_begin(0); oPtr != oEnd; ++oPtr, ++y) {
+            afwImage::BBox bbox = afwImage::BBox(afwImage::PointI(x0, y), image.getWidth(), 1);
+            afwImage::Image<PixelT> subImage(image, bbox);
+            afwMath::Statistics stat = makeStatistics(subImage, flags | afwMath::ERRORS, sctrl);
+            *oPtr = typename afwImage::MaskedImage<PixelT>::Pixel(stat.getValue(), 0x0, 
+                                                                  stat.getError()*stat.getError());
+        }
 
     } else if (dimension == 'y') {
-	imgOut = typename MImage::Ptr(new MImage(image.getWidth(), 1));
-	int x = 0;
-	typename MImage::x_iterator oEnd = imgOut->row_end(0);
-	for (typename MImage::x_iterator oPtr = imgOut->row_begin(0); oPtr != oEnd; ++oPtr, ++x) {
-	    afwImage::BBox bbox = afwImage::BBox(afwImage::PointI(x, y0), 1, image.getHeight());
-	    afwImage::Image<PixelT> subImage(image, bbox);
-	    afwMath::Statistics stat = makeStatistics(subImage, flags | afwMath::ERRORS, sctrl);
-	    *oPtr = typename afwImage::MaskedImage<PixelT>::Pixel(stat.getValue(), 0x0, 
-								  stat.getError()*stat.getError());
-	}
+        imgOut = typename MImage::Ptr(new MImage(image.getWidth(), 1));
+        int x = 0;
+        typename MImage::x_iterator oEnd = imgOut->row_end(0);
+        for (typename MImage::x_iterator oPtr = imgOut->row_begin(0); oPtr != oEnd; ++oPtr, ++x) {
+            afwImage::BBox bbox = afwImage::BBox(afwImage::PointI(x, y0), 1, image.getHeight());
+            afwImage::Image<PixelT> subImage(image, bbox);
+            afwMath::Statistics stat = makeStatistics(subImage, flags | afwMath::ERRORS, sctrl);
+            *oPtr = typename afwImage::MaskedImage<PixelT>::Pixel(stat.getValue(), 0x0, 
+                                                                  stat.getError()*stat.getError());
+        }
     } else {
         throw LSST_EXCEPT(ex::InvalidParameterException,
                           "Can only run statisticsStack in x or y for single image.");
@@ -451,9 +452,9 @@ template<typename PixelT>
 typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
         afwImage::MaskedImage<PixelT> const &image,  
         afwMath::Property flags,               
-	char dimension,
+        char dimension,
         afwMath::StatisticsControl const& sctrl
-								 ) {
+                                                                 ) {
 
 
     int x0 = image.getX0();
@@ -464,28 +465,28 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
     // do each row or column, one at a time
     // - create a subimage with a bounding box, and get the stats and assign the value to the output image
     if (dimension == 'x') {
-	imgOut = typename MImage::Ptr(new MImage(1, image.getHeight()));
-	int y = 0;
-	typename MImage::y_iterator oEnd = imgOut->col_end(0);
-	for (typename MImage::y_iterator oPtr = imgOut->col_begin(0); oPtr != oEnd; ++oPtr, ++y) {
-	    afwImage::BBox bbox = afwImage::BBox(afwImage::PointI(x0, y), image.getWidth(), 1);
-	    afwImage::MaskedImage<PixelT> subImage(image, bbox);
-	    afwMath::Statistics stat = makeStatistics(subImage, flags | afwMath::ERRORS, sctrl);
-	    *oPtr = typename afwImage::MaskedImage<PixelT>::Pixel(stat.getValue(), 0x0, 
-								  stat.getError()*stat.getError());
-	}
+        imgOut = typename MImage::Ptr(new MImage(1, image.getHeight()));
+        int y = 0;
+        typename MImage::y_iterator oEnd = imgOut->col_end(0);
+        for (typename MImage::y_iterator oPtr = imgOut->col_begin(0); oPtr != oEnd; ++oPtr, ++y) {
+            afwImage::BBox bbox = afwImage::BBox(afwImage::PointI(x0, y), image.getWidth(), 1);
+            afwImage::MaskedImage<PixelT> subImage(image, bbox);
+            afwMath::Statistics stat = makeStatistics(subImage, flags | afwMath::ERRORS, sctrl);
+            *oPtr = typename afwImage::MaskedImage<PixelT>::Pixel(stat.getValue(), 0x0, 
+                                                                  stat.getError()*stat.getError());
+        }
 
     } else if (dimension == 'y') {
-	imgOut = typename MImage::Ptr(new MImage(image.getWidth(), 1));
-	int x = 0;
-	typename MImage::x_iterator oEnd = imgOut->row_end(0);
-	for (typename MImage::x_iterator oPtr = imgOut->row_begin(0); oPtr != oEnd; ++oPtr, ++x) {
-	    afwImage::BBox bbox = afwImage::BBox(afwImage::PointI(x, y0), 1, image.getHeight());
-	    afwImage::MaskedImage<PixelT> subImage(image, bbox);
-	    afwMath::Statistics stat = makeStatistics(subImage, flags | afwMath::ERRORS, sctrl);
-	    *oPtr = typename afwImage::MaskedImage<PixelT>::Pixel(stat.getValue(), 0x0, 
-								  stat.getError()*stat.getError());
-	}
+        imgOut = typename MImage::Ptr(new MImage(image.getWidth(), 1));
+        int x = 0;
+        typename MImage::x_iterator oEnd = imgOut->row_end(0);
+        for (typename MImage::x_iterator oPtr = imgOut->row_begin(0); oPtr != oEnd; ++oPtr, ++x) {
+            afwImage::BBox bbox = afwImage::BBox(afwImage::PointI(x, y0), 1, image.getHeight());
+            afwImage::MaskedImage<PixelT> subImage(image, bbox);
+            afwMath::Statistics stat = makeStatistics(subImage, flags | afwMath::ERRORS, sctrl);
+            *oPtr = typename afwImage::MaskedImage<PixelT>::Pixel(stat.getValue(), 0x0, 
+                                                                  stat.getError()*stat.getError());
+        }
     } else {
         throw LSST_EXCEPT(ex::InvalidParameterException,
                           "Can only run statisticsStack in x or y for single image.");
@@ -504,7 +505,7 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
  *
  */
 #define INSTANTIATE_STACKS(TYPE) \
-    template afwImage::Image<TYPE>::Ptr afwMath::statisticsStack<TYPE>(	\
+    template afwImage::Image<TYPE>::Ptr afwMath::statisticsStack<TYPE>( \
             std::vector<afwImage::Image<TYPE>::Ptr > &images, \
             afwMath::Property flags, \
             afwMath::StatisticsControl const& sctrl,    \
@@ -521,14 +522,14 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
             std::vector<TYPE> const &wvector); \
     template afwImage::MaskedImage<TYPE>::Ptr afwMath::statisticsStack( \
             afwImage::Image<TYPE> const &image, \
-            afwMath::Property flags,			\
-	    char dimension,					\
+            afwMath::Property flags,                    \
+            char dimension,                                     \
             afwMath::StatisticsControl const& sctrl); \
     template afwImage::MaskedImage<TYPE>::Ptr afwMath::statisticsStack( \
             afwImage::MaskedImage<TYPE> const &image, \
-            afwMath::Property flags,			\
-	    char dimension,					\
+            afwMath::Property flags,                    \
+            char dimension,                                     \
             afwMath::StatisticsControl const& sctrl);
 
-INSTANTIATE_STACKS(double);
-INSTANTIATE_STACKS(float);
+INSTANTIATE_STACKS(double)
+INSTANTIATE_STACKS(float)

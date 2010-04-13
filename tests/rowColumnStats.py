@@ -19,8 +19,7 @@ import unittest
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.utils.tests as utilsTests
-import lsst.pex.exceptions as pexEx
-import lsst.afw.display.ds9 as ds9
+
 
 class RowColumnStatisticsTestCase(unittest.TestCase):
 
@@ -32,7 +31,7 @@ class RowColumnStatisticsTestCase(unittest.TestCase):
 
         # these are the known answers for comparison
         def nVector(n, v):
-            return [0.0 for i in range(n)]
+            return [v for i in range(n)]
         self.column = nVector(self.n, 0.0)
         self.row    = nVector(self.n, 0.0)
         self.colPlus  = nVector(self.n, 0.0)
