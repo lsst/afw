@@ -63,6 +63,8 @@ class RowColumnStatisticsTestCase(unittest.TestCase):
         
     def tearDown(self):
         del self.img
+        del self.imgProjectCol
+        del self.imgProjectRow
 
     def testColumnStats(self):
         """Test the column statistics """
