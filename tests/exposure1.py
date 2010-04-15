@@ -306,6 +306,11 @@ class ExposureTestCase(unittest.TestCase):
         xy = afwGeom.makePointD(0, 0)
         self.assertEqual(exposureU.getWcs().pixelToSky(xy)[0], exposureF.getWcs().pixelToSky(xy)[0])
 
+    def testMakeExposureLeaks(self):
+        """Test for memory leaks in makeExposure (the test is in utilsTests.MemoryTestCase)"""
+        m = afwImage.makeMaskedImage(afwImage.ImageU(10, 20))
+        e = afwImage.makeExposure(afwImage.makeMaskedImage(afwImage.ImageU(10, 20)))
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
