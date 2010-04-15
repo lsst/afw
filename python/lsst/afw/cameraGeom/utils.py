@@ -567,7 +567,8 @@ def makeImageFromCamera(camera, imageSource=None, imageFactory=afwImage.ImageU):
 
         im <<= makeImageFromRaft(raft, imageSource,
                                  afwGeom.makePointI(bbox.getWidth()/2, bbox.getHeight()/2))
-        im += raft.getId().getSerial()
+        serial = raft.getId().getSerial()
+        im += serial if serial > 0 else 0
 
     return cameraImage
 
