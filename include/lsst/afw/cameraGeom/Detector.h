@@ -4,6 +4,7 @@
 #include <string>
 #include "boost/weak_ptr.hpp"
 #include <boost/enable_shared_from_this.hpp>
+#include "lsst/daf/base/Citizen.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/image/Defect.h"
 #include "lsst/afw/image/Utils.h"
@@ -30,7 +31,8 @@ namespace afwImage = lsst::afw::image;
  */
     class Detector
 #if !defined(SWIG)
-        : public boost::enable_shared_from_this<Detector>
+        : public lsst::daf::base::Citizen,
+          public boost::enable_shared_from_this<Detector>
 #endif
     {
 public:
@@ -42,6 +44,7 @@ public:
             bool hasTrimmablePixels=false, ///< true iff Detector has pixels that can be trimmed (e.g. a CCD)
             double pixelSize=0.0           ///< Size of pixels, mm
                      ) :
+        lsst::daf::base::Citizen(typeid(this)),
         _id(id), _isTrimmed(false), _allPixels(),
         _hasTrimmablePixels(hasTrimmablePixels), _pixelSize(pixelSize)
     {
