@@ -84,12 +84,16 @@ class Mosaic(object):
             mode = self.mode
 
         if mode == "square":
-            nx = math.sqrt(self.nImage)
-            nx, ny = int(nx), int(self.nImage/nx)
-            if nx*ny < self.nImage:
+            nx, ny = 1, self.nImage
+            while nx*im.getWidth() < ny*im.getHeight():
                 nx += 1
-            if nx*ny < self.nImage:
-                ny += 1
+                ny = int(self.nImage/nx)
+
+                if nx*ny < self.nImage:
+                    ny += 1
+                if nx*ny < self.nImage:
+                    nx += 1
+                    
             assert(nx*ny >= self.nImage)
         elif mode == "x":
             nx, ny = self.nImage, 1
