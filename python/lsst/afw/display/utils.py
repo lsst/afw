@@ -55,6 +55,10 @@ class Mosaic(object):
     def append(self, image, label=None, ctype=None):
         """Add an image to the list of images to be mosaiced
         Set may be cleared with Mosaic.reset()"""
+        if not self.xsize:
+            self.xsize = image.getWidth()
+            self.ysize = image.getHeight()
+
         self.images.append(image)
         self.labels.append((label, ctype))
 
@@ -183,6 +187,9 @@ class Mosaic(object):
                     label, ctype = label
                 except:
                     pass
+
+                if not label:
+                    continue
                     
                 ds9.dot(label, self.getBBox(i).getX0(), self.getBBox(i).getY0(), frame=frame, ctype=ctype)
 
