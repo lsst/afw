@@ -333,7 +333,7 @@ namespace image {
         explicit Image(const std::pair<int, int> dimensions, PixelT initialValue=0);
         Image(const Image& rhs, const bool deep=false);
         explicit Image(const Image& rhs, const BBox& bbox, const bool deep=false);
-        explicit Image(std::string const& fileName, const int hdu=0,
+        explicit Image(std::string const& fileName, const int hdu=1,
                        lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
                        BBox const& bbox=BBox());
 
@@ -412,7 +412,7 @@ namespace image {
         explicit DecoratedImage(const std::pair<int, int> dimensions);
         explicit DecoratedImage(typename Image<PixelT>::Ptr rhs);
         DecoratedImage(DecoratedImage const& rhs, const bool deep=false);
-        explicit DecoratedImage(std::string const& fileName, const int hdu=0, BBox const& bbox=BBox());
+        explicit DecoratedImage(std::string const& fileName, const int hdu=1, BBox const& bbox=BBox());
 
         DecoratedImage& operator=(const DecoratedImage& image);
 
