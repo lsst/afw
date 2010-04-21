@@ -38,17 +38,17 @@ namespace detail {
      * Note that null pointers are NOT acceptable for the constructors!
      *
      * Also note that it uses lazy evaluation: images are computed when they are wanted.
-     *
-     * @todo: figure out how to initialize const std::map<Location, std::pair<double> > or similar
-     * so I can have one fractional position map instead of separate maps for x and y.
-     * When I try the obvious (commented out in ConvolveImage.cc) I get errors.
      */
-    class KernelImagesForRegion : public lsst::daf::data::LsstBase, public lsst::daf::base::Persistable {
+    class KernelImagesForRegion :
+        public lsst::daf::data::LsstBase,
+        public lsst::daf::base::Persistable
+    {
     public:
         typedef lsst::afw::math::Kernel::ConstPtr KernelConstPtr;
-        typedef lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel> KernelImage;
-        typedef KernelImage::ConstPtr ImageConstPtr;
-
+        typedef lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel> Image;
+        typedef Image::Ptr ImagePtr;
+        typedef Image::ConstPtr ImageConstPtr;
+        typedef std::vector<KernelImagesForRegion> List;
         /**
          * locations of various points in the region
          *
@@ -57,7 +57,7 @@ namespace detail {
          *    BOTTOM, TOP, LEFT, RIGHT, CENTER
          *
          * These positions always refer to an exact pixel. If the region has an even size along an axis
-         * then the middle is shifted towards the BOTTOM_LEFT by 1/2 pixel for that axis.
+         * then the middle is shifted by 1/2 pixel (in an unspecified direction) for that axis.
          */
         enum Location {
             BOTTOM_LEFT, BOTTOM_RIGHT, TOP_LEFT, TOP_RIGHT,
@@ -66,12 +66,11 @@ namespace detail {
     
         KernelImagesForRegion(
                 KernelConstPtr kernelPtr,
-                lsst::afw::image::BBox const &bbox,
+                lsst::afw::geom::BoxI const &bbox,
                 bool doNormalize);
-
         KernelImagesForRegion(
                 KernelConstPtr kernelPtr,
-                lsst::afw::image::BBox const &bbox,
+                lsst::afw::geom::BoxI const &bbox,
                 bool doNormalize,
                 ImageConstPtr bottomLeftImagePtr,
                 ImageConstPtr bottomRightImagePtr,
@@ -79,38 +78,83 @@ namespace detail {
                 ImageConstPtr topRightImagePtr);
 
         ImageConstPtr getImage(Location location) const;
-
         KernelConstPtr getKernel() const { return _kernelPtr; };
+        lsst::afw::geom::BoxI getBBox() const { return _bbox; };
+        lsst::afw::geom::BoxI getBBoxWithMargin() const;
+        std::vector<KernelImagesForRegion> getSubregions() const;
+        std::vector<KernelImagesForRegion> getSubregions(int nx, int ny) const;
+        bool isInterpolationOk(double tolerance) const;
+        static int getMinInterpSize() { return _MinInterpSize; };
 
-        lsst::afw::image::BBox getBBox() const { return _bbox; };
-
-        std::vector<KernelImagesForRegion> getSubRegions() const;
     private:
         typedef std::map<Location, ImageConstPtr> ImageMap;
-        typedef std::map<Location, double> FracMap;
+        typedef std::vector<Location> LocationList;
 
-        lsst::afw::image::PointI _pixelIndexFromLocation(Location) const;
         inline void _insertImage(Location location, ImageConstPtr &imagePtr) const;
-
-        KernelConstPtr _kernelPtr;
-        lsst::afw::image::BBox _bbox;
-        bool _doNormalize;
-        mutable ImageMap _imageMap; // mutable because simply a cache; const methods can alter it.
+        void _interpolateImage(Image &outImage, Location location1) const;
+        lsst::afw::geom::Point2I _pixelIndexFromLocation(Location) const;
         
-        static const FracMap _fracMapX;
-        static const FracMap _fracMapY;
+        // static helper functions
+        static lsst::afw::geom::Point2D _computeCenterFractionalPosition(lsst::afw::geom::BoxI const &bbox);
+        static lsst::afw::geom::Point2I _computeCenterIndex(lsst::afw::geom::BoxI const &bbox);
+        static inline int _computeNextSubregionLength(int length, int nDivisions);
+        static std::vector<int> _computeSubregionLengths(int length, int nDivisions);
+        
+        // member variables
+        KernelConstPtr _kernelPtr;
+        lsst::afw::geom::BoxI _bbox;
+        lsst::afw::geom::Point2D _centerFractionalPosition;  ///< fractional position of center pixel
+            ///< from bottom left to top right; 0.5 if length of axis is odd, somewhat less if even
+        lsst::afw::geom::Point2I _centerIndex;  ///< index of center pixel
+        bool _doNormalize;
+        mutable ImageMap _imageMap; ///< cache of location:kernel image;
+            ///< mutable to support lazy evaluation: const methods may add entries to the cache
+
+        static int const _MinInterpSize;
+        static LocationList const _TestLocationList;   ///< locations at which to test
+            ///< linear interpolation to see if it is accurate enough
     };
-}
+    
+    template <typename OutImageT, typename InImageT>
+    void convolveWithInterpolation(
+            OutImageT &outImage,
+            InImageT const &inImage,
+            lsst::afw::math::Kernel const &kernel,
+            bool doNormalize,
+            double tolerance = 1.0e-5,
+            int maxInterpolationDistance = 50);
+
+    template <typename OutImageT, typename InImageT>
+    void convolveRegionWithRecursiveInterpolation(
+            OutImageT &outImage,
+            InImageT const &inImage,
+            KernelImagesForRegion const &region,
+            double tolerance = 1.0e-5);
+    
+    template <typename OutImageT, typename InImageT>
+    void convolveRegionWithInterpolation(
+            OutImageT &outImage,
+            InImageT const &inImage,
+            KernelImagesForRegion const &region);
+}   // detail
+
+    template <typename OutImageT, typename InImageT>
+    void scaledPlus(
+        OutImageT &outImage,
+        double c1,
+        InImageT const &inImage1,
+        double c2,
+        InImageT const &inImage2);
 
     template <typename OutImageT, typename InImageT>
     inline typename OutImageT::SinglePixel convolveAtAPoint(
-        typename InImageT::const_xy_locator& inLocator,
-        typename lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel>::const_xy_locator& kernelLocator,
+        typename InImageT::const_xy_locator inImageLocator,
+        typename lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel>::const_xy_locator kernelLocator,
         int kWidth, int kHeight);
     
     template <typename OutImageT, typename InImageT>
     inline typename OutImageT::SinglePixel convolveAtAPoint(
-        typename InImageT::const_xy_locator& inImage,
+        typename InImageT::const_xy_locator inImageLocator,
         std::vector<lsst::afw::math::Kernel::Pixel> const& kernelColList,
         std::vector<lsst::afw::math::Kernel::Pixel> const& kernelRowList
     );
@@ -205,28 +249,25 @@ namespace detail {
  */
 template <typename OutImageT, typename InImageT>
 inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
-    typename InImageT::const_xy_locator& imageLocator, ///< locator for %image pixel that overlaps
+    typename InImageT::const_xy_locator inImageLocator, ///< locator for %image pixel that overlaps
         ///< pixel (0,0) of kernel (the origin of the kernel, not its center)
-    lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel>::const_xy_locator &kernelLocator,
+    lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel>::const_xy_locator kernelLocator,
                     ///< locator for (0,0) pixel of kernel (the origin of the kernel, not its center)
     int kWidth,     ///< number of columns in kernel
     int kHeight     ///< number of rows in kernel
                                   ) {
     typename OutImageT::SinglePixel outValue = 0;
     for (int y = 0; y != kHeight; ++y) {
-        for (int x = 0; x != kWidth; ++x, ++imageLocator.x(), ++kernelLocator.x()) {
+        for (int x = 0; x != kWidth; ++x, ++inImageLocator.x(), ++kernelLocator.x()) {
             typename lsst::afw::math::Kernel::Pixel const kVal = kernelLocator[0];
             if (kVal != 0) {
-                outValue += *imageLocator*kVal;
+                outValue += *inImageLocator*kVal;
             }
         }
 
-        imageLocator  += lsst::afw::image::detail::difference_type(-kWidth, 1);
+        inImageLocator  += lsst::afw::image::detail::difference_type(-kWidth, 1);
         kernelLocator += lsst::afw::image::detail::difference_type(-kWidth, 1);
     }
-
-    imageLocator  += lsst::afw::image::detail::difference_type(0, -kHeight);
-    kernelLocator += lsst::afw::image::detail::difference_type(0, -kHeight);
 
     return outValue;
 }
@@ -242,8 +283,8 @@ inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
  */
 template <typename OutImageT, typename InImageT>
 inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
-    typename InImageT::const_xy_locator& imageLocator,
-                                        ///< locator for %image pixel that overlaps (0,0) pixel of kernel(!)
+    typename InImageT::const_xy_locator inImageLocator,   ///< locator for %image pixel that overlaps
+        ///< pixel (0,0) of kernel (the origin of the kernel, not its center)
     std::vector<lsst::afw::math::Kernel::Pixel> const &kernelXList,  ///< kernel column vector
     std::vector<lsst::afw::math::Kernel::Pixel> const &kernelYList   ///< kernel row vector
 ) {
@@ -256,10 +297,10 @@ inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
 
         OutT outValueY = 0;
         for (k_iter kernelXIter = kernelXList.begin(), xEnd = kernelXList.end();
-             kernelXIter != xEnd; ++kernelXIter, ++imageLocator.x()) {
+             kernelXIter != xEnd; ++kernelXIter, ++inImageLocator.x()) {
             typename lsst::afw::math::Kernel::Pixel const kValX = *kernelXIter;
             if (kValX != 0) {
-                outValueY += *imageLocator*kValX;
+                outValueY += *inImageLocator*kValX;
             }
         }
         
@@ -268,10 +309,8 @@ inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
             outValue += outValueY*kValY;
         }
         
-        imageLocator += lsst::afw::image::detail::difference_type(-kernelXList.size(), 1);
+        inImageLocator += lsst::afw::image::detail::difference_type(-kernelXList.size(), 1);
     }
-    
-    imageLocator += lsst::afw::image::detail::difference_type(0, -kernelYList.size());
 
     return outValue;
 }

@@ -4,8 +4,6 @@
  *
  * @brief Definition of functions declared in ConvolveImage.h
  *
- * This file is meant to be included by lsst/afw/math/KernelFunctions.h
- *
  * @author Russell Owen
  *
  * @ingroup afw
@@ -14,6 +12,7 @@
 #include <cmath>
 #include <functional>
 #include <iostream>
+#include <sstream>
 #include <limits>
 #include <vector>
 #include <string>
@@ -38,6 +37,7 @@ using boost::assign::list_of;
 # define ISINSTANCE(A, B) (dynamic_cast<B const*>(&(A)) != NULL)
 
 namespace {
+
     /**
      * @brief Compute the dot product of a kernel row or column and the overlapping portion of an %image
      *
@@ -189,212 +189,56 @@ include/lsst/afw/image/Pixel.h:212: error: no type named ÔVariancePixelTÕ in Ôst
 }   // anonymous namespace
 
 /**
- * Construct a KernelImagesForRegion
+ * Compute the scaled sum of two images
  *
- * @throw lsst::pex::exceptions::InvalidParameterException if kernelPtr is null
+ * outImage = c1 inImage1 + c2 inImage2
+ *
+ * For example to linearly interpolate between two images set:
+ *   c1 = 1.0 - fracDist
+ *   c2 = fracDist
+ * where fracDist is the fractional distance of outImage from inImage1:
+ *              location of outImage - location of inImage1
+ *   fracDist = -------------------------------------------
+ *              location of inImage2 - location of inImage1
+ *
+ * @throw lsst::pex::exceptions::InvalidParameterException if outImage is not same dimensions
+ * as inImage1 and inImage2.
  */
-afwMath::detail::KernelImagesForRegion::KernelImagesForRegion(
-        KernelConstPtr kernelPtr,     ///< kernel
-        lsst::afw::image::BBox const &bbox, ///< bounding box of region of an image (relative to parent image)
-                                            ///< for which we want to compute kernel images
-        bool doNormalize)                   ///< normalize the kernel images?
-:
-    lsst::daf::data::LsstBase::LsstBase(typeid(this)),
-    _kernelPtr(kernelPtr),
-    _bbox(bbox),
-    _doNormalize(doNormalize),
-    _imageMap()
+template <typename OutImageT, typename InImageT>
+void afwMath::scaledPlus(
+        OutImageT &outImage,        ///< output image
+        double c1,                  ///< coefficient for image 1
+        InImageT const &inImage1,   ///< input image 1
+        double c2,                  ///< coefficient for image 2
+        InImageT const &inImage2)   ///< input image 2
 {
-    if (!_kernelPtr) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "kernelPtr is null");
+    if (outImage.getDimensions() != inImage1.getDimensions()) {
+        std::ostringstream os;
+        os << "outImage dimensions = ( " << outImage.getWidth() << ", " << outImage.getHeight()
+            << ") != (" << inImage1.getWidth() << ", " << inImage1.getHeight()
+            << ") = inImage1 dimensions";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+    } else if (inImage1.getDimensions() != inImage2.getDimensions()) {
+        std::ostringstream os;
+        os << "inImage1 dimensions = ( " << inImage1.getWidth() << ", " << inImage1.getHeight()
+            << ") != (" << inImage2.getWidth() << ", " << inImage2.getHeight()
+            << ") = inImage2 dimensions";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
-}
-
-/**
- * Construct a KernelImagesForRegion with corner images
- *
- * @warning: if any images are incorrect you will get a mess.
- *
- * @throw lsst::pex::exceptions::InvalidParameterException if kernelPtr is null
- * @throw lsst::pex::exceptions::InvalidParameterException if an image pointer is null
- * @throw lsst::pex::exceptions::InvalidParameterException if an image has the wrong dimensions
- */
-afwMath::detail::KernelImagesForRegion::KernelImagesForRegion(
-        KernelConstPtr const kernelPtr,     ///< kernel
-        lsst::afw::image::BBox const &bbox, ///< bounding box of region of an image (relative to parent image)
-                                            ///< for which we want to compute kernel images
-        bool doNormalize,                   ///< normalize the kernel images?
-        ImageConstPtr bottomLeftImagePtr,   ///< kernel image at bottom left of region
-        ImageConstPtr bottomRightImagePtr,  ///< kernel image at bottom right of region
-        ImageConstPtr topLeftImagePtr,      ///< kernel image at top left of region
-        ImageConstPtr topRightImagePtr)     ///< kernel image at top right of region
-:
-    lsst::daf::data::LsstBase::LsstBase(typeid(this)),
-    _kernelPtr(kernelPtr),
-    _bbox(bbox),
-    _doNormalize(doNormalize),
-    _imageMap()
-{
-    if (!_kernelPtr) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "kernelPtr is null");
-    }
-    _insertImage(BOTTOM_LEFT, bottomLeftImagePtr);
-    _insertImage(BOTTOM_RIGHT, bottomRightImagePtr);
-    _insertImage(TOP_LEFT, topLeftImagePtr);
-    _insertImage(TOP_RIGHT, topRightImagePtr);
-}
-
-/**
- * Insert an image in the cache.
- *
- * @throw lsst::pex::exceptions::InvalidParameterException if image pointer is null
- * @throw lsst::pex::exceptions::InvalidParameterException if image has the wrong dimensions
- */
-void afwMath::detail::KernelImagesForRegion::_insertImage(
-        Location location,          ///< location at which to insert image
-        ImageConstPtr &imagePtr)    ///< image to insert
-const {
-    if (imagePtr) {
-        if (_kernelPtr->getDimensions() != imagePtr->getDimensions()) {
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException, "image dimensions wrong");
-        }
-        _imageMap.insert(std::make_pair(location, imagePtr));
-    } else {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "image pointer is null");
-    }
-}
-
-/**
- * Return the image at the specified location
- *
- * If the image has not yet been computed, it is computed at this time.
- */
-afwMath::detail::KernelImagesForRegion::ImageConstPtr afwMath::detail::KernelImagesForRegion::getImage(
-        Location location)  ///< location of image
-const {
-    ImageMap::const_iterator imageMapIter = _imageMap.find(location);
-    if (imageMapIter != _imageMap.end()) {
-        return imageMapIter->second;
-    }
-
-    afwImage::PointI pixelIndex = _pixelIndexFromLocation(location);
-    KernelImage::Ptr kernelImagePtr(new KernelImage(_kernelPtr->getDimensions()));
-    _kernelPtr->computeImage(
-        *kernelImagePtr,
-        _doNormalize,
-        afwImage::indexToPosition(pixelIndex.getX()),
-        afwImage::indexToPosition(pixelIndex.getY()));
-    _imageMap.insert(std::make_pair(location, kernelImagePtr));
-    return kernelImagePtr;
-}
-
-/**
- * Divide region into four roughly equal sub-regions and return
- *
- * The subregions have exactly one row or column of overlapping pixels;
- * thus the 4 regions share 5 kernel images.
- *
- * @warning: any images missing that have not yet been computed for this region are computed;
- * that is why this function is not const.
- *
- * @return a list of subregions in order: bottom left, bottom right, top left, top right
- */
-std::vector<afwMath::detail::KernelImagesForRegion>
-afwMath::detail::KernelImagesForRegion::getSubRegions() const {
-    std::vector<KernelImagesForRegion> retList;
     
-    afwImage::PointI ctrInd = _pixelIndexFromLocation(CENTER);
-
-    retList.push_back(KernelImagesForRegion(_kernelPtr,
-        afwImage::BBox(_bbox.getLLC(), ctrInd),
-        _doNormalize,
-        getImage(BOTTOM_LEFT),
-        getImage(BOTTOM),
-        getImage(LEFT),
-        getImage(CENTER)));
-
-    retList.push_back(KernelImagesForRegion(_kernelPtr,
-        afwImage::BBox(
-            afwImage::PointI(ctrInd.getX(), _bbox.getY0()),
-            afwImage::PointI(_bbox.getX1(), ctrInd.getY())),
-        _doNormalize,
-        getImage(BOTTOM),
-        getImage(BOTTOM_RIGHT),
-        getImage(CENTER),
-        getImage(RIGHT)));
-
-    retList.push_back(KernelImagesForRegion(_kernelPtr,
-        afwImage::BBox(
-            afwImage::PointI(_bbox.getX0(), ctrInd.getY()),
-            afwImage::PointI(ctrInd.getX(), _bbox.getY1())),
-        _doNormalize,
-        getImage(LEFT),
-        getImage(CENTER),
-        getImage(TOP_LEFT),
-        getImage(TOP)));
-
-    retList.push_back(KernelImagesForRegion(_kernelPtr,
-        afwImage::BBox(ctrInd, _bbox.getURC()),
-        _doNormalize,
-        getImage(CENTER),
-        getImage(RIGHT),
-        getImage(TOP),
-        getImage(TOP_RIGHT)));
-
-    return retList;
+    typedef typename InImageT::const_x_iterator InConstXIter;
+    typedef typename OutImageT::x_iterator OutXIter;
+    for (int y = 0; y != inImage1.getHeight(); ++y) {
+        InConstXIter const end1 = inImage1.row_end(y);
+        InConstXIter inIter1 = inImage1.row_begin(y);
+        InConstXIter inIter2 = inImage2.row_begin(y);
+        OutXIter outIter = outImage.row_begin(y);
+        for (; inIter1 != end1; ++inIter1, ++inIter2, ++outIter) {
+            *outIter = (*inIter1 * c1) + (*inIter2 * c2);
+        }
+    }
 }
 
-/**
- * Compute pixel index of a given location, relative to the parent image
- * (thus offset by bottom left corner of bounding box)
- */
-lsst::afw::image::PointI afwMath::detail::KernelImagesForRegion::_pixelIndexFromLocation(
-        Location location)  ///< location for which to return pixel index
-const {
-    double fracX = (_fracMapX.find(location))->second;
-    double fracY = (_fracMapY.find(location))->second;
-    return afwImage::PointI(
-        _bbox.getX0() + static_cast<int>((_bbox.getWidth() - 1) * fracX),
-        _bbox.getY0() + static_cast<int>((_bbox.getHeight() - 1) * fracY)
-    );
-}
-
-const std::map<afwMath::detail::KernelImagesForRegion::Location, double>
-afwMath::detail::KernelImagesForRegion::_fracMapX = map_list_of
-    (BOTTOM_LEFT, 0)
-    (BOTTOM_RIGHT, 1.0)
-    (TOP_LEFT, 0.0)
-    (TOP_RIGHT, 1.0)
-    (BOTTOM, 0.5)
-    (TOP, 0.5)
-    (LEFT, 0.0)
-    (RIGHT, 1.0)
-    (CENTER, 0.5);
-
-const std::map<afwMath::detail::KernelImagesForRegion::Location, double>
-afwMath::detail::KernelImagesForRegion::_fracMapY = map_list_of
-    (BOTTOM_LEFT, 0.0)
-    (BOTTOM_RIGHT, 0.0)
-    (TOP_LEFT, 1.0)
-    (TOP_RIGHT, 1.0)
-    (BOTTOM, 0.0)
-    (TOP, 1.0)
-    (LEFT, 0.5)
-    (RIGHT, 0.5)
-    (CENTER, 0.5);
-
-// This is what I want to do, but I can't get it to work:
-// const std::map<afwMath::detail::KernelImagesForRegion::Location, double>
-// afwMath::detail::KernelImagesForRegion::_fracMapX = map_list_of
-//     (BOTTOM_LEFT, boost::assign::list_of(0.0)(0.0));
-//     (BOTTOM_RIGHT, boost::assign::list_of(1.0, 0.0))
-//     (TOP_LEFT, boost::assign::list_of(0.0, 1.0) )
-//     (TOP_RIGHT, boost::assign::list_of(1.0, 1.0))
-//     (BOTTOM, boost::assign::list_of(0.5, 0.0))
-//     (TOP, boost::assign::list_of(0.5, 1.0))
-//     (LEFT, boost::assign::list_of(0.0, 0.5))
-//     (RIGHT, boost::assign::list_of(1.0, 0.5))
-//     (CENTER, boost::assign::list_of(0.5, 0.5));
 
 /**
  * @brief Low-level convolution function that does not set edge pixels.
@@ -417,7 +261,7 @@ void afwMath::basicConvolve(
     OutImageT &convolvedImage,      ///< convolved %image
     InImageT const& inImage,        ///< %image to convolve
     afwMath::Kernel const& kernel,  ///< convolution kernel
-    bool doNormalize                ///< if True, normalize the kernel, else use "as is"
+    bool doNormalize                ///< if true, normalize the kernel, else use "as is"
 ) {
     typedef typename afwMath::Kernel::Pixel KernelPixel;
     typedef afwImage::Image<KernelPixel> KernelImage;
@@ -457,12 +301,19 @@ void afwMath::basicConvolve(
     // OK, use general (and slower) form
 
     if (convolvedImage.getDimensions() != inImage.getDimensions()) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
-            "convolvedImage not the same size as inImage");
+        std::ostringstream os;
+        os << "convolvedImage dimensions = ( "
+            << convolvedImage.getWidth() << ", " << convolvedImage.getHeight()
+            << ") != (" << inImage.getWidth() << ", " << inImage.getHeight() << ") = inImage dimensions";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
     if (inImage.getDimensions() < kernel.getDimensions()) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
-            "inImage smaller than kernel in columns and/or rows");
+        std::ostringstream os;
+        os << "inImage dimensions = ( "
+            << inImage.getWidth() << ", " << inImage.getHeight()
+            << ") smaller than (" << kernel.getWidth() << ", " << kernel.getHeight()
+            << ") = kernel dimensions in width and/or height";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
     
     int const inImageWidth = inImage.getWidth();
@@ -535,12 +386,19 @@ void afwMath::basicConvolve(
     assert (!kernel.isSpatiallyVarying());
 
     if (convolvedImage.getDimensions() != inImage.getDimensions()) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
-            "convolvedImage not the same size as inImage");
+        std::ostringstream os;
+        os << "convolvedImage dimensions = ( "
+            << convolvedImage.getWidth() << ", " << convolvedImage.getHeight()
+            << ") != (" << inImage.getWidth() << ", " << inImage.getHeight() << ") = inImage dimensions";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
-    if (convolvedImage.getDimensions() < kernel.getDimensions()) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
-            "inImage smaller than kernel in columns and/or rows");
+    if (inImage.getDimensions() < kernel.getDimensions()) {
+        std::ostringstream os;
+        os << "inImage dimensions = ( "
+            << inImage.getWidth() << ", " << inImage.getHeight()
+            << ") smaller than (" << kernel.getWidth() << ", " << kernel.getHeight()
+            << ") = kernel dimensions in width and/or height";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
     
     int const mImageWidth = inImage.getWidth(); // size of input region
@@ -589,7 +447,7 @@ void afwMath::basicConvolve(
     OutImageT& convolvedImage,      ///< convolved %image
     InImageT const& inImage,        ///< %image to convolve
     afwMath::LinearCombinationKernel const& kernel, ///< convolution kernel
-    bool doNormalize                ///< if True, normalize the kernel, else use "as is"
+    bool doNormalize                ///< if true, normalize the kernel, else use "as is"
 ) {
     if (!kernel.isSpatiallyVarying()) {
         // use the standard algorithm for the spatially invariant case
@@ -605,12 +463,19 @@ void afwMath::basicConvolve(
     
 
     if (convolvedImage.getDimensions() != inImage.getDimensions()) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
-            "convolvedImage not the same size as inImage");
+        std::ostringstream os;
+        os << "convolvedImage dimensions = ( "
+            << convolvedImage.getWidth() << ", " << convolvedImage.getHeight()
+            << ") != (" << inImage.getWidth() << ", " << inImage.getHeight() << ") = inImage dimensions";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
     if (inImage.getDimensions() < kernel.getDimensions()) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
-            "inImage smaller than kernel in columns and/or rows");
+        std::ostringstream os;
+        os << "inImage dimensions = ( "
+            << inImage.getWidth() << ", " << inImage.getHeight()
+            << ") smaller than (" << kernel.getWidth() << ", " << kernel.getHeight()
+            << ") = kernel dimensions in width and/or height";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
     
     pexLog::TTrace<3>("lsst.afw.kernel.convolve",
@@ -716,7 +581,7 @@ void afwMath::basicConvolve(
     OutImageT& convolvedImage,      ///< convolved %image
     InImageT const& inImage,        ///< %image to convolve
     afwMath::SeparableKernel const &kernel, ///< convolution kernel
-    bool doNormalize                ///< if True, normalize the kernel, else use "as is"
+    bool doNormalize                ///< if true, normalize the kernel, else use "as is"
 ) {
     typedef typename afwMath::Kernel::Pixel KernelPixel;
     typedef typename std::vector<KernelPixel> KernelVector;
@@ -728,12 +593,19 @@ void afwMath::basicConvolve(
     typedef typename OutImageT::SinglePixel OutPixel;
 
     if (convolvedImage.getDimensions() != inImage.getDimensions()) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
-            "convolvedImage not the same size as inImage");
+        std::ostringstream os;
+        os << "convolvedImage dimensions = ( "
+            << convolvedImage.getWidth() << ", " << convolvedImage.getHeight()
+            << ") != (" << inImage.getWidth() << ", " << inImage.getHeight() << ") = inImage dimensions";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
     if (inImage.getDimensions() < kernel.getDimensions()) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
-            "inImage smaller than kernel in columns and/or rows");
+        std::ostringstream os;
+        os << "inImage dimensions = ( "
+            << inImage.getWidth() << ", " << inImage.getHeight()
+            << ") smaller than (" << kernel.getWidth() << ", " << kernel.getHeight()
+            << ") = kernel dimensions in width and/or height";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
     
     int const imWidth = inImage.getWidth();
@@ -902,35 +774,36 @@ void afwMath::convolve(
 
 
 /*
- *  Explicit instantiation of all convolve functions.
+ * Explicit instantiation of all convolve functions.
  *
- * This code needs to be compiled with full optimization, and there's no need why
+ * This code needs to be compiled with full optimization, and there's no reason why
  * it should be instantiated in the swig wrappers.
  */
 #define IMAGE(PIXTYPE) afwImage::Image<PIXTYPE>
 #define MASKEDIMAGE(PIXTYPE) afwImage::MaskedImage<PIXTYPE, afwImage::MaskPixel, afwImage::VariancePixel>
 //
-// Next a macro to generate needed instantiations for IMAGE (e.g. MASKEDIMAGE) and the specified pixel types
-//
-// Note that IMAGE is a macro, not a class name
+// Next a macro to generate needed instantiations for IMGMACRO (either IMAGE or MASKEDIMAGE)
+// and the specified pixel types
 //
 /* NL's a newline for debugging -- don't define it and say
  g++ -C -E -I$(eups list -s -d boost)/include Convolve.cc | perl -pe 's| *NL *|\n|g'
 */
 #define NL /* */
-#define CONVOLUTIONFUNCSBYTYPE(IMAGE, OUTPIXTYPE, INPIXTYPE) \
+#define CONVOLUTIONFUNCSBYTYPE(IMGMACRO, OUTPIXTYPE, INPIXTYPE) \
+    template void afwMath::scaledPlus( \
+        IMGMACRO(OUTPIXTYPE)&, double, IMGMACRO(INPIXTYPE) const&, double, IMGMACRO(INPIXTYPE) const&); NL \
     template void afwMath::convolve( \
-        IMAGE(OUTPIXTYPE)&, IMAGE(INPIXTYPE) const&, AnalyticKernel const&, bool, bool); NL \
+        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, AnalyticKernel const&, bool, bool); NL \
     template void afwMath::convolve( \
-        IMAGE(OUTPIXTYPE)&, IMAGE(INPIXTYPE) const&, DeltaFunctionKernel const&, bool, bool); NL \
+        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, DeltaFunctionKernel const&, bool, bool); NL \
     template void afwMath::convolve( \
-        IMAGE(OUTPIXTYPE)&, IMAGE(INPIXTYPE) const&, FixedKernel const&, bool, bool); NL \
+        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, FixedKernel const&, bool, bool); NL \
     template void afwMath::convolve( \
-        IMAGE(OUTPIXTYPE)&, IMAGE(INPIXTYPE) const&, LinearCombinationKernel const&, bool, bool); NL \
+        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, LinearCombinationKernel const&, bool, bool); NL \
     template void afwMath::convolve( \
-        IMAGE(OUTPIXTYPE)&, IMAGE(INPIXTYPE) const&, SeparableKernel const&, bool, bool); NL \
+        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, SeparableKernel const&, bool, bool); NL \
     template void afwMath::convolve( \
-        IMAGE(OUTPIXTYPE)&, IMAGE(INPIXTYPE) const&, Kernel const&, bool, bool);
+        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, Kernel const&, bool, bool);
 
 //
 // Now a macro to specify Image and MaskedImage

@@ -2,73 +2,31 @@
 import glob, re, sys
 Import('env')
 
-env.Program(["forEachPixel.cc"], LIBS=env.getlibs("afw"))
-env.Program(["image.cc"], LIBS=env.getlibs("afw"))
-env.Program(["image1.cc"], LIBS=env.getlibs("afw"))
-env.Program(["image2.cc"], LIBS=env.getlibs("afw"))
-env.Program(["mask.cc"], LIBS=env.getlibs("afw"))
-env.Program(["decoratedImage.cc"], LIBS=env.getlibs("afw"))
-env.Program(["maskedImage.cc"], LIBS=env.getlibs("afw"))
-env.Program(["statistics.cc"], LIBS=env.getlibs("afw"))
-env.Program(["maskedImage1.cc"], LIBS=env.getlibs("afw"))
-env.Program(["maskedImage2.cc"], LIBS=env.getlibs("afw"))
-env.Program(["footprintFunctor.cc"], LIBS=env.getlibs("afw"))
-
-env.Program(["maskedImageFitsIo.cc"], LIBS=env.getlibs("afw"))
-env.Program("timeImageIterators.cc", LIBS=env.getlibs("afw"))
-env.Program(["timeImageAddition.cc"], LIBS=env.getlibs("afw"))
-env.Program(["timePixelAccess.cc"], LIBS=env.getlibs("afw"))
-env.Program(["timePixelAccessGil.cc"], LIBS=env.getlibs("afw"))
-
-env.Program(["chebyshev1Function.cc"], LIBS=env.getlibs("afw"))
-env.Program(["gaussianFunction.cc"], LIBS=env.getlibs("afw"))
-env.Program(["lanczosFunction.cc"], LIBS=env.getlibs("afw"))
-env.Program(["polynomialFunction.cc"], LIBS=env.getlibs("afw"))
-
-env.Program(["minimize.cc"], LIBS=env.getlibs("afw"))
-
-env.Program(["analyticKernel.cc"], LIBS=env.getlibs("afw"))
-env.Program(["deltaFunctionKernels.cc"], LIBS=env.getlibs("afw"))
-env.Program(["fixedKernel.cc"], LIBS=env.getlibs("afw"))
-env.Program(["lanczosKernel.cc"], LIBS=env.getlibs("afw"))
-env.Program("kernelImagesForRegion.cc", LIBS=env.getlibs("afw"))
-
-env.Program(["convolveLinear.cc"], LIBS=env.getlibs("afw"))
-env.Program(["simpleConvolve.cc"], LIBS=env.getlibs("afw"))
-env.Program(["spatiallyVaryingConvolve.cc"], LIBS=env.getlibs("afw"))
-env.Program(["timeConvolve.cc"], LIBS=env.getlibs("afw"))
-env.Program(["timeSpatiallyVaryingConvolve.cc"], LIBS=env.getlibs("afw"))
-
-env.Program(["makeExposure.cc"], LIBS=env.getlibs("afw wcs"))
-env.Program(["wcsTest.cc"], LIBS=env.getlibs("afw wcs"))
-
-env.Program(["imageBackground.cc"], LIBS=env.getlibs("afw"))
-env.Program(["imageStatistics.cc"], LIBS=env.getlibs("afw"))
-env.Program(["splineInterpolate.cc"], LIBS=env.getlibs("afw"))
-env.Program(["integrateCartesian.cc"], LIBS=env.getlibs("afw"))
-env.Program(["integratePolar.cc"], LIBS=env.getlibs("afw"))
-env.Program(["integrateExample.cc"], LIBS=env.getlibs("afw"))
-
-env.Program(["simpleStacker.cc"], LIBS=env.getlibs("afw"))
-
-env.Program(["ccd.cc"], LIBS=env.getlibs("afw"))
 #
-# Build all ticket test files
+# Build all cc files
+# (to exclude a file -- e.g. to handle it specially -- test for its name in the loop)
 #
-for cfile in glob.glob("ticket*.cc"):
+print "RE-ENABLE EXAMPLES"
+for cfile in glob.glob("*.cc"):
+    # DITCH ME TO RE-ENABLE EXAMPLSE
+    if not cfile.startswith("kernelImages"):
+        continue
+    if cfile.startswith("spatialCellExample"):
+        continue
     env.Program(cfile, LIBS=env.getlibs("afw"))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
 # Build the swig extension used to illustrate SpatialCells
 #
-env.CheckSwig("python", ilang="c++",
-              includedProducts=["afw", "utils", "daf_base", "daf_persistence", "daf_data",
-                                "pex_exceptions", "pex_logging", "pex_policy", "security"])
-
-testSpatialCellLib = env.LoadableModuleIncomplete("_testSpatialCellLib",
-                                                  ["testSpatialCellLib.i", "testSpatialCell.cc"],
-                                                  CCFLAGS=re.sub("-Wall", "", " ".join(env['CCFLAGS'])),
-                                                  LIBS=env.getlibs("afw"))
-
-env.Program(["spatialCellExample.cc", "testSpatialCell.cc"], LIBS=env.getlibs("afw"))
+print "RE-ENABLE SPECIAL EXAMPLE"
+# env.CheckSwig("python", ilang="c++",
+#               includedProducts=["afw", "utils", "daf_base", "daf_persistence", "daf_data",
+#                                 "pex_exceptions", "pex_logging", "pex_policy", "security"])
+# 
+# testSpatialCellLib = env.LoadableModuleIncomplete("_testSpatialCellLib",
+#                                                   ["testSpatialCellLib.i", "testSpatialCell.cc"],
+#                                                   CCFLAGS=re.sub("-Wall", "", " ".join(env['CCFLAGS'])),
+#                                                   LIBS=env.getlibs("afw"))
+# 
+# env.Program(["spatialCellExample.cc", "testSpatialCell.cc"], LIBS=env.getlibs("afw"))
