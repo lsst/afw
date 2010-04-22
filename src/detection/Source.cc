@@ -17,7 +17,9 @@ namespace det = lsst::afw::detection;
  * Default Contructor
  */
 det::Source::Source()
-    : _petroFlux(0.0),
+    : _raObject(0.0),
+      _decObject(0.0), 
+      _petroFlux(0.0),
       _petroFluxErr(0.0),
       _sky(0.0),
       _skyErr(0.0)
@@ -28,6 +30,8 @@ det::Source::Source()
  */
 det::Source::Source(Source const & other)
     : BaseSourceAttributes<NUM_SOURCE_NULLABLE_FIELDS>(other),
+      _raObject(other._raObject),
+      _decObject(other._decObject),
       _petroFlux(other._petroFlux),
       _petroFluxErr(other._petroFluxErr),
       _sky(other._sky),
@@ -73,6 +77,8 @@ bool det::Source::operator==(Source const & d) const {
         areEqual(_raAstromErr, d._raAstromErr,  RA_ASTROM_ERR) &&
         areEqual(_decAstrom, d._decAstrom,  DEC_ASTROM) &&
         areEqual(_decAstromErr, d._decAstromErr,  DEC_ASTROM_ERR) &&
+        areEqual(_raObject, d._raObject, RA_OBJECT) &&
+        areEqual(_decObject, d._decObject, DEC_OBJECT) &&
         areEqual(_taiMidPoint, d._taiMidPoint) &&
         areEqual(_taiRange, d._taiRange,  TAI_RANGE) &&
         areEqual(_psfFlux, d._psfFlux) &&

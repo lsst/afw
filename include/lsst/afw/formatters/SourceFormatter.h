@@ -96,6 +96,8 @@ private:
         RA_ASTROM_ERR,
         DEC_ASTROM,
         DEC_ASTROM_ERR,
+        RA_OBJECT,
+        DEC_OBJECT,
         TAI_MID_POINT,
         TAI_RANGE,
         PSF_FLUX,

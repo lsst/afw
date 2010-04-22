@@ -186,7 +186,14 @@ void form::SourceVectorFormatter::insertRow(T & db, Source const & d) {
     if (!d.isNull(det::DEC_ASTROM_ERR))
         db. template setColumn<float>("declAstromErr", d._decAstromErr);        
     else db.setColumnToNull("declAstromErr");
-  
+ 
+    if (!d.isNull(det::RA_OBJECT))
+        db.template setColumn<double>("raObject", d._raObject);
+    else db.setColumnToNull("raObject");
+    if (!d.isNull(det::DEC_OBJECT))
+        db.template setColumn<double>("declObject", d._decObject);
+    else db.setColumnToNull("declObject");
+ 
     db.template setColumn<double>("taiMidPoint", d._taiMidPoint);
     
     if (!d.isNull(det::TAI_RANGE))
@@ -322,7 +329,9 @@ void form::SourceVectorFormatter::setupFetch(DbStorage & db, Source & d) {
     db.outParam("raAstrom",           &(d._raAstrom));
     db.outParam("raAstromErr",        &(d._raAstromErr));    
     db.outParam("declAstrom",         &(d._decAstrom));
-    db.outParam("declAstromErr",      &(d._decAstromErr));    
+    db.outParam("declAstromErr",      &(d._decAstromErr));
+    db.outParam("raObject",           &(d._raObject));
+    db.outParam("declObject",         &(d._decObject));
     db.outParam("taiMidPoint",        &(d._taiMidPoint));
     db.outParam("taiRange",           &(d._taiRange));
     db.outParam("psfFlux",            &(d._psfFlux));
@@ -631,6 +640,12 @@ Persistable* form::SourceVectorFormatter::read(
                 }
                 if (db->columnIsNull(DEC_ASTROM_ERR)) { 
                     data.setNull(det::DEC_ASTROM_ERR); 
+                }
+                if (db->columnIsNull(RA_OBJECT)) {
+                    data.setNull(det::RA_OBJECT);
+                }
+                if (db->columnIsNull(DEC_OBJECT)) {
+                    data.setNull(det::DEC_OBJECT);
                 }
                 if (db->columnIsNull(TAI_MID_POINT)) {  
                     throw LSST_EXCEPT(ex::RuntimeErrorException, 
