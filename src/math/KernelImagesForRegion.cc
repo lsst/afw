@@ -114,22 +114,6 @@ const {
 }
 
 /**
- * Compute the bounding box expanded by the kernel. This is the bounding box for pixels of an input image
- * required to compute convolved pixels over getBBox() on an output image.
- *
- * @return the bounding box expanded by the kernel. 
- */
-afwGeom::BoxI mathDetail::KernelImagesForRegion::getBBoxWithMargin() const {
-    return afwGeom::BoxI(
-        afwGeom::Point2I::make(
-            _bbox.getMinX() - _kernelPtr->getCtrX(),
-            _bbox.getMinY() - _kernelPtr->getCtrY()),
-        afwGeom::Point2I::make(
-            _bbox.getWidth() + 1 - _kernelPtr->getWidth(),
-            _bbox.getHeight() + 1 - _kernelPtr->getHeight()));
-}
-
-/**
  * Divide region into 2 by 2 sub-regions of approximately equal size.
  *
  * The subregions have exactly one row or column of overlapping pixels;

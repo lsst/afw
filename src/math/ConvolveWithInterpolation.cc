@@ -151,7 +151,7 @@ void mathDetail::convolveRegionWithInterpolation(
     KernelImage kernelImage(leftKernelImage, true);  // final interpolated kernel image
 
     afwGeom::BoxI const outBBox = region.getBBox();
-    afwGeom::BoxI const inBBox = region.getBBoxWithMargin();
+    afwGeom::BoxI const inBBox = kernelPtr->growBBox(outBBox);
     
     double xfrac = 1.0 / static_cast<double>(outBBox.getWidth());
     double yfrac = 1.0 / static_cast<double>(outBBox.getHeight());

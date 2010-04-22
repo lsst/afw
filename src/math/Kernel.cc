@@ -25,6 +25,7 @@
 #include "lsst/afw/math/LocalKernel.h"
 
 namespace pexExcept = lsst::pex::exceptions;
+namespace afwGeom = lsst::afw::geom;
 namespace afwMath = lsst::afw::math;
 
 afwMath::generic_kernel_tag afwMath::generic_kernel_tag_; ///< Used as default value in argument lists
@@ -210,6 +211,47 @@ std::vector<afwMath::Kernel::SpatialFunctionPtr> afwMath::Kernel::getSpatialFunc
 std::vector<double> afwMath::Kernel::getKernelParameters() const {
     return std::vector<double>();
 }
+
+
+/**
+ * Given a bounding box for pixels one wishes to compute by convolving an image with this kernel,
+ * return the bounding box of pixels that must be accessed on the image to be convolved.
+ * Thus the box is expanded by kernel.getCtr() on the bottom left corner
+ * and the size is expanded by kernel.getDimensions()-1.
+ *
+ * @return the bbox expanded by the kernel. 
+ */
+afwGeom::BoxI afwMath::Kernel::growBBox(afwGeom::BoxI const &bbox) const {
+    return afwGeom::BoxI(
+        afwGeom::Point2I::make(
+            bbox.getMinX() - getCtrX(),
+            bbox.getMinY() - getCtrY()),
+        afwGeom::Point2I::make(
+            bbox.getWidth()  + getWidth() - 1,
+            bbox.getHeight() + getHeight() - 1));
+}
+
+/**
+ * Given a bounding box for an image one wishes to convolve with this kernel,
+ * return the bounding box for the region of pixels that can be computed.
+ * Thus the box is shrunk by kernel.getCtr() on the bottom left corner
+ * and the size is shrunk by kernel.getDimensions()-1.
+ *
+ * @return the bbox expanded by the kernel.
+ *
+ * @throw lsst::pex::exceptions::InvalidParameterException if the kernel is larger than bbox
+ * in either dimension.
+ */
+afwGeom::BoxI afwMath::Kernel::shrinkBBox(afwGeom::BoxI const &bbox) const {
+    return afwGeom::BoxI(
+        afwGeom::Point2I::make(
+            bbox.getMinX() + getCtrX(),
+            bbox.getMinY() + getCtrY()),
+        afwGeom::Point2I::make(
+            bbox.getWidth()  + 1 - getWidth(),
+            bbox.getHeight() + 1 - getHeight()));
+}
+
 
 /**
  * @brief Return a string representation of the kernel

@@ -80,7 +80,6 @@ namespace detail {
         ImageConstPtr getImage(Location location) const;
         KernelConstPtr getKernel() const { return _kernelPtr; };
         lsst::afw::geom::BoxI getBBox() const { return _bbox; };
-        lsst::afw::geom::BoxI getBBoxWithMargin() const;
         std::vector<KernelImagesForRegion> getSubregions() const;
         std::vector<KernelImagesForRegion> getSubregions(int nx, int ny) const;
         bool isInterpolationOk(double tolerance) const;
@@ -136,69 +135,71 @@ namespace detail {
             OutImageT &outImage,
             InImageT const &inImage,
             KernelImagesForRegion const &region);
+
+    template <typename OutImageT, typename InImageT>
+    void convolveWithBruteForce(
+            OutImageT &convolvedImage,
+            InImageT const& inImage,
+            lsst::afw::math::Kernel const& kernel,
+            bool doNormalize);
 }   // detail
 
     template <typename OutImageT, typename InImageT>
     void scaledPlus(
-        OutImageT &outImage,
-        double c1,
-        InImageT const &inImage1,
-        double c2,
-        InImageT const &inImage2);
+            OutImageT &outImage,
+            double c1,
+            InImageT const &inImage1,
+            double c2,
+            InImageT const &inImage2);
 
     template <typename OutImageT, typename InImageT>
     inline typename OutImageT::SinglePixel convolveAtAPoint(
-        typename InImageT::const_xy_locator inImageLocator,
-        typename lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel>::const_xy_locator kernelLocator,
-        int kWidth, int kHeight);
+            typename InImageT::const_xy_locator inImageLocator,
+            typename lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel>::const_xy_locator kernelLocator,
+            int kWidth,
+            int kHeight);
     
     template <typename OutImageT, typename InImageT>
     inline typename OutImageT::SinglePixel convolveAtAPoint(
-        typename InImageT::const_xy_locator inImageLocator,
-        std::vector<lsst::afw::math::Kernel::Pixel> const& kernelColList,
-        std::vector<lsst::afw::math::Kernel::Pixel> const& kernelRowList
-    );
+            typename InImageT::const_xy_locator inImageLocator,
+            std::vector<lsst::afw::math::Kernel::Pixel> const& kernelColList,
+            std::vector<lsst::afw::math::Kernel::Pixel> const& kernelRowList);
     
     template <typename OutImageT, typename InImageT>
     void basicConvolve(
-        OutImageT& convolvedImage,
-        InImageT const& inImage,
-        lsst::afw::math::Kernel const& kernel,
-        bool doNormalize
-    );
+            OutImageT& convolvedImage,
+            InImageT const& inImage,
+            lsst::afw::math::Kernel const& kernel,
+            bool doNormalize);
     
     template <typename OutImageT, typename InImageT>
     void basicConvolve(
-        OutImageT& convolvedImage,
-        InImageT const& inImage,
-        lsst::afw::math::DeltaFunctionKernel const& kernel,
-        bool doNormalize
-    );
+            OutImageT& convolvedImage,
+            InImageT const& inImage,
+            lsst::afw::math::DeltaFunctionKernel const& kernel,
+            bool doNormalize);
     
     template <typename OutImageT, typename InImageT>
     void basicConvolve(
-        OutImageT& convolvedImage,
-        InImageT const& inImage,
-        lsst::afw::math::LinearCombinationKernel const& kernel,
-        bool doNormalize
-    );
+            OutImageT& convolvedImage,
+            InImageT const& inImage,
+            lsst::afw::math::LinearCombinationKernel const& kernel,
+            bool doNormalize);
     
     template <typename OutImageT, typename InImageT>
     void basicConvolve(
-        OutImageT& convolvedImage,
-        InImageT const& inImage,
-        lsst::afw::math::SeparableKernel const& kernel,
-        bool doNormalize
-    );
+            OutImageT& convolvedImage,
+            InImageT const& inImage,
+            lsst::afw::math::SeparableKernel const& kernel,
+            bool doNormalize);
     
     template <typename OutImageT, typename InImageT, typename KernelT>
     void convolve(
-        OutImageT& convolvedImage,
-        InImageT const& inImage,
-        KernelT const& kernel,
-        bool doNormalize,
-        bool copyEdge = false
-    );
+            OutImageT& convolvedImage,
+            InImageT const& inImage,
+            KernelT const& kernel,
+            bool doNormalize,
+            bool copyEdge = false);
     
     /**
      * \brief Return an edge pixel appropriate for a given Image type
@@ -207,7 +208,8 @@ namespace detail {
      */
     template <typename ImageT>
     typename ImageT::SinglePixel edgePixel(
-        lsst::afw::image::detail::Image_tag ///< lsst::afw::image::detail::image_traits<ImageT>::image_category()
+            lsst::afw::image::detail::Image_tag
+                ///< lsst::afw::image::detail::image_traits<ImageT>::image_category()
     ) {
         typedef typename ImageT::SinglePixel SinglePixelT;
         return SinglePixelT(
@@ -225,7 +227,8 @@ namespace detail {
      */
     template <typename MaskedImageT>
     typename MaskedImageT::SinglePixel edgePixel(
-        lsst::afw::image::detail::MaskedImage_tag   ///< lsst::afw::image::detail::image_traits<MaskedImageT>::image_category()
+            lsst::afw::image::detail::MaskedImage_tag
+            ///< lsst::afw::image::detail::image_traits<MaskedImageT>::image_category()
     ) {
         typedef typename MaskedImageT::Image::Pixel ImagePixelT;
         typedef typename MaskedImageT::Variance::Pixel VariancePixelT;
@@ -249,13 +252,13 @@ namespace detail {
  */
 template <typename OutImageT, typename InImageT>
 inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
-    typename InImageT::const_xy_locator inImageLocator, ///< locator for %image pixel that overlaps
-        ///< pixel (0,0) of kernel (the origin of the kernel, not its center)
-    lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel>::const_xy_locator kernelLocator,
-                    ///< locator for (0,0) pixel of kernel (the origin of the kernel, not its center)
-    int kWidth,     ///< number of columns in kernel
-    int kHeight     ///< number of rows in kernel
-                                  ) {
+        typename InImageT::const_xy_locator inImageLocator, ///< locator for %image pixel that overlaps
+            ///< pixel (0,0) of kernel (the origin of the kernel, not its center)
+        lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel>::const_xy_locator kernelLocator,
+                        ///< locator for (0,0) pixel of kernel (the origin of the kernel, not its center)
+        int kWidth,     ///< number of columns in kernel
+        int kHeight)    ///< number of rows in kernel
+{
     typename OutImageT::SinglePixel outValue = 0;
     for (int y = 0; y != kHeight; ++y) {
         for (int x = 0; x != kWidth; ++x, ++inImageLocator.x(), ++kernelLocator.x()) {
@@ -283,11 +286,11 @@ inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
  */
 template <typename OutImageT, typename InImageT>
 inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
-    typename InImageT::const_xy_locator inImageLocator,   ///< locator for %image pixel that overlaps
-        ///< pixel (0,0) of kernel (the origin of the kernel, not its center)
-    std::vector<lsst::afw::math::Kernel::Pixel> const &kernelXList,  ///< kernel column vector
-    std::vector<lsst::afw::math::Kernel::Pixel> const &kernelYList   ///< kernel row vector
-) {
+        typename InImageT::const_xy_locator inImageLocator,   ///< locator for %image pixel that overlaps
+            ///< pixel (0,0) of kernel (the origin of the kernel, not its center)
+        std::vector<lsst::afw::math::Kernel::Pixel> const &kernelXList,  ///< kernel column vector
+        std::vector<lsst::afw::math::Kernel::Pixel> const &kernelYList)  ///< kernel row vector
+{
     typedef typename std::vector<lsst::afw::math::Kernel::Pixel>::const_iterator k_iter;
 
     typedef typename OutImageT::SinglePixel OutT;
