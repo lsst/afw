@@ -76,6 +76,8 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
 
 // Next a macro to generate needed instantiations for IMAGE (e.g. %MASKEDIMAGE) and the specified pixel types
 //
+// @todo put convolveWith... functions in lsst.afw.math.detail instead of lsst.afw.math
+//
 // Note that IMAGE is a macro, not a class name
 %define %convolutionFuncsByType(IMAGE, PIXTYPE1, PIXTYPE2)
     %template(convolve) lsst::afw::math::convolve<
@@ -90,6 +92,14 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
         IMAGE(PIXTYPE1), IMAGE(PIXTYPE2), lsst::afw::math::LinearCombinationKernel>;
     %template(convolve) lsst::afw::math::convolve<
         IMAGE(PIXTYPE1), IMAGE(PIXTYPE2), lsst::afw::math::SeparableKernel>;
+    %template(convolveWithBruteForce) lsst::afw::math::detail::convolveWithBruteForce<
+        IMAGE(PIXTYPE1), IMAGE(PIXTYPE2)>;
+    %template(convolveWithInterpolation) lsst::afw::math::detail::convolveWithInterpolation<
+        IMAGE(PIXTYPE1), IMAGE(PIXTYPE2)>;
+    %template(convolveRegionWithRecursiveInterpolation)
+        lsst::afw::math::detail::convolveRegionWithRecursiveInterpolation<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2)>;
+    %template(convolveRegionWithInterpolation) lsst::afw::math::detail::convolveRegionWithInterpolation<
+        IMAGE(PIXTYPE1), IMAGE(PIXTYPE2)>;
 %enddef
 //
 // Now a macro to specify Image and MaskedImage

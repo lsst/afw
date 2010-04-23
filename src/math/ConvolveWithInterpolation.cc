@@ -3,11 +3,6 @@
  * @file
  *
  * @brief Definition of convolveWithInterpolation and helper functions declared in ConvolveImage.h
- 
- TODO implement brute force convolution for convolveRegionWithRecursiveInterpolation
- This probably involves creating a new function detail::convolveWithBruteForce
- (to avoid accidentally dispatching somewhere not desired)
- 
  *
  * @author Russell Owen
  *
@@ -30,8 +25,10 @@ namespace afwMath = lsst::afw::math;
 namespace mathDetail = lsst::afw::math::detail;
 
 /**
- * Convolve an Image or MaskedImage with a spatially varying Kernel using linear interpolation
+ * @brief Convolve an Image or MaskedImage with a spatially varying Kernel using linear interpolation
  * (if it is sufficiently accurate, else fall back to brute force computation).
+ *
+ * This is a low-level convolution function that does not set edge pixels.
  *
  * The algorithm is as follows:
  * - divide the image into regions whose size is no larger than maxInterpolationDistance
@@ -79,10 +76,10 @@ void mathDetail::convolveWithInterpolation(
 }
 
 /**
- * Convolve a region of an Image or MaskedImage with a spatially varying Kernel
+ * @brief Convolve a region of an Image or MaskedImage with a spatially varying Kernel
  * using recursion and interpolation.
  *
- * This routine will work with spatially 
+ * This is a low-level convolution function that does not set edge pixels.
  *
  * The algorithm is:
  * - if the region is too small:
@@ -94,7 +91,7 @@ void mathDetail::convolveWithInterpolation(
  *
  * Note that this routine will also work with spatially invariant kernels, but not efficiently.
  *
- * @warning: this is a low-level routine that performs no bounds checking.
+ * @warning This is a low-level routine that performs no bounds checking.
  */
 template <typename OutImageT, typename InImageT>
 void mathDetail::convolveRegionWithRecursiveInterpolation(
@@ -106,17 +103,21 @@ void mathDetail::convolveRegionWithRecursiveInterpolation(
 {
     if (afwGeom::any(region.getBBox().getDimensions().lt(
         afwGeom::Extent2I::make(region.getMinInterpSize())))) {
-        // convolve using brute force
-//FILL ME IN
-throw LSST_EXCEPT(pexExcept::InvalidParameterException, "FILL ME IN");
+        // region too small for interpolation; convolve using brute force
+        afwMath::Kernel::ConstPtr kernelPtr = region.getKernel();
+        afwGeom::BoxI const bbox = kernelPtr->growBBox(region.getBBox());
+        OutImageT outView(OutImageT(outImage, afwGeom::convertToImage(bbox)));
+        InImageT inView(InImageT(inImage, afwGeom::convertToImage(bbox)));
+        mathDetail::convolveWithBruteForce(outView, inView, *kernelPtr, region.getDoNormalize());
     } else if (region.isInterpolationOk(tolerance)) {
+        // convolve region using linear interpolation
         KernelImagesForRegion::List rgnList = region.getSubregions();
         for (KernelImagesForRegion::List::const_iterator regionPtr = rgnList.begin();
             regionPtr != rgnList.end(); ++regionPtr) {
             convolveRegionWithInterpolation(outImage, inImage, *regionPtr);
         }
     } else {
-        // recurse
+        // linear interpolation wasn't good enough; divide region into 2x2 subregions and recurse on those
         KernelImagesForRegion::List rgnList = region.getSubregions();
         for (KernelImagesForRegion::List::const_iterator regionPtr = rgnList.begin();
             regionPtr != rgnList.end(); ++regionPtr) {
@@ -126,7 +127,9 @@ throw LSST_EXCEPT(pexExcept::InvalidParameterException, "FILL ME IN");
 }
 
 /**
- * Convolve a region of an Image or MaskedImage with a spatially varying Kernel using interpolation.
+ * @brief Convolve a region of an Image or MaskedImage with a spatially varying Kernel using interpolation.
+ *
+ * This is a low-level convolution function that does not set edge pixels.
  *
  * @warning: this is a low-level routine that performs no bounds checking.
  */
@@ -213,7 +216,7 @@ void mathDetail::convolveRegionWithInterpolation(
     INSTANTIATEONE(MASKEDIMAGE, OUTPIXTYPE, INPIXTYPE)
 
 INSTANTIATEBOTH(double, double)
-// INSTANTIATEBOTH(double, float)
-// INSTANTIATEBOTH(float, float)
-// INSTANTIATEBOTH(int, int)
-// INSTANTIATEBOTH(boost::uint16_t, boost::uint16_t)
+INSTANTIATEBOTH(double, float)
+INSTANTIATEBOTH(float, float)
+INSTANTIATEBOTH(int, int)
+INSTANTIATEBOTH(boost::uint16_t, boost::uint16_t)

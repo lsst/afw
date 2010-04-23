@@ -6,9 +6,8 @@
  *
  * @ingroup afw
  */
-#include <stdexcept>
-
 #include <fstream>
+#include <sstream>
 
 #include "boost/format.hpp"
 #if defined(__ICC)
@@ -216,8 +215,7 @@ std::vector<double> afwMath::Kernel::getKernelParameters() const {
 /**
  * Given a bounding box for pixels one wishes to compute by convolving an image with this kernel,
  * return the bounding box of pixels that must be accessed on the image to be convolved.
- * Thus the box is expanded by kernel.getCtr() on the bottom left corner
- * and the size is expanded by kernel.getDimensions()-1.
+ * Thus the box shifted by -kernel.getCtr() and its size is expanded by kernel.getDimensions()-1.
  *
  * @return the bbox expanded by the kernel. 
  */
@@ -234,15 +232,20 @@ afwGeom::BoxI afwMath::Kernel::growBBox(afwGeom::BoxI const &bbox) const {
 /**
  * Given a bounding box for an image one wishes to convolve with this kernel,
  * return the bounding box for the region of pixels that can be computed.
- * Thus the box is shrunk by kernel.getCtr() on the bottom left corner
- * and the size is shrunk by kernel.getDimensions()-1.
+ * Thus the box shifted by kernel.getCtr() and its size is reduced by kernel.getDimensions()-1.
  *
- * @return the bbox expanded by the kernel.
+ * @return the bbox shrunk by the kernel.
  *
- * @throw lsst::pex::exceptions::InvalidParameterException if the kernel is larger than bbox
- * in either dimension.
+ * @throw lsst::pex::exceptions::InvalidParameterException if the resulting box would have
+ * dimension < 1 in either axis
  */
 afwGeom::BoxI afwMath::Kernel::shrinkBBox(afwGeom::BoxI const &bbox) const {
+    if ((bbox.getWidth() <= 1 + getWidth()) || ((bbox.getHeight() <= 1 + getHeight()))) {
+        std::ostringstream os;
+        os << "bbox dimensions = " << bbox.getDimensions() << " <= ("
+           << getWidth() << ", " << getHeight() << ") + 1 in one or both dimensions";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+    }
     return afwGeom::BoxI(
         afwGeom::Point2I::make(
             bbox.getMinX() + getCtrX(),

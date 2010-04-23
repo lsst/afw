@@ -77,9 +77,10 @@ namespace detail {
                 ImageConstPtr topLeftImagePtr,
                 ImageConstPtr topRightImagePtr);
 
+        lsst::afw::geom::BoxI getBBox() const { return _bbox; };
+        bool getDoNormalize() const { return _doNormalize; };
         ImageConstPtr getImage(Location location) const;
         KernelConstPtr getKernel() const { return _kernelPtr; };
-        lsst::afw::geom::BoxI getBBox() const { return _bbox; };
         std::vector<KernelImagesForRegion> getSubregions() const;
         std::vector<KernelImagesForRegion> getSubregions(int nx, int ny) const;
         bool isInterpolationOk(double tolerance) const;
