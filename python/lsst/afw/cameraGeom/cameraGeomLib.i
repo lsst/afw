@@ -12,6 +12,7 @@ Python bindings for classes describing the the geometry of a mosaic camera
 
 %{
 #include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/Mask.h"
 #include "lsst/afw/cameraGeom.h"
 %}
 
@@ -79,6 +80,9 @@ SWIG_SHARED_PTR_DERIVED(CameraPtr, lsst::afw::cameraGeom::Detector, lsst::afw::c
 
 Instantiate(boost::uint16_t);
 Instantiate(float);
+Instantiate(double);
+%template(prepareAmpData)
+    lsst::afw::cameraGeom::Amp::prepareAmpData<lsst::afw::image::Mask<boost::uint16_t> >;
 
 //
 // We'd like to just say

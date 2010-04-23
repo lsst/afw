@@ -133,5 +133,7 @@ INSTANTIATE(boost::uint16_t)
 INSTANTIATE(int)
 INSTANTIATE(float)
 INSTANTIATE(double)
+template afwImage::Mask<boost::uint16_t>::Ptr rotateImageBy90(afwImage::Mask<boost::uint16_t> const&, int); 
+template afwImage::Mask<boost::uint16_t>::Ptr flipImage(afwImage::Mask<boost::uint16_t> const&, bool flipLR, bool flipTB); 
 
 }}}
