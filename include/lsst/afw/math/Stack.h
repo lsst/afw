@@ -14,6 +14,12 @@ namespace lsst {
 namespace afw {
 namespace math {    
 
+/********************************************************************
+ *
+ * z stacks
+ *
+ *********************************************************************/
+
 /**
  * @brief A function to compute some statistics of a stack of Images
  */
@@ -24,7 +30,6 @@ typename lsst::afw::image::Image<PixelT>::Ptr statisticsStack(
         StatisticsControl const& sctrl=StatisticsControl(),   ///< Control structure
         std::vector<PixelT> const& wvector=std::vector<PixelT>(0) ///< vector containing weights
                                                              );
-
 
 /**
  * @brief A function to compute some statistics of a stack of MaskedImages
@@ -49,6 +54,37 @@ typename boost::shared_ptr<std::vector<PixelT> > statisticsStack(
         std::vector<PixelT> const& wvector=std::vector<PixelT>(0) ///< vector containing weights
                                                                 );
     
+
+
+/********************************************************************
+ *
+ * x,y stacks
+ *
+ *********************************************************************/
+
+/**
+ * @brief A function to compute statistics on the rows or columns of an image
+ */
+template<typename PixelT>
+typename lsst::afw::image::MaskedImage<PixelT>::Ptr statisticsStack(
+        lsst::afw::image::Image<PixelT> const &image,  
+        Property flags,               
+        char dimension,
+        StatisticsControl const& sctrl=StatisticsControl()
+                                                                   );
+/**
+ * @brief A function to compute statistics on the rows or columns of an image
+ */
+template<typename PixelT>
+typename lsst::afw::image::MaskedImage<PixelT>::Ptr statisticsStack(
+        lsst::afw::image::MaskedImage<PixelT> const &image,  
+        Property flags,               
+        char dimension,
+        StatisticsControl const& sctrl=StatisticsControl()
+								    );
+
+
+
 
 }}}
 

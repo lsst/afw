@@ -42,7 +42,9 @@ enum SourceNullableField {
     PETRO_FLUX,
     PETRO_FLUX_ERR,
     SKY,
-    SKY_ERR,        
+    SKY_ERR,
+    RA_OBJECT,
+    DEC_OBJECT,
     NUM_SOURCE_NULLABLE_FIELDS
 };
 
@@ -66,6 +68,8 @@ public :
     float  getPetroFluxErr() const { return _petroFluxErr; }    
     float  getSky() const { return _sky; }
     float  getSkyErr() const { return _skyErr; }
+    double getRaObject() const { return _raObject; }
+    double getDecObject() const { return _decObject; }
 
     // setters
     void setSourceId( boost::int64_t const sourceId) {setId(sourceId);}
@@ -81,7 +85,13 @@ public :
     }
     void setSkyErr (float const skyErr) {
         set(_skyErr, skyErr, SKY_ERR);
-    }   
+    }
+    void setRaObject(double const raObject) {
+        set(_raObject, raObject, RA_OBJECT);
+    }
+    void setDecObject(double const decObject) {
+        set(_decObject, decObject, DEC_OBJECT);
+    }
     
     //overloaded setters
     //Because these fields are not NULLABLE in all sources, 
@@ -102,6 +112,8 @@ public :
     bool operator==(Source const & d) const;
 
 private :
+    double _raObject;
+    double _decObject;
     double _petroFlux;  
     float  _petroFluxErr;
     float  _sky;
@@ -109,6 +121,8 @@ private :
 
     template <typename Archive> 
     void serialize(Archive & ar, unsigned int const version) {
+        ar & _raObject;
+        ar & _decObject;
         ar & _petroFlux;
         ar & _petroFluxErr;
         ar & _sky;

@@ -60,7 +60,7 @@ static void initTestData(SourceSet & v, int sliceId = 0) {
         // make sure each field has a different value, and that IO for each nullable field is tested
         // Note: Source ids are generated in ascending order
         int j = i*NUM_SOURCE_NULLABLE_FIELDS;
-        data.setSourceId(j + sliceId*(NUM_SOURCE_NULLABLE_FIELDS + 2)*64 + 1);
+        data.setSourceId(j + sliceId*(NUM_SOURCE_NULLABLE_FIELDS + 2)*66 + 1);
         data.setAmpExposureId(static_cast<int64_t>(j +  2));
         data.setFilterId(-1);
         data.setObjectId(static_cast<int64_t>(j +  4));
@@ -113,6 +113,8 @@ static void initTestData(SourceSet & v, int sliceId = 0) {
         data.setChi2(static_cast<float>(j + 55));
         data.setSky(static_cast<float>(j + 56));
         data.setSkyErr(static_cast<float>(j + 57));
+        data.setRaObject(static_cast<double>(j + 58));
+        data.setDecObject(static_cast<double>(j + 59));
         data.setFlagForAssociation(1);
         data.setFlagForDetection(2);
         data.setFlagForWcs(3);
@@ -222,7 +224,7 @@ static void testDb(std::string const & storageType) {
 
     PropertySet::Ptr props = createDbTestProps(0, 1, "Source");
     Persistence::Ptr pers = Persistence::getPersistence(policy);
-    LogicalLocation loc("mysql://lsst10.ncsa.uiuc.edu:3306/test_source");
+    LogicalLocation loc("mysql://lsst10.ncsa.uiuc.edu:3306/test_source_pt1");
     
     // 1. Test on a single Source
     Source::Ptr ds(new Source());
@@ -305,7 +307,7 @@ static void testDb2(std::string const & storageType) {
     Policy::Ptr nested(policy->getPolicy(policyRoot));
 
     Persistence::Ptr pers = Persistence::getPersistence(policy);
-    LogicalLocation loc("mysql://lsst10.ncsa.uiuc.edu:3306/test_source");
+    LogicalLocation loc("mysql://lsst10.ncsa.uiuc.edu:3306/test_source_pt1");
 
     SourceSet all;
     int const numSlices = 3;

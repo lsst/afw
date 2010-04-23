@@ -259,6 +259,10 @@ namespace math {
                              bool const ignoreExceptions=false, bool const reset=true);
         void visitCandidates(CandidateVisitor * visitor, int const nMaxPerCell=-1,
                              bool const ignoreExceptions=false, bool const reset=true) const;
+        void visitAllCandidates(CandidateVisitor * visitor,
+                                bool const ignoreExceptions=false, bool const reset=true);
+        void visitAllCandidates(CandidateVisitor * visitor,
+                                bool const ignoreExceptions=false, bool const reset=true) const;
 
     private:
         std::string _label;             // Name of cell for logging/trace
@@ -297,6 +301,8 @@ namespace math {
                              bool const ignoreExceptions=false);
         void visitCandidates(CandidateVisitor * visitor, int const nMaxPerCell=-1,
                              bool const ignoreExceptions=false) const;
+        void visitAllCandidates(CandidateVisitor * visitor, bool const ignoreExceptions=false);
+        void visitAllCandidates(CandidateVisitor * visitor, bool const ignoreExceptions=false) const;
 
         SpatialCellCandidate::Ptr getCandidateById(int id, bool noThrow=false);
 
