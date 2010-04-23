@@ -310,31 +310,31 @@ void mathDetail::KernelImagesForRegion::_interpolateImage(
 const {
     double fracDist;
     switch (location) {
-        case BOTTOM:
+        case BOTTOM: {
             fracDist = _centerFractionalPosition.getX();
             scaledPlus(outImage, 1.0 - fracDist, *getImage(BOTTOM_LEFT),
                                        fracDist, *getImage(BOTTOM_RIGHT));
             break;
-
-        case TOP:
-            fracDist = _centerFractionalPosition.getX();
-            scaledPlus(outImage, 1.0 - fracDist, *getImage(TOP_LEFT),
-                                       fracDist, *getImage(TOP_RIGHT));
+        }
+        case TOP: {
+                fracDist = _centerFractionalPosition.getX();
+                scaledPlus(outImage, 1.0 - fracDist, *getImage(TOP_LEFT),
+                                           fracDist, *getImage(TOP_RIGHT));
             break;
-
-        case LEFT:
+        }
+        case LEFT: {
             fracDist = _centerFractionalPosition.getY();
             scaledPlus(outImage, 1.0 - fracDist, *getImage(BOTTOM_LEFT),
                                        fracDist, *getImage(TOP_LEFT));
             break;
-
-        case RIGHT:
+        }
+        case RIGHT: {
             fracDist = _centerFractionalPosition.getY();
             scaledPlus(outImage, 1.0 - fracDist, *getImage(BOTTOM_RIGHT),
                                        fracDist, *getImage(TOP_RIGHT));
             break;
-
-        case CENTER:
+        }
+        case CENTER: {
             // only perform this test for the CENTER case because the images are tested by linearInterpolate
             // for the other cases
             if (outImage.getDimensions() != _kernelPtr->getDimensions()) {
@@ -360,11 +360,12 @@ const {
                 }
             }
             break;
-
-        default:
+        }
+        default: {
             std::ostringstream os;
             os << "location = " << location << " is a corner";
             throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+        }
     }
 }
 
@@ -404,10 +405,11 @@ const {
         case TOP_RIGHT:
             return _bbox.getMax();
             break; // paranoia
-        default:
+        default: {
             std::ostringstream os;
             os << "Bug: unhandled location = " << location;
             throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+        }
     }
 }
 
