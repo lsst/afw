@@ -15,8 +15,6 @@
  */
 #include <limits>
 
-#include <boost/assign/list_of.hpp>
-
 #include "lsst/afw/geom.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"

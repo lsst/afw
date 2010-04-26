@@ -60,6 +60,9 @@ SWIG_SHARED_PTR_DERIVED(Kernel, lsst::daf::data::LsstBase, lsst::afw::math::Kern
 
 %include "lsst/afw/math/KernelFunctions.h"
 
+SWIG_SHARED_PTR_DERIVED(KernelImagesForRegion,
+    lsst::daf::data::LsstBase, lsst::afw::math::detail::KernelImagesForRegion);
+
 %include "lsst/afw/math/ConvolveImage.h"
 //
 // Functions to convolve a MaskedImage or Image with a Kernel.

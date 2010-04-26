@@ -17,8 +17,8 @@
 #include <vector>
 #include <string>
 
+#include <boost/cstdint.hpp> 
 #include "boost/format.hpp"
-#include "boost/assign/list_of.hpp"
 
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/image/ImageUtils.h"
@@ -30,9 +30,6 @@ namespace pexLog = lsst::pex::logging;
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
-
-using boost::assign::map_list_of;
-using boost::assign::list_of;
 
 # define ISINSTANCE(A, B) (dynamic_cast<B const*>(&(A)) != NULL)
 

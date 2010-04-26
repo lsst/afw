@@ -24,8 +24,6 @@ namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
 namespace mathDetail = lsst::afw::math::detail;
 
-using boost::assign::list_of;
-
 /**
  * Construct a KernelImagesForRegion
  *

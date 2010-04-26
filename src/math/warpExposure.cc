@@ -16,9 +16,9 @@
 #include <vector>
 #include <utility>
 
-#include <boost/cstdint.hpp> 
-#include <boost/format.hpp> 
-#include <boost/regex.hpp>
+#include "boost/cstdint.hpp" 
+#include "boost/format.hpp" 
+#include "boost/regex.hpp"
 
 #include "lsst/pex/logging/Trace.h" 
 #include "lsst/pex/exceptions.h"
