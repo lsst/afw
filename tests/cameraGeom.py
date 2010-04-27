@@ -62,12 +62,7 @@ class CameraGeomTestCase(unittest.TestCase):
     def setUp(self):
         CameraGeomTestCase.ampSerial = [0] # an array so we pass the value by reference
 
-        policyFile = pexPolicy.DefaultPolicyFile("afw", "CameraGeomDictionary.paf", "policy")
-        defPolicy = pexPolicy.Policy.createPolicy(policyFile, policyFile.getRepositoryPath(), True)
-
-        polFile = pexPolicy.DefaultPolicyFile("afw", "TestCameraGeom.paf", "tests")
-        self.geomPolicy = pexPolicy.Policy.createPolicy(polFile)
-        self.geomPolicy.mergeDefaults(defPolicy.getDictionary())
+        self.geomPolicy = cameraGeomUtils.getGeomPolicy("TestCameraGeom.paf")
 
     def tearDown(self):
         del self.geomPolicy

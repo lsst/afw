@@ -97,17 +97,30 @@ class SynthesizeCcdImage(GetCcdImage):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def getGeomPolicy(cameraGeomPolicyFile):
-    """Return a Policy describing a Camera's geometry"""
-    
-    if os.path.exists(cameraGeomPolicyFile):
-        return pexPolicy.Policy(cameraGeomPolicyFile)
+def mergeGeomDefaults(cameraGeomPolicy):
+   policyFile = pexPolicy.DefaultPolicyFile("afw", "CameraGeomDictionary.paf", "policy")
+   defPolicy = pexPolicy.Policy.createPolicy(policyFile, policyFile.getRepositoryPath(), True)
+
+   cameraGeomPolicy.mergeDefaults(defPolicy.getDictionary())
+   
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+def getGeomPolicy(cameraGeomPolicy):
+    """Return a Policy describing a Camera's geometry given a filename; the Policy will be validated using the
+    dictionary, and defaults will be supplied.  If you pass a Policy, it will be validated and completed.
+"""
 
     policyFile = pexPolicy.DefaultPolicyFile("afw", "CameraGeomDictionary.paf", "policy")
     defPolicy = pexPolicy.Policy.createPolicy(policyFile, policyFile.getRepositoryPath(), True)
 
-    policyFile = pexPolicy.DefaultPolicyFile("afw", cameraGeomPolicyFile, "examples")
-    geomPolicy = pexPolicy.Policy.createPolicy(policyFile, policyFile.getRepositoryPath(), True)
+    if isinstance(cameraGeomPolicy, pexPolicy.Policy):
+        geomPolicy = cameraGeomPolicy
+    else:
+        if os.path.exists(cameraGeomPolicy):
+            geomPolicy = pexPolicy.Policy.createPolicy(cameraGeomPolicy)
+        else:
+            policyFile = pexPolicy.DefaultPolicyFile("afw", cameraGeomPolicy, "examples")
+            geomPolicy = pexPolicy.Policy.createPolicy(policyFile, policyFile.getRepositoryPath(), True)
 
     geomPolicy.mergeDefaults(defPolicy.getDictionary())
 
