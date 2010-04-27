@@ -13,12 +13,17 @@
 #include <sstream>
 #include <vector>
 
+#include "boost/cstdint.hpp" 
+
+#include "lsst/pex/exceptions.h"
+#include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/image.h"
 #include "lsst/afw/math.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/geom/deprecated.h"
 
 namespace pexExcept = lsst::pex::exceptions;
+namespace pexLog = lsst::pex::logging;
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
@@ -44,10 +49,7 @@ void mathDetail::convolveWithInterpolation(
         OutImageT &outImage,        ///< convolved image = inImage convolved with kernel
         InImageT const &inImage,    ///< input image
         lsst::afw::math::Kernel const &kernel,  ///< convolution kernel
-        bool doNormalize,           ///< if true, normalize the kernel, else use "as is"
-        double tolerance,           ///< maximum allowed error in interpolated kernel images;
-            ///< see KernelImagesForRegion::isInterpolationOk for details
-        int maxInterpolationDistance)   ///< max region height or width for which interpolation is tested
+        lsst::afw::math::ConvolutionControl const &convolutionControl)  ///< convolution control parameters
 {
     if (outImage.getDimensions() != inImage.getDimensions()) {
         std::ostringstream os;
@@ -62,16 +64,21 @@ void mathDetail::convolveWithInterpolation(
         afwGeom::Extent2I::make(
             outImage.getWidth() + 1 - kernel.getWidth(),
             outImage.getHeight() + 1 - kernel.getHeight()));
-    KernelImagesForRegion fullRegion(KernelImagesForRegion(kernel.clone(), bbox, doNormalize));
+    KernelImagesForRegion fullRegion(KernelImagesForRegion(kernel.clone(), bbox,
+        convolutionControl.getDoNormalize()));
 
     // divide full region into subregions small enough to interpolate over
-    int nx = bbox.getWidth() / maxInterpolationDistance;
-    int ny = bbox.getHeight() / maxInterpolationDistance;
+    int nx = bbox.getWidth() / convolutionControl.getMaxInterpolationDistance();
+    int ny = bbox.getHeight() / convolutionControl.getMaxInterpolationDistance();
+    pexLog::TTrace<4>("lsst.afw.math.convolve",
+        "convolveWithInterpolation: divide into %d x %d subregions", nx, ny);
+
     std::vector<KernelImagesForRegion> subregionList = fullRegion.getSubregions(nx, ny);
     
     for (std::vector<KernelImagesForRegion>::iterator regionPtr = subregionList.begin();
         regionPtr != subregionList.end(); ++regionPtr) {
-        convolveRegionWithRecursiveInterpolation(outImage, inImage, *regionPtr, tolerance);
+        convolveRegionWithRecursiveInterpolation(outImage, inImage, *regionPtr,
+            convolutionControl.getMaxInterpolationError());
     }            
 }
 
@@ -98,8 +105,8 @@ void mathDetail::convolveRegionWithRecursiveInterpolation(
         OutImageT &outImage,        ///< convolved image = inImage convolved with kernel
         InImageT const &inImage,    ///< input image
         KernelImagesForRegion const &region,    ///< kernel image region over which to convolve
-        double tolerance)           ///< maximum allowed error in interpolated kernel images;
-            ///< see KernelImagesForRegion::isInterpolationOk for details
+        double maxInterpolationError)           ///< maximum allowed error in computing the kernel image
+            ///< at any pixel via linear interpolation
 {
     if (afwGeom::any(region.getBBox().getDimensions().lt(
         afwGeom::Extent2I::make(region.getMinInterpSize())))) {
@@ -109,7 +116,7 @@ void mathDetail::convolveRegionWithRecursiveInterpolation(
         OutImageT outView(OutImageT(outImage, afwGeom::convertToImage(bbox)));
         InImageT inView(InImageT(inImage, afwGeom::convertToImage(bbox)));
         mathDetail::convolveWithBruteForce(outView, inView, *kernelPtr, region.getDoNormalize());
-    } else if (region.isInterpolationOk(tolerance)) {
+    } else if (region.isInterpolationOk(maxInterpolationError)) {
         // convolve region using linear interpolation
         KernelImagesForRegion::List rgnList = region.getSubregions();
         for (KernelImagesForRegion::List::const_iterator regionPtr = rgnList.begin();
@@ -121,7 +128,7 @@ void mathDetail::convolveRegionWithRecursiveInterpolation(
         KernelImagesForRegion::List rgnList = region.getSubregions();
         for (KernelImagesForRegion::List::const_iterator regionPtr = rgnList.begin();
             regionPtr != rgnList.end(); ++regionPtr) {
-            convolveRegionWithRecursiveInterpolation(outImage, inImage, *regionPtr, tolerance);
+            convolveRegionWithRecursiveInterpolation(outImage, inImage, *regionPtr, maxInterpolationError);
         }
     }
 }
@@ -202,21 +209,26 @@ void mathDetail::convolveRegionWithInterpolation(
 #define IMAGE(PIXTYPE) afwImage::Image<PIXTYPE>
 #define MASKEDIMAGE(PIXTYPE) afwImage::MaskedImage<PIXTYPE, afwImage::MaskPixel, afwImage::VariancePixel>
 #define NL /* */
-// Instantiate either Image or MaskedImage version
-#define INSTANTIATEONE(IMGMACRO, OUTPIXTYPE, INPIXTYPE) \
+// Instantiate Image or MaskedImage versions
+#define INSTANTIATE_IM_OR_MI(IMGMACRO, OUTPIXTYPE, INPIXTYPE) \
     template void mathDetail::convolveWithInterpolation( \
-        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, afwMath::Kernel const &, bool, double, int); NL \
+        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, afwMath::Kernel const&, \
+            afwMath::ConvolutionControl const&); NL \
     template void mathDetail::convolveRegionWithRecursiveInterpolation( \
         IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, KernelImagesForRegion const&, double); NL \
     template void mathDetail::convolveRegionWithInterpolation( \
         IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, KernelImagesForRegion const&);
 // Instantiate both Image and MaskedImage versions
-#define INSTANTIATEBOTH(OUTPIXTYPE, INPIXTYPE) \
-    INSTANTIATEONE(IMAGE,       OUTPIXTYPE, INPIXTYPE) \
-    INSTANTIATEONE(MASKEDIMAGE, OUTPIXTYPE, INPIXTYPE)
+#define INSTANTIATE(OUTPIXTYPE, INPIXTYPE) \
+    INSTANTIATE_IM_OR_MI(IMAGE,       OUTPIXTYPE, INPIXTYPE) \
+    INSTANTIATE_IM_OR_MI(MASKEDIMAGE, OUTPIXTYPE, INPIXTYPE)
 
-INSTANTIATEBOTH(double, double)
-INSTANTIATEBOTH(double, float)
-INSTANTIATEBOTH(float, float)
-INSTANTIATEBOTH(int, int)
-INSTANTIATEBOTH(boost::uint16_t, boost::uint16_t)
+INSTANTIATE(double, double)
+INSTANTIATE(double, float)
+INSTANTIATE(double, int)
+INSTANTIATE(double, boost::uint16_t)
+INSTANTIATE(float, float)
+INSTANTIATE(float, int)
+INSTANTIATE(float, boost::uint16_t)
+INSTANTIATE(int, int)
+INSTANTIATE(boost::uint16_t, boost::uint16_t)

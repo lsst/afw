@@ -17,9 +17,9 @@
 #include <vector>
 #include <string>
 
-#include <boost/cstdint.hpp> 
-#include "boost/format.hpp"
+#include "boost/cstdint.hpp"
 
+#include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/image/ImageUtils.h"
 #include "lsst/afw/image/MaskedImage.h"
@@ -30,6 +30,7 @@ namespace pexLog = lsst::pex::logging;
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
+namespace mathDetail = lsst::afw::math::detail;
 
 # define ISINSTANCE(A, B) (dynamic_cast<B const*>(&(A)) != NULL)
 
@@ -60,10 +61,10 @@ include/lsst/afw/image/Pixel.h:212: error: no type named ÔVariancePixelTÕ in Ôst
      */
     template <typename OutPixelT, typename ImageIterT, typename KernelIterT, typename KernelPixelT>
     inline OutPixelT kernelDotProduct(
-        ImageIterT imageIter,       ///< start of input %image that overlaps kernel vector
-        KernelIterT kernelIter,     ///< start of kernel vector
-        int kWidth      ///< width of kernel
-    ) {
+            ImageIterT imageIter,       ///< start of input %image that overlaps kernel vector
+            KernelIterT kernelIter,     ///< start of kernel vector
+            int kWidth)                 ///< width of kernel
+    {
         OutPixelT outPixel(0);
         for (int x = 0; x < kWidth; ++x, ++imageIter, ++kernelIter) {
             KernelPixelT kVal = *kernelIter;
@@ -78,20 +79,20 @@ include/lsst/afw/image/Pixel.h:212: error: no type named ÔVariancePixelTÕ in Ôst
     * @brief Set the edge pixels of a convolved Image based on size of the convolution kernel used
     *
     * Separate specializations for Image and MaskedImage are required to set the EDGE bit of the Mask plane
-    * (if there is one) when copyEdge is true.
+    * (if there is one) when doCopyEdge is true.
     */
     template <typename OutImageT, typename InImageT>
     inline void setEdgePixels(
-        OutImageT& outImage,        ///< %image whose edge pixels are to be set
-        afwMath::Kernel const &kernel,  ///< convolution kernel; kernel size is used to determine the edge
-        InImageT const &inImage,    ///< %image whose edge pixels are to be copied;
-                                    ///< ignored if copyEdge is false
-        bool copyEdge,              ///< if false (default), set edge pixels to the standard edge pixel;
-                                    ///< if true, copy edge pixels from input and set EDGE bit of mask
-        lsst::afw::image::detail::Image_tag
-            ///< lsst::afw::image::detail::image_traits<ImageT>::image_category()
+            OutImageT& outImage,        ///< %image whose edge pixels are to be set
+            afwMath::Kernel const &kernel, ///< convolution kernel; kernel size is used to determine the edge
+            InImageT const &inImage,
+                ///< %image whose edge pixels are to be copied; ignored if doCopyEdge is false
+            bool doCopyEdge,            ///< if false (default), set edge pixels to the standard edge pixel;
+                                        ///< if true, copy edge pixels from input and set EDGE bit of mask
+            lsst::afw::image::detail::Image_tag)
+                ///< lsst::afw::image::detail::image_traits<ImageT>::image_category()
                                 
-    ) {
+    {
         const unsigned int imWidth = outImage.getWidth();
         const unsigned int imHeight = outImage.getHeight();
         const unsigned int kWidth = kernel.getWidth();
@@ -118,7 +119,7 @@ include/lsst/afw/image/Pixel.h:212: error: no type named ÔVariancePixelTÕ in Ôst
         for (std::vector<afwImage::BBox>::const_iterator bboxIter = bboxList.begin();
             bboxIter != bboxList.end(); ++bboxIter) {
             OutImageT outView(outImage, *bboxIter);
-            if (copyEdge) {
+            if (doCopyEdge) {
                 // note: <<= only works with data of the same type
                 // so convert the input image to output format
                 outView <<= OutImageT(inImage, *bboxIter);
@@ -132,19 +133,20 @@ include/lsst/afw/image/Pixel.h:212: error: no type named ÔVariancePixelTÕ in Ôst
     * @brief Set the edge pixels of a convolved MaskedImage based on size of the convolution kernel used
     *
     * Separate specializations for Image and MaskedImage are required to set the EDGE bit of the Mask plane
-    * (if there is one) when copyEdge is true.
+    * (if there is one) when doCopyEdge is true.
     */
     template <typename OutImageT, typename InImageT>
     inline void setEdgePixels(
-        OutImageT& outImage,        ///< %image whose edge pixels are to be set
-        afwMath::Kernel const &kernel,  ///< convolution kernel; kernel size is used to determine the edge
-        InImageT const &inImage,    ///< %image whose edge pixels are to be copied; ignored if copyEdge false
-        bool copyEdge,              ///< if false (default), set edge pixels to the standard edge pixel;
-                                    ///< if true, copy edge pixels from input and set EDGE bit of mask
-        lsst::afw::image::detail::MaskedImage_tag
-            ///< lsst::afw::image::detail::image_traits<MaskedImageT>::image_category()
+            OutImageT& outImage,        ///< %image whose edge pixels are to be set
+            afwMath::Kernel const &kernel,  ///< convolution kernel; kernel size is used to determine the edge
+            InImageT const &inImage,
+                ///< %image whose edge pixels are to be copied; ignored if doCopyEdge false
+            bool doCopyEdge,            ///< if false (default), set edge pixels to the standard edge pixel;
+                                        ///< if true, copy edge pixels from input and set EDGE bit of mask
+            lsst::afw::image::detail::MaskedImage_tag)
+                ///< lsst::afw::image::detail::image_traits<MaskedImageT>::image_category()
                                 
-    ) {
+    {
         const unsigned int imWidth = outImage.getWidth();
         const unsigned int imHeight = outImage.getHeight();
         const unsigned int kWidth = kernel.getWidth();
@@ -172,7 +174,7 @@ include/lsst/afw/image/Pixel.h:212: error: no type named ÔVariancePixelTÕ in Ôst
         for (std::vector<afwImage::BBox>::const_iterator bboxIter = bboxList.begin();
             bboxIter != bboxList.end(); ++bboxIter) {
             OutImageT outView(outImage, *bboxIter);
-            if (copyEdge) {
+            if (doCopyEdge) {
                 // note: <<= only works with data of the same type
                 // so convert the input image to output format
                 outView <<= OutImageT(inImage, *bboxIter);
@@ -254,39 +256,47 @@ void afwMath::scaledPlus(
  * @ingroup afw
  */
 template <typename OutImageT, typename InImageT>
-void afwMath::basicConvolve(
-    OutImageT &convolvedImage,      ///< convolved %image
-    InImageT const& inImage,        ///< %image to convolve
-    afwMath::Kernel const& kernel,  ///< convolution kernel
-    bool doNormalize                ///< if true, normalize the kernel, else use "as is"
-) {
+void mathDetail::basicConvolve(
+        OutImageT &convolvedImage,      ///< convolved %image
+        InImageT const& inImage,        ///< %image to convolve
+        afwMath::Kernel const& kernel,  ///< convolution kernel
+        afwMath::ConvolutionControl const& convolutionControl)  ///< convolution control parameters
+{
     // Because convolve isn't a method of Kernel we can't always use Kernel's vtbl to dynamically
     // dispatch the correct version of basicConvolve. The case that fails is convolving with a kernel
     // obtained from a pointer or reference to a Kernel (base class), e.g. as used in LinearCombinationKernel.
     if (ISINSTANCE(kernel, afwMath::DeltaFunctionKernel)) {
-        pexLog::TTrace<4>("lsst.afw.kernel.convolve",
+        pexLog::TTrace<4>("lsst.afw.math.convolve",
             "generic basicConvolve: dispatch to DeltaFunctionKernel basicConvolve");
-        afwMath::basicConvolve(convolvedImage, inImage,
+        mathDetail::basicConvolve(convolvedImage, inImage,
             *dynamic_cast<afwMath::DeltaFunctionKernel const*>(&kernel),
-            doNormalize);
+            convolutionControl);
         return;
     } else if (ISINSTANCE(kernel, afwMath::SeparableKernel)) {
-        pexLog::TTrace<4>("lsst.afw.kernel.convolve",
+        pexLog::TTrace<4>("lsst.afw.math.convolve",
             "generic basicConvolve: dispatch to SeparableKernel basicConvolve");
-        afwMath::basicConvolve(convolvedImage, inImage,
+        mathDetail::basicConvolve(convolvedImage, inImage,
             *dynamic_cast<afwMath::SeparableKernel const*>(&kernel),
-            doNormalize);
+            convolutionControl);
         return;
     } else if (ISINSTANCE(kernel, afwMath::LinearCombinationKernel) && kernel.isSpatiallyVarying()) {
-        pexLog::TTrace<4>("lsst.afw.kernel.convolve",
+        pexLog::TTrace<4>("lsst.afw.math.convolve",
             "generic basicConvolve: dispatch to spatially varying LinearCombinationKernel basicConvolve");
-        afwMath::basicConvolve(convolvedImage, inImage,
+        mathDetail::basicConvolve(convolvedImage, inImage,
             *dynamic_cast<afwMath::LinearCombinationKernel const*>(&kernel),
-            doNormalize);
+            convolutionControl);
         return;
     }
     // OK, use general (and slower) form
-    afwMath::detail::convolveWithBruteForce(convolvedImage, inImage, kernel, doNormalize);
+    if (kernel.isSpatiallyVarying() && (convolutionControl.getMaxInterpolationError() > 0.0)) {
+        // use linear interpolation
+        mathDetail::convolveWithInterpolation(convolvedImage, inImage, kernel, convolutionControl);
+
+    } else {
+        // use brute force
+        mathDetail::convolveWithBruteForce(convolvedImage, inImage, kernel,
+            convolutionControl.getDoNormalize());
+    }
 }
 
 /**
@@ -295,12 +305,12 @@ void afwMath::basicConvolve(
  * @ingroup afw
  */
 template <typename OutImageT, typename InImageT>
-void afwMath::basicConvolve(
-    OutImageT& convolvedImage,      ///< convolved %image
-    InImageT const& inImage,        ///< %image to convolve
-    afwMath::DeltaFunctionKernel const &kernel,    ///< convolution kernel
-    bool                                           ///< unused
-) {
+void mathDetail::basicConvolve(
+        OutImageT& convolvedImage,      ///< convolved %image
+        InImageT const& inImage,        ///< %image to convolve
+        afwMath::DeltaFunctionKernel const &kernel, ///< convolution kernel
+        afwMath::ConvolutionControl const &)        ///< unused
+{
     assert (!kernel.isSpatiallyVarying());
 
     if (convolvedImage.getDimensions() != inImage.getDimensions()) {
@@ -328,7 +338,7 @@ void afwMath::basicConvolve(
     int const inStartX = kernel.getPixel().getX();
     int const inStartY = kernel.getPixel().getY();
 
-    pexLog::TTrace<3>("lsst.afw.kernel.convolve", "DeltaFunctionKernel basicConvolve");
+    pexLog::TTrace<3>("lsst.afw.math.convolve", "DeltaFunctionKernel basicConvolve");
 
     for (int i = 0; i < cnvHeight; ++i) {
         typename InImageT::x_iterator inPtr = inImage.x_at(inStartX, i +  inStartY);
@@ -356,27 +366,26 @@ void afwMath::basicConvolve(
  * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage is not the same size as inImage
  * @throw lsst::pex::exceptions::InvalidParameterException if inImage is smaller than kernel
  *  in columns or rows.
- * @throw lsst::pex::exception::InvalidParameterException if doNormalize true and kernel is spatially varying
  *
  * @ingroup afw
  */
 template <typename OutImageT, typename InImageT>
-void afwMath::basicConvolve(
+void mathDetail::basicConvolve(
     OutImageT& convolvedImage,      ///< convolved %image
     InImageT const& inImage,        ///< %image to convolve
-    afwMath::LinearCombinationKernel const& kernel, ///< convolution kernel
-    bool doNormalize                ///< if true, normalize the kernel, else use "as is"
-) {
+    afwMath::LinearCombinationKernel const& kernel,         ///< convolution kernel
+    afwMath::ConvolutionControl const & convolutionControl) ///< convolution control parameters
+{
     if (!kernel.isSpatiallyVarying()) {
         // use the standard algorithm for the spatially invariant case
         typedef typename afwMath::Kernel::Pixel KernelPixel;
 
-        pexLog::TTrace<4>("lsst.afw.kernel.convolve",
+        pexLog::TTrace<4>("lsst.afw.math.convolve",
             "basicConvolve LinearCombinationKernel; kernel is not spatially varying");
         afwImage::Image<KernelPixel> kernelImage(kernel.getWidth(), kernel.getHeight());
-        kernel.computeImage(kernelImage, doNormalize);
+        kernel.computeImage(kernelImage, convolutionControl.getDoNormalize());
         afwMath::FixedKernel fixedKernel(kernelImage);
-        return basicConvolve(convolvedImage, inImage, fixedKernel, doNormalize);
+        return basicConvolve(convolvedImage, inImage, fixedKernel, convolutionControl);
     }
     
 
@@ -396,7 +405,7 @@ void afwMath::basicConvolve(
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
     
-    pexLog::TTrace<3>("lsst.afw.kernel.convolve",
+    pexLog::TTrace<3>("lsst.afw.math.convolve",
         "basicConvolve for LinearCombinationKernel: kernel is spatially varying");
     
     typedef typename InImageT::template ImageTypeFactory<double>::type BasisImage;
@@ -430,7 +439,7 @@ void afwMath::basicConvolve(
     int i = 0;
     for (typename KernelList::const_iterator basisKernelIter = basisKernelList.begin();
         basisKernelIter != basisKernelList.end(); ++basisKernelIter, ++i) {
-        afwMath::basicConvolve(basisImage, inImage, **basisKernelIter, false);
+        mathDetail::basicConvolve(basisImage, inImage, **basisKernelIter, false);
         double noiseCorrelationCoeff = 1.0;
         if (ISINSTANCE(**basisKernelIter, afwMath::DeltaFunctionKernel)) {
             noiseCorrelationCoeff = 0.0;
@@ -459,7 +468,7 @@ void afwMath::basicConvolve(
         }
     }
 
-    if (doNormalize) {
+    if (convolutionControl.getDoNormalize()) {
         /*
         For each pixel of the output image: compute the kernel sum for that pixel and scale
         the output image. One obvious alternative is to create a temporary kernel sum image
@@ -495,12 +504,12 @@ void afwMath::basicConvolve(
  * @ingroup afw
  */
 template <typename OutImageT, typename InImageT>
-void afwMath::basicConvolve(
-    OutImageT& convolvedImage,      ///< convolved %image
-    InImageT const& inImage,        ///< %image to convolve
-    afwMath::SeparableKernel const &kernel, ///< convolution kernel
-    bool doNormalize                ///< if true, normalize the kernel, else use "as is"
-) {
+void mathDetail::basicConvolve(
+        OutImageT& convolvedImage,      ///< convolved %image
+        InImageT const& inImage,        ///< %image to convolve
+        afwMath::SeparableKernel const &kernel, ///< convolution kernel
+        afwMath::ConvolutionControl const & convolutionControl) ///< convolution control parameters
+{
     typedef typename afwMath::Kernel::Pixel KernelPixel;
     typedef typename std::vector<KernelPixel> KernelVector;
     typedef KernelVector::const_iterator KernelIterator;
@@ -541,7 +550,7 @@ void afwMath::basicConvolve(
     KernelVector kYVec(kHeight);
     
     if (kernel.isSpatiallyVarying()) {
-        pexLog::TTrace<3>("lsst.afw.kernel.convolve",
+        pexLog::TTrace<3>("lsst.afw.math.convolve",
             "SeparableKernel basicConvolve: kernel is spatially varying");
 
         for (int cnvY = cnvStartY; cnvY != cnvEndY; ++cnvY) {
@@ -552,21 +561,22 @@ void afwMath::basicConvolve(
             for (int cnvX = cnvStartX; cnvX != cnvEndX; ++cnvX, ++inImLoc.x(), ++cnvXIter) {
                 double const colPos = inImage.indexToPosition(cnvX, afwImage::X);
 
-                KernelPixel kSum = kernel.computeVectors(kXVec, kYVec, doNormalize, colPos, rowPos);
+                KernelPixel kSum = kernel.computeVectors(kXVec, kYVec, convolutionControl.getDoNormalize(),
+                    colPos, rowPos);
 
                 // why does this trigger warnings? It did not in the past.
                 *cnvXIter = afwMath::convolveAtAPoint<OutImageT, InImageT>(inImLoc, kXVec, kYVec);
-                if (doNormalize) {
+                if (convolutionControl.getDoNormalize()) {
                     *cnvXIter = *cnvXIter/kSum;
                 }
             }
         }
     } else {
         // kernel is spatially invariant
-        pexLog::TTrace<3>("lsst.afw.kernel.convolve",
+        pexLog::TTrace<3>("lsst.afw.math.convolve",
             "SeparableKernel basicConvolve: kernel is spatially invariant");
 
-        kernel.computeVectors(kXVec, kYVec, doNormalize);
+        kernel.computeVectors(kXVec, kYVec, convolutionControl.getDoNormalize());
         KernelIterator const kXVecBegin = kXVec.begin();
         KernelIterator const kYVecBegin = kYVec.begin();
 
@@ -634,7 +644,7 @@ void afwMath::basicConvolve(
  *
  * convolvedImage has a border of edge pixels which cannot be computed normally. Normally these pixels
  * are set to the standard edge pixel, as returned by edgePixel(). However, if your code cannot handle
- * nans in the %image or infs in the variance, you may set copyEdge true, in which case the edge pixels
+ * nans in the %image or infs in the variance, you may set doCopyEdge true, in which case the edge pixels
  * are set to the corresponding pixels of the input %image and (if there is a mask) the mask EDGE bit is set.
  *
  * The border of edge pixels has size:
@@ -676,19 +686,39 @@ void afwMath::basicConvolve(
  */
 template <typename OutImageT, typename InImageT, typename KernelT>
 void afwMath::convolve(
-    OutImageT& convolvedImage,  ///< convolved %image; must be the same size as inImage
-    InImageT const& inImage,    ///< %image to convolve
-    KernelT const& kernel,      ///< convolution kernel
-    bool doNormalize,           ///< if true, normalize the kernel, else use "as is"
-    bool copyEdge               ///< if false (default), set edge pixels to the standard edge pixel;
-                                ///< if true, copy edge pixels from input and set EDGE bit of mask
-                                
-) {
-    afwMath::basicConvolve(convolvedImage, inImage, kernel, doNormalize);
-    setEdgePixels(convolvedImage, kernel, inImage, copyEdge,
+        OutImageT& convolvedImage,  ///< convolved %image; must be the same size as inImage
+        InImageT const& inImage,    ///< %image to convolve
+        KernelT const& kernel,      ///< convolution kernel
+        ConvolutionControl const& convolutionControl)   ///< convolution control parameters
+{
+    mathDetail::basicConvolve(convolvedImage, inImage, kernel, convolutionControl);
+    setEdgePixels(convolvedImage, kernel, inImage, convolutionControl.getDoCopyEdge(),
         typename lsst::afw::image::detail::image_traits<OutImageT>::image_category()
     );
 }
+
+/**
+ * @brief Old, deprecated version of convolve.
+ *
+ * @deprecated This version has no ability to control interpolation parameters.
+ */
+template <typename OutImageT, typename InImageT, typename KernelT>
+void afwMath::convolve(
+        OutImageT& convolvedImage,  ///< convolved %image; must be the same size as inImage
+        InImageT const& inImage,    ///< %image to convolve
+        KernelT const& kernel,      ///< convolution kernel
+        bool doNormalize,           ///< if true, normalize the kernel, else use "as is"
+        bool doCopyEdge)            ///< if false (default), set edge pixels to the standard edge pixel;
+                                    ///< if true, copy edge pixels from input and set EDGE bit of mask
+{
+    ConvolutionControl convolutionControl;
+    convolutionControl.setDoNormalize(doNormalize);
+    mathDetail::basicConvolve(convolvedImage, inImage, kernel, convolutionControl);
+    setEdgePixels(convolvedImage, kernel, inImage, convolutionControl.getDoCopyEdge(),
+        typename lsst::afw::image::detail::image_traits<OutImageT>::image_category()
+    );
+}
+
 
 /**
  * @brief Convolve an Image or MaskedImage with a Kernel by computing the kernel image
@@ -710,12 +740,12 @@ void afwMath::convolve(
  * @ingroup afw
  */
 template <typename OutImageT, typename InImageT>
-void afwMath::detail::convolveWithBruteForce(
-    OutImageT &convolvedImage,      ///< convolved %image
-    InImageT const& inImage,        ///< %image to convolve
-    afwMath::Kernel const& kernel,  ///< convolution kernel
-    bool doNormalize                ///< if true, normalize the kernel, else use "as is"
-) {
+void mathDetail::convolveWithBruteForce(
+        OutImageT &convolvedImage,      ///< convolved %image
+        InImageT const& inImage,        ///< %image to convolve
+        afwMath::Kernel const& kernel,  ///< convolution kernel
+        bool doNormalize)               ///< if true, normalize the kernel, else use "as is"
+{
     typedef typename afwMath::Kernel::Pixel KernelPixel;
     typedef afwImage::Image<KernelPixel> KernelImage;
 
@@ -756,8 +786,8 @@ void afwMath::detail::convolveWithBruteForce(
     KernelImage kernelImage(kernel.getDimensions()); // the kernel at a point
 
     if (kernel.isSpatiallyVarying()) {
-        pexLog::TTrace<3>("lsst.afw.kernel.convolve.detail.convolveWithBruteForce",
-            "kernel is spatially varying");
+        pexLog::TTrace<3>("lsst.afw.math.convolve",
+            "convolveWithBruteForce: kernel is spatially varying");
 
         for (int cnvY = cnvStartY; cnvY != cnvEndY; ++cnvY) {
             double const rowPos = inImage.indexToPosition(cnvY, afwImage::Y);
@@ -777,8 +807,8 @@ void afwMath::detail::convolveWithBruteForce(
             }
         }
     } else {
-        pexLog::TTrace<3>("lsst.afw.kernel.convolve.detail.convolveWithBruteForce",
-            "kernel is spatially invariant");
+        pexLog::TTrace<3>("lsst.afw.math.convolve",
+            "convolveWithBruteForce: kernel is spatially invariant");
         (void)kernel.computeImage(kernelImage, doNormalize);
         
         for (int inStartY = 0, cnvY = cnvStartY; inStartY < cnvHeight; ++inStartY, ++cnvY) {
@@ -816,33 +846,45 @@ void afwMath::detail::convolveWithBruteForce(
  g++ -C -E -I$(eups list -s -d boost)/include Convolve.cc | perl -pe 's| *NL *|\n|g'
 */
 #define NL /* */
-#define CONVOLUTIONFUNCSBYTYPE(IMGMACRO, OUTPIXTYPE, INPIXTYPE) \
+//
+// Instantiate one kernel-specific specializations of convolution functions for Image or MaskedImage
+// IMGMACRO = IMAGE or MASKEDIMAGE
+// KERNELTYPE = a kernel class
+//
+#define INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, KERNELTYPE) \
+    template void afwMath::convolve( \
+        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, KERNELTYPE const&, bool, bool); NL \
+    template void afwMath::convolve( \
+        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, KERNELTYPE const&, ConvolutionControl const&); NL
+//
+// Instantiate Image or MaskedImage versions of all functions defined in this file.
+// Call INSTANTIATE_IM_OR_MI_KERNEL once for each kernel class.
+// IMGMACRO = IMAGE or MASKEDIMAGE
+//
+#define INSTANTIATE_IM_OR_MI(IMGMACRO, OUTPIXTYPE, INPIXTYPE) \
     template void afwMath::scaledPlus( \
         IMGMACRO(OUTPIXTYPE)&, double, IMGMACRO(INPIXTYPE) const&, double, IMGMACRO(INPIXTYPE) const&); NL \
-    template void afwMath::convolve( \
-        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, AnalyticKernel const&, bool, bool); NL \
-    template void afwMath::convolve( \
-        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, DeltaFunctionKernel const&, bool, bool); NL \
-    template void afwMath::convolve( \
-        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, FixedKernel const&, bool, bool); NL \
-    template void afwMath::convolve( \
-        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, LinearCombinationKernel const&, bool, bool); NL \
-    template void afwMath::convolve( \
-        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, SeparableKernel const&, bool, bool); NL \
-    template void afwMath::convolve( \
-        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, Kernel const&, bool, bool); NL \
-    template void afwMath::detail::convolveWithBruteForce( \
-        IMGMACRO(OUTPIXTYPE)&, IMGMACRO(INPIXTYPE) const&, Kernel const&, bool);
-
+    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, afwMath::AnalyticKernel) \
+    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, afwMath::DeltaFunctionKernel) \
+    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, afwMath::FixedKernel) \
+    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, afwMath::LinearCombinationKernel) \
+    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, afwMath::SeparableKernel) \
+    INSTANTIATE_IM_OR_MI_KERNEL(IMGMACRO, OUTPIXTYPE, INPIXTYPE, afwMath::Kernel) \
 //
-// Now a macro to specify Image and MaskedImage
+// Instantiate all functions defined in this file for one specific output and input pixel type
 //
-#define CONVOLUTIONFUNCS(OUTPIXTYPE, INPIXTYPE) \
-    CONVOLUTIONFUNCSBYTYPE(IMAGE,       OUTPIXTYPE, INPIXTYPE) \
-    CONVOLUTIONFUNCSBYTYPE(MASKEDIMAGE, OUTPIXTYPE, INPIXTYPE)
-
-CONVOLUTIONFUNCS(double, double)
-CONVOLUTIONFUNCS(double, float)
-CONVOLUTIONFUNCS(float, float)
-CONVOLUTIONFUNCS(int, int)
-CONVOLUTIONFUNCS(boost::uint16_t, boost::uint16_t)
+#define INSTANTIATE(OUTPIXTYPE, INPIXTYPE) \
+    INSTANTIATE_IM_OR_MI(IMAGE,       OUTPIXTYPE, INPIXTYPE) \
+    INSTANTIATE_IM_OR_MI(MASKEDIMAGE, OUTPIXTYPE, INPIXTYPE)
+//
+// Instantiate all functions defined in this file
+//
+INSTANTIATE(double, double)
+INSTANTIATE(double, float)
+INSTANTIATE(double, int)
+INSTANTIATE(double, boost::uint16_t)
+INSTANTIATE(float, float)
+INSTANTIATE(float, int)
+INSTANTIATE(float, boost::uint16_t)
+INSTANTIATE(int, int)
+INSTANTIATE(boost::uint16_t, boost::uint16_t)

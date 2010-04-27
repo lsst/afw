@@ -23,125 +23,196 @@
 namespace lsst {
 namespace afw {
 namespace math {
-namespace detail {
 
     /**
-     * A collection of Kernel images for special locations on a rectangular region of an image
+     * @brief Parameters to control convolution
      *
-     * See the Location enum for a list of those special locations.
-     *
-     * This is a low-level helper class for recursive convolving with interpolation. Many of these objects
-     * may be created during a convolution, and many will share kernel images. It uses shared pointers
-     * to kernels and kernel images for increased speed and decreased memory usage (at the expense of safety).
-     * Note that null pointers are NOT acceptable for the constructors!
-     *
-     * Also note that it uses lazy evaluation: images are computed when they are wanted.
+     * @ingroup afw
      */
-    class KernelImagesForRegion :
-        public lsst::daf::data::LsstBase,
-        public lsst::daf::base::Persistable
-    {
+    class ConvolutionControl {
     public:
-        typedef lsst::afw::math::Kernel::ConstPtr KernelConstPtr;
-        typedef lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel> Image;
-        typedef Image::Ptr ImagePtr;
-        typedef Image::ConstPtr ImageConstPtr;
-        typedef std::vector<KernelImagesForRegion> List;
-        /**
-         * locations of various points in the region
-         *
-         * The corners posiitions are: BOTTOM_LEFT, BOTTOM_RIGHT, TOP_LEFT, TOP_RIGHT
-         * The "middle" positions are the middle of each side, plus the center of the region:
-         *    BOTTOM, TOP, LEFT, RIGHT, CENTER
-         *
-         * These positions always refer to an exact pixel. If the region has an even size along an axis
-         * then the middle is shifted by 1/2 pixel (in an unspecified direction) for that axis.
-         */
-        enum Location {
-            BOTTOM_LEFT, BOTTOM_RIGHT, TOP_LEFT, TOP_RIGHT,
-            BOTTOM, TOP, LEFT, RIGHT, CENTER
-        };
+        ConvolutionControl(
+                bool doNormalize = true,    ///< normalize the kernel to sum=1?
+                bool doCopyEdge = false,    ///< copy edge pixels from source image
+                    ///< instead of setting them to the standard edge pixel?
+                double maxInterpolationError = 1.0e-5,  ///< maximum allowed error
+                    ///< in computing the value of the kernel at any pixel by linear interpolation
+                int maxInterpolationDistance = 50)  ///< maximum width or height of a region
+                    ///< over which to test if interpolation works
+        :
+            _doNormalize(doNormalize),
+            _doCopyEdge(doCopyEdge),
+            _maxInterpolationError(maxInterpolationError)
+        { }
     
-        KernelImagesForRegion(
-                KernelConstPtr kernelPtr,
-                lsst::afw::geom::BoxI const &bbox,
-                bool doNormalize);
-        KernelImagesForRegion(
-                KernelConstPtr kernelPtr,
-                lsst::afw::geom::BoxI const &bbox,
-                bool doNormalize,
-                ImageConstPtr bottomLeftImagePtr,
-                ImageConstPtr bottomRightImagePtr,
-                ImageConstPtr topLeftImagePtr,
-                ImageConstPtr topRightImagePtr);
-
-        lsst::afw::geom::BoxI getBBox() const { return _bbox; };
-        bool getDoNormalize() const { return _doNormalize; };
-        ImageConstPtr getImage(Location location) const;
-        KernelConstPtr getKernel() const { return _kernelPtr; };
-        std::vector<KernelImagesForRegion> getSubregions() const;
-        std::vector<KernelImagesForRegion> getSubregions(int nx, int ny) const;
-        bool isInterpolationOk(double tolerance) const;
-        static int getMinInterpSize() { return _MinInterpSize; };
-
+        bool getDoNormalize() const { return _doNormalize; }
+        bool getDoCopyEdge() const { return _doCopyEdge; }
+        double getMaxInterpolationError() const { return _maxInterpolationError; }
+        int getMaxInterpolationDistance() const { return _maxInterpolationDistance; };
+        
+        void setDoNormalize(bool doNormalize) {_doNormalize = doNormalize; }
+        void setDoCopyEdge(bool doCopyEdge) { _doCopyEdge = doCopyEdge; }
+        void setMaxInterpolationError(double maxInterpolationError) {
+            _maxInterpolationError = maxInterpolationError; }
+        void setMaxInterpolationDistance(int maxInterpolationDistance) {
+            _maxInterpolationDistance = maxInterpolationDistance; }
+    
     private:
-        typedef std::map<Location, ImageConstPtr> ImageMap;
-        typedef std::vector<Location> LocationList;
-
-        inline void _insertImage(Location location, ImageConstPtr &imagePtr) const;
-        void _interpolateImage(Image &outImage, Location location1) const;
-        lsst::afw::geom::Point2I _pixelIndexFromLocation(Location) const;
-        
-        // static helper functions
-        static lsst::afw::geom::Point2D _computeCenterFractionalPosition(lsst::afw::geom::BoxI const &bbox);
-        static lsst::afw::geom::Point2I _computeCenterIndex(lsst::afw::geom::BoxI const &bbox);
-        static inline int _computeNextSubregionLength(int length, int nDivisions);
-        static std::vector<int> _computeSubregionLengths(int length, int nDivisions);
-        
-        // member variables
-        KernelConstPtr _kernelPtr;
-        lsst::afw::geom::BoxI _bbox;
-        lsst::afw::geom::Point2D _centerFractionalPosition;  ///< fractional position of center pixel
-            ///< from bottom left to top right; 0.5 if length of axis is odd, somewhat less if even
-        lsst::afw::geom::Point2I _centerIndex;  ///< index of center pixel
-        bool _doNormalize;
-        mutable ImageMap _imageMap; ///< cache of location:kernel image;
-            ///< mutable to support lazy evaluation: const methods may add entries to the cache
-
-        static int const _MinInterpSize;
-        static LocationList const _TestLocationList;   ///< locations at which to test
-            ///< linear interpolation to see if it is accurate enough
+        bool _doNormalize;  ///< normalize the kernel to sum=1?
+        bool _doCopyEdge;   ///< copy edge pixels from source image
+                    ///< instead of setting them to the standard edge pixel?
+        double _maxInterpolationError;  ///< maximum allowed error in computing the kernel image;
+                    ///< applies to linear interpolation and perhaps other approximate methods in the future
+        int _maxInterpolationDistance;  ///< maximum width or height of a region
+                    ///< over which to attempt interpolation
     };
-    
-    template <typename OutImageT, typename InImageT>
-    void convolveWithInterpolation(
-            OutImageT &outImage,
-            InImageT const &inImage,
-            lsst::afw::math::Kernel const &kernel,
-            bool doNormalize,
-            double tolerance = 1.0e-5,
-            int maxInterpolationDistance = 50);
 
-    template <typename OutImageT, typename InImageT>
-    void convolveRegionWithRecursiveInterpolation(
-            OutImageT &outImage,
-            InImageT const &inImage,
-            KernelImagesForRegion const &region,
-            double tolerance = 1.0e-5);
+    namespace detail {
     
-    template <typename OutImageT, typename InImageT>
-    void convolveRegionWithInterpolation(
-            OutImageT &outImage,
-            InImageT const &inImage,
-            KernelImagesForRegion const &region);
+        /**
+         * A collection of Kernel images for special locations on a rectangular region of an image
+         *
+         * See the Location enum for a list of those special locations.
+         *
+         * This is a low-level helper class for recursive convolving with interpolation. Many of these objects
+         * may be created during a convolution, and many will share kernel images. It uses shared pointers
+         * to kernels and kernel images for increased speed and decreased memory usage (at the expense of safety).
+         * Note that null pointers are NOT acceptable for the constructors!
+         *
+         * Also note that it uses lazy evaluation: images are computed when they are wanted.
+         */
+        class KernelImagesForRegion :
+            public lsst::daf::data::LsstBase,
+            public lsst::daf::base::Persistable
+        {
+        public:
+            typedef lsst::afw::math::Kernel::ConstPtr KernelConstPtr;
+            typedef lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel> Image;
+            typedef Image::Ptr ImagePtr;
+            typedef Image::ConstPtr ImageConstPtr;
+            typedef std::vector<KernelImagesForRegion> List;
+            /**
+             * locations of various points in the region
+             *
+             * The corners posiitions are: BOTTOM_LEFT, BOTTOM_RIGHT, TOP_LEFT, TOP_RIGHT
+             * The "middle" positions are the middle of each side, plus the center of the region:
+             *    BOTTOM, TOP, LEFT, RIGHT, CENTER
+             *
+             * These positions always refer to an exact pixel. If the region has an even size along an axis
+             * then the middle is shifted by 1/2 pixel (in an unspecified direction) for that axis.
+             */
+            enum Location {
+                BOTTOM_LEFT, BOTTOM_RIGHT, TOP_LEFT, TOP_RIGHT,
+                BOTTOM, TOP, LEFT, RIGHT, CENTER
+            };
+        
+            KernelImagesForRegion(
+                    KernelConstPtr kernelPtr,
+                    lsst::afw::geom::BoxI const &bbox,
+                    bool doNormalize);
+            KernelImagesForRegion(
+                    KernelConstPtr kernelPtr,
+                    lsst::afw::geom::BoxI const &bbox,
+                    bool doNormalize,
+                    ImageConstPtr bottomLeftImagePtr,
+                    ImageConstPtr bottomRightImagePtr,
+                    ImageConstPtr topLeftImagePtr,
+                    ImageConstPtr topRightImagePtr);
+    
+            lsst::afw::geom::BoxI getBBox() const { return _bbox; };
+            bool getDoNormalize() const { return _doNormalize; };
+            ImageConstPtr getImage(Location location) const;
+            KernelConstPtr getKernel() const { return _kernelPtr; };
+            std::vector<KernelImagesForRegion> getSubregions() const;
+            std::vector<KernelImagesForRegion> getSubregions(int nx, int ny) const;
+            bool isInterpolationOk(double maxInterpolationError) const;
+            static int getMinInterpSize() { return _MinInterpSize; };
+    
+        private:
+            typedef std::map<Location, ImageConstPtr> ImageMap;
+            typedef std::vector<Location> LocationList;
+    
+            inline void _insertImage(Location location, ImageConstPtr &imagePtr) const;
+            void _interpolateImage(Image &outImage, Location location1) const;
+            lsst::afw::geom::Point2I _pixelIndexFromLocation(Location) const;
+            
+            // static helper functions
+            static lsst::afw::geom::Point2D _computeCenterFractionalPosition(lsst::afw::geom::BoxI const &bbox);
+            static lsst::afw::geom::Point2I _computeCenterIndex(lsst::afw::geom::BoxI const &bbox);
+            static inline int _computeNextSubregionLength(int length, int nDivisions);
+            static std::vector<int> _computeSubregionLengths(int length, int nDivisions);
+            
+            // member variables
+            KernelConstPtr _kernelPtr;
+            lsst::afw::geom::BoxI _bbox;
+            lsst::afw::geom::Point2D _centerFractionalPosition;  ///< fractional position of center pixel
+                ///< from bottom left to top right; 0.5 if length of axis is odd, somewhat less if even
+            lsst::afw::geom::Point2I _centerIndex;  ///< index of center pixel
+            bool _doNormalize;
+            mutable ImageMap _imageMap; ///< cache of location:kernel image;
+                ///< mutable to support lazy evaluation: const methods may add entries to the cache
+    
+            static int const _MinInterpSize;
+            static LocationList const _TestLocationList;   ///< locations at which to test
+                ///< linear interpolation to see if it is accurate enough
+        };
+        
+        template <typename OutImageT, typename InImageT>
+        void convolveWithInterpolation(
+                OutImageT &outImage,
+                InImageT const &inImage,
+                lsst::afw::math::Kernel const &kernel,
+                ConvolutionControl const &convolutionControl);
+    
+        template <typename OutImageT, typename InImageT>
+        void convolveRegionWithRecursiveInterpolation(
+                OutImageT &outImage,
+                InImageT const &inImage,
+                KernelImagesForRegion const &region,
+                double maxInterpolationError = 1.0e-5);
+        
+        template <typename OutImageT, typename InImageT>
+        void convolveRegionWithInterpolation(
+                OutImageT &outImage,
+                InImageT const &inImage,
+                KernelImagesForRegion const &region);
+    
+        template <typename OutImageT, typename InImageT>
+        void convolveWithBruteForce(
+                OutImageT &convolvedImage,
+                InImageT const& inImage,
+                lsst::afw::math::Kernel const& kernel,
+                bool doNormalize);
 
-    template <typename OutImageT, typename InImageT>
-    void convolveWithBruteForce(
-            OutImageT &convolvedImage,
-            InImageT const& inImage,
-            lsst::afw::math::Kernel const& kernel,
-            bool doNormalize);
-}   // detail
+        template <typename OutImageT, typename InImageT>
+        void basicConvolve(
+                OutImageT& convolvedImage,
+                InImageT const& inImage,
+                lsst::afw::math::Kernel const& kernel,
+                lsst::afw::math::ConvolutionControl const& convolutionControl);
+        
+        template <typename OutImageT, typename InImageT>
+        void basicConvolve(
+                OutImageT& convolvedImage,
+                InImageT const& inImage,
+                lsst::afw::math::DeltaFunctionKernel const& kernel,
+                lsst::afw::math::ConvolutionControl const&);
+        
+        template <typename OutImageT, typename InImageT>
+        void basicConvolve(
+                OutImageT& convolvedImage,
+                InImageT const& inImage,
+                lsst::afw::math::LinearCombinationKernel const& kernel,
+                lsst::afw::math::ConvolutionControl const& convolutionControl);
+        
+        template <typename OutImageT, typename InImageT>
+        void basicConvolve(
+                OutImageT& convolvedImage,
+                InImageT const& inImage,
+                lsst::afw::math::SeparableKernel const& kernel,
+                lsst::afw::math::ConvolutionControl const& convolutionControl);
+    }   // detail
+
 
     template <typename OutImageT, typename InImageT>
     void scaledPlus(
@@ -164,33 +235,12 @@ namespace detail {
             std::vector<lsst::afw::math::Kernel::Pixel> const& kernelColList,
             std::vector<lsst::afw::math::Kernel::Pixel> const& kernelRowList);
     
-    template <typename OutImageT, typename InImageT>
-    void basicConvolve(
+    template <typename OutImageT, typename InImageT, typename KernelT>
+    void convolve(
             OutImageT& convolvedImage,
             InImageT const& inImage,
-            lsst::afw::math::Kernel const& kernel,
-            bool doNormalize);
-    
-    template <typename OutImageT, typename InImageT>
-    void basicConvolve(
-            OutImageT& convolvedImage,
-            InImageT const& inImage,
-            lsst::afw::math::DeltaFunctionKernel const& kernel,
-            bool doNormalize);
-    
-    template <typename OutImageT, typename InImageT>
-    void basicConvolve(
-            OutImageT& convolvedImage,
-            InImageT const& inImage,
-            lsst::afw::math::LinearCombinationKernel const& kernel,
-            bool doNormalize);
-    
-    template <typename OutImageT, typename InImageT>
-    void basicConvolve(
-            OutImageT& convolvedImage,
-            InImageT const& inImage,
-            lsst::afw::math::SeparableKernel const& kernel,
-            bool doNormalize);
+            KernelT const& kernel,
+            ConvolutionControl const& convolutionControl);
     
     template <typename OutImageT, typename InImageT, typename KernelT>
     void convolve(
@@ -198,7 +248,7 @@ namespace detail {
             InImageT const& inImage,
             KernelT const& kernel,
             bool doNormalize,
-            bool copyEdge = false);
+            bool doCopyEdge = false);
     
     /**
      * \brief Return an edge pixel appropriate for a given Image type

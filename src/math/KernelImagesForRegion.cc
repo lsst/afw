@@ -15,6 +15,8 @@
 
 #include "boost/assign/list_of.hpp"
 
+#include "lsst/pex/exceptions.h"
+#include "lsst/afw/geom.h"
 #include "lsst/afw/image/ImageUtils.h"
 #include "lsst/afw/math.h"
 
@@ -239,7 +241,7 @@ const {
  * The algorithm is as follows:
  * - for each location in (center, bottom, left, right, top):
  *     - error image = linearly interpolated kernel image - true kernel image (obeying doNormalize)
- *     - if the absolute value of any pixel of error image > tolerance then:
+ *     - if the absolute value of any pixel of error image > maxInterpolationError then:
  *         - interpolation is unacceptable; stop the test
  * - interpolation is acceptable
  *
@@ -249,7 +251,8 @@ const {
  * @return true if interpolation will give sufficiently accurate results, false otherwise
  */
 bool mathDetail::KernelImagesForRegion::isInterpolationOk(
-        double tolerance)   ///< maximum allowed error in interpolated kernel images
+        double maxInterpolationError)   ///< maximum allowed error
+            ///< in computing the value of the kernel at any pixel by linear interpolation
 const {
     typedef LocationList::const_iterator LocationIter;
     typedef Image::const_x_iterator ImageXIter;
@@ -264,7 +267,7 @@ const {
             ImageXIter const interpEnd = interpImage.row_end(row);
             ImageXIter truePtr = trueImagePtr->row_begin(row);
             for ( ; interpPtr != interpEnd; ++interpPtr, ++truePtr) {
-                if (std::abs(*interpPtr - *truePtr) > tolerance) {
+                if (std::abs(*interpPtr - *truePtr) > maxInterpolationError) {
                     return false;
                 }
             }

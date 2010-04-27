@@ -95,14 +95,6 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
         IMAGE(PIXTYPE1), IMAGE(PIXTYPE2), lsst::afw::math::LinearCombinationKernel>;
     %template(convolve) lsst::afw::math::convolve<
         IMAGE(PIXTYPE1), IMAGE(PIXTYPE2), lsst::afw::math::SeparableKernel>;
-    %template(convolveWithBruteForce) lsst::afw::math::detail::convolveWithBruteForce<
-        IMAGE(PIXTYPE1), IMAGE(PIXTYPE2)>;
-    %template(convolveWithInterpolation) lsst::afw::math::detail::convolveWithInterpolation<
-        IMAGE(PIXTYPE1), IMAGE(PIXTYPE2)>;
-    %template(convolveRegionWithRecursiveInterpolation)
-        lsst::afw::math::detail::convolveRegionWithRecursiveInterpolation<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2)>;
-    %template(convolveRegionWithInterpolation) lsst::afw::math::detail::convolveRegionWithInterpolation<
-        IMAGE(PIXTYPE1), IMAGE(PIXTYPE2)>;
 %enddef
 //
 // Now a macro to specify Image and MaskedImage
