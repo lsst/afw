@@ -428,31 +428,6 @@ void form::SourceVectorFormatter::write(
     }
     SourceSet sourceVector = p->getSources();   
 
-    // Assume all have ids or none do.
-    if ((*sourceVector.begin())->getId() == 0 && 
-        (!_policy || !_policy->exists("GenerateIds") 
-        || _policy->getBool("GenerateIds"))
-    ) {
-     
-        unsigned short seq = 1;
-        boost::int64_t ampExposureId = extractAmpExposureId(additionalData);
-        if (sourceVector.size() > 65536) {
-            throw LSST_EXCEPT(ex::RangeErrorException, "too many Sources per-amp: "
-                "sequence number overflows 16 bits, potentially causing unique-id conflicts");
-        }
-        
-        SourceSet::iterator i = sourceVector.begin();
-        for ( ; i != sourceVector.end(); ++i) {
-            (*i)->setId(generateSourceId(seq, ampExposureId));
-            (*i)->setAmpExposureId(ampExposureId);
-            ++seq;
-            if (seq == 0) { // Overflowed
-                throw LSST_EXCEPT(ex::RuntimeErrorException, 
-                        "Too many Sources");
-            }
-        }        
-    }
-
     if (typeid(*storage) == typeid(BoostStorage)) {
         //persist to BoostStorage    
         BoostStorage * bs = dynamic_cast<BoostStorage *>(storage.get());
@@ -465,6 +440,33 @@ void form::SourceVectorFormatter::write(
         bs->getOArchive() & *p;
     } else if (typeid(*storage) == typeid(DbStorage) 
             || typeid(*storage) == typeid(DbTsvStorage)) {
+
+        // Assume all have ids or none do.
+        // If none do, assign them ids.
+        if ((*sourceVector.begin())->getId() == 0 && 
+            (!_policy || !_policy->exists("GenerateIds") 
+            || _policy->getBool("GenerateIds"))
+        ) {
+     
+            unsigned short seq = 1;
+            boost::int64_t ampExposureId = extractAmpExposureId(additionalData);
+            if (sourceVector.size() > 65536) {
+                throw LSST_EXCEPT(ex::RangeErrorException, "too many Sources per-amp: "
+                    "sequence number overflows 16 bits, potentially causing unique-id conflicts");
+            }
+            
+            SourceSet::iterator i = sourceVector.begin();
+            for ( ; i != sourceVector.end(); ++i) {
+                (*i)->setId(generateSourceId(seq, ampExposureId));
+                (*i)->setAmpExposureId(ampExposureId);
+                ++seq;
+                if (seq == 0) { // Overflowed
+                    throw LSST_EXCEPT(ex::RuntimeErrorException, 
+                            "Too many Sources");
+                }
+            }        
+        }
+
         std::string itemName(getItemName(additionalData));
         std::string name(getTableName(_policy, additionalData));
         std::string model = _policy->getString(itemName + ".templateTableName");
