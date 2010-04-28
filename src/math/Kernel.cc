@@ -224,7 +224,7 @@ afwGeom::BoxI afwMath::Kernel::growBBox(afwGeom::BoxI const &bbox) const {
         afwGeom::Point2I::make(
             bbox.getMinX() - getCtrX(),
             bbox.getMinY() - getCtrY()),
-        afwGeom::Point2I::make(
+        afwGeom::Extent2I::make(
             bbox.getWidth()  + getWidth() - 1,
             bbox.getHeight() + getHeight() - 1));
 }
@@ -250,7 +250,7 @@ afwGeom::BoxI afwMath::Kernel::shrinkBBox(afwGeom::BoxI const &bbox) const {
         afwGeom::Point2I::make(
             bbox.getMinX() + getCtrX(),
             bbox.getMinY() + getCtrY()),
-        afwGeom::Point2I::make(
+        afwGeom::Extent2I::make(
             bbox.getWidth()  + 1 - getWidth(),
             bbox.getHeight() + 1 - getHeight()));
 }

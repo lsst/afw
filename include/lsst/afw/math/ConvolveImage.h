@@ -42,7 +42,8 @@ namespace math {
         :
             _doNormalize(doNormalize),
             _doCopyEdge(doCopyEdge),
-            _maxInterpolationError(maxInterpolationError)
+            _maxInterpolationError(maxInterpolationError),
+            _maxInterpolationDistance(maxInterpolationDistance)
         { }
     
         bool getDoNormalize() const { return _doNormalize; }
@@ -126,7 +127,7 @@ namespace math {
             std::vector<KernelImagesForRegion> getSubregions() const;
             std::vector<KernelImagesForRegion> getSubregions(int nx, int ny) const;
             bool isInterpolationOk(double maxInterpolationError) const;
-            static int getMinInterpSize() { return _MinInterpSize; };
+            static int getMinInterpolationSize() { return _MinInterpolationSize; };
     
         private:
             typedef std::map<Location, ImageConstPtr> ImageMap;
@@ -152,7 +153,7 @@ namespace math {
             mutable ImageMap _imageMap; ///< cache of location:kernel image;
                 ///< mutable to support lazy evaluation: const methods may add entries to the cache
     
-            static int const _MinInterpSize;
+            static int const _MinInterpolationSize;
             static LocationList const _TestLocationList;   ///< locations at which to test
                 ///< linear interpolation to see if it is accurate enough
         };

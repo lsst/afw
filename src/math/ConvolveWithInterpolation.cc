@@ -68,8 +68,8 @@ void mathDetail::convolveWithInterpolation(
         convolutionControl.getDoNormalize()));
 
     // divide full region into subregions small enough to interpolate over
-    int nx = bbox.getWidth() / convolutionControl.getMaxInterpolationDistance();
-    int ny = bbox.getHeight() / convolutionControl.getMaxInterpolationDistance();
+    int nx = 1 + (bbox.getWidth() / convolutionControl.getMaxInterpolationDistance());
+    int ny = 1 + (bbox.getHeight() / convolutionControl.getMaxInterpolationDistance());
     pexLog::TTrace<4>("lsst.afw.math.convolve",
         "convolveWithInterpolation: divide into %d x %d subregions", nx, ny);
 
@@ -109,7 +109,7 @@ void mathDetail::convolveRegionWithRecursiveInterpolation(
             ///< at any pixel via linear interpolation
 {
     if (afwGeom::any(region.getBBox().getDimensions().lt(
-        afwGeom::Extent2I::make(region.getMinInterpSize())))) {
+        afwGeom::Extent2I::make(region.getMinInterpolationSize())))) {
         // region too small for interpolation; convolve using brute force
         afwMath::Kernel::ConstPtr kernelPtr = region.getKernel();
         afwGeom::BoxI const bbox = kernelPtr->growBBox(region.getBBox());

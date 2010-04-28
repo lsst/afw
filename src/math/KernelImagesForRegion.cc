@@ -183,6 +183,7 @@ mathDetail::KernelImagesForRegion::getSubregions() const {
  * top row left to right
  *
  * @throw lsst::pex::exceptions::InvalidParameterException if nx >= region width or ny >= region height.
+ * @throw lsst::pex::exceptions::InvalidParameterException if nx < 1 or ny < 1.
  */
 std::vector<mathDetail::KernelImagesForRegion>
 mathDetail::KernelImagesForRegion::getSubregions(
@@ -469,9 +470,9 @@ std::vector<int> mathDetail::KernelImagesForRegion::_computeSubregionLengths(
     int length,     ///< length of region
     int nDivisions) ///< number of divisions of region
 {
-    if (nDivisions >= length) {
+    if ((nDivisions >= length) || (nDivisions < 1)) {
         std::ostringstream os;
-        os << "nDivisions = " << nDivisions << " >= " << length << "length";
+        os << "nDivisions = " << nDivisions << " not in range [1, " << length << " = length]";
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
     std::vector<int> regionLengths;
@@ -484,7 +485,7 @@ std::vector<int> mathDetail::KernelImagesForRegion::_computeSubregionLengths(
     return regionLengths;
 }
 
-int const mathDetail::KernelImagesForRegion::_MinInterpSize = 5;
+int const mathDetail::KernelImagesForRegion::_MinInterpolationSize = 5;
 
 mathDetail::KernelImagesForRegion::LocationList const mathDetail::KernelImagesForRegion::_TestLocationList =
     boost::assign::list_of(CENTER)(BOTTOM)(LEFT)(RIGHT)(TOP);

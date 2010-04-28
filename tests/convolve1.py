@@ -16,7 +16,7 @@ import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.image.testUtils as imTestUtils
 
-VERBOSITY = 0   # increase to see trace; 3 will show the convolutions specializations being used
+VERBOSITY = 4   # increase to see trace; 3 will show the convolutions specializations being used
 TESTTICKET873 = False
 
 if not TESTTICKET873:
@@ -243,13 +243,16 @@ class ConvolveTestCase(unittest.TestCase):
                 errStr = imTestUtils.maskedImagesDiffer(cnvImMaskVarArr, refCnvImMaskVarArr,
                     doVariance = TESTTICKET873, rtol=rtol, atol=atol)
                 if errStr:
+                    self.cnvMaskedImage.writeFits("act%s" % (kernelDescr,))
+                    refMaskedImage = imTestUtils.maskedImageFromArrays(refCnvImMaskVarArr)
+                    refMaskedImage.writeFits("des%s" % (kernelDescr,))
                     self.fail("convolve(MaskedImage, kernel=%s, doNormalize=%s, copyEdge=%s) failed:\n%s" % \
                         (kernelDescr, doNormalize, copyEdge, errStr))
                 self.assert_(sameMaskPlaneDicts(self.cnvMaskedImage, self.maskedImage),
                     "convolve(MaskedImage, kernel=%s, doNormalize=%s, copyEdge=%s) failed:\n%s" % \
                     (kernelDescr, doNormalize, copyEdge, "convolved mask dictionary does not match input"))
         
-    def testUnityConvolution(self):
+    def XXXtestUnityConvolution(self):
         """Verify that convolution with a centered delta function reproduces the original.
         """
         # create a delta function kernel that has 1,1 in the center
@@ -282,7 +285,7 @@ class ConvolveTestCase(unittest.TestCase):
             (kernelDescr, doNormalize, copyEdge, "convolved mask dictionary does not match input"))
 
 
-    def testFixedKernelConvolve(self):
+    def XXXtestFixedKernelConvolve(self):
         """Test convolve with a fixed kernel
         """
         kCols = 6
@@ -296,7 +299,7 @@ class ConvolveTestCase(unittest.TestCase):
         
         self.runStdTest(fixedKernel, kernelDescr="Gaussian FixedKernel")
 
-    def testSeparableConvolve(self):
+    def XXXtestSeparableConvolve(self):
         """Test convolve of a separable kernel with a spatially invariant Gaussian function
         """
         kCols = 7
@@ -310,7 +313,7 @@ class ConvolveTestCase(unittest.TestCase):
         self.runStdTest(separableKernel, refKernel=analyticKernel,
             kernelDescr="Gaussian Separable Kernel (compared to AnalyticKernel equivalent)")
 
-    def testSpatiallyInvariantConvolve(self):
+    def XXXtestSpatiallyInvariantConvolve(self):
         """Test convolution with a spatially invariant Gaussian function
         """
         kCols = 6
@@ -344,7 +347,7 @@ class ConvolveTestCase(unittest.TestCase):
 
         self.runStdTest(kernel, kernelDescr="Spatially Varying Gaussian Analytic Kernel")
 
-    def testSpatiallyVaryingSeparableConvolve(self):
+    def XXXtestSpatiallyVaryingSeparableConvolve(self):
         """Test in-place separable convolution with a spatially varying Gaussian function
         """
         kCols = 7
@@ -371,7 +374,7 @@ class ConvolveTestCase(unittest.TestCase):
         self.runStdTest(separableKernel, refKernel=analyticKernel,
             kernelDescr="Spatially Varying Gaussian Separable Kernel")
     
-    def testDeltaConvolve(self):
+    def XXXtestDeltaConvolve(self):
         """Test convolution with various delta function kernels using optimized code
         """
         for kCols in range(1, 4):
@@ -386,7 +389,7 @@ class ConvolveTestCase(unittest.TestCase):
 
                         self.runStdTest(kernel, kernelDescr="Delta Function Kernel")
 
-    def testSpatiallyVaryingGaussianLinerCombination(self):
+    def XXXtestSpatiallyVaryingGaussianLinerCombination(self):
         """Test convolution with a spatially varying LinearCombinationKernel of two Gaussian basis kernels.
         """
         kCols = 5
@@ -410,7 +413,7 @@ class ConvolveTestCase(unittest.TestCase):
         self.runStdTest(kernel,
             kernelDescr="Spatially varying LinearCombinationKernel of two Gaussian basis kernels")
 
-    def testSpatiallyVaryingDeltaFunctionLinearCombination(self):
+    def XXXtestSpatiallyVaryingDeltaFunctionLinearCombination(self):
         """Test convolution with a spatially varying LinearCombinationKernel of delta function basis kernels.
         """
         kCols = 2
