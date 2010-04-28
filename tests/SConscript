@@ -53,10 +53,11 @@ else:
                 ]
     tests = lsst.tests.Control(env, args = testArgs, ignoreList=ignoreList, verbose = True)
 
-    tests.run("*.cc")
+    print "SKIPPING ALL TESTS EXCEPT CONVOLUTION; RE-ENABLE TESTS!"
+#    tests.run("*.cc")
 
     # set up python tests
-    for target in tests.run("*.py"):
+    for target in tests.run("convolve1.py"): # tests.run("*.py"):
         for pkgName in ("detection", "display", "image", "math", "geom"):
             env.Depends(target, os.path.join(
                 "#python", "lsst", "afw", pkgName, "_%sLib%s" % (pkgName, env["LDMODULESUFFIX"])))

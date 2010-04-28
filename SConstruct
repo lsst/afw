@@ -31,10 +31,11 @@ if True:
 #
 # Build/install things
 #
+print "EXAMPLES NOT BEING BUILT; FIX SConstruct!!!"
 for d in (
     ".",
     "doc",
-    "examples",
+#    "examples",
     "lib",
     "python/lsst/afw/cameraGeom",
     "python/lsst/afw/detection",

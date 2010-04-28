@@ -16,7 +16,7 @@ import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.image.testUtils as imTestUtils
 
-VERBOSITY = 4   # increase to see trace; 3 will show the convolutions specializations being used
+VERBOSITY = 6   # increase to see trace; 3 will show the convolutions specializations being used
 TESTTICKET873 = False
 
 if not TESTTICKET873:
@@ -339,6 +339,12 @@ class ConvolveTestCase(unittest.TestCase):
             (1.0, 1.0/self.width, 0.0),
             (1.0, 0.0, 1.0/self.height),
             (0.0, 1.56/self.width, -1.56/self.height),
+        )
+        print "DISABLE SPATIAL PARAMS"
+        sParams = (
+            (1.0, 0.0, 0.0),
+            (0.0, 0.0, 0.0),
+            (0.0, 0.0, 0.0),
         )
    
         kFunc =  afwMath.GaussianFunction2D(1.0, 1.0, 0.0)

@@ -59,22 +59,37 @@ void mathDetail::convolveWithInterpolation(
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
 
-    // compute full region covering good area of output image
-    afwGeom::BoxI bbox(afwGeom::Point2I::make(kernel.getCtrX(), kernel.getCtrY()),
-        afwGeom::Extent2I::make(
-            outImage.getWidth() + 1 - kernel.getWidth(),
-            outImage.getHeight() + 1 - kernel.getHeight()));
-    KernelImagesForRegion fullRegion(KernelImagesForRegion(kernel.clone(), bbox,
+    // compute region covering good area of output image
+    afwGeom::BoxI fullBBox = afwGeom::BoxI(afwGeom::Point2I::make(0, 0), 
+        afwGeom::Extent2I::make(outImage.getWidth(), outImage.getHeight()));
+    afwGeom::BoxI goodBBox = kernel.shrinkBBox(fullBBox);
+    KernelImagesForRegion goodRegion(KernelImagesForRegion(kernel.clone(), goodBBox,
         convolutionControl.getDoNormalize()));
+    pexLog::TTrace<6>("lsst.afw.math.convolve",
+        "convolveWithInterpolation: full bbox minimum=(%d, %d), extent=(%d, %d)",
+            fullBBox.getMinX(), fullBBox.getMinY(),
+            fullBBox.getWidth(), fullBBox.getHeight());
+    pexLog::TTrace<6>("lsst.afw.math.convolve",
+        "convolveWithInterpolation: goodRegion bbox minimum=(%d, %d), extent=(%d, %d)",
+            goodRegion.getBBox().getMinX(), goodRegion.getBBox().getMinY(),
+            goodRegion.getBBox().getWidth(), goodRegion.getBBox().getHeight());
 
-    // divide full region into subregions small enough to interpolate over
-    int nx = 1 + (bbox.getWidth() / convolutionControl.getMaxInterpolationDistance());
-    int ny = 1 + (bbox.getHeight() / convolutionControl.getMaxInterpolationDistance());
+    // divide good region into subregions small enough to interpolate over
+    int nx = 1 + (goodBBox.getWidth() / convolutionControl.getMaxInterpolationDistance());
+    int ny = 1 + (goodBBox.getHeight() / convolutionControl.getMaxInterpolationDistance());
     pexLog::TTrace<4>("lsst.afw.math.convolve",
         "convolveWithInterpolation: divide into %d x %d subregions", nx, ny);
 
-    std::vector<KernelImagesForRegion> subregionList = fullRegion.getSubregions(nx, ny);
-    
+    std::vector<KernelImagesForRegion> subregionList = goodRegion.getSubregions(nx, ny);
+
+    for (std::vector<KernelImagesForRegion>::iterator regionPtr = subregionList.begin();
+        regionPtr != subregionList.end(); ++regionPtr) {
+        pexLog::TTrace<1>("lsst.afw.math.convolve",
+            "convolveWithInterpolation: bbox minimum=(%d, %d), extent=(%d, %d)",
+                regionPtr->getBBox().getMinX(), regionPtr->getBBox().getMinY(),
+                regionPtr->getBBox().getWidth(), regionPtr->getBBox().getHeight());
+    }            
+   
     for (std::vector<KernelImagesForRegion>::iterator regionPtr = subregionList.begin();
         regionPtr != subregionList.end(); ++regionPtr) {
         convolveRegionWithRecursiveInterpolation(outImage, inImage, *regionPtr,
@@ -108,9 +123,17 @@ void mathDetail::convolveRegionWithRecursiveInterpolation(
         double maxInterpolationError)           ///< maximum allowed error in computing the kernel image
             ///< at any pixel via linear interpolation
 {
+    
+    pexLog::TTrace<6>("lsst.afw.math.convolve",
+        "convolveRegionWithRecursiveInterpolation: region bbox minimum=(%d, %d), extent=(%d, %d)",
+            region.getBBox().getMinX(), region.getBBox().getMinY(),
+            region.getBBox().getWidth(), region.getBBox().getHeight());
+
     if (afwGeom::any(region.getBBox().getDimensions().lt(
         afwGeom::Extent2I::make(region.getMinInterpolationSize())))) {
         // region too small for interpolation; convolve using brute force
+        pexLog::TTrace<6>("lsst.afw.math.convolve",
+            "convolveRegionWithRecursiveInterpolation: region too small; using brute force");
         afwMath::Kernel::ConstPtr kernelPtr = region.getKernel();
         afwGeom::BoxI const bbox = kernelPtr->growBBox(region.getBBox());
         OutImageT outView(OutImageT(outImage, afwGeom::convertToImage(bbox)));
@@ -118,6 +141,8 @@ void mathDetail::convolveRegionWithRecursiveInterpolation(
         mathDetail::convolveWithBruteForce(outView, inView, *kernelPtr, region.getDoNormalize());
     } else if (region.isInterpolationOk(maxInterpolationError)) {
         // convolve region using linear interpolation
+        pexLog::TTrace<6>("lsst.afw.math.convolve",
+            "convolveRegionWithRecursiveInterpolation: linear interpolation is OK; use it");
         KernelImagesForRegion::List rgnList = region.getSubregions();
         for (KernelImagesForRegion::List::const_iterator regionPtr = rgnList.begin();
             regionPtr != rgnList.end(); ++regionPtr) {
@@ -125,6 +150,8 @@ void mathDetail::convolveRegionWithRecursiveInterpolation(
         }
     } else {
         // linear interpolation wasn't good enough; divide region into 2x2 subregions and recurse on those
+        pexLog::TTrace<6>("lsst.afw.math.convolve",
+            "convolveRegionWithRecursiveInterpolation: linear interpolation unsuitable; recurse");
         KernelImagesForRegion::List rgnList = region.getSubregions();
         for (KernelImagesForRegion::List::const_iterator regionPtr = rgnList.begin();
             regionPtr != rgnList.end(); ++regionPtr) {

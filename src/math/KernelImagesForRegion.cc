@@ -200,9 +200,10 @@ const {
     std::vector<int> heightList(_computeSubregionLengths(_bbox.getHeight(), ny));
     std::vector<KernelImagesForRegion> retList;
 
-    afwGeom::Point2I corner(_bbox.getMin());
+    afwGeom::Point2I leftCorner(_bbox.getMin());
     for (int yInd = 0, retInd = 0; yInd < ny; ++yInd) {
         int height = heightList[yInd];
+        afwGeom::Point2I corner = leftCorner;
         for (int xInd = 0; xInd < nx; ++xInd, ++retInd) {
             int width = widthList[xInd];
             if (xInd > 0) {
@@ -229,9 +230,9 @@ const {
                 brImagePtr,
                 tlImagePtr,
                 trImageNullPtr));
-            corner += afwGeom::Extent2I::make(width, 0);
+            corner += afwGeom::Extent2I::make(width - 1, 0);
         }
-        corner += afwGeom::Extent2I::make(0, height);
+        leftCorner += afwGeom::Extent2I::make(0, height - 1);
     }
     return retList;
 }
