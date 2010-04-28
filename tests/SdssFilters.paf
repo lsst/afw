@@ -20,5 +20,7 @@ Filter: {
 }
 Filter: {
     name: "z"
+    alias: "zprime"
+    alias: "z'"
     lambdaEff: 893.1
 }

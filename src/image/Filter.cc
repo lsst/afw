@@ -161,7 +161,7 @@ int Filter::defineAlias(std::string const& oldName, ///< old name for Filter
     // Lookup oldName
     NameMap::iterator keyVal = _nameMap->find(oldName);
     if (keyVal == _nameMap->end()) {
-        throw std::exception();
+        throw LSST_EXCEPT(pexEx::NotFoundException, "Unable to find filter " + oldName);
     }
     int const id = keyVal->second;
 
@@ -173,7 +173,7 @@ int Filter::defineAlias(std::string const& oldName, ///< old name for Filter
         }
 
         if (!force) {
-            throw std::exception(); // std::cerr << "Filter " << name << " is already defined" << std::endl;
+            throw LSST_EXCEPT(pexEx::NotFoundException, "Filter " + newName + " is already defined");
         }
         _aliasMap->erase(aliasKeyVal);
     }
@@ -186,7 +186,9 @@ int Filter::defineAlias(std::string const& oldName, ///< old name for Filter
 /**
  * Lookup the ID associated with a name
  */
-int Filter::_lookup(std::string const& name)
+int Filter::_lookup(std::string const& name, // Name of filter
+                    bool const force         // return an invalid ID, but don't throw, if name is unknown
+                               )
 {
     if (!_nameMap) {
         _initRegistry();
@@ -199,8 +201,12 @@ int Filter::_lookup(std::string const& name)
         if (aliasKeyVal != _aliasMap->end()) {
             return _lookup(aliasKeyVal->second);
         }
-        
-        throw LSST_EXCEPT(pexEx::NotFoundException, "Unable to find filter " + name);
+
+        if (force) {
+            return UNKNOWN;
+        } else {
+            throw LSST_EXCEPT(pexEx::NotFoundException, "Unable to find filter " + name);
+        }
     }
     
     return keyVal->second;
@@ -223,5 +229,17 @@ std::string const& Filter::_lookup(int id)
     
     return keyVal->second;
 }
-            
+/**
+ * Return a Filter's FilterProperty
+ */
+FilterProperty const& Filter::getFilterProperty() const {
+    //
+    // Map name to its ID and back to resolve aliases
+    //
+    int const id = _lookup(_name, true);
+    std::string const& name = (id == UNKNOWN) ? _name : _lookup(id);
+
+    return FilterProperty::lookup(name);
+}
+
 }}}
