@@ -128,7 +128,7 @@ def getGeomPolicy(cameraGeomPolicy):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def makeCcd(geomPolicy, ccdId=None, ccdInfo=None):
+def makeCcd(geomPolicy, ccdId=None, ccdInfo=None, defectDict=None):
     """Build a Ccd from a set of amplifiers given a suitable pex::Policy
 
 If ccdInfo is provided it's set to various facts about the CCDs which are used in unit tests.  Note
@@ -163,6 +163,12 @@ in particular that it has an entry ampSerial which is a single-element list, the
     # Actually build the Ccd
     #
     ccd = cameraGeom.Ccd(ccdId, pixelSize)
+    
+    for k in defectDict.keys():
+        if ccdId == k:
+            ccd.setDefects(defectDict[k])
+    else:
+        pass
 
     if nCol*nRow != len(ccdPol.getArray("Amp")):
         raise RuntimeError, ("Expected location of %d amplifiers, got %d" % \
@@ -257,7 +263,7 @@ in particular that it has an entry ampSerial which is a single-element list, the
 
     return ccd
 
-def makeRaft(geomPolicy, raftId=None, raftInfo=None):
+def makeRaft(geomPolicy, raftId=None, raftInfo=None, defectDict=None):
     """Build a Raft from a set of CCDs given a suitable pex::Policy
     
 If raftInfo is provided it's set to various facts about the Rafts which are used in unit tests.  Note in
@@ -328,7 +334,7 @@ particular that it has an entry ampSerial which is a single-element list, the am
             raise RuntimeError, ("Amp location %d, %d is not in 0..%d, 0..%d" % (Col, Row, nCol, nRow))
 
         ccdId = cameraGeom.Id(ccdPol.get("serial"), ccdPol.get("name"))
-        ccd = makeCcd(geomPolicy, ccdId, ccdInfo=ccdInfo)
+        ccd = makeCcd(geomPolicy, ccdId, ccdInfo=ccdInfo, defectDict=defectDict)
 
         raft.addDetector(afwGeom.makePointI(Col, Row),
                          afwGeom.makePointD(xc, yc),
@@ -389,11 +395,17 @@ particular that it has an entry ampSerial which is a single-element list, the am
         cameraId = cameraGeom.Id(cameraPol.get("serial"), cameraPol.get("name"))
     camera = cameraGeom.Camera(cameraId, nCol, nRow)
 
+    if geomPolicy.isPolicy("Defects"):
+        print "Making Defects"
+        defDict = makeDefects(geomPolicy)
+    else:
+        defDict = {}
+
     for raftPol in cameraPol.getArray("Raft"):
         Col, Row = raftPol.getArray("index")
         xc, yc = raftPol.getArray("offset")
         raftId = cameraGeom.Id(raftPol.get("serial"), raftPol.get("name"))
-        raft = makeRaft(geomPolicy, raftId, raftInfo)
+        raft = makeRaft(geomPolicy, raftId, raftInfo, defectDict=defDict)
         camera.addDetector(afwGeom.makePointI(Col, Row),
                            afwGeom.makePointD(xc, yc), cameraGeom.Orientation(), raft)
 
