@@ -128,7 +128,7 @@ def getGeomPolicy(cameraGeomPolicy):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def makeCcd(geomPolicy, ccdId=None, ccdInfo=None, defectDict=None):
+def makeCcd(geomPolicy, ccdId=None, ccdInfo=None, defectDict={}):
     """Build a Ccd from a set of amplifiers given a suitable pex::Policy
 
 If ccdInfo is provided it's set to various facts about the CCDs which are used in unit tests.  Note
@@ -167,8 +167,8 @@ in particular that it has an entry ampSerial which is a single-element list, the
     for k in defectDict.keys():
         if ccdId == k:
             ccd.setDefects(defectDict[k])
-    else:
-        pass
+        else:
+            pass
 
     if nCol*nRow != len(ccdPol.getArray("Amp")):
         raise RuntimeError, ("Expected location of %d amplifiers, got %d" % \
@@ -263,7 +263,7 @@ in particular that it has an entry ampSerial which is a single-element list, the
 
     return ccd
 
-def makeRaft(geomPolicy, raftId=None, raftInfo=None, defectDict=None):
+def makeRaft(geomPolicy, raftId=None, raftInfo=None, defectDict={}):
     """Build a Raft from a set of CCDs given a suitable pex::Policy
     
 If raftInfo is provided it's set to various facts about the Rafts which are used in unit tests.  Note in
@@ -394,8 +394,8 @@ particular that it has an entry ampSerial which is a single-element list, the am
     if not cameraId:
         cameraId = cameraGeom.Id(cameraPol.get("serial"), cameraPol.get("name"))
     camera = cameraGeom.Camera(cameraId, nCol, nRow)
-
-    if geomPolicy.isPolicy("Defects"):
+   
+    if geomPolicy.get("Defects").get("Raft").get("Ccd").isPolicy("Defect"):
         print "Making Defects"
         defDict = makeDefects(geomPolicy)
     else:
