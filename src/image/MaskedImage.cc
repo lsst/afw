@@ -104,8 +104,14 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     }
 
     if (isMef) {
-        const int real_hdu = (hdu == 0) ? 1 : hdu; // see notes about HDU==0 being interpreted as HDU==1,
-        ;                                          // but we have to do it here as we'll be adding 1 and 2
+        int real_hdu = (hdu == 0) ? 2 : hdu;
+
+        if (hdu == 0) {                 // may be an old file with no PDU
+            lsst::daf::base::PropertySet::Ptr hdr = readMetadata(baseName, 1);
+            if (hdr->get<int>("NAXIS") != 0) { // yes, an old-style file
+                real_hdu = 1;
+            }
+        }
 
         _image = typename Image::Ptr(new Image(baseName, real_hdu, metadata, bbox));
         try {
@@ -139,35 +145,38 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
             }
         } catch(lsst::pex::exceptions::NotFoundException) {}
     } else {
-        _image = typename Image::Ptr(new Image(MaskedImage::imageFileName(baseName), hdu, metadata, bbox));
+        int real_hdu = (hdu == 0) ? 1 : hdu;
+
+        _image = typename Image::Ptr(new Image(MaskedImage::imageFileName(baseName),
+                                               real_hdu, metadata, bbox));
         try {
             std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
             if (exttype != "" && exttype != "IMAGE") {
                 throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
                            (boost::format("Reading %s (hdu %d) Expected EXTTYPE==\"IMAGE\", saw \"%s\"") %
-                            MaskedImage::imageFileName(baseName) % hdu % exttype).str());           
+                            MaskedImage::imageFileName(baseName) % real_hdu % exttype).str());           
             }
         } catch(lsst::pex::exceptions::NotFoundException) {}
 
         _mask = typename Mask::Ptr(new Mask(MaskedImage::maskFileName(baseName),
-                                            hdu, metadata, bbox, conformMasks));
+                                            real_hdu, metadata, bbox, conformMasks));
         try {
             std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
             if (exttype != "" && exttype != "MASK") {
                 throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
                            (boost::format("Reading %s (hdu %d) Expected EXTTYPE==\"MASK\", saw \"%s\"") %
-                            MaskedImage::maskFileName(baseName) % hdu % exttype).str());           
+                            MaskedImage::maskFileName(baseName) % real_hdu % exttype).str());           
             }
         } catch(lsst::pex::exceptions::NotFoundException) {}
 
         _variance = typename Variance::Ptr(new Variance(MaskedImage::varianceFileName(baseName),
-                                                        hdu, metadata, bbox));
+                                                        real_hdu, metadata, bbox));
         try {
             std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
             if (exttype != "" && exttype != "VARIANCE") {
                 throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
                            (boost::format("Reading %s (hdu %d) Expected EXTTYPE==\"VARIANCE\", saw \"%s\"") %
-                            MaskedImage::varianceFileName(baseName) % hdu % exttype).str());           
+                            MaskedImage::varianceFileName(baseName) % real_hdu % exttype).str());           
             }
         } catch(lsst::pex::exceptions::NotFoundException) {}
     }
@@ -517,13 +526,16 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
                              ///< even if basename doesn't look like a fully qualified FITS file
     ) const {
 
+    if (!(mode == "a" || mode == "ab" || mode == "w" || mode == "wb")) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::IoErrorException, "Mode must be \"a\" or \"w\"");
+    }
+
     lsst::daf::base::PropertySet::Ptr metadata;
     if (metadata_i) {
         metadata = metadata_i->deepCopy();
     } else {
         metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet());
     }
-    metadata->set("EXTTYPE", "IMAGE");
 
     if (writeMef ||
         // write an MEF if they call it *.fits"
@@ -537,8 +549,18 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
             throw LSST_EXCEPT(lsst::pex::exceptions::IoErrorException,
                               "I don't know how to write a compressed MEF: " + baseName);
         }
+        //
+        // Write the PDU
+        //
+        if (mode == "w" || mode == "wb") {
+            _image->writeFits(baseName, metadata, "pdu");
+#if 0                                   // this has the consequence of _only_ writing the WCS to the PDU
+            metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet());
+#endif
+        }
 
-        _image->writeFits(baseName, metadata, mode);
+        metadata->set("EXTTYPE", "IMAGE");
+        _image->writeFits(baseName, metadata, "a");
 
         metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet());
         metadata->set("EXTTYPE", "MASK");
@@ -551,11 +573,9 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
         _image->writeFits(MaskedImage::imageFileName(baseName), metadata, mode);
 
         metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet());
-        metadata->set("EXTTYPE", "MASK");
         _mask->writeFits(MaskedImage::maskFileName(baseName), metadata, mode);
 
         metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet());
-        metadata->set("EXTTYPE", "VARIANCE");
         _variance->writeFits(MaskedImage::varianceFileName(baseName), metadata, mode);
     }
 }
