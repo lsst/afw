@@ -1,7 +1,9 @@
 #ifndef LSST_AFW_DETECTION_BASE_SOURCE_ATTRIBUTES_H
 #define LSST_AFW_DETECTION_BASE_SOURCE_ATTRIBUTES_H
 
+#include <math.h>  // for the isnan macro
 #include <bitset>
+#include <limits>
 #include "boost/cstdint.hpp"
 
 namespace boost {
@@ -351,20 +353,28 @@ protected:
         _objectId(0), _movingObjectId(0),                 
         _flagForDetection(0), 
         _ra(0.0), _dec(0.0), 
-        _xFlux(0.0), _yFlux(0.0), _raFlux(0.0), _decFlux(0.0),
-        _xPeak(0.0), _yPeak(0.0), _raPeak(0.0), _decPeak(0.0),
-        _xAstrom(0.0), _yAstrom(0.0), _raAstrom(0.0), _decAstrom(0.0), 
+        _xFlux(0.0), _yFlux(0.0),
+        _raFlux(0.0), _decFlux(0.0),
+        _xPeak(0.0), _yPeak(0.0),
+        _raPeak(0.0), _decPeak(0.0),
+        _xAstrom(0.0), _yAstrom(0.0),
+        _raAstrom(0.0), _decAstrom(0.0), 
         _taiMidPoint(0.0), _taiRange(0.0), 
         _psfFlux(0.0), _apFlux(0.0), _modelFlux(0.0),
-        _instFlux(0.0), _nonGrayCorrFlux(0.0), _atmCorrFlux(0.0),
+        _instFlux(0.0),
+        _nonGrayCorrFlux(0.0), _atmCorrFlux(0.0),
         _raErrForDetection(0.0), _decErrForDetection(0.0),
         _raErrForWcs(0.0), _decErrForWcs(0.0),                
         _xFluxErr(0.0), _yFluxErr(0.0),
         _raFluxErr(0.0), _decFluxErr(0.0), 
         _xAstromErr(0.0), _yAstromErr(0.0),
         _raAstromErr(0.0), _decAstromErr(0.0),
-        _psfFluxErr(0.0), _apFluxErr(0.0), _modelFluxErr(0.0),
-        _instFluxErr(0.0), _nonGrayCorrFluxErr(0.0), _atmCorrFluxErr(0.0),
+        _psfFluxErr(0.0),
+        _apFluxErr(0.0),
+        _modelFluxErr(0.0),
+        _instFluxErr(0.0),
+        _nonGrayCorrFluxErr(0.0),
+        _atmCorrFluxErr(0.0),
         _apDia(0.0), 
         _ixx(0.0), _ixxErr(0.0),
         _iyy(0.0), _iyyErr(0.0),
@@ -383,22 +393,38 @@ protected:
      */
     template<typename T> 
     inline bool areEqual(T const & a, T const & b, int const field = -1) const {
-    
         bool null = isNull(field);
-        
         return (a == b || null);
+    }
+    inline bool areEqual(float const & a, float const & b, int const field = -1) const {
+        bool null = isNull(field);
+        return (isnan(a) ? isnan(b) : a == b) || null;
+    }
+    inline bool areEqual(double const & a, double const & b, int const field = -1) const {
+        bool null = isNull(field);
+        return (isnan(a) ? isnan(b) : a == b) || null;
     }
 
     /**
      * \internal Set the value of a field, and if it is null
      */    
     template<typename T>
-    inline void set(T &dest, T const & src, int const field = -1) {
+    inline void set(T & dest, T const & src, int const field = -1) {
         setNotNull(field);            
         dest = src;
     }
-    
- 
+
+    template <typename Archive, typename FloatT>
+    static inline void fpSerialize(Archive & ar, FloatT & value) {
+        bool isNaN = isnan(value);
+        ar & isNaN;
+        if (isNaN) {
+            value = std::numeric_limits<FloatT>::quiet_NaN();
+        } else {
+            ar & value;
+        }
+    }
+
     /**
      * \internal Serialize field values, and null statuses          
      */    
@@ -410,59 +436,59 @@ protected:
         ar & _objectId;
         ar & _movingObjectId;
         ar & _procHistoryId;
-        ar & _ra;
-        ar & _dec;
-        ar & _raErrForDetection;
-        ar & _decErrForDetection;
-        ar & _raErrForWcs;
-        ar & _decErrForWcs;
-        ar & _xFlux;
-        ar & _xFluxErr;
-        ar & _yFlux;
-        ar & _yFluxErr;
-        ar & _raFlux;
-        ar & _raFluxErr;
-        ar & _decFlux;
-        ar & _decFluxErr;        
-        ar & _xPeak;
-        ar & _yPeak;
-        ar & _raPeak;
-        ar & _decPeak;
-        ar & _xAstrom;
-        ar & _xAstromErr;
-        ar & _yAstrom;
-        ar & _yAstromErr;
-        ar & _raAstrom;
-        ar & _raAstromErr;
-        ar & _decAstrom;
-        ar & _decAstromErr;
-        ar & _taiMidPoint;
-        ar & _taiRange;
-        ar & _psfFlux;
-        ar & _psfFluxErr;
-        ar & _apFlux;
-        ar & _apFluxErr;
-        ar & _modelFlux;
-        ar & _modelFluxErr;
-        ar & _instFlux;
-        ar & _instFluxErr;
-        ar & _nonGrayCorrFlux;
-        ar & _nonGrayCorrFluxErr;
-        ar & _atmCorrFlux;
-        ar & _atmCorrFluxErr;
-        ar & _apDia;        
-        ar & _ixx;
-        ar & _ixxErr;
-        ar & _iyy;
-        ar & _iyyErr;
-        ar & _ixy;
-        ar & _ixyErr; 
-        ar & _snr;
-        ar & _chi2;
+        fpSerialize(ar, _ra);
+        fpSerialize(ar, _dec);
+        fpSerialize(ar, _raErrForDetection);
+        fpSerialize(ar, _decErrForDetection);
+        fpSerialize(ar, _raErrForWcs);
+        fpSerialize(ar, _decErrForWcs);
+        fpSerialize(ar, _xFlux);
+        fpSerialize(ar, _xFluxErr);
+        fpSerialize(ar, _yFlux);
+        fpSerialize(ar, _yFluxErr);
+        fpSerialize(ar, _raFlux);
+        fpSerialize(ar, _raFluxErr);
+        fpSerialize(ar, _decFlux);
+        fpSerialize(ar, _decFluxErr);
+        fpSerialize(ar, _xPeak);
+        fpSerialize(ar, _yPeak);
+        fpSerialize(ar, _raPeak);
+        fpSerialize(ar, _decPeak);
+        fpSerialize(ar, _xAstrom);
+        fpSerialize(ar, _xAstromErr);
+        fpSerialize(ar, _yAstrom);
+        fpSerialize(ar, _yAstromErr);
+        fpSerialize(ar, _raAstrom);
+        fpSerialize(ar, _raAstromErr);
+        fpSerialize(ar, _decAstrom);
+        fpSerialize(ar, _decAstromErr);
+        fpSerialize(ar, _taiMidPoint);
+        fpSerialize(ar, _taiRange);
+        fpSerialize(ar, _psfFlux);
+        fpSerialize(ar, _psfFluxErr);
+        fpSerialize(ar, _apFlux);
+        fpSerialize(ar, _apFluxErr);
+        fpSerialize(ar, _modelFlux);
+        fpSerialize(ar, _modelFluxErr);
+        fpSerialize(ar, _instFlux);
+        fpSerialize(ar, _instFluxErr);
+        fpSerialize(ar, _nonGrayCorrFlux);
+        fpSerialize(ar, _nonGrayCorrFluxErr);
+        fpSerialize(ar, _atmCorrFlux);
+        fpSerialize(ar, _atmCorrFluxErr);
+        fpSerialize(ar, _apDia);
+        fpSerialize(ar, _ixx);
+        fpSerialize(ar, _ixxErr);
+        fpSerialize(ar, _iyy);
+        fpSerialize(ar, _iyyErr);
+        fpSerialize(ar, _ixy);
+        fpSerialize(ar, _ixyErr);
+        fpSerialize(ar, _snr);
+        fpSerialize(ar, _chi2);
         ar & _flagForAssociation;
         ar & _flagForDetection;
         ar & _flagForWcs;
-        
+ 
         bool b;
         if (Archive::is_loading::value) {
             for (int i = 0; i != numNullableFields; ++i) {
@@ -505,37 +531,37 @@ protected:
     double _instFlux;
     double _nonGrayCorrFlux;
     double _atmCorrFlux;
-    float  _raErrForDetection;
-    float  _decErrForDetection;
-    float  _raErrForWcs;
-    float  _decErrForWcs;
-    float  _xFluxErr;
-    float  _yFluxErr;
-    float  _raFluxErr;
-    float  _decFluxErr;
-    float  _xAstromErr;
-    float  _yAstromErr;
-    float  _raAstromErr;
-    float  _decAstromErr;
-    float  _psfFluxErr;
-    float  _apFluxErr;
-    float  _modelFluxErr;
-    float  _instFluxErr;
-    float  _nonGrayCorrFluxErr;
-    float  _atmCorrFluxErr;
-    float  _apDia;
-    float  _ixx;
-    float  _ixxErr;
-    float  _iyy;
-    float  _iyyErr;
-    float  _ixy;
-    float  _ixyErr;
-    float  _snr;
-    float  _chi2;
+    float _raErrForDetection;
+    float _decErrForDetection;
+    float _raErrForWcs;
+    float _decErrForWcs;
+    float _xFluxErr;
+    float _yFluxErr;
+    float _raFluxErr;
+    float _decFluxErr;
+    float _xAstromErr;
+    float _yAstromErr;
+    float _raAstromErr;
+    float _decAstromErr;
+    float _psfFluxErr;
+    float _apFluxErr;
+    float _modelFluxErr;
+    float _instFluxErr;
+    float _nonGrayCorrFluxErr;
+    float _atmCorrFluxErr;
+    float _apDia;
+    float _ixx;
+    float _ixxErr;
+    float _iyy;
+    float _iyyErr;
+    float _ixy;
+    float _ixyErr;
+    float _snr;
+    float _chi2;
     boost::int32_t _procHistoryId;
     boost::int16_t _flagForAssociation;
     boost::int16_t _flagForWcs;
-    boost::int8_t  _filterId;
+    boost::int8_t _filterId;
     
     friend class boost::serialization::access;
 };

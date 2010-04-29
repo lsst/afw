@@ -11,6 +11,7 @@ or
 
 import unittest
 import random
+import tempfile
 import time
 
 import lsst.daf.base as dafBase
@@ -142,6 +143,63 @@ class DiaSourceTestCase(unittest.TestCase):
         else:
             print "skipping database tests"
 
+    def testNaNPersistence(self):
+        dss = afwDet.DiaSourceSet()
+        ds = afwDet.DiaSource()
+        nan = float('nan')
+        ds.setRa(nan)
+        ds.setDec(nan)
+        ds.setRaErrForDetection(nan)
+        ds.setRaErrForWcs(nan)
+        ds.setDecErrForDetection(nan)
+        ds.setDecErrForWcs(nan)
+        ds.setXAstrom(nan)
+        ds.setXAstromErr(nan)
+        ds.setYAstrom(nan)
+        ds.setYAstromErr(nan)
+        ds.setTaiMidPoint(nan)
+        ds.setTaiRange(nan)
+        ds.setPsfFlux(nan)
+        ds.setPsfFluxErr(nan)
+        ds.setApFlux(nan)
+        ds.setApFluxErr(nan)
+        ds.setModelFlux(nan)
+        ds.setModelFluxErr(nan)
+        ds.setInstFlux(nan)
+        ds.setInstFluxErr(nan)
+        ds.setApDia(nan)
+        ds.setIxx(nan)
+        ds.setIxxErr(nan)
+        ds.setIyy(nan)
+        ds.setIyyErr(nan)
+        ds.setIxy(nan)
+        ds.setIxyErr(nan)
+        ds.setSnr(nan)
+        ds.setChi2(nan)
+        dss.append(ds)
+        pdsv = afwDet.PersistableDiaSourceVector(dss)
+        pol = dafPolicy.Policy()
+        pers = dafPers.Persistence.getPersistence(pol)
+        dp = dafBase.PropertySet()
+        dp.setInt("visitId", int(time.clock())*16384 + random.randint(0, 16383))
+        dp.setInt("sliceId", 0)
+        dp.setInt("numSlices", 1)
+        dp.setLongLong("ampExposureId", 10)
+        dp.setString("itemName", "DiaSource")
+        stl = dafPers.StorageList()
+        f = tempfile.NamedTemporaryFile()
+        try:
+            loc  = dafPers.LogicalLocation(f.name)
+            stl.append(pers.getPersistStorage("BoostStorage", loc))
+            pers.persist(pdsv, stl, dp)
+            stl = dafPers.StorageList()
+            stl.append(pers.getRetrieveStorage("BoostStorage", loc))
+            persistable = pers.unsafeRetrieve("PersistableDiaSourceVector", stl, dp)
+            res = afwDet.PersistableDiaSourceVector.swigConvert(persistable)
+            self.assertTrue(res == pdsv)
+        except:
+            f.close()
+            raise
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

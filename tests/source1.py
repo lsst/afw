@@ -11,6 +11,7 @@ or
 
 import unittest
 import random
+import tempfile
 import time
 
 import lsst.daf.base as dafBase
@@ -130,7 +131,6 @@ class SourceTestCase(unittest.TestCase):
             dp.setInt("numSlices", 1)
             dp.setLongLong("ampExposureId", 10)
             dp.setString("itemName", "Source")
-
             stl = dafPers.StorageList()
             stl.append(pers.getPersistStorage("DbStorage", loc))
             pers.persist(self.dsv1, stl, dp)
@@ -143,6 +143,83 @@ class SourceTestCase(unittest.TestCase):
         else:
             print "skipping database tests"
 
+    def testNaNPersistence(self):
+        ss = afwDet.SourceSet()
+        s = afwDet.Source()
+        nan = float('nan')
+        s.setRa(nan)
+        s.setDec(nan)
+        s.setRaErrForDetection(nan)
+        s.setRaErrForWcs(nan)
+        s.setDecErrForDetection(nan)
+        s.setDecErrForWcs(nan)
+        s.setXFlux(nan)
+        s.setXFluxErr(nan)
+        s.setYFlux(nan)
+        s.setYFluxErr(nan)
+        s.setRaFlux(nan)
+        s.setRaFluxErr(nan)
+        s.setDecFlux(nan)
+        s.setDecFluxErr(nan)
+        s.setXPeak(nan)
+        s.setYPeak(nan)
+        s.setRaPeak(nan)
+        s.setDecPeak(nan)
+        s.setXAstrom(nan)
+        s.setXAstromErr(nan)
+        s.setYAstrom(nan)
+        s.setYAstromErr(nan)
+        s.setRaAstrom(nan)
+        s.setRaAstromErr(nan)
+        s.setDecAstrom(nan)
+        s.setDecAstromErr(nan)
+        s.setTaiMidPoint(nan)
+        s.setTaiRange(nan)
+        s.setPsfFlux(nan)
+        s.setPsfFluxErr(nan)
+        s.setApFlux(nan)
+        s.setApFluxErr(nan)
+        s.setModelFlux(nan)
+        s.setModelFluxErr(nan)
+        s.setPetroFlux(nan)
+        s.setPetroFluxErr(nan)
+        s.setInstFlux(nan)
+        s.setInstFluxErr(nan)
+        s.setNonGrayCorrFlux(nan)
+        s.setNonGrayCorrFluxErr(nan)
+        s.setAtmCorrFlux(nan)
+        s.setAtmCorrFluxErr(nan)
+        s.setApDia(nan)
+        s.setSnr(nan)
+        s.setChi2(nan)
+        s.setSky(nan)
+        s.setSkyErr(nan)
+        s.setRaObject(nan)
+        s.setDecObject(nan)
+        ss.append(s)
+        psv = afwDet.PersistableSourceVector(ss) 
+        pol = dafPolicy.Policy()
+        pers = dafPers.Persistence.getPersistence(pol)
+        dp = dafBase.PropertySet()
+        dp.setInt("visitId", int(time.clock())*16384 + random.randint(0, 16383))
+        dp.setInt("sliceId", 0)
+        dp.setInt("numSlices", 1)
+        dp.setLongLong("ampExposureId", 10)
+        dp.setString("itemName", "Source")
+        stl = dafPers.StorageList()
+        f = tempfile.NamedTemporaryFile()
+        try:
+            loc  = dafPers.LogicalLocation(f.name)
+            stl.append(pers.getPersistStorage("BoostStorage", loc))
+            pers.persist(psv, stl, dp)
+            stl = dafPers.StorageList()
+            stl.append(pers.getRetrieveStorage("BoostStorage", loc))
+            persistable = pers.unsafeRetrieve("PersistableSourceVector", stl, dp)
+            res = afwDet.PersistableSourceVector.swigConvert(persistable)
+            self.assertTrue(res == psv)
+        except:
+            f.close()
+            raise
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
