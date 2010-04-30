@@ -199,10 +199,6 @@ void mathDetail::convolveRegionWithInterpolation(
     afwMath::scaledPlus(rightDeltaKernelImage,
          yfrac, *region.getImage(KernelImagesForRegion::TOP_RIGHT),
         -yfrac, rightKernelImage);
-    leftKernelImage.writeFits("bottomLeftKernelImage.fits");
-    rightKernelImage.writeFits("bottomRightKernelImage.fits");
-    leftDeltaKernelImage.writeFits("leftDeltaKernelImage.fits");
-    rightDeltaKernelImage.writeFits("rightDeltaKernelImage.fits");
 
     // note: it might be slightly more efficient to compute locators directly on outImage and inImage,
     // without making views; however, using views seems a bit simpler and safer
@@ -218,23 +214,20 @@ void mathDetail::convolveRegionWithInterpolation(
         afwMath::scaledPlus(deltaKernelImage, xfrac, rightKernelImage, -xfrac, leftKernelImage);
         OutXIterator outIter = outView.row_begin(row);
         OutXIterator const outEnd = outView.row_end(row);
-        InLocator inLocator = inView.xy_at(row, 0);
-        for ( ; outIter != outEnd; ++outIter, ++inLocator.x()) {
+        InLocator inLocator = inView.xy_at(0, row);
+        while(true) {
             *outIter = afwMath::convolveAtAPoint<OutImageT, InImageT>(inLocator, kernelLocator,
-                kernelPtr->getWidth(), kernelPtr->getHeight());
+                kernelDimensions.first, kernelDimensions.second);
+            ++outIter;
+            ++inLocator.x();
+            if (outIter == outEnd) {
+                break;
+            }
             kernelImage += deltaKernelImage;
-        }
-        if (row == 0) {
-            kernelImage -= deltaKernelImage; // undo last addition
-            kernelImage.writeFits("kernelImageAtBottomRight.fits");
-            deltaKernelImage.writeFits("deltaKernelImageBottomRow.fits");
         }
 
         row += 1;
         if (row >= outView.getHeight()) {
-            deltaKernelImage.writeFits("deltaKernelImageTopRow.fits");
-            kernelImage -= deltaKernelImage; // undo last addition
-            kernelImage.writeFits("kernelImageAtTopRight.fits");
             break;
         }
         leftKernelImage += leftDeltaKernelImage;
