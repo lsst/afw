@@ -396,7 +396,6 @@ particular that it has an entry ampSerial which is a single-element list, the am
     camera = cameraGeom.Camera(cameraId, nCol, nRow)
    
     if geomPolicy.get("Defects").get("Raft").get("Ccd").isPolicy("Defect"):
-        print "Making Defects"
         defDict = makeDefects(geomPolicy)
     else:
         defDict = {}
@@ -841,5 +840,5 @@ The dictionay is indexed by an Id object --- remember to compare by str(id) not 
                 bbox = afwImage.BBox(afwImage.PointI(x0, y0), afwImage.PointI(x1, y1))
                 defects.push_back(afwImage.DefectBase(bbox))
 
-        return defectsDict
+    return defectsDict
 
