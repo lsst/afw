@@ -23,7 +23,7 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
 //
 // Note that IMAGE is a macro, not a class name
 %define %templateConvolveByType(IMAGE, PIXTYPE1, PIXTYPE2)
-    %template(basicConvolve) lsst::afw::math::basicConvolve<
+    %template(basicConvolve) lsst::afw::math::detail::basicConvolve<
         IMAGE(PIXTYPE1), IMAGE(PIXTYPE2)>;
     %template(convolveWithInterpolation)
         lsst::afw::math::detail::convolveWithInterpolation<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2)>;
@@ -36,18 +36,18 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
 // Now a macro to specify Image and MaskedImage
 //
 %define %templateConvolve(PIXTYPE1, PIXTYPE2)
-    %convolutionFuncsByType(%IMAGE,       PIXTYPE1, PIXTYPE2);
-    %convolutionFuncsByType(%MASKEDIMAGE, PIXTYPE1, PIXTYPE2);
+    %templateConvolveByType(%IMAGE,       PIXTYPE1, PIXTYPE2);
+    %templateConvolveByType(%MASKEDIMAGE, PIXTYPE1, PIXTYPE2);
 %enddef
 //
 // Finally, specify the functions we want
 //
-%convolutionFuncs(double, double);
-%convolutionFuncs(double, float);
-%convolutionFuncs(double, int);
-%convolutionFuncs(double, boost::uint16_t);
-%convolutionFuncs(float, float);
-%convolutionFuncs(float, int);
-%convolutionFuncs(float, boost::uint16_t);
-%convolutionFuncs(int, int);
-%convolutionFuncs(boost::uint16_t, boost::uint16_t);
+%templateConvolve(double, double);
+%templateConvolve(double, float);
+%templateConvolve(double, int);
+%templateConvolve(double, boost::uint16_t);
+%templateConvolve(float, float);
+%templateConvolve(float, int);
+%templateConvolve(float, boost::uint16_t);
+%templateConvolve(int, int);
+%templateConvolve(boost::uint16_t, boost::uint16_t);
