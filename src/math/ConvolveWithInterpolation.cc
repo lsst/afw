@@ -12,6 +12,7 @@
 #include <cmath>
 #include <sstream>
 #include <vector>
+#include <iostream>
 
 #include "boost/cstdint.hpp" 
 
@@ -190,15 +191,18 @@ void mathDetail::convolveRegionWithInterpolation(
     afwGeom::BoxI const outBBox = region.getBBox();
     afwGeom::BoxI const inBBox = kernelPtr->growBBox(outBBox);
     
-    double xfrac = 1.0 / static_cast<double>(outBBox.getWidth());
-    double yfrac = 1.0 / static_cast<double>(outBBox.getHeight());
+    double xfrac = 1.0 / static_cast<double>(outBBox.getWidth()  - 1);
+    double yfrac = 1.0 / static_cast<double>(outBBox.getHeight() - 1);
     afwMath::scaledPlus(leftDeltaKernelImage, 
-         yfrac,  leftKernelImage,
-        -yfrac, *region.getImage(KernelImagesForRegion::TOP_LEFT));
+         yfrac,  *region.getImage(KernelImagesForRegion::TOP_LEFT),
+        -yfrac, leftKernelImage);
     afwMath::scaledPlus(rightDeltaKernelImage,
-        yfrac, rightKernelImage,
-        -yfrac, *region.getImage(KernelImagesForRegion::TOP_RIGHT));
-
+         yfrac, *region.getImage(KernelImagesForRegion::TOP_RIGHT),
+        -yfrac, rightKernelImage);
+    leftKernelImage.writeFits("bottomLeftKernelImage.fits");
+    rightKernelImage.writeFits("bottomRightKernelImage.fits");
+    leftDeltaKernelImage.writeFits("leftDeltaKernelImage.fits");
+    rightDeltaKernelImage.writeFits("rightDeltaKernelImage.fits");
 
     // note: it might be slightly more efficient to compute locators directly on outImage and inImage,
     // without making views; however, using views seems a bit simpler and safer
@@ -211,17 +215,28 @@ void mathDetail::convolveRegionWithInterpolation(
     // rightKernelImage are set when they are allocated, so they are not computed in the loop
     // until after the convolution; to save cpu cycles they are not computed at all in the last iteration.
     for (int row = 0; ; ) {
-        afwMath::scaledPlus(deltaKernelImage, xfrac, leftKernelImage, -xfrac, rightKernelImage);
-        OutXIterator outIter = outImage.row_begin(row);
-        OutXIterator const outEnd = outImage.row_end(row);
-        InLocator inLocator = inImage.xy_at(row, 0);
+        afwMath::scaledPlus(deltaKernelImage, xfrac, rightKernelImage, -xfrac, leftKernelImage);
+        OutXIterator outIter = outView.row_begin(row);
+        OutXIterator const outEnd = outView.row_end(row);
+        InLocator inLocator = inView.xy_at(row, 0);
         for ( ; outIter != outEnd; ++outIter, ++inLocator.x()) {
             *outIter = afwMath::convolveAtAPoint<OutImageT, InImageT>(inLocator, kernelLocator,
                 kernelPtr->getWidth(), kernelPtr->getHeight());
             kernelImage += deltaKernelImage;
         }
+        if (row == 0) {
+            kernelImage -= deltaKernelImage; // undo last addition
+            kernelImage.writeFits("kernelImageAtBottomRight.fits");
+            deltaKernelImage.writeFits("deltaKernelImageBottomRow.fits");
+        }
+
         row += 1;
-        if (row >= outView.getHeight()) break;
+        if (row >= outView.getHeight()) {
+            deltaKernelImage.writeFits("deltaKernelImageTopRow.fits");
+            kernelImage -= deltaKernelImage; // undo last addition
+            kernelImage.writeFits("kernelImageAtTopRight.fits");
+            break;
+        }
         leftKernelImage += leftDeltaKernelImage;
         rightKernelImage += rightDeltaKernelImage;
         kernelImage <<= leftKernelImage;

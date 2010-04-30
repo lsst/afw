@@ -31,7 +31,7 @@ if True:
 #
 # Build/install things
 #
-print "EXAMPLES NOT BEING BUILT; FIX SConstruct!!!"
+print "EXAMPLES AND TESTS NOT BEING BUILT; FIX SConstruct!!!"
 for d in (
     ".",
     "doc",

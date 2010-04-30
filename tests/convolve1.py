@@ -16,7 +16,7 @@ import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.image.testUtils as imTestUtils
 
-VERBOSITY = 6   # increase to see trace; 3 will show the convolutions specializations being used
+VERBOSITY = 4   # increase to see trace; 3 will show the convolutions specializations being used
 TESTTICKET873 = False
 
 if not TESTTICKET873:
@@ -214,6 +214,7 @@ class ConvolveTestCase(unittest.TestCase):
             print "Test convolution with", kernelDescr
         if refKernel == None:
             refKernel = kernel
+        shortKernelDescr = kernelDescr.replace(" ", "")
 
         imMaskVar = imTestUtils.arraysFromMaskedImage(self.maskedImage)
         xy0 = self.maskedImage.getXY0()
@@ -238,18 +239,24 @@ class ConvolveTestCase(unittest.TestCase):
     
                 errStr = imTestUtils.imagesDiffer(cnvImArr, refCnvImMaskVarArr[0], rtol=rtol, atol=atol)
                 if errStr:
+                    self.cnvImage.writeFits("act%s.fits" % (shortKernelDescr,))
+                    refMaskedImage = imTestUtils.maskedImageFromArrays(refCnvImMaskVarArr)
+                    refMaskedImage.getImage().writeFits("des%s.fits" % (shortKernelDescr,))
                     self.fail("convolve(Image, kernel=%s, doNormalize=%s, copyEdge=%s) failed:\n%s" % \
                         (kernelDescr, doNormalize, copyEdge, errStr))
                 errStr = imTestUtils.maskedImagesDiffer(cnvImMaskVarArr, refCnvImMaskVarArr,
                     doVariance = TESTTICKET873, rtol=rtol, atol=atol)
                 if errStr:
-                    self.cnvMaskedImage.writeFits("act%s" % (kernelDescr,))
+                    self.cnvMaskedImage.writeFits("act%s" % (shortKernelDescr,))
                     refMaskedImage = imTestUtils.maskedImageFromArrays(refCnvImMaskVarArr)
-                    refMaskedImage.writeFits("des%s" % (kernelDescr,))
+                    refMaskedImage.writeFits("des%s" % (shortKernelDescr,))
                     self.fail("convolve(MaskedImage, kernel=%s, doNormalize=%s, copyEdge=%s) failed:\n%s" % \
                         (kernelDescr, doNormalize, copyEdge, errStr))
-                self.assert_(sameMaskPlaneDicts(self.cnvMaskedImage, self.maskedImage),
-                    "convolve(MaskedImage, kernel=%s, doNormalize=%s, copyEdge=%s) failed:\n%s" % \
+                if not sameMaskPlaneDicts(self.cnvMaskedImage, self.maskedImage):
+                    self.cnvMaskedImage.writeFits("act%s" % (shortKernelDescr,))
+                    refMaskedImage = imTestUtils.maskedImageFromArrays(refCnvImMaskVarArr)
+                    refMaskedImage.writeFits("des%s" % (shortKernelDescr,))
+                    self.fail("convolve(MaskedImage, kernel=%s, doNormalize=%s, copyEdge=%s) failed:\n%s" % \
                     (kernelDescr, doNormalize, copyEdge, "convolved mask dictionary does not match input"))
         
     def XXXtestUnityConvolution(self):
@@ -343,7 +350,7 @@ class ConvolveTestCase(unittest.TestCase):
         print "DISABLE SPATIAL PARAMS"
         sParams = (
             (1.0, 0.0, 0.0),
-            (0.0, 0.0, 0.0),
+            (1.0, 0.0, 0.0),
             (0.0, 0.0, 0.0),
         )
    

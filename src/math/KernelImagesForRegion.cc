@@ -102,7 +102,7 @@ const {
         return imageMapIter->second;
     }
 
-    afwGeom::Point2I pixelIndex = _pixelIndexFromLocation(location);
+    afwGeom::Point2I pixelIndex = _getPixelIndex(location);
     Image::Ptr kernelImagePtr(new Image(_kernelPtr->getDimensions()));
     _kernelPtr->computeImage(
         *kernelImagePtr,
@@ -262,7 +262,7 @@ const {
     std::pair<int, int> const kernelDim = _kernelPtr->getDimensions();
     Image interpImage(kernelDim);
     for (LocationIter locIter = _TestLocationList.begin(); locIter != _TestLocationList.end(); ++locIter) {
-        _interpolateImage(interpImage, *locIter);
+        interpolateImage(interpImage, *locIter);
         ImageConstPtr trueImagePtr(getImage(*locIter));
         for (int row = 0; row < kernelDim.first; ++row) {
             ImageXIter interpPtr = interpImage.row_begin(row);
@@ -279,35 +279,13 @@ const {
 }
 
 /**
- * Insert an image in the cache.
- *
- * @throw lsst::pex::exceptions::InvalidParameterException if image pointer is null
- * @throw lsst::pex::exceptions::InvalidParameterException if image has the wrong dimensions
- */
-void mathDetail::KernelImagesForRegion::_insertImage(
-        Location location,          ///< location at which to insert image
-        ImageConstPtr &imagePtr)    ///< image to insert
-const {
-    if (imagePtr) {
-        if (_kernelPtr->getDimensions() != imagePtr->getDimensions()) {
-            std::ostringstream os;
-            os << "image dimensions = ( " << imagePtr->getWidth() << ", " << imagePtr->getHeight()
-                << ") != (" << _kernelPtr->getWidth() << ", " << _kernelPtr->getHeight()
-                << ") = kernel dimensions";
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
-        }
-        _imageMap.insert(std::make_pair(location, imagePtr));
-    }
-}
-
-/**
  * Compute the linearly interpolated image at the specified location (not a corner).
  *
  * @throw lsst::pex::exceptions::InvalidParameterException if location is a corner,
  * i.e. is not one of: BOTTOM, TOP, LEFT, RIGHT, CENTER
  * @throw lsst::pex::exceptions::InvalidParameterException if outImage is not same dimensions as kernel.
  */
-void mathDetail::KernelImagesForRegion::_interpolateImage(
+void mathDetail::KernelImagesForRegion::interpolateImage(
         Image &outImage,  ///< output image
         Location location)      ///< location at which to compute interpolated image
 const {
@@ -377,7 +355,7 @@ const {
  * Compute pixel index of a given location, relative to the parent image
  * (thus offset by bottom left corner of bounding box)
  */
-lsst::afw::geom::Point2I mathDetail::KernelImagesForRegion::_pixelIndexFromLocation(
+lsst::afw::geom::Point2I mathDetail::KernelImagesForRegion::_getPixelIndex(
         Location location)  ///< location for which to return pixel index
 const {
     switch (location) {
@@ -424,8 +402,8 @@ afwGeom::Point2D mathDetail::KernelImagesForRegion::_computeCenterFractionalPosi
 {
     afwGeom::Point2I ctrInd(_computeCenterIndex(bbox));
     return afwGeom::Point2D::make(
-        static_cast<double>(ctrInd.getX() - bbox.getMinX()) / static_cast<double>(bbox.getWidth()),
-        static_cast<double>(ctrInd.getY() - bbox.getMinY()) / static_cast<double>(bbox.getHeight())
+        static_cast<double>(ctrInd.getX() - bbox.getMinX()) / static_cast<double>(bbox.getWidth()  - 1),
+        static_cast<double>(ctrInd.getY() - bbox.getMinY()) / static_cast<double>(bbox.getHeight() - 1)
     );
 }
 
@@ -441,22 +419,6 @@ afwGeom::Point2I mathDetail::KernelImagesForRegion::_computeCenterIndex(
         bbox.getMinX() + _computeNextSubregionLength(bbox.getWidth(), 2) - 1,
         bbox.getMinY() + _computeNextSubregionLength(bbox.getHeight(), 2) - 1
     );
-}
-
-/**
- * Compute length of next subregion if the region is to be divided into pieces of approximately equal
- * length, each having one pixel of overlap with its neighbors.
- *
- * @return length of next subregion
- *
- * @warning: no range checking
- */
-inline int mathDetail::KernelImagesForRegion::_computeNextSubregionLength(
-    int length,     ///< length of region
-    int nDivisions) ///< number of divisions of region
-{
-    return static_cast<int>(std::floor(0.5 +
-        (static_cast<double>(length + nDivisions - 1) / static_cast<double>(nDivisions))));
 }
 
 /**

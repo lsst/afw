@@ -7,14 +7,15 @@ import lsst.tests
 import lsst.daf.persistence
 import lsst.SConsUtils as scons # scons 1.17 supports "env.ProductDir", but for now use scons.ProductDir
 
-for fileName in glob.glob("*.cc"):
-    if fileName == "maskIo2.cc":       # This test appears to be invalid
-        continue
-
-    if re.search(r"_wrap.cc", fileName): # not designed to be independently built!
-        continue
-
-    env.Program(fileName, LIBS=env.getlibs("afw"))
+print "C++ TESTS DISABLED"
+# for fileName in glob.glob("*.cc"):
+#     if fileName == "maskIo2.cc":       # This test appears to be invalid
+#         continue
+# 
+#     if re.search(r"_wrap.cc", fileName): # not designed to be independently built!
+#         continue
+# 
+#     env.Program(fileName, LIBS=env.getlibs("afw"))
 
 env.CheckSwig("python", ilang="c++",
               includedProducts="afw utils daf_base pex_exceptions pex_logging pex_policy daf_persistence daf_data security")

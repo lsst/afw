@@ -14,7 +14,9 @@
  * @ingroup afw
  */
 #include <limits>
+#include <sstream>
 
+#include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
@@ -99,8 +101,9 @@ namespace math {
              * The "middle" positions are the middle of each side, plus the center of the region:
              *    BOTTOM, TOP, LEFT, RIGHT, CENTER
              *
-             * These positions always refer to an exact pixel. If the region has an even size along an axis
-             * then the middle is shifted by 1/2 pixel (in an unspecified direction) for that axis.
+             * These locations always refer to the center of a pixel. Thus if the region has an even size
+             * along an axis, then the middle pixel will be 1/2 pixel off from the true center along that axis
+             * (in an unspecified direction).
              */
             enum Location {
                 BOTTOM_LEFT, BOTTOM_RIGHT, TOP_LEFT, TOP_RIGHT,
@@ -127,21 +130,21 @@ namespace math {
             std::vector<KernelImagesForRegion> getSubregions() const;
             std::vector<KernelImagesForRegion> getSubregions(int nx, int ny) const;
             bool isInterpolationOk(double maxInterpolationError) const;
+            void interpolateImage(Image &outImage, Location location) const;
             static int getMinInterpolationSize() { return _MinInterpolationSize; };
     
-        private:
+//        private:
             typedef std::map<Location, ImageConstPtr> ImageMap;
             typedef std::vector<Location> LocationList;
     
             inline void _insertImage(Location location, ImageConstPtr &imagePtr) const;
-            void _interpolateImage(Image &outImage, Location location1) const;
-            lsst::afw::geom::Point2I _pixelIndexFromLocation(Location) const;
             
             // static helper functions
             static lsst::afw::geom::Point2D _computeCenterFractionalPosition(lsst::afw::geom::BoxI const &bbox);
             static lsst::afw::geom::Point2I _computeCenterIndex(lsst::afw::geom::BoxI const &bbox);
             static inline int _computeNextSubregionLength(int length, int nDivisions);
             static std::vector<int> _computeSubregionLengths(int length, int nDivisions);
+            lsst::afw::geom::Point2I _getPixelIndex(Location location) const;
             
             // member variables
             KernelConstPtr _kernelPtr;
@@ -291,6 +294,48 @@ namespace math {
     }
 }}}   // lsst::afw::math
 
+/*
+ * Define inline functions
+ */
+
+/**
+ * Compute length of next subregion if the region is to be divided into pieces of approximately equal
+ * length, each having one pixel of overlap with its neighbors.
+ *
+ * @return length of next subregion
+ *
+ * @warning: no range checking
+ */
+inline int lsst::afw::math::detail::KernelImagesForRegion::_computeNextSubregionLength(
+    int length,     ///< length of region
+    int nDivisions) ///< number of divisions of region
+{
+    return static_cast<int>(std::floor(0.5 +
+        (static_cast<double>(length + nDivisions - 1) / static_cast<double>(nDivisions))));
+}
+
+/**
+ * Insert an image in the cache.
+ *
+ * @throw lsst::pex::exceptions::InvalidParameterException if image pointer is null
+ * @throw lsst::pex::exceptions::InvalidParameterException if image has the wrong dimensions
+ */
+inline void lsst::afw::math::detail::KernelImagesForRegion::_insertImage(
+        Location location,          ///< location at which to insert image
+        ImageConstPtr &imagePtr)    ///< image to insert
+const {
+    if (imagePtr) {
+        if (_kernelPtr->getDimensions() != imagePtr->getDimensions()) {
+            std::ostringstream os;
+            os << "image dimensions = ( " << imagePtr->getWidth() << ", " << imagePtr->getHeight()
+                << ") != (" << _kernelPtr->getWidth() << ", " << _kernelPtr->getHeight()
+                << ") = kernel dimensions";
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, os.str());
+        }
+        _imageMap.insert(std::make_pair(location, imagePtr));
+    }
+}
+
 /**
  * @brief Apply convolution kernel to an %image at one point
  *
@@ -367,5 +412,6 @@ inline typename OutImageT::SinglePixel lsst::afw::math::convolveAtAPoint(
 
     return outValue;
 }
+
 
 #endif // !defined(LSST_AFW_MATH_CONVOLVEIMAGE_H)
