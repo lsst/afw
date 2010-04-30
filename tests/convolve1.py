@@ -343,12 +343,6 @@ class ConvolveTestCase(unittest.TestCase):
             (1.0, 0.0, 1.0/self.height),
             (0.0, 1.56/self.width, -1.56/self.height),
         )
-        print "DISABLE SPATIAL PARAMS"
-        sParams = (
-            (1.0, 0.0, 0.0),
-            (1.0, 0.0, 0.0),
-            (0.0, 0.0, 0.0),
-        )
    
         kFunc =  afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         kernel = afwMath.AnalyticKernel(kCols, kRows, kFunc, sFunc)
