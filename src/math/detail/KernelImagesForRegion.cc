@@ -2,7 +2,7 @@
 /**
  * @file
  *
- * @brief Definition of KernelImagesForRegion class declared in ConvolveImage.h
+ * @brief Definition of KernelImagesForRegion class declared in detail/ConvolveImage.h
  *
  * @author Russell Owen
  *
@@ -18,12 +18,11 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/image/ImageUtils.h"
-#include "lsst/afw/math.h"
+#include "lsst/afw/math/detail/convolve.h"
 
 namespace pexExcept = lsst::pex::exceptions;
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
-namespace afwMath = lsst::afw::math;
 namespace mathDetail = lsst::afw::math::detail;
 
 /**

@@ -2,7 +2,7 @@
 #if !defined(LSST_AFW_COORD_OBSERVATORY_H)
 #define LSST_AFW_COORD_OBSERVATORY_H
 /**
- * @file Observatory.h
+ * @file
  * @brief Class to hold observatory information
  * @ingroup afw
  * @author Steve Bickerton

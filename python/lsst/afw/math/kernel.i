@@ -82,7 +82,7 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
 // @todo put convolveWith... functions in lsst.afw.math.detail instead of lsst.afw.math
 //
 // Note that IMAGE is a macro, not a class name
-%define %convolutionFuncsByType(IMAGE, PIXTYPE1, PIXTYPE2)
+%define %templateKernelByType(IMAGE, PIXTYPE1, PIXTYPE2)
     %template(convolve) lsst::afw::math::convolve<
         IMAGE(PIXTYPE1), IMAGE(PIXTYPE2), lsst::afw::math::Kernel>;
     %template(convolve) lsst::afw::math::convolve<
@@ -95,27 +95,26 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
         IMAGE(PIXTYPE1), IMAGE(PIXTYPE2), lsst::afw::math::LinearCombinationKernel>;
     %template(convolve) lsst::afw::math::convolve<
         IMAGE(PIXTYPE1), IMAGE(PIXTYPE2), lsst::afw::math::SeparableKernel>;
-    %template(convolveWithInterpolation)
-        lsst::afw::math::detail::convolveWithInterpolation<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2)>;
-    %template(convolveRegionWithRecursiveInterpolation)
-        lsst::afw::math::detail::convolveRegionWithRecursiveInterpolation<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2)>;
-    %template(convolveRegionWithInterpolation)
-        lsst::afw::math::detail::convolveRegionWithInterpolation<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2)>;
 %enddef
 //
 // Now a macro to specify Image and MaskedImage
 //
-%define %convolutionFuncs(PIXTYPE1, PIXTYPE2)
-    %convolutionFuncsByType(%IMAGE,       PIXTYPE1, PIXTYPE2);
-    %convolutionFuncsByType(%MASKEDIMAGE, PIXTYPE1, PIXTYPE2);
+%define %templateKernel(PIXTYPE1, PIXTYPE2)
+    %templateKernelByType(%IMAGE,       PIXTYPE1, PIXTYPE2);
+    %templateKernelByType(%MASKEDIMAGE, PIXTYPE1, PIXTYPE2);
 %enddef
 //
 // Finally, specify the functions we want
 //
-%convolutionFuncs(double, double);
-%convolutionFuncs(double, float);
-%convolutionFuncs(float, float);
-%convolutionFuncs(boost::uint16_t, boost::uint16_t);
+%templateKernel(double, double);
+%templateKernel(double, float);
+%templateKernel(double, int);
+%templateKernel(double, boost::uint16_t);
+%templateKernel(float, float);
+%templateKernel(float, int);
+%templateKernel(float, boost::uint16_t);
+%templateKernel(int, int);
+%templateKernel(boost::uint16_t, boost::uint16_t);
          
 //
 // When swig sees a Kernel it doesn't know about KERNEL_TYPE; all it knows is that it
