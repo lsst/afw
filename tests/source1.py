@@ -10,6 +10,7 @@ or
 """
 
 import unittest
+import math
 import random
 import tempfile
 import time
@@ -36,7 +37,7 @@ class SourceTestCase(unittest.TestCase):
             
             ds = afwDet.Source()
             ds.setId(m)
-            ds.setRa(m*20)
+            ds.setRa(math.radians(m*20))
             self.container2.push_back(ds)
 
         self.dsv1 = afwDet.PersistableSourceVector(self.container1)
