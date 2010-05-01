@@ -23,8 +23,9 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
 //
 // Note that IMAGE is a macro, not a class name
 %define %templateConvolveByType(IMAGE, PIXTYPE1, PIXTYPE2)
-    %template(basicConvolve) lsst::afw::math::detail::basicConvolve<
-        IMAGE(PIXTYPE1), IMAGE(PIXTYPE2)>;
+    %template(basicConvolve) lsst::afw::math::detail::basicConvolve<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2)>;
+    %template(convolveWithBruteForce)
+        lsst::afw::math::detail::convolveWithBruteForce<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2)>;
     %template(convolveWithInterpolation)
         lsst::afw::math::detail::convolveWithInterpolation<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2)>;
     %template(convolveRegionWithRecursiveInterpolation)

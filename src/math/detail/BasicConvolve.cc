@@ -490,14 +490,14 @@ void mathDetail::convolveWithBruteForce(
 
     if (convolvedImage.getDimensions() != inImage.getDimensions()) {
         std::ostringstream os;
-        os << "convolvedImage dimensions = ( "
+        os << "convolvedImage dimensions = ("
             << convolvedImage.getWidth() << ", " << convolvedImage.getHeight()
             << ") != (" << inImage.getWidth() << ", " << inImage.getHeight() << ") = inImage dimensions";
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
     if (inImage.getDimensions() < kernel.getDimensions()) {
         std::ostringstream os;
-        os << "inImage dimensions = ( "
+        os << "inImage dimensions = ("
             << inImage.getWidth() << ", " << inImage.getHeight()
             << ") smaller than (" << kernel.getWidth() << ", " << kernel.getHeight()
             << ") = kernel dimensions in width and/or height";
