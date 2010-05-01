@@ -22,7 +22,7 @@
 #include "lsst/afw/math.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/geom/deprecated.h"
-#include "lsst/afw/math/detail/convolve.h"
+#include "lsst/afw/math/detail/Convolve.h"
 
 namespace pexExcept = lsst::pex::exceptions;
 namespace pexLog = lsst::pex::logging;

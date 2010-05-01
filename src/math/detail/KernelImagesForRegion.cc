@@ -18,7 +18,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/image/ImageUtils.h"
-#include "lsst/afw/math/detail/convolve.h"
+#include "lsst/afw/math/detail/Convolve.h"
 
 namespace pexExcept = lsst::pex::exceptions;
 namespace afwGeom = lsst::afw::geom;
