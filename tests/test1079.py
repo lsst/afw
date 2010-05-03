@@ -161,7 +161,7 @@ class SavingSubImagesTest(unittest.TestCase):
         
      
     def testRoundTrip(self):
-        """Test that saving and retreiving an image doesn't alter the metadata"""
+        """Test that saving and retrieving an image doesn't alter the metadata"""
         llc = afwImg.PointI(20, 30)
         bbox = afwImg.BBox(llc, 60, 50)
         subImg = afwImg.ExposureF(self.parent, bbox)
