@@ -3,13 +3,13 @@
 //!
 // Describe an image's PSF
 //
-#include "lsst/meas/algorithms/PSF.h"
+#include "lsst/afw/detection/Psf.h"
 #include "boost/serialization/nvp.hpp"
 #include "boost/serialization/void_cast.hpp"
 
 // Forward declarations
 
-namespace lsst { namespace meas { namespace algorithms {
+namespace lsst { namespace afw { namespace detection {
     class dgPsf;
 }}}
 
@@ -17,18 +17,19 @@ namespace boost {
 namespace serialization {
     template <class Archive>
     void save_construct_data(
-        Archive& ar, lsst::meas::algorithms::dgPsf const* p,
+        Archive& ar, lsst::afw::detection::dgPsf const* p,
         unsigned int const file_version);
 }}
 
-namespace lsst { namespace meas { namespace algorithms {
+namespace lsst { namespace afw { namespace detection {
             
 /*!
- * \brief Represent a PSF as a circularly symmetrical double Gaussian
+ * \brief Represent a Psf as a circularly symmetrical double Gaussian
  */
-class dgPsf : public PSF {
+class dgPsf : public KernelPsf {
 public:
     typedef boost::shared_ptr<dgPsf> Ptr;
+    typedef boost::shared_ptr<dgPsf const> ConstPtr;
 
     /**
      * @brief constructors for a dgPsf
@@ -37,7 +38,7 @@ public:
      */
     explicit dgPsf(int width, int height, double sigma1, double sigma2=1, double b=0);
 
-    lsst::afw::image::Image<PSF::Pixel>::Ptr getImage(double const x, double const y) const;
+    lsst::afw::image::Image<Psf::Pixel>::Ptr getImage(double const x, double const y) const;
 private:
     double doGetValue(double const dx, double const dy, int xPositionInImage, int yPositionInImage) const;
 
@@ -45,27 +46,30 @@ private:
     double _sigma2;                     ///< Width of outer Gaussian
     double _b;                          ///< Central amplitude of outer Gaussian (inner amplitude == 1)
 
-private:
+    double getValue(double const dx, double const dy) const;
+
     friend class boost::serialization::access;
     template <class Archive>
     void serialize(Archive&, unsigned int const) {
-        boost::serialization::void_cast_register<dgPsf, PSF>(
-            static_cast<dgPsf*>(0), static_cast<PSF*>(0));
+        boost::serialization::void_cast_register<dgPsf, Psf>(
+            static_cast<dgPsf*>(0), static_cast<Psf*>(0));
     }
     template <class Archive>
     friend void boost::serialization::save_construct_data(
             Archive& ar, dgPsf const* p, unsigned int const file_version);
 };
 
-}}} // namespace lsst::meas::algorithms
+}}}
 
 namespace boost {
 namespace serialization {
 
 template <class Archive>
 inline void save_construct_data(
-    Archive& ar, lsst::meas::algorithms::dgPsf const* p,
-    unsigned int const) {
+        Archive& ar, lsst::afw::detection::dgPsf const* p,
+        unsigned int const
+                               )
+{
     int width = p->getKernel()->getWidth();
     int height = p->getKernel()->getHeight();
     ar << make_nvp("width", width);
@@ -77,8 +81,10 @@ inline void save_construct_data(
 
 template <class Archive>
 inline void load_construct_data(
-    Archive& ar, lsst::meas::algorithms::dgPsf* p,
-    unsigned int const) {
+        Archive& ar, lsst::afw::detection::dgPsf* p,
+        unsigned int const
+                               )
+{
     int width;
     int height;
     double sigma1;
@@ -89,7 +95,7 @@ inline void load_construct_data(
     ar >> make_nvp("sigma1", sigma1);
     ar >> make_nvp("sigma2", sigma2);
     ar >> make_nvp("b", b);
-    ::new(p) lsst::meas::algorithms::dgPsf(width, height, sigma1, sigma2, b);
+    ::new(p) lsst::afw::detection::dgPsf(width, height, sigma1, sigma2, b);
 }
 
 }}

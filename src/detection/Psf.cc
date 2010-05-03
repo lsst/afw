@@ -6,70 +6,125 @@
  *
  * \ingroup algorithms
  */
+#include <limits>
 #include <typeinfo>
 #include <cmath>
-#include "lsst/afw/image/ImagePca.h"
 #include "lsst/afw/detection/Psf.h"
 
 /************************************************************************************************************/
 
+namespace pexExcept = lsst::pex::exceptions;
 namespace afwImage = lsst::afw::image;
+namespace afwGeom = lsst::afw::geom;
 namespace afwMath = lsst::afw::math;
 
 namespace lsst {
 namespace afw {
 namespace detection {
 
-Psf::Psf(int const width,               // desired width of Image realisations of the kernel
-         int const height               // desired height of Image realisations of the kernel; default: width
-        ) :  lsst::daf::data::LsstBase(typeid(this)),
-             _kernel(afwMath::Kernel::Ptr()),
-             _width(width), _height(height == 0 ? width : height) {}
+/************************************************************************************************************/
+/** Return an Image of the PSF
+ *
+ * Evaluates the PSF at the specified point, and for neutrally coloured source
+ *
+ * \note The real work is done in the virtual function, Psf::doComputeImage
+ */
+Psf::Image::Ptr Psf::computeImage(
+        afwGeom::Extent2I const& size, ///< Desired size of Image (overriding natural size of Kernel)
+        bool normalizePeak              ///< normalize the image to have a maximum value of 1.0
+                                    ) const {
+    lsst::afw::image::Color color;
+    afwGeom::Point2D const ccdXY = lsst::afw::geom::makePointD(0, 0);
 
-Psf::Psf(lsst::afw::math::Kernel::Ptr kernel ///< The Kernel corresponding to this Psf
-        ) : lsst::daf::data::LsstBase(typeid(this)),
-            _kernel(kernel),
-            _width(kernel.get()  == NULL ? 0 : kernel->getWidth()),
-            _height(kernel.get() == NULL ? 0 : kernel->getHeight()) {}
-
-///
-/// Set the Psf's kernel
-///
-void Psf::setKernel(lsst::afw::math::Kernel::Ptr kernel) {
-    _kernel = kernel;
+    return doComputeImage(color, ccdXY, size, normalizePeak);
 }
 
-///
-/// Return the Psf's kernel
-///
-afwMath::Kernel::Ptr Psf::getKernel() {
-    return _kernel;
+/** Return an Image of the PSF
+ *
+ * Evaluates the PSF at the specified point, and for neutrally coloured source
+ *
+ * \note The real work is done in the virtual function, Psf::doComputeImage
+ */
+Psf::Image::Ptr Psf::computeImage(
+        afwGeom::Point2D const& ccdXY, ///< Position in image where PSF should be created
+        bool normalizePeak              ///< normalize the image to have a maximum value of 1.0
+                                    ) const {
+    lsst::afw::image::Color color;
+    afwGeom::Extent2I const& size=lsst::afw::geom::makeExtentI(0, 0);
+
+    return doComputeImage(color, ccdXY, size, normalizePeak);
 }
 
-///
-/// Return the Psf's kernel
-///
-boost::shared_ptr<const afwMath::Kernel> Psf::getKernel() const {
-    return boost::shared_ptr<const afwMath::Kernel>(_kernel);
+/** Return an Image of the PSF
+ *
+ * Unless otherwise specified, the image is of the "natural" size, and correct for the point (0,0);
+ * a neutrally coloured source is assumed
+ *
+ * \note The real work is done in the virtual function, Psf::doComputeImage
+ */
+Psf::Image::Ptr Psf::computeImage(
+        afwGeom::Point2D const& ccdXY, ///< Position in image where PSF should be created
+        afwGeom::Extent2I const& size, ///< Desired size of Image (overriding natural size of Kernel)
+        bool normalizePeak              ///< normalize the image to have a maximum value of 1.0
+                                    ) const {
+    lsst::afw::image::Color color;
+    return doComputeImage(color, ccdXY, size, normalizePeak);
+
 }
 
+/** Return an Image of the PSF
+ *
+ * Unless otherwise specified, the image is of the "natural" size, and correct for the point (0,0)
+ *
+ * \note The real work is done in the virtual function, Psf::doComputeImage
+ */
+Psf::Image::Ptr Psf::computeImage(
+        lsst::afw::image::Color const& color, ///< Colour of source whose PSF is desired
+        afwGeom::Point2D const& ccdXY, ///< Position in image where PSF should be created
+        afwGeom::Extent2I const& size, ///< Desired size of Image (overriding natural size of Kernel)
+        bool normalizePeak              ///< normalize the image to have a maximum value of 1.0
+                            ) const {
+    return doComputeImage(color, ccdXY, size, normalizePeak);
+}
+
+/************************************************************************************************************/
 /**
- * Return an Image of the the Psf at the point (x, y), setting the sum of all the Psf's pixels to 1.0
+ * Return an Image of the the Psf at the point (x, y), setting the peak pixel (if centered) to 1.0
  *
  * The specified position is a floating point number, and the resulting image will
  * have a Psf with the correct fractional position, with the centre within pixel (width/2, height/2)
  * Specifically, fractional positions in [0, 0.5] will appear above/to the right of the center,
  * and fractional positions in (0.5, 1] will appear below/to the left (0.9999 is almost back at middle)
  *
- * @note If a fractional position is specified, the central pixel value may not be 1.0
- *
- * @note This is a virtual function; we expect that derived classes will do something
- * more useful than returning a NULL pointer
+ * @note If a fractional position is specified, the calculated central pixel value may be less than 1.0
  */
-afwImage::Image<Psf::Pixel>::Ptr Psf::getImage(double const, ///< column position in parent %image
-                                                double const  ///< row position in parent %image
-                                               ) const {
-    return afwImage::Image<Psf::Pixel>::Ptr();
+Psf::Image::Ptr Psf::doComputeImage(
+        lsst::afw::image::Color const& color,  ///< Colour of source
+        lsst::afw::geom::Point2D const& ccdXY, ///< Position in parent (CCD) image
+        lsst::afw::geom::Extent2I const& size, ///< Size of PSF image
+        bool normalizePeak                     ///< normalize the image to have a maximum value of 1.0
+                                           ) const {
+    afwMath::Kernel::ConstPtr kernel = getKernel(color);
+    if (!kernel) {
+        throw LSST_EXCEPT(pexExcept::NotFoundException, "Psf is unable to return a kernel");
+    }
+    int const width =  (size.getX() > 0) ? size.getX() : kernel->getWidth();
+    int const height = (size.getY() > 0) ? size.getY() : kernel->getHeight();
+
+    Psf::Image::Ptr im = boost::make_shared<Psf::Image>(width, height);
+    kernel->computeImage(*im, !normalizePeak, ccdXY.getX(), ccdXY.getY());
+    //
+    // Do we want to normalize to the center being 1.0 (when centered in a pixel)?
+    //
+    if (normalizePeak) {
+        double const centralPixelValue = (*im)(kernel->getCtrX(), kernel->getCtrY());
+        *im /= centralPixelValue;
+    }
+    
+    double const dx = lsst::afw::image::positionToIndex(ccdXY.getX(), true).second; // frac. part of position
+    double const dy = lsst::afw::image::positionToIndex(ccdXY.getY(), true).second;
+    
+    return afwMath::offsetImage(*im, dx, dy, "lanczos5");
 }
 
 /************************************************************************************************************/
@@ -85,14 +140,14 @@ PsfFactoryBase& Psf::_registry(std::string const& name, PsfFactoryBase* factory)
         if (factory) {
             psfRegistry[name] = factory;
         } else {
-            throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException,
+            throw LSST_EXCEPT(pexExcept::NotFoundException,
                               "Unable to lookup Psf variety \"" + name + "\"");
         }
     } else {
         if (!factory) {
             factory = (*el).second;
         } else {
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+            throw LSST_EXCEPT(pexExcept::InvalidParameterException,
                               "Psf variety \"" + name + "\" is already declared");
         }
     }
@@ -143,9 +198,19 @@ Psf::Ptr createPsf(std::string const& name,       ///< desired variety
  * @throws std::runtime_error if name can't be found
  */
 Psf::Ptr createPsf(std::string const& name,             ///< desired variety
-                   lsst::afw::math::Kernel::Ptr kernel ///< Kernel specifying the Psf
+                   afwMath::Kernel::Ptr kernel          ///< Kernel specifying the Psf
                   ) {
     return Psf::lookup(name).create(kernel);
 }
-    
+
+//
+// We need to make an instance here so as to register it
+//
+// \cond
+namespace {
+    volatile bool isInstance =
+        Psf::registerMe<KernelPsf, afwMath::Kernel::Ptr>("Kernel");
+}
+// \endcond
 }}}
+

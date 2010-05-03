@@ -12,5 +12,5 @@ except AttributeError:                  # requires sconsUtils > 3.3
     pass
 
 env.SharedLibrary(
-    'afw', ccFiles, LIBS=filter(lambda x: x != "afw", env.getlibs("afw"))
+    'afw', ccFiles, LIBS=[x for x in env.getlibs("afw") if x != "afw"]
 )

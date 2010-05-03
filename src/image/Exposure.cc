@@ -101,13 +101,14 @@ template<typename ImageT, typename MaskT, typename VarianceT>
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &src, ///< Parent Exposure
                                                        BBox const& bbox,    ///< Desired region in Exposure 
                                                        bool const deep      ///< Should we copy the pixels?
-                                                              ) :
+                                                      ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _maskedImage(src.getMaskedImage(), bbox, deep),
     _wcs(new afwImage::Wcs(*src._wcs))
 {
     _wcs->shiftReferencePixel(-bbox.getX0(), -bbox.getY0());
-    setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet()));
+
+    setMetadata(deep ? src.getMetadata()->deepCopy() : src.getMetadata());
 }
 
 /** @brief Construct an Image from FITS files.
@@ -144,8 +145,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
         try {
             metadata->set("CRPIX1", metadata->getAsDouble("CRPIX1") - bbox.getX0());
             metadata->set("CRPIX2", metadata->getAsDouble("CRPIX2") - bbox.getY0());
-        }
-        catch (lsst::pex::exceptions::NotFoundException &) {
+        } catch (lsst::pex::exceptions::NotFoundException &) {
             ; // OK, no WCS is present in header
         }
     }

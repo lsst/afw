@@ -22,6 +22,7 @@ Basic routines to talk to lsst::afw::image classes
 #include "lsst/pex/policy.h"
 #include "lsst/afw/image.h"
 #include "lsst/afw/geom.h"
+#include "lsst/afw/image/Color.h"
 #include "lsst/afw/image/Defect.h"
 
 #include "boost/cstdint.hpp"
@@ -251,6 +252,10 @@ SWIG_SHARED_PTR_DERIVED(Exposure##TYPE, lsst::daf::data::LsstBase, lsst::afw::im
 %exposure(I, int);
 %exposure(F, float);
 %exposure(D, double);
+
+/************************************************************************************************************/
+
+%include "lsst/afw/image/Color.h"
 
 /************************************************************************************************************/
 

@@ -288,7 +288,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
 }
 
 /**
- * \brief Find a Detection Set given a MaskedImage and a threshold
+ * \brief Find a FootprintSet given a MaskedImage and a threshold
  *
  * Go through an image, finding sets of connected pixels above threshold
  * and assembling them into Footprint%s;  the resulting set of objects

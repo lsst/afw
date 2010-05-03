@@ -469,6 +469,10 @@ class DecoratedImageTestCase(unittest.TestCase):
         self.assertEqual(maskImg.getHeight(), 256)
         self.assertEqual(maskImg.getWidth(), 256)
         self.assertEqual(maskImg.get(0, 0), 1)
+        #
+        # Read a U16 image
+        #
+        imgU16 = afwImage.DecoratedImageF(files["u16"]) # read as unsigned short
 
     def testWriteFits(self):
         """Test writing FITS files"""

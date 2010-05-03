@@ -1,34 +1,34 @@
 // -*- LSST-C++ -*-
 /*!
- * Represent a PSF as a circularly symmetrical double Gaussian
+ * Represent a Psf as a circularly symmetrical double Gaussian
  *
  * \file
  *
- * \ingroup algorithms
+ * \ingroup afw
  */
 #include <cmath>
 #include "lsst/pex/exceptions.h"
-#include "lsst/meas/algorithms/detail/dgPsf.h"
+#include "lsst/afw/detection/detail/dgPsf.h"
 #include "lsst/afw/image/ImageUtils.h"
 
 namespace lsst {
-namespace meas {
-namespace algorithms {
+namespace afw {
+namespace detection {
 
 /************************************************************************************************************/
 /**
  * Constructor for a dgPsf
  */
-dgPsf::dgPsf(int width,                         ///< Number of columns in realisations of PSF
-             int height,                        ///< Number of rows in realisations of PSF
+dgPsf::dgPsf(int width,                         ///< Number of columns in realisations of Psf
+             int height,                        ///< Number of rows in realisations of Psf
              double sigma1,                     ///< Width of inner Gaussian
              double sigma2,                     ///< Width of outer Gaussian
              double b                   ///< Central amplitude of outer Gaussian (inner amplitude == 1)
             ) :
-    PSF(width, height),
+    KernelPsf(),
     _sigma1(sigma1), _sigma2(sigma2), _b(b) {
     if (b == 0.0 && sigma2 == 0.0) {
-        _sigma2 = 1.0;                  // avoid 0/0 at centre of PSF
+        _sigma2 = 1.0;                  // avoid 0/0 at centre of Psf
     }
 
     if (_sigma1 <= 0 || _sigma2 <= 0) {
@@ -42,12 +42,11 @@ dgPsf::dgPsf(int width,                         ///< Number of columns in realis
     }
 }
 
-/// \brief Evaluate the PSF at (dx, dy) (relative to the centre), taking the central amplitude to be 1.0
-double dgPsf::doGetValue(double const dx,            ///< Desired column (relative to centre of PSF)
-                         double const dy,            ///< Desired row (relative to centre of PSF)
-                         int,                        ///< Desired column position in image (think "CCD")
-                         int                         ///< Desired row position in image (think "CCD")
-                        ) const {
+namespace {
+// Evaluate the Psf at (dx, dy) (relative to the centre), taking the central amplitude to be 1.0
+double dgPsf::getValue(double const dx,            // Desired column (relative to centre of Psf)
+                       double const dy             // Desired row (relative to centre of Psf)
+                      ) const {
     double const r2 = dx*dx + dy*dy;
     double const psf1 = exp(-r2/(2*_sigma1*_sigma1));
     if (_b == 0.0) {
@@ -58,31 +57,32 @@ double dgPsf::doGetValue(double const dx,            ///< Desired column (relati
 
     return (psf1 + _b*psf2)/(1 + _b);
 }
+}
 
 /*
- * Return an Image of the the PSF at the point (x, y), setting the sum of all the PSF's pixels to 1.0
+ * Return an Image of the the Psf at the point (x, y), setting the sum of all the Psf's pixels to 1.0
  *
  * The specified position is a floating point number, and the resulting image will
- * have a PSF with the correct fractional position, with the centre within pixel (width/2, height/2)
+ * have a Psf with the correct fractional position, with the centre within pixel (width/2, height/2)
  * Specifically, fractional positions in [0, 0.5] will appear above/to the right of the center,
  * and fractional positions in (0.5, 1] will appear below/to the left (0.9999 is almost back at middle)
  */
-lsst::afw::image::Image<PSF::Pixel>::Ptr dgPsf::getImage(double const x, ///< column posn in parent %image
+lsst::afw::image::Image<Psf::Pixel>::Ptr dgPsf::getImage(double const x, ///< column posn in parent %image
                                                          double const y  ///< row posn in parent %image
                                                         ) const {
-    PSF::Image::Ptr image(new PSF::Image(getWidth(), getHeight()));
+    Psf::Image::Ptr image(new Psf::Image(getKernel()->getWidth(), getKernel()->getHeight()));
 
     double const dx = lsst::afw::image::positionToIndex(x, true).second; // fractional part of position
     double const dy = lsst::afw::image::positionToIndex(y, true).second;
 
-    int const xcen = static_cast<int>(getWidth()/2);
-    int const ycen = static_cast<int>(getHeight()/2);
+    int const xcen = static_cast<int>(getKernel()->getWidth()/2);
+    int const ycen = static_cast<int>(getKernel()->getHeight()/2);
 
     double sum = 0;
     for (int iy = 0; iy != image->getHeight(); ++iy) {
-        PSF::Image::x_iterator row = image->row_begin(iy);
+        Psf::Image::x_iterator row = image->row_begin(iy);
         for (int ix = 0; ix != image->getWidth(); ++ix) {
-            PSF::Pixel val = getValue(ix - dx - xcen, iy - dy - ycen);
+            Psf::Pixel val = getValue(ix - dx - xcen, iy - dy - ycen);
 
             row[ix] = val;
             sum += val;
@@ -100,7 +100,7 @@ lsst::afw::image::Image<PSF::Pixel>::Ptr dgPsf::getImage(double const x, ///< co
 // \cond
 namespace {
     volatile bool isInstance =
-        PSF::registerMe<dgPsf, boost::tuple<int, int, double, double, double> >("DoubleGaussian");
+        Psf::registerMe<dgPsf, boost::tuple<int, int, double, double, double> >("DoubleGaussian");
 }
 
 // \endcond

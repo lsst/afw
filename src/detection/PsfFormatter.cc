@@ -17,6 +17,7 @@
 
 #include "lsst/afw/detection/PsfFormatter.h"
 #include "lsst/afw/detection/Psf.h"
+#include "lsst/afw/detection/detail/dgPsf.h"
 #include "lsst/daf/persistence/FormatterImpl.h"
 #include "lsst/daf/persistence/LogicalLocation.h"
 #include "lsst/daf/persistence/BoostStorage.h"
@@ -26,6 +27,7 @@
 #include "lsst/pex/policy/Policy.h"
 
 BOOST_CLASS_EXPORT(lsst::afw::detection::Psf)
+BOOST_CLASS_EXPORT(lsst::afw::detection::dgPsf)
 
 #define EXEC_TRACE  20
 static void execTrace(std::string s, int level = EXEC_TRACE) {
@@ -45,6 +47,8 @@ using boost::serialization::make_nvp;
  */
 dafPersist::FormatterRegistration
 afwDetect::PsfFormatter::registration("Psf", typeid(afwDetect::Psf), createInstance);
+dafPersist::FormatterRegistration
+afwDetect::PsfFormatter::dgPsfRegistration("dgPsf", typeid(afwDetect::dgPsf), createInstance);
 
 /** Constructor.
  * \param[in] policy Policy for configuring this Formatter
@@ -116,13 +120,13 @@ void afwDetect::PsfFormatter::update(dafBase::Persistable* ,
 
 /** Serialize a Psf to a Boost archive.  Handles text or XML
  * archives, input or output.
- * \param[in,out] ar Boost archive
- * \param[in] version Version of the Psf class
- * \param[in,out] persistable Pointer to the Psf as a Persistable
  */
 template <class Archive>
 void afwDetect::PsfFormatter::delegateSerialize(
-    Archive& ar, unsigned int const version, dafBase::Persistable* persistable) {
+        Archive& ar,                    ///< Boost archive
+        unsigned int const,             ///< Version of the Psf class
+        dafBase::Persistable* persistable ///< persistable Pointer to the Psf as a Persistable
+                                               ) {
     execTrace("PsfFormatter delegateSerialize start");
     afwDetect::Psf* ps = dynamic_cast<afwDetect::Psf*>(persistable);
     if (ps == 0) {

@@ -10,6 +10,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/daf/data.h"
 #include "lsst/afw/math.h"
+#include "lsst/afw/image/Color.h"
 
 namespace lsst {
 namespace afw {
@@ -36,15 +37,55 @@ template<typename PsfT, typename PsfFactorySignatureT> class PsfFactory;
  */
 class Psf : public lsst::daf::data::LsstBase, public lsst::daf::base::Persistable {
 public:
-    typedef boost::shared_ptr<Psf> Ptr; ///< shared_ptr to a Psf
+    typedef boost::shared_ptr<Psf> Ptr;            ///< shared_ptr to a Psf
     typedef boost::shared_ptr<const Psf> ConstPtr; ///< shared_ptr to a const Psf
 
-    typedef lsst::afw::math::Kernel::Pixel Pixel; ///< Pixel type of Image returned by getImage
-    typedef lsst::afw::image::Image<Pixel> Image; ///< Image type returned by getImage
+    typedef lsst::afw::math::Kernel::Pixel Pixel; ///< Pixel type of Image returned by computeImage
+    typedef lsst::afw::image::Image<Pixel> Image; ///< Image type returned by computeImage
 
-    explicit Psf(int const width = 0, int const height = 0);
-    explicit Psf(lsst::afw::math::Kernel::Ptr kernel);
+    /// ctor
+    Psf() : lsst::daf::data::LsstBase(typeid(this)) {}
     virtual ~Psf() {}
+
+    Image::Ptr computeImage(lsst::afw::geom::Extent2I const& size, bool normalizePeak=true) const;
+
+    Image::Ptr computeImage(lsst::afw::geom::Point2D const& ccdXY, bool normalizePeak) const;
+
+    Image::Ptr computeImage(lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::makePointD(0, 0),
+                            lsst::afw::geom::Extent2I const& size=lsst::afw::geom::makeExtentI(0, 0),
+                            bool normalizePeak=true) const;
+
+    Image::Ptr computeImage(lsst::afw::image::Color const& color,
+                            lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::makePointD(0, 0),
+                            lsst::afw::geom::Extent2I const& size=lsst::afw::geom::makeExtentI(0, 0),
+                            bool normalizePeak=true) const;
+    
+    lsst::afw::math::Kernel::Ptr getKernel(lsst::afw::image::Color const&
+                                           color=lsst::afw::image::Color()) {
+        return doGetKernel(color);
+    }
+    lsst::afw::math::Kernel::ConstPtr getKernel(lsst::afw::image::Color const&
+                                                color=lsst::afw::image::Color()) const {
+        return doGetKernel(color);
+    }
+    lsst::afw::math::Kernel::Ptr getLocalKernel(
+        lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::makePointD(0, 0),
+        lsst::afw::image::Color const& color=lsst::afw::image::Color()) {
+        return doGetKernel(color);
+    }
+    lsst::afw::math::Kernel::ConstPtr getLocalKernel(
+        lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::makePointD(0, 0),
+        lsst::afw::image::Color const& color=lsst::afw::image::Color()) const {
+        return doGetKernel(color);
+    }
+    /**
+     * Return the average Color of the stars used to construct the Psf
+     *
+     * \note this the Color used to return a Psf if you don't specify a Color
+     */
+    lsst::afw::image::Color getAverageColor() const {
+        return lsst::afw::image::Color();
+    }
     /**
      * Register a factory that builds a type of Psf
      *
@@ -65,57 +106,11 @@ public:
 
         return true;
     }
-    
-    ///
-    /// Convolve an image with a Kernel
-    ///
-    template <typename ImageT>
-    void convolve(ImageT& convolvedImage,     ///< convolved image
-                  ImageT const& inImage,      ///< image to convolve
-                  bool doNormalize = true,    ///< if True, normalize the kernel, else use "as is"
-                  int edgeBit = -1            ///< mask bit to indicate pixel includes edge-extended data;
-                  ///< if negative (default) then no bit is set; only relevant for MaskedImages
-                 ) const {
-        if (!getKernel() || getKernel()->getWidth() <= 0 || getKernel()->getHeight() <= 0) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
-                              "Psf does not have a realisation that can be used for convolution");            
-        }
-        lsst::afw::math::convolve(convolvedImage, inImage, *getKernel(), doNormalize, edgeBit);        
-    }
-
-    ///< Evaluate the Psf at (dx, dy)
-    ///
-    /// This routine merely calls doGetValue, but here we can provide default values
-    /// for the virtual functions that do the real work
-    ///
-    double getValue(double const dx,            ///< Desired column (relative to centre of Psf)
-                    double const dy,            ///< Desired row (relative to centre of Psf)
-                    int xPositionInImage = 0,     ///< Desired column position in image (think "CCD")
-                    int yPositionInImage = 0      ///< Desired row position in image (think "CCD")
-                   ) const {
-        return doGetValue(dx, dy, xPositionInImage, yPositionInImage);
-    }
-
-    virtual Image::Ptr getImage(double const x, double const y) const;
-
-    void setKernel(lsst::afw::math::Kernel::Ptr kernel);
-    lsst::afw::math::Kernel::Ptr getKernel();
-    boost::shared_ptr<const lsst::afw::math::Kernel> getKernel() const;
-
-    /// Set the number of columns that will be used for %image representations of the Psf
-    void setWidth(int const width) const { _width = width; }
-    /// Return the number of columns that will be used for %image representations of the Psf
-    int getWidth() const { return _width; }
-    /// Set the number of rows that will be used for %image representations of the Psf
-    void setHeight(int const height) const { _height = height; }
-    /// Return the number of rows that will be used for %image representations of the Psf
-    int getHeight() const { return _height; }
-    /// Return the Psf's (width, height)
-    std::pair<int, int> getDimensions() const { return std::make_pair(_width, _height); }
 protected:
     /*
      * Support for Psf factories
      */
+
 #if !defined(SWIG)
     friend Psf::Ptr createPsf(std::string const& name,
                               int const width, int const height, double p0, double p1, double p2);
@@ -129,15 +124,49 @@ private:
     static PsfFactoryBase& _registry(std::string const& name, PsfFactoryBase * factory = NULL);
     LSST_PERSIST_FORMATTER(PsfFormatter)
 
-    virtual double doGetValue(double const dx, double const dy,
-                              int xPositionInImage, int yPositionInImage) const = 0;
-
-    lsst::afw::math::Kernel::Ptr _kernel; // Kernel that corresponds to the Psf
-    //
-    // These are mutable as they are concerned with the realisation of getImage's image, not the Psf itself
-    mutable int _width, _height;           // size of Image realisations of the Psf
+    virtual Image::Ptr doComputeImage(lsst::afw::image::Color const& color,
+                                      lsst::afw::geom::Point2D const& ccdXY,
+                                      lsst::afw::geom::Extent2I const& size,
+                                      bool normalizePeak) const;
+    virtual lsst::afw::math::Kernel::Ptr doGetKernel(lsst::afw::image::Color const&
+                                                     color=lsst::afw::image::Color()) = 0;
+    virtual lsst::afw::math::Kernel::ConstPtr doGetKernel(lsst::afw::image::Color const&
+                                                          color=lsst::afw::image::Color()) const = 0;
 };
 
+/************************************************************************************************************/
+/**
+ * A Psf built from a Kernel
+ */
+class KernelPsf : public Psf {
+public:
+    KernelPsf(
+        lsst::afw::math::Kernel::Ptr kernel=lsst::afw::math::Kernel::Ptr() ///< This PSF's Kernel
+             ) : Psf(), _kernel(kernel) {}
+
+    /**
+     * Return the Psf's kernel
+     */
+    lsst::afw::math::Kernel::Ptr getKernel(lsst::afw::image::Color const& =lsst::afw::image::Color()) {
+        return _kernel;
+    }
+    
+    /**
+     * Return the Psf's kernel
+     */
+    lsst::afw::math::Kernel::ConstPtr
+    getKernel(lsst::afw::image::Color const& =lsst::afw::image::Color()) const {
+        return lsst::afw::math::Kernel::ConstPtr(_kernel);
+    }
+    
+protected:
+    void setKernel(lsst::afw::math::Kernel::Ptr kernel) { _kernel = kernel; }
+    
+private:
+    lsst::afw::math::Kernel::Ptr _kernel; // Kernel that corresponds to the Psf
+};
+
+/************************************************************************************************************/
 /**
  * A polymorphic base class for Psf factories
  */
