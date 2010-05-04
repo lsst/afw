@@ -109,7 +109,16 @@ namespace image {
         virtual lsst::afw::geom::Point2D skyToPixel(lsst::afw::coord::Coord::ConstPtr coord) const;
 
         lsst::afw::geom::LinearTransform getLinearTransform() const;
-        virtual lsst::afw::geom::AffineTransform linearizeAt(lsst::afw::geom::Point2D const & pix) const;
+
+        virtual lsst::afw::geom::AffineTransform linearizeAt(
+            lsst::afw::coord::Coord::ConstPtr const & coord,
+            lsst::afw::coord::CoordUnit skyUnit = lsst::afw::coord::DEGREES
+        ) const;
+        
+        virtual lsst::afw::geom::AffineTransform linearizeAt(
+            lsst::afw::geom::Point2D const & pix,
+            lsst::afw::coord::CoordUnit skyUnit = lsst::afw::coord::DEGREES
+        ) const;
 
         //Mutators
         void shiftReferencePixel(double dx, double dy); 
@@ -126,6 +135,12 @@ namespace image {
                        );
 
         void initWcsLibFromFits(lsst::daf::base::PropertySet::Ptr const fitsMetadata);
+
+        lsst::afw::geom::AffineTransform linearizeInternal(
+            lsst::afw::geom::Point2D const & pix,
+            lsst::afw::coord::Coord::ConstPtr const & coord,
+            lsst::afw::coord::CoordUnit skyUnit
+        ) const;
 
     protected:
 

@@ -23,6 +23,10 @@
     def __setitem__(self,i,value):
         if i < 0 or i >= N: raise IndexError(i)
         self._setitem_nochecking(i,value)
+    def __repr__(self):
+        return "%s(%s)" % (self.__class__.__name__, ", ".join("%0.10g" % v for v in self))
+    def __str__(self):
+        return "(%s)" % (", ".join("%0.5g" % v for v in self),)
     }
 }
 %enddef
