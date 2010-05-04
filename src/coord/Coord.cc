@@ -10,6 +10,7 @@
  */
 #include <cmath>
 #include <limits>
+#include <cstdio>
 
 #include "lsst/pex/exceptions.h"
 #include "boost/algorithm/string.hpp"
