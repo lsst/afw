@@ -46,13 +46,13 @@ namespace image {
         //Constructors
         TanWcs();
         friend Wcs::Ptr makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
-        TanWcs(const lsst::afw::geom::PointD crval, const lsst::afw::geom::PointD crpix, 
+        TanWcs(const lsst::afw::geom::Point2D crval, const lsst::afw::geom::Point2D crpix, 
                const Eigen::Matrix2d &CD, 
                double equinox=2000, std::string raDecSys="FK5",
                const std::string cunits1="deg", const std::string cunits2="deg"
                );
 
-        TanWcs(const lsst::afw::geom::PointD crval, const lsst::afw::geom::PointD crpix, 
+        TanWcs(const lsst::afw::geom::Point2D crval, const lsst::afw::geom::Point2D crpix, 
                const Eigen::Matrix2d &CD, 
                Eigen::MatrixXd const & sipA, 
                Eigen::MatrixXd const & sipB, 
@@ -68,17 +68,17 @@ namespace image {
         
         //Accessors
         virtual lsst::afw::coord::Coord::Ptr pixelToSky(double pix1, double pix2) const;
-        virtual lsst::afw::coord::Coord::Ptr pixelToSky(const lsst::afw::geom::PointD pixel) const;
+        virtual lsst::afw::coord::Coord::Ptr pixelToSky(const lsst::afw::geom::Point2D pixel) const;
         
-        virtual lsst::afw::geom::PointD skyToPixel(double sky1, double sky2) const;
-        virtual lsst::afw::geom::PointD skyToPixel(const lsst::afw::coord::Coord::ConstPtr coord) const;
+        virtual lsst::afw::geom::Point2D skyToPixel(double sky1, double sky2) const;
+        virtual lsst::afw::geom::Point2D skyToPixel(const lsst::afw::coord::Coord::ConstPtr coord) const;
 
         
         bool hasDistortion() const {    return _hasDistortion;};
         lsst::daf::base::PropertySet::Ptr getFitsMetadata() const;        
 #if 0
         //Rely on base class implementation for now.
-        lsst::afw::geom::AffineTransform linearizeAt(lsst::afw::geom::PointD const & pix) const;
+        lsst::afw::geom::AffineTransform linearizeAt(lsst::afw::geom::Point2D const & pix) const;
 #endif        
         
 

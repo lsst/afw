@@ -10,6 +10,7 @@
  */
 #include <cmath>
 #include <limits>
+#include <cstdio>
 
 #include "lsst/pex/exceptions.h"
 #include "boost/algorithm/string.hpp"
@@ -169,7 +170,7 @@ std::string afwCoord::degreesToDmsString(
         }
     }
     char s[12];
-    sprintf(s, "%02d:%02d:%05.2f", dms.sign*dms.deg, dms.min, dms.sec);
+    std::sprintf(s, "%02d:%02d:%05.2f", dms.sign*dms.deg, dms.min, dms.sec);
     std::string dmsStr(s);
     return dmsStr;
 }

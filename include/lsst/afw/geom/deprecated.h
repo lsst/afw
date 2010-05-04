@@ -55,12 +55,12 @@ namespace lsst { namespace afw { namespace geom {
     <tr>
       <th rowspan=2>Construction</th> 
       <td>@code image::Point<T>(x,y) @endcode</td>
-      <td>@code geom::Point<T>::make(x,y) @endcode</td> 
+      <td>@code geom::Point<T>(x,y) @endcode</td> 
       <td>&nbsp;</td>
     </tr>
     <tr>
       <td>@code image::Point<T>(v) @endcode</td>
-      <td>@code geom::Point<T>::make(v) @endcode</td> 
+      <td>@code geom::Point<T>(v) @endcode</td> 
       <td>&nbsp;</td>
     </tr>
     <tr>
@@ -127,7 +127,7 @@ image::BBox::BBox(image::PointI llc,
       </td>
       <td>
 @code
-geom::BoxI::BoxI(geom::PointI min, 
+geom::BoxI::BoxI(geom::Point2I min, 
                  geom::ExtentI dimensions, 
                  bool invert=true)
 @endcode
@@ -230,15 +230,15 @@ geom::BoxI::BoxI(geom::PointI min,
     <tr>
       <th rowspan=4>Spatial Relations</th> 
       <td>@code image::BBox::contains(image::PointI) @endcode</td>
-      <td>@code geom::BoxI::contains(geom::PointI) @endcode</td>
+      <td>@code geom::BoxI::contains(geom::Point2I) @endcode</td>
       <td>
         Containment of points is identical (aside from the data type switch 
-        from image::PointI to geom::PointI).
+        from image::PointI to geom::Point2I).
       </td>
     </tr>
     <tr>
       <td>@code image::BBox::grow(image::PointI) @endcode</td>
-      <td>@code geom::BoxI::include(geom::PointI) @endcode</td>
+      <td>@code geom::BoxI::include(geom::Point2I) @endcode</td>
       <td>
         These expand the box to include the given point.  Behavior is identical,
         except for point data type and a difference in handling boxes with only one
@@ -271,7 +271,7 @@ geom::BoxI::BoxI(geom::PointI min,
 /// \brief Convert an image::Point object to the equivalent geom::Point object.
 template <typename T>
 inline geom::Point<T,2> convertToGeom(image::Point<T> const & other) {
-    return geom::Point<T,2>::make(other.getX(),other.getY());
+    return geom::Point<T,2>(other.getX(),other.getY());
 }
 
 /// \brief Convert a geom::Point object to the equivalent image::Point object.

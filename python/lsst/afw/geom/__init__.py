@@ -18,8 +18,8 @@ from .geomLib import (
     Point3D,
     makePointI,
     makePointD,
-    BoxI,
-    BoxD,
+    Box2I,
+    Box2D,
 )
 
 PointI = Point2I
@@ -27,6 +27,9 @@ PointD = Point2D
 
 ExtentI = Extent2I
 ExtentD = Extent2D
+
+BoxI = Box2I
+BoxD = Box2D
 
 import ellipses
 

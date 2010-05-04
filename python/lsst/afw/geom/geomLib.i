@@ -70,29 +70,31 @@ def version(HeadURL = r"$HeadURL: svn+ssh://svn.lsstcorp.org/DMS/afw/trunk/pytho
 %declareEigenMatrix(lsst::afw::geom::LinearTransform::Matrix);
 
 %include "CoordinateBase.i"
-%include "CoordinateExpr.i"
 %include "Extent.i"
 %include "Point.i"
 
 %include "lsst/afw/geom/CoordinateBase.h"
+
 %include "lsst/afw/geom/CoordinateExpr.h"
 %include "lsst/afw/geom/Extent.h"
 %include "lsst/afw/geom/Point.h"
 
-%CoordinateBase_POSTINCLUDE_2(bool, CoordinateExpr2, lsst::afw::geom::CoordinateExpr<2>);
-%CoordinateBase_POSTINCLUDE_3(bool, CoordinateExpr3, lsst::afw::geom::CoordinateExpr<3>);
+%template(CoordinateExprBase2) lsst::afw::geom::CoordinateBase<lsst::afw::geom::CoordinateExpr<2>,bool,2>;
+%template(CoordinateExprBase3) lsst::afw::geom::CoordinateBase<lsst::afw::geom::CoordinateExpr<3>,bool,3>;
+%template(CoordinateExpr2) lsst::afw::geom::CoordinateExpr<2>;
+%template(CoordinateExpr3) lsst::afw::geom::CoordinateExpr<3>;
+%CoordinateBase_POSTINCLUDE(bool, 2, lsst::afw::geom::CoordinateExpr<2>);
+%CoordinateBase_POSTINCLUDE(bool, 3, lsst::afw::geom::CoordinateExpr<3>);
 
-%CoordinateBase_POSTINCLUDE_2(int, Extent2I, lsst::afw::geom::Extent<int,2>);
-%CoordinateBase_POSTINCLUDE_3(int, Extent3I, lsst::afw::geom::Extent<int,3>);
+%Point_POSTINCLUDE(double, 2, D);
+%Point_POSTINCLUDE(double, 3, D);
+%Point_POSTINCLUDE(int, 2, I);
+%Point_POSTINCLUDE(int, 3, I);
 
-%CoordinateBase_POSTINCLUDE_2(double, Extent2D, lsst::afw::geom::Extent<double,2>);
-%CoordinateBase_POSTINCLUDE_3(double, Extent3D, lsst::afw::geom::Extent<double,3>);
-
-%CoordinateBase_POSTINCLUDE_2(int, Point2I, lsst::afw::geom::Point<int,2>);
-%CoordinateBase_POSTINCLUDE_3(int, Point3I, lsst::afw::geom::Point<int,3>);
-
-%CoordinateBase_POSTINCLUDE_2(double, Point2D, lsst::afw::geom::Point<double,2>);
-%CoordinateBase_POSTINCLUDE_3(double, Point3D, lsst::afw::geom::Point<double,3>);
+%Extent_POSTINCLUDE(double, 2, D);
+%Extent_POSTINCLUDE(double, 3, D);
+%Extent_POSTINCLUDE(int, 2, I);
+%Extent_POSTINCLUDE(int, 3, I);
 
 %include "LinearTransform.i"
 %include "AffineTransform.i"

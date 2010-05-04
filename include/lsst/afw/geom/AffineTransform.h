@@ -109,8 +109,8 @@ public:
      *
      * The result is affected by the translation parameters of the transform
      */
-    PointD operator()(PointD const &p) const {         
-        return PointD(_linear(p) + _translation);
+    Point2D operator()(Point2D const &p) const {         
+        return Point2D(_linear(p) + _translation);
     }
 
     /**
@@ -217,7 +217,7 @@ public:
         return AffineTransform(translation);
     }
 
-    TransformDerivativeMatrix dTransform(PointD const & input) const;
+    TransformDerivativeMatrix dTransform(Point2D const & input) const;
     TransformDerivativeMatrix dTransform(ExtentD const & input) const;
 
     friend std::ostream & operator<<(std::ostream & os, AffineTransform const & transform);

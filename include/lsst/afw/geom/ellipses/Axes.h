@@ -54,11 +54,11 @@ public:
         return static_cast<AxesEllipse &>(BaseEllipse::operator=(other));
     }
 
-    /// \brief Construct from a PointD and zero-size Core.
-    explicit inline AxesEllipse(PointD const & center = PointD());
+    /// \brief Construct from a Point2D and zero-size Core.
+    explicit inline AxesEllipse(Point2D const & center = Point2D());
 
     /// \brief Construct from a copy of an Axes core.
-    explicit inline AxesEllipse(Axes const & core, PointD const & center = PointD());
+    explicit inline AxesEllipse(Axes const & core, Point2D const & center = Point2D());
 
     /// \brief Construct from a 5-element parameter vector.
     explicit AxesEllipse(BaseEllipse::ParameterVector const & vector, bool doNormalize=true);
@@ -93,7 +93,7 @@ public:
     Ptr clone() const { return Ptr(_clone()); }
 
     /// \brief Construct an Ellipse of the appropriate subclass from this and the given center.
-    AxesEllipse::Ptr makeEllipse(PointD const & center = PointD()) const {
+    AxesEllipse::Ptr makeEllipse(Point2D const & center = Point2D()) const {
         return AxesEllipse::Ptr(_makeEllipse(center));
     }
 
@@ -144,7 +144,7 @@ protected:
 
     virtual Axes * _clone() const { return new Axes(*this); }
     
-    virtual AxesEllipse * _makeEllipse(PointD const & center) const {
+    virtual AxesEllipse * _makeEllipse(Point2D const & center) const {
         return new AxesEllipse(*this, center);
     }
 
@@ -163,9 +163,9 @@ protected:
 inline Axes const & AxesEllipse::getCore() const { return static_cast<Axes const &>(*_core); }
 inline Axes & AxesEllipse::getCore() { return static_cast<Axes &>(*_core); }
 
-inline AxesEllipse::AxesEllipse(PointD const & center) :
+inline AxesEllipse::AxesEllipse(Point2D const & center) :
     BaseEllipse(new Axes(),center) {}
-inline AxesEllipse::AxesEllipse(Axes const & core, PointD const & center) : 
+inline AxesEllipse::AxesEllipse(Axes const & core, Point2D const & center) : 
     BaseEllipse(core,center) {}
 inline AxesEllipse::AxesEllipse(BaseEllipse const & other) : 
     BaseEllipse(other.getCore(),other.getCenter()) {}
