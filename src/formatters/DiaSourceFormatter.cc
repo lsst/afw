@@ -65,10 +65,15 @@ template <typename T, typename F>
 inline static void insertFp(T & db, F const & val, char const * const col, bool isNull=false) {
     if (isNull || isnan(val)) {
         db.setColumnToNull(col);
+    } else if (isinf(val)) {
+        F replacement = (val > 0.0) ? std::numeric_limits<F>::max() :
+                                     -std::numeric_limits<F>::max();
+        db.template setColumn<F>(col, replacement);
     } else {
         db.template setColumn<F>(col, val);
     }
 }
+
 
 /*!
     Inserts a single DiaSource into a database table using \a db

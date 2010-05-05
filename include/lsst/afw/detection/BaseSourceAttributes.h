@@ -1,10 +1,18 @@
 #ifndef LSST_AFW_DETECTION_BASE_SOURCE_ATTRIBUTES_H
 #define LSST_AFW_DETECTION_BASE_SOURCE_ATTRIBUTES_H
 
-#include <math.h>  // for the isnan macro
+#include <math.h>
+#ifndef isnan
+#define isnan(x) ((x) != (x) || !((x)*(x) >= 0))
+#endif
+#ifndef isinf
+#define isinf(x) ((x) != 0.0 && (x) == 2.0*(x))
+#endif
+
 #include <bitset>
 #include <limits>
 #include "boost/cstdint.hpp"
+#include "boost/math/special_functions/fpclassify.hpp"
 
 namespace boost {
 namespace serialization {
@@ -398,36 +406,49 @@ protected:
     }
     inline bool areEqual(float const & a, float const & b, int const field = -1) const {
         bool null = isNull(field);
-        return (isnan(a) ? isnan(b) : a == b) || null;
+        return ((boost::math::isnan)(a) ? (boost::math::isnan)(b) : a == b) || null;
     }
     inline bool areEqual(double const & a, double const & b, int const field = -1) const {
         bool null = isNull(field);
-        return (isnan(a) ? isnan(b) : a == b) || null;
+        return ((boost::math::isnan)(a) ? (boost::math::isnan)(b) : a == b) || null;
     }
 
     /**
      * \internal Set the value of a field, and if it is null
-     */    
+     */
     template<typename T>
     inline void set(T & dest, T const & src, int const field = -1) {
-        setNotNull(field);            
+        setNotNull(field);
         dest = src;
     }
 
     template <typename Archive, typename FloatT>
     static inline void fpSerialize(Archive & ar, FloatT & value) {
-        bool isNaN = isnan(value);
-        ar & isNaN;
-        if (isNaN) {
-            value = std::numeric_limits<FloatT>::quiet_NaN();
-        } else {
-            ar & value;
+        int fpClass = 0;
+        if (isnan(value)) {
+            fpClass = 1;
+        } else if (isinf(value)) {
+            fpClass = value > 0.0 ? 2 : 3;
+        }
+        ar & fpClass;
+        switch (fpClass) {
+            case 1:
+                value = std::numeric_limits<FloatT>::quiet_NaN();
+                break;
+            case 2:
+                value = std::numeric_limits<FloatT>::infinity();
+                break;
+            case 3:
+                value = -std::numeric_limits<FloatT>::infinity();
+                break;
+            default:
+                ar & value;
         }
     }
 
     /**
-     * \internal Serialize field values, and null statuses          
-     */    
+     * \internal Serialize field values, and null statuses
+     */
     template <class Archive> 
     void serialize(Archive & ar, unsigned int const) {
         ar & _id;
