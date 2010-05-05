@@ -2,17 +2,11 @@
 #define LSST_AFW_DETECTION_BASE_SOURCE_ATTRIBUTES_H
 
 #include <math.h>
-#ifndef isnan
-#define isnan(x) ((x) != (x) || !((x)*(x) >= 0))
-#endif
-#ifndef isinf
-#define isinf(x) ((x) != 0.0 && (x) == 2.0*(x))
-#endif
 
 #include <bitset>
 #include <limits>
 #include "boost/cstdint.hpp"
-#include "boost/math/special_functions/fpclassify.hpp"
+#include "boost/tr1/tr1/cmath"
 
 namespace boost {
 namespace serialization {
@@ -406,11 +400,11 @@ protected:
     }
     inline bool areEqual(float const & a, float const & b, int const field = -1) const {
         bool null = isNull(field);
-        return ((boost::math::isnan)(a) ? (boost::math::isnan)(b) : a == b) || null;
+        return ((std::tr1::isnan)(a) ? (std::tr1::isnan)(b) : a == b) || null;
     }
     inline bool areEqual(double const & a, double const & b, int const field = -1) const {
         bool null = isNull(field);
-        return ((boost::math::isnan)(a) ? (boost::math::isnan)(b) : a == b) || null;
+        return ((std::tr1::isnan)(a) ? (std::tr1::isnan)(b) : a == b) || null;
     }
 
     /**
@@ -425,9 +419,9 @@ protected:
     template <typename Archive, typename FloatT>
     static inline void fpSerialize(Archive & ar, FloatT & value) {
         int fpClass = 0;
-        if (isnan(value)) {
+        if (std::tr1::isnan(value)) {
             fpClass = 1;
-        } else if (isinf(value)) {
+        } else if (std::tr1::isinf(value)) {
             fpClass = value > 0.0 ? 2 : 3;
         }
         ar & fpClass;
