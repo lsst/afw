@@ -18,6 +18,7 @@
 #include "lsst/afw/formatters/DiaSourceFormatter.h"
 #include "lsst/afw/formatters/Utils.h"
 #include "lsst/afw/detection/DiaSource.h"
+#include "lsst/utils/ieee.h"
 
 namespace ex = lsst::pex::exceptions;
 namespace det = lsst::afw::detection;
@@ -63,9 +64,9 @@ inline static int64_t generateDiaSourceId(unsigned short seqNum, int64_t ampExpo
 
 template <typename T, typename F>
 inline static void insertFp(T & db, F const & val, char const * const col, bool isNull=false) {
-    if (isNull || isnan(val)) {
+    if (isNull || lsst::utils::isnan(val)) {
         db.setColumnToNull(col);
-    } else if (isinf(val)) {
+    } else if (lsst::utils::isinf(val)) {
         F replacement = (val > 0.0) ? std::numeric_limits<F>::max() :
                                      -std::numeric_limits<F>::max();
         db.template setColumn<F>(col, replacement);
