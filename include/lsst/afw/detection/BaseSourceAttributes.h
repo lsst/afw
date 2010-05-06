@@ -8,6 +8,9 @@
 #include "boost/cstdint.hpp"
 #include "lsst/utils/ieee.h"
 
+#include "lsst/afw/image/Filter.h"
+
+
 namespace boost {
 namespace serialization {
     class access;
@@ -384,7 +387,7 @@ protected:
         _snr(0.0), _chi2(0.0),
         _procHistoryId(0),
         _flagForAssociation(0), _flagForWcs(0),
-        _filterId(0)
+        _filterId(lsst::afw::image::Filter::UNKNOWN)
     {
         setNull();
     }    
