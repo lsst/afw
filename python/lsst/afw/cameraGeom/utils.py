@@ -13,6 +13,7 @@ import math
 import os
 import sys
 import unittest
+import pyfits
 
 import lsst.pex.policy as pexPolicy
 import lsst.afw.geom as afwGeom
@@ -782,6 +783,28 @@ def findRaft(parent, id):
             return raft
 
     return None
+
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+def makeDefectsFromFits(filename):
+    """Create a dictionary of DefectSets from a fits file with one ccd worth
+    of defects per extension.
+
+       The dictionay is indexed by an Id object --- remember to compare by str(id) not object identity
+    """
+    hdulist = pyfits.open(filename)
+    defects = {}
+    for hdu in hdulist[1:]:
+        id = cameraGeom.Id(hdu.header['serial'], hdu.header['name'])
+        data = hdu.data
+        defectList = []
+        for i in range(len(data)):
+            bbox = afwImage.BBox(afwImage.PointI(int(data[i]['x0']),\
+                int(data[i]['y0'])), int(data[i]['width']),\
+                int(data[i]['height']))
+            defectList.append(afwImage.DefectBase(bbox))
+        defects[id] = defectList
+    return defects
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
