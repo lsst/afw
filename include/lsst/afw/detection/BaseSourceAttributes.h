@@ -6,7 +6,7 @@
 #include <bitset>
 #include <limits>
 #include "boost/cstdint.hpp"
-#include "boost/tr1/tr1/cmath"
+#include "lsst/utils/ieee.h"
 
 namespace boost {
 namespace serialization {
@@ -400,11 +400,11 @@ protected:
     }
     inline bool areEqual(float const & a, float const & b, int const field = -1) const {
         bool null = isNull(field);
-        return ((std::tr1::isnan)(a) ? (std::tr1::isnan)(b) : a == b) || null;
+        return (lsst::utils::isnan(a) ? lsst::utils::isnan(b) : a == b) || null;
     }
     inline bool areEqual(double const & a, double const & b, int const field = -1) const {
         bool null = isNull(field);
-        return ((std::tr1::isnan)(a) ? (std::tr1::isnan)(b) : a == b) || null;
+        return (lsst::utils::isnan(a) ? lsst::utils::isnan(b) : a == b) || null;
     }
 
     /**
@@ -419,9 +419,9 @@ protected:
     template <typename Archive, typename FloatT>
     static inline void fpSerialize(Archive & ar, FloatT & value) {
         int fpClass = 0;
-        if (std::tr1::isnan(value)) {
+        if (lsst::utils::isnan(value)) {
             fpClass = 1;
-        } else if (std::tr1::isinf(value)) {
+        } else if (lsst::utils::isinf(value)) {
             fpClass = value > 0.0 ? 2 : 3;
         }
         ar & fpClass;
