@@ -10,6 +10,7 @@ setupRequired(eigen >= 2.0.0)
 setupRequired(gsl >= 1.8)
 setupRequired(fftw >= 3.1.2+1)
 setupRequired(utils >= 3.4.5)
+setupRequired(pyfits >= 2.2.2)
 
 setupOptional(afwdata)
 setupOptional(gcc)
