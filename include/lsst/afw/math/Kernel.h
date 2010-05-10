@@ -567,6 +567,11 @@ class FourierLocalKernel;
         std::vector<double> getKernelSumList() const;
 
         void checkKernelList(const KernelList &kernelList) const;
+        
+        /**
+         * Return true if all basis kernels are instances of DeltaFunctionKernel
+         */
+        bool isDeltaFunctionBasis() const { return _isDeltaFunctionBasis; };
 
         virtual std::string toString(std::string const& prefix="") const;
 
@@ -581,6 +586,7 @@ class FourierLocalKernel;
             ///< image of each basis kernel (a cache)
         std::vector<double> _kernelSumList; ///< sum of each basis kernel (a cache)
         mutable std::vector<double> _kernelParams;
+        bool _isDeltaFunctionBasis;
 
         friend class boost::serialization::access;
         template <class Archive>

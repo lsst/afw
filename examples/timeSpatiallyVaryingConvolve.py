@@ -25,12 +25,10 @@ if not dataDir:
 InputMaskedImagePath = os.path.join(dataDir, "med")
 
 def getAnalyticKernel(kSize, imSize):
-    """Return spatially varying analytic kernel
+    """Return spatially varying analytic kernel: a Gaussian
     
-    @param kSize: kernel size (height = width)
-    @param imSize: image size (x, y)
-    
-    @return a Gaussian analytic kernel with a 1st order polynomial spatial model
+    @param kSize: kernel size (scalar; height = width)
+    @param x, y imSize: image size
     """
     # construct analytic kernel
     gaussFunc = afwMath.GaussianFunction2D(1, 1, 0)
@@ -52,13 +50,37 @@ def getAnalyticKernel(kSize, imSize):
     kernel.setSpatialParameters(polyParamsList);
     return kernel
 
+def getSeparableKernel(kSize, imSize):
+    """Return spatially varying separable kernel: a pair of 1-d Gaussians
+    
+    @param kSize: kernel size (scalar; height = width)
+    @param x, y imSize: image size
+    """
+    # construct analytic kernel
+    gaussFunc = afwMath.GaussianFunction1D(1)
+    polyOrder = 1;
+    polyFunc = afwMath.PolynomialFunction2D(polyOrder)
+    kernel = afwMath.SeparableKernel(kSize, kSize, gaussFunc, gaussFunc, polyFunc)
+    
+    minSigma = 0.1
+    maxSigma = 3.0
+
+    # get copy of spatial parameters (all zeros), set and feed back to the kernel
+    polyParamsList = [[0.0]*3]*2
+    polyParamsList[0][0] = minSigma
+    polyParamsList[0][1] = (maxSigma - minSigma) / float(imSize[0])
+    polyParamsList[0][2] = 0.0
+    polyParamsList[1][0] = minSigma;
+    polyParamsList[1][1] = 0.0;
+    polyParamsList[1][2] = (maxSigma - minSigma) / float(imSize[1]);
+    kernel.setSpatialParameters(polyParamsList);
+    return kernel
+
 def getDeltaLinearCombinationKernel(kSize, imSize):
     """Return a LinearCombinationKernel of delta functions
 
-    @param kSize: kernel size (height = width)
-    @param imSize: image size (x, y)
-    
-    @return LinearCombinationKernel with a delta function basis and a 1st order polynomial spatial model
+    @param kSize: kernel size (scalar; height = width)
+    @param x, y imSize: image size
     """
     kernelList = afwMath.KernelList()
     for ctrX in range(kSize):
@@ -83,6 +105,9 @@ def getDeltaLinearCombinationKernel(kSize, imSize):
 
 def getGaussianLinearCombinationKernel(kSize, imSize):
     """Return a LinearCombinationKernel with 5 bases, each a Gaussian
+
+    @param kSize: kernel size (scalar; height = width)
+    @param x, y imSize: image size
     """
     kernelList = afwMath.KernelList()
     for fwhmX, fwhmY, angle in (
@@ -124,21 +149,33 @@ def timeConvolution(outImage, inImage, kernel, convControl):
     """
     startTime = time.time();
     for nIter in range(1, MaxIter + 1):
-        mathDetail.convolveWithInterpolation(outImage, inImage, kernel, convControl)
-#        afwMath.convolve(outImage, inImage, kernel, convControl)
+#        mathDetail.convolveWithInterpolation(outImage, inImage, kernel, convControl)
+        afwMath.convolve(outImage, inImage, kernel, convControl)
         endTime = time.time()
         if endTime - startTime > MaxTime:
             break
 
     return (endTime - startTime, nIter)
 
-def timeSet(outImage, inImage, kernelFunction, kernelDescr, convControl):
+def timeSet(outImage, inImage, kernelFunction, kernelDescr, convControl, stdOnly=False):
+    """Time a set of convolutions for various parameters
+    
+    Inputs:
+    ... the usual
+    - stdOnly: if True then there is only one way to convolve; use it
+    """
     imSize = inImage.getDimensions()
-    for methodDescr, maxInterpolationError in (
-        ("Interpolation", 1000.0),
-        ("Brute Force", 0.0),
-        ("Default Mix of Interpolation and Brute Force", 1.0e-5),
-    ):
+    if stdOnly:
+        methodDescrInterpErrList = (
+            ("the only method", 1.0e-5),
+        )
+    else:
+        methodDescrInterpErrList = (
+            ("Interpolation", 1000.0),
+            ("Brute Force", 0.0),
+            ("Default Mix of Interpolation and Brute Force", 1.0e-5),
+        )
+    for methodDescr, maxInterpolationError in methodDescrInterpErrList:
         convControl.setMaxInterpolationError(maxInterpolationError)
         print "%s using %s" % (kernelDescr, methodDescr)
         print "ImWid\tImHt\tKerWid\tKerHt\tSec/Cnv"
@@ -157,12 +194,15 @@ def run():
     inImage = afwImage.MaskedImageF(fullInImage, bbox, False)
     outImage = afwImage.MaskedImageF(inImage.getDimensions())
     
+    getSeparableKernel(5, (10, 10))
     timeSet(outImage, inImage, getAnalyticKernel,
-        "Analytic Kernel", convControl)
-    timeSet(outImage, inImage, getDeltaLinearCombinationKernel,
-        "LinearCombinationKernel with Delta Function Basis", convControl)
+        "AnalyticKernel", convControl)
+    timeSet(outImage, inImage, getSeparableKernel,
+        "SeparableKernel", convControl, stdOnly=True)
     timeSet(outImage, inImage, getGaussianLinearCombinationKernel,
         "LinearCombinationKernel with 5 Gaussian Basis Kernels", convControl)
+    timeSet(outImage, inImage, getDeltaLinearCombinationKernel,
+        "LinearCombinationKernel with Delta Function Basis", convControl, stdOnly=True)
 
 if __name__ == "__main__":
     run()

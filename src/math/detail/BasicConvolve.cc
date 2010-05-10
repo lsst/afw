@@ -212,16 +212,14 @@ void mathDetail::basicConvolve(
 {
     if (!kernel.isSpatiallyVarying()) {
         // use the standard algorithm for the spatially invariant case
-        typedef typename afwMath::Kernel::Pixel KernelPixel;
-
-        pexLog::TTrace<4>("lsst.afw.math.convolve",
-            "basicConvolve LinearCombinationKernel; kernel is not spatially varying");
-        afwImage::Image<KernelPixel> kernelImage(kernel.getWidth(), kernel.getHeight());
-        kernel.computeImage(kernelImage, convolutionControl.getDoNormalize());
-        afwMath::FixedKernel fixedKernel(kernelImage);
-        return basicConvolve(convolvedImage, inImage, fixedKernel, convolutionControl);
+        return convolveWithBruteForce(convolvedImage, inImage, kernel, convolutionControl.getDoNormalize());
+    } else if (!kernel.isDeltaFunctionBasis()) {
+        // use the standard algorithm for the spatially varying case
+        return convolveWithInterpolation(convolvedImage, inImage, kernel, convolutionControl);
     }
     
+    // use specialization for delta function basis; this is faster then
+    // the standard algorithm but requires more memory
 
     if (convolvedImage.getDimensions() != inImage.getDimensions()) {
         std::ostringstream os;
@@ -240,7 +238,7 @@ void mathDetail::basicConvolve(
     }
     
     pexLog::TTrace<3>("lsst.afw.math.convolve",
-        "basicConvolve for LinearCombinationKernel: kernel is spatially varying");
+        "basicConvolve for LinearCombinationKernel with spatially varying delta function basis");
     
     typedef typename InImageT::template ImageTypeFactory<double>::type BasisImage;
     typedef typename BasisImage::x_iterator BasisXIterator;
@@ -259,7 +257,6 @@ void mathDetail::basicConvolve(
     BasisImage basisImage(inImage.getDimensions());
 
     // initialize good area of output image to zero so we can add the convolved basis images into it
-    // surely there is a single call that will do this? but in lieu of that...
     typename OutImageT::SinglePixel const nullPixel(0);
     for (int cnvY = cnvStartY; cnvY < cnvEndY; ++cnvY) {
         OutXIterator cnvXIter = convolvedImage.row_begin(cnvY) + cnvStartX;
@@ -274,10 +271,6 @@ void mathDetail::basicConvolve(
     for (typename KernelList::const_iterator basisKernelIter = basisKernelList.begin();
         basisKernelIter != basisKernelList.end(); ++basisKernelIter, ++i) {
         mathDetail::basicConvolve(basisImage, inImage, **basisKernelIter, false);
-        double noiseCorrelationCoeff = 1.0;
-        if (ISINSTANCE(**basisKernelIter, afwMath::DeltaFunctionKernel)) {
-            noiseCorrelationCoeff = 0.0;
-        }
 
         // iterate over matching pixels of all images to compute output image
         afwMath::Kernel::SpatialFunctionPtr spatialFunctionPtr = kernel.getSpatialFunction(i);
@@ -293,11 +286,10 @@ void mathDetail::basicConvolve(
                 double basisCoeff = (*spatialFunctionPtr)(colPos, rowPos);
                 
                 typename OutImageT::SinglePixel cnvPixel(*cnvXIter);
-                cnvPixel = afwImage::pixel::plus(cnvPixel, (*basisXIter) * basisCoeff, noiseCorrelationCoeff);
+                cnvPixel += (*basisXIter) * basisCoeff;
                 *cnvXIter = cnvPixel;
                 // note: cnvPixel avoids compiler complaints; the following does not build:
-                // *cnvXIter = afwImage::pixel::plus(
-                //      *cnvXIter, (*basisXIter) * basisCoeff, noiseCorrelationCoeff);
+                // *cnvXIter += (*basisXIter) * basisCoeff;
             }
         }
     }
