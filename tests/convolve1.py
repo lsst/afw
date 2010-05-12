@@ -16,7 +16,7 @@ import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.image.testUtils as imTestUtils
 
-VERBOSITY = 6   # increase to see trace; 3 will show the convolutions specializations being used
+VERBOSITY = 0   # increase to see trace; 3 will show the convolutions specializations being used
 
 pexLog.Debug("lsst.afw", VERBOSITY)
 
@@ -221,8 +221,8 @@ class ConvolveTestCase(unittest.TestCase):
         
         refCnvImMaskVarArr = refConvolve(imMaskVar, xy0, refKernel, doNormalize, doCopyEdge)
 
-        afwMath.convolve(self.cnvImage, self.maskedImage.getImage(), kernel, convControl)
-        cnvImArr = imTestUtils.arrayFromImage(self.cnvImage)
+#         afwMath.convolve(self.cnvImage, self.maskedImage.getImage(), kernel, convControl)
+#         cnvImArr = imTestUtils.arrayFromImage(self.cnvImage)
 
         afwMath.convolve(self.cnvMaskedImage, self.maskedImage, kernel, convControl)
         cnvImMaskVarArr = imTestUtils.arraysFromMaskedImage(self.cnvMaskedImage)
@@ -261,7 +261,7 @@ class ConvolveTestCase(unittest.TestCase):
                 (kernelDescr, doNormalize, doCopyEdge, maxInterpErr, "convolved mask dictionary does not match input"))
 
     def runStdTest(self, kernel, refKernel=None, kernelDescr="", rtol=1.0e-05, atol=1e-08,
-        maxInterpErr=1.0e-5):
+        maxInterpErr=1.0e-9):
         """Assert that afwMath::convolve gives the same result as reference convolution for a given kernel.
         
         Inputs:
@@ -308,7 +308,7 @@ class ConvolveTestCase(unittest.TestCase):
             convControl.setMaxInterpolationError(maxInterpErr)
             self.assert_(convControl.getMaxInterpolationError() == maxInterpErr)
         
-    def XXXtestUnityConvolution(self):
+    def testUnityConvolution(self):
         """Verify that convolution with a centered delta function reproduces the original.
         """
         # create a delta function kernel that has 1,1 in the center
@@ -341,7 +341,7 @@ class ConvolveTestCase(unittest.TestCase):
             (kernelDescr, doNormalize, doCopyEdge, "convolved mask dictionary does not match input"))
 
 
-    def XXXtestFixedKernelConvolve(self):
+    def testFixedKernelConvolve(self):
         """Test convolve with a fixed kernel
         """
         kCols = 6
@@ -355,7 +355,7 @@ class ConvolveTestCase(unittest.TestCase):
         
         self.runStdTest(fixedKernel, kernelDescr="Gaussian FixedKernel")
 
-    def XXXtestSeparableConvolve(self):
+    def testSeparableConvolve(self):
         """Test convolve of a separable kernel with a spatially invariant Gaussian function
         """
         kCols = 7
@@ -369,7 +369,7 @@ class ConvolveTestCase(unittest.TestCase):
         self.runStdTest(separableKernel, refKernel=analyticKernel,
             kernelDescr="Gaussian Separable Kernel (compared to AnalyticKernel equivalent)")
 
-    def XXXtestSpatiallyInvariantConvolve(self):
+    def testSpatiallyInvariantConvolve(self):
         """Test convolution with a spatially invariant Gaussian function
         """
         kCols = 6
@@ -389,8 +389,8 @@ class ConvolveTestCase(unittest.TestCase):
         # create spatial model
         sFunc = afwMath.PolynomialFunction2D(1)
         
-        minSigma = 0.1
-        maxSigma = 3.0
+        minSigma = 1.5
+        maxSigma = 1.501
 
         # spatial parameters are a list of entries, one per kernel parameter;
         # each entry is a list of spatial parameters
@@ -399,15 +399,23 @@ class ConvolveTestCase(unittest.TestCase):
             (minSigma, 0.0,  (maxSigma - minSigma) / self.height),
             (0.0, 0.0, 0.0),
         )
-   
+
         kFunc =  afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         kernel = afwMath.AnalyticKernel(kCols, kRows, kFunc, sFunc)
         kernel.setSpatialParameters(sParams)
+        
+        for maxInterpErr, rtol, methodStr in (
+            (0.0,     1.0e-5, "brute force with no iteration"),
+            (1.0e-99, 1.0e5,  "brute force after iteration"),
+            (1.0e-9,  0.01,   "interpolation"),
+        ):
+            self.runStdTest(
+                kernel,
+                kernelDescr="Spatially Varying Gaussian Analytic Kernel with %s" % (methodStr,),
+                maxInterpErr=maxInterpErr,
+                rtol=rtol)
 
-        self.runStdTest(kernel, kernelDescr="Spatially Varying Gaussian Analytic Kernel",
-            maxInterpErr = 1.0e99)
-
-    def XXXtestSpatiallyVaryingSeparableConvolve(self):
+    def testSpatiallyVaryingSeparableConvolve(self):
         """Test convolution with a spatially varying SeparableKernel
         """
         kCols = 7
@@ -437,7 +445,7 @@ class ConvolveTestCase(unittest.TestCase):
         self.runStdTest(separableKernel, refKernel=analyticKernel,
             kernelDescr="Spatially Varying Gaussian Separable Kernel")
     
-    def XXXtestDeltaConvolve(self):
+    def testDeltaConvolve(self):
         """Test convolution with various delta function kernels using optimized code
         """
         for kCols in range(1, 4):
@@ -452,7 +460,7 @@ class ConvolveTestCase(unittest.TestCase):
 
                         self.runStdTest(kernel, kernelDescr="Delta Function Kernel")
 
-    def XXXtestSpatiallyVaryingGaussianLinerCombination(self):
+    def testSpatiallyVaryingGaussianLinerCombination(self):
         """Test convolution with a spatially varying LinearCombinationKernel of two Gaussian basis kernels.
         """
         kCols = 5
@@ -464,20 +472,27 @@ class ConvolveTestCase(unittest.TestCase):
         # spatial parameters are a list of entries, one per kernel parameter;
         # each entry is a list of spatial parameters
         sParams = (
-            (1.0, -0.5/self.width, -0.5/self.height),
-            (0.0,  1.0/self.width,  0.0/self.height),
-            (0.0,  0.0/self.width,  1.0/self.height),
+            (1.0, -0.01/self.width, -0.01/self.height),
+            (0.0,  0.01/self.width,  0.0/self.height),
+            (0.0,  0.0/self.width,  0.01/self.height),
         )
         
         kVec = makeGaussianKernelVec(kCols, kRows)
         kernel = afwMath.LinearCombinationKernel(kVec, sFunc)
         kernel.setSpatialParameters(sParams)
 
-        self.runStdTest(kernel,
-            kernelDescr="Spatially varying LinearCombinationKernel of two Gaussian basis kernels",
-            maxInterpErr = 1.0e-3)
+        for maxInterpErr, rtol, methodStr in (
+            (0.0,     1.0e-5, "brute force with no iteration"),
+            (1.0e-99, 1.0e5,  "brute force after iteration"),
+            (1.0e-9,  0.02,   "interpolation"),
+        ):
+            self.runStdTest(
+                kernel,
+                kernelDescr="Spatially Varying Gaussian Analytic Kernel with %s" % (methodStr,),
+                maxInterpErr=maxInterpErr,
+                rtol=rtol)
 
-    def XXXtestSpatiallyVaryingDeltaFunctionLinearCombination(self):
+    def testSpatiallyVaryingDeltaFunctionLinearCombination(self):
         """Test convolution with a spatially varying LinearCombinationKernel of delta function basis kernels.
         """
         kCols = 2
@@ -502,7 +517,7 @@ class ConvolveTestCase(unittest.TestCase):
         self.runStdTest(kernel,
             kernelDescr="Spatially varying LinearCombinationKernel of delta function basis kernels")
 
-    def XXXtestTicket873(self):
+    def testTicket873(self):
         """Demonstrate ticket 873: convolution of a MaskedImage with a spatially varying
         LinearCombinationKernel of basis kernels with low covariance gives incorrect variance.
         """

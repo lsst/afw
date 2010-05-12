@@ -92,6 +92,7 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
         IMAGE(PIXTYPE1), IMAGE(PIXTYPE2), lsst::afw::math::LinearCombinationKernel>;
     %template(convolve) lsst::afw::math::convolve<
         IMAGE(PIXTYPE1), IMAGE(PIXTYPE2), lsst::afw::math::SeparableKernel>;
+    %template(scaledPlus) lsst::afw::math::scaledPlus<IMAGE(PIXTYPE1), IMAGE(PIXTYPE2)>;
 %enddef
 //
 // Now a macro to specify Image and MaskedImage
