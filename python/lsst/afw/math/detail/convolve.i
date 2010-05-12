@@ -55,3 +55,7 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
 %templateConvolve(float, boost::uint16_t);
 %templateConvolve(int, int);
 %templateConvolve(boost::uint16_t, boost::uint16_t);
+
+// Note: cannot swig std::vector<lsst::afw::math::detail::KernelImagesForRegion> in the obvious way:
+// %template(KernelImagesForRegionList) std::vector<lsst::afw::math::detail::KernelImagesForRegion>;
+// because there is no KernelImagesForRegionList default constructor. Sigh.

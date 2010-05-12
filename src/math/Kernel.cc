@@ -240,10 +240,10 @@ afwGeom::BoxI afwMath::Kernel::growBBox(afwGeom::BoxI const &bbox) const {
  * dimension < 1 in either axis
  */
 afwGeom::BoxI afwMath::Kernel::shrinkBBox(afwGeom::BoxI const &bbox) const {
-    if ((bbox.getWidth() <= 1 + getWidth()) || ((bbox.getHeight() <= 1 + getHeight()))) {
+    if ((bbox.getWidth() < getWidth()) || ((bbox.getHeight() < getHeight()))) {
         std::ostringstream os;
-        os << "bbox dimensions = " << bbox.getDimensions() << " <= ("
-           << getWidth() << ", " << getHeight() << ") + 1 in one or both dimensions";
+        os << "bbox dimensions = " << bbox.getDimensions() << " < ("
+           << getWidth() << ", " << getHeight() << ") in one or both dimensions";
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
     return afwGeom::BoxI(

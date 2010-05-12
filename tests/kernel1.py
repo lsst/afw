@@ -7,6 +7,7 @@ import numpy
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions as pexExcept
 import lsst.pex.logging as pexLog
+import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.image.testUtils as imTestUtils
@@ -61,6 +62,32 @@ class KernelTestCase(unittest.TestCase):
             self.fail("Clone was modified by changing original's kernel parameters")
 
         self.checkComputeImage(kernel)
+
+    def testShrinkGrowBBox(self):
+        """Test Kernel methods shrinkBBox and growBBox
+        """
+        boxStart = afwGeom.makePointI(3, -3)
+        for kWidth in (1, 2, 6):
+            for kHeight in (1, 2, 5):
+                for deltaWidth in (-1, 0, 1, 20):
+                    fullWidth = kWidth + deltaWidth
+                    for deltaHeight in (-1, 0, 1, 20):
+                        fullHeight = kHeight + deltaHeight
+                        kernel = afwMath.DeltaFunctionKernel(kWidth, kHeight, afwImage.PointI(0, 0))
+                        fullBBox = afwGeom.BoxI(boxStart, afwGeom.makeExtentI(fullWidth, fullHeight))
+                        if (fullWidth < kWidth) or (fullHeight < kHeight):
+                            self.assertRaises(Exception, kernel.shrinkBBox, fullBBox)
+                            continue
+
+                        shrunkBBox = kernel.shrinkBBox(fullBBox)
+                        self.assert_((shrunkBBox.getWidth() == fullWidth + 1 - kWidth) and
+                            (shrunkBBox.getHeight() == fullHeight + 1 - kHeight),
+                            "shrinkBBox returned box of wrong size")
+                        self.assert_((shrunkBBox.getMinX() == boxStart[0] + kernel.getCtrX()) and
+                            (shrunkBBox.getMinY() == boxStart[1] + kernel.getCtrY()),
+                            "shrinkBBox returned box with wrong minimum")
+                        newFullBBox = kernel.growBBox(shrunkBBox)
+                        self.assert_(newFullBBox == fullBBox, "growBBox(shrinkBBox(x)) != x")
     
     def testDeltaFunctionKernel(self):
         """Test DeltaFunctionKernel
@@ -150,6 +177,7 @@ class KernelTestCase(unittest.TestCase):
 
         kParams = [0.0]*len(basisKernelList)
         kernel = afwMath.LinearCombinationKernel(basisKernelList, kParams)
+        self.assert_(kernel.isDeltaFunctionBasis())
         self.basicTests(kernel, len(kParams))
         for ii in range(len(basisKernelList)):
             kParams = [0.0]*len(basisKernelList)
@@ -191,6 +219,7 @@ class KernelTestCase(unittest.TestCase):
             kernelList = afwMath.KernelList()
             kernelList.append(analKernel)
             lcKernel = afwMath.LinearCombinationKernel(kernelList, [1])
+            self.assert_(not lcKernel.isDeltaFunctionBasis())
 
             doRaise = (coeff == 0)
             self.basicTestComputeImageRaise(analKernel,  doRaise, "AnalyticKernel")
@@ -223,6 +252,7 @@ class KernelTestCase(unittest.TestCase):
 
         kParams = [0.0]*len(basisKernelList)
         kernel = afwMath.LinearCombinationKernel(basisKernelList, kParams)
+        self.assert_(not kernel.isDeltaFunctionBasis())
         self.basicTests(kernel, len(kParams))
         
         # make sure the linear combination kernel has private copies of its basis kernels
@@ -423,6 +453,7 @@ class KernelTestCase(unittest.TestCase):
         )
         
         kernel = afwMath.LinearCombinationKernel(basisKernelList, spFunc)
+        self.assert_(not kernel.isDeltaFunctionBasis())
         self.basicTests(kernel, 2, 3)
         kernel.setSpatialParameters(sParams)
         kImage = afwImage.ImageD(kWidth, kHeight)

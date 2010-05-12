@@ -124,10 +124,12 @@ void mathDetail::basicConvolve(
     // OK, use general (and slower) form
     if (kernel.isSpatiallyVarying() && (convolutionControl.getMaxInterpolationError() > 0.0)) {
         // use linear interpolation
+        pexLog::TTrace<3>("lsst.afw.math.convolve", "generic basicConvolve: using linear interpolation");
         mathDetail::convolveWithInterpolation(convolvedImage, inImage, kernel, convolutionControl);
 
     } else {
         // use brute force
+        pexLog::TTrace<3>("lsst.afw.math.convolve", "generic basicConvolve: using brute force");
         mathDetail::convolveWithBruteForce(convolvedImage, inImage, kernel,
             convolutionControl.getDoNormalize());
     }
@@ -212,10 +214,22 @@ void mathDetail::basicConvolve(
 {
     if (!kernel.isSpatiallyVarying()) {
         // use the standard algorithm for the spatially invariant case
-        return convolveWithBruteForce(convolvedImage, inImage, kernel, convolutionControl.getDoNormalize());
+        pexLog::TTrace<3>("lsst.afw.math.convolve",
+            "basicConvolve for LinearCombinationKernel: spatially invariant; using brute force");
+        return mathDetail::convolveWithBruteForce(convolvedImage, inImage, kernel,
+            convolutionControl.getDoNormalize());
     } else if (!kernel.isDeltaFunctionBasis()) {
         // use the standard algorithm for the spatially varying case
-        return convolveWithInterpolation(convolvedImage, inImage, kernel, convolutionControl);
+        if (convolutionControl.getMaxInterpolationError() > 0.0) {
+            pexLog::TTrace<3>("lsst.afw.math.convolve",
+                "basicConvolve for LinearCombinationKernel: using interpolation");
+            return mathDetail::convolveWithInterpolation(convolvedImage, inImage, kernel, convolutionControl);
+        } else {
+            pexLog::TTrace<3>("lsst.afw.math.convolve",
+                "basicConvolve for LinearCombinationKernel: maxInterpolationError < 0; using brute force");
+            return mathDetail::convolveWithBruteForce(convolvedImage, inImage, kernel,
+                convolutionControl.getDoNormalize());
+        }
     }
     
     // use specialization for delta function basis; this is faster then
@@ -238,7 +252,7 @@ void mathDetail::basicConvolve(
     }
     
     pexLog::TTrace<3>("lsst.afw.math.convolve",
-        "basicConvolve for LinearCombinationKernel with spatially varying delta function basis");
+        "basicConvolve for LinearCombinationKernel: spatially varying delta function basis");
     
     typedef typename InImageT::template ImageTypeFactory<double>::type BasisImage;
     typedef typename BasisImage::x_iterator BasisXIterator;
@@ -507,7 +521,8 @@ void mathDetail::convolveWithBruteForce(
     int const cnvEndX = cnvStartX + cnvWidth;  // end index + 1
     int const cnvEndY = cnvStartY + cnvHeight; // end index + 1
 
-    KernelImage kernelImage(kernel.getDimensions()); // the kernel at a point
+    KernelImage kernelImage(kernel.getDimensions());
+    KernelXYLocator const kernelLoc = kernelImage.xy_at(0,0);
 
     if (kernel.isSpatiallyVarying()) {
         pexLog::TTrace<3>("lsst.afw.math.convolve",
@@ -522,7 +537,6 @@ void mathDetail::convolveWithBruteForce(
                 double const colPos = inImage.indexToPosition(cnvX, afwImage::X);
 
                 KernelPixel kSum = kernel.computeImage(kernelImage, false, colPos, rowPos);
-                KernelXYLocator kernelLoc = kernelImage.xy_at(0,0);
                 *cnvXIter = afwMath::convolveAtAPoint<OutImageT, InImageT>(
                     inImLoc, kernelLoc, kWidth, kHeight);
                 if (doNormalize) {

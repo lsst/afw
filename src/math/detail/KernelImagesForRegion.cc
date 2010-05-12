@@ -101,7 +101,7 @@ const {
         return imageMapIter->second;
     }
 
-    afwGeom::Point2I pixelIndex = _getPixelIndex(location);
+    afwGeom::Point2I pixelIndex = getPixelIndex(location);
     Image::Ptr kernelImagePtr(new Image(_kernelPtr->getDimensions()));
     _kernelPtr->computeImage(
         *kernelImagePtr,
@@ -110,6 +110,49 @@ const {
         afwImage::indexToPosition(pixelIndex.getY()));
     _imageMap.insert(std::make_pair(location, kernelImagePtr));
     return kernelImagePtr;
+}
+
+/**
+ * Compute pixel index of a given location, relative to the parent image
+ * (thus offset by bottom left corner of bounding box)
+ */
+lsst::afw::geom::Point2I mathDetail::KernelImagesForRegion::getPixelIndex(
+        Location location)  ///< location for which to return pixel index
+const {
+    switch (location) {
+        case BOTTOM_LEFT:
+            return _bbox.getMin();
+            break; // paranoia
+        case BOTTOM:
+            return afwGeom::Point2I::make(_centerIndex.getX(), _bbox.getMinY());
+            break; // paranoia
+        case BOTTOM_RIGHT:
+            return afwGeom::Point2I::make(_bbox.getMaxX(), _bbox.getMinY());
+            break; // paranoia
+        case LEFT:
+            return afwGeom::Point2I::make(_bbox.getMinX(), _centerIndex.getY());
+            break; // paranoia
+        case CENTER:
+            return _centerIndex;
+            break; // paranoia
+        case RIGHT:
+            return afwGeom::Point2I::make(_bbox.getMaxX(), _centerIndex.getY());
+            break; // paranoia
+        case TOP_LEFT:
+            return afwGeom::Point2I::make(_bbox.getMinX(), _bbox.getMaxY());
+            break; // paranoia
+        case TOP:
+            return afwGeom::Point2I::make(_centerIndex.getX(), _bbox.getMaxY());
+            break; // paranoia
+        case TOP_RIGHT:
+            return _bbox.getMax();
+            break; // paranoia
+        default: {
+            std::ostringstream os;
+            os << "Bug: unhandled location = " << location;
+            throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+        }
+    }
 }
 
 /**
@@ -237,47 +280,6 @@ const {
 }
 
 /**
- * Will linear interpolation give a sufficiently accurate kernel image?
- *
- * The algorithm is as follows:
- * - for each location in (center, bottom, left, right, top):
- *     - error image = linearly interpolated kernel image - true kernel image (obeying doNormalize)
- *     - if the absolute value of any pixel of error image > maxInterpolationError then:
- *         - interpolation is unacceptable; stop the test
- * - interpolation is acceptable
- *
- * This is not completely foolproof, but it should do if you are careful not to test too large a region
- * relative to the wiggliness of the kernel's spatial model.
- *
- * @return true if interpolation will give sufficiently accurate results, false otherwise
- */
-bool mathDetail::KernelImagesForRegion::isInterpolationOk(
-        double maxInterpolationError)   ///< maximum allowed error
-            ///< in computing the value of the kernel at any pixel by linear interpolation
-const {
-    typedef LocationList::const_iterator LocationIter;
-    typedef Image::const_x_iterator ImageXIter;
-    
-    std::pair<int, int> const kernelDim = _kernelPtr->getDimensions();
-    Image interpImage(kernelDim);
-    for (LocationIter locIter = _TestLocationList.begin(); locIter != _TestLocationList.end(); ++locIter) {
-        interpolateImage(interpImage, *locIter);
-        ImageConstPtr trueImagePtr(getImage(*locIter));
-        for (int row = 0; row < kernelDim.first; ++row) {
-            ImageXIter interpPtr = interpImage.row_begin(row);
-            ImageXIter const interpEnd = interpImage.row_end(row);
-            ImageXIter truePtr = trueImagePtr->row_begin(row);
-            for ( ; interpPtr != interpEnd; ++interpPtr, ++truePtr) {
-                if (std::abs(*interpPtr - *truePtr) > maxInterpolationError) {
-                    return false;
-                }
-            }
-        }
-    }
-    return true;
-}
-
-/**
  * Compute the linearly interpolated image at the specified location (not a corner).
  *
  * @throw lsst::pex::exceptions::InvalidParameterException if location is a corner,
@@ -349,48 +351,45 @@ const {
     }
 }
 
-
 /**
- * Compute pixel index of a given location, relative to the parent image
- * (thus offset by bottom left corner of bounding box)
+ * Will linear interpolation give a sufficiently accurate kernel image?
+ *
+ * The algorithm is as follows:
+ * - for each location in (center, bottom, left, right, top):
+ *     - error image = linearly interpolated kernel image - true kernel image (obeying doNormalize)
+ *     - if the absolute value of any pixel of error image > maxInterpolationError then:
+ *         - interpolation is unacceptable; stop the test
+ * - interpolation is acceptable
+ *
+ * This is not completely foolproof, but it should do if you are careful not to test too large a region
+ * relative to the wiggliness of the kernel's spatial model.
+ *
+ * @return true if interpolation will give sufficiently accurate results, false otherwise
  */
-lsst::afw::geom::Point2I mathDetail::KernelImagesForRegion::_getPixelIndex(
-        Location location)  ///< location for which to return pixel index
+bool mathDetail::KernelImagesForRegion::isInterpolationOk(
+        double maxInterpolationError)   ///< maximum allowed error
+            ///< in computing the value of the kernel at any pixel by linear interpolation
 const {
-    switch (location) {
-        case BOTTOM_LEFT:
-            return _bbox.getMin();
-            break; // paranoia
-        case BOTTOM:
-            return afwGeom::Point2I::make(_centerIndex.getX(), _bbox.getMinY());
-            break; // paranoia
-        case BOTTOM_RIGHT:
-            return afwGeom::Point2I::make(_bbox.getMaxX(), _bbox.getMinY());
-            break; // paranoia
-        case LEFT:
-            return afwGeom::Point2I::make(_bbox.getMinX(), _centerIndex.getY());
-            break; // paranoia
-        case CENTER:
-            return _centerIndex;
-            break; // paranoia
-        case RIGHT:
-            return afwGeom::Point2I::make(_bbox.getMaxX(), _centerIndex.getY());
-            break; // paranoia
-        case TOP_LEFT:
-            return afwGeom::Point2I::make(_bbox.getMinX(), _bbox.getMaxY());
-            break; // paranoia
-        case TOP:
-            return afwGeom::Point2I::make(_centerIndex.getX(), _bbox.getMaxY());
-            break; // paranoia
-        case TOP_RIGHT:
-            return _bbox.getMax();
-            break; // paranoia
-        default: {
-            std::ostringstream os;
-            os << "Bug: unhandled location = " << location;
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+    typedef LocationList::const_iterator LocationIter;
+    typedef Image::const_x_iterator ImageXIter;
+    
+    std::pair<int, int> const kernelDim = _kernelPtr->getDimensions();
+    Image interpImage(kernelDim);
+    for (LocationIter locIter = _TestLocationList.begin(); locIter != _TestLocationList.end(); ++locIter) {
+        interpolateImage(interpImage, *locIter);
+        ImageConstPtr trueImagePtr(getImage(*locIter));
+        for (int row = 0; row < kernelDim.second; ++row) {
+            ImageXIter interpPtr = interpImage.row_begin(row);
+            ImageXIter const interpEnd = interpImage.row_end(row);
+            ImageXIter truePtr = trueImagePtr->row_begin(row);
+            for ( ; interpPtr != interpEnd; ++interpPtr, ++truePtr) {
+                if (std::abs(*interpPtr - *truePtr) > maxInterpolationError) {
+                    return false;
+                }
+            }
         }
     }
+    return true;
 }
 
 /**

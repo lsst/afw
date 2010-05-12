@@ -115,10 +115,11 @@ namespace detail {
         bool getDoNormalize() const { return _doNormalize; };
         ImageConstPtr getImage(Location location) const;
         KernelConstPtr getKernel() const { return _kernelPtr; };
+        lsst::afw::geom::Point2I getPixelIndex(Location location) const;
         std::vector<KernelImagesForRegion> getSubregions() const;
         std::vector<KernelImagesForRegion> getSubregions(int nx, int ny) const;
-        bool isInterpolationOk(double maxInterpolationError) const;
         void interpolateImage(Image &outImage, Location location) const;
+        bool isInterpolationOk(double maxInterpolationError) const;
         static int getMinInterpolationSize() { return _MinInterpolationSize; };
 
     private:
@@ -132,7 +133,6 @@ namespace detail {
         static lsst::afw::geom::Point2I _computeCenterIndex(lsst::afw::geom::BoxI const &bbox);
         static inline int _computeNextSubregionLength(int length, int nDivisions);
         static std::vector<int> _computeSubregionLengths(int length, int nDivisions);
-        lsst::afw::geom::Point2I _getPixelIndex(Location location) const;
         
         // member variables
         KernelConstPtr _kernelPtr;
