@@ -65,6 +65,12 @@ namespace detail {
      *
      * See the Location enum for a list of those special locations.
      *
+     * @warning The kernel images along the top and right edges are computed one row or column past
+     * the bounding box. This allows abutting KernelImagesForRegion to share corner and edge kernel images,
+     * which is useful when dividing a KernelImagesForRegion into subregions.
+     *
+     * @warning The bounding box for the region applies to the parent image.
+     *
      * This is a low-level helper class for recursive convolving with interpolation. Many of these objects
      * may be created during a convolution, and many will share kernel images. It uses shared pointers
      * to kernels and kernel images for increased speed and decreased memory usage (at the expense of safety).
@@ -85,12 +91,16 @@ namespace detail {
         /**
          * locations of various points in the region
          *
+         * RIGHT and TOP are one column/row beyond the region's bounding box.
+         * Thus adjacent regions share corner images.
+         *
          * The corners posiitions are: BOTTOM_LEFT, BOTTOM_RIGHT, TOP_LEFT, TOP_RIGHT
          * The "middle" positions are the middle of each side, plus the center of the region:
          *    BOTTOM, TOP, LEFT, RIGHT, CENTER
          *
-         * These locations always refer to the center of a pixel. Thus if the region has an even size
-         * along an axis, then the middle pixel will be 1/2 pixel off from the true center along that axis
+         * These locations always refer to the center of a pixel. Thus if the region has an odd size
+         * along an axis (so that the span to the top and right, which are one beyond, is even),
+         * the middle pixel will be 1/2 pixel off from the true center along that axis
          * (in an unspecified direction).
          */
         enum Location {
@@ -111,15 +121,27 @@ namespace detail {
                 ImageConstPtr topLeftImagePtr,
                 ImageConstPtr topRightImagePtr);
 
+        /** 
+         * Get the bounding box for the region
+         */
         lsst::afw::geom::BoxI getBBox() const { return _bbox; };
+        /**
+         * Get the doNormalize parameter
+         */
         bool getDoNormalize() const { return _doNormalize; };
         ImageConstPtr getImage(Location location) const;
+        /**
+         * Get the kernel (as a shared pointer to const)
+         */
         KernelConstPtr getKernel() const { return _kernelPtr; };
         lsst::afw::geom::Point2I getPixelIndex(Location location) const;
         std::vector<KernelImagesForRegion> getSubregions() const;
         std::vector<KernelImagesForRegion> getSubregions(int nx, int ny) const;
         void interpolateImage(Image &outImage, Location location) const;
         bool isInterpolationOk(double maxInterpolationError) const;
+        /**
+         * Get the minInterpolationSize class constant
+         */
         static int getMinInterpolationSize() { return _MinInterpolationSize; };
 
     private:
@@ -175,8 +197,7 @@ namespace detail {
  */
 
 /**
- * Compute length of next subregion if the region is to be divided into pieces of approximately equal
- * length, each having one pixel of overlap with its neighbors.
+ * Compute length of next subregion if the region is to be divided into pieces of approximately equal length.
  *
  * @return length of next subregion
  *
@@ -187,7 +208,7 @@ inline int lsst::afw::math::detail::KernelImagesForRegion::_computeNextSubregion
     int nDivisions) ///< number of divisions of region
 {
     return static_cast<int>(std::floor(0.5 +
-        (static_cast<double>(length + nDivisions - 1) / static_cast<double>(nDivisions))));
+        (static_cast<double>(length) / static_cast<double>(nDivisions))));
 }
 
 /**

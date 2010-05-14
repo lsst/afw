@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import math
 import unittest
 
 import numpy
@@ -84,9 +83,8 @@ class KernelImagesForRegion(unittest.TestCase):
         actImage = afwImage.ImageD(self.kernel.getWidth(), self.kernel.getHeight())
         region.interpolateImage(actImage, location)
         actImArr = imTestUtils.arrayFromImage(actImage)
-        frac0 = (ind1 - indCtr) / float(ind1 - ind0)
-        frac1 = (indCtr - ind0) / float(ind1 - ind0)
-        desImArr = (im0Arr * frac0) + (im1Arr * frac1)
+        fracDist = float(indCtr - ind0) / float(ind1 - ind0)
+        desImArr = (im0Arr * (1.0 - fracDist)) + (im1Arr * fracDist)
         errStr = imTestUtils.imagesDiffer(actImArr, desImArr)
         if errStr:
             self.fail("interpolateImage(%s) failed:\n%s" % (LocNameDict[location], errStr))
@@ -104,11 +102,11 @@ class KernelImagesForRegion(unittest.TestCase):
         """
         region = mathDetail.KernelImagesForRegion(self.kernel, self.bbox, False)
         leftInd = self.bbox.getMinX()
-        rightInd = self.bbox.getMaxX()
+        rightInd = self.bbox.getMaxX() + 1
         bottomInd = self.bbox.getMinY()
-        topInd = self.bbox.getMaxY()
-        ctrXInd = int(math.ceil((leftInd + rightInd) / 2.0))
-        ctrYInd = int(math.ceil((bottomInd + topInd) / 2.0))
+        topInd = self.bbox.getMaxY() + 1
+        ctrXInd = int(round((leftInd + rightInd) / 2.0))
+        ctrYInd = int(round((bottomInd + topInd) / 2.0))
         
         for location, desIndex in (
             (region.BOTTOM_LEFT,  (leftInd,  bottomInd)),
@@ -142,12 +140,9 @@ class KernelImagesForRegion(unittest.TestCase):
         topLeftImArr = imTestUtils.arrayFromImage(region.getImage(region.TOP_LEFT))
         topRightImArr = imTestUtils.arrayFromImage(region.getImage(region.TOP_RIGHT))
 
-        leftInd = self.bbox.getMinX()
-        rightInd = self.bbox.getMaxX()
-        bottomInd = self.bbox.getMinY()
-        topInd = self.bbox.getMaxY()
-        ctrXInd = int(math.ceil((leftInd + rightInd) / 2.0))
-        ctrYInd = int(math.ceil((bottomInd + topInd) / 2.0))
+        leftInd, bottomInd = region.getPixelIndex(region.BOTTOM_LEFT)
+        rightInd, topInd = region.getPixelIndex(region.TOP_RIGHT)
+        ctrXInd, ctrYInd = region.getPixelIndex(region.CENTER)
         
         self.runInterpTest(region, region.BOTTOM, bottomLeftImArr, bottomRightImArr, leftInd, ctrXInd, rightInd)
         self.runInterpTest(region, region.TOP,    topLeftImArr,    topRightImArr,    leftInd, ctrXInd, rightInd)
@@ -161,6 +156,7 @@ class KernelImagesForRegion(unittest.TestCase):
         region.interpolateImage(topIm, region.TOP)
         topImArr = imTestUtils.arrayFromImage(topIm)
         self.runInterpTest(region, region.CENTER, bottomImArr, topImArr, bottomInd, ctrYInd, topInd)
+        
 
     def testIsInterpolateOk(self):
         region = mathDetail.KernelImagesForRegion(self.kernel, self.bbox, True)

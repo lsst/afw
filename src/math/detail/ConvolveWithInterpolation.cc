@@ -131,8 +131,8 @@ void mathDetail::convolveRegionWithRecursiveInterpolation(
             region.getBBox().getMinX(), region.getBBox().getMinY(),
             region.getBBox().getWidth(), region.getBBox().getHeight());
 
-    if (afwGeom::any(region.getBBox().getDimensions().lt(
-        afwGeom::Extent2I::make(region.getMinInterpolationSize())))) {
+    if ((region.getBBox().getWidth() < region.getMinInterpolationSize())
+        || (region.getBBox().getHeight() < region.getMinInterpolationSize())) {
         // region too small for interpolation; convolve using brute force
         pexLog::TTrace<6>("lsst.afw.math.convolve",
             "convolveRegionWithRecursiveInterpolation: region too small; using brute force");
@@ -192,8 +192,10 @@ void mathDetail::convolveRegionWithInterpolation(
     afwGeom::BoxI const outBBox = region.getBBox();
     afwGeom::BoxI const inBBox = kernelPtr->growBBox(outBBox);
     
-    double xfrac = 1.0 / static_cast<double>(outBBox.getWidth()  - 1);
-    double yfrac = 1.0 / static_cast<double>(outBBox.getHeight() - 1);
+    // top and right images are computed one beyond bbox boundary,
+    // so the distance between edge images is bbox width/height pixels
+    double xfrac = 1.0 / static_cast<double>(outBBox.getWidth());
+    double yfrac = 1.0 / static_cast<double>(outBBox.getHeight());
     afwMath::scaledPlus(leftDeltaKernelImage, 
          yfrac,  *region.getImage(KernelImagesForRegion::TOP_LEFT),
         -yfrac, leftKernelImage);

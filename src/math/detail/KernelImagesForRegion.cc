@@ -16,11 +16,13 @@
 #include "boost/assign/list_of.hpp"
 
 #include "lsst/pex/exceptions.h"
+#include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/image/ImageUtils.h"
 #include "lsst/afw/math/detail/Convolve.h"
 
 namespace pexExcept = lsst::pex::exceptions;
+namespace pexLog = lsst::pex::logging;
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 namespace mathDetail = lsst::afw::math::detail;
@@ -48,6 +50,9 @@ mathDetail::KernelImagesForRegion::KernelImagesForRegion(
     if (!_kernelPtr) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, "kernelPtr is null");
     }
+    pexLog::TTrace<6>("lsst.afw.math.convolve",
+        "KernelImagesForRegion(bbox(minimum=(%d, %d), extent=(%d, %d)), doNormalize=%d, images...)",
+        _bbox.getMinX(), _bbox.getMinY(), _bbox.getWidth(), _bbox.getHeight(), _doNormalize);
 }
 
 /**
@@ -86,6 +91,9 @@ mathDetail::KernelImagesForRegion::KernelImagesForRegion(
     _insertImage(BOTTOM_RIGHT, bottomRightImagePtr);
     _insertImage(TOP_LEFT, topLeftImagePtr);
     _insertImage(TOP_RIGHT, topRightImagePtr);
+    pexLog::TTrace<6>("lsst.afw.math.convolve",
+        "KernelImagesForRegion(bbox(minimum=(%d, %d), extent=(%d, %d)), doNormalize=%d, images...)",
+        _bbox.getMinX(), _bbox.getMinY(), _bbox.getWidth(), _bbox.getHeight(), _doNormalize);
 }
 
 /**
@@ -127,7 +135,7 @@ const {
             return afwGeom::Point2I::make(_centerIndex.getX(), _bbox.getMinY());
             break; // paranoia
         case BOTTOM_RIGHT:
-            return afwGeom::Point2I::make(_bbox.getMaxX(), _bbox.getMinY());
+            return afwGeom::Point2I::make(_bbox.getMaxX() + 1, _bbox.getMinY());
             break; // paranoia
         case LEFT:
             return afwGeom::Point2I::make(_bbox.getMinX(), _centerIndex.getY());
@@ -136,16 +144,16 @@ const {
             return _centerIndex;
             break; // paranoia
         case RIGHT:
-            return afwGeom::Point2I::make(_bbox.getMaxX(), _centerIndex.getY());
+            return afwGeom::Point2I::make(_bbox.getMaxX() + 1, _centerIndex.getY());
             break; // paranoia
         case TOP_LEFT:
-            return afwGeom::Point2I::make(_bbox.getMinX(), _bbox.getMaxY());
+            return afwGeom::Point2I::make(_bbox.getMinX(), _bbox.getMaxY() + 1);
             break; // paranoia
         case TOP:
-            return afwGeom::Point2I::make(_centerIndex.getX(), _bbox.getMaxY());
+            return afwGeom::Point2I::make(_centerIndex.getX(), _bbox.getMaxY() + 1);
             break; // paranoia
         case TOP_RIGHT:
-            return _bbox.getMax();
+            return afwGeom::Point2I::make(_bbox.getMaxX() + 1, _bbox.getMaxY() + 1);
             break; // paranoia
         default: {
             std::ostringstream os;
@@ -158,9 +166,8 @@ const {
 /**
  * Divide region into 2 by 2 sub-regions of approximately equal size.
  *
- * The subregions have exactly one row or column of overlapping pixels;
- * thus the 4 regions share 5 kernel images.
- * All corner images of all subregions are computed.
+ * The four subregions share 5 kernel images (bottom, left, center, right, top) from this region.
+ * All corner images of all four subregions are computed.
  *
  * @return a list of subregions in order: bottom left, bottom right, top left, top right
  */
@@ -170,7 +177,7 @@ mathDetail::KernelImagesForRegion::getSubregions() const {
     
     retList.push_back(KernelImagesForRegion(
         _kernelPtr,
-        afwGeom::BoxI(_bbox.getMin(), _centerIndex),
+        afwGeom::BoxI(_bbox.getMin(), _centerIndex - afwGeom::Extent2I(1)),
         _doNormalize,
         getImage(BOTTOM_LEFT),
         getImage(BOTTOM),
@@ -181,7 +188,7 @@ mathDetail::KernelImagesForRegion::getSubregions() const {
         _kernelPtr,
         afwGeom::BoxI(
             afwGeom::Point2I::make(_centerIndex.getX(), _bbox.getMinY()),
-            afwGeom::Point2I::make(_bbox.getMaxX(), _centerIndex.getY())),
+            afwGeom::Point2I::make(_bbox.getMaxX(), _centerIndex.getY() - 1)),
         _doNormalize,
         getImage(BOTTOM),
         getImage(BOTTOM_RIGHT),
@@ -192,7 +199,7 @@ mathDetail::KernelImagesForRegion::getSubregions() const {
         _kernelPtr,
         afwGeom::BoxI(
             afwGeom::Point2I::make(_bbox.getMinX(), _centerIndex.getY()),
-            afwGeom::Point2I::make(_centerIndex.getX(), _bbox.getMaxY())),
+            afwGeom::Point2I::make(_centerIndex.getX() - 1, _bbox.getMaxY())),
         _doNormalize,
         getImage(LEFT),
         getImage(CENTER),
@@ -215,9 +222,9 @@ mathDetail::KernelImagesForRegion::getSubregions() const {
 /**
  * Divide region into nx by ny sub-regions of approximately equal size.
  *
- * Adjacent regions share one row or column of overlapping pixels and thus share two corner kernel images.
+ * Adjacent regions share two corner kernel images.
  *
- * All kernel images shared by the returned regions are computed.
+ * All kernel images shared by the returned regions are computed, but others may not be.
  * In particular note that the extreme corner images may not be computed
  * (unlike the no-argument version of this function) to reduce code complexity.
  *
@@ -272,9 +279,9 @@ const {
                 brImagePtr,
                 tlImagePtr,
                 trImageNullPtr));
-            corner += afwGeom::Extent2I::make(width - 1, 0);
+            corner += afwGeom::Extent2I::make(width, 0);
         }
-        leftCorner += afwGeom::Extent2I::make(0, height - 1);
+        leftCorner += afwGeom::Extent2I::make(0, height);
     }
     return retList;
 }
@@ -400,8 +407,8 @@ afwGeom::Point2D mathDetail::KernelImagesForRegion::_computeCenterFractionalPosi
 {
     afwGeom::Point2I ctrInd(_computeCenterIndex(bbox));
     return afwGeom::Point2D::make(
-        static_cast<double>(ctrInd.getX() - bbox.getMinX()) / static_cast<double>(bbox.getWidth()  - 1),
-        static_cast<double>(ctrInd.getY() - bbox.getMinY()) / static_cast<double>(bbox.getHeight() - 1)
+        static_cast<double>(ctrInd.getX() - bbox.getMinX()) / static_cast<double>(bbox.getWidth()),
+        static_cast<double>(ctrInd.getY() - bbox.getMinY()) / static_cast<double>(bbox.getHeight())
     );
 }
 
@@ -414,14 +421,14 @@ afwGeom::Point2I mathDetail::KernelImagesForRegion::_computeCenterIndex(
     afwGeom::BoxI const &bbox) ///< bounding box
 {
     return afwGeom::Point2I::make(
-        bbox.getMinX() + _computeNextSubregionLength(bbox.getWidth(), 2) - 1,
-        bbox.getMinY() + _computeNextSubregionLength(bbox.getHeight(), 2) - 1
+        bbox.getMinX() + _computeNextSubregionLength(bbox.getWidth(), 2),
+        bbox.getMinY() + _computeNextSubregionLength(bbox.getHeight(), 2)
     );
 }
 
 /**
  * Compute length of each subregion for a region divided into nDivisions pieces of approximately equal
- * length, each having one pixel of overlap with its neighbors.
+ * length.
  *
  * @return a list of subspan lengths
  *
@@ -431,7 +438,7 @@ std::vector<int> mathDetail::KernelImagesForRegion::_computeSubregionLengths(
     int length,     ///< length of region
     int nDivisions) ///< number of divisions of region
 {
-    if ((nDivisions >= length) || (nDivisions < 1)) {
+    if ((nDivisions > length) || (nDivisions < 1)) {
         std::ostringstream os;
         os << "nDivisions = " << nDivisions << " not in range [1, " << length << " = length]";
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
@@ -440,13 +447,19 @@ std::vector<int> mathDetail::KernelImagesForRegion::_computeSubregionLengths(
     int remLength = length;
     for (int remNDiv = nDivisions; remNDiv > 0; --remNDiv) {
         int subLength = _computeNextSubregionLength(remLength, remNDiv);
+        if (subLength < 1) {
+            std::ostringstream os;
+            os << "Bug! _computeSubregionLengths(length=" << length << ", nDivisions=" << nDivisions <<
+                ") computed sublength = " << subLength << " < 0; remLength = " << remLength;
+            throw LSST_EXCEPT(pexExcept::RuntimeErrorException, os.str());
+        }
         regionLengths.push_back(subLength);
-        remLength -= (subLength - 1);
+        remLength -= subLength;
     }
     return regionLengths;
 }
 
-int const mathDetail::KernelImagesForRegion::_MinInterpolationSize = 5;
+int const mathDetail::KernelImagesForRegion::_MinInterpolationSize = 10;
 
 mathDetail::KernelImagesForRegion::LocationList const mathDetail::KernelImagesForRegion::_TestLocationList =
     boost::assign::list_of(CENTER)(BOTTOM)(LEFT)(RIGHT)(TOP);

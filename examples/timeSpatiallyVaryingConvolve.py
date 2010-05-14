@@ -14,7 +14,7 @@ import lsst.afw.math.detail as mathDetail
 pexLog.Debug("lsst.afw", 0)
 
 MaxIter = 20
-MaxTime = 2.0 # seconds
+MaxTime = 1.0 # seconds
 
 # force the same seed each time for reproducible results;
 # set this seed before computing each kernel that uses random numbers
@@ -153,8 +153,6 @@ def timeConvolution(outImage, inImage, kernel, convControl):
 #        mathDetail.convolveWithInterpolation(outImage, inImage, kernel, convControl)
         afwMath.convolve(outImage, inImage, kernel, convControl)
         endTime = time.time()
-        print "HACK: only one iteration!"
-        break
         if endTime - startTime > MaxTime:
             break
 
@@ -182,9 +180,7 @@ def timeSet(outImage, inImage, kernelFunction, kernelDescr, convControl, stdOnly
         convControl.setMaxInterpolationError(maxInterpolationError)
         print "%s using %s" % (kernelDescr, methodDescr)
         print "ImWid\tImHt\tKerWid\tKerHt\tSec/Cnv"
-        print "HACK: kSize restricted and default case commented out"
-        for kSize in (5,):
-#        for kSize in (5, 11, 19):
+        for kSize in (5, 11, 19):
             kernel = kernelFunction(kSize, imSize)
             dur, nIter = timeConvolution(outImage, inImage, kernel, convControl)
             print "%d\t%d\t%d\t%d\t%0.2f" % (imSize[0], imSize[1], kSize, kSize, dur/float(nIter))
@@ -195,8 +191,8 @@ def run():
     convControl.setDoNormalize(True)
     fullInImage = afwImage.MaskedImageF(InputMaskedImagePath)
     imSize = (256, 256)
-    print "hack: made image smaller"
-    imSize = (100, 100)
+#     print "hack: made image smaller"
+#     imSize = (100, 100)
     bbox = afwImage.BBox(afwImage.PointI(0, 0), imSize[0], imSize[1])
     inImage = afwImage.MaskedImageF(fullInImage, bbox, False)
     outImage = afwImage.MaskedImageF(inImage.getDimensions())
@@ -204,6 +200,7 @@ def run():
     getSeparableKernel(5, (10, 10))
     timeSet(outImage, inImage, getAnalyticKernel,
         "AnalyticKernel", convControl)
+    print "HACK: disabled most tests"
 #     timeSet(outImage, inImage, getSeparableKernel,
 #         "SeparableKernel", convControl, stdOnly=True)
 #     timeSet(outImage, inImage, getGaussianLinearCombinationKernel,

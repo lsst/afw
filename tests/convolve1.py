@@ -221,8 +221,8 @@ class ConvolveTestCase(unittest.TestCase):
         
         refCnvImMaskVarArr = refConvolve(imMaskVar, xy0, refKernel, doNormalize, doCopyEdge)
 
-#         afwMath.convolve(self.cnvImage, self.maskedImage.getImage(), kernel, convControl)
-#         cnvImArr = imTestUtils.arrayFromImage(self.cnvImage)
+        afwMath.convolve(self.cnvImage, self.maskedImage.getImage(), kernel, convControl)
+        cnvImArr = imTestUtils.arrayFromImage(self.cnvImage)
 
         afwMath.convolve(self.cnvMaskedImage, self.maskedImage, kernel, convControl)
         cnvImMaskVarArr = imTestUtils.arraysFromMaskedImage(self.cnvMaskedImage)
@@ -236,13 +236,13 @@ class ConvolveTestCase(unittest.TestCase):
                     print "Mask(%d,%d) 0x%x 0x%x" % (x, y, refMaskedImage.getMask().get(x, y),
                     self.cnvMaskedImage.getMask().get(x, y))
 
-#         errStr = imTestUtils.imagesDiffer(cnvImArr, refCnvImMaskVarArr[0], rtol=rtol, atol=atol)
-#         if errStr:
-#             self.cnvImage.writeFits("act%s.fits" % (shortKernelDescr,))
-#             refMaskedImage = imTestUtils.maskedImageFromArrays(refCnvImMaskVarArr)
-#             refMaskedImage.getImage().writeFits("des%s.fits" % (shortKernelDescr,))
-#             self.fail("convolve(Image, kernel=%s, doNormalize=%s, doCopyEdge=%s, maxInterpErr=%s) failed:\n%s" % \
-#                 (kernelDescr, doNormalize, doCopyEdge, maxInterpErr, errStr))
+        errStr = imTestUtils.imagesDiffer(cnvImArr, refCnvImMaskVarArr[0], rtol=rtol, atol=atol)
+        if errStr:
+            self.cnvImage.writeFits("act%s.fits" % (shortKernelDescr,))
+            refMaskedImage = imTestUtils.maskedImageFromArrays(refCnvImMaskVarArr)
+            refMaskedImage.getImage().writeFits("des%s.fits" % (shortKernelDescr,))
+            self.fail("convolve(Image, kernel=%s, doNormalize=%s, doCopyEdge=%s, maxInterpErr=%s) failed:\n%s" % \
+                (kernelDescr, doNormalize, doCopyEdge, maxInterpErr, errStr))
 
         errStr = imTestUtils.maskedImagesDiffer(cnvImMaskVarArr, refCnvImMaskVarArr,
             doVariance = True, rtol=rtol, atol=atol)

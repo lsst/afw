@@ -18,7 +18,7 @@ pexLog.Debug("lsst.afw", VERBOSITY)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-class ImageMath(unittest.TestCase):
+class ScaledPlus(unittest.TestCase):
     def setUp(self):
         self.random = afwMath.Random()
         self.imWidth = 200
@@ -86,7 +86,7 @@ def suite():
     utilsTests.init()
 
     suites = []
-    suites += unittest.makeSuite(ImageMath)
+    suites += unittest.makeSuite(ScaledPlus)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)
