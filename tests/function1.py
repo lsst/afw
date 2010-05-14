@@ -302,7 +302,23 @@ class FunctionTestCase(unittest.TestCase):
                 continue
             self.assertRaises(Exception, afwMath.PolynomialFunction2D, numpy.zeros(numParams, dtype=float))
 
+    def testDFuncDParameters(self):
+        """Test that we can differentiate the Function2 with respect to its parameters"""
+        
+        nOrder = 3
+        coeffs = [1]*((nOrder + 1)*(nOrder + 2)//2)
+        f = afwMath.PolynomialFunction2D(coeffs)
 
+        for (x, y) in [(2, 1), (1, 2), (2, 2)]:
+            dFdC = f.getDFuncDParameters(x, y)
+
+            o0 = 0
+            for o in range(nOrder + 1):
+                coeffs = dFdC[o0: o0 + o+1]
+                self.assertEqual(coeffs, [x**(o - r)*y**r for r in range(0, o+1)])
+
+                o0 += o + 1
+                
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():

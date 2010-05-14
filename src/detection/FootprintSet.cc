@@ -904,6 +904,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::insertIntoImage(bool const rel
 //
 // Explicit instantiations
 //
+template class detection::FootprintSet<boost::uint16_t, image::MaskPixel>;
 template class detection::FootprintSet<int, image::MaskPixel>;
 template class detection::FootprintSet<float, image::MaskPixel>;
 template class detection::FootprintSet<double, image::MaskPixel>;

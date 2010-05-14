@@ -23,7 +23,7 @@ det::Source::Source()
       _petroFluxErr(0.0),
       _sky(0.0),
       _skyErr(0.0)
-{}
+{ }
 
 /**
  * Copy Constructor

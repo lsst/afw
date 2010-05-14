@@ -444,11 +444,16 @@ void image::Image<PixelT>::writeFits(
 ) const {
     using lsst::daf::base::PropertySet;
 
-    PropertySet::Ptr wcsAMetadata = image::detail::createTrivialWcsAsPropertySet(image::detail::wcsNameForXY0,
-                                                                                 this->getX0(),
-                                                                                 this->getY0());
+    if (mode == "pdu") {
+        image::fits_write_view(fileName, _getRawView(), metadata_i, mode);
+        return;
+    }
 
     lsst::daf::base::PropertySet::Ptr metadata;
+    PropertySet::Ptr wcsAMetadata =
+        image::detail::createTrivialWcsAsPropertySet(image::detail::wcsNameForXY0,
+                                                     this->getX0(), this->getY0());
+    
     if (metadata_i) {
         metadata = metadata_i->deepCopy();
         metadata->combine(wcsAMetadata);

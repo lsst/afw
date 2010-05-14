@@ -77,6 +77,12 @@ class FilterTestCase(unittest.TestCase):
         self.g_lambdaEff = [p.get("lambdaEff") for p in filterPolicy.getArray("Filter")
                             if p.get("name") == "g"][0] # used for tests
 
+    def defineFilterProperty(self, name, lambdaEff, force=False):
+        filterPolicy = pexPolicy.Policy()
+        filterPolicy.add("lambdaEff", lambdaEff)
+
+        return afwImage.FilterProperty(name, filterPolicy, force);
+
     def testCtor(self):
         """Test that we can construct a Filter"""
         # A filter of type 
@@ -100,7 +106,12 @@ class FilterTestCase(unittest.TestCase):
 
     def testFilterAliases(self):
         """Test that we can provide an alias for a Filter"""
-        pass
+        f0 = afwImage.Filter("z")
+        f1 = afwImage.Filter("zprime")
+        f2 = afwImage.Filter("z'")
+
+        self.assertEqual(f0.getFilterProperty().getLambdaEff(), f1.getFilterProperty().getLambdaEff())
+        self.assertEqual(f0.getFilterProperty().getLambdaEff(), f2.getFilterProperty().getLambdaEff())
 
     def testReset(self):
         """Test that we can reset filter IDs and properties if needs be"""
@@ -109,18 +120,12 @@ class FilterTestCase(unittest.TestCase):
         #
         # First FilterProperty
         #
-        def defineFilterProperty(name, lambdaEff, force=False):
-            filterPolicy = pexPolicy.Policy()
-            filterPolicy.add("lambdaEff", lambdaEff)
-
-            return afwImage.FilterProperty(name, filterPolicy, force);
-
         def tst():
-            gprime = defineFilterProperty("g", self.g_lambdaEff + 10)
+            gprime = self.defineFilterProperty("g", self.g_lambdaEff + 10)
 
         tests.assertRaisesLsstCpp(self, pexExcept.RuntimeErrorException, tst)
-        gprime = defineFilterProperty("g", self.g_lambdaEff + 10, True) # should not raise
-        gprime = defineFilterProperty("g", self.g_lambdaEff, True)
+        gprime = self.defineFilterProperty("g", self.g_lambdaEff + 10, True) # should not raise
+        gprime = self.defineFilterProperty("g", self.g_lambdaEff, True)
         #
         # Now Filter
         #
@@ -130,6 +135,30 @@ class FilterTestCase(unittest.TestCase):
         afwImage.Filter.define(g, afwImage.Filter("g").getId()) # OK if Id's the same
         tests.assertRaisesLsstCpp(self, pexExcept.RuntimeErrorException, tst)
         afwImage.Filter.define(g, afwImage.Filter.AUTO, True)
+
+    def testUnknownFilter(self):
+        """Test that we can define, but not use, an unknown filter"""
+        badFilter = "rhl"               # an undefined filter
+        # Not defined
+        tests.assertRaisesLsstCpp(self, pexExcept.NotFoundException,
+                                  lambda : afwImage.Filter(badFilter))
+        # Force definition
+        f = afwImage.Filter(badFilter, True)
+        self.assertEqual(f.getName(), badFilter) # name is correctly defined
+        
+        tests.assertRaisesLsstCpp(self, pexExcept.NotFoundException,
+                                  lambda : f.getFilterProperty().getLambdaEff()) # can't use Filter f
+        #
+        # Now define badFilter
+        #
+        lambdaEff = 666.0; self.defineFilterProperty(badFilter, lambdaEff)
+        
+        self.assertEqual(f.getFilterProperty().getLambdaEff(), lambdaEff) # but now we can
+        #
+        # Check that we didn't accidently define the unknown filter
+        #
+        tests.assertRaisesLsstCpp(self, pexExcept.NotFoundException,
+                                  lambda : afwImage.Filter().getFilterProperty().getLambdaEff())
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

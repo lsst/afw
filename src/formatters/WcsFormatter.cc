@@ -121,7 +121,7 @@ afwForm::WcsFormatter::generatePropertySet(afwImg::Wcs const& wcs) {
 
     wcsProps->add("NAXIS", wcs._wcsInfo[0].naxis);
     wcsProps->add("EQUINOX", wcs._wcsInfo[0].equinox);
-    wcsProps->add("RADECSYS", std::string(wcs._wcsInfo[0].radesys));
+    wcsProps->add("RADESYS", std::string(wcs._wcsInfo[0].radesys));
     wcsProps->add("CRPIX1", wcs._wcsInfo[0].crpix[0]);
     wcsProps->add("CRPIX2", wcs._wcsInfo[0].crpix[1]);
     wcsProps->add("CD1_1", wcs._wcsInfo[0].cd[0]);

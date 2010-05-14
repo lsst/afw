@@ -616,7 +616,7 @@ namespace image {
                              MaskPtr mask = MaskPtr(),
                              VariancePtr variance = VariancePtr());
         explicit MaskedImage(const std::pair<int, int> dimensions, MaskPlaneDict const& planeDict=MaskPlaneDict());
-        explicit MaskedImage(std::string const& baseName, int const hdu=1,
+        explicit MaskedImage(std::string const& baseName, int const hdu=0,
                              lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
                              BBox const& bbox=BBox(), bool const conformMasks=false);
         

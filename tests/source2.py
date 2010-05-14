@@ -11,6 +11,7 @@ or
 
 import unittest
 import random
+import tempfile
 import time
 
 import lsst.daf.base as dafBase
@@ -142,6 +143,67 @@ class DiaSourceTestCase(unittest.TestCase):
         else:
             print "skipping database tests"
 
+    def testSpecialValuesPersistence(self):
+        dss = afwDet.DiaSourceSet()
+        ds = afwDet.DiaSource()
+        for (vd, vf) in ((float('nan'), float('nan')),
+                         (float('inf'), 0.0),
+                         (float('-inf'), 0.0)):
+            # we can't pass inf to methods taking floats - SWIG raises
+            # an overflow error
+            ds.setRa(vd)
+            ds.setDec(vd)
+            ds.setRaErrForDetection(vf)
+            ds.setRaErrForWcs(vf)
+            ds.setDecErrForDetection(vf)
+            ds.setDecErrForWcs(vf)
+            ds.setXAstrom(vd)
+            ds.setXAstromErr(vf)
+            ds.setYAstrom(vd)
+            ds.setYAstromErr(vf)
+            ds.setTaiMidPoint(vd)
+            ds.setTaiRange(vd)
+            ds.setPsfFlux(vd)
+            ds.setPsfFluxErr(vf)
+            ds.setApFlux(vd)
+            ds.setApFluxErr(vf)
+            ds.setModelFlux(vd)
+            ds.setModelFluxErr(vf)
+            ds.setInstFlux(vd)
+            ds.setInstFluxErr(vf)
+            ds.setApDia(vf)
+            ds.setIxx(vf)
+            ds.setIxxErr(vf)
+            ds.setIyy(vf)
+            ds.setIyyErr(vf)
+            ds.setIxy(vf)
+            ds.setIxyErr(vf)
+            ds.setSnr(vf)
+            ds.setChi2(vf)
+            dss.append(ds)
+            pdsv = afwDet.PersistableDiaSourceVector(dss)
+            pol = dafPolicy.Policy()
+            pers = dafPers.Persistence.getPersistence(pol)
+            dp = dafBase.PropertySet()
+            dp.setInt("visitId", 0)
+            dp.setInt("sliceId", 0)
+            dp.setInt("numSlices", 1)
+            dp.setLongLong("ampExposureId", 10)
+            dp.setString("itemName", "DiaSource")
+            stl = dafPers.StorageList()
+            f = tempfile.NamedTemporaryFile()
+            try:
+                loc  = dafPers.LogicalLocation(f.name)
+                stl.append(pers.getPersistStorage("BoostStorage", loc))
+                pers.persist(pdsv, stl, dp)
+                stl = dafPers.StorageList()
+                stl.append(pers.getRetrieveStorage("BoostStorage", loc))
+                persistable = pers.unsafeRetrieve("PersistableDiaSourceVector", stl, dp)
+                res = afwDet.PersistableDiaSourceVector.swigConvert(persistable)
+                self.assertTrue(res == pdsv)
+            except:
+                f.close()
+                raise
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

@@ -245,7 +245,7 @@ void afwImage::operator/=(
 
 #define INSTANTIATE_SLICE_OPEQ(TYPE, OP)                                \
     template void afwImage::operator OP(afwImage::Image<TYPE> &img,     \
-                                        afwImage::ImageSlice<TYPE> const &slc);
+                                        afwImage::ImageSlice<TYPE> const &slc)
 
 
 
@@ -258,7 +258,7 @@ void afwImage::operator/=(
     INSTANTIATE_SLICE_OPEQ(TYPE, +=);                                   \
     INSTANTIATE_SLICE_OPEQ(TYPE, -=);                                   \
     INSTANTIATE_SLICE_OPEQ(TYPE, *=);                                   \
-    INSTANTIATE_SLICE_OPEQ(TYPE, /=);
+    INSTANTIATE_SLICE_OPEQ(TYPE, /=)
 
 
 INSTANTIATE_SLICES(double);

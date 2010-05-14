@@ -59,7 +59,7 @@ namespace cfitsio {
         
     int ttypeFromBitpix(const int bitpix);
 
-    void move_to_hdu(lsst::afw::image::cfitsio::fitsfile *fd, int hdu, bool relative = false);
+    void move_to_hdu(lsst::afw::image::cfitsio::fitsfile *fd, int hdu, bool relative=false);
 
     void appendKey(lsst::afw::image::cfitsio::fitsfile* fd, std::string const &keyWord,
                    std::string const& keyComment, boost::shared_ptr<const lsst::daf::base::PropertySet> metadata);
@@ -177,6 +177,7 @@ class fits_file_mgr {
 protected:
     boost::shared_ptr<FD> _fd;
     std::string _filename;                               ///< filename
+    std::string _flags;                                  ///< flags used to open file
     
     struct null_deleter { void operator()(void const*) const {} };
     //
@@ -197,13 +198,13 @@ protected:
     fits_file_mgr(FD* file) : _fd(file, null_deleter()) {}
 
     fits_file_mgr(const std::string& filename, const std::string& flags) :
-        _fd(static_cast<FD *>(NULL)), _filename(filename) {
+        _fd(static_cast<FD *>(NULL)), _filename(filename), _flags(flags) {
         if (flags == "r" || flags == "rb") {
             int status = 0;
             if (fits_open_file(&_fd_s, filename.c_str(), READONLY, &status) != 0) {
                 throw LSST_EXCEPT(FitsException, cfitsio::err_msg(filename, status));
             }
-        } else if (flags == "w" || flags == "wb") {
+        } else if (flags == "w" || flags == "wb" || flags == "pdu") {
             int status = 0;
             (void)unlink(filename.c_str()); // cfitsio doesn't like over-writing files
             if (fits_create_file(&_fd_s, filename.c_str(), &status) != 0) {
@@ -247,7 +248,7 @@ protected:
     BBox const& _bbox;                                   //!< Bounding Box of desired part of data
 
     void init() {
-        move_to_hdu(_fd.get(), _hdu);
+        move_to_hdu(_fd.get(), _hdu, false);
 
         /* get image data type */
         int bitpix = 0;     // BITPIX from FITS header
@@ -392,8 +393,14 @@ public:
         const int BITPIX = detail::fits_read_support_private<View>::BITPIX;
 
         int status = 0;
-        if (fits_create_img(_fd.get(), BITPIX, nAxis, nAxes, &status) != 0) {
-            throw LSST_EXCEPT(FitsException, cfitsio::err_msg(_fd.get(), status));
+        if (_flags == "pdu") {
+            if (fits_create_img(_fd.get(), 8, 0, nAxes, &status) != 0) {
+                throw LSST_EXCEPT(FitsException, cfitsio::err_msg(_fd.get(), status));
+            }
+        } else {
+            if (fits_create_img(_fd.get(), BITPIX, nAxis, nAxes, &status) != 0) {
+                throw LSST_EXCEPT(FitsException, cfitsio::err_msg(_fd.get(), status));
+            }
         }
         /*
          * Write metadata to header.  
@@ -412,6 +419,10 @@ public:
             }
         }
 #endif
+        if (_flags == "pdu") {            // no data to write
+            return;
+        }
+        
         /*
          * Write the data itself
          */

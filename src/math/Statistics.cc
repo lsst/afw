@@ -14,6 +14,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/Statistics.h"
+#include "lsst/utils/ieee.h"
 
 using namespace std;
 namespace afwImage = lsst::afw::image;
@@ -73,7 +74,7 @@ class CheckFinite {
 public:
     template<typename T>
     bool operator()(T val) const {
-        return !std::isnan(static_cast<float>(val));
+        return !lsst::utils::isnan(static_cast<float>(val));
     }
 };
 
@@ -443,7 +444,7 @@ afwMath::Statistics::StandardReturn afwMath::Statistics::_getStandard(
     double const center = clipinfo.first;
     double const cliplimit = clipinfo.second;
 
-    if (isnan(center) || isnan(cliplimit)) {
+    if (lsst::utils::isnan(center) || lsst::utils::isnan(cliplimit)) {
         //return afwMath::Statistics::StandardReturn(mean, variance, min, max, sum + center*n);
         return afwMath::Statistics::StandardReturn(NaN, NaN, NaN, NaN, NaN);
     }

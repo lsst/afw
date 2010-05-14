@@ -58,8 +58,8 @@ namespace image {
         ImageList _eigenImages;           // Eigen images
     };
 
-template <typename ImageT>
-double innerProduct(ImageT const& lhs, ImageT const& rhs);
+template <typename Image1T, typename Image2T>
+double innerProduct(Image1T const& lhs, Image2T const& rhs, int const border=0);
     
 }}}
 

@@ -71,7 +71,7 @@ namespace image {
         virtual lsst::afw::coord::Coord::Ptr pixelToSky(const lsst::afw::geom::PointD pixel) const;
         
         virtual lsst::afw::geom::PointD skyToPixel(double sky1, double sky2) const;
-        virtual lsst::afw::geom::PointD skyToPixel(const lsst::afw::coord::Coord::Ptr coord) const;
+        virtual lsst::afw::geom::PointD skyToPixel(const lsst::afw::coord::Coord::ConstPtr coord) const;
 
         
         bool hasDistortion() const {    return _hasDistortion;};

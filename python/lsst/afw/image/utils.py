@@ -35,3 +35,7 @@ def defineFiltersFromPolicy(filterPolicy, reset=False):
 
     for p in filterPolicy.getArray("Filter"):
         afwImage.Filter.define(afwImage.FilterProperty(p.get("name"), p))
+        if p.exists("alias"):
+            for a in p.getArray("alias"):
+                afwImage.Filter.defineAlias(p.get("name"), a)
+            

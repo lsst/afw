@@ -145,10 +145,6 @@ private:
         T &,
         lsst::afw::detection::Source const &
     );
-    static void setupFetch(
-        lsst::daf::persistence::DbStorage &,
-        lsst::afw::detection::Source &
-    );
 };
 
 

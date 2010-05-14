@@ -155,34 +155,34 @@ public :
     
     bool operator==(DiaSource const & d) const;
 private :
-    boost::int64_t  _ssmId;
-    boost::int64_t  _diaSourceToId;
-    boost::int64_t  _flagClassification;
-    double  _lengthDeg;
-    double  _valX1;
-    double  _valX2;
-    double  _valY1;
-    double  _valY2;
-    double  _valXY;
-    float   _refFlux;
+    boost::int64_t _ssmId;
+    boost::int64_t _diaSourceToId;
+    boost::int64_t _flagClassification;
+    double _lengthDeg;
+    double _valX1;
+    double _valX2;
+    double _valY1;
+    double _valY2;
+    double _valXY;
+    float _refFlux;
     boost::int32_t _scId;
     std::string _obsCode;
-    char    _isSynthetic;
-    char    _mopsStatus;
+    char _isSynthetic;
+    char _mopsStatus;
 
 
     template <typename Archive> 
     void serialize(Archive & ar, unsigned int const version) {    
         ar & _diaSourceToId;
         ar & _scId;
-        ar & _ssmId;        
-        ar & _lengthDeg;        
-        ar & _refFlux;
-        ar & _valX1;
-        ar & _valX2;
-        ar & _valY1;
-        ar & _valY2;
-        ar & _valXY;
+        ar & _ssmId;
+        fpSerialize(ar, _lengthDeg);
+        fpSerialize(ar, _refFlux);
+        fpSerialize(ar, _valX1);
+        fpSerialize(ar, _valX2);
+        fpSerialize(ar, _valY1);
+        fpSerialize(ar, _valY2);
+        fpSerialize(ar, _valXY);
         ar & _obsCode;
         ar & _isSynthetic;
         ar & _mopsStatus;

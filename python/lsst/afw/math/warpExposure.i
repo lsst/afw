@@ -1,6 +1,7 @@
 // -*- lsst-c++ -*-
 %{
 #include "lsst/afw/math/warpExposure.h"
+#include "lsst/afw/image/Mask.h"
 %}
 
 //
@@ -63,3 +64,5 @@ imageTransforms(boost::uint16_t);
 imageTransforms(int);
 imageTransforms(float);
 imageTransforms(double);
+%template(rotateImageBy90) lsst::afw::math::rotateImageBy90<lsst::afw::image::Mask<boost::uint16_t> >;
+%template(flipImage) lsst::afw::math::flipImage<lsst::afw::image::Mask<boost::uint16_t> >;

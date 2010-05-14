@@ -68,8 +68,9 @@ public :
     /*!
      * Creates a Filter with the given name
      */
-    explicit Filter(std::string const& name ///< Name of filter
-                   ) : _id(_lookup(name)), _name(name) {}
+    explicit Filter(std::string const& name, ///< Name of filter
+                    bool const force=false   ///< Allow us to construct an unknown Filter
+                   ) : _id(_lookup(name, force)), _name(name) {}
     /**
      * Creates a Filter with the given identifier
      */
@@ -84,10 +85,7 @@ public :
      */
     std::string const& getName() const { return _name; }
     
-    FilterProperty const& getFilterProperty() const {
-        return FilterProperty::lookup(_name);
-    }
-
+    FilterProperty const& getFilterProperty() const;
     /**
      * Clear all definitions
      */
@@ -106,7 +104,7 @@ private :
     typedef std::tr1::unordered_map<unsigned int const, std::string const> IdMap;
 
     static void _initRegistry();
-    static int _lookup(std::string const& name);
+    static int _lookup(std::string const& name, bool const force=false);
     static std::string const& _lookup(int id);
 
     int _id;

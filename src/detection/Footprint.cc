@@ -14,6 +14,7 @@
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/math/KernelFunctions.h"
 #include "lsst/afw/detection/Footprint.h"
+#include "lsst/utils/ieee.h"
 
 namespace afwMath = lsst::afw::math;
 namespace afwDetect = lsst::afw::detection;
@@ -1066,7 +1067,7 @@ psErrorCode pmFootprintCullPeaks(psImage const *img, // the image wherein lives 
         assert (x >= 0 && x < subImg->numCols && y >= 0 && y < subImg->numRows);
         float const stdev = std::sqrt(subWt->data.F32[y][x]);
         float threshold = subImg->data.F32[y][x] - nsigma_delta*stdev;
-        if (isnan(threshold) || threshold < min_threshold) {
+        if (lsst::utils::isnan(threshold) || threshold < min_threshold) {
 #if 1                                   // min_threshold is assumed to be below the detection threshold,
                                         // so all the peaks are pmFootprint, and this isn't the brightest
             (void)psArrayRemoveIndex(fp->peaks, i);

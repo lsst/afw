@@ -13,6 +13,7 @@ import math
 import os
 import sys
 import unittest
+import eups
 
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions as pexExcept
@@ -62,12 +63,8 @@ class CameraGeomTestCase(unittest.TestCase):
     def setUp(self):
         CameraGeomTestCase.ampSerial = [0] # an array so we pass the value by reference
 
-        policyFile = pexPolicy.DefaultPolicyFile("afw", "CameraGeomDictionary.paf", "policy")
-        defPolicy = pexPolicy.Policy.createPolicy(policyFile, policyFile.getRepositoryPath(), True)
-
-        polFile = pexPolicy.DefaultPolicyFile("afw", "TestCameraGeom.paf", "tests")
-        self.geomPolicy = pexPolicy.Policy.createPolicy(polFile)
-        self.geomPolicy.mergeDefaults(defPolicy.getDictionary())
+        self.geomPolicy = cameraGeomUtils.getGeomPolicy(os.path.join(eups.productDir("afw"),
+                                                                     "tests", "TestCameraGeom.paf"))
 
     def tearDown(self):
         del self.geomPolicy

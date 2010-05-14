@@ -149,7 +149,11 @@ typename ImageT::Ptr cameraGeom::Amp::prepareAmpData(ImageT const& inImage)
 //
 #define INSTANTIATE(TYPE) \
     template afwImage::Image<TYPE>::Ptr cameraGeom::Amp::prepareAmpData(afwImage::Image<TYPE> const&);
+#define INSTANTIATEMASK(TYPE) \
+    template afwImage::Mask<TYPE>::Ptr cameraGeom::Amp::prepareAmpData(afwImage::Mask<TYPE> const&);
 
 INSTANTIATE(boost::uint16_t)
 INSTANTIATE(float)
+INSTANTIATE(double)
+INSTANTIATEMASK(boost::uint16_t)
 // \endcond

@@ -13,6 +13,7 @@ import math
 import os
 import sys
 import unittest
+import pyfits
 
 import lsst.pex.policy as pexPolicy
 import lsst.afw.geom as afwGeom
@@ -97,17 +98,30 @@ class SynthesizeCcdImage(GetCcdImage):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def getGeomPolicy(cameraGeomPolicyFile):
-    """Return a Policy describing a Camera's geometry"""
-    
-    if os.path.exists(cameraGeomPolicyFile):
-        return pexPolicy.Policy(cameraGeomPolicyFile)
+def mergeGeomDefaults(cameraGeomPolicy):
+   policyFile = pexPolicy.DefaultPolicyFile("afw", "CameraGeomDictionary.paf", "policy")
+   defPolicy = pexPolicy.Policy.createPolicy(policyFile, policyFile.getRepositoryPath(), True)
+
+   cameraGeomPolicy.mergeDefaults(defPolicy.getDictionary())
+   
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+def getGeomPolicy(cameraGeomPolicy):
+    """Return a Policy describing a Camera's geometry given a filename; the Policy will be validated using the
+    dictionary, and defaults will be supplied.  If you pass a Policy, it will be validated and completed.
+"""
 
     policyFile = pexPolicy.DefaultPolicyFile("afw", "CameraGeomDictionary.paf", "policy")
     defPolicy = pexPolicy.Policy.createPolicy(policyFile, policyFile.getRepositoryPath(), True)
 
-    policyFile = pexPolicy.DefaultPolicyFile("afw", cameraGeomPolicyFile, "examples")
-    geomPolicy = pexPolicy.Policy.createPolicy(policyFile, policyFile.getRepositoryPath(), True)
+    if isinstance(cameraGeomPolicy, pexPolicy.Policy):
+        geomPolicy = cameraGeomPolicy
+    else:
+        if os.path.exists(cameraGeomPolicy):
+            geomPolicy = pexPolicy.Policy.createPolicy(cameraGeomPolicy)
+        else:
+            policyFile = pexPolicy.DefaultPolicyFile("afw", cameraGeomPolicy, "examples")
+            geomPolicy = pexPolicy.Policy.createPolicy(policyFile, policyFile.getRepositoryPath(), True)
 
     geomPolicy.mergeDefaults(defPolicy.getDictionary())
 
@@ -115,7 +129,7 @@ def getGeomPolicy(cameraGeomPolicyFile):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def makeCcd(geomPolicy, ccdId=None, ccdInfo=None):
+def makeCcd(geomPolicy, ccdId=None, ccdInfo=None, defectDict={}):
     """Build a Ccd from a set of amplifiers given a suitable pex::Policy
 
 If ccdInfo is provided it's set to various facts about the CCDs which are used in unit tests.  Note
@@ -150,6 +164,12 @@ in particular that it has an entry ampSerial which is a single-element list, the
     # Actually build the Ccd
     #
     ccd = cameraGeom.Ccd(ccdId, pixelSize)
+    
+    for k in defectDict.keys():
+        if ccdId == k:
+            ccd.setDefects(defectDict[k])
+        else:
+            pass
 
     if nCol*nRow != len(ccdPol.getArray("Amp")):
         raise RuntimeError, ("Expected location of %d amplifiers, got %d" % \
@@ -244,7 +264,7 @@ in particular that it has an entry ampSerial which is a single-element list, the
 
     return ccd
 
-def makeRaft(geomPolicy, raftId=None, raftInfo=None):
+def makeRaft(geomPolicy, raftId=None, raftInfo=None, defectDict={}):
     """Build a Raft from a set of CCDs given a suitable pex::Policy
     
 If raftInfo is provided it's set to various facts about the Rafts which are used in unit tests.  Note in
@@ -315,7 +335,7 @@ particular that it has an entry ampSerial which is a single-element list, the am
             raise RuntimeError, ("Amp location %d, %d is not in 0..%d, 0..%d" % (Col, Row, nCol, nRow))
 
         ccdId = cameraGeom.Id(ccdPol.get("serial"), ccdPol.get("name"))
-        ccd = makeCcd(geomPolicy, ccdId, ccdInfo=ccdInfo)
+        ccd = makeCcd(geomPolicy, ccdId, ccdInfo=ccdInfo, defectDict=defectDict)
 
         raft.addDetector(afwGeom.makePointI(Col, Row),
                          afwGeom.makePointD(xc, yc),
@@ -375,12 +395,17 @@ particular that it has an entry ampSerial which is a single-element list, the am
     if not cameraId:
         cameraId = cameraGeom.Id(cameraPol.get("serial"), cameraPol.get("name"))
     camera = cameraGeom.Camera(cameraId, nCol, nRow)
+   
+    if geomPolicy.get("Defects").get("Raft").get("Ccd").isPolicy("Defect"):
+        defDict = makeDefects(geomPolicy)
+    else:
+        defDict = {}
 
     for raftPol in cameraPol.getArray("Raft"):
         Col, Row = raftPol.getArray("index")
         xc, yc = raftPol.getArray("offset")
         raftId = cameraGeom.Id(raftPol.get("serial"), raftPol.get("name"))
-        raft = makeRaft(geomPolicy, raftId, raftInfo)
+        raft = makeRaft(geomPolicy, raftId, raftInfo, defectDict=defDict)
         camera.addDetector(afwGeom.makePointI(Col, Row),
                            afwGeom.makePointD(xc, yc), cameraGeom.Orientation(), raft)
 
@@ -761,6 +786,28 @@ def findRaft(parent, id):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+def makeDefectsFromFits(filename):
+    """Create a dictionary of DefectSets from a fits file with one ccd worth
+    of defects per extension.
+
+       The dictionay is indexed by an Id object --- remember to compare by str(id) not object identity
+    """
+    hdulist = pyfits.open(filename)
+    defects = {}
+    for hdu in hdulist[1:]:
+        id = cameraGeom.Id(hdu.header['serial'], hdu.header['name'])
+        data = hdu.data
+        defectList = []
+        for i in range(len(data)):
+            bbox = afwImage.BBox(afwImage.PointI(int(data[i]['x0']),\
+                int(data[i]['y0'])), int(data[i]['width']),\
+                int(data[i]['height']))
+            defectList.append(afwImage.DefectBase(bbox))
+        defects[id] = defectList
+    return defects
+
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 def makeDefects(geomPolicy):
     """Create a dictionary of DefectSets from a pexPolicy::Policy
 
@@ -816,5 +863,5 @@ The dictionay is indexed by an Id object --- remember to compare by str(id) not 
                 bbox = afwImage.BBox(afwImage.PointI(x0, y0), afwImage.PointI(x1, y1))
                 defects.push_back(afwImage.DefectBase(bbox))
 
-        return defectsDict
+    return defectsDict
 

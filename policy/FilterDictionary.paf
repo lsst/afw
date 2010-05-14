@@ -23,6 +23,11 @@ definitions: {
                     maxOccurs: 1
                     default: "Unknown"
                 }
+                alias: {
+                    type: string
+                    description: "Alternative name for this filter"
+                    minOccurs: 0
+                }
                 lambdaEff: {
                     type: double
                     description: "Effective wavelength of filter"

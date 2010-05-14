@@ -115,18 +115,18 @@ private :
     double _raObject;
     double _decObject;
     double _petroFlux;  
-    float  _petroFluxErr;
-    float  _sky;
-    float  _skyErr;
+    float _petroFluxErr;
+    float _sky;
+    float _skyErr;
 
     template <typename Archive> 
     void serialize(Archive & ar, unsigned int const version) {
-        ar & _raObject;
-        ar & _decObject;
-        ar & _petroFlux;
-        ar & _petroFluxErr;
-        ar & _sky;
-        ar & _skyErr;
+        fpSerialize(ar, _raObject);
+        fpSerialize(ar, _decObject);
+        fpSerialize(ar, _petroFlux);
+        fpSerialize(ar, _petroFluxErr);
+        fpSerialize(ar, _sky);
+        fpSerialize(ar, _skyErr);
 
         BaseSourceAttributes<NUM_SOURCE_NULLABLE_FIELDS>::serialize(ar, version);
     }

@@ -255,24 +255,52 @@ void ImagePca<ImageT>::analyze() {
 }
 
 /*******************************************************************************************************/    
+namespace {
+    template<typename T, typename U>
+    struct IsSame {
+        IsSame(T const&, U const&) {}
+        bool operator()() { return false; }
+    };
+
+    template<typename T>
+    struct IsSame<T, T> {
+        IsSame(T const& im1, T const& im2) : _same(im1.row_begin(0) == im2.row_begin(0)) {}
+        bool operator()() { return _same; }
+    private:
+        bool _same;
+    };
+
+    // Test if two Images are identical; they need not be of the same type
+    template<typename Image1T, typename Image2T>
+    bool imagesAreIdentical(Image1T const& im1, Image2T const& im2) {
+        return IsSame<Image1T, Image2T>(im1, im2)();
+    }
+}
 /**
  * Calculate the inner product of two %images
  * @return The inner product
  * @throw lsst::pex::exceptions::LengthErrorException if all the images aren't the same size
  */
-template <typename ImageT>
-double innerProduct(ImageT const& lhs, ///< first image
-                    ImageT const& rhs  ///< Other image to dot with first
+template <typename Image1T, typename Image2T>
+double innerProduct(Image1T const& lhs, ///< first image
+                    Image2T const& rhs, ///< Other image to dot with first
+                    int border          ///< number of pixels to ignore around the edge
                    ) {
+    if (lhs.getWidth() <= 2*border || lhs.getHeight() <= 2*border) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+                          (boost::format("All image pixels are in the border of width %d: %dx%d") %
+                           border % lhs.getWidth() % lhs.getHeight()).str());
+    }
+
     double sum = 0.0;
     //
     // Handle I.I specially for efficiency, and to avoid advancing the iterator twice
     //
-    if (lhs.row_begin(0) == rhs.row_begin(0)) {
-        for (int y = 0; y != lhs.getHeight(); ++y) {
-            for (typename ImageT::const_x_iterator lptr = lhs.row_begin(y), lend = lhs.row_end(y);
-                 lptr != lend; ++lptr) {
-                typename ImageT::Pixel val = *lptr;
+    if (imagesAreIdentical(lhs, rhs)) {
+        for (int y = border; y != lhs.getHeight() - border; ++y) {
+            for (typename Image1T::const_x_iterator lptr = lhs.row_begin(y) + border,
+                     lend = lhs.row_end(y) - border; lptr != lend; ++lptr) {
+                typename Image1T::Pixel val = *lptr;
                 sum += val*val;
             }
         }
@@ -283,9 +311,10 @@ double innerProduct(ImageT const& lhs, ///< first image
                                lhs.getWidth() % lhs.getHeight() % rhs.getWidth() % rhs.getHeight()).str());
         }
 
-        for (int y = 0; y != lhs.getHeight(); ++y) {
-            for (typename ImageT::const_x_iterator lptr = lhs.row_begin(y), lend = lhs.row_end(y),
-                     rptr = rhs.row_begin(y); lptr != lend; ++lptr, ++rptr) {
+        for (int y = border; y != lhs.getHeight() - border; ++y) {
+            typename Image2T::const_x_iterator rptr = rhs.row_begin(y) + border;
+            for (typename Image1T::const_x_iterator lptr = lhs.row_begin(y) + border,
+                     lend = lhs.row_end(y) - border; lptr != lend; ++lptr, ++rptr) {
                 sum += (*lptr)*(*rptr);
             }
         }
@@ -300,12 +329,17 @@ double innerProduct(ImageT const& lhs, ///< first image
 //
 #define INSTANTIATE(T) \
     template class ImagePca<Image<T> >; \
-    template double innerProduct(Image<T> const&, Image<T> const&);
+    template double innerProduct(Image<T> const&, Image<T> const&, int);
+
+#define INSTANTIATE2(T, U)                \
+    template double innerProduct(Image<T> const&, Image<U> const&, int);    \
+    template double innerProduct(Image<U> const&, Image<T> const&, int);
 
 INSTANTIATE(boost::uint16_t)
 INSTANTIATE(int)
 INSTANTIATE(float)
 INSTANTIATE(double)
 
+INSTANTIATE2(float, double)             // the two types must be different
     
 }}}

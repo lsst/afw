@@ -183,7 +183,8 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
         try {
             _filter = Filter(filterName);
         } catch(lsst::pex::exceptions::NotFoundException &) {
-            lsst::pex::logging::TTrace<3>("afw.image.exposure", "Unknown filter %s", filterName.c_str());
+            lsst::pex::logging::TTrace<1>("afw.image.exposure", "Unknown filter %s", filterName.c_str());
+            _filter = Filter(filterName, true); // force the filter to be defined
         }
     }
 

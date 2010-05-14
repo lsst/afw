@@ -413,7 +413,7 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
     // - create a subimage with a bounding box, and get the stats and assign the value to the output image
     if (dimension == 'x') {
         imgOut = typename MImage::Ptr(new MImage(1, image.getHeight()));
-        int y = 0;
+        int y = y0;
         typename MImage::y_iterator oEnd = imgOut->col_end(0);
         for (typename MImage::y_iterator oPtr = imgOut->col_begin(0); oPtr != oEnd; ++oPtr, ++y) {
             afwImage::BBox bbox = afwImage::BBox(afwImage::PointI(x0, y), image.getWidth(), 1);
@@ -425,7 +425,7 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
 
     } else if (dimension == 'y') {
         imgOut = typename MImage::Ptr(new MImage(image.getWidth(), 1));
-        int x = 0;
+        int x = x0;
         typename MImage::x_iterator oEnd = imgOut->row_end(0);
         for (typename MImage::x_iterator oPtr = imgOut->row_begin(0); oPtr != oEnd; ++oPtr, ++x) {
             afwImage::BBox bbox = afwImage::BBox(afwImage::PointI(x, y0), 1, image.getHeight());
