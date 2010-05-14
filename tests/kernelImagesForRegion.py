@@ -125,12 +125,6 @@ class KernelImagesForRegion(unittest.TestCase):
                     desPixIndex)
             )
     
-    def XXXtestGetSubregions(self):
-        """Would like to test getSubregions(); but the returned object is opaque so can't do much
-        """
-        region = mathDetail.KernelImagesForRegion(self.kernel, self.bbox, False)
-        subregionList = region.getSubregions()
-
     def testInterpolateImage(self):
         region = mathDetail.KernelImagesForRegion(self.kernel, self.bbox, False)
         actImage = afwImage.ImageD(self.kernel.getWidth(), self.kernel.getHeight())

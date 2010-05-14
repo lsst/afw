@@ -5,6 +5,13 @@
 
 SWIG_SHARED_PTR_DERIVED(KernelImagesForRegion,
     lsst::daf::data::LsstBase, lsst::afw::math::detail::KernelImagesForRegion);
+    
+// Hide methods that return KernelImagesForRegion::List since can cause a memory leak and is opaque anyway
+//
+// @todo: swig KernelImagesForRegion::List; I don't know how to swig a collection of shared pointers
+// (and when it was a collection of objects instead of pointers it would not swig because
+// KernelImagesForRegion has no default constructor)
+%ignore lsst::afw::math::detail::KernelImagesForRegion::getSubregions;
 
 %include "lsst/afw/math/detail/Convolve.h"
 //
@@ -21,8 +28,6 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
 %enddef
 
 // Next a macro to generate needed instantiations for IMAGE (e.g. %MASKEDIMAGE) and the specified pixel types
-//
-// @todo put convolveWith... functions in lsst.afw.math.detail instead of lsst.afw.math
 //
 // Note that IMAGE is a macro, not a class name
 %define %templateConvolveByType(IMAGE, PIXTYPE1, PIXTYPE2)
@@ -55,7 +60,3 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
 %templateConvolve(float, boost::uint16_t);
 %templateConvolve(int, int);
 %templateConvolve(boost::uint16_t, boost::uint16_t);
-
-// Note: cannot swig std::vector<lsst::afw::math::detail::KernelImagesForRegion> in the obvious way:
-// %template(KernelImagesForRegionList) std::vector<lsst::afw::math::detail::KernelImagesForRegion>;
-// because there is no KernelImagesForRegionList default constructor. Sigh.
