@@ -14,6 +14,8 @@ Basic routines to talk to lsst::afw::image classes
 
 
 %{
+#include "boost/cstdint.hpp"
+
 #include "lsst/daf/base.h"
 #include "lsst/daf/data.h"
 #include "lsst/daf/persistence.h"
@@ -26,7 +28,6 @@ Basic routines to talk to lsst::afw::image classes
 #include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/image/Defect.h"
 
-#include "boost/cstdint.hpp"
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_IMAGE_NUMPY_ARRAY_API
 #include "numpy/arrayobject.h"
 #include "lsst/afw/numpyTypemaps.h"

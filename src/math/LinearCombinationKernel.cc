@@ -234,9 +234,13 @@ void afwMath::LinearCombinationKernel::_setKernelList(KernelList const &kernelLi
     _kernelSumList.clear();
     _kernelImagePtrList.clear();
     _kernelList.clear();
+    _isDeltaFunctionBasis = true;
     for (KernelList::const_iterator kIter = kernelList.begin(), kEnd = kernelList.end();
         kIter != kEnd; ++kIter) {
         Kernel::Ptr basisKernelPtr = (*kIter)->clone();
+        if (dynamic_cast<afwMath::DeltaFunctionKernel const *>(&(*basisKernelPtr)) == 0) {
+            _isDeltaFunctionBasis = false;
+        }
         _kernelList.push_back(basisKernelPtr);
         afwImage::Image<Pixel>::Ptr kernelImagePtr(new afwImage::Image<Pixel>(this->getDimensions()));
         _kernelSumList.push_back(basisKernelPtr->computeImage(*kernelImagePtr, false));

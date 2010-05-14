@@ -2,7 +2,7 @@
 #if !defined(LSST_AFW_COORD_UTILS_H)
 #define LSST_AFW_COORD_UTILS_H
 /**
- * @file Utils.h
+ * @file
  * @brief Header to declare constants and enums for Coord and Observatory
  * @ingroup afw
  * @author Steve Bickerton

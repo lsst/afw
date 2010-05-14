@@ -1,6 +1,9 @@
 /**
  * \file
- * \brief An include file to include the header files for lsst::afw::math
+ * \brief An include file to include the public header files for lsst::afw::math
+ *
+ * Note: this header file intentionally excludes math/detail header files because they define
+ * classes and functions which are not part of the public API.
  */
 #ifndef LSST_AFW_MATH_H
 #define LSST_AFW_MATH_H

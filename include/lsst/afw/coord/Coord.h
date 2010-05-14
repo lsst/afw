@@ -2,7 +2,7 @@
 #if !defined(LSST_AFW_COORD_COORD_H)
 #define LSST_AFW_COORD_COORD_H
 /**
- * @file Coord.h
+ * @file
  * @brief Functions to handle coordinates
  * @ingroup afw
  * @author Steve Bickerton

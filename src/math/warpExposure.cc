@@ -16,9 +16,8 @@
 #include <vector>
 #include <utility>
 
-#include <boost/cstdint.hpp> 
-#include <boost/format.hpp> 
-#include <boost/regex.hpp>
+#include "boost/cstdint.hpp" 
+#include "boost/regex.hpp"
 
 #include "lsst/pex/logging/Trace.h" 
 #include "lsst/pex/exceptions.h"
@@ -340,7 +339,7 @@ int afwMath::warpImage(
 #define IMAGE(PIXTYPE) afwImage::Image<PIXTYPE>
 #define NL /* */
 
-#define WarpFunctionsByType(DESTIMAGEPIXELT, SRCIMAGEPIXELT) \
+#define INSTANTIATE(DESTIMAGEPIXELT, SRCIMAGEPIXELT) \
     template int afwMath::warpImage( \
         IMAGE(DESTIMAGEPIXELT) &destImage, \
         afwImage::Wcs const &destWcs, \
@@ -358,10 +357,12 @@ int afwMath::warpImage(
         EXPOSURE(SRCIMAGEPIXELT) const &srcExposure, \
         SeparableKernel &warpingKernel);
 
-WarpFunctionsByType(float, boost::uint16_t)
-WarpFunctionsByType(double, boost::uint16_t)
-WarpFunctionsByType(float, int)
-WarpFunctionsByType(double, int)
-WarpFunctionsByType(float, float)
-WarpFunctionsByType(double, float)
-WarpFunctionsByType(double, double)
+INSTANTIATE(double, double)
+INSTANTIATE(double, float)
+INSTANTIATE(double, int)
+INSTANTIATE(double, boost::uint16_t)
+INSTANTIATE(float, float)
+INSTANTIATE(float, int)
+INSTANTIATE(float, boost::uint16_t)
+INSTANTIATE(int, int)
+INSTANTIATE(boost::uint16_t, boost::uint16_t)
