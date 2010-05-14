@@ -7,15 +7,14 @@ import lsst.tests
 import lsst.daf.persistence
 import lsst.SConsUtils as scons # scons 1.17 supports "env.ProductDir", but for now use scons.ProductDir
 
-print "C++ TESTS DISABLED"
-# for fileName in glob.glob("*.cc"):
-#     if fileName == "maskIo2.cc":       # This test appears to be invalid
-#         continue
-# 
-#     if re.search(r"_wrap.cc", fileName): # not designed to be independently built!
-#         continue
-# 
-#     env.Program(fileName, LIBS=env.getlibs("afw"))
+for fileName in glob.glob("*.cc"):
+    if fileName == "maskIo2.cc":       # This test appears to be invalid
+        continue
+
+    if re.search(r"_wrap.cc", fileName): # not designed to be independently built!
+        continue
+
+    env.Program(fileName, LIBS=env.getlibs("afw"))
 
 env.CheckSwig("python", ilang="c++",
               includedProducts="afw utils daf_base pex_exceptions pex_logging pex_policy daf_persistence daf_data security")
@@ -54,11 +53,10 @@ else:
                 ]
     tests = lsst.tests.Control(env, args = testArgs, ignoreList=ignoreList, verbose = True)
 
-    print "SKIPPING ALL TESTS EXCEPT CONVOLUTION; RE-ENABLE TESTS!"
-#    tests.run("*.cc")
+    tests.run("*.cc")
 
     # set up python tests
-    for target in tests.run("convolve1.py"): # tests.run("*.py"):
+    for target in tests.run("*.py"):
         for pkgName in ("detection", "display", "image", "math", "geom"):
             env.Depends(target, os.path.join(
                 "#python", "lsst", "afw", pkgName, "_%sLib%s" % (pkgName, env["LDMODULESUFFIX"])))
