@@ -200,13 +200,12 @@ def run():
     getSeparableKernel(5, (10, 10))
     timeSet(outImage, inImage, getAnalyticKernel,
         "AnalyticKernel", convControl)
-    print "HACK: disabled most tests"
-#     timeSet(outImage, inImage, getSeparableKernel,
-#         "SeparableKernel", convControl, stdOnly=True)
-#     timeSet(outImage, inImage, getGaussianLinearCombinationKernel,
-#         "LinearCombinationKernel with 5 Gaussian Basis Kernels", convControl)
-#     timeSet(outImage, inImage, getDeltaLinearCombinationKernel,
-#         "LinearCombinationKernel with Delta Function Basis", convControl, stdOnly=True)
+    timeSet(outImage, inImage, getSeparableKernel,
+        "SeparableKernel", convControl, stdOnly=True)
+    timeSet(outImage, inImage, getGaussianLinearCombinationKernel,
+        "LinearCombinationKernel with 5 Gaussian Basis Kernels", convControl)
+    timeSet(outImage, inImage, getDeltaLinearCombinationKernel,
+        "LinearCombinationKernel with Delta Function Basis", convControl, stdOnly=True)
 
 if __name__ == "__main__":
     run()

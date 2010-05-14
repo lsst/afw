@@ -24,8 +24,8 @@
 namespace afwMath = lsst::afw::math;
 
 namespace {
-    /**
-     * @brief Minuit wrapper for a function(x)
+    /*
+     * Minuit wrapper for a function(x)
      */
     template<typename ReturnT>
     class MinimizerFunctionBase1 : public ROOT::Minuit2::FCNBase, public lsst::daf::data::LsstBase {
@@ -56,8 +56,8 @@ namespace {
         double _errorDef;
     };
         
-    /**
-     * @brief Minuit wrapper for a function(x, y)
+    /*
+     * Minuit wrapper for a function(x, y)
      */
     template<typename ReturnT>
     class MinimizerFunctionBase2 : public ROOT::Minuit2::FCNBase, public lsst::daf::data::LsstBase {
@@ -160,7 +160,7 @@ double MinimizerFunctionBase2<ReturnT>::operator() (const std::vector<double>& p
 }
 
 /**
- * @brief Find the minimum of a function(x)
+ * Find the minimum of a function(x)
  *
  * @return true if minimum is valid, false otherwise
  *
@@ -244,7 +244,7 @@ afwMath::FitResults afwMath::minimize(
 
 
 /**
- * @brief Find the minimum of a function(x, y)
+ * Find the minimum of a function(x, y)
  *
  * Uses the Minuit fitting package with a standard definition of chiSq.
  * (see MinimizerFunctionBase2).
