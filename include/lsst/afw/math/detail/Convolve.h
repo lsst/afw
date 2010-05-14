@@ -12,6 +12,8 @@
  */
 #include <sstream>
 
+#include "boost/shared_ptr.hpp"
+
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/image/Image.h"
@@ -85,9 +87,11 @@ namespace detail {
     public:
         typedef lsst::afw::math::Kernel::ConstPtr KernelConstPtr;
         typedef lsst::afw::image::Image<lsst::afw::math::Kernel::Pixel> Image;
+        typedef boost::shared_ptr<const KernelImagesForRegion> ConstPtr;
+        typedef boost::shared_ptr<KernelImagesForRegion> Ptr;
         typedef Image::Ptr ImagePtr;
         typedef Image::ConstPtr ImageConstPtr;
-        typedef std::vector<KernelImagesForRegion> List;
+        typedef std::vector<ConstPtr> List;
         /**
          * locations of various points in the region
          *
@@ -135,8 +139,8 @@ namespace detail {
          */
         KernelConstPtr getKernel() const { return _kernelPtr; };
         lsst::afw::geom::Point2I getPixelIndex(Location location) const;
-        std::vector<KernelImagesForRegion> getSubregions() const;
-        std::vector<KernelImagesForRegion> getSubregions(int nx, int ny) const;
+        List getSubregions() const;
+        List getSubregions(int nx, int ny) const;
         void interpolateImage(Image &outImage, Location location) const;
         bool isInterpolationOk(double maxInterpolationError) const;
         /**

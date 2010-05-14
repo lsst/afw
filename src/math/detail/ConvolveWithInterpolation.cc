@@ -82,19 +82,19 @@ void mathDetail::convolveWithInterpolation(
     pexLog::TTrace<4>("lsst.afw.math.convolve",
         "convolveWithInterpolation: divide into %d x %d subregions", nx, ny);
 
-    std::vector<KernelImagesForRegion> subregionList = goodRegion.getSubregions(nx, ny);
+    KernelImagesForRegion::List subregionList = goodRegion.getSubregions(nx, ny);
 
-    for (std::vector<KernelImagesForRegion>::iterator regionPtr = subregionList.begin();
-        regionPtr != subregionList.end(); ++regionPtr) {
+    for (KernelImagesForRegion::List::const_iterator rgnIter = subregionList.begin();
+        rgnIter != subregionList.end(); ++rgnIter) {
         pexLog::TTrace<1>("lsst.afw.math.convolve",
             "convolveWithInterpolation: bbox minimum=(%d, %d), extent=(%d, %d)",
-                regionPtr->getBBox().getMinX(), regionPtr->getBBox().getMinY(),
-                regionPtr->getBBox().getWidth(), regionPtr->getBBox().getHeight());
+                (*rgnIter)->getBBox().getMinX(), (*rgnIter)->getBBox().getMinY(),
+                (*rgnIter)->getBBox().getWidth(), (*rgnIter)->getBBox().getHeight());
     }            
    
-    for (std::vector<KernelImagesForRegion>::iterator regionPtr = subregionList.begin();
-        regionPtr != subregionList.end(); ++regionPtr) {
-        convolveRegionWithRecursiveInterpolation(outImage, inImage, *regionPtr,
+    for (KernelImagesForRegion::List::const_iterator rgnIter = subregionList.begin();
+        rgnIter != subregionList.end(); ++rgnIter) {
+        convolveRegionWithRecursiveInterpolation(outImage, inImage, *(*rgnIter),
             convolutionControl.getMaxInterpolationError());
     }            
 }
@@ -145,19 +145,19 @@ void mathDetail::convolveRegionWithRecursiveInterpolation(
         // convolve region using linear interpolation
         pexLog::TTrace<6>("lsst.afw.math.convolve",
             "convolveRegionWithRecursiveInterpolation: linear interpolation is OK; use it");
-        KernelImagesForRegion::List rgnList = region.getSubregions();
-        for (KernelImagesForRegion::List::const_iterator regionPtr = rgnList.begin();
-            regionPtr != rgnList.end(); ++regionPtr) {
-            convolveRegionWithInterpolation(outImage, inImage, *regionPtr);
+        KernelImagesForRegion::List subregionList = region.getSubregions();
+        for (KernelImagesForRegion::List::const_iterator rgnIter = subregionList.begin();
+            rgnIter != subregionList.end(); ++rgnIter) {
+            convolveRegionWithInterpolation(outImage, inImage, *(*rgnIter));
         }
     } else {
         // linear interpolation wasn't good enough; divide region into 2x2 subregions and recurse on those
         pexLog::TTrace<6>("lsst.afw.math.convolve",
             "convolveRegionWithRecursiveInterpolation: linear interpolation unsuitable; recurse");
-        KernelImagesForRegion::List rgnList = region.getSubregions();
-        for (KernelImagesForRegion::List::const_iterator regionPtr = rgnList.begin();
-            regionPtr != rgnList.end(); ++regionPtr) {
-            convolveRegionWithRecursiveInterpolation(outImage, inImage, *regionPtr, maxInterpolationError);
+        KernelImagesForRegion::List subregionList = region.getSubregions();
+        for (KernelImagesForRegion::List::const_iterator rgnIter = subregionList.begin();
+            rgnIter != subregionList.end(); ++rgnIter) {
+            convolveRegionWithRecursiveInterpolation(outImage, inImage, *(*rgnIter), maxInterpolationError);
         }
     }
 }

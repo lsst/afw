@@ -171,20 +171,20 @@ const {
  *
  * @return a list of subregions in order: bottom left, bottom right, top left, top right
  */
-std::vector<mathDetail::KernelImagesForRegion>
+mathDetail::KernelImagesForRegion::List
 mathDetail::KernelImagesForRegion::getSubregions() const {
-    std::vector<KernelImagesForRegion> retList;
+    List retList;
     
-    retList.push_back(KernelImagesForRegion(
+    retList.push_back(KernelImagesForRegion::ConstPtr(new KernelImagesForRegion(
         _kernelPtr,
         afwGeom::BoxI(_bbox.getMin(), _centerIndex - afwGeom::Extent2I(1)),
         _doNormalize,
         getImage(BOTTOM_LEFT),
         getImage(BOTTOM),
         getImage(LEFT),
-        getImage(CENTER)));
+        getImage(CENTER))));
 
-    retList.push_back(KernelImagesForRegion(
+    retList.push_back(KernelImagesForRegion::ConstPtr(new KernelImagesForRegion(
         _kernelPtr,
         afwGeom::BoxI(
             afwGeom::Point2I::make(_centerIndex.getX(), _bbox.getMinY()),
@@ -193,9 +193,9 @@ mathDetail::KernelImagesForRegion::getSubregions() const {
         getImage(BOTTOM),
         getImage(BOTTOM_RIGHT),
         getImage(CENTER),
-        getImage(RIGHT)));
+        getImage(RIGHT))));
 
-    retList.push_back(KernelImagesForRegion(
+    retList.push_back(KernelImagesForRegion::ConstPtr(new KernelImagesForRegion(
         _kernelPtr,
         afwGeom::BoxI(
             afwGeom::Point2I::make(_bbox.getMinX(), _centerIndex.getY()),
@@ -204,16 +204,16 @@ mathDetail::KernelImagesForRegion::getSubregions() const {
         getImage(LEFT),
         getImage(CENTER),
         getImage(TOP_LEFT),
-        getImage(TOP)));
+        getImage(TOP))));
 
-    retList.push_back(KernelImagesForRegion(
+    retList.push_back(KernelImagesForRegion::ConstPtr(new KernelImagesForRegion(
         _kernelPtr,
         afwGeom::BoxI(_centerIndex, _bbox.getMax()),
         _doNormalize,
         getImage(CENTER),
         getImage(RIGHT),
         getImage(TOP),
-        getImage(TOP_RIGHT)));
+        getImage(TOP_RIGHT))));
 
     return retList;
 }
@@ -234,7 +234,7 @@ mathDetail::KernelImagesForRegion::getSubregions() const {
  * @throw lsst::pex::exceptions::InvalidParameterException if nx >= region width or ny >= region height.
  * @throw lsst::pex::exceptions::InvalidParameterException if nx < 1 or ny < 1.
  */
-std::vector<mathDetail::KernelImagesForRegion>
+mathDetail::KernelImagesForRegion::List
 mathDetail::KernelImagesForRegion::getSubregions(
         int nx, ///< number of x regions
         int ny) ///< number of y regions
@@ -247,7 +247,7 @@ const {
     typedef std::vector<int>::const_iterator IntIter;
     std::vector<int> widthList(_computeSubregionLengths(_bbox.getWidth(), nx));
     std::vector<int> heightList(_computeSubregionLengths(_bbox.getHeight(), ny));
-    std::vector<KernelImagesForRegion> retList;
+    List retList;
 
     afwGeom::Point2I leftCorner(_bbox.getMin());
     for (int yInd = 0, retInd = 0; yInd < ny; ++yInd) {
@@ -257,8 +257,8 @@ const {
             int width = widthList[xInd];
             if (xInd > 0) {
                 // there is a region to the left; get its right-hand images
-                blImagePtr = retList[retInd-1].getImage(BOTTOM_RIGHT);
-                tlImagePtr = retList[retInd-1].getImage(TOP_RIGHT);
+                blImagePtr = retList[retInd-1]->getImage(BOTTOM_RIGHT);
+                tlImagePtr = retList[retInd-1]->getImage(TOP_RIGHT);
             } else {
                 blImagePtr.reset();
                 tlImagePtr.reset();
@@ -266,19 +266,19 @@ const {
             if (yInd > 0) {
                 // there is a region below; get its top images
                 if (!blImagePtr) {
-                    blImagePtr = retList[retInd-nx].getImage(TOP_LEFT);
+                    blImagePtr = retList[retInd-nx]->getImage(TOP_LEFT);
                 }
-                brImagePtr = retList[retInd-nx].getImage(TOP_RIGHT);
+                brImagePtr = retList[retInd-nx]->getImage(TOP_RIGHT);
             }
 
-            retList.push_back(KernelImagesForRegion(
+            retList.push_back(KernelImagesForRegion::ConstPtr(new KernelImagesForRegion(
                 _kernelPtr,
                 afwGeom::BoxI(corner, afwGeom::Extent2I::make(width, height)),
                 _doNormalize,
                 blImagePtr,
                 brImagePtr,
                 tlImagePtr,
-                trImageNullPtr));
+                trImageNullPtr)));
             corner += afwGeom::Extent2I::make(width, 0);
         }
         leftCorner += afwGeom::Extent2I::make(0, height);
