@@ -374,6 +374,10 @@ Wcs::~Wcs() {
 }
     
 
+Wcs::Ptr Wcs::clone(void) const {
+    return Wcs::Ptr(new Wcs(*this));
+}
+
 
 //
 // Accessors

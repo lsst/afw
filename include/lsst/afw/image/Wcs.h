@@ -85,6 +85,7 @@ namespace image {
         Wcs(lsst::afw::image::Wcs const & rhs);
         Wcs & operator = (const Wcs &);        
         virtual ~Wcs();
+        virtual Ptr clone(void) const;
 
         //Accessors
         lsst::afw::geom::PointD getSkyOrigin() const;      //Return crval

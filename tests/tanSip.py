@@ -124,6 +124,13 @@ class TanSipTestCases(unittest.TestCase):
         dec = self.dec_100_100
         self.evalTanSip(ra, dec, x, y)
         
+    def testExposureIo(self):
+        e = afwImage.ExposureF(100, 100)
+        e.setWcs(self.wcs)
+        e.writeFits("exposureTanSip.fits")
+        md = afwImage.readMetadata("exposureTanSip.fits")
+        self.assertEqual(md.get("A_ORDER"), 2)
+        self.assertAlmostEqual(md.get("A_0_2"), 1.212767765974218E-09)
 
 #####
         

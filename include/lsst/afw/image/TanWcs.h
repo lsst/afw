@@ -66,6 +66,8 @@ namespace image {
         TanWcs & operator = (const TanWcs &);        
         inline ~TanWcs() {};
         
+        virtual lsst::afw::image::Wcs::Ptr clone(void) const;
+
         //Accessors
         virtual lsst::afw::coord::Coord::Ptr pixelToSky(double pix1, double pix2) const;
         virtual lsst::afw::coord::Coord::Ptr pixelToSky(const lsst::afw::geom::PointD pixel) const;

@@ -68,12 +68,12 @@ TanWcs::TanWcs(PropertySet::Ptr const fitsMetadata) :
 
     //Check for distorton terms. With two ctypes, there are 4 alternatives, only
     //two of which are valid.. Both have distortion terms or both don't. 
-    int nSip = (ctype1.substr(7, 4) == "-SIP")   ? 1 : 0;
-    nSip += (ctype2.substr(7, 4) == "-SIP") ? 1 : 0;
+    int nSip = (ctype1.substr(8, 4) == "-SIP")   ? 1 : 0;
+    nSip += (ctype2.substr(8, 4) == "-SIP") ? 1 : 0;
     
     switch (nSip) {
         case 0:
-            _hasDistortion = 0;
+            _hasDistortion = false;
             break;
         case 1:
             {//Invalid case. Throw an exception
@@ -82,7 +82,7 @@ TanWcs::TanWcs(PropertySet::Ptr const fitsMetadata) :
             }
             break;  //Not necessary, but looks naked without it.
         case 2:
-            _hasDistortion = 1;
+            _hasDistortion = true;
             
             //Hide the distortion from wcslib
             fitsMetadata->set<string>("CTYPE1", ctype1.substr(0,7));
@@ -239,6 +239,10 @@ TanWcs::TanWcs & TanWcs::operator = (const TanWcs & rhs){
     return *this;
 }
 
+///\brief Clone a TanWcs.
+afwImg::Wcs::Ptr TanWcs::clone(void) const {
+    return afwImg::Wcs::Ptr(new TanWcs(*this));
+}
 
 //
 // Accessors

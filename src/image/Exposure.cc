@@ -28,7 +28,6 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/image/Exposure.h"
-#include "lsst/afw/formatters/WcsFormatter.h"
 
 namespace afwImage = lsst::afw::image;
 
@@ -158,8 +157,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     // WCS keywords such as CDELT[12] they won't be stripped
     //
     {
-        lsst::daf::base::PropertySet::Ptr wcsMetadata =
-            lsst::afw::formatters::WcsFormatter::generatePropertySet(*_wcs);
+        lsst::daf::base::PropertySet::Ptr wcsMetadata = _wcs->getFitsMetadata();
         std::vector<std::string> paramNames = wcsMetadata->paramNames();
         for (std::vector<std::string>::const_iterator namePtr =
                  paramNames.begin(); namePtr != paramNames.end(); ++namePtr) {
@@ -220,7 +218,7 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::setMaskedImage(MaskedImageT &
  */   
 template<typename ImageT, typename MaskT, typename VarianceT> 
 void afwImage::Exposure<ImageT, MaskT, VarianceT>::setWcs(afwImage::Wcs const &wcs){
-    _wcs.reset(new afwImage::Wcs(wcs)); 
+    _wcs = wcs.clone();
 }
 
 
@@ -273,13 +271,13 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(
     //by this transformation
     afwImage::MaskedImage<ImageT> mi = getMaskedImage();
 
-    afwImage::Wcs::Ptr newWcs(new afwImage::Wcs(*_wcs)); //Create a copy
+    afwImage::Wcs::Ptr newWcs = _wcs->clone(); //Create a copy
     newWcs->shiftReferencePixel(-1*mi.getX0(), -1*mi.getY0() );
 
     //Create fits header
     PropertySet::Ptr outputMetadata = getMetadata()->deepCopy();
     // Copy wcsMetadata over to fits header
-    PropertySet::Ptr wcsMetadata = lsst::afw::formatters::WcsFormatter::generatePropertySet(*newWcs);
+    PropertySet::Ptr wcsMetadata = newWcs->getFitsMetadata();
     outputMetadata->combine(wcsMetadata);
     
     //Store _x0 and _y0. If this exposure is a portion of a larger image, _x0 and _y0
