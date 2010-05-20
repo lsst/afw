@@ -18,15 +18,9 @@ namespace lsst { namespace afw { namespace detection { namespace {
 
     double const DEGREES_PER_RADIAN = 57.2957795130823208767981548141;
     double const RADIANS_PER_DEGREE = 0.0174532925199432957692369076849;
-    double const DEC_SCALE = 5.96523235555555555555555555e06;   //  536870912.0/90.0
-    double const RA_SCALE = 1.19304647111111111111111111111e07; // 1073741824.0/90.0
-    static int const LUT_SIZE = 256;  // must be a power of 2
-    // shift that reduces an integer in [0, 2^30] to [0, LUT_SIZE]
-    static int const LUT_SHIFT = 22;
 
     struct SourcePos {
-        int dec;
-        unsigned int ra;
+        double dec;
         double x;
         double y;
         double z;
@@ -64,10 +58,7 @@ namespace lsst { namespace afw { namespace detection { namespace {
                 throw LSST_EXCEPT(ex::RangeErrorException, "declination out of range");
             }
             double cosDec    = std::cos(RADIANS_PER_DEGREE*dec);
-            // map declination to an integer in range [-2^29, 2^29]
-            positions[n].dec = static_cast<int>(std::floor(dec*DEC_SCALE));
-            // map right ascension to an integer in range [0, 2^32)
-            positions[n].ra  = static_cast<unsigned int>(std::floor(ra*RA_SCALE));
+            positions[n].dec = RADIANS_PER_DEGREE*dec;
             positions[n].x   = std::cos(RADIANS_PER_DEGREE*ra)*cosDec;
             positions[n].y   = std::sin(RADIANS_PER_DEGREE*ra)*cosDec;
             positions[n].z   = std::sin(RADIANS_PER_DEGREE*dec);
@@ -75,47 +66,6 @@ namespace lsst { namespace afw { namespace detection { namespace {
         }
         std::sort(positions, positions + n);
     }
-
-    /**
-      * Compute the extent in right ascension [-alpha, alpha] of the circle
-      * with radius @a theta and center (0, @a centerDec) on the unit sphere.
-      *
-      * @pre    @code theta > 0.0 @endcode
-      * @pre    @code centerDec >= -90.0 && centerDec <= 90.0 @endcode
-      *
-      * @param[in] theta     the radius of the circle to find ra extents for (degrees)
-      * @param[in] centerDec the declination of the circle center (degrees)
-      *
-      * @return  the largest right ascension of any point on the input circle
-      */
-    double maxAlpha(double theta, double centerDec) {
-        if (std::fabs(centerDec) + theta > 89.9) {
-            return 180.0;
-        }
-        double y = std::sin(RADIANS_PER_DEGREE*theta);
-        double x = std::sqrt(std::fabs(cos(RADIANS_PER_DEGREE*(centerDec - theta))*
-                                       cos(RADIANS_PER_DEGREE*(centerDec + theta))));
-        return std::fabs(std::atan(y/x))*DEGREES_PER_RADIAN;
-    }
-
-    /** Construct a lookup table which, given a declination D, supplies an ra delta &alpha;
-      * such than a ra span of 2&alpha; is guaranteed to encompass a circle of the given
-      * radius centered at D.
-      *
-      * @param[in] radius   radius of circle to compute &alpha; LUT for (degrees)
-      * @param[in] lut      pointer to an array of at least LUT_SIZE + 1 unsigned integers.
-      */
-    void makeAlphaLut(double radius, unsigned int *lut) {
-        int i = 0;
-        for (; i < LUT_SIZE; ++i) {
-            double absDecMin = std::fabs((i - LUT_SIZE/2)*(180.0/LUT_SIZE));
-            double absDecMax = std::fabs((i + 1 - LUT_SIZE/2)*(180.0/LUT_SIZE));
-            double centerDec = std::max(absDecMin, absDecMax);
-            lut[i] = static_cast<unsigned int>(std::ceil(maxAlpha(radius, centerDec)*RA_SCALE));
-        }
-        lut[i] = lut[i-1]; // for dec == 90.0
-    }
-
 
 }}}} // namespace lsst::afw::detection::<anonymous>
 
@@ -142,12 +92,8 @@ std::vector<det::SourceMatch> det::matchRaDec(lsst::afw::detection::SourceSet co
         return std::vector<SourceMatch>();
     }
     // setup match parameters
-    unsigned int alphaLut[LUT_SIZE + 1];
-    double const radiusDeg = radius/3600.0;
-    makeAlphaLut(radiusDeg, alphaLut);
-
-    int const deltaDec = std::ceil(radiusDeg*DEC_SCALE);
-    double const shr = std::sin(RADIANS_PER_DEGREE*0.5*radiusDeg);
+    double const radiusRad = RADIANS_PER_DEGREE * radius/3600.0;
+    double const shr = std::sin(0.5*radiusRad);
     double const d2Limit = 4.0*shr*shr;
 
     // Build position lists
@@ -160,41 +106,20 @@ std::vector<det::SourceMatch> det::matchRaDec(lsst::afw::detection::SourceSet co
 
     std::vector<SourceMatch> matches;
     for (size_t i = 0, start = 0; i < len1; ++i) {
-        int minDec = pos1[i].dec - deltaDec;
+        double minDec = pos1[i].dec - radiusRad;
         while (start < len2 && pos2[start].dec < minDec) { ++start; }
         if (start == len2) {
             break;
         }
-        int maxDec = pos1[i].dec + deltaDec;
-        unsigned int alpha = alphaLut[(pos1[i].dec + 536870912) >> LUT_SHIFT];
-        unsigned int minRa = (pos1[i].ra - alpha) & 0xFFFFFFFFu;
-        unsigned int maxRa = (pos1[i].ra + alpha) & 0xFFFFFFFFu;
-        if (minRa < maxRa) {
-            for (size_t j = start; j < len2 && pos2[j].dec <= maxDec; ++j) {
-                if ((pos2[j].ra >= minRa) && (pos2[j].ra <= maxRa)) {
-                    double dx = pos1[i].x - pos2[j].x;
-                    double dy = pos1[i].y - pos2[j].y;
-                    double dz = pos1[i].z - pos2[j].z;
-                    double d2 = dx*dx + dy*dy + dz*dz;
-                    if (d2 < d2Limit) {
-                        matches.push_back(SourceMatch(*pos1[i].src, *pos2[j].src,
-                            DEGREES_PER_RADIAN*3600.0*2.0*std::asin(0.5*std::sqrt(d2))));
-                    }
-                }
-            }
-        } else {
-            // ra wrap around
-            for (size_t j = start; j < len2 && pos2[j].dec <= maxDec; ++j) {
-                if ((pos2[j].ra >= minRa) || (pos2[j].ra <= maxRa)) {
-                    double dx = pos1[i].x - pos2[j].x;
-                    double dy = pos1[i].y - pos2[j].y;
-                    double dz = pos1[i].z - pos2[j].z;
-                    double d2 = dx*dx + dy*dy + dz*dz;
-                    if (d2 < d2Limit) {
-                        matches.push_back(SourceMatch(*pos1[i].src, *pos2[j].src,
-                            DEGREES_PER_RADIAN*3600.0*2.0*std::asin(0.5*std::sqrt(d2))));
-                    }
-                }
+        double maxDec = pos1[i].dec + radiusRad;
+        for (size_t j = start; j < len2 && pos2[j].dec <= maxDec; ++j) {
+            double dx = pos1[i].x - pos2[j].x;
+            double dy = pos1[i].y - pos2[j].y;
+            double dz = pos1[i].z - pos2[j].z;
+            double d2 = dx*dx + dy*dy + dz*dz;
+            if (d2 < d2Limit) {
+                matches.push_back(SourceMatch(*pos1[i].src, *pos2[j].src,
+                    DEGREES_PER_RADIAN*3600.0*2.0*std::asin(0.5*std::sqrt(d2))));
             }
         }
     }
@@ -221,12 +146,8 @@ std::vector<det::SourceMatch> det::matchRaDec(lsst::afw::detection::SourceSet co
         return std::vector<SourceMatch>();
     }
     // setup match parameters
-    unsigned int alphaLut[LUT_SIZE + 1];
-    double const radiusDeg = radius/3600.0;
-    makeAlphaLut(radiusDeg, alphaLut);
-
-    int const deltaDec = std::ceil(radiusDeg*DEC_SCALE);
-    double const shr = std::sin(RADIANS_PER_DEGREE*0.5*radiusDeg);
+    double const radiusRad = RADIANS_PER_DEGREE * radius/3600.0;
+    double const shr = std::sin(0.5*radiusRad);
     double const d2Limit = 4.0*shr*shr;
 
     // Build position list
@@ -236,42 +157,18 @@ std::vector<det::SourceMatch> det::matchRaDec(lsst::afw::detection::SourceSet co
 
     std::vector<SourceMatch> matches;
     for (size_t i = 0; i < len; ++i) {
-        int dec = pos[i].dec;
-        int maxDec = pos[i].dec + deltaDec;
-        unsigned int alpha = alphaLut[(dec + 536870912) >> LUT_SHIFT];
-        unsigned int minRa = (pos[i].ra - alpha) & 0xFFFFFFFFu;
-        unsigned int maxRa = (pos[i].ra + alpha) & 0xFFFFFFFFu;
-        if (minRa < maxRa) {
-            for (size_t j = i + 1; j < len && pos[j].dec <= maxDec; ++j) {
-                if (pos[j].ra >= minRa && pos[j].ra <= maxRa) {
-                    double dx = pos[i].x - pos[j].x;
-                    double dy = pos[i].y - pos[j].y;
-                    double dz = pos[i].z - pos[j].z;
-                    double d2 = dx*dx + dy*dy + dz*dz;
-                    if (d2 < d2Limit) {
-                        double d = DEGREES_PER_RADIAN*3600.0*2.0*std::asin(0.5*std::sqrt(d2));
-                        matches.push_back(SourceMatch(*pos[i].src, *pos[j].src, d));
-                        if (symmetric) {
-                            matches.push_back(SourceMatch(*pos[j].src, *pos[i].src, d));
-                        }
-                    }
-                }
-            }
-        } else {
-            // ra wrap around
-            for (size_t j = i + 1; j < len && pos[j].dec <= maxDec; ++j) {
-                if (pos[j].ra >= minRa || pos[j].ra <= maxRa) {
-                    double dx = pos[i].x - pos[j].x;
-                    double dy = pos[i].y - pos[j].y;
-                    double dz = pos[i].z - pos[j].z;
-                    double d2 = dx*dx + dy*dy + dz*dz;
-                    if (d2 < d2Limit) {
-                        double d = DEGREES_PER_RADIAN*3600.0*2.0*std::asin(0.5*std::sqrt(d2));
-                        matches.push_back(SourceMatch(*pos[i].src, *pos[j].src, d));
-                        if (symmetric) {
-                            matches.push_back(SourceMatch(*pos[j].src, *pos[i].src, d));
-                        } 
-                    }
+        double dec = pos[i].dec;
+        double maxDec = pos[i].dec + radiusRad;
+        for (size_t j = i + 1; j < len && pos[j].dec <= maxDec; ++j) {
+            double dx = pos[i].x - pos[j].x;
+            double dy = pos[i].y - pos[j].y;
+            double dz = pos[i].z - pos[j].z;
+            double d2 = dx*dx + dy*dy + dz*dz;
+            if (d2 < d2Limit) {
+                double d = DEGREES_PER_RADIAN*3600.0*2.0*std::asin(0.5*std::sqrt(d2));
+                matches.push_back(SourceMatch(*pos[i].src, *pos[j].src, d));
+                if (symmetric) {
+                    matches.push_back(SourceMatch(*pos[j].src, *pos[i].src, d));
                 }
             }
         }
