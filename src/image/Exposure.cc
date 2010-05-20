@@ -28,6 +28,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/image/Exposure.h"
+#include "lsst/afw/image/Calib.h"
 
 namespace afwImage = lsst::afw::image;
 
@@ -75,7 +76,8 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(int cols, ///< number of 
     _maskedImage(cols, rows),
     _wcs(new afwImage::Wcs(wcs)),
     _detector(),
-    _filter()
+    _filter(),
+    _calib(new afwImage::Calib())
 {
     setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet()));
 }
@@ -91,7 +93,8 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     _maskedImage(maskedImage),
     _wcs(new afwImage::Wcs(wcs)),
     _detector(),
-    _filter()
+    _filter(),
+    _calib(new afwImage::Calib())    
 {
     setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet()));
 }
@@ -110,7 +113,8 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &src, ///<
     _maskedImage(src.getMaskedImage(), bbox, deep),
     _wcs(new afwImage::Wcs(*src._wcs)),
     _detector(src._detector),
-    _filter(src._filter)    
+    _filter(src._filter),
+    _calib(new lsst::afw::image::Calib(*src.getCalib()))    
 {
 /*
   * N.b. You'll need to update the generalised copy constructor in Exposure.h when you add new data members
@@ -168,24 +172,62 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     //If keywords LTV[1,2] are present, the image on disk is already a subimage, so
     //we should note this fact. Also, shift the wcs so the crpix values refer to 
     //pixel positions not pixel index
-    //See writeFits() below 
-    if( metadata->exists("LTV1") ) {
-        _wcs->shiftReferencePixel(-1*metadata->getAsDouble("LTV1"), 0);
+    //See writeFits() below
+    std::string key = "LTV1";
+    if( metadata->exists(key)) {
+        _wcs->shiftReferencePixel(-1*metadata->getAsDouble(key), 0);
+        metadata->remove(key);
     }
-    if( metadata->exists("LTV2") ) {
-        _wcs->shiftReferencePixel(0, -1*metadata->getAsDouble("LTV2"));
+    key = "LTV2";
+    if( metadata->exists(key) ) {
+        _wcs->shiftReferencePixel(0, -1*metadata->getAsDouble(key));
+        metadata->remove(key);
     }
 
-    if( metadata->exists("FILTER") ) {
-        std::string filterName = metadata->getAsString("FILTER");
+    key = "FILTER";
+    if( metadata->exists(key) ) {
+        std::string filterName = metadata->getAsString(key);
         try {
             _filter = Filter(filterName);
         } catch(lsst::pex::exceptions::NotFoundException &) {
             lsst::pex::logging::TTrace<1>("afw.image.exposure", "Unknown filter %s", filterName.c_str());
             _filter = Filter(filterName, true); // force the filter to be defined
         }
+        metadata->remove(key);
+    }
+    /*
+     * Calib
+     */
+    _calib = afwImage::Calib::Ptr(new afwImage::Calib);
+
+    key = "MIDTIME";
+    if (metadata->exists(key)) {
+        _calib->setMidTime(lsst::daf::base::DateTime(metadata->getAsDouble(key)));
+        metadata->remove(key);
     }
 
+    key = "EXPTIME";
+    if (metadata->exists(key)) {
+        _calib->setExptime(metadata->getAsDouble(key));
+        metadata->remove(key);
+    }
+
+    key = "FLUXMAG0";
+    if (metadata->exists(key)) {
+        double const fluxMag0 = metadata->getAsDouble(key);
+        metadata->remove(key);
+        
+        key = "FLUXMAG0ERR";
+        if (metadata->exists(key)) {
+            double const fluxMag0Err = metadata->getAsDouble(key);
+            metadata->remove(key);
+
+            _calib->setFluxMag0(fluxMag0, fluxMag0Err);
+        } else {
+            _calib->setFluxMag0(fluxMag0);
+        }
+    }
+    
     setMetadata(metadata);
 }
 
@@ -299,7 +341,14 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(
         outputMetadata->set("DETNAME", _detector->getId().getName());
         outputMetadata->set("DETSER", _detector->getId().getSerial());
     }
-        
+    /**
+     * We need to define these keywords properly! XXX
+     */
+    outputMetadata->set("MIDTIME", _calib->getMidTime().get());
+    outputMetadata->set("EXPTIME", _calib->getExptime());
+    outputMetadata->set("FLUXMAG0", _calib->getFluxMag0().first);
+    outputMetadata->set("FLUXMAG0ERR", _calib->getFluxMag0().second);
+
     _maskedImage.writeFits(expOutFile, outputMetadata);
 }
 

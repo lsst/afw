@@ -27,6 +27,7 @@ Basic routines to talk to lsst::afw::image classes
 #include "lsst/afw/geom.h"
 #include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/image/Defect.h"
+#include "lsst/afw/image/Calib.h"
 
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_IMAGE_NUMPY_ARRAY_API
 #include "numpy/arrayobject.h"
@@ -97,8 +98,9 @@ def version(HeadURL = r"$HeadURL$"):
 
 /******************************************************************************/
 
-%template(pairIntInt)   std::pair<int, int>;
-%template(mapStringInt) std::map<std::string, int>;
+%template(pairIntInt)       std::pair<int, int>;
+%template(pairDoubleDouble) std::pair<double, double>;
+%template(mapStringInt)     std::map<std::string, int>;
 
 /************************************************************************************************************/
 // Images, Masks, and MaskedImages
@@ -106,6 +108,9 @@ def version(HeadURL = r"$HeadURL$"):
 
 %ignore lsst::afw::image::Filter::operator int;
 %include "lsst/afw/image/Filter.h"
+
+SWIG_SHARED_PTR(CalibPtr, lsst::afw::image::Calib);
+%include "lsst/afw/image/Calib.h"
 
 #if defined(IMPORT_FUNCTION_I)
 %{

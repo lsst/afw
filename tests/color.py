@@ -10,10 +10,11 @@ or
 """
 
 
-import os, sys
+import math, os, sys
 import eups
 import unittest
 import lsst.utils.tests as tests
+import lsst.daf.base as dafBase
 import lsst.pex.logging as logging
 import lsst.pex.exceptions as pexExcept
 import lsst.pex.policy as pexPolicy
@@ -36,6 +37,43 @@ except NameError:
     display = False
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+class CalibTestCase(unittest.TestCase):
+    """A test case for Calib"""
+    def setUp(self):
+        self.calib = afwImage.Calib()
+
+    def tearDown(self):
+        del self.calib
+
+    def testTime(self):
+        """Test the exposure time information"""
+        
+        isoDate = "1995-01-26T07:32:00.000000000Z"
+        self.calib.setMidTime(dafBase.DateTime(isoDate))
+        self.assertEqual(isoDate, self.calib.getMidTime().toString())
+        self.assertAlmostEqual(self.calib.getMidTime().get(), 49743.3142245)
+
+        dt = 123.4
+        self.calib.setExptime(dt)
+        self.assertEqual(self.calib.getExptime(), dt)
+
+    def testPhotom(self):
+        """Test the zero-point information"""
+        
+        flux, fluxErr = 1000.0, 10.0
+        flux0, flux0Err = 1e12, 1e10
+        self.calib.setFluxMag0(flux0)
+
+        self.assertEqual(flux0, self.calib.getFluxMag0()[0])
+        self.assertEqual(0.0, self.calib.getFluxMag0()[1])
+        self.assertEqual(22.5, self.calib.getMagnitude(flux))
+        # Error just in flux
+        self.assertAlmostEqual(self.calib.getMagnitude(flux, fluxErr)[1], 2.5/math.log(10)*fluxErr/flux)
+        # Error just in flux0
+        self.calib.setFluxMag0(flux0, flux0Err)
+        self.assertEqual(flux0Err, self.calib.getFluxMag0()[1])
+        self.assertAlmostEqual(self.calib.getMagnitude(flux, 0)[1], 2.5/math.log(10)*flux0Err/flux0)
 
 class ColorTestCase(unittest.TestCase):
     """A test case for Color"""
@@ -167,6 +205,7 @@ def suite():
     tests.init()
 
     suites = []
+    suites += unittest.makeSuite(CalibTestCase)
     if False:
         suites += unittest.makeSuite(ColorTestCase)
     else:

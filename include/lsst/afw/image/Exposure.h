@@ -39,6 +39,8 @@ namespace afw {
         template<typename ImageT, typename MaskT, typename VarianceT> class ExposureFormatter;
     }
 namespace image {
+    class Calib;
+
     /// A class to contain the data, WCS, and other information needed to describe an %image of the sky
     template<typename ImageT, typename MaskT=lsst::afw::image::MaskPixel,
              typename VarianceT=lsst::afw::image::VariancePixel>
@@ -67,7 +69,8 @@ namespace image {
             _maskedImage(rhs.getMaskedImage(), deep),
             _wcs(new lsst::afw::image::Wcs(*rhs.getWcs())),
             _detector(rhs.getDetector()),
-            _filter(rhs.getFilter())
+            _filter(rhs.getFilter()),
+            _calib(new lsst::afw::image::Calib(*rhs.getCalib()))
         {
             setMetadata(rhs.getMetadata()->deepCopy());
         }
@@ -97,6 +100,9 @@ namespace image {
         void setDetector(lsst::afw::cameraGeom::Detector::Ptr detector) { _detector = detector; }
         /// Set the Exposure's filter
         void setFilter(Filter const& filter) { _filter = filter; }
+        /// Return the Exposure's Calib object
+        boost::shared_ptr<Calib> getCalib() { return _calib; }
+        boost::shared_ptr<const Calib> getCalib() const { return _calib; }
         
         // Has Member (inline)
         bool hasWcs() const { return (*_wcs ? true : false); 
@@ -112,6 +118,7 @@ namespace image {
         Wcs::Ptr _wcs;
         cameraGeom::Detector::Ptr _detector;
         Filter _filter;
+        boost::shared_ptr<Calib> _calib;
     };
 
 /**
