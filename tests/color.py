@@ -109,6 +109,7 @@ class FilterTestCase(unittest.TestCase):
         #
         filterPolicy = pexPolicy.Policy.createPolicy(
             os.path.join(eups.productDir("afw"), "tests", "SdssFilters.paf"), True)
+        self.filters = tuple(sorted([f.get("name") for f in filterPolicy.getArray("Filter")]))
 
         imageUtils.defineFiltersFromPolicy(filterPolicy, reset=True)
 
@@ -120,6 +121,9 @@ class FilterTestCase(unittest.TestCase):
         filterPolicy.add("lambdaEff", lambdaEff)
 
         return afwImage.FilterProperty(name, filterPolicy, force);
+
+    def testListFilters(self):
+        self.assertEqual(afwImage.Filter_getNames(), self.filters)
 
     def testCtor(self):
         """Test that we can construct a Filter"""

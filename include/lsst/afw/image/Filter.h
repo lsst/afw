@@ -41,11 +41,8 @@ public:
      * Clear all definitions
      */
     static void reset() { _initRegistry(); }
-    /**
-     * Return the FilterProperty for filter with given name
-     */
+
     static FilterProperty const& lookup(std::string const& name);
-    
 private:
     typedef std::tr1::unordered_map<std::string const, FilterProperty> PropertyMap;
 
@@ -98,6 +95,8 @@ public :
      * Define an alias for a filter
      */
     static int defineAlias(std::string const& oldName, std::string const& newName, bool force=false);
+
+    static std::vector<std::string> getNames();
 private :
     typedef std::tr1::unordered_map<std::string const, std::string const> AliasMap;
     typedef std::tr1::unordered_map<std::string const, unsigned int const> NameMap;

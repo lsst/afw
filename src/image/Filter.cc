@@ -75,6 +75,33 @@ FilterProperty const& FilterProperty::lookup(std::string const& name ///< name o
     
     return keyVal->second;
 }
+
+/************************************************************************************************************/
+
+namespace {
+    std::string const unknownFilter = "_unknown_";
+}
+
+/**
+ * Return a list of known filters
+ */
+std::vector<std::string> Filter::getNames()
+{
+    if (!_nameMap) {
+        _initRegistry();
+    }
+
+    std::vector<std::string> names;
+
+    for (NameMap::const_iterator ptr = _nameMap->begin(), end = _nameMap->end(); ptr != end; ++ptr) {
+        if (ptr->first != unknownFilter) {
+            names.push_back(ptr->first);
+        }
+    }
+    std::sort(names.begin(), names.end());
+
+    return names;
+}
             
 /************************************************************************************************************/
 /**
@@ -91,7 +118,7 @@ void Filter::_initRegistry()
     _nameMap = new NameMap;
     _idMap = new IdMap;
     
-    define(FilterProperty("_unknown_", lsst::pex::policy::Policy(), true));
+    define(FilterProperty(unknownFilter, lsst::pex::policy::Policy(), true));
 }
 
 /************************************************************************************************************/
