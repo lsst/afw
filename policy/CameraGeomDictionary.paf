@@ -318,6 +318,13 @@ definitions: {
                                 maxOccurs: 1
                                 default: false
                             }
+                            nQuarter: {
+                                type: int
+                                description: "Number of quarter-turns applied to Amp when put into Ccd"
+                                minOccurs: 0
+                                maxOccurs: 1
+                                default: 0
+                            }
                             hdu: {
                                 type: int
                                 description: "HDU the data's found in"

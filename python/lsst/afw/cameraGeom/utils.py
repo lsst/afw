@@ -29,6 +29,11 @@ try:
 except NameError:
     display = False
 
+try:
+    type(defaultImageFactory)
+except NameError:
+    defaultImageFactory = afwImage.ImageF # The default Image type for e.g. showCamera
+    
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class GetCcdImage(object):
@@ -38,14 +43,19 @@ class GetCcdImage(object):
         self.imageFile = imageFile
         self.isTrimmed = False
 
-    def getImage(self, ccd, amp=None, imageFactory=afwImage.ImageU):
+    def getImage(self, ccd, amp=None, imageFactory=None):
         """Return the image of the chip with cameraGeom.Id == id; if provided only read the given BBox"""
 
+        if not imageFactory:
+            imageFactory = defaultImageFactory
+            
         return self.getImageFromFilename(self.imageFile, ccd, amp, imageFactory=imageFactory)
 
-    def getImageFromFilename(self, fileName, ccd, amp=None, hdu=0, imageFactory=afwImage.ImageU,
-                             oneAmpPerFile=False):
+    def getImageFromFilename(self, fileName, ccd, amp=None, hdu=0, imageFactory=None, oneAmpPerFile=False):
         """Return the image of the chip with cameraGeom.Id == id; if provided only read the given BBox"""
+
+        if not imageFactory:
+            imageFactory = defaultImageFactory
 
         if amp:
             if self.isTrimmed:
@@ -67,8 +77,11 @@ class SynthesizeCcdImage(GetCcdImage):
     def __init__(self, isTrimmed=True):
         self.isTrimmed = isTrimmed
 
-    def getImage(self, ccd, amp, imageFactory=afwImage.ImageU):
+    def getImage(self, ccd, amp, imageFactory=None):
         """Return an image of the specified amp in the specified ccd"""
+
+        if not imageFactory:
+            imageFactory = defaultImageFactory
         
         bbox = amp.getAllPixels(self.isTrimmed)
         im = imageFactory(bbox.getDimensions())
@@ -314,7 +327,8 @@ particular that it has an entry ampSerial which is a single-element list, the am
     ampDiskLayout = {}
     if hduPerAmp:
         for p in diskFormatPol.getArray("Amp"):
-            ampDiskLayout[p.get("serial")] = (p.get("hdu"), p.get("flipLR"), p.get("flipTB"))
+            ampDiskLayout[p.get("serial")] = (p.get("hdu"),
+                                              p.get("flipLR"), p.get("flipTB"), p.get("nQuarter"))
     #
     # Build the Raft
     #
@@ -346,9 +360,9 @@ particular that it has an entry ampSerial which is a single-element list, the am
         #
         if hduPerAmp:
             for amp in ccd:
-                hdu, flipLR, flipTB = ampDiskLayout[amp.getId().getSerial()]
+                hdu, flipLR, flipTB, nQuarter_amp = ampDiskLayout[amp.getId().getSerial()]
                 amp.setDiskLayout(afwGeom.makePointI(amp.getAllPixels().getX0(), amp.getAllPixels().getY0()),
-                                  nQuarter, flipLR, flipTB)
+                                  nQuarter_amp, flipLR, flipTB)
 
         if raftInfo is not None:
             # Guess the gutter between detectors
@@ -397,6 +411,7 @@ particular that it has an entry ampSerial which is a single-element list, the am
     camera = cameraGeom.Camera(cameraId, nCol, nRow)
    
     if geomPolicy.get("Defects").get("Raft").get("Ccd").isPolicy("Defect"):
+  #  if geomPolicy.isPolicy("Defects"):
         defDict = makeDefects(geomPolicy)
     else:
         defDict = {}
@@ -438,14 +453,19 @@ particular that it has an entry ampSerial which is a single-element list, the am
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def makeAmpImageFromCcd(amp, imageSource=SynthesizeCcdImage(), isTrimmed=None, imageFactory=afwImage.ImageU):
+def makeAmpImageFromCcd(amp, imageSource=SynthesizeCcdImage(), isTrimmed=None, imageFactory=None):
     """Make an Image of an Amp"""
+
+    if not imageFactory:
+        imageFactory = defaultImageFactory
 
     return imageSource.getImage(amp, imageFactory=imageFactory)
 
-def makeImageFromCcd(ccd, imageSource=SynthesizeCcdImage(), amp=None,
-                     isTrimmed=None, imageFactory=afwImage.ImageU):
+def makeImageFromCcd(ccd, imageSource=SynthesizeCcdImage(), amp=None, isTrimmed=None, imageFactory=None):
     """Make an Image of a Ccd (or just a single amp)"""
+
+    if not imageFactory:
+        imageFactory = defaultImageFactory
 
     if isTrimmed is None:
         isTrimmed = ccd.isTrimmed()
@@ -458,12 +478,12 @@ def makeImageFromCcd(ccd, imageSource=SynthesizeCcdImage(), amp=None,
         return ampImage
 
     ccdImage = imageFactory(ccd.getAllPixels(isTrimmed).getDimensions())
-        
+    
     for a in ccd:
         im = ccdImage.Factory(ccdImage, a.getAllPixels(isTrimmed))
         im <<= a.prepareAmpData(imageSource.getImage(ccd, a, imageFactory=imageFactory))
 
-    return ccdImage
+    return afwMath.rotateImageBy90(ccdImage, ccd.getOrientation().getNQuarter())
 
 def showCcd(ccd, ccdImage="", amp=None, ccdOrigin=None, isTrimmed=None, frame=None, overlay=True):
     """Show a CCD on ds9.  If cameraImage is "", an image will be created based on the properties
@@ -521,8 +541,11 @@ of the detectors"""
     displayUtils.drawBBox(ccd.getAllPixels(isTrimmed), origin=ccdOrigin,
                           borderWidth=0.49, ctype=ds9.MAGENTA, frame=frame)
 
-def makeImageFromRaft(raft, imageSource=SynthesizeCcdImage(), raftCenter=None, imageFactory=afwImage.ImageU):
+def makeImageFromRaft(raft, imageSource=SynthesizeCcdImage(), raftCenter=None, imageFactory=None):
     """Make an Image of a Raft"""
+
+    if not imageFactory:
+        imageFactory = defaultImageFactory
 
     raftImage = imageFactory(raft.getAllPixels().getDimensions())
 
@@ -578,8 +601,11 @@ If imageSource isn't None, an image using the images specified by imageSource"""
 
         showCcd(ccd, None, isTrimmed=True, frame=frame, ccdOrigin=origin, overlay=overlay)
 
-def makeImageFromCamera(camera, imageSource=None, imageFactory=afwImage.ImageU):
+def makeImageFromCamera(camera, imageSource=None, imageFactory=None):
     """Make an Image of a Camera"""
+
+    if not imageFactory:
+        imageFactory = defaultImageFactory
 
     cameraImage = imageFactory(camera.getAllPixels().getDimensions())
     for det in camera:
@@ -629,7 +655,7 @@ of the detectors"""
 
 def showMosaic(fileName, geomPolicy=None, camera=None,
                display=True, what=cameraGeom.Camera, id=None, overlay=False, describe=True, doTrim=False,
-               imageFactory=afwImage.ImageU, frame=None):
+               imageFactory=None, frame=None):
     """Show a mosaic built from the MEF imageFile containing an exposure
 
 The camera geometry is defined by cameraGeomPolicyFile;  raft IDs etc. are drawn on ds9 if overlay is True;
@@ -646,6 +672,9 @@ If relevant (for e.g. a Ccd) doTrim is applied to the Detector.
         imageSource = GetCcdImage(fileName) # object that understands the CCD <--> HDU mapping
     else:
         imageSource = None
+
+    if not imageFactory:
+        imageFactory = defaultImageFactory
 
     if imageSource:
         imageSource.setTrimmed(doTrim)
@@ -864,4 +893,3 @@ The dictionay is indexed by an Id object --- remember to compare by str(id) not 
                 defects.push_back(afwImage.DefectBase(bbox))
 
     return defectsDict
-
