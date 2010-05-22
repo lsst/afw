@@ -200,9 +200,9 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
      */
     _calib = afwImage::Calib::Ptr(new afwImage::Calib);
 
-    key = "MIDTIME";
+    key = "TIME-MID";
     if (metadata->exists(key)) {
-        _calib->setMidTime(lsst::daf::base::DateTime(metadata->getAsDouble(key)));
+        _calib->setMidTime(lsst::daf::base::DateTime(metadata->getAsString(key)));
         metadata->remove(key);
     }
 
@@ -344,7 +344,7 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(
     /**
      * We need to define these keywords properly! XXX
      */
-    outputMetadata->set("MIDTIME", _calib->getMidTime().get());
+    outputMetadata->set("TIME-MID", _calib->getMidTime().toString());
     outputMetadata->set("EXPTIME", _calib->getExptime());
     outputMetadata->set("FLUXMAG0", _calib->getFluxMag0().first);
     outputMetadata->set("FLUXMAG0ERR", _calib->getFluxMag0().second);
