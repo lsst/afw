@@ -539,7 +539,7 @@ def makeImageFromRaft(raft, imageSource=SynthesizeCcdImage(), raftCenter=None, i
         bbox.shift(origin[0], origin[1])
         ccdImage = raftImage.Factory(raftImage, bbox)
             
-        ccdImage <<= makeImageFromCcd(ccd, imageSource, isTrimmed=True)
+        ccdImage <<= makeImageFromCcd(ccd, imageSource, imageFactory=imageFactory, isTrimmed=True)
 
     return raftImage
 
@@ -591,7 +591,7 @@ def makeImageFromCamera(camera, imageSource=None, imageFactory=afwImage.ImageU):
         im = cameraImage.Factory(cameraImage, bbox)
 
         im <<= makeImageFromRaft(raft, imageSource,
-                                 afwGeom.makePointI(bbox.getWidth()/2, bbox.getHeight()/2))
+                                 afwGeom.makePointI(bbox.getWidth()/2, bbox.getHeight()/2), imageFactory=imageFactory )
         serial = raft.getId().getSerial()
         im += serial if serial > 0 else 0
 
