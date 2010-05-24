@@ -49,7 +49,7 @@ def trimCcd(ccd, ccdImage=""):
         for a in ccd:
             data =      ccdImage.Factory(ccdImage, a.getDataSec(False))
             tdata = trimmedImage.Factory(trimmedImage, a.getDataSec())
-            tdata <<= a.prepareAmpData(tdata)
+            tdata <<= data
     else:
         trimmedImage = None
 
@@ -83,7 +83,7 @@ class CameraGeomTestCase(unittest.TestCase):
     def testId(self):
         """Test cameraGeom.Id"""
 
-        print >> sys.stderr, "Skipping testId"; return
+        #print >> sys.stderr, "Skipping testId"; return
         
         ix, iy = 2, 1
         id = cameraGeom.Id(666, "Beasty", ix, iy)
@@ -214,8 +214,7 @@ class CameraGeomTestCase(unittest.TestCase):
         ccdId = cameraGeom.Id("Rotated CCD")
         ccdInfo = {"ampSerial" : CameraGeomTestCase.ampSerial}
         ccd = cameraGeomUtils.makeCcd(self.geomPolicy, ccdId, ccdInfo=ccdInfo)
-        nQuarter = 1
-        ccd.setOrientation(cameraGeom.Orientation(nQuarter, 0.0, 0.0, 0.0))
+        ccd.setOrientation(cameraGeom.Orientation(1, 0.0, 0.0, 0.0))
         if display:
             cameraGeomUtils.showCcd(ccd)
             ds9.incrDefaultFrame()
@@ -251,7 +250,7 @@ class CameraGeomTestCase(unittest.TestCase):
     def testRaft(self):
         """Test if we can build a Raft out of Ccds"""
 
-        print >> sys.stderr, "Skipping testRaft"; return
+        #print >> sys.stderr, "Skipping testRaft"; return
         raftId = cameraGeom.Id("Raft")
         raftInfo = {"ampSerial" : CameraGeomTestCase.ampSerial}
         raft = cameraGeomUtils.makeRaft(self.geomPolicy, raftId, raftInfo=raftInfo)
@@ -301,7 +300,7 @@ class CameraGeomTestCase(unittest.TestCase):
     def testCamera(self):
         """Test if we can build a Camera out of Rafts"""
 
-        print >> sys.stderr, "Skipping testCamera"; return
+        #print >> sys.stderr, "Skipping testCamera"; return
 
         cameraInfo = {"ampSerial" : CameraGeomTestCase.ampSerial}
         camera = cameraGeomUtils.makeCamera(self.geomPolicy, cameraInfo=cameraInfo)
@@ -354,7 +353,7 @@ class CameraGeomTestCase(unittest.TestCase):
     def testDefectBase(self):
         """Test DefectBases"""
 
-        print >> sys.stderr, "Skipping testDefectBase"; return
+        #print >> sys.stderr, "Skipping testDefectBase"; return
 
         defectsDict = cameraGeomUtils.makeDefects(self.geomPolicy)
 
