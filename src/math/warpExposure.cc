@@ -153,7 +153,8 @@ int afwMath::warpExposure(
     if (!srcExposure.hasWcs()) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, "srcExposure has no Wcs");
     }
-    return warpImage(destExposure.getMaskedImage(), *destExposure.getWcs(),
+    typename DestExposureT::MaskedImageT mi = destExposure.getMaskedImage();
+    return warpImage(mi, *destExposure.getWcs(),
         srcExposure.getMaskedImage(), *srcExposure.getWcs(), warpingKernel);
 }
 

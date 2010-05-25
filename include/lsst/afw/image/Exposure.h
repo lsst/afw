@@ -79,9 +79,9 @@ namespace image {
 
         // Get Members
         /// Return the MaskedImage
-        MaskedImageT& getMaskedImage() { return _maskedImage; };
+        MaskedImageT getMaskedImage() { return _maskedImage; };
         /// Return the MaskedImage
-        MaskedImageT const& getMaskedImage() const { return _maskedImage; };
+        MaskedImageT getMaskedImage() const { return _maskedImage; };
         Wcs::Ptr getWcs() const;
         /// Return the Exposure's Detector information
         lsst::afw::cameraGeom::Detector::Ptr getDetector() const { return _detector; }

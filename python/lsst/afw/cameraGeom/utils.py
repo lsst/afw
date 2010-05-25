@@ -478,7 +478,7 @@ def makeImageFromCcd(ccd, imageSource=SynthesizeCcdImage(), amp=None,
         ampImage = imageFactory(amp.getAllPixels(isTrimmed).getDimensions())
         ampImage <<= imageSource.getImage(ccd, amp, imageFactory=imageFactory)
 
-        if bin:
+        if bin > 1:
             ampImage = afwMath.binImage(ampImage, bin)
             
         return ampImage
@@ -492,7 +492,7 @@ def makeImageFromCcd(ccd, imageSource=SynthesizeCcdImage(), amp=None,
     else:
         ccdImage = imageSource.getImage(ccd, imageFactory=imageFactory)
 
-    if bin:
+    if bin > 1:
         ccdImage = afwMath.binImage(ccdImage, bin)
 
     return ccdImage
