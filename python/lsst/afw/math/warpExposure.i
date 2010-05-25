@@ -53,6 +53,7 @@ SWIG_SHARED_PTR_DERIVED(NearestWarpingKernel, lsst::afw::math::SeparableKernel,
 %template(rotateImageBy90) lsst::afw::math::rotateImageBy90<lsst::afw::image::Image<PIXELT> >;
 %template(flipImage) lsst::afw::math::flipImage<lsst::afw::image::Image<PIXELT> >;
 %template(binImage) lsst::afw::math::binImage<lsst::afw::image::Image<PIXELT> >;
+%template(binImage) lsst::afw::math::binImage<lsst::afw::image::MaskedImage<PIXELT, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> >;
 #if 0
 %template(rotateImageBy90) lsst::afw::math::rotateImageBy90<
     lsst::afw::image::MaskedImage<PIXELT, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> >;
