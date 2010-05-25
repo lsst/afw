@@ -193,9 +193,11 @@ class Mosaic(object):
                     
                 ds9.dot(label, self.getBBox(i).getX0(), self.getBBox(i).getY0(), frame=frame, ctype=ctype)
 
-def drawBBox(bbox, borderWidth=0.0, origin=None, frame=None, ctype=None):
+def drawBBox(bbox, borderWidth=0.0, origin=None, frame=None, ctype=None, bin=1):
     """Draw an afwImage::BBox on a ds9 frame with the specified ctype.  Include an extra borderWidth pixels
 If origin is present, it's Added to the BBox
+
+All BBox coordinates are divided by bin, as is right and proper for overlaying on a binned image
     """
     x0, y0 = bbox.getX0(), bbox.getY0()
     x1, y1 = bbox.getX1(), bbox.getY1()
@@ -204,6 +206,10 @@ If origin is present, it's Added to the BBox
         x0 += origin[0]; x1 += origin[0]
         y0 += origin[1]; y1 += origin[1]
 
+    x0 /= bin; y0 /= bin
+    x1 /= bin; y1 /= bin
+    borderWidth /= bin
+    
     ds9.line([(x0 - borderWidth, y0 - borderWidth),
               (x0 - borderWidth, y1 + borderWidth),
               (x1 + borderWidth, y1 + borderWidth),
