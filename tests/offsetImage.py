@@ -39,7 +39,7 @@ class offsetImageTestCase(unittest.TestCase):
     def tearDown(self):
         del self.inImage
 
-    def XXXtestSetFluxConvervation(self):
+    def testSetFluxConvervation(self):
         """Test that flux is preserved"""
 
         outImage = afwMath.offsetImage(self.inImage, 0, 0, self.algorithm)
@@ -51,7 +51,7 @@ class offsetImageTestCase(unittest.TestCase):
         outImage = afwMath.offsetImage(self.inImage, 0.5, 0.5, self.algorithm)
         self.assertAlmostEqual(outImage.get(50, 50), self.background, 4)
 
-    def XXXtestSetIntegerOffset(self):
+    def testSetIntegerOffset(self):
         """Test that we can offset by positive and negative amounts"""
         
         self.inImage.set(50, 50, 400)
@@ -120,7 +120,7 @@ class offsetImageTestCase(unittest.TestCase):
         imMax = imGoodVals.max()
         imMin = imGoodVals.min()
 
-        if not False:
+        if False:
             print "mean = %g, min = %g, max = %g" % (imMean, imMin, imMax)
             
         self.assertTrue(abs(imMean) < 1e-7)
@@ -179,14 +179,42 @@ class transformImageTestCase(unittest.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+class binImageTestCase(unittest.TestCase):
+    """A test case for binning images"""
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def testBin(self):
+        """Test that we can bin images"""
+
+        inImage = afwImage.ImageF(203, 131)
+        inImage.set(1)
+        bin = 4
+
+        outImage = afwMath.binImage(inImage, bin)
+
+        self.assertEqual(outImage.getWidth(), inImage.getWidth()//bin)
+        self.assertEqual(outImage.getHeight(), inImage.getHeight()//bin)
+
+        stats = afwMath.makeStatistics(outImage, afwMath.MAX | afwMath.MIN)
+        self.assertEqual(stats.getValue(afwMath.MIN), 1)
+        self.assertEqual(stats.getValue(afwMath.MAX), 1)
+
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
 
     utilsTests.init()
 
     suites = []
-    #suites += unittest.makeSuite(offsetImageTestCase)
+    suites += unittest.makeSuite(offsetImageTestCase)
     suites += unittest.makeSuite(transformImageTestCase)
+    suites += unittest.makeSuite(binImageTestCase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
