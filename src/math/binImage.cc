@@ -31,7 +31,7 @@ typename ImageT::Ptr binImage(ImageT const& in,  ///< The %image to bin
     int const outWidth = in.getWidth()/binsize;
     int const outHeight = in.getHeight()/binsize;
 
-    typename ImageT::Ptr out = ImageT::Ptr(new ImageT(outWidth, outHeight));
+    typename ImageT::Ptr out = typename ImageT::Ptr(new ImageT(outWidth, outHeight));
     *out = 0;
 
     for (int oy = 0, iy = 0; oy < out->getHeight(); ++oy) {
