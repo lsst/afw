@@ -23,6 +23,7 @@
 #include "boost/cstdint.hpp" 
 #include "boost/format.hpp" 
 #include "boost/shared_ptr.hpp"
+#include "boost/algorithm/string/trim.hpp"
 
 #include "lsst/daf/base/PropertySet.h"
 #include "lsst/pex/exceptions.h"
@@ -186,7 +187,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 
     key = "FILTER";
     if( metadata->exists(key) ) {
-        std::string filterName = metadata->getAsString(key);
+        std::string filterName = boost::algorithm::trim_right_copy(metadata->getAsString(key));
         try {
             _filter = Filter(filterName);
         } catch(lsst::pex::exceptions::NotFoundException &) {
@@ -202,7 +203,10 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 
     key = "TIME-MID";
     if (metadata->exists(key)) {
-        _calib->setMidTime(lsst::daf::base::DateTime(metadata->getAsString(key)));
+        lsst::daf::base::DateTime const
+            time_mid(boost::algorithm::trim_right_copy(metadata->getAsString(key)));
+        
+        _calib->setMidTime(time_mid);
         metadata->remove(key);
     }
 
