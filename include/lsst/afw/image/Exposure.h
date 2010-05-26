@@ -93,6 +93,52 @@ namespace image {
         /// Return the Exposure's height
         int getHeight() const { return _maskedImage.getHeight(); }
         
+        /**
+         * Return the Exposure's row-origin
+         *
+         * \sa getXY0()
+         */
+        int getX0() const { return _maskedImage.getX0(); }
+        /**
+         * Return the Exposure's column-origin
+         *
+         * \sa getXY0()
+         */
+        int getY0() const { return _maskedImage.getY0(); }
+
+        /**
+         * Return the Exposure's origin
+         *
+         * This will usually be (0, 0) except for images created using the
+         * <tt>Exposure(fileName, hdu, BBox, mode)</tt> ctor or <tt>Exposure(Exposure, BBox)</tt> cctor
+         * The origin can be reset with \c setXY0
+         */
+        PointI getXY0() const { return _maskedImage.getXY0(); }
+
+        /**
+         * Set the Exposure's origin (including correcting the Wcs)
+         *
+         * The origin is usually set by the constructor, so you shouldn't need this function
+         *
+         * \note There are use cases (e.g. memory overlays) that may want to set these values, but
+         * don't do so unless you are an Expert.
+         */
+        void setXY0(int const x0, int const y0) {
+            PointI const old = _maskedImage.getXY0();
+            _maskedImage.setXY0(x0, y0);
+            _wcs->shiftReferencePixel(x0 - old[0], y0 - old[1]);
+        }
+        /**
+         * Set the Exposure's origin
+         *
+         * The origin is usually set by the constructor, so you shouldn't need this function
+         *
+         * \note There are use cases (e.g. memory overlays) that may want to set these values, but
+         * don't do so unless you are an Expert.
+         */
+        void setXY0(PointI const origin) {
+            setXY0(origin[0], origin[1]);
+        }
         // Set Members
         void setMaskedImage(MaskedImageT &maskedImage);
         void setWcs(Wcs const& wcs);

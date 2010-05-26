@@ -66,6 +66,7 @@ image::ImageBase<PixelT>::ImageBase(
 {
     if (deep) {
         ImageBase tmp(getDimensions());
+        tmp.setXY0(getXY0());
         tmp <<= *this;                  // now copy the pixels
         swap(tmp);
     }
@@ -107,6 +108,7 @@ image::ImageBase<PixelT>::ImageBase(
 
     if (deep) {
         ImageBase tmp(getDimensions());
+        tmp.setXY0(getXY0());
         tmp <<= *this;                  // now copy the pixels
         swap(tmp);
     }
