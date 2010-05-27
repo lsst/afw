@@ -141,10 +141,10 @@ void Wcs::initWcsLibFromFits(PropertySet::Ptr const fitsMetadata){
     //Pass the header into wcslib's formatter to extract setup the Wcs. First need
     //to convert to a C style string, so the compile doesn't complain about constness
     int len = metadataStr.size();
-    char *hdrString = (char *) malloc((len + 1)*sizeof(char));
+    char *hdrString = new char[len + 1];
     strncpy(hdrString, metadataStr.c_str(), len + 1);
     int pihStatus = wcspih(hdrString, nCards, _relax, _wcshdrCtrl, &_nReject, &_nWcsInfo, &_wcsInfo);
-    delete hdrString;
+    delete[] hdrString;
 
     if (pihStatus != 0) {
         throw LSST_EXCEPT(except::RuntimeErrorException,
