@@ -144,6 +144,7 @@ void Wcs::initWcsLibFromFits(PropertySet::Ptr const fitsMetadata){
     char *hdrString = (char *) malloc((len + 1)*sizeof(char));
     strncpy(hdrString, metadataStr.c_str(), len + 1);
     int pihStatus = wcspih(hdrString, nCards, _relax, _wcshdrCtrl, &_nReject, &_nWcsInfo, &_wcsInfo);
+    delete hdrString;
 
     if (pihStatus != 0) {
         throw LSST_EXCEPT(except::RuntimeErrorException,
