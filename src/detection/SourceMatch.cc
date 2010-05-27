@@ -7,7 +7,9 @@
 
 #include "boost/scoped_array.hpp"
 
+#include "lsst/utils/ieee.h"
 #include "lsst/pex/exceptions.h"
+#include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/detection/SourceMatch.h"
 
 
@@ -40,15 +42,16 @@ namespace lsst { namespace afw { namespace detection { namespace {
     /**
       * Extract source positions from @a set, convert them to cartesian coordinates
       * (for faster distance checks) and sort the resulting array of @c SourcePos
-      * instances by declination.
+      * instances by declination. Sources with positions containing a NaN are skipped.
       *
       * @param[in] set          set of sources to process
       * @param[out] positions   pointer to an array of at least @c set.size()
       *                         SourcePos instances
+      * @return                 The number of sources with positions not containing a NaN.
       */
-    void makeSourcePositions(SourceSet const &set, SourcePos *positions) {
+    size_t makeSourcePositions(SourceSet const &set, SourcePos *positions) {
         size_t n = 0;
-        for (SourceSet::const_iterator i(set.begin()), e(set.end()); i != e; ++i, ++n) {
+        for (SourceSet::const_iterator i(set.begin()), e(set.end()); i != e; ++i) {
             double ra = (*i)->getRa();
             double dec = (*i)->getDec();
             if (ra < 0.0 || ra >= 360.0) {
@@ -57,14 +60,23 @@ namespace lsst { namespace afw { namespace detection { namespace {
             if (dec < -90.0 || dec > 90.0) {
                 throw LSST_EXCEPT(ex::RangeErrorException, "declination out of range");
             }
+            if (lsst::utils::isnan(ra) || lsst::utils::isnan(dec)) {
+                continue;
+            }
             double cosDec    = std::cos(RADIANS_PER_DEGREE*dec);
             positions[n].dec = RADIANS_PER_DEGREE*dec;
             positions[n].x   = std::cos(RADIANS_PER_DEGREE*ra)*cosDec;
             positions[n].y   = std::sin(RADIANS_PER_DEGREE*ra)*cosDec;
             positions[n].z   = std::sin(RADIANS_PER_DEGREE*dec);
             positions[n].src = &(*i);
+            ++n;
         }
         std::sort(positions, positions + n);
+        if (n < set.size()) {
+            lsst::pex::logging::TTrace<1>("afw.detection.matchRaDec",
+                                          "At least one source had ra or dec equal to NaN");
+        }
+        return n;
     }
 
 }}}} // namespace lsst::afw::detection::<anonymous>
@@ -97,12 +109,12 @@ std::vector<det::SourceMatch> det::matchRaDec(lsst::afw::detection::SourceSet co
     double const d2Limit = 4.0*shr*shr;
 
     // Build position lists
-    size_t const len1 = set1.size();
-    size_t const len2 = set2.size();
+    size_t len1 = set1.size();
+    size_t len2 = set2.size();
     boost::scoped_array<SourcePos> pos1(new SourcePos[len1]);
     boost::scoped_array<SourcePos> pos2(new SourcePos[len2]);
-    makeSourcePositions(set1, pos1.get());
-    makeSourcePositions(set2, pos2.get());
+    len1 = makeSourcePositions(set1, pos1.get());
+    len2 = makeSourcePositions(set2, pos2.get());
 
     std::vector<SourceMatch> matches;
     for (size_t i = 0, start = 0; i < len1; ++i) {
@@ -151,13 +163,12 @@ std::vector<det::SourceMatch> det::matchRaDec(lsst::afw::detection::SourceSet co
     double const d2Limit = 4.0*shr*shr;
 
     // Build position list
-    size_t const len = set.size();
+    size_t len = set.size();
     boost::scoped_array<SourcePos> pos(new SourcePos[len]);
-    makeSourcePositions(set, pos.get());
+    len = makeSourcePositions(set, pos.get());
 
     std::vector<SourceMatch> matches;
     for (size_t i = 0; i < len; ++i) {
-        double dec = pos[i].dec;
         double maxDec = pos[i].dec + radiusRad;
         for (size_t j = i + 1; j < len && pos[j].dec <= maxDec; ++j) {
             double dx = pos[i].x - pos[j].x;

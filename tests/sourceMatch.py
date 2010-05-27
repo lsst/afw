@@ -55,6 +55,27 @@ class SourceMatchTestCase(unittest.TestCase):
             s1 = mat[0][1]
             print s0.getRa(), s1.getRa(), s0.getId(), s1.getId()
 
+    def testNaNPositions(self):
+        ss1 = afwDetect.SourceSet()
+        ss2 = afwDetect.SourceSet()
+        for ss in (ss1, ss2):
+            s = afwDetect.Source()
+            s.setRa(float('nan'))
+            ss.append(s)
+            s = afwDetect.Source()
+            s.setDec(float('nan'))
+            ss.append(s)
+            s = afwDetect.Source()
+            s.setRa(0.0)
+            s.setDec(0.0)
+            ss.append(s)
+            s = afwDetect.Source()
+            s.setRa(float('nan'))
+            s.setDec(float('nan'))
+            ss.append(s)
+        mat = afwDetect.matchRaDec(ss1, ss2, 1.0)
+        self.assertEqual(len(mat), 1)
+
     def testPhotometricCalib(self):
         """Test matching the CFHT catalogue (as generated using LSST code) to the SDSS catalogue"""
 
