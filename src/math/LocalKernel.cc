@@ -105,7 +105,7 @@ void afwMath::FftLocalKernel::setDimensions(
     int imageSize = width*height;
     boost::scoped_array<Pixel> imageStack(new Pixel[stackDepth * imageSize]);
    
-    FourierCutoutStack temp(width, height, stackDepth);
+    _fourierStack.reset(new FourierCutoutStack(width, height, stackDepth));
     int cutoutSize = temp.getCutoutSize();
     std::pair<int, int> dimensions =std::make_pair(height, width);
 
@@ -118,7 +118,7 @@ void afwMath::FftLocalKernel::setDimensions(
             NULL, //embeded input image dimensions
             1, //input images are contiguous
             imageSize, //input stack is contiguous
-            reinterpret_cast<fftw_complex*>(temp.getData().get()), //output ptr
+            reinterpret_cast<fftw_complex*>(_fourierStack->getData().get()), //output ptr
             NULL, //embeded output image dimensions
             1, //output images are contiguous
             cutoutSize, //output stack is contiguous
@@ -135,8 +135,6 @@ void afwMath::FftLocalKernel::setDimensions(
 
     fftw_destroy_plan(plan);
 
-    _fourierStack->swap(temp);
-    
     //shift and if necessary, normalize each fft
     lsst::afw::geom::Point2I const & center = _imageKernel.getCenter();
     int dx = -center.getX();
