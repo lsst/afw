@@ -14,6 +14,7 @@
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/FourierCutout.h"
 #include "lsst/afw/math/LocalKernel.h"
+#include "lsst/afw/math/FunctionLibrary.h"
 
 #include "lsst/pex/exceptions/Runtime.h"
 
@@ -263,4 +264,22 @@ BOOST_AUTO_TEST_CASE(FourierConvolutionTest) { /* parasoft-suppress  LsstDm-3-2a
     }
     cutoutVector.clear();
     cutoutPtr.reset();
+}
+
+BOOST_AUTO_TEST_CASE(FourierLocalKernel) {
+    math::DoubleGaussianFunction2<double> dg(2.0, 1.0, 0.0);
+    math::Kernel::Ptr kernel(new math::AnalyticKernel(23, 23, dg));
+
+    math::FourierLocalKernel::Ptr localKernel = 
+        kernel->computeFourierLocalKernel(lsst::afw::geom::makePointD(45,45));
+    
+    localKernel->setDimensions(50,50);
+    math::FourierCutout::Ptr cutout = localKernel->getFourierImage();
+    math::FourierCutout::const_iterator i(cutout->begin());
+    std::cerr << "FourierCutout: [" << *i;
+    ++i;
+    for(; i != cutout->end(); ++i) {
+        std::cerr << ", " << *i;
+    }
+    std::cerr <<"]\n";
 }

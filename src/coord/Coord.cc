@@ -8,6 +8,7 @@
  * Most (nearly all) algorithms adapted from Astronomical Algorithms, 2nd ed. (J. Meeus)
  *
  */
+#include <cstdio>
 #include <cmath>
 #include <limits>
 #include <cstdio>

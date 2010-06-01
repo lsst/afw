@@ -1,6 +1,8 @@
+//See numpyTypemaps.h for documentation and examples
+
 %{
     #include "lsst/afw/numpyTypemaps.h"
-    %}
+%}
 
 %define %declareEigenMatrix(TYPE...)
 %typemap(out) TYPE {

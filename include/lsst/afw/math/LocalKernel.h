@@ -122,7 +122,14 @@ public:
         }
         validateDerivatives(); 
     }
-        
+    
+    explicit ImageLocalKernel(ImageLocalKernel const & other) 
+      : _center(other.getCenter()),
+        _parameters(other.getParameters()),
+        _image(other.getImage()),
+        _derivatives(other.getDerivatives())
+    { }
+
     virtual ~ImageLocalKernel() { }
 
     virtual int getNParameters() const {return _parameters.size();}
@@ -313,14 +320,11 @@ public:
 
 protected:
     ImageLocalKernel _imageKernel;
-    FourierCutoutStack _fourierStack;  
+    FourierCutoutStack::Ptr _fourierStack;  
 
 private:
-    void copyImage(Pixel * dest, Image::Ptr image, int const & destWidth);
-    void fillImageStack(
-        Pixel * imageStack, 
-        int const & imageSize, int const & imageWidth
-    );    
+    void copyImage(Image::Ptr const & , Pixel * , int const & , int const & );
+    void fillImageStack(Pixel *, int const &, int const &, int const &);    
 };
 
 #if 0
