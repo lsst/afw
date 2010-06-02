@@ -51,8 +51,8 @@ namespace image {
         typedef boost::shared_ptr<Exposure> Ptr;
         
         // Class Constructors and Destructor
-        explicit Exposure(int const cols=0, int const rows=0, Wcs const& wcs=Wcs());
-        explicit Exposure(MaskedImageT & maskedImage, Wcs const& wcs=Wcs());
+        explicit Exposure(int const cols=0, int const rows=0, Wcs const& wcs=NoWcs);
+        explicit Exposure(MaskedImageT & maskedImage, Wcs const& wcs=NoWcs);
         explicit Exposure(std::string const &baseName, int const hdu=0, BBox const& bbox=BBox(), bool const conformMasks=false);
 
         Exposure(Exposure const &src, BBox const& bbox, bool const deep=false);
@@ -67,7 +67,7 @@ namespace image {
                 ) :
             lsst::daf::data::LsstBase(typeid(this)),
             _maskedImage(rhs.getMaskedImage(), deep),
-            _wcs(new lsst::afw::image::Wcs(*rhs.getWcs())),
+            _wcs(rhs.getWcs()->clone()),
             _detector(rhs.getDetector()),
             _filter(rhs.getFilter()),
             _calib(new lsst::afw::image::Calib(*rhs.getCalib()))
@@ -172,7 +172,7 @@ namespace image {
  */
     template<typename MaskedImageT>
     Exposure<typename MaskedImageT::Image::Pixel>* makeExposure(MaskedImageT & mimage, ///< the Exposure's image
-                                                                Wcs const& wcs=Wcs() ///< the Exposure's WCS
+                                                                Wcs const& wcs=NoWcs ///< the Exposure's WCS
                                                                ) {
         return new Exposure<typename MaskedImageT::Image::Pixel>(mimage, wcs);
     }

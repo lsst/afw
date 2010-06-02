@@ -61,16 +61,8 @@ void doTest(lsst::afw::image::Wcs::Ptr wcsPtr) {
 
     std::cout << "making a copy of a wcs" << std::endl;
     { // use copy constructor and deallocate the copy
-        lsst::afw::image::Wcs wcsCopy(*wcsPtr);
-        lsst::afw::image::Wcs wcsCopy2(wcsCopy);
+        lsst::afw::image::Wcs::Ptr wcsCopy = wcsPtr->clone();
+        lsst::afw::image::Wcs::Ptr wcsCopy2 = wcsCopy->clone();
     }
     std::cout << "deallocated the copy; assigning a wcs" << std::endl;
-    { // use assignment operator and deallocate the assigned copy
-        lsst::afw::image::Wcs wcsAssign, wcsAssign2;
-        wcsAssign = *wcsPtr;
-        wcsAssign2 = wcsAssign;
-    }
-    std::cout << "deallocated the assigned copy" << std::endl;
-
-
 }
