@@ -279,12 +279,13 @@ public:
         std::vector<double> const & parameters, 
         Image::Ptr const & image, 
         ImagePtrList const & derivatives = ImagePtrList()
-    ) : _imageKernel(center, parameters, image, derivatives) 
+    ) : _imageKernel(center, parameters, image, derivatives),
+        _fourierStack(new FourierCutoutStack())
     {}
     
     explicit FftLocalKernel(
         ImageLocalKernel const & imageKernel
-    ) : _imageKernel(imageKernel) 
+    ) : _imageKernel(imageKernel), _fourierStack(new FourierCutoutStack()) 
     {}
 
     /**

@@ -38,7 +38,8 @@ namespace image {
 /// For the reverse, radec -> pixels, convert the radec to undistorted coords, and then use the _sipAp and
 /// _sipBp matrices to add in the distortion terms.
 /// 
-    class TanWcs : public lsst::afw::image::Wcs {
+    class TanWcs : public lsst::afw::image::Wcs
+{
     public:
         typedef boost::shared_ptr<lsst::afw::image::TanWcs> Ptr;    
         typedef boost::shared_ptr<lsst::afw::image::TanWcs const> ConstPtr;    
@@ -62,9 +63,7 @@ namespace image {
                const std::string cunits1="deg", const std::string cunits2="deg"
               );
 
-        TanWcs(lsst::afw::image::TanWcs const & rhs);
-        TanWcs & operator = (const TanWcs &);        
-        inline ~TanWcs() {};
+        virtual ~TanWcs() {};
         
         virtual lsst::afw::image::Wcs::Ptr clone(void) const;
 
@@ -98,6 +97,9 @@ namespace image {
         //If you want to create a TanWcs object from a fits header, use makeWcs()
         TanWcs(lsst::daf::base::PropertySet::Ptr const fitsMetadata);
         
+        TanWcs(lsst::afw::image::TanWcs const & rhs);
+        TanWcs & operator = (const TanWcs &);        
+
         //Allow the formatter to access private goo
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::TanWcsFormatter)
 

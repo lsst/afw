@@ -609,6 +609,11 @@ afwDetect::Footprint::Ptr growFootprintSlow(
     if (ngrow < 0) {
         ngrow = 0;                      // ngrow == 0 => no grow
     }
+
+    if (foot.getNpix() == 0) {          // an empty Footprint
+        return afwDetect::Footprint::Ptr(new afwDetect::Footprint);
+    }
+
     /*
      * We'll insert the footprints into an image, then convolve with a disk,
      * then extract a footprint from the result --- this is magically what we want.

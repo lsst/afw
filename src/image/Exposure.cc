@@ -75,7 +75,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(int cols, ///< number of 
                                                               ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _maskedImage(cols, rows),
-    _wcs(new afwImage::Wcs(wcs)),
+    _wcs(wcs.clone()),
     _detector(),
     _filter(),
     _calib(new afwImage::Calib())
@@ -92,7 +92,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
                                                               ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _maskedImage(maskedImage),
-    _wcs(new afwImage::Wcs(wcs)),
+    _wcs(wcs.clone()),
     _detector(),
     _filter(),
     _calib(new afwImage::Calib())    
@@ -112,7 +112,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &src, ///<
                                                               ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _maskedImage(src.getMaskedImage(), bbox, deep),
-    _wcs(new afwImage::Wcs(*src._wcs)),
+    _wcs(src._wcs->clone()),
     _detector(src._detector),
     _filter(src._filter),
     _calib(new lsst::afw::image::Calib(*src.getCalib()))    

@@ -67,7 +67,8 @@ namespace image {
 /// reading a header (keywords CRPIX1a etc are also accepted)
 
     class Wcs : public lsst::daf::base::Persistable,
-                    public lsst::daf::data::LsstBase {
+                public lsst::daf::data::LsstBase
+{
     public:
         typedef boost::shared_ptr<lsst::afw::image::Wcs> Ptr;
         typedef boost::shared_ptr<lsst::afw::image::Wcs const> ConstPtr;
@@ -82,8 +83,6 @@ namespace image {
                 const std::string cunits1="deg", const std::string cunits2="deg"
            );
 
-        Wcs(lsst::afw::image::Wcs const & rhs);
-        Wcs & operator = (const Wcs &);        
         virtual ~Wcs();
         virtual Ptr clone(void) const;
 
@@ -134,6 +133,9 @@ namespace image {
         //This is protected because the derived classes need to be able to see it.
         Wcs(lsst::daf::base::PropertySet::Ptr const fitsMetadata);
 
+        Wcs(lsst::afw::image::Wcs const & rhs);
+        Wcs& operator= (const Wcs &);        
+
         lsst::afw::coord::Coord::Ptr makeCorrectCoord(double sky0, double sky1) const;
         lsst::afw::geom::PointD convertCoordToSky(lsst::afw::coord::Coord::ConstPtr coord) const;
         
@@ -155,6 +157,9 @@ namespace image {
 
     Wcs::Ptr makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
 
+#if !defined(SWIG)
+    extern Wcs NoWcs;
+#endif
 }}} // lsst::afw::image
 
 #endif // LSST_AFW_IMAGE_WCS_H

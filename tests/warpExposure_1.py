@@ -27,6 +27,8 @@ if not dataDir:
 
 originalExposureName = "med"
 originalExposurePath = os.path.join(dataDir, originalExposureName)
+originalFullExposureName = os.path.join("CFHT", "D4", "cal-53535-i-797722_1")
+originalFullExposurePath = os.path.join(dataDir, originalFullExposureName)
 
 class WarpExposureTestCase(unittest.TestCase):
     """Test case for warpExposure
@@ -134,61 +136,81 @@ class WarpExposureTestCase(unittest.TestCase):
     def testMatchSwarpBilinearImage(self):
         """Test that warpExposure matches swarp using a bilinear warping kernel
         """
-        self.compareSwarpedImage("bilinear", atol=1.0e-2)
+        self.compareToSwarp("bilinear", useWarpExposure=False, atol=1.0e-2)
 
     def testMatchSwarpBilinearExposure(self):
         """Test that warpExposure matches swarp using a bilinear warping kernel
         """
-        self.compareSwarpedExposure("bilinear")
+        self.compareToSwarp("bilinear", useWarpExposure=True, useSubregion=False, useDeepCopy=True)
+
+    def testMatchSwarpBilinearSubExposure(self):
+        """Test that warpExposure matches swarp using a bilinear warping kernel with a subexposure
+        """
+        for useDeepCopy in (False, True):
+            self.compareToSwarp("bilinear", useWarpExposure=True, useSubregion=True, useDeepCopy=useDeepCopy)
 
     def testMatchSwarpLanczos2Image(self):
         """Test that warpExposure matches swarp using a lanczos2 warping kernel
         """
-        self.compareSwarpedImage("lanczos2", atol=1.0e-2)
+        self.compareToSwarp("lanczos2", useWarpExposure=False, atol=1.0e-2)
 
     def testMatchSwarpLanczos2Exposure(self):
         """Test that warpExposure matches swarp using a lanczos2 warping kernel.
         """
-        self.compareSwarpedExposure("lanczos2")
+        self.compareToSwarp("lanczos2", useWarpExposure=True)
 
     def testMatchSwarpLanczos3Image(self):
         """Test that warpExposure matches swarp using a lanczos2 warping kernel
         """
-        self.compareSwarpedImage("lanczos3", atol=1.0e-2)
+        self.compareToSwarp("lanczos3", useWarpExposure=False, atol=1.0e-2)
 
     def testMatchSwarpLanczos3(self):
         """Test that warpExposure matches swarp using a lanczos4 warping kernel.
         """
-        self.compareSwarpedExposure("lanczos3")
+        self.compareToSwarp("lanczos3", useWarpExposure=True)
 
     def testMatchSwarpLanczos4Image(self):
         """Test that warpExposure matches swarp using a lanczos2 warping kernel
         """
-        self.compareSwarpedImage("lanczos4", atol=1.0e-2)
+        self.compareToSwarp("lanczos4", useWarpExposure=False, atol=1.0e-2)
 
     def testMatchSwarpLanczos4(self):
         """Test that warpExposure matches swarp using a lanczos4 warping kernel.
         """
-        self.compareSwarpedExposure("lanczos4")
+        self.compareToSwarp("lanczos4", useWarpExposure=True)
 
     def testMatchSwarpNearestExposure(self):
         """Test that warpExposure matches swarp using a nearest neighbor warping kernel
         """
-        self.compareSwarpedExposure("nearest", atol=60)
+        self.compareToSwarp("nearest", useWarpExposure=True, atol=60)
 
-    def compareSwarpedImage(self, kernelName, rtol=1.0e-05, atol=1e-08):
-        """Compare remapExposure to swarp for given warping kernel.
+    def compareToSwarp(self, kernelName, rtol=1.0e-05, atol=1e-08,
+        useWarpExposure=True, useSubregion=False, useDeepCopy=False):
+        """Compare warpExposure to swarp for given warping kernel.
         
         Note that swarp only warps the image plane, so only test that plane.
+        
+        Inputs:
+        - kernelName: name of kernel in the form used by afwImage.makeKernel
+        - rtol: relative tolerance as used by numpy.allclose
+        - atol: absolute tolerance as used by numpy.allclose
+        - useWarpExposure: if True, call warpExposure to warp an ExposureF,
+            else call warpImage to warp an ImageF
+        - useSubregion: if True then the original source exposure (from which the usual
+            test exposure was extracted) is read and the correct subregion extracted
+        - useDeepCopy: if True then the copy of the subimage is a deep copy,
+            else it is a shallow copy; ignored if useSubregion is False
         """
         warpingKernel = afwMath.makeWarpingKernel(kernelName)
 
-        originalExposure = afwImage.ExposureF(originalExposurePath)
-        originalImage = originalExposure.getMaskedImage().getImage()
-        originalWcs = originalExposure.getWcs()
-        
-        # path for saved afw-warped image
-        afwWarpedImagePath = "afwWarpedImage1%s.fits" % (kernelName,)
+        if useSubregion:
+            originalFullExposure = afwImage.ExposureF(originalFullExposurePath)
+            # "med" is a subregion of one of the exposure "CFHT/D4/cal-53535-i-797722_1"
+            # starting at 0-indexed pixel (1563, 1901) of size 500x700.
+            bbox = afwImage.BBox(afwImage.PointI(1563, 1907), 500, 700)
+            originalExposure = afwImage.ExposureF(originalFullExposure, bbox, useDeepCopy)
+        else:
+            originalExposure = afwImage.ExposureF(originalExposurePath)
 
         swarpedImageName = "medswarp1%s.fits" % (kernelName,)
         swarpedImagePath = os.path.join(dataDir, swarpedImageName)
@@ -198,71 +220,59 @@ class WarpExposureTestCase(unittest.TestCase):
         warpedWcs = afwImage.makeWcs(swarpedMetadata)
         destWidth = swarpedImage.getWidth()
         destHeight = swarpedImage.getHeight()
-
-        afwWarpedImage = afwImage.ImageF(destWidth, destHeight)
-        afwMath.warpImage(afwWarpedImage, warpedWcs, originalImage, originalWcs, warpingKernel)
-        if SAVE_FITS_FILES:
-            afwWarpedImage.writeFits(afwWarpedImagePath)
-
         
-        afwWarpedImageArr = imageTestUtils.arrayFromImage(afwWarpedImage)
-        swarpedImageArr = imageTestUtils.arrayFromImage(swarpedImage)
-        edgeMaskArr = numpy.isnan(afwWarpedImageArr)
-        errStr = imageTestUtils.imagesDiffer(afwWarpedImageArr, swarpedImageArr,
-            skipMaskArr=edgeMaskArr, rtol=rtol, atol=atol)
-        if errStr:
-            if not SAVE_FITS_FILES:
-                # save the image anyway
-                afwWarpedImage.writeFits(afwWarpedImagePath)
-            print "Saved failed afw-warped image as: %s" % (afwWarpedImagePath,)
-            self.fail("afw and swarp %s-warped images do not match (ignoring NaN pixels): %s" % \
-                (kernelName, errStr))
-
-    def compareSwarpedExposure(self, kernelName, rtol=1.0e-05, atol=1e-08):
-        """Compare remapExposure to swarp for given warping kernel.
-        
-        Note that swarp only warps the image plane, so only test that plane.
-        """
-        warpingKernel = afwMath.makeWarpingKernel(kernelName)
-
-        originalExposure = afwImage.ExposureF(originalExposurePath)
-        
-        # path for saved afw-warped image
-        afwWarpedImagePath = "afwWarpedExposure1%s" % (kernelName,)
-
-        swarpedImageName = "medswarp1%s.fits" % (kernelName,)
-        swarpedImagePath = os.path.join(dataDir, swarpedImageName)
-        swarpedDecoratedImage = afwImage.DecoratedImageF(swarpedImagePath)
-        swarpedImage = swarpedDecoratedImage.getImage()
-        swarpedMetadata = swarpedDecoratedImage.getMetadata()
-        warpedWcs = afwImage.makeWcs(swarpedMetadata)
-        destWidth = swarpedImage.getWidth()
-        destHeight = swarpedImage.getHeight()
-
-        afwWarpedMaskedImage = afwImage.MaskedImageF(destWidth, destHeight)
-        afwWarpedExposure = afwImage.ExposureF(afwWarpedMaskedImage, warpedWcs)
-        afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingKernel)
-        if SAVE_FITS_FILES:
-            afwWarpedExposure.writeFits(afwWarpedImagePath)
-
-        afwWarpedMask = afwWarpedMaskedImage.getMask()
-        edgeBitMask = afwWarpedMask.getPlaneBitMask("EDGE")
-        if edgeBitMask == 0:
-            self.fail("warped mask has no EDGE bit")
-        afwWarpedMaskedImageArrSet = imageTestUtils.arraysFromMaskedImage(afwWarpedMaskedImage)
-        afwWarpedMaskArr = afwWarpedMaskedImageArrSet[1]
-
-        swarpedMaskedImage = afwImage.MaskedImageF(swarpedImage)
-        swarpedMaskedImageArrSet = imageTestUtils.arraysFromMaskedImage(swarpedMaskedImage)
-        
-        errStr = imageTestUtils.maskedImagesDiffer(afwWarpedMaskedImageArrSet, swarpedMaskedImageArrSet,
-            doImage=True, doMask=False, doVariance=False, skipMaskArr=afwWarpedMaskArr, rtol=rtol, atol=atol)
-        if errStr:
-            if not SAVE_FITS_FILES:
+        if useWarpExposure:
+            # path for saved afw-warped image
+            afwWarpedImagePath = "afwWarpedExposure1%s" % (kernelName,)
+    
+            afwWarpedMaskedImage = afwImage.MaskedImageF(destWidth, destHeight)
+            afwWarpedExposure = afwImage.ExposureF(afwWarpedMaskedImage, warpedWcs)
+            afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingKernel)
+            if SAVE_FITS_FILES:
                 afwWarpedExposure.writeFits(afwWarpedImagePath)
-            print "Saved failed afw-warped exposure as: %s" % (afwWarpedImagePath,)
-            self.fail("afw and swarp %s-warped %s (ignoring bad pixels)" % (kernelName, errStr))
-
+    
+            afwWarpedMask = afwWarpedMaskedImage.getMask()
+            edgeBitMask = afwWarpedMask.getPlaneBitMask("EDGE")
+            if edgeBitMask == 0:
+                self.fail("warped mask has no EDGE bit")
+            afwWarpedMaskedImageArrSet = imageTestUtils.arraysFromMaskedImage(afwWarpedMaskedImage)
+            afwWarpedMaskArr = afwWarpedMaskedImageArrSet[1]
+    
+            swarpedMaskedImage = afwImage.MaskedImageF(swarpedImage)
+            swarpedMaskedImageArrSet = imageTestUtils.arraysFromMaskedImage(swarpedMaskedImage)
+            
+            errStr = imageTestUtils.maskedImagesDiffer(afwWarpedMaskedImageArrSet, swarpedMaskedImageArrSet,
+                doImage=True, doMask=False, doVariance=False, skipMaskArr=afwWarpedMaskArr,
+                rtol=rtol, atol=atol)
+            if errStr:
+                if not SAVE_FITS_FILES:
+                    afwWarpedExposure.writeFits(afwWarpedImagePath)
+                print "Saved failed afw-warped exposure as: %s" % (afwWarpedImagePath,)
+                self.fail("afw and swarp %s-warped %s (ignoring bad pixels)" % (kernelName, errStr))
+        else:
+            # path for saved afw-warped image
+            afwWarpedImagePath = "afwWarpedImage1%s.fits" % (kernelName,)
+    
+            afwWarpedImage = afwImage.ImageF(destWidth, destHeight)
+            originalImage = originalExposure.getMaskedImage().getImage()
+            originalWcs = originalExposure.getWcs()
+            afwMath.warpImage(afwWarpedImage, warpedWcs, originalImage, originalWcs, warpingKernel)
+            if SAVE_FITS_FILES:
+                afwWarpedImage.writeFits(afwWarpedImagePath)
+            
+            afwWarpedImageArr = imageTestUtils.arrayFromImage(afwWarpedImage)
+            swarpedImageArr = imageTestUtils.arrayFromImage(swarpedImage)
+            edgeMaskArr = numpy.isnan(afwWarpedImageArr)
+            errStr = imageTestUtils.imagesDiffer(afwWarpedImageArr, swarpedImageArr,
+                skipMaskArr=edgeMaskArr, rtol=rtol, atol=atol)
+            if errStr:
+                if not SAVE_FITS_FILES:
+                    # save the image anyway
+                    afwWarpedImage.writeFits(afwWarpedImagePath)
+                print "Saved failed afw-warped image as: %s" % (afwWarpedImagePath,)
+                self.fail("afw and swarp %s-warped images do not match (ignoring NaN pixels): %s" % \
+                    (kernelName, errStr))
+    
     def compareMaskedImages(self, maskedImage1, maskedImage2, descr="",
         doImage=True, doMask=True, doVariance=True, skipMaskArr=None, rtol=1.0e-05, atol=1e-08):
         """Compare pixels from two masked images

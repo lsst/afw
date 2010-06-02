@@ -255,62 +255,65 @@ int afwMath::warpImage(
     
     // compute source position X,Y corresponding to row -1 of the destination image;
     // this is used for computing relative pixel scale
-    std::vector<afwGeom::PointD> prevRowSrcPosXY(destWidth+1);
+    std::vector<afwGeom::Point2D> prevRowSrcPosXY(destWidth+1);
     for (int destIndX = 0; destIndX < destWidth; ++destIndX) {
-        afwGeom::PointD destPosXY = afwGeom::makePointD(afwImage::indexToPosition(destIndX),
-                                                        afwImage::indexToPosition(-1));
-        afw::geom::PointD srcPosXY = srcWcs.skyToPixel(destWcs.pixelToSky(destPosXY));
+        afwGeom::Point2D destPosXY = afwGeom::makePointD(destImage.indexToPosition(destIndX, afwImage::X),
+                                                         destImage.indexToPosition(-1, afwImage::Y));
+        afw::geom::Point2D srcPosXY = srcWcs.skyToPixel(destWcs.pixelToSky(destPosXY));
         prevRowSrcPosXY[destIndX] = srcPosXY;
     }
     for (int destIndY = 0; destIndY < destHeight; ++destIndY) {
-        afwGeom::PointD destPosXY = afwGeom::makePointD(afwImage::indexToPosition(-1),
-                                                        afwImage::indexToPosition(destIndY));
-        afw::geom::PointD prevSrcPosXY = srcWcs.skyToPixel(destWcs.pixelToSky(destPosXY));
-        afw::geom::PointD srcPosXY;
+        afwGeom::Point2D destPosXY = afwGeom::makePointD(destImage.indexToPosition(-1, afwImage::X),
+                                                         destImage.indexToPosition(destIndY, afwImage::Y));
+        afw::geom::Point2D prevSrcPosXY = srcWcs.skyToPixel(destWcs.pixelToSky(destPosXY));
+        afw::geom::Point2D srcPosXY;
         typename DestImageT::x_iterator destXIter = destImage.row_begin(destIndY);
         for (int destIndX = 0; destIndX < destWidth; ++destIndX, ++destXIter) {
             // compute sky position associated with this pixel of remapped MaskedImage
-            destPosXY[0] = afwImage::indexToPosition(destIndX);
+            destPosXY[0] = destImage.indexToPosition(destIndX, afwImage::X);
 
             // Compute associated pixel position on source MaskedImage
             srcPosXY = srcWcs.skyToPixel(destWcs.pixelToSky(destPosXY));
 
-            // Compute associated source pixel index and break it into integer and fractional
-            // parts; the latter is used to compute the remapping kernel.
-            // To convolve at source pixel (x, y) point source accessor to (x - kernelCtrX, y - kernelCtrY)
-            // because the accessor must point to kernel pixel (0, 0), not the center of the kernel.
-            std::pair<double, double> srcFracInd;
-            int srcIndX = afwImage::positionToIndex(srcFracInd.first,  srcPosXY[0]) - kernelCtrX;
-            int srcIndY = afwImage::positionToIndex(srcFracInd.second, srcPosXY[1]) - kernelCtrY;
-            if (srcFracInd.first < 0) {
-                ++srcFracInd.first;
-                --srcIndX;
+            // Compute associated source pixel index as integer and nonnegative fractional parts;
+            // the latter is used to compute the remapping kernel.
+            std::pair<int, double> srcIndFracX = srcImage.positionToIndex(srcPosXY[0], afwImage::X);
+            std::pair<int, double> srcIndFracY = srcImage.positionToIndex(srcPosXY[1], afwImage::Y);
+            if (srcIndFracX.second < 0) {
+                ++srcIndFracX.second;
+                --srcIndFracX.first;
             }
-            if (srcFracInd.second < 0) {
-                ++srcFracInd.second;
-                --srcIndY;
+            if (srcIndFracY.second < 0) {
+                ++srcIndFracY.second;
+                --srcIndFracY.first;
             }
+
+            // Offset source pixel index from kernel center to kernel corner (0, 0)
+            // so we can convolveAtAPoint the pixels that overlap between source and kernel
+            srcIndFracX.first -= kernelCtrX;
+            srcIndFracY.first -= kernelCtrY;
           
             // If location is too near the edge of the source, or off the source, mark the dest as edge
-            if ((srcIndX < 0) || (srcIndX + kernelWidth > srcWidth) 
-                || (srcIndY < 0) || (srcIndY + kernelHeight > srcHeight)) {
+            if ((srcIndFracX.first < 0) || (srcIndFracX.first + kernelWidth > srcWidth) 
+                || (srcIndFracY.first < 0) || (srcIndFracY.first + kernelHeight > srcHeight)) {
                 // skip this pixel
                 *destXIter = edgePixel;
             } else {
                 ++numGoodPixels;
                     
                 // Compute warped pixel
+                std::pair<double, double> srcFracInd(srcIndFracX.second, srcIndFracY.second);
                 warpingKernel.setKernelParameters(srcFracInd);
                 double kSum = warpingKernel.computeVectors(kernelXList, kernelYList, false);
 
-                typename SrcImageT::const_xy_locator srcLoc = srcImage.xy_at(srcIndX, srcIndY);
+                typename SrcImageT::const_xy_locator srcLoc = srcImage.xy_at(srcIndFracX.first, srcIndFracY.first);
                 *destXIter = afwMath::convolveAtAPoint<DestImageT, SrcImageT>(
                     srcLoc, kernelXList, kernelYList);
     
                 // Correct intensity due to relative pixel spatial scale and kernel sum.
                 // The area computation is for a parallellogram.
-                afwGeom::PointD dSrcA = srcPosXY - afwGeom::Extent<double>(prevSrcPosXY);
-                afwGeom::PointD dSrcB = srcPosXY - afwGeom::Extent<double>(prevRowSrcPosXY[destIndX]);
+                afwGeom::Point2D dSrcA = srcPosXY - afwGeom::Extent<double>(prevSrcPosXY);
+                afwGeom::Point2D dSrcB = srcPosXY - afwGeom::Extent<double>(prevRowSrcPosXY[destIndX]);
                 double multFac = std::abs((dSrcA.getX() * dSrcB.getY())
                     - (dSrcA.getY() * dSrcB.getX())) / kSum;
                 *destXIter *= multFac;

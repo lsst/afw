@@ -3,10 +3,10 @@
 Tests for Footprints, and FootprintSets
 
 Run with:
-   Footprint_1.py
+   footprint2.py
 or
    python
-   >>> import Footprint_1; Footprint_1.run()
+   >>> import footprint2; footprint2.run()
 """
 
 
@@ -173,6 +173,25 @@ class FootprintSetUTestCase(unittest.TestCase):
             ds9.mtv(self.im, frame=0)
             ds9.mtv(idImage, frame=1)
 
+    def testInf(self):
+        """Test detection for images with Infs"""
+
+        im = afwImage.MaskedImageF(10, 20)
+        im.set(0)
+        
+        import numpy
+        for x in range(im.getWidth()):
+            im.set(x, im.getHeight() - 1, (numpy.Inf, 0x0, 0))
+
+        ds = afwDetect.makeFootprintSet(im, afwDetect.createThreshold(100))
+
+        objects = ds.getFootprints()
+        afwDetect.setMaskFromFootprintList(im.getMask(), objects, 0x10)
+
+        if display:
+            ds9.mtv(im)
+
+        self.assertEqual(len(objects), 1)
             
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
