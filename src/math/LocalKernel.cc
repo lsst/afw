@@ -5,26 +5,35 @@
 namespace afwMath = lsst::afw::math;
 
 afwMath::FourierCutout::Ptr afwMath::FftLocalKernel::getFourierImage() const {        
-    if(_fourierStack->getStackDepth() > 0)
-        return _fourierStack->getCutout(0);
+    if(_fourierStack) {
+        if(_fourierStack->getStackDepth() > 0) {
+            return _fourierStack->getCutout(0);
+        }
+    }
    
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
-            "Must previously call FourierLocalKernel::setDimensions");
+    throw LSST_EXCEPT(
+        lsst::pex::exceptions::RuntimeErrorException,
+        "Must previously call FourierLocalKernel::setDimensions"
+    );
 }
 
 std::vector<afwMath::FourierCutout::Ptr> 
 afwMath::FftLocalKernel::getFourierDerivatives() const {
-    if(_fourierStack->getStackDepth() > 1) {
-        //has already been transformed. return output of latest transform
-        return _fourierStack->getCutoutVector(1);
+    if(_fourierStack) {
+        if(_fourierStack->getStackDepth() > 1) {
+            //has already been transformed. return output of latest transform
+            return _fourierStack->getCutoutVector(1);
+        }
     }
     else if(getNParameters() == 0) {
         //no derivative info
         return std::vector<FourierCutout::Ptr>();
     }
 
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
-            "Must previously call FourierLocalKernel::setDimensions");
+    throw LSST_EXCEPT(
+        lsst::pex::exceptions::RuntimeErrorException,
+        "Must previously call FourierLocalKernel::setDimensions"
+    );
 }
 
 
@@ -106,7 +115,7 @@ void afwMath::FftLocalKernel::setDimensions(
     boost::scoped_array<Pixel> imageStack(new Pixel[stackDepth * imageSize]);
    
     _fourierStack.reset(new FourierCutoutStack(width, height, stackDepth));
-    int cutoutSize = temp.getCutoutSize();
+    int cutoutSize = _fourierStack->getCutoutSize();
     std::pair<int, int> dimensions =std::make_pair(height, width);
 
     //construct a forward-transform plan
