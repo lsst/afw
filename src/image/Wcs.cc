@@ -312,20 +312,22 @@ Wcs::Wcs(afwImg::Wcs const & rhs) :
     _wcshdrCtrl(rhs._wcshdrCtrl),
     _nReject(rhs._nReject) {
     
-    if( rhs._nWcsInfo > 0) {
-        _wcsInfo = static_cast<struct wcsprm *>(malloc(sizeof(struct wcsprm)));
+    if (rhs._nWcsInfo > 0) {
+        _wcsInfo = static_cast<struct wcsprm *>(calloc(rhs._nWcsInfo, sizeof(struct wcsprm)));
         if (_wcsInfo == NULL) {
             throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException, "Cannot allocate WCS info");
         }
 
         _wcsInfo->flag = -1;
-        int alloc=1;    //Unconditionally allocate memory when calling
-        int status = wcscopy(alloc, rhs._wcsInfo, _wcsInfo);
-        if(status != 0) {
-            wcsvfree(&_nWcsInfo, &_wcsInfo);
-            throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException,
-                (boost::format("Could not copy WCS: wcscopy status = %d : %s") %
-                 status % wcs_errmsg[status]).str());
+        int alloc = 1;                  //Unconditionally allocate memory when calling
+        for (int i = 0; i != rhs._nWcsInfo; ++i) {
+            int status = wcscopy(alloc, &rhs._wcsInfo[i], &_wcsInfo[i]);
+            if (status != 0) {
+                wcsvfree(&i, &_wcsInfo);
+                throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException,
+                                  (boost::format("Could not copy WCS: wcscopy status = %d : %s") %
+                                   status % wcs_errmsg[status]).str());
+            }
         }
     }
 }
