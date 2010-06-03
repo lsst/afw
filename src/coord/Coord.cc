@@ -456,7 +456,7 @@ afwCoord::Coord::Ptr afwCoord::Coord::convert(CoordSystem system) const {
  */
 double afwCoord::Coord::angularSeparation(
                                           Coord const &c, ///< coordinate to compute our separation from
-                                          CoordUnit unit
+                                          CoordUnit unit  ///< Units to use for returned value
                                          ) const {
 
     // make sure they're fk5

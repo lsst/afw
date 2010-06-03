@@ -469,9 +469,10 @@ bool Wcs::isFlipped()  const{
 }
 
 
-///Sky area covered by a pixel at position \param pix00. In units of cunits.
-///Sky area covered by a pixel at position \param pix00. In units of cunits.
-double Wcs::pixArea(GeomPoint pix00) const {
+///Sky area covered by a pixel at position \c pix00. In units of cunits.
+
+double Wcs::pixArea(GeomPoint pix00     ///< The point where the area is desired
+                   ) const {
     //
     // Figure out the (0, 0), (0, 1), and (1, 0) ra/dec coordinates of the corners of a square drawn in pixel
     // It'd be better to centre the square at sky00, but that would involve another conversion between sky and
@@ -498,7 +499,8 @@ double Wcs::pixArea(GeomPoint pix00) const {
 
 ///\brief Convert from sky coordinates (e.g ra/dec) to pixel positions.
 ///
-GeomPoint Wcs::skyToPixel(afwCoord::Coord::ConstPtr coord) const {
+GeomPoint Wcs::skyToPixel(afwCoord::Coord::ConstPtr coord ///< The sky position
+                         ) const {
 
     GeomPoint const sky = convertCoordToSky(coord);
     return skyToPixel(sky[0], sky[1]);
@@ -726,7 +728,7 @@ CoordPtr Wcs::makeCorrectCoord(double sky0, double sky1) const {
  * This is currently implemented as a numerical derivative, but we should specialise the Wcs class (or rather
  * its implementation) to handle "simple" cases such as TAN-SIP analytically
  *
- * @param(in) sky Position in sky coordinates where transform is desired
+ * @param[in] sky Position in sky coordinates where transform is desired
  */
 
 lsst::afw::geom::AffineTransform Wcs::linearizeAt(GeomPoint const & sky) const

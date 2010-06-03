@@ -188,11 +188,13 @@ namespace detail {
             return *lhs < *rhs;
         }
     };
-
+    /**
+     * Rotate a BBox about the center of some larger region by a multiple of 90 degrees 
+     */
     afwImage::BBox rotateBBoxBy90(
             afwImage::BBox const& bbox,         ///< the BBox to rotate
             int n90,                            ///< number of 90-degree anti-clockwise turns to make
-            afwGeom::Extent2I const& dimensions //< The size of the region wherein bbox dwells
+            afwGeom::Extent2I const& dimensions ///< The size of the region wherein bbox dwells
                                  );
 }
     

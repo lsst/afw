@@ -221,6 +221,7 @@ public:
     }
 
 };
+/// \endcond
 
 } // namespace numpy_typemaps
 

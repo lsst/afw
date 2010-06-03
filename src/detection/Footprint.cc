@@ -22,7 +22,7 @@ namespace afwImage = lsst::afw::image;
 
 /******************************************************************************/
 /**
- * \Factory method for creating Threshold objects
+ * \brief Factory method for creating Threshold objects
  *
  * \return desired Threshold
  */
