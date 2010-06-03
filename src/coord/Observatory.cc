@@ -1,6 +1,6 @@
 // -*- lsst-c++ -*-
 /**
- * @file Date.cc
+ * @file
  * @brief Provide functions to handle dates
  * @ingroup afw
  * @author Steve Bickerton
@@ -10,6 +10,7 @@
 #include <cmath>
 
 #include "lsst/pex/exceptions.h"
+#include "boost/format.hpp"
 #include "boost/algorithm/string.hpp"
 #include "boost/tuple/tuple.hpp"
 
@@ -151,3 +152,17 @@ std::string coord::Observatory::getLatitudeStr() const {
     return degreesToDmsString(radToDeg*_latitudeRad);
 }
 
+/**
+ * Print an Observatory to the stream
+ */
+std::ostream & coord::operator<<(std::ostream &os,             ///< Stream to print to
+                                 coord::Observatory const& obs ///< the Observatory to print
+                                )
+{
+    return os << (boost::format("%gW, %gN  %g")
+                  % obs.getLatitude(coord::DEGREES)
+                  % obs.getLongitude(coord::DEGREES)
+                  % obs.getElevation()).str();
+}
+
+/************************************************************************************************************/

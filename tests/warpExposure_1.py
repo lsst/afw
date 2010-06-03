@@ -27,6 +27,8 @@ if not dataDir:
 
 originalExposureName = "med"
 originalExposurePath = os.path.join(dataDir, originalExposureName)
+subExposureName = "medsub"
+subExposurePath = os.path.join(dataDir, originalExposureName)
 originalFullExposureName = os.path.join("CFHT", "D4", "cal-53535-i-797722_1")
 originalFullExposurePath = os.path.join(dataDir, originalFullExposureName)
 
@@ -143,12 +145,6 @@ class WarpExposureTestCase(unittest.TestCase):
         """
         self.compareToSwarp("bilinear", useWarpExposure=True, useSubregion=False, useDeepCopy=True)
 
-    def testMatchSwarpBilinearSubExposure(self):
-        """Test that warpExposure matches swarp using a bilinear warping kernel with a subexposure
-        """
-        for useDeepCopy in (False, True):
-            self.compareToSwarp("bilinear", useWarpExposure=True, useSubregion=True, useDeepCopy=useDeepCopy)
-
     def testMatchSwarpLanczos2Image(self):
         """Test that warpExposure matches swarp using a lanczos2 warping kernel
         """
@@ -158,6 +154,12 @@ class WarpExposureTestCase(unittest.TestCase):
         """Test that warpExposure matches swarp using a lanczos2 warping kernel.
         """
         self.compareToSwarp("lanczos2", useWarpExposure=True)
+
+    def testMatchSwarpLanczos2SubExposure(self):
+        """Test that warpExposure matches swarp using a lanczos2 warping kernel with a subexposure
+        """
+        for useDeepCopy in (False, True):
+            self.compareToSwarp("lanczos2", useWarpExposure=True, useSubregion=True, useDeepCopy=useDeepCopy)
 
     def testMatchSwarpLanczos3Image(self):
         """Test that warpExposure matches swarp using a lanczos2 warping kernel
@@ -204,15 +206,15 @@ class WarpExposureTestCase(unittest.TestCase):
         warpingKernel = afwMath.makeWarpingKernel(kernelName)
 
         if useSubregion:
-            originalFullExposure = afwImage.ExposureF(originalFullExposurePath)
-            # "med" is a subregion of one of the exposure "CFHT/D4/cal-53535-i-797722_1"
-            # starting at 0-indexed pixel (1563, 1901) of size 500x700.
-            bbox = afwImage.BBox(afwImage.PointI(1563, 1907), 500, 700)
+            originalFullExposure = afwImage.ExposureF(originalExposurePath)
+            # "medsub" is a subregion of med starting at 0-indexed pixel (40, 150) of size 145 x 200
+            bbox = afwImage.BBox(afwImage.PointI(40, 150), 145, 200)
             originalExposure = afwImage.ExposureF(originalFullExposure, bbox, useDeepCopy)
+            swarpedImageName = "medsubswarp1%s.fits" % (kernelName,)
         else:
             originalExposure = afwImage.ExposureF(originalExposurePath)
+            swarpedImageName = "medswarp1%s.fits" % (kernelName,)
 
-        swarpedImageName = "medswarp1%s.fits" % (kernelName,)
         swarpedImagePath = os.path.join(dataDir, swarpedImageName)
         swarpedDecoratedImage = afwImage.DecoratedImageF(swarpedImagePath)
         swarpedImage = swarpedDecoratedImage.getImage()

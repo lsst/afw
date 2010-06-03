@@ -76,7 +76,7 @@ namespace image {
         //Constructors
         Wcs();
         //Create a Wcs of the correct class using a fits header.
-        friend Ptr makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
+        friend Wcs::Ptr makeWcs(lsst::daf::base::PropertySet::Ptr fitsMetadata);
         Wcs(const lsst::afw::geom::PointD crval, const lsst::afw::geom::PointD crpix, const Eigen::Matrix2d &CD, 
                 const std::string ctype1="RA---TAN", const std::string ctype2="DEC--TAN",
                 double equinox=2000, std::string raDecSys="ICRS",
@@ -109,7 +109,7 @@ namespace image {
         virtual lsst::afw::geom::PointD skyToPixel(lsst::afw::coord::Coord::ConstPtr coord) const;
 
         lsst::afw::geom::LinearTransform getLinearTransform() const;
-        virtual lsst::afw::geom::AffineTransform linearizeAt(lsst::afw::geom::PointD const & pix) const;
+        virtual lsst::afw::geom::AffineTransform linearizeAt(lsst::afw::geom::PointD const& sky) const;
 
         //Mutators
         void shiftReferencePixel(double dx, double dy); 
