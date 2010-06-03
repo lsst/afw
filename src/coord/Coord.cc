@@ -8,7 +8,6 @@
  * Most (nearly all) algorithms adapted from Astronomical Algorithms, 2nd ed. (J. Meeus)
  *
  */
-#include <cstdio>
 #include <cmath>
 #include <limits>
 #include <cstdio>
@@ -170,10 +169,8 @@ std::string afwCoord::degreesToDmsString(
             }
         }
     }
-    char s[12];
-    sprintf(s, "%02d:%02d:%05.2f", dms.sign*dms.deg, dms.min, dms.sec);
-    std::string dmsStr(s);
-    return dmsStr;
+
+    return (boost::format("%02d:%02d:%05.2f") % (dms.sign*dms.deg) % dms.min % dms.sec).str();
 }
 
 /**
@@ -880,9 +877,19 @@ afwCoord::Fk5Coord afwCoord::TopocentricCoord::toFk5() const {
  * @brief Convert ourself from Topocentric to Topocentric ... a no-op
  */
 afwCoord::TopocentricCoord afwCoord::TopocentricCoord::toTopocentric(
-    Observatory const &obs, ///< observatory of observation
+    Observatory const &obs,             ///< observatory of observation
     dafBase::DateTime const &date        ///< date of observation
-                                                                    ) const {
+                                                                    ) const
+{
+    if (obs != _obs) {
+        throw LSST_EXCEPT(ex::InvalidParameterException,
+                          (boost::format("Expected observatory %s, saw %s") % _obs % obs).str());
+    }
+    if (fabs(date.get() - getEpoch()) > std::numeric_limits<double>::epsilon()) {
+        throw LSST_EXCEPT(ex::InvalidParameterException,
+                          (boost::format("Expected date %g, saw %g") % getEpoch() % date.get()).str());
+    }
+        
     return TopocentricCoord(getLongitude(DEGREES), getLatitude(DEGREES), getEpoch(), _obs);
 }
 

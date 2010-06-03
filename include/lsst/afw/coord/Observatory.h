@@ -10,6 +10,7 @@
  *
  */ 
 
+#include <iostream>
 #include "lsst/afw/coord/Utils.h"
 
 namespace lsst {
@@ -38,12 +39,23 @@ public:
     std::string getLatitudeStr() const;
     std::string getLongitudeStr() const;
 
+    bool operator==(Observatory const& rhs) const {
+        return
+            (_latitudeRad - rhs._latitudeRad) == 0.0 &&
+            (_longitudeRad - rhs._longitudeRad) == 0.0 &&
+            (_elevation - rhs._elevation) == 0.0;
+    }
+    bool operator!=(Observatory const& rhs) const {
+        return !(*this == rhs);
+    }
+
 private:
     double _latitudeRad;
     double _longitudeRad;
     double _elevation;
 };
 
+std::ostream & operator<<(std::ostream &os, Observatory const& obs);
 
 }}}
 
