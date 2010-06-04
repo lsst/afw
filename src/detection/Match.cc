@@ -8,10 +8,11 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/detection.h"
 #include "lsst/afw/detection/Match.h"
+#include "lsst/afw/coord/Coord.h"
 
 namespace pexEx = lsst::pex::exceptions;
 namespace afwDet = lsst::afw::detection;
-
+namespace afwCoord = lsst::afw::coord;
 
 afwDet::MatchRange::MatchRange(MatchUnit unit) : _unit(unit), _conversion(1.0) {
     
@@ -35,7 +36,7 @@ afwDet::MatchRange::MatchRange(MatchUnit unit) : _unit(unit), _conversion(1.0) {
     
 }
 
-double afwDet::MatchRange::computeDistance(WrapperBase const &s1, WrapperBase const &s2) const {
+double afwDet::MatchRange::computeDistance(GenericSourceWrapper const &s1, GenericSourceWrapper const &s2) const {
     double dx = s1.getX() - s2.getX();
     double dy = s1.getY() - s2.getY();
     return std::sqrt(dx*dx + dy*dy);
@@ -46,63 +47,92 @@ double afwDet::MatchRange::computeDistance(WrapperBase const &s1, WrapperBase co
 
 
             
-double afwDet::MatchCircle::compare(WrapperBase const &s1, WrapperBase const &s2) const {
+double afwDet::MatchCircle::compare(GenericSourceWrapper const &s1, GenericSourceWrapper const &s2) const {
     double d = computeDistance(s1, s2);
     return (d < _radius) ? d : -1.0;
 }
 
             
 template<typename Src, typename Wrapper>
-afwDet::MatchResult<Src> afwDet::matchEngine(std::vector<Src> const &ss1,
-                                             std::vector<Src> const &ss2,
+afwDet::MatchResult<Src> afwDet::matchEngine(std::vector<typename Src::Ptr> const &ss1,
+                                             std::vector<typename Src::Ptr> const &ss2,
                                              MatchRange const &range) {
     
-    typedef std::vector<MatchSet<Src> > MatchSetV;
-    typedef std::vector<Src> UnmatchedV;
-    typename boost::shared_ptr<MatchSetV> matches(new MatchSetV());
-    typename boost::shared_ptr<UnmatchedV> unmatched1(new UnmatchedV());
-    typename boost::shared_ptr<UnmatchedV> unmatched2(new UnmatchedV());
-
-    MatchResult<Src> result(matches, unmatched1, unmatched2);
+    std::vector<Match<Src> > matches;
     
+    //boost::shared_ptr<std::vector<Src> > sourceUnion;
+    //boost::shared_ptr<std::vector<Match::Ptr> > summary;
+
     std::vector<int> matched2(ss2.size(), 0);
+
+    std::vector<typename Src::Ptr> v(2);
+    std::vector<double> d(2);
+
+    typename Src::Ptr nullSource(new Src);
+    Wrapper(nullSource).setY(-1);
     
     // do the slow way first
-    for (typename std::vector<Src>::const_iterator s1 = ss1.begin(); s1 != ss1.end(); ++s1) {
+    for (typename std::vector<typename Src::Ptr>::const_iterator s1 = ss1.begin(); s1 != ss1.end(); ++s1) {
         bool found = false;
-        typename Src::Ptr ps1(new Src(*s1));
         int iS2 = 0;
-        for (typename std::vector<Src>::const_iterator s2 = ss2.begin(); s2 != ss2.end(); ++s2, ++iS2) {
+
+        for (typename std::vector<typename Src::Ptr>::const_iterator s2 = ss2.begin(); s2 != ss2.end(); ++s2, ++iS2) {
             double dist = range.compare(Wrapper(*s1), Wrapper(*s2));
+
+            // if we found it, create a Match object
             if (dist >= 0) {
                 found = true;
-                typename Src::Ptr ps2(new Src(*s2));
-                matches->push_back(MatchSet<Src>(ps1, ps2, dist));
+
+                v[0] = *s1;
+                v[1] = *s2;
+
+                d[0] = dist;
+                d[1] = dist;
+                matches.push_back(Match<Src>(v, d, 0));
                 matched2[iS2] += 1;
             }
         }
-        if (found) {
-            unmatched1->push_back(*s1);
+
+        // if we didn't find it, create a match object with a NULL pointer
+        if (! found) {
+            v[0] = *s1;
+            v[1] = nullSource;
+            d[0] = -1;
+            d[1] = -1;
+            matches.push_back(Match<Src>(v, d, 1));
         }
     }
 
+    // now get the ones in ss2 but not in ss1
     for (unsigned int i = 0; i < matched2.size(); ++i) {
         if (matched2[i] == 0) {
-            (*unmatched2)[i] = ss2[i];
+            v[0] = nullSource;
+            v[1] = ss2[i];
+            d[0] = -1;
+            d[1] = -1;
+            matches.push_back(Match<Src>(v, d, 1));
         }
     }
     
-    return result;
+    return afwDet::MatchResult<Src>(matches);
 }
 
-afwDet::MatchResult<afwDet::Source> afwDet::match(std::vector<afwDet::Source> const &ss1,
-                                                  std::vector<afwDet::Source> const &ss2,
+
+afwDet::MatchResult<afwDet::Source> afwDet::match(std::vector<std::vector<afwDet::Source::Ptr> > const &ss,
                                                   afwDet::MatchRange const &range) {
+    
     if ( range.getUnit() == PIXELS ) {
-        return matchEngine<Source, SourceXyWrapper>(ss1, ss2, range);
+        return afwDet::matchEngine<Source, SourceXyWrapper>(ss[0], ss[1], range);
     } else {
-        return matchEngine<Source, SourceRaDecWrapper>(ss1, ss2, range);
+        return afwDet::matchEngine<Source, SourceRaDecWrapper>(ss[0], ss[1], range);
     }
+}
+
+
+afwDet::MatchResult<afwCoord::Coord> afwDet::match(std::vector<std::vector<afwCoord::Coord::Ptr> > const &ss,
+                                                  afwDet::MatchRange const &range) {
+    
+    return afwDet::matchEngine<afwCoord::Coord, CoordWrapper>(ss[0], ss[1], range);
 }
 
 
@@ -119,3 +149,8 @@ std::vector<MatchSet<afwCoord::Coord> > match(std::vector<afwCoord::Coord> const
     }
 }
 #endif            
+
+
+//template afwDet::MatchResult<afwDet::Source> afwDet::match(std::vector<std::vector<afwDet::Source::Ptr> > const &ss, afwDet::MatchRange const &range);
+
+//template afwDet::MatchResult<afwCoord::Coord> afwDet::match(std::vector<std::vector<afwCoord::Coord::Ptr> > const &ss, afwDet::MatchRange const &range);
