@@ -8,8 +8,8 @@ import lsst.SConsUtils as scons
 try:
     scons.ConfigureDependentProducts
 except AttributeError:
-    import lsst.afw.SconsUtils
-    scons.ConfigureDependentProducts = lsst.afw.SconsUtils.ConfigureDependentProducts
+    import lsst.afw.scons.SconsUtils
+    scons.ConfigureDependentProducts = lsst.afw.scons.SconsUtils.ConfigureDependentProducts
 
 env = scons.makeEnv(
     "afw",
