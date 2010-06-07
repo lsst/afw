@@ -18,6 +18,23 @@ namespace afwCoord = lsst::afw::coord;
 
 namespace lsst { namespace afw { namespace detection {
 
+
+/* ==============================================================
+ *
+ * Wrappers/Adapters for the coordinate types we accept (Source, Coord)
+ *
+ * We need to access x,y but different containers have different names for them:
+ *     eg. Source.getXAstrom() vs Coord.getLongitude()
+ * We therefore wrap whatever we get so that we can call getX() or getY()
+ *
+ * ============================================================== */
+
+
+/**
+ * @brief A base class for a wrapper/adapter.
+ *
+ * We'll pass Source/Coord objects as objects of this type, but they'll actually be derived from it.
+ */
 class GenericSourceWrapper {
 public:
     virtual ~GenericSourceWrapper() {}
@@ -27,6 +44,10 @@ public:
     virtual void setY(double y) const = 0;
 };
 
+
+/**
+ * @brief Wrap a Source so getX/Y() access the getRaObject/DecObject() methods.
+ */
 class SourceRaDecWrapper : public GenericSourceWrapper {
 public:
     SourceRaDecWrapper(Source::Ptr s) : _s(s) {}
@@ -38,6 +59,10 @@ private:
     Source::Ptr _s;
 };
 
+            
+/**
+ * @brief Wrap a Source so getX/Y() access the getXAstrom/YAstrom() methods.
+ */
 class SourceXyWrapper : public GenericSourceWrapper {
 public:
     SourceXyWrapper(Source::Ptr s) : _s(s) {}
@@ -48,7 +73,10 @@ public:
 private:
     Source::Ptr _s;
 };
-        
+
+/**
+ * @brief Wrap a Coord so getX/Y() access the operator[] method to retrieve values in radians.
+ */            
 class CoordWrapper : public GenericSourceWrapper {
 public:
     CoordWrapper(afwCoord::Coord::Ptr c) : _c(c) {}
@@ -60,9 +88,15 @@ private:
     afwCoord::Coord::Ptr _c;
 };
 
-    
+
+
 enum MatchUnit {DEGREES, RADIANS, ARCMIN, ARCSEC, PIXELS};
+
             
+/**
+ * @brief Base class for the match style (within r, within ellipse, etc)
+ *
+ */    
 class MatchRange {
 public:
     MatchRange(MatchUnit unit);
@@ -81,7 +115,12 @@ private:
 };
 
 
-            
+
+/**
+ * @brief A class to define a circular match (ie. within radius r)
+ *
+ */
+        
 class MatchCircle : public MatchRange {
 public:
     MatchCircle(double radius, MatchUnit unit) : MatchRange(unit), _radius(radius) {
@@ -93,10 +132,29 @@ private:
     double _radius;
 };
 
+            
+/**
+ * @brief A class to define an annular match (ie. between rInner and rOuter)
+ *
+ */
+class MatchAnnulus : public MatchRange {
+public:
+    MatchAnnulus(double rInner, double rOuter, MatchUnit unit) :
+        MatchRange(unit), _rInner(rInner), _rOuter(rOuter) {
+        _rInner *= getConversion();
+        _rOuter *= getConversion();
+    }
+    double compare(GenericSourceWrapper const &s1, GenericSourceWrapper const &s2) const;
+    
+private:
+    double _rInner;
+    double _rOuter;
+};
 
+            
 
 /** 
- *
+ * @brief A container to hold matched objects from N sets (Source, Coord, etc)
  *
  */
 
@@ -124,6 +182,11 @@ private:
 
             
 
+/**
+ * @brief A class to contain the results of a match.  A full match will be performed and stored here
+ *        Specific subsets (union, intersection, complement, etc) can get be computed as needed
+ *        through methods in this class.
+ */
 template<typename Src>
 class MatchResult {
 public:
@@ -145,6 +208,8 @@ private:
 
             
 /**
+ * @brief The function to perform a match on a vector of SourceSets
+ *
  * @note We need to have overloaded match() functions to handle differences between Source and Coord
  *       ... can't just template and instantiate different ones.
  */
@@ -153,29 +218,24 @@ MatchResult<Source> match(std::vector<std::vector<Source::Ptr> > const &ss,
 
 
 /**
- *
+ * @brief The function to perform a match on a vector of CoordSets
  */
 MatchResult<afwCoord::Coord> match(std::vector<std::vector<afwCoord::Coord::Ptr> > const &ss,
                                    MatchRange const &range);
-            
+
+
+
+/**
+ * @brief The brains of the operation.  An engine to compute matches between two sets
+ *
+ * @note To handle more than two sets, this will be called repeatedly in a chain
+ */
 template<typename Src, typename Wrapper>
 MatchResult<Src> matchEngine(std::vector<typename Src::Ptr> const &ss1,
                              std::vector<typename Src::Ptr> const &ss2,
                              MatchRange const &range);
 
             
-#if 0
-            MatchResult<Source> match(std::vector<Source::Ptr> const &ss1,
-                          std::vector<Source::ptr> const &ss2,
-                          MatchRange const &range);
-            
-
-std::vector<MatchSet<afwCoord::Coord> > match(std::vector<afwCoord::Coord> const &c1,
-                                              std::vector<afwCoord::Coord> const &c2,
-                                              MatchRange const &range);
-
-#endif            
-
 }}} // namespace lsst::afw::detection
 
 #endif // #ifndef LSST_AFW_DETECTION_MATCH_H

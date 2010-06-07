@@ -1,6 +1,8 @@
 // -*- lsst-c++ -*-
 /** @file
   * @ingroup afw
+  *
+  * @todo Return NULL Sources for unmatched ones
   */
 
 #include <cmath>
@@ -14,10 +16,26 @@ namespace pexEx = lsst::pex::exceptions;
 namespace afwDet = lsst::afw::detection;
 namespace afwCoord = lsst::afw::coord;
 
-afwDet::MatchRange::MatchRange(MatchUnit unit) : _unit(unit), _conversion(1.0) {
+
+
+
+/* =============================================================
+ * The MatchRange methods 
+ * ============================================================= */
+
+
+/**
+ *
+ *
+ */
+
+afwDet::MatchRange::MatchRange(
+                               MatchUnit unit
+                              ) :
+    _unit(unit), _conversion(1.0) {
     
     // now adjust the distance to correct for units of the source
-    // we'll leave RADIANS and PIXELS alone as they're the native units for sources
+    // we'll leave RADIANS and PIXELS alone as they're the native units for sources and coords
     switch (unit) {
       case RADIANS:
         break;
@@ -36,7 +54,13 @@ afwDet::MatchRange::MatchRange(MatchUnit unit) : _unit(unit), _conversion(1.0) {
     
 }
 
-double afwDet::MatchRange::computeDistance(GenericSourceWrapper const &s1, GenericSourceWrapper const &s2) const {
+/**
+ *
+ */
+double afwDet::MatchRange::computeDistance(
+                                           GenericSourceWrapper const &s1,
+                                           GenericSourceWrapper const &s2
+                                          ) const {
     double dx = s1.getX() - s2.getX();
     double dy = s1.getY() - s2.getY();
     return std::sqrt(dx*dx + dy*dy);
@@ -46,28 +70,64 @@ double afwDet::MatchRange::computeDistance(GenericSourceWrapper const &s1, Gener
 
 
 
-            
-double afwDet::MatchCircle::compare(GenericSourceWrapper const &s1, GenericSourceWrapper const &s2) const {
+/* =============================================================
+ * Specific comparisons which inherit from MatchRange
+ * ============================================================= */
+
+
+/**
+ * @brief If s1 is within _radius of s2, return d, otherwise -1
+ */
+double afwDet::MatchCircle::compare(
+                                    GenericSourceWrapper const &s1,
+                                    GenericSourceWrapper const &s2
+                                   ) const {
     double d = computeDistance(s1, s2);
     return (d < _radius) ? d : -1.0;
 }
 
-            
+
+/**
+ * @brief If s2 is  between rInner,rOuter of s1, return d, otherwise -1
+ */
+double afwDet::MatchAnnulus::compare(
+                                     GenericSourceWrapper const &s1,
+                                     GenericSourceWrapper const &s2
+                                    ) const {
+    double d = computeDistance(s1, s2);
+    return (d <= _rOuter && d >= _rInner) ? d : -1.0;
+}
+
+
+
+
+
+
+/* =============================================================
+ * match engines 
+ * ============================================================= */
+
+
+/**
+ * @note This matchEngine (Order n^2, very slow) is a place holder.  It will be replaced with Serge's
+ *       existing match code when/if this design is worth pursuing.
+ */
 template<typename Src, typename Wrapper>
-afwDet::MatchResult<Src> afwDet::matchEngine(std::vector<typename Src::Ptr> const &ss1,
+afwDet::MatchResult<Src> afwDet::matchEngine(
+                                             std::vector<typename Src::Ptr> const &ss1,
                                              std::vector<typename Src::Ptr> const &ss2,
-                                             MatchRange const &range) {
+                                             MatchRange const &range
+                                            ) {
     
     std::vector<Match<Src> > matches;
     
-    //boost::shared_ptr<std::vector<Src> > sourceUnion;
-    //boost::shared_ptr<std::vector<Match::Ptr> > summary;
-
     std::vector<int> matched2(ss2.size(), 0);
 
     std::vector<typename Src::Ptr> v(2);
     std::vector<double> d(2);
 
+    // ***** fix this ***** 
+    // This should be NULL to denote 'no match', but I don't know how to return NULL for a Src::Ptr
     typename Src::Ptr nullSource(new Src);
     Wrapper(nullSource).setY(-1);
     
@@ -76,7 +136,9 @@ afwDet::MatchResult<Src> afwDet::matchEngine(std::vector<typename Src::Ptr> cons
         bool found = false;
         int iS2 = 0;
 
-        for (typename std::vector<typename Src::Ptr>::const_iterator s2 = ss2.begin(); s2 != ss2.end(); ++s2, ++iS2) {
+        for (typename std::vector<typename Src::Ptr>::const_iterator s2 = ss2.begin();
+             s2 != ss2.end(); ++s2, ++iS2) {
+            
             double dist = range.compare(Wrapper(*s1), Wrapper(*s2));
 
             // if we found it, create a Match object
@@ -118,8 +180,22 @@ afwDet::MatchResult<Src> afwDet::matchEngine(std::vector<typename Src::Ptr> cons
 }
 
 
-afwDet::MatchResult<afwDet::Source> afwDet::match(std::vector<std::vector<afwDet::Source::Ptr> > const &ss,
-                                                  afwDet::MatchRange const &range) {
+
+
+
+/* =============================================================
+ * match functions for each type we accept (Source, Coord)
+ * ============================================================= */
+
+
+
+/**
+ *
+ */
+afwDet::MatchResult<afwDet::Source> afwDet::match(
+                                                  std::vector<std::vector<afwDet::Source::Ptr> > const &ss,
+                                                  afwDet::MatchRange const &range
+                                                 ) {
     
     if ( range.getUnit() == PIXELS ) {
         return afwDet::matchEngine<Source, SourceXyWrapper>(ss[0], ss[1], range);
@@ -129,28 +205,16 @@ afwDet::MatchResult<afwDet::Source> afwDet::match(std::vector<std::vector<afwDet
 }
 
 
-afwDet::MatchResult<afwCoord::Coord> afwDet::match(std::vector<std::vector<afwCoord::Coord::Ptr> > const &ss,
-                                                  afwDet::MatchRange const &range) {
+
+/**
+ *
+ */
+afwDet::MatchResult<afwCoord::Coord> afwDet::match(
+                                                   std::vector<std::vector<afwCoord::Coord::Ptr> > const &ss,
+                                                   afwDet::MatchRange const &range
+                                                  ) {
     
     return afwDet::matchEngine<afwCoord::Coord, CoordWrapper>(ss[0], ss[1], range);
 }
 
 
-#if 0            
-std::vector<MatchSet<afwCoord::Coord> > match(std::vector<afwCoord::Coord> const &c1,
-                                              std::vector<afwCoord::Coord> const &c2,
-                                              MatchRange const &range) {
-
-    if ( range.getUnit() == PIXELS ) {
-        throw LSST_EXCEPT(pexEx::InvalidParameterException,
-                          "Coord objects contain only celestial coordinates.  Can't match PIXELS.");
-    } else {
-        return matchEngine<afwCoord::Coord, CoordWrapper>(c1, c2, range);
-    }
-}
-#endif            
-
-
-//template afwDet::MatchResult<afwDet::Source> afwDet::match(std::vector<std::vector<afwDet::Source::Ptr> > const &ss, afwDet::MatchRange const &range);
-
-//template afwDet::MatchResult<afwCoord::Coord> afwDet::match(std::vector<std::vector<afwCoord::Coord::Ptr> > const &ss, afwDet::MatchRange const &range);

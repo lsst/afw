@@ -25,6 +25,7 @@ int main() {
     std::vector<afwDet::Source::Ptr> ss1;
     std::vector<afwDet::Source::Ptr> ss2;
 
+    // make some phony coordSets
     std::vector<afwCoord::Coord::Ptr> cc1;
     std::vector<afwCoord::Coord::Ptr> cc2;
     
@@ -57,59 +58,108 @@ int main() {
                                                       x2/1000.0, y2/1000.0);
         cc2.push_back(c2);
 
-
-        //std::cout << s1.getXAstrom() << " " << s2.getXAstrom() << std::endl;
     }
 
 
-    // try a match
+    /* =============================================================== */
+    // try a match for Sources
+
+    // put the source sets in a vector
     std::vector<std::vector<afwDet::Source::Ptr> > ss;
     ss.push_back(ss1);
     ss.push_back(ss2);
-    
+
+    // call 'match'
     afwDet::MatchResult<afwDet::Source> match =
         afwDet::match(ss, afwDet::MatchCircle(rLimit, afwDet::PIXELS));
 
 
+    // see what we got
     std::vector<afwDet::Match<afwDet::Source> > matches = match.getMatches();
     for (std::vector<afwDet::Match<afwDet::Source> >::iterator it = matches.begin();
          it != matches.end(); ++it) {
+
+        // If this match worked
         if ((*it)[0]->getYAstrom() != -1 && (*it)[1]->getYAstrom() != -1) {
-            std::cout << "S Matched: " << (*it)[0]->getXAstrom() << " " <<
-                (*it)[0]->getYAstrom() <<  " " << it->getDistance(0) << std::endl;
+            std::cout << "S_Matched: " <<
+                (*it)[0]->getXAstrom() << " " <<
+                (*it)[0]->getYAstrom() <<  " " <<
+                (*it)[1]->getXAstrom() << " " <<
+                (*it)[1]->getYAstrom() <<  " " <<
+                it->getDistance(0) << std::endl;
+
+            // if this match contains an s1 object unmatched in s2
         } else if ( (*it)[0]->getYAstrom() != -1 ) {
-            std::cout << "S Match 1: " << (*it)[0]->getXAstrom() << " " <<
-                (*it)[0]->getYAstrom() <<  " " << 0 << std::endl;
+            std::cout << "S_Match_1: " <<
+                (*it)[0]->getXAstrom() << " " <<
+                (*it)[0]->getYAstrom() <<  " " <<
+                0.0 << " " <<
+                0.0 << " " <<
+                0 << std::endl;
+            
+            // if this match contains an s2 object unmatched in s1
         } else if ( (*it)[1]->getYAstrom() != -1 ) {
-            std::cout << "S Match 2: " << (*it)[1]->getXAstrom() << " " <<
-                (*it)[1]->getYAstrom() <<  " " << 0 << std::endl;
+            std::cout << "S_Match_2: " <<
+                0.0 << " " <<
+                0.0 << " " <<
+                (*it)[1]->getXAstrom() << " " <<
+                (*it)[1]->getYAstrom() <<  " " <<
+                0 << std::endl;
         }
+        
     }
 
 
+    /* =================================================================== */
     // try with a Coord
     std::vector<std::vector<afwCoord::Coord::Ptr> > cc;
     cc.push_back(cc1);
     cc.push_back(cc2);
 
+    // very sleezy, must fix this
+    // I can't return a NULL Coord, so I used latitude=-1 to denote 'unmatched'
     double tol = 1.0e-9;
-    
+
+    // do the match ... try using an annulus this time
+    // *********** must fix all this radians business *******************
     afwDet::MatchResult<afwCoord::Coord> matchC =
-        afwDet::match(cc, afwDet::MatchCircle((M_PI/180.0)*rLimit/1000.0, afwDet::PIXELS));
+        afwDet::match(cc, afwDet::MatchAnnulus((M_PI/180.0)*0.5*rLimit/1000.0,
+                                               (M_PI/180.0)*rLimit/1000.0,
+                                               afwDet::PIXELS));
 
     std::vector<afwDet::Match<afwCoord::Coord> > matchesC = matchC.getMatches();
     for (std::vector<afwDet::Match<afwCoord::Coord> >::iterator it = matchesC.begin();
          it != matchesC.end(); ++it) {
+
+        // if this match worked
         if ( fabs((*it)[0]->getLatitude(afwCoord::RADIANS) + 1) > tol &&
              fabs((*it)[1]->getLatitude(afwCoord::RADIANS) + 1) > tol) {
-            std::cout << "C Matched: " << (*it)[0]->getLongitude(afwCoord::RADIANS) << " " <<
-                (*it)[0]->getLatitude(afwCoord::RADIANS) <<  " " << it->getDistance(1) << std::endl;
+            std::cout << "C_Matched: " <<
+                (*it)[0]->getLongitude(afwCoord::RADIANS) << " " <<
+                (*it)[0]->getLatitude(afwCoord::RADIANS) <<  " " <<
+                (*it)[1]->getLongitude(afwCoord::RADIANS) << " " <<
+                (*it)[1]->getLatitude(afwCoord::RADIANS) <<  " " <<
+                it->getDistance(1) << std::endl;
+
+
+            // if this match contains a c1 object unmatched in c2
         } else if ( fabs((*it)[0]->getLatitude(afwCoord::RADIANS) + 1) > tol) {
-            std::cout << "C Match 1: " << (*it)[0]->getLongitude(afwCoord::RADIANS) << " " <<
-                (*it)[0]->getLatitude(afwCoord::RADIANS) <<  " " << 0 << std::endl;
+            std::cout << "C_Match_1: " <<
+                (*it)[0]->getLongitude(afwCoord::RADIANS) << " " <<
+                (*it)[0]->getLatitude(afwCoord::RADIANS) <<  " " <<
+                0.0 << " " <<
+                0.0 << " " <<
+                0 << std::endl;
+
+
+            // if this match contains a c2 object unmatched in c1
         } else if ( fabs((*it)[1]->getLatitude(afwCoord::RADIANS) + 1) > tol) {
-            std::cout << "C Match 2: " << (*it)[1]->getLongitude(afwCoord::RADIANS) << " " <<
-                (*it)[1]->getLatitude(afwCoord::RADIANS) <<  " " << 0 << std::endl;
+            std::cout << "C_Match_2: " <<
+                0.0 << " " <<
+                0.0 << " " <<
+                (*it)[1]->getLongitude(afwCoord::RADIANS) << " " <<
+                (*it)[1]->getLatitude(afwCoord::RADIANS) <<  " " <<
+                0 << std::endl;
         }
     }
 
