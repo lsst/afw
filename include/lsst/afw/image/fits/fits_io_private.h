@@ -342,18 +342,44 @@ public:
                 
             }
         }
-        for (int y = 0; y != view.height(); ++y) {
-            long fpixel[2];                     // tell cfitsio which pixels to read
-            fpixel[0] = x0 + 1;                 // 1 indexed.
-            fpixel[1] = y0 + y + 1;             //            grrrrrr
-            int anynull = 0;
-            int status = 0;                     // cfitsio function return status
+        /*
+         * Cfitsio 3.006 is able to read some, but not all, data types from top to bottom;  floats are OK,
+         * but unsigned short isn't.
+         *
+         * When cfitsio cooperates it saves us from having to flip the rows ourselves
+         */
+        long blc[2] = {x0, y0 + view.height() - 1}; // 'bottom left corner' of the subsection
+        long trc[2] = {x0 + view.width() - 1, y0};  // 'top right corner' of the subsection
+        long inc[2] = {1, 1};                       // increment to be applied in each dimension (of file)
 
-            if (fits_read_pix(_fd.get(), _ttype, fpixel, view.width(), NULL,
-                              view.row_begin(view.height() - y - 1), &anynull, &status) != 0) {
-                throw LSST_EXCEPT(FitsException,
-                                  cfitsio::err_msg(_fd.get(), status, boost::format("Reading row %d") % y));
-            }
+        blc[0]++; blc[1]++;             // 1-indexed.
+        trc[0]++; trc[1]++;             //            Grrrrrrrr
+
+        int status = 0;                 // cfitsio function return status
+        if (fits_read_subset(_fd.get(), _ttype, blc, trc, inc, NULL, view.row_begin(0), NULL, &status) == 0) {
+            return;                     // The simple case; the read succeeded
+        }
+        
+        if (status != BAD_PIX_NUM) {
+            throw LSST_EXCEPT(FitsException, cfitsio::err_msg(_fd.get(), status));
+        }
+        /*
+         * cfitsio returned a BAD_PIX_NUM errror, which (usually?) means that this type can't be read
+         * in the desired order;  so we'll do it ourselves --- i.e. do the read and flip the rows
+         */
+        std::swap(blc[1], trc[1]);
+
+        status = 0;
+        if (fits_read_subset(_fd.get(), _ttype, blc, trc, inc, NULL, view.row_begin(0), NULL, &status) != 0) {
+            throw LSST_EXCEPT(FitsException, cfitsio::err_msg(_fd.get(), status));
+        }
+        // Here's the row flip
+        std::vector<typename View::value_type> tmp(view.width());
+        for (int y = 0; y != view.height()/2; ++y) {
+            int const yp = view.height() - y - 1;
+            std::copy(view.row_begin(y),  view.row_end(y),  tmp.begin());
+            std::copy(view.row_begin(yp), view.row_end(yp), view.row_begin(y));
+            std::copy(tmp.begin(),        tmp.end(),        view.row_begin(yp));
         }
     }
     
