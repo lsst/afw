@@ -450,16 +450,36 @@ public:
         }
         
         /*
-         * Write the data itself
+         * Write the data itself.  Our underlying boost::gil image has the lowest-address row at the top so we
+         * have to flip rows to write it correctly even if the image is contiguous (which it may not be if
+         * it's a subimage)
+         *
+         * An alternative is write it row-by-row
          */
-        const int ttype = cfitsio::ttypeFromBitpix(BITPIX);
+        int const ttype = cfitsio::ttypeFromBitpix(BITPIX);
+        status = 0;                     // cfitsio function return status
+#if 1                                   // Write in one go via a copy
+        std::vector<typename View::value_type> tmp(view.size());
+        typename std::vector<typename View::value_type>::iterator tptr = tmp.begin();
+        for (int y = 0; y != view.height(); ++y, tptr += view.width()) {
+            std::copy(view.row_begin(y), view.row_end(y), tptr);
+        }
+
+        if (fits_write_img(_fd.get(), ttype, 1, tmp.size(), &tmp[0], &status) != 0) {
+            throw LSST_EXCEPT(FitsException, cfitsio::err_msg(_fd.get(), status));
+        }
+#else
+        /*
+         * Write row-by-row; less efficient as cfitsio isn't very smart, but economical on memory
+         */
         for (int y = 0; y != view.height(); ++y) {
-            status = 0;                 // cfitsio function return status
-            if (fits_write_img(_fd.get(), ttype, 1 + y*view.width(), view.width(), view.row_begin(y), &status) != 0) {
+            if (fits_write_img(_fd.get(), ttype, 1 + y*view.width(), view.width(),
+                               view.row_begin(y), &status) != 0) {
                 throw LSST_EXCEPT(FitsException,
                                   cfitsio::err_msg(_fd.get(), status, boost::format("Writing row %d") % y));
             }
         }
+#endif
     }
 };
 
