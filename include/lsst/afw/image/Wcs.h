@@ -87,7 +87,7 @@ namespace image {
         virtual Ptr clone(void) const;
 
         //Accessors
-        lsst::afw::geom::PointD getSkyOrigin() const;      //Return crval
+        lsst::afw::coord::Coord::Ptr getSkyOrigin() const;      //Return crval
         lsst::afw::geom::PointD getPixelOrigin() const;    //Return crpix
         Eigen::Matrix2d getCDMatrix() const;       //Return CD matrix
         
@@ -108,6 +108,9 @@ namespace image {
         virtual lsst::afw::geom::PointD skyToPixel(double sky1, double sky2) const;
         virtual lsst::afw::geom::PointD skyToPixel(lsst::afw::coord::Coord::ConstPtr coord) const;
 
+
+        virtual bool hasDistortion() const {    return false;};
+        
         lsst::afw::geom::LinearTransform getLinearTransform() const;
         virtual lsst::afw::geom::AffineTransform linearizeAt(lsst::afw::geom::PointD const& sky) const;
 

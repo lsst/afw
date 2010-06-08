@@ -387,20 +387,24 @@ Wcs::Ptr Wcs::clone(void) const {
 //
 
 ///Return crval. Note that this need not be the centre of the image
-GeomPoint Wcs::getSkyOrigin() const {
+CoordPtr Wcs::getSkyOrigin() const {
 
     if(_wcsInfo != NULL) {
-        return geom::makePointD(_wcsInfo->crval[0], _wcsInfo->crval[1]);
+        return makeCorrectCoord(_wcsInfo->crval[0], _wcsInfo->crval[1]);
     } else {
         throw(LSST_EXCEPT(except::RuntimeErrorException, "Wcs structure is not initialised"));
     }
 }
 
-///Return crpix. Note that this need not be the centre of the image
+///Return crpix in the fits convention. Note that this need not be the centre of the image
+///Note: The fits convention labels the bottom left pixel as (1,1), while in 
+///the lsst calls it (0,0). So wcs.pixelToSky(getPixelOrigin()) != getSkyOrigin()
 GeomPoint Wcs::getPixelOrigin() const {
 
     if(_wcsInfo != NULL) {
-        return geom::makePointD(_wcsInfo->crpix[0], _wcsInfo->crpix[1]);
+        double p1 = _wcsInfo->crpix[0];
+        double p2 = _wcsInfo->crpix[1];
+        return geom::makePointD(p1, p2);
     } else {
         throw(LSST_EXCEPT(except::RuntimeErrorException, "Wcs structure not initialised"));
     }
