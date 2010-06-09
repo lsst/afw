@@ -163,19 +163,34 @@ class Match {
 public:
 
     typedef boost::shared_ptr<Match<Src> > Ptr;
+
+    Match() : _nullCount(0),
+              _validIndices(std::vector<int>(0)),
+              _sources(std::vector<typename Src::Ptr>(0)),
+              _distance(std::vector<double>(0)) {}
     
     Match(std::vector<typename Src::Ptr> sources,
-          std::vector<double> distance, int nullCount) :
-        _nullCount(nullCount), _sources(sources), _distance(distance) {}
+          std::vector<double> distance, int nullCount, std::vector<int> validIndices) :
+        _nullCount(nullCount),
+        _validIndices(validIndices),
+        _sources(sources),
+        _distance(distance)
+        {}
     
-    unsigned int getLength() { return _sources.size(); }
-    typename Src::Ptr operator[](unsigned int i) { return _sources[i]; }
+    int getLength() { return _sources.size(); }
+    typename Src::Ptr getSource(int i) { return _sources[i]; }
+    void setSource(int i, typename Src::Ptr s) { _sources[i] = s; }
+    typename Src::Ptr operator[](int i) { return _sources[i]; }
 
-    double getDistance(unsigned int i) { return _distance[i]; }
-
+    double getDistance(int i) { return _distance[i]; }
+    void setDistance(int i, double d) { _distance[i] = d; }
+    
+    void incrementNull(int n) { _nullCount += n; }
     int getNullCount() { return _nullCount; }
+    std::vector<int> *getValidIndices() { return &_validIndices; }
 private:
     int _nullCount;
+    std::vector<int> _validIndices;
     std::vector<typename Src::Ptr> _sources;
     std::vector<double> _distance;
 };
@@ -191,18 +206,21 @@ template<typename Src>
 class MatchResult {
 public:
     
-    MatchResult(
-                std::vector<Match<Src> > matches
-               ) :
-        _matches(matches) {}
+    MatchResult(std::vector<typename Match<Src>::Ptr> matches);
     
-    std::vector<Match<Src> > getIntersection();
-    //std::vector<Src> getUnmatched(unsigned int i) { return _unmatched[i]; }
-    //std::vector<Src> getUnion() { return _union; }
-    std::vector<Match<Src> > getMatches() { return _matches; }
+    typename Match<Src>::Ptr operator[](int i) { return _matches[i]; }
+    int size() { return _matches.size(); }
+    
+    std::vector<typename Src::Ptr> getIntersection();
+    std::vector<typename Src::Ptr> getUnion();
+    std::vector<typename Match<Src>::Ptr> getMatches() { return _matches; }
 
 private:
-    typename std::vector<Match<Src> > _matches;
+    bool _haveUnion;
+    bool _haveIntersection;
+    std::vector<typename Src::Ptr> _union;
+    std::vector<typename Src::Ptr> _intersection;
+    typename std::vector<typename Match<Src>::Ptr> _matches;
 };
 
 
@@ -235,6 +253,11 @@ MatchResult<Src> matchEngine(std::vector<typename Src::Ptr> const &ss1,
                              std::vector<typename Src::Ptr> const &ss2,
                              MatchRange const &range);
 
+
+template<typename Src, typename Wrapper>
+MatchResult<Src> matchChain(std::vector<std::vector<typename Src::Ptr> > const &ss,
+                            MatchRange const &range);
+            
             
 }}} // namespace lsst::afw::detection
 
