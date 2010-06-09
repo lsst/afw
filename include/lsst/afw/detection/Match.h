@@ -1,22 +1,27 @@
 // -*- lsst-c++ -*-
+#ifndef LSST_AFW_DETECTION_MATCH_H
+#define LSST_AFW_DETECTION_MATCH_H
 /** @file
   * @author Steve Bickerton
   * @ingroup afw
+  *
+  * @todo Making many copies.  Use pointers and refs when possible.
+  * @todo use size_t for size() comparisons
+  * @todo find a better way to deal with validindices
   */
-#ifndef LSST_AFW_DETECTION_MATCH_H
-#define LSST_AFW_DETECTION_MATCH_H
 
 #include <vector>
 
 #include "boost/tuple/tuple.hpp"
-
 #include "lsst/afw/detection/Source.h"
-
 #include "lsst/afw/coord.h"
 
 namespace afwCoord = lsst::afw::coord;
 
-namespace lsst { namespace afw { namespace detection {
+
+namespace lsst {
+namespace afw {
+namespace detection {
 
 
 /* ==============================================================
@@ -151,7 +156,28 @@ private:
     double _rOuter;
 };
 
-            
+
+/**
+ * @brief A class to define an annular match (ie. between rInner and rOuter)
+ *
+ */
+class MatchEllipse : public MatchRange {
+public:
+    MatchEllipse(double a, double b, double theta, MatchUnit unit) :
+        MatchRange(unit), _a(a), _b(b), _theta(theta) {
+        _a *= getConversion();
+        _b *= getConversion();
+    }
+    double compare(GenericSourceWrapper const &s1, GenericSourceWrapper const &s2) const;
+    
+private:
+    double _a;
+    double _b;
+    double _theta;
+};
+
+    
+    
 
 /** 
  * @brief A container to hold matched objects from N sets (Source, Coord, etc)
@@ -164,35 +190,24 @@ public:
 
     typedef boost::shared_ptr<Match<Src> > Ptr;
 
-    Match() : _nullCount(0),
-              _validIndices(std::vector<int>(0)),
-              _sources(std::vector<typename Src::Ptr>(0)),
-              _distance(std::vector<double>(0)) {}
+     Match(std::vector<typename Src::Ptr> sources, std::vector<double> distances) :
+        _sources(sources), _distances(distances) {}
     
-    Match(std::vector<typename Src::Ptr> sources,
-          std::vector<double> distance, int nullCount, std::vector<int> validIndices) :
-        _nullCount(nullCount),
-        _validIndices(validIndices),
-        _sources(sources),
-        _distance(distance)
-        {}
+    size_t size() { return _sources.size(); }
     
-    int getLength() { return _sources.size(); }
     typename Src::Ptr getSource(int i) { return _sources[i]; }
     void setSource(int i, typename Src::Ptr s) { _sources[i] = s; }
     typename Src::Ptr operator[](int i) { return _sources[i]; }
 
-    double getDistance(int i) { return _distance[i]; }
-    void setDistance(int i, double d) { _distance[i] = d; }
+    double getDistance(int i) { return _distances[i]; }
+    void setDistance(int i, double d) { _distances[i] = d; }
     
-    void incrementNull(int n) { _nullCount += n; }
-    int getNullCount() { return _nullCount; }
-    std::vector<int> *getValidIndices() { return &_validIndices; }
+    int getNullCount();
+    std::vector<int> getValidIndices();
+    
 private:
-    int _nullCount;
-    std::vector<int> _validIndices;
     std::vector<typename Src::Ptr> _sources;
-    std::vector<double> _distance;
+    std::vector<double> _distances;
 };
 
             
@@ -209,7 +224,7 @@ public:
     MatchResult(std::vector<typename Match<Src>::Ptr> matches);
     
     typename Match<Src>::Ptr operator[](int i) { return _matches[i]; }
-    int size() { return _matches.size(); }
+    size_t size() { return _matches.size(); }
     
     std::vector<typename Src::Ptr> getIntersection();
     std::vector<typename Src::Ptr> getUnion();
@@ -254,6 +269,10 @@ MatchResult<Src> matchEngine(std::vector<typename Src::Ptr> const &ss1,
                              MatchRange const &range);
 
 
+/**
+ * @brief Function to match an arbitrary number of source sets
+ *
+ */
 template<typename Src, typename Wrapper>
 MatchResult<Src> matchChain(std::vector<std::vector<typename Src::Ptr> > const &ss,
                             MatchRange const &range);

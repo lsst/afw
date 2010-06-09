@@ -2,7 +2,6 @@
 /** @file
   * @ingroup afw
   *
-  * @todo Return NULL Sources for unmatched ones
   */
 
 #include <cmath>
@@ -99,14 +98,67 @@ double afwDet::MatchAnnulus::compare(
 }
 
 
+/**
+ * @brief If s2 is within ellipse a,b,theta centered on s1, return d, otherwise -1
+ */
+double afwDet::MatchEllipse::compare(
+                                     GenericSourceWrapper const &s1,
+                                     GenericSourceWrapper const &s2
+                                    ) const {
+    
+    // rotate the coords so the ellipse is along x-axis
+    double dx = s2.getX() - s1.getX();
+    double dy = s2.getY() - s1.getY();
+    double x = dx*std::cos(_theta) + dy*std::sin(_theta);
+    double y = -dx*std::sin(_theta) + dy*std::cos(_theta);
+
+    // eq is now  x^2/a^2 + y^2/b^2 = 1  ...  < 1 is within, >1 is outside
+    double ee = x*x/(_a*_a) + y*y/(_b*_b);
+    
+    double d = computeDistance(s1, s2);
+    return (ee <= 1) ? d : -1.0;
+}
+
+
+
+
 
 
 /**
- *
+ * @brief Count the null pointers in the Match
+ */
+template<typename Src>
+int afwDet::Match<Src>::getNullCount() {
+    int count = 0;
+    for (size_t i = 0; i < _sources.size(); i++) {
+        if (! _sources[i]) {
+            count++;
+        }
+    }
+    return count;
+}
+
+/**
+ * @brief Get indices for Sources which are non-null
+ */
+template<typename Src>
+std::vector<int> afwDet::Match<Src>::getValidIndices() {
+    std::vector<int> v;
+    for (size_t i = 0; i < _sources.size(); i++) {
+        if (_sources[i]) {
+            v.push_back(i);
+        }
+    }
+    return v;
+}
+
+
+/**
+ * @brief Constructor for a MatchResult
  */
 template<typename Src>
 afwDet::MatchResult<Src>::MatchResult(
-                                      std::vector<typename Match<Src>::Ptr> matches
+    std::vector<typename Match<Src>::Ptr> matches ///< list of Match objects in the result
                                      ) :
     _haveUnion(false), _haveIntersection(false),
     _union(std::vector<typename Src::Ptr>(0)),
@@ -154,12 +206,11 @@ std::vector<typename Src::Ptr> afwDet::MatchResult<Src>::getUnion() {
 
             // go through until we find the first non-null
             typename Match<Src>::Ptr pMat = *it;
-            std::vector<int> *validInd = pMat->getValidIndices();
-            int ind0 = (*validInd)[0];
-            _union.push_back( pMat->getSource(ind0) );
+            std::vector<int> validInd = pMat->getValidIndices();
+            int ind0 = validInd[0];
+            _union.push_back(pMat->getSource(ind0));
             
         }
-        
         _haveUnion = true;
         
         return _union;
@@ -211,7 +262,7 @@ afwDet::MatchResult<Src> afwDet::matchEngine(
 
                 d[0] = 0.0;
                 d[1] = dist;
-                typename Match<Src>::Ptr m(new Match<Src>(v, d, 0, std::vector<int>(1, 0)));
+                typename Match<Src>::Ptr m(new Match<Src>(v, d));
                 matches.push_back(m);
 
                 matched2[iS2] += 1;
@@ -224,19 +275,19 @@ afwDet::MatchResult<Src> afwDet::matchEngine(
             v[1] = typename Src::Ptr();
             d[0] = -1;
             d[1] = -1;
-            typename Match<Src>::Ptr m(new Match<Src>(v, d, 1, std::vector<int>(1, 0)));
+            typename Match<Src>::Ptr m(new Match<Src>(v, d));
             matches.push_back(m);
         }
     }
 
     // now get the ones in ss2 but not in ss1
-    for (int i = 0; i < matched2.size(); ++i) {
+    for (size_t i = 0; i < matched2.size(); ++i) {
         if (matched2[i] == 0) {
             v[0] = typename Src::Ptr();
             v[1] = ss2[i];
             d[0] = -1;
             d[1] = -1;
-            typename Match<Src>::Ptr m(new Match<Src>(v, d, 1, std::vector<int>(1, 1)));
+            typename Match<Src>::Ptr m(new Match<Src>(v, d));
             matches.push_back(m);
         }
     }
@@ -267,10 +318,9 @@ afwDet::MatchResult<Src> afwDet::matchChain(
     std::map<typename Src::Ptr, typename Match<Src>::Ptr > masterList;
 
     // initialize the masterList with sources from ss[0]
-    for (int i = 0; i < ss0.size(); i++) {
-        masterList[ss0[i]] = typename Match<Src>::Ptr(new Match<Src>(nulls, zeros, 0, indices));
+    for (size_t i = 0; i < ss0.size(); i++) {
+        masterList[ss0[i]] = typename Match<Src>::Ptr(new Match<Src>(nulls, zeros));
         masterList[ss0[i]]->setSource(0, ss0[i]);
-        (masterList[ss0[i]]->getValidIndices())->push_back(0);
     }
     
     // daisy chain through the sets
@@ -280,15 +330,15 @@ afwDet::MatchResult<Src> afwDet::matchChain(
         ss0 = result.getUnion();
 
         // add the matches to the master list
-        for (int iM = 0; iM < result.size(); iM++) {
+        for (size_t iM = 0; iM < result.size(); iM++) {
             
             typename Match<Src>::Ptr thisMatch = result[iM];
-            int firstValidIndex = (*(thisMatch->getValidIndices()))[0];
+            int firstValidIndex = (thisMatch->getValidIndices())[0];
             typename Src::Ptr sKey = thisMatch->getSource(firstValidIndex); // use as map key
 
             // if we don't already have it, create a new Match
             if (masterList.find(sKey) == masterList.end()) {
-                masterList[sKey] = typename Match<Src>::Ptr(new Match<Src>(nulls, zeros, iS, indices));
+                masterList[sKey] = typename Match<Src>::Ptr(new Match<Src>(nulls, zeros));
             }
 
             typename Src::Ptr s0 = thisMatch->getSource(0);
@@ -299,14 +349,11 @@ afwDet::MatchResult<Src> afwDet::matchChain(
             // if we found it in set iS
             if (s1) {
                 masterList[sKey]->setSource(iS, s1);
-                (masterList[sKey]->getValidIndices())->push_back(iS);
                 double dist = 0;
                 if (s0) {
                     dist = thisMatch->getDistance(1);
                 }
                 masterList[sKey]->setDistance(iS, dist);
-            } else {
-                masterList[sKey]->incrementNull(1);
             }
             
         }
@@ -316,7 +363,7 @@ afwDet::MatchResult<Src> afwDet::matchChain(
     std::vector<typename Match<Src>::Ptr> matches;
 
     // for each object
-    for (int iM = 0; iM < ss0.size(); iM++) {
+    for (size_t iM = 0; iM < ss0.size(); iM++) {
         matches.push_back( masterList[ss0[iM]] );
     }
     
