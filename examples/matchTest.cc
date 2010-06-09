@@ -53,43 +53,8 @@ int main() {
     /* =============================================================== */
     // try matching
 
-    // call 'match'
-    afwDet::MatchCircle circle = afwDet::MatchCircle(rLimit, afwDet::PIXELS);
-    afwDet::MatchEllipse ellipse = afwDet::MatchEllipse(rLimit, 0.5*rLimit, M_PI/6.0, afwDet::PIXELS);
-    afwDet::MatchResult<afwDet::Source> match = afwDet::match(ss, ellipse);
-    
-    // see what we got
-    std::vector<afwDet::Match<afwDet::Source>::Ptr> matches = match.getMatches();
-    for (std::vector<afwDet::Match<afwDet::Source>::Ptr>::iterator it = matches.begin();
-         it != matches.end(); ++it) {
 
-        printf("S %1d  ", (*it)->getNullCount());
-        for (size_t iS = 0; iS < (*it)->size(); iS++) {
-            afwDet::Source::Ptr s = (*it)->getSource(iS);
-            double x = s ? s->getXAstrom() : 0;
-            double y = s ? s->getYAstrom() : 0;
-            double d = (*it)->getDistance(iS);
-            
-            printf("%7.2f %7.2f %4.2f   ", x, y, d);
-        }
-        printf("\n");
-
-    }
-
-    printf("\nSource intersection\n");
-    afwDet::SourceSet sInter = match.getIntersection();
-    for (size_t i = 0; i < sInter.size(); i++) {
-        printf("%7.2f %7.2f\n", sInter[i]->getXAstrom(), sInter[i]->getYAstrom());
-    }
-    printf("\n");
-    
-    printf("\nSource union\n");
-    afwDet::SourceSet sUnion = match.getUnion();
-    for (size_t i = 0; i < sUnion.size(); i++) {
-        printf("%7.2f %7.2f\n", sUnion[i]->getXAstrom(), sUnion[i]->getYAstrom());
-    }
-    printf("\n");
-    
+    /* *************  Coord *************** */
     
     // do the match ... try using an annulus this time
     // Note:  this will reduce coords in intersection() set.
@@ -131,6 +96,57 @@ int main() {
         printf("%7.2f %7.2f\n", 1000.0*cUnion[i]->getLongitude(afwCoord::DEGREES),
                1000.0*cUnion[i]->getLatitude(afwCoord::DEGREES));
     }
+
+
+
+    
+    /* *************  Source *************** */
+
+    // call 'match'
+    afwDet::MatchCircle circle = afwDet::MatchCircle(rLimit, afwDet::PIXELS);
+    afwDet::MatchEllipse ellipse = afwDet::MatchEllipse(rLimit, 0.5*rLimit, M_PI/6.0, afwDet::PIXELS);
+    afwDet::MatchResult<afwDet::Source> match = afwDet::match(ss, ellipse);
+    
+    // see what we got
+    std::vector<afwDet::Match<afwDet::Source>::Ptr> matches = match.getMatches();
+    for (std::vector<afwDet::Match<afwDet::Source>::Ptr>::iterator it = matches.begin();
+         it != matches.end(); ++it) {
+
+        printf("S %1d  ", (*it)->getNullCount());
+        for (size_t iS = 0; iS < (*it)->size(); iS++) {
+            afwDet::Source::Ptr s = (*it)->getSource(iS);
+            double x = s ? s->getXAstrom() : 0;
+            double y = s ? s->getYAstrom() : 0;
+            double d = (*it)->getDistance(iS);
+            
+            printf("%7.2f %7.2f %4.2f   ", x, y, d);
+        }
+        printf("\n");
+
+    }
+
+    printf("\nSource intersection\n");
+    afwDet::SourceSet sInter = match.getIntersection();
+    for (size_t i = 0; i < sInter.size(); i++) {
+        printf("%7.2f %7.2f\n", sInter[i]->getXAstrom(), sInter[i]->getYAstrom());
+    }
+    printf("\n");
+    
+    printf("\nSource union\n");
+    afwDet::SourceSet sUnion = match.getUnion();
+    for (size_t i = 0; i < sUnion.size(); i++) {
+        printf("%7.2f %7.2f\n", sUnion[i]->getXAstrom(), sUnion[i]->getYAstrom());
+    }
+    printf("\n");
+    
+    printf("\nSource complement ... in 1 not 2\n");
+    afwDet::SourceSet sComplement = match.getComplement(0, 1);
+    for (size_t i = 0; i < sComplement.size(); i++) {
+        printf("%7.2f %7.2f\n", sComplement[i]->getXAstrom(), sComplement[i]->getYAstrom());
+    }
+    printf("\n");
+    
+    
     
     return 0;
 }

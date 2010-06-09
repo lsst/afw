@@ -218,6 +218,23 @@ std::vector<typename Src::Ptr> afwDet::MatchResult<Src>::getUnion() {
 }
 
 
+/**
+ *
+ */
+template<typename Src>
+std::vector<typename Src::Ptr> afwDet::MatchResult<Src>::getComplement(
+                                                                       int iIn, ///< index of Source is in
+                                                                       int iNotIn ///< index Source is absent
+                                                                      ) {
+    std::vector<typename Src::Ptr> _complement;
+    for (typename std::vector<typename afwDet::Match<Src>::Ptr>::iterator it = _matches.begin();
+         it != _matches.end(); ++it) {
+        if ((*it)->getSource(iIn) && ! (*it)->getSource(iNotIn) ) {
+            _complement.push_back( (*it)->getSource(iIn) );
+        }
+    }
+    return _complement;
+}
 
 
 /* =============================================================
@@ -409,5 +426,11 @@ afwDet::MatchResult<afwCoord::Coord> afwDet::match(
 }
 
 
-template std::vector<afwDet::Source::Ptr> afwDet::MatchResult<afwDet::Source>::getIntersection();
-template std::vector<afwCoord::Coord::Ptr> afwDet::MatchResult<afwCoord::Coord>::getIntersection();
+#define INSTANTIATE_STUFF(TYPE) \
+    template std::vector<TYPE::Ptr> afwDet::MatchResult<TYPE>::getIntersection(); \
+    template std::vector<TYPE::Ptr> afwDet::MatchResult<TYPE>::getComplement(int, int);
+
+
+INSTANTIATE_STUFF(afwDet::Source);
+INSTANTIATE_STUFF(afwCoord::Coord);
+

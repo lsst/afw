@@ -228,6 +228,7 @@ public:
     
     std::vector<typename Src::Ptr> getIntersection();
     std::vector<typename Src::Ptr> getUnion();
+    std::vector<typename Src::Ptr> getComplement(int iIn, int iNotIn);
     std::vector<typename Match<Src>::Ptr> getMatches() { return _matches; }
 
 private:
