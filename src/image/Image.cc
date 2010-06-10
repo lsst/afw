@@ -248,54 +248,6 @@ typename image::ImageBase<PixelT>::fast_iterator image::ImageBase<PixelT>::end(
     return row_end(0);
 }
 
-/// Return an \c xy_locator at the point <tt>(x, y)</tt> in the %image
-///
-/// Locators may be used to access a patch in an image
-template<typename PixelT>
-typename image::ImageBase<PixelT>::xy_locator image::ImageBase<PixelT>::xy_at(int x, int y) const {
-    return xy_locator(_gilView.xy_at(x, y));
-}
-
-/// Return an \c x_iterator to the start of the \c y'th row
-///
-/// Incrementing an \c x_iterator moves it across the row
-template<typename PixelT>
-typename image::ImageBase<PixelT>::x_iterator image::ImageBase<PixelT>::row_begin(int y) const {
-    return _gilView.row_begin(y);
-}
-
-/// Return an \c x_iterator to the end of the \c y'th row
-template<typename PixelT>
-typename image::ImageBase<PixelT>::x_iterator image::ImageBase<PixelT>::row_end(int y) const {
-    return _gilView.row_end(y);
-}
-
-/// Return an \c x_iterator to the point <tt>(x, y)</tt> in the %image
-template<typename PixelT>
-typename image::ImageBase<PixelT>::x_iterator image::ImageBase<PixelT>::x_at(int x, int y) const {
-    return _gilView.x_at(x, y);
-}
-
-/// Return an \c y_iterator to the start of the \c y'th row
-///
-/// Incrementing an \c y_iterator moves it up the column
-template<typename PixelT>
-typename image::ImageBase<PixelT>::y_iterator image::ImageBase<PixelT>::col_begin(int x) const {
-    return _gilView.col_begin(x);
-}
-
-/// Return an \c y_iterator to the end of the \c y'th row
-template<typename PixelT>
-typename image::ImageBase<PixelT>::y_iterator image::ImageBase<PixelT>::col_end(int x) const {
-    return _gilView.col_end(x);
-}
-
-/// Return an \c y_iterator to the point <tt>(x, y)</tt> in the %image
-template<typename PixelT>
-typename image::ImageBase<PixelT>::y_iterator image::ImageBase<PixelT>::y_at(int x, int y) const {
-    return _gilView.y_at(x, y);
-}
-
 /************************************************************************************************************/
 /// Set the %image's pixels to rhs
 template<typename PixelT>

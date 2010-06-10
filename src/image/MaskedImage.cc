@@ -699,16 +699,6 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::x_iterator
     return x_iterator(imageEnd, maskEnd, varianceEnd);
 }
 
-/// Return an \c x_iterator at the point <tt>(x, y)</tt>
-template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::x_iterator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::x_at(int x, int y) const {
-    typename Image::x_iterator imageEnd = getImage()->x_at(x, y);
-    typename Mask::x_iterator maskEnd = getMask()->x_at(x, y);
-    typename Variance::x_iterator varianceEnd = getVariance()->x_at(x, y);
-
-    return x_iterator(imageEnd, maskEnd, varianceEnd);
-}
-
 /************************************************************************************************************/
 
 /// Return an \c y_iterator to the start of the %image
@@ -727,16 +717,6 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::y_iterator
     typename Image::y_iterator imageEnd = getImage()->col_end(x);
     typename Mask::y_iterator maskEnd = getMask()->col_end(x);
     typename Variance::y_iterator varianceEnd = getVariance()->col_end(x);
-
-    return y_iterator(imageEnd, maskEnd, varianceEnd);
-}
-
-/// Return an \c y_iterator at the point <tt>(x, y)</tt>
-template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::y_iterator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::y_at(int x, int y) const {
-    typename Image::y_iterator imageEnd = getImage()->y_at(x, y);
-    typename Mask::y_iterator maskEnd = getMask()->y_at(x, y);
-    typename Variance::y_iterator varianceEnd = getVariance()->y_at(x, y);
 
     return y_iterator(imageEnd, maskEnd, varianceEnd);
 }
@@ -776,18 +756,6 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::fast_itera
     typename Variance::fast_iterator varianceEnd = getVariance()->end(contiguous);
 
     return fast_iterator(imageEnd, maskEnd, varianceEnd);
-}
-
-/************************************************************************************************************/
-
-/// Return an \c xy_locator at the point <tt>(x, y)</tt>
-template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::xy_locator image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::xy_at(int x, int y) const {
-    typename Image::xy_locator imageEnd = getImage()->xy_at(x, y);
-    typename Mask::xy_locator maskEnd = getMask()->xy_at(x, y);
-    typename Variance::xy_locator varianceEnd = getVariance()->xy_at(x, y);
-
-    return xy_locator(imageEnd, maskEnd, varianceEnd);
 }
 
 /************************************************************************************************************/

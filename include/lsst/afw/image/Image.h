@@ -244,15 +244,44 @@ namespace image {
         fast_iterator begin(bool) const;
         fast_iterator end(bool) const;
 
-        x_iterator row_begin(int y) const;
-        x_iterator row_end(int y) const;
-        x_iterator x_at(int x, int y) const;
+        /// Return an \c x_iterator to the start of the \c y'th row
+        ///
+        /// Incrementing an \c x_iterator moves it across the row
+        x_iterator row_begin(int y) const {
+            return _gilView.row_begin(y);
+        }
 
-        y_iterator col_begin(int x) const;
-        y_iterator col_end(int x) const;
-        y_iterator y_at(int x, int y) const;
+        /// Return an \c x_iterator to the end of the \c y'th row
+        x_iterator row_end(int y) const {
+            return _gilView.row_end(y);
+        }
 
-        xy_locator xy_at(int x, int y) const;
+        /// Return an \c x_iterator to the point <tt>(x, y)</tt> in the %image
+        x_iterator x_at(int x, int y) const { return _gilView.x_at(x, y); }
+
+        /// Return an \c y_iterator to the start of the \c y'th row
+        ///
+        /// Incrementing an \c y_iterator moves it up the column
+        y_iterator col_begin(int x) const {
+            return _gilView.col_begin(x);
+        }
+        
+        /// Return an \c y_iterator to the end of the \c y'th row
+        y_iterator col_end(int x) const {
+            return _gilView.col_end(x);
+        }
+
+        /// Return an \c y_iterator to the point <tt>(x, y)</tt> in the %image
+        y_iterator y_at(int x, int y) const {
+            return _gilView.y_at(x, y);
+        }
+
+        /// Return an \c xy_locator at the point <tt>(x, y)</tt> in the %image
+        ///
+        /// Locators may be used to access a patch in an image
+        xy_locator xy_at(int x, int y) const {
+            return xy_locator(_gilView.xy_at(x, y));
+        }
         /**
          * Set the ImageBase's origin
          *

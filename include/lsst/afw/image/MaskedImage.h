@@ -803,13 +803,54 @@ namespace image {
 
         x_iterator row_begin(int y) const;
         x_iterator row_end(int y) const;
-        x_iterator x_at(int x, int y) const;
+
+        /// Return an \c x_iterator at the point <tt>(x, y)</tt>
+        x_iterator x_at(int x, int y) const {
+#if 0
+            typename Image::x_iterator imageEnd = getImage()->x_at(x, y);
+            typename Mask::x_iterator maskEnd = getMask()->x_at(x, y);
+            typename Variance::x_iterator varianceEnd = getVariance()->x_at(x, y);
+#else  // bypass checks for non-NULL pointers
+            typename Image::x_iterator imageEnd = _image->x_at(x, y);
+            typename Mask::x_iterator maskEnd = _mask->x_at(x, y);
+            typename Variance::x_iterator varianceEnd = _variance->x_at(x, y);
+#endif
+
+            return x_iterator(imageEnd, maskEnd, varianceEnd);
+        }
 
         y_iterator col_begin(int x) const;
         y_iterator col_end(int x) const;
-        y_iterator y_at(int x, int y) const;
 
-        xy_locator xy_at(int x, int y) const;
+        /// Return an \c y_iterator at the point <tt>(x, y)</tt>
+        y_iterator y_at(int x, int y) const {
+#if 0
+            typename Image::y_iterator imageEnd = getImage()->y_at(x, y);
+            typename Mask::y_iterator maskEnd = getMask()->y_at(x, y);
+            typename Variance::y_iterator varianceEnd = getVariance()->y_at(x, y);
+#else  // bypass checks for non-NULL pointers
+            typename Image::y_iterator imageEnd = _image->y_at(x, y);
+            typename Mask::y_iterator maskEnd = _mask->y_at(x, y);
+            typename Variance::y_iterator varianceEnd = _variance->y_at(x, y);
+#endif
+            return y_iterator(imageEnd, maskEnd, varianceEnd);
+        }
+
+
+        /// Return an \c xy_locator at the point <tt>(x, y)</tt>
+        xy_locator xy_at(int x, int y) const {
+#if 0
+            typename Image::xy_locator imageEnd = getImage()->xy_at(x, y);
+            typename Mask::xy_locator maskEnd = getMask()->xy_at(x, y);
+            typename Variance::xy_locator varianceEnd = getVariance()->xy_at(x, y);
+#else  // bypass checks for non-NULL pointers
+            typename Image::xy_locator imageEnd = _image->xy_at(x, y);
+            typename Mask::xy_locator maskEnd = _mask->xy_at(x, y);
+            typename Variance::xy_locator varianceEnd = _variance->xy_at(x, y);
+#endif
+            
+            return xy_locator(imageEnd, maskEnd, varianceEnd);
+        }
         /**
          * Set the MaskedImage's origin
          *
