@@ -224,10 +224,10 @@ void getKey(fitsfile* fd,
 }
 
 void addKV(lsst::daf::base::PropertySet::Ptr metadata, std::string key, std::string value) {
-    boost::regex const boolRegex("[tTfF]");
-    boost::regex const intRegex("(\\Q+\\E|\\Q-\\E){0,1}[0-9]+");
-    boost::regex const doubleRegex("(\\Q+\\E|\\Q-\\E){0,1}([0-9]*\\.[0-9]+|[0-9]+\\.[0-9]*)((e|E)(\\Q+\\E|\\Q-\\E){0,1}[0-9]+){0,1}");
-    boost::regex const fitsStringRegex("'(.*)'");
+    static boost::regex const boolRegex("[tTfF]");
+    static boost::regex const intRegex("(\\Q+\\E|\\Q-\\E){0,1}[0-9]+");
+    static boost::regex const doubleRegex("(\\Q+\\E|\\Q-\\E){0,1}([0-9]*\\.[0-9]+|[0-9]+\\.[0-9]*)((e|E)(\\Q+\\E|\\Q-\\E){0,1}[0-9]+){0,1}");
+    static boost::regex const fitsStringRegex("'(.*)'");
 
     boost::smatch matchStrings;
     std::istringstream converter(value);

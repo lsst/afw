@@ -121,7 +121,7 @@ std::string afwMath::NearestWarpingKernel::NearestFunction1::toString(std::strin
 boost::shared_ptr<afwMath::SeparableKernel> afwMath::makeWarpingKernel(std::string name) {
     typedef boost::shared_ptr<afwMath::SeparableKernel> KernelPtr;
     boost::cmatch matches;
-    const boost::regex LanczosRE("lanczos(\\d+)");
+    static const boost::regex LanczosRE("lanczos(\\d+)");
     if (name == "bilinear") {
         return KernelPtr(new BilinearWarpingKernel());
     } else if (boost::regex_match(name.c_str(), matches, LanczosRE)) {

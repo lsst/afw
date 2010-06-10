@@ -356,6 +356,7 @@ public:
         trc[0]++; trc[1]++;             //            Grrrrrrrr
 
         int status = 0;                 // cfitsio function return status
+#if 0                                   // this generates slower code (more seeks) than the read-and-swap
         if (fits_read_subset(_fd.get(), _ttype, blc, trc, inc, NULL, view.row_begin(0), NULL, &status) == 0) {
             return;                     // The simple case; the read succeeded
         }
@@ -367,6 +368,7 @@ public:
          * cfitsio returned a BAD_PIX_NUM errror, which (usually?) means that this type can't be read
          * in the desired order;  so we'll do it ourselves --- i.e. do the read and flip the rows
          */
+#endif
         std::swap(blc[1], trc[1]);
 
         status = 0;
