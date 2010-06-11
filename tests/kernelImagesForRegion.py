@@ -37,6 +37,7 @@ class KernelImagesForRegion(unittest.TestCase):
         boxCorner = afwGeom.makePointI(11, 50)
         boxExtent = afwGeom.makeExtentI(100, 99)
         self.bbox = afwGeom.BoxI(boxCorner, boxExtent)
+        self.xy0 = afwGeom.makePointI(100, 251)
         self.imWidth = 200
         self.imHeight = 200
         self.kernel = self.makeKernel()
@@ -57,9 +58,13 @@ class KernelImagesForRegion(unittest.TestCase):
 
         # spatial parameters are a list of entries, one per kernel parameter;
         # each entry is a list of spatial parameters
+        xSlope = (maxSigma - minSigma) / self.imWidth
+        ySlope = (maxSigma - minSigma) / self.imHeight
+        xOrigin = minSigma - (self.xy0[0] * xSlope)
+        yOrigin = minSigma - (self.xy0[1] * ySlope)
         sParams = (
-            (minSigma, (maxSigma - minSigma) / self.imWidth, 0.0),
-            (minSigma, 0.0,  (maxSigma - minSigma) / self.imHeight),
+            (xOrigin, xSlope, 0.0),
+            (yOrigin, 0.0,    ySlope),
             (0.0, 0.0, 0.0),
         )
    
@@ -94,13 +99,13 @@ class KernelImagesForRegion(unittest.TestCase):
         """
         kernel = self.makeKernel()
         for doNormalize in (False, True):
-            region = mathDetail.KernelImagesForRegion(kernel, self.bbox, doNormalize)
+            region = mathDetail.KernelImagesForRegion(kernel, self.bbox, self.xy0, doNormalize)
             self.assert_(region.getDoNormalize() == doNormalize)
 
     def testGetPixelIndex(self):
         """Test getPixelIndex method
         """
-        region = mathDetail.KernelImagesForRegion(self.kernel, self.bbox, False)
+        region = mathDetail.KernelImagesForRegion(self.kernel, self.bbox, self.xy0, False)
         leftInd = self.bbox.getMinX()
         rightInd = self.bbox.getMaxX() + 1
         bottomInd = self.bbox.getMinY()
@@ -125,8 +130,38 @@ class KernelImagesForRegion(unittest.TestCase):
                     desPixIndex)
             )
     
+    def testExactImages(self):
+        """Confirm that kernel image at each location is correct
+        """
+        desImage = afwImage.ImageD(self.kernel.getWidth(), self.kernel.getHeight())
+        
+        for doNormalize in (False, True):
+            region = mathDetail.KernelImagesForRegion(self.kernel, self.bbox, self.xy0, doNormalize)
+            for location in (
+                region.BOTTOM_LEFT,
+                region.BOTTOM,
+                region.BOTTOM_RIGHT,
+                region.LEFT,
+                region.CENTER,
+                region.RIGHT,
+                region.TOP_LEFT,
+                region.TOP,
+                region.TOP_RIGHT,
+            ):
+                pixelIndex = region.getPixelIndex(location)
+                xPos = afwImage.indexToPosition(pixelIndex[0] + self.xy0[0])
+                yPos = afwImage.indexToPosition(pixelIndex[1] + self.xy0[1])
+                self.kernel.computeImage(desImage, doNormalize, xPos, yPos)
+                desImArr = imTestUtils.arrayFromImage(desImage)
+                
+                actImage = region.getImage(location)
+                actImArr = imTestUtils.arrayFromImage(actImage)
+                errStr = imTestUtils.imagesDiffer(actImArr, desImArr)
+                if errStr:
+                    self.fail("exact image(%s) incorrect:\n%s" % (LocNameDict[location], errStr))
+    
     def testInterpolateImage(self):
-        region = mathDetail.KernelImagesForRegion(self.kernel, self.bbox, False)
+        region = mathDetail.KernelImagesForRegion(self.kernel, self.bbox, self.xy0, False)
         actImage = afwImage.ImageD(self.kernel.getWidth(), self.kernel.getHeight())
         
         bottomLeftImArr = imTestUtils.arrayFromImage(region.getImage(region.BOTTOM_LEFT))
@@ -153,7 +188,7 @@ class KernelImagesForRegion(unittest.TestCase):
         
 
     def testIsInterpolateOk(self):
-        region = mathDetail.KernelImagesForRegion(self.kernel, self.bbox, True)
+        region = mathDetail.KernelImagesForRegion(self.kernel, self.bbox, self.xy0, True)
         
         # compute max error
         interpImage = afwImage.ImageD(self.kernel.getWidth(), self.kernel.getHeight())

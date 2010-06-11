@@ -115,10 +115,12 @@ namespace detail {
         KernelImagesForRegion(
                 KernelConstPtr kernelPtr,
                 lsst::afw::geom::BoxI const &bbox,
+                lsst::afw::geom::Point2I const &xy0,
                 bool doNormalize);
         KernelImagesForRegion(
                 KernelConstPtr kernelPtr,
                 lsst::afw::geom::BoxI const &bbox,
+                lsst::afw::geom::Point2I const &xy0,
                 bool doNormalize,
                 ImageConstPtr bottomLeftImagePtr,
                 ImageConstPtr bottomRightImagePtr,
@@ -129,6 +131,10 @@ namespace detail {
          * Get the bounding box for the region
          */
         lsst::afw::geom::BoxI getBBox() const { return _bbox; };
+        /**
+         * Get xy0 of the image
+         */
+        lsst::afw::geom::Point2I getXY0() const { return _xy0; };
         /**
          * Get the doNormalize parameter
          */
@@ -163,6 +169,7 @@ namespace detail {
         // member variables
         KernelConstPtr _kernelPtr;
         lsst::afw::geom::BoxI _bbox;
+        lsst::afw::geom::Point2I _xy0;
         lsst::afw::geom::Point2D _centerFractionalPosition;  ///< fractional position of center pixel
             ///< from bottom left to top right; 0.5 if length of axis is odd, somewhat less if even
         lsst::afw::geom::Point2I _centerIndex;  ///< index of center pixel
