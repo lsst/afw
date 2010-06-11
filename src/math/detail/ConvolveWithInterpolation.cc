@@ -65,7 +65,10 @@ void mathDetail::convolveWithInterpolation(
     afwGeom::BoxI fullBBox = afwGeom::BoxI(afwGeom::Point2I::make(0, 0), 
         afwGeom::Extent2I::make(outImage.getWidth(), outImage.getHeight()));
     afwGeom::BoxI goodBBox = kernel.shrinkBBox(fullBBox);
-    KernelImagesForRegion goodRegion(KernelImagesForRegion(kernel.clone(), goodBBox,
+    KernelImagesForRegion goodRegion(KernelImagesForRegion(
+        kernel.clone(),
+        goodBBox,
+        afwGeom::convertToGeom(inImage.getXY0()),
         convolutionControl.getDoNormalize()));
     pexLog::TTrace<6>("lsst.afw.math.convolve",
         "convolveWithInterpolation: full bbox minimum=(%d, %d), extent=(%d, %d)",
