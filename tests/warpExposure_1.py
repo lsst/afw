@@ -35,156 +35,156 @@ originalFullExposurePath = os.path.join(dataDir, originalFullExposureName)
 class WarpExposureTestCase(unittest.TestCase):
     """Test case for warpExposure
     """
-    def testNullWarpExposure(self):
-        """Test that warpExposure maps an image onto itself.
-        
-        Note:
-        - edge pixels must be ignored
-        - bad mask pixels get smeared out so we have to excluded all bad mask pixels
-          from the output image when comparing masks.
-        """
-        originalExposure = afwImage.ExposureF(originalExposurePath)
-        afwWarpedExposure = afwImage.ExposureF(originalExposurePath)
-        warpingKernel = afwMath.LanczosWarpingKernel(4)
-        afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingKernel)
-        if SAVE_FITS_FILES:
-            afwWarpedExposure.writeFits("afwWarpedExposureNull")
-        afwWarpedMaskedImage = afwWarpedExposure.getMaskedImage()
-        afwWarpedMask = afwWarpedMaskedImage.getMask()
-        edgeBitMask = afwWarpedMask.getPlaneBitMask("EDGE")
-        if edgeBitMask == 0:
-            self.fail("warped mask has no EDGE bit")
-        afwWarpedMaskedImageArrSet = imageTestUtils.arraysFromMaskedImage(afwWarpedMaskedImage)
-        afwWarpedMaskArr = afwWarpedMaskedImageArrSet[1]
-        
-        # compare all non-edge pixels of image and variance, but relax specs a bit
-        # because of minor noise introduced by bad pixels
-        edgeMaskArr = afwWarpedMaskArr & edgeBitMask
-        originalMaskedImageArrSet = imageTestUtils.arraysFromMaskedImage(originalExposure.getMaskedImage())
-        errStr = imageTestUtils.maskedImagesDiffer(afwWarpedMaskedImageArrSet, originalMaskedImageArrSet,
-            doMask=False, skipMaskArr=edgeMaskArr, atol=1.0e-5)
-        if errStr:
-            self.fail("afw null-warped MaskedImage (all pixels, relaxed tolerance): %s" % (errStr,))
-        
-        # compare good pixels of image, mask and variance using full tolerance
-        errStr = imageTestUtils.maskedImagesDiffer(afwWarpedMaskedImageArrSet, originalMaskedImageArrSet,
-            doImage=False, doVariance=False, skipMaskArr=afwWarpedMaskArr)
-        if errStr:
-            self.fail("afw null-warped MaskedImage (good pixels, max tolerance): %s" % (errStr,))
-
-    def testNullWarpImage(self):
-        """Test that warpImage maps an image onto itself.
-        """
-        originalExposure = afwImage.ExposureF(originalExposurePath)
-        afwWarpedExposure = afwImage.ExposureF(originalExposurePath)
-        originalImage = originalExposure.getMaskedImage().getImage()
-        afwWarpedImage = afwWarpedExposure.getMaskedImage().getImage()
-        originalWcs = originalExposure.getWcs()
-        afwWarpedWcs = afwWarpedExposure.getWcs()
-        warpingKernel = afwMath.LanczosWarpingKernel(4)
-        afwMath.warpImage(afwWarpedImage, afwWarpedWcs, originalImage, originalWcs, warpingKernel)
-        if SAVE_FITS_FILES:
-            afwWarpedImage.writeFits("afwWarpedImageNull.fits")
-        afwWarpedImageArr = imageTestUtils.arrayFromImage(afwWarpedImage)
-        edgeMaskArr = numpy.isnan(afwWarpedImageArr)
-        originalImageArr = imageTestUtils.arrayFromImage(originalImage)
-        # relax specs a bit because of minor noise introduced by bad pixels
-        errStr = imageTestUtils.imagesDiffer(originalImageArr, originalImageArr,
-            skipMaskArr=edgeMaskArr, atol=1.0e-5)
-        if errStr:
-            self.fail("afw null-warped Image: %s" % (errStr,))
-
-    def testNullWcs(self):
-        """Cannot warp from or into an exposure without a Wcs.
-        """
-        exposureWithWcs = afwImage.ExposureF(originalExposurePath)
-        mi = exposureWithWcs.getMaskedImage()
-        exposureWithoutWcs = afwImage.ExposureF(mi.getWidth(), mi.getHeight())
-        warpingKernel = afwMath.BilinearWarpingKernel()
-        try:
-            afwMath.warpExposure(exposureWithWcs, exposureWithoutWcs, warpingKernel)
-            self.fail("warping from a source Exception with no Wcs should fail")
-        except Exception:
-            pass
-        try:
-            afwMath.warpExposure(exposureWithoutWcs, exposureWithWcs, warpingKernel)
-            self.fail("warping into a destination Exception with no Wcs should fail")
-        except Exception:
-            pass
-    
-    def testWarpIntoSelf(self):
-        """Cannot warp in-place
-        """
-        originalExposure = afwImage.ExposureF(100, 100)
-        warpingKernel = afwMath.BilinearWarpingKernel()
-        try:
-            afwMath.warpExposure(originalExposure, originalExposure, warpingKernel)
-            self.fail("warpExposure in place (dest is src) should fail")
-        except Exception:
-            pass
-        try:
-            afwMath.warpImage(originalExposure.getMaskedImage(), originalExposure.getWcs(),
-                originalExposure.getMaskedImage(), originalExposure.getWcs(), warpingKernel)
-            self.fail("warpImage<MaskedImage> in place (dest is src) should fail")
-        except Exception:
-            pass
-        try:
-            afwMath.warpImage(originalExposure.getImage(), originalExposure.getWcs(),
-                originalExposure.getImage(), originalExposure.getWcs(), warpingKernel)
-            self.fail("warpImage<Image> in place (dest is src) should fail")
-        except Exception:
-            pass
-
+    #def testNullWarpExposure(self):
+        #"""Test that warpExposure maps an image onto itself.
+        #
+        #Note:
+        #- edge pixels must be ignored
+        #- bad mask pixels get smeared out so we have to excluded all bad mask pixels
+          #from the output image when comparing masks.
+        #"""
+        #originalExposure = afwImage.ExposureF(originalExposurePath)
+        #afwWarpedExposure = afwImage.ExposureF(originalExposurePath)
+        #warpingKernel = afwMath.LanczosWarpingKernel(4)
+        #afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingKernel)
+        #if SAVE_FITS_FILES:
+            #afwWarpedExposure.writeFits("afwWarpedExposureNull")
+        #afwWarpedMaskedImage = afwWarpedExposure.getMaskedImage()
+        #afwWarpedMask = afwWarpedMaskedImage.getMask()
+        #edgeBitMask = afwWarpedMask.getPlaneBitMask("EDGE")
+        #if edgeBitMask == 0:
+            #self.fail("warped mask has no EDGE bit")
+        #afwWarpedMaskedImageArrSet = imageTestUtils.arraysFromMaskedImage(afwWarpedMaskedImage)
+        #afwWarpedMaskArr = afwWarpedMaskedImageArrSet[1]
+        #
+        ## compare all non-edge pixels of image and variance, but relax specs a bit
+        ## because of minor noise introduced by bad pixels
+        #edgeMaskArr = afwWarpedMaskArr & edgeBitMask
+        #originalMaskedImageArrSet = imageTestUtils.arraysFromMaskedImage(originalExposure.getMaskedImage())
+        #errStr = imageTestUtils.maskedImagesDiffer(afwWarpedMaskedImageArrSet, originalMaskedImageArrSet,
+            #doMask=False, skipMaskArr=edgeMaskArr, atol=1.0e-5)
+        #if errStr:
+            #self.fail("afw null-warped MaskedImage (all pixels, relaxed tolerance): %s" % (errStr,))
+        #
+        ## compare good pixels of image, mask and variance using full tolerance
+        #errStr = imageTestUtils.maskedImagesDiffer(afwWarpedMaskedImageArrSet, originalMaskedImageArrSet,
+            #doImage=False, doVariance=False, skipMaskArr=afwWarpedMaskArr)
+        #if errStr:
+            #self.fail("afw null-warped MaskedImage (good pixels, max tolerance): %s" % (errStr,))
+#
+    #def testNullWarpImage(self):
+        #"""Test that warpImage maps an image onto itself.
+        #"""
+        #originalExposure = afwImage.ExposureF(originalExposurePath)
+        #afwWarpedExposure = afwImage.ExposureF(originalExposurePath)
+        #originalImage = originalExposure.getMaskedImage().getImage()
+        #afwWarpedImage = afwWarpedExposure.getMaskedImage().getImage()
+        #originalWcs = originalExposure.getWcs()
+        #afwWarpedWcs = afwWarpedExposure.getWcs()
+        #warpingKernel = afwMath.LanczosWarpingKernel(4)
+        #afwMath.warpImage(afwWarpedImage, afwWarpedWcs, originalImage, originalWcs, warpingKernel)
+        #if SAVE_FITS_FILES:
+            #afwWarpedImage.writeFits("afwWarpedImageNull.fits")
+        #afwWarpedImageArr = imageTestUtils.arrayFromImage(afwWarpedImage)
+        #edgeMaskArr = numpy.isnan(afwWarpedImageArr)
+        #originalImageArr = imageTestUtils.arrayFromImage(originalImage)
+        ## relax specs a bit because of minor noise introduced by bad pixels
+        #errStr = imageTestUtils.imagesDiffer(originalImageArr, originalImageArr,
+            #skipMaskArr=edgeMaskArr, atol=1.0e-5)
+        #if errStr:
+            #self.fail("afw null-warped Image: %s" % (errStr,))
+#
+    #def testNullWcs(self):
+        #"""Cannot warp from or into an exposure without a Wcs.
+        #"""
+        #exposureWithWcs = afwImage.ExposureF(originalExposurePath)
+        #mi = exposureWithWcs.getMaskedImage()
+        #exposureWithoutWcs = afwImage.ExposureF(mi.getWidth(), mi.getHeight())
+        #warpingKernel = afwMath.BilinearWarpingKernel()
+        #try:
+            #afwMath.warpExposure(exposureWithWcs, exposureWithoutWcs, warpingKernel)
+            #self.fail("warping from a source Exception with no Wcs should fail")
+        #except Exception:
+            #pass
+        #try:
+            #afwMath.warpExposure(exposureWithoutWcs, exposureWithWcs, warpingKernel)
+            #self.fail("warping into a destination Exception with no Wcs should fail")
+        #except Exception:
+            #pass
+    #
+    #def testWarpIntoSelf(self):
+        #"""Cannot warp in-place
+        #"""
+        #originalExposure = afwImage.ExposureF(100, 100)
+        #warpingKernel = afwMath.BilinearWarpingKernel()
+        #try:
+            #afwMath.warpExposure(originalExposure, originalExposure, warpingKernel)
+            #self.fail("warpExposure in place (dest is src) should fail")
+        #except Exception:
+            #pass
+        #try:
+            #afwMath.warpImage(originalExposure.getMaskedImage(), originalExposure.getWcs(),
+                #originalExposure.getMaskedImage(), originalExposure.getWcs(), warpingKernel)
+            #self.fail("warpImage<MaskedImage> in place (dest is src) should fail")
+        #except Exception:
+            #pass
+        #try:
+            #afwMath.warpImage(originalExposure.getImage(), originalExposure.getWcs(),
+                #originalExposure.getImage(), originalExposure.getWcs(), warpingKernel)
+            #self.fail("warpImage<Image> in place (dest is src) should fail")
+        #except Exception:
+            #pass
+#
     def testMatchSwarpBilinearImage(self):
         """Test that warpExposure matches swarp using a bilinear warping kernel
         """
         self.compareToSwarp("bilinear", useWarpExposure=False, atol=1.0e-2)
 
-    def testMatchSwarpBilinearExposure(self):
-        """Test that warpExposure matches swarp using a bilinear warping kernel
-        """
-        self.compareToSwarp("bilinear", useWarpExposure=True, useSubregion=False, useDeepCopy=True)
-
-    def testMatchSwarpLanczos2Image(self):
-        """Test that warpExposure matches swarp using a lanczos2 warping kernel
-        """
-        self.compareToSwarp("lanczos2", useWarpExposure=False, atol=1.0e-2)
-
-    def testMatchSwarpLanczos2Exposure(self):
-        """Test that warpExposure matches swarp using a lanczos2 warping kernel.
-        """
-        self.compareToSwarp("lanczos2", useWarpExposure=True)
-
-    def testMatchSwarpLanczos2SubExposure(self):
-        """Test that warpExposure matches swarp using a lanczos2 warping kernel with a subexposure
-        """
-        for useDeepCopy in (False, True):
-            self.compareToSwarp("lanczos2", useWarpExposure=True, useSubregion=True, useDeepCopy=useDeepCopy)
-
-    def testMatchSwarpLanczos3Image(self):
-        """Test that warpExposure matches swarp using a lanczos2 warping kernel
-        """
-        self.compareToSwarp("lanczos3", useWarpExposure=False, atol=1.0e-2)
-
-    def testMatchSwarpLanczos3(self):
-        """Test that warpExposure matches swarp using a lanczos4 warping kernel.
-        """
-        self.compareToSwarp("lanczos3", useWarpExposure=True)
-
-    def testMatchSwarpLanczos4Image(self):
-        """Test that warpExposure matches swarp using a lanczos2 warping kernel
-        """
-        self.compareToSwarp("lanczos4", useWarpExposure=False, atol=1.0e-2)
-
-    def testMatchSwarpLanczos4(self):
-        """Test that warpExposure matches swarp using a lanczos4 warping kernel.
-        """
-        self.compareToSwarp("lanczos4", useWarpExposure=True)
-
-    def testMatchSwarpNearestExposure(self):
-        """Test that warpExposure matches swarp using a nearest neighbor warping kernel
-        """
-        self.compareToSwarp("nearest", useWarpExposure=True, atol=60)
+    #def testMatchSwarpBilinearExposure(self):
+        #"""Test that warpExposure matches swarp using a bilinear warping kernel
+        #"""
+        #self.compareToSwarp("bilinear", useWarpExposure=True, useSubregion=False, useDeepCopy=True)
+#
+    #def testMatchSwarpLanczos2Image(self):
+        #"""Test that warpExposure matches swarp using a lanczos2 warping kernel
+        #"""
+        #self.compareToSwarp("lanczos2", useWarpExposure=False, atol=1.0e-2)
+#
+    #def testMatchSwarpLanczos2Exposure(self):
+        #"""Test that warpExposure matches swarp using a lanczos2 warping kernel.
+        #"""
+        #self.compareToSwarp("lanczos2", useWarpExposure=True)
+#
+    #def testMatchSwarpLanczos2SubExposure(self):
+        #"""Test that warpExposure matches swarp using a lanczos2 warping kernel with a subexposure
+        #"""
+        #for useDeepCopy in (False, True):
+            #self.compareToSwarp("lanczos2", useWarpExposure=True, useSubregion=True, useDeepCopy=useDeepCopy)
+#
+    #def testMatchSwarpLanczos3Image(self):
+        #"""Test that warpExposure matches swarp using a lanczos2 warping kernel
+        #"""
+        #self.compareToSwarp("lanczos3", useWarpExposure=False, atol=1.0e-2)
+#
+    #def testMatchSwarpLanczos3(self):
+        #"""Test that warpExposure matches swarp using a lanczos4 warping kernel.
+        #"""
+        #self.compareToSwarp("lanczos3", useWarpExposure=True)
+#
+    #def testMatchSwarpLanczos4Image(self):
+        #"""Test that warpExposure matches swarp using a lanczos2 warping kernel
+        #"""
+        #self.compareToSwarp("lanczos4", useWarpExposure=False, atol=1.0e-2)
+#
+    #def testMatchSwarpLanczos4(self):
+        #"""Test that warpExposure matches swarp using a lanczos4 warping kernel.
+        #"""
+        #self.compareToSwarp("lanczos4", useWarpExposure=True)
+#
+    #def testMatchSwarpNearestExposure(self):
+        #"""Test that warpExposure matches swarp using a nearest neighbor warping kernel
+        #"""
+        #self.compareToSwarp("nearest", useWarpExposure=True, atol=60)
 
     def compareToSwarp(self, kernelName, rtol=1.0e-05, atol=1e-08,
         useWarpExposure=True, useSubregion=False, useDeepCopy=False):
@@ -221,6 +221,7 @@ class WarpExposureTestCase(unittest.TestCase):
         swarpedImage = swarpedDecoratedImage.getImage()
         swarpedMetadata = swarpedDecoratedImage.getMetadata()
         warpedWcs = afwImage.makeWcs(swarpedMetadata)
+        print warpedWcs.getFitsMetadata().toString()
         destWidth = swarpedImage.getWidth()
         destHeight = swarpedImage.getHeight()
         
@@ -259,6 +260,7 @@ class WarpExposureTestCase(unittest.TestCase):
             afwWarpedImage = afwImage.ImageF(destWidth, destHeight)
             originalImage = originalExposure.getMaskedImage().getImage()
             originalWcs = originalExposure.getWcs()
+            print originalWcs.getFitsMetadata().toString()
             afwMath.warpImage(afwWarpedImage, warpedWcs, originalImage, originalWcs, warpingKernel)
             if SAVE_FITS_FILES:
                 afwWarpedImage.writeFits(afwWarpedImagePath)

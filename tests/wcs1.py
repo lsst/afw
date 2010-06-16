@@ -71,8 +71,8 @@ class WCSTestCaseSDSS(unittest.TestCase):
         
         lsstCrpix = self.wcs.getPixelOrigin()
         
-        self.assertEqual(lsstCrpix[0], crpix0+1)
-        self.assertEqual(lsstCrpix[1], crpix1+1)
+        self.assertEqual(lsstCrpix[0], crpix0-1)
+        self.assertEqual(lsstCrpix[1], crpix1-1)
         
     def testXyToRaDecArguments(self):
         """Check that conversion of xy to ra dec (and back again) works"""

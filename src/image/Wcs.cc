@@ -38,8 +38,8 @@ typedef lsst::afw::coord::Coord::Ptr CoordPtr;
 //The amount of space allocated to strings in wcslib
 const int STRLEN = 72;
 
-const int lsstToFitsPixels = -1;
-const int fitsToLsstPixels = +1;
+const int lsstToFitsPixels = +1;
+const int fitsToLsstPixels = -1;
 
 //
 // Constructors
