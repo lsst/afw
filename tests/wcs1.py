@@ -93,8 +93,10 @@ class WCSTestCaseSDSS(unittest.TestCase):
 
     def test_RaTan_DecTan(self):
         """Check the RA---TAN, DEC--TAN WCS conversion"""
-        raDec = self.wcs.pixelToSky(1.0, 1.0).getPosition()
-        raDec0 = afwGeom.makePointD(245.15968, +19.19601) # values from wcstools xy2sky (v3.8.1)
+        # values from wcstools xy2sky (v3.8.1). Confirmed by ds9
+        raDec0 = afwGeom.makePointD(245.15984167, +19.1960472) 
+        raDec = self.wcs.pixelToSky(0.0, 0.0).getPosition()
+        
 
         self.assertAlmostEqual(raDec.getX(), raDec0.getX(), 5)
         self.assertAlmostEqual(raDec.getY(), raDec0.getY(), 5) 
