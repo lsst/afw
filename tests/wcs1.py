@@ -32,15 +32,16 @@ class WCSTestCaseSDSS(unittest.TestCase):
     """A test case for WCS using a small (SDSS) image with a slightly weird WCS"""
 
     def setUp(self):
-        im = afwImage.DecoratedImageD(InputSmallImagePath)
+        self.im = afwImage.DecoratedImageD(InputSmallImagePath)
 
-        self.wcs = afwImage.makeWcs(im.getMetadata())
+        self.wcs = afwImage.makeWcs(self.im.getMetadata())
 
         if False:
             ds9.mtv(im, wcs=self.wcs)
 
     def tearDown(self):
         del self.wcs
+        del self.im
 
     def testValidWcs(self):
         """Test operator bool() (== isValid)"""
@@ -63,6 +64,16 @@ class WCSTestCaseSDSS(unittest.TestCase):
         
         self.assertRaises(exceptions.LsstCppException, afwImage.makeWcs, metadata)
 
+    def testCrpix(self):
+        metadata = self.im.getMetadata()
+        crpix0 = metadata.getAsDouble("CRPIX1")
+        crpix1 = metadata.getAsDouble("CRPIX2")
+        
+        lsstCrpix = self.wcs.getPixelOrigin()
+        
+        self.assertEqual(lsstCrpix[0], crpix0+1)
+        self.assertEqual(lsstCrpix[1], crpix1+1)
+        
     def testXyToRaDecArguments(self):
         """Check that conversion of xy to ra dec (and back again) works"""
         xy = afwGeom.makePointD(110, 123)
@@ -82,14 +93,11 @@ class WCSTestCaseSDSS(unittest.TestCase):
 
     def test_RaTan_DecTan(self):
         """Check the RA---TAN, DEC--TAN WCS conversion"""
-        raDec = self.wcs.pixelToSky(0.0, 0.0).getPosition()
-        raDec0 = afwGeom.makePointD(245.1598413385, 19.1960467992) # values from wcstools' xy2sky
+        raDec = self.wcs.pixelToSky(1.0, 1.0).getPosition()
+        raDec0 = afwGeom.makePointD(245.15968, +19.19601) # values from wcstools xy2sky (v3.8.1)
 
-        print "A riotous assembly"
-        print raDec
-        print raDec0
         self.assertAlmostEqual(raDec.getX(), raDec0.getX(), 5)
-        self.assertAlmostEqual(raDec.getY(), raDec0.getY(), 5) # dec from ds9
+        self.assertAlmostEqual(raDec.getY(), raDec0.getY(), 5) 
 
     def testIdentity(self):
         """Convert from ra, dec to col, row and back again"""

@@ -208,7 +208,9 @@ class SavingSubImagesTest(unittest.TestCase):
 
     def testFitsHeader(self):
         """Test that XY0 and crpix are written to the header as expected"""
-        
+
+        #getPixelOrigin() returns origin in lsst coordinates, so need to subtract 1 to 
+        #compare to values stored in fits headers        
         parentCrpix = self.parent.getWcs().getPixelOrigin()
         
         #Make a sub-image
@@ -233,8 +235,8 @@ class SavingSubImagesTest(unittest.TestCase):
         self.assertTrue( hdr.exists("CRPIX2"), "CRPIX2 not saved to fits header")
         
         fitsCrpix = [hdr.get("CRPIX1"), hdr.get("CRPIX2")]
-        self.assertAlmostEqual(fitsCrpix[0] - hdr.get("LTV1"), parentCrpix[0], 6, "CRPIX1 saved wrong")
-        self.assertAlmostEqual(fitsCrpix[1] - hdr.get("LTV2"), parentCrpix[1], 6, "CRPIX2 saved wrong")
+        self.assertAlmostEqual(fitsCrpix[0] - hdr.get("LTV1"), parentCrpix[0]-1, 6, "CRPIX1 saved wrong")
+        self.assertAlmostEqual(fitsCrpix[1] - hdr.get("LTV2"), parentCrpix[1]-1, 6, "CRPIX2 saved wrong")
         
 #####
 
