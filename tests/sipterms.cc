@@ -66,8 +66,8 @@ void testSip(afwImg::TanWcs &linWcs, afwImg::TanWcs &sipWcs, Eigen::MatrixXd sip
             double distortY = calculateDistortion(sipB, u, v);
 
             afwGeom::PointD xy = sipWcs.getPixelOrigin();
-            double x0 = xy[0]+2;
-            double y0 = xy[1]+2;
+            double x0 = xy[0];
+            double y0 = xy[1];
             
             
             afwCoord::Fk5Coord lin = linWcs.pixelToSky(x0 + u +distortX, y0+v+distortY)->toFk5();
@@ -190,64 +190,64 @@ BOOST_AUTO_TEST_CASE(basic)
     sipA(2,0) = 0;
 
     
-//     //Quadratic in y    
-//     sipA(0,2) = 1e-4;
-//     afwImg::TanWcs sipWcs2(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
-//     testSip(linWcs, sipWcs2, sipA, sipB);
-//     sipA(0,2) = 0;
-//     
-//     //Cross term
-//     sipA(1,1) = 1e-4;
-//     afwImg::TanWcs sipWcs3(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
-//     testSip(linWcs, sipWcs3, sipA, sipB);
-//     sipA(1,1) = 0;
-// 
-// 
-//     //test y direction
-//     //
-//     sipB(2,0) = 1e-4;
-//     afwImg::TanWcs sipWcs4(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
-//     testSip(linWcs, sipWcs4, sipA, sipB);
-//     sipB(2,0) = 0;
-//     
-//     //Quadratic in y    
-//     sipA(0,2) = 1e-4;
-//     afwImg::TanWcs sipWcs5(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
-//     testSip(linWcs, sipWcs5, sipA, sipB);
-//     sipB(0,2) = 0;
-//     
-//     //Cross term
-//     sipA(1,1) = 1e-4;
-//     afwImg::TanWcs sipWcs6(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
-//     testSip(linWcs, sipWcs6, sipA, sipB);
-//     sipB(1,1) = 0;
-// 
-// 
-//     ///
-//     //Test reverse coeff.
-//     ///
-//     sipAp(2,0) = 1.e-4;
-//     afwImg::TanWcs sipWcs7(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
-//     testSipP(linWcs, sipWcs7, sipAp, sipBp);
-//     sipA(2,0) = 0;
-// 
-//     //The linear term is allowed in the reverse matrix    
-//     sipAp(1,0) = 1.e-4;
-//     afwImg::TanWcs sipWcs8(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
-//     testSipP(linWcs, sipWcs8, sipAp, sipBp);
-//     sipA(1,0) = 0;
-// 
-// 
-//     sipBp(2,0) = 1.e-4;
-//     afwImg::TanWcs sipWcs9(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
-//     testSipP(linWcs, sipWcs9, sipAp, sipBp);
-//     sipA(2,0) = 0;
-// 
-//     //The linear term is allowed in the reverse matrix    
-//     sipBp(1,0) = 1.e-4;
-//     afwImg::TanWcs sipWcs10(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
-//     testSipP(linWcs, sipWcs10, sipAp, sipBp);
-//     sipA(1,0) = 0;
+    //Quadratic in y    
+    sipA(0,2) = 1e-4;
+    afwImg::TanWcs sipWcs2(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
+    testSip(linWcs, sipWcs2, sipA, sipB);
+    sipA(0,2) = 0;
+    
+    //Cross term
+    sipA(1,1) = 1e-4;
+    afwImg::TanWcs sipWcs3(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
+    testSip(linWcs, sipWcs3, sipA, sipB);
+    sipA(1,1) = 0;
+
+
+    //test y direction
+    //
+    sipB(2,0) = 1e-4;
+    afwImg::TanWcs sipWcs4(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
+    testSip(linWcs, sipWcs4, sipA, sipB);
+    sipB(2,0) = 0;
+    
+    //Quadratic in y    
+    sipA(0,2) = 1e-4;
+    afwImg::TanWcs sipWcs5(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
+    testSip(linWcs, sipWcs5, sipA, sipB);
+    sipB(0,2) = 0;
+    
+    //Cross term
+    sipA(1,1) = 1e-4;
+    afwImg::TanWcs sipWcs6(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
+    testSip(linWcs, sipWcs6, sipA, sipB);
+    sipB(1,1) = 0;
+
+
+    ///
+    //Test reverse coeff.
+    ///
+    sipAp(2,0) = 1.e-4;
+    afwImg::TanWcs sipWcs7(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
+    testSipP(linWcs, sipWcs7, sipAp, sipBp);
+    sipA(2,0) = 0;
+
+    //The linear term is allowed in the reverse matrix    
+    sipAp(1,0) = 1.e-4;
+    afwImg::TanWcs sipWcs8(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
+    testSipP(linWcs, sipWcs8, sipAp, sipBp);
+    sipA(1,0) = 0;
+
+
+    sipBp(2,0) = 1.e-4;
+    afwImg::TanWcs sipWcs9(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
+    testSipP(linWcs, sipWcs9, sipAp, sipBp);
+    sipA(2,0) = 0;
+
+    //The linear term is allowed in the reverse matrix    
+    sipBp(1,0) = 1.e-4;
+    afwImg::TanWcs sipWcs10(crval, crpix, CD, sipA, sipB, sipAp, sipBp);
+    testSipP(linWcs, sipWcs10, sipAp, sipBp);
+    sipA(1,0) = 0;
     
 }
 
