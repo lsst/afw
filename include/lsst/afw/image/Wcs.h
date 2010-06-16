@@ -107,7 +107,7 @@ namespace image {
         
         virtual lsst::afw::geom::PointD skyToPixel(double sky1, double sky2) const;
         virtual lsst::afw::geom::PointD skyToPixel(lsst::afw::coord::Coord::ConstPtr coord) const;
-
+        lsst::afw::geom::PointD skyToIntermediateWorldCoord(lsst::afw::coord::Coord::ConstPtr coord) const;
 
         virtual bool hasDistortion() const {    return false;};
         
