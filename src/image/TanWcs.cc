@@ -28,8 +28,8 @@ typedef lsst::afw::image::TanWcs TanWcs;
 typedef lsst::afw::geom::PointD GeomPoint;
 typedef lsst::afw::coord::Coord Coord;
 
-const int lsstToFitsPixels = -1;
-const int fitsToLsstPixels = +1;
+const int lsstToFitsPixels = +1;
+const int fitsToLsstPixels = -1;
 
 
 static void decodeSipHeader(lsst::daf::base::PropertySet::Ptr fitsMetadata,
