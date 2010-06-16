@@ -75,7 +75,7 @@ namespace image {
         virtual lsst::afw::geom::PointD skyToPixel(const lsst::afw::coord::Coord::ConstPtr coord) const;
 
         
-        virtual bool hasDistortion() const {    return _hasDistortion;};
+        bool hasDistortion() const {    return _hasDistortion;};
         lsst::daf::base::PropertySet::Ptr getFitsMetadata() const;        
 #if 0
         //Rely on base class implementation for now.

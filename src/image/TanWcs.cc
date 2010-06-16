@@ -311,28 +311,9 @@ GeomPoint TanWcs::skyToPixel(double sky1, double sky2) const {
         assert(_sipAp.rows() == _sipAp.cols());
         assert(_sipBp.rows() == _sipBp.cols());        
         
-        //Relative, undistorted pixel coords
-        double U = pixTmp[0] - _wcsInfo->crpix[0];  
-        double V = pixTmp[1] - _wcsInfo->crpix[1];
-// #if 0    
-//         double F = 0;
-//         for(int i=0; i< _sipAp.rows(); ++i) {
-//             for(int j=0; j< _sipAp.cols(); ++j) {
-//                 if (i+j>1 && i+j < _sipAp.rows() ) {
-//                     F += _sipAp(i,j)* pow(U, (int) i) * pow(V, (int) j);
-//                 }
-//             }
-//         }    
-// 
-//         double G = 0;
-//         for(int i=0; i< _sipBp.rows(); ++i) {
-//             for(int j=0; j< _sipBp.cols(); ++j) {
-//                 if (i+j>1 && i+j < _sipBp.rows() ) {
-//                     G += _sipBp(i,j)* pow(U, (int) i) * pow(V, (int) j);
-//                 }
-//             }
-//         }
-// #endif
+        double U = pixTmp[0] - _wcsInfo->crpix[0];  //Relative, undistorted pixel coords
+        double V = pixTmp[1]-  _wcsInfo->crpix[1];
+    
         double F = 0;
         for(int i=0; i< _sipAp.rows(); ++i) {
             for(int j=0; j< _sipAp.cols(); ++j) {
@@ -346,7 +327,6 @@ GeomPoint TanWcs::skyToPixel(double sky1, double sky2) const {
                 G += _sipBp(i,j)* pow(U, (int) i) * pow(V, (int) j);
             }
         }
-
 
         pixTmp[0] = U + F + _wcsInfo->crpix[0];
         pixTmp[1] = V + G + _wcsInfo->crpix[1];

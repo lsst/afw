@@ -404,6 +404,7 @@ CoordPtr Wcs::getSkyOrigin() const {
 }
 
 ///Return crpix in the lsst convention. Note that this need not be the centre of the image
+///Return crpix. Note that this need not be the centre of the image
 GeomPoint Wcs::getPixelOrigin() const {
 
     if(_wcsInfo != NULL) {

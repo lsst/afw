@@ -37,11 +37,13 @@ mathDetail::KernelImagesForRegion::KernelImagesForRegion(
         lsst::afw::geom::BoxI const &bbox,  ///< bounding box of region of an image
                                             ///< for which we want to compute kernel images
                                             ///< (inclusive and relative to parent image)
+        lsst::afw::geom::Point2I const &xy0,    ///< xy0 of image for which we want to compute kernel images
         bool doNormalize)                   ///< normalize the kernel images?
 :
     lsst::daf::data::LsstBase::LsstBase(typeid(this)),
     _kernelPtr(kernelPtr),
     _bbox(bbox),
+    _xy0(xy0),
     _centerFractionalPosition(_computeCenterFractionalPosition(bbox)),
     _centerIndex(_computeCenterIndex(bbox)),
     _doNormalize(doNormalize),
@@ -51,8 +53,8 @@ mathDetail::KernelImagesForRegion::KernelImagesForRegion(
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, "kernelPtr is null");
     }
     pexLog::TTrace<6>("lsst.afw.math.convolve",
-        "KernelImagesForRegion(bbox(minimum=(%d, %d), extent=(%d, %d)), doNormalize=%d, images...)",
-        _bbox.getMinX(), _bbox.getMinY(), _bbox.getWidth(), _bbox.getHeight(), _doNormalize);
+    "KernelImagesForRegion(bbox(minimum=(%d, %d), extent=(%d, %d)), xy0=(%d, %d), doNormalize=%d, images...)",
+       _bbox.getMinX(), _bbox.getMinY(), _bbox.getWidth(), _bbox.getHeight(), _xy0[0], _xy0[1], _doNormalize);
 }
 
 /**
@@ -70,6 +72,7 @@ mathDetail::KernelImagesForRegion::KernelImagesForRegion(
         lsst::afw::geom::BoxI const &bbox,  ///< bounding box of region of an image
                                             ///< for which we want to compute kernel images
                                             ///< (inclusive and relative to parent image)
+        lsst::afw::geom::Point2I const &xy0,    ///< xy0 of image
         bool doNormalize,                   ///< normalize the kernel images?
         ImageConstPtr bottomLeftImagePtr,   ///< kernel image at bottom left of region
         ImageConstPtr bottomRightImagePtr,  ///< kernel image at bottom right of region
@@ -79,6 +82,7 @@ mathDetail::KernelImagesForRegion::KernelImagesForRegion(
     lsst::daf::data::LsstBase::LsstBase(typeid(this)),
     _kernelPtr(kernelPtr),
     _bbox(bbox),
+    _xy0(xy0),
     _centerFractionalPosition(_computeCenterFractionalPosition(bbox)),
     _centerIndex(_computeCenterIndex(bbox)),
     _doNormalize(doNormalize),
@@ -92,8 +96,8 @@ mathDetail::KernelImagesForRegion::KernelImagesForRegion(
     _insertImage(TOP_LEFT, topLeftImagePtr);
     _insertImage(TOP_RIGHT, topRightImagePtr);
     pexLog::TTrace<6>("lsst.afw.math.convolve",
-        "KernelImagesForRegion(bbox(minimum=(%d, %d), extent=(%d, %d)), doNormalize=%d, images...)",
-        _bbox.getMinX(), _bbox.getMinY(), _bbox.getWidth(), _bbox.getHeight(), _doNormalize);
+    "KernelImagesForRegion(bbox(minimum=(%d, %d), extent=(%d, %d)), xy0=(%d, %d), doNormalize=%d, images...)",
+       _bbox.getMinX(), _bbox.getMinY(), _bbox.getWidth(), _bbox.getHeight(), _xy0[0], _xy0[1], _doNormalize);
 }
 
 /**
@@ -114,8 +118,8 @@ const {
     _kernelPtr->computeImage(
         *kernelImagePtr,
         _doNormalize,
-        afwImage::indexToPosition(pixelIndex.getX()),
-        afwImage::indexToPosition(pixelIndex.getY()));
+        afwImage::indexToPosition(pixelIndex.getX() + _xy0[0]),
+        afwImage::indexToPosition(pixelIndex.getY() + _xy0[1]));
     _imageMap.insert(std::make_pair(location, kernelImagePtr));
     return kernelImagePtr;
 }
@@ -178,6 +182,7 @@ mathDetail::KernelImagesForRegion::getSubregions() const {
     retList.push_back(KernelImagesForRegion::ConstPtr(new KernelImagesForRegion(
         _kernelPtr,
         afwGeom::BoxI(_bbox.getMin(), _centerIndex - afwGeom::Extent2I(1)),
+        _xy0,
         _doNormalize,
         getImage(BOTTOM_LEFT),
         getImage(BOTTOM),
@@ -189,6 +194,7 @@ mathDetail::KernelImagesForRegion::getSubregions() const {
         afwGeom::BoxI(
             afwGeom::Point2I::make(_centerIndex.getX(), _bbox.getMinY()),
             afwGeom::Point2I::make(_bbox.getMaxX(), _centerIndex.getY() - 1)),
+        _xy0,
         _doNormalize,
         getImage(BOTTOM),
         getImage(BOTTOM_RIGHT),
@@ -200,6 +206,7 @@ mathDetail::KernelImagesForRegion::getSubregions() const {
         afwGeom::BoxI(
             afwGeom::Point2I::make(_bbox.getMinX(), _centerIndex.getY()),
             afwGeom::Point2I::make(_centerIndex.getX() - 1, _bbox.getMaxY())),
+        _xy0,
         _doNormalize,
         getImage(LEFT),
         getImage(CENTER),
@@ -209,6 +216,7 @@ mathDetail::KernelImagesForRegion::getSubregions() const {
     retList.push_back(KernelImagesForRegion::ConstPtr(new KernelImagesForRegion(
         _kernelPtr,
         afwGeom::BoxI(_centerIndex, _bbox.getMax()),
+        _xy0,
         _doNormalize,
         getImage(CENTER),
         getImage(RIGHT),
@@ -274,6 +282,7 @@ const {
             retList.push_back(KernelImagesForRegion::ConstPtr(new KernelImagesForRegion(
                 _kernelPtr,
                 afwGeom::BoxI(corner, afwGeom::Extent2I::make(width, height)),
+                _xy0,
                 _doNormalize,
                 blImagePtr,
                 brImagePtr,
