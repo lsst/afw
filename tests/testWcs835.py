@@ -4,6 +4,8 @@ import lsst.utils.tests as tests
 import lsst.afw.image as afwImage
 import lsst.afw.coord as afwCoord
 import lsst.daf.base as dafBase
+import lsst.pex.exceptions as pexExcept
+
 
 class TanSipTestCases(unittest.TestCase):
     """Tests for the existence of the bug reported in #835
@@ -39,58 +41,14 @@ class TanSipTestCases(unittest.TestCase):
         metadata.setDouble("CD2_1", -8.27440751733828E-07)
 
 
+        self.metadata = metadata
 
-
-        self.wcs = afwImage.makeWcs(metadata)
 
     def tearDown(self):
-        del self.wcs
+        del self.metadata
 
-    def evalTanSip(self, ra, dec, x, y):
-
-        # 5th digit in degrees ~ 0.035 arcsec ~ 1/10 pixel
-        sky = self.wcs.pixelToSky(x - 1, y - 1)
-        self.assertAlmostEqual(sky.getLongitude(afwCoord.DEGREES), ra,  5) 
-        self.assertAlmostEqual(sky.getLatitude(afwCoord.DEGREES), dec, 5) # 
-
-        # round trip it
-        xy  = self.wcs.skyToPixel(sky)
-        self.assertAlmostEqual(xy[0], x - 1, 5)
-        self.assertAlmostEqual(xy[1], y - 1, 5)
-
-    def testTanSip0(self):
-        """The origin of the Wcs solution"""
-        
-        y   = 560.018167811613
-        x   = 1109.99981456774
-        
-        ra  = 215.604025685476
-        dec = 53.1595451514076
-        self.evalTanSip(ra, dec, x, y)
-        
-    def testTanSip1(self):
-        x   = 110
-        y   = 90
-        ra  = 215.51863778475067
-        dec = 53.18432622376551
-        self.evalTanSip(ra, dec, x, y)
-
-    def testTanSip2(self):
-        #Position 920, 200
-        x   = 920
-        y   = 200
-        ra  = 215.51863778475067
-        dec = +53.1780639
-        print "Skipping testTanSip2() with x=%d, y=%d, ra=%f, dec=%f" % (x, y, ra, dec)
-        #self.evalTanSip(ra, dec, x, y)
-        
-    def testTanSip3(self):
-        x   = 427
-        y   = 1131
-        ra  = 215.5460541111905
-        dec = 53.130960072287699
-        self.evalTanSip(ra, dec, x, y)
-        
+    def testExcept(self):
+        self.assertRaises(pexExcept.LsstCppException, afwImage.makeWcs, self.metadata)
 
 #####
         

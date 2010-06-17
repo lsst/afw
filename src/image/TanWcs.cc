@@ -28,6 +28,10 @@ typedef lsst::afw::image::TanWcs TanWcs;
 typedef lsst::afw::geom::PointD GeomPoint;
 typedef lsst::afw::coord::Coord Coord;
 
+const int lsstToFitsPixels = +1;
+const int fitsToLsstPixels = -1;
+
+
 static void decodeSipHeader(lsst::daf::base::PropertySet::Ptr fitsMetadata,
                             std::string const& which,
                             Eigen::MatrixXd *m);
@@ -95,6 +99,20 @@ TanWcs::TanWcs(PropertySet::Ptr const fitsMetadata) :
             decodeSipHeader(fitsMetadata, "BP", &_sipBp);
             break;
     }
+    
+    //Check that the existence of forward sip matrices <=> existence of reverse matrices
+    if( _hasDistortion) {
+        if ((_sipA.rows() == 1) || (_sipB.rows() == 1)) {
+                string msg = "Existence of forward distorton matrices suggested, but not found";
+                throw LSST_EXCEPT(except::InvalidParameterException, msg);
+        }
+
+        if ((_sipAp.rows() == 1) || (_sipBp.rows() == 1)) {
+                string msg = "Forward distorton matrices present, but no reverse matrices";
+                throw LSST_EXCEPT(except::InvalidParameterException, msg);
+        }
+    }
+            
 }
 
 
@@ -126,7 +144,7 @@ static void decodeSipHeader(lsst::daf::base::PropertySet::Ptr fitsMetadata,
 
 ///\brief Construct a tangent plane wcs without distortion terms    
 ///\param crval The sky position of the reference point
-///\param crpix The pixel position corresponding to crval
+///\param crpix The pixel position corresponding to crval in Lsst units
 ///\param CD    Matrix describing transformations from pixel to sky positions
 ///\param sipA Forward distortion matrix for axis 1
 ///\param sipB Forward distortion matrix for axis 2
@@ -299,18 +317,14 @@ GeomPoint TanWcs::skyToPixel(double sky1, double sky2) const {
         double F = 0;
         for(int i=0; i< _sipAp.rows(); ++i) {
             for(int j=0; j< _sipAp.cols(); ++j) {
-                if (i+j>1 && i+j < _sipAp.rows() ) {
-                    F += _sipAp(i,j)* pow(U, (int) i) * pow(V, (int) j);
-                }
+                F += _sipAp(i,j)* pow(U, (int) i) * pow(V, (int) j);
             }
         }    
 
         double G = 0;
         for(int i=0; i< _sipBp.rows(); ++i) {
             for(int j=0; j< _sipBp.cols(); ++j) {
-                if (i+j>1 && i+j < _sipBp.rows() ) {
-                    G += _sipBp(i,j)* pow(U, (int) i) * pow(V, (int) j);
-                }
+                G += _sipBp(i,j)* pow(U, (int) i) * pow(V, (int) j);
             }
         }
 
@@ -319,8 +333,8 @@ GeomPoint TanWcs::skyToPixel(double sky1, double sky2) const {
     }
 
     // wcslib assumes 1-indexed coords
-    return geom::makePointD(pixTmp[0] + lsst::afw::image::PixelZeroPos - 1,
-                                    pixTmp[1] + lsst::afw::image::PixelZeroPos - 1); 
+    double offset = lsst::afw::image::PixelZeroPos + fitsToLsstPixels;
+    return geom::makePointD(pixTmp[0]+offset, pixTmp[1]+offset); 
 
 }
 
@@ -345,8 +359,8 @@ Coord::Ptr TanWcs::pixelToSky(double pixel1, double pixel2) const {
     }
 
     // wcslib assumes 1-indexed coordinates
-    double pixTmp[2] = { pixel1 - lsst::afw::image::PixelZeroPos + 1,
-                               pixel2 - lsst::afw::image::PixelZeroPos + 1}; 
+    double pixTmp[2] = { pixel1 - lsst::afw::image::PixelZeroPos + lsstToFitsPixels,
+                               pixel2 - lsst::afw::image::PixelZeroPos + lsstToFitsPixels}; 
     double imgcrd[2];
     double phi, theta;
     double skyTmp[2];

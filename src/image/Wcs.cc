@@ -38,6 +38,9 @@ typedef lsst::afw::coord::Coord::Ptr CoordPtr;
 //The amount of space allocated to strings in wcslib
 const int STRLEN = 72;
 
+const int lsstToFitsPixels = +1;
+const int fitsToLsstPixels = -1;
+
 //
 // Constructors
 //
@@ -74,7 +77,7 @@ Wcs::Wcs(PropertySet::Ptr const fitsMetadata):
 ///\brief Create a Wcs object with some known information.
 ///
 ///\param crval The sky position of the reference point
-///\param crpix The pixel position corresponding to crval
+///\param crpix The pixel position corresponding to crval in LSST units
 ///\param CD    Matrix describing transformations from pixel to sky positions
 ///\param ctype1 Projection system used (see description of Wcs)
 ///\param ctype2 Projection system used (see description of Wcs)
@@ -82,6 +85,9 @@ Wcs::Wcs(PropertySet::Ptr const fitsMetadata):
 ///\param raDecSys System used to describe right ascension or declination, e.g FK4, FK5 or ICRS
 ///\param cunits1 Units of sky position. One of deg, arcmin or arcsec
 ///\param cunits2 Units of sky position. One of deg, arcmin or arcsec
+///
+///\note LSST units are zero indexed while FITs units are 1 indexed. So a value of crpix stored in a fits
+///header of 127,127 corresponds to a pixel position in LSST units of 128, 128
 Wcs::Wcs(const GeomPoint crval, const GeomPoint crpix, const Eigen::Matrix2d &CD, 
                  const std::string ctype1, const std::string ctype2,
                  double equinox, std::string raDecSys,
@@ -200,7 +206,7 @@ void Wcs::initWcsLibFromFits(PropertySet::Ptr const fitsMetadata){
 
 ///\brief Manually initialise a wcs struct using values passed by the constructor    
 ///\param crval The sky position of the reference point
-///\param crpix The pixel position corresponding to crval
+///\param crpix The pixel position corresponding to crval in LSST units
 ///\param CD    Matrix describing transformations from pixel to sky positions
 ///\param ctype1 Projection system used (see description of Wcs)
 ///\param ctype2 Projection system used (see description of Wcs)
@@ -257,11 +263,12 @@ void Wcs::initWcsLib(GeomPoint const crval, GeomPoint const crpix, Eigen::Matrix
     }
     
     
-    //Set crval, crpix and CD
+    //Set crval, crpix and CD. Internally to the class, we use fits units for consistency with
+    //wcslib.
     _wcsInfo->crval[0] = crval.getX();
     _wcsInfo->crval[1] = crval.getY();
-    _wcsInfo->crpix[0] = crpix.getX();
-    _wcsInfo->crpix[1] = crpix.getY();
+    _wcsInfo->crpix[0] = crpix.getX() + lsstToFitsPixels;
+    _wcsInfo->crpix[1] = crpix.getY() + lsstToFitsPixels;
 
     //Set the CD matrix
     for (int i=0; i<2; ++i) {
@@ -387,20 +394,23 @@ Wcs::Ptr Wcs::clone(void) const {
 //
 
 ///Return crval. Note that this need not be the centre of the image
-GeomPoint Wcs::getSkyOrigin() const {
+CoordPtr Wcs::getSkyOrigin() const {
 
     if(_wcsInfo != NULL) {
-        return geom::makePointD(_wcsInfo->crval[0], _wcsInfo->crval[1]);
+        return makeCorrectCoord(_wcsInfo->crval[0], _wcsInfo->crval[1]);
     } else {
         throw(LSST_EXCEPT(except::RuntimeErrorException, "Wcs structure is not initialised"));
     }
 }
 
-///Return crpix. Note that this need not be the centre of the image
+///Return crpix in the lsst convention. Note that this need not be the centre of the image
 GeomPoint Wcs::getPixelOrigin() const {
 
     if(_wcsInfo != NULL) {
-        return geom::makePointD(_wcsInfo->crpix[0], _wcsInfo->crpix[1]);
+        //Convert from fits units back to lsst units
+        double p1 = _wcsInfo->crpix[0] + fitsToLsstPixels;
+        double p2 = _wcsInfo->crpix[1] + fitsToLsstPixels;
+        return geom::makePointD(p1, p2);
     } else {
         throw(LSST_EXCEPT(except::RuntimeErrorException, "Wcs structure not initialised"));
     }
@@ -607,10 +617,39 @@ GeomPoint Wcs::skyToPixel(double sky1, double sky2) const {
     }
 
     // wcslib assumes 1-indexed coords
-    return geom::makePointD(pixTmp[0] + lsst::afw::image::PixelZeroPos - 1,
-                                    pixTmp[1] + lsst::afw::image::PixelZeroPos - 1); 
+    return geom::makePointD(pixTmp[0] + lsst::afw::image::PixelZeroPos + fitsToLsstPixels,
+                                    pixTmp[1] + lsst::afw::image::PixelZeroPos + fitsToLsstPixels); 
 }
 
+
+
+///\brief Convert from sky coordinates (e.g ra/dec) to intermediate world coordinates
+///
+GeomPoint Wcs::skyToIntermediateWorldCoord(lsst::afw::coord::Coord::ConstPtr coord) const {
+    if(_wcsInfo == NULL) {
+        throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
+    }
+
+    GeomPoint const sky = convertCoordToSky(coord);
+
+    double const skyTmp[2] = { sky[0], sky[1]};
+    double imgcrd[2];
+    double phi, theta;
+    double pixTmp[2];
+
+    //Estimate pixel coordinates
+    int stat[1];
+    int status = 0;
+    status = wcss2p(_wcsInfo, 1, 2, skyTmp, &phi, &theta, imgcrd, pixTmp, stat);
+    if (status > 0) {
+        throw LSST_EXCEPT(except::RuntimeErrorException,
+                          (boost::format("Error: wcslib returned a status code of %d. %s") %
+                           status % wcs_errmsg[status]).str());
+    }
+
+    // wcslib assumes 1-indexed coords
+    return geom::makePointD(imgcrd[0], imgcrd[1]); 
+}
 
 
 ///\brief Convert from pixel position to sky coordinates (e.g ra/dec)
@@ -633,8 +672,8 @@ CoordPtr Wcs::pixelToSky(double pixel1, double pixel2) const {
     }
 
     // wcslib assumes 1-indexed coordinates
-    double pixTmp[2] = { pixel1 - lsst::afw::image::PixelZeroPos + 1,
-                               pixel2 - lsst::afw::image::PixelZeroPos + 1}; 
+    double pixTmp[2] = { pixel1 - lsst::afw::image::PixelZeroPos + lsstToFitsPixels,
+                               pixel2 - lsst::afw::image::PixelZeroPos + lsstToFitsPixels}; 
     double imgcrd[2];
     double phi, theta;
     double skyTmp[2];

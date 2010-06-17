@@ -82,10 +82,9 @@ class MakeWcsTestCase(unittest.TestCase):
         self.assertNotEqual( strRepresentation.find("image::TanWcs"), -1, "non TanWcs object returned")
 
     def testCreateTanSipWcs(self):
-        """Check that a non-TAN projection in the header creates a base Wcs object"""
-        
-        self.metadata.set("CTYPE1", "RA---TAN-SIP")
-        self.metadata.set("CTYPE2", "DEC--TAN-SIP")
+                
+        self.metadata.set("CTYPE1", "RA---TAN")
+        self.metadata.set("CTYPE2", "DEC--TAN")
         
         wcs = afwImage.cast_TanWcs(afwImage.makeWcs(self.metadata))
         strRepresentation = str(wcs)

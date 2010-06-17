@@ -56,23 +56,19 @@ BOOST_AUTO_TEST_CASE(linearConstructor) { /* parasoft-suppress  LsstDm-3-2a Lsst
     geom::PointD crpix = geom::makePointD(8.,8.);
     
     matrixD CD;
-    CD  << 1,0,0,1; //Identity matrix
+    CD  << 1/3600.,0,0,1/3600.; 
     
     image::Wcs wcs(crval, crpix, CD);
 
-    //Remember, Wcs puts the origin of the chip at 1,1 while LSST
-    //puts it at 0,0. This means that your coordinate transformation
-    //will be one off what you expect it to be.
-    //That said, I'm disturbed about how high my tolerance has to be
-    //for what should be a simple computation
-    double expect=2.0;
+    double arcsecInDeg = 1/3600.;
+    double tol=1e-2;
     geom::PointD ad = wcs.pixelToSky(9,9)->getPosition();
-    BOOST_CHECK_CLOSE(ad.getX(), expect, .05);
-    BOOST_CHECK_CLOSE(ad.getY(), 2., .11);    
+    BOOST_CHECK_CLOSE(ad.getX(), arcsecInDeg, tol);
+    BOOST_CHECK_CLOSE(ad.getY(), arcsecInDeg, tol);    
     
-    geom::PointD xy = wcs.skyToPixel(2,2);
-    BOOST_CHECK_CLOSE(xy.getX(), 9., .05);
-    BOOST_CHECK_CLOSE(xy.getY(), 9., .05);    
+    geom::PointD xy = wcs.skyToPixel(1*arcsecInDeg, 1*arcsecInDeg);
+    BOOST_CHECK_CLOSE(xy.getX(), 9., tol);
+    BOOST_CHECK_CLOSE(xy.getY(), 9., tol);    
 }
 
 
@@ -80,7 +76,8 @@ BOOST_AUTO_TEST_CASE(linearConstructor) { /* parasoft-suppress  LsstDm-3-2a Lsst
 //of the field of the white dwarf GD66
 BOOST_AUTO_TEST_CASE(radec_to_xy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     geom::PointD crval = geom::makePointD(80.159679, 30.806568);
-    geom::PointD crpix = geom::makePointD(891.500000, 893.500000);
+    //geom::PointD crpix = geom::makePointD(891.500000, 893.500000);
+    geom::PointD crpix = geom::makePointD(890.500000, 892.500000);
     matrixD CD(2,2);
 
     CD(0,0) = -0.0002802350;
@@ -113,11 +110,11 @@ BOOST_AUTO_TEST_CASE(radec_to_xy) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4
 
 
 }
-    
+
 
 BOOST_AUTO_TEST_CASE(xy_to_radec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     geom::PointD crval = geom::makePointD(80.159679, 30.806568);
-    geom::PointD crpix = geom::makePointD(891.500000, 893.500000);
+    geom::PointD crpix = geom::makePointD(890.500000, 892.500000);
     matrixD CD(2,2);
 
     CD(0,0) = -0.0002802350;
@@ -148,8 +145,8 @@ BOOST_AUTO_TEST_CASE(xy_to_radec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4
     BOOST_CHECK_CLOSE(ad.getX(), 79.893342 , 3e-5);
     BOOST_CHECK_CLOSE(ad.getY(), +30.6068444 , 3e-5);  
 
-    std::printf("T'end\n");
 }
+
 
 BOOST_AUTO_TEST_CASE(test_closure) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     geom::PointD crval = geom::makePointD(80.159679, 30.806568);
