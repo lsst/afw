@@ -177,21 +177,26 @@ void afwDetect::Footprint::normalize() {
         afwDetect::Footprint::SpanList::iterator ptr = _spans.begin(), end = _spans.end();
         
         afwDetect::Span *lspan = ptr->get();  // Left span
-        int y = (*ptr)->_y;
-        int x1 = (*ptr)->_x1;
+        int y = lspan->_y;
+        int x1 = lspan->_x1;
         ++ptr;
 
-        for (; ptr < end; ++ptr) {
+        for (; ptr != end; ++ptr) {
             afwDetect::Span *rspan = ptr->get(); // Right span
             if (rspan->_y == y) {
                 if (rspan->_x0 <= x1 + 1) { // Spans overlap or touch
                     if (rspan->_x1 > x1) {  // right span extends left span
-                        lspan->_x1 = rspan->_x1;
+                        x1 = lspan->_x1 = rspan->_x1;
+                    }
+
+                    ptr = _spans.erase(ptr);
+                    end = _spans.end();   // delete the right span
+                    if (ptr == end) {
+                        break;
                     }
                     
-                    ptr = _spans.erase(ptr);
-                    --end; // delete the right span
-                    x1 = lspan->_x1;
+                    --ptr;
+                    continue;
                 }
             }
 
@@ -202,6 +207,7 @@ void afwDetect::Footprint::normalize() {
         }
 
         //_peaks = psArraySort(fp->peaks, pmPeakSortBySN);
+        setNpix();
         setBBox();
         _normalized = true;
     }
@@ -222,6 +228,7 @@ afwDetect::Span const& afwDetect::Footprint::addSpan(int const y, //!< row value
     _spans.push_back(sp);
 
     _npix += x1 - x0 + 1;
+    _normalized = false;
 
     _bbox.grow(afwImage::PointI(x0, y));
     _bbox.grow(afwImage::PointI(x1, y));
@@ -238,6 +245,7 @@ const afwDetect::Span& afwDetect::Footprint::addSpan(afwDetect::Span const& span
     _spans.push_back(sp);
 
     _npix += span._x1 - span._x0 + 1;
+    _normalized = false;
 
     _bbox.grow(afwImage::PointI(span._x0, span._y));
     _bbox.grow(afwImage::PointI(span._x1, span._y));
