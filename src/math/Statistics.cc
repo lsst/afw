@@ -542,7 +542,7 @@ double afwMath::Statistics::_percentile(std::vector<Pixel> &img,
         
         int const q2 = q1 + 1;
         typename std::vector<Pixel>::iterator midPlus1 = img.begin() + q2;
-        std::nth_element(img.begin(), midPlus1, img.end());
+        std::nth_element(midMinus1, midPlus1, img.end());
         double val2 = static_cast<double>(*midPlus1);
         
         double w1 = (static_cast<double>(q2) - idx);
