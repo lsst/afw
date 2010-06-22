@@ -142,7 +142,7 @@ boost::shared_ptr<std::vector<typename ImageT::Pixel> > afwMath::Statistics::_ma
     boost::shared_ptr<std::vector<typename ImageT::Pixel> > imgcp(new std::vector<typename ImageT::Pixel>(0));
     for (int i_y = 0; i_y < img.getHeight(); ++i_y) {
         typename MaskT::x_iterator mptr = msk.row_begin(i_y);
-        for (typename ImageT::x_iterator ptr = img.row_begin(i_y); ptr != img.row_end(i_y); ++ptr) {
+        for (typename ImageT::x_iterator ptr = img.row_begin(i_y), end = img.row_end(i_y); ptr != end; ++ptr) {
             if ( IsFinite()(*ptr) && !(*mptr & _sctrl.getAndMask()) ) {
                 imgcp->push_back(*ptr);
             }
