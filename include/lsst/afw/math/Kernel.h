@@ -596,6 +596,12 @@ class FourierLocalKernel;
                 ar & make_nvp("kimglist", _kernelImagePtrList);
                 ar & make_nvp("ksumlist", _kernelSumList);
                 ar & make_nvp("params", _kernelParams);
+                if (version > 0) {
+                    ar & make_nvp("deltaBasis", _isDeltaFunctionBasis);
+                }
+                else if (Archive::is_loading::value) {
+                    _isDeltaFunctionBasis = false;
+                }
             }
     };
 
@@ -722,5 +728,9 @@ inline void load_construct_data(
 }
 
 }}
+
+#ifndef SWIG
+BOOST_CLASS_VERSION(lsst::afw::math::LinearCombinationKernel, 1)
+#endif
 
 #endif // !defined(LSST_AFW_MATH_KERNEL_H)
