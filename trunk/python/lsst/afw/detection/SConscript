@@ -1,9 +1,0 @@
-# -*- python -*-
-import re
-Import("env")
-
-env.CheckSwig("python", ilang="c++", includedProducts="utils daf_base pex_exceptions pex_logging pex_policy daf_persistence daf_data security afw")
-env.LoadableModuleIncomplete("_detectionLib", Split("detectionLib.i"),
-                             CCFLAGS=re.sub("-Wall", "", " ".join(env['CCFLAGS'])),
-                             LIBS=env.getlibs("afw"))
-
