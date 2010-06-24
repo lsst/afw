@@ -281,6 +281,17 @@ class ConvolveTestCase(unittest.TestCase):
         
         convControl = afwMath.ConvolutionControl()
         convControl.setMaxInterpolationError(maxInterpErr)
+        
+        # verify dimension assertions:
+        # - output image dimensions = input image dimensions
+        # - input image width and height >= kernel width and height
+        # Note: the assertion kernel size > 0 is tested elsewhere
+        for inWidth in (kernel.getWidth() - 1, self.width-1, self.width, self.width + 1):
+            for inHeight in (kernel.getHeight() - 1, self.width-1, self.width, self.width + 1):
+                if (inWidth == self.width) and (inHeight == self.height):
+                    continue
+                inMaskedImage = afwImage.MaskedImageF(inWidth, inHeight)
+                self.assertRaises(Exception, afwMath.convolve, self.cnvMaskedImage, inMaskedImage, kernel)
 
         for doNormalize in (True,): # (False, True):
             convControl.setDoNormalize(doNormalize)
@@ -516,6 +527,24 @@ class ConvolveTestCase(unittest.TestCase):
 
         self.runStdTest(kernel,
             kernelDescr="Spatially varying LinearCombinationKernel of delta function basis kernels")
+
+    def testZeroWidthKernel(self):
+        """Convolution by a 0x0 kernel should raise an exception.
+        
+        The only way to produce a 0x0 kernel is to use the default constructor
+        (which exists only to support persistence; it does not produce a useful kernel).
+        """
+        kernelList = [
+            afwMath.FixedKernel(),
+            afwMath.AnalyticKernel(),
+            afwMath.SeparableKernel(),
+#            afwMath.DeltaFunctionKernel(),
+            afwMath.LinearCombinationKernel(),
+        ]
+        convolutionControl = afwMath.ConvolutionControl()
+        for kernel in kernelList:
+            self.assertRaises(Exception, afwMath.convolve, self.cnvMaskedImage, self.maskedImage, kernel,
+                convolutionControl)
 
     def testTicket873(self):
         """Demonstrate ticket 873: convolution of a MaskedImage with a spatially varying

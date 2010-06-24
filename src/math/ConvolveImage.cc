@@ -275,6 +275,7 @@ void afwMath::convolve(
     setEdgePixels(convolvedImage, kernel, inImage, convolutionControl.getDoCopyEdge(),
         typename lsst::afw::image::detail::image_traits<OutImageT>::image_category()
     );
+    convolvedImage.setXY0(inImage.getXY0());
 }
 
 /**
@@ -294,10 +295,7 @@ void afwMath::convolve(
     ConvolutionControl convolutionControl;
     convolutionControl.setDoNormalize(doNormalize);
     convolutionControl.setDoCopyEdge(doCopyEdge);
-    mathDetail::basicConvolve(convolvedImage, inImage, kernel, convolutionControl);
-    setEdgePixels(convolvedImage, kernel, inImage, convolutionControl.getDoCopyEdge(),
-        typename lsst::afw::image::detail::image_traits<OutImageT>::image_category()
-    );
+    afwMath::convolve(convolvedImage, inImage, kernel, convolutionControl);
 }
 
 

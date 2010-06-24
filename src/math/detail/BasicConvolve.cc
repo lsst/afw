@@ -12,7 +12,6 @@
 #include <cmath>
 #include <sstream>
 #include <vector>
-#include <iostream>
 
 #include "boost/cstdint.hpp" 
 
@@ -71,6 +70,44 @@ include/lsst/afw/image/Pixel.h:212: error: no type named ‘VariancePixelT’ in
         }
         return outPixel;
     }
+    
+    /*
+     * Assert that the dimensions of convolvedImage, inImage and kernel are compatible with convolution.
+     *
+     * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage dimensions != inImage dim.
+     * @throw lsst::pex::exceptions::InvalidParameterException if inImage smaller than kernel in width or h.
+     * @throw lsst::pex::exceptions::InvalidParameterException if kernel width or height < 1
+     */
+    template <typename OutImageT, typename InImageT>
+    void assertDimensionsOK(
+        OutImageT const &convolvedImage,
+        InImageT const &inImage,
+        lsst::afw::math::Kernel const &kernel
+    ) {
+        if (convolvedImage.getDimensions() != inImage.getDimensions()) {
+            std::ostringstream os;
+            os << "convolvedImage dimensions = ( "
+                << convolvedImage.getWidth() << ", " << convolvedImage.getHeight()
+                << ") != (" << inImage.getWidth() << ", " << inImage.getHeight() << ") = inImage dimensions";
+            throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+        }
+        if (inImage.getDimensions() < kernel.getDimensions()) {
+            std::ostringstream os;
+            os << "inImage dimensions = ( "
+                << inImage.getWidth() << ", " << inImage.getHeight()
+                << ") smaller than (" << kernel.getWidth() << ", " << kernel.getHeight()
+                << ") = kernel dimensions in width and/or height";
+            throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+        }
+        if ((kernel.getWidth() < 1) || (kernel.getHeight() < 1)) {
+            std::ostringstream os;
+            os << "kernel dimensions = ( "
+                << kernel.getWidth() << ", " << kernel.getHeight()
+                << ") smaller than (1, 1) in width and/or height";
+            throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+        }
+    }
+    
 }   // anonymous namespace
 
 /**
@@ -83,9 +120,9 @@ include/lsst/afw/image/Pixel.h:212: error: no type named ‘VariancePixelT’ in
  * - kernel.getWidth()  - 1 - kernel.getCtrX() along the right edge
  * - kernel.getHeight() - 1 - kernel.getCtrY() along the top edge
  *
- * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage is not the same size as inImage
- * @throw lsst::pex::exceptions::InvalidParameterException if inImage is smaller than kernel
- *  in columns or rows.
+ * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage dimensions != inImage dimensions
+ * @throw lsst::pex::exceptions::InvalidParameterException if inImage smaller than kernel in width or height
+ * @throw lsst::pex::exceptions::InvalidParameterException if kernel width or height < 1
  *
  * @ingroup afw
  */
@@ -148,22 +185,7 @@ void mathDetail::basicConvolve(
         afwMath::ConvolutionControl const &)        ///< unused
 {
     assert (!kernel.isSpatiallyVarying());
-
-    if (convolvedImage.getDimensions() != inImage.getDimensions()) {
-        std::ostringstream os;
-        os << "convolvedImage dimensions = ( "
-            << convolvedImage.getWidth() << ", " << convolvedImage.getHeight()
-            << ") != (" << inImage.getWidth() << ", " << inImage.getHeight() << ") = inImage dimensions";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
-    }
-    if (inImage.getDimensions() < kernel.getDimensions()) {
-        std::ostringstream os;
-        os << "inImage dimensions = ( "
-            << inImage.getWidth() << ", " << inImage.getHeight()
-            << ") smaller than (" << kernel.getWidth() << ", " << kernel.getHeight()
-            << ") = kernel dimensions in width and/or height";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
-    }
+    assertDimensionsOK(convolvedImage, inImage, kernel);
     
     int const mImageWidth = inImage.getWidth(); // size of input region
     int const mImageHeight = inImage.getHeight();
@@ -199,9 +221,9 @@ void mathDetail::basicConvolve(
  * contain many pixels with value zero, or if your basis kernels contain a mix of
  * afwMath::DeltaFunctionKernel with other kernels.
  *
- * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage is not the same size as inImage
- * @throw lsst::pex::exceptions::InvalidParameterException if inImage is smaller than kernel
- *  in columns or rows.
+ * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage dimensions != inImage dimensions
+ * @throw lsst::pex::exceptions::InvalidParameterException if inImage smaller than kernel in width or height
+ * @throw lsst::pex::exceptions::InvalidParameterException if kernel width or height < 1
  *
  * @ingroup afw
  */
@@ -235,21 +257,7 @@ void mathDetail::basicConvolve(
     // use specialization for delta function basis; this is faster then
     // the standard algorithm but requires more memory
 
-    if (convolvedImage.getDimensions() != inImage.getDimensions()) {
-        std::ostringstream os;
-        os << "convolvedImage dimensions = ( "
-            << convolvedImage.getWidth() << ", " << convolvedImage.getHeight()
-            << ") != (" << inImage.getWidth() << ", " << inImage.getHeight() << ") = inImage dimensions";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
-    }
-    if (inImage.getDimensions() < kernel.getDimensions()) {
-        std::ostringstream os;
-        os << "inImage dimensions = ( "
-            << inImage.getWidth() << ", " << inImage.getHeight()
-            << ") smaller than (" << kernel.getWidth() << ", " << kernel.getHeight()
-            << ") = kernel dimensions in width and/or height";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
-    }
+    assertDimensionsOK(convolvedImage, inImage, kernel);
     
     pexLog::TTrace<3>("lsst.afw.math.convolve",
         "basicConvolve for LinearCombinationKernel: spatially varying delta function basis");
@@ -359,21 +367,7 @@ void mathDetail::basicConvolve(
     typedef typename OutImageT::y_iterator OutYIterator;
     typedef typename OutImageT::SinglePixel OutPixel;
 
-    if (convolvedImage.getDimensions() != inImage.getDimensions()) {
-        std::ostringstream os;
-        os << "convolvedImage dimensions = ( "
-            << convolvedImage.getWidth() << ", " << convolvedImage.getHeight()
-            << ") != (" << inImage.getWidth() << ", " << inImage.getHeight() << ") = inImage dimensions";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
-    }
-    if (inImage.getDimensions() < kernel.getDimensions()) {
-        std::ostringstream os;
-        os << "inImage dimensions = ( "
-            << inImage.getWidth() << ", " << inImage.getHeight()
-            << ") smaller than (" << kernel.getWidth() << ", " << kernel.getHeight()
-            << ") = kernel dimensions in width and/or height";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
-    }
+    assertDimensionsOK(convolvedImage, inImage, kernel);
     
     int const imWidth = inImage.getWidth();
     int const imHeight = inImage.getHeight();
@@ -471,9 +465,9 @@ void mathDetail::basicConvolve(
  * - kernel.getWidth()  - 1 - kernel.getCtrX() along the right edge
  * - kernel.getHeight() - 1 - kernel.getCtrY() along the top edge
  *
- * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage is not the same size as inImage
- * @throw lsst::pex::exceptions::InvalidParameterException if inImage is smaller than kernel
- *  in columns or rows.
+ * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage dimensions != inImage dimensions
+ * @throw lsst::pex::exceptions::InvalidParameterException if inImage smaller than kernel in width or height
+ * @throw lsst::pex::exceptions::InvalidParameterException if kernel width or height < 1
  *
  * @ingroup afw
  */
@@ -494,21 +488,7 @@ void mathDetail::convolveWithBruteForce(
     typedef typename OutImageT::x_iterator OutXIterator;
     typedef typename OutImageT::SinglePixel OutPixel;
 
-    if (convolvedImage.getDimensions() != inImage.getDimensions()) {
-        std::ostringstream os;
-        os << "convolvedImage dimensions = ("
-            << convolvedImage.getWidth() << ", " << convolvedImage.getHeight()
-            << ") != (" << inImage.getWidth() << ", " << inImage.getHeight() << ") = inImage dimensions";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
-    }
-    if (inImage.getDimensions() < kernel.getDimensions()) {
-        std::ostringstream os;
-        os << "inImage dimensions = ("
-            << inImage.getWidth() << ", " << inImage.getHeight()
-            << ") smaller than (" << kernel.getWidth() << ", " << kernel.getHeight()
-            << ") = kernel dimensions in width and/or height";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
-    }
+    assertDimensionsOK(convolvedImage, inImage, kernel);
     
     int const inImageWidth = inImage.getWidth();
     int const inImageHeight = inImage.getHeight();

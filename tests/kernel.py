@@ -540,6 +540,29 @@ class KernelTestCase(unittest.TestCase):
                 self.assertEqual(kernel.getCtrX(), xCtr)
                 self.assertEqual(kernel.getCtrY(), yCtr)
 
+    def testZeroSizeKernel(self):
+        """Creating a kernel with width or height < 1 should raise an exception.
+        
+        Note: this ignores the default constructors, which produce kernels with height = width = 0.
+        The default constructors are only intended to support persistence, not to produce useful kernels.
+        """
+        emptyImage = afwImage.ImageF(0, 0)
+        gaussFunc2D = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
+        gaussFunc1D = afwMath.GaussianFunction1D(1.0)
+        zeroPoint = afwImage.PointI(0, 0)
+        for kWidth in (-1, 0, 1):
+            for kHeight in (-1, 0, 1):
+                if (kHeight > 0) and (kWidth > 0):
+                    continue
+                if (kHeight >= 0) and (kWidth >= 0):
+                    # don't try to create an image with negative dimensions
+                    blankImage = afwImage.ImageF(kWidth, kHeight)
+                    self.assertRaises(Exception, afwMath.FixedKernel, blankImage)
+                self.assertRaises(Exception, afwMath.AnalyticKernel, kWidth, kHeight, gaussFunc2D)
+                self.assertRaises(Exception, afwMath.SeparableKernel, kWidth, kHeight, gaussFunc1D, gaussFunc1D)
+                self.assertRaises(Exception, afwMath.DeltaFunctionKernel, kWidth, kHeight, zeroPoint)
+
+
     def basicTests(self, kernel, nKernelParams, nSpatialParams=0):
         """Basic tests of a kernel"""
         self.assert_(kernel.getNSpatialParameters() == nSpatialParams)
