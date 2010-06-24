@@ -540,7 +540,7 @@ class ConvolveTestCase(unittest.TestCase):
             afwMath.FixedKernel(),
             afwMath.AnalyticKernel(),
             afwMath.SeparableKernel(),
-#            afwMath.DeltaFunctionKernel(),
+#            afwMath.DeltaFunctionKernel(),  # DeltaFunctionKernel has no default constructor
             afwMath.LinearCombinationKernel(),
         ]
         convolutionControl = afwMath.ConvolutionControl()
