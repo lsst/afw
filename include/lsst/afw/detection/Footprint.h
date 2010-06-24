@@ -226,7 +226,7 @@ public:
     FootprintSet(FootprintSet const& set, int r, bool isotropic=true);
     FootprintSet(FootprintSet const& footprints1, FootprintSet const& footprints2,
                  bool const includePeaks);
-    ~FootprintSet();
+    ~FootprintSet(){}
 
     FootprintSet& operator=(FootprintSet const& rhs);
 
@@ -235,8 +235,9 @@ public:
         using std::swap;                    // See Meyers, Effective C++, Item 25
         
         swap(_footprints, rhs.getFootprints());
-        image::BBox rhsRegion = rhs.getRegion();
-        swap(_region, rhsRegion);
+        image::BBox tmp = rhs.getRegion();
+        swap(_region, tmp);
+        rhs.setRegion(tmp);
     }
     
     FootprintList& getFootprints() { return _footprints; } //!< Retun the Footprint%s of detected objects
@@ -263,7 +264,7 @@ public:
         setMask(mask.get(), planeName);
     }
 private:
-    FootprintList & _footprints;        //!< the Footprints of detected objects
+    FootprintList _footprints;        //!< the Footprints of detected objects
     image::BBox _region;                //!< The corners of the MaskedImage that the detections live in
 };
 
