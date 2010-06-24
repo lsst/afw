@@ -171,10 +171,11 @@ class ConvolveTestCase(unittest.TestCase):
             afwImage.MaskU_addMaskPlane(p)
             
         del tmp
-
+        
         self.maskedImage = afwImage.MaskedImageF(FullMaskedImage, InputBBox, True)
         # use a huge XY0 to make emphasize any errors related to not handling xy0 correctly.
         self.maskedImage.setXY0(300, 200)
+        self.xy0 = self.maskedImage.getXY0()
 
         # provide destinations for the convolved MaskedImage and Image that contain junk
         # to verify that convolve overwrites all pixels;
@@ -222,6 +223,7 @@ class ConvolveTestCase(unittest.TestCase):
         refCnvImMaskVarArr = refConvolve(imMaskVar, xy0, refKernel, doNormalize, doCopyEdge)
 
         afwMath.convolve(self.cnvImage, self.maskedImage.getImage(), kernel, convControl)
+        self.assertEqual(self.cnvImage.getXY0(), self.xy0)
         cnvImArr = imTestUtils.arrayFromImage(self.cnvImage)
 
         afwMath.convolve(self.cnvMaskedImage, self.maskedImage, kernel, convControl)
