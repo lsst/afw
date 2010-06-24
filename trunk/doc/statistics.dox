@@ -1,0 +1,19 @@
+// -*- lsst-c++ -*-
+namespace lsst { namespace afw { namespace math {
+     
+    /**
+       \page imageStatistics
+       \example imageStatistics.cc
+    */
+    
+    /**
+       \page splineInterpolate
+       \example splineInterpolate.cc
+    */
+    
+    /**
+       \page imageBackground
+       \example imageBackground.cc
+    */
+    
+}}}

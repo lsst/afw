@@ -1,0 +1,16 @@
+# -*- python -*-
+import glob, os, re
+
+Import('env')
+#
+# Here's a way to to build the files in the list noOptFiles without optimisation
+#
+ccFiles = glob.glob("../src/*/*.cc") + glob.glob("../src/*/*/*.cc")
+try:
+    ccFiles = env.SourcesForSharedLibrary(ccFiles)
+except AttributeError:                  # requires sconsUtils > 3.3
+    pass
+
+env.SharedLibrary(
+    'afw', ccFiles, LIBS=filter(lambda x: x != "afw", env.getlibs("afw"))
+)

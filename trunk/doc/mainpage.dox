@@ -1,0 +1,305 @@
+/**
+\mainpage lsst::afw;  the LSST Application Framework
+
+\section secIntro Introduction
+
+The LSST applications framework provides the basic functionality needed
+by an image processing system.  In particular:
+   - \ref secImage : Representation of Images (and Masks)
+   - \ref secDisplay : How to display images
+   - \ref secMath :  Mathematical functions such as convolution and image statistics
+   - \ref secDetection : Detection of sources in images
+*/
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+namespace lsst { namespace afw { namespace image {
+/**
+\page secImage Images
+
+\section secImage Images
+
+In LSST, 2-dimensional images are represented using a set of templated classes, all of
+which are ultimately derived from ImageBase:
+      - Image : An %image of arithmetic type (e.g. short; int; float)
+      - Mask : An %image representing a set of bitplanes
+      - DecoratedImage : An Image that has associated metadata (e.g. from a FITS header)
+      - MaskedImage : A combination of an Image, a Mask, and an Image giving the per-pixel variance
+      - Exposure : A MaskedImage with additional \link Wcs WCS\endlink information
+
+\subsection secPixelAccess How to Access Pixels
+
+%Image Pixels may be accessed via iterators or locators;
+the former are simpler if you want single-pixel access, while the latter provide
+you with access to a pixel's friends and neighbours. The following tutorials are available:   
+- \link imageIterators Image iterators\endlink
+- \link imageLocators Image locators\endlink
+- \link maskedImageIterators MaskedImage iterators\endlink
+- \link maskedImageLocators MaskedImage locators\endlink
+
+See also \ref secPixelAccessReference. LSST %image access is modelled after the boost::gil %image interface; see
+   http://www.boost.org/doc/libs/1_36_0/libs/gil/doc/html/giltutorial.html
+and
+   http://www.boost.org/doc/libs/1_36_0/libs/gil/doc/html/gildesignguide.html
+- \ref secImageIO
+
+There are also some algorithms analogous to the STL's @c \<algorithm\>; see \ref secImageAlgorithm.
+*/
+
+/**
+\addtogroup secPixelAccessReference Pixel Access Reference Manual
+
+(Return to \ref secImage)
+
+%Image Pixels may be accessed via iterators or locators;
+the former are simpler if you want single-pixel access, while the latter provide
+you with access to a pixel's friends and neighbours. There are a set of tutorials:
+- \link imageIterators Image iterators\endlink
+- \link imageLocators Image locators\endlink
+- \link maskedImageIterators MaskedImage iterators\endlink
+- \link maskedImageLocators MaskedImage locators\endlink
+
+In the case of MaskedImage, the user-visible \c iterator%s and
+locator%s (and \c const variants) are derived from MaskedImageIteratorBase
+and MaskedImageLocatorBase;  the following documentation refers to these
+base classes.
+
+\par Iterators
+
+- You can use an STL-compliant \c iterator to access the pixels:
+ - ImageBase::begin() const
+ - ImageBase::begin(bool) const
+ - MaskedImage::begin() const
+ - MaskedImage::begin(bool) const
+ - ImageBase::end() const
+ - ImageBase::end(bool) const
+ - MaskedImage::end() const
+ - MaskedImage::end(bool) const
+ - ImageBase::rbegin() const
+ - MaskedImage::rbegin() const
+ - ImageBase::rend() const
+ - MaskedImage::rend() const
+ - ImageBase::at(int x, int y) const
+ - MaskedImage::at(int x, int y) const
+
+N.b. These \c iterators aren't the most efficient way to access all the %image's
+pixels as they may not be contiguous in memory so a test for end-of-row
+is needed after every %pixel (we do guarantee that a \e row's pixels will be contiguous).
+The exceptions are the \c begin(bool) and \c end(bool) pairs which are only
+valid for contiguous images (they'll throw an exception if the %image isn't), but
+are the fastest way to traverse an %image if available.  Note that they return an
+\c x_iterator not an \c iterator.
+
+- Incrementing an \c y_iterator moves it across the row
+ - ImageBase::row_begin(int y) const
+ - MaskedImage::row_begin(int y) const
+ - ImageBase::row_end(int y) const
+ - MaskedImage::row_end(int y) const
+ - ImageBase::x_at(int x, int y) const
+ - MaskedImage::x_at(int x, int y) const
+
+- Incrementing an \c y_iterator moves it up the column
+ - ImageBase::col_begin(int x) const
+ - MaskedImage::col_begin(int x) const
+ - ImageBase::col_end(int x) const
+ - MaskedImage::col_end(int x) const
+ - ImageBase::y_at(int x, int y) const
+ - MaskedImage::y_at(int x, int y) const
+
+- Iterators can be dereferenced:
+ - imageIterator::operator*()
+ - MaskedImage::MaskedImageIteratorBase::operator*()
+
+- Additionally, MaskedImage iterators support
+ - MaskedImage::MaskedImageIteratorBase::image()
+ - MaskedImage::MaskedImageIteratorBase::mask()
+ - MaskedImage::MaskedImageIteratorBase::variance()
+
+- Iterators may be advanced with
+ - imageIterator::operator++()
+ - MaskedImage::MaskedImageIteratorBase::operator++()
+ - imageIterator::operator++(int)
+ - MaskedImage::MaskedImageIteratorBase::operator++(int)
+ - imageIterator::operator+=(std::ptrdiff_t delta)
+ - MaskedImage::MaskedImageIteratorBase::operator+=(std::ptrdiff_t delta)
+ - imageIterator::operator-=(std::ptrdiff_t delta)
+ - MaskedImage::MaskedImageIteratorBase::operator-=(std::ptrdiff_t delta)
+
+- and compared with
+ - imageIterator::operator==(imageIterator const& rhs)
+ - MaskedImage::MaskedImageIteratorBase::operator==(MaskedImageIteratorBase const& rhs)
+ - imageIterator::operator!=(imageIterator const& rhs)
+ - MaskedImage::MaskedImageIteratorBase::operator!=(MaskedImageIteratorBase const& rhs)
+ - imageIterator::operator<(imageIterator const& rhs)
+ - MaskedImage::MaskedImageIteratorBase::operator<(MaskedImageIteratorBase const& rhs)
+
+\par Locators
+
+\c Locators are more flexible than \c iterators, permitting us to manipulate
+regions of an %image
+
+- locators may be created with
+ - ImageBase::xy_at(int x, int y) const
+ - MaskedImage::xy_at(int x, int y) const
+
+- and dereferenced with:
+ - imageLocator::operator*()
+ - MaskedImage::MaskedImageLocatorBase::operator*()
+ - imageLocator::operator()(int x, int y)
+ - MaskedImage::MaskedImageLocatorBase::operator()(int x, int y)
+
+- Retrieve an x- or y-iterator that may be dereferenced or incremented
+ - imageLocator::x()
+ - MaskedImage::MaskedImageLocatorBase::x()
+ - imageLocator::y()
+ - MaskedImage::MaskedImageLocatorBase::y()
+
+- Manipulate those iterators (n.b. this moves the underlying locator,
+so \c ++locator.x() is the standard way to advance a locator)
+ - imageLocator::xy_x_iterator::operator*()
+ - MaskedImage::MaskedImageLocatorBase::xy_x_iterator::operator*()
+ - imageLocator::xy_y_iterator::operator*()
+ - MaskedImage::MaskedImageLocatorBase::xy_y_iterator::operator*()
+
+- Additionally, MaskedImage locator-iterators support
+ - image()
+ - mask()
+ - variance()
+
+- Move those iterators (n.b. this moves the underlying locator,
+so \c ++locator.x() is the standard way to advance a locator)
+ - imageLocator::xy_x_iterator::operator++()
+ - imageLocator::xy_x_iterator::operator++(int)
+ - imageLocator::xy_y_iterator::operator++()
+ - imageLocator::xy_y_iterator::operator++(int)
+
+- Advance (or retreat) an \c xy_locator directly
+ - ImageBase::operator+=(xy_locator& loc, pair2I const& off)
+ - MaskedImage::MaskedImageLocatorBase::operator+=(pair2I const& off)
+ - ImageBase::operator+=(const_xy_locator& loc, pair2I const& off)
+ - ImageBase::operator-=(xy_locator& loc, pair2I const& off)
+ - ImageBase::operator-=(const_xy_locator& loc, pair2I const& off)
+
+- Save or use a saved relative location
+ - imageLocator::cache_location()
+ - MaskedImage::MaskedImageLocatorBase::cache_location()
+ - imageLocator::cache_location(int x, int y)
+ - MaskedImage::MaskedImageLocatorBase::cache_location(int x, int y) const
+ - imageLocator::operator[](cached_location_t const&);
+ - MaskedImage::MaskedImageLocatorBase::operator[](cached_location_t const&);
+
+- MaskedImage locators also support
+ - MaskedImage::MaskedImageLocatorBase::image(cached_location_t const&);
+ - MaskedImage::MaskedImageLocatorBase::mask(cached_location_t const&);
+ - MaskedImage::MaskedImageLocatorBase::variance(cached_location_t const&);
+
+(Note that these are function calls, as opposed to the \c operator[] in the
+previous APIs)
+
+*/
+}}}
+
+
+namespace lsst { namespace afw { namespace image {
+/**
+\page secImageIO Image I/O
+\section secImageIO Image/Mask/MaskedImage I/O
+
+Reading Image%s, Mask%s, and MaskedImage%s from FITS files is achieved via their
+constructors that take a string, e.g.
+\code
+Image::Image(fileName, hdu=0, metadata=lsst::daf::base::PropertySet::Ptr(), bbox=BBox());
+\endcode
+
+- \c fileName gives the name of the file to be written (but see \ref MaskedImageIo).
+- The \c hdu is FITS jargon for the Header Data Unit;  the 1-indexed offset of the desired block
+of data in the file.  As a special favour, "0" is intepreted as the first HDU, and if
+it's empty, the next is read instead.
+- The \c metadata is basically the contents of the
+FITS header (n.b. it's read automatically if you call \link Exposure::Exposure\endlink(fileName)).
+- If the bounding box \c bbox is supplied, only that part of the file is read (n.b. in this
+case the image's origin is set correctly, cf. Image::getXY0).
+
+Writing to FITS files is done via a method, e.g. Image::writeFits (but once more,
+you should peruse \ref MaskedImageIo).
+
+\subsection MaskedImageIo Reading and writing MaskedImages
+
+MaskedImage%s are a bit more complicated, as there are three pieces of
+data to read or write, the %image, the mask, and the variance.  What's more, LSST
+changed its mind about how to do this in the early summer of 2009.
+
+The old convention was to write three separate FITS files, so a call
+to <tt>MaskedImage::writeFits("foo")</tt> would result in three files,
+\b foo_img.fits, \b foo_msk.fits, and \b foo_var.fits. The
+new convention is that, if the filename looks like a complete FITS file, the
+data should be written to a single Multi Extension Fits (MEF) file.  I.e.
+- <code>MaskedImage::writeFits("foo.fits")</code> writes the single MEF file, \b foo.fits
+- <code>MaskedImage::writeFits("foo")</code> still writes three files, \b foo_{img,msk,var}.fits,
+unless you explictly set <code>writeMef</code> in which case a single file, foo, will be written.
+
+In both cases, the FITS HDUs are identified with the \c EXTTYPE keyword; the possible
+values are \c IMAGE, \c MASK, and \c VARIANCE.  If the \c EXTTYPE keyword is present
+in the file, it must have the expected value or \c lsst::pex::exceptions::InvalidParameterException is thrown.
+
+\deprecated Please do not use the three-separate-files APIs in new code.
+
+The corresponding constructors obeyed and obey the same conventions, so
+- <code> MaskedImage::MaskedImage("foo")</code>  reads \b foo_{img,msk,var}.fits if \b foo_img.fits exists, otherwise it reads \b foo
+- <code> MaskedImage::MaskedImage("foo.fits")</code> reads \b foo.fits
+
+@note If \b foo.fits doesn't exist, the code tries to read \b foo.fits_img.fits for backward compatibility,
+but there's no way to force the code to write this file.
+
+\subsection secAppendingToFits Appending to FITS files
+
+If you specify the mode in e.g. Image::writeFits to \b a (or \b ab), the desired data
+will be appended to the file.  For Image%s and Mask%s this adds a single HDU, while
+for a MaskedImage it adds 3.
+
+You can read the HDU of your desires by passing an \c hdu to the constructor.
+
+\note For MaskedImage if you specify \b hdu, we'll read \b hdu, \b hdu+1, and \b hdu+2
+so to get the nth MaskedImage, you should set <tt>hdu == 1 + 3*n</tt>
+*/
+
+}}}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+namespace lsst { namespace afw { namespace math {
+/**
+\page secMath Mathematical Operations
+\section secMath Mathematical Operations
+
+ - Statistics
+Annotated examples are available for \link StatisticsExample Statistics\endlink.
+ - Background estimation of images
+ - Interpolate
+ - Convolution of images is handled by convolve()
+ - Warping Images is handled by warpImage()
+ - Manipulating spatially-distributed sets of objects (e.g. PSF candidates);
+ an annotated example is available as \link SpatialCellSetExample\endlink
+
+*/
+}}}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+namespace lsst { namespace afw { namespace detection {
+/**
+\page secDetection Detection
+\section secDetection Detection
+
+Detected pixels are manipulated using the following classes:
+ - Footprint : A set of pixels above (or below) a Threshold
+ - FootprintFunctor : A functor to process the pixels in a Footprint
+ - DetectionSet : A set of Footprints associated with a MaskedImage
+ - Peak : A peak pixel in the %image
+ - Source : The properties of a source of electrons (e.g. a star or cosmic ray)
+ - Threshold : An object describing the threshold used to define a set of Footprint%s
+
+Annotated examples are available for \link FootprintFunctorsExample FootprintFunctors\endlink.
+
+*/
+}}}
