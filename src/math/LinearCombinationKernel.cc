@@ -31,7 +31,8 @@ afwMath::LinearCombinationKernel::LinearCombinationKernel()
     _kernelList(),
     _kernelImagePtrList(),
     _kernelSumList(),
-    _kernelParams()
+    _kernelParams(),
+    _isDeltaFunctionBasis(false)
 { }
 
 /**
@@ -45,7 +46,8 @@ afwMath::LinearCombinationKernel::LinearCombinationKernel(
     _kernelList(),
     _kernelImagePtrList(),
     _kernelSumList(),
-    _kernelParams(kernelParameters)
+    _kernelParams(kernelParameters),
+    _isDeltaFunctionBasis(false)
 {
     if (kernelList.size() != kernelParameters.size()) {
         std::ostringstream os;
@@ -70,7 +72,8 @@ afwMath::LinearCombinationKernel::LinearCombinationKernel(
     _kernelList(),
     _kernelImagePtrList(),
     _kernelSumList(),
-    _kernelParams(std::vector<double>(kernelList.size()))
+    _kernelParams(std::vector<double>(kernelList.size())),
+    _isDeltaFunctionBasis(false)
 {
     checkKernelList(kernelList);
     _setKernelList(kernelList);
@@ -91,7 +94,8 @@ afwMath::LinearCombinationKernel::LinearCombinationKernel(
     _kernelList(),
     _kernelImagePtrList(),
     _kernelSumList(),
-    _kernelParams(std::vector<double>(kernelList.size()))
+    _kernelParams(std::vector<double>(kernelList.size())),
+    _isDeltaFunctionBasis(false)
 {
     if (kernelList.size() != spatialFunctionList.size()) {
         std::ostringstream os;

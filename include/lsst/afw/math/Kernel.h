@@ -342,6 +342,10 @@ class FourierLocalKernel;
         int _ctrX;
         int _ctrY;
         unsigned int _nKernelParams;
+        
+        // prevent copying and assignment (to avoid problems from type slicing)
+        Kernel(const Kernel&);
+        Kernel& operator=(const Kernel&);
     };
 
     typedef std::vector<Kernel::Ptr> KernelList;

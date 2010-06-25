@@ -58,6 +58,7 @@ afwMath::Kernel::Kernel()
  *
  * @throw lsst::pex::exceptions::InvalidParameterException if a spatial function is specified
  * and the kernel has no parameters.
+ * @throw lsst::pex::exceptions::InvalidParameterException if a width or height < 1
  */
 afwMath::Kernel::Kernel(
     int width,                          ///< number of columns
@@ -73,6 +74,11 @@ afwMath::Kernel::Kernel(
     _ctrY((height-1)/2),
     _nKernelParams(nKernelParams)
 {
+    if ((width < 1) || (height < 1)) {
+        std::ostringstream os;
+        os << "kernel height = " << height << " and/or width = " << width << " < 1";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+    }
     if (dynamic_cast<const NullSpatialFunction*>(&spatialFunction)) {
         // spatialFunction is not really present
     } else {
@@ -90,6 +96,8 @@ afwMath::Kernel::Kernel(
  * @brief Construct a spatially varying Kernel with a list of spatial functions (one per kernel parameter)
  *
  * Note: if the list of spatial functions is empty then the kernel is not spatially varying.
+ *
+ * @throw lsst::pex::exceptions::InvalidParameterException if a width or height < 1
  */
 afwMath::Kernel::Kernel(
     int width,                          ///< number of columns
@@ -104,6 +112,11 @@ afwMath::Kernel::Kernel(
    _ctrY(height/2),
    _nKernelParams(spatialFunctionList.size())
 {
+    if ((width < 1) || (height < 1)) {
+        std::ostringstream os;
+        os << "kernel height = " << height << " and/or width = " << width << " < 1";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+    }
     for (unsigned int ii = 0; ii < spatialFunctionList.size(); ++ii) {
         SpatialFunctionPtr spatialFunctionCopy = spatialFunctionList[ii]->clone();
         this->_spatialFunctionList.push_back(spatialFunctionCopy);
