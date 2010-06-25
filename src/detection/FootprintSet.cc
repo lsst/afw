@@ -355,14 +355,18 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
  */
 template<typename ImagePixelT, typename MaskPixelT>
 detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
-        const image::MaskedImage<ImagePixelT, MaskPixelT> &, //!< Image to search for objects
+        const image::MaskedImage<ImagePixelT, MaskPixelT> & img, //!< Image to search for objects
         Threshold const &,                                   //!< threshold to find objects
         int,                                                 //!< Footprint should include this pixel (column)
         int,                                                 //!< Footprint should include this pixel (row) 
         std::vector<Peak> const *       //!< Footprint should include at most one of these peaks
                                                               )
     : lsst::daf::data::LsstBase(typeid(this)),
-      _footprints(new FootprintList()) {}
+      _footprints(new FootprintList()),
+      _region(new image::BBox(image::PointI(img.getX0(), img.getY0()),
+                              img.getWidth(), img.getHeight())) 
+{
+}
 
 
 /************************************************************************************************************/
@@ -776,7 +780,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         FootprintSet const &rhs         //!< the input FootprintSet
                                                               ) :
     lsst::daf::data::LsstBase(typeid(this)),
-    _footprints(rhs._footprints) {
+    _footprints(rhs._footprints), _region(rhs._region) {
 }
 
 /// Assignment operator.
@@ -820,11 +824,9 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
                                         //!< @note Isotropic grows are significantly slower
                                                               )
     : lsst::daf::data::LsstBase(typeid(this)),
-      _footprints(new FootprintList())  // We don't use this
-      {
+      _footprints(rhs._footprints), _region(rhs._region) {
 
     if (r == 0) {
-        *this = rhs;
         return;
     } else if (r < 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
@@ -855,13 +857,16 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
  */
 template<typename ImagePixelT, typename MaskPixelT>
 detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
-        FootprintSet const& ,
-        FootprintSet const& ,
+        FootprintSet const& fs1,
+        FootprintSet const& fs2,
         bool const 
                                                               )
     : lsst::daf::data::LsstBase(typeid(this)),
-      _footprints(new FootprintList())
+      _footprints(new FootprintList()),
+      _region(new image::BBox(fs1.getRegion()))
     {
+        _region->grow(fs2.getRegion().getLLC());
+        _region->grow(fs2.getRegion().getURC());
 }
 
 /************************************************************************************************************/
