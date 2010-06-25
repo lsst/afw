@@ -135,9 +135,10 @@ public:
     ~Footprint();
 
     int getId() const { return _fid; }   //!< Return the Footprint's unique ID
-    SpanList &getSpans() { return _spans; } //!< return the Span%s contained in this Footprint
-    const SpanList &getSpans() const { return _spans; } //!< return the Span%s contained in this Footprint
-    std::vector<Peak::Ptr> &getPeaks() { return _peaks; } //!< Return the Peak%s contained in this Footprint
+    SpanList& getSpans() { return _spans; } //!< return the Span%s contained in this Footprint
+    const SpanList& getSpans() const { return _spans; } //!< return the Span%s contained in this Footprint
+    std::vector<Peak::Ptr>& getPeaks() { return _peaks; } //!< Return the Peak%s contained in this Footprint
+    const std::vector<Peak::Ptr>& getPeaks() const { return _peaks; } //!< Return the Peak%s contained in this Footprint
     int getNpix() const { return _npix; }     //!< Return the number of pixels in this Footprint
 
     const Span& addSpan(const int y, const int x0, const int x1);
@@ -159,21 +160,21 @@ public:
     void insertIntoImage(lsst::afw::image::Image<boost::uint16_t>& idImage, int const id,
                          image::BBox const& region=image::BBox()) const;
 private:
-    Footprint(const Footprint &);                   //!< No copy constructor
-    Footprint operator = (Footprint const &) const; //!< no assignment
+    Footprint(const Footprint&);                   //!< No copy constructor
+    Footprint operator = (Footprint const&) const; //!< no assignment
     static int id;
     mutable int _fid;                    //!< unique ID
     int _npix;                           //!< number of pixels in this Footprint
-    
-    SpanList &_spans;                    //!< the Spans contained in this Footprint
+     
+    SpanList _spans;                     //!< the Spans contained in this Footprint
     image::BBox _bbox;                   //!< the Footprint's bounding box
-    std::vector<Peak::Ptr> &_peaks;      //!< the Peaks lying in this footprint
+    std::vector<Peak::Ptr> _peaks;       //!< the Peaks lying in this footprint
     mutable image::BBox _region;         //!< The corners of the MaskedImage the footprints live in
     bool _normalized;                    //!< Are the spans sorted? 
 };
 
-Footprint::Ptr growFootprint(Footprint const &foot, int ngrow, bool isotropic=true);
-Footprint::Ptr growFootprint(Footprint::Ptr const &foot, int ngrow, bool isotropic=true);
+Footprint::Ptr growFootprint(Footprint const& foot, int ngrow, bool isotropic=true);
+Footprint::Ptr growFootprint(Footprint::Ptr const& foot, int ngrow, bool isotropic=true);
 
 std::vector<lsst::afw::image::BBox> footprintToBBoxList(Footprint const& foot);
 
@@ -194,8 +195,8 @@ MaskT setMaskFromFootprintList(lsst::afw::image::Mask<MaskT> *mask,
                                std::vector<Footprint::Ptr> const& footprints,
                                MaskT const bitmask);
 template<typename MaskT>
-Footprint::Ptr footprintAndMask(Footprint::Ptr const & foot,
-                                typename image::Mask<MaskT>::Ptr const & mask,
+Footprint::Ptr footprintAndMask(Footprint::Ptr const&  foot,
+                                typename image::Mask<MaskT>::Ptr const&  mask,
                                 MaskT bitmask);
     
 /************************************************************************************************************/
@@ -231,16 +232,16 @@ public:
     FootprintSet& operator=(FootprintSet const& rhs);
 
     template<typename RhsImagePixelT, typename RhsMaskPixelT>
-    void swap(FootprintSet<RhsImagePixelT, RhsMaskPixelT> &rhs) {
+    void swap(FootprintSet<RhsImagePixelT, RhsMaskPixelT>& rhs) {
         using std::swap;                    // See Meyers, Effective C++, Item 25
         
-        swap(_footprints, rhs.getFootprints());
+        swap(*_footprints, rhs.getFootprints());
         image::BBox rhsRegion = rhs.getRegion();
         swap(_region, rhsRegion);
     }
     
-    FootprintList& getFootprints() { return _footprints; } //!< Retun the Footprint%s of detected objects
-    FootprintList const& getFootprints() const { return _footprints; } //!< Retun the Footprint%s of detected objects
+    FootprintList& getFootprints() { return *_footprints; } //!< Retun the Footprint%s of detected objects
+    FootprintList const& getFootprints() const { return *_footprints; } //!< Retun the Footprint%s of detected objects
     void setRegion(lsst::afw::image::BBox const& region);
     image::BBox const& getRegion() const { return _region; } //!< Return the corners of the MaskedImage
 
@@ -263,7 +264,7 @@ public:
         setMask(mask.get(), planeName);
     }
 private:
-    FootprintList & _footprints;        //!< the Footprints of detected objects
+    boost::shared_ptr<FootprintList> _footprints;        //!< the Footprints of detected objects
     image::BBox _region;                //!< The corners of the MaskedImage that the detections live in
 };
 
@@ -386,7 +387,7 @@ typename detection::FootprintSet<ImagePixelT, MaskPixelT>::Ptr makeFootprintSet(
 
 template<typename ImagePixelT, typename MaskPixelT>
 typename detection::FootprintSet<ImagePixelT>::Ptr makeFootprintSet(
-        detection::FootprintSet<ImagePixelT, MaskPixelT> const &rhs, //!< the input FootprintSet
+        detection::FootprintSet<ImagePixelT, MaskPixelT> const& rhs, //!< the input FootprintSet
         int r,                          //!< Grow Footprints by r pixels
         bool isotropic                  //!< Grow isotropically (as opposed to a Manhattan metric)
                                         //!< @note Isotropic grows are significantly slower
