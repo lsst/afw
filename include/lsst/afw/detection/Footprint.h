@@ -237,13 +237,13 @@ public:
         
         swap(*_footprints, rhs.getFootprints());
         image::BBox rhsRegion = rhs.getRegion();
-        swap(*_region, rhsRegion);
+        swap(_region, rhsRegion);
     }
     
     FootprintList& getFootprints() { return *_footprints; } //!< Retun the Footprint%s of detected objects
     FootprintList const& getFootprints() const { return *_footprints; } //!< Retun the Footprint%s of detected objects
     void setRegion(lsst::afw::image::BBox const& region);
-    image::BBox const& getRegion() const { return *_region; } //!< Return the corners of the MaskedImage
+    image::BBox const& getRegion() const { return _region; } //!< Return the corners of the MaskedImage
 
 #if 0                                   // these are equivalent, but the former confuses swig
     typename image::Image<boost::uint16_t>::Ptr insertIntoImage(const bool relativeIDs);
@@ -265,7 +265,7 @@ public:
     }
 private:
     boost::shared_ptr<FootprintList> _footprints;        //!< the Footprints of detected objects
-    boost::shared_ptr<image::BBox> _region;                //!< The corners of the MaskedImage that the detections live in
+    image::BBox _region;                //!< The corners of the MaskedImage that the detections live in
 };
 
 #if 0

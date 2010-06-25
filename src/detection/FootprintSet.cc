@@ -276,10 +276,10 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         int const npixMin)              //!< minimum number of pixels in an object
     : lsst::daf::data::LsstBase(typeid(this)),
       _footprints(new FootprintList()),
-      _region(new image::BBox(image::PointI(img.getX0(), img.getY0()),
-                              img.getWidth(), img.getHeight())) {
-    findFootprints<ImagePixelT, MaskPixelT>(_footprints.get(), *_region, img, threshold, npixMin);
-}
+      _region(image::PointI(img.getX0(), img.getY0()),
+              img.getWidth(), img.getHeight()) {
+          findFootprints<ImagePixelT, MaskPixelT>(_footprints.get(), _region, img, threshold, npixMin);
+      }
 
 /**
  * \brief Find a Detection Set given a MaskedImage and a threshold
@@ -301,12 +301,12 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         int const npixMin)              //!< minimum number of pixels in an object
     : lsst::daf::data::LsstBase(typeid(this)),
       _footprints(new FootprintList()),
-      _region(new image::BBox(image::PointI(maskedImg.getX0(), maskedImg.getY0()),
-                               maskedImg.getWidth(), maskedImg.getHeight())) {
+      _region(image::PointI(maskedImg.getX0(), maskedImg.getY0()),
+              maskedImg.getWidth(), maskedImg.getHeight()) {
 /*
  * Find the Footprints
  */
-    findFootprints<ImagePixelT, MaskPixelT>(_footprints.get(), *_region,
+    findFootprints<ImagePixelT, MaskPixelT>(_footprints.get(), _region,
                                             *maskedImg.getImage(), threshold, npixMin);    
 /*
  * Set Mask if requested
@@ -363,8 +363,8 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
                                                               )
     : lsst::daf::data::LsstBase(typeid(this)),
       _footprints(new FootprintList()),
-      _region(new image::BBox(image::PointI(img.getX0(), img.getY0()),
-                              img.getWidth(), img.getHeight())) 
+      _region(image::PointI(img.getX0(), img.getY0()),
+              img.getWidth(), img.getHeight()) 
 {
 }
 
@@ -800,7 +800,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::operator=(FootprintSet const& 
 template<typename ImagePixelT, typename MaskPixelT>
 void detection::FootprintSet<ImagePixelT, MaskPixelT>::setRegion(image::BBox const& region // desired region
                                                                 ) {
-    *_region = region;
+    _region = region;
     typename FootprintSet::FootprintList footprintList = getFootprints();
 
     for (typename FootprintSet::FootprintList::iterator ptr = getFootprints().begin(),
@@ -863,10 +863,10 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
                                                               )
     : lsst::daf::data::LsstBase(typeid(this)),
       _footprints(new FootprintList()),
-      _region(new image::BBox(fs1.getRegion()))
-    {
-        _region->grow(fs2.getRegion().getLLC());
-        _region->grow(fs2.getRegion().getURC());
+      _region(fs1.getRegion())
+{
+    _region.grow(fs2.getRegion().getLLC());
+    _region.grow(fs2.getRegion().getURC());
 }
 
 /************************************************************************************************************/
@@ -879,7 +879,7 @@ template<typename ImagePixelT, typename MaskPixelT>
 typename image::Image<boost::uint16_t>::Ptr
 detection::FootprintSet<ImagePixelT, MaskPixelT>::insertIntoImage(bool const relativeIDs) {
     typename image::Image<boost::uint16_t>::Ptr
-        im(new image::Image<boost::uint16_t>(_region->getDimensions()));
+        im(new image::Image<boost::uint16_t>(_region.getDimensions()));
     *im = 0;
 
     int id = 0;
