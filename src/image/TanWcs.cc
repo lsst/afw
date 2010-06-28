@@ -63,9 +63,9 @@ TanWcs::TanWcs(PropertySet::Ptr const fitsMetadata) :
     
     //Check for tangent plane projection
     string ctype1 = fitsMetadata->getAsString("CTYPE1");
-    string ctype2 = fitsMetadata->getAsString("CTYPE1");
+    string ctype2 = fitsMetadata->getAsString("CTYPE2");
 
-    if((ctype1.substr(5, 3) != "TAN") || (ctype1.substr(5, 3) != "TAN") ) {
+    if((ctype1.substr(5, 3) != "TAN") || (ctype2.substr(5, 3) != "TAN") ) {
         string msg = "One or more axis isn't in TAN projection";
         throw LSST_EXCEPT(except::InvalidParameterException, msg);
     }
@@ -312,19 +312,19 @@ GeomPoint TanWcs::skyToPixel(double sky1, double sky2) const {
         assert(_sipBp.rows() == _sipBp.cols());        
         
         double U = pixTmp[0] - _wcsInfo->crpix[0];  //Relative, undistorted pixel coords
-        double V = pixTmp[1]-  _wcsInfo->crpix[1];
+        double V = pixTmp[1] - _wcsInfo->crpix[1];
     
         double F = 0;
         for(int i=0; i< _sipAp.rows(); ++i) {
             for(int j=0; j< _sipAp.cols(); ++j) {
-                F += _sipAp(i,j)* pow(U, (int) i) * pow(V, (int) j);
+                F += _sipAp(i,j)* pow(U, i) * pow(V, j);
             }
         }    
 
         double G = 0;
         for(int i=0; i< _sipBp.rows(); ++i) {
             for(int j=0; j< _sipBp.cols(); ++j) {
-                G += _sipBp(i,j)* pow(U, (int) i) * pow(V, (int) j);
+                G += _sipBp(i,j)* pow(U, i) * pow(V, j);
             }
         }
 
@@ -380,7 +380,7 @@ Coord::Ptr TanWcs::pixelToSky(double pixel1, double pixel2) const {
         for(int i=0; i< _sipA.rows(); ++i) {
             for(int j=0; j< _sipA.cols(); ++j) {
                 if (i+j>1 && i+j < _sipA.rows() ) {
-                    f += _sipA(i,j)* pow(u, (int) i) * pow(v, (int) j);
+                    f += _sipA(i,j)* pow(u, i) * pow(v, j);
                 }
             }
         }
@@ -389,7 +389,7 @@ Coord::Ptr TanWcs::pixelToSky(double pixel1, double pixel2) const {
         for(int i=0; i< _sipB.rows(); ++i) {
             for(int j=0; j< _sipB.cols(); ++j) {
                 if (i+j>1 && i+j < _sipB.rows() ) {
-                    g += _sipB(i,j)* pow(u, (int) i) * pow(v, (int) j);
+                    g += _sipB(i,j)* pow(u, i) * pow(v, j);
                 }
             }
         }
