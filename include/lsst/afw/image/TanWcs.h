@@ -10,18 +10,6 @@
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"
 
-#ifdef SWIG
-// This is typedef'd in preprocessor magic deep in the Eigen code
-// (Eigen/src/Core/Matrix.h : EIGEN_MAKE_TYPEDEFS (line 542))
-// so swig has a tough time of it.
-//typedef Eigen::Matrix<double, 2, 2> Eigen::Matrix2d;
-namespace Eigen {
-template<typename _Scalar, int _Rows, int _Cols, int _Options, int _MaxRows, int _MaxCols>
-  class Matrix;
-typedef Matrix<double,2,2> Matrix2d;
-};
-#endif
-
 struct wcsprm;                          // defined in wcs.h
 
 namespace lsst {
