@@ -10,6 +10,17 @@
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"
 
+#ifdef SWIG
+// This is typedef'd in preprocessor magic deep in the Eigen code
+// (Eigen/src/Core/Matrix.h : EIGEN_MAKE_TYPEDEFS (line 542))
+// so swig has a tough time of it.
+//typedef Eigen::Matrix<double, 2, 2> Eigen::Matrix2d;
+namespace Eigen {
+template<typename _Scalar, int _Rows, int _Cols, int _Options, int _MaxRows, int _MaxCols>
+  class Matrix;
+typedef Matrix<double,2,2> Matrix2d;
+};
+#endif
 
 struct wcsprm;                          // defined in wcs.h
 
@@ -74,7 +85,11 @@ namespace image {
         virtual lsst::afw::geom::PointD skyToPixel(double sky1, double sky2) const;
         virtual lsst::afw::geom::PointD skyToPixel(const lsst::afw::coord::Coord::ConstPtr coord) const;
 
-        
+        // Applies the SIP AP and BP distortion (used in the skyToPixel direction)
+        lsst::afw::geom::PointD distortPixel(const lsst::afw::geom::PointD pixel) const;
+        // Applies the SIP A and B un-distortion (used in the pixelToSky direction)
+        lsst::afw::geom::PointD undistortPixel(const lsst::afw::geom::PointD pixel) const;
+
         bool hasDistortion() const {    return _hasDistortion;};
         lsst::daf::base::PropertySet::Ptr getFitsMetadata() const;        
 #if 0

@@ -66,14 +66,14 @@ TanWcs::TanWcs(PropertySet::Ptr const fitsMetadata) :
     string ctype2 = fitsMetadata->getAsString("CTYPE2");
 
     if((ctype1.substr(5, 3) != "TAN") || (ctype2.substr(5, 3) != "TAN") ) {
-        string msg = "One or more axis isn't in TAN projection";
+        string msg = "One or more axes isn't in TAN projection";
         throw LSST_EXCEPT(except::InvalidParameterException, msg);
     }
 
     //Check for distorton terms. With two ctypes, there are 4 alternatives, only
     //two of which are valid.. Both have distortion terms or both don't. 
-    int nSip = (ctype1.substr(8, 4) == "-SIP")   ? 1 : 0;
-    nSip += (ctype2.substr(8, 4) == "-SIP") ? 1 : 0;
+    int nSip = (((ctype1.substr(8, 4) == "-SIP") ? 1 : 0) +
+		((ctype2.substr(8, 4) == "-SIP") ? 1 : 0));
     
     switch (nSip) {
         case 0:
@@ -305,39 +305,81 @@ GeomPoint TanWcs::skyToPixel(double sky1, double sky2) const {
     
     //Correct for distortion. We follow the notation of Shupe et al. here, including
     //capitalisation
-    if( _hasDistortion){
-        //If the following assertions aren't true then something has gone seriously wrong.
-        assert(_sipBp.rows() > 0 );
-        assert(_sipAp.rows() == _sipAp.cols());
-        assert(_sipBp.rows() == _sipBp.cols());        
-        
-        double U = pixTmp[0] - _wcsInfo->crpix[0];  //Relative, undistorted pixel coords
-        double V = pixTmp[1] - _wcsInfo->crpix[1];
-    
-        double F = 0;
-        for(int i=0; i< _sipAp.rows(); ++i) {
-            for(int j=0; j< _sipAp.cols(); ++j) {
-                F += _sipAp(i,j)* pow(U, i) * pow(V, j);
-            }
-        }    
-
-        double G = 0;
-        for(int i=0; i< _sipBp.rows(); ++i) {
-            for(int j=0; j< _sipBp.cols(); ++j) {
-                G += _sipBp(i,j)* pow(U, i) * pow(V, j);
-            }
-        }
-
-        pixTmp[0] = U + F + _wcsInfo->crpix[0];
-        pixTmp[1] = V + G + _wcsInfo->crpix[1];
+    if( _hasDistortion) {
+        GeomPoint pix = geom::makePointD(pixTmp[0], pixTmp[1]);
+        GeomPoint dpix = distortPixel(pix);
+        pixTmp[0] = dpix[0];
+        pixTmp[1] = dpix[1];
     }
 
     // wcslib assumes 1-indexed coords
     double offset = lsst::afw::image::PixelZeroPos + fitsToLsstPixels;
-    return geom::makePointD(pixTmp[0]+offset, pixTmp[1]+offset); 
+    return geom::makePointD(pixTmp[0]+offset, pixTmp[1]+offset);
 
 }
 
+GeomPoint TanWcs::undistortPixel(const GeomPoint pix) const {
+    if (!_hasDistortion) {
+        return GeomPoint(pix);
+    }
+    //If the following assertions aren't true then something has gone seriously wrong.
+    assert(_sipB.rows() > 0 );
+    assert(_sipA.rows() == _sipA.cols());
+    assert(_sipB.rows() == _sipB.cols());
+
+    double u = pix[0] - _wcsInfo->crpix[0];  //Relative pixel coords
+    double v = pix[1] - _wcsInfo->crpix[1];
+        
+    double f = 0;
+    for(int i=0; i< _sipA.rows(); ++i) {
+        for(int j=0; j< _sipA.cols(); ++j) {
+            if (i+j>1 && i+j < _sipA.rows() ) {
+                f += _sipA(i,j)* pow(u, i) * pow(v, j);
+            }
+        }
+    }
+
+    double g = 0;
+    for(int i=0; i< _sipB.rows(); ++i) {
+        for(int j=0; j< _sipB.cols(); ++j) {
+            if (i+j>1 && i+j < _sipB.rows() ) {
+                g += _sipB(i,j)* pow(u, i) * pow(v, j);
+            }
+        }
+    }
+
+    return geom::makePointD(pix[0] + f, pix[1] + g);
+}
+
+GeomPoint TanWcs::distortPixel(const GeomPoint pix) const {
+    if (!_hasDistortion) {
+        return GeomPoint(pix);
+    }
+    //If the following assertions aren't true then something has gone seriously wrong.
+    assert(_sipBp.rows() > 0 );
+    assert(_sipAp.rows() == _sipAp.cols());
+    assert(_sipBp.rows() == _sipBp.cols());        
+        
+    double U = pix[0] - _wcsInfo->crpix[0];  //Relative, undistorted pixel coords
+    double V = pix[1] - _wcsInfo->crpix[1];
+    
+    double F = 0;
+    for(int i=0; i< _sipAp.rows(); ++i) {
+        for(int j=0; j< _sipAp.cols(); ++j) {
+            F += _sipAp(i,j)* pow(U, i) * pow(V, j);
+        }
+    }    
+
+    double G = 0;
+    for(int i=0; i< _sipBp.rows(); ++i) {
+        for(int j=0; j< _sipBp.cols(); ++j) {
+            G += _sipBp(i,j)* pow(U, i) * pow(V, j);
+        }
+    }
+
+    return geom::makePointD(U + F + _wcsInfo->crpix[0],
+                            V + G + _wcsInfo->crpix[1]);
+}
 
 
 ///\brief Convert from (possibly) distorted pixel position to sky coordinates (e.g ra/dec)
@@ -368,33 +410,10 @@ Coord::Ptr TanWcs::pixelToSky(double pixel1, double pixel2) const {
     
     //Correct pixel positions for distortion if necessary
     if( _hasDistortion) {
-        //If the following assertions aren't true then something has gone seriously wrong.
-        assert(_sipB.rows() > 0 );
-        assert(_sipA.rows() == _sipA.cols());
-        assert(_sipB.rows() == _sipB.cols());
-
-        double u = pixTmp[0] - _wcsInfo->crpix[0];  //Relative pixel coords
-        double v = pixTmp[1] - _wcsInfo->crpix[1];
-        
-        double f = 0;
-        for(int i=0; i< _sipA.rows(); ++i) {
-            for(int j=0; j< _sipA.cols(); ++j) {
-                if (i+j>1 && i+j < _sipA.rows() ) {
-                    f += _sipA(i,j)* pow(u, i) * pow(v, j);
-                }
-            }
-        }
-
-        double g = 0;
-        for(int i=0; i< _sipB.rows(); ++i) {
-            for(int j=0; j< _sipB.cols(); ++j) {
-                if (i+j>1 && i+j < _sipB.rows() ) {
-                    g += _sipB(i,j)* pow(u, i) * pow(v, j);
-                }
-            }
-        }
-        pixTmp[0]+= f;
-        pixTmp[1]+= g;
+        GeomPoint pix = geom::makePointD(pixTmp[0], pixTmp[1]);
+        GeomPoint dpix = undistortPixel(pix);
+        pixTmp[0] = dpix[0];
+        pixTmp[1] = dpix[1];
     }
  
     int stat[1];
