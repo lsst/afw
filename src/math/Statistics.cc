@@ -204,12 +204,15 @@ afwMath::Statistics::Statistics(
             imgcp = _makeVectorCopy<AlwaysT>(img, msk, var, flags);
         }
 
-        if (flags & (MEDIAN | MEANCLIP | STDEVCLIP | VARIANCECLIP)) {
+        // if we *only* want the median, just use _percentile(), otherwise use _medianAndQuartiles()
+        if ( (flags & (MEDIAN)) && !(flags & (IQRANGE | MEANCLIP | STDEVCLIP | VARIANCECLIP)) ) {
             _median = _percentile(*imgcp, 0.5);
+        } else {
+            MedianQuartileReturn mq = _medianAndQuartiles(*imgcp);
+            _median = mq.get<0>();
+            _iqrange = mq.get<2>() - mq.get<1>();
         }
-        if (flags & (IQRANGE | MEANCLIP | STDEVCLIP | VARIANCECLIP)) {
-            _iqrange = std::fabs(_percentile(*imgcp, 0.75) - _percentile(*imgcp, 0.25));
-        }
+        
         
         if (flags & (MEANCLIP | STDEVCLIP | VARIANCECLIP)) {            
             for (int i_i = 0; i_i < _sctrl.getNumIter(); ++i_i) {
@@ -531,29 +534,117 @@ double afwMath::Statistics::_percentile(std::vector<Pixel> &img,
     int const n = img.size();
 
     if (n > 1) {
+        
         double const idx = percentile*(n - 1);
         
         // interpolate linearly between the adjacent values
+        // For efficiency:
+        // - if we're asked for a percentile > 0.5,
+        //    we'll do the second partial sort on shorter (upper) portion
+        // - otherwise, the shorter portion will be the lower one, we'll partial-sort that.
         
         int const q1 = static_cast<int>(idx);
-        typename std::vector<Pixel>::iterator midMinus1 = img.begin() + q1;
-        std::nth_element(img.begin(), midMinus1, img.end());
-        double val1 = static_cast<double>(*midMinus1);
-        
         int const q2 = q1 + 1;
-        typename std::vector<Pixel>::iterator midPlus1 = img.begin() + q2;
-        std::nth_element(midMinus1, midPlus1, img.end());
-        double val2 = static_cast<double>(*midPlus1);
-        
+
+        typename std::vector<Pixel>::iterator mid1 = img.begin() + q1;
+        typename std::vector<Pixel>::iterator mid2 = img.begin() + q2;
+        if ( percentile > 0.5 ) {
+            std::nth_element(img.begin(), mid1, img.end());
+            std::nth_element(mid1, mid2, img.end());
+        } else {
+            std::nth_element(img.begin(), mid2, img.end());
+            std::nth_element(img.begin(), mid1, mid2);
+        }
+    
+        double val1 = static_cast<double>(*mid1);
+        double val2 = static_cast<double>(*mid2);
         double w1 = (static_cast<double>(q2) - idx);
         double w2 = (idx - static_cast<double>(q1));
-        
         return w1*val1 + w2*val2;
         
     } else if (n == 1) {
         return img[0];
     } else {
         return NaN;
+    }
+            
+
+}
+
+
+
+/* _medianAndQuartiles()
+ *
+ * @brief A wrapper using the nth_element() built-in to compute median and Quartiles for an image
+ *
+ * @param img       an afw::Image
+ * @param quartile  the desired percentile.
+ *
+ */
+template<typename Pixel>
+afwMath::Statistics::MedianQuartileReturn afwMath::Statistics::_medianAndQuartiles(std::vector<Pixel> &img) {
+    
+    int const n = img.size();
+
+    if (n > 1) {
+        
+        double const idx50 = 0.50*(n - 1);
+        double const idx25 = 0.25*(n - 1);
+        double const idx75 = 0.75*(n - 1);
+        
+        // For efficiency:
+        // - partition at 50th, then partition the two half further to get 25th and 75th
+        // - to get the adjacent points (for interpolation), partition between 25/50, 50/75, 75/end
+        //   these should be much smaller partitions
+        
+        int const q50a = static_cast<int>(idx50);
+        int const q50b = q50a + 1;
+        int const q25a = static_cast<int>(idx25);
+        int const q25b = q25a + 1;
+        int const q75a = static_cast<int>(idx75);
+        int const q75b = q75a + 1;
+        
+        typename std::vector<Pixel>::iterator mid50a = img.begin() + q50a;
+        typename std::vector<Pixel>::iterator mid50b = img.begin() + q50b;
+        typename std::vector<Pixel>::iterator mid25a = img.begin() + q25a;
+        typename std::vector<Pixel>::iterator mid25b = img.begin() + q25b;
+        typename std::vector<Pixel>::iterator mid75a = img.begin() + q75a;
+        typename std::vector<Pixel>::iterator mid75b = img.begin() + q75b;
+
+        // get the 50th percentile, then get the 25th and 75th on the smaller partitions
+        std::nth_element(img.begin(), mid50a, img.end());
+        std::nth_element(mid50a, mid75a, img.end());
+        std::nth_element(img.begin(), mid25a, mid50a);
+
+        // and the adjacent points for each ... use the smallest segments available.
+        std::nth_element(mid50a, mid50b, mid75a);
+        std::nth_element(mid25a, mid25b, mid50a);
+        std::nth_element(mid75a, mid75b, img.end());
+
+        // interpolate linearly between the adjacent values
+        double val50a = static_cast<double>(*mid50a);
+        double val50b = static_cast<double>(*mid50b);
+        double w50a = (static_cast<double>(q50b) - idx50);
+        double w50b = (idx50 - static_cast<double>(q50a));
+        double median = w50a*val50a + w50b*val50b;
+
+        double val25a = static_cast<double>(*mid25a);
+        double val25b = static_cast<double>(*mid25b);
+        double w25a = (static_cast<double>(q25b) - idx25);
+        double w25b = (idx25 - static_cast<double>(q25a));
+        double q1 = w25a*val25a + w25b*val25b;
+        
+        double val75a = static_cast<double>(*mid75a);
+        double val75b = static_cast<double>(*mid75b);
+        double w75a = (static_cast<double>(q75b) - idx75);
+        double w75b = (idx75 - static_cast<double>(q75a));
+        double q3 = w75a*val75a + w75b*val75b;
+
+        return MedianQuartileReturn(median, q1, q3);
+    } else if (n == 1) {
+        return MedianQuartileReturn(img[0], img[0], img[0]);
+    } else {
+        return MedianQuartileReturn(NaN, NaN, NaN);
     }
             
 
@@ -795,8 +886,7 @@ typedef afwImage::VariancePixel VPixel;
     template STAT::StandardReturn STAT::_getStandard(afwImage::Image<TYPE> const &img, \
                                                      afwImage::Mask<afwImage::MaskPixel> const &msk, \
                                                      afwImage::Image<VPixel> const &var, \
-                                                     int const flags, std::pair<double, double> clipinfo); \
-    template double STAT::_percentile(std::vector<TYPE> &img, double const percentile)
+                                                     int const flags, std::pair<double, double> clipinfo);
 
 
 #define INSTANTIATE_MASKEDIMAGE_STATISTICS_NO_MASK(TYPE)                       \
