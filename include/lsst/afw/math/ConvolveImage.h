@@ -37,7 +37,7 @@ namespace math {
                 bool doNormalize = true,    ///< normalize the kernel to sum=1?
                 bool doCopyEdge = false,    ///< copy edge pixels from source image
                     ///< instead of setting them to the standard edge pixel?
-                double maxInterpolationError = 1.0e-9,  ///< maximum allowed error
+                double maxInterpolationError = 1.0e-3,  ///< maximum allowed error
                     ///< in computing the value of the kernel at any pixel by linear interpolation
                 int maxInterpolationDistance = 50)  ///< maximum width or height of a region
                     ///< over which to test if interpolation works
@@ -96,7 +96,7 @@ namespace math {
             OutImageT& convolvedImage,
             InImageT const& inImage,
             KernelT const& kernel,
-            ConvolutionControl const& convolutionControl);
+            ConvolutionControl const& convolutionControl = ConvolutionControl());
     
     template <typename OutImageT, typename InImageT, typename KernelT>
     void convolve(

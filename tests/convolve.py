@@ -316,7 +316,7 @@ class ConvolveTestCase(unittest.TestCase):
             convControl.setDoCopyEdge(doCopyEdge)
             self.assert_(convControl.getDoCopyEdge() == doCopyEdge)
 
-        self.assert_(0.0 < convControl.getMaxInterpolationError() < 0.001)
+        self.assert_(convControl.getMaxInterpolationError() == 1.0e-3)
         for maxInterpErr in (0.0, 1.0e-99, 1.1e-5, 2.0e99):
             convControl.setMaxInterpolationError(maxInterpErr)
             self.assert_(convControl.getMaxInterpolationError() == maxInterpErr)
