@@ -166,7 +166,8 @@ private:
     // return type for _getStandard
     typedef boost::tuple<double, double, double, double, double> StandardReturn; 
     typedef boost::tuple<int, double, double, double, double, double> SumReturn; 
-
+    typedef boost::tuple<double, double, double> MedianQuartileReturn;
+    
     long _flags;                        // The desired calculation
 
     int _n;                             // number of pixels in the image
@@ -206,6 +207,9 @@ private:
 
     template<typename Pixel>
     double _percentile(std::vector<Pixel> &img, double const percentile);   
+
+    template<typename Pixel>
+    MedianQuartileReturn _medianAndQuartiles(std::vector<Pixel> &img);
     
     inline double _varianceError(double const variance, int const n) const {
         return 2*(n - 1)*variance*variance/(static_cast<double>(n)*n); // assumes a Gaussian
