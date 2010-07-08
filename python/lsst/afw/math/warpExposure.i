@@ -46,14 +46,18 @@ SWIG_SHARED_PTR_DERIVED(NearestWarpingKernel, lsst::afw::math::SeparableKernel,
 
 %include "lsst/afw/math/offsetImage.h"
 
-%template(offsetImage) lsst::afw::math::offsetImage<lsst::afw::image::Image<double> >;
-%template(offsetImage) lsst::afw::math::offsetImage<lsst::afw::image::Image<float> >;
-
-%define imageTransforms(PIXELT)
-%template(rotateImageBy90) lsst::afw::math::rotateImageBy90<lsst::afw::image::Image<PIXELT> >;
-%template(flipImage) lsst::afw::math::flipImage<lsst::afw::image::Image<PIXELT> >;
+%define imageTransforms(PIXELT, FLOATING)
 %template(binImage) lsst::afw::math::binImage<lsst::afw::image::Image<PIXELT> >;
 %template(binImage) lsst::afw::math::binImage<lsst::afw::image::MaskedImage<PIXELT, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> >;
+
+%template(flipImage) lsst::afw::math::flipImage<lsst::afw::image::Image<PIXELT> >;
+
+#if FLOATING
+%template(offsetImage) lsst::afw::math::offsetImage<lsst::afw::image::Image<PIXELT> >;
+%template(offsetImage) lsst::afw::math::offsetImage<lsst::afw::image::MaskedImage<PIXELT, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> >;
+#endif
+
+%template(rotateImageBy90) lsst::afw::math::rotateImageBy90<lsst::afw::image::Image<PIXELT> >;
 #if 0
 %template(rotateImageBy90) lsst::afw::math::rotateImageBy90<
     lsst::afw::image::MaskedImage<PIXELT, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> >;
@@ -62,9 +66,10 @@ SWIG_SHARED_PTR_DERIVED(NearestWarpingKernel, lsst::afw::math::SeparableKernel,
 #endif
 %enddef
 
-imageTransforms(boost::uint16_t);
-imageTransforms(int);
-imageTransforms(float);
-imageTransforms(double);
+imageTransforms(boost::uint16_t, 0);
+imageTransforms(int, 0);
+imageTransforms(float, 1);
+imageTransforms(double, 1);
+
 %template(rotateImageBy90) lsst::afw::math::rotateImageBy90<lsst::afw::image::Mask<boost::uint16_t> >;
 %template(flipImage) lsst::afw::math::flipImage<lsst::afw::image::Mask<boost::uint16_t> >;
