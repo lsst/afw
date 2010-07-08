@@ -19,6 +19,19 @@ class Ds9Error(IOError):
     """Some problem talking to ds9"""
 
 try:
+    type(_frame0)
+except NameError:
+    def selectFrame(frame):
+        return "frame %d" % (frame + _frame0)
+
+    def setFrame0(frame0):
+        """Add frame0 to all frame specifications"""
+        global _frame0
+        _frame0 = frame0
+
+    setFrame0(0)
+
+try:
     type(_defaultFrame)
 except NameError:
     def setDefaultFrame(frame=0):
@@ -202,7 +215,7 @@ def initDS9(execDs9=True):
         os.system('ds9 &')
         for i in range(10):
             try:
-                ds9Cmd("frame 0", False)
+                ds9Cmd(selectFrame(0), False)
                 break
             except Ds9Error:
                 print "waiting for ds9...\r",
@@ -224,7 +237,7 @@ def show(frame=None):
     if frame is None:
         return
         
-    ds9Cmd("frame %d; raise" % frame, trap=False)
+    ds9Cmd(selectFrame(frame) + "; raise", trap=False)
 
 def setMaskColor(color=GREEN):
     """Set the ds9 mask colour to; eg. ds9.setMaskColor(ds9.RED)"""
@@ -260,7 +273,7 @@ def mtv(data, frame=None, init=True, wcs=None, isMask=False, lowOrderBits=False,
                 sys.stdout.flush()
                 break
          
-    ds9Cmd("frame %d" % frame)
+    ds9Cmd(selectFrame(frame))
 
     if settings:
         for setting in settings:
@@ -370,7 +383,7 @@ def erase(frame=None):
     if frame is None:
         return
 
-    ds9Cmd("frame %d; regions delete all" % frame)
+    ds9Cmd(selectFrame(frame) + "; regions delete all")
 
 def dot(symb, c, r, frame=None, size=2, ctype=None):
     """Draw a symbol onto the specified DS9 frame at (col,row) = (c,r) [0-based coordinates]
@@ -395,7 +408,7 @@ Any other value is interpreted as a string to be drawn
     else:
         color = ' # color=%s' % ctype
 
-    cmd = "frame %d; " % frame
+    cmd = selectFrame(frame) + "; "
     r += 1
     c += 1                      # ds9 uses 1-based coordinates
     if symb == '+':
@@ -429,7 +442,7 @@ Any other value is interpreted as a string to be drawn
                 show(frame)
             cmd += 'regions command {text %g %g \"%s\"%s}' % (c, r, symb, color)
         except Exception, e:
-            print >> sys.stderr, "Ds9 frame %d doesn't exist" % frame, e
+            print >> sys.stderr, ("Ds9 frame %d doesn't exist" % frame), e
 
     ds9Cmd(cmd)
 
@@ -446,7 +459,7 @@ otherwise connect the dots.  Ctype is the name of a colour (e.g. 'red')"""
 
     if symbs:
         for (c, r) in points:
-            dot(symbs, r, c, frame = frame, size = 0.5, ctype=ctype)
+            dot(symbs, r, c, frame=frame, size=0.5, ctype=ctype)
     else:
         if ctype == None:                # default
             color = ""
@@ -454,7 +467,7 @@ otherwise connect the dots.  Ctype is the name of a colour (e.g. 'red')"""
             color = "# color=%s" % ctype
 
         if len(points) > 0:
-            cmd = "frame %d; " % (frame)
+            cmd = selectFrame(frame) + "; "
 
             c0, r0 = points[0]
             r0 += 1
@@ -490,7 +503,7 @@ def zoom(zoomfac=None, colc=None, rowc=None, frame=None):
     if zoomfac == None and rowc == None:
         zoomfac = 2
 
-    cmd = "frame %d; " % frame
+    cmd = selectFrame(frame) + "; "
     if zoomfac != None:
         cmd += "zoom to %d; " % zoomfac
 

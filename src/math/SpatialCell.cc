@@ -218,6 +218,72 @@ void SpatialCell::visitCandidates(
     }
 #endif
 }
+
+/**
+ * Call the visitor's processCandidate method for every Candidate in the SpatialCell
+ *
+ * @sa visitCandidates
+ */
+void SpatialCell::visitAllCandidates(CandidateVisitor *visitor, ///< Pass this object to every Candidate
+                                     bool const ignoreExceptions, ///< Ignore any exceptions thrown by
+                                     bool const reset             ///< Reset visitor before passing it around
+                                    ) {
+    if (reset) {
+        visitor->reset();
+    }
+    
+    int i = 0;
+    for (SpatialCell::iterator candidate = begin(false), candidateEnd = end(false);
+         candidate != candidateEnd; ++candidate, ++i) {
+        try {
+            visitor->processCandidate((*candidate).get());
+        } catch(lsst::pex::exceptions::LengthErrorException &e) {
+            if (ignoreExceptions) {
+                ;
+            } else {
+                LSST_EXCEPT_ADD(e, "Visiting candidate");
+                throw e;
+            }
+        }
+    }
+}
+    
+/**
+ * Call the visitor's processCandidate method for each Candidate in the SpatialCell (const version)
+ *
+ * This is the const version of SpatialCellSet::visitAllCandidates
+ *
+ * @todo This is currently implemented via a const_cast (arghhh). The problem is that
+ * SpatialCell::begin() const isn't yet implemented
+ */
+void SpatialCell::visitAllCandidates(
+        CandidateVisitor * visitor, ///< Pass this object to every Candidate
+        bool const ignoreExceptions,     ///< Ignore any exceptions thrown by the processing
+        bool const reset                 ///< Reset visitor before passing it around
+                                 ) const {
+#if 1
+    //
+    // This const_cast must go!
+    //
+    SpatialCell *mthis = const_cast<SpatialCell *>(this);
+    mthis->visitAllCandidates(visitor, ignoreExceptions, reset);
+#else
+    int i = 0;
+    for (SpatialCell::const_iterator candidate = (*cell)->begin(false), candidateEnd = (*cell)->end(false);
+         candidate != candidateEnd; ++candidate, ++i) {
+        try {
+            visitor->processCandidate((*candidate).get());
+        } catch(lsst::pex::exceptions::LengthErrorException &e) {
+            if (ignoreExceptions) {
+                ;
+            } else {
+                LSST_EXCEPT_ADD(e, "Visiting candidate");
+                throw e;
+            }
+        }
+    }
+#endif
+}
     
 /************************************************************************************************************/
 /// ctor; designed to be used to pass begin to SpatialCellCandidateIterator
@@ -432,6 +498,40 @@ void SpatialCellSet::visitCandidates(
     for (CellList::const_iterator cell = _cellList.begin(), end = _cellList.end(); cell != end; ++cell) {
         SpatialCell const *ccell = cell->get(); // the SpatialCellSet's SpatialCells should be const too
         ccell->visitCandidates(visitor, nMaxPerCell, ignoreExceptions, false);
+    }
+}
+
+/************************************************************************************************************/
+/**
+ * Call the visitor's processCandidate method for every Candidate in the SpatialCellSet
+ *
+ * @sa visitCandidates
+ */
+void SpatialCellSet::visitAllCandidates(
+        CandidateVisitor *visitor,      ///< Pass this object to every Candidate
+        bool const ignoreExceptions     ///< Ignore any exceptions thrown by the processing
+                                    ) {
+    visitor->reset();
+    
+    for (CellList::iterator cell = _cellList.begin(), end = _cellList.end(); cell != end; ++cell) {
+        (*cell)->visitAllCandidates(visitor, ignoreExceptions, false);
+    }
+}
+    
+/**
+ * Call the visitor's processCandidate method for every Candidate in the SpatialCellSet (const version)
+ *
+ * This is the const version of SpatialCellSet::visitAllCandidates
+ */
+void SpatialCellSet::visitAllCandidates(
+        CandidateVisitor *visitor, ///< Pass this object to every Candidate
+        bool const ignoreExceptions ///< Ignore any exceptions thrown by the processing
+                                    ) const {
+    visitor->reset();
+
+    for (CellList::const_iterator cell = _cellList.begin(), end = _cellList.end(); cell != end; ++cell) {
+        SpatialCell const *ccell = cell->get(); // the SpatialCellSet's SpatialCells should be const too
+        ccell->visitAllCandidates(visitor, ignoreExceptions, false);
     }
 }
 

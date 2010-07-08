@@ -235,7 +235,7 @@ lsst::daf::base::PropertySet::Ptr readMetadata(std::string const& fileName, cons
  *
  * A quiet NaN is returned for types that support it otherwise @c bad
  *
- * @relates Image
+ * @relates lsst::afw::image::Image
  */
 template<typename ImageT>
 typename ImageT::SinglePixel badPixel(typename ImageT::Pixel bad=0 ///< The bad value if NaN isn't supported

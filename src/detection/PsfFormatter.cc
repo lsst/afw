@@ -132,8 +132,10 @@ void afwDetect::PsfFormatter::delegateSerialize(
     if (ps == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Serializing non-Psf");
     }
+#if 0                                   // not present in baseclass
     ar & make_nvp("width", ps->_width) & make_nvp("height", ps->_height);
     ar & make_nvp("k", ps->_kernel);
+#endif
 
     execTrace("PsfFormatter delegateSerialize end");
 }

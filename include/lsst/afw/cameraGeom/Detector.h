@@ -2,6 +2,9 @@
 #define LSST_AFW_CAMERAGEOM_DETECTOR_H
 
 #include <string>
+#include "boost/weak_ptr.hpp"
+#include <boost/enable_shared_from_this.hpp>
+#include "lsst/daf/base/Citizen.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/image/Defect.h"
 #include "lsst/afw/image/Utils.h"
@@ -17,13 +20,21 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
+#include "lsst/afw/image/Utils.h"
+#include "lsst/afw/image/Defect.h"
+
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
     
 /**
  * Describe a detector (e.g. a CCD)
  */
-class Detector {
+    class Detector
+#if !defined(SWIG)
+        : public lsst::daf::base::Citizen,
+          public boost::enable_shared_from_this<Detector>
+#endif
+    {
 public:
     typedef boost::shared_ptr<Detector> Ptr;
     typedef boost::shared_ptr<const Detector> ConstPtr;
@@ -33,9 +44,12 @@ public:
             bool hasTrimmablePixels=false, ///< true iff Detector has pixels that can be trimmed (e.g. a CCD)
             double pixelSize=0.0           ///< Size of pixels, mm
                      ) :
+        lsst::daf::base::Citizen(typeid(this)),
         _id(id), _isTrimmed(false), _allPixels(),
         _hasTrimmablePixels(hasTrimmablePixels), _pixelSize(pixelSize)
     {
+        _parent = boost::weak_ptr<Detector>();
+        
         if (_hasTrimmablePixels) {
             _trimmedAllPixels = _allPixels;
         }
@@ -43,6 +57,20 @@ public:
     virtual ~Detector() {}
     /// Return the Detector's Id
     Id getId() const { return _id; }
+
+    /// Return the detector's parent in the hierarchy
+    ///
+    /// If the parent is unknown or has been deleted, and empty Ptr is returned
+    void setParent(Ptr parent) {
+        _parent = boost::weak_ptr<Detector>(parent);
+    }
+
+    /// Return the detector's parent in the hierarchy
+    ///
+    /// If the parent is unknown or has been deleted, and empty Ptr is returned
+    Ptr getParent() const {
+        return Ptr(_parent.lock());
+    }
 
     /// Are two Detectors identical, in the sense that they have the same name
     bool operator==(Detector const& rhs ///< Detector to compare too
@@ -77,12 +105,12 @@ public:
         return (_hasTrimmablePixels && _isTrimmed) ? _trimmedAllPixels : _allPixels;
     }
     /// Return Detector's total footprint
-    virtual afwImage::BBox getAllPixels() const {
+    virtual afwImage::BBox const& getAllPixels() const {
         return getAllPixels(_isTrimmed);
     }
     /// Return Detector's total footprint
-    virtual afwImage::BBox getAllPixels(bool isTrimmed ///< True iff the bias/overclock have been removed
-                                       ) const {
+    virtual afwImage::BBox const& getAllPixels(bool isTrimmed ///< Has the bias/overclock have been removed?
+                                              ) const {
         return (_hasTrimmablePixels && isTrimmed) ? _trimmedAllPixels : _allPixels;
     }
     //
@@ -128,6 +156,11 @@ public:
     std::vector<boost::shared_ptr<afwImage::DefectBase> > const& getDefects() const { return _defects; }
     std::vector<boost::shared_ptr<afwImage::DefectBase> >& getDefects() { return _defects; }
 protected:
+    /// Return a shared pointer to this
+    Ptr getThisPtr() {
+        return shared_from_this();
+    }
+
     afwImage::BBox& getAllTrimmedPixels() {
         return _hasTrimmablePixels ? _trimmedAllPixels : _allPixels;
     }
@@ -142,6 +175,7 @@ private:
     afwGeom::Point2D _center;           // position of _centerPixel (mm)
     afwGeom::Extent2D _size;            // Size in mm of this Detector
     afwImage::BBox _trimmedAllPixels;   // Bounding box of all the Detector's pixels after bias trimming
+    boost::weak_ptr<Detector> _parent;  // Parent Detector in the hierarchy
 
     std::vector<afwImage::DefectBase::Ptr> _defects; // Defects in this detector
 };
@@ -154,11 +188,13 @@ namespace detail {
             return *lhs < *rhs;
         }
     };
-
+    /**
+     * Rotate a BBox about the center of some larger region by a multiple of 90 degrees 
+     */
     afwImage::BBox rotateBBoxBy90(
-            afwImage::BBox const& bbox, ///< the BBox to rotate
-            afwGeom::Extent2I const& dimensions, ///< The size of the region wherein bbox dwells
-            int n90                              ///< number of 90-degree anti-clockwise turns to make
+            afwImage::BBox const& bbox,         ///< the BBox to rotate
+            int n90,                            ///< number of 90-degree anti-clockwise turns to make
+            afwGeom::Extent2I const& dimensions ///< The size of the region wherein bbox dwells
                                  );
 }
     

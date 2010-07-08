@@ -13,7 +13,7 @@ class Mosaic(object):
     m = Mosaic()
     m.setGutter(5)
     m.setBackground(10)
-    m.setMode("square")                     # the default
+    m.setMode("square")                     # the default; other options are "x" or "y"
 
     mosaic = m.makeMosaic(im1, im2, im3)    # build the mosaic
     ds9.mtv(mosaic)                         # display it
@@ -30,6 +30,7 @@ class Mosaic(object):
     # Yet another way to build a mosaic (no need to build the images/labels lists)
     for i in range(len(images)):
         m.append(images[i], labels[i])
+    # You may optionally include a colour, e.g. ds9.YELLOW, as a third argument
 
     mosaic = m.makeMosaic()
     ds9.mtv(mosaic)
@@ -38,7 +39,7 @@ class Mosaic(object):
     You can return the (ix, iy)th (or nth) bounding box (in pixels) with getBBox()
     """
     def __init__(self, gutter=3, background=0, mode="square"):
-        self.gutter = 3                 # number of pixels between panels in a mosaic
+        self.gutter = gutter            # number of pixels between panels in a mosaic
         self.background = background    # value in gutters
         self.setMode(mode)              # mosaicing mode
         self.xsize = 0                  # column size of panels
@@ -51,11 +52,15 @@ class Mosaic(object):
         self.images = []                # images to mosaic together
         self.labels = []                # labels for images
         
-    def append(self, image, label=None):
+    def append(self, image, label=None, ctype=None):
         """Add an image to the list of images to be mosaiced
         Set may be cleared with Mosaic.reset()"""
+        if not self.xsize:
+            self.xsize = image.getWidth()
+            self.ysize = image.getHeight()
+
         self.images.append(image)
-        self.labels.append(label)
+        self.labels.append((label, ctype))
 
     def makeMosaic(self, images=None, frame=None, mode=None, title=""):
         """Return a mosaic of all the images provided; if none are specified,
@@ -83,12 +88,16 @@ class Mosaic(object):
             mode = self.mode
 
         if mode == "square":
-            nx = math.sqrt(self.nImage)
-            nx, ny = int(nx), int(self.nImage/nx)
-            if nx*ny < self.nImage:
+            nx, ny = 1, self.nImage
+            while nx*im.getWidth() < ny*im.getHeight():
                 nx += 1
-            if nx*ny < self.nImage:
-                ny += 1
+                ny = int(self.nImage/nx)
+
+                if nx*ny < self.nImage:
+                    ny += 1
+                if nx*ny < self.nImage:
+                    nx += 1
+                    
             assert(nx*ny >= self.nImage)
         elif mode == "x":
             nx, ny = self.nImage, 1
@@ -173,10 +182,23 @@ class Mosaic(object):
 
         for i in range(len(labels)):
             if labels[i]:
-                ds9.dot(labels[i], self.getBBox(i).getX0(), self.getBBox(i).getY0(), frame=frame)
+                label, ctype = labels[i], None
+                try:
+                    label, ctype = label
+                except:
+                    pass
 
-def drawBBox(bbox, borderWidth=0.0, origin=None, frame=None, ctype=None):
-    """Draw an afwImage::BBox on a ds9 frame with the specified ctype.  Include an extra borderWidth pixels"""
+                if not label:
+                    continue
+                    
+                ds9.dot(label, self.getBBox(i).getX0(), self.getBBox(i).getY0(), frame=frame, ctype=ctype)
+
+def drawBBox(bbox, borderWidth=0.0, origin=None, frame=None, ctype=None, bin=1):
+    """Draw an afwImage::BBox on a ds9 frame with the specified ctype.  Include an extra borderWidth pixels
+If origin is present, it's Added to the BBox
+
+All BBox coordinates are divided by bin, as is right and proper for overlaying on a binned image
+    """
     x0, y0 = bbox.getX0(), bbox.getY0()
     x1, y1 = bbox.getX1(), bbox.getY1()
 
@@ -184,6 +206,10 @@ def drawBBox(bbox, borderWidth=0.0, origin=None, frame=None, ctype=None):
         x0 += origin[0]; x1 += origin[0]
         y0 += origin[1]; y1 += origin[1]
 
+    x0 /= bin; y0 /= bin
+    x1 /= bin; y1 /= bin
+    borderWidth /= bin
+    
     ds9.line([(x0 - borderWidth, y0 - borderWidth),
               (x0 - borderWidth, y1 + borderWidth),
               (x1 + borderWidth, y1 + borderWidth),

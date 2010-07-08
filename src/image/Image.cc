@@ -66,6 +66,7 @@ image::ImageBase<PixelT>::ImageBase(
 {
     if (deep) {
         ImageBase tmp(getDimensions());
+        tmp.setXY0(getXY0());
         tmp <<= *this;                  // now copy the pixels
         swap(tmp);
     }
@@ -89,7 +90,12 @@ image::ImageBase<PixelT>::ImageBase(
     lsst::daf::data::LsstBase(typeid(this)),
     _gilImage(rhs._gilImage), // boost::shared_ptr, so don't copy the pixels
     _gilView(subimage_view(rhs._gilView,
-                           bbox.getX0(), bbox.getY0(), bbox.getWidth(), bbox.getHeight())),
+                           bbox.getX0(), bbox.getY0(),
+                           ((bbox.getWidth() + bbox.getHeight() == 0) ?
+                            (rhs.getWidth()  - bbox.getX0()) : bbox.getWidth()),
+                           ((bbox.getWidth() + bbox.getHeight() == 0) ?
+                            (rhs.getHeight() - bbox.getY0()) : bbox.getHeight())
+                          )),
     _ix0(rhs._ix0 + bbox.getX0()), _iy0(rhs._iy0 + bbox.getY0()),
     _x0(rhs._x0 + bbox.getX0()), _y0(rhs._y0 + bbox.getY0())
 {
@@ -102,6 +108,7 @@ image::ImageBase<PixelT>::ImageBase(
 
     if (deep) {
         ImageBase tmp(getDimensions());
+        tmp.setXY0(getXY0());
         tmp <<= *this;                  // now copy the pixels
         swap(tmp);
     }
@@ -110,7 +117,7 @@ image::ImageBase<PixelT>::ImageBase(
 /// Assignment operator.
 ///
 /// \note that this has the effect of making the lhs share pixels with the rhs which may
-/// not be what you intended;  to copy the pixels, use operator<<
+/// not be what you intended;  to copy the pixels, use operator<<=()
 ///
 /// \note this behaviour is required to make the swig interface work, otherwise I'd
 /// declare this function private
@@ -241,54 +248,6 @@ typename image::ImageBase<PixelT>::fast_iterator image::ImageBase<PixelT>::end(
     return row_end(0);
 }
 
-/// Return an \c xy_locator at the point <tt>(x, y)</tt> in the %image
-///
-/// Locators may be used to access a patch in an image
-template<typename PixelT>
-typename image::ImageBase<PixelT>::xy_locator image::ImageBase<PixelT>::xy_at(int x, int y) const {
-    return xy_locator(_gilView.xy_at(x, y));
-}
-
-/// Return an \c x_iterator to the start of the \c y'th row
-///
-/// Incrementing an \c x_iterator moves it across the row
-template<typename PixelT>
-typename image::ImageBase<PixelT>::x_iterator image::ImageBase<PixelT>::row_begin(int y) const {
-    return _gilView.row_begin(y);
-}
-
-/// Return an \c x_iterator to the end of the \c y'th row
-template<typename PixelT>
-typename image::ImageBase<PixelT>::x_iterator image::ImageBase<PixelT>::row_end(int y) const {
-    return _gilView.row_end(y);
-}
-
-/// Return an \c x_iterator to the point <tt>(x, y)</tt> in the %image
-template<typename PixelT>
-typename image::ImageBase<PixelT>::x_iterator image::ImageBase<PixelT>::x_at(int x, int y) const {
-    return _gilView.x_at(x, y);
-}
-
-/// Return an \c y_iterator to the start of the \c y'th row
-///
-/// Incrementing an \c y_iterator moves it up the column
-template<typename PixelT>
-typename image::ImageBase<PixelT>::y_iterator image::ImageBase<PixelT>::col_begin(int x) const {
-    return _gilView.col_begin(x);
-}
-
-/// Return an \c y_iterator to the end of the \c y'th row
-template<typename PixelT>
-typename image::ImageBase<PixelT>::y_iterator image::ImageBase<PixelT>::col_end(int x) const {
-    return _gilView.col_end(x);
-}
-
-/// Return an \c y_iterator to the point <tt>(x, y)</tt> in the %image
-template<typename PixelT>
-typename image::ImageBase<PixelT>::y_iterator image::ImageBase<PixelT>::y_at(int x, int y) const {
-    return _gilView.y_at(x, y);
-}
-
 /************************************************************************************************************/
 /// Set the %image's pixels to rhs
 template<typename PixelT>
@@ -368,7 +327,7 @@ image::Image<PixelT>& image::Image<PixelT>::operator=(PixelT const rhs) {
 /// Assignment operator.
 ///
 /// \note that this has the effect of making the lhs share pixels with the rhs which may
-/// not be what you intended;  to copy the pixels, use operator<<=
+/// not be what you intended;  to copy the pixels, use operator<<=()
 ///
 /// \note this behaviour is required to make the swig interface work, otherwise I'd
 /// declare this function private
@@ -439,11 +398,16 @@ void image::Image<PixelT>::writeFits(
 ) const {
     using lsst::daf::base::PropertySet;
 
-    PropertySet::Ptr wcsAMetadata = image::detail::createTrivialWcsAsPropertySet(image::detail::wcsNameForXY0,
-                                                                                 this->getX0(),
-                                                                                 this->getY0());
+    if (mode == "pdu") {
+        image::fits_write_view(fileName, _getRawView(), metadata_i, mode);
+        return;
+    }
 
     lsst::daf::base::PropertySet::Ptr metadata;
+    PropertySet::Ptr wcsAMetadata =
+        image::detail::createTrivialWcsAsPropertySet(image::detail::wcsNameForXY0,
+                                                     this->getX0(), this->getY0());
+    
     if (metadata_i) {
         metadata = metadata_i->deepCopy();
         metadata->combine(wcsAMetadata);
@@ -503,8 +467,8 @@ void image::Image<PixelT>::operator+=(
         lsst::afw::math::Function2<double> const& function ///< function to add
                                      ) {
     for (int y = 0; y != this->getHeight(); ++y) {
-        double const yPos = image::positionToIndex(y + this->getY0());
-        double xPos = image::positionToIndex(this->getX0());
+        double const yPos = this->indexToPosition(y, image::Y);
+        double xPos = this->indexToPosition(0, image::X);
         for (typename Image<PixelT>::x_iterator ptr = this->row_begin(y), end = this->row_end(y);
              ptr != end; ++ptr, ++xPos) {            
             *ptr += function(xPos, yPos);
@@ -561,8 +525,8 @@ void image::Image<PixelT>::operator-=(
         lsst::afw::math::Function2<double> const& function ///< function to add
                                      ) {
     for (int y = 0; y != this->getHeight(); ++y) {
-        double const yPos = image::positionToIndex(y + this->getY0());
-        double xPos = image::positionToIndex(this->getX0());
+        double const yPos = this->indexToPosition(y, image::Y);
+        double xPos = this->indexToPosition(0, image::X);
         for (typename Image<PixelT>::x_iterator ptr = this->row_begin(y), end = this->row_end(y);
              ptr != end; ++ptr, ++xPos) {            
             *ptr -= function(xPos, yPos);

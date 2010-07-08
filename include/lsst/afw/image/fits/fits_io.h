@@ -72,7 +72,7 @@ inline void fits_read_view(std::string const& filename,const View& view,
 template <typename Image>
 inline void fits_read_image(const std::string& filename, Image& im,
                             lsst::daf::base::PropertySet::Ptr metadata = lsst::daf::base::PropertySet::Ptr(),
-                            int hdu=0,
+                            int hdu=1,
                             BBox const& bbox=BBox()
                            ) {
     BOOST_STATIC_ASSERT(fits_read_support<typename Image::view_t>::is_supported);

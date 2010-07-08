@@ -287,6 +287,13 @@ using boost::serialization::make_nvp;
         virtual std::string toString(std::string const& prefix="") const {
             return std::string("Function2: ") + Function<ReturnT>::toString(prefix);
         }
+        /**
+         * Return the derivative of the Function with respect to its parameters
+         */
+        virtual std::vector<double> getDFuncDParameters(double, double) const {
+            throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException,
+                              "getDFuncDParameters is not implemented for this class");
+        }
 
     private:
         friend class boost::serialization::access;

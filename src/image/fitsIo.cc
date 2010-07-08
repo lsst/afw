@@ -84,12 +84,25 @@ void move_to_hdu(lsst::afw::image::cfitsio::fitsfile *fd, //!< cfitsio file desc
                           err_msg(fd, status, boost::format("Attempted to select relative HDU %d") % hdu));
         }
     } else {
-        if (hdu == 0) { // PDU; go there
-            hdu = 1;
-        } else {
-            if (fits_movabs_hdu(fd, hdu, NULL, &status) != 0) {
-                throw LSST_EXCEPT(FitsException,
-                            err_msg(fd, status, boost::format("Attempted to select absolute HDU %d") % hdu));
+        int const real_hdu = (hdu == 0) ? 1 : hdu;
+        
+        if (fits_movabs_hdu(fd, real_hdu, NULL, &status) != 0) {
+            throw LSST_EXCEPT(FitsException,
+                              err_msg(fd, status,
+                                      boost::format("Attempted to select absolute HDU %d") % real_hdu));
+        }
+        if (hdu == 0) {                 // they asked for the "default" HDU
+            int nAxis = 0;              // number of axes in file
+            if (fits_get_img_dim(fd, &nAxis, &status) != 0) {
+                throw LSST_EXCEPT(FitsException, cfitsio::err_msg(fd, status, "Getting NAXIS"));
+            }
+
+            if (nAxis == 0) {
+                if (fits_movrel_hdu(fd, 1, NULL, &status) != 0) {
+                    throw LSST_EXCEPT(FitsException,
+                                      err_msg(fd, status,
+                                              boost::format("Attempted to skip data-less hdu %d") % hdu));
+                }
             }
         }
     }
@@ -136,7 +149,17 @@ void appendKey(lsst::afw::image::cfitsio::fitsfile* fd, std::string const &keyWo
 
             fits_write_key(fd, TINT, keyWordChars, &tmp, keyCommentChars, &status);
         }
+    } else if (valueType == typeid(long)) {
+        if (metadata->isArray(keyWord)) {
+            std::vector<long> tmp = metadata->getArray<long>(keyWord);
+            for (unsigned long i = 0; i != tmp.size(); ++i) {
+                fits_write_key(fd, TLONG, keyWordChars, &tmp[i], keyCommentChars, &status);
+            }
+        } else {
+            long tmp = metadata->get<long>(keyWord);
 
+            fits_write_key(fd, TLONG, keyWordChars, &tmp, keyCommentChars, &status);
+        }
     } else if (valueType == typeid(double)) {
         if (metadata->isArray(keyWord)) {
             std::vector<double> tmp = metadata->getArray<double>(keyWord);
@@ -201,10 +224,10 @@ void getKey(fitsfile* fd,
 }
 
 void addKV(lsst::daf::base::PropertySet::Ptr metadata, std::string key, std::string value) {
-    boost::regex const boolRegex("[tTfF]");
-    boost::regex const intRegex("(\\Q+\\E|\\Q-\\E){0,1}[0-9]+");
-    boost::regex const doubleRegex("(\\Q+\\E|\\Q-\\E){0,1}([0-9]*\\.[0-9]+|[0-9]+\\.[0-9]*)((e|E)(\\Q+\\E|\\Q-\\E){0,1}[0-9]+){0,1}");
-    boost::regex const fitsStringRegex("'(.*)'");
+    static boost::regex const boolRegex("[tTfF]");
+    static boost::regex const intRegex("(\\Q+\\E|\\Q-\\E){0,1}[0-9]+");
+    static boost::regex const doubleRegex("(\\Q+\\E|\\Q-\\E){0,1}([0-9]*\\.[0-9]+|[0-9]+\\.[0-9]*)((e|E)(\\Q+\\E|\\Q-\\E){0,1}[0-9]+){0,1}");
+    static boost::regex const fitsStringRegex("'(.*)'");
 
     boost::smatch matchStrings;
     std::istringstream converter(value);
@@ -246,9 +269,10 @@ void addKV(lsst::daf::base::PropertySet::Ptr metadata, std::string key, std::str
         std::string val;
         std::string comment;
         getKey(fd, i, keyName, val, comment);
-
+        // I could use std::tr1::unordered_map, but it probably isn't worth the trouble
         if (strip && (keyName == "SIMPLE" || keyName == "BITPIX" || keyName == "EXTEND" ||
                       keyName == "NAXIS" || keyName == "NAXIS1" || keyName == "NAXIS2" ||
+                      keyName == "GCOUNT" || keyName == "PCOUNT" || keyName == "XTENSION" ||
                       keyName == "BSCALE" || keyName == "BZERO")) {
             ;
         } else {

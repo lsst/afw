@@ -14,18 +14,22 @@ Basic routines to talk to lsst::afw::image classes
 
 
 %{
+#include "boost/cstdint.hpp"
+
 #include "lsst/daf/base.h"
 #include "lsst/daf/data.h"
 #include "lsst/daf/persistence.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/pex/policy.h"
+#include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/image.h"
 #include "lsst/afw/geom.h"
+#include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/image/Color.h"
 #include "lsst/afw/image/Defect.h"
+#include "lsst/afw/image/Calib.h"
 
-#include "boost/cstdint.hpp"
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_IMAGE_NUMPY_ARRAY_API
 #include "numpy/arrayobject.h"
 #include "lsst/afw/numpyTypemaps.h"
@@ -80,6 +84,7 @@ def version(HeadURL = r"$HeadURL$"):
 %import "lsst/daf/persistence/persistenceLib.i"
 %import "lsst/daf/data/dataLib.i"
 %import "lsst/afw/geom/geomLib.i"
+%import "lsst/afw/coord/coordLib.i"
 
 %include "lsst/afw/eigen.i"
 
@@ -94,8 +99,9 @@ def version(HeadURL = r"$HeadURL$"):
 
 /******************************************************************************/
 
-%template(pairIntInt)   std::pair<int, int>;
-%template(mapStringInt) std::map<std::string, int>;
+%template(pairIntInt)       std::pair<int, int>;
+%template(pairDoubleDouble) std::pair<double, double>;
+%template(mapStringInt)     std::map<std::string, int>;
 
 /************************************************************************************************************/
 // Images, Masks, and MaskedImages
@@ -103,6 +109,9 @@ def version(HeadURL = r"$HeadURL$"):
 
 %ignore lsst::afw::image::Filter::operator int;
 %include "lsst/afw/image/Filter.h"
+
+SWIG_SHARED_PTR(CalibPtr, lsst::afw::image::Calib);
+%include "lsst/afw/image/Calib.h"
 
 #if defined(IMPORT_FUNCTION_I)
 %{
@@ -115,6 +124,7 @@ def version(HeadURL = r"$HeadURL$"):
 %include "image.i"
 %include "mask.i"
 %include "maskedImage.i"
+%include "imageSlice.i"
 
 %define %POINT(NAME, TYPE)
 %template(Point##NAME) lsst::afw::image::Point<TYPE>;
@@ -180,29 +190,42 @@ def version(HeadURL = r"$HeadURL$"):
 
 /************************************************************************************************************/
 
+SWIG_SHARED_PTR(Wcs, lsst::afw::image::Wcs);
+SWIG_SHARED_PTR_DERIVED(TanWcs, lsst::afw::image::Wcs, lsst::afw::image::TanWcs);
+
 %{
 #include "lsst/afw/image/Wcs.h"
+#include "lsst/afw/image/TanWcs.h"
 %}
 
-SWIG_SHARED_PTR(Wcs, lsst::afw::image::Wcs);
 
 %include "lsst/afw/image/Wcs.h"
+%include "lsst/afw/image/TanWcs.h"
 
 %lsst_persistable(lsst::afw::image::Wcs);
+%lsst_persistable(lsst::afw::image::TanWcs);
 
-%extend lsst::afw::image::Wcs {
-    lsst::afw::image::Wcs::Ptr clone() {
-        return lsst::afw::image::Wcs::Ptr(new lsst::afw::image::Wcs::Wcs(*self));
+%newobject makeWcs;
+
+%inline %{
+    lsst::afw::image::TanWcs::Ptr
+    cast_TanWcs(lsst::afw::image::Wcs::Ptr wcs) {
+        lsst::afw::image::TanWcs::Ptr tanWcs = boost::shared_dynamic_cast<lsst::afw::image::TanWcs>(wcs);
+        
+        if(tanWcs.get() == NULL) {
+            throw(LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "Up cast failed"));
+        }
+        return tanWcs;
     }
-}
+%}
 
 
 %inline {
     /**
      * Create a WCS from crval, image, and the elements of CD
      */
-    lsst::afw::image::Wcs::Ptr createWcs(lsst::afw::image::PointD crval,
-                                         lsst::afw::image::PointD crpix,
+    lsst::afw::image::Wcs::Ptr createWcs(lsst::afw::geom::PointD crval,
+                                         lsst::afw::geom::PointD crpix,
                                          double CD11, double CD12, double CD21, double CD22) {
 
     Eigen::Matrix2d CD;
@@ -217,6 +240,11 @@ SWIG_SHARED_PTR(Wcs, lsst::afw::image::Wcs);
 
 /************************************************************************************************************/
 
+#if !defined(CAMERA_GEOM_LIB_I)
+%import "lsst/afw/cameraGeom/cameraGeomLib.i"
+#endif
+
+/************************************************************************************************************/
 %{
 #include "lsst/afw/image/Exposure.h"
 %}
@@ -228,10 +256,11 @@ SWIG_SHARED_PTR_DERIVED(Exposure##TYPE, lsst::daf::data::LsstBase, lsst::afw::im
 
 // Must go After the %include
 %define %exposure(TYPE, PIXEL_TYPE)
-%template(Exposure##TYPE) lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>;
-%lsst_persistable(lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>);
-%template(makeExposure) lsst::afw::image::makeExposure<lsst::afw::image::MaskedImage<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> >;
 %newobject makeExposure;
+%template(Exposure##TYPE) lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>;
+%template(makeExposure) lsst::afw::image::makeExposure<lsst::afw::image::MaskedImage<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> >;
+%lsst_persistable(lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>);
+
 %extend lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> {
     %pythoncode {
     def Factory(self, *args):
@@ -253,6 +282,17 @@ SWIG_SHARED_PTR_DERIVED(Exposure##TYPE, lsst::daf::data::LsstBase, lsst::afw::im
 %exposure(F, float);
 %exposure(D, double);
 
+
+%extend lsst::afw::image::Exposure<boost::uint16_t, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> {
+    %newobject convertF;
+    lsst::afw::image::Exposure<float,
+         lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> convertF()
+    {
+        return lsst::afw::image::Exposure<float,
+            lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>(*self, true);
+    }
+}
+
 /************************************************************************************************************/
 
 %include "lsst/afw/image/Color.h"
@@ -264,3 +304,6 @@ SWIG_SHARED_PTR(DefectPtr, lsst::afw::image::DefectBase);
 %include "lsst/afw/image/Defect.h"
 
 %template(DefectSet) std::vector<boost::shared_ptr<lsst::afw::image::DefectBase> >;
+
+/************************************************************************************************************/
+

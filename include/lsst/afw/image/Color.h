@@ -9,7 +9,7 @@
 
 #include <cmath>
 #include <limits>
-#include "lsst/afw/image/filter.h"
+#include "lsst/afw/image/Filter.h"
 
 namespace lsst {
 namespace afw {

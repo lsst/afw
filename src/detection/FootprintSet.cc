@@ -103,7 +103,6 @@ namespace {
  */
 template<typename ImagePixelT, typename MaskPixelT>
 detection::FootprintSet<ImagePixelT, MaskPixelT>::~FootprintSet() {
-    delete &_footprints;
 }
 
 /************************************************************************************************************/
@@ -186,9 +185,8 @@ static void findFootprints(
 
              if (isBadPixel(pixVal) || pixVal < thresholdVal) {
                 if (in_span) {
-                    IdSpan *sp = new IdSpan(in_span, y, x0, x - 1);
-                    IdSpan::Ptr spp(sp);
-                    spans.push_back(spp);
+                    IdSpan::Ptr sp(new IdSpan(in_span, y, x0, x - 1));
+                    spans.push_back(sp);
 
                     in_span = 0;
                 }
@@ -223,9 +221,8 @@ static void findFootprints(
         }
 
         if (in_span) {
-            IdSpan *sp = new IdSpan(in_span, y, x0, width - 1);
-            IdSpan::Ptr spp(sp);
-            spans.push_back(spp);
+            IdSpan::Ptr sp(new IdSpan(in_span, y, x0, width - 1));
+            spans.push_back(sp);
         }
     }
 /*
@@ -249,17 +246,14 @@ static void findFootprints(
         i0 = 0;
         for (unsigned int i = 0; i <= spans.size(); i++) { // <= size to catch the last object
             if (i == spans.size() || spans[i]->id != id) {
-                detection::Footprint *fp = new detection::Footprint(i - i0, _region);
+                detection::Footprint::Ptr fp(new detection::Footprint(i - i0, _region));
             
                 for (; i0 < i; i0++) {
                     fp->addSpan(spans[i0]->y + row0, spans[i0]->x0 + col0, spans[i0]->x1 + col0);
                 }
 
-                if (fp->getNpix() < npixMin) {
-                    delete fp;
-                } else {
-                    detection::Footprint::Ptr fpp(fp);
-                    _footprints->push_back(fpp);
+                if (!(fp->getNpix() < npixMin)) {
+                    _footprints->push_back(fp);
                 }
             }
 
@@ -281,11 +275,11 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         Threshold const &threshold,     //!< threshold to find objects
         int const npixMin)              //!< minimum number of pixels in an object
     : lsst::daf::data::LsstBase(typeid(this)),
-      _footprints(*new FootprintList()),
-      _region(*new image::BBox(image::PointI(img.getX0(), img.getY0()),
-                               img.getWidth(), img.getHeight())) {
-    findFootprints<ImagePixelT, MaskPixelT>(&_footprints, _region, img, threshold, npixMin);
-}
+      _footprints(new FootprintList()),
+      _region(image::PointI(img.getX0(), img.getY0()),
+              img.getWidth(), img.getHeight()) {
+          findFootprints<ImagePixelT, MaskPixelT>(_footprints.get(), _region, img, threshold, npixMin);
+      }
 
 /**
  * \brief Find a FootprintSet given a MaskedImage and a threshold
@@ -306,13 +300,13 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         std::string const &planeName,   //!< mask plane to set (if != "")
         int const npixMin)              //!< minimum number of pixels in an object
     : lsst::daf::data::LsstBase(typeid(this)),
-      _footprints(*new FootprintList()),
-      _region(*new image::BBox(image::PointI(maskedImg.getX0(), maskedImg.getY0()),
-                               maskedImg.getWidth(), maskedImg.getHeight())) {
+      _footprints(new FootprintList()),
+      _region(image::PointI(maskedImg.getX0(), maskedImg.getY0()),
+              maskedImg.getWidth(), maskedImg.getHeight()) {
 /*
  * Find the Footprints
  */
-    findFootprints<ImagePixelT, MaskPixelT>(&_footprints, _region,
+    findFootprints<ImagePixelT, MaskPixelT>(_footprints.get(), _region,
                                             *maskedImg.getImage(), threshold, npixMin);    
 /*
  * Set Mask if requested
@@ -345,7 +339,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
     };
 
     MaskFootprint maskit(*maskedImg.getMask(), bitPlane);
-    for (FootprintList::const_iterator fiter = _footprints.begin(), end = _footprints.end();
+    for (FootprintList::const_iterator fiter = _footprints->begin(), end = _footprints->end();
          fiter != end; ++fiter) {
         Footprint::Ptr const foot = *fiter;
 
@@ -361,14 +355,18 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
  */
 template<typename ImagePixelT, typename MaskPixelT>
 detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
-        const image::MaskedImage<ImagePixelT, MaskPixelT> &, //!< Image to search for objects
+        const image::MaskedImage<ImagePixelT, MaskPixelT> & img, //!< Image to search for objects
         Threshold const &,                                   //!< threshold to find objects
         int,                                                 //!< Footprint should include this pixel (column)
         int,                                                 //!< Footprint should include this pixel (row) 
         std::vector<Peak> const *       //!< Footprint should include at most one of these peaks
                                                               )
     : lsst::daf::data::LsstBase(typeid(this)),
-      _footprints(*new FootprintList()) {}
+      _footprints(new FootprintList()),
+      _region(image::PointI(img.getX0(), img.getY0()),
+              img.getWidth(), img.getHeight()) 
+{
+}
 
 
 /************************************************************************************************************/
@@ -439,9 +437,8 @@ namespace {
     public:
         StartspanSet(image::MaskedImage<ImagePixelT, MaskPixelT>& image) :
             _image(image->getImage()),
-            _mask(image->getMask()),
-            _spans(*new std::vector<typename Startspan<MaskPixelT>::Ptr>()) {}
-        ~StartspanSet() { delete &_spans; }
+            _mask(image->getMask()) {}
+        ~StartspanSet() {}
 
         bool add(detection::Span *span, DIRECTION const dir, bool addToMask = true);
         bool process(detection::Footprint *fp,          // the footprint that we're building
@@ -450,7 +447,7 @@ namespace {
     private:
         image::Image<ImagePixelT> const *_image; // the Image we're searching
         image::Mask<MaskPixelT> *_mask;          // the mask that tells us where we've got to
-        std::vector<typename Startspan<MaskPixelT>::Ptr>& _spans; // list of Startspans
+        std::vector<typename Startspan<MaskPixelT>::Ptr> _spans; // list of Startspans
     };
 
     //
@@ -469,7 +466,7 @@ namespace {
             if (sspan->stop()) {        // we detected a stop bit
                 return true;
             } else {
-                _spans->push_back(sspan);
+                _spans.push_back(sspan);
             }
         }
 
@@ -502,7 +499,7 @@ namespace {
         typedef typename std::vector<typename Startspan<MaskPixelT>::Ptr>::iterator StartspanListIterT;
 
         Startspan<MaskPixelT> *sspan = NULL;
-        for (StartspanListIterT iter = _spans->begin(); iter != _spans->end(); iter++) {
+        for (StartspanListIterT iter = _spans.begin(); iter != _spans.end(); iter++) {
             *sspan = *iter;
             if (sspan->getDirection() != DONE) {
                 break;
@@ -783,7 +780,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
         FootprintSet const &rhs         //!< the input FootprintSet
                                                               ) :
     lsst::daf::data::LsstBase(typeid(this)),
-    _footprints(rhs._footprints) {
+    _footprints(rhs._footprints), _region(rhs._region) {
 }
 
 /// Assignment operator.
@@ -827,11 +824,9 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
                                         //!< @note Isotropic grows are significantly slower
                                                               )
     : lsst::daf::data::LsstBase(typeid(this)),
-      _footprints(*new FootprintList())  // We don't use this, it's a reference type so should be initialised
-      {
+      _footprints(rhs._footprints), _region(rhs._region) {
 
     if (r == 0) {
-        *this = rhs;
         return;
     } else if (r < 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
@@ -862,13 +857,16 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
  */
 template<typename ImagePixelT, typename MaskPixelT>
 detection::FootprintSet<ImagePixelT, MaskPixelT>::FootprintSet(
-        FootprintSet const& ,
-        FootprintSet const& ,
+        FootprintSet const& fs1,
+        FootprintSet const& fs2,
         bool const 
                                                               )
     : lsst::daf::data::LsstBase(typeid(this)),
-      _footprints(*new FootprintList())
-    {
+      _footprints(new FootprintList()),
+      _region(fs1.getRegion())
+{
+    _region.grow(fs2.getRegion().getLLC());
+    _region.grow(fs2.getRegion().getURC());
 }
 
 /************************************************************************************************************/
@@ -885,7 +883,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::insertIntoImage(bool const rel
     *im = 0;
 
     int id = 0;
-    for (FootprintList::const_iterator fiter = _footprints.begin(); fiter != _footprints.end(); fiter++) {
+    for (FootprintList::const_iterator fiter = _footprints->begin(); fiter != _footprints->end(); fiter++) {
         Footprint::Ptr const foot = *fiter;
         
         if (relativeIDs) {
@@ -904,6 +902,7 @@ detection::FootprintSet<ImagePixelT, MaskPixelT>::insertIntoImage(bool const rel
 //
 // Explicit instantiations
 //
+template class detection::FootprintSet<boost::uint16_t, image::MaskPixel>;
 template class detection::FootprintSet<int, image::MaskPixel>;
 template class detection::FootprintSet<float, image::MaskPixel>;
 template class detection::FootprintSet<double, image::MaskPixel>;

@@ -27,9 +27,7 @@ det::DiaSource::DiaSource()
       _obsCode(std::string()),
       _isSynthetic(0),
       _mopsStatus(0)
-{
-    setNull();
-}
+{ }
 
 /**
  * Copy Constructor

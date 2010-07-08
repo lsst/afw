@@ -4,6 +4,7 @@
 #include <map>
 #include "boost/make_shared.hpp"
 
+#include "lsst/pex/exceptions/Runtime.h"
 #include "lsst/afw/detection/Schema.h"
 
 namespace lsst { namespace afw { namespace detection {
@@ -375,7 +376,7 @@ MeasureQuantity<T, ImageT, PeakT>::_registryWorker(
     static typename MeasureQuantity<T, ImageT, PeakT>::AlgorithmRegistry *_registry = NULL;
 
     if (!_registry) {
-        _registry = new MeasureQuantity<T, ImageT, PeakT>::AlgorithmRegistry;
+        _registry = new typename MeasureQuantity<T, ImageT, PeakT>::AlgorithmRegistry;
     }
 
     if (func == _iefbr14) {     // lookup func

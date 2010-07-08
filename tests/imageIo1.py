@@ -66,7 +66,11 @@ class ReadFitsTestCase(unittest.TestCase):
     def testWriteReadF64(self):
         """Test writing then reading an F64 image"""
 
-        imPath = os.path.join("tests", "data", "smallD.fits")
+        imPath = "data"
+        if os.path.exists("tests"):
+            imPath = os.path.join("tests", imPath)
+        imPath = os.path.join(imPath, "smallD.fits")
+        
         im = afwImage.ImageD(100, 100)
         im.set(666)
         im.writeFits(imPath)
@@ -92,7 +96,11 @@ class ReadFitsTestCase(unittest.TestCase):
     def testMEF(self):
         """Test writing a set of images to an MEF fits file, and then reading them back"""
         
-        imPath = os.path.join("tests", "data", "MEF.fits")
+        imPath = "data"
+        if os.path.exists("tests"):
+            imPath = os.path.join("tests", imPath)
+        imPath = os.path.join(imPath, "MEF.fits")
+
         im = afwImage.ImageF(20, 20)
 
         for hdu in range(1, 5):

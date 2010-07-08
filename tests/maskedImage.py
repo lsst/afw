@@ -60,9 +60,11 @@ class MaskedImageTestCase(unittest.TestCase):
         #
         self.function = afwMath.PolynomialFunction2D(2)
         self.function.setParameters(range(self.function.getNParameters()))
+
     def tearDown(self):
         del self.mimage
         del self.mimage2
+        del self.function
 
     def testSetGetValues(self):
         self.assertEqual(self.mimage.get(0, 0), (self.imgVal1, self.EDGE, self.varVal1))
@@ -116,13 +118,23 @@ class MaskedImageTestCase(unittest.TestCase):
         #
         # Copy with change of Image type
         #
-        mi = self.mimage.convertDouble()
+        mi = self.mimage.convertD()
 
         self.assertEqual(mi.get(0, 0), val00)
         mi.set(0, 0, nval00)
 
         self.assertEqual(self.mimage.get(0, 0), val00)
         self.assertEqual(mi.get(0, 0), nval00)
+        #
+        # Convert from U to F
+        #
+        mi = afwImage.MaskedImageU(10, 20)
+        val00 = (10, 0x10, 1)
+        mi.set(val00)
+        self.assertEqual(mi.get(0, 0), val00)
+
+        fmi = mi.convertF()
+        self.assertEqual(fmi.get(0, 0), val00)
 
     def testAddImages(self):
         "Test addition"

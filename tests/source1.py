@@ -10,7 +10,9 @@ or
 """
 
 import unittest
+import math
 import random
+import tempfile
 import time
 
 import lsst.daf.base as dafBase
@@ -35,7 +37,7 @@ class SourceTestCase(unittest.TestCase):
             
             ds = afwDet.Source()
             ds.setId(m)
-            ds.setRa(m*20)
+            ds.setRa(math.radians(m*20))
             self.container2.push_back(ds)
 
         self.dsv1 = afwDet.PersistableSourceVector(self.container1)
@@ -123,14 +125,13 @@ class SourceTestCase(unittest.TestCase):
             pol.set("Formatter.PersistableSourceVector.Source.templateTableName", "Source")
             pol.set("Formatter.PersistableSourceVector.Source.tableNamePattern", "_tmp_v%(visitId)_Source")
             pers = dafPers.Persistence.getPersistence(pol)
-            loc  = dafPers.LogicalLocation("mysql://lsst10.ncsa.uiuc.edu:3306/test_source")
+            loc  = dafPers.LogicalLocation("mysql://lsst10.ncsa.uiuc.edu:3306/test_source_pt1")
             dp = dafBase.PropertySet()
             dp.setInt("visitId", int(time.clock())*16384 + random.randint(0, 16383))
             dp.setInt("sliceId", 0)
             dp.setInt("numSlices", 1)
             dp.setLongLong("ampExposureId", 10)
             dp.setString("itemName", "Source")
-
             stl = dafPers.StorageList()
             stl.append(pers.getPersistStorage("DbStorage", loc))
             pers.persist(self.dsv1, stl, dp)
@@ -143,6 +144,87 @@ class SourceTestCase(unittest.TestCase):
         else:
             print "skipping database tests"
 
+    def testSpecialValuesPersistence(self):
+        ss = afwDet.SourceSet()
+        s = afwDet.Source()
+        for (vd, vf) in ((float('nan'), float('nan')),
+                         (float('inf'), 0.0),
+                         (float('-inf'), 0.0)):
+            # we can't pass inf to methods taking floats - SWIG raises
+            # an overflow error
+            s.setRa(vd)
+            s.setDec(vd)
+            s.setRaErrForDetection(vf)
+            s.setRaErrForWcs(vf)
+            s.setDecErrForDetection(vf)
+            s.setDecErrForWcs(vf)
+            s.setXFlux(vd)
+            s.setXFluxErr(vf)
+            s.setYFlux(vd)
+            s.setYFluxErr(vf)
+            s.setRaFlux(vd)
+            s.setRaFluxErr(vf)
+            s.setDecFlux(vd)
+            s.setDecFluxErr(vf)
+            s.setXPeak(vd)
+            s.setYPeak(vd)
+            s.setRaPeak(vd)
+            s.setDecPeak(vd)
+            s.setXAstrom(vd)
+            s.setXAstromErr(vf)
+            s.setYAstrom(vd)
+            s.setYAstromErr(vf)
+            s.setRaAstrom(vd)
+            s.setRaAstromErr(vf)
+            s.setDecAstrom(vd)
+            s.setDecAstromErr(vf)
+            s.setTaiMidPoint(vd)
+            s.setTaiRange(vd)
+            s.setPsfFlux(vd)
+            s.setPsfFluxErr(vf)
+            s.setApFlux(vd)
+            s.setApFluxErr(vf)
+            s.setModelFlux(vd)
+            s.setModelFluxErr(vf)
+            s.setPetroFlux(vd)
+            s.setPetroFluxErr(vf)
+            s.setInstFlux(vd)
+            s.setInstFluxErr(vf)
+            s.setNonGrayCorrFlux(vd)
+            s.setNonGrayCorrFluxErr(vf)
+            s.setAtmCorrFlux(vd)
+            s.setAtmCorrFluxErr(vf)
+            s.setApDia(vf)
+            s.setSnr(vf)
+            s.setChi2(vf)
+            s.setSky(vf)
+            s.setSkyErr(vf)
+            s.setRaObject(vd)
+            s.setDecObject(vd)
+            ss.append(s)
+            psv = afwDet.PersistableSourceVector(ss) 
+            pol = dafPolicy.Policy()
+            pers = dafPers.Persistence.getPersistence(pol)
+            dp = dafBase.PropertySet()
+            dp.setInt("visitId", 0)
+            dp.setInt("sliceId", 0)
+            dp.setInt("numSlices", 1)
+            dp.setLongLong("ampExposureId", 10)
+            dp.setString("itemName", "Source")
+            stl = dafPers.StorageList()
+            f = tempfile.NamedTemporaryFile()
+            try:
+                loc  = dafPers.LogicalLocation(f.name)
+                stl.append(pers.getPersistStorage("BoostStorage", loc))
+                pers.persist(psv, stl, dp)
+                stl = dafPers.StorageList()
+                stl.append(pers.getRetrieveStorage("BoostStorage", loc))
+                persistable = pers.unsafeRetrieve("PersistableSourceVector", stl, dp)
+                res = afwDet.PersistableSourceVector.swigConvert(persistable)
+                self.assertTrue(res == psv)
+            except:
+                f.close()
+                raise
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

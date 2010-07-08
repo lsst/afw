@@ -22,8 +22,6 @@
 #include "lsst/daf/base.h"
 #include "lsst/daf/persistence.h"
 
-#include "Eigen/Core.h"
-
 namespace lsst {
 namespace afw {
     namespace image {

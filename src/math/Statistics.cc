@@ -14,6 +14,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/Statistics.h"
+#include "lsst/utils/ieee.h"
 
 using namespace std;
 namespace afwImage = lsst::afw::image;
@@ -73,7 +74,7 @@ class CheckFinite {
 public:
     template<typename T>
     bool operator()(T val) const {
-        return !std::isnan(static_cast<float>(val));
+        return !lsst::utils::isnan(static_cast<float>(val));
     }
 };
 
@@ -141,7 +142,7 @@ boost::shared_ptr<std::vector<typename ImageT::Pixel> > afwMath::Statistics::_ma
     boost::shared_ptr<std::vector<typename ImageT::Pixel> > imgcp(new std::vector<typename ImageT::Pixel>(0));
     for (int i_y = 0; i_y < img.getHeight(); ++i_y) {
         typename MaskT::x_iterator mptr = msk.row_begin(i_y);
-        for (typename ImageT::x_iterator ptr = img.row_begin(i_y); ptr != img.row_end(i_y); ++ptr) {
+        for (typename ImageT::x_iterator ptr = img.row_begin(i_y), end = img.row_end(i_y); ptr != end; ++ptr) {
             if ( IsFinite()(*ptr) && !(*mptr & _sctrl.getAndMask()) ) {
                 imgcp->push_back(*ptr);
             }
@@ -443,7 +444,7 @@ afwMath::Statistics::StandardReturn afwMath::Statistics::_getStandard(
     double const center = clipinfo.first;
     double const cliplimit = clipinfo.second;
 
-    if (isnan(center) || isnan(cliplimit)) {
+    if (lsst::utils::isnan(center) || lsst::utils::isnan(cliplimit)) {
         //return afwMath::Statistics::StandardReturn(mean, variance, min, max, sum + center*n);
         return afwMath::Statistics::StandardReturn(NaN, NaN, NaN, NaN, NaN);
     }
@@ -541,7 +542,7 @@ double afwMath::Statistics::_percentile(std::vector<Pixel> &img,
         
         int const q2 = q1 + 1;
         typename std::vector<Pixel>::iterator midPlus1 = img.begin() + q2;
-        std::nth_element(img.begin(), midPlus1, img.end());
+        std::nth_element(midMinus1, midPlus1, img.end());
         double val2 = static_cast<double>(*midPlus1);
         
         double w1 = (static_cast<double>(q2) - idx);
@@ -590,7 +591,7 @@ std::pair<double, double> afwMath::Statistics::getResult(
     Value ret(NaN, NaN);
     switch (prop) {
         
-      case ( NPOINT ):
+      case NPOINT:
         ret.first = static_cast<double>(_n);
         if (_flags & ERRORS) {
             ret.second = 0;
@@ -605,13 +606,13 @@ std::pair<double, double> afwMath::Statistics::getResult(
         break;
         
         // == means ==
-      case ( MEAN ):
+      case MEAN:
         ret.first = _mean;
         if (_flags & ERRORS) {
             ret.second = sqrt(_variance/_n);
         }
         break;
-      case ( MEANCLIP ):
+      case MEANCLIP:
         ret.first = _meanclip;
         if ( _flags & ERRORS ) {
             ret.second = sqrt(_varianceclip/_n);  // this is a bug ... _nClip != _n
@@ -619,51 +620,58 @@ std::pair<double, double> afwMath::Statistics::getResult(
         break;
         
         // == stdevs & variances ==
-      case ( VARIANCE ):
+      case VARIANCE:
         ret.first = _variance;
         if (_flags & ERRORS) {
             ret.second = _varianceError(ret.first, _n);
         }
         break;
-      case ( STDEV ):
+      case STDEV:
         ret.first = sqrt(_variance);
         if (_flags & ERRORS) {
             ret.second = 0.5*_varianceError(_variance, _n)/ret.first;
         }
         break;
-      case ( VARIANCECLIP ):
+      case VARIANCECLIP:
         ret.first = _varianceclip;
         if (_flags & ERRORS) {
             ret.second = _varianceError(ret.first, _n);
         }
         break;
-      case ( STDEVCLIP ):
+      case STDEVCLIP:
         ret.first = sqrt(_varianceclip);  // bug: nClip != _n
         if (_flags & ERRORS) {
             ret.second = 0.5*_varianceError(_varianceclip, _n)/ret.first;
         }
         break;
+
+      case MEANSQUARE:
+        ret.first = (_n - 1)/static_cast<double>(_n)*_variance + _mean*_mean;
+        if (_flags & ERRORS) {
+            ret.second = ::sqrt(2*ret.first*ret.first/(_n*_n)); // assumes Gaussian
+        }
+        break;
         
         // == other stats ==
-      case ( MIN ):
+      case MIN:
         ret.first = _min;
         if ( _flags & ERRORS ) {
             ret.second = 0;
         }
         break;
-      case ( MAX ):
+      case MAX:
         ret.first = _max;
         if ( _flags & ERRORS ) {
             ret.second = 0;
         }
         break;
-      case ( MEDIAN ):
+      case MEDIAN:
         ret.first = _median;
         if ( _flags & ERRORS ) {
             ret.second = 0;
         }
         break;
-      case ( IQRANGE ):
+      case IQRANGE:
         ret.first = _iqrange;
         if ( _flags & ERRORS ) {
             ret.second = 0;
@@ -671,7 +679,7 @@ std::pair<double, double> afwMath::Statistics::getResult(
         break;
         
         // no-op to satisfy the compiler
-      case ( ERRORS ):
+      case ERRORS:
         break;
         // default: redundant as 'ret' is initialized to NaN, NaN
       default:                          // we must have set prop to _flags

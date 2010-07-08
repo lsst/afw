@@ -136,49 +136,49 @@ Electronic: {
         Ccd: {
             name:  "*"
             Amp: {
-                serial: 0
+                index: 0 0
                 gain: 0.0
                 readNoise: 10.0
                 saturationLevel: 65535.0
             }
             Amp: {
-                serial: 1
+                index: 0 1
                 gain: 0.01
                 readNoise: 10.0
                 saturationLevel: 65535.0
             }
             Amp: {
-                serial: 2
+                index: 0 2
                 gain: 0.02
                 readNoise: 10.0
                 saturationLevel: 65535.0
             }
             Amp: {
-                serial: 3
+                index: 0 3
                 gain: 0.03
                 readNoise: 10.0
                 saturationLevel: 65535.0
             }
             Amp: {
-                serial: 4
+                index: 1 0
                 gain: 0.10
                 readNoise: 10.0
                 saturationLevel: 65535.0
             }
             Amp: {
-                serial: 5
+                index: 1 1
                 gain: 0.11
                 readNoise: 10.0
                 saturationLevel: 65535.0
             }
             Amp: {
-                serial: 6
+                index: 1 2
                 gain: 0.12
                 readNoise: 10.0
                 saturationLevel: 65535.0
             }
             Amp: {
-                serial: 7
+                index: 1 3
                 gain: 0.13
                 readNoise: 10.0
                 saturationLevel: 65535.0

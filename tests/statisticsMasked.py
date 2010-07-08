@@ -44,7 +44,8 @@ class StatisticsTestCase(unittest.TestCase):
         
     def tearDown(self):
         del self.mimg
-
+        del self.mimgL
+        del self.mimgR
 
     # Verify that NaN values are being ignored
     # (by default, StatisticsControl.useNanSafe = True)

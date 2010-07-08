@@ -8,14 +8,15 @@ import lsst.SConsUtils as scons
 try:
     scons.ConfigureDependentProducts
 except AttributeError:
-    import lsst.afw.SconsUtils
-    scons.ConfigureDependentProducts = lsst.afw.SconsUtils.ConfigureDependentProducts
+    import lsst.afw.scons.SconsUtils
+    scons.ConfigureDependentProducts = lsst.afw.scons.SconsUtils.ConfigureDependentProducts
 
 env = scons.makeEnv(
     "afw",
     r"$HeadURL$",
     scons.ConfigureDependentProducts("afw"),
 )
+
 #
 # Libraries needed to link libraries/executables
 #
@@ -41,7 +42,9 @@ for d in (
 #    "python/lsst/afw/eigen",
     "python/lsst/afw/image",
     "python/lsst/afw/geom", 
-    "python/lsst/afw/math", 
+    "python/lsst/afw/math",
+    "python/lsst/afw/math/detail",
+    "python/lsst/afw/coord", 
     "tests",
 ):
     if d != ".":

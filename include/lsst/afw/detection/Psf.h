@@ -71,12 +71,12 @@ public:
     lsst::afw::math::Kernel::Ptr getLocalKernel(
         lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::makePointD(0, 0),
         lsst::afw::image::Color const& color=lsst::afw::image::Color()) {
-        return doGetKernel(color);
+        return doGetLocalKernel(ccdXY, color);
     }
     lsst::afw::math::Kernel::ConstPtr getLocalKernel(
         lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::makePointD(0, 0),
         lsst::afw::image::Color const& color=lsst::afw::image::Color()) const {
-        return doGetKernel(color);
+        return doGetLocalKernel(ccdXY, color);
     }
     /**
      * Return the average Color of the stars used to construct the Psf
@@ -107,10 +107,23 @@ public:
         return true;
     }
 protected:
+    virtual Image::Ptr doComputeImage(lsst::afw::image::Color const& color,
+                                      lsst::afw::geom::Point2D const& ccdXY,
+                                      lsst::afw::geom::Extent2I const& size,
+                                      bool normalizePeak) const;
+
+    virtual lsst::afw::math::Kernel::Ptr doGetKernel(lsst::afw::image::Color const&) = 0;
+    virtual lsst::afw::math::Kernel::ConstPtr doGetKernel(lsst::afw::image::Color const&) const = 0;
+    virtual lsst::afw::math::Kernel::Ptr doGetLocalKernel(lsst::afw::geom::Point2D const&,
+                                                          lsst::afw::image::Color const&) = 0;
+    virtual lsst::afw::math::Kernel::ConstPtr doGetLocalKernel(lsst::afw::geom::Point2D const&,
+                                                               lsst::afw::image::Color const&) const = 0;
+private:
+    LSST_PERSIST_FORMATTER(PsfFormatter)
     /*
      * Support for Psf factories
      */
-
+protected:
 #if !defined(SWIG)
     friend Psf::Ptr createPsf(std::string const& name,
                               int const width, int const height, double p0, double p1, double p2);
@@ -122,16 +135,6 @@ protected:
     static PsfFactoryBase& lookup(std::string name);
 private:
     static PsfFactoryBase& _registry(std::string const& name, PsfFactoryBase * factory = NULL);
-    LSST_PERSIST_FORMATTER(PsfFormatter)
-
-    virtual Image::Ptr doComputeImage(lsst::afw::image::Color const& color,
-                                      lsst::afw::geom::Point2D const& ccdXY,
-                                      lsst::afw::geom::Extent2I const& size,
-                                      bool normalizePeak) const;
-    virtual lsst::afw::math::Kernel::Ptr doGetKernel(lsst::afw::image::Color const&
-                                                     color=lsst::afw::image::Color()) = 0;
-    virtual lsst::afw::math::Kernel::ConstPtr doGetKernel(lsst::afw::image::Color const&
-                                                          color=lsst::afw::image::Color()) const = 0;
 };
 
 /************************************************************************************************************/
@@ -144,18 +147,33 @@ public:
         lsst::afw::math::Kernel::Ptr kernel=lsst::afw::math::Kernel::Ptr() ///< This PSF's Kernel
              ) : Psf(), _kernel(kernel) {}
 
+protected:
     /**
      * Return the Psf's kernel
      */
-    lsst::afw::math::Kernel::Ptr getKernel(lsst::afw::image::Color const& =lsst::afw::image::Color()) {
+    virtual lsst::afw::math::Kernel::Ptr
+    doGetKernel(lsst::afw::image::Color const&) {
         return _kernel;
     }
-    
     /**
      * Return the Psf's kernel
      */
-    lsst::afw::math::Kernel::ConstPtr
-    getKernel(lsst::afw::image::Color const& =lsst::afw::image::Color()) const {
+    virtual lsst::afw::math::Kernel::ConstPtr
+    doGetKernel(lsst::afw::image::Color const&) const {
+        return lsst::afw::math::Kernel::ConstPtr(_kernel);
+    }
+    /**
+     * Return the Psf's kernel instantiated at a point
+     */
+    virtual lsst::afw::math::Kernel::Ptr doGetLocalKernel(lsst::afw::geom::Point2D const&,
+                                                          lsst::afw::image::Color const&) {
+        return _kernel;
+    }
+    /**
+     * Return the Psf's kernel instantiated at a point
+     */
+    virtual lsst::afw::math::Kernel::ConstPtr doGetLocalKernel(lsst::afw::geom::Point2D const&,
+                                                               lsst::afw::image::Color const&) const {
         return lsst::afw::math::Kernel::ConstPtr(_kernel);
     }
     

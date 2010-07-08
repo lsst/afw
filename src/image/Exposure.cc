@@ -23,11 +23,13 @@
 #include "boost/cstdint.hpp" 
 #include "boost/format.hpp" 
 #include "boost/shared_ptr.hpp"
+#include "boost/algorithm/string/trim.hpp"
 
 #include "lsst/daf/base/PropertySet.h"
 #include "lsst/pex/exceptions.h"
+#include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/image/Exposure.h"
-#include "lsst/afw/formatters/WcsFormatter.h"
+#include "lsst/afw/image/Calib.h"
 
 namespace afwImage = lsst::afw::image;
 
@@ -73,7 +75,10 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(int cols, ///< number of 
                                                               ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _maskedImage(cols, rows),
-    _wcs(new afwImage::Wcs(wcs))
+    _wcs(wcs.clone()),
+    _detector(),
+    _filter(),
+    _calib(new afwImage::Calib())
 {
     setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet()));
 }
@@ -87,7 +92,10 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
                                                               ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _maskedImage(maskedImage),
-    _wcs(new afwImage::Wcs(wcs))
+    _wcs(wcs.clone()),
+    _detector(),
+    _filter(),
+    _calib(new afwImage::Calib())    
 {
     setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet()));
 }
@@ -104,10 +112,15 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &src, ///<
                                                       ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _maskedImage(src.getMaskedImage(), bbox, deep),
-    _wcs(new afwImage::Wcs(*src._wcs))
+    _wcs(src._wcs->clone()),
+    _detector(src._detector),
+    _filter(src._filter),
+    _calib(new lsst::afw::image::Calib(*src.getCalib()))    
 {
-    _wcs->shiftReferencePixel(-bbox.getX0(), -bbox.getY0());
-
+/*
+  * N.b. You'll need to update the generalised copy constructor in Exposure.h when you add new data members
+  * --- this note is here as you'll be making the same changes here!
+  */
     setMetadata(deep ? src.getMetadata()->deepCopy() : src.getMetadata());
 }
 
@@ -136,21 +149,89 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     BBox const& bbox,               //!< Only read these pixels
     bool conformMasks               //!< Make Mask conform to mask layout in file?
 ) :
-    lsst::daf::data::LsstBase(typeid(this)) {
+    lsst::daf::data::LsstBase(typeid(this))
+{
     lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertySet());
 
     _maskedImage = MaskedImageT(baseName, hdu, metadata, bbox, conformMasks);
-
-    if (bbox) {
-        try {
-            metadata->set("CRPIX1", metadata->getAsDouble("CRPIX1") - bbox.getX0());
-            metadata->set("CRPIX2", metadata->getAsDouble("CRPIX2") - bbox.getY0());
-        } catch (lsst::pex::exceptions::NotFoundException &) {
-            ; // OK, no WCS is present in header
+    _wcs = afwImage::Wcs::Ptr(afwImage::makeWcs(metadata));
+    //
+    // Strip keywords from the input metadata that are related to the generated Wcs
+    //
+    // It isn't entirely obvious that this is enough --- e.g. if the input metadata has deprecated
+    // WCS keywords such as CDELT[12] they won't be stripped
+    //
+    {
+        lsst::daf::base::PropertySet::Ptr wcsMetadata = _wcs->getFitsMetadata();
+        std::vector<std::string> paramNames = wcsMetadata->paramNames();
+        for (std::vector<std::string>::const_iterator namePtr =
+                 paramNames.begin(); namePtr != paramNames.end(); ++namePtr) {
+            metadata->remove(*namePtr);
         }
     }
 
-    _wcs = afwImage::Wcs::Ptr(new afwImage::Wcs(metadata));
+    //If keywords LTV[1,2] are present, the image on disk is already a subimage, so
+    //we should note this fact. Also, shift the wcs so the crpix values refer to 
+    //pixel positions not pixel index
+    //See writeFits() below
+    std::string key = "LTV1";
+    if( metadata->exists(key)) {
+        _wcs->shiftReferencePixel(-1*metadata->getAsDouble(key), 0);
+        metadata->remove(key);
+    }
+    key = "LTV2";
+    if( metadata->exists(key) ) {
+        _wcs->shiftReferencePixel(0, -1*metadata->getAsDouble(key));
+        metadata->remove(key);
+    }
+
+    key = "FILTER";
+    if( metadata->exists(key) ) {
+        std::string filterName = boost::algorithm::trim_right_copy(metadata->getAsString(key));
+        try {
+            _filter = Filter(filterName);
+        } catch(lsst::pex::exceptions::NotFoundException &) {
+            lsst::pex::logging::TTrace<1>("afw.image.exposure", "Unknown filter %s", filterName.c_str());
+            _filter = Filter(filterName, true); // force the filter to be defined
+        }
+        metadata->remove(key);
+    }
+    /*
+     * Calib
+     */
+    _calib = afwImage::Calib::Ptr(new afwImage::Calib);
+
+    key = "TIME-MID";
+    if (metadata->exists(key)) {
+        lsst::daf::base::DateTime const
+            time_mid(boost::algorithm::trim_right_copy(metadata->getAsString(key)));
+        
+        _calib->setMidTime(time_mid);
+        metadata->remove(key);
+    }
+
+    key = "EXPTIME";
+    if (metadata->exists(key)) {
+        _calib->setExptime(metadata->getAsDouble(key));
+        metadata->remove(key);
+    }
+
+    key = "FLUXMAG0";
+    if (metadata->exists(key)) {
+        double const fluxMag0 = metadata->getAsDouble(key);
+        metadata->remove(key);
+        
+        key = "FLUXMAG0ERR";
+        if (metadata->exists(key)) {
+            double const fluxMag0Err = metadata->getAsDouble(key);
+            metadata->remove(key);
+
+            _calib->setFluxMag0(fluxMag0, fluxMag0Err);
+        } else {
+            _calib->setFluxMag0(fluxMag0);
+        }
+    }
+    
     setMetadata(metadata);
 }
 
@@ -183,7 +264,7 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::setMaskedImage(MaskedImageT &
  */   
 template<typename ImageT, typename MaskT, typename VarianceT> 
 void afwImage::Exposure<ImageT, MaskT, VarianceT>::setWcs(afwImage::Wcs const &wcs){
-    _wcs.reset(new afwImage::Wcs(wcs)); 
+    _wcs = wcs.clone();
 }
 
 
@@ -198,6 +279,27 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::setWcs(afwImage::Wcs const &w
   * disk.  Method also uses the metadata information to update the Exposure's
   * fits header cards.
   *
+  * @note LSST and Fits use a different convention for Wcs coordinates.
+  * Fits measures crpix relative to the bottom left hand corner of the image
+  * saved in that file (what ds9 calls image coordinates). Lsst measures it 
+  * relative to the bottom left hand corner of the parent image (what 
+  * ds9 calls the physical coordinates). This may cause confusion when you
+  * write an image to disk and discover that the values of crpix in the header
+  * are not what you expect.
+  *
+  * exposure = afwImage.ExposureF(filename) 
+  * fitsHeader = afwImage.readMetadata(filename)
+  * 
+  * exposure.getWcs().getPixelOrigin() ---> (128,128)
+  * fitsHeader.get("CRPIX1") --> 108
+  *
+  * This is expected. If you look at the value of
+  * fitsHeader.get("LTV1") --> -20
+  * you will find that CRPIX - LTV == getPixelOrigin.
+  *
+  * This implementation means that if you open the image in ds9 (say)
+  * the wcs translations for a given pixel are correct
+  *
   * @note The MaskedImage Class will throw an pex Exception if the base
   * filename is not found.
   */
@@ -207,12 +309,49 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(
 ) const {
     using lsst::daf::base::PropertySet;
 
+
+    //LSST convention is that Wcs is in pixel coordinates (i.e relative to bottom left
+    //corner of parent image, if any). The Wcs/Fits convention is that the Wcs is in
+    //image coordinates. When saving an image we convert from pixel to index coordinates.
+    //In the case where this image is a parent image, the reference pixels are unchanged
+    //by this transformation
+    afwImage::MaskedImage<ImageT> mi = getMaskedImage();
+
+    afwImage::Wcs::Ptr newWcs = _wcs->clone(); //Create a copy
+    newWcs->shiftReferencePixel(-1*mi.getX0(), -1*mi.getY0() );
+
+    //Create fits header
     PropertySet::Ptr outputMetadata = getMetadata()->deepCopy();
-    PropertySet::Ptr wcsMetadata = lsst::afw::formatters::WcsFormatter::generatePropertySet(*_wcs);
-    //
-    // Copy wcsMetadata over to outputMetadata
-    //
+    // Copy wcsMetadata over to fits header
+    PropertySet::Ptr wcsMetadata = newWcs->getFitsMetadata();
     outputMetadata->combine(wcsMetadata);
+    
+    //Store _x0 and _y0. If this exposure is a portion of a larger image, _x0 and _y0
+    //indicate the origin (the position of the bottom left corner) of the sub-image with 
+    //respect to the origin of the parent image.
+    //This is stored in the fits header using the LTV convention used by STScI 
+    //(see \S2.6.2 of HST Data Handbook for STIS, version 5.0
+    // http://www.stsci.edu/hst/stis/documents/handbooks/currentDHB/ch2_stis_data7.html#429287). 
+    //This is not a fits standard keyword, but is recognised by ds9
+    //LTV keywords use the opposite convention to the LSST, in that they represent
+    //the position of the origin of the parent image relative to the origin of the sub-image.
+    // _x0, _y0 >= 0, while LTV1 and LTV2 <= 0
+  
+    outputMetadata->set("LTV1", -1*mi.getX0());
+    outputMetadata->set("LTV2", -1*mi.getY0());
+
+    outputMetadata->set("FILTER", _filter.getName());
+    if (_detector) {
+        outputMetadata->set("DETNAME", _detector->getId().getName());
+        outputMetadata->set("DETSER", _detector->getId().getSerial());
+    }
+    /**
+     * We need to define these keywords properly! XXX
+     */
+    outputMetadata->set("TIME-MID", _calib->getMidTime().toString());
+    outputMetadata->set("EXPTIME", _calib->getExptime());
+    outputMetadata->set("FLUXMAG0", _calib->getFluxMag0().first);
+    outputMetadata->set("FLUXMAG0ERR", _calib->getFluxMag0().second);
 
     _maskedImage.writeFits(expOutFile, outputMetadata);
 }

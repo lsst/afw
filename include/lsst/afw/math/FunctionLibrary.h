@@ -566,6 +566,8 @@ using boost::serialization::make_nvp;
             return static_cast<ReturnT>(retVal);
         }
 
+        virtual std::vector<double> getDFuncDParameters(double x, double y) const;
+
         virtual std::string toString(std::string const& prefix) const {
             std::ostringstream os;
             os << "PolynomialFunction2 [" << _order << "]: ";

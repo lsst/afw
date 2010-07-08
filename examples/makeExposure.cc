@@ -95,28 +95,22 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
     // as a PropertySet::Ptr.  getMetadata() returns a pointer to the metadata.
 
     dafBase::PropertySet::Ptr mData = miMetadata;
-
-    // make sure it can be copied.
-    afwImage::Wcs myWcs(mData);  
-
-    afwImage::Wcs wcs2;
-    wcs2 = myWcs;
         
     // Now use Exposure class to create an Exposure from a MaskedImage and a
     // Wcs.
        
-    afwImage::Exposure<ImagePixel> miWcsExpImage(mImage, myWcs);
+    // make sure it can be copied.
+    afwImage::Wcs::Ptr myWcsPtr = afwImage::makeWcs(mData); 
+
+    afwImage::Exposure<ImagePixel> miWcsExpImage(mImage, *myWcsPtr);
              
-    afwImage::Wcs wcsCopy(myWcs); 
-      
-    //afwImage::Wcs wcsAssigned();
-    //wcsAssigned = myWcs; 
+    afwImage::Wcs::Ptr wcsCopy = myWcsPtr->clone(); 
 
     // (4) Construct an Exposure from a given region (col, row) and a Wcs.
 
     int miWidth = 5;
     int miHeight = 5;
-    afwImage::Exposure<ImagePixel> regWcsExpImage(miWidth, miHeight, myWcs);
+    afwImage::Exposure<ImagePixel> regWcsExpImage(miWidth, miHeight, *myWcsPtr);
        
     // (5) Construct an Exposure from a given region (col, row) with no Wcs.
 
@@ -126,7 +120,7 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
        
     // try to get the Wcs when there isn't one
     try {
-        afwImage::Wcs noWcs = *regExpImage.getWcs();
+        afwImage::Wcs::Ptr noWcs = regExpImage.getWcs();
     } catch (lsst::pex::exceptions::Exception &e) {
         pexLog::Trace("lsst.afw.Exposure", 5, "Caught Exception for getting a null Wcs: %s", e.what());
     }
@@ -138,7 +132,7 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
         
     // (7) Get a Wcs. 
          
-    afwImage::Wcs newWcs = *miWcsExpImage.getWcs();
+    afwImage::Wcs::Ptr newWcs = miWcsExpImage.getWcs();
 
     // try to get a Wcs from an image where I have corrupted the Wcs
     // information (removed the CRPIX1/2 header keywords/values.  Lets see
@@ -149,9 +143,9 @@ void doWork() {                         // Block to allow shared_ptrs to go out 
         dafBase::PropertySet::Ptr mCorData(new dafBase::PropertySet);
         afwImage::MaskedImage<ImagePixel> mCorruptImage("tests/data/small_MI_corrupt", hdu,
                                                     mCorData); // CFHT MI with corrupt header
-        afwImage::Wcs wcs = afwImage::Wcs(mCorData);
+        afwImage::Wcs::Ptr wcsPtr = afwImage::makeWcs(mCorData);
             
-        afwImage::Exposure<ImagePixel> newCorExposure(mCorruptImage, wcs);
+        afwImage::Exposure<ImagePixel> newCorExposure(mCorruptImage, *wcsPtr);
        
     } catch (lsst::pex::exceptions::Exception &e) {
         pexLog::Trace("lsst.afw.Exposure", 1,

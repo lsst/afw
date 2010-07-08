@@ -123,3 +123,4 @@ DiaSource.__str__ = DiaSource.toString
 %lsst_persistable(lsst::afw::detection::PersistableSourceVector);
 %lsst_persistable(lsst::afw::detection::PersistableDiaSourceVector);
 
+%template(PersistableSourceVectorVector) std::vector<lsst::afw::detection::PersistableSourceVector::Ptr>;

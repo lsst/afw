@@ -14,6 +14,7 @@
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/math/KernelFunctions.h"
 #include "lsst/afw/detection/Footprint.h"
+#include "lsst/utils/ieee.h"
 
 namespace afwMath = lsst::afw::math;
 namespace afwDetect = lsst::afw::detection;
@@ -21,7 +22,7 @@ namespace afwImage = lsst::afw::image;
 
 /******************************************************************************/
 /**
- * \Factory method for creating Threshold objects
+ * \brief Factory method for creating Threshold objects
  *
  * \return desired Threshold
  */
@@ -93,9 +94,7 @@ afwDetect::Footprint::Footprint(int nspan,         //!< initial number of Span%s
     : lsst::daf::data::LsstBase(typeid(this)),
       _fid(++id),
       _npix(0),
-      _spans(*new afwDetect::Footprint::SpanList),
       _bbox(afwImage::BBox()),
-      _peaks(*new std::vector<Peak::Ptr>),
       _region(region),
       _normalized(false) {
     if (nspan < 0) {
@@ -108,14 +107,12 @@ afwDetect::Footprint::Footprint(int nspan,         //!< initial number of Span%s
 /**
  * Create a rectangular Footprint
  */
-afwDetect::Footprint::Footprint(afwImage::BBox const &bbox, //!< The bounding box defining the rectangle
+afwDetect::Footprint::Footprint(afwImage::BBox const& bbox, //!< The bounding box defining the rectangle
                                 afwImage::BBox const region) //!< Bounding box of MaskedImage footprint
     : lsst::daf::data::LsstBase(typeid(this)),
       _fid(++id),
       _npix(0),
-      _spans(*new afwDetect::Footprint::SpanList),
       _bbox(afwImage::BBox()),
-      _peaks(*new std::vector<Peak::Ptr>),
       _region(region),
       _normalized(false) {
     int const x0 = bbox.getX0();
@@ -136,9 +133,7 @@ afwDetect::Footprint::Footprint(afwImage::BCircle const& circle, //!< The center
     : lsst::daf::data::LsstBase(typeid(this)),
       _fid(++id),
       _npix(0),
-      _spans(*new afwDetect::Footprint::SpanList),
       _bbox(afwImage::BBox()),
-      _peaks(*new std::vector<Peak::Ptr>),
       _region(region),
       _normalized(false) {
     int const xc = circle.getCenter().getX(); // x-centre
@@ -156,8 +151,6 @@ afwDetect::Footprint::Footprint(afwImage::BCircle const& circle, //!< The center
  * Destroy a Footprint
  */
 afwDetect::Footprint::~Footprint() {
-    delete &_spans;
-    delete &_peaks;
 }
 
 /**
@@ -176,21 +169,26 @@ void afwDetect::Footprint::normalize() {
         afwDetect::Footprint::SpanList::iterator ptr = _spans.begin(), end = _spans.end();
         
         afwDetect::Span *lspan = ptr->get();  // Left span
-        int y = (*ptr)->_y;
-        int x1 = (*ptr)->_x1;
+        int y = lspan->_y;
+        int x1 = lspan->_x1;
         ++ptr;
 
-        for (; ptr < end; ++ptr) {
+        for (; ptr != end; ++ptr) {
             afwDetect::Span *rspan = ptr->get(); // Right span
             if (rspan->_y == y) {
                 if (rspan->_x0 <= x1 + 1) { // Spans overlap or touch
                     if (rspan->_x1 > x1) {  // right span extends left span
-                        lspan->_x1 = rspan->_x1;
+                        x1 = lspan->_x1 = rspan->_x1;
+                    }
+
+                    ptr = _spans.erase(ptr);
+                    end = _spans.end();   // delete the right span
+                    if (ptr == end) {
+                        break;
                     }
                     
-                    ptr = _spans.erase(ptr);
-                    --end; // delete the right span
-                    x1 = lspan->_x1;
+                    --ptr;
+                    continue;
                 }
             }
 
@@ -201,6 +199,7 @@ void afwDetect::Footprint::normalize() {
         }
 
         //_peaks = psArraySort(fp->peaks, pmPeakSortBySN);
+        setNpix();
         setBBox();
         _normalized = true;
     }
@@ -221,6 +220,7 @@ afwDetect::Span const& afwDetect::Footprint::addSpan(int const y, //!< row value
     _spans.push_back(sp);
 
     _npix += x1 - x0 + 1;
+    _normalized = false;
 
     _bbox.grow(afwImage::PointI(x0, y));
     _bbox.grow(afwImage::PointI(x1, y));
@@ -237,6 +237,7 @@ const afwDetect::Span& afwDetect::Footprint::addSpan(afwDetect::Span const& span
     _spans.push_back(sp);
 
     _npix += span._x1 - span._x0 + 1;
+    _normalized = false;
 
     _bbox.grow(afwImage::PointI(span._x0, span._y));
     _bbox.grow(afwImage::PointI(span._x1, span._y));
@@ -511,7 +512,7 @@ static void set_footprint_id(typename afwImage::Image<IDPixelT>::Ptr idImage,   
 template <typename IDPixelT>
 static void
 set_footprint_array_ids(typename afwImage::Image<IDPixelT>::Ptr idImage, // the image to set
-                        std::vector<afwDetect::Footprint::Ptr> const &footprints, // the footprints to insert
+                        std::vector<afwDetect::Footprint::Ptr> const& footprints, // the footprints to insert
                         bool const relativeIDs) { // show IDs starting at 0, not Footprint->id
     int id = 0;                         // first index will be 1
 
@@ -530,7 +531,7 @@ set_footprint_array_ids(typename afwImage::Image<IDPixelT>::Ptr idImage, // the 
 }
 
 template void set_footprint_array_ids<int>(afwImage::Image<int>::Ptr idImage,
-                                           std::vector<afwDetect::Footprint::Ptr> const &footprints,
+                                           std::vector<afwDetect::Footprint::Ptr> const& footprints,
                                            bool const relativeIDs);
 
 /************************************************************************************************************/
@@ -608,6 +609,11 @@ afwDetect::Footprint::Ptr growFootprintSlow(
     if (ngrow < 0) {
         ngrow = 0;                      // ngrow == 0 => no grow
     }
+
+    if (foot.getNpix() == 0) {          // an empty Footprint
+        return afwDetect::Footprint::Ptr(new afwDetect::Footprint);
+    }
+
     /*
      * We'll insert the footprints into an image, then convolve with a disk,
      * then extract a footprint from the result --- this is magically what we want.
@@ -657,7 +663,7 @@ afwDetect::Footprint::Ptr growFootprintSlow(
  * Grow a Footprint by r pixels, returning a new Footprint
  */
 afwDetect::Footprint::Ptr afwDetect::growFootprint(
-        afwDetect::Footprint const &foot,      //!< The Footprint to grow
+        afwDetect::Footprint const& foot,      //!< The Footprint to grow
         int ngrow,                             //!< how much to grow foot
         bool isotropic                         //!< Grow isotropically (as opposed to a Manhattan metric)
                                                //!< @note Isotropic grows are significantly slower
@@ -745,7 +751,7 @@ afwDetect::Footprint::Ptr afwDetect::growFootprint(
     return grown;
 }
 
-afwDetect::Footprint::Ptr afwDetect::growFootprint(Footprint::Ptr const &foot, int ngrow, bool isotropic) {
+afwDetect::Footprint::Ptr afwDetect::growFootprint(Footprint::Ptr const& foot, int ngrow, bool isotropic) {
     return growFootprint(*foot, ngrow, isotropic);
 }
 
@@ -1066,7 +1072,7 @@ psErrorCode pmFootprintCullPeaks(psImage const *img, // the image wherein lives 
         assert (x >= 0 && x < subImg->numCols && y >= 0 && y < subImg->numRows);
         float const stdev = std::sqrt(subWt->data.F32[y][x]);
         float threshold = subImg->data.F32[y][x] - nsigma_delta*stdev;
-        if (isnan(threshold) || threshold < min_threshold) {
+        if (lsst::utils::isnan(threshold) || threshold < min_threshold) {
 #if 1                                   // min_threshold is assumed to be below the detection threshold,
                                         // so all the peaks are pmFootprint, and this isn't the brightest
             (void)psArrayRemoveIndex(fp->peaks, i);
@@ -1171,8 +1177,8 @@ psArray *pmFootprintArrayToPeaks(psArray const *footprints) {
 // \cond
 //
 template
-afwDetect::Footprint::Ptr afwDetect::footprintAndMask(afwDetect::Footprint::Ptr const & foot,
-                                                      afwImage::Mask<afwImage::MaskPixel>::Ptr const & mask,
+afwDetect::Footprint::Ptr afwDetect::footprintAndMask(afwDetect::Footprint::Ptr const& foot,
+                                                      afwImage::Mask<afwImage::MaskPixel>::Ptr const& mask,
                                                       afwImage::MaskPixel bitMask);
 
 template

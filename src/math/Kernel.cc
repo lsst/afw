@@ -6,9 +6,8 @@
  *
  * @ingroup afw
  */
-#include <stdexcept>
-
 #include <fstream>
+#include <sstream>
 
 #include "boost/format.hpp"
 #if defined(__ICC)
@@ -25,6 +24,7 @@
 #include "lsst/afw/math/LocalKernel.h"
 
 namespace pexExcept = lsst::pex::exceptions;
+namespace afwGeom = lsst::afw::geom;
 namespace afwMath = lsst::afw::math;
 
 afwMath::generic_kernel_tag afwMath::generic_kernel_tag_; ///< Used as default value in argument lists
@@ -58,6 +58,7 @@ afwMath::Kernel::Kernel()
  *
  * @throw lsst::pex::exceptions::InvalidParameterException if a spatial function is specified
  * and the kernel has no parameters.
+ * @throw lsst::pex::exceptions::InvalidParameterException if a width or height < 1
  */
 afwMath::Kernel::Kernel(
     int width,                          ///< number of columns
@@ -73,6 +74,11 @@ afwMath::Kernel::Kernel(
     _ctrY((height-1)/2),
     _nKernelParams(nKernelParams)
 {
+    if ((width < 1) || (height < 1)) {
+        std::ostringstream os;
+        os << "kernel height = " << height << " and/or width = " << width << " < 1";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+    }
     if (dynamic_cast<const NullSpatialFunction*>(&spatialFunction)) {
         // spatialFunction is not really present
     } else {
@@ -90,6 +96,8 @@ afwMath::Kernel::Kernel(
  * @brief Construct a spatially varying Kernel with a list of spatial functions (one per kernel parameter)
  *
  * Note: if the list of spatial functions is empty then the kernel is not spatially varying.
+ *
+ * @throw lsst::pex::exceptions::InvalidParameterException if a width or height < 1
  */
 afwMath::Kernel::Kernel(
     int width,                          ///< number of columns
@@ -104,6 +112,11 @@ afwMath::Kernel::Kernel(
    _ctrY(height/2),
    _nKernelParams(spatialFunctionList.size())
 {
+    if ((width < 1) || (height < 1)) {
+        std::ostringstream os;
+        os << "kernel height = " << height << " and/or width = " << width << " < 1";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+    }
     for (unsigned int ii = 0; ii < spatialFunctionList.size(); ++ii) {
         SpatialFunctionPtr spatialFunctionCopy = spatialFunctionList[ii]->clone();
         this->_spatialFunctionList.push_back(spatialFunctionCopy);
@@ -210,6 +223,51 @@ std::vector<afwMath::Kernel::SpatialFunctionPtr> afwMath::Kernel::getSpatialFunc
 std::vector<double> afwMath::Kernel::getKernelParameters() const {
     return std::vector<double>();
 }
+
+
+/**
+ * Given a bounding box for pixels one wishes to compute by convolving an image with this kernel,
+ * return the bounding box of pixels that must be accessed on the image to be convolved.
+ * Thus the box shifted by -kernel.getCtr() and its size is expanded by kernel.getDimensions()-1.
+ *
+ * @return the bbox expanded by the kernel. 
+ */
+afwGeom::BoxI afwMath::Kernel::growBBox(afwGeom::BoxI const &bbox) const {
+    return afwGeom::BoxI(
+        afwGeom::Point2I::make(
+            bbox.getMinX() - getCtrX(),
+            bbox.getMinY() - getCtrY()),
+        afwGeom::Extent2I::make(
+            bbox.getWidth()  + getWidth() - 1,
+            bbox.getHeight() + getHeight() - 1));
+}
+
+/**
+ * Given a bounding box for an image one wishes to convolve with this kernel,
+ * return the bounding box for the region of pixels that can be computed.
+ * Thus the box shifted by kernel.getCtr() and its size is reduced by kernel.getDimensions()-1.
+ *
+ * @return the bbox shrunk by the kernel.
+ *
+ * @throw lsst::pex::exceptions::InvalidParameterException if the resulting box would have
+ * dimension < 1 in either axis
+ */
+afwGeom::BoxI afwMath::Kernel::shrinkBBox(afwGeom::BoxI const &bbox) const {
+    if ((bbox.getWidth() < getWidth()) || ((bbox.getHeight() < getHeight()))) {
+        std::ostringstream os;
+        os << "bbox dimensions = " << bbox.getDimensions() << " < ("
+           << getWidth() << ", " << getHeight() << ") in one or both dimensions";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+    }
+    return afwGeom::BoxI(
+        afwGeom::Point2I::make(
+            bbox.getMinX() + getCtrX(),
+            bbox.getMinY() + getCtrY()),
+        afwGeom::Extent2I::make(
+            bbox.getWidth()  + 1 - getWidth(),
+            bbox.getHeight() + 1 - getHeight()));
+}
+
 
 /**
  * @brief Return a string representation of the kernel

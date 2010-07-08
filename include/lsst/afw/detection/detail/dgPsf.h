@@ -3,15 +3,21 @@
 //!
 // Describe an image's PSF
 //
+#include "lsst/base.h"
 #include "lsst/afw/detection/Psf.h"
 #include "boost/serialization/nvp.hpp"
 #include "boost/serialization/void_cast.hpp"
 
 // Forward declarations
 
-namespace lsst { namespace afw { namespace detection {
-    class dgPsf;
-}}}
+namespace lsst { namespace afw {
+    namespace detection {
+        class dgPsf;
+    }
+    namespace math {
+        class Kernel;
+    }
+}}
 
 namespace boost {
 namespace serialization {
@@ -28,8 +34,8 @@ namespace lsst { namespace afw { namespace detection {
  */
 class dgPsf : public KernelPsf {
 public:
-    typedef boost::shared_ptr<dgPsf> Ptr;
-    typedef boost::shared_ptr<dgPsf const> ConstPtr;
+    typedef PTR(dgPsf) Ptr;
+    typedef CONST_PTR(dgPsf) ConstPtr;
 
     /**
      * @brief constructors for a dgPsf
@@ -37,16 +43,10 @@ public:
      * Parameters:
      */
     explicit dgPsf(int width, int height, double sigma1, double sigma2=1, double b=0);
-
-    lsst::afw::image::Image<Psf::Pixel>::Ptr getImage(double const x, double const y) const;
 private:
-    double doGetValue(double const dx, double const dy, int xPositionInImage, int yPositionInImage) const;
-
     double _sigma1;                     ///< Width of inner Gaussian
     double _sigma2;                     ///< Width of outer Gaussian
     double _b;                          ///< Central amplitude of outer Gaussian (inner amplitude == 1)
-
-    double getValue(double const dx, double const dy) const;
 
     friend class boost::serialization::access;
     template <class Archive>

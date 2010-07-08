@@ -26,6 +26,7 @@ static char const* SVNid __attribute__((unused)) =
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/daf/persistence/PropertySetFormatter.h"
 #include "lsst/afw/formatters/ExposureFormatter.h"
+#include "lsst/afw/formatters/TanWcsFormatter.h"
 #include "lsst/afw/formatters/Utils.h"
 #include "lsst/afw/formatters/WcsFormatter.h"
 #include "lsst/afw/image/Exposure.h"
@@ -172,7 +173,7 @@ void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
 
         // Get the Wcs headers.
         lsst::daf::base::PropertySet::Ptr wcsProps =
-            lsst::afw::formatters::WcsFormatter::generatePropertySet(*(ip->_wcs));
+            ip->getWcs()->getFitsMetadata();
 
         // Get the image headers.
         lsst::daf::base::PropertySet::Ptr dp = ip->getMetadata();

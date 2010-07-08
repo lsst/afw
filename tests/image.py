@@ -43,6 +43,7 @@ class ImageTestCase(unittest.TestCase):
     def tearDown(self):
         del self.image1
         del self.image2
+        del self.function
 
     def testInitializeImages(self):
         val = 666
@@ -164,8 +165,8 @@ class ImageTestCase(unittest.TestCase):
         self.assertEqual(simage.get(0, 0), self.val1 + 2)
 
     def testGeneralisedCopyConstructors(self):
-        imageU = self.image1.convertU16() # these are generalised (templated) copy constructors in C++
-        imageF = imageU.convertFloat()
+        imageU = self.image1.convertU() # these are generalised (templated) copy constructors in C++
+        imageF = imageU.convertF()
 
         self.assertEqual(imageU.get(0, 0), self.val1)
         self.assertEqual(imageF.get(0, 0), self.val1)
@@ -472,7 +473,17 @@ class DecoratedImageTestCase(unittest.TestCase):
         #
         # Read a U16 image
         #
-        imgU16 = afwImage.DecoratedImageF(files["u16"]) # read as unsigned short
+        tmpFile = "foo.fits"
+
+        imgU.writeFits(tmpFile)
+
+        try:
+            imgU16 = afwImage.DecoratedImageF(tmpFile) # read as unsigned short
+        except:
+            os.remove(tmpFile)
+            raise
+
+        os.remove(tmpFile)
 
     def testWriteFits(self):
         """Test writing FITS files"""

@@ -13,6 +13,7 @@ import math
 import os
 import sys
 import unittest
+import eups
 
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions as pexExcept
@@ -62,15 +63,11 @@ class CameraGeomTestCase(unittest.TestCase):
     def setUp(self):
         CameraGeomTestCase.ampSerial = [0] # an array so we pass the value by reference
 
-        policyFile = pexPolicy.DefaultPolicyFile("afw", "CameraGeomDictionary.paf", "policy")
-        defPolicy = pexPolicy.Policy.createPolicy(policyFile, policyFile.getRepositoryPath(), True)
-
-        polFile = pexPolicy.DefaultPolicyFile("afw", "TestCameraGeom.paf", "tests")
-        self.geomPolicy = pexPolicy.Policy.createPolicy(polFile)
-        self.geomPolicy.mergeDefaults(defPolicy.getDictionary())
+        self.geomPolicy = cameraGeomUtils.getGeomPolicy(os.path.join(eups.productDir("afw"),
+                                                                     "tests", "TestCameraGeom.paf"))
 
     def tearDown(self):
-        pass
+        del self.geomPolicy
 
     def testDictionary(self):
         """Test the camera geometry dictionary"""
@@ -88,6 +85,10 @@ class CameraGeomTestCase(unittest.TestCase):
 
         #print >> sys.stderr, "Skipping testId"; return
         
+        ix, iy = 2, 1
+        id = cameraGeom.Id(666, "Beasty", ix, iy)
+        self.assertTrue(id.getIndex(), (ix, iy))
+
         self.assertTrue(cameraGeom.Id(1) == cameraGeom.Id(1))
         self.assertFalse(cameraGeom.Id(1) == cameraGeom.Id(100))
         
@@ -120,7 +121,7 @@ class CameraGeomTestCase(unittest.TestCase):
             dataSec = afwImage.BBox(afwImage.PointI(0, 0), width, height)
 
             eParams = cameraGeom.ElectronicParams(gain, readNoise, saturationLevel)
-            amp = cameraGeom.Amp(cameraGeom.Id(serial), allPixels, biasSec, dataSec,
+            amp = cameraGeom.Amp(cameraGeom.Id(serial, "", Col, 0), allPixels, biasSec, dataSec,
                                  cameraGeom.Amp.LLC, eParams)
 
             ccd.addAmp(afwGeom.makePointI(Col, 0), amp); Col += 1
@@ -165,11 +166,13 @@ class CameraGeomTestCase(unittest.TestCase):
         self.assertEqual(ccd.getAllPixels().getURC(),
                          ccd.findAmp(afwGeom.makePointI(ccdInfo["width"] - 1,
                                                             ccdInfo["height"] - 1)).getAllPixels().getURC())
+        ps = ccd.getPixelSize()
         #
         # Test mapping pixel <--> mm
         #
         pix = afwGeom.makePointI(100, 204) # wrt bottom left
-        pos = afwGeom.makePointD(0.0, 1.02) # wrt CCD center
+        pos = afwGeom.makePointD(0.00+ps/2., 1.02+ps/2.) # pixel center wrt CCD center
+        posll = afwGeom.makePointD(0.00, 1.02) # llc of pixel wrt CCD center
         #
         # Map pix into untrimmed coordinates
         #
@@ -179,7 +182,7 @@ class CameraGeomTestCase(unittest.TestCase):
         pix += corr
         
         self.assertEqual(ccd.getPixelFromPosition(pos) + corr, pix)
-        self.assertEqual(ccd.getPositionFromPixel(pix), pos)
+        self.assertEqual(ccd.getPositionFromPixel(pix), posll)
         #
         # Trim the CCD and try again
         #
@@ -200,10 +203,11 @@ class CameraGeomTestCase(unittest.TestCase):
         # Test mapping pixel <--> mm
         #
         pix = afwGeom.makePointI(100, 204) # wrt LLC
-        pos = afwGeom.makePointD(0.0, 1.02) # wrt chip centre
+        pos = afwGeom.makePointD(0.00+ps/2., 1.02+ps/2.) #pixel center wrt CCD center
+        posll = afwGeom.makePointD(0.0, 1.02) # llc of pixel wrt chip center 
         
         self.assertEqual(ccd.getPixelFromPosition(pos), pix)
-        self.assertEqual(ccd.getPositionFromPixel(pix), pos)
+        self.assertEqual(ccd.getPositionFromPixel(pix), posll)
 
     def testRotatedCcd(self):
         """Test if we can build a Ccd out of Amps"""
@@ -285,16 +289,20 @@ class CameraGeomTestCase(unittest.TestCase):
         #
         # Test mapping pixel <--> mm
         #
+        ps = raft.getPixelSize()
         for ix, iy, x, y in [(102, 500, -1.01,  2.02),
                              (306, 100,  1.01, -2.02),
                              (306, 500,  1.01,  2.02),
                              (356, 525,  1.51,  2.27),
                              ]:
             pix = afwGeom.makePointI(ix, iy) # wrt raft LLC
-            pos = afwGeom.makePointD(x, y) # wrt raft center
+            #position of pixel center
+            pos = afwGeom.makePointD(x+ps/2., y+ps/2.) # wrt raft center
+            #position of pixel lower left corner which is returned by getPositionFromPixel()
+            posll = afwGeom.makePointD(x, y) # wrt raft center
 
             self.assertEqual(raft.getPixelFromPosition(pos), pix)
-            self.assertEqual(raft.getPositionFromPixel(pix), pos)
+            self.assertEqual(raft.getPositionFromPixel(pix), posll)
         
     def testCamera(self):
         """Test if we can build a Camera out of Rafts"""
@@ -314,10 +322,10 @@ class CameraGeomTestCase(unittest.TestCase):
         self.assertEqual(camera.getAllPixels().getWidth(), cameraInfo["width"])
         self.assertEqual(camera.getAllPixels().getHeight(), cameraInfo["height"])
 
-        for rx, ry, cx, cy, serial, cen in [(0, 0,     0,   0,   4,  (-3.12, -2.02)),
+        for rx, ry, cx, cy, serial, cen in [(0, 0,     0,   0,    4, (-3.12, -2.02)),
                                             (0,   0,   150, 250, 20, (-3.12,  0.00)),
-                                            (600, 300, 0,   0,   52, ( 1.1,  -2.02)),
-                                            (600, 300, 150, 250, 68, ( 1.1,  0.00)),
+                                            (600, 300, 0,   0,   52, ( 1.10,  -2.02)),
+                                            (600, 300, 150, 250, 68, ( 1.10,  0.00)),
                                             ]:
             raft = cameraGeom.cast_Raft(camera.findDetector(afwGeom.makePointI(rx, ry)))
 
@@ -331,6 +339,7 @@ class CameraGeomTestCase(unittest.TestCase):
 
         self.assertEqual(camera.getSize()[0], cameraInfo["widthMm"])
         self.assertEqual(camera.getSize()[1], cameraInfo["heightMm"])
+        ps = raft.getPixelSize()
         #
         # Test mapping pixel <--> mm
         #
@@ -339,10 +348,16 @@ class CameraGeomTestCase(unittest.TestCase):
                              (714, 500,  3.12, 2.02),
                              ]:
             pix = afwGeom.makePointI(ix, iy) # wrt raft LLC
-            pos = afwGeom.makePointD(x, y) # wrt raft center
+            pos = afwGeom.makePointD(x+ps/2., y+ps/2.) # center of pixel wrt raft center
+            posll = afwGeom.makePointD(x, y) # llc of pixel wrt raft center
             
             self.assertEqual(camera.getPixelFromPosition(pos), pix)
-            self.assertEqual(camera.getPositionFromPixel(pix), pos)
+            self.assertEqual(camera.getPositionFromPixel(pix), posll)
+        # Check that we can find an Amp in the bowels of the camera
+        ccdName = "C:0,0"
+        amp = cameraGeomUtils.findAmp(camera, cameraGeom.Id(ccdName), 1, 2)
+        self.assertEqual(amp.getId().getName(), "ID6")
+        self.assertEqual(amp.getParent().getId().getName(), ccdName)
 
     def testDefectBase(self):
         """Test DefectBases"""
@@ -398,6 +413,26 @@ class CameraGeomTestCase(unittest.TestCase):
                         displayUtils.drawBBox(d.getBBox(), ctype=ds9.YELLOW, borderWidth=1.0)
 
                 ds9.incrDefaultFrame()
+
+    def testParent(self):
+        """Test that we can find our parent"""
+
+        cameraInfo = {"ampSerial" : CameraGeomTestCase.ampSerial}
+        camera = cameraGeomUtils.makeCamera(self.geomPolicy, cameraInfo=cameraInfo)
+
+        for rx, ry, cx, cy, serial in [(0, 0,     0,   0,   4),
+                                       (0,   0,   150, 250, 20),
+                                       (600, 300, 0,   0,   52),
+                                       (600, 300, 150, 250, 68),
+                                       ]:
+            raft = cameraGeom.cast_Raft(camera.findDetector(afwGeom.makePointI(rx, ry)))
+            ccd = cameraGeom.cast_Ccd(raft.findDetector(afwGeom.makePointI(cx, cy)))
+
+            amp = ccd[0]
+            self.assertEqual(ccd.getId(),    amp.getParent().getId())
+            self.assertEqual(raft.getId(),   ccd.getParent().getId())
+            self.assertEqual(camera.getId(), ccd.getParent().getParent().getId())
+            self.assertEqual(None,           ccd.getParent().getParent().getParent())        
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

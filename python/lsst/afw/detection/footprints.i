@@ -8,6 +8,8 @@
 SWIG_SHARED_PTR(Peak,      lsst::afw::detection::Peak);
 SWIG_SHARED_PTR(Footprint, lsst::afw::detection::Footprint);
 SWIG_SHARED_PTR(Span,      lsst::afw::detection::Span);
+SWIG_SHARED_PTR(FootprintSetU, lsst::afw::detection::FootprintSet<boost::uint16_t, lsst::afw::image::MaskPixel>);
+SWIG_SHARED_PTR(FootprintSetI, lsst::afw::detection::FootprintSet<int, lsst::afw::image::MaskPixel>);
 SWIG_SHARED_PTR(FootprintSetF, lsst::afw::detection::FootprintSet<float, lsst::afw::image::MaskPixel>);
 SWIG_SHARED_PTR(FootprintSetD, lsst::afw::detection::FootprintSet<double, lsst::afw::image::MaskPixel>);
 
@@ -36,6 +38,8 @@ SWIG_SHARED_PTR(FootprintSetD, lsst::afw::detection::FootprintSet<double, lsst::
 %footprintOperations(F, float);
 %template(FootprintFunctorMaskU) lsst::afw::detection::FootprintFunctor<lsst::afw::image::Mask<boost::uint16_t> >;
 
+%FootprintSet(U, boost::uint16_t);
+%FootprintSet(I, int);
 %FootprintSet(D, double);
 %FootprintSet(F, float);
 

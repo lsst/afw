@@ -16,18 +16,19 @@
 #include <vector>
 #include <utility>
 
-#include <boost/cstdint.hpp> 
-#include <boost/format.hpp> 
-#include <boost/regex.hpp>
+#include "boost/cstdint.hpp" 
+#include "boost/regex.hpp"
 
 #include "lsst/pex/logging/Trace.h" 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image.h"
+#include "lsst/afw/geom.h"
 #include "lsst/afw/math.h"
 
 namespace pexExcept = lsst::pex::exceptions;
 namespace pexLog = lsst::pex::logging;
 namespace afwImage = lsst::afw::image;
+namespace afwGeom = lsst::afw::geom;
 namespace afwMath = lsst::afw::math;
 
 afwMath::Kernel::Ptr afwMath::LanczosWarpingKernel::clone() const {
@@ -120,7 +121,7 @@ std::string afwMath::NearestWarpingKernel::NearestFunction1::toString(std::strin
 boost::shared_ptr<afwMath::SeparableKernel> afwMath::makeWarpingKernel(std::string name) {
     typedef boost::shared_ptr<afwMath::SeparableKernel> KernelPtr;
     boost::cmatch matches;
-    const boost::regex LanczosRE("lanczos(\\d+)");
+    static const boost::regex LanczosRE("lanczos(\\d+)");
     if (name == "bilinear") {
         return KernelPtr(new BilinearWarpingKernel());
     } else if (boost::regex_match(name.c_str(), matches, LanczosRE)) {
@@ -152,7 +153,8 @@ int afwMath::warpExposure(
     if (!srcExposure.hasWcs()) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, "srcExposure has no Wcs");
     }
-    return warpImage(destExposure.getMaskedImage(), *destExposure.getWcs(),
+    typename DestExposureT::MaskedImageT mi = destExposure.getMaskedImage();
+    return warpImage(mi, *destExposure.getWcs(),
         srcExposure.getMaskedImage(), *srcExposure.getWcs(), warpingKernel);
 }
 
@@ -253,64 +255,65 @@ int afwMath::warpImage(
     
     // compute source position X,Y corresponding to row -1 of the destination image;
     // this is used for computing relative pixel scale
-    std::vector<afwImage::PointD> prevRowSrcPosXY(destWidth+1);
+    std::vector<afwGeom::Point2D> prevRowSrcPosXY(destWidth+1);
     for (int destIndX = 0; destIndX < destWidth; ++destIndX) {
-        afwImage::PointD destPosXY(
-            afwImage::indexToPosition(destIndX),
-            afwImage::indexToPosition(-1));
-        afwImage::PointD srcPosXY = srcWcs.raDecToXY(destWcs.xyToRaDec(destPosXY));
+        afwGeom::Point2D destPosXY = afwGeom::makePointD(destImage.indexToPosition(destIndX, afwImage::X),
+                                                         destImage.indexToPosition(-1, afwImage::Y));
+        afw::geom::Point2D srcPosXY = srcWcs.skyToPixel(destWcs.pixelToSky(destPosXY));
         prevRowSrcPosXY[destIndX] = srcPosXY;
     }
     for (int destIndY = 0; destIndY < destHeight; ++destIndY) {
-        afwImage::PointD destPosXY(
-            afwImage::indexToPosition(-1),
-            afwImage::indexToPosition(destIndY));
-        afwImage::PointD prevSrcPosXY = srcWcs.raDecToXY(destWcs.xyToRaDec(destPosXY));
-        afwImage::PointD srcPosXY;
+        afwGeom::Point2D destPosXY = afwGeom::makePointD(destImage.indexToPosition(-1, afwImage::X),
+                                                         destImage.indexToPosition(destIndY, afwImage::Y));
+        afw::geom::Point2D prevSrcPosXY = srcWcs.skyToPixel(destWcs.pixelToSky(destPosXY));
+        afw::geom::Point2D srcPosXY;
         typename DestImageT::x_iterator destXIter = destImage.row_begin(destIndY);
         for (int destIndX = 0; destIndX < destWidth; ++destIndX, ++destXIter) {
             // compute sky position associated with this pixel of remapped MaskedImage
-            destPosXY[0] = afwImage::indexToPosition(destIndX);
+            destPosXY[0] = destImage.indexToPosition(destIndX, afwImage::X);
 
             // Compute associated pixel position on source MaskedImage
-            srcPosXY = srcWcs.raDecToXY(destWcs.xyToRaDec(destPosXY));
+            srcPosXY = srcWcs.skyToPixel(destWcs.pixelToSky(destPosXY));
 
-            // Compute associated source pixel index and break it into integer and fractional
-            // parts; the latter is used to compute the remapping kernel.
-            // To convolve at source pixel (x, y) point source accessor to (x - kernelCtrX, y - kernelCtrY)
-            // because the accessor must point to kernel pixel (0, 0), not the center of the kernel.
-            std::pair<double, double> srcFracInd;
-            int srcIndX = afwImage::positionToIndex(srcFracInd.first,  srcPosXY[0]) - kernelCtrX;
-            int srcIndY = afwImage::positionToIndex(srcFracInd.second, srcPosXY[1]) - kernelCtrY;
-            if (srcFracInd.first < 0) {
-                ++srcFracInd.first;
-                --srcIndX;
+            // Compute associated source pixel index as integer and nonnegative fractional parts;
+            // the latter is used to compute the remapping kernel.
+            std::pair<int, double> srcIndFracX = srcImage.positionToIndex(srcPosXY[0], afwImage::X);
+            std::pair<int, double> srcIndFracY = srcImage.positionToIndex(srcPosXY[1], afwImage::Y);
+            if (srcIndFracX.second < 0) {
+                ++srcIndFracX.second;
+                --srcIndFracX.first;
             }
-            if (srcFracInd.second < 0) {
-                ++srcFracInd.second;
-                --srcIndY;
+            if (srcIndFracY.second < 0) {
+                ++srcIndFracY.second;
+                --srcIndFracY.first;
             }
+
+            // Offset source pixel index from kernel center to kernel corner (0, 0)
+            // so we can convolveAtAPoint the pixels that overlap between source and kernel
+            srcIndFracX.first -= kernelCtrX;
+            srcIndFracY.first -= kernelCtrY;
           
             // If location is too near the edge of the source, or off the source, mark the dest as edge
-            if ((srcIndX < 0) || (srcIndX + kernelWidth > srcWidth) 
-                || (srcIndY < 0) || (srcIndY + kernelHeight > srcHeight)) {
+            if ((srcIndFracX.first < 0) || (srcIndFracX.first + kernelWidth > srcWidth) 
+                || (srcIndFracY.first < 0) || (srcIndFracY.first + kernelHeight > srcHeight)) {
                 // skip this pixel
                 *destXIter = edgePixel;
             } else {
                 ++numGoodPixels;
                     
                 // Compute warped pixel
+                std::pair<double, double> srcFracInd(srcIndFracX.second, srcIndFracY.second);
                 warpingKernel.setKernelParameters(srcFracInd);
                 double kSum = warpingKernel.computeVectors(kernelXList, kernelYList, false);
 
-                typename SrcImageT::const_xy_locator srcLoc = srcImage.xy_at(srcIndX, srcIndY);
+                typename SrcImageT::const_xy_locator srcLoc = srcImage.xy_at(srcIndFracX.first, srcIndFracY.first);
                 *destXIter = afwMath::convolveAtAPoint<DestImageT, SrcImageT>(
                     srcLoc, kernelXList, kernelYList);
     
                 // Correct intensity due to relative pixel spatial scale and kernel sum.
                 // The area computation is for a parallellogram.
-                afwImage::PointD dSrcA = srcPosXY - prevSrcPosXY;
-                afwImage::PointD dSrcB = srcPosXY - prevRowSrcPosXY[destIndX];
+                afwGeom::Point2D dSrcA = srcPosXY - afwGeom::Extent<double>(prevSrcPosXY);
+                afwGeom::Point2D dSrcB = srcPosXY - afwGeom::Extent<double>(prevRowSrcPosXY[destIndX]);
                 double multFac = std::abs((dSrcA.getX() * dSrcB.getY())
                     - (dSrcA.getY() * dSrcB.getX())) / kSum;
                 *destXIter *= multFac;
@@ -340,7 +343,7 @@ int afwMath::warpImage(
 #define IMAGE(PIXTYPE) afwImage::Image<PIXTYPE>
 #define NL /* */
 
-#define WarpFunctionsByType(DESTIMAGEPIXELT, SRCIMAGEPIXELT) \
+#define INSTANTIATE(DESTIMAGEPIXELT, SRCIMAGEPIXELT) \
     template int afwMath::warpImage( \
         IMAGE(DESTIMAGEPIXELT) &destImage, \
         afwImage::Wcs const &destWcs, \
@@ -358,10 +361,12 @@ int afwMath::warpImage(
         EXPOSURE(SRCIMAGEPIXELT) const &srcExposure, \
         SeparableKernel &warpingKernel);
 
-WarpFunctionsByType(float, boost::uint16_t)
-WarpFunctionsByType(double, boost::uint16_t)
-WarpFunctionsByType(float, int)
-WarpFunctionsByType(double, int)
-WarpFunctionsByType(float, float)
-WarpFunctionsByType(double, float)
-WarpFunctionsByType(double, double)
+INSTANTIATE(double, double)
+INSTANTIATE(double, float)
+INSTANTIATE(double, int)
+INSTANTIATE(double, boost::uint16_t)
+INSTANTIATE(float, float)
+INSTANTIATE(float, int)
+INSTANTIATE(float, boost::uint16_t)
+INSTANTIATE(int, int)
+INSTANTIATE(boost::uint16_t, boost::uint16_t)

@@ -12,6 +12,9 @@
 
 using lsst::daf::base::PropertySet;
 
+void doTest(lsst::afw::image::Wcs::Ptr wcsPtr);
+
+
 int main() {
     typedef float Pixel;
 
@@ -30,20 +33,17 @@ int main() {
         PropertySet::Ptr metadata(new PropertySet);
         int const hdu = 0;
         lsst::afw::image::MaskedImage<Pixel, lsst::afw::image::MaskPixel> mImage(inFilename, hdu, metadata);
-        lsst::afw::image::Wcs wcs(metadata);
         
-        std::cout << "making a copy of a wcs" << std::endl;
-        { // use copy constructor and deallocate the copy
-            lsst::afw::image::Wcs wcsCopy(wcs);
-            lsst::afw::image::Wcs wcsCopy2(wcsCopy);
-        }
-        std::cout << "deallocated the copy; assigning a wcs" << std::endl;
-        { // use assignment operator and deallocate the assigned copy
-            lsst::afw::image::Wcs wcsAssign, wcsAssign2;
-            wcsAssign = wcs;
-            wcsAssign2 = wcsAssign;
-        }
-        std::cout << "deallocated the assigned copy" << std::endl;
+        //Test the TanWcs class
+        lsst::afw::image::Wcs::Ptr  wcsPtr = lsst::afw::image::makeWcs(metadata);
+        doTest(wcsPtr);
+        
+        //Change the CTYPES so makeWcs creates an object of the base class
+        metadata->set("CTYPE1", "RA---SIN");
+        metadata->set("CTYPE3", "DEC--SIN");
+        wcsPtr = lsst::afw::image::makeWcs(metadata);
+        doTest(wcsPtr);
+        
     } // close memory (de)allocation block
 
     // check for memory leaks
@@ -53,4 +53,16 @@ int main() {
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;
+}
+
+
+
+void doTest(lsst::afw::image::Wcs::Ptr wcsPtr) {
+
+    std::cout << "making a copy of a wcs" << std::endl;
+    { // use copy constructor and deallocate the copy
+        lsst::afw::image::Wcs::Ptr wcsCopy = wcsPtr->clone();
+        lsst::afw::image::Wcs::Ptr wcsCopy2 = wcsCopy->clone();
+    }
+    std::cout << "deallocated the copy; assigning a wcs" << std::endl;
 }

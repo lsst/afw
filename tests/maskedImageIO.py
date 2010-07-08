@@ -115,7 +115,8 @@ class MaskedImageTestCase(unittest.TestCase):
         x0, y0 = 1, 2
         im.setXY0(x0, y0)
 
-        for tmpFile, writeMef in [("foo", False), ("foo", True), ("foo.fits", False)]:
+        for tmpFile, writeMef in [("foo", False), ("foo", True),
+                                  ("foo.fits", False)]:
             im.writeFits(tmpFile, None, "w", writeMef)
 
             im2 = im.Factory(tmpFile)
@@ -131,12 +132,18 @@ class MaskedImageTestCase(unittest.TestCase):
             self.assertEqual(im2.getVariance().getX0(), x0)
             self.assertEqual(im2.getVariance().getY0(), y0)
 
-            if writeMef or re.search(r"\.fits$", tmpFile):
+            if writeMef or re.search(r"\.fits(\.gz)?$", tmpFile):
                 os.remove(tmpFile)
             else:
                 os.remove(afwImage.MaskedImageF.imageFileName(tmpFile))
                 os.remove(afwImage.MaskedImageF.maskFileName(tmpFile))
                 os.remove(afwImage.MaskedImageF.varianceFileName(tmpFile))
+
+        def tst():
+            """We can't write a compressed MEF as we write 3 HDUs"""
+            im.writeFits("foo.fits.gz", None, "w", writeMef)
+
+        utilsTests.assertRaisesLsstCpp(self, pexEx.IoErrorException, tst)
 
     def testReadWriteXY0(self):
         """Test that we read and write (X0, Y0) correctly"""
@@ -163,6 +170,21 @@ class MaskedImageTestCase(unittest.TestCase):
         os.remove(afwImage.MaskedImageF.imageFileName(tmpFile))
         os.remove(afwImage.MaskedImageF.maskFileName(tmpFile))
         os.remove(afwImage.MaskedImageF.varianceFileName(tmpFile))
+
+    def testWcs(self):
+        """Test round-tripping an empty Wcs"""
+        mi = afwImage.MaskedImageF(10, 20)
+        wcs = afwImage.Wcs()
+
+        exp = afwImage.makeExposure(mi, wcs)
+
+        tmpFile = "foo.fits"
+        exp.writeFits(tmpFile)
+
+        exp2 = type(exp)(tmpFile)
+        self.assertFalse(exp2.getWcs())
+
+        os.remove(tmpFile)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

@@ -75,7 +75,7 @@ class RandomImageTestCase(unittest.TestCase):
         self.image = afwImage.ImageF(1000, 1000)
 
     def tearDown(self):
-        pass
+        del self.image
 
     def testRandomUniformImage(self):
         afwMath.randomUniformImage(self.image, self.rand)
@@ -118,6 +118,10 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
+def run(shouldExit=False):
+    """Run the tests"""
+    utilsTests.run(suite(), shouldExit)
+
 if __name__ == "__main__":
-    utilsTests.run(suite())
+    run(True)
 

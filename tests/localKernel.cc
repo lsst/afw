@@ -14,6 +14,7 @@
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/FourierCutout.h"
 #include "lsst/afw/math/LocalKernel.h"
+#include "lsst/afw/math/FunctionLibrary.h"
 
 #include "lsst/pex/exceptions/Runtime.h"
 

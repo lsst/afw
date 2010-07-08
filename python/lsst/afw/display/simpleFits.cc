@@ -394,7 +394,12 @@ void writeBasicFits(int fd,                                      // file descrip
      */
     if (Wcs != NULL && *Wcs) {
         typedef std::vector<std::string> NameList;
-        lsst::daf::base::PropertySet::Ptr metadata = Wcs->getFitsMetadata();
+
+        image::Wcs::Ptr newWcs = Wcs->clone(); //Create a copy
+        newWcs->shiftReferencePixel(-data.getX0(), -data.getY0());
+        
+        lsst::daf::base::PropertySet::Ptr metadata = newWcs->getFitsMetadata();
+
         NameList paramNames = metadata->paramNames();
         
         for (NameList::const_iterator i = paramNames.begin(), end = paramNames.end(); i != end; ++i) {

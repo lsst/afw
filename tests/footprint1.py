@@ -3,10 +3,10 @@
 Tests for Footprints, and FootprintSets
 
 Run with:
-   Footprint_1.py
+   footprint1.py
 or
    python
-   >>> import Footprint_1; Footprint_1.run()
+   >>> import footprint1; footprint1.run()
 """
 
 
@@ -613,6 +613,12 @@ class NaNFootprintSetTestCase(unittest.TestCase):
         for i in range(len(objects)):
             self.assertEqual(objects[i], self.objects[i])
             
+    def testGrowEmpty(self):
+        """Check that growing an empty Footprint doesn't fail an assertion; #1186"""
+        fp = afwDetect.Footprint()
+        fp.setRegion(afwImage.BBox(afwImage.PointI(0, 0), 10, 10))
+        afwDetect.growFootprint(fp, 5)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():

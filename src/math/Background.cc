@@ -264,13 +264,10 @@ void math::Background::_checkSampling() {
     
 }
 
-
-
-
-
-/**
- * @brief Explicit instantiations
+/*
+ * Explicit instantiations
  *
+ * \cond
  */
 #define INSTANTIATE_BACKGROUND(TYPE)                                    \
     template math::Background::Background(image::Image<TYPE> const& img, \
@@ -281,3 +278,4 @@ INSTANTIATE_BACKGROUND(double)
 INSTANTIATE_BACKGROUND(float)
 INSTANTIATE_BACKGROUND(int)
 
+// \endcond

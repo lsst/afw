@@ -108,6 +108,9 @@ class StatisticsTestCase(unittest.TestCase):
         self.assertEqual(sd, 1/math.sqrt(4.0)*math.sqrt(n/(n - 1)))
         self.assertAlmostEqual(mean[1], sd/math.sqrt(image2.getWidth()*image2.getHeight()), 10)
 
+        meanSquare = afwMath.makeStatistics(image2, afwMath.MEANSQUARE).getValue()
+        self.assertEqual(meanSquare, 0.5*(image2.get(0, 0)**2 + image2.get(0, 1)**2))
+
     def testStatsStdevclip(self):
         """Test STDEVCLIP; cf. #611"""
         image2 = self.image.Factory(self.image, True)

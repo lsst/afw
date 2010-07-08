@@ -25,7 +25,7 @@
 
 #include "lsst/daf/base/Persistable.h"
 #include "lsst/daf/data/LsstBase.h"
-#include "lsst/afw/geom/Point.h"
+#include "lsst/afw/geom.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/Utils.h"
 #include "lsst/afw/math/Function.h"
@@ -190,16 +190,27 @@ class FourierLocalKernel;
         inline int getHeight() const {
             return _height;
         }
+        
+        /**
+         * @brief Return index of kernel's center
+         */
+        inline lsst::afw::geom::Point2I getCtr() const {
+            return lsst::afw::geom::Point2I::make(_ctrX, _ctrY);
+        }
 
         /**
-         * @brief Return index of the center column
+         * @brief Return x index of kernel's center
+         *
+         * @deprecated Use getCtr instead
          */
         inline int getCtrX() const {
             return _ctrX;
         }
 
         /**
-         * @brief Return index of the center row
+         * @brief Return y index of kernel's center
+         *
+         * @deprecated Use getCtr instead
          */
         inline int getCtrY() const {
             return _ctrY;
@@ -224,17 +235,33 @@ class FourierLocalKernel;
         std::vector<SpatialFunctionPtr> getSpatialFunctionList() const;
 
         virtual std::vector<double> getKernelParameters() const;
+        
+        lsst::afw::geom::BoxI growBBox(lsst::afw::geom::BoxI const &bbox) const;
+        
+        lsst::afw::geom::BoxI shrinkBBox(lsst::afw::geom::BoxI const &bbox) const;
 
         /**
-        * @brief Set the center index, x axis
-        */
+         * @brief Set index of kernel's center
+         */
+        inline void setCtr(lsst::afw::geom::Point2I ctr) {
+            _ctrX = ctr.getX();
+            _ctrY = ctr.getY();
+        }
+
+        /**
+         * @brief Set x index of kernel's center
+         *
+         * @deprecated Use setCtr instead
+         */
         inline void setCtrX(int ctrX) {
             _ctrX = ctrX;
         }
 
         /**
-        * @brief Set the center index, y axis
-        */
+         * @brief Set y index of kernel's center
+         *
+         * @deprecated Use setCtr instead
+         */
         inline void setCtrY(int ctrY) {
             _ctrY = ctrY;
         }
@@ -317,6 +344,10 @@ class FourierLocalKernel;
         int _ctrX;
         int _ctrY;
         unsigned int _nKernelParams;
+        
+        // prevent copying and assignment (to avoid problems from type slicing)
+        Kernel(const Kernel&);
+        Kernel& operator=(const Kernel&);
     };
 
     typedef std::vector<Kernel::Ptr> KernelList;
@@ -542,6 +573,11 @@ class FourierLocalKernel;
         std::vector<double> getKernelSumList() const;
 
         void checkKernelList(const KernelList &kernelList) const;
+        
+        /**
+         * Return true if all basis kernels are instances of DeltaFunctionKernel
+         */
+        bool isDeltaFunctionBasis() const { return _isDeltaFunctionBasis; };
 
         virtual std::string toString(std::string const& prefix="") const;
 
@@ -556,6 +592,7 @@ class FourierLocalKernel;
             ///< image of each basis kernel (a cache)
         std::vector<double> _kernelSumList; ///< sum of each basis kernel (a cache)
         mutable std::vector<double> _kernelParams;
+        bool _isDeltaFunctionBasis;
 
         friend class boost::serialization::access;
         template <class Archive>
@@ -565,6 +602,12 @@ class FourierLocalKernel;
                 ar & make_nvp("kimglist", _kernelImagePtrList);
                 ar & make_nvp("ksumlist", _kernelSumList);
                 ar & make_nvp("params", _kernelParams);
+                if (version > 0) {
+                    ar & make_nvp("deltaBasis", _isDeltaFunctionBasis);
+                }
+                else if (Archive::is_loading::value) {
+                    _isDeltaFunctionBasis = false;
+                }
             }
     };
 
@@ -691,5 +734,9 @@ inline void load_construct_data(
 }
 
 }}
+
+#ifndef SWIG
+BOOST_CLASS_VERSION(lsst::afw::math::LinearCombinationKernel, 1)
+#endif
 
 #endif // !defined(LSST_AFW_MATH_KERNEL_H)

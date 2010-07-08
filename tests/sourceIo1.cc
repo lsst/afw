@@ -57,41 +57,41 @@ static void initTestData(SourceSet & v, int sliceId = 0) {
     v.reserve(NUM_SOURCE_NULLABLE_FIELDS + 2);
     Source data;
     for (int i = 0; i != NUM_SOURCE_NULLABLE_FIELDS + 2; ++i) {
-        // make sure each field has a different value, and that IO for each nullable field is tested
-        // Note: Source ids are generated in ascending order
+        // make sure each field (other than angles) has a different value, and that IO for
+        // each nullable field is tested.  Note: Source ids are generated in ascending order
         int j = i*NUM_SOURCE_NULLABLE_FIELDS;
-        data.setSourceId(j + sliceId*(NUM_SOURCE_NULLABLE_FIELDS + 2)*64 + 1);
+        data.setSourceId(j + sliceId*(NUM_SOURCE_NULLABLE_FIELDS + 2)*66 + 1);
         data.setAmpExposureId(static_cast<int64_t>(j +  2));
         data.setFilterId(-1);
         data.setObjectId(static_cast<int64_t>(j +  4));
         data.setMovingObjectId(static_cast<int64_t>(j +  5));
         data.setProcHistoryId(-1);
-        data.setRa(static_cast<double>(j +  8));
-        data.setRaErrForDetection(static_cast<float>(j +  9));
-        data.setRaErrForWcs(static_cast<float>(j + 10));
-        data.setDec(static_cast<double>(j + 11));
-        data.setDecErrForDetection(static_cast<float>(j + 12));
-        data.setDecErrForWcs(static_cast<float>(j + 13));
+        data.setRa(0);
+        data.setRaErrForDetection(0);
+        data.setRaErrForWcs(0);
+        data.setDec(0);
+        data.setDecErrForDetection(0);
+        data.setDecErrForWcs(0);
         data.setXFlux(static_cast<double>(j + 14));
         data.setXFluxErr(static_cast<float>(j + 15));
         data.setYFlux(static_cast<double>(j + 16));
         data.setYFluxErr(static_cast<float>(j + 17));
-        data.setRaFlux(static_cast<double>(j + 18));
-        data.setRaFluxErr(static_cast<float>(j + 19));
-        data.setDecFlux(static_cast<double>(j + 20));
-        data.setDecFluxErr(static_cast<float>(j + 21));
+        data.setRaFlux(0);
+        data.setRaFluxErr(0);
+        data.setDecFlux(0);
+        data.setDecFluxErr(0);
         data.setXPeak(static_cast<double>(j + 22));
         data.setYPeak(static_cast<double>(j + 23));
-        data.setRaPeak(static_cast<double>(j + 24));
-        data.setDecPeak(static_cast<double>(j + 25));
+        data.setRaPeak(0);
+        data.setDecPeak(0);
         data.setXAstrom(static_cast<double>(j + 26));
         data.setXAstromErr(static_cast<float>(j + 27));
         data.setYAstrom(static_cast<double>(j + 28));
         data.setYAstromErr(static_cast<float>(j + 29));        
-        data.setRaAstrom(static_cast<double>(j + 30));
-        data.setRaAstromErr(static_cast<float>(j + 31));
-        data.setDecAstrom(static_cast<double>(j + 32));
-        data.setDecAstromErr(static_cast<float>(j + 33));                
+        data.setRaAstrom(0);
+        data.setRaAstromErr(0);
+        data.setDecAstrom(0);
+        data.setDecAstromErr(0);                
         data.setTaiMidPoint(static_cast<double>(j + 34));
         data.setTaiRange(static_cast<double>(j + 35));
         data.setPsfFlux(static_cast<double>(j + 39));
@@ -113,6 +113,8 @@ static void initTestData(SourceSet & v, int sliceId = 0) {
         data.setChi2(static_cast<float>(j + 55));
         data.setSky(static_cast<float>(j + 56));
         data.setSkyErr(static_cast<float>(j + 57));
+        data.setRaObject(0);
+        data.setDecObject(0);
         data.setFlagForAssociation(1);
         data.setFlagForDetection(2);
         data.setFlagForWcs(3);
@@ -222,7 +224,7 @@ static void testDb(std::string const & storageType) {
 
     PropertySet::Ptr props = createDbTestProps(0, 1, "Source");
     Persistence::Ptr pers = Persistence::getPersistence(policy);
-    LogicalLocation loc("mysql://lsst10.ncsa.uiuc.edu:3306/test_source");
+    LogicalLocation loc("mysql://lsst10.ncsa.uiuc.edu:3306/test_source_pt1");
     
     // 1. Test on a single Source
     Source::Ptr ds(new Source());
@@ -305,7 +307,7 @@ static void testDb2(std::string const & storageType) {
     Policy::Ptr nested(policy->getPolicy(policyRoot));
 
     Persistence::Ptr pers = Persistence::getPersistence(policy);
-    LogicalLocation loc("mysql://lsst10.ncsa.uiuc.edu:3306/test_source");
+    LogicalLocation loc("mysql://lsst10.ncsa.uiuc.edu:3306/test_source_pt1");
 
     SourceSet all;
     int const numSlices = 3;

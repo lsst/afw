@@ -137,20 +137,6 @@ class dgPsfTestCase(unittest.TestCase):
 
                 ds9.dot("%.2f, %.2f" % (trueCenters[i][0], trueCenters[i][1]),
                         bbox.getX0() + xcen, bbox.getY0() + 2)
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-class KernelPsfTestCase(unittest.TestCase):
-    """A test case for KernelPsf"""
-
-    def testGetPcaKernel(self):
-        """Convert our cellSet to a LinearCombinationKernel"""
-
-        kernel = afwMath.LinearCombinationKernel()
-        psf = roundTripPsf(5, afwDetect.createPsf("Kernel", kernel)) # Hurrah!
-        #
-        self.assertTrue(afwMath.cast_AnalyticKernel(psf.getKernel()) is None)
-        self.assertTrue(afwMath.cast_LinearCombinationKernel(psf.getKernel()) is not None)
             
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -160,10 +146,6 @@ def suite():
 
     suites = []
     suites += unittest.makeSuite(dgPsfTestCase)
-    if False:
-        suites += unittest.makeSuite(KernelPsfTestCase)
-    else:
-        print >> sys.stderr, "(psfIo.py) skipping tests for KernelPsf"
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
