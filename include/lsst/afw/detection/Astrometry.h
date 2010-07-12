@@ -34,7 +34,7 @@ public:
     }
     /// Return the error in the x-centroid
     float getXErr() const {
-        return Measurement<Astrometry>::get<Astrometry::X_ERR, float>();
+        return Measurement<Astrometry>::get<Astrometry::X_ERR, double>();
     }
     /// Return the y-centroid
     double getY() const {
@@ -42,7 +42,7 @@ public:
     }
     /// Return the error in the y-centroid
     float getYErr() const {
-        return Measurement<Astrometry>::get<Astrometry::Y_ERR, float>();
+        return Measurement<Astrometry>::get<Astrometry::Y_ERR, double>();
     }
 
     virtual ::std::ostream &output(std::ostream &os) const {
