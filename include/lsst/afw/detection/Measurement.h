@@ -4,7 +4,9 @@
 #include <map>
 #include "boost/make_shared.hpp"
 
+#include "lsst/base.h"
 #include "lsst/pex/exceptions/Runtime.h"
+#include "lsst/pex/policy/Policy.h"
 #include "lsst/afw/detection/Schema.h"
 
 namespace lsst { namespace afw { namespace detection {
@@ -296,11 +298,27 @@ class MeasureQuantity {
 public:
     typedef Measurement<T> Values;
     typedef boost::shared_ptr<T> (*makeMeasureQuantityFunc)(typename ImageT::ConstPtr, PeakT const&);
+    typedef bool (*configureMeasureQuantityFunc)(lsst::pex::policy::Policy const&);
+    typedef std::pair<makeMeasureQuantityFunc, configureMeasureQuantityFunc> measureQuantityFuncs;
 private:
-    typedef std::map<std::string, makeMeasureQuantityFunc> AlgorithmList;
+    typedef std::map<std::string, measureQuantityFuncs> AlgorithmList;
 public:
 
-    MeasureQuantity(typename ImageT::ConstPtr im) : _im(im), _algorithms() {}
+    MeasureQuantity(typename ImageT::ConstPtr im,
+                    CONST_PTR(lsst::pex::policy::Policy) policy=CONST_PTR(lsst::pex::policy::Policy)())
+        : _im(im), _algorithms()
+    {
+        if (policy) {
+            lsst::pex::policy::Policy::StringArray names = policy->policyNames(false);
+
+            for (lsst::pex::policy::Policy::StringArray::iterator ptr = names.begin();
+                 ptr != names.end(); ++ptr) {
+                addAlgorithm(*ptr);
+            }
+
+            configure(*policy);
+        }
+    }
     virtual ~MeasureQuantity() {}
 
     /// Include the algorithm called name in the list of measurement algorithms to use
@@ -318,15 +336,30 @@ public:
         Values values;
 
         for (typename AlgorithmList::iterator ptr = _algorithms.begin(); ptr != _algorithms.end(); ++ptr) {
-            boost::shared_ptr<T> val = ptr->second(_im, peak);
+            boost::shared_ptr<T> val = ptr->second.first(_im, peak);
             val->getSchema()->setComponent(ptr->first); // name this type of measurement (e.g. psf)
             values.add(val);
         }
 
         return values;
     }
+    /// Actually measure im using all requested algorithms, returning the result
+    bool configure(lsst::pex::policy::Policy const& policy ///< The Policy to configure algorithms
+                  ) {
+        bool value = true;
 
-    static bool declare(std::string const& name, makeMeasureQuantityFunc func);
+        for (typename AlgorithmList::iterator ptr = _algorithms.begin(); ptr != _algorithms.end(); ++ptr) {
+            if (policy.exists(ptr->first)) {
+                lsst::pex::policy::Policy::ConstPtr subPol = policy.getPolicy(ptr->first);
+                value = ptr->second.second(*subPol) && value; // don't short-circuit the call
+            }
+        }
+
+        return value;
+    }
+
+    static bool declare(std::string const& name, makeMeasureQuantityFunc makeFunc,
+                        configureMeasureQuantityFunc configFunc=_iefbr15);
 private:
     //
     // The data that we wish to measure
@@ -341,14 +374,19 @@ private:
     //
     // _registryWorker must be inline as it contains a critical static variable, _registry
     //    
-    typedef std::map<std::string, makeMeasureQuantityFunc> AlgorithmRegistry;
+    typedef std::map<std::string, measureQuantityFuncs> AlgorithmRegistry;
 
-    static inline makeMeasureQuantityFunc _registryWorker(std::string const& name,
-                                                          makeMeasureQuantityFunc func);
-    static makeMeasureQuantityFunc _lookupAlgorithm(std::string const& name);
+    static inline measureQuantityFuncs _registryWorker(std::string const& name,
+                                                       makeMeasureQuantityFunc makeFunc,
+                                                       configureMeasureQuantityFunc configFunc
+                                                      );
+    static measureQuantityFuncs _lookupAlgorithm(std::string const& name);
     /// The unknown algorithm; used to allow _lookupAlgorithm use _registryWorker
     static boost::shared_ptr<T> _iefbr14(typename ImageT::ConstPtr, PeakT const &) {
         return boost::shared_ptr<T>();
+    }
+    static bool _iefbr15(lsst::pex::policy::Policy const &) {
+        return true;
     }
     //
     // Do the real work of measuring things
@@ -364,11 +402,12 @@ private:
  * Support the algorithm registry
  */
 template<typename T, typename ImageT, typename PeakT>
-typename MeasureQuantity<T, ImageT, PeakT>::makeMeasureQuantityFunc
+typename MeasureQuantity<T, ImageT, PeakT>::measureQuantityFuncs
 MeasureQuantity<T, ImageT, PeakT>::_registryWorker(
         std::string const& name,
-        typename MeasureQuantity<T, ImageT, PeakT>::makeMeasureQuantityFunc func
-                                           )
+        typename MeasureQuantity<T, ImageT, PeakT>::makeMeasureQuantityFunc makeFunc,
+        typename MeasureQuantity<T, ImageT, PeakT>::configureMeasureQuantityFunc configureFunc
+                                                  )
 {
     // N.b. This is a pointer rather than an object as this helps the intel compiler generate a
     // single copy of the _registry across multiple dynamically loaded libraries.  The intel
@@ -379,7 +418,7 @@ MeasureQuantity<T, ImageT, PeakT>::_registryWorker(
         _registry = new typename MeasureQuantity<T, ImageT, PeakT>::AlgorithmRegistry;
     }
 
-    if (func == _iefbr14) {     // lookup func
+    if (makeFunc == _iefbr14) {     // lookup functions
         typename MeasureQuantity<T, ImageT, PeakT>::AlgorithmRegistry::const_iterator ptr =
             _registry->find(name);
         
@@ -387,12 +426,15 @@ MeasureQuantity<T, ImageT, PeakT>::_registryWorker(
             throw std::runtime_error("Unknown algorithm " + name);
         }
         
-        func = ptr->second;
-    } else {                            // register func
-        (*_registry)[name] = func;
-    }
+        return ptr->second;
+    } else {                            // register functions
+        typename MeasureQuantity<T, ImageT, PeakT>::measureQuantityFuncs funcs = 
+            std::make_pair(makeFunc, configureFunc);            
 
-    return func;
+        (*_registry)[name] = funcs;
+
+        return funcs;
+    }
 }
 
 /**
@@ -401,10 +443,11 @@ MeasureQuantity<T, ImageT, PeakT>::_registryWorker(
 template<typename T, typename ImageT, typename PeakT>
 bool MeasureQuantity<T, ImageT, PeakT>::declare(
         std::string const& name,
-        typename MeasureQuantity<T, ImageT, PeakT>::makeMeasureQuantityFunc func
-                                        )
+        typename MeasureQuantity<T, ImageT, PeakT>::makeMeasureQuantityFunc makeFunc,
+        typename MeasureQuantity<T, ImageT, PeakT>::configureMeasureQuantityFunc configFunc
+                                               )
 {
-    _registryWorker(name, func);
+    _registryWorker(name, makeFunc, configFunc);
 
     return true;
 }
@@ -413,10 +456,10 @@ bool MeasureQuantity<T, ImageT, PeakT>::declare(
  * Return the factory function for a named algorithm
  */
 template<typename T, typename ImageT, typename PeakT>
-typename MeasureQuantity<T, ImageT, PeakT>::makeMeasureQuantityFunc
+typename MeasureQuantity<T, ImageT, PeakT>::measureQuantityFuncs
 MeasureQuantity<T, ImageT, PeakT>::_lookupAlgorithm(std::string const& name)
 {
-    return _registryWorker(name, _iefbr14);
+    return _registryWorker(name, _iefbr14, _iefbr15);
 }
 
 }}}
