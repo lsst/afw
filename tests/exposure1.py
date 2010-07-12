@@ -13,6 +13,7 @@ import unittest
 
 import eups
 import lsst.daf.base as dafBase
+import lsst.afw.detection as afwDetection
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.afw.coord as afwCoord
@@ -22,7 +23,10 @@ import lsst.pex.exceptions as pexExcept
 import lsst.pex.logging as pexLog
 import lsst.pex.policy as pexPolicy
 
-VERBOSITY = 0 # increase to see trace
+try:
+    type(VERBOSITY)
+except:
+    VERBOSITY = 0                       # increase to see trace
 
 pexLog.Debug("lsst.afw.image", VERBOSITY)
 
@@ -178,7 +182,17 @@ class ExposureTestCase(unittest.TestCase):
         dt = 10
         calib.setExptime(dt)
         self.assertEqual(exposure.getCalib().getExptime(), dt)
-               
+        #
+        # Psfs next
+        #
+        w, h = 11, 11
+        self.assertFalse(exposure.hasPsf())
+        exposure.setPsf(afwDetection.createPsf("DoubleGaussian", w, h, 3))
+        self.assertTrue(exposure.hasPsf())
+        self.assertEqual(exposure.getPsf().getKernel().getDimensions(), (w, h))
+
+        exposure.setPsf(afwDetection.createPsf("DoubleGaussian", w, h, 1)) # we can reset the Psf
+         
         # Test that we can set the MaskedImage and WCS of an Exposure
         # that already has both
         self.exposureMiWcs.setMaskedImage(maskedImage)

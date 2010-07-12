@@ -25,6 +25,7 @@
 #include "boost/cstdint.hpp"
 #include "boost/shared_ptr.hpp"
 
+#include "lsst/base.h"
 #include "lsst/daf/base/Persistable.h"
 #include "lsst/daf/data/LsstBase.h"
 #include "lsst/afw/image/MaskedImage.h"
@@ -35,6 +36,10 @@
 
 namespace lsst {
 namespace afw {
+    namespace detection {
+        class Psf;
+    }
+
     namespace formatters {
         template<typename ImageT, typename MaskT, typename VarianceT> class ExposureFormatter;
     }
@@ -72,6 +77,7 @@ namespace image {
             _filter(rhs.getFilter()),
             _calib(new lsst::afw::image::Calib(*rhs.getCalib()))
         {
+            _clonePsf(rhs.getPsf());    // a separate function so it can go in Exposure.cc
             setMetadata(rhs.getMetadata()->deepCopy());
         }
         
@@ -149,10 +155,19 @@ namespace image {
         /// Return the Exposure's Calib object
         boost::shared_ptr<Calib> getCalib() { return _calib; }
         boost::shared_ptr<const Calib> getCalib() const { return _calib; }
+        /// Set the Exposure's Psf
+        void setPsf(CONST_PTR(lsst::afw::detection::Psf) psf) { _clonePsf(psf); }
+
+        /// Return the Exposure's Psf object
+        PTR(lsst::afw::detection::Psf) getPsf() { return _psf; }
+        /// Return the Exposure's Psf object
+        CONST_PTR(lsst::afw::detection::Psf) getPsf() const { return _psf; }
         
-        // Has Member (inline)
-        bool hasWcs() const { return (*_wcs ? true : false); 
-        }
+        /// Does this Exposure have a Psf?
+        bool hasPsf() const { return static_cast<bool>(_psf); }
+
+        /// Does this Exposure have a Wcs?
+        bool hasWcs() const { return *_wcs ? true : false; }
         
         // FITS
         void writeFits(std::string const &expOutFile) const;
@@ -164,7 +179,10 @@ namespace image {
         Wcs::Ptr _wcs;
         cameraGeom::Detector::Ptr _detector;
         Filter _filter;
-        boost::shared_ptr<Calib> _calib;
+        PTR(Calib) _calib;
+        PTR(lsst::afw::detection::Psf) _psf;
+
+        void _clonePsf(CONST_PTR(lsst::afw::detection::Psf) psf);
     };
 
 /**

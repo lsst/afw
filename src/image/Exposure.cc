@@ -29,9 +29,11 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/image/Exposure.h"
+#include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/image/Calib.h"
 
 namespace afwImage = lsst::afw::image;
+namespace afwDetection = lsst::afw::detection;
 
 /** @brief Exposure Class Implementation for LSST: a templated framework class
   * for creating an Exposure from a MaskedImage and a Wcs.
@@ -70,15 +72,16 @@ namespace afwImage = lsst::afw::image;
   */          
 template<typename ImageT, typename MaskT, typename VarianceT> 
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(int cols, ///< number of columns (default: 0)
-                                                               int rows, ///< number of rows (default: 0)
-                                                               afwImage::Wcs const& wcs ///< the Wcs
-                                                              ) :
+                                                       int rows, ///< number of rows (default: 0)
+                                                       afwImage::Wcs const& wcs ///< the Wcs
+                                                      ) :
     lsst::daf::data::LsstBase(typeid(this)),
     _maskedImage(cols, rows),
     _wcs(wcs.clone()),
     _detector(),
     _filter(),
-    _calib(new afwImage::Calib())
+    _calib(new afwImage::Calib()),
+    _psf(PTR(afwDetection::Psf)())
 {
     setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet()));
 }
@@ -95,7 +98,8 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     _wcs(wcs.clone()),
     _detector(),
     _filter(),
-    _calib(new afwImage::Calib())    
+    _calib(new afwImage::Calib()),
+    _psf(PTR(afwDetection::Psf)())
 {
     setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertySet()));
 }
@@ -115,12 +119,13 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(Exposure const &src, ///<
     _wcs(src._wcs->clone()),
     _detector(src._detector),
     _filter(src._filter),
-    _calib(new lsst::afw::image::Calib(*src.getCalib()))    
+    _calib(new lsst::afw::image::Calib(*src.getCalib()))
 {
 /*
   * N.b. You'll need to update the generalised copy constructor in Exposure.h when you add new data members
   * --- this note is here as you'll be making the same changes here!
   */
+    _clonePsf(src.getPsf());
     setMetadata(deep ? src.getMetadata()->deepCopy() : src.getMetadata());
 }
 
@@ -240,6 +245,16 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 template<typename ImageT, typename MaskT, typename VarianceT> 
 afwImage::Exposure<ImageT, MaskT, VarianceT>::~Exposure(){}
 
+/**
+ * Clone a Psf; defined here so that we don't have to expose the insides of Psf in Exposure.h
+ */
+template<typename ImageT, typename MaskT, typename VarianceT> 
+void afwImage::Exposure<ImageT, MaskT, VarianceT>::_clonePsf(
+        CONST_PTR(afwDetection::Psf) psf      // the Psf to clone
+                                                            )
+{
+    _psf = psf ? psf->clone() : PTR(afwDetection::Psf)();
+}
 
 /** @brief Get the Wcs of an Exposure.
   *

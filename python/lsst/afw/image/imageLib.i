@@ -52,6 +52,8 @@ namespace boost {
 %include "lsst/p_lsstSwig.i"
 %include "lsst/daf/base/persistenceMacros.i"
 
+%include "lsst/base.h"
+
 %pythoncode %{
 import lsst.utils
 
@@ -274,6 +276,11 @@ SWIG_SHARED_PTR_DERIVED(Exposure##TYPE, lsst::daf::data::LsstBase, lsst::afw::im
 %exposurePtr(I, int);
 %exposurePtr(F, float);
 %exposurePtr(D, double);
+
+namespace lsst { namespace afw { namespace detection {
+    class Psf;
+}}}
+SWIG_SHARED_PTR(PsfPtr, lsst::afw::detection::Psf);
 
 %include "lsst/afw/image/Exposure.h"
 
