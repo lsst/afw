@@ -47,6 +47,11 @@ public:
     Psf() : lsst::daf::data::LsstBase(typeid(this)) {}
     virtual ~Psf() {}
 
+    virtual Ptr clone() const { return boost::make_shared<Psf>(*this); }
+
+    /// Return true iff Psf is valid
+    operator bool() const { return getKernel().get() != NULL; }
+
     Image::Ptr computeImage(lsst::afw::geom::Extent2I const& size, bool normalizePeak=true) const;
 
     Image::Ptr computeImage(lsst::afw::geom::Point2D const& ccdXY, bool normalizePeak) const;
@@ -112,12 +117,24 @@ protected:
                                       lsst::afw::geom::Extent2I const& size,
                                       bool normalizePeak) const;
 
-    virtual lsst::afw::math::Kernel::Ptr doGetKernel(lsst::afw::image::Color const&) = 0;
-    virtual lsst::afw::math::Kernel::ConstPtr doGetKernel(lsst::afw::image::Color const&) const = 0;
+    virtual lsst::afw::math::Kernel::Ptr doGetKernel(lsst::afw::image::Color const&) {
+        return lsst::afw::math::Kernel::Ptr();
+    }
+        
+    virtual lsst::afw::math::Kernel::ConstPtr doGetKernel(lsst::afw::image::Color const&) const {
+        return lsst::afw::math::Kernel::Ptr();
+    }
+        
     virtual lsst::afw::math::Kernel::Ptr doGetLocalKernel(lsst::afw::geom::Point2D const&,
-                                                          lsst::afw::image::Color const&) = 0;
+                                                          lsst::afw::image::Color const&) {
+        return lsst::afw::math::Kernel::Ptr();
+    }
+        
     virtual lsst::afw::math::Kernel::ConstPtr doGetLocalKernel(lsst::afw::geom::Point2D const&,
-                                                               lsst::afw::image::Color const&) const = 0;
+                                                               lsst::afw::image::Color const&) const {
+        return lsst::afw::math::Kernel::Ptr();
+    }
+        
 private:
     LSST_PERSIST_FORMATTER(PsfFormatter)
     /*
@@ -176,7 +193,10 @@ protected:
                                                                lsst::afw::image::Color const&) const {
         return lsst::afw::math::Kernel::ConstPtr(_kernel);
     }
-    
+
+    /// Clone a KernelPsf
+    virtual Ptr clone() const { return boost::make_shared<KernelPsf>(*this); }
+
 protected:
     void setKernel(lsst::afw::math::Kernel::Ptr kernel) { _kernel = kernel; }
     

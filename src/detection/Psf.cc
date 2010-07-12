@@ -96,6 +96,8 @@ Psf::Image::Ptr Psf::computeImage(
  * Specifically, fractional positions in [0, 0.5] will appear above/to the right of the center,
  * and fractional positions in (0.5, 1] will appear below/to the left (0.9999 is almost back at middle)
  *
+ * The image's (X0, Y0) will be set correctly to reflect this 
+ *
  * @note If a fractional position is specified, the calculated central pixel value may be less than 1.0
  */
 Psf::Image::Ptr Psf::doComputeImage(
@@ -120,11 +122,15 @@ Psf::Image::Ptr Psf::doComputeImage(
         double const centralPixelValue = (*im)(kernel->getCtrX(), kernel->getCtrY());
         *im /= centralPixelValue;
     }
+    // "ir" : (integer, residual)
+    std::pair<int, double> const ir_dx = lsst::afw::image::positionToIndex(ccdXY.getX(), true);
+    std::pair<int, double> const ir_dy = lsst::afw::image::positionToIndex(ccdXY.getY(), true);
     
-    double const dx = lsst::afw::image::positionToIndex(ccdXY.getX(), true).second; // frac. part of position
-    double const dy = lsst::afw::image::positionToIndex(ccdXY.getY(), true).second;
+    im = lsst::afw::math::offsetImage(*im, ir_dx.second, ir_dy.second, "lanczos5");
+    im->setXY0(ir_dx.first - kernel->getCtrX() + (ir_dx.second <= 0.5 ? 0 : 1),
+               ir_dy.first - kernel->getCtrY() + (ir_dy.second <= 0.5 ? 0 : 1));
     
-    return afwMath::offsetImage(*im, dx, dy, "lanczos5");
+    return im;
 }
 
 /************************************************************************************************************/
