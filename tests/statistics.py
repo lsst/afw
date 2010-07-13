@@ -347,6 +347,22 @@ class StatisticsTestCase(unittest.TestCase):
         self.assertNotEqual(stdev, stdev) # NaN does not equal itself
 
 
+
+    def testWeightedSum(self):
+        ctrl = afwMath.StatisticsControl()
+        mi = afwImage.MaskedImageF(10,10)
+        mi.getImage().set(1.0)
+        mi.getVariance().set(0.1)
+        
+        stats = afwMath.makeStatistics(mi, afwMath.SUM, ctrl)
+        self.assertEqual(stats.getValue(afwMath.SUM), 100.0)
+        
+        ctrl.setWeighted(True)
+        weighted = afwMath.makeStatistics(mi, afwMath.SUM, ctrl)
+        # precision at "4 places" as images are floats
+        # ... variance = 0.1 is stored as 0.100000001
+        self.assertAlmostEqual(weighted.getValue(afwMath.SUM), 1000.0, 4) 
+        
             
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

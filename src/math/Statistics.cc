@@ -437,14 +437,16 @@ afwMath::Statistics::StandardReturn afwMath::Statistics::_getStandard(ImageT con
     double mean, variance;
     if (_sctrl.getWeighted()) {
         mean = (wsum > 0) ? meanCrude + sum/wsum : NaN;
-        variance = (n > 1) ? sumx2/(wsum - wsum/n) - sum*sum/(static_cast<double>(wsum - wsum/n)*wsum) : NaN; 
+        variance = (n > 1) ? sumx2/(wsum - wsum/n) - sum*sum/(static_cast<double>(wsum - wsum/n)*wsum) : NaN;
+        sum += meanCrude*wsum;
     } else {
         mean = (n) ? meanCrude + sum/n : NaN;
-        variance = (n > 1) ? sumx2/(n - 1) - sum*sum/(static_cast<double>(n - 1)*n) : NaN; 
+        variance = (n > 1) ? sumx2/(n - 1) - sum*sum/(static_cast<double>(n - 1)*n) : NaN;
+        sum += n*meanCrude;
     }
     _n = n;
     
-    return afwMath::Statistics::StandardReturn(mean, variance, min, max, sum + n*meanCrude);
+    return afwMath::Statistics::StandardReturn(mean, variance, min, max, sum);
 }
 
 
@@ -532,13 +534,15 @@ afwMath::Statistics::StandardReturn afwMath::Statistics::_getStandard(
     if (_sctrl.getWeighted()) {
         mean = (wsum > 0) ? center + sum/wsum : NaN;
         variance = (n > 1) ? sumx2/(wsum - wsum/n) - sum*sum/(static_cast<double>(wsum - wsum/n)*n) : NaN;
+        sum += center*wsum;
     } else {
         mean = (n) ? center + sum/n : NaN;
         variance = (n > 1) ? sumx2/(n - 1) - sum*sum/(static_cast<double>(n - 1)*n) : NaN;
+        sum += n*center;
     }
     _n = n;
     
-    return afwMath::Statistics::StandardReturn(mean, variance, min, max, sum + center*n);
+    return afwMath::Statistics::StandardReturn(mean, variance, min, max, sum);
 }
 
 
