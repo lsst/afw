@@ -54,6 +54,7 @@ namespace image {
     public:
         typedef MaskedImage<ImageT, MaskT, VarianceT> MaskedImageT;
         typedef boost::shared_ptr<Exposure> Ptr;
+        typedef boost::shared_ptr<Exposure const> ConstPtr;
         
         // Class Constructors and Destructor
         explicit Exposure(int const cols=0, int const rows=0, Wcs const& wcs=NoWcs);
@@ -189,10 +190,11 @@ namespace image {
  * A function to return an Exposure of the correct type (cf. std::make_pair)
  */
     template<typename MaskedImageT>
-    Exposure<typename MaskedImageT::Image::Pixel>* makeExposure(MaskedImageT & mimage, ///< the Exposure's image
-                                                                Wcs const& wcs=NoWcs ///< the Exposure's WCS
-                                                               ) {
-        return new Exposure<typename MaskedImageT::Image::Pixel>(mimage, wcs);
+    typename Exposure<typename MaskedImageT::Image::Pixel>::Ptr makeExposure(MaskedImageT & mimage, ///< the Exposure's image
+                                                                             Wcs const& wcs=NoWcs ///< the Exposure's WCS
+                                                                            ) {
+        return typename Exposure<typename MaskedImageT::Image::Pixel>::Ptr(
+                                                            new Exposure<typename MaskedImageT::Image::Pixel>(mimage, wcs));
     }
 
 }}} // lsst::afw::image
