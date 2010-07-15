@@ -235,7 +235,7 @@ private:
             } else {
                 msg << "Index " << index << " out of range [0," << _data.size() << "] for " << se.getName();
             }
-            throw std::runtime_error(msg.str());
+            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, msg.str());
         }
         boost::any const& val = _data[index];
 
@@ -265,7 +265,7 @@ private:
         
         std::ostringstream msg;
         msg << "Unable to retrieve value of type " << se.getType() << " for " << se.getName();
-        throw std::runtime_error(msg.str());
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, msg.str());
     }
 
     typedef std::vector<boost::any> DataStore;
@@ -321,6 +321,19 @@ public:
     }
     virtual ~MeasureQuantity() {}
 
+    /**
+     * Return the image data that we are measuring
+     */
+    typename ImageT::ConstPtr getImage() const {
+        return _im;
+    }
+    /**
+     * (Re)set the data that we are measuring
+     */
+    void setImage(typename ImageT::ConstPtr im) {
+        _im = im;
+    }
+
     /// Include the algorithm called name in the list of measurement algorithms to use
     ///
     /// This name is looked up in the registry (\sa declare), and used as the name of the
@@ -334,6 +347,10 @@ public:
     Values measure(PeakT const& peak     ///< approximate position of object's centre
                   ) {
         Values values;
+
+        if (!_im) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "I cannot measure a NULL image");
+        }
 
         for (typename AlgorithmList::iterator ptr = _algorithms.begin(); ptr != _algorithms.end(); ++ptr) {
             boost::shared_ptr<T> val = ptr->second.first(_im, peak);
@@ -423,7 +440,7 @@ MeasureQuantity<T, ImageT, PeakT>::_registryWorker(
             _registry->find(name);
         
         if (ptr == _registry->end()) {
-            throw std::runtime_error("Unknown algorithm " + name);
+            throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException, "Unknown algorithm " + name);
         }
         
         return ptr->second;
