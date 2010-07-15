@@ -20,6 +20,21 @@ public:
     typedef boost::shared_ptr<Astrometry> Ptr;
     typedef boost::shared_ptr<Astrometry const> ConstPtr;
 
+    /// Ctor
+    Astrometry() : Measurement<Astrometry>()
+    {
+        init();                         // This allocates space for fields added by defineSchema
+    }
+    /// Ctor
+    Astrometry(double x, double xErr, double y, double yErr) : Measurement<Astrometry>()
+    {
+        init();                         // This allocates space for fields added by defineSchema
+        set<X>(x);                      // ... if you don't, these set calls will fail an assertion
+        set<X_ERR>(xErr);               // the type of the value must match the schema
+        set<Y>(y);
+        set<Y_ERR>(yErr);
+    }
+
     /// Add desired members to the schema
     virtual void defineSchema(Schema::Ptr schema) {
         schema->add(SchemaEntry("x", X, Schema::DOUBLE, 1, "pixel"));

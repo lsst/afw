@@ -22,6 +22,29 @@ public:
     typedef boost::shared_ptr<Shape> Ptr;
     typedef boost::shared_ptr<Shape const> ConstPtr;
 
+    /// Ctor
+    Shape() : Measurement<Shape>()
+    {
+        init();                         // This allocates space for fields added by defineSchema
+    }
+    /// Ctor
+    Shape(double x, double xErr, double y, double yErr,
+          double ixx, double ixxErr, double ixy, double ixyErr, double iyy, double iyyErr)
+    {
+        init();                         // This allocates space for fields added by defineSchema
+        set<X>(x);                      // ... if you don't, these set calls will fail an assertion
+        set<X_ERR>(xErr);               // the type of the value must match the schema
+        set<Y>(y);
+        set<Y_ERR>(yErr);
+
+        set<IXX>(ixx);
+        set<IXX_ERR>(ixxErr);
+        set<IXY>(ixy);
+        set<IXY_ERR>(ixyErr);
+        set<IYY>(iyy);
+        set<IYY_ERR>(iyyErr);
+    }
+
     /// Add desired members to the schema
     virtual void defineSchema(Schema::Ptr schema) {
         schema->add(SchemaEntry("x",       X,         Schema::DOUBLE, 1, "pixel"));

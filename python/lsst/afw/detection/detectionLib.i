@@ -37,6 +37,8 @@ namespace boost {
 %include "std_string.i"
 
 %include "lsst/p_lsstSwig.i"
+%include "lsst/base.h"
+
 %import  "lsst/afw/utils.i" 
 %include "lsst/daf/base/persistenceMacros.i"
 

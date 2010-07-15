@@ -18,12 +18,26 @@ public:
     typedef boost::shared_ptr<Photometry> Ptr;
     typedef boost::shared_ptr<Photometry const> ConstPtr;
 
+    /// Ctor
+    Photometry() : Measurement<Photometry>()
+    {
+        init();                         // This allocates space for fields added by defineSchema
+    }
+    /// Ctor
+    Photometry(double flux, double fluxErr=std::numeric_limits<double>::quiet_NaN()) : Measurement<Photometry>()
+    {
+        init();                         // This allocates space for everything in the schema
+
+        set<FLUX>(flux);                // ... if you don't, these set calls will fail an assertion
+        set<FLUX_ERR>(fluxErr);         // the type of the value must match the schema
+    }
+
     /// Add desired members to the schema
     virtual void defineSchema(lsst::afw::detection::Schema::Ptr schema) {
         schema->add(lsst::afw::detection::SchemaEntry("flux", FLUX,
                                                       lsst::afw::detection::Schema::DOUBLE));
         schema->add(lsst::afw::detection::SchemaEntry("fluxErr", FLUX_ERR,
-                                                      lsst::afw::detection::Schema::FLOAT, 1));
+                                                      lsst::afw::detection::Schema::DOUBLE, 1));
     }
 
     /// Return the flux
@@ -35,12 +49,12 @@ public:
         return lsst::afw::detection::Measurement<Photometry>::get<FLUX, double>(i);
     }
     /// Return the error in the flux
-    virtual float getFluxErr() const {
-        return lsst::afw::detection::Measurement<Photometry>::get<FLUX_ERR, float>();
+    virtual double getFluxErr() const {
+        return lsst::afw::detection::Measurement<Photometry>::get<FLUX_ERR, double>();
     }
     /// Return the error in the flux (if an array)
-    virtual float getFluxErr(int i) const {
-        return lsst::afw::detection::Measurement<Photometry>::get<FLUX_ERR, float>(i);
+    virtual double getFluxErr(int i) const {
+        return lsst::afw::detection::Measurement<Photometry>::get<FLUX_ERR, double>(i);
     }
 
     virtual ::std::ostream &output(std::ostream &os) const;
