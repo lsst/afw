@@ -8,6 +8,7 @@
 #include "lsst/afw/detection/DiaSource.h"
 #include "lsst/afw/detection/Astrometry.h"
 #include "lsst/afw/detection/Photometry.h"
+#include "lsst/afw/detection/Shape.h"
 %}
 
 //shared_ptr declarations
@@ -64,15 +65,18 @@ SWIG_SHARED_PTR_DERIVED(SchemaEntry,
 
 %MeasurementBefore(Astrometry);
 %MeasurementBefore(Photometry);
+%MeasurementBefore(Shape);
 
 %include "lsst/afw/detection/Schema.h"
 %include "lsst/afw/detection/Measurement.h"
 
 %MeasurementAfter(Astrometry);
 %MeasurementAfter(Photometry);
+%MeasurementAfter(Shape);
 
 %include "lsst/afw/detection/Astrometry.h"
 %include "lsst/afw/detection/Photometry.h"
+%include "lsst/afw/detection/Shape.h"
 
 /************************************************************************************************************/
 

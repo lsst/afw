@@ -23,9 +23,9 @@ public:
     /// Add desired members to the schema
     virtual void defineSchema(Schema::Ptr schema) {
         schema->add(SchemaEntry("x", X, Schema::DOUBLE, 1, "pixel"));
-        schema->add(SchemaEntry("xErr", X_ERR, Schema::FLOAT, 1, "pixel"));
+        schema->add(SchemaEntry("xErr", X_ERR, Schema::DOUBLE, 1, "pixel"));
         schema->add(SchemaEntry("y", Y, Schema::DOUBLE, 1, "pixel"));
-        schema->add(SchemaEntry("yErr", Y_ERR, Schema::FLOAT, 1, "pixel"));
+        schema->add(SchemaEntry("yErr", Y_ERR, Schema::DOUBLE, 1, "pixel"));
     }
     
     /// Return the x-centroid
@@ -33,7 +33,7 @@ public:
         return Measurement<Astrometry>::get<Astrometry::X, double>();
     }
     /// Return the error in the x-centroid
-    float getXErr() const {
+    double getXErr() const {
         return Measurement<Astrometry>::get<Astrometry::X_ERR, double>();
     }
     /// Return the y-centroid
@@ -41,7 +41,7 @@ public:
         return Measurement<Astrometry>::get<Astrometry::Y, double>();
     }
     /// Return the error in the y-centroid
-    float getYErr() const {
+    double getYErr() const {
         return Measurement<Astrometry>::get<Astrometry::Y_ERR, double>();
     }
 
