@@ -126,7 +126,9 @@ Psf::Image::Ptr Psf::doComputeImage(
     std::pair<int, double> const ir_dx = lsst::afw::image::positionToIndex(ccdXY.getX(), true);
     std::pair<int, double> const ir_dy = lsst::afw::image::positionToIndex(ccdXY.getY(), true);
     
-    im = lsst::afw::math::offsetImage(*im, ir_dx.second, ir_dy.second, "lanczos5");
+    if (ir_dx.second != 0.0 || ir_dy.second != 0.0) {
+        im = lsst::afw::math::offsetImage(*im, ir_dx.second, ir_dy.second, "lanczos5");
+    }
     im->setXY0(ir_dx.first - kernel->getCtrX() + (ir_dx.second <= 0.5 ? 0 : 1),
                ir_dy.first - kernel->getCtrY() + (ir_dy.second <= 0.5 ? 0 : 1));
     
