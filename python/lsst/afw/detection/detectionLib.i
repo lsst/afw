@@ -45,6 +45,7 @@ Python interface to lsst::afw::detection classes
 #include "lsst/pex/policy.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/image.h"
+#include "lsst/afw/detection/Psf.h"
 %}
 
 %inline %{
@@ -59,12 +60,17 @@ namespace boost {
 %include "std_string.i"
 
 %include "lsst/p_lsstSwig.i"
+%include "lsst/base.h"
+
+%import  "lsst/afw/utils.i" 
 %include "lsst/daf/base/persistenceMacros.i"
 
 %import "lsst/afw/image/imageLib.i"
+%import "lsst/afw/math/mathLib.i"
 
 %lsst_exceptions()
 
 %include "source.i"
 %include "footprints.i"
 %include "match.i"
+%include "psf.i"

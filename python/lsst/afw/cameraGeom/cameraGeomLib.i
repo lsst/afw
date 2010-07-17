@@ -1,4 +1,4 @@
-// -*- lsst-c++ -*-
+// -*- lsst-++ -*-
 
 /* 
  * LSST Data Management System
@@ -40,8 +40,9 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %}
 
 %include "lsst/p_lsstSwig.i"
+%include  "lsst/afw/utils.i" 
 #if defined(IMPORT_IMAGE_I)
-%import "lsst/afw/image/imageLib.i" 
+%import  "lsst/afw/image/imageLib.i" 
 #endif
 
 %lsst_exceptions();
@@ -106,31 +107,6 @@ Instantiate(float);
 Instantiate(double);
 %template(prepareAmpData)
     lsst::afw::cameraGeom::Amp::prepareAmpData<lsst::afw::image::Mask<boost::uint16_t> >;
-
-//
-// We'd like to just say
-//  def __iter__(self):
-//      return next()
-// but this crashes, at least with swig 1.3.36
-//
-%define %definePythonIterator(TYPE...)
-%extend TYPE {
-    %pythoncode {
-        def __iter__(self):
-            ptr = self.begin()
-            end = self.end()
-            while True:
-                if ptr == end:
-                    raise StopIteration
-
-                yield ptr.value()
-                ptr.incr()
-
-        def __getitem__(self, i):
-            return [e for e in self][i]
-    }
-}
-%enddef
 
 %definePythonIterator(lsst::afw::cameraGeom::Ccd);
 %definePythonIterator(lsst::afw::cameraGeom::DetectorMosaic);

@@ -29,7 +29,7 @@
 #ifndef LSST_AFW_GEOM_EXTENT_H
 #define LSST_AFW_GEOM_EXTENT_H
 
-#include "lsst/afw/geom/CoordinateBase.h"
+#include "lsst/afw/geom/CoordinateExpr.h"
 
 namespace lsst { namespace afw { namespace geom {
 

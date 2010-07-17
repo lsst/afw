@@ -37,10 +37,14 @@ import lsst.afw.image.testUtils as imageTestUtils
 import lsst.utils.tests as utilsTests
 import lsst.pex.logging as logging
 
-VERBOSITY = 0 # increase to see trace
-
-# set True to save afw-warped images as FITS files
-SAVE_FITS_FILES = False
+import lsst.afw.display.ds9 as ds9
+try:
+    display
+except:
+    display = False
+    VERBOSITY = 0                       # increase to see trace
+    # set True to save afw-warped images as FITS files
+    SAVE_FITS_FILES = False
 
 logging.Debug("lsst.afw.math", VERBOSITY)
 
@@ -255,6 +259,8 @@ class WarpExposureTestCase(unittest.TestCase):
             afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingKernel)
             if SAVE_FITS_FILES:
                 afwWarpedExposure.writeFits(afwWarpedImagePath)
+            if display:
+                ds9.mtv(afwWarpedExposure, frame=1, title="Warped")
     
             afwWarpedMask = afwWarpedMaskedImage.getMask()
             edgeBitMask = afwWarpedMask.getPlaneBitMask("EDGE")
@@ -265,6 +271,9 @@ class WarpExposureTestCase(unittest.TestCase):
     
             swarpedMaskedImage = afwImage.MaskedImageF(swarpedImage)
             swarpedMaskedImageArrSet = imageTestUtils.arraysFromMaskedImage(swarpedMaskedImage)
+
+            if display:
+                ds9.mtv(swarpedMaskedImage, frame=2, title="SWarped")
             
             errStr = imageTestUtils.maskedImagesDiffer(afwWarpedMaskedImageArrSet, swarpedMaskedImageArrSet,
                 doImage=True, doMask=False, doVariance=False, skipMaskArr=afwWarpedMaskArr,

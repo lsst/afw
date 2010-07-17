@@ -56,6 +56,13 @@ typename ImageT::Ptr offsetImage(ImageT const& inImage,  ///< The %image to offs
                                 ) {
     SeparableKernel::Ptr offsetKernel = makeWarpingKernel(algorithmName);
 
+    if (offsetKernel->getWidth() > inImage.getWidth() || offsetKernel->getHeight() > inImage.getHeight()) {
+        throw LSST_EXCEPT(pexExcept::LengthErrorException,
+                          (boost::format("Image of size %dx%d is too small to offset using a %s kernel (minimum %dx%d)") %
+                           inImage.getWidth() %  inImage.getHeight() % algorithmName %
+                           offsetKernel->getWidth() % offsetKernel->getHeight()).str());
+    }
+
     typename ImageT::Ptr outImage(new ImageT(inImage, true)); // output image, a deep copy
 
     std::pair<int, double> deltaX = afwImage::positionToIndex(dx, true); // true => return the std::pair

@@ -31,8 +31,11 @@
 //##====----------------                                ----------------====##/
 
 #include "lsst/daf/base.h"
-#include "lsst/afw/detection/Source.h"
 #include "lsst/pex/exceptions/Runtime.h"
+#include "lsst/afw/detection/Source.h"
+#include "lsst/afw/detection/Astrometry.h"
+#include "lsst/afw/detection/Photometry.h"
+#include "lsst/afw/detection/Shape.h"
 
 namespace det = lsst::afw::detection;
 
@@ -45,7 +48,10 @@ det::Source::Source()
       _petroFlux(0.0),
       _petroFluxErr(0.0),
       _sky(0.0),
-      _skyErr(0.0)
+      _skyErr(0.0),
+      _astrom(new Astrometry),
+      _photom(new Photometry),
+      _shape(new Shape)
 { }
 
 /**

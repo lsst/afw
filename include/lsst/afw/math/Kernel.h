@@ -171,6 +171,8 @@ class FourierLocalKernel;
          *
          * x, y are ignored if there is no spatial function.
          *
+         * @return The kernel sum
+         *
          * @note computeNewImage has been retired; it doesn't need to be a member
          *
          * @throw lsst::pex::exceptions::InvalidParameterException if the image is the wrong size
