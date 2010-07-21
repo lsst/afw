@@ -13,17 +13,21 @@ fn = os.path.join(mypath, 'tests', 'testWcs-2.wcs')
 fitsheader = afwImg.readMetadata(fn)
 wcs = afwImg.makeWcs(fitsheader)
 
-pa = wcs.pixArea(afwGeom.makePointD(0,0));
-print 'pixel area:', pa
-print 'sqrt', sqrt(pa)
-print '3600 sqrt', 3600. * sqrt(pa)
-
-pa = wcs.pixArea(afwGeom.makePointD(359.9823936, -3.9997742));
-print 'pixel area:', pa
-print 'sqrt:', sqrt(pa)
-print '3600 x sqrt:', 3600. * sqrt(pa)
+for x,y in [(0,0), (359.9823936, -3.9997742), (-1,0), (1,1), (0,-1), (-1,-1), (0, -11), (11,-11), (360, -4), (0,-4), (360,0), (100,0), (200,0),
+            (300,0), (350,0), (355,0), (359,0), (357,0), (358,0)]:
+    pa = wcs.pixArea(afwGeom.makePointD(x,y));
+    print 'pixel area at (%g,%g): %g arcsec/pix' % (x, y, 3600. * sqrt(pa))
 
 
-    
+import matplotlib
+matplotlib.use('Agg')
+from pylab import *
+from numpy import *
 
-
+clf()
+X=arange(0, 400, 0.1)
+A = [3600.*sqrt(wcs.pixArea(afwGeom.makePointD(x,0))) for x in X]
+plot(X,A,'r-')
+xlabel('X')
+ylabel('pixel scale ("/pix)')
+savefig('pixscale.png')
