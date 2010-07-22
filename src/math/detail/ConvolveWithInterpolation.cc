@@ -208,8 +208,8 @@ void mathDetail::convolveRegionWithInterpolation(
     
     afwMath::Kernel::ConstPtr kernelPtr = region.getKernel();
     std::pair<int, int> const kernelDimensions(kernelPtr->getDimensions());
-    KernelImage leftKernelImage(*(region.getImage(KernelImagesForRegion::BOTTOM_LEFT)), true);
-    KernelImage rightKernelImage(*(region.getImage(KernelImagesForRegion::BOTTOM_RIGHT)), true);
+    KernelImage leftKernelImage(*(region.getImageSumPair(KernelImagesForRegion::BOTTOM_LEFT).first), true);
+    KernelImage rightKernelImage(*(region.getImageSumPair(KernelImagesForRegion::BOTTOM_RIGHT).first), true);
     KernelImage leftDeltaKernelImage(kernelDimensions);
     KernelImage rightDeltaKernelImage(kernelDimensions);
     KernelImage deltaKernelImage(kernelDimensions);  // interpolated in x
@@ -223,10 +223,10 @@ void mathDetail::convolveRegionWithInterpolation(
     double xfrac = 1.0 / static_cast<double>(outBBox.getWidth());
     double yfrac = 1.0 / static_cast<double>(outBBox.getHeight());
     afwMath::scaledPlus(leftDeltaKernelImage, 
-         yfrac,  *region.getImage(KernelImagesForRegion::TOP_LEFT),
+         yfrac,  *(region.getImageSumPair(KernelImagesForRegion::TOP_LEFT).first),
         -yfrac, leftKernelImage);
     afwMath::scaledPlus(rightDeltaKernelImage,
-         yfrac, *region.getImage(KernelImagesForRegion::TOP_RIGHT),
+         yfrac, *(region.getImageSumPair(KernelImagesForRegion::TOP_RIGHT).first),
         -yfrac, rightKernelImage);
 
     // note: it might be slightly more efficient to compute locators directly on outImage and inImage,

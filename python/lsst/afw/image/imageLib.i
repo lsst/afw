@@ -163,29 +163,39 @@ SWIG_SHARED_PTR(CalibPtr, lsst::afw::image::Calib);
         return "(%g, %g)" % (self.getX(), self.getY())
 
     def __getitem__(self, i):
-        """Treat a Point as an array of length 2, [x, y]"""
+        """Treat as an array of length 2: [x, y]"""
         if i == 0:
             return self.getX()
         elif i == 1:
             return self.getY()
+        elif hasattr(i, "indices"):
+            return [self[ind] for ind in range(*i.indices(2))]
         else:
-            raise IndexError, i
+            raise IndexError(i)
 
     def __setitem__(self, i, val):
-        """Treat a Point as an array of length 2, [x, y]"""
+        """Treat as an array of length 2: [x, y]"""
         if i == 0:
             self.setX(val)
         elif i == 1:
             self.setY(val)
+        elif hasattr(i, "indices"):
+            indexList = range(*i.indices(2))
+            if len(val) != len(indexList):
+                raise IndexError("Need %s values but got %s" % (len(indexList), len(val)))
+            for ind in indexList:
+                self[ind] = val[ind]
         else:
-            raise IndexError, i
+            raise IndexError(i)
+    
+    def __iter__(self):
+        return iter(self[:])
 
     def __len__(self):
         return 2
                 
     def clone(self):
         return self.__class__(self.getX(), self.getY())
-                
     }
 }
 %enddef

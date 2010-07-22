@@ -28,7 +28,7 @@
 
 SWIG_SHARED_PTR_DERIVED(KernelImagesForRegion,
     lsst::daf::data::LsstBase, lsst::afw::math::detail::KernelImagesForRegion);
-    
+
 // Hide methods that return KernelImagesForRegion::List since can cause a memory leak and is opaque anyway
 //
 // @todo: swig KernelImagesForRegion::List; I don't know how to swig a collection of shared pointers
@@ -37,7 +37,45 @@ SWIG_SHARED_PTR_DERIVED(KernelImagesForRegion,
 %ignore lsst::afw::math::detail::KernelImagesForRegion::getSubregions;
 
 %include "lsst/afw/math/detail/Convolve.h"
-//
+
+%template(ImageSumPair) std::pair<lsst::afw::math::detail::KernelImagesForRegion::ImageConstPtr, double>;
+
+%extend std::pair<lsst::afw::math::detail::KernelImagesForRegion::ImageConstPtr, double> {
+    %pythoncode {
+    def __getitem__(self, i):
+        """Treat as an array of length 2: [image, imageSum]"""
+        if i == 0:
+            return self.first
+        elif i == 1:
+            return self.second
+        elif hasattr(i, "indices"):
+            return [self[ind] for ind in range(*i.indices(2))]
+        else:
+            raise IndexError(i)
+
+    def __setitem__(self, i, val):
+        """Treat as an array of length 2: [image, imageSum]"""
+        if i == 0:
+            self.first = val
+        elif i == 1:
+            self.second = val
+        elif hasattr(i, "indices"):
+            indexList = range(*i.indices(2))
+            if len(val) != len(indexList):
+                raise IndexError("Need %s values but got %s" % (len(indexList), len(val)))
+            for ind in indexList:
+                self[ind] = val[ind]
+        else:
+            raise IndexError(i)
+    
+    def __iter__(self):
+        return iter(self[:])
+
+    def __len__(self):
+        return 2
+    }
+}
+
 // Functions to convolve a MaskedImage or Image with a Kernel.
 // There are a lot of these, so write a set of macros to do the instantiations
 //
